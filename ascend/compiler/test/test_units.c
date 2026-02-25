@@ -20,6 +20,10 @@
 #include <ascend/compiler/units.h>
 #include <ascend/compiler/symtab.h>
 
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <ascend/general/env.h>
 #include <ascend/general/list.h>
 #include <ascend/general/platform.h>
@@ -42,6 +46,20 @@ static unsigned long get_num_units_defined(void){
     for(p = g_units_hash_table[c];p!=NULL;p=p->next)nc++;
   }
   return nc;
+}
+
+static void destroy_ladder_item_list(struct gl_list_t *items){
+	unsigned long i, len;
+	struct UnitLadderItem *item;
+	if (items == NULL) {
+		return;
+	}
+	len = gl_length(items);
+	for (i = 1; i <= len; ++i) {
+		item = (struct UnitLadderItem *)gl_fetch(items,i);
+		DestroyUnitLadderItem(item);
+	}
+	gl_destroy(items);
 }
 
 static void test_test1(void){
@@ -279,6 +297,223 @@ static void test_test3(void){
 	gl_destroy_pool();
 }
 
+static void test_test4(void){
+	const struct Units *u_w, *u_kw, *u_hp, *u_mw;
+	struct gl_list_t *items;
+	long ladder_id;
+
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+	InitSymbolTable();
+	InitUnitsTable();
+
+	items = gl_create(10L);
+	gl_append_ptr(items,(char *)CreateUnitLadderItem(AddSymbol("W"),"kg*m^2/s^3",0,"test",1));
+	gl_append_ptr(items,(char *)CreateUnitLadderItem(AddSymbol("kW"),"1e3*W",0,"test",2));
+	gl_append_ptr(items,(char *)CreateUnitLadderItem(AddSymbol("MW"),"1e6*W",0,"test",3));
+	CU_TEST(ProcessUnitLadder(items) == 0);
+	destroy_ladder_item_list(items);
+
+	u_w = LookupUnits("W");
+	u_kw = LookupUnits("kW");
+	u_mw = LookupUnits("MW");
+	CU_TEST(NULL != u_w);
+	CU_TEST(NULL != u_kw);
+	CU_TEST(NULL != u_mw);
+	ladder_id = UnitsLadderId(u_w);
+	CU_TEST(ladder_id >= 0);
+	CU_TEST(UnitsLadderId(u_kw) == ladder_id);
+	CU_TEST(UnitsLadderId(u_mw) == ladder_id);
+	CU_TEST(UnitsLadderRank(u_w) == 0);
+	CU_TEST(UnitsLadderRank(u_kw) == 1);
+	CU_TEST(UnitsLadderRank(u_mw) == 2);
+
+	items = gl_create(10L);
+	gl_append_ptr(items,(char *)CreateUnitLadderItem(AddSymbol("kW"),NULL,1,"test",4));
+	gl_append_ptr(items,(char *)CreateUnitLadderItem(AddSymbol("hp"),"0.745699872*kW",0,"test",5));
+	CU_TEST(ProcessUnitLadder(items) == 0);
+	destroy_ladder_item_list(items);
+
+	u_hp = LookupUnits("hp");
+	CU_TEST(NULL != u_hp);
+	CU_TEST(UnitsLadderId(u_hp) == ladder_id);
+	CU_TEST(UnitsLadderRank(u_hp) == 2);
+	CU_TEST(UnitsLadderRank(u_mw) == 3);
+	CU_TEST(LookupUnitsByLadder(ladder_id,2) == u_hp);
+
+	items = gl_create(10L);
+	gl_append_ptr(items,(char *)CreateUnitLadderItem(AddSymbol("kg"),NULL,1,"test",6));
+	gl_append_ptr(items,(char *)CreateUnitLadderItem(AddSymbol("slug"),"14.59390294*kg",0,"test",7));
+	CU_TEST(ProcessUnitLadder(items) > 0);
+	destroy_ladder_item_list(items);
+	CU_TEST(NULL == LookupUnits("slug"));
+
+	DestroyUnitsTable();
+	DestroyStringSpace();
+	DestroySymbolTable();
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
+static void define_unit(const char *name, const char *expr){
+	struct UnitDefinition *ud = CreateUnitDef(AddSymbol(name),expr,"test_units.c",1);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(ud);
+	ProcessUnitDef(ud);
+	DestroyUnitDef(ud);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(LookupUnits(name));
+}
+
+static void test_test5(void){
+	struct UnitsOverridesDB *db;
+	struct UnitsOverridesDB *db2;
+	const struct Units *u;
+	const dim_type *powerdim;
+	const dim_type *lengthdim;
+	unsigned loaded = 0, errors = 0;
+	char fn1[] = "/tmp/asc_uovr_1_XXXXXX";
+	char fn2[] = "/tmp/asc_uovr_2_XXXXXX";
+	FILE *fp;
+	int fd;
+	char *defaultpath;
+	int found_simroot_name = 0;
+	int found_trimmed_name = 0;
+	char line[512];
+
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+	InitSymbolTable();
+	InitUnitsTable();
+
+	define_unit("W","kg*m^2/s^3");
+	define_unit("kW","1e3*W");
+	define_unit("MW","1e6*W");
+	define_unit("GW","1e9*W");
+
+	db = UnitsOverridesCreate();
+	CU_ASSERT_PTR_NOT_NULL_FATAL(db);
+
+	CU_TEST(0 == UnitsOverridesSet(db,UNITS_OVERRIDE_TYPE,"","energy_rate","W"));
+	CU_TEST(0 == UnitsOverridesSet(db,UNITS_OVERRIDE_TYPE,"models/johnpye/demo.a4c","energy_rate","kW"));
+	CU_TEST(0 == UnitsOverridesSet(db,UNITS_OVERRIDE_NAME,"models/johnpye/demo.a4c","plant.tes.power","MW"));
+	CU_TEST(0 != UnitsOverridesSet(db,UNITS_OVERRIDE_NAME,"","global.bad.name","MW"));
+
+	powerdim = UnitsDimensions(LookupUnits("W"));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(powerdim);
+
+	u = UnitsOverridesResolve(db,"models/johnpye/demo.a4c","energy_rate","plant.tes.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"MW"));
+	u = UnitsOverridesResolve(db,"models/johnpye/demo.a4c","energy_rate","sim1.plant.tes.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"MW"));
+#ifdef _WIN32
+	u = UnitsOverridesResolve(db,"MODELS/JOHNPYE/DEMO.A4C","energy_rate","plant.tes.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"MW"));
+	u = UnitsOverridesResolve(db,"MODELS\\JOHNPYE\\DEMO.A4C","energy_rate","plant.tes.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"MW"));
+#endif
+
+	u = UnitsOverridesResolve(db,"models/johnpye/demo.a4c","energy_rate","plant.other.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"kW"));
+
+	u = UnitsOverridesResolve(db,"models/other/demo.a4c","energy_rate","plant.tes.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"W"));
+
+	u = UnitsOverridesResolve(db,"","energy_rate","plant.tes.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"W"));
+
+	CU_TEST(0 == UnitsOverridesSet(db,UNITS_OVERRIDE_TYPE,"models/johnpye/demo.a4c","length_type","s"));
+	lengthdim = UnitsDimensions(LookupUnits("m"));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(lengthdim);
+	CU_TEST(NULL == UnitsOverridesResolve(db,"models/johnpye/demo.a4c","length_type","",lengthdim));
+	CU_TEST(NULL == UnitsOverridesLookup(db,UNITS_OVERRIDE_TYPE,"models/johnpye/demo.a4c","length_type"));
+
+	fd = mkstemp(fn1);
+	CU_ASSERT_FATAL(fd >= 0);
+	close(fd);
+	fd = mkstemp(fn2);
+	CU_ASSERT_FATAL(fd >= 0);
+	close(fd);
+	fp = fopen(fn1,"w");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(fp);
+	fprintf(fp,"[global]\n");
+	fprintf(fp,"type.energy_rate = kW\n");
+	fprintf(fp,"badkey = kW\n");
+	fprintf(fp,"name.not_allowed = MW\n");
+	fprintf(fp,"\n[models/johnpye/demo.a4c]\n");
+	fprintf(fp,"type.energy_rate = MW\n");
+	fprintf(fp,"name.plant.tes.power = GW\n");
+	fprintf(fp,"name.broken = NOT_A_UNIT\n");
+	fclose(fp);
+
+	UnitsOverridesClear(db);
+	CU_TEST(0 == UnitsOverridesLoad(db,fn1,&loaded,&errors));
+	CU_TEST(loaded == 3);
+	CU_TEST(errors >= 3);
+
+	u = UnitsOverridesResolve(db,"models/johnpye/demo.a4c","energy_rate","plant.tes.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"GW"));
+	u = UnitsOverridesResolve(db,"models/johnpye/demo.a4c","energy_rate","sim1.plant.tes.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"GW"));
+	CU_TEST(NULL == UnitsOverridesLookup(db,UNITS_OVERRIDE_NAME,"models/johnpye/demo.a4c","broken"));
+
+	CU_TEST(0 == UnitsOverridesSet(
+		db,UNITS_OVERRIDE_NAME,"models/johnpye/demo.a4c","sim1.plant.rooted.power","MW"
+	));
+	CU_TEST(0 == UnitsOverridesSetSimroot(db,"sim1"));
+	CU_TEST(0 == UnitsOverridesSave(db,fn2));
+	fp = fopen(fn2,"r");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(fp);
+	while (fgets(line,sizeof(line),fp) != NULL) {
+		if (strstr(line,"name.sim1.plant.rooted.power") != NULL) {
+			found_simroot_name = 1;
+		}
+		if (strstr(line,"name.plant.rooted.power = MW") != NULL) {
+			found_trimmed_name = 1;
+		}
+	}
+	fclose(fp);
+	CU_TEST(!found_simroot_name);
+	CU_TEST(found_trimmed_name);
+
+	db2 = UnitsOverridesCreate();
+	CU_ASSERT_PTR_NOT_NULL_FATAL(db2);
+	UnitsOverridesClear(db2);
+	CU_TEST(0 == UnitsOverridesLoad(db2,fn2,&loaded,&errors));
+	u = UnitsOverridesResolve(db2,"models/johnpye/demo.a4c","energy_rate","plant.tes.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"GW"));
+	u = UnitsOverridesResolve(db2,"models/johnpye/demo.a4c","energy_rate","sim1.plant.rooted.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"MW"));
+
+	defaultpath = UnitsOverridesDefaultPath();
+	CU_ASSERT_PTR_NOT_NULL(defaultpath);
+	if (defaultpath != NULL) {
+		ASC_FREE(defaultpath);
+	}
+
+	UnitsOverridesDestroy(db2);
+	UnitsOverridesDestroy(db);
+	remove(fn1);
+	remove(fn2);
+
+	DestroyUnitsTable();
+	DestroyStringSpace();
+	DestroySymbolTable();
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -288,8 +523,9 @@ static void test_test3(void){
 #define TESTS(T) \
 	T(test1) \
 	T(test2) \
-	T(test3)
+	T(test3) \
+	T(test4) \
+	T(test5)
 
 
 REGISTER_TESTS_SIMPLE(compiler_units, TESTS)
-

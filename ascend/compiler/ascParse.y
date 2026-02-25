@@ -719,6 +719,7 @@ static void CollectNote(struct Note *);
   CONST dim_type *dimp;
   struct TypeDescription *tptr;
   struct UnitDefinition *udefptr;
+  struct UnitLadderItem *ulitemptr;
   dim_type dimen;
   enum ForOrder order;
   enum ForKind fkind;
@@ -748,7 +749,7 @@ static void CollectNote(struct Note *);
 %token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
 %token TABLE_TOK VALUES_TOK DATASET_TOK POSITIONAL_TOK INDEX_TOK COLUMN_TOK EOL_TOK
 %token THEN_TOK TRUE_TOK
-%token UNION_TOK UNITS_TOK UNIVERSAL_TOK UNLINK_TOK
+%token UNION_TOK UNITS_TOK LADDER_TOK UNIVERSAL_TOK UNLINK_TOK
 %token WHEN_TOK WHERE_TOK WHILE_TOK WILLBE_TOK WILLBETHESAME_TOK WILLNOTBETHESAME_TOK
 %token ASSIGN_TOK CASSIGN_TOK DBLCOLON_TOK USE_TOK LEQ_TOK GEQ_TOK NEQ_TOK
 %token DOTDOT_TOK WITH_TOK VALUE_TOK WITH_VALUE_T
@@ -772,7 +773,7 @@ static void CollectNote(struct Note *);
 %start definitions
 
 %type <real_value> default_val number realnumber opunits
-%type <int_value> end optional_sign universal 
+%type <int_value> end optional_sign universal optional_ladder_end
 %type <fkind> forexprend
 %type <frac_value> fraction fractail
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
@@ -805,13 +806,14 @@ static void CollectNote(struct Note *);
 %type <swptr> switchlist switchlistf
 %type <wptr> whenlist whenlistf
 %type <notesptr> notes_body noteslist
-%type <listp> methods proclist proclistf statements unitdeflist complex_statement fix_and_assign_statement
+%type <listp> methods proclist proclistf statements unitdeflist unitladderitemlist complex_statement fix_and_assign_statement
 %type <procptr> procedure
 %type <dimp> dims dimensions constant_dims
 %type <dimen> dimexpr
 %type <order> optional_direction
 %type <tptr> add_method_head replace_method_head
 %type <udefptr> unitdef
+%type <ulitemptr> unitladderitem
 %type <id_ptr> model_id atom_id procedure_id definition_id
 
 /* stuff without a particular need for a type */
@@ -1553,6 +1555,39 @@ units_statement:
 	  gl_destroy($2);
 	  $$ = NULL;
 	}
+	| UNITS_TOK LADDER_TOK unitladderitemlist end optional_ladder_end
+	{
+	  struct UnitLadderItem *item;
+	  unsigned long c,len;
+	  int ladder_errors;
+
+	  if( $4 != UNITS_TOK ) {
+	    WarnMsg_MismatchEnd("UNITS LADDER", NULL, $4, NULL);
+	  }
+	  ladder_errors = ProcessUnitLadder($3);
+	  if (ladder_errors) {
+	    g_untrapped_error++;
+	  }
+
+	  len = gl_length($3);
+	  for (c=1; c <= len; c++) {
+	    item = (struct UnitLadderItem *)gl_fetch($3,c);
+	    DestroyUnitLadderItem(item);
+	  }
+	  gl_destroy($3);
+	  $$ = NULL;
+	}
+	;
+
+optional_ladder_end:
+	/* empty */
+	{
+	  $$ = 0;
+	}
+	| LADDER_TOK
+	{
+	  $$ = 1;
+	}
 	;
 
 table_statement:
@@ -1876,6 +1911,30 @@ unitdef:
 	                     LineNum());
 	}
     ;
+
+unitladderitemlist:
+	{
+	  $$ = gl_create(20L);
+	}
+	| unitladderitemlist unitladderitem ';'
+	{
+	  gl_append_ptr($1,(char *)$2);
+	  $$ = $1;
+	}
+	;
+
+unitladderitem:
+	IDENTIFIER_TOK '=' BRACEDTEXT_TOK
+	{
+	  $$ = CreateUnitLadderItem($1,$3,0,Asc_ModuleBestName(Asc_CurrentModule()),
+	                     LineNum());
+	}
+	| IDENTIFIER_TOK
+	{
+	  $$ = CreateUnitLadderItem($1,NULL,1,Asc_ModuleBestName(Asc_CurrentModule()),
+	                     LineNum());
+	}
+	;
 
 
 methods:
@@ -3805,6 +3864,8 @@ TokenAsString(unsigned long token)
     return "SWITCH";
   case UNITS_TOK:
     return "UNITS";
+  case LADDER_TOK:
+    return "LADDER";
   case WHEN_TOK:
     return "WHEN";
   case END_TOK:

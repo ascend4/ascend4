@@ -489,12 +489,21 @@ public:
 			"""Return real-valued instance value as a string, using preferred, then declared, then default units."""
 			if not self.isReal():
 				raise TypeError
-			_u = self.getType().getPreferredUnits();
+			_u = self.getDisplayUnits()
+			return _u.getConvertedValue(self.getRealValue())
+
+		def getDisplayUnits(self, autoscale=True, lower=0.1, upper=1000.0):
+			"""Return display units for this instance: preferred -> declared -> default; optionally autoscaled by ladder."""
+			if not self.isReal():
+				raise TypeError
+			_u = self.getType().getPreferredUnits()
 			if _u is None:
 				_u = self.getType().getDeclaredUnits()
 			if _u is None:
 				_u = self.getDimensions().getDefaultUnits()
-			return _u.getConvertedValue(self.getRealValue())
+			if autoscale and _u.hasLadder():
+				_u = _u.getAutoScaledUnits(self.getRealValue(), lower, upper)
+			return _u
 
 		def to(self,units):
 			"""Returns an instance value converted to specified units."""

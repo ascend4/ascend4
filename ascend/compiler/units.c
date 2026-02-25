@@ -24,10 +24,19 @@
 
 #include <math.h>
 #include <ctype.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <string.h>
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <sys/stat.h>
+#endif
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/hashpjw.h>
 #include <ascend/general/dstring.h>
+#include <ascend/utilities/error.h>
 
 #include "instance_enum.h"
 #include "cmpfunc.h"
@@ -72,6 +81,7 @@ char g_units_id_space[MAXTOKENLENGTH+1];
 struct Units *g_units_hash_table[UNITS_HASH_SIZE];
 unsigned long g_units_size = 0;
 unsigned long g_units_collisions = 0;
+static long g_units_next_ladder_id = 0;
 
 static struct ParseReturn CheckNewUnits(CONST char *	
 	, unsigned long int *CONST, int *CONST
@@ -144,6 +154,7 @@ void InitUnitsTable(void){
     /* no body */
   g_units_size = 0;
   g_units_collisions = 0;
+  g_units_next_ladder_id = 0;
   DefineUnits(AddSymbol("?"),1.0,WildDimension());
   DefineUnits(AddSymbol(""),1.0,Dimensionless());
   DefineFundamentalUnits();
@@ -172,6 +183,7 @@ void DestroyUnitsTable(void){
   }
   g_units_size = 0;
   g_units_collisions = 0;
+  g_units_next_ladder_id = 0;
   if (g_units_str) ascfree(g_units_str);
   g_units_str = 0;
   g_units_str_len = 0;
@@ -258,6 +270,201 @@ void ProcessUnitDef(struct UnitDefinition *ud){
   }
 }
 
+struct UnitLadderItem *CreateUnitLadderItem(symchar *name,
+		CONST char *unitsexpr, int is_anchor,
+		CONST char *filename, int linenum
+){
+	struct UnitLadderItem *item;
+	char *ustr = NULL;
+	int len;
+	if (name == NULL || filename == NULL) {
+		FPRINTF(ASCERR,"  CreateUnitLadderItem miscalled.\n");
+		return NULL;
+	}
+	if (is_anchor && unitsexpr != NULL) {
+		FPRINTF(ASCERR,"  Anchor ladder item cannot have a units expression.\n");
+		return NULL;
+	}
+	if (!is_anchor && unitsexpr == NULL) {
+		FPRINTF(ASCERR,"  Definition ladder item requires a units expression.\n");
+		return NULL;
+	}
+	item = ASC_NEW(struct UnitLadderItem);
+	if (item == NULL) {
+		FPRINTF(ASCERR,"  malloc failed in CreateUnitLadderItem for %s: %s %d\n",
+			SCP(name),filename,linenum);
+		return NULL;
+	}
+	if (!is_anchor) {
+		len = strlen(unitsexpr) + 1;
+		ustr = ASC_NEW_ARRAY(char,len);
+		if (ustr == NULL) {
+			FPRINTF(ASCERR,"  malloc failed in CreateUnitLadderItem for %s: %s %d\n",
+				unitsexpr,filename,linenum);
+			ascfree(item);
+			return NULL;
+		}
+		strcpy(ustr,unitsexpr);
+	}
+	item->name = name;
+	item->unitsexpr = ustr;
+	item->filename = filename;
+	item->linenum = linenum;
+	item->is_anchor = !!is_anchor;
+	return item;
+}
+
+void DestroyUnitLadderItem(struct UnitLadderItem *item){
+	if (item == NULL) {
+		return;
+	}
+	if (item->unitsexpr != NULL) {
+		ascfree((char *)item->unitsexpr);
+	}
+	item->name = NULL;
+	item->unitsexpr = NULL;
+	item->filename = NULL;
+	ascfree((char *)item);
+}
+
+static int UnitsLadderError(CONST char *filename, int linenum, CONST char *fmt, ...){
+	char msg[1024];
+	va_list args;
+	va_start(args,fmt);
+	vsnprintf(msg,sizeof(msg),fmt,args);
+	va_end(args);
+	error_reporter(ASC_USER_ERROR,filename,linenum,NULL,"%s",msg);
+	return 1;
+}
+
+static void UnitsShiftRanks(long ladder_id, long start_rank, long delta){
+	unsigned long c;
+	struct Units *p;
+	if (delta <= 0) {
+		return;
+	}
+	for (c = 0; c < UNITS_HASH_SIZE; ++c) {
+		for (p = g_units_hash_table[c]; p != NULL; p = p->next) {
+			if (p->ladder_id == ladder_id && p->ladder_rank >= start_rank) {
+				p->ladder_rank += delta;
+			}
+		}
+	}
+}
+
+int ProcessUnitLadder(struct gl_list_t *items){
+	unsigned long i, len;
+	long ladder_id = -1;
+	long insert_rank = 0;
+	int errors = 0;
+	struct UnitLadderItem *item;
+	CONST dim_type *ladder_dim = NULL;
+	const struct Units *uconst;
+	struct Units *u;
+	struct gl_list_t *new_units;
+
+	if (items == NULL) {
+		return UnitsLadderError(NULL,0,"UNITS LADDER item list is NULL.");
+	}
+	len = gl_length(items);
+	if (len == 0) {
+		return UnitsLadderError(NULL,0,"UNITS LADDER must contain at least one item.");
+	}
+
+	new_units = gl_create(len);
+	item = (struct UnitLadderItem *)gl_fetch(items,1);
+	if (item != NULL && item->is_anchor) {
+		uconst = LookupUnits(SCP(item->name));
+		if (uconst == NULL) {
+			errors += UnitsLadderError(item->filename,item->linenum,
+				"UNITS LADDER anchor '%s' is not defined.",SCP(item->name));
+			gl_destroy(new_units);
+			return errors;
+		}
+		if (UnitsLadderId(uconst) < 0) {
+			errors += UnitsLadderError(item->filename,item->linenum,
+				"UNITS LADDER anchor '%s' is not a member of any ladder."
+				,SCP(item->name)
+			);
+			gl_destroy(new_units);
+			return errors;
+		}
+		ladder_id = UnitsLadderId(uconst);
+		insert_rank = UnitsLadderRank(uconst) + 1;
+		ladder_dim = UnitsDimensions(uconst);
+	}else{
+		ladder_id = g_units_next_ladder_id++;
+	}
+
+	for (i = 1; i <= len; ++i) {
+		item = (struct UnitLadderItem *)gl_fetch(items,i);
+		if (item == NULL) {
+			errors += UnitsLadderError(NULL,0,"NULL item in UNITS LADDER.");
+			continue;
+		}
+		if (item->is_anchor) {
+			if (i != 1) {
+				errors += UnitsLadderError(item->filename,item->linenum,
+					"UNITS LADDER anchor '%s' is only allowed as first item."
+					,SCP(item->name)
+				);
+			}
+			continue;
+		}
+
+		{
+			struct UnitDefinition *ud = CreateUnitDef(item->name,item->unitsexpr,item->filename,item->linenum);
+			if (ud == NULL) {
+				errors += UnitsLadderError(item->filename,item->linenum,
+					"Failed to create unit definition for '%s'.",SCP(item->name));
+				continue;
+			}
+			ProcessUnitDef(ud);
+			DestroyUnitDef(ud);
+		}
+
+		uconst = LookupUnits(SCP(item->name));
+		if (uconst == NULL) {
+			errors += UnitsLadderError(item->filename,item->linenum,
+				"Units '%s' could not be defined for UNITS LADDER.",SCP(item->name));
+			continue;
+		}
+		u = (struct Units *)uconst; /* storage is mutable, API is const-qualified */
+		if (UnitsLadderId(u) >= 0) {
+			errors += UnitsLadderError(item->filename,item->linenum,
+				"Units '%s' already belongs to ladder %ld."
+				,SCP(item->name),UnitsLadderId(u)
+			);
+			continue;
+		}
+		if (ladder_dim == NULL) {
+			ladder_dim = UnitsDimensions(u);
+		}else if (!SameDimen(ladder_dim,UnitsDimensions(u))) {
+			errors += UnitsLadderError(item->filename,item->linenum,
+				"Units '%s' has dimensions incompatible with this UNITS LADDER."
+				,SCP(item->name)
+			);
+			continue;
+		}
+		gl_append_ptr(new_units,(char *)u);
+	}
+
+	len = gl_length(new_units);
+	if (len > 0) {
+		if (insert_rank < 0) {
+			insert_rank = 0;
+		}
+		UnitsShiftRanks(ladder_id,insert_rank,(long)len);
+		for (i = 1; i <= len; ++i) {
+			u = (struct Units *)gl_fetch(new_units,i);
+			u->ladder_id = ladder_id;
+			u->ladder_rank = insert_rank + (long)(i - 1);
+		}
+	}
+	gl_destroy(new_units);
+	return errors;
+}
+
 /*
  * it is not appropriate to replace this with a pointer hashing
  * function since the string hashed may not be a symchar.
@@ -323,6 +530,8 @@ CONST struct Units *DefineUnits(symchar *c
     result->description = c;
     result->conversion_factor = conv;
     result->dim = dim;
+    result->ladder_id = -1;
+    result->ladder_rank = -1;
   }else{
     /* empty bucket */
     g_units_size++;
@@ -332,8 +541,23 @@ CONST struct Units *DefineUnits(symchar *c
     result->description = c;
     result->dim = dim;
     result->conversion_factor = conv;
+    result->ladder_id = -1;
+    result->ladder_rank = -1;
   }
   return result;
+}
+
+CONST struct Units *LookupUnitsByLadder(long ladder_id, long ladder_rank){
+	unsigned long c;
+	struct Units *p;
+	for (c = 0; c < UNITS_HASH_SIZE; ++c) {
+		for (p = g_units_hash_table[c]; p != NULL; p = p->next) {
+			if (p->ladder_id == ladder_id && p->ladder_rank == ladder_rank) {
+				return p;
+			}
+		}
+	}
+	return NULL;
 }
 
 
@@ -842,6 +1066,857 @@ void DumpUnits(FILE *file){
       }
     }
   }
+}
+
+/*----------------------------- units overrides -----------------------------*/
+
+#define UOVR_BUCKETS 257
+
+struct UnitsOverrideEntry{
+	char *scope;
+	char *name;
+	char *units;
+	const struct Units *u;
+	struct UnitsOverrideEntry *next;
+};
+
+struct UnitsOverridesDB{
+	struct UnitsOverrideEntry *type_buckets[UOVR_BUCKETS];
+	struct UnitsOverrideEntry *name_buckets[UOVR_BUCKETS];
+	char *simroot;
+	unsigned dirty;
+};
+
+static char *uovr_strdup(CONST char *s){
+	size_t n;
+	char *r;
+	if (s == NULL) {
+		return NULL;
+	}
+	n = strlen(s) + 1;
+	r = ASC_NEW_ARRAY(char,n);
+	if (r == NULL) {
+		return NULL;
+	}
+	memcpy(r,s,n);
+	return r;
+}
+
+static unsigned long uovr_hash_text(CONST char *s, int fold_case){
+	unsigned long h = 0;
+	unsigned char ch;
+	if (s == NULL) {
+		s = "";
+	}
+	while ((ch = (unsigned char)*s++) != '\0') {
+#ifdef _WIN32
+		if (ch == '\\') {
+			ch = '/';
+		}
+		if (fold_case) {
+			ch = (unsigned char)tolower(ch);
+		}
+#else
+		(void)fold_case;
+#endif
+		h = ((h * 131UL) + (unsigned long)ch) % UOVR_BUCKETS;
+	}
+	return h;
+}
+
+static int uovr_scope_eq(CONST char *a, CONST char *b){
+	if (a == NULL) {
+		a = "";
+	}
+	if (b == NULL) {
+		b = "";
+	}
+#ifdef _WIN32
+	unsigned char ca, cb;
+	while (*a != '\0' && *b != '\0') {
+		ca = (unsigned char)*a++;
+		cb = (unsigned char)*b++;
+		if (ca == '\\') {
+			ca = '/';
+		}
+		if (cb == '\\') {
+			cb = '/';
+		}
+		ca = (unsigned char)tolower(ca);
+		cb = (unsigned char)tolower(cb);
+		if (ca != cb) {
+			return 0;
+		}
+	}
+	return *a == '\0' && *b == '\0';
+#else
+	return strcmp(a,b) == 0;
+#endif
+}
+
+static unsigned long uovr_hash(CONST char *scope, CONST char *name){
+	unsigned long h1 = uovr_hash_text(scope,1);
+	unsigned long h2 = uovr_hash_text(name,0);
+	return (h1 * 33UL + h2) % UOVR_BUCKETS;
+}
+
+static struct UnitsOverrideEntry **uovr_bucket_head(
+	struct UnitsOverridesDB *db,
+	enum UnitsOverrideKind kind,
+	CONST char *scope,
+	CONST char *name
+){
+	unsigned long h;
+	if (db == NULL) {
+		return NULL;
+	}
+	h = uovr_hash(scope,name);
+	switch (kind) {
+	case UNITS_OVERRIDE_TYPE:
+		return &db->type_buckets[h];
+	case UNITS_OVERRIDE_NAME:
+		return &db->name_buckets[h];
+	default:
+		return NULL;
+	}
+}
+
+static struct UnitsOverrideEntry **uovr_find_ref(
+	struct UnitsOverridesDB *db,
+	enum UnitsOverrideKind kind,
+	CONST char *scope,
+	CONST char *name
+){
+	struct UnitsOverrideEntry **head;
+	struct UnitsOverrideEntry **ref;
+	CONST char *scope0 = (scope != NULL) ? scope : "";
+	if (name == NULL) {
+		return NULL;
+	}
+	head = uovr_bucket_head(db,kind,scope0,name);
+	if (head == NULL) {
+		return NULL;
+	}
+	ref = head;
+	while (*ref != NULL) {
+		if (uovr_scope_eq((*ref)->scope,scope0) && strcmp((*ref)->name,name) == 0) {
+			return ref;
+		}
+		ref = &(*ref)->next;
+	}
+	return ref;
+}
+
+static void uovr_free_entry(struct UnitsOverrideEntry *e){
+	if (e == NULL) {
+		return;
+	}
+	if (e->scope != NULL) {
+		ascfree(e->scope);
+	}
+	if (e->name != NULL) {
+		ascfree(e->name);
+	}
+	if (e->units != NULL) {
+		ascfree(e->units);
+	}
+	ascfree(e);
+}
+
+static void uovr_clear_buckets(struct UnitsOverrideEntry **buckets){
+	unsigned long i;
+	if (buckets == NULL) {
+		return;
+	}
+	for (i = 0; i < UOVR_BUCKETS; ++i) {
+		struct UnitsOverrideEntry *e = buckets[i];
+		while (e != NULL) {
+			struct UnitsOverrideEntry *n = e->next;
+			uovr_free_entry(e);
+			e = n;
+		}
+		buckets[i] = NULL;
+	}
+}
+
+struct UnitsOverridesDB *UnitsOverridesCreate(void){
+	struct UnitsOverridesDB *db = ASC_NEW_CLEAR(struct UnitsOverridesDB);
+	return db;
+}
+
+void UnitsOverridesDestroy(struct UnitsOverridesDB *db){
+	if (db == NULL) {
+		return;
+	}
+	uovr_clear_buckets(db->type_buckets);
+	uovr_clear_buckets(db->name_buckets);
+	if (db->simroot != NULL) {
+		ascfree(db->simroot);
+		db->simroot = NULL;
+	}
+	ascfree(db);
+}
+
+void UnitsOverridesClear(struct UnitsOverridesDB *db){
+	if (db == NULL) {
+		return;
+	}
+	uovr_clear_buckets(db->type_buckets);
+	uovr_clear_buckets(db->name_buckets);
+	db->dirty = 1;
+}
+
+int UnitsOverridesSetSimroot(
+	struct UnitsOverridesDB *db,
+	CONST char *simroot
+){
+	if (db == NULL) {
+		return 1;
+	}
+	if (db->simroot != NULL) {
+		ascfree(db->simroot);
+		db->simroot = NULL;
+	}
+	if (simroot != NULL && *simroot != '\0') {
+		db->simroot = uovr_strdup(simroot);
+		if (db->simroot == NULL) {
+			return 1;
+		}
+	}
+	db->dirty = 1;
+	return 0;
+}
+
+int UnitsOverridesSet(struct UnitsOverridesDB *db,
+	enum UnitsOverrideKind kind,
+	CONST char *scope,
+	CONST char *name,
+	CONST char *units
+){
+	struct UnitsOverrideEntry **ref;
+	struct UnitsOverrideEntry *e;
+	const struct Units *u;
+	unsigned long pos = 0;
+	int err = 0;
+	CONST char *scope0 = (scope != NULL) ? scope : "";
+
+	if (db == NULL || name == NULL || units == NULL || *name == '\0' || *units == '\0') {
+		return 1;
+	}
+	if (kind != UNITS_OVERRIDE_TYPE && kind != UNITS_OVERRIDE_NAME) {
+		return 1;
+	}
+	if (kind == UNITS_OVERRIDE_NAME && *scope0 == '\0') {
+		error_reporter(ASC_USER_WARNING,NULL,0,NULL,
+			"Ignoring global name override '%s' (name overrides must be file-scoped)",
+			name
+		);
+		return 1;
+	}
+
+	u = FindOrDefineUnits(units,&pos,&err);
+	if (u == NULL || err != 0) {
+		error_reporter(ASC_USER_ERROR,NULL,0,NULL,
+			"Invalid units override for '%s|%s': '%s'",
+			scope0,name,units
+		);
+		return 2;
+	}
+
+	ref = uovr_find_ref(db,kind,scope0,name);
+	if (ref == NULL) {
+		return 3;
+	}
+	if (*ref != NULL) {
+		e = *ref;
+		if (e->units != NULL) {
+			ascfree(e->units);
+		}
+		e->units = uovr_strdup(units);
+		if (e->units == NULL) {
+			return 4;
+		}
+		e->u = u;
+		db->dirty = 1;
+		return 0;
+	}
+
+	e = ASC_NEW_CLEAR(struct UnitsOverrideEntry);
+	if (e == NULL) {
+		return 4;
+	}
+	e->scope = uovr_strdup(scope0);
+	e->name = uovr_strdup(name);
+	e->units = uovr_strdup(units);
+	e->u = u;
+	if (e->scope == NULL || e->name == NULL || e->units == NULL) {
+		uovr_free_entry(e);
+		return 4;
+	}
+	e->next = NULL;
+	*ref = e;
+	db->dirty = 1;
+	return 0;
+}
+
+int UnitsOverridesUnset(struct UnitsOverridesDB *db,
+	enum UnitsOverrideKind kind,
+	CONST char *scope,
+	CONST char *name
+){
+	struct UnitsOverrideEntry **ref;
+	struct UnitsOverrideEntry *e;
+	CONST char *scope0 = (scope != NULL) ? scope : "";
+	if (db == NULL || name == NULL || *name == '\0') {
+		return 1;
+	}
+	ref = uovr_find_ref(db,kind,scope0,name);
+	if (ref == NULL || *ref == NULL) {
+		return 1;
+	}
+	e = *ref;
+	*ref = e->next;
+	uovr_free_entry(e);
+	db->dirty = 1;
+	return 0;
+}
+
+CONST struct Units *UnitsOverridesLookup(
+	struct UnitsOverridesDB *db,
+	enum UnitsOverrideKind kind,
+	CONST char *scope,
+	CONST char *name
+){
+	struct UnitsOverrideEntry **ref;
+	CONST char *scope0 = (scope != NULL) ? scope : "";
+	if (db == NULL || name == NULL || *name == '\0') {
+		return NULL;
+	}
+	ref = uovr_find_ref(db,kind,scope0,name);
+	if (ref == NULL || *ref == NULL) {
+		return NULL;
+	}
+	return (*ref)->u;
+}
+
+static CONST struct Units *uovr_validate_resolved(
+	struct UnitsOverridesDB *db,
+	enum UnitsOverrideKind kind,
+	CONST char *scope,
+	CONST char *name,
+	const dim_type *dim
+){
+	CONST struct Units *u = UnitsOverridesLookup(db,kind,scope,name);
+	if (u == NULL) {
+		return NULL;
+	}
+	if (!SameDimen(dim,UnitsDimensions(u))) {
+		error_reporter(ASC_USER_ERROR,NULL,0,NULL,
+			"Removing invalid units override '%s|%s' -> '%s' (dimension mismatch)",
+			(scope != NULL) ? scope : "", name, SCP(UnitsDescription(u))
+		);
+		UnitsOverridesUnset(db,kind,scope,name);
+		return NULL;
+	}
+	return u;
+}
+
+static CONST char *uovr_name_without_simroot(CONST char *qlfdid){
+	CONST char *dot;
+	if (qlfdid == NULL) {
+		return NULL;
+	}
+	dot = strchr(qlfdid,'.');
+	if (dot == NULL || dot[1] == '\0') {
+		return qlfdid;
+	}
+	return dot + 1;
+}
+
+CONST struct Units *UnitsOverridesResolve(
+	struct UnitsOverridesDB *db,
+	CONST char *scope,
+	CONST char *type_name,
+	CONST char *qlfdid,
+	CONST dim_type *dim
+){
+	CONST struct Units *u;
+	CONST char *scope0 = (scope != NULL) ? scope : "";
+	if (db == NULL || dim == NULL) {
+		return NULL;
+	}
+	if (IsWild(dim) || CmpDimen(dim,Dimensionless()) == 0) {
+		return NULL;
+	}
+	if (qlfdid != NULL && *qlfdid != '\0' && *scope0 != '\0') {
+		u = uovr_validate_resolved(db,UNITS_OVERRIDE_NAME,scope0,qlfdid,dim);
+		if (u != NULL) {
+			return u;
+		}
+		{
+			CONST char *relname = uovr_name_without_simroot(qlfdid);
+			if (relname != qlfdid) {
+				u = uovr_validate_resolved(db,UNITS_OVERRIDE_NAME,scope0,relname,dim);
+				if (u != NULL) {
+					return u;
+				}
+			}
+		}
+	}
+	if (type_name != NULL && *type_name != '\0') {
+		if (*scope0 != '\0') {
+			u = uovr_validate_resolved(db,UNITS_OVERRIDE_TYPE,scope0,type_name,dim);
+			if (u != NULL) {
+				return u;
+			}
+		}
+		u = uovr_validate_resolved(db,UNITS_OVERRIDE_TYPE,"",type_name,dim);
+		if (u != NULL) {
+			return u;
+		}
+	}
+	return NULL;
+}
+
+static char *uovr_ltrim(char *s){
+	if (s == NULL) {
+		return NULL;
+	}
+	while (*s != '\0' && isspace((unsigned char)*s)) {
+		++s;
+	}
+	return s;
+}
+
+static void uovr_rtrim(char *s){
+	size_t n;
+	if (s == NULL) {
+		return;
+	}
+	n = strlen(s);
+	while (n > 0 && isspace((unsigned char)s[n - 1])) {
+		s[--n] = '\0';
+	}
+}
+
+static char *uovr_parse_section_name(char *line){
+	char *s = uovr_ltrim(line);
+	size_t n;
+	if (s == NULL || *s != '[') {
+		return NULL;
+	}
+	++s;
+	n = strlen(s);
+	if (n == 0 || s[n - 1] != ']') {
+		return NULL;
+	}
+	s[n - 1] = '\0';
+	uovr_rtrim(s);
+	s = uovr_ltrim(s);
+	if (*s == '\0') {
+		return NULL;
+	}
+	return s;
+}
+
+int UnitsOverridesLoad(
+	struct UnitsOverridesDB *db,
+	CONST char *filename,
+	unsigned *loaded,
+	unsigned *errors
+){
+	FILE *fp;
+	char buf[4096];
+	unsigned nloaded = 0;
+	unsigned nerrors = 0;
+	char current_scope[4096];
+	int have_section = 0;
+	unsigned lineno = 0;
+
+	if (loaded != NULL) {
+		*loaded = 0;
+	}
+	if (errors != NULL) {
+		*errors = 0;
+	}
+	if (db == NULL || filename == NULL || *filename == '\0') {
+		return 1;
+	}
+
+	fp = fopen(filename,"r");
+	if (fp == NULL) {
+		if (errno == ENOENT) {
+			return 0;
+		}
+		error_reporter(ASC_USER_ERROR,NULL,0,NULL,
+			"Unable to read units overrides file '%s': %s",filename,strerror(errno)
+		);
+		return 1;
+	}
+	current_scope[0] = '\0';
+
+	while (fgets(buf,sizeof(buf),fp) != NULL) {
+		char *line;
+		char *eq;
+		char *key;
+		char *val;
+		char *section;
+		char *ovrname;
+		enum UnitsOverrideKind kind;
+		int rc;
+
+		++lineno;
+		buf[strcspn(buf,"\r\n")] = '\0';
+		line = buf;
+		{
+			char *hash = strchr(line,'#');
+			if (hash != NULL) {
+				*hash = '\0';
+			}
+		}
+		uovr_rtrim(line);
+		line = uovr_ltrim(line);
+		if (*line == '\0') {
+			continue;
+		}
+
+		if (*line == '[') {
+			section = uovr_parse_section_name(line);
+			if (section == NULL) {
+				error_reporter(ASC_USER_WARNING,NULL,0,NULL,
+					"Ignoring unknown units-override section at line %u in '%s'",
+					lineno,filename
+				);
+				++nerrors;
+				have_section = 0;
+			}else if (strcmp(section,"global") == 0) {
+				current_scope[0] = '\0';
+				have_section = 1;
+			}else{
+				snprintf(current_scope,sizeof(current_scope),"%s",section);
+				have_section = 1;
+			}
+			continue;
+		}
+
+		if (!have_section) {
+			error_reporter(ASC_USER_WARNING,NULL,0,NULL,
+				"Ignoring units-override entry outside [global]/[<file>] at line %u in '%s'",
+				lineno,filename
+			);
+			++nerrors;
+			continue;
+		}
+
+		eq = strchr(line,'=');
+		if (eq == NULL) {
+			error_reporter(ASC_USER_WARNING,NULL,0,NULL,
+				"Ignoring malformed units-override entry at line %u in '%s'",
+				lineno,filename
+			);
+			++nerrors;
+			continue;
+		}
+		*eq = '\0';
+		key = uovr_ltrim(line);
+		uovr_rtrim(key);
+		val = uovr_ltrim(eq + 1);
+		uovr_rtrim(val);
+
+		if (strncmp(key,"type.",5) == 0) {
+			kind = UNITS_OVERRIDE_TYPE;
+			ovrname = key + 5;
+		}else if (strncmp(key,"name.",5) == 0) {
+			kind = UNITS_OVERRIDE_NAME;
+			ovrname = key + 5;
+		}else{
+			error_reporter(ASC_USER_WARNING,NULL,0,NULL,
+				"Ignoring units-override key without type./name. prefix at line %u in '%s'",
+				lineno,filename
+			);
+			++nerrors;
+			continue;
+		}
+		ovrname = uovr_ltrim(ovrname);
+		uovr_rtrim(ovrname);
+		if (*ovrname == '\0' || *val == '\0') {
+			error_reporter(ASC_USER_WARNING,NULL,0,NULL,
+				"Ignoring empty units-override key/value at line %u in '%s'",
+				lineno,filename
+			);
+			++nerrors;
+			continue;
+		}
+		if (kind == UNITS_OVERRIDE_NAME && current_scope[0] == '\0') {
+			error_reporter(ASC_USER_WARNING,NULL,0,NULL,
+				"Ignoring global name override '%s' at line %u in '%s'",
+				ovrname,lineno,filename
+			);
+			++nerrors;
+			continue;
+		}
+		rc = UnitsOverridesSet(
+			db,
+			kind,
+			current_scope,
+			ovrname,
+			val
+		);
+		if (rc != 0) {
+			++nerrors;
+		}else{
+			++nloaded;
+		}
+	}
+	fclose(fp);
+	if (loaded != NULL) {
+		*loaded = nloaded;
+	}
+	if (errors != NULL) {
+		*errors = nerrors;
+	}
+	db->dirty = 0;
+	return 0;
+}
+
+static int uovr_scope_exists(struct gl_list_t *scopes, CONST char *scope){
+	unsigned long i, len;
+	if (scopes == NULL || scope == NULL) {
+		return 0;
+	}
+	len = gl_length(scopes);
+	for (i = 1; i <= len; ++i) {
+		CONST char *s = (CONST char *)gl_fetch(scopes,i);
+		if (s != NULL && uovr_scope_eq(s,scope)) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static void uovr_collect_scopes(struct gl_list_t *scopes, struct UnitsOverrideEntry **buckets){
+	unsigned long i;
+	for (i = 0; i < UOVR_BUCKETS; ++i) {
+		struct UnitsOverrideEntry *e;
+		for (e = buckets[i]; e != NULL; e = e->next) {
+			if (e->scope != NULL && e->scope[0] != '\0' && !uovr_scope_exists(scopes,e->scope)) {
+				char *dup = uovr_strdup(e->scope);
+				if (dup != NULL) {
+					gl_append_ptr(scopes,dup);
+				}
+			}
+		}
+	}
+}
+
+static void uovr_write_entries(
+	FILE *fp,
+	struct UnitsOverrideEntry **buckets,
+	CONST char *scope,
+	CONST char *prefix
+){
+	unsigned long i;
+	for (i = 0; i < UOVR_BUCKETS; ++i) {
+		struct UnitsOverrideEntry *e;
+		for (e = buckets[i]; e != NULL; e = e->next) {
+			if (uovr_scope_eq(e->scope,scope)) {
+				FPRINTF(fp,"%s%s = %s\n",prefix,e->name,e->units);
+			}
+		}
+	}
+}
+
+static CONST char *uovr_strip_configured_simroot(
+	CONST char *name,
+	CONST char *simroot
+){
+	size_t n;
+	if (name == NULL || simroot == NULL || *simroot == '\0') {
+		return name;
+	}
+	n = strlen(simroot);
+	if (strncmp(name,simroot,n) == 0 && name[n] == '.' && name[n + 1] != '\0') {
+		return name + n + 1;
+	}
+	return name;
+}
+
+static int uovr_scope_name_exists(
+	struct UnitsOverrideEntry **buckets,
+	CONST char *scope,
+	CONST char *name,
+	CONST struct UnitsOverrideEntry *skip
+){
+	struct UnitsOverrideEntry *e;
+	unsigned long h;
+	if (buckets == NULL || scope == NULL || name == NULL || *name == '\0') {
+		return 0;
+	}
+	h = uovr_hash(scope,name);
+	for (e = buckets[h]; e != NULL; e = e->next) {
+		if (e != skip && uovr_scope_eq(e->scope,scope) && strcmp(e->name,name) == 0) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static void uovr_write_name_entries(
+	FILE *fp,
+	struct UnitsOverrideEntry **buckets,
+	CONST char *scope,
+	CONST char *simroot
+){
+	unsigned long i;
+	for (i = 0; i < UOVR_BUCKETS; ++i) {
+		struct UnitsOverrideEntry *e;
+		for (e = buckets[i]; e != NULL; e = e->next) {
+			if (uovr_scope_eq(e->scope,scope)) {
+				CONST char *outname = uovr_strip_configured_simroot(e->name,simroot);
+				if (outname != e->name
+				 && uovr_scope_name_exists(buckets,scope,outname,e)) {
+					continue;
+				}
+				FPRINTF(fp,"name.%s = %s\n",outname,e->units);
+			}
+		}
+	}
+}
+
+static int uovr_mkdir_single(CONST char *path){
+#ifdef _WIN32
+	if (_mkdir(path) == 0 || errno == EEXIST) {
+#else
+	if (mkdir(path,0775) == 0 || errno == EEXIST) {
+#endif
+		return 0;
+	}
+	return 1;
+}
+
+static int uovr_ensure_parent_dir(CONST char *filename){
+	char *tmp;
+	char *slash;
+	char *p;
+	if (filename == NULL) {
+		return 1;
+	}
+	tmp = uovr_strdup(filename);
+	if (tmp == NULL) {
+		return 1;
+	}
+	slash = strrchr(tmp,'/');
+	if (slash == NULL) {
+		ascfree(tmp);
+		return 0;
+	}
+	*slash = '\0';
+	p = tmp;
+	if (*p == '/') {
+		++p;
+	}
+	while (*p != '\0') {
+		if (*p == '/') {
+			*p = '\0';
+			if (tmp[0] != '\0' && uovr_mkdir_single(tmp) != 0) {
+				ascfree(tmp);
+				return 1;
+			}
+			*p = '/';
+		}
+		++p;
+	}
+	if (tmp[0] != '\0' && uovr_mkdir_single(tmp) != 0) {
+		ascfree(tmp);
+		return 1;
+	}
+	ascfree(tmp);
+	return 0;
+}
+
+int UnitsOverridesSave(
+	struct UnitsOverridesDB *db,
+	CONST char *filename
+){
+	FILE *fp;
+	unsigned long i;
+	struct gl_list_t *scopes;
+	if (db == NULL || filename == NULL || *filename == '\0') {
+		return 1;
+	}
+	if (uovr_ensure_parent_dir(filename) != 0) {
+		error_reporter(ASC_USER_ERROR,NULL,0,NULL,
+			"Unable to create parent directories for '%s'",filename
+		);
+		return 1;
+	}
+	fp = fopen(filename,"w");
+	if (fp == NULL) {
+		error_reporter(ASC_USER_ERROR,NULL,0,NULL,
+			"Unable to write units overrides file '%s': %s",filename,strerror(errno)
+		);
+		return 1;
+	}
+	FPRINTF(fp,"# ASCEND units overrides\n");
+	FPRINTF(fp,"# sections: [global], [<relative-or-absolute-model-file>]\n");
+	FPRINTF(fp,"# keys: type.<type_name> = <units>, name.<qlfdid_without_simroot> = <units>\n\n");
+	FPRINTF(fp,"[global]\n");
+	uovr_write_entries(fp,db->type_buckets,"","type.");
+	scopes = gl_create(16L);
+	uovr_collect_scopes(scopes,db->type_buckets);
+	uovr_collect_scopes(scopes,db->name_buckets);
+	for (i = 1; i <= gl_length(scopes); ++i) {
+		char *scope = (char *)gl_fetch(scopes,i);
+		FPRINTF(fp,"\n[%s]\n",scope);
+		uovr_write_entries(fp,db->type_buckets,scope,"type.");
+		uovr_write_name_entries(fp,db->name_buckets,scope,db->simroot);
+	}
+	for (i = 1; i <= gl_length(scopes); ++i) {
+		char *scope = (char *)gl_fetch(scopes,i);
+		if (scope != NULL) {
+			ascfree(scope);
+		}
+	}
+	gl_destroy(scopes);
+	fclose(fp);
+	db->dirty = 0;
+	return 0;
+}
+
+char *UnitsOverridesDefaultPath(void){
+	CONST char *xdg = getenv("XDG_CONFIG_HOME");
+	CONST char *home = getenv("HOME");
+	CONST char *appdata = getenv("APPDATA");
+	char *out;
+	size_t n;
+	if (xdg != NULL && *xdg != '\0') {
+		n = strlen(xdg) + strlen("/ascend/units-overrides.ini") + 1;
+		out = ASC_NEW_ARRAY(char,n);
+		if (out == NULL) {
+			return NULL;
+		}
+		snprintf(out,n,"%s/ascend/units-overrides.ini",xdg);
+		return out;
+	}
+	if (home != NULL && *home != '\0') {
+		n = strlen(home) + strlen("/.config/ascend/units-overrides.ini") + 1;
+		out = ASC_NEW_ARRAY(char,n);
+		if (out == NULL) {
+			return NULL;
+		}
+		snprintf(out,n,"%s/.config/ascend/units-overrides.ini",home);
+		return out;
+	}
+	if (appdata != NULL && *appdata != '\0') {
+		n = strlen(appdata) + strlen("/ascend/units-overrides.ini") + 1;
+		out = ASC_NEW_ARRAY(char,n);
+		if (out == NULL) {
+			return NULL;
+		}
+		snprintf(out,n,"%s/ascend/units-overrides.ini",appdata);
+		return out;
+	}
+	return NULL;
 }
 
 

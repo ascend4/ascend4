@@ -1392,6 +1392,100 @@ static void test_constant_units_clause_mismatched_default_rejected(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_units_ladder_define_and_extend(void){
+	int status;
+	int has_error;
+	const struct Units *u_w;
+	const struct Units *u_kw;
+	const struct Units *u_hp;
+	const struct Units *u_mw;
+	long ladder_id;
+	const char *model = "\n\
+		UNITS LADDER\n\
+			W = {kg*m^2/s^3};\n\
+			kW = {1e3*W};\n\
+			MW = {1e6*W};\n\
+		END UNITS LADDER;\n\
+		UNITS LADDER\n\
+			kW;\n\
+			hp = {0.745699872*kW};\n\
+		END UNITS LADDER;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	u_w = LookupUnits("W");
+	u_kw = LookupUnits("kW");
+	u_hp = LookupUnits("hp");
+	u_mw = LookupUnits("MW");
+
+	CU_ASSERT_FATAL(u_w != NULL);
+	CU_ASSERT_FATAL(u_kw != NULL);
+	CU_ASSERT_FATAL(u_hp != NULL);
+	CU_ASSERT_FATAL(u_mw != NULL);
+
+	ladder_id = UnitsLadderId(u_w);
+	CU_ASSERT(ladder_id >= 0);
+	CU_ASSERT(UnitsLadderId(u_kw) == ladder_id);
+	CU_ASSERT(UnitsLadderId(u_hp) == ladder_id);
+	CU_ASSERT(UnitsLadderId(u_mw) == ladder_id);
+
+	CU_ASSERT(UnitsLadderRank(u_w) == 0);
+	CU_ASSERT(UnitsLadderRank(u_kw) == 1);
+	CU_ASSERT(UnitsLadderRank(u_hp) == 2);
+	CU_ASSERT(UnitsLadderRank(u_mw) == 3);
+
+	CU_ASSERT(LookupUnitsByLadder(ladder_id,0) == u_w);
+	CU_ASSERT(LookupUnitsByLadder(ladder_id,1) == u_kw);
+	CU_ASSERT(LookupUnitsByLadder(ladder_id,2) == u_hp);
+	CU_ASSERT(LookupUnitsByLadder(ladder_id,3) == u_mw);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_units_ladder_invalid_anchor_rejected(void){
+	int status;
+	int has_error;
+	const struct Units *u;
+	const char *model = "\n\
+		UNITS LADDER\n\
+			kg;\n\
+			slug = {14.59390294*kg};\n\
+		END UNITS LADDER;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "anchor") != NULL);
+
+	u = LookupUnits("slug");
+	CU_ASSERT(u == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -1441,6 +1535,8 @@ static void test_constant_units_clause_mismatched_default_rejected(void){
 	T(atom_declared_units_inherited_on_refine) \
 	T(atom_declared_units_null_without_units) \
 	T(constant_declared_units_inherited_on_refine) \
-	T(constant_units_clause_mismatched_default_rejected)
+	T(constant_units_clause_mismatched_default_rejected) \
+	T(units_ladder_define_and_extend) \
+	T(units_ladder_invalid_anchor_rejected)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)

@@ -31,6 +31,10 @@ public:
 	const SymChar getName() const;
 	const Dimensions getDimensions() const;
 	const double getConversion() const;
+	const bool hasLadder() const;
+	const long getLadderId() const;
+	const long getLadderRank() const;
+	const UnitsM getAutoScaledUnits(const double &value_si, const double &lower = 0.1, const double &upper = 1000.0) const;
 	const bool operator==(const UnitsM &other) const;
 };
 
