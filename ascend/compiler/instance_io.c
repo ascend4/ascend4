@@ -1188,12 +1188,11 @@ static
 int ProcessArrayDesc(struct gl_list_t *arraytypelist,
 		     CONST struct TypeDescription *desc)
 {
-  struct TypeDescription *tmp;
+  unsigned long pos;
 
-  /* FIXME how can you cast an array index to a pointer??? */
-  tmp = (struct TypeDescription *)gl_search(arraytypelist,(VOIDPTR)desc,
-                                            (CmpFunc)CmpDescPtrs);
-  if (tmp==NULL) {
+  /* gl_search returns a 1-based index, not a pointer. */
+  pos = gl_search(arraytypelist,(VOIDPTR)desc,(CmpFunc)CmpDescPtrs);
+  if (pos == 0) {
     gl_append_ptr(arraytypelist,(VOIDPTR)desc);
     return 1;		/* indicate if we added or not */
   }

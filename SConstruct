@@ -252,8 +252,19 @@ if not os.path.exists(default_ida_prefix):
 
 def cygpath(mypath):
 	cmd = [pathlib.Path(shutil.which('cygpath')),'-w',mypath]
-	print(f"CMD = {cmd}")
 	return subprocess.run(cmd,check=1,capture_output=1,encoding="utf=8").stdout.strip("\r\n \t")
+
+def existing_path_anysep(path):
+	path = str(path)
+	candidates = [path]
+	if "\\" in path:
+		candidates.append(path.replace("\\","/"))
+	if "/" in path:
+		candidates.append(path.replace("/","\\"))
+	for p in candidates:
+		if os.path.exists(p):
+			return p
+	return None
 
 def exists_maybe_cygpath(mypath):
 	path = str(mypath)
@@ -262,18 +273,67 @@ def exists_maybe_cygpath(mypath):
 			path = cygpath(path)
 		except Exception:
 			pass
-	if os.path.exists(path):
-		return path
+	found = existing_path_anysep(path)
+	if found:
+		return found
 	return None
 
+def get_effective_home():
+	"""
+	Return the user's home path, preferring MSYS2 $HOME when building under
+	MSYSTEM, because pathlib.Path.home() may resolve to the Windows profile dir.
+	"""
+	if os.environ.get('MSYSTEM'):
+		home = os.environ.get('HOME')
+		if home:
+			return home
+	return str(pathlib.Path.home())
+
 def get_default_user_local():
-	home_local = pathlib.Path.home() / '.local'
+	home_local = pathlib.Path(get_effective_home()) / '.local'
 	home_local_path = exists_maybe_cygpath(home_local)
 	if home_local_path:
 		return home_local_path
 	return default_prefix
 
 default_user_local = get_default_user_local()
+
+def get_default_cunit_paths():
+	"""
+	Choose CUnit defaults that are valid paths on this host so PackageVariable
+	validation doesn't fail before optional-component probing.
+	"""
+	candidates = []
+	home_local = exists_maybe_cygpath(pathlib.Path(get_effective_home()) / '.local')
+	if home_local:
+		candidates.append(home_local)
+	default_pref = exists_maybe_cygpath(default_prefix) or str(default_prefix)
+	if default_pref not in candidates:
+		candidates.append(default_pref)
+
+	for base in candidates:
+		inc = existing_path_anysep(os.path.join(base,"include"))
+		lib = existing_path_anysep(os.path.join(base,"lib"))
+		if inc and lib:
+			return base, inc, lib
+
+	for base in candidates:
+		inc = existing_path_anysep(os.path.join(base,"include"))
+		if inc:
+			break
+	else:
+		inc = os.path.join(str(default_pref),"include")
+
+	for base in candidates:
+		lib = existing_path_anysep(os.path.join(base,"lib"))
+		if lib:
+			break
+	else:
+		lib = os.path.join(str(default_pref),"lib")
+
+	return candidates[0] if candidates else str(default_pref), inc, lib
+
+default_cunit_prefix, default_cunit_cpppath, default_cunit_libpath = get_default_cunit_paths()
 
 soname_clean = "${SHLIBPREFIX}ascend${SHLIBSUFFIX}"
 soname_full = "%s%s" % (soname_clean,soname_major)
@@ -485,19 +545,19 @@ vars.Add(PackageVariable('DEFAULT_PREFIX'
 # Where was CUNIT installed?
 vars.Add(PackageVariable('CUNIT_PREFIX'
 	,"Where are your CUnit files?"
-	,default_user_local
+	,default_cunit_prefix
 ))
 
 # Where are the CUnit includes?
 vars.Add(PackageVariable('CUNIT_CPPPATH'
 	,"Where are your CUnit include files?"
-	,"$CUNIT_PREFIX/include"
+	,default_cunit_cpppath
 ))
 
 # Where are the CUnit libraries?
 vars.Add(PackageVariable('CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
-	,"$CUNIT_PREFIX/lib"
+	,default_cunit_libpath
 ))
 
 # ----- conopt-----

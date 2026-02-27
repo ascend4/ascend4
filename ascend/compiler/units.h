@@ -188,6 +188,11 @@ ASC_DLLSPEC int ProcessUnitLadder(struct gl_list_t *items);
  */
 
 ASC_DLLSPEC CONST struct Units *LookupUnits(CONST char *c);
+
+/**
+	Return the number of units currently defined in the units table.
+*/
+ASC_DLLSPEC unsigned long UnitsTableSize(void);
 /**<
  *  Check the units library for units with a description string which
  *  matches c.  If it is found, this function will return a non-NULL pointer;
