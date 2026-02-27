@@ -1,0 +1,75 @@
+REQUIRE "johnpye/dataset/pv_tes_common_full.a4c";
+
+MODEL opt_dispatch_full REFINES pv_tes_common_full;
+	minimum_operating_threshold IS_A factor_constant;
+	minimum_operating_threshold :== 0.70;
+
+	plant_on[dispatch_step] IS_A solver_binary;
+
+	FOR t IN dispatch_step CREATE
+		z_process_dispatch_upper[t]:
+			process_dispatch[t] <= process_demand * plant_on[t];
+
+		z_process_dispatch_lower[t]:
+			process_dispatch[t] >= minimum_operating_threshold * process_demand * plant_on[t];
+
+		z_process_balance[t]:
+			pv_to_process[t] + storage_to_process[t] + boiler_to_process[t] = process_dispatch[t];
+	END FOR;
+
+	z_annual_demand:
+		annual_demand = annualization_factor
+			* SUM[process_dispatch[t] * step_duration | t IN dispatch_step];
+
+	(* In optimal-dispatch mode, CF target is enforced on total annual production output *)
+	z_annual_production_target:
+		annual_demand = displaced_energy_target;
+
+METHODS
+METHOD default_self;
+	pv_capacity := 0 {MW};
+	storage_units := 0;
+	storage_units.relaxed := TRUE;
+	heater_capacity := 0 {MW};
+
+	storage_energy_capacity := 0 {GJ};
+	storage_charge_capacity := 0 {MW};
+	storage_discharge_capacity := 0 {MW};
+
+	process_demand := 3 {MW};
+	process_demand.fixed := TRUE;
+
+	annual_demand := displaced_energy_target;
+	displaced_energy := 0 {GJ};
+	boiler_energy := annual_demand;
+	pv_energy := 0 {GJ};
+	displaced_fraction := 0;
+
+	fuel_cost_annual := fuel_price * annual_demand;
+	pv_capex_annual := 0 {USD};
+	pv_om_annual := 0 {USD};
+	storage_capex_annual := 0 {USD};
+	storage_om_annual := 0 {USD};
+	heater_capex_annual := 0 {USD};
+	heater_om_annual := 0 {USD};
+	total_annual_cost := fuel_cost_annual;
+
+	FOR t IN dispatch_step DO
+		pv_available[t] := 0 {MW};
+		pv_to_process[t] := 0 {MW};
+		pv_to_storage[t] := 0 {MW};
+		storage_to_process[t] := 0 {MW};
+		pv_curtailment[t] := 0 {MW};
+		boiler_to_process[t] := 0 {MW};
+		process_dispatch[t] := 0 {MW};
+		plant_on[t] := 0;
+		storage_state[t] := 0 {GJ};
+	END FOR;
+END default_self;
+
+METHOD self_test;
+	ASSERT abs(annual_demand - displaced_energy_target) < 1e-6 {GJ};
+	ASSERT abs((displaced_energy + boiler_energy) - annual_demand) < 1e-4 {GJ};
+	ASSERT total_annual_cost >= 0 {USD};
+END self_test;
+END opt_dispatch_full;

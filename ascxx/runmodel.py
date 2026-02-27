@@ -1,6 +1,71 @@
-import pathlib, sys, argparse, re
+import pathlib, sys, argparse, re, time
 
-def run_ascend_model(filen,model=None,printvars=None,test=True):
+
+def build_progress_reporter(ascpy, progress_delay=10.0, progress_interval=5.0):
+	class ConsoleProgressReporter(ascpy.SolverReporter):
+		def __init__(self):
+			self._start = time.perf_counter()
+			self._last_emit = 0.0
+			self._progress_delay = max(0.0, float(progress_delay))
+			self._progress_interval = max(0.2, float(progress_interval))
+			ascpy.SolverReporter.__init__(self)
+
+		def _elapsed(self):
+			return time.perf_counter() - self._start
+
+		def _should_emit(self):
+			elapsed = self._elapsed()
+			if elapsed < self._progress_delay:
+				return False
+			if (elapsed - self._last_emit) < self._progress_interval:
+				return False
+			self._last_emit = elapsed
+			return True
+
+		def report(self, status):
+			if self._should_emit():
+				parts = [f"t={self._elapsed():.1f}s"]
+				try:
+					if status.isMIP():
+						if status.hasMipNodeCount():
+							parts.append(f"nodes={status.getMipNodeCount()}")
+						if status.hasMipGap():
+							parts.append(f"gap={status.getMipGap():.4g}")
+						if status.hasMipPrimalBound():
+							parts.append(f"primal={status.getMipPrimalBound():.6g}")
+						if status.hasMipDualBound():
+							parts.append(f"dual={status.getMipDualBound():.6g}")
+					elif status.hasLpObjective():
+						parts.append(f"obj={status.getLpObjective():.6g}")
+				except Exception:
+					pass
+				sys.stderr.write("progress: %s\n" % ", ".join(parts))
+				sys.stderr.flush()
+			return False
+
+		def finalise(self, status):
+			elapsed = self._elapsed()
+			if elapsed >= self._progress_delay:
+				sys.stderr.write(f"progress: finished in {elapsed:.1f}s\n")
+				sys.stderr.flush()
+
+		def reportProgress(self, solver_name, message):
+			if self._should_emit():
+				msg = str(message).strip()
+				if msg:
+					sys.stderr.write(f"progress: [{solver_name}] {msg}\n")
+					sys.stderr.flush()
+
+	return ConsoleProgressReporter()
+
+def run_ascend_model(
+	filen,
+	model=None,
+	printvars=None,
+	test=True,
+	progress_delay=10.0,
+	progress_interval=5.0
+):
 	"""
 	This function (and the associated command-line argument parser) is for
 	easing the job of quickly running ASCEND models from the command line.
@@ -38,7 +103,11 @@ def run_ascend_model(filen,model=None,printvars=None,test=True):
 		solver = M.getSolver()
 	except RuntimeError:
 		solver = ascpy.Solver("QRSlv")
-	M.solve(solver,ascpy.SolverReporter())
+	M.solve(solver,build_progress_reporter(
+		ascpy,
+		progress_delay=progress_delay,
+		progress_interval=progress_interval
+	))
 	
 	if printvars is not None:
 		test = False
@@ -71,11 +140,20 @@ if __name__=="__main__":
 	p.add_argument('--model','-m', help="Name of MODEL to instantiate (defaults to filename without extension)");
 	p.add_argument('-p', '--print', dest='printvars', action='extend', nargs='+', help='Variables to print (can be used multiple times). Implies --no-test.')
 	p.add_argument('--no-test','-n',action='store_false', help="Suppress running of 'self_test' method after solving");
+	p.add_argument('--progress-delay', type=float, default=10.0, help='Seconds before emitting solver progress (default: 10).')
+	p.add_argument('--progress-interval', type=float, default=5.0, help='Minimum seconds between progress lines (default: 5).')
 	args = p.parse_args()
 		
 	#print("sys.argv =",sys.argv)
 	try:
-		run_ascend_model(filen=args.file,model=args.model,printvars=args.printvars,test=args.no_test)
+		run_ascend_model(
+			filen=args.file,
+			model=args.model,
+			printvars=args.printvars,
+			test=args.no_test,
+			progress_delay=args.progress_delay,
+			progress_interval=args.progress_interval
+		)
 		sys.exit(0)
 	except Exception as e:
 		sys.stderr.write(f"{pathlib.Path(sys.argv[0]).name}: {str(e)}\n")
