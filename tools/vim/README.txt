@@ -14,6 +14,11 @@ If you use MinGW/MSYS then you can use the example .vimrc file (vimrc-mingw.txt)
 which will enable colour syntax highlighting. It seems to work for both the 'mintty'
 terminal as well as for the 'cygwin' (regular MSYS command-line) terminal. Enjoy!
 
+UPDATE (Feb 2026): For Ubuntu 24.04, you need to install as follows (maybe other ways
+work too):
+sudo co ascend.vim /usr/share/vim/vim91/syntax/
+cat vimrc-mingw.txt >> ~/.vimrc
+
 UPDATE (Jul 2016): The correct location for syntax files in Ubuntu 16.04 is 
 /usr/share/vim/vim74/syntax/
 Also, the file 'vimrc-mingw.txt' works fine for Linux, too:

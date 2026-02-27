@@ -92,6 +92,51 @@
                     <end>'</end>
                 </context>
 
+                <!-- TABLE block: lightweight validation only -->
+                <context id="table-block">
+                    <start>(?&lt;=\bTABLE\b)(?!\s*;?\s*$)</start>
+                    <end>\bEND\s+TABLE\b\s*;?</end>
+                    <include>
+                        <context ref="comment-multiline"/>
+                        <context ref="keywords"/>
+                        <context ref="types"/>
+                        <context ref="common-methods"/>
+                        <context ref="boolean"/>
+                        <context ref="functions"/>
+                        <context ref="float"/>
+                        <context ref="decimal"/>
+                        <context ref="bracedtext"/>
+
+                        <context id="table-string-double" style-ref="string" end-at-line-end="false">
+                            <start>"</start>
+                            <end>"</end>
+                        </context>
+
+                        <context id="table-string-single" style-ref="char" end-at-line-end="false">
+                            <start>'</start>
+                            <end>'</end>
+                        </context>
+
+                        <!-- Unterminated quoted token on a TABLE line -->
+                        <context id="table-unmatched-double-quote" style-ref="error">
+                            <match>"[^"\n]*$</match>
+                        </context>
+                        <context id="table-unmatched-single-quote" style-ref="error">
+                            <match>'[^'\n]*$</match>
+                        </context>
+
+                        <!-- Repeated delimiters like ',,', ';;', ',;', ';,' -->
+                        <context id="table-repeated-delimiter" style-ref="error">
+                            <match>[,;][ \t]*[,;]</match>
+                        </context>
+
+                        <!-- Obvious bad tokens/characters in TABLE payload -->
+                        <context id="table-invalid-char" style-ref="error">
+                            <match>[^A-Za-z0-9_ \t\r\n,;:=\.\-\+\[\]\(\)"']</match>
+                        </context>
+                    </include>
+                </context>
+
                 <!-- http://www.lysator.liu.se/c/ANSI-C-grammar-l.html -->
                 <context id="float" style-ref="floating-point">
                     <match extended="true">
@@ -122,14 +167,16 @@
 					<keyword>ASSERT</keyword>
 					<keyword>ATOM</keyword>
 					<keyword>CALL</keyword>	
-					<keyword>CASE</keyword>	
-					<keyword>CARD</keyword>
-					<keyword>CHECK</keyword>
+						<keyword>CASE</keyword>	
+						<keyword>CARD</keyword>
+						<keyword>COLUMN</keyword>
+						<keyword>CHECK</keyword>
 					<keyword>CHOICE</keyword>
 					<keyword>CONSTANT</keyword>
 					<keyword>CONDITIONAL</keyword>
 					<keyword>CREATE</keyword>
 					<keyword>DATA</keyword>
+					<keyword>DATASET</keyword>
 					<keyword>DEFAULT</keyword>
 					<keyword>DEFINITION</keyword>
 					<keyword>DIMENSION</keyword>
@@ -138,17 +185,20 @@
 					<keyword>ELSE</keyword>
 					<keyword>END</keyword>
 					<keyword>EXTERNAL</keyword>
-					<keyword>FIX</keyword>
-					<keyword>FOR</keyword>
-					<keyword>FREE</keyword>
-					<keyword>IF</keyword>
-					<keyword>IMPORT</keyword>
-					<keyword>IN</keyword>
+						<keyword>FIX</keyword>
+						<keyword>FOR</keyword>
+						<keyword>FROM</keyword>
+						<keyword>FREE</keyword>
+						<keyword>IF</keyword>
+						<keyword>IMPORT</keyword>
+						<keyword>INDEX</keyword>
+						<keyword>IN</keyword>
 					<keyword>INPUT</keyword>
-					<keyword>INTERSECTION</keyword>
-					<keyword>IS_A</keyword>
-					<keyword>IS_REFINED_TO</keyword>
-					<keyword>MAX</keyword>
+						<keyword>INTERSECTION</keyword>
+						<keyword>IS_A</keyword>
+						<keyword>IS_REFINED_TO</keyword>
+						<keyword>LADDER</keyword>
+						<keyword>MAX</keyword>
 					<keyword>MAXIMIZE</keyword>
 					<keyword>METHOD</keyword>
 					<keyword>METHODS</keyword>
@@ -159,9 +209,10 @@
 					<keyword>OF</keyword>
 					<keyword>OPTION</keyword>
 					<keyword>OR</keyword>
-					<keyword>OTHERWISE</keyword>
-					<keyword>OUTPUT</keyword>
-					<keyword>PROVIDE</keyword>
+						<keyword>OTHERWISE</keyword>
+						<keyword>OUTPUT</keyword>
+						<keyword>POSITIONAL</keyword>
+						<keyword>PROVIDE</keyword>
 					<keyword>PROD</keyword>
 					<keyword>REPLACE</keyword>
 					<keyword>REQUIRE</keyword>
@@ -176,6 +227,7 @@
 					<keyword>SUCH_THAT</keyword>
 					<keyword>SUM</keyword>
 					<keyword>SWITCH</keyword>
+					<keyword>TABLE</keyword>
 					<keyword>THEN</keyword>
 					<keyword>UNIVERSAL</keyword>
 					<keyword>UNION</keyword>
