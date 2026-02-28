@@ -1,0 +1,120 @@
+REQUIRE "atoms.a4l";
+
+(* Travelling Salesman Problem (TSP), solved as a MIP with MTZ subtour constraints.
+
+   Problem class references:
+   - Dantzig, Fulkerson, Johnson (1954): foundational TSP IP formulation
+     https://doi.org/10.1287/opre.2.4.393
+   - Miller, Tucker, Zemlin (1960): MTZ subtour elimination constraints
+     https://doi.org/10.1145/321043.321046
+
+   This is a compact asymmetric 8-city regression instance (hand-sized for CI),
+   with unique optimum objective 166 for this cost matrix.
+*)
+MODEL mip_tsp_mtz8;
+	c[1..8][1..8] IS_A factor_constant;
+	x[1..8][1..8] IS_A solver_binary;
+	u[1..8] IS_A solver_var;
+
+	c[1][1] :== 0;  c[1][2] :== 89; c[1][3] :== 22; c[1][4] :== 11;
+	c[1][5] :== 43; c[1][6] :== 39; c[1][7] :== 36; c[1][8] :== 25;
+
+	c[2][1] :== 21; c[2][2] :== 0;  c[2][3] :== 94; c[2][4] :== 77;
+	c[2][5] :== 19; c[2][6] :== 83; c[2][7] :== 62; c[2][8] :== 12;
+
+	c[3][1] :== 11; c[3][2] :== 19; c[3][3] :== 0;  c[3][4] :== 35;
+	c[3][5] :== 37; c[3][6] :== 72; c[3][7] :== 85; c[3][8] :== 11;
+
+	c[4][1] :== 79; c[4][2] :== 33; c[4][3] :== 99; c[4][4] :== 0;
+	c[4][5] :== 91; c[4][6] :== 97; c[4][7] :== 77; c[4][8] :== 61;
+
+	c[5][1] :== 36; c[5][2] :== 65; c[5][3] :== 83; c[5][4] :== 43;
+	c[5][5] :== 0;  c[5][6] :== 8;  c[5][7] :== 28; c[5][8] :== 97;
+
+	c[6][1] :== 62; c[6][2] :== 51; c[6][3] :== 43; c[6][4] :== 27;
+	c[6][5] :== 35; c[6][6] :== 0;  c[6][7] :== 51; c[6][8] :== 21;
+
+	c[7][1] :== 19; c[7][2] :== 56; c[7][3] :== 20; c[7][4] :== 53;
+	c[7][5] :== 52; c[7][6] :== 85; c[7][7] :== 0;  c[7][8] :== 41;
+
+	c[8][1] :== 13; c[8][2] :== 66; c[8][3] :== 76; c[8][4] :== 23;
+	c[8][5] :== 56; c[8][6] :== 18; c[8][7] :== 78; c[8][8] :== 0;
+
+	FOR i IN [1..8] CREATE
+		outdeg[i]: SUM[x[i][j] | j IN [1..8]] = 1;
+	END FOR;
+
+	FOR j IN [1..8] CREATE
+		indeg[j]: SUM[x[i][j] | i IN [1..8]] = 1;
+	END FOR;
+
+	FOR i IN [2..8] CREATE
+		FOR j IN [2..8] CREATE
+			mtz[i][j]: u[i] - u[j] + 8*x[i][j] <= 7;
+		END FOR;
+	END FOR;
+
+	obj: MINIMIZE SUM[ SUM[c[i][j]*x[i][j] | j IN [1..8]] | i IN [1..8] ];
+
+METHODS
+
+METHOD self_test;
+	ASSERT abs(SUM[ SUM[c[i][j]*x[i][j] | j IN [1..8]] | i IN [1..8] ] - 166) < 1e-7;
+
+	ASSERT abs(x[1][4] - 1) < 1e-7;
+	ASSERT abs(x[4][2] - 1) < 1e-7;
+	ASSERT abs(x[2][5] - 1) < 1e-7;
+	ASSERT abs(x[5][6] - 1) < 1e-7;
+	ASSERT abs(x[6][7] - 1) < 1e-7;
+	ASSERT abs(x[7][3] - 1) < 1e-7;
+	ASSERT abs(x[3][8] - 1) < 1e-7;
+	ASSERT abs(x[8][1] - 1) < 1e-7;
+END self_test;
+
+METHOD bound_self;
+	FOR i IN [1..8] DO
+		x[i][i].lower_bound := 0;
+		x[i][i].upper_bound := 0;
+	END FOR;
+
+	u[1].lower_bound := 0;
+	u[1].upper_bound := 0;
+
+	FOR i IN [2..8] DO
+		u[i].lower_bound := 1;
+		u[i].upper_bound := 7;
+	END FOR;
+END bound_self;
+
+METHOD default_self;
+	FOR i IN [1..8] DO
+		FOR j IN [1..8] DO
+			x[i][j] := 0;
+		END FOR;
+	END FOR;
+
+	x[1][4] := 1;
+	x[4][2] := 1;
+	x[2][5] := 1;
+	x[5][6] := 1;
+	x[6][7] := 1;
+	x[7][3] := 1;
+	x[3][8] := 1;
+	x[8][1] := 1;
+
+	u[1] := 0;
+	u[2] := 2;
+	u[3] := 6;
+	u[4] := 1;
+	u[5] := 3;
+	u[6] := 4;
+	u[7] := 5;
+	u[8] := 7;
+END default_self;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+END on_load;
+
+END mip_tsp_mtz8;

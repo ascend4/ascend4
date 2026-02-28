@@ -1,0 +1,39 @@
+REQUIRE "atoms.a4l";
+
+MODEL highs_opts;
+	x, y, s1, s2 IS_A factor;
+
+	c1: x + y + s1 = 4;
+	c2: x + s2 = 2;
+	obj: MINIMIZE -3*x -2*y;
+
+METHODS
+METHOD on_load;
+	x.lower_bound := 0;
+	y.lower_bound := 0;
+	s1.lower_bound := 0;
+	s2.lower_bound := 0;
+
+	x := 0.5;
+	y := 0.5;
+	s1 := 3.0;
+	s2 := 1.5;
+
+	SOLVER HiGHS;
+	OPTION presolve 'on';
+	OPTION solver 'simplex';
+	OPTION parallel 'off';
+	OPTION progress_callbacks FALSE;
+	OPTION threads 1;
+	OPTION random_seed 7;
+	OPTION time_limit 5.0;
+	OPTION mip_rel_gap 1e-6;
+	OPTION mip_abs_gap 1e-7;
+	SOLVE;
+
+	ASSERT abs(x - 2) < 1e-7;
+	ASSERT abs(y - 2) < 1e-7;
+	ASSERT abs(s1) < 1e-7;
+	ASSERT abs(s2) < 1e-7;
+END on_load;
+END highs_opts;

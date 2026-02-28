@@ -42,6 +42,11 @@
 # define MSG(ARGS...) ((void)0)
 #endif
 
+// Scope guard for GIL; keep returns outside the guarded block.
+#define PY_GIL_GUARD(name) \
+	PyGILState_STATE name = PyGILState_Ensure(); \
+	for (int _once = 1; _once; _once = 0, PyGILState_Release(name))
+
 
 ImportHandlerCreateFilenameFn extpy_filename;
 ImportHandlerImportFn extpy_import;
@@ -112,96 +117,103 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 		, *mainmodule=NULL, *errstring=NULL, *errtypestring=NULL;
 	PyObject *perrtype=NULL, *perrvalue=NULL, *perrtrace=NULL;
 
-	int ret;
+	int ret = 1;
 	struct ExtPyData *extpydata;
 
 	/* cast user data to PyObject pointer */
 	extpydata = (struct ExtPyData *)user_data;
 
-	mainmodule = PyImport_AddModule("__main__");
-	if(mainmodule==NULL){
-		MSG("Unable to retrieve __main__ module");
-		ret = 1;
-		goto cleanup_extpy_invokemethod;
+	if(!Py_IsInitialized()){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Python is not initialized");
+		return 1;
 	}
 
-	dict = PyModule_GetDict(mainmodule);
-	if(dict==NULL){
-		MSG("Unable to retrieve __main__ dict");
-		ret = 1;
-		goto cleanup_extpy_invokemethod;
+	PY_GIL_GUARD(gstate){
+		do {
+			mainmodule = PyImport_AddModule("__main__");
+			if(mainmodule==NULL){
+				MSG("Unable to retrieve __main__ module");
+				ret = 1;
+				break;
+			}
+
+			dict = PyModule_GetDict(mainmodule);
+			if(dict==NULL){
+				MSG("Unable to retrieve __main__ dict");
+				ret = 1;
+				break;
+			}
+
+			MSG("Running python method '%s'",extpydata->name);
+
+			if(!PyCallable_Check(extpydata->fn)){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"user_data is not a PyCallable");
+				ret = 1;
+				break;
+			}
+
+			/*
+				We need to be able to convert C 'struct Instance' pointers to Python 'Instance' objects.
+				This functionality is implemented in 'ascpy' but we're not going to link to that here,
+				so we will use the importhandler 'setsharedpointer' trick to pass the object to the
+				'registry' then write a routine in ascpy that will cast it into the appropriate
+				Python object.
+			*/
+			importhandler_setsharedpointer("context",(void *)context);
+
+			PyErr_Clear();
+			pyinstance = PyRun_String("ascpy.Registry().getInstance('context')",Py_eval_input,dict,dict);
+			if(PyErr_Occurred()){
+				MSG("Failed retrieving instance");
+				ret = 1;
+				break;
+			}
+
+			arglist = Py_BuildValue("(O)", pyinstance);
+
+
+			PyErr_Clear();
+			result = PyObject_CallObject(extpydata->fn, arglist);
+			Py_XDECREF(result); // result is a new ref; we don't use it.
+			
+			if(PyErr_Occurred()){
+				MSG("Error occured in PyObject_CallObject");
+
+				/* get the content of the error message */
+				PyErr_Fetch(&perrtype, &perrvalue, &perrtrace);
+
+				errtypestring = NULL;
+				if(perrtype != NULL
+					&& (errtypestring = PyObject_Str(perrtype)) != NULL
+					&& PyUnicode_Check(errtypestring)
+				){
+					// nothing
+				}else{
+					errtypestring = Py_BuildValue("");
+				}
+
+				errstring = NULL;
+				if(perrvalue != NULL
+					&& (errstring = PyObject_Str(perrvalue)) != NULL
+					&& PyUnicode_Check(errstring)
+				){
+					error_reporter(ASC_PROG_ERR
+						,extpydata->name,0
+						,PyUnicode_AsUTF8(errtypestring)
+						,"%s",PyUnicode_AsUTF8(errstring)
+					);
+				}else{
+					error_reporter(ASC_PROG_ERR,extpydata->name,0,extpydata->name,"(unknown python error)");
+				}
+				PyErr_Print();
+				ret = 1;
+				break;
+			}
+
+			ret=0;
+		} while(0);
 	}
 
-	MSG("Running python method '%s'",extpydata->name);
-
-	if(!PyCallable_Check(extpydata->fn)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"user_data is not a PyCallable");
-		ret = 1;
-		goto cleanup_extpy_invokemethod;
-	}
-
-	/*
-		We need to be able to convert C 'struct Instance' pointers to Python 'Instance' objects.
-		This functionality is implemented in 'ascpy' but we're not going to link to that here,
-		so we will use the importhandler 'setsharedpointer' trick to pass the object to the
-		'registry' then write a routine in ascpy that will cast it into the appropriate
-		Python object.
-	*/
-	importhandler_setsharedpointer("context",(void *)context);
-
-	PyErr_Clear();
-	pyinstance = PyRun_String("ascpy.Registry().getInstance('context')",Py_eval_input,dict,dict);
-	if(PyErr_Occurred()){
-		MSG("Failed retrieving instance");
-		ret = 1;
-		goto cleanup_extpy_invokemethod;
-	}
-
-	arglist = Py_BuildValue("(O)", pyinstance);
-
-
-	PyErr_Clear();
-	result = PyEval_CallObject(extpydata->fn, arglist);
-	(void)result; // we don't use the result.
-	
-	if(PyErr_Occurred()){
-		MSG("Error occured in PyEval_CallObject");
-
-		/* get the content of the error message */
-		PyErr_Fetch(&perrtype, &perrvalue, &perrtrace);
-
-		errtypestring = NULL;
-		if(perrtype != NULL
-			&& (errtypestring = PyObject_Str(perrtype)) != NULL
-		    && PyUnicode_Check(errtypestring)
-		){
-			// nothing
-		}else{
-			errtypestring = Py_BuildValue("");
-		}
-
-		errstring = NULL;
-		if(perrvalue != NULL
-			&& (errstring = PyObject_Str(perrvalue)) != NULL
-		    && PyUnicode_Check(errstring)
-		){
-			error_reporter(ASC_PROG_ERR
-				,extpydata->name,0
-				,PyUnicode_AsUTF8(errtypestring)
-				,"%s",PyUnicode_AsUTF8(errstring)
-			);
-		}else{
-			error_reporter(ASC_PROG_ERR,extpydata->name,0,extpydata->name,"(unknown python error)");
-		}
-		PyErr_Print();
-		ret = 1;
-		goto cleanup_extpy_invokemethod;
-	}
-
-	ret=0;
-
-cleanup_extpy_invokemethod:
-	Py_XDECREF(dict);
 	Py_XDECREF(arglist);
 	Py_XDECREF(pyinstance);
 	Py_XDECREF(errstring);
@@ -219,7 +231,11 @@ cleanup_extpy_invokemethod:
 int extpy_destroy(void *user_data){
 	struct ExtPyData *extpydata;
 	extpydata = (struct ExtPyData *)user_data;
-	Py_DECREF(extpydata->fn);
+	if(Py_IsInitialized()){
+		PY_GIL_GUARD(gstate){
+			Py_DECREF(extpydata->fn);
+		}
+	}
 	ASC_FREE(extpydata->name);
 	ASC_FREE(extpydata);
 	return 0;
@@ -238,6 +254,7 @@ static PyObject *extpy_getbrowser(PyObject *self, PyObject *args){
 	if(browser==NULL){
 		return Py_BuildValue("");
 	}
+	Py_INCREF(browser);
 	return browser;
 	/* return Py_BuildValue("O",browser);*/
 }
@@ -284,16 +301,15 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 	// Retrieve __doc__ attribute (func_doc is deprecated)
 	docstring = PyObject_GetAttrString(fn, "__doc__");
 	if(!docstring){
+		PyErr_Clear();
 		cdocstring = "(error retrieving docstring)";
 	}else if(docstring == Py_None){
 		cdocstring = "(no docstring provided)";
 	}else{
 		if(!PyUnicode_Check(docstring)){
-#ifdef EXTPY_DEBUG
-			const char *data = PyUnicode_DATA(docstring);
-			MSG("docstring is '%s'",data);
-#endif
 			PyErr_SetString(PyExc_TypeError,"docstring is not unicode??");
+			Py_DECREF(name);
+			Py_DECREF(docstring);
 			return NULL;
 		}
 		cdocstring = PyUnicode_AsUTF8(docstring);
@@ -324,6 +340,8 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		PyErr_SetString(PyExc_Exception,"unable to register script method");
 		Py_DECREF(name);
 		if (docstring) Py_DECREF(docstring);
+		ASC_FREE(extpydata->name);
+		ASC_FREE(extpydata);
 		return NULL;
 	}
 
@@ -397,6 +415,7 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	name = ospath_str(fp);
 	FILE *f;
 	int iserr;
+	int ret = 1;
 
 	MSG("Importing Python script %s",name);
 
@@ -415,96 +434,101 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		return 1;
 	}
 
-
-	PyObject *mod = PyInit_extpy();
-	if (mod == NULL) {
-		PyErr_Print();
-		MSG("Failed to create 'extpy' module");
-		return 1;
-	}else{
-		MSG("Module created");
-	}
-	
-	// Retrieve the modules dictionary
-	PyObject *modulesDict = PyImport_GetModuleDict();
-
-	// Add your module to the modules dictionary
-	if (PyDict_SetItemString(modulesDict, "extpy", mod) < 0) {
-		PyErr_Print();
-		MSG("Failed to add 'extpy' to the modules dictionary");
-		Py_DECREF(mod);
-		return 1;
-	}
-
-	// Decrease reference count of the module
-	Py_DECREF(mod);
-
-	MSG("Module 'extpy' added to Python's modules dictionary");
-
-	MSG("Importing 'extpy'");
-	PyObject *pimp = PyImport_ImportModule("extpy");
-	if(!pimp){
-		PyErr_Print();
-		MSG("Failed importing 'extpy'");
-	}else{
-		MSG("Imported extpy OK!");
-	}
-
-	MSG("Importing 'ascpy'");
-	if(PyRun_SimpleString("import ascpy")){
-		PyErr_Print();
-		MSG("Failed importing 'ascpy'");
-		ASC_FREE(name);
-		return 1;
-	}else{
-		MSG("Imported 'ascpy' OK!");
-	}
-
-	MSG("Reading script '%s'",name);
-	f = fopen(name,"r");
-	if(f==NULL){
-		MSG("Failed opening script");
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to open '%s' (%s)",partialpath,name);
-		ASC_FREE(name);
-		return 1;
-	}
-	PyErr_Clear();
-
-	MSG("Running script '%s'",name);
-	iserr = PyRun_AnyFileEx(f,name,1);
-
-	if(iserr){
-		MSG("Failed running script");
-		PyObject *ptype, *pvalue, *ptraceback;
-		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-		PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
-
-		// Convert the error value to a string, if it's not already
-		PyObject* str_exc_value = PyObject_Str(pvalue);
-		if (str_exc_value != NULL) {
-			// Convert Python string to C string
-			const char* error_msg = PyUnicode_AsUTF8(str_exc_value);
-			if (error_msg != NULL) {
-				// Output or log the error message using your preferred method
-				ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to run '%s' (%s):\n%s", partialpath, name, error_msg);
+	PY_GIL_GUARD(gstate){
+		do {
+			PyObject *mod = PyInit_extpy();
+			if (mod == NULL) {
+				PyErr_Print();
+				MSG("Failed to create 'extpy' module");
+				ret = 1;
+				break;
+			}else{
+				MSG("Module created");
 			}
-			Py_DECREF(str_exc_value);
-		}else{
-			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to run '%s' (%s).", partialpath, name);
-		}
+			
+			// Retrieve the modules dictionary
+			PyObject *modulesDict = PyImport_GetModuleDict();
 
-		// Remember to decref the objects you have fetched
-		Py_XDECREF(ptype);
-		Py_XDECREF(pvalue);
-		Py_XDECREF(ptraceback);	
-		ASC_FREE(name);
-		return 1;
+			// Add your module to the modules dictionary
+			if (PyDict_SetItemString(modulesDict, "extpy", mod) < 0) {
+				PyErr_Print();
+				MSG("Failed to add 'extpy' to the modules dictionary");
+				Py_DECREF(mod);
+				ret = 1;
+				break;
+			}
+
+			// Decrease reference count of the module
+			Py_DECREF(mod);
+
+			MSG("Module 'extpy' added to Python's modules dictionary");
+
+			MSG("Importing 'extpy'");
+			PyObject *pimp = PyImport_ImportModule("extpy");
+			if(!pimp){
+				PyErr_Print();
+				MSG("Failed importing 'extpy'");
+			}else{
+				MSG("Imported extpy OK!");
+				Py_DECREF(pimp);
+			}
+
+			MSG("Importing 'ascpy'");
+			if(PyRun_SimpleString("import ascpy")){
+				PyErr_Print();
+				MSG("Failed importing 'ascpy'");
+				ret = 1;
+				break;
+			}else{
+				MSG("Imported 'ascpy' OK!");
+			}
+
+			MSG("Reading script '%s'",name);
+			f = fopen(name,"r");
+			if(f==NULL){
+				MSG("Failed opening script");
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to open '%s' (%s)",partialpath,name);
+				ret = 1;
+				break;
+			}
+			PyErr_Clear();
+
+			MSG("Running script '%s'",name);
+			iserr = PyRun_AnyFileEx(f,name,1);
+
+			if(iserr){
+				MSG("Failed running script");
+				PyObject *ptype, *pvalue, *ptraceback;
+				PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+				PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+
+				// Convert the error value to a string, if it's not already
+				PyObject* str_exc_value = PyObject_Str(pvalue);
+				if (str_exc_value != NULL) {
+					// Convert Python string to C string
+					const char* error_msg = PyUnicode_AsUTF8(str_exc_value);
+					if (error_msg != NULL) {
+						// Output or log the error message using your preferred method
+						ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to run '%s' (%s):\n%s", partialpath, name, error_msg);
+					}
+					Py_DECREF(str_exc_value);
+				}else{
+					ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to run '%s' (%s).", partialpath, name);
+				}
+
+				// Remember to decref the objects you have fetched
+				Py_XDECREF(ptype);
+				Py_XDECREF(pvalue);
+				Py_XDECREF(ptraceback);	
+				ret = 1;
+				break;
+			}
+
+			MSG("Imported python script '%s'\n",partialpath);
+			ret = 0;
+		} while(0);
 	}
-
-	MSG("Imported python script '%s'\n",partialpath);
 
 	ASC_FREE(name);
-	return 0;
+	return ret;
 }
-
-

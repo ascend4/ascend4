@@ -228,7 +228,7 @@ real64 var_lower_bound(struct var_variable *var)
   return( RealAtomValue(c) );
 }
 
-void var_set_lower_bound(struct var_variable *var, real64 lower_bound)
+ASC_DLLSPEC void var_set_lower_bound(struct var_variable *var, real64 lower_bound)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
@@ -260,7 +260,7 @@ real64 var_upper_bound(struct var_variable *var)
   return( RealAtomValue(c) );
 }
 
-void var_set_upper_bound(struct var_variable *var, real64 upper_bound)
+ASC_DLLSPEC void var_set_upper_bound(struct var_variable *var, real64 upper_bound)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
@@ -335,7 +335,7 @@ void var_set_fixed(struct var_variable *var, uint32 fixed)
   var_set_flagbit(var,VAR_FIXED,fixed);
 }
 
-uint32 var_relaxed(struct var_variable *var)
+ASC_DLLSPEC uint32 var_relaxed(struct var_variable *var)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
@@ -616,4 +616,3 @@ boolean solver_semi( SlvBackendToken inst)
   type = InstanceTypeDesc(IPTR(inst));
   return( type == MoreRefined(type,g_solver_semi_type) );
 }
-

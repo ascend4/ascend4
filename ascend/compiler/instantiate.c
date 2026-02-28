@@ -28,6 +28,9 @@
 
 #include "instantiate.h"
 
+#include <ctype.h>
+#include <strings.h>
+
 #include <ascend/utilities/bit.h>
 
 #include "vlist.h"
@@ -38,10 +41,16 @@
 #include "statement.h"
 #include "type_desc.h"
 #include "type_descio.h"
+#include <ascend/general/ascMalloc.h>
+#include <ascend/general/dstring.h>
+#include <ascend/general/ospath.h>
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/utilities/config.h>
 #include "module.h"
 #include "library.h"
 #include "sets.h"
 #include "setio.h"
+#include "units.h"
 #include "extfunc.h"
 #include "extcall.h"
 #include "forvars.h"
@@ -91,6 +100,18 @@
 
 #include <stdarg.h>
 #include <errno.h>
+#include <string.h>
+#include <stdint.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <time.h>
+
+#ifdef ASC_WITH_ZLIB
+# include <zlib.h>
+#endif
+#ifdef ASC_WITH_LZMA
+# include <lzma.h>
+#endif
 
 #include <ascend/utilities/config.h>
 #include <ascend/general/platform.h>
@@ -140,6 +161,12 @@
 #define NO_INCIDENCES 7         /* avg number of vars in a external reln */
 
 static int g_iteration = 0;	/* the current iteration. */
+/**
+ * Tracks whether any DATASET statements were executed in the current
+ * pass-1 instantiation cycle. Large DATASET-backed constant arrays can
+ * make full pass-1 structural diagnostics very expensive.
+ */
+static int g_pass1_saw_dataset = 0;
 
 /* moved from tcltk/generic/interface/SimsProc.c */
 struct Instance *g_cursim;
@@ -225,6 +252,7 @@ static int CheckVarList(struct Instance *, struct Statement *);
 static int CheckWhereStatements(struct Instance *,struct StatementList *);
 static int ExecuteISA(struct Instance *, struct Statement *);
 static int ExecuteCASGN(struct Instance *, struct Statement *);
+static int ExecuteTABLE(struct Instance *, struct Statement *);
 static int DigestArguments(struct Instance *,
                     struct gl_list_t *, struct StatementList *,
                     struct StatementList *, struct Statement *);
@@ -4575,17 +4603,20 @@ static int ExecuteATS(struct Instance *inst, struct Statement *statement){
     if ((gl_length(instances)==0)||(MostRefined(instances)!=NULL)){
       len = gl_length(instances);
       if (len>1){
+        int merge_failed = 0;
         inst1 = (struct Instance *)gl_fetch(instances,1);
         for(c=2;c<=len;c++){
           inst2 = (struct Instance *)gl_fetch(instances,c);
           inst1 = MergeInstances(inst1,inst2);
           if (inst1==NULL){
-            STATEMENT_ERROR(statement, "Fatal ARE_THE_SAME error");
-            ASC_PANIC("Fatal ARE_THE_SAME error");
-            /*NOTREACHED Wanna bet? ! */
+            STATEMENT_ERROR(statement, "ARE_THE_SAME merge failed");
+            merge_failed = 1;
+            break;
           }
         }
-        PostMergeCheck(inst1);
+        if(!merge_failed){
+          PostMergeCheck(inst1);
+        }
       }
     }else{
       STATEMENT_ERROR(statement,
@@ -6064,6 +6095,3357 @@ static int AssignStructuralValue(struct Instance *inst
   }
 }
 
+struct table_domain_t {
+  struct set_t *set;
+  enum set_kind kind;
+  unsigned long len;
+};
+
+struct dataset_column_t {
+  symchar *name;
+  char *units; /* optional units string */
+};
+
+struct dataset_row_t {
+  char **cells;
+  char *storage;
+};
+
+struct dataset_table_t {
+  unsigned ncols;
+  struct dataset_column_t *cols;
+  unsigned nrows;
+  struct dataset_row_t *rows;
+};
+
+struct dataset_cache_entry_t {
+  char *path;
+  struct dataset_table_t *table;
+  struct dataset_cache_entry_t *next;
+};
+
+static struct dataset_cache_entry_t *g_dataset_cache = NULL;
+
+static void TableDomainDestroy(struct table_domain_t *domain){
+  if (domain->set != NULL) {
+    DestroySet(domain->set);
+    domain->set = NULL;
+  }
+  domain->kind = empty_set;
+  domain->len = 0;
+}
+
+static void DatasetTableDestroy(struct dataset_table_t *table)
+{
+  unsigned r;
+  unsigned c;
+  if (table == NULL) {
+    return;
+  }
+  if (table->cols != NULL) {
+    for (c = 0; c < table->ncols; ++c) {
+      if (table->cols[c].units != NULL) {
+        ascfree(table->cols[c].units);
+      }
+    }
+    ascfree(table->cols);
+  }
+  if (table->rows != NULL) {
+    for (r = 0; r < table->nrows; ++r) {
+      if (table->rows[r].storage != NULL) {
+        ascfree(table->rows[r].storage);
+      }
+      if (table->rows[r].cells != NULL) {
+        ascfree(table->rows[r].cells);
+      }
+    }
+    ascfree(table->rows);
+  }
+  ascfree(table);
+}
+
+static void DatasetCacheClear(void)
+{
+  struct dataset_cache_entry_t *entry = g_dataset_cache;
+  while (entry != NULL) {
+    struct dataset_cache_entry_t *next = entry->next;
+    if (entry->path != NULL) {
+      ascfree(entry->path);
+    }
+    DatasetTableDestroy(entry->table);
+    ascfree(entry);
+    entry = next;
+  }
+  g_dataset_cache = NULL;
+}
+
+static struct dataset_table_t *DatasetCacheGet(const char *path)
+{
+  struct dataset_cache_entry_t *entry;
+  if (path == NULL) {
+    return NULL;
+  }
+  for (entry = g_dataset_cache; entry != NULL; entry = entry->next) {
+    if (entry->path != NULL && strcmp(entry->path,path) == 0) {
+      return entry->table;
+    }
+  }
+  return NULL;
+}
+
+static void DatasetCacheInsert(const char *path, struct dataset_table_t *table)
+{
+  struct dataset_cache_entry_t *entry;
+  if (path == NULL || table == NULL) {
+    return;
+  }
+  entry = ASC_NEW(struct dataset_cache_entry_t);
+  entry->path = ASC_STRDUP(path);
+  entry->table = table;
+  entry->next = g_dataset_cache;
+  g_dataset_cache = entry;
+}
+
+static int TableInitDomainFromSet(CONST struct set_t *set,
+                                  struct Statement *statement,
+                                  struct table_domain_t *domain)
+{
+  domain->set = CopySet(set);
+  if (domain->set == NULL) {
+    STATEMENT_ERROR(statement,"TABLE index set is unavailable");
+    return 0;
+  }
+  domain->kind = SetKind(domain->set);
+  if (domain->kind != integer_set && domain->kind != string_set && domain->kind != empty_set) {
+    STATEMENT_ERROR(statement,"TABLE index set type is unsupported");
+    TableDomainDestroy(domain);
+    return 0;
+  }
+  domain->len = Cardinality(domain->set);
+  return 1;
+}
+
+static int TableEvaluateDomains(struct Instance *inst,
+                                CONST struct Set *set_expr,
+                                struct Statement *statement,
+                                struct table_domain_t *domains,
+                                unsigned max_domains,
+                                unsigned *num_domains)
+{
+  struct value_t value, ordered;
+  struct gl_list_t *list;
+  struct value_t *vptr;
+  int saved_list_mode;
+  unsigned long c,len;
+  int all_sets = 0;
+  IVAL(value);
+  IVAL(ordered);
+  *num_domains = 0;
+
+  asc_assert(GetEvaluationContext()==NULL);
+  SetEvaluationContext(inst);
+  value = EvaluateSet(set_expr,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+
+  switch (ValueKind(value)) {
+  case set_value:
+    if (max_domains < 1) {
+      STATEMENT_ERROR(statement,"Too many TABLE indices");
+      DestroyValue(&value);
+      return 0;
+    }
+    if (!TableInitDomainFromSet(SetValue(value),statement,&domains[0])) {
+      DestroyValue(&value);
+      return 0;
+    }
+    *num_domains = 1;
+    break;
+  case list_value:
+    list = value.u.lvalues;
+    len = (list != NULL) ? gl_length(list) : 0;
+    all_sets = (len > 0);
+    for (c = 1; c <= len; ++c) {
+      vptr = (struct value_t *)gl_fetch(list,c);
+      if (vptr == NULL || ValueKind(*vptr) != set_value) {
+        all_sets = 0;
+        break;
+      }
+    }
+    if (all_sets) {
+      if (len > max_domains) {
+        STATEMENT_ERROR(statement,"Too many TABLE indices");
+        DestroyValue(&value);
+        return 0;
+      }
+      for (c = 1; c <= len; ++c) {
+        vptr = (struct value_t *)gl_fetch(list,c);
+        if (!TableInitDomainFromSet(SetValue(*vptr),statement,&domains[c-1])) {
+          unsigned long d;
+          for (d = 0; d < c - 1; ++d) {
+            TableDomainDestroy(&domains[d]);
+          }
+          DestroyValue(&value);
+          return 0;
+        }
+      }
+      *num_domains = (unsigned)len;
+      break;
+    }
+    if (max_domains < 1) {
+      STATEMENT_ERROR(statement,"Too many TABLE indices");
+      DestroyValue(&value);
+      return 0;
+    }
+    saved_list_mode = ListMode;
+    ListMode = 1;
+    ordered = CreateOrderedSetFromList(value);
+    ListMode = saved_list_mode;
+    if (ValueKind(ordered) != set_value) {
+      STATEMENT_ERROR(statement,"TABLE index set cannot be converted from list");
+      DestroyValue(&ordered);
+      DestroyValue(&value);
+      return 0;
+    }
+    if (!TableInitDomainFromSet(SetValue(ordered),statement,&domains[0])) {
+      DestroyValue(&ordered);
+      DestroyValue(&value);
+      return 0;
+    }
+    *num_domains = 1;
+    DestroyValue(&ordered);
+    break;
+  case error_value:
+    STATEMENT_ERROR(statement,"TABLE index set could not be evaluated");
+    DestroyValue(&value);
+    return 0;
+  default:
+    STATEMENT_ERROR(statement,"TABLE index expression must evaluate to a set");
+    DestroyValue(&value);
+    return 0;
+  }
+  DestroyValue(&value);
+  return 1;
+}
+
+static int TableParseNumberToken(CONST char *tok,
+                                 int sign,
+                                 int *is_int,
+                                 long *ival,
+                                 double *rval)
+{
+  char *end;
+  long ltmp;
+  double dtmp;
+  errno = 0;
+  ltmp = strtol(tok,&end,10);
+  if (end != NULL && *end == '\0' && errno != ERANGE) {
+    *is_int = 1;
+    *ival = sign * ltmp;
+    *rval = (double)(*ival);
+    return 1;
+  }
+  errno = 0;
+  dtmp = strtod(tok,&end);
+  if (end != NULL && *end == '\0' && errno != ERANGE) {
+    *is_int = 0;
+    *rval = (sign < 0) ? -dtmp : dtmp;
+    *ival = (long)(*rval);
+    return 1;
+  }
+  return 0;
+}
+
+struct table_cell_value_t {
+  int is_int;
+  long ival;
+  double rval;
+};
+
+struct table_domain_ref_t {
+  CONST struct Expr *expr;
+  CONST struct Name *set_name;
+};
+
+static int TableAssignCell(struct Instance *work,
+                           struct Statement *statement,
+                           CONST struct table_domain_t *domains,
+                           unsigned ndims,
+                           CONST unsigned long *positions,
+                           int is_int,
+                           long ival,
+                           double rval);
+static int TableAssignCellMaybeWait(struct Instance *work,
+                                    struct Statement *statement,
+                                    CONST struct table_domain_t *domains,
+                                    unsigned ndims,
+                                    CONST unsigned long *positions,
+                                    int is_int,
+                                    long ival,
+                                    double rval);
+
+static int TableTokenIsDelimiter(CONST char *tok)
+{
+  return (strcmp(tok,",") == 0 || strcmp(tok,";") == 0);
+}
+
+static int TableTokenIsSign(CONST char *tok)
+{
+  return (strcmp(tok,"+") == 0 || strcmp(tok,"-") == 0);
+}
+
+static int TableTokenIsPunctuation(CONST char *tok)
+{
+  return TableTokenIsDelimiter(tok)
+      || TableTokenIsSign(tok)
+      || strcmp(tok,":") == 0
+      || strcmp(tok,"=") == 0;
+}
+
+static int TableTokenIsQuotedSymbol(CONST char *tok)
+{
+  size_t n;
+  if (tok == NULL) {
+    return 0;
+  }
+  n = strlen(tok);
+  return (n >= 2 && tok[0] == '\'' && tok[n - 1] == '\'');
+}
+
+static int TableParseIntegerToken(CONST char *tok, long *ival)
+{
+  char *end = NULL;
+  long v;
+  if (tok == NULL) {
+    return 0;
+  }
+  errno = 0;
+  v = strtol(tok,&end,10);
+  if (end == NULL || *end != '\0' || errno == ERANGE) {
+    return 0;
+  }
+  if (ival != NULL) {
+    *ival = v;
+  }
+  return 1;
+}
+
+static int TableParseSymbolToken(CONST char *tok, symchar **sym)
+{
+  size_t n;
+  if (tok == NULL || sym == NULL) {
+    return 0;
+  }
+  n = strlen(tok);
+  if (n == 0) {
+    return 0;
+  }
+  if (TableTokenIsQuotedSymbol(tok)) {
+    *sym = AddSymbolL(tok + 1,n - 2);
+  } else {
+    *sym = AddSymbol(tok);
+  }
+  return (*sym != NULL);
+}
+
+static int DatasetParseRealToken(CONST char *tok, double *rval)
+{
+  char *end = NULL;
+  double v;
+  if (tok == NULL) {
+    return 0;
+  }
+  errno = 0;
+  v = strtod(tok,&end);
+  if (end == NULL || *end != '\0' || errno == ERANGE) {
+    return 0;
+  }
+  if (rval != NULL) {
+    *rval = v;
+  }
+  return 1;
+}
+
+static int DatasetParseBooleanToken(CONST char *tok, int *bval)
+{
+  if (tok == NULL || bval == NULL) {
+    return 0;
+  }
+  if (strcasecmp(tok,"TRUE") == 0) {
+    *bval = 1;
+    return 1;
+  }
+  if (strcasecmp(tok,"FALSE") == 0) {
+    *bval = 0;
+    return 1;
+  }
+  return 0;
+}
+
+static double DatasetNowSeconds(void)
+{
+  struct timespec ts;
+  if (clock_gettime(CLOCK_MONOTONIC,&ts) != 0) {
+    return 0.0;
+  }
+  return (double)ts.tv_sec + 1e-9 * (double)ts.tv_nsec;
+}
+
+enum dataset_stream_kind_t {
+  DATASET_STREAM_PLAIN = 0,
+  DATASET_STREAM_GZ,
+  DATASET_STREAM_XZ
+};
+
+struct dataset_stream_t {
+  enum dataset_stream_kind_t kind;
+  FILE *file;
+#ifdef ASC_WITH_ZLIB
+  gzFile gz;
+#endif
+#ifdef ASC_WITH_LZMA
+  lzma_stream xz;
+  int xz_initialised;
+  int xz_input_eof;
+  int xz_stream_end;
+  unsigned char xz_inbuf[8192];
+  unsigned char xz_outbuf[8192];
+  size_t xz_outpos;
+  size_t xz_outlen;
+#endif
+};
+
+static int DatasetPathHasSuffix(CONST char *path, CONST char *suffix)
+{
+  size_t plen;
+  size_t slen;
+  if (path == NULL || suffix == NULL) {
+    return 0;
+  }
+  plen = strlen(path);
+  slen = strlen(suffix);
+  if (plen < slen) {
+    return 0;
+  }
+  return strcasecmp(path + plen - slen,suffix) == 0;
+}
+
+static void DatasetStreamInit(struct dataset_stream_t *stream)
+{
+  if (stream == NULL) {
+    return;
+  }
+  memset(stream,0,sizeof(*stream));
+  stream->kind = DATASET_STREAM_PLAIN;
+}
+
+static int DatasetResolvePath(CONST char *filename,
+                              char **resolved_path,
+                              struct Statement *statement)
+{
+  struct FilePath *fp;
+  struct FilePath **sp;
+  struct FilePath **sp_root;
+  struct FilePath *found = NULL;
+  ospath_stat_t buf;
+  char *path;
+
+  if (resolved_path != NULL) {
+    *resolved_path = NULL;
+  }
+  if (filename == NULL || filename[0] == '\0') {
+    STATEMENT_ERROR(statement,"DATASET filename is empty");
+    return 0;
+  }
+
+  fp = ospath_new(filename);
+  if (fp == NULL) {
+    STATEMENT_ERROR(statement,"DATASET filename is invalid");
+    return 0;
+  }
+
+  if (ospath_stat(fp,&buf) == 0) {
+    if (resolved_path != NULL) {
+      *resolved_path = ospath_str(fp);
+    }
+    ospath_free(fp);
+    return 1;
+  }
+
+  path = Asc_GetEnv(ASC_ENV_LIBRARY);
+  if (path == NULL) {
+    STATEMENT_ERROR(statement,"No search path available for DATASET file");
+    ospath_free(fp);
+    return 0;
+  }
+
+  sp = ospath_searchpath_new(path);
+  ascfree(path);
+  if (sp == NULL) {
+    STATEMENT_ERROR(statement,"Unable to parse DATASET search path");
+    ospath_free(fp);
+    return 0;
+  }
+  sp_root = sp;
+
+  for (; *sp != NULL; ++sp) {
+    struct FilePath *candidate = ospath_concat(*sp,fp);
+    if (candidate == NULL) {
+      continue;
+    }
+    if (ospath_stat(candidate,&buf) == 0) {
+      found = candidate;
+      break;
+    }
+    ospath_free(candidate);
+  }
+
+  ospath_free(fp);
+  ospath_searchpath_free(sp_root);
+  if (found != NULL && resolved_path != NULL) {
+    *resolved_path = ospath_str(found);
+  }
+  if (found != NULL) {
+    ospath_free(found);
+  }
+  if (found == NULL) {
+    STATEMENT_ERROR(statement,"DATASET file not found in search path");
+    return 0;
+  }
+  return 1;
+}
+
+static int DatasetStreamOpen(CONST char *filename,
+                             char **resolved_path,
+                             struct Statement *statement,
+                             struct dataset_stream_t *stream)
+{
+  char *path = NULL;
+
+  if (stream == NULL) {
+    STATEMENT_ERROR(statement,"Internal DATASET stream error");
+    return 0;
+  }
+  DatasetStreamInit(stream);
+
+  if (!DatasetResolvePath(filename,&path,statement)) {
+    return 0;
+  }
+
+  if (DatasetPathHasSuffix(path,".gz")) {
+#ifdef ASC_WITH_ZLIB
+    stream->gz = gzopen(path,"rb");
+    if (stream->gz == NULL) {
+      STATEMENT_ERROR(statement,"Unable to open gzip-compressed DATASET file");
+      ascfree(path);
+      return 0;
+    }
+    stream->kind = DATASET_STREAM_GZ;
+#else
+    STATEMENT_ERROR(statement,"DATASET .gz input requires zlib support at build time");
+    ascfree(path);
+    return 0;
+#endif
+  } else if (DatasetPathHasSuffix(path,".xz")) {
+#ifdef ASC_WITH_LZMA
+    stream->file = fopen(path,"rb");
+    if (stream->file == NULL) {
+      STATEMENT_ERROR(statement,"Unable to open xz-compressed DATASET file");
+      ascfree(path);
+      return 0;
+    }
+    stream->xz = (lzma_stream)LZMA_STREAM_INIT;
+    if (lzma_stream_decoder(&stream->xz,UINT64_MAX,LZMA_CONCATENATED) != LZMA_OK) {
+      STATEMENT_ERROR(statement,"Unable to initialise xz decompressor for DATASET file");
+      fclose(stream->file);
+      stream->file = NULL;
+      ascfree(path);
+      return 0;
+    }
+    stream->xz_initialised = 1;
+    stream->kind = DATASET_STREAM_XZ;
+#else
+    STATEMENT_ERROR(statement,"DATASET .xz input requires liblzma support at build time");
+    ascfree(path);
+    return 0;
+#endif
+  } else {
+    stream->file = fopen(path,"rb");
+    if (stream->file == NULL) {
+      STATEMENT_ERROR(statement,"Unable to open DATASET file");
+      ascfree(path);
+      return 0;
+    }
+    stream->kind = DATASET_STREAM_PLAIN;
+  }
+
+  if (resolved_path != NULL) {
+    *resolved_path = path;
+  } else {
+    ascfree(path);
+  }
+  return 1;
+}
+
+static void DatasetStreamClose(struct dataset_stream_t *stream)
+{
+  if (stream == NULL) {
+    return;
+  }
+#ifdef ASC_WITH_ZLIB
+  if (stream->kind == DATASET_STREAM_GZ && stream->gz != NULL) {
+    gzclose(stream->gz);
+    stream->gz = NULL;
+  }
+#endif
+#ifdef ASC_WITH_LZMA
+  if (stream->kind == DATASET_STREAM_XZ && stream->xz_initialised) {
+    lzma_end(&stream->xz);
+    stream->xz_initialised = 0;
+  }
+#endif
+  if (stream->file != NULL) {
+    fclose(stream->file);
+    stream->file = NULL;
+  }
+  stream->kind = DATASET_STREAM_PLAIN;
+}
+
+#ifdef ASC_WITH_LZMA
+static int DatasetStreamRefillXZ(struct dataset_stream_t *stream,
+                                 struct Statement *statement)
+{
+  while (1) {
+    lzma_ret ret;
+    lzma_action action = stream->xz_input_eof ? LZMA_FINISH : LZMA_RUN;
+
+    if (stream->xz_outpos < stream->xz_outlen) {
+      return 1;
+    }
+    if (stream->xz_stream_end) {
+      return 0;
+    }
+
+    if (stream->xz.avail_in == 0 && !stream->xz_input_eof) {
+      size_t nread = fread(stream->xz_inbuf,1,sizeof(stream->xz_inbuf),stream->file);
+      if (nread == 0) {
+        if (ferror(stream->file)) {
+          STATEMENT_ERROR(statement,"Error reading compressed DATASET stream");
+          return -1;
+        }
+        stream->xz_input_eof = 1;
+        action = LZMA_FINISH;
+      } else {
+        stream->xz.next_in = stream->xz_inbuf;
+        stream->xz.avail_in = nread;
+      }
+    }
+
+    stream->xz.next_out = stream->xz_outbuf;
+    stream->xz.avail_out = sizeof(stream->xz_outbuf);
+    ret = lzma_code(&stream->xz,action);
+    stream->xz_outpos = 0;
+    stream->xz_outlen = sizeof(stream->xz_outbuf) - stream->xz.avail_out;
+
+    if (ret == LZMA_STREAM_END) {
+      stream->xz_stream_end = 1;
+      if (stream->xz_outlen > 0) {
+        return 1;
+      }
+      return 0;
+    }
+    if (ret != LZMA_OK) {
+      STATEMENT_ERROR(statement,"DATASET xz decompression failed");
+      return -1;
+    }
+    if (stream->xz_outlen > 0) {
+      return 1;
+    }
+    if (stream->xz_input_eof && stream->xz.avail_in == 0) {
+      return 0;
+    }
+  }
+}
+#endif
+
+static int DatasetStreamGetChar(struct dataset_stream_t *stream,
+                                int *outch,
+                                struct Statement *statement)
+{
+  if (stream == NULL || outch == NULL) {
+    return -1;
+  }
+
+  switch (stream->kind) {
+  case DATASET_STREAM_PLAIN:
+    {
+      int ch = fgetc(stream->file);
+      if (ch == EOF) {
+        if (ferror(stream->file)) {
+          STATEMENT_ERROR(statement,"Error reading DATASET file");
+          return -1;
+        }
+        return 0;
+      }
+      *outch = ch;
+      return 1;
+    }
+#ifdef ASC_WITH_ZLIB
+  case DATASET_STREAM_GZ:
+    {
+      int ch = gzgetc(stream->gz);
+      if (ch == -1) {
+        if (gzeof(stream->gz)) {
+          return 0;
+        } else {
+          STATEMENT_ERROR(statement,"Error reading gzip DATASET stream");
+          return -1;
+        }
+      }
+      *outch = ch;
+      return 1;
+    }
+#endif
+#ifdef ASC_WITH_LZMA
+  case DATASET_STREAM_XZ:
+    {
+      int refill = DatasetStreamRefillXZ(stream,statement);
+      if (refill <= 0) {
+        return refill;
+      }
+      *outch = (int)stream->xz_outbuf[stream->xz_outpos++];
+      return 1;
+    }
+#endif
+  default:
+    STATEMENT_ERROR(statement,"Unsupported DATASET stream type");
+    return -1;
+  }
+}
+
+static int DatasetReadLine(struct dataset_stream_t *stream,
+                           Asc_DString *line,
+                           unsigned long *line_no,
+                           struct Statement *statement)
+{
+  int got = 0;
+  int ch = 0;
+  if (line == NULL || stream == NULL) {
+    return 0;
+  }
+  Asc_DStringTrunc(line,0);
+  while (1) {
+    int rc = DatasetStreamGetChar(stream,&ch,statement);
+    if (rc < 0) {
+      return -1;
+    }
+    if (rc == 0) {
+      break;
+    }
+    {
+      char cbuf[2];
+      got = 1;
+      cbuf[0] = (char)ch;
+      cbuf[1] = '\0';
+      Asc_DStringAppend(line,cbuf,1);
+      if (cbuf[0] == '\n') {
+        break;
+      }
+    }
+  }
+  if (got && line_no != NULL) {
+    (*line_no)++;
+  }
+  return got;
+}
+
+static char *DatasetTrimCopy(CONST char *txt)
+{
+  CONST char *start;
+  CONST char *end;
+  size_t len;
+  char *out;
+
+  if (txt == NULL) {
+    return NULL;
+  }
+  start = txt;
+  while (*start != '\0' && isspace((unsigned char)*start)) {
+    ++start;
+  }
+  end = start + strlen(start);
+  while (end > start && isspace((unsigned char)end[-1])) {
+    --end;
+  }
+  len = (size_t)(end - start);
+  out = ASC_NEW_ARRAY(char,len + 1);
+  if (len > 0) {
+    memcpy(out,start,len);
+  }
+  out[len] = '\0';
+  return out;
+}
+
+static int DatasetIsDimensionlessToken(CONST char *tok)
+{
+  return tok == NULL
+      || tok[0] == '\0'
+      || strcmp(tok,"-") == 0
+      || strcmp(tok,"1") == 0
+      || strcasecmp(tok,"dimensionless") == 0;
+}
+
+static int DatasetTokenizeLine(CONST char *line,
+                               char ***tokens_out,
+                               unsigned *count_out,
+                               struct Statement *statement,
+                               unsigned long line_no)
+{
+  Asc_DString token;
+  char **tokens = NULL;
+  unsigned count = 0;
+  unsigned ti;
+  int in_quote = 0;
+  char quote_char = '\0';
+  int saw_token = 0;
+  size_t i;
+
+  if (tokens_out == NULL || count_out == NULL || line == NULL) {
+    return 0;
+  }
+  *tokens_out = NULL;
+  *count_out = 0;
+  (void)line_no;
+
+  for (i = 0; line[i] != '\0'; ++i) {
+    if (!isspace((unsigned char)line[i])) {
+      if (line[i] == '#') {
+        return 0;
+      }
+      break;
+    }
+  }
+  if (line[i] == '\0') {
+    return 0;
+  }
+
+  Asc_DStringInit(&token);
+
+  for (i = 0; ; ++i) {
+    int end = (line[i] == '\0');
+    int delim = (!in_quote && !end && (line[i] == ',' || line[i] == ';'));
+    int comment = 0;
+
+    if (!in_quote && !end && line[i] == '#') {
+      char *trimmed = DatasetTrimCopy(Asc_DStringValue(&token));
+      if (trimmed == NULL || trimmed[0] == '\0') {
+        if (trimmed != NULL) {
+          ascfree(trimmed);
+        }
+        break;
+      }
+      ascfree(trimmed);
+      comment = 1;
+      end = 1;
+    }
+
+    if (!end && !delim && !comment) {
+      char ch = line[i];
+      if (!in_quote && (ch == '\'' || ch == '"')) {
+        in_quote = 1;
+        quote_char = ch;
+        continue;
+      }
+      if (in_quote && ch == quote_char) {
+        in_quote = 0;
+        quote_char = '\0';
+        continue;
+      }
+    }
+
+    if (end || delim || comment) {
+      char *trimmed = DatasetTrimCopy(Asc_DStringValue(&token));
+      Asc_DStringTrunc(&token,0);
+      if (trimmed == NULL) {
+        STATEMENT_ERROR(statement,"Unable to allocate DATASET token buffer");
+        for (ti = 0; ti < count; ++ti) {
+          ascfree(tokens[ti]);
+        }
+        ascfree(tokens);
+        Asc_DStringFree(&token);
+        return -1;
+      }
+      if (trimmed[0] != '\0') {
+        tokens = (char **)ascrealloc(tokens,sizeof(char *) * (count + 1));
+        tokens[count++] = trimmed;
+        saw_token = 1;
+      } else {
+        ascfree(trimmed);
+        if (delim || (comment && saw_token)) {
+          STATEMENT_ERROR(statement,"Empty DATASET field");
+          for (ti = 0; ti < count; ++ti) {
+            ascfree(tokens[ti]);
+          }
+          ascfree(tokens);
+          Asc_DStringFree(&token);
+          return -1;
+        }
+      }
+      if (end || comment) {
+        break;
+      }
+      continue;
+    }
+
+    {
+      char chbuf[2] = {line[i],'\0'};
+      Asc_DStringAppend(&token,chbuf,1);
+    }
+  }
+
+  Asc_DStringFree(&token);
+  if (in_quote) {
+    STATEMENT_ERROR(statement,"Unterminated quote in DATASET row");
+    for (i = 0; i < count; ++i) {
+      ascfree(tokens[i]);
+    }
+    ascfree(tokens);
+    return -1;
+  }
+
+  if (!saw_token) {
+    return 0;
+  }
+
+  *tokens_out = tokens;
+  *count_out = count;
+  return 1;
+}
+
+static int DatasetExtractColumnUnitsSuffix(CONST char *tok, char **name, char **units)
+{
+  char closech;
+  char opench;
+  CONST char *openptr = NULL;
+  CONST char *start;
+  CONST char *end;
+  CONST char *p;
+  CONST char *ustart;
+  CONST char *uend;
+  CONST char *nstart;
+  CONST char *nend;
+  size_t nlen;
+  size_t ulen;
+  char *ncopy;
+  char *ucopy;
+
+  *name = NULL;
+  *units = NULL;
+  if (tok == NULL) {
+    return 0;
+  }
+
+  start = tok;
+  while (*start != '\0' && isspace((unsigned char)*start)) {
+    ++start;
+  }
+  end = start + strlen(start);
+  while (end > start && isspace((unsigned char)end[-1])) {
+    --end;
+  }
+  if (end <= start) {
+    return 0;
+  }
+
+  closech = end[-1];
+  if (closech == '}') {
+    opench = '{';
+  } else if (closech == ']') {
+    opench = '[';
+  } else {
+    return 0;
+  }
+
+  for (p = end - 1; p > start; --p) {
+    if (p[-1] == opench) {
+      openptr = p - 1;
+      break;
+    }
+  }
+  if (openptr == NULL) {
+    return 0;
+  }
+
+  ustart = openptr + 1;
+  uend = end - 1;
+  while (ustart < uend && isspace((unsigned char)*ustart)) {
+    ++ustart;
+  }
+  while (uend > ustart && isspace((unsigned char)uend[-1])) {
+    --uend;
+  }
+  if (uend <= ustart) {
+    return 0;
+  }
+
+  nstart = start;
+  nend = openptr;
+  while (nend > nstart && isspace((unsigned char)nend[-1])) {
+    --nend;
+  }
+  if (nend > nstart && nend[-1] == '/') {
+    --nend;
+    while (nend > nstart && isspace((unsigned char)nend[-1])) {
+      --nend;
+    }
+  }
+  while (nstart < nend && isspace((unsigned char)*nstart)) {
+    ++nstart;
+  }
+  if (nend <= nstart) {
+    return 0;
+  }
+
+  nlen = (size_t)(nend - nstart);
+  ulen = (size_t)(uend - ustart);
+  ncopy = ASC_NEW_ARRAY(char,nlen + 1);
+  ucopy = ASC_NEW_ARRAY(char,ulen + 1);
+  memcpy(ncopy,nstart,nlen);
+  ncopy[nlen] = '\0';
+  memcpy(ucopy,ustart,ulen);
+  ucopy[ulen] = '\0';
+
+  *name = ncopy;
+  *units = ucopy;
+  return 1;
+}
+
+static int DatasetSplitColumnToken(CONST char *tok, symchar **name, char **units)
+{
+  char *name_copy = NULL;
+  char *units_copy = NULL;
+  char *trimmed = NULL;
+  int ok = 0;
+
+  if (tok == NULL || name == NULL || units == NULL) {
+    return 0;
+  }
+  *name = NULL;
+  *units = NULL;
+
+  if (!DatasetExtractColumnUnitsSuffix(tok,&name_copy,&units_copy)) {
+    trimmed = DatasetTrimCopy(tok);
+    if (trimmed == NULL || trimmed[0] == '\0') {
+      if (trimmed != NULL) {
+        ascfree(trimmed);
+      }
+      return 0;
+    }
+    name_copy = trimmed;
+    trimmed = NULL;
+  }
+
+  ok = TableParseSymbolToken(name_copy,name);
+  ascfree(name_copy);
+  if (!ok) {
+    if (units_copy != NULL) {
+      ascfree(units_copy);
+    }
+    return 0;
+  }
+
+  if (units_copy != NULL) {
+    char *u = DatasetTrimCopy(units_copy);
+    ascfree(units_copy);
+    if (u != NULL && u[0] != '\0') {
+      *units = u;
+    } else if (u != NULL) {
+      ascfree(u);
+    }
+  }
+  return 1;
+}
+
+static int DatasetParseUnitsOnlyToken(CONST char *tok, char **units_out, int *has_units)
+{
+  char *trimmed;
+  CONST char *start;
+  CONST char *end;
+  char *units = NULL;
+
+  if (units_out == NULL || has_units == NULL || tok == NULL) {
+    return 0;
+  }
+  *units_out = NULL;
+  *has_units = 0;
+
+  trimmed = DatasetTrimCopy(tok);
+  if (trimmed == NULL) {
+    return 0;
+  }
+  if (DatasetIsDimensionlessToken(trimmed)) {
+    ascfree(trimmed);
+    return 1;
+  }
+
+  start = trimmed;
+  if (*start == '/') {
+    ++start;
+    while (*start != '\0' && isspace((unsigned char)*start)) {
+      ++start;
+    }
+  }
+  end = start + strlen(start);
+  while (end > start && isspace((unsigned char)end[-1])) {
+    --end;
+  }
+  if (end - start >= 2
+      && ((start[0] == '{' && end[-1] == '}')
+          || (start[0] == '[' && end[-1] == ']'))) {
+    size_t len;
+    ++start;
+    --end;
+    while (end > start && isspace((unsigned char)end[-1])) {
+      --end;
+    }
+    while (start < end && isspace((unsigned char)*start)) {
+      ++start;
+    }
+    len = (size_t)(end - start);
+    units = ASC_NEW_ARRAY(char,len + 1);
+    if (len > 0) {
+      memcpy(units,start,len);
+    }
+    units[len] = '\0';
+    if (!DatasetIsDimensionlessToken(units)) {
+      *units_out = units;
+      *has_units = 1;
+      ascfree(trimmed);
+      return 1;
+    }
+    ascfree(units);
+    ascfree(trimmed);
+    return 1;
+  }
+
+  ascfree(trimmed);
+  return 0;
+}
+
+static int DatasetMaybeApplyUnitsRow(struct dataset_table_t *table,
+                                     char **tokens,
+                                     unsigned ntokens,
+                                     struct Statement *statement,
+                                     int *consumed)
+{
+  char **parsed = NULL;
+  unsigned i;
+  int saw_units = 0;
+
+  if (consumed != NULL) {
+    *consumed = 0;
+  }
+  if (table == NULL || tokens == NULL || ntokens != table->ncols || table->nrows != 0) {
+    return 1;
+  }
+
+  parsed = ASC_NEW_ARRAY_CLEAR(char *,ntokens);
+  if (parsed == NULL) {
+    STATEMENT_ERROR(statement,"Unable to allocate DATASET units-row buffer");
+    return 0;
+  }
+  for (i = 0; i < ntokens; ++i) {
+    int has_units = 0;
+    if (!DatasetParseUnitsOnlyToken(tokens[i],&parsed[i],&has_units)) {
+      goto not_units_row;
+    }
+    if (has_units) {
+      saw_units = 1;
+    }
+  }
+
+  if (!saw_units) {
+    goto not_units_row;
+  }
+
+  for (i = 0; i < ntokens; ++i) {
+    if (parsed[i] == NULL) {
+      continue;
+    }
+    if (table->cols[i].units != NULL && strcmp(table->cols[i].units,parsed[i]) != 0) {
+      STATEMENT_ERROR(statement,"DATASET units row conflicts with column header units");
+      goto fail;
+    }
+    if (table->cols[i].units == NULL) {
+      table->cols[i].units = parsed[i];
+      parsed[i] = NULL;
+    }
+  }
+
+  for (i = 0; i < ntokens; ++i) {
+    if (parsed[i] != NULL) {
+      ascfree(parsed[i]);
+    }
+  }
+  ascfree(parsed);
+  if (consumed != NULL) {
+    *consumed = 1;
+  }
+  return 1;
+
+not_units_row:
+  for (i = 0; i < ntokens; ++i) {
+    if (parsed[i] != NULL) {
+      ascfree(parsed[i]);
+    }
+  }
+  ascfree(parsed);
+  return 1;
+
+fail:
+  for (i = 0; i < ntokens; ++i) {
+    if (parsed[i] != NULL) {
+      ascfree(parsed[i]);
+    }
+  }
+  ascfree(parsed);
+  return 0;
+}
+
+static struct dataset_table_t *DatasetReadFile(CONST char *path,
+                                               struct dataset_stream_t *stream,
+                                               struct Statement *statement)
+{
+  Asc_DString line;
+  unsigned long line_no = 0;
+  int have_header = 0;
+  struct dataset_table_t *table = NULL;
+  (void)path;
+
+  if (stream == NULL) {
+    return NULL;
+  }
+
+  Asc_DStringInit(&line);
+  while (1) {
+    int line_result = DatasetReadLine(stream,&line,&line_no,statement);
+    if (line_result < 0) {
+      DatasetTableDestroy(table);
+      Asc_DStringFree(&line);
+      return NULL;
+    }
+    if (line_result == 0) {
+      break;
+    }
+    char **tokens = NULL;
+    unsigned ntokens = 0;
+    int tok_result = DatasetTokenizeLine(Asc_DStringValue(&line),&tokens,&ntokens,statement,line_no);
+    if (tok_result < 0) {
+      DatasetTableDestroy(table);
+      Asc_DStringFree(&line);
+      return NULL;
+    }
+    if (tok_result == 0) {
+      continue;
+    }
+
+    if (!have_header) {
+      unsigned i;
+      if (ntokens == 0) {
+        continue;
+      }
+      table = ASC_NEW(struct dataset_table_t);
+      table->ncols = ntokens;
+      table->nrows = 0;
+      table->rows = NULL;
+      table->cols = ASC_NEW_ARRAY(struct dataset_column_t,ntokens);
+      for (i = 0; i < ntokens; ++i) {
+        symchar *colname = NULL;
+        char *units = NULL;
+        if (!DatasetSplitColumnToken(tokens[i],&colname,&units)) {
+          STATEMENT_ERROR(statement,"Invalid DATASET column name");
+          DatasetTableDestroy(table);
+          table = NULL;
+          break;
+        }
+        if (table != NULL) {
+          unsigned j;
+          for (j = 0; j < i; ++j) {
+            if (table->cols[j].name == colname) {
+              STATEMENT_ERROR(statement,"DATASET contains duplicate column names");
+              DatasetTableDestroy(table);
+              table = NULL;
+              if (units != NULL) {
+                ascfree(units);
+              }
+              break;
+            }
+          }
+          if (table == NULL) {
+            break;
+          }
+        }
+        table->cols[i].name = colname;
+        table->cols[i].units = units;
+      }
+      for (i = 0; i < ntokens; ++i) {
+        ascfree(tokens[i]);
+      }
+      ascfree(tokens);
+      if (table == NULL) {
+        Asc_DStringFree(&line);
+        return NULL;
+      }
+      have_header = 1;
+      continue;
+    }
+
+    if (table == NULL) {
+      unsigned i;
+      for (i = 0; i < ntokens; ++i) {
+        ascfree(tokens[i]);
+      }
+      ascfree(tokens);
+      continue;
+    }
+
+    if (table->nrows == 0) {
+      int consumed_units_row = 0;
+      if (!DatasetMaybeApplyUnitsRow(table,tokens,ntokens,statement,&consumed_units_row)) {
+        unsigned i;
+        for (i = 0; i < ntokens; ++i) {
+          ascfree(tokens[i]);
+        }
+        ascfree(tokens);
+        DatasetTableDestroy(table);
+        Asc_DStringFree(&line);
+        return NULL;
+      }
+      if (consumed_units_row) {
+        unsigned i;
+        for (i = 0; i < ntokens; ++i) {
+          ascfree(tokens[i]);
+        }
+        ascfree(tokens);
+        continue;
+      }
+    }
+
+    if (ntokens != table->ncols) {
+      unsigned i;
+      STATEMENT_ERROR(statement,"DATASET row has incorrect number of columns");
+      for (i = 0; i < ntokens; ++i) {
+        ascfree(tokens[i]);
+      }
+      ascfree(tokens);
+      DatasetTableDestroy(table);
+      Asc_DStringFree(&line);
+      return NULL;
+    }
+
+    {
+      struct dataset_row_t *row;
+      char *dst;
+      size_t storage_len = 0;
+      unsigned i;
+
+      table->rows = (struct dataset_row_t *)ascrealloc(table->rows,sizeof(struct dataset_row_t) * (table->nrows + 1));
+      row = &table->rows[table->nrows];
+      row->cells = ASC_NEW_ARRAY(char *,table->ncols);
+      row->storage = NULL;
+      for (i = 0; i < table->ncols; ++i) {
+        storage_len += strlen(tokens[i]) + 1;
+      }
+      row->storage = ASC_NEW_ARRAY(char,storage_len > 0 ? storage_len : 1);
+      dst = row->storage;
+      for (i = 0; i < table->ncols; ++i) {
+        size_t len = strlen(tokens[i]) + 1;
+        memcpy(dst,tokens[i],len);
+        row->cells[i] = dst;
+        dst += len;
+        ascfree(tokens[i]);
+      }
+    }
+    ascfree(tokens);
+    table->nrows++;
+  }
+
+  Asc_DStringFree(&line);
+
+  if (!have_header) {
+    STATEMENT_ERROR(statement,"DATASET file is missing header row");
+    DatasetTableDestroy(table);
+    return NULL;
+  }
+  if (table != NULL && table->nrows == 0) {
+    STATEMENT_ERROR(statement,"DATASET file contains no data rows");
+    DatasetTableDestroy(table);
+    return NULL;
+  }
+  return table;
+}
+
+static int TableCollectDomainRefs(CONST struct Name *target,
+                                  struct Statement *statement,
+                                  struct table_domain_ref_t refs[2],
+                                  unsigned *ndims)
+{
+  CONST struct Name *node;
+  unsigned d = 0;
+  for (node = target; node != NULL; node = NextName(node)) {
+    CONST struct Set *setnode;
+    if (NameId(node)) {
+      continue;
+    }
+    for (setnode = NameSetPtr(node); setnode != NULL; setnode = NextSet(setnode)) {
+      CONST struct Expr *expr;
+      if (d >= 2) {
+        STATEMENT_ERROR(statement,"TABLE currently supports at most 2 indices");
+        return 0;
+      }
+      if (SetType(setnode)) {
+        STATEMENT_ERROR(statement,"TABLE index ranges are not supported");
+        return 0;
+      }
+      expr = GetSingleExpr(setnode);
+      if (expr == NULL) {
+        STATEMENT_ERROR(statement,"TABLE index expression is invalid");
+        return 0;
+      }
+      refs[d].expr = expr;
+      refs[d].set_name = NULL;
+      if (ExprType(expr) == e_var
+          && ExprListLength(expr) == 1
+          && SimpleNameIdPtr(ExprName(expr)) != NULL) {
+        refs[d].set_name = ExprName(expr);
+      }
+      d++;
+    }
+  }
+  *ndims = d;
+  return 1;
+}
+
+static int TableEvaluateDomainExpr(struct Instance *work,
+                                   CONST struct Expr *expr,
+                                   struct Statement *statement,
+                                   struct table_domain_t *domain,
+                                   int *undefined)
+{
+  struct Set tmpset;
+  struct value_t value, ordered;
+  int saved_list_mode;
+  IVAL(value);
+  IVAL(ordered);
+  *undefined = 0;
+
+  tmpset.next = NULL;
+  tmpset.range = 0;
+  tmpset.val.e = (struct Expr *)expr;
+  tmpset.ref_count = 1;
+
+  asc_assert(GetEvaluationContext()==NULL);
+  SetEvaluationContext(work);
+  value = EvaluateSet(&tmpset,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+
+  switch (ValueKind(value)) {
+  case set_value:
+    if (!TableInitDomainFromSet(SetValue(value),statement,domain)) {
+      DestroyValue(&value);
+      return 0;
+    }
+    DestroyValue(&value);
+    return 1;
+  case list_value:
+    saved_list_mode = ListMode;
+    ListMode = 1;
+    ordered = CreateOrderedSetFromList(value);
+    ListMode = saved_list_mode;
+    DestroyValue(&value);
+    if (ValueKind(ordered) != set_value) {
+      STATEMENT_ERROR(statement,"TABLE index set cannot be converted from list");
+      DestroyValue(&ordered);
+      return 0;
+    }
+    if (!TableInitDomainFromSet(SetValue(ordered),statement,domain)) {
+      DestroyValue(&ordered);
+      return 0;
+    }
+    DestroyValue(&ordered);
+    return 1;
+  case error_value:
+    if (ErrorValue(value) == name_unfound || ErrorValue(value) == undefined_value) {
+      *undefined = 1;
+      DestroyValue(&value);
+      return 0;
+    }
+    STATEMENT_ERROR(statement,"TABLE index set could not be evaluated");
+    DestroyValue(&value);
+    return 0;
+  default:
+    STATEMENT_ERROR(statement,"TABLE index expression must evaluate to a set");
+    DestroyValue(&value);
+    return 0;
+  }
+}
+
+static int TableAssignDomainSet(struct Instance *work,
+                                CONST struct Name *set_name,
+                                CONST struct set_t *setvalue,
+                                struct Statement *statement)
+{
+  struct gl_list_t *instances;
+  struct Instance *setinst;
+  struct value_t value;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  int ok;
+
+  instances = FindInstances(work,(struct Name *)set_name,&err);
+  if (instances == NULL || gl_length(instances) != 1) {
+    if (instances != NULL) {
+      gl_destroy(instances);
+    }
+    STATEMENT_ERROR(statement,"TABLE inferred index set name could not be resolved uniquely");
+    return 0;
+  }
+  setinst = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+
+  value = CreateSetValue(CopySet(setvalue));
+  ok = AssignStructuralValue(setinst,value,statement);
+  DestroyValue(&value);
+  return ok;
+}
+
+static int TableInferDomainFromLabels(struct Instance *work,
+                                      CONST struct Name *set_name,
+                                      char **labels,
+                                      unsigned long nlabels,
+                                      struct Statement *statement,
+                                      struct table_domain_t *domain)
+{
+  struct set_t *setvalue = NULL;
+  unsigned long i;
+  int all_int = 1;
+  int ok = 0;
+
+  if (set_name == NULL) {
+    STATEMENT_ERROR(statement,"TABLE index set is undefined and cannot be inferred");
+    return 0;
+  }
+
+  for (i = 0; i < nlabels; ++i) {
+    long ival;
+    if (labels[i] == NULL || TableTokenIsQuotedSymbol(labels[i]) || !TableParseIntegerToken(labels[i],&ival)) {
+      all_int = 0;
+      break;
+    }
+  }
+
+  setvalue = CreateEmptySet();
+  if (all_int) {
+    for (i = 0; i < nlabels; ++i) {
+      long ival;
+      if (!TableParseIntegerToken(labels[i],&ival)) {
+        STATEMENT_ERROR(statement,"TABLE inferred integer index contains invalid label");
+        goto cleanup;
+      }
+      if (IntMember((asc_intptr_t)ival,setvalue)) {
+        STATEMENT_ERROR(statement,"TABLE inferred integer index contains duplicate labels");
+        goto cleanup;
+      }
+      InsertInteger(setvalue,(asc_intptr_t)ival);
+    }
+  } else {
+    for (i = 0; i < nlabels; ++i) {
+      symchar *sym;
+      if (!TableParseSymbolToken(labels[i],&sym)) {
+        STATEMENT_ERROR(statement,"TABLE inferred string index contains invalid label");
+        goto cleanup;
+      }
+      if (StrMember(sym,setvalue)) {
+        STATEMENT_ERROR(statement,"TABLE inferred string index contains duplicate labels");
+        goto cleanup;
+      }
+      InsertString(setvalue,sym);
+    }
+  }
+
+  if (!TableAssignDomainSet(work,set_name,setvalue,statement)) {
+    goto cleanup;
+  }
+  if (!TableInitDomainFromSet(setvalue,statement,domain)) {
+    goto cleanup;
+  }
+  ok = 1;
+
+cleanup:
+  if (setvalue != NULL) {
+    DestroySet(setvalue);
+  }
+  return ok;
+}
+
+static int TableLabelToPosition(CONST struct table_domain_t *domain,
+                                CONST char *tok,
+                                unsigned long *pos,
+                                struct Statement *statement,
+                                int is_row_label)
+{
+  unsigned long i;
+  const char *axis = is_row_label ? "row" : "column";
+  if (domain->kind == integer_set) {
+    long ival;
+    if (!TableParseIntegerToken(tok,&ival)) {
+      STATEMENT_ERROR(statement,
+        is_row_label
+          ? "TABLE row label is not a valid integer for first index set"
+          : "TABLE column label is not a valid integer for second index set");
+      return 0;
+    }
+    if (!IntMember((asc_intptr_t)ival,domain->set)) {
+      STATEMENT_ERROR(statement,
+        is_row_label
+          ? "TABLE row label is not a member of first index set"
+          : "TABLE column label is not a member of second index set");
+      return 0;
+    }
+    for (i = 1; i <= domain->len; ++i) {
+      if ((long)FetchIntMember(domain->set,i) == ival) {
+        *pos = i;
+        return 1;
+      }
+    }
+  } else if (domain->kind == string_set) {
+    symchar *sym;
+    if (!TableParseSymbolToken(tok,&sym)) {
+      STATEMENT_ERROR(statement,
+        is_row_label
+          ? "TABLE row label is not a valid symbol for first index set"
+          : "TABLE column label is not a valid symbol for second index set");
+      return 0;
+    }
+    if (!StrMember(sym,domain->set)) {
+      STATEMENT_ERROR(statement,
+        is_row_label
+          ? "TABLE row label is not a member of first index set"
+          : "TABLE column label is not a member of second index set");
+      return 0;
+    }
+    for (i = 1; i <= domain->len; ++i) {
+      if (FetchStrMember(domain->set,i) == sym) {
+        *pos = i;
+        return 1;
+      }
+    }
+  } else {
+    STATEMENT_ERROR(statement,"TABLE index set type is unsupported");
+    return 0;
+  }
+  FPRINTF(ASCERR,"Internal TABLE %s-label mapping failure.\n",axis);
+  return 0;
+}
+
+static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
+{
+  struct table_domain_t domains[2];
+  struct table_domain_ref_t refs[2];
+  unsigned ndims = 0;
+  char *bodycopy = NULL;
+  char *line_ctx = NULL;
+  char *line;
+  char **col_labels = NULL;
+  char **row_labels = NULL;
+  struct table_cell_value_t *values = NULL;
+  struct table_cell_value_t *row_values = NULL;
+  unsigned long *row_pos = NULL;
+  unsigned long *col_pos = NULL;
+  char *row_seen = NULL;
+  char *col_seen = NULL;
+  unsigned long ncols = 0;
+  unsigned long nrows = 0;
+  int header_seen = 0;
+  unsigned d;
+  int rval = 0;
+
+  if (!TableCollectDomainRefs(statement->v.table.name,statement,refs,&ndims)) {
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+  if (ndims != 2) {
+    STATEMENT_ERROR(statement,"Dense non-POSITIONAL TABLE requires exactly 2 indices");
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+
+  for (d = 0; d < 2; ++d) {
+    domains[d].set = NULL;
+    domains[d].kind = empty_set;
+    domains[d].len = 0;
+  }
+
+  if (statement->v.table.body != NULL) {
+    size_t n = strlen(statement->v.table.body);
+    bodycopy = ASC_NEW_ARRAY(char,n + 1);
+    memcpy(bodycopy,statement->v.table.body,n + 1);
+  } else {
+    bodycopy = ASC_NEW_ARRAY(char,1);
+    bodycopy[0] = '\0';
+  }
+
+  for (line = strtok_r(bodycopy,"\n",&line_ctx); line != NULL; line = strtok_r(NULL,"\n",&line_ctx)) {
+    char *tok_ctx = NULL;
+    char *tok = strtok_r(line," \t\r",&tok_ctx);
+
+    if (tok == NULL) {
+      continue;
+    }
+
+    if (!header_seen) {
+      int expect_label = 1;
+      int seen_any = 0;
+      int last_delim = 0;
+      if (strcmp(tok,":") == 0) {
+        tok = strtok_r(NULL," \t\r",&tok_ctx);
+      }
+      for (; tok != NULL; tok = strtok_r(NULL," \t\r",&tok_ctx)) {
+        if (TableTokenIsDelimiter(tok)) {
+          if (expect_label || !seen_any) {
+            STATEMENT_ERROR(statement,"TABLE header has misplaced delimiter");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          expect_label = 1;
+          last_delim = tok[0];
+          continue;
+        }
+        if (TableTokenIsPunctuation(tok)) {
+          STATEMENT_ERROR(statement,"TABLE header contains invalid punctuation");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (!expect_label) {
+          /* whitespace-separated labels are accepted */
+        }
+        col_labels = (char **)ascrealloc(col_labels,sizeof(char *) * (ncols + 1));
+        col_labels[ncols++] = tok;
+        seen_any = 1;
+        expect_label = 0;
+        last_delim = 0;
+      }
+      if (!seen_any) {
+        STATEMENT_ERROR(statement,"TABLE header row is empty");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      if (expect_label) {
+        if (last_delim != ';') {
+          STATEMENT_ERROR(statement,"TABLE header cannot end with delimiter");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+      }
+      header_seen = 1;
+      continue;
+    }
+
+    {
+      unsigned long row_values_count = 0;
+      int sign = 1;
+      int sign_pending = 0;
+      int delim_pending = 0;
+      int last_delim = 0;
+
+      if (TableTokenIsPunctuation(tok)) {
+        STATEMENT_ERROR(statement,"TABLE data row is missing row label");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+
+      row_labels = (char **)ascrealloc(row_labels,sizeof(char *) * (nrows + 1));
+      row_labels[nrows] = tok;
+
+      tok = strtok_r(NULL," \t\r",&tok_ctx);
+      if (tok != NULL && strcmp(tok,":") == 0) {
+        tok = strtok_r(NULL," \t\r",&tok_ctx);
+      }
+      if (tok != NULL && TableTokenIsDelimiter(tok)) {
+        tok = strtok_r(NULL," \t\r",&tok_ctx);
+      }
+
+      row_values = ASC_NEW_ARRAY(struct table_cell_value_t,ncols > 0 ? ncols : 1);
+      for (; tok != NULL; tok = strtok_r(NULL," \t\r",&tok_ctx)) {
+        if (TableTokenIsDelimiter(tok)) {
+          if (sign_pending) {
+            STATEMENT_ERROR(statement,"TABLE delimiter cannot follow a sign without a value");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          if (row_values_count == 0) {
+            STATEMENT_ERROR(statement,"TABLE data row cannot begin values with delimiter");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          if (delim_pending) {
+            STATEMENT_ERROR(statement,"TABLE data row has repeated delimiters without a value");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          delim_pending = 1;
+          last_delim = tok[0];
+          continue;
+        }
+        if (TableTokenIsSign(tok)) {
+          if (sign_pending) {
+            STATEMENT_ERROR(statement,"Malformed TABLE value sign sequence");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          sign = (tok[0] == '-') ? -1 : 1;
+          sign_pending = 1;
+          delim_pending = 0;
+          last_delim = 0;
+          continue;
+        }
+        if (strcmp(tok,":") == 0 || strcmp(tok,"=") == 0) {
+          STATEMENT_ERROR(statement,"Unexpected sparse punctuation in dense TABLE row");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (row_values_count >= ncols) {
+          STATEMENT_ERROR(statement,"TABLE row has too many values");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (!TableParseNumberToken(tok,sign_pending ? sign : 1,
+                                   &row_values[row_values_count].is_int,
+                                   &row_values[row_values_count].ival,
+                                   &row_values[row_values_count].rval)) {
+          STATEMENT_ERROR(statement,"Dense TABLE contains non-numeric value token");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        row_values_count++;
+        sign = 1;
+        sign_pending = 0;
+        delim_pending = 0;
+        last_delim = 0;
+      }
+
+      if (sign_pending) {
+        STATEMENT_ERROR(statement,"Dangling sign token at end of TABLE row");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      if (delim_pending) {
+        if (last_delim != ';') {
+          STATEMENT_ERROR(statement,"TABLE data row cannot end with delimiter");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+      }
+      if (row_values_count != ncols) {
+        STATEMENT_ERROR(statement,"TABLE row has incorrect number of values");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+
+      values = (struct table_cell_value_t *)ascrealloc(values,sizeof(struct table_cell_value_t) * (nrows + 1) * ncols);
+      memcpy(values + nrows * ncols,row_values,sizeof(struct table_cell_value_t) * ncols);
+      ascfree(row_values);
+      row_values = NULL;
+      nrows++;
+    }
+  }
+
+  if (!header_seen) {
+    STATEMENT_ERROR(statement,"TABLE body is missing header row");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+  if (nrows == 0) {
+    STATEMENT_ERROR(statement,"TABLE body is missing data rows");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+
+  for (d = 0; d < 2; ++d) {
+    int undefined = 0;
+    if (!TableEvaluateDomainExpr(work,refs[d].expr,statement,&domains[d],&undefined)) {
+      if (!undefined) {
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      if (!TableInferDomainFromLabels(work
+            ,refs[d].set_name
+            ,(d == 0) ? row_labels : col_labels
+            ,(d == 0) ? nrows : ncols
+            ,statement
+            ,&domains[d])) {
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+    }
+  }
+
+  if (domains[0].len != nrows) {
+    STATEMENT_ERROR(statement,"TABLE row count does not match first index cardinality");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+  if (domains[1].len != ncols) {
+    STATEMENT_ERROR(statement,"TABLE column count does not match second index cardinality");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+
+  row_pos = ASC_NEW_ARRAY(unsigned long,nrows);
+  col_pos = ASC_NEW_ARRAY(unsigned long,ncols);
+  row_seen = ASC_NEW_ARRAY(char,domains[0].len > 0 ? domains[0].len : 1);
+  col_seen = ASC_NEW_ARRAY(char,domains[1].len > 0 ? domains[1].len : 1);
+  memset(row_seen,0,domains[0].len > 0 ? domains[0].len : 1);
+  memset(col_seen,0,domains[1].len > 0 ? domains[1].len : 1);
+
+  for (d = 0; d < nrows; ++d) {
+    if (!TableLabelToPosition(&domains[0],row_labels[d],&row_pos[d],statement,1)) {
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    if (row_seen[row_pos[d] - 1]) {
+      STATEMENT_ERROR(statement,"TABLE contains duplicate row labels");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    row_seen[row_pos[d] - 1] = 1;
+  }
+  for (d = 0; d < ncols; ++d) {
+    if (!TableLabelToPosition(&domains[1],col_labels[d],&col_pos[d],statement,0)) {
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    if (col_seen[col_pos[d] - 1]) {
+      STATEMENT_ERROR(statement,"TABLE contains duplicate column labels");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    col_seen[col_pos[d] - 1] = 1;
+  }
+
+  for (d = 0; d < nrows; ++d) {
+    unsigned long c;
+    for (c = 0; c < ncols; ++c) {
+      unsigned long pos[2];
+      CONST struct table_cell_value_t *cell = &values[d * ncols + c];
+      int assign_result;
+      pos[0] = row_pos[d];
+      pos[1] = col_pos[c];
+      assign_result = TableAssignCellMaybeWait(work,statement,domains,2,pos,cell->is_int,cell->ival,cell->rval);
+      if (assign_result < 0) {
+        rval = 0;
+        goto cleanup;
+      }
+      if (!assign_result) {
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+    }
+  }
+
+  rval = 1;
+
+cleanup:
+  if (row_values != NULL) {
+    ascfree(row_values);
+  }
+  if (row_seen != NULL) {
+    ascfree(row_seen);
+  }
+  if (col_seen != NULL) {
+    ascfree(col_seen);
+  }
+  if (row_pos != NULL) {
+    ascfree(row_pos);
+  }
+  if (col_pos != NULL) {
+    ascfree(col_pos);
+  }
+  if (values != NULL) {
+    ascfree(values);
+  }
+  if (row_labels != NULL) {
+    ascfree(row_labels);
+  }
+  if (col_labels != NULL) {
+    ascfree(col_labels);
+  }
+  if (bodycopy != NULL) {
+    ascfree(bodycopy);
+  }
+  for (d = 0; d < 2; ++d) {
+    TableDomainDestroy(&domains[d]);
+  }
+  return rval;
+}
+
+static struct Name *TableBuildCellName(CONST struct Name *templ,
+                                       CONST struct table_domain_t *domains,
+                                       unsigned ndims,
+                                       CONST unsigned long *positions)
+{
+  CONST struct Name *scan;
+  CONST struct Name *node;
+  struct Name *result = NULL;
+  unsigned d = 0;
+
+  for (node = templ; node != NULL; node = NextName(node)) {
+    if (NameId(node)) {
+      result = CopyAppendNameNode(result,node);
+    } else {
+      unsigned rem_nodes = 0;
+      unsigned rem_dims;
+      unsigned take;
+      unsigned k;
+
+      for (scan = node; scan != NULL; scan = NextName(scan)) {
+        if (!NameId(scan)) {
+          rem_nodes++;
+        }
+      }
+      rem_dims = ndims - d;
+      if (rem_nodes == 0 || rem_dims == 0 || rem_dims < rem_nodes) {
+        DestroyName(result);
+        return NULL;
+      }
+      take = rem_dims - (rem_nodes - 1);
+      for (k = 0; k < take; ++k) {
+        struct Name *indexnode = NULL;
+        switch (domains[d].kind) {
+        case integer_set:
+          indexnode = CreateIntegerElementName((long)FetchIntMember(domains[d].set,positions[d]));
+          break;
+        case string_set:
+          indexnode = CreateEnumElementName(FetchStrMember(domains[d].set,positions[d]));
+          break;
+        default:
+          DestroyName(result);
+          return NULL;
+        }
+        result = JoinNames(result,indexnode);
+        d++;
+      }
+    }
+  }
+  if (d != ndims) {
+    DestroyName(result);
+    return NULL;
+  }
+  return result;
+}
+
+static int TableAssignCell(struct Instance *work,
+                           struct Statement *statement,
+                           CONST struct table_domain_t *domains,
+                           unsigned ndims,
+                           CONST unsigned long *positions,
+                           int is_int,
+                           long ival,
+                           double rval)
+{
+  struct Name *lhs;
+  struct gl_list_t *instances;
+  struct value_t value;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  struct Instance *inst;
+  int ok;
+
+  lhs = TableBuildCellName(statement->v.table.name,domains,ndims,positions);
+  if (lhs == NULL) {
+    STATEMENT_ERROR(statement,"Unable to construct TABLE assignment target name");
+    return 0;
+  }
+
+  instances = FindInstances(work,lhs,&err);
+  DestroyName(lhs);
+  if (instances == NULL || gl_length(instances) != 1) {
+    if (instances != NULL) {
+      gl_destroy(instances);
+    }
+    STATEMENT_ERROR(statement,"TABLE assignment target could not be resolved uniquely");
+    return 0;
+  }
+  inst = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+
+  value = is_int
+    ? CreateIntegerValue(ival,1)
+    : CreateRealValue(rval,WildDimension(),1);
+
+  ok = AssignStructuralValue(inst,value,statement);
+  DestroyValue(&value);
+  return ok;
+}
+
+static int TableAssignCellMaybeWait(struct Instance *work,
+                                    struct Statement *statement,
+                                    CONST struct table_domain_t *domains,
+                                    unsigned ndims,
+                                    CONST unsigned long *positions,
+                                    int is_int,
+                                    long ival,
+                                    double rval)
+{
+  struct Name *lhs;
+  struct gl_list_t *instances;
+  struct value_t value;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  struct Instance *inst;
+  int ok;
+
+  lhs = TableBuildCellName(statement->v.table.name,domains,ndims,positions);
+  if (lhs == NULL) {
+    STATEMENT_ERROR(statement,"Unable to construct TABLE assignment target name");
+    return 0;
+  }
+
+  instances = FindInstances(work,lhs,&err);
+  DestroyName(lhs);
+  if (instances == NULL) {
+    switch (rel_errorlist_get_find_error(&err)) {
+    case unmade_instance:
+    case undefined_instance:
+      return -1;
+    default:
+      STATEMENT_ERROR(statement,"TABLE assignment target could not be resolved uniquely");
+      return 0;
+    }
+  }
+  if (gl_length(instances) != 1) {
+    gl_destroy(instances);
+    STATEMENT_ERROR(statement,"TABLE assignment target could not be resolved uniquely");
+    return 0;
+  }
+  inst = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+
+  value = is_int
+    ? CreateIntegerValue(ival,1)
+    : CreateRealValue(rval,WildDimension(),1);
+  ok = AssignStructuralValue(inst,value,statement);
+  DestroyValue(&value);
+  return ok;
+}
+
+struct dataset_domain_ref_t {
+  CONST struct Expr *expr;
+  CONST struct Name *set_name;
+};
+
+struct dataset_index_runtime_t {
+  CONST struct DatasetIndexItem *item;
+  symchar *set_name;
+  unsigned col;
+  enum set_kind kind;
+  int implicit_row;
+  struct set_t *set;
+  struct table_domain_t domain;
+  int int_fastpath;
+  long int_first;
+  long int_last;
+};
+
+struct dataset_map_runtime_t {
+  CONST struct DatasetMapItem *item;
+  unsigned col;
+  unsigned ndims;
+  struct dataset_index_runtime_t **indices;
+  struct table_domain_t *domains;
+  unsigned long *posbuf;
+  int fast_array_1d;
+  struct Instance *fast_array_inst;
+};
+
+static int DatasetFindColumn(CONST struct dataset_table_t *table, symchar *name)
+{
+  unsigned i;
+  if (table == NULL || name == NULL) {
+    return -1;
+  }
+  for (i = 0; i < table->ncols; ++i) {
+    if (table->cols[i].name == name) {
+      return (int)i;
+    }
+  }
+  return -1;
+}
+
+static struct dataset_index_runtime_t *DatasetFindIndexBySetName(struct dataset_index_runtime_t *indices,
+                                                                 unsigned nindices,
+                                                                 symchar *set_name)
+{
+  unsigned i;
+  if (indices == NULL || set_name == NULL) {
+    return NULL;
+  }
+  for (i = 0; i < nindices; ++i) {
+    if (indices[i].set_name == set_name) {
+      return &indices[i];
+    }
+  }
+  return NULL;
+}
+
+static int DatasetIndexTypeKind(symchar *type_name, enum set_kind *kind)
+{
+  if (type_name == NULL || kind == NULL) {
+    return 0;
+  }
+  if (type_name == GetBaseTypeName(integer_constant_type)
+      || type_name == GetBaseTypeName(integer_type)) {
+    *kind = integer_set;
+    return 1;
+  }
+  if (type_name == GetBaseTypeName(symbol_constant_type)
+      || type_name == GetBaseTypeName(symbol_type)) {
+    *kind = string_set;
+    return 1;
+  }
+  return 0;
+}
+
+static int DatasetIntValueCmp(VOIDPTR a, VOIDPTR b)
+{
+  asc_intptr_t ia = (asc_intptr_t)a;
+  asc_intptr_t ib = (asc_intptr_t)b;
+  return (ia > ib) ? 1 : ((ia < ib) ? -1 : 0);
+}
+
+static void DatasetInitIndexFastPath(struct dataset_index_runtime_t *index)
+{
+  unsigned long i;
+  CONST struct table_domain_t *domain;
+
+  if (index == NULL) {
+    return;
+  }
+  index->int_fastpath = 0;
+  index->int_first = 0;
+  index->int_last = 0;
+
+  domain = &index->domain;
+  if (domain->kind != integer_set || domain->set == NULL || domain->len == 0) {
+    return;
+  }
+
+  index->int_first = (long)FetchIntMember(domain->set,1);
+  index->int_last = index->int_first;
+  for (i = 2; i <= domain->len; ++i) {
+    long current = (long)FetchIntMember(domain->set,i);
+    if (index->int_last == LONG_MAX || current != index->int_last + 1) {
+      return;
+    }
+    index->int_last = current;
+  }
+  index->int_fastpath = 1;
+}
+
+static int DatasetLabelToPosition(CONST struct dataset_index_runtime_t *index,
+                                  CONST char *tok,
+                                  unsigned long *pos,
+                                  struct Statement *statement)
+{
+  CONST struct table_domain_t *domain;
+  if (index == NULL || tok == NULL || pos == NULL) {
+    return 0;
+  }
+  domain = &index->domain;
+  if (domain->kind == integer_set) {
+    long ival;
+    unsigned long p;
+    if (!TableParseIntegerToken(tok,&ival)) {
+      STATEMENT_ERROR(statement,"DATASET index label is not a valid integer");
+      return 0;
+    }
+    if (index->int_fastpath) {
+      if (ival < index->int_first || ival > index->int_last) {
+        STATEMENT_ERROR(statement,"DATASET index label is not a member of index set");
+        return 0;
+      }
+      *pos = (unsigned long)(ival - index->int_first) + 1;
+      return 1;
+    }
+    p = gl_search(domain->set->list,(VOIDPTR)(asc_intptr_t)ival,(CmpFunc)DatasetIntValueCmp);
+    if (p == 0) {
+      STATEMENT_ERROR(statement,"DATASET index label is not a member of index set");
+      return 0;
+    }
+    *pos = p;
+    return 1;
+  } else if (domain->kind == string_set) {
+    symchar *sym;
+    unsigned long p;
+    if (!TableParseSymbolToken(tok,&sym)) {
+      STATEMENT_ERROR(statement,"DATASET index label is not a valid symbol");
+      return 0;
+    }
+    p = gl_search(domain->set->list,sym,(CmpFunc)CmpSymchar);
+    if (p == 0) {
+      STATEMENT_ERROR(statement,"DATASET index label is not a member of index set");
+      return 0;
+    }
+    *pos = p;
+    return 1;
+  } else {
+    STATEMENT_ERROR(statement,"DATASET index set type is unsupported");
+    return 0;
+  }
+  STATEMENT_ERROR(statement,"DATASET index label mapping failure");
+  return 0;
+}
+
+static int DatasetCollectDomainRefs(CONST struct Name *target,
+                                    struct Statement *statement,
+                                    struct dataset_domain_ref_t **out_refs,
+                                    unsigned *out_ndims)
+{
+  CONST struct Name *node;
+  struct dataset_domain_ref_t *refs = NULL;
+  unsigned cap = 0;
+  unsigned count = 0;
+
+  if (out_refs == NULL || out_ndims == NULL) {
+    return 0;
+  }
+  *out_refs = NULL;
+  *out_ndims = 0;
+
+  for (node = target; node != NULL; node = NextName(node)) {
+    CONST struct Set *setnode;
+    if (NameId(node)) {
+      continue;
+    }
+    for (setnode = NameSetPtr(node); setnode != NULL; setnode = NextSet(setnode)) {
+      CONST struct Expr *expr;
+      if (SetType(setnode)) {
+        STATEMENT_ERROR(statement,"DATASET index ranges are not supported");
+        ascfree(refs);
+        return 0;
+      }
+      expr = GetSingleExpr(setnode);
+      if (expr == NULL) {
+        STATEMENT_ERROR(statement,"DATASET index expression is invalid");
+        ascfree(refs);
+        return 0;
+      }
+      if (count >= cap) {
+        cap = (cap == 0) ? 4 : cap * 2;
+        refs = (struct dataset_domain_ref_t *)ascrealloc(refs,sizeof(struct dataset_domain_ref_t) * cap);
+      }
+      refs[count].expr = expr;
+      refs[count].set_name = NULL;
+      if (ExprType(expr) == e_var
+          && ExprListLength(expr) == 1
+          && SimpleNameIdPtr(ExprName(expr)) != NULL) {
+        refs[count].set_name = ExprName(expr);
+      }
+      count++;
+    }
+  }
+  if (count == 0) {
+    STATEMENT_ERROR(statement,"DATASET target must include at least one index");
+    ascfree(refs);
+    return 0;
+  }
+  *out_refs = refs;
+  *out_ndims = count;
+  return 1;
+}
+
+static int DatasetAssignTokenToInstance(struct Instance *inst,
+                                        struct Statement *statement,
+                                        CONST char *token,
+                                        CONST char *units)
+{
+  struct value_t value;
+  CONST char *valtok = token;
+  CONST char *cell_units = NULL;
+  char *valbuf = NULL;
+  char *unitbuf = NULL;
+  int ok;
+
+  if (inst == NULL) {
+    STATEMENT_ERROR(statement,"DATASET assignment target instance is NULL");
+    return 0;
+  }
+
+  if (valtok != NULL) {
+    const char *brace = strchr(valtok,'{');
+    size_t len = strlen(valtok);
+    if (brace != NULL && len > 0 && valtok[len - 1] == '}') {
+      size_t nlen = (size_t)(brace - valtok);
+      size_t ulen = len - nlen - 2;
+      valbuf = ASC_NEW_ARRAY(char,nlen + 1);
+      unitbuf = ASC_NEW_ARRAY(char,ulen + 1);
+      memcpy(valbuf,valtok,nlen);
+      valbuf[nlen] = '\0';
+      memcpy(unitbuf,brace + 1,ulen);
+      unitbuf[ulen] = '\0';
+      valtok = valbuf;
+      cell_units = unitbuf;
+    }
+  }
+
+  if (units != NULL && cell_units != NULL && strcmp(units,cell_units) != 0) {
+    STATEMENT_ERROR(statement,"DATASET value units conflict with declared units");
+    ok = 0;
+    goto cleanup_units;
+  }
+  if (units == NULL && cell_units != NULL) {
+    units = cell_units;
+  }
+
+  switch (InstanceKind(inst)) {
+  case REAL_CONSTANT_INST:
+    {
+      double rval;
+      CONST dim_type *dims = Dimensionless();
+      if (!DatasetParseRealToken(valtok,&rval)) {
+        STATEMENT_ERROR(statement,"DATASET value is not a valid real");
+        ok = 0;
+        break;
+      }
+      if (units != NULL) {
+        unsigned long pos;
+        int error_code;
+        CONST struct Units *u = FindOrDefineUnits(units,&pos,&error_code);
+        if (u == NULL) {
+          STATEMENT_ERROR(statement,"DATASET units are invalid");
+          ok = 0;
+          break;
+        }
+        rval = rval * UnitsConvFactor(u);
+        dims = UnitsDimensions(u);
+      }
+      value = CreateRealValue(rval,dims,1);
+      ok = AssignStructuralValue(inst,value,statement);
+      DestroyValue(&value);
+    }
+    break;
+  case INTEGER_CONSTANT_INST:
+    {
+      long ival;
+      if (units != NULL) {
+        STATEMENT_ERROR(statement,"DATASET units are not allowed for integer values");
+        ok = 0;
+        break;
+      }
+      if (!TableParseIntegerToken(valtok,&ival)) {
+        STATEMENT_ERROR(statement,"DATASET value is not a valid integer");
+        ok = 0;
+        break;
+      }
+      value = CreateIntegerValue(ival,1);
+      ok = AssignStructuralValue(inst,value,statement);
+      DestroyValue(&value);
+    }
+    break;
+  case SYMBOL_CONSTANT_INST:
+    {
+      symchar *sym;
+      if (units != NULL) {
+        STATEMENT_ERROR(statement,"DATASET units are not allowed for symbol values");
+        ok = 0;
+        break;
+      }
+      if (!TableParseSymbolToken(valtok,&sym)) {
+        STATEMENT_ERROR(statement,"DATASET value is not a valid symbol");
+        ok = 0;
+        break;
+      }
+      value = CreateSymbolValue(sym,1);
+      ok = AssignStructuralValue(inst,value,statement);
+      DestroyValue(&value);
+    }
+    break;
+  case BOOLEAN_CONSTANT_INST:
+    {
+      int bval;
+      if (units != NULL) {
+        STATEMENT_ERROR(statement,"DATASET units are not allowed for boolean values");
+        ok = 0;
+        break;
+      }
+      if (!DatasetParseBooleanToken(valtok,&bval)) {
+        STATEMENT_ERROR(statement,"DATASET value is not a valid boolean");
+        ok = 0;
+        break;
+      }
+      value = CreateBooleanValue(bval,1);
+      ok = AssignStructuralValue(inst,value,statement);
+      DestroyValue(&value);
+    }
+    break;
+  default:
+    STATEMENT_ERROR(statement,"DATASET assignment target is not a constant");
+    ok = 0;
+    break;
+  }
+
+cleanup_units:
+  if (valbuf != NULL) {
+    ascfree(valbuf);
+  }
+  if (unitbuf != NULL) {
+    ascfree(unitbuf);
+  }
+  return ok;
+}
+
+static int DatasetAssignValueMaybeWait(struct Instance *work,
+                                       struct Statement *statement,
+                                       CONST struct DatasetMapItem *map,
+                                       CONST struct table_domain_t *domains,
+                                       unsigned ndims,
+                                       CONST unsigned long *positions,
+                                       CONST char *token,
+                                       CONST char *units)
+{
+  struct Name *lhs;
+  struct gl_list_t *instances;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  struct Instance *inst;
+
+  lhs = TableBuildCellName(map->target,domains,ndims,positions);
+  if (lhs == NULL) {
+    STATEMENT_ERROR(statement,"Unable to construct DATASET assignment target name");
+    return 0;
+  }
+
+  instances = FindInstances(work,lhs,&err);
+  DestroyName(lhs);
+  if (instances == NULL) {
+    switch (rel_errorlist_get_find_error(&err)) {
+    case unmade_instance:
+    case undefined_instance:
+      return -1;
+    default:
+      STATEMENT_ERROR(statement,"DATASET assignment target could not be resolved uniquely");
+      return 0;
+    }
+  }
+  if (gl_length(instances) != 1) {
+    gl_destroy(instances);
+    STATEMENT_ERROR(statement,"DATASET assignment target could not be resolved uniquely");
+    return 0;
+  }
+  inst = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+  return DatasetAssignTokenToInstance(inst,statement,token,units);
+}
+
+static struct Name *DatasetBuildSimpleArrayName(CONST struct Name *target, unsigned ndims)
+{
+  CONST struct Name *node;
+  CONST struct Name *last = NULL;
+  struct Name *result = NULL;
+  unsigned seen_sets = 0;
+  int seen_set_node = 0;
+
+  if (target == NULL || ndims != 1) {
+    return NULL;
+  }
+
+  for (node = target; node != NULL; node = NextName(node)) {
+    last = node;
+    if (NameId(node)) {
+      if (seen_set_node) {
+        DestroyName(result);
+        return NULL;
+      }
+      result = CopyAppendNameNode(result,node);
+    } else {
+      CONST struct Set *setnode = NameSetPtr(node);
+      seen_set_node = 1;
+      for (; setnode != NULL; setnode = NextSet(setnode)) {
+        if (SetType(setnode) || GetSingleExpr(setnode) == NULL) {
+          DestroyName(result);
+          return NULL;
+        }
+        seen_sets++;
+      }
+    }
+  }
+
+  if (result == NULL || last == NULL || NameId(last) || seen_sets != ndims) {
+    DestroyName(result);
+    return NULL;
+  }
+  return result;
+}
+
+static int DatasetTryBindFastArray1D(struct Instance *work,
+                                     struct Statement *statement,
+                                     struct dataset_map_runtime_t *map_runtime)
+{
+  struct Name *array_name;
+  struct gl_list_t *instances;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  struct Instance *inst;
+
+  if (work == NULL || statement == NULL || map_runtime == NULL) {
+    return 0;
+  }
+  if (map_runtime->ndims != 1 || map_runtime->item == NULL) {
+    return 1;
+  }
+
+  array_name = DatasetBuildSimpleArrayName(map_runtime->item->target,map_runtime->ndims);
+  if (array_name == NULL) {
+    return 1;
+  }
+
+  instances = FindInstances(work,array_name,&err);
+  DestroyName(array_name);
+  if (instances == NULL) {
+    switch (rel_errorlist_get_find_error(&err)) {
+    case unmade_instance:
+    case undefined_instance:
+      return -1;
+    default:
+      STATEMENT_ERROR(statement,"DATASET fast-path array target could not be resolved uniquely");
+      return 0;
+    }
+  }
+  if (gl_length(instances) != 1) {
+    gl_destroy(instances);
+    STATEMENT_ERROR(statement,"DATASET fast-path array target could not be resolved uniquely");
+    return 0;
+  }
+  inst = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+
+  if (!IsArrayInstance(inst)) {
+    return 1;
+  }
+
+  map_runtime->fast_array_1d = 1;
+  map_runtime->fast_array_inst = inst;
+  return 1;
+}
+
+static int ExecuteDATASET(struct Instance *work, struct Statement *statement)
+{
+  struct dataset_table_t *table;
+  struct DatasetIndexItem *idx;
+  struct DatasetMapItem *map;
+  struct dataset_index_runtime_t *indices = NULL;
+  struct dataset_map_runtime_t *maps = NULL;
+  struct dataset_map_prepare_t {
+    CONST struct DatasetMapItem *item;
+    struct dataset_domain_ref_t *refs;
+    unsigned ndims;
+    unsigned col;
+  } *map_prep = NULL;
+  unsigned nindices = 0;
+  unsigned nmaps = 0;
+  unsigned nexplicit_indices = 0;
+  symchar **implicit_set_names = NULL;
+  unsigned nimplicit_sets = 0;
+  unsigned implicit_set_cap = 0;
+  unsigned i;
+  int pending = 0;
+  int ok = 1;
+  int dataset_profile = 0;
+  int dataset_cache_hit = 1;
+  double t_total = 0.0;
+  double t_load = 0.0;
+  double t_index = 0.0;
+  double t_expand = 0.0;
+  double t_map_prepare = 0.0;
+  double t_assign = 0.0;
+  double tmark = 0.0;
+  const char *profile_env = getenv("ASC_DATASET_PROFILE");
+
+  if (profile_env != NULL && profile_env[0] != '\0' && profile_env[0] != '0') {
+    dataset_profile = 1;
+    tmark = DatasetNowSeconds();
+  }
+
+  if (StatWrong(statement)) {
+    return 1;
+  }
+  g_pass1_saw_dataset = 1;
+
+  if (statement->v.dataset.filename == NULL) {
+    STATEMENT_ERROR(statement,"DATASET filename is missing");
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+
+  table = DatasetCacheGet(statement->v.dataset.filename);
+  if (table == NULL) {
+    double t0 = 0.0;
+    struct dataset_stream_t stream;
+    dataset_cache_hit = 0;
+    if (dataset_profile) {
+      t0 = DatasetNowSeconds();
+    }
+    if (!DatasetStreamOpen(statement->v.dataset.filename,NULL,statement,&stream)) {
+      MarkStatContext(statement,context_WRONG);
+      return 0;
+    }
+    table = DatasetReadFile(statement->v.dataset.filename,&stream,statement);
+    DatasetStreamClose(&stream);
+    if (table == NULL) {
+      MarkStatContext(statement,context_WRONG);
+      return 0;
+    }
+    DatasetCacheInsert(statement->v.dataset.filename,table);
+    if (dataset_profile) {
+      t_load += DatasetNowSeconds() - t0;
+    }
+  }
+
+  if (dataset_profile) {
+    tmark = DatasetNowSeconds();
+  }
+
+  for (idx = statement->v.dataset.indices; idx != NULL; idx = idx->next) {
+    nindices++;
+  }
+  nexplicit_indices = nindices;
+
+  indices = (nindices > 0) ? ASC_NEW_ARRAY(struct dataset_index_runtime_t,nindices) : NULL;
+  for (i = 0; i < nindices; ++i) {
+    indices[i].item = NULL;
+    indices[i].set_name = NULL;
+    indices[i].col = 0;
+    indices[i].kind = empty_set;
+    indices[i].implicit_row = 0;
+    indices[i].set = NULL;
+    indices[i].domain.set = NULL;
+    indices[i].domain.kind = empty_set;
+    indices[i].domain.len = 0;
+    indices[i].int_fastpath = 0;
+    indices[i].int_first = 0;
+    indices[i].int_last = 0;
+  }
+  i = 0;
+  for (idx = statement->v.dataset.indices; idx != NULL; idx = idx->next) {
+    enum set_kind kind;
+    int col = DatasetFindColumn(table,idx->column_name);
+    if (col < 0) {
+      STATEMENT_ERROR(statement,"DATASET INDEX column not found");
+      MarkStatContext(statement,context_WRONG);
+      ok = 0;
+      goto cleanup;
+    }
+    if (!DatasetIndexTypeKind(idx->type_name,&kind)) {
+      STATEMENT_ERROR(statement,"DATASET INDEX type is unsupported");
+      MarkStatContext(statement,context_WRONG);
+      ok = 0;
+      goto cleanup;
+    }
+    indices[i].item = idx;
+    indices[i].set_name = idx->set_name;
+    indices[i].col = (unsigned)col;
+    indices[i].kind = kind;
+    indices[i].implicit_row = 0;
+    indices[i].set = CreateEmptySet();
+    indices[i].domain.set = NULL;
+    indices[i].domain.kind = empty_set;
+    indices[i].domain.len = 0;
+    i++;
+  }
+
+  for (i = 0; i < table->nrows; ++i) {
+    unsigned j;
+    for (j = 0; j < nindices; ++j) {
+      CONST char *tok = table->rows[i].cells[indices[j].col];
+      if (indices[j].kind == integer_set) {
+        long ival;
+        if (!TableParseIntegerToken(tok,&ival)) {
+          STATEMENT_ERROR(statement,"DATASET INDEX value is not a valid integer");
+          MarkStatContext(statement,context_WRONG);
+          ok = 0;
+          goto cleanup;
+        }
+        InsertInteger(indices[j].set,(asc_intptr_t)ival);
+      } else if (indices[j].kind == string_set) {
+        symchar *sym;
+        if (!TableParseSymbolToken(tok,&sym)) {
+          STATEMENT_ERROR(statement,"DATASET INDEX value is not a valid symbol");
+          MarkStatContext(statement,context_WRONG);
+          ok = 0;
+          goto cleanup;
+        }
+        InsertString(indices[j].set,sym);
+      }
+    }
+  }
+
+  for (i = 0; i < nindices; ++i) {
+    struct Name *setname;
+    if (indices[i].set_name == NULL) {
+      STATEMENT_ERROR(statement,"DATASET INDEX set name is invalid");
+      MarkStatContext(statement,context_WRONG);
+      ok = 0;
+      goto cleanup;
+    }
+    setname = CreateIdName(indices[i].set_name);
+    if (!TableAssignDomainSet(work,setname,indices[i].set,statement)) {
+      DestroyName(setname);
+      MarkStatContext(statement,context_WRONG);
+      ok = 0;
+      goto cleanup;
+    }
+    DestroyName(setname);
+    if (!TableInitDomainFromSet(indices[i].set,statement,&indices[i].domain)) {
+      MarkStatContext(statement,context_WRONG);
+      ok = 0;
+      goto cleanup;
+    }
+    DatasetInitIndexFastPath(&indices[i]);
+    DestroySet(indices[i].set);
+    indices[i].set = NULL;
+  }
+
+  if (dataset_profile) {
+    double now = DatasetNowSeconds();
+    t_index += now - tmark;
+    tmark = now;
+  }
+
+  for (map = statement->v.dataset.maps; map != NULL; map = map->next) {
+    nmaps++;
+  }
+  if (nmaps == 0) {
+    STATEMENT_ERROR(statement,"DATASET has no map items");
+    MarkStatContext(statement,context_WRONG);
+    ok = 0;
+    goto cleanup;
+  }
+
+  maps = ASC_NEW_ARRAY(struct dataset_map_runtime_t,nmaps);
+  map_prep = ASC_NEW_ARRAY(struct dataset_map_prepare_t,nmaps);
+  for (i = 0; i < nmaps; ++i) {
+    maps[i].item = NULL;
+    maps[i].col = 0;
+    maps[i].ndims = 0;
+    maps[i].indices = NULL;
+    maps[i].domains = NULL;
+    maps[i].posbuf = NULL;
+    maps[i].fast_array_1d = 0;
+    maps[i].fast_array_inst = NULL;
+    map_prep[i].item = NULL;
+    map_prep[i].refs = NULL;
+    map_prep[i].ndims = 0;
+    map_prep[i].col = 0;
+  }
+  i = 0;
+  for (map = statement->v.dataset.maps; map != NULL; map = map->next) {
+    struct dataset_domain_ref_t *refs = NULL;
+    unsigned ndims = 0;
+    unsigned d;
+    int col = DatasetFindColumn(table,map->column_name);
+    const char *col_units = NULL;
+    if (col < 0) {
+      STATEMENT_ERROR(statement,"DATASET column not found for map item");
+      MarkStatContext(statement,context_WRONG);
+      ok = 0;
+      goto cleanup;
+    }
+    col_units = table->cols[col].units;
+    if (map->units != NULL && col_units != NULL && strcmp(map->units,col_units) != 0) {
+      STATEMENT_ERROR(statement,"DATASET map units conflict with column units");
+      MarkStatContext(statement,context_WRONG);
+      ok = 0;
+      goto cleanup;
+    }
+    if (!DatasetCollectDomainRefs(map->target,statement,&refs,&ndims)) {
+      MarkStatContext(statement,context_WRONG);
+      ok = 0;
+      goto cleanup;
+    }
+    map_prep[i].item = map;
+    map_prep[i].col = (unsigned)col;
+    map_prep[i].refs = refs;
+    map_prep[i].ndims = ndims;
+    for (d = 0; d < ndims; ++d) {
+      struct dataset_index_runtime_t *idxmatch = NULL;
+      symchar *setid = NULL;
+      if (refs[d].set_name != NULL) {
+        setid = SimpleNameIdPtr(refs[d].set_name);
+      }
+      if (setid == NULL) {
+        STATEMENT_ERROR(statement,"DATASET target index must be a simple set name");
+        MarkStatContext(statement,context_WRONG);
+        ok = 0;
+        goto cleanup;
+      }
+      idxmatch = DatasetFindIndexBySetName(indices,nindices,setid);
+      if (idxmatch == NULL) {
+        if (nexplicit_indices > 0) {
+          STATEMENT_ERROR(statement,"DATASET target index not declared in INDEX items");
+          MarkStatContext(statement,context_WRONG);
+          ok = 0;
+          goto cleanup;
+        }
+        if (nimplicit_sets == 0) {
+          implicit_set_cap = 2;
+          implicit_set_names = ASC_NEW_ARRAY(symchar *,implicit_set_cap);
+        } else if (nimplicit_sets >= implicit_set_cap) {
+          implicit_set_cap *= 2;
+          implicit_set_names = (symchar **)ascrealloc(implicit_set_names,sizeof(symchar *) * implicit_set_cap);
+        }
+        if (nimplicit_sets > 0 && implicit_set_names[0] != setid) {
+          STATEMENT_ERROR(statement,"DATASET implicit row-index mode supports only one undeclared index set");
+          MarkStatContext(statement,context_WRONG);
+          ok = 0;
+          goto cleanup;
+        }
+        if (nimplicit_sets == 0) {
+          implicit_set_names[nimplicit_sets++] = setid;
+        }
+      }
+    }
+    i++;
+  }
+
+  if (nexplicit_indices == 0 && nimplicit_sets > 0) {
+    unsigned base = nindices;
+    indices = (struct dataset_index_runtime_t *)ascrealloc(indices,sizeof(struct dataset_index_runtime_t) * (nindices + nimplicit_sets));
+    for (i = 0; i < nimplicit_sets; ++i) {
+      struct Name *setname;
+      unsigned long row;
+      unsigned pos = base + i;
+      indices[pos].item = NULL;
+      indices[pos].set_name = implicit_set_names[i];
+      indices[pos].col = 0;
+      indices[pos].kind = integer_set;
+      indices[pos].implicit_row = 1;
+      indices[pos].set = CreateEmptySet();
+      indices[pos].domain.set = NULL;
+      indices[pos].domain.kind = empty_set;
+      indices[pos].domain.len = 0;
+      indices[pos].int_fastpath = 0;
+      indices[pos].int_first = 0;
+      indices[pos].int_last = 0;
+
+      for (row = 1; row <= table->nrows; ++row) {
+        InsertInteger(indices[pos].set,(asc_intptr_t)row);
+      }
+
+      setname = CreateIdName(indices[pos].set_name);
+      if (!TableAssignDomainSet(work,setname,indices[pos].set,statement)) {
+        DestroyName(setname);
+        MarkStatContext(statement,context_WRONG);
+        ok = 0;
+        goto cleanup;
+      }
+      DestroyName(setname);
+      if (!TableInitDomainFromSet(indices[pos].set,statement,&indices[pos].domain)) {
+        MarkStatContext(statement,context_WRONG);
+        ok = 0;
+        goto cleanup;
+      }
+      DatasetInitIndexFastPath(&indices[pos]);
+      DestroySet(indices[pos].set);
+      indices[pos].set = NULL;
+    }
+    nindices += nimplicit_sets;
+  }
+
+  /*
+   * DATASET index assignment can define array index sets that were previously
+   * unknown. Try an immediate expansion so map assignments can resolve
+   * target instances in this same pass.
+   */
+  {
+    int changed = 0;
+    TryArrayExpansion(work,&changed);
+  }
+
+  if (dataset_profile) {
+    double now = DatasetNowSeconds();
+    t_expand += now - tmark;
+    tmark = now;
+  }
+
+  for (i = 0; i < nmaps; ++i) {
+    unsigned d;
+    int fast_bind;
+    maps[i].item = map_prep[i].item;
+    maps[i].col = map_prep[i].col;
+    maps[i].ndims = map_prep[i].ndims;
+    maps[i].indices = ASC_NEW_ARRAY(struct dataset_index_runtime_t *,maps[i].ndims);
+    maps[i].domains = ASC_NEW_ARRAY(struct table_domain_t,maps[i].ndims);
+    maps[i].posbuf = ASC_NEW_ARRAY(unsigned long,maps[i].ndims);
+    for (d = 0; d < maps[i].ndims; ++d) {
+      symchar *setid = NULL;
+      struct dataset_index_runtime_t *idxmatch;
+      if (map_prep[i].refs[d].set_name != NULL) {
+        setid = SimpleNameIdPtr(map_prep[i].refs[d].set_name);
+      }
+      if (setid == NULL) {
+        STATEMENT_ERROR(statement,"DATASET target index must be a simple set name");
+        MarkStatContext(statement,context_WRONG);
+        ok = 0;
+        goto cleanup;
+      }
+      idxmatch = DatasetFindIndexBySetName(indices,nindices,setid);
+      if (idxmatch == NULL) {
+        STATEMENT_ERROR(statement,"DATASET target index not declared in INDEX items");
+        MarkStatContext(statement,context_WRONG);
+        ok = 0;
+        goto cleanup;
+      }
+      maps[i].indices[d] = idxmatch;
+      maps[i].domains[d] = idxmatch->domain;
+    }
+    fast_bind = DatasetTryBindFastArray1D(work,statement,&maps[i]);
+    if (fast_bind < 0) {
+      pending = 1;
+      maps[i].fast_array_1d = 0;
+      maps[i].fast_array_inst = NULL;
+    } else if (!fast_bind) {
+      MarkStatContext(statement,context_WRONG);
+      ok = 0;
+      goto cleanup;
+    }
+  }
+
+  if (dataset_profile) {
+    double now = DatasetNowSeconds();
+    t_map_prepare += now - tmark;
+    tmark = now;
+  }
+
+  for (i = 0; i < table->nrows; ++i) {
+    unsigned m;
+    for (m = 0; m < nmaps; ++m) {
+      unsigned d;
+      unsigned long *pos = maps[m].posbuf;
+      int assign_result;
+      for (d = 0; d < maps[m].ndims; ++d) {
+        if (maps[m].indices[d]->implicit_row) {
+          pos[d] = i + 1;
+        } else {
+          CONST char *tok = table->rows[i].cells[maps[m].indices[d]->col];
+          if (!DatasetLabelToPosition(maps[m].indices[d],tok,&pos[d],statement)) {
+            MarkStatContext(statement,context_WRONG);
+            ok = 0;
+            goto cleanup;
+          }
+        }
+      }
+      {
+        CONST char *units = maps[m].item->units;
+        if (units == NULL) {
+          units = table->cols[maps[m].col].units;
+        }
+        if (maps[m].fast_array_1d && maps[m].fast_array_inst != NULL && maps[m].ndims == 1) {
+          unsigned long p = pos[0];
+          struct Instance *cellinst = NULL;
+          if (p == 0 || p > NumberChildren(maps[m].fast_array_inst)) {
+            STATEMENT_ERROR(statement,"DATASET fast-path index position is out of array bounds");
+            assign_result = 0;
+          } else {
+            cellinst = InstanceChild(maps[m].fast_array_inst,p);
+            if (cellinst == NULL) {
+              assign_result = -1;
+            } else {
+              assign_result = DatasetAssignTokenToInstance(cellinst,statement,table->rows[i].cells[maps[m].col],units);
+            }
+          }
+        } else {
+          assign_result = DatasetAssignValueMaybeWait(work,statement,maps[m].item,maps[m].domains,maps[m].ndims,pos,table->rows[i].cells[maps[m].col],units);
+        }
+      }
+      if (assign_result < 0) {
+        pending = 1;
+      } else if (!assign_result) {
+        MarkStatContext(statement,context_WRONG);
+        ok = 0;
+        goto cleanup;
+      }
+    }
+  }
+
+  if (dataset_profile) {
+    double now = DatasetNowSeconds();
+    t_assign += now - tmark;
+    tmark = now;
+    t_total = t_load + t_index + t_expand + t_map_prepare + t_assign;
+    FPRINTF(ASCERR,
+      "DATASET_PROFILE file='%s' cache_hit=%d rows=%u nindices=%u nmaps=%u load=%.6fs index=%.6fs expand=%.6fs map_prepare=%.6fs assign=%.6fs total=%.6fs\n",
+      statement->v.dataset.filename ? statement->v.dataset.filename : "(null)",
+      dataset_cache_hit,
+      table->nrows,
+      nindices,
+      nmaps,
+      t_load,
+      t_index,
+      t_expand,
+      t_map_prepare,
+      t_assign,
+      t_total
+    );
+  }
+
+cleanup:
+  if (map_prep != NULL) {
+    for (i = 0; i < nmaps; ++i) {
+      if (map_prep[i].refs != NULL) {
+        ascfree(map_prep[i].refs);
+      }
+    }
+    ascfree(map_prep);
+  }
+  if (implicit_set_names != NULL) {
+    ascfree(implicit_set_names);
+  }
+  if (maps != NULL) {
+    for (i = 0; i < nmaps; ++i) {
+      if (maps[i].indices != NULL) {
+        ascfree(maps[i].indices);
+      }
+      if (maps[i].domains != NULL) {
+        ascfree(maps[i].domains);
+      }
+      if (maps[i].posbuf != NULL) {
+        ascfree(maps[i].posbuf);
+      }
+    }
+    ascfree(maps);
+  }
+  if (indices != NULL) {
+    for (i = 0; i < nindices; ++i) {
+      TableDomainDestroy(&indices[i].domain);
+      if (indices[i].set != NULL) {
+        DestroySet(indices[i].set);
+      }
+    }
+    ascfree(indices);
+  }
+  if (!ok) {
+    return 0;
+  }
+  if (pending) {
+    return 0;
+  }
+  return 1;
+}
+
+static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
+  struct table_domain_t domains[2];
+  CONST struct Name *node;
+  unsigned ndims = 0;
+  int rval = 1;
+  char *bodycopy = NULL;
+  char *line_ctx = NULL;
+  char *line;
+  unsigned long row_index = 1;
+  unsigned long flat_index = 0;
+  unsigned di;
+
+  if (StatWrong(statement)) {
+    return 1;
+  }
+
+  if (statement->v.table.name == NULL || !NameId(statement->v.table.name)) {
+    STATEMENT_ERROR(statement,"TABLE target name is invalid");
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+  if (!statement->v.table.positional) {
+    return ExecuteTABLEDense(work,statement);
+  }
+
+  for (di = 0; di < 2; ++di) {
+    domains[di].set = NULL;
+    domains[di].kind = empty_set;
+    domains[di].len = 0;
+  }
+
+  for (node = statement->v.table.name; node != NULL; node = NextName(node)) {
+    if (!NameId(node)) {
+      unsigned added = 0;
+      if (ndims >= 2) {
+        STATEMENT_ERROR(statement,"POSITIONAL TABLE currently supports at most 2 indices");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      if (!TableEvaluateDomains(work,NameSetPtr(node),statement,&domains[ndims],2 - ndims,&added)) {
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      ndims += added;
+    }
+  }
+  if (ndims == 0) {
+    STATEMENT_ERROR(statement,"TABLE target must include at least one index");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+
+  if (statement->v.table.body != NULL) {
+    size_t n = strlen(statement->v.table.body);
+    bodycopy = ASC_NEW_ARRAY(char,n + 1);
+    memcpy(bodycopy,statement->v.table.body,n + 1);
+  } else {
+    bodycopy = ASC_NEW_ARRAY(char,1);
+    bodycopy[0] = '\0';
+  }
+
+  for (line = strtok_r(bodycopy,"\n",&line_ctx); line != NULL; line = strtok_r(NULL,"\n",&line_ctx)) {
+    char *tok_ctx = NULL;
+    char *tok;
+    unsigned long col_index = 1;
+    int row_has_values = 0;
+    int delim_pending = 0;
+    int last_delim = 0;
+    int sign = 1;
+    int sign_pending = 0;
+
+    for (tok = strtok_r(line," \t\r",&tok_ctx); tok != NULL; tok = strtok_r(NULL," \t\r",&tok_ctx)) {
+      int is_int;
+      long ival;
+      double rvalnum;
+      unsigned long pos[2];
+
+      if (strcmp(tok,";") == 0 || strcmp(tok,",") == 0) {
+        if (sign_pending) {
+          STATEMENT_ERROR(statement,"TABLE delimiter cannot follow a sign without a value");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (!row_has_values) {
+          STATEMENT_ERROR(statement,"TABLE row cannot begin with a delimiter");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (delim_pending) {
+          STATEMENT_ERROR(statement,"TABLE row has repeated delimiters without a value");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        delim_pending = 1;
+        last_delim = tok[0];
+        continue;
+      }
+      if (strcmp(tok,"+") == 0 || strcmp(tok,"-") == 0) {
+        if (sign_pending) {
+          STATEMENT_ERROR(statement,"Malformed TABLE value sign sequence");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        delim_pending = 0;
+        last_delim = 0;
+        sign = (tok[0] == '-') ? -1 : 1;
+        sign_pending = 1;
+        continue;
+      }
+      if (strcmp(tok,":") == 0 || strcmp(tok,"=") == 0) {
+        STATEMENT_ERROR(statement,"Unexpected sparse-token punctuation in POSITIONAL TABLE");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+
+      if (!TableParseNumberToken(tok,sign_pending ? sign : 1,&is_int,&ival,&rvalnum)) {
+        STATEMENT_ERROR(statement,"POSITIONAL TABLE contains non-numeric token");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      delim_pending = 0;
+      last_delim = 0;
+      sign = 1;
+      sign_pending = 0;
+      row_has_values = 1;
+
+      if (ndims == 1) {
+        flat_index++;
+        if (flat_index > domains[0].len) {
+          STATEMENT_ERROR(statement,"Too many TABLE values for 1-D target");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        pos[0] = flat_index;
+        if (!TableAssignCell(work,statement,domains,1,pos,is_int,ival,rvalnum)) {
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+      } else {
+        if (row_index > domains[0].len) {
+          STATEMENT_ERROR(statement,"Too many TABLE rows for first index set");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (col_index > domains[1].len) {
+          STATEMENT_ERROR(statement,"Too many TABLE columns for second index set");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        pos[0] = row_index;
+        pos[1] = col_index;
+        if (!TableAssignCell(work,statement,domains,2,pos,is_int,ival,rvalnum)) {
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        col_index++;
+      }
+    }
+
+    if (sign_pending) {
+      STATEMENT_ERROR(statement,"Dangling sign token at end of TABLE row");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    if (delim_pending) {
+      if (last_delim != ';') {
+        STATEMENT_ERROR(statement,"TABLE row cannot end with a delimiter");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+    }
+    if (!row_has_values) {
+      continue;
+    }
+    if (ndims == 2) {
+      if (col_index - 1 != domains[1].len) {
+        STATEMENT_ERROR(statement,"TABLE row has incorrect number of columns");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      row_index++;
+    }
+  }
+
+  if (ndims == 1) {
+    if (flat_index != domains[0].len) {
+      STATEMENT_ERROR(statement,"TABLE value count does not match index cardinality");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+  } else {
+    if (row_index - 1 != domains[0].len) {
+      STATEMENT_ERROR(statement,"TABLE row count does not match first index cardinality");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+  }
+  rval = 1;
+  goto cleanup;
+
+cleanup:
+  if (bodycopy != NULL) {
+    ascfree(bodycopy);
+  }
+  for (di = 0; di < 2; ++di) {
+    TableDomainDestroy(&domains[di]);
+  }
+  return rval;
+}
+
 
 /**
 	Execute structural and dimensional assignments.
@@ -6180,11 +9562,13 @@ static int NameContainsName(CONST struct Name *n,CONST struct Name *sub){
   nl = EvaluateNamesNeededShallow(en,NULL,NULL);
   /* should this function be checking deep instead? can't tell yet. */
   if (nl==NULL || gl_length(nl)==0) {
+    ascfree(en);
     return 0; /* should never happen */
   }
   for (c=1, len = gl_length(nl); c <= len; c++) {
     if (CompareNames((struct Name *)gl_fetch(nl,c),sub)==0) {
       gl_destroy(nl);
+      ascfree(en);
       return 1;
     }
   }
@@ -6906,6 +10290,8 @@ static int Pass3CheckCondStatements(struct Instance *inst
     case WHEN:
     case FNAME:
     case SELECT:
+    case TABLESTAT:
+    case DATASETSTAT:
       STATEMENT_ERROR(statement,
         "Statement not allowed inside a CONDITIONAL statement\n");
       return 0;
@@ -6968,6 +10354,8 @@ static int Pass2CheckCondStatements(struct Instance *inst
     case WHEN:
     case FNAME:
     case SELECT:
+    case TABLESTAT:
+    case DATASETSTAT:
          STATEMENT_ERROR(statement,
                "Statement not allowed inside a CONDITIONAL statement\n");
          return 0;
@@ -7260,6 +10648,8 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
     case CALL:
     case ASGN:
     case SELECT:
+    case TABLESTAT:
+    case DATASETSTAT:
          STATEMENT_ERROR(statement,
               "Statement not allowed inside a WHEN statement\n");
          return 0;
@@ -7780,6 +11170,8 @@ int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
   case LNK:
   case CASGN:
   case ASGN:
+  case TABLESTAT:
+  case DATASETSTAT:
   default:
     return 1; /* ignore all in phase 4.*/
   }
@@ -7812,6 +11204,8 @@ int Pass3CheckStatement(struct Instance *inst, struct Statement *stat)
   case WHEN:
   case SELECT:
   case FNAME:
+  case TABLESTAT:
+  case DATASETSTAT:
   default:
     return 1; /* ignore all in phase 3. nondeclarative flagged in pass1 */
   }
@@ -7845,6 +11239,8 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
   case WHEN:
   case SELECT:
   case FNAME:
+  case TABLESTAT:
+  case DATASETSTAT:
   default:
     return 1; /* ignore all in phase 2. nondeclarative flagged in pass1 */
   }
@@ -7894,6 +11290,10 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
     return 1; /* ignore'm in phase 1 */
   case CASGN:
     return CheckCASGN(inst,stat);
+  case TABLESTAT:
+    return 1;
+  case DATASETSTAT:
+    return 1;
   case ASGN:
     return 1; /* ignore'm in phase 1 */
   case WHEN:
@@ -8955,6 +12355,14 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
         return_value = Pass1ExecuteFOR(inst,statement);
         if (return_value) ClearBit(blist,*count);
         break;
+      case TABLESTAT:
+        return_value = ExecuteTABLE(inst,statement);
+        if (return_value) ClearBit(blist,*count);
+        break;
+      case DATASETSTAT:
+        return_value = ExecuteDATASET(inst,statement);
+        if (return_value) ClearBit(blist,*count);
+        break;
       case ASGN:
       case REL:
       case EXT:
@@ -9017,6 +12425,8 @@ void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
       case CALL:
       case CASGN:
       case ASGN:
+      case TABLESTAT:
+      case DATASETSTAT:
         ClearBit(blist,*count);
         break;
       case FNAME:
@@ -9686,6 +13096,8 @@ int Pass5ExecuteForStatements(struct Instance *inst,
     case LOGREL:
     case COND:
     case CALL:
+    case TABLESTAT:
+    case DATASETSTAT:
     case EXT:  /* ignore'm */
     break;
     default:
@@ -9743,6 +13155,8 @@ int Pass4ExecuteForStatements(struct Instance *inst,
     case LOGREL:
     case COND:
     case CALL:
+    case TABLESTAT:
+    case DATASETSTAT:
     case EXT:  /* ignore'm */
     break;
     default:
@@ -9787,6 +13201,8 @@ int Pass3ExecuteForStatements(struct Instance *inst,
     case ASGN:
     case REL:
     case CALL:
+    case TABLESTAT:
+    case DATASETSTAT:
     case EXT: /* ignore'm */
     case CASGN:
     case WHEN:
@@ -9864,6 +13280,8 @@ void Pass2ExecuteForStatements(struct Instance *inst,
     case ASGN: /* ignore'm */
     case CASGN:
     case LOGREL:
+    case TABLESTAT:
+    case DATASETSTAT:
       return_value = 1; /* ignore'm until pass 3 */
       break;
     case WHEN:
@@ -9993,6 +13411,12 @@ void Pass1ExecuteForStatements(struct Instance *inst,
     case CASGN:
       return_value = ExecuteCASGN(inst,statement);
       break;
+    case TABLESTAT:
+      return_value = ExecuteTABLE(inst,statement);
+      break;
+    case DATASETSTAT:
+      return_value = ExecuteDATASET(inst,statement);
+      break;
     case FNAME:
       STATEMENT_ERROR(statement,
                 "FNAME statements are only allowed inside a WHEN Statement");
@@ -10041,6 +13465,8 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
       case CALL:
       case CASGN:
       case ASGN:
+      case TABLESTAT:
+      case DATASETSTAT:
         break;
       case FNAME:
         if (g_iteration>=MAXNUMBER) {
@@ -11273,6 +14699,10 @@ int Pass5ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return 0;
   case FOR:
     return Pass5ExecuteFOR(inst,statement);
+  case TABLESTAT:
+    return 1;
+  case DATASETSTAT:
+    return 1;
   default:
     return 1;
     /* For anything else but a LINK and FOR statement */
@@ -11287,6 +14717,10 @@ int Pass4ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return ExecuteWHEN(inst,statement);
   case FOR:
     return Pass4ExecuteFOR(inst,statement);
+  case TABLESTAT:
+    return 1;
+  case DATASETSTAT:
+    return 1;
   case LNK:
     return 1; /* automatically assume done */
   case UNLNK:
@@ -11307,6 +14741,10 @@ int Pass3ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return ExecuteLOGREL(inst,statement);
   case COND:
     return Pass3ExecuteCOND(inst,statement);
+  case TABLESTAT:
+    return 1;
+  case DATASETSTAT:
+    return 1;
   case WHEN:
     return 1; /* assumed done  */
   case LNK:
@@ -11346,6 +14784,10 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return ExecuteEXT(inst,statement);
   case COND:
     return Pass2ExecuteCOND(inst,statement);
+  case TABLESTAT:
+    return 1;
+  case DATASETSTAT:
+    return 1;
   case LOGREL:
 		return 1; /* assumed done */
   case WHEN:
@@ -11382,6 +14824,10 @@ int Pass1ExecuteStatement(struct Instance *inst, unsigned long *c,
     return ExecuteAA(inst,statement);
   case FOR:
     return Pass1ExecuteFOR(inst,statement);
+  case TABLESTAT:
+    return ExecuteTABLE(inst,statement);
+  case DATASETSTAT:
+    return ExecuteDATASET(inst,statement);
   case REL:
     return 1; /* automatically assume done */
   case CALL:
@@ -12517,7 +15963,7 @@ static struct Instance *Pass2InstantiateModel(struct Instance *result,
   if (result!=NULL) {
     /* CONSOLE_DEBUG("result!=NULL..."); */
     /* pass2 pendings already set by visit */
-    if (ANONFORCE || g_use_copyanon != 0) {
+    if (ANONFORCE || (g_use_copyanon != 0 && !g_pass1_saw_dataset)) {
 #if TIMECOMPILER
       g_ExecuteREL_CreateTokenRelation_calls = 0;
       g_CopyAnonRelation = 0;
@@ -12632,6 +16078,7 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
   struct for_table_t *SavedForTable;
   SavedForTable = GetEvaluationForTable();
   SetEvaluationForTable(CreateForTable());
+  g_pass1_saw_dataset = 0;
 
   if (def != NULL && oldresult != NULL) {
     Asc_Panic(2, "Pass1InstantiateModel",
@@ -12668,8 +16115,13 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
           );
         }else{
           FPRINTF(ASCWAR,"---- Pass 1 pending: -------------\n");
-          if (g_compiler_warnings > 1) {
+          if (g_compiler_warnings > 1
+              && (!g_pass1_saw_dataset || g_compiler_warnings > 2)) {
             CheckInstanceLevel(ASCWAR,result,1);
+          }else if (g_compiler_warnings > 1 && g_pass1_saw_dataset) {
+            FPRINTF(ASCWAR,
+              "Skipping full pass-1 structural check because DATASET statements were executed.\n"
+              "Use compiler verbosity > 2 to force full diagnostics for DATASET-backed models.\n");
           }else{
             FPRINTF(ASCWAR,"(Total object check suppressed: g_compiler_warnings = %d)\n",g_compiler_warnings);
           }
@@ -12680,6 +16132,7 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
     }
     ClearList();
   }
+  DatasetCacheClear();
   DestroyForTable(GetEvaluationForTable());
   SetEvaluationForTable(SavedForTable);
   return result;
@@ -12699,6 +16152,16 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
 {
   struct Instance *result;
   unsigned long pass1pendings,pass2pendings,pass3pendings,pass4pendings,pass5pendings;
+  int inst_profile = 0;
+  double inst_mark = 0.0;
+  double inst_p1 = 0.0;
+  double inst_p2 = 0.0;
+  double inst_p3 = 0.0;
+  double inst_p4 = 0.0;
+  double inst_p5 = 0.0;
+  double inst_p6 = 0.0;
+  double inst_total = 0.0;
+  const char *inst_profile_env = getenv("ASC_INSTANTIATE_PROFILE");
 #if TIMECOMPILER
   double start, phase1t,phase2t,phase3t,phase4t,phase5t,phase6t;
 #endif
@@ -12712,10 +16175,19 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   pass3pendings = 0L;
   pass4pendings = 0L;
 	pass5pendings = 0L;
+  if (inst_profile_env != NULL && inst_profile_env[0] != '\0' && inst_profile_env[0] != '0') {
+    inst_profile = 1;
+    inst_mark = DatasetNowSeconds();
+  }
 #if TIMECOMPILER
   start = tm_cpu_time();
 #endif
   result = Pass1InstantiateModel(def,&pass1pendings,NULL);
+  if (inst_profile) {
+    double now = DatasetNowSeconds();
+    inst_p1 = now - inst_mark;
+    inst_mark = now;
+  }
 
 #if TIMECOMPILER
   phase1t = tm_cpu_time();
@@ -12739,6 +16211,11 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
     if (g_use_copyanon) {
     }
     result = Pass2InstantiateModel(result,&pass2pendings);
+    if (inst_profile) {
+      double now = DatasetNowSeconds();
+      inst_p2 = now - inst_mark;
+      inst_mark = now;
+    }
     /* result will not move as currently implemented */
 #ifdef DEBUG_RELS
     debug_rels_work = NULL;
@@ -12765,6 +16242,11 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
      * at present order 0, so we do lower models before those near root
      */
     result = Pass3InstantiateModel(result,&pass3pendings);
+    if (inst_profile) {
+      double now = DatasetNowSeconds();
+      inst_p3 = now - inst_mark;
+      inst_mark = now;
+    }
    /* result will not move as currently implemented */
   }else{
     return result;
@@ -12781,6 +16263,11 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
     /* note, the order of the visit might be better 1 than 0. don't know */
     /* at present order 0, so we do lower models before those near root */
     result = Pass4InstantiateModel(result,&pass4pendings);
+    if (inst_profile) {
+      double now = DatasetNowSeconds();
+      inst_p4 = now - inst_mark;
+      inst_mark = now;
+    }
    /* result will not move as currently implemented */
   }else{
     return result;
@@ -12797,6 +16284,11 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
 	  /* note, the order of the visit might be better 1 than 0. don't know */
 	  /* at present order 0, so we do lower models before those near root */
 		result = Pass5InstantiateModel(result,&pass5pendings);
+    if (inst_profile) {
+      double now = DatasetNowSeconds();
+      inst_p5 = now - inst_mark;
+      inst_mark = now;
+    }
 		/* result will not move as currently implemented <-DS: what do you really mean by this? */
   }else{
     return result;
@@ -12808,6 +16300,11 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   if (result!=NULL) {
     if (!pass1pendings && !pass2pendings && !pass3pendings && !pass4pendings && !pass5pendings){
       DefaultInstanceTree(result);
+      if (inst_profile) {
+        double now = DatasetNowSeconds();
+        inst_p6 = now - inst_mark;
+        inst_mark = now;
+      }
     }else{
       ERROR_REPORTER_NOLINE(ASC_USER_WARNING,"There are unexecuted statements "
 		"in the instance.\nDefault assignments not executed.");
@@ -12830,6 +16327,24 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   gl_reportrecycler(ASCERR);
 # endif
 #endif
+  if (inst_profile) {
+    inst_total = inst_p1 + inst_p2 + inst_p3 + inst_p4 + inst_p5 + inst_p6;
+    FPRINTF(ASCERR,
+      "INSTANTIATE_PROFILE p1_models=%.6fs p2_rels=%.6fs p3_logrels=%.6fs p4_whens=%.6fs p5_links=%.6fs p6_defaults=%.6fs total=%.6fs pendings=[%lu,%lu,%lu,%lu,%lu]\n",
+      inst_p1,
+      inst_p2,
+      inst_p3,
+      inst_p4,
+      inst_p5,
+      inst_p6,
+      inst_total,
+      pass1pendings,
+      pass2pendings,
+      pass3pendings,
+      pass4pendings,
+      pass5pendings
+    );
+  }
 
   return result;
 }
@@ -13244,5 +16759,3 @@ struct Instance *InstantiatePatch(symchar *patch,
   return result;
 }
 #endif
-
-

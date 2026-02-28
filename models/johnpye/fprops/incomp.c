@@ -79,6 +79,13 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 #define D P->data
 #define I E->data.incomp
 
+	if(E == NULL || I == NULL){
+		ERRMSG("Null EosData or incompressible data in incomp_prepare");
+		FPROPS_FREE(P->data);
+		FPROPS_FREE(P);
+		return NULL;
+	}
+
 	MSG("E->data.incomp = %p",I);
 
 	/* metadata */

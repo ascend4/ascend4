@@ -5,8 +5,13 @@ srcs = Split("""
 	dtrsv.f dswap.f dgemv.f dtrsm.f xerbla.f lsame.f dgemm.f
 """)
 
+blas_env = env.Clone()
+# Legacy BLAS sources use deleted Fortran constructs (ASSIGN / assigned GOTO).
+if 'gfortran' in str(blas_env.subst('$FORTRAN')).lower():
+	blas_env.AppendUnique(FORTRANFLAGS=['-std=legacy'])
+
 blas = []
 for src in srcs:
-	blas.append( env.SharedObject(src,SHFORTRAN=env['FORTRAN']) )
+	blas.append(blas_env.SharedObject(src,SHFORTRAN=blas_env['FORTRAN']))
 
 Return('blas')

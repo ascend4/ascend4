@@ -64,6 +64,11 @@ typedef unsigned long long asc_intptr_t;
 @HAVE_IEEE@
 
 /**
+	If we can use GCC symbol visibility attributes.
+*/
+@HAVE_GCCVISIBILITY@
+
+/**
 	If we have IEEE math library include 'isnan' etc.
 */
 @HAVE_ERF@
@@ -101,6 +106,26 @@ typedef unsigned long long asc_intptr_t;
 @ASC_WITH_DMALLOC@
 
 /*
+	Whether support for reading gzip-compressed CSV files is enabled.
+*/
+@ASC_WITH_ZLIB@
+
+/*
+	Whether support for reading xz-compressed CSV files is enabled.
+*/
+@ASC_WITH_LZMA@
+
+/*
+	Whether Graphviz support is enabled.
+*/
+@WITH_GRAPHVIZ@
+
+/*
+	Whether Graphviz headers require HAVE_BOOLEAN to be declared.
+*/
+@HAVE_GRAPHVIZ_BOOLEAN@
+
+/*
 	Whether to generate color console output when requested eg
 	'ERROR' in red, etc.
 
@@ -108,6 +133,11 @@ typedef unsigned long long asc_intptr_t;
 	On non-Windows, we can handle 'xterm'.
 */
 @ASC_XTERM_COLORS@
+
+/*
+	Whether fnmatch() is available in <fnmatch.h>.
+*/
+@HAVE_FNMATCH@
 
 /* #define ASC_DLLDIRS "@DLLDIRS@" */
 

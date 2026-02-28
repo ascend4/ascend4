@@ -1,0 +1,16 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_instantiate_dense_csv_semicolon;
+	r IS_A set OF symbol_constant;
+	c IS_A set OF symbol_constant;
+	cost[r][c] IS_A integer_constant;
+
+	r :== ['alan','bernhard'];
+	c :== ['c3','c1','c2'];
+
+	TABLE cost[r,c];
+		c3,c1,c2;
+		alan,23,21,22;
+		bernhard,13,11,12;
+	END TABLE;
+END tables_v05_instantiate_dense_csv_semicolon;

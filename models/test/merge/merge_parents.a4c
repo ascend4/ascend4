@@ -1,0 +1,21 @@
+(* ARE_THE_SAME / mergeinst parent list tests *)
+
+MODEL parent_real;
+	x IS_A real;
+END parent_real;
+
+MODEL merge_parents_real;
+	a IS_A parent_real;
+	b IS_A parent_real;
+	a.x, b.x ARE_THE_SAME;
+END merge_parents_real;
+
+MODEL parent_array;
+	a[1..2] IS_A real;
+END parent_array;
+
+MODEL merge_parents_array;
+	p IS_A parent_array;
+	q IS_A parent_array;
+	p.a, q.a ARE_THE_SAME;
+END merge_parents_array;

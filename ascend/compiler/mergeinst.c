@@ -1017,7 +1017,9 @@ struct Instance *MergeArrays(struct ArrayInstance *i1,
   assert(i1&&i2&&i1->t==i2->t);
   if ((i1->desc == i2->desc)&&(i1->indirected == i2->indirected)){
     if (CheckArrayChildren(i1->children,i2->children,i1->t)){
-      ASC_PANIC("Arrays have different children.\n");/*NOTREACHED*/
+      BadMerge(ASCERR,"Arrays have different children.\n",
+               INST(i1),INST(i2),"");
+      return NULL;
     }
     switch (KeepWhichInstance(i1->desc,i2->desc,INST(i1),INST(i2))){
     case 1:
@@ -1031,13 +1033,16 @@ struct Instance *MergeArrays(struct ArrayInstance *i1,
       DestroyInstance(INST(i1),NULL);
       return INST(i2);
     default:
-      Asc_Panic(2, NULL,
-                "Bizarre error that should never occur.\n");/*NOTREACHED*/
+      BadMerge(ASCERR,"Bizarre error in array merge.\n",
+               INST(i1),INST(i2),"");
+      return NULL;
     }
   } else {
-    ASC_PANIC("Unconformable arrays.\n");/*NOTREACHED*/
+    BadMerge(ASCERR,"Unconformable arrays.\n",
+             INST(i1),INST(i2),"");
+    return NULL;
   }
-  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+  return NULL;
 }
 
 static
@@ -1186,4 +1191,3 @@ struct Instance *MergeInstances(struct Instance *i1, struct Instance *i2){
     return NULL;
   }
 }
-

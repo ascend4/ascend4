@@ -1,0 +1,28 @@
+general_*
+-e general_hashpjw
+-e general_list
+-e general_pairlist
+-e general_pool
+-e general_stack
+-e general_table
+-e general_ascMalloc
+
+utilities_*
+-e utilities_error
+-e utilities_set
+-e utilities_bit
+
+linear_*
+
+compiler_basics
+compiler_expr
+compiler_fixfree
+compiler_fixassign
+compiler_bintok
+compiler_instantiate_*
+compiler_merge*
+
+solver_slvreq
+integrator_lsode
+solver_fprops
+solver_lrslv

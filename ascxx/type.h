@@ -42,6 +42,7 @@ public:
 	const bool isRefinedAtom() const;
 	const bool isRefinedReal() const;
 	const bool isRefinedConstant() const;
+	const char *getDeclaredUnits() const; ///< declared unit token for real atom/constant, or NULL
 	const bool isFundamental() const;
 	const bool isModel() const;
 	const bool hasParameters() const;

@@ -34,6 +34,7 @@
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
 
+#include "link.h"
 #include "symtab.h"
 #include "functype.h"
 #include "expr_types.h"
@@ -151,6 +152,18 @@ static void DeleteIPtr(struct Instance *i){
   }
 }
 
+static void ClearParentChildLinks(struct Instance *parent,
+                                  struct Instance *inst)
+{
+  unsigned long pos, nch;
+  nch = NumberChildren(parent);
+  for (pos = 1; pos <= nch; ++pos) {
+    if (InstanceChild(parent,pos) == inst) {
+      StoreChildPtr(parent,pos,NULL);
+    }
+  }
+}
+
 /**
 	This never returns anything but 1 for DUMMY_INSTs.
 	@return true value if inst should be deleted; otherwise, return 0.
@@ -158,22 +171,23 @@ static void DeleteIPtr(struct Instance *i){
 static int RemoveParentReferences(
 	struct Instance *inst, struct Instance *parent
 ){
-  unsigned long c,pos,length;
+  unsigned long c,d,pos,length;
   AssertMemory(inst);
   if(parent!=NULL){
     AssertMemory(parent);
-    /* destroy link from inst to parent */
-    pos = SearchForParent(inst,parent);
-    if(pos != 0 || inst->t == DUMMY_INST){
-      /* Because the dummy always 'adds' a parent, it must always delete it to 
-      keep the ref_count happy. Dummy knows of no parents, but knows exactly 
+    /* destroy all links from inst to this parent */
+    if(inst->t == DUMMY_INST){
+      /* Because the dummy always 'adds' a parent, it must always delete it to
+      keep the ref_count happy. Dummy knows of no parents, but knows exactly
       how many it doesn't have. */
-      DeleteParent(inst,pos);
+      DeleteParent(inst,0);
+    }else{
+      while((pos = SearchForParent(inst,parent)) != 0){
+        DeleteParent(inst,pos);
+      }
     }
     /* destroy link(s) from parent to inst */
-    while(0 != (pos = ChildIndex(parent,inst))){
-      StoreChildPtr(parent,pos,NULL);
-    }
+    ClearParentChildLinks(parent,inst);
     return (NumberParents(inst) == 0);
   }else{
     length = NumberParents(inst);
@@ -186,8 +200,14 @@ static int RemoveParentReferences(
     }
     for(c=1;c<=length;c++) {
       parent = InstanceParent(inst,c);
-      while(0 != (pos = ChildIndex(parent,inst))){
-        StoreChildPtr(parent,pos,NULL);
+      /* Parent aliases can duplicate parent entries; clear each unique parent once. */
+      for (d = 1; d < c; ++d) {
+        if (InstanceParent(inst,d) == parent) {
+          break;
+        }
+      }
+      if (d == c) {
+        ClearParentChildLinks(parent,inst);
       }
     }
     return  1;
@@ -352,7 +372,7 @@ static void DestroyInstanceParts(struct Instance *i){
     i->t = ERROR_INST;
     DeleteTypeDesc(MOD_INST(i)->desc);
     MOD_INST(i)->desc = NULL;
-	gl_destroy(MOD_INST(i)->link_table);
+    LinkDestroyTable(MOD_INST(i)->link_table);
     ascfree((char *)i);
     return;
   case REAL_CONSTANT_INST:
@@ -650,4 +670,3 @@ void DestroyInstance(struct Instance *inst, struct Instance *parent){
     }
   }
 }
-

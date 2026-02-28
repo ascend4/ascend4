@@ -30,6 +30,11 @@
 
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/compiler/check.h>
+#include <ascend/compiler/link.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/name.h>
+#include <ascend/compiler/vlist.h>
+#include <ascend/compiler/cmpfunc.h>
 
 #include <ascend/linear/mtx.h>
 
@@ -51,6 +56,109 @@
 #endif
 
 #define IPTR(i) ((struct Instance *) (i))
+
+static void count_link_key(struct gl_list_t *table, symchar *key, int *count){
+	unsigned long i, len;
+	if(!table) return;
+	len = gl_length(table);
+	for(i=1; i<=len; ++i){
+		struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(table, i);
+		if(entry && entry->key_cache && CmpSymchar(entry->key_cache, key) == 0){
+			(*count)++;
+		}
+	}
+}
+
+static int check_ode_independent_links(struct Instance *inst){
+	symchar *ode_key = AddSymbol("ode");
+	symchar *indep_key = AddSymbol("independent");
+	struct gl_list_t *decl = getLinkTableDeclarative(inst);
+	struct gl_list_t *proc = getLinkTableProcedural(inst);
+	int ode_count = 0;
+	int indep_count = 0;
+	struct gl_list_t *indep_names;
+	unsigned long i;
+
+	count_link_key(decl, ode_key, &ode_count);
+	count_link_key(proc, ode_key, &ode_count);
+	count_link_key(decl, indep_key, &indep_count);
+	count_link_key(proc, indep_key, &indep_count);
+
+	if(ode_count > 0 && indep_count != 1){
+		ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+		FPRINTF(ASCERR,"ODE model requires exactly one INDEPENDENT variable; found %d.\n", indep_count);
+		error_reporter_end_flush();
+		return 1;
+	}
+	if(ode_count == 0 && indep_count > 0){
+		ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+		FPRINTF(ASCERR,"INDEPENDENT specified but no DER statements found.\n");
+		error_reporter_end_flush();
+		return 1;
+	}
+
+	/* verify that no DER entries reference the independent variable */
+	indep_names = gl_create(4);
+	if(decl){
+		unsigned long len = gl_length(decl);
+		for(i=1;i<=len;i++){
+			struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(decl,i);
+			if(entry && entry->key_cache && CmpSymchar(entry->key_cache, indep_key) == 0){
+				CONST struct VariableList *var = entry->u.vl;
+				while(var!=NULL){
+					symchar *name = SimpleNameIdPtr(NamePointer(var));
+					gl_append_ptr(indep_names, (VOIDPTR)name);
+					var = NextVariableNode(var);
+				}
+			}
+		}
+	}
+	if(proc){
+		unsigned long len = gl_length(proc);
+		for(i=1;i<=len;i++){
+			struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(proc,i);
+			if(entry && entry->key_cache && CmpSymchar(entry->key_cache, indep_key) == 0){
+				CONST struct VariableList *var = entry->u.vl;
+				while(var!=NULL){
+					symchar *name = SimpleNameIdPtr(NamePointer(var));
+					gl_append_ptr(indep_names, (VOIDPTR)name);
+					var = NextVariableNode(var);
+				}
+			}
+		}
+	}
+
+	if(gl_length(indep_names) > 0){
+		struct gl_list_t *tables[2] = {decl, proc};
+		for(int t=0;t<2;t++){
+			struct gl_list_t *table = tables[t];
+			if(!table) continue;
+			unsigned long len = gl_length(table);
+			for(i=1;i<=len;i++){
+				struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(table,i);
+				if(entry && entry->key_cache && CmpSymchar(entry->key_cache, ode_key) == 0){
+					CONST struct VariableList *var = entry->u.vl;
+					while(var!=NULL){
+						symchar *name = SimpleNameIdPtr(NamePointer(var));
+						unsigned long j;
+						for(j=1;j<=gl_length(indep_names);j++){
+							if(CmpSymchar((symchar *)gl_fetch(indep_names,j), name) == 0){
+								ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+								FPRINTF(ASCERR,"DER uses independent variable '%s'.\n", SCP(name));
+								error_reporter_end_flush();
+								gl_destroy(indep_names);
+								return 1;
+							}
+						}
+						var = NextVariableNode(var);
+					}
+				}
+			}
+		}
+	}
+	gl_destroy(indep_names);
+	return 0;
+}
 
 slv_system_t system_build(SlvBackendToken inst){
   slv_system_t sys;
@@ -104,6 +212,11 @@ slv_system_t system_build(SlvBackendToken inst){
     MSG("System built (time %0.0f us)",comptime*1e6);
   }
 #endif
+  if(check_ode_independent_links(IPTR(inst))){
+    system_destroy(sys);
+    sys = NULL;
+    return sys;
+  }
   return(sys);
 }
 
@@ -140,4 +253,3 @@ void system_free_reused_mem(){
   analyze_free_reused_mem();
   relman_free_reused_mem();
 }
-

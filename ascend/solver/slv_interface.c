@@ -403,6 +403,7 @@ static void output_status(slv_system_t sys)
  **/
 {
    slv_status_t s;
+   const struct slv__block_status_structure *block;
    slv_get_status(sys,&s);
 
    PRINTF("\nSolver status\n-------------\n");
@@ -424,16 +425,27 @@ static void output_status(slv_system_t sys)
    if( s.ok ) PRINTF("  NONE");
    PUTCHAR('\n');
 
-   PRINTF("# of blocks = %d\n",s.block.number_of);
-   PRINTF("current block = %d\n",s.block.current_block);
-   PRINTF("its size = %d\n",s.block.current_size);
-   PRINTF("# vars/rels solved already = %d\n",
-	  s.block.previous_total_size);
-   PRINTF("Iteration = %d (this block = %d)\n",
-	  s.iteration,s.block.iteration);
-   PRINTF("CPU time elapsed = %g sec (this block = %g sec)\n",
-	  s.cpu_elapsed,s.block.cpu_elapsed);
-   PRINTF("Residual norm in current block = %g\n",s.block.residual);
+   block = slv_status_block(&s);
+   if(block != NULL){
+      PRINTF("# of blocks = %d\n",block->number_of);
+      PRINTF("current block = %d\n",block->current_block);
+      PRINTF("its size = %d\n",block->current_size);
+      PRINTF("# vars/rels solved already = %d\n",
+	     block->previous_total_size);
+      PRINTF("Iteration = %d (this block = %d)\n",
+	     s.iteration,block->iteration);
+      PRINTF("CPU time elapsed = %g sec (this block = %g sec)\n",
+	     s.cpu_elapsed,block->cpu_elapsed);
+      PRINTF("Residual norm in current block = %g\n",block->residual);
+   }else{
+      PRINTF("# of blocks = 0\n");
+      PRINTF("current block = 0\n");
+      PRINTF("its size = 0\n");
+      PRINTF("# vars/rels solved already = 0\n");
+      PRINTF("Iteration = %d (this block = 0)\n",s.iteration);
+      PRINTF("CPU time elapsed = %g sec (this block = 0)\n",s.cpu_elapsed);
+      PRINTF("Residual norm in current block = 0\n");
+   }
 }
 
 
@@ -566,14 +578,16 @@ static boolean do_command(int command)
 
       case C_COUNT_IN_BLOCK: {
          slv_status_t s;
+	 const struct slv__block_status_structure *block;
 	 int32 bnum;
 	 linsolqr_system_t lsys;
 	 mtx_matrix_t mtx;
 	 mtx_region_t reg;
 
          slv_get_status(sys,&s);
-         PRINTF("Block number [%d]: ",s.block.current_block);
-         bnum = (int32)readlong((long)s.block.current_block);
+	 block = slv_status_block(&s);
+         PRINTF("Block number [%d]: ",block ? block->current_block : 0);
+         bnum = (int32)readlong((long)(block ? block->current_block : 0));
 	 lsys = slv_get_linsolqr_sys(sys);
 	 mtx = linsolqr_get_matrix(lsys);
 	 mtx_block(mtx,bnum,&reg);
@@ -605,14 +619,16 @@ static boolean do_command(int command)
       case C_WRITE_VARS_IN_BLOCK: {
 	 struct var_variable **vp = slv_get_solvers_var_list(sys);
          slv_status_t s;
+	 const struct slv__block_status_structure *block;
 	 int32 bnum;
 	 linsolqr_system_t lsys;
 	 mtx_matrix_t mtx;
 	 mtx_region_t reg;
 
          slv_get_status(sys,&s);
-         PRINTF("Block number [%d]: ",s.block.current_block);
-         bnum = (int32)readlong((long)s.block.current_block);
+	 block = slv_status_block(&s);
+         PRINTF("Block number [%d]: ",block ? block->current_block : 0);
+         bnum = (int32)readlong((long)(block ? block->current_block : 0));
 	 lsys = slv_get_linsolqr_sys(sys);
 	 mtx = linsolqr_get_matrix(lsys);
 	 mtx_block(mtx,bnum,&reg);
@@ -649,14 +665,16 @@ static boolean do_command(int command)
       case C_WRITE_RELS_IN_BLOCK: {
 	 struct rel_relation **rp = slv_get_solvers_rel_list(sys);
          slv_status_t s;
+	 const struct slv__block_status_structure *block;
 	 int32 bnum;
 	 linsolqr_system_t lsys;
 	 mtx_matrix_t mtx;
 	 mtx_region_t reg;
 
          slv_get_status(sys,&s);
-         PRINTF("Block number [%d]: ",s.block.current_block);
-         bnum = (int32)readlong((long)s.block.current_block);
+	 block = slv_status_block(&s);
+         PRINTF("Block number [%d]: ",block ? block->current_block : 0);
+         bnum = (int32)readlong((long)(block ? block->current_block : 0));
 	 lsys = slv_get_linsolqr_sys(sys);
 	 mtx = linsolqr_get_matrix(lsys);
 	 mtx_block(mtx,bnum,&reg);

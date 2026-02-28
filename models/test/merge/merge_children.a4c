@@ -1,0 +1,22 @@
+(* ARE_THE_SAME / mergeinst children merge tests *)
+
+ATOM base_var REFINES real;
+	c1 IS_A real;
+	c2 IS_A real;
+END base_var;
+
+ATOM refined_var REFINES base_var;
+	c3 IS_A real;
+END refined_var;
+
+MODEL merge_children_common;
+	a IS_A base_var;
+	b IS_A base_var;
+	a, b ARE_THE_SAME;
+END merge_children_common;
+
+MODEL merge_children_uncommon;
+	a IS_A refined_var;
+	b IS_A base_var;
+	a, b ARE_THE_SAME;
+END merge_children_uncommon;

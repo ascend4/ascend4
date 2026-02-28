@@ -45,20 +45,19 @@
  *  @return Returns zero on success, non-zero if an error occurred.
  */
 extern boolean write_name_map(const char *name,
-                              struct var_variable **vlist);
+                              struct var_variable **vlist,
+                              const real64 *col_scale);
 
 /*
  *  Writes out the MPS file.
  *
  *  @param name   File name to receive the output.
  *  @param mps    The main chunk of data for the problem.
- *  @param iarray Integer subparameters, array of size slv6_IA_SIZE.
- *  @param rarray Real subparameters, array of size slv6_RA_SIZE.
+ *  @param parms  Solver parameter set.
  *  @return Returns zero on success, non-zero if an error occurred.
  */
 extern boolean write_MPS(const char *name,
                          mps_data_t mps,
-                         struct slv_parameter *parms);
+                         slv_parameters_t *parms);
 
 #endif  /* ASC_MPS_H */
-

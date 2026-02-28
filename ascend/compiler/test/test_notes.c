@@ -382,7 +382,8 @@ static void test_re(void){
 
 	Asc_CompilerDestroy();
 #else
-	CU_FAIL("PCRE support not available at compilation time");
+	CONSOLE_DEBUG("Skipping notes regex test: PCRE support not available");
+	return;
 #endif
 }
 

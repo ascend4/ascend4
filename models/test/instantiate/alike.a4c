@@ -1,0 +1,67 @@
+REQUIRE "system.a4l";
+
+(* ARE_ALIKE instantiate tests *)
+
+MODEL test_alike_base;
+END test_alike_base;
+
+MODEL a (x WILL_BE real;) REFINES test_alike_base;
+	(* simple dummy parameterized object *)
+END a;
+
+MODEL alike_fail_atom_children REFINES test_alike_base;
+	(* FAIL: ARE_ALIKE on ATOM children *)
+	x IS_A solver_var;
+	z1,z2 IS_A a(x);
+	x.lower_bound,z1.upper_bound ARE_ALIKE;
+END alike_fail_atom_children;
+
+MODEL alike_fail_missing_children REFINES test_alike_base;
+	(* FAIL: missing child *)
+	x IS_A solver_var;
+	z1,z2 IS_A a(x);
+	x.lower_bound.y,z1.upper_bound.y ARE_ALIKE;
+END alike_fail_missing_children;
+
+MODEL alike_fail_param_down REFINES test_alike_base;
+	(* FAIL: ARE_ALIKE down in parameterized object *)
+	x IS_A solver_var;
+	z1,z2 IS_A a(x);
+	z1.x,z2.x ARE_ALIKE;
+END alike_fail_param_down;
+
+MODEL alike_fail_param_object REFINES test_alike_base;
+	(* FAIL: ARE_ALIKE on parameterized objects *)
+	x IS_A solver_var;
+	z1,z2 IS_A a(x);
+	z1,z2 ARE_ALIKE;
+END alike_fail_param_object;
+
+MODEL alike_fail_array_real REFINES test_alike_base;
+	(* FAIL: ARE_ALIKE between array element and array *)
+	a[1..2] IS_A real;
+	b[1..3] IS_A real;
+	a[1],b ARE_ALIKE;
+END alike_fail_array_real;
+
+MODEL alike_fail_relation REFINES test_alike_base;
+	(* FAIL: ARE_ALIKE on relations *)
+	x IS_A real;
+	a: x=1;
+	b: x=1;
+	a,b ARE_ALIKE;
+END alike_fail_relation;
+
+MODEL alike_pass_simple REFINES test_alike_base;
+	a,b IS_A solver_var;
+	a,b ARE_ALIKE;
+END alike_pass_simple;
+
+MODEL box REFINES test_alike_base;
+	x IS_A solver_var;
+END box;
+
+MODEL alike_pass_unparam_down REFINES test_alike_base;
+	a,b IS_A box;
+	a.x,b.x ARE_ALIKE;
+END alike_pass_unparam_down;

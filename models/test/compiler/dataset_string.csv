@@ -1,0 +1,5 @@
+region,col,cost
+north,x,11
+north,y,12
+south,x,21
+south,y,22

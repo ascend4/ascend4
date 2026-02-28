@@ -34,12 +34,17 @@
 #include "slv6.h"
 #include "mps.h"
 
+#include <ctype.h>
+#include <string.h>
+
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/set.h>
 #include <ascend/general/mem.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
+#include <ascend/general/ospath.h>
+#include <ascend/utilities/error.h>
 #include <ascend/compiler/module.h>
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/instance_io.h>
@@ -53,6 +58,7 @@
 #include <ascend/system/bnd.h>
 #include <ascend/system/var.h>
 #include <ascend/system/rel.h>
+#include <ascend/system/lp_utils.h>
 
 #ifndef KILL
 #define KILL TRUE
@@ -60,6 +66,8 @@
 #define DEBUG FALSE
 
 #define SYS(s) ((slv6_system_t)(s))
+
+ASC_DLLSPEC SolverRegisterFn makemps_register;
 
 struct slv6_system_structure {
 
@@ -96,16 +104,90 @@ struct slv6_system_structure {
 
 };
 
+static int makemps_has_suffix_ci(const char *name, const char *suffix){
+	size_t nlen, slen, i;
+	if(name == NULL || suffix == NULL){
+		return 0;
+	}
+	nlen = strlen(name);
+	slen = strlen(suffix);
+	if(nlen < slen){
+		return 0;
+	}
+	for(i = 0; i < slen; ++i){
+		unsigned char a = (unsigned char)name[nlen - slen + i];
+		unsigned char b = (unsigned char)suffix[i];
+		if(tolower(a) != tolower(b)){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int makemps_build_output_names(const char *requested, char **mpsname, char **mapname){
+	size_t inlen, stemlen;
+	char *mps = NULL;
+	char *map = NULL;
+
+	if(mpsname == NULL || mapname == NULL || requested == NULL || requested[0] == '\0'){
+		return 0;
+	}
+
+	inlen = strlen(requested);
+	stemlen = inlen;
+	if(makemps_has_suffix_ci(requested, ".mps") || makemps_has_suffix_ci(requested, ".map")){
+		stemlen = inlen - 4;
+	}
+
+	mps = ASC_NEW_ARRAY(char, stemlen + 5);
+	map = ASC_NEW_ARRAY(char, stemlen + 5);
+	if(mps == NULL || map == NULL){
+		if(mps != NULL)ascfree(mps);
+		if(map != NULL)ascfree(map);
+		return 0;
+	}
+
+	if(stemlen > 0){
+		memcpy(mps, requested, stemlen);
+		memcpy(map, requested, stemlen);
+	}
+	memcpy(mps + stemlen, ".mps", 5);
+	memcpy(map + stemlen, ".map", 5);
+
+	*mpsname = mps;
+	*mapname = map;
+	return 1;
+}
+
+static char *makemps_get_abs_name(const char *name){
+	struct FilePath *fp = NULL;
+	struct FilePath *absfp = NULL;
+	char *abspath = NULL;
+	if(name == NULL || name[0] == '\0'){
+		return NULL;
+	}
+	fp = ospath_new(name);
+	if(fp == NULL){
+		return NULL;
+	}
+	absfp = ospath_getabs(fp);
+	if(absfp != NULL){
+		abspath = ospath_str(absfp);
+	}
+	ospath_free(fp);
+	if(absfp != NULL){
+		ospath_free(absfp);
+	}
+	return abspath;
+}
+
 
 static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 		,slv_parameters_t *parameters
 ){
-	slv6_system_t sys = NULL;
 	struct slv_parameter *new_parms = NULL;
-
-	if(server != NULL && asys != NULL) {
-		sys = SYS(asys);
-	}
+	(void)server;
+	(void)asys;
 
 	if(parameters->parms == NULL) {
 		new_parms = ASC_NEW_ARRAY_OR_NULL(struct slv_parameter,SP6_PARAMS);
@@ -210,11 +292,23 @@ static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 		}, FALSE}
 	);
 
-	slv_param_bool(parameters,SP6_BO
+	slv_param_bool(parameters,SP6_EPS
 		,(SlvParameterInitBool){{"eps"
 			,"EPS termination criterion support?",4
 			,"0->no support; 1->solver supports QOMILP-style EPS termination criterion. Note: value of bound is set in 'epsval'."
 		}, FALSE}
+	);
+	slv_param_bool(parameters,SP6_VARNOM_SCALE
+		,(SlvParameterInitBool){{"varnom_scale"
+			,"Scale by variable nominals?",5
+			,"Scale LP/MIP columns and bounds using continuous-variable nominal values."
+		}, TRUE}
+	);
+	slv_param_bool(parameters,SP6_RELNOM_SCALE
+		,(SlvParameterInitBool){{"relnom_scale"
+			,"Scale by relation nominals?",5
+			,"Scale LP/MIP constraint rows and RHS using relation nominal values."
+		}, TRUE}
 	);
 
 
@@ -249,10 +343,10 @@ static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 	slv_param_char(parameters,SP6_FILENAME
 		,(SlvParameterInitChar){{"filename"
 			,"Output filename",1
-			,"Name of the output file to be created."
-		}, "outfile.txt"}, (char *[]){
-			"outfile.txt","outfile1.txt","outfile2.txt","outfile3.txt",NULL
-		} /* FIXME how to specify that the user can type this in as free text? */
+			,"Path for generated files. If no extension is given, '.mps' and '.map' are added."
+		}, "outfile.mps"}, (char *[]){
+			"outfile.mps","outfile1.mps","outfile2.mps","outfile3.mps",NULL
+		}
 	);
 
 	asc_assert(parameters->num_parms==SP6_PARAMS);
@@ -277,8 +371,7 @@ static int check_system(slv6_system_t sys)
  **/
 {
    if( sys == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) check_system\n");
-      FPRINTF(stderr,"        NULL system handle.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL system handle.");
       return 1;
    }
 
@@ -286,12 +379,10 @@ static int check_system(slv6_system_t sys)
    case OK:
       return 0;
    case DESTROYED:
-      FPRINTF(stderr,"ERROR:  (slv6) check_system\n");
-      FPRINTF(stderr,"        System was recently destroyed.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System was recently destroyed.");
       return 1;
    default:
-      FPRINTF(stderr,"ERROR:  (slv6) check_system\n");
-      FPRINTF(stderr,"        System reused or never allocated.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System reused or never allocated.");
       return 1;
    }
 }
@@ -318,70 +409,9 @@ static int check_system(slv6_system_t sys)
 /* Zeros an array of nelts objects, each having given type. */
 
 
-static void nuke_pointers(mps_data_t mps) { /* free all allocated memory in mps data structure */
-
-   if (mps.Ac_mtx != NULL) {       /* delete old matrix if the exist */
-       mtx_destroy(mps.Ac_mtx);
-       mps.Ac_mtx = NULL;
-   }
-
-   if (mps.lbrow != NULL) {        /* delete old vector if it exists */
-       destroy_array(mps.lbrow);
-       mps.lbrow = NULL;
-   }
-
-   if (mps.ubrow != NULL) {        /* delete old vector if it exists */
-       destroy_array(mps.ubrow);
-       mps.ubrow = NULL;
-   }
-
-   if (mps.bcol != NULL) {         /* delete old vector if the exist */
-       destroy_array(mps.bcol);
-       mps.bcol = NULL;
-   }
-
-   if (mps.typerow != NULL) {      /* delete old vector if it exists */
-       destroy_array(mps.typerow);
-       mps.typerow = NULL;
-   }
-
-   if (mps.relopcol != NULL) {     /* delete old vector if it exists */
-       destroy_array(mps.relopcol);
-       mps.relopcol = NULL;
-   }
+static void nuke_pointers(mps_data_t *mps) {
+	lp_nuke_pointers(mps);
 }
-
-/* _________________________________________________________________________ */
-
-/*
- ***  General input/output routines
- ***  -----------------------------
- ***     fp = MIF(sys)
- ***     fp = LIF(sys)
- **/
-
-/**
-	Returns fp if fp!=NULL, or a file pointer
-	open to nul device if fp == NULL.
-*/
-static FILE *get_output_file(FILE *fp){
-   static FILE *nuldev = NULL;
-   static char fname[] = "/dev/null";
-
-   if( fp==NULL ) {
-      if(nuldev==NULL)
-	 if( (nuldev=fopen(fname,"w")) == NULL ) {
-	    FPRINTF(stderr,"ERROR:  (slv6) get_output_file\n");
-	    FPRINTF(stderr,"        Unable to open %s.\n",fname);
-	 }
-      fp=nuldev;
-   }
-   return(fp);
-}
-
-/*   #define MIF(sys) get_output_file( (sys)->p.output.more_important )
- *   #define LIF(sys) get_output_file( (sys)->p.output.less_important )
- */
 
 /* _________________________________________________________________________ */
 
@@ -398,15 +428,7 @@ static FILE *get_output_file(FILE *fp){
 	var is not fixed and incident in something.
 */
 extern boolean free_inc_var_filter(struct var_variable *var){
-      var_filter_t vfilter;
-      vfilter.matchbits = (VAR_FIXED | VAR_INCIDENT | VAR_ACTIVE);
-      vfilter.matchvalue = (VAR_INCIDENT | VAR_ACTIVE);
-
-      /*     vfilter.fixed = var_false;*/            /* calc for all non-fixed vars */
-      /* vfilter.incident = var_true;  */        /* incident vars only */
-      /* vfilter.in_block = var_ignore; */
-
-      return var_apply_filter(var,&vfilter);
+	return lp_free_inc_var_filter(var);
 }
 
 static boolean inc_rel_filter(struct rel_relation *rel)
@@ -414,15 +436,7 @@ static boolean inc_rel_filter(struct rel_relation *rel)
  ***  Returns true if rel is an incident relation.
  **/
 {
-   rel_filter_t rfilter;  /* filter for included rels */
-   rfilter.matchbits = (REL_INCLUDED | REL_ACTIVE);
-   rfilter.matchvalue = (REL_INCLUDED| REL_ACTIVE );
-   /*   rfilter.included = rel_true;
-   rfilter.equality = rel_ignore;
-   rfilter.in_block = rel_ignore;
-   rfilter.in_subregion = rel_ignore; */
-
-   return rel_apply_filter(rel,&rfilter);
+	return lp_inc_rel_filter(rel);
 }
 
 
@@ -451,31 +465,7 @@ static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
                       int32 org_row,  /* original number of row to store them */
                       struct rel_relation  *obj)           /* expression to diffs */
 {
-      var_filter_t vfilter;
-	  int32 row;
-
-      if ((mtx == NULL) || (obj == NULL)) {         /* got a bad pointer */
-          FPRINTF(stderr,"ERROR:  (slv6) calc_c\n");
-          FPRINTF(stderr,"        Routine was passed a NULL pointer!\n");
-          return FALSE;
-      }
-
-      vfilter.matchbits = (VAR_FIXED | VAR_INCIDENT | VAR_ACTIVE);
-      vfilter.matchvalue = (VAR_INCIDENT | VAR_ACTIVE);
-      /*      vfilter.fixed = var_false;
-      vfilter.incident = var_true;
-      vfilter.in_block = var_ignore;    */
-
-      row = mtx_org_to_row(mtx,org_row);       /* convert from original numbering to current */
-
-#ifndef KILL
-      exprman_diffs(obj, &vfilter, row, mtx);  /* find the deriviative, sets calc_ok as result */
-#else
-     FPRINTF(stderr,"  function calc_c is slv6 is broken.\n");
-     FPRINTF(stderr," It calls exprman_diffs with wrong number of args.\n");
-     exit(1);
-#endif
-      return calc_ok;                          /* did things work out ?, calc_ok in calc.h */
+	return lp_calc_c(mtx,org_row,obj);
 }
 
 
@@ -484,33 +474,11 @@ static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
  **  in a new array, which is returned by the routine
  **/
 static real64 *calc_bounds(struct var_variable **vlist, /* variable list to get bounds */
-                                 int32 vinc,      /* number of incident variables */
+                                 int32 vused,      /* number of variables in solver list */
                                  boolean upper)         /* do upper, else lower */
 
 {
-      real64 *tmp,*tmp_array_origin;  /* temporary storage for our bounds data */
-
-      if (vlist == NULL) {         /* got a bad pointer */
-          FPRINTF(stderr,"ERROR:  (slv6) calc_bounds\n");
-          FPRINTF(stderr,"        Routine was passed a NULL variable list pointer!\n");
-          return FALSE;
-      }
-
-      tmp_array_origin = create_array(vinc,real64);
-      if (tmp_array_origin == NULL) {
-          FPRINTF(stderr,"ERROR:  (slv6) calc_bounds\n");
-          FPRINTF(stderr,"        Memory allocation failed!\n");
-          return FALSE;
-      }
-
-      tmp = tmp_array_origin;
-      for( ; *vlist != NULL ; ++vlist ){
-        if( free_inc_var_filter(*vlist) ){
-           if (upper) { *tmp=var_upper_bound(*vlist); tmp++; }
-           else   { *tmp=var_lower_bound(*vlist); tmp++; }
-        }
-      }
-      return tmp_array_origin;
+	return lp_calc_bounds(vlist,vused,upper);
 }
 
 
@@ -527,46 +495,7 @@ static real64 *calc_bounds(struct var_variable **vlist, /* variable list to get 
 static char *calc_reloplist(struct rel_relation **rlist,
                             int32    rused)   /* entry for each relation */
 {
-   char *reloplist;
-   char *tmp;                  /* pointer for storage */
-
-   reloplist = create_array(rused,char);  /* see macro, over all incident relations */
-   if (reloplist == NULL) {         /* memory allocation failed */
-          FPRINTF(stderr,"ERROR:  (slv6) calc_reloplist\n");
-          FPRINTF(stderr,"        Memory allocation failed!\n");
-          return NULL;
-   }
-
-   tmp = reloplist;
-   for ( ;*rlist != NULL; rlist++)
-   {
-       if (inc_rel_filter(*rlist))   /* is an incident var */
-           switch(rel_relop(*rlist)) {
-               case e_rel_less:
-               case e_rel_lesseq:
-                              *tmp = rel_TOK_less;
-                              break;
-
-               case e_rel_equal:
-                              *tmp = rel_TOK_equal;
-                              break;
-               case e_rel_greater:
-               case e_rel_greatereq:
-                              *tmp = rel_TOK_greater;
-                              break;
-               default:
-                              FPRINTF(stderr,"ERROR:  (slv6) calc_reloplist\n");
-                              FPRINTF(stderr,"        Unknown relation type (not greater, less, or equal)\n");
-                              return NULL;
-           }
-       else
-           *tmp = rel_TOK_nonincident;
-
-       tmp++;  /* increment to new location in array */
-
-   }
-
-   return reloplist;
+	return lp_calc_reloplist(rlist,rused);
 }
 
 /**
@@ -586,112 +515,17 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
                            int *solver_semi_used,
                            int *solver_other_used,
                            int *solver_fixed){
-	struct TypeDescription *type;              /* type of the current var */
-	struct TypeDescription *solver_var_type;   /* type of the standard types */
-	struct TypeDescription *solver_int_type;
-	struct TypeDescription *solver_binary_type;
-	struct TypeDescription *solver_semi_type;
-
-	char *svtlist;  /* pointer for storage */
-	char *tmp;      /* temp pointer to set values */
-
-	/* get the types for variable definitions */
-
-	if( (solver_var_type = FindType(AddSymbol(MPS_VAR_STR))) == NULL ) {
-		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-		FPRINTF(stderr,"        Type solver_var not defined.\n");
-		FPRINTF(stderr,"        MPS will not work.\n");
-		return NULL;
-	}
-	if( (solver_int_type = FindType(AddSymbol(MPS_INT_STR))) == NULL ) {
-		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-		FPRINTF(stderr,"        Type solver_int not defined.\n");
-		FPRINTF(stderr,"        MPS will not work.\n");
-		return NULL;
-	}
-	if( (solver_binary_type = FindType(AddSymbol(MPS_BINARY_STR))) == NULL ) {
-		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-		FPRINTF(stderr,"        Type solver_binary not defined.\n");
-		FPRINTF(stderr,"        MPS will not work.\n");
-		return NULL;
-	}
-	if( (solver_semi_type = FindType(AddSymbol(MPS_SEMI_STR))) == NULL ) {
-		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-		FPRINTF(stderr,"        Type solver_semi not defined.\n");
-		FPRINTF(stderr,"        MPS will not work.\n");
-		return NULL;
-	}
-
-	/* allocate memory and initialize stuff */
-
-	svtlist = create_array(vused,char);  /* see macro */
-	if (svtlist == NULL) {         /* memory allocation failed */
-		  FPRINTF(stderr,"ERROR:  (slv6) calc_svtlist\n");
-		  FPRINTF(stderr,"        Memory allocation failed for solver var type list!\n");
-		  return NULL;
-	}
-
-	*solver_var_used = 0;
-	*solver_relaxed_used = 0;
-	*solver_int_used = 0;
-	*solver_binary_used = 0;
-	*solver_semi_used = 0;
-	*solver_other_used = 0;
-	*solver_fixed = 0;
-	tmp = svtlist;
-
-	/* loop over all vars */
-
-	for(; *vlist != NULL ; ++vlist )  {
-		if(free_inc_var_filter(*vlist) ){
-			type = InstanceTypeDesc(var_instance(*vlist));
-
-			if(type == MoreRefined(type,solver_binary_type) ){
-				if (var_relaxed(*vlist)){
-				   *tmp = MPS_RELAXED;
-				   (*solver_relaxed_used)++;
-				}else{
-				   *tmp = MPS_BINARY;
-				   (*solver_binary_used)++;
-				}
-			}else{
-				if (type == MoreRefined(type,solver_int_type) ){
-					if(var_relaxed(*vlist)){
-						*tmp = MPS_RELAXED;
-						(*solver_relaxed_used)++;
-					}else{
-						*tmp = MPS_INT;
-						(*solver_int_used)++;
-					}
-				}else{
-					if (type == MoreRefined(type,solver_semi_type) ){
-						if (var_relaxed(*vlist)){
-							*tmp = MPS_RELAXED;
-							(*solver_relaxed_used)++;
-						}else{
-							*tmp = MPS_SEMI;
-							(*solver_semi_used)++;
-						}
-					}else{
-						if (type == MoreRefined(type,solver_var_type) ){
-							/* either solver var or some refinement */
-							*tmp = MPS_VAR;
-							(*solver_var_used)++;
-						}else{
-							FPRINTF(stderr,"ERROR:  (slv6) determine_svtlist\n");
-							FPRINTF(stderr,"        Unknown solver_var type encountered.\n");
-							/* should never get to here */
-						}
-					}          /* if semi */
-				}          /* if int */
-			}         /* if binary */
-		}else{
-			*tmp = MPS_FIXED;
-			(*solver_fixed)++;
-		}
-		tmp++;
-	}
-	return svtlist;
+	return lp_calc_svtlist(
+		vlist
+		,vused
+		,solver_var_used
+		,solver_relaxed_used
+		,solver_int_used
+		,solver_binary_used
+		,solver_semi_used
+		,solver_other_used
+		,solver_fixed
+	);
 }
 
 static mtx_matrix_t calc_matrix(int32     cap,
@@ -710,7 +544,7 @@ static mtx_matrix_t calc_matrix(int32     cap,
 	@param rlist,       in: Relation list (NULL terminated)
 	@param obj,          in: objective function
 	@param crow,         in: row to store objective row
-	@param s,          out: s.block.jactime, and s.calc_ok
+	@param s,          out: s.calc_ok (and NLP branch jacobian timing)
 	@param rank,       out
 	@oaram rhs_orig   out: rhs array origin
 
@@ -766,94 +600,8 @@ static mtx_matrix_t calc_matrix(int32     cap,
 </pre>
 */
 {
-   mtx_matrix_t mtx;      /* main data structure */
-   var_filter_t vfilter;  /* checks for free incident vars in relman_diffs */
-   double time0;          /* time of Jacobian calculation, among other things */
-   struct rel_relation **rp;    /* relation pointer */
-   real64 *rhs;     /* temporary pointer for our RHS data */
-
-   if(obj == NULL) {         /* a little preflight checking */
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        System must have an objective!\n");
-      return NULL;
-   }
-
-   time0=tm_cpu_time();           /* start timing */
-   s->calc_ok = TRUE;            /* no errors yet */
-
-   mtx = mtx_create();            /* create 0 order matrix */
-   mtx_set_order(mtx,cap);        /* adjust size of square matrix to size of cap
-                                    (cap set in presolve.) The relman_diffs
-                                     routine returns values in the matrix */
-                                  /* these routines don't return success/fail */
-
-   vfilter.matchbits = (VAR_FIXED | VAR_INCIDENT | VAR_ACTIVE);
-   vfilter.matchvalue = (VAR_INCIDENT | VAR_ACTIVE);
-   /*   vfilter.fixed = var_false;
-   vfilter.incident = var_true;
-   vfilter.in_block = var_ignore; */
-
-   /* want to save column of residuals as they come along from relman_diffs */
-   *rhs_orig = create_array(rused,real64);
-   if(*rhs_orig == NULL) {         /* memory allocation failed */
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        Memory allocation for right hand side failed!\n");
-      return NULL;
-   }
-   rhs = *rhs_orig;
-
-
-  /* note: the rhs array is the residual at the current point, not what we want!
-     see further comments at the start of this routine */
-
-	int safe = 0;
-
-   for( rp = rlist ; *rp != NULL ; ++rp ) {
-      /* fill out A matrix only for used elements */
-      if( inc_rel_filter(*rp) ) {
-         *rhs = relman_diffs(*rp,&vfilter,mtx,rhs,safe);
-         /*calculate each row of A matrix here! */
-         rhs++;
-         if( ! calc_ok ) {   /* error check each call, calc_ok is in calc.h */
-            s->calc_ok = FALSE;  /* error in diffs ! */
-            FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-            FPRINTF(stderr,"        Error in calculating A matrix.\n");
-            destroy_array(rhs_orig);  /* clean up house, then die */
-            mtx_destroy(mtx);                 /* zap all alocated memory */
-            return NULL;
-         }
-      }
-   }
-   /* Calculate the rank of the matrix, before we add extra rows/cols */
-   mtx_output_assign(mtx, crow, vused);
-   if(! mtx_output_assigned(mtx)) {  /* output assignment failed */
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        Output assignment to calculate rank of problem failed.\n");
-      mtx_destroy(mtx);                 /* zap all alocated memory */
-      destroy_array(rhs_orig);  /* clean up house, then die */
-      return NULL;
-   }
-   *rank = mtx_symbolic_rank(mtx);
-
-   if( *rank < 0 ) {
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        Symbolic rank calculation failed, matrix may be bad.\n");
-      return mtx;
-   }
-
-   /* calculate the c vector and save it to the matrix */
-   if( ! calc_c(mtx, mtx_org_to_row(mtx,crow), obj) ) {
-      s->calc_ok = FALSE;  /* error in diffs ! */
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        Error in calculating objective coefficients.\n");
-      mtx_destroy(mtx);    /* commit suicide */
-      destroy_array(rhs_orig);  /* clean up house, then die */
-      return NULL;
-   }
-
-   s->block.jactime = tm_cpu_time() - time0;  /* set overall jacobian time */
-
-   return mtx;
+	(void)calc_c;
+	return lp_calc_matrix(cap,rused,vused,rlist,obj,crow,s,rank,rhs_orig);
 }
 
 
@@ -861,6 +609,7 @@ static void real_rhs(mtx_matrix_t    Ac_mtx,      /* Matrix representation of pr
                      char            relopcol[],  /* is it incident? */
                      struct var_variable  **vlist,      /* Variable list (NULL terminated) */
                      int32     rused,       /* in: total number of relations used */
+                     int32     vused,       /* in: total number of variables used */
                      real64    rhs[])       /* out: rhs array origin */
 /**
  ***  Takes the residuals stored in rhs, and converts them into the actual right
@@ -879,41 +628,7 @@ static void real_rhs(mtx_matrix_t    Ac_mtx,      /* Matrix representation of pr
  ***
  **/
 {
-   real64 a;        /* value of mtx element */
-   mtx_coord_t  nz;       /* coordinate of row/column in A matrix */
-   mtx_range_t  range;    /* storage for range of A matrix, run down a column */
-   int32  currow;   /* counter for current row */
-   int          orgrow;   /* original row number */
-   int          orgcol;   /* orignal col number */
-   double       rowval;   /* the sum of a[i]*x[i] in the row */
-
-   if(rhs == NULL) {         /* a little preflight checking */
-      FPRINTF(stderr,"ERROR:  (slv6) real_rhs\n");
-      FPRINTF(stderr,"        The routine was passed a NULL rhs pointer!\n");
-      return;
-   }
-
-   for(currow = 0; currow < rused; currow++)      {      /* loop over all rows, is _current_ column number */
-      orgrow = mtx_row_to_org(Ac_mtx, currow);
-      if (relopcol[orgrow] != rel_TOK_nonincident)  {   /* if it is incident row */
-
- 	   nz.col = mtx_FIRST;    /* first nonzero col */
-	   nz.row = currow;       /* current row */
-           rowval = 0.0;          /* accumulate value here */
-
-           a = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,rused));
-
-           do  {  orgcol  = mtx_col_to_org(Ac_mtx, nz.col);
-                  rowval += a*var_value(*(vlist+orgcol));
-                  a = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,rused));
-
-               } while (nz.col != mtx_LAST);
-
-          rhs[orgrow] = rowval - rhs[orgrow];  /* set real value of right hand side */
-
-      }
-  }
-
+	lp_real_rhs(Ac_mtx,relopcol,vlist,rused,vused,rhs);
 }
 
 /* _________________________________________________________________________ */
@@ -921,46 +636,18 @@ static void real_rhs(mtx_matrix_t    Ac_mtx,      /* Matrix representation of pr
 /**
  ***  Routines used by presolve
  ***  --------------------
- ***  insure_bounds - fix inconsistent bounds
+ ***  ensure_bounds - fix inconsistent bounds
  ***  update_vlist - add vars to vlist
  ***  determine_vlist - build new vlist
  **/
 
 
-static void insure_bounds(FILE *mif,slv6_system_t sys, struct var_variable *var)
+static void ensure_bounds(FILE *mif,slv6_system_t sys, struct var_variable *var)
 /**
- ***  Insures that the variable value is within its bounds.
+ ***  Ensures that the variable value is within its bounds.
  **/
 {
-   real64 val,low,high;
-
-   low = var_lower_bound(var);
-   high = var_upper_bound(var);
-   val = var_value(var);
-   if( low > high ) {
-      FPRINTF(mif,"Bounds for variable ");
-      slv_print_var_name(mif,sys->slv,var);
-      FPRINTF(mif," are inconsistent [%g,%g].\n",low,high);
-      FPRINTF(mif,"Bounds will be swapped.\n");
-      var_set_upper_bound(var, low);
-      var_set_lower_bound(var, high);
-      low = var_lower_bound(var);
-      high = var_upper_bound(var);
-   }
-
-   if( low > val ) {
-      FPRINTF(mif,"Variable ");
-      slv_print_var_name(mif,sys->slv,var);
-      FPRINTF(mif," was initialized below its lower bound.\n");
-      FPRINTF(mif,"It will be moved to its lower bound.\n");
-      var_set_value(var, low);
-   } else if( val > high ) {
-      FPRINTF(mif,"Variable ");
-      slv_print_var_name(mif,sys->slv,var);
-      FPRINTF(mif," was initialized above its upper bound.\n");
-      FPRINTF(mif,"It will be moved to its upper bound.\n");
-      var_set_value(var, high);
-   }
+	lp_ensure_bounds(mif,sys->slv,var);
 }
 
 #ifndef KILL
@@ -1162,8 +849,7 @@ struct rel_relation *slv6_get_obj_relation(slv6_system_t sys){
 void slv6_dump_internals(slv6_system_t sys, int level){
    check_system(sys);
    if (level > 0) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_dump_internals\n");
-      FPRINTF(stderr,"        slv6 does not dump its internals.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Dumping internals is not implemented.");
    }
 }
 #endif
@@ -1203,8 +889,7 @@ boolean slv6_change_basis(slv6_system_t sys,int32 var, mtx_range_t *rng){
    Nor, for that matter, is there a basis in the first place.
    So I just write out an error message, and return FALSE  */
 
-   FPRINTF(stderr,"ERROR:  (slv6) slv6_change_basis\n");
-   FPRINTF(stderr,"        This solver does not support changing the basis.\n");
+   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Changing basis is not supported.");
 
    return FALSE;
 }
@@ -1238,6 +923,16 @@ static SlvClientToken slv6_create(slv_system_t server, int32 *statusindex){   /*
 		*statusindex = 1;
 		return sys;
 	}
+
+	/* Bind this solver instance to the current system lists. */
+	sys->slv = server;
+	sys->vlist_user = slv_get_solvers_var_list(server);
+	sys->vlist = sys->vlist_user;
+	sys->blist_user = (struct bnd_boundary *)slv_get_solvers_bnd_list(server);
+	sys->blist = sys->blist_user;
+	sys->rlist_user = slv_get_solvers_rel_list(server);
+	sys->rlist = sys->rlist_user;
+	sys->obj = slv_get_obj_relation(server);
 
 	/***  Initialize system parameters ***/
 
@@ -1275,12 +970,15 @@ static SlvClientToken slv6_create(slv_system_t server, int32 *statusindex){   /*
 	sys->mps.lbrow = NULL;     /* all other data in mps structure is 0 */
 	sys->mps.ubrow = NULL;
 	sys->mps.bcol = NULL;
+	sys->mps.col_scale = NULL;
+	sys->mps.row_scale = NULL;
 	sys->mps.typerow = NULL;
 	sys->mps.relopcol = NULL;
 
 
 	/***  Initialize status flags ***/
 
+	sys->s.kind                      = SLV_STATUS_NLP;
 	sys->s.over_defined               = FALSE;  /* set to (sys->mps.rinc > sys->mps.vinc) in slv6_presolve */
 	sys->s.under_defined              = FALSE;  /* set to (sys->mps.rinc < sys->mps.vinc) in slv6_presolve */
 	sys->s.struct_singular            = FALSE;  /* set to (sys->mps.rank < sys->mps.rinc) in slv6_presolve */
@@ -1313,21 +1011,21 @@ static SlvClientToken slv6_create(slv_system_t server, int32 *statusindex){   /*
 	sys->s.block.residual             = 0.0;    /* always 0.0 since not iterating, never used */
 	sys->s.block.jactime              = 0.0;    /* calculated in slv6_presolve, time for jacobian eval */
 
-	sys->s.costsize                   = sys->s.block.number_of;  /* just one cost block, which will be set in  */
+	sys->s.u.nlp.costsize                   = sys->s.block.number_of;  /* just one cost block, which will be set in  */
 
-	sys->s.cost=create_zero_array(sys->s.costsize,struct slv_block_cost);  /* allocate memory */
+	sys->s.u.nlp.cost=create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);  /* allocate memory */
 
 
 	/* Note: the cost vars are equivalent to other sys->s.* vars
 
-	sys->s.cost->size        = sys->s.block.current_size
-	sys->s.cost->iterations  = sys->s.block.iteration
-	sys->s.cost->jacs        = sys->s.block.iteration
-	sys->s.cost->funcs       = always 0 since no function evals needed
-	sys->s.cost->time        = sys->s.block.cpu_elapsed
-	sys->s.cost->resid       = 0.0  whatever this is ?
-	sys->s.cost->functime    = 0.0  since no function evals needed
-	sys->s.cost->jactime     = sys->s.block.jactime
+	sys->s.u.nlp.cost->size        = sys->s.block.current_size
+	sys->s.u.nlp.cost->iterations  = sys->s.block.iteration
+	sys->s.u.nlp.cost->jacs        = sys->s.block.iteration
+	sys->s.u.nlp.cost->funcs       = always 0 since no function evals needed
+	sys->s.u.nlp.cost->time        = sys->s.block.cpu_elapsed
+	sys->s.u.nlp.cost->resid       = 0.0  whatever this is ?
+	sys->s.u.nlp.cost->functime    = 0.0  since no function evals needed
+	sys->s.u.nlp.cost->jactime     = sys->s.block.jactime
 
 	*/
 
@@ -1349,11 +1047,11 @@ static int slv6_destroy(slv_system_t server, SlvClientToken asys){
 	slv6_set_extrel_list(sys,NULL);
 #endif
 	sys->integrity = DESTROYED;
-	if (sys->s.cost) ascfree(sys->s.cost);  /* deallocate cost array */
+	if (sys->s.u.nlp.cost) ascfree(sys->s.u.nlp.cost);  /* deallocate cost array */
 
 	slv_destroy_parms(&(sys->p));
 
-	nuke_pointers(sys->mps);   /* free memory, and set all pointers to NULL */
+	nuke_pointers(&(sys->mps));   /* free memory, and set all pointers to NULL */
 	ascfree( (POINTER)sys );
 
 
@@ -1374,13 +1072,11 @@ boolean slv6_eligible_solver(slv6_system_t server){
 
    check_system(sys);
    if( sys->rlist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_eligible_solver\n");
-      FPRINTF(stderr,"        Relation list was never set.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list was never set.");
       return (FALSE);
    }
    if( sys->obj == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_eligible_solver\n");
-      FPRINTF(stderr,"        No objective in problem.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"No objective in problem.");
       return (FALSE);
    }
 
@@ -1398,22 +1094,23 @@ boolean slv6_eligible_solver(slv6_system_t server){
    if (SLV_PARAM_BOOL(&(sys->p),SP6_NONLIN) == 0){
       for( rp=sys->rlist ; *rp != NULL ; ++rp )   /* check relations */
           if(!relman_is_linear(*rp,&vfilter)) {
-            FPRINTF(MIF(sys), "ERROR:  With the current settings, the MPS generator can only\n");
-            FPRINTF(MIF(sys), "        handle linear models. Nonlinearity in constraint:\n");
-            slv_print_rel_name(MIF(sys),sys->slv, *rp);
+            char *relname = rel_make_name(sys->slv,*rp);
+            ERROR_REPORTER_HERE(ASC_PROG_ERR
+               ,"With current settings, MakeMPS requires linear models; nonlinearity in constraint '%s'."
+               ,(relname ? relname : "<unknown>")
+            );
+            ASC_FREE(relname);
             return(FALSE);   /* don't do nonlinearities */
           }
-#ifndef KILL
-      if (!exprman_is_linear(sys->obj,&vfilter)){
-          FPRINTF(MIF(sys), "ERROR:  With the current settings, the MPS generator can only\n");
-          FPRINTF(MIF(sys), "        handle linear models. Nonlinearity in objective.\n");
+      if(!relman_is_linear(sys->obj,&vfilter)){
+          char *relname = rel_make_name(sys->slv,sys->obj);
+          ERROR_REPORTER_HERE(ASC_PROG_ERR
+             ,"With current settings, MakeMPS requires linear models; nonlinearity in objective '%s'."
+             ,(relname ? relname : "<unknown>")
+          );
+          ASC_FREE(relname);
           return(FALSE);   /* don't do nonlinearities */
       }
-#else
-     FPRINTF(stderr,"  function slv6_elegible_solver is slv6 is broken.\n");
-     FPRINTF(stderr," It calls exprman_is_linear with wrong number of args.\n");
-     exit(1);
-#endif
    }
 
    /*  Note: initially I had this routine check to see if solver could handle
@@ -1434,26 +1131,19 @@ void slv6_presolve(slv_system_t server){
 
    struct var_variable **vp;
    struct rel_relation **rp;
-   struct bnd_boundary *bp;
-   int32 cap;
-
-   bnd_filter_t bfilter;
 
    /* Check if necessary pointers are non-NULL */
    check_system(sys);
    if( sys->vlist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Variable list was never set.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was never set.");
       return;
    }
    if( sys->blist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Boundary list was never set.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Boundary list was never set.");
       return;
    }
    if( sys->rlist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Relation list was never set.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list was never set.");
       return;
    }
 
@@ -1468,7 +1158,7 @@ void slv6_presolve(slv_system_t server){
    if( sys->vlist_user == NULL ) determine_vlist(sys);
 #else
    if( sys->vlist_user == NULL ){
-     FPRINTF(stderr,"  function determine_vlist is slv6 is broken.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"automatic variable-list setup is broken.");
      exit(1);
    }
 #endif
@@ -1522,36 +1212,64 @@ void slv6_presolve(slv_system_t server){
    }
 
 #endif
-      /* compute info for variables */
-   sys->mps.vused = 0;     /* number starting at 0 */
-   sys->mps.vinc = 0;
-   for( vp = sys->vlist ; *vp != NULL ; vp++ ) {
-      if( free_inc_var_filter(*vp) )
-          sys->mps.vinc++;
-      sys->mps.vused++;    /* count up incident, non-fixed vars */
-   }
+	  /* Legacy incidence setup above is disabled; compute the core counts here. */
+	   sys->mps.rused = 0;
+	   sys->mps.rinc = 0;
+	   for( rp = sys->rlist ; *rp != NULL ; ++rp ) {
+	      if( inc_rel_filter(*rp) ) {
+	         sys->mps.rinc++;
+	      }
+	      sys->mps.rused++;
+	   }
 
-   /* calculate values for other index_mps_t vars */
-   sys->mps.crow     = sys->mps.rused;    /* note rused = N means rows 0 to N-1, exist,
-                                             the next one will be numbered rused */
-   /* calculate rank later */
+	      /* compute info for variables */
+	   sys->mps.vused = 0;     /* number starting at 0 */
+	   sys->mps.vinc = 0;
+	   for( vp = sys->vlist ; *vp != NULL ; vp++ ) {
+	      if( free_inc_var_filter(*vp) )
+	          sys->mps.vinc++;
+	      sys->mps.vused++;    /* count up incident, non-fixed vars */
+	   }
+	   if(sys->mps.vinc == 0){
+	      /* Fallback for systems where incident flags are not pre-marked. */
+	      var_filter_t active_free;
+	      active_free.matchbits = (VAR_FIXED | VAR_ACTIVE);
+	      active_free.matchvalue = VAR_ACTIVE;
+	      for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
+	         if( var_apply_filter(*vp,&active_free) ){
+	            sys->mps.vinc++;
+	         }
+	      }
+	   }
 
-   /* Call slv6_elgibile_solver to see if the solver has a chance */
-   /* If not bail now ... requires the incidence values of prev section be set */
-   if(! slv6_eligible_solver(sys)) return;
+	   /* calculate values for other index_mps_t vars */
+	   sys->mps.cap = sys->mps.vused;
+	   if(sys->mps.cap < sys->mps.rused + 1){
+	      sys->mps.cap = sys->mps.rused + 1;
+	   }
+	   sys->mps.crow     = sys->mps.rused;    /* note rused = N means rows 0 to N-1, exist,
+	                                             the next one will be numbered rused */
+	   /* calculate rank later */
+
+	   /* Call slv6_elgibile_solver to see if the solver has a chance */
+	   /* If not bail now ... requires the incidence values of prev section be set */
+	   if(! slv6_eligible_solver(sys)) {
+	      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Model is not eligible for MakeMPS export with current options.");
+	      return;
+	   }
 
    /*  Make sure that at least one incident variable and at least one incident
        relation exist, else bail */
    if ((sys->mps.rinc == 0) || (sys->mps.vinc == 0))  {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Your model must have at least one incident variable and equation.\n");
-      FPRINTF(stderr,"        Incident variables: %d\n", sys->mps.vinc);
-      FPRINTF(stderr,"        Incident equations: %d\n", sys->mps.rinc);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR
+         ,"Your model must have at least one incident variable and equation (incident variables: %d, incident equations: %d)."
+         ,sys->mps.vinc, sys->mps.rinc
+      );
       return;
    }
 
    /* free memory, and set all pointers to NULL */
-   nuke_pointers(sys->mps);
+   nuke_pointers(&(sys->mps));
 
    /* setup matrix representaion of problem */
    sys->mps.Ac_mtx = calc_matrix(sys->mps.cap,
@@ -1564,34 +1282,31 @@ void slv6_presolve(slv_system_t server){
                                  &sys->mps.rank,
                                  &sys->mps.bcol);
    if( sys->mps.Ac_mtx == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Call to calc_matrix failed.\n");
-      nuke_pointers(sys->mps);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed to build matrix representation.");
+      nuke_pointers(&(sys->mps));
       return;
    }
 
    /* get upper bound row */
-   sys->mps.ubrow = calc_bounds(sys->vlist, sys->mps.vinc, TRUE);
+   sys->mps.ubrow = calc_bounds(sys->vlist, sys->mps.vused, TRUE);
    if (sys->mps.ubrow == NULL)  {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Error in calculating variable upper bounds.\n");
-      nuke_pointers(sys->mps);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating variable upper bounds.");
+      nuke_pointers(&(sys->mps));
       return;
    }
 
    /* get lower bound row */
-   sys->mps.lbrow = calc_bounds(sys->vlist, sys->mps.vinc, FALSE);
+   sys->mps.lbrow = calc_bounds(sys->vlist, sys->mps.vused, FALSE);
    if (sys->mps.lbrow == NULL)  {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Error in calculating variable lower bounds.\n");
-      nuke_pointers(sys->mps);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating variable lower bounds.");
+      nuke_pointers(&(sys->mps));
       return;
    }
 
-   /* Call calc_svtlist to allocate array of variable types */
-   sys->mps.typerow = calc_svtlist(sys->vlist,
-                                   sys->mps.vinc,
-                                   &sys->mps.solver_var_used,      /* output */
+	/* Call calc_svtlist to allocate array of variable types */
+	sys->mps.typerow = calc_svtlist(sys->vlist,
+	                                sys->mps.vused,
+	                                &sys->mps.solver_var_used,      /* output */
                                    &sys->mps.solver_relaxed_used,  /* output */
                                    &sys->mps.solver_int_used,      /* output */
                                    &sys->mps.solver_binary_used,   /* output */
@@ -1599,18 +1314,16 @@ void slv6_presolve(slv_system_t server){
                                    &sys->mps.solver_other_used,    /* output */
                                    &sys->mps.solver_fixed);        /* output */
    if(sys->mps.typerow == NULL) {         /* allocation failed */
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Error in calculating the variable type list!\n");
-      nuke_pointers(sys->mps);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating the variable type list!");
+      nuke_pointers(&(sys->mps));
       return;
    }
 
    /* Call calc_reloplist here, to calculate the relational operators >=, <=, = */
-    sys->mps.relopcol = calc_reloplist(sys->rlist, sys->mps.rinc);
+	 sys->mps.relopcol = calc_reloplist(sys->rlist, sys->mps.rused);
     if(sys->mps.relopcol == NULL) {         /* allocation failed */
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Error in calculating the relational operators!\n");
-      nuke_pointers(sys->mps);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating the relational operators!");
+      nuke_pointers(&(sys->mps));
       return;
    }
 
@@ -1619,38 +1332,70 @@ void slv6_presolve(slv_system_t server){
             sys->mps.relopcol,    /* is it incident? */
             sys->vlist,           /* in: Variable list (NULL terminated) */
             sys->mps.rused,       /* in: total number of relations used */
+            sys->mps.vused,       /* in: total number of variables used */
             sys->mps.bcol);       /* out: rhs array origin */
 
 
-   /* Call insure_bounds over all vars to make bounds self-consistent */
+   /* Call ensure_bounds over all vars to make bounds self-consistent */
    for( vp=sys->vlist; *vp != NULL ; ++vp )
-     insure_bounds(MIF(sys),sys, *vp);
+     ensure_bounds(NULL,sys, *vp);
+
+   if(!lp_apply_nominal_scaling(
+      sys->mps.Ac_mtx,
+      sys->mps.lbrow,
+      sys->mps.ubrow,
+      sys->mps.bcol,
+      sys->mps.typerow,
+      sys->mps.relopcol,
+      sys->mps.cap,
+      sys->mps.rused,
+      sys->mps.vused,
+      sys->mps.crow,
+      sys->vlist,
+      sys->rlist,
+      sys->obj,
+      SLV_PARAM_BOOL(&(sys->p),SP6_VARNOM_SCALE),
+      SLV_PARAM_BOOL(&(sys->p),SP6_RELNOM_SCALE),
+      &sys->mps.col_scale,
+      &sys->mps.row_scale
+   )){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed applying LP/MIP nominal scaling.");
+      nuke_pointers(&(sys->mps));
+      return;
+   }
 
    /* Reset status flags */
    sys->s.over_defined = (sys->mps.rinc > sys->mps.vinc);
    sys->s.under_defined = (sys->mps.rinc < sys->mps.vinc);
    sys->s.struct_singular = (sys->mps.rank < sys->mps.rinc);
-   sys->s.ok = sys->s.calc_ok && !sys->s.struct_singular;
+   /* MakeMPS exports are valid even when the row set is rank-deficient. */
+   sys->s.ok = sys->s.calc_ok;
    sys->s.ready_to_solve = sys->s.ok;
 
    sys->s.converged = FALSE;      /* changes to true after slv6_solve */
    sys->s.block.current_size = sys->mps.vused;
-   sys->s.cost->size = sys->s.block.current_size;
+   sys->s.u.nlp.cost->size = sys->s.block.current_size;
 
    sys->s.cpu_elapsed       = (double)(tm_cpu_time() - sys->clock);  /* record times */
    sys->s.block.cpu_elapsed = sys->s.cpu_elapsed;
-   sys->s.cost->time        = sys->s.cpu_elapsed;
-   sys->s.cost->jactime     = sys->s.block.jactime;  /* from calc_matrix */
+   sys->s.u.nlp.cost->time        = sys->s.cpu_elapsed;
+   sys->s.u.nlp.cost->jactime     = sys->s.block.jactime;  /* from calc_matrix */
 
    sys->s.block.iteration   = 0;  /* reset iteration "count", changes to 1 after slv6_solve */
    sys->s.iteration         = 0;
-   sys->s.cost->iterations  = 0;
-   sys->s.cost->jacs        = 0;
+   sys->s.u.nlp.cost->iterations  = 0;
+   sys->s.u.nlp.cost->jacs        = 0;
 
 }
 
 void slv6_solve(slv_system_t server){
 	slv6_system_t sys;
+	const char *requested_name;
+	char *mps_name = NULL;
+	char *map_name = NULL;
+	char *mps_name_abs = NULL;
+	char *map_name_abs = NULL;
+	boolean mps_ok, map_ok;
 	sys = SYS(server);
 
    /* make sure none of the mps pointers are NULL */
@@ -1660,16 +1405,16 @@ void slv6_solve(slv_system_t server){
        (sys->mps.bcol == NULL) ||
        (sys->mps.typerow == NULL) ||
        (sys->mps.relopcol == NULL)) {
-      FPRINTF(MIF(sys),"ERROR:  Matrix representation of problem is not available.\n");
-      FPRINTF(MIF(sys),"        Perhaps the presolve routine was not called before slv6_solve.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR
+         ,"Matrix representation of problem is not available; presolve may not have been called."
+      );
       return;
    }
 
    /* Check system to see if it can be solved  */
    check_system(sys);
    if( !sys->s.ready_to_solve ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_solve\n");
-      FPRINTF(stderr,"        Not ready to solve.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
       return;
    }
 
@@ -1680,37 +1425,67 @@ void slv6_solve(slv_system_t server){
    mtx_write_region_human(MIF(sys), sys->mps.Ac_mtx, mtx_ENTIRE_MATRIX);
    FPRINTF(MIF(sys),"_________________________________________\n");
  */
+	requested_name = SLV_PARAM_CHAR(&(sys->p),SP6_FILENAME);
+	if(!makemps_build_output_names(requested_name, &mps_name, &map_name)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR
+			,"Invalid MakeMPS output filename '%s'"
+			,(requested_name != NULL ? requested_name : "(null)")
+		);
+		return;
+	}
 
-#define FN SLV_PARAM_CHAR(&(sys->p),SP6_FILENAME)
+	mps_ok = write_MPS(mps_name, sys->mps, &(sys->p));
+	map_ok = FALSE;
+	if(mps_ok){
+		map_ok = write_name_map(map_name, sys->vlist, sys->mps.col_scale);
+	}
+	mps_name_abs = makemps_get_abs_name(mps_name);
+	map_name_abs = makemps_get_abs_name(map_name);
 
-   /* Call write_mps to create the mps file */
-   write_MPS(FN,     /* filename for output */
-             sys->mps,                      /* main chunk of data */
-             sys->pa);
+	if(mps_ok && map_ok){
+		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS
+			,"MakeMPS wrote '%s' and '%s'."
+			,(mps_name_abs != NULL ? mps_name_abs : mps_name)
+			,(map_name_abs != NULL ? map_name_abs : map_name)
+		);
+	}else if(mps_ok){
+		ERROR_REPORTER_NOLINE(ASC_USER_NOTE
+			,"MakeMPS wrote '%s' but failed to write '%s'."
+			,(mps_name_abs != NULL ? mps_name_abs : mps_name)
+			,(map_name_abs != NULL ? map_name_abs : map_name)
+		);
+	}else{
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+			,"MakeMPS failed to write output files (requested '%s')."
+			,requested_name
+		);
+	}
 
-   /* replace .mps with .map at end of filename */
-   *(FN+strlen(FN)-2) = 'a';
-   *(FN+strlen(FN)-1) = 'p';
-
-   /* writes out a file mapping the CXXXXXXX variable names with the actual ASCEND names */
-   write_name_map(FN,   /* user-specified filename */
-                  sys->vlist);
-#undef FN
+	if(mps_name_abs != NULL)ospath_free_str(mps_name_abs);
+	if(map_name_abs != NULL)ospath_free_str(map_name_abs);
+	ascfree(mps_name);
+	ascfree(map_name);
 
 
 
    sys->s.cpu_elapsed += (double)(tm_cpu_time() - sys->clock);
    /* compute total elapsed time */
    sys->s.block.cpu_elapsed = sys->s.cpu_elapsed;
-   sys->s.cost->time        = sys->s.cpu_elapsed;
+   sys->s.u.nlp.cost->time        = sys->s.cpu_elapsed;
+
+   if(!(mps_ok && map_ok)){
+      sys->s.converged = FALSE;
+      sys->s.ready_to_solve = FALSE;
+      return;
+   }
 
    sys->s.converged = TRUE;
    sys->s.ready_to_solve = FALSE;   /* !sys->s.converged  */
 
    sys->s.block.iteration   = 1;  /* change iteration "count", goes to 0 after slv6_presolve */
    sys->s.iteration         = 1;
-   sys->s.cost->iterations  = 1;
-   sys->s.cost->jacs        = 1;
+   sys->s.u.nlp.cost->iterations  = 1;
+   sys->s.u.nlp.cost->jacs        = 1;
    sys->s.ready_to_solve = FALSE;
 
 }
@@ -1744,7 +1519,61 @@ void slv6_resolve(slv_system_t server){
   */
 
    check_system(sys);
-   slv6_solve(server);
+	slv6_solve(server);
+}
+
+/* Adapters from modern solver API (server + token) to legacy slv6 callbacks. */
+static int makemps_destroy(slv_system_t server, SlvClientToken asys){
+	(void)server;
+	return slv6_destroy((slv_system_t)asys, asys);
+}
+
+static int makemps_eligible_solver(slv_system_t server){
+	SlvClientToken asys = slv_get_client_token(server);
+	if(asys == NULL){
+		return 0;
+	}
+	return slv6_eligible_solver((slv6_system_t)asys) ? 1 : 0;
+}
+
+static void makemps_get_parameters(slv_system_t server, SlvClientToken asys, slv_parameters_t *parameters){
+	(void)server;
+	slv6_get_parameters((slv_system_t)asys, parameters);
+}
+
+static void makemps_set_parameters(slv_system_t server, SlvClientToken asys, slv_parameters_t *parameters){
+	(void)server;
+	slv6_set_parameters((slv_system_t)asys, parameters);
+}
+
+static int makemps_get_status(slv_system_t server, SlvClientToken asys, slv_status_t *status){
+	(void)server;
+	slv6_get_status((slv_system_t)asys, status);
+	return 0;
+}
+
+static int makemps_solve(slv_system_t server, SlvClientToken asys){
+	(void)server;
+	slv6_solve((slv_system_t)asys);
+	return 0;
+}
+
+static int makemps_presolve(slv_system_t server, SlvClientToken asys){
+	(void)server;
+	slv6_presolve((slv_system_t)asys);
+	return 0;
+}
+
+static int makemps_iterate(slv_system_t server, SlvClientToken asys){
+	(void)server;
+	slv6_iterate((slv_system_t)asys);
+	return 0;
+}
+
+static int makemps_resolve(slv_system_t server, SlvClientToken asys){
+	(void)server;
+	slv6_resolve((slv_system_t)asys);
+	return 0;
 }
 
 
@@ -1752,16 +1581,16 @@ static const SlvFunctionsT makemps_internals = {
 	6
 	,"MakeMPS"
 	,slv6_create
-  	,slv6_destroy
-	,slv6_eligible_solver
+  	,makemps_destroy
+	,makemps_eligible_solver
 	,slv6_get_default_parameters
-	,slv6_get_parameters
-	,slv6_set_parameters
-	,slv6_get_status
-	,slv6_solve
-	,slv6_presolve
-	,slv6_iterate
-	,slv6_resolve
+	,makemps_get_parameters
+	,makemps_set_parameters
+	,makemps_get_status
+	,makemps_solve
+	,makemps_presolve
+	,makemps_iterate
+	,makemps_resolve
 	,NULL
 	,NULL
 	,NULL
@@ -1771,4 +1600,3 @@ static const SlvFunctionsT makemps_internals = {
 int makemps_register(void){
 	return solver_register(&makemps_internals);
 }
-

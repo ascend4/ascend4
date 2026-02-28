@@ -1,0 +1,103 @@
+REQUIRE "atoms.a4l";
+
+(* TABLE + string-labeled variant of mip_tsp_mtz8. *)
+MODEL mip_tsp_mtz8_table_labels;
+	city IS_A set OF symbol_constant;
+	nondepot IS_A set OF symbol_constant;
+
+	x[city][city] IS_A solver_binary;
+	u[city] IS_A solver_var;
+
+	city :== ['a','b','c','d','e','f','g','h'];
+	nondepot :== ['b','c','d','e','f','g','h'];
+
+	TABLE c[city,city] IS_A factor_constant;
+		a,b,c,d,e,f,g,h;
+		a,0,89,22,11,43,39,36,25;
+		b,21,0,94,77,19,83,62,12;
+		c,11,19,0,35,37,72,85,11;
+		d,79,33,99,0,91,97,77,61;
+		e,36,65,83,43,0,8,28,97;
+		f,62,51,43,27,35,0,51,21;
+		g,19,56,20,53,52,85,0,41;
+		h,13,66,76,23,56,18,78,0;
+	END TABLE;
+
+	FOR i IN city CREATE
+		outdeg[i]: SUM[x[i][j] | j IN city] = 1;
+	END FOR;
+
+	FOR j IN city CREATE
+		indeg[j]: SUM[x[i][j] | i IN city] = 1;
+	END FOR;
+
+	FOR i IN nondepot CREATE
+		FOR j IN nondepot CREATE
+			mtz[i][j]: u[i] - u[j] + 8*x[i][j] <= 7;
+		END FOR;
+	END FOR;
+
+	obj: MINIMIZE SUM[ SUM[c[i][j]*x[i][j] | j IN city] | i IN city ];
+
+METHODS
+
+METHOD self_test;
+	ASSERT abs(SUM[ SUM[c[i][j]*x[i][j] | j IN city] | i IN city ] - 166) < 1e-7;
+
+	ASSERT abs(x['a']['d'] - 1) < 1e-7;
+	ASSERT abs(x['d']['b'] - 1) < 1e-7;
+	ASSERT abs(x['b']['e'] - 1) < 1e-7;
+	ASSERT abs(x['e']['f'] - 1) < 1e-7;
+	ASSERT abs(x['f']['g'] - 1) < 1e-7;
+	ASSERT abs(x['g']['c'] - 1) < 1e-7;
+	ASSERT abs(x['c']['h'] - 1) < 1e-7;
+	ASSERT abs(x['h']['a'] - 1) < 1e-7;
+END self_test;
+
+METHOD bound_self;
+	FOR i IN city DO
+		x[i][i].lower_bound := 0;
+		x[i][i].upper_bound := 0;
+	END FOR;
+
+	u['a'].lower_bound := 0;
+	u['a'].upper_bound := 0;
+
+	FOR i IN nondepot DO
+		u[i].lower_bound := 1;
+		u[i].upper_bound := 7;
+	END FOR;
+END bound_self;
+
+METHOD default_self;
+	FOR i IN city DO
+		FOR j IN city DO
+			x[i][j] := 0;
+		END FOR;
+	END FOR;
+
+	x['a']['d'] := 1;
+	x['d']['b'] := 1;
+	x['b']['e'] := 1;
+	x['e']['f'] := 1;
+	x['f']['g'] := 1;
+	x['g']['c'] := 1;
+	x['c']['h'] := 1;
+	x['h']['a'] := 1;
+
+	u['a'] := 0;
+	u['b'] := 2;
+	u['c'] := 6;
+	u['d'] := 1;
+	u['e'] := 3;
+	u['f'] := 4;
+	u['g'] := 5;
+	u['h'] := 7;
+END default_self;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+END on_load;
+
+END mip_tsp_mtz8_table_labels;

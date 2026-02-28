@@ -180,6 +180,10 @@ static int g_defaulted;			/* used for atoms,constants */
 static CONST dim_type *g_dim_ptr;	  /* dim of last units parsed, or so */
 static CONST dim_type *g_atom_dim_ptr;	  /* dim of DIMENSION decl */
 static CONST dim_type *g_default_dim_ptr; /* dim of default value parsed */
+static symchar *g_default_units;         /* units token of default value, if supplied */
+static symchar *g_constant_units;        /* units token from CONSTANT ... UNITS ... */
+static symchar *g_parsed_units;          /* units token from most recently parsed unit expression */
+static symchar *g_number_units;          /* units token from most recently parsed number */
 
 static double g_default_double;
 static long g_default_long;
@@ -196,6 +200,384 @@ int g_parse_relns = 1;
  *      0 indicates don't parse relations
  *      1 indicates process them
  */
+
+struct table_parse_state {
+  int active;
+  int body_init;
+  int positional;
+  int row_has_items;
+  symchar *decl_type;
+  struct Set *decl_typeargs;
+  symchar *decl_set_type;
+  struct Expr *default_expr;
+  Asc_DString body;
+  unsigned long rows;
+  unsigned long scalars;
+  unsigned long items;
+};
+
+static struct table_parse_state g_table_parse = {0,0,0,0,NULL,NULL,NULL,NULL,{0},0,0,0};
+
+struct dataset_parse_state {
+  int active;
+  symchar *name;
+  char *filename;
+  struct DatasetIndexItem *indices;
+  struct DatasetMapItem *maps;
+};
+
+static struct dataset_parse_state g_dataset_parse = {0,NULL,NULL,NULL,NULL};
+
+static void TableParseEnsureBody(void){
+  if (!g_table_parse.body_init) {
+    Asc_DStringInit(&g_table_parse.body);
+    g_table_parse.body_init = 1;
+  }
+}
+
+static void TableParseBegin(void){
+  if (g_table_parse.decl_typeargs != NULL) {
+    DestroySetList(g_table_parse.decl_typeargs);
+    g_table_parse.decl_typeargs = NULL;
+  }
+  g_table_parse.decl_type = NULL;
+  g_table_parse.decl_set_type = NULL;
+  if (g_table_parse.default_expr != NULL) {
+    DestroyExprList(g_table_parse.default_expr);
+  }
+  g_table_parse.default_expr = NULL;
+  TableParseEnsureBody();
+  Asc_DStringTrunc(&g_table_parse.body,0);
+  g_table_parse.active = 1;
+  g_table_parse.positional = 0;
+  g_table_parse.row_has_items = 0;
+  g_table_parse.rows = 0;
+  g_table_parse.scalars = 0;
+  g_table_parse.items = 0;
+}
+
+static void TableParseAbort(void){
+  if (g_table_parse.decl_typeargs != NULL) {
+    DestroySetList(g_table_parse.decl_typeargs);
+    g_table_parse.decl_typeargs = NULL;
+  }
+  g_table_parse.decl_type = NULL;
+  g_table_parse.decl_set_type = NULL;
+  if (g_table_parse.default_expr != NULL) {
+    DestroyExprList(g_table_parse.default_expr);
+    g_table_parse.default_expr = NULL;
+  }
+  if (g_table_parse.body_init) {
+    Asc_DStringTrunc(&g_table_parse.body,0);
+  }
+  g_table_parse.active = 0;
+  g_table_parse.row_has_items = 0;
+  g_table_parse.rows = 0;
+  g_table_parse.scalars = 0;
+  g_table_parse.items = 0;
+  g_table_parse.positional = 0;
+}
+
+static void TableParseAppendToken(CONST char *tok, int scalar){
+  if (!g_table_parse.active || tok == NULL) {
+    return;
+  }
+  TableParseEnsureBody();
+  if (g_table_parse.row_has_items) {
+    Asc_DStringAppend(&g_table_parse.body," ",1);
+  }
+  Asc_DStringAppend(&g_table_parse.body,tok,-1);
+  g_table_parse.items++;
+  if (scalar) {
+    g_table_parse.scalars++;
+  }
+  g_table_parse.row_has_items = 1;
+}
+
+static void TableParseAppendInteger(long v){
+  char buf[64];
+  snprintf(buf,sizeof(buf),"%ld",v);
+  TableParseAppendToken(buf,1);
+}
+
+static void TableParseAppendReal(double v){
+  char buf[64];
+  snprintf(buf,sizeof(buf),"%.17g",v);
+  TableParseAppendToken(buf,1);
+}
+
+static void TableParseAppendSymbol(symchar *sym){
+  if (sym == NULL) {
+    return;
+  }
+  TableParseEnsureBody();
+  if (g_table_parse.row_has_items) {
+    Asc_DStringAppend(&g_table_parse.body," ",1);
+  }
+  Asc_DStringAppend(&g_table_parse.body,"'",1);
+  Asc_DStringAppend(&g_table_parse.body,SCP(sym),-1);
+  Asc_DStringAppend(&g_table_parse.body,"'",1);
+  g_table_parse.items++;
+  g_table_parse.scalars++;
+  g_table_parse.row_has_items = 1;
+}
+
+static void TableParseAppendBraced(CONST char *txt){
+  if (txt == NULL) {
+    return;
+  }
+  TableParseEnsureBody();
+  if (g_table_parse.row_has_items) {
+    Asc_DStringAppend(&g_table_parse.body," ",1);
+  }
+  Asc_DStringAppend(&g_table_parse.body,"{",1);
+  Asc_DStringAppend(&g_table_parse.body,txt,-1);
+  Asc_DStringAppend(&g_table_parse.body,"}",1);
+  g_table_parse.items++;
+  g_table_parse.scalars++;
+  g_table_parse.row_has_items = 1;
+}
+
+static void TableParseEndRow(void){
+  if (!g_table_parse.active) {
+    return;
+  }
+  if (g_table_parse.row_has_items) {
+    TableParseEnsureBody();
+    Asc_DStringAppend(&g_table_parse.body,"\n",1);
+    g_table_parse.rows++;
+    g_table_parse.row_has_items = 0;
+  }
+}
+
+static char *TableParseFinish(void){
+  char *result;
+  TableParseEndRow();
+  TableParseEnsureBody();
+  result = Asc_DStringResult(&g_table_parse.body);
+  g_table_parse.active = 0;
+  return result;
+}
+
+static void DatasetParseClear(void){
+  struct DatasetIndexItem *idx = g_dataset_parse.indices;
+  struct DatasetMapItem *map = g_dataset_parse.maps;
+  while (idx != NULL) {
+    struct DatasetIndexItem *next = idx->next;
+    ASC_FREE(idx);
+    idx = next;
+  }
+  while (map != NULL) {
+    struct DatasetMapItem *next = map->next;
+    if (map->target != NULL) {
+      DestroyName(map->target);
+    }
+    if (map->units != NULL) {
+      ascfree(map->units);
+    }
+    ASC_FREE(map);
+    map = next;
+  }
+  if (g_dataset_parse.filename != NULL) {
+    ascfree(g_dataset_parse.filename);
+  }
+  g_dataset_parse.active = 0;
+  g_dataset_parse.name = NULL;
+  g_dataset_parse.filename = NULL;
+  g_dataset_parse.indices = NULL;
+  g_dataset_parse.maps = NULL;
+}
+
+static void DatasetParseBegin(symchar *name, CONST char *filename){
+  DatasetParseClear();
+  g_dataset_parse.active = 1;
+  g_dataset_parse.name = name;
+  g_dataset_parse.filename = (filename != NULL) ? ASC_STRDUP(filename) : NULL;
+}
+
+static void DatasetParseAddIndex(symchar *set_name,
+                                 symchar *column_name,
+                                 symchar *type_name)
+{
+  struct DatasetIndexItem *item;
+  if (!g_dataset_parse.active) {
+    return;
+  }
+  item = ASC_NEW(struct DatasetIndexItem);
+  item->set_name = set_name;
+  item->column_name = column_name;
+  item->type_name = type_name;
+  item->next = NULL;
+  if (g_dataset_parse.indices == NULL) {
+    g_dataset_parse.indices = item;
+  } else {
+    struct DatasetIndexItem *tail = g_dataset_parse.indices;
+    while (tail->next != NULL) {
+      tail = tail->next;
+    }
+    tail->next = item;
+  }
+}
+
+static void DatasetParseAddMap(struct Name *target,
+                               symchar *column_name,
+                               CONST char *units,
+                               symchar *type_name)
+{
+  struct DatasetMapItem *item;
+  if (!g_dataset_parse.active) {
+    if (target != NULL) {
+      DestroyName(target);
+    }
+    return;
+  }
+  item = ASC_NEW(struct DatasetMapItem);
+  item->target = target;
+  item->column_name = column_name;
+  item->units = (units != NULL) ? ASC_STRDUP(units) : NULL;
+  item->type_name = type_name;
+  item->next = NULL;
+  if (g_dataset_parse.maps == NULL) {
+    g_dataset_parse.maps = item;
+  } else {
+    struct DatasetMapItem *tail = g_dataset_parse.maps;
+    while (tail->next != NULL) {
+      tail = tail->next;
+    }
+    tail->next = item;
+  }
+}
+
+static struct Statement *DatasetParseFinish(void){
+  struct Statement *result;
+  if (!g_dataset_parse.active) {
+    return NULL;
+  }
+  result = CreateDATASET(g_dataset_parse.name,
+                         g_dataset_parse.filename,
+                         g_dataset_parse.indices,
+                         g_dataset_parse.maps);
+  g_dataset_parse.active = 0;
+  g_dataset_parse.name = NULL;
+  g_dataset_parse.filename = NULL;
+  g_dataset_parse.indices = NULL;
+  g_dataset_parse.maps = NULL;
+  return result;
+}
+
+static struct Name *DatasetAppendIndices(struct Name *base, struct VariableList *vl)
+{
+  CONST struct VariableList *node;
+  struct Name *result = base;
+  for (node = vl; node != NULL; node = NextVariableNode(node)) {
+    CONST struct Name *nptr = NamePointer(node);
+    struct Name *idxname = CopyName((struct Name *)nptr);
+    struct Set *setnode = CreateSingleSet(CreateVarExpr(idxname));
+    struct Name *setname = CreateSetName(setnode);
+    result = JoinNames(result,setname);
+  }
+  return result;
+}
+
+static struct Name *TableDeclNameFromTarget(CONST struct Name *target){
+  CONST struct Name *node;
+  struct Name *result = NULL;
+
+  for (node = target; node != NULL; node = NextName(node)) {
+    if (NameId(node)) {
+      result = CopyAppendNameNode(result,node);
+    } else {
+      CONST struct Set *setnode;
+      for (setnode = NameSetPtr(node); setnode != NULL; setnode = NextSet(setnode)) {
+        struct Name *idx = CreateSetName(CopySetNode(setnode));
+        result = JoinNames(result,idx);
+      }
+    }
+  }
+  return result;
+}
+
+static int StatementListHasTypeDeclForName(CONST struct gl_list_t *list,
+                                           CONST struct Name *name)
+{
+  unsigned long len;
+  unsigned long c;
+  if (list == NULL || name == NULL) {
+    return 0;
+  }
+  len = gl_length(list);
+  for (c = 1; c <= len; ++c) {
+    struct Statement *s = (struct Statement *)gl_fetch(list,c);
+    CONST struct VariableList *vl;
+    if (s == NULL) {
+      continue;
+    }
+    if (StatementType(s) != ISA && StatementType(s) != IRT && StatementType(s) != WILLBE) {
+      continue;
+    }
+    for (vl = s->v.i.vl; vl != NULL; vl = NextVariableNode(vl)) {
+      CONST struct Name *nptr = NamePointer(vl);
+      if (nptr != NULL && CompareNames(nptr,name) == 0) {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
+
+static void DatasetAppendImplicitSetDecls(struct gl_list_t *list, struct Statement *dataset_stat)
+{
+  struct DatasetMapItem *map;
+
+  if (list == NULL || dataset_stat == NULL || StatementType(dataset_stat) != DATASETSTAT) {
+    return;
+  }
+  if (dataset_stat->v.dataset.indices != NULL) {
+    return;
+  }
+
+  for (map = dataset_stat->v.dataset.maps; map != NULL; map = map->next) {
+    CONST struct Name *node;
+    for (node = map->target; node != NULL; node = NextName(node)) {
+      CONST struct Set *setnode;
+      if (NameId(node)) {
+        continue;
+      }
+      for (setnode = NameSetPtr(node); setnode != NULL; setnode = NextSet(setnode)) {
+        CONST struct Expr *expr = GetSingleExpr(setnode);
+        CONST struct Name *setexpr;
+        symchar *setid;
+        struct Name *setname;
+        struct Statement *decl;
+        struct VariableList *vl;
+
+        if (expr == NULL || ExprType(expr) != e_var || ExprListLength(expr) != 1) {
+          continue;
+        }
+        setexpr = ExprName(expr);
+        setid = (setexpr != NULL) ? SimpleNameIdPtr(setexpr) : NULL;
+        if (setid == NULL) {
+          continue;
+        }
+        setname = CreateIdName(setid);
+        if (StatementListHasTypeDeclForName(list,setname)) {
+          DestroyName(setname);
+          continue;
+        }
+        vl = CreateVariableNode(setname);
+        decl = CreateISA(vl
+          ,GetBaseTypeName(set_type)
+          ,NULL
+          ,GetBaseTypeName(integer_constant_type)
+        );
+        decl->mod = dataset_stat->mod;
+        decl->linenum = dataset_stat->linenum;
+        decl->context = dataset_stat->context;
+        gl_append_ptr(list,(char *)decl);
+      }
+    }
+  }
+}
 
 /*  Forward declaration of error message reporting
  *  functions provided at the end of this file.
@@ -337,6 +719,7 @@ static void CollectNote(struct Note *);
   CONST dim_type *dimp;
   struct TypeDescription *tptr;
   struct UnitDefinition *udefptr;
+  struct UnitLadderItem *ulitemptr;
   dim_type dimen;
   enum ForOrder order;
   enum ForKind fkind;
@@ -364,8 +747,9 @@ static void CollectNote(struct Note *);
 %token /* PATCH_TOK */ PROD_TOK PROVIDE_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
 %token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
+%token TABLE_TOK VALUES_TOK DATASET_TOK POSITIONAL_TOK INDEX_TOK COLUMN_TOK EOL_TOK
 %token THEN_TOK TRUE_TOK
-%token UNION_TOK UNITS_TOK UNIVERSAL_TOK UNLINK_TOK
+%token UNION_TOK UNITS_TOK LADDER_TOK UNIVERSAL_TOK UNLINK_TOK
 %token WHEN_TOK WHERE_TOK WHILE_TOK WILLBE_TOK WILLBETHESAME_TOK WILLNOTBETHESAME_TOK
 %token ASSIGN_TOK CASSIGN_TOK DBLCOLON_TOK USE_TOK LEQ_TOK GEQ_TOK NEQ_TOK
 %token DOTDOT_TOK WITH_TOK VALUE_TOK WITH_VALUE_T
@@ -389,13 +773,13 @@ static void CollectNote(struct Note *);
 %start definitions
 
 %type <real_value> default_val number realnumber opunits
-%type <int_value> end optional_sign universal 
+%type <int_value> end optional_sign universal optional_ladder_end
 %type <fkind> forexprend
 %type <frac_value> fraction fractail
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
-%type <nptr> data_args fname name /* optional_scope */
+%type <nptr> data_args fname name dataset_target /* optional_scope */
 %type <eptr> relation expr relop logrelop optional_with_value
 %type <sptr> set setexprlist optional_set_values
 %type <lptr> fvarlist input_args output_args varlist
@@ -411,6 +795,9 @@ static void CollectNote(struct Note *);
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
 %type <statptr> solve_statement solver_statement option_statement switch_statement
+%type <statptr> table_statement values_statement dataset_statement
+%type <braced_ptr> dataset_units_opt
+%type <id_ptr> dataset_type_opt dataset_type_req dataset_column_ref dataset_column_selector
 
 %type <slptr> fstatements global_def optional_else
 %type <slptr> optional_model_parameters optional_parameter_reduction
@@ -419,13 +806,14 @@ static void CollectNote(struct Note *);
 %type <swptr> switchlist switchlistf
 %type <wptr> whenlist whenlistf
 %type <notesptr> notes_body noteslist
-%type <listp> methods proclist proclistf statements unitdeflist complex_statement fix_and_assign_statement
+%type <listp> methods proclist proclistf statements unitdeflist unitladderitemlist complex_statement fix_and_assign_statement
 %type <procptr> procedure
-%type <dimp> dims dimensions
+%type <dimp> dims dimensions constant_dims
 %type <dimen> dimexpr
 %type <order> optional_direction
 %type <tptr> add_method_head replace_method_head
 %type <udefptr> unitdef
+%type <ulitemptr> unitladderitem
 %type <id_ptr> model_id atom_id procedure_id definition_id
 
 /* stuff without a particular need for a type */
@@ -455,11 +843,15 @@ definition:
 /*    | patch_def */
     | units_def
     | global_def
-    | error
+	| error
 	{
-	  ErrMsg_Generic("Error in definition.");
+	  /*
+	   * The specific syntax diagnostic is already emitted by zz_error().
+	   * Emitting a generic message here causes noisy duplicates during
+	   * parser recovery.
+	   */
 	}
-    ;
+	;
 
 global_def:
     GLOBAL_TOK ';' fstatements end ';'
@@ -713,6 +1105,7 @@ atom_def:
 	                                g_atom_dim_ptr,
 	                                g_default_long,
 	                                g_default_symbol,
+	                                g_default_units,
 	                                g_untrapped_error);
 	    if (def_ptr != NULL) {
 	      keepnotes = AddType(def_ptr);
@@ -761,17 +1154,20 @@ default_val:
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = WildDimension();
+	  g_default_units = NULL;
 	  g_defaulted = 0;
 	}
     | DEFAULT_TOK optional_sign number
 	{
 	  $$ = $2 ? -$3 : $3;
+	  g_default_units = g_number_units;
 	  g_defaulted = 1;
 	}
     | DEFAULT_TOK FALSE_TOK
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_default_long = 0;
 	  g_defaulted = 1;
 	}
@@ -779,6 +1175,7 @@ default_val:
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_default_long = 1;
 	  g_defaulted = 1;
 	}
@@ -786,6 +1183,7 @@ default_val:
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_default_symbol = $2;
 	  g_defaulted = 0;
 	}
@@ -810,6 +1208,7 @@ constant_def:
 	                                    g_default_long,
 	                                    g_default_symbol,
 	                                    g_atom_dim_ptr,
+	                                    (g_constant_units != NULL ? g_constant_units : g_default_units),
 	                                    g_untrapped_error);
 	    if (def_ptr != NULL) {
 	      keepnotes = AddType(def_ptr);
@@ -831,7 +1230,7 @@ constant_def:
     ;
 
 constant_head:
-    CONSTANT_TOK IDENTIFIER_TOK REFINES_TOK IDENTIFIER_TOK dims constant_val
+    CONSTANT_TOK IDENTIFIER_TOK REFINES_TOK IDENTIFIER_TOK constant_dims constant_val
     optional_notes ';'
 	{
 	  g_type_name = $2;
@@ -864,16 +1263,54 @@ constant_head:
 	}
     ;
 
+constant_dims:
+    DIMENSION_TOK dimensions
+	{
+	  $$ = $2;
+	  g_constant_units = NULL;
+	}
+    | DIMENSIONLESS_TOK
+	{
+	  $$ = Dimensionless();
+	  g_constant_units = NULL;
+	}
+    | /* empty */
+	{
+	  $$ = WildDimension();
+	  g_constant_units = NULL;
+	}
+    | UNITS_TOK BRACEDTEXT_TOK
+	{
+	  unsigned long pos;
+	  int error_code;
+	  g_units_ptr = FindOrDefineUnits($2,&pos,&error_code);
+	  if (g_units_ptr != NULL) {
+	    $$ = UnitsDimensions(g_units_ptr);
+	    g_constant_units = UnitsDescription(g_units_ptr);
+	  } else {
+	    char **errv;
+	    $$ = WildDimension();
+	    g_constant_units = NULL;
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",$2);
+	    errv = UnitsExplainError($2,error_code,pos);
+	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
+	    g_untrapped_error++;
+	  }
+	}
+    ;
+
 constant_val:
     /* empty */
 	{
 	  $<real_value>$ = 0.0;
 	  g_default_dim_ptr = WildDimension();
+	  g_default_units = NULL;
 	  g_defaulted = 0;
 	}
     | CASSIGN_TOK optional_sign number
 	{
 	  $<real_value>$ = $2 ? -$3 : $3;
+	  g_default_units = g_number_units;
 	  g_defaulted = 1;
 	}
     | CASSIGN_TOK TRUE_TOK
@@ -881,6 +1318,7 @@ constant_val:
 	  $<int_value>$ = 1;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_constant_type = BOOLEANCONSTANT;
 	}
     | CASSIGN_TOK FALSE_TOK
@@ -888,6 +1326,7 @@ constant_val:
 	  $<int_value>$ = 0;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_constant_type = BOOLEANCONSTANT;
 	}
     | CASSIGN_TOK SYMBOL_TOK
@@ -895,6 +1334,7 @@ constant_val:
 	  $<sym_ptr>$ = $2;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_constant_type = SYMBOLCONSTANT;
 	}
     ;
@@ -1119,11 +1559,347 @@ units_statement:
 	  gl_destroy($2);
 	  $$ = NULL;
 	}
-    ;
+	| UNITS_TOK LADDER_TOK unitladderitemlist end optional_ladder_end
+	{
+	  struct UnitLadderItem *item;
+	  unsigned long c,len;
+	  int ladder_errors;
+
+	  if( $4 != UNITS_TOK ) {
+	    WarnMsg_MismatchEnd("UNITS LADDER", NULL, $4, NULL);
+	  }
+	  ladder_errors = ProcessUnitLadder($3);
+	  if (ladder_errors) {
+	    g_untrapped_error++;
+	  }
+
+	  len = gl_length($3);
+	  for (c=1; c <= len; c++) {
+	    item = (struct UnitLadderItem *)gl_fetch($3,c);
+	    DestroyUnitLadderItem(item);
+	  }
+	  gl_destroy($3);
+	  $$ = NULL;
+	}
+	;
+
+optional_ladder_end:
+	/* empty */
+	{
+	  $$ = 0;
+	}
+	| LADDER_TOK
+	{
+	  $$ = 1;
+	}
+	;
+
+table_statement:
+	TABLE_TOK fname table_begin table_decl_opt table_options ';' table_mode_on table_body END_TOK TABLE_TOK table_mode_off
+	{
+	  char *table_body;
+	  table_body = TableParseFinish();
+	  $$ = CreateTABLE($2,
+	                   g_table_parse.decl_type,
+	                   g_table_parse.decl_typeargs,
+	                   g_table_parse.decl_set_type,
+	                   g_table_parse.default_expr,
+	                   g_table_parse.positional,
+	                   g_table_parse.rows,
+	                   g_table_parse.scalars,
+	                   g_table_parse.items,
+	                   table_body);
+	  g_table_parse.decl_type = NULL;
+	  g_table_parse.decl_typeargs = NULL;
+	  g_table_parse.decl_set_type = NULL;
+	  g_table_parse.default_expr = NULL;
+	}
+	| TABLE_TOK fname table_begin table_decl_opt table_options ';' table_mode_on error END_TOK TABLE_TOK table_mode_off
+	{
+	  DestroyName($2);
+	  TableParseAbort();
+	  ErrMsg_Generic("Error in TABLE body.");
+	  g_untrapped_error++;
+	  yyerrok;
+	  $$ = NULL;
+	}
+	;
+
+table_begin:
+	/* empty */
+	{
+	  TableParseBegin();
+	}
+	;
+
+table_mode_on:
+	/* empty */
+	{
+	  Asc_ScannerSetTableMode(1);
+	}
+	;
+
+table_mode_off:
+	/* empty */
+	{
+	  Asc_ScannerSetTableMode(0);
+	}
+	;
+
+table_options:
+	/* empty */
+	| table_options table_option
+	;
+
+table_decl_opt:
+	/* empty */
+	{
+	  g_table_parse.decl_type = NULL;
+	  g_table_parse.decl_set_type = NULL;
+	  if (g_table_parse.decl_typeargs != NULL) {
+	    DestroySetList(g_table_parse.decl_typeargs);
+	  }
+	  g_table_parse.decl_typeargs = NULL;
+	}
+	| ISA_TOK type_identifier optional_of
+	{
+	  if (g_table_parse.decl_typeargs != NULL) {
+	    DestroySetList(g_table_parse.decl_typeargs);
+	  }
+	  g_table_parse.decl_type = $2;
+	  g_table_parse.decl_set_type = $3;
+	  g_table_parse.decl_typeargs = g_typeargs;
+	  g_typeargs = NULL;
+	}
+	;
+
+table_option:
+	POSITIONAL_TOK
+	{
+	  g_table_parse.positional = 1;
+	}
+	| DEFAULT_TOK expr
+	{
+	  if (g_table_parse.default_expr != NULL) {
+	    DestroyExprList(g_table_parse.default_expr);
+	  }
+	  g_table_parse.default_expr = $2;
+	}
+	;
+
+table_body:
+	/* empty */
+	| table_body table_body_item
+	;
+
+table_body_item:
+	table_scalar
+	| ':'
+	{
+	  TableParseAppendToken(":",0);
+	}
+	| '='
+	{
+	  TableParseAppendToken("=",0);
+	}
+	| ','
+	{
+	  TableParseAppendToken(",",0);
+	}
+	| '+'
+	{
+	  TableParseAppendToken("+",0);
+	}
+	| '-'
+	{
+	  TableParseAppendToken("-",0);
+	}
+	| ';'
+	{
+	  TableParseEndRow();
+	}
+	| EOL_TOK
+	{
+	  TableParseEndRow();
+	}
+	;
+
+table_scalar:
+	IDENTIFIER_TOK
+	{
+	  TableParseAppendToken(SCP($1),1);
+	}
+	| SYMBOL_TOK
+	{
+	  TableParseAppendSymbol($1);
+	}
+	| INTEGER_TOK
+	{
+	  TableParseAppendInteger($1);
+	}
+	| REAL_TOK
+	{
+	  TableParseAppendReal($1);
+	}
+	| BRACEDTEXT_TOK
+	{
+	  TableParseAppendBraced($1);
+	}
+	;
+
+values_statement:
+	VALUES_TOK fname values_default_opt ';' values_entries END_TOK VALUES_TOK
+	{
+	  DestroyName($2);
+	  $$ = NULL;
+	}
+	;
+
+values_default_opt:
+	/* empty */
+	| DEFAULT_TOK expr
+	{
+	  DestroyExprList($2);
+	}
+	;
+
+values_entries:
+	values_entry ';'
+	| values_entries values_entry ';'
+	;
+
+values_entry:
+	values_key_list '=' expr
+	{
+	  DestroyExprList($3);
+	}
+	;
+
+values_key_list:
+	values_key
+	| values_key_list ',' values_key
+	;
+
+values_key:
+	IDENTIFIER_TOK
+	| SYMBOL_TOK
+	| INTEGER_TOK
+	| REAL_TOK
+	;
+
+dataset_statement:
+	DATASET_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';'
+	{
+	  DatasetParseBegin($2,$4);
+	}
+	dataset_items END_TOK DATASET_TOK
+	{
+	  $$ = DatasetParseFinish();
+	}
+	;
+
+dataset_items:
+	/* empty */
+	| dataset_items dataset_item ';'
+	| dataset_items error ';'
+	{
+	  ErrMsg_Generic("Error in DATASET item.");
+	  ErrMsg_Generic("Check DATASET statement syntax.");
+	  g_untrapped_error++;
+	  yyerrok;
+	}
+	;
+
+dataset_item:
+	dataset_index_item
+	| dataset_map_item
+	;
+
+dataset_index_item:
+	INDEX_TOK IDENTIFIER_TOK FROM_TOK COLUMN_TOK dataset_column_ref ISA_TOK IDENTIFIER_TOK
+	{
+	  DatasetParseAddIndex($2,$5,$7);
+	}
+	;
+
+dataset_map_item:
+	dataset_target FROM_TOK dataset_column_selector dataset_units_opt dataset_type_opt
+	{
+	  DatasetParseAddMap($1,$3,$4,$5);
+	}
+	| dataset_target dataset_type_req FROM_TOK dataset_column_selector dataset_units_opt
+	{
+	  DatasetParseAddMap($1,$4,$5,$2);
+	}
+	;
+
+dataset_column_selector:
+	COLUMN_TOK dataset_column_ref
+	{
+	  $$ = $2;
+	}
+	| dataset_column_ref
+	{
+	  $$ = $1;
+	}
+	;
+
+dataset_column_ref:
+	IDENTIFIER_TOK
+	{
+	  $$ = $1;
+	}
+	| SYMBOL_TOK
+	{
+	  $$ = $1;
+	}
+	;
+
+dataset_target:
+	IDENTIFIER_TOK '[' fvarlist ']'
+	{
+	  $$ = DatasetAppendIndices(CreateIdName($1),$3);
+	  DestroyVariableList($3);
+	}
+	| dataset_target '[' fvarlist ']'
+	{
+	  $$ = DatasetAppendIndices($1,$3);
+	  DestroyVariableList($3);
+	}
+	;
+
+dataset_units_opt:
+	/* empty */
+	{
+	  $$ = NULL;
+	}
+	| BRACEDTEXT_TOK
+	{
+	  $$ = $1;
+	}
+	;
+
+dataset_type_opt:
+	/* empty */
+	{
+	  $$ = NULL;
+	}
+	| ISA_TOK IDENTIFIER_TOK
+	{
+	  $$ = $2;
+	}
+	;
+
+dataset_type_req:
+	ISA_TOK IDENTIFIER_TOK
+	{
+	  $$ = $2;
+	}
+	;
 
 unitdeflist:
-	{
-	  $$ = gl_create(100L);
+		{
+		  $$ = gl_create(100L);
 	}
     | unitdeflist unitdef
 	{
@@ -1139,6 +1915,30 @@ unitdef:
 	                     LineNum());
 	}
     ;
+
+unitladderitemlist:
+	{
+	  $$ = gl_create(20L);
+	}
+	| unitladderitemlist unitladderitem ';'
+	{
+	  gl_append_ptr($1,(char *)$2);
+	  $$ = $1;
+	}
+	;
+
+unitladderitem:
+	IDENTIFIER_TOK '=' BRACEDTEXT_TOK
+	{
+	  $$ = CreateUnitLadderItem($1,$3,0,Asc_ModuleBestName(Asc_CurrentModule()),
+	                     LineNum());
+	}
+	| IDENTIFIER_TOK
+	{
+	  $$ = CreateUnitLadderItem($1,NULL,1,Asc_ModuleBestName(Asc_CurrentModule()),
+	                     LineNum());
+	}
+	;
 
 
 methods:
@@ -1234,6 +2034,64 @@ statements:
 	{
 	  /* this is appending to a gllist of statements, not yet slist. */
 	  if ($2 != NULL) {
+	    if (StatementType($2) == TABLESTAT && $2->v.table.decl_type != NULL) {
+	      struct Statement *decl;
+	      struct VariableList *vl;
+	      vl = CreateVariableNode(TableDeclNameFromTarget($2->v.table.name));
+	      decl = CreateISA(vl
+	        ,$2->v.table.decl_type
+	        ,CopySetList($2->v.table.decl_typeargs)
+	        ,$2->v.table.decl_set_type
+	      );
+	      decl->mod = $2->mod;
+	      decl->linenum = $2->linenum;
+	      decl->context = $2->context;
+	      gl_append_ptr($1,(char *)decl);
+	    }
+	    if (StatementType($2) == DATASETSTAT) {
+	      struct DatasetIndexItem *idx;
+	      struct DatasetMapItem *map;
+	      for (idx = $2->v.dataset.indices; idx != NULL; idx = idx->next) {
+	        if (idx->type_name != NULL) {
+	          struct Statement *decl;
+	          struct VariableList *vl;
+	          struct Name *setname = CreateIdName(idx->set_name);
+	          if (!StatementListHasTypeDeclForName($1,setname)) {
+	            vl = CreateVariableNode(setname);
+	            decl = CreateISA(vl
+	              ,GetBaseTypeName(set_type)
+	              ,NULL
+	              ,idx->type_name
+	            );
+	            decl->mod = $2->mod;
+	            decl->linenum = $2->linenum;
+	            decl->context = $2->context;
+	            gl_append_ptr($1,(char *)decl);
+	          } else {
+	            DestroyName(setname);
+	          }
+	        }
+	      }
+	      DatasetAppendImplicitSetDecls($1,$2);
+	      for (map = $2->v.dataset.maps; map != NULL; map = map->next) {
+	        if (map->type_name != NULL) {
+	          struct Statement *decl;
+	          struct VariableList *vl;
+	          if (!StatementListHasTypeDeclForName($1,map->target)) {
+	            vl = CreateVariableNode(CopyName(map->target));
+	            decl = CreateISA(vl
+	              ,map->type_name
+	              ,NULL
+	              ,NULL
+	            );
+	            decl->mod = $2->mod;
+	            decl->linenum = $2->linenum;
+	            decl->context = $2->context;
+	            gl_append_ptr($1,(char *)decl);
+	          }
+	        }
+	      }
+	    }
 	    gl_append_ptr($1,(char *)$2);
 	  }
 	  $$ = $1;
@@ -1291,6 +2149,9 @@ statement:
     | conditional_statement
     | notes_statement
     | units_statement
+    | table_statement
+    | values_statement
+    | dataset_statement
     ;
 
 complex_statement:
@@ -2411,6 +3272,7 @@ number:
 	  $$ = $1;
 	  g_constant_type = LONGCONSTANT;
 	  g_default_dim_ptr = Dimensionless();
+	  g_number_units = NULL;
 	}
     | realnumber
 	{
@@ -2424,6 +3286,7 @@ realnumber:
     REAL_TOK opunits
 	{
 	  $$ = $1*$2;
+	  g_number_units = g_parsed_units;
 	}
     | INTEGER_TOK BRACEDTEXT_TOK
 	{
@@ -2433,15 +3296,18 @@ realnumber:
 	  if (g_units_ptr != NULL) {
 	    $$ = (double)$1*UnitsConvFactor(g_units_ptr);
 	    g_dim_ptr = UnitsDimensions(g_units_ptr);
+	    g_parsed_units = UnitsDescription(g_units_ptr);
 	  } else {
 	    char **errv;
 	    $$ = (double)$1;
 	    g_dim_ptr = WildDimension();
+	    g_parsed_units = NULL;
 	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'", $2);
 	    errv = UnitsExplainError($2,error_code,pos);
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
+	  g_number_units = g_parsed_units;
 	}
     ;
 
@@ -2449,6 +3315,7 @@ opunits:
     /* empty */
 	{
 	  g_dim_ptr = Dimensionless();
+	  g_parsed_units = NULL;
 	  $$ = 1.0;
 	}
     | BRACEDTEXT_TOK
@@ -2459,10 +3326,12 @@ opunits:
 	  if (g_units_ptr != NULL) {
 	    $$ = UnitsConvFactor(g_units_ptr);
 	    g_dim_ptr = UnitsDimensions(g_units_ptr);
+	    g_parsed_units = UnitsDescription(g_units_ptr);
 	  } else {
 	    char **errv;
 	    $$ = 1.0;
 	    g_dim_ptr = WildDimension();
+	    g_parsed_units = NULL;
 	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",$1);
 	    errv = UnitsExplainError($1,error_code,pos);
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
@@ -2811,10 +3680,28 @@ logrelop:
  */
 int
 zz_error(char *s){
+  const char *tok = Asc_ScannerTokenText();
+  unsigned long col = Asc_ScannerTokenColumn();
+  char tokbuf[64];
+  size_t i;
+  if (tok == NULL) {
+    tok = "";
+  }
+
+  for (i = 0; i < sizeof(tokbuf) - 1 && tok[i] != '\0'; ++i) {
+    char c = tok[i];
+    tokbuf[i] = (c == '\n' || c == '\r' || c == '\t') ? ' ' : c;
+  }
+  tokbuf[i] = '\0';
+
   g_untrapped_error++;
   if (Asc_CurrentModule() != NULL) {
     MSG("message string '%s'",s);
-    error_reporter_current_line(ASC_USER_ERROR,"%s",s);
+    if (tokbuf[0] != '\0') {
+      error_reporter_current_line(ASC_USER_ERROR,"%s near token '%s' at column %lu",s,tokbuf,col);
+    } else {
+      error_reporter_current_line(ASC_USER_ERROR,"%s at column %lu",s,col);
+    }
   } else {
     error_reporter(ASC_USER_ERROR,NULL,0,NULL,"%s at end of input.",s);
   }
@@ -2849,7 +3736,6 @@ Asc_ErrMsgTypeDefnEOF(void)
 static void ErrMsg_Generic(CONST char *string){
 	static int errcount=0;
 	if(errcount<30){ 
-		char *s1 = strdup(string);
 		/* the module may have be already closed, Asc_CurrentModule will be null */
 		MSG("generic message, '%s'",string);
 		error_reporter_current_line(ASC_USER_ERROR,"%s",string);
@@ -2863,13 +3749,12 @@ static void ErrMsg_Generic(CONST char *string){
 
 		errcount++;
 		if(errcount==30){
-			ERROR_REPORTER_HERE(ASC_PROG_NOTE
-				,"Further reports of this error will be suppressed.\n"
-			);
+				ERROR_REPORTER_HERE(ASC_PROG_NOTE
+					,"Further reports of this error will be suppressed.\n"
+				);
+			}
 		}
-		ASC_FREE(s1);
 	}
-}
 
 static void ErrMsg_CommaName(CONST char *what, struct Name *name)
 {
@@ -2983,6 +3868,8 @@ TokenAsString(unsigned long token)
     return "SWITCH";
   case UNITS_TOK:
     return "UNITS";
+  case LADDER_TOK:
+    return "LADDER";
   case WHEN_TOK:
     return "WHEN";
   case END_TOK:
@@ -3045,4 +3932,3 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
 }
 
 /* vim: set ts=8: */
-

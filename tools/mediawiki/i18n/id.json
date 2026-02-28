@@ -1,0 +1,11 @@
+{
+	"@metadata": {
+		"authors": [
+			"Ivan Lanin"
+		]
+	},
+	"ashighlight-specify": "Anda harus menentukan suatu bahasa seperti ini:",
+	"ashighlight-supported": "Bahasa-bahasa yang didukung oleh pewarnaan sintaks:",
+	"ashighlight-err-loading": "(kesalahan pemuatan daftar bahasa yang didukung)",
+	"ashighlight-err-language": "Bahasa tak sah."
+}

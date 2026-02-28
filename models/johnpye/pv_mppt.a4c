@@ -1,0 +1,113 @@
+REQUIRE "atoms.a4l";
+
+(*
+	Simple PV + buck converter + resistive load model.
+	MPPT is formulated implicitly as an NLP over duty cycle D, with
+	no explicit dP/dV = 0 equation.
+*)
+
+MODEL pv_buck_load_base;
+	I_ph, I_0   IS_A current;      (* PV photocurrent and diode saturation current *)
+	V_d         IS_A voltage;      (* effective diode voltage scale (n*N_s*V_t) *)
+	R_load      IS_A resistance;   (* output resistive load *)
+
+	D           IS_A factor;       (* buck duty cycle, optimisation variable *)
+	V_pv, V_out IS_A voltage;
+	I_pv, I_out IS_A current;
+	P_pv, P_out IS_A energy_rate;
+	eta_conv    IS_A factor;
+	Voc_est     IS_A voltage;
+	Rin_eq      IS_A resistance;
+
+	PV_IV: I_pv = I_ph - I_0 * (exp(V_pv / V_d) - 1);
+	Buck_V: V_out = D * V_pv;
+	Load_IV: I_out = V_out / R_load;
+	Input_Match: I_pv = D^2 * V_pv / R_load;
+
+	PV_Power: P_pv = V_pv * I_pv;
+	Load_Power: P_out = V_out * I_out;
+	Efficiency: eta_conv = P_out / P_pv;
+	Voc_Def: Voc_est = V_d * lnm(1 + I_ph / I_0);
+	Rin_Def: Rin_eq = V_pv / I_pv;
+
+METHODS
+	METHOD default_self;
+		I_ph := 5.0 {A};
+		I_0 := 1.0e-5 {A};
+		V_d := 1.8 {V};
+		R_load := 2.0 {ohm};
+
+		D := 0.6;
+		V_pv := 16.0 {V};
+		I_pv := 3.0 {A};
+	END default_self;
+
+	METHOD bound_self;
+		D.lower_bound := 0.05;
+		D.upper_bound := 0.95;
+
+		V_pv.lower_bound := 0.0 {V};
+		V_pv.upper_bound := 40.0 {V};
+		I_pv.lower_bound := 0.0 {A};
+		I_pv.upper_bound := 20.0 {A};
+
+		I_0.lower_bound := 1.0e-12 {A};
+		I_0.upper_bound := 1.0e-2 {A};
+		V_d.lower_bound := 0.1 {V};
+		V_d.upper_bound := 10.0 {V};
+		R_load.lower_bound := 0.1 {ohm};
+	END bound_self;
+
+	METHOD specify;
+		FIX I_ph, I_0, V_d, R_load;
+		FREE D;
+	END specify;
+
+	METHOD values;
+		I_ph := 5.0 {A};
+		I_0 := 1.0e-5 {A};
+		V_d := 1.8 {V};
+		R_load := 2.0 {ohm};
+
+		D := 0.6;
+		V_pv := 16.0 {V};
+		I_pv := 3.0 {A};
+	END values;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN bound_self;
+		RUN specify;
+		RUN values;
+	END on_load;
+END pv_buck_load_base;
+
+
+MODEL pv_mppt REFINES pv_buck_load_base;
+	obj: MINIMIZE -P_pv;
+
+METHODS
+	METHOD on_load;
+		RUN default_self;
+		RUN bound_self;
+		RUN specify;
+		RUN values;
+		SOLVER IPOPT;
+		OPTION hessian_approximation 'limited-memory';
+		OPTION print_level 0;
+	END on_load;
+
+	METHOD solve_mppt;
+		SOLVER IPOPT;
+		OPTION hessian_approximation 'limited-memory';
+		OPTION print_level 0;
+		SOLVE;
+	END solve_mppt;
+
+	METHOD self_test;
+		RUN solve_mppt;
+		ASSERT D > 0.05 + 1e-4;
+		ASSERT D < 0.95 - 1e-4;
+		ASSERT P_pv > 1.0 {W};
+	END self_test;
+END pv_mppt;

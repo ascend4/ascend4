@@ -1,6 +1,7 @@
 #include "config.h"
 #include "reporter.h"
 #include "solver.h"
+#include "solverreporter.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -11,6 +12,19 @@ extern "C"{
 #include <ascend/system/system.h>
 #include <ascend/solver/solver.h>
 #include <ascend/solver/slvDOF.h>
+}
+
+extern "C" int ascxx_solver_progress_callback(
+	const char *solver_name, const char *message, void *user_data
+){
+	SolverReporter *reporter = reinterpret_cast<SolverReporter *>(user_data);
+	if(reporter == NULL)return 0;
+	try{
+		reporter->reportProgress(solver_name,message);
+	}catch(...){
+		/* progress callbacks should not abort solver execution */
+	}
+	return 0;
 }
 
 /**
@@ -95,3 +109,16 @@ registerStandardSolvers(){
 	*/
 }
 
+void
+setSolverInterrupt(const bool &interrupt){
+	slv_set_solver_interrupt(interrupt ? 1 : 0);
+}
+
+void
+setSolverProgressReporter(SolverReporter *reporter){
+	if(reporter == NULL){
+		slv_clear_progress_callback();
+		return;
+	}
+	slv_set_progress_callback(&ascxx_solver_progress_callback,reinterpret_cast<void *>(reporter));
+}

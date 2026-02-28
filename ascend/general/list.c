@@ -303,7 +303,6 @@ struct gl_list_t *gl_create(unsigned long int capacity){
   }
 }
 
-
 void gl_free_and_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
@@ -454,7 +453,6 @@ static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
   if (list->data==NULL)ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_expand_list_by: memory allocation failed\n");
   asc_assert(list->data!=NULL);
 }
-
 
 void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
   asc_assert((NULL != list) && (0 != gl_expandable(list)));
@@ -1214,4 +1212,3 @@ void gl_reportrecycler(FILE *fp){
   FPRINTF(fp,"Total bytes:\t%lu\n",bytecount);
 #endif
 }
-

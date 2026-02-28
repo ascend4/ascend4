@@ -1,6 +1,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
+#include <cfloat>
+#include <cmath>
 using namespace std;
 
 #include "units.h"
@@ -102,8 +104,80 @@ UnitsM::getConversion() const{
 }
 
 const bool
+UnitsM::hasLadder() const{
+	return UnitsLadderId(u) >= 0;
+}
+
+const long
+UnitsM::getLadderId() const{
+	return UnitsLadderId(u);
+}
+
+const long
+UnitsM::getLadderRank() const{
+	return UnitsLadderRank(u);
+}
+
+const UnitsM
+UnitsM::getAutoScaledUnits(const double &value_si, const double &lower, const double &upper) const{
+	const struct Units *cand = NULL;
+	const struct Units *best = u;
+	double best_score = DBL_MAX;
+	bool have_inrange = false;
+	double abs_si;
+	long rank;
+	long ladder_id;
+	double target;
+
+	if(!hasLadder()){
+		return *this;
+	}
+	if(!(lower > 0.0) || !(upper > lower)){
+		throw runtime_error("UnitsM::getAutoScaledUnits: require 0 < lower < upper");
+	}
+	abs_si = fabs(value_si);
+	if(abs_si == 0.0){
+		return *this;
+	}
+	ladder_id = getLadderId();
+	target = 0.5 * (log10(lower) + log10(upper));
+
+	for(rank = 0; ; ++rank){
+		double value;
+		double score;
+		bool inrange;
+
+		cand = LookupUnitsByLadder(ladder_id,rank);
+		if(cand == NULL){
+			break;
+		}
+		value = abs_si / UnitsConvFactor(cand);
+		if(value <= 0.0){
+			continue;
+		}
+		inrange = (value >= lower && value < upper);
+		if(inrange){
+			score = fabs(log10(value) - target);
+			if(!have_inrange || score < best_score){
+				best = cand;
+				best_score = score;
+				have_inrange = true;
+			}
+		}else if(!have_inrange){
+			/* fallback: pick the rung giving value closest to 1 */
+			score = fabs(log10(value));
+			if(score < best_score){
+				best = cand;
+				best_score = score;
+			}
+		}
+	}
+
+	return UnitsM(best);
+}
+
+const bool
 UnitsM::operator==(const UnitsM &other) const{
 	// because of the FindOrDefineUnits thing, equivalent units will always have the same pointer
 	return 0==CmpRealPtrs(getInternalType(),other.getInternalType());
 }
-

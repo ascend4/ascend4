@@ -112,14 +112,10 @@ class VarPropsWin:
 		self.browser.builder.connect_signals(self)
 
 	def fill_values(self):
-		# all the values here use the same preferred units for this instance type
-		_u = self.instance.getType().getPreferredUnits();
-		if _u is None:
-			_conversion = 1
-			_u = self.instance.getDimensions().getDefaultUnits().getName().toString()
-		else:
-			_conversion = _u.getConversion() # displayvalue x conversion = SI
-			_u = _u.getName().toString()
+		# all the values here use the current display-units policy for this instance
+		_u = self.browser.get_instance_display_units(self.instance)
+		_conversion = _u.getConversion()
+		_u = _u.getName().toString()
 
 		_arr = {
 			self.valueentry: self.instance.getRealValue()
@@ -165,11 +161,13 @@ class VarPropsWin:
 			newtext = CelsiusUnits.convert_edit(self.instance, newtext, False)
 			##### CELSIUS TEMPERATURE WORKAROUND
 
-			i = RealAtomEntry(self.instance, newtext)
+			_default_units = self.browser.get_instance_display_units(self.instance)
+			i = RealAtomEntry(self.instance, newtext, _default_units)
 			try:
 				i.checkEntry()
 				self.taint_entry(_k,"white");
 				_v(i.getValue())
+				i.applyUnitsOverride(self.browser)
 			except InputError as e:
 				print("INPUT ERROR: ",str(e))
 				self.taint_entry(_k,"#FFBBBB");
@@ -200,7 +198,8 @@ class VarPropsWin:
 		##### CELSIUS TEMPERATURE WORKAROUND
 		newtext = CelsiusUnits.convert_edit(self.instance, newtext, False)
 		##### CELSIUS TEMPERATURE WORKAROUND
-		i = RealAtomEntry(self.instance, newtext)
+		_default_units = self.browser.get_instance_display_units(self.instance)
+		i = RealAtomEntry(self.instance, newtext, _default_units)
 		try:
 			i.checkEntry()
 			_value = i.getValue()

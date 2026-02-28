@@ -29,11 +29,13 @@
 #include "solver.h"
 
 #include <ascend/system/system_impl.h>
+#include <ascend/utilities/error.h>
 #include <ascend/general/list.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
 #include <ascend/compiler/packages.h>
 #include <ascend/general/ospath.h>
+#include <signal.h>
 
 #ifdef WIN32
 # include <windows.h>
@@ -44,9 +46,13 @@
 # define MSG CONSOLE_DEBUG
 # define ERRMSG CONSOLE_DEBUG
 #else
-# define MSG(...) 
+# define MSG(...)
 # define ERRMSG CONSOLE_DEBUG
 #endif
+
+static volatile sig_atomic_t g_solver_interrupt_requested = 0;
+static SlvProgressCallbackF *g_solver_progress_callback = NULL;
+static void *g_solver_progress_user_data = NULL;
 
 /**
 	Local function that holds the list of available solvers. The value 
@@ -64,6 +70,7 @@ static struct gl_list_t *solver_get_list(int free_space){
 			gl_destroy(L);
 		}
 		init = 0;
+		L = NULL;
 		return NULL;
 	}
 	if(!init){
@@ -87,6 +94,33 @@ struct gl_list_t *solver_get_engines_growable(){
 
 void solver_destroy_engines(){
 	solver_get_list(1);
+}
+
+void slv_set_solver_interrupt(int value){
+	g_solver_interrupt_requested = (value ? 1 : 0);
+}
+
+int slv_get_solver_interrupt(void){
+	return (g_solver_interrupt_requested ? 1 : 0);
+}
+
+void slv_set_progress_callback(SlvProgressCallbackF *callback, void *user_data){
+	g_solver_progress_callback = callback;
+	g_solver_progress_user_data = user_data;
+}
+
+void slv_clear_progress_callback(void){
+	g_solver_progress_callback = NULL;
+	g_solver_progress_user_data = NULL;
+}
+
+int slv_report_progress(const char *solver_name, const char *message){
+	if(g_solver_progress_callback == NULL)return 0;
+	return g_solver_progress_callback(
+		(solver_name != NULL ? solver_name : "")
+		,(message != NULL ? message : "")
+		,g_solver_progress_user_data
+	);
 }
 
 const SlvFunctionsT *solver_engine(const int number){
@@ -228,6 +262,8 @@ struct StaticSolverRegistration{
 static const struct StaticSolverRegistration slv_reg[]={
 	{"qrslv"}
 	,{"ipopt"}
+	,{"makemps"}
+	,{"highs"}
 #if 0
 	,{"conopt"}
 	,{"lrslv"}

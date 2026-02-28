@@ -18,6 +18,8 @@
 	Unit test functions for compiler. Nothing here yet.
 */
 #include <string.h>
+#include <stdio.h>
+#include <math.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/platform.h>
@@ -29,11 +31,14 @@
 #include <ascend/compiler/parser.h>
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/symtab.h>
+#include <ascend/compiler/type_desc.h>
 #include <ascend/compiler/simlist.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/atomvalue.h>
 #include <ascend/compiler/childio.h>
+#include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/units.h>
 
 #include <ascend/compiler/initialize.h>
 
@@ -46,6 +51,173 @@
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
+
+/* Define this locally when you want verbose parser-error traces for table tests. */
+#define TEST_TABLES_DEBUG
+#ifdef TEST_TABLES_DEBUG
+# define TMSG CONSOLE_DEBUG
+#else
+# define TMSG(ARGS...) ((void)0)
+#endif
+
+typedef struct{
+	int error_count;
+	int first_error_line;
+	char first_error_file[256];
+	char first_error_msg[512];
+	char all_error_msgs[4096];
+} parse_error_capture_t;
+
+static parse_error_capture_t g_parse_error_capture;
+
+#ifdef TEST_TABLES_DEBUG
+static const char *sev_to_str(error_severity_t sev){
+	switch(sev){
+	case ASC_USER_SUCCESS: return "SUCCESS";
+	case ASC_USER_NOTE: return "USER_NOTE";
+	case ASC_USER_WARNING: return "USER_WARNING";
+	case ASC_USER_ERROR: return "USER_ERROR";
+	case ASC_PROG_NOTE: return "PROG_NOTE";
+	case ASC_PROG_WARNING: return "PROG_WARNING";
+	case ASC_PROG_ERROR: return "PROG_ERROR";
+	case ASC_PROG_FATAL: return "PROG_FATAL";
+	default: return "UNKNOWN";
+	}
+}
+#endif
+
+static void parse_error_capture_reset(void){
+	memset(&g_parse_error_capture,0,sizeof(g_parse_error_capture));
+}
+
+static int parse_error_capture_cb(ERROR_REPORTER_CALLBACK_ARGS){
+	char msg[sizeof(g_parse_error_capture.first_error_msg)];
+	int wrote_default;
+	va_list args_copy;
+	size_t used;
+
+	va_copy(args_copy,args);
+	vsnprintf(msg,sizeof(msg),fmt,args_copy);
+	va_end(args_copy);
+
+	TMSG("captured [%s] %s:%d: %s"
+		,sev_to_str(sev)
+		,filename ? filename : "(null)"
+		,line
+		,msg
+	);
+	if(sev & ASC_ERR_ERR){
+		g_parse_error_capture.error_count++;
+		used = strlen(g_parse_error_capture.all_error_msgs);
+		if(used + 2 < sizeof(g_parse_error_capture.all_error_msgs)){
+			if(used > 0){
+				snprintf(
+					g_parse_error_capture.all_error_msgs + used
+					,sizeof(g_parse_error_capture.all_error_msgs) - used
+					,"\n"
+				);
+				used = strlen(g_parse_error_capture.all_error_msgs);
+			}
+			snprintf(
+				g_parse_error_capture.all_error_msgs + used
+				,sizeof(g_parse_error_capture.all_error_msgs) - used
+				,"%s",msg
+			);
+		}
+		if(g_parse_error_capture.first_error_line == 0){
+			g_parse_error_capture.first_error_line = line;
+			if(filename){
+				snprintf(g_parse_error_capture.first_error_file
+					,sizeof(g_parse_error_capture.first_error_file)
+					,"%s",filename
+				);
+			}
+			snprintf(g_parse_error_capture.first_error_msg
+				,sizeof(g_parse_error_capture.first_error_msg)
+				,"%s",msg
+			);
+		}
+	}
+
+	/* Preserve normal console/error-stream output while also capturing metadata. */
+	va_copy(args_copy,args);
+	wrote_default = error_reporter_default_callback(sev,filename,line,funcname,fmt,args_copy);
+	va_end(args_copy);
+	return wrote_default;
+}
+
+static void parse_module_expect_error(const char *modulefile, const char *typename, const char *msg_substr, int expect_type_rejected, int require_column_info){
+	int status;
+	int has_error;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenModule(modulefile,&status);
+	CU_ASSERT(status == 0);
+	TMSG("parsing module '%s' (expecting parse errors)",modulefile);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	TMSG("error_count=%d first_error_line=%d",g_parse_error_capture.error_count,g_parse_error_capture.first_error_line);
+	TMSG("first_error='%s'",g_parse_error_capture.first_error_msg);
+	TMSG("all_errors:\n%s",g_parse_error_capture.all_error_msgs);
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(g_parse_error_capture.first_error_line > 0);
+	if(require_column_info){
+		CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,"column") != NULL);
+	}
+	if(msg_substr){
+		CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,msg_substr) != NULL);
+	}
+	if(expect_type_rejected && typename){
+		CU_ASSERT(FindType(AddSymbol(typename))==NULL);
+	}
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void instantiate_module_expect_error(const char *modulefile, const char *typename, const char *msg_substr){
+	int status;
+	struct Instance *sim;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenModule(modulefile,&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol(typename))!=NULL);
+
+	parse_error_capture_reset();
+	sim = SimsCreateInstance(AddSymbol(typename), AddSymbol("sim1"), e_normal, NULL);
+
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	if(msg_substr){
+		CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,msg_substr) != NULL);
+	}
+
+	if(sim != NULL){
+		sim_destroy(sim);
+	}
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
 
 static void test_init(void){
 
@@ -496,6 +668,824 @@ static void test_badalias(void){
 #undef TESTFILE
 }
 
+static void test_parse_tables_v05(void){
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_parse.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_clear();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_parse"))!=NULL);
+
+	Asc_CompilerDestroy();
+}
+
+static long fetch_int_table_cell_2d(struct Instance *root, const char *arrname, long i, long j){
+	struct InstanceName rec;
+	struct Instance *arr;
+	struct Instance *row;
+	struct Instance *inst;
+	unsigned long pos;
+	long value;
+
+	arr = ChildByChar(root,AddSymbol(arrname));
+	CU_ASSERT_FATAL(arr != NULL);
+
+	SetInstanceNameType(rec,IntArrayIndex);
+	SetInstanceNameIntIndex(rec,i);
+	pos = ChildSearch(arr,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	row = InstanceChild(arr,pos);
+	CU_ASSERT_FATAL(row != NULL);
+
+	SetInstanceNameIntIndex(rec,j);
+	pos = ChildSearch(row,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	inst = InstanceChild(row,pos);
+	CU_ASSERT_FATAL(inst != NULL);
+	CU_ASSERT_FATAL(InstanceKind(inst)==INTEGER_CONSTANT_INST);
+	CU_ASSERT_FATAL(AtomAssigned(inst));
+	value = GetIntegerAtomValue(inst);
+	return value;
+}
+
+static long fetch_int_table_cell_2d_is(struct Instance *root, const char *arrname, long i, const char *j){
+	struct InstanceName rec;
+	struct Instance *arr;
+	struct Instance *row;
+	struct Instance *inst;
+	unsigned long pos;
+	long value;
+
+	arr = ChildByChar(root,AddSymbol(arrname));
+	CU_ASSERT_FATAL(arr != NULL);
+
+	SetInstanceNameType(rec,IntArrayIndex);
+	SetInstanceNameIntIndex(rec,i);
+	pos = ChildSearch(arr,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	row = InstanceChild(arr,pos);
+	CU_ASSERT_FATAL(row != NULL);
+
+	SetInstanceNameType(rec,StrArrayIndex);
+	SetInstanceNameStrIndex(rec,AddSymbol(j));
+	pos = ChildSearch(row,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	inst = InstanceChild(row,pos);
+	CU_ASSERT_FATAL(inst != NULL);
+	CU_ASSERT_FATAL(InstanceKind(inst)==INTEGER_CONSTANT_INST);
+	CU_ASSERT_FATAL(AtomAssigned(inst));
+	value = GetIntegerAtomValue(inst);
+	return value;
+}
+
+static long fetch_int_table_cell_2d_ss(struct Instance *root, const char *arrname, const char *i, const char *j){
+	struct InstanceName rec;
+	struct Instance *arr;
+	struct Instance *row;
+	struct Instance *inst;
+	unsigned long pos;
+	long value;
+
+	arr = ChildByChar(root,AddSymbol(arrname));
+	CU_ASSERT_FATAL(arr != NULL);
+
+	SetInstanceNameType(rec,StrArrayIndex);
+	SetInstanceNameStrIndex(rec,AddSymbol(i));
+	pos = ChildSearch(arr,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	row = InstanceChild(arr,pos);
+	CU_ASSERT_FATAL(row != NULL);
+
+	SetInstanceNameStrIndex(rec,AddSymbol(j));
+	pos = ChildSearch(row,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	inst = InstanceChild(row,pos);
+	CU_ASSERT_FATAL(inst != NULL);
+	CU_ASSERT_FATAL(InstanceKind(inst)==INTEGER_CONSTANT_INST);
+	CU_ASSERT_FATAL(AtomAssigned(inst));
+	value = GetIntegerAtomValue(inst);
+	return value;
+}
+
+static void test_instantiate_tables_v05_positional(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_positional_csv_semicolon(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_positional_csv_semicolon.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_positional_csv_semicolon"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_positional_csv_semicolon"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_dense_int_labels(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_int.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_int"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_int"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_dense_csv_semicolon(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_csv_semicolon.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_csv_semicolon"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_csv_semicolon"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","alan","c3") == 23);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","alan","c1") == 21);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","alan","c2") == 22);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","bernhard","c3") == 13);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","bernhard","c1") == 11);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","bernhard","c2") == 12);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_dense_string_labels(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_string.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_string"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_string"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","north","x") == 11);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","north","y") == 12);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","south","x") == 21);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","south","y") == 22);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_dense_implicit_sets(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_implicit.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_implicit"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_implicit"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",1,"a") == 11);
+	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",1,"b") == 12);
+	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",2,"a") == 21);
+	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",2,"b") == 22);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_parse_tables_v05_fail_table_header(void){
+	parse_module_expect_error(
+		"test/compiler/tables_v05_fail_table_header.a4c"
+		, "tables_v05_fail_table_header"
+		, "syntax error"
+		, 1
+		, 1
+	);
+}
+
+static void test_parse_tables_v05_fail_table_badchar(void){
+	parse_module_expect_error(
+		"test/compiler/tables_v05_fail_table_badchar.a4c"
+		, "tables_v05_fail_table_badchar"
+		, "Unexpected character"
+		, 0
+		, 1
+	);
+}
+
+static void test_parse_tables_v05_fail_table_bad_delimiter(void){
+	parse_module_expect_error(
+		"test/compiler/tables_v05_fail_table_bad_delimiter.a4c"
+		, "tables_v05_fail_table_bad_delimiter"
+		, "syntax error"
+		, 0
+		, 1
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_short_row(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_short_row.a4c"
+		, "tables_v05_fail_positional_short_row"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_too_many_cols(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_too_many_cols.a4c"
+		, "tables_v05_fail_positional_too_many_cols"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_too_few_rows(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_too_few_rows.a4c"
+		, "tables_v05_fail_positional_too_few_rows"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_too_many_rows(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_too_many_rows.a4c"
+		, "tables_v05_fail_positional_too_many_rows"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_invalid_row_label(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_invalid_row_label.a4c"
+		, "tables_v05_fail_positional_invalid_row_label"
+		, "POSITIONAL TABLE contains non-numeric token"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_invalid_col_delim(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_invalid_col_delim.a4c"
+		, "tables_v05_fail_positional_invalid_col_delim"
+		, "Unexpected sparse-token punctuation in POSITIONAL TABLE"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_sparse_repeated_labels(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_sparse_repeated_labels.a4c"
+		, "tables_v05_fail_sparse_repeated_labels"
+		, "TABLE header contains invalid punctuation"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_leading_delim(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_leading_delim.a4c"
+		, "tables_v05_fail_positional_leading_delim"
+		, "TABLE row cannot begin with a delimiter"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_trailing_delim(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_trailing_delim.a4c"
+		, "tables_v05_fail_positional_trailing_delim"
+		, "TABLE delimiter cannot follow a sign without a value"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_double_delim(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_double_delim.a4c"
+		, "tables_v05_fail_positional_double_delim"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_dense_bad_col_label(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_dense_bad_col_label.a4c"
+		, "tables_v05_fail_dense_bad_col_label"
+		, "TABLE column label is not a member of second index set"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_dense_bad_row_label_string(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_dense_bad_row_label_string.a4c"
+		, "tables_v05_fail_dense_bad_row_label_string"
+		, "TABLE row label is not a member of first index set"
+	);
+}
+
+static void test_atom_declared_units_from_default(void){
+	int status;
+	int has_error;
+	struct TypeDescription *t;
+	const char *model = "\n\
+		UNITS\n\
+			MW = {1e6*kg*m^2/s^3};\n\
+		END UNITS;\n\
+		ATOM atom_decl_units REFINES real DIMENSION M*L^2/T^3 DEFAULT 5 {MW};\n\
+		END atom_decl_units;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	t = FindType(AddSymbol("atom_decl_units"));
+	CU_ASSERT_FATAL(t != NULL);
+	CU_ASSERT(GetBaseType(t) == real_type);
+	CU_ASSERT_FATAL(GetRealDeclaredUnits(t) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetRealDeclaredUnits(t)), "MW");
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_units_clause_and_declared_units(void){
+	int status;
+	int has_error;
+	const struct Units *u;
+	struct TypeDescription *t;
+	const char *model = "\n\
+		UNITS\n\
+			MWh = {3.6e9*kg*m^2/s^2};\n\
+			USD_per_MWh = {USD/MWh};\n\
+		END UNITS;\n\
+		CONSTANT const_units_no_default REFINES real_constant UNITS {MWh};\n\
+		CONSTANT const_units_with_default REFINES real_constant UNITS {USD_per_MWh} :== 20 {USD_per_MWh};";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	t = FindType(AddSymbol("const_units_no_default"));
+	CU_ASSERT_FATAL(t != NULL);
+	CU_ASSERT(GetBaseType(t) == real_constant_type);
+	CU_ASSERT(ConstantDefaulted(t) == 0);
+	CU_ASSERT_FATAL(GetConstantDeclaredUnits(t) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetConstantDeclaredUnits(t)), "MWh");
+	u = LookupUnits("MWh");
+	CU_ASSERT_FATAL(u != NULL);
+	CU_ASSERT(GetConstantDimens(t) == UnitsDimensions(u));
+
+	t = FindType(AddSymbol("const_units_with_default"));
+	CU_ASSERT_FATAL(t != NULL);
+	CU_ASSERT(GetBaseType(t) == real_constant_type);
+	CU_ASSERT(ConstantDefaulted(t) == 1);
+	CU_ASSERT_FATAL(GetConstantDeclaredUnits(t) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetConstantDeclaredUnits(t)), "USD_per_MWh");
+	u = LookupUnits("USD_per_MWh");
+	CU_ASSERT_FATAL(u != NULL);
+	CU_ASSERT(GetConstantDimens(t) == UnitsDimensions(u));
+	CU_ASSERT_DOUBLE_EQUAL(GetConstantDefReal(t), 20.0 * UnitsConvFactor(u), 1e-12);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_units_clause_invalid_units(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		CONSTANT const_units_invalid REFINES real_constant UNITS {NO_SUCH_UNIT};";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "Undefined units") != NULL);
+	CU_ASSERT(FindType(AddSymbol("const_units_invalid")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_units_clause_nonreal_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		CONSTANT const_units_nonreal REFINES integer_constant UNITS {kg};";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "non-real type") != NULL);
+	CU_ASSERT(FindType(AddSymbol("const_units_nonreal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_atom_declared_units_inherited_on_refine(void){
+	int status;
+	int has_error;
+	struct TypeDescription *parent;
+	struct TypeDescription *child;
+	const char *model = "\n\
+		UNITS\n\
+			MW = {1e6*kg*m^2/s^3};\n\
+		END UNITS;\n\
+		ATOM atom_decl_units_parent REFINES real DIMENSION M*L^2/T^3 DEFAULT 5 {MW};\n\
+		END atom_decl_units_parent;\n\
+		ATOM atom_decl_units_child REFINES atom_decl_units_parent;\n\
+		END atom_decl_units_child;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	parent = FindType(AddSymbol("atom_decl_units_parent"));
+	CU_ASSERT_FATAL(parent != NULL);
+	CU_ASSERT(GetBaseType(parent) == real_type);
+	CU_ASSERT_FATAL(GetRealDeclaredUnits(parent) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetRealDeclaredUnits(parent)), "MW");
+
+	child = FindType(AddSymbol("atom_decl_units_child"));
+	CU_ASSERT_FATAL(child != NULL);
+	CU_ASSERT(GetBaseType(child) == real_type);
+	CU_ASSERT_FATAL(GetRealDeclaredUnits(child) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetRealDeclaredUnits(child)), "MW");
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_atom_declared_units_null_without_units(void){
+	int status;
+	int has_error;
+	struct TypeDescription *t;
+	const char *model = "\n\
+		ATOM atom_decl_units_null REFINES real DIMENSION M*L^2/T^3;\n\
+		END atom_decl_units_null;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	t = FindType(AddSymbol("atom_decl_units_null"));
+	CU_ASSERT_FATAL(t != NULL);
+	CU_ASSERT(GetBaseType(t) == real_type);
+	CU_ASSERT(GetRealDeclaredUnits(t) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_declared_units_inherited_on_refine(void){
+	int status;
+	int has_error;
+	const struct Units *u;
+	struct TypeDescription *parent;
+	struct TypeDescription *child;
+	const char *model = "\n\
+		UNITS\n\
+			MWh = {3.6e9*kg*m^2/s^2};\n\
+		END UNITS;\n\
+		CONSTANT const_units_parent REFINES real_constant UNITS {MWh};\n\
+		CONSTANT const_units_child REFINES const_units_parent;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	u = LookupUnits("MWh");
+	CU_ASSERT_FATAL(u != NULL);
+
+	parent = FindType(AddSymbol("const_units_parent"));
+	CU_ASSERT_FATAL(parent != NULL);
+	CU_ASSERT(GetBaseType(parent) == real_constant_type);
+	CU_ASSERT_FATAL(GetConstantDeclaredUnits(parent) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetConstantDeclaredUnits(parent)), "MWh");
+	CU_ASSERT(GetConstantDimens(parent) == UnitsDimensions(u));
+
+	child = FindType(AddSymbol("const_units_child"));
+	CU_ASSERT_FATAL(child != NULL);
+	CU_ASSERT(GetBaseType(child) == real_constant_type);
+	CU_ASSERT_FATAL(GetConstantDeclaredUnits(child) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetConstantDeclaredUnits(child)), "MWh");
+	CU_ASSERT(GetConstantDimens(child) == UnitsDimensions(u));
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_units_clause_mismatched_default_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		UNITS\n\
+			MWh = {3.6e9*kg*m^2/s^2};\n\
+			MW = {1e6*kg*m^2/s^3};\n\
+		END UNITS;\n\
+		CONSTANT const_units_bad_default REFINES real_constant UNITS {MWh} :== 20 {MW};";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(FindType(AddSymbol("const_units_bad_default")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_units_ladder_define_and_extend(void){
+	int status;
+	int has_error;
+	const struct Units *u_w;
+	const struct Units *u_kw;
+	const struct Units *u_hp;
+	const struct Units *u_mw;
+	long ladder_id;
+	const char *model = "\n\
+		UNITS LADDER\n\
+			W = {kg*m^2/s^3};\n\
+			kW = {1e3*W};\n\
+			MW = {1e6*W};\n\
+		END UNITS LADDER;\n\
+		UNITS LADDER\n\
+			kW;\n\
+			hp = {0.745699872*kW};\n\
+		END UNITS LADDER;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	u_w = LookupUnits("W");
+	u_kw = LookupUnits("kW");
+	u_hp = LookupUnits("hp");
+	u_mw = LookupUnits("MW");
+
+	CU_ASSERT_FATAL(u_w != NULL);
+	CU_ASSERT_FATAL(u_kw != NULL);
+	CU_ASSERT_FATAL(u_hp != NULL);
+	CU_ASSERT_FATAL(u_mw != NULL);
+
+	ladder_id = UnitsLadderId(u_w);
+	CU_ASSERT(ladder_id >= 0);
+	CU_ASSERT(UnitsLadderId(u_kw) == ladder_id);
+	CU_ASSERT(UnitsLadderId(u_hp) == ladder_id);
+	CU_ASSERT(UnitsLadderId(u_mw) == ladder_id);
+
+	CU_ASSERT(UnitsLadderRank(u_w) == 0);
+	CU_ASSERT(UnitsLadderRank(u_kw) == 1);
+	CU_ASSERT(UnitsLadderRank(u_hp) == 2);
+	CU_ASSERT(UnitsLadderRank(u_mw) == 3);
+
+	CU_ASSERT(LookupUnitsByLadder(ladder_id,0) == u_w);
+	CU_ASSERT(LookupUnitsByLadder(ladder_id,1) == u_kw);
+	CU_ASSERT(LookupUnitsByLadder(ladder_id,2) == u_hp);
+	CU_ASSERT(LookupUnitsByLadder(ladder_id,3) == u_mw);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_units_ladder_invalid_anchor_rejected(void){
+	int status;
+	int has_error;
+	const struct Units *u;
+	const char *model = "\n\
+		UNITS LADDER\n\
+			kg;\n\
+			slug = {14.59390294*kg};\n\
+		END UNITS LADDER;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "anchor") != NULL);
+
+	u = LookupUnits("slug");
+	CU_ASSERT(u == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -515,7 +1505,38 @@ static void test_badalias(void){
 	T(stoponfailedassert) \
 	T(badassign) \
 	T(type_info) \
-	T(badalias)
+	T(badalias) \
+	T(parse_tables_v05) \
+	T(instantiate_tables_v05_positional) \
+	T(instantiate_tables_v05_positional_csv_semicolon) \
+	T(instantiate_tables_v05_dense_int_labels) \
+	T(instantiate_tables_v05_dense_csv_semicolon) \
+	T(instantiate_tables_v05_dense_string_labels) \
+	T(instantiate_tables_v05_dense_implicit_sets) \
+	T(parse_tables_v05_fail_table_header) \
+	T(parse_tables_v05_fail_table_badchar) \
+	T(parse_tables_v05_fail_table_bad_delimiter) \
+	T(instantiate_tables_v05_fail_positional_short_row) \
+	T(instantiate_tables_v05_fail_positional_too_many_cols) \
+	T(instantiate_tables_v05_fail_positional_too_few_rows) \
+	T(instantiate_tables_v05_fail_positional_too_many_rows) \
+	T(instantiate_tables_v05_fail_positional_invalid_row_label) \
+	T(instantiate_tables_v05_fail_positional_invalid_col_delim) \
+	T(instantiate_tables_v05_fail_sparse_repeated_labels) \
+	T(instantiate_tables_v05_fail_positional_leading_delim) \
+	T(instantiate_tables_v05_fail_positional_trailing_delim) \
+	T(instantiate_tables_v05_fail_positional_double_delim) \
+	T(instantiate_tables_v05_fail_dense_bad_col_label) \
+	T(instantiate_tables_v05_fail_dense_bad_row_label_string) \
+	T(atom_declared_units_from_default) \
+	T(constant_units_clause_and_declared_units) \
+	T(constant_units_clause_invalid_units) \
+	T(constant_units_clause_nonreal_rejected) \
+	T(atom_declared_units_inherited_on_refine) \
+	T(atom_declared_units_null_without_units) \
+	T(constant_declared_units_inherited_on_refine) \
+	T(constant_units_clause_mismatched_default_rejected) \
+	T(units_ladder_define_and_extend) \
+	T(units_ladder_invalid_anchor_rejected)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)
-

@@ -676,7 +676,7 @@ static int32 *raise_qr_int_capacity(int32 *vec,
     return vec;
   if (NOTNULL(vec)) {/* don't call realloc on null with newcap 0 or it frees */
     newvec=(int32 *)ascrealloc(vec,(newcap * sizeof(int32)));
-    mtx_zero_int32(vec,newcap);
+    mtx_zero_int32(newvec,newcap);
   } else {
     newvec= (newcap > 0 ? ASC_NEW_ARRAY_CLEAR(int32,newcap) : NULL);
   }
@@ -698,7 +698,7 @@ static real64 *raise_qr_real_capacity(real64 *vec,
     return vec;
   if (NOTNULL(vec)) {/* don't call realloc on null with newcap 0 or it frees */
     newvec=(real64 *)ascrealloc(vec,(newcap * sizeof(real64)));
-    mtx_zero_real64(vec,newcap);
+    mtx_zero_real64(newvec,newcap);
   } else {
     newvec= (newcap > 0 ? ASC_NEW_ARRAY_CLEAR(real64,newcap) : NULL);
   }
@@ -721,7 +721,7 @@ static struct qr_fill_t *raise_qr_fill_capacity(struct qr_fill_t *vec,
   if (NOTNULL(vec)) {/* don't call realloc on null with newcap 0 or it frees */
     newvec=(struct qr_fill_t *)
       ascrealloc(vec,(newcap * sizeof(struct qr_fill_t)));
-    mtx_zero_char((char *)vec,newcap*sizeof(struct qr_fill_t));
+    mtx_zero_char((char *)newvec,newcap*sizeof(struct qr_fill_t));
   }else{
     newvec= (newcap > 0 ? ASC_NEW_ARRAY_CLEAR(struct qr_fill_t, newcap) : NULL);
   }

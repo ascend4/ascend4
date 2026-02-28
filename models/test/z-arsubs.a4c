@@ -4,6 +4,8 @@ PROVIDE "z-arsubs.a4c";
  * under the GNU Public License as described at the end of this file.
  *)
 
+(* MIGRATED: compiler_instantiate_array (array_ok_range_constants). *)
+(*
 MODEL range_test;
 a IS_A boolean_constant;
 b IS_A real_constant;
@@ -30,6 +32,7 @@ x2[b] IS_A real;
 y2[c] IS_A real;
 z2[d] IS_A real;
 END range_test;
+*)
 
 
 (*

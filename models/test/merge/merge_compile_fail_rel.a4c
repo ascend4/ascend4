@@ -1,0 +1,17 @@
+REQUIRE "system.a4l";
+(* ARE_THE_SAME compile-fail tests *)
+
+MODEL merge_fail_relations;
+	x IS_A real;
+	r1: x = 1;
+	r2: x = 1;
+	r1, r2 ARE_THE_SAME;
+END merge_fail_relations;
+
+MODEL merge_fail_logrels;
+	b1 IS_A boolean;
+	b2 IS_A boolean;
+	lr1: b1 == b2;
+	lr2: b1 == b2;
+	lr1, lr2 ARE_THE_SAME;
+END merge_fail_logrels;

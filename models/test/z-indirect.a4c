@@ -8,6 +8,8 @@ PROVIDE "z-indirect.a4c";
  * Use of this module requires an empty ASCEND system.
  *)
 
+(* MIGRATED: compiler_instantiate_for (for_ok_indirect_sparse). *)
+(*
 MODEL testindirect;
 (*
 NOTES 'test' SELF {
@@ -27,6 +29,7 @@ END NOTES;
   m[1] :==n;
   n:==3;
 END testindirect;
+*)
 
 
 (*

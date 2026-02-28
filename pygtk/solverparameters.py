@@ -114,9 +114,9 @@ class SolverParametersWindow:
 						_item.show()
 						_item.connect('activate', self.on_menu_activate, _param, _iter, i);
 						_menu.append(_item)
-									
+					_menu.attach_to_widget(self.window, None)
 					_menu.show()
-					_menu.popup(None, None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True), None,event.button, _time)
+					_menu.popup_at_pointer(event)
 
 	def on_menu_activate(self, menuitem, param, iter, newvalue):
 		if param.getStrValue() != newvalue:
@@ -189,7 +189,7 @@ class SolverParametersWindow:
 	def create_row_data(self,p):
 		_row = [p.getLabel()];
 		if p.isStr():
-			_row.extend([p.getStrValue(), str(len(p.getStrOptions()))+" options", False]);
+			_row.extend([p.getStrValue(), str(len(p.getStrOptions()))+" options", True]);
 		elif p.isBool():
 			if p.getBoolValue():
 				_val = SOLVERPARAM_BOOL_TRUE
@@ -249,4 +249,3 @@ class SolverParametersWindow:
 		_res = self.window.run()
 		self.window.destroy()
 		return _res
-

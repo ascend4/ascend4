@@ -166,6 +166,12 @@ extern struct gl_list_t *getLinkTableProcedural(struct Instance *model);
 	@return gl_list with all the LINK entries that are non-declarative for the given model
 */
 
+ASC_DLLSPEC void LinkDestroyTable(struct gl_list_t *table);
+/**<
+	Destroys a LINK table and any cached instance lists it owns.
+	Pass NULL safely.
+*/
+
 extern int isDeclarative(struct Instance* model, struct link_entry_t *link_entry);
 /**<
 	@param model       the scope Instance of the LINK (should be a model)
@@ -228,4 +234,3 @@ void TestingRoutine(struct Instance* model);
 struct gl_list_t *FindInsts(
 	struct Instance *inst, const struct VariableList *list, rel_errorlist *err
 );
-

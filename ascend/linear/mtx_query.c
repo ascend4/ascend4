@@ -59,7 +59,7 @@ real64 mtx_next_in_row( mtx_matrix_t mtx, mtx_coord_t *coord, mtx_range_t *rng)
    return( ISNULL(elt) ? D_ZERO : elt->value );
 }
 
-real64 mtx_next_in_col( mtx_matrix_t mtx, mtx_coord_t *coord, mtx_range_t *rng)
+ASC_DLLSPEC real64 mtx_next_in_col( mtx_matrix_t mtx, mtx_coord_t *coord, mtx_range_t *rng)
 {
    static struct element_t *elt = NULL;
    struct element_t Rewind;
@@ -575,7 +575,7 @@ real64 mtx_get_pivot_row( mtx_matrix_t mtx, mtx_coord_t *coord,
   return(rmax);
 }
 
-int32 mtx_nonzeros_in_row( mtx_matrix_t mtx, int32 row, mtx_range_t *rng)
+ASC_DLLSPEC int32 mtx_nonzeros_in_row( mtx_matrix_t mtx, int32 row, mtx_range_t *rng)
 {
    struct element_t *elt;
    int32 *tocur;

@@ -135,7 +135,7 @@ extern size_t mtx_block_perm_size(mtx_block_perm_t bperm);
   MTX PERMUTATION AND PERMUTATION INFO ROUTINES
 */
 
-extern void mtx_swap_rows(mtx_matrix_t mtx, int32 row1, int32 row2);
+ASC_DLLSPEC void mtx_swap_rows(mtx_matrix_t mtx, int32 row1, int32 row2);
 /**<
  ***  Swaps two rows of the matrix.  The association between the
  ***  "original row number" and the row contents is not

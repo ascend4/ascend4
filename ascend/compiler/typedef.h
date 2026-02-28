@@ -98,6 +98,7 @@ extern struct TypeDescription
                        long ival,            /* default integer/boolean value */
                        symchar *sval,        /* default symbol value */
                        CONST dim_type *dim_thing,  /* default dimensions */
+                       symchar *decl_units,  /* declared units token, if any */
                        unsigned int err);
 /**<
  *  Creates a refinement of refines. refines cannot be NULL.
@@ -131,6 +132,7 @@ extern struct TypeDescription
                    CONST dim_type *dim_thing,      /* default dimensions */
                    long ival,                /* default int/bool */
                    symchar *sval,            /* default sym*/
+                   symchar *decl_units,      /* declared units token, if any */
                    unsigned int err);
 /**<
  *  Creates an atom type definition.

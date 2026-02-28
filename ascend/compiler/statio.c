@@ -23,6 +23,8 @@
 
 #define INDENTATION 4
 
+#include <string.h>
+
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
@@ -257,6 +259,8 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl){
     case WHILE:
     case EXT:
     case REF:	/* that this isn't handled may be a bug */
+    case TABLESTAT:
+    case DATASETSTAT:
       break;
     default:
       break;
@@ -495,6 +499,67 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
     FPRINTF(f," :== ");
     WriteExpr(f,AssignStatRHS(s));
     FPRINTF(f,";\n");
+    break;
+  case TABLESTAT:
+    FPRINTF(f,"TABLE ");
+    WriteName(f,s->v.table.name);
+    if (s->v.table.decl_type != NULL) {
+      FPRINTF(f," IS_A %s",SCP(s->v.table.decl_type));
+      if (s->v.table.decl_typeargs != NULL) {
+        FPRINTF(f,"(");
+        WriteSet(f,s->v.table.decl_typeargs);
+        FPRINTF(f,")");
+      }
+      if (s->v.table.decl_set_type != NULL) {
+        FPRINTF(f," OF %s",SCP(s->v.table.decl_set_type));
+      }
+    }
+    if (s->v.table.positional) {
+      FPRINTF(f," POSITIONAL");
+    }
+    if (s->v.table.default_expr != NULL) {
+      FPRINTF(f," DEFAULT ");
+      WriteExpr(f,s->v.table.default_expr);
+    }
+    FPRINTF(f,";\n");
+    if (s->v.table.body != NULL && *s->v.table.body != '\0') {
+      FPRINTF(f,"%s",s->v.table.body);
+      if (s->v.table.body[strlen(s->v.table.body)-1] != '\n') {
+        FPRINTF(f,"\n");
+      }
+    }
+    Indent(f,i);
+    FPRINTF(f,"END TABLE;\n");
+    break;
+  case DATASETSTAT:
+    FPRINTF(f,"DATASET %s FROM \"%s\";\n",
+      SCP(s->v.dataset.name),
+      s->v.dataset.filename ? s->v.dataset.filename : "");
+    {
+      struct DatasetIndexItem *idx = s->v.dataset.indices;
+      struct DatasetMapItem *map = s->v.dataset.maps;
+      for (; idx != NULL; idx = idx->next) {
+        Indent(f,i+2);
+        FPRINTF(f,"INDEX %s FROM COLUMN %s IS_A %s;\n",
+          SCP(idx->set_name),
+          SCP(idx->column_name),
+          SCP(idx->type_name));
+      }
+      for (; map != NULL; map = map->next) {
+        Indent(f,i+2);
+        WriteName(f,map->target);
+        FPRINTF(f," FROM COLUMN %s",SCP(map->column_name));
+        if (map->units != NULL) {
+          FPRINTF(f," {%s}",map->units);
+        }
+        if (map->type_name != NULL) {
+          FPRINTF(f," IS_A %s",SCP(map->type_name));
+        }
+        FPRINTF(f,";\n");
+      }
+    }
+    Indent(f,i);
+    FPRINTF(f,"END DATASET;\n");
     break;
   case ASGN:
     WriteName(f,DefaultStatVar(s));
@@ -842,6 +907,8 @@ symchar *StatementTypeString(CONST struct Statement *s){
     g_statio_stattypenames[COND] = AddSymbol("CONDITIONAL");
     g_statio_stattypenames[WBTS] = AddSymbol("WILL_BE_THE_SAME");
     g_statio_stattypenames[WNBTS] = AddSymbol("WILL_NOT_BE_THE_SAME");
+    g_statio_stattypenames[TABLESTAT] = AddSymbol("TABLE");
+    g_statio_stattypenames[DATASETSTAT] = AddSymbol("DATASET");
     g_statio_stattypenames[WILLBE] = AddSymbol("WILL_BE");
     g_statio_flowtypenames[fc_return] = AddSymbol("RETURN");
     g_statio_flowtypenames[fc_continue] = AddSymbol("CONTINUE");
@@ -878,6 +945,8 @@ symchar *StatementTypeString(CONST struct Statement *s){
   case COND:
   case WBTS:
   case WNBTS:
+  case TABLESTAT:
+  case DATASETSTAT:
   case WILLBE:
   case WHILE:
     /* It's a massive fall through to check that we know the statement */

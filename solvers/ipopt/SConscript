@@ -37,7 +37,6 @@ def CheckIPOPT(context):
 
 	# test that we can link against it
 	is_ok = context.TryLink(ipopt_test_text,".c")
-	context.env.Append(CPPDEFINES='ASC_WITH_IPOPT')
 	if is_ok:
 		context.Result(is_ok)
 	else:

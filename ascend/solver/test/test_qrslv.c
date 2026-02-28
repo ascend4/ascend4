@@ -200,6 +200,11 @@ static void test_fixedbug564(void){
 	load_solve_test_qrslv("models","test/qrslv/akash_eos.a4c","akash_eos",1);
 }
 
+static void test_fixedbug564_repeat(void){
+	load_solve_test_qrslv("models","test/qrslv/akash_eos.a4c","akash_eos",1);
+	load_solve_test_qrslv("models","test/qrslv/akash_eos.a4c","akash_eos",1);
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -207,12 +212,11 @@ static void test_fixedbug564(void){
 	T(fixedbug513_no_simplify) \
 	X T(fixedbug513_simplify) \
 	X T(fixedbug567) \
-	X T(fixedbug564)
+	X T(fixedbug564) \
+	X T(fixedbug564_repeat)
 
 #define X
 #define TESTS(T) TESTS1(T,X)
 
 REGISTER_TESTS_SIMPLE(solver_qrslv, TESTS)
 #undef X
-
-

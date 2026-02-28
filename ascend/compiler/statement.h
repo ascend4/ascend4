@@ -469,6 +469,30 @@ extern struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs);
  *  The statement's line number is set to the current line number.
  */
 
+extern struct Statement *CreateTABLE(struct Name *n,
+                                     symchar *decl_type,
+                                     struct Set *decl_typeargs,
+                                     symchar *decl_set_type,
+                                     struct Expr *default_expr,
+                                     int positional,
+                                     unsigned long rows,
+                                     unsigned long scalars,
+                                     unsigned long items,
+                                     char *body);
+/**<
+ *  Create a TABLE statement node.
+ *  The statement takes ownership of n, default_expr, and body.
+ */
+
+extern struct Statement *CreateDATASET(symchar *name,
+                                       char *filename,
+                                       struct DatasetIndexItem *indices,
+                                       struct DatasetMapItem *maps);
+/**<
+ *  Create a DATASET statement node.
+ *  The statement takes ownership of filename, indices, and maps.
+ */
+
 #ifdef NDEBUG
 #define StatementType(s) ((s)->t)
 #else
@@ -2090,4 +2114,3 @@ extern int CompareISStatements(CONST struct Statement *s1,
 /* @} */
 
 #endif /* ASC_STATEMENT_H */
-

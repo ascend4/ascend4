@@ -66,7 +66,14 @@
 #include <ascend/utilities/set.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/mem.h>
+#include <ascend/utilities/error.h>
 #include <ascend/compiler/instance_io.h>
+
+#ifdef MAKEMPS_DEBUG
+#define MSG(...) CONSOLE_DEBUG(__VA_ARGS__)
+#else
+#define MSG(...) ((void)0)
+#endif
 
 /* _________________________________________________________________________ */
 
@@ -87,7 +94,7 @@ static void stamp(FILE *outfile, boolean newstamp, boolean dostamp, boolean dost
  ***  if newstamp is true
  **/
 {
-   static char stampstr[26];
+   static char stampstr[27];
    static unsigned long stamptime;
    time_t now;
 
@@ -95,7 +102,7 @@ static void stamp(FILE *outfile, boolean newstamp, boolean dostamp, boolean dost
 
    if (newstamp) {  /* generate new stamp */
       stamptime  = (unsigned long) clock();
-      sprintf(&stampstr[0], "%-26s", ctime(&now));
+      snprintf(&stampstr[0], sizeof(stampstr), "%-26s", ctime(&now));
    }
 
    if (dostamp) FPRINTF(outfile,"%-8x", stamptime);  /* only 8 chars for stamp in MPS, so show hex */
@@ -112,9 +119,10 @@ static FILE *open_write(const char *filename)
   if (filename == NULL) filename = "\0";  /* shouldn't pass null to fopen */
   f = fopen(filename, "w");
   if( f == NULL ) {
-	 FPRINTF(stderr,"ERROR:  (MPS) open_write\n");
-	 FPRINTF(stderr,"        Unable to open %s. Error:%s\n",
-	         filename, strerror(errno));
+	 ERROR_REPORTER_HERE(ASC_PROG_ERR
+	 	,"(MPS) open_write: unable to open '%s' (%s)"
+	 	,filename, strerror(errno)
+	 );
   }
 
   return f;
@@ -133,8 +141,10 @@ static boolean close_file(FILE *f)
   s = fclose(f);
   if (s == EOF)
   {
-  	 FPRINTF(stderr,"ERROR:  (MPS) open_write\n");
-             perror("        Unable to close file");
+  	 ERROR_REPORTER_HERE(ASC_PROG_ERR
+	 	,"(MPS) close_file: unable to close file (%s)"
+	 	,strerror(errno)
+	 );
      return FALSE;
   }
   else
@@ -160,7 +170,7 @@ static void print_col_element(FILE *out,
  ***  want a newline if the last call was in the middle of a line
  **/
 {
-   static int32 oldvar;
+   static int32 oldvar = -1;
    static int         onetwo;  /* is it the first or second value on the line (ONE or TWO) */
 
    /* set up state */
@@ -247,10 +257,14 @@ void print_col(FILE *out,               /* file */
        nz.col = curcol;       /* current col */
 
        /* note: since mtx_FIRST = mtx_LAST, can't use a while loop */
-       value = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,rused));
+       value = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,mtx_order(Ac_mtx)-1));
        do  {
-             print_col_element(out, orgcol, mtx_row_to_org(Ac_mtx, nz.row), value);   /* print out a nonzero element */
-             value = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,rused));
+             int32 orgrow = mtx_row_to_org(Ac_mtx, nz.row);
+             /* Emit only declared rows (constraints plus objective), regardless of row permutation. */
+             if(orgrow >= 0 && orgrow <= rused){
+               print_col_element(out, orgcol, orgrow, value);
+             }
+             value = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,mtx_order(Ac_mtx)-1));
 	   } while (nz.row != mtx_LAST);
 
        print_col_element(out, -1 , 0, 0.0);   /* clean up newline */
@@ -278,14 +292,16 @@ void print_col(FILE *out,               /* file */
  **/
 
 extern boolean write_name_map(const char *name,        /* filename for output */
-                              struct var_variable  **vlist)  /* Variable list (NULL terminated) */
+                              struct var_variable  **vlist,  /* Variable list (NULL terminated) */
+                              const real64 *col_scale)
 {
   FILE *out;
   //int i;
 
   if ((vlist == NULL) || (name == NULL)) {  /* got a bad pointer */
-          FPRINTF(stderr,"ERROR:  (MPS) write_name_map\n");
-          FPRINTF(stderr,"        Routine was passed a NULL pointer!\n");
+          ERROR_REPORTER_HERE(ASC_PROG_ERR
+          	,"(MPS) write_name_map: routine was passed a NULL pointer"
+          );
           return FALSE;
   }
 
@@ -297,8 +313,8 @@ extern boolean write_name_map(const char *name,        /* filename for output */
   FPRINTF(out,"Timestamp: ");
     stamp(out,FALSE,TRUE,TRUE);   /*  use same stamp as in write_MPS, which was already called */
   FPRINTF(out,"\n");
-  FPRINTF(out,"MPS Name   ASCEND Name\n");
-  FPRINTF(out,"--------   -----------\n");
+  FPRINTF(out,"MPS Name   ASCEND Name   ColScale(x = scale*x_s)\n");
+  FPRINTF(out,"--------   -----------   ----------------------\n");
 
   for(; *vlist != NULL ; ++vlist )
      if( free_inc_var_filter(*vlist) )
@@ -310,6 +326,12 @@ extern boolean write_name_map(const char *name,        /* filename for output */
 
          /* now, from instance_io.h, the full qualified name */
          WriteInstanceName(out, var_instance(*vlist), NULL);
+         if(col_scale != NULL){
+           int32 col = var_sindex(*vlist);
+           if(col >= 0){
+             FPRINTF(out,"   %.17g",col_scale[col]);
+           }
+         }
          FPRINTF(out,"\n");
      }
 
@@ -383,8 +405,9 @@ static void do_name(FILE *out,             /* file */
                FPRINTF(out," MIN\n");          /* optimization direction */
                break;
 
-      default: FPRINTF(stderr,"ERROR:  (MPS) do_name\n");
-               FPRINTF(stderr,"        Unknown option for objective!\n");
+      default: ERROR_REPORTER_HERE(ASC_PROG_ERR
+                   ,"(MPS) do_name: unknown option for objective"
+               );
   }
 
   if (bo == 1)
@@ -414,8 +437,9 @@ static void do_rows(FILE *out,             /* file */
                                     break;
           case rel_TOK_nonincident: break;
 
-          default: FPRINTF(stderr,"ERROR:  (MPS) do_rows\n");
-                   FPRINTF(stderr,"        Unknown value for relational operators!\n");
+          default: ERROR_REPORTER_HERE(ASC_PROG_ERR
+                      ,"(MPS) do_rows: unknown value for relational operators"
+                   );
       }
 
    FPRINTF(out," N  R%07d\n", rused);     /* objective row */
@@ -462,26 +486,32 @@ static void upgrade_vars(FILE *out,             /* file */
                typerow[orgcol] = MPS_INT;
           }
 	  else if ((typerow[orgcol] == MPS_INT) && (dointeger == 2) && (dobinary != 2))  {
-	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, MPS_BINARY_STR, MPS_INT_STR);
-	       FPRINTF(stderr,"         The selected MILP solver does not support %s.\n", MPS_INT_STR);
-	       FPRINTF(stderr,"         Upper bound was set to 1.0.\n");
+	       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+	       	,"Variable C%07d treated as %s instead of %s; selected MILP solver does not support %s. Upper bound set to 1.0."
+	       	,orgcol, MPS_BINARY_STR, MPS_INT_STR, MPS_INT_STR
+	       );
                typerow[orgcol] = MPS_BINARY;
                ubrow[orgcol] = 1.0;   /* note: changed bound */
           }
 	  else if ((typerow[orgcol] == MPS_SEMI) && (dosemi == 0))  {   /* semi not supported */
-	       FPRINTF(stderr,"WARNING: Variable C%07d was converted from a %s to a %s.\n", orgcol, MPS_SEMI_STR, MPS_VAR_STR);
-	       FPRINTF(stderr,"         The selected MILP solver does not support %s.\n", orgcol, MPS_SEMI_STR);
-	       FPRINTF(stderr,"         The solution found may not be correct for your model.\n");
+	       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+	       	,"Variable C%07d converted from %s to %s; selected MILP solver does not support %s. The solution may not be correct for this model."
+	       	,orgcol, MPS_SEMI_STR, MPS_VAR_STR, MPS_SEMI_STR
+	       );
                typerow[orgcol] = MPS_VAR;
           }
 	  else if ((typerow[orgcol] == MPS_BINARY) && (dointeger == 2) && (dobinary ==2))  {  /* neither is supported */
-	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, MPS_VAR_STR, MPS_BINARY_STR);
-	       FPRINTF(stderr,"         The selected MILP solver only supports %s.\n", MPS_VAR_STR);
+	       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+	       	,"Variable C%07d treated as %s instead of %s; selected MILP solver only supports %s."
+	       	,orgcol, MPS_VAR_STR, MPS_BINARY_STR, MPS_VAR_STR
+	       );
                typerow[orgcol] = MPS_VAR;
           }
 	  else if ((typerow[orgcol] == MPS_INT) && (dointeger == 2) && (dobinary == 2))  {  /* neither is supported */
-	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, MPS_VAR_STR, MPS_INT_STR);
-	       FPRINTF(stderr,"         The selected MILP solver only supports %s.\n", MPS_VAR_STR);
+	       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+	       	,"Variable C%07d treated as %s instead of %s; selected MILP solver only supports %s."
+	       	,orgcol, MPS_VAR_STR, MPS_INT_STR, MPS_VAR_STR
+	       );
                typerow[orgcol] = MPS_VAR;
           }
        }
@@ -572,21 +602,21 @@ void scan_SOS(mtx_matrix_t Ac_mtx,     /* Matrix representation of problem */
 
                    value = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,vused));
                    if  ((nz.col != mtx_FIRST) && (nz.col != mtx_LAST)) {
-                	 if ( nz.col < current_col)  {
+                         if ( nz.col < current_col)  {
                         	   isSOS = FALSE;  /* overlaps prev SOS */
-                        	   FPRINTF(stderr, "nz.col, current_col, mtx_FIRST: %d  %d  %d\n", nz.col, current_col, mtx_FIRST);
+                        	   MSG("nz.col, current_col, mtx_FIRST: %d %d %d", nz.col, current_col, mtx_FIRST);
                          }
                 	 if ((typerow[mtx_col_to_org(Ac_mtx, nz.col)] != MPS_BINARY) &&
                 	     ( typerow[mtx_col_to_org(Ac_mtx, nz.col)] != MPS_INT)) {
                                isSOS = FALSE;  /* var is wrong type */
-                               FPRINTF(stderr, "typerow: %d\n", typerow[mtx_col_to_org(Ac_mtx, nz.col)]);
+                               MSG("typerow: %d", typerow[mtx_col_to_org(Ac_mtx, nz.col)]);
                 	 }
                    }
 
                } while ( (value == 1.0) && (nz.row != mtx_LAST) && isSOS );
 
                if (nz.col != mtx_LAST) isSOS = FALSE;  /* only true if terminated due to mxt_LAST */
-               FPRINTF(stderr, "isSOS,nz.col:%d, %d\n", isSOS,nz.col);
+               MSG("isSOS, nz.col: %d, %d", isSOS,nz.col);
 
          }
          else
@@ -594,7 +624,7 @@ void scan_SOS(mtx_matrix_t Ac_mtx,     /* Matrix representation of problem */
 
          if (isSOS)  /* reorder columns so all line up in first cols */
          {
-             FPRINTF(stderr, "current_row, not_row:%d, %d\n", current_row, not_row);
+             MSG("current_row, not_row: %d, %d", current_row, not_row);
              /* Is a SOS, so rearrange columns so all the vars in the equation
                 are from current_col on.  Also advance current_row by one. */
 
@@ -705,7 +735,7 @@ void do_bounds(FILE *out,              /* file */
                real64 lbrow[],   /* array of data */
                real64 ubrow[],   /* array of data */
                char typerow[],         /* array of data */
-               int32 rused,      /* size of arrays */
+               int32 vused,      /* size of arrays */
                int nonneg,             /* allow nonneg vars (no FR or MI) ? */
                int binary_flag,        /* allow BV vars ? */
                int integer_flag,       /* allow UI vars ? */
@@ -750,8 +780,11 @@ void do_bounds(FILE *out,              /* file */
 
    FPRINTF(out,"BOUNDS\n");                             /* section header */
 
-   for(i = 0; i < rused; i++)                          /* loop over all rows */
+   for(i = 0; i < vused; i++)                          /* loop over all columns */
    {
+     if(typerow[i] == MPS_FIXED){
+         continue;
+     }
      if ((typerow[i] == MPS_BINARY) && (binary_flag == 1))   /* do BV */
               FPRINTF(out," BV B%07d  C%07d\n",i,i);
      else if ((typerow[i] == MPS_INT) && (integer_flag == 1))  /* do UI */
@@ -802,51 +835,67 @@ void do_bounds(FILE *out,              /* file */
 
 extern boolean write_MPS(const char *name,                /* filename for output */
 	mps_data_t mps,                  /* the main chunk of data for the problem */
-	struct slv_parameter *parms
+	slv_parameters_t *parms
 ){
-#if 0
   FILE *out;
   int32 sosvar;   /* number of variables used in SOS's */
   int32 sosrel;   /* number of relations defining SOS's */
- // int i;                /* temporary counter */
+  int obj, bo, eps;
+  int relaxed, dointeger, dobinary, dosemi;
+  int nonneg;
+  real64 boval, epsval, pinf, minf;
 
-  if (name == NULL) {  /* got a bad pointer */
-          FPRINTF(stderr,"ERROR:  (MPS) write_MPS\n");
-          FPRINTF(stderr,"        Routine was passed a NULL pointer!\n");
+  if ((name == NULL) || (parms == NULL)) {  /* got a bad pointer */
+          ERROR_REPORTER_HERE(ASC_PROG_ERR
+          	,"(MPS) write_MPS: routine was passed a NULL pointer"
+          );
           return FALSE;
   }
+
+  obj = SLV_PARAM_INT(parms,SP6_OBJ);
+  bo = SLV_PARAM_BOOL(parms,SP6_BO);
+  eps = SLV_PARAM_BOOL(parms,SP6_EPS);
+  boval = SLV_PARAM_REAL(parms,SP6_BOVAL);
+  epsval = SLV_PARAM_REAL(parms,SP6_EPSVAL);
+  relaxed = SLV_PARAM_BOOL(parms,SP6_RELAXED);
+  dointeger = SLV_PARAM_INT(parms,SP6_INTEGER);
+  dobinary = SLV_PARAM_INT(parms,SP6_BINARY);
+  dosemi = SLV_PARAM_BOOL(parms,SP6_SEMI);
+  nonneg = SLV_PARAM_BOOL(parms,SP6_NONNEG);
+  pinf = SLV_PARAM_REAL(parms,SP6_PINF);
+  minf = SLV_PARAM_REAL(parms,SP6_MINF);
 
   out = open_write(name);
   if (out == NULL) return FALSE;
 
   /* create header */
   do_name(out,                 /* file */
-          iarray[SP6_OBJ],     /* how does it know to max/min */
-          iarray[SP6_BO],      /* QOMILP style cutoff */
-          iarray[SP6_EPS],     /* QOMILP style termination criteria */
-          rarray[SP6_BOVAL],   /* value of cutoff */
-          rarray[SP6_EPSVAL]); /* value of termination criteria */
+          obj,                 /* how does it know to max/min */
+          bo,                  /* QOMILP style cutoff */
+          eps,                 /* QOMILP style termination criteria */
+          boval,               /* value of cutoff */
+          epsval);             /* value of termination criteria */
 
   do_rows(out,            /* file */
           mps.relopcol,   /* need type of constraint <=, >=, = */
-          mps.rinc);      /* number of incident relations */
+          mps.rused);     /* number of relations */
 
   upgrade_vars(out,                  /* file */
                mps.typerow,          /* array of variable type data */
                mps.ubrow,            /* change ub on int -> bin conversion */
                mps.vused,            /* number of vars */
-               iarray[SP6_RELAXED],  /* should the relaxed problem be solved */
-               iarray[SP6_INTEGER],  /* supports integer vars */
-               iarray[SP6_BINARY],   /* supports binary vars */
-               iarray[SP6_SEMI]);    /* supports semi-continuous vars */
+               relaxed,              /* should the relaxed problem be solved */
+               dointeger,            /* supports integer vars */
+               dobinary,             /* supports binary vars */
+               dosemi);              /* supports semi-continuous vars */
 
-  if ((iarray[SP6_SOS1] == 1) || (iarray[SP6_SOS3] == 1))  /* look for SOS's, reorder matrix */
+  if ((SLV_PARAM_BOOL(parms,SP6_SOS1) == 1) || (SLV_PARAM_BOOL(parms,SP6_SOS3) == 1))  /* look for SOS's, reorder matrix */
      scan_SOS(mps.Ac_mtx,     /* Matrix representation of problem */
               mps.relopcol,   /* array of relational operator data */
               mps.bcol,       /* array of RHS data */
               mps.typerow,    /* array of variable type data */
-              mps.rinc,       /* size of incident relations */
-              mps.vinc,       /* number of vars */
+              mps.rused,      /* size of relations */
+              mps.vused,      /* number of vars */
               &sosvar,        /* output: number of variables used in SOS's */
               &sosrel);       /* output: number of relations defining SOS's */
      else {
@@ -854,9 +903,10 @@ extern boolean write_MPS(const char *name,                /* filename for output
               sosrel = 0;
      }
 
-  if (iarray[SP6_SOS2] == 1)  {    /* don't support SOS2 yet */
-       FPRINTF(stderr,"WARNING:  (MPS) write_MPS\n");
-       FPRINTF(stderr,"          SOS2 are not currently supported in ASCEND!\n");
+  if (SLV_PARAM_BOOL(parms,SP6_SOS2) == 1)  {    /* don't support SOS2 yet */
+       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+       	,"(MPS) write_MPS: SOS2 is not currently supported in ASCEND"
+       );
   }
 
   do_columns(out,                    /* file */
@@ -866,33 +916,28 @@ extern boolean write_MPS(const char *name,                /* filename for output
              mps.vused,         /* number of vars */
              sosvar,            /* number of variables used in SOS's */
              sosrel,            /* number of SOS's */
-             iarray[SP6_INTEGER],    /* supports integer vars */
-             iarray[SP6_BINARY]);    /* supports binary vars */
+             dointeger,              /* supports integer vars */
+             dobinary);              /* supports binary vars */
 
   do_rhs(out,                 /* file */
          mps.bcol,
          mps.relopcol,
-         mps.rinc,
-         mps.vinc);
+         mps.rused,
+         mps.vused);
 
   do_bounds(out,                   /* file */
             mps.lbrow,        /* array of data */
             mps.ubrow,        /* array of data */
             mps.typerow,      /* array of data */
-            mps.rused,        /* size of arrays */
-            iarray[SP6_NONNEG],    /* allow nonneg vars (no FR or MI) ? */
-            iarray[SP6_BINARY],    /* allow BV vars ? */
-            iarray[SP6_INTEGER],   /* allow UI vars ? */
-            iarray[SP6_SEMI],      /* allow SC vars ? */
-            rarray[SP6_PINF],      /* any UB>=pinf is set to + infinity */
-            rarray[SP6_MINF]);     /* any LB<=minf is set to - infinity */
+            mps.vused,        /* size of arrays */
+            nonneg,           /* allow nonneg vars (no FR or MI) ? */
+            dobinary,         /* allow BV vars ? */
+            dointeger,        /* allow UI vars ? */
+            dosemi,           /* allow SC vars ? */
+            pinf,             /* any UB>=pinf is set to + infinity */
+            minf);            /* any LB<=minf is set to - infinity */
 
   FPRINTF(out, "ENDATA\n");  /* finish up the file */
 
   return close_file(out);
-#else
-  return 0;
-#endif
 }
-
-

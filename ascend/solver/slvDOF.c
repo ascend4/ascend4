@@ -131,9 +131,10 @@ slvDOF_system_t slvDOF_create()
    sys->p.output.more_important = stdout;
    sys->p.output.less_important = NULL;
    sys->p.partition = TRUE;
-   sys->s.ok = TRUE;
-   sys->s.costsize = 0;
-   sys->s.cost = NULL; /*redundant, but sanity preserving */
+   sys->s.kind = SLV_STATUS_NLP;
+  sys->s.ok = TRUE;
+   sys->s.u.nlp.costsize = 0;
+   sys->s.u.nlp.cost = NULL; /*redundant, but sanity preserving */
 
    return(sys);
 }
@@ -155,7 +156,7 @@ int slvDOF_destroy(slvDOF_system_t sys)
   if (check_system(sys)) return 1;
   destroy_matrices(sys);
   sys->integrity = DESTROYED;
-  if (sys->s.cost) ascfree(sys->s.cost);
+  if (sys->s.u.nlp.cost) ascfree(sys->s.u.nlp.cost);
   ascfree( (POINTER)sys );
   return 0;
 }

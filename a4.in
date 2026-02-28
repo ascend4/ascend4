@@ -97,6 +97,7 @@ if __name__ == "__main__":
 	g = p.add_mutually_exclusive_group()
 	g.add_argument('--gdb',action='store_true',help='Run action via GDB')
 	g.add_argument('--valgrind',action='store_true',help='Run action via Valgrind')
+	g.add_argument('--callgrind',action='store_true',help='Run action via Valgrind Callgrind profiler')
 
 	s = p.add_subparsers(help='sub-command help')
 	
@@ -128,6 +129,10 @@ if __name__ == "__main__":
 	p_scr.set_defaults(action='script')
 	p_scr.add_argument('file',type=pathlib.Path,help='Script file to be run')
 	p_scr.add_argument('rest',nargs=argparse.REMAINDER,help='Additional arguments to be passed to the script')
+
+	p_cutest = s.add_parser('cutest',help = 'Run ASCEND CUnit test runner with ASCEND environment set')
+	p_cutest.set_defaults(action='cutest')
+	p_cutest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to test/test')
 	
 	p_sh = s.add_parser('env',help = 'Create a sub-shell in which ASCEND environment variables are set.')
 	p_sh.set_defaults(action='env')
@@ -138,7 +143,15 @@ if __name__ == "__main__":
 	p_sh = s.add_parser('q',help = 'Quick shortcut test -- test a4.in source for details.')
 	p_sh.set_defaults(action='q')
 
-	args = p.parse_args()
+	args, unknown = p.parse_known_args()
+	if unknown:
+		if hasattr(args, 'action') and args.action == 'cutest':
+			# Pass unknown args through to the test runner.
+			if not hasattr(args, 'rest') or args.rest is None:
+				args.rest = []
+			args.rest = unknown + list(args.rest)
+		else:
+			p.error("unrecognized arguments: " + " ".join(unknown))
 
 	if args.debug:
 		DEBUG=1
@@ -186,6 +199,15 @@ if __name__ == "__main__":
 	if add_at_start('PYTHONPATH',pypath):
 		restart.append('PYTHONPATH')
 
+	# bintoken compile/link helpers expect single root paths, not PATH lists.
+	# In an in-tree dev run, default these to source root if user has not set them.
+	if not os.environ.get('ASCENDBTINC'):
+		os.environ['ASCENDBTINC'] = str(sourceroot)
+		MSG("CREATED ASCENDBTINC=%s" % os.environ['ASCENDBTINC'])
+	if not os.environ.get('ASCENDBTLIB'):
+		os.environ['ASCENDBTLIB'] = str(sourceroot)
+		MSG("CREATED ASCENDBTLIB=%s" % os.environ['ASCENDBTLIB'])
+
 	MSG("ARGS",args)
 		
 	precmd = []
@@ -196,6 +218,16 @@ if __name__ == "__main__":
 		if VALGRIND == None:
 			raise RuntimeError("Could not locate 'valgrind' in the PATH")
 		precmd = [VALGRIND]+ '--suppressions=tools/valgrind/suppressions --tool=memcheck --leak-check=full --show-reachable=yes'.split(' ')
+	elif args.callgrind:
+		VALGRIND = shutil.which('valgrind')
+		if VALGRIND == None:
+			raise RuntimeError("Could not locate 'valgrind' in the PATH")
+		callgrind_out = os.environ.get('ASC_CALLGRIND_OUT','callgrind.out.%p')
+		precmd = [VALGRIND] + [
+			'--tool=callgrind'
+			, '--trace-children=yes'
+			, '--callgrind-out-file=%s' % callgrind_out
+		]
 	
 	cmd = precmd
 	if not hasattr(args,'action') or args.action == 'gui':
@@ -222,21 +254,46 @@ if __name__ == "__main__":
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', sourceroot/'models'/'johnpye'/'extpy'/'extpytest.a4c']
 	elif args.action == 'script':
 		cmd += shebang(args.file,args.rest)
+	elif args.action == 'cutest':
+		cmd += [sourceroot / 'test' / 'test']
+		rest = list(args.rest)
+		if rest and rest[0] == '--':
+			rest = rest[1:]
+		cmd += rest
 	elif args.action == 'env' :
 		shargs = []
 		if os.environ.get('ASCEND_SHELL'):
 			raise RuntimeError("You are already inside an ASCEND shell")
+		rest = list(args.rest)
+		if rest and rest[0] == '--':
+			rest = rest[1:]
+		shell = args.shell
+		if platform.system() == "Windows":
+			shname = pathlib.Path(shell).name.lower()
+			cygpath = shutil.which('cygpath')
+			if shname in ('bash','bash.exe') and os.environ.get('MSYSTEM'):
+				# In MSYS2, avoid Windows resolving bare 'bash' to WSL's System32\bash.exe.
+				if cygpath:
+					wp = subprocess.run([cygpath,'-w','/usr/bin/bash.exe'],capture_output=True,check=True,encoding='utf-8')
+					shell = wp.stdout.strip()
+				elif shname == 'bash':
+					shell = 'bash.exe'
+			elif shell.startswith('/') and cygpath:
+				# Convert explicit MSYS-style shell paths for CreateProcess on Windows.
+				wp = subprocess.run([cygpath,'-w',shell],capture_output=True,check=True,encoding='utf-8')
+				shell = wp.stdout.strip()
 		if args.label:
-			assert(args.shell=='bash')
-			os.environ['PS1'] = r'a4> \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-			shargs += ['--norc']
+			if pathlib.Path(shell).name.lower() in ('bash','bash.exe'):
+				os.environ['PS1'] = r'a4> \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+				shargs += ['--norc']
 		os.environ['ASCEND_SHELL'] = '1'
-		cmd += [args.shell] + shargs + args.rest
+		cmd += [shell] + shargs + rest
 	else:
 		print("unrecognised command")
 		sys.exit(1);
 		
 	MSG("CMD =",cmd)
 	proc = subprocess.run(cmd)
+	sys.exit(proc.returncode)
 
 # vim:syntax=python:ts=4:sw=4:noet

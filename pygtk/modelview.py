@@ -241,7 +241,7 @@ class ModelView:
 #   INSTANCE TREE
 
 	def get_tree_row_data(self,instance): # for instance browser
-		_value = str(instance.getValue())
+		_value = self.browser.get_instance_display_value(instance)
 		_type = str(instance.getType())
 		_name = str(instance.getName())
 		_fgcolor = BROWSER_INCLUDED_COLOR
@@ -292,10 +292,7 @@ class ModelView:
 		for _path in self.otank: # { path : (name,value) }
 			_iter = self.modelstore.get_iter(_path)
 			_name, _instance = self.otank[_path]
-			_value = str(_instance.getValue())
-			##### CELSIUS TEMPERATURE WORKAROUND
-			_value = CelsiusUnits.convert_show(_instance, _value, True)
-			##### CELSIUS TEMPERATURE WORKAROUND
+			_value = self.browser.get_instance_display_value(_instance)
 			self.modelstore.set_value(_iter, 2, _value)
 			if _instance.getType().isRefinedSolverVar():
 				if _instance.isFixed() and self.modelstore.get_value(_iter,3)==BROWSER_FREE_COLOR:
@@ -311,6 +308,29 @@ class ModelView:
 					self.modelstore.set_value(_iter,3,BROWSER_INCLUDED_COLOR)
 				else:
 					self.modelstore.set_value(_iter,3,BROWSER_UNINCLUDED_COLOR)
+
+	def refresh_display_units(self, instance=None, instance_type=None):
+		"""
+		Refresh only displayed values affected by units policy changes.
+		If instance is provided: refresh that instance only.
+		If instance_type is provided: refresh matching type name only.
+		"""
+		target_type_name = None
+		if instance_type is not None:
+			target_type_name = str(instance_type.getName())
+		for _path in self.otank:
+			_iter = self.modelstore.get_iter(_path)
+			_name, _instance = self.otank[_path]
+			if instance is not None and _instance != instance:
+				continue
+			if target_type_name is not None:
+				try:
+					if str(_instance.getType().getName()) != target_type_name:
+						continue
+				except Exception:
+					continue
+			_value = self.browser.get_instance_display_value(_instance)
+			self.modelstore.set_value(_iter, 2, _value)
 
 	def get_selected_type(self):
 		return self.get_selected_instance().getType()
@@ -344,11 +364,12 @@ class ModelView:
 			newtext = CelsiusUnits.convert_edit(_instance, newtext, True)
 			##### CELSIUS TEMPERATURE WORKAROUND
 
-			_e = RealAtomEntry(_instance, newtext)
+			_default_units = self.browser.get_instance_display_units(_instance)
+			_e = RealAtomEntry(_instance, newtext, _default_units)
 			try:
 				_e.checkEntry()
 				_e.setValue()
-				_e.exportPreferredUnits(self.browser.prefs)
+				_e.applyUnitsOverride(self.browser)
 			except InputError as e:
 				self.browser.reporter.reportError(str(e))
 				return True
@@ -388,15 +409,12 @@ class ModelView:
 
 		# now that the variable is set, update the GUI and re-solve if desired
 		_iter = self.modelstore.get_iter(path)
-		self.modelstore.set_value(_iter,2, str(_instance.getValue()))
+		self.modelstore.set_value(_iter,2, self.browser.get_instance_display_value(_instance))
 
 		if _instance.getType().isRefinedSolverVar():
 			self.modelstore.set_value(_iter,3,BROWSER_FIXED_COLOR) # set the row green as fixed
 
 		self.browser.do_solve_if_auto()
-		for _obs in self.browser.observers:
-			if _obs.alive:
-				_obs.units_refresh(self.get_selected_instance().getType())
 		return True
 
 	##### EXTERNAL RELATION WORKAROUND
@@ -571,7 +589,10 @@ class ModelView:
 			self.hidevariable.set_label("Hide selected types")
 
 			self.modelview.grab_focus()
-			self.treecontext.popup(None, None, None, None, _button, event.time)
+			if event.type == Gdk.EventType.BUTTON_PRESS:
+				self.treecontext.popup_at_pointer(event)
+			else:
+				self.treecontext.popup(None, None, None, None, _button, event.time)
 			return True
 
 		if _instance.isReal():
@@ -595,7 +616,10 @@ class ModelView:
 			self.modelview.grab_focus()
 			self.modelview.set_cursor(_path,_col,0)
 			print("RUNNING POPUP MENU")
-			self.modelmenu.popup(None, None, None, None, _button, event.time)
+			if event.type == Gdk.EventType.BUTTON_PRESS:
+				self.modelmenu.popup_at_pointer(event)
+			else:
+				self.modelmenu.popup(None, None, None, None, _button, event.time)
 			return True
 
 		self.hidevariable.set_label("Hide " + str(_instance.getType()))
@@ -603,7 +627,10 @@ class ModelView:
 
 		self.modelview.grab_focus()
 		self.modelview.set_cursor( _path, _col, 0)
-		self.treecontext.popup( None, None, None,None, _button, event.time) 
+		if event.type == Gdk.EventType.BUTTON_PRESS:
+			self.treecontext.popup_at_pointer(event)
+		else:
+			self.treecontext.popup( None, None, None,None, _button, event.time)
 		return True
 
 	def get_model_context_menu(self,instance):
@@ -747,9 +774,16 @@ class ModelView:
 		_dia.run()
 
 	def units_activate(self,*args):
-		T = self.get_selected_type()
+		_instance = self.get_selected_instance()
+		if _instance is None:
+			self.browser.reporter.reportError("Select a real variable first.")
+			return
+		if not _instance.isReal():
+			self.browser.reporter.reportError("Units can only be edited for real-valued variables.")
+			return
+		T = _instance.getType()
 		try:
-			_un = UnitsDialog(self.browser,T)
+			_un = UnitsDialog(self.browser,T,_instance)
 			_un.run()
 		except:
 			self.browser.reporter.reportError("Unable to display units dialog.")

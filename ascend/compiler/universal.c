@@ -26,6 +26,7 @@
  */
 
 #include <ascend/general/platform.h>
+#include <ascend/general/ascMalloc.h>
 
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
@@ -35,8 +36,15 @@
 #include "expr_types.h"
 #include "stattypes.h"
 #include "child.h"
+#include "destroyinst.h"
+#include "instmacro.h"
+#include "instance_types.h"
+#include "instquery.h"
 #include "type_desc.h"
 #include "universal.h"
+#include "instance_enum.h"
+#include "type_desc.h"
+#include "instquery.h"
 
 
 struct universal_rec {
@@ -140,6 +148,24 @@ void ChangeUniversalInstance(struct gl_list_t *table,
       if (ptr->inst == oldinst) {
 	ptr->inst = newinst;
       }
+    }
+  }
+}
+
+void DestroyUniversalDummyInstances(struct gl_list_t *table)
+{
+  if (!table) return;
+  for(unsigned long c = gl_length(table); c >= 1; --c){
+    struct universal_rec *ptr = (struct universal_rec *)gl_fetch(table,c);
+    if(ptr && ptr->inst && InstanceKind(ptr->inst) == DUMMY_INST){
+      struct Instance *inst = ptr->inst;
+      DeleteTypeDesc(D_INST(inst)->desc);
+      inst->t = ERROR_INST;
+      ascfree((char *)inst);
+      gl_delete(table,c,1);
+    }
+    if(c == 1){
+      break;
     }
   }
 }

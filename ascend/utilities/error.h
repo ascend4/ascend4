@@ -404,6 +404,13 @@ typedef int (*ErrorReporter_fptr_t)(
 );
 
 /**
+	Default callback implementation used when no custom callback is set.
+	Useful for callback chaining: custom callback can capture metadata, then
+	call this function to preserve standard console reporting.
+*/
+ASC_DLLSPEC int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS);
+
+/**
 	Use this function directly for 'richer' reporting of
 	of error messages.
 

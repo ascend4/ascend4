@@ -1,0 +1,95 @@
+REQUIRE "atoms.a4l";
+
+(* TABLE + string-labeled variant of mip_facility_location. *)
+MODEL mip_facility_location_table_labels;
+	customers IS_A set OF symbol_constant;
+	facilities IS_A set OF symbol_constant;
+
+	demand[customers] IS_A factor_constant;
+	capacity[facilities] IS_A factor_constant;
+	fixed_cost[facilities] IS_A factor_constant;
+
+	open[facilities] IS_A solver_binary;
+	assign[customers][facilities] IS_A solver_binary;
+
+	customers :== ['cust1','cust2','cust3','cust4'];
+	facilities :== ['alpha','beta','gamma'];
+
+	demand['cust1'] :== 45;
+	demand['cust2'] :== 30;
+	demand['cust3'] :== 40;
+	demand['cust4'] :== 35;
+
+	capacity['alpha'] :== 80;
+	capacity['beta'] :== 100;
+	capacity['gamma'] :== 120;
+
+	fixed_cost['alpha'] :== 120;
+	fixed_cost['beta'] :== 100;
+	fixed_cost['gamma'] :== 90;
+
+	TABLE ship_cost[customers,facilities] IS_A factor_constant;
+		alpha,beta,gamma;
+		cust1,2,4,5;
+		cust2,3,1,2;
+		cust3,4,2,1;
+		cust4,5,3,2;
+	END TABLE;
+
+	FOR i IN customers CREATE
+		serve[i]: SUM[assign[i][j] | j IN facilities] = 1;
+	END FOR;
+
+	FOR i IN customers CREATE
+		FOR j IN facilities CREATE
+			link[i][j]: assign[i][j] <= open[j];
+		END FOR;
+	END FOR;
+
+	FOR j IN facilities CREATE
+		cap[j]: SUM[demand[i]*assign[i][j] | i IN customers] <= capacity[j];
+	END FOR;
+
+	obj: MINIMIZE
+		SUM[fixed_cost[j]*open[j] | j IN facilities]
+		+ SUM[ SUM[demand[i]*ship_cost[i][j]*assign[i][j] | j IN facilities] | i IN customers ];
+
+METHODS
+
+METHOD self_test;
+	ASSERT abs(open['alpha'] - 1) < 1e-7;
+	ASSERT abs(open['beta']) < 1e-7;
+	ASSERT abs(open['gamma'] - 1) < 1e-7;
+
+	ASSERT abs(assign['cust1']['alpha'] - 1) < 1e-7;
+	ASSERT abs(assign['cust2']['gamma'] - 1) < 1e-7;
+	ASSERT abs(assign['cust3']['gamma'] - 1) < 1e-7;
+	ASSERT abs(assign['cust4']['gamma'] - 1) < 1e-7;
+
+	FOR i IN customers DO
+		ASSERT abs(SUM[assign[i][j] | j IN facilities] - 1) < 1e-7;
+	END FOR;
+
+	ASSERT abs(
+		SUM[fixed_cost[j]*open[j] | j IN facilities]
+		+ SUM[ SUM[demand[i]*ship_cost[i][j]*assign[i][j] | j IN facilities] | i IN customers ]
+		- 470
+	) < 1e-7;
+END self_test;
+
+METHOD default_self;
+	open['alpha'] := 1;
+	open['beta'] := 1;
+	open['gamma'] := 0;
+
+	assign['cust1']['alpha'] := 1; assign['cust1']['beta'] := 0; assign['cust1']['gamma'] := 0;
+	assign['cust2']['alpha'] := 0; assign['cust2']['beta'] := 1; assign['cust2']['gamma'] := 0;
+	assign['cust3']['alpha'] := 0; assign['cust3']['beta'] := 1; assign['cust3']['gamma'] := 0;
+	assign['cust4']['alpha'] := 1; assign['cust4']['beta'] := 0; assign['cust4']['gamma'] := 0;
+END default_self;
+
+METHOD on_load;
+	RUN default_self;
+END on_load;
+
+END mip_facility_location_table_labels;

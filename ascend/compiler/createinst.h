@@ -65,7 +65,7 @@ extern struct Instance *CreateModelInstance(struct TypeDescription *type);
 	The reference count of type is incremented.
 */
 
-extern struct Instance *CreateDummyInstance(struct TypeDescription *type);
+ASC_DLLSPEC struct Instance *CreateDummyInstance(struct TypeDescription *type);
 /**<
 	Returns a DummyInstance using the type given, which must be
 	the dummy_type named BASE_UNSELECTED.
@@ -164,4 +164,3 @@ extern struct Instance *CreateWhenInstance(struct TypeDescription *type);
 /* @} */
 
 #endif  /* ASC_CREATEINST_H */
-

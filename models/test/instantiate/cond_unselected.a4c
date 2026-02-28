@@ -1,0 +1,14 @@
+REQUIRE "system.a4l";
+(* CONDITIONAL unselected statement tests *)
+
+MODEL cond_unselected_case;
+	i IS_A integer_constant;
+	i :== 1;
+	x IS_A real;
+	SELECT(i)
+	CASE 2:
+		CONDITIONAL
+			r1: x = 1;
+		END CONDITIONAL;
+	END SELECT;
+END cond_unselected_case;

@@ -9,6 +9,7 @@ csrcs = Split("""
 	panic.c pool.c pretty.c
 	stack.c table.c tm_time.c
 	ospath.c env.c pairlist.c ltmatrix.c
+	glob.c
 """)
 
 #print("SUBST_DICT =",libascend_env['SUBST_DICT'])
@@ -36,4 +37,3 @@ if libascend_env.get('CAN_INSTALL'):
 Return('objs')
 
 # vim: set syntax=python:
-

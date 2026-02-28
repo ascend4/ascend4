@@ -386,46 +386,48 @@ static void test_test4(void){
 	InitDimenList();
 
 #define LEN 1024
-	char fn[LEN], s[LEN];
-
-	strncpy(fn,"/tmp/ascend-test-XXXXXX",1023);
-	int fd = mkstemp(fn);
-	FILE *F = fdopen(fd,"w+");
+	char s[LEN];
+	FILE *F = NULL;
 
 	dim_type D;
 
 	ClearDimensions(&D);
 	SetDimFraction(D,D_LENGTH,CreateFraction(3,1));
 	SetDimFraction(D,D_MASS,CreateFraction(7,1));
+	F = tmpfile();
+	CU_ASSERT_PTR_NOT_NULL_FATAL(F);
 	fprintf(F,"{"); PrintDimen(F,&D); fprintf(F,"}"); fputc('\0',F);
 	rewind(F);
 	errno=0;
 	memset(s,'\0',LEN);
-	CU_TEST(fread(s,1,LEN,F));
-	CU_TEST(0==strncmp(s,"{7/1M 3/1L }",LEN));
+	CU_TEST(fread(s,1,strlen("{7/1M 3/1L }") + 1,F) == strlen("{7/1M 3/1L }") + 1);
+	CU_TEST(0==strcmp(s,"{7/1M 3/1L }"));
+	fclose(F);
 
-	rewind(F);
 	ClearDimensions(&D);
 	SetWild(&D);
+	F = tmpfile();
+	CU_ASSERT_PTR_NOT_NULL_FATAL(F);
 	fprintf(F,"{"); PrintDimen(F,&D); fprintf(F,"}"); fputc('\0',F);
 	rewind(F);
 	errno=0;
 	memset(s,'\0',LEN);
-	CU_TEST(fread(s,1,LEN,F));
-	CU_TEST(0==strncmp(s,"{wild}",LEN));
+	CU_TEST(fread(s,1,strlen("{wild}") + 1,F) == strlen("{wild}") + 1);
+	CU_TEST(0==strcmp(s,"{wild}"));
+	fclose(F);
 
-	rewind(F);
 	ClearDimensions(&D);
+	F = tmpfile();
+	CU_ASSERT_PTR_NOT_NULL_FATAL(F);
 	fprintf(F,"{"); PrintDimen(F,&D); fprintf(F,"}"); fputc('\0',F);
 	rewind(F);
 	errno=0;
 	memset(s,'\0',LEN);
-	CU_TEST(fread(s,1,LEN,F));
-	CU_TEST(0==strncmp(s,"{dimensionless}",LEN));
+	CU_TEST(fread(s,1,strlen("{dimensionless}") + 1,F) == strlen("{dimensionless}") + 1);
+	CU_TEST(0==strcmp(s,"{dimensionless}"));
 
 
 	fclose(F);
-	unlink(fn);
 
 	DestroyDimenList();
 	gl_destroy_pool();
@@ -446,4 +448,3 @@ static void test_test4(void){
 
 
 REGISTER_TESTS_SIMPLE(compiler_dimen, TESTS)
-

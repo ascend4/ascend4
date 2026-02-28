@@ -16,6 +16,7 @@
 *)
 REQUIRE "atoms.a4l";
 
+(* Used by solver_makemps tests to exercise nonlinear rejection and optional linearization. *)
 
 MODEL test11;
 	NOTES
@@ -64,4 +65,3 @@ METHOD on_load;
 END on_load;
 
 END test11;
-

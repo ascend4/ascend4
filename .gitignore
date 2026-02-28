@@ -28,7 +28,10 @@ ascxx/ascpy_wrap.h
 ascxx/config.h
 ascxx/testconopt
 ascxx/testipopt
+ascxx/testhighs
+ascxx/testmakemps
 ascxx/testslvreq
+ascxx/testdeclunits
 config.log
 libascend.so.1
 listiotempfile.tmp

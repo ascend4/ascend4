@@ -601,13 +601,13 @@ STDHLF(Asc_SimBinTokenSetOptions, (Asc_SimBinTokenSetOptionsHL,Asc_SimBinTokenSe
 int Asc_SimBinTokenSetOptions(ClientData cdata, Tcl_Interp *interp,
                               int argc, CONST84 char **argv)
 {
-  const char *srcname, *objname, *libname, *buildcommand, *unlinkcommand;
+  const char *srcname, *objname, *libname, *buildcommand;
   long maxrels;
   int verbose, housekeep;
   int s1,s2,s3;
 
   ASCUSE;  /* see if first arg is -help */
-  if (argc != 9 ) {
+  if (argc != 8 ) {
     Asc_HelpGetUsage(interp,Asc_SimBinTokenSetOptionsHN);
     return TCL_ERROR;
   };
@@ -615,20 +615,19 @@ int Asc_SimBinTokenSetOptions(ClientData cdata, Tcl_Interp *interp,
   objname = argv[2];
   libname = argv[3];
   buildcommand = argv[4];
-  unlinkcommand = argv[5];
-  s1 = Tcl_ExprLong(interp,argv[6],&maxrels);
+  s1 = Tcl_ExprLong(interp,argv[5],&maxrels);
   Tcl_ResetResult(interp);
-  s2 = Tcl_GetInt(interp,argv[7],&verbose);
+  s2 = Tcl_GetInt(interp,argv[6],&verbose);
   Tcl_ResetResult(interp);
-  s3 = Tcl_GetInt(interp,argv[8],&housekeep);
+  s3 = Tcl_GetInt(interp,argv[7],&housekeep);
   Tcl_ResetResult(interp);
   if (srcname == NULL || objname == NULL || libname == NULL ||
-      buildcommand == NULL || unlinkcommand == NULL ||
+      buildcommand == NULL ||
       s1 != TCL_OK || s2 != TCL_OK || s3 != TCL_OK) {
     Tcl_AppendResult(interp,argv[0],": Error converting input",(char *)NULL);
     return TCL_ERROR;
   }
-  BinTokenSetOptions(srcname,objname,libname,buildcommand,unlinkcommand,
+  BinTokenSetOptions(srcname,objname,libname,buildcommand,
                      (unsigned long)maxrels,verbose,housekeep);
   return TCL_OK;
 }

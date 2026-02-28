@@ -54,8 +54,8 @@
  *                parameter: the system.  Note also that the select
  *                solver functions don't exist.
  *  </pre>
- *  @todo makeMPS (solver/slv6.c) is out-of-date and will not compile.
- *        Should be either fixed or archived.
+ *  @todo makeMPS (solver/slv6.c) remains legacy code and needs refactoring.
+ *        It currently compiles and is covered by solver tests.
  *  @todo Restructure solver/slv6 & mps so can remove declarations in
  *        solver/slv6.h out of header.  Currently needed by mps.[ch].
  */
@@ -66,7 +66,7 @@
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_client.h>
 
-#include "mps_types.h"
+#include <ascend/system/lp_data.h>
 
 typedef struct slv6_system_structure *slv6_system_t;
 
@@ -226,6 +226,8 @@ enum{
 	, SP6_SOS3
 	, SP6_BO
 	, SP6_EPS
+	, SP6_VARNOM_SCALE
+	, SP6_RELNOM_SCALE
 	/* real-valued */
 	, SP6_BOVAL
 	, SP6_EPSVAL
@@ -242,4 +244,3 @@ enum{
 #define rel_TOK_nonincident 00
 
 #endif  /* ASC_SLV6_H */
-

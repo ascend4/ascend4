@@ -807,4 +807,3 @@ extern void gl_reportrecycler(FILE *fp);
 /* @} */
 
 #endif /* ASC_LIST_H */
-

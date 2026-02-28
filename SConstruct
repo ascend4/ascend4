@@ -250,6 +250,91 @@ else: # LINUX, unix we hope
 if not os.path.exists(default_ida_prefix):
 	default_ida_prefix = None
 
+def cygpath(mypath):
+	cmd = [pathlib.Path(shutil.which('cygpath')),'-w',mypath]
+	return subprocess.run(cmd,check=1,capture_output=1,encoding="utf=8").stdout.strip("\r\n \t")
+
+def existing_path_anysep(path):
+	path = str(path)
+	candidates = [path]
+	if "\\" in path:
+		candidates.append(path.replace("\\","/"))
+	if "/" in path:
+		candidates.append(path.replace("/","\\"))
+	for p in candidates:
+		if os.path.exists(p):
+			return p
+	return None
+
+def exists_maybe_cygpath(mypath):
+	path = str(mypath)
+	if os.environ.get('MSYSTEM'):
+		try:
+			path = cygpath(path)
+		except Exception:
+			pass
+	found = existing_path_anysep(path)
+	if found:
+		return found
+	return None
+
+def get_effective_home():
+	"""
+	Return the user's home path, preferring MSYS2 $HOME when building under
+	MSYSTEM, because pathlib.Path.home() may resolve to the Windows profile dir.
+	"""
+	if os.environ.get('MSYSTEM'):
+		home = os.environ.get('HOME')
+		if home:
+			return home
+	return str(pathlib.Path.home())
+
+def get_default_user_local():
+	home_local = pathlib.Path(get_effective_home()) / '.local'
+	home_local_path = exists_maybe_cygpath(home_local)
+	if home_local_path:
+		return home_local_path
+	return default_prefix
+
+default_user_local = get_default_user_local()
+
+def get_default_cunit_paths():
+	"""
+	Choose CUnit defaults that are valid paths on this host so PackageVariable
+	validation doesn't fail before optional-component probing.
+	"""
+	candidates = []
+	home_local = exists_maybe_cygpath(pathlib.Path(get_effective_home()) / '.local')
+	if home_local:
+		candidates.append(home_local)
+	default_pref = exists_maybe_cygpath(default_prefix) or str(default_prefix)
+	if default_pref not in candidates:
+		candidates.append(default_pref)
+
+	for base in candidates:
+		inc = existing_path_anysep(os.path.join(base,"include"))
+		lib = existing_path_anysep(os.path.join(base,"lib"))
+		if inc and lib:
+			return base, inc, lib
+
+	for base in candidates:
+		inc = existing_path_anysep(os.path.join(base,"include"))
+		if inc:
+			break
+	else:
+		inc = os.path.join(str(default_pref),"include")
+
+	for base in candidates:
+		lib = existing_path_anysep(os.path.join(base,"lib"))
+		if lib:
+			break
+	else:
+		lib = os.path.join(str(default_pref),"lib")
+
+	return candidates[0] if candidates else str(default_pref), inc, lib
+
+default_cunit_prefix, default_cunit_cpppath, default_cunit_libpath = get_default_cunit_paths()
+
 soname_clean = "${SHLIBPREFIX}ascend${SHLIBSUFFIX}"
 soname_full = "%s%s" % (soname_clean,soname_major)
 
@@ -344,10 +429,10 @@ vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5"]
+	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS','MAKEMPS']
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","RADAU5"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","RADAU5"
 	 ]
 ))
 
@@ -435,6 +520,13 @@ vars.Add(BoolVariable('WITH_ZLIB'
 	,True
 ))
 
+# liblzma/xz support
+vars.Add(BoolVariable('WITH_LZMA'
+	,"Include features that make use of the liblzma/xz compression library,"
+	+" if available. Set to zero if you want to explicitly disable this."
+	,True
+))
+
 # Build with MMIO matrix export support?
 vars.Add(BoolVariable('WITH_MMIO'
 	,"Include support for exporting matrices in Matrix Market format"
@@ -453,19 +545,19 @@ vars.Add(PackageVariable('DEFAULT_PREFIX'
 # Where was CUNIT installed?
 vars.Add(PackageVariable('CUNIT_PREFIX'
 	,"Where are your CUnit files?"
-	,pathlib.Path(os.environ['HOME'])/'.local'
+	,default_cunit_prefix
 ))
 
 # Where are the CUnit includes?
 vars.Add(PackageVariable('CUNIT_CPPPATH'
 	,"Where are your CUnit include files?"
-	,"$CUNIT_PREFIX/include"
+	,default_cunit_cpppath
 ))
 
 # Where are the CUnit libraries?
 vars.Add(PackageVariable('CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
-	,"$CUNIT_PREFIX/lib"
+	,default_cunit_libpath
 ))
 
 # ----- conopt-----
@@ -509,7 +601,14 @@ vars.Add('CONOPT_ENVVAR'
 
 vars.Add(PackageVariable("IPOPT_PREFIX"
 	,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
-,pathlib.Path(os.environ['HOME'])/'.local'
+	,default_user_local
+))
+
+#------- HIGHS -------
+
+vars.Add(PackageVariable("HIGHS_PREFIX"
+	,"Prefix for your HiGHS install (if not found via default pkg-config path)"
+	,default_user_local
 ))
 
 #
@@ -971,13 +1070,13 @@ def set_optional(env,comp,reason=None,active=None):
 
 AddMethod(Environment, set_optional, 'set_optional')
 
-for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','mmio','blas','signals','doc','doc_build','pcre','installer']:
+for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','lzma','mmio','blas','signals','doc','doc_build','pcre','installer']:
 	env.set_optional(opt)
 
 if not env['WITH_DOC']:
 	env.set_optional('doc_build',reason='documentation was disabled',active=False)
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS':
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS':
 	env.set_optional(solv,active = solv in env['WITH_SOLVERS'], reason="Not selected (see option WITH_SOLVERS)")
 	
 
@@ -1133,6 +1232,59 @@ def CheckScrollkeeperConfig(context):
 	context.env['OMFDIR']=dir
 	context.Result("OK, %s" % dir)
 	return 1
+
+def TryPkgConfigPackages(env, packages):
+	"""
+	Try to import compiler/linker flags for one of the given package names
+	using pkg-config (or pkgconf). Returns True on success.
+	"""
+	for tool in ['pkg-config','pkgconf']:
+		if shutil.which(tool) is None:
+			continue
+		for pkg in packages:
+			env1 = env.Clone()
+			env1['CPPPATH'] = None
+			env1['LIBPATH'] = None
+			env1['LIBS'] = None
+			try:
+				env1.ParseConfig([tool,pkg,'--cflags','--libs'])
+				if env1.get('CPPPATH'):
+					env.AppendUnique(CPPPATH=env1['CPPPATH'])
+				if env1.get('LIBPATH'):
+					env.AppendUnique(LIBPATH=env1['LIBPATH'])
+				if env1.get('LIBS'):
+					env.AppendUnique(LIBS=env1['LIBS'])
+				return True
+			except Exception:
+				pass
+	return False
+
+def SnapshotBuildFlags(env):
+	"""Snapshot selected build flags so temporary checks can be reverted."""
+	out = {}
+	for k in ['CPPPATH','LIBPATH','LIBS']:
+		v = env.get(k)
+		out[k] = None if v is None else list(v)
+	return out
+
+def RestoreBuildFlags(env, snap):
+	for k in ['CPPPATH','LIBPATH','LIBS']:
+		v = snap.get(k)
+		if v is None:
+			if k in env:
+				del env[k]
+		else:
+			env[k] = v
+
+def AddedBuildFlags(before, after):
+	"""Return ordered unique additions in 'after' relative to 'before'."""
+	b = [] if before is None else before
+	a = [] if after is None else after
+	added = []
+	for x in a:
+		if x not in b and x not in added:
+			added.append(x)
+	return added
 
 #----------------
 # General purpose library-and-header test
@@ -2201,9 +2353,8 @@ if conf.CheckGcc():
 	conf.env['HAVE_GCC']=True;
 	if env.get('WITH_GCCVISIBILITY') and conf.CheckGccVisibility():
 		conf.env['HAVE_GCCVISIBILITY']=True;
-		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
-		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
-	conf.env.Append(CCFLAGS=['-Wall','-O2','-g'])
+		conf.env.AppendUnique(CCFLAGS=['-fvisibility=hidden'])
+	conf.env.AppendUnique(CCFLAGS=['-Wall','-O2','-g'])
 
 # Catching SIGINT
 
@@ -2266,6 +2417,9 @@ if conf.env['STATIC_TCLTK']:
 if conf.env['WITH_CUNIT']:
 	conf.env.set_optional('cunit',active=conf.CheckCUnit(),reason='not found')
 
+# fnmatch (used by test runner glob support fallback)
+conf.env['HAVE_FNMATCH'] = conf.CheckDeclaration('fnmatch', '#include <fnmatch.h>\n')
+
 # DMALLOC
 
 if conf.env['WITH_DMALLOC']:
@@ -2303,11 +2457,61 @@ if conf.env['WITH_CONOPT']:
 
 # ZLIB
 
+conf.env['ZLIB_CPPPATH'] = []
+conf.env['ZLIB_LIBPATH'] = []
+conf.env['ZLIB_LIBS'] = []
 if conf.env['WITH_ZLIB']:
-	if not conf.CheckCHeader('zlib.h'):
-		conf.env.set_optional('zlib',active=False,reason="zlib.h not found")
-	if not conf.CheckLib('z'):
-		conf.env.set_optional('zlib',active=False,reason='library libz not found')
+	zlib_saved = SnapshotBuildFlags(conf.env)
+	zlib_ok = False
+	zlib_reason = "zlib not found"
+	if TryPkgConfigPackages(conf.env,['zlib']):
+		if conf.CheckCHeader('zlib.h'):
+			zlib_ok = True
+		else:
+			zlib_reason = "zlib.h not found"
+	else:
+		if not conf.CheckCHeader('zlib.h'):
+			zlib_reason = "zlib.h not found"
+		elif not conf.CheckLib('z'):
+			zlib_reason = "library libz not found"
+		else:
+			zlib_ok = True
+	zlib_after = SnapshotBuildFlags(conf.env)
+	if zlib_ok:
+		conf.env['ZLIB_CPPPATH'] = AddedBuildFlags(zlib_saved['CPPPATH'],zlib_after['CPPPATH'])
+		conf.env['ZLIB_LIBPATH'] = AddedBuildFlags(zlib_saved['LIBPATH'],zlib_after['LIBPATH'])
+		conf.env['ZLIB_LIBS'] = AddedBuildFlags(zlib_saved['LIBS'],zlib_after['LIBS'])
+	RestoreBuildFlags(conf.env,zlib_saved)
+	conf.env.set_optional('zlib',active=zlib_ok,reason=zlib_reason)
+
+# LZMA
+
+conf.env['LZMA_CPPPATH'] = []
+conf.env['LZMA_LIBPATH'] = []
+conf.env['LZMA_LIBS'] = []
+if conf.env['WITH_LZMA']:
+	lzma_saved = SnapshotBuildFlags(conf.env)
+	lzma_ok = False
+	lzma_reason = "liblzma not found"
+	if TryPkgConfigPackages(conf.env,['liblzma','xz']):
+		if conf.CheckCHeader('lzma.h'):
+			lzma_ok = True
+		else:
+			lzma_reason = "lzma.h not found"
+	else:
+		if not conf.CheckCHeader('lzma.h'):
+			lzma_reason = "lzma.h not found"
+		elif not conf.CheckLib('lzma'):
+			lzma_reason = "library liblzma not found"
+		else:
+			lzma_ok = True
+	lzma_after = SnapshotBuildFlags(conf.env)
+	if lzma_ok:
+		conf.env['LZMA_CPPPATH'] = AddedBuildFlags(lzma_saved['CPPPATH'],lzma_after['CPPPATH'])
+		conf.env['LZMA_LIBPATH'] = AddedBuildFlags(lzma_saved['LIBPATH'],lzma_after['LIBPATH'])
+		conf.env['LZMA_LIBS'] = AddedBuildFlags(lzma_saved['LIBS'],lzma_after['LIBS'])
+	RestoreBuildFlags(conf.env,lzma_saved)
+	conf.env.set_optional('lzma',active=lzma_ok,reason=lzma_reason)
 
 # LSODE needs Fortran; no fortran then no LSODE
 
@@ -2361,11 +2565,6 @@ env = conf.Finish()
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files
 
-def cygpath(mypath):
-	cmd = [pathlib.Path(shutil.which('cygpath')),'-w',mypath]
-	print(f"CMD = {cmd}")
-	return subprocess.run(cmd,check=1,capture_output=1,encoding="utf=8").stdout.strip("\r\n \t")
-
 def get_dlldirs(pathlist):
 	print("start:",pathlist)
 	l1 = str(pathlist).split(os.pathsep)
@@ -2417,7 +2616,7 @@ subst_dict = {
 	, '@PYTHON@' : python_exe
 	, '@PYVERSION@' : pyversion
 	, '@SOURCE_ROOT@':c_escape(os.path.abspath(str(env.Dir("#"))))
-	, '@WITH_GRAPHVIZ@': str(int(env.get('WITH_GRAPHVIZ')))
+	, '@ASC_WITH_GRAPHVIZ@': str(int(env.get('WITH_GRAPHVIZ')))
 #define ASC_ABSOLUTE_PATHS @ASC_ABSOLUTE_PATHS@
 #if ASC_ABSOLUTE_PATHS
 # define ASCENDDIST_DEFAULT "@ASCENDDIST_DEFAULT@"
@@ -2460,17 +2659,22 @@ if env.get('WITH_DOC'):
 
 # bool options...
 for k,v in {
-		'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
-		,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
-		,'ASC_WITH_MMIO':env['WITH_MMIO']
-		,'ASC_WITH_ZLIB':env['WITH_ZLIB']
-		,'ASC_WITH_PCRE':env['WITH_PCRE']
-		,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
+			'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
+			,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
+			,'ASC_WITH_MMIO':env['WITH_MMIO']
+			,'ASC_WITH_ZLIB':env['WITH_ZLIB']
+			,'ASC_WITH_LZMA':env['WITH_LZMA']
+			,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
+			,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
+			,'ASC_WITH_PCRE':env['WITH_PCRE']
+			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
+		,'HAVE_GCCVISIBILITY':env.get('HAVE_GCCVISIBILITY')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
-		,'HAVE_ERF':env.get('HAVE_ERF')
-		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
+			,'HAVE_ERF':env.get('HAVE_ERF')
+			,'HAVE_FNMATCH':env.get('HAVE_FNMATCH')
+			,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
 		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY',0)
 		,'HAVE_SNPRINTF':env.get('HAVE_SNPRINTF')
@@ -2485,9 +2689,6 @@ for k,v in {
 
 if with_latex2html:
 	env['WITH_LATEX2HTML']=1
-
-if 'HAVE_GCCVISIBILITY' in env:
-	subst_dict['@HAVE_GCCVISIBILITY@'] = "1"
 
 env.Append(SUBST_DICT=subst_dict)
 
@@ -2531,7 +2732,7 @@ SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, 
 env.AppendUnique(CPPPATH=['#'])
 
 if env['DEBUG']:
-	env.Append(
+	env.AppendUnique(
 		CCFLAGS=['-g']
 		,LINKFLAGS=['-g']
 	)
@@ -2540,8 +2741,8 @@ if env['ADDCCFLAGS']:
 	env.Append(CCFLAGS=env['ADDCCFLAGS'])
 
 if env['GCOV']:
-	env.Append(
-		CPPFLAGS=['-g','-fprofile-arcs','-ftest-coverage']
+	env.AppendUnique(
+		CCFLAGS=['-g','-fprofile-arcs','-ftest-coverage']
 		, LIBS=['gcov']
 		, LINKFLAGS=['-fprofile-arcs','-ftest-coverage']
 	)
@@ -2571,6 +2772,18 @@ if env['WITH_TCLTK']:
 # BASE/GENERIC SUBDIRECTORIES
 
 libascend_env = env.Clone()
+if env.get('ZLIB_CPPPATH'):
+	libascend_env.AppendUnique(CPPPATH=env['ZLIB_CPPPATH'])
+if env.get('ZLIB_LIBPATH'):
+	libascend_env.AppendUnique(LIBPATH=env['ZLIB_LIBPATH'])
+if env.get('ZLIB_LIBS'):
+	libascend_env.AppendUnique(LIBS=env['ZLIB_LIBS'])
+if env.get('LZMA_CPPPATH'):
+	libascend_env.AppendUnique(CPPPATH=env['LZMA_CPPPATH'])
+if env.get('LZMA_LIBPATH'):
+	libascend_env.AppendUnique(LIBPATH=env['LZMA_LIBPATH'])
+if env.get('LZMA_LIBS'):
+	libascend_env.AppendUnique(LIBS=env['LZMA_LIBS'])
 
 dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear','bintokens']
 
@@ -2595,7 +2808,7 @@ if env['WITH_MMIO']:
 
 # FIXME want to move these bits to ascend/SConscript
 
-libascend_env.Append(
+libascend_env.AppendUnique(
 	CPPPATH=['#']
 	,LIBS=['m']
 )
@@ -2635,9 +2848,7 @@ env.Alias('libascend',libtargets)
 # UNIT TESTS (C CODE)
 
 test_env = env.Clone()
-test_env.Append(
-	CPPPATH="#"
-)
+test_env.AppendUnique(CPPPATH=['#'])
 
 if env['WITH_CUNIT']:
 	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']
@@ -2689,6 +2900,9 @@ ascendconfig = env.Substfile('ascend-config.in')
 
 a4cmd = env.Substfile('a4.in')
 env.AddPostAction(a4cmd, 'chmod 755 $TARGET')
+if env.get('WITH_CUNIT'):
+	test_runner = env.File('#/test/test' + env.subst('$PROGSUFFIX'))
+	env.Depends(test_runner, a4cmd)
 
 #------------------------------------------------------
 # INSTALLATION

@@ -1,0 +1,73 @@
+REQUIRE "atoms.a4l";
+
+(* Test model for structured variable-path mapping in MPS export and HiGHS solve checks. *)
+MODEL lp_row(
+	x1 WILL_BE factor;
+	x2 WILL_BE factor;
+	a1 WILL_BE factor_constant;
+	a2 WILL_BE factor_constant;
+	rhs WILL_BE factor_constant;
+);
+	s IS_A factor;
+	eqn: a1*x1 + a2*x2 + s = rhs;
+METHODS
+METHOD bound_self;
+	s.lower_bound := 0;
+END bound_self;
+END lp_row;
+
+MODEL lp_structured;
+	x[1..2] IS_A factor;
+	c[1..2] IS_A factor_constant;
+	a[1..2][1..2] IS_A factor_constant;
+	b[1..2] IS_A factor_constant;
+
+	c[1] :== -3;
+	c[2] :== -2;
+
+	a[1][1] :== 1;
+	a[1][2] :== 1;
+	b[1] :== 4;
+
+	a[2][1] :== 1;
+	a[2][2] :== 0;
+	b[2] :== 2;
+
+	FOR i IN [1..2] CREATE
+		row[i] IS_A lp_row(x[1], x[2], a[i][1], a[i][2], b[i]);
+	END FOR;
+
+	obj: MINIMIZE SUM[c[j]*x[j] | j IN [1..2]];
+
+METHODS
+
+METHOD self_test;
+	ASSERT abs(x[1] - 2) < 1e-7;
+	ASSERT abs(x[2] - 2) < 1e-7;
+	FOR i IN [1..2] DO
+		ASSERT abs(row[i].s) < 1e-7;
+	END FOR;
+END self_test;
+
+METHOD bound_self;
+	FOR j IN [1..2] DO
+		x[j].lower_bound := 0;
+	END FOR;
+	FOR i IN [1..2] DO
+		RUN row[i].bound_self;
+	END FOR;
+END bound_self;
+
+METHOD default_self;
+	x[1] := 0.5;
+	x[2] := 0.5;
+	row[1].s := 3.0;
+	row[2].s := 1.5;
+END default_self;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+END on_load;
+
+END lp_structured;

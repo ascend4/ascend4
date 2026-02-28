@@ -85,13 +85,9 @@ class StudyWin:
 			self.taint_entry(self.nsteps,good=1)
 
 		# fill in upper/.lower bound
-		_u = self.instance.getType().getPreferredUnits();
-		if _u is None:
-			_conversion = 1
-			_u = self.instance.getDimensions().getDefaultUnits().getName().toString()
-		else:
-			_conversion = _u.getConversion() # displayvalue x conversion = SI
-			_u = _u.getName().toString()
+		_u = self.browser.get_instance_display_units(self.instance)
+		_conversion = _u.getConversion()
+		_u = _u.getName().toString()
 
 		_arr = {self.lowerb: self.instance.getRealValue()
 			,self.upperb: self.instance.getUpperBound() # this upper bound is probably stoopid
@@ -329,7 +325,8 @@ class StudyWin:
 		newtext = CelsiusUnits.convert_edit(self.instance, newtext, False)
 		##### CELSIUS TEMPERATURE WORKAROUND
 		# FIXME Add missing units if they have not been entered.
-		i = RealAtomEntry(self.instance, newtext)
+		_default_units = self.browser.get_instance_display_units(self.instance)
+		i = RealAtomEntry(self.instance, newtext, _default_units)
 		_msg = None
 		try:
 			i.checkEntry()
@@ -421,6 +418,8 @@ class StudyWin:
 
 			GObject.idle_add(self.solve_update, reporter, i)
 			try:
+				ascpy.setSolverProgressReporter(reporter)
+				ascpy.setSolverInterrupt(False)
 				browser.sim.presolve(browser.solver)
 				status = browser.sim.getStatus()
 				while status.isReadyToSolve() and not self.solve_interrupt:
@@ -436,6 +435,12 @@ class StudyWin:
 				browser.sim.postsolve(status)
 			except RuntimeError as err:
 				browser.reporter.reportError(str(err))
+			finally:
+				try:
+					ascpy.setSolverInterrupt(False)
+					ascpy.setSolverProgressReporter(None)
+				except Exception:
+					pass
 
 			i += 1
 

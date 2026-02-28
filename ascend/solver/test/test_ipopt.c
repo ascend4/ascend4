@@ -61,6 +61,16 @@ static void test_ipopt(const char *filenamestem){
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ipopt");
 
+	/* assign solver early so we can skip tests if IPOPT isn't available */
+	const char *solvername = "IPOPT";
+	package_load("ipopt",NULL);
+	int index = slv_lookup_client(solvername);
+	if(index == -1){
+		CONSOLE_DEBUG("Skipping IPOPT test '%s': solver not available",filenamestem);
+		Asc_CompilerDestroy();
+		return;
+	}
+
 	/* load the file */
 	char path[PATH_MAX];
 	strcpy((char *)path,"test/ipopt/");
@@ -93,15 +103,6 @@ static void test_ipopt(const char *filenamestem){
 	CU_ASSERT(pe==Proc_all_ok);
 
 	/* assign solver */
-	const char *solvername = "IPOPT";
-	package_load("ipopt",NULL);
-	int index = slv_lookup_client(solvername);
-	if(index == -1){
-		sim_destroy(siminst);
-		Asc_CompilerDestroy();
-		CU_FAIL_FATAL("Unable to look up IPOPT solver");
-	}
-
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
 
@@ -152,7 +153,9 @@ static void test_ipopt(const char *filenamestem){
 	X T(test11) \
 	X T(test12) \
 	X T(test13) \
-	X T(test14)
+	X T(test14) \
+	X T(lp1) \
+	X T(lp_structured)
 //	X T(test15) --- FAILS, need to work out why
 // X T(formula) --- FAILS, need to work out why.
 
@@ -172,4 +175,3 @@ TESTS1(T,X)
 
 REGISTER_TESTS_SIMPLE(solver_ipopt, TESTS)
 #undef X
-

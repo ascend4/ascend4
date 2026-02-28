@@ -1,0 +1,54 @@
+REQUIRE "atoms.a4l";
+
+(*
+	First-step DATASET model for Melbourne (station 086282) DNI/GHI data.
+	This model uses weather data as-received from 'marcoernst.net':
+		johnpye/dataset/086282TMY_60min.csv.xz
+*)
+MODEL melbourne_dni_ghi_dataset;
+	timestep IS_A set OF integer_constant;
+	dni[timestep] IS_A real_constant;
+	ghi[timestep] IS_A real_constant;
+
+	annual_dni_sum IS_A solver_var;
+	annual_ghi_sum IS_A solver_var;
+	daily_avg_dni IS_A solver_var;
+	daily_avg_ghi IS_A solver_var;
+	dummy IS_A solver_var;
+
+	days_in_year IS_A integer_constant;
+	days_in_year :== 365;
+
+	DATASET melbourne FROM "johnpye/datareader/086282TMY_60min_dni_ghi.csv";
+		INDEX timestep FROM COLUMN t IS_A integer_constant;
+		dni[timestep] FROM COLUMN DNI IS_A real_constant;
+		ghi[timestep] FROM COLUMN GHI IS_A real_constant;
+	END DATASET;
+
+	z_dummy: dummy = 0;
+
+METHODS
+METHOD on_load;
+	RUN default_self;
+	FIX annual_dni_sum, annual_ghi_sum, daily_avg_dni, daily_avg_ghi;
+	FREE dummy;
+
+	annual_dni_sum := 0;
+	annual_ghi_sum := 0;
+
+	FOR i IN timestep DO
+		annual_dni_sum := annual_dni_sum + dni[i];
+		annual_ghi_sum := annual_ghi_sum + ghi[i];
+	END FOR;
+
+	daily_avg_dni := annual_dni_sum / days_in_year;
+	daily_avg_ghi := annual_ghi_sum / days_in_year;
+END on_load;
+
+METHOD self_test;
+	ASSERT abs(annual_dni_sum - 1492411.1848636186) < 1e-6;
+	ASSERT abs(annual_ghi_sum - 1559323.2651236965) < 1e-6;
+	ASSERT abs(daily_avg_dni - 4088.79776674964) < 1e-6;
+	ASSERT abs(daily_avg_ghi - 4272.11853458547) < 1e-6;
+END self_test;
+END melbourne_dni_ghi_dataset;

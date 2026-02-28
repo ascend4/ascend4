@@ -16,7 +16,12 @@ PROVIDE "z-anontype.a4c";
  * To test with this file, load it and compile test_all_anon.
  *)
 
+(* MIGRATED: compiler_instantiate_anontype (anontype_sc). *)
+(*
 CONSTANT st REFINES symbol_constant :== 'one';
+*)
+(* MIGRATED: compiler_instantiate_anontype (anontype_sc). *)
+(*
 MODEL test_sc_anon; (* ok *)
   a,b,c,d,e,f,g IS_A symbol_constant;
   a :== 'one';
@@ -31,9 +36,15 @@ MODEL test_sc_anon; (* ok *)
   D :== 'three';
   F,G IS_REFINED_TO st;
 END test_sc_anon;
+*)
 
+(* MIGRATED: compiler_instantiate_anontype (anontype_bc). *)
+(*
 CONSTANT bt REFINES boolean_constant;
 CONSTANT sbt REFINES boolean_constant :== TRUE;
+*)
+(* MIGRATED: compiler_instantiate_anontype (anontype_bc). *)
+(*
 MODEL test_bc_anon; (*ok*)
   a,b,e IS_A boolean_constant;
   c,d IS_A boolean_constant;
@@ -48,9 +59,15 @@ MODEL test_bc_anon; (*ok*)
   A :== TRUE;
   B :== FALSE;
 END test_bc_anon;
+*)
 
+(* MIGRATED: compiler_instantiate_anontype (anontype_ic). *)
+(*
 CONSTANT it REFINES integer_constant;
 CONSTANT sit REFINES integer_constant :== 2;
+*)
+(* MIGRATED: compiler_instantiate_anontype (anontype_ic). *)
+(*
 MODEL test_ic_anon;
   a,b,c,d IS_A integer_constant;
   e,f IS_A it;
@@ -71,6 +88,7 @@ MODEL test_ic_anon;
   (* e undefined *)
   F :== 2;
 END test_ic_anon;
+*)
 
 MODEL test_rc_anon;
   a,b,c,d,e,f,g,h IS_A real_constant;
@@ -100,6 +118,8 @@ MODEL test_ra_anon;
   b,d IS_REFINED_TO solver_var;
 END test_ra_anon;
 
+(* MIGRATED: compiler_instantiate_anontype (anontype_set). *)
+(*
 MODEL test_set_anon;
 
   c,C,zC IS_A set OF symbol_constant;
@@ -140,7 +160,9 @@ MODEL test_set_anon;
   zD :== INTERSECTION[zE,[5]]; (* empty *)
 
 END test_set_anon;
+*)
 
+(* NOT MIGRATED: depends on migrated test_sc_anon/test_bc_anon/test_ic_anon/test_set_anon; deferred. *)
 MODEL test_c_anon;
   r IS_A test_rc_anon;
   s IS_A test_sc_anon;
@@ -158,6 +180,8 @@ END test_c_anon;
 ATOM tr REFINES real;
 END tr;
 
+(* MIGRATED: compiler_instantiate_anontype (anontype_ai1). *)
+(*
 MODEL test_ai_anon1;
   a[1..3],c[1..3] IS_A real;
   b[2..3] IS_A real;
@@ -169,7 +193,9 @@ MODEL test_ai_anon1;
   h[1..3] IS_A integer;
   i[1..3] IS_A integer;
 END test_ai_anon1;
+*)
 
+(* NOT MIGRATED: deferred due to compiler cleanup assert (see compiler_instantiate_anontype). *)
 MODEL test_ai_anon2;
   a[5][1..3],c[5][1..3] IS_A real;
   b[5][2..3] IS_A real;
@@ -191,6 +217,7 @@ MODEL test_ai_anon2;
   m[2..4] IS_A real;
 END test_ai_anon2;
 
+(* NOT MIGRATED: deferred due to compiler cleanup assert (see compiler_instantiate_anontype). *)
 MODEL test_ai_anon3;
   a[5][1..3][7],c[5][1..3][7] IS_A real;
   b[5][2..3][7] IS_A real;
@@ -207,6 +234,7 @@ MODEL test_ai_anon3;
   m[2..4][7] IS_A real;
 END test_ai_anon3;
 
+(* NOT MIGRATED: deferred due to compiler cleanup assert (see compiler_instantiate_anontype). *)
 MODEL test_ae_anon3;
 
   s IS_A set OF symbol_constant;
@@ -227,6 +255,7 @@ MODEL test_ae_anon3;
 
 END test_ae_anon3;
 
+(* NOT MIGRATED: deferred due to compiler cleanup assert (see compiler_instantiate_anontype). *)
 MODEL test_rel_anon;
   x IS_A real;
   y[1] IS_A real;
@@ -236,6 +265,7 @@ MODEL test_rel_anon;
   x = x; (* silly but buildable *)
 END test_rel_anon;
 
+(* NOT MIGRATED: deferred due to compiler cleanup assert (see compiler_instantiate_anontype). *)
 MODEL test_lrel_anon;
   x IS_A boolean;
   y[1] IS_A boolean;
@@ -245,6 +275,7 @@ MODEL test_lrel_anon;
   x == x; (* silly but buildable *)
 END test_lrel_anon;
 
+(* NOT MIGRATED: deferred due to compiler cleanup assert (see compiler_instantiate_anontype). *)
 MODEL test_dummy_anon;
   i IS_A integer_constant;
   i:==1;
@@ -256,18 +287,28 @@ MODEL test_dummy_anon;
   END SELECT;
 END test_dummy_anon;
 
+(* MIGRATED: compiler_instantiate_anontype (anontype_u, anontype_u2). *)
+(*
 UNIVERSAL ATOM ut REFINES real;
 END ut;
+*)
 
+(* MIGRATED: compiler_instantiate_anontype (anontype_u). *)
+(*
 MODEL test_u_anon;
 a,b,c IS_A ut;
 b2 IS_A real;
 END test_u_anon;
+*)
 
+(* MIGRATED: compiler_instantiate_anontype (anontype_u2). *)
+(*
 MODEL test_u2_anon;
 p,q IS_A test_u_anon;
 END test_u2_anon;
+*)
 
+(* NOT MIGRATED: deferred due to compiler cleanup assert (see compiler_instantiate_anontype). *)
 MODEL test_m_anon;
   tic IS_A  test_ic_anon;
   Tic IS_A  test_ic_anon;
@@ -281,6 +322,7 @@ td IS_A  test_dummy_anon;
 Td IS_A  test_dummy_anon;
 END test_m_anon;
 
+(* NOT MIGRATED: deferred due to compiler cleanup assert (see compiler_instantiate_anontype). *)
 MODEL test_all_anon;
 tsc IS_A  test_sc_anon;
 tbc IS_A  test_bc_anon;

@@ -31,11 +31,15 @@ public:
 	const std::string& getName() const;
 };
 
+class SolverReporter;
+
 /**
 	Some global functions
 */
 void registerStandardSolvers();
 //void registerSolver(SlvRegistration regfuncptr);
 const std::vector<Solver> getSolvers();
+void setSolverInterrupt(const bool &interrupt);
+void setSolverProgressReporter(SolverReporter *reporter);
 
 #endif

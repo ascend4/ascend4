@@ -56,9 +56,10 @@ class ObserverColumn:
 				name = browser.sim.getInstanceName(instance)
 
 		if units is None:
-			units = instance.getType().getPreferredUnits()
-		if units is None:
-			units = instance.getType().getDimensions().getDefaultUnits()
+			if browser is not None:
+				units = browser.get_instance_display_units(instance)
+			else:
+				units = instance.getDisplayUnits()
 
 		uname = str(units.getName())
 
@@ -266,7 +267,7 @@ class ObserverTab:
 	def plot(self,x=None,y=None):
 		"""create a plot from two/more columns in the ObserverTable"""
 		import matplotlib
-		matplotlib.use('module://backend_gtk3',False)
+		matplotlib.use('GTK3Agg', force=False)
 		import pylab
 		pylab.ioff()
 
@@ -370,50 +371,70 @@ class ObserverTab:
 				start+=1
 
 		fig = pylab.figure()
+		def _series_type(col):
+			try:
+				return str(col.instance.getType().getName())
+			except Exception:
+				return "unknown"
 
-		if len(y) == 2:
-			# two y vectors: use two different y axes on one plot
-			ax1 = pylab.subplot(111)   
-			# TODO: second y axis label gets cut off?
-			#pylab.axis('auto')   
-			ax1.set_xlabel(x.title)
-			ax1.set_ylabel(y[0].title,labelpad=20)
-			l1 = ax1.plot(A[:,0],A[:,1],'-bo',label=y[0].title)
-			ax2 = ax1.twinx()  
-			l2 = ax2.plot(A[:,0],A[:,2],'-ro',label=y[1].title)
-			ax2.set_ylabel(y[1].title,labelpad=20)
-			ax2.yaxis.tick_right()
-			l = l1+l2
-			labels = [i.get_label() for i in l]
-			leg = ax1.legend(l,labels,loc='upper left')
-			leg.get_frame().set_alpha(0.3)
-			leg.draggable()
-		else :  
-			color_cycle = ['b','r','g','y']
+		def _series_units(col):
+			try:
+				return str(col.uname)
+			except Exception:
+				return ""
 
-			sharex = None
-			j = 0.83/len(y)
-			for i in range(len(y)):
-				if i == 0:
-					ax = pylab.subplot(len(y),1,i+1)
-					sharex = ax
-				else:
-					ax = pylab.subplot(len(y),1,i+1,sharex=sharex)
-				#ax[i] = fig.add_axes([0.27, 0.08+(i*(j+0.02)), 0.65, j-0.01], **axprops)
-				pylab.plot(A[:,0],A[:,i+1],'-'+color_cycle[i%4]+'o',label=y[i].title)
+		def _group_ylabel(cols):
+			type_name = _series_type(cols[0]) if cols else "unknown"
+			names = ", ".join([c.name for c in cols])
+			units = sorted(set([u for u in [_series_units(c) for c in cols] if u != ""]))
+			if len(units) > 0:
+				return "%s: %s [%s]" % (type_name, names, ", ".join(units))
+			return "%s: %s" % (type_name, names)
 
-				# put the x-axis label only on the last plot
-				if i+1 != len(y):
-					pylab.setp(ax.get_xticklabels(),visible=False)
-				else:
-					ax.set_xlabel(x.title)
-	
-				# only use a y-axis label if it's a single plot, else put legend on each plot
-				if len(y)==1:
-					pylab.ylabel(y[i].title)
-				else:
-					leg = pylab.legend(loc='upper left')  
-					leg.get_frame().set_alpha(0.3)
+		def _legend_draggable(leg):
+			if leg is None:
+				return
+			if hasattr(leg, "set_draggable"):
+				leg.set_draggable(True)
+			elif hasattr(leg, "draggable"):
+				leg.draggable()
+
+		# Group y-series by ASCEND type while preserving user-selected order.
+		grouped = {}
+		group_order = []
+		for yi, ycol in enumerate(y):
+			t = _series_type(ycol)
+			if t not in grouped:
+				grouped[t] = []
+				group_order.append(t)
+			grouped[t].append((yi, ycol))
+
+		color_cycle = ['b','r','g','y','c','m','k']
+		n_groups = len(group_order)
+		sharex = None
+		for gi, gkey in enumerate(group_order):
+			if gi == 0:
+				ax = pylab.subplot(n_groups,1,gi+1)
+				sharex = ax
+			else:
+				ax = pylab.subplot(n_groups,1,gi+1,sharex=sharex)
+
+			group_entries = grouped[gkey]
+			group_cols = [c for _, c in group_entries]
+			for yi, ycol in group_entries:
+				color = color_cycle[yi % len(color_cycle)]
+				ax.plot(A[:,0],A[:,yi+1],'-'+color+'o',label=ycol.title)
+
+			if gi + 1 != n_groups:
+				pylab.setp(ax.get_xticklabels(),visible=False)
+			else:
+				ax.set_xlabel("X: %s" % x.title)
+
+			ax.set_ylabel(_group_ylabel(group_cols),labelpad=20)
+			leg = ax.legend(loc='upper left')
+			if leg is not None:
+				leg.get_frame().set_alpha(0.3)
+			_legend_draggable(leg)
 
 		# FIXME why can't I drag the legend?
 
@@ -583,7 +604,10 @@ class ObserverTab:
 			if _delete_row:
 				self.on_delete_row()
 				return True
-			self.treecontext.popup( None, None, None, _button, event.time)
+			if event.type == Gdk.EventType.BUTTON_PRESS:
+				self.treecontext.popup_at_pointer(event)
+			else:
+				self.treecontext.popup( None, None, None, _button, event.time)
 			return
 		
 		self.view.grab_focus()
@@ -597,7 +621,7 @@ class ObserverTab:
 		elif self.alive is False:
 			self.unitsmenuitem.set_sensitive(False)
 			self.studycolumnmenuitem.set_sensitive(False)
-			self.treecontext.popup( None, None, None, _button, event.time)
+			self.treecontext.popup_at_pointer(event)
 		else:
 			# Since we have the instance data in self.cols and treeview points us to the
 			# ClickableTreeColumn, we need to match the two.
@@ -610,7 +634,7 @@ class ObserverTab:
 				return 0
 			if self.current_instance.isFixed() == False:
 				self.studycolumnmenuitem.set_sensitive(False)
-			self.treecontext.popup(None, None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True), None,_button, event.time)
+			self.treecontext.popup_at_pointer(event)
 		return 1
 		
 	def on_study_column_activate(self, *args):
@@ -688,30 +712,20 @@ class ObserverTab:
 	def on_units_activate(self, *args):
 		if self.current_instance is not None:
 			T = self.current_instance.getType()
-			_un = UnitsDialog(self.browser,T)
+			_un = UnitsDialog(self.browser,T,self.current_instance)
 			_un.run()
 	
 	def units_refresh(self, instance_type):
 		for _col in list(self.cols.values()):
-			_units = None
-			_units = instance_type.getPreferredUnits()
-			if _units is None:
-				_units = instance_type.getDimensions().getDefaultUnits()
-			_uname = str(_units.getName())
-			
 			_col_type = _col.instance.getType()
-			_col_units = _col_type.getPreferredUnits()
-			if _col_units is None:
-				_col_units = _col_type.getDimensions().getDefaultUnits()
-			_col_uname = str(_col_units.getName())
-			
-			if _col_uname == _uname:
+			if instance_type is None or str(_col_type.getName()) == str(instance_type.getName()):
+				_units = self.browser.get_instance_display_units(_col.instance)
+				_uname = str(_units.getName())
 				if self.browser == None:
 					name = "UNNAMED"
 				else:
 					name = self.browser.sim.getInstanceName(_col.instance)
 
-				_uname = str(_units.getName())
 				##### CELSIUS TEMPERATURE WORKAROUND
 				if _col.instance.getType().isRefinedReal() and str(_col.instance.getType().getDimensions()) == 'TMP':
 					units = Preferences().getPreferredUnitsOrigin(str(_col.instance.getType().getName()))

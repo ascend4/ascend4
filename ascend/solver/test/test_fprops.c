@@ -173,10 +173,10 @@ int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 	if(status.diverged)CONSOLE_DEBUG("Solver diverged");
 	if(status.inconsistent)CONSOLE_DEBUG("System is inconsistent");
 	if(status.iteration_limit_exceeded)CONSOLE_DEBUG("Solver exceeded iteration limit");
-	if(status.calc_ok != 0)CONSOLE_DEBUG("Solver had residual calculation errors");
+	if(status.calc_ok == 0)CONSOLE_DEBUG("Solver had residual calculation errors");
 	if(status.over_defined)CONSOLE_DEBUG("Solver system is over-defined");
 	if(status.under_defined)CONSOLE_DEBUG("Solver system is under-defined");
-	if(status.iteration_limit_exceeded)CONSOLE_DEBUG("Solver exceeded time limit");
+	if(status.time_limit_exceeded)CONSOLE_DEBUG("Solver exceeded time limit");
 
 	return SLVREQ_SOLVE_FAIL;
 }
@@ -268,4 +268,3 @@ TESTS1(T,X)
 
 REGISTER_TESTS_SIMPLE(solver_fprops, TESTS)
 #undef X
-

@@ -1,0 +1,69 @@
+REQUIRE "atoms.a4l";
+
+(* Test model for mixed-integer export/solve paths.
+   Includes:
+   - integer vars (x,y), with y relaxed to exercise mixed type handling
+   - <= and >= constraints (c_le, c_ge)
+   - an excluded relation (c_skip.included := FALSE)
+   - inconsistent/out-of-range initial bounds and values to exercise bound repair
+*)
+MODEL mip_mixed;
+	x IS_A solver_int;
+	y IS_A solver_int;
+	z IS_A solver_var;
+	w IS_A solver_var;
+	v IS_A solver_var;
+	u IS_A solver_var;
+
+	c_eq1: x + y + z = 4;
+	c_eq2: x + w = 2;
+	c_eq3: v = 3;
+	c_le: x + u <= 100;
+	c_ge: x + u >= -100;
+	c_skip: y + v <= 100;
+
+	obj: MINIMIZE -3*x - 2*y + 0.2*z + 0.3*w + 0.1*v;
+
+METHODS
+
+METHOD bound_self;
+	x.lower_bound := 3;
+	x.upper_bound := 1;
+
+	y.lower_bound := 0;
+	y.upper_bound := 2;
+
+	z.lower_bound := 0;
+	z.upper_bound := 3;
+
+	w.lower_bound := 0;
+	w.upper_bound := 2;
+
+	v.lower_bound := 0;
+	v.upper_bound := 3;
+END bound_self;
+
+METHOD default_self;
+	x := 0;
+	y := 5;
+	z := 5;
+	w := 5;
+	v := 5;
+END default_self;
+
+METHOD type_self;
+	y.relaxed := TRUE;
+END type_self;
+
+METHOD include_self;
+	c_skip.included := FALSE;
+END include_self;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+	RUN type_self;
+	RUN include_self;
+END on_load;
+
+END mip_mixed;

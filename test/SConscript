@@ -16,21 +16,34 @@ test_env.Append(
 )
 
 if test_env.get('WITH_PCRE'):
+	_pcre_cpp = test_env.get('PCRE_CPPPATH')
+	_pcre_libpath = test_env.get('PCRE_LIBPATH')
 	test_env.AppendUnique(
-		CPPPATH=test_env.get('PCRE_CPPPATH')
-		,LIBS=test_env['PCRE_LIBS']
-		,LIBPATH=test_env.get('PCRE_LIBPATH')
+		LIBS=test_env['PCRE_LIBS']
 	)
+	if _pcre_cpp:
+		test_env.AppendUnique(CPPPATH=_pcre_cpp)
+	if _pcre_libpath:
+		test_env.AppendUnique(LIBPATH=_pcre_libpath)
 
-if 'CUNIT_CPPPATH' in test_env:
-	test_env.Append(CPPPATH=test_env['CUNIT_CPPPATH'])
+_cunit_cpp = test_env.get('CUNIT_CPPPATH')
+if _cunit_cpp:
+	test_env.Append(CPPPATH=_cunit_cpp)
 
-if 'CUNIT_LIBPATH' in test_env:
-	test_env.Append(LIBPATH=test_env['CUNIT_LIBPATH'])
+_cunit_libpath = test_env.get('CUNIT_LIBPATH')
+if _cunit_libpath:
+	test_env.Append(LIBPATH=_cunit_libpath)
+
+conf = test_env.Configure()
+if not conf.CheckDeclaration('CU_set_test_output_capture', '#include <CUnit/TestRun.h>\n'):
+	print("ERROR: CUnit is missing CU_set_test_output_capture; install the patched CUnit.")
+	Exit(1)
+test_env = conf.Finish()
 
 testprog = test_env.Program('test',srcs)
 
 test_env.Depends(testprog,"#/ascend/utilities/test")
+test_env.Depends(testprog,[test_env.Dir('#/solvers'), test_env.Dir('#/models')])
 
 if platform.system()=="Windows":
 	test_env.Depends(testprog,test_env['libascend'])

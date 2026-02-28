@@ -90,6 +90,135 @@ create_statement_here(enum stat_t t){
 	return result;
 }
 
+static struct DatasetIndexItem *CopyDatasetIndexItems(CONST struct DatasetIndexItem *src)
+{
+  struct DatasetIndexItem *head = NULL;
+  struct DatasetIndexItem *tail = NULL;
+  while (src != NULL) {
+    struct DatasetIndexItem *item = ASC_NEW(struct DatasetIndexItem);
+    item->set_name = src->set_name;
+    item->column_name = src->column_name;
+    item->type_name = src->type_name;
+    item->next = NULL;
+    if (tail != NULL) {
+      tail->next = item;
+    } else {
+      head = item;
+    }
+    tail = item;
+    src = src->next;
+  }
+  return head;
+}
+
+static struct DatasetMapItem *CopyDatasetMapItems(CONST struct DatasetMapItem *src)
+{
+  struct DatasetMapItem *head = NULL;
+  struct DatasetMapItem *tail = NULL;
+  while (src != NULL) {
+    struct DatasetMapItem *item = ASC_NEW(struct DatasetMapItem);
+    item->target = CopyName(src->target);
+    item->column_name = src->column_name;
+    item->units = (src->units != NULL) ? ASC_STRDUP(src->units) : NULL;
+    item->type_name = src->type_name;
+    item->next = NULL;
+    if (tail != NULL) {
+      tail->next = item;
+    } else {
+      head = item;
+    }
+    tail = item;
+    src = src->next;
+  }
+  return head;
+}
+
+static void DestroyDatasetIndexItems(struct DatasetIndexItem *item)
+{
+  while (item != NULL) {
+    struct DatasetIndexItem *next = item->next;
+    ASC_FREE(item);
+    item = next;
+  }
+}
+
+static void DestroyDatasetMapItems(struct DatasetMapItem *item)
+{
+  while (item != NULL) {
+    struct DatasetMapItem *next = item->next;
+    if (item->target != NULL) {
+      DestroyName(item->target);
+    }
+    if (item->units != NULL) {
+      ascfree(item->units);
+    }
+    ASC_FREE(item);
+    item = next;
+  }
+}
+
+static int CompareDatasetIndexItems(CONST struct DatasetIndexItem *a,
+                                    CONST struct DatasetIndexItem *b)
+{
+  int ctmp;
+  while (a != NULL && b != NULL) {
+    ctmp = CmpSymchar(a->set_name,b->set_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(a->column_name,b->column_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(a->type_name,b->type_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    a = a->next;
+    b = b->next;
+  }
+  if (a == b) {
+    return 0;
+  }
+  return (a != NULL) ? 1 : -1;
+}
+
+static int CompareDatasetMapItems(CONST struct DatasetMapItem *a,
+                                  CONST struct DatasetMapItem *b)
+{
+  int ctmp;
+  while (a != NULL && b != NULL) {
+    ctmp = CompareNames(a->target,b->target);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(a->column_name,b->column_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (a->units == NULL || b->units == NULL) {
+      if (a->units != b->units) {
+        return (a->units != NULL) ? 1 : -1;
+      }
+    } else {
+      ctmp = strcmp(a->units,b->units);
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    }
+    ctmp = CmpSymchar(a->type_name,b->type_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    a = a->next;
+    b = b->next;
+  }
+  if (a == b) {
+    return 0;
+  }
+  return (a != NULL) ? 1 : -1;
+}
+
 void AddContext(struct StatementList *slist, unsigned int con)
 {
   unsigned long c,length;
@@ -136,6 +265,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case RUN:
     case FNAME:
     case FLOW:
+    case TABLESTAT:
       break;
     case FOR:
       sublist = ForStatStmts(s);
@@ -826,6 +956,46 @@ struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs)
   return result;
 }
 
+struct Statement *CreateTABLE(struct Name *n,
+                              symchar *decl_type,
+                              struct Set *decl_typeargs,
+                              symchar *decl_set_type,
+                              struct Expr *default_expr,
+                              int positional,
+                              unsigned long rows,
+                              unsigned long scalars,
+                              unsigned long items,
+                              char *body)
+{
+  struct Statement *result;
+  result = create_statement_here(TABLESTAT);
+  result->v.table.name = n;
+  result->v.table.decl_type = decl_type;
+  result->v.table.decl_typeargs = decl_typeargs;
+  result->v.table.decl_set_type = decl_set_type;
+  result->v.table.default_expr = default_expr;
+  result->v.table.body = body;
+  result->v.table.positional = positional;
+  result->v.table.rows = rows;
+  result->v.table.scalars = scalars;
+  result->v.table.items = items;
+  return result;
+}
+
+struct Statement *CreateDATASET(symchar *name,
+                                char *filename,
+                                struct DatasetIndexItem *indices,
+                                struct DatasetMapItem *maps)
+{
+  struct Statement *result;
+  result = create_statement_here(DATASETSTAT);
+  result->v.dataset.name = name;
+  result->v.dataset.filename = filename;
+  result->v.dataset.indices = indices;
+  result->v.dataset.maps = maps;
+  return result;
+}
+
 enum stat_t StatementTypeF(CONST struct Statement *s)
 {
   assert(s!=NULL);
@@ -970,6 +1140,39 @@ void DestroyStatement(struct Statement *s)
         s->v.asgn.nptr = NULL;
         DestroyExprList(s->v.asgn.rhs);
         s->v.asgn.rhs = NULL;
+        break;
+      case TABLESTAT:
+        DestroyName(s->v.table.name);
+        s->v.table.name = NULL;
+        if (s->v.table.decl_typeargs != NULL) {
+          DestroySetList(s->v.table.decl_typeargs);
+          s->v.table.decl_typeargs = NULL;
+        }
+        s->v.table.decl_type = NULL;
+        s->v.table.decl_set_type = NULL;
+        if (s->v.table.default_expr != NULL) {
+          DestroyExprList(s->v.table.default_expr);
+          s->v.table.default_expr = NULL;
+        }
+        if (s->v.table.body != NULL) {
+          ascfree(s->v.table.body);
+          s->v.table.body = NULL;
+        }
+        break;
+      case DATASETSTAT:
+        s->v.dataset.name = NULL;
+        if (s->v.dataset.filename != NULL) {
+          ascfree(s->v.dataset.filename);
+          s->v.dataset.filename = NULL;
+        }
+        if (s->v.dataset.indices != NULL) {
+          DestroyDatasetIndexItems(s->v.dataset.indices);
+          s->v.dataset.indices = NULL;
+        }
+        if (s->v.dataset.maps != NULL) {
+          DestroyDatasetMapItems(s->v.dataset.maps);
+          s->v.dataset.maps = NULL;
+        }
         break;
       case RUN:
         DestroyName(s->v.r.proc_name);
@@ -1165,6 +1368,30 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.asgn.nptr = CopyName(s->v.asgn.nptr);
     result->v.asgn.rhs = CopyExprList(s->v.asgn.rhs);
     break;
+  case TABLESTAT:
+    result->v.table.name = CopyName(s->v.table.name);
+    result->v.table.decl_type = s->v.table.decl_type;
+    result->v.table.decl_typeargs = CopySetList(s->v.table.decl_typeargs);
+    result->v.table.decl_set_type = s->v.table.decl_set_type;
+    result->v.table.default_expr = CopyExprList(s->v.table.default_expr);
+    result->v.table.positional = s->v.table.positional;
+    result->v.table.rows = s->v.table.rows;
+    result->v.table.scalars = s->v.table.scalars;
+    result->v.table.items = s->v.table.items;
+    if (s->v.table.body != NULL) {
+      size = strlen(s->v.table.body);
+      result->v.table.body = ASC_NEW_ARRAY(char,size + 1);
+      memcpy(result->v.table.body,s->v.table.body,size + 1);
+    } else {
+      result->v.table.body = NULL;
+    }
+    break;
+  case DATASETSTAT:
+    result->v.dataset.name = s->v.dataset.name;
+    result->v.dataset.filename = (s->v.dataset.filename != NULL) ? ASC_STRDUP(s->v.dataset.filename) : NULL;
+    result->v.dataset.indices = CopyDatasetIndexItems(s->v.dataset.indices);
+    result->v.dataset.maps = CopyDatasetMapItems(s->v.dataset.maps);
+    break;
   case RUN:
     result->v.r.proc_name = CopyName(s->v.r.proc_name);
     result->v.r.type_name = CopyName(s->v.r.type_name);
@@ -1275,6 +1502,8 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case COND:
   case WHILE:
   case FLOW:
+  case TABLESTAT:
+  case DATASETSTAT:
     return s->context;
   default:
     ERROR_REPORTER_STAT(ASC_PROG_ERR,s,"GetStatContext called on incorrect statement type.");
@@ -1320,6 +1549,8 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case COND:
   case WHILE:
   case FLOW:
+  case TABLESTAT:
+  case DATASETSTAT:
     s->context = c;
     break;
   default:
@@ -1367,6 +1598,8 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case COND:
   case WHILE:
   case FLOW:
+  case TABLESTAT:
+  case DATASETSTAT:
     s->context |= c;
     break;
   default:
@@ -2482,6 +2715,66 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareExprs(AssignStatRHS(s1),AssignStatRHS(s2));
+  case TABLESTAT:
+    ctmp = CompareNames(s1->v.table.name,s2->v.table.name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(s1->v.table.decl_type,s2->v.table.decl_type);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CompareSetStructures(s1->v.table.decl_typeargs,s2->v.table.decl_typeargs);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(s1->v.table.decl_set_type,s2->v.table.decl_set_type);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (s1->v.table.positional != s2->v.table.positional) {
+      return (s1->v.table.positional > s2->v.table.positional) ? 1 : -1;
+    }
+    ctmp = CompareExprs(s1->v.table.default_expr,s2->v.table.default_expr);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (s1->v.table.rows != s2->v.table.rows) {
+      return (s1->v.table.rows > s2->v.table.rows) ? 1 : -1;
+    }
+    if (s1->v.table.scalars != s2->v.table.scalars) {
+      return (s1->v.table.scalars > s2->v.table.scalars) ? 1 : -1;
+    }
+    if (s1->v.table.items != s2->v.table.items) {
+      return (s1->v.table.items > s2->v.table.items) ? 1 : -1;
+    }
+    if (s1->v.table.body == NULL || s2->v.table.body == NULL) {
+      if (s1->v.table.body == s2->v.table.body) {
+        return 0;
+      }
+      return (s1->v.table.body != NULL) ? 1 : -1;
+    }
+    return strcmp(s1->v.table.body,s2->v.table.body);
+  case DATASETSTAT:
+    ctmp = CmpSymchar(s1->v.dataset.name,s2->v.dataset.name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (s1->v.dataset.filename == NULL || s2->v.dataset.filename == NULL) {
+      if (s1->v.dataset.filename != s2->v.dataset.filename) {
+        return (s1->v.dataset.filename != NULL) ? 1 : -1;
+      }
+    } else {
+      ctmp = strcmp(s1->v.dataset.filename,s2->v.dataset.filename);
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    }
+    ctmp = CompareDatasetIndexItems(s1->v.dataset.indices,s2->v.dataset.indices);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    return CompareDatasetMapItems(s1->v.dataset.maps,s2->v.dataset.maps);
   case RUN:
     ctmp = CompareNames(RunStatName(s1),RunStatName(s2));
     if (ctmp != 0) {
@@ -2739,4 +3032,3 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
 }
 
 /* vim: set ts=8: */
-

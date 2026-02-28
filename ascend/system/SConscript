@@ -16,6 +16,7 @@ csrcs = Split("""
 	slv_param.c
 	slv_stdcalls.c system.c var.c
 	incidence.c
+	lp_utils.c
 """)
 
 solver_env = libascend_env.Clone()
@@ -28,10 +29,7 @@ for c in csrcs:
 
 graph_env = solver_env.Clone()
 if libascend_env.get('WITH_GRAPHVIZ'):
-	graph_env.Append(CPPDEFINES=['WITH_GRAPHVIZ'])
 	graph_env.Append(CPPPATH=libascend_env['GRAPHVIZ_CPPPATH'])
-	if graph_env.get('HAVE_GRAPHVIZ_BOOLEAN'):
-		graph_env.Append(CPPDEFINES=['HAVE_GRAPHVIZ_BOOLEAN'])
 else:
 	print("NO GRAPHVIZ----")
 
@@ -57,4 +55,3 @@ if libascend_env.get('CAN_INSTALL'):
 Return('objs')
 
 # vim: set syntax=python:
-

@@ -1,0 +1,19 @@
+(* Compound ALIASES / IS_A (ARR) instantiate tests: ok cases *)
+
+MODEL arr_ok_int_generated;
+	a IS_A real;
+	b IS_A real;
+	arr[idx] ALIASES (a,b) WHERE idx IS_A set OF integer_constant;
+END arr_ok_int_generated;
+
+MODEL arr_ok_sym_generated;
+	a IS_A real;
+	b IS_A real;
+	arr[idx] ALIASES (a,b) WHERE idx IS_A set OF symbol_constant;
+END arr_ok_sym_generated;
+
+MODEL arr_ok_with_value;
+	a IS_A real;
+	b IS_A real;
+	arr[idx] ALIASES (a,b) WHERE idx IS_A set OF integer_constant WITH_VALUE([3,4]);
+END arr_ok_with_value;

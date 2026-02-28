@@ -84,7 +84,7 @@ Compiler::sendBinaryCompilationOptions(){
 		CONSOLE_DEBUG("SETUP BINTOKENS...");
 #endif
 		BinTokenSetOptions(bt_srcname.c_str(), bt_objname.c_str(), bt_libname.c_str()
-			, bt_cmd.c_str(), bt_rm.c_str(), 1000/*maxrels*/, 1/*verbose*/, 0/*housekeep*/
+			, bt_cmd.c_str(), 1000/*maxrels*/, 1/*verbose*/, 0/*housekeep*/
 		);
 #ifdef BINTOKEN_DEBUG
 		CONSOLE_DEBUG("srcname = %s, objname = %s, libname = %s, cmd = %s, rm = %s",
@@ -98,7 +98,7 @@ Compiler::sendBinaryCompilationOptions(){
 	}else{
 		/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"disabling bintoken compilation\n"); */
 		bintoken_options_sent = false;
-		BinTokenSetOptions(NULL,NULL,NULL,NULL,NULL,0,1,1);
+		BinTokenSetOptions(NULL,NULL,NULL,NULL,0,1,1);
 	}
 }
 

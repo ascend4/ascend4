@@ -1,0 +1,30 @@
+(* ARE_THE_SAME / mergeinst basic tests *)
+
+MODEL merge_ok_reals;
+	a IS_A real;
+	b IS_A real;
+	a, b ARE_THE_SAME;
+END merge_ok_reals;
+
+MODEL merge_ok_array_elem;
+	a[1..2] IS_A real;
+	b[1..2] IS_A real;
+	a[1], b[1] ARE_THE_SAME;
+END merge_ok_array_elem;
+
+MODEL merge_fail_types;
+	a IS_A real;
+	b IS_A integer;
+	a, b ARE_THE_SAME;
+END merge_fail_types;
+
+(* NOT MIGRATED: fatal error in ARE_THE_SAME with constants. *)
+(*
+MODEL merge_fail_constants;
+	a IS_A integer_constant;
+	b IS_A integer_constant;
+	a :== 1;
+	b :== 2;
+	a, b ARE_THE_SAME;
+END merge_fail_constants;
+*)

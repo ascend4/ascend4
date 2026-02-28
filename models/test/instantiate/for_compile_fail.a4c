@@ -1,0 +1,2 @@
+REQUIRE "system.a4l";
+(* FOR compile-fail instantiate tests (deprecated, use per-test files) *)

@@ -1,0 +1,106 @@
+REQUIRE "atoms.a4l";
+
+MODEL melbourne_dni;
+	DATASET melbourne FROM "johnpye/dataset/086282TMY_60min.csv.xz";
+		dni[timestep] FROM COLUMN 'Mean direct irradiance (over 1 minute) in W/sq m' IS_A real_constant;
+		ghi[timestep] FROM COLUMN 'Mean global irradiance (over 1 minute) in W/sq m' IS_A real_constant;
+	END DATASET;
+
+	annual_dni_sum, annual_ghi_sum IS_A solver_var;
+	daily_avg_dni, daily_avg_ghi IS_A solver_var;
+	days_in_year IS_A integer_constant;
+	days_in_year :== 365;
+	dummy IS_A solver_var;
+
+	z_dummy: dummy = 0;
+
+METHODS
+METHOD on_load;
+	RUN default_self;
+	ASSERT CARD[timestep] = 8760;
+	FIX annual_dni_sum, annual_ghi_sum, daily_avg_dni, daily_avg_ghi;
+	FREE dummy;
+
+	annual_dni_sum := SUM[dni[t] | t IN timestep];
+	annual_ghi_sum := SUM[ghi[t] | t IN timestep];
+	daily_avg_dni := annual_dni_sum / days_in_year;
+	daily_avg_ghi := annual_ghi_sum / days_in_year;
+END on_load;
+
+METHOD self_test;
+	ASSERT abs(annual_dni_sum - 1492411.1848636186) < 1e-6;
+	ASSERT abs(annual_ghi_sum - 1559323.2651236965) < 1e-6;
+	ASSERT abs(daily_avg_dni - 4088.79776674964) < 1e-6;
+	ASSERT abs(daily_avg_ghi - 4272.11853458547) < 1e-6;
+END self_test;
+END melbourne_dni;
+
+MODEL melbourne_dni_gz;
+	DATASET melbourne FROM "086282TMY_60min.csv.gz";
+		dni[timestep] FROM COLUMN 'Mean direct irradiance (over 1 minute) in W/sq m' IS_A real_constant;
+		ghi[timestep] FROM COLUMN 'Mean global irradiance (over 1 minute) in W/sq m' IS_A real_constant;
+	END DATASET;
+
+	annual_dni_sum, annual_ghi_sum IS_A solver_var;
+	daily_avg_dni, daily_avg_ghi IS_A solver_var;
+	days_in_year IS_A integer_constant;
+	days_in_year :== 365;
+	dummy IS_A solver_var;
+
+	z_dummy: dummy = 0;
+
+METHODS
+METHOD on_load;
+	RUN default_self;
+	ASSERT CARD[timestep] = 8760;
+	FIX annual_dni_sum, annual_ghi_sum, daily_avg_dni, daily_avg_ghi;
+	FREE dummy;
+
+	annual_dni_sum := SUM[dni[t] | t IN timestep];
+	annual_ghi_sum := SUM[ghi[t] | t IN timestep];
+	daily_avg_dni := annual_dni_sum / days_in_year;
+	daily_avg_ghi := annual_ghi_sum / days_in_year;
+END on_load;
+
+METHOD self_test;
+	ASSERT abs(annual_dni_sum - 1492411.1848636186) < 1e-6;
+	ASSERT abs(annual_ghi_sum - 1559323.2651236965) < 1e-6;
+	ASSERT abs(daily_avg_dni - 4088.79776674964) < 1e-6;
+	ASSERT abs(daily_avg_ghi - 4272.11853458547) < 1e-6;
+END self_test;
+END melbourne_dni_gz;
+
+MODEL melbourne_dni_uncompressed;
+	DATASET melbourne FROM "086282TMY_60min.csv";
+		dni[timestep] FROM COLUMN 'Mean direct irradiance (over 1 minute) in W/sq m' IS_A real_constant;
+		ghi[timestep] FROM COLUMN 'Mean global irradiance (over 1 minute) in W/sq m' IS_A real_constant;
+	END DATASET;
+
+	annual_dni_sum, annual_ghi_sum IS_A solver_var;
+	daily_avg_dni, daily_avg_ghi IS_A solver_var;
+	days_in_year IS_A integer_constant;
+	days_in_year :== 365;
+	dummy IS_A solver_var;
+
+	z_dummy: dummy = 0;
+
+METHODS
+METHOD on_load;
+	RUN default_self;
+	ASSERT CARD[timestep] = 8760;
+	FIX annual_dni_sum, annual_ghi_sum, daily_avg_dni, daily_avg_ghi;
+	FREE dummy;
+
+	annual_dni_sum := SUM[dni[t] | t IN timestep];
+	annual_ghi_sum := SUM[ghi[t] | t IN timestep];
+	daily_avg_dni := annual_dni_sum / days_in_year;
+	daily_avg_ghi := annual_ghi_sum / days_in_year;
+END on_load;
+
+METHOD self_test;
+	ASSERT abs(annual_dni_sum - 1492411.1848636186) < 1e-6;
+	ASSERT abs(annual_ghi_sum - 1559323.2651236965) < 1e-6;
+	ASSERT abs(daily_avg_dni - 4088.79776674964) < 1e-6;
+	ASSERT abs(daily_avg_ghi - 4272.11853458547) < 1e-6;
+END self_test;
+END melbourne_dni_uncompressed;

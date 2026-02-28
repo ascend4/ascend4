@@ -46,12 +46,33 @@
 /*
 	Test solving a simple model with 'bintoken' support
 */
+static int bintok_supported(void){
+	static int cached = -1;
+	if(cached != -1){
+		return cached;
+	}
+	if(BinTokenSetOptionsDefault() != 0){
+		cached = 0;
+		return cached;
+	}
+	/* reset to a known state for tests that disable bintok */
+	(void)BinTokenClearOptions();
+	cached = 1;
+	return cached;
+}
+
 static void test_bintok(char *filenamestem,int usebintok){
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
 	Asc_PutEnv(ASC_ENV_BTINC "=.");
 	Asc_PutEnv(ASC_ENV_BTLIB "=.");
+
+	if(!bintok_supported()){
+		CONSOLE_DEBUG("Skipping bintok test '%s': BinTokenSetOptionsDefault not available",filenamestem);
+		Asc_CompilerDestroy();
+		return;
+	}
 
 	/* load and parse */
 	char path[PATH_MAX];
@@ -77,7 +98,14 @@ static void test_bintok(char *filenamestem,int usebintok){
 	error_reporter_tree_start();
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(filenamestem), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
-	CU_TEST(!error_reporter_tree_has_error());
+	if(error_reporter_tree_has_error()){
+		error_reporter_tree_end();
+		solver_destroy_engines();
+		sim_destroy(siminst);
+		Asc_CompilerDestroy();
+		CU_FAIL_FATAL("Error during instantiation");
+		return;
+	}
 	error_reporter_tree_end();
 
 	/* initialise */
@@ -149,4 +177,3 @@ static void test_gradient_nobintok(){
 	T(gradient_nobintok)
 
 REGISTER_TESTS_SIMPLE(compiler_bintok, TESTS)
-

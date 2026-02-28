@@ -20,6 +20,7 @@
 
 #define TESTS(T) \
 	T(basics) \
+	T(dataset) \
 	T(relation) \
 	T(autodiff) \
 	T(expr) \
@@ -30,12 +31,37 @@
 	T(dimen) \
 	T(fractions) \
 	T(units) \
+	T(displayunits) \
 	T(name) \
 	T(symtab) \
 	T(qlfdid) \
 	T(func) \
 	T(notes) \
-	T(chkdim)
+	T(chkdim) \
+	T(instantiate_set_enum) \
+	T(instantiate_relation_logrel_bool) \
+	T(instantiate_logrel_bool_algebra) \
+	T(instantiate_alike) \
+	T(instantiate_context) \
+	T(instantiate_anontype) \
+	T(instantiate_defaults) \
+	T(instantiate_array) \
+	T(instantiate_arr) \
+	T(instantiate_for) \
+	T(instantiate_when_select) \
+	T(instantiate_alias) \
+	T(instantiate_set_type_errors) \
+	T(instantiate_cond) \
+	T(merge) \
+	T(merge_extra) \
+	T(merge_values) \
+	T(merge_parents) \
+	T(merge_relparents) \
+	T(merge_children) \
+	T(merge_arrays) \
+	T(merge_dims) \
+	T(merge_model_children) \
+	T(merge_model_values)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

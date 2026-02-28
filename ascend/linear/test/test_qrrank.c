@@ -21,6 +21,7 @@
 
 #include <ascend/general/platform.h>
 #include <ascend/linear/linsolqr.h>
+#include <ascend/system/system.h>
 
 #include <test/common.h>
 #include <test/assertimpl.h>
@@ -63,7 +64,8 @@ static void test_qr1x1(void){
 	CU_ASSERT(r==1);
 
 	linsolqr_destroy(L);
-	mtx_destroy(M);	
+	mtx_destroy(M);
+	system_free_reused_mem();
 }
 
 /*
@@ -108,7 +110,8 @@ static void test_qr2x2(void){
 	CU_ASSERT(r==2);
 
 	linsolqr_destroy(L);
-	mtx_destroy(M);	
+	mtx_destroy(M);
+	system_free_reused_mem();
 }
 
 /*
@@ -159,6 +162,7 @@ static void test_qr3x3(void){
 
 	linsolqr_destroy(L);
 	mtx_destroy(M);
+	system_free_reused_mem();
 }
 
 /*===========================================================================*/
@@ -170,4 +174,3 @@ static void test_qr3x3(void){
 	T(qr3x3)
 
 REGISTER_TESTS_SIMPLE(linear_qrrank, TESTS)
-

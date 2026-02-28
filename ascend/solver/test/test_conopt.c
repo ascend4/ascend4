@@ -62,13 +62,17 @@ static void test_conopt(const char *filenamestem){
 	ASC_FREE(lib);
 
 	/* load the CONOPT solver, presumably from the ASCENDSOLVERS path */
-	package_load("conopt",NULL);
+	if(0 != package_load("conopt",NULL)){
+		Asc_CompilerDestroy();
+		CONSOLE_DEBUG("Skipping CONOPT test: solver not available");
+		return;
+	}
 	solver_index = slv_lookup_client("CONOPT");
 	if(solver_index==-1){
-		/* cleanup compiler if we're about to fail */
 		Asc_CompilerDestroy();
+		CONSOLE_DEBUG("Skipping CONOPT test: solver not registered");
+		return;
 	}
-	CU_ASSERT_FATAL(solver_index != -1);
 
 	/* load the file */
 	char path[PATH_MAX];
@@ -151,6 +155,8 @@ static void test_conopt(const char *filenamestem){
 	T(test12) \
 	T(test13) \
 	T(test14) \
+	T(lp1) \
+	T(lp_structured) \
 	T(conopttest)
 
 /* define the tests: each test loads the model, solves with CONOPT, then runs the
@@ -165,4 +171,3 @@ TESTS1(T)
 	TESTS1(T)
 
 REGISTER_TESTS_SIMPLE(solver_conopt, TESTS)
-

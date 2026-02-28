@@ -334,9 +334,7 @@ int logrel_apply_filter( struct logrel_relation *logrel,
  * generally, like the FindType checking stuff in var.c
  */
 static void check_included_flag(void){
-  if (INCLUDED_R == NULL || AscFindSymbol(INCLUDED_R) == NULL) {
-    INCLUDED_R = AddSymbol("included");
-  }
+  INCLUDED_R = AddSymbol("included");
 }
 
 uint32 logrel_included( struct logrel_relation *logrel)

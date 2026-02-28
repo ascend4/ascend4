@@ -44,7 +44,8 @@
 	@{
 */
 
-#define relman_is_linear(a,b) (FALSE)
+ASC_DLLSPEC boolean relman_is_linear(struct rel_relation *rel,
+                                     var_filter_t *filter);
 /**<
  *  Determines whether or not the given relation is linear in
  *  all of the variables which pass through the variable filter, treating
@@ -458,4 +459,3 @@ extern void relman_free_reused_mem(void);
 /* @} */
 
 #endif  /* ASC_RELMAN_H */
-

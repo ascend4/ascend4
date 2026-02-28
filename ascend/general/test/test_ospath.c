@@ -22,6 +22,7 @@
 #include <ascend/general/ospath.h>
 
 #include <test/common.h>
+#include <unistd.h>
 
 static FilePathTestFn ospath_searchpath_testexists;
 
@@ -675,6 +676,27 @@ static void test_expandenv(void){
 	MEMUSED(0);
 }	
 
+static void test_mkstemp(void){
+	char path[PATH_MAX+1];
+	int fd;
+	FILE *fp;
+
+	fd = ospath_mkstemp(path,sizeof(path),"asc_ospath_test_");
+	CU_TEST(fd >= 0);
+	if (fd < 0) {
+		return;
+	}
+	close(fd);
+
+	fp = fopen(path,"r");
+	CU_ASSERT_PTR_NOT_NULL(fp);
+	if (fp != NULL) {
+		fclose(fp);
+	}
+	remove(path);
+	MEMUSED(0);
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -696,7 +718,7 @@ static void test_expandenv(void){
 	T(getfilestem) \
 	T(getbasefileext) \
 	T(getdir) \
-	T(expandenv)
+	T(expandenv) \
+	T(mkstemp)
 
 REGISTER_TESTS_SIMPLE(general_ospath, TESTS);
-

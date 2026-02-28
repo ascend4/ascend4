@@ -1,5 +1,6 @@
 import threading
 import loading
+import ascpy
 from gi.repository import GObject
 
 from solverreporter import *
@@ -9,8 +10,24 @@ class SolverHooksPython(ascpy.SolverHooks):
 	def __init__(self):
 		loading.print_status("","Loaded python solver hooks")
 		ascpy.SolverHooks.__init__(self,None)
+	def _set_solver_param(self, sim, optionname, val):
+		try:
+			PP = sim.getParameters()
+		except Exception:
+			return
+		try:
+			for P in PP:
+				if P.getName() == optionname:
+					P.setValueValue(val)
+					sim.setParameters(PP)
+					return
+		except Exception:
+			return
 	def setSolver(self,solvername,sim):
 		sim.setSolver(ascpy.Solver(solvername))
+		if solvername.lower() == "highs":
+			# Avoid GUI crashes from high-frequency progress callbacks.
+			self._set_solver_param(sim, "progress_callbacks", False)
 		print("PYTHON: SOLVER is now %s" % sim.getSolver().getName())	
 		return 0
 	def setOption(self,optionname,val,sim):
@@ -78,6 +95,8 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 
 	def do_solve_thread(self, sim, reporter):
 		try:
+			ascpy.setSolverProgressReporter(reporter)
+			ascpy.setSolverInterrupt(False)
 			sim.presolve(sim.getSolver())
 			status = sim.getStatus()
 			while status.isReadyToSolve() and not self.solve_interrupt:
@@ -93,4 +112,9 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 			sim.postsolve(status)
 		except Exception as e:
 			print("PYTHON ERROR:", str(e))
-
+		finally:
+			try:
+				ascpy.setSolverInterrupt(False)
+				ascpy.setSolverProgressReporter(None)
+			except Exception:
+				pass

@@ -153,6 +153,10 @@ METHODS
 END test1;
 
 
+(* NOT MIGRATED: merge tests now live in models/test/merge/merge_basic.a4c
+   and models/test/merge/merge_compile_fail_rel.a4c (simplified);
+   legacy merge models retained here. *)
+(*
 MODEL test2
 REFINES testcmumodel;
 
@@ -203,6 +207,7 @@ METHOD default_all;
 END default_all;
 
 END test2;
+*)
 
 
 MODEL test1Array
@@ -285,6 +290,8 @@ METHODS
 
 END test1_normal;
 
+(* NOT MIGRATED: legacy merge models retained here. *)
+(*
 MODEL test2_normal
 REFINES testcmumodel;
 	one IS_A real_constant;
@@ -334,8 +341,11 @@ METHODS
 	END default_all;
 
 END test2_normal;
+*)
 
 
+(* NOT MIGRATED: legacy merge models retained here. *)
+(*
 MODEL testrefinement_base_normal
 REFINES testcmumodel;
 	one IS_A real_constant;
@@ -383,7 +393,10 @@ METHODS
 	END default_all;
 
 END testrefinement_base_normal;
+*)
 
+(* NOT MIGRATED: legacy merge models retained here. *)
+(*
 MODEL testrefinement_normal
 REFINES testrefinement_base_normal;
 	t_merge_xy.x[1], t_merge_xy.y[1] ARE_THE_SAME;
@@ -404,7 +417,10 @@ METHODS
 	END specify;
 
 END testrefinement_normal;
+*)
 
+(* NOT MIGRATED: legacy merge models retained here. *)
+(*
 MODEL testrefinement_base
 REFINES testcmumodel;
 	one IS_A real_constant;
@@ -452,7 +468,10 @@ METHODS
 	END default_all;
 
 END testrefinement_base;
+*)
 
+(* NOT MIGRATED: legacy merge models retained here. *)
+(*
 MODEL testrefinement
 REFINES testrefinement_base;
 	t_merge_xy.x[1], t_merge_xy.y[1] ARE_THE_SAME;
@@ -473,6 +492,7 @@ METHODS
 	END specify;
 
 END testrefinement;
+*)
 
 (* simple test of relation sharing for blackboxes *)
 MODEL test2Shared
@@ -513,4 +533,3 @@ METHOD default_all;
 END default_all;
 
 END test2Shared;
-

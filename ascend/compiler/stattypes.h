@@ -126,6 +126,8 @@ enum stat_t {
   COND,         /**< CONDITIONAL statement */
   WBTS,         /**< WILL_BE_THE_SAME */
   WNBTS,        /**< WILL_NOT_BE_THE_SAME */
+  TABLESTAT,    /**< TABLE statement */
+  DATASETSTAT,  /**< DATASET statement */
   WILLBE        /**< WILL_BE */
   /* if you add anything after WILLBE, change statio.c/suppression
    * accordingly.
@@ -401,6 +403,43 @@ struct StateOPTION{
   struct Expr *rhs;
  };
 
+/** used for TABLE statement (parse metadata in v0). */
+struct StateTABLE{
+  struct Name *name;           /**< target array name */
+  symchar *decl_type;          /**< inline TABLE declaration type (optional) */
+  struct Set *decl_typeargs;   /**< inline TABLE type arguments (optional) */
+  symchar *decl_set_type;      /**< inline TABLE set type for set-valued targets */
+  struct Expr *default_expr;   /**< DEFAULT expression, if supplied */
+  char *body;                  /**< canonical tokenized body text */
+  unsigned long rows;          /**< parsed non-empty table rows */
+  unsigned long scalars;       /**< parsed scalar tokens */
+  unsigned long items;         /**< parsed row items (includes punctuation tokens) */
+  int positional;              /**< nonzero when POSITIONAL specified */
+};
+
+/** used for DATASET statement (parse metadata in v0). */
+struct DatasetIndexItem{
+  symchar *set_name;          /**< index set name */
+  symchar *column_name;       /**< source column name */
+  symchar *type_name;         /**< element type (eg integer_constant) */
+  struct DatasetIndexItem *next;
+};
+
+struct DatasetMapItem{
+  struct Name *target;        /**< target array name */
+  symchar *column_name;       /**< source column name */
+  char *units;                /**< units string, without braces (optional) */
+  symchar *type_name;         /**< inline type (optional) */
+  struct DatasetMapItem *next;
+};
+
+struct StateDATASET{
+  symchar *name;              /**< dataset name */
+  char *filename;             /**< dataset source filename */
+  struct DatasetIndexItem *indices;
+  struct DatasetMapItem *maps;
+};
+
 /**<DS: used for LINK statements */
 struct StateLINK {
   symchar *key;			/**< key under which the linked instances are stored in the link table, which can be a symbol, a name, loop index stored as symchars*/
@@ -464,6 +503,8 @@ union StateUnion {
   struct StateSOLVER     solver;
   struct StateOPTION     option;
   struct StateLINK	     lnk;
+  struct StateTABLE      table;
+  struct StateDATASET    dataset;
 };
 
 struct Statement {
@@ -484,4 +525,3 @@ struct StatementList {
 /* @} */
 
 #endif  /* ASC_STATTYPES_H */
-

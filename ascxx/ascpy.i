@@ -304,6 +304,8 @@ public:
 %apply SWIGTYPE *DISOWN { Compiler * };
 %apply SWIGTYPE *DISOWN { Simulation * };
 
+/* keep raw token internal for wrapper implementation */
+%rename(_getDeclaredUnitsToken) Type::getDeclaredUnits;
 %include "type.h"
 
 %extend Type{
@@ -330,6 +332,13 @@ public:
 				return None
 
 			return _units;
+
+		def getDeclaredUnits(self):
+			"""Return declared units for the type as a Units object, or None."""
+			_u = self._getDeclaredUnitsToken()
+			if _u is None:
+				return None
+			return Units(_u)
 	%}
 }
 
@@ -377,6 +386,10 @@ public:
 	const double getRealValue() const;
 	const bool isDimensionless() const;
 	const Dimensions getDimensions() const;
+	const UnitsM getDisplayUnits(const bool &autoscale=true, const double &lower=0.1, const double &upper=1000.0) const;
+	const UnitsM getDisplayUnitsPolicy(const bool &autoscale=true, const bool &autoscale_overrides=false, const double &lower=0.1, const double &upper=1000.0) const;
+	void setDisplayUnitsOverride(const std::string &units, const bool &by_name=false, const bool &model_scope=true) const;
+	void clearDisplayUnitsOverride(const bool &by_name=false, const bool &model_scope=true) const;
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
@@ -414,6 +427,9 @@ public:
 	const std::vector<Instanc> getClique() const;
 	const std::vector<std::string> getAliases() const;
 };
+
+int saveDisplayUnitsOverrides(void);
+int reloadDisplayUnitsOverrides(void);
 
 %extend Instanc{
 	const char *__repr__(){
@@ -477,14 +493,10 @@ public:
 				#raise RuntimeError("Unknown value model type="+self.getType().getName().toString()+", instance kind=".getKindStr())
 
 		def getRealValueAndUnits(self):
-			"""Return real-valued instance value as a string, converted to, and including, its preferred units."""
+			"""Return real-valued instance value as a string using display-units policy."""
 			if not self.isReal():
 				raise TypeError
-			if self.isFund():
-				return self.getRealValue();
-			_u = self.getType().getPreferredUnits();
-			if _u is None:
-				_u = self.getDimensions().getDefaultUnits()
+			_u = self.getDisplayUnits()
 			return _u.getConvertedValue(self.getRealValue())
 
 		def to(self,units):

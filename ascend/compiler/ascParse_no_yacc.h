@@ -35,14 +35,14 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_ZZ_ASCEND_COMPILER_ASCPARSE_H_INCLUDED
-# define YY_ZZ_ASCEND_COMPILER_ASCPARSE_H_INCLUDED
+#ifndef YY_YY_ASCEND_COMPILER_ASCPARSE_H_INCLUDED
+# define YY_YY_ASCEND_COMPILER_ASCPARSE_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
 #endif
 #if YYDEBUG
-extern int zz_debug;
+extern int yydebug;
 #endif
 
 /* Token kinds.  */
@@ -121,183 +121,69 @@ extern int zz_debug;
     OR_TOK = 322,                  /* OR_TOK  */
     OTHERWISE_TOK = 323,           /* OTHERWISE_TOK  */
     OUTPUT_TOK = 324,              /* OUTPUT_TOK  */
-    PATCH_TOK = 325,               /* PATCH_TOK  */
-    PROD_TOK = 326,                /* PROD_TOK  */
-    PROVIDE_TOK = 327,             /* PROVIDE_TOK  */
-    REFINES_TOK = 328,             /* REFINES_TOK  */
-    REPLACE_TOK = 329,             /* REPLACE_TOK  */
-    REQUIRE_TOK = 330,             /* REQUIRE_TOK  */
-    RETURN_TOK = 331,              /* RETURN_TOK  */
-    RUN_TOK = 332,                 /* RUN_TOK  */
-    SATISFIED_TOK = 333,           /* SATISFIED_TOK  */
-    SELECT_TOK = 334,              /* SELECT_TOK  */
-    SIZE_TOK = 335,                /* SIZE_TOK  */
-    SOLVE_TOK = 336,               /* SOLVE_TOK  */
-    SOLVER_TOK = 337,              /* SOLVER_TOK  */
-    STOP_TOK = 338,                /* STOP_TOK  */
-    SUCHTHAT_TOK = 339,            /* SUCHTHAT_TOK  */
-    SUM_TOK = 340,                 /* SUM_TOK  */
-    SWITCH_TOK = 341,              /* SWITCH_TOK  */
-    THEN_TOK = 342,                /* THEN_TOK  */
-    TRUE_TOK = 343,                /* TRUE_TOK  */
-    UNION_TOK = 344,               /* UNION_TOK  */
-    UNITS_TOK = 345,               /* UNITS_TOK  */
-    UNIVERSAL_TOK = 346,           /* UNIVERSAL_TOK  */
-    UNLINK_TOK = 347,              /* UNLINK_TOK  */
-    WHEN_TOK = 348,                /* WHEN_TOK  */
-    WHERE_TOK = 349,               /* WHERE_TOK  */
-    WHILE_TOK = 350,               /* WHILE_TOK  */
-    WILLBE_TOK = 351,              /* WILLBE_TOK  */
-    WILLBETHESAME_TOK = 352,       /* WILLBETHESAME_TOK  */
-    WILLNOTBETHESAME_TOK = 353,    /* WILLNOTBETHESAME_TOK  */
-    ASSIGN_TOK = 354,              /* ASSIGN_TOK  */
-    CASSIGN_TOK = 355,             /* CASSIGN_TOK  */
-    DBLCOLON_TOK = 356,            /* DBLCOLON_TOK  */
-    USE_TOK = 357,                 /* USE_TOK  */
-    LEQ_TOK = 358,                 /* LEQ_TOK  */
-    GEQ_TOK = 359,                 /* GEQ_TOK  */
-    NEQ_TOK = 360,                 /* NEQ_TOK  */
-    DOTDOT_TOK = 361,              /* DOTDOT_TOK  */
-    WITH_TOK = 362,                /* WITH_TOK  */
-    VALUE_TOK = 363,               /* VALUE_TOK  */
-    WITH_VALUE_T = 364,            /* WITH_VALUE_T  */
-    REAL_TOK = 365,                /* REAL_TOK  */
-    INTEGER_TOK = 366,             /* INTEGER_TOK  */
-    IDENTIFIER_TOK = 367,          /* IDENTIFIER_TOK  */
-    BRACEDTEXT_TOK = 368,          /* BRACEDTEXT_TOK  */
-    SYMBOL_TOK = 369,              /* SYMBOL_TOK  */
-    DQUOTE_TOK = 370,              /* DQUOTE_TOK  */
-    UMINUS_TOK = 371,              /* UMINUS_TOK  */
-    UPLUS_TOK = 372                /* UPLUS_TOK  */
+    PROD_TOK = 325,                /* PROD_TOK  */
+    PROVIDE_TOK = 326,             /* PROVIDE_TOK  */
+    REFINES_TOK = 327,             /* REFINES_TOK  */
+    REPLACE_TOK = 328,             /* REPLACE_TOK  */
+    REQUIRE_TOK = 329,             /* REQUIRE_TOK  */
+    RETURN_TOK = 330,              /* RETURN_TOK  */
+    RUN_TOK = 331,                 /* RUN_TOK  */
+    SATISFIED_TOK = 332,           /* SATISFIED_TOK  */
+    SELECT_TOK = 333,              /* SELECT_TOK  */
+    SIZE_TOK = 334,                /* SIZE_TOK  */
+    SOLVE_TOK = 335,               /* SOLVE_TOK  */
+    SOLVER_TOK = 336,              /* SOLVER_TOK  */
+    STOP_TOK = 337,                /* STOP_TOK  */
+    SUCHTHAT_TOK = 338,            /* SUCHTHAT_TOK  */
+    SUM_TOK = 339,                 /* SUM_TOK  */
+    SWITCH_TOK = 340,              /* SWITCH_TOK  */
+    TABLE_TOK = 341,               /* TABLE_TOK  */
+    VALUES_TOK = 342,              /* VALUES_TOK  */
+    DATASET_TOK = 343,             /* DATASET_TOK  */
+    POSITIONAL_TOK = 344,          /* POSITIONAL_TOK  */
+    INDEX_TOK = 345,               /* INDEX_TOK  */
+    COLUMN_TOK = 346,              /* COLUMN_TOK  */
+    EOL_TOK = 347,                 /* EOL_TOK  */
+    THEN_TOK = 348,                /* THEN_TOK  */
+    TRUE_TOK = 349,                /* TRUE_TOK  */
+    UNION_TOK = 350,               /* UNION_TOK  */
+    UNITS_TOK = 351,               /* UNITS_TOK  */
+    UNIVERSAL_TOK = 352,           /* UNIVERSAL_TOK  */
+    UNLINK_TOK = 353,              /* UNLINK_TOK  */
+    WHEN_TOK = 354,                /* WHEN_TOK  */
+    WHERE_TOK = 355,               /* WHERE_TOK  */
+    WHILE_TOK = 356,               /* WHILE_TOK  */
+    WILLBE_TOK = 357,              /* WILLBE_TOK  */
+    WILLBETHESAME_TOK = 358,       /* WILLBETHESAME_TOK  */
+    WILLNOTBETHESAME_TOK = 359,    /* WILLNOTBETHESAME_TOK  */
+    ASSIGN_TOK = 360,              /* ASSIGN_TOK  */
+    CASSIGN_TOK = 361,             /* CASSIGN_TOK  */
+    DBLCOLON_TOK = 362,            /* DBLCOLON_TOK  */
+    USE_TOK = 363,                 /* USE_TOK  */
+    LEQ_TOK = 364,                 /* LEQ_TOK  */
+    GEQ_TOK = 365,                 /* GEQ_TOK  */
+    NEQ_TOK = 366,                 /* NEQ_TOK  */
+    DOTDOT_TOK = 367,              /* DOTDOT_TOK  */
+    WITH_TOK = 368,                /* WITH_TOK  */
+    VALUE_TOK = 369,               /* VALUE_TOK  */
+    WITH_VALUE_T = 370,            /* WITH_VALUE_T  */
+    REAL_TOK = 371,                /* REAL_TOK  */
+    INTEGER_TOK = 372,             /* INTEGER_TOK  */
+    IDENTIFIER_TOK = 373,          /* IDENTIFIER_TOK  */
+    BRACEDTEXT_TOK = 374,          /* BRACEDTEXT_TOK  */
+    SYMBOL_TOK = 375,              /* SYMBOL_TOK  */
+    DQUOTE_TOK = 376,              /* DQUOTE_TOK  */
+    UMINUS_TOK = 377,              /* UMINUS_TOK  */
+    UPLUS_TOK = 378                /* UPLUS_TOK  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Token kinds.  */
-#define YYEMPTY -2
-#define YYEOF 0
-#define YYerror 256
-#define YYUNDEF 257
-#define ADD_TOK 258
-#define ALIASES_TOK 259
-#define AND_TOK 260
-#define ANY_TOK 261
-#define AREALIKE_TOK 262
-#define ARETHESAME_TOK 263
-#define ARRAY_TOK 264
-#define ASSERT_TOK 265
-#define ATOM_TOK 266
-#define BEQ_TOK 267
-#define BNE_TOK 268
-#define BREAK_TOK 269
-#define CALL_TOK 270
-#define CARD_TOK 271
-#define CASE_TOK 272
-#define CHOICE_TOK 273
-#define CHECK_TOK 274
-#define CONDITIONAL_TOK 275
-#define CONSTANT_TOK 276
-#define CONTINUE_TOK 277
-#define CREATE_TOK 278
-#define DATA_TOK 279
-#define DECREASING_TOK 280
-#define DEFAULT_TOK 281
-#define DEFINITION_TOK 282
-#define DER_TOK 283
-#define DIMENSION_TOK 284
-#define DIMENSIONLESS_TOK 285
-#define DO_TOK 286
-#define ELSE_TOK 287
-#define END_TOK 288
-#define EXPECT_TOK 289
-#define EXTERNAL_TOK 290
-#define FALSE_TOK 291
-#define FALLTHRU_TOK 292
-#define FIX_TOK 293
-#define FOR_TOK 294
-#define FREE_TOK 295
-#define FROM_TOK 296
-#define GLOBAL_TOK 297
-#define IF_TOK 298
-#define IGNORE_TOK 299
-#define IMPORT_TOK 300
-#define IN_TOK 301
-#define INPUT_TOK 302
-#define INCREASING_TOK 303
-#define INTERACTIVE_TOK 304
-#define INDEPENDENT_TOK 305
-#define INTERSECTION_TOK 306
-#define ISA_TOK 307
-#define _IS_T 308
-#define ISREFINEDTO_TOK 309
-#define LINK_TOK 310
-#define MAXIMIZE_TOK 311
-#define MAXINTEGER_TOK 312
-#define MAXREAL_TOK 313
-#define METHODS_TOK 314
-#define METHOD_TOK 315
-#define MINIMIZE_TOK 316
-#define MODEL_TOK 317
-#define NOT_TOK 318
-#define NOTES_TOK 319
-#define OF_TOK 320
-#define OPTION_TOK 321
-#define OR_TOK 322
-#define OTHERWISE_TOK 323
-#define OUTPUT_TOK 324
-#define PATCH_TOK 325
-#define PROD_TOK 326
-#define PROVIDE_TOK 327
-#define REFINES_TOK 328
-#define REPLACE_TOK 329
-#define REQUIRE_TOK 330
-#define RETURN_TOK 331
-#define RUN_TOK 332
-#define SATISFIED_TOK 333
-#define SELECT_TOK 334
-#define SIZE_TOK 335
-#define SOLVE_TOK 336
-#define SOLVER_TOK 337
-#define STOP_TOK 338
-#define SUCHTHAT_TOK 339
-#define SUM_TOK 340
-#define SWITCH_TOK 341
-#define THEN_TOK 342
-#define TRUE_TOK 343
-#define UNION_TOK 344
-#define UNITS_TOK 345
-#define UNIVERSAL_TOK 346
-#define UNLINK_TOK 347
-#define WHEN_TOK 348
-#define WHERE_TOK 349
-#define WHILE_TOK 350
-#define WILLBE_TOK 351
-#define WILLBETHESAME_TOK 352
-#define WILLNOTBETHESAME_TOK 353
-#define ASSIGN_TOK 354
-#define CASSIGN_TOK 355
-#define DBLCOLON_TOK 356
-#define USE_TOK 357
-#define LEQ_TOK 358
-#define GEQ_TOK 359
-#define NEQ_TOK 360
-#define DOTDOT_TOK 361
-#define WITH_TOK 362
-#define VALUE_TOK 363
-#define WITH_VALUE_T 364
-#define REAL_TOK 365
-#define INTEGER_TOK 366
-#define IDENTIFIER_TOK 367
-#define BRACEDTEXT_TOK 368
-#define SYMBOL_TOK 369
-#define DQUOTE_TOK 370
-#define UMINUS_TOK 371
-#define UPLUS_TOK 372
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 302 "ascend/compiler/ascParse.y"
+#line 641 "ascend/compiler/ascParse.y"
 
   double real_value;
   long   int_value;
@@ -325,7 +211,7 @@ union YYSTYPE
   enum ForOrder order;
   enum ForKind fkind;
 
-#line 329 "ascend/compiler/ascParse.h"
+#line 215 "ascend/compiler/ascParse.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -334,10 +220,10 @@ typedef union YYSTYPE YYSTYPE;
 #endif
 
 
-extern YYSTYPE zz_lval;
+extern YYSTYPE yylval;
 
 
-int zz_parse (void);
+int yyparse (void);
 
 
-#endif /* !YY_ZZ_ASCEND_COMPILER_ASCPARSE_H_INCLUDED  */
+#endif /* !YY_YY_ASCEND_COMPILER_ASCPARSE_H_INCLUDED  */

@@ -20,6 +20,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ascend/general/platform.h>
 #ifdef __WIN32__
 #include <io.h>
@@ -45,6 +46,24 @@ static
 int compare_strings(CONST VOIDPTR p1, CONST VOIDPTR p2)
 {
   return strcmp((char *)p1, (char *)p2);
+}
+
+static int test_setenv_var(const char *name, const char *value)
+{
+#if defined(_WIN32) && !defined(__CYGWIN__) && !defined(__MSYS__)
+  return _putenv_s(name, value);
+#else
+  return setenv(name, value, 1);
+#endif
+}
+
+static int test_unsetenv_var(const char *name)
+{
+#if defined(_WIN32) && !defined(__CYGWIN__) && !defined(__MSYS__)
+  return _putenv_s(name, "");
+#else
+  return unsetenv(name);
+#endif
 }
 
 #pragma GCC diagnostic ignored "-Wformat-truncation"
@@ -516,8 +535,7 @@ static void test_ascEnvVar(void)
     CU_TEST(1 == Asc_ImportPathList(test_ext_varname)); /* non-existent external env var */
 
     SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "iHaveNoSpaces");
-    SNPRINTF(str_path, STR_LEN-1, "%s=%s", test_ext_varname, str_path_ss1);
-    CU_TEST_FATAL(0 == putenv(str_path));
+    CU_TEST_FATAL(0 == test_setenv_var(test_ext_varname, str_path_ss1));
 
     CU_TEST(0 == Asc_ImportPathList(test_ext_varname)); /* import single path env var */
     paths = Asc_GetPathList(test_ext_varname, &elem_count);
@@ -528,12 +546,11 @@ static void test_ascEnvVar(void)
 
     SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "~This one has spaces~");
     SNPRINTF(str_path_ss2, STR_LEN-1, "%s", "<>NotMe<>");
-    SNPRINTF(str_path, STR_LEN-1, "%s=%s%c%s",
-                                  test_ext_varname,
+    SNPRINTF(str_path, STR_LEN-1, "%s%c%s",
                                   str_path_ss1,
                                   PATHDIV,
                                   str_path_ss2);
-    CU_TEST_FATAL(0 == putenv(str_path));
+    CU_TEST_FATAL(0 == test_setenv_var(test_ext_varname, str_path));
 
     CU_TEST(0 == Asc_ImportPathList(test_ext_varname)); /* import double path env var */
     paths = Asc_GetPathList(test_ext_varname, &elem_count);
@@ -546,14 +563,13 @@ static void test_ascEnvVar(void)
     SNPRINTF(str_path_ss1, STR_LEN-1, "%cusr%clocal%clib", SLASH, SLASH, SLASH);
     SNPRINTF(str_path_ss2, STR_LEN-1, "%cc%cWindows%cTemp", SLASH, SLASH, SLASH);
     SNPRINTF(str_path_ss3, STR_LEN-1, "server%c%caccount%csubfolder", SLASH, SLASH, SLASH);
-    SNPRINTF(str_path, STR_LEN-1, "%s=%s%c%s%c%s",
-                                  test_ext_varname,
+    SNPRINTF(str_path, STR_LEN-1, "%s%c%s%c%s",
                                   str_path_ss1,
                                   PATHDIV,
                                   str_path_ss2,
                                   PATHDIV,
                                   str_path_ss3);
-    CU_TEST_FATAL(0 == putenv(str_path));
+    CU_TEST_FATAL(0 == test_setenv_var(test_ext_varname, str_path));
 
     CU_TEST(0 == Asc_ImportPathList(test_ext_varname)); /* import double path env var */
     paths = Asc_GetPathList(test_ext_varname, &elem_count);
@@ -565,8 +581,7 @@ static void test_ascEnvVar(void)
     if (NULL != paths) ascfree(paths);
   }
 
-  SNPRINTF(str_path, STR_LEN-1, "%s=", test_ext_varname); /* clear the temporary external env var */
-  CU_TEST(0 == putenv(str_path));
+  CU_TEST(0 == test_unsetenv_var(test_ext_varname));
   Asc_DestroyEnvironment();                             /* clean up */
 
   /* test Asc_AppendPath() */
@@ -756,4 +771,3 @@ static void test_ascEnvVar(void)
 	T(ascEnvVar)
 
 REGISTER_TESTS_SIMPLE(utilities_ascEnvVar, TESTS)
-
