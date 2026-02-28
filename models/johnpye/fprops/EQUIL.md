@@ -214,14 +214,7 @@ Start from:
 
 From formula parsing, build the element matrix with rows = elements and columns = species:
 
-$$
-\mathbf{A}
-=
-\begin{bmatrix}
-1 & 1 & 0\\
-1 & 2 & 2
-\end{bmatrix},
-$$
+`A = [[1, 1, 0], [1, 2, 2]]`.
 
 where column order is $(\mathrm{CO},\mathrm{CO}_2,\mathrm{O}_2)$.
 For example:
@@ -230,47 +223,17 @@ For example:
 - CO2 contributes C:1, O:2,
 - O2 contributes C:0, O:2.
 
-If feed totals are $b_{\mathrm{C}}, b_{\mathrm{O}}$, feasibility is
+If feed totals are $b_{\mathrm{C}}, b_{\mathrm{O}}$, feasibility is $\mathbf{A}\mathbf{n}=\mathbf{b}$ with $\mathbf{b}=[b_{\mathrm{C}},\,b_{\mathrm{O}}]^T$.
 
-$$
-\mathbf{A}\mathbf{n}=\mathbf{b}
-=
-\begin{bmatrix}
-b_{\mathrm{C}}\\
-b_{\mathrm{O}}
-\end{bmatrix}.
-$$
+The nullspace dimension is $r=n_s-\mathrm{rank}(\mathbf{A})=3-2=1$.
 
-The nullspace has dimension
+One null vector is $\boldsymbol\nu=[2,\,-2,\,1]^T$, and it satisfies $\mathbf{A}\boldsymbol\nu=\mathbf{0}$.
 
-$$
-r=n_s-\mathrm{rank}(\mathbf{A})=3-2=1.
-$$
-
-One null vector is
-
-$$
-\boldsymbol\nu=
-\begin{bmatrix}
-2\\
--2\\
-1
-\end{bmatrix},
-\qquad
-\mathbf{A}\boldsymbol\nu=\mathbf{0}.
-$$
-
-So every feasible composition is
-
-$$
-\mathbf{n}=\mathbf{n}_0+\boldsymbol\nu\,\xi.
-$$
+So every feasible composition is $\mathbf{n}=\mathbf{n}_0+\boldsymbol\nu\,\xi$.
 
 This is exactly the extent form for the balanced reaction
 
-$$
-2\,\mathrm{CO}+\mathrm{O}_2\rightleftharpoons 2\,\mathrm{CO}_2.
-$$
+$2\,\mathrm{CO}+\mathrm{O}_2\rightleftharpoons 2\,\mathrm{CO}_2$.
 
 General case is the same workflow:
 
@@ -440,17 +403,8 @@ When interior reduced solve fails near boundary, code now runs an active-set see
 
 - Split species into active set $\mathcal{A}$ (pinned at $n_i=n_{\mathrm{floor}}$) and free set $\mathcal{F}$.
 - Solve reduced problem on free species only.
-- Compute reduced gradients
-
-$$
-r_i = \frac{\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i}{RT}.
-$$
-
-- Recover $\boldsymbol\lambda$ from free species $\mathcal{F}$ by solving
-  $$
-  \mathbf{A}_{\mathcal{F}}^T\boldsymbol\lambda \approx -\boldsymbol\mu_{\mathcal{F}},
-  $$
-  exactly if dimensions permit, otherwise as a least-squares system.
+- Compute reduced gradients as $r_i = (\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i)/(RT)$.
+- Recover $\boldsymbol\lambda$ from free species $\mathcal{F}$ by solving $\mathbf{A}_{\mathcal{F}}^T\boldsymbol\lambda \approx -\boldsymbol\mu_{\mathcal{F}}$, exactly if dimensions permit, otherwise as a least-squares system.
 
 - Pivot rules:
   - add species to active set if free species is near bound and $r_i>0$,
@@ -497,12 +451,7 @@ $$
 j=1,\dots,r.
 $$
 
-Here each
-$$
-\ln K_j = -\frac{\Delta_r G_j^\circ}{RT},
-\qquad
-\Delta_r G_j^\circ = \sum_i \nu_{i,j}\mu_i^\circ.
-$$
+Here each reaction constant satisfies $\ln K_j = -\Delta_r G_j^\circ/(RT)$, with $\Delta_r G_j^\circ = \sum_i \nu_{i,j}\mu_i^\circ$.
 
 Small $\Delta\log_{10}K_j$ and small composition differences indicate good agreement.
 
@@ -529,20 +478,14 @@ This section maps the key equations in this note to the main implementation poin
 
 #### 15.1 Thermodynamic state equations
 
-Equation:
-$$
-\mu_i = \mu_i^\circ + RT\ln\left(\frac{y_i P}{P^\circ}\right)
-$$
+Equation: $\mu_i = \mu_i^\circ + RT\ln\left(\frac{y_i P}{P^\circ}\right)$.
 Code:
 - `eqm_compute_mu0` and `eqm_mu0_ideal_source` compute $\mu_i^\circ(T,P^\circ)$.
 - `eqm_reduced_eval_obj_mu` computes $y_i$, $\mu_i$, and $G=\sum_i n_i\mu_i$.
 
 #### 15.2 Feasible-set parameterization
 
-Equation:
-$$
-\mathbf{n}=\mathbf{n}_0+\mathbf{N}\mathbf{z}, \qquad \mathbf{A}\mathbf{n}_0=\mathbf{b}, \qquad \mathbf{A}\mathbf{N}=0
-$$
+Equation: $\mathbf{n}=\mathbf{n}_0+\mathbf{N}\mathbf{z}$, with $\mathbf{A}\mathbf{n}_0=\mathbf{b}$ and $\mathbf{A}\mathbf{N}=0$.
 Code:
 - `eqm_solve_particular` computes $\mathbf{n}_0$.
 - `eqm_rref` + `eqm_fill_nullspace` build $\mathbf{N}$.
@@ -550,27 +493,13 @@ Code:
 
 #### 15.3 Reduced gradient and Hessian
 
-Equations:
-$$
-\nabla_{\mathbf{z}}\phi=\mathbf{N}^T\boldsymbol\mu
-$$
-$$
-\mathbf{H}=RT\left(\mathbf{N}^T\mathrm{diag}(1/n_i)\mathbf{N}
--\frac{\mathbf{c}\mathbf{c}^T}{n_{\mathrm{tot}}}\right), \quad \mathbf{c}=\mathbf{N}^T\mathbf{1}
-$$
+Equations: $\nabla_{\mathbf{z}}\phi=\mathbf{N}^T\boldsymbol\mu$, and $\mathbf{H}=RT\left(\mathbf{N}^T\mathrm{diag}(1/n_i)\mathbf{N}-\frac{\mathbf{c}\mathbf{c}^T}{n_{\mathrm{tot}}}\right)$ with $\mathbf{c}=\mathbf{N}^T\mathbf{1}$.
 Code:
 - `eqm_reduced_eval_grad_hess`.
 
 #### 15.4 Newton step and globalization
 
-Equations:
-$$
-(\mathbf{H}+\lambda\mathbf{I})\Delta\mathbf{z}=-\nabla\phi
-$$
-plus positivity-limited line search on
-$$
-\mathbf{n}+\alpha\Delta\mathbf{n}>n_{\mathrm{floor}}.
-$$
+Equations: $(\mathbf{H}+\lambda\mathbf{I})\Delta\mathbf{z}=-\nabla\phi$, plus positivity-limited line search constraint $\mathbf{n}+\alpha\Delta\mathbf{n}>n_{\mathrm{floor}}$.
 Code:
 - Newton loop in `eqm_reduced_solve_source_init_once`.
 - linear solve via `eqm_dense_solve`.
@@ -578,46 +507,27 @@ Code:
 
 #### 15.5 1D nullspace special case
 
-Equation:
-$$
-\Phi(z)=\mathbf{v}^T\boldsymbol\mu(\mathbf{n}_0+\mathbf{v}z)=0
-$$
+Equation: $\Phi(z)=\mathbf{v}^T\boldsymbol\mu(\mathbf{n}_0+\mathbf{v}z)=0$.
 Code:
 - `eqm_reduced_solve_r1`.
 - helper evaluators: `eqm_reduced_eval_phi_r1`, `eqm_reduced_eval_phi_edge`, `eqm_reduced_try_edge_root`.
 
 #### 15.6 Continuation/homotopy
 
-Equations:
-$$
-T_{k+1}=0.82\,T_k,\qquad T_0=2.5\,T_{\mathrm{target}}
-$$
-and floor schedule $n_{\mathrm{floor}}:10^{-12}\to10^{-120}$.
+Equations: $T_{k+1}=0.82\,T_k$ with $T_0=2.5\,T_{\mathrm{target}}$, and floor schedule $n_{\mathrm{floor}}:10^{-12}\to10^{-120}$.
 Code:
 - `eqm_reduced_solve_source_init`.
 
 #### 15.7 Active-set reduced KKT quantities
 
-Equation:
-$$
-r_i=\frac{\mu_i+(\mathbf{A}^T\boldsymbol\lambda)_i}{RT}
-$$
-where $\boldsymbol\lambda$ is computed from free-species equations.
+Equation: $r_i=\frac{\mu_i+(\mathbf{A}^T\boldsymbol\lambda)_i}{RT}$, where $\boldsymbol\lambda$ is computed from free-species equations.
 Code:
 - `eqm_reduced_eval_reduced_gradients`.
 - active-set pivot loop in `eqm_reduced_active_set_seed`.
 
 #### 15.8 Boundary-KKT acceptance
 
-Conditions:
-$$
-|r_i|\le\varepsilon_{\mathrm{free}}\quad(i\in\mathcal{F}),\qquad
-r_i\ge-\varepsilon_{\mathrm{dual}}\quad(i\in\mathcal{A})
-$$
-with active cutoff
-$$
-n_i \le \max\left(10^{-60},\,\eta\,n_{\mathrm{tot}}\right),\quad \eta=10^{-22}.
-$$
+Conditions: $|r_i|\le\varepsilon_{\mathrm{free}}$ for $i\in\mathcal{F}$ and $r_i\ge-\varepsilon_{\mathrm{dual}}$ for $i\in\mathcal{A}$, with active cutoff $n_i \le \max\left(10^{-60},\,\eta\,n_{\mathrm{tot}}\right)$ and $\eta=10^{-22}$.
 Code:
 - `eqm_validate_solution_bounds`.
 Constants used in code: `EQM_BOUND_KKT_FREE_TOL`, `EQM_BOUND_KKT_DUAL_TOL`, `EQM_BOUND_ACTIVE_CUTOFF_FRAC`.
