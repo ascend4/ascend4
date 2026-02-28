@@ -10,6 +10,19 @@ Document roadmap:
 - Part D maps equations to code.
 - Appendix A gives the secondary full-space interior-point pathway.
 
+## Where This Fits
+
+This `fprops` `eqm` code is a chemical-reaction equilibrium solver.
+Its core problem is: minimize mixture Gibbs energy over species amounts `n`, subject to element balances `A n = b`.
+That is exactly the right structure for reactive systems (for example CO/CO2/H2/H2O/O2, or future solid-gas redox systems).
+
+By contrast, `models/thermodynamics.a4l` is mainly a phase-equilibrium/flash framework.
+It enforces phase conditions (equal `T`, equal `P`, and optionally equality of component partial Gibbs energies across phases), plus phase-fraction complementarity.
+As written, it does not introduce reaction stoichiometry, reaction extents, or elemental conservation constraints that permit chemical conversion between species.
+
+So yes: in its current form, `thermodynamics.a4l` handles phase redistribution of a fixed species set, not chemical reaction equilibrium.
+That ASCEND model remains valuable for process-level phase-equilibrium structure and model composition, while `fprops/eqm` is the appropriate core for reaction equilibrium.
+
 ## Part A. Common Principles
 
 ### 1. Problem statement
