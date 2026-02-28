@@ -12,6 +12,41 @@
 #include "eqm_slsqp.h"
 #endif
 
+static int eqm_low_temperature(double T){
+	return T < 700.0;
+}
+
+static void eqm_ipopt_apply_options(IpoptProblem prob, double T, const char *hess_approx,
+		int with_mu_target, int with_bound_push){
+	const int lowT = eqm_low_temperature(T);
+	const double tol = lowT ? 1e-8 : 1e-10;
+	const double acceptable_tol = lowT ? 1e-7 : 1e-9;
+	const double mu_target = lowT ? 1e-10 : 1e-12;
+	const double bound_push = lowT ? 1e-10 : 1e-14;
+	const int max_iter = lowT ? 800 : 500;
+
+	AddIpoptNumOption(prob, "tol", tol);
+	AddIpoptNumOption(prob, "constr_viol_tol", tol);
+	AddIpoptNumOption(prob, "dual_inf_tol", tol);
+	AddIpoptNumOption(prob, "compl_inf_tol", tol);
+	AddIpoptNumOption(prob, "acceptable_tol", acceptable_tol);
+	AddIpoptNumOption(prob, "acceptable_constr_viol_tol", acceptable_tol);
+	AddIpoptIntOption(prob, "acceptable_iter", 5);
+	if(with_mu_target){
+		AddIpoptNumOption(prob, "mu_target", mu_target);
+	}
+	if(with_bound_push){
+		AddIpoptNumOption(prob, "bound_relax_factor", 0.0);
+		AddIpoptNumOption(prob, "bound_push", bound_push);
+		AddIpoptNumOption(prob, "bound_frac", bound_push);
+		AddIpoptNumOption(prob, "slack_bound_push", bound_push);
+	}
+	AddIpoptIntOption(prob, "max_iter", max_iter);
+	AddIpoptStrOption(prob, "hessian_approximation", (char *)hess_approx);
+	AddIpoptStrOption(prob, "mu_strategy", (char *)"adaptive");
+	AddIpoptIntOption(prob, "print_level", 0);
+}
+
 static void eqm_compute_x(const EqmData *D, const Number *xvars, double *S, double *x, double *Z){
 	double sum = 0.0;
 	int i;
@@ -2114,10 +2149,7 @@ int eqm_ipopt_nullspace_solve(EqmNullspace *M, const double *z_init, double *n_o
 		free(x_best);
 		return -14;
 	}
-	AddIpoptNumOption(prob, "tol", 1e-9);
-	AddIpoptStrOption(prob, "mu_strategy", "adaptive");
-	AddIpoptIntOption(prob, "print_level", 0);
-	AddIpoptStrOption(prob, "hessian_approximation", "exact");
+	eqm_ipopt_apply_options(prob, M->T, "exact", 0, 0);
 	for(size_t t = 0; t < tau_count; ++t){
 		M->barrier_tau = tau_seq[t];
 		status = IpoptSolve(prob, x, NULL, &obj, NULL, NULL, NULL, (UserDataPtr)M);
@@ -2166,11 +2198,25 @@ void eqm_ipopt_nullspace_destroy(EqmNullspace *M){
 	free(M);
 }
 
+static int eqm_ipopt_r1_logK_ok(const EqmNullspace *M, const double *n, double log10_tol){
+	double log10K_target;
+	double log10K_check;
+	if(!M || !n || M->r != 1){
+		return 1;
+	}
+	log10K_target = eqm_log10K_target_nu(M->N, M->mu0, M->ns, M->T);
+	log10K_check = eqm_log10K_from_nu(n, M->N, M->ns, M->P, M->P0);
+	if(!isfinite(log10K_target) || !isfinite(log10K_check)){
+		return 0;
+	}
+	return fabs(log10K_check - log10K_target) <= log10_tol;
+}
+
 int eqm_ipopt_nullspace_solve_source(const char **names, int ns, const char **elements, int ne,
 		const char *source, const double *b, double T, double P, double *n_out){
 	EqmNullspace *M = NULL;
 	double *n_seed = NULL;
-	int seed_ok = 0;
+	const double log10_tol_r1 = 0.2;
 	int status;
 
 	if(!eqm_ipopt_nullspace_create(names, ns, elements, ne, source, b, T, P, &M)){
@@ -2179,82 +2225,119 @@ int eqm_ipopt_nullspace_solve_source(const char **names, int ns, const char **el
 	if(M->r == 1){
 		n_seed = (double *)calloc((size_t)ns, sizeof(double));
 		if(n_seed && eqm_ipopt_nullspace_seed_r1(M, n_seed)){
-			seed_ok = 1;
 			status = eqm_ipopt_solve_elements_source_init(names, ns, elements, ne,
 				source, b, T, P, n_seed, n_out);
 			if(status == 0 || status == 1 || status == 6){
-				free(n_seed);
-				eqm_ipopt_nullspace_destroy(M);
-				return status;
+				if(eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					free(n_seed);
+					eqm_ipopt_nullspace_destroy(M);
+					return status;
+				}
+				if(eqm_ipopt_nullspace_logK_solution_r1(M, n_out)
+						&& eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					free(n_seed);
+					eqm_ipopt_nullspace_destroy(M);
+					return 0;
+				}
 			}
 			status = eqm_ipopt_solve_elements_n_source_init(names, ns, elements, ne,
 				source, b, T, P, n_seed, n_out);
 			if(status == 0 || status == 1 || status == 6){
-				free(n_seed);
-				eqm_ipopt_nullspace_destroy(M);
-				return status;
+				if(eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					free(n_seed);
+					eqm_ipopt_nullspace_destroy(M);
+					return status;
+				}
+				if(eqm_ipopt_nullspace_logK_solution_r1(M, n_out)
+						&& eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					free(n_seed);
+					eqm_ipopt_nullspace_destroy(M);
+					return 0;
+				}
 			}
 			status = eqm_ipopt_solve_elements_logn_source_init(names, ns, elements, ne,
 				source, b, T, P, n_seed, n_out);
 			if(status == 0 || status == 1 || status == 6){
-				free(n_seed);
-				eqm_ipopt_nullspace_destroy(M);
-				return status;
+				if(eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					free(n_seed);
+					eqm_ipopt_nullspace_destroy(M);
+					return status;
+				}
+				if(eqm_ipopt_nullspace_logK_solution_r1(M, n_out)
+						&& eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					free(n_seed);
+					eqm_ipopt_nullspace_destroy(M);
+					return 0;
+				}
 			}
 #ifdef HAVE_NLOPT
 			status = eqm_slsqp_solve_elements_source_init(names, ns, elements, ne,
 				source, b, T, P, n_seed, n_out);
 			if(status == 0){
-				free(n_seed);
-				eqm_ipopt_nullspace_destroy(M);
-				return 0;
+				if(eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					free(n_seed);
+					eqm_ipopt_nullspace_destroy(M);
+					return 0;
+				}
+				if(eqm_ipopt_nullspace_logK_solution_r1(M, n_out)
+						&& eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					free(n_seed);
+					eqm_ipopt_nullspace_destroy(M);
+					return 0;
+				}
 			}
 #endif
 		}
 		status = eqm_ipopt_solve_elements_source(names, ns, elements, ne, source, b, T, P, n_out);
+		if(status == 0 || status == 1 || status == 6){
+			if(eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+				free(n_seed);
+				eqm_ipopt_nullspace_destroy(M);
+				return status;
+			}
+			if(eqm_ipopt_nullspace_logK_solution_r1(M, n_out)
+					&& eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+				free(n_seed);
+				eqm_ipopt_nullspace_destroy(M);
+				return 0;
+			}
+		}
+	}
+	status = eqm_ipopt_solve_elements_n_source(names, ns, elements, ne, source, b, T, P, n_out);
+	if(status == 0 || status == 1 || status == 6){
+		if(M->r == 1){
+			if(!eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+				if(eqm_ipopt_nullspace_logK_solution_r1(M, n_out)
+						&& eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					status = 0;
+				}else{
+					status = -22;
+				}
+			}
+		}
 		if(status == 0 || status == 1 || status == 6){
 			free(n_seed);
 			eqm_ipopt_nullspace_destroy(M);
 			return status;
 		}
 	}
-	status = eqm_ipopt_solve_elements_n_source(names, ns, elements, ne, source, b, T, P, n_out);
-	if(status == 0 || status == 1 || status == 6){
-		if(M->r == 1){
-			const double log10_tol = 0.5;
-			double log10K_target = eqm_log10K_target_nu(M->N, M->mu0, M->ns, M->T);
-			double log10K_check = eqm_log10K_from_nu(n_out, M->N, M->ns, P, M->P0);
-			if(!(isfinite(log10K_check) && fabs(log10K_check - log10K_target) <= log10_tol)){
-				if(!eqm_ipopt_nullspace_logK_solution_r1(M, n_out) && seed_ok){
-					for(int i = 0; i < M->ns; ++i){
-						n_out[i] = n_seed[i];
-					}
-				}
-				status = 0;
-			}
-		}
-		free(n_seed);
-		eqm_ipopt_nullspace_destroy(M);
-		return status;
-	}
 	status = eqm_ipopt_solve_elements_logn_source(names, ns, elements, ne, source, b, T, P, n_out);
 	if(status == 0 || status == 1 || status == 6){
 		if(M->r == 1){
-			const double log10_tol = 0.5;
-			double log10K_target = eqm_log10K_target_nu(M->N, M->mu0, M->ns, M->T);
-			double log10K_check = eqm_log10K_from_nu(n_out, M->N, M->ns, P, M->P0);
-			if(!(isfinite(log10K_check) && fabs(log10K_check - log10K_target) <= log10_tol)){
-				if(!eqm_ipopt_nullspace_logK_solution_r1(M, n_out) && seed_ok){
-					for(int i = 0; i < M->ns; ++i){
-						n_out[i] = n_seed[i];
-					}
+			if(!eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+				if(eqm_ipopt_nullspace_logK_solution_r1(M, n_out)
+						&& eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					status = 0;
+				}else{
+					status = -22;
 				}
-				status = 0;
 			}
 		}
-		free(n_seed);
-		eqm_ipopt_nullspace_destroy(M);
-		return status;
+		if(status == 0 || status == 1 || status == 6){
+			free(n_seed);
+			eqm_ipopt_nullspace_destroy(M);
+			return status;
+		}
 	}
 #ifdef HAVE_NLOPT
 	status = eqm_slsqp_solve_elements_source(names, ns, elements, ne, source, b, T, P, n_out);
@@ -2266,6 +2349,16 @@ int eqm_ipopt_nullspace_solve_source(const char **names, int ns, const char **el
 #endif
 	if(M->r >= 1){
 		status = eqm_ipopt_nullspace_solve(M, NULL, n_out);
+		if(status == 0 || status == 1 || status == 6){
+			if(M->r == 1 && !eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+				if(eqm_ipopt_nullspace_logK_solution_r1(M, n_out)
+						&& eqm_ipopt_r1_logK_ok(M, n_out, log10_tol_r1)){
+					status = 0;
+				}else{
+					status = -22;
+				}
+			}
+		}
 		if(status == 0 || status == 1 || status == 6){
 			free(n_seed);
 			eqm_ipopt_nullspace_destroy(M);
@@ -2430,18 +2523,25 @@ int eqm_ipopt_solve_source_init(const char **names, int ns, int ne, const double
 		nele_jac, nele_hess, 0,
 		eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h
 	);
-	AddIpoptNumOption(prob, "tol", 1e-12);
-	AddIpoptNumOption(prob, "constr_viol_tol", 1e-12);
-	AddIpoptNumOption(prob, "dual_inf_tol", 1e-12);
-	AddIpoptNumOption(prob, "compl_inf_tol", 1e-12);
-	AddIpoptIntOption(prob, "max_iter", 500);
-	AddIpoptStrOption(prob, "hessian_approximation", "limited-memory");
-	AddIpoptStrOption(prob, "mu_strategy", "adaptive");
-	AddIpoptIntOption(prob, "print_level", 0);
+	eqm_ipopt_apply_options(prob, D.T, "limited-memory", 0, 0);
 
 	status = IpoptSolve(prob, x, NULL, &obj, NULL, NULL, NULL, (UserDataPtr)&D);
-	for(i = 0; i < D.ns; ++i){
-		n_out[i] = exp(x[i]);
+	{
+		double sumx = 0.0;
+		double S = exp(x[D.ns]);
+		for(i = 0; i < D.ns; ++i){
+			sumx += exp(x[i]);
+		}
+		if(!(sumx > 0.0) || !isfinite(sumx) || !isfinite(S)){
+			status = -13;
+			for(i = 0; i < D.ns; ++i){
+				n_out[i] = NAN;
+			}
+		}else{
+			for(i = 0; i < D.ns; ++i){
+				n_out[i] = S * exp(x[i]) / sumx;
+			}
+		}
 	}
 
 	FreeIpoptProblem(prob);
@@ -2635,23 +2735,11 @@ int eqm_ipopt_solve_logn_source_init(const char **names, int ns, int ne, const d
 		nele_jac, nele_hess, 0,
 		eval_f_logn, eval_g_logn, eval_grad_f_logn, eval_jac_g_logn, eval_h_logn
 	);
-	AddIpoptNumOption(prob, "tol", 1e-10);
-	AddIpoptNumOption(prob, "constr_viol_tol", 1e-10);
-	AddIpoptNumOption(prob, "dual_inf_tol", 1e-10);
-	AddIpoptNumOption(prob, "compl_inf_tol", 1e-10);
-	AddIpoptNumOption(prob, "mu_target", 1e-12);
-	AddIpoptNumOption(prob, "bound_relax_factor", 0.0);
-	AddIpoptNumOption(prob, "bound_push", 1e-14);
-	AddIpoptNumOption(prob, "bound_frac", 1e-14);
-	AddIpoptNumOption(prob, "slack_bound_push", 1e-14);
-	AddIpoptIntOption(prob, "max_iter", 500);
-	AddIpoptStrOption(prob, "hessian_approximation", "limited-memory");
-	AddIpoptStrOption(prob, "mu_strategy", "adaptive");
-	AddIpoptIntOption(prob, "print_level", 0);
+	eqm_ipopt_apply_options(prob, D.T, "limited-memory", 1, 1);
 
 	status = IpoptSolve(prob, x, NULL, &obj, NULL, NULL, NULL, (UserDataPtr)&D);
 	for(i = 0; i < D.ns; ++i){
-		n_out[i] = exp(x[i]);
+		n_out[i] = D.n_est[i] * exp(x[i]);
 	}
 
 	FreeIpoptProblem(prob);
@@ -2768,14 +2856,7 @@ int eqm_ipopt_solve_n_source_init(const char **names, int ns, int ne, const doub
 		nele_jac, nele_hess, 0,
 		eval_f_n, eval_g_n, eval_grad_f_n, eval_jac_g_n, eval_h_n
 	);
-	AddIpoptNumOption(prob, "tol", 1e-10);
-	AddIpoptNumOption(prob, "constr_viol_tol", 1e-10);
-	AddIpoptNumOption(prob, "dual_inf_tol", 1e-10);
-	AddIpoptNumOption(prob, "compl_inf_tol", 1e-10);
-	AddIpoptIntOption(prob, "max_iter", 500);
-	AddIpoptStrOption(prob, "hessian_approximation", "limited-memory");
-	AddIpoptStrOption(prob, "mu_strategy", "adaptive");
-	AddIpoptIntOption(prob, "print_level", 0);
+	eqm_ipopt_apply_options(prob, D.T, "limited-memory", 0, 0);
 
 	status = IpoptSolve(prob, x, NULL, &obj, NULL, NULL, NULL, (UserDataPtr)&D);
 	for(i = 0; i < D.ns; ++i){

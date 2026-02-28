@@ -193,6 +193,10 @@ static const ThermalConductivityData thcond_nitrogen = {
 	}}
 };
 
+static const ElementComp elements_nitrogen[] = {
+	{"N", 2}
+};
+
 
 const EosData eos_nitrogen = {
 	"nitrogen"
@@ -204,6 +208,8 @@ const EosData eos_nitrogen = {
 	,.data = {.helm = &helmholtz_data_nitrogen}
 	,.visc = &visc_nitrogen
 	,.thcond = &thcond_nitrogen
+	,.elements = elements_nitrogen
+	,.nelements = (int)(sizeof(elements_nitrogen) / sizeof(elements_nitrogen[0]))
 };
 
 #else

@@ -5015,7 +5015,7 @@ MODEL td_component_constants(
  * accordingly.
  *)
 CASE 'aluminum_tribromide':
-	 formula :== 'ALBR3';
+	 formula :== 'AlBr3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5044,7 +5044,7 @@ CASE 'aluminum_tribromide':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'aluminum_trichloride':
-	 formula :== 'ALCL3';
+	 formula :== 'AlCl3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5073,7 +5073,7 @@ CASE 'aluminum_trichloride':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'aluminum_triiodide':
-	 formula :== 'ALI3';
+	 formula :== 'AlI3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5102,7 +5102,7 @@ CASE 'aluminum_triiodide':
 	 lden :== 1.310 {g/cm^3};
 
 CASE 'argon':
-	 formula :== 'AR';
+	 formula :== 'Ar';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5114,11 +5114,11 @@ CASE 'argon':
 	 Zc :== 0.291;
 	 omega :== 0.001;
 	 cpvapa :== 20.80 {J/g_mole/K};
-(* 	 cpvapb :== ; parameter missing from Reid et al.*)
-(* 	 cpvapc :== ; parameter missing from Reid et al.*)
-(* 	 cpvapd :== ; parameter missing from Reid et al.*)
-(* 	 Hf :== ; parameter missing from Reid et al.*)
-(* 	 Gf :== ; parameter missing from Reid et al.*)
+	 cpvapb :== 0 {J/g_mole/K^2};
+	 cpvapc :== 0 {J/g_mole/K^3};
+	 cpvapd :== 0 {J/g_mole/K^4};
+	 Hf :== 0 {J/g_mole};
+	 Gf :== 0 {J/g_mole};
 	 vpa :== -5.90501;
 	 vpb :== 1.12627;
 	 vpc :== -0.76787;
@@ -5131,7 +5131,7 @@ CASE 'argon':
 	 lden :== 1.373 {g/cm^3};
 
 CASE 'arsenic':
-	 formula :== 'AS';
+	 formula :== 'As';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5160,7 +5160,7 @@ CASE 'arsenic':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'arsenic_trichloride':
-	 formula :== 'ASCL3';
+	 formula :== 'AsCl3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5189,7 +5189,7 @@ CASE 'arsenic_trichloride':
 	 lden :== 2.163 {g/cm^3};
 
 CASE 'boron_tribromide':
-	 formula :== 'BBR3';
+	 formula :== 'BBr3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5218,7 +5218,7 @@ CASE 'boron_tribromide':
 	 lden :== 2.643 {g/cm^3};
 
 CASE 'boron_trichloride':
-	 formula :== 'BCL3';
+	 formula :== 'BCl3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5305,7 +5305,7 @@ CASE 'boron_triiodide':
 	 lden :== 3.350 {g/cm^3};
 
 CASE 'bromine':
-	 formula :== 'BR2';
+	 formula :== 'Br2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5334,7 +5334,7 @@ CASE 'bromine':
 	 lden :== 3.119 {g/cm^3};
 
 CASE 'iodine_bromide':
-	 formula :== 'BRI';
+	 formula :== 'BrI';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5363,7 +5363,7 @@ CASE 'iodine_bromide':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'phosphorus_tribromide':
-	 formula :== 'BR3P';
+	 formula :== 'Br3P';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5392,7 +5392,7 @@ CASE 'phosphorus_tribromide':
 	 lden :== 2.852 {g/cm^3};
 
 CASE 'silicon_tetrabromide':
-	 formula :== 'BR4SI';
+	 formula :== 'Br4Si';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5421,7 +5421,7 @@ CASE 'silicon_tetrabromide':
 	 lden :== 2.772 {g/cm^3};
 
 CASE 'titanium_tetrabromide':
-	 formula :== 'BR4TI';
+	 formula :== 'Br4Ti';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5450,7 +5450,7 @@ CASE 'titanium_tetrabromide':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'perchloryl_fluoride':
-	 formula :== 'CLFO3';
+	 formula :== 'ClFO3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5479,7 +5479,7 @@ CASE 'perchloryl_fluoride':
 	 lden :== 2.003 {g/cm^3};
 
 CASE 'nitrogen_chloride_difluoride':
-	 formula :== 'CLF2N';
+	 formula :== 'ClF2N';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5508,7 +5508,7 @@ CASE 'nitrogen_chloride_difluoride':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'phosphorus_chloride_difluoride':
-	 formula :== 'CLF2P';
+	 formula :== 'ClF2P';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5537,7 +5537,7 @@ CASE 'phosphorus_chloride_difluoride':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'thiophosphoryl_chloride_difluoride':
-	 formula :== 'CLF2PS';
+	 formula :== 'ClF2PS';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5566,7 +5566,7 @@ CASE 'thiophosphoryl_chloride_difluoride':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'chlorine_pentafluoride':
-	 formula :== 'CLF5';
+	 formula :== 'ClF5';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5595,7 +5595,7 @@ CASE 'chlorine_pentafluoride':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'nitrosyl_chloride':
-	 formula :== 'CLNO';
+	 formula :== 'ClNO';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5624,7 +5624,7 @@ CASE 'nitrosyl_chloride':
 	 lden :== 1.420 {g/cm^3};
 
 CASE 'chlorine':
-	 formula :== 'CL2';
+	 formula :== 'Cl2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5653,7 +5653,7 @@ CASE 'chlorine':
 	 lden :== 1.563 {g/cm^3};
 
 CASE 'phosphorus_dichloride_fluoride':
-	 formula :== 'CL2FP';
+	 formula :== 'Cl2FP';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5682,7 +5682,7 @@ CASE 'phosphorus_dichloride_fluoride':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'phosphorus_trichloride':
-	 formula :== 'CL3P';
+	 formula :== 'Cl3P';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5711,7 +5711,7 @@ CASE 'phosphorus_trichloride':
 	 lden :== 1.574 {g/cm^3};
 
 CASE 'silicon_tetrachloride':
-	 formula :== 'CL4SI';
+	 formula :== 'Cl4Si';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5740,7 +5740,7 @@ CASE 'silicon_tetrachloride':
 	 lden :== 1.480 {g/cm^3};
 
 CASE 'titanium_tetrachloride':
-	 formula :== 'CL4TI';
+	 formula :== 'Cl4Ti';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5769,7 +5769,7 @@ CASE 'titanium_tetrachloride':
 	 lden :== 1.700 {g/cm^3};
 
 CASE 'phosphorus_pentachloride':
-	 formula :== 'CL5P';
+	 formula :== 'Cl5P';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -5856,7 +5856,7 @@ CASE 'deuterium_normal':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'deuterium_oxide':
-	 formula :== 'D20';
+	 formula :== 'D2O';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6030,7 +6030,7 @@ CASE 'oxygen_difluoride':
 	 lden :== 1.521 {g/cm^3};
 
 CASE 'xenon_difluoride':
-	 formula :== 'F2XE';
+	 formula :== 'F2Xe';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6233,7 +6233,7 @@ CASE 'sulfur_tetrafluoride':
 	 lden :== 1.936 {g/cm^3};
 
 CASE 'silicon_tetrafluoride':
-	 formula :== 'F4SI';
+	 formula :== 'F4Si';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6262,7 +6262,7 @@ CASE 'silicon_tetrafluoride':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'xenon_tetrafluoride':
-	 formula :== 'F4XE';
+	 formula :== 'F4Xe';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6378,7 +6378,7 @@ CASE 'helium_3':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'helium_4':
-	 formula :== 'HE';
+	 formula :== 'He';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6407,7 +6407,7 @@ CASE 'helium_4':
 	 lden :== 0.123 {g/cm^3};
 
 CASE 'mercury':
-	 formula :== 'HG';
+	 formula :== 'Hg';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6465,7 +6465,7 @@ CASE 'iodine':
 	 lden :== 3.740 {g/cm^3};
 
 CASE 'silicon_tetraiodide':
-	 formula :== 'I4SI';
+	 formula :== 'I4Si';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6494,7 +6494,7 @@ CASE 'silicon_tetraiodide':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'titanium_tetraiodide':
-	 formula :== 'I4TI';
+	 formula :== 'I4Ti';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6523,7 +6523,7 @@ CASE 'titanium_tetraiodide':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'krypton':
-	 formula :== 'KR';
+	 formula :== 'Kr';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6639,7 +6639,7 @@ CASE 'nitrous_oxide':
 	 lden :== 1.226 {g/cm^3};
 
 CASE 'neon':
-	 formula :== 'NE';
+	 formula :== 'Ne';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6784,7 +6784,7 @@ CASE 'phosphorous':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'radon':
-	 formula :== 'RN';
+	 formula :== 'Rn';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6842,7 +6842,7 @@ CASE 'sulfur':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'selenium':
-	 formula :== 'SE';
+	 formula :== 'Se';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6900,7 +6900,7 @@ CASE 'tritium':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'xenon':
-	 formula :== 'XE';
+	 formula :== 'Xe';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6929,7 +6929,7 @@ CASE 'xenon':
 	 lden :== 3.060 {g/cm^3};
 
 CASE 'hydrogen_bromide':
-	 formula :== 'HBR';
+	 formula :== 'HBr';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -6958,7 +6958,7 @@ CASE 'hydrogen_bromide':
 	 lden :== 2.160 {g/cm^3};
 
 CASE 'hydrogen_chloride':
-	 formula :== 'HCL';
+	 formula :== 'HCl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7190,7 +7190,7 @@ CASE 'hydrogen_sulfide':
 	 lden :== 0.993 {g/cm^3};
 
 CASE 'arsine':
-	 formula :== 'H3AS';
+	 formula :== 'H3As';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7277,7 +7277,7 @@ CASE 'phosphine':
 	 lden :== 1.529 {g/cm^3};
 
 CASE 'ammonium_chloride':
-	 formula :== 'H4CLN';
+	 formula :== 'H4ClN';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7306,7 +7306,7 @@ CASE 'ammonium_chloride':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'phosphonium_chloride':
-	 formula :== 'H4CLP';
+	 formula :== 'H4ClP';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7364,7 +7364,7 @@ CASE 'hydrazine':
 	 lden :== 1.008 {g/cm^3};
 
 CASE 'silane':
-	 formula :== 'H4SI';
+	 formula :== 'H4Si';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7422,7 +7422,7 @@ CASE 'diborane':
 	 lden :== 0.470 {g/cm^3};
 
 CASE 'bromochlorodifluoromethane':
-	 formula :== 'CBRCLF2';
+	 formula :== 'CBrClF2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7451,7 +7451,7 @@ CASE 'bromochlorodifluoromethane':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'dibromodifluoromethane':
-	 formula :== 'CBR2F2';
+	 formula :== 'CBr2F2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7480,7 +7480,7 @@ CASE 'dibromodifluoromethane':
 	 lden :== 2.462 {g/cm^3};
 
 CASE 'trifluorobromomethane':
-	 formula :== 'CBRF3';
+	 formula :== 'CBrF3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7509,7 +7509,7 @@ CASE 'trifluorobromomethane':
 	 lden :== 1.538 {g/cm^3};
 
 CASE 'chlorotrifluoromethane':
-	 formula :== 'CCLF3';
+	 formula :== 'CClF3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7538,7 +7538,7 @@ CASE 'chlorotrifluoromethane':
 	 lden :== 1.298 {g/cm^3};
 
 CASE 'dichlorodifluoromethane':
-	 formula :== 'CCL2F2';
+	 formula :== 'CCl2F2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7567,7 +7567,7 @@ CASE 'dichlorodifluoromethane':
 	 lden :== 1.750 {g/cm^3};
 
 CASE 'phosgene':
-	 formula :== 'CCL2O';
+	 formula :== 'CCl2O';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7915,7 +7915,7 @@ CASE 'hydrogen_cyanide':
 	 lden :== 0.688 {g/cm^3};
 
 CASE 'dibromethane':
-	 formula :== 'CH2BR2';
+	 formula :== 'CH2Br2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -7944,7 +7944,7 @@ CASE 'dibromethane':
 	 lden :== 2.500 {g/cm^3};
 
 CASE 'dichloromethane':
-	 formula :== 'CH2CL2';
+	 formula :== 'CH2Cl2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8060,7 +8060,7 @@ CASE 'formic_acid':
 	 lden :== 1.226 {g/cm^3};
 
 CASE 'methyl_bromide':
-	 formula :== 'CH3BR';
+	 formula :== 'CH3Br';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8089,7 +8089,7 @@ CASE 'methyl_bromide':
 	 lden :== 1.737 {g/cm^3};
 
 CASE 'methyl_chloride':
-	 formula :== 'CH3CL';
+	 formula :== 'CH3Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8292,7 +8292,7 @@ CASE 'methyl_hydrazine':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'methyl_silane':
-	 formula :== 'CH6SI';
+	 formula :== 'CH6Si';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8321,7 +8321,7 @@ CASE 'methyl_silane':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE '1_2_dibromo_1_chlorotrifluoroethane':
-	 formula :== 'C2BR2CLF3';
+	 formula :== 'C2Br2ClF3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8350,7 +8350,7 @@ CASE '1_2_dibromo_1_chlorotrifluoroethane':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE '1_2_dibromotetrafluoroetane':
-	 formula :== 'C2BR2F4';
+	 formula :== 'C2Br2F4';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8379,7 +8379,7 @@ CASE '1_2_dibromotetrafluoroetane':
 	 lden :== 2.175 {g/cm^3};
 
 CASE 'chlorotrifluoroetene':
-	 formula :== 'C2CLF3';
+	 formula :== 'C2ClF3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8408,7 +8408,7 @@ CASE 'chlorotrifluoroetene':
 	 lden :== 1.305 {g/cm^3};
 
 CASE 'chloropentafluoroetane':
-	 formula :== 'C2CLF5';
+	 formula :== 'C2ClF5';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8437,7 +8437,7 @@ CASE 'chloropentafluoroetane':
 	 lden :== 1.260 {g/cm^3};
 
 CASE '1_1_dichlorotetrafluoroetane':
-	 formula :== 'C2CL2F4';
+	 formula :== 'C2Cl2F4';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8466,7 +8466,7 @@ CASE '1_1_dichlorotetrafluoroetane':
 	 lden :== 1.455 {g/cm^3};
 
 CASE '1_2_dichlorotetrafluoroethane':
-	 formula :== 'C2CL2F4';
+	 formula :== 'C2Cl2F4';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8495,7 +8495,7 @@ CASE '1_2_dichlorotetrafluoroethane':
 	 lden :== 1.480 {g/cm^3};
 
 CASE '1_2_2_trichlorotrifluoroetane':
-	 formula :== 'C2CL3F3';
+	 formula :== 'C2Cl3F3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8524,7 +8524,7 @@ CASE '1_2_2_trichlorotrifluoroetane':
 	 lden :== 1.548 {g/cm^3};
 
 CASE 'tetrachloroethene':
-	 formula :== 'C2CL4';
+	 formula :== 'C2Cl4';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8553,7 +8553,7 @@ CASE 'tetrachloroethene':
 	 lden :== 1.620 {g/cm^3};
 
 CASE '1_1_2_2_tetrachlorodifluoroethane':
-	 formula :== 'C2CL4F2';
+	 formula :== 'C2Cl4F2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8698,7 +8698,7 @@ CASE 'cyanogen':
 	 lden :== 0.954 {g/cm^3};
 
 CASE '1_chloro_2_2_difluoroethene':
-	 formula :== 'C2HCLF2';
+	 formula :== 'C2HClF2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8727,7 +8727,7 @@ CASE '1_chloro_2_2_difluoroethene':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'chloro_1_1_2_2__tetrafluoroethane':
-	 formula :== 'C2HCLF4';
+	 formula :== 'C2HClF4';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8756,7 +8756,7 @@ CASE 'chloro_1_1_2_2__tetrafluoroethane':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'trichloroethene':
-	 formula :== 'C2HCL3';
+	 formula :== 'C2HCl3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8785,7 +8785,7 @@ CASE 'trichloroethene':
 	 lden :== 1.462 {g/cm^3};
 
 CASE 'pentachloroethane':
-	 formula :== 'C2HCL5';
+	 formula :== 'C2HCl5';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8814,7 +8814,7 @@ CASE 'pentachloroethane':
 	 lden :== 1.671 {g/cm^3};
 
 CASE 'trifluoroacetic_acid':
-	 formula :== 'C2CHF302';
+	 formula :== 'C2HF3O2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8872,7 +8872,7 @@ CASE 'acetylene':
 	 lden :== 0.615 {g/cm^3};
 
 CASE 'cis_1_2_dichloroethene':
-	 formula :== 'C2H2CL2';
+	 formula :== 'C2H2Cl2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8901,7 +8901,7 @@ CASE 'cis_1_2_dichloroethene':
 	 lden :== 1.282 {g/cm^3};
 
 CASE 'trans_1_2_dichloroethene':
-	 formula :== 'C2H2CL2';
+	 formula :== 'C2H2Cl2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -8930,7 +8930,7 @@ CASE 'trans_1_2_dichloroethene':
 	 lden :== 1.255 {g/cm^3};
 
 CASE '1_1_2_2_tetrachloroethane':
-	 formula :== 'C2H2CL4';
+	 formula :== 'C2H2Cl4';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9017,7 +9017,7 @@ CASE 'ketene':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'vinyl_chloride':
-	 formula :== 'C2H3CL';
+	 formula :== 'C2H3Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9046,7 +9046,7 @@ CASE 'vinyl_chloride':
 	 lden :== 0.969 {g/cm^3};
 
 CASE '1_chloro_1_1_difluoroethane':
-	 formula :== 'C2H3CLF2';
+	 formula :== 'C2H3ClF2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9075,7 +9075,7 @@ CASE '1_chloro_1_1_difluoroethane':
 	 lden :== 1.100 {g/cm^3};
 
 CASE 'acetyl_chloride':
-	 formula :== 'C2H3CLO';
+	 formula :== 'C2H3ClO';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9104,7 +9104,7 @@ CASE 'acetyl_chloride':
 	 lden :== 1.104 {g/cm^3};
 
 CASE '1_1_1_trichloroethane':
-	 formula :== 'C2H3CL3';
+	 formula :== 'C2H3Cl3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9133,7 +9133,7 @@ CASE '1_1_1_trichloroethane':
 	 lden :== 1.339 {g/cm^3};
 
 CASE '1_1_2_trichloroethane':
-	 formula :== 'C2H3CL3';
+	 formula :== 'C2H3Cl3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9278,7 +9278,7 @@ CASE 'methyl_isocyanate':
 	 lden :== 0.958 {g/cm^3};
 
 CASE '1_2_dibromoethane':
-	 formula :== 'C2H4BR2';
+	 formula :== 'C2H4Br2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9307,7 +9307,7 @@ CASE '1_2_dibromoethane':
 	 lden :== 2.180 {g/cm^3};
 
 CASE '1_1_dichloroethane':
-	 formula :== 'C2H4CL2';
+	 formula :== 'C2H4Cl2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9336,7 +9336,7 @@ CASE '1_1_dichloroethane':
 	 lden :== 1.168 {g/cm^3};
 
 CASE '1_2_dichloroethane':
-	 formula :== 'C2H4CL2';
+	 formula :== 'C2H4Cl2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9510,7 +9510,7 @@ CASE 'methyl_formate':
 	 lden :== 0.974 {g/cm^3};
 
 CASE 'ethyl_bromide':
-	 formula :== 'C2H5BR';
+	 formula :== 'C2H5Br';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9539,7 +9539,7 @@ CASE 'ethyl_bromide':
 	 lden :== 1.451 {g/cm^3};
 
 CASE 'ethyl_chloride':
-	 formula :== 'C2H5CL';
+	 formula :== 'C2H5Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9829,7 +9829,7 @@ CASE 'ethylenediamine':
 	 lden :== 0.896 {g/cm^3};
 
 CASE 'hloropentaflouroacetone':
-	 formula :== 'C3CLF5O';
+	 formula :== 'C3ClF5O';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -9858,7 +9858,7 @@ CASE 'hloropentaflouroacetone':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'perflouroacetone':
-	 formula :== 'C3F60';
+	 formula :== 'C3F6O';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -10148,7 +10148,7 @@ CASE 'vinyl_formate':
 	 lden :== 0.963 {g/cm^3};
 
 CASE 'allyl_chloride':
-	 formula :== 'C3H5CL';
+	 formula :== 'C3H5Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -10177,7 +10177,7 @@ CASE 'allyl_chloride':
 	 lden :== 0.937 {g/cm^3};
 
 CASE '1_2_3_trichloropropane':
-	 formula :== 'C3H5CL3';
+	 formula :== 'C3H5Cl3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -10264,7 +10264,7 @@ CASE 'cyclopropane':
 	 lden :== 0.563 {g/cm^3};
 
 CASE '1_2_dichloropropane':
-	 formula :== 'C3H6CL2';
+	 formula :== 'C3H6Cl2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -10438,7 +10438,7 @@ CASE 'propionic_acid':
 	 lden :== 0.993 {g/cm^3};
 
 CASE 'ethyl_formate':
-	 formula :== 'C3H602';
+	 formula :== 'C3H6O2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -10496,7 +10496,7 @@ CASE 'methyl_acetate':
 	 lden :== 0.934 {g/cm^3};
 
 CASE 'propyl_chloride':
-	 formula :== 'C3H7CL';
+	 formula :== 'C3H7Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -10525,7 +10525,7 @@ CASE 'propyl_chloride':
 	 lden :== 0.891 {g/cm^3};
 
 CASE 'isopropyl_chloride':
-	 formula :== 'C3H7CL';
+	 formula :== 'C3H7Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -10989,7 +10989,7 @@ CASE 'vinylacetylene':
 	 lden :== 0.710 {g/cm^3};
 
 CASE 'furan':
-	 formula :== 'C4H40';
+	 formula :== 'C4H4O';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -11888,7 +11888,7 @@ CASE 'tetrahydrothiophene':
 	 lden :== 1.000 {g/cm^3};
 
 CASE '1_chlorobutane':
-	 formula :== 'C4H9CL';
+	 formula :== 'C4H9Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -11917,7 +11917,7 @@ CASE '1_chlorobutane':
 	 lden :== 0.886 {g/cm^3};
 
 CASE '2_chlorobutane':
-	 formula :== 'C4H9CL';
+	 formula :== 'C4H9Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -11946,7 +11946,7 @@ CASE '2_chlorobutane':
 	 lden :== 0.873 {g/cm^3};
 
 CASE 'tert_butyl_chloride':
-	 formula :== 'C4H9CL';
+	 formula :== 'C4H9Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -13280,7 +13280,7 @@ CASE 'tetrahydropyran':
 	 lden :== 0.886 {g/cm^3};
 
 CASE 'n_valeric_acid':
-	 formula :== 'C5H10O';
+	 formula :== 'C5H10O2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -13831,7 +13831,7 @@ CASE 'tert_butyl_methyl_ether':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'bromopentaflourobenzene':
-	 formula :== 'C6BRF5';
+	 formula :== 'C6BrF5';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -13860,7 +13860,7 @@ CASE 'bromopentaflourobenzene':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'chloropentaflourobenzene':
-	 formula :== 'C6CLF5';
+	 formula :== 'C6ClF5';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -13889,7 +13889,7 @@ CASE 'chloropentaflourobenzene':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'dichlorotetraflourobenzene':
-	 formula :== 'C6CL2F4';
+	 formula :== 'C6Cl2F4';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -13918,7 +13918,7 @@ CASE 'dichlorotetraflourobenzene':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE '1_3_5_trichlorotriflourobenzene':
-	 formula :== 'C6CL3F3';
+	 formula :== 'C6Cl3F3';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -14266,7 +14266,7 @@ CASE '1_2_4_5_tetrafluorobenzene':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'o_dichlorobenzene':
-	 formula :== 'C6H4CL2';
+	 formula :== 'C6H4Cl2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -14324,7 +14324,7 @@ CASE '1_4_difluorobenzene':
 (* 	 lden :== ; parameter missing from Reid et al.*)
 
 CASE 'bromobenzene':
-	 formula :== 'C6H5BR';
+	 formula :== 'C6H5Br';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -14353,7 +14353,7 @@ CASE 'bromobenzene':
 	 lden :== 1.495 {g/cm^3};
 
 CASE 'chlorobenzene':
-	 formula :== 'C6H5CL';
+	 formula :== 'C6H5Cl';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -15197,7 +15197,7 @@ CASE 'ethyl_propyl_ketone':
 	 lden :== 0.813 {g/cm^3};
 
 CASE 'methyl_butyl_ketone':
-	 formula :== 'C6H120';
+	 formula :== 'C6H12O';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -15371,7 +15371,7 @@ CASE 'ethyl_isobutyrate':
 	 lden :== 0.869 {g/cm^3};
 
 CASE 'n_propyl_propionate':
-	 formula :== 'C2H12O2';
+	 formula :== 'C6H12O2';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -15922,7 +15922,7 @@ CASE 'perflouro_n_heptane':
 	 lden :== 1.733 {g/cm^3};
 
 CASE '2_3_4_5_6_pentaflourotoluene':
-	 formula :== 'C7H35';
+	 formula :== 'C7H3F5';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -21200,7 +21200,7 @@ CASE 'n_dodecane':
 	 lden :== 0.748 {g/cm^3};
 
 CASE 'dihexylether':
-	 formula :== 'C12H29O';
+	 formula :== 'C12H26O';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -22012,7 +22012,7 @@ CASE 'n_octadecane':
 	 lden :== 0.789 {g/cm^3};
 
 CASE '1_octadecanol':
-	 formula :== 'C18H380';
+	 formula :== 'C18H38O';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -22099,7 +22099,7 @@ CASE 'n_nonadecane':
 	 lden :== 0.789 {g/cm^3};
 
 CASE '1_cyclopentylpentadecane':
-	 formula :== 'C2OH4O';
+	 formula :== 'C20H40';
 	 subgroups :== [];
 	 wilson_set :== [];
 
@@ -22157,7 +22157,7 @@ CASE 'n_eicosane':
 	 lden :== 0.775 {g/cm^3};
 
 CASE '1_eicosanol':
-	 formula :== 'C20H420';
+	 formula :== 'C20H42O';
 	 subgroups :== [];
 	 wilson_set :== [];
 

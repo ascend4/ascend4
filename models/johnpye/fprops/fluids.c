@@ -122,7 +122,13 @@ int fprops_build_element_matrix_source(const char **names, int ns, const char **
 	for(i = 0; i < ns; ++i){
 		const EosData *E = fprops_eos(names[i], NULL, source);
 		if(!E){
+			E = fprops_eos(names[i], NULL, NULL);
+		}
+		if(!E){
 			const ConstCpSpecies *S = constcp_data_lookup(names[i], source);
+			if(!S){
+				S = constcp_data_lookup(names[i], NULL);
+			}
 			if(!S){
 				ERRMSG("Missing EOS/constcp data for '%s'", names[i]);
 				return 0;
@@ -141,6 +147,25 @@ int fprops_build_element_matrix_source(const char **names, int ns, const char **
 			continue;
 		}
 		if(!E->elements || E->nelements <= 0){
+			/* Elemental composition is source-independent: if a selected EOS
+			   lacks composition metadata, try RPP entry for the same species. */
+			const EosData *Erpp = fprops_eos(names[i], NULL, "RPP");
+			if(Erpp && Erpp->elements && Erpp->nelements > 0){
+				E = Erpp;
+			}
+		}
+		if(!E->elements || E->nelements <= 0){
+			const ConstCpSpecies *S = constcp_data_lookup(names[i], NULL);
+			if(S && S->elements && S->stoich && S->nelem > 0){
+				for(k = 0; k < (int)S->nelem; ++k){
+					for(e = 0; e < ne; ++e){
+						if(0 == strcmp(S->elements[k], elements[e])){
+							A_out[e * ns + i] += S->stoich[k];
+						}
+					}
+				}
+				continue;
+			}
 			ERRMSG("Missing element composition for '%s'", E->name);
 			return 0;
 		}
