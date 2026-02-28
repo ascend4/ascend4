@@ -122,33 +122,21 @@ Near bounds ($n_i\to 0$), the logarithmic terms become singular, so boundary sol
 
 Interpretation:
 
-If $n_i>0$ (free species), then complementarity gives $s_i=0$, so
-$$
-\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i=0.
-$$
+If $n_i>0$ (free species), then complementarity gives $s_i=0$, so $\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i=0$.
 
-If $n_i=0$ (active bound), then $s_i\ge 0$, so the KKT residual is nonnegative:
-$$
-\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i \ge 0.
-$$
+If $n_i=0$ (active bound), then $s_i\ge 0$, so the KKT residual is nonnegative: $\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i \ge 0$.
 
 #### 3.2 Physical interpretation of multipliers
 
 $\lambda_e$ acts like an elemental potential for conserved element $e$.
-Define the constrained driving force
-$$
-\tilde{\mu}_i = \mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i.
-$$
+Define the constrained driving force $\tilde{\mu}_i = \mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i$.
 At equilibrium, free species satisfy $\tilde{\mu}_i=0$ and bound species satisfy $\tilde{\mu}_i\ge 0$.
 
 So no feasible composition change can reduce $G$ further.
 
 ### 4. Why nullspace/reduced coordinates
 
-Quick summary: the nullspace of $\mathbf{A}$ is
-$$
-\mathcal{N}(\mathbf{A})=\{\mathbf{v}\in\mathbb{R}^{n_s}\mid \mathbf{A}\mathbf{v}=0\}.
-$$
+Quick summary: the nullspace of $\mathbf{A}$ is $\mathcal{N}(\mathbf{A})=\{\mathbf{v}\in\mathbb{R}^{n_s}\mid \mathbf{A}\mathbf{v}=0\}$.
 Any step $\Delta\mathbf{n}$ in this nullspace preserves element totals, because $\mathbf{A}(\mathbf{n}+\Delta\mathbf{n})=\mathbf{A}\mathbf{n}$.
 
 Direct optimization in $\mathbf{n}$ has linear constraints $\mathbf{A}\mathbf{n}=\mathbf{b}$.
@@ -176,10 +164,7 @@ $$
 \mathcal{F}=\{\mathbf{n}\in\mathbb{R}^{n_s}\mid \mathbf{A}\mathbf{n}=\mathbf{b}\}.
 $$
 
-Here, "affine subspace" means a shifted linear subspace: it can be written as
-$$
-\mathcal{F}=\mathbf{n}_0+\mathcal{N}(\mathbf{A}).
-$$
+Here, "affine subspace" means a shifted linear subspace: it can be written as $\mathcal{F}=\mathbf{n}_0+\mathcal{N}(\mathbf{A})$.
 So it is flat (like a plane/line in higher dimensions), but not required to pass through the origin.
 
 - $\mathbf{n}_0$ is one point on this subspace.
@@ -404,7 +389,7 @@ When interior reduced solve fails near boundary, code now runs an active-set see
 - Split species into active set $\mathcal{A}$ (pinned at $n_i=n_{\mathrm{floor}}$) and free set $\mathcal{F}$.
 - Solve reduced problem on free species only.
 - Compute reduced gradients as $r_i = (\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i)/(RT)$.
-- Recover $\boldsymbol\lambda$ from free species $\mathcal{F}$ by solving $\mathbf{A}_{\mathcal{F}}^T\boldsymbol\lambda \approx -\boldsymbol\mu_{\mathcal{F}}$, exactly if dimensions permit, otherwise as a least-squares system.
+- Recover `lambda` from free species set `F` by solving `A_F^T lambda ≈ -mu_F`, exactly if dimensions permit, otherwise as a least-squares system.
 
 - Pivot rules:
   - add species to active set if free species is near bound and $r_i>0$,
