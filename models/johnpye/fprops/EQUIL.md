@@ -5,9 +5,10 @@ This note explains the current ideal-gas equilibrium implementation in `fprops` 
 Document roadmap:
 
 - Part A gives common thermodynamic and optimization principles (independent of solver choice).
-- Part B gives implementation pathways (full-space interior-point versus reduced-space).
+- Part B gives implementation pathways, with reduced-space first (primary) and full-space interior-point as a secondary path.
 - Part C gives validation/diagnostics.
 - Part D maps equations to code.
+- Appendix A gives the secondary full-space interior-point pathway.
 
 ## Part A. Common Principles
 
@@ -302,39 +303,10 @@ From `eqm_solve_elements`/`eqm_solve`, key algorithms are:
 
 Pathway grouping:
 
-- Full-space pathway: `ipopt*` with `slsqp` fallback.
-- Reduced-space pathway: `reduced` (with optional 1D special solve, continuation, and active-set boundary handling).
+- Reduced-space pathway (primary): `reduced` (with optional 1D special solve, continuation, and active-set boundary handling).
+- Full-space pathway (secondary): `ipopt*` with `slsqp` fallback.
 
 For low-temperature boundary-heavy cases, `reduced` is now the primary robust path.
-
-#### 6.1 Interior-point method in this context
-
-The full-space IPOPT path uses an interior-point idea: keep all $n_i$ strictly positive while solving a sequence of barrier problems
-
-$$
-\min_{\mathbf{n}}\; G(\mathbf{n})-\tau\sum_{i=1}^{n_s}\ln n_i,
-$$
-
-subject to
-
-$$
-\mathbf{A}\mathbf{n}=\mathbf{b},
-$$
-
-with barrier parameter $\tau>0$ reduced toward zero.
-
-Equivalent perturbed KKT system:
-
-$$
-\boldsymbol\mu+\mathbf{A}^T\boldsymbol\lambda-\mathbf{s}=0,\qquad
-\mathbf{A}\mathbf{n}-\mathbf{b}=0,
-$$
-$$
-n_i s_i=\tau,\qquad n_i>0,\ s_i>0,\qquad i=1,\dots,n_s.
-$$
-
-As $\tau\to 0$, this approaches the original complementarity $n_i s_i=0$.
-Numerically, interior-point methods are strong for smooth interior solutions, but low-temperature chemistry often places many species at or near bounds, where reduced-space active-set logic is usually more robust.
 
 ### 7. Reduced Newton method (interior part)
 
@@ -441,6 +413,8 @@ $$
 n_i \le \max\left(10^{-60},\,\eta\,n_{\mathrm{tot}}\right), \qquad \eta=10^{-22}.
 $$
 
+For the secondary full-space interior-point pathway, see Appendix A.
+
 ## Part C. Validation and Operations
 
 ### 12. What “correctness” means here
@@ -546,3 +520,14 @@ Logic:
 - in `auto_reduced`, fall back to generic `auto` pipeline if needed.
 Code:
 - `eqm_solve` and `eqm_solve_elements`.
+
+## Appendix A. Full-space interior-point path (secondary)
+
+The full-space IPOPT path keeps all `n_i` strictly positive and solves a barrier sequence:
+`min G(n) - tau * sum_i ln(n_i)` subject to `A n = b`, with `tau > 0` reduced toward zero.
+
+Equivalent perturbed KKT form is:
+`mu + A^T lambda - s = 0`, `A n - b = 0`, and `n_i s_i = tau` with `n_i > 0`, `s_i > 0`.
+As `tau -> 0`, this tends to the original complementarity relation `n_i s_i = 0`.
+
+In current FPROPS equilibrium work, this full-space pathway is useful as fallback/cross-check, but reduced-space plus active-set handling has been more robust for low-temperature, boundary-dominated chemistry.
