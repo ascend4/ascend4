@@ -78,6 +78,27 @@ For ideal gases, the activity is $a_i = y_i P/P^\circ$, so the logarithm argumen
 Define the chemical-potential vector
 $\boldsymbol{\mu}=[\mu_1,\dots,\mu_{n_s}]^T$.
 
+#### 2.1 How `mu0(T)` is obtained from FPROPS data
+
+In code, `eqm_compute_mu0` calls `eqm_mu0_ideal_source` for each species.
+That routine builds an ideal-fluid object and evaluates Gibbs energy at `(T, P0)` as follows:
+
+- compute ideal-gas density from `rho = P0/(R T)`,
+- evaluate mass-specific Gibbs energy `g(T, rho)` from the ideal-fluid model,
+- convert to molar standard chemical potential with `mu0 = g * M` (where `M` is in kg/mol).
+
+For equilibrium work, it first tries to apply the species `ref0` reference state (`FPROPS_REF_REF0`) so that the absolute Gibbs level is formation-based.
+For many species (notably the RPP set), `ref0` is stored as `FPROPS_REF_TPHG` with `(T_ref, p_ref, h_f, g_f)`.
+
+How the formation data enters:
+
+- in `components.a4l`, `Hf` and `Gf` are stored as formation enthalpy/free energy (units `J/g_mole`),
+- `convcomp.py` converts these to per-mass values (`h_f0 = Hf/mw`, `g_f0 = Gf/mw`) in generated fluid C data (for example `_rpp.c`),
+- during `ideal_prepare(..., FPROPS_REF_REF0)`, FPROPS converts to SI mass basis and sets the ideal reference constants so that ideal `h` and `g` at `(T_ref, p_ref)` match those targets (equivalently it uses `s_f = (h_f-g_f)/T_ref`).
+
+So the temperature dependence comes from the ideal `cp0` model, while the absolute level comes from the `ref0` formation reference.
+If a species has missing `ref0` formation terms, `eqm_mu0_ideal_source` falls back to other ideal-source paths, but those may not be formation-consistent across species.
+
 ### 3. KKT conditions (equilibrium conditions)
 
 Quick summary: KKT conditions are the first-order optimality conditions for constrained optimization.
