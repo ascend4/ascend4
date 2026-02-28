@@ -21,6 +21,20 @@ double gas_R(void){
 	return 8.31446261815324;
 }
 
+/* Bound-KKT acceptance settings for boundary-active equilibrium solutions. */
+static const double EQM_BOUND_KKT_FREE_TOL = 2e-2;
+static const double EQM_BOUND_KKT_DUAL_TOL = 2e-2;
+static const double EQM_BOUND_ACTIVE_CUTOFF_FRAC = 1e-22;
+
+static int eqm_active_trace_enabled(void){
+	static int enabled = -1;
+	if(enabled < 0){
+		const char *v = getenv("FPROPS_EQM_ACTIVESET_TRACE");
+		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
+	}
+	return enabled;
+}
+
 void eqm_apply_bscale(EqmData *D){
 	int e;
 	D->b_scale = (double *)calloc((size_t)D->ne, sizeof(double));
@@ -1228,114 +1242,332 @@ cleanup:
 	return status;
 }
 
-static int eqm_reduced_try_drop_seed(const char **names, int ns, int ne, const double *A,
+static int eqm_reduced_eval_reduced_gradients(const double *mu, const double *A, int ns, int ne,
+		const int *is_active, double T, double *red){
+	double *M = NULL;
+	double *Msys = NULL;
+	double *rhs = NULL;
+	double *lambda = NULL;
+	int nfree = 0;
+
+	if(!mu || !A || !is_active || !red || ns <= 0 || ne <= 0 || !(T > 0.0)){
+		return 0;
+	}
+	for(int i = 0; i < ns; ++i){
+		if(!is_active[i]){
+			++nfree;
+		}
+	}
+	if(nfree <= 0){
+		return 0;
+	}
+	M = (double *)calloc((size_t)(ne * ne), sizeof(double));
+	Msys = (double *)calloc((size_t)(ne * ne), sizeof(double));
+	rhs = (double *)calloc((size_t)ne, sizeof(double));
+	lambda = (double *)calloc((size_t)ne, sizeof(double));
+	if(!M || !Msys || !rhs || !lambda){
+		free(M);
+		free(Msys);
+		free(rhs);
+		free(lambda);
+		return 0;
+	}
+	for(int p = 0; p < ne; ++p){
+		double bp = 0.0;
+		for(int i = 0; i < ns; ++i){
+			if(is_active[i]){
+				continue;
+			}
+			bp += A[p * ns + i] * mu[i];
+		}
+		rhs[p] = -bp;
+		for(int q = 0; q < ne; ++q){
+			double s = 0.0;
+			for(int i = 0; i < ns; ++i){
+				if(is_active[i]){
+					continue;
+				}
+				s += A[p * ns + i] * A[q * ns + i];
+			}
+			M[p * ne + q] = s;
+		}
+	}
+	{
+		double reg = 0.0;
+		int solved = 0;
+		for(int damp = 0; damp < 8; ++damp){
+			for(int p = 0; p < ne; ++p){
+				lambda[p] = rhs[p];
+				for(int q = 0; q < ne; ++q){
+					Msys[p * ne + q] = M[p * ne + q];
+				}
+				Msys[p * ne + p] += reg;
+			}
+			if(eqm_dense_solve(Msys, lambda, ne)){
+				solved = 1;
+				break;
+			}
+			reg = (reg == 0.0) ? 1e-18 : (reg * 100.0);
+		}
+		if(!solved){
+			free(M);
+			free(Msys);
+			free(rhs);
+			free(lambda);
+			return 0;
+		}
+	}
+	for(int i = 0; i < ns; ++i){
+		double r = mu[i];
+		for(int p = 0; p < ne; ++p){
+			r += A[p * ns + i] * lambda[p];
+		}
+		red[i] = r / (gas_R() * T);
+	}
+	free(M);
+	free(Msys);
+	free(rhs);
+	free(lambda);
+	return 1;
+}
+
+static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const double *A,
 		const double *b, const char *source, double T, double P, const double *n_hint,
 		double n_floor, double *n_seed_out){
-	int *order = NULL;
-	const int ns2 = ns - 1;
+	const int max_iter = 24;
 	const double pin = n_floor;
-	const double drop_thresh = fmax(1e-30, 1e4 * n_floor);
-	const char **names2 = NULL;
-	double *A2 = NULL;
-	double *b2 = NULL;
-	double *n2 = NULL;
-	double *init2 = NULL;
+	const double active_seed_cut = fmax(1e-30, 1e6 * n_floor);
+	const double active_n_cut = fmax(1e-30, 1e3 * n_floor);
+	const double free_tol = EQM_BOUND_KKT_FREE_TOL;
+	const double dual_tol = EQM_BOUND_KKT_DUAL_TOL;
+	const double P0 = 1e5;
+	const int trace = eqm_active_trace_enabled();
+	int *is_active = NULL;
+	int *free_idx = NULL;
+	const char **names_f = NULL;
+	double *A_f = NULL;
+	double *b_f = NULL;
+	double *n_f = NULL;
+	double *init_f = NULL;
+	double *n_work = NULL;
+	double *n_trial = NULL;
+	double *mu0 = NULL;
+	double *mu = NULL;
+	double *red = NULL;
+	double obj_dummy = 0.0;
+	int ok = 0;
+	int status = -13;
 
 	if(!names || !A || !b || !n_hint || !n_seed_out || ns <= 1 || ne <= 0){
 		return 0;
 	}
-	order = (int *)calloc((size_t)ns, sizeof(int));
-	names2 = (const char **)calloc((size_t)ns2, sizeof(const char *));
-	A2 = (double *)calloc((size_t)(ne * ns2), sizeof(double));
-	b2 = (double *)calloc((size_t)ne, sizeof(double));
-	n2 = (double *)calloc((size_t)ns2, sizeof(double));
-	init2 = (double *)calloc((size_t)ns2, sizeof(double));
-	if(!order || !names2 || !A2 || !b2 || !n2 || !init2){
-		free(order);
-		free(names2);
-		free(A2);
-		free(b2);
-		free(n2);
-		free(init2);
-		return 0;
+	is_active = (int *)calloc((size_t)ns, sizeof(int));
+	free_idx = (int *)calloc((size_t)ns, sizeof(int));
+	names_f = (const char **)calloc((size_t)ns, sizeof(const char *));
+	A_f = (double *)calloc((size_t)(ne * ns), sizeof(double));
+	b_f = (double *)calloc((size_t)ne, sizeof(double));
+	n_f = (double *)calloc((size_t)ns, sizeof(double));
+	init_f = (double *)calloc((size_t)ns, sizeof(double));
+	n_work = (double *)calloc((size_t)ns, sizeof(double));
+	n_trial = (double *)calloc((size_t)ns, sizeof(double));
+	mu0 = (double *)calloc((size_t)ns, sizeof(double));
+	mu = (double *)calloc((size_t)ns, sizeof(double));
+	red = (double *)calloc((size_t)ns, sizeof(double));
+	if(!is_active || !free_idx || !names_f || !A_f || !b_f || !n_f || !init_f
+			|| !n_work || !n_trial || !mu0 || !mu || !red){
+		goto cleanup;
 	}
-
+	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
+		goto cleanup;
+	}
 	for(int i = 0; i < ns; ++i){
-		order[i] = i;
-	}
-	for(int i = 0; i < ns - 1; ++i){
-		for(int j = i + 1; j < ns; ++j){
-			if(n_hint[order[j]] < n_hint[order[i]]){
-				int t = order[i];
-				order[i] = order[j];
-				order[j] = t;
-			}
+		double ni = n_hint[i];
+		if(!(ni > 0.0) || !isfinite(ni)){
+			ni = 1.0;
+		}
+		n_work[i] = ni;
+		if(ni <= active_seed_cut){
+			is_active[i] = 1;
 		}
 	}
+	if(trace){
+		fprintf(stderr, "eqm active-set seed start: T=%.6g P=%.6g n_floor=%.3e\n", T, P, n_floor);
+	}
 
-	for(int k = 0; k < ns; ++k){
-		int drop = order[k];
-		int j2 = 0;
-		int status = -13;
+	for(int it = 0; it < max_iter; ++it){
+		int nf = 0;
+		int add_idx = -1;
+		int drop_idx = -1;
+		double add_score = 0.0;
+		double drop_score = 0.0;
+		double max_free_resid = 0.0;
 
-		if(!(n_hint[drop] > 0.0) || !isfinite(n_hint[drop]) || n_hint[drop] > drop_thresh){
-			break;
-		}
-
-		for(int e = 0; e < ne; ++e){
-			b2[e] = b[e] - A[e * ns + drop] * pin;
-		}
 		for(int i = 0; i < ns; ++i){
-			if(i == drop){
-				continue;
+			if(!is_active[i]){
+				free_idx[nf++] = i;
 			}
-			names2[j2] = names[i];
-			init2[j2] = n_hint[i];
-			for(int e = 0; e < ne; ++e){
-				A2[e * ns2 + j2] = A[e * ns + i];
-			}
-			++j2;
 		}
-
-		status = eqm_reduced_solve_source_init_once(names2, ns2, ne, A2, b2, source, T, P,
-			init2, n_floor, n2);
-		if(status != 0){
-			status = eqm_reduced_solve_source_init_once(names2, ns2, ne, A2, b2, source, T, P,
-				NULL, n_floor, n2);
+		if(nf <= 0){
+			goto cleanup;
 		}
-		if(status == 0){
-			j2 = 0;
-			for(int i = 0; i < ns; ++i){
-				if(i == drop){
-					n_seed_out[i] = pin;
-				}else{
-					n_seed_out[i] = n2[j2++];
+		if(trace){
+			fprintf(stderr, "  it=%d nf=%d active={", it, nf);
+			{
+				int first = 1;
+				for(int i = 0; i < ns; ++i){
+					if(is_active[i]){
+						fprintf(stderr, "%s%d", first ? "" : ",", i);
+						first = 0;
+					}
 				}
 			}
-			free(order);
-			free(names2);
-			free(A2);
-			free(b2);
-			free(n2);
-			free(init2);
-			return 1;
+			fprintf(stderr, "}\n");
+		}
+		for(int e = 0; e < ne; ++e){
+			double rhs = b[e];
+			for(int i = 0; i < ns; ++i){
+				if(is_active[i]){
+					rhs -= A[e * ns + i] * pin;
+				}
+			}
+			b_f[e] = rhs;
+		}
+		for(int j = 0; j < nf; ++j){
+			int i = free_idx[j];
+			double ni = n_work[i];
+			if(!(ni > n_floor) || !isfinite(ni)){
+				ni = fmax(10.0 * n_floor, 1e-30);
+			}
+			names_f[j] = names[i];
+			init_f[j] = ni;
+			for(int e = 0; e < ne; ++e){
+				A_f[e * nf + j] = A[e * ns + i];
+			}
+		}
+		status = eqm_reduced_solve_source_init_once(names_f, nf, ne, A_f, b_f, source, T, P,
+			init_f, n_floor, n_f);
+		if(status != 0){
+			status = eqm_reduced_solve_source_init_once(names_f, nf, ne, A_f, b_f, source, T, P,
+				NULL, n_floor, n_f);
+		}
+		if(status != 0){
+			double nmax = -HUGE_VAL;
+			for(int i = 0; i < ns; ++i){
+				if(is_active[i] && n_work[i] > nmax){
+					nmax = n_work[i];
+					drop_idx = i;
+				}
+			}
+			if(drop_idx < 0){
+				goto cleanup;
+			}
+			if(trace){
+				fprintf(stderr, "    free solve failed -> drop active species %d\n", drop_idx);
+			}
+			is_active[drop_idx] = 0;
+			continue;
+		}
+		for(int i = 0; i < ns; ++i){
+			n_trial[i] = is_active[i] ? pin : 0.0;
+		}
+		for(int j = 0; j < nf; ++j){
+			n_trial[free_idx[j]] = n_f[j];
+		}
+		if(!eqm_reduced_eval_obj_mu(n_trial, mu0, ns, T, P, P0, &obj_dummy, mu)){
+			goto cleanup;
+		}
+		if(!eqm_reduced_eval_reduced_gradients(mu, A, ns, ne, is_active, T, red)){
+			goto cleanup;
+		}
+
+		for(int i = 0; i < ns; ++i){
+			if(is_active[i]){
+				if(red[i] < -dual_tol && -red[i] > drop_score){
+					drop_score = -red[i];
+					drop_idx = i;
+				}
+			}else{
+				double ar = fabs(red[i]);
+				if(ar > max_free_resid){
+					max_free_resid = ar;
+				}
+				if(n_trial[i] <= active_n_cut && red[i] > dual_tol && red[i] > add_score){
+					add_score = red[i];
+					add_idx = i;
+				}
+			}
+		}
+		if(trace){
+			fprintf(stderr,
+				"    resid: max_free=%.3e add=%d(%.3e) drop=%d(%.3e)\n",
+				max_free_resid, add_idx, add_score, drop_idx, drop_score);
+		}
+		for(int i = 0; i < ns; ++i){
+			n_work[i] = n_trial[i];
+		}
+		if(add_idx < 0 && drop_idx < 0 && max_free_resid <= free_tol){
+			for(int i = 0; i < ns; ++i){
+				n_seed_out[i] = n_work[i];
+			}
+			if(trace){
+				fprintf(stderr, "  active-set converged (KKT) in %d iter\n", it + 1);
+			}
+			ok = 1;
+			goto cleanup;
+		}
+		if(add_idx >= 0 && drop_idx >= 0){
+			if(add_score >= drop_score){
+				drop_idx = -1;
+			}else{
+				add_idx = -1;
+			}
+		}
+		if(add_idx >= 0){
+			if(trace){
+				fprintf(stderr, "    pivot: add species %d to active\n", add_idx);
+			}
+			is_active[add_idx] = 1;
+		}else if(drop_idx >= 0){
+			if(trace){
+				fprintf(stderr, "    pivot: drop species %d from active\n", drop_idx);
+			}
+			is_active[drop_idx] = 0;
+		}else{
+			for(int i = 0; i < ns; ++i){
+				n_seed_out[i] = n_work[i];
+			}
+			if(trace){
+				fprintf(stderr, "  active-set accepted without pivot in %d iter\n", it + 1);
+			}
+			ok = 1;
+			goto cleanup;
 		}
 	}
+	if(trace){
+		fprintf(stderr, "  active-set seed exhausted max_iter=%d\n", max_iter);
+	}
 
-	free(order);
-	free(names2);
-	free(A2);
-	free(b2);
-	free(n2);
-	free(init2);
-	return 0;
+cleanup:
+	free(red);
+	free(mu);
+	free(mu0);
+	free(n_trial);
+	free(n_work);
+	free(init_f);
+	free(n_f);
+	free(b_f);
+	free(A_f);
+	free(names_f);
+	free(free_idx);
+	free(is_active);
+	return ok;
 }
 
 static int eqm_validate_solution_bounds(const char **names, int ns, int ne, const double *A,
 		const double *b, const char *source, double T, double P, const double *n_out){
 	const double elem_tol = 1e-6;
-	const double free_tol = 5e-2;
-	const double dual_tol = 5e-2;
+	const double free_tol = EQM_BOUND_KKT_FREE_TOL;
+	const double dual_tol = EQM_BOUND_KKT_DUAL_TOL;
 	const double P0 = 1e5;
 	double n_tot = 0.0;
 	double n_active_cutoff;
@@ -1432,7 +1664,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		}
 	}
 
-	n_active_cutoff = fmax(1e-60, 1e-22 * n_tot);
+	n_active_cutoff = fmax(1e-60, EQM_BOUND_ACTIVE_CUTOFF_FRAC * n_tot);
 	for(int i = 0; i < ns; ++i){
 		if(n_out[i] <= n_active_cutoff){
 			is_active[i] = 1;
@@ -1605,7 +1837,7 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 					Tk, P, NULL, nf, n_work);
 			}
 			if(status != 0 && init != NULL && Tk <= 1.08 * T){
-				if(eqm_reduced_try_drop_seed(names, ns, ne, A, b, source, Tk, P, init, nf, n_work)){
+				if(eqm_reduced_active_set_seed(names, ns, ne, A, b, source, Tk, P, init, nf, n_work)){
 					status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
 						Tk, P, n_work, nf, n_polish);
 					if(status == 0){
@@ -1620,7 +1852,7 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 			if(status != 0){
 				/* Small-floor continuation can fail near boundary optima; keep last good floor. */
 				if(any_ok){
-					break;
+					continue;
 				}
 				continue;
 			}
