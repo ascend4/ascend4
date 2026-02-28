@@ -80,6 +80,16 @@ $\boldsymbol{\mu}=[\mu_1,\dots,\mu_{n_s}]^T$.
 
 ### 3. KKT conditions (equilibrium conditions)
 
+Quick summary: KKT conditions are the first-order optimality conditions for constrained optimization.
+They combine four ideas:
+
+- stationarity (zero first derivative of the Lagrangian),
+- primal feasibility (original constraints hold),
+- dual feasibility (inequality multipliers are nonnegative),
+- complementarity (inactive inequality multipliers vanish).
+
+For this equilibrium problem, KKT is the mathematical statement that no infinitesimal, element-balanced, admissible composition change can reduce Gibbs energy further.
+
 Define the Lagrangian with equality multipliers $\boldsymbol\lambda\in\mathbb{R}^{n_e}$ and bound multipliers $\mathbf{s}\in\mathbb{R}^{n_s}_{\ge 0}$:
 
 $$
@@ -112,27 +122,34 @@ Near bounds ($n_i\to 0$), the logarithmic terms become singular, so boundary sol
 
 Interpretation:
 
-- If $n_i>0$ (free species), then $s_i=0$, so $\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i=0$.
-- If $n_i=0$ (active bound), then $s_i\ge 0$, so the KKT residual is nonnegative:
-  $$
-  \mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i \ge 0.
-  $$
+If $n_i>0$ (free species), then complementarity gives $s_i=0$, so
+$$
+\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i=0.
+$$
+
+If $n_i=0$ (active bound), then $s_i\ge 0$, so the KKT residual is nonnegative:
+$$
+\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i \ge 0.
+$$
 
 #### 3.2 Physical interpretation of multipliers
 
-- $\lambda_e$ acts like an elemental potential for conserved element $e$.
-- The quantity
-  $$
-  \tilde{\mu}_i = \mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i
-  $$
-  is the constrained or reduced driving force for species $i$.
-- At equilibrium:
-  - free species satisfy $\tilde{\mu}_i=0$,
-  - bound species satisfy $\tilde{\mu}_i\ge 0$.
+$\lambda_e$ acts like an elemental potential for conserved element $e$.
+Define the constrained driving force
+$$
+\tilde{\mu}_i = \mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i.
+$$
+At equilibrium, free species satisfy $\tilde{\mu}_i=0$ and bound species satisfy $\tilde{\mu}_i\ge 0$.
 
 So no feasible composition change can reduce $G$ further.
 
 ### 4. Why nullspace/reduced coordinates
+
+Quick summary: the nullspace of $\mathbf{A}$ is
+$$
+\mathcal{N}(\mathbf{A})=\{\mathbf{v}\in\mathbb{R}^{n_s}\mid \mathbf{A}\mathbf{v}=0\}.
+$$
+Any step $\Delta\mathbf{n}$ in this nullspace preserves element totals, because $\mathbf{A}(\mathbf{n}+\Delta\mathbf{n})=\mathbf{A}\mathbf{n}$.
 
 Direct optimization in $\mathbf{n}$ has linear constraints $\mathbf{A}\mathbf{n}=\mathbf{b}$.
 
@@ -159,6 +176,12 @@ $$
 \mathcal{F}=\{\mathbf{n}\in\mathbb{R}^{n_s}\mid \mathbf{A}\mathbf{n}=\mathbf{b}\}.
 $$
 
+Here, "affine subspace" means a shifted linear subspace: it can be written as
+$$
+\mathcal{F}=\mathbf{n}_0+\mathcal{N}(\mathbf{A}).
+$$
+So it is flat (like a plane/line in higher dimensions), but not required to pass through the origin.
+
 - $\mathbf{n}_0$ is one point on this subspace.
 - Columns of $\mathbf{N}$ span directions tangent to $\mathcal{F}$.
 - Moving along $\mathbf{N}\mathbf{z}$ keeps all element totals unchanged.
@@ -169,6 +192,9 @@ So the solver is doing unconstrained optimization on the feasible manifold, then
 
 Each nullspace direction $\boldsymbol\nu$ satisfies $\mathbf{A}\boldsymbol\nu=0$, which is exactly the condition for a balanced stoichiometric reaction vector.
 So reduced coordinates are generalized reaction extents.
+
+Important: the reduced coordinates are not unique. If $\mathbf{z}$ is replaced by $\hat{\mathbf{z}}=\mathbf{Q}^{-1}\mathbf{z}$ for any invertible matrix $\mathbf{Q}$, with basis $\hat{\mathbf{N}}=\mathbf{N}\mathbf{Q}$, the same feasible compositions are represented.
+So the variables are "reaction-extent-like" coordinates on the same feasible manifold, and different bases are just different coordinate systems.
 
 If $r=1$, this becomes the familiar single-extent form:
 
@@ -182,7 +208,7 @@ Programmatically, independent $\boldsymbol\nu$ vectors are extracted from $\math
 
 Start from:
 
-- a species list (for example: CO, CO$_2$, O$_2$),
+- a species list (for example: CO, CO2, O2),
 - chemical formulae for each species,
 - a chosen element set (here C and O).
 
@@ -197,12 +223,12 @@ $$
 \end{bmatrix},
 $$
 
-where column order is $(\mathrm{CO},\mathrm{CO_2},\mathrm{O_2})$.
+where column order is $(\mathrm{CO},\mathrm{CO}_2,\mathrm{O}_2)$.
 For example:
 
 - CO contributes C:1, O:1,
-- CO$_2$ contributes C:1, O:2,
-- O$_2$ contributes C:0, O:2.
+- CO2 contributes C:1, O:2,
+- O2 contributes C:0, O:2.
 
 If feed totals are $b_{\mathrm{C}}, b_{\mathrm{O}}$, feasibility is
 
@@ -243,7 +269,7 @@ $$
 This is exactly the extent form for the balanced reaction
 
 $$
-2\,\mathrm{CO}+\mathrm{O_2}\rightleftharpoons 2\,\mathrm{CO_2}.
+2\,\mathrm{CO}+\mathrm{O}_2\rightleftharpoons 2\,\mathrm{CO}_2.
 $$
 
 General case is the same workflow:
