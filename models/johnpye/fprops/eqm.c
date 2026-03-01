@@ -3,11 +3,13 @@
 #include <stdlib.h>
 #include <float.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "fprops.h"
 #include "ideal.h"
 #include "fluids.h"
 #include "constcp_species.h"
+#include "shomate_species.h"
 #include "eqm.h"
 #include "eqm_internal.h"
 
@@ -27,6 +29,15 @@ static const double EQM_BOUND_KKT_FREE_TOL = 2e-2;
 static const double EQM_BOUND_KKT_DUAL_TOL = 2e-2;
 static const double EQM_BOUND_ACTIVE_CUTOFF_FRAC = 1e-22;
 
+typedef enum {
+	EQM_MODEL_AUTO = 0,
+	EQM_MODEL_IDEAL,
+	EQM_MODEL_CONSTCP,
+	EQM_MODEL_SHOMATE,
+	EQM_MODEL_HELMHOLTZ,
+	EQM_MODEL_PENGROB
+} EqmMuModel;
+
 static int eqm_active_trace_enabled(void){
 	static int enabled = -1;
 	if(enabled < 0){
@@ -38,6 +49,11 @@ static int eqm_active_trace_enabled(void){
 
 static int eqm_mu0_constcp_source(const char *name, const char *source, double T, double P0,
 		double *mu0);
+static int eqm_mu0_shomate_source(const char *name, const char *source, double T, double P0,
+		double *mu0);
+static int eqm_mu0_model_source(const char *name, EqmMuModel model, const char *source, double T,
+		double P0, double *mu0);
+static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, const char **source_out);
 int eqm_mu0_source(const char *name, const char *source, double T, double P0, double *mu0);
 
 void eqm_apply_bscale(EqmData *D){
@@ -95,7 +111,7 @@ int eqm_compute_mu0(const char **names, int ns, const char *source, double T, do
 	int i;
 	for(i = 0; i < ns; ++i){
 		if(!eqm_mu0_source(names[i], source, T, P0, &mu0[i])){
-			fprintf(stderr, "eqm mu0 failed: no ideal/constcp data for '%s'\n", names[i]);
+			fprintf(stderr, "eqm mu0 failed: no thermo data for '%s'\n", names[i]);
 			return 0;
 		}
 	}
@@ -109,14 +125,34 @@ int eqm_compute_is_condensed(const char **names, int ns, const char *source, int
 	}
 	for(i = 0; i < ns; ++i){
 		const ConstCpSpecies *S = NULL;
+		const ShomateSpecies *Sh = NULL;
+		char source_buf[512];
+		const char *selector_source = NULL;
+		EqmMuModel selector_model = EQM_MODEL_AUTO;
+		const char *source_i;
 		if(!names[i]){
 			return 0;
 		}
-		S = constcp_species_lookup(names[i], source);
+		source_i = fprops_resolve_species_source(source, names[i], source_buf,
+			(unsigned)sizeof(source_buf));
+		eqm_parse_selector(source_i, &selector_model, &selector_source);
+		S = constcp_species_lookup(names[i], selector_source ? selector_source : source_i);
 		if(!S){
 			S = constcp_species_lookup(names[i], NULL);
 		}
-		is_condensed[i] = S ? 1 : 0;
+		Sh = shomate_species_lookup(names[i], selector_source);
+		if(!Sh){
+			Sh = shomate_species_lookup(names[i], NULL);
+		}
+		if(selector_model == EQM_MODEL_SHOMATE){
+			is_condensed[i] = (Sh && Sh->phase != FPROPS_PHASE_GAS) ? 1 : 0;
+		}else if(selector_model == EQM_MODEL_CONSTCP){
+			is_condensed[i] = S ? 1 : 0;
+		}else{
+			int is_cond_constcp = S ? 1 : 0;
+			int is_cond_shomate = (Sh && Sh->phase != FPROPS_PHASE_GAS) ? 1 : 0;
+			is_condensed[i] = (is_cond_constcp || is_cond_shomate) ? 1 : 0;
+		}
 	}
 	return 1;
 }
@@ -196,11 +232,193 @@ static int eqm_mu0_constcp_source(const char *name, const char *source, double T
 	return 1;
 }
 
-int eqm_mu0_source(const char *name, const char *source, double T, double P0, double *mu0){
-	if(eqm_mu0_ideal_source(name, source, T, P0, mu0)){
+static int eqm_mu0_shomate_source(const char *name, const char *source, double T, double P0,
+		double *mu0){
+	const ShomateSpecies *S;
+	FpropsError err = FPROPS_NO_ERROR;
+	double g_molar;
+
+	if(!name || !mu0){
+		return 0;
+	}
+	S = shomate_species_lookup(name, source);
+	if(!S){
+		S = shomate_species_lookup(name, NULL);
+	}
+	if(!S){
+		return 0;
+	}
+	g_molar = shomate_species_g_molar(S, T, P0, &err);
+	if(err || !isfinite(g_molar)){
+		return 0;
+	}
+	*mu0 = g_molar;
+	return 1;
+}
+
+static int eqm_mu0_fluid_model_source(const char *name, const char *corrtype, const char *source,
+		double T, double P0, double *mu0){
+	PureFluid *P;
+	const char *cands[3];
+	int ncands = 0;
+	int c;
+	if(!name || !corrtype || !mu0 || !(T > 0.0) || !(P0 > 0.0)){
+		return 0;
+	}
+	cands[ncands++] = source;
+	cands[ncands++] = NULL;
+	if(strcmp(corrtype, "ideal") == 0){
+		cands[ncands++] = "RPP";
+	}
+	for(c = 0; c < ncands; ++c){
+		double rho;
+		double p_calc = NAN;
+		double g;
+		double molar_mass;
+		FpropsError err = FPROPS_NO_ERROR;
+		int it;
+		const char *src = cands[c];
+		P = (PureFluid *)fprops_fluid(name, corrtype, src);
+		if(!P){
+			continue;
+		}
+		if(!P->data || !(P->data->R > 0.0) || !P->p_fn || !P->g_fn){
+			fprops_fluid_destroy(P);
+			continue;
+		}
+		rho = P0 / (P->data->R * T);
+		if(!(rho > 0.0) || !isfinite(rho)){
+			fprops_fluid_destroy(P);
+			continue;
+		}
+		if(P->type != FPROPS_IDEAL){
+			for(it = 0; it < 12; ++it){
+				double rel;
+				double rho_new;
+				err = FPROPS_NO_ERROR;
+				p_calc = P->p_fn((FluidStateUnion){.Trho={T, rho}}, P->data, &err);
+				if(err || !isfinite(p_calc) || !(p_calc > 0.0)){
+					break;
+				}
+				rel = fabs(p_calc - P0) / P0;
+				if(rel < 1e-10){
+					break;
+				}
+				rho_new = rho * (P0 / p_calc);
+				if(!isfinite(rho_new) || !(rho_new > 0.0)){
+					break;
+				}
+				if(rho_new > 1e5){
+					rho_new = 1e5;
+				}
+				rho = rho_new;
+			}
+		}
+		err = FPROPS_NO_ERROR;
+		g = P->g_fn((FluidStateUnion){.Trho={T, rho}}, P->data, &err);
+		molar_mass = P->data->M * 1e-3;
+		fprops_fluid_destroy(P);
+		if(!err && isfinite(g) && isfinite(molar_mass) && molar_mass > 0.0){
+			*mu0 = g * molar_mass;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int eqm_mu0_model_source(const char *name, EqmMuModel model, const char *source, double T,
+		double P0, double *mu0){
+	if(model == EQM_MODEL_AUTO){
+		if(eqm_mu0_ideal_source(name, source, T, P0, mu0)){
+			return 1;
+		}
+		if(eqm_mu0_shomate_source(name, source, T, P0, mu0)){
+			return 1;
+		}
+		return eqm_mu0_constcp_source(name, source, T, P0, mu0);
+	}
+	if(model == EQM_MODEL_IDEAL){
+		return eqm_mu0_ideal_source(name, source, T, P0, mu0);
+	}
+	if(model == EQM_MODEL_CONSTCP){
+		return eqm_mu0_constcp_source(name, source, T, P0, mu0);
+	}
+	if(model == EQM_MODEL_SHOMATE){
+		return eqm_mu0_shomate_source(name, source, T, P0, mu0);
+	}
+	if(model == EQM_MODEL_HELMHOLTZ){
+		return eqm_mu0_fluid_model_source(name, "helmholtz", source, T, P0, mu0);
+	}
+	if(model == EQM_MODEL_PENGROB){
+		return eqm_mu0_fluid_model_source(name, "pengrob", source, T, P0, mu0);
+	}
+	return 0;
+}
+
+static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, const char **source_out){
+	char model_buf[32];
+	const char *colon = NULL;
+	size_t n = 0;
+	if(model_out){
+		*model_out = EQM_MODEL_AUTO;
+	}
+	if(source_out){
+		*source_out = spec;
+	}
+	if(!spec || !spec[0]){
 		return 1;
 	}
-	return eqm_mu0_constcp_source(name, source, T, P0, mu0);
+	colon = strchr(spec, ':');
+	if(!colon){
+		return 1;
+	}
+	while(spec[n] && &spec[n] < colon && n < sizeof(model_buf) - 1){
+		model_buf[n] = (char)tolower((unsigned char)spec[n]);
+		++n;
+	}
+	model_buf[n] = '\0';
+	if(n == 0){
+		return 1;
+	}
+	if(model_out){
+		if(strcmp(model_buf, "auto") == 0){
+			*model_out = EQM_MODEL_AUTO;
+		}else if(strcmp(model_buf, "ideal") == 0){
+			*model_out = EQM_MODEL_IDEAL;
+		}else if(strcmp(model_buf, "constcp") == 0){
+			*model_out = EQM_MODEL_CONSTCP;
+		}else if(strcmp(model_buf, "shomate") == 0){
+			*model_out = EQM_MODEL_SHOMATE;
+		}else if(strcmp(model_buf, "helmholtz") == 0){
+			*model_out = EQM_MODEL_HELMHOLTZ;
+		}else if(strcmp(model_buf, "pengrob") == 0){
+			*model_out = EQM_MODEL_PENGROB;
+		}else{
+			*model_out = EQM_MODEL_AUTO;
+			return 1;
+		}
+	}
+	if(source_out){
+		const char *src = colon + 1;
+		while(*src && isspace((unsigned char)*src)){
+			++src;
+		}
+		*source_out = (*src) ? src : NULL;
+	}
+	return 1;
+}
+
+int eqm_mu0_source(const char *name, const char *source, double T, double P0, double *mu0){
+	char source_buf[512];
+	const char *source_i = fprops_resolve_species_source(source, name, source_buf,
+		(unsigned)sizeof(source_buf));
+	EqmMuModel selector_model = EQM_MODEL_AUTO;
+	const char *selector_source = NULL;
+	eqm_parse_selector(source_i, &selector_model, &selector_source);
+	if(eqm_mu0_model_source(name, selector_model, selector_source, T, P0, mu0)){
+		return 1;
+	}
+	return 0;
 }
 
 int eqm_mu0_ideal_source(const char *name, const char *source, double T, double P0,

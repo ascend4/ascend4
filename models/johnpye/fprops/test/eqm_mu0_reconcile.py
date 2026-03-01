@@ -30,6 +30,18 @@ How to run:
          --a 'fprops:Moran and Shapiro' \
          --b 'fprops:oecd_nea_tdb_vol6_nickel'
 
+  2b) Gas-only decomposition check (H2 + 0.5 O2 <-> H2O):
+       python3 models/johnpye/fprops/test/eqm_mu0_reconcile.py \
+         --preset h2_oxidation \
+         --a 'fprops:Moran and Shapiro' \
+         --b 'reaktoro:supcrt98'
+
+  2c) Oxide-only decomposition check (Ni + 0.5 O2 <-> NiO):
+       python3 models/johnpye/fprops/test/eqm_mu0_reconcile.py \
+         --preset nio_formation \
+         --a 'fprops:Moran and Shapiro' \
+         --b 'reaktoro:supcrt98'
+
   3) Compare FPROPS vs Reaktoro using a separate Reaktoro runner:
        python3 models/johnpye/fprops/test/eqm_mu0_reconcile.py \
          --a 'fprops:Moran and Shapiro' \
@@ -59,13 +71,25 @@ from typing import Dict, Iterable, List, Tuple
 import numpy as np
 
 
-DEFAULT_SPECIES = ["Ni", "NiO", "hydrogen", "water"]
-DEFAULT_REACTION_NU = {
-    "Ni": 1.0,
-    "NiO": -1.0,
-    "hydrogen": -1.0,
-    "water": 1.0,
+PRESETS = {
+    "nio_h2o": {
+        "species": ["Ni", "NiO", "hydrogen", "water"],
+        "nu": {"Ni": 1.0, "NiO": -1.0, "hydrogen": -1.0, "water": 1.0},
+        "title": "NiO + H2 <-> Ni + H2O",
+    },
+    "h2_oxidation": {
+        "species": ["hydrogen", "oxygen", "water"],
+        "nu": {"hydrogen": -1.0, "oxygen": -0.5, "water": 1.0},
+        "title": "H2 + 0.5 O2 <-> H2O",
+    },
+    "nio_formation": {
+        "species": ["Ni", "oxygen", "NiO"],
+        "nu": {"Ni": -1.0, "oxygen": -0.5, "NiO": 1.0},
+        "title": "Ni + 0.5 O2 <-> NiO",
+    },
 }
+
+DEFAULT_PRESET = "nio_h2o"
 
 DEFAULT_FORMULA_MAP = {
     "Ni": "Ni",
@@ -237,13 +261,15 @@ def query_provider_mu0(
     runner: Path,
     reaktoro_runner: Path,
     reaktoro_shell_prefix: str,
+    fprops_source_override: str,
     tk: float,
     p0: float,
     species: List[str],
     reaktoro_name_map: Dict[str, str],
 ) -> Dict[str, float]:
     if provider.kind == "fprops":
-        return query_fprops_mu0(runner, provider.source, tk, p0, species)
+        src = fprops_source_override if fprops_source_override else provider.source
+        return query_fprops_mu0(runner, src, tk, p0, species)
     if provider.kind == "reaktoro":
         return query_reaktoro_mu0(
             reaktoro_runner,
@@ -295,6 +321,22 @@ def main() -> int:
     )
     ap.add_argument("--a", default="fprops:Moran and Shapiro", help="Provider A, format kind:source")
     ap.add_argument("--b", default="fprops:oecd_nea_tdb_vol6_nickel", help="Provider B, format kind:source")
+    ap.add_argument(
+        "--a-fprops-source-override",
+        default="",
+        help="Optional full source string/map override when provider A is fprops.",
+    )
+    ap.add_argument(
+        "--b-fprops-source-override",
+        default="",
+        help="Optional full source string/map override when provider B is fprops.",
+    )
+    ap.add_argument(
+        "--preset",
+        choices=sorted(PRESETS.keys()),
+        default=DEFAULT_PRESET,
+        help="Reaction/species preset. Use --species/--nu to override.",
+    )
     ap.add_argument("--runner", type=Path, default=Path(__file__).resolve().parent / "eqm_mu0_runner")
     ap.add_argument(
         "--reaktoro-runner",
@@ -318,8 +360,8 @@ def main() -> int:
     )
     ap.add_argument(
         "--species",
-        default=",".join(DEFAULT_SPECIES),
-        help="Comma-separated FPROPS species list.",
+        default="",
+        help="Comma-separated species list. If omitted, uses --preset.",
     )
     ap.add_argument(
         "--formula",
@@ -355,7 +397,11 @@ def main() -> int:
     a = parse_provider(args.a)
     b = parse_provider(args.b)
     temps_k = [t + 273.15 for t in parse_temps(args.temps_c)]
-    species = [s.strip() for s in args.species.split(",") if s.strip()]
+    preset = PRESETS[args.preset]
+    if args.species.strip():
+        species = [s.strip() for s in args.species.split(",") if s.strip()]
+    else:
+        species = list(preset["species"])
     if not species:
         raise ValueError("No species provided")
 
@@ -369,7 +415,7 @@ def main() -> int:
     if not elements:
         raise ValueError("No elements defined/inferred")
 
-    user_nu = dict(DEFAULT_REACTION_NU)
+    user_nu = dict(preset["nu"])
     user_nu.update({k: float(v) for k, v in parse_name_map(args.nu).items()})
     nu = reaction_vector(species, user_nu)
     has_reaction = np.any(np.abs(nu) > 0.0)
@@ -391,6 +437,7 @@ def main() -> int:
 
     print(f"Provider A: {a.kind}:{a.source}")
     print(f"Provider B: {b.kind}:{b.source}")
+    print(f"Preset: {args.preset} ({preset['title']})")
     print(f"Species: {', '.join(species)}")
     print(f"Elements: {', '.join(elements)}")
     print()
@@ -403,6 +450,7 @@ def main() -> int:
                 args.runner,
                 args.reaktoro_runner,
                 args.reaktoro_shell_prefix,
+                args.a_fprops_source_override,
                 tk,
                 args.p0,
                 species,
@@ -413,6 +461,7 @@ def main() -> int:
                 args.runner,
                 args.reaktoro_runner,
                 args.reaktoro_shell_prefix,
+                args.b_fprops_source_override,
                 tk,
                 args.p0,
                 species,

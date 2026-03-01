@@ -4,10 +4,12 @@
 #include "helmholtz.h"
 #include "pengrob.h"
 #include "constcp_data.h"
+#include "shomate_data.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include <ctype.h>
 
 //#define FLUIDS_DEBUG
 #ifdef FLUIDS_DEBUG
@@ -103,6 +105,82 @@ int fprops_build_element_matrix(const char **names, int ns, const char **element
 	return fprops_build_element_matrix_source(names, ns, elements, ne, NULL, A_out);
 }
 
+static void copy_trimmed_range(const char *a, const char *b, char *out, unsigned out_len){
+	const char *s = a;
+	const char *e = b;
+	unsigned n;
+	if(!out || out_len == 0){
+		return;
+	}
+	while(s < e && isspace((unsigned char)*s)){
+		++s;
+	}
+	while(e > s && isspace((unsigned char)*(e - 1))){
+		--e;
+	}
+	n = (unsigned)(e - s);
+	if(n >= out_len){
+		n = out_len - 1;
+	}
+	if(n > 0){
+		memcpy(out, s, n);
+	}
+	out[n] = '\0';
+}
+
+const char *fprops_resolve_species_source(const char *source_spec, const char *species_name,
+		char *out, unsigned out_len){
+	const char *p;
+	char default_source[256];
+	int have_default = 0;
+	if(!source_spec || !source_spec[0]){
+		return NULL;
+	}
+	if(!species_name || !species_name[0]){
+		return source_spec;
+	}
+	if(!strchr(source_spec, '=')){
+		return source_spec;
+	}
+	if(!out || out_len == 0){
+		return NULL;
+	}
+	default_source[0] = '\0';
+	p = source_spec;
+	while(*p){
+		const char *q = p;
+		const char *eq = NULL;
+		char key[128];
+		char val[512];
+		while(*q && *q != ';'){
+			if(!eq && *q == '='){
+				eq = q;
+			}
+			++q;
+		}
+		if(eq){
+			copy_trimmed_range(p, eq, key, (unsigned)sizeof(key));
+			copy_trimmed_range(eq + 1, q, val, (unsigned)sizeof(val));
+			if(key[0] && val[0]){
+				if(0 == strcmp(key, species_name)){
+					copy_trimmed_range(val, val + strlen(val), out, out_len);
+					return out[0] ? out : NULL;
+				}
+				if(0 == strcmp(key, "*") || 0 == strcmp(key, "default")){
+					copy_trimmed_range(val, val + strlen(val), default_source, (unsigned)sizeof(default_source));
+					have_default = default_source[0] ? 1 : 0;
+				}
+			}
+		}
+		p = (*q == ';') ? q + 1 : q;
+	}
+	if(have_default){
+		copy_trimmed_range(default_source, default_source + strlen(default_source), out, out_len);
+		return out[0] ? out : NULL;
+	}
+	return NULL;
+}
+
 int fprops_build_element_matrix_source(const char **names, int ns, const char **elements, int ne,
 		const char *source, double *A_out){
 	int i;
@@ -120,27 +198,51 @@ int fprops_build_element_matrix_source(const char **names, int ns, const char **
 	}
 
 	for(i = 0; i < ns; ++i){
-		const EosData *E = fprops_eos(names[i], NULL, source);
+		char source_buf[512];
+		const char *source_i = fprops_resolve_species_source(source, names[i], source_buf,
+			(unsigned)sizeof(source_buf));
+		const EosData *E = fprops_eos(names[i], NULL, source_i);
 		if(!E){
 			E = fprops_eos(names[i], NULL, NULL);
 		}
 		if(!E){
-			const ConstCpSpecies *S = constcp_data_lookup(names[i], source);
+			const ConstCpSpecies *S = constcp_data_lookup(names[i], source_i);
+			const ShomateSpecies *Sh = NULL;
 			if(!S){
 				S = constcp_data_lookup(names[i], NULL);
 			}
 			if(!S){
+				Sh = shomate_data_lookup(names[i], source_i);
+			}
+			if(!Sh){
+				Sh = shomate_data_lookup(names[i], NULL);
+			}
+			if(!S && !Sh){
 				ERRMSG("Missing EOS/constcp data for '%s'", names[i]);
 				return 0;
 			}
-			if(!S->elements || !S->stoich || S->nelem == 0){
-				ERRMSG("Missing element composition for '%s'", S->name);
-				return 0;
-			}
-			for(k = 0; k < (int)S->nelem; ++k){
-				for(e = 0; e < ne; ++e){
-					if(0 == strcmp(S->elements[k], elements[e])){
-						A_out[e * ns + i] += S->stoich[k];
+			if(S){
+				if(!S->elements || !S->stoich || S->nelem == 0){
+					ERRMSG("Missing element composition for '%s'", S->name);
+					return 0;
+				}
+				for(k = 0; k < (int)S->nelem; ++k){
+					for(e = 0; e < ne; ++e){
+						if(0 == strcmp(S->elements[k], elements[e])){
+							A_out[e * ns + i] += S->stoich[k];
+						}
+					}
+				}
+			}else{
+				if(!Sh->elements || !Sh->stoich || Sh->nelem == 0){
+					ERRMSG("Missing element composition for '%s'", Sh->name);
+					return 0;
+				}
+				for(k = 0; k < (int)Sh->nelem; ++k){
+					for(e = 0; e < ne; ++e){
+						if(0 == strcmp(Sh->elements[k], elements[e])){
+							A_out[e * ns + i] += Sh->stoich[k];
+						}
 					}
 				}
 			}

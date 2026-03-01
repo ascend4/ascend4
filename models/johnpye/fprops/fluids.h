@@ -45,4 +45,17 @@ int fprops_build_element_matrix_source(const char **names, int ns, const char **
 
 const ConstCpSpecies *fprops_constcp_species(const char *name, const char *source);
 
+/**
+	Resolve a source selector for one species.
+
+	If `source_spec` is a plain source string (no '='), that string is returned.
+	If `source_spec` is a map, the syntax is:
+	    species=source;other=source2;*=defaultsource
+	(`default=` is also accepted instead of `*=`).
+	The resolved source is written to `out` and returned as `out`.
+	Returns NULL if no source is resolved.
+*/
+const char *fprops_resolve_species_source(const char *source_spec, const char *species_name,
+		char *out, unsigned out_len);
+
 #endif

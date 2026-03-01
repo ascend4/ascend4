@@ -23,6 +23,11 @@ int eqm_solve_elements(const char **names, int ns, const char **elements, int ne
 
 int eqm_mu0_ideal_source(const char *name, const char *source, double T, double P0,
 		double *mu0);
+/* `source` supports explicit model prefixes:
+   auto:<source>, ideal:<source>, constcp:<source>, shomate:<source>,
+   helmholtz:<source>, pengrob:<source>.
+   This also works per species when used inside source maps, eg
+   "Ni=shomate:oecd_nea_tdb_vol6_nickel;water=ideal:Moran and Shapiro". */
 int eqm_mu0_source(const char *name, const char *source, double T, double P0,
 		double *mu0);
 
