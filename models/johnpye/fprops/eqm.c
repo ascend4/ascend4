@@ -7,6 +7,7 @@
 #include "fprops.h"
 #include "ideal.h"
 #include "fluids.h"
+#include "constcp_species.h"
 #include "eqm.h"
 #include "eqm_internal.h"
 
@@ -34,6 +35,10 @@ static int eqm_active_trace_enabled(void){
 	}
 	return enabled;
 }
+
+static int eqm_mu0_constcp_source(const char *name, const char *source, double T, double P0,
+		double *mu0);
+int eqm_mu0_source(const char *name, const char *source, double T, double P0, double *mu0);
 
 void eqm_apply_bscale(EqmData *D){
 	int e;
@@ -89,12 +94,113 @@ void eqm_apply_nscale(EqmData *D, const double *n_init){
 int eqm_compute_mu0(const char **names, int ns, const char *source, double T, double P0, double *mu0){
 	int i;
 	for(i = 0; i < ns; ++i){
-		if(!eqm_mu0_ideal_source(names[i], source, T, P0, &mu0[i])){
-			fprintf(stderr, "eqm mu0 failed: no ideal data for '%s'\n", names[i]);
+		if(!eqm_mu0_source(names[i], source, T, P0, &mu0[i])){
+			fprintf(stderr, "eqm mu0 failed: no ideal/constcp data for '%s'\n", names[i]);
 			return 0;
 		}
 	}
 	return 1;
+}
+
+int eqm_compute_is_condensed(const char **names, int ns, const char *source, int *is_condensed){
+	int i;
+	if(!names || !is_condensed || ns <= 0){
+		return 0;
+	}
+	for(i = 0; i < ns; ++i){
+		const ConstCpSpecies *S = NULL;
+		if(!names[i]){
+			return 0;
+		}
+		S = constcp_species_lookup(names[i], source);
+		if(!S){
+			S = constcp_species_lookup(names[i], NULL);
+		}
+		is_condensed[i] = S ? 1 : 0;
+	}
+	return 1;
+}
+
+int eqm_eval_obj_mu(const double *n, const double *mu0, const int *is_condensed, int ns,
+		double T, double P, double P0, double *obj, double *mu, double *n_gas_out){
+	const double RT = gas_R() * T;
+	const double logPP0 = log(P / P0);
+	double ngas = 0.0;
+	int has_gas = 0;
+	double f = 0.0;
+	int i;
+
+	if(!n || !mu0 || ns <= 0 || !(T > 0.0) || !(P > 0.0) || !(P0 > 0.0)){
+		return 0;
+	}
+	for(i = 0; i < ns; ++i){
+		if(!(n[i] > 0.0) || !isfinite(n[i])){
+			return 0;
+		}
+		if(!is_condensed || !is_condensed[i]){
+			ngas += n[i];
+			has_gas = 1;
+		}
+	}
+	if(has_gas && (!(ngas > 0.0) || !isfinite(ngas))){
+		return 0;
+	}
+	if(n_gas_out){
+		*n_gas_out = ngas;
+	}
+	for(i = 0; i < ns; ++i){
+		double mui = mu0[i];
+		if(!is_condensed || !is_condensed[i]){
+			mui += RT * (log(n[i]) - log(ngas) + logPP0);
+		}
+		if(!isfinite(mui)){
+			return 0;
+		}
+		if(mu){
+			mu[i] = mui;
+		}
+		if(obj){
+			f += n[i] * mui;
+		}
+	}
+	if(obj){
+		*obj = f;
+	}
+	return 1;
+}
+
+static int eqm_mu0_constcp_source(const char *name, const char *source, double T, double P0,
+		double *mu0){
+	const ConstCpSpecies *S;
+	const ConstCpData *phase = NULL;
+	FpropsError err = FPROPS_NO_ERROR;
+	double g_molar;
+
+	if(!name || !mu0){
+		return 0;
+	}
+
+	S = constcp_species_lookup(name, source);
+	if(!S){
+		S = constcp_species_lookup(name, NULL);
+	}
+	if(!S){
+		return 0;
+	}
+
+	g_molar = constcp_species_g_molar(S, T, P0, &phase, &err);
+	if(err || !isfinite(g_molar)){
+		return 0;
+	}
+	*mu0 = g_molar;
+	return 1;
+}
+
+int eqm_mu0_source(const char *name, const char *source, double T, double P0, double *mu0){
+	if(eqm_mu0_ideal_source(name, source, T, P0, mu0)){
+		return 1;
+	}
+	return eqm_mu0_constcp_source(name, source, T, P0, mu0);
 }
 
 int eqm_mu0_ideal_source(const char *name, const char *source, double T, double P0,
@@ -637,78 +743,70 @@ static int eqm_reduced_make_interior(const double *n0, const double *N, int ns, 
 	return ok;
 }
 
-static int eqm_reduced_eval_obj_mu(const double *n, const double *mu0, int ns,
-		double T, double P, double P0, double *obj, double *mu){
-	const double RT = gas_R() * T;
-	const double logPP0 = log(P / P0);
-	double n_tot = 0.0;
-	double log_n_tot;
-	double f = 0.0;
-	for(int i = 0; i < ns; ++i){
-		if(!(n[i] > 0.0) || !isfinite(n[i])){
-			return 0;
-		}
-		n_tot += n[i];
-	}
-	if(!(n_tot > 0.0) || !isfinite(n_tot)){
-		return 0;
-	}
-	log_n_tot = log(n_tot);
-	for(int i = 0; i < ns; ++i){
-		double lnai = log(n[i]) - log_n_tot + logPP0;
-		double mui = mu0[i] + RT * lnai;
-		if(!isfinite(mui)){
-			return 0;
-		}
-		mu[i] = mui;
-		f += n[i] * mui;
-	}
-	*obj = f;
-	return 1;
+static int eqm_reduced_eval_obj_mu(const double *n, const double *mu0, const int *is_condensed,
+		int ns, double T, double P, double P0, double *obj, double *mu, double *n_gas_tot){
+	return eqm_eval_obj_mu(n, mu0, is_condensed, ns, T, P, P0, obj, mu, n_gas_tot);
 }
 
 static void eqm_reduced_eval_grad_hess(const double *n, const double *N, int ns, int r,
-		double T, const double *mu, double *grad, double *H){
+		double T, const int *is_condensed, double *H){
 	const double RT = gas_R() * T;
 	const double n_curv_floor = 1e-80;
-	double n_tot = 0.0;
+	double n_gas = 0.0;
 	double *c = (double *)calloc((size_t)r, sizeof(double));
+	if(!c){
+		return;
+	}
 	for(int i = 0; i < ns; ++i){
-		n_tot += n[i];
+		if(!is_condensed || !is_condensed[i]){
+			n_gas += n[i];
+		}
 	}
 	for(int j = 0; j < r; ++j){
-		double gj = 0.0;
 		double cj = 0.0;
 		for(int i = 0; i < ns; ++i){
+			if(is_condensed && is_condensed[i]){
+				continue;
+			}
 			double Nij = N[i * r + j];
-			gj += Nij * mu[i];
 			cj += Nij;
 		}
-		grad[j] = gj;
 		c[j] = cj;
+	}
+	if(!(n_gas > 0.0) || !isfinite(n_gas)){
+		for(int j = 0; j < r; ++j){
+			for(int k = 0; k < r; ++k){
+				H[j * r + k] = 0.0;
+			}
+		}
+		free(c);
+		return;
 	}
 	for(int j = 0; j < r; ++j){
 		for(int k = 0; k < r; ++k){
 			double s = 0.0;
 			for(int i = 0; i < ns; ++i){
+				if(is_condensed && is_condensed[i]){
+					continue;
+				}
 				double ni = n[i];
 				if(ni < n_curv_floor){
 					ni = n_curv_floor;
 				}
 				s += N[i * r + j] * N[i * r + k] / ni;
 			}
-			H[j * r + k] = RT * (s - (c[j] * c[k] / n_tot));
+			H[j * r + k] = RT * (s - (c[j] * c[k] / n_gas));
 		}
 	}
 	free(c);
 }
 
 static int eqm_reduced_eval_phi_r1(const double *n0, const double *v, int ns,
-		const double *mu0, double T, double P, double P0, long double z,
+		const double *mu0, const int *is_condensed, double T, double P, double P0, long double z,
 		long double *phi, long double *obj){
 	const long double RT = (long double)gas_R() * (long double)T;
 	const long double logPP0 = logl((long double)P / (long double)P0);
-	long double ntot = 0.0L;
+	long double ngas = 0.0L;
 	long double f = 0.0L;
 	long double p = 0.0L;
 	for(int i = 0; i < ns; ++i){
@@ -716,14 +814,22 @@ static int eqm_reduced_eval_phi_r1(const double *n0, const double *v, int ns,
 		if(!(ni > 0.0L) || !isfinite((double)ni)){
 			return 0;
 		}
-		ntot += ni;
+		if(!is_condensed || !is_condensed[i]){
+			ngas += ni;
+		}
 	}
-	if(!(ntot > 0.0L) || !isfinite((double)ntot)){
+	if(ngas < 0.0L || !isfinite((double)ngas)){
 		return 0;
 	}
 	for(int i = 0; i < ns; ++i){
 		long double ni = (long double)n0[i] + (long double)v[i] * z;
-		long double mui = (long double)mu0[i] + RT * (logl(ni) - logl(ntot) + logPP0);
+		long double mui = (long double)mu0[i];
+		if(!is_condensed || !is_condensed[i]){
+			if(!(ngas > 0.0L)){
+				return 0;
+			}
+			mui += RT * (logl(ni) - logl(ngas) + logPP0);
+		}
 		if(!isfinite((double)mui)){
 			return 0;
 		}
@@ -736,11 +842,11 @@ static int eqm_reduced_eval_phi_r1(const double *n0, const double *v, int ns,
 }
 
 static int eqm_reduced_eval_phi_edge(const long double *n_edge, const double *dir, int ns,
-		const double *mu0, double T, double P, double P0, long double u,
+		const double *mu0, const int *is_condensed, double T, double P, double P0, long double u,
 		long double *phi, long double *obj){
 	const long double RT = (long double)gas_R() * (long double)T;
 	const long double logPP0 = logl((long double)P / (long double)P0);
-	long double ntot = 0.0L;
+	long double ngas = 0.0L;
 	long double f = 0.0L;
 	long double p = 0.0L;
 	for(int i = 0; i < ns; ++i){
@@ -748,14 +854,22 @@ static int eqm_reduced_eval_phi_edge(const long double *n_edge, const double *di
 		if(!(ni > 0.0L) || !isfinite((double)ni)){
 			return 0;
 		}
-		ntot += ni;
+		if(!is_condensed || !is_condensed[i]){
+			ngas += ni;
+		}
 	}
-	if(!(ntot > 0.0L) || !isfinite((double)ntot)){
+	if(ngas < 0.0L || !isfinite((double)ngas)){
 		return 0;
 	}
 	for(int i = 0; i < ns; ++i){
 		long double ni = n_edge[i] + (long double)dir[i] * u;
-		long double mui = (long double)mu0[i] + RT * (logl(ni) - logl(ntot) + logPP0);
+		long double mui = (long double)mu0[i];
+		if(!is_condensed || !is_condensed[i]){
+			if(!(ngas > 0.0L)){
+				return 0;
+			}
+			mui += RT * (logl(ni) - logl(ngas) + logPP0);
+		}
 		if(!isfinite((double)mui)){
 			return 0;
 		}
@@ -768,7 +882,7 @@ static int eqm_reduced_eval_phi_edge(const long double *n_edge, const double *di
 }
 
 static int eqm_reduced_try_edge_root(const long double *n_edge, const double *dir, int ns,
-		const double *mu0, double T, double P, double P0, long double u_max,
+		const double *mu0, const int *is_condensed, double T, double P, double P0, long double u_max,
 		long double *u_best){
 	const long double u_min = 1e-300L;
 	long double ulo = u_min;
@@ -781,7 +895,7 @@ static int eqm_reduced_try_edge_root(const long double *n_edge, const double *di
 	if(!(u_max > u_min)){
 		return 0;
 	}
-	if(!eqm_reduced_eval_phi_edge(n_edge, dir, ns, mu0, T, P, P0, ulo, &flo, &tmp)){
+	if(!eqm_reduced_eval_phi_edge(n_edge, dir, ns, mu0, is_condensed, T, P, P0, ulo, &flo, &tmp)){
 		return 0;
 	}
 	for(int it = 0; it < 600; ++it){
@@ -789,7 +903,7 @@ static int eqm_reduced_try_edge_root(const long double *n_edge, const double *di
 		if(uhi > u_max){
 			uhi = u_max;
 		}
-		if(!eqm_reduced_eval_phi_edge(n_edge, dir, ns, mu0, T, P, P0, uhi, &fhi, &tmp)){
+		if(!eqm_reduced_eval_phi_edge(n_edge, dir, ns, mu0, is_condensed, T, P, P0, uhi, &fhi, &tmp)){
 			return 0;
 		}
 		if((flo == 0.0L) || (fhi == 0.0L) || (flo * fhi < 0.0L)){
@@ -816,7 +930,7 @@ static int eqm_reduced_try_edge_root(const long double *n_edge, const double *di
 	for(int it = 0; it < 300; ++it){
 		long double um = sqrtl(ulo * uhi);
 		long double fm = 0.0L;
-		if(!eqm_reduced_eval_phi_edge(n_edge, dir, ns, mu0, T, P, P0, um, &fm, &tmp)){
+		if(!eqm_reduced_eval_phi_edge(n_edge, dir, ns, mu0, is_condensed, T, P, P0, um, &fm, &tmp)){
 			return 0;
 		}
 		if(fabsl(fm) / ((long double)gas_R() * (long double)T) < 1e-10L
@@ -837,7 +951,7 @@ static int eqm_reduced_try_edge_root(const long double *n_edge, const double *di
 }
 
 static int eqm_reduced_solve_r1(const double *n0, const double *v, int ns, const double *mu0,
-		double T, double P, double P0, double n_floor, double *n_out){
+		const int *is_condensed, double T, double P, double P0, double n_floor, double *n_out){
 	long double zl;
 	long double zh;
 	long double span;
@@ -893,14 +1007,14 @@ static int eqm_reduced_solve_r1(const double *n0, const double *v, int ns, const
 		za = zl;
 		zb = zh;
 	}
-	if(!eqm_reduced_eval_phi_r1(n0, v, ns, mu0, T, P, P0, za, &phi_a, &obj_a)){
+	if(!eqm_reduced_eval_phi_r1(n0, v, ns, mu0, is_condensed, T, P, P0, za, &phi_a, &obj_a)){
 		free(n_low);
 		free(n_high);
 		free(dir_low);
 		free(dir_high);
 		return 0;
 	}
-	if(!eqm_reduced_eval_phi_r1(n0, v, ns, mu0, T, P, P0, zb, &phi_b, &obj_b)){
+	if(!eqm_reduced_eval_phi_r1(n0, v, ns, mu0, is_condensed, T, P, P0, zb, &phi_b, &obj_b)){
 		free(n_low);
 		free(n_high);
 		free(dir_low);
@@ -919,7 +1033,7 @@ static int eqm_reduced_solve_r1(const double *n0, const double *v, int ns, const
 			long double mid = 0.5L * (left + right);
 			long double fm = 0.0L;
 			long double om = 0.0L;
-			if(!eqm_reduced_eval_phi_r1(n0, v, ns, mu0, T, P, P0, mid, &fm, &om)){
+			if(!eqm_reduced_eval_phi_r1(n0, v, ns, mu0, is_condensed, T, P, P0, mid, &fm, &om)){
 				return 0;
 			}
 			if(fabsl(fm) / ((long double)gas_R() * (long double)T) < 1e-10L
@@ -938,14 +1052,14 @@ static int eqm_reduced_solve_r1(const double *n0, const double *v, int ns, const
 	}else{
 		long double ubest = 0.0L;
 		int found = 0;
-		if(eqm_reduced_try_edge_root(n_high, dir_high, ns, mu0, T, P, P0, span, &ubest)){
+		if(eqm_reduced_try_edge_root(n_high, dir_high, ns, mu0, is_condensed, T, P, P0, span, &ubest)){
 			z_best = zh - ubest;
 			u_edge = ubest;
 			used_edge = 1;
 			edge_high = 1;
 			found = 1;
 		}
-		if(!found && eqm_reduced_try_edge_root(n_low, dir_low, ns, mu0, T, P, P0, span, &ubest)){
+		if(!found && eqm_reduced_try_edge_root(n_low, dir_low, ns, mu0, is_condensed, T, P, P0, span, &ubest)){
 			z_best = zl + ubest;
 			u_edge = ubest;
 			used_edge = 1;
@@ -990,6 +1104,7 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	const double grad_tol = 1e-8;
 	const int max_iter = 2000;
 	double *mu0 = NULL;
+	int *is_condensed = NULL;
 	double *Awork = NULL;
 	int *pivots = NULL;
 	double *N = NULL;
@@ -1013,13 +1128,18 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	}
 
 	mu0 = (double *)calloc((size_t)ns, sizeof(double));
+	is_condensed = (int *)calloc((size_t)ns, sizeof(int));
 	Awork = (double *)calloc((size_t)(ne * ns), sizeof(double));
 	pivots = (int *)calloc((size_t)ne, sizeof(int));
-	if(!mu0 || !Awork || !pivots){
+	if(!mu0 || !is_condensed || !Awork || !pivots){
 		status = -11;
 		goto cleanup;
 	}
 	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
+		status = -11;
+		goto cleanup;
+	}
+	if(!eqm_compute_is_condensed(names, ns, source, is_condensed)){
 		status = -11;
 		goto cleanup;
 	}
@@ -1066,7 +1186,7 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 		goto cleanup;
 	}
 	if(r == 1){
-		if(eqm_reduced_solve_r1(n0, N, ns, mu0, T, P, P0, n_floor, n_out)){
+		if(eqm_reduced_solve_r1(n0, N, ns, mu0, is_condensed, T, P, P0, n_floor, n_out)){
 			status = 0;
 			goto cleanup;
 		}
@@ -1102,11 +1222,18 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 		double alpha;
 		int accepted = 0;
 
-		if(!eqm_reduced_eval_obj_mu(n, mu0, ns, T, P, P0, &obj, mu)){
+		if(!eqm_reduced_eval_obj_mu(n, mu0, is_condensed, ns, T, P, P0, &obj, mu, NULL)){
 			status = -13;
 			goto cleanup;
 		}
-		eqm_reduced_eval_grad_hess(n, N, ns, r, T, mu, grad, H);
+		for(int j = 0; j < r; ++j){
+			double gj = 0.0;
+			for(int i = 0; i < ns; ++i){
+				gj += N[i * r + j] * mu[i];
+			}
+			grad[j] = gj;
+		}
+		eqm_reduced_eval_grad_hess(n, N, ns, r, T, is_condensed, H);
 		for(int j = 0; j < r; ++j){
 			double g = fabs(grad[j]) / (gas_R() * T);
 			if(g > grad_inf){
@@ -1198,7 +1325,8 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 					break;
 				}
 			}
-			if(valid && eqm_reduced_eval_obj_mu(dn, mu0, ns, T, P, P0, &obj_trial, mu)){
+			if(valid && eqm_reduced_eval_obj_mu(dn, mu0, is_condensed, ns, T, P, P0,
+					&obj_trial, mu, NULL)){
 				if(obj_trial <= obj + 1e-4 * alpha * gdotdz || obj_trial < obj){
 					accepted = 1;
 					for(int j = 0; j < r; ++j){
@@ -1238,6 +1366,7 @@ cleanup:
 	free(N);
 	free(pivots);
 	free(Awork);
+	free(is_condensed);
 	free(mu0);
 	return status;
 }
@@ -1352,6 +1481,7 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 	double *n_work = NULL;
 	double *n_trial = NULL;
 	double *mu0 = NULL;
+	int *is_condensed = NULL;
 	double *mu = NULL;
 	double *red = NULL;
 	double obj_dummy = 0.0;
@@ -1371,13 +1501,17 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 	n_work = (double *)calloc((size_t)ns, sizeof(double));
 	n_trial = (double *)calloc((size_t)ns, sizeof(double));
 	mu0 = (double *)calloc((size_t)ns, sizeof(double));
+	is_condensed = (int *)calloc((size_t)ns, sizeof(int));
 	mu = (double *)calloc((size_t)ns, sizeof(double));
 	red = (double *)calloc((size_t)ns, sizeof(double));
 	if(!is_active || !free_idx || !names_f || !A_f || !b_f || !n_f || !init_f
-			|| !n_work || !n_trial || !mu0 || !mu || !red){
+			|| !n_work || !n_trial || !mu0 || !is_condensed || !mu || !red){
 		goto cleanup;
 	}
 	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
+		goto cleanup;
+	}
+	if(!eqm_compute_is_condensed(names, ns, source, is_condensed)){
 		goto cleanup;
 	}
 	for(int i = 0; i < ns; ++i){
@@ -1473,7 +1607,8 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 		for(int j = 0; j < nf; ++j){
 			n_trial[free_idx[j]] = n_f[j];
 		}
-		if(!eqm_reduced_eval_obj_mu(n_trial, mu0, ns, T, P, P0, &obj_dummy, mu)){
+		if(!eqm_reduced_eval_obj_mu(n_trial, mu0, is_condensed, ns, T, P, P0,
+				&obj_dummy, mu, NULL)){
 			goto cleanup;
 		}
 		if(!eqm_reduced_eval_reduced_gradients(mu, A, ns, ne, is_active, T, red)){
@@ -1560,6 +1695,7 @@ cleanup:
 	free(names_f);
 	free(free_idx);
 	free(is_active);
+	free(is_condensed);
 	return ok;
 }
 
@@ -1572,6 +1708,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	double n_tot = 0.0;
 	double n_active_cutoff;
 	double *mu0 = NULL;
+	int *is_condensed = NULL;
 	double *mu = NULL;
 	double *M = NULL;
 	double *Msys = NULL;
@@ -1612,14 +1749,16 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	}
 
 	mu0 = (double *)calloc((size_t)ns, sizeof(double));
+	is_condensed = (int *)calloc((size_t)ns, sizeof(int));
 	mu = (double *)calloc((size_t)ns, sizeof(double));
 	M = (double *)calloc((size_t)(ne * ne), sizeof(double));
 	Msys = (double *)calloc((size_t)(ne * ne), sizeof(double));
 	rhs = (double *)calloc((size_t)ne, sizeof(double));
 	lambda = (double *)calloc((size_t)ne, sizeof(double));
 	is_active = (int *)calloc((size_t)ns, sizeof(int));
-	if(!mu0 || !mu || !M || !Msys || !rhs || !lambda || !is_active){
+	if(!mu0 || !is_condensed || !mu || !M || !Msys || !rhs || !lambda || !is_active){
 		free(mu0);
+		free(is_condensed);
 		free(mu);
 		free(M);
 		free(Msys);
@@ -1630,6 +1769,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	}
 	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
 		free(mu0);
+		free(is_condensed);
 		free(mu);
 		free(M);
 		free(Msys);
@@ -1638,30 +1778,27 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(is_active);
 		return 0;
 	}
-	for(int i = 0; i < ns; ++i){
-		double y_i = n_out[i] / n_tot;
-		double logarg = y_i * P / P0;
-		if(!(y_i > 0.0) || !(logarg > 0.0) || !isfinite(logarg)){
-			free(mu0);
-			free(mu);
-			free(M);
-			free(Msys);
-			free(rhs);
-			free(lambda);
-			free(is_active);
-			return 0;
-		}
-		mu[i] = mu0[i] + gas_R() * T * log(logarg);
-		if(!isfinite(mu[i])){
-			free(mu0);
-			free(mu);
-			free(M);
-			free(Msys);
-			free(rhs);
-			free(lambda);
-			free(is_active);
-			return 0;
-		}
+	if(!eqm_compute_is_condensed(names, ns, source, is_condensed)){
+		free(mu0);
+		free(is_condensed);
+		free(mu);
+		free(M);
+		free(Msys);
+		free(rhs);
+		free(lambda);
+		free(is_active);
+		return 0;
+	}
+	if(!eqm_eval_obj_mu(n_out, mu0, is_condensed, ns, T, P, P0, NULL, mu, NULL)){
+		free(mu0);
+		free(is_condensed);
+		free(mu);
+		free(M);
+		free(Msys);
+		free(rhs);
+		free(lambda);
+		free(is_active);
+		return 0;
 	}
 
 	n_active_cutoff = fmax(1e-60, EQM_BOUND_ACTIVE_CUTOFF_FRAC * n_tot);
@@ -1675,6 +1812,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	}
 	if(nactive == 0 || nfree <= 0){
 		free(mu0);
+		free(is_condensed);
 		free(mu);
 		free(M);
 		free(Msys);
@@ -1723,6 +1861,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		}
 		if(!solved){
 			free(mu0);
+			free(is_condensed);
 			free(mu);
 			free(M);
 			free(Msys);
@@ -1742,6 +1881,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		if(is_active[i]){
 			if(red < -dual_tol){
 				free(mu0);
+				free(is_condensed);
 				free(mu);
 				free(M);
 				free(Msys);
@@ -1753,6 +1893,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		}else{
 			if(fabs(red) > free_tol){
 				free(mu0);
+				free(is_condensed);
 				free(mu);
 				free(M);
 				free(Msys);
@@ -1765,6 +1906,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	}
 
 	free(mu0);
+	free(is_condensed);
 	free(mu);
 	free(M);
 	free(Msys);
@@ -1970,8 +2112,8 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 	const double elem_tol = 1e-6;
 	const double stat_tol = 1e-1;
 	const double P0 = 1e5;
-	double n_tot = 0.0;
 	double *mu0 = NULL;
+	int *is_condensed = NULL;
 	double *mu = NULL;
 	double *Awork = NULL;
 	double *N = NULL;
@@ -1988,11 +2130,6 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 			fprintf(stderr, "eqm validate failed: invalid n[%d]=%.17g\n", i, n_out[i]);
 			return 0;
 		}
-		n_tot += n_out[i];
-	}
-	if(!isfinite(n_tot) || n_tot <= 0.0){
-		fprintf(stderr, "eqm validate failed: invalid n_tot=%.17g\n", n_tot);
-		return 0;
 	}
 
 	for(int e = 0; e < ne; ++e){
@@ -2015,11 +2152,13 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 	}
 
 	mu0 = (double *)calloc((size_t)ns, sizeof(double));
+	is_condensed = (int *)calloc((size_t)ns, sizeof(int));
 	mu = (double *)calloc((size_t)ns, sizeof(double));
 	Awork = (double *)calloc((size_t)(ne * ns), sizeof(double));
 	pivots = (int *)calloc((size_t)ne, sizeof(int));
-	if(!mu0 || !mu || !Awork || !pivots){
+	if(!mu0 || !is_condensed || !mu || !Awork || !pivots){
 		free(mu0);
+		free(is_condensed);
 		free(mu);
 		free(Awork);
 		free(pivots);
@@ -2028,31 +2167,28 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 
 	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
 		free(mu0);
+		free(is_condensed);
 		free(mu);
 		free(Awork);
 		free(pivots);
 		return 0;
 	}
-	for(int i = 0; i < ns; ++i){
-		double y_i = n_out[i] / n_tot;
-		double logarg = y_i * P / P0;
-		if(!(y_i > 0.0) || !(logarg > 0.0) || !isfinite(logarg)){
-			fprintf(stderr, "eqm validate failed: invalid activity for i=%d\n", i);
-			free(mu0);
-			free(mu);
-			free(Awork);
-			free(pivots);
-			return 0;
-		}
-		mu[i] = mu0[i] + gas_R() * T * log(logarg);
-		if(!isfinite(mu[i])){
-			fprintf(stderr, "eqm validate failed: invalid mu[%d]\n", i);
-			free(mu0);
-			free(mu);
-			free(Awork);
-			free(pivots);
-			return 0;
-		}
+	if(!eqm_compute_is_condensed(names, ns, source, is_condensed)){
+		free(mu0);
+		free(is_condensed);
+		free(mu);
+		free(Awork);
+		free(pivots);
+		return 0;
+	}
+	if(!eqm_eval_obj_mu(n_out, mu0, is_condensed, ns, T, P, P0, NULL, mu, NULL)){
+		fprintf(stderr, "eqm validate failed: invalid activity/mu state\n");
+		free(mu0);
+		free(is_condensed);
+		free(mu);
+		free(Awork);
+		free(pivots);
+		return 0;
 	}
 
 	for(int i = 0; i < ne * ns; ++i){
@@ -2064,6 +2200,7 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 		N = (double *)calloc((size_t)(ns * r), sizeof(double));
 		if(!N){
 			free(mu0);
+			free(is_condensed);
 			free(mu);
 			free(Awork);
 			free(pivots);
@@ -2084,11 +2221,12 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 			if(normv > 0.0){
 					double scaled = fabs(dot / normv) / (gas_R() * T);
 				if(!isfinite(scaled) || scaled > stat_tol){
-					fprintf(stderr,
+						fprintf(stderr,
 						"eqm validate failed: stationarity col=%d scaled=%.17g\n",
 						j, scaled);
 						free(N);
 						free(mu0);
+						free(is_condensed);
 						free(mu);
 						free(Awork);
 					free(pivots);
@@ -2100,6 +2238,7 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 
 	free(N);
 	free(mu0);
+	free(is_condensed);
 	free(mu);
 	free(Awork);
 	free(pivots);

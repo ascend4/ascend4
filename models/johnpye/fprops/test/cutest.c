@@ -61,6 +61,7 @@ REGISTER_TESTS_SIMPLE(fprops,FLUIDS);
 
 extern CU_ErrorCode test_register_pengrob_rpp(void);
 extern CU_ErrorCode test_register_mix_ideal(void);
+extern CU_ErrorCode test_register_eqm(void);
 
 int list_suites(){
 	struct CU_TestRegistry *reg = CU_get_registry();
@@ -190,6 +191,7 @@ int main(int argc, char* argv[]){
 	test_register_fprops();
 	test_register_pengrob_rpp();
 	test_register_mix_ideal();
+	test_register_eqm();
 	CU_basic_set_mode(mode);
 	CU_set_error_action(error_action);
 

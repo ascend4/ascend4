@@ -23,5 +23,7 @@ int eqm_solve_elements(const char **names, int ns, const char **elements, int ne
 
 int eqm_mu0_ideal_source(const char *name, const char *source, double T, double P0,
 		double *mu0);
+int eqm_mu0_source(const char *name, const char *source, double T, double P0,
+		double *mu0);
 
 #endif

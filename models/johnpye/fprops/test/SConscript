@@ -13,30 +13,6 @@ testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 
 #print "CUNIT_CPPPATH =",test_env.get("CUNIT_CPPPATH")
 
-if test_env['WITH_CUNIT']:
-	test_env.AppendUnique(
-		CPPPATH=test_env.get('CUNIT_CPPPATH',[])
-		,LIBPATH=test_env.get('CUNIT_LIBPATH',[])
-	)
-
-	tobjs = []
-	for f in test_env['fluids']:
-		tobjs += [test_env.SharedObject(f
-			,CPPDEFINES=['-DTEST','-DCUNIT_TEST']
-			,OBJPREFIX='#/test/cutest-fluid-'
-		)]
-
-	tobjs += [
-		test_env.SharedObject('cutest.c',OBJPREFIX='#/test/cutest-')
-		, test_env.SharedObject('cutest_pengrob_rpp.c',OBJPREFIX='#/test/cutest-')
-		, test_env.SharedObject('mixture_ideal.c',OBJPREFIX='#/test/cutest-')
-		, test_env.SharedObject('../test.c')
-	]
-
-	test_env.Program('cutest', test_env['shobjs'] + tobjs
-		,LIBS = ['m','cunit']
-	)
-
 if not test_env.get('WITH_IPOPT'):
 	try:
 		test_env.ParseConfig('pkgconf ipopt --libs --cflags')
@@ -50,6 +26,40 @@ if not test_env.get('WITH_NLOPT'):
 		test_env['WITH_NLOPT'] = 1
 	except OSError:
 		test_env['WITH_NLOPT'] = 0
+
+if test_env['WITH_CUNIT']:
+	test_env.AppendUnique(
+		CPPPATH=test_env.get('CUNIT_CPPPATH',[])
+		,LIBPATH=test_env.get('CUNIT_LIBPATH',[])
+	)
+
+	cutest_libs = ['m','cunit']
+
+	tobjs = []
+	for f in test_env['fluids']:
+		tobjs += [test_env.SharedObject(f
+			,CPPDEFINES=['-DTEST','-DCUNIT_TEST']
+			,OBJPREFIX='#/test/cutest-fluid-'
+		)]
+
+	tobjs += [
+		test_env.SharedObject('cutest.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('cutest_pengrob_rpp.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('mixture_ideal.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('cutest_eqm.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('../eqm.c',OBJPREFIX='#/test/cutest-lib-')
+		, test_env.SharedObject('../test.c')
+	]
+	if test_env.get('WITH_IPOPT'):
+		tobjs.append(test_env.SharedObject('../eqm_ipopt.c',OBJPREFIX='#/test/cutest-lib-'))
+		cutest_libs.append('ipopt')
+	if test_env.get('WITH_NLOPT'):
+		tobjs.append(test_env.SharedObject('../eqm_slsqp.c',OBJPREFIX='#/test/cutest-lib-'))
+		cutest_libs.append('nlopt')
+
+	test_env.Program('cutest', test_env['shobjs'] + tobjs
+		,LIBS = cutest_libs
+	)
 
 if test_env.get('WITH_IPOPT'):
 	test_env.AppendUnique(CPPPATH=['#'])

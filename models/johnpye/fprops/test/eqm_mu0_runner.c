@@ -6,9 +6,9 @@
 /* How to run:
    1) Build:
         scons models/johnpye/fprops/test/eqm_mu0_runner -j4
-   2) Evaluate mu0(T,P0) for selected species:
+   2) Evaluate mixed-provider mu0(T,P0) for selected species:
         ./models/johnpye/fprops/test/eqm_mu0_runner "Moran and Shapiro" 1000 100000 \
-          hydrogen oxygen water carbonmonoxide carbondioxide
+          hydrogen oxygen water carbonmonoxide carbondioxide Fe FeO Fe2O3 Fe3O4
 */
 
 int main(int argc, char *argv[]){
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
 	printf("],\"mu0\":[");
 	for(i = 4; i < argc; ++i){
 		double mu0 = 0.0;
-		int ok = eqm_mu0_ideal_source(argv[i], source, T, P0, &mu0);
+		int ok = eqm_mu0_source(argv[i], source, T, P0, &mu0);
 		if(i > 4) printf(",");
 		if(ok){
 			printf("%.17g", mu0);

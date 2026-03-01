@@ -14,6 +14,7 @@ typedef struct EqmData{
 	double *b_scale; /* [ne], scaling for constraints */
 	double *n_scale; /* [ns], scaling for variable gradients */
 	double *mu0;     /* [ns], J/mol */
+	int *is_condensed; /* [ns], 1 for condensed (a~1), 0 for gas species */
 } EqmData;
 
 typedef struct EqmNullspace{
@@ -29,6 +30,7 @@ typedef struct EqmNullspace{
 	double *A;  /* [ne * ns] */
 	double *b;  /* [ne] */
 	double *mu0; /* [ns] */
+	int *is_condensed; /* [ns], 1 for condensed (a~1), 0 for gas species */
 	double *n0; /* [ns] */
 	double *N;  /* [ns * r] */
 } EqmNullspace;
@@ -44,6 +46,7 @@ typedef struct EqmLogN{
 	const double *b; /* [ne] */
 	double *b_scale; /* [ne], scaling for constraints */
 	double *mu0;     /* [ns], J/mol */
+	int *is_condensed; /* [ns], 1 for condensed (a~1), 0 for gas species */
 	double *n_est;   /* [ns], scaling for log-mole variables */
 } EqmLogN;
 
@@ -59,10 +62,14 @@ typedef struct EqmN{
 	const double *b; /* [ne] */
 	double *b_scale; /* [ne], scaling for constraints */
 	double *mu0;     /* [ns], J/mol */
+	int *is_condensed; /* [ns], 1 for condensed (a~1), 0 for gas species */
 } EqmN;
 
 double gas_R(void);
 int eqm_compute_mu0(const char **names, int ns, const char *source, double T, double P0, double *mu0);
+int eqm_compute_is_condensed(const char **names, int ns, const char *source, int *is_condensed);
+int eqm_eval_obj_mu(const double *n, const double *mu0, const int *is_condensed, int ns,
+		double T, double P, double P0, double *obj, double *mu, double *n_gas_out);
 void eqm_apply_bscale(EqmData *D);
 void eqm_apply_bscale_logn(EqmLogN *D);
 void eqm_apply_bscale_n(EqmN *D);

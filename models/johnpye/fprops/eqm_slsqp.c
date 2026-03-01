@@ -19,43 +19,41 @@ typedef struct EqmNConstraint{
 	int e;
 } EqmNConstraint;
 
-static double eqm_mu_ideal(const EqmN *D, const double *logn, double logn_tot, int i){
-	double logy = logn[i] - logn_tot;
-	return D->mu0[i] + gas_R() * D->T * (logy + log(D->P / D->P0));
-}
-
 static double eqm_gibbs_nlopt(unsigned n, const double *x, double *grad, void *data){
 	EqmSlsqp *S = (EqmSlsqp *)data;
 	EqmN *D = &S->D;
-	double *logn = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *nvec = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
 	double logn_tot;
 	double G = 0.0;
 
-	if(!logn){
+	(void)logn_tot;
+	if(!nvec || !mu){
+		free(nvec);
+		free(mu);
 		return HUGE_VAL;
 	}
 	for(unsigned i = 0; i < n; ++i){
 		double n_i = S->n_est[i] * x[i];
 		if(n_i <= 0.0){
-			free(logn);
+			free(nvec);
+			free(mu);
 			return HUGE_VAL;
 		}
-		logn[i] = log(n_i);
+		nvec[i] = n_i;
 	}
-	logn_tot = eqm_logsumexp(logn, (int)n);
-	if(!isfinite(logn_tot)){
-		free(logn);
+	if(!eqm_eval_obj_mu(nvec, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
+		free(nvec);
+		free(mu);
 		return HUGE_VAL;
 	}
 	for(unsigned i = 0; i < n; ++i){
-		double mu = eqm_mu_ideal(D, logn, logn_tot, (int)i);
-		double n_i = S->n_est[i] * x[i];
-		G += n_i * mu;
 		if(grad){
-			grad[i] = D->obj_scale * (mu / (gas_R() * D->T)) * S->n_est[i];
+			grad[i] = D->obj_scale * (mu[i] / (gas_R() * D->T)) * S->n_est[i];
 		}
 	}
-	free(logn);
+	free(mu);
+	free(nvec);
 	return D->obj_scale * (G / (gas_R() * D->T));
 }
 
@@ -102,16 +100,26 @@ int eqm_slsqp_solve_source_init(const char **names, int ns, int ne, const double
 	D->A = A;
 	D->b = b;
 	D->mu0 = (double *)calloc((size_t)D->ns, sizeof(double));
+	D->is_condensed = (int *)calloc((size_t)D->ns, sizeof(int));
 	eqm_apply_bscale_n(D);
 	S.n_est = (double *)calloc((size_t)D->ns, sizeof(double));
-	if(!D->mu0 || !D->b_scale || !S.n_est){
+	if(!D->mu0 || !D->is_condensed || !D->b_scale || !S.n_est){
 		free(D->mu0);
+		free(D->is_condensed);
 		free(D->b_scale);
 		free(S.n_est);
 		return -11;
 	}
 	if(!eqm_compute_mu0(names, D->ns, source, D->T, D->P0, D->mu0)){
 		free(D->mu0);
+		free(D->is_condensed);
+		free(D->b_scale);
+		free(S.n_est);
+		return -11;
+	}
+	if(!eqm_compute_is_condensed(names, D->ns, source, D->is_condensed)){
+		free(D->mu0);
+		free(D->is_condensed);
 		free(D->b_scale);
 		free(S.n_est);
 		return -11;
@@ -133,6 +141,7 @@ int eqm_slsqp_solve_source_init(const char **names, int ns, int ne, const double
 	opt = nlopt_create(NLOPT_LD_SLSQP, (unsigned)D->ns);
 	if(!opt){
 		free(D->mu0);
+		free(D->is_condensed);
 		free(D->b_scale);
 		free(S.n_est);
 		return -12;
@@ -148,6 +157,7 @@ int eqm_slsqp_solve_source_init(const char **names, int ns, int ne, const double
 		free(cons);
 		nlopt_destroy(opt);
 		free(D->mu0);
+		free(D->is_condensed);
 		free(D->b_scale);
 		free(S.n_est);
 		return -12;
@@ -211,6 +221,7 @@ int eqm_slsqp_solve_source_init(const char **names, int ns, int ne, const double
 	free(cons);
 	nlopt_destroy(opt);
 	free(D->mu0);
+	free(D->is_condensed);
 	free(D->b_scale);
 	free(S.n_est);
 	return status;

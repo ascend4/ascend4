@@ -61,21 +61,40 @@ static void eqm_compute_x(const EqmData *D, const Number *xvars, double *S, doub
 	*Z = sum;
 }
 
-
 static int eval_f(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
 	EqmData *D = (EqmData *)user_data;
 	double *x_i = NULL;
+	double *n_i = NULL;
+	double *mu = NULL;
 	double S = 0.0;
 	double Z = 0.0;
 	double G = 0.0;
-	int i;
 	(void)new_x;
+	(void)n;
 
 	x_i = (double *)calloc((size_t)D->ns, sizeof(double));
-	eqm_compute_x(D, x, &S, x_i, &Z);
-	for(i = 0; i < D->ns; ++i){
-		G += S * x_i[i] * (D->mu0[i] + gas_R() * D->T * log(x_i[i] * D->P / D->P0));
+	n_i = (double *)calloc((size_t)D->ns, sizeof(double));
+	mu = (double *)calloc((size_t)D->ns, sizeof(double));
+	if(!x_i || !n_i || !mu){
+		free(mu);
+		free(n_i);
+		free(x_i);
+		*obj_value = HUGE_VAL;
+		return TRUE;
 	}
+	eqm_compute_x(D, x, &S, x_i, &Z);
+	for(int i = 0; i < D->ns; ++i){
+		n_i[i] = S * x_i[i];
+	}
+	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
+		free(mu);
+		free(n_i);
+		free(x_i);
+		*obj_value = HUGE_VAL;
+		return TRUE;
+	}
+	free(mu);
+	free(n_i);
 	free(x_i);
 	*obj_value = G / (gas_R() * D->T);
 	return TRUE;
@@ -83,30 +102,38 @@ static int eval_f(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr
 
 static int eval_grad_f(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
 	EqmData *D = (EqmData *)user_data;
-	double *x_i = NULL;
-	double *A_i = NULL;
-	double S = 0.0;
-	double Z = 0.0;
-	double Abar = 0.0;
-	double Gbar = 0.0;
-	int i;
-	(void)n;
+	const int nvars = D->ns + 1;
+	const double eps = 1e-6;
+	double *xwork = (double *)calloc((size_t)nvars, sizeof(double));
 	(void)new_x;
 
-	x_i = (double *)calloc((size_t)D->ns, sizeof(double));
-	A_i = (double *)calloc((size_t)D->ns, sizeof(double));
-	eqm_compute_x(D, x, &S, x_i, &Z);
-	for(i = 0; i < D->ns; ++i){
-		A_i[i] = D->mu0[i] + gas_R() * D->T * (log(x_i[i] * D->P / D->P0) + 1.0);
-		Abar += x_i[i] * A_i[i];
-		Gbar += x_i[i] * (D->mu0[i] + gas_R() * D->T * log(x_i[i] * D->P / D->P0));
+	if(!xwork){
+		for(int i = 0; i < nvars; ++i){
+			grad_f[i] = 0.0;
+		}
+		return TRUE;
 	}
-	for(i = 0; i < D->ns; ++i){
-		grad_f[i] = S * x_i[i] * (A_i[i] - Abar) / (gas_R() * D->T) * D->n_scale[i];
+	for(int i = 0; i < nvars; ++i){
+		xwork[i] = x[i];
 	}
-	grad_f[D->ns] = S * Gbar / (gas_R() * D->T);
-	free(A_i);
-	free(x_i);
+	for(int j = 0; j < nvars; ++j){
+		Number fp = 0.0;
+		Number fm = 0.0;
+		xwork[j] = x[j] + eps;
+		(void)eval_f(n, xwork, TRUE, &fp, user_data);
+		xwork[j] = x[j] - eps;
+		(void)eval_f(n, xwork, TRUE, &fm, user_data);
+		xwork[j] = x[j];
+		if(isfinite(fp) && isfinite(fm)){
+			grad_f[j] = (fp - fm) / (2.0 * eps);
+		}else{
+			grad_f[j] = 0.0;
+		}
+		if(j < D->ns){
+			grad_f[j] *= D->n_scale[j];
+		}
+	}
+	free(xwork);
 	return TRUE;
 }
 
@@ -135,81 +162,80 @@ static int eval_g(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPt
 
 static int eval_f_logn(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
 	EqmLogN *D = (EqmLogN *)user_data;
-	double *logn = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *n_i = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
 	double logn_tot;
 	double G = 0.0;
 	(void)new_x;
 
-	if(!logn){
+	(void)logn_tot;
+	if(!n_i || !mu){
+		free(n_i);
+		free(mu);
 		*obj_value = HUGE_VAL;
 		return TRUE;
 	}
 	for(int i = 0; i < D->ns; ++i){
 		if(D->n_est[i] <= 0.0){
-			free(logn);
+			free(n_i);
+			free(mu);
 			*obj_value = HUGE_VAL;
 			return TRUE;
 		}
-		logn[i] = log(D->n_est[i]) + x[i];
+		n_i[i] = D->n_est[i] * exp(x[i]);
 	}
-	logn_tot = eqm_logsumexp(logn, D->ns);
-	if(!isfinite(logn_tot)){
-		free(logn);
+	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
+		free(n_i);
+		free(mu);
 		*obj_value = HUGE_VAL;
 		return TRUE;
 	}
-	for(int i = 0; i < D->ns; ++i){
-		double n_i = exp(logn[i]);
-		double y_i = exp(logn[i] - logn_tot);
-		G += n_i * (D->mu0[i] + gas_R() * D->T * log(y_i * D->P / D->P0));
-	}
-	free(logn);
+	free(mu);
+	free(n_i);
 	*obj_value = D->obj_scale * (G / (gas_R() * D->T));
 	return TRUE;
 }
 
 static int eval_f_n(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
 	EqmN *D = (EqmN *)user_data;
-	double *logn = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
 	double logn_tot;
 	double G = 0.0;
-	double logP = log(D->P / D->P0);
 	(void)new_x;
+	(void)logn_tot;
 
-	if(!logn){
+	if(!mu){
 		*obj_value = HUGE_VAL;
 		return TRUE;
 	}
 	for(int i = 0; i < D->ns; ++i){
 		if(x[i] <= 0.0){
-			free(logn);
+			free(mu);
 			*obj_value = HUGE_VAL;
 			return TRUE;
 		}
-		logn[i] = log(x[i]);
 	}
-	logn_tot = eqm_logsumexp(logn, D->ns);
-	if(!isfinite(logn_tot)){
-		free(logn);
+	if(!eqm_eval_obj_mu(x, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
+		free(mu);
 		*obj_value = HUGE_VAL;
 		return TRUE;
 	}
-	for(int i = 0; i < D->ns; ++i){
-		double logy = logn[i] - logn_tot;
-		G += x[i] * (D->mu0[i] + gas_R() * D->T * (logy + logP));
-	}
-	free(logn);
+	free(mu);
 	*obj_value = D->obj_scale * (G / (gas_R() * D->T));
 	return TRUE;
 }
 
 static int eval_grad_f_logn(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
 	EqmLogN *D = (EqmLogN *)user_data;
-	double *logn = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *n_i = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
 	double logn_tot;
 	(void)new_x;
+	(void)logn_tot;
 
-	if(!logn){
+	if(!n_i || !mu){
+		free(n_i);
+		free(mu);
 		for(int i = 0; i < D->ns; ++i){
 			grad_f[i] = 0.0;
 		}
@@ -217,40 +243,39 @@ static int eval_grad_f_logn(Index n, Number *x, Bool new_x, Number *grad_f, User
 	}
 	for(int i = 0; i < D->ns; ++i){
 		if(D->n_est[i] <= 0.0){
-			free(logn);
+			free(n_i);
+			free(mu);
 			for(int j = 0; j < D->ns; ++j){
 				grad_f[j] = 0.0;
 			}
 			return TRUE;
 		}
-		logn[i] = log(D->n_est[i]) + x[i];
+		n_i[i] = D->n_est[i] * exp(x[i]);
 	}
-	logn_tot = eqm_logsumexp(logn, D->ns);
-	if(!isfinite(logn_tot)){
-		free(logn);
+	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+		free(n_i);
+		free(mu);
 		for(int i = 0; i < D->ns; ++i){
 			grad_f[i] = 0.0;
 		}
 		return TRUE;
 	}
 	for(int i = 0; i < D->ns; ++i){
-		double n_i = exp(logn[i]);
-		double y_i = exp(logn[i] - logn_tot);
-		double mu = D->mu0[i] + gas_R() * D->T * log(y_i * D->P / D->P0);
-		grad_f[i] = D->obj_scale * n_i * (mu / (gas_R() * D->T));
+		grad_f[i] = D->obj_scale * n_i[i] * (mu[i] / (gas_R() * D->T));
 	}
-	free(logn);
+	free(mu);
+	free(n_i);
 	return TRUE;
 }
 
 static int eval_grad_f_n(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
 	EqmN *D = (EqmN *)user_data;
-	double *logn = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
 	double logn_tot;
-	double logP = log(D->P / D->P0);
 	(void)new_x;
+	(void)logn_tot;
 
-	if(!logn){
+	if(!mu){
 		for(int i = 0; i < D->ns; ++i){
 			grad_f[i] = 0.0;
 		}
@@ -258,28 +283,24 @@ static int eval_grad_f_n(Index n, Number *x, Bool new_x, Number *grad_f, UserDat
 	}
 	for(int i = 0; i < D->ns; ++i){
 		if(x[i] <= 0.0){
-			free(logn);
+			free(mu);
 			for(int j = 0; j < D->ns; ++j){
 				grad_f[j] = 0.0;
 			}
 			return TRUE;
 		}
-		logn[i] = log(x[i]);
 	}
-	logn_tot = eqm_logsumexp(logn, D->ns);
-	if(!isfinite(logn_tot)){
-		free(logn);
+	if(!eqm_eval_obj_mu(x, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+		free(mu);
 		for(int i = 0; i < D->ns; ++i){
 			grad_f[i] = 0.0;
 		}
 		return TRUE;
 	}
 	for(int i = 0; i < D->ns; ++i){
-		double logy = logn[i] - logn_tot;
-		double mu = D->mu0[i] + gas_R() * D->T * (logy + logP);
-		grad_f[i] = D->obj_scale * (mu / (gas_R() * D->T));
+		grad_f[i] = D->obj_scale * (mu[i] / (gas_R() * D->T));
 	}
-	free(logn);
+	free(mu);
 	return TRUE;
 }
 
@@ -383,10 +404,14 @@ static int eval_jac_g_n(Index n, Number *x, Bool new_x, Index m,
 
 static void eval_grad_L_logn(const EqmLogN *D, const Number *xvars, Number obj_factor,
 		const Number *lambda, double *grad){
-	double *logn = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *n_i = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
 	double logn_tot;
+	(void)logn_tot;
 
-	if(!logn){
+	if(!n_i || !mu){
+		free(n_i);
+		free(mu);
 		for(int i = 0; i < D->ns; ++i){
 			grad[i] = 0.0;
 		}
@@ -394,42 +419,41 @@ static void eval_grad_L_logn(const EqmLogN *D, const Number *xvars, Number obj_f
 	}
 	for(int i = 0; i < D->ns; ++i){
 		if(D->n_est[i] <= 0.0){
-			free(logn);
+			free(n_i);
+			free(mu);
 			for(int j = 0; j < D->ns; ++j){
 				grad[j] = 0.0;
 			}
 			return;
 		}
-		logn[i] = log(D->n_est[i]) + xvars[i];
+		n_i[i] = D->n_est[i] * exp(xvars[i]);
 	}
-	logn_tot = eqm_logsumexp(logn, D->ns);
-	if(!isfinite(logn_tot)){
-		free(logn);
+	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+		free(n_i);
+		free(mu);
 		for(int i = 0; i < D->ns; ++i){
 			grad[i] = 0.0;
 		}
 		return;
 	}
 	for(int i = 0; i < D->ns; ++i){
-		double n_i = exp(logn[i]);
-		double y_i = exp(logn[i] - logn_tot);
-		double mu = D->mu0[i] + gas_R() * D->T * log(y_i * D->P / D->P0);
-		double val = obj_factor * D->obj_scale * n_i * (mu / (gas_R() * D->T));
+		double val = obj_factor * D->obj_scale * n_i[i] * (mu[i] / (gas_R() * D->T));
 		for(int e = 0; e < D->ne; ++e){
-			val += lambda[e] * D->A[e * D->ns + i] * n_i * D->b_scale[e];
+			val += lambda[e] * D->A[e * D->ns + i] * n_i[i] * D->b_scale[e];
 		}
 		grad[i] = val;
 	}
-	free(logn);
+	free(mu);
+	free(n_i);
 }
 
 static void eval_grad_L_n(const EqmN *D, const Number *xvars, Number obj_factor,
 		const Number *lambda, double *grad){
-	double *logn = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
 	double logn_tot;
-	double logP = log(D->P / D->P0);
+	(void)logn_tot;
 
-	if(!logn){
+	if(!mu){
 		for(int i = 0; i < D->ns; ++i){
 			grad[i] = 0.0;
 		}
@@ -437,32 +461,28 @@ static void eval_grad_L_n(const EqmN *D, const Number *xvars, Number obj_factor,
 	}
 	for(int i = 0; i < D->ns; ++i){
 		if(xvars[i] <= 0.0){
-			free(logn);
+			free(mu);
 			for(int j = 0; j < D->ns; ++j){
 				grad[j] = 0.0;
 			}
 			return;
 		}
-		logn[i] = log(xvars[i]);
 	}
-	logn_tot = eqm_logsumexp(logn, D->ns);
-	if(!isfinite(logn_tot)){
-		free(logn);
+	if(!eqm_eval_obj_mu(xvars, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+		free(mu);
 		for(int i = 0; i < D->ns; ++i){
 			grad[i] = 0.0;
 		}
 		return;
 	}
 	for(int i = 0; i < D->ns; ++i){
-		double logy = logn[i] - logn_tot;
-		double mu = D->mu0[i] + gas_R() * D->T * (logy + logP);
-		double val = obj_factor * D->obj_scale * (mu / (gas_R() * D->T));
+		double val = obj_factor * D->obj_scale * (mu[i] / (gas_R() * D->T));
 		for(int e = 0; e < D->ne; ++e){
 			val += lambda[e] * D->A[e * D->ns + i] * D->b_scale[e];
 		}
 		grad[i] = val;
 	}
-	free(logn);
+	free(mu);
 }
 
 static int eval_h_logn(Index n, Number *x, Bool new_x, Number obj_factor,
@@ -609,41 +629,46 @@ static int eval_jac_g(Index n, Number *x, Bool new_x, Index m,
 
 static void eval_grad_L(const EqmData *D, const Number *xvars, Number obj_factor,
 		const Number *lambda, double *grad){
+	const int nvars = D->ns + 1;
+	double *grad_obj = (double *)calloc((size_t)nvars, sizeof(double));
 	double *x_i = (double *)calloc((size_t)D->ns, sizeof(double));
-	double *A_i = (double *)calloc((size_t)D->ns, sizeof(double));
 	double *B_e = (double *)calloc((size_t)D->ne, sizeof(double));
 	double S = 0.0;
 	double Z = 0.0;
-	double Abar = 0.0;
-	double Gbar = 0.0;
 	int i;
 	int e;
 
-	eqm_compute_x(D, xvars, &S, x_i, &Z);
-	for(i = 0; i < D->ns; ++i){
-		A_i[i] = D->mu0[i] + gas_R() * D->T * (log(x_i[i] * D->P / D->P0) + 1.0);
-		Abar += x_i[i] * A_i[i];
-		Gbar += x_i[i] * (D->mu0[i] + gas_R() * D->T * log(x_i[i] * D->P / D->P0));
+	if(!grad_obj || !x_i || !B_e){
+		free(grad_obj);
+		free(B_e);
+		free(x_i);
+		for(i = 0; i < nvars; ++i){
+			grad[i] = 0.0;
+		}
+		return;
 	}
+
+	(void)eval_grad_f((Index)nvars, (Number *)xvars, FALSE, grad_obj, (UserDataPtr)D);
+	eqm_compute_x(D, xvars, &S, x_i, &Z);
 	for(e = 0; e < D->ne; ++e){
 		for(i = 0; i < D->ns; ++i){
 			B_e[e] += D->A[e * D->ns + i] * x_i[i];
 		}
 	}
 	for(i = 0; i < D->ns; ++i){
-		double val = obj_factor * S * x_i[i] * (A_i[i] - Abar) / (gas_R() * D->T) * D->n_scale[i];
+		double val = obj_factor * grad_obj[i];
 		for(e = 0; e < D->ne; ++e){
 			val += lambda[e] * S * x_i[i] * (D->A[e * D->ns + i] - B_e[e]) * D->b_scale[e] * D->n_scale[i];
 		}
 		grad[i] = val;
 	}
-	grad[D->ns] = obj_factor * S * Gbar / (gas_R() * D->T);
+	grad[D->ns] = obj_factor * grad_obj[D->ns];
 	for(e = 0; e < D->ne; ++e){
 		grad[D->ns] += lambda[e] * S * B_e[e] * D->b_scale[e];
 	}
 
+	free(grad_obj);
 	free(B_e);
-	free(A_i);
 	free(x_i);
 }
 
@@ -700,22 +725,31 @@ static int eval_h(Index n, Number *x, Bool new_x, Number obj_factor,
 }
 
 static double eqm_obj_1d(double z, const double *n0, const double *v, int ns,
-		const double *mu0, double T, double P, double P0){
-	double n_tot = 0.0;
+		const double *mu0, const int *is_condensed, double T, double P, double P0){
 	double G = 0.0;
-	double n_i;
-	int i;
-	for(i = 0; i < ns; ++i){
-		n_i = n0[i] + v[i] * z;
+	double *n = (double *)calloc((size_t)ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)ns, sizeof(double));
+	if(!n || !mu){
+		free(n);
+		free(mu);
+		return HUGE_VAL;
+	}
+	for(int i = 0; i < ns; ++i){
+		double n_i = n0[i] + v[i] * z;
 		if(n_i <= 0.0){
+			free(n);
+			free(mu);
 			return HUGE_VAL;
 		}
-		n_tot += n_i;
+		n[i] = n_i;
 	}
-	for(i = 0; i < ns; ++i){
-		n_i = n0[i] + v[i] * z;
-		G += n_i * (mu0[i] + gas_R() * T * log((n_i / n_tot) * P / P0));
+	if(!eqm_eval_obj_mu(n, mu0, is_condensed, ns, T, P, P0, &G, mu, NULL)){
+		free(n);
+		free(mu);
+		return HUGE_VAL;
 	}
+	free(mu);
+	free(n);
 	return G;
 }
 
@@ -796,11 +830,16 @@ static double eqm_log10K_from_nu(const double *n, const double *nu, int ns, doub
 }
 
 static double eqm_phi_1d(const double *n0, const double *v, int ns, const double *mu0,
-		double T, double P, double P0, double z){
-	double n_tot = 0.0;
+		const int *is_condensed, double T, double P, double P0, double z){
 	double phi = 0.0;
 	double *n = (double *)calloc((size_t)ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)ns, sizeof(double));
 	if(!n){
+		free(mu);
+		return HUGE_VAL;
+	}
+	if(!mu){
+		free(n);
 		return HUGE_VAL;
 	}
 	for(int i = 0; i < ns; ++i){
@@ -808,33 +847,33 @@ static double eqm_phi_1d(const double *n0, const double *v, int ns, const double
 		if(n[i] < DBL_MIN){
 			n[i] = DBL_MIN;
 		}
-		n_tot += n[i];
 	}
-	if(n_tot <= 0.0){
+	if(!eqm_eval_obj_mu(n, mu0, is_condensed, ns, T, P, P0, NULL, mu, NULL)){
 		free(n);
+		free(mu);
 		return HUGE_VAL;
 	}
 	for(int i = 0; i < ns; ++i){
-		double y_i = n[i] / n_tot;
-		double mu_i = mu0[i] + gas_R() * T * log(y_i * P / P0);
-		phi += v[i] * mu_i;
+		phi += v[i] * mu[i];
 	}
 	free(n);
+	free(mu);
 	return phi;
 }
 
 static int eqm_phi_root_1d(const double *n0, const double *v, int ns, const double *mu0,
-		double T, double P, double P0, double zmin, double zmax, double *z_out){
+		const int *is_condensed, double T, double P, double P0, double zmin, double zmax,
+		double *z_out){
 	double a = zmin;
 	double bnd = zmax;
-	double fa = eqm_phi_1d(n0, v, ns, mu0, T, P, P0, a);
-	double fb = eqm_phi_1d(n0, v, ns, mu0, T, P, P0, bnd);
+	double fa = eqm_phi_1d(n0, v, ns, mu0, is_condensed, T, P, P0, a);
+	double fb = eqm_phi_1d(n0, v, ns, mu0, is_condensed, T, P, P0, bnd);
 	if(eqm_sign(fa) * eqm_sign(fb) > 0){
 		return 0;
 	}
 	for(int i = 0; i < 200; ++i){
 		double mid = 0.5 * (a + bnd);
-		double fmid = eqm_phi_1d(n0, v, ns, mu0, T, P, P0, mid);
+		double fmid = eqm_phi_1d(n0, v, ns, mu0, is_condensed, T, P, P0, mid);
 		if(fmid == 0.0){
 			*z_out = mid;
 			return 1;
@@ -1307,21 +1346,21 @@ int eqm_ipopt_nullspace_1d(const char **names, const char **elements, const char
 	bnd = zmax;
 	c = bnd - phi * (bnd - a);
 	d = a + phi * (bnd - a);
-	fc = eqm_obj_1d(c, n0, v, 3, mu0, T, P, P0);
-	fd = eqm_obj_1d(d, n0, v, 3, mu0, T, P, P0);
+	fc = eqm_obj_1d(c, n0, v, 3, mu0, NULL, T, P, P0);
+	fd = eqm_obj_1d(d, n0, v, 3, mu0, NULL, T, P, P0);
 	for(i = 0; i < 80; ++i){
 		if(fc < fd){
 			bnd = d;
 			d = c;
 			fd = fc;
 			c = bnd - phi * (bnd - a);
-			fc = eqm_obj_1d(c, n0, v, 3, mu0, T, P, P0);
+			fc = eqm_obj_1d(c, n0, v, 3, mu0, NULL, T, P, P0);
 		}else{
 			a = c;
 			c = d;
 			fc = fd;
 			d = a + phi * (bnd - a);
-			fd = eqm_obj_1d(d, n0, v, 3, mu0, T, P, P0);
+			fd = eqm_obj_1d(d, n0, v, 3, mu0, NULL, T, P, P0);
 		}
 	}
 	{
@@ -1352,11 +1391,17 @@ int eqm_ipopt_nullspace_seed_r1(const EqmNullspace *M, double *n_seed){
 	if(!eqm_nullspace_bounds(M->n0, M->N, M->ns, &zmin, &zmax)){
 		return 0;
 	}
-	if(eqm_phi_root_1d(M->n0, M->N, M->ns, M->mu0, M->T, M->P, M->P0, zmin, zmax, &z)){
+	if(eqm_phi_root_1d(M->n0, M->N, M->ns, M->mu0, M->is_condensed,
+			M->T, M->P, M->P0, zmin, zmax, &z)){
 		for(int i = 0; i < M->ns; ++i){
 			n_seed[i] = M->n0[i] + M->N[i] * z;
 		}
 		return 1;
+	}
+	for(int i = 0; i < M->ns; ++i){
+		if(M->is_condensed && M->is_condensed[i]){
+			return 0;
+		}
 	}
 	nu = M->N;
 	for(int i = 0; i < M->ns; ++i){
@@ -1418,6 +1463,11 @@ int eqm_ipopt_nullspace_logK_solution_r1(const EqmNullspace *M, double *n_out){
 
 	if(!M || !n_out || M->r != 1){
 		return 0;
+	}
+	for(int i = 0; i < M->ns; ++i){
+		if(M->is_condensed && M->is_condensed[i]){
+			return 0;
+		}
 	}
 	for(int i = 0; i < M->ns; ++i){
 		double vabs = fabs(M->N[i]);
@@ -1685,28 +1735,36 @@ static int eqm_nullspace_lp_init(const EqmNullspace *M, double *z_out){
 static Bool eval_f_ns(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
 	EqmNullspace *M = (EqmNullspace *)user_data;
 	double *n_i = (double *)calloc((size_t)M->ns, sizeof(double));
-	double n_tot = 0.0;
+	double *mu = (double *)calloc((size_t)M->ns, sizeof(double));
 	double G = 0.0;
 	double barrier = 0.0;
+	double n_tot = 0.0;
 	(void)new_x;
 
-	eqm_nullspace_compute_n(M, x, n_i, &n_tot);
-	if(n_tot <= 0.0){
+	if(!n_i || !mu){
 		free(n_i);
+		free(mu);
+		*obj_value = HUGE_VAL;
+		return TRUE;
+	}
+	eqm_nullspace_compute_n(M, x, n_i, &n_tot);
+	if(n_tot <= 0.0 || !eqm_eval_obj_mu(n_i, M->mu0, M->is_condensed, M->ns, M->T, M->P, M->P0,
+			&G, mu, NULL)){
+		free(n_i);
+		free(mu);
 		*obj_value = HUGE_VAL;
 		return TRUE;
 	}
 	for(int i = 0; i < M->ns; ++i){
-		double y_i;
 		if(n_i[i] <= 0.0){
 			free(n_i);
+			free(mu);
 			*obj_value = HUGE_VAL;
 			return TRUE;
 		}
-		y_i = n_i[i] / n_tot;
-		G += n_i[i] * (M->mu0[i] + gas_R() * M->T * log(y_i * M->P / M->P0));
 		barrier += log(n_i[i]);
 	}
+	free(mu);
 	free(n_i);
 	*obj_value = M->obj_scale * (G / (gas_R() * M->T)) - M->barrier_tau * barrier;
 	return TRUE;
@@ -1719,8 +1777,18 @@ static Bool eval_grad_f_ns(Index n, Number *x, Bool new_x, Number *grad_f, UserD
 	double *mu = (double *)calloc((size_t)M->ns, sizeof(double));
 	(void)new_x;
 
+	if(!n_i || !mu){
+		free(n_i);
+		free(mu);
+		for(int j = 0; j < M->r; ++j){
+			grad_f[j] = 0.0;
+		}
+		return TRUE;
+	}
 	eqm_nullspace_compute_n(M, x, n_i, &n_tot);
-	if(n_tot <= 0.0){
+	if(n_tot <= 0.0
+			|| !eqm_eval_obj_mu(n_i, M->mu0, M->is_condensed, M->ns, M->T, M->P, M->P0,
+				NULL, mu, NULL)){
 		free(n_i);
 		free(mu);
 		for(int j = 0; j < M->r; ++j){
@@ -1729,7 +1797,6 @@ static Bool eval_grad_f_ns(Index n, Number *x, Bool new_x, Number *grad_f, UserD
 		return TRUE;
 	}
 	for(int i = 0; i < M->ns; ++i){
-		double y_i;
 		if(n_i[i] <= 0.0){
 			free(n_i);
 			free(mu);
@@ -1738,8 +1805,6 @@ static Bool eval_grad_f_ns(Index n, Number *x, Bool new_x, Number *grad_f, UserD
 			}
 			return TRUE;
 		}
-		y_i = n_i[i] / n_tot;
-		mu[i] = M->mu0[i] + gas_R() * M->T * log(y_i * M->P / M->P0);
 	}
 	for(int j = 0; j < M->r; ++j){
 		double sum = 0.0;
@@ -1811,11 +1876,25 @@ static void eqm_nullspace_grad_L(const EqmNullspace *M, const Number *x, Number 
 	double *n_i = (double *)calloc((size_t)M->ns, sizeof(double));
 	double n_tot = 0.0;
 	double *mu = (double *)calloc((size_t)M->ns, sizeof(double));
+	if(!n_i || !mu){
+		free(n_i);
+		free(mu);
+		for(int j = 0; j < M->r; ++j){
+			grad_L[j] = 0.0;
+		}
+		return;
+	}
 
 	eqm_nullspace_compute_n(M, x, n_i, &n_tot);
-	for(int i = 0; i < M->ns; ++i){
-		double y_i = n_i[i] / n_tot;
-		mu[i] = M->mu0[i] + gas_R() * M->T * log(y_i * M->P / M->P0);
+	if(n_tot <= 0.0
+			|| !eqm_eval_obj_mu(n_i, M->mu0, M->is_condensed, M->ns, M->T, M->P, M->P0,
+				NULL, mu, NULL)){
+		free(n_i);
+		free(mu);
+		for(int j = 0; j < M->r; ++j){
+			grad_L[j] = 0.0;
+		}
+		return;
 	}
 	for(int j = 0; j < M->r; ++j){
 		double sum = 0.0;
@@ -1902,8 +1981,9 @@ int eqm_ipopt_nullspace_create(const char **names, int ns, const char **elements
 	M->A = (double *)calloc((size_t)(ne * ns), sizeof(double));
 	M->b = (double *)calloc((size_t)ne, sizeof(double));
 	M->mu0 = (double *)calloc((size_t)ns, sizeof(double));
+	M->is_condensed = (int *)calloc((size_t)ns, sizeof(int));
 	M->n0 = (double *)calloc((size_t)ns, sizeof(double));
-	if(!M->A || !M->b || !M->mu0 || !M->n0){
+	if(!M->A || !M->b || !M->mu0 || !M->is_condensed || !M->n0){
 		eqm_ipopt_nullspace_destroy(M);
 		return 0;
 	}
@@ -1915,6 +1995,10 @@ int eqm_ipopt_nullspace_create(const char **names, int ns, const char **elements
 		return 0;
 	}
 	if(!eqm_compute_mu0(names, ns, source, T, M->P0, M->mu0)){
+		eqm_ipopt_nullspace_destroy(M);
+		return 0;
+	}
+	if(!eqm_compute_is_condensed(names, ns, source, M->is_condensed)){
 		eqm_ipopt_nullspace_destroy(M);
 		return 0;
 	}
@@ -2193,6 +2277,7 @@ void eqm_ipopt_nullspace_destroy(EqmNullspace *M){
 	free(M->A);
 	free(M->b);
 	free(M->mu0);
+	free(M->is_condensed);
 	free(M->n0);
 	free(M->N);
 	free(M);
@@ -2203,6 +2288,11 @@ static int eqm_ipopt_r1_logK_ok(const EqmNullspace *M, const double *n, double l
 	double log10K_check;
 	if(!M || !n || M->r != 1){
 		return 1;
+	}
+	for(int i = 0; i < M->ns; ++i){
+		if(M->is_condensed && M->is_condensed[i]){
+			return 1;
+		}
 	}
 	log10K_target = eqm_log10K_target_nu(M->N, M->mu0, M->ns, M->T);
 	log10K_check = eqm_log10K_from_nu(n, M->N, M->ns, M->P, M->P0);
@@ -2380,7 +2470,8 @@ int eqm_ipopt_nullspace_solve_source(const char **names, int ns, const char **el
 		}
 		zmin_full = zmin;
 		zmax_full = zmax;
-		if(eqm_phi_root_1d(M->n0, M->N, M->ns, M->mu0, T, P, M->P0, zmin, zmax, &z)){
+		if(eqm_phi_root_1d(M->n0, M->N, M->ns, M->mu0, M->is_condensed,
+				T, P, M->P0, zmin, zmax, &z)){
 			for(int i = 0; i < M->ns; ++i){
 				n_out[i] = M->n0[i] + M->N[i] * z;
 			}
@@ -2463,10 +2554,16 @@ int eqm_ipopt_solve_source_init(const char **names, int ns, int ne, const double
 	D.A = A;
 	D.b = b;
 	D.mu0 = (double *)calloc((size_t)D.ns, sizeof(double));
+	D.is_condensed = (int *)calloc((size_t)D.ns, sizeof(int));
 	eqm_apply_bscale(&D);
 	eqm_apply_nscale(&D, n_init);
-	if(!eqm_compute_mu0(names, D.ns, source, D.T, D.P0, D.mu0)){
+	if(!D.mu0 || !D.is_condensed
+			|| !eqm_compute_mu0(names, D.ns, source, D.T, D.P0, D.mu0)
+			|| !eqm_compute_is_condensed(names, D.ns, source, D.is_condensed)){
 		free(D.mu0);
+		free(D.is_condensed);
+		free(D.b_scale);
+		free(D.n_scale);
 		return -11;
 	}
 
@@ -2546,6 +2643,7 @@ int eqm_ipopt_solve_source_init(const char **names, int ns, int ne, const double
 
 	FreeIpoptProblem(prob);
 	free(D.mu0);
+	free(D.is_condensed);
 	free(x_L);
 	free(x_U);
 	free(g_L);
@@ -2588,16 +2686,20 @@ int eqm_ipopt_solve_logn_source_init(const char **names, int ns, int ne, const d
 	D.A = A;
 	D.b = b;
 	D.mu0 = (double *)calloc((size_t)D.ns, sizeof(double));
+	D.is_condensed = (int *)calloc((size_t)D.ns, sizeof(int));
 	D.n_est = (double *)calloc((size_t)D.ns, sizeof(double));
 	eqm_apply_bscale_logn(&D);
-	if(!D.mu0 || !D.n_est){
+	if(!D.mu0 || !D.is_condensed || !D.n_est){
 		free(D.mu0);
+		free(D.is_condensed);
 		free(D.n_est);
 		free(D.b_scale);
 		return -11;
 	}
-	if(!eqm_compute_mu0(names, D.ns, source, D.T, D.P0, D.mu0)){
+	if(!eqm_compute_mu0(names, D.ns, source, D.T, D.P0, D.mu0)
+			|| !eqm_compute_is_condensed(names, D.ns, source, D.is_condensed)){
 		free(D.mu0);
+		free(D.is_condensed);
 		free(D.n_est);
 		free(D.b_scale);
 		return -11;
@@ -2744,6 +2846,7 @@ int eqm_ipopt_solve_logn_source_init(const char **names, int ns, int ne, const d
 
 	FreeIpoptProblem(prob);
 	free(D.mu0);
+	free(D.is_condensed);
 	free(D.n_est);
 	free(D.b_scale);
 	free(x_L);
@@ -2787,9 +2890,13 @@ int eqm_ipopt_solve_n_source_init(const char **names, int ns, int ne, const doub
 	D.A = A;
 	D.b = b;
 	D.mu0 = (double *)calloc((size_t)D.ns, sizeof(double));
+	D.is_condensed = (int *)calloc((size_t)D.ns, sizeof(int));
 	eqm_apply_bscale_n(&D);
-	if(!eqm_compute_mu0(names, D.ns, source, D.T, D.P0, D.mu0)){
+	if(!D.mu0 || !D.is_condensed
+			|| !eqm_compute_mu0(names, D.ns, source, D.T, D.P0, D.mu0)
+			|| !eqm_compute_is_condensed(names, D.ns, source, D.is_condensed)){
 		free(D.mu0);
+		free(D.is_condensed);
 		free(D.b_scale);
 		return -11;
 	}
@@ -2865,6 +2972,7 @@ int eqm_ipopt_solve_n_source_init(const char **names, int ns, int ne, const doub
 
 	FreeIpoptProblem(prob);
 	free(D.mu0);
+	free(D.is_condensed);
 	free(D.b_scale);
 	free(x_L);
 	free(x_U);
