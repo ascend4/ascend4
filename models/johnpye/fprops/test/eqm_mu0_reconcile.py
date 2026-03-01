@@ -30,10 +30,17 @@ How to run:
          --a 'fprops:Moran and Shapiro' \
          --b 'fprops:oecd_nea_tdb_vol6_nickel'
 
-  3) Compare FPROPS vs Reaktoro (if installed in this Python env):
+  3) Compare FPROPS vs Reaktoro using a separate Reaktoro runner:
        python3 models/johnpye/fprops/test/eqm_mu0_reconcile.py \
          --a 'fprops:Moran and Shapiro' \
          --b 'reaktoro:supcrt98'
+
+  4) If Reaktoro is in a micromamba env, use a shell prefix:
+       python3 models/johnpye/fprops/test/eqm_mu0_reconcile.py \
+         --a 'fprops:Moran and Shapiro' \
+         --b 'reaktoro:supcrt98' \
+         --reaktoro-shell-prefix \
+         'eval \"$(micromamba shell hook --shell bash)\" && micromamba activate reaktoro'
 """
 
 from __future__ import annotations
@@ -42,6 +49,7 @@ import argparse
 import json
 import math
 import re
+import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -165,33 +173,70 @@ def query_fprops_mu0(runner: Path, source: str, tk: float, p0: float, species: L
     return out_map
 
 
-def query_reaktoro_mu0(db_name: str, tk: float, p0: float, species: List[str], rmap: Dict[str, str]) -> Dict[str, float]:
-    try:
-        from reaktoro import SupcrtDatabase
-    except Exception as e:
-        raise RuntimeError(
-            "Reaktoro provider requested but module import failed. "
-            "Install/use an environment with `reaktoro`."
-        ) from e
+def query_reaktoro_mu0(
+    runner: Path,
+    db_name: str,
+    tk: float,
+    p0: float,
+    species: List[str],
+    rmap: Dict[str, str],
+    shell_prefix: str,
+) -> Dict[str, float]:
+    cmd = [
+        "python3",
+        str(runner),
+        "--db",
+        db_name,
+        "--T",
+        f"{tk:.12g}",
+        "--P0",
+        f"{p0:.12g}",
+        "--species",
+        *species,
+    ]
+    for k, v in rmap.items():
+        cmd.extend(["--name-map", f"{k}={v}"])
 
-    db = SupcrtDatabase(db_name)
-    tc = tk - 273.15
-    pbar = p0 / 1e5
+    try:
+        if shell_prefix:
+            quoted = " ".join(shlex.quote(x) for x in cmd)
+            shell_cmd = f"{shell_prefix} && {quoted}"
+            p = subprocess.run(
+                ["bash", "-lc", shell_cmd],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        else:
+            p = subprocess.run(
+                cmd,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+    except subprocess.CalledProcessError as e:
+        msg = (e.stderr or e.stdout or str(e)).strip()
+        raise RuntimeError(f"Failed reaktoro runner invocation: {msg}") from e
+
+    out = p.stdout
+
+    data = json.loads(out)
+    mu = data["mu0"]
+    if len(mu) != len(species):
+        raise RuntimeError("Unexpected mu0 length from reaktoro_mu0_runner")
     out_map: Dict[str, float] = {}
-    for s in species:
-        rname = rmap.get(s, s)
-        sp = db.species(rname)
-        pr = sp.props(tc, "C", pbar, "bar")
-        g0 = float(pr.G0)
-        if not math.isfinite(g0):
-            raise RuntimeError(f"Reaktoro G0 non-finite for '{s}' ({rname}) at T={tk:.2f} K")
-        out_map[s] = g0
+    for s, v in zip(species, mu):
+        if v is None or not math.isfinite(float(v)):
+            raise RuntimeError(f"Reaktoro mu0 missing/non-finite for '{s}' at T={tk:.2f} K")
+        out_map[s] = float(v)
     return out_map
 
 
 def query_provider_mu0(
     provider: Provider,
     runner: Path,
+    reaktoro_runner: Path,
+    reaktoro_shell_prefix: str,
     tk: float,
     p0: float,
     species: List[str],
@@ -200,7 +245,15 @@ def query_provider_mu0(
     if provider.kind == "fprops":
         return query_fprops_mu0(runner, provider.source, tk, p0, species)
     if provider.kind == "reaktoro":
-        return query_reaktoro_mu0(provider.source, tk, p0, species, reaktoro_name_map)
+        return query_reaktoro_mu0(
+            reaktoro_runner,
+            provider.source,
+            tk,
+            p0,
+            species,
+            reaktoro_name_map,
+            reaktoro_shell_prefix,
+        )
     raise RuntimeError(f"Unhandled provider kind '{provider.kind}'")
 
 
@@ -243,6 +296,20 @@ def main() -> int:
     ap.add_argument("--a", default="fprops:Moran and Shapiro", help="Provider A, format kind:source")
     ap.add_argument("--b", default="fprops:oecd_nea_tdb_vol6_nickel", help="Provider B, format kind:source")
     ap.add_argument("--runner", type=Path, default=Path(__file__).resolve().parent / "eqm_mu0_runner")
+    ap.add_argument(
+        "--reaktoro-runner",
+        type=Path,
+        default=Path(__file__).resolve().parent / "reaktoro_mu0_runner.py",
+        help="Path to helper script executed for reaktoro provider.",
+    )
+    ap.add_argument(
+        "--reaktoro-shell-prefix",
+        default="",
+        help=(
+            "Shell prefix run before reaktoro runner, for example: "
+            "'eval \"$(micromamba shell hook --shell bash)\" && micromamba activate myenv'"
+        ),
+    )
     ap.add_argument("--p0", type=float, default=1e5, help="Standard pressure [Pa]")
     ap.add_argument(
         "--temps-c",
@@ -314,6 +381,10 @@ def main() -> int:
         if not args.runner.exists():
             print(f"FPROPS runner not found: {args.runner}", file=sys.stderr)
             return 2
+    if a.kind == "reaktoro" or b.kind == "reaktoro":
+        if not args.reaktoro_runner.exists():
+            print(f"Reaktoro runner not found: {args.reaktoro_runner}", file=sys.stderr)
+            return 2
 
     amat = build_element_matrix(species, comp, elements)  # (ne, ns)
     bmat = amat.T  # (ns, ne)
@@ -326,8 +397,30 @@ def main() -> int:
 
     worst_rms = 0.0
     for tk in temps_k:
-        mu_a = query_provider_mu0(a, args.runner, tk, args.p0, species, rmap)
-        mu_b = query_provider_mu0(b, args.runner, tk, args.p0, species, rmap)
+        try:
+            mu_a = query_provider_mu0(
+                a,
+                args.runner,
+                args.reaktoro_runner,
+                args.reaktoro_shell_prefix,
+                tk,
+                args.p0,
+                species,
+                rmap,
+            )
+            mu_b = query_provider_mu0(
+                b,
+                args.runner,
+                args.reaktoro_runner,
+                args.reaktoro_shell_prefix,
+                tk,
+                args.p0,
+                species,
+                rmap,
+            )
+        except Exception as e:
+            print(f"ERROR at T={tk:.2f} K: {e}", file=sys.stderr)
+            return 2
         va = np.array([mu_a[s] for s in species], dtype=float)
         vb = np.array([mu_b[s] for s in species], dtype=float)
         delta = va - vb
