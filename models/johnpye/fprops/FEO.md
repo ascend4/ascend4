@@ -285,6 +285,79 @@ So the Degterov spinel upgrade clearly improves the oxide-ladder side, but it
 still does **not** recover the Hidayat Table 2 invariant at the reported
 `51.4 at% O` wustite composition.
 
+The next pragmatic Fe-side upgrade was to replace pure `Fe_bcc` with the
+Hidayat `BCC_A2` Fe-O solution model:
+
+$$
+g^{\mathrm{bcc}}(T,x_{\mathrm O}) =
+(1-x_{\mathrm O}) g_{\mathrm{Fe}}^{\circ}(T)
++ x_{\mathrm O} g_{\mathrm O}^{\circ}(T)
++ RT \left[(1-x_{\mathrm O})\ln(1-x_{\mathrm O}) + x_{\mathrm O}\ln x_{\mathrm O}\right]
++ x_{\mathrm O}(1-x_{\mathrm O}) L_{\mathrm{Fe,O}}(T)
+$$
+
+with:
+
+$$
+g_{\mathrm O}^{\circ}(T) =
+120184.8 + 139.1406T - 24.5000T\ln T - 9.8420\times 10^{-4}T^2
+- 0.12938\times 10^{-6}T^3 + \frac{322517}{T}
+$$
+
+$$
+L_{\mathrm{Fe,O}}(T) = -315149.19 + 20.6935T
+$$
+
+and `g_{\mathrm{Fe}}^{\circ}(T)` taken from the bcc iron line plus the unary
+Hillert-Jarl magnetic term already implemented.
+
+This Fe-side upgrade turns out to have essentially **no effect** on the
+Hidayat eutectoid validation:
+
+- at the target point, the `BCC_A2 | wustite` residual is still about
+  `-15.146 kJ/mol`,
+- the grand-potential minimum occurs at an oxygen fraction
+  `y_O \approx 10^{-8}` in the metallic phase,
+- the best-fit `BCC_A2 | wustite` boundary remains at about
+  `x = 0.362558` (`54.155 at% O`).
+
+So the current evidence is that the remaining Tier 2 mismatch is **not**
+caused by neglecting oxygen solubility in metallic iron. The dominant gap is
+still elsewhere in the Fe-O stack.
+
+To localize the remaining shift further, an additional condensed-only target
+from Hidayat Table 2 / Fig. 12 was checked:
+
+$$
+\mathrm{Fe(fcc)} + \mathrm{wustite} \rightarrow \mathrm{Fe(bcc)}
+\qquad \text{at } 912~^\circ\mathrm C
+$$
+
+with the reported wustite composition:
+
+$$
+51.3~\text{at\% O}
+$$
+
+For the current model:
+
+- at the Hidayat target point `(T = 1185.15 K, x = 0.106776)`,
+  the `Fe(bcc) | wustite` residual is about `-17.255 kJ/mol`,
+- at the same point, the `Fe(fcc) | wustite` residual is about
+  `-15.047 kJ/mol`,
+- the direct Gibbs offset between `Fe(fcc)` and `Fe(bcc)` there is only about
+  `+2.208 kJ/mol`,
+- the best coupled `Fe(bcc)/Fe(fcc)/wustite` invariant fit moves to about
+  `x = 0.315384` (`53.654 at% O`) with `max|residual| \approx 1.109 kJ/mol`.
+
+This is an important diagnostic result:
+
+- the `Fe | wustite` boundary family itself is shifted to higher oxygen
+  contents by roughly `2.3 at% O`,
+- that shift persists through both the low-temperature eutectoid and the
+  `bcc/fcc` crossover,
+- so the remaining mismatch is not a single isolated invariant-point error.
+
 ## 15. Degterov Spinel Upgrade
 
 The next Tier 2 extension is to replace the stoichiometric surrogate

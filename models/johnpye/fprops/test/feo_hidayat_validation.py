@@ -20,6 +20,9 @@ For the current Tier 2 model, coexistence at fixed T requires:
 
 where A = FeO and B = FeO1.5 are the wustite endmembers.
 
+For the upgraded Fe-side model we also check the minimized grand-potential
+residual of the Hidayat `BCC_A2` Fe-O solution phase.
+
 On the magnetite side we now use the Fe-only slice of the Degterov spinel
 CEF model. The relevant check is therefore the minimized grand-potential
 residual of the spinel phase at the elemental potentials implied by the
@@ -54,6 +57,40 @@ def g_fe_bcc(T: float) -> float:
         - 5.8927e-8 * T**3
         + hillert_jarl_gmag(T, 1043.0, 2.22, 0.40)
     )
+
+
+def g_fe_fcc(T: float) -> float:
+    if T <= 1811.0:
+        g = (
+            -236.5
+            + 132.4156 * T
+            - 24.6643 * T * math.log(T)
+            - 0.003758 * T * T
+            + 77359.0 / T
+            - 5.8927e-8 * T**3
+        )
+    else:
+        g = -27097.2 + 300.2521 * T - 46.0 * T * math.log(T) + 2.78854e31 * T**-9
+    return g + hillert_jarl_gmag(T, 67.0, 0.70, 0.28)
+
+
+def g_bcc_fe0(T: float) -> float:
+    return g_fe_bcc(T)
+
+
+def g_bcc_o0(T: float) -> float:
+    return (
+        120184.8
+        + 139.1406 * T
+        - 24.5000 * T * math.log(T)
+        - 9.8420e-4 * T * T
+        - 0.12938e-6 * T**3
+        + 322517.0 / T
+    )
+
+
+def l_bcc_feo(T: float) -> float:
+    return -315149.19 + 20.6935 * T
 
 
 def g_fe3o4(T: float) -> float:
@@ -141,6 +178,41 @@ def residual_wustite_magnetite(T: float, x: float) -> float:
     mu_a = mu_a_wustite(T, x)
     mu_b = mu_b_wustite(T, x)
     return g_fe3o4(T) - (mu_a + 2.0 * mu_b)
+
+
+def bcc_solution_g(T: float, y_o: float) -> float:
+    y_fe = 1.0 - y_o
+    return (
+        y_fe * g_bcc_fe0(T)
+        + y_o * g_bcc_o0(T)
+        + R * T * (y_fe * math.log(y_fe) + y_o * math.log(y_o))
+        + y_fe * y_o * l_bcc_feo(T)
+    )
+
+
+def residual_fe_bcc_solution(T: float, x: float) -> tuple[float, float]:
+    mu_a = mu_a_wustite(T, x)
+    mu_b = mu_b_wustite(T, x)
+    lam_o = 2.0 * (mu_b - mu_a)
+    lam_fe = 3.0 * mu_a - 2.0 * mu_b
+    best = math.inf
+    best_y = math.nan
+    y_lo = 1e-8
+    y_hi = 0.1
+    for _ in range(4):
+        steps = 80
+        span = y_hi - y_lo
+        for i in range(steps + 1):
+            y_o = y_lo + span * i / steps
+            y_fe = 1.0 - y_o
+            resid = bcc_solution_g(T, y_o) - (y_fe * lam_fe + y_o * lam_o)
+            if resid < best:
+                best = resid
+                best_y = y_o
+        dy = max(1e-8, 0.15 * span)
+        y_lo = max(1e-10, best_y - dy)
+        y_hi = min(0.5, best_y + dy)
+    return best, best_y
 
 
 def spinel_phase_g(T: float, a: float, b: float) -> tuple[float, float, float, float]:
@@ -261,10 +333,17 @@ def main() -> None:
     x_target = x_from_atpct_o(atpct_o_target)
 
     r_fe = residual_fe_wustite(T_target, x_target)
+    r_fe_bcc, y_o_bcc = residual_fe_bcc_solution(T_target, x_target)
     r_sp_old = residual_wustite_magnetite(T_target, x_target)
     r_sp_new, a_sp, b_sp, v_sp = residual_wustite_spinel_degterov(T_target, x_target)
 
     x_fe_best, r_fe_best = minimize_abs_residual_at_T(T_target, residual_fe_wustite)
+    def bcc_abs_residual(T: float, x: float) -> float:
+        resid, _y = residual_fe_bcc_solution(T, x)
+        return abs(resid)
+
+    x_fe_bcc_best, r_fe_bcc_best = minimize_abs_residual_at_T(T_target, bcc_abs_residual)
+    _r_fe_bcc_signed, y_o_bcc_best = residual_fe_bcc_solution(T_target, x_fe_bcc_best)
     x_sp_old_best, r_sp_old_best = minimize_abs_residual_at_T(T_target, residual_wustite_magnetite)
 
     def spinel_abs_residual(T: float, x: float) -> float:
@@ -282,8 +361,10 @@ def main() -> None:
     print()
     print("Residuals at the Hidayat target point")
     print(f"Fe(bcc) | Wustite residual     = {r_fe/1000.0:+.3f} kJ/mol")
+    print(f"BCC_A2 | Wustite residual      = {r_fe_bcc/1000.0:+.3f} kJ/mol   (Hidayat Fe-O solution)")
     print(f"Wustite | Magnetite residual  = {r_sp_old/1000.0:+.3f} kJ/mol   (stoich Fe3O4 surrogate)")
     print(f"Wustite | Spinel residual     = {r_sp_new/1000.0:+.3f} kJ/mol   (Degterov Fe-only spinel)")
+    print(f"best BCC_A2 oxygen fraction at target point: y_O = {y_o_bcc:.6e}")
     print(
         "best spinel site state at target point: "
         f"y_t(Fe2+) = {a_sp:.4f}, y_o(Fe2+) = {b_sp:.4f}, y_o(Va) = {v_sp:.4f}"
@@ -294,6 +375,12 @@ def main() -> None:
         "Fe(bcc) | Wustite: "
         f"x = {x_fe_best:.6f}, at% O = {atpct_o_from_x(x_fe_best):.3f}, "
         f"|residual| = {r_fe_best/1000.0:.3f} kJ/mol"
+    )
+    print(
+        "BCC_A2 | Wustite: "
+        f"x = {x_fe_bcc_best:.6f}, at% O = {atpct_o_from_x(x_fe_bcc_best):.3f}, "
+        f"|residual| = {r_fe_bcc_best/1000.0:.3f} kJ/mol, "
+        f"y_O = {y_o_bcc_best:.6e}"
     )
     print(
         "Wustite | Magnetite (stoich): "
@@ -308,6 +395,56 @@ def main() -> None:
     print(
         "best spinel site state at best Degterov fit: "
         f"y_t(Fe2+) = {a_sp_best:.4f}, y_o(Fe2+) = {b_sp_best:.4f}, y_o(Va) = {v_sp_best:.4f}"
+    )
+
+    print()
+    print("Hidayat Table 2 bcc/fcc-wustite invariant")
+    T_alpha_gamma = 912.0 + 273.15
+    atpct_o_alpha_gamma = 51.3
+    x_alpha_gamma = x_from_atpct_o(atpct_o_alpha_gamma)
+    r_bcc_ag = residual_fe_wustite(T_alpha_gamma, x_alpha_gamma)
+    lam_combo = 0.0
+    mu_a_ag = mu_a_wustite(T_alpha_gamma, x_alpha_gamma)
+    mu_b_ag = mu_b_wustite(T_alpha_gamma, x_alpha_gamma)
+    r_fcc_ag = g_fe_fcc(T_alpha_gamma) - (3.0 * mu_a_ag - 2.0 * mu_b_ag)
+    print(
+        f"target: Fe(fcc) + wustite -> Fe(bcc) at T = {T_alpha_gamma:.2f} K (912 C), "
+        f"wustite = {atpct_o_alpha_gamma:.3f} at% O -> x = {x_alpha_gamma:.6f}"
+    )
+    print("Residuals at the Hidayat target point")
+    print(f"Fe(bcc) | Wustite residual     = {r_bcc_ag/1000.0:+.3f} kJ/mol")
+    print(f"Fe(fcc) | Wustite residual     = {r_fcc_ag/1000.0:+.3f} kJ/mol")
+    print(f"Fe(fcc)-Fe(bcc) Gibbs offset   = {(g_fe_fcc(T_alpha_gamma)-g_fe_bcc(T_alpha_gamma))/1000.0:+.3f} kJ/mol")
+
+    x_bcc_ag_best, r_bcc_ag_best = minimize_abs_residual_at_T(T_alpha_gamma, residual_fe_wustite)
+
+    def residual_fe_fcc_wustite(T: float, x: float) -> float:
+        mu_a = mu_a_wustite(T, x)
+        mu_b = mu_b_wustite(T, x)
+        return g_fe_fcc(T) - (3.0 * mu_a - 2.0 * mu_b)
+
+    x_fcc_ag_best, r_fcc_ag_best = minimize_abs_residual_at_T(T_alpha_gamma, residual_fe_fcc_wustite)
+
+    def coupled_fe_transition_residual(T: float, x: float) -> float:
+        return max(abs(residual_fe_wustite(T, x)), abs(residual_fe_fcc_wustite(T, x)))
+
+    x_coupled_best, r_coupled_best = minimize_abs_residual_at_T(T_alpha_gamma, coupled_fe_transition_residual)
+
+    print("Best single-boundary fits at the same temperature")
+    print(
+        "Fe(bcc) | Wustite: "
+        f"x = {x_bcc_ag_best:.6f}, at% O = {atpct_o_from_x(x_bcc_ag_best):.3f}, "
+        f"|residual| = {r_bcc_ag_best/1000.0:.3f} kJ/mol"
+    )
+    print(
+        "Fe(fcc) | Wustite: "
+        f"x = {x_fcc_ag_best:.6f}, at% O = {atpct_o_from_x(x_fcc_ag_best):.3f}, "
+        f"|residual| = {r_fcc_ag_best/1000.0:.3f} kJ/mol"
+    )
+    print(
+        "Coupled Fe(bcc)/Fe(fcc)/Wustite target: "
+        f"x = {x_coupled_best:.6f}, at% O = {atpct_o_from_x(x_coupled_best):.3f}, "
+        f"max|residual| = {r_coupled_best/1000.0:.3f} kJ/mol"
     )
 
 

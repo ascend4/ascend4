@@ -468,6 +468,20 @@ static void test_eqm_wustite_solution_fullspace_unique_balance(void){
 	CU_ASSERT_TRUE(fabs(n[1] - 0.2) <= 1e-8);
 }
 
+static void test_eqm_bcc_iron_solution_fullspace_unique_balance(void){
+	static const char *names[] = {"Bcc_Fe", "Bcc_O"};
+	static const char *elements[] = {"Fe", "O"};
+	static const double b[] = {0.999, 0.001};
+	double n[2];
+	int status = eqm_solve_elements(names, 2, elements, 2, b, "hidayat_2015",
+		1000.0, g_eqm.P, "auto", NULL, n);
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_TRUE(isfinite(n[0]));
+	CU_ASSERT_TRUE(isfinite(n[1]));
+	CU_ASSERT_TRUE(fabs(n[0] - 0.999) <= 1e-8);
+	CU_ASSERT_TRUE(fabs(n[1] - 0.001) <= 1e-8);
+}
+
 static void test_eqm_wustite_solution_rejects_nullspace_only(void){
 	static const char *names[] = {"Wus_FeO", "Wus_FeO1p5"};
 	static const char *elements[] = {"Fe", "O"};
@@ -569,6 +583,10 @@ CU_ErrorCode test_register_eqm(void){
 	}
 	if(NULL == CU_add_test(s, "wustite_solution_fullspace_unique_balance",
 			test_eqm_wustite_solution_fullspace_unique_balance)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "bcc_iron_solution_fullspace_unique_balance",
+			test_eqm_bcc_iron_solution_fullspace_unique_balance)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "wustite_solution_rejects_nullspace_only",

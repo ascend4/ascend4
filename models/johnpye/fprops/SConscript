@@ -21,6 +21,7 @@ coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'peng
 	, 'fprops_species.c','thermo_constcp.c','thermo_mix_ideal.c'
 	, 'gibbs_species.c'
 	, 'solution.c','solution_data.c','thermo_solution_binary.c','wustite_hidayat.c'
+	, 'bcc_iron_hidayat.c'
 	, 'spinel_data.c','spinel_fe_degterov.c'
 	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c', 'incomp.c'
 ]

@@ -9,6 +9,7 @@
 #include "../thermo_mix_ideal.h"
 #include "../solution.h"
 #include "../thermo_solution_binary.h"
+#include "../bcc_iron_hidayat.h"
 #include "../wustite_hidayat.h"
 
 #include <math.h>
@@ -238,6 +239,67 @@ static void test_wustite_solution_finite_difference(void){
 	ASSERT(fabs(fd_b - mu_b) <= 1e-5 * (fabs(mu_b) + 1.0));
 }
 
+static double bcc_iron_test_total_g(const BinarySolutionModel *M, double T, double p, double n_a,
+		double n_b, FpropsError *err){
+	double ntot = n_a + n_b;
+	double x = n_b / ntot;
+	return ntot * solution_binary_g_molar(M, T, p, x, err);
+}
+
+static void test_bcc_iron_solution_model(void){
+	FpropsError err = FPROPS_NO_ERROR;
+	const BinarySolutionPhaseDef *P = bcc_iron_hidayat_phase();
+	const BinarySolutionModel *M = P->model;
+	double T = 1000.0;
+	double p = 1e5;
+	double x = 1e-3;
+	double g = solution_binary_g_molar(M, T, p, x, &err);
+	double mu_a = solution_binary_mu_a(M, T, p, x, &err);
+	double mu_b = solution_binary_mu_b(M, T, p, x, &err);
+	ASSERT(err == FPROPS_NO_ERROR);
+	ASSERT(isfinite(g));
+	ASSERT(isfinite(mu_a));
+	ASSERT(isfinite(mu_b));
+	ASSERT(strcmp(P->source, "hidayat_2015") == 0);
+}
+
+static void test_bcc_iron_solution_finite_difference(void){
+	FpropsError err = FPROPS_NO_ERROR;
+	const BinarySolutionPhaseDef *P = bcc_iron_hidayat_phase();
+	const BinarySolutionModel *M = P->model;
+	double T = 1000.0;
+	double p = 1e5;
+	double n_a = 0.999;
+	double n_b = 0.001;
+	double eps = 1e-8;
+	double mu_a;
+	double mu_b;
+	double g_pa, g_ma, g_pb, g_mb;
+	double fd_a;
+	double fd_b;
+	double x = n_b / (n_a + n_b);
+
+	mu_a = solution_binary_mu_a(M, T, p, x, &err);
+	ASSERT(err == FPROPS_NO_ERROR);
+	mu_b = solution_binary_mu_b(M, T, p, x, &err);
+	ASSERT(err == FPROPS_NO_ERROR);
+
+	g_pa = bcc_iron_test_total_g(M, T, p, n_a + eps, n_b, &err);
+	ASSERT(err == FPROPS_NO_ERROR);
+	g_ma = bcc_iron_test_total_g(M, T, p, n_a - eps, n_b, &err);
+	ASSERT(err == FPROPS_NO_ERROR);
+	g_pb = bcc_iron_test_total_g(M, T, p, n_a, n_b + eps, &err);
+	ASSERT(err == FPROPS_NO_ERROR);
+	g_mb = bcc_iron_test_total_g(M, T, p, n_a, n_b - eps, &err);
+	ASSERT(err == FPROPS_NO_ERROR);
+
+	fd_a = (g_pa - g_ma) / (2.0 * eps);
+	fd_b = (g_pb - g_mb) / (2.0 * eps);
+
+	ASSERT(fabs(fd_a - mu_a) <= 1e-4 * (fabs(mu_a) + 1.0));
+	ASSERT(fabs(fd_b - mu_b) <= 1e-4 * (fabs(mu_b) + 1.0));
+}
+
 CU_ErrorCode test_register_mix_ideal(void){
 	CU_pSuite s = CU_add_suite("mix_ideal",NULL,NULL);
 	if(NULL == s){
@@ -265,6 +327,12 @@ CU_ErrorCode test_register_mix_ideal(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "wustite_solution_finite_difference", test_wustite_solution_finite_difference)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "bcc_iron_solution_model", test_bcc_iron_solution_model)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "bcc_iron_solution_finite_difference", test_bcc_iron_solution_finite_difference)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;
