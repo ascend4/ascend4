@@ -56,6 +56,10 @@ static int eqm_mu0_model_source(const char *name, EqmMuModel model, const char *
 static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, const char **source_out);
 int eqm_mu0_source(const char *name, const char *source, double T, double P0, double *mu0);
 
+static int eqm_has_explicit_source(const char *source){
+	return (source && source[0]) ? 1 : 0;
+}
+
 void eqm_apply_bscale(EqmData *D){
 	int e;
 	D->b_scale = (double *)calloc((size_t)D->ne, sizeof(double));
@@ -262,12 +266,16 @@ static int eqm_mu0_fluid_model_source(const char *name, const char *corrtype, co
 	const char *cands[3];
 	int ncands = 0;
 	int c;
+	int explicit_source;
 	if(!name || !corrtype || !mu0 || !(T > 0.0) || !(P0 > 0.0)){
 		return 0;
 	}
+	explicit_source = eqm_has_explicit_source(source);
 	cands[ncands++] = source;
-	cands[ncands++] = NULL;
-	if(strcmp(corrtype, "ideal") == 0){
+	if(!explicit_source){
+		cands[ncands++] = NULL;
+	}
+	if(!explicit_source && strcmp(corrtype, "ideal") == 0){
 		cands[ncands++] = "RPP";
 	}
 	for(c = 0; c < ncands; ++c){
@@ -432,13 +440,20 @@ int eqm_mu0_ideal_source(const char *name, const char *source, double T, double 
 	const EosData *cands[3];
 	int ncands = 0;
 	int c;
+	int explicit_source = eqm_has_explicit_source(source);
+	int prefer_shomate_source = 0;
 
 	if(!name || !mu0){
 		return 0;
 	}
+	if(explicit_source && shomate_species_lookup(name, source)){
+		prefer_shomate_source = 1;
+	}
 	cands[ncands++] = fprops_eos(name, NULL, source);
-	cands[ncands++] = fprops_eos(name, NULL, NULL);
-	cands[ncands++] = fprops_eos(name, NULL, "RPP");
+	if(!prefer_shomate_source){
+		cands[ncands++] = fprops_eos(name, NULL, NULL);
+		cands[ncands++] = fprops_eos(name, NULL, "RPP");
+	}
 	for(c = 0; c < ncands; ++c){
 		const EosData *E = cands[c];
 		if(!E){
@@ -458,6 +473,12 @@ int eqm_mu0_ideal_source(const char *name, const char *source, double T, double 
 			return 1;
 		}
 	}
+
+	/* For explicit shomate-backed sources, do not ideal-fallback. */
+	if(prefer_shomate_source){
+		return 0;
+	}
+
 	Pideal = (PureFluid *)fprops_fluid(name, "ideal", NULL);
 	if(Pideal){
 		rho = P0 / (Pideal->data->R * T);

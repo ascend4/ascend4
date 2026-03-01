@@ -58,6 +58,7 @@ How to run:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import re
@@ -392,6 +393,17 @@ def main() -> int:
         default=0.0,
         help="If >0, nonzero exit when residual RMS exceeds this [J/mol] at any T.",
     )
+    ap.add_argument(
+        "--show-mu",
+        action="store_true",
+        help="Print provider mu0 vectors in addition to delta/residual summaries.",
+    )
+    ap.add_argument(
+        "--csv-out",
+        type=Path,
+        default=None,
+        help="Optional CSV output path for per-temperature, per-species overlay data.",
+    )
     args = ap.parse_args()
 
     a = parse_provider(args.a)
@@ -443,6 +455,7 @@ def main() -> int:
     print()
 
     worst_rms = 0.0
+    csv_rows: List[Dict[str, float | str]] = []
     for tk in temps_k:
         try:
             mu_a = query_provider_mu0(
@@ -484,6 +497,9 @@ def main() -> int:
         explain = float(np.linalg.norm(delta_hat) / np.linalg.norm(delta)) if np.linalg.norm(delta) > 0 else 0.0
 
         print(f"T = {tk:.2f} K ({tk - 273.15:.2f} C)")
+        if args.show_mu:
+            print("  mu_A         : " + fmt_vec(va, species, "J/mol"))
+            print("  mu_B         : " + fmt_vec(vb, species, "J/mol"))
         print("  delta_mu(A-B): " + fmt_vec(delta, species, "J/mol"))
         print("  lambda fit   : " + fmt_vec(lam, elements, "J/mol-atom"))
         print("  residual     : " + fmt_vec(resid, species, "J/mol"))
@@ -498,6 +514,42 @@ def main() -> int:
             print(f"  reaction delta_dG(A-B) = {ddg:.6e} J/mol")
             print(f"  reaction residual part = {ddg_resid:.6e} J/mol")
         print()
+
+        for idx, s in enumerate(species):
+            row: Dict[str, float | str] = {
+                "provider_a": f"{a.kind}:{a.source}",
+                "provider_b": f"{b.kind}:{b.source}",
+                "preset": args.preset,
+                "species": s,
+                "T_K": float(tk),
+                "T_C": float(tk - 273.15),
+                "mu_A_J_per_mol": float(va[idx]),
+                "mu_B_J_per_mol": float(vb[idx]),
+                "delta_mu_J_per_mol": float(delta[idx]),
+                "fit_A_t_lambda_J_per_mol": float(delta_hat[idx]),
+                "residual_J_per_mol": float(resid[idx]),
+                "residual_rms_J_per_mol": float(rms),
+                "residual_max_abs_J_per_mol": float(max_abs),
+                "explain_norm_ratio": float(explain),
+            }
+            for ie, ename in enumerate(elements):
+                row[f"lambda_{ename}_J_per_mol_atom"] = float(lam[ie])
+            if has_reaction:
+                row["reaction_delta_dG_A_minus_B_J_per_mol"] = float(ddg)
+                row["reaction_residual_part_J_per_mol"] = float(ddg_resid)
+            csv_rows.append(row)
+
+    if args.csv_out is not None:
+        args.csv_out.parent.mkdir(parents=True, exist_ok=True)
+        fieldnames = []
+        if csv_rows:
+            fieldnames = list(csv_rows[0].keys())
+        with args.csv_out.open("w", newline="", encoding="utf-8") as fp:
+            if fieldnames:
+                writer = csv.DictWriter(fp, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(csv_rows)
+        print(f"Wrote CSV overlay: {args.csv_out}")
 
     if args.strict_resid > 0.0 and worst_rms > args.strict_resid:
         print(

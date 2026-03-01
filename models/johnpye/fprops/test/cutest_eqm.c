@@ -331,6 +331,20 @@ static void test_eqm_nio_h2_shomate_selector_reduced(void){
 	}
 }
 
+static void test_eqm_explicit_unknown_source_falls_back_to_ideal(void){
+	double mu_unknown = 0.0;
+	CU_ASSERT_TRUE(eqm_mu0_source("hydrogen", "this_source_does_not_exist", g_eqm.T, g_eqm.P0, &mu_unknown) != 0);
+	CU_ASSERT_TRUE(isfinite(mu_unknown));
+}
+
+static void test_eqm_reaktoro_clone_auto_routes_to_clone(void){
+	double mu_auto = 0.0;
+	double mu_shomate = 0.0;
+	CU_ASSERT_TRUE(eqm_mu0_source("hydrogen", "reaktoro_clone_supcrt98", g_eqm.T, g_eqm.P0, &mu_auto) != 0);
+	CU_ASSERT_TRUE(eqm_mu0_source("hydrogen", "shomate:reaktoro_clone_supcrt98", g_eqm.T, g_eqm.P0, &mu_shomate) != 0);
+	CU_ASSERT_TRUE(fabs(mu_auto - mu_shomate) <= 1e-9);
+}
+
 CU_ErrorCode test_register_eqm(void){
 	CU_pSuite s = CU_add_suite("eqm", eqm_suite_init, eqm_suite_cleanup);
 	if(NULL == s){
@@ -364,6 +378,13 @@ CU_ErrorCode test_register_eqm(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "nio_h2_shomate_selector_reduced", test_eqm_nio_h2_shomate_selector_reduced)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "explicit_unknown_source_falls_back_to_ideal",
+			test_eqm_explicit_unknown_source_falls_back_to_ideal)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "reaktoro_clone_auto_routes_to_clone", test_eqm_reaktoro_clone_auto_routes_to_clone)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;

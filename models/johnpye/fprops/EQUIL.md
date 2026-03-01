@@ -448,6 +448,48 @@ Here each reaction constant satisfies $\ln K_j = -\Delta_r G_j^\circ/(RT)$, with
 
 Small $\Delta\log_{10}K_j$ and small composition differences indicate good agreement.
 
+### 12.1 Reaktoro-clone validation path (`Ni`/`NiO`/`H2`/`O2`/`H2O`)
+
+To separate implementation errors from source-data differences, `fprops` also includes a dedicated shomate source:
+
+- `reaktoro_clone_supcrt98`
+
+This source is fitted against Reaktoro/SUPCRT98 standard-state Gibbs data for:
+
+- `Ni`, `NiO`, `hydrogen`, `oxygen`, `water`.
+
+The intent is not to define a new recommended thermodynamic database.
+The intent is implementation validation: if FPROPS and Reaktoro use nearly the same $\mu_i^\circ(T)$ inputs, equilibrium outputs should match closely.
+
+Current check method:
+
+1. Compare species $\mu_i^\circ(T)$ directly between providers.
+2. Fit elemental-potential shifts and inspect non-elemental residuals.
+3. Inspect reaction-level mismatch
+   $\Delta\Delta G^\circ = \sum_i \nu_i\left(\mu_{i,\mathrm{FPROPS}}^\circ-\mu_{i,\mathrm{Reaktoro}}^\circ\right)$
+   for balanced reactions.
+
+How to run:
+
+```bash
+python3 models/johnpye/fprops/test/eqm_mu0_reconcile.py \
+  --a 'fprops:reaktoro_clone_supcrt98' \
+  --b 'reaktoro:supcrt98' \
+  --preset nio_h2o \
+  --temps-c 25,100,200,300,400,500,600,700,800,900,1000,1100,1200 \
+  --reaktoro-shell-prefix 'eval "$(micromamba shell hook --shell bash)" && micromamba activate'
+```
+
+Interpretation guide:
+
+- If reaction-level mismatch is small (order `1-50 J/mol` across this range), then remaining solver differences are usually negligible for engineering equilibrium predictions.
+- Larger discrepancies then mostly come from database/model differences (not optimizer failure).
+
+Notes:
+
+- Auto source routing in `eqm` now prefers this shomate clone data when `source=reaktoro_clone_supcrt98` is requested, so clone gases are not silently replaced by unrelated default ideal-gas data.
+- For production calculations, use your chosen physical database (for example OECD/NIST-consistent sets); keep `reaktoro_clone_supcrt98` as a verification harness.
+
 ### 13. Practical debug hook
 
 Set
