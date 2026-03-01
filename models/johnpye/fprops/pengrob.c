@@ -77,6 +77,8 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		ERRMSG("EosData was NULL");
 		return NULL;
 	}
+	const int ref_was_explicit = (ref != NULL);
+	const ReferenceState *ref_apply = ref;
 	MSG("Preparing PR fluid '%s'...",E->name);
 	PureFluid *P = FPROPS_NEW(PureFluid);
 	P->data = FPROPS_NEW(FluidData);
@@ -122,14 +124,14 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		// use that pressure as the PR p_c, together with updating the
 		// value of rho_c for consistency with PR EOS (from the known
 		// Z_c = 0.307.
-		{
-			FpropsError herr = FPROPS_NO_ERROR;
-			MSG("Preparing helmholtz data '%s'...",E->name);
-			PureFluid *PH = helmholtz_prepare(E,ref);
-			if(!PH){
-				ERRMSG("Failed to create Helmholtz runtime data");
-				return NULL;
-			}
+			{
+				FpropsError herr = FPROPS_NO_ERROR;
+				MSG("Preparing helmholtz data '%s'...",E->name);
+				PureFluid *PH = helmholtz_prepare(E,ref_apply);
+				if(!PH){
+					ERRMSG("Failed to create Helmholtz runtime data");
+					return NULL;
+				}
 			D->p_c = PH->p_fn((FluidStateUnion){.Trho={D->T_c, D->rho_c}}, PH->data, &herr);
 			MSG("Calculated p_c = %f from Helmholtz data",D->p_c);
 			if(herr){
@@ -138,10 +140,14 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 			}
 			double Zc = 0.307;
 			D->rho_c = D->p_c / (Zc * D->R * D->T_c);
-			helmholtz_destroy(PH);
-		}
+				helmholtz_destroy(PH);
+			}
 #endif
-		break;
+			D->ref0 = (ReferenceState){FPROPS_REF_TPHG,{.tphg={298.15,0,NAN,NAN}}};
+			if(ref_apply == NULL){
+				ref_apply = &(I->ref);
+			}
+			break;
 #undef I
 	case FPROPS_CUBIC:
 		MSG("EOS data is cubic");	
@@ -178,13 +184,25 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		}
 #endif
 
-		D->omega = I->omega;
+			D->omega = I->omega;
 
-		D->Tstar = I->T_c;
-		D->rhostar = I->rho_c;
-		MSG("R = %f, Tstar = %f",D->R, D->Tstar);
-		D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
-		break;
+			D->Tstar = I->T_c;
+			D->rhostar = I->rho_c;
+			MSG("R = %f, Tstar = %f",D->R, D->Tstar);
+			D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
+			D->ref0 = I->ref0;
+			if(D->ref0.type == FPROPS_REF_TPHG){
+				if(isfinite(D->ref0.data.tphg.h0)){
+					D->ref0.data.tphg.h0 *= 1000.0;
+				}
+				if(isfinite(D->ref0.data.tphg.g0)){
+					D->ref0.data.tphg.g0 *= 1000.0;
+				}
+			}
+			if(ref_apply == NULL){
+				ref_apply = &(I->ref);
+			}
+			break;
 	default:
 		fprintf(stderr,"Invalid EOS data\n");
 		return NULL;
@@ -223,6 +241,28 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 #undef D
 #undef C
 	//P->sat_fn = &pengrob_sat_akasaka;
+
+	if(ref_apply == NULL){
+		ERRMSG("No reference state available for this Peng-Robinson fluid");
+		pengrob_destroy(P);
+		return NULL;
+	}
+	{
+		int res = fprops_set_reference_state(P, ref_apply);
+		if(res){
+			if(!ref_was_explicit){
+				ReferenceState ref_phi0 = {FPROPS_REF_PHI0,{.phi0={0,0}}};
+				ERRMSG("Unable to apply default reference state (type %d, err %d); falling back to PHI0",
+					ref_apply->type,res);
+				res = fprops_set_reference_state(P, &ref_phi0);
+			}
+			if(res){
+				ERRMSG("Unable to apply reference state (type %d, err %d)",ref_apply->type,res);
+				pengrob_destroy(P);
+				return NULL;
+			}
+		}
+	}
 
 	return P;
 }

@@ -1916,6 +1916,196 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	return 1;
 }
 
+static int eqm_reduced_condensed_candidate_seed(const char **names, int ns, int ne, const double *A,
+		const double *b, const char *source, double T, double P, const double *n_hint,
+		double n_floor, double *n_seed_out, int *kkt_ok_out){
+	const int max_condensed_enum = 12;
+	const double pin = n_floor;
+	const double P0 = 1e5;
+	const int trace = eqm_active_trace_enabled();
+	int *is_condensed = NULL;
+	double *mu0 = NULL;
+	int *cond_idx = NULL;
+	int *is_active = NULL;
+	int *free_idx = NULL;
+	const char **names_f = NULL;
+	double *A_f = NULL;
+	double *b_f = NULL;
+	double *n_f = NULL;
+	double *init_f = NULL;
+	double *n_trial = NULL;
+	double *n_best = NULL;
+	int nc = 0;
+	int ok = 0;
+	int best_kkt = 0;
+	double best_obj = 0.0;
+	unsigned long long nmask = 0ULL;
+
+	if(kkt_ok_out){
+		*kkt_ok_out = 0;
+	}
+	if(!names || !A || !b || !n_seed_out || ns <= 1 || ne <= 0 || !(T > 0.0) || !(P > 0.0)){
+		return 0;
+	}
+
+	is_condensed = (int *)calloc((size_t)ns, sizeof(int));
+	mu0 = (double *)calloc((size_t)ns, sizeof(double));
+	cond_idx = (int *)calloc((size_t)ns, sizeof(int));
+	is_active = (int *)calloc((size_t)ns, sizeof(int));
+	free_idx = (int *)calloc((size_t)ns, sizeof(int));
+	names_f = (const char **)calloc((size_t)ns, sizeof(const char *));
+	A_f = (double *)calloc((size_t)(ne * ns), sizeof(double));
+	b_f = (double *)calloc((size_t)ne, sizeof(double));
+	n_f = (double *)calloc((size_t)ns, sizeof(double));
+	init_f = (double *)calloc((size_t)ns, sizeof(double));
+	n_trial = (double *)calloc((size_t)ns, sizeof(double));
+	n_best = (double *)calloc((size_t)ns, sizeof(double));
+	if(!is_condensed || !mu0 || !cond_idx || !is_active || !free_idx || !names_f
+			|| !A_f || !b_f || !n_f || !init_f || !n_trial || !n_best){
+		goto cleanup;
+	}
+
+	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
+		goto cleanup;
+	}
+	if(!eqm_compute_is_condensed(names, ns, source, is_condensed)){
+		goto cleanup;
+	}
+	for(int i = 0; i < ns; ++i){
+		if(is_condensed[i]){
+			cond_idx[nc++] = i;
+		}
+	}
+	if(nc <= 0){
+		goto cleanup;
+	}
+	if(nc > max_condensed_enum){
+		if(trace){
+			fprintf(stderr, "eqm condensed-candidate: skip nc=%d > %d\n", nc, max_condensed_enum);
+		}
+		goto cleanup;
+	}
+
+	nmask = 1ULL << nc;
+	if(trace){
+		fprintf(stderr, "eqm condensed-candidate: trying %llu masks at T=%.6g P=%.6g\n",
+			nmask, T, P);
+	}
+	for(unsigned long long mask = 0ULL; mask < nmask; ++mask){
+		int nf = 0;
+		int status;
+		int kkt_ok = 0;
+		double obj = 0.0;
+
+		for(int i = 0; i < ns; ++i){
+			is_active[i] = 0;
+		}
+		for(int c = 0; c < nc; ++c){
+			int i = cond_idx[c];
+			int present = ((mask >> c) & 1ULL) ? 1 : 0;
+			if(!present){
+				is_active[i] = 1;
+			}
+		}
+		for(int i = 0; i < ns; ++i){
+			if(!is_active[i]){
+				free_idx[nf++] = i;
+			}
+		}
+		if(nf <= 0){
+			continue;
+		}
+
+		for(int e = 0; e < ne; ++e){
+			double rhs = b[e];
+			for(int i = 0; i < ns; ++i){
+				if(is_active[i]){
+					rhs -= A[e * ns + i] * pin;
+				}
+			}
+			b_f[e] = rhs;
+		}
+		for(int j = 0; j < nf; ++j){
+			int i = free_idx[j];
+			double ni = (n_hint && n_hint[i] > n_floor && isfinite(n_hint[i]))
+				? n_hint[i] : fmax(10.0 * n_floor, 1e-30);
+			names_f[j] = names[i];
+			init_f[j] = ni;
+			for(int e = 0; e < ne; ++e){
+				A_f[e * nf + j] = A[e * ns + i];
+			}
+		}
+
+		status = eqm_reduced_solve_source_init_once(names_f, nf, ne, A_f, b_f, source, T, P,
+			init_f, n_floor, n_f);
+		if(status != 0){
+			status = eqm_reduced_solve_source_init_once(names_f, nf, ne, A_f, b_f, source, T, P,
+				NULL, n_floor, n_f);
+		}
+		if(status != 0){
+			continue;
+		}
+
+		for(int i = 0; i < ns; ++i){
+			n_trial[i] = is_active[i] ? pin : 0.0;
+		}
+		for(int j = 0; j < nf; ++j){
+			n_trial[free_idx[j]] = n_f[j];
+		}
+		for(int i = 0; i < ns; ++i){
+			if(!(n_trial[i] > 0.0) || !isfinite(n_trial[i])){
+				status = -13;
+				break;
+			}
+		}
+		if(status != 0){
+			continue;
+		}
+		if(!eqm_reduced_eval_obj_mu(n_trial, mu0, is_condensed, ns, T, P, P0, &obj, NULL, NULL)){
+			continue;
+		}
+		kkt_ok = eqm_validate_solution_bounds(names, ns, ne, A, b, source, T, P, n_trial);
+
+		if(!ok
+				|| (kkt_ok && !best_kkt)
+				|| (kkt_ok == best_kkt && obj < best_obj)){
+			for(int i = 0; i < ns; ++i){
+				n_best[i] = n_trial[i];
+			}
+			best_obj = obj;
+			best_kkt = kkt_ok;
+			ok = 1;
+		}
+	}
+	if(ok){
+		for(int i = 0; i < ns; ++i){
+			n_seed_out[i] = n_best[i];
+		}
+		if(kkt_ok_out){
+			*kkt_ok_out = best_kkt;
+		}
+		if(trace){
+			fprintf(stderr, "eqm condensed-candidate: selected %s candidate\n",
+				best_kkt ? "KKT-valid" : "non-KKT");
+		}
+	}
+
+cleanup:
+	free(n_best);
+	free(n_trial);
+	free(init_f);
+	free(n_f);
+	free(b_f);
+	free(A_f);
+	free(names_f);
+	free(free_idx);
+	free(is_active);
+	free(cond_idx);
+	free(mu0);
+	free(is_condensed);
+	return ok;
+}
+
 static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, const double *A,
 		const double *b, const char *source, double T, double P, const double *n_init,
 		double *n_out){
@@ -1978,8 +2168,9 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 				status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
 					Tk, P, NULL, nf, n_work);
 			}
-			if(status != 0 && init != NULL && Tk <= 1.08 * T){
-				if(eqm_reduced_active_set_seed(names, ns, ne, A, b, source, Tk, P, init, nf, n_work)){
+			if(status != 0 && Tk <= 1.08 * T){
+				if(init != NULL
+						&& eqm_reduced_active_set_seed(names, ns, ne, A, b, source, Tk, P, init, nf, n_work)){
 					status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
 						Tk, P, n_work, nf, n_polish);
 					if(status == 0){
@@ -1988,6 +2179,23 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 						}
 					}else if(eqm_validate_solution_bounds(names, ns, ne, A, b, source, Tk, P, n_work)){
 						status = 0;
+					}
+				}
+				if(status != 0){
+					int cand_kkt_ok = 0;
+					const double *hint = init ? init : n_init;
+					if(eqm_reduced_condensed_candidate_seed(names, ns, ne, A, b, source, Tk, P,
+							hint, nf, n_work, &cand_kkt_ok)){
+						status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
+							Tk, P, n_work, nf, n_polish);
+						if(status == 0){
+							for(int i = 0; i < ns; ++i){
+								n_work[i] = n_polish[i];
+							}
+						}else if(cand_kkt_ok
+								|| eqm_validate_solution_bounds(names, ns, ne, A, b, source, Tk, P, n_work)){
+							status = 0;
+						}
 					}
 				}
 			}

@@ -47,6 +47,7 @@ if test_env['WITH_CUNIT']:
 		, test_env.SharedObject('cutest_pengrob_rpp.c',OBJPREFIX='#/test/cutest-')
 		, test_env.SharedObject('mixture_ideal.c',OBJPREFIX='#/test/cutest-')
 		, test_env.SharedObject('cutest_eqm.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('cutest_refstate.c',OBJPREFIX='#/test/cutest-')
 		, test_env.SharedObject('../eqm.c',OBJPREFIX='#/test/cutest-lib-')
 		, test_env.SharedObject('../test.c')
 	]

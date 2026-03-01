@@ -98,7 +98,7 @@ static void assert_log10K_consistent(const char **names, const double *nu, int n
 static void test_eqm_mu0_core_species(void){
 	static const char *species[] = {
 		"hydrogen", "oxygen", "water", "carbonmonoxide",
-		"carbondioxide", "nitrogen", "methane"
+		"carbondioxide", "nitrogen", "methane", "Ni", "NiO"
 	};
 	size_t i;
 	for(i = 0; i < sizeof(species) / sizeof(species[0]); ++i){
@@ -173,6 +173,20 @@ static void test_eqm_multi_reaction_mixed_system(void){
 	assert_log10K_consistent(names, nu_wgs, 5, n);
 }
 
+static void test_eqm_fe_oxide_mu0_data(void){
+	static const char *species[] = {"Fe", "FeO", "Fe3O4", "Fe2O3", "hydrogen", "water"};
+	static const double temps[] = {700.0, 1000.0};
+	size_t it, is;
+	for(it = 0; it < sizeof(temps) / sizeof(temps[0]); ++it){
+		for(is = 0; is < sizeof(species) / sizeof(species[0]); ++is){
+			double mu0 = 0.0;
+			int ok = eqm_mu0_source(species[is], g_eqm.source, temps[it], g_eqm.P0, &mu0);
+			CU_ASSERT_TRUE(ok != 0);
+			CU_ASSERT_TRUE(isfinite(mu0));
+		}
+	}
+}
+
 CU_ErrorCode test_register_eqm(void){
 	CU_pSuite s = CU_add_suite("eqm", eqm_suite_init, eqm_suite_cleanup);
 	if(NULL == s){
@@ -191,6 +205,9 @@ CU_ErrorCode test_register_eqm(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "multi_reaction_mixed_system", test_eqm_multi_reaction_mixed_system)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fe_oxide_mu0_data", test_eqm_fe_oxide_mu0_data)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;
