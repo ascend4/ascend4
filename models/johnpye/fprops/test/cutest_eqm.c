@@ -124,6 +124,76 @@ static double log10K_from_n_source_phaseaware(const char **names, const double *
 	return sum;
 }
 
+static double hillert_jarl_A_test(double p){
+	return 518.0 / 1125.0 + (11692.0 / 15975.0) * (1.0 / p - 1.0);
+}
+
+static double hillert_jarl_gmag_test(double T, double Tord, double beta, double p){
+	const double R = 8.31446261815324;
+	double tau = T / Tord;
+	double A = hillert_jarl_A_test(p);
+	double f;
+	if(tau <= 1.0){
+		double poly = tau * tau * tau / 6.0
+			+ pow(tau, 9.0) / 135.0
+			+ pow(tau, 15.0) / 600.0;
+		f = 1.0 - (
+			(79.0 / (140.0 * p)) / tau
+			+ (474.0 / 497.0) * (1.0 / p - 1.0) * poly
+		) / A;
+	}else{
+		f = -(
+			pow(tau, -5.0) / 10.0
+			+ pow(tau, -15.0) / 315.0
+			+ pow(tau, -25.0) / 1500.0
+		) / A;
+	}
+	return f * R * T * log(beta + 1.0);
+}
+
+static double gibbs_fe_bcc_expected(double T){
+	return 10375.2
+		+ 114.5502 * T
+		- 23.5143 * T * log(T)
+		- 0.004398 * T * T
+		+ 77359.0 / T
+		- 5.8927e-8 * T * T * T
+		+ hillert_jarl_gmag_test(T, 1043.0, 2.22, 0.40);
+}
+
+static double gibbs_fe_fcc_expected(double T){
+	double g;
+	if(T <= 1811.0){
+		g = -236.5
+			+ 132.4156 * T
+			- 24.6643 * T * log(T)
+			- 0.003758 * T * T
+			+ 77359.0 / T
+			- 5.8927e-8 * T * T * T;
+	}else{
+		g = -27097.2
+			+ 300.2521 * T
+			- 46.0 * T * log(T)
+			+ 2.78854e31 * pow(T, -9.0);
+	}
+	return g + hillert_jarl_gmag_test(T, 67.0, 0.70, 0.28);
+}
+
+static double gibbs_fe2o3_expected(double T){
+	double g;
+	if(T <= 2500.0){
+		g = -859683.1
+			+ 828.0501 * T
+			- 137.0089 * T * log(T)
+			+ 1453820.0 / T;
+	}else{
+		g = -857356.9
+			+ 823.7122 * T
+			- 136.5437 * T * log(T);
+	}
+	return g + hillert_jarl_gmag_test(T, 955.667, 8.36667, 0.28);
+}
+
 static void assert_reduced_solve_ok(const char **names, int ns, const char **elements, int ne,
 		const double *b, double *n_out){
 	int i;
@@ -345,6 +415,105 @@ static void test_eqm_reaktoro_clone_auto_routes_to_clone(void){
 	CU_ASSERT_TRUE(fabs(mu_auto - mu_shomate) <= 1e-9);
 }
 
+static void test_eqm_hidayat_pragmatic_species_mu0(void){
+	double mu = 0.0;
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe_bcc", "hidayat_2015", 1000.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(isfinite(mu));
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe_fcc", "hidayat_2015", 1400.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(isfinite(mu));
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe3O4", "hidayat_2015", 1000.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(isfinite(mu));
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe2O3", "hidayat_2015", 1000.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(isfinite(mu));
+}
+
+static void test_eqm_hidayat_magnetic_mu0_matches_formula(void){
+	double mu = 0.0;
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe_bcc", "hidayat_2015", 1000.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(fabs(mu - gibbs_fe_bcc_expected(1000.0)) <= 1e-6);
+
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe_fcc", "hidayat_2015", 1400.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(fabs(mu - gibbs_fe_fcc_expected(1400.0)) <= 1e-6);
+
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe2O3", "hidayat_2015", 1000.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(fabs(mu - gibbs_fe2o3_expected(1000.0)) <= 1e-6);
+}
+
+static void test_eqm_degterov_spinel_fe3o4_smoke(void){
+	static const char *names[] = {
+		"Sp_Fe2_tet", "Sp_Fe3_tet", "Sp_Fe2_oct", "Sp_Fe3_oct", "Sp_Va_oct"
+	};
+	static const char *elements[] = {"Fe", "O"};
+	static const double b[] = {3.0, 4.0};
+	double n[5];
+	int status = eqm_solve_elements(names, 5, elements, 2, b, "degterov_2001",
+		1000.0, g_eqm.P, "auto", NULL, n);
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_TRUE(n[0] + n[1] > 0.0);
+	CU_ASSERT_TRUE(fabs(2.0 * (n[0] + n[1]) - n[2] - n[3] - n[4]) <= 1e-6);
+	CU_ASSERT_TRUE(fabs(6.0 * n[0] + 5.0 * n[1] - 2.0 * n[2] - 3.0 * n[3]) <= 1e-6);
+}
+
+static void test_eqm_wustite_solution_fullspace_unique_balance(void){
+	static const char *names[] = {"Wus_FeO", "Wus_FeO1p5"};
+	static const char *elements[] = {"Fe", "O"};
+	static const double b[] = {1.0, 1.1};
+	double n[2];
+	int status = eqm_solve_elements(names, 2, elements, 2, b, "hidayat_2015",
+		g_eqm.T, g_eqm.P, "auto", NULL, n);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_TRUE(isfinite(n[0]));
+	CU_ASSERT_TRUE(isfinite(n[1]));
+	CU_ASSERT_TRUE(fabs(n[0] - 0.8) <= 1e-8);
+	CU_ASSERT_TRUE(fabs(n[1] - 0.2) <= 1e-8);
+}
+
+static void test_eqm_wustite_solution_rejects_nullspace_only(void){
+	static const char *names[] = {"Wus_FeO", "Wus_FeO1p5"};
+	static const char *elements[] = {"Fe", "O"};
+	static const double b[] = {1.0, 1.1};
+	double n[2];
+	int status = eqm_solve_elements(names, 2, elements, 2, b, "hidayat_2015",
+		g_eqm.T, g_eqm.P, "nullspace", NULL, n);
+	CU_ASSERT_EQUAL(status, -12);
+}
+
+static void test_eqm_feo_pragmatic_low_oxygen_smoke_1000K(void){
+	static const char *names[] = {
+		"Fe_bcc", "Fe_fcc", "Wus_FeO", "Wus_FeO1p5", "Fe3O4", "Fe2O3"
+	};
+	static const char *elements[] = {"Fe", "O"};
+	static const double b[] = {1.0, 0.95};
+	double n[6];
+	double n_metal;
+	double n_wustite;
+	int status = eqm_solve_elements(names, 6, elements, 2, b, "hidayat_2015",
+		1000.0, g_eqm.P, "auto", NULL, n);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	n_metal = n[0] + n[1];
+	n_wustite = n[2] + n[3];
+	CU_ASSERT_TRUE(n_metal > 1e-2);
+	CU_ASSERT_TRUE(n_wustite > 0.5);
+}
+
+static void test_eqm_feo_pragmatic_low_oxygen_smoke_1400K(void){
+	static const char *names[] = {
+		"Fe_bcc", "Fe_fcc", "Wus_FeO", "Wus_FeO1p5", "Fe3O4", "Fe2O3"
+	};
+	static const char *elements[] = {"Fe", "O"};
+	static const double b[] = {1.0, 0.95};
+	double n[6];
+	double n_metal;
+	double n_wustite;
+	int status = eqm_solve_elements(names, 6, elements, 2, b, "hidayat_2015",
+		1400.0, g_eqm.P, "auto", NULL, n);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	n_metal = n[0] + n[1];
+	n_wustite = n[2] + n[3];
+	CU_ASSERT_TRUE(n_metal > 1e-2);
+	CU_ASSERT_TRUE(n_wustite > 0.5);
+}
+
 CU_ErrorCode test_register_eqm(void){
 	CU_pSuite s = CU_add_suite("eqm", eqm_suite_init, eqm_suite_cleanup);
 	if(NULL == s){
@@ -385,6 +554,33 @@ CU_ErrorCode test_register_eqm(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "reaktoro_clone_auto_routes_to_clone", test_eqm_reaktoro_clone_auto_routes_to_clone)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "hidayat_pragmatic_species_mu0", test_eqm_hidayat_pragmatic_species_mu0)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "hidayat_magnetic_mu0_matches_formula",
+			test_eqm_hidayat_magnetic_mu0_matches_formula)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "degterov_spinel_fe3o4_smoke",
+			test_eqm_degterov_spinel_fe3o4_smoke)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "wustite_solution_fullspace_unique_balance",
+			test_eqm_wustite_solution_fullspace_unique_balance)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "wustite_solution_rejects_nullspace_only",
+			test_eqm_wustite_solution_rejects_nullspace_only)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "feo_pragmatic_low_oxygen_smoke_1000K",
+			test_eqm_feo_pragmatic_low_oxygen_smoke_1000K)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "feo_pragmatic_low_oxygen_smoke_1400K",
+			test_eqm_feo_pragmatic_low_oxygen_smoke_1400K)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;

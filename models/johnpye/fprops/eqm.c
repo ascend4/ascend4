@@ -8,8 +8,10 @@
 #include "fprops.h"
 #include "ideal.h"
 #include "fluids.h"
+#include "gibbs_species.h"
 #include "constcp_species.h"
 #include "shomate_species.h"
+#include "solution.h"
 #include "eqm.h"
 #include "eqm_internal.h"
 
@@ -51,10 +53,50 @@ static int eqm_mu0_constcp_source(const char *name, const char *source, double T
 		double *mu0);
 static int eqm_mu0_shomate_source(const char *name, const char *source, double T, double P0,
 		double *mu0);
+static int eqm_mu0_gibbs_species_source(const char *name, const char *source, double T, double P0,
+		double *mu0);
 static int eqm_mu0_model_source(const char *name, EqmMuModel model, const char *source, double T,
 		double P0, double *mu0);
 static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, const char **source_out);
 int eqm_mu0_source(const char *name, const char *source, double T, double P0, double *mu0);
+
+static int eqm_lookup_solution_member(const char *name, const char *source,
+		const BinarySolutionPhaseDef **phase_out, unsigned *member_index_out){
+	char source_buf[512];
+	const char *source_i;
+	EqmMuModel selector_model = EQM_MODEL_AUTO;
+	const char *selector_source = NULL;
+	(void)selector_model;
+	if(!name){
+		return 0;
+	}
+	source_i = fprops_resolve_species_source(source, name, source_buf, (unsigned)sizeof(source_buf));
+	eqm_parse_selector(source_i, &selector_model, &selector_source);
+	if(solution_phase_lookup_member(name, selector_source ? selector_source : source_i,
+			phase_out, member_index_out)){
+		return 1;
+	}
+	return solution_phase_lookup_member(name, NULL, phase_out, member_index_out);
+}
+
+static int eqm_lookup_spinel_member(const char *name, const char *source,
+		const FeSpinelPhaseDef **phase_out, unsigned *member_index_out){
+	char source_buf[512];
+	const char *source_i;
+	EqmMuModel selector_model = EQM_MODEL_AUTO;
+	const char *selector_source = NULL;
+	(void)selector_model;
+	if(!name){
+		return 0;
+	}
+	source_i = fprops_resolve_species_source(source, name, source_buf, (unsigned)sizeof(source_buf));
+	eqm_parse_selector(source_i, &selector_model, &selector_source);
+	if(spinel_phase_lookup_member(name, selector_source ? selector_source : source_i,
+			phase_out, member_index_out)){
+		return 1;
+	}
+	return spinel_phase_lookup_member(name, NULL, phase_out, member_index_out);
+}
 
 static int eqm_has_explicit_source(const char *source){
 	return (source && source[0]) ? 1 : 0;
@@ -114,6 +156,21 @@ void eqm_apply_nscale(EqmData *D, const double *n_init){
 int eqm_compute_mu0(const char **names, int ns, const char *source, double T, double P0, double *mu0){
 	int i;
 	for(i = 0; i < ns; ++i){
+		const BinarySolutionPhaseDef *phase = NULL;
+		const FeSpinelPhaseDef *spinel = NULL;
+		unsigned member_index = 0;
+		if(eqm_lookup_solution_member(names[i], source, &phase, &member_index)){
+			(void)phase;
+			(void)member_index;
+			mu0[i] = 0.0;
+			continue;
+		}
+		if(eqm_lookup_spinel_member(names[i], source, &spinel, &member_index)){
+			(void)spinel;
+			(void)member_index;
+			mu0[i] = 0.0;
+			continue;
+		}
 		if(!eqm_mu0_source(names[i], source, T, P0, &mu0[i])){
 			fprintf(stderr, "eqm mu0 failed: no thermo data for '%s'\n", names[i]);
 			return 0;
@@ -128,6 +185,10 @@ int eqm_compute_is_condensed(const char **names, int ns, const char *source, int
 		return 0;
 	}
 	for(i = 0; i < ns; ++i){
+		const BinarySolutionPhaseDef *phase = NULL;
+		const FeSpinelPhaseDef *spinel = NULL;
+		unsigned member_index = 0;
+		const GibbsSpecies *G = NULL;
 		const ConstCpSpecies *S = NULL;
 		const ShomateSpecies *Sh = NULL;
 		char source_buf[512];
@@ -137,9 +198,25 @@ int eqm_compute_is_condensed(const char **names, int ns, const char *source, int
 		if(!names[i]){
 			return 0;
 		}
+		if(eqm_lookup_solution_member(names[i], source, &phase, &member_index)){
+			(void)phase;
+			(void)member_index;
+			is_condensed[i] = 1;
+			continue;
+		}
+		if(eqm_lookup_spinel_member(names[i], source, &spinel, &member_index)){
+			(void)spinel;
+			(void)member_index;
+			is_condensed[i] = 1;
+			continue;
+		}
 		source_i = fprops_resolve_species_source(source, names[i], source_buf,
 			(unsigned)sizeof(source_buf));
 		eqm_parse_selector(source_i, &selector_model, &selector_source);
+		G = gibbs_species_lookup(names[i], selector_source ? selector_source : source_i);
+		if(!G){
+			G = gibbs_species_lookup(names[i], NULL);
+		}
 		S = constcp_species_lookup(names[i], selector_source ? selector_source : source_i);
 		if(!S){
 			S = constcp_species_lookup(names[i], NULL);
@@ -155,14 +232,264 @@ int eqm_compute_is_condensed(const char **names, int ns, const char *source, int
 		}else{
 			int is_cond_constcp = S ? 1 : 0;
 			int is_cond_shomate = (Sh && Sh->phase != FPROPS_PHASE_GAS) ? 1 : 0;
-			is_condensed[i] = (is_cond_constcp || is_cond_shomate) ? 1 : 0;
+			int is_cond_gibbs = G ? 1 : 0;
+			is_condensed[i] = (is_cond_constcp || is_cond_shomate || is_cond_gibbs) ? 1 : 0;
 		}
 	}
 	return 1;
 }
 
-int eqm_eval_obj_mu(const double *n, const double *mu0, const int *is_condensed, int ns,
-		double T, double P, double P0, double *obj, double *mu, double *n_gas_out){
+int eqm_compute_solution_phases(const char **names, int ns, const char *source,
+		int **solution_phase_id_out, int **solution_member_index_out,
+		EqmBinaryPhaseMeta **binary_phases_out, int *nbinary_phases_out){
+	int *solution_phase_id = NULL;
+	int *solution_member_index = NULL;
+	EqmBinaryPhaseMeta *binary_phases = NULL;
+	int nbinary_phases = 0;
+	int i;
+
+	if(!names || ns <= 0 || !solution_phase_id_out || !solution_member_index_out
+			|| !binary_phases_out || !nbinary_phases_out){
+		return 0;
+	}
+
+	solution_phase_id = (int *)calloc((size_t)ns, sizeof(int));
+	solution_member_index = (int *)calloc((size_t)ns, sizeof(int));
+	binary_phases = (EqmBinaryPhaseMeta *)calloc((size_t)ns, sizeof(EqmBinaryPhaseMeta));
+	if(!solution_phase_id || !solution_member_index || !binary_phases){
+		free(solution_phase_id);
+		free(solution_member_index);
+		free(binary_phases);
+		return 0;
+	}
+	for(i = 0; i < ns; ++i){
+		solution_phase_id[i] = -1;
+		solution_member_index[i] = -1;
+	}
+
+	for(i = 0; i < ns; ++i){
+		const BinarySolutionPhaseDef *phase = NULL;
+		const FeSpinelPhaseDef *spinel = NULL;
+		unsigned member_index = 0;
+		int p;
+		if(eqm_lookup_solution_member(names[i], source, &phase, &member_index)){
+			for(p = 0; p < nbinary_phases; ++p){
+				if(binary_phases[p].kind == EQM_PHASE_BINARY_SOLUTION
+						&& binary_phases[p].phase == phase){
+					break;
+				}
+			}
+			if(p == nbinary_phases){
+				binary_phases[p].kind = EQM_PHASE_BINARY_SOLUTION;
+				binary_phases[p].ia = -1;
+				binary_phases[p].ib = -1;
+				binary_phases[p].phase = phase;
+				binary_phases[p].spinel = NULL;
+				for(int j = 0; j < 5; ++j){
+					binary_phases[p].members[j] = -1;
+				}
+				++nbinary_phases;
+			}
+			if(member_index == 0){
+				if(binary_phases[p].ia >= 0){
+					free(solution_phase_id);
+					free(solution_member_index);
+					free(binary_phases);
+					return 0;
+				}
+				binary_phases[p].ia = i;
+			}else if(member_index == 1){
+				if(binary_phases[p].ib >= 0){
+					free(solution_phase_id);
+					free(solution_member_index);
+					free(binary_phases);
+					return 0;
+				}
+				binary_phases[p].ib = i;
+			}else{
+				free(solution_phase_id);
+				free(solution_member_index);
+				free(binary_phases);
+				return 0;
+			}
+			solution_phase_id[i] = p;
+			solution_member_index[i] = (int)member_index;
+			continue;
+		}
+		if(!eqm_lookup_spinel_member(names[i], source, &spinel, &member_index)){
+			continue;
+		}
+		for(p = 0; p < nbinary_phases; ++p){
+			if(binary_phases[p].kind == EQM_PHASE_FE_SPINEL
+					&& binary_phases[p].spinel == spinel){
+				break;
+			}
+		}
+		if(p == nbinary_phases){
+			binary_phases[p].kind = EQM_PHASE_FE_SPINEL;
+			binary_phases[p].ia = -1;
+			binary_phases[p].ib = -1;
+			binary_phases[p].phase = NULL;
+			binary_phases[p].spinel = spinel;
+			for(int j = 0; j < 5; ++j){
+				binary_phases[p].members[j] = -1;
+			}
+			++nbinary_phases;
+		}
+		if(member_index >= 5){
+			free(solution_phase_id);
+			free(solution_member_index);
+			free(binary_phases);
+			return 0;
+		}
+		if(binary_phases[p].members[member_index] >= 0){
+			free(solution_phase_id);
+			free(solution_member_index);
+			free(binary_phases);
+			return 0;
+		}
+		binary_phases[p].members[member_index] = i;
+		solution_phase_id[i] = p;
+		solution_member_index[i] = (int)member_index;
+	}
+
+	for(i = 0; i < nbinary_phases; ++i){
+		if(binary_phases[i].kind == EQM_PHASE_BINARY_SOLUTION){
+			if(binary_phases[i].ia < 0 || binary_phases[i].ib < 0){
+				free(solution_phase_id);
+				free(solution_member_index);
+				free(binary_phases);
+				return 0;
+			}
+		}else if(binary_phases[i].kind == EQM_PHASE_FE_SPINEL){
+			for(int j = 0; j < 5; ++j){
+				if(binary_phases[i].members[j] < 0){
+					free(solution_phase_id);
+					free(solution_member_index);
+					free(binary_phases);
+					return 0;
+				}
+			}
+		}
+	}
+
+	*solution_phase_id_out = solution_phase_id;
+	*solution_member_index_out = solution_member_index;
+	*binary_phases_out = (nbinary_phases > 0) ? binary_phases : NULL;
+	*nbinary_phases_out = nbinary_phases;
+	if(nbinary_phases == 0){
+		free(binary_phases);
+	}
+	return 1;
+}
+
+void eqm_free_solution_phases(int **solution_phase_id, int **solution_member_index,
+		EqmBinaryPhaseMeta **binary_phases){
+	if(solution_phase_id && *solution_phase_id){
+		free(*solution_phase_id);
+		*solution_phase_id = NULL;
+	}
+	if(solution_member_index && *solution_member_index){
+		free(*solution_member_index);
+		*solution_member_index = NULL;
+	}
+	if(binary_phases && *binary_phases){
+		free(*binary_phases);
+		*binary_phases = NULL;
+	}
+}
+
+int eqm_has_solution_phases(const char **names, int ns, const char *source){
+	int i;
+	for(i = 0; i < ns; ++i){
+		const BinarySolutionPhaseDef *phase = NULL;
+		const FeSpinelPhaseDef *spinel = NULL;
+		unsigned member_index = 0;
+		if(eqm_lookup_solution_member(names[i], source, &phase, &member_index)){
+			(void)phase;
+			(void)member_index;
+			return 1;
+		}
+		if(eqm_lookup_spinel_member(names[i], source, &spinel, &member_index)){
+			(void)spinel;
+			(void)member_index;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int eqm_augment_special_phase_constraints(const char **names, int ns, const char *source,
+		int ne_in, const double *A_in, const double *b_in, int *ne_out,
+		double **A_out, double **b_out){
+	int *phase_id = NULL;
+	int *member_index = NULL;
+	EqmBinaryPhaseMeta *phases = NULL;
+	int nphases = 0;
+	int extra = 0;
+	double *A_aug = NULL;
+	double *b_aug = NULL;
+	int e;
+	int p;
+	if(!names || !A_in || !b_in || !ne_out || !A_out || !b_out){
+		return 0;
+	}
+	if(!eqm_compute_solution_phases(names, ns, source, &phase_id, &member_index, &phases, &nphases)){
+		return 0;
+	}
+	for(p = 0; p < nphases; ++p){
+		if(phases[p].kind == EQM_PHASE_FE_SPINEL){
+			extra += 2;
+		}
+	}
+	if(extra == 0){
+		*ne_out = ne_in;
+		*A_out = (double *)A_in;
+		*b_out = (double *)b_in;
+		eqm_free_solution_phases(&phase_id, &member_index, &phases);
+		return 1;
+	}
+	A_aug = (double *)calloc((size_t)((ne_in + extra) * ns), sizeof(double));
+	b_aug = (double *)calloc((size_t)(ne_in + extra), sizeof(double));
+	if(!A_aug || !b_aug){
+		free(A_aug);
+		free(b_aug);
+		eqm_free_solution_phases(&phase_id, &member_index, &phases);
+		return 0;
+	}
+	memcpy(A_aug, A_in, sizeof(double) * (size_t)(ne_in * ns));
+	memcpy(b_aug, b_in, sizeof(double) * (size_t)ne_in);
+	e = ne_in;
+	for(p = 0; p < nphases; ++p){
+		if(phases[p].kind != EQM_PHASE_FE_SPINEL){
+			continue;
+		}
+		/* 2(n_tet,total) - n_oct,total = 0 */
+		A_aug[e * ns + phases[p].members[0]] = 2.0;
+		A_aug[e * ns + phases[p].members[1]] = 2.0;
+		A_aug[e * ns + phases[p].members[2]] = -1.0;
+		A_aug[e * ns + phases[p].members[3]] = -1.0;
+		A_aug[e * ns + phases[p].members[4]] = -1.0;
+		b_aug[e] = 0.0;
+		++e;
+		/* Charge neutrality: 6 n_tFe2 + 5 n_tFe3 - 2 n_oFe2 - 3 n_oFe3 = 0 */
+		A_aug[e * ns + phases[p].members[0]] = 6.0;
+		A_aug[e * ns + phases[p].members[1]] = 5.0;
+		A_aug[e * ns + phases[p].members[2]] = -2.0;
+		A_aug[e * ns + phases[p].members[3]] = -3.0;
+		b_aug[e] = 0.0;
+		++e;
+	}
+	*ne_out = ne_in + extra;
+	*A_out = A_aug;
+	*b_out = b_aug;
+	eqm_free_solution_phases(&phase_id, &member_index, &phases);
+	return 1;
+}
+
+int eqm_eval_obj_mu(const double *n, const double *mu0, const int *is_condensed,
+		const int *solution_phase_id, const EqmBinaryPhaseMeta *binary_phases, int nbinary_phases,
+		int ns, double T, double P, double P0, double *obj, double *mu, double *n_gas_out){
 	const double RT = gas_R() * T;
 	const double logPP0 = log(P / P0);
 	double ngas = 0.0;
@@ -188,7 +515,82 @@ int eqm_eval_obj_mu(const double *n, const double *mu0, const int *is_condensed,
 	if(n_gas_out){
 		*n_gas_out = ngas;
 	}
+	for(i = 0; i < nbinary_phases; ++i){
+		const EqmBinaryPhaseMeta *phase = &binary_phases[i];
+		if(phase->kind == EQM_PHASE_BINARY_SOLUTION){
+			const BinarySolutionModel *M;
+			double n_a;
+			double n_b;
+			double n_tot;
+			double x;
+			double g_phase;
+			double mu_a;
+			double mu_b;
+			FpropsError err = FPROPS_NO_ERROR;
+			if(!phase->phase || !phase->phase->model){
+				return 0;
+			}
+			M = phase->phase->model;
+			n_a = n[phase->ia];
+			n_b = n[phase->ib];
+			n_tot = n_a + n_b;
+			if(!(n_tot > 0.0) || !isfinite(n_tot)){
+				return 0;
+			}
+			x = n_b / n_tot;
+			g_phase = solution_binary_g_molar(M, T, P, x, &err);
+			if(err || !isfinite(g_phase)){
+				return 0;
+			}
+			mu_a = solution_binary_mu_a(M, T, P, x, &err);
+			if(err || !isfinite(mu_a)){
+				return 0;
+			}
+			mu_b = solution_binary_mu_b(M, T, P, x, &err);
+			if(err || !isfinite(mu_b)){
+				return 0;
+			}
+			if(mu){
+				mu[phase->ia] = mu_a;
+				mu[phase->ib] = mu_b;
+			}
+			if(obj){
+				f += n_tot * g_phase;
+			}
+		}else if(phase->kind == EQM_PHASE_FE_SPINEL){
+			double n_members[5];
+			double mu_members[5];
+			double g_phase = 0.0;
+			int j;
+			if(!phase->spinel){
+				return 0;
+			}
+			for(j = 0; j < 5; ++j){
+				int idx = phase->members[j];
+				if(idx < 0){
+					return 0;
+				}
+				n_members[j] = n[idx];
+			}
+			if(!spinel_phase_eval(phase->spinel, n_members, T, P, &g_phase, mu ? mu_members : NULL)){
+				return 0;
+			}
+			if(obj){
+				f += g_phase;
+			}
+			if(mu){
+				for(j = 0; j < 5; ++j){
+					mu[phase->members[j]] = mu_members[j];
+				}
+			}
+		}else{
+			return 0;
+		}
+	}
 	for(i = 0; i < ns; ++i){
+		if(solution_phase_id && solution_phase_id[i] >= 0){
+			continue;
+		}
 		double mui = mu0[i];
 		if(!is_condensed || !is_condensed[i]){
 			mui += RT * (log(n[i]) - log(ngas) + logPP0);
@@ -254,6 +656,29 @@ static int eqm_mu0_shomate_source(const char *name, const char *source, double T
 	}
 	g_molar = shomate_species_g_molar(S, T, P0, &err);
 	if(err || !isfinite(g_molar)){
+		return 0;
+	}
+	*mu0 = g_molar;
+	return 1;
+}
+
+static int eqm_mu0_gibbs_species_source(const char *name, const char *source, double T, double P0,
+		double *mu0){
+	const GibbsSpecies *S;
+	double g_molar;
+	(void)P0;
+
+	if(!name || !mu0){
+		return 0;
+	}
+	S = gibbs_species_lookup(name, source);
+	if(!S){
+		S = gibbs_species_lookup(name, NULL);
+	}
+	if(!S){
+		return 0;
+	}
+	if(!gibbs_species_g_molar(S, T, 1e5, &g_molar)){
 		return 0;
 	}
 	*mu0 = g_molar;
@@ -338,6 +763,9 @@ static int eqm_mu0_model_source(const char *name, EqmMuModel model, const char *
 		double P0, double *mu0){
 	if(model == EQM_MODEL_AUTO){
 		if(eqm_mu0_ideal_source(name, source, T, P0, mu0)){
+			return 1;
+		}
+		if(eqm_mu0_gibbs_species_source(name, source, T, P0, mu0)){
 			return 1;
 		}
 		if(eqm_mu0_shomate_source(name, source, T, P0, mu0)){
@@ -984,7 +1412,7 @@ static int eqm_reduced_make_interior(const double *n0, const double *N, int ns, 
 
 static int eqm_reduced_eval_obj_mu(const double *n, const double *mu0, const int *is_condensed,
 		int ns, double T, double P, double P0, double *obj, double *mu, double *n_gas_tot){
-	return eqm_eval_obj_mu(n, mu0, is_condensed, ns, T, P, P0, obj, mu, n_gas_tot);
+	return eqm_eval_obj_mu(n, mu0, is_condensed, NULL, NULL, 0, ns, T, P, P0, obj, mu, n_gas_tot);
 }
 
 static void eqm_reduced_eval_grad_hess(const double *n, const double *N, int ns, int r,
@@ -1948,6 +2376,10 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	double n_active_cutoff;
 	double *mu0 = NULL;
 	int *is_condensed = NULL;
+	int *solution_phase_id = NULL;
+	int *solution_member_index = NULL;
+	EqmBinaryPhaseMeta *binary_phases = NULL;
+	int nbinary_phases = 0;
 	double *mu = NULL;
 	double *M = NULL;
 	double *Msys = NULL;
@@ -2006,6 +2438,18 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(is_active);
 		return 0;
 	}
+	if(!eqm_compute_solution_phases(names, ns, source, &solution_phase_id, &solution_member_index,
+			&binary_phases, &nbinary_phases)){
+		free(mu0);
+		free(is_condensed);
+		free(mu);
+		free(M);
+		free(Msys);
+		free(rhs);
+		free(lambda);
+		free(is_active);
+		return 0;
+	}
 	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
 		free(mu0);
 		free(is_condensed);
@@ -2015,6 +2459,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(rhs);
 		free(lambda);
 		free(is_active);
+		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
 	}
 	if(!eqm_compute_is_condensed(names, ns, source, is_condensed)){
@@ -2026,9 +2471,11 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(rhs);
 		free(lambda);
 		free(is_active);
+		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
 	}
-	if(!eqm_eval_obj_mu(n_out, mu0, is_condensed, ns, T, P, P0, NULL, mu, NULL)){
+	if(!eqm_eval_obj_mu(n_out, mu0, is_condensed, solution_phase_id, binary_phases,
+			nbinary_phases, ns, T, P, P0, NULL, mu, NULL)){
 		free(mu0);
 		free(is_condensed);
 		free(mu);
@@ -2037,6 +2484,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(rhs);
 		free(lambda);
 		free(is_active);
+		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
 	}
 
@@ -2058,6 +2506,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(rhs);
 		free(lambda);
 		free(is_active);
+		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
 	}
 
@@ -2107,6 +2556,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 			free(rhs);
 			free(lambda);
 			free(is_active);
+			eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 			return 0;
 		}
 	}
@@ -2152,6 +2602,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	free(rhs);
 	free(lambda);
 	free(is_active);
+	eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 	return 1;
 }
 
@@ -2561,6 +3012,10 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 	const double P0 = 1e5;
 	double *mu0 = NULL;
 	int *is_condensed = NULL;
+	int *solution_phase_id = NULL;
+	int *solution_member_index = NULL;
+	EqmBinaryPhaseMeta *binary_phases = NULL;
+	int nbinary_phases = 0;
 	double *mu = NULL;
 	double *Awork = NULL;
 	double *N = NULL;
@@ -2611,6 +3066,15 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 		free(pivots);
 		return 0;
 	}
+	if(!eqm_compute_solution_phases(names, ns, source, &solution_phase_id, &solution_member_index,
+			&binary_phases, &nbinary_phases)){
+		free(mu0);
+		free(is_condensed);
+		free(mu);
+		free(Awork);
+		free(pivots);
+		return 0;
+	}
 
 	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
 		free(mu0);
@@ -2618,6 +3082,7 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 		free(mu);
 		free(Awork);
 		free(pivots);
+		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
 	}
 	if(!eqm_compute_is_condensed(names, ns, source, is_condensed)){
@@ -2626,15 +3091,18 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 		free(mu);
 		free(Awork);
 		free(pivots);
+		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
 	}
-	if(!eqm_eval_obj_mu(n_out, mu0, is_condensed, ns, T, P, P0, NULL, mu, NULL)){
+	if(!eqm_eval_obj_mu(n_out, mu0, is_condensed, solution_phase_id, binary_phases,
+			nbinary_phases, ns, T, P, P0, NULL, mu, NULL)){
 		fprintf(stderr, "eqm validate failed: invalid activity/mu state\n");
 		free(mu0);
 		free(is_condensed);
 		free(mu);
 		free(Awork);
 		free(pivots);
+		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
 	}
 
@@ -2651,6 +3119,7 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 			free(mu);
 			free(Awork);
 			free(pivots);
+			eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 			return 0;
 		}
 		eqm_fill_nullspace(Awork, ne, ns, pivots, rank, N, r);
@@ -2676,8 +3145,10 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 						free(is_condensed);
 						free(mu);
 						free(Awork);
-					free(pivots);
-					return 0;
+						free(pivots);
+						eqm_free_solution_phases(&solution_phase_id, &solution_member_index,
+							&binary_phases);
+						return 0;
 				}
 			}
 		}
@@ -2689,6 +3160,7 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 	free(mu);
 	free(Awork);
 	free(pivots);
+	eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 	return 1;
 }
 #endif
@@ -2722,7 +3194,7 @@ static int eqm_try_ipopt(const char **names, int ns, int ne, const double *A, co
 	if(algorithm && strstr(algorithm, "logn")){
 		status = eqm_ipopt_solve_logn_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
 		if(eqm_status_ok_ipopt(status)
-				&& eqm_validate_solution(names, ns, ne, A, b, source, T, P, n_out)){
+				&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 			return status;
 		}
 		if(eqm_status_ok_ipopt(status)){
@@ -2733,7 +3205,7 @@ static int eqm_try_ipopt(const char **names, int ns, int ne, const double *A, co
 	if(algorithm && strstr(algorithm, "_n")){
 		status = eqm_ipopt_solve_n_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
 		if(eqm_status_ok_ipopt(status)
-				&& eqm_validate_solution(names, ns, ne, A, b, source, T, P, n_out)){
+				&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 			return status;
 		}
 		if(eqm_status_ok_ipopt(status)){
@@ -2743,17 +3215,17 @@ static int eqm_try_ipopt(const char **names, int ns, int ne, const double *A, co
 	}
 	status = eqm_ipopt_solve_logn_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
 	if(eqm_status_ok_ipopt(status)
-			&& eqm_validate_solution(names, ns, ne, A, b, source, T, P, n_out)){
+			&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 		return status;
 	}
 	status = eqm_ipopt_solve_n_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
 	if(eqm_status_ok_ipopt(status)
-			&& eqm_validate_solution(names, ns, ne, A, b, source, T, P, n_out)){
+			&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 		return status;
 	}
 	status = eqm_ipopt_solve_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
 	if(eqm_status_ok_ipopt(status)
-			&& eqm_validate_solution(names, ns, ne, A, b, source, T, P, n_out)){
+			&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 		return status;
 	}
 	if(eqm_status_ok_ipopt(status)){
@@ -2767,9 +3239,17 @@ int eqm_solve(const char **names, int ns, int ne, const double *A, const double 
 		const char *source, double T, double P, const char *algorithm, const double *n_init,
 		double *n_out){
 	int status = -99;
+	int has_solution_phases;
 
 	if(!names || !A || !b || !n_out || ns <= 0 || ne <= 0){
 		return -11;
+	}
+	has_solution_phases = eqm_has_solution_phases(names, ns, source);
+	if(has_solution_phases && eqm_alg_auto_reduced(algorithm)){
+		algorithm = "auto";
+	}
+	if(has_solution_phases && eqm_alg_reduced(algorithm)){
+		return -12;
 	}
 	if(eqm_alg_auto_reduced(algorithm)){
 		status = eqm_reduced_solve_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
@@ -2801,7 +3281,7 @@ int eqm_solve(const char **names, int ns, int ne, const double *A, const double 
 #ifdef HAVE_NLOPT
 		status = eqm_slsqp_solve_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
 		if(eqm_status_ok_slsqp(status)
-				&& eqm_validate_solution(names, ns, ne, A, b, source, T, P, n_out)){
+				&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 			return status;
 		}
 		if(eqm_status_ok_slsqp(status)){
@@ -2823,7 +3303,7 @@ int eqm_solve(const char **names, int ns, int ne, const double *A, const double 
 	if(eqm_alg_prefix(algorithm, "slsqp")){
 		status = eqm_slsqp_solve_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
 		if(eqm_status_ok_slsqp(status)
-				&& eqm_validate_solution(names, ns, ne, A, b, source, T, P, n_out)){
+				&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 			return status;
 		}
 		if(eqm_status_ok_slsqp(status)){
@@ -2839,11 +3319,16 @@ int eqm_solve_elements(const char **names, int ns, const char **elements, int ne
 		const double *b, const char *source, double T, double P, const char *algorithm,
 		const double *n_init, double *n_out){
 	double *A = NULL;
+	double *A_use = NULL;
+	double *b_use = NULL;
+	int ne_use = 0;
 	int status = -11;
+	int has_solution_phases;
 
 	if(!names || !elements || !b || !n_out || ns <= 0 || ne <= 0){
 		return -11;
 	}
+	has_solution_phases = eqm_has_solution_phases(names, ns, source);
 	A = (double *)calloc((size_t)(ne * ns), sizeof(double));
 	if(!A){
 		return -11;
@@ -2852,11 +3337,15 @@ int eqm_solve_elements(const char **names, int ns, const char **elements, int ne
 		free(A);
 		return -11;
 	}
+	if(!eqm_augment_special_phase_constraints(names, ns, source, ne, A, b, &ne_use, &A_use, &b_use)){
+		free(A);
+		return -11;
+	}
 #ifdef HAVE_IPOPT
-	if(eqm_alg_use_nullspace(algorithm)){
+	if(!has_solution_phases && eqm_alg_use_nullspace(algorithm)){
 		status = eqm_ipopt_nullspace_solve_source(names, ns, elements, ne, source, b, T, P, n_out);
 		if(eqm_status_ok_ipopt(status)
-				&& eqm_validate_solution(names, ns, ne, A, b, source, T, P, n_out)){
+				&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 			free(A);
 			return status;
 		}
@@ -2868,8 +3357,25 @@ int eqm_solve_elements(const char **names, int ns, const char **elements, int ne
 			return status;
 		}
 	}
+	if(has_solution_phases && eqm_alg_nullspace_only(algorithm)){
+		if(A_use != A){
+			free(A_use);
+		}
+		if(b_use != b){
+			free(b_use);
+		}
+		free(A);
+		return -12;
+	}
 #endif
-	status = eqm_solve(names, ns, ne, A, b, source, T, P, eqm_alg_fallback(algorithm), n_init, n_out);
+	status = eqm_solve(names, ns, ne_use, A_use, b_use, source, T, P,
+		eqm_alg_fallback(algorithm), n_init, n_out);
+	if(A_use != A){
+		free(A_use);
+	}
+	if(b_use != b){
+		free(b_use);
+	}
 	free(A);
 	return status;
 }

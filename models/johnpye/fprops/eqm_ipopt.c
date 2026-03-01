@@ -86,7 +86,8 @@ static int eval_f(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr
 	for(int i = 0; i < D->ns; ++i){
 		n_i[i] = S * x_i[i];
 	}
-	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
+	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
 		free(mu);
 		free(n_i);
 		free(x_i);
@@ -184,7 +185,8 @@ static int eval_f_logn(Index n, Number *x, Bool new_x, Number *obj_value, UserDa
 		}
 		n_i[i] = D->n_est[i] * exp(x[i]);
 	}
-	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
+	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
 		free(n_i);
 		free(mu);
 		*obj_value = HUGE_VAL;
@@ -215,7 +217,8 @@ static int eval_f_n(Index n, Number *x, Bool new_x, Number *obj_value, UserDataP
 			return TRUE;
 		}
 	}
-	if(!eqm_eval_obj_mu(x, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
+	if(!eqm_eval_obj_mu(x, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
 		free(mu);
 		*obj_value = HUGE_VAL;
 		return TRUE;
@@ -252,7 +255,8 @@ static int eval_grad_f_logn(Index n, Number *x, Bool new_x, Number *grad_f, User
 		}
 		n_i[i] = D->n_est[i] * exp(x[i]);
 	}
-	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
 		free(n_i);
 		free(mu);
 		for(int i = 0; i < D->ns; ++i){
@@ -290,7 +294,8 @@ static int eval_grad_f_n(Index n, Number *x, Bool new_x, Number *grad_f, UserDat
 			return TRUE;
 		}
 	}
-	if(!eqm_eval_obj_mu(x, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+	if(!eqm_eval_obj_mu(x, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
 		free(mu);
 		for(int i = 0; i < D->ns; ++i){
 			grad_f[i] = 0.0;
@@ -428,7 +433,8 @@ static void eval_grad_L_logn(const EqmLogN *D, const Number *xvars, Number obj_f
 		}
 		n_i[i] = D->n_est[i] * exp(xvars[i]);
 	}
-	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+	if(!eqm_eval_obj_mu(n_i, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
 		free(n_i);
 		free(mu);
 		for(int i = 0; i < D->ns; ++i){
@@ -468,7 +474,8 @@ static void eval_grad_L_n(const EqmN *D, const Number *xvars, Number obj_factor,
 			return;
 		}
 	}
-	if(!eqm_eval_obj_mu(xvars, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+	if(!eqm_eval_obj_mu(xvars, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
 		free(mu);
 		for(int i = 0; i < D->ns; ++i){
 			grad[i] = 0.0;
@@ -743,7 +750,7 @@ static double eqm_obj_1d(double z, const double *n0, const double *v, int ns,
 		}
 		n[i] = n_i;
 	}
-	if(!eqm_eval_obj_mu(n, mu0, is_condensed, ns, T, P, P0, &G, mu, NULL)){
+	if(!eqm_eval_obj_mu(n, mu0, is_condensed, NULL, NULL, 0, ns, T, P, P0, &G, mu, NULL)){
 		free(n);
 		free(mu);
 		return HUGE_VAL;
@@ -848,7 +855,7 @@ static double eqm_phi_1d(const double *n0, const double *v, int ns, const double
 			n[i] = DBL_MIN;
 		}
 	}
-	if(!eqm_eval_obj_mu(n, mu0, is_condensed, ns, T, P, P0, NULL, mu, NULL)){
+	if(!eqm_eval_obj_mu(n, mu0, is_condensed, NULL, NULL, 0, ns, T, P, P0, NULL, mu, NULL)){
 		free(n);
 		free(mu);
 		return HUGE_VAL;
@@ -1748,8 +1755,8 @@ static Bool eval_f_ns(Index n, Number *x, Bool new_x, Number *obj_value, UserDat
 		return TRUE;
 	}
 	eqm_nullspace_compute_n(M, x, n_i, &n_tot);
-	if(n_tot <= 0.0 || !eqm_eval_obj_mu(n_i, M->mu0, M->is_condensed, M->ns, M->T, M->P, M->P0,
-			&G, mu, NULL)){
+	if(n_tot <= 0.0 || !eqm_eval_obj_mu(n_i, M->mu0, M->is_condensed, M->solution_phase_id,
+			M->binary_phases, M->nbinary_phases, M->ns, M->T, M->P, M->P0, &G, mu, NULL)){
 		free(n_i);
 		free(mu);
 		*obj_value = HUGE_VAL;
@@ -1787,7 +1794,8 @@ static Bool eval_grad_f_ns(Index n, Number *x, Bool new_x, Number *grad_f, UserD
 	}
 	eqm_nullspace_compute_n(M, x, n_i, &n_tot);
 	if(n_tot <= 0.0
-			|| !eqm_eval_obj_mu(n_i, M->mu0, M->is_condensed, M->ns, M->T, M->P, M->P0,
+			|| !eqm_eval_obj_mu(n_i, M->mu0, M->is_condensed, M->solution_phase_id,
+				M->binary_phases, M->nbinary_phases, M->ns, M->T, M->P, M->P0,
 				NULL, mu, NULL)){
 		free(n_i);
 		free(mu);
@@ -1887,7 +1895,8 @@ static void eqm_nullspace_grad_L(const EqmNullspace *M, const Number *x, Number 
 
 	eqm_nullspace_compute_n(M, x, n_i, &n_tot);
 	if(n_tot <= 0.0
-			|| !eqm_eval_obj_mu(n_i, M->mu0, M->is_condensed, M->ns, M->T, M->P, M->P0,
+			|| !eqm_eval_obj_mu(n_i, M->mu0, M->is_condensed, M->solution_phase_id,
+				M->binary_phases, M->nbinary_phases, M->ns, M->T, M->P, M->P0,
 				NULL, mu, NULL)){
 		free(n_i);
 		free(mu);
@@ -1964,6 +1973,9 @@ int eqm_ipopt_nullspace_create(const char **names, int ns, const char **elements
 	double max_mu0 = 0.0;
 
 	if(!names || !elements || !b || !out || ns <= 0 || ne <= 0){
+		return 0;
+	}
+	if(eqm_has_solution_phases(names, ns, source)){
 		return 0;
 	}
 	M = (EqmNullspace *)calloc(1, sizeof(*M));
@@ -2278,6 +2290,7 @@ void eqm_ipopt_nullspace_destroy(EqmNullspace *M){
 	free(M->b);
 	free(M->mu0);
 	free(M->is_condensed);
+	eqm_free_solution_phases(&M->solution_phase_id, &M->solution_member_index, &M->binary_phases);
 	free(M->n0);
 	free(M->N);
 	free(M);
@@ -2553,6 +2566,10 @@ int eqm_ipopt_solve_source_init(const char **names, int ns, int ne, const double
 	D.P0 = 1e5;
 	D.A = A;
 	D.b = b;
+	D.solution_phase_id = NULL;
+	D.solution_member_index = NULL;
+	D.nbinary_phases = 0;
+	D.binary_phases = NULL;
 	D.mu0 = (double *)calloc((size_t)D.ns, sizeof(double));
 	D.is_condensed = (int *)calloc((size_t)D.ns, sizeof(int));
 	eqm_apply_bscale(&D);
@@ -2560,6 +2577,14 @@ int eqm_ipopt_solve_source_init(const char **names, int ns, int ne, const double
 	if(!D.mu0 || !D.is_condensed
 			|| !eqm_compute_mu0(names, D.ns, source, D.T, D.P0, D.mu0)
 			|| !eqm_compute_is_condensed(names, D.ns, source, D.is_condensed)){
+		free(D.mu0);
+		free(D.is_condensed);
+		free(D.b_scale);
+		free(D.n_scale);
+		return -11;
+	}
+	if(!eqm_compute_solution_phases(names, D.ns, source, &D.solution_phase_id,
+			&D.solution_member_index, &D.binary_phases, &D.nbinary_phases)){
 		free(D.mu0);
 		free(D.is_condensed);
 		free(D.b_scale);
@@ -2644,6 +2669,7 @@ int eqm_ipopt_solve_source_init(const char **names, int ns, int ne, const double
 	FreeIpoptProblem(prob);
 	free(D.mu0);
 	free(D.is_condensed);
+	eqm_free_solution_phases(&D.solution_phase_id, &D.solution_member_index, &D.binary_phases);
 	free(x_L);
 	free(x_U);
 	free(g_L);
@@ -2685,11 +2711,23 @@ int eqm_ipopt_solve_logn_source_init(const char **names, int ns, int ne, const d
 	D.obj_scale = 1.0;
 	D.A = A;
 	D.b = b;
+	D.solution_phase_id = NULL;
+	D.solution_member_index = NULL;
+	D.nbinary_phases = 0;
+	D.binary_phases = NULL;
 	D.mu0 = (double *)calloc((size_t)D.ns, sizeof(double));
 	D.is_condensed = (int *)calloc((size_t)D.ns, sizeof(int));
 	D.n_est = (double *)calloc((size_t)D.ns, sizeof(double));
 	eqm_apply_bscale_logn(&D);
 	if(!D.mu0 || !D.is_condensed || !D.n_est){
+		free(D.mu0);
+		free(D.is_condensed);
+		free(D.n_est);
+		free(D.b_scale);
+		return -11;
+	}
+	if(!eqm_compute_solution_phases(names, D.ns, source, &D.solution_phase_id,
+			&D.solution_member_index, &D.binary_phases, &D.nbinary_phases)){
 		free(D.mu0);
 		free(D.is_condensed);
 		free(D.n_est);
@@ -2847,6 +2885,7 @@ int eqm_ipopt_solve_logn_source_init(const char **names, int ns, int ne, const d
 	FreeIpoptProblem(prob);
 	free(D.mu0);
 	free(D.is_condensed);
+	eqm_free_solution_phases(&D.solution_phase_id, &D.solution_member_index, &D.binary_phases);
 	free(D.n_est);
 	free(D.b_scale);
 	free(x_L);
@@ -2889,12 +2928,23 @@ int eqm_ipopt_solve_n_source_init(const char **names, int ns, int ne, const doub
 	D.n_min = 1e-200;
 	D.A = A;
 	D.b = b;
+	D.solution_phase_id = NULL;
+	D.solution_member_index = NULL;
+	D.nbinary_phases = 0;
+	D.binary_phases = NULL;
 	D.mu0 = (double *)calloc((size_t)D.ns, sizeof(double));
 	D.is_condensed = (int *)calloc((size_t)D.ns, sizeof(int));
 	eqm_apply_bscale_n(&D);
 	if(!D.mu0 || !D.is_condensed
 			|| !eqm_compute_mu0(names, D.ns, source, D.T, D.P0, D.mu0)
 			|| !eqm_compute_is_condensed(names, D.ns, source, D.is_condensed)){
+		free(D.mu0);
+		free(D.is_condensed);
+		free(D.b_scale);
+		return -11;
+	}
+	if(!eqm_compute_solution_phases(names, D.ns, source, &D.solution_phase_id,
+			&D.solution_member_index, &D.binary_phases, &D.nbinary_phases)){
 		free(D.mu0);
 		free(D.is_condensed);
 		free(D.b_scale);
@@ -2973,6 +3023,7 @@ int eqm_ipopt_solve_n_source_init(const char **names, int ns, int ne, const doub
 	FreeIpoptProblem(prob);
 	free(D.mu0);
 	free(D.is_condensed);
+	eqm_free_solution_phases(&D.solution_phase_id, &D.solution_member_index, &D.binary_phases);
 	free(D.b_scale);
 	free(x_L);
 	free(x_U);

@@ -3,8 +3,11 @@
 #include "fprops.h"
 #include "helmholtz.h"
 #include "pengrob.h"
+#include "gibbs_species.h"
 #include "constcp_data.h"
 #include "shomate_data.h"
+#include "solution_data.h"
+#include "spinel_data.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -201,6 +204,68 @@ int fprops_build_element_matrix_source(const char **names, int ns, const char **
 		char source_buf[512];
 		const char *source_i = fprops_resolve_species_source(source, names[i], source_buf,
 			(unsigned)sizeof(source_buf));
+		const GibbsSpecies *G = gibbs_species_lookup(names[i], source_i);
+		const BinarySolutionPhaseDef *phase = NULL;
+		unsigned member_index = 0;
+		if(!G){
+			G = gibbs_species_lookup(names[i], NULL);
+		}
+		if(G){
+			unsigned k2;
+			if(!G->elements || !G->stoich || G->nelem == 0){
+				ERRMSG("Missing Gibbs-species element composition for '%s'", names[i]);
+				return 0;
+			}
+			for(k2 = 0; k2 < G->nelem; ++k2){
+				for(e = 0; e < ne; ++e){
+					if(0 == strcmp(G->elements[k2], elements[e])){
+						A_out[e * ns + i] += G->stoich[k2];
+					}
+				}
+			}
+			continue;
+		}
+		if(solution_phase_lookup_member(names[i], source_i, &phase, &member_index)
+				|| solution_phase_lookup_member(names[i], NULL, &phase, &member_index)){
+			unsigned k2;
+			const char **phase_elements = (member_index == 0) ? phase->elements_a : phase->elements_b;
+			const double *phase_stoich = (member_index == 0) ? phase->stoich_a : phase->stoich_b;
+			unsigned phase_nelem = (member_index == 0) ? phase->nelem_a : phase->nelem_b;
+			if(!phase_elements || !phase_stoich || phase_nelem == 0){
+				ERRMSG("Missing solution-phase element composition for '%s'", names[i]);
+				return 0;
+			}
+			for(k2 = 0; k2 < phase_nelem; ++k2){
+				for(e = 0; e < ne; ++e){
+					if(0 == strcmp(phase_elements[k2], elements[e])){
+						A_out[e * ns + i] += phase_stoich[k2];
+					}
+				}
+			}
+			continue;
+		}
+		{
+			const FeSpinelPhaseDef *spinel = NULL;
+			if(spinel_phase_lookup_member(names[i], source_i, &spinel, &member_index)
+					|| spinel_phase_lookup_member(names[i], NULL, &spinel, &member_index)){
+				unsigned k2;
+				const char **phase_elements = spinel_phase_member_elements(spinel, member_index);
+				const double *phase_stoich = spinel_phase_member_stoich(spinel, member_index);
+				unsigned phase_nelem = spinel_phase_member_nelem(spinel, member_index);
+				if((phase_nelem > 0) && (!phase_elements || !phase_stoich)){
+					ERRMSG("Missing spinel-phase element composition for '%s'", names[i]);
+					return 0;
+				}
+				for(k2 = 0; k2 < phase_nelem; ++k2){
+					for(e = 0; e < ne; ++e){
+						if(0 == strcmp(phase_elements[k2], elements[e])){
+							A_out[e * ns + i] += phase_stoich[k2];
+						}
+					}
+				}
+				continue;
+			}
+		}
 		const EosData *E = fprops_eos(names[i], NULL, source_i);
 		if(!E){
 			E = fprops_eos(names[i], NULL, NULL);

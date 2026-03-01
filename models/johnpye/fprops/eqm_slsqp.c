@@ -42,7 +42,8 @@ static double eqm_gibbs_nlopt(unsigned n, const double *x, double *grad, void *d
 		}
 		nvec[i] = n_i;
 	}
-	if(!eqm_eval_obj_mu(nvec, D->mu0, D->is_condensed, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
+	if(!eqm_eval_obj_mu(nvec, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
 		free(nvec);
 		free(mu);
 		return HUGE_VAL;
@@ -99,6 +100,10 @@ int eqm_slsqp_solve_source_init(const char **names, int ns, int ne, const double
 	D->n_min = 1e-200;
 	D->A = A;
 	D->b = b;
+	D->solution_phase_id = NULL;
+	D->solution_member_index = NULL;
+	D->nbinary_phases = 0;
+	D->binary_phases = NULL;
 	D->mu0 = (double *)calloc((size_t)D->ns, sizeof(double));
 	D->is_condensed = (int *)calloc((size_t)D->ns, sizeof(int));
 	eqm_apply_bscale_n(D);
@@ -118,6 +123,14 @@ int eqm_slsqp_solve_source_init(const char **names, int ns, int ne, const double
 		return -11;
 	}
 	if(!eqm_compute_is_condensed(names, D->ns, source, D->is_condensed)){
+		free(D->mu0);
+		free(D->is_condensed);
+		free(D->b_scale);
+		free(S.n_est);
+		return -11;
+	}
+	if(!eqm_compute_solution_phases(names, D->ns, source, &D->solution_phase_id,
+			&D->solution_member_index, &D->binary_phases, &D->nbinary_phases)){
 		free(D->mu0);
 		free(D->is_condensed);
 		free(D->b_scale);
@@ -158,6 +171,7 @@ int eqm_slsqp_solve_source_init(const char **names, int ns, int ne, const double
 		nlopt_destroy(opt);
 		free(D->mu0);
 		free(D->is_condensed);
+		eqm_free_solution_phases(&D->solution_phase_id, &D->solution_member_index, &D->binary_phases);
 		free(D->b_scale);
 		free(S.n_est);
 		return -12;
@@ -222,6 +236,7 @@ int eqm_slsqp_solve_source_init(const char **names, int ns, int ne, const double
 	nlopt_destroy(opt);
 	free(D->mu0);
 	free(D->is_condensed);
+	eqm_free_solution_phases(&D->solution_phase_id, &D->solution_member_index, &D->binary_phases);
 	free(D->b_scale);
 	free(S.n_est);
 	return status;
@@ -257,7 +272,7 @@ int eqm_slsqp_solve_elements_source_init(const char **names, int ns, const char 
 		free(A);
 		return -11;
 	}
-	if(!n_use){
+	if(!n_use && !eqm_has_solution_phases(names, ns, source)){
 		n_seed = (double *)calloc((size_t)ns, sizeof(double));
 		if(n_seed && eqm_seed_from_nullspace_r1(names, ns, elements, ne, source, b, T, P, n_seed)){
 			n_use = n_seed;
