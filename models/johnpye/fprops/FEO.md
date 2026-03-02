@@ -251,9 +251,9 @@ After switching to the corrected $ \mathrm{H_2} $-based traced lines, the
 Tier 3 picture improved substantially.
 
 The current comparison plot is:
-[bg_compare_all_h2_helmholtz_plus_ref0.png](/home/john/ascend/models/johnpye/fprops/res/bg_compare_all_h2_helmholtz_plus_ref0.png)
+[bg_compare_all_h2_helmholtz_plus_ref0.png](res/bg_compare_all_h2_helmholtz_plus_ref0.png)
 
-![Corrected $ \mathrm{H_2} $ boundary comparison](/home/john/ascend/models/johnpye/fprops/res/bg_compare_all_h2_helmholtz_plus_ref0.png)
+![Corrected $ \mathrm{H_2} $ boundary comparison](res/bg_compare_all_h2_helmholtz_plus_ref0.png)
 
 This plot compares the current FPROPS Tier 3 curves against the
 corrected $ \mathrm{H_2} $-based traced lines for:
@@ -343,7 +343,7 @@ The relevant file is:
 The most useful current artifacts are:
 
 - corrected $ \mathrm{H_2} $ comparison plot:
-  [bg_compare_all_h2_helmholtz_plus_ref0.png](/home/john/ascend/models/johnpye/fprops/res/bg_compare_all_h2_helmholtz_plus_ref0.png)
+  [bg_compare_all_h2_helmholtz_plus_ref0.png](res/bg_compare_all_h2_helmholtz_plus_ref0.png)
 - Tier 3 boundary script:
   [feoh_hydrogen_boundary.py](/home/john/ascend/models/johnpye/fprops/test/feoh_hydrogen_boundary.py)
 - Spreitzer comparison harness:
