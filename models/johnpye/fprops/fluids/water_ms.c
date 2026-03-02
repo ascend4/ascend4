@@ -30,7 +30,12 @@ static const CubicData cubic_data_water_ms = {
 	,.T_t = 0
 	,.omega = 0
 	/* M&S G9e Table A-25, H2O(g) */
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.0, 101325, (-241820.0 / WATER_MS_M), (-228590.0 / WATER_MS_M)}}}
+	,.ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-241820.0e3 / WATER_MS_M)
+		, .s0 = (188.72e3 / WATER_MS_M)
+	}}}
 	,.ref = {FPROPS_REF_REF0}
 	,.ideal = &ideal_data_water_ms
 };

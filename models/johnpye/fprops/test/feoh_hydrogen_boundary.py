@@ -4,7 +4,7 @@ First-pass Tier 3 Fe-O-H diagnostic.
 
 This script combines:
   - the current audited Hidayat Fe-O condensed thermodynamics, and
-  - Reaktoro/SUPCRT98-clone gas mu0(T, 1 bar) data for H2 and H2O
+  - chemistry-ready gas mu0(T, 1 bar) data for H2 and H2O
 
 to generate first Baur-Glaessner-style reduction-boundary tables for:
 
@@ -41,6 +41,7 @@ from feo_hidayat_validation import (
     mu_a_wustite,
     mu_b_wustite,
     residual_wustite_spinel_degterov,
+    spinel_phase_g,
 )
 
 P0 = 1e5
@@ -138,6 +139,57 @@ def oxygen_potential_at_wustite_spinel_boundary(T: float) -> tuple[float, float]
     return x_best, lam_o
 
 
+def oxygen_potential_at_fe_spinel_boundary(T: float) -> tuple[str, float]:
+    """
+    Fe|spinel boundary using the reduced Degterov Fe-only spinel model.
+
+    For fixed metallic iron potential lambda_Fe = g_Fe(T), the spinel phase
+    becomes co-stable when its minimized grand potential equals zero:
+
+        min_{a,b} [ g_spinel(a,b) - lambda_Fe n_Fe(a,b) - lambda_O * 4 ] = 0
+
+    which gives
+
+        lambda_O = min_{a,b} [ g_spinel(a,b) - lambda_Fe n_Fe(a,b) ] / 4
+    """
+    gfe = stable_fe_g(T)
+    best = math.inf
+    a_lo = 0.0
+    a_hi = 1.0
+    best_a = 0.0
+    best_b = 0.5
+    for _ in range(4):
+        steps_a = 80
+        span_a = a_hi - a_lo
+        for ia in range(steps_a + 1):
+            a = a_lo + span_a * ia / steps_a
+            bmax = 0.5 * (1.0 - a)
+            if bmax <= 0.0:
+                continue
+            if math.isfinite(best_a) and abs(a - best_a) < 0.2:
+                b_center = min(max(best_b, 0.0), bmax)
+                b_lo = max(0.0, b_center - 0.15)
+                b_hi = min(bmax, b_center + 0.15)
+            else:
+                b_lo = 0.0
+                b_hi = bmax
+            steps_b = 80
+            for ib in range(steps_b + 1):
+                b = b_lo + (b_hi - b_lo) * ib / steps_b
+                g, n_fe, _yo_fe3, _yo_va = spinel_phase_g(T, a, b)
+                if not math.isfinite(g):
+                    continue
+                trial = (g - gfe * n_fe) / 4.0
+                if trial < best:
+                    best = trial
+                    best_a = a
+                    best_b = b
+        da = max(0.01, 0.2 * span_a)
+        a_lo = max(0.0, best_a - da)
+        a_hi = min(1.0, best_a + da)
+    return stable_fe_label(T), best
+
+
 def oxygen_potential_at_fe_magnetite_boundary(T: float) -> tuple[str, float]:
     """
     Stoichiometric Fe|Fe3O4 boundary using the current metallic Fe model and
@@ -159,7 +211,7 @@ def print_table(title: str, temps_c: list[float], boundary_fn, runner: Path, gas
     )
     for tc in temps_c:
         tk = tc + 273.15
-        if boundary_fn is oxygen_potential_at_fe_magnetite_boundary:
+        if boundary_fn in (oxygen_potential_at_fe_magnetite_boundary, oxygen_potential_at_fe_spinel_boundary):
             phase, lam_o = boundary_fn(tk)
             x_best = math.nan
             atpct = math.nan
@@ -183,7 +235,7 @@ def main() -> int:
     ap.add_argument("--runner", type=Path, default=default_runner(), help="Path to eqm_mu0_runner.")
     ap.add_argument(
         "--gas-source",
-        default="reaktoro_clone_supcrt98",
+        default="helmholtz+ref0:",
         help="Gas mu0 source for hydrogen and water.",
     )
     ap.add_argument(
@@ -193,7 +245,7 @@ def main() -> int:
     )
     ap.add_argument(
         "--boundary",
-        choices=("fe-wustite", "wustite-spinel", "fe-magnetite", "both"),
+        choices=("fe-wustite", "wustite-spinel", "fe-spinel", "fe-magnetite", "both"),
         default="both",
         help="Which condensed boundary to tabulate.",
     )
@@ -220,6 +272,15 @@ def main() -> int:
             "Provisional Tier 3 wustite|spinel|H2/H2O boundary",
             temps_c,
             oxygen_potential_at_wustite_spinel_boundary,
+            args.runner,
+            gas_source,
+        )
+
+    if args.boundary == "fe-spinel":
+        print_table(
+            "Provisional Tier 3 Fe|spinel|H2/H2O boundary",
+            temps_c,
+            oxygen_potential_at_fe_spinel_boundary,
             args.runner,
             gas_source,
         )

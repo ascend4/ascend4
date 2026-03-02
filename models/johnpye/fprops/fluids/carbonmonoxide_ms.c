@@ -30,9 +30,12 @@ static const CubicData cubic_data_carbonmonoxide_ms = {
 	,.T_t = 0
 	,.omega = 0
 	/* M&S G9e Table A-25, CO(g) */
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.0, 101325,
-		(-110530.0 / CARBONMONOXIDE_MS_M),
-		(-137150.0 / CARBONMONOXIDE_MS_M)}}}
+	,.ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-110530.0e3 / CARBONMONOXIDE_MS_M)
+		, .s0 = (197.54e3 / CARBONMONOXIDE_MS_M)
+	}}}
 	,.ref = {FPROPS_REF_REF0}
 	,.ideal = &ideal_data_carbonmonoxide_ms
 };

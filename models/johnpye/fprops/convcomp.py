@@ -83,6 +83,30 @@ fieldunits = {
 }
 
 R_UNIVERSAL_MOLAR = 8.3144621
+RPP_T_REF = 298.15
+
+# Reference-element absolute standard entropies S° at 298.15 K, 1 atm/1 bar.
+# Values are stored per reference species, not per atom.
+#
+# Sources:
+# - H2(g), O2(g), C(s, graphite): Moran and Shapiro G9e Table A-25
+# - N2(g): NIST WebBook
+# - S(s, rhombic): NIST WebBook
+# - P(s, white): NIST WebBook
+# - Si(s): NIST WebBook
+# - Al(s): NIST WebBook
+# - Fe(s, alpha): OECD/NEA Thermochemical Database, Iron volume
+ELEMENT_REF_ENTROPY = {
+	'H':  {'atoms_per_ref': 2, 's0_molar': 130.57,  'label': 'H2(g), M&S G9e Table A-25'},
+	'O':  {'atoms_per_ref': 2, 's0_molar': 205.03,  'label': 'O2(g), M&S G9e Table A-25'},
+	'C':  {'atoms_per_ref': 1, 's0_molar': 5.740,   'label': 'C(s, graphite), M&S G9e Table A-25'},
+	'N':  {'atoms_per_ref': 2, 's0_molar': 191.609, 'label': 'N2(g), NIST WebBook'},
+	'S':  {'atoms_per_ref': 1, 's0_molar': 32.054,  'label': 'S(s, rhombic), NIST WebBook'},
+	'P':  {'atoms_per_ref': 1, 's0_molar': 41.09,   'label': 'P(s, white), NIST WebBook'},
+	'Si': {'atoms_per_ref': 1, 's0_molar': 18.82,   'label': 'Si(s), NIST WebBook'},
+	'Al': {'atoms_per_ref': 1, 's0_molar': 28.30,   'label': 'Al(s), NIST WebBook'},
+	'Fe': {'atoms_per_ref': 1, 's0_molar': 27.085,  'label': 'Fe(s, alpha), OECD/NEA'},
+}
 
 ctemplate = """
 static const IdealData ideal_data_%(name)s = {
@@ -107,7 +131,7 @@ static const CubicData cubic_data_%(name)s = {
 	,.rho_c = %(rhoc_kgm3)s
 	,.T_t = %(Tt_K)s
 	,.omega = %(omega)s
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={%(T_ref)s, 101325, %(h_f0)s, %(g_f0)s}}}
+%(ref0_decl)s
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_%(name)s
 };
@@ -167,6 +191,16 @@ def formula_mass(counts):
 			return None
 		m += mass * cnt
 	return m
+
+def absolute_entropy_from_formation(counts, h_f0_molar, g_f0_molar):
+	"""Return absolute S°(298.15 K) in J/mol/K, or None if basis is incomplete."""
+	s0 = (h_f0_molar - g_f0_molar) / RPP_T_REF
+	for sym, cnt in counts.items():
+		ref = ELEMENT_REF_ENTROPY.get(sym)
+		if ref is None:
+			return None
+		s0 += cnt * ref['s0_molar'] / ref['atoms_per_ref']
+	return s0
 
 def _merge_counts(dst, src):
 	out = dict(dst)
@@ -315,10 +349,16 @@ class CubicFluid:
 		if hasattr(self,'Pc'):pc = '(%s * 1e5)'%self.Pc
 		rhoc = '-1'
 		if hasattr(self,'Vc'):rhoc = '(1000 * %s / %s)'%(self.mw,self.Vc)
+		# NOTE: components.a4l stores RPP-style formation values Hf/Gf at 298.15 K.
+		# These are not absolute species h°/g° anchors, so they should not be fed
+		# directly into a TPHG chemistry reference without reconstructing absolute
+		# entropy first (eg via Eq. 3-1.9 in RPP5).
 		h_f0 = 'NAN'
 		if hasattr(self,'Hf'):h_f0 = '(%s / %s)'%(self.Hf,self.mw)
 		g_f0 = 'NAN'
 		if hasattr(self,'Gf'):g_f0 = '(%s / %s)'%(self.Gf,self.mw)
+		h_f0_mass = 'NAN'
+		if hasattr(self,'Hf'):h_f0_mass = '(%s * 1000 / %s)'%(self.Hf,self.mw)
 		
 		formula = self.formula.strip().strip("'\"")
 		counts = parse_formula(formula, mw=float(self.mw), species_name=self.name)
@@ -329,6 +369,20 @@ class CubicFluid:
 			if idx > 0:
 				prefix += ","
 			decl_lines.append('%s{"%s", %d}' % (prefix, sym, cnt))
+		ref0_decl = '\t,.ref0 = {FPROPS_REF_TPHG,{.tphg={%(T_ref)s, 101325, %(h_f0)s, %(g_f0)s}}}' % {
+			'T_ref': RPP_T_REF,
+			'h_f0': h_f0,
+			'g_f0': g_f0,
+		}
+		if hasattr(self, 'Hf') and hasattr(self, 'Gf'):
+			s0_molar = absolute_entropy_from_formation(counts, float(self.Hf), float(self.Gf))
+			if s0_molar is not None:
+				ref0_decl = (
+					'\t/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); '
+					'see convcomp.py Eq. 3-1.9 notes */\n'
+					'\t,.ref0 = {FPROPS_REF_TPHS0,{.tphs={%.15g, 101325, %s, (%.15g * 1000 / %s)}}}'
+				) % (RPP_T_REF, h_f0_mass, s0_molar, self.mw)
+
 		return ctemplate % {
 			'name':self.name
 			,'source':'RPP'#'Reid, Prausnitz, and Poling, 1987, The Properties of '+
@@ -340,10 +394,11 @@ class CubicFluid:
 			,'Pc_Pa':pc
 			,'rhoc_kgm3':rhoc
 			,'Tt_K' : getattr(self, 'Tt', 0)
-			,'T_ref' : 298.2
+			,'T_ref' : RPP_T_REF
 			,'omega':self.omega
 			,'h_f0':h_f0
 			,'g_f0':g_f0
+			,'ref0_decl':ref0_decl
 			,'cpvapa_red':'%.15g' % (float(self.cpvapa) / R_UNIVERSAL_MOLAR)
 			,'cpvapb_red':'%.15g' % (float(self.cpvapb) / R_UNIVERSAL_MOLAR)
 			,'cpvapc_red':'%.15g' % (float(self.cpvapc) / R_UNIVERSAL_MOLAR)

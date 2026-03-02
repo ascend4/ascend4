@@ -114,7 +114,7 @@ static PropsRow eval_one(const char *species, const char *label, const PureFluid
 	}else if(0 == strcmp(label, "helm_REF0")){
 		mu0_source = "helmholtz+ref0:";
 	}else if(0 == strcmp(label, "RPP")){
-		mu0_source = "ideal:RPP";
+		mu0_source = "ideal+ref0:RPP";
 	}else{
 		mu0_source = "Moran and Shapiro";
 	}

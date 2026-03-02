@@ -82,8 +82,8 @@ static const HelmholtzData helmholtz_data_nitrogen = {
 	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
 		.T0 = 298.15
 		, .p0 = 101325.0
-		, .h0 = 0.0 /* M&S G9e Table A-25, N2(g) */
-		, .s0 = (191.50e3 / NITROGEN_M) /* M&S G9e Table A-25, N2(g) */
+		, .h0 = 0.0 /* N2(g) elemental reference convention */
+		, .s0 = (191.609e3 / NITROGEN_M) /* NIST WebBook, Sdeg(gas, 1 bar) */
 	}}}
 
 	, .omega = 0.039 /* acentric factor, from Reid, Prausnitz & Polling */

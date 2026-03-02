@@ -34,7 +34,7 @@ from feoh_hydrogen_boundary import (
     default_runner,
     gas_ratio_logs,
     normalize_gas_source,
-    oxygen_potential_at_fe_magnetite_boundary,
+    oxygen_potential_at_fe_spinel_boundary,
     oxygen_potential_at_fe_wustite_boundary,
     oxygen_potential_at_wustite_spinel_boundary,
     parse_temps_c,
@@ -48,6 +48,7 @@ class FitSpec:
     boundary: str | None
     fit_kind: str
     coeffs: tuple[float, float, float, float, float]
+    points: tuple[tuple[float, float], ...]
     xmin: float
     xmax: float
     ymin_c: float
@@ -59,35 +60,113 @@ FIT_SPECS: dict[str, FitSpec] = {
     "h2-fe-wustite": FitSpec(
         name="H2 Fe|wustite",
         boundary="fe-wustite",
-        fit_kind="poly_t_of_god",
-        coeffs=(4595.72, -27292.9, 78583.6, -111187.0, 61840.6),
-        xmin=0.294362959456,
-        xmax=0.494298957173,
-        ymin_c=568.64160727,
-        ymax_c=1000.16056878,
-        note="Fityk polynomial from g3data2 points supplied by user.",
+        fit_kind="raw_points",
+        coeffs=(0.0, 0.0, 0.0, 0.0, 0.0),
+        points=(
+            (0.23456245187, 570.019013451),
+            (0.245296282085, 592.590131422),
+            (0.255653986024, 614.912837142),
+            (0.265820081712, 636.619322895),
+            (0.276332434119, 661.081479321),
+            (0.28587264008, 682.801879077),
+            (0.295194336274, 704.894663517),
+            (0.304440542997, 728.550763493),
+            (0.314278233378, 751.960141983),
+            (0.322901794238, 775.194442504),
+            (0.332080050299, 798.659339747),
+            (0.34091136509, 823.547651351),
+            (0.348323683793, 845.580742473),
+            (0.356207135385, 868.888850295),
+            (0.363887111598, 892.091017732),
+            (0.371545484269, 917.140024584),
+            (0.379672257281, 940.778255429),
+            (0.386656009969, 964.517824917),
+            (0.392734556921, 986.338851943),
+            (0.396007774564, 999.490234859),
+        ),
+        xmin=0.23456245187,
+        xmax=0.396007774564,
+        ymin_c=570.019013451,
+        ymax_c=999.490234859,
+        note="User-supplied hand-traced H2 Fe|wustite line.",
     ),
     "h2-wustite-spinel": FitSpec(
         name="H2 wustite|spinel",
         boundary="wustite-spinel",
-        fit_kind="poly_t_of_god",
-        coeffs=(2930.67, -16978.7, 43596.4, -48465.1, 20660.2),
-        xmin=0.494629473168,
-        xmax=0.830900778467,
-        ymin_c=569.493308392,
-        ymax_c=969.237753586,
-        note="Fityk polynomial from g3data2 points supplied by user.",
+        fit_kind="raw_points",
+        coeffs=(0.0, 0.0, 0.0, 0.0, 0.0),
+        points=(
+            (0.239636951896, 570.802435201),
+            (0.26050174532, 580.54667932),
+            (0.280873172483, 589.174170906),
+            (0.302575011377, 599.15855048),
+            (0.323005844537, 607.571969383),
+            (0.343902933586, 616.598976108),
+            (0.365361486289, 626.038166261),
+            (0.386057891025, 634.520983141),
+            (0.407381453732, 643.547840821),
+            (0.428479295225, 652.703107093),
+            (0.449059606332, 661.619647942),
+            (0.470615227345, 670.566281858),
+            (0.49083018369, 679.879098617),
+            (0.512137360845, 689.332544171),
+            (0.5333888167, 698.63992637),
+            (0.553100275071, 707.819009833),
+            (0.574465809385, 717.92777879),
+            (0.595291048461, 728.43389926),
+            (0.615035358174, 739.036771584),
+            (0.635904031524, 749.995835088),
+            (0.655768343041, 761.207343924),
+            (0.675471200887, 773.088962713),
+            (0.695367585689, 784.940587177),
+            (0.714406754152, 797.953058136),
+            (0.733389609597, 811.66502176),
+            (0.752528006667, 824.830642117),
+            (0.770755480745, 840.545929068),
+            (0.788963418297, 856.556431896),
+            (0.80572786869, 872.585699551),
+            (0.821795065664, 889.906116431),
+            (0.837937983872, 909.781941876),
+            (0.85288725963, 928.918132929),
+            (0.866386490957, 949.369068968),
+            (0.880422170032, 973.543407948),
+            (0.890140238673, 991.257119644),
+            (0.894130342583, 999.467304699),
+        ),
+        xmin=0.239636951896,
+        xmax=0.894130342583,
+        ymin_c=570.802435201,
+        ymax_c=999.467304699,
+        note="User-supplied hand-traced H2 wustite|spinel line.",
     ),
-    "h2-fe-magnetite": FitSpec(
-        name="H2 Fe|magnetite",
-        boundary="fe-magnetite",
-        fit_kind="linear_god_of_t",
-        coeffs=(0.493969, 1.40312e-06, 0.0, 0.0, 0.0),
-        xmin=0.494146060491,
-        xmax=0.495124245888,
-        ymin_c=300.364196965,
-        ymax_c=569.974675344,
-        note="Near-vertical BG line fitted as GOD(T) from g3data2 points supplied by user.",
+    "h2-fe-spinel": FitSpec(
+        name="H2 Fe|spinel",
+        boundary="fe-spinel",
+        fit_kind="raw_points",
+        coeffs=(0.0, 0.0, 0.0, 0.0, 0.0),
+        points=(
+            (0.0324563391631, 300.168143858),
+            (0.0426429152512, 324.117602543),
+            (0.0543387848168, 347.496404941),
+            (0.065007540708, 366.150699826),
+            (0.0789270759127, 388.298687389),
+            (0.0934618420789, 409.099758867),
+            (0.106420951095, 426.12554569),
+            (0.122031864011, 445.592220804),
+            (0.136824638483, 462.83294041),
+            (0.153775819851, 481.58547164),
+            (0.168845620361, 498.137780549),
+            (0.185316158674, 515.570661982),
+            (0.202668265865, 532.581218262),
+            (0.219718975701, 549.656298345),
+            (0.235228173231, 564.783638887),
+            (0.239096097533, 569.079556973),
+        ),
+        xmin=0.0324563391631,
+        xmax=0.239096097533,
+        ymin_c=300.168143858,
+        ymax_c=569.079556973,
+        note="User-supplied hand-traced H2 Fe|spinel line.",
     ),
 }
 
@@ -100,9 +179,9 @@ PLOT_STYLE: dict[str, dict[str, str]] = {
         "color": "#b55200",
         "label": "wustite|spinel",
     },
-    "fe-magnetite": {
+    "fe-spinel": {
         "color": "#2b7a0b",
-        "label": "Fe|magnetite",
+        "label": "Fe|spinel",
     },
 }
 
@@ -141,6 +220,14 @@ def bisect_root(coeffs: tuple[float, ...], target_c: float, xa: float, xb: float
 def fit_god_at_temp(spec: FitSpec, target_c: float) -> float | None:
     if target_c < spec.ymin_c or target_c > spec.ymax_c:
         return None
+    if spec.fit_kind == "raw_points":
+        for (x0, y0), (x1, y1) in zip(spec.points, spec.points[1:]):
+            if y0 <= target_c <= y1:
+                if y1 == y0:
+                    return x0
+                frac = (target_c - y0) / (y1 - y0)
+                return x0 + frac * (x1 - x0)
+        return None
     if spec.fit_kind == "linear_god_of_t":
         a0, a1, _a2, _a3, _a4 = spec.coeffs
         return a0 + a1 * target_c
@@ -173,8 +260,8 @@ def boundary_fn(name: str):
         return oxygen_potential_at_fe_wustite_boundary
     if name == "wustite-spinel":
         return oxygen_potential_at_wustite_spinel_boundary
-    if name == "fe-magnetite":
-        return oxygen_potential_at_fe_magnetite_boundary
+    if name == "fe-spinel":
+        return oxygen_potential_at_fe_spinel_boundary
     raise KeyError(name)
 
 
@@ -240,10 +327,13 @@ def write_plot(
     plot_file: Path,
     plot_model_step_c: float,
 ) -> None:
-    style_key = spec.boundary if spec.boundary is not None else "fe-magnetite"
+    style_key = spec.boundary if spec.boundary is not None else "fe-spinel"
     style = PLOT_STYLE[style_key]
 
-    if spec.fit_kind == "poly_t_of_god":
+    if spec.fit_kind == "raw_points":
+        fit_xs = [x for x, _y in spec.points]
+        fit_ys = [y for _x, y in spec.points]
+    elif spec.fit_kind == "poly_t_of_god":
         fit_xs = frange(spec.xmin, spec.xmax, max((spec.xmax - spec.xmin) / 400.0, 1e-5))
         fit_ys = [poly_eval(spec.coeffs, x) for x in fit_xs]
     elif spec.fit_kind == "linear_god_of_t":
@@ -317,10 +407,13 @@ def write_all_plot(
     ymax = max(sample_temps_c)
 
     for spec in specs:
-        style_key = spec.boundary if spec.boundary is not None else "fe-magnetite"
+        style_key = spec.boundary if spec.boundary is not None else "fe-spinel"
         style = PLOT_STYLE[style_key]
 
-        if spec.fit_kind == "poly_t_of_god":
+        if spec.fit_kind == "raw_points":
+            fit_xs = [x for x, _y in spec.points]
+            fit_ys = [y for _x, y in spec.points]
+        elif spec.fit_kind == "poly_t_of_god":
             fit_xs = frange(spec.xmin, spec.xmax, max((spec.xmax - spec.xmin) / 400.0, 1e-5))
             fit_ys = [poly_eval(spec.coeffs, x) for x in fit_xs]
         elif spec.fit_kind == "linear_god_of_t":
@@ -408,7 +501,7 @@ def main() -> int:
     ap.add_argument("--runner", type=Path, default=default_runner(), help="Path to eqm_mu0_runner.")
     ap.add_argument(
         "--gas-source",
-        default="reaktoro_clone_supcrt98",
+        default="helmholtz+ref0:",
         help="Gas mu0 source for hydrogen and water.",
     )
     ap.add_argument(
@@ -437,7 +530,7 @@ def main() -> int:
 
     temps_c = parse_temps_c(args.temps_c)
     if args.fit == "all-h2-current":
-        specs = [FIT_SPECS["h2-fe-wustite"], FIT_SPECS["h2-wustite-spinel"], FIT_SPECS["h2-fe-magnetite"]]
+        specs = [FIT_SPECS["h2-fe-wustite"], FIT_SPECS["h2-wustite-spinel"], FIT_SPECS["h2-fe-spinel"]]
         plot_file = args.plot_file if args.plot_file is not None else default_all_plot_file(args.gas_source)
         write_all_plot(specs, args.runner, args.gas_source, temps_c, plot_file, args.plot_model_step_c)
         print("Baur-Glaessner comparison: all current H2 fits")

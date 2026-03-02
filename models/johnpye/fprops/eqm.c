@@ -917,8 +917,10 @@ int eqm_mu0_ideal_source(const char *name, const char *source, double T, double 
 	if(explicit_source && shomate_species_lookup(name, source)){
 		prefer_shomate_source = 1;
 	}
+	cands[ncands++] = fprops_eos(name, "ideal", source);
 	cands[ncands++] = fprops_eos(name, NULL, source);
 	if(!prefer_shomate_source){
+		cands[ncands++] = fprops_eos(name, "ideal", NULL);
 		cands[ncands++] = fprops_eos(name, NULL, NULL);
 		cands[ncands++] = fprops_eos(name, NULL, "RPP");
 	}

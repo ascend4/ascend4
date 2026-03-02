@@ -7,6 +7,7 @@
 #include "../helmholtz.h"
 #include "../cp0.h"
 #include "../zeroin.h"
+#include "../eqm.h"
 
 #include <math.h>
 
@@ -453,6 +454,26 @@ static void test_rpp_hydrogen_cp0_filedata_matches_helmholtz(void){
 	}
 }
 
+static void test_rpp_ref0_water_formation_reaction_matches_helmholtz(void){
+	const double T = 873.15;
+	const double p = 101325.0;
+	double mu_w_rpp, mu_h2_rpp, mu_o2_rpp;
+	double mu_w_helm, mu_h2_helm, mu_o2_helm;
+	double dg_rpp, dg_helm;
+
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "ideal+ref0:RPP", T, p, &mu_w_rpp));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("hydrogen", "ideal+ref0:RPP", T, p, &mu_h2_rpp));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("oxygen", "ideal+ref0:RPP", T, p, &mu_o2_rpp));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "helmholtz+ref0:", T, p, &mu_w_helm));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("hydrogen", "helmholtz+ref0:", T, p, &mu_h2_helm));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("oxygen", "helmholtz+ref0:", T, p, &mu_o2_helm));
+
+	dg_rpp = mu_w_rpp - mu_h2_rpp - 0.5 * mu_o2_rpp;
+	dg_helm = mu_w_helm - mu_h2_helm - 0.5 * mu_o2_helm;
+
+	CU_ASSERT_TRUE(fabs(dg_rpp - dg_helm) <= 1.0e3);
+}
+
 CU_ErrorCode test_register_refstate(void){
 	CU_pSuite s = CU_add_suite("refstate", refstate_suite_init, refstate_suite_cleanup);
 	if(NULL == s){
@@ -501,6 +522,9 @@ CU_ErrorCode test_register_refstate(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "rpp_hydrogen_cp0_filedata_matches_helmholtz", test_rpp_hydrogen_cp0_filedata_matches_helmholtz)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "rpp_ref0_water_formation_reaction_matches_helmholtz", test_rpp_ref0_water_formation_reaction_matches_helmholtz)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;

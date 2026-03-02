@@ -30,7 +30,12 @@ static const CubicData cubic_data_oxygen_ms = {
 	,.T_t = 0
 	,.omega = 0
 	/* M&S G9e Table A-25, O2(g) */
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.0, 101325, (0.0 / OXYGEN_MS_M), (0.0 / OXYGEN_MS_M)}}}
+	,.ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (0.0 / OXYGEN_MS_M)
+		, .s0 = (205.03e3 / OXYGEN_MS_M)
+	}}}
 	,.ref = {FPROPS_REF_REF0}
 	,.ideal = &ideal_data_oxygen_ms
 };
