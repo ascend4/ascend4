@@ -33,6 +33,7 @@ import matplotlib.pyplot as plt
 from feoh_hydrogen_boundary import (
     default_runner,
     gas_ratio_logs,
+    normalize_gas_source,
     oxygen_potential_at_fe_magnetite_boundary,
     oxygen_potential_at_fe_wustite_boundary,
     oxygen_potential_at_wustite_spinel_boundary,
@@ -212,12 +213,22 @@ def frange(start: float, stop: float, step: float) -> list[float]:
 
 def default_plot_file(spec: FitSpec, gas_source: str) -> Path:
     stem = spec.name.lower().replace("|", "-").replace(" ", "_")
-    gas = gas_source.lower().replace(" ", "_")
+    gas = (
+        gas_source.lower()
+        .replace(" ", "_")
+        .replace("+", "_plus_")
+        .replace(":", "")
+    )
     return Path(__file__).resolve().parent / f"bg_compare_{stem}_{gas}.png"
 
 
 def default_all_plot_file(gas_source: str) -> Path:
-    gas = gas_source.lower().replace(" ", "_")
+    gas = (
+        gas_source.lower()
+        .replace(" ", "_")
+        .replace("+", "_plus_")
+        .replace(":", "")
+    )
     return Path(__file__).resolve().parent / f"bg_compare_all_h2_{gas}.png"
 
 
@@ -418,6 +429,7 @@ def main() -> int:
         help="Temperature step in Celsius for the model curve in the PNG.",
     )
     args = ap.parse_args()
+    args.gas_source = normalize_gas_source(args.gas_source)
 
     if not args.runner.exists():
         print(f"Runner not found: {args.runner}", file=sys.stderr)

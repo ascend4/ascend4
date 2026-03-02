@@ -45,6 +45,17 @@ from feo_hidayat_validation import (
 
 P0 = 1e5
 
+GAS_SOURCE_ALIASES = {
+    "reaktoro": "reaktoro_clone_supcrt98",
+    "supcrt98": "reaktoro_clone_supcrt98",
+    "ms": "moran_and_shapiro",
+    "m&s": "moran_and_shapiro",
+    "helm_ref0": "helmholtz+ref0:",
+    "helmholtz_ref0": "helmholtz+ref0:",
+    "rpp": "ideal+ref0:RPP",
+    "rpp_ref0": "ideal+ref0:RPP",
+}
+
 
 def default_runner() -> Path:
     return Path(__file__).resolve().parent / "eqm_mu0_runner"
@@ -59,6 +70,11 @@ def parse_temps_c(text: str) -> list[float]:
     if not out:
         raise ValueError("no temperatures provided")
     return out
+
+
+def normalize_gas_source(source: str) -> str:
+    key = source.strip()
+    return GAS_SOURCE_ALIASES.get(key.lower(), key)
 
 
 def query_mu0(runner: Path, source: str, tk: float, species: list[str]) -> dict[str, float]:
@@ -188,6 +204,7 @@ def main() -> int:
         return 2
 
     temps_c = parse_temps_c(args.temps_c)
+    gas_source = normalize_gas_source(args.gas_source)
 
     if args.boundary in ("fe-wustite", "both"):
         print_table(
@@ -195,7 +212,7 @@ def main() -> int:
             temps_c,
             oxygen_potential_at_fe_wustite_boundary,
             args.runner,
-            args.gas_source,
+            gas_source,
         )
 
     if args.boundary in ("wustite-spinel", "both"):
@@ -204,7 +221,7 @@ def main() -> int:
             temps_c,
             oxygen_potential_at_wustite_spinel_boundary,
             args.runner,
-            args.gas_source,
+            gas_source,
         )
 
     if args.boundary == "fe-magnetite":
@@ -213,13 +230,13 @@ def main() -> int:
             temps_c,
             oxygen_potential_at_fe_magnetite_boundary,
             args.runner,
-            args.gas_source,
+            gas_source,
         )
 
     print("Interpretation")
     print("- The Fe|wustite table is the most trustworthy Tier 3 output at present.")
     print("- The wustite|spinel table is useful for trend-checking, but still provisional.")
-    print("- Both tables use current Hidayat Fe-O condensed thermodynamics plus Reaktoro-clone H2/H2O gases.")
+    print(f"- Gas source used here: {gas_source}")
     return 0
 
 

@@ -68,14 +68,14 @@
 static const IdealData ideal_data_hydrogen = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 2.016)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{27.14, 0}
-			,{9.274e+1, 1}
-			,{-1.381e-5, 2}
-			,{7.645e-9, 3}
+			{3.26419191928243, 0}
+			,{0.00111540589017779, 1}
+			,{-1.66096132665034e-06, 2}
+			,{9.19482211603322e-10, 3}
 		}
 	}}
 };
@@ -111,14 +111,14 @@ const EosData eos_rpp_hydrogen = {
 static const IdealData ideal_data_carbon_dioxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 44.010)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{19.80, 0}
-			,{7.344e-2, 1}
-			,{-5.602e-5, 2}
-			,{1.715e-8, 3}
+			{2.38139277825321, 0}
+			,{0.00883280230479372, 1}
+			,{-6.73765774938105e-06, 2}
+			,{2.0626710175274e-09, 3}
 		}
 	}}
 };
@@ -155,14 +155,14 @@ const EosData eos_rpp_carbon_dioxide = {
 static const IdealData ideal_data_water = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 18.015)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{32.24, 0}
-			,{1.924e-3, 1}
-			,{1.055e-5, 2}
-			,{-3.596e-9, 3}
+			{3.87758096822644, 0}
+			,{0.00023140402552319, 1}
+			,{1.26887342477633e-06, 2}
+			,{-4.32499415686795e-10, 3}
 		}
 	}}
 };
@@ -199,14 +199,14 @@ const EosData eos_rpp_water = {
 static const IdealData ideal_data_chloroform = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 119.378)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{24.00, 0}
-			,{1.893e-1, 1}
-			,{-1.841e-4, 2}
-			,{6.657e-8, 3}
+			{2.88653670091298, 0}
+			,{0.0227675582284511, 1}
+			,{-2.21421419432533e-05, 2}
+			,{8.00653117415738e-09, 3}
 		}
 	}}
 };
@@ -244,14 +244,14 @@ const EosData eos_rpp_chloroform = {
 static const IdealData ideal_data_methane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 16.043)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{19.25, 0}
-			,{5.213e-2, 1}
-			,{1.197e-5, 2}
-			,{-1.132e-8, 3}
+			{2.31524297885729, 0}
+			,{0.00626979825910807, 1}
+			,{1.43966017958035e-06, 2}
+			,{-1.36148314393062e-09, 3}
 		}
 	}}
 };
@@ -288,14 +288,14 @@ const EosData eos_rpp_methane = {
 static const IdealData ideal_data_methanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 32.042)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.15, 0}
-			,{7.092e-2, 1}
-			,{2.587e-5, 2}
-			,{-2.852e-8, 3}
+			{2.54376046767956, 0}
+			,{0.00852971595119785, 1}
+			,{3.11144601885912e-06, 2}
+			,{-3.43016777958492e-09, 3}
 		}
 	}}
 };
@@ -333,14 +333,14 @@ const EosData eos_rpp_methanol = {
 static const IdealData ideal_data_ethylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 28.054)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.806, 0}
-			,{1.566e-1, 1}
-			,{-8.348e-5, 2}
-			,{1.755e-8, 3}
+			{0.457756611819783, 0}
+			,{0.0188346519734572, 1}
+			,{-1.00403368246756e-05, 2}
+			,{2.11077996254262e-09, 3}
 		}
 	}}
 };
@@ -377,14 +377,14 @@ const EosData eos_rpp_ethylene = {
 static const IdealData ideal_data_ethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 30.070)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{5.409, 0}
-			,{1.781e-1, 1}
-			,{-6.938e-5, 2}
-			,{8.713e-9, 3}
+			{0.650553208968263, 0}
+			,{0.0214205077680251, 1}
+			,{-8.34449651288927e-06, 2}
+			,{1.04793309479395e-09, 3}
 		}
 	}}
 };
@@ -421,14 +421,14 @@ const EosData eos_rpp_ethane = {
 static const IdealData ideal_data_ethanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 46.069)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{9.014, 0}
-			,{2.141e-1, 1}
-			,{-8.390e-5, 2}
-			,{1.373e-9, 3}
+			{1.0841350759179, 0}
+			,{0.0257503128193945, 1}
+			,{-1.00908512169416e-05, 2}
+			,{1.6513395376473e-10, 3}
 		}
 	}}
 };
@@ -466,14 +466,14 @@ const EosData eos_rpp_ethanol = {
 static const IdealData ideal_data_propylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 42.081)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.710, 0}
-			,{2.345e-1, 1}
-			,{-1.160e-4, 2}
-			,{2.205e-8, 3}
+			{0.446210465016131, 0}
+			,{0.0282038690151706, 1}
+			,{-1.39515940544127e-05, 2}
+			,{2.6520055939638e-09, 3}
 		}
 	}}
 };
@@ -510,14 +510,14 @@ const EosData eos_rpp_propylene = {
 static const IdealData ideal_data_acetone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{6.301, 0}
-			,{2.606e-1, 1}
-			,{-1.253e-4, 2}
-			,{2.038e-8, 3}
+			{0.757836156352195, 0}
+			,{0.0313429776774134, 1}
+			,{-1.50701270260165e-05, 2}
+			,{2.45115074852527e-09, 3}
 		}
 	}}
 };
@@ -555,14 +555,14 @@ const EosData eos_rpp_acetone = {
 static const IdealData ideal_data_propane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 44.094)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-4.224, 0}
-			,{3.063e-1, 1}
-			,{-1.586e-4, 2}
-			,{3.215e-8, 3}
+			{-0.508030459360684, 0}
+			,{0.0368394246454019, 1}
+			,{-1.90751966985333e-05, 2}
+			,{3.86675645559801e-09, 3}
 		}
 	}}
 };
@@ -599,14 +599,14 @@ const EosData eos_rpp_propane = {
 static const IdealData ideal_data_propadiene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 40.065)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{9.906, 0}
-			,{1.977e-1, 1}
-			,{-1.182e-4, 2}
-			,{2.782e-8, 3}
+			{1.19141802330183, 0}
+			,{0.0237778460737707, 1}
+			,{-1.42161932519964e-05, 2}
+			,{3.34597712580829e-09, 3}
 		}
 	}}
 };
@@ -643,14 +643,14 @@ const EosData eos_rpp_propadiene = {
 static const IdealData ideal_data_n_propanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.096)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{2.470, 0}
-			,{3.325e-1, 1}
-			,{-1.855e-4, 2}
-			,{4.296e-8, 3}
+			{0.297072735468961, 0}
+			,{0.0399905605438986, 1}
+			,{-2.23105232508066e-05, 2}
+			,{5.16690069463423e-09, 3}
 		}
 	}}
 };
@@ -688,14 +688,14 @@ const EosData eos_rpp_n_propanol = {
 static const IdealData ideal_data_i_propanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.096)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{32.43, 0}
-			,{1.885e-1, 1}
-			,{6.406e-5, 2}
-			,{-9.261e-8, 3}
+			{3.90043271710866, 0}
+			,{0.0226713403384207, 1}
+			,{7.70464754418689e-06, 2}
+			,{-1.1138423494648e-08, 3}
 		}
 	}}
 };
@@ -733,14 +733,14 @@ const EosData eos_rpp_i_propanol = {
 static const IdealData ideal_data_n_butane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.124)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{9.487, 0}
-			,{3.313e-1, 1}
-			,{-1.108e-4, 2}
-			,{-2.822e-9, 3}
+			{1.14102390339839, 0}
+			,{0.0398462337088529, 1}
+			,{-1.33261777692149e-05, 2}
+			,{-3.39408607082351e-10, 3}
 		}
 	}}
 };
@@ -777,14 +777,14 @@ const EosData eos_rpp_n_butane = {
 static const IdealData ideal_data_i_butane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.124)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-1.390, 0}
-			,{3.847e-1, 1}
-			,{-1.846e-4, 2}
-			,{2.895e-8, 3}
+			{-0.167178583927877, 0}
+			,{0.0462687778683843, 1}
+			,{-2.22022781245223e-05, 2}
+			,{3.48188489547628e-09, 3}
 		}
 	}}
 };
@@ -821,14 +821,14 @@ const EosData eos_rpp_i_butane = {
 static const IdealData ideal_data_butene_1 = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 56.108)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-2.994, 0}
-			,{3.532e-1, 1}
-			,{-1.990e-4, 2}
-			,{4.463e-8, 3}
+			{-0.360095453438894, 0}
+			,{0.042480198448436, 1}
+			,{-2.39342001450701e-05, 2}
+			,{5.36775554007276e-09, 3}
 		}
 	}}
 };
@@ -865,14 +865,14 @@ const EosData eos_rpp_butene_1 = {
 static const IdealData ideal_data_n_butanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.266, 0}
-			,{4.180e-1, 1}
-			,{-2.242e-4, 2}
-			,{4.685e-8, 3}
+			{0.392809536049241, 0}
+			,{0.050273847540901, 1}
+			,{-2.69650636810287e-05, 2}
+			,{5.63476018490721e-09, 3}
 		}
 	}}
 };
@@ -910,14 +910,14 @@ const EosData eos_rpp_n_butanol = {
 static const IdealData ideal_data_i_butanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.708, 0}
-			,{4.689e-1, 1}
-			,{-2.884e-4, 2}
-			,{7.231e-8, 3}
+			{-0.927059370443219, 0}
+			,{0.0563957107940873, 1}
+			,{-3.4686549355971e-05, 2}
+			,{8.69689453512573e-09, 3}
 		}
 	}}
 };
@@ -955,14 +955,14 @@ const EosData eos_rpp_i_butanol = {
 static const IdealData ideal_data_n_pentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.151)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.626, 0}
-			,{4.873e-1, 1}
-			,{-2.580e-4, 2}
-			,{5.305e-8, 3}
+			{-0.436107586562936, 0}
+			,{0.0586087222647873, 1}
+			,{-3.10302695348145e-05, 2}
+			,{6.38044883264306e-09, 3}
 		}
 	}}
 };
@@ -999,14 +999,14 @@ const EosData eos_rpp_n_pentane = {
 static const IdealData ideal_data_i_pentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.151)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.525, 0}
-			,{5.066e-1, 1}
-			,{-2.729e-4, 2}
-			,{5.723e-8, 3}
+			{-1.14559425317484, 0}
+			,{0.0609299788617715, 1}
+			,{-3.28223277366313e-05, 2}
+			,{6.88318730805207e-09, 3}
 		}
 	}}
 };
@@ -1043,14 +1043,14 @@ const EosData eos_rpp_i_pentane = {
 static const IdealData ideal_data_benzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 78.114)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.392e+1, 0}
-			,{4.739e-1, 1}
-			,{-3.017e-4, 2}
-			,{7.130e-8, 3}
+			{-4.07963853729034, 0}
+			,{0.0569970726067775, 1}
+			,{-3.62861717777269e-05, 2}
+			,{8.57541944896231e-09, 3}
 		}
 	}}
 };
@@ -1087,14 +1087,14 @@ const EosData eos_rpp_benzene = {
 static const IdealData ideal_data_n_hexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.178)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-4.413, 0}
-			,{5.820e-1, 1}
-			,{-3.119e-4, 2}
-			,{6.494e-8, 3}
+			{-0.530761935880374, 0}
+			,{0.0699985149971397, 1}
+			,{-3.75129498756149e-05, 2}
+			,{7.81048722322037e-09, 3}
 		}
 	}}
 };
@@ -1131,14 +1131,14 @@ const EosData eos_rpp_n_hexane = {
 static const IdealData ideal_data_toluene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 92.141)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-2.435e+1, 0}
-			,{5.125e-1, 1}
-			,{-2.765e-4, 2}
-			,{4.911e-8, 3}
+			{-2.92863202780129, 0}
+			,{0.0616395858007459, 1}
+			,{-3.32553082417683e-05, 2}
+			,{5.90657572424318e-09, 3}
 		}
 	}}
 };
@@ -1175,14 +1175,14 @@ const EosData eos_rpp_toluene = {
 static const IdealData ideal_data_n_heptane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.205)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-5.146, 0}
-			,{6.762e-1, 1}
-			,{-3.651e-4, 2}
-			,{7.658e-8, 3}
+			{-0.618921577620758, 0}
+			,{0.0813281715482232, 1}
+			,{-4.39114395626387e-05, 2}
+			,{9.21045752316316e-09, 3}
 		}
 	}}
 };
@@ -1219,14 +1219,14 @@ const EosData eos_rpp_n_heptane = {
 static const IdealData ideal_data_styrene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 104.152)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-2.825e+1, 0}
-			,{6.159e-1, 1}
-			,{-4.023e-4, 2}
-			,{9.935e-8, 3}
+			{-3.39769424169965, 0}
+			,{0.0740757480871793, 1}
+			,{-4.83855714490538e-05, 2}
+			,{1.19490592181544e-08, 3}
 		}
 	}}
 };
@@ -1263,14 +1263,14 @@ const EosData eos_rpp_styrene = {
 static const IdealData ideal_data_ethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 106.168)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-4.310e1, 0}
-			,{7.072e-1, 1}
-			,{-4.811e-4, 2}
-			,{1.301e-7, 3}
+			{-5.18373882538956, 0}
+			,{0.0850566147869025, 1}
+			,{-5.78630336170514e-05, 2}
+			,{1.56474343661991e-08, 3}
 		}
 	}}
 };
@@ -1307,14 +1307,14 @@ const EosData eos_rpp_ethylbenzene = {
 static const IdealData ideal_data_n_octane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-6.096, 0}
-			,{7.712e-1, 1}
-			,{-4.195e-4, 2}
-			,{8.855e-8, 3}
+			{-0.733180322031897, 0}
+			,{0.0927540459893371, 1}
+			,{-5.04542560847081e-05, 2}
+			,{1.06501177027435e-08, 3}
 		}
 	}}
 };
@@ -1351,14 +1351,14 @@ const EosData eos_rpp_n_octane = {
 static const IdealData ideal_data_diethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 134.222)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.742e+1, 0}
-			,{8.671e-1, 1}
-			,{-5.560e-4, 2}
-			,{1.411e-7, 3}
+			{-4.50059180617349, 0}
+			,{0.104288165556735, 1}
+			,{-6.68714335711507e-05, 2}
+			,{1.69704303541176e-08, 3}
 		}
 	}}
 };
@@ -1395,14 +1395,14 @@ const EosData eos_rpp_diethylbenzene = {
 static const IdealData ideal_data_n_decane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 142.286)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.913, 0}
-			,{9.609e-1, 1}
-			,{-5.288e-4, 2}
-			,{1.131e-7, 3}
+			{-0.951715204763517, 0}
+			,{0.115569713162803, 1}
+			,{-6.3600025310116e-05, 2}
+			,{1.36028042030524e-08, 3}
 		}
 	}}
 };
@@ -1439,14 +1439,14 @@ const EosData eos_rpp_n_decane = {
 static const IdealData ideal_data_diphenyl = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 154.212)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.707e+1, 0}
-			,{1.106, 1}
-			,{-8.855e-4, 2}
-			,{2.790e-7, 3}
+			{-11.6748382315676, 0}
+			,{0.133021232967073, 1}
+			,{-0.000106501177027435, 2}
+			,{3.35559891481134e-08, 3}
 		}
 	}}
 };
@@ -1483,14 +1483,14 @@ const EosData eos_rpp_diphenyl = {
 static const IdealData ideal_data_pentanol_1 = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 88.150)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.869, 0}
-			,{0.5045, 1}
-			,{-2.639e-04, 2}
-			,{5.120e-08, 3}
+			{0.46533377065968, 0}
+			,{0.0606774069004416, 1}
+			,{-3.1739876473789e-05, 2}
+			,{6.15794496194769e-09, 3}
 		}
 	}}
 };
@@ -1528,14 +1528,14 @@ const EosData eos_rpp_pentanol_1 = {
 static const IdealData ideal_data_dodecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 170.34)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.328, 0}
-			,{1.149, 1}
-			,{-6.347e-4, 2}
-			,{1.359e-7, 3}
+			{-1.12190059775484, 0}
+			,{0.138192944556209, 1}
+			,{-7.63368685028945e-05, 2}
+			,{1.63450140689197e-08, 3}
 		}
 	}}
 };
@@ -1572,14 +1572,14 @@ const EosData eos_rpp_dodecane = {
 static const IdealData ideal_data_chloro_benzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.559)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-33.89, 0}
-			,{0.5631, 1}
-			,{-4.522e-04, 2}
-			,{1.426e-07, 3}
+			{-4.0760303664142, 0}
+			,{0.0677253673451708, 1}
+			,{-5.4387162339702e-05, 2}
+			,{1.71508388979246e-08, 3}
 		}
 	}}
 };
@@ -1617,14 +1617,14 @@ const EosData eos_rpp_chloro_benzene = {
 static const IdealData ideal_data_oxygen = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 31.999)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{2.811e1, 0}
-			,{-3.680e-6, 1}
-			,{1.746e-5, 2}
-			,{-1.065e-8, 3}
+			{3.38085611094433, 0}
+			,{-4.4260229413999e-07, 1}
+			,{2.09995544991419e-06, 2}
+			,{-1.28090066103013e-09, 3}
 		}
 	}}
 };
@@ -1660,14 +1660,14 @@ const EosData eos_rpp_oxygen = {
 static const IdealData ideal_data_nitrogen = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 28.013)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.115e1, 0}
-			,{-1.357e-2, 1}
-			,{2.680e-5, 2}
-			,{-1.168e-8, 3}
+			{3.74648409305997, 0}
+			,{-0.00163209595964121, 1}
+			,{3.22329931601949e-06, 2}
+			,{-1.40478119444432e-09, 3}
 		}
 	}}
 };
@@ -1703,14 +1703,14 @@ const EosData eos_rpp_nitrogen = {
 static const IdealData ideal_data_aluminum_tribromide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 266.694)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{64.94, 0}
-			,{0.06098, 1}
-			,{-7.31E-05, 2}
-			,{2.98E-08, 3}
+			{7.81048722322037, 0}
+			,{0.00733420866756973, 1}
+			,{-8.79190970153078e-06, 2}
+			,{3.58411640363362e-09, 3}
 		}
 	}}
 };
@@ -1747,14 +1747,14 @@ const EosData eos_rpp_aluminum_tribromide = {
 static const IdealData ideal_data_aluminum_trichloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 133.341)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{50.54, 0}
-			,{0.1037, 1}
-			,{-1.20E-04, 2}
-			,{4.79E-08, 3}
+			{6.07856520267258, 0}
+			,{0.0124722439951948, 1}
+			,{-1.44326835045649e-05, 2}
+			,{5.76104616557215e-09, 3}
 		}
 	}}
 };
@@ -1791,11 +1791,11 @@ const EosData eos_rpp_aluminum_trichloride = {
 static const IdealData ideal_data_argon = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 39.948)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
+			{2.50166514079125, 0}
 			,{0, 1}
 			,{0, 2}
 			,{0, 3}
@@ -1834,14 +1834,14 @@ const EosData eos_rpp_argon = {
 static const IdealData ideal_data_boron_trichloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 117.191)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{32.61, 0}
-			,{0.139, 1}
-			,{-1.46E-04, 2}
-			,{5.44E-08, 3}
+			{3.92208174236551, 0}
+			,{0.0167178583927877, 1}
+			,{-1.7559764930554e-05, 2}
+			,{6.54281652206942e-09, 3}
 		}
 	}}
 };
@@ -1878,14 +1878,14 @@ const EosData eos_rpp_boron_trichloride = {
 static const IdealData ideal_data_boron_trifluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 67.805)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{18.58, 0}
-			,{0.1399, 1}
-			,{-1.22E-04, 2}
-			,{3.92E-08, 3}
+			{2.2346604959568, 0}
+			,{0.0168261035190719, 1}
+			,{-1.4673228229641e-05, 2}
+			,{4.7146766114912e-09, 3}
 		}
 	}}
 };
@@ -1922,14 +1922,14 @@ const EosData eos_rpp_boron_trifluoride = {
 static const IdealData ideal_data_bromine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 159.808)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{33.86, 0}
-			,{0.01125, 1}
-			,{-1.19E-05, 2}
-			,{4.53E-09, 3}
+			{4.07242219553806, 0}
+			,{0.00135306407855296, 1}
+			,{-1.43124111420269e-06, 2}
+			,{5.44833802297325e-10, 3}
 		}
 	}}
 };
@@ -1965,14 +1965,14 @@ const EosData eos_rpp_bromine = {
 static const IdealData ideal_data_perchloryl_fluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.448)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{12.45, 0}
-			,{0.239, 1}
-			,{-2.35E-04, 2}
-			,{8.32E-08, 3}
+			{1.49739091359861, 0}
+			,{0.0287450946465917, 1}
+			,{-2.82640051964396e-05, 2}
+			,{1.0006660563165e-08, 3}
 		}
 	}}
 };
@@ -2010,14 +2010,14 @@ const EosData eos_rpp_perchloryl_fluoride = {
 static const IdealData ideal_data_chlorine_pentafluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 130.433)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{30.98, 0}
-			,{0.3203, 1}
-			,{-3.69E-04, 2}
-			,{1.46E-07, 3}
+			{3.7260377914285, 0}
+			,{0.0385232377209345, 1}
+			,{-4.43805017765371e-05, 2}
+			,{1.7559764930554e-08, 3}
 		}
 	}}
 };
@@ -2054,14 +2054,14 @@ const EosData eos_rpp_chlorine_pentafluoride = {
 static const IdealData ideal_data_chlorine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 70.906)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{26.93, 0}
-			,{0.03384, 1}
-			,{-3.87E-05, 2}
-			,{1.55E-08, 3}
+			{3.23893472314944, 0}
+			,{0.0040700167482873, 1}
+			,{-4.65454043022218e-06, 2}
+			,{1.86422161933963e-09, 3}
 		}
 	}}
 };
@@ -2097,14 +2097,14 @@ const EosData eos_rpp_chlorine = {
 static const IdealData ideal_data_silicon_tetrachloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 169.898)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{56.58, 0}
-			,{0.1636, 1}
-			,{-1.90E-04, 2}
-			,{7.57E-08, 3}
+			{6.80501027240235, 0}
+			,{0.0196765585112235, 1}
+			,{-2.28517488822278e-05, 2}
+			,{9.10461784412969e-09, 3}
 		}
 	}}
 };
@@ -2141,14 +2141,14 @@ const EosData eos_rpp_silicon_tetrachloride = {
 static const IdealData ideal_data_titanium_tetrachloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 189.712)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{70.64, 0}
-			,{0.1224, 1}
-			,{-1.44E-04, 2}
-			,{5.82E-08, 3}
+			{8.4960396896872, 0}
+			,{0.0147213371746562, 1}
+			,{-1.73192202054779e-05, 2}
+			,{6.99985149971397e-09, 3}
 		}
 	}}
 };
@@ -2185,14 +2185,14 @@ const EosData eos_rpp_titanium_tetrachloride = {
 static const IdealData ideal_data_deuterium_equilibrium = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 4.032)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{30.25, 0}
-			,{-0.006615, 1}
-			,{1.17E-05, 2}
-			,{-3.68E-09, 3}
+			{3.63823896677573, 0}
+			,{-0.00079560167818914, 1}
+			,{1.40718664169508e-06, 2}
+			,{-4.4260229413999e-10, 3}
 		}
 	}}
 };
@@ -2228,14 +2228,14 @@ const EosData eos_rpp_deuterium_equilibrium = {
 static const IdealData ideal_data_deuterium_oxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 20.031)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{31.82, 0}
-			,{0.003045, 1}
-			,{2.03E-05, 2}
-			,{-9.74E-09, 3}
+			{3.82706657596046, 0}
+			,{0.000366229343928334, 1}
+			,{2.44152895952223e-06, 2}
+			,{-1.17145281112052e-09, 3}
 		}
 	}}
 };
@@ -2272,14 +2272,14 @@ const EosData eos_rpp_deuterium_oxide = {
 static const IdealData ideal_data_fluorine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 37.997)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{23.22, 0}
-			,{0.03657, 1}
-			,{-3.61E-05, 2}
-			,{1.20E-08, 3}
+			{2.79272425813331, 0}
+			,{0.00439836029801615, 1}
+			,{-4.34183228762327e-06, 2}
+			,{1.44326835045649e-09, 3}
 		}
 	}}
 };
@@ -2315,14 +2315,14 @@ const EosData eos_rpp_fluorine = {
 static const IdealData ideal_data_cis_difluorodiazine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 66.010)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.21, 0}
-			,{0.1745, 1}
-			,{-1.69E-04, 2}
-			,{5.90E-08, 3}
+			{1.34825318405144, 0}
+			,{0.0209875272628881, 1}
+			,{-2.03260292689289e-05, 2}
+			,{7.09606938974441e-09, 3}
 		}
 	}}
 };
@@ -2359,14 +2359,14 @@ const EosData eos_rpp_cis_difluorodiazine = {
 static const IdealData ideal_data_trans_difluorodiazine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 66.010)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{22.54, 0}
-			,{0.1377, 1}
-			,{-1.26E-04, 2}
-			,{4.23E-08, 3}
+			{2.71093905160744, 0}
+			,{0.0165615043214882, 1}
+			,{-1.51543176797931e-05, 2}
+			,{5.08752093535913e-09, 3}
 		}
 	}}
 };
@@ -2403,14 +2403,14 @@ const EosData eos_rpp_trans_difluorodiazine = {
 static const IdealData ideal_data_nitrogen_trifluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 71.002)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.41, 0}
-			,{0.1948, 1}
-			,{-2.02E-04, 2}
-			,{7.45E-08, 3}
+			{1.37230765655905, 0}
+			,{0.0234290562224103, 1}
+			,{-2.42950172326842e-05, 2}
+			,{8.96029100908404e-09, 3}
 		}
 	}}
 };
@@ -2447,14 +2447,14 @@ const EosData eos_rpp_nitrogen_trifluoride = {
 static const IdealData ideal_data_trifluoroamine_oxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 87.001)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{15.13, 0}
-			,{0.2446, 1}
-			,{-2.53E-04, 2}
-			,{9.38E-08, 3}
+			{1.81972084520056, 0}
+			,{0.0294186198768048, 1}
+			,{-3.04289077221243e-05, 2}
+			,{1.12815476060682e-08, 3}
 		}
 	}}
 };
@@ -2492,14 +2492,14 @@ const EosData eos_rpp_trifluoroamine_oxide = {
 static const IdealData ideal_data_phosphorus_trifluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 87.968)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.79, 0}
-			,{0.1733, 1}
-			,{-1.85E-04, 2}
-			,{6.97E-08, 3}
+			{2.62073477970391, 0}
+			,{0.0208432004278425, 1}
+			,{-2.22503870695375e-05, 2}
+			,{8.38298366890144e-09, 3}
 		}
 	}}
 };
@@ -2536,14 +2536,14 @@ const EosData eos_rpp_phosphorus_trifluoride = {
 static const IdealData ideal_data_thiophosphoryl_trifluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.034)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{24.92, 0}
-			,{0.2326, 1}
-			,{-2.47E-04, 2}
-			,{9.28E-08, 3}
+			{2.99718727444798, 0}
+			,{0.0279753515263483, 1}
+			,{-2.97072735468961e-05, 2}
+			,{1.11612752435302e-08, 3}
 		}
 	}}
 };
@@ -2581,14 +2581,14 @@ const EosData eos_rpp_thiophosphoryl_trifluoride = {
 static const IdealData ideal_data_tetrafluorohydrazine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 104.016)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.55, 0}
-			,{0.3509, 1}
-			,{-3.64E-04, 2}
-			,{1.34E-07, 3}
+			{0.426966887010045, 0}
+			,{0.0422035720145985, 1}
+			,{-4.37791399638469e-05, 2}
+			,{1.61164965800975e-08, 3}
 		}
 	}}
 };
@@ -2625,14 +2625,14 @@ const EosData eos_rpp_tetrafluorohydrazine = {
 static const IdealData ideal_data_silicon_tetrafluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 104.090)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{26.78, 0}
-			,{0.2157, 1}
-			,{-2.20E-04, 2}
-			,{8.03E-08, 3}
+			{3.22089386876873, 0}
+			,{0.0259427485994554, 1}
+			,{-2.6459919758369e-05, 2}
+			,{9.65787071180468e-09, 3}
 		}
 	}}
 };
@@ -2669,14 +2669,14 @@ const EosData eos_rpp_silicon_tetrafluoride = {
 static const IdealData ideal_data_sulfur_hexafluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 146.054)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-0.66, 0}
-			,{0.4639, 1}
-			,{-5.09E-04, 2}
-			,{1.95E-07, 3}
+			{-0.0793797592751069, 0}
+			,{0.0557943489813971, 1}
+			,{-6.12186325318628e-05, 2}
+			,{2.3453110694918e-08, 3}
 		}
 	}}
 };
@@ -2713,14 +2713,14 @@ const EosData eos_rpp_sulfur_hexafluoride = {
 static const IdealData ideal_data_helium_3 = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 3.017)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
+			{2.50166514079125, 0}
 			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			,{0, 2}
+			,{0, 3}
 		}
 	}}
 };
@@ -2756,14 +2756,14 @@ const EosData eos_rpp_helium_3 = {
 static const IdealData ideal_data_helium_4 = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 4.003)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
+			{2.50166514079125, 0}
 			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			,{0, 2}
+			,{0, 3}
 		}
 	}}
 };
@@ -2799,14 +2799,14 @@ const EosData eos_rpp_helium_4 = {
 static const IdealData ideal_data_mercury = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 200.610)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
+			{2.50166514079125, 0}
 			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			,{0, 2}
+			,{0, 3}
 		}
 	}}
 };
@@ -2842,14 +2842,14 @@ const EosData eos_rpp_mercury = {
 static const IdealData ideal_data_krypton = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 83.800)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
+			{2.50166514079125, 0}
 			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			,{0, 2}
+			,{0, 3}
 		}
 	}}
 };
@@ -2885,14 +2885,14 @@ const EosData eos_rpp_krypton = {
 static const IdealData ideal_data_nitric_oxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 30.006)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{29.35, 0}
-			,{-0.0009378, 1}
-			,{9.75E-06, 2}
-			,{-4.19E-09, 3}
+			{3.5299938404915, 0}
+			,{-0.000112791421588175, 1}
+			,{1.1726555347459e-06, 2}
+			,{-5.03941199034391e-10, 3}
 		}
 	}}
 };
@@ -2929,14 +2929,14 @@ const EosData eos_rpp_nitric_oxide = {
 static const IdealData ideal_data_nitrogen_dioxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 46.006)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{24.23, 0}
-			,{0.04836, 1}
-			,{-2.08E-05, 2}
-			,{2.93E-10, 3}
+			{2.91419934429673, 0}
+			,{0.00581637145233965, 1}
+			,{-2.50166514079125e-06, 2}
+			,{3.5239802223646e-11, 3}
 		}
 	}}
 };
@@ -2973,14 +2973,14 @@ const EosData eos_rpp_nitrogen_dioxide = {
 static const IdealData ideal_data_nitrous_oxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 44.013)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.62, 0}
-			,{0.07281, 1}
-			,{-5.78E-05, 2}
-			,{1.83E-08, 3}
+			{2.60028847807244, 0}
+			,{0.00875703071639475, 1}
+			,{-6.95174255469876e-06, 2}
+			,{2.20098423444615e-09, 3}
 		}
 	}}
 };
@@ -3017,14 +3017,14 @@ const EosData eos_rpp_nitrous_oxide = {
 static const IdealData ideal_data_neon = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 20.183)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
+			{2.50166514079125, 0}
 			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			,{0, 2}
+			,{0, 3}
 		}
 	}}
 };
@@ -3060,14 +3060,14 @@ const EosData eos_rpp_neon = {
 static const IdealData ideal_data_sulfur_dioxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 64.063)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{23.85, 0}
-			,{0.06699, 1}
-			,{-4.96E-05, 2}
-			,{1.33E-08, 3}
+			{2.86849584653227, 0}
+			,{0.00805704556642335, 1}
+			,{-5.96550918188682e-06, 2}
+			,{1.59962242175594e-09, 3}
 		}
 	}}
 };
@@ -3104,14 +3104,14 @@ const EosData eos_rpp_sulfur_dioxide = {
 static const IdealData ideal_data_ozone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 47.998)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.54, 0}
-			,{0.08009, 1}
-			,{-6.24E-05, 2}
-			,{1.70E-08, 3}
+			{2.47039432653136, 0}
+			,{0.00963261351567169, 1}
+			,{-7.50499542237375e-06, 2}
+			,{2.04463016314669e-09, 3}
 		}
 	}}
 };
@@ -3147,14 +3147,14 @@ const EosData eos_rpp_ozone = {
 static const IdealData ideal_data_sulfur_trioxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 80.058)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{19.21, 0}
-			,{0.1374, 1}
-			,{-1.18E-04, 2}
-			,{3.70E-08, 3}
+			{2.31043208435576, 0}
+			,{0.0165254226127268, 1}
+			,{-1.41921387794888e-05, 2}
+			,{4.45007741390751e-09, 3}
 		}
 	}}
 };
@@ -3191,14 +3191,14 @@ const EosData eos_rpp_sulfur_trioxide = {
 static const IdealData ideal_data_radon = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 222.000)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
+			{2.50166514079125, 0}
 			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			,{0, 2}
+			,{0, 3}
 		}
 	}}
 };
@@ -3234,14 +3234,14 @@ const EosData eos_rpp_radon = {
 static const IdealData ideal_data_xenon = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 131.300)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
+			{2.50166514079125, 0}
 			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			,{0, 2}
+			,{0, 3}
 		}
 	}}
 };
@@ -3277,14 +3277,14 @@ const EosData eos_rpp_xenon = {
 static const IdealData ideal_data_hydrogen_bromide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 80.912)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{30.65, 0}
-			,{-0.009462, 1}
-			,{1.72E-05, 2}
-			,{-6.24E-09, 3}
+			{3.68634791179095, 0}
+			,{-0.00113801709433494, 1}
+			,{2.0686846356543e-06, 2}
+			,{-7.50499542237375e-10, 3}
 		}
 	}}
 };
@@ -3321,14 +3321,14 @@ const EosData eos_rpp_hydrogen_bromide = {
 static const IdealData ideal_data_hydrogen_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 36.461)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{30.67, 0}
-			,{-0.007201, 1}
-			,{1.25E-05, 2}
-			,{-3.90E-09, 3}
+			{3.68875335904171, 0}
+			,{-0.000866081282636432, 1}
+			,{1.50340453172551e-06, 2}
+			,{-4.69062213898359e-10, 3}
 		}
 	}}
 };
@@ -3365,14 +3365,14 @@ const EosData eos_rpp_hydrogen_chloride = {
 static const IdealData ideal_data_hydrogen_deuteride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 3.023)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{29.47, 0}
-			,{-0.001329, 1}
-			,{1.31E-06, 2}
-			,{1.28E-09, 3}
+			{3.54442652399606, 0}
+			,{-0.000159841969813056, 1}
+			,{1.57556794924833e-07, 2}
+			,{1.53948624048692e-10, 3}
 		}
 	}}
 };
@@ -3409,14 +3409,14 @@ const EosData eos_rpp_hydrogen_deuteride = {
 static const IdealData ideal_data_hydrogen_fluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 20.006)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{29.06, 0}
-			,{0.0006611, 1}
-			,{-2.03E-06, 2}
-			,{2.50E-09, 3}
+			{3.49511485535547, 0}
+			,{7.95120588738988e-05, 1}
+			,{-2.44152895952223e-07, 2}
+			,{3.00680906345102e-10, 3}
 		}
 	}}
 };
@@ -3453,14 +3453,14 @@ const EosData eos_rpp_hydrogen_fluoride = {
 static const IdealData ideal_data_hydrogen_iodide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 127.912)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{31.16, 0}
-			,{-0.01428, 1}
-			,{2.97E-05, 2}
-			,{-1.35E-08, 3}
+			{3.74768681668535, 0}
+			,{-0.00171748933704322, 1}
+			,{3.57208916737981e-06, 2}
+			,{-1.62367689426355e-09, 3}
 		}
 	}}
 };
@@ -3497,14 +3497,14 @@ const EosData eos_rpp_hydrogen_iodide = {
 static const IdealData ideal_data_hydrogen_equilib = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 2.016)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{27.14, 0}
-			,{0.009274, 1}
-			,{-1.38E-05, 2}
-			,{7.65E-09, 3}
+			{3.26419191928243, 0}
+			,{0.00111540589017779, 1}
+			,{-1.65975860302496e-06, 2}
+			,{9.20083573416012e-10, 3}
 		}
 	}}
 };
@@ -3540,14 +3540,14 @@ const EosData eos_rpp_hydrogen_equilib = {
 static const IdealData ideal_data_hydrogen_sulfide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 34.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{31.94, 0}
-			,{0.001436, 1}
-			,{2.43E-05, 2}
-			,{-1.18E-08, 3}
+			{3.84149925946502, 0}
+			,{0.000172711112604627, 1}
+			,{2.92261840967439e-06, 2}
+			,{-1.41921387794888e-09, 3}
 		}
 	}}
 };
@@ -3584,14 +3584,14 @@ const EosData eos_rpp_hydrogen_sulfide = {
 static const IdealData ideal_data_ammonia = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 17.031)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{27.31, 0}
-			,{0.02383, 1}
-			,{1.71E-05, 2}
-			,{-1.19E-08, 3}
+			{3.28463822091389, 0}
+			,{0.00286609039928151, 1}
+			,{2.0566573994005e-06, 2}
+			,{-1.43124111420269e-09, 3}
 		}
 	}}
 };
@@ -3628,14 +3628,14 @@ const EosData eos_rpp_ammonia = {
 static const IdealData ideal_data_phosphine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 33.998)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{23.23, 0}
-			,{0.04401, 1}
-			,{1.30E-05, 2}
-			,{-1.60E-08, 3}
+			{2.79392698175869, 0}
+			,{0.00529318667529918, 1}
+			,{1.56354071299453e-06, 2}
+			,{-1.92435780060865e-09, 3}
 		}
 	}}
 };
@@ -3672,14 +3672,14 @@ const EosData eos_rpp_phosphine = {
 static const IdealData ideal_data_hydrazine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 32.045)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{9.77, 0}
-			,{0.1895, 1}
-			,{-1.66E-04, 2}
-			,{6.03E-08, 3}
+			{1.17506098199666, 0}
+			,{0.0227916127009587, 1}
+			,{-1.99652121813148e-05, 2}
+			,{7.25242346104386e-09, 3}
 		}
 	}}
 };
@@ -3716,14 +3716,14 @@ const EosData eos_rpp_hydrazine = {
 static const IdealData ideal_data_silane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 32.122)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.18, 0}
-			,{0.122, 1}
-			,{-5.55E-05, 2}
-			,{6.84E-09, 3}
+			{1.3446450131753, 0}
+			,{0.014673228229641, 1}
+			,{-6.67511612086126e-06, 2}
+			,{8.22662959760199e-10, 3}
 		}
 	}}
 };
@@ -3760,14 +3760,14 @@ const EosData eos_rpp_silane = {
 static const IdealData ideal_data_trifluorobromomethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 148.910)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.88, 0}
-			,{0.2159, 1}
-			,{-2.11E-04, 2}
-			,{7.46E-08, 3}
+			{2.63155929233233, 0}
+			,{0.025966803071963, 1}
+			,{-2.53774684955266e-05, 2}
+			,{8.97231824533784e-09, 3}
 		}
 	}}
 };
@@ -3805,14 +3805,14 @@ const EosData eos_rpp_trifluorobromomethane = {
 static const IdealData ideal_data_chlorotrifluoromethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 104.459)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{22.81, 0}
-			,{0.1911, 1}
-			,{-1.58E-04, 2}
-			,{4.46E-08, 3}
+			{2.74341258949271, 0}
+			,{0.0229840484810196, 1}
+			,{-1.90030332810104e-05, 2}
+			,{5.36414736919662e-09, 3}
 		}
 	}}
 };
@@ -3850,14 +3850,14 @@ const EosData eos_rpp_chlorotrifluoromethane = {
 static const IdealData ideal_data_dichlorodifluoromethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.914)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{31.60, 0}
-			,{0.1782, 1}
-			,{-1.51E-04, 2}
-			,{4.34E-08, 3}
+			{3.80060665620209, 0}
+			,{0.0214325350042789, 1}
+			,{-1.81611267432442e-05, 2}
+			,{5.21982053415097e-09, 3}
 		}
 	}}
 };
@@ -3895,14 +3895,14 @@ const EosData eos_rpp_dichlorodifluoromethane = {
 static const IdealData ideal_data_phosgene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.916)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{28.09, 0}
-			,{0.1361, 1}
-			,{-1.37E-04, 2}
-			,{5.07E-08, 3}
+			{3.37845066369357, 0}
+			,{0.0163690685414274, 1}
+			,{-1.64773136677116e-05, 2}
+			,{6.09780878067867e-09, 3}
 		}
 	}}
 };
@@ -3940,14 +3940,14 @@ const EosData eos_rpp_phosgene = {
 static const IdealData ideal_data_trichlorofluoromethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 137.368)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{40.98, 0}
-			,{0.1668, 1}
-			,{-1.42E-04, 2}
-			,{4.15E-08, 3}
+			{4.92876141680891, 0}
+			,{0.0200614300713452, 1}
+			,{-1.70786754804018e-05, 2}
+			,{4.99130304532869e-09, 3}
 		}
 	}}
 };
@@ -3985,14 +3985,14 @@ const EosData eos_rpp_trichlorofluoromethane = {
 static const IdealData ideal_data_carbon_tetrachloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 153.823)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{40.72, 0}
-			,{0.2049, 1}
-			,{-2.27E-04, 2}
-			,{8.84E-08, 3}
+			{4.89749060254902, 0}
+			,{0.0246438070840446, 1}
+			,{-2.73018262961353e-05, 2}
+			,{1.06320768483628e-08, 3}
 		}
 	}}
 };
@@ -4029,14 +4029,14 @@ const EosData eos_rpp_carbon_tetrachloride = {
 static const IdealData ideal_data_deutromethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 20.071)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{12.49, 0}
-			,{0.101, 1}
-			,{-2.20E-05, 2}
-			,{-8.46E-09, 3}
+			{1.50220180810013, 0}
+			,{0.0121475086163421, 1}
+			,{-2.6459919758369e-06, 2}
+			,{-1.01750418707182e-09, 3}
 		}
 	}}
 };
@@ -4073,14 +4073,14 @@ const EosData eos_rpp_deutromethane = {
 static const IdealData ideal_data_carbon_tetrafluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 88.005)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{13.98, 0}
-			,{0.2026, 1}
-			,{-1.63E-04, 2}
-			,{4.51E-08, 3}
+			{1.68140762828181, 0}
+			,{0.0243671806502071, 1}
+			,{-1.96043950937006e-05, 2}
+			,{5.42428355046564e-09, 3}
 		}
 	}}
 };
@@ -4117,14 +4117,14 @@ const EosData eos_rpp_carbon_tetrafluoride = {
 static const IdealData ideal_data_carbon_monoxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 28.010)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{30.87, 0}
-			,{-0.01285, 1}
-			,{2.79E-05, 2}
-			,{-1.27E-08, 3}
+			{3.71280783154932, 0}
+			,{-0.00154549985861382, 1}
+			,{3.35559891481134e-06, 2}
+			,{-1.52745900423312e-09, 3}
 		}
 	}}
 };
@@ -4161,14 +4161,14 @@ const EosData eos_rpp_carbon_monoxide = {
 static const IdealData ideal_data_carbonyl_sulfide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.070)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{23.57, 0}
-			,{0.07984, 1}
-			,{-7.02E-05, 2}
-			,{2.45E-08, 3}
+			{2.83481958502162, 0}
+			,{0.00960254542503718, 1}
+			,{-8.44311985017046e-06, 2}
+			,{2.946672882182e-09, 3}
 		}
 	}}
 };
@@ -4206,14 +4206,14 @@ const EosData eos_rpp_carbonyl_sulfide = {
 static const IdealData ideal_data_carbon_disulfide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 76.131)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{27.44, 0}
-			,{0.08127, 1}
-			,{-7.67E-05, 2}
-			,{2.67E-08, 3}
+			{3.30027362804384, 0}
+			,{0.00977453490346658, 1}
+			,{-9.22489020666773e-06, 2}
+			,{3.21127207976569e-09, 3}
 		}
 	}}
 };
@@ -4250,14 +4250,14 @@ const EosData eos_rpp_carbon_disulfide = {
 static const IdealData ideal_data_chlorodifluoromethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.469)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{17.30, 0}
-			,{0.1618, 1}
-			,{-1.17E-04, 2}
-			,{3.06E-08, 3}
+			{2.08071187190811, 0}
+			,{0.019460068258655, 1}
+			,{-1.40718664169508e-05, 2}
+			,{3.68033429366405e-09, 3}
 		}
 	}}
 };
@@ -4296,14 +4296,14 @@ const EosData eos_rpp_chlorodifluoromethane = {
 static const IdealData ideal_data_dichloromonofluoromethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.923)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{23.66, 0}
-			,{0.1581, 1}
-			,{-1.20E-04, 2}
-			,{3.26E-08, 3}
+			{2.84564409765005, 0}
+			,{0.0190150605172642, 1}
+			,{-1.44326835045649e-05, 2}
+			,{3.92087901874013e-09, 3}
 		}
 	}}
 };
@@ -4342,14 +4342,14 @@ const EosData eos_rpp_dichloromonofluoromethane = {
 static const IdealData ideal_data_fluoroform = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 70.013)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{8.16, 0}
-			,{0.1813, 1}
-			,{-1.38E-04, 2}
-			,{3.94E-08, 3}
+			{0.981422478310413, 0}
+			,{0.0218053793281468, 1}
+			,{-1.65975860302496e-05, 2}
+			,{4.73873108399881e-09, 3}
 		}
 	}}
 };
@@ -4387,14 +4387,14 @@ const EosData eos_rpp_fluoroform = {
 static const IdealData ideal_data_hydrogen_cyanide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 27.026)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.86, 0}
-			,{0.06062, 1}
-			,{-4.96E-05, 2}
-			,{1.82E-08, 3}
+			{2.62915384508157, 0}
+			,{0.00729091061705603, 1}
+			,{-5.96550918188682e-06, 2}
+			,{2.18895699819234e-09, 3}
 		}
 	}}
 };
@@ -4432,14 +4432,14 @@ const EosData eos_rpp_hydrogen_cyanide = {
 static const IdealData ideal_data_dichloromethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.933)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{12.95, 0}
-			,{0.1623, 1}
-			,{-1.30E-04, 2}
-			,{4.21E-08, 3}
+			{1.55752709486763, 0}
+			,{0.019520204439924, 1}
+			,{-1.56354071299453e-05, 2}
+			,{5.06346646285152e-09, 3}
 		}
 	}}
 };
@@ -4477,14 +4477,14 @@ const EosData eos_rpp_dichloromethane = {
 static const IdealData ideal_data_difluoromethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 52.023)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.79, 0}
-			,{0.1181, 1}
-			,{-4.84E-05, 2}
-			,{2.13E-09, 3}
+			{1.4180111543235, 0}
+			,{0.0142041660157426, 1}
+			,{-5.82118234684117e-06, 2}
+			,{2.56180132206027e-10, 3}
 		}
 	}}
 };
@@ -4522,14 +4522,14 @@ const EosData eos_rpp_difluoromethane = {
 static const IdealData ideal_data_formaldehyde = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 30.026)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{23.48, 0}
-			,{0.03157, 1}
-			,{2.99E-05, 2}
-			,{-2.30E-08, 3}
+			{2.8239950723932, 0}
+			,{0.00379699848532595, 1}
+			,{3.59614363988742e-06, 2}
+			,{-2.76626433837494e-09, 3}
 		}
 	}}
 };
@@ -4567,14 +4567,14 @@ const EosData eos_rpp_formaldehyde = {
 static const IdealData ideal_data_methyl_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 50.488)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{13.88, 0}
-			,{0.1014, 1}
-			,{-3.89E-05, 2}
-			,{2.57E-09, 3}
+			{1.66938039202801, 0}
+			,{0.0121956175613573, 1}
+			,{-4.67859490272979e-06, 2}
+			,{3.09099971722765e-10, 3}
 		}
 	}}
 };
@@ -4612,14 +4612,14 @@ const EosData eos_rpp_methyl_chloride = {
 static const IdealData ideal_data_methyl_fluoride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 34.033)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{13.82, 0}
-			,{0.08616, 1}
-			,{-2.07E-05, 2}
-			,{-1.99E-09, 3}
+			{1.66216405027572, 0}
+			,{0.0103626667562776, 1}
+			,{-2.48963790453744e-06, 2}
+			,{-2.39342001450701e-10, 3}
 		}
 	}}
 };
@@ -4657,14 +4657,14 @@ const EosData eos_rpp_methyl_fluoride = {
 static const IdealData ideal_data_nitromethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 61.041)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{7.43, 0}
-			,{0.1978, 1}
-			,{-1.08E-04, 2}
-			,{2.09E-08, 3}
+			{0.893623653657643, 0}
+			,{0.0237898733100245, 1}
+			,{-1.29894151541084e-05, 2}
+			,{2.51369237704505e-09, 3}
 		}
 	}}
 };
@@ -4703,14 +4703,14 @@ const EosData eos_rpp_nitromethane = {
 static const IdealData ideal_data_methyl_mercaptan = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 48.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{13.27, 0}
-			,{0.1457, 1}
-			,{-8.55E-05, 2}
-			,{2.08E-08, 3}
+			{1.5960142508798, 0}
+			,{0.0175236832217925, 1}
+			,{-1.02832869970025e-05, 2}
+			,{2.50166514079125e-09, 3}
 		}
 	}}
 };
@@ -4748,14 +4748,14 @@ const EosData eos_rpp_methyl_mercaptan = {
 static const IdealData ideal_data_methyl_amine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 31.058)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.48, 0}
-			,{0.1427, 1}
-			,{-5.33E-05, 2}
-			,{4.75E-09, 3}
+			{1.38072672193671, 0}
+			,{0.0171628661341784, 1}
+			,{-6.41051692327757e-06, 2}
+			,{5.71293722055694e-10, 3}
 		}
 	}}
 };
@@ -4793,14 +4793,14 @@ const EosData eos_rpp_methyl_amine = {
 static const IdealData ideal_data_chloropentafluoroetane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 154.467)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{27.83, 0}
-			,{0.3492, 1}
-			,{-2.89E-04, 2}
-			,{8.14E-08, 3}
+			{3.34717984943368, 0}
+			,{0.0419991089982838, 1}
+			,{-3.47587127734938e-05, 2}
+			,{9.79017031059652e-09, 3}
 		}
 	}}
 };
@@ -4838,14 +4838,14 @@ const EosData eos_rpp_chloropentafluoroetane = {
 static const IdealData ideal_data_1_1_dichlorotetrafluoroetane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 170.922)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{40.45, 0}
-			,{0.3278, 1}
-			,{-2.75E-04, 2}
-			,{7.82E-08, 3}
+			{4.86501706466375, 0}
+			,{0.0394252804399698, 1}
+			,{-3.30748996979612e-05, 2}
+			,{9.40529875047479e-09, 3}
 		}
 	}}
 };
@@ -4883,14 +4883,14 @@ const EosData eos_rpp_1_1_dichlorotetrafluoroetane = {
 static const IdealData ideal_data_1_2_dichlorotetrafluoroethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 170.922)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{38.78, 0}
-			,{0.344, 1}
-			,{-2.95E-04, 2}
-			,{8.51E-08, 3}
+			{4.66416221922522, 0}
+			,{0.041373692713086, 1}
+			,{-3.5480346948722e-05, 2}
+			,{1.02351780519873e-08, 3}
 		}
 	}}
 };
@@ -4928,14 +4928,14 @@ const EosData eos_rpp_1_2_dichlorotetrafluoroethane = {
 static const IdealData ideal_data_1_2_2_trichlorotrifluoroetane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 187.380)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{61.14, 0}
-			,{0.2874, 1}
-			,{-2.42E-04, 2}
-			,{6.90E-08, 3}
+			{7.35345224557581, 0}
+			,{0.0345662769934329, 1}
+			,{-2.91059117342059e-05, 2}
+			,{8.29879301512481e-09, 3}
 		}
 	}}
 };
@@ -4973,14 +4973,14 @@ const EosData eos_rpp_1_2_2_trichlorotrifluoroetane = {
 static const IdealData ideal_data_trifluoroacetonitrile = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 95.023)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{22.13, 0}
-			,{0.2519, 1}
-			,{-2.36E-04, 2}
-			,{8.21E-08, 3}
+			{2.66162738296684, 0}
+			,{0.0302966081233325, 1}
+			,{-2.83842775589776e-05, 2}
+			,{9.87436096437315e-09, 3}
 		}
 	}}
 };
@@ -5018,14 +5018,14 @@ const EosData eos_rpp_trifluoroacetonitrile = {
 static const IdealData ideal_data_perfluoroethene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.016)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{29.01, 0}
-			,{0.2277, 1}
-			,{-2.04E-04, 2}
-			,{6.78E-08, 3}
+			{3.48910123722856, 0}
+			,{0.0273860169499119, 1}
+			,{-2.45355619577603e-05, 2}
+			,{8.15446618007917e-09, 3}
 		}
 	}}
 };
@@ -5062,14 +5062,14 @@ const EosData eos_rpp_perfluoroethene = {
 static const IdealData ideal_data_cyanogen = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 52.035)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{35.94, 0}
-			,{0.09253, 1}
-			,{-8.15E-05, 2}
-			,{2.95E-08, 3}
+			{4.32258870961719, 0}
+			,{0.0111288017056449, 1}
+			,{-9.80219754685032e-06, 2}
+			,{3.5480346948722e-09, 3}
 		}
 	}}
 };
@@ -5106,14 +5106,14 @@ const EosData eos_rpp_cyanogen = {
 static const IdealData ideal_data_trichloroethene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 131.389)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{30.17, 0}
-			,{0.2287, 1}
-			,{-2.23E-04, 2}
-			,{8.24E-08, 3}
+			{3.62861717777269, 0}
+			,{0.0275062893124499, 1}
+			,{-2.68207368459831e-05, 2}
+			,{9.91044267313456e-09, 3}
 		}
 	}}
 };
@@ -5151,14 +5151,14 @@ const EosData eos_rpp_trichloroethene = {
 static const IdealData ideal_data_acetylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 26.038)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{26.82, 0}
-			,{0.07578, 1}
-			,{-5.01E-05, 2}
-			,{1.41E-08, 3}
+			{3.22570476327025, 0}
+			,{0.00911423963313273, 1}
+			,{-6.02564536315584e-06, 2}
+			,{1.69584031178638e-09, 3}
 		}
 	}}
 };
@@ -5195,14 +5195,14 @@ const EosData eos_rpp_acetylene = {
 static const IdealData ideal_data_trans_1_2_dichloroethene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 96.944)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{18.28, 0}
-			,{0.21, 1}
-			,{-1.76E-04, 2}
-			,{5.80E-08, 3}
+			{2.19857878719539, 0}
+			,{0.0252571961329886, 1}
+			,{-2.11679358066952e-05, 2}
+			,{6.97579702720637e-09, 3}
 		}
 	}}
 };
@@ -5240,14 +5240,14 @@ const EosData eos_rpp_trans_1_2_dichloroethene = {
 static const IdealData ideal_data_1_1_difluoroethene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 64.035)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.07, 0}
-			,{0.2445, 1}
-			,{-2.10E-04, 2}
-			,{7.02E-08, 3}
+			{0.369236152991785, 0}
+			,{0.029406592640551, 1}
+			,{-2.52571961329886e-05, 2}
+			,{8.44311985017046e-09, 3}
 		}
 	}}
 };
@@ -5285,14 +5285,14 @@ const EosData eos_rpp_1_1_difluoroethene = {
 static const IdealData ideal_data_ketene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 42.038)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{6.39, 0}
-			,{0.16938, 1}
-			,{-1.08E-04, 2}
-			,{2.70E-08, 3}
+			{0.768540396618081, 0}
+			,{0.0203717327666934, 1}
+			,{-1.29894151541084e-05, 2}
+			,{3.2473537885271e-09, 3}
 		}
 	}}
 };
@@ -5330,14 +5330,14 @@ const EosData eos_rpp_ketene = {
 static const IdealData ideal_data_vinyl_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 62.499)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{5.95, 0}
-			,{0.2019, 1}
-			,{-1.54E-04, 2}
-			,{4.77E-08, 3}
+			{0.715620557101343, 0}
+			,{0.0242829899964304, 1}
+			,{-1.85219438308583e-05, 2}
+			,{5.73699169306455e-09, 3}
 		}
 	}}
 };
@@ -5375,14 +5375,14 @@ const EosData eos_rpp_vinyl_chloride = {
 static const IdealData ideal_data_1_chloro_1_1_difluoroethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.496)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{16.82, 0}
-			,{0.2757, 1}
-			,{-1.99E-04, 2}
-			,{5.31E-08, 3}
+			{2.02298113788985, 0}
+			,{0.0331590903517378, 1}
+			,{-2.39342001450701e-05, 2}
+			,{6.38646245076997e-09, 3}
 		}
 	}}
 };
@@ -5421,14 +5421,14 @@ const EosData eos_rpp_1_chloro_1_1_difluoroethane = {
 static const IdealData ideal_data_acetyl_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 78.498)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{25.02, 0}
-			,{0.1711, 1}
-			,{-9.86E-05, 2}
-			,{2.22E-08, 3}
+			{3.00921451070178, 0}
+			,{0.0205786012302588, 1}
+			,{-1.18588549462508e-05, 2}
+			,{2.67004644834451e-09, 3}
 		}
 	}}
 };
@@ -5467,14 +5467,14 @@ const EosData eos_rpp_acetyl_chloride = {
 static const IdealData ideal_data_1_1_1_trifluoroethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.041)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{5.74, 0}
-			,{0.3141, 1}
-			,{-2.60E-04, 2}
-			,{8.42E-08, 3}
+			{0.690363360968354, 0}
+			,{0.0377775490731986, 1}
+			,{-3.12708142598906e-05, 2}
+			,{1.0126932925703e-08, 3}
 		}
 	}}
 };
@@ -5512,14 +5512,14 @@ const EosData eos_rpp_1_1_1_trifluoroethane = {
 static const IdealData ideal_data_acetonitrile = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 41.053)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.48, 0}
-			,{0.1196, 1}
-			,{-4.49E-05, 2}
-			,{3.20E-09, 3}
+			{2.46317798477908, 0}
+			,{0.0143845745595497, 1}
+			,{-5.40022907795803e-06, 2}
+			,{3.84871560121731e-10, 3}
 		}
 	}}
 };
@@ -5557,14 +5557,14 @@ const EosData eos_rpp_acetonitrile = {
 static const IdealData ideal_data_methyl_isocyanate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 57.052)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{35.76, 0}
-			,{0.104, 1}
-			,{-5.82E-06, 2}
-			,{-1.69E-08, 3}
+			{4.30093968436034, 0}
+			,{0.0125083257039562, 1}
+			,{-6.99985149971397e-07, 2}
+			,{-2.03260292689289e-09, 3}
 		}
 	}}
 };
@@ -5603,14 +5603,14 @@ const EosData eos_rpp_methyl_isocyanate = {
 static const IdealData ideal_data_1_2_dibromoethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 187.862)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{25.00, 0}
-			,{0.2517, 1}
-			,{-1.83E-04, 2}
-			,{5.65E-08, 3}
+			{3.00680906345102, 0}
+			,{0.0302725536508249, 1}
+			,{-2.20098423444615e-05, 2}
+			,{6.79538848339931e-09, 3}
 		}
 	}}
 };
@@ -5648,14 +5648,14 @@ const EosData eos_rpp_1_2_dibromoethane = {
 static const IdealData ideal_data_1_1_dichloroethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.960)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{12.47, 0}
-			,{0.2696, 1}
-			,{-2.05E-04, 2}
-			,{6.30E-08, 3}
+			{1.49979636084937, 0}
+			,{0.0324254289402558, 1}
+			,{-2.46558343202984e-05, 2}
+			,{7.57715883989657e-09, 3}
 		}
 	}}
 };
@@ -5693,14 +5693,14 @@ const EosData eos_rpp_1_1_dichloroethane = {
 static const IdealData ideal_data_1_2_dichloroethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.960)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.49, 0}
-			,{0.231, 1}
-			,{-1.44E-04, 2}
-			,{3.39E-08, 3}
+			{2.46438070840446, 0}
+			,{0.0277829157462874, 1}
+			,{-1.73192202054779e-05, 2}
+			,{4.07723309003958e-09, 3}
 		}
 	}}
 };
@@ -5738,14 +5738,14 @@ const EosData eos_rpp_1_2_dichloroethane = {
 static const IdealData ideal_data_1_1_difluoroethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 66.051)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{86.75, 0}
-			,{0.2396, 1}
-			,{-1.46E-04, 2}
-			,{3.39E-08, 3}
+			{10.433627450175, 0}
+			,{0.0288172580641146, 1}
+			,{-1.7559764930554e-05, 2}
+			,{4.07723309003958e-09, 3}
 		}
 	}}
 };
@@ -5783,14 +5783,14 @@ const EosData eos_rpp_1_1_difluoroethane = {
 static const IdealData ideal_data_acetaldehyde = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 44.054)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{7.72, 0}
-			,{0.1823, 1}
-			,{-1.01E-04, 2}
-			,{2.38E-08, 3}
+			{0.928502638793675, 0}
+			,{0.0219256516906848, 1}
+			,{-1.21475086163421e-05, 2}
+			,{2.86248222840537e-09, 3}
 		}
 	}}
 };
@@ -5828,14 +5828,14 @@ const EosData eos_rpp_acetaldehyde = {
 static const IdealData ideal_data_ethylene_oxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 44.054)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.52, 0}
-			,{0.2222, 1}
-			,{-1.26E-04, 2}
-			,{2.59E-08, 3}
+			{-0.904448166286067, 0}
+			,{0.0267245189559527, 1}
+			,{-1.51543176797931e-05, 2}
+			,{3.11505418973526e-09, 3}
 		}
 	}}
 };
@@ -5873,14 +5873,14 @@ const EosData eos_rpp_ethylene_oxide = {
 static const IdealData ideal_data_acetic_acid = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.052)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{4.84, 0}
-			,{0.2549, 1}
-			,{-1.75E-04, 2}
-			,{4.95E-08, 3}
+			{0.582118234684117, 0}
+			,{0.0306574252109466, 1}
+			,{-2.10476634441571e-05, 2}
+			,{5.95348194563302e-09, 3}
 		}
 	}}
 };
@@ -5918,14 +5918,14 @@ const EosData eos_rpp_acetic_acid = {
 static const IdealData ideal_data_methyl_formate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.052)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{1.43, 0}
-			,{0.27, 1}
-			,{-1.95E-04, 2}
-			,{5.70E-08, 3}
+			{0.171989478429398, 0}
+			,{0.032473537885271, 1}
+			,{-2.3453110694918e-05, 2}
+			,{6.85552466466833e-09, 3}
 		}
 	}}
 };
@@ -5963,14 +5963,14 @@ const EosData eos_rpp_methyl_formate = {
 static const IdealData ideal_data_ethyl_bromide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 108.966)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{6.66, 0}
-			,{0.2348, 1}
-			,{-1.47E-04, 2}
-			,{3.80E-08, 3}
+			{0.801013934503352, 0}
+			,{0.028239950723932, 1}
+			,{-1.7680037293092e-05, 2}
+			,{4.57034977644555e-09, 3}
 		}
 	}}
 };
@@ -6008,14 +6008,14 @@ const EosData eos_rpp_ethyl_bromide = {
 static const IdealData ideal_data_ethyl_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 64.515)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-0.55, 0}
-			,{0.2606, 1}
-			,{-1.84E-04, 2}
-			,{5.55E-08, 3}
+			{-0.0661497993959224, 0}
+			,{0.0313429776774134, 1}
+			,{-2.21301147069995e-05, 2}
+			,{6.67511612086126e-09, 3}
 		}
 	}}
 };
@@ -6053,14 +6053,14 @@ const EosData eos_rpp_ethyl_chloride = {
 static const IdealData ideal_data_ethyl_flouride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 48.060)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{4.35, 0}
-			,{0.218, 1}
-			,{-1.17E-04, 2}
-			,{2.41E-08, 3}
+			{0.523184777040477, 0}
+			,{0.0262193750332929, 1}
+			,{-1.40718664169508e-05, 2}
+			,{2.89856393716678e-09, 3}
 		}
 	}}
 };
@@ -6098,14 +6098,14 @@ const EosData eos_rpp_ethyl_flouride = {
 static const IdealData ideal_data_dimethyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 46.069)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{17.02, 0}
-			,{0.1791, 1}
-			,{-5.23E-05, 2}
-			,{-1.92E-09, 3}
+			{2.04703561039745, 0}
+			,{0.0215407801305631, 1}
+			,{-6.29024456073953e-06, 2}
+			,{-2.30922936073038e-10, 3}
 		}
 	}}
 };
@@ -6143,14 +6143,14 @@ const EosData eos_rpp_dimethyl_ether = {
 static const IdealData ideal_data_ethyl_mercaptan = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 62.134)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{14.92, 0}
-			,{0.2351, 1}
-			,{-1.36E-04, 2}
-			,{3.16E-08, 3}
+			{1.79446364906757, 0}
+			,{0.0282760324326934, 1}
+			,{-1.63570413051735e-05, 2}
+			,{3.80060665620209e-09, 3}
 		}
 	}}
 };
@@ -6188,14 +6188,14 @@ const EosData eos_rpp_ethyl_mercaptan = {
 static const IdealData ideal_data_dimethyl_sulphide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 62.130)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{24.30, 0}
-			,{0.1875, 1}
-			,{-6.79E-05, 2}
-			,{4.10E-09, 3}
+			{2.92261840967439, 0}
+			,{0.0225510679758827, 1}
+			,{-8.16649341633297e-06, 2}
+			,{4.93116686405967e-10, 3}
 		}
 	}}
 };
@@ -6233,14 +6233,14 @@ const EosData eos_rpp_dimethyl_sulphide = {
 static const IdealData ideal_data_ethyl_amine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 45.085)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.69, 0}
-			,{0.2752, 1}
-			,{-1.58E-04, 2}
-			,{3.81E-08, 3}
+			{0.443805017765371, 0}
+			,{0.0330989541704688, 1}
+			,{-1.90030332810104e-05, 2}
+			,{4.58237701269935e-09, 3}
 		}
 	}}
 };
@@ -6278,14 +6278,14 @@ const EosData eos_rpp_ethyl_amine = {
 static const IdealData ideal_data_dimethylamine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 45.085)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-0.17, 0}
-			,{0.2695, 1}
-			,{-1.33E-04, 2}
-			,{2.34E-08, 3}
+			{-0.0204463016314669, 0}
+			,{0.032413401704002, 1}
+			,{-1.59962242175594e-05, 2}
+			,{2.81437328339015e-09, 3}
 		}
 	}}
 };
@@ -6323,14 +6323,14 @@ const EosData eos_rpp_dimethylamine = {
 static const IdealData ideal_data_ethylenediamine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.099)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{38.30, 0}
-			,{0.2407, 1}
-			,{-4.34E-05, 2}
-			,{-3.95E-08, 3}
+			{4.60643148520696, 0}
+			,{0.0289495576629064, 1}
+			,{-5.21982053415097e-06, 2}
+			,{-4.75075832025261e-09, 3}
 		}
 	}}
 };
@@ -6368,14 +6368,14 @@ const EosData eos_rpp_ethylenediamine = {
 static const IdealData ideal_data_acrylonitrile = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 53.064)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{10.69, 0}
-			,{0.2208, 1}
-			,{-1.57E-04, 2}
-			,{4.60E-08, 3}
+			{1.28571155553166, 0}
+			,{0.0265561376483994, 1}
+			,{-1.88827609184724e-05, 2}
+			,{5.53252867674988e-09, 3}
 		}
 	}}
 };
@@ -6413,14 +6413,14 @@ const EosData eos_rpp_acrylonitrile = {
 static const IdealData ideal_data_methyl_acetylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 40.065)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{14.71, 0}
-			,{0.1864, 1}
-			,{-1.17E-04, 2}
-			,{3.22E-08, 3}
+			{1.76920645293458, 0}
+			,{0.0224187683770908, 1}
+			,{-1.40718664169508e-05, 2}
+			,{3.87277007372491e-09, 3}
 		}
 	}}
 };
@@ -6457,14 +6457,14 @@ const EosData eos_rpp_methyl_acetylene = {
 static const IdealData ideal_data_acrolein = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 56.064)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.97, 0}
-			,{0.2106, 1}
-			,{-1.07E-04, 2}
-			,{1.91E-08, 3}
+			{1.43966017958035, 0}
+			,{0.0253293595505114, 1}
+			,{-1.28691427915704e-05, 2}
+			,{2.29720212447658e-09, 3}
 		}
 	}}
 };
@@ -6502,14 +6502,14 @@ const EosData eos_rpp_acrolein = {
 static const IdealData ideal_data_acrylic_acid = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.064)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{1.74, 0}
-			,{0.3191, 1}
-			,{-2.35E-04, 2}
-			,{6.98E-08, 3}
+			{0.209273910816191, 0}
+			,{0.0383789108858888, 1}
+			,{-2.82640051964396e-05, 2}
+			,{8.39501090515525e-09, 3}
 		}
 	}}
 };
@@ -6547,14 +6547,14 @@ const EosData eos_rpp_acrylic_acid = {
 static const IdealData ideal_data_vinyl_formate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.064)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{27.81, 0}
-			,{0.1839, 1}
-			,{-3.56E-05, 2}
-			,{-2.34E-07, 3}
+			{3.34477440218291, 0}
+			,{0.0221180874707457, 1}
+			,{-4.28169610635425e-06, 2}
+			,{-2.81437328339015e-08, 3}
 		}
 	}}
 };
@@ -6592,14 +6592,14 @@ const EosData eos_rpp_vinyl_formate = {
 static const IdealData ideal_data_allyl_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 76.526)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{2.53, 0}
-			,{0.3047, 1}
-			,{-2.28E-04, 2}
-			,{7.29E-08, 3}
+			{0.304289077221243, 0}
+			,{0.036646988865341, 1}
+			,{-2.74220986586733e-05, 2}
+			,{8.76785522902317e-09, 3}
 		}
 	}}
 };
@@ -6637,14 +6637,14 @@ const EosData eos_rpp_allyl_chloride = {
 static const IdealData ideal_data_1_2_3_trichloropropane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 147.432)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{26.88, 0}
-			,{0.3622, 1}
-			,{-2.79E-04, 2}
-			,{8.79E-08, 3}
+			{3.23292110502254, 0}
+			,{0.0435626497112784, 1}
+			,{-3.35559891481134e-05, 2}
+			,{1.05719406670938e-08, 3}
 		}
 	}}
 };
@@ -6682,14 +6682,14 @@ const EosData eos_rpp_1_2_3_trichloropropane = {
 static const IdealData ideal_data_propionitrile = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 55.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{15.40, 0}
-			,{0.2245, 1}
-			,{-1.10E-04, 2}
-			,{1.95E-08, 3}
+			{1.85219438308583, 0}
+			,{0.0270011453897902, 1}
+			,{-1.32299598791845e-05, 2}
+			,{2.3453110694918e-09, 3}
 		}
 	}}
 };
@@ -6727,14 +6727,14 @@ const EosData eos_rpp_propionitrile = {
 static const IdealData ideal_data_cyclopropane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 42.081)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-35.24, 0}
-			,{0.3813, 1}
-			,{-2.88E-04, 2}
-			,{9.04E-08, 3}
+			{-4.23839805584056, 0}
+			,{0.045859851835755, 1}
+			,{-3.46384404109557e-05, 2}
+			,{1.08726215734389e-08, 3}
 		}
 	}}
 };
@@ -6771,14 +6771,14 @@ const EosData eos_rpp_cyclopropane = {
 static const IdealData ideal_data_1_2_dichloropropane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.987)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{10.45, 0}
-			,{0.3655, 1}
-			,{-2.60E-04, 2}
-			,{7.74E-08, 3}
+			{1.25684618852253, 0}
+			,{0.0439595485076539, 1}
+			,{-3.12708142598906e-05, 2}
+			,{9.30908086044436e-09, 3}
 		}
 	}}
 };
@@ -6816,14 +6816,14 @@ const EosData eos_rpp_1_2_dichloropropane = {
 static const IdealData ideal_data_propionaldehyde = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.72, 0}
-			,{0.2614, 1}
-			,{-1.30E-04, 2}
-			,{2.13E-08, 3}
+			{1.40959208894584, 0}
+			,{0.0314391955674439, 1}
+			,{-1.56354071299453e-05, 2}
+			,{2.56180132206027e-09, 3}
 		}
 	}}
 };
@@ -6861,14 +6861,14 @@ const EosData eos_rpp_propionaldehyde = {
 static const IdealData ideal_data_1_2_propylene_oxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-8.46, 0}
-			,{0.3257, 1}
-			,{-1.99E-04, 2}
-			,{4.82E-08, 3}
+			{-1.01750418707183, 0}
+			,{0.0391727084786399, 1}
+			,{-2.39342001450701e-05, 2}
+			,{5.79712787433357e-09, 3}
 		}
 	}}
 };
@@ -6906,14 +6906,14 @@ const EosData eos_rpp_1_2_propylene_oxide = {
 static const IdealData ideal_data_vinyl_methyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{15.63, 0}
-			,{0.2341, 1}
-			,{-9.70E-05, 2}
-			,{1.06E-08, 3}
+			{1.87985702646958, 0}
+			,{0.0281557600701553, 1}
+			,{-1.166641916619e-05, 2}
+			,{1.27488704290323e-09, 3}
 		}
 	}}
 };
@@ -6951,14 +6951,14 @@ const EosData eos_rpp_vinyl_methyl_ether = {
 static const IdealData ideal_data_propionic_acid = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{5.67, 0}
-			,{0.3689, 1}
-			,{-2.87E-04, 2}
-			,{9.88E-08, 3}
+			{0.681944295590691, 0}
+			,{0.0443684745402832, 1}
+			,{-3.45181680484177e-05, 2}
+			,{1.18829094187584e-08, 3}
 		}
 	}}
 };
@@ -6996,14 +6996,14 @@ const EosData eos_rpp_propionic_acid = {
 static const IdealData ideal_data_ethyl_formate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{24.67, 0}
-			,{0.2316, 1}
-			,{-2.12E-05, 2}
-			,{-5.36E-08, 3}
+			{2.96711918381347, 0}
+			,{0.0278550791638102, 1}
+			,{-2.54977408580646e-06, 2}
+			,{-6.44659863203899e-09, 3}
 		}
 	}}
 };
@@ -7041,14 +7041,14 @@ const EosData eos_rpp_ethyl_formate = {
 static const IdealData ideal_data_methyl_acetate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{16.55, 0}
-			,{0.2245, 1}
-			,{-4.34E-05, 2}
-			,{2.91E-08, 3}
+			{1.99050760000458, 0}
+			,{0.0270011453897902, 1}
+			,{-5.21982053415097e-06, 2}
+			,{3.49992574985699e-09, 3}
 		}
 	}}
 };
@@ -7086,14 +7086,14 @@ const EosData eos_rpp_methyl_acetate = {
 static const IdealData ideal_data_propyl_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 78.542)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.35, 0}
-			,{0.3626, 1}
-			,{-2.51E-04, 2}
-			,{7.45E-08, 3}
+			{-0.402912414502437, 0}
+			,{0.0436107586562936, 1}
+			,{-3.01883629970482e-05, 2}
+			,{8.96029100908404e-09, 3}
 		}
 	}}
 };
@@ -7131,14 +7131,14 @@ const EosData eos_rpp_propyl_chloride = {
 static const IdealData ideal_data_isopropyl_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 78.542)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{1.84, 0}
-			,{0.3488, 1}
-			,{-2.24E-04, 2}
-			,{5.86E-08, 3}
+			{0.221301147069995, 0}
+			,{0.0419510000532686, 1}
+			,{-2.69410092085211e-05, 2}
+			,{7.04796044472919e-09, 3}
 		}
 	}}
 };
@@ -7176,14 +7176,14 @@ const EosData eos_rpp_isopropyl_chloride = {
 static const IdealData ideal_data_1_propanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.096)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{2.47, 0}
-			,{0.3325, 1}
-			,{-1.86E-04, 2}
-			,{4.30E-08, 3}
+			{0.297072735468961, 0}
+			,{0.0399905605438986, 1}
+			,{-2.23706594320756e-05, 2}
+			,{5.17171158913575e-09, 3}
 		}
 	}}
 };
@@ -7221,14 +7221,14 @@ const EosData eos_rpp_1_propanol = {
 static const IdealData ideal_data_isopropyl_alcohol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.096)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{32.43, 0}
-			,{0.1885, 1}
-			,{6.41E-05, 2}
-			,{-9.26E-08, 3}
+			{3.90043271710866, 0}
+			,{0.0226713403384207, 1}
+			,{7.70945843868841e-06, 2}
+			,{-1.11372207710226e-08, 3}
 		}
 	}}
 };
@@ -7266,14 +7266,14 @@ const EosData eos_rpp_isopropyl_alcohol = {
 static const IdealData ideal_data_methyl_ethyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.096)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{18.67, 0}
-			,{0.2685, 1}
-			,{-1.03E-04, 2}
-			,{8.95E-09, 3}
+			{2.24548500858522, 0}
+			,{0.032293129341464, 1}
+			,{-1.23880533414182e-05, 2}
+			,{1.07643764471547e-09, 3}
 		}
 	}}
 };
@@ -7311,14 +7311,14 @@ const EosData eos_rpp_methyl_ethyl_ether = {
 static const IdealData ideal_data_methyl_ethyl_sulfide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 76.157)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{19.53, 0}
-			,{0.2891, 1}
-			,{-1.21E-04, 2}
-			,{1.29E-08, 3}
+			{2.34891924036794, 0}
+			,{0.0347707400097476, 1}
+			,{-1.45529558671029e-05, 2}
+			,{1.55151347674073e-09, 3}
 		}
 	}}
 };
@@ -7356,14 +7356,14 @@ const EosData eos_rpp_methyl_ethyl_sulfide = {
 static const IdealData ideal_data_n_propyl_amine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 59.112)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{6.69, 0}
-			,{0.3498, 1}
-			,{-1.82E-04, 2}
-			,{3.59E-08, 3}
+			{0.804622105379493, 0}
+			,{0.0420712724158067, 1}
+			,{-2.18895699819234e-05, 2}
+			,{4.31777781511566e-09, 3}
 		}
 	}}
 };
@@ -7401,14 +7401,14 @@ const EosData eos_rpp_n_propyl_amine = {
 static const IdealData ideal_data_isopropyl_amine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 59.112)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.49, 0}
-			,{0.4175, 1}
-			,{-2.83E-04, 2}
-			,{8.35E-08, 3}
+			{-0.900839995409926, 0}
+			,{0.050213711359632, 1}
+			,{-3.40370785982655e-05, 2}
+			,{1.00427422719264e-08, 3}
 		}
 	}}
 };
@@ -7446,14 +7446,14 @@ const EosData eos_rpp_isopropyl_amine = {
 static const IdealData ideal_data_trimethyl_amine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 59.112)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-8.21, 0}
-			,{0.3972, 1}
-			,{-2.22E-04, 2}
-			,{4.62E-08, 3}
+			{-0.987436096437315, 0}
+			,{0.0477721824001098, 1}
+			,{-2.67004644834451e-05, 2}
+			,{5.55658314925748e-09, 3}
 		}
 	}}
 };
@@ -7491,14 +7491,14 @@ const EosData eos_rpp_trimethyl_amine = {
 static const IdealData ideal_data_vinylacetylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 52.076)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{6.76, 0}
-			,{0.2841, 1}
-			,{-2.27E-04, 2}
-			,{7.46E-08, 3}
+			{0.813041170757156, 0}
+			,{0.0341693781970574, 1}
+			,{-2.73018262961353e-05, 2}
+			,{8.97231824533784e-09, 3}
 		}
 	}}
 };
@@ -7535,14 +7535,14 @@ const EosData eos_rpp_vinylacetylene = {
 static const IdealData ideal_data_furan = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 68.075)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-35.53, 0}
-			,{0.4321, 1}
-			,{-3.46E-04, 2}
-			,{1.07E-07, 3}
+			{-4.27327704097659, 0}
+			,{0.0519696878526874, 1}
+			,{-4.16142374381621e-05, 2}
+			,{1.28691427915704e-08, 3}
 		}
 	}}
 };
@@ -7580,14 +7580,14 @@ const EosData eos_rpp_furan = {
 static const IdealData ideal_data_thiophene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.136)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-30.61, 0}
-			,{0.448, 1}
-			,{-3.77E-04, 2}
-			,{1.25E-07, 3}
+			{-3.68153701728943, 0}
+			,{0.0538820184170423, 1}
+			,{-4.53426806768414e-05, 2}
+			,{1.50340453172551e-08, 3}
 		}
 	}}
 };
@@ -7625,14 +7625,14 @@ const EosData eos_rpp_thiophene = {
 static const IdealData ideal_data_allyl_cyanide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 67.091)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.70, 0}
-			,{0.2572, 1}
-			,{-1.19E-04, 2}
-			,{1.23E-08, 3}
+			{2.60991026707549, 0}
+			,{0.0309340516447841, 1}
+			,{-1.43124111420269e-05, 2}
+			,{1.4793500592179e-09, 3}
 		}
 	}}
 };
@@ -7670,14 +7670,14 @@ const EosData eos_rpp_allyl_cyanide = {
 static const IdealData ideal_data_1_butyne = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 54.092)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{12.55, 0}
-			,{0.2744, 1}
-			,{-1.55E-04, 2}
-			,{3.45E-08, 3}
+			{1.50941814985241, 0}
+			,{0.0330027362804384, 1}
+			,{-1.86422161933963e-05, 2}
+			,{4.14939650756241e-09, 3}
 		}
 	}}
 };
@@ -7714,14 +7714,14 @@ const EosData eos_rpp_1_butyne = {
 static const IdealData ideal_data_2_butyne = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 54.092)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{15.93, 0}
-			,{0.2381, 1}
-			,{-1.07E-04, 2}
-			,{1.75E-08, 3}
+			{1.91593873523099, 0}
+			,{0.0286368495203075, 1}
+			,{-1.28691427915704e-05, 2}
+			,{2.10476634441571e-09, 3}
 		}
 	}}
 };
@@ -7758,14 +7758,14 @@ const EosData eos_rpp_2_butyne = {
 static const IdealData ideal_data_1_2_butadiene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 54.092)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.20, 0}
-			,{0.2724, 1}
-			,{-1.47E-04, 2}
-			,{3.09E-08, 3}
+			{1.34705046042606, 0}
+			,{0.0327621915553623, 1}
+			,{-1.7680037293092e-05, 2}
+			,{3.71641600242546e-09, 3}
 		}
 	}}
 };
@@ -7802,14 +7802,14 @@ const EosData eos_rpp_1_2_butadiene = {
 static const IdealData ideal_data_1_3_butadiene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 54.092)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-1.69, 0}
-			,{0.3419, 1}
-			,{-2.34E-04, 2}
-			,{6.34E-08, 3}
+			{-0.203260292689289, 0}
+			,{0.0411211207517561, 1}
+			,{-2.81437328339015e-05, 2}
+			,{7.62526778491179e-09, 3}
 		}
 	}}
 };
@@ -7846,14 +7846,14 @@ const EosData eos_rpp_1_3_butadiene = {
 static const IdealData ideal_data_vinyl_acetate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.091)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{15.16, 0}
-			,{0.2795, 1}
-			,{-8.81E-05, 2}
-			,{-1.66E-08, 3}
+			{1.8233290160767, 0}
+			,{0.0336161253293824, 1}
+			,{-1.05959951396014e-05, 2}
+			,{-1.99652121813148e-09, 3}
 		}
 	}}
 };
@@ -7891,14 +7891,14 @@ const EosData eos_rpp_vinyl_acetate = {
 static const IdealData ideal_data_acetic_anhydride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.089)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-23.13, 0}
-			,{0.5087, 1}
-			,{-3.58E-04, 2}
-			,{9.84E-08, 3}
+			{-2.78189974550488, 0}
+			,{0.0611825508231014, 1}
+			,{-4.30575057886186e-05, 2}
+			,{1.18348004737432e-08, 3}
 		}
 	}}
 };
@@ -7936,14 +7936,14 @@ const EosData eos_rpp_acetic_anhydride = {
 static const IdealData ideal_data_butyronitrile = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 69.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{15.21, 0}
-			,{0.3206, 1}
-			,{-1.64E-04, 2}
-			,{2.98E-08, 3}
+			{1.8293426342036, 0}
+			,{0.0385593194296959, 1}
+			,{-1.97246674562387e-05, 2}
+			,{3.58411640363362e-09, 3}
 		}
 	}}
 };
@@ -7981,14 +7981,14 @@ const EosData eos_rpp_butyronitrile = {
 static const IdealData ideal_data_methyl_acrylate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.091)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{15.16, 0}
-			,{0.2796, 1}
-			,{-8.81E-05, 2}
-			,{-1.66E-08, 3}
+			{1.8233290160767, 0}
+			,{0.0336281525656362, 1}
+			,{-1.05959951396014e-05, 2}
+			,{-1.99652121813148e-09, 3}
 		}
 	}}
 };
@@ -8026,14 +8026,14 @@ const EosData eos_rpp_methyl_acrylate = {
 static const IdealData ideal_data_1_butene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 56.108)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-2.99, 0}
-			,{0.3532, 1}
-			,{-1.99E-04, 2}
-			,{4.46E-08, 3}
+			{-0.359614363988742, 0}
+			,{0.042480198448436, 1}
+			,{-2.39342001450701e-05, 2}
+			,{5.36414736919662e-09, 3}
 		}
 	}}
 };
@@ -8070,14 +8070,14 @@ const EosData eos_rpp_1_butene = {
 static const IdealData ideal_data_2_butene_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 56.108)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{0.44, 0}
-			,{0.2953, 1}
-			,{-1.02E-04, 2}
-			,{-6.16E-10, 3}
+			{0.0529198395167379, 0}
+			,{0.0355164286574834, 1}
+			,{-1.22677809788802e-05, 2}
+			,{-7.40877753234331e-11, 3}
 		}
 	}}
 };
@@ -8114,14 +8114,14 @@ const EosData eos_rpp_2_butene_cis = {
 static const IdealData ideal_data_2_butene_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 56.108)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{18.32, 0}
-			,{0.2564, 1}
-			,{-7.01E-05, 2}
-			,{-8.99E-09, 3}
+			{2.20338968169691, 0}
+			,{0.0308378337547537, 1}
+			,{-8.43109261391666e-06, 2}
+			,{-1.08124853921699e-09, 3}
 		}
 	}}
 };
@@ -8158,14 +8158,14 @@ const EosData eos_rpp_2_butene_trans = {
 static const IdealData ideal_data_cyclobutane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 56.108)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-50.25, 0}
-			,{0.5024, 1}
-			,{-3.56E-04, 2}
-			,{1.05E-07, 3}
+			{-6.04368621753655, 0}
+			,{0.0604248349391117, 1}
+			,{-4.28169610635425e-05, 2}
+			,{1.26285980664943e-08, 3}
 		}
 	}}
 };
@@ -8202,14 +8202,14 @@ const EosData eos_rpp_cyclobutane = {
 static const IdealData ideal_data_isobutylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 56.108)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{16.05, 0}
-			,{0.2804, 1}
-			,{-1.09E-04, 2}
-			,{9.10E-09, 3}
+			{1.93037141873555, 0}
+			,{0.0337243704556666, 1}
+			,{-1.31096875166464e-05, 2}
+			,{1.09447849909617e-09, 3}
 		}
 	}}
 };
@@ -8246,14 +8246,14 @@ const EosData eos_rpp_isobutylene = {
 static const IdealData ideal_data_n_butyraldehyde = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{14.08, 0}
-			,{0.3457, 1}
-			,{-1.72E-04, 2}
-			,{2.89E-08, 3}
+			{1.69343486453561, 0}
+			,{0.0415781557294007, 1}
+			,{-2.0686846356543e-05, 2}
+			,{3.47587127734938e-09, 3}
 		}
 	}}
 };
@@ -8291,14 +8291,14 @@ const EosData eos_rpp_n_butyraldehyde = {
 static const IdealData ideal_data_isobutyraldehyde = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{24.46, 0}
-			,{0.3356, 1}
-			,{-2.06E-04, 2}
-			,{6.37E-08, 3}
+			{2.94186198768048, 0}
+			,{0.0403634048677665, 1}
+			,{-2.47761066828364e-05, 2}
+			,{7.6613494936732e-09, 3}
 		}
 	}}
 };
@@ -8336,14 +8336,14 @@ const EosData eos_rpp_isobutyraldehyde = {
 static const IdealData ideal_data_methyl_ethyl_ketone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{10.94, 0}
-			,{0.3559, 1}
-			,{-1.90E-04, 2}
-			,{3.92E-08, 3}
+			{1.31577964616617, 0}
+			,{0.0428049338272887, 1}
+			,{-2.28517488822278e-05, 2}
+			,{4.7146766114912e-09, 3}
 		}
 	}}
 };
@@ -8381,14 +8381,14 @@ const EosData eos_rpp_methyl_ethyl_ketone = {
 static const IdealData ideal_data_tetrahydrofuran = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{19.10, 0}
-			,{0.5162, 1}
-			,{-4.13E-04, 2}
-			,{1.45E-07, 3}
+			{2.29720212447658, 0}
+			,{0.0620845935421367, 1}
+			,{-4.96724857282108e-05, 2}
+			,{1.74394925680159e-08, 3}
 		}
 	}}
 };
@@ -8426,14 +8426,14 @@ const EosData eos_rpp_tetrahydrofuran = {
 static const IdealData ideal_data_vinyl_ethyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{17.28, 0}
-			,{0.3236, 1}
-			,{-1.47E-04, 2}
-			,{2.15E-08, 3}
+			{2.07830642465735, 0}
+			,{0.03892013651731, 1}
+			,{-1.7680037293092e-05, 2}
+			,{2.58585579456788e-09, 3}
 		}
 	}}
 };
@@ -8471,14 +8471,14 @@ const EosData eos_rpp_vinyl_ethyl_ether = {
 static const IdealData ideal_data_n_butyric_acid = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 88.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.74, 0}
-			,{0.4137, 1}
-			,{-2.43E-04, 2}
-			,{5.53E-08, 3}
+			{1.4119975361966, 0}
+			,{0.0497566763819875, 1}
+			,{-2.92261840967439e-05, 2}
+			,{6.65106164835366e-09, 3}
 		}
 	}}
 };
@@ -8516,14 +8516,14 @@ const EosData eos_rpp_n_butyric_acid = {
 static const IdealData ideal_data_isobutyric_acid = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 88.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{9.81, 0}
-			,{0.4668, 1}
-			,{-3.72E-04, 2}
-			,{1.35E-07, 3}
+			{1.17987187649818, 0}
+			,{0.0561431388327574, 1}
+			,{-4.47413188641512e-05, 2}
+			,{1.62367689426355e-08, 3}
 		}
 	}}
 };
@@ -8561,14 +8561,14 @@ const EosData eos_rpp_isobutyric_acid = {
 static const IdealData ideal_data_1_4_dioxane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 88.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-53.57, 0}
-			,{0.5987, 1}
-			,{-4.09E-04, 2}
-			,{1.06E-07, 3}
+			{-6.44299046116285, 0}
+			,{0.072007063451525, 1}
+			,{-4.91913962780587e-05, 2}
+			,{1.27488704290323e-08, 3}
 		}
 	}}
 };
@@ -8606,14 +8606,14 @@ const EosData eos_rpp_1_4_dioxane = {
 static const IdealData ideal_data_ethyl_acetate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 88.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{7.24, 0}
-			,{0.4072, 1}
-			,{-2.09E-04, 2}
-			,{2.86E-08, 3}
+			{0.870771904775415, 0}
+			,{0.0489749060254902, 1}
+			,{-2.51369237704505e-05, 2}
+			,{3.43978956858797e-09, 3}
 		}
 	}}
 };
@@ -8651,14 +8651,14 @@ const EosData eos_rpp_ethyl_acetate = {
 static const IdealData ideal_data_methyl_propionate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 88.107)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{18.20, 0}
-			,{0.314, 1}
-			,{-9.35E-05, 2}
-			,{-1.83E-08, 3}
+			{2.18895699819234, 0}
+			,{0.0377655218369448, 1}
+			,{-1.12454658973068e-05, 2}
+			,{-2.20098423444615e-09, 3}
 		}
 	}}
 };
@@ -8696,14 +8696,14 @@ const EosData eos_rpp_methyl_propionate = {
 static const IdealData ideal_data_1_chlorobutane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 92.569)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-2.61, 0}
-			,{0.4497, 1}
-			,{-2.94E-04, 2}
-			,{8.08E-08, 3}
+			{-0.313910866224286, 0}
+			,{0.0540864814333569, 1}
+			,{-3.5360074586184e-05, 2}
+			,{9.7180068930737e-09, 3}
 		}
 	}}
 };
@@ -8741,14 +8741,14 @@ const EosData eos_rpp_1_chlorobutane = {
 static const IdealData ideal_data_2_chlorobutane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 92.569)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.43, 0}
-			,{0.4559, 1}
-			,{-2.98E-04, 2}
-			,{8.26E-08, 3}
+			{-0.41253420350548, 0}
+			,{0.0548321700810928, 1}
+			,{-3.58411640363362e-05, 2}
+			,{9.93449714564217e-09, 3}
 		}
 	}}
 };
@@ -8786,14 +8786,14 @@ const EosData eos_rpp_2_chlorobutane = {
 static const IdealData ideal_data_tert_butyl_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 92.569)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.93, 0}
-			,{0.4652, 1}
-			,{-2.89E-04, 2}
-			,{7.87E-08, 3}
+			{-0.4726703847745, 0}
+			,{0.0559507030526966, 1}
+			,{-3.47587127734938e-05, 2}
+			,{9.46543493174381e-09, 3}
 		}
 	}}
 };
@@ -8831,14 +8831,14 @@ const EosData eos_rpp_tert_butyl_chloride = {
 static const IdealData ideal_data_pyrrolidine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 71.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-51.53, 0}
-			,{0.5338, 1}
-			,{-3.24E-04, 2}
-			,{7.53E-08, 3}
+			{-6.19763484158524, 0}
+			,{0.0642013871228062, 1}
+			,{-3.89682454623252e-05, 2}
+			,{9.05650889911447e-09, 3}
 		}
 	}}
 };
@@ -8876,14 +8876,14 @@ const EosData eos_rpp_pyrrolidine = {
 static const IdealData ideal_data_morpholine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 87.122)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-42.80, 0}
-			,{0.5388, 1}
-			,{-2.67E-04, 2}
-			,{4.20E-08, 3}
+			{-5.14765711662815, 0}
+			,{0.0648027489354964, 1}
+			,{-3.21127207976569e-05, 2}
+			,{5.05143922659771e-09, 3}
 		}
 	}}
 };
@@ -8922,14 +8922,14 @@ const EosData eos_rpp_morpholine = {
 static const IdealData ideal_data_isobutane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.124)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-1.39, 0}
-			,{0.3847, 1}
-			,{-1.85E-04, 2}
-			,{2.90E-08, 3}
+			{-0.167178583927877, 0}
+			,{0.0462687778683843, 1}
+			,{-2.22503870695375e-05, 2}
+			,{3.48789851360318e-09, 3}
 		}
 	}}
 };
@@ -8966,14 +8966,14 @@ const EosData eos_rpp_isobutane = {
 static const IdealData ideal_data_2_butanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{5.75, 0}
-			,{0.4245, 1}
-			,{-2.33E-04, 2}
-			,{4.77E-08, 3}
+			{0.691566084593735, 0}
+			,{0.0510556178973983, 1}
+			,{-2.80234604713635e-05, 2}
+			,{5.73699169306455e-09, 3}
 		}
 	}}
 };
@@ -9011,14 +9011,14 @@ const EosData eos_rpp_2_butanol = {
 static const IdealData ideal_data_isobutaol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.71, 0}
-			,{0.4689, 1}
-			,{-2.88E-04, 2}
-			,{7.23E-08, 3}
+			{-0.927299915168294, 0}
+			,{0.0563957107940873, 1}
+			,{-3.46384404109557e-05, 2}
+			,{8.69569181150035e-09, 3}
 		}
 	}}
 };
@@ -9056,14 +9056,14 @@ const EosData eos_rpp_isobutaol = {
 static const IdealData ideal_data_tert_butanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-48.61, 0}
-			,{0.7172, 1}
-			,{-7.08E-04, 2}
-			,{2.92E-07, 3}
+			{-5.84643954297416, 0}
+			,{0.0862593384122829, 1}
+			,{-8.51528326769329e-05, 2}
+			,{3.51195298611079e-08, 3}
 		}
 	}}
 };
@@ -9101,14 +9101,14 @@ const EosData eos_rpp_tert_butanol = {
 static const IdealData ideal_data_diethyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.42, 0}
-			,{0.3359, 1}
-			,{-1.04E-04, 2}
-			,{-9.36E-09, 3}
+			{2.57623400556483, 0}
+			,{0.0403994865765279, 1}
+			,{-1.25083257039562e-05, 2}
+			,{-1.12574931335606e-09, 3}
 		}
 	}}
 };
@@ -9146,14 +9146,14 @@ const EosData eos_rpp_diethyl_ether = {
 static const IdealData ideal_data_methyl_propyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.31, 0}
-			,{0.339, 1}
-			,{-1.13E-04, 2}
-			,{-2.86E-09, 3}
+			{2.56300404568565, 0}
+			,{0.0407723309003958, 1}
+			,{-1.35907769667986e-05, 2}
+			,{-3.43978956858797e-10, 3}
 		}
 	}}
 };
@@ -9191,14 +9191,14 @@ const EosData eos_rpp_methyl_propyl_ether = {
 static const IdealData ideal_data_methyl_isopropyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 74.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{13.53, 0}
-			,{0.3697, 1}
-			,{-1.48E-04, 2}
-			,{1.21E-08, 3}
+			{1.62728506513969, 0}
+			,{0.0444646924303137, 1}
+			,{-1.780030965563e-05, 2}
+			,{1.45529558671029e-09, 3}
 		}
 	}}
 };
@@ -9236,14 +9236,14 @@ const EosData eos_rpp_methyl_isopropyl_ether = {
 static const IdealData ideal_data_1_2_dimethoxyethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 90.123)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{32.23, 0}
-			,{0.3567, 1}
-			,{-1.34E-04, 2}
-			,{8.40E-09, 3}
+			{3.87637824460105, 0}
+			,{0.0429011517173192, 1}
+			,{-1.61164965800975e-05, 2}
+			,{1.01028784531954e-09, 3}
 		}
 	}}
 };
@@ -9281,14 +9281,14 @@ const EosData eos_rpp_1_2_dimethoxyethane = {
 static const IdealData ideal_data_diethyl_sulfide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 90.184)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{13.59, 0}
-			,{0.3959, 1}
-			,{-1.78E-04, 2}
-			,{2.65E-08, 3}
+			{1.63450140689197, 0}
+			,{0.0476158283288103, 1}
+			,{-2.14084805317713e-05, 2}
+			,{3.18721760725808e-09, 3}
 		}
 	}}
 };
@@ -9326,14 +9326,14 @@ const EosData eos_rpp_diethyl_sulfide = {
 static const IdealData ideal_data_n_butyl_amine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 73.139)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{5.08, 0}
-			,{0.4476, 1}
-			,{-2.41E-04, 2}
-			,{7.60E-08, 3}
+			{0.610983601693247, 0}
+			,{0.0538339094720271, 1}
+			,{-2.89856393716678e-05, 2}
+			,{9.1406995528911e-09, 3}
 		}
 	}}
 };
@@ -9371,14 +9371,14 @@ const EosData eos_rpp_n_butyl_amine = {
 static const IdealData ideal_data_isobutyl_amine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 73.139)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{9.49, 0}
-			,{0.443, 1}
-			,{-2.11E-04, 2}
-			,{2.33E-08, 3}
+			{1.14138472048601, 0}
+			,{0.0532806566043521, 1}
+			,{-2.53774684955266e-05, 2}
+			,{2.80234604713635e-09, 3}
 		}
 	}}
 };
@@ -9416,14 +9416,14 @@ const EosData eos_rpp_isobutyl_amine = {
 static const IdealData ideal_data_diethyl_amine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 73.139)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{2.04, 0}
-			,{0.443, 1}
-			,{-2.18E-04, 2}
-			,{3.65E-08, 3}
+			{0.245355619577603, 0}
+			,{0.0532806566043521, 1}
+			,{-2.62193750332929e-05, 2}
+			,{4.38994123263849e-09, 3}
 		}
 	}}
 };
@@ -9461,14 +9461,14 @@ const EosData eos_rpp_diethyl_amine = {
 static const IdealData ideal_data_pyradine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 79.102)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{39.79, 0}
-			,{0.4928, 1}
-			,{-3.56E-04, 2}
-			,{1.00E-07, 3}
+			{4.78563730538864, 0}
+			,{0.0592702202587465, 1}
+			,{-4.28169610635425e-05, 2}
+			,{1.20272362538041e-08, 3}
 		}
 	}}
 };
@@ -9506,14 +9506,14 @@ const EosData eos_rpp_pyradine = {
 static const IdealData ideal_data_1_2_pentadiene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 68.119)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{8.83, 0}
-			,{0.388, 1}
-			,{-2.28E-04, 2}
-			,{5.25E-08, 3}
+			{1.0620049612109, 0}
+			,{0.0466656766647598, 1}
+			,{-2.74220986586733e-05, 2}
+			,{6.31429903324714e-09, 3}
 		}
 	}}
 };
@@ -9550,14 +9550,14 @@ const EosData eos_rpp_1_2_pentadiene = {
 static const IdealData ideal_data_1_3_pentadiene_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 68.119)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{30.69, 0}
-			,{0.2811, 1}
-			,{-6.71E-05, 2}
-			,{-2.35E-08, 3}
+			{3.69115880629247, 0}
+			,{0.0338085611094433, 1}
+			,{-8.07027552630254e-06, 2}
+			,{-2.82640051964396e-09, 3}
 		}
 	}}
 };
@@ -9594,14 +9594,14 @@ const EosData eos_rpp_1_3_pentadiene_trans = {
 static const IdealData ideal_data_1_4_pentadiene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 68.119)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{7.00, 0}
-			,{0.3952, 1}
-			,{-2.37E-04, 2}
-			,{5.60E-08, 3}
+			{0.841906537766286, 0}
+			,{0.0475316376750337, 1}
+			,{-2.85045499215157e-05, 2}
+			,{6.73525230213028e-09, 3}
 		}
 	}}
 };
@@ -9638,14 +9638,14 @@ const EosData eos_rpp_1_4_pentadiene = {
 static const IdealData ideal_data_1_pentyne = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 68.119)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{18.07, 0}
-			,{0.3511, 1}
-			,{-1.91E-04, 2}
-			,{4.10E-08, 3}
+			{2.1733215910624, 0}
+			,{0.0422276264871061, 1}
+			,{-2.29720212447658e-05, 2}
+			,{4.93116686405967e-09, 3}
 		}
 	}}
 };
@@ -9682,14 +9682,14 @@ const EosData eos_rpp_1_pentyne = {
 static const IdealData ideal_data_2_methyl_1_3_butadiene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 68.119)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.41, 0}
-			,{0.45885, 1}
-			,{-3.34E-04, 2}
-			,{1.00E-07, 3}
+			{-0.410128756254719, 0}
+			,{0.05518697355058, 1}
+			,{-4.01709690877056e-05, 2}
+			,{1.20272362538041e-08, 3}
 		}
 	}}
 };
@@ -9726,14 +9726,14 @@ const EosData eos_rpp_2_methyl_1_3_butadiene = {
 static const IdealData ideal_data_3_methyl_1_2_butadiene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 68.119)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{14.69, 0}
-			,{0.3598, 1}
-			,{-1.98E-04, 2}
-			,{4.26E-08, 3}
+			{1.76680100568382, 0}
+			,{0.0432739960411871, 1}
+			,{-2.38139277825321e-05, 2}
+			,{5.12360264412054e-09, 3}
 		}
 	}}
 };
@@ -9770,14 +9770,14 @@ const EosData eos_rpp_3_methyl_1_2_butadiene = {
 static const IdealData ideal_data_cyclopentanone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.118)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-40.64, 0}
-			,{0.5255, 1}
-			,{-3.12E-04, 2}
-			,{7.13E-08, 3}
+			{-4.88786881354598, 0}
+			,{0.0632031265137404, 1}
+			,{-3.75249771118687e-05, 2}
+			,{8.57541944896231e-09, 3}
 		}
 	}}
 };
@@ -9815,14 +9815,14 @@ const EosData eos_rpp_cyclopentanone = {
 static const IdealData ideal_data_ethyl_acrylate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.118)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{16.81, 0}
-			,{0.369, 1}
-			,{-1.38E-04, 2}
-			,{-5.73E-09, 3}
+			{2.02177841426447, 0}
+			,{0.0443805017765371, 1}
+			,{-1.65975860302496e-05, 2}
+			,{-6.89160637342974e-10, 3}
 		}
 	}}
 };
@@ -9860,14 +9860,14 @@ const EosData eos_rpp_ethyl_acrylate = {
 static const IdealData ideal_data_cyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 70.135)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-53.62, 0}
-			,{0.5426, 1}
-			,{-3.03E-04, 2}
-			,{6.49E-08, 3}
+			{-6.44900407928975, 0}
+			,{0.0652597839131409, 1}
+			,{-3.64425258490264e-05, 2}
+			,{7.80567632871885e-09, 3}
 		}
 	}}
 };
@@ -9904,14 +9904,14 @@ const EosData eos_rpp_cyclopentane = {
 static const IdealData ideal_data_1_pentene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 70.135)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-0.13, 0}
-			,{0.4329, 1}
-			,{-2.32E-04, 2}
-			,{4.68E-08, 3}
+			{-0.0156354071299453, 0}
+			,{0.0520659057427179, 1}
+			,{-2.79031881088255e-05, 2}
+			,{5.62874656678031e-09, 3}
 		}
 	}}
 };
@@ -9948,14 +9948,14 @@ const EosData eos_rpp_1_pentene = {
 static const IdealData ideal_data_2_pentene_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 70.135)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-14.29, 0}
-			,{0.4601, 1}
-			,{-2.54E-04, 2}
-			,{5.46E-08, 3}
+			{-1.7186920606686, 0}
+			,{0.0553373140037526, 1}
+			,{-3.05491800846624e-05, 2}
+			,{6.56687099457703e-09, 3}
 		}
 	}}
 };
@@ -9992,14 +9992,14 @@ const EosData eos_rpp_2_pentene_cis = {
 static const IdealData ideal_data_2_pentene_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 70.135)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{1.95, 0}
-			,{0.4182, 1}
-			,{-2.18E-04, 2}
-			,{4.41E-08, 3}
+			{0.23453110694918, 0}
+			,{0.0502979020134087, 1}
+			,{-2.62193750332929e-05, 2}
+			,{5.3040111879276e-09, 3}
 		}
 	}}
 };
@@ -10036,14 +10036,14 @@ const EosData eos_rpp_2_pentene_trans = {
 static const IdealData ideal_data_2_methyl_1_butene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 70.135)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{10.57, 0}
-			,{0.3997, 1}
-			,{-1.95E-04, 2}
-			,{3.31E-08, 3}
+			{1.27127887202709, 0}
+			,{0.0480728633064549, 1}
+			,{-2.3453110694918e-05, 2}
+			,{3.98101520000915e-09, 3}
 		}
 	}}
 };
@@ -10080,14 +10080,14 @@ const EosData eos_rpp_2_methyl_1_butene = {
 static const IdealData ideal_data_2_methyl_2_butene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 70.135)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.80, 0}
-			,{0.3509, 1}
-			,{-1.12E-04, 2}
-			,{-5.81E-09, 3}
+			{1.41921387794888, 0}
+			,{0.0422035720145985, 1}
+			,{-1.34705046042606e-05, 2}
+			,{-6.98782426346017e-10, 3}
 		}
 	}}
 };
@@ -10124,14 +10124,14 @@ const EosData eos_rpp_2_methyl_2_butene = {
 static const IdealData ideal_data_3_methyl_1_butene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 70.135)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.74, 0}
-			,{0.389, 1}
-			,{-2.01E-04, 2}
-			,{4.01E-08, 3}
+			{2.61472116157701, 0}
+			,{0.0467859490272979, 1}
+			,{-2.41747448701462e-05, 2}
+			,{4.82292173777544e-09, 3}
 		}
 	}}
 };
@@ -10168,14 +10168,14 @@ const EosData eos_rpp_3_methyl_1_butene = {
 static const IdealData ideal_data_valeraldehyde = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.134)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{14.24, 0}
-			,{0.4329, 1}
-			,{-2.11E-04, 2}
-			,{3.16E-08, 3}
+			{1.7126784425417, 0}
+			,{0.0520659057427179, 1}
+			,{-2.53774684955266e-05, 2}
+			,{3.80060665620209e-09, 3}
 		}
 	}}
 };
@@ -10213,14 +10213,14 @@ const EosData eos_rpp_valeraldehyde = {
 static const IdealData ideal_data_methyl_n_propyl_ketone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.134)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{1.15, 0}
-			,{0.4802, 1}
-			,{-2.82E-04, 2}
-			,{6.66E-08, 3}
+			{0.138313216918747, 0}
+			,{0.0577547884907672, 1}
+			,{-3.39168062357275e-05, 2}
+			,{8.01013934503352e-09, 3}
 		}
 	}}
 };
@@ -10258,14 +10258,14 @@ const EosData eos_rpp_methyl_n_propyl_ketone = {
 static const IdealData ideal_data_methyl_isopropyl_ketone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.134)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-2.91, 0}
-			,{0.4991, 1}
-			,{-2.94E-04, 2}
-			,{6.67E-08, 3}
+			{-0.349992574985699, 0}
+			,{0.0600279361427362, 1}
+			,{-3.5360074586184e-05, 2}
+			,{8.02216658128732e-09, 3}
 		}
 	}}
 };
@@ -10303,14 +10303,14 @@ const EosData eos_rpp_methyl_isopropyl_ketone = {
 static const IdealData ideal_data_diethyl_ketone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.134)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{30.01, 0}
-			,{0.3939, 1}
-			,{-1.91E-04, 2}
-			,{3.40E-08, 3}
+			{3.6093735997666, 0}
+			,{0.0473752836037343, 1}
+			,{-2.29720212447658e-05, 2}
+			,{4.08926032629339e-09, 3}
 		}
 	}}
 };
@@ -10348,14 +10348,14 @@ const EosData eos_rpp_diethyl_ketone = {
 static const IdealData ideal_data_isobutyl_formate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.134)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{19.85, 0}
-			,{0.4034, 1}
-			,{-1.44E-04, 2}
-			,{-7.40E-09, 3}
+			{2.38740639638011, 0}
+			,{0.0485178710478457, 1}
+			,{-1.73192202054779e-05, 2}
+			,{-8.90015482781502e-10, 3}
 		}
 	}}
 };
@@ -10393,14 +10393,14 @@ const EosData eos_rpp_isobutyl_formate = {
 static const IdealData ideal_data_n_propyl_acetate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.134)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{15.42, 0}
-			,{0.4501, 1}
-			,{-1.69E-04, 2}
-			,{-1.44E-08, 3}
+			{1.85459983033659, 0}
+			,{0.0541345903783722, 1}
+			,{-2.03260292689289e-05, 2}
+			,{-1.73192202054779e-09, 3}
 		}
 	}}
 };
@@ -10438,14 +10438,14 @@ const EosData eos_rpp_n_propyl_acetate = {
 static const IdealData ideal_data_ethyl_propionate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.134)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{19.85, 0}
-			,{0.4034, 1}
-			,{-1.44E-04, 2}
-			,{-7.39E-09, 3}
+			{2.38740639638011, 0}
+			,{0.0485178710478457, 1}
+			,{-1.73192202054779e-05, 2}
+			,{-8.88812759156122e-10, 3}
 		}
 	}}
 };
@@ -10483,14 +10483,14 @@ const EosData eos_rpp_ethyl_propionate = {
 static const IdealData ideal_data_piperidine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 85.150)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-53.07, 0}
-			,{0.6289, 1}
-			,{-3.36E-04, 2}
-			,{6.43E-08, 3}
+			{-6.38285427989382, 0}
+			,{0.0756392888001739, 1}
+			,{-4.04115138127817e-05, 2}
+			,{7.73351291119602e-09, 3}
 		}
 	}}
 };
@@ -10528,14 +10528,14 @@ const EosData eos_rpp_piperidine = {
 static const IdealData ideal_data_n_pentate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.151)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.63, 0}
-			,{0.4873, 1}
-			,{-2.58E-04, 2}
-			,{5.31E-08, 3}
+			{-0.436588676013088, 0}
+			,{0.0586087222647873, 1}
+			,{-3.10302695348145e-05, 2}
+			,{6.38646245076997e-09, 3}
 		}
 	}}
 };
@@ -10572,14 +10572,14 @@ const EosData eos_rpp_n_pentate = {
 static const IdealData ideal_data_2_methyl_butane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.151)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.52, 0}
-			,{0.5066001, 1}
-			,{-2.73E-04, 2}
-			,{5.72E-08, 3}
+			{-1.14499289136215, 0}
+			,{0.0609299908890077, 1}
+			,{-3.28343549728851e-05, 2}
+			,{6.87957913717593e-09, 3}
 		}
 	}}
 };
@@ -10616,14 +10616,14 @@ const EosData eos_rpp_2_methyl_butane = {
 static const IdealData ideal_data_2_2_dimethylpropane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 72.151)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-16.59, 0}
-			,{0.5552, 1}
-			,{-3.31E-04, 2}
-			,{7.63E-08, 3}
+			{-1.9953184945061, 0}
+			,{0.0667752156811203, 1}
+			,{-3.98101520000915e-05, 2}
+			,{9.17678126165251e-09, 3}
 		}
 	}}
 };
@@ -10660,14 +10660,14 @@ const EosData eos_rpp_2_2_dimethylpropane = {
 static const IdealData ideal_data_1_pentanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 88.150)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.87, 0}
-			,{0.5045, 1}
-			,{-2.64E-04, 2}
-			,{5.12E-08, 3}
+			{0.465454043022218, 0}
+			,{0.0606774069004416, 1}
+			,{-3.17519037100428e-05, 2}
+			,{6.15794496194769e-09, 3}
 		}
 	}}
 };
@@ -10705,14 +10705,14 @@ const EosData eos_rpp_1_pentanol = {
 static const IdealData ideal_data_tert_butyl_methyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 88.150)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{2.53, 0}
-			,{0.5136, 1}
-			,{-2.60E-04, 2}
-			,{4.30E-08, 3}
+			{0.304289077221243, 0}
+			,{0.0617718853995377, 1}
+			,{-3.12708142598906e-05, 2}
+			,{5.17171158913575e-09, 3}
 		}
 	}}
 };
@@ -10750,14 +10750,14 @@ const EosData eos_rpp_tert_butyl_methyl_ether = {
 static const IdealData ideal_data_perflourobenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 186.056)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{36.28, 0}
-			,{0.5267, 1}
-			,{-4.55E-04, 2}
-			,{1.46E-07, 3}
+			{4.36348131288012, 0}
+			,{0.0633474533487861, 1}
+			,{-5.47239249548086e-05, 2}
+			,{1.7559764930554e-08, 3}
 		}
 	}}
 };
@@ -10794,14 +10794,14 @@ const EosData eos_rpp_perflourobenzene = {
 static const IdealData ideal_data_o_dichlorobenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 147.004)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-14.30, 0}
-			,{0.5506, 1}
-			,{-4.51E-04, 2}
-			,{1.43E-07, 3}
+			{-1.71989478429398, 0}
+			,{0.0662219628134453, 1}
+			,{-5.42428355046564e-05, 2}
+			,{1.71989478429398e-08, 3}
 		}
 	}}
 };
@@ -10839,14 +10839,14 @@ const EosData eos_rpp_o_dichlorobenzene = {
 static const IdealData ideal_data_1_4_difluorobenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.094)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-25.96, 0}
-			,{0.5722, 1}
-			,{-4.68E-04, 2}
-			,{1.48E-07, 3}
+			{-3.12227053148754, 0}
+			,{0.068819845844267, 1}
+			,{-5.62874656678031e-05, 2}
+			,{1.780030965563e-08, 3}
 		}
 	}}
 };
@@ -10884,14 +10884,14 @@ const EosData eos_rpp_1_4_difluorobenzene = {
 static const IdealData ideal_data_bromobenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 157.010)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-28.81, 0}
-			,{0.5351, 1}
-			,{-4.08E-04, 2}
-			,{1.21E-07, 3}
+			{-3.46504676472096, 0}
+			,{0.0643577411941056, 1}
+			,{-4.90711239155206e-05, 2}
+			,{1.45529558671029e-08, 3}
 		}
 	}}
 };
@@ -10929,14 +10929,14 @@ const EosData eos_rpp_bromobenzene = {
 static const IdealData ideal_data_chlorobenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.559)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-33.89, 0}
-			,{0.5631, 1}
-			,{-4.52E-04, 2}
-			,{1.43E-07, 3}
+			{-4.0760303664142, 0}
+			,{0.0677253673451708, 1}
+			,{-5.43631078671944e-05, 2}
+			,{1.71989478429398e-08, 3}
 		}
 	}}
 };
@@ -10974,14 +10974,14 @@ const EosData eos_rpp_chlorobenzene = {
 static const IdealData ideal_data_fluorobenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 96.104)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-38.73, 0}
-			,{0.5669, 1}
-			,{-4.43E-04, 2}
-			,{1.36E-07, 3}
+			{-4.65814860109832, 0}
+			,{0.0681824023228153, 1}
+			,{-5.32806566043521e-05, 2}
+			,{1.63570413051735e-08, 3}
 		}
 	}}
 };
@@ -11019,14 +11019,14 @@ const EosData eos_rpp_fluorobenzene = {
 static const IdealData ideal_data_iodobenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 204.011)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-29.27, 0}
-			,{0.5564, 1}
-			,{-4.51E-04, 2}
-			,{1.44E-07, 3}
+			{-3.52037205148845, 0}
+			,{0.0669195425161659, 1}
+			,{-5.42428355046564e-05, 2}
+			,{1.73192202054779e-08, 3}
 		}
 	}}
 };
@@ -11064,14 +11064,14 @@ const EosData eos_rpp_iodobenzene = {
 static const IdealData ideal_data_phenol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 94.113)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-35.84, 0}
-			,{0.5983, 1}
-			,{-4.83E-04, 2}
-			,{1.53E-07, 3}
+			{-4.31056147336338, 0}
+			,{0.0719589545065098, 1}
+			,{-5.80915511058737e-05, 2}
+			,{1.84016714683202e-08, 3}
 		}
 	}}
 };
@@ -11109,14 +11109,14 @@ const EosData eos_rpp_phenol = {
 static const IdealData ideal_data_aniline = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 93.129)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-40.52, 0}
-			,{0.6385, 1}
-			,{-5.13E-04, 2}
-			,{1.63E-07, 3}
+			{-4.87343613004141, 0}
+			,{0.076793903480539, 1}
+			,{-6.16997219820149e-05, 2}
+			,{1.96043950937006e-08, 3}
 		}
 	}}
 };
@@ -11154,14 +11154,14 @@ const EosData eos_rpp_aniline = {
 static const IdealData ideal_data_2_methylpyridine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 93.129)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-36.26, 0}
-			,{0.5584, 1}
-			,{-3.70E-04, 2}
-			,{9.66E-08, 3}
+			{-4.36107586562936, 0}
+			,{0.067160087241242, 1}
+			,{-4.45007741390751e-05, 2}
+			,{1.16183102211747e-08, 3}
 		}
 	}}
 };
@@ -11199,14 +11199,14 @@ const EosData eos_rpp_2_methylpyridine = {
 static const IdealData ideal_data_4_methylpyridine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 93.129)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-17.43, 0}
-			,{0.4882, 1}
-			,{-2.80E-04, 2}
-			,{5.45E-08, 3}
+			{-2.09634727903805, 0}
+			,{0.0587169673910715, 1}
+			,{-3.36762615106514e-05, 2}
+			,{6.55484375832322e-09, 3}
 		}
 	}}
 };
@@ -11244,14 +11244,14 @@ const EosData eos_rpp_4_methylpyridine = {
 static const IdealData ideal_data_cyclohexene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 82.146)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-68.65, 0}
-			,{0.7252, 1}
-			,{-5.41E-04, 2}
-			,{1.64E-07, 3}
+			{-8.2566976882365, 0}
+			,{0.0872215173125872, 1}
+			,{-6.50673481330801e-05, 2}
+			,{1.97246674562387e-08, 3}
 		}
 	}}
 };
@@ -11288,14 +11288,14 @@ const EosData eos_rpp_cyclohexene = {
 static const IdealData ideal_data_cyclohexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-54.54, 0}
-			,{0.6113, 1}
-			,{-2.52E-04, 2}
-			,{1.32E-08, 3}
+			{-6.55965465282474, 0}
+			,{0.0735224952195043, 1}
+			,{-3.03086353595863e-05, 2}
+			,{1.58759518550214e-09, 3}
 		}
 	}}
 };
@@ -11332,14 +11332,14 @@ const EosData eos_rpp_cyclohexane = {
 static const IdealData ideal_data_methylcyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-50.11, 0}
-			,{0.6381, 1}
-			,{-3.64E-04, 2}
-			,{8.01E-08, 3}
+			{-6.02684808678122, 0}
+			,{0.0767457945355238, 1}
+			,{-4.37791399638469e-05, 2}
+			,{9.63381623929707e-09, 3}
 		}
 	}}
 };
@@ -11376,14 +11376,14 @@ const EosData eos_rpp_methylcyclopentane = {
 static const IdealData ideal_data_1_hexene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.163)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-1.75, 0}
-			,{0.5309, 1}
-			,{-2.90E-04, 2}
-			,{6.05E-08, 3}
+			{-0.210476634441571, 0}
+			,{0.0638525972714459, 1}
+			,{-3.48789851360318e-05, 2}
+			,{7.27647793355147e-09, 3}
 		}
 	}}
 };
@@ -11420,14 +11420,14 @@ const EosData eos_rpp_1_hexene = {
 static const IdealData ideal_data_2_hexene_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.81, 0}
-			,{0.5309, 1}
-			,{-2.72E-04, 2}
-			,{4.83E-08, 3}
+			{-1.17987187649818, 0}
+			,{0.0638525972714459, 1}
+			,{-3.27140826103471e-05, 2}
+			,{5.80915511058737e-09, 3}
 		}
 	}}
 };
@@ -11464,14 +11464,14 @@ const EosData eos_rpp_2_hexene_cis = {
 static const IdealData ideal_data_2_hexene_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-32.92, 0}
-			,{0.6929, 1}
-			,{-5.62E-04, 2}
-			,{2.01E-07, 3}
+			{-3.9593661747523, 0}
+			,{0.0833367200026085, 1}
+			,{-6.75930677463789e-05, 2}
+			,{2.41747448701462e-08, 3}
 		}
 	}}
 };
@@ -11508,14 +11508,14 @@ const EosData eos_rpp_2_hexene_trans = {
 static const IdealData ideal_data_3_hexene_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-21.73, 0}
-			,{0.5811, 1}
-			,{-3.36E-04, 2}
-			,{7.46E-08, 3}
+			{-2.61351843795163, 0}
+			,{0.0698902698708555, 1}
+			,{-4.04115138127817e-05, 2}
+			,{8.97231824533784e-09, 3}
 		}
 	}}
 };
@@ -11552,14 +11552,14 @@ const EosData eos_rpp_3_hexene_cis = {
 static const IdealData ideal_data_3_hexene_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-4.34, 0}
-			,{0.551, 1}
-			,{-3.28E-04, 2}
-			,{8.05E-08, 3}
+			{-0.521982053415097, 0}
+			,{0.0662700717584605, 1}
+			,{-3.94493349124774e-05, 2}
+			,{9.68192518431228e-09, 3}
 		}
 	}}
 };
@@ -11596,14 +11596,14 @@ const EosData eos_rpp_3_hexene_trans = {
 static const IdealData ideal_data_2_methyl_2_pentene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-14.75, 0}
-			,{0.5669, 1}
-			,{-3.34E-04, 2}
-			,{7.96E-08, 3}
+			{-1.7740173474361, 0}
+			,{0.0681824023228153, 1}
+			,{-4.01709690877056e-05, 2}
+			,{9.57368005802805e-09, 3}
 		}
 	}}
 };
@@ -11640,14 +11640,14 @@ const EosData eos_rpp_2_methyl_2_pentene = {
 static const IdealData ideal_data_3_methyl_2_pentene_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-14.75, 0}
-			,{0.5669, 1}
-			,{-3.34E-04, 2}
-			,{7.96E-08, 3}
+			{-1.7740173474361, 0}
+			,{0.0681824023228153, 1}
+			,{-4.01709690877056e-05, 2}
+			,{9.57368005802805e-09, 3}
 		}
 	}}
 };
@@ -11684,14 +11684,14 @@ const EosData eos_rpp_3_methyl_2_pentene_cis = {
 static const IdealData ideal_data_3_methyl_2_pentene_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-14.75, 0}
-			,{0.5669, 1}
-			,{-3.34E-04, 2}
-			,{7.96E-08, 3}
+			{-1.7740173474361, 0}
+			,{0.0681824023228153, 1}
+			,{-4.01709690877056e-05, 2}
+			,{9.57368005802805e-09, 3}
 		}
 	}}
 };
@@ -11728,14 +11728,14 @@ const EosData eos_rpp_3_methyl_2_pentene_trans = {
 static const IdealData ideal_data_4_methyl_2_pentene_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-1.68, 0}
-			,{0.5376, 1}
-			,{-3.04E-04, 2}
-			,{6.75E-08, 3}
+			{-0.202057569063909, 0}
+			,{0.0646584221004507, 1}
+			,{-3.65627982115644e-05, 2}
+			,{8.11838447131775e-09, 3}
 		}
 	}}
 };
@@ -11772,14 +11772,14 @@ const EosData eos_rpp_4_methyl_2_pentene_cis = {
 static const IdealData ideal_data_4_methyl_2_pentene_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{12.63, 0}
-			,{0.5154, 1}
-			,{-3.01E-04, 2}
-			,{7.33E-08, 3}
+			{1.51903993885546, 0}
+			,{0.0619883756521062, 1}
+			,{-3.62019811239503e-05, 2}
+			,{8.81596417403839e-09, 3}
 		}
 	}}
 };
@@ -11816,14 +11816,14 @@ const EosData eos_rpp_4_methyl_2_pentene_trans = {
 static const IdealData ideal_data_2_3_dimethyl_1_butene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{7.03, 0}
-			,{0.5585, 1}
-			,{-3.70E-04, 2}
-			,{1.06E-07, 3}
+			{0.845514708642427, 0}
+			,{0.0671721144774958, 1}
+			,{-4.45007741390751e-05, 2}
+			,{1.27488704290323e-08, 3}
 		}
 	}}
 };
@@ -11860,14 +11860,14 @@ const EosData eos_rpp_2_3_dimethyl_1_butene = {
 static const IdealData ideal_data_2_3_dimethyl_2_butene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{2.29, 0}
-			,{0.4827, 1}
-			,{-2.20E-04, 2}
-			,{3.04E-08, 3}
+			{0.275423710212113, 0}
+			,{0.0580554693971123, 1}
+			,{-2.6459919758369e-05, 2}
+			,{3.65627982115644e-09, 3}
 		}
 	}}
 };
@@ -11904,14 +11904,14 @@ const EosData eos_rpp_2_3_dimethyl_2_butene = {
 static const IdealData ideal_data_3_3_dimethyl_1_butene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 84.162)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-12.56, 0}
-			,{0.5485, 1}
-			,{-2.92E-04, 2}
-			,{5.21E-08, 3}
+			{-1.51062087347779, 0}
+			,{0.0659693908521154, 1}
+			,{-3.51195298611079e-05, 2}
+			,{6.26619008823193e-09, 3}
 		}
 	}}
 };
@@ -11948,14 +11948,14 @@ const EosData eos_rpp_3_3_dimethyl_1_butene = {
 static const IdealData ideal_data_cyclohexanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.160)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-55.53, 0}
-			,{0.7214, 1}
-			,{-4.09E-04, 2}
-			,{8.24E-08, 3}
+			{-6.67872429173741, 0}
+			,{0.0867644823349426, 1}
+			,{-4.91913962780587e-05, 2}
+			,{9.91044267313456e-09, 3}
 		}
 	}}
 };
@@ -11993,14 +11993,14 @@ const EosData eos_rpp_cyclohexanol = {
 static const IdealData ideal_data_methyl_isobutyl_ketone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.160)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.89, 0}
-			,{0.5656, 1}
-			,{-3.32E-04, 2}
-			,{8.23E-08, 3}
+			{0.467859490272979, 0}
+			,{0.0680260482515159, 1}
+			,{-3.99304243626295e-05, 2}
+			,{9.89841543688076e-09, 3}
 		}
 	}}
 };
@@ -12038,14 +12038,14 @@ const EosData eos_rpp_methyl_isobutyl_ketone = {
 static const IdealData ideal_data_n_butyl_acetate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 116.160)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{13.62, 0}
-			,{0.5489, 1}
-			,{-2.28E-04, 2}
-			,{7.91E-10, 3}
+			{1.63810957776812, 0}
+			,{0.0660174997971306, 1}
+			,{-2.74220986586733e-05, 2}
+			,{9.51354387675903e-11, 3}
 		}
 	}}
 };
@@ -12083,14 +12083,14 @@ const EosData eos_rpp_n_butyl_acetate = {
 static const IdealData ideal_data_isobutyl_acetate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 116.160)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{7.31, 0}
-			,{0.574, 1}
-			,{-2.58E-04, 2}
-			,{1.10E-08, 3}
+			{0.879190970153078, 0}
+			,{0.0690363360968354, 1}
+			,{-3.10302695348145e-05, 2}
+			,{1.32299598791845e-09, 3}
 		}
 	}}
 };
@@ -12128,14 +12128,14 @@ const EosData eos_rpp_isobutyl_acetate = {
 static const IdealData ideal_data_ethyl_butyrate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 116.160)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.51, 0}
-			,{0.4928, 1}
-			,{-1.94E-04, 2}
-			,{3.56E-09, 3}
+			{2.58705851819326, 0}
+			,{0.0592702202587465, 1}
+			,{-2.33328383323799e-05, 2}
+			,{4.28169610635425e-10, 3}
 		}
 	}}
 };
@@ -12173,14 +12173,14 @@ const EosData eos_rpp_ethyl_butyrate = {
 static const IdealData ideal_data_2_methyl_pentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.178)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-10.57, 0}
-			,{0.6184, 1}
-			,{-3.57E-04, 2}
-			,{8.09E-08, 3}
+			{-1.27127887202709, 0}
+			,{0.0743764289935244, 1}
+			,{-4.29372334260806e-05, 2}
+			,{9.7300341293275e-09, 3}
 		}
 	}}
 };
@@ -12217,14 +12217,14 @@ const EosData eos_rpp_2_methyl_pentane = {
 static const IdealData ideal_data_3_methyl_pentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.178)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-2.39, 0}
-			,{0.569, 1}
-			,{-2.87E-04, 2}
-			,{5.03E-08, 3}
+			{-0.287450946465918, 0}
+			,{0.0684349742841452, 1}
+			,{-3.45181680484177e-05, 2}
+			,{6.04969983566345e-09, 3}
 		}
 	}}
 };
@@ -12261,14 +12261,14 @@ const EosData eos_rpp_3_methyl_pentane = {
 static const IdealData ideal_data_2_2_dimethyl_butane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.178)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-16.63, 0}
-			,{0.6293, 1}
-			,{-3.48E-04, 2}
-			,{6.85E-08, 3}
+			{-2.00012938900762, 0}
+			,{0.0756873977451891, 1}
+			,{-4.18547821632382e-05, 2}
+			,{8.23865683385579e-09, 3}
 		}
 	}}
 };
@@ -12305,14 +12305,14 @@ const EosData eos_rpp_2_2_dimethyl_butane = {
 static const IdealData ideal_data_2_3_dimethyl_butane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 86.178)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-14.61, 0}
-			,{0.615, 1}
-			,{-3.38E-04, 2}
-			,{6.82E-08, 3}
+			{-1.75717921668078, 0}
+			,{0.0739675029608951, 1}
+			,{-4.06520585378578e-05, 2}
+			,{8.20257512509438e-09, 3}
 		}
 	}}
 };
@@ -12349,14 +12349,14 @@ const EosData eos_rpp_2_3_dimethyl_butane = {
 static const IdealData ideal_data_1_hexanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.177)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{4.81, 0}
-			,{0.5891, 1}
-			,{-3.01E-04, 2}
-			,{5.43E-08, 3}
+			{0.578510063807976, 0}
+			,{0.0708524487711598, 1}
+			,{-3.62019811239503e-05, 2}
+			,{6.53078928581562e-09, 3}
 		}
 	}}
 };
@@ -12394,14 +12394,14 @@ const EosData eos_rpp_1_hexanol = {
 static const IdealData ideal_data_ethyl_butyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.177)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{23.63, 0}
-			,{0.5367, 1}
-			,{2.53E-04, 2}
-			,{4.16E-08, 3}
+			{2.8420359267739, 0}
+			,{0.0645501769741665, 1}
+			,{3.04289077221243e-05, 2}
+			,{5.0033302815825e-09, 3}
 		}
 	}}
 };
@@ -12439,14 +12439,14 @@ const EosData eos_rpp_ethyl_butyl_ether = {
 static const IdealData ideal_data_dipropyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.177)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{18.62, 0}
-			,{0.5335, 1}
-			,{-2.29E-04, 2}
-			,{2.44E-08, 3}
+			{2.23947139045832, 0}
+			,{0.0641653054140448, 1}
+			,{-2.75423710212113e-05, 2}
+			,{2.9346456459282e-09, 3}
 		}
 	}}
 };
@@ -12484,14 +12484,14 @@ const EosData eos_rpp_dipropyl_ether = {
 static const IdealData ideal_data_diisopropyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 102.177)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{7.51, 0}
-			,{0.5489, 1}
-			,{-3.03E-04, 2}
-			,{5.85E-08, 3}
+			{0.903245442660686, 0}
+			,{0.0660174997971306, 1}
+			,{-3.64425258490264e-05, 2}
+			,{7.03593320847539e-09, 3}
 		}
 	}}
 };
@@ -12529,14 +12529,14 @@ const EosData eos_rpp_diisopropyl_ether = {
 static const IdealData ideal_data_dipropylamine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 101.193)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{6.46, 0}
-			,{0.6293, 1}
-			,{-3.39E-04, 2}
-			,{7.07E-08, 3}
+			{0.776959461995744, 0}
+			,{0.0756873977451891, 1}
+			,{-4.07723309003958e-05, 2}
+			,{8.50325603143948e-09, 3}
 		}
 	}}
 };
@@ -12574,14 +12574,14 @@ const EosData eos_rpp_dipropylamine = {
 static const IdealData ideal_data_triethylamine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 101.193)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-18.43, 0}
-			,{0.7155, 1}
-			,{-4.39E-04, 2}
-			,{1.09E-07, 3}
+			{-2.21661964157609, 0}
+			,{0.0860548753959682, 1}
+			,{-5.27995671541999e-05, 2}
+			,{1.31096875166464e-08, 3}
 		}
 	}}
 };
@@ -12619,14 +12619,14 @@ const EosData eos_rpp_triethylamine = {
 static const IdealData ideal_data_benzonitrile = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 103.124)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-26.05, 0}
-			,{0.5732, 1}
-			,{-4.43E-04, 2}
-			,{1.35E-07, 3}
+			{-3.13309504411596, 0}
+			,{0.068940118206805, 1}
+			,{-5.32806566043521e-05, 2}
+			,{1.62367689426355e-08, 3}
 		}
 	}}
 };
@@ -12664,14 +12664,14 @@ const EosData eos_rpp_benzonitrile = {
 static const IdealData ideal_data_benzaldehyde = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 106.124)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-12.14, 0}
-			,{0.4961, 1}
-			,{-2.85E-04, 2}
-			,{5.17E-08, 3}
+			{-1.46010648121182, 0}
+			,{0.059667119055122, 1}
+			,{-3.42776233233416e-05, 2}
+			,{6.21808114321671e-09, 3}
 		}
 	}}
 };
@@ -12709,14 +12709,14 @@ const EosData eos_rpp_benzaldehyde = {
 static const IdealData ideal_data_benzoic_acid = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 122.124)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-51.29, 0}
-			,{0.6293, 1}
-			,{-4.24E-04, 2}
-			,{1.06E-07, 3}
+			{-6.16876947457611, 0}
+			,{0.0756873977451891, 1}
+			,{-5.09954817161293e-05, 2}
+			,{1.27488704290323e-08, 3}
 		}
 	}}
 };
@@ -12754,14 +12754,14 @@ const EosData eos_rpp_benzoic_acid = {
 static const IdealData ideal_data_o_cresol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 108.140)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-32.28, 0}
-			,{0.7005, 1}
-			,{-5.92E-04, 2}
-			,{2.21E-07, 3}
+			{-3.88239186272796, 0}
+			,{0.0842507899578976, 1}
+			,{-7.12012386225202e-05, 2}
+			,{2.6580192120907e-08, 3}
 		}
 	}}
 };
@@ -12799,14 +12799,14 @@ const EosData eos_rpp_o_cresol = {
 static const IdealData ideal_data_m_cresol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 108.140)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-45.01, 0}
-			,{0.7264, 1}
-			,{-6.03E-04, 2}
-			,{2.08E-07, 3}
+			{-5.41345903783722, 0}
+			,{0.0873658441476328, 1}
+			,{-7.25242346104386e-05, 2}
+			,{2.50166514079125e-08, 3}
 		}
 	}}
 };
@@ -12844,14 +12844,14 @@ const EosData eos_rpp_m_cresol = {
 static const IdealData ideal_data_p_cresol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 108.140)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-40.63, 0}
-			,{0.7055, 1}
-			,{-5.76E-04, 2}
-			,{1.97E-07, 3}
+			{-4.8866660899206, 0}
+			,{0.0848521517705878, 1}
+			,{-6.92768808219115e-05, 2}
+			,{2.3693655419994e-08, 3}
 		}
 	}}
 };
@@ -12889,14 +12889,14 @@ const EosData eos_rpp_p_cresol = {
 static const IdealData ideal_data_m_toluidine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 107.156)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-15.99, 0}
-			,{0.5681, 1}
-			,{-3.03E-04, 2}
-			,{4.64E-08, 3}
+			{-1.92315507698327, 0}
+			,{0.068326729157861, 1}
+			,{-3.64425258490264e-05, 2}
+			,{5.58063762176509e-09, 3}
 		}
 	}}
 };
@@ -12934,14 +12934,14 @@ const EosData eos_rpp_m_toluidine = {
 static const IdealData ideal_data_cycloheptane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.189)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-76.19, 0}
-			,{0.7867, 1}
-			,{4.20E-04, 2}
-			,{7.56E-08, 3}
+			{-9.16355130177333, 0}
+			,{0.0946182676086767, 1}
+			,{5.05143922659771e-05, 2}
+			,{9.09259060787588e-09, 3}
 		}
 	}}
 };
@@ -12978,14 +12978,14 @@ const EosData eos_rpp_cycloheptane = {
 static const IdealData ideal_data_1_1_dimethylcyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.189)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-57.89, 0}
-			,{0.767, 1}
-			,{-4.50E-04, 2}
-			,{1.01E-07, 3}
+			{-6.96256706732718, 0}
+			,{0.0922489020666773, 1}
+			,{-5.41225631421184e-05, 2}
+			,{1.21475086163421e-08, 3}
 		}
 	}}
 };
@@ -13022,14 +13022,14 @@ const EosData eos_rpp_1_1_dimethylcyclopentane = {
 static const IdealData ideal_data_1_2_dimethylcyclopentane_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.189)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-55.64, 0}
-			,{0.7616, 1}
-			,{-4.48E-04, 2}
-			,{1.01E-07, 3}
+			{-6.69195425161659, 0}
+			,{0.0915994313089719, 1}
+			,{-5.38820184170423e-05, 2}
+			,{1.21475086163421e-08, 3}
 		}
 	}}
 };
@@ -13066,14 +13066,14 @@ const EosData eos_rpp_1_2_dimethylcyclopentane_cis = {
 static const IdealData ideal_data_1_2_dimethylcyclopentane_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.189)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{54.52, 0}
-			,{0.7591, 1}
-			,{-4.48E-04, 2}
-			,{1.02E-07, 3}
+			{6.55724920557398, 0}
+			,{0.0912987504026268, 1}
+			,{-5.38820184170423e-05, 2}
+			,{1.22677809788802e-08, 3}
 		}
 	}}
 };
@@ -13110,14 +13110,14 @@ const EosData eos_rpp_1_2_dimethylcyclopentane_trans = {
 static const IdealData ideal_data_ethylcyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.189)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-55.31, 0}
-			,{0.7511, 1}
-			,{-4.40E-04, 2}
-			,{1.00E-07, 3}
+			{-6.65226437197904, 0}
+			,{0.0903365715023224, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.20272362538041e-08, 3}
 		}
 	}}
 };
@@ -13154,14 +13154,14 @@ const EosData eos_rpp_ethylcyclopentane = {
 static const IdealData ideal_data_methylcyclohexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.189)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-61.92, 0}
-			,{0.7842, 1}
-			,{-4.44E-04, 2}
-			,{9.37E-08, 3}
+			{-7.44726468835549, 0}
+			,{0.0943175867023316, 1}
+			,{-5.34009289668901e-05, 2}
+			,{1.12695203698144e-08, 3}
 		}
 	}}
 };
@@ -13198,14 +13198,14 @@ const EosData eos_rpp_methylcyclohexane = {
 static const IdealData ideal_data_1_heptene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 98.189)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.30, 0}
-			,{0.6297, 1}
-			,{-3.51E-04, 2}
-			,{7.61E-08, 3}
+			{-0.396898796375535, 0}
+			,{0.0757355066902043, 1}
+			,{-4.22155992508523e-05, 2}
+			,{9.1527267891449e-09, 3}
 		}
 	}}
 };
@@ -13242,14 +13242,14 @@ const EosData eos_rpp_1_heptene = {
 static const IdealData ideal_data_2_methylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.295)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-39.39, 0}
-			,{0.8642, 1}
-			,{-6.29E-04, 2}
-			,{1.84E-07, 3}
+			{-4.73752836037343, 0}
+			,{0.103939375705375, 1}
+			,{-7.56513160364277e-05, 2}
+			,{2.21301147069995e-08, 3}
 		}
 	}}
 };
@@ -13286,14 +13286,14 @@ const EosData eos_rpp_2_methylhexane = {
 static const IdealData ideal_data_3_methylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.205)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
 		}
 	}}
 };
@@ -13330,14 +13330,14 @@ const EosData eos_rpp_3_methylhexane = {
 static const IdealData ideal_data_2_2_dimethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.205)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-50.10, 0}
-			,{0.8956, 1}
-			,{-6.36E-04, 2}
-			,{1.74E-07, 3}
+			{-6.02564536315584, 0}
+			,{0.107715927889069, 1}
+			,{-7.64932225741939e-05, 2}
+			,{2.09273910816191e-08, 3}
 		}
 	}}
 };
@@ -13374,14 +13374,14 @@ const EosData eos_rpp_2_2_dimethylpentane = {
 static const IdealData ideal_data_2_3_dimethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.205)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
 		}
 	}}
 };
@@ -13418,14 +13418,14 @@ const EosData eos_rpp_2_3_dimethylpentane = {
 static const IdealData ideal_data_2_4_dimethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.205)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
 		}
 	}}
 };
@@ -13462,14 +13462,14 @@ const EosData eos_rpp_2_4_dimethylpentane = {
 static const IdealData ideal_data_3_3_dimethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.205)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
 		}
 	}}
 };
@@ -13506,14 +13506,14 @@ const EosData eos_rpp_3_3_dimethylpentane = {
 static const IdealData ideal_data_3_ethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.205)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
 		}
 	}}
 };
@@ -13550,14 +13550,14 @@ const EosData eos_rpp_3_ethylpentane = {
 static const IdealData ideal_data_2_2_3_trimethylbutane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 100.205)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-22.94, 0}
-			,{0.7159, 1}
-			,{-4.42E-04, 2}
-			,{1.01E-07, 3}
+			{-2.75904799662266, 0}
+			,{0.0861029843409834, 1}
+			,{-5.3160384241814e-05, 2}
+			,{1.21475086163421e-08, 3}
 		}
 	}}
 };
@@ -13594,14 +13594,14 @@ const EosData eos_rpp_2_2_3_trimethylbutane = {
 static const IdealData ideal_data_1_heptanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 116.204)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{49.07, 0}
-			,{0.6778, 1}
-			,{-3.45E-04, 2}
-			,{6.05E-08, 3}
+			{5.90176482974166, 0}
+			,{0.081520607328284, 1}
+			,{-4.14939650756241e-05, 2}
+			,{7.27647793355147e-09, 3}
 		}
 	}}
 };
@@ -13639,14 +13639,14 @@ const EosData eos_rpp_1_heptanol = {
 static const IdealData ideal_data_methyl_phenyl_ketone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.151)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-29.58, 0}
-			,{0.641, 1}
-			,{-4.07E-04, 2}
-			,{9.72E-08, 3}
+			{-3.55765648387525, 0}
+			,{0.0770945843868842, 1}
+			,{-4.89508515529826e-05, 2}
+			,{1.16904736386976e-08, 3}
 		}
 	}}
 };
@@ -13684,14 +13684,14 @@ const EosData eos_rpp_methyl_phenyl_ketone = {
 static const IdealData ideal_data_methyl_benzoate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 136.151)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-21.21, 0}
-			,{0.5501, 1}
-			,{-1.80E-04, 2}
-			,{4.43E-08, 3}
+			{-2.55097680943185, 0}
+			,{0.0661618266321762, 1}
+			,{-2.16490252568473e-05, 2}
+			,{5.32806566043521e-09, 3}
 		}
 	}}
 };
@@ -13729,14 +13729,14 @@ const EosData eos_rpp_methyl_benzoate = {
 static const IdealData ideal_data_o_xylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 106.168)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-15.85, 0}
-			,{0.5962, 1}
-			,{-3.44E-04, 2}
-			,{7.53E-08, 3}
+			{-1.90631694622795, 0}
+			,{0.0717063825451799, 1}
+			,{-4.1373692713086e-05, 2}
+			,{9.05650889911447e-09, 3}
 		}
 	}}
 };
@@ -13773,14 +13773,14 @@ const EosData eos_rpp_o_xylene = {
 static const IdealData ideal_data_m_xylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 106.168)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-29.17, 0}
-			,{0.6297, 1}
-			,{-3.75E-04, 2}
-			,{8.48E-08, 3}
+			{-3.50834481523465, 0}
+			,{0.0757355066902043, 1}
+			,{-4.51021359517653e-05, 2}
+			,{1.01990963432259e-08, 3}
 		}
 	}}
 };
@@ -13817,14 +13817,14 @@ const EosData eos_rpp_m_xylene = {
 static const IdealData ideal_data_p_xylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 106.168)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-25.09, 0}
-			,{0.6042, 1}
-			,{-3.37E-04, 2}
-			,{6.82E-08, 3}
+			{-3.01763357607944, 0}
+			,{0.0726685614454842, 1}
+			,{-4.05317861753197e-05, 2}
+			,{8.20257512509438e-09, 3}
 		}
 	}}
 };
@@ -13861,14 +13861,14 @@ const EosData eos_rpp_p_xylene = {
 static const IdealData ideal_data_1_1_dimethylcyclohexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-72.11, 0}
-			,{0.8997, 1}
-			,{-5.02E-04, 2}
-			,{1.03E-07, 3}
+			{-8.67284006261812, 0}
+			,{0.108209044575475, 1}
+			,{-6.03767259940965e-05, 2}
+			,{1.23880533414182e-08, 3}
 		}
 	}}
 };
@@ -13905,14 +13905,14 @@ const EosData eos_rpp_1_1_dimethylcyclohexane = {
 static const IdealData ideal_data_1_2_dimethylcyclohexane_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-68.37, 0}
-			,{0.8972, 1}
-			,{-5.14E-04, 2}
-			,{1.10E-07, 3}
+			{-8.22302142672585, 0}
+			,{0.10790836366913, 1}
+			,{-6.1819994344553e-05, 2}
+			,{1.32299598791845e-08, 3}
 		}
 	}}
 };
@@ -13949,14 +13949,14 @@ const EosData eos_rpp_1_2_dimethylcyclohexane_cis = {
 static const IdealData ideal_data_1_3_dimethylcyclohexane_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-65.16, 0}
-			,{0.8838, 1}
-			,{-4.93E-04, 2}
-			,{1.02E-07, 3}
+			{-7.83694714297874, 0}
+			,{0.10629671401112, 1}
+			,{-5.92942747312541e-05, 2}
+			,{1.22677809788802e-08, 3}
 		}
 	}}
 };
@@ -13993,14 +13993,14 @@ const EosData eos_rpp_1_3_dimethylcyclohexane_cis = {
 static const IdealData ideal_data_1_3_dimethylcyclohexane_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-64.15, 0}
-			,{0.8826, 1}
-			,{-5.02E-04, 2}
-			,{1.07E-07, 3}
+			{-7.71547205681532, 0}
+			,{0.106152387176075, 1}
+			,{-6.03767259940965e-05, 2}
+			,{1.28691427915704e-08, 3}
 		}
 	}}
 };
@@ -14037,14 +14037,14 @@ const EosData eos_rpp_1_3_dimethylcyclohexane_trans = {
 static const IdealData ideal_data_1_4_dimethylcyclohexane_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-64.15, 0}
-			,{0.8826, 1}
-			,{-5.02E-04, 2}
-			,{1.07E-07, 3}
+			{-7.71547205681532, 0}
+			,{0.106152387176075, 1}
+			,{-6.03767259940965e-05, 2}
+			,{1.28691427915704e-08, 3}
 		}
 	}}
 };
@@ -14081,14 +14081,14 @@ const EosData eos_rpp_1_4_dimethylcyclohexane_cis = {
 static const IdealData ideal_data_1_4_dimethylcyclohexane_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-70.36, 0}
-			,{0.9131, 1}
-			,{-5.31E-04, 2}
-			,{1.16E-07, 3}
+			{-8.46236342817655, 0}
+			,{0.109820694233485, 1}
+			,{-6.38646245076997e-05, 2}
+			,{1.39515940544127e-08, 3}
 		}
 	}}
 };
@@ -14125,14 +14125,14 @@ const EosData eos_rpp_1_4_dimethylcyclohexane_trans = {
 static const IdealData ideal_data_ethylcyclohexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-63.89, 0}
-			,{0.8893, 1}
-			,{-5.11E-04, 2}
-			,{1.10E-07, 3}
+			{-7.68420124255543, 0}
+			,{0.10695821200508, 1}
+			,{-6.14591772569388e-05, 2}
+			,{1.32299598791845e-08, 3}
 		}
 	}}
 };
@@ -14169,14 +14169,14 @@ const EosData eos_rpp_ethylcyclohexane = {
 static const IdealData ideal_data_n_propylcyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-55.97, 0}
-			,{0.8449, 1}
-			,{-4.92E-04, 2}
-			,{1.12E-07, 3}
+			{-6.73164413125414, 0}
+			,{0.101618119108391, 1}
+			,{-5.91740023687161e-05, 2}
+			,{1.34705046042606e-08, 3}
 		}
 	}}
 };
@@ -14213,14 +14213,14 @@ const EosData eos_rpp_n_propylcyclopentane = {
 static const IdealData ideal_data_1_octene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-4.10, 0}
-			,{0.7239, 1}
-			,{-4.04E-04, 2}
-			,{8.68E-08, 3}
+			{-0.493116686405967, 0}
+			,{0.0870651632412877, 1}
+			,{-4.85900344653685e-05, 2}
+			,{1.04396410683019e-08, 3}
 		}
 	}}
 };
@@ -14257,14 +14257,14 @@ const EosData eos_rpp_1_octene = {
 static const IdealData ideal_data_2_octene_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 112.216)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-12.82, 0}
-			,{0.7532, 1}
-			,{-4.44E-04, 2}
-			,{1.05E-07, 3}
+			{-1.54189168773768, 0}
+			,{0.0905891434636523, 1}
+			,{-5.34009289668901e-05, 2}
+			,{1.26285980664943e-08, 3}
 		}
 	}}
 };
@@ -14301,14 +14301,14 @@ const EosData eos_rpp_2_octene_trans = {
 static const IdealData ideal_data_2_methylheptane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-89.70, 0}
-			,{1.242, 1}
-			,{-1.18E-03, 2}
-			,{4.62E-07, 3}
+			{-10.7884309196623, 0}
+			,{0.149378274272247, 1}
+			,{-0.000141921387794888, 2}
+			,{5.55658314925748e-08, 3}
 		}
 	}}
 };
@@ -14345,14 +14345,14 @@ const EosData eos_rpp_2_methylheptane = {
 static const IdealData ideal_data_3_methylheptane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14389,14 +14389,14 @@ const EosData eos_rpp_3_methylheptane = {
 static const IdealData ideal_data_4_methylheptane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14433,14 +14433,14 @@ const EosData eos_rpp_4_methylheptane = {
 static const IdealData ideal_data_2_2_dimethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14477,14 +14477,14 @@ const EosData eos_rpp_2_2_dimethylhexane = {
 static const IdealData ideal_data_2_3_dimethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14521,14 +14521,14 @@ const EosData eos_rpp_2_3_dimethylhexane = {
 static const IdealData ideal_data_2_4_dimethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14565,14 +14565,14 @@ const EosData eos_rpp_2_4_dimethylhexane = {
 static const IdealData ideal_data_2_5_dimethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14609,14 +14609,14 @@ const EosData eos_rpp_2_5_dimethylhexane = {
 static const IdealData ideal_data_3_3_dimethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14653,14 +14653,14 @@ const EosData eos_rpp_3_3_dimethylhexane = {
 static const IdealData ideal_data_3_4_dimethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14697,14 +14697,14 @@ const EosData eos_rpp_3_4_dimethylhexane = {
 static const IdealData ideal_data_3_ethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14741,14 +14741,14 @@ const EosData eos_rpp_3_ethylhexane = {
 static const IdealData ideal_data_2_2_3_trimethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14785,14 +14785,14 @@ const EosData eos_rpp_2_2_3_trimethylpentane = {
 static const IdealData ideal_data_2_2_4_trimethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.46, 0}
-			,{0.7779, 1}
-			,{-4.29E-04, 2}
-			,{9.17E-08, 3}
+			{-0.897231824533784, 0}
+			,{0.0935598708183419, 1}
+			,{-5.15968435288195e-05, 2}
+			,{1.10289756447383e-08, 3}
 		}
 	}}
 };
@@ -14829,14 +14829,14 @@ const EosData eos_rpp_2_2_4_trimethylpentane = {
 static const IdealData ideal_data_2_3_3_trimethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14873,14 +14873,14 @@ const EosData eos_rpp_2_3_3_trimethylpentane = {
 static const IdealData ideal_data_2_3_4_trimethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14917,14 +14917,14 @@ const EosData eos_rpp_2_3_4_trimethylpentane = {
 static const IdealData ideal_data_2_methyl_3_ethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -14961,14 +14961,14 @@ const EosData eos_rpp_2_methyl_3_ethylpentane = {
 static const IdealData ideal_data_3_methyl_3_ethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 114.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
 		}
 	}}
 };
@@ -15005,14 +15005,14 @@ const EosData eos_rpp_3_methyl_3_ethylpentane = {
 static const IdealData ideal_data_1_octanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 130.231)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{6.17, 0}
-			,{0.7607, 1}
-			,{-3.80E-04, 2}
-			,{6.26E-08, 3}
+			{0.742080476859712, 0}
+			,{0.0914911861826876, 1}
+			,{-4.57034977644555e-05, 2}
+			,{7.52904989488135e-09, 3}
 		}
 	}}
 };
@@ -15050,14 +15050,14 @@ const EosData eos_rpp_1_octanol = {
 static const IdealData ideal_data_dibutyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 130.231)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{6.05, 0}
-			,{0.7729, 1}
-			,{-4.09E-04, 2}
-			,{8.09E-08, 3}
+			{0.727647793355147, 0}
+			,{0.0929585090056517, 1}
+			,{-4.91913962780587e-05, 2}
+			,{9.7300341293275e-09, 3}
 		}
 	}}
 };
@@ -15095,14 +15095,14 @@ const EosData eos_rpp_dibutyl_ether = {
 static const IdealData ideal_data_dibutyl_amine = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 129.247)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{9.76, 0}
-			,{0.8081, 1}
-			,{-4.39E-04, 2}
-			,{9.25E-08, 3}
+			{1.17385825837128, 0}
+			,{0.0971920961669908, 1}
+			,{-5.27995671541999e-05, 2}
+			,{1.11251935347688e-08, 3}
 		}
 	}}
 };
@@ -15140,14 +15140,14 @@ const EosData eos_rpp_dibutyl_amine = {
 static const IdealData ideal_data_ethyl_benzoate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 150.178)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.67, 0}
-			,{0.6887, 1}
-			,{-3.61E-04, 2}
-			,{5.06E-08, 3}
+			{2.4860297336613, 0}
+			,{0.0828315760799487, 1}
+			,{-4.34183228762327e-05, 2}
+			,{6.08578154442486e-09, 3}
 		}
 	}}
 };
@@ -15185,14 +15185,14 @@ const EosData eos_rpp_ethyl_benzoate = {
 static const IdealData ideal_data_n_propylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.195)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-31.29, 0}
-			,{0.7486, 1}
-			,{-4.60E-04, 2}
-			,{1.08E-07, 3}
+			{-3.7633222238153, 0}
+			,{0.0900358905959773, 1}
+			,{-5.53252867674988e-05, 2}
+			,{1.29894151541084e-08, 3}
 		}
 	}}
 };
@@ -15229,14 +15229,14 @@ const EosData eos_rpp_n_propylbenzene = {
 static const IdealData ideal_data_isopropylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.195)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-39.36, 0}
-			,{0.7842, 1}
-			,{-5.09E-04, 2}
-			,{1.29E-07, 3}
+			{-4.73392018949729, 0}
+			,{0.0943175867023316, 1}
+			,{-6.12186325318628e-05, 2}
+			,{1.55151347674073e-08, 3}
 		}
 	}}
 };
@@ -15273,14 +15273,14 @@ const EosData eos_rpp_isopropylbenzene = {
 static const IdealData ideal_data_1_methyl_2_ethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.195)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-16.45, 0}
-			,{0.6996, 1}
-			,{-4.12E-04, 2}
-			,{9.33E-08, 3}
+			{-1.97848036375077, 0}
+			,{0.0841425448316133, 1}
+			,{-4.95522133656728e-05, 2}
+			,{1.12214114247992e-08, 3}
 		}
 	}}
 };
@@ -15317,14 +15317,14 @@ const EosData eos_rpp_1_methyl_2_ethylbenzene = {
 static const IdealData ideal_data_1_methyl_3_ethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.195)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-29.00, 0}
-			,{0.7293, 1}
-			,{-4.36E-04, 2}
-			,{1.00E-07, 3}
+			{-3.48789851360318, 0}
+			,{0.0877146339989931, 1}
+			,{-5.24387500665858e-05, 2}
+			,{1.20272362538041e-08, 3}
 		}
 	}}
 };
@@ -15361,14 +15361,14 @@ const EosData eos_rpp_1_methyl_3_ethylbenzene = {
 static const IdealData ideal_data_1_methyl_4_ethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.195)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-27.31, 0}
-			,{0.7176, 1}
-			,{-4.22E-04, 2}
-			,{9.54E-08, 3}
+			{-3.28463822091389, 0}
+			,{0.0863074473572981, 1}
+			,{-5.07549369910532e-05, 2}
+			,{1.14739833861291e-08, 3}
 		}
 	}}
 };
@@ -15405,14 +15405,14 @@ const EosData eos_rpp_1_methyl_4_ethylbenzene = {
 static const IdealData ideal_data_1_2_3_trimethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.195)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-6.94, 0}
-			,{0.6335, 1}
-			,{-3.33E-04, 2}
-			,{6.61E-08, 3}
+			{-0.834690196014003, 0}
+			,{0.0761925416678488, 1}
+			,{-4.00506967251676e-05, 2}
+			,{7.9500031637645e-09, 3}
 		}
 	}}
 };
@@ -15449,14 +15449,14 @@ const EosData eos_rpp_1_2_3_trimethylbenzene = {
 static const IdealData ideal_data_1_2_4_trimethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.195)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-4.67, 0}
-			,{0.6238, 1}
-			,{-3.26E-04, 2}
-			,{6.38E-08, 3}
+			{-0.561671933052651, 0}
+			,{0.0750258997512298, 1}
+			,{-3.92087901874013e-05, 2}
+			,{7.673376729927e-09, 3}
 		}
 	}}
 };
@@ -15493,14 +15493,14 @@ const EosData eos_rpp_1_2_4_trimethylbenzene = {
 static const IdealData ideal_data_1_3_5_trimethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 120.195)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-19.59, 0}
-			,{0.6724, 1}
-			,{-3.69E-04, 2}
-			,{7.70E-08, 3}
+			{-2.35613558212022, 0}
+			,{0.0808711365705786, 1}
+			,{-4.43805017765371e-05, 2}
+			,{9.26097191542914e-09, 3}
 		}
 	}}
 };
@@ -15537,14 +15537,14 @@ const EosData eos_rpp_1_3_5_trimethylbenzene = {
 static const IdealData ideal_data_n_propylcyclohexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 126.243)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-62.52, 0}
-			,{0.9889, 1}
-			,{-5.80E-04, 2}
-			,{1.29E-07, 3}
+			{-7.51942810587831, 0}
+			,{0.118937339313869, 1}
+			,{-6.97579702720637e-05, 2}
+			,{1.55151347674073e-08, 3}
 		}
 	}}
 };
@@ -15581,14 +15581,14 @@ const EosData eos_rpp_n_propylcyclohexane = {
 static const IdealData ideal_data_1_nonene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 126.243)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-3.72, 0}
-			,{0.8122, 1}
-			,{-4.51E-04, 2}
-			,{9.71E-08, 3}
+			{-0.447413188641512, 0}
+			,{0.0976852128533967, 1}
+			,{-5.42428355046564e-05, 2}
+			,{1.16784464024438e-08, 3}
 		}
 	}}
 };
@@ -15625,14 +15625,14 @@ const EosData eos_rpp_1_nonene = {
 static const IdealData ideal_data_n_nonane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.259)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-8.37, 0}
-			,{0.8729, 1}
-			,{-4.82E-04, 2}
-			,{1.03E-07, 3}
+			{-1.0066796744434, 0}
+			,{0.104985745259456, 1}
+			,{-5.79712787433357e-05, 2}
+			,{1.23880533414182e-08, 3}
 		}
 	}}
 };
@@ -15669,14 +15669,14 @@ const EosData eos_rpp_n_nonane = {
 static const IdealData ideal_data_2_methyloctane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.242)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-10.11, 0}
-			,{0.8805, 1}
-			,{-4.94E-04, 2}
-			,{1.08E-07, 3}
+			{-1.21595358525959, 0}
+			,{0.105899815214745, 1}
+			,{-5.94145470937921e-05, 2}
+			,{1.29894151541084e-08, 3}
 		}
 	}}
 };
@@ -15713,14 +15713,14 @@ const EosData eos_rpp_2_methyloctane = {
 static const IdealData ideal_data_2_2_dimethylheptane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.242)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-20.89, 0}
-			,{0.9668, 1}
-			,{-6.12E-04, 2}
-			,{1.57E-07, 3}
+			{-2.51248965341967, 0}
+			,{0.116279320101778, 1}
+			,{-7.3606685873281e-05, 2}
+			,{1.88827609184724e-08, 3}
 		}
 	}}
 };
@@ -15757,14 +15757,14 @@ const EosData eos_rpp_2_2_dimethylheptane = {
 static const IdealData ideal_data_2_2_3_trimethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.259)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-45.63, 0}
-			,{1.055, 1}
-			,{-7.17E-04, 2}
-			,{1.99E-07, 3}
+			{-5.4880279026108, 0}
+			,{0.126887342477633, 1}
+			,{-8.62352839397752e-05, 2}
+			,{2.39342001450701e-08, 3}
 		}
 	}}
 };
@@ -15801,14 +15801,14 @@ const EosData eos_rpp_2_2_3_trimethylhexane = {
 static const IdealData ideal_data_2_2_4_trimethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.259)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-60.13, 0}
-			,{1.104, 1}
-			,{-7.71E-04, 2}
-			,{2.19E-07, 3}
+			{-7.23197715941239, 0}
+			,{0.132780688241997, 1}
+			,{-9.27299915168295e-05, 2}
+			,{2.63396473958309e-08, 3}
 		}
 	}}
 };
@@ -15845,14 +15845,14 @@ const EosData eos_rpp_2_2_4_trimethylhexane = {
 static const IdealData ideal_data_2_2_5_trimethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.259)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-54.11, 0}
-			,{1.095, 1}
-			,{-7.75E-04, 2}
-			,{2.26E-07, 3}
+			{-6.50793753693339, 0}
+			,{0.131698236979155, 1}
+			,{-9.32110809669816e-05, 2}
+			,{2.71815539335972e-08, 3}
 		}
 	}}
 };
@@ -15889,14 +15889,14 @@ const EosData eos_rpp_2_2_5_trimethylhexane = {
 static const IdealData ideal_data_3_3_diethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.259)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-67.27, 0}
-			,{1.126, 1}
-			,{-7.99E-04, 2}
-			,{2.31E-07, 3}
+			{-8.090721827934, 0}
+			,{0.135426680217834, 1}
+			,{-9.60976176678946e-05, 2}
+			,{2.77829157462874e-08, 3}
 		}
 	}}
 };
@@ -15933,14 +15933,14 @@ const EosData eos_rpp_3_3_diethylpentane = {
 static const IdealData ideal_data_2_2_3_3_tetramethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.259)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-54.58, 0}
-			,{1.089, 1}
-			,{-7.57E-04, 2}
-			,{2.14E-07, 3}
+			{-6.56446554732627, 0}
+			,{0.130976602803926, 1}
+			,{-9.10461784412969e-05, 2}
+			,{2.57382855831407e-08, 3}
 		}
 	}}
 };
@@ -15977,14 +15977,14 @@ const EosData eos_rpp_2_2_3_3_tetramethylpentane = {
 static const IdealData ideal_data_2_2_3_4_tetramethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.259)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-54.58, 0}
-			,{1.089, 1}
-			,{-7.57E-04, 2}
-			,{2.14E-07, 3}
+			{-6.56446554732627, 0}
+			,{0.130976602803926, 1}
+			,{-9.10461784412969e-05, 2}
+			,{2.57382855831407e-08, 3}
 		}
 	}}
 };
@@ -16021,14 +16021,14 @@ const EosData eos_rpp_2_2_3_4_tetramethylpentane = {
 static const IdealData ideal_data_2_2_4_4_tetramethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.259)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-67.40, 0}
-			,{1.168, 1}
-			,{-8.61E-04, 2}
-			,{2.57E-07, 3}
+			{-8.10635723506395, 0}
+			,{0.140478119444432, 1}
+			,{-0.000103554504145253, 2}
+			,{3.09099971722765e-08, 3}
 		}
 	}}
 };
@@ -16065,14 +16065,14 @@ const EosData eos_rpp_2_2_4_4_tetramethylpentane = {
 static const IdealData ideal_data_2_3_3_4_tetramethylpentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.259)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-54.92, 0}
-			,{1.091, 1}
-			,{-7.60E-04, 2}
-			,{2.16E-07, 3}
+			{-6.6053581505892, 0}
+			,{0.131217147529003, 1}
+			,{-9.1406995528911e-05, 2}
+			,{2.59788303082168e-08, 3}
 		}
 	}}
 };
@@ -16109,14 +16109,14 @@ const EosData eos_rpp_2_3_3_4_tetramethylpentane = {
 static const IdealData ideal_data_naphthalene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 128.174)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-68.80, 0}
-			,{0.8499, 1}
-			,{-6.51E-04, 2}
-			,{1.98E-07, 3}
+			{-8.27473854261721, 0}
+			,{0.102219480921081, 1}
+			,{-7.82973080122646e-05, 2}
+			,{2.38139277825321e-08, 3}
 		}
 	}}
 };
@@ -16153,14 +16153,14 @@ const EosData eos_rpp_naphthalene = {
 static const IdealData ideal_data_n_butylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 134.222)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-22.99, 0}
-			,{0.7934, 1}
-			,{-4.40E-04, 2}
-			,{8.57E-08, 3}
+			{-2.76506161474956, 0}
+			,{0.0954240924376816, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.03073414695101e-08, 3}
 		}
 	}}
 };
@@ -16197,14 +16197,14 @@ const EosData eos_rpp_n_butylbenzene = {
 static const IdealData ideal_data_sec_butylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 134.222)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-65.15, 0}
-			,{0.9893, 1}
-			,{-7.21E-04, 2}
-			,{2.15E-07, 3}
+			{-7.83574441935336, 0}
+			,{0.118985448258884, 1}
+			,{-8.67163733899274e-05, 2}
+			,{2.58585579456788e-08, 3}
 		}
 	}}
 };
@@ -16241,14 +16241,14 @@ const EosData eos_rpp_sec_butylbenzene = {
 static const IdealData ideal_data_tert_butylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 134.222)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-86.00, 0}
-			,{1.102, 1}
-			,{-8.75E-04, 2}
-			,{2.83E-07, 3}
+			{-10.3434231782715, 0}
+			,{0.132540143516921, 1}
+			,{-0.000105238317220786, 2}
+			,{3.40370785982655e-08, 3}
 		}
 	}}
 };
@@ -16285,14 +16285,14 @@ const EosData eos_rpp_tert_butylbenzene = {
 static const IdealData ideal_data_1_methyl_3_isopropylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 134.222)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-48.76, 0}
-			,{0.9064, 1}
-			,{-6.05E-04, 2}
-			,{1.63E-07, 3}
+			{-5.86448039735487, 0}
+			,{0.10901486940448, 1}
+			,{-7.27647793355147e-05, 2}
+			,{1.96043950937006e-08, 3}
 		}
 	}}
 };
@@ -16329,14 +16329,14 @@ const EosData eos_rpp_1_methyl_3_isopropylbenzene = {
 static const IdealData ideal_data_1_4_diethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 134.222)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-37.42, 0}
-			,{0.8671, 1}
-			,{-5.56E-04, 2}
-			,{1.41E-07, 3}
+			{-4.50059180617349, 0}
+			,{0.104288165556735, 1}
+			,{-6.68714335711507e-05, 2}
+			,{1.69584031178638e-08, 3}
 		}
 	}}
 };
@@ -16373,14 +16373,14 @@ const EosData eos_rpp_1_4_diethylbenzene = {
 static const IdealData ideal_data_1_2_4_5_tetramethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 134.222)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{16.52, 0}
-			,{0.6519, 1}
-			,{-2.88E-04, 2}
-			,{3.26E-08, 3}
+			{1.98689942912843, 0}
+			,{0.0784055531385488, 1}
+			,{-3.46384404109557e-05, 2}
+			,{3.92087901874013e-09, 3}
 		}
 	}}
 };
@@ -16417,14 +16417,14 @@ const EosData eos_rpp_1_2_4_5_tetramethylbenzene = {
 static const IdealData ideal_data_cis_decalin = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 138.254)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-112.50, 0}
-			,{1.118, 1}
-			,{-6.61E-04, 2}
-			,{1.44E-07, 3}
+			{-13.5306407855296, 0}
+			,{0.13446450131753, 1}
+			,{-7.9500031637645e-05, 2}
+			,{1.73192202054779e-08, 3}
 		}
 	}}
 };
@@ -16461,14 +16461,14 @@ const EosData eos_rpp_cis_decalin = {
 static const IdealData ideal_data_trans_decalin = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 138.254)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-97.67, 0}
-			,{1.045, 1}
-			,{-5.48E-04, 2}
-			,{8.98E-08, 3}
+			{-11.7470016490904, 0}
+			,{0.125684618852253, 1}
+			,{-6.59092546708464e-05, 2}
+			,{1.08004581559161e-08, 3}
 		}
 	}}
 };
@@ -16505,14 +16505,14 @@ const EosData eos_rpp_trans_decalin = {
 static const IdealData ideal_data_butylcyclohexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 140.260)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-62.96, 0}
-			,{1.081, 1}
-			,{-6.31E-04, 2}
-			,{1.40E-07, 3}
+			{-7.57234794539505, 0}
+			,{0.130014423903622, 1}
+			,{-7.58918607615037e-05, 2}
+			,{1.68381307553257e-08, 3}
 		}
 	}}
 };
@@ -16549,14 +16549,14 @@ const EosData eos_rpp_butylcyclohexane = {
 static const IdealData ideal_data_1_decene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 140.270)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-4.66, 0}
-			,{0.9077, 1}
-			,{-5.06E-04, 2}
-			,{1.10E-07, 3}
+			{-0.56046920942727, 0}
+			,{0.10917122347578, 1}
+			,{-6.08578154442486e-05, 2}
+			,{1.32299598791845e-08, 3}
 		}
 	}}
 };
@@ -16593,14 +16593,14 @@ const EosData eos_rpp_1_decene = {
 static const IdealData ideal_data_3_3_5_trimethylheptane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 142.286)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-70.37, 0}
-			,{1.232, 1}
-			,{-8.65E-04, 2}
-			,{2.46E-07, 3}
+			{-8.46356615180193, 0}
+			,{0.148175550646866, 1}
+			,{-0.000104035593595405, 2}
+			,{2.9587001184358e-08, 3}
 		}
 	}}
 };
@@ -16637,14 +16637,14 @@ const EosData eos_rpp_3_3_5_trimethylheptane = {
 static const IdealData ideal_data_2_2_3_3_tetramethylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 142.286)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-58.83, 0}
-			,{1.231, 1}
-			,{-8.83E-04, 2}
-			,{2.59E-07, 3}
+			{-7.07562308811294, 0}
+			,{0.148055278284328, 1}
+			,{-0.00010620049612109, 2}
+			,{3.11505418973526e-08, 3}
 		}
 	}}
 };
@@ -16681,14 +16681,14 @@ const EosData eos_rpp_2_2_3_3_tetramethylhexane = {
 static const IdealData ideal_data_2_2_5_5_tetramthylhexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 142.286)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-62.34, 0}
-			,{1.235, 1}
-			,{-8.96E-04, 2}
-			,{2.62E-07, 3}
+			{-7.49777908062146, 0}
+			,{0.14853636773448, 1}
+			,{-0.000107764036834085, 2}
+			,{3.15113589849667e-08, 3}
 		}
 	}}
 };
@@ -16725,14 +16725,14 @@ const EosData eos_rpp_2_2_5_5_tetramthylhexane = {
 static const IdealData ideal_data_1_methylnaphthalene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 142.201)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-64.82, 0}
-			,{0.9387, 1}
-			,{-6.49E-04, 2}
-			,{2.02E-07, 3}
+			{-7.7960545397158, 0}
+			,{0.112899666714459, 1}
+			,{-7.80567632871885e-05, 2}
+			,{2.42950172326842e-08, 3}
 		}
 	}}
 };
@@ -16769,14 +16769,14 @@ const EosData eos_rpp_1_methylnaphthalene = {
 static const IdealData ideal_data_2_methylnaphthalene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 142.201)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-56.52, 0}
-			,{0.8997, 1}
-			,{-6.47E-04, 2}
-			,{1.84E-07, 3}
+			{-6.79779393065007, 0}
+			,{0.108209044575475, 1}
+			,{-7.78162185621124e-05, 2}
+			,{2.21301147069995e-08, 3}
 		}
 	}}
 };
@@ -16813,14 +16813,14 @@ const EosData eos_rpp_2_methylnaphthalene = {
 static const IdealData ideal_data_butyl_benzoate = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 178.232)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-17.37, 0}
-			,{0.8657, 1}
-			,{-4.61E-04, 2}
-			,{7.25E-08, 3}
+			{-2.08913093728577, 0}
+			,{0.104119784249182, 1}
+			,{-5.54455591300368e-05, 2}
+			,{8.71974628400796e-09, 3}
 		}
 	}}
 };
@@ -16858,14 +16858,14 @@ const EosData eos_rpp_butyl_benzoate = {
 static const IdealData ideal_data_n_hexylcylopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 154.297)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-58.32, 0}
-			,{1.128, 1}
-			,{-6.54E-04, 2}
-			,{1.47E-07, 3}
+			{-7.01428418321854, 0}
+			,{0.13566722494291, 1}
+			,{-7.86581250998787e-05, 2}
+			,{1.7680037293092e-08, 3}
 		}
 	}}
 };
@@ -16902,14 +16902,14 @@ const EosData eos_rpp_n_hexylcylopentane = {
 static const IdealData ideal_data_1_undecene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 154.297)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-5.59, 0}
-			,{1.003, 1}
-			,{-5.60E-04, 2}
-			,{1.22E-07, 3}
+			{-0.672322506587648, 0}
+			,{0.120633179625655, 1}
+			,{-6.73525230213028e-05, 2}
+			,{1.4673228229641e-08, 3}
 		}
 	}}
 };
@@ -16946,14 +16946,14 @@ const EosData eos_rpp_1_undecene = {
 static const IdealData ideal_data_n_undecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 156.313)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-8.40, 0}
-			,{1.054, 1}
-			,{-5.80E-04, 2}
-			,{1.24E-07, 3}
+			{-1.01028784531954, 0}
+			,{0.126767070115095, 1}
+			,{-6.97579702720637e-05, 2}
+			,{1.49137729547171e-08, 3}
 		}
 	}}
 };
@@ -16990,14 +16990,14 @@ const EosData eos_rpp_n_undecane = {
 static const IdealData ideal_data_diphenyl_ether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 170.211)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-60.73, 0}
-			,{0.9282, 1}
-			,{-5.87E-04, 2}
-			,{1.36E-04, 3}
+			{-7.30414057693522, 0}
+			,{0.111636806907809, 1}
+			,{-7.05998768098299e-05, 2}
+			,{1.63570413051735e-05, 3}
 		}
 	}}
 };
@@ -17035,14 +17035,14 @@ const EosData eos_rpp_diphenyl_ether = {
 static const IdealData ideal_data_n_heptylcyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 168.324)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-59.26, 0}
-			,{1.223, 1}
-			,{-7.08E-04, 2}
-			,{1.60E-07, 3}
+			{-7.1273402040043, 0}
+			,{0.147093099384024, 1}
+			,{-8.51528326769329e-05, 2}
+			,{1.92435780060865e-08, 3}
 		}
 	}}
 };
@@ -17079,14 +17079,14 @@ const EosData eos_rpp_n_heptylcyclopentane = {
 static const IdealData ideal_data_1_dodecene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 168.324)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-6.54, 0}
-			,{1.098, 1}
-			,{-6.16E-04, 2}
-			,{1.34E-07, 3}
+			{-0.786581250998787, 0}
+			,{0.132059054066769, 1}
+			,{-7.40877753234331e-05, 2}
+			,{1.61164965800975e-08, 3}
 		}
 	}}
 };
@@ -17123,14 +17123,14 @@ const EosData eos_rpp_1_dodecene = {
 static const IdealData ideal_data_n_dodecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 170.340)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.24, 0}
-			,{1.149, 1}
-			,{-6.35E-04, 2}
-			,{1.36E-07, 3}
+			{-1.1113166298515, 0}
+			,{0.138192944556209, 1}
+			,{-7.63729502116559e-05, 2}
+			,{1.63570413051735e-08, 3}
 		}
 	}}
 };
@@ -17167,14 +17167,14 @@ const EosData eos_rpp_n_dodecane = {
 static const IdealData ideal_data_dihexylether = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 186.339)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{33.54, 0}
-			,{1.073, 1}
-			,{-5.54E-04, 2}
-			,{1.68E-07, 3}
+			{4.03393503952589, 0}
+			,{0.129052245003318, 1}
+			,{-6.66308888460746e-05, 2}
+			,{2.02057569063909e-08, 3}
 		}
 	}}
 };
@@ -17212,14 +17212,14 @@ const EosData eos_rpp_dihexylether = {
 static const IdealData ideal_data_n_octylcyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 182.351)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-59.95, 0}
-			,{1.317, 1}
-			,{-7.61E-04, 2}
-			,{1.71E-07, 3}
+			{-7.21032813415555, 0}
+			,{0.1583987014626, 1}
+			,{-9.1527267891449e-05, 2}
+			,{2.0566573994005e-08, 3}
 		}
 	}}
 };
@@ -17256,14 +17256,14 @@ const EosData eos_rpp_n_octylcyclopentane = {
 static const IdealData ideal_data_1_tridecene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 182.351)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.12, 0}
-			,{1.191, 1}
-			,{-6.67E-04, 2}
-			,{1.45E-07, 3}
+			{-0.85633922127085, 0}
+			,{0.143244383782807, 1}
+			,{-8.02216658128732e-05, 2}
+			,{1.74394925680159e-08, 3}
 		}
 	}}
 };
@@ -17300,14 +17300,14 @@ const EosData eos_rpp_1_tridecene = {
 static const IdealData ideal_data_n_tridecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 184.367)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-10.46, 0}
-			,{1.245, 1}
-			,{-6.91E-04, 2}
-			,{1.49E-07, 3}
+			{-1.25804891214791, 0}
+			,{0.149739091359861, 1}
+			,{-8.31082025137862e-05, 2}
+			,{1.79205820181681e-08, 3}
 		}
 	}}
 };
@@ -17344,14 +17344,14 @@ const EosData eos_rpp_n_tridecane = {
 static const IdealData ideal_data_n_nonylcyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 196.378)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-60.81, 0}
-			,{1.412, 1}
-			,{-8.16E-04, 2}
-			,{1.83E-07, 3}
+			{-7.31376236593826, 0}
+			,{0.169824575903714, 1}
+			,{-9.81422478310413e-05, 2}
+			,{2.20098423444615e-08, 3}
 		}
 	}}
 };
@@ -17388,14 +17388,14 @@ const EosData eos_rpp_n_nonylcyclopentane = {
 static const IdealData ideal_data_1_tetradecene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 196.378)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.97, 0}
-			,{1.826, 1}
-			,{-7.21E-04, 2}
-			,{1.57E-07, 3}
+			{-0.958570729428185, 0}
+			,{0.219617333994463, 1}
+			,{-8.67163733899274e-05, 2}
+			,{1.88827609184724e-08, 3}
 		}
 	}}
 };
@@ -17432,14 +17432,14 @@ const EosData eos_rpp_1_tetradecene = {
 static const IdealData ideal_data_n_tetradecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 198.934)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-10.98, 0}
-			,{1.338, 1}
-			,{-7.42E-04, 2}
-			,{1.60E-07, 3}
+			{-1.32059054066769, 0}
+			,{0.160924421075899, 1}
+			,{-8.92420930032263e-05, 2}
+			,{1.92435780060865e-08, 3}
 		}
 	}}
 };
@@ -17476,14 +17476,14 @@ const EosData eos_rpp_n_tetradecane = {
 static const IdealData ideal_data_n_decylcyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 210.405)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-61.92, 0}
-			,{1.508, 1}
-			,{-8.72E-04, 2}
-			,{1.96E-07, 3}
+			{-7.44726468835549, 0}
+			,{0.181370722707366, 1}
+			,{-0.000104877500133172, 2}
+			,{2.3573383057456e-08, 3}
 		}
 	}}
 };
@@ -17520,14 +17520,14 @@ const EosData eos_rpp_n_decylcyclopentane = {
 static const IdealData ideal_data_1_pentadecene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 210.405)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.20, 0}
-			,{1.382, 1}
-			,{-7.78E-04, 2}
-			,{1.70E-07, 3}
+			{-1.10650573534998, 0}
+			,{0.166216405027572, 1}
+			,{-9.35718980545957e-05, 2}
+			,{2.04463016314669e-08, 3}
 		}
 	}}
 };
@@ -17564,14 +17564,14 @@ const EosData eos_rpp_1_pentadecene = {
 static const IdealData ideal_data_n_pentadecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 212.421)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-11.92, 0}
-			,{1.433, 1}
-			,{-7.97E-04, 2}
-			,{1.72E-07, 3}
+			{-1.43364656145345, 0}
+			,{0.172350295517012, 1}
+			,{-9.58570729428185e-05, 2}
+			,{2.0686846356543e-08, 3}
 		}
 	}}
 };
@@ -17608,14 +17608,14 @@ const EosData eos_rpp_n_pentadecane = {
 static const IdealData ideal_data_n_decylcyclohexane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 224.432)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-69.02, 0}
-			,{1.654, 1}
-			,{-9.61E-04, 2}
-			,{2.14E-07, 3}
+			{-8.30119846237558, 0}
+			,{0.198930487637919, 1}
+			,{-0.000115581740399057, 2}
+			,{2.57382855831407e-08, 3}
 		}
 	}}
 };
@@ -17652,14 +17652,14 @@ const EosData eos_rpp_n_decylcyclohexane = {
 static const IdealData ideal_data_1_hexadecene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 224.432)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-9.71, 0}
-			,{1.475, 1}
-			,{-8.30E-04, 2}
-			,{1.81E-07, 3}
+			{-1.16784464024438, 0}
+			,{0.17740173474361, 1}
+			,{-9.98260609065739e-05, 2}
+			,{2.17692976193854e-08, 3}
 		}
 	}}
 };
@@ -17696,14 +17696,14 @@ const EosData eos_rpp_1_hexadecene = {
 static const IdealData ideal_data_n_hexadecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 226.448)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-13.02, 0}
-			,{1.529, 1}
-			,{-8.54E-04, 2}
-			,{1.85E-07, 3}
+			{-1.56594616024529, 0}
+			,{0.183896442320664, 1}
+			,{-0.000102712597607487, 2}
+			,{2.22503870695375e-08, 3}
 		}
 	}}
 };
@@ -17740,14 +17740,14 @@ const EosData eos_rpp_n_hexadecane = {
 static const IdealData ideal_data_n_dodecylcyclopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 238.459)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-63.26, 0}
-			,{1.695, 1}
-			,{-9.77E-04, 2}
-			,{2.19E-07, 3}
+			{-7.60842965415646, 0}
+			,{0.203861654501979, 1}
+			,{-0.000117506098199666, 2}
+			,{2.63396473958309e-08, 3}
 		}
 	}}
 };
@@ -17784,14 +17784,14 @@ const EosData eos_rpp_n_dodecylcyclopentane = {
 static const IdealData ideal_data_n_heptadecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 240.475)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-13.97, 0}
-			,{1.624, 1}
-			,{-9.08E-04, 2}
-			,{1.97E-07, 3}
+			{-1.68020490465643, 0}
+			,{0.195322316761778, 1}
+			,{-0.000109207305184541, 2}
+			,{2.3693655419994e-08, 3}
 		}
 	}}
 };
@@ -17828,14 +17828,14 @@ const EosData eos_rpp_n_heptadecane = {
 static const IdealData ideal_data_1_octadecene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 252.486)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-11.33, 0}
-			,{1.664, 1}
-			,{-9.37E-04, 2}
-			,{2.05E-07, 3}
+			{-1.362685867556, 0}
+			,{0.2001332112633, 1}
+			,{-0.000112695203698144, 2}
+			,{2.46558343202984e-08, 3}
 		}
 	}}
 };
@@ -17872,14 +17872,14 @@ const EosData eos_rpp_1_octadecene = {
 static const IdealData ideal_data_n_tridecylcylopentane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 252.486)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-64.21, 0}
-			,{1.79, 1}
-			,{-1.03E-03, 2}
-			,{2.31E-07, 3}
+			{-7.7226883985676, 0}
+			,{0.215287528943093, 1}
+			,{-0.000123880533414182, 2}
+			,{2.77829157462874e-08, 3}
 		}
 	}}
 };
@@ -17916,14 +17916,14 @@ const EosData eos_rpp_n_tridecylcylopentane = {
 static const IdealData ideal_data_n_octadecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 254.504)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-14.47, 0}
-			,{1.717, 1}
-			,{-9.59E-04, 2}
-			,{2.08E-07, 3}
+			{-1.74034108592545, 0}
+			,{0.206507646477816, 1}
+			,{-0.000115341195673981, 2}
+			,{2.50166514079125e-08, 3}
 		}
 	}}
 };
@@ -17960,14 +17960,14 @@ const EosData eos_rpp_n_octadecane = {
 static const IdealData ideal_data_1_cyclopentyltetradecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 266.513)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-64.93, 0}
-			,{1.884, 1}
-			,{-1.09E-03, 2}
-			,{2.43E-07, 3}
+			{-7.80928449959499, 0}
+			,{0.226593131021669, 1}
+			,{-0.000131096875166464, 2}
+			,{2.92261840967439e-08, 3}
 		}
 	}}
 };
@@ -18004,14 +18004,14 @@ const EosData eos_rpp_1_cyclopentyltetradecane = {
 static const IdealData ideal_data_n_nonadecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 268.529)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-15.49, 0}
-			,{1.812, 1}
-			,{-1.02E-03, 2}
-			,{2.21E-07, 3}
+			{-1.86301889571425, 0}
+			,{0.21793352091893, 1}
+			,{-0.000122677809788802, 2}
+			,{2.6580192120907e-08, 3}
 		}
 	}}
 };
@@ -18048,14 +18048,14 @@ const EosData eos_rpp_n_nonadecane = {
 static const IdealData ideal_data_1_cyclopentylpentadecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 280.540)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-66.09, 0}
-			,{1.98, 1}
-			,{-1.14E-03, 2}
-			,{2.55E-07, 3}
+			{-7.94880044013912, 0}
+			,{0.238139277825321, 1}
+			,{-0.000137110493293366, 2}
+			,{3.06694524472004e-08, 3}
 		}
 	}}
 };
@@ -18092,14 +18092,14 @@ const EosData eos_rpp_1_cyclopentylpentadecane = {
 static const IdealData ideal_data_n_eicosane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 282.556)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-22.38, 0}
-			,{1.939, 1}
-			,{-1.12E-03, 2}
-			,{2.53E-07, 3}
+			{-2.69169547360135, 0}
+			,{0.233208110961261, 1}
+			,{-0.000134705046042606, 2}
+			,{3.04289077221243e-08, 3}
 		}
 	}}
 };
@@ -18109,7 +18109,7 @@ static const CubicData cubic_data_n_eicosane = {
 	,.T_c = 767.0
 	,.p_c = (11.1 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_t = 309.64
 	,.omega = 0.907
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-456100 / 282.556), (117400 / 282.556)}}}
 	,.ref = {FPROPS_REF_IIR}

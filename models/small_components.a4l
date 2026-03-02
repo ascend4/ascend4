@@ -2818,6 +2818,7 @@ MODEL component_constants(
 	mw "molecular weight"	IS_A	molar_weight_constant;
 	Tb "normal boiling point"	IS_A	boiling_temperature;
 	Tc "critical temperature"	IS_A	critical_temperature;
+	Tt "triple-point temperature"	IS_A	reference_temperature;
 	Pc "critical pressure"		IS_A	critical_pressure;
 	Vc "critical volume"		IS_A	critical_volume;
 	Zc "critical compressibility"	IS_A	critical_compressibility;

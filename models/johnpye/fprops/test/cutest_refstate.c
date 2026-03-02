@@ -4,6 +4,8 @@
 #include "../refstate.h"
 #include "../pengrob.h"
 #include "../ideal.h"
+#include "../helmholtz.h"
+#include "../cp0.h"
 #include "../zeroin.h"
 
 #include <math.h>
@@ -46,6 +48,10 @@ static int refstate_suite_cleanup(void){
 }
 
 extern const EosData eos_rpp_nitrogen;
+
+static double to_molar(double specific, const PureFluid *P){
+	return specific * P->data->M / 1000.0;
+}
 
 static PureFluid *prepare_pengrob_n2(void){
 	const EosData *E = fprops_eos("nitrogen", "pengrob", "RPP");
@@ -392,6 +398,61 @@ static void test_ideal_prepare_accepts_helmholtz_ref0(void){
 	fprops_fluid_destroy(P);
 }
 
+static void test_rpp_water_cp0_filedata_matches_reference(void){
+	const EosData *Erpp = fprops_eos("water", "ideal", "RPP");
+	const PureFluid *Phelm = fprops_fluid("water", "helmholtz", NULL);
+	const double temps[] = {298.15, 773.15};
+	unsigned i;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Erpp);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Phelm);
+	CU_ASSERT_EQUAL_FATAL(Erpp->type, FPROPS_CUBIC);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Erpp->data.cubic->ideal);
+
+	for(i = 0; i < sizeof(temps) / sizeof(temps[0]); ++i){
+		double T = temps[i];
+		double cp0_mass = cp0_cp(T, &Erpp->data.cubic->ideal->data.cp0);
+		double cp0_molar = cp0_mass * Erpp->data.cubic->M / 1000.0;
+		double rho_helm = 101325.0 / (Phelm->data->R * T);
+		FpropsError err = FPROPS_NO_ERROR;
+		double cp0_helm = to_molar(
+			fprops_cp0(fprops_set_Trho(T, rho_helm, Phelm, &err), &err), Phelm
+		);
+		CU_ASSERT_EQUAL_FATAL(err, FPROPS_NO_ERROR);
+		if(i == 0){
+			CU_ASSERT_TRUE(fabs(cp0_molar - 33.58) <= 0.2);
+		}
+		CU_ASSERT_TRUE(fabs(cp0_molar - cp0_helm) <= 1.0);
+	}
+}
+
+static void test_rpp_hydrogen_cp0_filedata_matches_helmholtz(void){
+	const EosData *Erpp = fprops_eos("hydrogen", "ideal", "RPP");
+	const PureFluid *Phelm = fprops_fluid("hydrogen", "helmholtz", NULL);
+	const double temps[] = {298.15, 773.15};
+	unsigned i;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Erpp);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Phelm);
+	CU_ASSERT_EQUAL_FATAL(Erpp->type, FPROPS_CUBIC);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Erpp->data.cubic->ideal);
+
+	for(i = 0; i < sizeof(temps) / sizeof(temps[0]); ++i){
+		double T = temps[i];
+		double cp0_mass = cp0_cp(T, &Erpp->data.cubic->ideal->data.cp0);
+		double cp0_molar = cp0_mass * Erpp->data.cubic->M / 1000.0;
+		double rho_helm = 101325.0 / (Phelm->data->R * T);
+		FpropsError err = FPROPS_NO_ERROR;
+		double cp0_helm = to_molar(
+			fprops_cp0(fprops_set_Trho(T, rho_helm, Phelm, &err), &err), Phelm
+		);
+		CU_ASSERT_EQUAL_FATAL(err, FPROPS_NO_ERROR);
+
+		CU_ASSERT_TRUE(cp0_molar > 10.0 && cp0_molar < 60.0);
+		CU_ASSERT_TRUE(fabs(cp0_molar - cp0_helm) <= 2.0);
+	}
+}
+
 CU_ErrorCode test_register_refstate(void){
 	CU_pSuite s = CU_add_suite("refstate", refstate_suite_init, refstate_suite_cleanup);
 	if(NULL == s){
@@ -434,6 +495,12 @@ CU_ErrorCode test_register_refstate(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "ideal_prepare_accepts_helmholtz_ref0", test_ideal_prepare_accepts_helmholtz_ref0)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "rpp_water_cp0_filedata_matches_reference", test_rpp_water_cp0_filedata_matches_reference)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "rpp_hydrogen_cp0_filedata_matches_helmholtz", test_rpp_hydrogen_cp0_filedata_matches_helmholtz)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;

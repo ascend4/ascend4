@@ -113,6 +113,8 @@ static PropsRow eval_one(const char *species, const char *label, const PureFluid
 		mu0_source = "helmholtz:";
 	}else if(0 == strcmp(label, "helm_REF0")){
 		mu0_source = "helmholtz+ref0:";
+	}else if(0 == strcmp(label, "RPP")){
+		mu0_source = "ideal:RPP";
 	}else{
 		mu0_source = "Moran and Shapiro";
 	}
@@ -205,10 +207,13 @@ int main(int argc, char *argv[]){
 			const PureFluid *Phelm = fprops_fluid(sp, "helmholtz", NULL);
 			const EosData *Ehelm = fprops_eos(sp, "helmholtz", NULL);
 			const PureFluid *Phelm_ref0 = Ehelm ? helmholtz_prepare(Ehelm, &ref0) : NULL;
+			const EosData *Erpp = fprops_eos(sp, "ideal", "RPP");
+			const PureFluid *Prpp = Erpp ? ideal_prepare(Erpp, &ref0) : NULL;
 			const EosData *Ems = fprops_eos(sp, "ideal", "Moran and Shapiro");
 			const PureFluid *Pms = Ems ? ideal_prepare(Ems, &ref0) : NULL;
 			print_one(sp, "helmholtz", Phelm, T, p);
 			print_one(sp, "helm_REF0", Phelm_ref0, T, p);
+			print_one(sp, "RPP", Prpp, T, p);
 			print_one(sp, "M&S", Pms, T, p);
 		}
 	}
@@ -226,9 +231,15 @@ int main(int argc, char *argv[]){
 		const PureFluid *Pw_helm_ref0 = Ew_helm ? helmholtz_prepare(Ew_helm, &ref0) : NULL;
 		const PureFluid *Ph2_helm_ref0 = Eh2_helm ? helmholtz_prepare(Eh2_helm, &ref0) : NULL;
 		const PureFluid *Po2_helm_ref0 = Eo2_helm ? helmholtz_prepare(Eo2_helm, &ref0) : NULL;
+		const EosData *Ew_rpp = fprops_eos("water", "ideal", "RPP");
+		const EosData *Eh2_rpp = fprops_eos("hydrogen", "ideal", "RPP");
+		const EosData *Eo2_rpp = fprops_eos("oxygen", "ideal", "RPP");
 		const EosData *Ew_ms = fprops_eos("water", "ideal", "Moran and Shapiro");
 		const EosData *Eh2_ms = fprops_eos("hydrogen", "ideal", "Moran and Shapiro");
 		const EosData *Eo2_ms = fprops_eos("oxygen", "ideal", "Moran and Shapiro");
+		const PureFluid *Pw_rpp = Ew_rpp ? ideal_prepare(Ew_rpp, &ref0) : NULL;
+		const PureFluid *Ph2_rpp = Eh2_rpp ? ideal_prepare(Eh2_rpp, &ref0) : NULL;
+		const PureFluid *Po2_rpp = Eo2_rpp ? ideal_prepare(Eo2_rpp, &ref0) : NULL;
 		const PureFluid *Pw_ms = Ew_ms ? ideal_prepare(Ew_ms, &ref0) : NULL;
 		const PureFluid *Ph2_ms = Eh2_ms ? ideal_prepare(Eh2_ms, &ref0) : NULL;
 		const PureFluid *Po2_ms = Eo2_ms ? ideal_prepare(Eo2_ms, &ref0) : NULL;
@@ -238,27 +249,34 @@ int main(int argc, char *argv[]){
 		PropsRow w_helm_ref0 = eval_one("water", "helm_REF0", Pw_helm_ref0, T, p);
 		PropsRow h2_helm_ref0 = eval_one("hydrogen", "helm_REF0", Ph2_helm_ref0, T, p);
 		PropsRow o2_helm_ref0 = eval_one("oxygen", "helm_REF0", Po2_helm_ref0, T, p);
+		PropsRow w_rpp = eval_one("water", "RPP", Pw_rpp, T, p);
+		PropsRow h2_rpp = eval_one("hydrogen", "RPP", Ph2_rpp, T, p);
+		PropsRow o2_rpp = eval_one("oxygen", "RPP", Po2_rpp, T, p);
 		PropsRow w_ms = eval_one("water", "M&S", Pw_ms, T, p);
 		PropsRow h2_ms = eval_one("hydrogen", "M&S", Ph2_ms, T, p);
 		PropsRow o2_ms = eval_one("oxygen", "M&S", Po2_ms, T, p);
-		double dg_g_helm, dg_g_helm_ref0, dg_g_ms;
-		double dg_mu0_helm, dg_mu0_helm_ref0, dg_mu0_ms;
+		double dg_g_helm, dg_g_helm_ref0, dg_g_rpp, dg_g_ms;
+		double dg_mu0_helm, dg_mu0_helm_ref0, dg_mu0_rpp, dg_mu0_ms;
 
 		if(!(w_helm.ok && h2_helm.ok && o2_helm.ok
 				&& w_helm_ref0.ok && h2_helm_ref0.ok && o2_helm_ref0.ok
+				&& w_rpp.ok && h2_rpp.ok && o2_rpp.ok
 				&& w_ms.ok && h2_ms.ok && o2_ms.ok)){
 			continue;
 		}
 
 		dg_g_helm = w_helm.g - h2_helm.g - 0.5 * o2_helm.g;
 		dg_g_helm_ref0 = w_helm_ref0.g - h2_helm_ref0.g - 0.5 * o2_helm_ref0.g;
+		dg_g_rpp = w_rpp.g - h2_rpp.g - 0.5 * o2_rpp.g;
 		dg_g_ms = w_ms.g - h2_ms.g - 0.5 * o2_ms.g;
 		dg_mu0_helm = w_helm.mu0 - h2_helm.mu0 - 0.5 * o2_helm.mu0;
 		dg_mu0_helm_ref0 = w_helm_ref0.mu0 - h2_helm_ref0.mu0 - 0.5 * o2_helm_ref0.mu0;
+		dg_mu0_rpp = w_rpp.mu0 - h2_rpp.mu0 - 0.5 * o2_rpp.mu0;
 		dg_mu0_ms = w_ms.mu0 - h2_ms.mu0 - 0.5 * o2_ms.mu0;
 
 		print_reaction_row("helmholtz", T, dg_g_helm, dg_mu0_helm);
 		print_reaction_row("helm_REF0", T, dg_g_helm_ref0, dg_mu0_helm_ref0);
+		print_reaction_row("RPP", T, dg_g_rpp, dg_mu0_rpp);
 		print_reaction_row("M&S", T, dg_g_ms, dg_mu0_ms);
 	}
 	return 0;

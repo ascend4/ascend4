@@ -2856,6 +2856,7 @@ MODEL component_constants(
 	mw "molecular weight"	IS_A	molar_weight_constant;
 	Tb "normal boiling point"	IS_A	boiling_temperature;
 	Tc "critical temperature"	IS_A	critical_temperature;
+	Tt "triple-point temperature"	IS_A	reference_temperature;
 	Pc "critical pressure"		IS_A	critical_pressure;
 	Vc "critical volume"		IS_A	critical_volume;
 	Zc "critical compressibility"	IS_A	critical_compressibility;
@@ -3611,7 +3612,7 @@ MODEL td_component_constants(
 		Zc :== 0.303;
 		omega :== -0.216;
 		cpvapa :== 27.14 {J/g_mole/K};
-		cpvapb :== 9.274e+1 {J/g_mole/K^2};
+		cpvapb :== 9.274e-3 {J/g_mole/K^2};
 		cpvapc :== -1.381e-5 {J/g_mole/K^3};
 		cpvapd :== 7.645e-9 {J/g_mole/K^4};
 		Hf :== 0.00 {J/g_mole};
@@ -22135,6 +22136,8 @@ CASE 'n_eicosane':
 	 mw :== 282.556 {g/g_mole};
 	 Tb :== 617.0 {K};
 	 Tc :== 767.0 {K};
+(* 	 Source for triple-point temperature: https://webbook.nist.gov/cgi/inchi?ID=C112958&Mask=4 *)
+	 Tt :== 309.64 {K};
 	 Pc :== 11.1 {bar};
 (* 	 Vc :== ; parameter missing from Reid et al.*)
 (* 	 Zc :== ; parameter missing from Reid et al.*)

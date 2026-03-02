@@ -69,6 +69,7 @@ class ExpectedUnits:
 fields = ['formula','Zc','omega']
 fieldunits = {
 	'Tc':'K'
+	,'Tt':'K'
 	,'mw':'g/g_mole'
 	,'Vc':'cm^3/g_mole'
 	,'Tb':'K'
@@ -81,18 +82,20 @@ fieldunits = {
 	,'cpvapd':'J/g_mole/K^4'
 }
 
+R_UNIVERSAL_MOLAR = 8.3144621
+
 ctemplate = """
 static const IdealData ideal_data_%(name)s = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / %(mw)s)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{%(cpvapa)s, 0}
-			,{%(cpvapb)s, 1}
-			,{%(cpvapc)s, 2}
-			,{%(cpvapd)s, 3}
+			{%(cpvapa_red)s, 0}
+			,{%(cpvapb_red)s, 1}
+			,{%(cpvapc_red)s, 2}
+			,{%(cpvapd_red)s, 3}
 		}
 	}}
 };
@@ -336,15 +339,15 @@ class CubicFluid:
 			,'Tc_K':self.Tc
 			,'Pc_Pa':pc
 			,'rhoc_kgm3':rhoc
-			,'Tt_K' : 0
+			,'Tt_K' : getattr(self, 'Tt', 0)
 			,'T_ref' : 298.2
 			,'omega':self.omega
 			,'h_f0':h_f0
 			,'g_f0':g_f0
-			,'cpvapa':self.cpvapa
-			,'cpvapb':self.cpvapb
-			,'cpvapc':self.cpvapc
-			,'cpvapd':self.cpvapd
+			,'cpvapa_red':'%.15g' % (float(self.cpvapa) / R_UNIVERSAL_MOLAR)
+			,'cpvapb_red':'%.15g' % (float(self.cpvapb) / R_UNIVERSAL_MOLAR)
+			,'cpvapc_red':'%.15g' % (float(self.cpvapc) / R_UNIVERSAL_MOLAR)
+			,'cpvapd_red':'%.15g' % (float(self.cpvapd) / R_UNIVERSAL_MOLAR)
 			,'elements_decl':'\n'.join(decl_lines)
 		}
 
