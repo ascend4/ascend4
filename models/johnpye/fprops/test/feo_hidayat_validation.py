@@ -37,41 +37,41 @@ R = 8.31446261815324
 
 
 def hillert_jarl_gmag(T: float, Tord: float, beta: float, p: float) -> float:
-    tau = T / Tord
+    tau = T / abs(Tord)
     A = 518.0 / 1125.0 + (11692.0 / 15975.0) * (1.0 / p - 1.0)
     if tau <= 1.0:
         poly = tau**3 / 6.0 + tau**9 / 135.0 + tau**15 / 600.0
         f = 1.0 - (((79.0 / (140.0 * p)) / tau) + (474.0 / 497.0) * (1.0 / p - 1.0) * poly) / A
     else:
         f = -(tau**-5 / 10.0 + tau**-15 / 315.0 + tau**-25 / 1500.0) / A
-    return f * R * T * math.log(beta + 1.0)
+    return f * R * T * math.log(abs(beta) + 1.0)
+
+
+def g_hser_fe(T: float) -> float:
+    return (
+        1225.7
+        + 124.134 * T
+        - 23.5143 * T * math.log(T)
+        - 0.00439752 * T * T
+        + 77359.0 / T
+        - 5.8927e-8 * T**3
+    )
 
 
 def g_fe_bcc(T: float) -> float:
-    return (
-        10375.2
-        + 114.5502 * T
-        - 23.5143 * T * math.log(T)
-        - 0.004398 * T * T
-        + 77359.0 / T
-        - 5.8927e-8 * T**3
-        + hillert_jarl_gmag(T, 1043.0, 2.22, 0.40)
-    )
+    if T <= 1811.0:
+        g = g_hser_fe(T)
+    else:
+        g = -25383.581 + 299.31255 * T - 46.0 * T * math.log(T) + 2.29603e31 * T**-9
+    return g + hillert_jarl_gmag(T, 1043.0, 2.22, 0.40)
 
 
 def g_fe_fcc(T: float) -> float:
     if T <= 1811.0:
-        g = (
-            -236.5
-            + 132.4156 * T
-            - 24.6643 * T * math.log(T)
-            - 0.003758 * T * T
-            + 77359.0 / T
-            - 5.8927e-8 * T**3
-        )
+        g = g_hser_fe(T) - 1462.4 + 8.282 * T - 1.15 * T * math.log(T) + 6.4e-4 * T * T
     else:
-        g = -27097.2 + 300.2521 * T - 46.0 * T * math.log(T) + 2.78854e31 * T**-9
-    return g + hillert_jarl_gmag(T, 67.0, 0.70, 0.28)
+        g = -27098.266 + 300.25256 * T - 46.0 * T * math.log(T) + 2.78854e31 * T**-9
+    return g + hillert_jarl_gmag(T, -201.0, -2.1, 0.28)
 
 
 def g_bcc_fe0(T: float) -> float:
@@ -91,6 +91,18 @@ def g_bcc_o0(T: float) -> float:
 
 def l_bcc_feo(T: float) -> float:
     return -315149.19 + 20.6935 * T
+
+
+def g_fcc_fe0(T: float) -> float:
+    return g_fe_fcc(T)
+
+
+def g_fcc_o0(T: float) -> float:
+    return g_bcc_o0(T)
+
+
+def l_fcc_feo(T: float) -> float:
+    return -315652.63336 + 27.6144 * T
 
 
 def g_fe3o4(T: float) -> float:
@@ -138,13 +150,14 @@ def g0_feo1p5(T: float) -> float:
 def gex_wustite(x: float) -> float:
     q00 = -59412.8
     q10 = 42676.8
-    return x * (1.0 - x) * (q00 + q10 * (1.0 - 2.0 * x))
+    xa = 1.0 - x
+    return xa * x * (q00 + q10 * xa)
 
 
 def dgex_wustite_dx(x: float) -> float:
     q00 = -59412.8
     q10 = 42676.8
-    return q00 * (1.0 - 2.0 * x) + q10 * (1.0 - 6.0 * x + 6.0 * x * x)
+    return q00 * (1.0 - 2.0 * x) + q10 * (1.0 - 4.0 * x + 3.0 * x * x)
 
 
 def mu_a_wustite(T: float, x: float) -> float:
@@ -206,6 +219,41 @@ def residual_fe_bcc_solution(T: float, x: float) -> tuple[float, float]:
             y_o = y_lo + span * i / steps
             y_fe = 1.0 - y_o
             resid = bcc_solution_g(T, y_o) - (y_fe * lam_fe + y_o * lam_o)
+            if resid < best:
+                best = resid
+                best_y = y_o
+        dy = max(1e-8, 0.15 * span)
+        y_lo = max(1e-10, best_y - dy)
+        y_hi = min(0.5, best_y + dy)
+    return best, best_y
+
+
+def fcc_solution_g(T: float, y_o: float) -> float:
+    y_fe = 1.0 - y_o
+    return (
+        y_fe * g_fcc_fe0(T)
+        + y_o * g_fcc_o0(T)
+        + R * T * (y_fe * math.log(y_fe) + y_o * math.log(y_o))
+        + y_fe * y_o * l_fcc_feo(T)
+    )
+
+
+def residual_fe_fcc_solution(T: float, x: float) -> tuple[float, float]:
+    mu_a = mu_a_wustite(T, x)
+    mu_b = mu_b_wustite(T, x)
+    lam_o = 2.0 * (mu_b - mu_a)
+    lam_fe = 3.0 * mu_a - 2.0 * mu_b
+    best = math.inf
+    best_y = math.nan
+    y_lo = 1e-8
+    y_hi = 0.1
+    for _ in range(4):
+        steps = 80
+        span = y_hi - y_lo
+        for i in range(steps + 1):
+            y_o = y_lo + span * i / steps
+            y_fe = 1.0 - y_o
+            resid = fcc_solution_g(T, y_o) - (y_fe * lam_fe + y_o * lam_o)
             if resid < best:
                 best = resid
                 best_y = y_o
@@ -327,6 +375,29 @@ def minimize_abs_residual_at_T(T: float, fn, xmin: float = 1e-4, xmax: float = 0
     return best_x, best_val
 
 
+def find_transition_temperature(fn, tmin: float, tmax: float) -> float:
+    fmin = fn(tmin)
+    fmax = fn(tmax)
+    if fmin == 0.0:
+        return tmin
+    if fmax == 0.0:
+        return tmax
+    if fmin * fmax > 0.0:
+        raise ValueError("transition is not bracketed")
+    for _ in range(120):
+        tmid = 0.5 * (tmin + tmax)
+        fmid = fn(tmid)
+        if fmid == 0.0:
+            return tmid
+        if fmin * fmid <= 0.0:
+            tmax = tmid
+            fmax = fmid
+        else:
+            tmin = tmid
+            fmin = fmid
+    return 0.5 * (tmin + tmax)
+
+
 def main() -> None:
     T_target = 561.0 + 273.15
     atpct_o_target = 51.4
@@ -403,10 +474,11 @@ def main() -> None:
     atpct_o_alpha_gamma = 51.3
     x_alpha_gamma = x_from_atpct_o(atpct_o_alpha_gamma)
     r_bcc_ag = residual_fe_wustite(T_alpha_gamma, x_alpha_gamma)
-    lam_combo = 0.0
     mu_a_ag = mu_a_wustite(T_alpha_gamma, x_alpha_gamma)
     mu_b_ag = mu_b_wustite(T_alpha_gamma, x_alpha_gamma)
     r_fcc_ag = g_fe_fcc(T_alpha_gamma) - (3.0 * mu_a_ag - 2.0 * mu_b_ag)
+    r_bcc_ag_sol, y_bcc_ag = residual_fe_bcc_solution(T_alpha_gamma, x_alpha_gamma)
+    r_fcc_ag_sol, y_fcc_ag = residual_fe_fcc_solution(T_alpha_gamma, x_alpha_gamma)
     print(
         f"target: Fe(fcc) + wustite -> Fe(bcc) at T = {T_alpha_gamma:.2f} K (912 C), "
         f"wustite = {atpct_o_alpha_gamma:.3f} at% O -> x = {x_alpha_gamma:.6f}"
@@ -414,7 +486,11 @@ def main() -> None:
     print("Residuals at the Hidayat target point")
     print(f"Fe(bcc) | Wustite residual     = {r_bcc_ag/1000.0:+.3f} kJ/mol")
     print(f"Fe(fcc) | Wustite residual     = {r_fcc_ag/1000.0:+.3f} kJ/mol")
+    print(f"BCC_A2 | Wustite residual      = {r_bcc_ag_sol/1000.0:+.3f} kJ/mol   (Hidayat Fe-O solution)")
+    print(f"FCC_A1 | Wustite residual      = {r_fcc_ag_sol/1000.0:+.3f} kJ/mol   (Hidayat Fe-O solution)")
     print(f"Fe(fcc)-Fe(bcc) Gibbs offset   = {(g_fe_fcc(T_alpha_gamma)-g_fe_bcc(T_alpha_gamma))/1000.0:+.3f} kJ/mol")
+    print(f"best BCC_A2 oxygen fraction    = {y_bcc_ag:.6e}")
+    print(f"best FCC_A1 oxygen fraction    = {y_fcc_ag:.6e}")
 
     x_bcc_ag_best, r_bcc_ag_best = minimize_abs_residual_at_T(T_alpha_gamma, residual_fe_wustite)
 
@@ -424,6 +500,13 @@ def main() -> None:
         return g_fe_fcc(T) - (3.0 * mu_a - 2.0 * mu_b)
 
     x_fcc_ag_best, r_fcc_ag_best = minimize_abs_residual_at_T(T_alpha_gamma, residual_fe_fcc_wustite)
+
+    def fcc_abs_residual(T: float, x: float) -> float:
+        resid, _y = residual_fe_fcc_solution(T, x)
+        return abs(resid)
+
+    x_fcc_ag_sol_best, r_fcc_ag_sol_best = minimize_abs_residual_at_T(T_alpha_gamma, fcc_abs_residual)
+    _r_fcc_ag_sol_signed, y_fcc_ag_best = residual_fe_fcc_solution(T_alpha_gamma, x_fcc_ag_sol_best)
 
     def coupled_fe_transition_residual(T: float, x: float) -> float:
         return max(abs(residual_fe_wustite(T, x)), abs(residual_fe_fcc_wustite(T, x)))
@@ -442,9 +525,30 @@ def main() -> None:
         f"|residual| = {r_fcc_ag_best/1000.0:.3f} kJ/mol"
     )
     print(
+        "FCC_A1 | Wustite: "
+        f"x = {x_fcc_ag_sol_best:.6f}, at% O = {atpct_o_from_x(x_fcc_ag_sol_best):.3f}, "
+        f"|residual| = {r_fcc_ag_sol_best/1000.0:.3f} kJ/mol, "
+        f"y_O = {y_fcc_ag_best:.6e}"
+    )
+    print(
         "Coupled Fe(bcc)/Fe(fcc)/Wustite target: "
         f"x = {x_coupled_best:.6f}, at% O = {atpct_o_from_x(x_coupled_best):.3f}, "
         f"max|residual| = {r_coupled_best/1000.0:.3f} kJ/mol"
+    )
+    print()
+
+    def pure_fe_offset(T: float) -> float:
+        return g_fe_fcc(T) - g_fe_bcc(T)
+
+    t_alpha_gamma_pure = find_transition_temperature(pure_fe_offset, 700.0, 1300.0)
+    print("Pure Fe allotropic crossover in the current implementation")
+    print(
+        f"Fe(fcc)-Fe(bcc) = 0 at T = {t_alpha_gamma_pure:.2f} K "
+        f"({t_alpha_gamma_pure - 273.15:.2f} C)"
+    )
+    print(
+        f"Fe(fcc)-Fe(bcc) at 1185.15 K (912 C) = "
+        f"{pure_fe_offset(T_alpha_gamma)/1000.0:+.3f} kJ/mol"
     )
 
 

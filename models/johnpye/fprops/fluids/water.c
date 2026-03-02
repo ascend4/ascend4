@@ -70,9 +70,15 @@ static HelmholtzData helmholtz_data_water = {
 		}}
 	}
 #endif
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-241820.0e3 / 18.015242) /* M&S G9e Table A-25, H2O(g) */
+		, .s0 = (188.72e3 / 18.015242) /* M&S G9e Table A-25, H2O(g) */
+	}}}
 
-	, 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
-	, &ideal_data_water
+	, .omega = 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
+	, .ideal = &ideal_data_water
 	, .np = (int)51 /* np */
 	, .pt = (HelmholtzPowTerm[]){
 		/* a_i, t_i, d_i, l_i */

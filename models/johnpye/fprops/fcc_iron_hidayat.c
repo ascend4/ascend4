@@ -1,8 +1,8 @@
-#include "bcc_iron_hidayat.h"
+#include "fcc_iron_hidayat.h"
 
 #include <math.h>
 
-static double bcc_iron_R(void){
+static double fcc_iron_R(void){
 	return 8.31446261815324;
 }
 
@@ -37,11 +37,11 @@ static int hillert_jarl_gmag(double T, double Tord, double beta, double p, doubl
 			+ pow(tau, -25.0) / 1500.0
 		) / A;
 	}
-	*g_out = f * bcc_iron_R() * T * log(fabs(beta) + 1.0);
+	*g_out = f * fcc_iron_R() * T * log(fabs(beta) + 1.0);
 	return isfinite(*g_out);
 }
 
-static double bcc_iron_hidayat_ghser_fe(double T, FpropsError *err){
+static double fcc_iron_hidayat_ghser_fe(double T, FpropsError *err){
 	if(err){
 		*err = FPROPS_NO_ERROR;
 	}
@@ -65,30 +65,48 @@ static double bcc_iron_hidayat_ghser_fe(double T, FpropsError *err){
 		+ 2.29603e31 * pow(T, -9.0);
 }
 
-static double bcc_iron_hidayat_g0_fe(double T, double p, FpropsError *err){
+static double fcc_iron_hidayat_g0_fe(double T, double p, FpropsError *err){
 	double gmag = 0.0;
-	double ghser;
+	double g;
 	(void)p;
 	if(err){
 		*err = FPROPS_NO_ERROR;
 	}
-	ghser = bcc_iron_hidayat_ghser_fe(T, err);
-	if(!isfinite(ghser)){
+	if(!(T >= 298.0) || !(T <= 6000.0)){
 		if(err){
 			*err = FPROPS_RANGE_ERROR;
 		}
 		return NAN;
 	}
-	if(!hillert_jarl_gmag(T, 1043.0, 2.22, 0.40, &gmag)){
+	if(T <= 1811.0){
+		double ghser = fcc_iron_hidayat_ghser_fe(T, err);
+		if(!isfinite(ghser)){
+			if(err){
+				*err = FPROPS_RANGE_ERROR;
+			}
+			return NAN;
+		}
+		g = ghser
+			- 1462.4
+			+ 8.282 * T
+			- 1.15 * T * log(T)
+			+ 6.4e-4 * T * T;
+	}else{
+		g = -27098.266
+			+ 300.25256 * T
+			- 46.0 * T * log(T)
+			+ 2.78854e31 * pow(T, -9.0);
+	}
+	if(!hillert_jarl_gmag(T, -201.0, -2.1, 0.28, &gmag)){
 		if(err){
 			*err = FPROPS_RANGE_ERROR;
 		}
 		return NAN;
 	}
-	return ghser + gmag;
+	return g + gmag;
 }
 
-static double bcc_iron_hidayat_g0_o(double T, double p, FpropsError *err){
+static double fcc_iron_hidayat_g0_o(double T, double p, FpropsError *err){
 	(void)p;
 	if(err){
 		*err = FPROPS_NO_ERROR;
@@ -107,77 +125,77 @@ static double bcc_iron_hidayat_g0_o(double T, double p, FpropsError *err){
 		+ 322517.0 / T;
 }
 
-static double bcc_iron_hidayat_gex(double T, double x, FpropsError *err){
+static double fcc_iron_hidayat_gex(double T, double x, FpropsError *err){
 	double L;
 	if(err){
 		*err = FPROPS_NO_ERROR;
 	}
-	if(!(T >= 298.0) || !(T <= 1811.0) || !(x >= 0.0) || !(x <= 1.0)){
+	if(!(T >= 298.0) || !(T <= 2000.0) || !(x >= 0.0) || !(x <= 1.0)){
 		if(err){
 			*err = FPROPS_RANGE_ERROR;
 		}
 		return NAN;
 	}
-	L = -315149.19 + 20.6935 * T;
+	L = -315652.63336 + 27.6144 * T;
 	return x * (1.0 - x) * L;
 }
 
-static double bcc_iron_hidayat_dgex_dx(double T, double x, FpropsError *err){
+static double fcc_iron_hidayat_dgex_dx(double T, double x, FpropsError *err){
 	double L;
 	if(err){
 		*err = FPROPS_NO_ERROR;
 	}
-	if(!(T >= 298.0) || !(T <= 1811.0) || !(x >= 0.0) || !(x <= 1.0)){
+	if(!(T >= 298.0) || !(T <= 2000.0) || !(x >= 0.0) || !(x <= 1.0)){
 		if(err){
 			*err = FPROPS_RANGE_ERROR;
 		}
 		return NAN;
 	}
-	L = -315149.19 + 20.6935 * T;
+	L = -315652.63336 + 27.6144 * T;
 	return (1.0 - 2.0 * x) * L;
 }
 
-static double bcc_iron_hidayat_d2gex_dx2(double T, double x, FpropsError *err){
+static double fcc_iron_hidayat_d2gex_dx2(double T, double x, FpropsError *err){
 	(void)x;
 	if(err){
 		*err = FPROPS_NO_ERROR;
 	}
-	if(!(T >= 298.0) || !(T <= 1811.0)){
+	if(!(T >= 298.0) || !(T <= 2000.0)){
 		if(err){
 			*err = FPROPS_RANGE_ERROR;
 		}
 		return NAN;
 	}
-	return 2.0 * (-20.6935 * T + 315149.19);
+	return 2.0 * (315652.63336 - 27.6144 * T);
 }
 
-static const BinarySolutionModel bcc_iron_model = {
-	"bcc_iron_hidayat",
-	&bcc_iron_hidayat_g0_fe,
-	&bcc_iron_hidayat_g0_o,
-	&bcc_iron_hidayat_gex,
-	&bcc_iron_hidayat_dgex_dx,
-	&bcc_iron_hidayat_d2gex_dx2,
+static const BinarySolutionModel fcc_iron_model = {
+	"fcc_iron_hidayat",
+	&fcc_iron_hidayat_g0_fe,
+	&fcc_iron_hidayat_g0_o,
+	&fcc_iron_hidayat_gex,
+	&fcc_iron_hidayat_dgex_dx,
+	&fcc_iron_hidayat_d2gex_dx2,
 	0.0,
 	1.0
 };
 
-static const char *elements_bcc_fe[] = {"Fe"};
-static const double stoich_bcc_fe[] = {1.0};
+static const char *elements_fcc_fe[] = {"Fe"};
+static const double stoich_fcc_fe[] = {1.0};
 
-static const char *elements_bcc_o[] = {"O"};
-static const double stoich_bcc_o[] = {1.0};
+static const char *elements_fcc_o[] = {"O"};
+static const double stoich_fcc_o[] = {1.0};
 
-static const BinarySolutionPhaseDef bcc_iron_phase = {
-	"bcc_iron",
+static const BinarySolutionPhaseDef fcc_iron_phase = {
+	"fcc_iron",
 	"hidayat_2015",
-	"Bcc_Fe",
-	"Bcc_O",
-	1, elements_bcc_fe, stoich_bcc_fe,
-	1, elements_bcc_o, stoich_bcc_o,
-	&bcc_iron_model
+	"Fcc_Fe",
+	"Fcc_O",
+	1, elements_fcc_fe, stoich_fcc_fe,
+	1, elements_fcc_o, stoich_fcc_o,
+	&fcc_iron_model
 };
 
-const BinarySolutionPhaseDef *bcc_iron_hidayat_phase(void){
-	return &bcc_iron_phase;
+const BinarySolutionPhaseDef *fcc_iron_hidayat_phase(void){
+	return &fcc_iron_phase;
 }

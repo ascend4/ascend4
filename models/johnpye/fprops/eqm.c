@@ -7,6 +7,8 @@
 
 #include "fprops.h"
 #include "ideal.h"
+#include "helmholtz.h"
+#include "pengrob.h"
 #include "fluids.h"
 #include "gibbs_species.h"
 #include "constcp_species.h"
@@ -56,8 +58,9 @@ static int eqm_mu0_shomate_source(const char *name, const char *source, double T
 static int eqm_mu0_gibbs_species_source(const char *name, const char *source, double T, double P0,
 		double *mu0);
 static int eqm_mu0_model_source(const char *name, EqmMuModel model, const char *source, double T,
-		double P0, double *mu0);
-static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, const char **source_out);
+		double P0, int use_ref0, double *mu0);
+static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, int *use_ref0_out,
+		const char **source_out);
 int eqm_mu0_source(const char *name, const char *source, double T, double P0, double *mu0);
 
 static int eqm_lookup_solution_member(const char *name, const char *source,
@@ -65,13 +68,14 @@ static int eqm_lookup_solution_member(const char *name, const char *source,
 	char source_buf[512];
 	const char *source_i;
 	EqmMuModel selector_model = EQM_MODEL_AUTO;
+	int use_ref0 = 0;
 	const char *selector_source = NULL;
 	(void)selector_model;
 	if(!name){
 		return 0;
 	}
 	source_i = fprops_resolve_species_source(source, name, source_buf, (unsigned)sizeof(source_buf));
-	eqm_parse_selector(source_i, &selector_model, &selector_source);
+	eqm_parse_selector(source_i, &selector_model, &use_ref0, &selector_source);
 	if(solution_phase_lookup_member(name, selector_source ? selector_source : source_i,
 			phase_out, member_index_out)){
 		return 1;
@@ -84,13 +88,14 @@ static int eqm_lookup_spinel_member(const char *name, const char *source,
 	char source_buf[512];
 	const char *source_i;
 	EqmMuModel selector_model = EQM_MODEL_AUTO;
+	int use_ref0 = 0;
 	const char *selector_source = NULL;
 	(void)selector_model;
 	if(!name){
 		return 0;
 	}
 	source_i = fprops_resolve_species_source(source, name, source_buf, (unsigned)sizeof(source_buf));
-	eqm_parse_selector(source_i, &selector_model, &selector_source);
+	eqm_parse_selector(source_i, &selector_model, &use_ref0, &selector_source);
 	if(spinel_phase_lookup_member(name, selector_source ? selector_source : source_i,
 			phase_out, member_index_out)){
 		return 1;
@@ -194,6 +199,7 @@ int eqm_compute_is_condensed(const char **names, int ns, const char *source, int
 		char source_buf[512];
 		const char *selector_source = NULL;
 		EqmMuModel selector_model = EQM_MODEL_AUTO;
+		int use_ref0 = 0;
 		const char *source_i;
 		if(!names[i]){
 			return 0;
@@ -212,7 +218,7 @@ int eqm_compute_is_condensed(const char **names, int ns, const char *source, int
 		}
 		source_i = fprops_resolve_species_source(source, names[i], source_buf,
 			(unsigned)sizeof(source_buf));
-		eqm_parse_selector(source_i, &selector_model, &selector_source);
+		eqm_parse_selector(source_i, &selector_model, &use_ref0, &selector_source);
 		G = gibbs_species_lookup(names[i], selector_source ? selector_source : source_i);
 		if(!G){
 			G = gibbs_species_lookup(names[i], NULL);
@@ -685,8 +691,25 @@ static int eqm_mu0_gibbs_species_source(const char *name, const char *source, do
 	return 1;
 }
 
+static PureFluid *eqm_prepare_fluid_for_mu0(const EosData *E, const char *corrtype, int use_ref0){
+	ReferenceState ref0 = {FPROPS_REF_REF0};
+	if(!E || !corrtype){
+		return NULL;
+	}
+	if(strcmp(corrtype, "helmholtz") == 0){
+		return helmholtz_prepare(E, use_ref0 ? &ref0 : NULL);
+	}
+	if(strcmp(corrtype, "pengrob") == 0){
+		return pengrob_prepare(E, use_ref0 ? &ref0 : NULL);
+	}
+	if(strcmp(corrtype, "ideal") == 0){
+		return ideal_prepare(E, use_ref0 ? &ref0 : NULL);
+	}
+	return NULL;
+}
+
 static int eqm_mu0_fluid_model_source(const char *name, const char *corrtype, const char *source,
-		double T, double P0, double *mu0){
+		double T, double P0, int use_ref0, double *mu0){
 	PureFluid *P;
 	const char *cands[3];
 	int ncands = 0;
@@ -711,7 +734,8 @@ static int eqm_mu0_fluid_model_source(const char *name, const char *corrtype, co
 		FpropsError err = FPROPS_NO_ERROR;
 		int it;
 		const char *src = cands[c];
-		P = (PureFluid *)fprops_fluid(name, corrtype, src);
+		const EosData *E = fprops_eos(name, corrtype, src);
+		P = eqm_prepare_fluid_for_mu0(E, corrtype, use_ref0);
 		if(!P){
 			continue;
 		}
@@ -760,7 +784,7 @@ static int eqm_mu0_fluid_model_source(const char *name, const char *corrtype, co
 }
 
 static int eqm_mu0_model_source(const char *name, EqmMuModel model, const char *source, double T,
-		double P0, double *mu0){
+		double P0, int use_ref0, double *mu0){
 	if(model == EQM_MODEL_AUTO){
 		if(eqm_mu0_ideal_source(name, source, T, P0, mu0)){
 			return 1;
@@ -783,20 +807,24 @@ static int eqm_mu0_model_source(const char *name, EqmMuModel model, const char *
 		return eqm_mu0_shomate_source(name, source, T, P0, mu0);
 	}
 	if(model == EQM_MODEL_HELMHOLTZ){
-		return eqm_mu0_fluid_model_source(name, "helmholtz", source, T, P0, mu0);
+		return eqm_mu0_fluid_model_source(name, "helmholtz", source, T, P0, use_ref0, mu0);
 	}
 	if(model == EQM_MODEL_PENGROB){
-		return eqm_mu0_fluid_model_source(name, "pengrob", source, T, P0, mu0);
+		return eqm_mu0_fluid_model_source(name, "pengrob", source, T, P0, use_ref0, mu0);
 	}
 	return 0;
 }
 
-static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, const char **source_out){
+static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, int *use_ref0_out,
+		const char **source_out){
 	char model_buf[32];
 	const char *colon = NULL;
 	size_t n = 0;
 	if(model_out){
 		*model_out = EQM_MODEL_AUTO;
+	}
+	if(use_ref0_out){
+		*use_ref0_out = 0;
 	}
 	if(source_out){
 		*source_out = spec;
@@ -815,6 +843,17 @@ static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, const cha
 	model_buf[n] = '\0';
 	if(n == 0){
 		return 1;
+	}
+	if(n > 5 && strcmp(model_buf + n - 5, "+ref0") == 0){
+		if(use_ref0_out){
+			*use_ref0_out = 1;
+		}
+		model_buf[n - 5] = '\0';
+	}else if(n > 5 && strcmp(model_buf + n - 5, "_ref0") == 0){
+		if(use_ref0_out){
+			*use_ref0_out = 1;
+		}
+		model_buf[n - 5] = '\0';
 	}
 	if(model_out){
 		if(strcmp(model_buf, "auto") == 0){
@@ -849,9 +888,10 @@ int eqm_mu0_source(const char *name, const char *source, double T, double P0, do
 	const char *source_i = fprops_resolve_species_source(source, name, source_buf,
 		(unsigned)sizeof(source_buf));
 	EqmMuModel selector_model = EQM_MODEL_AUTO;
+	int use_ref0 = 0;
 	const char *selector_source = NULL;
-	eqm_parse_selector(source_i, &selector_model, &selector_source);
-	if(eqm_mu0_model_source(name, selector_model, selector_source, T, P0, mu0)){
+	eqm_parse_selector(source_i, &selector_model, &use_ref0, &selector_source);
+	if(eqm_mu0_model_source(name, selector_model, selector_source, T, P0, use_ref0, mu0)){
 		return 1;
 	}
 	return 0;

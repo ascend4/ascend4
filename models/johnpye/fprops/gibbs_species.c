@@ -27,10 +27,10 @@ static double hillert_jarl_A(double p){
 
 static FpropsError hillert_jarl_gmag(double T, double Tord, double beta, double p, double *g_out){
 	double tau, A, f;
-	if(!g_out || !(T > 0.0) || !(Tord > 0.0) || !(beta > 0.0) || !(p > 0.0)){
+	if(!g_out || !(T > 0.0) || !(Tord != 0.0) || !(beta != -1.0) || !(p > 0.0)){
 		return FPROPS_RANGE_ERROR;
 	}
-	tau = T / Tord;
+	tau = T / fabs(Tord);
 	A = hillert_jarl_A(p);
 	if(!(A > 0.0)){
 		return FPROPS_RANGE_ERROR;
@@ -50,22 +50,36 @@ static FpropsError hillert_jarl_gmag(double T, double Tord, double beta, double 
 			+ pow(tau, -25.0) / 1500.0
 		) / A;
 	}
-	*g_out = f * gibbs_species_R() * T * log(beta + 1.0);
+	*g_out = f * gibbs_species_R() * T * log(fabs(beta) + 1.0);
+	return isfinite(*g_out) ? FPROPS_NO_ERROR : FPROPS_RANGE_ERROR;
+}
+
+static FpropsError gibbs_hser_fe(double T, double *g_out){
+	if(!g_out || !(T >= 298.0) || !(T <= 6000.0)){
+		return FPROPS_RANGE_ERROR;
+	}
+	if(T <= 1811.0){
+		*g_out = 1225.7
+			+ 124.134 * T
+			- 23.5143 * T * log(T)
+			- 0.00439752 * T * T
+			+ 77359.0 / T
+			- 5.8927e-8 * T * T * T;
+	}else{
+		*g_out = -25383.581
+			+ 299.31255 * T
+			- 46.0 * T * log(T)
+			+ 2.29603e31 * pow(T, -9.0);
+	}
 	return isfinite(*g_out) ? FPROPS_NO_ERROR : FPROPS_RANGE_ERROR;
 }
 
 static FpropsError gibbs_fe_bcc(double T, double p, double *g_out){
 	double gmag = 0.0;
 	(void)p;
-	if(!g_out || !(T >= 298.0) || !(T <= 1811.0)){
+	if(gibbs_hser_fe(T, g_out) != FPROPS_NO_ERROR){
 		return FPROPS_RANGE_ERROR;
 	}
-	*g_out = 10375.2
-		+ 114.5502 * T
-		- 23.5143 * T * log(T)
-		- 0.004398 * T * T
-		+ 77359.0 / T
-		- 5.8927e-8 * T * T * T;
 	if(hillert_jarl_gmag(T, 1043.0, 2.22, 0.40, &gmag) != FPROPS_NO_ERROR){
 		return FPROPS_RANGE_ERROR;
 	}
@@ -75,24 +89,27 @@ static FpropsError gibbs_fe_bcc(double T, double p, double *g_out){
 
 static FpropsError gibbs_fe_fcc(double T, double p, double *g_out){
 	double gmag = 0.0;
+	double ghser = 0.0;
 	(void)p;
 	if(!g_out || !(T >= 298.0) || !(T <= 6000.0)){
 		return FPROPS_RANGE_ERROR;
 	}
+	if(gibbs_hser_fe(T, &ghser) != FPROPS_NO_ERROR){
+		return FPROPS_RANGE_ERROR;
+	}
 	if(T <= 1811.0){
-		*g_out = -236.5
-			+ 132.4156 * T
-			- 24.6643 * T * log(T)
-			- 0.003758 * T * T
-			+ 77359.0 / T
-			- 5.8927e-8 * T * T * T;
+		*g_out = ghser
+			- 1462.4
+			+ 8.282 * T
+			- 1.15 * T * log(T)
+			+ 6.4e-4 * T * T;
 	}else{
-		*g_out = -27097.2
-			+ 300.2521 * T
+		*g_out = -27098.266
+			+ 300.25256 * T
 			- 46.0 * T * log(T)
 			+ 2.78854e31 * pow(T, -9.0);
 	}
-	if(hillert_jarl_gmag(T, 67.0, 0.70, 0.28, &gmag) != FPROPS_NO_ERROR){
+	if(hillert_jarl_gmag(T, -201.0, -2.1, 0.28, &gmag) != FPROPS_NO_ERROR){
 		return FPROPS_RANGE_ERROR;
 	}
 	*g_out += gmag;

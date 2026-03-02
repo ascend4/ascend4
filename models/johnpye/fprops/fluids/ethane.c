@@ -47,11 +47,17 @@ static const HelmholtzData helmholtz_data_ethane = {
     	.c = 9.212802589 /* constant */
     	, .m = -4.682248550 /* linear */
     }}}
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-84680.0e3 / ETHANE_M) /* M&S G9e Table A-25, C2H6(g) */
+		, .s0 = (229.49e3 / ETHANE_M) /* M&S G9e Table A-25, C2H6(g) */
+	}}}
 
-    , 0.0995 /* acentric factor */
-    , &ideal_data_ethane
-    , 39 /* power terms */
-    , (const HelmholtzPowTerm[]){
+    , .omega = 0.0995 /* acentric factor */
+    , .ideal = &ideal_data_ethane
+    , .np = 39 /* power terms */
+    , .pt = (const HelmholtzPowTerm[]){
         /* a_i, 	t_i, 	d_i, 	l_i */
         {0.83440745735241e+0,      0.25,    1.0,    0}
         , {-0.14287360607171e+1,   1.00,    1.0,    0}
@@ -93,8 +99,8 @@ static const HelmholtzData helmholtz_data_ethane = {
  	, {0.18593386407186e-2,    22.00,   8.0,    4}
 	, {-0.61404353331199e-3,   13.00,   10.0,   4}
     }
-    , 5 /* gaussian terms */
-    , (const HelmholtzGausTerm[]){
+    , .ng = 5 /* gaussian terms */
+    , .gt = (const HelmholtzGausTerm[]){
 	/* n_i,			t_i,	d_i,	alpha_i,beta_i,	gamma_i,delta_i */
 	{-0.23312179367924e-2,    0.0,     1.0,     15.0,    150.0,   1.05,   1.0}
  	, {0.29301047908760e-2,    3.0,     1.0,     15.0,    150.0,   1.05,   1.0}

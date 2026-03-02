@@ -44,7 +44,7 @@ static HelmholtzData helmholtz_data_oxygen = {
     , .T_c = OXYGEN_TC
     , .rho_c = OXYGEN_RHOC
     , .T_t = 54.361
-    , {FPROPS_REF_TPHS0,
+	, {FPROPS_REF_TPHS0,
 		.data={.tphs={
 			.T0 = 298.15
 			,.p0 = 1.01325e5
@@ -52,10 +52,16 @@ static HelmholtzData helmholtz_data_oxygen = {
 			,.s0 = 0
 		}}
 	}
-    , 0.0222 /* acentric factor, according to REFPROP 8 */
-    , &ideal_data_oxygen
-    , 32 /* power terms */
-    , (const HelmholtzPowTerm[]){
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = 0.0 /* M&S G9e Table A-25, O2(g) */
+		, .s0 = (205.03e3 / OXYGEN_M) /* M&S G9e Table A-25, O2(g) */
+	}}}
+    , .omega = 0.0222 /* acentric factor, according to REFPROP 8 */
+    , .ideal = &ideal_data_oxygen
+    , .np = 32 /* power terms */
+    , .pt = (const HelmholtzPowTerm[]){
         /* a_i, 	t_i, 	d_i, 	l_i */
 		{0.39837687490,     	0,  	1,	0}
 		,{-0.18461574540e1, 	1.5,	1,	0}

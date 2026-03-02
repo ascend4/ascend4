@@ -4,11 +4,12 @@
 #ifndef CUNIT_TEST
 
 #define CARBONMONOXIDE_MS_M 28.010
+#define CARBONMONOXIDE_MS_R (R_UNIVERSAL / CARBONMONOXIDE_MS_M)
 
 static const IdealData ideal_data_carbonmonoxide_ms = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = CARBONMONOXIDE_MS_R
 		,.Tstar = 1
 		,.np = 5
 		,.pt = (const Cp0PowTerm[]){
@@ -28,10 +29,11 @@ static const CubicData cubic_data_carbonmonoxide_ms = {
 	,.rho_c = 1.0
 	,.T_t = 0
 	,.omega = 0
+	/* M&S G9e Table A-25, CO(g) */
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.0, 101325,
 		(-110530.0 / CARBONMONOXIDE_MS_M),
 		(-137150.0 / CARBONMONOXIDE_MS_M)}}}
-	,.ref = {FPROPS_REF_IIR}
+	,.ref = {FPROPS_REF_REF0}
 	,.ideal = &ideal_data_carbonmonoxide_ms
 };
 

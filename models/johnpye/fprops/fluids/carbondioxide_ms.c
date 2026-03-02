@@ -4,11 +4,12 @@
 #ifndef CUNIT_TEST
 
 #define CARBONDIOXIDE_MS_M 44.010
+#define CARBONDIOXIDE_MS_R (R_UNIVERSAL / CARBONDIOXIDE_MS_M)
 
 static const IdealData ideal_data_carbondioxide_ms = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = CARBONDIOXIDE_MS_R
 		,.Tstar = 1
 		,.np = 5
 		,.pt = (const Cp0PowTerm[]){
@@ -28,10 +29,11 @@ static const CubicData cubic_data_carbondioxide_ms = {
 	,.rho_c = 1.0
 	,.T_t = 0
 	,.omega = 0
+	/* M&S G9e Table A-25, CO2(g) */
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.0, 101325,
 		(-393520.0 / CARBONDIOXIDE_MS_M),
 		(-394380.0 / CARBONDIOXIDE_MS_M)}}}
-	,.ref = {FPROPS_REF_IIR}
+	,.ref = {FPROPS_REF_REF0}
 	,.ideal = &ideal_data_carbondioxide_ms
 };
 

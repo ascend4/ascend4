@@ -74,43 +74,24 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPHS0:
-		/* FIXME we seem to have errors here, as tested with fluids/oxygen.c */
 		T = ref->data.tphs.T0;
 		p = ref->data.tphs.p0;
 		h1 = ref->data.tphs.h0;
 		s1 = ref->data.tphs.s0;
-		MSG("state: p=%f, T=%f",p,T);
-		MSG("R = %f",P->data->R);
-		/* at this state, rho0 = p/R*T -- by ideal gas equation. */
+		/* For zero-pressure reference data, anchor against the ideal-gas state
+		   at rho = p/(R T), then shift only the phi0 constants c and m. */
 		double rho0 = p / P->data->R / T;
 
 		P->data->cp0->m = 0;
 		P->data->cp0->c = 0;
 
+		h2 = ideal_h((FluidStateUnion){.Trho={T, rho0}}, P->data, &res);
+		if(res)return 9000 + res;
+		s2 = ideal_s((FluidStateUnion){.Trho={T, rho0}}, P->data, &res);
+		if(res)return 10000 + res;
 
-		h2 = ideal_h((FluidStateUnion){.Trho={T,rho0}},P->data,&res);
-		s2 = ideal_s((FluidStateUnion){.Trho={T,rho0}},P->data,&res);
-		MSG("h2 = %f",h2);
-
-		P->data->cp0->m = -h1 / P->data->R / P->data->Tstar;
-
-#if 1
-		P->data->cp0->m = -h1 / P->data->R / P->data->Tstar;
-		P->data->cp0->c = -s1/P->data->R - 1. - log(p/(P->data->rhostar*P->data->R*T)) + log(P->data->Tstar/T);
-#else
-		h2 = ideal_h(T,rho0,P->data,&res);
-		if(res)return 9000+res;
-		s2 = ideal_s(T,rho0,P->data,&res);
-		if(res)return 10000+res;
-		P->data->cp0->c = (s2 - s1)/P->data->R;
-		P->data->cp0->m = -(h2 - h1) / P->data->R / P->data->Tstar;
-#endif
-		MSG("m = %f",P->data->cp0->m);
-		MSG("c = %f",P->data->cp0->c);
-		if(1){
-			MSG("ideal_h(p0,T0) = %g",ideal_h((FluidStateUnion){.Trho={T,rho0}},P->data,&res));
-			MSG("ideal_s(p0,T0) = %g",ideal_s((FluidStateUnion){.Trho={T,rho0}},P->data,&res));
-		}
+		P->data->cp0->c = -(s1 - s2) / P->data->R;
+		P->data->cp0->m = (h1 - h2) / P->data->R / P->data->Tstar;
 		MSG("Set TPHS0 reference state.");
 		return 0;
 

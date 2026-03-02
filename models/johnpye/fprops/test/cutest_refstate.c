@@ -382,13 +382,14 @@ static void test_ideal_prepare_rejects_explicit_tphs(void){
 	CU_ASSERT_PTR_NULL(P);
 }
 
-static void test_ideal_prepare_rejects_invalid_helmholtz_ref0(void){
+static void test_ideal_prepare_accepts_helmholtz_ref0(void){
 	const EosData *Ehelm = fprops_eos("nitrogen", "helmholtz", NULL);
 	ReferenceState ref_ref0 = {FPROPS_REF_REF0};
 	PureFluid *P;
 	CU_ASSERT_PTR_NOT_NULL_FATAL(Ehelm);
 	P = ideal_prepare(Ehelm, &ref_ref0);
-	CU_ASSERT_PTR_NULL(P);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(P);
+	fprops_fluid_destroy(P);
 }
 
 CU_ErrorCode test_register_refstate(void){
@@ -432,7 +433,7 @@ CU_ErrorCode test_register_refstate(void){
 	if(NULL == CU_add_test(s, "ideal_prepare_rejects_explicit_tphs", test_ideal_prepare_rejects_explicit_tphs)){
 		return CUE_NOTEST;
 	}
-	if(NULL == CU_add_test(s, "ideal_prepare_rejects_invalid_helmholtz_ref0", test_ideal_prepare_rejects_invalid_helmholtz_ref0)){
+	if(NULL == CU_add_test(s, "ideal_prepare_accepts_helmholtz_ref0", test_ideal_prepare_accepts_helmholtz_ref0)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;

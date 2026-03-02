@@ -189,8 +189,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 		//return NULL;
 	}
 
-	// ref0 is not yet supported for this fluid type:
-	P->data->ref0 = (ReferenceState){FPROPS_REF_TPHG,{.tphg={298.15,0,NAN,NAN}}};
+	P->data->ref0 = I->ref0;
 
 	// fix up the reference point now...
 	if(ref == NULL){
@@ -1532,5 +1531,4 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzRunData *HD){
 }
 
 #endif
-
 

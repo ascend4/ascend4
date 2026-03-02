@@ -4,11 +4,12 @@
 #ifndef CUNIT_TEST
 
 #define WATER_MS_M 18.015
+#define WATER_MS_R (R_UNIVERSAL / WATER_MS_M)
 
 static const IdealData ideal_data_water_ms = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = WATER_MS_R
 		,.Tstar = 1
 		,.np = 5
 		,.pt = (const Cp0PowTerm[]){
@@ -28,8 +29,9 @@ static const CubicData cubic_data_water_ms = {
 	,.rho_c = 1.0
 	,.T_t = 0
 	,.omega = 0
+	/* M&S G9e Table A-25, H2O(g) */
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.0, 101325, (-241820.0 / WATER_MS_M), (-228590.0 / WATER_MS_M)}}}
-	,.ref = {FPROPS_REF_IIR}
+	,.ref = {FPROPS_REF_REF0}
 	,.ideal = &ideal_data_water_ms
 };
 

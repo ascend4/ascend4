@@ -46,6 +46,12 @@ static const HelmholtzData helmholtz_data_butane = {
 		.c = 12.54882924 /* constant */
 		,.m = -5.46976878 /* linear */
 	}}}
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-126150.0e3 / BUTANE_M) /* M&S G9e Table A-25, C4H10(g) */
+		, .s0 = (310.03e3 / BUTANE_M) /* M&S G9e Table A-25, C4H10(g) */
+	}}}
 
 	, .omega = 0.201 /* acentric factor */
 	, .ideal = &ideal_data_butane

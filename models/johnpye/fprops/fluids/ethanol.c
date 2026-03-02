@@ -48,11 +48,17 @@ static const HelmholtzData helmholtz_data_ethanol = {
     , /* T_t */ 159.0
 
 	,{FPROPS_REF_IIR}
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-235310.0e3 / ETHANOL_M) /* M&S G9e Table A-25, C2H5OH(g) */
+		, .s0 = (282.59e3 / ETHANOL_M) /* M&S G9e Table A-25, C2H5OH(g) */
+	}}}
 
-    , 0.644 /* acentric factor */
-    , &ideal_data_ethanol
-    , 23 /* power terms */
-    , (const HelmholtzPowTerm[]){
+    , .omega = 0.644 /* acentric factor */
+    , .ideal = &ideal_data_ethanol
+    , .np = 23 /* power terms */
+    , .pt = (const HelmholtzPowTerm[]){
         /* a_i, 		t_i, 	d_i, 	l_i */
         {0.114008942201E+2,	-0.5,	1.0,	0.0}
         , {-0.395227128302E+2,	0.0,	1.0,	0.0}

@@ -4,11 +4,12 @@
 #ifndef CUNIT_TEST
 
 #define HYDROGEN_MS_M 2.016
+#define HYDROGEN_MS_R (R_UNIVERSAL / HYDROGEN_MS_M)
 
 static const IdealData ideal_data_hydrogen_ms = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = HYDROGEN_MS_R
 		,.Tstar = 1
 		,.np = 5
 		,.pt = (const Cp0PowTerm[]){
@@ -28,8 +29,9 @@ static const CubicData cubic_data_hydrogen_ms = {
 	,.rho_c = 1.0
 	,.T_t = 0
 	,.omega = 0
+	/* M&S G9e Table A-25, H2(g) */
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.0, 101325, (0.0 / HYDROGEN_MS_M), (0.0 / HYDROGEN_MS_M)}}}
-	,.ref = {FPROPS_REF_IIR}
+	,.ref = {FPROPS_REF_REF0}
 	,.ideal = &ideal_data_hydrogen_ms
 };
 

@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "bcc_iron_hidayat.h"
+#include "fcc_iron_hidayat.h"
 #include "wustite_hidayat.h"
 
 static int source_match(const char *entry_source, const char *source){
@@ -18,6 +19,7 @@ static int source_match(const char *entry_source, const char *source){
 const BinarySolutionPhaseDef *solution_phase_lookup(const char *name, const char *source){
 	const BinarySolutionPhaseDef *phases[] = {
 		bcc_iron_hidayat_phase(),
+		fcc_iron_hidayat_phase(),
 		wustite_hidayat_phase()
 	};
 	size_t i;
@@ -37,6 +39,7 @@ int solution_phase_lookup_member(const char *name, const char *source,
 		const BinarySolutionPhaseDef **phase, unsigned *member_index){
 	const BinarySolutionPhaseDef *phases[] = {
 		bcc_iron_hidayat_phase(),
+		fcc_iron_hidayat_phase(),
 		wustite_hidayat_phase()
 	};
 	size_t i;

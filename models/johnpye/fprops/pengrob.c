@@ -143,7 +143,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 				helmholtz_destroy(PH);
 			}
 #endif
-			D->ref0 = (ReferenceState){FPROPS_REF_TPHG,{.tphg={298.15,0,NAN,NAN}}};
+			D->ref0 = I->ref0;
 			if(ref_apply == NULL){
 				ref_apply = &(I->ref);
 			}

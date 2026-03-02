@@ -334,6 +334,7 @@ typedef struct HelmholtzData_struct{
 	const HelmholtzGausTerm *gt; /* critical terms of the first kind */
 	unsigned nc; /* number of critical terms of the second kind */
 	const HelmholtzCritTerm *ct; /* critical terms of the second kind */
+	ReferenceState ref0; /**< formation/reference-state anchor for chemistry use */
 } HelmholtzData;
 
 /*___________________________CUBIC_________________________________*/

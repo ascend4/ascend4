@@ -4,11 +4,12 @@
 #ifndef CUNIT_TEST
 
 #define OXYGEN_MS_M 31.999
+#define OXYGEN_MS_R (R_UNIVERSAL / OXYGEN_MS_M)
 
 static const IdealData ideal_data_oxygen_ms = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = OXYGEN_MS_R
 		,.Tstar = 1
 		,.np = 5
 		,.pt = (const Cp0PowTerm[]){
@@ -28,8 +29,9 @@ static const CubicData cubic_data_oxygen_ms = {
 	,.rho_c = 1.0
 	,.T_t = 0
 	,.omega = 0
+	/* M&S G9e Table A-25, O2(g) */
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.0, 101325, (0.0 / OXYGEN_MS_M), (0.0 / OXYGEN_MS_M)}}}
-	,.ref = {FPROPS_REF_IIR}
+	,.ref = {FPROPS_REF_REF0}
 	,.ideal = &ideal_data_oxygen_ms
 };
 

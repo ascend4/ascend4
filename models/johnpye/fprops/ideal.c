@@ -122,7 +122,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 		D->rhostar = 1;
 		D->cp0 = cp0_prepare(E->data.helm->ideal, D->R, D->Tstar);
 		D->corr.helm = NULL;
-		D->ref0 = (ReferenceState){FPROPS_REF_TPHG,{.tphg={298.15,0,NAN,NAN}}};
+		D->ref0 = E->data.helm->ref0;
 
 		if(ref == NULL){
 			ref = &(E->data.helm->ref);
@@ -191,6 +191,36 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 				//if(res)ERRMSG("error %d",res);
 				//MSG("new g0(T0,rho0) = %f", g0);
 				//MSG("DONE");
+			}
+			break;
+		case FPROPS_REF_TPHS0:
+			{
+				ReferenceState *ref0 = &(P->data->ref0);
+				FpropsError res = FPROPS_NO_ERROR;
+				double rho0, T0, h0, s0, h1, s1;
+				if(!isfinite(ref0->data.tphs.T0) || !(ref0->data.tphs.T0 > 0.0)
+						|| !isfinite(ref0->data.tphs.p0) || !(ref0->data.tphs.p0 > 0.0)
+						|| !isfinite(ref0->data.tphs.h0) || !isfinite(ref0->data.tphs.s0)){
+					ERRMSG("Invalid/undefined REF0 TPHS0 data in ideal_prepare");
+					FPROPS_FREE(P->data); FPROPS_FREE(P);
+					return NULL;
+				}
+				T0 = ref0->data.tphs.T0;
+				rho0 = ref0->data.tphs.p0 / D->R / T0;
+				h0 = ref0->data.tphs.h0;
+				s0 = ref0->data.tphs.s0;
+
+				P->data->cp0->c = 0;
+				P->data->cp0->m = 0;
+				h1 = ideal_h((FluidStateUnion){.Trho={T0, rho0}}, P->data, &res);
+				s1 = ideal_s((FluidStateUnion){.Trho={T0, rho0}}, P->data, &res);
+				if(res){
+					ERRMSG("error %d",res);
+					FPROPS_FREE(P->data); FPROPS_FREE(P);
+					return NULL;
+				}
+				P->data->cp0->c = -(s0 - s1)/D->R;
+				P->data->cp0->m = (h0 - h1)/D->R/P->data->Tstar;
 			}
 			break;
 		default:
