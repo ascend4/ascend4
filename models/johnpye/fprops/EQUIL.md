@@ -28,8 +28,7 @@ The public equilibrium API is in
 For most users, the two important calls are:
 
 1. `eqm_mu0_source(...)`
-   Use this when you want standard chemical potentials
-   $ \mu_i^\circ(T, P^\circ) $ for chosen species and data sources.
+   Use this when you want standard chemical potentials $\mu_i^\circ(T, P^\circ)$ for chosen species and data sources.
 
 2. `eqm_solve_elements(...)`
    Use this when you want equilibrium composition from:
@@ -185,18 +184,24 @@ Interpretation of the result:
 
 - `n_out[i]` is the equilibrium mole amount of species `names[i]`
 - total metallic iron is
-  $$
+
+$$
   n_{\mathrm{Fe,metal}} = n_{\mathrm{Fe_bcc}} + n_{\mathrm{Fe_fcc}}
-  $$
+$$
+
 - total wustite phase is
-  $$
+
+$$
   n_{\mathrm{wus}} = n_{\mathrm{Wus\_FeO}} + n_{\mathrm{Wus\_FeO1p5}}
-  $$
+$$
+
 - wustite composition is
-  $$
+
+$$
   x = \frac{n_{\mathrm{Wus\_FeO1p5}}}
            {n_{\mathrm{Wus\_FeO}} + n_{\mathrm{Wus\_FeO1p5}}}
-  $$
+$$
+
 - spinel is present if the spinel member amounts are nonzero
 
 For systems containing solution phases like wustite or spinel,
@@ -652,7 +657,7 @@ For the secondary full-space interior-point pathway, see Appendix A.
 
 For ideal-gas equilibrium we check:
 
-1. Element residuals: $ \|\mathbf{A}\mathbf{n} - \mathbf{b}\| $ small.
+1. Element residuals: $\|\mathbf{A}\mathbf{n} - \mathbf{b}\|$ small.
 2. KKT stationarity (interior or bound-aware as above).
 3. Cross-check against external reference (Cantera), reaction by reaction for a chosen independent reaction basis $\boldsymbol\nu_j$ (for example, columns of $\mathbf{N}$):
 
@@ -677,14 +682,14 @@ This source is fitted against Reaktoro/SUPCRT98 standard-state Gibbs data for:
 - `Ni`, `NiO`, `hydrogen`, `oxygen`, `water`.
 
 The intent is not to define a new recommended thermodynamic database.
-The intent is implementation validation: if FPROPS and Reaktoro use nearly the same $ \mu_i^\circ(T) $ inputs, equilibrium outputs should match closely.
+The intent is implementation validation: if FPROPS and Reaktoro use nearly the same $\mu_i^\circ(T)$ inputs, equilibrium outputs should match closely.
 
 Current check method:
 
 1. Compare species $\mu_i^\circ(T)$ directly between providers.
 2. Fit elemental-potential shifts and inspect non-elemental residuals.
 3. Inspect reaction-level mismatch
-   $ \Delta\Delta G^\circ = \sum_i \nu_i\left(\mu_{i,\mathrm{FPROPS}}^\circ - \mu_{i,\mathrm{Reaktoro}}^\circ\right) $
+   $\Delta\Delta G^\circ = \sum_i \nu_i\left(\mu_{i,\mathrm{FPROPS}}^\circ - \mu_{i,\mathrm{Reaktoro}}^\circ\right)$
    for balanced reactions.
 
 How to run:
@@ -731,28 +736,28 @@ This section maps the key equations in this note to the main implementation poin
 
 #### 15.1 Thermodynamic state equations
 
-Equation: $ \mu_i = \mu_i^\circ + RT\ln\left(\frac{y_i P}{P^\circ}\right) $.
+Equation: $\mu_i = \mu_i^\circ + RT\ln\left(\frac{y_i P}{P^\circ}\right)$.
 Code:
-- `eqm_compute_mu0` and `eqm_mu0_ideal_source` compute $ \mu_i^\circ(T, P^\circ) $.
-- `eqm_reduced_eval_obj_mu` computes $ y_i $, $ \mu_i $, and $ G = \sum_i n_i\mu_i $.
+- `eqm_compute_mu0` and `eqm_mu0_ideal_source` compute $\mu_i^\circ(T, P^\circ)$.
+- `eqm_reduced_eval_obj_mu` computes $y_i$, $\mu_i$, and $G = \sum_i n_i\mu_i$.
 
 #### 15.2 Feasible-set parameterization
 
-Equation: $ \mathbf{n} = \mathbf{n}_0 + \mathbf{N}\mathbf{z} $, with $ \mathbf{A}\mathbf{n}_0 = \mathbf{b} $ and $ \mathbf{A}\mathbf{N} = 0 $.
+Equation: $\mathbf{n} = \mathbf{n}_0 + \mathbf{N}\mathbf{z} $, with $ \mathbf{A}\mathbf{n}_0 = \mathbf{b} $ and $ \mathbf{A}\mathbf{N} = 0$ .
 Code:
-- `eqm_solve_particular` computes $\mathbf{n}_0$.
-- `eqm_rref` + `eqm_fill_nullspace` build $\mathbf{N}$.
-- `eqm_reduced_compute_n` evaluates $\mathbf{n}(\mathbf{z})$.
+- `eqm_solve_particular` computes $\mathbf{n}_0$ .
+- `eqm_rref` + `eqm_fill_nullspace` build $\mathbf{N}$ .
+- `eqm_reduced_compute_n` evaluates $\mathbf{n}(\mathbf{z})$ .
 
 #### 15.3 Reduced gradient and Hessian
 
-Equations: $ \nabla_{\mathbf{z}}\phi = \mathbf{N}^T\boldsymbol\mu $, and $ \mathbf{H} = RT\left(\mathbf{N}^T\mathrm{diag}(1/n_i)\mathbf{N} - \frac{\mathbf{c}\mathbf{c}^T}{n_{\mathrm{tot}}}\right) $ with $ \mathbf{c} = \mathbf{N}^T\mathbf{1} $.
+Equations: $\nabla_{\mathbf{z}}\phi = \mathbf{N}^T\boldsymbol\mu$ , and $\mathbf{H} = RT\left(\mathbf{N}^T\mathrm{diag}(1/n_i)\mathbf{N} - \frac{\mathbf{c}\mathbf{c}^T}{n_{\mathrm{tot}}}\right)$ with $\mathbf{c} = \mathbf{N}^T\mathbf{1}$ .
 Code:
 - `eqm_reduced_eval_grad_hess`.
 
 #### 15.4 Newton step and globalization
 
-Equations: $ (\mathbf{H} + \lambda\mathbf{I})\Delta\mathbf{z} = -\nabla\phi $, plus positivity-limited line search constraint $ \mathbf{n} + \alpha\Delta\mathbf{n} > n_{\mathrm{floor}} $.
+Equations: $(\mathbf{H} + \lambda\mathbf{I})\Delta\mathbf{z} = -\nabla\phi$ , plus positivity-limited line search constraint $\mathbf{n} + \alpha\Delta\mathbf{n} > n_{\mathrm{floor}}$ .
 Code:
 - Newton loop in `eqm_reduced_solve_source_init_once`.
 - linear solve via `eqm_dense_solve`.
@@ -760,27 +765,27 @@ Code:
 
 #### 15.5 1D nullspace special case
 
-Equation: $ \Phi(z) = \mathbf{v}^T\boldsymbol\mu(\mathbf{n}_0 + \mathbf{v}z) = 0 $.
+Equation: $\Phi(z) = \mathbf{v}^T\boldsymbol\mu(\mathbf{n}_0 + \mathbf{v}z) = 0$ .
 Code:
 - `eqm_reduced_solve_r1`.
 - helper evaluators: `eqm_reduced_eval_phi_r1`, `eqm_reduced_eval_phi_edge`, `eqm_reduced_try_edge_root`.
 
 #### 15.6 Continuation/homotopy
 
-Equations: $ T_{k+1} = 0.82\,T_k $ with $ T_0 = 2.5\,T_{\mathrm{target}} $, and floor schedule $ n_{\mathrm{floor}}:10^{-12}\to10^{-120} $.
+Equations: $T_{k+1} = 0.82\,T_k$ with $T_0 = 2.5\,T_{\mathrm{target}}$, and floor schedule $n_{\mathrm{floor}}:10^{-12}\to10^{-120}$ .
 Code:
 - `eqm_reduced_solve_source_init`.
 
 #### 15.7 Active-set reduced KKT quantities
 
-Equation: $ r_i = \frac{\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i}{RT} $, where $ \boldsymbol\lambda $ is computed from free-species equations.
+Equation: $r_i = \frac{\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i}{RT}$ , where $\boldsymbol\lambda$ is computed from free-species equations.
 Code:
 - `eqm_reduced_eval_reduced_gradients`.
 - active-set pivot loop in `eqm_reduced_active_set_seed`.
 
 #### 15.8 Boundary-KKT acceptance
 
-Conditions: $ |r_i| \le \varepsilon_{\mathrm{free}} $ for $ i \in \mathcal{F} $ and $ r_i \ge -\varepsilon_{\mathrm{dual}} $ for $ i \in \mathcal{A} $, with active cutoff $ n_i \le \max\left(10^{-60},\,\eta\,n_{\mathrm{tot}}\right) $ and $ \eta = 10^{-22} $.
+Conditions: $|r_i| \le \varepsilon_{\mathrm{free}}$ for $i \in \mathcal{F}$ and $r_i \ge -\varepsilon_{\mathrm{dual}}$ for $i \in \mathcal{A} $, with active cutoff $ n_i \le \max\left(10^{-60},\,\eta\,n_{\mathrm{tot}}\right)$ and $\eta = 10^{-22}$ .
 Code:
 - `eqm_validate_solution_bounds`.
 Constants used in code: `EQM_BOUND_KKT_FREE_TOL`, `EQM_BOUND_KKT_DUAL_TOL`, `EQM_BOUND_ACTIVE_CUTOFF_FRAC`.
