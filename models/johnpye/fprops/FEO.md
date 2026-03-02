@@ -97,25 +97,19 @@ $$
 with
 
 $$
-g(T,x) =
-(1-x) g^\circ_{\mathrm{FeO}}(T)
-+ x g^\circ_{\mathrm{FeO}_{1.5}}(T)
-+ RT\left[(1-x)\ln(1-x) + x\ln x\right]
-+ g^{ex}(T,x)
+g(T,x) = (1-x) g^\circ_{\mathrm{FeO}}(T) + x g^\circ_{\mathrm{FeO}_{1.5}}(T) + RT\left[(1-x)\ln(1-x) + x\ln x\right] + g^{ex}(T,x)
 $$
 
 and
 
 $$
-g^{ex}(T,x) =
-X_{\mathrm{FeO}} X_{\mathrm{FeO}_{1.5}}
-\left(q^{00} + q^{10} X_{\mathrm{FeO}}\right)
+g^{ex}(T,x) = X_{\mathrm{FeO}} X_{\mathrm{FeO}_{1.5}} \left(q^{00} + q^{10} X_{\mathrm{FeO}}\right)
 $$
 
 with:
 
-- `q^{00} = -59412.8 J/mol`
-- `q^{10} = 42676.8 J/mol`
+- $q^{00}$ = -59412.8 J/mol
+- $q^{10}$ = 42676.8 J/mol
 
 Important historical point:
 
