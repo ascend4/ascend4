@@ -10,6 +10,224 @@ Document roadmap:
 - Part D maps equations to code.
 - Appendix A gives the secondary full-space interior-point pathway.
 
+## Quick Start
+
+This section is the practical front-end to the material below.
+The rest of the document keeps the bottom-up thermodynamic and
+numerical explanation.
+
+### Public entry points
+
+The public equilibrium API is in
+[eqm.h](/home/john/ascend/models/johnpye/fprops/eqm.h):
+
+- `eqm_solve(...)`
+- `eqm_solve_elements(...)`
+- `eqm_mu0_source(...)`
+
+For most users, the two important calls are:
+
+1. `eqm_mu0_source(...)`
+   Use this when you want standard chemical potentials
+   `\mu_i^\circ(T,P^\circ)` for chosen species and data sources.
+
+2. `eqm_solve_elements(...)`
+   Use this when you want equilibrium composition from:
+   - a species list
+   - an element list
+   - element totals `b`
+   - a source/model specification
+   - `T`, `P`
+
+### Typical usage pattern
+
+At a high level:
+
+1. Choose the candidate species.
+2. Choose the conserved elements.
+3. Set the elemental totals `b`.
+4. Choose a thermo source or source map.
+5. Call `eqm_solve_elements(...)`.
+6. Read the equilibrium mole amounts `n_out`.
+
+### Source selection syntax
+
+`eqm_mu0_source(...)` and `eqm_solve_elements(...)` accept:
+
+- a simple source name, for example:
+  - `Moran and Shapiro`
+  - `hidayat_2015`
+  - `degterov_2001`
+- an explicit model selector, for example:
+  - `ideal:Moran and Shapiro`
+  - `helmholtz+ref0:`
+  - `constcp:oecd_nea_tdb_vol6_nickel`
+  - `shomate:reaktoro_clone_supcrt98`
+- a per-species source map, for example:
+
+```text
+Ni=oecd_nea_tdb_vol6_nickel;NiO=oecd_nea_tdb_vol6_nickel;*=Moran and Shapiro
+```
+
+The wildcard `*=` gives a default for species not named explicitly.
+
+This is the main mechanism for mixed-source equilibrium problems,
+for example:
+
+- condensed Fe-O data from `hidayat_2015`
+- gas `H2/H2O/O2` from `helmholtz+ref0:`
+
+### Recommended source choices
+
+For current Fe-O-H work:
+
+- gases:
+  - `helmholtz+ref0:`
+- Fe-O condensed backbone:
+  - `hidayat_2015`
+- reduced spinel model:
+  - `degterov_2001`
+
+### Runners and utilities
+
+The simplest existing command-line helpers are:
+
+- [eqm_mu0_runner.c](/home/john/ascend/models/johnpye/fprops/test/eqm_mu0_runner.c)
+- [eqm_case_runner.c](/home/john/ascend/models/johnpye/fprops/test/eqm_case_runner.c)
+
+Build them with:
+
+```bash
+scons models/johnpye/fprops/test/eqm_mu0_runner -j4
+scons models/johnpye/fprops/test/eqm_case_runner -j4
+```
+
+Examples:
+
+```bash
+./models/johnpye/fprops/test/eqm_mu0_runner "helmholtz+ref0:" 1173.15 101325 \
+  hydrogen oxygen water
+```
+
+```bash
+./models/johnpye/fprops/test/eqm_case_runner wgs 1173.15 101325 auto_nullspace "helmholtz+ref0:"
+```
+
+### A concrete Fe-O-H example: H2 reduction of hematite
+
+Suppose we want a first-principles Fe-O-H equilibrium problem for
+hematite reduced by hydrogen, allowing the system to choose among:
+
+- hematite
+- spinel
+- wustite
+- metallic iron
+- `H2`
+- `H2O`
+
+One practical species list is:
+
+```c
+static const char *names[] = {
+    "Fe_bcc", "Fe_fcc",
+    "Wus_FeO", "Wus_FeO1p5",
+    "Sp_Fe2_tet", "Sp_Fe3_tet", "Sp_Fe2_oct", "Sp_Fe3_oct", "Sp_Va_oct",
+    "Fe2O3",
+    "hydrogen", "water"
+};
+
+static const char *elements[] = {"Fe", "O", "H"};
+```
+
+If the feed is `1 mol Fe2O3 + 3 mol H2`, then the elemental totals are:
+
+$$
+b_{\mathrm{Fe}} = 2,\qquad
+b_{\mathrm{O}} = 3,\qquad
+b_{\mathrm{H}} = 6
+$$
+
+so:
+
+```c
+static const double b[] = {2.0, 3.0, 6.0};
+```
+
+A suitable mixed-source map is:
+
+```text
+Fe_bcc=hidayat_2015;Fe_fcc=hidayat_2015;
+Wus_FeO=hidayat_2015;Wus_FeO1p5=hidayat_2015;
+Fe2O3=hidayat_2015;
+Sp_Fe2_tet=degterov_2001;Sp_Fe3_tet=degterov_2001;
+Sp_Fe2_oct=degterov_2001;Sp_Fe3_oct=degterov_2001;Sp_Va_oct=degterov_2001;
+hydrogen=helmholtz+ref0:;water=helmholtz+ref0:
+```
+
+Then solve:
+
+```c
+double n_out[12];
+int status = eqm_solve_elements(
+    names, 12,
+    elements, 3,
+    b,
+    source_map,
+    1173.15,      /* T = 900 C */
+    101325.0,     /* P = 1 atm-ish */
+    "auto",
+    NULL,
+    n_out
+);
+```
+
+Interpretation of the result:
+
+- `n_out[i]` is the equilibrium mole amount of species `names[i]`
+- total metallic iron is
+  $$
+  n_{\mathrm{Fe,metal}} = n_{\mathrm{Fe_bcc}} + n_{\mathrm{Fe_fcc}}
+  $$
+- total wustite phase is
+  $$
+  n_{\mathrm{wus}} = n_{\mathrm{Wus\_FeO}} + n_{\mathrm{Wus\_FeO1p5}}
+  $$
+- wustite composition is
+  $$
+  x = \frac{n_{\mathrm{Wus\_FeO1p5}}}
+           {n_{\mathrm{Wus\_FeO}} + n_{\mathrm{Wus\_FeO1p5}}}
+  $$
+- spinel is present if the spinel member amounts are nonzero
+
+For systems containing solution phases like wustite or spinel,
+`"auto"` is the right first choice. The code will avoid the old
+reduced/nullspace-only path when that is not valid.
+
+### What to extract from an Fe-O-H solve
+
+For end users, the most useful outputs are usually:
+
+- stable condensed assemblage
+- gas composition
+- total metallic iron
+- wustite composition `x`
+- whether the system has reduced to:
+  - hematite
+  - spinel
+  - wustite
+  - iron
+
+In practice, for reduction studies, the phase-presence pattern and
+the ratios
+
+$$
+\frac{n_{\mathrm{H_2O}}}{n_{\mathrm{H_2}}}
+\qquad \text{or} \qquad
+\frac{p_{\mathrm{H_2O}}}{p_{\mathrm{H_2}}}
+$$
+
+are often the most informative quantities.
+
 ## Where This Fits
 
 This `fprops` `eqm` code is a chemical-reaction equilibrium solver.

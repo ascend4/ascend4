@@ -347,11 +347,8 @@ def write_plot(
     model_gods = []
     if spec.boundary is not None:
         fn = boundary_fn(spec.boundary)
-        plot_tmin = max(spec.ymin_c, min(sample_temps_c))
-        plot_tmax = min(spec.ymax_c, max(sample_temps_c))
-        if plot_tmax <= plot_tmin:
-            plot_tmin = spec.ymin_c
-            plot_tmax = spec.ymax_c
+        plot_tmin = spec.ymin_c
+        plot_tmax = spec.ymax_c
         model_temps = frange(plot_tmin, plot_tmax, plot_model_step_c)
         model_gods = [model_god_at_temp(fn, runner, gas_source, tc)[0] for tc in model_temps]
 
@@ -426,13 +423,7 @@ def write_all_plot(
         model_temps = []
         model_gods = []
         if spec.boundary is not None:
-            model_temps = [tc for tc in sample_temps_c if spec.ymin_c <= tc <= spec.ymax_c]
-            if not model_temps:
-                model_temps = [
-                    tc
-                    for tc in frange(spec.ymin_c, spec.ymax_c, plot_model_step_c)
-                    if spec.ymin_c <= tc <= spec.ymax_c
-                ]
+            model_temps = frange(spec.ymin_c, spec.ymax_c, plot_model_step_c)
             model_gods = [
                 cached_model_god_at_temp(spec.boundary, str(runner), gas_source, tc)[0]
                 for tc in model_temps

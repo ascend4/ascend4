@@ -46,8 +46,13 @@ static double hillert_jarl_gmag(double T, double Tord, double beta, double p){
 }
 
 static double spinel_g_ae(double T){
-	return -1141701.0
-		+ 1014.54 * T
+	/*
+	 * Hidayat 2015 Table 1: the Fe3O4 endmember of spinel was adjusted
+	 * slightly relative to Degterov 2001 to reproduce the wustite-spinel
+	 * and spinel-Fe2O3 boundaries in the Fe-O system.
+	 */
+	return -1140237.0
+		+ 1015.067 * T
 		- 0.008149197 * T * T
 		- 174.832 * T * log(T)
 		+ 1445276.0 / T;

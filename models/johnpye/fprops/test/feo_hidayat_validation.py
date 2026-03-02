@@ -110,7 +110,9 @@ def g_fe3o4(T: float) -> float:
 
 
 def spinel_g_ae(T: float) -> float:
-    return -1141701.0 + 1014.54 * T - 0.008149197 * T * T - 174.832 * T * math.log(T) + 1445276.0 / T
+    # Hidayat 2015 Table 1 adjusted the Fe3O4 spinel endmember slightly
+    # relative to the earlier Degterov 2001 optimization.
+    return -1140237.0 + 1015.067 * T - 0.008149197 * T * T - 174.832 * T * math.log(T) + 1445276.0 / T
 
 
 def spinel_i_ae(T: float) -> float:
