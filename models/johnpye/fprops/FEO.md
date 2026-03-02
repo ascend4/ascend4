@@ -19,8 +19,8 @@ Current position:
 
 - Tier 2 `Fe-O` is implemented and usable
 - Tier 3 `Fe-O-H` is implemented and in good enough agreement with
-  the corrected Spreitzer/Schenk H\(_2\) traces to proceed
-- the main remaining weakness is the `wustite|spinel` side of the
+  the corrected Spreitzer/Schenk $ \mathrm{H_2} $ traces to proceed
+- the main remaining weakness is the $ \mathrm{wustite|spinel} $ side of the
   oxide ladder
 
 ## 2. Recommended Working Position
@@ -30,14 +30,14 @@ Use the current Tier 3 model as the baseline for:
 - Tier 4 `Fe-O-C-H`
 - further Fe-O-H equilibrium studies
 - hydrogen reduction-boundary work centered on
-  `\mathrm{Fe}|\mathrm{wustite}`
+  $ \mathrm{Fe|wustite} $
 
 Confidence level by boundary:
 
 - high: gas-side reference-state handling
-- high: `\mathrm{Fe}|\mathrm{wustite}`
-- moderate: `\mathrm{Fe}|\mathrm{spinel}`
-- moderate-to-lower: `\mathrm{wustite}|\mathrm{spinel}`
+- high: $ \mathrm{Fe|wustite} $
+- moderate: $ \mathrm{Fe|spinel} $
+- moderate-to-lower: $ \mathrm{wustite|spinel} $
 
 The main unresolved issue is no longer the gas side. It is the
 reduced spinel model.
@@ -65,11 +65,11 @@ Reaction-level agreement is now good between:
 
 For the reaction
 
-$$
+$$ 
 \mathrm{H_2} + \tfrac12 \mathrm{O_2} \rightarrow \mathrm{H_2O},
 $$
 
-these sources now agree closely on `\Delta G^\circ(T)`.
+these sources now agree closely on $ \Delta G^\circ(T) $.
 
 ### 3.2 Metallic iron
 
@@ -82,7 +82,7 @@ with unary Hillert-Jarl magnetic corrections.
 
 This side is now in good shape:
 
-- the `bcc/fcc` crossover occurs near the expected `912^\circ C`
+- the `bcc/fcc` crossover occurs near the expected $ 912^\circ \mathrm{C} $
 - the metallic side is no longer the dominant source of error
 
 ### 3.3 Wustite
@@ -121,7 +121,7 @@ Important historical point:
 
 - the largest early Tier 2 error came from misreading this excess
   term as a Redlich-Kister form
-- once corrected, the `\mathrm{Fe}|\mathrm{wustite}` boundary moved
+- once corrected, the $ \mathrm{Fe|wustite} $ boundary moved
   into close agreement with Hidayat
 
 ### 3.4 Spinel / magnetite side
@@ -132,8 +132,8 @@ endmember adjusted to the Hidayat 2015 value.
 
 This model includes:
 
-- tetrahedral Fe\(^{2+}\) / Fe\(^{3+}\)
-- octahedral Fe\(^{2+}\) / Fe\(^{3+}\) / vacancy
+- tetrahedral $ \mathrm{Fe^{2+}} $ / $ \mathrm{Fe^{3+}} $
+- octahedral $ \mathrm{Fe^{2+}} $ / $ \mathrm{Fe^{3+}} $ / vacancy
 - configurational entropy
 - a unary magnetic term
 
@@ -179,7 +179,7 @@ active and relevant.
 The following are now well supported:
 
 - wustite thermodynamics
-- `\mathrm{Fe}|\mathrm{wustite}` boundary
+- $ \mathrm{Fe|wustite} $ boundary
 - iron `bcc/fcc` crossover
 
 The important Hidayat-side lesson was:
@@ -200,13 +200,13 @@ $$
 \mu_{O_2}^{rel} = 2\lambda_O - \mu^\circ_{O_2}(T,p^\circ)
 $$
 
-not on raw absolute `2\lambda_O`.
+not on raw absolute $ 2\lambda_O $.
 
-#### Fe|wustite
+#### $ \mathrm{Fe|wustite} $
 
 This boundary now agrees very well with O'Neill:
 
-| T (°C) | Model `\mu_{O_2}^{rel}` | O'Neill | Delta |
+| T (°C) | Model $ \mu_{O_2}^{rel} $ | O'Neill | Delta |
 |---:|---:|---:|---:|
 | 570 | -418378.0 | -418172.3 | -205.7 |
 | 600 | -414566.5 | -414362.5 | -204.0 |
@@ -218,17 +218,17 @@ This boundary now agrees very well with O'Neill:
 All values are in `J/mol O2`.
 
 This is strong evidence that the current
-`\mathrm{Fe}|\mathrm{wustite}` boundary is already correctly placed
+$ \mathrm{Fe|wustite} $ boundary is already correctly placed
 on the condensed-side oxygen-potential scale.
 
-#### Wustite|spinel
+#### $ \mathrm{wustite|spinel} $
 
 This is where the remaining oxide-side problem sits.
 
 Using the same O'Neill basis, the current model near the invariant
 region is still too oxidized by several `kJ/mol O2`:
 
-| T (°C) | Model `\mu_{O_2}^{rel}` | O'Neill | Delta |
+| T (°C) | Model $ \mu_{O_2}^{rel} $ | O'Neill | Delta |
 |---:|---:|---:|---:|
 | 570 | -421804.8 | -417188.1 | -4616.6 |
 | 575 | -420646.2 | -416016.9 | -4629.3 |
@@ -237,8 +237,8 @@ region is still too oxidized by several `kJ/mol O2`:
 So the O'Neill comparison localizes the main remaining error very
 cleanly:
 
-- `\mathrm{Fe}|\mathrm{wustite}` is essentially right
-- `\mathrm{wustite}|\mathrm{spinel}` is still shifted
+- $ \mathrm{Fe|wustite} $ is essentially right
+- $ \mathrm{wustite|spinel} $ is still shifted
 
 ### 5.3 Tier 3 Fe-O-H validation: Spreitzer/Schenk
 
@@ -247,26 +247,28 @@ The earlier severe mismatch turned out to be a false alarm:
 - the first traced curves used for comparison were from the
   `Fe-O-C` diagram, not the `Fe-O-H` diagram
 
-After switching to the corrected H\(_2\)-based traced lines, the
+After switching to the corrected $ \mathrm{H_2} $-based traced lines, the
 Tier 3 picture improved substantially.
 
 The current comparison plot is:
-[bg_compare_all_h2_helmholtz_plus_ref0.png](/home/john/ascend/models/johnpye/fprops/test/bg_compare_all_h2_helmholtz_plus_ref0.png)
+[bg_compare_all_h2_helmholtz_plus_ref0.png](/home/john/ascend/models/johnpye/fprops/res/bg_compare_all_h2_helmholtz_plus_ref0.png)
+
+![Corrected $ \mathrm{H_2} $ boundary comparison](/home/john/ascend/models/johnpye/fprops/res/bg_compare_all_h2_helmholtz_plus_ref0.png)
 
 This plot compares the current FPROPS Tier 3 curves against the
-corrected H\(_2\)-based traced lines for:
+corrected $ \mathrm{H_2} $-based traced lines for:
 
-- `Fe|wustite`
-- `wustite|spinel`
-- `Fe|spinel`
+- $ \mathrm{Fe|wustite} $
+- $ \mathrm{wustite|spinel} $
+- $ \mathrm{Fe|spinel} $
 
 Assessment:
 
 - overall agreement is now good
-- `Fe|wustite` is especially good
-- `Fe|spinel` is reasonable
+- $ \mathrm{Fe|wustite} $ is especially good
+- $ \mathrm{Fe|spinel} $ is reasonable
 - the main visible residual discrepancy remains
-  `wustite|spinel`
+  $ \mathrm{wustite|spinel} $
 
 That level of agreement is good enough to proceed with Tier 4 and
 other Tier 3-based work.
@@ -312,7 +314,7 @@ What is true now:
 
 - the current model already captures the qualitative spinel behavior
 - the `Fe3O4` endmember has been updated to the Hidayat 2015 value
-- but the reduced model still leaves the `wustite|spinel` boundary
+- but the reduced model still leaves the $ \mathrm{wustite|spinel} $ boundary
   too oxidized
 
 What is not yet implemented:
@@ -340,8 +342,8 @@ The relevant file is:
 
 The most useful current artifacts are:
 
-- corrected H\(_2\) comparison plot:
-  [bg_compare_all_h2_helmholtz_plus_ref0.png](/home/john/ascend/models/johnpye/fprops/test/bg_compare_all_h2_helmholtz_plus_ref0.png)
+- corrected $ \mathrm{H_2} $ comparison plot:
+  [bg_compare_all_h2_helmholtz_plus_ref0.png](/home/john/ascend/models/johnpye/fprops/res/bg_compare_all_h2_helmholtz_plus_ref0.png)
 - Tier 3 boundary script:
   [feoh_hydrogen_boundary.py](/home/john/ascend/models/johnpye/fprops/test/feoh_hydrogen_boundary.py)
 - Spreitzer comparison harness:
