@@ -39,6 +39,8 @@ models/johnpye/fprops/fluids/fluids_list.h
 models/johnpye/fprops/python/fprops.py
 models/johnpye/fprops/python/fprops_wrap.c
 models/johnpye/fprops/test/cutest
+models/johnpye/fprops/test/pureprops_compare
+models/johnpye/fprops/test/*.png
 options.cache
 pygtk/ascdev
 pygtk/ascend

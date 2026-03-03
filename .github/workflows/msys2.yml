@@ -100,28 +100,17 @@ jobs:
         mkdir -p "$CUNIT_PREFIX"
         scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX="$CUNIT_PREFIX" ascend solvers models test a4
 
-    - name: Verify GDB
+    - name: Test ASCEND (solver_ipopt + integrator_lsode)
       run: |
-        which gdb
-        gdb --version
-        ls -l ./test/test*
+        ./a4 cutest solver_ipopt integrator_lsode
 
-    - name: Verify GDB (ASCEND env)
+    - name: Test ASCEND (mallocdebug except solver_highs)
       run: |
-        ./a4 env --shell bash -- -lc "which gdb"
-        ./a4 env --shell bash -- -lc "gdb --version"
+        ./a4 cutest -r mallocdebug -e solver_highs
 
-    - name: Test ASCEND (solver_ipopt + integrator_lsode, gdb batch)
+    - name: Test ASCEND (mallocdebug full)
       run: |
-        ./a4 env --shell bash -- -lc "gdb -batch -return-child-result -ex 'set pagination off' -ex run -ex 'thread apply all bt full' --args ./test/test solver_ipopt integrator_lsode"
-
-    - name: Test ASCEND (mallocdebug except solver_highs, gdb batch)
-      run: |
-        ./a4 env --shell bash -- -lc "gdb -batch -return-child-result -ex 'set pagination off' -ex run -ex 'thread apply all bt full' --args ./test/test -r mallocdebug -e solver_highs"
-
-    - name: Test ASCEND (mallocdebug full, gdb batch)
-      run: |
-        ./a4 env --shell bash -- -lc "gdb -batch -return-child-result -ex 'set pagination off' -ex run -ex 'thread apply all bt full' --args ./test/test -r mallocdebug"
+        ./a4 cutest -r mallocdebug
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
