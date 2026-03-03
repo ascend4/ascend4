@@ -473,6 +473,7 @@ extern struct Statement *CreateTABLE(struct Name *n,
                                      symchar *decl_type,
                                      struct Set *decl_typeargs,
                                      symchar *decl_set_type,
+                                     char *units,
                                      struct Expr *default_expr,
                                      int positional,
                                      unsigned long rows,
@@ -481,7 +482,7 @@ extern struct Statement *CreateTABLE(struct Name *n,
                                      char *body);
 /**<
  *  Create a TABLE statement node.
- *  The statement takes ownership of n, default_expr, and body.
+ *  The statement takes ownership of n, units, default_expr, and body.
  */
 
 extern struct Statement *CreateDATASET(symchar *name,

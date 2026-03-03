@@ -514,6 +514,9 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
         FPRINTF(f," OF %s",SCP(s->v.table.decl_set_type));
       }
     }
+    if (s->v.table.units != NULL) {
+      FPRINTF(f," UNITS {%s}",s->v.table.units);
+    }
     if (s->v.table.positional) {
       FPRINTF(f," POSITIONAL");
     }

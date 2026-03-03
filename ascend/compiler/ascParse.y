@@ -209,6 +209,7 @@ struct table_parse_state {
   symchar *decl_type;
   struct Set *decl_typeargs;
   symchar *decl_set_type;
+  char *units;
   struct Expr *default_expr;
   Asc_DString body;
   unsigned long rows;
@@ -216,7 +217,7 @@ struct table_parse_state {
   unsigned long items;
 };
 
-static struct table_parse_state g_table_parse = {0,0,0,0,NULL,NULL,NULL,NULL,{0},0,0,0};
+static struct table_parse_state g_table_parse = {0,0,0,0,NULL,NULL,NULL,NULL,NULL,{0},0,0,0};
 
 struct dataset_parse_state {
   int active;
@@ -242,6 +243,10 @@ static void TableParseBegin(void){
   }
   g_table_parse.decl_type = NULL;
   g_table_parse.decl_set_type = NULL;
+  if (g_table_parse.units != NULL) {
+    ascfree(g_table_parse.units);
+    g_table_parse.units = NULL;
+  }
   if (g_table_parse.default_expr != NULL) {
     DestroyExprList(g_table_parse.default_expr);
   }
@@ -263,6 +268,10 @@ static void TableParseAbort(void){
   }
   g_table_parse.decl_type = NULL;
   g_table_parse.decl_set_type = NULL;
+  if (g_table_parse.units != NULL) {
+    ascfree(g_table_parse.units);
+    g_table_parse.units = NULL;
+  }
   if (g_table_parse.default_expr != NULL) {
     DestroyExprList(g_table_parse.default_expr);
     g_table_parse.default_expr = NULL;
@@ -1603,6 +1612,7 @@ table_statement:
 	                   g_table_parse.decl_type,
 	                   g_table_parse.decl_typeargs,
 	                   g_table_parse.decl_set_type,
+	                   g_table_parse.units,
 	                   g_table_parse.default_expr,
 	                   g_table_parse.positional,
 	                   g_table_parse.rows,
@@ -1612,6 +1622,7 @@ table_statement:
 	  g_table_parse.decl_type = NULL;
 	  g_table_parse.decl_typeargs = NULL;
 	  g_table_parse.decl_set_type = NULL;
+	  g_table_parse.units = NULL;
 	  g_table_parse.default_expr = NULL;
 	}
 	| TABLE_TOK fname table_begin table_decl_opt table_options ';' table_mode_on error END_TOK TABLE_TOK table_mode_off
@@ -1656,6 +1667,10 @@ table_decl_opt:
 	{
 	  g_table_parse.decl_type = NULL;
 	  g_table_parse.decl_set_type = NULL;
+	  if (g_table_parse.units != NULL) {
+	    ascfree(g_table_parse.units);
+	  }
+	  g_table_parse.units = NULL;
 	  if (g_table_parse.decl_typeargs != NULL) {
 	    DestroySetList(g_table_parse.decl_typeargs);
 	  }
@@ -1684,6 +1699,13 @@ table_option:
 	    DestroyExprList(g_table_parse.default_expr);
 	  }
 	  g_table_parse.default_expr = $2;
+	}
+	| UNITS_TOK BRACEDTEXT_TOK
+	{
+	  if (g_table_parse.units != NULL) {
+	    ascfree(g_table_parse.units);
+	  }
+	  g_table_parse.units = ASC_STRDUP($2);
 	}
 	;
 

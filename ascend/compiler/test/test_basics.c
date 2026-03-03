@@ -716,6 +716,35 @@ static long fetch_int_table_cell_2d(struct Instance *root, const char *arrname, 
 	return value;
 }
 
+static double fetch_real_table_cell_2d(struct Instance *root, const char *arrname, long i, long j){
+	struct InstanceName rec;
+	struct Instance *arr;
+	struct Instance *row;
+	struct Instance *inst;
+	unsigned long pos;
+	double value;
+
+	arr = ChildByChar(root,AddSymbol(arrname));
+	CU_ASSERT_FATAL(arr != NULL);
+
+	SetInstanceNameType(rec,IntArrayIndex);
+	SetInstanceNameIntIndex(rec,i);
+	pos = ChildSearch(arr,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	row = InstanceChild(arr,pos);
+	CU_ASSERT_FATAL(row != NULL);
+
+	SetInstanceNameIntIndex(rec,j);
+	pos = ChildSearch(row,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	inst = InstanceChild(row,pos);
+	CU_ASSERT_FATAL(inst != NULL);
+	CU_ASSERT_FATAL(InstanceKind(inst)==REAL_CONSTANT_INST);
+	CU_ASSERT_FATAL(AtomAssigned(inst));
+	value = RealAtomValue(inst);
+	return value;
+}
+
 static long fetch_int_table_cell_2d_is(struct Instance *root, const char *arrname, long i, const char *j){
 	struct InstanceName rec;
 	struct Instance *arr;
@@ -977,6 +1006,72 @@ static void test_instantiate_tables_v05_dense_implicit_sets(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_instantiate_tables_v05_dense_real(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_real.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_real"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_real"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"cost",1,1), 11.5, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"cost",1,2), 12.75, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"cost",1,3), 13.125, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"cost",2,1), 21.25, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"cost",2,2), 22.875, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"cost",2,3), 23.5, 1e-12);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_units(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_units.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_units"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_units"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"temp",1,1), 273.15, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"temp",1,2), 298.15, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"temp",2,1), 310.5, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fetch_real_table_cell_2d(root,"temp",2,2), 325.0, 1e-12);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 static void test_parse_tables_v05_fail_table_header(void){
 	parse_module_expect_error(
 		"test/compiler/tables_v05_fail_table_header.a4c"
@@ -1100,6 +1195,30 @@ static void test_instantiate_tables_v05_fail_dense_bad_row_label_string(void){
 		"test/compiler/tables_v05_fail_dense_bad_row_label_string.a4c"
 		, "tables_v05_fail_dense_bad_row_label_string"
 		, "TABLE row label is not a member of first index set"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_units_integer(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_units_integer.a4c"
+		, "tables_v05_fail_units_integer"
+		, "TABLE units are not allowed for integer values"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_units_invalid(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_units_invalid.a4c"
+		, "tables_v05_fail_units_invalid"
+		, "TABLE units are invalid"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_units_dimension_conflict(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_units_dimension_conflict.a4c"
+		, "tables_v05_fail_units_dimension_conflict"
+		, "Dimensionally inconsistent assignment"
 	);
 }
 
@@ -1513,6 +1632,8 @@ static void test_units_ladder_invalid_anchor_rejected(void){
 	T(instantiate_tables_v05_dense_csv_semicolon) \
 	T(instantiate_tables_v05_dense_string_labels) \
 	T(instantiate_tables_v05_dense_implicit_sets) \
+	T(instantiate_tables_v05_dense_real) \
+	T(instantiate_tables_v05_units) \
 	T(parse_tables_v05_fail_table_header) \
 	T(parse_tables_v05_fail_table_badchar) \
 	T(parse_tables_v05_fail_table_bad_delimiter) \
@@ -1528,6 +1649,9 @@ static void test_units_ladder_invalid_anchor_rejected(void){
 	T(instantiate_tables_v05_fail_positional_double_delim) \
 	T(instantiate_tables_v05_fail_dense_bad_col_label) \
 	T(instantiate_tables_v05_fail_dense_bad_row_label_string) \
+	T(instantiate_tables_v05_fail_units_integer) \
+	T(instantiate_tables_v05_fail_units_invalid) \
+	T(instantiate_tables_v05_fail_units_dimension_conflict) \
 	T(atom_declared_units_from_default) \
 	T(constant_units_clause_and_declared_units) \
 	T(constant_units_clause_invalid_units) \

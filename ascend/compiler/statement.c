@@ -960,6 +960,7 @@ struct Statement *CreateTABLE(struct Name *n,
                               symchar *decl_type,
                               struct Set *decl_typeargs,
                               symchar *decl_set_type,
+                              char *units,
                               struct Expr *default_expr,
                               int positional,
                               unsigned long rows,
@@ -973,6 +974,7 @@ struct Statement *CreateTABLE(struct Name *n,
   result->v.table.decl_type = decl_type;
   result->v.table.decl_typeargs = decl_typeargs;
   result->v.table.decl_set_type = decl_set_type;
+  result->v.table.units = units;
   result->v.table.default_expr = default_expr;
   result->v.table.body = body;
   result->v.table.positional = positional;
@@ -1150,6 +1152,10 @@ void DestroyStatement(struct Statement *s)
         }
         s->v.table.decl_type = NULL;
         s->v.table.decl_set_type = NULL;
+        if (s->v.table.units != NULL) {
+          ascfree(s->v.table.units);
+          s->v.table.units = NULL;
+        }
         if (s->v.table.default_expr != NULL) {
           DestroyExprList(s->v.table.default_expr);
           s->v.table.default_expr = NULL;
@@ -1373,6 +1379,7 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.table.decl_type = s->v.table.decl_type;
     result->v.table.decl_typeargs = CopySetList(s->v.table.decl_typeargs);
     result->v.table.decl_set_type = s->v.table.decl_set_type;
+    result->v.table.units = (s->v.table.units != NULL) ? ASC_STRDUP(s->v.table.units) : NULL;
     result->v.table.default_expr = CopyExprList(s->v.table.default_expr);
     result->v.table.positional = s->v.table.positional;
     result->v.table.rows = s->v.table.rows;
@@ -2731,6 +2738,16 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     ctmp = CmpSymchar(s1->v.table.decl_set_type,s2->v.table.decl_set_type);
     if (ctmp != 0) {
       return ctmp;
+    }
+    if (s1->v.table.units == NULL || s2->v.table.units == NULL) {
+      if (s1->v.table.units != s2->v.table.units) {
+        return (s1->v.table.units != NULL) ? 1 : -1;
+      }
+    } else {
+      ctmp = strcmp(s1->v.table.units,s2->v.table.units);
+      if (ctmp != 0) {
+        return ctmp;
+      }
     }
     if (s1->v.table.positional != s2->v.table.positional) {
       return (s1->v.table.positional > s2->v.table.positional) ? 1 : -1;

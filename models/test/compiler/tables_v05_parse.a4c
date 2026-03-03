@@ -12,6 +12,7 @@ MODEL tables_v05_parse;
 	demand[customer] IS_A factor_constant;
 	ship_cost[customer][facility] IS_A factor_constant;
 	c[city][city] IS_A factor_constant;
+	temp[city][city] IS_A temperature_constant;
 	load[customer] IS_A factor_constant;
 
 	TABLE ship_cost[customer,facility];
@@ -36,6 +37,14 @@ MODEL tables_v05_parse;
 		21 0 94 77
 		11 19 0 35
 		79 33 99 0
+	END TABLE;
+
+	TABLE temp[city,city] UNITS {K};
+		1 2 3 4
+		1 273.15 274.15 275.15 276.15
+		2 283.15 284.15 285.15 286.15
+		3 293.15 294.15 295.15 296.15
+		4 303.15 304.15 305.15 306.15
 	END TABLE;
 
 	VALUES demand[customer] DEFAULT 0;
