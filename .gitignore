@@ -63,6 +63,8 @@ models/johnpye/datareader/AUS_NSW.Moree.Aero.955270_RMY.epw
 models/johnpye/datareader/Birdsville.epw
 models/johnpye/datareader/CA_Daggett_Barstow.bin
 models/johnpye/datareader/daggett_ca_34.865371_-116.783023_psmv3_60_tmy.csv
+Highs.log
+.lcov/
 
 
 **/.claude/settings.local.json

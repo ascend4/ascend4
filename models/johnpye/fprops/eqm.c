@@ -905,7 +905,7 @@ int eqm_mu0_ideal_source(const char *name, const char *source, double T, double 
 	double rho;
 	double g;
 	double molar_mass;
-	const EosData *cands[3];
+	const EosData *cands[5];
 	int ncands = 0;
 	int c;
 	int explicit_source = eqm_has_explicit_source(source);
