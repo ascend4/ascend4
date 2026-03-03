@@ -269,11 +269,10 @@ if __name__ == "__main__":
 	elif args.action == 'script':
 		cmd += shebang(args.file,args.rest)
 	elif args.action == 'cutest':
-		cmd += [sourceroot / 'test' / 'test']
 		rest = list(args.rest)
 		if rest and rest[0] == '--':
 			rest = rest[1:]
-		cmd += rest
+		cmd += shebang(sourceroot / 'test' / 'test', rest)
 	elif args.action == 'env' :
 		shargs = []
 		if os.environ.get('ASCEND_SHELL'):

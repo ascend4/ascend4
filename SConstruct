@@ -1020,6 +1020,14 @@ if platform.system()=="Windows":
 
 vars.Update(env)
 
+if 'CUNIT_PREFIX' in ARGUMENTS:
+	cunit_prefix = env.get('CUNIT_PREFIX')
+	if cunit_prefix:
+		if env.get('CUNIT_CPPPATH') == default_cunit_cpppath:
+			env['CUNIT_CPPPATH'] = str(pathlib.Path(str(cunit_prefix)) / 'include')
+		if env.get('CUNIT_LIBPATH') == default_cunit_libpath:
+			env['CUNIT_LIBPATH'] = str(pathlib.Path(str(cunit_prefix)) / 'lib')
+
 for l in ['SUNDIALS','IPOPT']:
 	var = "%s_LIBS" % l
 	if env.get(var) and not isinstance(env[var],list):
