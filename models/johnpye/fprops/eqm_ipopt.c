@@ -2684,6 +2684,8 @@ int eqm_ipopt_solve_logn_source_init(const char **names, int ns, int ne, const d
 		const double *b, const char *source, double T, double P, const double *n_init,
 		double *n_out){
 	EqmLogN D;
+	const size_t ns_count = (size_t)ns;
+	const size_t ne_count = (size_t)ne;
 	double max_mu0 = 0.0;
 	Index n;
 	Index m;
@@ -2822,11 +2824,11 @@ int eqm_ipopt_solve_logn_source_init(const char **names, int ns, int ne, const d
 	m = D.ne;
 	nele_jac = (Index)(D.ne * D.ns);
 	nele_hess = (Index)(D.ns * (D.ns + 1) / 2);
-	x_L = (Number *)calloc((size_t)n, sizeof(Number));
-	x_U = (Number *)calloc((size_t)n, sizeof(Number));
-	g_L = (Number *)calloc((size_t)m, sizeof(Number));
-	g_U = (Number *)calloc((size_t)m, sizeof(Number));
-	x = (Number *)calloc((size_t)n, sizeof(Number));
+	x_L = (Number *)calloc(ns_count, sizeof(Number));
+	x_U = (Number *)calloc(ns_count, sizeof(Number));
+	g_L = (Number *)calloc(ne_count, sizeof(Number));
+	g_U = (Number *)calloc(ne_count, sizeof(Number));
+	x = (Number *)calloc(ns_count, sizeof(Number));
 
 	for(i = 0; i < D.ns; ++i){
 		x_L[i] = -700.0;
@@ -2900,6 +2902,8 @@ int eqm_ipopt_solve_n_source_init(const char **names, int ns, int ne, const doub
 		const double *b, const char *source, double T, double P, const double *n_init,
 		double *n_out){
 	EqmN D;
+	const size_t ns_count = (size_t)ns;
+	const size_t ne_count = (size_t)ne;
 	double max_mu0 = 0.0;
 	Index n;
 	Index m;
@@ -2967,11 +2971,11 @@ int eqm_ipopt_solve_n_source_init(const char **names, int ns, int ne, const doub
 	m = D.ne;
 	nele_jac = (Index)(D.ne * D.ns);
 	nele_hess = (Index)(D.ns * (D.ns + 1) / 2);
-	x_L = (Number *)calloc((size_t)n, sizeof(Number));
-	x_U = (Number *)calloc((size_t)n, sizeof(Number));
-	g_L = (Number *)calloc((size_t)m, sizeof(Number));
-	g_U = (Number *)calloc((size_t)m, sizeof(Number));
-	x = (Number *)calloc((size_t)n, sizeof(Number));
+	x_L = (Number *)calloc(ns_count, sizeof(Number));
+	x_U = (Number *)calloc(ns_count, sizeof(Number));
+	g_L = (Number *)calloc(ne_count, sizeof(Number));
+	g_U = (Number *)calloc(ne_count, sizeof(Number));
+	x = (Number *)calloc(ns_count, sizeof(Number));
 
 	for(i = 0; i < D.ns; ++i){
 		x_L[i] = D.n_min;
