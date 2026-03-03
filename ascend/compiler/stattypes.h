@@ -409,6 +409,7 @@ struct StateTABLE{
   symchar *decl_type;          /**< inline TABLE declaration type (optional) */
   struct Set *decl_typeargs;   /**< inline TABLE type arguments (optional) */
   symchar *decl_set_type;      /**< inline TABLE set type for set-valued targets */
+  char *units;                 /**< table-level units string, without braces (optional) */
   struct Expr *default_expr;   /**< DEFAULT expression, if supplied */
   char *body;                  /**< canonical tokenized body text */
   unsigned long rows;          /**< parsed non-empty table rows */

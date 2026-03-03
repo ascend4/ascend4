@@ -77,6 +77,8 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		ERRMSG("EosData was NULL");
 		return NULL;
 	}
+	const int ref_was_explicit = (ref != NULL);
+	const ReferenceState *ref_apply = ref;
 	MSG("Preparing PR fluid '%s'...",E->name);
 	PureFluid *P = FPROPS_NEW(PureFluid);
 	P->data = FPROPS_NEW(FluidData);
@@ -122,14 +124,14 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		// use that pressure as the PR p_c, together with updating the
 		// value of rho_c for consistency with PR EOS (from the known
 		// Z_c = 0.307.
-		{
-			FpropsError herr = FPROPS_NO_ERROR;
-			MSG("Preparing helmholtz data '%s'...",E->name);
-			PureFluid *PH = helmholtz_prepare(E,ref);
-			if(!PH){
-				ERRMSG("Failed to create Helmholtz runtime data");
-				return NULL;
-			}
+			{
+				FpropsError herr = FPROPS_NO_ERROR;
+				MSG("Preparing helmholtz data '%s'...",E->name);
+				PureFluid *PH = helmholtz_prepare(E,ref_apply);
+				if(!PH){
+					ERRMSG("Failed to create Helmholtz runtime data");
+					return NULL;
+				}
 			D->p_c = PH->p_fn((FluidStateUnion){.Trho={D->T_c, D->rho_c}}, PH->data, &herr);
 			MSG("Calculated p_c = %f from Helmholtz data",D->p_c);
 			if(herr){
@@ -138,10 +140,14 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 			}
 			double Zc = 0.307;
 			D->rho_c = D->p_c / (Zc * D->R * D->T_c);
-			helmholtz_destroy(PH);
-		}
+				helmholtz_destroy(PH);
+			}
 #endif
-		break;
+			D->ref0 = I->ref0;
+			if(ref_apply == NULL){
+				ref_apply = &(I->ref);
+			}
+			break;
 #undef I
 	case FPROPS_CUBIC:
 		MSG("EOS data is cubic");	
@@ -178,13 +184,25 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		}
 #endif
 
-		D->omega = I->omega;
+			D->omega = I->omega;
 
-		D->Tstar = I->T_c;
-		D->rhostar = I->rho_c;
-		MSG("R = %f, Tstar = %f",D->R, D->Tstar);
-		D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
-		break;
+			D->Tstar = I->T_c;
+			D->rhostar = I->rho_c;
+			MSG("R = %f, Tstar = %f",D->R, D->Tstar);
+			D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
+			D->ref0 = I->ref0;
+			if(D->ref0.type == FPROPS_REF_TPHG){
+				if(isfinite(D->ref0.data.tphg.h0)){
+					D->ref0.data.tphg.h0 *= 1000.0;
+				}
+				if(isfinite(D->ref0.data.tphg.g0)){
+					D->ref0.data.tphg.g0 *= 1000.0;
+				}
+			}
+			if(ref_apply == NULL){
+				ref_apply = &(I->ref);
+			}
+			break;
 	default:
 		fprintf(stderr,"Invalid EOS data\n");
 		return NULL;
@@ -223,6 +241,28 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 #undef D
 #undef C
 	//P->sat_fn = &pengrob_sat_akasaka;
+
+	if(ref_apply == NULL){
+		ERRMSG("No reference state available for this Peng-Robinson fluid");
+		pengrob_destroy(P);
+		return NULL;
+	}
+	{
+		int res = fprops_set_reference_state(P, ref_apply);
+		if(res){
+			if(!ref_was_explicit){
+				ReferenceState ref_phi0 = {FPROPS_REF_PHI0,{.phi0={0,0}}};
+				ERRMSG("Unable to apply default reference state (type %d, err %d); falling back to PHI0",
+					ref_apply->type,res);
+				res = fprops_set_reference_state(P, &ref_phi0);
+			}
+			if(res){
+				ERRMSG("Unable to apply reference state (type %d, err %d)",ref_apply->type,res);
+				pengrob_destroy(P);
+				return NULL;
+			}
+		}
+	}
 
 	return P;
 }
@@ -362,23 +402,26 @@ double pengrob_g(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 		MSG("Density exceeds limit value 1/b = %f",1./PD->b);
 		*err = FPROPS_RANGE_ERROR;
 	}
-#if 0
-	double h = pengrob_h(T,rho,data,err);
-	double s = pengrob_s(T,rho,data,err); // duplicated calculation of p!
-	if(isnan(h))MSG("h is nan");
-	if(isnan(s))MSG("s is nan");
-	return h - T*s;
-#else
-	//	previous code from Richard, probably fine but need to check
+	/* residual Gibbs energy from PR fugacity coefficient */
 	DEFINE_SQRTALPHA;
 	DEFINE_A;
 	DEFINE_V;
 	double p = pengrob_p((FluidStateUnion){.Trho={T, rho}}, data, err);
+	if(*err){
+		return NAN;
+	}
 	double Z = p*v/(data->R * T);
 	double B = p*PD->b/(data->R * T);
 	double A = p * a / SQ(data->R * T);
-	return log(fabs(Z-B))-(A/(sqrt(8)*B))*log(fabs((Z+(1+sqrt(2))*B)/(Z+(1-sqrt(2))*B)))+Z-1;
-#endif
+	double denom1 = Z - B;
+	double denom2 = Z + (1 - SQRT2) * B;
+	double numer2 = Z + (1 + SQRT2) * B;
+	if(denom1 <= 0 || denom2 <= 0 || numer2 <= 0){
+		*err = FPROPS_NUMERIC_ERROR;
+		return NAN;
+	}
+	double lnphi = (Z - 1) - log(denom1) - (A/(2*SQRT2*B)) * log(numer2/denom2);
+	return data->R * T * lnphi;
 }
 
 /**
@@ -467,19 +510,29 @@ double pengrob_cp(FluidStateUnion vals, const FluidData *data, FpropsError *err)
 */
 double pengrob_w(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
-    DEFINE_SQRTALPHA;
+	DEFINE_SQRTALPHA;
 	DEFINE_V;
 	DEFINE_DADT;
-	DEFINE_D2ADT2;
-	DEFINE_A;
 	DEFINE_DPDT_RHO;
-	double cv0 = ideal_cv((FluidStateUnion){.Trho={T, rho}}, data, err);
-	double cp0 = cv0 + data->R;
-	DEFINE_CVR;
-	DEFINE_CPR;
-	double k = (cp0 + cpr) / (cv0 + cvr);
-	double dpdv_T = - SQ(rho) * pengrob_dpdrho_T((FluidStateUnion){.Trho={T,rho}},data,err);
-	return v * sqrt(-k * dpdv_T);
+	double cv = pengrob_cv((FluidStateUnion){.Trho={T, rho}}, data, err);
+	if(*err){
+		return NAN;
+	}
+	double dpdrho_T = pengrob_dpdrho_T((FluidStateUnion){.Trho={T,rho}},data,err);
+	if(*err){
+		return NAN;
+	}
+	if(cv <= 0){
+		*err = FPROPS_NUMERIC_ERROR;
+		return NAN;
+	}
+	/* w^2 = (dp/drho)_T + (T/rho^2) * (dp/dT|rho)^2 / cv */
+	double w2 = dpdrho_T + (T / SQ(rho)) * (SQ(dpdT_rho) / cv);
+	if(!(w2 > 0)){
+		*err = FPROPS_NUMERIC_ERROR;
+		return NAN;
+	}
+	return sqrt(w2);
 }
 
 double pengrob_dpdrho_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
@@ -811,4 +864,3 @@ void pengrob_solve_pT(double p,double T, double *rho
 		return;
 	}
 }
-

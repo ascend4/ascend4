@@ -16,7 +16,13 @@ fprops_env.Depends("fluids.c","fluids/fluids_list.h")
 coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
 	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c'
 	, 'solve_pT.c'
-	, 'fluids.c','cp0.c'
+	, 'fluids.c','cp0.c','mixture.c','thermo.c','thermo_pure.c','constcp.c','constcp_species.c','constcp_data.c'
+	, 'shomate.c','shomate_species.c','shomate_data.c'
+	, 'fprops_species.c','thermo_constcp.c','thermo_mix_ideal.c'
+	, 'gibbs_species.c'
+	, 'solution.c','solution_data.c','thermo_solution_binary.c','wustite_hidayat.c'
+	, 'bcc_iron_hidayat.c','fcc_iron_hidayat.c'
+	, 'spinel_data.c','spinel_fe_degterov.c'
 	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c', 'incomp.c'
 ]
 
@@ -70,4 +76,3 @@ prog_env.Program("test_cubicroots",['cubicroots.c'] + fprops_env['shobjs'],OBJPR
  #vim: set syntax=python:
 
 fprops_env.SConscript("test/SConscript",['fprops_env'])
-

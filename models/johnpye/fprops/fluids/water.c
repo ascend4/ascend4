@@ -70,9 +70,15 @@ static HelmholtzData helmholtz_data_water = {
 		}}
 	}
 #endif
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-241820.0e3 / 18.015242) /* M&S G9e Table A-25, H2O(g) */
+		, .s0 = (188.72e3 / 18.015242) /* M&S G9e Table A-25, H2O(g) */
+	}}}
 
-	, 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
-	, &ideal_data_water
+	, .omega = 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
+	, .ideal = &ideal_data_water
 	, .np = (int)51 /* np */
 	, .pt = (HelmholtzPowTerm[]){
 		/* a_i, t_i, d_i, l_i */
@@ -143,6 +149,11 @@ static HelmholtzData helmholtz_data_water = {
 	}
 };
 
+static const ElementComp elements_water[] = {
+	{"H", 2}
+	,{"O", 1}
+};
+
 const EosData eos_water = {
 	"water"
 	,"IAPWS-95"
@@ -150,6 +161,8 @@ const EosData eos_water = {
 	,100
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_water}
+	,.elements = elements_water
+	,.nelements = 2
 };
 
 #else

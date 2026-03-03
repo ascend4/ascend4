@@ -10,6 +10,10 @@ changes to _rpp.c!
 """
 
 import re, os
+try:
+	import periodictable as _periodictable
+except ImportError:
+	_periodictable = None
 
 f = open("../../components.a4l","r").read()
 
@@ -65,6 +69,7 @@ class ExpectedUnits:
 fields = ['formula','Zc','omega']
 fieldunits = {
 	'Tc':'K'
+	,'Tt':'K'
 	,'mw':'g/g_mole'
 	,'Vc':'cm^3/g_mole'
 	,'Tb':'K'
@@ -77,18 +82,44 @@ fieldunits = {
 	,'cpvapd':'J/g_mole/K^4'
 }
 
+R_UNIVERSAL_MOLAR = 8.3144621
+RPP_T_REF = 298.15
+
+# Reference-element absolute standard entropies S° at 298.15 K, 1 atm/1 bar.
+# Values are stored per reference species, not per atom.
+#
+# Sources:
+# - H2(g), O2(g), C(s, graphite): Moran and Shapiro G9e Table A-25
+# - N2(g): NIST WebBook
+# - S(s, rhombic): NIST WebBook
+# - P(s, white): NIST WebBook
+# - Si(s): NIST WebBook
+# - Al(s): NIST WebBook
+# - Fe(s, alpha): OECD/NEA Thermochemical Database, Iron volume
+ELEMENT_REF_ENTROPY = {
+	'H':  {'atoms_per_ref': 2, 's0_molar': 130.57,  'label': 'H2(g), M&S G9e Table A-25'},
+	'O':  {'atoms_per_ref': 2, 's0_molar': 205.03,  'label': 'O2(g), M&S G9e Table A-25'},
+	'C':  {'atoms_per_ref': 1, 's0_molar': 5.740,   'label': 'C(s, graphite), M&S G9e Table A-25'},
+	'N':  {'atoms_per_ref': 2, 's0_molar': 191.609, 'label': 'N2(g), NIST WebBook'},
+	'S':  {'atoms_per_ref': 1, 's0_molar': 32.054,  'label': 'S(s, rhombic), NIST WebBook'},
+	'P':  {'atoms_per_ref': 1, 's0_molar': 41.09,   'label': 'P(s, white), NIST WebBook'},
+	'Si': {'atoms_per_ref': 1, 's0_molar': 18.82,   'label': 'Si(s), NIST WebBook'},
+	'Al': {'atoms_per_ref': 1, 's0_molar': 28.30,   'label': 'Al(s), NIST WebBook'},
+	'Fe': {'atoms_per_ref': 1, 's0_molar': 27.085,  'label': 'Fe(s, alpha), OECD/NEA'},
+}
+
 ctemplate = """
 static const IdealData ideal_data_%(name)s = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / %(mw)s)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{%(cpvapa)s, 0}
-			,{%(cpvapb)s, 1}
-			,{%(cpvapc)s, 2}
-			,{%(cpvapd)s, 3}
+			{%(cpvapa_red)s, 0}
+			,{%(cpvapb_red)s, 1}
+			,{%(cpvapc_red)s, 2}
+			,{%(cpvapd_red)s, 3}
 		}
 	}}
 };
@@ -100,9 +131,13 @@ static const CubicData cubic_data_%(name)s = {
 	,.rho_c = %(rhoc_kgm3)s
 	,.T_t = %(Tt_K)s
 	,.omega = %(omega)s
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={%(T_ref)s, 101325, %(h_f0)s, %(g_f0)s}}}
+%(ref0_decl)s
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_%(name)s
+};
+
+static const ElementComp elements_rpp_%(name)s[] = {
+%(elements_decl)s
 };
 
 const EosData eos_rpp_%(name)s = {
@@ -112,9 +147,179 @@ const EosData eos_rpp_%(name)s = {
 	,%(priority)d
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_%(name)s}
+	,.elements = elements_rpp_%(name)s
+	,.nelements = (int)(sizeof(elements_rpp_%(name)s) / sizeof(elements_rpp_%(name)s[0]))
 };
 
 """
+
+ELEMENT_SYMBOLS = {
+	'H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca',
+	'Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y',
+	'Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe','Cs','Ba','La','Ce',
+	'Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf','Ta','W','Re','Os','Ir',
+	'Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu','Am','Cm',
+	'Bk','Cf','Es','Fm','Md','No','Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn','Nh','Fl','Mc',
+	'Lv','Ts','Og','D','T'
+}
+
+FALLBACK_ELEMENT_MASS = {
+	'Al': 26.9815385, 'Ar': 39.948, 'As': 74.921595, 'B': 10.81, 'Br': 79.904,
+	'C': 12.011, 'Cl': 35.45, 'D': 2.0141017781, 'F': 18.998403163, 'H': 1.008,
+	'He': 4.002602, 'Hg': 200.592, 'I': 126.90447, 'Kr': 83.798, 'N': 14.007,
+	'Ne': 20.1797, 'O': 15.999, 'P': 30.973761998, 'Rn': 222.0, 'S': 32.06,
+	'Se': 78.971, 'Si': 28.085, 'Ti': 47.867, 'T': 3.0160492779, 'U': 238.02891, 'Xe': 131.293
+}
+
+def element_mass(symbol):
+	"""Atomic mass in g/mol for one element/isotope symbol."""
+	if _periodictable is not None:
+		if symbol == 'D':
+			return float(_periodictable.H[2].mass)
+		if symbol == 'T':
+			return float(_periodictable.H[3].mass)
+		elem = getattr(_periodictable, symbol, None)
+		if elem is not None and getattr(elem, 'mass', None) is not None:
+			return float(elem.mass)
+	return FALLBACK_ELEMENT_MASS.get(symbol)
+
+def formula_mass(counts):
+	m = 0.0
+	for sym, cnt in counts.items():
+		mass = element_mass(sym)
+		if mass is None:
+			return None
+		m += mass * cnt
+	return m
+
+def absolute_entropy_from_formation(counts, h_f0_molar, g_f0_molar):
+	"""Return absolute S°(298.15 K) in J/mol/K, or None if basis is incomplete."""
+	s0 = (h_f0_molar - g_f0_molar) / RPP_T_REF
+	for sym, cnt in counts.items():
+		ref = ELEMENT_REF_ENTROPY.get(sym)
+		if ref is None:
+			return None
+		s0 += cnt * ref['s0_molar'] / ref['atoms_per_ref']
+	return s0
+
+def _merge_counts(dst, src):
+	out = dict(dst)
+	for k, v in src.items():
+		out[k] = out.get(k, 0) + v
+	return out
+
+def parse_formula(formula, mw=None, species_name=None):
+	"""Return element counts from a chemical formula.
+
+	Parses all valid element-token interpretations (including all-caps legacy
+	spelling) and uses species molecular weight, when provided, to disambiguate.
+	"""
+	s = formula.strip()
+	n = len(s)
+
+	def parse_number(i):
+		j = i
+		while i < n and s[i].isdigit():
+			i += 1
+		return (int(s[j:i]) if i > j else 1), i
+
+	def skip_separators(i):
+		while i < n and (s[i].isspace() or s[i] in ".-·"):
+			i += 1
+		return i
+
+	def parse_group(i, stop_char=None):
+		i = skip_separators(i)
+		if i >= n or (stop_char and i < n and s[i] == stop_char):
+			return [({}, i)]
+
+		ch = s[i]
+		options = []
+
+		if ch == '(':
+			sub_results = parse_group(i + 1, ')')
+			for sub_counts, j in sub_results:
+				if j >= n or s[j] != ')':
+					continue
+				mult, k = parse_number(j + 1)
+				scaled = {}
+				for sym, cnt in sub_counts.items():
+					scaled[sym] = cnt * mult
+				options.append((scaled, k))
+		elif ch.isupper():
+			# one-letter element token
+			one = ch.upper()
+			if one in ELEMENT_SYMBOLS:
+				mult, j = parse_number(i + 1)
+				options.append(({one: mult}, j))
+			# two-letter token (canonical or all-caps legacy)
+			if i + 1 < n and s[i + 1].isalpha():
+				two = ch.upper() + s[i + 1].lower()
+				if two in ELEMENT_SYMBOLS:
+					mult, j = parse_number(i + 2)
+					options.append(({two: mult}, j))
+		else:
+			raise ValueError("Unexpected character '%s' in formula '%s'" % (ch, formula))
+
+		if not options:
+			raise ValueError("Unknown element token near '%s' in formula '%s'" % (s[i:i+2], formula))
+
+		results = []
+		for term_counts, j in options:
+			try:
+				rem_results = parse_group(j, stop_char)
+			except ValueError:
+				continue
+			for rem_counts, k in rem_results:
+				results.append((_merge_counts(term_counts, rem_counts), k))
+		if not results:
+			raise ValueError("Unable to parse formula '%s'" % formula)
+		return results
+
+	cands = parse_group(0, None)
+	complete = []
+	for counts, i in cands:
+		i = skip_separators(i)
+		if i == n:
+			complete.append(counts)
+
+	if not complete:
+		raise ValueError("Unparsed remainder in formula '%s'" % formula)
+
+	# de-duplicate identical compositions
+	uniq = []
+	seen = set()
+	for counts in complete:
+		key = tuple(sorted(counts.items()))
+		if key in seen:
+			continue
+		seen.add(key)
+		uniq.append(counts)
+
+	chosen = uniq[0]
+	if mw is not None:
+		best = None
+		for counts in uniq:
+			mass = formula_mass(counts)
+			if mass is None:
+				continue
+			err = abs(mass - mw)
+			if best is None or err < best[0]:
+				best = (err, counts, mass)
+		if best is not None:
+			chosen = best[1]
+
+	if mw is not None:
+		mass = formula_mass(chosen)
+		if mass is not None:
+			err = abs(mass - mw)
+			if err > 0.25:
+				tag = species_name if species_name else formula
+				print("WARNING: formula/mw mismatch for '%s': formula=%s mw=%.6g est=%.6g err=%.6g" % (
+					tag, formula, mw, mass, err
+				))
+
+	return chosen
 
 class CubicFluid:
 	def __init__(self,name,o):
@@ -144,11 +349,40 @@ class CubicFluid:
 		if hasattr(self,'Pc'):pc = '(%s * 1e5)'%self.Pc
 		rhoc = '-1'
 		if hasattr(self,'Vc'):rhoc = '(1000 * %s / %s)'%(self.mw,self.Vc)
+		# NOTE: components.a4l stores RPP-style formation values Hf/Gf at 298.15 K.
+		# These are not absolute species h°/g° anchors, so they should not be fed
+		# directly into a TPHG chemistry reference without reconstructing absolute
+		# entropy first (eg via Eq. 3-1.9 in RPP5).
 		h_f0 = 'NAN'
 		if hasattr(self,'Hf'):h_f0 = '(%s / %s)'%(self.Hf,self.mw)
 		g_f0 = 'NAN'
 		if hasattr(self,'Gf'):g_f0 = '(%s / %s)'%(self.Gf,self.mw)
+		h_f0_mass = 'NAN'
+		if hasattr(self,'Hf'):h_f0_mass = '(%s * 1000 / %s)'%(self.Hf,self.mw)
 		
+		formula = self.formula.strip().strip("'\"")
+		counts = parse_formula(formula, mw=float(self.mw), species_name=self.name)
+		elems = sorted(counts.items())
+		decl_lines = []
+		for idx, (sym, cnt) in enumerate(elems):
+			prefix = "\t"
+			if idx > 0:
+				prefix += ","
+			decl_lines.append('%s{"%s", %d}' % (prefix, sym, cnt))
+		ref0_decl = '\t,.ref0 = {FPROPS_REF_TPHG,{.tphg={%(T_ref)s, 101325, %(h_f0)s, %(g_f0)s}}}' % {
+			'T_ref': RPP_T_REF,
+			'h_f0': h_f0,
+			'g_f0': g_f0,
+		}
+		if hasattr(self, 'Hf') and hasattr(self, 'Gf'):
+			s0_molar = absolute_entropy_from_formation(counts, float(self.Hf), float(self.Gf))
+			if s0_molar is not None:
+				ref0_decl = (
+					'\t/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); '
+					'see convcomp.py Eq. 3-1.9 notes */\n'
+					'\t,.ref0 = {FPROPS_REF_TPHS0,{.tphs={%.15g, 101325, %s, (%.15g * 1000 / %s)}}}'
+				) % (RPP_T_REF, h_f0_mass, s0_molar, self.mw)
+
 		return ctemplate % {
 			'name':self.name
 			,'source':'RPP'#'Reid, Prausnitz, and Poling, 1987, The Properties of '+
@@ -159,15 +393,17 @@ class CubicFluid:
 			,'Tc_K':self.Tc
 			,'Pc_Pa':pc
 			,'rhoc_kgm3':rhoc
-			,'Tt_K' : 0
-			,'T_ref' : 298.2
+			,'Tt_K' : getattr(self, 'Tt', 0)
+			,'T_ref' : RPP_T_REF
 			,'omega':self.omega
 			,'h_f0':h_f0
 			,'g_f0':g_f0
-			,'cpvapa':self.cpvapa
-			,'cpvapb':self.cpvapb
-			,'cpvapc':self.cpvapc
-			,'cpvapd':self.cpvapd
+			,'ref0_decl':ref0_decl
+			,'cpvapa_red':'%.15g' % (float(self.cpvapa) / R_UNIVERSAL_MOLAR)
+			,'cpvapb_red':'%.15g' % (float(self.cpvapb) / R_UNIVERSAL_MOLAR)
+			,'cpvapc_red':'%.15g' % (float(self.cpvapc) / R_UNIVERSAL_MOLAR)
+			,'cpvapd_red':'%.15g' % (float(self.cpvapd) / R_UNIVERSAL_MOLAR)
+			,'elements_decl':'\n'.join(decl_lines)
 		}
 
 cf = {}

@@ -13,11 +13,27 @@ testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 
 #print "CUNIT_CPPPATH =",test_env.get("CUNIT_CPPPATH")
 
+if not test_env.get('WITH_IPOPT'):
+	try:
+		test_env.ParseConfig('pkgconf ipopt --libs --cflags')
+		test_env['WITH_IPOPT'] = 1
+	except OSError:
+		test_env['WITH_IPOPT'] = 0
+
+if not test_env.get('WITH_NLOPT'):
+	try:
+		test_env.ParseConfig('pkgconf nlopt --libs --cflags')
+		test_env['WITH_NLOPT'] = 1
+	except OSError:
+		test_env['WITH_NLOPT'] = 0
+
 if test_env['WITH_CUNIT']:
 	test_env.AppendUnique(
 		CPPPATH=test_env.get('CUNIT_CPPPATH',[])
 		,LIBPATH=test_env.get('CUNIT_LIBPATH',[])
 	)
+
+	cutest_libs = ['m','cunit']
 
 	tobjs = []
 	for f in test_env['fluids']:
@@ -28,9 +44,78 @@ if test_env['WITH_CUNIT']:
 
 	tobjs += [
 		test_env.SharedObject('cutest.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('cutest_pengrob_rpp.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('mixture_ideal.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('cutest_eqm.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('cutest_refstate.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('../eqm.c',OBJPREFIX='#/test/cutest-lib-')
 		, test_env.SharedObject('../test.c')
 	]
+	if test_env.get('WITH_IPOPT'):
+		tobjs.append(test_env.SharedObject('../eqm_ipopt.c',OBJPREFIX='#/test/cutest-lib-'))
+		cutest_libs.append('ipopt')
+	if test_env.get('WITH_NLOPT'):
+		tobjs.append(test_env.SharedObject('../eqm_slsqp.c',OBJPREFIX='#/test/cutest-lib-'))
+		cutest_libs.append('nlopt')
 
 	test_env.Program('cutest', test_env['shobjs'] + tobjs
-		,LIBS = ['m','cunit']
+		,LIBS = cutest_libs
+	)
+
+if test_env.get('WITH_IPOPT'):
+	test_env.AppendUnique(CPPPATH=['#'])
+	test_env.AppendUnique(CPPDEFINES=['HAVE_IPOPT'])
+	if test_env.get('WITH_NLOPT'):
+		test_env.AppendUnique(CPPDEFINES=['HAVE_NLOPT'])
+	try:
+		test_env.ParseConfig('pkgconf ipopt --libs --cflags')
+	except OSError:
+		pass
+	if test_env.get('WITH_NLOPT'):
+		try:
+			test_env.ParseConfig('pkgconf nlopt --libs --cflags')
+		except OSError:
+			pass
+	ipopt_objs = [
+		test_env.SharedObject('ipopt_eqm.c',OBJPREFIX='#/test/ipopt-test-')
+		,test_env.SharedObject('../eqm.c',OBJPREFIX='#/test/ipopt-lib-')
+		,test_env.SharedObject('../eqm_ipopt.c',OBJPREFIX='#/test/ipopt-lib-')
+	]
+	if test_env.get('WITH_NLOPT'):
+		ipopt_objs.append(test_env.SharedObject('../eqm_slsqp.c',OBJPREFIX='#/test/ipopt-lib-'))
+	ipopt_libs = ['m','ipopt']
+	if test_env.get('WITH_NLOPT'):
+		ipopt_libs.append('nlopt')
+	test_env.Program('ipopt_eqm', test_env['shobjs'] + ipopt_objs
+		,LIBS = ipopt_libs
+	)
+	cmp_objs = [
+		test_env.SharedObject('eqm_case_runner.c',OBJPREFIX='#/test/eqmcmp-test-')
+		,test_env.SharedObject('../eqm.c',OBJPREFIX='#/test/eqmcmp-lib-')
+		,test_env.SharedObject('../eqm_ipopt.c',OBJPREFIX='#/test/eqmcmp-lib-')
+	]
+	if test_env.get('WITH_NLOPT'):
+		cmp_objs.append(test_env.SharedObject('../eqm_slsqp.c',OBJPREFIX='#/test/eqmcmp-lib-'))
+	test_env.Program('eqm_case_runner', test_env['shobjs'] + cmp_objs
+		,LIBS = ipopt_libs
+	)
+	mu0_objs = [
+		test_env.SharedObject('eqm_mu0_runner.c',OBJPREFIX='#/test/eqmmu0-test-')
+		,test_env.SharedObject('../eqm.c',OBJPREFIX='#/test/eqmmu0-lib-')
+		,test_env.SharedObject('../eqm_ipopt.c',OBJPREFIX='#/test/eqmmu0-lib-')
+	]
+	if test_env.get('WITH_NLOPT'):
+		mu0_objs.append(test_env.SharedObject('../eqm_slsqp.c',OBJPREFIX='#/test/eqmmu0-lib-'))
+	test_env.Program('eqm_mu0_runner', test_env['shobjs'] + mu0_objs
+		,LIBS = ipopt_libs
+	)
+	pureprops_objs = [
+		test_env.SharedObject('pureprops_compare.c',OBJPREFIX='#/test/pureprops-test-')
+		,test_env.SharedObject('../eqm.c',OBJPREFIX='#/test/pureprops-lib-')
+		,test_env.SharedObject('../eqm_ipopt.c',OBJPREFIX='#/test/pureprops-lib-')
+	]
+	if test_env.get('WITH_NLOPT'):
+		pureprops_objs.append(test_env.SharedObject('../eqm_slsqp.c',OBJPREFIX='#/test/pureprops-lib-'))
+	test_env.Program('pureprops_compare', test_env['shobjs'] + pureprops_objs
+		,LIBS = ipopt_libs
 	)

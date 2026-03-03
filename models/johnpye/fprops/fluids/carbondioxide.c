@@ -78,10 +78,16 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 	, /* T_t */ 216.592
 
 	, {FPROPS_REF_TPF}
-	,  0.2239 /* acentric factor, from Reid, Prausnitz & Polling */
-	, &ideal_data_carbondioxide
-	, 34 /* power terms */
-	, (const HelmholtzPowTerm[]){
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-393520.0e3 / CARBONDIOXIDE_M) /* M&S G9e Table A-25, CO2(g) */
+		, .s0 = (213.69e3 / CARBONDIOXIDE_M) /* M&S G9e Table A-25, CO2(g) */
+	}}}
+	, .omega = 0.2239 /* acentric factor, from Reid, Prausnitz & Polling */
+	, .ideal = &ideal_data_carbondioxide
+	, .np = 34 /* power terms */
+	, .pt = (const HelmholtzPowTerm[]){
 		/* a_i, t_i, d_i, l_i */
 		{  0.38856823203161e00,  0.000,   1.00,    0}
 		,{ 0.29385475942740e01,  0.750,   1.00,    0}
@@ -118,8 +124,8 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 		,{ 0.55993651771592e-02, 28.000,   4.00,    5}
 		,{-0.30335118055646e-03, 14.000,   8.00,    6}
 	}
-	, 5 /* critical (gaussian) terms */
- 	, (const HelmholtzGausTerm[]){
+	, .ng = 5 /* critical (gaussian) terms */
+	, .gt = (const HelmholtzGausTerm[]){
 		/* a, t, d, alpha, beta, gamma, epsilon */
 		{ -0.21365488688320e03,  1.000,  2,  25.,  325.,  1.16,  1.00}
 		,{ 0.26641569149272e05,  0.000,  2,  25.,  300.,  1.19,  1.00}
@@ -127,8 +133,8 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 		,{-0.28341603423999e03,  3.000,  3,  15.,  275.,  1.25,  1.00}
 		,{ 0.21247284400179e03,  3.000,  3,  20.,  275.,  1.22,  1.00}
 	}
-	, 3 /* critical terms */
-	, (const HelmholtzCritTerm[]){
+	, .nc = 3 /* critical terms */
+	, .ct = (const HelmholtzCritTerm[]){
 		/* n, a, b, beta, A, B, C, D */
 		{ -0.66642276540751e00,  3.5,  0.875,  0.300,  0.70,  0.3,  10.0,  275.}
 		,{ 0.72608632349897e00,  3.5,  0.925,  0.300,  0.70,  0.3,  10.0,  275.}

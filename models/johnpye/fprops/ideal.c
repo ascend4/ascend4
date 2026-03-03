@@ -75,17 +75,32 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 		D->M = E->data.cubic->M;
 		D->R = R_UNIVERSAL / D->M;
 		D->T_t = 0; /* TODO how will we flag this object so that sat.c doesn't try to solve? */
-		D->T_c = 0; /* TODO we need a temperature for scaling against, what should it be if critical point is not specified, and how will it be provided? */
+		D->T_c = E->data.cubic->T_c > 0.0 ? E->data.cubic->T_c : 1.0;
 		D->p_c = 0;
-		D->rho_c = 0;
+		if(E->data.cubic->rho_c > 0.0){
+			D->rho_c = E->data.cubic->rho_c;
+		}else if(E->data.cubic->p_c > 0.0 && D->T_c > 0.0){
+			double Zc = 0.307;
+			D->rho_c = E->data.cubic->p_c / (Zc * D->R * D->T_c);
+		}else{
+			D->rho_c = 1.0;
+		}
 		D->omega = 0;
 		D->Tstar = 1;
-		D->rhostar = E->data.cubic->T_c;
+		D->rhostar = D->rho_c;
 		D->cp0 = cp0_prepare(E->data.cubic->ideal, D->R, D->Tstar);
 		D->corr.helm = NULL;
 
 		//MSG("ref0 type = %d", E->data.cubic->ref0.type);
 		D->ref0 = E->data.cubic->ref0;
+		if(D->ref0.type == FPROPS_REF_TPHG){
+			if(isfinite(D->ref0.data.tphg.h0)){
+				D->ref0.data.tphg.h0 *= 1000.0;
+			}
+			if(isfinite(D->ref0.data.tphg.g0)){
+				D->ref0.data.tphg.g0 *= 1000.0;
+			}
+		}
 		if(ref == NULL){
 			ref = &(E->data.cubic->ref);
 		}
@@ -107,6 +122,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 		D->rhostar = 1;
 		D->cp0 = cp0_prepare(E->data.helm->ideal, D->R, D->Tstar);
 		D->corr.helm = NULL;
+		D->ref0 = E->data.helm->ref0;
 
 		if(ref == NULL){
 			ref = &(E->data.helm->ref);
@@ -138,13 +154,20 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 	case FPROPS_REF_REF0:
 		//MSG("Applying ref0 reference state");
 		switch(P->data->ref0.type){
-		case FPROPS_REF_TPHG:
-			{
-				//MSG("TPHG");
-				ReferenceState *ref0 = &(P->data->ref0);
-				//MSG("T0 = %f, p0 = %f, h0 = %f, g0 = %f",ref0->data.tphg.T0,ref0->data.tphg.p0,ref0->data.tphg.h0,ref0->data.tphg.g0);
-				FpropsError res = FPROPS_NO_ERROR;
-				double rho0 = ref0->data.tphg.p0 / D->R / ref0->data.tphg.T0;
+			case FPROPS_REF_TPHG:
+				{
+					//MSG("TPHG");
+					ReferenceState *ref0 = &(P->data->ref0);
+					if(!isfinite(ref0->data.tphg.T0) || !(ref0->data.tphg.T0 > 0.0)
+							|| !isfinite(ref0->data.tphg.p0) || !(ref0->data.tphg.p0 > 0.0)
+							|| !isfinite(ref0->data.tphg.h0) || !isfinite(ref0->data.tphg.g0)){
+						ERRMSG("Invalid/undefined REF0 TPHG data in ideal_prepare");
+						FPROPS_FREE(P->data); FPROPS_FREE(P);
+						return NULL;
+					}
+					//MSG("T0 = %f, p0 = %f, h0 = %f, g0 = %f",ref0->data.tphg.T0,ref0->data.tphg.p0,ref0->data.tphg.h0,ref0->data.tphg.g0);
+					FpropsError res = FPROPS_NO_ERROR;
+					double rho0 = ref0->data.tphg.p0 / D->R / ref0->data.tphg.T0;
 				double T0 = ref0->data.tphg.T0;
 				double s0 = (ref0->data.tphg.h0 - ref0->data.tphg.g0) / T0;
 				double h0 = ref0->data.tphg.h0;
@@ -168,6 +191,36 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 				//if(res)ERRMSG("error %d",res);
 				//MSG("new g0(T0,rho0) = %f", g0);
 				//MSG("DONE");
+			}
+			break;
+		case FPROPS_REF_TPHS0:
+			{
+				ReferenceState *ref0 = &(P->data->ref0);
+				FpropsError res = FPROPS_NO_ERROR;
+				double rho0, T0, h0, s0, h1, s1;
+				if(!isfinite(ref0->data.tphs.T0) || !(ref0->data.tphs.T0 > 0.0)
+						|| !isfinite(ref0->data.tphs.p0) || !(ref0->data.tphs.p0 > 0.0)
+						|| !isfinite(ref0->data.tphs.h0) || !isfinite(ref0->data.tphs.s0)){
+					ERRMSG("Invalid/undefined REF0 TPHS0 data in ideal_prepare");
+					FPROPS_FREE(P->data); FPROPS_FREE(P);
+					return NULL;
+				}
+				T0 = ref0->data.tphs.T0;
+				rho0 = ref0->data.tphs.p0 / D->R / T0;
+				h0 = ref0->data.tphs.h0;
+				s0 = ref0->data.tphs.s0;
+
+				P->data->cp0->c = 0;
+				P->data->cp0->m = 0;
+				h1 = ideal_h((FluidStateUnion){.Trho={T0, rho0}}, P->data, &res);
+				s1 = ideal_s((FluidStateUnion){.Trho={T0, rho0}}, P->data, &res);
+				if(res){
+					ERRMSG("error %d",res);
+					FPROPS_FREE(P->data); FPROPS_FREE(P);
+					return NULL;
+				}
+				P->data->cp0->c = -(s0 - s1)/D->R;
+				P->data->cp0->m = (h0 - h1)/D->R/P->data->Tstar;
 			}
 			break;
 		default:
@@ -261,5 +314,3 @@ double ideal_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData *d
 	*err = FPROPS_RANGE_ERROR;
 	return 0;
 }
-
-

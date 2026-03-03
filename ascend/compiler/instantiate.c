@@ -6361,6 +6361,12 @@ struct table_cell_value_t {
   double rval;
 };
 
+struct scalar_units_runtime_t {
+  int has_units;
+  double conv;
+  CONST dim_type *dims;
+};
+
 struct table_domain_ref_t {
   CONST struct Expr *expr;
   CONST struct Name *set_name;
@@ -6371,6 +6377,7 @@ static int TableAssignCell(struct Instance *work,
                            CONST struct table_domain_t *domains,
                            unsigned ndims,
                            CONST unsigned long *positions,
+                           CONST struct scalar_units_runtime_t *units_runtime,
                            int is_int,
                            long ival,
                            double rval);
@@ -6379,6 +6386,7 @@ static int TableAssignCellMaybeWait(struct Instance *work,
                                     CONST struct table_domain_t *domains,
                                     unsigned ndims,
                                     CONST unsigned long *positions,
+                                    CONST struct scalar_units_runtime_t *units_runtime,
                                     int is_int,
                                     long ival,
                                     double rval);
@@ -6479,6 +6487,109 @@ static int DatasetParseBooleanToken(CONST char *tok, int *bval)
     return 1;
   }
   return 0;
+}
+
+static int ResolveScalarUnits(CONST char *units,
+                              struct Statement *statement,
+                              CONST char *kind,
+                              struct scalar_units_runtime_t *out)
+{
+  unsigned long pos;
+  int error_code;
+  CONST struct Units *u;
+
+  if (out == NULL) {
+    return 0;
+  }
+  out->has_units = 0;
+  out->conv = 1.0;
+  out->dims = Dimensionless();
+
+  if (units == NULL) {
+    return 1;
+  }
+
+  u = FindOrDefineUnits(units,&pos,&error_code);
+  if (u == NULL) {
+    if (strcmp(kind,"TABLE") == 0) {
+      STATEMENT_ERROR(statement,"TABLE units are invalid");
+    } else {
+      STATEMENT_ERROR(statement,"DATASET units are invalid");
+    }
+    return 0;
+  }
+
+  out->has_units = 1;
+  out->conv = UnitsConvFactor(u);
+  out->dims = UnitsDimensions(u);
+  return 1;
+}
+
+static int AssignNumericToConstantInstance(struct Instance *inst,
+                                           struct Statement *statement,
+                                           int is_int,
+                                           long ival,
+                                           double rval,
+                                           CONST struct scalar_units_runtime_t *units_runtime,
+                                           CONST dim_type *default_real_dims,
+                                           CONST char *kind)
+{
+  struct value_t value;
+  int ok;
+
+  if (inst == NULL) {
+    if (strcmp(kind,"TABLE") == 0) {
+      STATEMENT_ERROR(statement,"TABLE assignment target instance is NULL");
+    } else {
+      STATEMENT_ERROR(statement,"DATASET assignment target instance is NULL");
+    }
+    return 0;
+  }
+
+  switch (InstanceKind(inst)) {
+  case REAL_CONSTANT_INST:
+    if (units_runtime != NULL && units_runtime->has_units) {
+      value = CreateRealValue((is_int ? (double)ival : rval) * units_runtime->conv,
+                              units_runtime->dims,1);
+    } else if (is_int) {
+      value = CreateIntegerValue(ival,1);
+    } else {
+      value = CreateRealValue(rval,
+                              default_real_dims != NULL ? default_real_dims : Dimensionless(),
+                              1);
+    }
+    ok = AssignStructuralValue(inst,value,statement);
+    DestroyValue(&value);
+    return ok;
+  case INTEGER_CONSTANT_INST:
+    if (units_runtime != NULL && units_runtime->has_units) {
+      if (strcmp(kind,"TABLE") == 0) {
+        STATEMENT_ERROR(statement,"TABLE units are not allowed for integer values");
+      } else {
+        STATEMENT_ERROR(statement,"DATASET units are not allowed for integer values");
+      }
+      return 0;
+    }
+    if (!is_int) {
+      if (strcmp(kind,"TABLE") == 0) {
+        STATEMENT_ERROR(statement,"TABLE value is not a valid integer");
+      } else {
+        STATEMENT_ERROR(statement,"DATASET value is not a valid integer");
+      }
+      return 0;
+    }
+    value = CreateIntegerValue(ival,1);
+    ok = AssignStructuralValue(inst,value,statement);
+    DestroyValue(&value);
+    return ok;
+  default:
+    if (strcmp(kind,"TABLE") == 0) {
+      STATEMENT_ERROR(statement,"TABLE assignment target is not a constant");
+    } else {
+      STATEMENT_ERROR(statement,"DATASET assignment target is not a constant");
+    }
+    return 0;
+  }
 }
 
 static double DatasetNowSeconds(void)
@@ -7750,6 +7861,7 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
 {
   struct table_domain_t domains[2];
   struct table_domain_ref_t refs[2];
+  struct scalar_units_runtime_t units_runtime;
   unsigned ndims = 0;
   char *bodycopy = NULL;
   char *line_ctx = NULL;
@@ -7774,6 +7886,11 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
   }
   if (ndims != 2) {
     STATEMENT_ERROR(statement,"Dense non-POSITIONAL TABLE requires exactly 2 indices");
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+
+  if (!ResolveScalarUnits(statement->v.table.units,statement,"TABLE",&units_runtime)) {
     MarkStatContext(statement,context_WRONG);
     return 1;
   }
@@ -8039,7 +8156,9 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
       int assign_result;
       pos[0] = row_pos[d];
       pos[1] = col_pos[c];
-      assign_result = TableAssignCellMaybeWait(work,statement,domains,2,pos,cell->is_int,cell->ival,cell->rval);
+      assign_result = TableAssignCellMaybeWait(work,statement,domains,2,pos,
+                                               &units_runtime,
+                                               cell->is_int,cell->ival,cell->rval);
       if (assign_result < 0) {
         rval = 0;
         goto cleanup;
@@ -8147,13 +8266,13 @@ static int TableAssignCell(struct Instance *work,
                            CONST struct table_domain_t *domains,
                            unsigned ndims,
                            CONST unsigned long *positions,
+                           CONST struct scalar_units_runtime_t *units_runtime,
                            int is_int,
                            long ival,
                            double rval)
 {
   struct Name *lhs;
   struct gl_list_t *instances;
-  struct value_t value;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *inst;
   int ok;
@@ -8176,12 +8295,8 @@ static int TableAssignCell(struct Instance *work,
   inst = (struct Instance *)gl_fetch(instances,1);
   gl_destroy(instances);
 
-  value = is_int
-    ? CreateIntegerValue(ival,1)
-    : CreateRealValue(rval,WildDimension(),1);
-
-  ok = AssignStructuralValue(inst,value,statement);
-  DestroyValue(&value);
+  ok = AssignNumericToConstantInstance(inst,statement,is_int,ival,rval,
+                                       units_runtime,Dimensionless(),"TABLE");
   return ok;
 }
 
@@ -8190,13 +8305,13 @@ static int TableAssignCellMaybeWait(struct Instance *work,
                                     CONST struct table_domain_t *domains,
                                     unsigned ndims,
                                     CONST unsigned long *positions,
+                                    CONST struct scalar_units_runtime_t *units_runtime,
                                     int is_int,
                                     long ival,
                                     double rval)
 {
   struct Name *lhs;
   struct gl_list_t *instances;
-  struct value_t value;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *inst;
   int ok;
@@ -8227,11 +8342,8 @@ static int TableAssignCellMaybeWait(struct Instance *work,
   inst = (struct Instance *)gl_fetch(instances,1);
   gl_destroy(instances);
 
-  value = is_int
-    ? CreateIntegerValue(ival,1)
-    : CreateRealValue(rval,WildDimension(),1);
-  ok = AssignStructuralValue(inst,value,statement);
-  DestroyValue(&value);
+  ok = AssignNumericToConstantInstance(inst,statement,is_int,ival,rval,
+                                       units_runtime,Dimensionless(),"TABLE");
   return ok;
 }
 
@@ -8465,17 +8577,13 @@ static int DatasetAssignTokenToInstance(struct Instance *inst,
                                         CONST char *token,
                                         CONST char *units)
 {
-  struct value_t value;
   CONST char *valtok = token;
   CONST char *cell_units = NULL;
   char *valbuf = NULL;
   char *unitbuf = NULL;
+  struct scalar_units_runtime_t units_runtime;
+  struct value_t value;
   int ok;
-
-  if (inst == NULL) {
-    STATEMENT_ERROR(statement,"DATASET assignment target instance is NULL");
-    return 0;
-  }
 
   if (valtok != NULL) {
     const char *brace = strchr(valtok,'{');
@@ -8503,49 +8611,34 @@ static int DatasetAssignTokenToInstance(struct Instance *inst,
     units = cell_units;
   }
 
+  if (!ResolveScalarUnits(units,statement,"DATASET",&units_runtime)) {
+    ok = 0;
+    goto cleanup_units;
+  }
+
   switch (InstanceKind(inst)) {
   case REAL_CONSTANT_INST:
     {
       double rval;
-      CONST dim_type *dims = Dimensionless();
       if (!DatasetParseRealToken(valtok,&rval)) {
         STATEMENT_ERROR(statement,"DATASET value is not a valid real");
         ok = 0;
         break;
       }
-      if (units != NULL) {
-        unsigned long pos;
-        int error_code;
-        CONST struct Units *u = FindOrDefineUnits(units,&pos,&error_code);
-        if (u == NULL) {
-          STATEMENT_ERROR(statement,"DATASET units are invalid");
-          ok = 0;
-          break;
-        }
-        rval = rval * UnitsConvFactor(u);
-        dims = UnitsDimensions(u);
-      }
-      value = CreateRealValue(rval,dims,1);
-      ok = AssignStructuralValue(inst,value,statement);
-      DestroyValue(&value);
+      ok = AssignNumericToConstantInstance(inst,statement,0,0,rval,
+                                           &units_runtime,Dimensionless(),"DATASET");
     }
     break;
   case INTEGER_CONSTANT_INST:
     {
       long ival;
-      if (units != NULL) {
-        STATEMENT_ERROR(statement,"DATASET units are not allowed for integer values");
-        ok = 0;
-        break;
-      }
       if (!TableParseIntegerToken(valtok,&ival)) {
         STATEMENT_ERROR(statement,"DATASET value is not a valid integer");
         ok = 0;
         break;
       }
-      value = CreateIntegerValue(ival,1);
-      ok = AssignStructuralValue(inst,value,statement);
-      DestroyValue(&value);
+      ok = AssignNumericToConstantInstance(inst,statement,1,ival,(double)ival,
+                                           &units_runtime,Dimensionless(),"DATASET");
     }
     break;
   case SYMBOL_CONSTANT_INST:
@@ -9238,6 +9331,7 @@ cleanup:
 
 static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
   struct table_domain_t domains[2];
+  struct scalar_units_runtime_t units_runtime;
   CONST struct Name *node;
   unsigned ndims = 0;
   int rval = 1;
@@ -9259,6 +9353,11 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
   }
   if (!statement->v.table.positional) {
     return ExecuteTABLEDense(work,statement);
+  }
+
+  if (!ResolveScalarUnits(statement->v.table.units,statement,"TABLE",&units_runtime)) {
+    MarkStatContext(statement,context_WRONG);
+    return 1;
   }
 
   for (di = 0; di < 2; ++di) {
@@ -9370,7 +9469,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
           goto cleanup;
         }
         pos[0] = flat_index;
-        if (!TableAssignCell(work,statement,domains,1,pos,is_int,ival,rvalnum)) {
+        if (!TableAssignCell(work,statement,domains,1,pos,&units_runtime,is_int,ival,rvalnum)) {
           MarkStatContext(statement,context_WRONG);
           goto cleanup;
         }
@@ -9387,7 +9486,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
         }
         pos[0] = row_index;
         pos[1] = col_index;
-        if (!TableAssignCell(work,statement,domains,2,pos,is_int,ival,rvalnum)) {
+        if (!TableAssignCell(work,statement,domains,2,pos,&units_runtime,is_int,ival,rvalnum)) {
           MarkStatContext(statement,context_WRONG);
           goto cleanup;
         }
