@@ -1,0 +1,9 @@
+REQUIRE "components.a4l";
+
+MODEL bench_unifac_constants_orig;
+	uc IS_A UNIFAC_constants;
+	x IS_A factor;
+
+	unifac_probe:
+		x = uc.a[1][2]/(1{K});
+END bench_unifac_constants_orig;

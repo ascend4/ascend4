@@ -1,0 +1,16 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_instantiate_dense_real;
+	r IS_A set OF integer_constant;
+	c IS_A set OF integer_constant;
+	cost[r][c] IS_A factor_constant;
+
+	r :== [1..2];
+	c :== [1..3];
+
+	TABLE cost[r,c];
+		3 1 2
+		2: 23.5 21.25 22.875
+		1: 13.125 11.5 12.75
+	END TABLE;
+END tables_v05_instantiate_dense_real;

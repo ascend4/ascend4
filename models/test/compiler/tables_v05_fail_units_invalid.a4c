@@ -1,0 +1,14 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_fail_units_invalid;
+	r IS_A set OF integer_constant;
+	c IS_A set OF integer_constant;
+
+	r :== [1..1];
+	c :== [1..1];
+
+	TABLE temp[r,c] IS_A temperature_constant UNITS {definitely_not_a_unit};
+		1
+		1: 273.15
+	END TABLE;
+END tables_v05_fail_units_invalid;
