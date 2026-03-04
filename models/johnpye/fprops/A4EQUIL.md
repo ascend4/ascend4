@@ -61,6 +61,10 @@ equilibrium and stoichiometric reactors is therefore:
 - elemental amounts for closed systems
 - elemental flow rates for open steady systems
 
+This is a conceptual and thermodynamic statement first. It does not yet
+force the implementation decision that every elemental balance must be
+materialized explicitly as A4 equations in the first version.
+
 ### 2.2 Keep equilibrium species separate from stream species
 
 Three different bases should be allowed to coexist:
@@ -92,20 +96,29 @@ in A4:
 
 - the stream component set
 - package identity
-- possibly the element set when element arrays appear explicitly in A4
 
 Heavy thermodynamic detail should remain in a C-side runtime package
 cache.
 
 ### 2.4 Keep the first deliverables narrow
 
-The first rigorous units should be:
+The first rigorous user-facing units should be:
 
 - `reactor_equil`: a single mixed-outlet equilibrium reactor
 - `reactor_stoic`: a stoichiometric reactor using the same reactive
   thermodynamic package system
 
 Phase-splitting units such as a reactive flash should come later.
+
+This does not mean implementation work has to start with A4 model
+wiring. A sensible bring-up order is:
+
+1. implement and test a standalone equilibrium black-box function in C
+2. expose that function to Python and small C test programs
+3. only then wire it into ASCEND models
+
+That sequence reduces risk while keeping the user-facing target
+unchanged.
 
 ## 2A. Existing Reactor Library Context
 
@@ -213,10 +226,14 @@ For simple reactive packages they may coincide with internal species.
 For more user-friendly or more approximate packages they may be a
 coarser basis.
 
-### 3.4 Report groups
+For the first delivered version, they should normally coincide with the
+internal equilibrium species basis. That keeps the first wiring exact
+and avoids premature work on pseudo-component transport.
 
-These are named linear aggregations of internal species used for
-reporting or GUI display:
+### 3.4 Report groups and GUI adaptation
+
+These are named linear aggregations of internal species that may later
+be useful for reporting or GUI display:
 
 `n_report[g] = SUM[R[g,i] * n_internal[i]]`
 
@@ -227,6 +244,7 @@ Examples:
 - `spinel_total = Sp_Fe2_tet + Sp_Fe3_tet + Sp_Fe2_oct + Sp_Fe3_oct + Sp_Va_oct`
 
 They are not initially proposed as the transport basis for streams.
+They are also not required for the first implementation milestone.
 
 ### 3.5 Nonlinear descriptors
 
@@ -238,7 +256,8 @@ not report groups. Examples:
 - phase fractions
 
 These should be treated as derived outputs, not part of the primary
-stream basis.
+stream basis. They are also secondary to the first implementation goal
+of getting rigorous models wired and solved.
 
 ## 4. Proposed `reactive_package`
 
@@ -250,14 +269,22 @@ for a set of connected reactive units.
 It answers questions such as:
 
 - what stream components exist?
-- what conserved elements exist?
 - what internal equilibrium species exist?
 - which thermo models and source maps are used?
 - how are stream components mapped to elements?
-- how are internal species mapped to report groups?
+- later, how should internal states be presented to users?
 
 The package is the object that should be shared with
 `WILL_BE_THE_SAME`-style constraints across a reactive flowpath.
+
+For a first implementation, the likely user experience is:
+
+- the A4 model names or instantiates a package identity
+- that package identity selects a detailed runtime package definition
+  held in C-side code or loaded through C-side package infrastructure
+
+In other words, users should initially select packages, not assemble all
+species/source-map detail manually inside each process model.
 
 ## 4.2 Hybrid A4/C design
 
@@ -269,12 +296,41 @@ This is intentionally light. It should expose only what ASCEND needs to
 instantiate arrays and validate connections:
 
 - `stream_components`
-- optionally `elements`
 - `package_name`
 - `package_version`
 - `package_key`
 
 The `package_key` should be a stable identity or hash, not a raw pointer.
+
+For the first design pass, there is no strong reason to expose the
+element set itself in the A4 instance tree. The black-box code can own
+the element basis completely.
+
+### Why this matters for usability
+
+The package boundary is not only an implementation concern. It affects:
+
+- how easy it is for a user to write a model
+- how much clutter appears in the instance tree
+- how much debug information is visible from ASCEND
+- how easy it is to reproduce and audit a calculation
+
+The first package design should therefore prefer:
+
+- simple, explicit package identity in A4
+- rich runtime introspection in C/Python
+- minimal repeated thermo metadata in process models
+
+The user should not be forced to rebuild large thermo package
+definitions ad hoc inside every reactor model.
+
+An initial practical direction is:
+
+- A4 package object carries a name/key and stream component set
+- C runtime registry maps that key to the full thermo package
+
+That keeps A4 models writable while still allowing sophisticated
+runtime package definitions.
 
 ### C-side runtime package
 
@@ -286,8 +342,8 @@ It contains:
 - thermo source maps
 - phase model definitions
 - solution-phase metadata
-- report groups
-- nonlinear descriptor definitions
+- later, report groups
+- later, nonlinear descriptor definitions
 - GUI/reporting metadata
 
 This package can be cached and reused by all black-box relations using
@@ -344,12 +400,17 @@ At minimum it should include:
 - `T`
 - `y[components]`
 - `H`
-- `V` optionally later
+- `V`
 - `phase_summary` outputs optionally later
 
 In the first implementation, `reactive_state` should not try to encode
 all internal equilibrium detail as A4 arrays. Instead, its thermodynamic
 properties are supplied by black-box relations using the package key.
+
+`V` should not be treated as optional for the long-term design because
+reactor sizing and residence-time calculations depend on it. It may be
+staged later in implementation if needed, but it belongs in the model
+conceptually.
 
 ## 5.2 `reactive_stream`
 
@@ -410,6 +471,16 @@ for closed systems.
 This is robust because the equilibrium kernel only requires elemental
 totals.
 
+In implementation terms there are two reasonable choices:
+
+- compute `b` explicitly in ASCEND and pass it to the black-box
+- pass component flows to the black-box and let C compute `b` internally
+
+The thermodynamic primitive should still be treated as `TPb`, because
+that is the natural reusable kernel. However, for the first ASCEND
+integration it may be cleaner to let the C layer compute `b` internally
+from stream component flows so that the A4 models stay smaller.
+
 ## 6.2 Internal equilibrium solve
 
 The runtime package provides an internal species elemental matrix:
@@ -417,6 +488,9 @@ The runtime package provides an internal species elemental matrix:
 `A_internal[e,i]`
 
 The FPROPS kernel then solves over `n_internal[i]` or `f_internal[i]`.
+
+`A_internal` belongs in the runtime package in C, not in the A4
+instance tree.
 
 ## 6.3 Output mapping: internal basis to stream basis
 
@@ -441,9 +515,10 @@ For that reason, the first rigorous implementation should be cautious.
 For packages with solution phases or endmember-level detail:
 
 - set `stream_components = internal equilibrium species`
-- use report groups and descriptors only for display and reporting
+- postpone report groups and descriptors to GUI/introspection work
 
-This preserves information exactly and keeps downstream units consistent.
+This preserves information exactly and keeps the first implementation
+focused on solvability.
 
 ### Later extension
 
@@ -477,10 +552,7 @@ Different units then wrap this closure:
 
 ## 7.2 Proposed first black-boxes
 
-The names below are placeholders for the RFC. Exact naming can be
-changed later.
-
-### `a4equil_tp_b`
+### `fprops_eqm_tpb`
 
 Purpose:
 
@@ -497,9 +569,8 @@ Outputs:
 
 - `n_eq[k]` or `f_eq[k]` in stream basis
 - `H_eq` or `Hdot_eq`
-- optional phase summary outputs
-- optional internal species outputs when stream basis is coarser than
-  internal basis
+- solver status / diagnostics in standalone C and Python interfaces
+- later, optional phase summary outputs
 
 Data:
 
@@ -513,7 +584,27 @@ Internally this black-box:
 4. evaluates equilibrium enthalpy from the resulting equilibrium state
 5. maps outputs to stream basis
 
-### `a4rxnprops_tp_f`
+This should be the first concrete implementation target. It is useful
+even before any ASCEND model wiring because it can support:
+
+- C-level regression tests
+- Python experiments
+- CLI-style utilities
+- later ASCEND black-box bindings
+
+### Failure behavior
+
+`fprops_eqm_tpb` must not silently return non-conservative or partially
+updated results on a failed solve. On failure it should:
+
+- return a clear non-success status
+- preserve diagnostic information useful for debugging
+- avoid presenting the caller with an apparently valid equilibrium state
+
+Element conservation should therefore be guaranteed for successful
+returns and treated as invalid/undefined for failed returns.
+
+### `fprops_rxnprops_tpf`
 
 Purpose:
 
@@ -539,18 +630,33 @@ This is not an equilibrium solver. It is a property evaluator for a
 given reactive-package composition basis. It is mainly needed by
 `reactor_stoic` and by generic reactive stream states.
 
+It is probably straightforward once `fprops_eqm_tpb` exists, but it is
+not the primary immediate target.
+
 ## 7.3 Derivative support
 
 If reactive units are to solve robustly inside ASCEND, these black-boxes
 need derivative callbacks, not only residual evaluation.
 
-For `a4rxnprops_tp_f`, standard black-box derivative support should be
+For `fprops_rxnprops_tpf`, standard black-box derivative support should be
 added directly if the property model can supply it.
 
-For `a4equil_tp_b`, derivatives are more subtle because the equilibrium
+For `fprops_eqm_tpb`, derivatives are more subtle because the equilibrium
 state is itself the result of an optimization/KKT solve. The correct
 approach is implicit differentiation of the equilibrium conditions, not
 naive finite differencing in the long term.
+
+Here "implicit differentiation" means this:
+
+- treat the converged equilibrium state as satisfying a nonlinear system
+  of KKT equations
+- differentiate that KKT system with respect to `T`, `P`, or `b`
+- solve the resulting linear system for the sensitivities of the
+  equilibrium state
+
+So the sensitivity calculation is not "rerun equilibrium many times with
+small perturbations". It is "differentiate the already-satisfied KKT
+system and solve for `dn/dT`, `dn/dP`, `dn/db`".
 
 ## 8. `reactor_equil`
 
@@ -592,21 +698,35 @@ Primary variables:
 - outlet species flows `outlet.f[components]`
 - `Qin` unless adiabatic
 
+There should be no `equilibrated` switch on `reactive_stream` or
+`reactive_state`. In the new stack, equilibrium should be a property of
+the unit model or closure being used, not a toggle on the stream object.
+
 ## 8.3 Governing balances
 
 For a single-inlet, single-outlet, steady reactor with no shaft work:
 
-### Element balances
+### Balance basis
 
-For each element `e`:
+Conceptually, the reactor is governed by:
 
-`b_dot_in[e] = b_dot_out[e]`
+- elemental conservation
+- energy conservation
+- pressure relation
+- equilibrium closure
 
-with:
+In a fully explicit formulation, elemental balances would appear in A4.
+However, for the first implementation it may be better to treat them as
+internal to the `fprops_eqm_tpb` closure:
 
-`b_dot_in[e] = SUM[A_stream[e,k] * inlet.f[k]]`
+- ASCEND supplies inlet component flows
+- C computes inlet element totals
+- C solves equilibrium at outlet `T`, `P`
+- C returns outlet composition and enthalpy consistent with those same
+  element totals
 
-and similarly for the outlet.
+That still makes the model element-based thermodynamically, even if the
+first A4 model does not materialize a visible `b[e]` array.
 
 ### Pressure relation
 
@@ -618,10 +738,15 @@ For example:
 
 At the outlet state:
 
-`(outlet.f[components], H_out, aux) = a4equil_tp_b(outlet.T, outlet.P, b_dot_in, pkg)`
+Conceptually:
+
+`(outlet.f[components], H_out, aux) = fprops_eqm_tpb(outlet.T, outlet.P, b_dot_in, pkg)`
 
 In practice the black-box may be written as a set of relations equating
-ASCEND variables to the returned equilibrium outputs.
+ASCEND variables to the returned equilibrium outputs. If the first A4
+binding passes inlet component flows rather than an explicit `b_dot_in`
+array, that should be treated as a wrapper around the same `TPb`
+primitive, not a different thermodynamic kernel.
 
 ### Energy balance
 
@@ -699,7 +824,7 @@ appropriate mapping.
 
 `reactor_stoic` still needs reactive-package property evaluation:
 
-`outlet.state.H = a4rxnprops_tp_f(outlet.T, outlet.P, outlet.f[components], pkg)`
+`outlet.state.H = fprops_rxnprops_tpf(outlet.T, outlet.P, outlet.f[components], pkg)`
 
 Energy balance is then written exactly as for the equilibrium reactor.
 
@@ -762,6 +887,15 @@ where:
 These KKT conditions are the true thermodynamic closure being embedded in
 ASCEND, even if the first implementation hides them inside a black-box.
 
+It is conceivable that a future ASCEND integration could expose some or
+all of this KKT system more directly to the outer solver. That could be
+useful if there is later value in solving larger flowsheets and
+equilibrium conditions in one more tightly orchestrated nonlinear
+system.
+
+However, that is explicitly not the first implementation target. The
+first target is a robust, tested black-box equilibrium kernel.
+
 ## 10.2 Relation to old phase-equilibrium thinking
 
 For nonreactive phase equilibrium, it is common to say "equal chemical
@@ -790,6 +924,13 @@ Not primary:
 - total molar flow balance
 
 Species flows are outputs of the equilibrium closure.
+
+Implementation note:
+
+- first version may keep the elemental balances implicit inside the
+  equilibrium black-box
+- later versions may choose to expose explicit `b[e]` arrays in A4 if
+  that proves useful for transparency, diagnostics, or solver control
 
 ## 11.2 Stoichiometric reactor
 
@@ -855,6 +996,16 @@ state variables. The ASCEND-facing layer should reinforce this by:
 - setting good nominals on flow and enthalpy variables
 - avoiding redundant equations
 
+ASCEND's own scaling and FPROPS' internal scaling should be allowed to
+coexist, but they live at different layers:
+
+- ASCEND scaling controls the outer nonlinear solve
+- FPROPS scaling stabilizes the inner equilibrium computation
+
+The main requirement is that derivative callbacks presented to ASCEND
+must correspond to the physical, unscaled variables at the interface.
+Internal scaling should remain invisible outside the black-box.
+
 ## 12.4 Reference-state consistency
 
 This is a thermodynamic rather than numerical issue, but it affects
@@ -914,7 +1065,7 @@ Finite differences may be acceptable only for very early bring-up.
 
 ## 13.2 Desired first derivatives
 
-For `a4equil_tp_b`, the important sensitivities are:
+For `fprops_eqm_tpb`, the important sensitivities are:
 
 - `d f_eq / dT`
 - `d f_eq / dP`
@@ -925,6 +1076,12 @@ For `a4equil_tp_b`, the important sensitivities are:
 
 These should be obtained by linearizing the equilibrium KKT system and
 solving the resulting sensitivity system.
+
+These calculations should not be massively costly relative to the
+equilibrium solve if implemented carefully, because the same KKT
+structure or factorization can often be reused for multiple right-hand
+sides. They are still nontrivial, but they are much more attractive than
+repeated finite-difference re-solves.
 
 ## 13.3 KKT linearization
 
@@ -958,29 +1115,37 @@ Therefore the recommended order is:
 
 The proposal for a first usable milestone is:
 
-### 14.1 New package and stream family
+### 14.1 Immediate kernel work
+
+- implement `fprops_eqm_tpb`
+- expose it in C test code
+- expose it in Python for rapid exploration and regression testing
+
+This is already useful outside ASCEND and should be the first practical
+implementation step.
+
+### 14.2 New package and stream family
 
 - add `reactive_package`
 - add `reactive_state`
 - add `reactive_stream`
 
-### 14.2 Black-boxes
+### 14.3 Black-boxes
 
-- implement `a4equil_tp_b`
-- implement `a4rxnprops_tp_f`
+- bind `fprops_eqm_tpb` into ASCEND black-box form
+- later implement `fprops_rxnprops_tpf`
 
-### 14.3 First reactor models
+### 14.4 First reactor models
 
 - implement `reactor_equil`
 - implement `reactor_stoic`
 
-### 14.4 Initial package discipline
+### 14.5 Initial package discipline
 
 - for rigorous packages with solution phases, set
   `stream_components = internal equilibrium species`
-- report friendly totals/descriptors separately
 
-### 14.5 Leave for later
+### 14.6 Leave for later
 
 - reactive flash / phase-splitting unit
 - pseudo-component transport with auxiliary descriptors
@@ -998,8 +1163,19 @@ first rigorous reactive package because:
 - it exercises gas species, pure condensed species, and solution phases
 - it forces the design to cope with real internal basis complexity
 
+However, Fe-O-H is not necessarily the best first performance target for
+kernel bring-up because it is already relatively slow. Early testing of
+`fprops_eqm_tpb` may benefit from faster systems such as:
+
+- water-gas shift
+- methane reforming subsets
+- small ideal-gas reacting systems
+
+Those can give faster regression cycles while Fe-O-H remains a primary
+application driver.
+
 An initial Fe-O-H demonstrator package should probably expose the full
-internal basis on streams, with additional report outputs such as:
+internal basis on streams, with additional derived outputs such as:
 
 - metallic iron total
 - wustite total
@@ -1016,10 +1192,11 @@ next design stage.
 
 This RFC deliberately does not commit to final A4 syntax yet.
 
-### 16.2 How much of the package element set should be exposed in A4?
+### 16.2 Whether elements ever need to be exposed in A4
 
-Exposing elements makes some unit equations clearer, but keeping them
-hidden makes the instance tree lighter.
+The current direction is to keep them hidden in the runtime package, but
+it remains open whether some later debugging or advanced-modeling use
+cases would benefit from explicit A4 exposure.
 
 ### 16.3 Whether `reactor_stoic` should use a dedicated reaction package
 
