@@ -19,6 +19,7 @@
 #include "test_register_solver.h"
 
 #define TESTS(T) \
+	T(column) \
 	T(slv_common) \
 	T(slvreq) \
 	T(ipopt) \

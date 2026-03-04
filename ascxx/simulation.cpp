@@ -83,8 +83,11 @@ extern "C"{
 Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), simroot(GetSimulationRoot(i),SymChar("simroot")){
 	MSG("Created simulation at %p",this);	
 	sys = NULL;
+	buildroot = NULL;
+	is_built = false;
+	sing = NULL;
+	activeblock = 0;
 	solverhooks = NULL;
-	//is_built = false;
 	// Create an Instance object for the 'simulation root' (we'll call
 	// it the 'simulation model') and it can be fetched using 'getModel()'
 	// any time later.
@@ -92,10 +95,12 @@ Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), sim
 }
 
 Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroot){
-	//is_built = old.is_built;
 	MSG("Copying Simulation...");
 	sys = old.sys;
+	buildroot = old.buildroot;
+	is_built = old.is_built;
 	sing = NULL;
+	activeblock = old.activeblock;
 	solverhooks = old.solverhooks;
 }
 
@@ -116,6 +121,7 @@ Simulation::~Simulation(){
 	}
 	*/
 	sys = NULL;
+	buildroot = NULL;
 }
 
 Instanc &
@@ -604,29 +610,58 @@ Simulation::getSolver() const{
 */
 void
 Simulation::build(){
+	build(simroot);
+}
+
+void
+Simulation::build(const Instanc &target){
+	Instance *root = target.getInternalType();
+	if(!root){
+		throw runtime_error("Cannot build system from NULL target");
+	}
 	if(sys){
-		//CONSOLE_DEBUG("System is already built (%p)",sys);
-		return;
-	}else{
+		if(buildroot == root){
+			return;
+		}
+		invalidateSystem();
+	}
+	{
 		MSG("Building system...");
 	}
 
-	if(simroot.getKind() != MODEL_INST){
-		throw runtime_error("Simulation does not contain a MODEL_INST");
+	if(InstanceKind(root) != MODEL_INST){
+		throw runtime_error("Requested solver export target is not a MODEL_INST");
 	}
 
-	if(NumberPendingInstances(simroot.getInternalType())){
+	if(NumberPendingInstances(root)){
 		throw runtime_error("System has pending instances; can't yet send to solver.");
 	}
 
 	MSG("============== REALLY building system...");
-	sys = system_build(simroot.getInternalType());
+	sys = system_build(root);
 	if(!sys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system");
 		throw runtime_error("Unable to build system");
 	}
+	buildroot = root;
+	is_built = true;
 
 	MSG("System built OK");
+}
+
+void
+Simulation::invalidateSystem(){
+	if(sing){
+		delete sing;
+		sing = NULL;
+	}
+	if(sys){
+		system_destroy(sys);
+		sys = NULL;
+	}
+	buildroot = NULL;
+	is_built = false;
+	activeblock = 0;
 }
 
 

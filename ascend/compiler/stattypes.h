@@ -117,6 +117,7 @@ enum stat_t {
   SOLVER,       /**< SOLVER statement */
   OPTION,       /**< OPTION statement */
   SOLVE,        /**< SOLVE statement */
+  DELETESYSTEM, /**< DELETE SYSTEM statement */
   SELECT,       /**< SELECT statement */
   SWITCH,       /**< SWITCH statement */
   WHILE,        /**< WHILE statement */
@@ -403,6 +404,11 @@ struct StateOPTION{
   struct Expr *rhs;
  };
 
+/** used for SOLVE statement */
+struct StateSOLVE{
+  struct Name *target; /**< optional target model name */
+ };
+
 /** used for TABLE statement (parse metadata in v0). */
 struct StateTABLE{
   struct Name *name;           /**< target array name */
@@ -503,6 +509,7 @@ union StateUnion {
   struct StateFlow       flow;
   struct StateSOLVER     solver;
   struct StateOPTION     option;
+  struct StateSOLVE      solve;
   struct StateLINK	     lnk;
   struct StateTABLE      table;
   struct StateDATASET    dataset;

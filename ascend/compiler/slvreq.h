@@ -43,11 +43,13 @@
 typedef int SlvReqSetSolverFn(const char *solvername, void *user_data);
 typedef int SlvReqSetOptionFn(const char *optionname, struct value_t *val, void *user_data);
 typedef int SlvReqDoSolveFn(struct Instance *instance, void *user_data);
+typedef int SlvReqDeleteSystemFn(void *user_data);
 
 typedef struct SlvReqHooks_struct{
 	SlvReqSetSolverFn *set_solver_fn;
 	SlvReqSetOptionFn *set_option_fn;
 	SlvReqDoSolveFn *do_solve_fn;
+	SlvReqDeleteSystemFn *delete_system_fn;
 	void *user_data;
 } SlvReqHooks;
 
@@ -58,6 +60,7 @@ ASC_DLLSPEC int slvreq_assign_hooks(struct Instance *siminst
 		, SlvReqSetSolverFn *set_solver_fn
 		, SlvReqSetOptionFn *set_option_fn
 		, SlvReqDoSolveFn *do_solve_fn
+		, SlvReqDeleteSystemFn *delete_system_fn
 		, void *user_data
 );
 
@@ -140,5 +143,7 @@ int slvreq_set_option(struct Instance *inst, const char *optionname, struct valu
 */
 int slvreq_do_solve(struct Instance *inst);
 
-#endif /* ASC_SLVREQ_H */
+#define SLVREQ_DELETE_HOOK_NOT_SET -1
+int slvreq_delete_system(struct Instance *inst);
 
+#endif /* ASC_SLVREQ_H */

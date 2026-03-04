@@ -262,6 +262,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case SOLVER:
     case OPTION:
     case SOLVE:
+    case DELETESYSTEM:
     case RUN:
     case FNAME:
     case FLOW:
@@ -506,9 +507,16 @@ struct Statement *CreateOPTION(CONST char *optname, struct Expr *rhs){
 	return result;
 }
 
-struct Statement *CreateSOLVE(){
+struct Statement *CreateSOLVE(struct Name *target){
 	struct Statement *result;
 	result=create_statement_here(SOLVE);
+	result->v.solve.target = target;
+	return result;
+}
+
+struct Statement *CreateDELETESYSTEM(){
+	struct Statement *result;
+	result=create_statement_here(DELETESYSTEM);
 	return result;
 }
 
@@ -1207,7 +1215,11 @@ void DestroyStatement(struct Statement *s)
         break;
 
       case SOLVE:
-        /* currently there's no data stored in this command */
+        DestroyName(s->v.solve.target);
+        s->v.solve.target = NULL;
+        break;
+
+      case DELETESYSTEM:
         break;
 
       case IF:
@@ -1423,7 +1435,10 @@ struct Statement *CopyToModify(struct Statement *s)
     break;
 
   case SOLVE:
-    /* no data to be copied for this command */
+    result->v.solve.target = CopyName(s->v.solve.target);
+    break;
+
+  case DELETESYSTEM:
     break;
 
   case IF:
@@ -1500,6 +1515,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case SOLVER:
   case OPTION:
   case SOLVE:
+  case DELETESYSTEM:
   case ASSERT:
   case IF:
   case WHEN:
@@ -1547,6 +1563,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case SOLVER:
   case OPTION:
   case SOLVE:
+  case DELETESYSTEM:
   case ASSERT:
   case IF:
   case WHEN:
@@ -1596,6 +1613,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case SOLVER:
   case OPTION:
   case SOLVE:
+  case DELETESYSTEM:
   case ASSERT:
   case IF:
   case WHEN:
@@ -2114,6 +2132,12 @@ struct VariableList *FixFreeStatVarsF(CONST struct Statement *s){
 	assert(s!=NULL);
 	assert(s->t==FIX || s->t==FREE);
 	return(s->v.fx.vars);
+}
+
+struct Name *SolveStatTargetF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==SOLVE);
+	return s->v.solve.target;
 }
 
 struct Set *CallStatArgsF(CONST struct Statement *s)
@@ -2798,6 +2822,10 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareNames(RunStatAccess(s1),RunStatAccess(s2));
+  case SOLVE:
+    return CompareNames(SolveStatTarget(s1),SolveStatTarget(s2));
+  case DELETESYSTEM:
+    return 0;
   case WHILE:
     ctmp = CompareExprs(WhileStatExpr(s1), WhileStatExpr(s2));
     if (ctmp != 0) {

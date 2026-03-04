@@ -601,7 +601,15 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
 	FPRINTF(f,";\n");
 	break;
   case SOLVE:
-  	FPRINTF(f,"SOLVE;\n");
+  	FPRINTF(f,"SOLVE");
+	if (s->v.solve.target != NULL) {
+		FPRINTF(f," ");
+		WriteName(f,s->v.solve.target);
+	}
+	FPRINTF(f,";\n");
+	break;
+  case DELETESYSTEM:
+	FPRINTF(f,"DELETE SYSTEM;\n");
 	break;
   case CALL:
     FPRINTF(f,"CALL %s(",SCP(CallStatId(s)));
@@ -896,6 +904,10 @@ symchar *StatementTypeString(CONST struct Statement *s){
     g_statio_stattypenames[ASGN] = AddSymbol("Assignment");
     g_statio_stattypenames[CASGN] = AddSymbol("Constant assignment");
     g_statio_stattypenames[RUN] = AddSymbol("RUN");
+    g_statio_stattypenames[SOLVER] = AddSymbol("SOLVER");
+    g_statio_stattypenames[OPTION] = AddSymbol("OPTION");
+    g_statio_stattypenames[SOLVE] = AddSymbol("SOLVE");
+    g_statio_stattypenames[DELETESYSTEM] = AddSymbol("DELETE SYSTEM");
     g_statio_stattypenames[IF] = AddSymbol("IF");
     g_statio_stattypenames[WHEN] = GetBaseTypeName(when_type);
     g_statio_stattypenames[FNAME] = AddSymbol("FNAME");

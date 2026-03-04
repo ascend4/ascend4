@@ -742,7 +742,7 @@ static void CollectNote(struct Note *);
 %token BEQ_TOK BNE_TOK BREAK_TOK
 %token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
 %token CONTINUE_TOK CREATE_TOK
-%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DER_TOK DIMENSION_TOK
+%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DELETE_TOK DER_TOK DIMENSION_TOK
 %token DIMENSIONLESS_TOK DO_TOK
 %token ELSE_TOK END_TOK EXPECT_TOK EXTERNAL_TOK
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
@@ -755,7 +755,7 @@ static void CollectNote(struct Note *);
 %token OF_TOK OPTION_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
 %token /* PATCH_TOK */ PROD_TOK PROVIDE_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
-%token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
+%token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK SYSTEM_TOK
 %token TABLE_TOK VALUES_TOK DATASET_TOK POSITIONAL_TOK INDEX_TOK COLUMN_TOK EOL_TOK
 %token THEN_TOK TRUE_TOK
 %token UNION_TOK UNITS_TOK LADDER_TOK UNIVERSAL_TOK UNLINK_TOK
@@ -803,7 +803,7 @@ static void CollectNote(struct Note *);
 %type <statptr> when_statement use_statement select_statement
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
-%type <statptr> solve_statement solver_statement option_statement switch_statement
+%type <statptr> delete_statement solve_statement solver_statement option_statement switch_statement
 %type <statptr> table_statement values_statement dataset_statement
 %type <braced_ptr> dataset_units_opt
 %type <id_ptr> dataset_type_opt dataset_type_req dataset_column_ref dataset_column_selector
@@ -2160,6 +2160,7 @@ statement:
     | solver_statement
     | solve_statement
     | option_statement
+    | delete_statement
     | assert_statement
     | if_statement
     | while_statement
@@ -2747,7 +2748,18 @@ solve_statement:
 	SOLVE_TOK
 	{
 		/*CONSOLE_DEBUG("GOT 'SOLVE' STATEMENT");*/
-		$$ = CreateSOLVE();
+		$$ = CreateSOLVE(NULL);
+	}
+	| SOLVE_TOK fname
+	{
+		$$ = CreateSOLVE($2);
+	}
+	;
+
+delete_statement:
+	DELETE_TOK SYSTEM_TOK
+	{
+		$$ = CreateDELETESYSTEM();
 	}
 	;
 

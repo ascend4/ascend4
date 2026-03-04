@@ -231,9 +231,14 @@ extern struct Statement *CreateOPTION(CONST char *optname, struct Expr *value);
 	Create a 'SOLVER' statement node.
 */
 
-extern struct Statement *CreateSOLVE();
+extern struct Statement *CreateSOLVE(struct Name *target);
 /**<
 	Create a 'SOLVE' statement node.
+*/
+
+extern struct Statement *CreateDELETESYSTEM();
+/**<
+	Create a 'DELETE SYSTEM' statement node.
 */
 
 extern struct Statement *CreateWBTS(struct VariableList *vl);
@@ -1533,6 +1538,16 @@ extern struct VariableList *FixFreeStatVarsF(CONST struct Statement *s);
 /**<
 	Implementation function for FixFreeStatVars(). Do not call this directory, use FixStatVars instead.
 */
+
+#ifdef NDEBUG
+# define SolveStatTarget(s) ((s)->v.solve.target)
+#else
+# define SolveStatTarget(s) SolveStatTargetF(s)
+#endif
+/**<
+	Returns the optional target name for a SOLVE statement.
+*/
+extern struct Name *SolveStatTargetF(CONST struct Statement *s);
 
 /* * * StateCall functions * * */
 

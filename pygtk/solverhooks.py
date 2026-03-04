@@ -10,7 +10,62 @@ class SolverHooksPython(ascpy.SolverHooks):
 	def __init__(self):
 		loading.print_status("","Loaded python solver hooks")
 		ascpy.SolverHooks.__init__(self,None)
-	def _set_solver_param(self, sim, optionname, val):
+		self._solver_name = {}
+		self._solver_options = {}
+		self._default_solver_name = None
+		self._default_solver_options = {}
+	def _simkey(self, sim):
+		try:
+			return sim.getName()
+		except Exception:
+			return str(sim.this)
+	def _get_option_store(self, sim):
+		return self._solver_options.setdefault(self._simkey(sim), {})
+	def _snapshot_parameter(self, param):
+		if param.isInt():
+			return ("int", param.getIntValue())
+		if param.isBool():
+			return ("bool", param.getBoolValue())
+		if param.isReal():
+			return ("real", param.getRealValue())
+		if param.isStr():
+			return ("str", param.getStrValue())
+		raise RuntimeError("Unsupported solver parameter type")
+	def _apply_parameter_value(self, param, stored):
+		kind, value = stored
+		if kind == "int":
+			param.setIntValue(value)
+		elif kind == "bool":
+			param.setBoolValue(value)
+		elif kind == "real":
+			param.setRealValue(value)
+		elif kind == "str":
+			param.setStrValue(value)
+		else:
+			raise RuntimeError("Unsupported stored solver option type")
+	def _apply_stored_options(self, sim):
+		store = self._solver_options.get(self._simkey(sim), self._default_solver_options)
+		if not store:
+			return
+		PP = sim.getParameters()
+		for P in PP:
+			name = P.getName()
+			if name in store:
+				self._apply_parameter_value(P, store[name])
+		sim.setParameters(PP)
+	def _build_for_target(self, sim, inst):
+		if inst is None:
+			sim.build()
+			return
+		try:
+			target = ascpy.Registry().getInstance("slvreq_target")
+			sim.build(target)
+		except Exception:
+			try:
+				sim.build(inst)
+			except TypeError:
+				sim.build(ascpy.Instance(inst))
+	def _set_solver_param(self, sim, optionname, val, remember=True):
 		try:
 			PP = sim.getParameters()
 		except Exception:
@@ -18,12 +73,29 @@ class SolverHooksPython(ascpy.SolverHooks):
 		try:
 			for P in PP:
 				if P.getName() == optionname:
-					P.setValueValue(val)
+					if isinstance(val, ascpy.Value):
+						P.setValueValue(val)
+					elif P.isInt():
+						P.setIntValue(val)
+					elif P.isBool():
+						P.setBoolValue(val)
+					elif P.isReal():
+						P.setRealValue(val)
+					elif P.isStr():
+						P.setStrValue(val)
+					else:
+						return
 					sim.setParameters(PP)
+					if remember:
+						stored = self._snapshot_parameter(P)
+						self._get_option_store(sim)[optionname] = stored
+						self._default_solver_options[optionname] = stored
 					return
 		except Exception:
 			return
 	def setSolver(self,solvername,sim):
+		self._solver_name[self._simkey(sim)] = solvername
+		self._default_solver_name = solvername
 		sim.setSolver(ascpy.Solver(solvername))
 		if solvername.lower() == "highs":
 			# Avoid GUI crashes from high-frequency progress callbacks.
@@ -42,6 +114,9 @@ class SolverHooksPython(ascpy.SolverHooks):
 					try:
 						P.setValueValue(val)
 						sim.setParameters(PP)
+						stored = self._snapshot_parameter(P)
+						self._get_option_store(sim)[optionname] = stored
+						self._default_solver_options[optionname] = stored
 						print("PYTHON: SET",optionname,"to",repr(val))
 						return 0
 					except Exception as e:
@@ -53,11 +128,23 @@ class SolverHooksPython(ascpy.SolverHooks):
 			return ascpy.SLVREQ_INVALID_OPTION_NAME
 	def doSolve(self,inst,sim):
 		try:
+			self._build_for_target(sim, inst)
+			solvername = self._solver_name.get(self._simkey(sim), self._default_solver_name)
+			if solvername is not None:
+				sim.setSolver(ascpy.Solver(solvername))
+			self._apply_stored_options(sim)
 			print("PYTHON: SOLVING",sim.getName(),"WITH",sim.getSolver().getName())
 			sim.solve(sim.getSolver(),ascpy.SolverReporter())
 		except Exception as e:
 			print("PYTHON ERROR:",str(e))
 			return 3
+		return 0
+	def deleteSystem(self, sim):
+		try:
+			sim.invalidateSystem()
+		except Exception as e:
+			print("PYTHON ERROR:",str(e))
+			return 1
 		return 0
 
 class SolverHooksPythonBrowser(SolverHooksPython):
@@ -67,6 +154,11 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 		SolverHooksPython.__init__(self)
 	def doSolve(self,inst,sim):
 		try:
+			self._build_for_target(sim, inst)
+			solvername = self._solver_name.get(self._simkey(sim), self._default_solver_name)
+			if solvername is not None:
+				sim.setSolver(ascpy.Solver(solvername))
+			self._apply_stored_options(sim)
 			if self.browser.prefs.getBoolPref("SolverReporter","show_popup",True):
 				reporter = PopupSolverReporter(self.browser, sim)
 			else:
@@ -82,6 +174,15 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 		# FIXME improve in case of error in solving
 		# unfortunately there is no possibility to get result from async task without waiting
 		# so we assume everything is fine
+		return 0
+	def deleteSystem(self, sim):
+		try:
+			sim.invalidateSystem()
+			if hasattr(self.browser, "disable_on_sim_delete"):
+				self.browser.disable_on_sim_delete()
+		except Exception as e:
+			print("PYTHON ERROR:", str(e))
+			return 1
 		return 0
 
 	# the same functions like in gtkbrowser, but a little bit other implementation

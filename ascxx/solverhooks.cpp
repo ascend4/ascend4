@@ -4,16 +4,148 @@
 #include "solver.h"
 #include "solverparameters.h"
 #include "solverreporter.h"
+#include "registry.h"
 #include "value.h"
 
+#include <map>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 extern "C"{
 #include <ascend/utilities/error.h>
+#include <ascend/compiler/value_type.h>
 };
 
 #define SOLVERHOOKS_DEBUG 0
+
+namespace{
+
+struct StoredOption{
+	enum ValueType{
+		INT_VALUE,
+		BOOL_VALUE,
+		REAL_VALUE,
+		SYMBOL_VALUE
+	};
+
+	std::string name;
+	ValueType type;
+	long int_data;
+	bool bool_data;
+	double real_data;
+	std::string symbol_data;
+
+	StoredOption(const std::string &name, const value_t &value)
+		: name(name), type(INT_VALUE), int_data(0), bool_data(false), real_data(0.0){
+		switch(ValueKind(value)){
+		case integer_value:
+			type = INT_VALUE;
+			int_data = IntegerValue(value);
+			break;
+		case boolean_value:
+			type = BOOL_VALUE;
+			bool_data = BooleanValue(value);
+			break;
+		case real_value:
+			type = REAL_VALUE;
+			real_data = RealValue(value);
+			break;
+		case symbol_value:
+			type = SYMBOL_VALUE;
+			symbol_data = SCP(SymbolValue(value));
+			break;
+		default:
+			throw std::runtime_error("Unsupported solver option value type");
+		}
+	}
+};
+
+struct StoredSolverConfig{
+	bool have_solver = false;
+	std::string solver_name;
+	std::vector<StoredOption> options;
+};
+
+static std::map<Simulation *, StoredSolverConfig> g_solver_configs;
+
+static StoredSolverConfig &get_solver_config(Simulation *S){
+	return g_solver_configs[S];
+}
+
+static int apply_option_to_system(Simulation *S, const char *optionname, const value_t *val){
+	SolverParameters pp = S->getParameters();
+
+	try{
+		SolverParameter p = pp.getParameter(optionname);
+		try{
+			p.setValueValue(Value(val));
+		}catch(std::runtime_error &){
+			return SLVREQ_WRONG_OPTION_VALUE_TYPE;
+		}
+	}catch(std::runtime_error &){
+		return SLVREQ_INVALID_OPTION_NAME;
+	}
+	S->setParameters(pp);
+	return 0;
+}
+
+static int apply_option_to_system(Simulation *S, const StoredOption &stored){
+	SolverParameters pp = S->getParameters();
+
+	try{
+		SolverParameter p = pp.getParameter(stored.name);
+		try{
+			switch(stored.type){
+			case StoredOption::INT_VALUE:
+				p.setIntValue((int)stored.int_data);
+				break;
+			case StoredOption::BOOL_VALUE:
+				p.setBoolValue(stored.bool_data);
+				break;
+			case StoredOption::REAL_VALUE:
+				p.setRealValue(stored.real_data);
+				break;
+			case StoredOption::SYMBOL_VALUE:
+				p.setStrValue(stored.symbol_data);
+				break;
+			}
+		}catch(std::runtime_error &){
+			return SLVREQ_WRONG_OPTION_VALUE_TYPE;
+		}
+	}catch(std::runtime_error &){
+		return SLVREQ_INVALID_OPTION_NAME;
+	}
+	S->setParameters(pp);
+	return 0;
+}
+
+static void remember_option(StoredSolverConfig &config, const char *optionname, const value_t *val){
+	for(std::vector<StoredOption>::iterator i = config.options.begin(); i != config.options.end(); ++i){
+		if(i->name == optionname){
+			*i = StoredOption(optionname, *val);
+			return;
+		}
+	}
+	config.options.push_back(StoredOption(optionname, *val));
+}
+
+static int apply_stored_solver_config(Simulation *S){
+	StoredSolverConfig &config = get_solver_config(S);
+	if(config.have_solver){
+		Solver solver(config.solver_name.c_str());
+		S->setSolver(solver);
+	}
+	for(std::vector<StoredOption>::const_iterator i = config.options.begin(); i != config.options.end(); ++i){
+		int res = apply_option_to_system(S, *i);
+		if(res != 0){
+			return res;
+		}
+	}
+	return 0;
+}
+
+}
 
 //------------------------------------------------------------------------------
 // C-level functions that SolverHooks can pass back to libascend
@@ -36,7 +168,17 @@ int ascxx_slvreq_set_option(const char *optionname, value_t *val, void *user_dat
 int ascxx_slvreq_do_solve(struct Instance *instance, void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_SOLVE_HOOK_NOT_SET;
-	return S->getSolverHooks()->doSolve(instance, S);
+	Registry reg;
+	reg.setPointer("slvreq_target", instance);
+	int res = S->getSolverHooks()->doSolve(instance, S);
+	reg.setPointer("slvreq_target", NULL);
+	return res;
+}
+
+int ascxx_slvreq_delete_system(void *user_data){
+	Simulation *S = (Simulation *)user_data;
+	if(NULL==S->getSolverHooks())return SLVREQ_DELETE_HOOK_NOT_SET;
+	return S->getSolverHooks()->deleteSystem(S);
 }
 
 
@@ -65,6 +207,9 @@ SolverHooks::setSolver(const char *solvername, Simulation *S){
 	/* note desired return codes from slvreq.h */
 	try{
 		Solver solver(solvername);
+		StoredSolverConfig &config = get_solver_config(S);
+		config.have_solver = true;
+		config.solver_name = solvername;
 		S->build();
 		S->setSolver(solver);
 	}catch(std::runtime_error &E){
@@ -76,21 +221,21 @@ SolverHooks::setSolver(const char *solvername, Simulation *S){
 
 int
 SolverHooks::setOption(const char *optionname, Value val, Simulation *S){
-	/* FIXME need to check if the system is built? */
-	/* FIXME check if we have got a solver assigned? */
-	SolverParameters pp = S->getParameters();
-
 	try{
-		SolverParameter p = pp.getParameter(optionname);
-		try{
-			p.setValueValue(val);
-		}catch(std::runtime_error &E){
-			return SLVREQ_WRONG_OPTION_VALUE_TYPE;
-		}
-	}catch(std::runtime_error &E){
-		return SLVREQ_INVALID_OPTION_NAME;
+		S->build();
+	}catch(std::runtime_error &){
+		return SLVREQ_OPTIONS_UNAVAILABLE;
 	}
-	return 0;
+	try{
+		(void)S->getSolver();
+	}catch(std::runtime_error &){
+		return SLVREQ_OPTIONS_UNAVAILABLE;
+	}
+	int res = apply_option_to_system(S, optionname, val.v);
+	if(res == 0){
+		remember_option(get_solver_config(S), optionname, val.v);
+	}
+	return res;
 }
 
 int
@@ -98,7 +243,12 @@ SolverHooks::doSolve(Instance *i, Simulation *S){
 	CONSOLE_DEBUG("Solving model...");
 	
 	try{
-		/* FIXME do solving of a particular instance? */
+		Instanc target(i);
+		S->build(target);
+		int applyres = apply_stored_solver_config(S);
+		if(applyres != 0){
+			return applyres;
+		}
 		if(!getSolverReporter()){
 			CONSOLE_DEBUG("Creating default SolverReporter");
 			SolverReporter R;
@@ -115,13 +265,19 @@ SolverHooks::doSolve(Instance *i, Simulation *S){
 	return 0;
 }
 
+int
+SolverHooks::deleteSystem(Simulation *S){
+	S->invalidateSystem();
+	return 0;
+}
+
 void
 SolverHooks::assign(Simulation *S){
 	S->setSolverHooks(this);
 #if SOLVERHOOKS_DEBUG
 	CONSOLE_DEBUG("Assigning SolverHooks to Simulation...");
 #endif
-	slvreq_assign_hooks(S->getInternalType(),&ascxx_slvreq_set_solver, &ascxx_slvreq_set_option, &ascxx_slvreq_do_solve, (void *)S);
+	slvreq_assign_hooks(S->getInternalType(),&ascxx_slvreq_set_solver, &ascxx_slvreq_set_option, &ascxx_slvreq_do_solve, &ascxx_slvreq_delete_system, (void *)S);
 }
 
 SolverReporter *
@@ -206,6 +362,3 @@ SolverHooksManager::getHooks(){
 	}
 	return this->hooks;
 }
-
-
-
