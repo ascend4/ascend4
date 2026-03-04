@@ -107,6 +107,62 @@ The first rigorous units should be:
 
 Phase-splitting units such as a reactive flash should come later.
 
+## 2A. Existing Reactor Library Context
+
+Before proposing a new reactive stack, it is useful to record what the
+existing reactor library already provides.
+
+The current reactor library in
+[models/reactor.a4l](/home/john/ascend/models/reactor.a4l) is a
+kinetics-based CSTR library, not a chemical-equilibrium library.
+
+It provides two reactor models:
+
+- `single_phase_cstr` in
+  [models/reactor.a4l](/home/john/ascend/models/reactor.a4l#L47)
+- `multiple_phase_cstr` in
+  [models/reactor.a4l](/home/john/ascend/models/reactor.a4l#L245)
+
+These models rely on the rate-based source-term interface from
+[models/kinetics.a4l](/home/john/ascend/models/kinetics.a4l), especially
+`base_kinetics`, `element_kinetics`, and `specify_kinetics`.
+
+What they support:
+
+- steady and dynamic operation
+- component holdup balances
+- total mass and energy balances
+- heat input `Qin`
+- concentration-based reaction rates
+- in the multiphase case, vapor-liquid thermodynamics using the old
+  `thermodynamics.a4l` framework
+- optional VLE coupling via `equilibrated := TRUE`
+
+What they do not support:
+
+- elemental-basis reaction closure
+- Gibbs minimization
+- internal equilibrium species distinct from stream species
+- stoichiometric reactor closure in the `RSTOIC` sense
+- chemical equilibrium in the `RGibbs` sense
+
+The most relevant historical precedent for this RFC is the multiphase
+reactor demonstration in
+[models/reactor.a4s](/home/john/ascend/models/reactor.a4s#L46), where
+`test_multiple_phase_cstr` is rerun with `equilibrated := TRUE`.
+
+That example is useful because it already demonstrates one important
+architectural pattern:
+
+- reactor balances in A4
+- thermodynamic closure supplied by a state submodel
+- steady and dynamic modes supported by different `seqmod` choices
+
+However, the chemistry in that library remains kinetic-source-based. The
+new `reactor_equil` proposed here should therefore be seen as a new
+reactive-thermodynamic unit family that reuses some modeling patterns
+from `reactor.a4l`, but not its chemical closure.
+
 ## 3. Terminology and Bases
 
 The terms below are used throughout this note.
