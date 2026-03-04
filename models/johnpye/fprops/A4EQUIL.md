@@ -24,13 +24,13 @@ implementation plan for one file.
 ASCEND already has:
 
 - legacy multicomponent/multiphase stream and thermo models in
-  [models/thermodynamics.a4l](/home/john/ascend/models/thermodynamics.a4l)
+  [../../thermodynamics.a4l](../../thermodynamics.a4l)
 - legacy process unit models such as
-  [models/stream_holdup.a4l](/home/john/ascend/models/stream_holdup.a4l)
-  and [models/reactor.a4l](/home/john/ascend/models/reactor.a4l)
+  [../../stream_holdup.a4l](../../stream_holdup.a4l)
+  and [../../reactor.a4l](../../reactor.a4l)
 - a newer Gibbs-minimization equilibrium kernel in
-  [models/johnpye/fprops/eqm.h](/home/john/ascend/models/johnpye/fprops/eqm.h)
-  and [models/johnpye/fprops/eqm.c](/home/john/ascend/models/johnpye/fprops/eqm.c)
+  [eqm.h](eqm.h)
+  and [eqm.c](eqm.c)
 
 The current gap is architectural:
 
@@ -113,18 +113,18 @@ Before proposing a new reactive stack, it is useful to record what the
 existing reactor library already provides.
 
 The current reactor library in
-[models/reactor.a4l](/home/john/ascend/models/reactor.a4l) is a
+[../../reactor.a4l](../../reactor.a4l) is a
 kinetics-based CSTR library, not a chemical-equilibrium library.
 
 It provides two reactor models:
 
 - `single_phase_cstr` in
-  [models/reactor.a4l](/home/john/ascend/models/reactor.a4l#L47)
+  [../../reactor.a4l#L47](../../reactor.a4l#L47)
 - `multiple_phase_cstr` in
-  [models/reactor.a4l](/home/john/ascend/models/reactor.a4l#L245)
+  [../../reactor.a4l#L245](../../reactor.a4l#L245)
 
 These models rely on the rate-based source-term interface from
-[models/kinetics.a4l](/home/john/ascend/models/kinetics.a4l), especially
+[../../kinetics.a4l](../../kinetics.a4l), especially
 `base_kinetics`, `element_kinetics`, and `specify_kinetics`.
 
 What they support:
@@ -148,7 +148,7 @@ What they do not support:
 
 The most relevant historical precedent for this RFC is the multiphase
 reactor demonstration in
-[models/reactor.a4s](/home/john/ascend/models/reactor.a4s#L46), where
+[../../reactor.a4s#L46](../../reactor.a4s#L46), where
 `test_multiple_phase_cstr` is rerun with `equilibrated := TRUE`.
 
 That example is useful because it already demonstrates one important
@@ -354,7 +354,7 @@ properties are supplied by black-box relations using the package key.
 ## 5.2 `reactive_stream`
 
 This parallels `detailed_stream` in
-[models/stream_holdup.a4l](/home/john/ascend/models/stream_holdup.a4l).
+[../../stream_holdup.a4l](../../stream_holdup.a4l).
 
 At minimum:
 
@@ -453,7 +453,7 @@ auxiliary descriptors, a coarser stream basis may be introduced.
 ## 7. Black-Box Function Strategy
 
 The existing `fprops` integration in
-[models/johnpye/fprops/asc_fprops.c](/home/john/ascend/models/johnpye/fprops/asc_fprops.c)
+[asc_fprops.c](asc_fprops.c)
 provides the pattern:
 
 - ASCEND-side black-box relations with `INPUT`, `OUTPUT`, `DATA`
@@ -712,7 +712,7 @@ reactor model, not a universal thermodynamic closure.
 ## 10. Governing Thermodynamic Basis Inside FPROPS
 
 The equilibrium kernel in
-[models/johnpye/fprops/eqm.c](/home/john/ascend/models/johnpye/fprops/eqm.c)
+[eqm.c](eqm.c)
 already solves the right class of problem:
 
 minimize total Gibbs free energy over species amounts, subject to
