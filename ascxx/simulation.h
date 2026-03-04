@@ -72,6 +72,7 @@ class Simulation : public Instanc{
 private:
 	Instanc simroot;
 	slv_system_t sys;
+	struct Instance *buildroot;
 	bool is_built;
 	SingularityInfo *sing; /// will be used to store this iff singularity found
 	int activeblock;
@@ -99,6 +100,8 @@ public:
 	void checkDimensions();
 
 	void build();
+	void build(const Instanc &target);
+	void invalidateSystem();
 
 	// checks of solver lists/structure
 	enum StructuralStatus checkDoF() const;

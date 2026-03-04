@@ -1,0 +1,23 @@
+REQUIRE "atoms.a4l";
+IMPORT "qrslv";
+
+MODEL leaf;
+	x, y IS_A solver_var;
+	y = 4 * x + 5;
+END leaf;
+
+MODEL test4;
+	a IS_A leaf;
+METHODS
+METHOD on_load;
+	FIX a.x;
+	a.x := 5;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE a;
+	ASSERT a.y == 25;
+	DELETE SYSTEM;
+	SOLVE a;
+	ASSERT a.y == 25;
+END on_load;
+END test4;

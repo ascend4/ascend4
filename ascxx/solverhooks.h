@@ -40,6 +40,7 @@ extern "C"{
 SlvReqSetSolverFn ascxx_slvreq_set_solver;
 SlvReqSetOptionFn ascxx_slvreq_set_option;
 SlvReqDoSolveFn ascxx_slvreq_do_solve;
+SlvReqDeleteSystemFn ascxx_slvreq_delete_system;
 };
 
 /**
@@ -64,6 +65,9 @@ public:
 
 	/// C++ function that will be called as a result of a 'SOLVE' command
 	virtual int doSolve(Instance *i, Simulation *S);
+
+	/// C++ function that will be called as a result of a 'DELETE SYSTEM' command
+	virtual int deleteSystem(Simulation *S);
 
 	SolverReporter *getSolverReporter();
 

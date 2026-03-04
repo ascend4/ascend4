@@ -358,6 +358,7 @@ public:
 %ignore ascxx_slvreq_set_solver;
 %ignore ascxx_slvreq_set_option;
 %ignore ascxx_slvreq_do_solve;
+%ignore ascxx_slvreq_delete_system;
 %apply SWIGTYPE *DISOWN {SolverReporter *reporter};
 %apply SWIGTYPE *DISOWN {SolverHooks *hooks};
 %include "solverhooks.h"

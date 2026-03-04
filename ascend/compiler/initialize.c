@@ -447,12 +447,76 @@ ExecuteInitOption(struct procFrame *fm, struct Statement *stat){
 static void
 ExecuteInitSolve(struct procFrame *fm, struct Statement *stat){
 	int res;
-	res = slvreq_do_solve(fm->i);
+	struct Instance *sim = FindSimulationInstance(fm->i);
+	struct Instance *target = NULL;
+	if(sim == NULL){
+		WriteStatementError(ASC_PROG_ERR,stat,1,"Unable to locate simulation context for SOLVE");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		return;
+	}
+	target = GetSimulationRoot(sim);
+	if (SolveStatTarget(stat) != NULL) {
+		REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+		struct gl_list_t *instances = FindInstances(fm->i, SolveStatTarget(stat), &err);
+		const char *errstr = NULL;
+		if(instances==NULL){
+			errstr = "Unknown error";
+			fm->ErrNo = Proc_bad_name;
+		}
+		switch(rel_errorlist_get_find_error(&err)){
+			case unmade_instance: errstr = "unmade instance"; fm->ErrNo = Proc_instance_not_found; break;
+			case undefined_instance: errstr = "undefined instance"; fm->ErrNo = Proc_name_not_found; break;
+			case impossible_instance: errstr = "impossible instance"; fm->ErrNo = Proc_illegal_name_use; break;
+			case correct_instance: break;
+		}
+		if(errstr){
+			WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid SOLVE target (%s)",errstr);
+			fm->flow = FrameError;
+			if(instances != NULL){
+				gl_destroy(instances);
+			}
+			return;
+		}
+		if(gl_length(instances) != 1){
+			WriteStatementError(ASC_USER_ERROR,stat,1,"SOLVE target must resolve to exactly one instance");
+			gl_destroy(instances);
+			fm->ErrNo = Proc_bad_name;
+			fm->flow = FrameError;
+			return;
+		}
+		target = (struct Instance *)gl_fetch(instances,1);
+		gl_destroy(instances);
+		if(InstanceKind(target) != MODEL_INST){
+			WriteStatementError(ASC_USER_ERROR,stat,1,"SOLVE target must be a MODEL instance");
+			fm->ErrNo = Proc_illegal_type_use;
+			fm->flow = FrameError;
+			return;
+		}
+	}
+	res = slvreq_do_solve(target);
 	if(res){
 		switch(res){
 			case SLVREQ_NO_SOLVER_SELECTED: fm->ErrNo = Proc_slvreq_no_solver_selected; break;
 			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
 			case SLVREQ_SOLVE_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
+		}
+		ProcWriteSlvReqError(fm);
+		return;
+	}
+	fm->ErrNo = Proc_all_ok;
+}
+
+static void
+ExecuteInitDeleteSystem(struct procFrame *fm, struct Statement *stat){
+	int res;
+	(void)stat;
+	res = slvreq_delete_system(fm->i);
+	if(res){
+		switch(res){
+			case SLVREQ_DELETE_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
 			default: fm->ErrNo = Proc_slvreq_error; break;
 		}
 		ProcWriteSlvReqError(fm);
@@ -1701,6 +1765,9 @@ static void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat){
 	break;
   case SOLVE:
     ExecuteInitSolve(fm,stat);
+	break;
+  case DELETESYSTEM:
+	ExecuteInitDeleteSystem(fm,stat);
 	break;
   case FLOW:
     ExecuteInitFlow(fm);

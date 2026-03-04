@@ -1309,6 +1309,22 @@ METHOD values;
 	equilibrated := FALSE;
 END values;
 
+METHOD on_load;
+	RUN default_all;
+	RUN values;
+	equilibrated := FALSE;
+	RUN reset;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+END on_load;
+
+METHOD self_test;
+	ASSERT vap.flow > 1e-4 {mole/s};
+	ASSERT liq.flow > 1e-4 {mole/s};
+	ASSERT abs(feed.flow - vap.flow - liq.flow) < 1e-6 {mole/s};
+END self_test;
+
 END test_vapor_liquid_flash;
 
 MODEL test2_vapor_liquid_flash() REFINES testflashmodel();
@@ -1420,6 +1436,22 @@ METHOD values;
 	fl1.Qin := 0 {kW};
 	equilibrated := FALSE;
 END values;
+
+METHOD on_load;
+	RUN default_all;
+	RUN values;
+	equilibrated := FALSE;
+	RUN reset;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+END on_load;
+
+METHOD self_test;
+	ASSERT vap.flow > 1e-4 {mole/s};
+	ASSERT liq.flow > 1e-4 {mole/s};
+	ASSERT abs(feed.flow - vap.flow - liq.flow) < 1e-6 {mole/s};
+END self_test;
 
 END test2_vapor_liquid_flash;
 MODEL test5_vapor_liquid_flash() REFINES testflashmodel();
@@ -1539,6 +1571,22 @@ METHOD values;
 	fl1.Qin := 0 {kW};
 	equilibrated := FALSE;
 END values;
+
+METHOD on_load;
+	RUN default_all;
+	RUN values;
+	equilibrated := FALSE;
+	RUN reset;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+END on_load;
+
+METHOD self_test;
+	ASSERT vap.flow > 1e-4 {mole/s};
+	ASSERT liq.flow > 1e-4 {mole/s};
+	ASSERT abs(feed.flow - vap.flow - liq.flow) < 1e-6 {mole/s};
+END self_test;
 
 END test5_vapor_liquid_flash;
 MODEL test_vlflashes;
@@ -1673,6 +1721,22 @@ METHOD values;
 	fl1.P := 1{atm};
 	feed.f[cd.components] := 3{mole/s};
 END values;
+
+METHOD on_load;
+	RUN default_all;
+	RUN values;
+	equilibrated := FALSE;
+	RUN reset;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+END on_load;
+
+METHOD self_test;
+	ASSERT vap.flow > 1e-4 {mole/s};
+	ASSERT liq.flow > 1e-4 {mole/s};
+	ASSERT abs(feed.flow - vap.flow - liq.flow) < 1e-6 {mole/s};
+END self_test;
 
 END test_hard_vapor_liquid_flash;
 

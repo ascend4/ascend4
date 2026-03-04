@@ -1780,6 +1780,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		for button in list:
 			if self.builder.get_object(button) != None:
 			   self.builder.get_object(button).set_sensitive(True)
+	def disable_on_sim_delete(self):
+		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+				"show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1"]
+		for button in list:
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(False)
 	def disable_on_first_run(self):
 		list=["reloadbutton","reload","show_external_functions","notes_view"]
 		for button in list:
