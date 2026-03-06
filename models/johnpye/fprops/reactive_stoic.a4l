@@ -38,25 +38,31 @@ END reactive_state;
 
 MODEL reactive_stream(pkg WILL_BE reactive_package;);
 	components ALIASES pkg.components;
-	state IS_A reactive_state(pkg);
-
-	P ALIASES state.P;
-	T ALIASES state.T;
+	T IS_A temperature;
+	P IS_A pressure;
 
 	flow IS_A molar_rate;
+	y[components] IS_A fraction;
 	f[components] IS_A molar_rate;
 	H_flow IS_A energy_rate;
 
+	flow_eqn: flow = SUM[f[i] | i IN components];
 	FOR i IN components CREATE
-		f_eqn[i]: f[i] = state.y[i] * flow;
+		f_eqn[i]: f[i] = y[i] * flow;
 	END FOR;
-	H_eqn: H_flow = state.H * flow;
+	calc_H_flow: fprops_rxn_h_TPn(
+		T, P, f[components] : INPUT;
+		H_flow : OUTPUT;
+		pkg : DATA
+	);
 
 METHODS
 	METHOD default_self;
-		RUN state.default_self;
+		T := 298.15 {K};
+		P := 1 {bar};
 		flow := 1 {mol/s};
 		FOR i IN components DO
+			y[i] := 1 / CARD[components];
 			f[i] := flow / CARD[components];
 		END FOR;
 		H_flow := 0 {W};
@@ -72,11 +78,6 @@ MODEL stoic_reaction_set(
 METHODS
 	METHOD default_self;
 		FIX nu[components][reactions];
-		FOR k IN components DO
-			FOR r IN reactions DO
-				nu[k][r] := 0;
-			END FOR;
-		END FOR;
 	END default_self;
 END stoic_reaction_set;
 

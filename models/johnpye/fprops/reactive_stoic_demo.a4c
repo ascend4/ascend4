@@ -14,21 +14,26 @@ MODEL reactor_stoic_wgs_demo;
 	pkg.source :== 'Moran and Shapiro';
 
 	R IS_A reactor_stoic(pkg, reactions);
+	nu_table[reactions][components] IS_A real_constant;
+
+	TABLE nu_table[reactions,components];
+		    CO   H2O  CO2  H2
+		WGS -1   -1    1   1
+	END TABLE;
 
 METHODS
 	METHOD default_self;
 		RUN R.default_self;
-
 		FIX R.rxns.nu[components][reactions];
-		R.rxns.nu['CO']['WGS'] := -1;
-		R.rxns.nu['H2O']['WGS'] := -1;
-		R.rxns.nu['CO2']['WGS'] := 1;
-		R.rxns.nu['H2']['WGS'] := 1;
+		FOR i IN components DO
+			FOR r IN reactions DO
+				R.rxns.nu[i][r] := nu_table[r][i];
+			END FOR;
+		END FOR;
 
 		FIX R.inlet.T;
 		FIX R.inlet.P;
-		FIX R.inlet.flow;
-		FIX R.inlet.f[components - ['H2']];
+		FIX R.inlet.f[components];
 
 		FIX R.xi[reactions];
 		FIX R.Qdot;
@@ -36,15 +41,22 @@ METHODS
 
 		R.inlet.T := 900 {K};
 		R.inlet.P := 1 {bar};
-		R.inlet.flow := 1 {mol/s};
 		R.inlet.f['CO'] := 0.5 {mol/s};
 		R.inlet.f['H2O'] := 0.5 {mol/s};
 		R.inlet.f['CO2'] := 0 {mol/s};
+		R.inlet.f['H2'] := 0 {mol/s};
 
 		R.xi['WGS'] := 0.1 {mol/s};
 		R.Qdot := 0 {W};
 		R.DeltaP := 0 {Pa};
 	END default_self;
+
+	METHOD self_test;
+		ASSERT nu_table['WGS']['CO'] = -1;
+		ASSERT nu_table['WGS']['H2O'] = -1;
+		ASSERT nu_table['WGS']['CO2'] = 1;
+		ASSERT nu_table['WGS']['H2'] = 1;
+	END self_test;
 
 	METHOD on_load;
 		RUN default_self;
