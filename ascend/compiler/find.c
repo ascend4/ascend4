@@ -724,7 +724,18 @@ static struct gl_list_t *FindNextNameElement(CONST struct Name *n
   }else{
     //CONSOLE_DEBUG("name is a set");
     sptr = NameSetPtr(n);
-    setvalue = EvaluateSet(sptr,InstanceEvaluateName);
+    {
+      int saved_list_mode = ListMode;
+      /*
+       * In ordered-list contexts such as blackbox argument expansion we still
+       * need to be able to evaluate a named set atom (for example
+       * x[components]). Disable ListMode only for the set-expression
+       * evaluation itself, then reapply ordered expansion to the result below.
+       */
+      ListMode = 0;
+      setvalue = EvaluateSet(sptr,InstanceEvaluateName);
+      ListMode = saved_list_mode;
+    }
     switch(ValueKind(setvalue)){
     case integer_value:
     case symbol_value:

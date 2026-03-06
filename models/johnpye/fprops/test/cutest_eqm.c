@@ -8,6 +8,8 @@
 #include <math.h>
 #include <string.h>
 
+#define ARRAYLEN(a) ((int)(sizeof(a) / sizeof((a)[0])))
+
 typedef struct EqmFixture{
 	const char *source;
 	double T;
@@ -340,9 +342,182 @@ static void test_eqm_wgs_reduced(void){
 	static const char *elements[] = {"C", "O", "H"};
 	static const double b[] = {1.0, 2.0, 2.0};
 	static const double nu[] = {1.0, 1.0, -1.0, -1.0};
-	double n[4];
-	assert_reduced_solve_ok(names, 4, elements, 3, b, n);
-	assert_log10K_consistent(names, nu, 4, n);
+	double n[ARRAYLEN(names)];
+	assert_reduced_solve_ok(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, n);
+	assert_log10K_consistent(names, nu, ARRAYLEN(names), n);
+}
+
+static void test_fprops_eqm_tpb_wgs_ms_table(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const char *elements[] = {"C", "O", "H"};
+	static const double b[] = {1.0, 2.0, 2.0};
+	static const double nu[] = {1.0, 1.0, -1.0, -1.0};
+	static const struct{
+		double T;
+		double log10K;
+	} refs[] = {
+		{1000.0, -0.159},
+		{500.0, -2.139},
+		{298.0, -5.018}
+	};
+	size_t i;
+	for(i = 0; i < sizeof(refs) / sizeof(refs[0]); ++i){
+		double n[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+		double H_total = NAN;
+		double log10_eqm;
+		int status = fprops_eqm_tpb(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, "Moran and Shapiro",
+			refs[i].T, g_eqm.P, "reduced", NULL, n, &H_total);
+		CU_ASSERT_EQUAL_FATAL(status, 0);
+		log10_eqm = log10K_from_n(n, nu, ARRAYLEN(names));
+		CU_ASSERT_TRUE_FATAL(isfinite(log10_eqm));
+		CU_ASSERT_TRUE(fabs(log10_eqm - refs[i].log10K) <= 0.03);
+		CU_ASSERT_TRUE(isfinite(H_total));
+	}
+}
+
+static void test_fprops_eqm_tpy_wgs_normalization_and_match_tpb(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const char *elements[] = {"C", "O", "H"};
+	static const double y_norm[] = {0.5, 0.5, 0.0, 0.0};
+	static const double y_scaled[] = {1.0, 1.0, 0.0, 0.0};
+	static const double b_from_y[] = {0.5, 1.0, 1.0};
+	static const double nu[] = {1.0, 1.0, -1.0, -1.0};
+	double n_tpy_norm[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_tpy_scaled[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_tpb[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double log10_eqm;
+	int i;
+	int status_tpy_norm;
+	int status_tpy_scaled;
+	int status_tpb;
+
+	status_tpy_norm = fprops_eqm_tpy(names, ARRAYLEN(names), y_norm, "Moran and Shapiro",
+		g_eqm.T, g_eqm.P, "reduced", NULL, n_tpy_norm);
+	status_tpy_scaled = fprops_eqm_tpy(names, ARRAYLEN(names), y_scaled, "Moran and Shapiro",
+		g_eqm.T, g_eqm.P, "reduced", NULL, n_tpy_scaled);
+	status_tpb = fprops_eqm_tpb(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b_from_y, "Moran and Shapiro",
+		g_eqm.T, g_eqm.P, "reduced", NULL, n_tpb, NULL);
+
+	CU_ASSERT_EQUAL_FATAL(status_tpy_norm, 0);
+	CU_ASSERT_EQUAL_FATAL(status_tpy_scaled, 0);
+	CU_ASSERT_EQUAL_FATAL(status_tpb, 0);
+
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		CU_ASSERT_TRUE(fabs(n_tpy_norm[i] - n_tpb[i]) <= 1e-9);
+		CU_ASSERT_TRUE(fabs(n_tpy_scaled[i] - n_tpb[i]) <= 1e-9);
+	}
+
+	log10_eqm = log10K_from_n(n_tpy_norm, nu, ARRAYLEN(names));
+	CU_ASSERT_TRUE_FATAL(isfinite(log10_eqm));
+	CU_ASSERT_TRUE(fabs(log10_eqm - (-0.159)) <= 0.03);
+}
+
+static void test_fprops_mix_h_tpn_wgs_matches_tpb_and_scales(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const char *elements[] = {"C", "O", "H"};
+	static const double b[] = {1.0, 2.0, 2.0};
+	double n_eq[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double H_eq = NAN;
+	double H_mix = NAN;
+	double H_mix_scaled = NAN;
+	double n_scaled[ARRAYLEN(names)];
+	int i;
+	int status_eq;
+	int status_mix;
+	int status_mix_scaled;
+
+	status_eq = fprops_eqm_tpb(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, "Moran and Shapiro",
+		g_eqm.T, g_eqm.P, "reduced", NULL, n_eq, &H_eq);
+	CU_ASSERT_EQUAL_FATAL(status_eq, 0);
+	CU_ASSERT_TRUE_FATAL(isfinite(H_eq));
+
+	status_mix = fprops_mix_h_tpn(names, ARRAYLEN(names), n_eq, "Moran and Shapiro", g_eqm.T, g_eqm.P, &H_mix);
+	CU_ASSERT_EQUAL_FATAL(status_mix, 0);
+	CU_ASSERT_TRUE_FATAL(isfinite(H_mix));
+	CU_ASSERT_TRUE(fabs(H_mix - H_eq) <= 1e-6);
+
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		n_scaled[i] = 2.5 * n_eq[i];
+	}
+	status_mix_scaled = fprops_mix_h_tpn(names, ARRAYLEN(names), n_scaled, "Moran and Shapiro",
+		g_eqm.T, g_eqm.P, &H_mix_scaled);
+	CU_ASSERT_EQUAL_FATAL(status_mix_scaled, 0);
+	CU_ASSERT_TRUE_FATAL(isfinite(H_mix_scaled));
+	CU_ASSERT_TRUE(fabs(H_mix_scaled - 2.5 * H_mix) <= 1e-6);
+}
+
+static void test_fprops_mix_h_tpn_solution_phase_unsupported(void){
+	static const char *names[] = {"Wus_FeO", "Wus_FeO1p5"};
+	static const double n[] = {0.8, 0.2};
+	double H = NAN;
+	int status = fprops_mix_h_tpn(names, 2, n, "hidayat_2015", g_eqm.T, g_eqm.P, &H);
+	CU_ASSERT_EQUAL(status, -15);
+}
+
+static void test_fprops_rxn_package_mix_h_matches_legacy(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const double n[] = {0.3, 0.2, 0.1, 0.4};
+	FpropsRxnPackage *pkg = fprops_rxn_package_build(names, ARRAYLEN(names), "Moran and Shapiro");
+	FpropsRxnTPN state;
+	double H_pkg = NAN;
+	double H_legacy = NAN;
+	int status_pkg;
+	int status_legacy;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+	state.T = g_eqm.T;
+	state.P = g_eqm.P;
+	state.n = n;
+
+	status_pkg = fprops_rxn_mix_h(pkg, &state, &H_pkg);
+	status_legacy = fprops_mix_h_tpn(names, ARRAYLEN(names), n, "Moran and Shapiro", g_eqm.T, g_eqm.P, &H_legacy);
+
+	CU_ASSERT_EQUAL(status_pkg, 0);
+	CU_ASSERT_EQUAL(status_legacy, 0);
+	CU_ASSERT_TRUE_FATAL(isfinite(H_pkg));
+	CU_ASSERT_TRUE_FATAL(isfinite(H_legacy));
+	CU_ASSERT_TRUE(fabs(H_pkg - H_legacy) <= 1e-6);
+
+	fprops_rxn_package_free(pkg);
+}
+
+static void test_fprops_rxn_package_eqm_matches_legacy(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const char *elements[] = {"C", "O", "H"};
+	static const double b[] = {1.0, 2.0, 2.0};
+	FpropsRxnPackage *pkg = fprops_rxn_package_build(names, ARRAYLEN(names), "Moran and Shapiro");
+	FpropsRxnTPN state;
+	FpropsRxnResult out_pkg;
+	double n_pkg[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_legacy[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double H_legacy = NAN;
+	int status_pkg;
+	int status_legacy;
+	int i;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+	state.T = g_eqm.T;
+	state.P = g_eqm.P;
+	state.n = NULL;
+	out_pkg.status = -99;
+	out_pkg.H = NAN;
+	out_pkg.G = NAN;
+	out_pkg.n_out = n_pkg;
+
+	status_pkg = fprops_rxn_eqm_tpb(pkg, &state, b, "reduced", NULL, &out_pkg);
+	status_legacy = fprops_eqm_tpb(names, ARRAYLEN(names), elements, ARRAYLEN(elements),
+		b, "Moran and Shapiro", g_eqm.T, g_eqm.P, "reduced", NULL, n_legacy, &H_legacy);
+
+	CU_ASSERT_EQUAL(status_pkg, 0);
+	CU_ASSERT_EQUAL(status_legacy, 0);
+	CU_ASSERT_TRUE_FATAL(isfinite(out_pkg.H));
+	CU_ASSERT_TRUE_FATAL(isfinite(H_legacy));
+	CU_ASSERT_TRUE(fabs(out_pkg.H - H_legacy) <= 1e-6);
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		CU_ASSERT_TRUE(fabs(n_pkg[i] - n_legacy[i]) <= 1e-9);
+	}
+
+	fprops_rxn_package_free(pkg);
 }
 
 static void test_eqm_wgs_permutation_invariance(void){
@@ -354,16 +529,16 @@ static void test_eqm_wgs_permutation_invariance(void){
 	static const char *perm_elements[] = {"H", "C", "O"};
 	static const double perm_b[] = {2.0, 1.0, 2.0};
 
-	double n_base[4];
-	double n_perm[4];
+	double n_base[ARRAYLEN(base_names)];
+	double n_perm[ARRAYLEN(perm_names)];
 	double ndiff_max = 0.0;
 	int i;
 
-	assert_reduced_solve_ok(base_names, 4, base_elements, 3, base_b, n_base);
-	assert_reduced_solve_ok(perm_names, 4, perm_elements, 3, perm_b, n_perm);
+	assert_reduced_solve_ok(base_names, ARRAYLEN(base_names), base_elements, ARRAYLEN(base_elements), base_b, n_base);
+	assert_reduced_solve_ok(perm_names, ARRAYLEN(perm_names), perm_elements, ARRAYLEN(perm_elements), perm_b, n_perm);
 
-	for(i = 0; i < 4; ++i){
-		int j = find_name(perm_names, 4, base_names[i]);
+	for(i = 0; i < ARRAYLEN(base_names); ++i){
+		int j = find_name(perm_names, ARRAYLEN(perm_names), base_names[i]);
 		double d;
 		CU_ASSERT_TRUE_FATAL(j >= 0);
 		d = fabs(n_base[i] - n_perm[j]);
@@ -645,6 +820,29 @@ CU_ErrorCode test_register_eqm(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "wgs_reduced", test_eqm_wgs_reduced)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_eqm_tpb_wgs_ms_table", test_fprops_eqm_tpb_wgs_ms_table)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_eqm_tpy_wgs_normalization_and_match_tpb",
+			test_fprops_eqm_tpy_wgs_normalization_and_match_tpb)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_mix_h_tpn_wgs_matches_tpb_and_scales",
+			test_fprops_mix_h_tpn_wgs_matches_tpb_and_scales)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_mix_h_tpn_solution_phase_unsupported",
+			test_fprops_mix_h_tpn_solution_phase_unsupported)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_rxn_package_mix_h_matches_legacy",
+			test_fprops_rxn_package_mix_h_matches_legacy)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_matches_legacy",
+			test_fprops_rxn_package_eqm_matches_legacy)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "wgs_permutation_invariance", test_eqm_wgs_permutation_invariance)){

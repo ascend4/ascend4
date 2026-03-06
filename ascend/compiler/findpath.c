@@ -265,7 +265,16 @@ struct gl_list_t *FindNextNameElementPath(CONST struct Name *n,
     return result;
   }else{
     sptr = NameSetPtr(n);
-    setvalue = EvaluateSet(sptr,InstanceEvaluateName);
+    {
+      int saved_list_mode = ListMode;
+      /*
+       * Match FindNextNameElement: allow named set atoms to be evaluated even
+       * when the caller requires ordered list expansion.
+       */
+      ListMode = 0;
+      setvalue = EvaluateSet(sptr,InstanceEvaluateName);
+      ListMode = saved_list_mode;
+    }
     switch(ValueKind(setvalue)){
     case integer_value:
     case symbol_value:

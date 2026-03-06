@@ -43,6 +43,20 @@ const PureFluid *fprops_get_fluid(int i);
 int fprops_build_element_matrix_source(const char **names, int ns, const char **elements, int ne,
 		const char *source, double *A_out);
 
+/**
+	Collect the unique set of element symbols present in the provided species list.
+
+	The returned strings are heap-allocated and must be freed with
+	fprops_free_elements(...).
+*/
+int fprops_collect_elements_source(const char **names, int ns, const char *source,
+		char ***elements_out, int *ne_out);
+
+/**
+	Free an element-symbol array returned by fprops_collect_elements_source(...).
+*/
+void fprops_free_elements(char ***elements, int *ne);
+
 const ConstCpSpecies *fprops_constcp_species(const char *name, const char *source);
 
 /**

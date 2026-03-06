@@ -348,6 +348,223 @@ int fprops_build_element_matrix_source(const char **names, int ns, const char **
 	return 1;
 }
 
+static int fprops_add_unique_element(char ***elements, int *ne, int *cap, const char *sym){
+	int i;
+	char **tmp;
+	char *copy;
+	int newcap;
+
+	if(!elements || !ne || !cap || !sym || !sym[0]){
+		return 0;
+	}
+	for(i = 0; i < *ne; ++i){
+		if(0 == strcmp((*elements)[i], sym)){
+			return 1;
+		}
+	}
+	if(*ne >= *cap){
+		newcap = (*cap > 0) ? (2 * (*cap)) : 8;
+		tmp = (char **)realloc(*elements, (size_t)newcap * sizeof(char *));
+		if(!tmp){
+			return 0;
+		}
+		*elements = tmp;
+		*cap = newcap;
+	}
+	copy = strdup(sym);
+	if(!copy){
+		return 0;
+	}
+	(*elements)[*ne] = copy;
+	++(*ne);
+	return 1;
+}
+
+void fprops_free_elements(char ***elements, int *ne){
+	int i;
+	if(!elements || !*elements){
+		if(ne){
+			*ne = 0;
+		}
+		return;
+	}
+	for(i = 0; ne && i < *ne; ++i){
+		free((*elements)[i]);
+	}
+	free(*elements);
+	*elements = NULL;
+	if(ne){
+		*ne = 0;
+	}
+}
+
+int fprops_collect_elements_source(const char **names, int ns, const char *source,
+		char ***elements_out, int *ne_out){
+	char **elements = NULL;
+	int ne = 0;
+	int cap = 0;
+	int i;
+
+	if(!names || ns <= 0 || !elements_out || !ne_out){
+		return 0;
+	}
+
+	for(i = 0; i < ns; ++i){
+		char source_buf[512];
+		const char *source_i = fprops_resolve_species_source(source, names[i], source_buf,
+			(unsigned)sizeof(source_buf));
+		const GibbsSpecies *G = gibbs_species_lookup(names[i], source_i);
+		const BinarySolutionPhaseDef *phase = NULL;
+		unsigned member_index = 0;
+		if(!G){
+			G = gibbs_species_lookup(names[i], NULL);
+		}
+		if(G){
+			unsigned k2;
+			if(!G->elements || !G->stoich || G->nelem == 0){
+				ERRMSG("Missing Gibbs-species element composition for '%s'", names[i]);
+				fprops_free_elements(&elements, &ne);
+				return 0;
+			}
+			for(k2 = 0; k2 < G->nelem; ++k2){
+				if(!fprops_add_unique_element(&elements, &ne, &cap, G->elements[k2])){
+					fprops_free_elements(&elements, &ne);
+					return 0;
+				}
+			}
+			continue;
+		}
+		if(solution_phase_lookup_member(names[i], source_i, &phase, &member_index)
+				|| solution_phase_lookup_member(names[i], NULL, &phase, &member_index)){
+			unsigned k2;
+			const char **phase_elements = (member_index == 0) ? phase->elements_a : phase->elements_b;
+			unsigned phase_nelem = (member_index == 0) ? phase->nelem_a : phase->nelem_b;
+			if(!phase_elements || phase_nelem == 0){
+				ERRMSG("Missing solution-phase element composition for '%s'", names[i]);
+				fprops_free_elements(&elements, &ne);
+				return 0;
+			}
+			for(k2 = 0; k2 < phase_nelem; ++k2){
+				if(!fprops_add_unique_element(&elements, &ne, &cap, phase_elements[k2])){
+					fprops_free_elements(&elements, &ne);
+					return 0;
+				}
+			}
+			continue;
+		}
+		{
+			const FeSpinelPhaseDef *spinel = NULL;
+			if(spinel_phase_lookup_member(names[i], source_i, &spinel, &member_index)
+					|| spinel_phase_lookup_member(names[i], NULL, &spinel, &member_index)){
+				unsigned k2;
+				const char **phase_elements = spinel_phase_member_elements(spinel, member_index);
+				unsigned phase_nelem = spinel_phase_member_nelem(spinel, member_index);
+				if((phase_nelem > 0) && !phase_elements){
+					ERRMSG("Missing spinel-phase element composition for '%s'", names[i]);
+					fprops_free_elements(&elements, &ne);
+					return 0;
+				}
+				for(k2 = 0; k2 < phase_nelem; ++k2){
+					if(!fprops_add_unique_element(&elements, &ne, &cap, phase_elements[k2])){
+						fprops_free_elements(&elements, &ne);
+						return 0;
+					}
+				}
+				continue;
+			}
+		}
+		{
+			const EosData *E = fprops_eos(names[i], NULL, source_i);
+			int k;
+			if(!E){
+				E = fprops_eos(names[i], NULL, NULL);
+			}
+			if(!E){
+				const ConstCpSpecies *S = constcp_data_lookup(names[i], source_i);
+				const ShomateSpecies *Sh = NULL;
+				int k;
+				if(!S){
+					S = constcp_data_lookup(names[i], NULL);
+				}
+				if(!S){
+					Sh = shomate_data_lookup(names[i], source_i);
+				}
+				if(!Sh){
+					Sh = shomate_data_lookup(names[i], NULL);
+				}
+				if(!S && !Sh){
+					ERRMSG("Missing EOS/constcp data for '%s'", names[i]);
+					fprops_free_elements(&elements, &ne);
+					return 0;
+				}
+				if(S){
+					if(!S->elements || !S->stoich || S->nelem == 0){
+						ERRMSG("Missing element composition for '%s'", S->name);
+						fprops_free_elements(&elements, &ne);
+						return 0;
+					}
+					for(k = 0; k < (int)S->nelem; ++k){
+						if(!fprops_add_unique_element(&elements, &ne, &cap, S->elements[k])){
+							fprops_free_elements(&elements, &ne);
+							return 0;
+						}
+					}
+				}else{
+					if(!Sh->elements || !Sh->stoich || Sh->nelem == 0){
+						ERRMSG("Missing element composition for '%s'", Sh->name);
+						fprops_free_elements(&elements, &ne);
+						return 0;
+					}
+					for(k = 0; k < (int)Sh->nelem; ++k){
+						if(!fprops_add_unique_element(&elements, &ne, &cap, Sh->elements[k])){
+							fprops_free_elements(&elements, &ne);
+							return 0;
+						}
+					}
+				}
+				continue;
+			}
+			if(!E->elements || E->nelements <= 0){
+				const EosData *Erpp = fprops_eos(names[i], NULL, "RPP");
+				if(Erpp && Erpp->elements && Erpp->nelements > 0){
+					E = Erpp;
+				}
+			}
+			if(!E->elements || E->nelements <= 0){
+				const ConstCpSpecies *S = constcp_data_lookup(names[i], NULL);
+				int k;
+				if(S && S->elements && S->stoich && S->nelem > 0){
+					for(k = 0; k < (int)S->nelem; ++k){
+						if(!fprops_add_unique_element(&elements, &ne, &cap, S->elements[k])){
+							fprops_free_elements(&elements, &ne);
+							return 0;
+						}
+					}
+					continue;
+				}
+				ERRMSG("Missing element composition for '%s'", E->name);
+				fprops_free_elements(&elements, &ne);
+				return 0;
+			}
+			for(k = 0; k < E->nelements; ++k){
+				if(!fprops_add_unique_element(&elements, &ne, &cap, E->elements[k].symbol)){
+					fprops_free_elements(&elements, &ne);
+					return 0;
+				}
+			}
+		}
+	}
+
+	if(ne <= 0){
+		fprops_free_elements(&elements, &ne);
+		return 0;
+	}
+
+	*elements_out = elements;
+	*ne_out = ne;
+	return 1;
+}
+
 const ConstCpSpecies *fprops_constcp_species(const char *name, const char *source){
 	return constcp_data_lookup(name, source);
 }

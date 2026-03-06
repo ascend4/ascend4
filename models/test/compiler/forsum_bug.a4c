@@ -1,0 +1,155 @@
+REQUIRE "atoms.a4l";
+
+MODEL forsum_bug;
+	A IS_A set OF integer_constant;
+	A :== [1..2];
+	B IS_A set OF integer_constant;
+	B :== [1..2];
+
+	x[A] IS_A factor;
+	y[B] IS_A factor;
+
+	FOR i IN A CREATE
+		eq[i]: x[i] = SUM[y[j] | j IN B];
+	END FOR;
+END forsum_bug;
+
+MODEL forsum_param(
+	A WILL_BE set OF symbol_constant;
+	B WILL_BE set OF integer_constant;
+);
+	x[A] IS_A factor;
+	z[A] IS_A factor;
+	y[B] IS_A factor;
+
+	FOR i IN A CREATE
+		eq[i]: x[i] = z[i] + SUM[y[j] | j IN B];
+	END FOR;
+END forsum_param;
+
+MODEL forsum_bug_param;
+	A IS_A set OF symbol_constant;
+	A :== ['a','b'];
+	B IS_A set OF integer_constant;
+	B :== [1..2];
+
+	M IS_A forsum_param(A, B);
+END forsum_bug_param;
+
+MODEL forsum_stream(
+	A WILL_BE set OF symbol_constant;
+);
+	f[A] IS_A factor;
+END forsum_stream;
+
+MODEL forsum_reactor(
+	A WILL_BE set OF symbol_constant;
+	B WILL_BE set OF integer_constant;
+);
+	inlet IS_A forsum_stream(A);
+	outlet IS_A forsum_stream(A);
+	y[B] IS_A factor;
+
+	FOR i IN A CREATE
+		eq[i]: outlet.f[i] = inlet.f[i] + SUM[y[j] | j IN B];
+	END FOR;
+END forsum_reactor;
+
+MODEL forsum_bug_reactor;
+	A IS_A set OF symbol_constant;
+	A :== ['a','b'];
+	B IS_A set OF integer_constant;
+	B :== [1..2];
+
+	R IS_A forsum_reactor(A, B);
+END forsum_bug_reactor;
+
+MODEL forsum_reactor_units(
+	A WILL_BE set OF symbol_constant;
+	B WILL_BE set OF integer_constant;
+);
+	inlet[A] IS_A molar_rate;
+	outlet[A] IS_A molar_rate;
+	y[B] IS_A molar_rate;
+
+	FOR i IN A CREATE
+		eq[i]: outlet[i] = inlet[i] + SUM[y[j] | j IN B];
+	END FOR;
+END forsum_reactor_units;
+
+MODEL forsum_bug_units;
+	A IS_A set OF symbol_constant;
+	A :== ['a','b'];
+	B IS_A set OF integer_constant;
+	B :== [1..2];
+
+	R IS_A forsum_reactor_units(A, B);
+END forsum_bug_units;
+
+MODEL forsum_reactor_product(
+	A WILL_BE set OF symbol_constant;
+	B WILL_BE set OF integer_constant;
+);
+	inlet[A] IS_A factor;
+	outlet[A] IS_A factor;
+	nu[A][B] IS_A factor;
+	xi[B] IS_A factor;
+
+	FOR i IN A CREATE
+		eq[i]: outlet[i] = inlet[i] + SUM[nu[i][j] * xi[j] | j IN B];
+	END FOR;
+END forsum_reactor_product;
+
+MODEL forsum_bug_product;
+	A IS_A set OF symbol_constant;
+	A :== ['a','b'];
+	B IS_A set OF integer_constant;
+	B :== [1..2];
+
+	R IS_A forsum_reactor_product(A, B);
+END forsum_bug_product;
+
+MODEL forsum_reactor_child_product(
+	A WILL_BE set OF symbol_constant;
+	B WILL_BE set OF integer_constant;
+);
+	inlet IS_A forsum_stream(A);
+	outlet IS_A forsum_stream(A);
+	nu[A][B] IS_A factor;
+	xi[B] IS_A factor;
+
+	FOR i IN A CREATE
+		eq[i]: outlet.f[i] = inlet.f[i] + SUM[nu[i][j] * xi[j] | j IN B];
+	END FOR;
+END forsum_reactor_child_product;
+
+MODEL forsum_bug_child_product;
+	A IS_A set OF symbol_constant;
+	A :== ['a','b'];
+	B IS_A set OF integer_constant;
+	B :== [1..2];
+
+	R IS_A forsum_reactor_child_product(A, B);
+END forsum_bug_child_product;
+
+MODEL forsum_const_matrix(
+	A WILL_BE set OF symbol_constant;
+	B WILL_BE set OF symbol_constant;
+);
+	nu[A][B] IS_A real_constant;
+END forsum_const_matrix;
+
+MODEL forsum_bug_const_matrix;
+	A IS_A set OF symbol_constant;
+	A :== ['a','b'];
+	B IS_A set OF symbol_constant;
+	B :== ['r1','r2'];
+
+	S IS_A forsum_const_matrix(A, B);
+	x[A] IS_A factor;
+	xi[B] IS_A factor;
+
+	FOR i IN A CREATE
+		eq[i]: x[i] = SUM[S.nu[i][j] * xi[j] | j IN B];
+	END FOR;
+END forsum_bug_const_matrix;

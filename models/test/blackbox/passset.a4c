@@ -1,0 +1,4 @@
+REQUIRE "test/blackbox/passarray.a4c";
+
+MODEL passset REFINES pass24;
+END passset;

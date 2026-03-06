@@ -1153,6 +1153,325 @@ implementation step.
 - PFR discretizations
 - metastable constraints
 
+## 14.7 Proposed implementation checklist
+
+To regain momentum while still protecting the longer-term architecture,
+the next implementation steps should be:
+
+1. implement `reactor_stoic`
+2. extend `fprops_mix_h_tpn` only for the Fe-O-H species and phase
+   models needed by `reactor_stoic` and `reactor_equil`
+3. validate fast gas-phase equilibrium cases such as water-gas shift
+4. validate Fe-O-H equilibrium at fixed `T`, `P`
+5. implement `reactor_equil`
+6. only then revisit general multiphase inlet wrappers, reactive flash,
+   and nonideal liquid mixture enthalpy
+
+This sequence is deliberate:
+
+- `reactor_stoic` settles the package/stream interface, duty sign
+  conventions, and energy-balance basis without simultaneously
+  debugging Gibbs minimization
+- a narrowly targeted enthalpy capability is enough to support the
+  first reactor models
+- faster gas-only regression cases keep development cycles short while
+  Fe-O-H remains the main application driver
+- `reactor_equil` should be added only after the species basis and
+  energy basis are already proven in a simpler reactor
+
+### 14.7.1 Proposed first file/model surface
+
+The first implementation should be split into a small number of new A4
+artifacts with clear roles.
+
+Proposed A4 additions:
+
+- `reactive_package`:
+  compile-time package identity, stream component set, and opaque link
+  to the C-side runtime package
+- `reactive_state`:
+  state variables and property hooks on one canonical package species
+  basis
+- `reactive_stream`:
+  stream flow variables and a `state` part, analogous in role to the
+  existing `stream` family but without the old `equilibrated` switch
+- `stoic_reaction_set`:
+  reaction count, stoichiometric coefficients, and optional reaction
+  metadata such as reaction names and conversion bases
+- `reactor_stoic`:
+  inlet/outlet ports, pressure relation, heat duty, extent variables,
+  and energy balance
+
+The first practical split in the codebase should be:
+
+- one A4 file for package/stream/state definitions
+- one A4 file for stoichiometric reaction and reactor models
+- one A4 test/demo file for regression examples
+
+This keeps the package/stream design reusable by both
+`reactor_stoic` and `reactor_equil`.
+
+### 14.7.2 First `reactor_stoic` A4 contract
+
+The first version of `reactor_stoic` should be deliberately simple.
+
+Required parts:
+
+- `pkg WILL_BE reactive_package`
+- `inlet WILL_BE reactive_stream`
+- `outlet WILL_BE reactive_stream`
+- `rxns WILL_BE stoic_reaction_set`
+- `xi[rxns] IS_A molar_rate`
+- `Qdot IS_A power`
+- `DeltaP IS_A pressure`
+
+Required aliasing/consistency:
+
+- inlet and outlet must share the same `pkg`
+- inlet and outlet component sets should alias the package stream basis
+- stoichiometric coefficients must be defined on that same basis
+
+First balance set:
+
+- component balances:
+  `outlet.f[k] = inlet.f[k] + SUM(nu[k,r] * xi[r])`
+- pressure relation:
+  `outlet.P = inlet.P - DeltaP`
+- energy balance:
+  `SUM_in(Hdot) + Qdot = SUM_out(Hdot)`
+
+For the first version there should be no attempt to infer extents from
+conversion specifications automatically. Extents should be the primary
+variables; user-friendly conversion specifications can be layered on
+later.
+
+The first version should also be steady-state only. Dynamic holdup terms
+are a later extension.
+
+### 14.7.3 Required C blackbox/property work for `reactor_stoic`
+
+`reactor_stoic` does not need equilibrium closure, but it does require a
+reliable package-backed enthalpy/property path.
+
+Minimum required C-side capabilities:
+
+- runtime package construction and caching from A4 package constants
+- package-backed stream enthalpy:
+  `fprops_rxn_mix_h(pkg, state, &H)`
+- ASCEND blackbox wrapper that accepts:
+  - package handle/key
+  - `T`
+  - `P`
+  - species molar flow vector on package basis
+  and returns:
+  - total molar enthalpy flow or molar enthalpy, depending on chosen A4
+    convention
+
+The wrapper should not embed stoichiometric logic. Reaction extents and
+species balances belong in A4. The C side should only provide the
+property closure.
+
+This is important architecturally because it keeps `reactor_stoic`
+usable with:
+
+- fixed extents
+- conversion specs
+- externally computed extents
+- later kinetic source models
+
+without changing the property API.
+
+### 14.7.4 First delivery limitations for `reactor_stoic`
+
+The first delivery should explicitly exclude:
+
+- general flashed multiphase outlet states
+- nonideal liquid mixture enthalpy such as UNIFAC-based liquid mixtures
+- generic solution-phase enthalpy for wustite/spinel-rich mixed streams
+- automatic reaction parsing from chemistry strings
+
+The first successful target should instead be:
+
+- gas species
+- pure condensed species
+- one canonical package basis shared by stream and reaction data
+
+That is enough to support a serious first Fe-O-H reduction model and a
+water-gas-shift validation case.
+
+### 14.7.5 Recommended order of implementation tasks
+
+The first concrete work packages should be:
+
+1. add A4 package/state/stream skeletons with no reactor logic yet
+2. add A4 `stoic_reaction_set` and `reactor_stoic` skeletons with
+   species balances only
+3. bind package-backed enthalpy as an ASCEND blackbox and wire the
+   reactor energy balance
+4. add one minimal gas-phase regression model such as WGS
+5. add one Fe-O-H step-reaction regression model using pure solids and
+   gas species
+6. only after those pass, begin `reactor_equil`
+
+This sequence forces early settlement of:
+
+- package identity sharing across connected units
+- species-basis discipline
+- heat-duty sign convention
+
+### 14.7.6 ASCEND compiler and tooling issues observed
+
+During the first `reactor_stoic` prototype, a few ASCEND-side issues
+were encountered that should be treated as tooling/compiler bugs or at
+least as areas needing clearer diagnostics.
+
+Observed issues:
+
+- `ARE_THE_SAME` inside `FOR ... CREATE` produced an internal
+  `Pass2ExecuteForStatements` assertion failure when the aliased arrays
+  were unconformable, instead of reporting the actual user-level
+  conformability error. The same mismatch, expressed outside the `FOR`
+  loop, produced a normal diagnostic. This suggests a compiler error
+  handling bug in pass 2 around `ARE_THE_SAME` expansion within
+  generated statements.
+- method-time assignment to `symbol_constant` package fields such as
+  `source := ''` in `default_self` was rejected as assignment to a
+  constant instance. Declarative assignment using `:==` on the instance
+  declaration side works normally. It is not yet clear whether this is
+  intended language behaviour, an inconsistency in constant handling, or
+  simply a gap in documentation, but it is important because package
+  configuration naturally wants to live in model initialization methods.
+- declarative relations inside `FOR ... CREATE` that referenced
+  `real_constant` stoichiometric arrays such as `nu[k]` or
+  `nu[k][r]` caused an internal `Pass2ExecuteForStatements` assertion
+  failure. The underlying relation error is that these constants are
+  still unassigned at pass 2, so they cannot appear in compiled
+  relations yet; the real bug was the crash path rather than the
+  rejection itself. A minimal reproducer now lives in
+  `models/test/compiler/forsum_bug.a4c` (`forsum_bug_const_matrix`),
+  and the reported user-level error is:
+
+  `relation: Unassigned constants or wild dimensioned real constant in relation`
+
+  In other words, method-time assignment to `real_constant`
+  stoichiometric coefficients is too late for relation compilation.
+  Using fixed `solver_var` coefficients (for example `factor`) or
+  declarative `:==` assignment avoids the issue.
+
+Current workarounds:
+
+- avoid using `ARE_THE_SAME` inside `FOR ... CREATE` when whole-array
+  aliasing or simpler direct declarations can express the same intent
+- prefer declarative `:==` initialization for package constants such as
+  `species_name[...]` and `source`
+- use symbol-indexed blackbox vector passing directly now that
+  `y[components] : INPUT` support has been added in the compiler
+- represent stoichiometric coefficients as fixed `solver_var` arrays
+  rather than `real_constant` arrays when they must appear in generated
+  declarative relations
+- if truly constant stoichiometric coefficients are desired in future,
+  they must be assigned declaratively early enough to be available at
+  pass 2, or ASCEND’s relation compiler will need an explicit delayed
+  constant-resolution mechanism
+
+These should be revisited separately from the thermo/reactor design
+work, because they affect general ASCEND model ergonomics beyond this
+RFC.
+
+### 14.7.7 First regression and demo ladder
+
+The first tests should be split across three levels.
+
+Kernel/property tests:
+
+- package-backed enthalpy for small gas mixtures
+- package-backed enthalpy for pure condensed species used in Fe-O-H
+- package build and evaluation error handling
+
+A4 unit-model tests:
+
+- one-reaction WGS stoichiometric reactor, isothermal
+- one-reaction WGS stoichiometric reactor, adiabatic
+- Fe2O3 + H2 -> Fe3O4 + H2O step reactor
+- Fe3O4 + H2 -> FeO + H2O step reactor
+- FeO + H2 -> Fe + H2O step reactor
+
+Flowsheet/demo tests:
+
+- two stoichiometric reactors in series for staged reduction
+- optional heater plus stoichiometric reactor to test coupled energy
+  balance and temperature change
+
+This ladder is preferable to jumping directly to a full direct-reduction
+flowsheet, because each stage isolates one new layer of the design.
+
+## 14.8 Constraints to avoid painting the design into a corner
+
+The first implementation should be intentionally narrow, but it must
+respect a few rules so that later generalization remains straightforward.
+
+### 14.8.1 Keep one canonical species basis per package
+
+For any rigorous `reactive_package`, there should be one canonical
+species/endmember basis known to the runtime package and used
+consistently by:
+
+- `reactor_stoic`
+- `reactor_equil`
+- stream state property evaluation
+- later flash or separator models
+
+Different black-boxes may expose different convenience wrappers, but
+they should all reduce to this same internal basis.
+
+### 14.8.2 Do not make `fprops_eqm_tpy` responsible for general flash logic
+
+`fprops_eqm_tpy` should remain a convenience wrapper:
+
+- infer element totals from inlet species amounts
+- call the `TPb` equilibrium primitive on the supplied species basis
+
+It should not be burdened with automatic phase splitting, outlet
+routing, or general multiphase stream interpretation.
+
+If later users need true flash-style semantics, that should be a
+separate API and a separate unit-model closure.
+
+### 14.8.3 Keep simple enthalpy summation separate from flash/state objects
+
+`fprops_mix_h_tpn` should remain the simple primitive:
+
+`H = SUM[n_i * h_i(T,P)]`
+
+This is enough for:
+
+- gas mixtures
+- pure condensed species
+- explicit endmember lists used in Fe-O-H
+- stoichiometric and equilibrium reactors that already know the species
+  amounts
+
+Later multiphase or nonideal liquid enthalpy should be built as
+higher-level state/property APIs rather than by overloading this
+primitive with flash responsibilities.
+
+### 14.8.4 Treat nonideal liquids as a later package capability, not a hidden assumption
+
+UNIFAC and similar models are important, but they are not on the
+critical path for hydrogen reduction of iron oxides. Therefore the
+first reactor/property stack should not assume that all future packages
+behave like ideal or explicit-endmember systems.
+
+The package abstraction should leave room for later support of:
+
+- activity-coefficient liquid phases
+- cubic-EOS gas/liquid fugacity models
+- richer phase-state objects with explicit phase fractions and
+  compositions
+
+without requiring that those capabilities exist in the first delivered
+milestone.
+
 ## 15. Fe-O-H as the First Demonstrator
 
 The current Fe-O-H capability in `fprops` is a strong candidate for the
@@ -1173,6 +1492,15 @@ kernel bring-up because it is already relatively slow. Early testing of
 
 Those can give faster regression cycles while Fe-O-H remains a primary
 application driver.
+
+This suggests a validation ladder rather than a single heroic
+demonstrator:
+
+1. water-gas shift equilibrium against reference `K(T)` data
+2. Fe-O-H equilibrium at fixed `T`, `P`
+3. `reactor_stoic` with Fe-O-H step reactions and energy balance
+4. `reactor_equil` on the same package and stream basis
+5. only later, reactive flash or downstream phase-splitting models
 
 An initial Fe-O-H demonstrator package should probably expose the full
 internal basis on streams, with additional derived outputs such as:

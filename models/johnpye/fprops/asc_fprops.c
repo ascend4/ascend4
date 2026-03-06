@@ -17,8 +17,12 @@
 	Wrapper for FPROPS to allow access from ASCEND.
 */
 
+#include <stdlib.h>
+#include <string.h>
+
 /* include the external function API from libascend... */
 #include <ascend/compiler/extfunc.h>
+#include <ascend/compiler/extcall.h>
 
 /* include error reporting API as well, so we can send messages to user */
 #include <ascend/utilities/error.h>
@@ -36,6 +40,7 @@
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/instmacro.h>
 #include <ascend/compiler/instance_types.h>
+#include <ascend/compiler/arrayinst.h>
 
 /* the code that we're wrapping... */
 #include "fprops.h"
@@ -43,6 +48,7 @@
 #include "solve_ph.h"
 #include "thcond.h"
 #include "visc.h"
+#include "eqm.h"
 
 /* for the moment, species data are defined in C code, we'll implement something
 better later on, hopefully. */
@@ -89,6 +95,9 @@ ExtBBoxFunc fprops_cp_T_incomp_calc;
 ExtBBoxFunc fprops_phsx_vT_calc;
 ExtBBoxFunc fprops_Tvsx_ph_calc;
 ExtBBoxFunc fprops_Tvsx_h_incomp_calc;
+ExtBBoxInitFunc asc_fprops_rxn_prepare;
+ExtBBoxFinalFunc asc_fprops_rxn_final;
+ExtBBoxFunc fprops_rxn_h_TPn_calc;
 
 /* FIXME need incompressible fluid functions that depend only on T or h, to 
 	avoid unpivoted external relations...
@@ -134,6 +143,12 @@ static const char *fprops_phsx_vT_help = "Calculate p, h, s, x from specific vol
 
 static const char *fprops_Tvsx_ph_help = "Calculate T, v, s, x from pressure and enthalpy, using FPROPS";
 static const char *fprops_Tvsx_h_incomp_help = "Calculate T, v, s, x for incompressible fluid from enthalpy, using FPROPS";
+static const char *fprops_rxn_h_TPn_help = "Calculate package-based reactive mixture enthalpy from temperature, pressure and species molar vector, using FPROPS";
+
+typedef struct{
+	int ns;
+	FpropsRxnPackage *pkg;
+} AscFpropsRxnData;
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
 */
@@ -195,6 +210,16 @@ ASC_EXPORT int fprops_register(){
 	CALCFN(fprops_phsx_vT,2,4);
 	CALCFN(fprops_Tvsx_ph,2,4);
 	CALCFN(fprops_Tvsx_h_incomp,2,4);
+	result += CreateUserFunctionBlackBox("fprops_rxn_h_TPn"
+		, asc_fprops_rxn_prepare
+		, fprops_rxn_h_TPn_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_rxn_final
+		, 3,1
+		, fprops_rxn_h_TPn_help
+		, 0.0
+	);
 
 #undef CALCFN
 
@@ -275,6 +300,126 @@ void asc_fprops_final(struct BBoxInterp *bbox){
 		return;
 	}
 	fprops_fluid_destroy((PureFluid *)bbox->user_data);
+	bbox->user_data = NULL;
+}
+
+int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	struct Instance *srcinst, *components_inst;
+	const char *source = NULL;
+	const char **names = NULL;
+	AscFpropsRxnData *rxn = NULL;
+	unsigned long actual_inputs, actual_outputs, c, ns;
+	symchar *components_sym, *species_name_sym, *source_sym;
+
+	if(!bbox || !data || !arglist){
+		ERRMSG("Reactive FPROPS blackbox received invalid prepare arguments");
+		return 1;
+	}
+	if(gl_length(arglist) != 4){
+		ERRMSG("Reactive FPROPS blackbox expects 3 INPUT groups and 1 OUTPUT group");
+		return 1;
+	}
+	actual_inputs = CountNumberOfArgs(arglist,1,3);
+	actual_outputs = CountNumberOfArgs(arglist,4,4);
+	if(actual_inputs < 3){
+		ERRMSG("Reactive FPROPS blackbox requires T, P and a species flow vector");
+		return 1;
+	}
+	if(actual_outputs != 1){
+		ERRMSG("Reactive FPROPS blackbox requires exactly one output");
+		return 1;
+	}
+
+	components_sym = AddSymbol("components");
+	species_name_sym = AddSymbol("species_name");
+	source_sym = AddSymbol("source");
+	components_inst = ChildByChar(data, species_name_sym);
+	if(!components_inst){
+		components_inst = ChildByChar(data, components_sym);
+	}
+	if(!components_inst){
+		ERRMSG("Couldn't locate 'species_name' or 'components' in reactive package DATA");
+		return 1;
+	}
+	if(InstanceKind(components_inst) != ARRAY_INT_INST
+			&& InstanceKind(components_inst) != ARRAY_ENUM_INST){
+		ERRMSG("Reactive package species list must be an array of symbol_constant; use species_name[...] for thermo names");
+		return 1;
+	}
+	ns = NumberChildren(components_inst);
+	if(ns == 0){
+		ERRMSG("Reactive package DATA contains no components");
+		return 1;
+	}
+	if(actual_inputs != ns + 2){
+		ERRMSG("Reactive package input vector length mismatch: got %lu species inputs, expected %lu",
+			actual_inputs - 2, ns);
+		return 1;
+	}
+
+	names = (const char **)calloc((size_t)ns, sizeof(char *));
+	rxn = (AscFpropsRxnData *)calloc(1, sizeof(AscFpropsRxnData));
+	if(!names || !rxn){
+		ERRMSG("Unable to allocate reactive FPROPS blackbox workspace");
+		free(names);
+		free(rxn);
+		return 1;
+	}
+
+	for(c = 1; c <= ns; ++c){
+		struct Instance *child = InstanceChild(components_inst, c);
+		if(!child || InstanceKind(child) != SYMBOL_CONSTANT_INST){
+			ERRMSG("Reactive package species list must contain symbol_constant values");
+			free(names);
+			free(rxn);
+			return 1;
+		}
+		names[c - 1] = SCP(SYMC_INST(child)->value);
+		if(!names[c - 1] || strlen(names[c - 1]) == 0){
+			ERRMSG("Reactive package DATA contains an empty component name");
+			free(names);
+			free(rxn);
+			return 1;
+		}
+	}
+
+	srcinst = ChildByChar(data, source_sym);
+	if(srcinst){
+		if(InstanceKind(srcinst) != SYMBOL_CONSTANT_INST){
+			ERRMSG("DATA member 'source' must be a symbol_constant");
+			free(names);
+			free(rxn);
+			return 1;
+		}
+		source = SCP(SYMC_INST(srcinst)->value);
+		if(source && strlen(source) == 0)source = NULL;
+	}
+
+	rxn->pkg = fprops_rxn_package_build(names, (int)ns, source);
+	free(names);
+	if(!rxn->pkg){
+		ERRMSG("Failed to build reactive FPROPS package from DATA");
+		free(rxn);
+		return 1;
+	}
+	rxn->ns = (int)ns;
+	bbox->user_data = (void *)rxn;
+	return 0;
+}
+
+void asc_fprops_rxn_final(struct BBoxInterp *bbox){
+	AscFpropsRxnData *rxn;
+	if(!bbox || !bbox->user_data){
+		return;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(rxn->pkg){
+		fprops_rxn_package_free(rxn->pkg);
+	}
+	free(rxn);
 	bbox->user_data = NULL;
 }
 
@@ -870,4 +1015,45 @@ int fprops_Tvsx_h_incomp_calc(struct BBoxInterp *bbox,
 	}
 }
 
+int fprops_rxn_h_TPn_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsRxnData *rxn;
+	FpropsRxnTPN state;
+	double H = 0.0;
+	int status;
+	(void)jacobian;
 
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn->pkg){
+		ERRMSG("Reactive FPROPS blackbox has no prepared package");
+		return -6;
+	}
+	if(ninputs != rxn->ns + 2){
+		ERRMSG("Reactive FPROPS blackbox received %d inputs, expected %d", ninputs, rxn->ns + 2);
+		return -1;
+	}
+	if(noutputs != 1){
+		ERRMSG("Reactive FPROPS blackbox received %d outputs, expected 1", noutputs);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	state.T = inputs[0];
+	state.P = inputs[1];
+	state.n = &inputs[2];
+	status = fprops_rxn_mix_h(rxn->pkg, &state, &H);
+	if(status){
+		ERRMSG("Reactive FPROPS enthalpy evaluation failed with status %d", status);
+		return status;
+	}
+	outputs[0] = H;
+	return 0;
+}

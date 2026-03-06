@@ -125,7 +125,7 @@ static double log10K_from_n(const double *n, const double *nu, int ns, double P)
 }
 
 static void print_json_result(const EqmCase *C, double T, double P, const char *source,
-		const char *algorithm, int status, const double *n){
+		const char *algorithm, int status, const double *n, double H_total){
 	int i;
 	printf("{");
 	printf("\"case\":\"%s\"", C->name);
@@ -161,10 +161,16 @@ static void print_json_result(const EqmCase *C, double T, double P, const char *
 		}else{
 			printf(",\"log10K\":null");
 		}
+		if(isfinite(H_total)){
+			printf(",\"H_total\":%.17g", H_total);
+		}else{
+			printf(",\"H_total\":null");
+		}
 	}else{
 		printf(",\"n\":null");
 		printf(",\"y\":null");
 		printf(",\"log10K\":null");
+		printf(",\"H_total\":null");
 	}
 	printf("}\n");
 }
@@ -178,6 +184,7 @@ int main(int argc, char *argv[]){
 	double T;
 	double P;
 	double n[MAX_NS] = {0.0};
+	double H_total = NAN;
 	int status;
 	int i;
 
@@ -213,8 +220,8 @@ int main(int argc, char *argv[]){
 		elements[i] = C->elements[i];
 	}
 
-	status = eqm_solve_elements((const char **)names, C->ns, (const char **)elements, C->ne, C->b,
-		source, T, P, algorithm, NULL, n);
-	print_json_result(C, T, P, source, algorithm, status, n);
+	status = fprops_eqm_tpb((const char **)names, C->ns, (const char **)elements, C->ne, C->b,
+		source, T, P, algorithm, NULL, n, &H_total);
+	print_json_result(C, T, P, source, algorithm, status, n, H_total);
 	return 0;
 }

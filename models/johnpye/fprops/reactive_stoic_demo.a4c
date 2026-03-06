@@ -1,0 +1,55 @@
+REQUIRE "johnpye/fprops/reactive_stoic.a4l";
+
+MODEL reactor_stoic_wgs_demo;
+	components IS_A set OF symbol_constant;
+	components :== ['CO','H2O','CO2','H2'];
+	reactions IS_A set OF symbol_constant;
+	reactions :== ['WGS'];
+
+	pkg IS_A reactive_package(components);
+	pkg.species_name['CO'] :== 'carbonmonoxide';
+	pkg.species_name['H2O'] :== 'water';
+	pkg.species_name['CO2'] :== 'carbondioxide';
+	pkg.species_name['H2'] :== 'hydrogen';
+	pkg.source :== 'Moran and Shapiro';
+
+	R IS_A reactor_stoic(pkg, reactions);
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+
+		FIX R.rxns.nu[components][reactions];
+		R.rxns.nu['CO']['WGS'] := -1;
+		R.rxns.nu['H2O']['WGS'] := -1;
+		R.rxns.nu['CO2']['WGS'] := 1;
+		R.rxns.nu['H2']['WGS'] := 1;
+
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.flow;
+		FIX R.inlet.f[components - ['H2']];
+
+		FIX R.xi[reactions];
+		FIX R.Qdot;
+		FIX R.DeltaP;
+
+		R.inlet.T := 900 {K};
+		R.inlet.P := 1 {bar};
+		R.inlet.flow := 1 {mol/s};
+		R.inlet.f['CO'] := 0.5 {mol/s};
+		R.inlet.f['H2O'] := 0.5 {mol/s};
+		R.inlet.f['CO2'] := 0 {mol/s};
+
+		R.xi['WGS'] := 0.1 {mol/s};
+		R.Qdot := 0 {W};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD on_load;
+		RUN default_self;
+	END on_load;
+END reactor_stoic_wgs_demo;
+
+MODEL reactive_stoic_demo REFINES reactor_stoic_wgs_demo;
+END reactive_stoic_demo;
