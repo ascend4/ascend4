@@ -50,11 +50,11 @@ fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 #fprops_env['libfprops'] = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
 
 if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
-	asc_env = env.Clone()
+	asc_env = fprops_env.Clone()
 	asc_env.AppendUnique(LIBPATH=["."])
 	asc_env.AppendUnique(LIBPATH=["#"])
 	asc_env.AppendUnique(LIBS=["ascend"])
-	asc_coresrcs = [s for s in coresrcs if s not in ('eqm_ipopt.c', 'eqm_slsqp.c')]
+	asc_coresrcs = list(coresrcs)
 	asc_srcs = asc_coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 	asc_shobjs = [asc_env.SharedObject(s, OBJPREFIX='#/models/johnpye/fprops/asc-') for s in asc_srcs]
 

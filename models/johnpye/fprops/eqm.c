@@ -4313,8 +4313,118 @@ void fprops_rxn_package_free(FpropsRxnPackage *pkg){
 	free(pkg);
 }
 
+static int eqm_binary_solution_total_g(const EqmBinaryPhaseMeta *phase, const double *n,
+		double T, double P, double *g_out){
+	const BinarySolutionModel *M;
+	double n_a;
+	double n_b;
+	double n_tot;
+	double x;
+	double g_molar;
+	FpropsError err = FPROPS_NO_ERROR;
+
+	if(!phase || !n || !g_out || !phase->phase || !phase->phase->model){
+		return 0;
+	}
+	M = phase->phase->model;
+	n_a = n[phase->ia];
+	n_b = n[phase->ib];
+	n_tot = n_a + n_b;
+	if(!(n_tot >= 0.0) || !isfinite(n_tot)){
+		return 0;
+	}
+	if(n_tot == 0.0){
+		*g_out = 0.0;
+		return 1;
+	}
+	x = n_b / n_tot;
+	g_molar = solution_binary_g_molar(M, T, P, x, &err);
+	if(err || !isfinite(g_molar)){
+		return 0;
+	}
+	*g_out = n_tot * g_molar;
+	return isfinite(*g_out);
+}
+
+static int eqm_spinel_total_g(const EqmBinaryPhaseMeta *phase, const double *n,
+		double T, double P, double *g_out){
+	double n_members[5];
+	int j;
+
+	if(!phase || !n || !g_out || !phase->spinel){
+		return 0;
+	}
+	for(j = 0; j < 5; ++j){
+		int idx = phase->members[j];
+		if(idx < 0){
+			return 0;
+		}
+		n_members[j] = n[idx];
+		if(!(n_members[j] >= 0.0) || !isfinite(n_members[j])){
+			return 0;
+		}
+	}
+	return spinel_phase_eval(phase->spinel, n_members, T, P, g_out, NULL);
+}
+
+static int eqm_phase_total_h_fd(const EqmBinaryPhaseMeta *phase, const double *n,
+		double T, double P, double *h_out){
+	double dT;
+	double g0 = 0.0;
+	double gp = 0.0;
+	double gm = 0.0;
+	double dgdt;
+	int ok0 = 0;
+	int okp = 0;
+	int okm = 0;
+
+	if(!phase || !n || !h_out || !(T > 0.0) || !(P > 0.0)){
+		return 0;
+	}
+
+	dT = fmax(1e-3, 1e-5 * T);
+	if(T - dT <= 0.0){
+		dT = 0.5 * T;
+	}
+	if(!(dT > 0.0)){
+		return 0;
+	}
+
+	if(phase->kind == EQM_PHASE_BINARY_SOLUTION){
+		ok0 = eqm_binary_solution_total_g(phase, n, T, P, &g0);
+		okp = eqm_binary_solution_total_g(phase, n, T + dT, P, &gp);
+		if(T - dT > 0.0){
+			okm = eqm_binary_solution_total_g(phase, n, T - dT, P, &gm);
+		}
+	}else if(phase->kind == EQM_PHASE_FE_SPINEL){
+		ok0 = eqm_spinel_total_g(phase, n, T, P, &g0);
+		okp = eqm_spinel_total_g(phase, n, T + dT, P, &gp);
+		if(T - dT > 0.0){
+			okm = eqm_spinel_total_g(phase, n, T - dT, P, &gm);
+		}
+	}else{
+		return 0;
+	}
+
+	if(!ok0 || !okp){
+		return 0;
+	}
+	if(okm){
+		dgdt = (gp - gm) / (2.0 * dT);
+	}else{
+		dgdt = (gp - g0) / dT;
+	}
+	if(!isfinite(dgdt)){
+		return 0;
+	}
+	*h_out = g0 - T * dgdt;
+	return isfinite(*h_out);
+}
+
 int fprops_rxn_mix_h(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, double *H_out){
 	double H_total = 0.0;
+	double h_phase = 0.0;
+	int p;
 	int i;
 
 	if(!pkg || !state || !state->n || !H_out || pkg->ns <= 0 || !(state->T > 0.0) || !(state->P > 0.0)){
@@ -4323,18 +4433,27 @@ int fprops_rxn_mix_h(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, dou
 			pkg ? pkg->ns : -1, state ? state->T : NAN, state ? state->P : NAN);
 		return -11;
 	}
-	if(pkg->nbinary_phases > 0){
-		ERR("rxn mix h: solution/spinel phases not yet supported (nbinary=%d)", pkg->nbinary_phases);
-		return -15;
-	}
 	for(i = 0; i < pkg->ns; ++i){
-		double hi = 0.0;
 		if(!(state->n[i] >= 0.0) || !isfinite(state->n[i])){
 			ERR("rxn mix h: invalid amount n[%d]=%.17g for '%s'", i, state->n[i],
 				pkg->species && pkg->species[i].name ? pkg->species[i].name : "(null)");
 			return -13;
 		}
+	}
+	for(p = 0; p < pkg->nbinary_phases; ++p){
+		if(!eqm_phase_total_h_fd(&pkg->binary_phases[p], state->n, state->T, state->P, &h_phase)){
+			ERR("rxn mix h: solution/spinel enthalpy evaluation failed for phase %d at T=%.17g P=%.17g",
+				p, state->T, state->P);
+			return -15;
+		}
+		H_total += h_phase;
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		double hi = 0.0;
 		if(state->n[i] == 0.0){
+			continue;
+		}
+		if(pkg->solution_phase_id && pkg->solution_phase_id[i] >= 0){
 			continue;
 		}
 		if(!eqm_h_from_compiled(&pkg->species[i], state->T, state->P, &hi)){

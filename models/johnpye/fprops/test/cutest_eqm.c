@@ -454,6 +454,38 @@ static void test_fprops_mix_h_tpn_solution_phase_unsupported(void){
 	CU_ASSERT_EQUAL(status, -15);
 }
 
+static void test_fprops_rxn_package_mix_h_supports_wustite_phase(void){
+	static const char *names[] = {"Wus_FeO", "Wus_FeO1p5"};
+	static const double n[] = {0.89582806546875, 0.10417193453125};
+	double n_scaled[ARRAYLEN(names)];
+	FpropsRxnPackage *pkg = fprops_rxn_package_build(names, ARRAYLEN(names), "hidayat_2015");
+	FpropsRxnTPN state;
+	double H = NAN;
+	double H_scaled = NAN;
+	int i;
+	int status;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+
+	state.T = 1073.15;
+	state.P = g_eqm.P0;
+	state.n = n;
+	status = fprops_rxn_mix_h(pkg, &state, &H);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_TRUE_FATAL(isfinite(H));
+
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		n_scaled[i] = 3.0 * n[i];
+	}
+	state.n = n_scaled;
+	status = fprops_rxn_mix_h(pkg, &state, &H_scaled);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_TRUE_FATAL(isfinite(H_scaled));
+	CU_ASSERT_TRUE(fabs(H_scaled - 3.0 * H) <= 1e-4 * fmax(1.0, fabs(H)));
+
+	fprops_rxn_package_free(pkg);
+}
+
 static void test_fprops_rxn_package_mix_h_matches_legacy(void){
 	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
 	static const double n[] = {0.3, 0.2, 0.1, 0.4};
@@ -909,6 +941,10 @@ CU_ErrorCode test_register_eqm(void){
 	}
 	if(NULL == CU_add_test(s, "fprops_mix_h_tpn_solution_phase_unsupported",
 			test_fprops_mix_h_tpn_solution_phase_unsupported)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_rxn_package_mix_h_supports_wustite_phase",
+			test_fprops_rxn_package_mix_h_supports_wustite_phase)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "fprops_rxn_package_mix_h_matches_legacy",
