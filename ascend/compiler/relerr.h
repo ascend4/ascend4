@@ -82,6 +82,7 @@ struct rel_errorlist_struct{
 	enum logrelation_errorsx lrcode;
 	enum find_errors ferr;
 	unsigned long ferrpos;
+	char *instname;
 	union {
 		const struct Name *name; /* valid when...? for ferr==find_error */
 	} data;
@@ -125,6 +126,8 @@ int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr,
 
 int rel_errorlist_set_name(rel_errorlist *err, const struct Name *errname);
 
+int rel_errorlist_set_instname(rel_errorlist *err, const char *instname);
+
 enum find_errors rel_errorlist_get_find_error(rel_errorlist *err);
 int rel_errorlist_set_find_errpos(rel_errorlist *err,unsigned long errpos);
 //int rel_errorlist_get_lastcode(rel_errorlist *err);
@@ -139,4 +142,3 @@ int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat);
 
 
 #endif /* ASC_RELERR_H */
-

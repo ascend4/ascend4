@@ -1356,7 +1356,11 @@ Observed issues:
   In other words, method-time assignment to `real_constant`
   stoichiometric coefficients is too late for relation compilation.
   Using fixed `solver_var` coefficients (for example `factor`) or
-  declarative `:==` assignment avoids the issue.
+  declarative `:==` assignment avoids the issue. Declarative `TABLE`
+  assignment also works, because `TABLE` statements execute early enough
+  during instantiation to populate the constant matrix before pass-2
+  relation compilation. A minimal proof-of-concept model is
+  `tmp/table_const_matrix.a4c`.
 
 Current workarounds:
 
