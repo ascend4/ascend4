@@ -1,0 +1,73 @@
+REQUIRE "johnpye/fprops/reactive_stoic.a4l";
+
+(* Standard-state check case for:
+   Fe2O3(cr) + 3 H2(g) -> 2 Fe(cr) + 3 H2O(g)
+   At 298.15 K, NIST-JANAF values give Delta H° ~= +99.025 kJ/mol Fe2O3,
+   so at xi = 1 mol/s an isothermal reactor should require about +99.025 kW.
+*)
+
+MODEL reactor_stoic_fe2o3_demo;
+	components IS_A set OF symbol_constant;
+	reactions IS_A set OF symbol_constant;
+
+	pkg IS_A reactive_package(components);
+	pkg.species_name['Fe2O3'] :== 'Fe2O3';
+	pkg.species_name['hydrogen'] :== 'hydrogen';
+	pkg.species_name['Fe_bcc'] :== 'Fe_bcc';
+	pkg.species_name['water'] :== 'water';
+	pkg.source :== 'Fe2O3=hidayat_2015;Fe_bcc=hidayat_2015;*=Moran and Shapiro';
+
+	R IS_A reactor_stoic(pkg, reactions);
+
+	TABLE nu_table[reactions,components] IS_A real_constant;
+		        Fe2O3  hydrogen  Fe_bcc  water
+		HEM_RED    -1        -3       2      3
+	END TABLE;
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+		FIX R.rxns.nu[components][reactions];
+		FOR i IN components DO
+			FOR r IN reactions DO
+				R.rxns.nu[i][r] := nu_table[r][i];
+			END FOR;
+		END FOR;
+
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.f[components];
+		FIX R.outlet.T;
+
+		FIX R.xi[reactions];
+		FIX R.DeltaP;
+
+		R.inlet.T := 298.15 {K};
+		R.inlet.P := 1 {bar};
+		R.inlet.f['Fe2O3'] := 1 {mol/s};
+		R.inlet.f['hydrogen'] := 3 {mol/s};
+		R.inlet.f['Fe_bcc'] := 0 {mol/s};
+		R.inlet.f['water'] := 0 {mol/s};
+
+		R.outlet.T := 298.15 {K};
+
+		R.xi['HEM_RED'] := 1 {mol/s};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD self_test;
+		ASSERT abs(R.outlet.f['Fe2O3']) < 1e-8 {mol/s};
+		ASSERT abs(R.outlet.f['hydrogen']) < 1e-8 {mol/s};
+		ASSERT abs(R.outlet.f['Fe_bcc'] - 2 {mol/s}) < 1e-8 {mol/s};
+		ASSERT abs(R.outlet.f['water'] - 3 {mol/s}) < 1e-8 {mol/s};
+		ASSERT R.Qdot > 95 {kW};
+		ASSERT R.Qdot < 105 {kW};
+	END self_test;
+
+	METHOD on_load;
+		RUN default_self;
+	END on_load;
+END reactor_stoic_fe2o3_demo;
+
+MODEL reactive_stoic_fe2o3_demo REFINES reactor_stoic_fe2o3_demo;
+END reactive_stoic_fe2o3_demo;

@@ -1,0 +1,31 @@
+REQUIRE "johnpye/fprops/reactive_stoic.a4l";
+IMPORT "johnpye/fprops/fprops";
+PROVIDE "johnpye/fprops/reactive_equil.a4l";
+
+MODEL reactor_equil(
+	pkg WILL_BE reactive_package;
+);
+	components ALIASES pkg.components;
+
+	inlet IS_A reactive_stream(pkg);
+	outlet IS_A reactive_stream(pkg);
+
+	Qdot IS_A energy_rate;
+	DeltaP IS_A delta_pressure;
+
+	eqm_closure: fprops_rxn_eqm_TPn(
+		outlet.T, outlet.P, inlet.f[components] : INPUT;
+		outlet.f[components] : OUTPUT;
+		pkg : DATA
+	);
+	pbal: outlet.P = inlet.P - DeltaP;
+	ebal: outlet.H_flow = inlet.H_flow + Qdot;
+
+METHODS
+	METHOD default_self;
+		RUN inlet.default_self;
+		RUN outlet.default_self;
+		Qdot := 0 {W};
+		DeltaP := 0 {Pa};
+	END default_self;
+END reactor_equil;

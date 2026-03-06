@@ -136,6 +136,91 @@ the Hidayat/FactSage Fe-O assessment.
 
 This is the weakest remaining part of the present Tier 3 model.
 
+#### 3.4.1 Implemented reduced CEF equations (current code)
+
+In the current implementation, the spinel member set is:
+
+- tetrahedral: `Sp_Fe2_tet`, `Sp_Fe3_tet`
+- octahedral: `Sp_Fe2_oct`, `Sp_Fe3_oct`, `Sp_Va_oct`
+
+with \(A \equiv \mathrm{Fe^{2+}}\), \(E \equiv \mathrm{Fe^{3+}}\),
+\(V \equiv \mathrm{Va}\).
+
+For member amounts \(n_i\):
+
+$$
+n_t = n_{A,t} + n_{E,t}, \quad
+n_o = n_{A,o} + n_{E,o} + n_{V,o}, \quad
+n_{\phi} = n_t
+$$
+
+and site fractions
+
+$$
+y_{A,t} = \frac{n_{A,t}}{n_t}, \; y_{E,t} = \frac{n_{E,t}}{n_t}, \;
+y_{A,o} = \frac{n_{A,o}}{n_o}, \; y_{E,o} = \frac{n_{E,o}}{n_o}, \; y_{V,o} = \frac{n_{V,o}}{n_o}.
+$$
+
+The model uses
+
+$$
+G_{AE}(T)=G_{EA}(T)=g_{AE}(T),
+$$
+$$
+G_{EE}(T)=g_{AE}(T)+I_{AE}(T), \quad
+G_{AA}(T)=g_{AE}(T)-I_{AE}(T)+\Delta_{AE},
+$$
+$$
+G_{EV}(T)=\frac{5}{7}g_{AE}(T)+V_E(T), \quad
+G_{AV}(T)=\frac{5}{7}g_{AE}(T)+V_E(T)-I_{AE}(T)+\Delta_{AE}-\Delta_{EAV}.
+$$
+
+with
+
+$$
+g_{AE}(T)= -1140237 + 1015.067\,T - 0.008149197\,T^2 - 174.832\,T\ln T + \frac{1445276}{T},
+$$
+$$
+I_{AE}(T)= -31229 + 22.063\,T, \quad
+V_E(T)= 29932 + 28.547\,T, \quad
+\Delta_{AE}=15781, \quad
+\Delta_{EAV}=0.
+$$
+
+The molar CEF mixing part is
+
+$$
+\begin{aligned}
+G_{\mathrm{mix}} =\;&
+y_{A,t}y_{A,o}G_{AA}
++y_{A,t}y_{E,o}G_{AE}
++y_{A,t}y_{V,o}G_{AV} \\
+&+y_{E,t}y_{A,o}G_{EA}
++y_{E,t}y_{E,o}G_{EE}
++y_{E,t}y_{V,o}G_{EV},
+\end{aligned}
+$$
+
+and the configurational entropy term is
+
+$$
+S_{\mathrm{conf}} = -R\left[
+y_{A,t}\ln y_{A,t}+y_{E,t}\ln y_{E,t}
++2\left(y_{A,o}\ln y_{A,o}+y_{E,o}\ln y_{E,o}+y_{V,o}\ln y_{V,o}\right)
+\right].
+$$
+
+A Hillert-Jarl magnetic term \(G_{\mathrm{mag}}(T)\) is added
+(\(T_{ord}=848\), \(\beta=44.54\), \(p=0.28\)), giving
+
+$$
+G_{\phi} = n_{\phi}\left(G_{\mathrm{mix}} - T S_{\mathrm{conf}} + G_{\mathrm{mag}}\right).
+$$
+
+The member chemical potentials are obtained numerically from finite
+differences of \(G_{\phi}\) with respect to member amounts in the C
+implementation.
+
 ### 3.5 Hematite
 
 `Fe2O3` is still handled on a pragmatic condensed basis with a unary
@@ -155,6 +240,25 @@ This keeps:
 
 - element balances linear
 - the overall optimization framework intact
+
+For wustite endmembers \(A=\mathrm{FeO}\), \(B=\mathrm{FeO}_{1.5}\),
+the elemental potentials implied by \((\mu_A,\mu_B)\) are
+
+$$
+\lambda_O = 2(\mu_B-\mu_A), \qquad
+\lambda_{Fe} = 3\mu_A - 2\mu_B.
+$$
+
+These are used in the boundary diagnostics through grand-potential
+residuals. For the reduced spinel phase:
+
+$$
+\Phi_{\mathrm{sp}} = G_{\mathrm{sp}} - \lambda_{Fe}N_{Fe} - \lambda_ON_O,
+$$
+
+and coexistence is checked by minimizing \(\Phi_{\mathrm{sp}}\) over
+admissible spinel site states and testing whether the minimum is near
+zero.
 
 The engine now supports:
 

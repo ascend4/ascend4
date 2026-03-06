@@ -24,6 +24,14 @@
 #include "eqm_slsqp.h"
 #endif
 
+#ifdef EQM_DEBUG
+# define MSG FPROPS_MSG
+# define ERR FPROPS_ERRMSG
+#else
+# define MSG(ARGS...) ((void)0)
+# define ERR(ARGS...) ((void)0)
+#endif
+
 double gas_R(void){
 	return 8.31446261815324;
 }
@@ -41,6 +49,57 @@ typedef enum {
 	EQM_MODEL_HELMHOLTZ,
 	EQM_MODEL_PENGROB
 } EqmMuModel;
+
+typedef enum{
+	FPROPS_RXN_ENTRY_PURE = 0,
+	FPROPS_RXN_ENTRY_BINARY_SOLUTION_MEMBER,
+	FPROPS_RXN_ENTRY_SPINEL_MEMBER
+} FpropsRxnEntryKind;
+
+typedef enum{
+	FPROPS_RXN_COMPILED_NONE = 0,
+	FPROPS_RXN_COMPILED_CONSTCP,
+	FPROPS_RXN_COMPILED_SHOMATE,
+	FPROPS_RXN_COMPILED_GIBBS,
+	FPROPS_RXN_COMPILED_FLUID
+} FpropsRxnCompiledKind;
+
+typedef struct{
+	FpropsRxnCompiledKind mu_kind;
+	FpropsRxnCompiledKind h_kind;
+	EqmMuModel selector_model;
+	int use_ref0;
+	PureFluid *fluid;
+	const ConstCpSpecies *constcp;
+	const ShomateSpecies *shomate;
+	const GibbsSpecies *gibbs;
+} FpropsRxnThermoRef;
+
+typedef struct{
+	char *name;
+	char *source_resolved;
+	FpropsRxnEntryKind entry_kind;
+	int phase_id;
+	int member_index;
+	FpropsRxnThermoRef thermo;
+} FpropsRxnSpeciesCache;
+
+struct FpropsRxnPackage_struct{
+	int ns;
+	char **names;
+	char *source;
+	char **elements;
+	int ne;
+	double *A;
+	int *is_condensed;
+	int *solution_phase_id;
+	int *solution_member_index;
+	EqmBinaryPhaseMeta *binary_phases;
+	int nbinary_phases;
+	FpropsRxnSpeciesCache *species;
+};
+
+static const FpropsRxnPackage *eqm_current_package = NULL;
 
 static int eqm_active_trace_enabled(void){
 	static int enabled = -1;
@@ -62,6 +121,18 @@ static int eqm_mu0_model_source(const char *name, EqmMuModel model, const char *
 static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, int *use_ref0_out,
 		const char **source_out);
 int eqm_mu0_source(const char *name, const char *source, double T, double P0, double *mu0);
+static int eqm_h_constcp_source(const char *name, const char *source, double T, double P,
+		double *h);
+static int eqm_h_shomate_source(const char *name, const char *source, double T, double P,
+		double *h);
+static int eqm_h_fluid_model_source(const char *name, const char *corrtype, const char *source,
+		double T, double P, int use_ref0, double *h);
+static int eqm_h_model_source(const char *name, EqmMuModel model, const char *source, double T,
+		double P, int use_ref0, double *h);
+static int eqm_h_source(const char *name, const char *source, double T, double P, double *h);
+static PureFluid *eqm_prepare_fluid_for_mu0(const EosData *E, const char *corrtype, int use_ref0);
+static int eqm_fluid_state_from_pT(const PureFluid *F, double T, double P, FluidState2 *S_out);
+void fprops_rxn_package_free(FpropsRxnPackage *pkg);
 
 static int eqm_lookup_solution_member(const char *name, const char *source,
 		const BinarySolutionPhaseDef **phase_out, unsigned *member_index_out){
@@ -105,6 +176,312 @@ static int eqm_lookup_spinel_member(const char *name, const char *source,
 
 static int eqm_has_explicit_source(const char *source){
 	return (source && source[0]) ? 1 : 0;
+}
+
+static const FpropsRxnPackage *eqm_package_scope_push(const FpropsRxnPackage *pkg){
+	const FpropsRxnPackage *old = eqm_current_package;
+	eqm_current_package = pkg;
+	return old;
+}
+
+static void eqm_package_scope_pop(const FpropsRxnPackage *old){
+	eqm_current_package = old;
+}
+
+static int eqm_pkg_find_species(const FpropsRxnPackage *pkg, const char *name){
+	int i;
+	if(!pkg || !name){
+		return -1;
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		if(pkg->species[i].name && 0 == strcmp(pkg->species[i].name, name)){
+			return i;
+		}
+	}
+	return -1;
+}
+
+static int eqm_pkg_matches_basis_exact(const FpropsRxnPackage *pkg, const char **names, int ns){
+	int i;
+	if(!pkg || !names || ns != pkg->ns){
+		return 0;
+	}
+	for(i = 0; i < ns; ++i){
+		if(!names[i] || !pkg->species[i].name || 0 != strcmp(names[i], pkg->species[i].name)){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static char *eqm_strdup_local(const char *s){
+	size_t n;
+	char *out;
+	if(!s){
+		return NULL;
+	}
+	n = strlen(s);
+	out = (char *)malloc(n + 1);
+	if(!out){
+		return NULL;
+	}
+	memcpy(out, s, n + 1);
+	return out;
+}
+
+static PureFluid *eqm_prepare_fluid_cached(const char *name, const char *corrtype,
+		const char *source, int use_ref0){
+	const char *cands[3];
+	int ncands = 0;
+	int c;
+	int explicit_source;
+
+	if(!name || !corrtype){
+		return NULL;
+	}
+	explicit_source = eqm_has_explicit_source(source);
+	cands[ncands++] = source;
+	if(!explicit_source){
+		cands[ncands++] = NULL;
+	}
+	if(!explicit_source && strcmp(corrtype, "ideal") == 0){
+		cands[ncands++] = "RPP";
+	}
+	for(c = 0; c < ncands; ++c){
+		const EosData *E = fprops_eos(name, corrtype, cands[c]);
+		PureFluid *P = eqm_prepare_fluid_for_mu0(E, corrtype, use_ref0);
+		if(P){
+			return P;
+		}
+	}
+	return NULL;
+}
+
+static int eqm_species_compile_thermo(const char *name, const char *source_resolved,
+		EqmMuModel selector_model, int use_ref0, FpropsRxnThermoRef *thermo){
+	int allow_unsourced_fallback;
+	if(!name || !thermo){
+		ERR("eqm species compile thermo: invalid args name=%p thermo=%p", (void *)name, (void *)thermo);
+		return 0;
+	}
+	memset(thermo, 0, sizeof(*thermo));
+	thermo->selector_model = selector_model;
+	thermo->use_ref0 = use_ref0;
+	allow_unsourced_fallback = !eqm_has_explicit_source(source_resolved);
+
+	switch(selector_model){
+	case EQM_MODEL_AUTO:
+		thermo->fluid = eqm_prepare_fluid_cached(name, "ideal", source_resolved, 1);
+		if(thermo->fluid){
+			thermo->mu_kind = FPROPS_RXN_COMPILED_FLUID;
+			thermo->h_kind = FPROPS_RXN_COMPILED_FLUID;
+			return 1;
+		}
+		thermo->gibbs = gibbs_species_lookup(name, source_resolved);
+		if(!thermo->gibbs && allow_unsourced_fallback){
+			thermo->gibbs = gibbs_species_lookup(name, NULL);
+		}
+		if(thermo->gibbs){
+			thermo->mu_kind = FPROPS_RXN_COMPILED_GIBBS;
+		}
+		thermo->shomate = shomate_species_lookup(name, source_resolved);
+		if(!thermo->shomate && allow_unsourced_fallback){
+			thermo->shomate = shomate_species_lookup(name, NULL);
+		}
+		if(thermo->shomate){
+			if(thermo->mu_kind == FPROPS_RXN_COMPILED_NONE){
+				thermo->mu_kind = FPROPS_RXN_COMPILED_SHOMATE;
+			}
+			thermo->h_kind = FPROPS_RXN_COMPILED_SHOMATE;
+			return thermo->mu_kind != FPROPS_RXN_COMPILED_NONE;
+		}
+		thermo->constcp = constcp_species_lookup(name, source_resolved);
+		if(!thermo->constcp && allow_unsourced_fallback){
+			thermo->constcp = constcp_species_lookup(name, NULL);
+		}
+		if(thermo->constcp){
+			if(thermo->mu_kind == FPROPS_RXN_COMPILED_NONE){
+				thermo->mu_kind = FPROPS_RXN_COMPILED_CONSTCP;
+			}
+			thermo->h_kind = FPROPS_RXN_COMPILED_CONSTCP;
+		}
+		if(thermo->mu_kind == FPROPS_RXN_COMPILED_GIBBS
+				&& thermo->h_kind == FPROPS_RXN_COMPILED_NONE){
+			thermo->h_kind = FPROPS_RXN_COMPILED_GIBBS;
+		}
+		return thermo->mu_kind != FPROPS_RXN_COMPILED_NONE;
+	case EQM_MODEL_IDEAL:
+		thermo->fluid = eqm_prepare_fluid_cached(name, "ideal", source_resolved, 1);
+		if(!thermo->fluid){
+			ERR("eqm species compile thermo: no ideal fluid handle for '%s' (source='%s')",
+				name, source_resolved ? source_resolved : "");
+			return 0;
+		}
+		thermo->mu_kind = FPROPS_RXN_COMPILED_FLUID;
+		thermo->h_kind = FPROPS_RXN_COMPILED_FLUID;
+		return 1;
+	case EQM_MODEL_CONSTCP:
+		thermo->constcp = constcp_species_lookup(name, source_resolved);
+		if(!thermo->constcp){
+			thermo->constcp = constcp_species_lookup(name, NULL);
+		}
+		if(!thermo->constcp){
+			ERR("eqm species compile thermo: no constcp species for '%s' (source='%s')",
+				name, source_resolved ? source_resolved : "");
+			return 0;
+		}
+		thermo->mu_kind = FPROPS_RXN_COMPILED_CONSTCP;
+		thermo->h_kind = FPROPS_RXN_COMPILED_CONSTCP;
+		return 1;
+	case EQM_MODEL_SHOMATE:
+		thermo->shomate = shomate_species_lookup(name, source_resolved);
+		if(!thermo->shomate){
+			thermo->shomate = shomate_species_lookup(name, NULL);
+		}
+		if(!thermo->shomate){
+			ERR("eqm species compile thermo: no shomate species for '%s' (source='%s')",
+				name, source_resolved ? source_resolved : "");
+			return 0;
+		}
+		thermo->mu_kind = FPROPS_RXN_COMPILED_SHOMATE;
+		thermo->h_kind = FPROPS_RXN_COMPILED_SHOMATE;
+		return 1;
+	case EQM_MODEL_HELMHOLTZ:
+		thermo->fluid = eqm_prepare_fluid_cached(name, "helmholtz", source_resolved, use_ref0);
+		if(!thermo->fluid){
+			ERR("eqm species compile thermo: no helmholtz fluid handle for '%s' (source='%s')",
+				name, source_resolved ? source_resolved : "");
+			return 0;
+		}
+		thermo->mu_kind = FPROPS_RXN_COMPILED_FLUID;
+		thermo->h_kind = FPROPS_RXN_COMPILED_FLUID;
+		return 1;
+	case EQM_MODEL_PENGROB:
+		thermo->fluid = eqm_prepare_fluid_cached(name, "pengrob", source_resolved, use_ref0);
+		if(!thermo->fluid){
+			ERR("eqm species compile thermo: no pengrob fluid handle for '%s' (source='%s')",
+				name, source_resolved ? source_resolved : "");
+			return 0;
+		}
+		thermo->mu_kind = FPROPS_RXN_COMPILED_FLUID;
+		thermo->h_kind = FPROPS_RXN_COMPILED_FLUID;
+		return 1;
+	}
+	ERR("eqm species compile thermo: no compiled thermo path for '%s' (model=%d, source='%s')",
+		name, (int)selector_model, source_resolved ? source_resolved : "");
+	return 0;
+}
+
+static void eqm_species_free_thermo(FpropsRxnThermoRef *thermo){
+	if(!thermo){
+		return;
+	}
+	if(thermo->fluid){
+		fprops_fluid_destroy(thermo->fluid);
+	}
+	memset(thermo, 0, sizeof(*thermo));
+}
+
+static int eqm_mu0_from_compiled(const FpropsRxnSpeciesCache *spec, double T, double P0, double *mu0){
+	FpropsError err = FPROPS_NO_ERROR;
+	if(!spec || !mu0 || !(T > 0.0) || !(P0 > 0.0)){
+		return 0;
+	}
+	switch(spec->thermo.mu_kind){
+	case FPROPS_RXN_COMPILED_GIBBS:
+		if(!spec->thermo.gibbs){
+			return 0;
+		}
+		return gibbs_species_g_molar(spec->thermo.gibbs, T, 1e5, mu0);
+	case FPROPS_RXN_COMPILED_SHOMATE:
+		if(!spec->thermo.shomate){
+			return 0;
+		}
+		*mu0 = shomate_species_g_molar(spec->thermo.shomate, T, P0, &err);
+		return (!err && isfinite(*mu0)) ? 1 : 0;
+	case FPROPS_RXN_COMPILED_CONSTCP:
+		if(!spec->thermo.constcp){
+			return 0;
+		}
+		*mu0 = constcp_species_g_molar(spec->thermo.constcp, T, P0, NULL, &err);
+		return (!err && isfinite(*mu0)) ? 1 : 0;
+	case FPROPS_RXN_COMPILED_FLUID:
+		if(spec->thermo.fluid && spec->thermo.fluid->g_fn && spec->thermo.fluid->data){
+			FluidState2 S;
+			double g_mass;
+			double molar_mass = spec->thermo.fluid->data->M * 1e-3;
+			if(!(molar_mass > 0.0) || !eqm_fluid_state_from_pT(spec->thermo.fluid, T, P0, &S)){
+				return 0;
+			}
+			err = FPROPS_NO_ERROR;
+			g_mass = fprops_g(S, &err);
+			if(err || !isfinite(g_mass)){
+				return 0;
+			}
+			*mu0 = g_mass * molar_mass;
+			return 1;
+		}
+		return 0;
+	case FPROPS_RXN_COMPILED_NONE:
+	default:
+		return 0;
+	}
+}
+
+static int eqm_h_from_compiled(const FpropsRxnSpeciesCache *spec, double T, double P, double *h){
+	FpropsError err = FPROPS_NO_ERROR;
+	if(!spec || !h || !(T > 0.0) || !(P > 0.0)){
+		return 0;
+	}
+	switch(spec->thermo.h_kind){
+	case FPROPS_RXN_COMPILED_GIBBS:
+		if(!spec->thermo.gibbs){
+			return 0;
+		}
+		return gibbs_species_h_molar(spec->thermo.gibbs, T, 1e5, h);
+	case FPROPS_RXN_COMPILED_SHOMATE:
+		if(!spec->thermo.shomate){
+			return 0;
+		}
+		*h = shomate_species_h_molar(spec->thermo.shomate, T, &err);
+		return (!err && isfinite(*h)) ? 1 : 0;
+	case FPROPS_RXN_COMPILED_CONSTCP:
+		if(spec->thermo.constcp){
+			const ConstCpData *phase = constcp_species_select_phase(spec->thermo.constcp, T, P, &err);
+			double h_mass;
+			if(err || !phase || !(spec->thermo.constcp->M > 0.0)){
+				return 0;
+			}
+			err = FPROPS_NO_ERROR;
+			h_mass = constcp_h(T, phase, &err);
+			if(err || !isfinite(h_mass)){
+				return 0;
+			}
+			*h = h_mass * (spec->thermo.constcp->M * 1e-3);
+			return 1;
+		}
+			return 0;
+	case FPROPS_RXN_COMPILED_FLUID:
+		if(spec->thermo.fluid && spec->thermo.fluid->data){
+			FluidState2 S;
+			double h_mass;
+			double molar_mass = spec->thermo.fluid->data->M * 1e-3;
+			if(!(molar_mass > 0.0) || !eqm_fluid_state_from_pT(spec->thermo.fluid, T, P, &S)){
+				return 0;
+			}
+			err = FPROPS_NO_ERROR;
+			h_mass = fprops_h(S, &err);
+			if(err || !isfinite(h_mass)){
+				return 0;
+			}
+			*h = h_mass * molar_mass;
+			return 1;
+		}
+		return 0;
+	case FPROPS_RXN_COMPILED_NONE:
+	default:
+		return 0;
+	}
 }
 
 void eqm_apply_bscale(EqmData *D){
@@ -160,6 +537,27 @@ void eqm_apply_nscale(EqmData *D, const double *n_init){
 
 int eqm_compute_mu0(const char **names, int ns, const char *source, double T, double P0, double *mu0){
 	int i;
+	if(eqm_current_package){
+		for(i = 0; i < ns; ++i){
+			int idx = eqm_pkg_find_species(eqm_current_package, names[i]);
+			if(idx >= 0){
+				if(eqm_current_package->species[idx].entry_kind != FPROPS_RXN_ENTRY_PURE){
+					mu0[i] = 0.0;
+					continue;
+				}
+				if(eqm_mu0_from_compiled(&eqm_current_package->species[idx], T, P0, &mu0[i])){
+					continue;
+				}
+			}
+			break;
+		}
+		if(i == ns){
+			MSG("eqm compute mu0: using cached package thermo for %d species", ns);
+			return 1;
+		}
+		MSG("eqm compute mu0: package cache miss at species %d ('%s'), falling back",
+			i, (i >= 0 && i < ns && names && names[i]) ? names[i] : "(null)");
+	}
 	for(i = 0; i < ns; ++i){
 		const BinarySolutionPhaseDef *phase = NULL;
 		const FeSpinelPhaseDef *spinel = NULL;
@@ -177,7 +575,8 @@ int eqm_compute_mu0(const char **names, int ns, const char *source, double T, do
 			continue;
 		}
 		if(!eqm_mu0_source(names[i], source, T, P0, &mu0[i])){
-			fprintf(stderr, "eqm mu0 failed: no thermo data for '%s'\n", names[i]);
+			ERR("eqm compute mu0 failed: no thermo data for '%s' (source='%s', T=%.17g, P0=%.17g)",
+				names[i], source ? source : "", T, P0);
 			return 0;
 		}
 	}
@@ -187,7 +586,24 @@ int eqm_compute_mu0(const char **names, int ns, const char *source, double T, do
 int eqm_compute_is_condensed(const char **names, int ns, const char *source, int *is_condensed){
 	int i;
 	if(!names || !is_condensed || ns <= 0){
+		ERR("eqm compute is_condensed: invalid args names=%p is_condensed=%p ns=%d",
+			(void *)names, (void *)is_condensed, ns);
 		return 0;
+	}
+	if(eqm_current_package){
+		for(i = 0; i < ns; ++i){
+			int idx = eqm_pkg_find_species(eqm_current_package, names[i]);
+			if(idx < 0){
+				break;
+			}
+			is_condensed[i] = eqm_current_package->is_condensed[idx];
+		}
+		if(i == ns){
+			MSG("eqm compute is_condensed: using cached package classification for %d species", ns);
+			return 1;
+		}
+		MSG("eqm compute is_condensed: package cache miss at species %d ('%s'), falling back",
+			i, (i >= 0 && i < ns && names && names[i]) ? names[i] : "(null)");
 	}
 	for(i = 0; i < ns; ++i){
 		const BinarySolutionPhaseDef *phase = NULL;
@@ -202,6 +618,7 @@ int eqm_compute_is_condensed(const char **names, int ns, const char *source, int
 		int use_ref0 = 0;
 		const char *source_i;
 		if(!names[i]){
+			ERR("eqm compute is_condensed: null species name at index %d", i);
 			return 0;
 		}
 		if(eqm_lookup_solution_member(names[i], source, &phase, &member_index)){
@@ -256,13 +673,50 @@ int eqm_compute_solution_phases(const char **names, int ns, const char *source,
 
 	if(!names || ns <= 0 || !solution_phase_id_out || !solution_member_index_out
 			|| !binary_phases_out || !nbinary_phases_out){
+		ERR("eqm compute solution phases: invalid args names=%p ns=%d", (void *)names, ns);
 		return 0;
+	}
+	if(eqm_current_package && eqm_pkg_matches_basis_exact(eqm_current_package, names, ns)){
+		solution_phase_id = (int *)calloc((size_t)ns, sizeof(int));
+		solution_member_index = (int *)calloc((size_t)ns, sizeof(int));
+		if(!solution_phase_id || !solution_member_index){
+			ERR("eqm compute solution phases: allocation failed for cached copy ns=%d", ns);
+			free(solution_phase_id);
+			free(solution_member_index);
+			return 0;
+		}
+		memcpy(solution_phase_id, eqm_current_package->solution_phase_id, sizeof(int) * (size_t)ns);
+		memcpy(solution_member_index, eqm_current_package->solution_member_index, sizeof(int) * (size_t)ns);
+		if(eqm_current_package->nbinary_phases > 0){
+			binary_phases = (EqmBinaryPhaseMeta *)calloc((size_t)eqm_current_package->nbinary_phases,
+				sizeof(EqmBinaryPhaseMeta));
+			if(!binary_phases){
+				ERR("eqm compute solution phases: allocation failed for %d cached phases",
+					eqm_current_package->nbinary_phases);
+				free(solution_phase_id);
+				free(solution_member_index);
+				return 0;
+			}
+			memcpy(binary_phases, eqm_current_package->binary_phases,
+				sizeof(EqmBinaryPhaseMeta) * (size_t)eqm_current_package->nbinary_phases);
+		}
+		*solution_phase_id_out = solution_phase_id;
+		*solution_member_index_out = solution_member_index;
+		*binary_phases_out = binary_phases;
+		*nbinary_phases_out = eqm_current_package->nbinary_phases;
+		MSG("eqm compute solution phases: using cached package phase map (%d phases)",
+			eqm_current_package->nbinary_phases);
+		return 1;
+	}
+	if(eqm_current_package){
+		MSG("eqm compute solution phases: package basis mismatch, rebuilding phase map");
 	}
 
 	solution_phase_id = (int *)calloc((size_t)ns, sizeof(int));
 	solution_member_index = (int *)calloc((size_t)ns, sizeof(int));
 	binary_phases = (EqmBinaryPhaseMeta *)calloc((size_t)ns, sizeof(EqmBinaryPhaseMeta));
 	if(!solution_phase_id || !solution_member_index || !binary_phases){
+		ERR("eqm compute solution phases: allocation failed ns=%d", ns);
 		free(solution_phase_id);
 		free(solution_member_index);
 		free(binary_phases);
@@ -298,6 +752,8 @@ int eqm_compute_solution_phases(const char **names, int ns, const char *source,
 			}
 			if(member_index == 0){
 				if(binary_phases[p].ia >= 0){
+					ERR("eqm compute solution phases: duplicate binary solution member A for '%s'",
+						names[i]);
 					free(solution_phase_id);
 					free(solution_member_index);
 					free(binary_phases);
@@ -306,6 +762,8 @@ int eqm_compute_solution_phases(const char **names, int ns, const char *source,
 				binary_phases[p].ia = i;
 			}else if(member_index == 1){
 				if(binary_phases[p].ib >= 0){
+					ERR("eqm compute solution phases: duplicate binary solution member B for '%s'",
+						names[i]);
 					free(solution_phase_id);
 					free(solution_member_index);
 					free(binary_phases);
@@ -313,6 +771,8 @@ int eqm_compute_solution_phases(const char **names, int ns, const char *source,
 				}
 				binary_phases[p].ib = i;
 			}else{
+				ERR("eqm compute solution phases: invalid binary member index %u for '%s'",
+					member_index, names[i]);
 				free(solution_phase_id);
 				free(solution_member_index);
 				free(binary_phases);
@@ -343,12 +803,16 @@ int eqm_compute_solution_phases(const char **names, int ns, const char *source,
 			++nbinary_phases;
 		}
 		if(member_index >= 5){
+			ERR("eqm compute solution phases: invalid spinel member index %u for '%s'",
+				member_index, names[i]);
 			free(solution_phase_id);
 			free(solution_member_index);
 			free(binary_phases);
 			return 0;
 		}
 		if(binary_phases[p].members[member_index] >= 0){
+			ERR("eqm compute solution phases: duplicate spinel member %u for '%s'",
+				member_index, names[i]);
 			free(solution_phase_id);
 			free(solution_member_index);
 			free(binary_phases);
@@ -362,6 +826,7 @@ int eqm_compute_solution_phases(const char **names, int ns, const char *source,
 	for(i = 0; i < nbinary_phases; ++i){
 		if(binary_phases[i].kind == EQM_PHASE_BINARY_SOLUTION){
 			if(binary_phases[i].ia < 0 || binary_phases[i].ib < 0){
+				ERR("eqm compute solution phases: incomplete binary solution phase at %d", i);
 				free(solution_phase_id);
 				free(solution_member_index);
 				free(binary_phases);
@@ -370,6 +835,7 @@ int eqm_compute_solution_phases(const char **names, int ns, const char *source,
 		}else if(binary_phases[i].kind == EQM_PHASE_FE_SPINEL){
 			for(int j = 0; j < 5; ++j){
 				if(binary_phases[i].members[j] < 0){
+					ERR("eqm compute solution phases: incomplete spinel phase %d member %d", i, j);
 					free(solution_phase_id);
 					free(solution_member_index);
 					free(binary_phases);
@@ -386,6 +852,7 @@ int eqm_compute_solution_phases(const char **names, int ns, const char *source,
 	if(nbinary_phases == 0){
 		free(binary_phases);
 	}
+	MSG("eqm compute solution phases: built phase map with %d phases", nbinary_phases);
 	return 1;
 }
 
@@ -407,6 +874,9 @@ void eqm_free_solution_phases(int **solution_phase_id, int **solution_member_ind
 
 int eqm_has_solution_phases(const char **names, int ns, const char *source){
 	int i;
+	if(eqm_current_package && eqm_pkg_matches_basis_exact(eqm_current_package, names, ns)){
+		return eqm_current_package->nbinary_phases > 0;
+	}
 	for(i = 0; i < ns; ++i){
 		const BinarySolutionPhaseDef *phase = NULL;
 		const FeSpinelPhaseDef *spinel = NULL;
@@ -490,6 +960,67 @@ static int eqm_augment_special_phase_constraints(const char **names, int ns, con
 	*A_out = A_aug;
 	*b_out = b_aug;
 	eqm_free_solution_phases(&phase_id, &member_index, &phases);
+	return 1;
+}
+
+static int eqm_augment_special_phase_constraints_meta(int ns,
+		const EqmBinaryPhaseMeta *phases, int nphases,
+		int ne_in, const double *A_in, const double *b_in, int *ne_out,
+		double **A_out, double **b_out){
+	int extra = 0;
+	double *A_aug = NULL;
+	double *b_aug = NULL;
+	int e;
+	int p;
+
+	if(!A_in || !b_in || !ne_out || !A_out || !b_out || ns <= 0 || ne_in <= 0){
+		ERR("eqm augment special phase constraints: invalid args ns=%d ne_in=%d", ns, ne_in);
+		return 0;
+	}
+	for(p = 0; p < nphases; ++p){
+		if(phases[p].kind == EQM_PHASE_FE_SPINEL){
+			extra += 2;
+		}
+	}
+	if(extra == 0){
+		*ne_out = ne_in;
+		*A_out = (double *)A_in;
+		*b_out = (double *)b_in;
+		return 1;
+	}
+	A_aug = (double *)calloc((size_t)((ne_in + extra) * ns), sizeof(double));
+	b_aug = (double *)calloc((size_t)(ne_in + extra), sizeof(double));
+	if(!A_aug || !b_aug){
+		ERR("eqm augment special phase constraints: allocation failed for ne=%d extra=%d ns=%d",
+			ne_in, extra, ns);
+		free(A_aug);
+		free(b_aug);
+		return 0;
+	}
+	memcpy(A_aug, A_in, sizeof(double) * (size_t)(ne_in * ns));
+	memcpy(b_aug, b_in, sizeof(double) * (size_t)ne_in);
+	e = ne_in;
+	for(p = 0; p < nphases; ++p){
+		if(phases[p].kind != EQM_PHASE_FE_SPINEL){
+			continue;
+		}
+		A_aug[e * ns + phases[p].members[0]] = 2.0;
+		A_aug[e * ns + phases[p].members[1]] = 2.0;
+		A_aug[e * ns + phases[p].members[2]] = -1.0;
+		A_aug[e * ns + phases[p].members[3]] = -1.0;
+		A_aug[e * ns + phases[p].members[4]] = -1.0;
+		b_aug[e] = 0.0;
+		++e;
+		A_aug[e * ns + phases[p].members[0]] = 6.0;
+		A_aug[e * ns + phases[p].members[1]] = 5.0;
+		A_aug[e * ns + phases[p].members[2]] = -2.0;
+		A_aug[e * ns + phases[p].members[3]] = -3.0;
+		b_aug[e] = 0.0;
+		++e;
+	}
+	*ne_out = ne_in + extra;
+	*A_out = A_aug;
+	*b_out = b_aug;
 	return 1;
 }
 
@@ -708,6 +1239,56 @@ static PureFluid *eqm_prepare_fluid_for_mu0(const EosData *E, const char *corrty
 	return NULL;
 }
 
+static int eqm_fluid_state_from_pT(const PureFluid *F, double T, double P, FluidState2 *S_out){
+	FpropsError err = FPROPS_NO_ERROR;
+	double rho;
+	double p_calc = NAN;
+	int it;
+
+	if(!F || !S_out || !(T > 0.0) || !(P > 0.0) || !F->data || !(F->data->R > 0.0)){
+		return 0;
+	}
+
+	rho = P / (F->data->R * T);
+	if(!(rho > 0.0) || !isfinite(rho)){
+		return 0;
+	}
+
+	if(F->type != FPROPS_IDEAL){
+		if(!F->p_fn){
+			return 0;
+		}
+		for(it = 0; it < 12; ++it){
+			double rel;
+			double rho_new;
+			err = FPROPS_NO_ERROR;
+			p_calc = F->p_fn((FluidStateUnion){.Trho={T, rho}}, F->data, &err);
+			if(err || !isfinite(p_calc) || !(p_calc > 0.0)){
+				return 0;
+			}
+			rel = fabs(p_calc - P) / P;
+			if(rel < 1e-10){
+				break;
+			}
+			rho_new = rho * (P / p_calc);
+			if(!isfinite(rho_new) || !(rho_new > 0.0)){
+				return 0;
+			}
+			if(rho_new > 1e5){
+				rho_new = 1e5;
+			}
+			rho = rho_new;
+		}
+	}
+
+	err = FPROPS_NO_ERROR;
+	*S_out = fprops_set_Trho(T, rho, F, &err);
+	if(err){
+		return 0;
+	}
+	return 1;
+}
+
 static int eqm_mu0_fluid_model_source(const char *name, const char *corrtype, const char *source,
 		double T, double P0, int use_ref0, double *mu0){
 	PureFluid *P;
@@ -895,6 +1476,148 @@ int eqm_mu0_source(const char *name, const char *source, double T, double P0, do
 		return 1;
 	}
 	return 0;
+}
+
+static int eqm_h_constcp_source(const char *name, const char *source, double T, double P,
+		double *h){
+	const ConstCpSpecies *S;
+	const ConstCpData *phase = NULL;
+	FpropsError err = FPROPS_NO_ERROR;
+	double h_mass;
+
+	if(!name || !h){
+		return 0;
+	}
+	S = constcp_species_lookup(name, source);
+	if(!S){
+		S = constcp_species_lookup(name, NULL);
+	}
+	if(!S){
+		return 0;
+	}
+	phase = constcp_species_select_phase(S, T, P, &err);
+	if(err || !phase){
+		return 0;
+	}
+	h_mass = constcp_h(T, phase, &err);
+	if(err || !isfinite(h_mass) || !(S->M > 0.0)){
+		return 0;
+	}
+	*h = h_mass * (S->M * 1e-3);
+	return 1;
+}
+
+static int eqm_h_shomate_source(const char *name, const char *source, double T, double P,
+		double *h){
+	const ShomateSpecies *S;
+	FpropsError err = FPROPS_NO_ERROR;
+	(void)P;
+
+	if(!name || !h){
+		return 0;
+	}
+	S = shomate_species_lookup(name, source);
+	if(!S){
+		S = shomate_species_lookup(name, NULL);
+	}
+	if(!S){
+		return 0;
+	}
+	*h = shomate_species_h_molar(S, T, &err);
+	if(err || !isfinite(*h)){
+		return 0;
+	}
+	return 1;
+}
+
+static int eqm_h_fluid_model_source(const char *name, const char *corrtype, const char *source,
+		double T, double P, int use_ref0, double *h){
+	PureFluid *F;
+	const char *cands[3];
+	int ncands = 0;
+	int c;
+	int explicit_source;
+
+	if(!name || !corrtype || !h || !(T > 0.0) || !(P > 0.0)){
+		return 0;
+	}
+	explicit_source = eqm_has_explicit_source(source);
+	cands[ncands++] = source;
+	if(!explicit_source){
+		cands[ncands++] = NULL;
+	}
+	if(!explicit_source && strcmp(corrtype, "ideal") == 0){
+		cands[ncands++] = "RPP";
+	}
+	for(c = 0; c < ncands; ++c){
+		const char *src = cands[c];
+		const EosData *E = fprops_eos(name, corrtype, src);
+		FpropsError err = FPROPS_NO_ERROR;
+		FluidState2 S;
+		double h_mass;
+		double molar_mass;
+
+		F = eqm_prepare_fluid_for_mu0(E, corrtype, use_ref0);
+		if(!F){
+			continue;
+		}
+		if(!eqm_fluid_state_from_pT(F, T, P, &S)){
+			fprops_fluid_destroy(F);
+			continue;
+		}
+		err = FPROPS_NO_ERROR;
+		h_mass = fprops_h(S, &err);
+		molar_mass = F->data ? (F->data->M * 1e-3) : NAN;
+		fprops_fluid_destroy(F);
+		if(!err && isfinite(h_mass) && isfinite(molar_mass) && molar_mass > 0.0){
+			*h = h_mass * molar_mass;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int eqm_h_model_source(const char *name, EqmMuModel model, const char *source, double T,
+		double P, int use_ref0, double *h){
+	if(model == EQM_MODEL_AUTO){
+		if(eqm_h_fluid_model_source(name, "ideal", source, T, P, 1, h)){
+			return 1;
+		}
+		if(eqm_h_shomate_source(name, source, T, P, h)){
+			return 1;
+		}
+		if(eqm_h_constcp_source(name, source, T, P, h)){
+			return 1;
+		}
+		return 0;
+	}
+	if(model == EQM_MODEL_IDEAL){
+		return eqm_h_fluid_model_source(name, "ideal", source, T, P, 1, h);
+	}
+	if(model == EQM_MODEL_CONSTCP){
+		return eqm_h_constcp_source(name, source, T, P, h);
+	}
+	if(model == EQM_MODEL_SHOMATE){
+		return eqm_h_shomate_source(name, source, T, P, h);
+	}
+	if(model == EQM_MODEL_HELMHOLTZ){
+		return eqm_h_fluid_model_source(name, "helmholtz", source, T, P, use_ref0, h);
+	}
+	if(model == EQM_MODEL_PENGROB){
+		return eqm_h_fluid_model_source(name, "pengrob", source, T, P, use_ref0, h);
+	}
+	return 0;
+}
+
+static int eqm_h_source(const char *name, const char *source, double T, double P, double *h){
+	char source_buf[512];
+	const char *source_i = fprops_resolve_species_source(source, name, source_buf,
+		(unsigned)sizeof(source_buf));
+	EqmMuModel selector_model = EQM_MODEL_AUTO;
+	int use_ref0 = 0;
+	const char *selector_source = NULL;
+	eqm_parse_selector(source_i, &selector_model, &use_ref0, &selector_source);
+	return eqm_h_model_source(name, selector_model, selector_source, T, P, use_ref0, h);
 }
 
 int eqm_mu0_ideal_source(const char *name, const char *source, double T, double P0,
@@ -3420,4 +4143,494 @@ int eqm_solve_elements(const char **names, int ns, const char **elements, int ne
 	}
 	free(A);
 	return status;
+}
+
+static int eqm_total_h_tpn(const char **names, int ns, const double *n, const char *source,
+		double T, double P, double *H_out){
+	double H_total = 0.0;
+	int i;
+
+	if(!names || !n || !H_out || ns <= 0 || !(T > 0.0) || !(P > 0.0)){
+		return -11;
+	}
+	if(eqm_has_solution_phases(names, ns, source)){
+		return -15;
+	}
+	for(i = 0; i < ns; ++i){
+		double hi = 0.0;
+		if(!(n[i] >= 0.0) || !isfinite(n[i])){
+			return -13;
+		}
+		if(n[i] == 0.0){
+			continue;
+		}
+		if(!eqm_h_source(names[i], source, T, P, &hi)){
+			return -14;
+		}
+		H_total += n[i] * hi;
+	}
+	*H_out = H_total;
+	return 0;
+}
+
+FpropsRxnPackage *fprops_rxn_package_build(const char **names, int ns, const char *source){
+	FpropsRxnPackage *pkg = NULL;
+	int i;
+
+	if(!names || ns <= 0){
+		ERR("rxn package build: invalid args names=%p ns=%d", (void *)names, ns);
+		return NULL;
+	}
+	pkg = (FpropsRxnPackage *)calloc(1, sizeof(*pkg));
+	if(!pkg){
+		ERR("rxn package build: package allocation failed ns=%d", ns);
+		return NULL;
+	}
+	pkg->ns = ns;
+	pkg->names = (char **)calloc((size_t)ns, sizeof(char *));
+	pkg->species = (FpropsRxnSpeciesCache *)calloc((size_t)ns, sizeof(FpropsRxnSpeciesCache));
+	pkg->source = eqm_strdup_local(source ? source : "");
+	if(!pkg->names || !pkg->species || (source && !pkg->source)){
+		ERR("rxn package build: initial allocation failed ns=%d", ns);
+		fprops_rxn_package_free(pkg);
+		return NULL;
+	}
+	for(i = 0; i < ns; ++i){
+		char source_buf[512];
+		const char *source_i;
+		const BinarySolutionPhaseDef *phase = NULL;
+		const FeSpinelPhaseDef *spinel = NULL;
+		unsigned member_index = 0;
+		EqmMuModel selector_model = EQM_MODEL_AUTO;
+		int use_ref0 = 0;
+		const char *selector_source = NULL;
+
+		if(!names[i]){
+			ERR("rxn package build: null species name at index %d", i);
+			fprops_rxn_package_free(pkg);
+			return NULL;
+		}
+		pkg->names[i] = eqm_strdup_local(names[i]);
+		pkg->species[i].name = eqm_strdup_local(names[i]);
+		if(!pkg->names[i] || !pkg->species[i].name){
+			fprops_rxn_package_free(pkg);
+			return NULL;
+		}
+
+		source_i = fprops_resolve_species_source(source, names[i], source_buf, (unsigned)sizeof(source_buf));
+		pkg->species[i].source_resolved = eqm_strdup_local(source_i ? source_i : "");
+		if(source_i && !pkg->species[i].source_resolved){
+			ERR("rxn package build: failed to copy resolved source for '%s'", names[i]);
+			fprops_rxn_package_free(pkg);
+			return NULL;
+		}
+
+		if(eqm_lookup_solution_member(names[i], source, &phase, &member_index)){
+			pkg->species[i].entry_kind = FPROPS_RXN_ENTRY_BINARY_SOLUTION_MEMBER;
+			pkg->species[i].member_index = (int)member_index;
+			continue;
+		}
+		if(eqm_lookup_spinel_member(names[i], source, &spinel, &member_index)){
+			pkg->species[i].entry_kind = FPROPS_RXN_ENTRY_SPINEL_MEMBER;
+			pkg->species[i].member_index = (int)member_index;
+			continue;
+		}
+
+		eqm_parse_selector(source_i, &selector_model, &use_ref0, &selector_source);
+		if(!eqm_species_compile_thermo(names[i], selector_source ? selector_source : source_i,
+				selector_model, use_ref0, &pkg->species[i].thermo)){
+			ERR("rxn package build failed: no thermo model for '%s' (source='%s')",
+				names[i], selector_source ? selector_source : (source_i ? source_i : ""));
+			fprops_rxn_package_free(pkg);
+			return NULL;
+		}
+	}
+
+	if(!fprops_collect_elements_source(names, ns, source, &pkg->elements, &pkg->ne) || pkg->ne <= 0){
+		ERR("rxn package build: failed collecting elements for %d species", ns);
+		fprops_rxn_package_free(pkg);
+		return NULL;
+	}
+	pkg->A = (double *)calloc((size_t)(pkg->ne * ns), sizeof(double));
+	pkg->is_condensed = (int *)calloc((size_t)ns, sizeof(int));
+	if(!pkg->A || !pkg->is_condensed){
+		ERR("rxn package build: allocation failed for A/is_condensed (ns=%d ne=%d)", ns, pkg->ne);
+		fprops_rxn_package_free(pkg);
+		return NULL;
+	}
+	if(!fprops_build_element_matrix_source((const char **)pkg->names, ns,
+			(const char **)pkg->elements, pkg->ne, source, pkg->A)){
+		ERR("rxn package build: failed building element matrix (ns=%d ne=%d)", ns, pkg->ne);
+		fprops_rxn_package_free(pkg);
+		return NULL;
+	}
+	if(!eqm_compute_is_condensed((const char **)pkg->names, ns, source, pkg->is_condensed)){
+		ERR("rxn package build: failed classifying condensed species");
+		fprops_rxn_package_free(pkg);
+		return NULL;
+	}
+	if(!eqm_compute_solution_phases((const char **)pkg->names, ns, source,
+			&pkg->solution_phase_id, &pkg->solution_member_index,
+			&pkg->binary_phases, &pkg->nbinary_phases)){
+		ERR("rxn package build: failed computing solution phase metadata");
+		fprops_rxn_package_free(pkg);
+		return NULL;
+	}
+	for(i = 0; i < ns; ++i){
+		pkg->species[i].phase_id = pkg->solution_phase_id ? pkg->solution_phase_id[i] : -1;
+		if(pkg->solution_member_index){
+			pkg->species[i].member_index = pkg->solution_member_index[i];
+		}
+	}
+	MSG("rxn package build: built package ns=%d ne=%d nbinary=%d", pkg->ns, pkg->ne, pkg->nbinary_phases);
+	return pkg;
+}
+
+void fprops_rxn_package_free(FpropsRxnPackage *pkg){
+	int i;
+	if(!pkg){
+		return;
+	}
+	if(pkg->species){
+		for(i = 0; i < pkg->ns; ++i){
+			free(pkg->species[i].name);
+			free(pkg->species[i].source_resolved);
+			eqm_species_free_thermo(&pkg->species[i].thermo);
+		}
+		free(pkg->species);
+	}
+	if(pkg->names){
+		for(i = 0; i < pkg->ns; ++i){
+			free(pkg->names[i]);
+		}
+		free(pkg->names);
+	}
+	free(pkg->source);
+	free(pkg->A);
+	free(pkg->is_condensed);
+	eqm_free_solution_phases(&pkg->solution_phase_id, &pkg->solution_member_index, &pkg->binary_phases);
+	fprops_free_elements(&pkg->elements, &pkg->ne);
+	free(pkg);
+}
+
+static int eqm_binary_solution_total_g(const EqmBinaryPhaseMeta *phase, const double *n,
+		double T, double P, double *g_out){
+	const BinarySolutionModel *M;
+	double n_a;
+	double n_b;
+	double n_tot;
+	double x;
+	double g_molar;
+	FpropsError err = FPROPS_NO_ERROR;
+
+	if(!phase || !n || !g_out || !phase->phase || !phase->phase->model){
+		return 0;
+	}
+	M = phase->phase->model;
+	n_a = n[phase->ia];
+	n_b = n[phase->ib];
+	n_tot = n_a + n_b;
+	if(!(n_tot >= 0.0) || !isfinite(n_tot)){
+		return 0;
+	}
+	if(n_tot == 0.0){
+		*g_out = 0.0;
+		return 1;
+	}
+	x = n_b / n_tot;
+	g_molar = solution_binary_g_molar(M, T, P, x, &err);
+	if(err || !isfinite(g_molar)){
+		return 0;
+	}
+	*g_out = n_tot * g_molar;
+	return isfinite(*g_out);
+}
+
+static int eqm_spinel_total_g(const EqmBinaryPhaseMeta *phase, const double *n,
+		double T, double P, double *g_out){
+	double n_members[5];
+	int j;
+
+	if(!phase || !n || !g_out || !phase->spinel){
+		return 0;
+	}
+	for(j = 0; j < 5; ++j){
+		int idx = phase->members[j];
+		if(idx < 0){
+			return 0;
+		}
+		n_members[j] = n[idx];
+		if(!(n_members[j] >= 0.0) || !isfinite(n_members[j])){
+			return 0;
+		}
+	}
+	return spinel_phase_eval(phase->spinel, n_members, T, P, g_out, NULL);
+}
+
+static int eqm_phase_total_h_fd(const EqmBinaryPhaseMeta *phase, const double *n,
+		double T, double P, double *h_out){
+	double dT;
+	double g0 = 0.0;
+	double gp = 0.0;
+	double gm = 0.0;
+	double dgdt;
+	int ok0 = 0;
+	int okp = 0;
+	int okm = 0;
+
+	if(!phase || !n || !h_out || !(T > 0.0) || !(P > 0.0)){
+		return 0;
+	}
+
+	dT = fmax(1e-3, 1e-5 * T);
+	if(T - dT <= 0.0){
+		dT = 0.5 * T;
+	}
+	if(!(dT > 0.0)){
+		return 0;
+	}
+
+	if(phase->kind == EQM_PHASE_BINARY_SOLUTION){
+		ok0 = eqm_binary_solution_total_g(phase, n, T, P, &g0);
+		okp = eqm_binary_solution_total_g(phase, n, T + dT, P, &gp);
+		if(T - dT > 0.0){
+			okm = eqm_binary_solution_total_g(phase, n, T - dT, P, &gm);
+		}
+	}else if(phase->kind == EQM_PHASE_FE_SPINEL){
+		ok0 = eqm_spinel_total_g(phase, n, T, P, &g0);
+		okp = eqm_spinel_total_g(phase, n, T + dT, P, &gp);
+		if(T - dT > 0.0){
+			okm = eqm_spinel_total_g(phase, n, T - dT, P, &gm);
+		}
+	}else{
+		return 0;
+	}
+
+	if(!ok0 || !okp){
+		return 0;
+	}
+	if(okm){
+		dgdt = (gp - gm) / (2.0 * dT);
+	}else{
+		dgdt = (gp - g0) / dT;
+	}
+	if(!isfinite(dgdt)){
+		return 0;
+	}
+	*h_out = g0 - T * dgdt;
+	return isfinite(*h_out);
+}
+
+int fprops_rxn_mix_h(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, double *H_out){
+	double H_total = 0.0;
+	double h_phase = 0.0;
+	int p;
+	int i;
+
+	if(!pkg || !state || !state->n || !H_out || pkg->ns <= 0 || !(state->T > 0.0) || !(state->P > 0.0)){
+		ERR("rxn mix h: invalid args pkg=%p state=%p n=%p H_out=%p ns=%d T=%.17g P=%.17g",
+			(void *)pkg, (void *)state, state ? (void *)state->n : NULL, (void *)H_out,
+			pkg ? pkg->ns : -1, state ? state->T : NAN, state ? state->P : NAN);
+		return -11;
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		if(!(state->n[i] >= 0.0) || !isfinite(state->n[i])){
+			ERR("rxn mix h: invalid amount n[%d]=%.17g for '%s'", i, state->n[i],
+				pkg->species && pkg->species[i].name ? pkg->species[i].name : "(null)");
+			return -13;
+		}
+	}
+	for(p = 0; p < pkg->nbinary_phases; ++p){
+		if(!eqm_phase_total_h_fd(&pkg->binary_phases[p], state->n, state->T, state->P, &h_phase)){
+			ERR("rxn mix h: solution/spinel enthalpy evaluation failed for phase %d at T=%.17g P=%.17g",
+				p, state->T, state->P);
+			return -15;
+		}
+		H_total += h_phase;
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		double hi = 0.0;
+		if(state->n[i] == 0.0){
+			continue;
+		}
+		if(pkg->solution_phase_id && pkg->solution_phase_id[i] >= 0){
+			continue;
+		}
+		if(!eqm_h_from_compiled(&pkg->species[i], state->T, state->P, &hi)){
+			ERR("rxn mix h: enthalpy evaluation failed for '%s' at T=%.17g P=%.17g",
+				pkg->species && pkg->species[i].name ? pkg->species[i].name : "(null)",
+				state->T, state->P);
+			return -14;
+		}
+		H_total += state->n[i] * hi;
+	}
+	*H_out = H_total;
+	return 0;
+}
+
+int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
+		const char *algorithm, const double *n_init, FpropsRxnResult *out){
+	double *b = NULL;
+	int e, i, status;
+
+	if(!pkg || !state || !state->n || !out || !out->n_out || pkg->ns <= 0 || pkg->ne <= 0
+			|| !(state->T > 0.0) || !(state->P > 0.0)){
+		ERR("rxn eqm tpy: invalid args pkg=%p state=%p n=%p out=%p n_out=%p ns=%d ne=%d T=%.17g P=%.17g",
+			(void *)pkg, (void *)state, state ? (void *)state->n : NULL,
+			(void *)out, out ? (void *)out->n_out : NULL,
+			pkg ? pkg->ns : -1, pkg ? pkg->ne : -1,
+			state ? state->T : NAN, state ? state->P : NAN);
+		return -11;
+	}
+	b = (double *)calloc((size_t)pkg->ne, sizeof(double));
+	if(!b){
+		ERR("rxn eqm tpy: unable to allocate element totals vector (ne=%d)", pkg->ne);
+		return -12;
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		if(!(state->n[i] >= 0.0) || !isfinite(state->n[i])){
+			ERR("rxn eqm tpy: invalid amount n[%d]=%.17g for '%s'", i, state->n[i],
+				pkg->species && pkg->species[i].name ? pkg->species[i].name : "(null)");
+			free(b);
+			return -13;
+		}
+		for(e = 0; e < pkg->ne; ++e){
+			b[e] += pkg->A[e * pkg->ns + i] * state->n[i];
+		}
+	}
+	status = fprops_rxn_eqm_tpb(pkg, state, b, algorithm, n_init, out);
+	free(b);
+	return status;
+}
+
+int fprops_rxn_eqm_tpb(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
+		const double *b, const char *algorithm, const double *n_init, FpropsRxnResult *out){
+	int status;
+	int ne_use = 0;
+	double *A_use = NULL;
+	double *b_use = NULL;
+	const FpropsRxnPackage *old_pkg;
+	if(!pkg || !state || !b || !out || !out->n_out || pkg->ns <= 0 || pkg->ne <= 0
+			|| !(state->T > 0.0) || !(state->P > 0.0)){
+		ERR("rxn eqm tpb: invalid args pkg=%p state=%p b=%p out=%p n_out=%p ns=%d ne=%d T=%.17g P=%.17g",
+			(void *)pkg, (void *)state, (void *)b, (void *)out, out ? (void *)out->n_out : NULL,
+			pkg ? pkg->ns : -1, pkg ? pkg->ne : -1, state ? state->T : NAN, state ? state->P : NAN);
+		return -11;
+	}
+	old_pkg = eqm_package_scope_push(pkg);
+	if(!eqm_augment_special_phase_constraints_meta(pkg->ns, pkg->binary_phases, pkg->nbinary_phases,
+			pkg->ne, pkg->A, b, &ne_use, &A_use, &b_use)){
+		ERR("rxn eqm tpb: failed augmenting special phase constraints (ns=%d ne=%d nbinary=%d)",
+			pkg->ns, pkg->ne, pkg->nbinary_phases);
+		eqm_package_scope_pop(old_pkg);
+		return -11;
+	}
+	MSG("rxn eqm tpb: solving ns=%d ne=%d T=%.17g P=%.17g algorithm='%s'",
+		pkg->ns, ne_use, state->T, state->P, algorithm ? algorithm : "");
+	status = eqm_solve((const char **)pkg->names, pkg->ns, ne_use, A_use, b_use,
+		pkg->source, state->T, state->P, algorithm, n_init, out->n_out);
+	if(A_use != pkg->A){
+		free(A_use);
+	}
+	if(b_use != b){
+		free(b_use);
+	}
+	eqm_package_scope_pop(old_pkg);
+	out->status = status;
+	out->H = NAN;
+	out->G = NAN;
+	if(status != 0 && status != 1 && status != 6){
+		ERR("rxn eqm tpb: solver returned status %d", status);
+	}
+	if(status == 0 || status == 1 || status == 6){
+		FpropsRxnTPN out_state = {state->T, state->P, out->n_out};
+		if(0 == fprops_rxn_mix_h(pkg, &out_state, &out->H)){
+			return status;
+		}
+		ERR("rxn eqm tpb: post-equilibrium enthalpy evaluation failed");
+	}
+	return status;
+}
+
+int fprops_eqm_tpb(const char **names, int ns, const char **elements, int ne,
+		const double *b, const char *source, double T, double P, const char *algorithm,
+		const double *n_init, double *n_out, double *H_out){
+	int status;
+
+	if(!names || !elements || !b || !n_out || ns <= 0 || ne <= 0 || !(T > 0.0) || !(P > 0.0)){
+		return -11;
+	}
+	status = eqm_solve_elements(names, ns, elements, ne, b, source, T, P, algorithm, n_init, n_out);
+	if(status != 0 && status != 1 && status != 6){
+		return status;
+	}
+	if(H_out){
+		int h_status = eqm_total_h_tpn(names, ns, n_out, source, T, P, H_out);
+		if(h_status != 0){
+			return h_status;
+		}
+	}
+	return status;
+}
+
+int fprops_eqm_tpy(const char **names, int ns, const double *y_in, const char *source,
+		double T, double P, const char *algorithm, const double *n_init, double *n_out){
+	char **elements = NULL;
+	int ne = 0;
+	double *A = NULL;
+	double *b = NULL;
+	double ysum = 0.0;
+	int i;
+	int e;
+	int status = -11;
+
+	if(!names || !y_in || !n_out || ns <= 0 || !(T > 0.0) || !(P > 0.0)){
+		return -11;
+	}
+
+	for(i = 0; i < ns; ++i){
+		if(!isfinite(y_in[i]) || y_in[i] < 0.0){
+			return -11;
+		}
+		ysum += y_in[i];
+	}
+	if(!(ysum > 0.0) || !isfinite(ysum)){
+		return -11;
+	}
+
+	if(!fprops_collect_elements_source(names, ns, source, &elements, &ne) || ne <= 0){
+		return -11;
+	}
+
+	A = (double *)calloc((size_t)(ne * ns), sizeof(double));
+	b = (double *)calloc((size_t)ne, sizeof(double));
+	if(!A || !b){
+		goto cleanup;
+	}
+	if(!fprops_build_element_matrix_source(names, ns, (const char **)elements, ne, source, A)){
+		goto cleanup;
+	}
+
+	for(e = 0; e < ne; ++e){
+		double be = 0.0;
+		for(i = 0; i < ns; ++i){
+			double yi = y_in[i] / ysum;
+			be += A[e * ns + i] * yi;
+		}
+		b[e] = be;
+	}
+
+	status = fprops_eqm_tpb(names, ns, (const char **)elements, ne, b, source, T, P,
+		algorithm, n_init, n_out, NULL);
+
+cleanup:
+	free(A);
+	free(b);
+	fprops_free_elements(&elements, &ne);
+	return status;
+}
+
+int fprops_mix_h_tpn(const char **names, int ns, const double *n, const char *source,
+		double T, double P, double *H_out){
+	return eqm_total_h_tpn(names, ns, n, source, T, P, H_out);
 }

@@ -36,6 +36,87 @@ typedef enum EqmAlgorithm{
 	EQM_ALG_SLSQP
 } EqmAlgorithm;
 
+typedef struct FpropsRxnPackage_struct FpropsRxnPackage;
+
+typedef struct FpropsRxnTPN{
+	double T;
+	double P;
+	const double *n;
+} FpropsRxnTPN;
+
+typedef struct FpropsRxnResult{
+	int status;
+	double H;
+	double G;
+	double *n_out;
+} FpropsRxnResult;
+
+/**
+ * Build a compiled reactive-package runtime object from a species basis
+ * and source specification.
+ *
+ * The returned package caches species/element metadata and prepared
+ * thermo handles suitable for repeated evaluation from ASCEND blackboxes
+ * or other C callers.
+ *
+ * @param names Species names, length ns.
+ * @param ns Number of species.
+ * @param source Thermodynamic source specification or source map.
+ * @return Newly allocated package on success, or NULL on failure.
+ */
+FpropsRxnPackage *fprops_rxn_package_build(const char **names, int ns, const char *source);
+
+/**
+ * Destroy a package created by fprops_rxn_package_build(...).
+ */
+void fprops_rxn_package_free(FpropsRxnPackage *pkg);
+
+/**
+ * Solve equilibrium using a compiled reactive package.
+ *
+ * This is the package-oriented counterpart of fprops_eqm_tpb(...).
+ *
+ * @param pkg Compiled reactive package.
+ * @param state Input T/P state.
+ * @param b Element totals, length equal to the package element count.
+ * @param algorithm Algorithm selector string.
+ * @param n_init Optional initial guess, length equal to package species count.
+ * @param out Output/result structure. `out->n_out` must point to a caller-owned
+ *        array of length equal to package species count.
+ * @return Solver status code.
+ */
+int fprops_rxn_eqm_tpb(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
+		const double *b, const char *algorithm, const double *n_init, FpropsRxnResult *out);
+
+/**
+ * Solve equilibrium using a compiled reactive package and an inlet
+ * species-amount vector.
+ *
+ * This is the package-oriented counterpart of fprops_eqm_tpy(...): it
+ * infers conserved element totals from `state->n` using the package's
+ * cached element matrix, then calls fprops_rxn_eqm_tpb(...).
+ *
+ * @param pkg Compiled reactive package.
+ * @param state Input T/P/species-amount state.
+ * @param algorithm Algorithm selector string.
+ * @param n_init Optional initial guess, length equal to package species count.
+ * @param out Output/result structure. `out->n_out` must point to a caller-owned
+ *        array of length equal to package species count.
+ * @return Solver status code.
+ */
+int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
+		const char *algorithm, const double *n_init, FpropsRxnResult *out);
+
+/**
+ * Compute total mixture enthalpy using a compiled reactive package.
+ *
+ * @param pkg Compiled reactive package.
+ * @param state Input T/P/species-amount state.
+ * @param H_out Output total enthalpy in J on the same basis as `state->n`.
+ * @return 0 on success, negative code on failure.
+ */
+int fprops_rxn_mix_h(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, double *H_out);
+
 /**
  * Solve a chemical-equilibrium problem with an explicitly supplied
  * element matrix.
@@ -137,5 +218,88 @@ int eqm_mu0_ideal_source(const char *name, const char *source, double T, double 
  */
 int eqm_mu0_source(const char *name, const char *source, double T, double P0,
 		double *mu0);
+
+/**
+ * Solve a chemical-equilibrium problem at specified T, P, and element
+ * totals, and optionally evaluate the total equilibrium enthalpy of the
+ * returned state.
+ *
+ * This is a thin thermodynamic convenience API around eqm_solve_elements(...).
+ * It keeps the natural equilibrium primitive in terms of T, P, and b.
+ *
+ * @param names Species names, length ns.
+ * @param ns Number of species.
+ * @param elements Element symbols/names, length ne.
+ * @param ne Number of conserved elements.
+ * @param b Element totals, length ne.
+ * @param source Thermodynamic source specification or source map.
+ * @param T Temperature in K.
+ * @param P Pressure in Pa.
+ * @param algorithm Algorithm selector string.
+ * @param n_init Optional initial guess for species mole amounts, length ns,
+ *        or NULL.
+ * @param n_out Output equilibrium species mole amounts, length ns.
+ * @param H_out Optional output total equilibrium enthalpy in J for the
+ *        returned species amounts, or NULL to skip enthalpy evaluation.
+ * @return Solver status code. Zero is the normal success code; some
+ *         positive codes may also indicate successful convergence.
+ *         If equilibrium converges but enthalpy evaluation is unsupported
+ *         for the requested species/models, a negative code is returned.
+ */
+int fprops_eqm_tpb(const char **names, int ns, const char **elements, int ne,
+		const double *b, const char *source, double T, double P, const char *algorithm,
+		const double *n_init, double *n_out, double *H_out);
+
+/**
+ * Solve a chemical-equilibrium problem from inlet mole fractions.
+ *
+ * This convenience wrapper infers the element set from species data,
+ * computes elemental totals `b` from `y_in`, and then
+ * calls fprops_eqm_tpb(...).
+ *
+ * The inlet fractions are interpreted on a 1-mol feed basis after
+ * normalization, so `sum(y_in)` does not need to be exactly 1.
+ *
+ * @param names Species names, length ns.
+ * @param ns Number of species.
+ * @param y_in Inlet mole fractions (or proportional nonnegative values),
+ *        length ns.
+ * @param source Thermodynamic source specification or source map.
+ * @param T Temperature in K.
+ * @param P Pressure in Pa.
+ * @param algorithm Algorithm selector string.
+ * @param n_init Optional initial guess for species mole amounts, length ns,
+ *        or NULL.
+ * @param n_out Output equilibrium species mole amounts on the same 1-mol
+ *        feed element basis, length ns.
+ * @return Solver status code, matching fprops_eqm_tpb(...).
+ */
+int fprops_eqm_tpy(const char **names, int ns, const double *y_in, const char *source,
+		double T, double P, const char *algorithm, const double *n_init, double *n_out);
+
+/**
+ * Compute total stream enthalpy for a specified species-amount state.
+ *
+ * This routine evaluates:
+ *   H = sum_i n_i * h_i(T, P, source)
+ * for the provided species list and mole amounts.
+ *
+ * The function does not perform reaction or phase equilibrium.
+ *
+ * @param names Species names, length ns.
+ * @param ns Number of species.
+ * @param n Species mole amounts (or molar flowrates on any consistent basis),
+ *        length ns.
+ * @param source Thermodynamic source specification or source map.
+ * @param T Temperature in K.
+ * @param P Pressure in Pa.
+ * @param H_out Output total enthalpy in J on the same basis as `n`.
+ * @return 0 on success, negative code on failure.
+ *         -11 invalid input.
+ *         -14 unsupported/missing enthalpy model for one or more species.
+ *         -15 solution-phase species currently unsupported in this API.
+ */
+int fprops_mix_h_tpn(const char **names, int ns, const double *n, const char *source,
+		double T, double P, double *H_out);
 
 #endif

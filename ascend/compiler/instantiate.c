@@ -12202,7 +12202,11 @@ void ExecuteWhenStatements(struct Instance *inst,
                       "Inappropriate statement type in WHEN Statement");
       ASC_PANIC("Inappropriate statement type in WHEN Statement");
     }
-    asc_assert(return_value);
+    if(!return_value){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "while running %s on statement inside FOR", __FUNCTION__);
+      return;
+    }
   }
 }
 
@@ -12342,7 +12346,11 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
                       "Inappropriate statement type in WHEN Statement");
       ASC_PANIC("Inappropriate statement type in WHEN Statement");
     }
-    asc_assert(return_value);
+    if(!return_value){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "while running %s on statement inside FOR", __FUNCTION__);
+      return;
+    }
   }
 }
 
@@ -13441,7 +13449,11 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       ASC_PANIC("Inappropriate statement type"
                 " in declarative section relations");
     }
-    asc_assert(return_value);
+    if(!return_value){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "while running %s on statement inside FOR", __FUNCTION__);
+      return;
+    }
   }
 }
 

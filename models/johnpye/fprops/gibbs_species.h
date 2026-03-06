@@ -14,5 +14,6 @@ typedef struct {
 
 const GibbsSpecies *gibbs_species_lookup(const char *name, const char *source);
 int gibbs_species_g_molar(const GibbsSpecies *S, double T, double p, double *g_out);
+int gibbs_species_h_molar(const GibbsSpecies *S, double T, double p, double *h_out);
 
 #endif /* FPROPS_GIBBS_SPECIES_H */

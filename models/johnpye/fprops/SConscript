@@ -8,6 +8,15 @@
 Import('env')
 fprops_env = env.Clone()
 
+if fprops_env.get('HAVE_IPOPT'):
+	fprops_env.AppendUnique(CPPDEFINES=['HAVE_IPOPT'])
+	if fprops_env.get('IPOPT_CPPPATH'):
+		fprops_env.AppendUnique(CPPPATH=fprops_env['IPOPT_CPPPATH'])
+	if fprops_env.get('IPOPT_LIBPATH'):
+		fprops_env.AppendUnique(LIBPATH=fprops_env['IPOPT_LIBPATH'])
+	if fprops_env.get('IPOPT_LIBS'):
+		fprops_env.AppendUnique(LIBS=fprops_env['IPOPT_LIBS'])
+
 # automatically create fluids/fluids_list.h...
 fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 
@@ -24,7 +33,14 @@ coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'peng
 	, 'bcc_iron_hidayat.c','fcc_iron_hidayat.c'
 	, 'spinel_data.c','spinel_fe_degterov.c'
 	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c', 'incomp.c'
+	, 'eqm.c'
 ]
+
+if fprops_env.get('HAVE_IPOPT'):
+	coresrcs += ['eqm_ipopt.c']
+
+if fprops_env.get('HAVE_NLOPT'):
+	coresrcs += ['eqm_slsqp.c']
 
 srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 
@@ -37,17 +53,19 @@ if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 	asc_env = fprops_env.Clone()
 	asc_env.AppendUnique(LIBPATH=["."])
 	asc_env.AppendUnique(LIBPATH=["#"])
+	asc_env.AppendUnique(LIBS=["ascend"])
+	asc_coresrcs = list(coresrcs)
+	asc_srcs = asc_coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
+	asc_shobjs = [asc_env.SharedObject(s, OBJPREFIX='#/models/johnpye/fprops/asc-') for s in asc_srcs]
 
 	lib1 = asc_env.SharedLibrary("fprops"
-		,['asc_fprops.c'] + fprops_env['shobjs']
-		,LIBS = ["ascend"]
+		,['asc_fprops.c'] + asc_shobjs
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
 
 	lib2 = asc_env.SharedLibrary("heatex_pinch"
-		,['asc_heatex_pinch.c'] + fprops_env['shobjs']
-		,LIBS = ["ascend"]
+		,['asc_heatex_pinch.c'] + asc_shobjs
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
