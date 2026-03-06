@@ -89,6 +89,25 @@ int fprops_rxn_eqm_tpb(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 		const double *b, const char *algorithm, const double *n_init, FpropsRxnResult *out);
 
 /**
+ * Solve equilibrium using a compiled reactive package and an inlet
+ * species-amount vector.
+ *
+ * This is the package-oriented counterpart of fprops_eqm_tpy(...): it
+ * infers conserved element totals from `state->n` using the package's
+ * cached element matrix, then calls fprops_rxn_eqm_tpb(...).
+ *
+ * @param pkg Compiled reactive package.
+ * @param state Input T/P/species-amount state.
+ * @param algorithm Algorithm selector string.
+ * @param n_init Optional initial guess, length equal to package species count.
+ * @param out Output/result structure. `out->n_out` must point to a caller-owned
+ *        array of length equal to package species count.
+ * @return Solver status code.
+ */
+int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
+		const char *algorithm, const double *n_init, FpropsRxnResult *out);
+
+/**
  * Compute total mixture enthalpy using a compiled reactive package.
  *
  * @param pkg Compiled reactive package.

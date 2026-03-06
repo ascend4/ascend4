@@ -96,8 +96,10 @@ ExtBBoxFunc fprops_phsx_vT_calc;
 ExtBBoxFunc fprops_Tvsx_ph_calc;
 ExtBBoxFunc fprops_Tvsx_h_incomp_calc;
 ExtBBoxInitFunc asc_fprops_rxn_prepare;
+ExtBBoxInitFunc asc_fprops_rxneq_prepare;
 ExtBBoxFinalFunc asc_fprops_rxn_final;
 ExtBBoxFunc fprops_rxn_h_TPn_calc;
+ExtBBoxFunc fprops_rxn_eqm_TPn_calc;
 
 /* FIXME need incompressible fluid functions that depend only on T or h, to 
 	avoid unpivoted external relations...
@@ -144,10 +146,12 @@ static const char *fprops_phsx_vT_help = "Calculate p, h, s, x from specific vol
 static const char *fprops_Tvsx_ph_help = "Calculate T, v, s, x from pressure and enthalpy, using FPROPS";
 static const char *fprops_Tvsx_h_incomp_help = "Calculate T, v, s, x for incompressible fluid from enthalpy, using FPROPS";
 static const char *fprops_rxn_h_TPn_help = "Calculate package-based reactive mixture enthalpy from temperature, pressure and species molar vector, using FPROPS";
+static const char *fprops_rxn_eqm_TPn_help = "Calculate package-based equilibrium outlet species molar vector from temperature, pressure and inlet species molar vector, using FPROPS";
 
 typedef struct{
 	int ns;
 	FpropsRxnPackage *pkg;
+	char *algorithm;
 } AscFpropsRxnData;
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
@@ -218,6 +222,16 @@ ASC_EXPORT int fprops_register(){
 		, asc_fprops_rxn_final
 		, 3,1
 		, fprops_rxn_h_TPn_help
+		, 0.0
+	);
+	result += CreateUserFunctionBlackBox("fprops_rxn_eqm_TPn"
+		, asc_fprops_rxneq_prepare
+		, fprops_rxn_eqm_TPn_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_rxn_final
+		, 3,1
+		, fprops_rxn_eqm_TPn_help
 		, 0.0
 	);
 
@@ -307,12 +321,13 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
-	struct Instance *srcinst, *components_inst;
+	struct Instance *srcinst, *alginst, *components_inst;
 	const char *source = NULL;
+	const char *algorithm = NULL;
 	const char **names = NULL;
 	AscFpropsRxnData *rxn = NULL;
 	unsigned long actual_inputs, actual_outputs, c, ns;
-	symchar *components_sym, *species_name_sym, *source_sym;
+	symchar *components_sym, *species_name_sym, *source_sym, *algorithm_sym;
 
 	if(!bbox || !data || !arglist){
 		ERRMSG("Reactive FPROPS blackbox received invalid prepare arguments");
@@ -328,14 +343,15 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		ERRMSG("Reactive FPROPS blackbox requires T, P and a species flow vector");
 		return 1;
 	}
-	if(actual_outputs != 1){
-		ERRMSG("Reactive FPROPS blackbox requires exactly one output");
+	if(actual_outputs < 1){
+		ERRMSG("Reactive FPROPS blackbox requires at least one output");
 		return 1;
 	}
 
 	components_sym = AddSymbol("components");
 	species_name_sym = AddSymbol("species_name");
 	source_sym = AddSymbol("source");
+	algorithm_sym = AddSymbol("algorithm");
 	components_inst = ChildByChar(data, species_name_sym);
 	if(!components_inst){
 		components_inst = ChildByChar(data, components_sym);
@@ -397,6 +413,17 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		source = SCP(SYMC_INST(srcinst)->value);
 		if(source && strlen(source) == 0)source = NULL;
 	}
+	alginst = ChildByChar(data, algorithm_sym);
+	if(alginst){
+		if(InstanceKind(alginst) != SYMBOL_CONSTANT_INST){
+			ERRMSG("DATA member 'algorithm' must be a symbol_constant");
+			free(names);
+			free(rxn);
+			return 1;
+		}
+		algorithm = SCP(SYMC_INST(alginst)->value);
+		if(algorithm && strlen(algorithm) == 0)algorithm = NULL;
+	}
 
 	rxn->pkg = fprops_rxn_package_build(names, (int)ns, source);
 	free(names);
@@ -405,8 +432,46 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		free(rxn);
 		return 1;
 	}
+	if(algorithm){
+		rxn->algorithm = ASC_NEW_ARRAY(char, strlen(algorithm) + 1);
+		if(!rxn->algorithm){
+			fprops_rxn_package_free(rxn->pkg);
+			free(rxn);
+			ERRMSG("Unable to allocate reactive FPROPS algorithm string");
+			return 1;
+		}
+		strcpy(rxn->algorithm, algorithm);
+	}
 	rxn->ns = (int)ns;
 	bbox->user_data = (void *)rxn;
+	return 0;
+}
+
+int asc_fprops_rxneq_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	int status;
+	AscFpropsRxnData *rxn = NULL;
+	if(!bbox || !data || !arglist){
+		ERRMSG("Reactive FPROPS equilibrium blackbox received invalid prepare arguments");
+		return 1;
+	}
+	status = asc_fprops_rxn_prepare(bbox, data, arglist);
+	if(status){
+		return status;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn){
+		ERRMSG("Reactive FPROPS equilibrium blackbox prepare returned no package");
+		return 1;
+	}
+	if(CountNumberOfArgs(arglist,4,4) != (unsigned long)rxn->ns){
+		ERRMSG("Reactive FPROPS equilibrium blackbox requires one output per package species (got %lu, expected %d)",
+			CountNumberOfArgs(arglist,4,4), rxn->ns);
+		asc_fprops_rxn_final(bbox);
+		return 1;
+	}
 	return 0;
 }
 
@@ -419,6 +484,7 @@ void asc_fprops_rxn_final(struct BBoxInterp *bbox){
 	if(rxn->pkg){
 		fprops_rxn_package_free(rxn->pkg);
 	}
+	free(rxn->algorithm);
 	free(rxn);
 	bbox->user_data = NULL;
 }
@@ -1055,5 +1121,53 @@ int fprops_rxn_h_TPn_calc(struct BBoxInterp *bbox,
 		return status;
 	}
 	outputs[0] = H;
+	return 0;
+}
+
+int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsRxnData *rxn;
+	FpropsRxnTPN state;
+	FpropsRxnResult out;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn->pkg){
+		ERRMSG("Reactive FPROPS equilibrium blackbox has no prepared package");
+		return -6;
+	}
+	if(ninputs != rxn->ns + 2){
+		ERRMSG("Reactive FPROPS equilibrium blackbox received %d inputs, expected %d", ninputs, rxn->ns + 2);
+		return -1;
+	}
+	if(noutputs != rxn->ns){
+		ERRMSG("Reactive FPROPS equilibrium blackbox received %d outputs, expected %d", noutputs, rxn->ns);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	state.T = inputs[0];
+	state.P = inputs[1];
+	state.n = &inputs[2];
+	out.status = -99;
+	out.H = NAN;
+	out.G = NAN;
+	out.n_out = outputs;
+	status = fprops_rxn_eqm_tpy(rxn->pkg, &state,
+		rxn->algorithm ? rxn->algorithm : "reduced",
+		NULL, &out);
+	if(status != 0 && status != 1 && status != 6){
+		ERRMSG("Reactive FPROPS equilibrium evaluation failed with status %d", status);
+		return status;
+	}
 	return 0;
 }

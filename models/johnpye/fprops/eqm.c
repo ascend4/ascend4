@@ -4349,6 +4349,41 @@ int fprops_rxn_mix_h(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, dou
 	return 0;
 }
 
+int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
+		const char *algorithm, const double *n_init, FpropsRxnResult *out){
+	double *b = NULL;
+	int e, i, status;
+
+	if(!pkg || !state || !state->n || !out || !out->n_out || pkg->ns <= 0 || pkg->ne <= 0
+			|| !(state->T > 0.0) || !(state->P > 0.0)){
+		ERR("rxn eqm tpy: invalid args pkg=%p state=%p n=%p out=%p n_out=%p ns=%d ne=%d T=%.17g P=%.17g",
+			(void *)pkg, (void *)state, state ? (void *)state->n : NULL,
+			(void *)out, out ? (void *)out->n_out : NULL,
+			pkg ? pkg->ns : -1, pkg ? pkg->ne : -1,
+			state ? state->T : NAN, state ? state->P : NAN);
+		return -11;
+	}
+	b = (double *)calloc((size_t)pkg->ne, sizeof(double));
+	if(!b){
+		ERR("rxn eqm tpy: unable to allocate element totals vector (ne=%d)", pkg->ne);
+		return -12;
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		if(!(state->n[i] >= 0.0) || !isfinite(state->n[i])){
+			ERR("rxn eqm tpy: invalid amount n[%d]=%.17g for '%s'", i, state->n[i],
+				pkg->species && pkg->species[i].name ? pkg->species[i].name : "(null)");
+			free(b);
+			return -13;
+		}
+		for(e = 0; e < pkg->ne; ++e){
+			b[e] += pkg->A[e * pkg->ns + i] * state->n[i];
+		}
+	}
+	status = fprops_rxn_eqm_tpb(pkg, state, b, algorithm, n_init, out);
+	free(b);
+	return status;
+}
+
 int fprops_rxn_eqm_tpb(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 		const double *b, const char *algorithm, const double *n_init, FpropsRxnResult *out){
 	int status;

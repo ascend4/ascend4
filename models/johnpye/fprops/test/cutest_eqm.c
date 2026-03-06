@@ -560,6 +560,40 @@ static void test_fprops_rxn_package_eqm_matches_legacy(void){
 	fprops_rxn_package_free(pkg);
 }
 
+static void test_fprops_rxn_package_eqm_tpy_matches_legacy(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const double n_in[] = {1.0, 1.0, 0.0, 0.0};
+	FpropsRxnPackage *pkg = fprops_rxn_package_build(names, ARRAYLEN(names), "Moran and Shapiro");
+	FpropsRxnTPN state;
+	FpropsRxnResult out_pkg;
+	double n_pkg[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_legacy[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	int status_pkg;
+	int status_legacy;
+	int i;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+	state.T = g_eqm.T;
+	state.P = g_eqm.P;
+	state.n = n_in;
+	out_pkg.status = -99;
+	out_pkg.H = NAN;
+	out_pkg.G = NAN;
+	out_pkg.n_out = n_pkg;
+
+	status_pkg = fprops_rxn_eqm_tpy(pkg, &state, "reduced", NULL, &out_pkg);
+	status_legacy = fprops_eqm_tpy(names, ARRAYLEN(names), n_in, "Moran and Shapiro",
+		g_eqm.T, g_eqm.P, "reduced", NULL, n_legacy);
+
+	CU_ASSERT_EQUAL(status_pkg, 0);
+	CU_ASSERT_EQUAL(status_legacy, 0);
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		CU_ASSERT_TRUE(fabs(n_pkg[i] - 2.0 * n_legacy[i]) <= 1e-9);
+	}
+
+	fprops_rxn_package_free(pkg);
+}
+
 static void test_eqm_wgs_permutation_invariance(void){
 	static const char *base_names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
 	static const char *base_elements[] = {"C", "O", "H"};
@@ -887,6 +921,10 @@ CU_ErrorCode test_register_eqm(void){
 	}
 	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_matches_legacy",
 			test_fprops_rxn_package_eqm_matches_legacy)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_tpy_matches_legacy",
+			test_fprops_rxn_package_eqm_tpy_matches_legacy)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "wgs_permutation_invariance", test_eqm_wgs_permutation_invariance)){
