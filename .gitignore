@@ -41,6 +41,7 @@ models/johnpye/fprops/python/fprops_wrap.c
 models/johnpye/fprops/test/cutest
 models/johnpye/fprops/test/pureprops_compare
 models/johnpye/fprops/test/*.png
+models/johnpye/fprops/test/*.pdf
 options.cache
 pygtk/ascdev
 pygtk/ascend

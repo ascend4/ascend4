@@ -481,6 +481,46 @@ static void test_fprops_rxn_package_mix_h_matches_legacy(void){
 	fprops_rxn_package_free(pkg);
 }
 
+static void test_fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy(void){
+	static const char *names[] = {"Fe2O3", "hydrogen", "Fe_bcc", "water"};
+	static const double n_in[] = {1.0, 3.0, 0.0, 0.0};
+	static const double n_out[] = {0.0, 0.0, 2.0, 3.0};
+	static const char *source =
+		"Fe2O3=hidayat_2015;Fe_bcc=hidayat_2015;*=Moran and Shapiro";
+	FpropsRxnPackage *pkg = NULL;
+	FpropsRxnTPN state;
+	double H_in = NAN;
+	double H_out = NAN;
+	double dH = NAN;
+	int status_in;
+	int status_out;
+
+	/* Fe2O3(cr) + 3 H2(g) -> 2 Fe(cr) + 3 H2O(g)
+	   NIST/JANAF standard-state data at 298.15 K gives
+	   Delta H ~= +99.025 kJ/mol Fe2O3. */
+	pkg = fprops_rxn_package_build(names, ARRAYLEN(names), source);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+
+	state.T = 298.15;
+	state.P = g_eqm.P0;
+	state.n = n_in;
+	status_in = fprops_rxn_mix_h(pkg, &state, &H_in);
+
+	state.n = n_out;
+	status_out = fprops_rxn_mix_h(pkg, &state, &H_out);
+
+	CU_ASSERT_EQUAL_FATAL(status_in, 0);
+	CU_ASSERT_EQUAL_FATAL(status_out, 0);
+	CU_ASSERT_TRUE_FATAL(isfinite(H_in));
+	CU_ASSERT_TRUE_FATAL(isfinite(H_out));
+
+	dH = H_out - H_in;
+	CU_ASSERT_TRUE(dH > 0.0);
+	CU_ASSERT_TRUE(fabs(dH - 99025.0) <= 3000.0);
+
+	fprops_rxn_package_free(pkg);
+}
+
 static void test_fprops_rxn_package_eqm_matches_legacy(void){
 	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
 	static const char *elements[] = {"C", "O", "H"};
@@ -839,6 +879,10 @@ CU_ErrorCode test_register_eqm(void){
 	}
 	if(NULL == CU_add_test(s, "fprops_rxn_package_mix_h_matches_legacy",
 			test_fprops_rxn_package_mix_h_matches_legacy)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy",
+			test_fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_matches_legacy",

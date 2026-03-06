@@ -259,6 +259,7 @@ static PureFluid *eqm_prepare_fluid_cached(const char *name, const char *corrtyp
 
 static int eqm_species_compile_thermo(const char *name, const char *source_resolved,
 		EqmMuModel selector_model, int use_ref0, FpropsRxnThermoRef *thermo){
+	int allow_unsourced_fallback;
 	if(!name || !thermo){
 		ERR("eqm species compile thermo: invalid args name=%p thermo=%p", (void *)name, (void *)thermo);
 		return 0;
@@ -266,6 +267,7 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 	memset(thermo, 0, sizeof(*thermo));
 	thermo->selector_model = selector_model;
 	thermo->use_ref0 = use_ref0;
+	allow_unsourced_fallback = !eqm_has_explicit_source(source_resolved);
 
 	switch(selector_model){
 	case EQM_MODEL_AUTO:
@@ -276,14 +278,14 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 			return 1;
 		}
 		thermo->gibbs = gibbs_species_lookup(name, source_resolved);
-		if(!thermo->gibbs){
+		if(!thermo->gibbs && allow_unsourced_fallback){
 			thermo->gibbs = gibbs_species_lookup(name, NULL);
 		}
 		if(thermo->gibbs){
 			thermo->mu_kind = FPROPS_RXN_COMPILED_GIBBS;
 		}
 		thermo->shomate = shomate_species_lookup(name, source_resolved);
-		if(!thermo->shomate){
+		if(!thermo->shomate && allow_unsourced_fallback){
 			thermo->shomate = shomate_species_lookup(name, NULL);
 		}
 		if(thermo->shomate){
@@ -294,7 +296,7 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 			return thermo->mu_kind != FPROPS_RXN_COMPILED_NONE;
 		}
 		thermo->constcp = constcp_species_lookup(name, source_resolved);
-		if(!thermo->constcp){
+		if(!thermo->constcp && allow_unsourced_fallback){
 			thermo->constcp = constcp_species_lookup(name, NULL);
 		}
 		if(thermo->constcp){
@@ -302,6 +304,10 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 				thermo->mu_kind = FPROPS_RXN_COMPILED_CONSTCP;
 			}
 			thermo->h_kind = FPROPS_RXN_COMPILED_CONSTCP;
+		}
+		if(thermo->mu_kind == FPROPS_RXN_COMPILED_GIBBS
+				&& thermo->h_kind == FPROPS_RXN_COMPILED_NONE){
+			thermo->h_kind = FPROPS_RXN_COMPILED_GIBBS;
 		}
 		return thermo->mu_kind != FPROPS_RXN_COMPILED_NONE;
 	case EQM_MODEL_IDEAL:
@@ -428,6 +434,11 @@ static int eqm_h_from_compiled(const FpropsRxnSpeciesCache *spec, double T, doub
 		return 0;
 	}
 	switch(spec->thermo.h_kind){
+	case FPROPS_RXN_COMPILED_GIBBS:
+		if(!spec->thermo.gibbs){
+			return 0;
+		}
+		return gibbs_species_h_molar(spec->thermo.gibbs, T, 1e5, h);
 	case FPROPS_RXN_COMPILED_SHOMATE:
 		if(!spec->thermo.shomate){
 			return 0;
@@ -467,7 +478,6 @@ static int eqm_h_from_compiled(const FpropsRxnSpeciesCache *spec, double T, doub
 			return 1;
 		}
 		return 0;
-	case FPROPS_RXN_COMPILED_GIBBS:
 	case FPROPS_RXN_COMPILED_NONE:
 	default:
 		return 0;

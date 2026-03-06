@@ -2,9 +2,7 @@ REQUIRE "johnpye/fprops/reactive_stoic.a4l";
 
 MODEL reactor_stoic_wgs_demo;
 	components IS_A set OF symbol_constant;
-	components :== ['CO','H2O','CO2','H2'];
 	reactions IS_A set OF symbol_constant;
-	reactions :== ['WGS'];
 
 	pkg IS_A reactive_package(components);
 	pkg.species_name['CO'] :== 'carbonmonoxide';
@@ -14,9 +12,7 @@ MODEL reactor_stoic_wgs_demo;
 	pkg.source :== 'Moran and Shapiro';
 
 	R IS_A reactor_stoic(pkg, reactions);
-	nu_table[reactions][components] IS_A real_constant;
-
-	TABLE nu_table[reactions,components];
+	TABLE nu_table[reactions,components] IS_A real_constant;
 		    CO   H2O  CO2  H2
 		WGS -1   -1    1   1
 	END TABLE;

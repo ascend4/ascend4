@@ -1545,6 +1545,31 @@ black-boxes may be needed.
 This will depend on whether auxiliary descriptors are designed well
 enough to transport the missing internal state.
 
+### 16.6 Species alias and formula-based name resolution
+
+The current `reactive_package` examples require explicit mappings such
+as `CO -> carbonmonoxide` and `CO2 -> carbondioxide`, which is not a
+good long-term user experience.
+
+A likely direction is:
+
+- keep one canonical internal FPROPS species name per basis species
+- make `species_name[...]` an optional explicit override
+- otherwise resolve the user-facing component token via:
+  - exact canonical-name match
+  - normalized-name match (`carbon_dioxide`, `carbon-dioxide`, etc)
+  - a built-in alias table (`CO`, `CO2`, `H2`, `H2O`, ...)
+  - formula lookup, but only when the match is unique
+
+This would allow simple reactor models to use familiar chemical symbols
+by default, while still requiring explicit `species_name[...]`
+assignment for ambiguous cases such as hydrogen variants, phase-specific
+species, solution members, wustite/spinel members, and any future
+multiphase basis species.
+
+This should be implemented as a package-build-time resolver in FPROPS,
+not as a string rewrite scattered through ASCEND MODEL code.
+
 ## 17. Recommendation
 
 The recommended architectural direction is:

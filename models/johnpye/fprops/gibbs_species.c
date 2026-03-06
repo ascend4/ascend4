@@ -223,3 +223,42 @@ int gibbs_species_g_molar(const GibbsSpecies *S, double T, double p, double *g_o
 	}
 	return 1;
 }
+
+int gibbs_species_h_molar(const GibbsSpecies *S, double T, double p, double *h_out){
+	double g0, gp1, gp2, gm1, gm2;
+	double dT;
+	double dgdT;
+	int have_p1, have_p2, have_m1, have_m2;
+
+	if(!S || !h_out || !(T > 0.0)){
+		return 0;
+	}
+	if(!gibbs_species_g_molar(S, T, p, &g0)){
+		return 0;
+	}
+
+	dT = fmax(1e-3, 1e-4 * T);
+	have_p1 = gibbs_species_g_molar(S, T + dT, p, &gp1);
+	have_m1 = gibbs_species_g_molar(S, T - dT, p, &gm1);
+	if(have_p1 && have_m1){
+		dgdT = (gp1 - gm1) / (2.0 * dT);
+		*h_out = g0 - T * dgdT;
+		return isfinite(*h_out) ? 1 : 0;
+	}
+
+	have_p2 = gibbs_species_g_molar(S, T + 2.0 * dT, p, &gp2);
+	if(have_p1 && have_p2){
+		dgdT = (-3.0 * g0 + 4.0 * gp1 - gp2) / (2.0 * dT);
+		*h_out = g0 - T * dgdT;
+		return isfinite(*h_out) ? 1 : 0;
+	}
+
+	have_m2 = gibbs_species_g_molar(S, T - 2.0 * dT, p, &gm2);
+	if(have_m1 && have_m2){
+		dgdT = (3.0 * g0 - 4.0 * gm1 + gm2) / (2.0 * dT);
+		*h_out = g0 - T * dgdT;
+		return isfinite(*h_out) ? 1 : 0;
+	}
+
+	return 0;
+}
