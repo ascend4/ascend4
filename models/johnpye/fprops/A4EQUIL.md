@@ -1132,6 +1132,16 @@ Current limitation:
 - this is now understood as an initialization / scaling problem, not a
   missing architectural piece
 
+Current best initialization path:
+
+- solve the matching `reactor_kinetic` case first
+- copy the solved stream / holdup state into `reactor_kineq`
+- then attempt the `reactor_kineq` solve on that initialized state
+
+This continuation path is now implemented in the comparison harness and
+should remain the preferred bring-up route until `reactor_kineq` has a
+robust standalone initialization method.
+
 So the practical near-term plan is:
 
 1. keep `reactor_kineq` v1 concentration-based

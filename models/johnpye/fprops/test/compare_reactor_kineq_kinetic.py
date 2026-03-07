@@ -17,13 +17,62 @@ def array_child(array_instance, child_name):
 	raise KeyError(child_name)
 
 
-def solve_model(lib, filename, modelname, solvername):
+def build_model(lib, filename, modelname, solvername):
 	lib.load(filename)
 	t = lib.findType(modelname)
 	sim = t.getSimulation("sim", True)
 	sim.setSolver(ascpy.Solver(solvername))
+	return sim
+
+
+def solve_model(lib, filename, modelname, solvername):
+	sim = build_model(lib, filename, modelname, solvername)
 	sim.solve(sim.getSolver(), ascpy.SolverReporter())
 	return sim
+
+
+def set_array_value(array_instance, child_name, value, units=None):
+	child = array_child(array_instance, child_name)
+	if units is None:
+		child.setRealValue(value)
+	else:
+		child.setRealValueWithUnits(value, units)
+
+
+def copy_kinetic_state_to_kineq(kin, kineq):
+	for nm in ["n_butane", "butene_1", "n_octane"]:
+		set_array_value(kineq.R.inlet.f, nm, array_child(kin.R.inlet.f, nm).to("kmol/h"), "kmol/h")
+		set_array_value(kineq.R.outlet.f, nm, array_child(kin.R.outlet.f, nm).to("kmol/h"), "kmol/h")
+		set_array_value(kineq.R.inlet.y, nm, array_child(kin.R.inlet.y, nm).getRealValue())
+		set_array_value(kineq.R.outlet.y, nm, array_child(kin.R.outlet.y, nm).getRealValue())
+		set_array_value(kineq.R.holdup.y, nm, array_child(kin.R.holdup.y, nm).getRealValue())
+		set_array_value(kineq.R.holdup.n, nm, array_child(kin.R.holdup.n, nm).to("mol"), "mol")
+		set_array_value(kineq.R.holdup.c, nm, array_child(kin.R.holdup.c, nm).to("mol/m^3"), "mol/m^3")
+	kineq.R.inlet.flow.setRealValueWithUnits(kin.R.inlet.flow.to("mol/s"), "mol/s")
+	kineq.R.outlet.flow.setRealValueWithUnits(kin.R.outlet.flow.to("mol/s"), "mol/s")
+	kineq.R.inlet.H_flow.setRealValueWithUnits(kin.R.inlet.H_flow.to("W"), "W")
+	kineq.R.outlet.H_flow.setRealValueWithUnits(kin.R.outlet.H_flow.to("W"), "W")
+	kineq.R.holdup.c_tot.setRealValueWithUnits(kin.R.holdup.c_tot.to("mol/m^3"), "mol/m^3")
+	kineq.R.inlet.T.setRealValueWithUnits(kin.R.inlet.T.to("K"), "K")
+	kineq.R.inlet.P.setRealValueWithUnits(kin.R.inlet.P.to("Pa"), "Pa")
+	kineq.R.outlet.T.setRealValueWithUnits(kin.R.outlet.T.to("K"), "K")
+	kineq.R.outlet.P.setRealValueWithUnits(kin.R.outlet.P.to("Pa"), "Pa")
+	kineq.R.Volume.setRealValueWithUnits(kin.R.Volume.to("m^3"), "m^3")
+	kineq.R.DeltaP.setRealValueWithUnits(kin.R.DeltaP.to("Pa"), "Pa")
+	kineq.R.holdup.T.setRealValueWithUnits(kin.R.holdup.T.to("K"), "K")
+	kineq.R.holdup.P.setRealValueWithUnits(kin.R.holdup.P.to("Pa"), "Pa")
+	kineq.R.holdup.state.H.setRealValueWithUnits(kin.R.holdup.state.H.to("J/mol"), "J/mol")
+	kineq.R.holdup.N.setRealValueWithUnits(kin.R.holdup.N.to("mol"), "mol")
+	kineq.R.holdup.V.setRealValueWithUnits(kin.R.holdup.V.to("m^3"), "m^3")
+	kineq.R.holdup.V_molar.setRealValueWithUnits(kin.R.holdup.V_molar.to("m^3/mol"), "m^3/mol")
+	kineq.R.holdup.H.setRealValueWithUnits(kin.R.holdup.H.to("J"), "J")
+	kineq.R.Qdot.setRealValueWithUnits(kin.R.Qdot.to("W"), "W")
+	array_child(kineq.R.kinetics.rate_forward, "r1").setRealValueWithUnits(array_child(kin.R.kinetics.rate, "forward").to("mol/m^3/s"), "mol/m^3/s")
+	array_child(kineq.R.kinetics.rate, "r1").setRealValueWithUnits(
+		array_child(kin.R.kinetics.rate, "forward").to("mol/m^3/s")
+		- array_child(kin.R.kinetics.rate, "backward").to("mol/m^3/s"),
+		"mol/m^3/s",
+	)
 
 
 def report_delta(label, refval, testval):
@@ -36,7 +85,10 @@ def main():
 	lib = ascpy.Library()
 	kin = solve_model(lib, "models/johnpye/fprops/reactive_kinetic_demo.a4c", "test_reactive_kinetic_single_phase", "QRSlv")
 	try:
-		kineq = solve_model(lib, "models/johnpye/fprops/reactive_kineq_demo.a4c", "test_reactive_kineq_single_phase", "QRSlv")
+		kineq = build_model(lib, "models/johnpye/fprops/reactive_kineq_demo.a4c", "test_reactive_kineq_single_phase", "QRSlv")
+		copy_kinetic_state_to_kineq(kin, kineq)
+		array_child(kineq.R.kinetics.K_eq, "r1").setRealValue(0.01)
+		kineq.solve(kineq.getSolver(), ascpy.SolverReporter())
 	except RuntimeError as err:
 		print("reactor_kineq diagnostic: solver did not converge with the current formulation.")
 		print(f"reactor_kineq diagnostic: {err}")
