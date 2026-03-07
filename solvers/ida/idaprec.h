@@ -37,8 +37,13 @@ typedef void IntegratorIdaPrecCreateFn(IntegratorSystem *integ);
 */
 typedef struct IntegratorIdaPrecStruct{
 	IntegratorIdaPrecCreateFn *pcreate;
+#if SUNDIALS_VERSION_MAJOR >= 6
+	IDALsPrecSetupFn psetup;
+	IDALsPrecSolveFn psolve;
+#else
 	IDASpilsPrecSetupFn psetup;
 	IDASpilsPrecSolveFn psolve;
+#endif
 } IntegratorIdaPrec;
 
 
@@ -56,7 +61,7 @@ typedef struct IntegratorIdaPrecDJFStruct{
 /**	@todo FIXME seems that this pfree function is not being used anywhere?? */
 void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata);
 
-const IntegratorIdaPrec prec_jacobian;
+extern const IntegratorIdaPrec prec_jacobian;
 
 /*------------------------------------------------------------------------------
   JACOBI PRECONDITIONER
@@ -73,6 +78,4 @@ typedef struct IntegratorIdaPrecDJStruct{
 /**	@todo FIXME seems that this pfree function is not being used anywhere?? */
 void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata);
 
-const IntegratorIdaPrec prec_jacobi;
-
-
+extern const IntegratorIdaPrec prec_jacobi;

@@ -119,7 +119,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	char *relname;
 #ifdef FEX_DEBUG
 	char *varname;
-	char diffname[30];
+	char diffname[100];
 #endif
 
 	integ = (IntegratorSystem *)res_data;
@@ -230,7 +230,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 			varname = var_make_name(integ->system,integ->ydot[i]);
 			fprintf(stderr,"%15s=%10f\t",varname,NV_Ith_S(yp,i));
 		}else{
-			snprintf(diffname,99,"diff(%s)",varname);
+			snprintf(diffname,sizeof(diffname),"diff(%s)",varname);
 			fprintf(stderr,"%15s=%10f\t",diffname,NV_Ith_S(yp,i));
 		}
 		ASC_FREE(varname);
@@ -253,7 +253,13 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	Dense Jacobian evaluation. Only suitable for small problems!
 	Has been seen working for problems up to around 2000 vars, FWIW.
 */
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+#if SUNDIALS_VERSION_MAJOR >= 6
+int integrator_ida_djex(realtype tt, realtype c_j
+		, N_Vector yy, N_Vector yp, N_Vector rr
+		, IDA_MTX_T Jac, void *jac_data
+		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+){
+#elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
 int integrator_ida_djex(int Neq, realtype tt, realtype c_j
 		, N_Vector yy, N_Vector yp, N_Vector rr
 		, IDA_MTX_T Jac, void *jac_data
@@ -282,6 +288,10 @@ int integrator_ida_djex(long int Neq, realtype tt
 
 	integ = (IntegratorSystem *)jac_data;
 	enginedata = integrator_ida_enginedata(integ);
+	(void)rr;
+	(void)tmp1;
+	(void)tmp2;
+	(void)tmp3;
 
 	/* allocate space for returns from relman_diff3 */
 	/** @TODO instead, we should use 'tmp1' and 'tmp2' here... */
@@ -373,11 +383,11 @@ int integrator_ida_djex(long int Neq, realtype tt
 #ifdef DJEX_DEBUG
 				fprintf(stderr," --> J[%d,%d] += %g\n", i,j,derivatives[j]);
 				asc_assert(var_sindex(variables[j]) >= 0);
-				ASC_ASSERT_LT(var_sindex(variables[j]) , Neq);
+				ASC_ASSERT_LT(var_sindex(variables[j]) , integ->n_y);
 #endif
-				DENSE_ELEM(Jac,i,var_sindex(variables[j])) += derivatives[j];
+				ASC_IDA_DENSE_ELEM(Jac,i,var_sindex(variables[j])) += derivatives[j];
 			}else{
-				DENSE_ELEM(Jac,i,integrator_ida_diffindex(integ,variables[j])) += derivatives[j] * c_j;
+				ASC_IDA_DENSE_ELEM(Jac,i,integrator_ida_diffindex(integ,variables[j])) += derivatives[j] * c_j;
 #ifdef DJEX_DEBUG
 				fprintf(stderr," --> * c_j --> J[%d,%d] += %g\n", i,j,derivatives[j] * c_j);
 #endif
@@ -403,7 +413,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 
 		for(j=0; j < integ->n_y; ++j){
 			if(j)fprintf(stderr,"\t");
-			fprintf(stderr,"%11.2e",DENSE_ELEM(Jac,i,j));
+			fprintf(stderr,"%11.2e",ASC_IDA_DENSE_ELEM(Jac,i,j));
 		}
 		fprintf(stderr,"\n");
 	}
@@ -413,7 +423,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	if(!is_error){
 		for(i=0;i< enginedata->nrels; ++i){
 			for(j=0;j<integ->n_y;++j){
-				if(isnan(DENSE_ELEM(Jac,i,j))){
+				if(isnan(ASC_IDA_DENSE_ELEM(Jac,i,j))){
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"NAN detected in jacobian J[%d,%d]",i,j);
 					is_error=1;
 				}
@@ -477,7 +487,6 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	struct var_variable **variables;
 	double *derivatives;
 	int count;
-	struct var_variable **varlist;
 #ifdef JEX_DEBUG
 
 	CONSOLE_DEBUG("EVALUATING JACOBIAN...");
@@ -485,7 +494,6 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 	integ = (IntegratorSystem *)jac_data;
 	enginedata = integrator_ida_enginedata(integ);
-	varlist = slv_get_solvers_var_list(integ->system);
 
 	/* pass the values of everything back to the compiler */
 	integrator_set_t(integ, (double)tt);
@@ -673,4 +681,3 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
 
 	return 0; /* no way to detect errors in bndman_*_eval at this stage */
 }
-

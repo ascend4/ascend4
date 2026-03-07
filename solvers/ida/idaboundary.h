@@ -59,7 +59,7 @@ int ida_bnd_update_relist(IntegratorSystem *integ);
  * Create a new NVector, assign all data to 0
  * @param vec_length	number of data elements in the vector.
  */
-N_Vector ida_bnd_new_zero_NV(long int vec_length);
+N_Vector ida_bnd_new_zero_NV(IntegratorSystem *integ, long int vec_length);
 
 void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vector yp0);
 

@@ -251,8 +251,8 @@ static struct gl_list_t *integrator_get_list(int free_space){
 		for(i=0; defaultintegrators[i]!=NULL;++i){
 			error = package_load(defaultintegrators[i],NULL);
 			if(error){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR
-					,"Unable to register integrator '%s' (error %d)."
+				ERROR_REPORTER_HERE(ASC_PROG_NOTE
+					,"Integrator '%s' is not available (error %d)."
 					,defaultintegrators[i],error
 				);
 			}else{

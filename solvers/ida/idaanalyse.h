@@ -45,12 +45,12 @@ int integrator_ida_diffindex1(const IntegratorSystem *sys, const struct var_vari
 /**
 	Filter that will match all our 'y' variables (and only those)
 */
-const var_filter_t integrator_ida_filter_nonderiv;
+extern const var_filter_t integrator_ida_filter_nonderiv;
 
 /*
 	Filter that will match all our 'ydot' variables (and only those)
 */
-const var_filter_t integrator_ida_filter_deriv;
+extern const var_filter_t integrator_ida_filter_deriv;
 
 /**
 	Some filters that will generally be useful for IDA systems.

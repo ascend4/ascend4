@@ -6,6 +6,8 @@
 # compile and run.
 
 Import('env')
+import shutil
+
 fprops_env = env.Clone()
 
 if not fprops_env.get('HAVE_IPOPT'):
