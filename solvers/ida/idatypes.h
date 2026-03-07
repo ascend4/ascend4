@@ -22,6 +22,7 @@
 #ifndef ASC_IDATYPES_H
 #define ASC_IDATYPES_H
 
+#include "ida.h"
 #include <ascend/integrator/integrator.h>
 
 /* forward dec needed for IntegratorIdaPrecFreeFn */
@@ -36,8 +37,8 @@ typedef void IntegratorIdaPrecFreeFn(struct IntegratorIdaDataStruct *enginedata)
 /**
  * Function type for error flag description look-up
  */
-typedef int IdaFlagFn(void *, int *);
-typedef char *IdaFlagNameFn(int);
+typedef int IdaFlagFn(void *, long int *);
+typedef char *IdaFlagNameFn(long int);
 
 /**
 	Struct containing any stuff that IDA needs that doesn't fit into the
@@ -62,6 +63,12 @@ typedef struct IntegratorIdaDataStruct{
 	IdaFlagNameFn *flagnamefn;
 	const char *flagfntype;
 
+#if SUNDIALS_VERSION_MAJOR >= 6
+	SUNContext sunctx;
+	SUNLinearSolver linear_solver;
+	SUNMatrix dense_matrix;
+#endif
+
 } IntegratorIdaData;
 
 /**
@@ -71,4 +78,3 @@ typedef struct IntegratorIdaDataStruct{
 IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *integ);
 
 #endif
-

@@ -6,7 +6,26 @@
 # compile and run.
 
 Import('env')
+import shutil
+
 fprops_env = env.Clone()
+
+def _parse_optional_pkg(env, pkg):
+	pkgtool = shutil.which('pkgconf') or shutil.which('pkg-config')
+	if pkgtool is None:
+		return False
+	try:
+		env.ParseConfig([pkgtool, pkg, '--libs', '--cflags'])
+		return True
+	except Exception:
+		return False
+
+if not fprops_env.get('HAVE_IPOPT'):
+	fprops_env.ensure_ipopt()
+
+if fprops_env.get('WITH_NLOPT') and not fprops_env.get('HAVE_NLOPT'):
+	if _parse_optional_pkg(fprops_env, 'nlopt'):
+		fprops_env['HAVE_NLOPT'] = True
 
 if fprops_env.get('HAVE_IPOPT'):
 	fprops_env.AppendUnique(CPPDEFINES=['HAVE_IPOPT'])

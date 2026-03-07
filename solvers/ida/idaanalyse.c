@@ -365,7 +365,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	linsolqr_system_t L;
 	mtx_range_t range;
 	mtx_region_t R;
-	int res, r;
+	int res, r, index_error;
 	struct SystemJacobianStruct df_dydp, dg_dya;
 
 	CONSOLE_DEBUG("system has total of %d rels and %d vars"
@@ -391,6 +391,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating df/dyd'");
+		return 1;
 	}
 	CONSOLE_DEBUG("df/dyd': nr = %d, nv = %d",df_dydp.n_rels,df_dydp.n_vars);
 
@@ -403,6 +404,10 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating dg/dya");
+		ASC_FREE(df_dydp.vars);
+		ASC_FREE(df_dydp.rels);
+		mtx_destroy(df_dydp.M);
+		return 1;
 	}
 	CONSOLE_DEBUG("dg/dya: nr = %d, nv = %d",dg_dya.n_rels,dg_dya.n_vars);
 
@@ -410,10 +415,13 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"df/dyd' is a bit ambiguous");
 	}
 
+	index_error = 0;
+
 	if(dg_dya.n_rels <= 0){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No algebraic equations were found in the DAE system!");
 	}else if(dg_dya.n_rels != dg_dya.n_vars){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"The algebraic part of the DAE jacobian, dg/dya, is not square!");
+		index_error = 1;
 	}else{
 		/* check the rank */
 		range.low = 0; range.high = mtx_order(dg_dya.M) - 1;
@@ -431,6 +439,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 		if(r != dg_dya.n_rels){
 			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Your DAE system has an index problem: the matrix dg/dya is not full rank");
+			index_error = 1;
 		}
 	}
 
@@ -463,6 +472,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 		if(r != df_dydp.n_rels){
 			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Your DAE system has an index problem: the matrix df/dyd' is not full rank");
+			index_error = 1;
 		}
 	}
 
@@ -473,7 +483,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	ASC_FREE(df_dydp.vars);
 	ASC_FREE(df_dydp.rels);
 	mtx_destroy(df_dydp.M);
-	return 0;
+	return index_error;
 #else
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"check_index disabled");
 	return 0;
@@ -962,4 +972,3 @@ int integrator_ida_diffindex1(const IntegratorSystem *integ, const struct var_va
 	if(var_sindex(deriv) < integ->n_y + integ->n_ydot)return -2;
 	return integ->y_id[var_sindex(deriv) - integ->n_y];
 }
-
