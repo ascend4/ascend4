@@ -24,22 +24,18 @@ MODEL kineq_reaction_set(
 		rate_forward[r] ALIASES forward.rate[r];
 	END FOR;
 
+	rate_reverse[reactions] IS_A conc_rate;
 	rate[reactions] IS_A conc_rate;
 	production[components] IS_A conc_rate;
 
 	FOR r IN reactions CREATE
 		reactants[r] :== [i IN components | (i IN species[r]) AND (nu[i][r] < 0)];
 		products[r] :== [i IN components | (i IN species[r]) AND (nu[i][r] > 0)];
-		rate_eqn[r]:
-			rate[r] = rate_forward[r] * (
-				1 - (
-					PROD[PROD[(conc[i] / c_ref) | m IN [1..nu[i][r]]] | i IN products[r]]
-					/ (
-						K_eq[r]
-						* PROD[PROD[(conc[i] / c_ref) | m IN [1..-(nu[i][r])]] | i IN reactants[r]]
-					)
-				)
-			);
+		rate_rev_eqn[r]:
+			rate_reverse[r]
+				= (k_forward[r] * exp(-active_energy[r] / forward.R / T_reac) / K_eq[r])
+				* PROD[PROD[(conc[i] / c_ref) | m IN [1..nu[i][r]]] | i IN products[r]];
+		rate_eqn[r]: rate[r] = rate_forward[r] - rate_reverse[r];
 	END FOR;
 
 	FOR i IN components CREATE
@@ -52,6 +48,9 @@ METHODS
 		RUN forward.default_self;
 		FIX K_eq[reactions];
 		K_eq[reactions] := 1;
+		rate_reverse[reactions].lower_bound := 0 {mol/m^3/s};
+		rate[reactions].lower_bound := -1e100 {mol/m^3/s};
+		production[components].lower_bound := -1e100 {mol/m^3/s};
 	END default_self;
 END kineq_reaction_set;
 

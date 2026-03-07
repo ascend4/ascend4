@@ -1110,10 +1110,14 @@ What is implemented now:
 
 - a first `reactor_kineq` shell on the same `reactive_stream` /
   `reactive_holdup` basis as `reactor_kinetic`
-- a first `kineq_reaction_set` using a concentration-based reversible
-  elementary rate form:
+- a first `kineq_reaction_set` using a concentration-based
+  forward-minus-reverse elementary rate form:
 
-  `rate[r] = rate_fwd[r] * (1 - Qc[r] / K_eq[r])`
+  `rate[r] = rate_fwd[r] - rate_rev[r]`
+
+  with:
+
+  `rate_rev[r] = (k_fwd[r] / K_eq[r]) * exp(-Ea[r]/RT) * PROD[(c_i/c_ref)^nu+ ]`
 
   where `Qc[r]` is formed from concentrations normalized by a fixed
   reference concentration
@@ -1127,20 +1131,26 @@ What this current form is good for:
 
 Current limitation:
 
-- the first `reactor_kineq` demo does not yet converge robustly with
-  `QRSlv` as a standalone regression
-- this is now understood as an initialization / scaling problem, not a
-  missing architectural piece
+- the first `reactor_kineq` formulation using the compact
+  `rate_fwd * (1 - Q/K)` form did not converge robustly with `QRSlv`
+- the forward-minus-reverse reformulation does converge for the first
+  single-phase reversible-CSTR case
+
+Important implementation note:
+
+- `rate[r]` and `production[i]` must be allowed to go negative; using the
+  default nonnegative `conc_rate` bounds causes false solve failures
 
 Current best initialization path:
 
 - solve the matching `reactor_kinetic` case first
 - copy the solved stream / holdup state into `reactor_kineq`
-- then attempt the `reactor_kineq` solve on that initialized state
+- then solve `reactor_kineq` from that initialized state
 
-This continuation path is now implemented in the comparison harness and
-should remain the preferred bring-up route until `reactor_kineq` has a
-robust standalone initialization method.
+This continuation path is now implemented as a regression harness and
+serves as the cleanest verification that `reactor_kineq` reproduces the
+reversible kinetic baseline when both are posed on the same
+concentration basis.
 
 So the practical near-term plan is:
 
