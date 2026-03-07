@@ -118,6 +118,23 @@ int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 int fprops_rxn_mix_h(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, double *H_out);
 
 /**
+ * Compute total mixture volume using a compiled reactive package.
+ *
+ * This is currently a best-effort extensive property path intended for
+ * packages whose member species have meaningful per-species volume data
+ * at the requested `T`, `P`. It is suitable for pure-fluid and selected
+ * condensed-species packages, but may return a negative status for
+ * unsupported solution/species models.
+ *
+ * @param pkg Compiled reactive package.
+ * @param state Input T/P/species-amount state.
+ * @param V_out Output total volume in m^3 on the same extensive basis as
+ *        `state->n`.
+ * @return 0 on success, negative code on failure.
+ */
+int fprops_rxn_mix_v(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, double *V_out);
+
+/**
  * Solve a chemical-equilibrium problem with an explicitly supplied
  * element matrix.
  *

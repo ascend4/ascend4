@@ -1,9 +1,14 @@
 #include "../test.h"
 #include "../eqm.h"
+#include "../flash.h"
+#include "../flash_unifac.h"
 #include "../fluids.h"
 #include "../constcp_species.h"
 #include "../solution.h"
 #include "../wustite_hidayat.h"
+#include "../name_resolve.h"
+#include "../mixtures/unifac_data.h"
+#include "../mixtures/unifac_rundata.h"
 
 #include <math.h>
 #include <string.h>
@@ -914,6 +919,114 @@ static void test_eqm_feo_pragmatic_low_oxygen_smoke_1400K(void){
 	CU_ASSERT_TRUE(n_wustite > 0.5);
 }
 
+static void test_name_resolve_reactive_and_unifac_domains(void){
+	FpropsResolvedName out;
+	FpropsNameResolveStatus status;
+
+	status = fprops_name_resolve("CO", FPROPS_NAME_DOMAIN_EQM_SPECIES, "Moran and Shapiro", &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_OK);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(out.canonical);
+	CU_ASSERT_STRING_EQUAL(out.canonical->canonical, "carbonmonoxide");
+
+	status = fprops_name_resolve("CO", FPROPS_NAME_DOMAIN_EQM_SPECIES, "RPP", &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_OK);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(out.canonical);
+	CU_ASSERT_STRING_EQUAL(out.canonical->canonical, "carbon_monoxide");
+
+	status = fprops_name_resolve("EtOH", FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT, "UNIFAC-orig-2003", &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_OK);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(out.canonical);
+	CU_ASSERT_STRING_EQUAL(out.canonical->canonical, "ethanol");
+
+	status = fprops_name_resolve("H2O",
+		FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT, NULL, &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_AMBIGUOUS);
+}
+
+static void test_unifac_native_source_data_lookup(void){
+	const FpropsUNIFACSourceData *src = fprops_unifac_source("UNIFAC-orig-2003");
+	const FpropsUNIFACComponentSource *water;
+	const FpropsUNIFACComponentSource *ethanol;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(src);
+	CU_ASSERT_TRUE(src->ncomponents > 0);
+	CU_ASSERT_TRUE(src->nsubgroups > 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(src->interactions);
+	CU_ASSERT_EQUAL(src->interactions->ngroups, 47);
+
+	water = fprops_unifac_component(src, "water");
+	ethanol = fprops_unifac_component(src, "ethanol");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(water);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(ethanol);
+	CU_ASSERT_STRING_EQUAL(water->formula, "H2O");
+	CU_ASSERT_STRING_EQUAL(ethanol->formula, "C2H5OH");
+	CU_ASSERT_TRUE(water->nsubgroups > 0);
+	CU_ASSERT_TRUE(ethanol->nsubgroups > 0);
+	CU_ASSERT_TRUE(water->Pc > 1e6);
+	CU_ASSERT_TRUE(ethanol->Pc > 1e6);
+	CU_ASSERT_TRUE(water->Vliq > 1e-6);
+	CU_ASSERT_TRUE(ethanol->Vliq > 1e-6);
+}
+
+static void test_unifac_runtime_prepare_and_gamma(void){
+	const FpropsUNIFACSourceData *src = fprops_unifac_source("UNIFAC-orig-2003");
+	const char *names[] = {"water", "ethanol"};
+	FpropsUNIFACRunData *run;
+	double x[] = {0.5, 0.5};
+	double gamma[2];
+	int status;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(src);
+	run = fprops_unifac_prepare(src, names, ARRAYLEN(names));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(run);
+	CU_ASSERT_EQUAL(run->nc, 2);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(fprops_unifac_flash_package(run));
+
+	status = fprops_unifac_gamma_run(run, 298.0, x, gamma);
+	CU_ASSERT_EQUAL(status, 0);
+	CU_ASSERT_TRUE(gamma[0] > 1.0);
+	CU_ASSERT_TRUE(gamma[1] > 1.0);
+
+	fprops_unifac_destroy(run);
+}
+
+static void test_flash_prepare_unifac_and_tpz(void){
+	const char *names[] = {"water", "ethanol"};
+	FpropsMultiphasePackage pkg;
+	FpropsFlashTPZ in;
+	FpropsFlashVLResult out;
+	double z[] = {0.5, 0.5};
+	double x[2];
+	double y[2];
+	int status;
+
+	memset(&pkg, 0, sizeof(pkg));
+	status = fprops_flash_prepare_unifac(&pkg, "UNIFAC-orig-2003", names, ARRAYLEN(names));
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_EQUAL(pkg.kind, FPROPS_FLASH_PACKAGE_UNIFAC_IDEAL_VL);
+	CU_ASSERT_EQUAL(pkg.nc, ARRAYLEN(names));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg.data.unifac_ideal_vl.pkg);
+
+	in.T = 351.0;
+	in.P = 101325.0;
+	in.z = z;
+	out.status = -99;
+	out.beta = NAN;
+	out.x = x;
+	out.y = y;
+	status = fprops_flash_tpz(&pkg, &in, &out);
+	CU_ASSERT_EQUAL(status, 0);
+	CU_ASSERT_TRUE(out.beta >= 0.0);
+	CU_ASSERT_TRUE(out.beta <= 1.0);
+	CU_ASSERT_TRUE(x[0] > 0.0);
+	CU_ASSERT_TRUE(x[1] > 0.0);
+	CU_ASSERT_TRUE(y[0] > 0.0);
+	CU_ASSERT_TRUE(y[1] > 0.0);
+
+	fprops_flash_destroy_package(&pkg);
+	CU_ASSERT_EQUAL(pkg.kind, FPROPS_FLASH_PACKAGE_INVALID);
+}
+
 CU_ErrorCode test_register_eqm(void){
 	CU_pSuite s = CU_add_suite("eqm", eqm_suite_init, eqm_suite_cleanup);
 	if(NULL == s){
@@ -1022,6 +1135,22 @@ CU_ErrorCode test_register_eqm(void){
 	(void)test_eqm_feo_pragmatic_low_oxygen_smoke_1400K;
 	if(NULL == CU_add_test(s, "feoh_reaktoro_clone_boundary_912C",
 				test_eqm_feoh_reaktoro_clone_boundary_912C)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "name_resolve_reactive_and_unifac_domains",
+			test_name_resolve_reactive_and_unifac_domains)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "unifac_native_source_data_lookup",
+			test_unifac_native_source_data_lookup)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "unifac_runtime_prepare_and_gamma",
+			test_unifac_runtime_prepare_and_gamma)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "flash_prepare_unifac_and_tpz",
+			test_flash_prepare_unifac_and_tpz)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;

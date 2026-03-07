@@ -834,6 +834,314 @@ Unlike equilibrium, stoichiometric reactions do depend on a chosen
 reaction basis. That is acceptable here because it is a user-specified
 reactor model, not a universal thermodynamic closure.
 
+## 9.6 `reactor_kinetic`
+
+## 9.6.1 Role
+
+`reactor_kinetic` is the rate-based reactor family.
+
+It should cover:
+
+- conventional kinetic CSTR models
+- staged kinetic reactor models
+- future PFR/distributed models that reuse the same rate-law basis
+
+It should **not** enforce equilibrium closure. It is the direct
+successor to the older kinetics-only ideas in
+[reactor.a4l](/home/john/ascend/models/reactor.a4l), but rebuilt on the
+new reactive package and stream basis.
+
+## 9.6.2 Minimum contract
+
+Suggested model parts:
+
+- `inlet WILL_BE reactive_stream`
+- `outlet WILL_BE reactive_stream`
+- `pkg ALIASES inlet.state.pkg`
+- `rxn WILL_BE kinetic_reaction_set`
+- `V IS_A volume`
+- `Qin IS_A energy_rate`
+- `dP` or `Pdrop`
+
+Compatibility constraints:
+
+- `inlet.state.pkg, outlet.state.pkg WILL_BE_THE_SAME`
+- kinetic stoichiometry must be defined on the same stream/package basis
+
+Primary variables:
+
+- outlet `T`
+- outlet `P`
+- outlet species flows `outlet.f[components]`
+- reactor size / holdup variable such as `V`
+- any independent rate variables if exposed
+- `Qin` unless adiabatic
+
+## 9.6.3 Governing equations
+
+For steady-state CSTR-style operation, the natural basis is:
+
+`outlet.f[k] = inlet.f[k] + V * SUM[nu[k,r] * rate[r] | r IN rxns]`
+
+with:
+
+- `nu[k,r]` = stoichiometric coefficient on the package species basis
+- `rate[r]` = molar production rate per reactor volume
+
+Energy balance:
+
+`outlet.H_flow = inlet.H_flow + Qin`
+
+Pressure relation:
+
+`outlet.P = inlet.P - dP`
+
+This is deliberately parallel to `reactor_stoic` and `reactor_equil`.
+The main difference is that extent/equilibrium closure is replaced by a
+rate-law closure.
+
+## 9.6.4 Thermodynamic support needed
+
+`reactor_kinetic` still needs package-backed thermodynamics:
+
+- outlet enthalpy for energy balance
+- concentrations, mole fractions, or activities for rate laws
+- later density / molar volume for residence-time and hydrodynamic work
+
+The first implemented version uses a `reactive_holdup` object and:
+
+- `fprops_rxn_h_TPn(...)` for stream enthalpy
+- `fprops_rxn_v_TPn(...)` for best-available package molar volume
+- direct A4 expressions for holdup concentrations
+
+This first `reactive_holdup.V` should be interpreted as an engineering
+holdup volume, not yet as a universally thermodynamically consistent
+mixture volume. At present:
+
+- `helmholtz` and `pengrob` backed species can provide volume directly
+- `constcp` and `shomate` species can provide approximate condensed
+  molar volume from density metadata
+- solution phases such as wustite/spinel do not yet provide volume here
+
+So the first `reactor_kinetic` path is intentionally limited to package
+bases where engineering molar volume is available.
+
+Later versions will likely want additional package property calls for:
+
+- phase-specific activities
+- mixture density / molar volume
+- equilibrium constants or reaction Gibbs energies
+
+## 9.6.5 Why keep `reactor_kinetic` separate
+
+This separation is useful because many real process models need:
+
+- explicit catalyst kinetics
+- mass-transfer-limited kinetics
+- shrinking-core or morphology corrections
+- user-prescribed empirical rate laws
+
+without any requirement that the model be driven toward equilibrium.
+
+## 9.6.6 First delivered shape
+
+The first practical target is a steady single-phase CSTR aligned with the
+older `test_single_phase_cstr` example in
+[../../reactor.a4l](../../reactor.a4l):
+
+- same reversible hydrocarbon chemistry
+- same isothermal closure
+- same kinetic law family via `element_kinetics`
+- new `reactive_stream` / `reactive_holdup` / FPROPS thermo path
+
+That makes the first verification target "same chemistry and same
+reactor closure as the legacy model", while keeping the new work focused
+on the reactive-package thermo layer rather than rewriting the old
+kinetics equations unnecessarily.
+
+## 9.7 `reactor_kineq`
+
+## 9.7.1 Role
+
+`reactor_kineq` is the kinetics-toward-equilibrium reactor family.
+
+It sits between:
+
+- `reactor_kinetic`: kinetics with no equilibrium target
+- `reactor_equil`: instantaneous equilibrium with no kinetics
+
+This is likely to be especially important for iron-reduction and similar
+flowsheets, where reaction rates are finite but the equilibrium limit
+still matters strongly.
+
+## 9.7.2 Core idea
+
+The defining feature of `reactor_kineq` is:
+
+- rates are finite
+- rates depend on thermodynamic driving force
+- rates go to zero at equilibrium
+
+So equilibrium is **not** imposed as a separate black-box composition
+solve inside the reactor. Instead, equilibrium information appears
+inside the rate law.
+
+Typical forms include:
+
+`rate[r] = rate_fwd[r] * (1 - Q[r] / K[r])`
+
+or:
+
+`rate[r] = rate_fwd[r] - rate_rev[r]`
+
+with:
+
+`K[r] = exp(-DeltaG0[r] / (R * T))`
+
+and `Q[r]` formed from the same activity basis as the kinetics model.
+
+## 9.7.3 Minimum contract
+
+Suggested model parts:
+
+- `inlet WILL_BE reactive_stream`
+- `outlet WILL_BE reactive_stream`
+- `pkg ALIASES inlet.state.pkg`
+- `rxn WILL_BE kineq_reaction_set`
+- `V IS_A volume`
+- `Qin IS_A energy_rate`
+- `dP` or `Pdrop`
+
+Compatibility constraints:
+
+- `inlet.state.pkg, outlet.state.pkg WILL_BE_THE_SAME`
+- kinetic/equilibrium stoichiometry must be defined on the same package
+  basis
+- the activity basis used in `Q[r]` must be consistent with the package
+  thermodynamic model
+
+Primary variables:
+
+- outlet `T`
+- outlet `P`
+- outlet species flows `outlet.f[components]`
+- `rate[r]`
+- `Qrxn[r]` or equivalent reaction quotient variables if exposed
+- `K[r]` or `DeltaG0[r]` if exposed
+- `V`
+- `Qin` unless adiabatic
+
+## 9.7.4 Governing equations
+
+Species balances:
+
+`outlet.f[k] = inlet.f[k] + V * SUM[nu[k,r] * rate[r] | r IN rxns]`
+
+Energy balance:
+
+`outlet.H_flow = inlet.H_flow + Qin`
+
+Pressure relation:
+
+`outlet.P = inlet.P - dP`
+
+Thermodynamic driving-force relation for each reaction:
+
+`Qrxn[r] = PROD[a[k] ^ nu[k,r] | participating species]`
+
+`K[r] = exp(-DeltaG0[r] / (R * outlet.T))`
+
+Rate-law closure, for example:
+
+`rate[r] = kf[r] * driving[r] * (1 - Qrxn[r] / K[r])`
+
+where `driving[r]` may include:
+
+- reactant concentration/activity factors
+- catalyst effectiveness
+- gas-solid contact terms
+- shrinking-core or surface-area terms
+
+The exact rate form should remain open and belong in a rate-package
+object, not hard-coded into the reactor shell.
+
+## 9.7.5 Required thermodynamic support
+
+`reactor_kineq` needs more than `reactor_kinetic`:
+
+- stream enthalpy for energy balance
+- composition/activity variables for `Q[r]`
+- standard reaction Gibbs energy or equilibrium constant `K[r]`
+
+That suggests a later property helper family such as:
+
+- `fprops_rxn_h_TPn(...)`
+- `fprops_rxn_delta_g0_tp(...)` or equivalent
+- possibly direct activity / fugacity helper functions for selected
+  package types
+
+The first implementation does **not** need a full equilibrium solve
+inside the reactor. It only needs enough thermodynamics to compute the
+equilibrium target used in the rate law.
+
+## 9.7.6 Why this is likely important for iron reduction
+
+For iron-reduction flowsheets, the physically important regime is often:
+
+- not fully equilibrium-limited
+- not purely empirical kinetics either
+- strongly influenced by gas composition relative to equilibrium
+
+So `reactor_kineq` is a natural building block for:
+
+- staged shaft-furnace models
+- gas-solid reduction trains
+- models where `H2/H2O` or `CO/CO2` ratios control approach to
+  reduction limits
+
+It should therefore be treated as a first-class future reactor family,
+not a minor variation on `reactor_kinetic`.
+
+## 9.7.7 Current implementation status
+
+The first implementation path should stay narrow.
+
+What is implemented now:
+
+- a first `reactor_kineq` shell on the same `reactive_stream` /
+  `reactive_holdup` basis as `reactor_kinetic`
+- a first `kineq_reaction_set` using a concentration-based reversible
+  elementary rate form:
+
+  `rate[r] = rate_fwd[r] * (1 - Qc[r] / K_eq[r])`
+
+  where `Qc[r]` is formed from concentrations normalized by a fixed
+  reference concentration
+
+What this current form is good for:
+
+- bringing up the reactor shell
+- matching reversible elementary kinetics when `K_eq` is supplied on the
+  same concentration basis
+- comparing against the legacy `reactor.a4l` single-phase CSTR behavior
+
+Current limitation:
+
+- the first `reactor_kineq` demo does not yet converge robustly with
+  `QRSlv` as a standalone regression
+- this is now understood as an initialization / scaling problem, not a
+  missing architectural piece
+
+So the practical near-term plan is:
+
+1. keep `reactor_kineq` v1 concentration-based
+2. verify `reactor_kinetic` directly against the legacy reversible CSTR
+3. use that comparison as the anchor for later `reactor_kineq`
+   continuation
+4. only after robust solve behavior is achieved, upgrade `reactor_kineq`
+   from concentration-based `Qc/K_eq` toward a package-consistent
+   activity / fugacity basis
+
 ## 10. Governing Thermodynamic Basis Inside FPROPS
 
 The equilibrium kernel in
@@ -1569,6 +1877,313 @@ multiphase basis species.
 
 This should be implemented as a package-build-time resolver in FPROPS,
 not as a string rewrite scattered through ASCEND MODEL code.
+
+### 16.7 Generated C source-data path for UNIFAC and future mixture models
+
+The current UNIFAC flash implementation proves the thermodynamics, but
+its data path is not yet architecturally right: FPROPS is reading
+immutable mixture database data back out of the ASCEND instance tree via
+`components.a4l`.
+
+That is acceptable as a bring-up and verification path, but it should
+not be the long-term design.
+
+The preferred end state is analogous to the existing
+`filedata.h` -> `rundata.h` -> prepared-evaluator pattern already used
+for pure-fluid data:
+
+1. source data stored in generated `const` C structs
+2. runtime evaluators prepared from those source structs
+3. ASCEND passing only names/selectors and state variables
+4. `components.a4l` retained only as a verification/reference route
+   during migration
+
+#### 16.7.1 Separation of concerns
+
+The desired split is:
+
+- `filedata`-like layer:
+  immutable generated source records
+- `rundata`-like layer:
+  prepared runtime objects and caches
+- ASCEND:
+  user-facing names, model structure, and solve-time state only
+
+This means that UNIFAC data should not be "owned" by ASCEND models.
+Instead, ASCEND should identify the requested mixture package and
+components, while FPROPS owns:
+
+- database lookup
+- name/alias resolution
+- source-data selection
+- runtime preparation
+- prepared-cache lifetime
+
+#### 16.7.2 Proposed directory and file layout
+
+The existing `fluids/` directory is appropriate for pure-component
+source data, but activity-coefficient and group-contribution models are
+better treated as a parallel class of source data rather than forcing
+them into the pure-fluid directory.
+
+A sensible first layout is:
+
+```text
+fprops/
+  filedata.h
+  rundata.h
+  mixtures/
+    unifac_data.h
+    unifac_data.c
+    unifac_rundata.h
+    unifac.c
+    _unifac_groups.c
+    _unifac_components.c
+    _unifac_lookup.c
+    convunifac.py
+```
+
+The intent is:
+
+- `_unifac_groups.c`, `_unifac_components.c`, `_unifac_lookup.c`
+  are generated source-data files
+- `unifac_data.h`
+  declares source-data structs and lookup functions
+- `unifac_rundata.h`
+  declares prepared/runtime UNIFAC objects
+- `unifac.c`
+  converts source data into prepared runtime form and evaluates
+  activities/excess properties
+- `convunifac.py`
+  is the first generator, separate from `convcomp.py`
+
+It is possible that `convcomp.py` could eventually call a shared parser
+library and emit both pure-fluid and UNIFAC artifacts, but the initial
+code generator should be kept separate because the emitted data models
+are materially different.
+
+#### 16.7.3 Proposed generated source-data structs
+
+At source-data level, FPROPS needs at least:
+
+- subgroup definitions
+- main-group interaction parameters
+- component-to-subgroup mapping
+- canonical component names
+- optional aliases
+- optional pure-component auxiliary data used by flash calculations
+
+One workable C model is:
+
+```c
+typedef struct{
+	const char *name;      /* e.g. "OH", "H2O", "CH3" */
+	int subgroup_id;       /* stable generated ID */
+	int main_group_id;     /* UNIFAC main group */
+	double R;
+	double Q;
+} UNIFACSubgroupData;
+
+typedef struct{
+	int subgroup_index;    /* index into subgroup table */
+	double nu;             /* stoichiometric count in the component */
+} UNIFACComponentSubgroup;
+
+typedef struct{
+	const char *name;      /* canonical FPROPS component name */
+	const char **aliases;  /* optional, NULL-terminated or counted */
+	int naliases;
+
+	int nsubgroups;
+	const UNIFACComponentSubgroup *subgroups;
+
+	double r;              /* precomputed sum(nu_i * R_i) */
+	double q;              /* precomputed sum(nu_i * Q_i) */
+
+	/* optional pure-component data for current TPz flash kernel */
+	double Tc, Pc, omega;
+	double T0, P0, H0, G0;
+	double cpvapa, cpvapb, cpvapc, cpvapd;
+	double Vliq, Tliq;
+	int vp_correlation;
+	double vpa, vpb, vpc, vpd;
+} UNIFACComponentData;
+
+typedef struct{
+	int ngroups;                 /* dense storage, current original UNIFAC uses 47 */
+	const double *aij;           /* row-major ngroups x ngroups */
+} UNIFACInteractionData;
+```
+
+A top-level package descriptor can then bind these together:
+
+```c
+typedef struct{
+	const char *name; /* e.g. "UNIFAC-orig-2003" */
+	const UNIFACSubgroupData *subgroups;
+	int nsubgroups;
+	const UNIFACComponentData *components;
+	int ncomponents;
+	const UNIFACInteractionData *interactions;
+} UNIFACSourceData;
+```
+
+This is the mixture analogue of the pure-fluid source-data layer.
+
+#### 16.7.4 Proposed prepared/runtime structs
+
+The runtime layer should not simply re-expose the generated arrays.
+Preparation should compact, validate, and cache what the evaluator needs
+most often.
+
+One likely runtime object is:
+
+```c
+typedef struct{
+	const UNIFACSourceData *src;
+
+	int nc;
+	const UNIFACComponentData **components; /* chosen components */
+
+	int nactive_subgroups;
+	const UNIFACSubgroupData **active_subgroups;
+
+	double *aij_dense;   /* compact dense interaction matrix over active main groups */
+	double *r;           /* per-component r */
+	double *q;           /* per-component q */
+
+	/* optional cached work buffers or scratch allocators later */
+} UNIFACRunData;
+```
+
+This is the correct place to:
+
+- resolve component names once
+- validate subgroup completeness once
+- reduce the full database to the active component subset
+- compact the active interaction matrix
+- precompute any repeated sums or mappings
+
+That is directly analogous to preparing a `PureFluid *` from `EosData`.
+
+#### 16.7.5 Proposed public/runtime API
+
+The mixture-data path should offer a package-style front door similar to
+the new reactive package work:
+
+```c
+const UNIFACComponentData *fprops_unifac_component(
+	const char *name
+);
+
+const UNIFACSourceData *fprops_unifac_source(
+	const char *model_name
+);
+
+UNIFACRunData *fprops_unifac_prepare(
+	const UNIFACSourceData *src,
+	const char **components,
+	int nc
+);
+
+void fprops_unifac_destroy(UNIFACRunData *run);
+```
+
+and then evaluation routines such as:
+
+```c
+int fprops_unifac_gamma_run(
+	const UNIFACRunData *run,
+	double T,
+	const double *x,
+	double *gamma
+);
+```
+
+The current flash/equilibrium wrappers should ultimately depend on
+prepared runtime objects of this kind, not on ASCEND-instance data
+extraction.
+
+#### 16.7.6 Generator responsibilities
+
+The generator should read the canonical source definitions now present in
+`components.a4l` and emit:
+
+- subgroup table with stable indices
+- main-group interaction matrix
+- per-component subgroup composition arrays
+- optional alias table
+- optional lookup tables by canonical name
+- optional pure-component auxiliary constants used by current flash code
+
+The generator does not need to emit prepared/runtime objects. It should
+emit only immutable source data.
+
+That keeps the model clean:
+
+- generation step:
+  translate ASCEND source database to C source-data literals
+- runtime step:
+  prepare compact evaluators from those literals
+
+#### 16.7.7 Relation to `_rpp.c` and `convcomp.py`
+
+The existing `_rpp.c` pattern is the right precedent in spirit:
+
+- ASCEND source definitions
+- code generation into `const` C records
+- normal FPROPS preparation from those source records
+
+But UNIFAC is not just "one more pure fluid". It is a separate class of
+thermodynamic database. Therefore the first implementation should use a
+separate generator, likely `convunifac.py`, rather than overloading
+`convcomp.py`.
+
+Later, if desirable, the parsing logic for `components.a4l` can be
+shared between the generators.
+
+#### 16.7.8 Verification and migration strategy
+
+The current `components.a4l` extraction path remains valuable during the
+transition, because it gives an independent route to the same
+thermodynamic information.
+
+The recommended migration path is:
+
+1. generate C-native UNIFAC source data from `components.a4l`
+2. add C-native prepare/evaluate path alongside the current
+   ASCEND-instance route
+3. run both paths against the same tests:
+   - direct DDBST `gamma(T,x)` checks
+   - ASCEND phase-model equality checks
+   - ethanol-water TPz flash benchmark
+4. once parity is demonstrated, make the C-native route the default
+5. later, remove the `components.a4l` dependency from the FPROPS flash
+   kernel
+
+This should be treated as a controlled migration, not a flag day.
+
+#### 16.7.9 Why this helps flash and equilibrium converge
+
+Once mixture data are native to FPROPS in the same way as pure-fluid
+data, `flash` and `eqm` can converge on the same general package
+concept:
+
+- generated source-data registry
+- prepared runtime package
+- user-facing name resolution
+- state/equilibrium solver on top
+
+At that point, the main difference between `flash` and `eqm` becomes the
+state problem being solved, not the origin of the thermodynamic data.
+
+That is the correct architectural direction for broader future work such
+as:
+
+- cubic-EOS fugacity phases
+- UNIFAC/NRTL liquid phases
+- reactive flashes
+- solids plus solution phases in one package
 
 ## 17. Recommendation
 

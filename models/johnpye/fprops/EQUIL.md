@@ -246,6 +246,56 @@ As written, it does not introduce reaction stoichiometry, reaction extents, or e
 So yes: in its current form, `thermodynamics.a4l` handles phase redistribution of a fixed species set, not chemical reaction equilibrium.
 That ASCEND model remains valuable for process-level phase-equilibrium structure and model composition, while `fprops/eqm` is the appropriate core for reaction equilibrium.
 
+### Reactive flash and metallurgical multiphase work
+
+The next planned `reactive_flash` layer should be understood as a
+general multiphase reacting-equilibrium framework, not merely a
+vapor-liquid flash with reaction.
+
+That distinction matters because there are two quite different
+application classes:
+
+- `UNIFAC`-style gas-liquid systems:
+  - vapor phase
+  - nonideal liquid phase
+  - classic `TPz` flash structure
+- metallurgical systems:
+  - reacting gas
+  - metallic liquid or metallic solution phase
+  - slag liquid phase
+  - possible solid carbon / oxide / spinel / wustite phases
+
+The current `UNIFAC` work is useful because it establishes:
+
+- package-owned phase-model selection
+- source-data / rundata separation
+- native C preparation and caching
+- explicit flash/state interfaces
+
+However, it does **not** by itself provide the thermodynamic models
+needed for smelters, BOFs, EAFs, or slag-metal-gas equilibria.
+
+For that reason, the practical metallurgical path remains:
+
+1. current Tier 3 `Fe-O-H`
+2. next Tier 4 `Fe-O-H-C`
+3. only then broader slag systems such as
+   - `Fe-O-H-C-SiO2`
+   - `Fe-O-H-C-Al2O3-SiO2`
+
+So the role of `reactive_flash` is:
+
+- useful and directly applicable for gas-liquid reacting systems now
+- architecturally useful for metallurgy, provided it is built as a
+  general multiphase package/state framework
+- not yet sufficient for slag/metal equilibrium until suitable phase
+  models exist for those condensed phases
+
+In other words, if `reactive_flash` is built around a generic package
+of phase models, it is the right road. If it is built too narrowly as
+only a `UNIFAC` vapor-liquid reactor, it will not generalize well to
+the Tier 4 and slag work.
+
 ## Part A. Common Principles
 
 ### 1. Problem statement

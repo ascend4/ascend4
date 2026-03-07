@@ -16,6 +16,7 @@
 #include "solution.h"
 #include "eqm.h"
 #include "eqm_internal.h"
+#include "name_resolve.h"
 
 #ifdef HAVE_IPOPT
 #include "eqm_ipopt.h"
@@ -67,6 +68,7 @@ typedef enum{
 typedef struct{
 	FpropsRxnCompiledKind mu_kind;
 	FpropsRxnCompiledKind h_kind;
+	FpropsRxnCompiledKind v_kind;
 	EqmMuModel selector_model;
 	int use_ref0;
 	PureFluid *fluid;
@@ -100,6 +102,30 @@ struct FpropsRxnPackage_struct{
 };
 
 static const FpropsRxnPackage *eqm_current_package = NULL;
+
+static const char *eqm_resolve_rxn_name(const char *name, const char *source,
+		char *buf, unsigned buflen, const char **resolved_source){
+	FpropsResolvedName resolved;
+	FpropsNameResolveStatus status;
+	unsigned domains = FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_EQM_SPECIES;
+
+	if(resolved_source){
+		*resolved_source = source;
+	}
+	if(!name || !name[0] || !buf || buflen == 0){
+		return name;
+	}
+	status = fprops_name_resolve(name, domains, source, &resolved);
+	if(status != FPROPS_NAME_RESOLVE_OK || !resolved.canonical || !resolved.canonical->canonical){
+		return name;
+	}
+	snprintf(buf, buflen, "%s", resolved.canonical->canonical);
+	buf[buflen - 1] = '\0';
+	if(resolved_source && (!source || !source[0]) && resolved.canonical->source && resolved.canonical->source[0]){
+		*resolved_source = resolved.canonical->source;
+	}
+	return buf;
+}
 
 static int eqm_active_trace_enabled(void){
 	static int enabled = -1;
@@ -275,6 +301,7 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 		if(thermo->fluid){
 			thermo->mu_kind = FPROPS_RXN_COMPILED_FLUID;
 			thermo->h_kind = FPROPS_RXN_COMPILED_FLUID;
+			thermo->v_kind = FPROPS_RXN_COMPILED_FLUID;
 			return 1;
 		}
 		thermo->gibbs = gibbs_species_lookup(name, source_resolved);
@@ -293,6 +320,7 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 				thermo->mu_kind = FPROPS_RXN_COMPILED_SHOMATE;
 			}
 			thermo->h_kind = FPROPS_RXN_COMPILED_SHOMATE;
+			thermo->v_kind = FPROPS_RXN_COMPILED_SHOMATE;
 			return thermo->mu_kind != FPROPS_RXN_COMPILED_NONE;
 		}
 		thermo->constcp = constcp_species_lookup(name, source_resolved);
@@ -304,6 +332,7 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 				thermo->mu_kind = FPROPS_RXN_COMPILED_CONSTCP;
 			}
 			thermo->h_kind = FPROPS_RXN_COMPILED_CONSTCP;
+			thermo->v_kind = FPROPS_RXN_COMPILED_CONSTCP;
 		}
 		if(thermo->mu_kind == FPROPS_RXN_COMPILED_GIBBS
 				&& thermo->h_kind == FPROPS_RXN_COMPILED_NONE){
@@ -332,6 +361,7 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 		}
 		thermo->mu_kind = FPROPS_RXN_COMPILED_CONSTCP;
 		thermo->h_kind = FPROPS_RXN_COMPILED_CONSTCP;
+		thermo->v_kind = FPROPS_RXN_COMPILED_CONSTCP;
 		return 1;
 	case EQM_MODEL_SHOMATE:
 		thermo->shomate = shomate_species_lookup(name, source_resolved);
@@ -345,6 +375,7 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 		}
 		thermo->mu_kind = FPROPS_RXN_COMPILED_SHOMATE;
 		thermo->h_kind = FPROPS_RXN_COMPILED_SHOMATE;
+		thermo->v_kind = FPROPS_RXN_COMPILED_SHOMATE;
 		return 1;
 	case EQM_MODEL_HELMHOLTZ:
 		thermo->fluid = eqm_prepare_fluid_cached(name, "helmholtz", source_resolved, use_ref0);
@@ -355,6 +386,7 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 		}
 		thermo->mu_kind = FPROPS_RXN_COMPILED_FLUID;
 		thermo->h_kind = FPROPS_RXN_COMPILED_FLUID;
+		thermo->v_kind = FPROPS_RXN_COMPILED_FLUID;
 		return 1;
 	case EQM_MODEL_PENGROB:
 		thermo->fluid = eqm_prepare_fluid_cached(name, "pengrob", source_resolved, use_ref0);
@@ -365,6 +397,7 @@ static int eqm_species_compile_thermo(const char *name, const char *source_resol
 		}
 		thermo->mu_kind = FPROPS_RXN_COMPILED_FLUID;
 		thermo->h_kind = FPROPS_RXN_COMPILED_FLUID;
+		thermo->v_kind = FPROPS_RXN_COMPILED_FLUID;
 		return 1;
 	}
 	ERR("eqm species compile thermo: no compiled thermo path for '%s' (model=%d, source='%s')",
@@ -478,6 +511,59 @@ static int eqm_h_from_compiled(const FpropsRxnSpeciesCache *spec, double T, doub
 			return 1;
 		}
 		return 0;
+	case FPROPS_RXN_COMPILED_NONE:
+	default:
+		return 0;
+	}
+}
+
+static int eqm_v_from_compiled(const FpropsRxnSpeciesCache *spec, double T, double P, double *v){
+	FpropsError err = FPROPS_NO_ERROR;
+	if(!spec || !v || !(T > 0.0) || !(P > 0.0)){
+		return 0;
+	}
+	switch(spec->thermo.v_kind){
+	case FPROPS_RXN_COMPILED_SHOMATE:
+		if(spec->thermo.shomate){
+			double molar_mass;
+			if(!(spec->thermo.shomate->rho_ref > 0.0) || !(spec->thermo.shomate->M > 0.0)){
+				return 0;
+			}
+			molar_mass = spec->thermo.shomate->M * 1e-3;
+			*v = molar_mass / spec->thermo.shomate->rho_ref;
+			return isfinite(*v) && (*v > 0.0);
+		}
+		return 0;
+	case FPROPS_RXN_COMPILED_CONSTCP:
+		if(spec->thermo.constcp){
+			const ConstCpData *phase = constcp_species_select_phase(spec->thermo.constcp, T, P, &err);
+			double molar_mass;
+			if(err || !phase || !(phase->rho > 0.0) || !(spec->thermo.constcp->M > 0.0)){
+				return 0;
+			}
+			molar_mass = spec->thermo.constcp->M * 1e-3;
+			*v = molar_mass / phase->rho;
+			return isfinite(*v) && (*v > 0.0);
+		}
+		return 0;
+	case FPROPS_RXN_COMPILED_FLUID:
+		if(spec->thermo.fluid && spec->thermo.fluid->data){
+			FluidState2 S;
+			double v_mass;
+			double molar_mass = spec->thermo.fluid->data->M * 1e-3;
+			if(!(molar_mass > 0.0) || !eqm_fluid_state_from_pT(spec->thermo.fluid, T, P, &S)){
+				return 0;
+			}
+			err = FPROPS_NO_ERROR;
+			v_mass = fprops_v(S, &err);
+			if(err || !isfinite(v_mass) || !(v_mass > 0.0)){
+				return 0;
+			}
+			*v = v_mass * molar_mass;
+			return isfinite(*v) && (*v > 0.0);
+		}
+		return 0;
+	case FPROPS_RXN_COMPILED_GIBBS:
 	case FPROPS_RXN_COMPILED_NONE:
 	default:
 		return 0;
@@ -4196,7 +4282,10 @@ FpropsRxnPackage *fprops_rxn_package_build(const char **names, int ns, const cha
 		return NULL;
 	}
 	for(i = 0; i < ns; ++i){
+		char resolved_name_buf[256];
 		char source_buf[512];
+		const char *name_i;
+		const char *source_pref = source;
 		const char *source_i;
 		const BinarySolutionPhaseDef *phase = NULL;
 		const FeSpinelPhaseDef *spinel = NULL;
@@ -4210,43 +4299,45 @@ FpropsRxnPackage *fprops_rxn_package_build(const char **names, int ns, const cha
 			fprops_rxn_package_free(pkg);
 			return NULL;
 		}
-		pkg->names[i] = eqm_strdup_local(names[i]);
-		pkg->species[i].name = eqm_strdup_local(names[i]);
+		name_i = eqm_resolve_rxn_name(names[i], source, resolved_name_buf,
+			(unsigned)sizeof(resolved_name_buf), &source_pref);
+		pkg->names[i] = eqm_strdup_local(name_i);
+		pkg->species[i].name = eqm_strdup_local(name_i);
 		if(!pkg->names[i] || !pkg->species[i].name){
 			fprops_rxn_package_free(pkg);
 			return NULL;
 		}
 
-		source_i = fprops_resolve_species_source(source, names[i], source_buf, (unsigned)sizeof(source_buf));
+		source_i = fprops_resolve_species_source(source_pref, name_i, source_buf, (unsigned)sizeof(source_buf));
 		pkg->species[i].source_resolved = eqm_strdup_local(source_i ? source_i : "");
 		if(source_i && !pkg->species[i].source_resolved){
-			ERR("rxn package build: failed to copy resolved source for '%s'", names[i]);
+			ERR("rxn package build: failed to copy resolved source for '%s'", name_i);
 			fprops_rxn_package_free(pkg);
 			return NULL;
 		}
 
-		if(eqm_lookup_solution_member(names[i], source, &phase, &member_index)){
+		if(eqm_lookup_solution_member(name_i, source_pref, &phase, &member_index)){
 			pkg->species[i].entry_kind = FPROPS_RXN_ENTRY_BINARY_SOLUTION_MEMBER;
 			pkg->species[i].member_index = (int)member_index;
 			continue;
 		}
-		if(eqm_lookup_spinel_member(names[i], source, &spinel, &member_index)){
+		if(eqm_lookup_spinel_member(name_i, source_pref, &spinel, &member_index)){
 			pkg->species[i].entry_kind = FPROPS_RXN_ENTRY_SPINEL_MEMBER;
 			pkg->species[i].member_index = (int)member_index;
 			continue;
 		}
 
 		eqm_parse_selector(source_i, &selector_model, &use_ref0, &selector_source);
-		if(!eqm_species_compile_thermo(names[i], selector_source ? selector_source : source_i,
+		if(!eqm_species_compile_thermo(name_i, selector_source ? selector_source : source_i,
 				selector_model, use_ref0, &pkg->species[i].thermo)){
 			ERR("rxn package build failed: no thermo model for '%s' (source='%s')",
-				names[i], selector_source ? selector_source : (source_i ? source_i : ""));
+				name_i, selector_source ? selector_source : (source_i ? source_i : ""));
 			fprops_rxn_package_free(pkg);
 			return NULL;
 		}
 	}
 
-	if(!fprops_collect_elements_source(names, ns, source, &pkg->elements, &pkg->ne) || pkg->ne <= 0){
+	if(!fprops_collect_elements_source((const char **)pkg->names, ns, source, &pkg->elements, &pkg->ne) || pkg->ne <= 0){
 		ERR("rxn package build: failed collecting elements for %d species", ns);
 		fprops_rxn_package_free(pkg);
 		return NULL;
@@ -4465,6 +4556,45 @@ int fprops_rxn_mix_h(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, dou
 		H_total += state->n[i] * hi;
 	}
 	*H_out = H_total;
+	return 0;
+}
+
+int fprops_rxn_mix_v(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, double *V_out){
+	double V_total = 0.0;
+	int i;
+
+	if(!pkg || !state || !state->n || !V_out || pkg->ns <= 0 || !(state->T > 0.0) || !(state->P > 0.0)){
+		ERR("rxn mix v: invalid args pkg=%p state=%p n=%p V_out=%p ns=%d T=%.17g P=%.17g",
+			(void *)pkg, (void *)state, state ? (void *)state->n : NULL, (void *)V_out,
+			pkg ? pkg->ns : -1, state ? state->T : NAN, state ? state->P : NAN);
+		return -11;
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		if(!(state->n[i] >= 0.0) || !isfinite(state->n[i])){
+			ERR("rxn mix v: invalid amount n[%d]=%.17g for '%s'", i, state->n[i],
+				pkg->species && pkg->species[i].name ? pkg->species[i].name : "(null)");
+			return -13;
+		}
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		double vi = 0.0;
+		if(state->n[i] == 0.0){
+			continue;
+		}
+		if(pkg->solution_phase_id && pkg->solution_phase_id[i] >= 0){
+			ERR("rxn mix v: solution-phase volume evaluation not implemented for '%s'",
+				pkg->species && pkg->species[i].name ? pkg->species[i].name : "(null)");
+			return -15;
+		}
+		if(!eqm_v_from_compiled(&pkg->species[i], state->T, state->P, &vi)){
+			ERR("rxn mix v: volume evaluation failed for '%s' at T=%.17g P=%.17g",
+				pkg->species && pkg->species[i].name ? pkg->species[i].name : "(null)",
+				state->T, state->P);
+			return -14;
+		}
+		V_total += state->n[i] * vi;
+	}
+	*V_out = V_total;
 	return 0;
 }
 

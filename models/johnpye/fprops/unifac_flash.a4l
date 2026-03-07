@@ -1,0 +1,97 @@
+REQUIRE "atoms.a4l";
+REQUIRE "components.a4l";
+IMPORT "johnpye/fprops/fprops";
+PROVIDE "johnpye/fprops/unifac_flash.a4l";
+
+MODEL fprops_flash_state(
+	cd WILL_BE components_data;
+);
+	components ALIASES cd.components;
+
+	T IS_A temperature;
+	P IS_A pressure;
+	z[components] IS_A fraction;
+	beta IS_A fraction;
+	x[components] IS_A fraction;
+	y[components] IS_A fraction;
+
+	sum_z: SUM[z[i] | i IN components] = 1;
+
+	flash_tpz: fprops_flash_TPz(
+		T, P, z[components] : INPUT;
+		beta, x[components], y[components] : OUTPUT;
+		cd : DATA
+	);
+
+METHODS
+	METHOD default_self;
+		T := 298.15 {K};
+		P := 1 {bar};
+		beta := 0.5;
+		FOR i IN components DO
+			z[i] := 1 / CARD[components];
+			x[i] := 1 / CARD[components];
+			y[i] := 1 / CARD[components];
+		END FOR;
+	END default_self;
+END fprops_flash_state;
+
+MODEL fprops_unifac_flash_state(
+	cd WILL_BE components_data;
+);
+	components ALIASES cd.components;
+
+	T IS_A temperature;
+	P IS_A pressure;
+	z[components] IS_A fraction;
+	beta IS_A fraction;
+	x[components] IS_A fraction;
+	y[components] IS_A fraction;
+
+	sum_z: SUM[z[i] | i IN components] = 1;
+
+	flash_tpz: fprops_unifac_flash_TPz(
+		T, P, z[components] : INPUT;
+		beta, x[components], y[components] : OUTPUT;
+		cd : DATA
+	);
+
+METHODS
+	METHOD default_self;
+		T := 298.15 {K};
+		P := 1 {bar};
+		beta := 0.5;
+		FOR i IN components DO
+			z[i] := 1 / CARD[components];
+			x[i] := 1 / CARD[components];
+			y[i] := 1 / CARD[components];
+		END FOR;
+	END default_self;
+END fprops_unifac_flash_state;
+
+MODEL fprops_unifac_gamma_state(
+	cd WILL_BE components_data;
+);
+	components ALIASES cd.components;
+
+	T IS_A temperature;
+	x[components] IS_A fraction;
+	gamma[components] IS_A factor;
+
+	sum_x: SUM[x[i] | i IN components] = 1;
+
+	gamma_tx: fprops_unifac_gamma_Tx(
+		T, x[components] : INPUT;
+		gamma[components] : OUTPUT;
+		cd : DATA
+	);
+
+METHODS
+	METHOD default_self;
+		T := 298.15 {K};
+		FOR i IN components DO
+			x[i] := 1 / CARD[components];
+			gamma[i] := 1;
+		END FOR;
+	END default_self;
+END fprops_unifac_gamma_state;

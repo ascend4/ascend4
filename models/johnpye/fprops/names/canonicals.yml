@@ -1,0 +1,36 @@
+version: 1
+entries:
+  - canonical: carbonmonoxide
+    formula: CO
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+
+  - canonical: carbondioxide
+    formula: CO2
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+
+  - canonical: hydrogen
+    formula: H2
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+
+  - canonical: water
+    formula: H2O
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+
+  - canonical: oxygen
+    formula: O2
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+
+  - canonical: nitrogen
+    formula: N2
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+
+  - canonical: methane
+    formula: CH4
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]

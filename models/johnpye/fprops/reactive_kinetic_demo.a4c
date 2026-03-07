@@ -1,0 +1,66 @@
+REQUIRE "johnpye/fprops/reactive_kinetic.a4l";
+PROVIDE "johnpye/fprops/reactive_kinetic_demo.a4c";
+
+MODEL test_reactive_kinetic_single_phase;
+	components IS_A set OF symbol_constant;
+	reactions IS_A set OF symbol_constant;
+
+	pkg IS_A reactive_package(components);
+	R IS_A reactor_kinetic(pkg, reactions);
+
+	components :== ['n_butane', 'butene_1', 'n_octane'];
+	reactions :== ['forward', 'backward'];
+
+		pkg.source :== 'RPP';
+		pkg.algorithm :== 'auto';
+		pkg.species_name['n_butane'] :== 'n_butane';
+		pkg.species_name['butene_1'] :== 'butene_1';
+		pkg.species_name['n_octane'] :== 'n_octane';
+		R.reference_component :== 'n_octane';
+
+		R.kinetics.species['forward'] :== ['n_butane', 'butene_1', 'n_octane'];
+		R.kinetics.species['backward'] :== ['n_butane', 'butene_1', 'n_octane'];
+
+	R.kinetics.k['forward'] :== 0.1 {m^3/mol/s};
+	R.kinetics.k['backward'] :== 10 {1/s};
+	R.kinetics.active_energy['forward'] :== 50 {J/mol};
+	R.kinetics.active_energy['backward'] :== 50 {J/mol};
+
+	R.kinetics.nu['n_butane']['forward'] :== -1;
+	R.kinetics.nu['butene_1']['forward'] :== -1;
+	R.kinetics.nu['n_octane']['forward'] :== 1;
+	R.kinetics.nu['n_butane']['backward'] :== 1;
+	R.kinetics.nu['butene_1']['backward'] :== 1;
+	R.kinetics.nu['n_octane']['backward'] :== -1;
+
+METHODS
+	METHOD values;
+		RUN R.default_self;
+		R.inlet.f['n_butane'] := 100 {kmol/h};
+		R.inlet.f['butene_1'] := 100 {kmol/h};
+		R.inlet.f['n_octane'] := 1e-11 {kmol/h};
+		R.inlet.T := 300 {K};
+		R.inlet.P := 1 {atm};
+
+		R.outlet.f['n_butane'] := 90 {kmol/h};
+		R.outlet.f['butene_1'] := 90 {kmol/h};
+		R.outlet.f['n_octane'] := 10 {kmol/h};
+		R.outlet.T := 320 {K};
+		R.Volume := 25 {m^3};
+		R.DeltaP := 0 {Pa};
+	END values;
+
+	METHOD on_load;
+		RUN values;
+		RUN R.specify;
+		FIX R.outlet.T;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT R.outlet.f['n_octane'] > 1e-6 {mol/s};
+		ASSERT R.kinetics.rate['forward'] > 0 {mol/m^3/s};
+		ASSERT R.kinetics.rate['backward'] > 0 {mol/m^3/s};
+		ASSERT R.holdup.V > 0 {m^3};
+		ASSERT R.holdup.c_tot > 0 {mol/m^3};
+	END self_test;
+END test_reactive_kinetic_single_phase;

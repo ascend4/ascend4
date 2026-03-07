@@ -3781,7 +3781,8 @@ static const CubicData cubic_data_silane = {
 	,.rho_c = -1
 	,.T_t = 0
 	,.omega = 0.068
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (32660 / 32.122), (55180 / 32.122)}}}
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (32660 * 1000 / 32.122), (204.427549890994 * 1000 / 32.122)}}}
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_silane
 };

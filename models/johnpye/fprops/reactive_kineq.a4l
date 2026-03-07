@@ -1,0 +1,107 @@
+REQUIRE "johnpye/fprops/reactive_kinetic.a4l";
+PROVIDE "johnpye/fprops/reactive_kineq.a4l";
+
+MODEL kineq_reaction_set(
+	components WILL_BE set OF symbol_constant;
+	reactions WILL_BE set OF symbol_constant;
+	T_reac WILL_BE temperature;
+	conc[components] WILL_BE molar_density;
+	c_ref WILL_BE molar_density;
+);
+	species[reactions] IS_A set OF symbol_constant;
+	reactants[reactions] IS_A set OF symbol_constant;
+	products[reactions] IS_A set OF symbol_constant;
+	k_forward[reactions] IS_A constant;
+	active_energy[reactions] IS_A constant;
+	K_eq[reactions] IS_A positive_factor;
+	nu[components][reactions] IS_A integer_constant;
+
+	forward IS_A element_kinetics(
+		components, reactions, k_forward, active_energy, T_reac, species, nu, conc
+	);
+
+	FOR r IN reactions CREATE
+		rate_forward[r] ALIASES forward.rate[r];
+	END FOR;
+
+	rate[reactions] IS_A conc_rate;
+	production[components] IS_A conc_rate;
+
+	FOR r IN reactions CREATE
+		reactants[r] :== [i IN components | (i IN species[r]) AND (nu[i][r] < 0)];
+		products[r] :== [i IN components | (i IN species[r]) AND (nu[i][r] > 0)];
+		rate_eqn[r]:
+			rate[r] = rate_forward[r] * (
+				1 - (
+					PROD[PROD[(conc[i] / c_ref) | m IN [1..nu[i][r]]] | i IN products[r]]
+					/ (
+						K_eq[r]
+						* PROD[PROD[(conc[i] / c_ref) | m IN [1..-(nu[i][r])]] | i IN reactants[r]]
+					)
+				)
+			);
+	END FOR;
+
+	FOR i IN components CREATE
+		prod_eqn[i]:
+			production[i] = SUM[nu[i][r] * rate[r] | r IN reactions];
+	END FOR;
+
+METHODS
+	METHOD default_self;
+		RUN forward.default_self;
+		FIX K_eq[reactions];
+		K_eq[reactions] := 1;
+	END default_self;
+END kineq_reaction_set;
+
+MODEL reactor_kineq(
+	pkg WILL_BE reactive_package;
+	reactions WILL_BE set OF symbol_constant;
+);
+	components ALIASES pkg.components;
+	reference_component IS_A symbol_constant;
+
+	inlet IS_A reactive_stream(pkg);
+	outlet IS_A reactive_stream(pkg);
+	holdup IS_A reactive_holdup(pkg);
+	c_ref IS_A molar_density;
+
+	kinetics IS_A kineq_reaction_set(
+		components, reactions, holdup.T, holdup.c, c_ref
+	);
+
+	Volume ALIASES holdup.V;
+	Qdot IS_A energy_rate;
+	DeltaP IS_A delta_pressure;
+
+	FOR i IN components CREATE
+		mbal[i]:
+			outlet.f[i] = inlet.f[i] + Volume * kinetics.production[i];
+	END FOR;
+	FOR i IN components - [reference_component] CREATE
+		holdup_y[i]: holdup.y[i] = outlet.y[i];
+	END FOR;
+	holdup_T: holdup.T = outlet.T;
+	holdup_P: holdup.P = outlet.P;
+	pbal: outlet.P = inlet.P - DeltaP;
+	ebal: outlet.H_flow = inlet.H_flow + Qdot;
+
+METHODS
+	METHOD default_self;
+		RUN inlet.default_self;
+		RUN outlet.default_self;
+		RUN holdup.default_self;
+		RUN kinetics.default_self;
+		c_ref := 1 {mol/m^3};
+		Qdot := 0 {W};
+		DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD specify;
+		RUN inlet.specify;
+		FIX Volume;
+		FIX DeltaP;
+		FIX c_ref;
+	END specify;
+END reactor_kineq;

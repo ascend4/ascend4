@@ -33,7 +33,9 @@ coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'peng
 	, 'bcc_iron_hidayat.c','fcc_iron_hidayat.c'
 	, 'spinel_data.c','spinel_fe_degterov.c'
 	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c', 'incomp.c'
-	, 'eqm.c'
+	, 'eqm.c', 'flash.c', 'flash_unifac.c', 'name_resolve.c', 'names/_name_registry.c'
+	, 'mixtures/unifac_rundata.c'
+	, 'mixtures/_unifac_groups.c', 'mixtures/_unifac_components.c', 'mixtures/_unifac_lookup.c'
 ]
 
 if fprops_env.get('HAVE_IPOPT'):
