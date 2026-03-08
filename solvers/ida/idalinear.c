@@ -9,6 +9,45 @@
 #define ONE  RCONST(1.0)
 #define TWO  RCONST(2.0)
 
+#if SUNDIALS_VERSION_MAJOR >= 5
+
+int IDAASCEND(void *ida_mem, long _neq){
+	(void)ida_mem;
+	(void)_neq;
+	ERROR_REPORTER_HERE(ASC_PROG_ERR
+		,"The experimental ASCEND direct linear solver is not implemented for SUNDIALS %d"
+		,SUNDIALS_VERSION_MAJOR
+	);
+	return IDAASCEND_ILL_INPUT;
+}
+
+int IDAASCENDSetJacFn(void *ida_mem, IntegratorSparseJacFn *_jacfn, void *_jac_data){
+	(void)ida_mem;
+	(void)_jacfn;
+	(void)_jac_data;
+	return IDAASCEND_ILL_INPUT;
+}
+
+int IDAASCENDGetLastFlag(void *ida_mem, long int *flag){
+	(void)ida_mem;
+	if(flag != NULL){
+		*flag = IDAASCEND_ILL_INPUT;
+	}
+	return IDAASCEND_SUCCESS;
+}
+
+char *IDAASCENDGetReturnFlagName(long int flag){
+	char *name = ASC_NEW_ARRAY(char, 32);
+	if(flag == IDAASCEND_ILL_INPUT){
+		sprintf(name, "IDAASCEND_ILL_INPUT");
+	}else{
+		sprintf(name, "IDAASCEND_%ld", flag);
+	}
+	return name;
+}
+
+#else
+
 typedef struct IntegratorIdaAscendMemStruct{
 	long                   integ_neq;   /* problem size */
 	IntegratorSparseJacFn *integ_jacfn; /* sparse mtx jacobian evaluation function */
@@ -120,7 +159,7 @@ int IDAASCENDSetJacFn(void *ida_mem, IntegratorSparseJacFn *_jacfn, void *_jac_d
 	return IDAASCEND_SUCCESS;
 }
 
-int IDAASCENDGetLastFlag(void *ida_mem, int *flag){
+int IDAASCENDGetLastFlag(void *ida_mem, long int *flag){
 	IDAMem IDA_mem;
 	IntegratorIdaAscendMem *iamem;
 
@@ -141,7 +180,7 @@ int IDAASCENDGetLastFlag(void *ida_mem, int *flag){
 	return IDAASCEND_SUCCESS;
 }
 
-char *IDAASCENDGetReturnFlagName(int flag){
+char *IDAASCENDGetReturnFlagName(long int flag){
 	char *name;
 
 	name = ASC_NEW_ARRAY(char,30);
@@ -271,3 +310,5 @@ int integrator_ida_lfree(IDAMem IDA_mem){
 	}
 	return 0;
 }
+
+#endif

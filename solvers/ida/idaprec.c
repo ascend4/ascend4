@@ -38,16 +38,13 @@
 
 static int integrator_ida_psetup_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
-		 realtype c_j, void *prec_data,
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
+		 realtype c_j, void *prec_data
 );
 
 static int integrator_ida_psolve_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
-		 realtype c_j, realtype delta, void *prec_data,
-		 N_Vector tmp
+		 realtype c_j, realtype delta, void *prec_data
 );
 
 static void integrator_ida_pcreate_jacobian(IntegratorSystem *integ);
@@ -64,16 +61,13 @@ const IntegratorIdaPrec prec_jacobian = {
 
 static int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
-		 realtype c_j, void *prec_data,
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
+		 realtype c_j, void *prec_data
 );
 
 static int integrator_ida_psolve_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
-		 realtype c_j, realtype delta, void *prec_data,
-		 N_Vector tmp
+		 realtype c_j, realtype delta, void *prec_data
 );
 
 static void integrator_ida_pcreate_jacobi(IntegratorSystem *integ);
@@ -130,10 +124,10 @@ void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
 */
 static int integrator_ida_psetup_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
-		 realtype c_j, void *p_data,
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
+		 realtype c_j, void *p_data
 ){
+	(void)tt;
+	(void)rr;
 	int i, j, res;
 	IntegratorSystem *integ;
 	IntegratorIdaData *enginedata;
@@ -212,9 +206,14 @@ finish:
 static int integrator_ida_psolve_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
-		 realtype c_j, realtype delta, void *p_data,
-		 N_Vector tmp
+		 realtype c_j, realtype delta, void *p_data
 ){
+	(void)tt;
+	(void)yy;
+	(void)yp;
+	(void)rr;
+	(void)zvec;
+	(void)delta;
 	IntegratorSystem *integ;
 	IntegratorIdaData *data;
 	IntegratorIdaPrecDataJacobian *precdata;
@@ -252,7 +251,14 @@ static void integrator_ida_pcreate_jacobi(IntegratorSystem *integ){
 	precdata = ASC_NEW(IntegratorIdaPrecDataJacobi);
 
 	asc_assert(integ->n_y);
-	precdata->PIii = N_VNew_Serial(integ->n_y);
+	{
+		IntegratorIdaData *data = integrator_ida_enginedata(integ);
+#if SUNDIALS_VERSION_MAJOR >= 6
+		precdata->PIii = N_VNew_Serial(integ->n_y, data->sunctx);
+#else
+		precdata->PIii = N_VNew_Serial(integ->n_y);
+#endif
+	}
 
 	enginedata->pfree = &integrator_ida_pfree_jacobi;
 	enginedata->precdata = precdata;
@@ -278,10 +284,10 @@ void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
 */
 static int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
-		 realtype c_j, void *p_data,
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
+		 realtype c_j, void *p_data
 ){
+	(void)tt;
+	(void)rr;
 	int i, j, res;
 	IntegratorSystem *integ;
 	IntegratorIdaData *enginedata;
@@ -358,9 +364,14 @@ finish:
 static int integrator_ida_psolve_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
-		 realtype c_j, realtype delta, void *p_data,
-		 N_Vector tmp
+		 realtype c_j, realtype delta, void *p_data
 ){
+	(void)tt;
+	(void)yy;
+	(void)yp;
+	(void)rr;
+	(void)c_j;
+	(void)delta;
 	IntegratorSystem *integ;
 	IntegratorIdaData *data;
 	IntegratorIdaPrecDataJacobi *precdata;
@@ -372,5 +383,3 @@ static int integrator_ida_psolve_jacobi(realtype tt,
 	N_VProd(precdata->PIii, rvec, zvec);
 	return 0;
 };
-
-
