@@ -8,6 +8,9 @@
 Import('env')
 fprops_env = env.Clone()
 
+if not fprops_env.get('HAVE_IPOPT'):
+	fprops_env.ensure_ipopt()
+
 if fprops_env.get('HAVE_IPOPT'):
 	fprops_env.AppendUnique(CPPDEFINES=['HAVE_IPOPT'])
 	if fprops_env.get('IPOPT_CPPPATH'):
