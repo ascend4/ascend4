@@ -103,11 +103,19 @@ struct FpropsRxnPackage_struct{
 
 static const FpropsRxnPackage *eqm_current_package = NULL;
 
+static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, int *use_ref0_out,
+		const char **source_out);
+
 static const char *eqm_resolve_rxn_name(const char *name, const char *source,
 		char *buf, unsigned buflen, const char **resolved_source){
 	FpropsResolvedName resolved;
 	FpropsNameResolveStatus status;
 	unsigned domains = FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_EQM_SPECIES;
+	EqmMuModel selector_model = EQM_MODEL_AUTO;
+	int use_ref0 = 0;
+	const char *selector_source = NULL;
+	const char *name_source = source;
+	(void)use_ref0;
 
 	if(resolved_source){
 		*resolved_source = source;
@@ -115,7 +123,11 @@ static const char *eqm_resolve_rxn_name(const char *name, const char *source,
 	if(!name || !name[0] || !buf || buflen == 0){
 		return name;
 	}
-	status = fprops_name_resolve(name, domains, source, &resolved);
+	eqm_parse_selector(source, &selector_model, &use_ref0, &selector_source);
+	if(selector_source && selector_source[0]){
+		name_source = selector_source;
+	}
+	status = fprops_name_resolve(name, domains, name_source, &resolved);
 	if(status != FPROPS_NAME_RESOLVE_OK || !resolved.canonical || !resolved.canonical->canonical){
 		return name;
 	}

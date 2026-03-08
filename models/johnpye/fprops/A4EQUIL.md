@@ -1152,6 +1152,38 @@ serves as the cleanest verification that `reactor_kineq` reproduces the
 reversible kinetic baseline when both are posed on the same
 concentration basis.
 
+Useful textbook validation case:
+
+- Fogler Example 4-5 (`N2O4 <-> 2 NO2`) is now a practical usability check
+  for the new reactor family
+- adding `nitrogen_tetroxide` to the RPP data allows the example to run
+  through ASCEND using the shared alias resolver (`N2O4`, `NO2`)
+- `reactor_kineq` can reproduce the textbook reversible CSTR target once
+  the textbook `K_C` is mapped onto the current normalized-concentration
+  form
+- `reactor_equil` does solve the same chemistry, but users need to be
+  clear about selector semantics:
+  - plain `RPP` in the current equilibrium path already takes the ideal
+    gas `mu0` route for these gas species
+  - `ideal+ref0:RPP` therefore gives the same result in this case
+  - an explicit `pengrob+ref0:RPP` selector is needed if the user wants a
+    cubic-EOS-based equilibrium comparison
+- even on the ideal-RPP basis, the result need not match Fogler's
+  textbook `K_C` exactly because the textbook fixes `K_C` directly,
+  whereas the database route derives equilibrium from species formation
+  thermochemistry
+- for `N2O4 <-> 2 NO2` at `340 K`, the current ideal-RPP database implies
+  `K_C ~= 0.05455 mol/dm^3`, which is consistent with the observed
+  `Xef ~= 0.39983` and materially below Fogler's teaching value
+  `K_C = 0.1 mol/dm^3` / `Xef = 0.51`
+
+This is a good outcome architecturally:
+
+- `reactor_kineq` is already useful for idealized textbook reversible-CSTR
+  validation
+- the remaining gap is now clearly thermodynamic-model basis, not reactor
+  shell capability
+
 So the practical near-term plan is:
 
 1. keep `reactor_kineq` v1 concentration-based

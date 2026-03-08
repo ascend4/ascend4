@@ -1,0 +1,214 @@
+REQUIRE "johnpye/fprops/reactive_equil.a4l";
+REQUIRE "johnpye/fprops/reactive_kineq.a4l";
+
+MODEL reactor_equil_fogler_n2o4_demo;
+	components IS_A set OF symbol_constant;
+	components :== ['N2O4', 'NO2'];
+
+	pkg IS_A reactive_package(components);
+	R IS_A reactor_equil(pkg);
+	Xeq IS_A fraction;
+
+	pkg.species_name['N2O4'] :== 'N2O4';
+	pkg.species_name['NO2'] :== 'NO2';
+	pkg.source :== 'RPP';
+	pkg.algorithm :== 'auto';
+
+	Xeq_eqn:
+		Xeq = (R.inlet.f['N2O4'] - R.outlet.f['N2O4']) / R.inlet.f['N2O4'];
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.f[components];
+		FIX R.outlet.T;
+		FIX R.DeltaP;
+
+		R.inlet.T := 340 {K};
+		R.inlet.P := 202.6 {kPa};
+		R.inlet.f['N2O4'] := 1 {mol/s};
+		R.inlet.f['NO2'] := 0 {mol/s};
+
+		R.outlet.T := 340 {K};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD self_test;
+		(* Fogler's textbook value Xef = 0.51 assumes an ideal-gas Kc treatment. *)
+		(* The current reactor_equil path uses the RPP cubic-fluid thermo package. *)
+		ASSERT Xeq > 0.35;
+		ASSERT Xeq < 0.45;
+	END self_test;
+
+	METHOD on_load;
+		RUN default_self;
+	END on_load;
+END reactor_equil_fogler_n2o4_demo;
+
+MODEL reactor_equil_fogler_n2o4_ideal_demo;
+	components IS_A set OF symbol_constant;
+	components :== ['N2O4', 'NO2'];
+
+	pkg IS_A reactive_package(components);
+	R IS_A reactor_equil(pkg);
+	Xeq IS_A fraction;
+
+	pkg.species_name['N2O4'] :== 'N2O4';
+	pkg.species_name['NO2'] :== 'NO2';
+	pkg.source :== 'ideal+ref0:RPP';
+	pkg.algorithm :== 'auto';
+
+	Xeq_eqn:
+		Xeq = (R.inlet.f['N2O4'] - R.outlet.f['N2O4']) / R.inlet.f['N2O4'];
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.f[components];
+		FIX R.outlet.T;
+		FIX R.DeltaP;
+
+		R.inlet.T := 340 {K};
+		R.inlet.P := 202.6 {kPa};
+		R.inlet.f['N2O4'] := 1 {mol/s};
+		R.inlet.f['NO2'] := 0 {mol/s};
+
+		R.outlet.T := 340 {K};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD on_load;
+		RUN default_self;
+	END on_load;
+
+	METHOD self_test;
+		(* plain RPP and ideal+ref0:RPP are currently identical on the gas-equilibrium path *)
+		ASSERT Xeq > 0.39;
+		ASSERT Xeq < 0.41;
+	END self_test;
+END reactor_equil_fogler_n2o4_ideal_demo;
+
+MODEL reactor_equil_fogler_n2o4_pengrob_demo;
+	components IS_A set OF symbol_constant;
+	components :== ['N2O4', 'NO2'];
+
+	pkg IS_A reactive_package(components);
+	R IS_A reactor_equil(pkg);
+	Xeq IS_A fraction;
+
+	pkg.species_name['N2O4'] :== 'N2O4';
+	pkg.species_name['NO2'] :== 'NO2';
+	pkg.source :== 'pengrob+ref0:RPP';
+	pkg.algorithm :== 'auto';
+
+	Xeq_eqn:
+		Xeq = (R.inlet.f['N2O4'] - R.outlet.f['N2O4']) / R.inlet.f['N2O4'];
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.f[components];
+		FIX R.outlet.T;
+		FIX R.DeltaP;
+
+		R.inlet.T := 340 {K};
+		R.inlet.P := 202.6 {kPa};
+		R.inlet.f['N2O4'] := 1 {mol/s};
+		R.inlet.f['NO2'] := 0 {mol/s};
+
+		R.outlet.T := 340 {K};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD on_load;
+		RUN default_self;
+	END on_load;
+
+	METHOD self_test;
+		(* explicit Peng-Robinson gives a materially different equilibrium from the default ideal-RPP path *)
+		ASSERT Xeq > 0.32;
+		ASSERT Xeq < 0.35;
+	END self_test;
+END reactor_equil_fogler_n2o4_pengrob_demo;
+
+MODEL reactor_kineq_fogler_n2o4_cstr_demo;
+	components IS_A set OF symbol_constant;
+	reactions IS_A set OF symbol_constant;
+	components :== ['N2O4', 'NO2'];
+	reactions :== ['r1'];
+
+	pkg IS_A reactive_package(components);
+	R IS_A reactor_kineq(pkg, reactions);
+	X IS_A fraction;
+
+	pkg.source :== 'RPP';
+	pkg.algorithm :== 'auto';
+	pkg.species_name['N2O4'] :== 'N2O4';
+	pkg.species_name['NO2'] :== 'NO2';
+
+	R.reference_component :== 'NO2';
+	R.kinetics.species['r1'] :== ['N2O4', 'NO2'];
+
+	(* Fogler Example 4-5: k = 0.5 min^-1 and Kc = 0.1 mol/dm^3 at 340 K. *)
+	(* With the current normalized-concentration kineq form, K_eq = Kc / c_ref^2. *)
+	R.kinetics.k_forward['r1'] :== 8.333333333333333e-3 {1/s};
+	R.kinetics.active_energy['r1'] :== 0 {J/mol};
+	R.kinetics.nu['N2O4']['r1'] :== -1;
+	R.kinetics.nu['NO2']['r1'] :== 2;
+
+	X_eqn:
+		X = (R.inlet.f['N2O4'] - R.outlet.f['N2O4']) / R.inlet.f['N2O4'];
+
+METHODS
+	METHOD values;
+		RUN R.default_self;
+		R.c_ref := 1000 {mol/m^3};
+		R.kinetics.K_eq['r1'] := 1e-4;
+
+		R.inlet.f['N2O4'] := 3 {mol/min};
+		R.inlet.f['NO2'] := 0 {mol/min};
+		R.inlet.T := 340 {K};
+		R.inlet.P := 202.6 {kPa};
+
+		R.outlet.f['N2O4'] := 1.8 {mol/min};
+		R.outlet.f['NO2'] := 2.4 {mol/min};
+		R.outlet.T := 340 {K};
+		R.Volume := 0.171 {m^3};
+		R.DeltaP := 0 {Pa};
+
+		R.holdup.V := R.Volume;
+		R.holdup.V_molar := 0.01395 {m^3/mol};
+		R.holdup.N := R.holdup.V / R.holdup.V_molar;
+		R.holdup.y['N2O4'] := 0.42857142857142855;
+		R.holdup.y['NO2'] := 0.5714285714285714;
+		R.holdup.n['N2O4'] := R.holdup.y['N2O4'] * R.holdup.N;
+		R.holdup.n['NO2'] := R.holdup.y['NO2'] * R.holdup.N;
+		R.holdup.c['N2O4'] := 30.75 {mol/m^3};
+		R.holdup.c['NO2'] := 41.0 {mol/m^3};
+		R.holdup.c_tot := R.holdup.N / R.holdup.V;
+		R.kinetics.rate_forward['r1'] := 0.25625 {mol/m^3/s};
+		R.kinetics.rate_reverse['r1'] := 0.006833333333333333 {mol/m^3/s};
+		R.kinetics.rate['r1'] := 0.24941666666666668 {mol/m^3/s};
+	END values;
+
+	METHOD on_load;
+		RUN values;
+		RUN R.specify;
+		FIX R.outlet.T;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(X - 0.4) < 0.03;
+		ASSERT abs(R.Volume - 0.171 {m^3}) < 1e-12 {m^3};
+		ASSERT R.kinetics.rate['r1'] > 0 {mol/m^3/s};
+	END self_test;
+END reactor_kineq_fogler_n2o4_cstr_demo;

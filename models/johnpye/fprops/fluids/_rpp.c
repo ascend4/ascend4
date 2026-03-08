@@ -3007,6 +3007,51 @@ const EosData eos_rpp_nitrogen_dioxide = {
 };
 
 
+static const IdealData ideal_data_nitrogen_tetroxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 92.011)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.14391955674439, 0}
+			,{0.0304770166671395, 1}
+			,{-3.17037947650276e-05, 2}
+			,{1.18793012478823e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_nitrogen_tetroxide = {
+	.M = 92.011
+	,.T_c = 431.01
+	,.p_c = (101.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 261.95
+	,.omega = 1.007
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (9160 * 1000 / 92.011), (304.201282408184 * 1000 / 92.011)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_nitrogen_tetroxide
+};
+
+static const ElementComp elements_rpp_nitrogen_tetroxide[] = {
+	{"N", 2}
+	,{"O", 4}
+};
+
+const EosData eos_rpp_nitrogen_tetroxide = {
+	"nitrogen_tetroxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_nitrogen_tetroxide}
+	,.elements = elements_rpp_nitrogen_tetroxide
+	,.nelements = (int)(sizeof(elements_rpp_nitrogen_tetroxide) / sizeof(elements_rpp_nitrogen_tetroxide[0]))
+};
+
+
 static const IdealData ideal_data_nitrous_oxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
