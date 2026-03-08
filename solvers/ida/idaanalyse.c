@@ -80,7 +80,7 @@ static int integrator_ida_var_in_list(struct var_variable **list, int n, struct 
 
 static int integrator_ida_rebuild_var_order(IntegratorSystem *integ, int *ny1, int *nydot){
 	const SolverDiffVarCollection *diffvars;
-	struct var_variable **oldvars, **newvars, *v;
+	struct var_variable **oldvars, **mastervars, **newvars, *v;
 	SolverDiffVarSequence seq;
 	int i, oldn, newn, count_y, count_ydot;
 
@@ -91,6 +91,7 @@ static int integrator_ida_rebuild_var_order(IntegratorSystem *integ, int *ny1, i
 	}
 
 	oldvars = slv_get_solvers_var_list(integ->system);
+	mastervars = slv_get_master_var_list(integ->system);
 	oldn = slv_get_num_solvers_vars(integ->system);
 	newvars = ASC_NEW_ARRAY(struct var_variable *, oldn + diffvars->nseqs + 1);
 	if(newvars == NULL){
@@ -142,6 +143,9 @@ static int integrator_ida_rebuild_var_order(IntegratorSystem *integ, int *ny1, i
 	}
 
 	slv_set_solvers_var_list(integ->system, newvars, newn);
+	if(oldvars != NULL && oldvars != mastervars){
+		ascfree(oldvars);
+	}
 	*ny1 = count_y;
 	*nydot = count_ydot;
 	return 0;
