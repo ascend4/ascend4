@@ -35,6 +35,11 @@
 #if SUNDIALS_VERSION_MAJOR >= 6
 # include <sundials/sundials_config.h>
 # include <sundials/sundials_context.h>
+# if SUNDIALS_VERSION_MAJOR >= 7
+#  include <sundials/sundials_errors.h>
+#  include <sundials/sundials_types_deprecated.h>
+#  define SUNLS_SUCCESS SUN_SUCCESS
+# endif
 # include <nvector/nvector_serial.h>
 # include <ida/ida.h>
 # include <ida/ida_ls.h>

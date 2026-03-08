@@ -147,7 +147,7 @@ static void integrator_ida_create(IntegratorSystem *integ) {
 	enginedata->sunctx = NULL;
 	enginedata->linear_solver = NULL;
 	enginedata->dense_matrix = NULL;
-	if(SUNContext_Create(NULL, &enginedata->sunctx)){
+	if(SUNContext_Create(SUN_COMM_NULL, &enginedata->sunctx)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to create SUNDIALS context for IDA");
 	}
 #endif
@@ -558,7 +558,11 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 
 	IntegratorIdaData *enginedata = integ->enginedata;
 
+#if SUNDIALS_VERSION_MAJOR >= 7
+	/* IDASetErrHandlerFn was removed in SUNDIALS 7; use default context-based handling. */
+#elif SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4)
 	IDASetErrHandlerFn(ida_mem, &integrator_ida_error, (void *) integ);
+#endif
 #if SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4)
 	IDASetUserData(ida_mem, (void *)integ);
 #else

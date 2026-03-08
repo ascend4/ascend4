@@ -208,7 +208,12 @@ int integrator_ida_write_matrix(const IntegratorSystem *integ, FILE *f, const ch
 		R.row.low = 0; R.col.low = 0;
 		R.row.high = J.n_rels - 1; R.col.high = J.n_vars - 1;
 		/* note that we're not fussy about empty matrices here... */
+#ifdef ASC_WITH_MMIO
 		mtx_write_region_mmio(f,J.M,&R);
+#else
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix Market export support is unavailable in this build");
+		status = 1;
+#endif
 	}
 
 	if(J.vars)ASC_FREE(J.vars);
@@ -409,4 +414,3 @@ void integrator_ida_error(int error_code
 	/* use our all-purpose error reporting to get stuff back to the GUI */
 	error_reporter(sev,module,0,function,"%s (error %d)",msg,error_code);
 }
-

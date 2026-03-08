@@ -1,4 +1,4 @@
-import os, os.path, platform, subprocess
+import os, os.path, platform, subprocess, re
 from SCons.Script import *
 from SCons.Util import WhereIs
 munge = lambda s: s
@@ -45,6 +45,74 @@ def winpath(path):
 		os.unlink(fn)
 	return out
 
+def _default_sundials_libs(major):
+	libs = ['sundials_ida','sundials_nvecserial']
+	if major >= 6:
+		libs.extend([
+			'sundials_sunlinsoldense',
+			'sundials_sunlinsolspgmr',
+			'sundials_sunlinsolspbcgs',
+			'sundials_sunlinsolsptfqmr',
+			'sundials_sunmatrixdense',
+			'sundials_core' if major >= 7 else 'sundials_generic',
+		])
+	libs.append('m')
+	return libs
+
+def _sundials_version_major(include_dir):
+	config = os.path.join(include_dir, 'sundials', 'sundials_config.h')
+	if not os.path.exists(config):
+		return None
+	with open(config, 'r') as f:
+		for line in f:
+			m = re.match(r'#define\s+SUNDIALS_VERSION_MAJOR\s+(\d+)', line)
+			if m:
+				return int(m.group(1))
+	return None
+
+def _windows_sundials_prefixes():
+	prefixes = []
+	for key in ('MSYSTEM_PREFIX', 'MINGW_PREFIX'):
+		value = os.environ.get(key)
+		if value:
+			prefixes.append(value)
+
+	msys_root = os.environ.get('MSYS2_ROOT', r'C:\msys64')
+	for suffix in ('ucrt64', 'mingw64', 'clang64', 'mingw32'):
+		prefixes.append(os.path.join(msys_root, suffix))
+
+	seen = set()
+	for prefix in prefixes:
+		if not prefix:
+			continue
+		prefix = os.path.normpath(prefix)
+		if prefix in seen:
+			continue
+		seen.add(prefix)
+		yield prefix
+
+def find_sundials_install_windows():
+	for prefix in _windows_sundials_prefixes():
+		include_dir = os.path.join(prefix, 'include')
+		lib_dir = os.path.join(prefix, 'lib')
+		config = os.path.join(include_dir, 'sundials', 'sundials_config.h')
+		if not os.path.exists(config):
+			continue
+		if not (
+			os.path.exists(os.path.join(lib_dir, 'libsundials_ida.dll.a'))
+			or os.path.exists(os.path.join(lib_dir, 'libsundials_ida.a'))
+		):
+			continue
+		major = _sundials_version_major(include_dir)
+		if major is None:
+			continue
+		return {
+			'include': include_dir,
+			'lib': lib_dir,
+			'libs': _default_sundials_libs(major),
+		}
+	return None
+
 def generate(env):
 	"""
 	Detect SUNDIALS (IDA) settings and add them to the environment.
@@ -62,25 +130,30 @@ def generate(env):
 				BIN = os.path.join(PATH,"bin")
 				INCLUDE = os.path.join(PATH,"include")
 				env['SUNDIALS_CPPPATH'] = [munge(INCLUDE)]
-				env['SUNDIALS_LIBPATH'] = [munge(BIN)]
-				env['SUNDIALS_LIBS'] = ['sundials_ida','sundials_nvecserial','m']
+				env['SUNDIALS_LIBPATH'] = [munge(LIB)]
+				env['SUNDIALS_LIBS'] = _default_sundials_libs(_sundials_version_major(INCLUDE) or 2)
 			except WindowsError:
-				sundialsconfig = find_sundials_config(env)
-				if not sundialsconfig:
-					raise RuntimeError("Unable to locate sundials-config in Windows PATH")
-					# if someone has installed sundials with ./configure --prefix=/MinGW using MSYS, then
-				# this should work, but we would like to make this a lot more robust!
-				cmd = ['sh.exe',sundialsconfig,'-mida','-ts','-lc']
-				env1 = env.Clone()
-				env1['CPPPATH'] = None
-				env1['LIBPATH'] = None
-				env1['LIBS'] = None
-				#print "RUNNING sundials-config"
-				env1.ParseConfig(cmd)
-				env['SUNDIALS_CPPPATH'] = [munge(winpath(p)) for p in env1.get('CPPPATH')]
-				env['SUNDIALS_LIBPATH'] = [munge(winpath(p)) for p in env1.get('LIBPATH')]
-				env['SUNDIALS_LIBS'] = env1.get('LIBS')
-				env['HAVE_SUNDIALS'] = True		
+				install = find_sundials_install_windows()
+				if install:
+					env['SUNDIALS_CPPPATH'] = [munge(install['include'])]
+					env['SUNDIALS_LIBPATH'] = [munge(install['lib'])]
+					env['SUNDIALS_LIBS'] = install['libs']
+				else:
+					sundialsconfig = find_sundials_config(env)
+					if not sundialsconfig:
+						raise RuntimeError("Unable to locate SUNDIALS in standard Windows prefixes")
+						# if someone has installed sundials with ./configure --prefix=/MinGW using MSYS, then
+					# this should work, but we would like to make this a lot more robust!
+					cmd = ['sh.exe',sundialsconfig,'-mida','-ts','-lc']
+					env1 = env.Clone()
+					env1['CPPPATH'] = None
+					env1['LIBPATH'] = None
+					env1['LIBS'] = None
+					#print "RUNNING sundials-config"
+					env1.ParseConfig(cmd)
+					env['SUNDIALS_CPPPATH'] = [munge(winpath(p)) for p in env1.get('CPPPATH')]
+					env['SUNDIALS_LIBPATH'] = [munge(winpath(p)) for p in env1.get('LIBPATH')]
+					env['SUNDIALS_LIBS'] = env1.get('LIBS')
 
 			env['HAVE_SUNDIALS'] = True
 									
@@ -147,7 +220,8 @@ def find_sundials_config(env):
 	return WhereIs('sundials-config',path=os.environ['PATH'],pathext="")	
 
 def exists(env):
+	if platform.system()=="Windows" and find_sundials_install_windows() is not None:
+		return 1
 	if find_sundials_config(env) != None:
 		return 1
 	return 0
-

@@ -34,7 +34,7 @@ int main(void){
 	void *ida_mem;
 #if SUNDIALS_VERSION_MAJOR >= 6
 	SUNContext sunctx;
-	SUNContext_Create(NULL, &sunctx);
+	SUNContext_Create(SUN_COMM_NULL, &sunctx);
 	ida_mem = IDACreate(sunctx);
 #else
 	ida_mem = IDACreate();
@@ -53,13 +53,16 @@ def _as_list(value):
 def _default_sundials_libs(major):
 	libs = ['sundials_ida', 'sundials_nvecserial']
 	if major >= 6:
+		core_lib = 'sundials_generic'
+		if major >= 7:
+			core_lib = 'sundials_core'
 		libs.extend([
 			'sundials_sunlinsoldense',
 			'sundials_sunlinsolspgmr',
 			'sundials_sunlinsolspbcgs',
 			'sundials_sunlinsolsptfqmr',
 			'sundials_sunmatrixdense',
-			'sundials_generic',
+			core_lib,
 		])
 	libs.append('m')
 	return libs
