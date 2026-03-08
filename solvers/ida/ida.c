@@ -147,7 +147,11 @@ static void integrator_ida_create(IntegratorSystem *integ) {
 	enginedata->sunctx = NULL;
 	enginedata->linear_solver = NULL;
 	enginedata->dense_matrix = NULL;
+# if SUNDIALS_VERSION_MAJOR >= 7
 	if(SUNContext_Create(SUN_COMM_NULL, &enginedata->sunctx)){
+# else
+	if(SUNContext_Create(NULL, &enginedata->sunctx)){
+# endif
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to create SUNDIALS context for IDA");
 	}
 #endif
@@ -947,7 +951,21 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
 				return 12;
 			}
-#ifdef ASC_SIGNAL_TRAPS
+# if SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=3)
+			flag = IDAGetConsistentIC(ida_mem, y0, yp0);
+			if(flag != IDA_SUCCESS){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to retrieve consistent initial conditions");
+				return 14;
+			}
+			integrator_set_y(integ, NV_DATA_S(y0));
+			integrator_set_ydot(integ, NV_DATA_S(yp0));
+			flag = IDAReInit(ida_mem, t0, y0, yp0);
+			if(flag != IDA_SUCCESS){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to reinitialise IDA with consistent initial conditions");
+				return 15;
+			}
+# endif
+	#ifdef ASC_SIGNAL_TRAPS
 		} else {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error while solving initial conditions");
 			return 13;

@@ -8,8 +8,7 @@ MODEL integ1;
 	y,x,der_y IS_A solver_var;
 	t IS_A solver_var;
 
-	x = 1; (* this will fail *)
-	(* x = y * 0. + 1; *)(* this will work *)
+	x = 1;
 
 	der_y = x;
 METHODS
@@ -27,4 +26,3 @@ METHOD self_test;
 	ASSERT abs(y - 10) < 1e-5;
 END self_test;
 END integ1;
-

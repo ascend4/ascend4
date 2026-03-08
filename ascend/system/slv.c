@@ -545,7 +545,7 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 		slv_get_master_*_list
 */
 #define DEFINE_SET_SOLVERS_LIST_METHOD(NAME,PROP,TYPE) \
-	void slv_set_solvers_##NAME##_list(slv_system_t sys, struct TYPE **vlist, int size){ \
+	ASC_DLLSPEC void slv_set_solvers_##NAME##_list(slv_system_t sys, struct TYPE **vlist, int size){ \
 		if(sys->PROP.master==NULL){ \
 			ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"slv_set_solvers_" #NAME "_list: called before slv_set_master_" #NAME "_list."); \
 			/* might be ok, no return */ \
@@ -555,7 +555,7 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 	}
 
 #define DEFINE_SET_SOLVERS_LIST_METHOD_RETURN(NAME,PROP,TYPE) \
-	void slv_set_solvers_##NAME##_list(slv_system_t sys, struct TYPE **vlist, int size){ \
+	ASC_DLLSPEC void slv_set_solvers_##NAME##_list(slv_system_t sys, struct TYPE **vlist, int size){ \
 		if(sys->PROP.master==NULL){ \
 			ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"slv_set_solvers_" #NAME "_list: called before slv_set_master_" #NAME "_list."); \
 			return; /* can't be OK, so return now */ \
@@ -969,4 +969,3 @@ int slv_set_diffvars(slv_system_t sys,void *diffvars){
 	sys->diffvars = diffvars;
 	return 0;
 }
-

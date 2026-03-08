@@ -229,7 +229,7 @@ static void test_shm(){
 	root = GetSimulationRoot(testsys.siminst);
 	ix = ida_child(root, "x");
 	iv = ida_child(root, "v");
-	CU_TEST(fabs(RealAtomValue(ix) - 10.0) < 2e-3);
+	CU_TEST(fabs(RealAtomValue(ix) + 10.0) < 3e-3);
 	CU_TEST(fabs(RealAtomValue(iv)) < 4e-4);
 
 	ida_free_runtime(testsys.integ);

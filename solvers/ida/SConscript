@@ -34,7 +34,11 @@ int main(void){
 	void *ida_mem;
 #if SUNDIALS_VERSION_MAJOR >= 6
 	SUNContext sunctx;
+# if SUNDIALS_VERSION_MAJOR >= 7
 	SUNContext_Create(SUN_COMM_NULL, &sunctx);
+# else
+	SUNContext_Create(NULL, &sunctx);
+# endif
 	ida_mem = IDACreate(sunctx);
 #else
 	ida_mem = IDACreate();
