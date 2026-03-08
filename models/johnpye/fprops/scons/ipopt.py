@@ -1,3 +1,4 @@
+# a copy of the file in ~/ascend/scons/ipopt.py -- to allow self-contained FPROPS builds
 import pathlib
 import platform
 import shutil

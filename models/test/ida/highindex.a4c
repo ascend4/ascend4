@@ -1,0 +1,21 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_highindex;
+	x, dx, y, z IS_A solver_var;
+	t IS_A solver_var;
+
+	diffeq: dx = y;
+	alg1: y + z = 0;
+	alg2: 2 * y + 2 * z = 0;
+
+METHODS
+	METHOD on_load;
+		INDEPENDENT t;
+		DER(dx, x);
+		t := 0;
+		x := 0;
+		y := 1;
+		z := -1;
+	END on_load;
+END ida_highindex;

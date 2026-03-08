@@ -3,7 +3,9 @@
 # this ASCEND external library against an existing copy of
 # ASCEND installed on your system.
 
-import os, platform, sys, shutil
+import os, platform, sys, shutil, pathlib
+sys.path.insert(0, str(pathlib.Path(str(Dir('#').abspath)).resolve().parents[2] / 'scons'))
+from optional_packages import add_optional_package_methods
     
 deft = "default"
 if platform.system()=="Windows":
@@ -59,11 +61,12 @@ vars.Add(
 )
 
 env = Environment(
-	toolpath=['scons']
-	,tools = [deft ,'swig','textfile']
+	toolpath=['#/scons']
+	,tools = [deft ,'swig','textfile','ipopt']
 	,ENV={"TERM":os.environ.get('TERM'), "PATH":os.environ.get('PATH'), "LD_LIBRARY_PATH":os.environ.get("LD_LIBRARY_PATH")}
 	,HOST_PREFIX=os.environ.get('HOST_PREFIX')
 )
+add_optional_package_methods(Environment)
 
 Help(vars.GenerateHelpText(env))
 vars.Update(env)
@@ -104,4 +107,3 @@ env['extfns'] = []
 env['WITH_PYTHON'] = 1
 
 env.SConscript("SConscript",["env"])
-

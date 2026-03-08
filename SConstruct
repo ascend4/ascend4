@@ -980,7 +980,7 @@ envadditional={}
 
 tools = [
 	'lex', 'yacc', 'fortran', 'swig', 'textfile'#, 'substinfile'
-	,'disttar', 'tar', 'sundials', 'dvi', 'pdflatex', 'graphviz'
+	,'disttar', 'tar', 'dvi', 'pdflatex', 'graphviz', 'ipopt'
 ]
 if platform.system()=="Windows":
 	tools += ['nsis']
@@ -1001,7 +1001,7 @@ if platform.system()=="Windows":
 #		envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
 else:
 	envenv = os.environ
-	tools += ['default','doxygen','ipopt']
+	tools += ['default','doxygen']
 
 env = Environment(
 	ENV=envenv
@@ -1305,25 +1305,25 @@ class KeepContext:
 			self.keep[k]=context.env.get(k)
 		
 		if varprefix+'_CPPPATH' in context.env:
-			context.env.AppendUnique(CPPPATH=[env[varprefix+'_CPPPATH']])
+			context.env.AppendUnique(CPPPATH=[context.env[varprefix+'_CPPPATH']])
 			#print "Adding '"+str(env[varprefix+'_CPPPATH'])+"' to cpp path"
 
 		if static:
-			staticlib=env[varprefix+'_LIB']
+			staticlib=context.env[varprefix+'_LIB']
 			#print "STATIC LIB = ",staticlib
 			context.env.Append(
 				LINKFLAGS=[staticlib]
 			)
 		else:
 			if varprefix+'_LIBPATH' in context.env:
-				context.env.Append(LIBPATH=[env[varprefix+'_LIBPATH']])
+				context.env.Append(LIBPATH=[context.env[varprefix+'_LIBPATH']])
 				#print "Adding '"+str(env[varprefix+'_LIBPATH'])+"' to lib path"
 
 			if varprefix+'_LIB' in context.env:
-				context.env.Append(LIBS=[env[varprefix+'_LIB']])
+				context.env.Append(LIBS=[context.env[varprefix+'_LIB']])
 				#print "Adding '"+str(env[varprefix+'_LIB'])+"' to libs"	
 			elif varprefix+'_LIBS' in context.env:
-				context.env.AppendUnique(LIBS=env[varprefix+'_LIBS'])
+				context.env.AppendUnique(LIBS=context.env[varprefix+'_LIBS'])
 
 	def restore(self,context):
 		#print "RESTORING CONTEXT"
@@ -1736,104 +1736,6 @@ def CheckDLOpen(context):
 	return is_ok
 
 #----------------
-# IDA test
-
-sundials_version_major_required = 2
-sundials_version_minor_min = 4
-sundials_version_minor_max = 4
-
-sundials_version_text = """
-#include <sundials/sundials_config.h>
-#include <stdio.h>
-int main(){
-	printf("%s",SUNDIALS_PACKAGE_VERSION);
-	return 0;
-}
-"""
-
-ida_test_text = """
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
-# include <sundials/sundials_config.h>
-# include <sundials/sundials_nvector.h>
-# include <nvector_serial.h>
-# include <ida.h>
-# include <ida/ida_spgmr.h>
-#else
-# include <sundials/sundials_config.h>
-# include <nvector/nvector_serial.h>
-# include <ida/ida.h>
-#endif
-int main(){
-	void *ida_mem;
-	ida_mem = IDACreate();
-	return 0;
-}
-"""
-
-# slightly changed calling convention (IDACalcID) in newer versions of SUNDIALS,
-# so detect the version and act accordingly.
-def CheckSUNDIALS(context):
-	keep = KeepContext(context,'SUNDIALS')
-	context.Message("Checking for SUNDIALS... ")
-	(is_ok,output) = context.TryRun(sundials_version_text,'.c')
-	keep.restore(context)
-	if not is_ok:
-		context.Result(0)
-		return 0
-
-	major,minor,patch = tuple([int(i) for i in output.split(".")])
-	context.env['SUNDIALS_VERSION_MAJOR'] = major
-	context.env['SUNDIALS_VERSION_MINOR'] = minor
-	if major != sundials_version_major_required \
-			or minor < sundials_version_minor_min \
-			or minor > sundials_version_minor_max:
-		context.Result(output+" (bad version)")
-		# bad version
-		return 0
-		
-	# good version
-	context.Result("%d.%d.%d, good" % (major,minor,patch))
-
-	return 1
-	
-
-def CheckIDA(context):
-	context.Message( 'Checking for IDA... ' )
-
-	keep = KeepContext(context,"SUNDIALS")
-
-	major = context.env['SUNDIALS_VERSION_MAJOR']
-	minor = context.env['SUNDIALS_VERSION_MINOR'] 
-
-	cppdef = context.env.get('CPPDEFINES')
-
-	context.env.Append(CPPDEFINES=[
-		('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR")
-		,('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")
-	])
-
-	context.env['SUNDIALS_CPPPATH_EXTRA']=[]
-	if major==2 and minor==2:
-		context.env.Append(SUNDIALS_CPPPATH_EXTRA = ["$SUNDIALS_CPPPATH/sundials"])
-
-	context.env.Append(CPPDEFINES=[('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR"),('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")])
-	context.env.AppendUnique(LIBS=context.env['SUNDIALS_LIBS'])
-	context.env.AppendUnique(CPPPATH=context.env['SUNDIALS_CPPPATH_EXTRA'])
-
-	is_ok = context.TryLink(ida_test_text,".c")
-	context.Result(is_ok)
-	
-	if cppdef:
-		context.env['CPPDEFINES']=cppdef
-	else:
-		del context.env['CPPDEFINES']
-
-	keep.restore(context)
-		
-	return is_ok
-
-
-#----------------
 # CONOPT test
 
 conopt_test_text = """
@@ -2204,8 +2106,6 @@ conf = Configure(env
 		, 'CheckLexDestroy' : CheckLexDestroy
 		, 'CheckTkTable' : CheckTkTable
 		, 'CheckX11' : CheckX11
-		, 'CheckIDA' : CheckIDA
-		, 'CheckSUNDIALS' : CheckSUNDIALS
 		, 'CheckCONOPT' : CheckCONOPT
 #		, 'CheckIPOPT' : CheckIPOPT
 		, 'CheckScrollkeeperConfig' : CheckScrollkeeperConfig
@@ -2444,15 +2344,6 @@ if conf.env['WITH_GRAPHVIZ']:
 
 if conf.env['WITH_UFSPARSE']:
 	conf.env.set_optional('ufsparse',active=conf.CheckUFSparse(),reason="not found")
-
-# IDA
-
-if conf.env['WITH_IDA']:
-	if not conf.CheckSUNDIALS():
-		conf.env.set_optional('ida',active=False,reason="SUNDIALS not found, or bad version")
-	else:
-		if not conf.CheckIDA():
-			conf.env.set_optional('ida',active=False,reason="Unable to compile/link against SUNDIALS/IDA")
 
 # CONOPT
 

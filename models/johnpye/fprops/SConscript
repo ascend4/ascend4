@@ -6,7 +6,12 @@
 # compile and run.
 
 Import('env')
+import shutil
+
 fprops_env = env.Clone()
+
+if not fprops_env.get('HAVE_IPOPT'):
+	fprops_env.ensure_ipopt()
 
 if fprops_env.get('HAVE_IPOPT'):
 	fprops_env.AppendUnique(CPPDEFINES=['HAVE_IPOPT'])

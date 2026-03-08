@@ -17,12 +17,7 @@ testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 
 #print "CUNIT_CPPPATH =",test_env.get("CUNIT_CPPPATH")
 
-if not test_env.get('WITH_IPOPT'):
-	try:
-		test_env.ParseConfig('pkgconf ipopt --libs --cflags')
-		test_env['WITH_IPOPT'] = 1
-	except OSError:
-		test_env['WITH_IPOPT'] = 0
+test_env['WITH_IPOPT'] = 1 if test_env.ensure_ipopt() else 0
 
 if not test_env.get('WITH_NLOPT'):
 	try:
@@ -55,7 +50,7 @@ if test_env['WITH_CUNIT']:
 		, test_env.SharedObject('../test.c')
 	]
 	if test_env.get('WITH_IPOPT'):
-		cutest_libs.append('ipopt')
+		cutest_libs += list(test_env.get('IPOPT_LIBS') or ['ipopt'])
 	if test_env.get('WITH_NLOPT'):
 		cutest_libs.append('nlopt')
 
@@ -66,12 +61,11 @@ if test_env['WITH_CUNIT']:
 if test_env.get('WITH_IPOPT'):
 	test_env.AppendUnique(CPPPATH=['#'])
 	test_env.AppendUnique(CPPDEFINES=['HAVE_IPOPT'])
+	test_env.AppendUnique(CPPPATH=test_env.get('IPOPT_CPPPATH', []))
+	test_env.AppendUnique(LIBPATH=test_env.get('IPOPT_LIBPATH', []))
+	test_env.AppendUnique(LIBS=test_env.get('IPOPT_LIBS', []))
 	if test_env.get('WITH_NLOPT'):
 		test_env.AppendUnique(CPPDEFINES=['HAVE_NLOPT'])
-	try:
-		test_env.ParseConfig('pkgconf ipopt --libs --cflags')
-	except OSError:
-		pass
 	if test_env.get('WITH_NLOPT'):
 		try:
 			test_env.ParseConfig('pkgconf nlopt --libs --cflags')
@@ -89,7 +83,7 @@ if test_env.get('WITH_IPOPT'):
 	ipopt_objs = ipopt_solver_objs + [
 		test_env.SharedObject('ipopt_eqm.c',OBJPREFIX='#/test/ipopt-test-')
 	]
-	ipopt_libs = ['m','ipopt']
+	ipopt_libs = ['m'] + list(test_env.get('IPOPT_LIBS') or ['ipopt'])
 	if test_env.get('WITH_NLOPT'):
 		ipopt_libs.append('nlopt')
 	test_env.Program('ipopt_eqm', test_env['shobjs'] + ipopt_objs

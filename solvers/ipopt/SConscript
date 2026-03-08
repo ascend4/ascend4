@@ -1,5 +1,5 @@
 Import('env')
-import platform, subprocess,shutil, pathlib
+import platform
 
 # build the ASCEND IPOPT solver. we will do any configuration testing here now,
 # also, only if the solver is requested.
@@ -11,42 +11,35 @@ ipopt_test_text = """
 
 /* note that pkg-config sets the coin-or directory, so no need to prefix here */
 #include <IpStdCInterface.h>
-int main(){
+int main(void){
 	Number n;
 	IpoptProblem nlp = 0;
 	n = 1;
-	FreeIpoptProblem(nlp); // probably a crash if you run this
+	FreeIpoptProblem(nlp);
 	return 0;
 }
 """
 
 def CheckIPOPT(context):
 	context.Message( 'Checking for IPOPT... ' )
-
-	# check that it exists according to pkgconfig
-	try:
-		cmd =[shutil.which("pkg-config"),"--libs","--cflags","ipopt"]
-		res = subprocess.run(cmd,stdout=subprocess.PIPE,check=True)
-		print("PKGCONFIG:",res.stdout)
-	except:
-		context.Result("no (pkg-config --exists)")
+	is_ok = context.env.ensure_ipopt()
+	if not is_ok:
+		context.Result("no (%s)" % (context.env.get('IPOPT_REASON') or 'not found'))
 		return False
-				
-	# get the settings from pkg-config
-	context.env.ParseConfig(str(pathlib.Path(shutil.which('pkg-config')))+' --cflags --libs ipopt')
 
-	# test that we can link against it
+	context.env.AppendUnique(CPPPATH=context.env.get('IPOPT_CPPPATH', []))
+	context.env.AppendUnique(LIBPATH=context.env.get('IPOPT_LIBPATH', []))
+	context.env.AppendUnique(LIBS=context.env.get('IPOPT_LIBS', []))
 	is_ok = context.TryLink(ipopt_test_text,".c")
 	if is_ok:
-		context.Result(is_ok)
+		context.Result(True)
 	else:
+		context.env['IPOPT_REASON'] = 'failed to link'
 		context.Result("no (failed to link)")
 	return is_ok
 
 if env.get('WITH_IPOPT'):
 	solver_env = env.Clone()
-	if env['IPOPT_PREFIX'] not in ['/usr']:
-		solver_env.AppendENVPath('PKG_CONFIG_PATH',env.subst("$IPOPT_PREFIX/lib/pkgconfig"))
 	
 	conf = solver_env.Configure(custom_tests={'CheckIPOPT':CheckIPOPT})
 	if not conf.CheckIPOPT():
@@ -54,7 +47,7 @@ if env.get('WITH_IPOPT'):
 	solver_env = conf.Finish()
 
 	# tell the top-level if our conf test failed
-	env.set_optional('ipopt',active=solver_env['WITH_IPOPT'],reason="not found");
+	env.set_optional('ipopt',active=solver_env['WITH_IPOPT'],reason=solver_env.get('IPOPT_REASON') or "not found");
 	
 	if env['WITH_IPOPT']:
 		if platform.system()=="Windows":
@@ -62,13 +55,19 @@ if env.get('WITH_IPOPT'):
 				CFLAGS=["-static"]
 			)
 
+		if solver_env.get('IPOPT_CPPPATH'):
+			solver_env.AppendUnique(CPPPATH=solver_env['IPOPT_CPPPATH'])
+		if solver_env.get('IPOPT_LIBPATH'):
+			solver_env.AppendUnique(LIBPATH=solver_env['IPOPT_LIBPATH'])
+		if solver_env.get('IPOPT_LIBS'):
+			solver_env.AppendUnique(LIBS=solver_env['IPOPT_LIBS'])
+
 		solver_env.Append(LIBS=['ascend'],LIBPATH=['#'])
 
 		lib = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
 			,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 			,SHLIBPREFIX = env['EXTLIB_PREFIX']
 		)
-		print("solver:",lib)
 		
 		env.Depends(lib,env['libascend'])
 

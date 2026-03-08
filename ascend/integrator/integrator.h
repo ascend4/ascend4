@@ -69,14 +69,9 @@
 
 /*---------------------------*/
 
-// TODO FIXME do we need all integrator IDs to be declare in here, or is it 
-// OK to add them later at runtime...?
-
-#ifdef ASC_WITH_IDA
-# define IDA_OPTIONAL S I(IDA,integrator_ida_internals)
-#else
-# define IDA_OPTIONAL
-#endif
+// Integrator engines are discovered at runtime via package loading, so keep
+// the engine IDs stable regardless of which plugins were built.
+#define IDA_OPTIONAL S I(IDA,integrator_ida_internals)
 
 #ifdef ASC_WTH_DOPRI5
 # define DOPRI5_OPTIONAL S I(DOPRI5,integrator_dopri5_internals)
@@ -84,7 +79,7 @@
 # define DOPRI5_OPTIONAL
 #endif
 
-/* we add IDA to the list of integrators at build time, if it is selected */
+/* Integrator packages are loaded dynamically at runtime. */
 #define INTEG_LIST \
 	I(LSODE       ,integrator_lsode_internals) \
 	IDA_OPTIONAL \
