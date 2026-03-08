@@ -980,7 +980,7 @@ envadditional={}
 
 tools = [
 	'lex', 'yacc', 'fortran', 'swig', 'textfile'#, 'substinfile'
-	,'disttar', 'tar', 'sundials', 'dvi', 'pdflatex', 'graphviz'
+	,'disttar', 'tar', 'sundials', 'dvi', 'pdflatex', 'graphviz', 'ipopt'
 ]
 if platform.system()=="Windows":
 	tools += ['nsis']

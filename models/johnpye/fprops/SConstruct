@@ -59,8 +59,8 @@ vars.Add(
 )
 
 env = Environment(
-	toolpath=['scons']
-	,tools = [deft ,'swig','textfile']
+	toolpath=['#/scons']
+	,tools = [deft ,'swig','textfile','ipopt']
 	,ENV={"TERM":os.environ.get('TERM'), "PATH":os.environ.get('PATH'), "LD_LIBRARY_PATH":os.environ.get("LD_LIBRARY_PATH")}
 	,HOST_PREFIX=os.environ.get('HOST_PREFIX')
 )
