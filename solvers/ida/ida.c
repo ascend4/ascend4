@@ -143,10 +143,12 @@ static void integrator_ida_create(IntegratorSystem *integ) {
 	enginedata->flagfn = NULL;
 	enginedata->flagfntype = NULL;
 	enginedata->flagnamefn = NULL;
-#if SUNDIALS_VERSION_MAJOR >= 6
-	enginedata->sunctx = NULL;
+#if SUNDIALS_VERSION_MAJOR >= 5
 	enginedata->linear_solver = NULL;
 	enginedata->dense_matrix = NULL;
+#endif
+#if SUNDIALS_VERSION_MAJOR >= 6
+	enginedata->sunctx = NULL;
 # if SUNDIALS_VERSION_MAJOR >= 7
 	if(SUNContext_Create(SUN_COMM_NULL, &enginedata->sunctx)){
 # else
@@ -180,7 +182,7 @@ static void integrator_ida_free(void *enginedata) {
 
 	ASC_FREE(d->rellist);
 
-#if SUNDIALS_VERSION_MAJOR >= 6
+#if SUNDIALS_VERSION_MAJOR >= 5
 	if(d->linear_solver != NULL){
 		SUNLinSolFree(d->linear_solver);
 		d->linear_solver = NULL;
@@ -189,6 +191,8 @@ static void integrator_ida_free(void *enginedata) {
 		SUNMatDestroy(d->dense_matrix);
 		d->dense_matrix = NULL;
 	}
+#endif
+#if SUNDIALS_VERSION_MAJOR >= 6
 	if(d->sunctx != NULL){
 		SUNContext_Free(&d->sunctx);
 	}
@@ -489,40 +493,22 @@ int ida_malloc(IntegratorSystem *integ, void *ida_mem, realtype t0,
 	CONSOLE_DEBUG("rtol = %8.2e",reltol);
 
 
-#if SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4)
+#if SUNDIALS_VERSION_MAJOR >= 5
 	flag = IDAInit(ida_mem, &integrator_ida_fex, t0, y0 ,yp0);
-#else
-	if (SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_ATOLVECT)) {
-		/* vector of absolute tolerances */
-		CONSOLE_DEBUG("USING VECTOR OF ATOL VALUES");
-		abstolvect = N_VNew_Serial(integ->n_y);
-		integrator_get_atol(integ, NV_DATA_S(abstolvect));
-
-		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SV,
-				reltol, abstolvect);
-
-		N_VDestroy_Serial(abstolvect);
-	} else {
-		/* scalar absolute tolerance (one value for all) */
-		abstol = SLV_PARAM_REAL(&(integ->params),IDA_PARAM_ATOL);
-		CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
-		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SS,
-				reltol, &abstol);
-	}
 #endif
 
 	if (flag == IDA_MEM_NULL) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 		return 2;
 	} else if (flag == IDA_MEM_FAIL) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDAMalloc)");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDAInit)");
 		return 3;
 	} else if (flag == IDA_ILL_INPUT) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid input to IDAMalloc");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid input to IDAInit");
 		return 4;
 	}
 
-#if SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4)
+#if SUNDIALS_VERSION_MAJOR >= 5
 	CONSOLE_DEBUG("Assigning tolerances...");
 	/* assign tolerances */
 	if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_ATOLVECT)) {
@@ -564,13 +550,11 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 
 #if SUNDIALS_VERSION_MAJOR >= 7
 	/* IDASetErrHandlerFn was removed in SUNDIALS 7; use default context-based handling. */
-#elif SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4)
+#elif SUNDIALS_VERSION_MAJOR >= 5
 	IDASetErrHandlerFn(ida_mem, &integrator_ida_error, (void *) integ);
 #endif
-#if SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4)
+#if SUNDIALS_VERSION_MAJOR >= 5
 	IDASetUserData(ida_mem, (void *)integ);
-#else
-	IDASetRdata(ida_mem, (void *) integ);
 #endif
 	IDASetMaxStep(ida_mem, integrator_get_maxstep(integ));
 	IDASetInitStep(ida_mem, integrator_get_stepzero(integ));
@@ -590,7 +574,7 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 	if (enginedata->pfree) {
 		(enginedata->pfree)(enginedata);
 	}
-#if SUNDIALS_VERSION_MAJOR >= 6
+#if SUNDIALS_VERSION_MAJOR >= 5
 	if (enginedata->linear_solver != NULL) {
 		SUNLinSolFree(enginedata->linear_solver);
 		enginedata->linear_solver = NULL;
@@ -605,32 +589,26 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 	linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 	CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER '%s'",linsolver);
 	if (strcmp(linsolver, "ASCEND") == 0) {
-#if SUNDIALS_VERSION_MAJOR >= 6
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING
 			,"The experimental ASCEND direct linear solver is unavailable with SUNDIALS %d; using DENSE instead"
 			,SUNDIALS_VERSION_MAJOR
 		);
 		linsolver = "DENSE";
-#else
-		CONSOLE_DEBUG("ASCEND DIRECT SOLVER, size = %d",integ->n_y);
-		IDAASCEND(ida_mem, integ->n_y);
-		IDAASCENDSetJacFn(ida_mem, &integrator_ida_sjex, (void *) integ);
-
-		enginedata->flagfntype = "IDAASCEND";
-		enginedata->flagfn = &IDAASCENDGetLastFlag;
-		enginedata->flagnamefn = &IDAASCENDGetReturnFlagName;
-#endif
 	}
 
 	if (strcmp(linsolver, "DENSE") == 0) {
 		CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",integ->n_y);
 #if SUNDIALS_VERSION_MAJOR >= 6
 		enginedata->dense_matrix = SUNDenseMatrix(integ->n_y, integ->n_y, enginedata->sunctx);
+		enginedata->linear_solver = SUNLinSol_Dense(y0, enginedata->dense_matrix, enginedata->sunctx);
+#else
+		enginedata->dense_matrix = SUNDenseMatrix(integ->n_y, integ->n_y);
+		enginedata->linear_solver = SUNLinSol_Dense(y0, enginedata->dense_matrix);
+#endif
 		if (enginedata->dense_matrix == NULL) {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to allocate SUNMatrix for IDA");
 			return 5;
 		}
-		enginedata->linear_solver = SUNLinSol_Dense(y0, enginedata->dense_matrix, enginedata->sunctx);
 		if (enginedata->linear_solver == NULL) {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to allocate dense SUNLinearSolver for IDA");
 			return 5;
@@ -640,65 +618,21 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to attach dense linear solver to IDA");
 			return 5;
 		}
-#else
-		flag = IDADense(ida_mem, integ->n_y);
-		switch (flag) {
-		case IDADENSE_SUCCESS:
-			break;
-		case IDADENSE_MEM_NULL:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
-			return 5;
-		case IDADENSE_ILL_INPUT:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDADENSE is not compatible with current nvector module");
-			return 5;
-		case IDADENSE_MEM_FAIL:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for IDADENSE");
-			return 5;
-		default:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad return");
-			return 5;
-		}
-#endif
 
 		if (SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_AUTODIFF)) {
 			CONSOLE_DEBUG("USING AUTODIFF");
-#if SUNDIALS_VERSION_MAJOR >= 6
 			flag = IDASetJacFn(ida_mem, &integrator_ida_djex);
-#elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-			flag = IDADlsSetDenseJacFn(ida_mem, &integrator_ida_djex);
-#else
-			flag = IDADenseSetJacFn(ida_mem, &integrator_ida_djex,
-					(void *) integ);
-#endif
-#if SUNDIALS_VERSION_MAJOR >= 6
 			if (flag != IDALS_SUCCESS) {
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDASetJacFn");
 				return 6;
 			}
-#else
-			switch (flag) {
-			case IDADENSE_SUCCESS:
-				break;
-			default:
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn");
-				return 6;
-			}
-#endif
 		} else {
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
 		}
 
 		enginedata->flagfntype = "IDADENSE";
-#if SUNDIALS_VERSION_MAJOR >= 6
 		enginedata->flagfn = &IDAGetLastLinFlag;
 		enginedata->flagnamefn = &IDAGetLinReturnFlagName;
-#elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-		enginedata->flagfn = &IDADlsGetLastFlag;
-		enginedata->flagnamefn = &IDADlsGetReturnFlagName;
-#else
-		enginedata->flagfn = &IDADenseGetLastFlag;
-		enginedata->flagnamefn = &IDADenseGetReturnFlagName;
-#endif
 	} else {
 		/* remaining methods are all SPILS */
 		CONSOLE_DEBUG("IDA SPILS");
@@ -722,26 +656,26 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 			CONSOLE_DEBUG("IDA SPGMR");
 #if SUNDIALS_VERSION_MAJOR >= 6
 			enginedata->linear_solver = SUNLinSol_SPGMR(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl, enginedata->sunctx);
-			flag = enginedata->linear_solver == NULL ? IDALS_MEM_FAIL : IDASetLinearSolver(ida_mem, enginedata->linear_solver, NULL);
 #else
-			flag = IDASpgmr(ida_mem, maxl); /* 0 means use the default max Krylov dimension of 5 */
+			enginedata->linear_solver = SUNLinSol_SPGMR(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl);
 #endif
+			flag = enginedata->linear_solver == NULL ? IDALS_MEM_FAIL : IDASetLinearSolver(ida_mem, enginedata->linear_solver, NULL);
 		} else if (strcmp(linsolver, "SPBCG") == 0) {
 			CONSOLE_DEBUG("IDA SPBCG");
 #if SUNDIALS_VERSION_MAJOR >= 6
 			enginedata->linear_solver = SUNLinSol_SPBCGS(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl, enginedata->sunctx);
-			flag = enginedata->linear_solver == NULL ? IDALS_MEM_FAIL : IDASetLinearSolver(ida_mem, enginedata->linear_solver, NULL);
 #else
-			flag = IDASpbcg(ida_mem, maxl);
+			enginedata->linear_solver = SUNLinSol_SPBCGS(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl);
 #endif
+			flag = enginedata->linear_solver == NULL ? IDALS_MEM_FAIL : IDASetLinearSolver(ida_mem, enginedata->linear_solver, NULL);
 		} else if (strcmp(linsolver, "SPTFQMR") == 0) {
 			CONSOLE_DEBUG("IDA SPTFQMR");
 #if SUNDIALS_VERSION_MAJOR >= 6
 			enginedata->linear_solver = SUNLinSol_SPTFQMR(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl, enginedata->sunctx);
-			flag = enginedata->linear_solver == NULL ? IDALS_MEM_FAIL : IDASetLinearSolver(ida_mem, enginedata->linear_solver, NULL);
 #else
-			flag = IDASptfqmr(ida_mem, maxl);
+			enginedata->linear_solver = SUNLinSol_SPTFQMR(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl);
 #endif
+			flag = enginedata->linear_solver == NULL ? IDALS_MEM_FAIL : IDASetLinearSolver(ida_mem, enginedata->linear_solver, NULL);
 		} else {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
 			return 8;
@@ -750,21 +684,13 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 		if (prec) {
 			/* assign the preconditioner to the linear solver */
 			(prec->pcreate)(integ);
-#if SUNDIALS_VERSION_MAJOR >= 6
 			IDASetPreconditioner(ida_mem,prec->psetup,prec->psolve);
-#elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-			IDASpilsSetPreconditioner(ida_mem,prec->psetup,prec->psolve);
-#else
-			IDASpilsSetPreconditioner(ida_mem, prec->psetup, prec->psolve,
-					(void *) integ);
-#endif
 			CONSOLE_DEBUG("PRECONDITIONER = %s",pname);
 		} else {
 			CONSOLE_DEBUG("No preconditioner");
 		}
 
 		enginedata->flagfntype = "IDASPILS";
-	#if SUNDIALS_VERSION_MAJOR >= 6
 		enginedata->flagfn = &IDAGetLastLinFlag;
 		enginedata->flagnamefn = &IDAGetLinReturnFlagName;
 		if (flag == IDALS_MEM_NULL) {
@@ -774,30 +700,12 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate IDA linear solver");
 			return 9;
 		}
-	#else
-		enginedata->flagfn = &IDASpilsGetLastFlag;
-		enginedata->flagnamefn = &IDASpilsGetReturnFlagName;
-		if (flag == IDASPILS_MEM_NULL) {
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
-			return 9;
-		} else if (flag == IDASPILS_MEM_FAIL) {
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDASpgmr)");
-			return 9;
-		}
-	#endif
 
 
 		/* assign the J*v function */
 		if (SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_AUTODIFF)) {
 			CONSOLE_DEBUG("USING AUTODIFF");
-#if SUNDIALS_VERSION_MAJOR >= 6
 			flag = IDASetJacTimes(ida_mem, NULL, &integrator_ida_jvex);
-#elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-			flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex);
-#else
-			flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex,
-					(void *) integ);
-#endif
 			if (flag < 0) {
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 				return 10;
@@ -810,25 +718,15 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 			/* select Gram-Schmidt orthogonalisation */
 			if (SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_GSMODIFIED)) {
 				CONSOLE_DEBUG("USING MODIFIED GS");
-#if SUNDIALS_VERSION_MAJOR >= 6
 				flag = SUNLinSol_SPGMRSetGSType(enginedata->linear_solver, SUN_MODIFIED_GS);
 				if (flag != SUNLS_SUCCESS) {
-#else
-				flag = IDASpilsSetGSType(ida_mem, MODIFIED_GS);
-				if (flag != IDASPILS_SUCCESS) {
-#endif
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
 					return 11;
 				}
 			} else {
 				CONSOLE_DEBUG("USING CLASSICAL GS");
-#if SUNDIALS_VERSION_MAJOR >= 6
 				flag = SUNLinSol_SPGMRSetGSType(enginedata->linear_solver, SUN_CLASSICAL_GS);
 				if (flag != SUNLS_SUCCESS) {
-#else
-				flag = IDASpilsSetGSType(ida_mem, CLASSICAL_GS);
-				if (flag != IDASPILS_SUCCESS) {
-#endif
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
 					return 11;
 				}
@@ -917,10 +815,8 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 		if (setjmp(g_fpe_env) == 0) {
 #endif
 
-# if SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=3)
+# if SUNDIALS_VERSION_MAJOR >= 5
 			flag = IDACalcIC(ida_mem, icopt, tout1);/* new API from v2.3  */
-# else
-			flag = IDACalcIC(ida_mem, t0, y0, yp0, icopt, tout1);
 # endif
 			/* check flags and output status */
 			switch (flag) {
@@ -951,7 +847,7 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
 				return 12;
 			}
-# if SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=3)
+# if SUNDIALS_VERSION_MAJOR >= 5
 			flag = IDAGetConsistentIC(ida_mem, y0, yp0);
 			if(flag != IDA_SUCCESS){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to retrieve consistent initial conditions");
@@ -989,11 +885,8 @@ int ida_root_init(IntegratorSystem *integ, void *ida_mem) {
 	IntegratorIdaData *enginedata = integ->enginedata;
 
 	if (enginedata->nbnds) {
-#if SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4)
+#if SUNDIALS_VERSION_MAJOR >= 5
 		IDARootInit(ida_mem, enginedata->nbnds, &integrator_ida_rootfn);
-#else
-		IDARootInit(ida_mem, enginedata->nbnds, &integrator_ida_rootfn,
-				(void *) integ);
 #endif
 	}
 
@@ -1144,12 +1037,6 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
 	if (enginedata->nbnds) {
-
-#if SUNDIALS_VERSION_MAJOR < 6 && SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR<4
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING, "Warning: boundary detection is"
-				"unreliable with SUNDIALS pre version 2.4.0. Please update if you"
-				"wish to use IDA for conditional integration");
-#endif
 		bnd_cond_states = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 
 		for (i = 0; i < enginedata->nbnds; i++) {
@@ -1300,7 +1187,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						yret = ida_bnd_new_zero_NV(integ, integ->n_y);
 						ypret = ida_bnd_new_zero_NV(integ, integ->n_y);
 
-#if SUNDIALS_VERSION_MAJOR >= 6 || (SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4)
+#if SUNDIALS_VERSION_MAJOR >= 5
 						/* set rootdir to -1*rootsfound to set IDA
 						 * to ignore double crossings */
 						for(i = 0; i < enginedata->nbnds; i++) {
@@ -1389,30 +1276,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
  */
 static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
 
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
-
-	int res;
-
-	/*
-	 There is an error in the documentation for this function in Sundials 2.2.
-	 According the the header file, the hinused stat is not provided.
-	 */
-	res = IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals,
-			&s->nlinsetups, &s->netfails, &s->qlast, &s->qcur, &s->hlast,
-			&s->hcur, &s->tcur);
-
-	/* get the missing statistic */
-	IDAGetActualInitStep(ida_mem, &s->hinused);
-
-	return res;
-#else
-
 	return IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals, &s->nlinsetups
 			,&s->netfails, &s->qlast, &s->qcur, &s->hinused
 			,&s->hlast, &s->hcur, &s->tcur
 	);
-
-#endif
 }
 
 /* vim: set ts=4: */

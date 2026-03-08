@@ -20,25 +20,27 @@
 */
 
 /*
-	for cases where we don't have SUNDIALS version information, guess 2.2.
+	for cases where we don't have SUNDIALS version information, guess 5.x.
 */
 #ifndef SUNDIALS_VERSION_MINOR
 # ifdef __GNUC__
-#  warning "GUESSING SUNDIALS VERSION 2.2"
+#  warning "GUESSING SUNDIALS VERSION 5.x"
 # endif
-# define SUNDIALS_VERSION_MINOR 2
+# define SUNDIALS_VERSION_MINOR 0
 #endif
 #ifndef SUNDIALS_VERSION_MAJOR
-# define SUNDIALS_VERSION_MAJOR 2
+# define SUNDIALS_VERSION_MAJOR 5
 #endif
 
-#if SUNDIALS_VERSION_MAJOR >= 6
+#if SUNDIALS_VERSION_MAJOR >= 5
 # include <sundials/sundials_config.h>
-# include <sundials/sundials_context.h>
 # if SUNDIALS_VERSION_MAJOR >= 7
+#  include <sundials/sundials_context.h>
 #  include <sundials/sundials_errors.h>
 #  include <sundials/sundials_types_deprecated.h>
 #  define SUNLS_SUCCESS SUN_SUCCESS
+# elif SUNDIALS_VERSION_MAJOR >= 6
+#  include <sundials/sundials_context.h>
 # endif
 # include <nvector/nvector_serial.h>
 # include <ida/ida.h>
@@ -50,37 +52,9 @@
 # include <sunlinsol/sunlinsol_sptfqmr.h>
 # define IDA_MTX_T SUNMatrix
 # define ASC_IDA_DENSE_ELEM(A,i,j) SM_ELEMENT_D((A),(i),(j))
+# define ASC_SUNDIALS_5PLUS 1
 #else
-/* SUNDIALS 2.4.0 introduces new DlsMat in place of DenseMat */
-# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==4
-#  define IDA_MTX_T DlsMat
-#  define IDADENSE_SUCCESS IDADLS_SUCCESS
-#  define IDADENSE_MEM_NULL IDADLS_MEM_NULL
-#  define IDADENSE_ILL_INPUT IDADLS_ILL_INPUT
-#  define IDADENSE_MEM_FAIL IDADLS_MEM_FAIL
-# else
-#  define IDA_MTX_T DenseMat
-# endif
-
-# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
-#  include <sundials/sundials_config.h>
-#  include <sundials/sundials_nvector.h>
-#  include <ida/ida_spgmr.h>
-#  include <ida.h>
-#  include <nvector_serial.h>
-# else
-#  include <sundials/sundials_config.h>
-#  include <nvector/nvector_serial.h>
-#  include <ida/ida.h>
-# endif
-
-# include <sundials/sundials_dense.h>
-# include <ida/ida_spgmr.h>
-# include <ida/ida_spbcgs.h>
-# include <ida/ida_sptfqmr.h>
-# include <ida/ida_dense.h>
-# include <ida/ida_impl.h>
-# define ASC_IDA_DENSE_ELEM(A,i,j) DENSE_ELEM((A),(i),(j))
+# error "Unsupported SUNDIALS version: ASCEND IDA requires SUNDIALS 5 or newer"
 #endif
 
 #ifndef IDA_SUCCESS

@@ -9,7 +9,7 @@
 #define ONE  RCONST(1.0)
 #define TWO  RCONST(2.0)
 
-#if SUNDIALS_VERSION_MAJOR >= 6
+#if SUNDIALS_VERSION_MAJOR >= 5
 
 int IDAASCEND(void *ida_mem, long _neq){
 	(void)ida_mem;

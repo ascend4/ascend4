@@ -205,7 +205,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 				var_set_active(v,0);
 				vok = 0;
 			}else{
-				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Non-incident var with an incident derivative. ASCEND can't handle this case at the moment, but we hope to fix it.");
+				ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Including non-incident state because its derivative is present in the DAE system.");
 #ifdef DERIV_WITHOUT_DIFF
 				VARMSG("'%s' has a derivative present, so needs to be included in the system");
 				CONSOLE_DEBUG("That var %s active",(var_active(v) ? "is" : "is NOT"));

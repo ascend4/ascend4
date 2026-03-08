@@ -65,6 +65,8 @@ typedef struct IntegratorIdaDataStruct{
 
 #if SUNDIALS_VERSION_MAJOR >= 6
 	SUNContext sunctx;
+#endif
+#if SUNDIALS_VERSION_MAJOR >= 5
 	SUNLinearSolver linear_solver;
 	SUNMatrix dense_matrix;
 #endif

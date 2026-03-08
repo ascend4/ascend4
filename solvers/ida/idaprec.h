@@ -37,12 +37,9 @@ typedef void IntegratorIdaPrecCreateFn(IntegratorSystem *integ);
 */
 typedef struct IntegratorIdaPrecStruct{
 	IntegratorIdaPrecCreateFn *pcreate;
-#if SUNDIALS_VERSION_MAJOR >= 6
+#if SUNDIALS_VERSION_MAJOR >= 5
 	IDALsPrecSetupFn psetup;
 	IDALsPrecSolveFn psolve;
-#else
-	IDASpilsPrecSetupFn psetup;
-	IDASpilsPrecSolveFn psolve;
 #endif
 } IntegratorIdaPrec;
 
