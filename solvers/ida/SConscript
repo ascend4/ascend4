@@ -102,10 +102,6 @@ def CheckSUNDIALSVersion(context):
 
 def CheckIDA(context):
 	context.Message('Checking for IDA... ')
-	context.env.AppendUnique(CPPDEFINES=[
-		('SUNDIALS_VERSION_MAJOR', '$SUNDIALS_VERSION_MAJOR'),
-		('SUNDIALS_VERSION_MINOR', '$SUNDIALS_VERSION_MINOR'),
-	])
 	context.env.AppendUnique(CPPPATH=context.env.get('SUNDIALS_CPPPATH_EXTRA') or [])
 	context.env.AppendUnique(LIBS=context.env.get('SUNDIALS_LIBS') or [])
 	is_ok = context.TryLink(ida_test_text, '.c')

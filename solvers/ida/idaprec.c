@@ -39,10 +39,6 @@
 static int integrator_ida_psetup_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *prec_data
-#if SUNDIALS_VERSION_MAJOR == 5
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
-#endif
 );
 
 static int integrator_ida_psolve_jacobian(realtype tt,
@@ -66,10 +62,6 @@ const IntegratorIdaPrec prec_jacobian = {
 static int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *prec_data
-#if SUNDIALS_VERSION_MAJOR == 5
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
-#endif
 );
 
 static int integrator_ida_psolve_jacobi(realtype tt,
@@ -133,10 +125,6 @@ void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
 static int integrator_ida_psetup_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *p_data
-#if SUNDIALS_VERSION_MAJOR == 5
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
-#endif
 ){
 	(void)tt;
 	(void)rr;
@@ -297,10 +285,6 @@ void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
 static int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 realtype c_j, void *p_data
-#if SUNDIALS_VERSION_MAJOR == 5
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
-#endif
 ){
 	(void)tt;
 	(void)rr;

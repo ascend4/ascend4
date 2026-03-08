@@ -19,13 +19,12 @@
 	SUNDIALS releases.
 */
 
+#include <sundials/sundials_config.h>
+
 /*
-	for cases where we don't have SUNDIALS version information, guess 5.x.
+	for cases where the headers don't expose version information, guess 5.x.
 */
 #ifndef SUNDIALS_VERSION_MINOR
-# ifdef __GNUC__
-#  warning "GUESSING SUNDIALS VERSION 5.x"
-# endif
 # define SUNDIALS_VERSION_MINOR 0
 #endif
 #ifndef SUNDIALS_VERSION_MAJOR
@@ -33,7 +32,12 @@
 #endif
 
 #if SUNDIALS_VERSION_MAJOR >= 5
-# include <sundials/sundials_config.h>
+# if SUNDIALS_VERSION_MAJOR == 5
+#  define SUN_PREC_NONE PREC_NONE
+#  define SUN_PREC_LEFT PREC_LEFT
+#  define SUN_MODIFIED_GS MODIFIED_GS
+#  define SUN_CLASSICAL_GS CLASSICAL_GS
+# endif
 # if SUNDIALS_VERSION_MAJOR >= 7
 #  include <sundials/sundials_context.h>
 #  include <sundials/sundials_errors.h>
