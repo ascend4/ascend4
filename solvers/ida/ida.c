@@ -513,14 +513,14 @@ int ida_malloc(IntegratorSystem *integ, void *ida_mem, realtype t0,
 	/* assign tolerances */
 	if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_ATOLVECT)) {
 		CONSOLE_DEBUG("using vector of atol values");
+#if SUNDIALS_VERSION_MAJOR >= 6
 		{
 			IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
-#if SUNDIALS_VERSION_MAJOR >= 6
 			abstolvect = N_VNew_Serial(integ->n_y, enginedata->sunctx);
-#else
-			abstolvect = N_VNew_Serial(integ->n_y);
-#endif
 		}
+#else
+		abstolvect = N_VNew_Serial(integ->n_y);
+#endif
 		integrator_get_atol(integ,NV_DATA_S(abstolvect));
 		IDASVtolerances(ida_mem, reltol, abstolvect);
 		N_VDestroy_Serial(abstolvect);

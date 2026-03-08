@@ -182,8 +182,8 @@ int ida_bnd_update_relist(IntegratorSystem *integ){
 
 N_Vector ida_bnd_new_zero_NV(IntegratorSystem *integ, long int vec_length){
 	int i;
-	IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
 #if SUNDIALS_VERSION_MAJOR >= 6
+	IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
 	N_Vector nv = N_VNew_Serial(vec_length, enginedata->sunctx);
 #else
 	N_Vector nv = N_VNew_Serial(vec_length);

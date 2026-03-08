@@ -1910,6 +1910,11 @@ int eqm_solve_particular(const double *A_in, const double *b_in, int m, int n, d
 
 void eqm_fill_n_est(const double *A, const double *b, int ne, int ns,
 		const double *n_init, double *n_est){
+	size_t ns_count;
+	if(ns <= 0){
+		return;
+	}
+	ns_count = (size_t)ns;
 	for(int i = 0; i < ns; ++i){
 		n_est[i] = 1.0;
 	}
@@ -1929,7 +1934,7 @@ void eqm_fill_n_est(const double *A, const double *b, int ne, int ns,
 		}
 	}
 	{
-		double *n0 = (double *)calloc((size_t)ns, sizeof(double));
+		double *n0 = (double *)calloc(ns_count, sizeof(double));
 		int ok_n0 = 1;
 		if(n0 && eqm_solve_particular(A, b, ne, ns, n0)){
 			for(int i = 0; i < ns; ++i){
