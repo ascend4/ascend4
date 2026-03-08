@@ -12,8 +12,6 @@ soname_minor = ".0"
 
 import sys, os, subprocess, platform, distutils.sysconfig, os.path, re, types, pathlib
 import subprocess, shutil
-sys.path.insert(0, str(pathlib.Path(str(Dir('#').abspath)).resolve() / 'scons'))
-from optional_packages import add_optional_package_methods
 
 # version number for python, useful on Windows
 pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
@@ -982,7 +980,7 @@ envadditional={}
 
 tools = [
 	'lex', 'yacc', 'fortran', 'swig', 'textfile'#, 'substinfile'
-	,'disttar', 'tar', 'dvi', 'pdflatex', 'graphviz'
+	,'disttar', 'tar', 'dvi', 'pdflatex', 'graphviz', 'ipopt'
 ]
 if platform.system()=="Windows":
 	tools += ['nsis']
@@ -1079,7 +1077,6 @@ def set_optional(env,comp,reason=None,active=None):
 	return active
 
 AddMethod(Environment, set_optional, 'set_optional')
-add_optional_package_methods(Environment)
 
 for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','lzma','mmio','blas','signals','doc','doc_build','pcre','installer']:
 	env.set_optional(opt)
