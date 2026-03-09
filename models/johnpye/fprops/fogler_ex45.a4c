@@ -1,0 +1,82 @@
+REQUIRE "atoms.a4l";
+
+MODEL fogler_ex45_flow_reversible_rate;
+	T IS_A temperature;
+	P IS_A pressure;
+	R IS_A molar_gas_constant;
+	Kc IS_A molar_density;
+	kA IS_A frequency;
+	FA0 IS_A molar_rate;
+
+	eps IS_A factor;
+	X IS_A fraction;
+	Xef IS_A fraction;
+
+	CA0 IS_A molar_density;
+	CA IS_A molar_density;
+	CB IS_A molar_density;
+
+	minus_rA IS_A conc_rate;
+	F_over_r IS_A volume;
+	V_CSTR IS_A volume;
+
+	eps_eqn:
+		eps = 1;
+
+	ca0_eqn:
+		CA0 = P / (R * T);
+
+	xef_eqn:
+		Kc = 4 * CA0 * Xef * Xef / ((1 - Xef) * (1 + eps * Xef));
+
+	ca_eqn:
+		CA = CA0 * (1 - X) / (1 + eps * X);
+
+	cb_eqn:
+		CB = 2 * CA0 * X / (1 + eps * X);
+
+	rate_eqn:
+		minus_rA = kA * (CA - CB * CB / Kc);
+
+	f_over_r_eqn:
+		F_over_r = FA0 / minus_rA;
+
+	vcstr_eqn:
+		V_CSTR = X * F_over_r;
+
+METHODS
+	METHOD values;
+		T := 340 {K};
+		P := 202.6 {kPa};
+		Kc := 100 {mol/m^3};    (* Fogler: 0.1 mol/dm^3 *)
+		kA := 0.5 {1/min};
+		FA0 := 3 {mol/min};
+		X := 0.4;               (* Fogler part 4 uses 80% of 0.51, ie X = 0.4 *)
+
+		Xef := 0.51;
+		CA0 := 72 {mol/m^3};
+		CA := 30.9 {mol/m^3};
+		CB := 41.1 {mol/m^3};
+		minus_rA := 7e-3 {mol/dm^3/min};
+		F_over_r := 0.43 {m^3};
+		V_CSTR := 0.171 {m^3};
+	END values;
+
+	METHOD on_load;
+		RUN values;
+		FIX T;
+		FIX P;
+		FIX Kc;
+		FIX kA;
+		FIX FA0;
+		FIX X;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT Xef > 0.50;
+		ASSERT Xef < 0.52;
+		ASSERT minus_rA > 0 {mol/m^3/s};
+		ASSERT V_CSTR > 0.16 {m^3};
+		ASSERT V_CSTR < 0.19 {m^3};
+	END self_test;
+END fogler_ex45_flow_reversible_rate;
