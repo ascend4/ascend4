@@ -62,6 +62,8 @@ typedef struct SlvReqC_struct{
 	enum SlvReqStudyDistribution study_dist;
 	double study_lower;
 	double study_upper;
+	double study_value;
+	unsigned int study_now;
 	char study_vary[128];
 	char study_obs0[128];
 	char study_obs1[128];
@@ -260,6 +262,8 @@ int slvreq_c_do_study(const SlvReqStudyRequest *request, void *user_data){
 	S->study_dist = request->distribution;
 	S->study_lower = RealValue(request->lower);
 	S->study_upper = RealValue(request->upper);
+	S->study_value = (ValueKind(request->value) == real_value) ? RealValue(request->value) : 0.0;
+	S->study_now = request->now;
 	S->study_vary[0] = '\0';
 	S->study_obs0[0] = '\0';
 	S->study_obs1[0] = '\0';
@@ -512,6 +516,162 @@ static void test_slvreq_study(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_slvreq_study_observe_only(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test6.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test6"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test6"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.do_study_fn = &slvreq_c_do_study,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.study_count, 1);
+	CU_ASSERT_EQUAL(S.study_n_observed, 2);
+	CU_ASSERT_EQUAL(S.study_mode, SLVREQ_STUDY_NONE);
+	CU_ASSERT_EQUAL(S.study_dist, SLVREQ_STUDY_DIST_DEFAULT);
+	CU_ASSERT_STRING_EQUAL(S.study_vary, "");
+	CU_ASSERT_STRING_EQUAL(S.study_obs0, "y");
+	CU_ASSERT_STRING_EQUAL(S.study_obs1, "x");
+	CU_ASSERT_STRING_EQUAL(S.study_run_method, "");
+	CU_ASSERT_STRING_EQUAL(S.study_filename, "");
+
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_study_log(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test7.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test7"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test7"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.do_study_fn = &slvreq_c_do_study,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.study_count, 1);
+	CU_ASSERT_EQUAL(S.study_mode, SLVREQ_STUDY_STEPS);
+	CU_ASSERT_EQUAL(S.study_dist, SLVREQ_STUDY_DIST_LOG);
+	CU_ASSERT_EQUAL(S.study_steps, 2);
+	CU_ASSERT_EQUAL(S.study_now, 1);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_lower, 1.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_upper, 100.0, 1e-12);
+	CU_ASSERT_STRING_EQUAL(S.study_vary, "x");
+
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_study_ratio(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test8.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test8"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test8"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.do_study_fn = &slvreq_c_do_study,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.study_count, 1);
+	CU_ASSERT_EQUAL(S.study_mode, SLVREQ_STUDY_RATIO);
+	CU_ASSERT_EQUAL(S.study_dist, SLVREQ_STUDY_DIST_LOG);
+	CU_ASSERT_EQUAL(S.study_now, 0);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_lower, 1.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_upper, 16.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_value, 2.0, 1e-12);
+	CU_ASSERT_STRING_EQUAL(S.study_vary, "x");
+
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
 static void test_slvreq_highs_options(void){
 	struct module_t *m = NULL;
 	int status = 0;
@@ -699,6 +859,9 @@ cleanup:
 	T(slvreq_target_switch) \
 	T(slvreq_delete_system) \
 	T(slvreq_study) \
+	T(slvreq_study_observe_only) \
+	T(slvreq_study_log) \
+	T(slvreq_study_ratio) \
 	T(slvreq_highs_options) \
 	T(slvreq_highs_options_invalid)
 
