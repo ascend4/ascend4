@@ -1580,8 +1580,23 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		title = "Fixed Variables"
 		text += "\n"
 		if len(v):
+			_name_width = 20
 			for var in v:
-				text += "\n%s\t= %f"%(str(var),var.getValue())
+				_instance = None
+				try:
+					_instance = var.getInstance()
+				except Exception:
+					_instance = None
+				if _instance is not None and _instance.isReal():
+					_display = self.get_instance_display_value(_instance)
+				elif _instance is not None:
+					_display = str(_instance.getValue())
+				else:
+					_display = str(var.getValue())
+				_name = str(var)
+				if len(_name) < _name_width:
+					_name = _name.ljust(_name_width)
+				text += "\n%s = %s" % (_name, _display)
 		else:
 			text += "\nnone"
 		_dialog = InfoDialog(self,self.window,text,title,tabs=[100,200])
