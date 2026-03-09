@@ -6,22 +6,13 @@
 #include "instance_types.h"
 #include "instquery.h"
 
-int slvreq_assign_hooks(struct Instance *siminst
-		, SlvReqSetSolverFn *set_solver_fn
-		, SlvReqSetOptionFn *set_option_fn
-		, SlvReqDoSolveFn *do_solve_fn
-		, SlvReqDeleteSystemFn *delete_system_fn
-		, void *user_data
-){
+int slvreq_assign_hooks(struct Instance *siminst, const SlvReqHooks *hooks){
 	/* check that it's the right kind */
 	assert(InstanceKind(siminst)==SIM_INST);
+	assert(hooks != NULL);
 
 	SlvReqHooks *h = ASC_NEW(SlvReqHooks);
-	h->set_solver_fn = set_solver_fn;
-	h->set_option_fn = set_option_fn;
-	h->do_solve_fn = do_solve_fn;
-	h->delete_system_fn = delete_system_fn;
-	h->user_data = user_data;
+	*h = *hooks;
 
 	if(((struct SimulationInstance *)siminst)->slvreq_hooks){
 		ASC_FREE(((struct SimulationInstance *)siminst)->slvreq_hooks);
@@ -82,6 +73,17 @@ int slvreq_do_solve(struct Instance *inst){
 	}
 
 	return (*(hooks->do_solve_fn))(inst, hooks->user_data);
+}
+
+int slvreq_do_study(struct Instance *inst, const SlvReqStudyRequest *request){
+	struct Instance *sim = FindSimulationInstance(inst);
+	SlvReqHooks *hooks = ((struct SimulationInstance *)sim)->slvreq_hooks;
+	if(hooks==NULL || hooks->do_study_fn==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No STUDY hook set");
+		return -1;
+	}
+
+	return (*(hooks->do_study_fn))(request, hooks->user_data);
 }
 
 int slvreq_delete_system(struct Instance *inst){

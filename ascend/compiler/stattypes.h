@@ -117,6 +117,7 @@ enum stat_t {
   SOLVER,       /**< SOLVER statement */
   OPTION,       /**< OPTION statement */
   SOLVE,        /**< SOLVE statement */
+  STUDY,        /**< STUDY statement */
   DELETESYSTEM, /**< DELETE SYSTEM statement */
   SELECT,       /**< SELECT statement */
   SWITCH,       /**< SWITCH statement */
@@ -409,6 +410,34 @@ struct StateSOLVE{
   struct Name *target; /**< optional target model name */
  };
 
+enum StudyMode {
+  study_none = 0,
+  study_steps,
+  study_step,
+  study_ratio
+};
+
+enum StudyDistribution {
+  study_dist_default = 0,
+  study_dist_linear,
+  study_dist_log
+};
+
+/** used for STUDY statement */
+struct StateSTUDY{
+  struct VariableList *obsvars;   /**< variables to observe */
+  struct Name *vary;              /**< optional variable to vary */
+  struct Expr *lower;             /**< optional lower bound */
+  struct Expr *upper;             /**< optional upper bound */
+  struct Expr *value;             /**< STEP/RATIO expression */
+  long steps;                     /**< STEPS count */
+  enum StudyMode mode;            /**< spacing mode */
+  enum StudyDistribution dist;    /**< optional distribution override */
+  symchar *run_method;            /**< optional method to run before each step */
+  unsigned int now;               /**< execute immediately if true */
+  char *filename;                 /**< optional output filename */
+ };
+
 /** used for TABLE statement (parse metadata in v0). */
 struct StateTABLE{
   struct Name *name;           /**< target array name */
@@ -510,6 +539,7 @@ union StateUnion {
   struct StateSOLVER     solver;
   struct StateOPTION     option;
   struct StateSOLVE      solve;
+  struct StateSTUDY      study;
   struct StateLINK	     lnk;
   struct StateTABLE      table;
   struct StateDATASET    dataset;

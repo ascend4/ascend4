@@ -117,6 +117,63 @@ class StudyWin:
 		#FIXME this depends on the ordering, is there a better way?
 		self.dist.set_active({DIST_LINEAR:0, DIST_LOG:1}[dist])
 
+	def _format_real_entry(self, value):
+		_units = self.browser.get_instance_display_units(self.instance)
+		conv = _units.getConversion()
+		uname = _units.getName().toString()
+		text = "%.15g" % (value / conv)
+		if uname != "":
+			text += " " + uname
+		return CelsiusUnits.convert_show(self.instance, str(value), True, default=text)
+
+	def _select_method(self, method_name):
+		if not method_name:
+			self.method = None
+			try:
+				self.methodrun.set_active(-1)
+			except Exception:
+				pass
+			return True
+		for _m in self.browser.sim.getType().getMethods():
+			if _m.getName() == method_name:
+				self.method = _m
+				for i, row in enumerate(self.methodrun.get_model()):
+					if row[0] == method_name:
+						self.methodrun.set_active(i)
+						return True
+				return True
+		return False
+
+	def configure_from_request(self, request):
+		self.lowerb.set_text(self._format_real_entry(request.getLower()))
+		self.upperb.set_text(self._format_real_entry(request.getUpper()))
+
+		mode = request.getMode()
+		if mode == 1:
+			self.set_step_type(STEP_NUMBER)
+			self.nsteps.set_text(str(request.getSteps()))
+			if request.getDistribution() == 2:
+				self.set_dist(DIST_LOG)
+			else:
+				self.set_dist(DIST_LINEAR)
+		elif mode == 2:
+			self.set_step_type(STEP_INCREM)
+			self.set_dist(DIST_LINEAR)
+			self.nsteps.set_text(self._format_real_entry(request.getValue()))
+		elif mode == 3:
+			self.set_step_type(STEP_RATIO)
+			self.set_dist(DIST_LOG)
+			self.nsteps.set_text("%.15g" % request.getValue())
+
+		if request.hasRunMethod():
+			if not self._select_method(request.getRunMethod()):
+				self.browser.reporter.reportWarning("STUDY RUN method '%s' was not found in the current type." % request.getRunMethod())
+		else:
+			self._select_method(None)
+
+		self.on_nsteps_changed()
+		self.validate_inputs()
+
 	def run(self):
 		while 1:
 			_res = self.studywin.run();
@@ -138,6 +195,14 @@ class StudyWin:
 				# cancel... exit Study
 				break
 		self.studywin.destroy()
+
+	def run_now(self):
+		if not self.validate_inputs():
+			self.browser.reporter.reportError("Invalid inputs in METHOD STUDY request.")
+			self.studywin.destroy()
+			return False
+		self.solve()
+		return True
 		
 	def on_studywin_close(self,*args):
 		self.studywin.response(Gtk.ResponseType.CANCEL)

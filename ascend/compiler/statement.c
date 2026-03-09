@@ -262,6 +262,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case SOLVER:
     case OPTION:
     case SOLVE:
+    case STUDY:
     case DELETESYSTEM:
     case RUN:
     case FNAME:
@@ -511,6 +512,33 @@ struct Statement *CreateSOLVE(struct Name *target){
 	struct Statement *result;
 	result=create_statement_here(SOLVE);
 	result->v.solve.target = target;
+	return result;
+}
+
+struct Statement *CreateSTUDY(struct VariableList *obsvars,
+                              struct Name *vary,
+                              struct Expr *lower,
+                              struct Expr *upper,
+                              long steps,
+                              struct Expr *value,
+                              enum StudyMode mode,
+                              enum StudyDistribution dist,
+                              symchar *run_method,
+                              unsigned int now,
+                              CONST char *filename){
+	struct Statement *result;
+	result = create_statement_here(STUDY);
+	result->v.study.obsvars = obsvars;
+	result->v.study.vary = vary;
+	result->v.study.lower = lower;
+	result->v.study.upper = upper;
+	result->v.study.value = value;
+	result->v.study.steps = steps;
+	result->v.study.mode = mode;
+	result->v.study.dist = dist;
+	result->v.study.run_method = run_method;
+	result->v.study.now = now;
+	result->v.study.filename = (filename != NULL) ? ASC_STRDUP(filename) : NULL;
 	return result;
 }
 
@@ -1219,6 +1247,25 @@ void DestroyStatement(struct Statement *s)
         s->v.solve.target = NULL;
         break;
 
+      case STUDY:
+        DestroyVariableList(s->v.study.obsvars);
+        s->v.study.obsvars = NULL;
+        DestroyName(s->v.study.vary);
+        s->v.study.vary = NULL;
+        DestroyExprList(s->v.study.lower);
+        s->v.study.lower = NULL;
+        DestroyExprList(s->v.study.upper);
+        s->v.study.upper = NULL;
+        DestroyExprList(s->v.study.value);
+        s->v.study.value = NULL;
+        s->v.study.run_method = NULL;
+        s->v.study.now = 0;
+        if (s->v.study.filename != NULL) {
+          ascfree(s->v.study.filename);
+          s->v.study.filename = NULL;
+        }
+        break;
+
       case DELETESYSTEM:
         break;
 
@@ -1438,6 +1485,20 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.solve.target = CopyName(s->v.solve.target);
     break;
 
+  case STUDY:
+    result->v.study.obsvars = CopyVariableList(s->v.study.obsvars);
+    result->v.study.vary = CopyName(s->v.study.vary);
+    result->v.study.lower = CopyExprList(s->v.study.lower);
+    result->v.study.upper = CopyExprList(s->v.study.upper);
+    result->v.study.value = CopyExprList(s->v.study.value);
+    result->v.study.steps = s->v.study.steps;
+    result->v.study.mode = s->v.study.mode;
+    result->v.study.dist = s->v.study.dist;
+    result->v.study.run_method = s->v.study.run_method;
+    result->v.study.now = s->v.study.now;
+    result->v.study.filename = (s->v.study.filename != NULL) ? ASC_STRDUP(s->v.study.filename) : NULL;
+    break;
+
   case DELETESYSTEM:
     break;
 
@@ -1515,6 +1576,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case SOLVER:
   case OPTION:
   case SOLVE:
+  case STUDY:
   case DELETESYSTEM:
   case ASSERT:
   case IF:
@@ -1563,6 +1625,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case SOLVER:
   case OPTION:
   case SOLVE:
+  case STUDY:
   case DELETESYSTEM:
   case ASSERT:
   case IF:
@@ -1613,6 +1676,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case SOLVER:
   case OPTION:
   case SOLVE:
+  case STUDY:
   case DELETESYSTEM:
   case ASSERT:
   case IF:
@@ -2138,6 +2202,72 @@ struct Name *SolveStatTargetF(CONST struct Statement *s){
 	assert(s!=NULL);
 	assert(s->t==SOLVE);
 	return s->v.solve.target;
+}
+
+struct VariableList *StudyStatObservedF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.obsvars;
+}
+
+struct Name *StudyStatVaryF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.vary;
+}
+
+struct Expr *StudyStatLowerF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.lower;
+}
+
+struct Expr *StudyStatUpperF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.upper;
+}
+
+struct Expr *StudyStatValueF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.value;
+}
+
+long StudyStatStepsF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.steps;
+}
+
+enum StudyMode StudyStatModeF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.mode;
+}
+
+enum StudyDistribution StudyStatDistributionF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.dist;
+}
+
+symchar *StudyStatRunMethodF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.run_method;
+}
+
+unsigned int StudyStatNowF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.now;
+}
+
+CONST char *StudyStatFilenameF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.filename;
 }
 
 struct Set *CallStatArgsF(CONST struct Statement *s)
@@ -2824,6 +2954,50 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     return CompareNames(RunStatAccess(s1),RunStatAccess(s2));
   case SOLVE:
     return CompareNames(SolveStatTarget(s1),SolveStatTarget(s2));
+  case STUDY:
+    ctmp = CompareVariableLists(StudyStatObserved(s1),StudyStatObserved(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CompareNames(StudyStatVary(s1),StudyStatVary(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CompareExprs(StudyStatLower(s1),StudyStatLower(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CompareExprs(StudyStatUpper(s1),StudyStatUpper(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CompareExprs(StudyStatValue(s1),StudyStatValue(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (StudyStatSteps(s1) != StudyStatSteps(s2)) {
+      return (StudyStatSteps(s1) > StudyStatSteps(s2)) ? 1 : -1;
+    }
+    if (StudyStatMode(s1) != StudyStatMode(s2)) {
+      return (StudyStatMode(s1) > StudyStatMode(s2)) ? 1 : -1;
+    }
+    if (StudyStatDistribution(s1) != StudyStatDistribution(s2)) {
+      return (StudyStatDistribution(s1) > StudyStatDistribution(s2)) ? 1 : -1;
+    }
+    ctmp = CmpSymchar(StudyStatRunMethod(s1),StudyStatRunMethod(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (StudyStatNow(s1) != StudyStatNow(s2)) {
+      return (StudyStatNow(s1) > StudyStatNow(s2)) ? 1 : -1;
+    }
+    if (StudyStatFilename(s1) == NULL || StudyStatFilename(s2) == NULL) {
+      if (StudyStatFilename(s1) != StudyStatFilename(s2)) {
+        return (StudyStatFilename(s1) != NULL) ? 1 : -1;
+      }
+      return 0;
+    }
+    return strcmp(StudyStatFilename(s1),StudyStatFilename(s2));
   case DELETESYSTEM:
     return 0;
   case WHILE:
