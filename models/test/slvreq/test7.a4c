@@ -1,0 +1,14 @@
+REQUIRE "atoms.a4l";
+IMPORT "qrslv";
+
+MODEL test7;
+	x, y IS_A factor;
+	y = 2 * x;
+METHODS
+	METHOD on_load;
+		FIX x;
+		x := 1;
+		SOLVER QRSlv;
+		STUDY y, x VARY x FROM 1 TO 100 STEPS 2 LOG NOW;
+	END on_load;
+END test7;

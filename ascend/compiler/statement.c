@@ -524,6 +524,7 @@ struct Statement *CreateSTUDY(struct VariableList *obsvars,
                               enum StudyMode mode,
                               enum StudyDistribution dist,
                               symchar *run_method,
+                              unsigned int now,
                               CONST char *filename){
 	struct Statement *result;
 	result = create_statement_here(STUDY);
@@ -536,6 +537,7 @@ struct Statement *CreateSTUDY(struct VariableList *obsvars,
 	result->v.study.mode = mode;
 	result->v.study.dist = dist;
 	result->v.study.run_method = run_method;
+	result->v.study.now = now;
 	result->v.study.filename = (filename != NULL) ? ASC_STRDUP(filename) : NULL;
 	return result;
 }
@@ -1257,6 +1259,7 @@ void DestroyStatement(struct Statement *s)
         DestroyExprList(s->v.study.value);
         s->v.study.value = NULL;
         s->v.study.run_method = NULL;
+        s->v.study.now = 0;
         if (s->v.study.filename != NULL) {
           ascfree(s->v.study.filename);
           s->v.study.filename = NULL;
@@ -1492,6 +1495,7 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.study.mode = s->v.study.mode;
     result->v.study.dist = s->v.study.dist;
     result->v.study.run_method = s->v.study.run_method;
+    result->v.study.now = s->v.study.now;
     result->v.study.filename = (s->v.study.filename != NULL) ? ASC_STRDUP(s->v.study.filename) : NULL;
     break;
 
@@ -2254,6 +2258,12 @@ symchar *StudyStatRunMethodF(CONST struct Statement *s){
 	return s->v.study.run_method;
 }
 
+unsigned int StudyStatNowF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==STUDY);
+	return s->v.study.now;
+}
+
 CONST char *StudyStatFilenameF(CONST struct Statement *s){
 	assert(s!=NULL);
 	assert(s->t==STUDY);
@@ -2977,6 +2987,9 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     ctmp = CmpSymchar(StudyStatRunMethod(s1),StudyStatRunMethod(s2));
     if (ctmp != 0) {
       return ctmp;
+    }
+    if (StudyStatNow(s1) != StudyStatNow(s2)) {
+      return (StudyStatNow(s1) > StudyStatNow(s2)) ? 1 : -1;
     }
     if (StudyStatFilename(s1) == NULL || StudyStatFilename(s2) == NULL) {
       if (StudyStatFilename(s1) != StudyStatFilename(s2)) {

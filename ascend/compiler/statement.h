@@ -245,6 +245,7 @@ extern struct Statement *CreateSTUDY(struct VariableList *obsvars,
                                      enum StudyMode mode,
                                      enum StudyDistribution dist,
                                      symchar *run_method,
+                                     unsigned int now,
                                      CONST char *filename);
 /**<
 	Create a 'STUDY' statement node.
@@ -1573,6 +1574,7 @@ extern struct Name *SolveStatTargetF(CONST struct Statement *s);
 # define StudyStatMode(s) ((s)->v.study.mode)
 # define StudyStatDistribution(s) ((s)->v.study.dist)
 # define StudyStatRunMethod(s) ((s)->v.study.run_method)
+# define StudyStatNow(s) ((s)->v.study.now)
 # define StudyStatFilename(s) ((s)->v.study.filename)
 #else
 # define StudyStatObserved(s) StudyStatObservedF(s)
@@ -1584,6 +1586,7 @@ extern struct Name *SolveStatTargetF(CONST struct Statement *s);
 # define StudyStatMode(s) StudyStatModeF(s)
 # define StudyStatDistribution(s) StudyStatDistributionF(s)
 # define StudyStatRunMethod(s) StudyStatRunMethodF(s)
+# define StudyStatNow(s) StudyStatNowF(s)
 # define StudyStatFilename(s) StudyStatFilenameF(s)
 #endif
 extern struct VariableList *StudyStatObservedF(CONST struct Statement *s);
@@ -1595,6 +1598,7 @@ extern long StudyStatStepsF(CONST struct Statement *s);
 extern enum StudyMode StudyStatModeF(CONST struct Statement *s);
 extern enum StudyDistribution StudyStatDistributionF(CONST struct Statement *s);
 extern symchar *StudyStatRunMethodF(CONST struct Statement *s);
+extern unsigned int StudyStatNowF(CONST struct Statement *s);
 extern CONST char *StudyStatFilenameF(CONST struct Statement *s);
 
 /* * * StateCall functions * * */

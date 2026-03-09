@@ -69,6 +69,7 @@ typedef struct SlvReqStudyRequest_struct{
 	enum SlvReqStudyMode mode;
 	enum SlvReqStudyDistribution distribution;
 	const char *run_method;
+	unsigned int now;
 	const char *filename;
 } SlvReqStudyRequest;
 

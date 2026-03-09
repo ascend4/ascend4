@@ -643,6 +643,9 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
 	if (s->v.study.run_method != NULL) {
 		FPRINTF(f," RUN %s",SCP(s->v.study.run_method));
 	}
+	if (s->v.study.now) {
+		FPRINTF(f," NOW");
+	}
 	if (s->v.study.filename != NULL) {
 		FPRINTF(f," FILE \"%s\"",s->v.study.filename);
 	}

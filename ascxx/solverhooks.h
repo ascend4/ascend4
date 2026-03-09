@@ -59,6 +59,7 @@ private:
 	int mode;
 	int distribution;
 	std::string run_method;
+	bool now;
 	std::string filename;
 public:
 	StudyRequest();
@@ -75,6 +76,7 @@ public:
 	int getDistribution() const;
 	bool hasRunMethod() const;
 	std::string getRunMethod() const;
+	bool getNow() const;
 	bool hasFilename() const;
 	std::string getFilename() const;
 };
@@ -107,6 +109,9 @@ public:
 
 	/// C++ function that will be called as a result of a 'DELETE SYSTEM' command
 	virtual int deleteSystem(Simulation *S);
+
+	/// Return deferred post-solve outputs registered by STUDY statements without VARY
+	virtual std::vector<Instanc> getStudyPrintVars(Simulation *S) const;
 
 	SolverReporter *getSolverReporter();
 

@@ -195,6 +195,14 @@ class StudyWin:
 				# cancel... exit Study
 				break
 		self.studywin.destroy()
+
+	def run_now(self):
+		if not self.validate_inputs():
+			self.browser.reporter.reportError("Invalid inputs in METHOD STUDY request.")
+			self.studywin.destroy()
+			return False
+		self.solve()
+		return True
 		
 	def on_studywin_close(self,*args):
 		self.studywin.response(Gtk.ResponseType.CANCEL)

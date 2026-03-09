@@ -211,6 +211,10 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 
 			dia = StudyWin(self.browser, request.getVary())
 			dia.configure_from_request(request)
+			if request.getNow():
+				if not dia.run_now():
+					return 1
+				return 0
 			dia.run()
 			return 0
 		except Exception as e:

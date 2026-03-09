@@ -268,6 +268,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"LADDER"		{ return LADDER_TOK		; }
 <INITIAL>"LINEAR"		{ return LINEAR_TOK		; }
 <INITIAL>"LOG"		    { return LOG_TOK	        ; }
+<INITIAL>"NOW"			{ return NOW_TOK			; }
 <INITIAL>"MAXIMIZE"		{ return MAXIMIZE_TOK		; }
 <INITIAL>"MAX_INTEGER"		{ return MAXINTEGER_TOK		; }
 <INITIAL>"MAX_REAL"		{ return MAXREAL_TOK		; }

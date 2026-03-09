@@ -1,5 +1,20 @@
 import pathlib, sys, argparse, re
 
+def _print_requested_vars(sim, printvars):
+	re1 = re.compile(r"^[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*(\.[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*)*$")
+	for varname in printvars:
+		if not re1.match(varname):
+			raise RuntimeError(f"Requested variable name '{varname}' does not match allowable pattern.")
+		var = eval(f"sim.{varname}")
+		print(f"{var} = {var.getValue()}")
+
+def _print_default_study_vars(sim):
+	hooks = sim.getSolverHooks()
+	if hooks is None:
+		return
+	for var in hooks.getStudyPrintVars(sim):
+		print(f"{sim.getInstanceName(var)} = {var.getValue()}")
+
 def run_ascend_model(filen,model=None,printvars=None,test=True):
 	"""
 	This function (and the associated command-line argument parser) is for
@@ -42,12 +57,9 @@ def run_ascend_model(filen,model=None,printvars=None,test=True):
 	
 	if printvars is not None:
 		test = False
-		re1 = re.compile(r"^[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*(\.[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*)*$")
-		for varname in printvars:
-			if not re1.match(varname):
-				raise RuntimeError(f"Requested variable name '{varname}' does not match allowable pattern.")
-			var = eval(f"M.{varname}")
-			print(f"{var} = {var.getValue()}")
+		_print_requested_vars(M, printvars)
+	else:
+		_print_default_study_vars(M)
 	
 	if test:
 		try:

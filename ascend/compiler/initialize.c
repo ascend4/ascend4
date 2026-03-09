@@ -607,6 +607,7 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	req.mode = (enum SlvReqStudyMode)StudyStatMode(stat);
 	req.distribution = (enum SlvReqStudyDistribution)StudyStatDistribution(stat);
 	req.run_method = (StudyStatRunMethod(stat) != NULL) ? SCP(StudyStatRunMethod(stat)) : NULL;
+	req.now = StudyStatNow(stat);
 	req.filename = StudyStatFilename(stat);
 
 	for(vars = StudyStatObserved(stat); vars != NULL; vars = NextVariableNode(vars)){
@@ -710,8 +711,8 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 				goto cleanup;
 			}
 		}
-	}else if(req.run_method != NULL){
-		WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY RUN clause requires a VARY clause");
+	}else if(req.run_method != NULL || req.now){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY RUN/NOW clauses require a VARY clause");
 		fm->ErrNo = Proc_slvreq_error;
 		fm->flow = FrameError;
 		goto cleanup;

@@ -697,6 +697,7 @@ struct StudyParse {
   enum StudyMode mode;
   enum StudyDistribution dist;
   symchar *run_method;
+  unsigned int now;
   CONST char *filename;
 };
 
@@ -710,12 +711,14 @@ static struct StudyParse StudyParseEmpty(void){
   spec.mode = study_none;
   spec.dist = study_dist_default;
   spec.run_method = NULL;
+  spec.now = 0;
   spec.filename = NULL;
   return spec;
 }
 
 static struct StudyParse g_study_parse;
 static symchar *g_study_run_method = NULL;
+static unsigned int g_study_now = 0;
 static CONST char *g_study_filename = NULL;
 
 /* For 'inline' notes, note on DQUOTE_TOK from scanner.l:
@@ -781,6 +784,7 @@ static CONST char *g_study_filename = NULL;
 %token IF_TOK  IGNORE_TOK IMPORT_TOK IN_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK INDEPENDENT_TOK
 %token INTERSECTION_TOK ISA_TOK _IS_T ISREFINEDTO_TOK
 %token LINEAR_TOK LOG_TOK
+%token NOW_TOK
 %token LINK_TOK
 %token MAXIMIZE_TOK MAXINTEGER_TOK MAXREAL_TOK METHODS_TOK METHOD_TOK MINIMIZE_TOK MODEL_TOK
 %token NOT_TOK NOTES_TOK
@@ -2797,13 +2801,14 @@ study_statement:
 	{
 		g_study_parse = StudyParseEmpty();
 		g_study_run_method = NULL;
+		g_study_now = 0;
 		g_study_filename = NULL;
 	}
-	fvarlist study_vary_opt study_run_opt study_file_opt
+	fvarlist study_vary_opt study_run_opt study_now_opt study_file_opt
 	{
 		$$ = CreateSTUDY($3, g_study_parse.vary, g_study_parse.lower, g_study_parse.upper,
 			g_study_parse.steps, g_study_parse.value, g_study_parse.mode, g_study_parse.dist,
-			g_study_run_method, g_study_filename);
+			g_study_run_method, g_study_now, g_study_filename);
 	}
 	;
 
@@ -2870,6 +2875,16 @@ study_file_opt:
 	| FILE_TOK DQUOTE_TOK
 	{
 		g_study_filename = $2;
+	}
+	;
+
+study_now_opt:
+	/* empty */
+	{
+	}
+	| NOW_TOK
+	{
+		g_study_now = 1;
 	}
 	;
 

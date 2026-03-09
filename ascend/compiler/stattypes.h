@@ -434,6 +434,7 @@ struct StateSTUDY{
   enum StudyMode mode;            /**< spacing mode */
   enum StudyDistribution dist;    /**< optional distribution override */
   symchar *run_method;            /**< optional method to run before each step */
+  unsigned int now;               /**< execute immediately if true */
   char *filename;                 /**< optional output filename */
  };
 
