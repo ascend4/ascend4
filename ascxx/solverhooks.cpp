@@ -226,7 +226,8 @@ int ascxx_slvreq_do_solve(struct Instance *instance, void *user_data){
 int ascxx_slvreq_do_study(const SlvReqStudyRequest *request, void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_STUDY_HOOK_NOT_SET;
-	return S->getSolverHooks()->doStudy(request, S);
+	StudyRequest study_request(request);
+	return S->getSolverHooks()->doStudy(study_request, S);
 }
 
 int ascxx_slvreq_delete_system(void *user_data){
@@ -319,33 +320,145 @@ SolverHooks::doSolve(Instance *i, Simulation *S){
 	return 0;
 }
 
+StudyRequest::StudyRequest()
+	: observed(), have_vary(false), vary(), lower(0.0), upper(0.0), value(0.0)
+	, steps(0), mode(SLVREQ_STUDY_NONE), distribution(SLVREQ_STUDY_DIST_DEFAULT)
+	, run_method(), filename(){
+}
+
+StudyRequest::StudyRequest(const SlvReqStudyRequest *request)
+	: observed(), have_vary(false), vary(), lower(0.0), upper(0.0), value(0.0)
+	, steps(0), mode(SLVREQ_STUDY_NONE), distribution(SLVREQ_STUDY_DIST_DEFAULT)
+	, run_method(), filename(){
+	unsigned long i;
+	if(request == NULL){
+		return;
+	}
+	if(request->observed != NULL){
+		for(i = 0; i < request->n_observed; ++i){
+			if(request->observed[i] != NULL){
+				observed.push_back(Instanc(request->observed[i]));
+			}
+		}
+	}
+	if(request->vary != NULL){
+		have_vary = true;
+		vary = Instanc(request->vary);
+	}
+	if(ValueKind(request->lower) == real_value){
+		lower = RealValue(request->lower);
+	}
+	if(ValueKind(request->upper) == real_value){
+		upper = RealValue(request->upper);
+	}
+	if(ValueKind(request->value) == real_value){
+		value = RealValue(request->value);
+	}
+	steps = request->steps;
+	mode = request->mode;
+	distribution = request->distribution;
+	if(request->run_method != NULL){
+		run_method = request->run_method;
+	}
+	if(request->filename != NULL){
+		filename = request->filename;
+	}
+}
+
+std::vector<Instanc>
+StudyRequest::getObserved() const{
+	return observed;
+}
+
+bool
+StudyRequest::hasVary() const{
+	return have_vary;
+}
+
+Instanc
+StudyRequest::getVary() const{
+	return vary;
+}
+
+double
+StudyRequest::getLower() const{
+	return lower;
+}
+
+double
+StudyRequest::getUpper() const{
+	return upper;
+}
+
+double
+StudyRequest::getValue() const{
+	return value;
+}
+
+long
+StudyRequest::getSteps() const{
+	return steps;
+}
+
 int
-SolverHooks::doStudy(const SlvReqStudyRequest *request, Simulation *S){
+StudyRequest::getMode() const{
+	return mode;
+}
+
+int
+StudyRequest::getDistribution() const{
+	return distribution;
+}
+
+bool
+StudyRequest::hasRunMethod() const{
+	return !run_method.empty();
+}
+
+std::string
+StudyRequest::getRunMethod() const{
+	return run_method;
+}
+
+bool
+StudyRequest::hasFilename() const{
+	return !filename.empty();
+}
+
+std::string
+StudyRequest::getFilename() const{
+	return filename;
+}
+
+int
+SolverHooks::doStudy(const StudyRequest &request, Simulation *S){
 	FILE *fp = stdout;
 	bool close_fp = false;
 	bool include_vary = false;
 	std::vector<StudyColumn> columns;
 	unsigned long i;
 	int res = 0;
+	std::vector<Instanc> observed = request.getObserved();
 
-	if(request == NULL || request->n_observed == 0 || request->observed == NULL){
+	if(observed.empty()){
 		return SLVREQ_STUDY_INVALID_REQUEST;
 	}
 
-	if(request->filename != NULL){
-		fp = fopen(request->filename, "w");
+	if(request.hasFilename()){
+		fp = fopen(request.getFilename().c_str(), "w");
 		if(fp == NULL){
 			return SLVREQ_STUDY_IO_ERROR;
 		}
 		close_fp = true;
-		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Writing STUDY output to '%s'.",request->filename);
+		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Writing STUDY output to '%s'.",request.getFilename().c_str());
 	}
 
 	try{
-		if(request->vary != NULL){
+		if(request.hasVary()){
 			include_vary = true;
-			for(i = 0; i < request->n_observed; ++i){
-				if(request->observed[i] == request->vary){
+			Instanc vary = request.getVary();
+			for(i = 0; i < observed.size(); ++i){
+				if(observed[i].getInternalType() == vary.getInternalType()){
 					include_vary = false;
 					break;
 				}
@@ -353,25 +466,25 @@ SolverHooks::doStudy(const SlvReqStudyRequest *request, Simulation *S){
 		}
 
 		if(include_vary){
-			columns.push_back(get_study_column(request->vary, S));
+			columns.push_back(get_study_column(request.getVary().getInternalType(), S));
 		}
-		for(i = 0; i < request->n_observed; ++i){
-			columns.push_back(get_study_column(request->observed[i], S));
+		for(i = 0; i < observed.size(); ++i){
+			columns.push_back(get_study_column(observed[i].getInternalType(), S));
 		}
 		write_study_headers(fp, columns);
 
-		if(request->vary == NULL || request->mode == SLVREQ_STUDY_NONE){
+		if(!request.hasVary() || request.getMode() == SLVREQ_STUDY_NONE){
 			write_study_row(fp, columns);
 			goto cleanup;
 		}
 
 		{
-			Instanc vary(request->vary);
+			Instanc vary = request.getVary();
 			Method run_method;
 			bool have_run_method = false;
 
-			if(request->run_method != NULL){
-				run_method = S->getType().getMethod(SymChar(request->run_method));
+			if(request.hasRunMethod()){
+				run_method = S->getType().getMethod(SymChar(request.getRunMethod().c_str()));
 				have_run_method = true;
 			}
 
@@ -379,13 +492,13 @@ SolverHooks::doStudy(const SlvReqStudyRequest *request, Simulation *S){
 				vary.setFixed(true);
 			}
 
-			if(request->mode == SLVREQ_STUDY_STEPS){
-				long steps = request->steps;
-				double lower = RealValue(request->lower);
-				double upper = RealValue(request->upper);
+			if(request.getMode() == SLVREQ_STUDY_STEPS){
+				long steps = request.getSteps();
+				double lower = request.getLower();
+				double upper = request.getUpper();
 				for(long step = 0; step <= steps; ++step){
 					double value;
-					if(request->distribution == SLVREQ_STUDY_DIST_LOG){
+					if(request.getDistribution() == SLVREQ_STUDY_DIST_LOG){
 						double ratio = pow(upper / lower, 1.0 / (double)steps);
 						value = lower * pow(ratio, (double)step);
 					}else{
@@ -401,10 +514,10 @@ SolverHooks::doStudy(const SlvReqStudyRequest *request, Simulation *S){
 					}
 					write_study_row(fp, columns);
 				}
-			}else if(request->mode == SLVREQ_STUDY_STEP){
-				double value = RealValue(request->lower);
-				double upper = RealValue(request->upper);
-				double delta = RealValue(request->value);
+			}else if(request.getMode() == SLVREQ_STUDY_STEP){
+				double value = request.getLower();
+				double upper = request.getUpper();
+				double delta = request.getValue();
 				for(;;){
 					if(have_run_method){
 						S->run(run_method);
@@ -420,10 +533,10 @@ SolverHooks::doStudy(const SlvReqStudyRequest *request, Simulation *S){
 						break;
 					}
 				}
-			}else if(request->mode == SLVREQ_STUDY_RATIO){
-				double value = RealValue(request->lower);
-				double upper = RealValue(request->upper);
-				double ratio = RealValue(request->value);
+			}else if(request.getMode() == SLVREQ_STUDY_RATIO){
+				double value = request.getLower();
+				double upper = request.getUpper();
+				double ratio = request.getValue();
 				for(;;){
 					if(have_run_method){
 						S->run(run_method);
