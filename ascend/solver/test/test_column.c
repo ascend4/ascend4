@@ -145,8 +145,15 @@ static void test_column_model(const char *modelname){
 	S.buildroot = NULL;
 	S.solvername[0] = '\0';
 	S.delete_count = 0;
-
-	slvreq_assign_hooks(S.siminst, &slvreq_c_set_solver, NULL, &slvreq_c_do_solve, &slvreq_c_delete_system, &S);
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
 
 	name = CreateIdName(AddSymbol("on_load"));
 	pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);

@@ -214,7 +214,15 @@ static void test_fprops_model(const char *modelname){
 
 	/* do the solver hooks */
 	S.sys = NULL;
-	slvreq_assign_hooks(S.siminst, &slvreq_c_set_solver, &slvreq_c_set_option, &slvreq_c_do_solve, NULL, &S);
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
 
     CONSOLE_DEBUG("RUNNING ON_LOAD");
 

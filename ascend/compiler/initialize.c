@@ -444,6 +444,86 @@ ExecuteInitOption(struct procFrame *fm, struct Statement *stat){
 	return;
 }
 
+static int
+ResolveStudyInstance(struct procFrame *fm, struct Statement *stat, CONST struct Name *name,
+		const char *what, struct Instance **result)
+{
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+	struct gl_list_t *instances = FindInstances(fm->i, (struct Name *)name, &err);
+	const char *errstr = NULL;
+
+	if(instances==NULL){
+		errstr = "unknown error";
+		fm->ErrNo = Proc_bad_name;
+	}
+	switch(rel_errorlist_get_find_error(&err)){
+		case unmade_instance: errstr = "unmade instance"; fm->ErrNo = Proc_instance_not_found; break;
+		case undefined_instance: errstr = "undefined instance"; fm->ErrNo = Proc_name_not_found; break;
+		case impossible_instance: errstr = "impossible instance"; fm->ErrNo = Proc_illegal_name_use; break;
+		case correct_instance: break;
+	}
+	if(errstr){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid STUDY %s (%s)",what,errstr);
+		if(instances != NULL){
+			gl_destroy(instances);
+		}
+		fm->flow = FrameError;
+		return 1;
+	}
+	if(gl_length(instances) != 1){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY %s must resolve to exactly one instance",what);
+		gl_destroy(instances);
+		fm->ErrNo = Proc_bad_name;
+		fm->flow = FrameError;
+		return 1;
+	}
+	*result = (struct Instance *)gl_fetch(instances,1);
+	gl_destroy(instances);
+	return 0;
+}
+
+static int
+EvaluateStudyRealExpr(struct procFrame *fm, struct Statement *stat, struct Expr *expr,
+		const char *what, const dim_type *expected, struct value_t *result)
+{
+	struct value_t value;
+	IVAL(value);
+	assert(GetEvaluationContext()==NULL);
+	SetEvaluationContext(fm->i);
+	value = EvaluateExpr(expr,NULL,InstanceEvaluateName);
+	SetEvaluationContext(NULL);
+
+	switch(ValueKind(value)){
+		case integer_value:
+			value = CreateRealValue((double)IntegerValue(value), Dimensionless(), IsConstantValue(value));
+			break;
+		case real_value:
+			break;
+		case error_value:
+			WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid STUDY %s expression",what);
+			fm->ErrNo = Proc_slvreq_error;
+			fm->flow = FrameError;
+			return 1;
+		default:
+			WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY %s expression must evaluate to a real value",what);
+			fm->ErrNo = Proc_slvreq_error;
+			fm->flow = FrameError;
+			DestroyValue(&value);
+			return 1;
+	}
+
+	if(expected != NULL && !IsWild(expected) && !SameDimen(expected,RealValueDimensions(value))){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY %s has incompatible dimensions",what);
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		DestroyValue(&value);
+		return 1;
+	}
+
+	*result = value;
+	return 0;
+}
+
 static void
 ExecuteInitSolve(struct procFrame *fm, struct Statement *stat){
 	int res;
@@ -506,6 +586,156 @@ ExecuteInitSolve(struct procFrame *fm, struct Statement *stat){
 		return;
 	}
 	fm->ErrNo = Proc_all_ok;
+}
+
+static void
+ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
+	SlvReqStudyRequest req;
+	CONST struct VariableList *vars;
+	struct Instance *vary = NULL;
+	unsigned long index = 0;
+	int res;
+	const dim_type *varydim = NULL;
+
+	IVAL(req.lower);
+	IVAL(req.upper);
+	IVAL(req.value);
+	req.n_observed = VariableListLength(StudyStatObserved(stat));
+	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	req.vary = NULL;
+	req.steps = StudyStatSteps(stat);
+	req.mode = (enum SlvReqStudyMode)StudyStatMode(stat);
+	req.distribution = (enum SlvReqStudyDistribution)StudyStatDistribution(stat);
+	req.run_method = (StudyStatRunMethod(stat) != NULL) ? SCP(StudyStatRunMethod(stat)) : NULL;
+	req.filename = StudyStatFilename(stat);
+
+	for(vars = StudyStatObserved(stat); vars != NULL; vars = NextVariableNode(vars)){
+		struct Instance *obs = NULL;
+		if(ResolveStudyInstance(fm, stat, NamePointer(vars), "observed variable", &obs)){
+			goto cleanup;
+		}
+		switch(InstanceKind(obs)){
+			case REAL_INST:
+			case REAL_ATOM_INST:
+			case REAL_CONSTANT_INST:
+				break;
+			default:
+				WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY observed variable must be real-valued");
+				fm->ErrNo = Proc_illegal_type_use;
+				fm->flow = FrameError;
+				goto cleanup;
+		}
+		req.observed[index++] = obs;
+	}
+
+	if(StudyStatVary(stat) != NULL){
+		if(ResolveStudyInstance(fm, stat, StudyStatVary(stat), "vary variable", &vary)){
+			goto cleanup;
+		}
+		switch(InstanceKind(vary)){
+			case REAL_INST:
+			case REAL_ATOM_INST:
+				break;
+			default:
+				WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY vary variable must be mutable and real-valued");
+				fm->ErrNo = Proc_illegal_type_use;
+				fm->flow = FrameError;
+				goto cleanup;
+		}
+		req.vary = vary;
+		varydim = RealAtomDims(vary);
+
+		if(EvaluateStudyRealExpr(fm, stat, StudyStatLower(stat), "lower bound", varydim, &req.lower)){
+			goto cleanup;
+		}
+		if(EvaluateStudyRealExpr(fm, stat, StudyStatUpper(stat), "upper bound", varydim, &req.upper)){
+			goto cleanup;
+		}
+
+		switch(StudyStatMode(stat)){
+			case study_steps:
+				if(req.steps < 1){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY STEPS count must be at least 1");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				break;
+			case study_step:
+				if(EvaluateStudyRealExpr(fm, stat, StudyStatValue(stat), "step size", varydim, &req.value)){
+					goto cleanup;
+				}
+				if(RealValue(req.value) == 0.0){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY STEP size must be nonzero");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				if((RealValue(req.upper) > RealValue(req.lower) && RealValue(req.value) < 0.0)
+						|| (RealValue(req.upper) < RealValue(req.lower) && RealValue(req.value) > 0.0)){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY STEP size must move from lower bound toward upper bound");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				break;
+			case study_ratio:
+				if(EvaluateStudyRealExpr(fm, stat, StudyStatValue(stat), "step ratio", Dimensionless(), &req.value)){
+					goto cleanup;
+				}
+				if(RealValue(req.value) <= 0.0 || RealValue(req.value) == 1.0){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY RATIO must be positive and not equal to 1");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				if((RealValue(req.upper) > RealValue(req.lower) && RealValue(req.value) < 1.0)
+						|| (RealValue(req.upper) < RealValue(req.lower) && RealValue(req.value) > 1.0)){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY RATIO must move from lower bound toward upper bound");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				/* fall through */
+			case study_none:
+				break;
+		}
+
+		if((StudyStatMode(stat) == study_ratio)
+				|| (StudyStatMode(stat) == study_steps && StudyStatDistribution(stat) == study_dist_log)){
+			if(RealValue(req.lower) <= 0.0 || RealValue(req.upper) <= 0.0){
+				WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY LOG/RATIO bounds must be positive");
+				fm->ErrNo = Proc_slvreq_error;
+				fm->flow = FrameError;
+				goto cleanup;
+			}
+		}
+	}else if(req.run_method != NULL){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY RUN clause requires a VARY clause");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		goto cleanup;
+	}
+
+	res = slvreq_do_study(fm->i, &req);
+	if(res){
+		switch(res){
+			case SLVREQ_STUDY_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
+		}
+		ProcWriteSlvReqError(fm);
+		goto cleanup;
+	}
+	fm->ErrNo = Proc_all_ok;
+
+cleanup:
+	if(req.observed != NULL){
+		ASC_FREE(req.observed);
+	}
+	DestroyValue(&req.lower);
+	DestroyValue(&req.upper);
+	DestroyValue(&req.value);
 }
 
 static void
@@ -1765,6 +1995,9 @@ static void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat){
 	break;
   case SOLVE:
     ExecuteInitSolve(fm,stat);
+	break;
+  case STUDY:
+    ExecuteInitStudy(fm,stat);
 	break;
   case DELETESYSTEM:
 	ExecuteInitDeleteSystem(fm,stat);
