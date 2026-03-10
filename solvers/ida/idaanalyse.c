@@ -36,7 +36,21 @@
 #include <ascend/system/cond_config.h>
 #include <ascend/solver/slvDOF.h>
 
-#define ANALYSE_DEBUG
+#ifndef IDA_DEBUG
+# define IDA_DEBUG 0
+#endif
+#if !IDA_DEBUG
+# undef CONSOLE_DEBUG
+# define CONSOLE_DEBUG(...) ((void)0)
+#endif
+
+#ifdef IDA_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
+/* #define ANALYSE_DEBUG */
 
 /*
 	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
@@ -333,7 +347,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 		return 2;
 	}
 
-	ERROR_REPORTER_HERE(ASC_USER_NOTE,"moving derivs to start of remainder\n");
+	MSG("moving derivs to start of remainder");
 
 	if(system_cut_rels(integ->system, 0, &integrator_ida_rel, &nr)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");

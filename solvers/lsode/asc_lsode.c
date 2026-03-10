@@ -72,6 +72,12 @@
 
 /* #define TIMING_DEBUG */
 
+#ifdef LSODE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 static IntegratorCreateFn integrator_lsode_create;
 static IntegratorParamsDefaultFn integrator_lsode_params_default;
 static IntegratorSolveFn integrator_lsode_solve;
@@ -91,7 +97,7 @@ static const IntegratorInternals integrator_lsode_internals = {
 };
 
 extern ASC_EXPORT int lsode_register(void){
-	CONSOLE_DEBUG("Registering LSODE...");
+	MSG("Registering LSODE...");
 	return integrator_register(&integrator_lsode_internals);
 }
 
@@ -1386,4 +1392,3 @@ static int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp
 	return 1;
 #endif
 }
-

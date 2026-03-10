@@ -83,6 +83,7 @@ int IntegratorReporterConsole::recordObservedValues(){
 	f << setw(11) << integrator_get_t(sys);
 	vector<double> data(integrator->getNumObservedVars());
 	integrator_get_observations(sys,&data[0]);
+	integrator->saveObservations();
 	//copy(data.begin(),data.end(),ostream_iterator<double>(f,"\t"));
 	for(vector<double>::iterator i=data.begin();i<data.end();++i){
 		f << "  " << setw(11) << *i;
@@ -131,9 +132,7 @@ IntegratorReporterCxx::updateStatus(){
 
 int
 IntegratorReporterCxx::recordObservedValues(){
-	// CONSOLE_DEBUG("...");
-	double *data = ASC_NEW_ARRAY(double,integrator->getNumObservedVars());
-	integrator_get_observations(integrator->getInternalType(),data);
+	integrator->saveObservations();
 	return 0;
 }
 

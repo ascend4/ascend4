@@ -1,0 +1,58 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL fogler_ex45_batch;
+	Rgas IS_A generic_real;
+	T IS_A generic_real;
+	P0 IS_A generic_real;
+	Kc IS_A generic_real;
+	kA IS_A generic_real;
+
+	t IS_A generic_real;
+	X IS_A generic_real;
+	dX_dt IS_A generic_real;
+	Xeb IS_A generic_real;
+	Xtarget IS_A generic_real;
+
+	CA0 IS_A generic_real;
+	CA IS_A generic_real;
+	CB IS_A generic_real;
+	minus_rA IS_A generic_real;
+
+	ca0_eqn: CA0 = P0 / (Rgas * T);
+	xeb_eqn: Kc = 4 * CA0 * Xeb * Xeb / (1 - Xeb);
+	xtarget_eqn: Xtarget = 0.8 * Xeb;
+	ca_eqn: CA = CA0 * (1 - X);
+	cb_eqn: CB = 2 * CA0 * X;
+	rate_eqn: minus_rA = kA * (CA - CB * CB / Kc);
+	conv_ode: dX_dt = minus_rA / CA0;
+
+METHODS
+	METHOD on_load;
+		FIX Rgas, T, P0, Kc, kA;
+
+		Rgas := 0.082057;
+		T := 340;
+		P0 := 2;
+		Kc := 0.1;
+		kA := 0.5;
+
+		t := 0;
+		X := 0;
+		dX_dt := 0.5;
+		CA0 := 0.07168618084;
+		CA := 0.07168618084;
+		CB := 0;
+		Xeb := 0.4413784501;
+		Xtarget := 0.3531027601;
+		minus_rA := 0.03584309042;
+
+		INDEPENDENT t;
+		DER(dX_dt, X);
+
+		X.obs_id := 1;
+		minus_rA.obs_id := 2;
+		Xeb.obs_id := 3;
+		Xtarget.obs_id := 4;
+		dX_dt.obs_id := 5;
+	END on_load;
+END fogler_ex45_batch;

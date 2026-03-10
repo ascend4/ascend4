@@ -167,7 +167,7 @@ Instanc::~Instanc(){
 	//cerr << "DESTROYING INSTANC OBJECT" << endl;
 }
 
-const SymChar &
+const SymChar
 Instanc::getName() const{
 	return name;
 }

@@ -65,9 +65,17 @@
 #include <ascend/utilities/config.h>
 #include <ascend/integrator/integrator.h>
 
+#ifndef IDA_DEBUG
+# define IDA_DEBUG 0
+#endif
+#if !IDA_DEBUG
+# undef CONSOLE_DEBUG
+# define CONSOLE_DEBUG(...) ((void)0)
+#endif
+
 /* #define FEX_DEBUG */
-#define SOLVE_DEBUG
-#define STATS_DEBUG
+/* #define SOLVE_DEBUG */
+/* #define STATS_DEBUG */
 /* #define DESTROY_DEBUG */
 
 /*-------------------------------------------------------------

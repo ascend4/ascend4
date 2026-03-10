@@ -359,7 +359,7 @@ public:
 	~Instanc();
 	std::vector<Instanc> getChildren();
 	const std::string getKindStr() const;
-	const SymChar &getName();
+	const SymChar getName();
 	const Type getType() const;
 	const bool isAtom() const;
 	const bool isFixed() const;

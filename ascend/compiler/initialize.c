@@ -75,6 +75,12 @@
 //#define INIT_DEBUG
 //#define FIXFREE_DEBUG
 
+#ifdef INIT_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking
   recursion errors.
@@ -1907,7 +1913,7 @@ static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 	instances = FindInsts(fm->i,LINKStatVlist(stat),&err);
 	key = LINKStatKey(stat);
 
-	CONSOLE_DEBUG("LINKStatVlist(stat) contains %lu",VariableListLength(LINKStatVlist(stat)));
+	MSG("LINKStatVlist(stat) contains %lu",VariableListLength(LINKStatVlist(stat)));
 	if(instances == NULL){
 		switch(rel_errorlist_get_find_error(&err)){
 		case impossible_instance:
@@ -1922,7 +1928,7 @@ static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 	if((instances != NULL) && (key != NULL)){
 		switch(InstanceKind(fm->i)){
 		case MODEL_INST:
-			CONSOLE_DEBUG("Adding procedural link");
+			MSG("Adding procedural link");
 			addLinkEntry(fm->i,key,instances,stat,0);
 			break;
 		default:
