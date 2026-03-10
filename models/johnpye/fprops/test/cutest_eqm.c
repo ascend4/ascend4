@@ -1027,6 +1027,58 @@ static void test_flash_prepare_unifac_and_tpz(void){
 	CU_ASSERT_EQUAL(pkg.kind, FPROPS_FLASH_PACKAGE_INVALID);
 }
 
+static void test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points(void){
+	const char *names[] = {"water", "ethanol"};
+	const double P = 1.01e5; /* VLE-Calc case shown at 1.01 bar */
+	const double reltol = 2e-2;
+	struct {
+		double T_C;
+		double x_water;
+		double y_water;
+	} cases[] = {
+		{78.0563, 0.10, 0.100401},
+		{79.7169, 0.50, 0.342386},
+		{86.3093, 0.90, 0.555865}
+	};
+	FpropsMultiphasePackage pkg;
+	int i, status;
+
+	memset(&pkg, 0, sizeof(pkg));
+	status = fprops_flash_prepare_unifac(&pkg, "UNIFAC-orig-2003", names, ARRAYLEN(names));
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg.data.unifac_ideal_vl.pkg);
+
+	for(i = 0; i < ARRAYLEN(cases); ++i){
+		double x[2];
+		double fugacity[2];
+		double y_water_expected;
+		double T;
+
+		x[0] = cases[i].x_water;
+		x[1] = 1.0 - x[0];
+		y_water_expected = cases[i].y_water;
+		T = 273.15 + cases[i].T_C;
+
+		status = fprops_unifac_liq_fugacity(pkg.data.unifac_ideal_vl.pkg, T, P, x, fugacity);
+		CU_ASSERT_EQUAL(status, 0);
+		CU_ASSERT_TRUE(fugacity[0] > 0.0);
+		CU_ASSERT_TRUE(fugacity[1] > 0.0);
+
+		if(fabs(fugacity[0] / P - y_water_expected) > reltol){
+			fprintf(stderr,
+				"UNIFAC liq fugacity mismatch at x_water=%.6f, T_C=%.4f:"
+				" yw_calc=%.8f yw_ref=%.8f\n",
+				x[0], cases[i].T_C,
+				fugacity[0] / P, y_water_expected
+			);
+		}
+		CU_ASSERT_DOUBLE_EQUAL(fugacity[0] / P, y_water_expected, reltol);
+	}
+
+	fprops_flash_destroy_package(&pkg);
+	CU_ASSERT_EQUAL(pkg.kind, FPROPS_FLASH_PACKAGE_INVALID);
+}
+
 CU_ErrorCode test_register_eqm(void){
 	CU_pSuite s = CU_add_suite("eqm", eqm_suite_init, eqm_suite_cleanup);
 	if(NULL == s){
@@ -1151,6 +1203,10 @@ CU_ErrorCode test_register_eqm(void){
 	}
 	if(NULL == CU_add_test(s, "flash_prepare_unifac_and_tpz",
 			test_flash_prepare_unifac_and_tpz)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points",
+			test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;
