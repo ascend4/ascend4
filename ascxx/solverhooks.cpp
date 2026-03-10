@@ -458,7 +458,6 @@ int
 SolverHooks::doStudy(const StudyRequest &request, Simulation *S){
 	FILE *fp = stdout;
 	bool close_fp = false;
-	bool include_vary = false;
 	std::vector<StudyColumn> columns;
 	unsigned long i;
 	int res = 0;
@@ -494,20 +493,13 @@ SolverHooks::doStudy(const StudyRequest &request, Simulation *S){
 
 	try{
 		if(request.hasVary()){
-			include_vary = true;
 			Instanc vary = request.getVary();
-			for(i = 0; i < observed.size(); ++i){
-				if(observed[i].getInternalType() == vary.getInternalType()){
-					include_vary = false;
-					break;
-				}
-			}
-		}
-
-		if(include_vary){
-			columns.push_back(get_study_column(request.getVary().getInternalType(), S));
+			columns.push_back(get_study_column(vary.getInternalType(), S));
 		}
 		for(i = 0; i < observed.size(); ++i){
+			if(request.hasVary() && observed[i].getInternalType() == request.getVary().getInternalType()){
+				continue;
+			}
 			columns.push_back(get_study_column(observed[i].getInternalType(), S));
 		}
 		write_study_headers(fp, columns);
