@@ -58,12 +58,33 @@ int
 IntegratorReporterConsole::initOutput(){
 	long nobs = integrator->getNumObservedVars();
 	stringstream ss;
-	f << setw(11) << right << "t";
-	ss << setw(11)<< right << "-------";
+	Variable indep = integrator->getIndependentVariable();
+	UnitsM indep_units = indep.getInstance().getDisplayUnits(false);
+	string indep_label = indep.getName();
+	string indep_units_name = indep_units.getName().toString();
+	bool indep_show_units = !indep_units_name.empty() && indep_units_name != "1";
+	if(indep_units.getDimensions().isWild() && indep.getInstance().isDimensionless()){
+		indep_show_units = false;
+	}
+	if(indep_show_units){
+		indep_label += " [" + indep_units_name + "]";
+	}
+	f << setw(20) << right << indep_label;
+	ss << setw(20)<< right << "--------------------";
 	for(long i=0; i<nobs; ++i){
 		Variable v = integrator->getObservedVariable(i);
-		f << "  " << setw(11) << right << v.getName();
-		ss<< "  " << setw(11) << right << "-----------";
+		string label = v.getName();
+		UnitsM units = v.getInstance().getDisplayUnits(false);
+		string units_name = units.getName().toString();
+		bool show_units = !units_name.empty() && units_name != "1";
+		if(units.getDimensions().isWild() && v.getInstance().isDimensionless()){
+			show_units = false;
+		}
+		if(show_units){
+			label += " [" + units_name + "]";
+		}
+		f << "  " << setw(20) << right << label;
+		ss<< "  " << setw(20) << right << "--------------------";
 	}
 	f << endl;
 	f << ss.str() << endl;
@@ -80,13 +101,18 @@ int IntegratorReporterConsole::updateStatus(){
 
 int IntegratorReporterConsole::recordObservedValues(){
 	IntegratorSystem *sys = integrator->getInternalType();
-	f << setw(11) << integrator_get_t(sys);
+	Variable indep = integrator->getIndependentVariable();
+	UnitsM indep_units = indep.getInstance().getDisplayUnits(false);
+	double indep_value = integrator_get_t(sys) / indep_units.getConversion();
+	f << setw(20) << indep_value;
 	vector<double> data(integrator->getNumObservedVars());
 	integrator_get_observations(sys,&data[0]);
 	integrator->saveObservations();
-	//copy(data.begin(),data.end(),ostream_iterator<double>(f,"\t"));
-	for(vector<double>::iterator i=data.begin();i<data.end();++i){
-		f << "  " << setw(11) << *i;
+	for(long j = 0; j < integrator->getNumObservedVars(); ++j){
+		Variable v = integrator->getObservedVariable(j);
+		UnitsM units = v.getInstance().getDisplayUnits(false);
+		double value = data[j] / units.getConversion();
+		f << "  " << setw(20) << value;
 	}
 	f << endl;
 	return 1;
