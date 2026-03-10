@@ -196,6 +196,8 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 	def doStudy(self, request, sim):
 		try:
 			observer = self._get_study_observer()
+			if request.hasVary() and request.getMode() != SLVREQ_STUDY_NONE:
+				observer.add_instance(request.getVary())
 			for inst in request.getObserved():
 				observer.add_instance(inst)
 			observer.sync()
