@@ -4,6 +4,10 @@ import ascpy
 from gi.repository import GObject
 
 from solverreporter import *
+from study import StudyWin
+
+SLVREQ_NOT_IMPLEMENTED = 8
+SLVREQ_STUDY_NONE = 0
 
 
 class SolverHooksPython(ascpy.SolverHooks):
@@ -139,6 +143,9 @@ class SolverHooksPython(ascpy.SolverHooks):
 			print("PYTHON ERROR:",str(e))
 			return 3
 		return 0
+	def doStudy(self,request,sim):
+		print("PYTHON: STUDY is not implemented for this solver hook")
+		return SLVREQ_NOT_IMPLEMENTED
 	def deleteSystem(self, sim):
 		try:
 			sim.invalidateSystem()
@@ -175,6 +182,44 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 		# unfortunately there is no possibility to get result from async task without waiting
 		# so we assume everything is fine
 		return 0
+	def _get_study_observer(self):
+		if self.browser.currentobservertab is None or self.browser.currentobservertab not in self.browser.tabs:
+			observer = self.browser.create_observer()
+		else:
+			observer = self.browser.tabs[self.browser.currentobservertab]
+		try:
+			self.browser.maintabs.set_current_page(observer.tab)
+		except Exception:
+			pass
+		return observer
+
+	def doStudy(self, request, sim):
+		try:
+			observer = self._get_study_observer()
+			for inst in request.getObserved():
+				observer.add_instance(inst)
+			observer.sync()
+
+			if request.hasFilename():
+				self.browser.reporter.reportNote(
+					"STUDY FILE output is not implemented in the GTK browser; results remain in the active Observer."
+				)
+
+			if not request.hasVary() or request.getMode() == SLVREQ_STUDY_NONE:
+				self.browser.reporter.reportNote("Observer populated from METHOD STUDY.")
+				return 0
+
+			dia = StudyWin(self.browser, request.getVary())
+			dia.configure_from_request(request)
+			if request.getNow():
+				if not dia.run_now():
+					return 1
+				return 0
+			dia.run()
+			return 0
+		except Exception as e:
+			print("PYTHON ERROR:", str(e))
+			return 1
 	def deleteSystem(self, sim):
 		try:
 			sim.invalidateSystem()

@@ -26,7 +26,10 @@
 #define ASCXX_SOLVERHOOKS_H
 
 #include "config.h"
+#include "instance.h"
 #include "value.h"
+#include <string>
+#include <vector>
 
 class SolverReporter;
 class Simulation;
@@ -40,7 +43,42 @@ extern "C"{
 SlvReqSetSolverFn ascxx_slvreq_set_solver;
 SlvReqSetOptionFn ascxx_slvreq_set_option;
 SlvReqDoSolveFn ascxx_slvreq_do_solve;
+SlvReqDoStudyFn ascxx_slvreq_do_study;
 SlvReqDeleteSystemFn ascxx_slvreq_delete_system;
+};
+
+class StudyRequest{
+private:
+	std::vector<Instanc> observed;
+	bool have_vary;
+	Instanc vary;
+	double lower;
+	double upper;
+	double value;
+	long steps;
+	int mode;
+	int distribution;
+	std::string run_method;
+	bool now;
+	std::string filename;
+public:
+	StudyRequest();
+	explicit StudyRequest(const SlvReqStudyRequest *request);
+
+	std::vector<Instanc> getObserved() const;
+	bool hasVary() const;
+	Instanc getVary() const;
+	double getLower() const;
+	double getUpper() const;
+	double getValue() const;
+	long getSteps() const;
+	int getMode() const;
+	int getDistribution() const;
+	bool hasRunMethod() const;
+	std::string getRunMethod() const;
+	bool getNow() const;
+	bool hasFilename() const;
+	std::string getFilename() const;
 };
 
 /**
@@ -66,8 +104,14 @@ public:
 	/// C++ function that will be called as a result of a 'SOLVE' command
 	virtual int doSolve(Instance *i, Simulation *S);
 
+	/// C++ function that will be called as a result of a 'STUDY' command
+	virtual int doStudy(const StudyRequest &request, Simulation *S);
+
 	/// C++ function that will be called as a result of a 'DELETE SYSTEM' command
 	virtual int deleteSystem(Simulation *S);
+
+	/// Return deferred post-solve outputs registered by STUDY statements without VARY
+	virtual std::vector<Instanc> getStudyPrintVars(Simulation *S) const;
 
 	SolverReporter *getSolverReporter();
 

@@ -1,0 +1,23 @@
+REQUIRE "atoms.a4l";
+IMPORT "qrslv";
+
+MODEL test5;
+	distance_run IS_A distance;
+	time_run IS_A time;
+	initial_speed IS_A speed;
+	accel_required IS_A acceleration;
+
+	drag_race: distance_run = initial_speed * time_run + 0.5 * accel_required * time_run^2;
+METHODS
+	METHOD on_load;
+		FIX distance_run, time_run, initial_speed;
+		distance_run := 100 {m};
+		time_run := 5 {s};
+		initial_speed := 0 {m/s};
+		accel_required := 8 {m/s^2};
+		SOLVER QRSlv;
+		STUDY accel_required, time_run
+			VARY time_run FROM 2 {s} TO 6 {s} STEPS 4
+			FILE "study.tsv";
+	END on_load;
+END test5;

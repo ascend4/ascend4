@@ -11,13 +11,20 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <cmath>
+#include <cstdio>
 
 extern "C"{
 #include <ascend/utilities/error.h>
 #include <ascend/compiler/value_type.h>
 };
 
-#define SOLVERHOOKS_DEBUG 0
+//#define SOLVERHOOKS_DEBUG
+#ifdef SIMULATION_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 namespace{
 
@@ -67,10 +74,75 @@ struct StoredSolverConfig{
 	std::vector<StoredOption> options;
 };
 
-static std::map<Simulation *, StoredSolverConfig> g_solver_configs;
+struct StoredStudyConfig{
+	std::vector<Instanc> print_vars;
+	bool suppress_print = false;
+};
+
+struct StudyColumn{
+	Instance *inst;
+	std::string name;
+	std::string units;
+	double conversion;
+};
+
+static StudyColumn get_study_column(Instance *inst, Simulation *S){
+	StudyColumn column;
+	Instanc wrapped(inst);
+
+	column.inst = inst;
+	column.name = S->getInstanceName(wrapped);
+	column.units = "1";
+	column.conversion = 1.0;
+	try{
+		UnitsM display_units = wrapped.getDisplayUnits(false);
+		column.units = display_units.getName().toString();
+		column.conversion = display_units.getConversion();
+		if(column.conversion == 0.0){
+			column.conversion = 1.0;
+		}
+	}catch(std::runtime_error &){
+		column.units = wrapped.isDimensionless() ? "1" : "?";
+		column.conversion = 1.0;
+	}
+	return column;
+}
+
+static void write_study_headers(FILE *fp, const std::vector<StudyColumn> &columns){
+	for(std::vector<StudyColumn>::size_type i = 0; i < columns.size(); ++i){
+		fprintf(fp, "%s [%s]%s", columns[i].name.c_str(), columns[i].units.c_str(),
+			(i + 1 < columns.size()) ? "\t" : "");
+	}
+	fprintf(fp, "\n");
+}
+
+static int write_study_row(FILE *fp, const std::vector<StudyColumn> &columns){
+	for(std::vector<StudyColumn>::size_type i = 0; i < columns.size(); ++i){
+		Instanc obs(columns[i].inst);
+		double value = obs.getRealValue() / columns[i].conversion;
+		fprintf(fp, "%.15g%s", value, (i + 1 < columns.size()) ? "\t" : "");
+	}
+	return fprintf(fp, "\n");
+}
+
+static std::map<Instance *, StoredSolverConfig> g_solver_configs;
+static std::map<Instance *, StoredStudyConfig> g_study_configs;
 
 static StoredSolverConfig &get_solver_config(Simulation *S){
-	return g_solver_configs[S];
+	return g_solver_configs[S->getInternalType()];
+}
+
+static StoredStudyConfig &get_study_config(Simulation *S){
+	return g_study_configs[S->getInternalType()];
+}
+
+static bool has_instance(const std::vector<Instanc> &vars, const Instanc &inst){
+	for(std::vector<Instanc>::const_iterator it = vars.begin(); it != vars.end(); ++it){
+		if(it->getInternalType() == inst.getInternalType()){
+			return true;
+		}
+	}
+	return false;
 }
 
 static int apply_option_to_system(Simulation *S, const char *optionname, const value_t *val){
@@ -153,9 +225,7 @@ static int apply_stored_solver_config(Simulation *S){
 int ascxx_slvreq_set_solver(const char *solvername, void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_SOLVER_HOOK_NOT_SET;
-#if SOLVERHOOKS_DEBUG
-	CONSOLE_DEBUG("Got solver hooks at %p from Simulation at %p",S->getSolverHooks(),S);
-#endif
+	MSG("Got solver hooks at %p from Simulation at %p",S->getSolverHooks(),S);
 	return S->getSolverHooks()->setSolver(solvername, S);
 }
 
@@ -175,6 +245,13 @@ int ascxx_slvreq_do_solve(struct Instance *instance, void *user_data){
 	return res;
 }
 
+int ascxx_slvreq_do_study(const SlvReqStudyRequest *request, void *user_data){
+	Simulation *S = (Simulation *)user_data;
+	if(NULL==S->getSolverHooks())return SLVREQ_STUDY_HOOK_NOT_SET;
+	StudyRequest study_request(request);
+	return S->getSolverHooks()->doStudy(study_request, S);
+}
+
 int ascxx_slvreq_delete_system(void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_DELETE_HOOK_NOT_SET;
@@ -186,9 +263,7 @@ int ascxx_slvreq_delete_system(void *user_data){
 // SOLVER HOOKS (C++ layer implementation)
 
 SolverHooks::SolverHooks(SolverReporter *R) : R(R){
-#if SOLVERHOOKS_DEBUG
-	CONSOLE_DEBUG("Creating SolverHooks at %p",this);
-#endif
+	MSG("Creating SolverHooks at %p",this);
 	// nothing else to do
 }
 
@@ -197,9 +272,7 @@ SolverHooks::~SolverHooks(){
 }
 
 SolverHooks::SolverHooks(SolverHooks &old) : R(old.R){
-#if SOLVERHOOKS_DEBUG
-	CONSOLE_DEBUG("Creating new SolverHooks at %p (copy of old at %p",this,&old);
-#endif
+	MSG("Creating new SolverHooks at %p (copy of old at %p",this,&old);
 }
 
 int
@@ -215,7 +288,7 @@ SolverHooks::setSolver(const char *solvername, Simulation *S){
 	}catch(std::runtime_error &E){
 		return SLVREQ_UNKNOWN_SOLVER;
 	}
-	CONSOLE_DEBUG("Solver set to '%s'",solvername);
+	MSG("Solver set to '%s'",solvername);
 	return 0;
 }
 
@@ -240,7 +313,7 @@ SolverHooks::setOption(const char *optionname, Value val, Simulation *S){
 
 int
 SolverHooks::doSolve(Instance *i, Simulation *S){
-	CONSOLE_DEBUG("Solving model...");
+	MSG("Solving model...");
 	
 	try{
 		Instanc target(i);
@@ -250,11 +323,11 @@ SolverHooks::doSolve(Instance *i, Simulation *S){
 			return applyres;
 		}
 		if(!getSolverReporter()){
-			CONSOLE_DEBUG("Creating default SolverReporter");
+			MSG("Creating default SolverReporter");
 			SolverReporter R;
 			S->solve(S->getSolver(), R);
 		}else{
-			CONSOLE_DEBUG("Using SolverReporter at %p",getSolverReporter());
+			MSG("Using SolverReporter at %p",getSolverReporter());
 			S->solve(S->getSolver(), *getSolverReporter());
 		}
 	}catch(std::runtime_error &E){
@@ -265,26 +338,302 @@ SolverHooks::doSolve(Instance *i, Simulation *S){
 	return 0;
 }
 
+StudyRequest::StudyRequest()
+	: observed(), have_vary(false), vary(), lower(0.0), upper(0.0), value(0.0)
+	, steps(0), mode(SLVREQ_STUDY_NONE), distribution(SLVREQ_STUDY_DIST_DEFAULT)
+	, run_method(), now(false), filename(){
+}
+
+StudyRequest::StudyRequest(const SlvReqStudyRequest *request)
+	: observed(), have_vary(false), vary(), lower(0.0), upper(0.0), value(0.0)
+	, steps(0), mode(SLVREQ_STUDY_NONE), distribution(SLVREQ_STUDY_DIST_DEFAULT)
+	, run_method(), now(false), filename(){
+	unsigned long i;
+	if(request == NULL){
+		return;
+	}
+	if(request->observed != NULL){
+		for(i = 0; i < request->n_observed; ++i){
+			if(request->observed[i] != NULL){
+				observed.push_back(Instanc(request->observed[i]));
+			}
+		}
+	}
+	if(request->vary != NULL){
+		have_vary = true;
+		vary = Instanc(request->vary);
+	}
+	if(ValueKind(request->lower) == real_value){
+		lower = RealValue(request->lower);
+	}
+	if(ValueKind(request->upper) == real_value){
+		upper = RealValue(request->upper);
+	}
+	if(ValueKind(request->value) == real_value){
+		value = RealValue(request->value);
+	}
+	steps = request->steps;
+	mode = request->mode;
+	distribution = request->distribution;
+	if(request->run_method != NULL){
+		run_method = request->run_method;
+	}
+	now = request->now ? true : false;
+	if(request->filename != NULL){
+		filename = request->filename;
+	}
+}
+
+std::vector<Instanc>
+StudyRequest::getObserved() const{
+	return observed;
+}
+
+bool
+StudyRequest::hasVary() const{
+	return have_vary;
+}
+
+Instanc
+StudyRequest::getVary() const{
+	return vary;
+}
+
+double
+StudyRequest::getLower() const{
+	return lower;
+}
+
+double
+StudyRequest::getUpper() const{
+	return upper;
+}
+
+double
+StudyRequest::getValue() const{
+	return value;
+}
+
+long
+StudyRequest::getSteps() const{
+	return steps;
+}
+
+int
+StudyRequest::getMode() const{
+	return mode;
+}
+
+int
+StudyRequest::getDistribution() const{
+	return distribution;
+}
+
+bool
+StudyRequest::hasRunMethod() const{
+	return !run_method.empty();
+}
+
+std::string
+StudyRequest::getRunMethod() const{
+	return run_method;
+}
+
+bool
+StudyRequest::getNow() const{
+	return now;
+}
+
+bool
+StudyRequest::hasFilename() const{
+	return !filename.empty();
+}
+
+std::string
+StudyRequest::getFilename() const{
+	return filename;
+}
+
+int
+SolverHooks::doStudy(const StudyRequest &request, Simulation *S){
+	FILE *fp = stdout;
+	bool close_fp = false;
+	bool include_vary = false;
+	std::vector<StudyColumn> columns;
+	unsigned long i;
+	int res = 0;
+	std::vector<Instanc> observed = request.getObserved();
+	StoredStudyConfig &study_config = get_study_config(S);
+
+	if(observed.empty()){
+		return SLVREQ_STUDY_INVALID_REQUEST;
+	}
+
+	if(!request.hasVary() || request.getMode() == SLVREQ_STUDY_NONE){
+		if(!study_config.suppress_print){
+			for(i = 0; i < observed.size(); ++i){
+				if(!has_instance(study_config.print_vars, observed[i])){
+					study_config.print_vars.push_back(observed[i]);
+				}
+			}
+		}
+		return 0;
+	}
+
+	study_config.print_vars.clear();
+	study_config.suppress_print = true;
+
+	if(request.hasFilename()){
+		fp = fopen(request.getFilename().c_str(), "w");
+		if(fp == NULL){
+			return SLVREQ_STUDY_IO_ERROR;
+		}
+		close_fp = true;
+		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Writing STUDY output to '%s'.",request.getFilename().c_str());
+	}
+
+	try{
+		if(request.hasVary()){
+			include_vary = true;
+			Instanc vary = request.getVary();
+			for(i = 0; i < observed.size(); ++i){
+				if(observed[i].getInternalType() == vary.getInternalType()){
+					include_vary = false;
+					break;
+				}
+			}
+		}
+
+		if(include_vary){
+			columns.push_back(get_study_column(request.getVary().getInternalType(), S));
+		}
+		for(i = 0; i < observed.size(); ++i){
+			columns.push_back(get_study_column(observed[i].getInternalType(), S));
+		}
+		write_study_headers(fp, columns);
+
+		{
+			Instanc vary = request.getVary();
+			Method run_method;
+			bool have_run_method = false;
+
+			if(request.hasRunMethod()){
+				run_method = S->getType().getMethod(SymChar(request.getRunMethod().c_str()));
+				have_run_method = true;
+			}
+
+			if(vary.getType().isRefinedSolverVar()){
+				vary.setFixed(true);
+			}
+
+			if(request.getMode() == SLVREQ_STUDY_STEPS){
+				long steps = request.getSteps();
+				double lower = request.getLower();
+				double upper = request.getUpper();
+				for(long step = 0; step <= steps; ++step){
+					double value;
+					if(request.getDistribution() == SLVREQ_STUDY_DIST_LOG){
+						double ratio = pow(upper / lower, 1.0 / (double)steps);
+						value = lower * pow(ratio, (double)step);
+					}else{
+						value = lower + (upper - lower) * ((double)step / (double)steps);
+					}
+					if(have_run_method){
+						S->run(run_method);
+					}
+					vary.setRealValue(value);
+					res = doSolve(S->getModel().getInternalType(), S);
+					if(res != 0){
+						goto cleanup;
+					}
+					write_study_row(fp, columns);
+				}
+			}else if(request.getMode() == SLVREQ_STUDY_STEP){
+				double value = request.getLower();
+				double upper = request.getUpper();
+				double delta = request.getValue();
+				for(;;){
+					if(have_run_method){
+						S->run(run_method);
+					}
+					vary.setRealValue(value);
+					res = doSolve(S->getModel().getInternalType(), S);
+					if(res != 0){
+						goto cleanup;
+					}
+					write_study_row(fp, columns);
+					value += delta;
+					if((delta > 0.0 && value > upper) || (delta < 0.0 && value < upper)){
+						break;
+					}
+				}
+			}else if(request.getMode() == SLVREQ_STUDY_RATIO){
+				double value = request.getLower();
+				double upper = request.getUpper();
+				double ratio = request.getValue();
+				for(;;){
+					if(have_run_method){
+						S->run(run_method);
+					}
+					vary.setRealValue(value);
+					res = doSolve(S->getModel().getInternalType(), S);
+					if(res != 0){
+						goto cleanup;
+					}
+					write_study_row(fp, columns);
+					value *= ratio;
+					if((ratio > 1.0 && value > upper) || (ratio < 1.0 && value < upper)){
+						break;
+					}
+				}
+			}else{
+				res = SLVREQ_STUDY_INVALID_REQUEST;
+			}
+		}
+	}catch(std::runtime_error &){
+		res = SLVREQ_STUDY_INVALID_REQUEST;
+	}
+
+cleanup:
+	if(close_fp && fp != NULL){
+		fclose(fp);
+	}
+	return res;
+}
+
 int
 SolverHooks::deleteSystem(Simulation *S){
 	S->invalidateSystem();
 	return 0;
 }
 
+std::vector<Instanc>
+SolverHooks::getStudyPrintVars(Simulation *S) const{
+	const StoredStudyConfig &study_config = get_study_config(S);
+	if(study_config.suppress_print){
+		return std::vector<Instanc>();
+	}
+	return study_config.print_vars;
+}
+
 void
 SolverHooks::assign(Simulation *S){
 	S->setSolverHooks(this);
-#if SOLVERHOOKS_DEBUG
-	CONSOLE_DEBUG("Assigning SolverHooks to Simulation...");
-#endif
-	slvreq_assign_hooks(S->getInternalType(),&ascxx_slvreq_set_solver, &ascxx_slvreq_set_option, &ascxx_slvreq_do_solve, &ascxx_slvreq_delete_system, (void *)S);
+	MSG("Assigning SolverHooks to Simulation...");
+	get_study_config(S) = StoredStudyConfig();
+	SlvReqHooks hooks = SLVREQ_HOOKS_EMPTY;
+	hooks.set_solver_fn = &ascxx_slvreq_set_solver;
+	hooks.set_option_fn = &ascxx_slvreq_set_option;
+	hooks.do_solve_fn = &ascxx_slvreq_do_solve;
+	hooks.do_study_fn = &ascxx_slvreq_do_study;
+	hooks.delete_system_fn = &ascxx_slvreq_delete_system;
+	hooks.user_data = (void *)S;
+	slvreq_assign_hooks(S->getInternalType(), &hooks);
 }
 
 SolverReporter *
 SolverHooks::getSolverReporter(){
-#if SOLVERHOOKS_DEBUG
-	CONSOLE_DEBUG("SolverReporter is at %p", R);
-#endif
+	MSG("SolverReporter is at %p", R);
 	return R;
 }
 
@@ -310,9 +659,7 @@ public:
 // SOLVER HOOKS MANAGER (singleton)
 
 SolverHooksManager::SolverHooksManager(){
-#if SOLVERHOOKS_DEBUG
-	CONSOLE_DEBUG("Creating SolverHooksManager with NULL hooks");
-#endif
+	MSG("Creating SolverHooksManager with NULL hooks");
 	this->hooks = NULL;
 	this->own_hooks = 0;
 }
@@ -329,22 +676,16 @@ SolverHooksManager::Instance(){
 
 SolverHooksManager::~SolverHooksManager(){
 	if(own_hooks){
-#if SOLVERHOOKS_DEBUG
-		CONSOLE_DEBUG("Delete owned hooks");
-#endif
+		MSG("Delete owned hooks");
 		delete hooks;
 	}
 }
 
 void
 SolverHooksManager::setHooks(SolverHooks *H){
-#if SOLVERHOOKS_DEBUG
-	CONSOLE_DEBUG("Using hooks at %p",H);
-#endif
+	MSG("Using hooks at %p",H);
 	if(hooks && own_hooks){
-#if SOLVERHOOKS_DEBUG
-		CONSOLE_DEBUG("Deleting previous owned hooks");
-#endif
+		MSG("Deleting previous owned hooks");
 		delete(hooks);
 	}
 	this->hooks = H;
@@ -354,9 +695,7 @@ SolverHooksManager::setHooks(SolverHooks *H){
 SolverHooks *
 SolverHooksManager::getHooks(){
 	if(this->hooks == NULL){
-#if SOLVERHOOKS_DEBUG
-		CONSOLE_DEBUG("Creating new default SolverHooks...");
-#endif
+		MSG("Creating new default SolverHooks...");
 		this->hooks = new SolverHooks();
 		this->own_hooks = 1;
 	}
