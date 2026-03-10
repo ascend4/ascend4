@@ -1,0 +1,136 @@
+REQUIRE "johnpye/fprops/unifac_flash.a4l";
+IMPORT "qrslv";
+PROVIDE "johnpye/fprops/ethanol_water_vle_demo.a4c";
+
+MODEL ethanol_water_bubble_point REFINES cmumodel;
+	cd IS_A components_data(['water','ethanol'], 'water');
+	liq IS_A fprops_unifac_liq_fugacity_state(cd);
+
+	T ALIASES liq.T;
+	P ALIASES liq.P;
+	x_water ALIASES liq.x['water'];
+	x_ethanol ALIASES liq.x['ethanol'];
+	f_water ALIASES liq.fugacity['water'];
+	f_ethanol ALIASES liq.fugacity['ethanol'];
+
+	y_water IS_A fraction;
+	y_ethanol IS_A fraction;
+
+	y_sum: y_water + y_ethanol = 1;
+	water_eq: y_water * P = f_water;
+	ethanol_eq: y_ethanol * P = f_ethanol;
+
+METHODS
+	METHOD default_self;
+		RUN liq.default_self;
+		P := 101.3 {kPa};
+		T := 360 {K};
+		T.lower_bound := 330 {K};
+		T.upper_bound := 390 {K};
+		x_water := 0.5;
+		x_ethanol := 0.5;
+		y_water := 0.3;
+		y_ethanol := 0.7;
+	END default_self;
+
+	METHOD specify;
+		FIX P;
+		FIX x_water;
+	END specify;
+
+	METHOD specify_linked;
+	END specify_linked;
+END ethanol_water_bubble_point;
+
+MODEL ethanol_water_dew_point REFINES cmumodel;
+	cd IS_A components_data(['water','ethanol'], 'water');
+	liq IS_A fprops_unifac_liq_fugacity_state(cd);
+
+	T ALIASES liq.T;
+	P ALIASES liq.P;
+	x_water ALIASES liq.x['water'];
+	x_ethanol ALIASES liq.x['ethanol'];
+	f_water ALIASES liq.fugacity['water'];
+	f_ethanol ALIASES liq.fugacity['ethanol'];
+
+	y_water IS_A fraction;
+	y_ethanol IS_A fraction;
+
+	y_sum: y_water + y_ethanol = 1;
+	water_eq: y_water * P = f_water;
+	ethanol_eq: y_ethanol * P = f_ethanol;
+
+METHODS
+	METHOD default_self;
+		RUN liq.default_self;
+		P := 101.3 {kPa};
+		T := 360 {K};
+		T.lower_bound := 330 {K};
+		T.upper_bound := 390 {K};
+		x_water := 0.7;
+		x_ethanol := 0.3;
+		y_water := 0.5;
+		y_ethanol := 0.5;
+	END default_self;
+
+	METHOD specify;
+		FIX P;
+		FIX y_water;
+	END specify;
+
+	METHOD specify_linked;
+	END specify_linked;
+END ethanol_water_dew_point;
+
+MODEL ethanol_water_vle_shared_xy REFINES cmumodel;
+	xy1 IS_A fraction;
+	P IS_A pressure;
+
+	bubble IS_A ethanol_water_bubble_point;
+	dew IS_A ethanol_water_dew_point;
+
+	link_bubble_xy: bubble.x_water = xy1;
+	link_dew_xy: dew.y_water = xy1;
+	link_bubble_P: bubble.P = P;
+	link_dew_P: dew.P = P;
+
+METHODS
+	METHOD default_self;
+		RUN bubble.default_self;
+		RUN dew.default_self;
+		P := 101.3 {kPa};
+		xy1 := 0.5;
+	END default_self;
+
+	METHOD specify;
+		RUN bubble.specify_linked;
+		RUN dew.specify_linked;
+		FIX P;
+		FIX xy1;
+	END specify;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN specify;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		SOLVE;
+	END on_load;
+
+	METHOD smooth_study;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		STUDY bubble.T, dew.T, bubble.y_water, dew.x_water
+			VARY xy1 FROM 0.001 TO 0.999 STEPS 80
+			NOW;
+	END smooth_study;
+
+	METHOD self_test;
+		ASSERT bubble.T > 351 {K};
+		ASSERT bubble.T < 373.5 {K};
+		ASSERT dew.T > 351 {K};
+		ASSERT dew.T < 373.5 {K};
+		ASSERT bubble.y_water < xy1;
+		ASSERT dew.x_water > xy1;
+	END self_test;
+END ethanol_water_vle_shared_xy;

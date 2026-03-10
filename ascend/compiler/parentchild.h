@@ -172,6 +172,34 @@ ASC_DLLSPEC CONST struct Statement *ChildDeclaration(CONST struct Instance *i,
  *  the ascend language is basetype safe semantically.)
  */
 
+ASC_DLLSPEC CONST struct Statement *InstanceDeclarationStatement(
+    CONST struct Instance *inst,
+    CONST struct Instance *parent_hint
+);
+/**<
+ *  Returns the declaration statement for an instance relative to a chosen
+ *  parent. If parent_hint is NULL, the first parent is used. Returns NULL if
+ *  no declaration statement can be resolved.
+ *
+ *  This helper intentionally returns only one "best" declaration site today.
+ *  If diagnostics later need to surface multiple declaration sites for aliased
+ *  or multiply-parented instances, expand this API here rather than
+ *  reimplementing the lookup logic in individual callers.
+ */
+
+ASC_DLLSPEC int InstanceDeclarationLocation(
+    CONST struct Instance *inst,
+    CONST struct Instance *parent_hint,
+    CONST char **filename,
+    int *lineno
+);
+/**<
+ *  Resolves a source filename and line number for an instance declaration.
+ *  Returns 1 on success, 0 if no declaration statement can be found.
+ *  See InstanceDeclarationStatement() for the future expansion note regarding
+ *  multiple declaration sites.
+ */
+
 extern CONST struct TypeDescription *ChildRefines(CONST struct Instance *i,
                                                   unsigned long n);
 /**<

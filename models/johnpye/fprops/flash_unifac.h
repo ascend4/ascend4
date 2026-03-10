@@ -60,5 +60,6 @@ typedef struct FpropsFlashVLResult{
 int fprops_unifac_psat(const FpropsUNIFACComponentData *comp, double T, double *Psat);
 int fprops_unifac_gamma(const FpropsUNIFACFlashPackage *pkg, double T, const double *x, double *gamma);
 int fprops_unifac_flash_tpz(const FpropsUNIFACFlashPackage *pkg, const FpropsFlashTPZ *in, FpropsFlashVLResult *out);
+int fprops_unifac_liq_fugacity(const FpropsUNIFACFlashPackage *pkg, double T, double P, const double *x, double *fugacity);
 
 #endif

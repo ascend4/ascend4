@@ -236,6 +236,54 @@ int fprops_unifac_gamma(const FpropsUNIFACFlashPackage *pkg, double T, const dou
 	return 0;
 }
 
+int fprops_unifac_liq_fugacity(const FpropsUNIFACFlashPackage *pkg, double T, double P, const double *x, double *fugacity){
+	double *Psat = NULL;
+	double *gamma = NULL;
+	int i;
+
+	if(!pkg || !x || !fugacity || pkg->nc <= 0 || T <= 0.0 || P <= 0.0){
+		return -1;
+	}
+
+	Psat = (double *)calloc((size_t)pkg->nc, sizeof(double));
+	gamma = (double *)calloc((size_t)pkg->nc, sizeof(double));
+	if(!Psat || !gamma){
+		free(Psat);
+		free(gamma);
+		return -2;
+	}
+
+	for(i = 0; i < pkg->nc; ++i){
+		int status = fprops_unifac_psat(&pkg->components[i], T, &Psat[i]);
+		if(status){
+			free(Psat);
+			free(gamma);
+			return -10 + status;
+		}
+	}
+
+	if(fprops_unifac_gamma(pkg, T, x, gamma)){
+		free(Psat);
+		free(gamma);
+		return -20;
+	}
+
+	for(i = 0; i < pkg->nc; ++i){
+		double pureK = exp((fprops_unifac_pure_g_l(&pkg->components[i], T, P, Psat[i])
+			- fprops_unifac_pure_g_v(&pkg->components[i], T, P)) / (FPROPS_R * T));
+		fugacity[i] = x[i] * gamma[i] * P * pureK;
+		if(!isfinite(fugacity[i]) || fugacity[i] < 0.0){
+			free(Psat);
+			free(gamma);
+			return -30;
+		}
+	}
+
+	free(Psat);
+	free(gamma);
+	return 0;
+}
+
 int fprops_unifac_flash_tpz(const FpropsUNIFACFlashPackage *pkg, const FpropsFlashTPZ *in, FpropsFlashVLResult *out){
 	double *Psat = NULL;
 	double *K = NULL;

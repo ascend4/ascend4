@@ -109,6 +109,7 @@ ExtBBoxInitFunc asc_fprops_rxneq_prepare;
 ExtBBoxInitFunc asc_fprops_flash_prepare;
 ExtBBoxInitFunc asc_fprops_unifac_flash_prepare;
 ExtBBoxInitFunc asc_fprops_unifac_gamma_prepare;
+ExtBBoxInitFunc asc_fprops_unifac_liq_fugacity_prepare;
 ExtBBoxFinalFunc asc_fprops_rxn_final;
 ExtBBoxFinalFunc asc_fprops_unifac_flash_final;
 ExtBBoxFunc fprops_rxn_h_TPn_calc;
@@ -117,6 +118,7 @@ ExtBBoxFunc fprops_rxn_eqm_TPn_calc;
 ExtBBoxFunc fprops_flash_TPz_calc;
 ExtBBoxFunc fprops_unifac_flash_TPz_calc;
 ExtBBoxFunc fprops_unifac_gamma_Tx_calc;
+ExtBBoxFunc fprops_unifac_liq_fugacity_TPx_calc;
 
 /* FIXME need incompressible fluid functions that depend only on T or h, to 
 	avoid unpivoted external relations...
@@ -168,6 +170,7 @@ static const char *fprops_rxn_eqm_TPn_help = "Calculate package-based equilibriu
 static const char *fprops_flash_TPz_help = "Calculate package-based TPz flash from temperature, pressure and overall composition, using FPROPS";
 static const char *fprops_unifac_flash_TPz_help = "Calculate ideal-vapor plus UNIFAC-liquid TPz flash from temperature, pressure and overall composition, using FPROPS";
 static const char *fprops_unifac_gamma_Tx_help = "Calculate original-UNIFAC liquid activity coefficients from temperature and liquid composition, using FPROPS";
+static const char *fprops_unifac_liq_fugacity_TPx_help = "Calculate ideal-vapor-reference UNIFAC liquid component fugacities from temperature, pressure and liquid composition, using FPROPS";
 
 typedef struct{
 	int ns;
@@ -305,6 +308,16 @@ ASC_EXPORT int fprops_register(){
 		, asc_fprops_unifac_flash_final
 		, 2,1
 		, fprops_unifac_gamma_Tx_help
+		, 0.0
+	);
+	result += CreateUserFunctionBlackBox("fprops_unifac_liq_fugacity_TPx"
+		, asc_fprops_unifac_liq_fugacity_prepare
+		, fprops_unifac_liq_fugacity_TPx_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_unifac_flash_final
+		, 3,1
+		, fprops_unifac_liq_fugacity_TPx_help
 		, 0.0
 	);
 
@@ -946,6 +959,9 @@ static int asc_build_unifac_flash_package_native(struct Instance *cd, AscFpropsU
 	}
 	fp->nc = fp->mpkg.nc;
 	fp->nsub = fp->mpkg.data.unifac_ideal_vl.pkg ? fp->mpkg.data.unifac_ideal_vl.pkg->nsub : 0;
+	if(fp->mpkg.data.unifac_ideal_vl.pkg){
+		fp->pkg = *fp->mpkg.data.unifac_ideal_vl.pkg;
+	}
 	*outpkg = fp;
 	ascfree(names);
 	return 0;
@@ -1046,6 +1062,51 @@ int asc_fprops_unifac_gamma_prepare(struct BBoxInterp *bbox,
 	}
 	if(actual_outputs != nc){
 		ERRMSG("UNIFAC gamma output vector length mismatch: got %lu outputs, expected %lu",
+			actual_outputs, nc);
+		return 1;
+	}
+	if(asc_build_unifac_flash_package(data, &fp)){
+		return 1;
+	}
+	bbox->user_data = fp;
+	return 0;
+}
+
+int asc_fprops_unifac_liq_fugacity_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	AscFpropsUNIFACFlashData *fp = NULL;
+	unsigned long actual_inputs, actual_outputs;
+	struct Instance *components_inst;
+	const struct set_t *components_set;
+	unsigned long nc;
+
+	if(!bbox || !data || !arglist){
+		ERRMSG("UNIFAC liquid fugacity blackbox received invalid prepare arguments");
+		return 1;
+	}
+	if(gl_length(arglist) != 4){
+		ERRMSG("UNIFAC liquid fugacity blackbox expects 3 INPUT groups and 1 OUTPUT group");
+		return 1;
+	}
+	actual_inputs = CountNumberOfArgs(arglist, 1, 3);
+	actual_outputs = CountNumberOfArgs(arglist, 4, 4);
+
+	components_inst = ChildByChar(data, AddSymbol("components"));
+	components_set = components_inst ? SetAtomList(components_inst) : NULL;
+	if(!components_set){
+		ERRMSG("UNIFAC liquid fugacity DATA must provide a components set");
+		return 1;
+	}
+	nc = Cardinality(components_set);
+	if(actual_inputs != nc + 2){
+		ERRMSG("UNIFAC liquid fugacity input vector length mismatch: got %lu composition inputs, expected %lu",
+			actual_inputs - 2, nc);
+		return 1;
+	}
+	if(actual_outputs != nc){
+		ERRMSG("UNIFAC liquid fugacity output vector length mismatch: got %lu outputs, expected %lu",
 			actual_outputs, nc);
 		return 1;
 	}
@@ -1906,6 +1967,39 @@ int fprops_unifac_gamma_Tx_calc(struct BBoxInterp *bbox,
 	status = fprops_unifac_gamma(&fp->pkg, inputs[0], &inputs[1], outputs);
 	if(status){
 		ERRMSG("UNIFAC gamma evaluation failed with status %d", status);
+		return status;
+	}
+	return 0;
+}
+
+int fprops_unifac_liq_fugacity_TPx_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsUNIFACFlashData *fp;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	fp = (AscFpropsUNIFACFlashData *)bbox->user_data;
+	if(ninputs != fp->nc + 2){
+		ERRMSG("UNIFAC liquid fugacity blackbox received %d inputs, expected %d", ninputs, fp->nc + 2);
+		return -1;
+	}
+	if(noutputs != fp->nc){
+		ERRMSG("UNIFAC liquid fugacity blackbox received %d outputs, expected %d", noutputs, fp->nc);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	status = fprops_unifac_liq_fugacity(&fp->pkg, inputs[0], inputs[1], &inputs[2], outputs);
+	if(status){
+		ERRMSG("UNIFAC liquid fugacity evaluation failed with status %d", status);
 		return status;
 	}
 	return 0;

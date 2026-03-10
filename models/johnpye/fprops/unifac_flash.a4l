@@ -95,3 +95,32 @@ METHODS
 		END FOR;
 	END default_self;
 END fprops_unifac_gamma_state;
+
+MODEL fprops_unifac_liq_fugacity_state(
+	cd WILL_BE components_data;
+);
+	components ALIASES cd.components;
+
+	T IS_A temperature;
+	P IS_A pressure;
+	x[components] IS_A fraction;
+	fugacity[components] IS_A pressure;
+
+	sum_x: SUM[x[i] | i IN components] = 1;
+
+	liq_f_tpx: fprops_unifac_liq_fugacity_TPx(
+		T, P, x[components] : INPUT;
+		fugacity[components] : OUTPUT;
+		cd : DATA
+	);
+
+METHODS
+	METHOD default_self;
+		T := 298.15 {K};
+		P := 1 {bar};
+		FOR i IN components DO
+			x[i] := 1 / CARD[components];
+			fugacity[i] := P / CARD[components];
+		END FOR;
+	END default_self;
+END fprops_unifac_liq_fugacity_state;
