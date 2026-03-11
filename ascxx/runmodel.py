@@ -30,6 +30,51 @@ def _find_optional_method(model_type, method_name):
 def _needs_final_solve(sim):
 	return sim.isSolveDirty()
 
+def _status_label(status):
+	if status.isConverged():
+		return "converged"
+	if status.isReadyToSolve():
+		return "ready"
+	if status.isDiverged():
+		return "diverged"
+	if status.isInterrupted():
+		return "interrupted"
+	if status.hasExceededTimeLimit():
+		return "time-limit"
+	if status.hasExceededIterationLimit():
+		return "iteration-limit"
+	if status.hasResidualCalculationErrors():
+		return "residual-errors"
+	if status.isOverDefined():
+		return "over-defined"
+	if status.isUnderDefined():
+		return "under-defined"
+	return "not-converged"
+
+def _print_simstatus(sim):
+	state = "solved"
+	parts = []
+	if sim.isMethodRunning():
+		state = "running-method"
+	elif sim.isSolveDirty():
+		state = "dirty"
+	parts.append(f"state={state}")
+	try:
+		target = sim.getSolveTargetName()
+	except Exception:
+		target = ""
+	if target:
+		parts.append(f"target={target}")
+	try:
+		parts.append(f"solver={sim.getSolver().getName()}")
+	except Exception:
+		pass
+	try:
+		parts.append(f"solver_status={_status_label(sim.getStatus())}")
+	except Exception:
+		pass
+	print("STATUS: " + ", ".join(parts))
+
 def run_ascend_model(filen,model=None,printvars=None,test=True,runmethod=None):
 	"""
 	This function (and the associated command-line argument parser) is for
@@ -87,6 +132,8 @@ def run_ascend_model(filen,model=None,printvars=None,test=True,runmethod=None):
 				M.run(self_test)
 		except Exception as e:
 			raise RuntimeError(f"While attempting to run 'self_test': {str(e)}")
+
+	_print_simstatus(M)
 	
 	# TODO: we can add a customised solverreporter here
 	# TODO: we could also extend the user interface to support setting of solver parameters etc.
