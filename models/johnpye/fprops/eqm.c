@@ -41,6 +41,8 @@ double gas_R(void){
 static const double EQM_BOUND_KKT_FREE_TOL = 2e-2;
 static const double EQM_BOUND_KKT_DUAL_TOL = 2e-2;
 static const double EQM_BOUND_ACTIVE_CUTOFF_FRAC = 1e-22;
+static const double EQM_BOUND_ACTIVE_SMALL_FRAC = 2e-10;
+static const double EQM_BOUND_COMPLEMENTARITY_TOL = 1e-9;
 
 typedef enum {
 	EQM_MODEL_AUTO = 0,
@@ -3240,8 +3242,10 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	const double free_tol = EQM_BOUND_KKT_FREE_TOL;
 	const double dual_tol = EQM_BOUND_KKT_DUAL_TOL;
 	const double P0 = 1e5;
+	const int trace = eqm_active_trace_enabled();
 	double n_tot = 0.0;
 	double n_active_cutoff;
+	double n_small_cutoff;
 	double *mu0 = NULL;
 	int *is_condensed = NULL;
 	int *solution_phase_id = NULL;
@@ -3249,10 +3253,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	EqmBinaryPhaseMeta *binary_phases = NULL;
 	int nbinary_phases = 0;
 	double *mu = NULL;
-	double *M = NULL;
-	double *Msys = NULL;
-	double *rhs = NULL;
-	double *lambda = NULL;
+	double *red = NULL;
 	int *is_active = NULL;
 	int nfree = 0;
 	int nactive = 0;
@@ -3290,19 +3291,13 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 	mu0 = (double *)calloc((size_t)ns, sizeof(double));
 	is_condensed = (int *)calloc((size_t)ns, sizeof(int));
 	mu = (double *)calloc((size_t)ns, sizeof(double));
-	M = (double *)calloc((size_t)(ne * ne), sizeof(double));
-	Msys = (double *)calloc((size_t)(ne * ne), sizeof(double));
-	rhs = (double *)calloc((size_t)ne, sizeof(double));
-	lambda = (double *)calloc((size_t)ne, sizeof(double));
+	red = (double *)calloc((size_t)ns, sizeof(double));
 	is_active = (int *)calloc((size_t)ns, sizeof(int));
-	if(!mu0 || !is_condensed || !mu || !M || !Msys || !rhs || !lambda || !is_active){
+	if(!mu0 || !is_condensed || !mu || !red || !is_active){
 		free(mu0);
 		free(is_condensed);
 		free(mu);
-		free(M);
-		free(Msys);
-		free(rhs);
-		free(lambda);
+		free(red);
 		free(is_active);
 		return 0;
 	}
@@ -3311,10 +3306,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(mu0);
 		free(is_condensed);
 		free(mu);
-		free(M);
-		free(Msys);
-		free(rhs);
-		free(lambda);
+		free(red);
 		free(is_active);
 		return 0;
 	}
@@ -3322,10 +3314,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(mu0);
 		free(is_condensed);
 		free(mu);
-		free(M);
-		free(Msys);
-		free(rhs);
-		free(lambda);
+		free(red);
 		free(is_active);
 		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
@@ -3334,10 +3323,7 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(mu0);
 		free(is_condensed);
 		free(mu);
-		free(M);
-		free(Msys);
-		free(rhs);
-		free(lambda);
+		free(red);
 		free(is_active);
 		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
@@ -3347,128 +3333,101 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(mu0);
 		free(is_condensed);
 		free(mu);
-		free(M);
-		free(Msys);
-		free(rhs);
-		free(lambda);
+		free(red);
 		free(is_active);
 		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
 	}
 
 	n_active_cutoff = fmax(1e-60, EQM_BOUND_ACTIVE_CUTOFF_FRAC * n_tot);
+	n_small_cutoff = fmax(n_active_cutoff, EQM_BOUND_ACTIVE_SMALL_FRAC * n_tot);
+	if(!eqm_reduced_eval_reduced_gradients(mu, A, ns, ne, is_active, T, red)){
+		free(mu0);
+		free(is_condensed);
+		free(mu);
+		free(red);
+		free(is_active);
+		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
+		return 0;
+	}
 	for(int i = 0; i < ns; ++i){
-		if(n_out[i] <= n_active_cutoff){
+		double comp = n_out[i] * fmax(red[i], 0.0);
+		if(n_out[i] <= n_active_cutoff
+				|| (n_out[i] <= n_small_cutoff
+					&& red[i] >= -dual_tol
+					&& comp <= EQM_BOUND_COMPLEMENTARITY_TOL * n_tot)){
 			is_active[i] = 1;
 			++nactive;
 		}else{
 			++nfree;
 		}
 	}
+	if(trace){
+		fprintf(stderr, "eqm validate bounds preclass: T=%.6g P=%.6g nsmall=%.3e nactive=%d nfree=%d\n",
+			T, P, n_small_cutoff, nactive, nfree);
+		for(int i = 0; i < ns; ++i){
+			fprintf(stderr, "  %s n=%.3e red0=%.3e active=%d\n",
+				names[i] ? names[i] : "?", n_out[i], red[i], is_active[i]);
+		}
+	}
 	if(nactive == 0 || nfree <= 0){
 		free(mu0);
 		free(is_condensed);
 		free(mu);
-		free(M);
-		free(Msys);
-		free(rhs);
-		free(lambda);
+		free(red);
+		free(is_active);
+		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
+		return 0;
+	}
+	if(!eqm_reduced_eval_reduced_gradients(mu, A, ns, ne, is_active, T, red)){
+		free(mu0);
+		free(is_condensed);
+		free(mu);
+		free(red);
 		free(is_active);
 		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 		return 0;
 	}
 
-	for(int p = 0; p < ne; ++p){
-		double bp = 0.0;
-		for(int i = 0; i < ns; ++i){
-			if(is_active[i]){
-				continue;
-			}
-			bp += A[p * ns + i] * mu[i];
-		}
-		rhs[p] = -bp;
-		for(int q = 0; q < ne; ++q){
-			double s = 0.0;
-			for(int i = 0; i < ns; ++i){
-				if(is_active[i]){
-					continue;
-				}
-				s += A[p * ns + i] * A[q * ns + i];
-			}
-			M[p * ne + q] = s;
-		}
-	}
-	{
-		double reg = 0.0;
-		int solved = 0;
-		for(int damp = 0; damp < 8; ++damp){
-			for(int p = 0; p < ne; ++p){
-				lambda[p] = rhs[p];
-				for(int q = 0; q < ne; ++q){
-					Msys[p * ne + q] = M[p * ne + q];
-				}
-				Msys[p * ne + p] += reg;
-			}
-			if(eqm_dense_solve(Msys, lambda, ne)){
-				solved = 1;
-				break;
-			}
-			reg = (reg == 0.0) ? 1e-18 : (reg * 100.0);
-		}
-		if(!solved){
-			free(mu0);
-			free(is_condensed);
-			free(mu);
-			free(M);
-			free(Msys);
-			free(rhs);
-			free(lambda);
-			free(is_active);
-			eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
-			return 0;
-		}
-	}
-
 	for(int i = 0; i < ns; ++i){
-		double red = mu[i];
-		for(int p = 0; p < ne; ++p){
-			red += A[p * ns + i] * lambda[p];
-		}
-		red /= (gas_R() * T);
 		if(is_active[i]){
-			if(red < -dual_tol){
+			if(red[i] < -dual_tol){
+				if(trace){
+					fprintf(stderr, "eqm validate bounds fail active %s red=%.3e\n",
+						names[i] ? names[i] : "?", red[i]);
+				}
 				free(mu0);
 				free(is_condensed);
 				free(mu);
-				free(M);
-				free(Msys);
-				free(rhs);
-				free(lambda);
+				free(red);
 				free(is_active);
+				eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 				return 0;
 			}
 		}else{
-			if(fabs(red) > free_tol){
+			if(fabs(red[i]) > free_tol){
+				if(trace){
+					fprintf(stderr, "eqm validate bounds fail free %s red=%.3e\n",
+						names[i] ? names[i] : "?", red[i]);
+				}
 				free(mu0);
 				free(is_condensed);
 				free(mu);
-				free(M);
-				free(Msys);
-				free(rhs);
-				free(lambda);
+				free(red);
 				free(is_active);
+				eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 				return 0;
 			}
 		}
+	}
+	if(trace){
+		fprintf(stderr, "eqm validate bounds accepted\n");
 	}
 
 	free(mu0);
 	free(is_condensed);
 	free(mu);
-	free(M);
-	free(Msys);
-	free(rhs);
-	free(lambda);
+	free(red);
 	free(is_active);
 	eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
 	return 1;
@@ -3726,7 +3685,7 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 				status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
 					Tk, P, NULL, nf, n_work);
 			}
-			if(status != 0 && Tk <= 1.08 * T){
+			if(status != 0){
 				if(init != NULL
 						&& eqm_reduced_active_set_seed(names, ns, ne, A, b, source, Tk, P, init, nf, n_work)){
 					status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,

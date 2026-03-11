@@ -46,11 +46,24 @@ static int canonicals_differ(const FpropsNameCanonical *a, const FpropsNameCanon
 	return strcmp(a->canonical, b->canonical) != 0 || strcmp(a->source, b->source) != 0;
 }
 
+static int canonicals_differ_ignoring_source(const FpropsNameCanonical *a, const FpropsNameCanonical *b){
+	if(a == NULL || b == NULL){
+		return 0;
+	}
+	return strcmp(a->canonical, b->canonical) != 0;
+}
+
+static int allow_source_agnostic_unique_canonical(unsigned domains, const char *source){
+	return source == NULL
+		&& domains == FPROPS_NAME_DOMAIN_PURE_FLUID;
+}
+
 
 static int count_matching_canonicals(
 	const char *canonical,
 	const char *source,
 	unsigned domains,
+	int ignore_source_ambiguity,
 	const FpropsNameCanonical **first
 ){
 	int i;
@@ -70,7 +83,7 @@ static int count_matching_canonicals(
 		if(best == NULL){
 			best = c;
 			count = 1;
-		}else if(canonicals_differ(best, c)){
+		}else if(ignore_source_ambiguity ? canonicals_differ_ignoring_source(best, c) : canonicals_differ(best, c)){
 			count += 1;
 		}
 	}
@@ -108,6 +121,7 @@ FpropsNameResolveStatus fprops_name_resolve(
 	int matches = 0;
 	const FpropsNameAlias *best_alias = NULL;
 	const FpropsNameCanonical *best_canonical = NULL;
+	int ignore_source_ambiguity;
 	char normalized[256];
 
 	if(out != NULL){
@@ -117,6 +131,7 @@ FpropsNameResolveStatus fprops_name_resolve(
 	if(token == NULL || token[0] == '\0' || out == NULL){
 		return FPROPS_NAME_RESOLVE_INVALID;
 	}
+	ignore_source_ambiguity = allow_source_agnostic_unique_canonical(domains, source);
 
 	for(i = 0; i < fprops_name_registry.ncanonicals; ++i){
 		const FpropsNameCanonical *c = &fprops_name_registry.canonicals[i];
@@ -132,7 +147,7 @@ FpropsNameResolveStatus fprops_name_resolve(
 		if(best_canonical == NULL){
 			best_canonical = c;
 			matches = 1;
-		}else if(strcmp(best_canonical->canonical, c->canonical) != 0 || strcmp(best_canonical->source, c->source) != 0){
+		}else if(ignore_source_ambiguity ? canonicals_differ_ignoring_source(best_canonical, c) : canonicals_differ(best_canonical, c)){
 			return FPROPS_NAME_RESOLVE_AMBIGUOUS;
 		}
 	}
@@ -158,7 +173,8 @@ FpropsNameResolveStatus fprops_name_resolve(
 		}
 		candidate_source = effective_source_filter(source, a->source);
 		candidate_domains = effective_domain_filter(domains, a->domains);
-		candidate_count = count_matching_canonicals(a->canonical, candidate_source, candidate_domains, &c);
+		candidate_count = count_matching_canonicals(a->canonical, candidate_source, candidate_domains,
+			ignore_source_ambiguity, &c);
 		if(candidate_count == 0 || c == NULL){
 			continue;
 		}
@@ -207,7 +223,8 @@ FpropsNameResolveStatus fprops_name_resolve(
 			}
 			candidate_source = effective_source_filter(source, a->source);
 			candidate_domains = effective_domain_filter(domains, a->domains);
-			candidate_count = count_matching_canonicals(a->canonical, candidate_source, candidate_domains, &c);
+			candidate_count = count_matching_canonicals(a->canonical, candidate_source, candidate_domains,
+				ignore_source_ambiguity, &c);
 			if(candidate_count == 0 || c == NULL){
 				continue;
 			}

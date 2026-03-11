@@ -675,6 +675,71 @@ static void test_eqm_multi_reaction_mixed_system(void){
 	assert_log10K_consistent(names, nu_wgs, 5, n);
 }
 
+static void test_eqm_humid_air_nox_auto_reduced_lowt(void){
+	static const char *names[] = {
+		"nitrogen", "oxygen", "argon", "water", "carbondioxide",
+		"nitric_oxide", "nitrogen_dioxide", "carbonmonoxide", "hydrogen"
+	};
+	static const double n_in[] = {
+		0.78050661145600002,
+		0.20937052904000001,
+		0.0096958595039999996,
+		0.015,
+		0.00043000000000000002,
+		0.0,
+		0.0,
+		0.0,
+		0.0
+	};
+	static const char *source =
+		"*=RPP;water=Moran and Shapiro;carbondioxide=Moran and Shapiro;"
+		"carbonmonoxide=Moran and Shapiro;hydrogen=Moran and Shapiro";
+	static const struct{
+		double T;
+		double y_no_min;
+		double y_no_max;
+		double y_no2_min;
+		double y_no2_max;
+	} refs[] = {
+		{1000.0, 2.0e-5, 5.0e-5, 1.0e-6, 2.5e-6},
+		{800.0, 1.0e-6, 5.0e-6, 3.0e-7, 1.0e-6}
+	};
+	size_t k;
+
+	for(k = 0; k < ARRAYLEN(refs); ++k){
+		double n_out[ARRAYLEN(names)] = {0.0};
+		double ntot = 0.0;
+		int i_no;
+		int i_no2;
+		int i_co;
+		int i_h2;
+		int status = fprops_eqm_tpy(names, ARRAYLEN(names), n_in, source,
+			refs[k].T, g_eqm.P, "auto_reduced", n_in, n_out);
+
+		CU_ASSERT_EQUAL_FATAL(status, 0);
+		i_no = find_name(names, ARRAYLEN(names), "nitric_oxide");
+		i_no2 = find_name(names, ARRAYLEN(names), "nitrogen_dioxide");
+		i_co = find_name(names, ARRAYLEN(names), "carbonmonoxide");
+		i_h2 = find_name(names, ARRAYLEN(names), "hydrogen");
+		CU_ASSERT_TRUE_FATAL(i_no >= 0);
+		CU_ASSERT_TRUE_FATAL(i_no2 >= 0);
+		CU_ASSERT_TRUE_FATAL(i_co >= 0);
+		CU_ASSERT_TRUE_FATAL(i_h2 >= 0);
+		for(int i = 0; i < ARRAYLEN(names); ++i){
+			CU_ASSERT_TRUE_FATAL(isfinite(n_out[i]));
+			CU_ASSERT_TRUE_FATAL(n_out[i] > 0.0);
+			ntot += n_out[i];
+		}
+		CU_ASSERT_TRUE_FATAL(ntot > 0.0);
+		CU_ASSERT_TRUE(n_out[i_no] / ntot >= refs[k].y_no_min);
+		CU_ASSERT_TRUE(n_out[i_no] / ntot <= refs[k].y_no_max);
+		CU_ASSERT_TRUE(n_out[i_no2] / ntot >= refs[k].y_no2_min);
+		CU_ASSERT_TRUE(n_out[i_no2] / ntot <= refs[k].y_no2_max);
+		CU_ASSERT_TRUE(n_out[i_co] / ntot <= 1e-8);
+		CU_ASSERT_TRUE(n_out[i_h2] / ntot <= 1e-8);
+	}
+}
+
 static void test_eqm_fe_oxide_mu0_data(void){
 	static const char *species[] = {"Fe", "FeO", "Fe3O4", "Fe2O3", "hydrogen", "water"};
 	static const double temps[] = {700.0, 1000.0};
@@ -938,6 +1003,11 @@ static void test_name_resolve_reactive_and_unifac_domains(void){
 	CU_ASSERT_PTR_NOT_NULL_FATAL(out.canonical);
 	CU_ASSERT_STRING_EQUAL(out.canonical->canonical, "ethanol");
 
+	status = fprops_name_resolve("water", FPROPS_NAME_DOMAIN_PURE_FLUID, NULL, &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_OK);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(out.canonical);
+	CU_ASSERT_STRING_EQUAL(out.canonical->canonical, "water");
+
 	status = fprops_name_resolve("H2O",
 		FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT, NULL, &out);
 	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_AMBIGUOUS);
@@ -1132,6 +1202,10 @@ CU_ErrorCode test_register_eqm(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "multi_reaction_mixed_system", test_eqm_multi_reaction_mixed_system)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "humid_air_nox_auto_reduced_lowt",
+			test_eqm_humid_air_nox_auto_reduced_lowt)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "fe_oxide_mu0_data", test_eqm_fe_oxide_mu0_data)){

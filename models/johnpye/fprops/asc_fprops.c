@@ -1666,7 +1666,10 @@ int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
 	AscFpropsRxnData *rxn;
 	FpropsRxnTPN state;
 	FpropsRxnResult out;
+	double *n_guess = NULL;
+	const double *n_init = NULL;
 	int status;
+	int i;
 	(void)jacobian;
 
 	if(!bbox || !bbox->user_data){
@@ -1696,9 +1699,24 @@ int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
 	out.H = NAN;
 	out.G = NAN;
 	out.n_out = outputs;
+	n_guess = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
+	if(n_guess){
+		int ok_init = 1;
+		for(i = 0; i < rxn->ns; ++i){
+			if(!isfinite(outputs[i]) || outputs[i] < 0.0){
+				ok_init = 0;
+				break;
+			}
+			n_guess[i] = outputs[i] > 1e-30 ? outputs[i] : 1e-30;
+		}
+		if(ok_init){
+			n_init = n_guess;
+		}
+	}
 	status = fprops_rxn_eqm_tpy(rxn->pkg, &state,
 		rxn->algorithm ? rxn->algorithm : "reduced",
-		NULL, &out);
+		n_init, &out);
+	ASC_FREE(n_guess);
 	if(status != 0 && status != 1 && status != 6){
 		ERRMSG("Reactive FPROPS equilibrium evaluation failed with status %d", status);
 		return status;

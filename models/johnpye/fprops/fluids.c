@@ -52,53 +52,98 @@ static int nfluids = 0 + FLUIDS(F,X) + RPPFLUIDS(F,X);
 #undef F
 #undef X
 
-const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source){
+static int source_filter_matches(const EosData *E, const char *source){
+	if(source == NULL){
+		return 1;
+	}
+	return E->source != NULL && NULL != strstr(E->source, source);
+}
+
+static int default_corr_rank(int corr){
+	switch(corr){
+	case FPROPS_HELMHOLTZ:
+		return 4;
+	case FPROPS_PENGROB:
+		return 3;
+	case FPROPS_INCOMP:
+		return 2;
+	case FPROPS_IDEAL:
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+static const EosData *find_first_matching_eos(const char *name, const char *corrtype, const char *source){
 	int i;
-	MSG("Looking for fluid '%s' of type '%s', with source text '%s'",name,corrtype,source);
 	for(i = 0; i < nfluids; ++i){
-		if(0==strcmp(name, fluids[i]->name)){
-			MSG("Got '%s' (type %d, source '%s')",name,fluids[i]->type,fluids[i]->source);
-			if(source){
-				if(fluids[i]->source && NULL != strstr(fluids[i]->source, source)){
-					MSG("Source '%s' OK",source);
-				}else{
-					MSG("Source '%s' not matched",source);
-					continue;
-				}
-			}
-			if(fprops_corr_avail(fluids[i],corrtype)){
-				MSG("Match! %d",i);
-				return fprops_prepare(fluids[i],corrtype);
-			}else{
-				MSG("No match");
-			}
+		if(0 != strcmp(name, fluids[i]->name)){
+			continue;
 		}
+		MSG("Got '%s' (type %d, source '%s')", name, fluids[i]->type, fluids[i]->source);
+		if(!source_filter_matches(fluids[i], source)){
+			MSG("Source '%s' not matched", source);
+			continue;
+		}
+		if(fprops_corr_avail(fluids[i], corrtype)){
+			MSG("Match! %d", i);
+			return fluids[i];
+		}
+		MSG("No match");
+	}
+	return NULL;
+}
+
+static const EosData *find_best_default_eos(const char *name, const char *source){
+	int i;
+	int best_rank = 0;
+	const EosData *best = NULL;
+	for(i = 0; i < nfluids; ++i){
+		int corr;
+		int rank;
+		if(0 != strcmp(name, fluids[i]->name)){
+			continue;
+		}
+		MSG("Got '%s' (type %d, source '%s')", name, fluids[i]->type, fluids[i]->source);
+		if(!source_filter_matches(fluids[i], source)){
+			MSG("Source '%s' not matched", source);
+			continue;
+		}
+		corr = fprops_corr_avail(fluids[i], NULL);
+		rank = default_corr_rank(corr);
+		if(rank > best_rank){
+			best_rank = rank;
+			best = fluids[i];
+		}
+	}
+	return best;
+}
+
+const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source){
+	const EosData *E;
+	MSG("Looking for fluid '%s' of type '%s', with source text '%s'",name,corrtype,source);
+	if(corrtype == NULL){
+		E = find_best_default_eos(name, source);
+	}else{
+		E = find_first_matching_eos(name, corrtype, source);
+	}
+	if(E != NULL){
+		return fprops_prepare(E, corrtype);
 	}
 	ERRMSG("No fluid found matching name '%s', type '%s' and source '%s'",name,corrtype,source);
 	return NULL;
 }
 
 const EosData *fprops_eos(const char *name, const char *corrtype, const char *source){
-	int i;
+	const EosData *E;
 	MSG("Looking for EOS '%s' of type '%s', with source text '%s'",name,corrtype,source);
-	for(i = 0; i < nfluids; ++i){
-		if(0==strcmp(name, fluids[i]->name)){
-			MSG("Got '%s' (type %d, source '%s')",name,fluids[i]->type,fluids[i]->source);
-			if(source){
-				if(fluids[i]->source && NULL != strstr(fluids[i]->source, source)){
-					MSG("Source '%s' OK",source);
-				}else{
-					MSG("Source '%s' not matched",source);
-					continue;
-				}
-			}
-			if(fprops_corr_avail(fluids[i],corrtype)){
-				MSG("Match! %d",i);
-				return fluids[i];
-			}else{
-				MSG("No match");
-			}
-		}
+	if(corrtype == NULL){
+		E = find_best_default_eos(name, source);
+	}else{
+		E = find_first_matching_eos(name, corrtype, source);
+	}
+	if(E != NULL){
+		return E;
 	}
 	ERRMSG("No EOS found matching name '%s', type '%s' and source '%s'",name,corrtype,source);
 	return NULL;
