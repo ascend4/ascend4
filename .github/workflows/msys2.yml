@@ -112,12 +112,13 @@ jobs:
       run: |
         ./a4 cutest -r mallocdebug
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        report_type: coverage
-        flags: msys2-cunit
-        fail_ci_if_error: true
+# suppress codecov -- some weird filename length issue?
+#    - name: Upload coverage reports to Codecov
+#      uses: codecov/codecov-action@v5
+#      with:
+#        report_type: coverage
+#        flags: msys2-cunit
+#        fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
 
 # vim: ts=2:sw=2:et
