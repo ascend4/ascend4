@@ -26,11 +26,7 @@ SolverReporter::report(SolverStatus *status){
 
 void
 SolverReporter::finalise(SolverStatus *status){
-	if(status->isConverged()){
-		cerr << "Converged" << endl;
-	}else{
-		cerr << "Not converged" << endl;
-	}
+	(void)status;
 }
 
 void

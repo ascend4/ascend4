@@ -37,6 +37,8 @@
 #include "logical_relation.h"
 #include <ascend/utilities/bit.h>
 
+struct asc_simstatus;
+
 /** @file
  *  Real Ascend Instance Types.
  *  <pre>
@@ -634,6 +636,7 @@ struct SimulationInstance {
   /* these have *no* parents, yet */
   enum inst_t t;
   VOIDPTR interface_ptr;
+  struct asc_simstatus *simstatus;
   struct TypeDescription *desc; /**< copy of the typedesc of its lone child */
   symchar *name;                /**< name of its lone child */
   struct Instance **extvars;    /**< external variables handles hack */
@@ -673,4 +676,3 @@ struct GlobalDummyInstance {
 /* @} */
 
 #endif /* ASC_INSTANCE_TYPES_H */
-

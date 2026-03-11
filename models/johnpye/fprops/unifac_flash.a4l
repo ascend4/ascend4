@@ -1,10 +1,17 @@
 REQUIRE "atoms.a4l";
-REQUIRE "components.a4l";
 IMPORT "johnpye/fprops/fprops";
 PROVIDE "johnpye/fprops/unifac_flash.a4l";
 
+MODEL fprops_component_list_data(
+	components IS_A set OF symbol_constant;
+	reference IS_A symbol_constant;
+);
+	other_components IS_A set OF symbol_constant;
+	other_components :== [components - [reference]];
+END fprops_component_list_data;
+
 MODEL fprops_flash_state(
-	cd WILL_BE components_data;
+	cd WILL_BE fprops_component_list_data;
 );
 	components ALIASES cd.components;
 
@@ -37,7 +44,7 @@ METHODS
 END fprops_flash_state;
 
 MODEL fprops_unifac_flash_state(
-	cd WILL_BE components_data;
+	cd WILL_BE fprops_component_list_data;
 );
 	components ALIASES cd.components;
 
@@ -70,7 +77,7 @@ METHODS
 END fprops_unifac_flash_state;
 
 MODEL fprops_unifac_gamma_state(
-	cd WILL_BE components_data;
+	cd WILL_BE fprops_component_list_data;
 );
 	components ALIASES cd.components;
 
@@ -97,7 +104,7 @@ METHODS
 END fprops_unifac_gamma_state;
 
 MODEL fprops_unifac_liq_fugacity_state(
-	cd WILL_BE components_data;
+	cd WILL_BE fprops_component_list_data;
 );
 	components ALIASES cd.components;
 

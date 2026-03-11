@@ -1,9 +1,7 @@
 REQUIRE "johnpye/fprops/unifac_flash.a4l";
-REQUIRE "thermodynamics.a4l";
-REQUIRE "flash.a4l";
 
 MODEL test_fprops_unifac_gamma_ddbst_ethanol_water REFINES cmumodel;
-	cd IS_A components_data(['water','ethanol'], 'water');
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
 	ug IS_A fprops_unifac_gamma_state(cd);
 
 METHODS
@@ -38,7 +36,7 @@ METHODS
 END test_fprops_unifac_gamma_ddbst_ethanol_water;
 
 MODEL test_fprops_unifac_blackbox_ethanol_water REFINES cmumodel;
-	cd IS_A components_data(['water','ethanol'], 'water');
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
 	fp IS_A fprops_unifac_flash_state(cd);
 
 METHODS
@@ -77,7 +75,7 @@ METHODS
 END test_fprops_unifac_blackbox_ethanol_water;
 
 MODEL test_fprops_flash_blackbox_ethanol_water REFINES cmumodel;
-	cd IS_A components_data(['water','ethanol'], 'water');
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
 	fp IS_A fprops_flash_state(cd);
 	ref IS_A fprops_unifac_flash_state(cd);
 
@@ -125,32 +123,26 @@ METHODS
 	END self_test;
 END test_fprops_flash_blackbox_ethanol_water;
 
-MODEL test_fprops_unifac_phase_eq_ethanol_water REFINES cmumodel;
-	cd IS_A components_data(['water','ethanol'], 'water');
+MODEL test_fprops_unifac_flash_fugacity_ethanol_water REFINES cmumodel;
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
 	fp IS_A fprops_unifac_flash_state(cd);
-	vm IS_A ideal_vapor_mixture(cd);
-	lm IS_A UNIFAC_liquid_mixture(cd);
+	lf IS_A fprops_unifac_liq_fugacity_state(cd);
 
-	Tv ALIASES vm.T;
-	Pv ALIASES vm.P;
-	Tl ALIASES lm.T;
-	Pl ALIASES lm.P;
+	Tflash ALIASES fp.T;
+	Pflash ALIASES fp.P;
+	Tliq ALIASES lf.T;
+	Pliq ALIASES lf.P;
 
-	Tv = fp.T;
-	Pv = fp.P;
-	Tl = fp.T;
-	Pl = fp.P;
-
-	FOR i IN cd.components CREATE
-		yv[i]: vm.y[i] = fp.y[i];
-		xl[i]: lm.y[i] = fp.x[i];
+	Tlink: Tliq = Tflash;
+	Plink: Pliq = Pflash;
+	FOR i IN cd.other_components CREATE
+		xlink[i]: lf.x[i] = fp.x[i];
 	END FOR;
 
 METHODS
 	METHOD default_self;
 		RUN fp.default_self;
-		RUN vm.default_self;
-		RUN lm.default_self;
+		RUN lf.default_self;
 	END default_self;
 
 	METHOD values;
@@ -176,79 +168,7 @@ METHODS
 	END on_load;
 
 	METHOD self_test;
-		ASSERT abs(vm.partial['water'].g - lm.partial['water'].g) < 2e-2 {J/mol};
-		ASSERT abs(vm.partial['ethanol'].g - lm.partial['ethanol'].g) < 2e-2 {J/mol};
+		ASSERT abs(fp.y['water'] * fp.P - lf.fugacity['water']) < 1e-6 {Pa};
+		ASSERT abs(fp.y['ethanol'] * fp.P - lf.fugacity['ethanol']) < 1e-6 {Pa};
 	END self_test;
-END test_fprops_unifac_phase_eq_ethanol_water;
-
-(* Probe only: the legacy vapor_liquid_flash wrapper is currently
- * row-rank-deficient for this fixed-T fixed-P specification under QRSlv,
- * so this model is kept for manual investigation rather than gating tests.
- *)
-MODEL probe_fprops_unifac_against_flash_ethanol_water REFINES cmumodel;
-	cd IS_A components_data(['water','ethanol'], 'water');
-	pdV IS_A phases_data('V', 'ideal_vapor_mixture', 'none', 'none');
-	pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
-	feed_equilibrated IS_A boolean;
-	flash_equilibrated IS_A boolean;
-	Qin IS_A energy_rate;
-
-	feed IS_A stream(cd, pdV, feed_equilibrated);
-	liq IS_A stream(cd, pdL, flash_equilibrated);
-	vap IS_A stream(cd, pdV, flash_equilibrated);
-	fl1 IS_A vapor_liquid_flash(Qin, flash_equilibrated, feed, vap, liq);
-	fp IS_A fprops_unifac_flash_state(cd);
-
-	Tlink: fp.T = fl1.T;
-	Plink: fp.P = fl1.P;
-	FOR i IN cd.other_components CREATE
-		zlink[i]: fp.z[i] = feed.y[i];
-	END FOR;
-
-METHODS
-	METHOD default_self;
-		RUN feed.default_self;
-		RUN liq.default_self;
-		RUN vap.default_self;
-		RUN fl1.default_self;
-		RUN fp.default_self;
-	END default_self;
-
-	METHOD values;
-		feed.P := 1 {atm};
-		feed.T := 360 {K};
-		feed.f['ethanol'] := 0.4 {mol/s};
-		feed.f['water'] := 0.6 {mol/s};
-		fl1.alpha['ethanol'] := 2;
-		fl1.alpha['water'] := 1;
-		fl1.P := 1 {atm};
-		fl1.T := 360 {K};
-		feed_equilibrated := FALSE;
-		flash_equilibrated := TRUE;
-		Qin := 0 {W};
-	END values;
-
-	METHOD specify_mass_balance;
-		flash_equilibrated := FALSE;
-		RUN fl1.specify;
-		fl1.state.phase_fraction['vapor'] := 0.5;
-		FIX fl1.P;
-		FIX fl1.T;
-	END specify_mass_balance;
-
-	METHOD specify_full_thermo;
-		flash_equilibrated := TRUE;
-		RUN fl1.reset_to_fullthermo;
-		FIX fl1.P;
-		FIX fl1.T;
-	END specify_full_thermo;
-
-	METHOD compare;
-		ASSERT abs(fp.beta - fl1.state.phase_fraction['vapor']) < 1e-7;
-		ASSERT abs(fp.x['water'] - liq.y['water']) < 1e-7;
-		ASSERT abs(fp.x['ethanol'] - liq.y['ethanol']) < 1e-7;
-		ASSERT abs(fp.y['water'] - vap.y['water']) < 1e-7;
-		ASSERT abs(fp.y['ethanol'] - vap.y['ethanol']) < 1e-7;
-	END compare;
-
-END probe_fprops_unifac_against_flash_ethanol_water;
+END test_fprops_unifac_flash_fugacity_ethanol_water;

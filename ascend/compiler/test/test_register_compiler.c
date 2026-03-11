@@ -29,6 +29,7 @@
 	T(fixfree) \
 	T(blackbox) \
 	T(fixassign) \
+	T(simstatus) \
 	T(dimen) \
 	T(fractions) \
 	T(units) \

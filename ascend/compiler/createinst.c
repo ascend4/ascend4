@@ -170,6 +170,7 @@ struct Instance *CreateSimulationInstance(struct TypeDescription *type,
 			      num_children* sizeof(struct Instance *)));
   result->t = SIM_INST;
   result->interface_ptr = NULL;
+  result->simstatus = NULL;
   result->desc = type;
   result->name = name;
   result->extvars = NULL;

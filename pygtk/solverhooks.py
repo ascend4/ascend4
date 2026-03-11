@@ -209,6 +209,7 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 
 			if not request.hasVary() or request.getMode() == SLVREQ_STUDY_NONE:
 				self.browser.reporter.reportNote("Observer populated from METHOD STUDY.")
+				self.browser.update_simulation_statusbar()
 				return 0
 
 			dia = StudyWin(self.browser, request.getVary())
@@ -216,8 +217,10 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 			if request.getNow():
 				if not dia.run_now():
 					return 1
+				self.browser.update_simulation_statusbar()
 				return 0
 			dia.run()
+			self.browser.update_simulation_statusbar()
 			return 0
 		except Exception as e:
 			print("PYTHON ERROR:", str(e))
@@ -227,6 +230,7 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 			sim.invalidateSystem()
 			if hasattr(self.browser, "disable_on_sim_delete"):
 				self.browser.disable_on_sim_delete()
+			self.browser.update_simulation_statusbar()
 		except Exception as e:
 			print("PYTHON ERROR:", str(e))
 			return 1
@@ -239,6 +243,7 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 
 	def do_solve_finish(self, reporter, status):
 		reporter.finalise(status)
+		self.browser.update_simulation_statusbar()
 		return False
 
 	def do_solve_thread(self, sim, reporter):
@@ -256,8 +261,8 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 				time.sleep(0.02)
 				if res != 0:
 					break
-			GObject.idle_add(self.do_solve_finish, reporter, status)
 			sim.postsolve(status)
+			GObject.idle_add(self.do_solve_finish, reporter, status)
 		except Exception as e:
 			print("PYTHON ERROR:", str(e))
 		finally:

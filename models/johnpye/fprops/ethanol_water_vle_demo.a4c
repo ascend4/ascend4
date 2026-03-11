@@ -3,7 +3,7 @@ IMPORT "qrslv";
 PROVIDE "johnpye/fprops/ethanol_water_vle_demo.a4c";
 
 MODEL ethanol_water_bubble_point REFINES cmumodel;
-	cd IS_A components_data(['water','ethanol'], 'water');
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
 	liq IS_A fprops_unifac_liq_fugacity_state(cd);
 
 	T ALIASES liq.T;
@@ -43,7 +43,7 @@ METHODS
 END ethanol_water_bubble_point;
 
 MODEL ethanol_water_dew_point REFINES cmumodel;
-	cd IS_A components_data(['water','ethanol'], 'water');
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
 	liq IS_A fprops_unifac_liq_fugacity_state(cd);
 
 	T ALIASES liq.T;

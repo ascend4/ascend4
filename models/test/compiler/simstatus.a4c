@@ -1,0 +1,57 @@
+REQUIRE "system.a4l";
+
+MODEL simstatus_child;
+	x, y IS_A solver_var;
+METHODS
+	METHOD default_self;
+		x := 4;
+		y := 5;
+	END default_self;
+END simstatus_child;
+
+MODEL simstatus_test;
+	x, y, z IS_A solver_var;
+	child IS_A simstatus_child;
+METHODS
+	METHOD default_self;
+		x := 1;
+		y := 2;
+		z := 3;
+		RUN child.default_self;
+	END default_self;
+
+	METHOD dirty_assign;
+		x := 11;
+	END dirty_assign;
+
+	METHOD dirty_fix;
+		FIX x;
+	END dirty_fix;
+
+	METHOD solve_root;
+		SOLVE;
+	END solve_root;
+
+	METHOD dirty_then_solve;
+		x := 12;
+		SOLVE;
+	END dirty_then_solve;
+
+	METHOD solve_then_dirty;
+		SOLVE;
+		x := 13;
+	END solve_then_dirty;
+
+	METHOD solve_child;
+		SOLVE child;
+	END solve_child;
+
+	METHOD study_now;
+		STUDY x, y VARY z FROM 1 TO 2 STEPS 1 NOW;
+	END study_now;
+
+	METHOD study_then_dirty;
+		STUDY x, y VARY z FROM 1 TO 2 STEPS 1 NOW;
+		x := 14;
+	END study_then_dirty;
+END simstatus_test;

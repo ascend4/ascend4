@@ -541,8 +541,8 @@ class StudyWin:
 					if res != 0:
 						break
 				self.save_data()
-				GObject.idle_add(self.solve_finish_step, reporter, status)
 				browser.sim.postsolve(status)
+				GObject.idle_add(self.solve_finish_step, reporter, status)
 			except RuntimeError as err:
 				browser.reporter.reportError(str(err))
 			finally:
@@ -579,4 +579,5 @@ class StudyWin:
 		reporter.report_observed(self.data)
 		browser.stop_waiting()
 		browser.modelview.refreshtree()
+		browser.update_simulation_statusbar()
 		return False

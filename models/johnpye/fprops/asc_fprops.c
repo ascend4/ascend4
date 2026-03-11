@@ -189,6 +189,99 @@ typedef struct{
 	double *nu_data;
 	double *a;
 } AscFpropsUNIFACFlashData;
+
+static const char *asc_name_domain_label(unsigned domains){
+	switch(domains){
+	case FPROPS_NAME_DOMAIN_PURE_FLUID:
+		return "pure fluid";
+	case FPROPS_NAME_DOMAIN_EQM_SPECIES:
+		return "equilibrium species";
+	case FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT:
+		return "mixture component";
+	default:
+		return "FPROPS name";
+	}
+}
+
+static int asc_resolve_name_or_error(const char *token, unsigned domains,
+		const char *source, const char *context, const char **canonical_out){
+	FpropsResolvedName resolved;
+	FpropsNameResolveStatus status;
+	const char *label = asc_name_domain_label(domains);
+
+	if(!canonical_out){
+		return 1;
+	}
+	*canonical_out = NULL;
+	status = fprops_name_resolve(token, domains, source, &resolved);
+	if(status == FPROPS_NAME_RESOLVE_OK && resolved.canonical
+			&& resolved.canonical->canonical && resolved.canonical->canonical[0]){
+		*canonical_out = resolved.canonical->canonical;
+		return 0;
+	}
+	switch(status){
+	case FPROPS_NAME_RESOLVE_NOT_FOUND:
+		if(source && source[0]){
+			ERRMSG("%s '%s' is not a registered %s for source '%s'%s%s",
+				label, token ? token : "(null)", label, source,
+				context ? " in " : "", context ? context : "");
+		}else{
+			ERRMSG("%s '%s' is not a registered %s%s%s",
+				label, token ? token : "(null)", label,
+				context ? " in " : "", context ? context : "");
+		}
+		break;
+	case FPROPS_NAME_RESOLVE_AMBIGUOUS:
+		if(source && source[0]){
+			ERRMSG("%s '%s' is ambiguous for source '%s'%s%s",
+				label, token ? token : "(null)", source,
+				context ? " in " : "", context ? context : "");
+		}else{
+			ERRMSG("%s '%s' is ambiguous; specify a source%s%s",
+				label, token ? token : "(null)",
+				context ? " in " : "", context ? context : "");
+		}
+		break;
+	case FPROPS_NAME_RESOLVE_INVALID:
+		ERRMSG("Invalid %s '%s'%s%s",
+			label, token ? token : "(null)",
+			context ? " in " : "", context ? context : "");
+		break;
+	default:
+		ERRMSG("Unable to resolve %s '%s'%s%s",
+			label, token ? token : "(null)",
+			context ? " in " : "", context ? context : "");
+	}
+	return 1;
+}
+
+static int asc_check_unique_canonical_names(const char **tokens, const char **canonicals,
+		unsigned long n, const char *context){
+	unsigned long i, j;
+	if(!canonicals){
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		if(!canonicals[i] || !canonicals[i][0]){
+			ERRMSG("Empty canonical name at position %lu%s%s", i + 1,
+				context ? " in " : "", context ? context : "");
+			return 1;
+		}
+		for(j = i + 1; j < n; ++j){
+			if(canonicals[j] && 0 == strcmp(canonicals[i], canonicals[j])){
+				ERRMSG("%s '%s' resolves to canonical '%s', which duplicates %s '%s'%s%s",
+					tokens && tokens[j] ? "Name" : "Entry",
+					tokens && tokens[j] ? tokens[j] : "(unknown)",
+					canonicals[j],
+					tokens && tokens[i] ? "name" : "entry",
+					tokens && tokens[i] ? tokens[i] : "(unknown)",
+					context ? " in " : "", context ? context : "");
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
 */
@@ -338,7 +431,7 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	   struct gl_list_t *arglist
 ){
 	struct Instance *compinst, *typeinst, *srcinst;
-	const char *comp, *type = NULL, *src = NULL;
+	const char *comp, *resolved_comp = NULL, *type = NULL, *src = NULL;
 
 	fprops_symbols[0] = AddSymbol("component");
 	fprops_symbols[1] = AddSymbol("type");
@@ -384,13 +477,20 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 		if(src && strlen(src)==0)src = NULL;
 	}
 
-	bbox->user_data = (void *)fprops_fluid(comp,type,src);
-	if(bbox->user_data == NULL){
-		ERRMSG("Unsupported component requested (name='%s',type='%s'). Check source-code for supported species.",comp,type);
+	if(asc_resolve_name_or_error(comp, FPROPS_NAME_DOMAIN_PURE_FLUID, src,
+			"FPROPS DATA", &resolved_comp)){
 		return 1;
 	}
 
-	MSG("Prepared component '%s'%s%s%s OK.",comp, type?" type '":"", type?type:"" ,type?"'":""
+	bbox->user_data = (void *)fprops_fluid(resolved_comp,type,src);
+	if(bbox->user_data == NULL){
+		ERRMSG("Unsupported component requested (name='%s', canonical='%s', type='%s', source='%s'). Check generated FPROPS data.",
+			comp, resolved_comp, type ? type : "", src ? src : "");
+		return 1;
+	}
+
+	MSG("Prepared component '%s' as '%s'%s%s%s OK.",comp, resolved_comp,
+		type?" type '":"", type?type:"" ,type?"'":""
 	);
 	return 0;
 }
@@ -411,6 +511,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	const char *source = NULL;
 	const char *algorithm = NULL;
 	const char **names = NULL;
+	const char **resolved_names = NULL;
 	AscFpropsRxnData *rxn = NULL;
 	unsigned long actual_inputs, actual_outputs, c, ns;
 	symchar *components_sym, *species_name_sym, *source_sym, *algorithm_sym;
@@ -475,10 +576,12 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	}
 
 	names = (const char **)calloc((size_t)ns, sizeof(char *));
+	resolved_names = (const char **)calloc((size_t)ns, sizeof(char *));
 	rxn = (AscFpropsRxnData *)calloc(1, sizeof(AscFpropsRxnData));
-	if(!names || !rxn){
+	if(!names || !resolved_names || !rxn){
 		ERRMSG("Unable to allocate reactive FPROPS blackbox workspace");
 		free(names);
+		free(resolved_names);
 		free(rxn);
 		return 1;
 	}
@@ -492,12 +595,13 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		names[c - 1] = NULL;
 		if(species_name_inst){
 			struct Instance *child = InstanceChild(species_name_inst, c);
-			if(!child || InstanceKind(child) != SYMBOL_CONSTANT_INST){
-				ERRMSG("Reactive package species_name must contain symbol_constant values");
-				free(names);
-				free(rxn);
-				return 1;
-			}
+				if(!child || InstanceKind(child) != SYMBOL_CONSTANT_INST){
+					ERRMSG("Reactive package species_name must contain symbol_constant values");
+					free(names);
+					free(resolved_names);
+					free(rxn);
+					return 1;
+				}
 			if(AtomAssigned(child)){
 				names[c - 1] = SCP(SYMC_INST(child)->value);
 			}
@@ -505,19 +609,21 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		if((!names[c - 1] || strlen(names[c - 1]) == 0) && fallback_name && strlen(fallback_name) > 0){
 			names[c - 1] = fallback_name;
 		}
-		if(!names[c - 1] || strlen(names[c - 1]) == 0){
-			ERRMSG("Reactive package DATA contains an empty component/species name");
-			free(names);
-			free(rxn);
-			return 1;
+			if(!names[c - 1] || strlen(names[c - 1]) == 0){
+				ERRMSG("Reactive package DATA contains an empty component/species name");
+				free(names);
+				free(resolved_names);
+				free(rxn);
+				return 1;
+			}
 		}
-	}
 
 	srcinst = ChildByChar(data, source_sym);
 	if(srcinst){
 		if(InstanceKind(srcinst) != SYMBOL_CONSTANT_INST){
 			ERRMSG("DATA member 'source' must be a symbol_constant");
 			free(names);
+			free(resolved_names);
 			free(rxn);
 			return 1;
 		}
@@ -529,20 +635,40 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		if(InstanceKind(alginst) != SYMBOL_CONSTANT_INST){
 			ERRMSG("DATA member 'algorithm' must be a symbol_constant");
 			free(names);
+			free(resolved_names);
 			free(rxn);
 			return 1;
 		}
-		algorithm = SCP(SYMC_INST(alginst)->value);
-		if(algorithm && strlen(algorithm) == 0)algorithm = NULL;
-	}
+			algorithm = SCP(SYMC_INST(alginst)->value);
+			if(algorithm && strlen(algorithm) == 0)algorithm = NULL;
+		}
 
-	rxn->pkg = fprops_rxn_package_build(names, (int)ns, source);
-	free(names);
-	if(!rxn->pkg){
-		ERRMSG("Failed to build reactive FPROPS package from DATA");
+	for(c = 0; c < ns; ++c){
+		FpropsResolvedName resolved;
+		FpropsNameResolveStatus status = fprops_name_resolve(names[c],
+			FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_EQM_SPECIES,
+			source, &resolved);
+		resolved_names[c] = (status == FPROPS_NAME_RESOLVE_OK && resolved.canonical
+			&& resolved.canonical->canonical && resolved.canonical->canonical[0])
+			? resolved.canonical->canonical : names[c];
+	}
+	if(asc_check_unique_canonical_names(names, resolved_names, ns, "reactive package DATA")){
+		free(names);
+		free(resolved_names);
 		free(rxn);
 		return 1;
 	}
+
+	rxn->pkg = fprops_rxn_package_build(names, (int)ns, source);
+	if(!rxn->pkg){
+		ERRMSG("Failed to build reactive FPROPS package from DATA");
+		free(names);
+		free(resolved_names);
+		free(rxn);
+		return 1;
+	}
+	free(names);
+	free(resolved_names);
 	if(algorithm){
 		rxn->algorithm = ASC_NEW_ARRAY(char, strlen(algorithm) + 1);
 		if(!rxn->algorithm){
@@ -600,49 +726,6 @@ void asc_fprops_rxn_final(struct BBoxInterp *bbox){
 	bbox->user_data = NULL;
 }
 
-static int asc_read_real_child(struct Instance *inst, const char *name, double *value){
-	struct Instance *child = ChildByChar(inst, AddSymbol((char *)name));
-	if(!child){
-		ERRMSG("Couldn't locate '%s' in UNIFAC flash DATA", name);
-		return 1;
-	}
-	*value = RealAtomValue(child);
-	return 0;
-}
-
-static int asc_read_int_child(struct Instance *inst, const char *name, long *value){
-	struct Instance *child = ChildByChar(inst, AddSymbol((char *)name));
-	if(!child){
-		ERRMSG("Couldn't locate '%s' in UNIFAC flash DATA", name);
-		return 1;
-	}
-	*value = GetIntegerAtomValue(child);
-	return 0;
-}
-
-static int asc_unifac_find_subgroup(symchar **subs, int nsub, symchar *sub){
-	int i;
-	for(i = 0; i < nsub; ++i){
-		if(subs[i] == sub){
-			return i;
-		}
-	}
-	return -1;
-}
-
-static unsigned long asc_find_symbol_in_set(const struct set_t *set, symchar *sym){
-	unsigned long i;
-	if(!set || SetKind(set) != string_set){
-		return 0;
-	}
-	for(i = 1; i <= Cardinality(set); ++i){
-		if(FetchStrMember(set, i) == sym){
-			return i;
-		}
-	}
-	return 0;
-}
-
 static void asc_unifac_flash_free_data(AscFpropsUNIFACFlashData *fp){
 	if(!fp){
 		return;
@@ -656,249 +739,13 @@ static void asc_unifac_flash_free_data(AscFpropsUNIFACFlashData *fp){
 	ascfree(fp);
 }
 
-static int asc_build_unifac_flash_package_from_ascend(struct Instance *cd, AscFpropsUNIFACFlashData **outpkg){
-	struct Instance *components_inst, *data_inst;
-	struct Instance *uc_inst = NULL;
-	const struct set_t *components_set;
-	symchar **sub_syms = NULL;
-	int *comp_nsub = NULL;
-	AscFpropsUNIFACFlashData *fp = NULL;
-	unsigned long nc_ul, i_ul, k_ul;
-	int nsub = 0;
-	int total_nu = 0;
-	int offset = 0;
-
-	if(!cd || !outpkg){
-		return 1;
-	}
-
-	components_inst = ChildByChar(cd, AddSymbol("components"));
-	data_inst = ChildByChar(cd, AddSymbol("data"));
-	if(!components_inst || !data_inst){
-		ERRMSG("UNIFAC flash DATA must be a components_data instance");
-		return 1;
-	}
-
-	components_set = SetAtomList(components_inst);
-	if(!components_set || SetKind(components_set) != string_set){
-		ERRMSG("UNIFAC flash DATA requires a string-valued components set");
-		return 1;
-	}
-	nc_ul = Cardinality(components_set);
-	if(nc_ul == 0){
-		ERRMSG("UNIFAC flash DATA contains no components");
-		return 1;
-	}
-
-	comp_nsub = ASC_NEW_ARRAY(int, nc_ul);
-	if(!comp_nsub){
-		ERRMSG("Unable to allocate UNIFAC flash workspace");
-		return 1;
-	}
-
-	for(i_ul = 1; i_ul <= nc_ul; ++i_ul){
-		symchar *comp_sym = FetchStrMember(components_set, i_ul);
-		struct Instance *compinst = InstanceChild(data_inst, i_ul);
-		const struct set_t *sub_set;
-		unsigned long sub_card;
-		if(!compinst){
-			ERRMSG("UNIFAC flash DATA missing component '%s'", SCP(comp_sym));
-			ascfree(comp_nsub);
-			return 1;
-		}
-		if(!uc_inst){
-			uc_inst = ChildByChar(compinst, AddSymbol("uc"));
-		}
-		sub_set = SetAtomList(ChildByChar(compinst, AddSymbol("subgroups")));
-		if(!sub_set || SetKind(sub_set) != string_set){
-			ERRMSG("Component '%s' has no UNIFAC subgroup set", SCP(comp_sym));
-			ascfree(comp_nsub);
-			return 1;
-		}
-		sub_card = Cardinality(sub_set);
-		if(sub_card == 0){
-			ERRMSG("Component '%s' has no UNIFAC subgroup data", SCP(comp_sym));
-			ascfree(comp_nsub);
-			return 1;
-		}
-		comp_nsub[i_ul - 1] = (int)sub_card;
-		total_nu += (int)sub_card;
-		for(k_ul = 1; k_ul <= sub_card; ++k_ul){
-			symchar *sub_sym = FetchStrMember(sub_set, k_ul);
-			if(asc_unifac_find_subgroup(sub_syms, nsub, sub_sym) < 0){
-				symchar **tmp = ASC_NEW_ARRAY(symchar *, nsub + 1);
-				int i;
-				if(!tmp){
-					ascfree(comp_nsub);
-					ascfree(sub_syms);
-					ERRMSG("Unable to allocate UNIFAC subgroup list");
-					return 1;
-				}
-				for(i = 0; i < nsub; ++i){
-					tmp[i] = sub_syms[i];
-				}
-				tmp[nsub] = sub_sym;
-				ascfree(sub_syms);
-				sub_syms = tmp;
-				++nsub;
-			}
-		}
-	}
-
-	if(!uc_inst){
-		ERRMSG("Unable to locate UNIFAC constants in components DATA");
-		ascfree(comp_nsub);
-		ascfree(sub_syms);
-		return 1;
-	}
-
-	fp = ASC_NEW(AscFpropsUNIFACFlashData);
-	if(!fp){
-		ascfree(comp_nsub);
-		ascfree(sub_syms);
-		ERRMSG("Unable to allocate UNIFAC flash package");
-		return 1;
-	}
-	memset(fp, 0, sizeof(*fp));
-	fp->nc = (int)nc_ul;
-	fp->nsub = nsub;
-	fp->components = ASC_NEW_ARRAY(FpropsUNIFACComponentData, nc_ul);
-	fp->subgroups = ASC_NEW_ARRAY(FpropsUNIFACSubgroupData, nsub);
-	fp->sub_index_data = ASC_NEW_ARRAY(int, total_nu);
-	fp->nu_data = ASC_NEW_ARRAY(double, total_nu);
-	fp->a = ASC_NEW_ARRAY(double, ASCFPROPS_UNIFAC_MAX_GROUP * ASCFPROPS_UNIFAC_MAX_GROUP);
-	if(!fp->components || !fp->subgroups || !fp->sub_index_data || !fp->nu_data || !fp->a){
-		asc_unifac_flash_free_data(fp);
-		ascfree(comp_nsub);
-		ascfree(sub_syms);
-		ERRMSG("Unable to allocate UNIFAC flash package storage");
-		return 1;
-	}
-
-	for(i_ul = 0; i_ul < (unsigned long)nsub; ++i_ul){
-		const struct set_t *uc_subgroups = SetAtomList(ChildByChar(uc_inst, AddSymbol("subgroups")));
-		unsigned long pos;
-		struct Instance *group_arr;
-		struct Instance *R_arr;
-		struct Instance *Q_arr;
-		fp->subgroups[i_ul].name = SCP(sub_syms[i_ul]);
-		pos = asc_find_symbol_in_set(uc_subgroups, sub_syms[i_ul]);
-		group_arr = ChildByChar(uc_inst, AddSymbol("group"));
-		R_arr = ChildByChar(uc_inst, AddSymbol("R"));
-		Q_arr = ChildByChar(uc_inst, AddSymbol("Q"));
-		if(!pos || !group_arr || !R_arr || !Q_arr){
-			ERRMSG("Incomplete UNIFAC constants for subgroup '%s'", SCP(sub_syms[i_ul]));
-			asc_unifac_flash_free_data(fp);
-			ascfree(comp_nsub);
-			ascfree(sub_syms);
-			return 1;
-		}
-		fp->subgroups[i_ul].group = (int)GetIntegerAtomValue(InstanceChild(group_arr, pos));
-		fp->subgroups[i_ul].R = RealAtomValue(InstanceChild(R_arr, pos));
-		fp->subgroups[i_ul].Q = RealAtomValue(InstanceChild(Q_arr, pos));
-	}
-
-	for(i_ul = 1; i_ul <= ASCFPROPS_UNIFAC_MAX_GROUP; ++i_ul){
-		struct Instance *row = InstanceChild(ChildByChar(uc_inst, AddSymbol("a")), i_ul);
-		unsigned long j_ul;
-		for(j_ul = 1; j_ul <= ASCFPROPS_UNIFAC_MAX_GROUP; ++j_ul){
-			struct Instance *cell = InstanceChild(row, j_ul);
-			fp->a[(i_ul - 1) * ASCFPROPS_UNIFAC_MAX_GROUP + (j_ul - 1)] = RealAtomValue(cell);
-		}
-	}
-
-	for(i_ul = 1; i_ul <= nc_ul; ++i_ul){
-		symchar *comp_sym = FetchStrMember(components_set, i_ul);
-		struct Instance *compinst = InstanceChild(data_inst, i_ul);
-		const struct set_t *sub_set = SetAtomList(ChildByChar(compinst, AddSymbol("subgroups")));
-		struct Instance *nu_inst = ChildByChar(compinst, AddSymbol("nu"));
-		long vp_corr;
-		unsigned long sub_card = Cardinality(sub_set);
-		double r = 0.0, q = 0.0;
-		FpropsResolvedName resolved_name;
-		FpropsNameResolveStatus resolve_status;
-		const char *comp_name = SCP(comp_sym);
-
-		resolve_status = fprops_name_resolve(comp_name,
-			FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT, "UNIFAC-orig-2003", &resolved_name);
-		if(resolve_status == FPROPS_NAME_RESOLVE_OK && resolved_name.canonical
-				&& resolved_name.canonical->canonical){
-			comp_name = resolved_name.canonical->canonical;
-		}
-		fp->components[i_ul - 1].name = comp_name;
-		if(asc_read_real_child(compinst, "Tc", &fp->components[i_ul - 1].Tc)
-				|| asc_read_real_child(compinst, "Pc", &fp->components[i_ul - 1].Pc)
-				|| asc_read_real_child(compinst, "vpa", &fp->components[i_ul - 1].vpa)
-				|| asc_read_real_child(compinst, "vpb", &fp->components[i_ul - 1].vpb)
-				|| asc_read_real_child(compinst, "vpc", &fp->components[i_ul - 1].vpc)
-				|| asc_read_real_child(compinst, "vpd", &fp->components[i_ul - 1].vpd)
-				|| asc_read_real_child(compinst, "T0", &fp->components[i_ul - 1].T0)
-				|| asc_read_real_child(compinst, "P0", &fp->components[i_ul - 1].P0)
-				|| asc_read_real_child(compinst, "H0", &fp->components[i_ul - 1].H0)
-				|| asc_read_real_child(compinst, "G0", &fp->components[i_ul - 1].G0)
-				|| asc_read_real_child(compinst, "cpvapa", &fp->components[i_ul - 1].cpvapa)
-				|| asc_read_real_child(compinst, "cpvapb", &fp->components[i_ul - 1].cpvapb)
-				|| asc_read_real_child(compinst, "cpvapc", &fp->components[i_ul - 1].cpvapc)
-				|| asc_read_real_child(compinst, "cpvapd", &fp->components[i_ul - 1].cpvapd)
-				|| asc_read_real_child(compinst, "omega", &fp->components[i_ul - 1].omega)
-				|| asc_read_real_child(compinst, "Zc", &fp->components[i_ul - 1].Zc)
-				|| asc_read_real_child(compinst, "Vliq", &fp->components[i_ul - 1].Vliq)
-				|| asc_read_real_child(compinst, "Tliq", &fp->components[i_ul - 1].Tliq)
-				|| asc_read_int_child(compinst, "vp_correlation", &vp_corr)){
-			asc_unifac_flash_free_data(fp);
-			ascfree(comp_nsub);
-			ascfree(sub_syms);
-			return 1;
-		}
-		fp->components[i_ul - 1].vp_correlation = (int)vp_corr;
-		fp->components[i_ul - 1].nsub = (int)sub_card;
-		fp->components[i_ul - 1].sub_index = &fp->sub_index_data[offset];
-		fp->components[i_ul - 1].nu = &fp->nu_data[offset];
-
-		for(k_ul = 1; k_ul <= sub_card; ++k_ul){
-			symchar *sub_sym = FetchStrMember(sub_set, k_ul);
-			int si = asc_unifac_find_subgroup(sub_syms, nsub, sub_sym);
-			double nu;
-			if(si < 0 || !nu_inst){
-				ERRMSG("Incomplete UNIFAC stoichiometry for component '%s' subgroup '%s'",
-					SCP(comp_sym), SCP(sub_sym));
-				asc_unifac_flash_free_data(fp);
-				ascfree(comp_nsub);
-				ascfree(sub_syms);
-				return 1;
-			}
-			nu = (double)GetIntegerAtomValue(InstanceChild(nu_inst, k_ul));
-			fp->sub_index_data[offset + (int)k_ul - 1] = si;
-			fp->nu_data[offset + (int)k_ul - 1] = nu;
-			r += nu * fp->subgroups[si].R;
-			q += nu * fp->subgroups[si].Q;
-		}
-		fp->components[i_ul - 1].r = r;
-		fp->components[i_ul - 1].q = q;
-		offset += (int)sub_card;
-	}
-
-	fp->pkg.nc = fp->nc;
-	fp->pkg.nsub = fp->nsub;
-	fp->pkg.components = fp->components;
-	fp->pkg.subgroups = fp->subgroups;
-	fp->pkg.a = fp->a;
-	fp->mpkg.kind = FPROPS_FLASH_PACKAGE_UNIFAC_IDEAL_VL;
-	fp->mpkg.nc = fp->nc;
-	fp->mpkg.data.unifac_ideal_vl.run = NULL;
-	fp->mpkg.data.unifac_ideal_vl.pkg = &fp->pkg;
-	*outpkg = fp;
-	ascfree(comp_nsub);
-	ascfree(sub_syms);
-	return 0;
-}
-
 static int asc_build_unifac_flash_package_native(struct Instance *cd, AscFpropsUNIFACFlashData **outpkg){
 	struct Instance *components_inst;
 	const struct set_t *components_set;
 	const FpropsUNIFACSourceData *src;
 	AscFpropsUNIFACFlashData *fp = NULL;
 	const char **names = NULL;
+	const char **tokens = NULL;
 	unsigned long nc_ul, i_ul;
 
 	if(!cd || !outpkg){
@@ -923,8 +770,11 @@ static int asc_build_unifac_flash_package_native(struct Instance *cd, AscFpropsU
 		return 1;
 	}
 	names = ASC_NEW_ARRAY(const char *, nc_ul);
-	if(!names){
+	tokens = ASC_NEW_ARRAY(const char *, nc_ul);
+	if(!names || !tokens){
 		ERRMSG("Unable to allocate native UNIFAC component-name list");
+		ascfree(names);
+		ascfree(tokens);
 		return 1;
 	}
 
@@ -938,22 +788,28 @@ static int asc_build_unifac_flash_package_native(struct Instance *cd, AscFpropsU
 
 	for(i_ul = 1; i_ul <= nc_ul; ++i_ul){
 		symchar *comp_sym = FetchStrMember(components_set, i_ul);
-		FpropsResolvedName resolved_name;
-		FpropsNameResolveStatus resolve_status;
 		const char *comp_name = SCP(comp_sym);
-
-		resolve_status = fprops_name_resolve(comp_name,
-			FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT, "UNIFAC-orig-2003", &resolved_name);
-		if(resolve_status == FPROPS_NAME_RESOLVE_OK && resolved_name.canonical
-				&& resolved_name.canonical->canonical){
-			comp_name = resolved_name.canonical->canonical;
+		tokens[i_ul - 1] = comp_name;
+		if(asc_resolve_name_or_error(comp_name, FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT,
+				"UNIFAC-orig-2003", "UNIFAC flash DATA", &comp_name)){
+			asc_unifac_flash_free_data(fp);
+			ascfree(names);
+			ascfree(tokens);
+			return 1;
 		}
 		names[i_ul - 1] = comp_name;
+	}
+	if(asc_check_unique_canonical_names(tokens, names, nc_ul, "UNIFAC flash DATA")){
+		asc_unifac_flash_free_data(fp);
+		ascfree(names);
+		ascfree(tokens);
+		return 1;
 	}
 
 	if(fprops_flash_prepare_unifac(&fp->mpkg, "UNIFAC-orig-2003", names, (int)nc_ul)){
 		asc_unifac_flash_free_data(fp);
 		ascfree(names);
+		ascfree(tokens);
 		ERRMSG("Unable to prepare native UNIFAC flash package");
 		return 1;
 	}
@@ -964,15 +820,12 @@ static int asc_build_unifac_flash_package_native(struct Instance *cd, AscFpropsU
 	}
 	*outpkg = fp;
 	ascfree(names);
+	ascfree(tokens);
 	return 0;
 }
 
 static int asc_build_unifac_flash_package(struct Instance *cd, AscFpropsUNIFACFlashData **outpkg){
-	if(!asc_build_unifac_flash_package_native(cd, outpkg)){
-		return 0;
-	}
-	MSG("native UNIFAC package build failed, falling back to ASCEND instance extraction");
-	return asc_build_unifac_flash_package_from_ascend(cd, outpkg);
+	return asc_build_unifac_flash_package_native(cd, outpkg);
 }
 
 int asc_fprops_flash_prepare(struct BBoxInterp *bbox,

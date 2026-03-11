@@ -8,6 +8,7 @@
 #include "set.h"
 #include "plot.h"
 #include "instanceinterfacedata.h"
+#include <ascend/compiler/simstatus.h>
 
 extern "C"{
 #include <ascend/general/platform.h>
@@ -582,8 +583,12 @@ Instanc::setSymbolValue(const SymChar &sym){
 		ss << "Constant '" << getName().toString() << "' has already been defined.";
 		throw runtime_error(ss.str());
 	}
+	if(isDefined() && getSymbolValue() == sym){
+		return;
+	}
 
 	SetSymbolAtomValue(i,sym.getInternalType());
+	asc_simstatus_mark_dirty(i);
 }
 
 const string
@@ -809,17 +814,29 @@ Instanc::setIncluded(const bool &val){
 
 void
 Instanc::setBoolValue(const bool &val, const unsigned &depth){
+	if(isDefined() && getBoolValue() == val){
+		return;
+	}
 	SetBooleanAtomValue(i, val, depth);
+	asc_simstatus_mark_dirty(i);
 }
 
 void
 Instanc::setIntValue(const long &val, const unsigned &depth){
+	if(isDefined() && getIntValue() == val){
+		return;
+	}
 	SetIntegerAtomValue(i, val, depth);
+	asc_simstatus_mark_dirty(i);
 }
 
 void
 Instanc::setRealValue(const double &val, const unsigned &depth){
+	if(isDefined() && getRealValue() == val){
+		return;
+	}
 	SetRealAtomValue(i,val, depth);
+	asc_simstatus_mark_dirty(i);
 	//ERROR_REPORTER_HERE(ASC_USER_NOTE,"Set %s to %f",getName().toString(),val);
 }
 
@@ -858,6 +875,7 @@ Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &de
 	}
 
 	SetRealAtomValue(i,val,depth);
+	asc_simstatus_mark_dirty(i);
 }
 
 /**
