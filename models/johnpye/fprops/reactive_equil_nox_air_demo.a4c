@@ -5,8 +5,8 @@ PROVIDE "johnpye/fprops/reactive_equil_nox_air_demo.a4c";
 
 (* Simple thermal-NOx equilibrium study for heated humid air.
 
-   This uses a humid-air gas-phase basis that currently converges reliably
-   from about 1100 K upward in the dissociation regime:
+   This uses a humid-air gas-phase basis that now converges reliably
+   from about 300 K upward in the dissociation regime:
      N2, O2, Ar, H2O, CO2, NO, NO2, CO, H2
 
    The present FPROPS Gibbs kernel fails validation when N2O is added to this
@@ -117,6 +117,9 @@ METHODS
 		ambient_RH := 0.5;
 		co2_dry_ppm := 427.24;
 		dry_feed_flow := 1 {mol/s};
+		R.inlet.f['N2'] := dry_feed_flow * (1 - co2_dry_ppm * 1e-6) * 0.78084;
+		R.inlet.f['O2'] := dry_feed_flow * (1 - co2_dry_ppm * 1e-6) * 0.20946;
+		R.inlet.f['Ar'] := dry_feed_flow * (1 - co2_dry_ppm * 1e-6) * 0.00970;
 		R.inlet.f['H2O'] := 0.015 {mol/s};
 		R.inlet.f['CO2'] := 4.3e-4 {mol/s};
 		R.inlet.f['NO'] := 0 {mol/s};
@@ -158,6 +161,12 @@ METHODS
 		SOLVE;
 	END solve_case;
 
+	METHOD reset_for_study_point;
+		DELETE SYSTEM;
+		RUN default_self;
+		RUN specify;
+	END reset_for_study_point;
+
 	METHOD temperature_study;
 		SOLVER QRSlv;
 		OPTION convopt 'RELNOM_SCALE';
@@ -166,6 +175,25 @@ METHODS
 			NOW
 			FILE "nox_air_temperature_study.tsv";
 	END temperature_study;
+
+	METHOD temperature_study_cold;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		STUDY nox_out_ppm, no_out_ppm, no2_out_ppm, co_out_ppm, h2_out_ppm, nox_out, R.Qdot
+			VARY T_reactor FROM 3000 {K} TO 300 {K} STEPS 54
+			NOW
+			FILE "nox_air_temperature_study_cold.tsv";
+	END temperature_study_cold;
+
+	METHOD temperature_study_cold_fresh;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		STUDY nox_out_ppm, no_out_ppm, no2_out_ppm, co_out_ppm, h2_out_ppm, nox_out, R.Qdot
+			VARY T_reactor FROM 3000 {K} TO 300 {K} STEPS 54
+			RUN reset_for_study_point
+			NOW
+			FILE "nox_air_temperature_study_cold_fresh.tsv";
+	END temperature_study_cold_fresh;
 
 	METHOD on_load;
 		RUN default_self;

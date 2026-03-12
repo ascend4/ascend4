@@ -150,6 +150,15 @@ static int eqm_active_trace_enabled(void){
 	return enabled;
 }
 
+static int eqm_alg_trace_enabled(void){
+	static int enabled = -1;
+	if(enabled < 0){
+		const char *v = getenv("FPROPS_EQM_ALG_TRACE");
+		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
+	}
+	return enabled;
+}
+
 static int eqm_mu0_constcp_source(const char *name, const char *source, double T, double P0,
 		double *mu0);
 static int eqm_mu0_shomate_source(const char *name, const char *source, double T, double P0,
@@ -2188,6 +2197,7 @@ static int eqm_reduced_make_interior(const double *n0, const double *N, int ns, 
 		double n_floor, double *z){
 	double *n = NULL;
 	double *p = NULL;
+	const int trace = eqm_alg_trace_enabled();
 	int pass;
 	int iter;
 	int ok = 0;
@@ -2219,6 +2229,13 @@ static int eqm_reduced_make_interior(const double *n0, const double *N, int ns, 
 				z[j] = (j % 2 == 0) ? 1.0 : -1.0;
 			}
 		}
+		if(trace){
+			fprintf(stderr, "FPROPS_EQM_MAKE_INTERIOR pass=%d z0=", pass);
+			for(int j = 0; j < r; ++j){
+				fprintf(stderr, "%s%.17g", j ? "," : "", z[j]);
+			}
+			fprintf(stderr, "\n");
+		}
 		for(iter = 0; iter < 600; ++iter){
 			int imin = 0;
 			double nmin;
@@ -2234,6 +2251,11 @@ static int eqm_reduced_make_interior(const double *n0, const double *N, int ns, 
 				}
 			}
 			if(nmin > n_floor){
+				if(trace){
+					fprintf(stderr,
+						"FPROPS_EQM_MAKE_INTERIOR success pass=%d iter=%d nmin=%.17g n_floor=%.17g\n",
+						pass, iter, nmin, n_floor);
+				}
 				ok = 1;
 				break;
 			}
@@ -2241,7 +2263,21 @@ static int eqm_reduced_make_interior(const double *n0, const double *N, int ns, 
 				p[j] = N[imin * r + j];
 				norm2 += p[j] * p[j];
 			}
+			if(trace && iter < 8){
+				fprintf(stderr,
+					"FPROPS_EQM_MAKE_INTERIOR iter=%d pass=%d imin=%d nmin=%.17g norm2=%.17g n[imin]=%.17g n0[imin]=%.17g p=",
+					iter, pass, imin, nmin, norm2, n[imin], n0[imin]);
+				for(int j = 0; j < r; ++j){
+					fprintf(stderr, "%s%.17g", j ? "," : "", p[j]);
+				}
+				fprintf(stderr, "\n");
+			}
 			if(!(norm2 > 1e-24)){
+				if(trace){
+					fprintf(stderr,
+						"FPROPS_EQM_MAKE_INTERIOR break pass=%d iter=%d reason=small-norm2 imin=%d\n",
+						pass, iter, imin);
+				}
 				break;
 			}
 			for(int i = 0; i < ns; ++i){
@@ -2257,6 +2293,11 @@ static int eqm_reduced_make_interior(const double *n0, const double *N, int ns, 
 				}
 			}
 			if(!(alpha_max > 0.0) || !isfinite(alpha_max)){
+				if(trace){
+					fprintf(stderr,
+						"FPROPS_EQM_MAKE_INTERIOR break pass=%d iter=%d reason=alpha-max alpha_max=%.17g\n",
+						pass, iter, alpha_max);
+				}
 				break;
 			}
 			alpha = (10.0 * n_floor - nmin) / norm2;
@@ -2267,12 +2308,30 @@ static int eqm_reduced_make_interior(const double *n0, const double *N, int ns, 
 				alpha = 0.5 * alpha_max;
 			}
 			if(!(alpha > 1e-16)){
+				if(trace){
+					fprintf(stderr,
+						"FPROPS_EQM_MAKE_INTERIOR break pass=%d iter=%d reason=alpha-small alpha=%.17g alpha_max=%.17g\n",
+						pass, iter, alpha, alpha_max);
+				}
 				break;
+			}
+			if(trace && iter < 8){
+				fprintf(stderr,
+					"FPROPS_EQM_MAKE_INTERIOR step pass=%d iter=%d alpha=%.17g alpha_max=%.17g\n",
+					pass, iter, alpha, alpha_max);
 			}
 			for(int j = 0; j < r; ++j){
 				z[j] += alpha * p[j];
 			}
 		}
+	}
+
+	if(trace && !ok){
+		fprintf(stderr, "FPROPS_EQM_MAKE_INTERIOR failed final_z=");
+		for(int j = 0; j < r; ++j){
+			fprintf(stderr, "%s%.17g", j ? "," : "", z[j]);
+		}
+		fprintf(stderr, "\n");
 	}
 
 	free(n);
@@ -2640,6 +2699,7 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	const double P0 = 1e5;
 	const double grad_tol = 1e-8;
 	const int max_iter = 2000;
+	const int trace = eqm_alg_trace_enabled();
 	double *mu0 = NULL;
 	int *is_condensed = NULL;
 	double *Awork = NULL;
@@ -2659,9 +2719,15 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	int rank = 0;
 	int r = 0;
 	int status = -13;
+	const char *reason = "uninitialized";
 
 	if(!names || !A || !b || !n_out || ns <= 0 || ne <= 0 || !(T > 0.0) || !(P > 0.0)){
 		return -11;
+	}
+	if(trace){
+		fprintf(stderr,
+			"FPROPS_EQM_REDUCED_TRACE enter T=%.17g P=%.17g ns=%d ne=%d n_floor=%.3e n_init=%s\n",
+			T, P, ns, ne, n_floor, n_init ? "yes" : "no");
 	}
 
 	mu0 = (double *)calloc((size_t)ns, sizeof(double));
@@ -2670,14 +2736,17 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	pivots = (int *)calloc((size_t)ne, sizeof(int));
 	if(!mu0 || !is_condensed || !Awork || !pivots){
 		status = -11;
+		reason = "alloc-front";
 		goto cleanup;
 	}
 	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
 		status = -11;
+		reason = "compute-mu0";
 		goto cleanup;
 	}
 	if(!eqm_compute_is_condensed(names, ns, source, is_condensed)){
 		status = -11;
+		reason = "compute-is-condensed";
 		goto cleanup;
 	}
 	for(int i = 0; i < ne * ns; ++i){
@@ -2685,18 +2754,24 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	}
 	eqm_rref(Awork, ne, ns, pivots, &rank);
 	r = ns - rank;
+	if(trace){
+		fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE rank=%d r=%d\n", rank, r);
+	}
 	if(r <= 0){
 		if(!eqm_solve_particular(A, b, ne, ns, n_out)){
 			status = -13;
+			reason = "solve-particular-r0";
 			goto cleanup;
 		}
 		for(int i = 0; i < ns; ++i){
 			if(!(n_out[i] > 0.0) || !isfinite(n_out[i])){
 				status = -13;
+				reason = "nonpositive-r0";
 				goto cleanup;
 			}
 		}
 		status = 0;
+		reason = "success-r0";
 		goto cleanup;
 	}
 
@@ -2714,22 +2789,31 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	dn = (double *)calloc((size_t)ns, sizeof(double));
 	if(!N || !n0 || !n || !n_target || !z || !mu || !grad || !H || !Hsys || !rhs || !dz || !dn){
 		status = -11;
+		reason = "alloc-main";
 		goto cleanup;
 	}
 
 	eqm_fill_nullspace(Awork, ne, ns, pivots, rank, N, r);
 	if(!eqm_solve_particular(A, b, ne, ns, n0)){
 		status = -13;
+		reason = "solve-particular";
 		goto cleanup;
 	}
 	if(r == 1){
 		if(eqm_reduced_solve_r1(n0, N, ns, mu0, is_condensed, T, P, P0, n_floor, n_out)){
 			status = 0;
+			reason = "success-r1";
 			goto cleanup;
+		}
+		if(trace){
+			fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE r1 closed-form path failed, continuing full solve\n");
 		}
 	}
 	eqm_fill_n_est(A, b, ne, ns, n_init, n_target);
 	if(!eqm_reduced_project_ls(n0, N, ns, r, n_target, z)){
+		if(trace){
+			fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE project-ls failed, using z=0\n");
+		}
 		for(int j = 0; j < r; ++j){
 			z[j] = 0.0;
 		}
@@ -2745,9 +2829,13 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 		if(nmin <= n_floor){
 			if(!eqm_reduced_make_interior(n0, N, ns, r, n_floor, z)){
 				status = -13;
+				reason = "make-interior";
 				goto cleanup;
 			}
 			eqm_reduced_compute_n(n0, N, ns, r, z, n);
+		}
+		if(trace){
+			fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE initial nmin=%.17g\n", nmin);
 		}
 	}
 
@@ -2761,6 +2849,7 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 
 		if(!eqm_reduced_eval_obj_mu(n, mu0, is_condensed, ns, T, P, P0, &obj, mu, NULL)){
 			status = -13;
+			reason = "eval-obj-mu";
 			goto cleanup;
 		}
 		for(int j = 0; j < r; ++j){
@@ -2782,7 +2871,12 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 				n_out[i] = n[i];
 			}
 			status = 0;
+			reason = "success-gradtol";
 			goto cleanup;
+		}
+		if(trace && (iter < 5 || iter == max_iter - 1)){
+			fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE iter=%d grad_inf=%.17g obj=%.17g\n",
+				iter, grad_inf, obj);
 		}
 
 		{
@@ -2824,6 +2918,7 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 			}
 			if(!(gdotdz < 0.0)){
 				status = -13;
+				reason = "non-descent";
 				goto cleanup;
 			}
 		}
@@ -2843,6 +2938,7 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 		}
 		if(!(alpha_max > 0.0) || !isfinite(alpha_max)){
 			status = -13;
+			reason = "alpha-max";
 			goto cleanup;
 		}
 		alpha = 1.0;
@@ -2882,13 +2978,19 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 		}
 		if(!accepted){
 			status = -13;
+			reason = "line-search";
 			goto cleanup;
 		}
 	}
 
 	status = -13;
+	reason = "max-iter";
 
 cleanup:
+	if(trace){
+		fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE exit status=%d reason=%s T=%.17g P=%.17g\n",
+			status, reason, T, P);
+	}
 	free(dn);
 	free(dz);
 	free(rhs);
@@ -4072,7 +4174,15 @@ int eqm_solve(const char **names, int ns, int ne, const double *A, const double 
 		return -11;
 	}
 	has_solution_phases = eqm_has_solution_phases(names, ns, source);
+	if(eqm_alg_trace_enabled()){
+		fprintf(stderr,
+			"FPROPS_EQM_ALG_TRACE enter alg=%s T=%.17g P=%.17g has_solution_phases=%d\n",
+			algorithm ? algorithm : "(null)", T, P, has_solution_phases);
+	}
 	if(has_solution_phases && eqm_alg_auto_reduced(algorithm)){
+		if(eqm_alg_trace_enabled()){
+			fprintf(stderr, "FPROPS_EQM_ALG_TRACE auto_reduced redirected to auto due to solution phases\n");
+		}
 		algorithm = "auto";
 	}
 	if(has_solution_phases && eqm_alg_reduced(algorithm)){
@@ -4080,11 +4190,23 @@ int eqm_solve(const char **names, int ns, int ne, const double *A, const double 
 	}
 	if(eqm_alg_auto_reduced(algorithm)){
 		status = eqm_reduced_solve_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
+		if(eqm_alg_trace_enabled()){
+			fprintf(stderr, "FPROPS_EQM_ALG_TRACE auto_reduced reduced_status=%d\n", status);
+		}
 		if(status == 0 && eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
+			if(eqm_alg_trace_enabled()){
+				fprintf(stderr, "FPROPS_EQM_ALG_TRACE auto_reduced accepted reduced solution\n");
+			}
 			return 0;
 		}
 		if(status == 0){
+			if(eqm_alg_trace_enabled()){
+				fprintf(stderr, "FPROPS_EQM_ALG_TRACE auto_reduced reduced solution rejected by validation\n");
+			}
 			status = -13;
+		}
+		if(eqm_alg_trace_enabled()){
+			fprintf(stderr, "FPROPS_EQM_ALG_TRACE auto_reduced falling back to auto\n");
 		}
 		algorithm = "auto";
 	}

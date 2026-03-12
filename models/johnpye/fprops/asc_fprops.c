@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 /* include the external function API from libascend... */
 #include <ascend/compiler/extfunc.h>
@@ -176,6 +177,14 @@ typedef struct{
 	int ns;
 	FpropsRxnPackage *pkg;
 	char *algorithm;
+	char *source;
+	char **names;
+	/* Keep the equilibrium blackbox stateless by default; opt in only when
+	   seed reuse is explicitly being studied. */
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
+	double *last_n;
+	int have_last_n;
+#endif
 } AscFpropsRxnData;
 
 typedef struct{
@@ -189,6 +198,78 @@ typedef struct{
 	double *nu_data;
 	double *a;
 } AscFpropsUNIFACFlashData;
+
+static int asc_fprops_rxn_eqm_trace_enabled(void){
+	static int enabled = -1;
+	if(enabled < 0){
+		const char *v = getenv("ASC_FPROPS_RXN_EQM_TRACE");
+		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
+	}
+	return enabled;
+}
+
+static int asc_fprops_rxn_find_name_index(const AscFpropsRxnData *rxn, const char *name){
+	int i;
+	if(!rxn || !rxn->names || !name){
+		return -1;
+	}
+	for(i = 0; i < rxn->ns; ++i){
+		if(rxn->names[i] && 0 == strcmp(rxn->names[i], name)){
+			return i;
+		}
+	}
+	return -1;
+}
+
+static void asc_fprops_rxn_eqm_trace_report(const AscFpropsRxnData *rxn, double T, double P,
+		const double *inputs_n, int status_pkg, const double *out_pkg,
+		int status_legacy, const double *out_legacy, int bbox_task){
+	static long seq = 0;
+	int i_n2, i_o2, i_ar, i_h2o, i_co2, i_no, i_no2, i_co, i_h2;
+	double inlet_sum = 0.0;
+	int i;
+	if(!asc_fprops_rxn_eqm_trace_enabled() || !rxn){
+		return;
+	}
+	++seq;
+	i_n2 = asc_fprops_rxn_find_name_index(rxn, "nitrogen");
+	i_o2 = asc_fprops_rxn_find_name_index(rxn, "oxygen");
+	i_ar = asc_fprops_rxn_find_name_index(rxn, "argon");
+	i_h2o = asc_fprops_rxn_find_name_index(rxn, "water");
+	i_co2 = asc_fprops_rxn_find_name_index(rxn, "carbondioxide");
+	i_no = asc_fprops_rxn_find_name_index(rxn, "nitric_oxide");
+	i_no2 = asc_fprops_rxn_find_name_index(rxn, "nitrogen_dioxide");
+	i_co = asc_fprops_rxn_find_name_index(rxn, "carbonmonoxide");
+	i_h2 = asc_fprops_rxn_find_name_index(rxn, "hydrogen");
+	for(i = 0; i < rxn->ns; ++i){
+		if(inputs_n && isfinite(inputs_n[i])){
+			inlet_sum += inputs_n[i];
+		}
+	}
+	fprintf(stderr,
+		"ASC_FPROPS_RXN_EQM_TRACE seq=%ld task=%d alg=%s T=%.17g P=%.17g inlet_sum=%.17g"
+		" in[N2]=%.17g in[O2]=%.17g in[Ar]=%.17g in[H2O]=%.17g in[CO2]=%.17g"
+		" pkg_status=%d legacy_status=%d"
+		" pkg[NO]=%.17g pkg[NO2]=%.17g pkg[CO]=%.17g pkg[H2]=%.17g"
+		" legacy[NO]=%.17g legacy[NO2]=%.17g legacy[CO]=%.17g legacy[H2]=%.17g\n",
+		seq, bbox_task, rxn->algorithm ? rxn->algorithm : "(null)", T, P, inlet_sum,
+		(inputs_n && i_n2 >= 0) ? inputs_n[i_n2] : NAN,
+		(inputs_n && i_o2 >= 0) ? inputs_n[i_o2] : NAN,
+		(inputs_n && i_ar >= 0) ? inputs_n[i_ar] : NAN,
+		(inputs_n && i_h2o >= 0) ? inputs_n[i_h2o] : NAN,
+		(inputs_n && i_co2 >= 0) ? inputs_n[i_co2] : NAN,
+		status_pkg, status_legacy,
+		(out_pkg && i_no >= 0) ? out_pkg[i_no] : NAN,
+		(out_pkg && i_no2 >= 0) ? out_pkg[i_no2] : NAN,
+		(out_pkg && i_co >= 0) ? out_pkg[i_co] : NAN,
+		(out_pkg && i_h2 >= 0) ? out_pkg[i_h2] : NAN,
+		(out_legacy && i_no >= 0) ? out_legacy[i_no] : NAN,
+		(out_legacy && i_no2 >= 0) ? out_legacy[i_no2] : NAN,
+		(out_legacy && i_co >= 0) ? out_legacy[i_co] : NAN,
+		(out_legacy && i_h2 >= 0) ? out_legacy[i_h2] : NAN
+	);
+	fflush(stderr);
+}
 
 static const char *asc_name_domain_label(unsigned domains){
 	switch(domains){
@@ -667,8 +748,6 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		free(rxn);
 		return 1;
 	}
-	free(names);
-	free(resolved_names);
 	if(algorithm){
 		rxn->algorithm = ASC_NEW_ARRAY(char, strlen(algorithm) + 1);
 		if(!rxn->algorithm){
@@ -680,6 +759,63 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		strcpy(rxn->algorithm, algorithm);
 	}
 	rxn->ns = (int)ns;
+	rxn->names = ASC_NEW_ARRAY(char *, ns);
+	if(!rxn->names){
+		fprops_rxn_package_free(rxn->pkg);
+		free(rxn->algorithm);
+		free(rxn);
+		ERRMSG("Unable to allocate reactive FPROPS species-name cache");
+		return 1;
+	}
+	for(c = 0; c < ns; ++c){
+		rxn->names[c] = ASC_NEW_ARRAY(char, strlen(names[c]) + 1);
+		if(!rxn->names[c]){
+			while(c > 0){
+				--c;
+				ascfree(rxn->names[c]);
+			}
+			ascfree(rxn->names);
+			fprops_rxn_package_free(rxn->pkg);
+			free(rxn->algorithm);
+			free(rxn);
+			ERRMSG("Unable to copy reactive FPROPS species name");
+			return 1;
+		}
+		strcpy(rxn->names[c], names[c]);
+	}
+	if(source){
+		rxn->source = ASC_NEW_ARRAY(char, strlen(source) + 1);
+		if(!rxn->source){
+			for(c = 0; c < ns; ++c){
+				ascfree(rxn->names[c]);
+			}
+			ascfree(rxn->names);
+			fprops_rxn_package_free(rxn->pkg);
+			free(rxn->algorithm);
+			free(rxn);
+			ERRMSG("Unable to copy reactive FPROPS source string");
+			return 1;
+		}
+		strcpy(rxn->source, source);
+	}
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
+	rxn->last_n = ASC_NEW_ARRAY(double, ns);
+	if(!rxn->last_n){
+		for(c = 0; c < ns; ++c){
+			ascfree(rxn->names[c]);
+		}
+		ascfree(rxn->names);
+		ascfree(rxn->source);
+		fprops_rxn_package_free(rxn->pkg);
+		free(rxn->algorithm);
+		free(rxn);
+		ERRMSG("Unable to allocate reactive FPROPS cached seed vector");
+		return 1;
+	}
+	rxn->have_last_n = 0;
+#endif
+	free(names);
+	free(resolved_names);
 	bbox->user_data = (void *)rxn;
 	return 0;
 }
@@ -721,6 +857,16 @@ void asc_fprops_rxn_final(struct BBoxInterp *bbox){
 	if(rxn->pkg){
 		fprops_rxn_package_free(rxn->pkg);
 	}
+	if(rxn->names){
+		for(int i = 0; i < rxn->ns; ++i){
+			ascfree(rxn->names[i]);
+		}
+		ascfree(rxn->names);
+	}
+	ascfree(rxn->source);
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
+	ascfree(rxn->last_n);
+#endif
 	free(rxn->algorithm);
 	free(rxn);
 	bbox->user_data = NULL;
@@ -1669,7 +1815,13 @@ int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
 	double *n_guess = NULL;
 	const double *n_init = NULL;
 	int status;
+	int status_pkg;
+	int status_legacy_trace = 999;
+	double *legacy_out = NULL;
+	int do_trace = 0;
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
 	int i;
+#endif
 	(void)jacobian;
 
 	if(!bbox || !bbox->user_data){
@@ -1699,8 +1851,16 @@ int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
 	out.H = NAN;
 	out.G = NAN;
 	out.n_out = outputs;
+	do_trace = asc_fprops_rxn_eqm_trace_enabled() && state.T <= 800.0;
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
 	n_guess = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
-	if(n_guess){
+	if(n_guess && rxn->have_last_n && rxn->last_n){
+		for(i = 0; i < rxn->ns; ++i){
+			double ni = rxn->last_n[i];
+			n_guess[i] = (isfinite(ni) && ni > 1e-30) ? ni : 1e-30;
+		}
+		n_init = n_guess;
+	}else if(n_guess){
 		int ok_init = 1;
 		for(i = 0; i < rxn->ns; ++i){
 			if(!isfinite(outputs[i]) || outputs[i] < 0.0){
@@ -1713,14 +1873,56 @@ int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
 			n_init = n_guess;
 		}
 	}
-	status = fprops_rxn_eqm_tpy(rxn->pkg, &state,
-		rxn->algorithm ? rxn->algorithm : "reduced",
+#endif
+	status_pkg = fprops_rxn_eqm_tpy(rxn->pkg, &state,
+		rxn->algorithm ? rxn->algorithm : "auto_reduced",
 		n_init, &out);
+	status = status_pkg;
+	if(do_trace && rxn->names){
+		legacy_out = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
+		if(legacy_out){
+			const char *algorithm = rxn->algorithm ? rxn->algorithm : "auto_reduced";
+			const char *source = rxn->source && rxn->source[0] ? rxn->source : NULL;
+			const char **names_legacy = (const char **)rxn->names;
+			status_legacy_trace = fprops_eqm_tpy(names_legacy, rxn->ns, state.n, source,
+				state.T, state.P, algorithm, NULL, legacy_out);
+		}
+	}
+	if(status != 0 && status != 1 && status != 6 && n_init != NULL){
+		status = fprops_rxn_eqm_tpy(rxn->pkg, &state,
+			rxn->algorithm ? rxn->algorithm : "auto_reduced",
+			NULL, &out);
+	}
+	if(status != 0 && status != 1 && status != 6 && rxn->names){
+		const char *algorithm = rxn->algorithm ? rxn->algorithm : "auto_reduced";
+		const char *source = rxn->source && rxn->source[0] ? rxn->source : NULL;
+		const char **names_legacy = (const char **)rxn->names;
+		status = fprops_eqm_tpy(names_legacy, rxn->ns, state.n, source,
+			state.T, state.P, algorithm, n_init, out.n_out);
+		if(status != 0 && status != 1 && status != 6 && n_init != NULL){
+			status = fprops_eqm_tpy(names_legacy, rxn->ns, state.n, source,
+			state.T, state.P, algorithm, NULL, out.n_out);
+		}
+	}
+	if(do_trace || (asc_fprops_rxn_eqm_trace_enabled() && status != 0 && status != 1 && status != 6)){
+		asc_fprops_rxn_eqm_trace_report(rxn, state.T, state.P, state.n,
+			status_pkg, outputs, status_legacy_trace, legacy_out,
+			bbox ? (int)bbox->task : -1);
+	}
 	ASC_FREE(n_guess);
+	ASC_FREE(legacy_out);
 	if(status != 0 && status != 1 && status != 6){
 		ERRMSG("Reactive FPROPS equilibrium evaluation failed with status %d", status);
 		return status;
 	}
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
+	if(rxn->last_n){
+		for(i = 0; i < rxn->ns; ++i){
+			rxn->last_n[i] = (isfinite(outputs[i]) && outputs[i] > 0.0) ? outputs[i] : 1e-30;
+		}
+		rxn->have_last_n = 1;
+	}
+#endif
 	return 0;
 }
 

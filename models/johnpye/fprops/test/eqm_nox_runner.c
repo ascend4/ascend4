@@ -78,6 +78,23 @@ static const EqmCase CASES[] = {
 		}
 	},
 	{
+		"humid_air_nox_demo",
+		9,
+		{"nitrogen", "oxygen", "argon", "water", "carbondioxide",
+			"nitric_oxide", "nitrogen_dioxide", "carbonmonoxide", "hydrogen"},
+		{
+			0.78050639391839993,
+			0.20937051030959999,
+			0.0096958557720000001,
+			0.015,
+			0.00042724000000000001,
+			0.0,
+			0.0,
+			0.0,
+			0.0
+		}
+	},
+	{
 		"co2_h2o_trace_air",
 		7,
 		{"nitrogen", "oxygen", "argon", "water", "carbondioxide", "carbonmonoxide", "hydrogen"},
@@ -137,6 +154,25 @@ static void print_case_list(void){
 	}
 }
 
+typedef enum RunnerMode{
+	RUNNER_LEGACY_FEEDINIT = 0,
+	RUNNER_PKG_NULLINIT,
+	RUNNER_PKG_FEEDINIT
+} RunnerMode;
+
+static const char *runner_mode_label(RunnerMode mode){
+	switch(mode){
+	case RUNNER_LEGACY_FEEDINIT:
+		return "legacy_feedinit";
+	case RUNNER_PKG_NULLINIT:
+		return "pkg_nullinit";
+	case RUNNER_PKG_FEEDINIT:
+		return "pkg_feedinit";
+	default:
+		return "unknown";
+	}
+}
+
 static double log10Q_simple(const char * const *species, const double *n, int ns, double P,
 		const char *num1, double nu1, const char *num2, double nu2, const char *den){
 	double ntot = 0.0;
@@ -179,7 +215,8 @@ static double log10Q_simple(const char * const *species, const double *n, int ns
 }
 
 static void print_json_result(const EqmCase *C, double T, double P, const char *source,
-		const char *algorithm, int status, const double *n, double H_total){
+		const char *algorithm, const char *runner_mode, int status, const double *n,
+		double H_total){
 	double ntot = 0.0;
 	double y_no = NAN;
 	double y_no2 = NAN;
@@ -190,6 +227,7 @@ static void print_json_result(const EqmCase *C, double T, double P, const char *
 	printf("\"case\":\"%s\"", C->name);
 	printf(",\"source\":\"%s\"", source);
 	printf(",\"algorithm\":\"%s\"", algorithm);
+	printf(",\"runner_mode\":\"%s\"", runner_mode);
 	printf(",\"T\":%.17g", T);
 	printf(",\"P\":%.17g", P);
 	printf(",\"status\":%d", status);
@@ -252,28 +290,72 @@ static void print_json_result(const EqmCase *C, double T, double P, const char *
 	printf("}\n");
 }
 
+static int run_case_once(const EqmCase *C, double T, double P, const char *algorithm,
+		const char *source, RunnerMode mode, FpropsRxnPackage *pkg_reuse){
+	double n[MAX_NS] = {0.0};
+	double H_total = NAN;
+	int status;
+	int i;
+
+	if(mode == RUNNER_LEGACY_FEEDINIT){
+		double y0[MAX_NS] = {0.0};
+		double nsum = 0.0;
+		for(i = 0; i < C->ns; ++i){
+			nsum += C->n0[i];
+		}
+		for(i = 0; i < C->ns; ++i){
+			y0[i] = C->n0[i] / nsum;
+		}
+		status = fprops_eqm_tpy((const char **)C->species, C->ns, y0, source, T, P, algorithm, C->n0, n);
+		if(eqm_status_ok(status)){
+			(void)fprops_mix_h_tpn((const char **)C->species, C->ns, n, source, T, P, &H_total);
+		}
+	}else{
+		FpropsRxnPackage *pkg = pkg_reuse;
+		FpropsRxnTPN state = {T, P, C->n0};
+		FpropsRxnResult out = {-99, NAN, NAN, n};
+		const double *n_init = (mode == RUNNER_PKG_FEEDINIT) ? C->n0 : NULL;
+		int own_pkg = 0;
+		if(!pkg){
+			pkg = fprops_rxn_package_build((const char **)C->species, C->ns, source);
+			own_pkg = 1;
+		}
+		if(!pkg){
+			fprintf(stderr, "Failed to build reactive package\n");
+			return 1;
+		}
+		status = fprops_rxn_eqm_tpy(pkg, &state, algorithm, n_init, &out);
+		if(eqm_status_ok(status)){
+			FpropsRxnTPN state_out = {T, P, n};
+			(void)fprops_rxn_mix_h(pkg, &state_out, &H_total);
+		}
+		if(own_pkg){
+			fprops_rxn_package_free(pkg);
+		}
+	}
+	print_json_result(C, T, P, source, algorithm, runner_mode_label(mode), status, n, H_total);
+	return 0;
+}
+
 int main(int argc, char *argv[]){
 	const EqmCase *C;
 	const char *algorithm = "auto_reduced";
 	const char *source = "Moran and Shapiro";
-	double T;
+	RunnerMode mode = RUNNER_LEGACY_FEEDINIT;
 	double P;
-	double y0[MAX_NS] = {0.0};
-	double n[MAX_NS] = {0.0};
-	double H_total = NAN;
-	double nsum = 0.0;
-	int status;
+	char *temps_arg = NULL;
 	int i;
 
 	if(argc < 4){
-		fprintf(stderr, "USAGE: %s <case|list> <T[K]> <P[Pa]> [algorithm] [source]\n", argv[0]);
+		fprintf(stderr,
+			"USAGE: %s <case|list> <T[K]|T1,T2,...> <P[Pa]> [algorithm] [source] [legacy_feedinit|pkg_nullinit|pkg_feedinit]\n",
+			argv[0]);
 		return 2;
 	}
 	if(0 == strcmp(argv[1], "list")){
 		print_case_list();
 		return 0;
 	}
-	T = atof(argv[2]);
 	P = atof(argv[3]);
 	if(argc >= 5){
 		algorithm = argv[4];
@@ -281,13 +363,25 @@ int main(int argc, char *argv[]){
 	if(argc >= 6){
 		source = argv[5];
 	}
+	if(argc >= 7){
+		if(0 == strcmp(argv[6], "legacy_feedinit")){
+			mode = RUNNER_LEGACY_FEEDINIT;
+		}else if(0 == strcmp(argv[6], "pkg_nullinit")){
+			mode = RUNNER_PKG_NULLINIT;
+		}else if(0 == strcmp(argv[6], "pkg_feedinit")){
+			mode = RUNNER_PKG_FEEDINIT;
+		}else{
+			fprintf(stderr, "Unknown runner mode '%s'\n", argv[6]);
+			return 2;
+		}
+	}
 	C = find_case(argv[1]);
 	if(!C){
 		fprintf(stderr, "Unknown case '%s'\n", argv[1]);
 		return 2;
 	}
-	if(!(T > 0.0) || !(P > 0.0)){
-		fprintf(stderr, "Invalid T/P\n");
+	if(!(P > 0.0)){
+		fprintf(stderr, "Invalid P\n");
 		return 2;
 	}
 	for(i = 0; i < C->ns; ++i){
@@ -295,19 +389,54 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "Invalid feed amount for species %d\n", i);
 			return 2;
 		}
-		nsum += C->n0[i];
 	}
-	if(!(nsum > 0.0) || !isfinite(nsum)){
-		fprintf(stderr, "Invalid feed total\n");
-		return 2;
+	temps_arg = strdup(argv[2]);
+	if(!temps_arg){
+		fprintf(stderr, "Allocation failure\n");
+		return 1;
 	}
-	for(i = 0; i < C->ns; ++i){
-		y0[i] = C->n0[i] / nsum;
+	if(strchr(temps_arg, ',')){
+		FpropsRxnPackage *pkg_reuse = NULL;
+		char *saveptr = NULL;
+		char *tok = strtok_r(temps_arg, ",", &saveptr);
+		if(mode != RUNNER_LEGACY_FEEDINIT){
+			pkg_reuse = fprops_rxn_package_build((const char **)C->species, C->ns, source);
+			if(!pkg_reuse){
+				free(temps_arg);
+				fprintf(stderr, "Failed to build reactive package\n");
+				return 1;
+			}
+		}
+		while(tok){
+			double T = atof(tok);
+			if(!(T > 0.0)){
+				fprintf(stderr, "Invalid T '%s'\n", tok);
+				free(temps_arg);
+				if(pkg_reuse) fprops_rxn_package_free(pkg_reuse);
+				return 2;
+			}
+			if(run_case_once(C, T, P, algorithm, source, mode, pkg_reuse)){
+				free(temps_arg);
+				if(pkg_reuse) fprops_rxn_package_free(pkg_reuse);
+				return 1;
+			}
+			tok = strtok_r(NULL, ",", &saveptr);
+		}
+		if(pkg_reuse){
+			fprops_rxn_package_free(pkg_reuse);
+		}
+	}else{
+		double T = atof(temps_arg);
+		if(!(T > 0.0)){
+			fprintf(stderr, "Invalid T\n");
+			free(temps_arg);
+			return 2;
+		}
+		if(run_case_once(C, T, P, algorithm, source, mode, NULL)){
+			free(temps_arg);
+			return 1;
+		}
 	}
-	status = fprops_eqm_tpy((const char **)C->species, C->ns, y0, source, T, P, algorithm, C->n0, n);
-	if(eqm_status_ok(status)){
-		(void)fprops_mix_h_tpn((const char **)C->species, C->ns, n, source, T, P, &H_total);
-	}
-	print_json_result(C, T, P, source, algorithm, status, n, H_total);
+	free(temps_arg);
 	return 0;
 }
