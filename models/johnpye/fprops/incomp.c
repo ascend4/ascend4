@@ -178,6 +178,19 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	return P;
 }
 
+void incomp_destroy(PureFluid *P){
+	if(!P){
+		return;
+	}
+	if(P->data){
+		FPROPS_FREE(P->data->corr.incomp);
+		P->data->corr.incomp = NULL;
+		FPROPS_FREE(P->data);
+		P->data = NULL;
+	}
+	FPROPS_FREE(P);
+}
+
 
 #define DEFINE_T double T = vals.Tp.T
 #define DEFINE_P double p = vals.Tp.p

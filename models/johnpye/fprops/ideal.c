@@ -128,12 +128,11 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 			ref = &(E->data.helm->ref);
 		}
 		break;
-	default:
-		ERRMSG("Unsupported source data type in ideal_prepare");
-		FPROPS_FREE(P->data);
-		FPROPS_FREE(P);
-		return NULL;
-	}
+		default:
+			ERRMSG("Unsupported source data type in ideal_prepare");
+			ideal_destroy(P);
+			return NULL;
+		}
 
 	/* function pointers... more to come still? */
 #define FN(VAR) P->VAR##_fn = &ideal_##VAR
@@ -158,13 +157,13 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 				{
 					//MSG("TPHG");
 					ReferenceState *ref0 = &(P->data->ref0);
-					if(!isfinite(ref0->data.tphg.T0) || !(ref0->data.tphg.T0 > 0.0)
-							|| !isfinite(ref0->data.tphg.p0) || !(ref0->data.tphg.p0 > 0.0)
-							|| !isfinite(ref0->data.tphg.h0) || !isfinite(ref0->data.tphg.g0)){
-						ERRMSG("Invalid/undefined REF0 TPHG data in ideal_prepare");
-						FPROPS_FREE(P->data); FPROPS_FREE(P);
-						return NULL;
-					}
+						if(!isfinite(ref0->data.tphg.T0) || !(ref0->data.tphg.T0 > 0.0)
+								|| !isfinite(ref0->data.tphg.p0) || !(ref0->data.tphg.p0 > 0.0)
+								|| !isfinite(ref0->data.tphg.h0) || !isfinite(ref0->data.tphg.g0)){
+							ERRMSG("Invalid/undefined REF0 TPHG data in ideal_prepare");
+							ideal_destroy(P);
+							return NULL;
+						}
 					//MSG("T0 = %f, p0 = %f, h0 = %f, g0 = %f",ref0->data.tphg.T0,ref0->data.tphg.p0,ref0->data.tphg.h0,ref0->data.tphg.g0);
 					FpropsError res = FPROPS_NO_ERROR;
 					double rho0 = ref0->data.tphg.p0 / D->R / ref0->data.tphg.T0;
@@ -198,13 +197,13 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 				ReferenceState *ref0 = &(P->data->ref0);
 				FpropsError res = FPROPS_NO_ERROR;
 				double rho0, T0, h0, s0, h1, s1;
-				if(!isfinite(ref0->data.tphs.T0) || !(ref0->data.tphs.T0 > 0.0)
-						|| !isfinite(ref0->data.tphs.p0) || !(ref0->data.tphs.p0 > 0.0)
-						|| !isfinite(ref0->data.tphs.h0) || !isfinite(ref0->data.tphs.s0)){
-					ERRMSG("Invalid/undefined REF0 TPHS0 data in ideal_prepare");
-					FPROPS_FREE(P->data); FPROPS_FREE(P);
-					return NULL;
-				}
+					if(!isfinite(ref0->data.tphs.T0) || !(ref0->data.tphs.T0 > 0.0)
+							|| !isfinite(ref0->data.tphs.p0) || !(ref0->data.tphs.p0 > 0.0)
+							|| !isfinite(ref0->data.tphs.h0) || !isfinite(ref0->data.tphs.s0)){
+						ERRMSG("Invalid/undefined REF0 TPHS0 data in ideal_prepare");
+						ideal_destroy(P);
+						return NULL;
+					}
 				T0 = ref0->data.tphs.T0;
 				rho0 = ref0->data.tphs.p0 / D->R / T0;
 				h0 = ref0->data.tphs.h0;
@@ -214,31 +213,45 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 				P->data->cp0->m = 0;
 				h1 = ideal_h((FluidStateUnion){.Trho={T0, rho0}}, P->data, &res);
 				s1 = ideal_s((FluidStateUnion){.Trho={T0, rho0}}, P->data, &res);
-				if(res){
-					ERRMSG("error %d",res);
-					FPROPS_FREE(P->data); FPROPS_FREE(P);
-					return NULL;
-				}
+					if(res){
+						ERRMSG("error %d",res);
+						ideal_destroy(P);
+						return NULL;
+					}
 				P->data->cp0->c = -(s0 - s1)/D->R;
 				P->data->cp0->m = (h0 - h1)/D->R/P->data->Tstar;
 			}
 			break;
+			default:
+				ERRMSG("Unsupported type of reference state (ref0) in ideal_prepare");
+				ideal_destroy(P);
+				return NULL;
+			}
+			break;
 		default:
-			ERRMSG("Unsupported type of reference state (ref0) in ideal_prepare");
-			FPROPS_FREE(P->data); FPROPS_FREE(P);
+			ERRMSG("Unsupported type of reference state requested in ideal_prepare.\n");
+			ideal_destroy(P);
 			return NULL;
 		}
-		break;
-	default:
-		ERRMSG("Unsupported type of reference state requested in ideal_prepare.\n");
-		FPROPS_FREE(P->data);
-		FPROPS_FREE(P);
-		return NULL;
-	}
 #undef D
 
 	assert(P);
 	return P;
+}
+
+void ideal_destroy(PureFluid *P){
+	if(!P){
+		return;
+	}
+	if(P->data){
+		if(P->data->cp0){
+			cp0_destroy(P->data->cp0);
+			P->data->cp0 = NULL;
+		}
+		FPROPS_FREE(P->data);
+		P->data = NULL;
+	}
+	FPROPS_FREE(P);
 }
 
 #define DEFINE_T double T = vals.Trho.T

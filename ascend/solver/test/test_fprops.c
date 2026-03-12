@@ -26,6 +26,7 @@
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/watchpt.h>
 #include <ascend/compiler/initialize.h>
+#include <ascend/compiler/rel_blackbox.h>
 #include <ascend/compiler/name.h>
 #include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/functype.h>
@@ -47,6 +48,10 @@
 typedef struct SlvReqC_struct{
 	struct Instance *siminst;
 	slv_system_t sys;
+	slv_status_t last_status;
+	int last_solve_result;
+	int last_slv_solve_return;
+	int solve_calls;
 } SlvReqC;
 
 static SlvReqSetSolverFn slvreq_c_set_solver;
@@ -149,10 +154,21 @@ int slvreq_c_set_option(const char *optionname, struct value_t *val, void *user_
 int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 	SlvReqC *S = (SlvReqC *)user_data;
 	int res;
-	if(S->sys==NULL)return SLVREQ_NO_SOLVER_SELECTED;
+	++S->solve_calls;
+	if(S->sys==NULL){
+		S->last_solve_result = SLVREQ_NO_SOLVER_SELECTED;
+		S->last_slv_solve_return = 0;
+		memset(&S->last_status, 0, sizeof(S->last_status));
+		return SLVREQ_NO_SOLVER_SELECTED;
+	}
 
 	res = slv_presolve(S->sys);
-	if(res)return SLVREQ_PRESOLVE_FAIL;
+	if(res){
+		S->last_solve_result = SLVREQ_PRESOLVE_FAIL;
+		S->last_slv_solve_return = 0;
+		slv_get_status(S->sys, &S->last_status);
+		return SLVREQ_PRESOLVE_FAIL;
+	}
 
 	slv_status_t status;
 
@@ -163,10 +179,13 @@ int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 			CONSOLE_DEBUG("slv_solve returned %d",res);
 		}
 	}
+	S->last_slv_solve_return = res;
 
 	slv_get_status(S->sys, &status);
+	S->last_status = status;
 	if(status.ok){
 		CONSOLE_DEBUG("Solver completed OK");
+		S->last_solve_result = 0;
 		return 0;
 	}
 
@@ -178,7 +197,164 @@ int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 	if(status.under_defined)CONSOLE_DEBUG("Solver system is under-defined");
 	if(status.time_limit_exceeded)CONSOLE_DEBUG("Solver exceeded time limit");
 
+	S->last_solve_result = SLVREQ_SOLVE_FAIL;
 	return SLVREQ_SOLVE_FAIL;
+}
+
+static struct Instance *child_by_name(struct Instance *inst, const char *name){
+	struct Instance *child = ChildByChar(inst, AddSymbol(name));
+	CU_ASSERT_FATAL(child != NULL);
+	return child;
+}
+
+static enum Proc_enum run_method(struct Instance *siminst, const char *method){
+	struct Name *name = CreateIdName(AddSymbol(method));
+	return Initialize(GetSimulationRoot(siminst), name, "sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+}
+
+static void destroy_test_simulation(SlvReqC *S){
+	if(!S){
+		return;
+	}
+	CONSOLE_DEBUG("Destroying system...");
+	if(S->sys){
+		system_destroy(S->sys);
+		S->sys = NULL;
+	}
+	system_free_reused_mem();
+	CONSOLE_DEBUG("Destroy solver engines");
+	solver_destroy_engines();
+	CONSOLE_DEBUG("Destroying instance tree");
+	if(S->siminst){
+		sim_destroy(S->siminst);
+		S->siminst = NULL;
+	}
+	Asc_CompilerDestroy();
+}
+
+static void load_fprops_model(const char *modelfile, const char *modelname, SlvReqC *S){
+	int status;
+
+	memset(S, 0, sizeof(*S));
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+
+	Asc_OpenModule(modelfile,&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol(modelname))!=NULL);
+
+	S->siminst = SimsCreateInstance(AddSymbol(modelname), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S->siminst!=NULL);
+
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.user_data = S
+		};
+		slvreq_assign_hooks(S->siminst, &hooks);
+	}
+}
+
+static void test_nox_air_debug_single_point(double T, int expect_success){
+	static const char *modelfile = "johnpye/fprops/reactive_equil_nox_air_demo.a4c";
+	static const char *modelname = "reactive_equil_nox_air_debug";
+	SlvReqC S;
+	struct Instance *root;
+	enum Proc_enum pe;
+	int bbox_before = BlackBoxCacheAlive();
+
+	load_fprops_model(modelfile, modelname, &S);
+	root = GetSimulationRoot(S.siminst);
+	CU_ASSERT_FATAL(root != NULL);
+
+	pe = run_method(S.siminst, "default_self");
+	CU_ASSERT_FATAL(pe == Proc_all_ok);
+	SetRealAtomValue(child_by_name(root, "T_reactor"), T, 0);
+	pe = run_method(S.siminst, "solve_case");
+
+	fprintf(stderr,
+		"NOx ASCEND characterization: T=%.0f pe=%d solve_calls=%d ok=%u ready=%u calc_ok=%u div=%u iterlim=%u over=%u under=%u\n",
+		T, (int)pe, S.solve_calls, S.last_status.ok, S.last_status.ready_to_solve,
+		S.last_status.calc_ok, S.last_status.diverged, S.last_status.iteration_limit_exceeded,
+		S.last_status.over_defined, S.last_status.under_defined);
+
+	if(expect_success){
+		CU_ASSERT(pe == Proc_all_ok);
+		CU_ASSERT_EQUAL(S.last_solve_result, 0);
+		CU_ASSERT_TRUE(S.last_status.ok);
+		CU_ASSERT_TRUE(S.last_status.calc_ok);
+	}else{
+		CU_ASSERT_NOT_EQUAL(S.last_solve_result, 0);
+		CU_ASSERT_FALSE(S.last_status.ok);
+	}
+
+	destroy_test_simulation(&S);
+	CU_ASSERT_EQUAL(BlackBoxCacheAlive(), bbox_before);
+}
+
+static void test_nox_air_debug_1100K(void){
+	test_nox_air_debug_single_point(1100.0, 1);
+}
+
+static void test_nox_air_debug_lowT_fresh_characterization(void){
+	static const double temps[] = {700.0, 650.0, 300.0};
+	static const int expect_success[] = {1, 0, 0};
+	size_t i;
+	for(i = 0; i < sizeof(temps) / sizeof(temps[0]); ++i){
+		test_nox_air_debug_single_point(temps[i], expect_success[i]);
+	}
+}
+
+static void test_nox_air_debug_reuse_descending_pathology(void){
+	static const char *modelfile = "johnpye/fprops/reactive_equil_nox_air_demo.a4c";
+	static const char *modelname = "reactive_equil_nox_air_debug";
+	static const double temps[] = {1100.0, 1000.0, 900.0, 800.0, 700.0, 650.0};
+	SlvReqC S;
+	struct Instance *root;
+	struct Instance *T_reactor;
+	struct Instance *NO2_out;
+	enum Proc_enum pe;
+	double no2_1100 = NAN;
+	double no2_650 = NAN;
+	int solve_ret_650 = 0;
+	size_t i;
+
+	load_fprops_model(modelfile, modelname, &S);
+	root = GetSimulationRoot(S.siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	T_reactor = child_by_name(root, "T_reactor");
+	NO2_out = child_by_name(root, "NO2_out");
+
+	pe = run_method(S.siminst, "default_self");
+	CU_ASSERT_FATAL(pe == Proc_all_ok);
+
+	for(i = 0; i < sizeof(temps) / sizeof(temps[0]); ++i){
+		SetRealAtomValue(T_reactor, temps[i], 0);
+		pe = run_method(S.siminst, "solve_case");
+		fprintf(stderr,
+			"NOx ASCEND reuse characterization: T=%.0f pe=%d solve_calls=%d ok=%u calc_ok=%u div=%u no2=%.17g\n",
+			temps[i], (int)pe, S.solve_calls, S.last_status.ok, S.last_status.calc_ok,
+			S.last_status.diverged, RealAtomValue(NO2_out));
+		if(temps[i] == 1100.0){
+			no2_1100 = RealAtomValue(NO2_out);
+		}
+		if(temps[i] == 650.0){
+			no2_650 = RealAtomValue(NO2_out);
+			solve_ret_650 = S.last_slv_solve_return;
+		}
+	}
+
+	CU_ASSERT_TRUE(isfinite(no2_1100));
+	CU_ASSERT_TRUE(isfinite(no2_650));
+	CU_ASSERT_TRUE(no2_1100 < 1e-3);
+	CU_ASSERT_TRUE(no2_650 > 1e4 * no2_1100);
+	CU_ASSERT_NOT_EQUAL(solve_ret_650, 0);
+
+	destroy_test_simulation(&S);
 }
 
 
@@ -272,7 +448,10 @@ TESTS1(T,X)
 
 #define X
 #define TESTS(T) \
-	TESTS1(T,X)
+	TESTS1(T,X) \
+	X T(nox_air_debug_1100K) \
+	X T(nox_air_debug_lowT_fresh_characterization) \
+	X T(nox_air_debug_reuse_descending_pathology)
 
 REGISTER_TESTS_SIMPLE(solver_fprops, TESTS)
 #undef X

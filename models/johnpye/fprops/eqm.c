@@ -159,6 +159,37 @@ static int eqm_alg_trace_enabled(void){
 	return enabled;
 }
 
+static int eqm_package_trace_enabled(void){
+	static int enabled = -1;
+	if(enabled < 0){
+		const char *v = getenv("FPROPS_EQM_PACKAGE_TRACE");
+		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
+	}
+	return enabled;
+}
+
+static void eqm_package_trace(const char *event, const FpropsRxnPackage *pkg,
+		const FpropsRxnPackage *other, const char **names, int ns){
+	static long seq = 0;
+	const char *first = NULL;
+	if(!eqm_package_trace_enabled()){
+		return;
+	}
+	if(pkg && pkg->ns > 0 && pkg->species && pkg->species[0].name){
+		first = pkg->species[0].name;
+	}else if(names && ns > 0 && names[0]){
+		first = names[0];
+	}else{
+		first = "(none)";
+	}
+	++seq;
+	fprintf(stderr,
+		"FPROPS_EQM_PACKAGE_TRACE seq=%ld event=%s pkg=%p other=%p current=%p ns=%d ne=%d first=%s\n",
+		seq, event ? event : "(null)", (const void *)pkg, (const void *)other,
+		(const void *)eqm_current_package, pkg ? pkg->ns : ns, pkg ? pkg->ne : -1, first);
+	fflush(stderr);
+}
+
 static int eqm_mu0_constcp_source(const char *name, const char *source, double T, double P0,
 		double *mu0);
 static int eqm_mu0_shomate_source(const char *name, const char *source, double T, double P0,
@@ -229,11 +260,13 @@ static int eqm_has_explicit_source(const char *source){
 
 static const FpropsRxnPackage *eqm_package_scope_push(const FpropsRxnPackage *pkg){
 	const FpropsRxnPackage *old = eqm_current_package;
+	eqm_package_trace("scope_push", pkg, old, NULL, 0);
 	eqm_current_package = pkg;
 	return old;
 }
 
 static void eqm_package_scope_pop(const FpropsRxnPackage *old){
+	eqm_package_trace("scope_pop", eqm_current_package, old, NULL, 0);
 	eqm_current_package = old;
 }
 
@@ -661,9 +694,11 @@ int eqm_compute_mu0(const char **names, int ns, const char *source, double T, do
 			break;
 		}
 		if(i == ns){
+			eqm_package_trace("mu0_cache_hit", eqm_current_package, NULL, names, ns);
 			MSG("eqm compute mu0: using cached package thermo for %d species", ns);
 			return 1;
 		}
+		eqm_package_trace("mu0_cache_miss", eqm_current_package, NULL, names, ns);
 		MSG("eqm compute mu0: package cache miss at species %d ('%s'), falling back",
 			i, (i >= 0 && i < ns && names && names[i]) ? names[i] : "(null)");
 	}
@@ -708,9 +743,11 @@ int eqm_compute_is_condensed(const char **names, int ns, const char *source, int
 			is_condensed[i] = eqm_current_package->is_condensed[idx];
 		}
 		if(i == ns){
+			eqm_package_trace("condensed_cache_hit", eqm_current_package, NULL, names, ns);
 			MSG("eqm compute is_condensed: using cached package classification for %d species", ns);
 			return 1;
 		}
+		eqm_package_trace("condensed_cache_miss", eqm_current_package, NULL, names, ns);
 		MSG("eqm compute is_condensed: package cache miss at species %d ('%s'), falling back",
 			i, (i >= 0 && i < ns && names && names[i]) ? names[i] : "(null)");
 	}
@@ -813,11 +850,13 @@ int eqm_compute_solution_phases(const char **names, int ns, const char *source,
 		*solution_member_index_out = solution_member_index;
 		*binary_phases_out = binary_phases;
 		*nbinary_phases_out = eqm_current_package->nbinary_phases;
+		eqm_package_trace("solution_phase_cache_hit", eqm_current_package, NULL, names, ns);
 		MSG("eqm compute solution phases: using cached package phase map (%d phases)",
 			eqm_current_package->nbinary_phases);
 		return 1;
 	}
 	if(eqm_current_package){
+		eqm_package_trace("solution_phase_cache_miss", eqm_current_package, NULL, names, ns);
 		MSG("eqm compute solution phases: package basis mismatch, rebuilding phase map");
 	}
 
@@ -4472,7 +4511,20 @@ FpropsRxnPackage *fprops_rxn_package_build(const char **names, int ns, const cha
 		}
 	}
 	MSG("rxn package build: built package ns=%d ne=%d nbinary=%d", pkg->ns, pkg->ne, pkg->nbinary_phases);
+	eqm_package_trace("package_build", pkg, NULL, (const char **)pkg->names, pkg->ns);
 	return pkg;
+}
+
+int fprops_rxn_package_num_species(const FpropsRxnPackage *pkg){
+	return pkg ? pkg->ns : 0;
+}
+
+int fprops_rxn_package_num_elements(const FpropsRxnPackage *pkg){
+	return pkg ? pkg->ne : 0;
+}
+
+const double *fprops_rxn_package_element_matrix(const FpropsRxnPackage *pkg){
+	return pkg ? pkg->A : NULL;
 }
 
 void fprops_rxn_package_free(FpropsRxnPackage *pkg){
@@ -4480,6 +4532,7 @@ void fprops_rxn_package_free(FpropsRxnPackage *pkg){
 	if(!pkg){
 		return;
 	}
+	eqm_package_trace("package_free", pkg, NULL, (const char **)pkg->names, pkg->ns);
 	if(pkg->species){
 		for(i = 0; i < pkg->ns; ++i){
 			free(pkg->species[i].name);
@@ -4731,6 +4784,142 @@ int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 	return status;
 }
 
+int fprops_rxn_eqm_sensitivities(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
+		const double *n_eq, double *dn_dT, double *dn_dP, double *dn_db){
+	const double P0 = 1e5;
+	const double n_floor = 1e-120;
+	const double R = gas_R();
+	const int m = pkg ? pkg->ns + pkg->ne : 0;
+	double *mu0 = NULL;
+	double *h0 = NULL;
+	double *K = NULL;
+	double *Kwork = NULL;
+	double *rhs = NULL;
+	double ngas = 0.0;
+	double RT;
+	double logPP0;
+	int i, j, e;
+	int status = -11;
+
+	if(!pkg || !state || !state->n || !n_eq || pkg->ns <= 0 || pkg->ne <= 0
+			|| !(state->T > 0.0) || !(state->P > 0.0)){
+		return -11;
+	}
+	if(pkg->nbinary_phases > 0){
+		return -15;
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		if(!(n_eq[i] > 0.0) || !isfinite(n_eq[i])){
+			return -13;
+		}
+		if(pkg->solution_phase_id && pkg->solution_phase_id[i] >= 0){
+			return -15;
+		}
+		if(pkg->is_condensed && pkg->is_condensed[i]){
+			return -15;
+		}
+		if(pkg->species[i].entry_kind != FPROPS_RXN_ENTRY_PURE){
+			return -15;
+		}
+		ngas += n_eq[i];
+	}
+	if(!(ngas > 0.0) || !isfinite(ngas)){
+		return -13;
+	}
+
+	mu0 = (double *)calloc((size_t)pkg->ns, sizeof(double));
+	h0 = (double *)calloc((size_t)pkg->ns, sizeof(double));
+	K = (double *)calloc((size_t)(m * m), sizeof(double));
+	Kwork = (double *)calloc((size_t)(m * m), sizeof(double));
+	rhs = (double *)calloc((size_t)m, sizeof(double));
+	if(!mu0 || !h0 || !K || !Kwork || !rhs){
+		status = -12;
+		goto cleanup;
+	}
+
+	for(i = 0; i < pkg->ns; ++i){
+		if(!eqm_mu0_from_compiled(&pkg->species[i], state->T, P0, &mu0[i])){
+			status = -14;
+			goto cleanup;
+		}
+		if(!eqm_h_from_compiled(&pkg->species[i], state->T, P0, &h0[i])){
+			status = -14;
+			goto cleanup;
+		}
+	}
+
+	RT = R * state->T;
+	logPP0 = log(state->P / P0);
+	for(i = 0; i < pkg->ns; ++i){
+		for(j = 0; j < pkg->ns; ++j){
+			double nij = (i == j) ? 1.0 / fmax(n_eq[i], n_floor) : 0.0;
+			K[i * m + j] = RT * (nij - (1.0 / ngas));
+		}
+		for(e = 0; e < pkg->ne; ++e){
+			double aei = pkg->A[e * pkg->ns + i];
+			K[i * m + (pkg->ns + e)] = aei;
+			K[(pkg->ns + e) * m + i] = aei;
+		}
+	}
+
+	if(dn_dT){
+		memset(rhs, 0, sizeof(double) * (size_t)m);
+		for(i = 0; i < pkg->ns; ++i){
+			double logterm = log(fmax(n_eq[i], n_floor)) - log(ngas) + logPP0;
+			double dmu_dT = (mu0[i] - h0[i]) / state->T + R * logterm;
+			rhs[i] = -dmu_dT;
+		}
+		memcpy(Kwork, K, sizeof(double) * (size_t)(m * m));
+		if(!eqm_dense_solve(Kwork, rhs, m)){
+			status = -13;
+			goto cleanup;
+		}
+		for(i = 0; i < pkg->ns; ++i){
+			dn_dT[i] = rhs[i];
+		}
+	}
+
+	if(dn_dP){
+		memset(rhs, 0, sizeof(double) * (size_t)m);
+		for(i = 0; i < pkg->ns; ++i){
+			rhs[i] = -(RT / state->P);
+		}
+		memcpy(Kwork, K, sizeof(double) * (size_t)(m * m));
+		if(!eqm_dense_solve(Kwork, rhs, m)){
+			status = -13;
+			goto cleanup;
+		}
+		for(i = 0; i < pkg->ns; ++i){
+			dn_dP[i] = rhs[i];
+		}
+	}
+
+	if(dn_db){
+		for(e = 0; e < pkg->ne; ++e){
+			memset(rhs, 0, sizeof(double) * (size_t)m);
+			rhs[pkg->ns + e] = 1.0;
+			memcpy(Kwork, K, sizeof(double) * (size_t)(m * m));
+			if(!eqm_dense_solve(Kwork, rhs, m)){
+				status = -13;
+				goto cleanup;
+			}
+			for(i = 0; i < pkg->ns; ++i){
+				dn_db[i * pkg->ne + e] = rhs[i];
+			}
+		}
+	}
+
+	status = 0;
+
+cleanup:
+	free(mu0);
+	free(h0);
+	free(K);
+	free(Kwork);
+	free(rhs);
+	return status;
+}
+
 int fprops_rxn_eqm_tpb(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 		const double *b, const char *algorithm, const double *n_init, FpropsRxnResult *out){
 	int status;
@@ -4755,6 +4944,7 @@ int fprops_rxn_eqm_tpb(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 	}
 	MSG("rxn eqm tpb: solving ns=%d ne=%d T=%.17g P=%.17g algorithm='%s'",
 		pkg->ns, ne_use, state->T, state->P, algorithm ? algorithm : "");
+	eqm_package_trace("eqm_tpb_enter", pkg, old_pkg, (const char **)pkg->names, pkg->ns);
 	status = eqm_solve((const char **)pkg->names, pkg->ns, ne_use, A_use, b_use,
 		pkg->source, state->T, state->P, algorithm, n_init, out->n_out);
 	if(A_use != pkg->A){
@@ -4763,6 +4953,7 @@ int fprops_rxn_eqm_tpb(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 	if(b_use != b){
 		free(b_use);
 	}
+	eqm_package_trace("eqm_tpb_exit", pkg, old_pkg, (const char **)pkg->names, pkg->ns);
 	eqm_package_scope_pop(old_pkg);
 	out->status = status;
 	out->H = NAN;

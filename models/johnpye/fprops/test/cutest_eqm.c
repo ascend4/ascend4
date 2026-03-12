@@ -631,6 +631,100 @@ static void test_fprops_rxn_package_eqm_tpy_matches_legacy(void){
 	fprops_rxn_package_free(pkg);
 }
 
+static void test_fprops_rxn_package_eqm_sensitivities_wgs(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const double n_in[] = {1.0, 1.0, 0.0, 0.0};
+	static const double dT = 1e-2;
+	static const double dn = 1e-6;
+	FpropsRxnPackage *pkg = fprops_rxn_package_build(names, ARRAYLEN(names), "Moran and Shapiro");
+	FpropsRxnTPN state;
+	FpropsRxnResult out;
+	double n_eq[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double dn_dT[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double dn_db[ARRAYLEN(names) * 3] = {0.0};
+	double dn_dnin0[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_pm[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_pp[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_in_work[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	const double *A = NULL;
+	int ne = 0;
+	int status;
+	int i;
+	int e;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+	ne = fprops_rxn_package_num_elements(pkg);
+	A = fprops_rxn_package_element_matrix(pkg);
+	CU_ASSERT_TRUE_FATAL(ne > 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(A);
+	state.T = g_eqm.T;
+	state.P = g_eqm.P;
+	state.n = n_in;
+	out.status = -99;
+	out.H = NAN;
+	out.G = NAN;
+	out.n_out = n_eq;
+
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", NULL, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	status = fprops_rxn_eqm_sensitivities(pkg, &state, n_eq, dn_dT, NULL, dn_db);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		double s = 0.0;
+		for(e = 0; e < ne; ++e){
+			s += dn_db[i * ne + e] * A[e * ARRAYLEN(names) + 0];
+		}
+		dn_dnin0[i] = s;
+	}
+
+	state.T = g_eqm.T - dT;
+	out.n_out = n_pm;
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", n_eq, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	state.T = g_eqm.T + dT;
+	out.n_out = n_pp;
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", n_eq, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		double fd_fwd = (n_pp[i] - n_eq[i]) / dT;
+		double fd_bwd = (n_eq[i] - n_pm[i]) / dT;
+		double fd_ctr = (n_pp[i] - n_pm[i]) / (2.0 * dT);
+		double fd_lo = fmin(fd_fwd, fd_bwd);
+		double fd_hi = fmax(fd_fwd, fd_bwd);
+		double tol = 1e-5 + 5e-3 * fmax(fabs(fd_ctr), fabs(dn_dT[i]));
+		CU_ASSERT_TRUE(fabs(fd_ctr - dn_dT[i]) <= tol);
+		CU_ASSERT_TRUE(dn_dT[i] >= fd_lo - tol);
+		CU_ASSERT_TRUE(dn_dT[i] <= fd_hi + tol);
+	}
+
+	memcpy(n_in_work, n_in, sizeof(n_in_work));
+	n_in_work[0] -= dn;
+	state.T = g_eqm.T;
+	state.n = n_in_work;
+	out.n_out = n_pm;
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", n_eq, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	memcpy(n_in_work, n_in, sizeof(n_in_work));
+	n_in_work[0] += dn;
+	state.n = n_in_work;
+	out.n_out = n_pp;
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", n_eq, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		double fd_fwd = (n_pp[i] - n_eq[i]) / dn;
+		double fd_bwd = (n_eq[i] - n_pm[i]) / dn;
+		double fd_ctr = (n_pp[i] - n_pm[i]) / (2.0 * dn);
+		double fd_lo = fmin(fd_fwd, fd_bwd);
+		double fd_hi = fmax(fd_fwd, fd_bwd);
+		double tol = 1e-5 + 5e-3 * fmax(fabs(fd_ctr), fabs(dn_dnin0[i]));
+		CU_ASSERT_TRUE(fabs(fd_ctr - dn_dnin0[i]) <= tol);
+		CU_ASSERT_TRUE(dn_dnin0[i] >= fd_lo - tol);
+		CU_ASSERT_TRUE(dn_dnin0[i] <= fd_hi + tol);
+	}
+
+	fprops_rxn_package_free(pkg);
+}
+
 static void test_eqm_wgs_permutation_invariance(void){
 	static const char *base_names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
 	static const char *base_elements[] = {"C", "O", "H"};
@@ -1196,6 +1290,10 @@ CU_ErrorCode test_register_eqm(void){
 	}
 	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_tpy_matches_legacy",
 			test_fprops_rxn_package_eqm_tpy_matches_legacy)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_sensitivities_wgs",
+			test_fprops_rxn_package_eqm_sensitivities_wgs)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "wgs_permutation_invariance", test_eqm_wgs_permutation_invariance)){

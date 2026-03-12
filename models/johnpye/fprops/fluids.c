@@ -2,6 +2,8 @@
 #include "fluids/fluids_list.h"
 #include "fprops.h"
 #include "helmholtz.h"
+#include "ideal.h"
+#include "incomp.h"
 #include "pengrob.h"
 #include "gibbs_species.h"
 #include "constcp_data.h"
@@ -641,7 +643,11 @@ void fprops_fluid_destroy(PureFluid *P){
 		assert(FPROPS_CUBIC != P->type);
 		break;
 	case FPROPS_IDEAL:
+		ideal_destroy(P);
+		break;
 	case FPROPS_INCOMP:
+		incomp_destroy(P);
+		break;
 	case FPROPS_REDKW:
 	case FPROPS_SOAVE:
 	case FPROPS_MBWR:

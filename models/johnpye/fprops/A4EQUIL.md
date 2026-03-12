@@ -536,6 +536,26 @@ provides the pattern:
 
 Reactive thermodynamics should follow this same pattern.
 
+### 7.0.1 NOx study note on black-box lifetime
+
+The humid-air thermal-NOx demo exposed an important ASCEND integration
+detail: `DELETE SYSTEM` inside an ASCEND `STUDY` does not necessarily
+recreate the reactive black-box object itself. In traced runs, the same
+`BBoxInterp` / `user_data` / prepared `FpropsRxnPackage` survived across
+study points even when the solver system was invalidated and rebuilt.
+
+This means:
+
+- solver-system rebuild and black-box-object rebuild are not identical
+- diagnostics about "state carryover" must distinguish ASCEND extrel
+  cache lifetime from FPROPS seed reuse
+- future debugging hooks should report both black-box lifetime and
+  package lifetime explicitly
+
+For the current `fprops_rxn_eqm_TPn` work, seed reuse inside the wrapper
+should remain opt-in only, because ASCEND already has its own black-box
+cache and lifetime semantics.
+
 ## 7.1 Separate state closure from unit model
 
 The core thermodynamic closure should be independent of reactor type:
@@ -1366,6 +1386,24 @@ The main requirement is that derivative callbacks presented to ASCEND
 must correspond to the physical, unscaled variables at the interface.
 Internal scaling should remain invisible outside the black-box.
 
+### 12.3.1 NOx study note on outer-solver scaling
+
+The NOx demo also showed that ASCEND scaling can visibly distort the
+reported low-temperature path even when the inner equilibrium solve is
+thermodynamically close. With generic `molar_rate` nominals, QRSlv can
+treat trace-species outlet rows as effectively converged while `CO` and
+`H2` are still numerically stale.
+
+However, that was only part of the story:
+
+- better nominals are still worthwhile for outer-solver scaling
+- they did not resolve the actual isolated low-temperature ASCEND failure
+- the remaining blocker was not just residual scaling but derivative
+  failure in the embedded equilibrium black-box
+
+So scaling fixes should be treated as supportive, not primary, for
+`reactor_equil`.
+
 ## 12.4 Reference-state consistency
 
 This is a thermodynamic rather than numerical issue, but it affects
@@ -1442,6 +1480,68 @@ equilibrium solve if implemented carefully, because the same KKT
 structure or factorization can often be reused for multiple right-hand
 sides. They are still nontrivial, but they are much more attractive than
 repeated finite-difference re-solves.
+
+### 13.2.1 NOx study findings
+
+The humid-air NOx case now provides a concrete regression for derivative
+strategy.
+
+What was observed:
+
+- direct FPROPS equilibrium solves on the same gas basis can succeed to
+  `300 K`
+- the ASCEND-wrapped `fprops_rxn_eqm_TPn` path can still fail at
+  isolated cold points, even in a fresh simulation and without study
+  continuation
+- the wrapper currently provides no derivative callback, so QRSlv uses
+  finite-difference gradients for the equilibrium black-box
+- those finite-difference perturbations regularly drive the black-box
+  into rejected or invalid nearby states (`status 2`, `-13`, etc),
+  producing rank defects and unpivoted `eqm_closure` rows in the outer
+  solve
+
+This investigation therefore upgraded derivative support from
+"important later work" to "first-order requirement for robust ASCEND
+embedding" for equilibrium closures.
+
+It also clarified the structure of the required Jacobian. For a gas-only
+equilibrium closure such as the NOx demo, the natural sensitivities are
+not really with respect to every inlet species independently, but with
+respect to:
+
+- `T`
+- `P`
+- conserved element totals `b`
+
+since inlet-species sensitivities can be recovered from
+`d n_out / d b` via the element matrix.
+
+For a fixed active set, the correct route is:
+
+1. solve equilibrium normally
+2. linearize the reduced KKT conditions about the accepted state
+3. solve for `d z / dT`, `d z / dP`, and `d z / db`
+4. map those back to `d n_out / d(T, P, n_in)`
+
+This should be the preferred first derivative implementation target for
+`fprops_rxn_eqm_TPn`.
+
+### 13.2.2 "Semi-analytic" derivatives
+
+The NOx investigation also clarified what "semi-analytic" should mean in
+this codebase. It should not mean blind finite differences of the whole
+ASCEND black-box. Useful semi-analytic options are:
+
+- analytic KKT linearization with finite-difference only of thermo terms
+  such as `d mu0 / dT`
+- analytic derivatives with respect to element totals/inlet composition,
+  but temporary numerical treatment of `T` and `P` columns
+- derivatives of a regularized interior problem with small mole floors,
+  giving a smooth approximation near active-set boundaries
+
+All of these are much better than finite-differencing the complete
+equilibrium solve from outside, because they preserve the equilibrium
+structure and avoid repeated failed outer perturbation calls.
 
 ## 13.3 KKT linearization
 

@@ -72,6 +72,24 @@ FpropsRxnPackage *fprops_rxn_package_build(const char **names, int ns, const cha
 void fprops_rxn_package_free(FpropsRxnPackage *pkg);
 
 /**
+ * Return the number of species in a compiled reactive package.
+ */
+int fprops_rxn_package_num_species(const FpropsRxnPackage *pkg);
+
+/**
+ * Return the number of conserved elements in a compiled reactive package.
+ */
+int fprops_rxn_package_num_elements(const FpropsRxnPackage *pkg);
+
+/**
+ * Return the package element matrix A in row-major order with shape [ne x ns].
+ *
+ * The returned pointer is owned by the package and remains valid until the
+ * package is freed.
+ */
+const double *fprops_rxn_package_element_matrix(const FpropsRxnPackage *pkg);
+
+/**
  * Solve equilibrium using a compiled reactive package.
  *
  * This is the package-oriented counterpart of fprops_eqm_tpb(...).
@@ -106,6 +124,29 @@ int fprops_rxn_eqm_tpb(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
  */
 int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 		const char *algorithm, const double *n_init, FpropsRxnResult *out);
+
+/**
+ * Compute first sensitivities of an already-solved package equilibrium state.
+ *
+ * This routine currently targets gas-only package equilibria with no
+ * solution-phase members. It linearizes the interior equilibrium KKT
+ * system at the supplied equilibrium composition and returns local
+ * sensitivities with respect to temperature, pressure, and conserved
+ * element totals.
+ *
+ * @param pkg Compiled reactive package.
+ * @param state Input T/P/species-amount state whose conserved element totals
+ *        define the equilibrium problem.
+ * @param n_eq Accepted equilibrium species amounts, length equal to package
+ *        species count.
+ * @param dn_dT Optional output vector, length equal to package species count.
+ * @param dn_dP Optional output vector, length equal to package species count.
+ * @param dn_db Optional output matrix, row-major with shape [ns x ne], where
+ *        `dn_db[i * ne + e] = d n_eq[i] / d b[e]`.
+ * @return 0 on success, negative code on failure or unsupported phase model.
+ */
+int fprops_rxn_eqm_sensitivities(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
+		const double *n_eq, double *dn_dT, double *dn_dP, double *dn_db);
 
 /**
  * Compute total mixture enthalpy using a compiled reactive package.

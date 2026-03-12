@@ -25,6 +25,7 @@
 	enthalpy and entropy scales.
 */
 PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref);
+void ideal_destroy(PureFluid *P);
 
 PropEvalFn2 ideal_p;
 PropEvalFn2 ideal_u;
@@ -43,4 +44,3 @@ SatEvalFn ideal_sat;
 #define HELM_IDEAL_DELTAU(TAU, DELTA, DATA, ERROR) (0)
 
 #endif
-

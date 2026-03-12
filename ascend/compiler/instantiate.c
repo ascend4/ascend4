@@ -5345,7 +5345,6 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   struct for_var_t *fv;
 
   struct BlackBoxCache * common;
-  ExtBBoxInitFunc * init;
   char *context;
   struct Instance *data=NULL, *subject = NULL;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
@@ -5451,7 +5450,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
 
   /* Now create the relations, all with the same common. */
   common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, argListNames, dataName, efunc);
-  common->interp.task = bb_first_call;
+  InitBBox(inst, common);
   context = WriteInstanceNameString(inst, NULL);
 
   /* now set up the for loop index --------------------------------*/
@@ -5493,12 +5492,6 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
 
 /* ------------ */ /* ------------ */
   /* and now for cleaning up shared data. */
-  init = GetInitFunc(efunc);
-  if(init){
-    if( (*init)( &(common->interp), data, arglist) ){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in blackbox initfn");
-    }
-  }
   common->interp.task = bb_none;
   ascfree(context);
   DeleteRefBlackBoxCache(NULL, &common);

@@ -116,6 +116,7 @@ ExtBBoxFinalFunc asc_fprops_unifac_flash_final;
 ExtBBoxFunc fprops_rxn_h_TPn_calc;
 ExtBBoxFunc fprops_rxn_v_TPn_calc;
 ExtBBoxFunc fprops_rxn_eqm_TPn_calc;
+ExtBBoxFunc fprops_rxn_eqm_TPn_deriv;
 ExtBBoxFunc fprops_flash_TPz_calc;
 ExtBBoxFunc fprops_unifac_flash_TPz_calc;
 ExtBBoxFunc fprops_unifac_gamma_Tx_calc;
@@ -206,6 +207,53 @@ static int asc_fprops_rxn_eqm_trace_enabled(void){
 		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
 	}
 	return enabled;
+}
+
+static int asc_fprops_rxn_state_trace_enabled(void){
+	static int enabled = -1;
+	if(enabled < 0){
+		const char *v = getenv("ASC_FPROPS_RXN_STATE_TRACE");
+		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
+	}
+	return enabled;
+}
+
+static void asc_fprops_rxn_state_trace(const char *event, const struct BBoxInterp *bbox,
+		const AscFpropsRxnData *rxn, double T, double P, const double *inputs_n,
+		const double *outputs_n, int status){
+	static long seq = 0;
+	double inlet_sum = 0.0;
+	double outlet_sum = 0.0;
+	int i;
+	if(!asc_fprops_rxn_state_trace_enabled()){
+		return;
+	}
+	++seq;
+	if(rxn && inputs_n){
+		for(i = 0; i < rxn->ns; ++i){
+			if(isfinite(inputs_n[i])){
+				inlet_sum += inputs_n[i];
+			}
+		}
+	}
+	if(rxn && outputs_n){
+		for(i = 0; i < rxn->ns; ++i){
+			if(isfinite(outputs_n[i])){
+				outlet_sum += outputs_n[i];
+			}
+		}
+	}
+	fprintf(stderr,
+		"ASC_FPROPS_RXN_STATE_TRACE seq=%ld event=%s bbox=%p user_data=%p pkg=%p task=%d ns=%d"
+		" T=%.17g P=%.17g inlet_sum=%.17g outlet_sum=%.17g status=%d alg=%s\n",
+		seq, event ? event : "(null)", (void *)bbox, bbox ? bbox->user_data : NULL,
+		(void *)(rxn ? rxn->pkg : NULL), bbox ? (int)bbox->task : -1, rxn ? rxn->ns : -1,
+		T, P, inlet_sum, outlet_sum, status, (rxn && rxn->algorithm) ? rxn->algorithm : "(null)");
+	fflush(stderr);
+}
+
+static int asc_fprops_rxn_eqm_status_ok(int status){
+	return status == 0 || status == 1 || status == 6;
 }
 
 static int asc_fprops_rxn_find_name_index(const AscFpropsRxnData *rxn, const char *name){
@@ -447,7 +495,7 @@ ASC_EXPORT int fprops_register(){
 	result += CreateUserFunctionBlackBox("fprops_rxn_eqm_TPn"
 		, asc_fprops_rxneq_prepare
 		, fprops_rxn_eqm_TPn_calc
-		, (ExtBBoxFunc*)NULL
+		, fprops_rxn_eqm_TPn_deriv
 		, (ExtBBoxFunc*)NULL
 		, asc_fprops_rxn_final
 		, 3,1
@@ -762,7 +810,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	rxn->names = ASC_NEW_ARRAY(char *, ns);
 	if(!rxn->names){
 		fprops_rxn_package_free(rxn->pkg);
-		free(rxn->algorithm);
+		ascfree(rxn->algorithm);
 		free(rxn);
 		ERRMSG("Unable to allocate reactive FPROPS species-name cache");
 		return 1;
@@ -776,7 +824,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 			}
 			ascfree(rxn->names);
 			fprops_rxn_package_free(rxn->pkg);
-			free(rxn->algorithm);
+			ascfree(rxn->algorithm);
 			free(rxn);
 			ERRMSG("Unable to copy reactive FPROPS species name");
 			return 1;
@@ -791,7 +839,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 			}
 			ascfree(rxn->names);
 			fprops_rxn_package_free(rxn->pkg);
-			free(rxn->algorithm);
+			ascfree(rxn->algorithm);
 			free(rxn);
 			ERRMSG("Unable to copy reactive FPROPS source string");
 			return 1;
@@ -807,7 +855,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		ascfree(rxn->names);
 		ascfree(rxn->source);
 		fprops_rxn_package_free(rxn->pkg);
-		free(rxn->algorithm);
+		ascfree(rxn->algorithm);
 		free(rxn);
 		ERRMSG("Unable to allocate reactive FPROPS cached seed vector");
 		return 1;
@@ -817,6 +865,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	free(names);
 	free(resolved_names);
 	bbox->user_data = (void *)rxn;
+	asc_fprops_rxn_state_trace("prepare", bbox, rxn, NAN, NAN, NULL, NULL, 0);
 	return 0;
 }
 
@@ -845,6 +894,7 @@ int asc_fprops_rxneq_prepare(struct BBoxInterp *bbox,
 		asc_fprops_rxn_final(bbox);
 		return 1;
 	}
+	asc_fprops_rxn_state_trace("prepare_eqm", bbox, rxn, NAN, NAN, NULL, NULL, 0);
 	return 0;
 }
 
@@ -854,6 +904,7 @@ void asc_fprops_rxn_final(struct BBoxInterp *bbox){
 		return;
 	}
 	rxn = (AscFpropsRxnData *)bbox->user_data;
+	asc_fprops_rxn_state_trace("final", bbox, rxn, NAN, NAN, NULL, NULL, 0);
 	if(rxn->pkg){
 		fprops_rxn_package_free(rxn->pkg);
 	}
@@ -867,7 +918,7 @@ void asc_fprops_rxn_final(struct BBoxInterp *bbox){
 #ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
 	ascfree(rxn->last_n);
 #endif
-	free(rxn->algorithm);
+	ascfree(rxn->algorithm);
 	free(rxn);
 	bbox->user_data = NULL;
 }
@@ -1804,12 +1855,8 @@ int fprops_rxn_v_TPn_calc(struct BBoxInterp *bbox,
 	return 0;
 }
 
-int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
-		int ninputs, int noutputs,
-		double *inputs, double *outputs,
-		double *jacobian
-){
-	AscFpropsRxnData *rxn;
+static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnData *rxn,
+		int ninputs, int noutputs, double *inputs, double *outputs, int trace_state){
 	FpropsRxnTPN state;
 	FpropsRxnResult out;
 	double *n_guess = NULL;
@@ -1822,14 +1869,8 @@ int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
 #ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
 	int i;
 #endif
-	(void)jacobian;
 
-	if(!bbox || !bbox->user_data){
-		return -5;
-	}
-	rxn = (AscFpropsRxnData *)bbox->user_data;
-	if(!rxn->pkg){
-		ERRMSG("Reactive FPROPS equilibrium blackbox has no prepared package");
+	if(!bbox || !rxn || !rxn->pkg){
 		return -6;
 	}
 	if(ninputs != rxn->ns + 2){
@@ -1852,6 +1893,9 @@ int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
 	out.G = NAN;
 	out.n_out = outputs;
 	do_trace = asc_fprops_rxn_eqm_trace_enabled() && state.T <= 800.0;
+	if(trace_state){
+		asc_fprops_rxn_state_trace("eval_enter", bbox, rxn, state.T, state.P, state.n, NULL, 0);
+	}
 #ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
 	n_guess = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
 	if(n_guess && rxn->have_last_n && rxn->last_n){
@@ -1888,42 +1932,183 @@ int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
 				state.T, state.P, algorithm, NULL, legacy_out);
 		}
 	}
-	if(status != 0 && status != 1 && status != 6 && n_init != NULL){
+	if(!asc_fprops_rxn_eqm_status_ok(status) && n_init != NULL){
 		status = fprops_rxn_eqm_tpy(rxn->pkg, &state,
 			rxn->algorithm ? rxn->algorithm : "auto_reduced",
 			NULL, &out);
 	}
-	if(status != 0 && status != 1 && status != 6 && rxn->names){
+	if(!asc_fprops_rxn_eqm_status_ok(status) && rxn->names){
 		const char *algorithm = rxn->algorithm ? rxn->algorithm : "auto_reduced";
 		const char *source = rxn->source && rxn->source[0] ? rxn->source : NULL;
 		const char **names_legacy = (const char **)rxn->names;
 		status = fprops_eqm_tpy(names_legacy, rxn->ns, state.n, source,
 			state.T, state.P, algorithm, n_init, out.n_out);
-		if(status != 0 && status != 1 && status != 6 && n_init != NULL){
+		if(!asc_fprops_rxn_eqm_status_ok(status) && n_init != NULL){
 			status = fprops_eqm_tpy(names_legacy, rxn->ns, state.n, source,
-			state.T, state.P, algorithm, NULL, out.n_out);
+				state.T, state.P, algorithm, NULL, out.n_out);
 		}
 	}
-	if(do_trace || (asc_fprops_rxn_eqm_trace_enabled() && status != 0 && status != 1 && status != 6)){
+	if(do_trace || (asc_fprops_rxn_eqm_trace_enabled() && !asc_fprops_rxn_eqm_status_ok(status))){
 		asc_fprops_rxn_eqm_trace_report(rxn, state.T, state.P, state.n,
 			status_pkg, outputs, status_legacy_trace, legacy_out,
 			bbox ? (int)bbox->task : -1);
 	}
-	ASC_FREE(n_guess);
-	ASC_FREE(legacy_out);
-	if(status != 0 && status != 1 && status != 6){
-		ERRMSG("Reactive FPROPS equilibrium evaluation failed with status %d", status);
-		return status;
+	if(trace_state){
+		asc_fprops_rxn_state_trace("eval_exit", bbox, rxn, state.T, state.P, state.n, outputs, status);
 	}
 #ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
-	if(rxn->last_n){
+	if(asc_fprops_rxn_eqm_status_ok(status) && rxn->last_n){
 		for(i = 0; i < rxn->ns; ++i){
 			rxn->last_n[i] = (isfinite(outputs[i]) && outputs[i] > 0.0) ? outputs[i] : 1e-30;
 		}
 		rxn->have_last_n = 1;
 	}
 #endif
+	ASC_FREE(n_guess);
+	ASC_FREE(legacy_out);
+	return status;
+}
+
+static int asc_fprops_rxn_eqm_fd_jacobian(struct BBoxInterp *bbox, AscFpropsRxnData *rxn,
+		int ninputs, int noutputs, const double *inputs, const double *outputs, double *jacobian){
+	double *inputs_work = NULL;
+	double *outputs_work = NULL;
+	int j;
+
+	if(!bbox || !rxn || !inputs || !outputs || !jacobian){
+		return -11;
+	}
+	inputs_work = ASC_NEW_ARRAY(double, (size_t)ninputs);
+	outputs_work = ASC_NEW_ARRAY(double, (size_t)noutputs);
+	if(!inputs_work || !outputs_work){
+		ASC_FREE(inputs_work);
+		ASC_FREE(outputs_work);
+		return -12;
+	}
+	for(j = 0; j < ninputs; ++j){
+		double x = inputs[j];
+		double step = 1e-7 * fmax(fabs(x), 1.0);
+		int status;
+		if(j == 0 || j == 1){
+			if(x + step <= 0.0){
+				step = fmax(1e-7, 0.5 * fmax(x, 1e-7));
+			}
+		}
+		memcpy(inputs_work, inputs, sizeof(double) * (size_t)ninputs);
+		inputs_work[j] = x + step;
+		if((j == 0 || j == 1) && !(inputs_work[j] > 0.0)){
+			inputs_work[j] = fmax(1e-7, x + fabs(step));
+		}
+		status = asc_fprops_rxn_eqm_eval_core(bbox, rxn, ninputs, noutputs,
+			inputs_work, outputs_work, 0);
+		if(!asc_fprops_rxn_eqm_status_ok(status)){
+			ASC_FREE(inputs_work);
+			ASC_FREE(outputs_work);
+			return status;
+		}
+		for(int i = 0; i < noutputs; ++i){
+			jacobian[i * ninputs + j] = (outputs_work[i] - outputs[i]) / (inputs_work[j] - x);
+		}
+	}
+	ASC_FREE(inputs_work);
+	ASC_FREE(outputs_work);
 	return 0;
+}
+
+int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsRxnData *rxn;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn->pkg){
+		ERRMSG("Reactive FPROPS equilibrium blackbox has no prepared package");
+		return -6;
+	}
+	status = asc_fprops_rxn_eqm_eval_core(bbox, rxn, ninputs, noutputs, inputs, outputs, 1);
+	if(!asc_fprops_rxn_eqm_status_ok(status)){
+		ERRMSG("Reactive FPROPS equilibrium evaluation failed with status %d", status);
+		return status;
+	}
+	return 0;
+}
+
+int fprops_rxn_eqm_TPn_deriv(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsRxnData *rxn;
+	FpropsRxnTPN state;
+	double *dn_dT = NULL;
+	double *dn_dP = NULL;
+	double *dn_db = NULL;
+	const double *A = NULL;
+	int ne = 0;
+	int status;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn || !rxn->pkg){
+		return -6;
+	}
+	if(!jacobian){
+		return -3;
+	}
+	status = asc_fprops_rxn_eqm_eval_core(bbox, rxn, ninputs, noutputs, inputs, outputs, 0);
+	if(!asc_fprops_rxn_eqm_status_ok(status)){
+		return status;
+	}
+
+	ne = fprops_rxn_package_num_elements(rxn->pkg);
+	A = fprops_rxn_package_element_matrix(rxn->pkg);
+	if(ne <= 0 || !A){
+		return asc_fprops_rxn_eqm_fd_jacobian(bbox, rxn, ninputs, noutputs, inputs, outputs, jacobian);
+	}
+
+	dn_dT = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
+	dn_dP = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
+	dn_db = ASC_NEW_ARRAY(double, (size_t)(rxn->ns * ne));
+	if(!dn_dT || !dn_dP || !dn_db){
+		ASC_FREE(dn_dT);
+		ASC_FREE(dn_dP);
+		ASC_FREE(dn_db);
+		return -12;
+	}
+
+	state.T = inputs[0];
+	state.P = inputs[1];
+	state.n = &inputs[2];
+	status = fprops_rxn_eqm_sensitivities(rxn->pkg, &state, outputs, dn_dT, dn_dP, dn_db);
+	if(status == 0){
+		for(int i = 0; i < rxn->ns; ++i){
+			jacobian[i * ninputs + 0] = dn_dT[i];
+			jacobian[i * ninputs + 1] = dn_dP[i];
+			for(int j = 0; j < rxn->ns; ++j){
+				double s = 0.0;
+				for(int e = 0; e < ne; ++e){
+					s += dn_db[i * ne + e] * A[e * rxn->ns + j];
+				}
+				jacobian[i * ninputs + (2 + j)] = s;
+			}
+		}
+	}else{
+		status = asc_fprops_rxn_eqm_fd_jacobian(bbox, rxn, ninputs, noutputs, inputs, outputs, jacobian);
+	}
+
+	ASC_FREE(dn_dT);
+	ASC_FREE(dn_dP);
+	ASC_FREE(dn_db);
+	return status;
 }
 
 int fprops_flash_TPz_calc(struct BBoxInterp *bbox,

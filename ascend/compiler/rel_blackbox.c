@@ -231,7 +231,14 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r){
 				common->outputs,
 				common->jacobian);
 		if(nok)CONSOLE_DEBUG("Error '%d' returned by external relation '%s' eval.",nok,ExternalFuncName(efunc));
-		common->residCount++;
+		if(!nok){
+			common->residCount++;
+		}
+	}
+	if(nok){
+		/* On evaluation failure, do not read cached/stale outputs. */
+		*res = 1.0e8;
+		return nok;
 	}
 	value = common->outputs[outputIndex];
 
@@ -348,11 +355,19 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 			);
 			if(nok)CONSOLE_DEBUG("Error '%d' returned for finite difference gradient for '%s'.",nok,ExternalFuncName(efunc));		
 		}
-		common->gradCount++;
+		if(!nok){
+			common->gradCount++;
+		}
 	}
 
 	for (k = 0; k < varlistLen; k++) {
 		gradient[k] = 0.0;
+	}
+	if(nok){
+		/* Keep the row finite if caller inspects it despite the error. */
+		k = lhsVar - 1;
+		gradient[k] = 1.0;
+		return nok;
 	}
 
 	/* now compute d(y-yhat)/dx for this row as ( I - dyhat/dx ) */
@@ -380,7 +395,7 @@ struct Instance *BlackBoxGetOutputVar(CONST struct relation *r){
 
 static int g_cbbdcount=0;
 struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common){
-	struct BlackBoxData *b = (struct BlackBoxData *)malloc(sizeof(struct BlackBoxData));
+	struct BlackBoxData *b = (struct BlackBoxData *)ascmalloc(sizeof(struct BlackBoxData));
 	g_cbbdcount++;
 	b->count = g_cbbdcount;
 	assert(common!=NULL);
@@ -540,7 +555,7 @@ struct BlackBoxCache *CreateBlackBoxCache(
 	struct ExternalFunc *efunc
 )
 {
-	struct BlackBoxCache *b = (struct BlackBoxCache *)malloc(sizeof(struct BlackBoxCache));
+	struct BlackBoxCache *b = (struct BlackBoxCache *)ascmalloc(sizeof(struct BlackBoxCache));
 	g_cbbccount++;
 	g_bbccurrent++;
 	b->count = g_cbbccount;
@@ -699,4 +714,3 @@ void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b){
 		*b = NULL;
 	}
 }
-
