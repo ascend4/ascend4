@@ -556,6 +556,31 @@ For the current `fprops_rxn_eqm_TPn` work, seed reuse inside the wrapper
 should remain opt-in only, because ASCEND already has its own black-box
 cache and lifetime semantics.
 
+### 7.0.2 NOx study note on current-output preload
+
+The NOx work also exposed a second ASCEND runtime detail: the
+`outputs[]` array presented to a black-box callback is cache scratch
+storage, not automatically the current model-variable values.
+
+That mattered because the equilibrium wrapper can legitimately use the
+current outlet composition as a visible local seed, but only if the
+runtime first preloads the cache outputs from the current model state.
+
+The ASCEND-side fix was to let the black-box cache remember its output
+variable instances and preload `common->outputs` before residual and
+derivative evaluation.
+
+This explains an otherwise confusing result from the NOx tests:
+
+- solver-driven `solve_case` at `300 K` can now succeed, because it goes
+  through the cache preload path
+- manual direct callback invocation can still return `status 2` at
+  `300 K`, because that path bypasses the cache preload and does not see
+  the current outlet composition
+
+So this is not a thermodynamic inconsistency. It is an ASCEND runtime
+context distinction.
+
 ## 7.1 Separate state closure from unit model
 
 The core thermodynamic closure should be independent of reactor type:
@@ -1394,12 +1419,30 @@ thermodynamically close. With generic `molar_rate` nominals, QRSlv can
 treat trace-species outlet rows as effectively converged while `CO` and
 `H2` are still numerically stale.
 
-However, that was only part of the story:
+The newer NOx characterization sharpens this further. After the
+black-box lifetime fixes and current-output preload fix, fresh ASCEND
+single-point solves now work down to `300 K`. But repeated
+same-simulation solves can still plateau below about `600 K` on stale
+trace-species values even while QRSlv reports success.
+
+For this case, the change from one cold point to the next is of order
+`1e-7 mol/s`, which is close to the effective feasibility scale implied
+by the generic `molar_rate` nominal. A temporary demo-level nominal
+experiment confirmed that scaling is real:
+
+- tighter trace-species nominals made the repeated path track the direct
+  FPROPS `500 K` and `400 K` values much more closely
+- but that same experiment also exposed a genuine repeated-path `300 K`
+  black-box `status 2` failure
+
+So scaling is one real part of the remaining problem, but not the whole
+problem.
+
+In summary:
 
 - better nominals are still worthwhile for outer-solver scaling
-- they did not resolve the actual isolated low-temperature ASCEND failure
-- the remaining blocker was not just residual scaling but derivative
-  failure in the embedded equilibrium black-box
+- they can materially improve the repeated low-temperature branch
+- they do not, by themselves, guarantee a robust repeated `300 K` solve
 
 So scaling fixes should be treated as supportive, not primary, for
 `reactor_equil`.
@@ -1490,19 +1533,24 @@ What was observed:
 
 - direct FPROPS equilibrium solves on the same gas basis can succeed to
   `300 K`
-- the ASCEND-wrapped `fprops_rxn_eqm_TPn` path can still fail at
-  isolated cold points, even in a fresh simulation and without study
-  continuation
-- the wrapper currently provides no derivative callback, so QRSlv uses
-  finite-difference gradients for the equilibrium black-box
-- those finite-difference perturbations regularly drive the black-box
-  into rejected or invalid nearby states (`status 2`, `-13`, etc),
-  producing rank defects and unpivoted `eqm_closure` rows in the outer
-  solve
+- the old ASCEND path really did suffer from finite-difference-gradient
+  failures in QRSlv
+- analytic first derivatives for the gas-only equilibrium closure are
+  now implemented and validated against forward, backward, and central
+  finite-difference checks
+- that derivative work was worthwhile, but it did not turn out to be the
+  root cause of the remaining low-temperature discrepancy
+- after the wrapper/runtime fixes, fresh ASCEND single-point solves can
+  now also succeed to `300 K`
+- the remaining discrepancy is in repeated low-temperature ASCEND solves,
+  where the reported branch can still be distorted by outer-solver
+  scaling and then, once scaling is tightened, by a remaining `300 K`
+  residual-evaluation failure in the repeated path
 
 This investigation therefore upgraded derivative support from
 "important later work" to "first-order requirement for robust ASCEND
-embedding" for equilibrium closures.
+embedding" for equilibrium closures, but also showed that derivatives
+alone are not a complete explanation of NOx low-temperature behavior.
 
 It also clarified the structure of the required Jacobian. For a gas-only
 equilibrium closure such as the NOx demo, the natural sensitivities are

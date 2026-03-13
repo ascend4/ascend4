@@ -137,6 +137,9 @@ METHODS
 		R.outlet.f['NO2'] := 1e-12 {mol/s};
 		R.outlet.f['CO'] := 1e-9 {mol/s};
 		R.outlet.f['H2'] := 1e-9 {mol/s};
+		(* Trace NOx rows need tighter outer-solver scaling than generic molar_rate. *)
+		R.outlet.f['NO'].nominal := 1e-1 {mol/s};
+		R.outlet.f['NO2'].nominal := 1e-1 {mol/s};
 		R.DeltaP := 0 {Pa};
 	END default_self;
 

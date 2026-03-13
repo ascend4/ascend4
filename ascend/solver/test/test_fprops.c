@@ -511,6 +511,15 @@ static void test_nox_air_debug_reuse_descending_to_300K(void){
 		CU_ASSERT_TRUE(co >= 0.0);
 		CU_ASSERT_TRUE(h2 >= 0.0);
 		CU_ASSERT_TRUE(no2 <= no2_prev + 1e-12);
+		if(temps[i] == 500.0){
+			CU_ASSERT_TRUE(no2 < 5e-8);
+		}
+		if(temps[i] == 400.0){
+			CU_ASSERT_TRUE(no2 < 1e-8);
+		}
+		if(temps[i] == 300.0){
+			CU_ASSERT_TRUE(no2 < 1e-9);
+		}
 		no2_prev = no2;
 	}
 

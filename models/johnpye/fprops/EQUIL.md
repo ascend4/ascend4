@@ -678,6 +678,47 @@ Then polish with full reduced solve.
 
 This is the main reason low-temperature mixed cases (like CO/CO2/H2O/H2/O2) now converge down to 298 K.
 
+### 10.1 NOx study lessons for reduced-space startup
+
+The humid-air NOx gas basis exposed an important extra requirement for
+the reduced-space path: startup must be invariant, or nearly invariant,
+to species ordering.
+
+What was observed during the NOx study:
+
+- the same physical humid-air NOx problem could succeed or fail in
+  `auto_reduced` depending on species order alone
+- this was not a thermodynamic multiplicity issue in the direct solve;
+  it came from the reduced-space construction and boundary startup logic
+- once a first reduced solution was accepted, continuation could still
+  be driven onto different low-temperature branches if the startup basis
+  and active-set seed were poor
+
+The fixes that proved important were:
+
+- choose reduced pivots/basis columns using a target-weighted ordering,
+  not raw species index order
+- compute the particular feasible point `n0` from the chosen pivots, so
+  the reduced map and the pivot structure stay consistent
+- classify active/free species using the same near-boundary
+  complementarity logic used by solution validation, rather than only a
+  small-amount cutoff
+- when `n_init == NULL`, build a deterministic bootstrap composition and
+  feed that into reduced startup instead of treating null-init as "no
+  seed at all"
+- score candidate active-set pivots by post-solve KKT quality/objective,
+  rather than taking the first legal add/drop move
+
+Current FPROPS status for this NOx basis:
+
+- direct package-backed solves for the demo gas basis now succeed to
+  `300 K`
+- warm starts from physically reasonable higher-temperature states do
+  not trap the direct reduced solver on the wrong low-temperature branch
+- the remaining low-temperature discrepancy is no longer in the direct
+  FPROPS equilibrium kernel itself; it is in the ASCEND embedding and
+  outer-solver treatment of the returned trace-species rows
+
 ### 11. Boundary-KKT validation
 
 If strict interior stationarity check fails, we also accept solutions satisfying bound-KKT logic:
@@ -698,6 +739,13 @@ Active-species detection also uses
 $$
 n_i \le \max\left(10^{-60},\,\eta\,n_{\mathrm{tot}}\right), \qquad \eta=10^{-22}.
 $$
+
+For the humid-air NOx work, this validation logic was also used as the
+basis for active/free classification in startup. That is a better guide
+than a raw concentration cutoff, because it is tied to complementarity:
+small positive species can be treated as effectively active only when
+their reduced-gradient sign is also consistent with a boundary KKT
+state.
 
 For the secondary full-space interior-point pathway, see Appendix A.
 

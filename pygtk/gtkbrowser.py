@@ -1257,13 +1257,19 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.tabs[self.currentobservertab].do_add_row()
 
 	def on_copy_observer_matrix_click(self,*args):
-		if self.clip == None:
-			self.clip = Gtk.Clipboard()
-
-		if len(self.observers) <= 0:
+		if self.currentobservertab is None:
 			self.reporter.reportError("No observer defined!")
 			return
-		self.tabs[self.currentpage].copy_to_clipboard(self.clip)
+		if self.clip is None:
+			display = Gdk.Display.get_default()
+			if display is None:
+				self.reporter.reportError("Unable to access the GTK display clipboard")
+				return
+			self.clip = Gtk.Clipboard.get_default(display)
+			if self.clip is None:
+				self.reporter.reportError("Unable to access the system clipboard")
+				return
+		self.tabs[self.currentobservertab].copy_to_clipboard(self.clip)
 
 	def on_use_relation_sharing_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()
