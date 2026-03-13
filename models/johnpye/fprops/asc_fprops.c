@@ -270,8 +270,7 @@ static int asc_fprops_rxn_find_name_index(const AscFpropsRxnData *rxn, const cha
 }
 
 static void asc_fprops_rxn_eqm_trace_report(const AscFpropsRxnData *rxn, double T, double P,
-		const double *inputs_n, int status_pkg, const double *out_pkg,
-		int status_legacy, const double *out_legacy, int bbox_task){
+		const double *inputs_n, int status_pkg, const double *out_pkg, int bbox_task){
 	static long seq = 0;
 	int i_n2, i_o2, i_ar, i_h2o, i_co2, i_no, i_no2, i_co, i_h2;
 	double inlet_sum = 0.0;
@@ -297,24 +296,20 @@ static void asc_fprops_rxn_eqm_trace_report(const AscFpropsRxnData *rxn, double 
 	fprintf(stderr,
 		"ASC_FPROPS_RXN_EQM_TRACE seq=%ld task=%d alg=%s T=%.17g P=%.17g inlet_sum=%.17g"
 		" in[N2]=%.17g in[O2]=%.17g in[Ar]=%.17g in[H2O]=%.17g in[CO2]=%.17g"
-		" pkg_status=%d legacy_status=%d"
+		" pkg_status=%d"
 		" pkg[NO]=%.17g pkg[NO2]=%.17g pkg[CO]=%.17g pkg[H2]=%.17g"
-		" legacy[NO]=%.17g legacy[NO2]=%.17g legacy[CO]=%.17g legacy[H2]=%.17g\n",
+		"\n",
 		seq, bbox_task, rxn->algorithm ? rxn->algorithm : "(null)", T, P, inlet_sum,
 		(inputs_n && i_n2 >= 0) ? inputs_n[i_n2] : NAN,
 		(inputs_n && i_o2 >= 0) ? inputs_n[i_o2] : NAN,
 		(inputs_n && i_ar >= 0) ? inputs_n[i_ar] : NAN,
 		(inputs_n && i_h2o >= 0) ? inputs_n[i_h2o] : NAN,
 		(inputs_n && i_co2 >= 0) ? inputs_n[i_co2] : NAN,
-		status_pkg, status_legacy,
+		status_pkg,
 		(out_pkg && i_no >= 0) ? out_pkg[i_no] : NAN,
 		(out_pkg && i_no2 >= 0) ? out_pkg[i_no2] : NAN,
 		(out_pkg && i_co >= 0) ? out_pkg[i_co] : NAN,
-		(out_pkg && i_h2 >= 0) ? out_pkg[i_h2] : NAN,
-		(out_legacy && i_no >= 0) ? out_legacy[i_no] : NAN,
-		(out_legacy && i_no2 >= 0) ? out_legacy[i_no2] : NAN,
-		(out_legacy && i_co >= 0) ? out_legacy[i_co] : NAN,
-		(out_legacy && i_h2 >= 0) ? out_legacy[i_h2] : NAN
+		(out_pkg && i_h2 >= 0) ? out_pkg[i_h2] : NAN
 	);
 	fflush(stderr);
 }
@@ -921,6 +916,40 @@ void asc_fprops_rxn_final(struct BBoxInterp *bbox){
 	ascfree(rxn->algorithm);
 	free(rxn);
 	bbox->user_data = NULL;
+}
+
+#if defined(__GNUC__)
+__attribute__((visibility("default")))
+#endif
+int asc_fprops_rxn_eqm_debug_fresh_compare(const void *user_data, double T, double P,
+		const double *n_in, double *n_out){
+	const AscFpropsRxnData *rxn = (const AscFpropsRxnData *)user_data;
+	FpropsRxnPackage *pkg = NULL;
+	FpropsRxnTPN state;
+	FpropsRxnResult out;
+	const char *algorithm;
+	const char *source;
+	int status;
+
+	if(!rxn || !rxn->names || !n_in || !n_out || rxn->ns <= 0){
+		return -11;
+	}
+	source = (rxn->source && rxn->source[0]) ? rxn->source : NULL;
+	algorithm = (rxn->algorithm && rxn->algorithm[0]) ? rxn->algorithm : "auto_reduced";
+	pkg = fprops_rxn_package_build((const char **)rxn->names, rxn->ns, source);
+	if(!pkg){
+		return -12;
+	}
+	state.T = T;
+	state.P = P;
+	state.n = n_in;
+	out.status = -99;
+	out.H = NAN;
+	out.G = NAN;
+	out.n_out = n_out;
+	status = fprops_rxn_eqm_tpy(pkg, &state, algorithm, NULL, &out);
+	fprops_rxn_package_free(pkg);
+	return status;
 }
 
 static void asc_unifac_flash_free_data(AscFpropsUNIFACFlashData *fp){
@@ -1862,12 +1891,9 @@ static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnDat
 	double *n_guess = NULL;
 	const double *n_init = NULL;
 	int status;
-	int status_pkg;
-	int status_legacy_trace = 999;
-	double *legacy_out = NULL;
 	int do_trace = 0;
-#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
 	int i;
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
 #endif
 
 	if(!bbox || !rxn || !rxn->pkg){
@@ -1896,15 +1922,17 @@ static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnDat
 	if(trace_state){
 		asc_fprops_rxn_state_trace("eval_enter", bbox, rxn, state.T, state.P, state.n, NULL, 0);
 	}
-#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
 	n_guess = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
 	if(n_guess && rxn->have_last_n && rxn->last_n){
 		for(i = 0; i < rxn->ns; ++i){
 			double ni = rxn->last_n[i];
 			n_guess[i] = (isfinite(ni) && ni > 1e-30) ? ni : 1e-30;
 		}
 		n_init = n_guess;
-	}else if(n_guess){
+	}
+#endif
+	if(n_init == NULL && n_guess && bbox && bbox->task == bb_func_eval){
 		int ok_init = 1;
 		for(i = 0; i < rxn->ns; ++i){
 			if(!isfinite(outputs[i]) || outputs[i] < 0.0){
@@ -1917,41 +1945,17 @@ static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnDat
 			n_init = n_guess;
 		}
 	}
-#endif
-	status_pkg = fprops_rxn_eqm_tpy(rxn->pkg, &state,
+	status = fprops_rxn_eqm_tpy(rxn->pkg, &state,
 		rxn->algorithm ? rxn->algorithm : "auto_reduced",
 		n_init, &out);
-	status = status_pkg;
-	if(do_trace && rxn->names){
-		legacy_out = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
-		if(legacy_out){
-			const char *algorithm = rxn->algorithm ? rxn->algorithm : "auto_reduced";
-			const char *source = rxn->source && rxn->source[0] ? rxn->source : NULL;
-			const char **names_legacy = (const char **)rxn->names;
-			status_legacy_trace = fprops_eqm_tpy(names_legacy, rxn->ns, state.n, source,
-				state.T, state.P, algorithm, NULL, legacy_out);
-		}
-	}
 	if(!asc_fprops_rxn_eqm_status_ok(status) && n_init != NULL){
 		status = fprops_rxn_eqm_tpy(rxn->pkg, &state,
 			rxn->algorithm ? rxn->algorithm : "auto_reduced",
 			NULL, &out);
 	}
-	if(!asc_fprops_rxn_eqm_status_ok(status) && rxn->names){
-		const char *algorithm = rxn->algorithm ? rxn->algorithm : "auto_reduced";
-		const char *source = rxn->source && rxn->source[0] ? rxn->source : NULL;
-		const char **names_legacy = (const char **)rxn->names;
-		status = fprops_eqm_tpy(names_legacy, rxn->ns, state.n, source,
-			state.T, state.P, algorithm, n_init, out.n_out);
-		if(!asc_fprops_rxn_eqm_status_ok(status) && n_init != NULL){
-			status = fprops_eqm_tpy(names_legacy, rxn->ns, state.n, source,
-				state.T, state.P, algorithm, NULL, out.n_out);
-		}
-	}
 	if(do_trace || (asc_fprops_rxn_eqm_trace_enabled() && !asc_fprops_rxn_eqm_status_ok(status))){
-		asc_fprops_rxn_eqm_trace_report(rxn, state.T, state.P, state.n,
-			status_pkg, outputs, status_legacy_trace, legacy_out,
-			bbox ? (int)bbox->task : -1);
+		asc_fprops_rxn_eqm_trace_report(rxn, state.T, state.P, state.n, status,
+			outputs, bbox ? (int)bbox->task : -1);
 	}
 	if(trace_state){
 		asc_fprops_rxn_state_trace("eval_exit", bbox, rxn, state.T, state.P, state.n, outputs, status);
@@ -1965,7 +1969,6 @@ static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnDat
 	}
 #endif
 	ASC_FREE(n_guess);
-	ASC_FREE(legacy_out);
 	return status;
 }
 

@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
+#include <dlfcn.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/ospath.h>
@@ -53,6 +55,17 @@ typedef struct SlvReqC_struct{
 	int last_slv_solve_return;
 	int solve_calls;
 } SlvReqC;
+
+typedef struct TestAscFpropsRxnData_struct{
+	int ns;
+	void *pkg;
+	char *algorithm;
+	char *source;
+	char **names;
+} TestAscFpropsRxnData;
+
+typedef int (*AscFpropsRxnEqmDebugFreshCompareFn)(const void *, double, double,
+		const double *, double *);
 
 static SlvReqSetSolverFn slvreq_c_set_solver;
 static SlvReqSetOptionFn slvreq_c_set_option;
@@ -212,6 +225,91 @@ static enum Proc_enum run_method(struct Instance *siminst, const char *method){
 	return Initialize(GetSimulationRoot(siminst), name, "sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 }
 
+static struct BlackBoxCache *find_blackbox_cache_for_output(struct Instance *var, const char *funcname){
+	unsigned long i, nrels;
+	if(!var || !funcname){
+		return NULL;
+	}
+	nrels = RelationsCount(var);
+	for(i = 1; i <= nrels; ++i){
+		struct Instance *relinst = RelationsForAtom(var, i);
+		enum Expr_enum reltype = e_undefined;
+		CONST struct relation *rel;
+		struct BlackBoxCache *cache;
+		const char *name;
+		if(!relinst || GetInstanceRelationType(relinst) != e_blackbox){
+			continue;
+		}
+		rel = GetInstanceRelation(relinst, &reltype);
+		if(!rel || reltype != e_blackbox){
+			continue;
+		}
+		cache = RelationBlackBoxCache(rel);
+		if(!cache || !cache->efunc){
+			continue;
+		}
+		name = ExternalFuncName(cache->efunc);
+		if(name && 0 == strcmp(name, funcname)){
+			return cache;
+		}
+	}
+	return NULL;
+}
+
+static AscFpropsRxnEqmDebugFreshCompareFn load_rxn_eqm_debug_fresh_compare(void){
+	void *handle;
+	void *sym;
+	handle = dlopen("models/johnpye/fprops/libfprops_ascend.so", RTLD_NOW | RTLD_LOCAL);
+	CU_ASSERT_FATAL(handle != NULL);
+	sym = dlsym(handle, "asc_fprops_rxn_eqm_debug_fresh_compare");
+	CU_ASSERT_FATAL(sym != NULL);
+	return (AscFpropsRxnEqmDebugFreshCompareFn)sym;
+}
+
+static double nox_air_demo_flow_by_name(const char *name){
+	if(!name){
+		return NAN;
+	}
+	if(0 == strcmp(name, "nitrogen")) return 0.7805063939184;
+	if(0 == strcmp(name, "oxygen")) return 0.2093705103096;
+	if(0 == strcmp(name, "argon")) return 0.009695855772;
+	if(0 == strcmp(name, "water")) return 0.015;
+	if(0 == strcmp(name, "carbondioxide")) return 0.00042724;
+	if(0 == strcmp(name, "nitric_oxide")) return 0.0;
+	if(0 == strcmp(name, "nitrogen_dioxide")) return 0.0;
+	if(0 == strcmp(name, "carbonmonoxide")) return 0.0;
+	if(0 == strcmp(name, "hydrogen")) return 0.0;
+	return NAN;
+}
+
+static void fill_nox_air_demo_inputs(const TestAscFpropsRxnData *rxn, double T, double *inputs){
+	int i;
+	CU_ASSERT_FATAL(inputs != NULL);
+	CU_ASSERT_FATAL(rxn != NULL);
+	CU_ASSERT_FATAL(rxn->ns == 9);
+	CU_ASSERT_FATAL(rxn->names != NULL);
+	inputs[0] = T;
+	inputs[1] = 101325.0;
+	for(i = 0; i < rxn->ns; ++i){
+		double ni = nox_air_demo_flow_by_name(rxn->names[i]);
+		CU_ASSERT_FATAL(isfinite(ni));
+		inputs[2 + i] = ni;
+	}
+}
+
+static int find_species_index(const TestAscFpropsRxnData *rxn, const char *name){
+	int i;
+	if(!rxn || !name || !rxn->names){
+		return -1;
+	}
+	for(i = 0; i < rxn->ns; ++i){
+		if(rxn->names[i] && 0 == strcmp(rxn->names[i], name)){
+			return i;
+		}
+	}
+	return -1;
+}
+
 static void destroy_test_simulation(SlvReqC *S){
 	if(!S){
 		return;
@@ -302,7 +400,7 @@ static void test_nox_air_debug_1100K(void){
 
 static void test_nox_air_debug_lowT_fresh_characterization(void){
 	static const double temps[] = {700.0, 650.0, 300.0};
-	static const int expect_success[] = {1, 0, 0};
+	static const int expect_success[] = {1, 1, 1};
 	size_t i;
 	for(i = 0; i < sizeof(temps) / sizeof(temps[0]); ++i){
 		test_nox_air_debug_single_point(temps[i], expect_success[i]);
@@ -351,8 +449,271 @@ static void test_nox_air_debug_reuse_descending_pathology(void){
 	CU_ASSERT_TRUE(isfinite(no2_1100));
 	CU_ASSERT_TRUE(isfinite(no2_650));
 	CU_ASSERT_TRUE(no2_1100 < 1e-3);
-	CU_ASSERT_TRUE(no2_650 > 1e4 * no2_1100);
-	CU_ASSERT_NOT_EQUAL(solve_ret_650, 0);
+	CU_ASSERT_TRUE(no2_650 < no2_1100);
+	CU_ASSERT_TRUE(no2_650 < 1e-5);
+	CU_ASSERT_EQUAL(solve_ret_650, 0);
+
+	destroy_test_simulation(&S);
+}
+
+static void test_nox_air_debug_reuse_descending_to_300K(void){
+	static const char *modelfile = "johnpye/fprops/reactive_equil_nox_air_demo.a4c";
+	static const char *modelname = "reactive_equil_nox_air_debug";
+	static const double temps[] = {1100.0, 1000.0, 900.0, 800.0, 700.0, 650.0, 600.0, 500.0, 400.0, 300.0};
+	SlvReqC S;
+	struct Instance *root;
+	struct Instance *T_reactor;
+	struct Instance *NO_out;
+	struct Instance *NO2_out;
+	struct Instance *CO_out;
+	struct Instance *H2_out;
+	enum Proc_enum pe;
+	size_t i;
+	double no2_prev = HUGE_VAL;
+
+	load_fprops_model(modelfile, modelname, &S);
+	root = GetSimulationRoot(S.siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	T_reactor = child_by_name(root, "T_reactor");
+	NO_out = child_by_name(root, "NO_out");
+	NO2_out = child_by_name(root, "NO2_out");
+	CO_out = child_by_name(root, "CO_out");
+	H2_out = child_by_name(root, "H2_out");
+
+	pe = run_method(S.siminst, "default_self");
+	CU_ASSERT_FATAL(pe == Proc_all_ok);
+
+	for(i = 0; i < sizeof(temps) / sizeof(temps[0]); ++i){
+		double no = NAN;
+		double no2 = NAN;
+		double co = NAN;
+		double h2 = NAN;
+		SetRealAtomValue(T_reactor, temps[i], 0);
+		pe = run_method(S.siminst, "solve_case");
+		no = RealAtomValue(NO_out);
+		no2 = RealAtomValue(NO2_out);
+		co = RealAtomValue(CO_out);
+		h2 = RealAtomValue(H2_out);
+		fprintf(stderr,
+			"NOx ASCEND reuse to 300K: T=%.0f pe=%d solve_calls=%d solve_ret=%d ok=%u calc_ok=%u "
+			"NO=%.17g NO2=%.17g CO=%.17g H2=%.17g\n",
+			temps[i], (int)pe, S.solve_calls, S.last_slv_solve_return,
+			S.last_status.ok, S.last_status.calc_ok, no, no2, co, h2);
+		CU_ASSERT_EQUAL(S.last_slv_solve_return, 0);
+		CU_ASSERT_TRUE(S.last_status.ok);
+		CU_ASSERT_TRUE(S.last_status.calc_ok);
+		CU_ASSERT_TRUE(isfinite(no));
+		CU_ASSERT_TRUE(isfinite(no2));
+		CU_ASSERT_TRUE(isfinite(co));
+		CU_ASSERT_TRUE(isfinite(h2));
+		CU_ASSERT_TRUE(no >= 0.0);
+		CU_ASSERT_TRUE(no2 >= 0.0);
+		CU_ASSERT_TRUE(co >= 0.0);
+		CU_ASSERT_TRUE(h2 >= 0.0);
+		CU_ASSERT_TRUE(no2 <= no2_prev + 1e-12);
+		no2_prev = no2;
+	}
+
+	destroy_test_simulation(&S);
+}
+
+static void test_nox_air_debug_direct_eval_vs_solver_650K(void){
+	static const char *modelfile = "johnpye/fprops/reactive_equil_nox_air_demo.a4c";
+	static const char *modelname = "reactive_equil_nox_air_debug";
+	SlvReqC S;
+	struct Instance *root;
+	struct Instance *NO_out;
+	struct BlackBoxCache *cache;
+	TestAscFpropsRxnData *rxn;
+	AscFpropsRxnEqmDebugFreshCompareFn fresh_compare;
+	ExtBBoxFunc *valuefn;
+	double inputs[11];
+	double outputs_direct[9];
+	double outputs_fresh[9];
+	int status_bbox_predefault;
+	int status_fresh_predefault;
+	int status_bbox_before;
+	int status_fresh_before;
+	enum Request_type old_task;
+	enum Proc_enum pe;
+	int status_bbox_after;
+	int status_fresh_after;
+	int idx_co;
+	int idx_no;
+	int idx_no2;
+	int idx_h2;
+
+	load_fprops_model(modelfile, modelname, &S);
+	root = GetSimulationRoot(S.siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	NO_out = child_by_name(root, "NO_out");
+
+	pe = run_method(S.siminst, "default_self");
+	CU_ASSERT_FATAL(pe == Proc_all_ok);
+
+	cache = find_blackbox_cache_for_output(NO_out, "fprops_rxn_eqm_TPn");
+	CU_ASSERT_FATAL(cache != NULL);
+	CU_ASSERT_FATAL(cache->efunc != NULL);
+	rxn = (TestAscFpropsRxnData *)cache->interp.user_data;
+	CU_ASSERT_FATAL(rxn != NULL);
+	fresh_compare = load_rxn_eqm_debug_fresh_compare();
+	valuefn = cache->efunc->u.black.value;
+	CU_ASSERT_FATAL(valuefn != NULL);
+	idx_co = find_species_index(rxn, "carbonmonoxide");
+	idx_no = find_species_index(rxn, "nitric_oxide");
+	idx_no2 = find_species_index(rxn, "nitrogen_dioxide");
+	idx_h2 = find_species_index(rxn, "hydrogen");
+	CU_ASSERT_FATAL(idx_co >= 0);
+	CU_ASSERT_FATAL(idx_no >= 0);
+	CU_ASSERT_FATAL(idx_no2 >= 0);
+	CU_ASSERT_FATAL(idx_h2 >= 0);
+
+	fill_nox_air_demo_inputs(rxn, 650.0, inputs);
+	old_task = cache->interp.task;
+	cache->interp.task = bb_func_eval;
+	status_bbox_predefault = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
+	cache->interp.task = old_task;
+	status_fresh_predefault = fresh_compare(cache->interp.user_data, 650.0, 101325.0, &inputs[2], outputs_fresh);
+
+	fprintf(stderr,
+		"NOx ASCEND pre-default characterization: bbox_predefault=%d fresh_predefault=%d "
+		"NO2=%.17g fresh_NO2=%.17g CO=%.17g fresh_CO=%.17g\n",
+		status_bbox_predefault, status_fresh_predefault,
+		outputs_direct[idx_no2], outputs_fresh[idx_no2],
+		outputs_direct[idx_co], outputs_fresh[idx_co]);
+
+	old_task = cache->interp.task;
+	cache->interp.task = bb_func_eval;
+	status_bbox_before = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
+	cache->interp.task = old_task;
+	status_fresh_before = fresh_compare(cache->interp.user_data, 650.0, 101325.0, &inputs[2], outputs_fresh);
+
+	fprintf(stderr,
+		"NOx ASCEND direct-eval characterization: bbox_before=%d fresh_before=%d "
+		"NO=%.17g NO2=%.17g CO=%.17g H2=%.17g fresh_NO=%.17g fresh_NO2=%.17g fresh_CO=%.17g fresh_H2=%.17g\n",
+		status_bbox_before, status_fresh_before,
+		outputs_direct[idx_no], outputs_direct[idx_no2], outputs_direct[idx_co], outputs_direct[idx_h2],
+		outputs_fresh[idx_no], outputs_fresh[idx_no2], outputs_fresh[idx_co], outputs_fresh[idx_h2]);
+
+	CU_ASSERT_EQUAL(status_bbox_before, 0);
+	CU_ASSERT_EQUAL(status_fresh_before, 0);
+	CU_ASSERT_EQUAL(status_bbox_predefault, status_bbox_before);
+	CU_ASSERT_EQUAL(status_fresh_predefault, status_fresh_before);
+	CU_ASSERT_TRUE(outputs_direct[idx_no] > 1e-8);
+	CU_ASSERT_TRUE(outputs_direct[idx_no2] > 1e-8);
+	CU_ASSERT_TRUE(outputs_direct[idx_no2] < 1e-4);
+	CU_ASSERT_TRUE(outputs_direct[idx_co] < 1e-12);
+	CU_ASSERT_TRUE(outputs_direct[idx_h2] < 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(outputs_fresh[idx_no], outputs_direct[idx_no], 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(outputs_fresh[idx_no2], outputs_direct[idx_no2], 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(outputs_fresh[idx_co], outputs_direct[idx_co], 1e-18);
+	CU_ASSERT_DOUBLE_EQUAL(outputs_fresh[idx_h2], outputs_direct[idx_h2], 1e-18);
+
+	SetRealAtomValue(child_by_name(root, "T_reactor"), 650.0, 0);
+	pe = run_method(S.siminst, "solve_case");
+
+	cache->interp.task = bb_func_eval;
+	status_bbox_after = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
+	cache->interp.task = old_task;
+	status_fresh_after = fresh_compare(cache->interp.user_data, 650.0, 101325.0, &inputs[2], outputs_fresh);
+
+	fprintf(stderr,
+		"NOx ASCEND direct-eval after solve: pe=%d solve_result=%d ok=%u calc_ok=%u "
+		"bbox_after=%d fresh_after=%d NO2=%.17g fresh_NO2=%.17g\n",
+		(int)pe, S.last_solve_result, S.last_status.ok, S.last_status.calc_ok,
+		status_bbox_after, status_fresh_after, outputs_direct[idx_no2], outputs_fresh[idx_no2]);
+
+	CU_ASSERT_EQUAL(S.last_solve_result, 0);
+	CU_ASSERT_TRUE(S.last_status.ok);
+	CU_ASSERT_TRUE(S.last_status.calc_ok);
+	CU_ASSERT_EQUAL(status_bbox_after, 0);
+	CU_ASSERT_EQUAL(status_fresh_after, 0);
+	CU_ASSERT_TRUE(outputs_direct[idx_no2] > 1e-8);
+	CU_ASSERT_TRUE(outputs_direct[idx_no2] < 1e-4);
+	CU_ASSERT_DOUBLE_EQUAL(outputs_fresh[idx_no2], outputs_direct[idx_no2], 1e-12);
+
+	destroy_test_simulation(&S);
+}
+
+static void test_nox_air_debug_direct_eval_vs_solver_300K(void){
+	static const char *modelfile = "johnpye/fprops/reactive_equil_nox_air_demo.a4c";
+	static const char *modelname = "reactive_equil_nox_air_debug";
+	SlvReqC S;
+	struct Instance *root;
+	struct Instance *NO_out;
+	struct BlackBoxCache *cache;
+	TestAscFpropsRxnData *rxn;
+	AscFpropsRxnEqmDebugFreshCompareFn fresh_compare;
+	ExtBBoxFunc *valuefn;
+	double inputs[11];
+	double outputs_direct[9];
+	double outputs_fresh[9];
+	int status_bbox_before;
+	int status_fresh_before;
+	enum Request_type old_task;
+	enum Proc_enum pe;
+	int status_bbox_after;
+	int status_fresh_after;
+	int idx_no;
+	int idx_no2;
+
+	load_fprops_model(modelfile, modelname, &S);
+	root = GetSimulationRoot(S.siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	NO_out = child_by_name(root, "NO_out");
+
+	pe = run_method(S.siminst, "default_self");
+	CU_ASSERT_FATAL(pe == Proc_all_ok);
+
+	cache = find_blackbox_cache_for_output(NO_out, "fprops_rxn_eqm_TPn");
+	CU_ASSERT_FATAL(cache != NULL);
+	CU_ASSERT_FATAL(cache->efunc != NULL);
+	rxn = (TestAscFpropsRxnData *)cache->interp.user_data;
+	CU_ASSERT_FATAL(rxn != NULL);
+	fresh_compare = load_rxn_eqm_debug_fresh_compare();
+	valuefn = cache->efunc->u.black.value;
+	CU_ASSERT_FATAL(valuefn != NULL);
+	idx_no = find_species_index(rxn, "nitric_oxide");
+	idx_no2 = find_species_index(rxn, "nitrogen_dioxide");
+	CU_ASSERT_FATAL(idx_no >= 0);
+	CU_ASSERT_FATAL(idx_no2 >= 0);
+
+	fill_nox_air_demo_inputs(rxn, 300.0, inputs);
+	old_task = cache->interp.task;
+	cache->interp.task = bb_func_eval;
+	status_bbox_before = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
+	cache->interp.task = old_task;
+	status_fresh_before = fresh_compare(cache->interp.user_data, 300.0, 101325.0, &inputs[2], outputs_fresh);
+
+	fprintf(stderr,
+		"NOx ASCEND direct-eval 300K characterization: bbox_before=%d fresh_before=%d "
+		"NO=%.17g NO2=%.17g fresh_NO=%.17g fresh_NO2=%.17g\n",
+		status_bbox_before, status_fresh_before,
+		outputs_direct[idx_no], outputs_direct[idx_no2],
+		outputs_fresh[idx_no], outputs_fresh[idx_no2]);
+
+	CU_ASSERT_EQUAL(status_bbox_before, 2);
+	CU_ASSERT_EQUAL(status_fresh_before, 2);
+
+	SetRealAtomValue(child_by_name(root, "T_reactor"), 300.0, 0);
+	pe = run_method(S.siminst, "solve_case");
+
+	cache->interp.task = bb_func_eval;
+	status_bbox_after = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
+	cache->interp.task = old_task;
+	status_fresh_after = fresh_compare(cache->interp.user_data, 300.0, 101325.0, &inputs[2], outputs_fresh);
+
+	fprintf(stderr,
+		"NOx ASCEND direct-eval 300K after solve: pe=%d solve_result=%d ok=%u calc_ok=%u "
+		"bbox_after=%d fresh_after=%d\n",
+		(int)pe, S.last_solve_result, S.last_status.ok, S.last_status.calc_ok,
+		status_bbox_after, status_fresh_after);
+
+	CU_ASSERT_EQUAL(S.last_solve_result, 0);
+	CU_ASSERT_TRUE(S.last_status.ok);
+	CU_ASSERT_TRUE(S.last_status.calc_ok);
+	CU_ASSERT_EQUAL(status_bbox_after, 2);
+	CU_ASSERT_EQUAL(status_fresh_after, 2);
 
 	destroy_test_simulation(&S);
 }
@@ -451,7 +812,10 @@ TESTS1(T,X)
 	TESTS1(T,X) \
 	X T(nox_air_debug_1100K) \
 	X T(nox_air_debug_lowT_fresh_characterization) \
-	X T(nox_air_debug_reuse_descending_pathology)
+	X T(nox_air_debug_reuse_descending_pathology) \
+	X T(nox_air_debug_reuse_descending_to_300K) \
+	X T(nox_air_debug_direct_eval_vs_solver_650K) \
+	X T(nox_air_debug_direct_eval_vs_solver_300K)
 
 REGISTER_TESTS_SIMPLE(solver_fprops, TESTS)
 #undef X

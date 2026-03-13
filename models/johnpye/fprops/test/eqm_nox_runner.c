@@ -95,6 +95,23 @@ static const EqmCase CASES[] = {
 		}
 	},
 	{
+		"humid_air_nox_demo_ascorder",
+		9,
+		{"argon", "carbonmonoxide", "carbondioxide", "hydrogen", "water",
+			"nitrogen", "nitric_oxide", "nitrogen_dioxide", "oxygen"},
+		{
+			0.0096958557720000001,
+			0.0,
+			0.00042724000000000001,
+			0.0,
+			0.015,
+			0.78050639391839993,
+			0.0,
+			0.0,
+			0.20937051030959999
+		}
+	},
+	{
 		"co2_h2o_trace_air",
 		7,
 		{"nitrogen", "oxygen", "argon", "water", "carbondioxide", "carbonmonoxide", "hydrogen"},
@@ -157,7 +174,8 @@ static void print_case_list(void){
 typedef enum RunnerMode{
 	RUNNER_LEGACY_FEEDINIT = 0,
 	RUNNER_PKG_NULLINIT,
-	RUNNER_PKG_FEEDINIT
+	RUNNER_PKG_FEEDINIT,
+	RUNNER_PKG_CUSTOMINIT
 } RunnerMode;
 
 static const char *runner_mode_label(RunnerMode mode){
@@ -168,9 +186,43 @@ static const char *runner_mode_label(RunnerMode mode){
 		return "pkg_nullinit";
 	case RUNNER_PKG_FEEDINIT:
 		return "pkg_feedinit";
+	case RUNNER_PKG_CUSTOMINIT:
+		return "pkg_custominit";
 	default:
 		return "unknown";
 	}
+}
+
+static int parse_init_env(const char *envname, int ns, double *n_init){
+	const char *v = getenv(envname);
+	char *buf = NULL;
+	char *tok = NULL;
+	char *saveptr = NULL;
+	int i = 0;
+
+	if(!v || !v[0] || !n_init || ns <= 0){
+		return 0;
+	}
+	buf = strdup(v);
+	if(!buf){
+		return 0;
+	}
+	for(tok = strtok_r(buf, ",", &saveptr); tok; tok = strtok_r(NULL, ",", &saveptr)){
+		char *endptr = NULL;
+		double val;
+		if(i >= ns){
+			free(buf);
+			return 0;
+		}
+		val = strtod(tok, &endptr);
+		if(endptr == tok || !isfinite(val) || val < 0.0){
+			free(buf);
+			return 0;
+		}
+		n_init[i++] = val;
+	}
+	free(buf);
+	return i == ns;
 }
 
 static double log10Q_simple(const char * const *species, const double *n, int ns, double P,
@@ -314,8 +366,18 @@ static int run_case_once(const EqmCase *C, double T, double P, const char *algor
 		FpropsRxnPackage *pkg = pkg_reuse;
 		FpropsRxnTPN state = {T, P, C->n0};
 		FpropsRxnResult out = {-99, NAN, NAN, n};
-		const double *n_init = (mode == RUNNER_PKG_FEEDINIT) ? C->n0 : NULL;
+		double n_init_buf[MAX_NS] = {0.0};
+		const double *n_init = NULL;
 		int own_pkg = 0;
+		if(mode == RUNNER_PKG_FEEDINIT){
+			n_init = C->n0;
+		}else if(mode == RUNNER_PKG_CUSTOMINIT){
+			if(!parse_init_env("EQM_RUNNER_INIT", C->ns, n_init_buf)){
+				fprintf(stderr, "Invalid or missing EQM_RUNNER_INIT for pkg_custominit\n");
+				return 1;
+			}
+			n_init = n_init_buf;
+		}
 		if(!pkg){
 			pkg = fprops_rxn_package_build((const char **)C->species, C->ns, source);
 			own_pkg = 1;
@@ -348,7 +410,7 @@ int main(int argc, char *argv[]){
 
 	if(argc < 4){
 		fprintf(stderr,
-			"USAGE: %s <case|list> <T[K]|T1,T2,...> <P[Pa]> [algorithm] [source] [legacy_feedinit|pkg_nullinit|pkg_feedinit]\n",
+			"USAGE: %s <case|list> <T[K]|T1,T2,...> <P[Pa]> [algorithm] [source] [legacy_feedinit|pkg_nullinit|pkg_feedinit|pkg_custominit]\n",
 			argv[0]);
 		return 2;
 	}
@@ -370,6 +432,8 @@ int main(int argc, char *argv[]){
 			mode = RUNNER_PKG_NULLINIT;
 		}else if(0 == strcmp(argv[6], "pkg_feedinit")){
 			mode = RUNNER_PKG_FEEDINIT;
+		}else if(0 == strcmp(argv[6], "pkg_custominit")){
+			mode = RUNNER_PKG_CUSTOMINIT;
 		}else{
 			fprintf(stderr, "Unknown runner mode '%s'\n", argv[6]);
 			return 2;

@@ -168,6 +168,24 @@ static int eqm_package_trace_enabled(void){
 	return enabled;
 }
 
+static int eqm_basis_trace_enabled(void){
+	static int enabled = -1;
+	if(enabled < 0){
+		const char *v = getenv("FPROPS_EQM_BASIS_TRACE");
+		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
+	}
+	return enabled;
+}
+
+static int eqm_reduced_basis_trace_enabled(void){
+	static int enabled = -1;
+	if(enabled < 0){
+		const char *v = getenv("FPROPS_EQM_REDUCED_BASIS_TRACE");
+		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
+	}
+	return enabled;
+}
+
 static void eqm_package_trace(const char *event, const FpropsRxnPackage *pkg,
 		const FpropsRxnPackage *other, const char **names, int ns){
 	static long seq = 0;
@@ -187,6 +205,115 @@ static void eqm_package_trace(const char *event, const FpropsRxnPackage *pkg,
 		"FPROPS_EQM_PACKAGE_TRACE seq=%ld event=%s pkg=%p other=%p current=%p ns=%d ne=%d first=%s\n",
 		seq, event ? event : "(null)", (const void *)pkg, (const void *)other,
 		(const void *)eqm_current_package, pkg ? pkg->ns : ns, pkg ? pkg->ne : -1, first);
+	fflush(stderr);
+}
+
+static void eqm_basis_trace_dump(const char *tag, const char **names, int ns,
+		const char **elements, int ne, const double *A, const double *b,
+		const double *n_in, const double *n_init, const char *source,
+		const char *algorithm, double T, double P, const void *pkg){
+	int i, e;
+	if(!eqm_basis_trace_enabled()){
+		return;
+	}
+	fprintf(stderr,
+		"FPROPS_EQM_BASIS_TRACE tag=%s pkg=%p current=%p ns=%d ne=%d T=%.17g P=%.17g source=%s algorithm=%s\n",
+		tag ? tag : "(null)", pkg, (const void *)eqm_current_package, ns, ne, T, P,
+		source ? source : "(null)", algorithm ? algorithm : "(null)");
+	if(elements){
+		fprintf(stderr, "FPROPS_EQM_BASIS_TRACE elements=");
+		for(e = 0; e < ne; ++e){
+			fprintf(stderr, "%s%s", e ? "," : "", elements[e] ? elements[e] : "(null)");
+		}
+		fputc('\n', stderr);
+	}
+	for(i = 0; i < ns; ++i){
+		fprintf(stderr, "FPROPS_EQM_BASIS_TRACE species[%d]=%s", i,
+			(names && names[i]) ? names[i] : "(null)");
+		if(n_in){
+			fprintf(stderr, " n_in=%.17g", n_in[i]);
+		}
+		if(n_init){
+			fprintf(stderr, " n_init=%.17g", n_init[i]);
+		}
+		if(A && ne > 0){
+			fprintf(stderr, " A=[");
+			for(e = 0; e < ne; ++e){
+				fprintf(stderr, "%s%.17g", e ? "," : "", A[e * ns + i]);
+			}
+			fputc(']', stderr);
+		}
+		fputc('\n', stderr);
+	}
+	if(b){
+		fprintf(stderr, "FPROPS_EQM_BASIS_TRACE b=[");
+		for(e = 0; e < ne; ++e){
+			fprintf(stderr, "%s%.17g", e ? "," : "", b[e]);
+		}
+		fprintf(stderr, "]\n");
+	}
+	fflush(stderr);
+}
+
+static void eqm_reduced_basis_trace_dump(const char *tag, const char **names, int ns, int ne,
+		const double *A, const double *b, const int *pivots, int rank, const double *n0,
+		const double *N, int r, const double *n_target, const double *z, const double *n,
+		double T, double P){
+	if(!eqm_reduced_basis_trace_enabled()){
+		return;
+	}
+	fprintf(stderr,
+		"FPROPS_EQM_REDUCED_BASIS_TRACE tag=%s T=%.17g P=%.17g ns=%d ne=%d rank=%d r=%d\n",
+		tag ? tag : "(null)", T, P, ns, ne, rank, r);
+	if(pivots){
+		fprintf(stderr, "FPROPS_EQM_REDUCED_BASIS_TRACE pivots=[");
+		for(int i = 0; i < rank; ++i){
+			fprintf(stderr, "%s%d", i ? "," : "", pivots[i]);
+		}
+		fprintf(stderr, "]\n");
+	}
+	if(b){
+		fprintf(stderr, "FPROPS_EQM_REDUCED_BASIS_TRACE b=[");
+		for(int e = 0; e < ne; ++e){
+			fprintf(stderr, "%s%.17g", e ? "," : "", b[e]);
+		}
+		fprintf(stderr, "]\n");
+	}
+	if(z){
+		fprintf(stderr, "FPROPS_EQM_REDUCED_BASIS_TRACE z=[");
+		for(int j = 0; j < r; ++j){
+			fprintf(stderr, "%s%.17g", j ? "," : "", z[j]);
+		}
+		fprintf(stderr, "]\n");
+	}
+	for(int i = 0; i < ns; ++i){
+		fprintf(stderr, "FPROPS_EQM_REDUCED_BASIS_TRACE species[%d]=%s",
+			i, (names && names[i]) ? names[i] : "(null)");
+		if(n0){
+			fprintf(stderr, " n0=%.17g", n0[i]);
+		}
+		if(n_target){
+			fprintf(stderr, " n_target=%.17g", n_target[i]);
+		}
+		if(n){
+			fprintf(stderr, " n=%.17g", n[i]);
+		}
+		if(A){
+			fprintf(stderr, " A=[");
+			for(int e = 0; e < ne; ++e){
+				fprintf(stderr, "%s%.17g", e ? "," : "", A[e * ns + i]);
+			}
+			fputc(']', stderr);
+		}
+		if(N){
+			fprintf(stderr, " N=[");
+			for(int j = 0; j < r; ++j){
+				fprintf(stderr, "%s%.17g", j ? "," : "", N[i * r + j]);
+			}
+			fputc(']', stderr);
+		}
+		fputc('\n', stderr);
+	}
 	fflush(stderr);
 }
 
@@ -212,7 +339,72 @@ static int eqm_h_model_source(const char *name, EqmMuModel model, const char *so
 static int eqm_h_source(const char *name, const char *source, double T, double P, double *h);
 static PureFluid *eqm_prepare_fluid_for_mu0(const EosData *E, const char *corrtype, int use_ref0);
 static int eqm_fluid_state_from_pT(const PureFluid *F, double T, double P, FluidState2 *S_out);
+static int eqm_validate_solution_bounds(const char **names, int ns, int ne, const double *A,
+		const double *b, const char *source, double T, double P, const double *n_out);
+static int eqm_dense_solve(double *A, double *b, int n);
 void fprops_rxn_package_free(FpropsRxnPackage *pkg);
+
+static void eqm_sort_columns_by_target(const double *n_target, int ns, int *perm, int *inv_perm){
+	for(int i = 0; i < ns; ++i){
+		perm[i] = i;
+	}
+	for(int i = 1; i < ns; ++i){
+		int key = perm[i];
+		double keyv = n_target ? n_target[key] : 0.0;
+		int j = i - 1;
+		while(j >= 0){
+			double curv = n_target ? n_target[perm[j]] : 0.0;
+			if(curv > keyv || (curv == keyv && perm[j] < key)){
+				break;
+			}
+			perm[j + 1] = perm[j];
+			--j;
+		}
+		perm[j + 1] = key;
+	}
+	if(inv_perm){
+		for(int i = 0; i < ns; ++i){
+			inv_perm[perm[i]] = i;
+		}
+	}
+}
+
+static int eqm_solve_particular_from_pivots(const double *A, const double *b, int ne, int ns,
+		const int *pivots, int rank, double *n0_out){
+	double *B = NULL;
+	double *x = NULL;
+	int ok = 0;
+
+	if(!A || !b || !pivots || !n0_out || ne <= 0 || ns <= 0 || rank != ne){
+		return 0;
+	}
+	B = (double *)calloc((size_t)(ne * ne), sizeof(double));
+	x = (double *)calloc((size_t)ne, sizeof(double));
+	if(!B || !x){
+		goto cleanup;
+	}
+	for(int e = 0; e < ne; ++e){
+		x[e] = b[e];
+		for(int j = 0; j < ne; ++j){
+			B[e * ne + j] = A[e * ns + pivots[j]];
+		}
+	}
+	if(!eqm_dense_solve(B, x, ne)){
+		goto cleanup;
+	}
+	for(int i = 0; i < ns; ++i){
+		n0_out[i] = 0.0;
+	}
+	for(int j = 0; j < ne; ++j){
+		n0_out[pivots[j]] = x[j];
+	}
+	ok = 1;
+
+cleanup:
+	free(x);
+	free(B);
+	return ok;
+}
 
 static int eqm_lookup_solution_member(const char *name, const char *source,
 		const BinarySolutionPhaseDef **phase_out, unsigned *member_index_out){
@@ -1983,7 +2175,7 @@ void eqm_fill_n_est(const double *A, const double *b, int ne, int ns,
 	if(n_init){
 		int ok_init = 1;
 		for(int i = 0; i < ns; ++i){
-			if(n_init[i] <= 0.0){
+			if(n_init[i] < 0.0){
 				ok_init = 0;
 				break;
 			}
@@ -2743,7 +2935,11 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	int *is_condensed = NULL;
 	double *Awork = NULL;
 	int *pivots = NULL;
+	int *pivots_perm = NULL;
+	int *perm = NULL;
+	int *inv_perm = NULL;
 	double *N = NULL;
+	double *Nperm = NULL;
 	double *n0 = NULL;
 	double *n = NULL;
 	double *n_target = NULL;
@@ -2773,7 +2969,12 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	is_condensed = (int *)calloc((size_t)ns, sizeof(int));
 	Awork = (double *)calloc((size_t)(ne * ns), sizeof(double));
 	pivots = (int *)calloc((size_t)ne, sizeof(int));
-	if(!mu0 || !is_condensed || !Awork || !pivots){
+	pivots_perm = (int *)calloc((size_t)ne, sizeof(int));
+	perm = (int *)calloc((size_t)ns, sizeof(int));
+	inv_perm = (int *)calloc((size_t)ns, sizeof(int));
+	n_target = (double *)calloc((size_t)ns, sizeof(double));
+	if(!mu0 || !is_condensed || !Awork || !pivots || !pivots_perm || !perm || !inv_perm
+			|| !n_target){
 		status = -11;
 		reason = "alloc-front";
 		goto cleanup;
@@ -2788,11 +2989,18 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 		reason = "compute-is-condensed";
 		goto cleanup;
 	}
-	for(int i = 0; i < ne * ns; ++i){
-		Awork[i] = A[i];
+	eqm_fill_n_est(A, b, ne, ns, n_init, n_target);
+	eqm_sort_columns_by_target(n_target, ns, perm, inv_perm);
+	for(int e = 0; e < ne; ++e){
+		for(int j = 0; j < ns; ++j){
+			Awork[e * ns + j] = A[e * ns + perm[j]];
+		}
 	}
-	eqm_rref(Awork, ne, ns, pivots, &rank);
+	eqm_rref(Awork, ne, ns, pivots_perm, &rank);
 	r = ns - rank;
+	for(int i = 0; i < rank; ++i){
+		pivots[i] = perm[pivots_perm[i]];
+	}
 	if(trace){
 		fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE rank=%d r=%d\n", rank, r);
 	}
@@ -2815,9 +3023,9 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	}
 
 	N = (double *)calloc((size_t)(ns * r), sizeof(double));
+	Nperm = (double *)calloc((size_t)(ns * r), sizeof(double));
 	n0 = (double *)calloc((size_t)ns, sizeof(double));
 	n = (double *)calloc((size_t)ns, sizeof(double));
-	n_target = (double *)calloc((size_t)ns, sizeof(double));
 	z = (double *)calloc((size_t)r, sizeof(double));
 	mu = (double *)calloc((size_t)ns, sizeof(double));
 	grad = (double *)calloc((size_t)r, sizeof(double));
@@ -2826,14 +3034,20 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 	rhs = (double *)calloc((size_t)r, sizeof(double));
 	dz = (double *)calloc((size_t)r, sizeof(double));
 	dn = (double *)calloc((size_t)ns, sizeof(double));
-	if(!N || !n0 || !n || !n_target || !z || !mu || !grad || !H || !Hsys || !rhs || !dz || !dn){
+	if(!N || !Nperm || !n0 || !n || !z || !mu || !grad || !H || !Hsys || !rhs || !dz || !dn){
 		status = -11;
 		reason = "alloc-main";
 		goto cleanup;
 	}
 
-	eqm_fill_nullspace(Awork, ne, ns, pivots, rank, N, r);
-	if(!eqm_solve_particular(A, b, ne, ns, n0)){
+	eqm_fill_nullspace(Awork, ne, ns, pivots_perm, rank, Nperm, r);
+	for(int j = 0; j < r; ++j){
+		for(int i = 0; i < ns; ++i){
+			N[i * r + j] = Nperm[inv_perm[i] * r + j];
+		}
+	}
+	if(!eqm_solve_particular_from_pivots(A, b, ne, ns, pivots, rank, n0)
+			&& !eqm_solve_particular(A, b, ne, ns, n0)){
 		status = -13;
 		reason = "solve-particular";
 		goto cleanup;
@@ -2848,7 +3062,6 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 			fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE r1 closed-form path failed, continuing full solve\n");
 		}
 	}
-	eqm_fill_n_est(A, b, ne, ns, n_init, n_target);
 	if(!eqm_reduced_project_ls(n0, N, ns, r, n_target, z)){
 		if(trace){
 			fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE project-ls failed, using z=0\n");
@@ -2858,6 +3071,8 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 		}
 	}
 	eqm_reduced_compute_n(n0, N, ns, r, z, n);
+	eqm_reduced_basis_trace_dump("post-project", names, ns, ne, A, b, pivots, rank,
+		n0, N, r, n_target, z, n, T, P);
 	{
 		double nmin = n[0];
 		for(int i = 1; i < ns; ++i){
@@ -2865,15 +3080,19 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 				nmin = n[i];
 			}
 		}
-		if(nmin <= n_floor){
-			if(!eqm_reduced_make_interior(n0, N, ns, r, n_floor, z)){
-				status = -13;
-				reason = "make-interior";
-				goto cleanup;
+			if(nmin <= n_floor){
+				if(!eqm_reduced_make_interior(n0, N, ns, r, n_floor, z)){
+					eqm_reduced_basis_trace_dump("make-interior-failed", names, ns, ne, A, b,
+						pivots, rank, n0, N, r, n_target, z, n, T, P);
+					status = -13;
+					reason = "make-interior";
+					goto cleanup;
+				}
+				eqm_reduced_compute_n(n0, N, ns, r, z, n);
+				eqm_reduced_basis_trace_dump("post-make-interior", names, ns, ne, A, b, pivots,
+					rank, n0, N, r, n_target, z, n, T, P);
 			}
-			eqm_reduced_compute_n(n0, N, ns, r, z, n);
-		}
-		if(trace){
+			if(trace){
 			fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE initial nmin=%.17g\n", nmin);
 		}
 	}
@@ -3042,6 +3261,10 @@ cleanup:
 	free(n);
 	free(n0);
 	free(N);
+	free(Nperm);
+	free(inv_perm);
+	free(perm);
+	free(pivots_perm);
 	free(pivots);
 	free(Awork);
 	free(is_condensed);
@@ -3138,17 +3361,227 @@ static int eqm_reduced_eval_reduced_gradients(const double *mu, const double *A,
 	return 1;
 }
 
+static void eqm_bound_classify_active_free(const double *n, const double *red, int ns,
+		double dual_tol, int *is_active, int *nactive_out, int *nfree_out,
+		double *n_active_cutoff_out, double *n_small_cutoff_out){
+	double n_tot = 0.0;
+	double n_active_cutoff;
+	double n_small_cutoff;
+	int nactive = 0;
+	int nfree = 0;
+
+	if(!n || !is_active || ns <= 0){
+		if(nactive_out){
+			*nactive_out = 0;
+		}
+		if(nfree_out){
+			*nfree_out = 0;
+		}
+		if(n_active_cutoff_out){
+			*n_active_cutoff_out = 0.0;
+		}
+		if(n_small_cutoff_out){
+			*n_small_cutoff_out = 0.0;
+		}
+		return;
+	}
+
+	for(int i = 0; i < ns; ++i){
+		if(n[i] > 0.0 && isfinite(n[i])){
+			n_tot += n[i];
+		}
+	}
+	n_active_cutoff = fmax(1e-60, EQM_BOUND_ACTIVE_CUTOFF_FRAC * n_tot);
+	n_small_cutoff = fmax(n_active_cutoff, EQM_BOUND_ACTIVE_SMALL_FRAC * n_tot);
+
+	for(int i = 0; i < ns; ++i){
+		int active = 0;
+		if(n[i] <= n_active_cutoff){
+			active = 1;
+		}else if(red && n[i] <= n_small_cutoff){
+			double comp = n[i] * fmax(red[i], 0.0);
+			if(red[i] >= -dual_tol
+					&& comp <= EQM_BOUND_COMPLEMENTARITY_TOL * n_tot){
+				active = 1;
+			}
+		}
+		is_active[i] = active;
+		if(active){
+			++nactive;
+		}else{
+			++nfree;
+		}
+	}
+
+	if(nactive_out){
+		*nactive_out = nactive;
+	}
+	if(nfree_out){
+		*nfree_out = nfree;
+	}
+	if(n_active_cutoff_out){
+		*n_active_cutoff_out = n_active_cutoff;
+	}
+	if(n_small_cutoff_out){
+		*n_small_cutoff_out = n_small_cutoff;
+	}
+}
+
+static void eqm_active_set_push_candidate(int idx, double score, int maxcand,
+		int *ncand, int *cand_idx, double *cand_score){
+	int pos;
+	if(!ncand || !cand_idx || !cand_score || maxcand <= 0 || idx < 0 || !(score > 0.0)){
+		return;
+	}
+	for(int i = 0; i < *ncand; ++i){
+		if(cand_idx[i] == idx){
+			if(score <= cand_score[i]){
+				return;
+			}
+			for(int j = i; j + 1 < *ncand; ++j){
+				cand_idx[j] = cand_idx[j + 1];
+				cand_score[j] = cand_score[j + 1];
+			}
+			--(*ncand);
+			break;
+		}
+	}
+	if(*ncand < maxcand){
+		pos = (*ncand)++;
+	}else{
+		if(score <= cand_score[maxcand - 1]){
+			return;
+		}
+		pos = maxcand - 1;
+	}
+	while(pos > 0 && score > cand_score[pos - 1]){
+		cand_idx[pos] = cand_idx[pos - 1];
+		cand_score[pos] = cand_score[pos - 1];
+		--pos;
+	}
+	cand_idx[pos] = idx;
+	cand_score[pos] = score;
+}
+
+static int eqm_reduced_active_set_trial(const char **names, int ns, int ne, const double *A,
+		const double *b, const char *source, double T, double P, const double *mu0,
+		const int *is_condensed, const int *is_active, const double *n_hint, double n_floor,
+		double *n_trial, double *mu, double *red, double *obj_out, double *max_free_resid_out,
+		int *kkt_ok_out, int *free_idx, const char **names_f, double *A_f, double *b_f,
+		double *n_f, double *init_f){
+	const double pin = n_floor;
+	const double P0 = 1e5;
+	double obj = 0.0;
+	double max_free_resid = 0.0;
+	int nf = 0;
+	int status;
+
+	if(!names || !A || !b || !mu0 || !is_condensed || !is_active || !n_hint || !n_trial
+			|| !mu || !red || !free_idx || !names_f || !A_f || !b_f || !n_f || !init_f){
+		return 0;
+	}
+	for(int i = 0; i < ns; ++i){
+		if(!is_active[i]){
+			free_idx[nf++] = i;
+		}
+	}
+	if(nf <= 0){
+		return 0;
+	}
+	for(int e = 0; e < ne; ++e){
+		double rhs = b[e];
+		for(int i = 0; i < ns; ++i){
+			if(is_active[i]){
+				rhs -= A[e * ns + i] * pin;
+			}
+		}
+		b_f[e] = rhs;
+	}
+	for(int j = 0; j < nf; ++j){
+		int i = free_idx[j];
+		double ni = n_hint[i];
+		if(!(ni > n_floor) || !isfinite(ni)){
+			ni = fmax(10.0 * n_floor, 1e-30);
+		}
+		names_f[j] = names[i];
+		init_f[j] = ni;
+		for(int e = 0; e < ne; ++e){
+			A_f[e * nf + j] = A[e * ns + i];
+		}
+	}
+	status = eqm_reduced_solve_source_init_once(names_f, nf, ne, A_f, b_f, source, T, P,
+		init_f, n_floor, n_f);
+	if(status != 0){
+		status = eqm_reduced_solve_source_init_once(names_f, nf, ne, A_f, b_f, source, T, P,
+			NULL, n_floor, n_f);
+	}
+	if(status != 0){
+		return 0;
+	}
+	for(int i = 0; i < ns; ++i){
+		n_trial[i] = is_active[i] ? pin : 0.0;
+	}
+	for(int j = 0; j < nf; ++j){
+		n_trial[free_idx[j]] = n_f[j];
+	}
+	if(!eqm_reduced_eval_obj_mu(n_trial, mu0, is_condensed, ns, T, P, P0, &obj, mu, NULL)){
+		return 0;
+	}
+	if(!eqm_reduced_eval_reduced_gradients(mu, A, ns, ne, is_active, T, red)){
+		return 0;
+	}
+	for(int i = 0; i < ns; ++i){
+		if(!is_active[i]){
+			double ar = fabs(red[i]);
+			if(ar > max_free_resid){
+				max_free_resid = ar;
+			}
+		}
+	}
+	if(obj_out){
+		*obj_out = obj;
+	}
+	if(max_free_resid_out){
+		*max_free_resid_out = max_free_resid;
+	}
+	if(kkt_ok_out){
+		*kkt_ok_out = eqm_validate_solution_bounds(names, ns, ne, A, b, source, T, P, n_trial);
+	}
+	return 1;
+}
+
+static int eqm_active_set_trial_better(int have_best, int kkt_ok, double obj,
+		double max_free_resid, int best_kkt_ok, double best_obj, double best_max_free_resid){
+	double obj_tol;
+	if(!have_best){
+		return 1;
+	}
+	if(kkt_ok != best_kkt_ok){
+		return kkt_ok > best_kkt_ok;
+	}
+	obj_tol = 1e-12 * fmax(1.0, fmax(fabs(obj), fabs(best_obj)));
+	if(obj < best_obj - obj_tol){
+		return 1;
+	}
+	if(obj > best_obj + obj_tol){
+		return 0;
+	}
+	return max_free_resid < best_max_free_resid;
+}
+
 static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const double *A,
 		const double *b, const char *source, double T, double P, const double *n_hint,
 		double n_floor, double *n_seed_out){
 	const int max_iter = 24;
+	const int max_candidates = 4;
 	const double pin = n_floor;
-	const double active_seed_cut = fmax(1e-30, 1e6 * n_floor);
 	const double active_n_cut = fmax(1e-30, 1e3 * n_floor);
 	const double free_tol = EQM_BOUND_KKT_FREE_TOL;
 	const double dual_tol = EQM_BOUND_KKT_DUAL_TOL;
 	const double P0 = 1e5;
 	const int trace = eqm_active_trace_enabled();
+	int nactive = 0;
+	int nfree = 0;
 	int *is_active = NULL;
 	int *free_idx = NULL;
 	const char **names_f = NULL;
@@ -3158,10 +3591,14 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 	double *init_f = NULL;
 	double *n_work = NULL;
 	double *n_trial = NULL;
+	double *n_trial_best = NULL;
 	double *mu0 = NULL;
 	int *is_condensed = NULL;
 	double *mu = NULL;
 	double *red = NULL;
+	double *mu_cand = NULL;
+	double *red_cand = NULL;
+	int *is_active_best = NULL;
 	double obj_dummy = 0.0;
 	int ok = 0;
 	int status = -13;
@@ -3178,12 +3615,17 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 	init_f = (double *)calloc((size_t)ns, sizeof(double));
 	n_work = (double *)calloc((size_t)ns, sizeof(double));
 	n_trial = (double *)calloc((size_t)ns, sizeof(double));
+	n_trial_best = (double *)calloc((size_t)ns, sizeof(double));
 	mu0 = (double *)calloc((size_t)ns, sizeof(double));
 	is_condensed = (int *)calloc((size_t)ns, sizeof(int));
 	mu = (double *)calloc((size_t)ns, sizeof(double));
 	red = (double *)calloc((size_t)ns, sizeof(double));
+	mu_cand = (double *)calloc((size_t)ns, sizeof(double));
+	red_cand = (double *)calloc((size_t)ns, sizeof(double));
+	is_active_best = (int *)calloc((size_t)ns, sizeof(int));
 	if(!is_active || !free_idx || !names_f || !A_f || !b_f || !n_f || !init_f
-			|| !n_work || !n_trial || !mu0 || !is_condensed || !mu || !red){
+			|| !n_work || !n_trial || !n_trial_best || !mu0 || !is_condensed || !mu || !red
+			|| !mu_cand || !red_cand || !is_active_best){
 		goto cleanup;
 	}
 	if(!eqm_compute_mu0(names, ns, source, T, P0, mu0)){
@@ -3195,15 +3637,53 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 	for(int i = 0; i < ns; ++i){
 		double ni = n_hint[i];
 		if(!(ni > 0.0) || !isfinite(ni)){
-			ni = 1.0;
+			ni = fmax(10.0 * n_floor, 1e-30);
 		}
 		n_work[i] = ni;
-		if(ni <= active_seed_cut){
+	}
+	eqm_bound_classify_active_free(n_work, NULL, ns, dual_tol, is_active, &nactive, &nfree,
+		NULL, NULL);
+	if(nfree > 0
+			&& eqm_reduced_eval_obj_mu(n_work, mu0, is_condensed, ns, T, P, P0, &obj_dummy, mu, NULL)
+			&& eqm_reduced_eval_reduced_gradients(mu, A, ns, ne, is_active, T, red)){
+		eqm_bound_classify_active_free(n_work, red, ns, dual_tol, is_active, &nactive, &nfree,
+			NULL, NULL);
+	}
+	if(nactive <= 0){
+		int imin = -1;
+		double nmin = HUGE_VAL;
+		for(int i = 0; i < ns; ++i){
+			if(n_work[i] < nmin){
+				nmin = n_work[i];
+				imin = i;
+			}
+			is_active[i] = 0;
+		}
+		if(imin >= 0){
+			is_active[imin] = 1;
+			nactive = 1;
+			nfree = ns - 1;
+		}
+	}
+	if(nfree <= 0){
+		int imax = -1;
+		double nmax = -HUGE_VAL;
+		for(int i = 0; i < ns; ++i){
+			if(n_work[i] > nmax){
+				nmax = n_work[i];
+				imax = i;
+			}
 			is_active[i] = 1;
+		}
+		if(imax >= 0){
+			is_active[imax] = 0;
+			nactive = ns - 1;
+			nfree = 1;
 		}
 	}
 	if(trace){
-		fprintf(stderr, "eqm active-set seed start: T=%.6g P=%.6g n_floor=%.3e\n", T, P, n_floor);
+		fprintf(stderr, "eqm active-set seed start: T=%.6g P=%.6g n_floor=%.3e nactive=%d nfree=%d\n",
+			T, P, n_floor, nactive, nfree);
 	}
 
 	for(int it = 0; it < max_iter; ++it){
@@ -3213,6 +3693,12 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 		double add_score = 0.0;
 		double drop_score = 0.0;
 		double max_free_resid = 0.0;
+		int add_cands[4] = {-1, -1, -1, -1};
+		double add_cand_scores[4] = {0.0, 0.0, 0.0, 0.0};
+		int drop_cands[4] = {-1, -1, -1, -1};
+		double drop_cand_scores[4] = {0.0, 0.0, 0.0, 0.0};
+		int nadd_cands = 0;
+		int ndrop_cands = 0;
 
 		for(int i = 0; i < ns; ++i){
 			if(!is_active[i]){
@@ -3263,12 +3749,77 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 				NULL, n_floor, n_f);
 		}
 		if(status != 0){
-			double nmax = -HUGE_VAL;
-			for(int i = 0; i < ns; ++i){
-				if(is_active[i] && n_work[i] > nmax){
-					nmax = n_work[i];
-					drop_idx = i;
+			int have_best = 0;
+			int best_idx = -1;
+			int best_make_active = 0;
+			int best_kkt_ok = 0;
+			double best_obj = HUGE_VAL;
+			double best_max_free_resid = HUGE_VAL;
+			if(eqm_reduced_eval_obj_mu(n_work, mu0, is_condensed, ns, T, P, P0, &obj_dummy, mu, NULL)
+					&& eqm_reduced_eval_reduced_gradients(mu, A, ns, ne, is_active, T, red)){
+				double worst_red = 0.0;
+				for(int i = 0; i < ns; ++i){
+					if(is_active[i] && red[i] < -dual_tol && red[i] < worst_red){
+						worst_red = red[i];
+						drop_idx = i;
+					}
+					if(is_active[i] && red[i] < -dual_tol){
+						eqm_active_set_push_candidate(i, -red[i], max_candidates,
+							&ndrop_cands, drop_cands, drop_cand_scores);
+					}
 				}
+			}
+			if(drop_idx < 0){
+				double nmax = -HUGE_VAL;
+				for(int i = 0; i < ns; ++i){
+					if(is_active[i] && n_work[i] > nmax){
+						nmax = n_work[i];
+						drop_idx = i;
+					}
+				}
+			}
+			eqm_active_set_push_candidate(drop_idx, drop_idx >= 0 ? HUGE_VAL : 0.0, max_candidates,
+				&ndrop_cands, drop_cands, drop_cand_scores);
+			for(int ci = 0; ci < ndrop_cands; ++ci){
+				int idx = drop_cands[ci];
+				double cand_obj;
+				double cand_max_free_resid;
+				int cand_kkt_ok = 0;
+				if(idx < 0){
+					continue;
+				}
+				is_active[idx] = 0;
+				if(eqm_reduced_active_set_trial(names, ns, ne, A, b, source, T, P, mu0,
+						is_condensed, is_active, n_work, n_floor, n_trial_best, mu_cand, red_cand,
+						&cand_obj, &cand_max_free_resid, &cand_kkt_ok, free_idx, names_f, A_f, b_f,
+						n_f, init_f)
+						&& eqm_active_set_trial_better(have_best, cand_kkt_ok, cand_obj,
+							cand_max_free_resid, best_kkt_ok, best_obj, best_max_free_resid)){
+					have_best = 1;
+					best_idx = idx;
+					best_make_active = 0;
+					best_kkt_ok = cand_kkt_ok;
+					best_obj = cand_obj;
+					best_max_free_resid = cand_max_free_resid;
+					for(int i = 0; i < ns; ++i){
+						n_trial[i] = n_trial_best[i];
+						is_active_best[i] = is_active[i];
+					}
+				}
+				is_active[idx] = 1;
+			}
+			if(have_best){
+				for(int i = 0; i < ns; ++i){
+					n_work[i] = n_trial[i];
+					is_active[i] = is_active_best[i];
+				}
+				if(trace){
+					fprintf(stderr,
+						"    scored pivot: %s species %d (kkt=%d obj=%.12g max_free=%.3e)\n",
+						best_make_active ? "add" : "drop", best_idx, best_kkt_ok, best_obj,
+						best_max_free_resid);
+				}
+				continue;
 			}
 			if(drop_idx < 0){
 				goto cleanup;
@@ -3299,6 +3850,10 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 					drop_score = -red[i];
 					drop_idx = i;
 				}
+				if(red[i] < -dual_tol){
+					eqm_active_set_push_candidate(i, -red[i], max_candidates,
+						&ndrop_cands, drop_cands, drop_cand_scores);
+				}
 			}else{
 				double ar = fabs(red[i]);
 				if(ar > max_free_resid){
@@ -3307,6 +3862,10 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 				if(n_trial[i] <= active_n_cut && red[i] > dual_tol && red[i] > add_score){
 					add_score = red[i];
 					add_idx = i;
+				}
+				if(n_trial[i] <= active_n_cut && red[i] > dual_tol){
+					eqm_active_set_push_candidate(i, red[i], max_candidates,
+						&nadd_cands, add_cands, add_cand_scores);
 				}
 			}
 		}
@@ -3327,6 +3886,97 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 			}
 			ok = 1;
 			goto cleanup;
+		}
+		if(nadd_cands > 0 || ndrop_cands > 0){
+			int have_best = 0;
+			int best_idx = -1;
+			int best_make_active = 0;
+			int best_kkt_ok = 0;
+			double best_obj = HUGE_VAL;
+			double best_max_free_resid = HUGE_VAL;
+			for(int ci = 0; ci < nadd_cands; ++ci){
+				int idx = add_cands[ci];
+				double cand_obj;
+				double cand_max_free_resid;
+				int cand_kkt_ok = 0;
+				if(idx < 0){
+					continue;
+				}
+				is_active[idx] = 1;
+				if(eqm_reduced_active_set_trial(names, ns, ne, A, b, source, T, P, mu0,
+						is_condensed, is_active, n_trial, n_floor, n_trial_best, mu_cand, red_cand,
+						&cand_obj, &cand_max_free_resid, &cand_kkt_ok, free_idx, names_f, A_f, b_f,
+						n_f, init_f)
+						&& eqm_active_set_trial_better(have_best, cand_kkt_ok, cand_obj,
+							cand_max_free_resid, best_kkt_ok, best_obj, best_max_free_resid)){
+					have_best = 1;
+					best_idx = idx;
+					best_make_active = 1;
+					best_kkt_ok = cand_kkt_ok;
+					best_obj = cand_obj;
+					best_max_free_resid = cand_max_free_resid;
+					for(int i = 0; i < ns; ++i){
+						n_work[i] = n_trial_best[i];
+						is_active_best[i] = is_active[i];
+					}
+				}
+				is_active[idx] = 0;
+			}
+			for(int ci = 0; ci < ndrop_cands; ++ci){
+				int idx = drop_cands[ci];
+				double cand_obj;
+				double cand_max_free_resid;
+				int cand_kkt_ok = 0;
+				if(idx < 0){
+					continue;
+				}
+				is_active[idx] = 0;
+				if(eqm_reduced_active_set_trial(names, ns, ne, A, b, source, T, P, mu0,
+						is_condensed, is_active, n_trial, n_floor, n_trial_best, mu_cand, red_cand,
+						&cand_obj, &cand_max_free_resid, &cand_kkt_ok, free_idx, names_f, A_f, b_f,
+						n_f, init_f)
+						&& eqm_active_set_trial_better(have_best, cand_kkt_ok, cand_obj,
+							cand_max_free_resid, best_kkt_ok, best_obj, best_max_free_resid)){
+					have_best = 1;
+					best_idx = idx;
+					best_make_active = 0;
+					best_kkt_ok = cand_kkt_ok;
+					best_obj = cand_obj;
+					best_max_free_resid = cand_max_free_resid;
+					for(int i = 0; i < ns; ++i){
+						n_work[i] = n_trial_best[i];
+						is_active_best[i] = is_active[i];
+					}
+				}
+				is_active[idx] = 1;
+			}
+			if(have_best){
+				for(int i = 0; i < ns; ++i){
+					is_active[i] = is_active_best[i];
+				}
+				if(best_kkt_ok && best_max_free_resid <= free_tol){
+					for(int i = 0; i < ns; ++i){
+						n_seed_out[i] = n_work[i];
+					}
+					if(trace){
+						fprintf(stderr,
+							"  active-set converged via scored pivot: %s species %d\n",
+							best_make_active ? "add" : "drop", best_idx);
+					}
+					ok = 1;
+					goto cleanup;
+				}
+				if(trace){
+					fprintf(stderr,
+						"    scored pivot: %s species %d (kkt=%d obj=%.12g max_free=%.3e)\n",
+						best_make_active ? "add" : "drop", best_idx, best_kkt_ok, best_obj,
+						best_max_free_resid);
+				}
+				for(int i = 0; i < ns; ++i){
+					is_active[i] = is_active_best[i];
+				}
+				continue;
+			}
 		}
 		if(add_idx >= 0 && drop_idx >= 0){
 			if(add_score >= drop_score){
@@ -3362,8 +4012,11 @@ static int eqm_reduced_active_set_seed(const char **names, int ns, int ne, const
 
 cleanup:
 	free(red);
+	free(red_cand);
 	free(mu);
+	free(mu_cand);
 	free(mu0);
+	free(n_trial_best);
 	free(n_trial);
 	free(n_work);
 	free(init_f);
@@ -3372,6 +4025,7 @@ cleanup:
 	free(A_f);
 	free(names_f);
 	free(free_idx);
+	free(is_active_best);
 	free(is_active);
 	free(is_condensed);
 	return ok;
@@ -3488,21 +4142,11 @@ static int eqm_validate_solution_bounds(const char **names, int ns, int ne, cons
 		free(mu);
 		free(red);
 		free(is_active);
-		eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
-		return 0;
+			eqm_free_solution_phases(&solution_phase_id, &solution_member_index, &binary_phases);
+			return 0;
 	}
-	for(int i = 0; i < ns; ++i){
-		double comp = n_out[i] * fmax(red[i], 0.0);
-		if(n_out[i] <= n_active_cutoff
-				|| (n_out[i] <= n_small_cutoff
-					&& red[i] >= -dual_tol
-					&& comp <= EQM_BOUND_COMPLEMENTARITY_TOL * n_tot)){
-			is_active[i] = 1;
-			++nactive;
-		}else{
-			++nfree;
-		}
-	}
+	eqm_bound_classify_active_free(n_out, red, ns, dual_tol, is_active, &nactive, &nfree,
+		&n_active_cutoff, &n_small_cutoff);
 	if(trace){
 		fprintf(stderr, "eqm validate bounds preclass: T=%.6g P=%.6g nsmall=%.3e nactive=%d nfree=%d\n",
 			T, P, n_small_cutoff, nactive, nfree);
@@ -3775,6 +4419,7 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 	double *n_seed = NULL;
 	double *n_work = NULL;
 	double *n_polish = NULL;
+	double *n_bootstrap = NULL;
 	const double *init = n_init;
 	const double n_floor_target = 1e-120;
 	int status = -13;
@@ -3805,30 +4450,40 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 	n_seed = (double *)calloc((size_t)ns, sizeof(double));
 	n_work = (double *)calloc((size_t)ns, sizeof(double));
 	n_polish = (double *)calloc((size_t)ns, sizeof(double));
-	if(!n_seed || !n_work || !n_polish){
+	n_bootstrap = (double *)calloc((size_t)ns, sizeof(double));
+	if(!n_seed || !n_work || !n_polish || !n_bootstrap){
 		free(n_seed);
 		free(n_work);
 		free(n_polish);
+		free(n_bootstrap);
 		return status;
 	}
+	eqm_fill_n_est(A, b, ne, ns, n_init, n_bootstrap);
 
 	for(int s = 0; s < nsteps; ++s){
 		double Tk = schedule[s];
 		int any_ok = 0;
 		for(size_t fk = 0; fk < sizeof(floor_knots) / sizeof(floor_knots[0]); ++fk){
 			double nf = floor_knots[fk];
+			const double *step_init = init ? init : n_bootstrap;
 			if(nf < n_floor_target){
 				nf = n_floor_target;
 			}
 			status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
-				Tk, P, init, nf, n_work);
+				Tk, P, step_init, nf, n_work);
+			if(status != 0 && step_init != NULL && step_init != init){
+				status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
+					Tk, P, NULL, nf, n_work);
+			}
 			if(status != 0 && init != NULL){
 				status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
 					Tk, P, NULL, nf, n_work);
 			}
 			if(status != 0){
-				if(init != NULL
-						&& eqm_reduced_active_set_seed(names, ns, ne, A, b, source, Tk, P, init, nf, n_work)){
+				const double *seed_hint = step_init ? step_init : n_init;
+				if(seed_hint != NULL
+						&& eqm_reduced_active_set_seed(names, ns, ne, A, b, source, Tk, P,
+							seed_hint, nf, n_work)){
 					status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
 						Tk, P, n_work, nf, n_polish);
 					if(status == 0){
@@ -3841,9 +4496,9 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 				}
 				if(status != 0){
 					int cand_kkt_ok = 0;
-					const double *hint = init ? init : n_init;
+					const double *hint = step_init ? step_init : n_init;
 					if(eqm_reduced_condensed_candidate_seed(names, ns, ne, A, b, source, Tk, P,
-							hint, nf, n_work, &cand_kkt_ok)){
+								hint, nf, n_work, &cand_kkt_ok)){
 						status = eqm_reduced_solve_source_init_once(names, ns, ne, A, b, source,
 							Tk, P, n_work, nf, n_polish);
 						if(status == 0){
@@ -3870,12 +4525,13 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 			}
 			init = n_seed;
 		}
-			if(!any_ok){
-				free(n_seed);
-				free(n_work);
-				free(n_polish);
-				return status;
-			}
+		if(!any_ok){
+			free(n_seed);
+			free(n_work);
+			free(n_polish);
+			free(n_bootstrap);
+			return status;
+		}
 		for(int i = 0; i < ns; ++i){
 			n_seed[i] = n_work[i];
 		}
@@ -3887,6 +4543,7 @@ static int eqm_reduced_solve_source_init(const char **names, int ns, int ne, con
 	free(n_seed);
 	free(n_work);
 	free(n_polish);
+	free(n_bootstrap);
 	return 0;
 }
 
@@ -4779,6 +5436,9 @@ int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 			b[e] += pkg->A[e * pkg->ns + i] * state->n[i];
 		}
 	}
+	eqm_basis_trace_dump("rxn_tpy", (const char **)pkg->names, pkg->ns,
+		(const char **)pkg->elements, pkg->ne, pkg->A, b, state->n, n_init,
+		pkg->source, algorithm, state->T, state->P, (const void *)pkg);
 	status = fprops_rxn_eqm_tpb(pkg, state, b, algorithm, n_init, out);
 	free(b);
 	return status;
@@ -5038,6 +5698,9 @@ int fprops_eqm_tpy(const char **names, int ns, const double *y_in, const char *s
 		}
 		b[e] = be;
 	}
+
+	eqm_basis_trace_dump("legacy_tpy", names, ns, (const char **)elements, ne, A, b,
+		y_in, n_init, source, algorithm, T, P, NULL);
 
 	status = fprops_eqm_tpb(names, ns, (const char **)elements, ne, b, source, T, P,
 		algorithm, n_init, n_out, NULL);
