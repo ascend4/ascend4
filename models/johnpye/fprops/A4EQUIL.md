@@ -1435,6 +1435,13 @@ experiment confirmed that scaling is real:
 - but that same experiment also exposed a genuine repeated-path `300 K`
   black-box `status 2` failure
 
+The useful refinement was to scale only the chemically relevant NOx
+trace rows, and not too aggressively. In the current demo, moderate
+species-specific outlet nominals for `NO` and `NO2` materially improve
+the repeated `1100 -> 300 K` path, with `NO2` no longer frozen on the
+old `600 K` plateau. But over-tightening those trace rows, especially
+for `NO`, can still reintroduce the repeated-path `300 K` failure.
+
 So scaling is one real part of the remaining problem, but not the whole
 problem.
 
@@ -1543,9 +1550,13 @@ What was observed:
 - after the wrapper/runtime fixes, fresh ASCEND single-point solves can
   now also succeed to `300 K`
 - the remaining discrepancy is in repeated low-temperature ASCEND solves,
-  where the reported branch can still be distorted by outer-solver
-  scaling and then, once scaling is tightened, by a remaining `300 K`
-  residual-evaluation failure in the repeated path
+  where the reported branch was initially distorted by outer-solver
+  scaling
+- targeted `NO/NO2` outlet scaling now improves that repeated branch
+  substantially and gives a usable repeated `1100 -> 300 K` path
+- however, the NOx work still shows that there is a limit to how hard
+  those trace rows can be scaled before a repeated-path `300 K`
+  residual-evaluation failure reappears
 
 This investigation therefore upgraded derivative support from
 "important later work" to "first-order requirement for robust ASCEND

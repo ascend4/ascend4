@@ -718,6 +718,10 @@ Current FPROPS status for this NOx basis:
 - the remaining low-temperature discrepancy is no longer in the direct
   FPROPS equilibrium kernel itself; it is in the ASCEND embedding and
   outer-solver treatment of the returned trace-species rows
+- targeted ASCEND-side scaling of the `NO/NO2` outlet rows can improve
+  the repeated low-temperature branch without changing the direct FPROPS
+  equilibrium result, reinforcing that this remaining issue is outside
+  the core reduced-space thermodynamics
 
 ### 11. Boundary-KKT validation
 
