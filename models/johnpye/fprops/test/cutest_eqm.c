@@ -352,6 +352,79 @@ static void test_eqm_wgs_reduced(void){
 	assert_log10K_consistent(names, nu, ARRAYLEN(names), n);
 }
 
+static double hr_ammonia_log10_ka(double T){
+	return 2.1
+		+ (1.0 / 4.571) * (9591.0 / T - 0.00046 * T + 0.85e-6 * T * T)
+		- 4.98 * log10(T) / 1.985;
+}
+
+static double hr_ammonia_residual(double xi, double T, double P_atm){
+	double Ka = pow(10.0, hr_ammonia_log10_ka(T));
+	return Ka
+		* pow((1.0 - xi) / 2.0, 0.5)
+		* pow(3.0 * (1.0 - xi) / 2.0, 1.5)
+		* P_atm
+		- xi * (2.0 - xi);
+}
+
+static double hr_ammonia_nh3_percent(double T, double P_atm){
+	double lo = 1e-12;
+	double hi = 1.0 - 1e-12;
+	double flo = hr_ammonia_residual(lo, T, P_atm);
+	double fhi = hr_ammonia_residual(hi, T, P_atm);
+	int iter;
+	CU_ASSERT_TRUE_FATAL(flo * fhi < 0.0);
+	for(iter = 0; iter < 200; ++iter){
+		double mid = 0.5 * (lo + hi);
+		double fmid = hr_ammonia_residual(mid, T, P_atm);
+		if(fabs(fmid) < 1e-14){
+			lo = mid;
+			hi = mid;
+			break;
+		}
+		if(flo * fmid <= 0.0){
+			hi = mid;
+			fhi = fmid;
+		}else{
+			lo = mid;
+			flo = fmid;
+		}
+	}
+	(void)fhi;
+	return 100.0 * (0.5 * (lo + hi)) / (2.0 - 0.5 * (lo + hi));
+}
+
+static void test_eqm_ammonia_synthesis_helmholtz_ref0_matches_hr_grid(void){
+	static const char *names[] = {"nitrogen", "hydrogen", "ammonia"};
+	static const char *elements[] = {"N", "H"};
+	static const double b[] = {1.0, 3.0};
+	static const double temps[] = {473.0, 573.0, 673.0, 773.0, 873.0, 973.0, 1073.0, 1173.0, 1273.0};
+	static const double pressures_atm[] = {1.0, 30.0, 100.0, 200.0};
+	const char *source = "helmholtz+ref0:";
+	size_t it;
+	size_t ip;
+	for(it = 0; it < ARRAYLEN(temps); ++it){
+		for(ip = 0; ip < ARRAYLEN(pressures_atm); ++ip){
+			double P = pressures_atm[ip] * 101325.0;
+			double n[ARRAYLEN(names)] = {0.0, 0.0, 0.0};
+			double H_total = NAN;
+			double ntot = 0.0;
+			double y_nh3;
+			double nh3_pct_eqm;
+			double nh3_pct_hr = hr_ammonia_nh3_percent(temps[it], pressures_atm[ip]);
+			int status = fprops_eqm_tpb(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b,
+				source, temps[it], P, "auto_nullspace", NULL, n, &H_total);
+			CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+			CU_ASSERT_TRUE(isfinite(H_total));
+			ntot = n[0] + n[1] + n[2];
+			CU_ASSERT_TRUE_FATAL(ntot > 0.0);
+			y_nh3 = n[2] / ntot;
+			nh3_pct_eqm = 100.0 * y_nh3;
+			CU_ASSERT_TRUE(fabs(nh3_pct_eqm - nh3_pct_hr) <= 0.25);
+		}
+	}
+}
+
 static void test_fprops_eqm_tpb_wgs_ms_table(void){
 	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
 	static const char *elements[] = {"C", "O", "H"};
@@ -1255,6 +1328,10 @@ CU_ErrorCode test_register_eqm(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "wgs_reduced", test_eqm_wgs_reduced)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "ammonia_synthesis_helmholtz_ref0_matches_hr_grid",
+			test_eqm_ammonia_synthesis_helmholtz_ref0_matches_hr_grid)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "fprops_eqm_tpb_wgs_ms_table", test_fprops_eqm_tpb_wgs_ms_table)){
