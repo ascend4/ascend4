@@ -631,6 +631,57 @@ static void test_fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy(v
 	fprops_rxn_package_free(pkg);
 }
 
+static void test_fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves(void){
+	static const char *names[] = {"ammonia", "hydrogen", "nitrogen"};
+	static const char *source =
+		"nitrogen=helmholtz+ref0:;hydrogen=helmholtz+ref0:;ammonia=helmholtz+ref0:";
+	FpropsRxnPackage *pkg = NULL;
+	FpropsRxnTPN state;
+	FpropsRxnResult out_pkg;
+	double b[2] = {0.0, 0.0};
+	double n_out[ARRAYLEN(names)] = {0.0, 0.0, 0.0};
+	const double *A = NULL;
+	int status_pkg;
+	int ne;
+	int e;
+
+	pkg = fprops_rxn_package_build(names, ARRAYLEN(names), source);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+	ne = fprops_rxn_package_num_elements(pkg);
+	CU_ASSERT_EQUAL_FATAL(ne, 2);
+	A = fprops_rxn_package_element_matrix(pkg);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(A);
+	for(e = 0; e < ne; ++e){
+		const double *row = &A[e * ARRAYLEN(names)];
+		if(fabs(row[0] - 1.0) < 1e-12 && fabs(row[1]) < 1e-12 && fabs(row[2] - 2.0) < 1e-12){
+			b[e] = 1.0;
+		}else if(fabs(row[0] - 3.0) < 1e-12 && fabs(row[1] - 2.0) < 1e-12 && fabs(row[2]) < 1e-12){
+			b[e] = 3.0;
+		}else{
+			CU_FAIL_FATAL("Unexpected ammonia package element");
+		}
+	}
+
+	state.T = 573.0;
+	state.P = 200.0 * 101325.0;
+	state.n = NULL;
+	out_pkg.status = -99;
+	out_pkg.H = NAN;
+	out_pkg.G = NAN;
+	out_pkg.n_out = n_out;
+
+	status_pkg = fprops_rxn_eqm_tpb(pkg, &state, b, "auto_nullspace", NULL, &out_pkg);
+
+	CU_ASSERT_TRUE(status_pkg == 0 || status_pkg == 1 || status_pkg == 6);
+	CU_ASSERT_TRUE_FATAL(isfinite(n_out[0]));
+	CU_ASSERT_TRUE_FATAL(isfinite(n_out[1]));
+	CU_ASSERT_TRUE_FATAL(isfinite(n_out[2]));
+	CU_ASSERT_TRUE(n_out[0] > 0.7);
+	CU_ASSERT_TRUE(n_out[0] < 0.8);
+
+	fprops_rxn_package_free(pkg);
+}
+
 static void test_fprops_rxn_package_eqm_matches_legacy(void){
 	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
 	static const char *elements[] = {"C", "O", "H"};
@@ -1359,6 +1410,10 @@ CU_ErrorCode test_register_eqm(void){
 	}
 	if(NULL == CU_add_test(s, "fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy",
 			test_fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves",
+			test_fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_matches_legacy",

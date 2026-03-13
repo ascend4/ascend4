@@ -1,0 +1,132 @@
+REQUIRE "johnpye/fprops/reactive_equil.a4l";
+IMPORT "qrslv";
+PROVIDE "johnpye/fprops/reactive_equil_ammonia_demo.a4c";
+
+MODEL reactor_equil_ammonia_case;
+	components IS_A set OF symbol_constant;
+	components :== ['nitrogen', 'hydrogen', 'ammonia'];
+
+	pkg IS_A reactive_package(components);
+	R IS_A reactor_equil(pkg);
+
+	temp IS_A temperature;
+	press IS_A pressure;
+	NH3_percent IS_A factor;
+
+	pkg.species_name['nitrogen'] :== 'nitrogen';
+	pkg.species_name['hydrogen'] :== 'hydrogen';
+	pkg.species_name['ammonia'] :== 'ammonia';
+	pkg.source :== 'nitrogen=helmholtz+ref0:;hydrogen=helmholtz+ref0:;ammonia=helmholtz+ref0:';
+	pkg.algorithm :== 'auto_nullspace';
+
+	t_in_eqn: R.inlet.T = temp;
+	t_out_eqn: R.outlet.T = temp;
+	p_in_eqn: R.inlet.P = press;
+	nh3_percent_eqn: NH3_percent = 100 * R.outlet.y['ammonia'];
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+
+		FIX R.inlet.f['nitrogen'];
+		FIX R.inlet.f['hydrogen'];
+		FIX R.inlet.f['ammonia'];
+		FIX R.DeltaP;
+
+		temp := 573 {K};
+		press := 200 {atm};
+		R.inlet.f['nitrogen'] := 0.5 {mol/s};
+		R.inlet.f['hydrogen'] := 1.5 {mol/s};
+		R.inlet.f['ammonia'] := 0 {mol/s};
+		R.outlet.f['nitrogen'] := 0.12 {mol/s};
+		R.outlet.f['hydrogen'] := 0.35 {mol/s};
+		R.outlet.f['ammonia'] := 0.77 {mol/s};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD on_load;
+		RUN default_self;
+		FIX temp;
+		FIX press;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+	END on_load;
+
+	METHOD self_test;
+		ASSERT NH3_percent > 62;
+		ASSERT NH3_percent < 63;
+	END self_test;
+END reactor_equil_ammonia_case;
+
+MODEL reactor_equil_ammonia_pressures;
+	pp IS_A set OF symbol_constant;
+	pp :== ['p1atm', 'p30atm', 'p100atm', 'p200atm'];
+
+	case[pp] IS_A reactor_equil_ammonia_case;
+	press_case[pp] IS_A pressure;
+	temp IS_A temperature;
+
+	NH3_percent_1atm IS_A factor;
+	NH3_percent_30atm IS_A factor;
+	NH3_percent_100atm IS_A factor;
+	NH3_percent_200atm IS_A factor;
+
+	FOR p IN pp CREATE
+		temp_link[p]: case[p].temp = temp;
+		press_link[p]: case[p].press = press_case[p];
+	END FOR;
+
+	nh3_1_eqn: NH3_percent_1atm = case['p1atm'].NH3_percent;
+	nh3_30_eqn: NH3_percent_30atm = case['p30atm'].NH3_percent;
+	nh3_100_eqn: NH3_percent_100atm = case['p100atm'].NH3_percent;
+	nh3_200_eqn: NH3_percent_200atm = case['p200atm'].NH3_percent;
+
+METHODS
+	METHOD default_self;
+		temp := 573 {K};
+		FIX temp;
+		FOR p IN pp DO
+			RUN case[p].default_self;
+		END FOR;
+		FIX press_case[pp];
+		press_case['p1atm'] := 1 {atm};
+		press_case['p30atm'] := 30 {atm};
+		press_case['p100atm'] := 100 {atm};
+		press_case['p200atm'] := 200 {atm};
+	END default_self;
+
+	METHOD on_load;
+		RUN default_self;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+	END on_load;
+
+	METHOD self_test;
+		ASSERT NH3_percent_1atm < NH3_percent_30atm;
+		ASSERT NH3_percent_30atm < NH3_percent_100atm;
+		ASSERT NH3_percent_100atm < NH3_percent_200atm;
+	END self_test;
+END reactor_equil_ammonia_pressures;
+
+MODEL reactive_equil_ammonia_demo REFINES reactor_equil_ammonia_case;
+END reactive_equil_ammonia_demo;
+
+MODEL reactive_equil_ammonia_pressures_demo REFINES reactor_equil_ammonia_pressures;
+END reactive_equil_ammonia_pressures_demo;
+
+MODEL reactive_equil_ammonia_pressures_study REFINES reactor_equil_ammonia_pressures;
+METHODS
+	METHOD on_load;
+		RUN reactor_equil_ammonia_pressures::default_self;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		STUDY
+			NH3_percent_1atm,
+			NH3_percent_30atm,
+			NH3_percent_100atm,
+			NH3_percent_200atm
+			VARY temp FROM 473 {K} TO 1273 {K} STEPS 8
+			NOW
+			FILE "ammonia_reactive_equil_helmholtz_ref0.tsv";
+	END on_load;
+END reactive_equil_ammonia_pressures_study;

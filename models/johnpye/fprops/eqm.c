@@ -5122,10 +5122,10 @@ FpropsRxnPackage *fprops_rxn_package_build(const char **names, int ns, const cha
 		}
 
 		eqm_parse_selector(source_i, &selector_model, &use_ref0, &selector_source);
-		if(!eqm_species_compile_thermo(name_i, selector_source ? selector_source : source_i,
+		if(!eqm_species_compile_thermo(name_i, selector_source,
 				selector_model, use_ref0, &pkg->species[i].thermo)){
 			ERR("rxn package build failed: no thermo model for '%s' (source='%s')",
-				name_i, selector_source ? selector_source : (source_i ? source_i : ""));
+				name_i, selector_source ? selector_source : "");
 			fprops_rxn_package_free(pkg);
 			return NULL;
 		}
@@ -5606,7 +5606,7 @@ int fprops_rxn_eqm_tpb(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 		pkg->ns, ne_use, state->T, state->P, algorithm ? algorithm : "");
 	eqm_package_trace("eqm_tpb_enter", pkg, old_pkg, (const char **)pkg->names, pkg->ns);
 	status = eqm_solve((const char **)pkg->names, pkg->ns, ne_use, A_use, b_use,
-		pkg->source, state->T, state->P, algorithm, n_init, out->n_out);
+		pkg->source, state->T, state->P, eqm_alg_fallback(algorithm), n_init, out->n_out);
 	if(A_use != pkg->A){
 		free(A_use);
 	}

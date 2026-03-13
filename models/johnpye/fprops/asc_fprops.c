@@ -631,6 +631,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
+	/* Reactive-package source selectors are resolved in the C-side FPROPS layer. */
 	struct Instance *srcinst, *alginst, *components_inst, *species_name_inst;
 	const char *source = NULL;
 	const char *algorithm = NULL;
