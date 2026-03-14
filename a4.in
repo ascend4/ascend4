@@ -102,6 +102,18 @@ def resolve_cmd_for_debugger(cmd):
 	return shebang(cmd[0], cmd[1:])
 
 if __name__ == "__main__":
+	argv = list(sys.argv)
+	if (
+		len(argv) >= 3
+		and argv[1] == 'cutest'
+		and '--' not in argv[2:]
+		and any(arg in ('-h', '--help') for arg in argv[2:])
+	):
+		argv[2:] = ['--help' if arg == '-h' else arg for arg in argv[2:]]
+		# Forward cutest help flags to the underlying runner instead of
+		# letting argparse consume them as subcommand help.
+		argv.insert(2, '--')
+
 	p = argparse.ArgumentParser(description='ASCEND launcher')
 
 	p.add_argument('--debug',action='store_true',help='Show launcher debug output')
@@ -155,7 +167,7 @@ if __name__ == "__main__":
 	p_sh = s.add_parser('q',help = 'Quick shortcut test -- test a4.in source for details.')
 	p_sh.set_defaults(action='q')
 
-	args, unknown = p.parse_known_args()
+	args, unknown = p.parse_known_args(argv[1:])
 	if unknown:
 		if hasattr(args, 'action') and args.action == 'cutest':
 			# Pass unknown args through to the test runner.
