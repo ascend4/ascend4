@@ -16,7 +16,7 @@ MODEL reactor_equil_ammonia_case;
 	pkg.species_name['nitrogen'] :== 'nitrogen';
 	pkg.species_name['hydrogen'] :== 'hydrogen';
 	pkg.species_name['ammonia'] :== 'ammonia';
-	pkg.source :== 'nitrogen=helmholtz+ref0:;hydrogen=helmholtz+ref0:;ammonia=helmholtz+ref0:';
+	pkg.source :== 'helmholtz+ref0:';
 	pkg.algorithm :== 'auto_nullspace';
 
 	t_in_eqn: R.inlet.T = temp;
