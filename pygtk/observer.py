@@ -363,17 +363,17 @@ class ObserverTab:
 				start+=1
 
 		fig = pylab.figure()
-		def _series_type(col):
-			try:
-				return str(col.instance.getType().getName())
-			except Exception:
-				return "unknown"
-
 		def _series_units(col):
 			try:
 				return col.display_unit_name()
 			except Exception:
 				return ""
+
+		def _series_group_key(col):
+			try:
+				return (str(col.instance.getType().getDimensions()), _series_units(col))
+			except Exception:
+				return ("unknown", _series_units(col))
 
 		def _group_ylabel(cols):
 			units = sorted(set([u for u in [_series_units(c) for c in cols] if u != ""]))
@@ -393,15 +393,15 @@ class ObserverTab:
 			elif hasattr(leg, "draggable"):
 				leg.draggable()
 
-		# Group y-series by ASCEND type while preserving user-selected order.
+		# Group y-series by compatible dimensions/display-units while preserving user-selected order.
 		grouped = {}
 		group_order = []
 		for yi, ycol in enumerate(y):
-			t = _series_type(ycol)
-			if t not in grouped:
-				grouped[t] = []
-				group_order.append(t)
-			grouped[t].append((yi, ycol))
+			g = _series_group_key(ycol)
+			if g not in grouped:
+				grouped[g] = []
+				group_order.append(g)
+			grouped[g].append((yi, ycol))
 
 		color_cycle = ['b','r','g','y','c','m','k']
 		n_groups = len(group_order)

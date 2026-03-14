@@ -105,7 +105,7 @@ class Preferences:
 	def getPreferredUnits(self, key):
 		_u = self.getPreferredUnitsOrigin(key)
 		##### CELSIUS TEMPERATURE WORKAROUND (see celsiusunits.py)
-		if _u == "degC":
+		if _u in ("degC", "degF"):
 			_u = "K"
 		return _u
 
