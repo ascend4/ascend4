@@ -2069,6 +2069,43 @@ struct value_t FindArgValue(struct Instance *parent,
   return value;
 }
 
+static
+struct value_t FindDefaultValue(struct Instance *tmpinst,
+                                CONST struct Expr *expr,
+                                int *err)
+{
+  int previous_context;
+  struct value_t value;
+
+  asc_assert(err != NULL);
+  asc_assert(expr != NULL);
+  *err = 0;
+
+  previous_context = GetDeclarativeContext();
+  SetDeclarativeContext(0);
+  asc_assert(GetEvaluationContext()==NULL);
+  SetEvaluationContext(tmpinst);
+  value = EvaluateExpr(expr,NULL,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+  SetDeclarativeContext(previous_context);
+  if (ValueKind(value)==error_value) {
+    switch (ErrorValue(value)) {
+    case name_unfound:
+    case undefined_value:
+      *err = 1;
+      return value;
+    default:
+      *err = -1;
+    }
+  }
+  if (IsConstantValue(value)==0) {
+    *err = -1;
+    DestroyValue(&value);
+    return CreateErrorValue(type_conflict);
+  }
+  return value;
+}
+
 /* return codes and message handling for MakeParameterInst */
 #define MPIOK 1
 #define MPIWAIT 0
@@ -2564,6 +2601,56 @@ int MPIMakeSimple(struct Instance *parent,
   }
   return MPIOK;
 }
+
+static
+int MPIMakeDefaultSimple(struct Instance *tmpinst,
+                         unsigned long argn,
+                         CONST struct Name *nptr,
+                         struct TypeDescription *ptype,
+                         int intset,
+                         struct Statement *ps,
+                         struct Statement *statement)
+{
+  int tverr;
+  struct Instance *ipass;
+  struct value_t vpass;
+  CONST struct Expr *defexpr;
+
+  (void)argn;
+
+  defexpr = GetStatDefaultValue(ps);
+  asc_assert(defexpr != NULL);
+  vpass = FindDefaultValue(tmpinst,defexpr,&tverr);
+  if (tverr != 0) {
+    if (tverr == 1) {
+      WriteUnexecutedMessage(ASCERR,statement,
+        "Parameter default is waiting on sufficient type or value.");
+      DestroyValue(&vpass);
+      return MPIWAIT;
+    }else{
+      STATEMENT_ERROR(statement,"Invalid DEFAULT value in parameter list.");
+      DestroyValue(&vpass);
+      return MPIBADVAL;
+    }
+  }
+
+  ipass = MakeSimpleInstance(ptype,intset,ps,NULL);
+  if (ipass == NULL) {
+    DestroyValue(&vpass);
+    return MPIINSMEM;
+  }
+  if (AssignStructuralValue(ipass,vpass,statement)!=1) {
+    DestroyParameterInst(ipass);
+    DestroyValue(&vpass);
+    return MPIARGTYPE;
+  }
+  DestroyValue(&vpass);
+  if (InsertParameterInst(tmpinst,ipass,nptr,ps,IPICHECK) != 1) {
+    DestroyParameterInst(ipass);
+    return MPIMULTI;
+  }
+  return MPIOK;
+}
 #define NOKEEPARGINST 0
 #define KEEPARGINST 1
 /**
@@ -2628,7 +2715,7 @@ int MakeParameterInst(struct Instance *parent,
   struct Set *argset;		/* set element extracted from arglist */
   CONST struct VariableList *vl;
   struct for_table_t *SavedForTable;
-  unsigned long slen,c,argn;
+  unsigned long slen,c,argn,argc;
   int tverr;	/* error return from checking array elt type, or value */
   int suberr;	/* error return from other routine */
   int intset;
@@ -2681,8 +2768,10 @@ int MakeParameterInst(struct Instance *parent,
     return MPIINSMEM;
   }
   SplitArgumentSet(GetStatTypeArgs(statement),args);
-  /* due to typelint, the following assertion should pass. fix lint if not. */
-  asc_assert(gl_length(args)==(unsigned long)pc);
+  argc = gl_length(args);
+  /* due to typelint, the actual count should already be in range. */
+  asc_assert(argc >= (unsigned long)GetModelParameterMinimumCount(d));
+  asc_assert(argc <= (unsigned long)pc);
   psl = GetModelParameterList(d);
   slen = StatementListLength(psl);
   argn = 1L;
@@ -2701,6 +2790,22 @@ int MakeParameterInst(struct Instance *parent,
     switch (StatementType(ps)) {
     case WILLBE:
       while (vl != NULL) {
+        if (argn > argc) {
+          if (GetStatDefaultValue(ps) == NULL) {
+            mpierror(NULL,argn,statement,MPIBADARG);
+            ClearMPImem(args,NULL,tmpinst,NULL,NULL);
+            return MPIBADARG;
+          }
+          suberr = MPIMakeDefaultSimple(tmpinst,argn,NamePointer(vl),
+                                        ptype,intset,ps,statement);
+          if (suberr != MPIOK) {
+            ClearMPImem(args,NULL,tmpinst,NULL,NULL);
+            return suberr;
+          }
+          argn++;
+          vl = NextVariableNode(vl);
+          continue;
+        }
         argset = GETARG(args,argn);
         il = FindArgInsts(parent,argset,&err);
         if (il == NULL) {
@@ -2836,6 +2941,11 @@ int MakeParameterInst(struct Instance *parent,
       }
       break;
     case ISA:
+      if (argn > argc) {
+        mpierror(NULL,argn,statement,MPIBADARG);
+        ClearMPImem(args,NULL,tmpinst,NULL,NULL);
+        return MPIBADARG;
+      }
       argset = GETARG(args,argn);
       if (SimpleNameIdPtr(NamePointer(vl))!=NULL) {
         /* scalar: evaluate and make it */

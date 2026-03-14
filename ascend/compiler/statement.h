@@ -130,7 +130,8 @@ extern struct Statement *CreateWILLBE(struct VariableList *vl,
                                       symchar *t,
                                       struct Set *ta,
                                       symchar *st,
-                                      struct Expr *cv);
+                                      struct Expr *cv,
+                                      struct Expr *dv);
 /**<
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
@@ -793,6 +794,24 @@ extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s);
 /**<
  *  Implementation function for GetStatCheckValue().  Do not call this
  *  function directly - use GetStatCheckValue() instead.
+ */
+
+#ifdef NDEBUG
+#define GetStatDefaultValue(s) ((s)->v.i.defaultvalue)
+#else
+#define GetStatDefaultValue(s) GetStatDefaultValueF(s)
+#endif
+/**<
+ *  Return the default value expression for a WILLBE. Often this will be NULL,
+ *  which means there is no DEFAULT clause on the WILL_BE.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The expression as a CONST struct Expr*.
+ *  @see GetStatDefaultValueF()
+ */
+extern CONST struct Expr *GetStatDefaultValueF(CONST struct Statement *s);
+/**<
+ *  Implementation function for GetStatDefaultValue(). Do not call this
+ *  function directly - use GetStatDefaultValue() instead.
  */
 
 /* * * StateLink functions * * */

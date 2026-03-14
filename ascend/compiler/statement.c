@@ -375,12 +375,13 @@ struct Statement *CreateISA(struct VariableList *vl,
   result->v.i.typeargs = ta;
   result->v.i.settype = st;
   result->v.i.checkvalue = NULL;
+  result->v.i.defaultvalue = NULL;
   return result;
 }
 
 struct Statement *CreateWILLBE(struct VariableList *vl, symchar *t,
                                struct Set *ta,
-			       symchar *st, struct Expr *cv)
+			       symchar *st, struct Expr *cv, struct Expr *dv)
 {
   struct Statement *result;
   result=create_statement_here(WILLBE);
@@ -389,6 +390,7 @@ struct Statement *CreateWILLBE(struct VariableList *vl, symchar *t,
   result->v.i.typeargs = ta;
   result->v.i.settype = st;
   result->v.i.checkvalue = cv;
+  result->v.i.defaultvalue = dv;
   return result;
 }
 
@@ -401,6 +403,7 @@ struct Statement *CreateIRT(struct VariableList *vl, symchar *t,
   result->v.i.typeargs = ta;
   result->v.i.settype = NULL;
   result->v.i.checkvalue = NULL;
+  result->v.i.defaultvalue = NULL;
   result->v.i.vl = vl;
   return result;
 }
@@ -1099,6 +1102,10 @@ void DestroyStatement(struct Statement *s)
           DestroyExprList(s->v.i.checkvalue);
           s->v.i.checkvalue = NULL;
         }
+        if (s->v.i.defaultvalue != NULL) {
+          DestroyExprList(s->v.i.defaultvalue);
+          s->v.i.defaultvalue = NULL;
+        }
         if (s->v.i.typeargs != NULL) {
           DestroySetList(s->v.i.typeargs);
           s->v.i.typeargs = NULL;
@@ -1370,6 +1377,7 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.i.settype = s->v.i.settype;
     result->v.i.vl = CopyVariableList(s->v.i.vl);
     result->v.i.checkvalue =  CopyExprList(s->v.i.checkvalue);
+    result->v.i.defaultvalue = CopyExprList(s->v.i.defaultvalue);
     /* is this complete for IS_A with args to type? */
     break;
   case UNLNK:
@@ -1778,6 +1786,14 @@ CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s)
   assert(s->ref_count);
   assert(s->t==WILLBE);
   return s->v.i.checkvalue;
+}
+
+CONST struct Expr *GetStatDefaultValueF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==WILLBE);
+  return s->v.i.defaultvalue;
 }
 
 symchar *LINKStatKeyF(CONST struct Statement *s)
@@ -3192,10 +3208,19 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     if (GetStatCheckValue(s1) != NULL) {
-      return CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
-    } else {
-      return 0;
+      ctmp = CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    } else if (GetStatCheckValue(s2) != NULL) {
+      return -1;
     }
+    if (GetStatDefaultValue(s1) != NULL) {
+      return CompareExprs(GetStatDefaultValue(s1),GetStatDefaultValue(s2));
+    } else if (GetStatDefaultValue(s2) != NULL) {
+      return -1;
+    }
+    return 0;
   case WBTS: /* fallthru */
   case WNBTS:
     return CompareVariableLists(GetStatVarList(s1),GetStatVarList(s2));

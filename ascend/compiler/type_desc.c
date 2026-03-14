@@ -366,6 +366,33 @@ unsigned int CountParameters(CONST struct StatementList *sl)
   return cnt;
 }
 
+static
+unsigned int CountRequiredParameters(CONST struct StatementList *sl)
+{
+  unsigned cnt = 0;
+  unsigned long c, len;
+  CONST struct Statement *s;
+
+  len = StatementListLength(sl);
+  for (c = 1; c <= len; ++c) {
+    s = GetStatement(sl,c);
+    switch (StatementType(s)) {
+    case WILLBE:
+      if (GetStatDefaultValue(s) != NULL) {
+        return cnt;
+      }
+      cnt += VariableListLength(GetStatVarList(s));
+      break;
+    case ISA:
+      cnt++;
+      break;
+    default:
+      break;
+    }
+  }
+  return cnt;
+}
+
 /* returns old, the number of procedures in pl already
  * claimed by another type.
  */
@@ -433,6 +460,7 @@ struct TypeDescription
   result->u.modarg.argdata = NULL;
 */
   result->u.modarg.argcnt = CountParameters(psl);
+  result->u.modarg.reqargcnt = CountRequiredParameters(psl);
   return result;
 }
 

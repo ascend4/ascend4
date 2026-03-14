@@ -202,7 +202,8 @@ struct ModelArgs {
   /* struct gl_list_t *argdata;
    * list of final values, etc if needed. (not yet in use)
    */
-  unsigned int argcnt; /**< number of args required in an IS_A of this type. */
+  unsigned int argcnt; /**< maximum number of args accepted in an IS_A of this type. */
+  unsigned int reqargcnt; /**< minimum number of args required after applying DEFAULTs. */
 };
 
 /**
@@ -769,12 +770,21 @@ ASC_DLLSPEC struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d);
 
 #define GetModelParameterCount(d) ((d)->u.modarg.argcnt)
 /**<
-	Returns the number of arguments required when IS_A'ing a MODEL type.
-	Any attempt to use the type d in a RHS must fill in this many slots.
+	Returns the maximum number of arguments accepted when IS_A'ing a MODEL type.
+	Any attempt to use the type d in a RHS may fill in at most this many slots.
 
 	@param d The type to query (TypeDescription *).
 	@return The count as an unsigned int.
 */
+
+#define GetModelParameterMinimumCount(d) ((d)->u.modarg.reqargcnt)
+/**<
+	Returns the minimum number of arguments required when IS_A'ing a MODEL type,
+	after accounting for trailing DEFAULT clauses on WILL_BE parameters.
+
+	@param d The type to query (TypeDescription *).
+	@return The minimum count as an unsigned int.
+ */
 
 #define GetModelAbsorbedParameters(d) ((d)->u.modarg.absorbed)
 /**<
