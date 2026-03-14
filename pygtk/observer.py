@@ -61,13 +61,9 @@ class ObserverColumn:
 			else:
 				units = instance.getDisplayUnits()
 
-		uname = str(units.getName())
-
 		self.units = units
-		self.uname = uname
-
-		self.instance = instance
-		uname = CelsiusUnits.get_display_unit_name(instance, uname)
+		self.uname = self.display_unit_name()
+		uname = self.uname
 
 		if len(uname) or uname.find("/")!=-1:
 			uname = "["+uname+"]"
@@ -82,6 +78,17 @@ class ObserverColumn:
 
 	def __repr__(self):
 		return "ObserverColumn(name="+self.name+")"
+
+	def display_unit_name(self):
+		uname = CelsiusUnits.get_display_unit_name(self.instance, str(self.units.getName()))
+		if uname in ("", "?", "dimensionless", "[dimensionless]"):
+			return ""
+		try:
+			if self.instance.getType().getDimensions().isDimensionless():
+				return ""
+		except Exception:
+			pass
+		return uname
 
 	def display_value(self, rawval):
 		value = rawval / self.units.getConversion()
@@ -364,17 +371,19 @@ class ObserverTab:
 
 		def _series_units(col):
 			try:
-				return str(col.uname)
+				return col.display_unit_name()
 			except Exception:
 				return ""
 
 		def _group_ylabel(cols):
-			type_name = _series_type(cols[0]) if cols else "unknown"
-			names = ", ".join([c.name for c in cols])
 			units = sorted(set([u for u in [_series_units(c) for c in cols] if u != ""]))
-			if len(units) > 0:
-				return "%s: %s [%s]" % (type_name, names, ", ".join(units))
-			return "%s: %s" % (type_name, names)
+			if len(cols) > 1:
+				if len(units) == 1:
+					return "[%s]" % units[0]
+				return ""
+			if len(cols) == 1:
+				return cols[0].title
+			return ""
 
 		def _legend_draggable(leg):
 			if leg is None:
@@ -396,6 +405,7 @@ class ObserverTab:
 
 		color_cycle = ['b','r','g','y','c','m','k']
 		n_groups = len(group_order)
+		single_series = len(y) == 1
 		sharex = None
 		for gi, gkey in enumerate(group_order):
 			if gi == 0:
@@ -413,13 +423,16 @@ class ObserverTab:
 			if gi + 1 != n_groups:
 				pylab.setp(ax.get_xticklabels(),visible=False)
 			else:
-				ax.set_xlabel("X: %s" % x.title)
+				ax.set_xlabel(x.title)
 
-			ax.set_ylabel(_group_ylabel(group_cols),labelpad=20)
-			leg = ax.legend(loc='upper left')
-			if leg is not None:
-				leg.get_frame().set_alpha(0.3)
-			_legend_draggable(leg)
+			if single_series and len(group_cols) == 1:
+				ax.set_ylabel(group_cols[0].title,labelpad=20)
+			else:
+				ax.set_ylabel(_group_ylabel(group_cols),labelpad=20)
+				leg = ax.legend(loc='upper left')
+				if leg is not None:
+					leg.get_frame().set_alpha(0.3)
+				_legend_draggable(leg)
 
 		# FIXME why can't I drag the legend?
 
@@ -705,28 +718,27 @@ class ObserverTab:
 			_col_type = _col.instance.getType()
 			if instance_type is None or str(_col_type.getName()) == str(instance_type.getName()):
 				_units = self.browser.get_instance_display_units(_col.instance)
-				_uname = str(_units.getName())
+				_col.units = _units
 				if self.browser == None:
 					name = "UNNAMED"
 				else:
 					name = self.browser.sim.getInstanceName(_col.instance)
 
-				_uname = CelsiusUnits.get_display_unit_name(_col.instance, _uname)
+				_uname = _col.display_unit_name()
 				if len(_uname) or _uname.find("/")!=-1:
 					_uname = "["+_uname+"]"
 
 				if _uname == "":
 					_title = "%s" % (name)
 				else:
-					_title = "%s / %s" % (name, _uname) 
+					_title = "%s / %s" % (name, _uname)
 				for _tvcol in self.view.get_columns():
 					if _tvcol.title == _col.title:
 						_tvcol.label.set_text(str(_title))
 						_tvcol.title = _title
 						_tvcol.set_title(_title)
 				_col.title = _title
-				_col.units = _units
-				_col.uname = _uname
+				_col.uname = _col.display_unit_name()
 				_col.name = name
 	def set_dead(self):
 		if self.alive == False and self.reloaded == True:
