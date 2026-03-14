@@ -5,11 +5,6 @@ MODEL reactor_equil_feoh_700c_demo;
 	components :== ['Fe_bcc', 'Wus_FeO', 'Wus_FeO1p5', 'hydrogen', 'water'];
 
 	pkg IS_A reactive_package(components);
-	pkg.species_name['Fe_bcc'] :== 'Fe_bcc';
-	pkg.species_name['Wus_FeO'] :== 'Wus_FeO';
-	pkg.species_name['Wus_FeO1p5'] :== 'Wus_FeO1p5';
-	pkg.species_name['hydrogen'] :== 'hydrogen';
-	pkg.species_name['water'] :== 'water';
 	pkg.source :== 'Fe_bcc=hidayat_2015;Wus_FeO=hidayat_2015;Wus_FeO1p5=hidayat_2015;hydrogen=reaktoro_clone_supcrt98;water=reaktoro_clone_supcrt98';
 	pkg.algorithm :== 'auto';
 

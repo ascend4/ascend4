@@ -4,7 +4,6 @@ PROVIDE "johnpye/fprops/reactive_stoic.a4l";
 
 MODEL reactive_package(species WILL_BE set OF symbol_constant;);
 	components ALIASES species;
-	species_name[components] IS_A symbol_constant;
 	source IS_A symbol_constant;
 	algorithm IS_A symbol_constant;
 END reactive_package;

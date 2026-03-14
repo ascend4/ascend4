@@ -84,6 +84,20 @@ entries:
     flags: [manual]
     priority: 100
 
+  - alias: NH3
+    canonical: ammonia
+    domains: [pure_fluid, eqm_species]
+    sources: [RPP]
+    flags: [manual, formula]
+    priority: 100
+
+  - alias: NH3
+    canonical: ammonia
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+    flags: [manual, formula]
+    priority: 100
+
   - alias: CH4
     canonical: methane
     domains: [pure_fluid, eqm_species]

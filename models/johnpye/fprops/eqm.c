@@ -113,19 +113,22 @@ static const char *eqm_resolve_rxn_name(const char *name, const char *source,
 	FpropsResolvedName resolved;
 	FpropsNameResolveStatus status;
 	unsigned domains = FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_EQM_SPECIES;
+	char source_buf[512];
 	EqmMuModel selector_model = EQM_MODEL_AUTO;
 	int use_ref0 = 0;
 	const char *selector_source = NULL;
-	const char *name_source = source;
+	const char *source_i = fprops_resolve_species_source(source, name, source_buf,
+		(unsigned)sizeof(source_buf));
+	const char *name_source = NULL;
 	(void)use_ref0;
 
 	if(resolved_source){
-		*resolved_source = source;
+		*resolved_source = source_i;
 	}
 	if(!name || !name[0] || !buf || buflen == 0){
 		return name;
 	}
-	eqm_parse_selector(source, &selector_model, &use_ref0, &selector_source);
+	eqm_parse_selector(source_i, &selector_model, &use_ref0, &selector_source);
 	if(selector_source && selector_source[0]){
 		name_source = selector_source;
 	}
@@ -135,7 +138,7 @@ static const char *eqm_resolve_rxn_name(const char *name, const char *source,
 	}
 	snprintf(buf, buflen, "%s", resolved.canonical->canonical);
 	buf[buflen - 1] = '\0';
-	if(resolved_source && (!source || !source[0]) && resolved.canonical->source && resolved.canonical->source[0]){
+	if(resolved_source && (!source_i || !source_i[0]) && resolved.canonical->source && resolved.canonical->source[0]){
 		*resolved_source = resolved.canonical->source;
 	}
 	return buf;
@@ -4654,7 +4657,7 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 
 	for(int i = 0; i < ns; ++i){
 		if(!isfinite(n_out[i]) || n_out[i] <= 0.0){
-			fprintf(stderr, "eqm validate failed: invalid n[%d]=%.17g\n", i, n_out[i]);
+			MSG("eqm validate failed: invalid n[%d]=%.17g", i, n_out[i]);
 			return 0;
 		}
 	}
@@ -4671,8 +4674,8 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 		}
 		resid = lhs - b[e];
 		if(!isfinite(resid) || fabs(resid) > elem_tol * denom){
-			fprintf(stderr,
-				"eqm validate failed: element residual e=%d lhs=%.17g rhs=%.17g resid=%.17g\n",
+			MSG(
+				"eqm validate failed: element residual e=%d lhs=%.17g rhs=%.17g resid=%.17g",
 				e, lhs, b[e], resid);
 			return 0;
 		}
@@ -4721,7 +4724,7 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 	}
 	if(!eqm_eval_obj_mu(n_out, mu0, is_condensed, solution_phase_id, binary_phases,
 			nbinary_phases, ns, T, P, P0, NULL, mu, NULL)){
-		fprintf(stderr, "eqm validate failed: invalid activity/mu state\n");
+		MSG("eqm validate failed: invalid activity/mu state");
 		free(mu0);
 		free(is_condensed);
 		free(mu);
@@ -4762,8 +4765,8 @@ static int eqm_validate_solution(const char **names, int ns, int ne, const doubl
 			if(normv > 0.0){
 					double scaled = fabs(dot / normv) / (gas_R() * T);
 				if(!isfinite(scaled) || scaled > stat_tol){
-						fprintf(stderr,
-						"eqm validate failed: stationarity col=%d scaled=%.17g\n",
+						MSG(
+						"eqm validate failed: stationarity col=%d scaled=%.17g",
 						j, scaled);
 						free(N);
 						free(mu0);

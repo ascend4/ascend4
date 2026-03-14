@@ -632,9 +632,8 @@ static void test_fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy(v
 }
 
 static void test_fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves(void){
-	static const char *names[] = {"ammonia", "hydrogen", "nitrogen"};
-	static const char *source =
-		"nitrogen=helmholtz+ref0:;hydrogen=helmholtz+ref0:;ammonia=helmholtz+ref0:";
+	static const char *names[] = {"NH3", "H2", "N2"};
+	static const char *source = "helmholtz+ref0:";
 	FpropsRxnPackage *pkg = NULL;
 	FpropsRxnTPN state;
 	FpropsRxnResult out_pkg;

@@ -13,9 +13,6 @@ MODEL test_reactive_kineq_single_phase;
 
 	pkg.source :== 'RPP';
 	pkg.algorithm :== 'auto';
-	pkg.species_name['n_butane'] :== 'n_butane';
-	pkg.species_name['butene_1'] :== 'butene_1';
-	pkg.species_name['n_octane'] :== 'n_octane';
 	R.reference_component :== 'n_octane';
 
 	R.kinetics.species['r1'] :== ['n_butane', 'butene_1', 'n_octane'];

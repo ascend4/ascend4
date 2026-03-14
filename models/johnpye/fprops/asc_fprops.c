@@ -21,6 +21,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <ctype.h>
 
 /* include the external function API from libascend... */
 #include <ascend/compiler/extfunc.h>
@@ -199,6 +200,77 @@ typedef struct{
 	double *nu_data;
 	double *a;
 } AscFpropsUNIFACFlashData;
+
+static int asc_fprops_parse_selector(const char *spec, const char **source_out){
+	char model_buf[32];
+	const char *colon = NULL;
+	size_t n = 0;
+	if(source_out){
+		*source_out = spec;
+	}
+	if(!spec || !spec[0]){
+		return 1;
+	}
+	colon = strchr(spec, ':');
+	if(!colon){
+		return 1;
+	}
+	while(spec[n] && &spec[n] < colon && n < sizeof(model_buf) - 1){
+		model_buf[n] = (char)tolower((unsigned char)spec[n]);
+		++n;
+	}
+	model_buf[n] = '\0';
+	if(n == 0){
+		return 1;
+	}
+	if(n > 5 && (strcmp(model_buf + n - 5, "+ref0") == 0
+			|| strcmp(model_buf + n - 5, "_ref0") == 0)){
+		model_buf[n - 5] = '\0';
+	}
+	if(strcmp(model_buf, "auto") != 0
+			&& strcmp(model_buf, "ideal") != 0
+			&& strcmp(model_buf, "constcp") != 0
+			&& strcmp(model_buf, "shomate") != 0
+			&& strcmp(model_buf, "helmholtz") != 0
+			&& strcmp(model_buf, "pengrob") != 0){
+		return 1;
+	}
+	if(source_out){
+		const char *src = colon + 1;
+		while(*src && isspace((unsigned char)*src)){
+			++src;
+		}
+		*source_out = (*src) ? src : NULL;
+	}
+	return 1;
+}
+
+static const char *asc_fprops_resolve_rxn_name(const char *name, const char *source,
+		char *buf, unsigned buflen){
+	FpropsResolvedName resolved;
+	FpropsNameResolveStatus status;
+	unsigned domains = FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_EQM_SPECIES;
+	char source_buf[512];
+	const char *source_i = fprops_resolve_species_source(source, name, source_buf,
+		(unsigned)sizeof(source_buf));
+	const char *selector_source = NULL;
+	const char *name_source = NULL;
+
+	if(!name || !name[0] || !buf || buflen == 0){
+		return name;
+	}
+	asc_fprops_parse_selector(source_i, &selector_source);
+	if(selector_source && selector_source[0]){
+		name_source = selector_source;
+	}
+	status = fprops_name_resolve(name, domains, name_source, &resolved);
+	if(status != FPROPS_NAME_RESOLVE_OK || !resolved.canonical || !resolved.canonical->canonical){
+		return name;
+	}
+	snprintf(buf, buflen, "%s", resolved.canonical->canonical);
+	buf[buflen - 1] = '\0';
+	return buf;
+}
 
 static int asc_fprops_rxn_eqm_trace_enabled(void){
 	static int enabled = -1;
@@ -632,14 +704,14 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	   struct gl_list_t *arglist
 ){
 	/* Reactive-package source selectors are resolved in the C-side FPROPS layer. */
-	struct Instance *srcinst, *alginst, *components_inst, *species_name_inst;
+	struct Instance *srcinst, *alginst, *components_inst;
 	const char *source = NULL;
 	const char *algorithm = NULL;
 	const char **names = NULL;
 	const char **resolved_names = NULL;
 	AscFpropsRxnData *rxn = NULL;
 	unsigned long actual_inputs, actual_outputs, c, ns;
-	symchar *components_sym, *species_name_sym, *source_sym, *algorithm_sym;
+	symchar *components_sym, *source_sym, *algorithm_sym;
 	const struct set_t *components_set = NULL;
 
 	if(!bbox || !data || !arglist){
@@ -662,21 +734,12 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	}
 
 	components_sym = AddSymbol("components");
-	species_name_sym = AddSymbol("species_name");
 	source_sym = AddSymbol("source");
 	algorithm_sym = AddSymbol("algorithm");
-	species_name_inst = ChildByChar(data, species_name_sym);
 	components_inst = ChildByChar(data, components_sym);
-	if(!species_name_inst && !components_inst){
-		ERRMSG("Couldn't locate 'species_name' or 'components' in reactive package DATA");
+	if(!components_inst){
+		ERRMSG("Couldn't locate 'components' in reactive package DATA");
 		return 1;
-	}
-	if(species_name_inst){
-		if(InstanceKind(species_name_inst) != ARRAY_INT_INST
-				&& InstanceKind(species_name_inst) != ARRAY_ENUM_INST){
-			ERRMSG("Reactive package species_name must be an array of symbol_constant");
-			return 1;
-		}
 	}
 	if(components_inst){
 		components_set = SetAtomList(components_inst);
@@ -685,13 +748,9 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 			return 1;
 		}
 	}
-	ns = species_name_inst ? NumberChildren(species_name_inst) : (components_set ? Cardinality(components_set) : 0);
+	ns = components_set ? Cardinality(components_set) : 0;
 	if(ns == 0){
 		ERRMSG("Reactive package DATA contains no components");
-		return 1;
-	}
-	if(species_name_inst && components_set && Cardinality(components_set) != ns){
-		ERRMSG("Reactive package species_name size does not match components set cardinality");
 		return 1;
 	}
 	if(actual_inputs != ns + 2){
@@ -717,31 +776,15 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 			symchar *comp_sym = FetchStrMember(components_set, c);
 			fallback_name = comp_sym ? SCP(comp_sym) : NULL;
 		}
-		names[c - 1] = NULL;
-		if(species_name_inst){
-			struct Instance *child = InstanceChild(species_name_inst, c);
-				if(!child || InstanceKind(child) != SYMBOL_CONSTANT_INST){
-					ERRMSG("Reactive package species_name must contain symbol_constant values");
-					free(names);
-					free(resolved_names);
-					free(rxn);
-					return 1;
-				}
-			if(AtomAssigned(child)){
-				names[c - 1] = SCP(SYMC_INST(child)->value);
-			}
+		names[c - 1] = fallback_name;
+		if(!names[c - 1] || strlen(names[c - 1]) == 0){
+			ERRMSG("Reactive package DATA contains an empty component name");
+			free(names);
+			free(resolved_names);
+			free(rxn);
+			return 1;
 		}
-		if((!names[c - 1] || strlen(names[c - 1]) == 0) && fallback_name && strlen(fallback_name) > 0){
-			names[c - 1] = fallback_name;
-		}
-			if(!names[c - 1] || strlen(names[c - 1]) == 0){
-				ERRMSG("Reactive package DATA contains an empty component/species name");
-				free(names);
-				free(resolved_names);
-				free(rxn);
-				return 1;
-			}
-		}
+	}
 
 	srcinst = ChildByChar(data, source_sym);
 	if(srcinst){
@@ -769,15 +812,29 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		}
 
 	for(c = 0; c < ns; ++c){
-		FpropsResolvedName resolved;
-		FpropsNameResolveStatus status = fprops_name_resolve(names[c],
-			FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_EQM_SPECIES,
-			source, &resolved);
-		resolved_names[c] = (status == FPROPS_NAME_RESOLVE_OK && resolved.canonical
-			&& resolved.canonical->canonical && resolved.canonical->canonical[0])
-			? resolved.canonical->canonical : names[c];
+		char resolved_name_buf[256];
+		const char *resolved_name = asc_fprops_resolve_rxn_name(names[c], source,
+			resolved_name_buf, (unsigned)sizeof(resolved_name_buf));
+		if(resolved_name != names[c] && resolved_name == resolved_name_buf){
+			char *copy = ASC_STRDUP(resolved_name_buf);
+			if(!copy){
+				ERRMSG("Unable to copy resolved reactive FPROPS species name");
+				free(names);
+				free(resolved_names);
+				free(rxn);
+				return 1;
+			}
+			resolved_names[c] = copy;
+		}else{
+			resolved_names[c] = resolved_name;
+		}
 	}
 	if(asc_check_unique_canonical_names(names, resolved_names, ns, "reactive package DATA")){
+		for(c = 0; c < ns; ++c){
+			if(resolved_names[c] && resolved_names[c] != names[c]){
+				ASC_FREE((void *)resolved_names[c]);
+			}
+		}
 		free(names);
 		free(resolved_names);
 		free(rxn);
@@ -786,7 +843,12 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 
 	rxn->pkg = fprops_rxn_package_build(names, (int)ns, source);
 	if(!rxn->pkg){
-		ERRMSG("Failed to build reactive FPROPS package from DATA");
+		ERRMSG("Failed to build reactive FPROPS package from DATA; check component names and source selector");
+		for(c = 0; c < ns; ++c){
+			if(resolved_names[c] && resolved_names[c] != names[c]){
+				ASC_FREE((void *)resolved_names[c]);
+			}
+		}
 		free(names);
 		free(resolved_names);
 		free(rxn);
@@ -812,7 +874,8 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		return 1;
 	}
 	for(c = 0; c < ns; ++c){
-		rxn->names[c] = ASC_NEW_ARRAY(char, strlen(names[c]) + 1);
+		const char *cache_name = resolved_names[c] ? resolved_names[c] : names[c];
+		rxn->names[c] = ASC_NEW_ARRAY(char, strlen(cache_name) + 1);
 		if(!rxn->names[c]){
 			while(c > 0){
 				--c;
@@ -825,7 +888,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 			ERRMSG("Unable to copy reactive FPROPS species name");
 			return 1;
 		}
-		strcpy(rxn->names[c], names[c]);
+		strcpy(rxn->names[c], cache_name);
 	}
 	if(source){
 		rxn->source = ASC_NEW_ARRAY(char, strlen(source) + 1);
@@ -858,6 +921,11 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	}
 	rxn->have_last_n = 0;
 #endif
+	for(c = 0; c < ns; ++c){
+		if(resolved_names[c] && resolved_names[c] != names[c]){
+			ASC_FREE((void *)resolved_names[c]);
+		}
+	}
 	free(names);
 	free(resolved_names);
 	bbox->user_data = (void *)rxn;

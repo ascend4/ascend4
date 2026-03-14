@@ -54,8 +54,11 @@ static int canonicals_differ_ignoring_source(const FpropsNameCanonical *a, const
 }
 
 static int allow_source_agnostic_unique_canonical(unsigned domains, const char *source){
+	unsigned rxn_domains = FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_EQM_SPECIES;
 	return source == NULL
-		&& domains == FPROPS_NAME_DOMAIN_PURE_FLUID;
+		&& domains != FPROPS_NAME_DOMAIN_NONE
+		&& (domains & rxn_domains) != 0
+		&& (domains & ~rxn_domains) == 0;
 }
 
 
@@ -187,7 +190,9 @@ FpropsNameResolveStatus fprops_name_resolve(
 			best_canonical = c;
 			matches = 1;
 		}else if(a->priority == best_priority){
-			if(best_canonical == NULL || canonicals_differ(best_canonical, c)){
+			if(best_canonical == NULL || (ignore_source_ambiguity
+					? canonicals_differ_ignoring_source(best_canonical, c)
+					: canonicals_differ(best_canonical, c))){
 				matches += 1;
 			}
 		}
@@ -237,7 +242,9 @@ FpropsNameResolveStatus fprops_name_resolve(
 				best_canonical = c;
 				matches = 1;
 			}else if(a->priority == best_priority){
-				if(best_canonical == NULL || canonicals_differ(best_canonical, c)){
+				if(best_canonical == NULL || (ignore_source_ambiguity
+						? canonicals_differ_ignoring_source(best_canonical, c)
+						: canonicals_differ(best_canonical, c))){
 					matches += 1;
 				}
 			}

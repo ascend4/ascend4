@@ -21,6 +21,8 @@ MODEL reactor_equil_nox_air_demo;
 	pkg IS_A reactive_package(components);
 	R IS_A reactor_equil(pkg);
 	water_sat IS_A iapws_sat_pressure;
+	pkg.source :== 'water=Moran and Shapiro;carbondioxide=Moran and Shapiro;carbonmonoxide=Moran and Shapiro;hydrogen=Moran and Shapiro;*=RPP';
+	pkg.algorithm :== 'auto_reduced';
 
 	T_ambient ALIASES R.inlet.T;
 	T_reactor ALIASES R.outlet.T;
@@ -46,18 +48,6 @@ MODEL reactor_equil_nox_air_demo;
 	no_out_ppm IS_A factor;
 	no2_out_ppm IS_A factor;
 	nox_out_ppm IS_A factor;
-
-	pkg.species_name['N2'] :== 'nitrogen';
-	pkg.species_name['O2'] :== 'oxygen';
-	pkg.species_name['Ar'] :== 'argon';
-	pkg.species_name['H2O'] :== 'water';
-	pkg.species_name['CO2'] :== 'carbondioxide';
-	pkg.species_name['NO'] :== 'nitric_oxide';
-	pkg.species_name['NO2'] :== 'nitrogen_dioxide';
-	pkg.species_name['CO'] :== 'carbonmonoxide';
-	pkg.species_name['H2'] :== 'hydrogen';
-	pkg.source :== 'water=Moran and Shapiro;carbondioxide=Moran and Shapiro;carbonmonoxide=Moran and Shapiro;hydrogen=Moran and Shapiro;*=RPP';
-	pkg.algorithm :== 'auto_reduced';
 
 	water_psat_link:
 		water_sat.T = T_ambient;

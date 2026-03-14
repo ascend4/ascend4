@@ -8,9 +8,6 @@ MODEL reactor_equil_fogler_n2o4_demo;
 	pkg IS_A reactive_package(components);
 	R IS_A reactor_equil(pkg);
 	Xeq IS_A fraction;
-
-	pkg.species_name['N2O4'] :== 'N2O4';
-	pkg.species_name['NO2'] :== 'NO2';
 	pkg.source :== 'RPP';
 	pkg.algorithm :== 'auto';
 
@@ -55,9 +52,6 @@ MODEL reactor_equil_fogler_n2o4_ideal_demo;
 	pkg IS_A reactive_package(components);
 	R IS_A reactor_equil(pkg);
 	Xeq IS_A fraction;
-
-	pkg.species_name['N2O4'] :== 'N2O4';
-	pkg.species_name['NO2'] :== 'NO2';
 	pkg.source :== 'ideal+ref0:RPP';
 	pkg.algorithm :== 'auto';
 
@@ -101,9 +95,6 @@ MODEL reactor_equil_fogler_n2o4_pengrob_demo;
 	pkg IS_A reactive_package(components);
 	R IS_A reactor_equil(pkg);
 	Xeq IS_A fraction;
-
-	pkg.species_name['N2O4'] :== 'N2O4';
-	pkg.species_name['NO2'] :== 'NO2';
 	pkg.source :== 'pengrob+ref0:RPP';
 	pkg.algorithm :== 'auto';
 
@@ -149,11 +140,8 @@ MODEL reactor_kineq_fogler_n2o4_cstr_demo;
 	pkg IS_A reactive_package(components);
 	R IS_A reactor_kineq(pkg, reactions);
 	X IS_A fraction;
-
 	pkg.source :== 'RPP';
 	pkg.algorithm :== 'auto';
-	pkg.species_name['N2O4'] :== 'N2O4';
-	pkg.species_name['NO2'] :== 'NO2';
 
 	R.reference_component :== 'NO2';
 	R.kinetics.species['r1'] :== ['N2O4', 'NO2'];

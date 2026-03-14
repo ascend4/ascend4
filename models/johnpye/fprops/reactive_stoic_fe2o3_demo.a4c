@@ -11,10 +11,6 @@ MODEL reactor_stoic_fe2o3_demo;
 	reactions IS_A set OF symbol_constant;
 
 	pkg IS_A reactive_package(components);
-	pkg.species_name['Fe2O3'] :== 'Fe2O3';
-	pkg.species_name['hydrogen'] :== 'hydrogen';
-	pkg.species_name['Fe_bcc'] :== 'Fe_bcc';
-	pkg.species_name['water'] :== 'water';
 	pkg.source :== 'Fe2O3=hidayat_2015;Fe_bcc=hidayat_2015;*=Moran and Shapiro';
 
 	R IS_A reactor_stoic(pkg, reactions);

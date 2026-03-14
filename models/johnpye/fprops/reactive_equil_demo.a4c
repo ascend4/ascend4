@@ -5,10 +5,6 @@ MODEL reactor_equil_wgs_demo;
 	components :== ['CO', 'H2O', 'CO2', 'H2'];
 
 	pkg IS_A reactive_package(components);
-	pkg.species_name['CO'] :== 'CO';
-	pkg.species_name['H2O'] :== 'H2O';
-	pkg.species_name['CO2'] :== 'CO2';
-	pkg.species_name['H2'] :== 'H2';
 	pkg.source :== 'Moran and Shapiro';
 	pkg.algorithm :== 'reduced';
 
