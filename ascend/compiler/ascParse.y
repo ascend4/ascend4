@@ -828,7 +828,7 @@ static CONST char *g_study_filename = NULL;
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
 %type <nptr> data_args fname name dataset_target /* optional_scope */
-%type <eptr> relation expr relop logrelop optional_with_value
+%type <eptr> relation expr relop logrelop optional_with_value optional_default_value
 %type <sptr> set setexprlist optional_set_values
 %type <lptr> fvarlist input_args output_args varlist
 
@@ -2264,7 +2264,7 @@ isa_statement:
     ;
 
 willbe_statement:
-    fvarlist WILLBE_TOK type_identifier optional_of optional_with_value
+    fvarlist WILLBE_TOK type_identifier optional_of optional_with_value optional_default_value
 	{
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($3);
@@ -2275,15 +2275,17 @@ willbe_statement:
 	      DestroyVariableList($1);
 	      DestroySetList(g_typeargs);
 	      DestroyExprList($5);
+	      DestroyExprList($6);
 	      g_untrapped_error++;
 	      $$ = NULL;
 	    } else {
-	      $$ = CreateWILLBE($1,$3,g_typeargs,$4,$5);
+	      $$ = CreateWILLBE($1,$3,g_typeargs,$4,$5,$6);
 	    }
 	  } else {
 	    DestroyVariableList($1);
 	    DestroySetList(g_typeargs);
 	    DestroyExprList($5);
+	    DestroyExprList($6);
 	    g_untrapped_error++;
 	    $$ = NULL;
 	    error_reporter_current_line(ASC_USER_ERROR,"WILL_BE uses the undefined type %s.",SCP($3));
@@ -2450,6 +2452,17 @@ optional_with_value:
 	  $$ = NULL;
 	}
     | WITH_VALUE_T expr
+	{
+	  $$ = $2;
+	}
+    ;
+
+optional_default_value:
+    /* empty */
+	{
+	  $$ = NULL;
+	}
+    | DEFAULT_TOK expr
 	{
 	  $$ = $2;
 	}

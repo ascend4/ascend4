@@ -320,17 +320,23 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
       d = FindType(GetStatType(s));
       if (GetBaseType(d)== model_type /* || GetBaseType(d) == patch_type */ ) {
         /* check arg list length. can't do types until after. */
-        if (GetModelParameterCount(d) != SetLength(GetStatTypeArgs(s))) {
+        {
+          unsigned long got = SetLength(GetStatTypeArgs(s));
+          unsigned long min = GetModelParameterMinimumCount(d);
+          unsigned long max = GetModelParameterCount(d);
+          if (got < min || got > max) {
           if (TLINT_ERROR) {
-            FPRINTF(fp,"%sType %s needs %u arguments. Got %lu.\n",
+            FPRINTF(fp,"%sType %s needs between %lu and %lu arguments. Got %lu.\n",
               StatioLabel(3),
               SCP(GetStatType(s)),
-              GetModelParameterCount(d),
-              SetLength(GetStatTypeArgs(s)));
+              min,
+              max,
+              got);
           }
           rval = DEF_ARGNUM_INCORRECT;
           TypeLintError(fp,s,rval);
           break;
+        }
         }
       }
       /* fall through */
@@ -416,17 +422,23 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
       d = FindType(GetStatType(s));
       if (GetBaseType(d)== model_type /* || GetBaseType(d) == patch_type */) {
         /* check arg list length. can't do types until after. */
-        if (GetModelParameterCount(d) != SetLength(GetStatTypeArgs(s))) {
+        {
+          unsigned long got = SetLength(GetStatTypeArgs(s));
+          unsigned long min = GetModelParameterMinimumCount(d);
+          unsigned long max = GetModelParameterCount(d);
+          if (got < min || got > max) {
           if (TLINT_ERROR) {
-            FPRINTF(fp,"%sType %s needs %u arguments. Got %lu.\n",
+            FPRINTF(fp,"%sType %s needs between %lu and %lu arguments. Got %lu.\n",
               StatioLabel(3),
               SCP(GetStatType(s)),
-              GetModelParameterCount(d),
-              SetLength(GetStatTypeArgs(s)));
+              min,
+              max,
+              got);
           }
           rval = DEF_ARGNUM_INCORRECT;
           TypeLintError(fp,s,rval);
           break;
+        }
         }
       }
       break;
