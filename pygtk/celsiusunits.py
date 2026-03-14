@@ -20,6 +20,29 @@ class CelsiusUnits:
 		return "degC"
 
 	@staticmethod
+	def get_preferred_temperature_units(instance):
+		if instance.getType().isRefinedReal() and str(instance.getType().getDimensions()) == 'TMP':
+			return Preferences().getPreferredUnitsOrigin(str(instance.getType().getName()))
+		return None
+
+	@staticmethod
+	def get_display_unit_name(instance, default=None):
+		units = CelsiusUnits.get_preferred_temperature_units(instance)
+		if units == CelsiusUnits.get_celsius_sign():
+			return units
+		return default
+
+	@staticmethod
+	def convert_show_value(instance, value):
+		units = CelsiusUnits.get_preferred_temperature_units(instance)
+		if units == CelsiusUnits.get_celsius_sign():
+			try:
+				return float(value) - 273.15
+			except (TypeError, ValueError):
+				return value
+		return value
+
+	@staticmethod
 	def convert_celsius_to_kelvin(value, instype):
 		if instype.startswith("delta"):
 			return value
@@ -55,14 +78,12 @@ class CelsiusUnits:
 
 	@staticmethod
 	def convert_show(instance, value, add_sign, default=None):
-		if instance.getType().isRefinedReal() and str(instance.getType().getDimensions()) == 'TMP':
-			units = Preferences().getPreferredUnitsOrigin(str(instance.getType().getName()))
-			if units == CelsiusUnits.get_celsius_sign():
-				temp = value.split(" ")[0]
-				value = CelsiusUnits.convert_kelvin_to_celsius(temp, str(instance.getType()))
-				if add_sign:
-					value += " " + CelsiusUnits.get_celsius_sign()
-				return value
+		if CelsiusUnits.get_preferred_temperature_units(instance) == CelsiusUnits.get_celsius_sign():
+			temp = value.split(" ")[0]
+			value = CelsiusUnits.convert_kelvin_to_celsius(temp, str(instance.getType()))
+			if add_sign:
+				value += " " + CelsiusUnits.get_celsius_sign()
+			return value
 
 		if default is not None:
 			return default

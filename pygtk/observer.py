@@ -66,13 +66,8 @@ class ObserverColumn:
 		self.units = units
 		self.uname = uname
 
-		##### CELSIUS TEMPERATURE WORKAROUND
 		self.instance = instance
-		if instance.getType().isRefinedReal() and str(instance.getType().getDimensions()) == 'TMP':
-			units = Preferences().getPreferredUnitsOrigin(str(instance.getType().getName()))
-			if units == CelsiusUnits.get_celsius_sign():
-				uname = CelsiusUnits.get_celsius_sign()
-		##### CELSIUS TEMPERATURE WORKAROUND
+		uname = CelsiusUnits.get_display_unit_name(instance, uname)
 
 		if len(uname) or uname.find("/")!=-1:
 			uname = "["+uname+"]"
@@ -87,6 +82,10 @@ class ObserverColumn:
 
 	def __repr__(self):
 		return "ObserverColumn(name="+self.name+")"
+
+	def display_value(self, rawval):
+		value = rawval / self.units.getConversion()
+		return CelsiusUnits.convert_show_value(self.instance, value)
 
 	def cellvalue(self, column, cell, model, row_iter, user_data=None):
 		_rowobject = model.get_value(row_iter,0)
@@ -103,12 +102,12 @@ class ObserverColumn:
 						cell.set_property('foreground',OBSERVER_EDIT_COLOR)
 					else:
 						cell.set_property('foreground',OBSERVER_NOEDIT_COLOR)
-				_dataval = _rawval / self.units.getConversion()
+				_dataval = self.display_value(_rawval)
 			else:
 				cell.set_property('foreground',OBSERVER_NORMAL_COLOR)
 				try :
 					_rawval = _rowobject.values[self.index]
-					_dataval = _rawval / self.units.getConversion()
+					_dataval = self.display_value(_rawval)
 				except:
 					_dataval = ""
 			if _rowobject.tainted is True:
@@ -119,9 +118,6 @@ class ObserverColumn:
 			else:
 				cell.set_property('background', None)
 
-			##### CELSIUS TEMPERATURE WORKAROUND
-			_dataval = CelsiusUnits.convert_show(self.instance, str(_dataval), False)
-			##### CELSIUS TEMPERATURE WORKAROUND
 		except Exception as e:
 			_dataval = ""
 
@@ -160,13 +156,13 @@ class ObserverRow:
 		if not self.active:
 			for k,v in table.cols.items():
 				try:
-					vv[k]=(self.values[v.index]/v.units.getConversion())
+					vv[k] = v.display_value(self.values[v.index])
 				except:
 					vv[k]=""
 			return vv
 		else:
 			for index, col in table.cols.items():
-				vv[index] = float(col.instance.getRealValue())/col.units.getConversion()
+				vv[index] = col.display_value(float(col.instance.getRealValue()))
 			return vv
 
 class ObserverTab:
@@ -279,17 +275,6 @@ class ObserverTab:
 				x=self.cols[0]
 			if y is None:
 				y=[self.cols[1]]
-
-		##### CELSIUS TEMPERATURE WORKAROUND
-		size = len(CelsiusUnits.get_celsius_sign())
-		xtit = x.title.find(CelsiusUnits.get_celsius_sign())
-		if xtit != -1:
-			x.title = x.title[:xtit] + "K" + x.title[xtit + size:]
-		for yy in y:
-			ytit = yy.title.find(CelsiusUnits.get_celsius_sign())
-			if ytit != -1:
-				yy.title = yy.title[:ytit] + "K" + yy.title[ytit + size:]
-		##### CELSIUS TEMPERATURE WORKAROUND
 
 		# if column indices are provided instead of columns, convert them
 		if x.__class__ is int and x>=0 and x<len(self.cols):
@@ -726,12 +711,7 @@ class ObserverTab:
 				else:
 					name = self.browser.sim.getInstanceName(_col.instance)
 
-				##### CELSIUS TEMPERATURE WORKAROUND
-				if _col.instance.getType().isRefinedReal() and str(_col.instance.getType().getDimensions()) == 'TMP':
-					units = Preferences().getPreferredUnitsOrigin(str(_col.instance.getType().getName()))
-					if units == CelsiusUnits.get_celsius_sign():
-						_uname = CelsiusUnits.get_celsius_sign()
-				##### CELSIUS TEMPERATURE WORKAROUND
+				_uname = CelsiusUnits.get_display_unit_name(_col.instance, _uname)
 				if len(_uname) or _uname.find("/")!=-1:
 					_uname = "["+_uname+"]"
 
