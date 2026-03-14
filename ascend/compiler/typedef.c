@@ -3059,15 +3059,6 @@ enum typelinterr VerifyTypeArgs(CONST struct Set *alist,
     switch(StatementType(stat)) {
     case WILLBE:
       vl = GetStatVarList(stat);
-      if (sn == NULL) {
-        if (GetStatDefaultValue(stat) != NULL) {
-          return DEF_OKAY;
-        }
-        ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
-        FPRINTF(ASCERR,"Missing required argument %d.",argc);
-        error_reporter_end_flush();
-        return DEF_ARGNUM_INCORRECT;
-      }
       atn = GetStatType(stat);
       atype = FindType(atn);
       assert(atype!=NULL);
@@ -3161,12 +3152,6 @@ enum typelinterr VerifyTypeArgs(CONST struct Set *alist,
       }
       break;
     case ISA:
-      if (sn == NULL) {
-        ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
-        FPRINTF(ASCERR,"Missing required argument %d.",argc);
-        error_reporter_end_flush();
-        return DEF_ARGNUM_INCORRECT;
-      }
       if (SetType(sn)!=0) {
         FPRINTF(ASCERR,
            "%sIncorrect range value passed for\n  Argument %d: ",
@@ -3852,41 +3837,6 @@ enum typelinterr CheckWITHVALUE( CONST struct Statement *stat)
   return rval;
 }
 
-static
-enum typelinterr CheckDEFAULTVALUE(CONST struct Statement *stat)
-{
-  enum typelinterr rval = DEF_OKAY;
-  struct gl_list_t *lclgl;
-  CONST struct VariableList *vl;
-  CONST struct TypeDescription *ptype;
-
-  if (StatementType(stat) != WILLBE) {
-    ASC_PANIC("StatementType(stat)!=WILLBE");
-  }
-  if (GetStatDefaultValue(stat) == NULL) {
-    return DEF_OKAY;
-  }
-
-  vl = GetStatVarList(stat);
-  if (VariableListLength(vl) != 1 || NameLength(NamePointer(vl)) != 1) {
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
-      "DEFAULT is currently only supported for single scalar/set WILL_BE parameters.");
-    return DEF_ILLEGAL_PARAM;
-  }
-
-  ptype = FindType(GetStatType(stat));
-  if (ptype == NULL || (!BaseTypeIsConstant(ptype) && !BaseTypeIsSet(ptype))) {
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
-      "DEFAULT is currently only supported for constant or set WILL_BE parameters.");
-    return DEF_ILLEGAL_PARAM;
-  }
-
-  lclgl = CopyLCLToGL();
-  rval = VerifyScalarNames(GetStatDefaultValue(stat),lclgl,NULL);
-  gl_destroy(lclgl);
-  return rval;
-}
-
 /*
  * Checks the first element of a name for being in the child list.
  * If not in child list, checks/adds it. returns DEF_OKAY.
@@ -3990,7 +3940,6 @@ enum typelinterr ParametricChildList(symchar *name,
   unsigned long c,len;
   enum typelinterr error_code;
   struct Statement *stat;
-  int saw_default = 0;
 
   (void) name; /* may need it later */
   len = StatementListLength(slist);
@@ -4000,13 +3949,6 @@ enum typelinterr ParametricChildList(symchar *name,
     stat = (struct Statement *)gl_fetch(statements,c);
     switch(StatementType(stat)){
     case WILLBE:
-      if (saw_default && GetStatDefaultValue(stat) == NULL) {
-        ClearLCL();
-        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
-          "WILL_BE parameters with DEFAULT must form a trailing suffix.");
-        TypeLintError(ASCERR,stat,DEF_ILLEGAL_PARAM);
-        return DEF_ILLEGAL_PARAM;
-      }
       /* here we should have a check of withvalue clauses
        * for any names being defined in leading parameters.
        */
@@ -4019,34 +3961,8 @@ enum typelinterr ParametricChildList(symchar *name,
         TypeLintError(ASCERR,stat, error_code);
         return error_code;
       }
-      error_code = CheckDEFAULTVALUE(stat);
-      if (error_code != DEF_OKAY) {
-        ClearLCL();
-        FPRINTF(ASCERR,
-          "%sDEFAULT must be computable from leading parameters.\n",
-          StatioLabel(3));
-        TypeLintError(ASCERR,stat,error_code);
-        return error_code;
-      }
-      if (GetStatDefaultValue(stat) != NULL) {
-        saw_default = 1;
-      }
-      error_code = DoParamVarList(GetStatVarList(stat),
-                     FindType(GetStatType(stat)),stat,checksubs);
-      if (error_code != DEF_OKAY) {
-        ClearLCL();
-        TypeLintError(ASCERR,stat, error_code);
-      return error_code;
-      }
-      break;
+      /* fall through */
     case ISA:
-      if (saw_default) {
-        ClearLCL();
-        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
-          "Parameters with DEFAULT must be trailing in the parameter list.");
-        TypeLintError(ASCERR,stat,DEF_ILLEGAL_PARAM);
-        return DEF_ILLEGAL_PARAM;
-      }
       error_code = DoParamVarList(GetStatVarList(stat),
                      FindType(GetStatType(stat)),stat,checksubs);
       if (error_code != DEF_OKAY) {

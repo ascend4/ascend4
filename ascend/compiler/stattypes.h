@@ -247,7 +247,6 @@ struct StateIS {
   struct Set *typeargs;     /**< all, parameter list. may be NULL */
   symchar *settype;         /**< IS_A only */
   struct Expr *checkvalue;  /**< WILL_BE only */
-  struct Expr *defaultvalue; /**< WILL_BE only, parameter default if omitted */
   /* note that checkvalue!=NULL and typeargs!=NULL are mutually exclusive
    * because checkvalues go with constants which are never parameterized.
    */

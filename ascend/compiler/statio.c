@@ -346,10 +346,6 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
       FPRINTF(f," WITH_VALUE ");
       WriteExpr(f,GetStatCheckValue(s));
     }
-    if (GetStatDefaultValue(s)!=NULL ) {
-      FPRINTF(f," DEFAULT ");
-      WriteExpr(f,GetStatDefaultValue(s));
-    }
     FPRINTF(f,";\n");
     break;
   case IRT:
