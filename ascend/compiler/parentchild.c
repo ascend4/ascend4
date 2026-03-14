@@ -925,24 +925,38 @@ CONST struct Statement *InstanceDeclarationStatement(CONST struct Instance *inst
                                                      CONST struct Instance *parent_hint)
 {
   struct Instance *parent;
+  struct Instance *declinst;
   unsigned long ci;
 
   if(inst == NULL){
     return NULL;
   }
 
+  declinst = (struct Instance *)inst;
+
   parent = (struct Instance *)parent_hint;
   if(parent == NULL){
-    if(NumberParents(inst) == 0){
+    if(NumberParents(declinst) == 0){
       return NULL;
     }
-    parent = InstanceParent(inst,1);
+    parent = InstanceParent(declinst,1);
   }
   if(parent == NULL){
     return NULL;
   }
 
-  ci = ChildIndex(parent,inst);
+  while(IsArrayInstance(parent)){
+    declinst = parent;
+    if(NumberParents(declinst) == 0){
+      return NULL;
+    }
+    parent = InstanceParent(declinst,1);
+    if(parent == NULL){
+      return NULL;
+    }
+  }
+
+  ci = ChildIndex(parent,declinst);
   if(ci == 0){
     return NULL;
   }

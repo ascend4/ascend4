@@ -564,6 +564,13 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
   desc = InstanceTypeDesc(work);
   clp = GetChildList(desc);
   statement = (struct Statement *)ChildStatement(clp,cnum);
+  if(statement == NULL){
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Unable to determine declaration statement for child '%s' while reporting array expansion failure",
+      SCP(ChildStrPtr(clp,cnum))
+    );
+    return;
+  }
   if ( StatWrong(statement) != 0) {
     return;
   }
