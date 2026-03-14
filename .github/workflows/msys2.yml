@@ -100,25 +100,16 @@ jobs:
         mkdir -p "$CUNIT_PREFIX"
         scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX="$CUNIT_PREFIX" ascend solvers models test a4
 
-    - name: Test ASCEND (solver_ipopt + integrator_lsode)
-      run: |
-        ./a4 cutest solver_ipopt integrator_lsode
-
-    - name: Test ASCEND (mallocdebug except solver_highs)
-      run: |
-        ./a4 cutest -r mallocdebug -e solver_highs
-
-    - name: Test ASCEND (mallocdebug full)
+    - name: Test ASCEND
       run: |
         ./a4 cutest -r mallocdebug
 
-# suppress codecov -- some weird filename length issue?
-#    - name: Upload coverage reports to Codecov
-#      uses: codecov/codecov-action@v5
-#      with:
-#        report_type: coverage
-#        flags: msys2-cunit
-#        fail_ci_if_error: true
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        report_type: coverage
+        flags: msys2-cunit
+        fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
 
 # vim: ts=2:sw=2:et
