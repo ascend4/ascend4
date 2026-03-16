@@ -638,6 +638,9 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 	char *path, *foundpath;
 	ospath_stat_t buf;
 	FILE *f;
+	int free_path;
+
+	free_path = 0;
 
 	fp1 = ospath_new_noclean(name);
 	if(fp1==NULL){
@@ -686,6 +689,8 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 		if(path==NULL){
 			/* CONSOLE_DEBUG("Library search path env var '%s' not found, using default path '%s'",envv,dpath); */
 			path=dpath;
+		}else{
+			free_path = 1;
 		}
 
 		/* CONSOLE_DEBUG("SEARCHPATH IS %s",path); */
@@ -694,12 +699,18 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 		if(NULL==ospath_searchpath_iterate(sp,&test_librarysearch,&ls)){
 			ospath_free(fp1);
 			ospath_searchpath_free(sp);
+			if(free_path){
+				ASC_FREE(path);
+			}
 			return NULL;
 		}
 
 		foundpath = ASC_NEW_ARRAY(char,strlen(ls.fullpath)+1);
 		strcpy(foundpath,ls.fullpath);
 		ospath_searchpath_free(sp);
+		if(free_path){
+			ASC_FREE(path);
+		}
 	}
 
 	ospath_free(fp1);

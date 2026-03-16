@@ -257,23 +257,34 @@ static struct BlackBoxCache *find_blackbox_cache_for_output(struct Instance *var
 	return NULL;
 }
 
+static AscFpropsRxnEqmDebugFreshCompareFn g_rxn_eqm_debug_fresh_compare = NULL;
+static char *g_rxn_eqm_debug_fresh_compare_libpath = NULL;
+
 static AscFpropsRxnEqmDebugFreshCompareFn load_rxn_eqm_debug_fresh_compare(void){
-	static AscFpropsRxnEqmDebugFreshCompareFn fn = NULL;
 	char *libpath;
 
-	if(fn != NULL){
-		return fn;
+	if(g_rxn_eqm_debug_fresh_compare != NULL){
+		return g_rxn_eqm_debug_fresh_compare;
 	}
 
 	libpath = SearchArchiveLibraryPath("johnpye/fprops/fprops_ascend", "models", ASC_ENV_LIBRARY);
 	CU_ASSERT_FATAL(libpath != NULL);
 	CU_ASSERT_FATAL(0 == Asc_DynamicLoad(libpath, NULL));
-	fn = (AscFpropsRxnEqmDebugFreshCompareFn)Asc_DynamicFunction(
+	g_rxn_eqm_debug_fresh_compare = (AscFpropsRxnEqmDebugFreshCompareFn)Asc_DynamicFunction(
 		libpath, "asc_fprops_rxn_eqm_debug_fresh_compare"
 	);
-	ASC_FREE(libpath);
-	CU_ASSERT_FATAL(fn != NULL);
-	return fn;
+	CU_ASSERT_FATAL(g_rxn_eqm_debug_fresh_compare != NULL);
+	g_rxn_eqm_debug_fresh_compare_libpath = libpath;
+	return g_rxn_eqm_debug_fresh_compare;
+}
+
+static void unload_rxn_eqm_debug_fresh_compare(void){
+	if(g_rxn_eqm_debug_fresh_compare_libpath != NULL){
+		CU_ASSERT(0 == Asc_DynamicUnLoad(g_rxn_eqm_debug_fresh_compare_libpath));
+		ASC_FREE(g_rxn_eqm_debug_fresh_compare_libpath);
+		g_rxn_eqm_debug_fresh_compare_libpath = NULL;
+		g_rxn_eqm_debug_fresh_compare = NULL;
+	}
 }
 
 static double nox_air_demo_flow_by_name(const char *name){
@@ -544,6 +555,7 @@ static void test_nox_air_debug_reuse_descending_to_300K(void){
 	}
 
 	destroy_test_simulation(&S);
+	unload_rxn_eqm_debug_fresh_compare();
 }
 
 static void test_nox_air_debug_direct_eval_vs_solver_650K(void){
@@ -668,6 +680,7 @@ static void test_nox_air_debug_direct_eval_vs_solver_650K(void){
 	CU_ASSERT_DOUBLE_EQUAL(outputs_fresh[idx_no2], outputs_direct[idx_no2], 1e-12);
 
 	destroy_test_simulation(&S);
+	unload_rxn_eqm_debug_fresh_compare();
 }
 
 static void test_nox_air_debug_direct_eval_vs_solver_300K(void){
@@ -755,6 +768,7 @@ static void test_nox_air_debug_direct_eval_vs_solver_300K(void){
 	CU_ASSERT_EQUAL(status_bbox_after, status_fresh_after);
 
 	destroy_test_simulation(&S);
+	unload_rxn_eqm_debug_fresh_compare();
 }
 
 
