@@ -70,6 +70,14 @@ Ni=oecd_nea_tdb_vol6_nickel;NiO=oecd_nea_tdb_vol6_nickel;*=Moran and Shapiro
 
 The wildcard `*=` gives a default for species not named explicitly.
 
+For reactive-package use, the key may be either a canonical species name
+or a familiar alias such as `CO`, `CO2`, `H2`, or `H2O`. Resolution is
+now done in two stages: first gather the canonical candidates for the
+user token, then apply the per-species source selector against those
+candidates. That means a map like
+`carbonmonoxide=Moran and Shapiro;*=RPP` will still downselect the alias
+`CO` to the intended Moran-and-Shapiro entry.
+
 This is the main mechanism for mixed-source equilibrium problems,
 for example:
 
@@ -592,7 +600,7 @@ Pathway grouping:
 - Reduced-space pathway (primary): `reduced` (with optional 1D special solve, continuation, and active-set boundary handling).
 - Full-space pathway (secondary): `ipopt*` with `slsqp` fallback.
 
-For low-temperature boundary-heavy cases, `reduced` is now the primary robust path.
+For low-temperature boundary-heavy cases, `reduced` is now the primary robust path. In the ASCEND blackbox wrapper, direct unseeded callback evaluation is also intentionally kept on the reduced-only path; seeded/preloaded solver-path calls can still use `auto_reduced`.
 
 ### 7. Reduced Newton method (interior part)
 
@@ -668,7 +676,7 @@ When interior reduced solve fails near boundary, code now runs an active-set see
 - Split species into active set $\mathcal{A}$ (pinned at $n_i=n_{\mathrm{floor}}$) and free set $\mathcal{F}$.
 - Solve reduced problem on free species only.
 - Compute reduced gradients as $r_i = (\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i)/(RT)$.
-- Recover `lambda` from free species set `F` by solving `A_F^T lambda ≈ -mu_F`, exactly if dimensions permit, otherwise as a least-squares system.
+- Recover `lambda` from free species set `F` by solving `A_F^T lambda approx -mu_F`, exactly if dimensions permit, otherwise as a least-squares system.
 
 - Pivot rules:
   - add species to active set if free species is near bound and $r_i>0$,
@@ -755,7 +763,7 @@ For the secondary full-space interior-point pathway, see Appendix A.
 
 ## Part C. Validation and Operations
 
-### 12. What “correctness” means here
+### 12. What "correctness" means here
 
 For ideal-gas equilibrium we check:
 

@@ -574,9 +574,12 @@ This explains an otherwise confusing result from the NOx tests:
 
 - solver-driven `solve_case` at `300 K` can now succeed, because it goes
   through the cache preload path
-- manual direct callback invocation can still return `status 2` at
-  `300 K`, because that path bypasses the cache preload and does not see
-  the current outlet composition
+- manual direct callback invocation can still fail cleanly at `300 K`,
+  because that path bypasses the cache preload and does not see the
+  current outlet composition; in the current ASCEND wrapper, an unseeded
+  direct callback is also intentionally kept on the reduced-only path.
+  In current tests this shows up as a matching reduced-path failure,
+  rather than a successful seeded solve.
 
 So this is not a thermodynamic inconsistency. It is an ASCEND runtime
 context distinction.
@@ -1433,7 +1436,7 @@ experiment confirmed that scaling is real:
 - tighter trace-species nominals made the repeated path track the direct
   FPROPS `500 K` and `400 K` values much more closely
 - but that same experiment also exposed a genuine repeated-path `300 K`
-  black-box `status 2` failure
+  low-temperature direct-equilibrium failure
 
 The useful refinement was to scale only the chemically relevant NOx
 trace rows, and not too aggressively. In the current demo, moderate
@@ -1894,7 +1897,7 @@ Current workarounds:
   declarative relations
 - if truly constant stoichiometric coefficients are desired in future,
   they must be assigned declaratively early enough to be available at
-  pass 2, or ASCEND’s relation compiler will need an explicit delayed
+  pass 2, or ASCEND's relation compiler will need an explicit delayed
   constant-resolution mechanism
 
 These should be revisited separately from the thermo/reactor design
@@ -2066,11 +2069,16 @@ enough to transport the missing internal state.
 
 ### 16.6 Species alias and formula-based name resolution
 
-The current `reactive_package` examples require explicit mappings such
-as `CO -> carbonmonoxide` and `CO2 -> carbondioxide`, which is not a
-good long-term user experience.
+The current reactive-package resolver no longer requires ASCEND MODEL
+code to spell out simple aliases such as `CO -> carbonmonoxide` or
+`CO2 -> carbondioxide`. The package-build path now resolves the token
+against all matching canonicals first, then applies the source selector
+against those candidates. That matters for mixed-source maps such as
+`carbonmonoxide=Moran and Shapiro;*=RPP`, where the raw token `CO`
+should downselect to `carbonmonoxide` rather than falling through to the
+wrong default-source canonical.
 
-A likely direction is:
+A likely further direction is:
 
 - keep one canonical internal FPROPS species name per basis species
 - make `species_name[...]` an optional explicit override
