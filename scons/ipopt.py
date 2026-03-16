@@ -1,11 +1,43 @@
+import os
 import pathlib
 import platform
+import re
 import shutil
 import subprocess
 
 from SCons.Script import AddMethod
 
 _ipopt_cache = {}
+
+def _normalise_msys_path(path, env):
+	path = str(path)
+	if platform.system() != 'Windows':
+		return path
+
+	home = env['ENV'].get('HOME') or os.environ.get('HOME')
+	if not home:
+		return path
+
+	home = home.replace('\\', '/')
+	home_marker = '/home/'
+	if home_marker not in home:
+		return path
+
+	msys_root = home.split(home_marker, 1)[0]
+	if not msys_root:
+		return path
+
+	if path.startswith('/home/'):
+		return msys_root + path
+
+	match = re.match(r'^[A-Za-z]:(/home/.*)$', path)
+	if match:
+		return msys_root + match.group(1)
+
+	return path
+
+def _normalise_msys_paths(paths, env):
+	return [_normalise_msys_path(path, env) for path in (paths or [])]
 
 def _copy_ipopt_result_to_env(env, result):
 	env['HAVE_IPOPT'] = result['ok']
@@ -50,6 +82,7 @@ def ensure_ipopt(env):
 			try:
 				subprocess.run(
 					[pkgtool, '--exists', 'ipopt'],
+					env=dict(os.environ, **probe_env['ENV']),
 					stdout=subprocess.PIPE,
 					stderr=subprocess.PIPE,
 					check=True
@@ -70,8 +103,8 @@ def ensure_ipopt(env):
 					result = {
 						'ok': True,
 						'reason': None,
-						'cpppath': list(probe_env.get('CPPPATH') or []),
-						'libpath': list(probe_env.get('LIBPATH') or []),
+						'cpppath': _normalise_msys_paths(probe_env.get('CPPPATH'), probe_env),
+						'libpath': _normalise_msys_paths(probe_env.get('LIBPATH'), probe_env),
 						'libs': list(probe_env.get('LIBS') or []),
 					}
 				except Exception:

@@ -628,6 +628,8 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 ){
 	struct Instance *compinst, *typeinst, *srcinst;
 	const char *comp, *resolved_comp = NULL, *type = NULL, *src = NULL;
+	FpropsResolvedName resolved;
+	FpropsNameResolveStatus status;
 
 	fprops_symbols[0] = AddSymbol("component");
 	fprops_symbols[1] = AddSymbol("type");
@@ -673,7 +675,14 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 		if(src && strlen(src)==0)src = NULL;
 	}
 
-	if(asc_resolve_name_or_error(comp, FPROPS_NAME_DOMAIN_PURE_FLUID, src,
+	status = fprops_name_resolve(comp, FPROPS_NAME_DOMAIN_PURE_FLUID, src, &resolved);
+	if(status == FPROPS_NAME_RESOLVE_OK && resolved.canonical
+			&& resolved.canonical->canonical && resolved.canonical->canonical[0]){
+		resolved_comp = resolved.canonical->canonical;
+	}else if(status == FPROPS_NAME_RESOLVE_NOT_FOUND){
+		resolved_comp = comp;
+		MSG("Pure fluid '%s' is not in the generated name registry; falling back to direct EOS lookup.", comp);
+	}else if(asc_resolve_name_or_error(comp, FPROPS_NAME_DOMAIN_PURE_FLUID, src,
 			"FPROPS DATA", &resolved_comp)){
 		return 1;
 	}
@@ -1288,6 +1297,7 @@ static const char *noutputs_msg = "Incorrect call: %u outputs received, but expe
 	if(inputs==NULL)return -3; \
 	if(outputs==NULL)return -4; \
 	if(bbox==NULL)return -5; \
+	if(bbox->user_data==NULL){ERRMSG("Pure-fluid FPROPS blackbox has no prepared fluid data");return -6;} \
 	\
 	/* the 'user_data' in the black box object will contain the */\
 	/* coefficients required for this fluid; cast it to the required form: */\
@@ -1826,7 +1836,7 @@ int fprops_Tvsx_h_incomp_calc(struct BBoxInterp *bbox,
 	static const PureFluid *last = NULL;
 	double p = 1e5; // arbitrary!
 	static double h,T,v,s,x;
-	if(last == FLUID && h == inputs[1]){
+	if(last == FLUID && h == inputs[0]){
 		outputs[0] = T;
 		outputs[1] = v;
 		outputs[2] = s;

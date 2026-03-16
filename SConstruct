@@ -2627,8 +2627,9 @@ SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, 
 #------------------------------------------------------
 # BUILD...
 
-# so that #include <ascend/modulename/headername.h> works across all modules...
-env.AppendUnique(CPPPATH=['#'])
+# so that #include <ascend/modulename/headername.h> resolves to this checkout
+# even if an older ASCEND tree is present elsewhere on the compiler search path.
+env.PrependUnique(CPPPATH=['#'])
 
 if env['DEBUG']:
 	env.AppendUnique(
@@ -2747,7 +2748,7 @@ env.Alias('libascend',libtargets)
 # UNIT TESTS (C CODE)
 
 test_env = env.Clone()
-test_env.AppendUnique(CPPPATH=['#'])
+test_env.PrependUnique(CPPPATH=['#'])
 
 if env['WITH_CUNIT']:
 	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']

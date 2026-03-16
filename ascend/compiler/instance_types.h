@@ -36,6 +36,7 @@
 #include <ascend/general/list.h>
 #include "logical_relation.h"
 #include <ascend/utilities/bit.h>
+#include "slvreq.h"
 
 struct asc_simstatus;
 
@@ -643,7 +644,7 @@ struct SimulationInstance {
   unsigned long tmp_num;        /**< used when an instance tree is being copied*/
   unsigned int anon_flags;      /**< anonymous field to be manipulated */
   /* add other interesting stuff here */
-  VOIDPTR slvreq_hooks;
+  SlvReqHooks slvreq_hooks;
 };
 
 /** dummy instance for unselected children of models

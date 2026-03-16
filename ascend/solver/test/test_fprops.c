@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <dlfcn.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/ospath.h>
@@ -10,7 +9,9 @@
 #include <ascend/general/ltmatrix.h>
 
 #include <ascend/general/platform.h>
+#include <ascend/utilities/ascDynaLoad.h>
 #include <ascend/utilities/ascEnvVar.h>
+#include <ascend/utilities/config.h>
 #include <ascend/utilities/error.h>
 
 #include <ascend/compiler/ascCompiler.h>
@@ -257,13 +258,22 @@ static struct BlackBoxCache *find_blackbox_cache_for_output(struct Instance *var
 }
 
 static AscFpropsRxnEqmDebugFreshCompareFn load_rxn_eqm_debug_fresh_compare(void){
-	void *handle;
-	void *sym;
-	handle = dlopen("models/johnpye/fprops/libfprops_ascend.so", RTLD_NOW | RTLD_LOCAL);
-	CU_ASSERT_FATAL(handle != NULL);
-	sym = dlsym(handle, "asc_fprops_rxn_eqm_debug_fresh_compare");
-	CU_ASSERT_FATAL(sym != NULL);
-	return (AscFpropsRxnEqmDebugFreshCompareFn)sym;
+	static AscFpropsRxnEqmDebugFreshCompareFn fn = NULL;
+	char *libpath;
+
+	if(fn != NULL){
+		return fn;
+	}
+
+	libpath = SearchArchiveLibraryPath("johnpye/fprops/fprops_ascend", "models", ASC_ENV_LIBRARY);
+	CU_ASSERT_FATAL(libpath != NULL);
+	CU_ASSERT_FATAL(0 == Asc_DynamicLoad(libpath, NULL));
+	fn = (AscFpropsRxnEqmDebugFreshCompareFn)Asc_DynamicFunction(
+		libpath, "asc_fprops_rxn_eqm_debug_fresh_compare"
+	);
+	ASC_FREE(libpath);
+	CU_ASSERT_FATAL(fn != NULL);
+	return fn;
 }
 
 static double nox_air_demo_flow_by_name(const char *name){
@@ -828,3 +838,5 @@ TESTS1(T,X)
 
 REGISTER_TESTS_SIMPLE(solver_fprops, TESTS)
 #undef X
+
+

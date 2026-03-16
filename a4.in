@@ -9,6 +9,19 @@ def MSG(*args):
 		pass
 PYTHON=pathlib.Path(r'@PYTHON@')
 
+def get_effective_home():
+	home = os.environ.get('HOME')
+	if home:
+		return pathlib.Path(home)
+	userprofile = os.environ.get('USERPROFILE')
+	if userprofile:
+		return pathlib.Path(userprofile)
+	homedrive = os.environ.get('HOMEDRIVE')
+	homepath = os.environ.get('HOMEPATH')
+	if homedrive and homepath:
+		return pathlib.Path(homedrive + homepath)
+	return pathlib.Path.home()
+
 def add_at_start(envvar,pathcomponents):
 	"""
 	Add path components at start of envvar, but only if they're not already in the path somewhere.
@@ -70,10 +83,10 @@ def shebang(script,args):
 		if not found:
 			raise RuntimeError(f"script '{script}' either doesn't exist is or not executable")
 		return [found]+args
-	with open(p,'r') as f:
+	with open(p,'rb') as f:
 		line1 = f.readline()
-		if line1.startswith("#!"):
-			interp = line1[2:].strip().split()
+		if line1.startswith(b"#!"):
+			interp = line1[2:].decode('utf-8', errors='replace').strip().split()
 			if interp:
 				pi = pathlib.Path(interp[0])
 				if str(pi)[0] == "/":
@@ -211,7 +224,7 @@ if __name__ == "__main__":
 		restart.append('ASCENDSOLVERS')
 
 	# ensure that we have our shared libraries in the LD_LIBRARY_PATH
-	libdirs = [sourceroot, pathlib.Path.home() / '.local/lib']
+	libdirs = [sourceroot, get_effective_home() / '.local/lib']
 	if add_at_start(LD_LIBRARY_PATH,libdirs):
 		restart.append(LD_LIBRARY_PATH)
 
