@@ -224,7 +224,8 @@ if __name__ == "__main__":
 		restart.append('ASCENDSOLVERS')
 
 	# ensure that we have our shared libraries in the LD_LIBRARY_PATH
-	libdirs = [sourceroot, get_effective_home() / '.local/lib']
+	local_bindir = get_effective_home() / '.local/bin' if platform.system() == 'Windows' else get_effective_home() / '.local/lib'
+	libdirs = [sourceroot, local_bindir]
 	if add_at_start(LD_LIBRARY_PATH,libdirs):
 		restart.append(LD_LIBRARY_PATH)
 
