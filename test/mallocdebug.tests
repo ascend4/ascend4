@@ -37,3 +37,5 @@ compiler_dataset
 packages_defaultall
 integrator_lsode
 integrator_ida
+
+solver_fprops
