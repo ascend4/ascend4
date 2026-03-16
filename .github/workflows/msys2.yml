@@ -13,6 +13,8 @@ jobs:
     env:
       OMP_NUM_THREADS: "1"
       ASCEND_CI_HIGHS_SERIAL: "1"
+      CUNIT_VERSION: "2.2.2"
+      CUNIT_PKGREL: "6"
 
     defaults:
       run:
@@ -33,7 +35,7 @@ jobs:
         update: true
         cache: true
         install: >-
-          git swig subversion make flex bison
+          git swig make flex bison
           autoconf automake libtool m4
           mingw-w64-${{matrix.env}}-toolchain
           mingw-w64-${{matrix.env}}-gsl
@@ -60,48 +62,19 @@ jobs:
         pacman -U --noconfirm "$PKG_FILE"
         pacman -Q mingw-w64-ucrt-x86_64-ipopt
 
+    - name: Install CUnit package
+      run: |
+        PKG_FILE="mingw-w64-${{ matrix.env }}-cunit-${CUNIT_VERSION}-${CUNIT_PKGREL}-any.pkg.tar.zst"
+        PKG_URL="https://github.com/ascend4/cunit/releases/download/v${CUNIT_VERSION}/${PKG_FILE}"
+        curl -L --retry 3 -o "$PKG_FILE" "$PKG_URL"
+        pacman -U --noconfirm "$PKG_FILE"
+        pacman -Q "mingw-w64-${{ matrix.env }}-cunit"
+
     - uses: actions/checkout@v4
-
-    - name: Get CUnit SVN revision
-      id: cunit_rev
-      run: |
-        REV=$(svn info https://svn.code.sf.net/p/cunit/code/branches/mingw64 | awk -F': ' '/^Revision:/{print $2}')
-        echo "rev=$REV" >> "$GITHUB_OUTPUT"
-
-    - name: Cache CUnit install
-      id: cunit_cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ runner.temp }}/ascend4-msys2-cunit
-        key: ${{ runner.os }}-ascend4-msys2-cunit-v2-r${{ steps.cunit_rev.outputs.rev }}
-        restore-keys: |
-          ${{ runner.os }}-ascend4-msys2-cunit-v2-
-
-    - name: Cache status
-      run: |
-        echo "CUnit cache hit: ${{ steps.cunit_cache.outputs.cache-hit }}"
-
-    - name: Build and install CUnit
-      run: |
-        CUNIT_PREFIX="$(cygpath -u "$RUNNER_TEMP")/ascend4-msys2-cunit"
-        mkdir -p "$CUNIT_PREFIX"
-        if [ ! -f "$CUNIT_PREFIX/include/CUnit/CUnit.h" ] || { [ ! -f "$CUNIT_PREFIX/lib/libcunit.a" ] && [ ! -f "$CUNIT_PREFIX/lib/libcunit.dll.a" ]; }; then
-          rm -rf "$CUNIT_PREFIX"
-          mkdir -p "$CUNIT_PREFIX"
-          svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit
-          cd cunit
-          ./configure --prefix="$CUNIT_PREFIX"
-          make -j8
-          make install
-          test -f "$CUNIT_PREFIX/include/CUnit/CUnit.h"
-          test -f "$CUNIT_PREFIX/lib/libcunit.a" || test -f "$CUNIT_PREFIX/lib/libcunit.dll.a"
-        fi
 
     - name: Build ASCEND
       run: |
-        CUNIT_PREFIX="$(cygpath -u "$RUNNER_TEMP")/ascend4-msys2-cunit"
-        mkdir -p "$CUNIT_PREFIX"
+        CUNIT_PREFIX="${MSYSTEM_PREFIX:-/${{ matrix.sys }}}"
         scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX="$CUNIT_PREFIX" ascend solvers models test a4
 
     - name: Test ASCEND
