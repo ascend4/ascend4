@@ -30,7 +30,7 @@ jobs:
     - uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
-        update: false
+        update: true
         cache: true
         install: >-
           git swig subversion make flex bison
@@ -49,8 +49,9 @@ jobs:
           mingw-w64-${{matrix.env}}-python-wheel
           mingw-w64-${{matrix.env}}-python-matplotlib
           mingw-w64-${{matrix.env}}-scons
-          mingw-w64-${{matrix.env}}-gcovr
-
+        pacboy: >-
+          gcovr:p
+      
     - name: Install IPOPT package
       run: |
         PKG_URL='https://stg.fprops.org/public.php/dav/files/X54WgtSsEbFoFKG/mingw-w64-ucrt-x86_64-ipopt-3.14.19-1-any.pkg.tar.zst'
