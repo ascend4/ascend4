@@ -4,10 +4,8 @@ PROVIDE "johnpye/fprops/reactive_stoic.a4l";
 
 MODEL reactive_package(species WILL_BE set OF symbol_constant;);
 	components ALIASES species;
-	species_name[components] IS_A symbol_constant;
 	source IS_A symbol_constant;
 	algorithm IS_A symbol_constant;
-
 END reactive_package;
 
 MODEL reactive_state(pkg WILL_BE reactive_package;);
@@ -68,7 +66,62 @@ METHODS
 		END FOR;
 		H_flow := 0 {W};
 	END default_self;
+
+	METHOD specify;
+		FIX T;
+		FIX P;
+		FIX f[components];
+		FREE flow;
+		FREE y[components];
+		FREE H_flow;
+	END specify;
 END reactive_stream;
+
+MODEL reactive_holdup(pkg WILL_BE reactive_package;);
+	components ALIASES pkg.components;
+
+	state IS_A reactive_state(pkg);
+	T ALIASES state.T;
+	P ALIASES state.P;
+	FOR i IN components CREATE
+		y[i] ALIASES state.y[i];
+	END FOR;
+
+	n[components] IS_A mole;
+	N IS_A mole;
+	H IS_A energy;
+	V IS_A volume;
+	V_molar IS_A molar_volume;
+	c[components] IS_A molar_density;
+	c_tot IS_A molar_density;
+
+	calc_V: fprops_rxn_v_TPn(
+		T, P, y[components] : INPUT;
+		V_molar : OUTPUT;
+		pkg : DATA
+	);
+	FOR i IN components CREATE
+		y_eqn[i]: n[i] = y[i] * N;
+		c_eqn[i]: c[i] = n[i] / V;
+	END FOR;
+	H_eqn: H = N * state.H;
+	V_eqn: V = N * V_molar;
+	c_tot_eqn: c_tot = N / V;
+
+	METHODS
+		METHOD default_self;
+			RUN state.default_self;
+			N := 1 {mol};
+			FOR i IN components DO
+				n[i] := (1 / CARD[components]) * 1 {mol};
+				c[i] := 1 {mol/m^3};
+			END FOR;
+			V_molar := 0.02479 {m^3/mol};
+			H := 0 {J};
+		V := V_molar * N;
+		c_tot := N / V;
+	END default_self;
+END reactive_holdup;
 
 MODEL stoic_reaction_set(
 	components WILL_BE set OF symbol_constant;

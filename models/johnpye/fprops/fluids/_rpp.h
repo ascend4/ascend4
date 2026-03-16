@@ -69,6 +69,7 @@
 	X F(krypton)\
 	X F(nitric_oxide)\
 	X F(nitrogen_dioxide)\
+	X F(nitrogen_tetroxide)\
 	X F(nitrous_oxide)\
 	X F(neon)\
 	X F(sulfur_dioxide)\

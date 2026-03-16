@@ -66,6 +66,7 @@
 #include "sets.h"
 #include "parentchild.h"
 #include "slvreq.h"
+#include "simstatus.h"
 #include "link.h"
 #include "relerr.h"
 
@@ -74,6 +75,12 @@
 
 //#define INIT_DEBUG
 //#define FIXFREE_DEBUG
+
+#ifdef INIT_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
 
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking
@@ -341,6 +348,7 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 	/* CONSOLE_DEBUG("DONE WITH VARLIST"); */
 
 	/* return 'ok' */
+	asc_simstatus_mark_dirty(fm->i);
 	fm->ErrNo = Proc_all_ok;
 }
 
@@ -1888,6 +1896,9 @@ static void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat){
     }
     DestroyValue(&value);
     gl_destroy(instances);
+    if(fm->flow != FrameError){
+      asc_simstatus_mark_dirty(fm->i);
+    }
   }else{
     /* error finding left hand side */
     fm->ErrNo = Proc_lhs_error;
@@ -1907,7 +1918,7 @@ static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 	instances = FindInsts(fm->i,LINKStatVlist(stat),&err);
 	key = LINKStatKey(stat);
 
-	CONSOLE_DEBUG("LINKStatVlist(stat) contains %lu",VariableListLength(LINKStatVlist(stat)));
+	MSG("LINKStatVlist(stat) contains %lu",VariableListLength(LINKStatVlist(stat)));
 	if(instances == NULL){
 		switch(rel_errorlist_get_find_error(&err)){
 		case impossible_instance:
@@ -1922,8 +1933,9 @@ static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 	if((instances != NULL) && (key != NULL)){
 		switch(InstanceKind(fm->i)){
 		case MODEL_INST:
-			CONSOLE_DEBUG("Adding procedural link");
+			MSG("Adding procedural link");
 			addLinkEntry(fm->i,key,instances,stat,0);
+			asc_simstatus_mark_dirty(fm->i);
 			break;
 		default:
 			STATEMENT_ERROR(stat, "LINK is not called by a model");
@@ -1949,6 +1961,7 @@ static void ExecuteInitUnlnk(struct procFrame *fm, struct Statement *stat){
 		case MODEL_INST:
 			printf("Procedural UNLINK...");
 			removeLinkEntry(fm->i,key,LINKStatVlist(stat));
+			asc_simstatus_mark_dirty(fm->i);
 			break;
 		default:
 			STATEMENT_ERROR(stat, "UNLINK is not called by a model");
@@ -2342,6 +2355,7 @@ enum Proc_enum Initialize(struct Instance *context,
   assert(errfp != NULL);
   g_proc.depth = 0;
   Asc_SetMethodUserInterrupt(0);
+  asc_simstatus_method_enter(context);
   if(watchpoints == NULL){
     InitNormalTopProcFrame(&fm,context,cname,errfp,options);
     rval = NormalInitialize(&fm,name);
@@ -2350,6 +2364,7 @@ enum Proc_enum Initialize(struct Instance *context,
     CONSOLE_DEBUG("Running method with debug...");
     rval = DebugInitialize(context,name,cname,errfp,options,watchpoints,log,&fm);
   }
+  asc_simstatus_method_leave(context);
   return rval;
 }
 

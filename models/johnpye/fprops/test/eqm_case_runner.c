@@ -73,6 +73,15 @@ static const EqmCase CASES[] = {
 		{"C", "O", "H"},
 		{1.0, 2.0, 2.0},
 		{1.0, -1.0, 1.0, -1.0, 0.0} /* report WGS log10K for this mixed system */
+	},
+	{
+		"ammonia_synthesis",
+		3,
+		{"nitrogen", "hydrogen", "ammonia"},
+		2,
+		{"N", "H"},
+		{1.0, 3.0},
+		{-1.0, -3.0, 2.0}
 	}
 };
 

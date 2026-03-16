@@ -5,10 +5,6 @@ MODEL reactor_stoic_wgs_demo;
 	reactions IS_A set OF symbol_constant;
 
 	pkg IS_A reactive_package(components);
-	pkg.species_name['CO'] :== 'carbonmonoxide';
-	pkg.species_name['H2O'] :== 'water';
-	pkg.species_name['CO2'] :== 'carbondioxide';
-	pkg.species_name['H2'] :== 'hydrogen';
 	pkg.source :== 'Moran and Shapiro';
 
 	R IS_A reactor_stoic(pkg, reactions);

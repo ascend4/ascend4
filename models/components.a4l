@@ -766,6 +766,7 @@ MODEL td_component_constants(
 		'krypton',
 		'nitric_oxide',
 		'nitrogen_dioxide',
+		'nitrogen_tetroxide',
 		'nitrous_oxide',
 		'neon',
 		'sulfur_dioxide',
@@ -4360,6 +4361,38 @@ CASE 'nitrogen_dioxide':
 	 Hvb :== 0;
 	 Tliq :== 293 {K};
 	 lden :== 1.450 {g/cm^3};
+
+CASE 'nitrogen_tetroxide':
+	 formula :== 'N2O4';
+	 subgroups :== [];
+	 wilson_set :== [];
+
+	 mw :== 92.011 {g/g_mole};
+	 Tt :== 261.95 {K};
+	 Tb :== 302.22 {K};
+	 Tc :== 431.01 {K};
+	 Pc :== 101.0 {bar};
+(* 	 Vc :== ; parameter unavailable in RPP5 table A *)
+(* 	 Zc :== ; parameter unavailable in RPP5 table A *)
+	 omega :== 1.007;
+(*  RPP5 Table C is quartic in T for Cp/R; project it onto the legacy *)
+(*  cubic cpvap* basis over 50-1000 K for compatibility with convcomp.py. *)
+	 cpvapa :== 26.14 {J/g_mole/K};
+	 cpvapb :== 0.2534 {J/g_mole/K^2};
+	 cpvapc :== -2.636E-04 {J/g_mole/K^3};
+	 cpvapd :== 9.877E-08 {J/g_mole/K^4};
+	 Hf :== 9160 {J/g_mole};
+	 Gf :== 97850 {J/g_mole};
+(* 	 vpa :== ; parameter not yet transcribed from RPP5 table D *)
+(* 	 vpb :== ; parameter not yet transcribed from RPP5 table D *)
+(* 	 vpc :== ; parameter not yet transcribed from RPP5 table D *)
+(* 	 vpd :== ; parameter not yet transcribed from RPP5 table D *)
+(* 	 vp_correlation :== ; parameter not yet transcribed from RPP5 table D *)
+	 Hv :== 6931 {cal/g_mole};
+	 Hva :== 0.38;
+	 Hvb :== 0;
+	 Tliq :== 293.15 {K};
+	 lden :== 1.447 {g/cm^3};
 
 CASE 'nitrous_oxide':
 	 formula :== 'N2O';
@@ -20070,6 +20103,7 @@ MODEL components_data(
 'krypton',
 'nitric_oxide',
 'nitrogen_dioxide',
+'nitrogen_tetroxide',
 'nitrous_oxide',
 'neon',
 'sulfur_dioxide',

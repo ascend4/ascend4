@@ -564,6 +564,13 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
   desc = InstanceTypeDesc(work);
   clp = GetChildList(desc);
   statement = (struct Statement *)ChildStatement(clp,cnum);
+  if(statement == NULL){
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Unable to determine declaration statement for child '%s' while reporting array expansion failure",
+      SCP(ChildStrPtr(clp,cnum))
+    );
+    return;
+  }
   if ( StatWrong(statement) != 0) {
     return;
   }
@@ -5255,6 +5262,11 @@ struct gl_list_t *GetExtCallArgs(struct Instance *inst, struct Statement *stat
   *names = NULL;
   if (result != NULL) {
     *names = ProcessExtRelArgNames(inst,vl,&err2);
+    if (*names == NULL) {
+      DestroySpecialList(result);
+      rel_errorlist_set_find_error(err, rel_errorlist_get_find_error(&err2));
+      return NULL;
+    }
     asc_assert(rel_errorlist_get_find_error(err) == rel_errorlist_get_find_error(&err2));
   }
   return result;
@@ -5336,6 +5348,7 @@ apparently is too hard for some.
 @param statement: the EXT bbox statement.
 */
 int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *statement){
+  int rval = 1;
   symchar *name;
   struct Expr *ex, *one, *en;
   unsigned long c,len;
@@ -5344,9 +5357,8 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   struct set_t *sptr;
   struct for_var_t *fv;
 
-  struct BlackBoxCache * common;
-  ExtBBoxInitFunc * init;
-  char *context;
+  struct BlackBoxCache * common = NULL;
+  char *context = NULL;
   struct Instance *data=NULL, *subject = NULL;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *arglist=NULL;
@@ -5354,10 +5366,13 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   CONST char *funcname = NULL;
   unsigned long n_input_args=0L, n_output_args=0L; /* formal arg counts */
   unsigned long n_inputs_actual=0L, n_outputs_actual=0L; /* atomic arg counts */
-  struct gl_list_t *inputs, *outputs, *argListNames;
+  struct gl_list_t *inputs = NULL, *outputs = NULL, *argListNames = NULL;
   struct Name *dataName = NULL;
   unsigned long start,end;
   struct Set *extrange= NULL;
+  int value_ready = 0;
+
+  IVAL(value);
 
   /* common stuff do once ------------ */
 
@@ -5373,16 +5388,16 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
       switch(rel_errorlist_get_find_error(&err)){
       case unmade_instance:
 		STATEMENT_ERROR(statement,"Statement contains unmade data instance");
-        return 1;
+        goto cleanup;
       case undefined_instance:
         STATEMENT_ERROR(statement,"Statement contains undefined data instance\n");
-        return 1; /* for the time being give another crack */
+        goto cleanup; /* for the time being give another crack */
       case impossible_instance:
         STATEMENT_ERROR(statement,"Statement contains impossible data instance\n");
-        return 1;
+        goto cleanup;
       default:
         STATEMENT_ERROR(statement,"Unhandled case!");
-        return 1;
+        goto cleanup;
       }
     }
   }
@@ -5394,22 +5409,22 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
       STATEMENT_ERROR(statement,"Statement contains unmade argument instance\n");
-      return 1;
+      goto cleanup;
     case undefined_instance:
       STATEMENT_ERROR(statement,"Statement contains undefined argument instance\n");
-      return 1;
+      goto cleanup;
     case impossible_instance:
       instantiation_error(ASC_USER_ERROR,statement,"Statement contains impossible instance\n");
-      return 1;
+      goto cleanup;
     default:
       instantiation_error(ASC_PROG_ERR,statement,"Unhandled case!");
-      return 1;
+      goto cleanup;
     }
   }
   funcname = ExternalStatFuncName(statement);
   efunc = LookupExtFunc(funcname);
   if (efunc == NULL) {
-    return 1;
+    goto cleanup;
   }
 /*
   n_input_args = NumberInputArgs(efunc);
@@ -5423,24 +5438,31 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     instantiation_error(ASC_PROG_ERR,statement
 		,"Unable to create external expression structure."
 	);
-    return 1;
+    goto cleanup;
   }
 
   /* we should have a valid arglist at this stage */
   if (CheckExtCallArgTypes(arglist)) {
     instantiation_error(ASC_USER_ERROR,statement,"Wrong type of args to external statement");
-    DestroySpecialList(arglist);
-    return 1;
+    goto cleanup;
   }
   start = 1L;
   end = n_input_args;
   inputs = LinearizeArgList(arglist,start,end);
+  if (inputs == NULL) {
+    instantiation_error(ASC_PROG_ERR,statement,"Unable to linearize external input arguments.");
+    goto cleanup;
+  }
   n_inputs_actual = gl_length(inputs);
 
   /* Now process the outputs */
   start = n_input_args+1;
   end = n_input_args + n_output_args;
   outputs = LinearizeArgList(arglist,start,end);
+  if (outputs == NULL) {
+    instantiation_error(ASC_PROG_ERR,statement,"Unable to linearize external output arguments.");
+    goto cleanup;
+  }
   n_outputs_actual = gl_length(outputs);
 
 /*
@@ -5451,7 +5473,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
 
   /* Now create the relations, all with the same common. */
   common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, argListNames, dataName, efunc);
-  common->interp.task = bb_first_call;
+  InitBBox(inst, common);
   context = WriteInstanceNameString(inst, NULL);
 
   /* now set up the for loop index --------------------------------*/
@@ -5468,6 +5490,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   extrange = CreateRangeSet(one,en);
   ex = CreateSetExpr(extrange);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
+  value_ready = 1;
   SetEvaluationContext(NULL);
 
   ASC_ASSERT_EQ(ValueKind(value),set_value);
@@ -5488,32 +5511,46 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     /*  currently designed to always succeed or fail permanently */
   }
   RemoveForVariable(GetEvaluationForTable());
-  DestroyValue(&value);
-  DestroySetNode(extrange);
+  rval = 1;
+cleanup:
+  if (value_ready) {
+    DestroyValue(&value);
+  }
+  if (extrange != NULL) {
+    DestroySetNode(extrange);
+  }
 
 /* ------------ */ /* ------------ */
   /* and now for cleaning up shared data. */
-  init = GetInitFunc(efunc);
-  if(init){
-    if( (*init)( &(common->interp), data, arglist) ){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in blackbox initfn");
-    }
+  if (common != NULL) {
+    common->interp.task = bb_none;
+    DeleteRefBlackBoxCache(NULL, &common);
   }
-  common->interp.task = bb_none;
-  ascfree(context);
-  DeleteRefBlackBoxCache(NULL, &common);
-  gl_destroy(inputs);
-  gl_destroy(outputs);
-  DestroySpecialList(arglist);
-  DeepDestroySpecialList(argListNames,(DestroyFunc)DestroyName);
-  DestroyName(dataName);
+  if (context != NULL) {
+    ascfree(context);
+  }
+  if (inputs != NULL) {
+    gl_destroy(inputs);
+  }
+  if (outputs != NULL) {
+    gl_destroy(outputs);
+  }
+  if (arglist != NULL) {
+    DestroySpecialList(arglist);
+  }
+  if (argListNames != NULL) {
+    DeepDestroySpecialList(argListNames,(DestroyFunc)DestroyName);
+  }
+  if (dataName != NULL) {
+    DestroyName(dataName);
+  }
 /* ------------ */ /* ------------ */
 
   /*  currently designed to always succeed or fail permanently.
    *  We reached this point meaning we've processed everything.
    *  Therefore the statment returns 1 and becomes no longer pending.
    */
-  return 1;
+  return rval;
 }
 
 int ExecuteBBOXElement(struct Instance *inst
@@ -9583,6 +9620,9 @@ static int ExecuteCASGN(struct Instance *work, struct Statement *statement){
 	}else{
 		STATEMENT_ERROR(statement, "Floating-point error while evaluating assignment statement");
         MarkStatContext(statement,context_WRONG);
+		gl_destroy(instances);
+		SetEvaluationContext(NULL);
+		Asc_SignalHandlerPopDefault(SIGFPE);
 		SetDeclarativeContext(previous_context);
 		return 1;
 	}

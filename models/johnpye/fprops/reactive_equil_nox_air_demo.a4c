@@ -1,0 +1,216 @@
+REQUIRE "johnpye/fprops/reactive_equil.a4l";
+REQUIRE "johnpye/iapws_sat_curves.a4c";
+IMPORT "qrslv";
+PROVIDE "johnpye/fprops/reactive_equil_nox_air_demo.a4c";
+
+(* Simple thermal-NOx equilibrium study for heated humid air.
+
+   This uses a humid-air gas-phase basis that now converges reliably
+   from about 300 K upward in the dissociation regime:
+     N2, O2, Ar, H2O, CO2, NO, NO2, CO, H2
+
+   The present FPROPS Gibbs kernel fails validation when N2O is added to this
+   N/O gas basis, so N2O is not included in the active equilibrium species set
+   here even though it would be desirable physically.
+*)
+
+MODEL reactor_equil_nox_air_demo;
+	components IS_A set OF symbol_constant;
+	components :== ['N2', 'O2', 'Ar', 'H2O', 'CO2', 'NO', 'NO2', 'CO', 'H2'];
+
+	pkg IS_A reactive_package(components);
+	R IS_A reactor_equil(pkg);
+	water_sat IS_A iapws_sat_pressure;
+	pkg.source :== 'water=Moran and Shapiro;carbondioxide=Moran and Shapiro;carbonmonoxide=Moran and Shapiro;hydrogen=Moran and Shapiro;*=RPP';
+	pkg.algorithm :== 'auto_reduced';
+
+	T_ambient ALIASES R.inlet.T;
+	T_reactor ALIASES R.outlet.T;
+	H2O_in ALIASES R.inlet.f['H2O'];
+	CO2_in ALIASES R.inlet.f['CO2'];
+	NO_out ALIASES R.outlet.f['NO'];
+	NO2_out ALIASES R.outlet.f['NO2'];
+	CO_out ALIASES R.outlet.f['CO'];
+	H2_out ALIASES R.outlet.f['H2'];
+
+	ambient_RH IS_A factor;
+	co2_dry_ppm IS_A factor;
+	dry_feed_flow IS_A molar_rate;
+	water_partial_pressure IS_A pressure;
+	water_wet_fraction IS_A fraction;
+	co2_dry_fraction IS_A fraction;
+	n2_dry_fraction IS_A fraction;
+	o2_dry_fraction IS_A fraction;
+	ar_dry_fraction IS_A fraction;
+	nox_out IS_A molar_rate;
+	co_out_ppm IS_A factor;
+	h2_out_ppm IS_A factor;
+	no_out_ppm IS_A factor;
+	no2_out_ppm IS_A factor;
+	nox_out_ppm IS_A factor;
+
+	water_psat_link:
+		water_sat.T = T_ambient;
+	water_partial_pressure_eqn:
+		water_partial_pressure = ambient_RH * water_sat.p;
+	water_wet_fraction_eqn:
+		water_wet_fraction = water_partial_pressure / R.inlet.P;
+	co2_dry_fraction_eqn:
+		co2_dry_fraction = co2_dry_ppm * 1e-6;
+	n2_dry_fraction_eqn:
+		n2_dry_fraction = (1 - co2_dry_fraction) * 0.78084;
+	o2_dry_fraction_eqn:
+		o2_dry_fraction = (1 - co2_dry_fraction) * 0.20946;
+	ar_dry_fraction_eqn:
+		ar_dry_fraction = (1 - co2_dry_fraction) * 0.00970;
+	h2o_in_eqn:
+		H2O_in = dry_feed_flow * water_wet_fraction / (1 - water_wet_fraction);
+	co2_in_eqn:
+		CO2_in = dry_feed_flow * co2_dry_fraction;
+	n2_in_eqn:
+		R.inlet.f['N2'] = dry_feed_flow * n2_dry_fraction;
+	o2_in_eqn:
+		R.inlet.f['O2'] = dry_feed_flow * o2_dry_fraction;
+	ar_in_eqn:
+		R.inlet.f['Ar'] = dry_feed_flow * ar_dry_fraction;
+	nox_out_eqn:
+		nox_out = NO_out + NO2_out;
+	co_out_ppm_eqn:
+		co_out_ppm = 1e6 * R.outlet.y['CO'];
+	h2_out_ppm_eqn:
+		h2_out_ppm = 1e6 * R.outlet.y['H2'];
+	no_out_ppm_eqn:
+		no_out_ppm = 1e6 * R.outlet.y['NO'];
+	no2_out_ppm_eqn:
+		no2_out_ppm = 1e6 * R.outlet.y['NO2'];
+	nox_out_ppm_eqn:
+		nox_out_ppm = no_out_ppm + no2_out_ppm;
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.f['NO'];
+		FIX R.inlet.f['NO2'];
+		FIX R.inlet.f['CO'];
+		FIX R.inlet.f['H2'];
+		FIX R.outlet.T;
+		FIX R.DeltaP;
+		FIX ambient_RH;
+		FIX co2_dry_ppm;
+		FIX dry_feed_flow;
+
+		T_ambient := 298.15 {K};
+		R.inlet.P := 1 {atm};
+		ambient_RH := 0.5;
+		co2_dry_ppm := 427.24;
+		dry_feed_flow := 1 {mol/s};
+		R.inlet.f['N2'] := dry_feed_flow * (1 - co2_dry_ppm * 1e-6) * 0.78084;
+		R.inlet.f['O2'] := dry_feed_flow * (1 - co2_dry_ppm * 1e-6) * 0.20946;
+		R.inlet.f['Ar'] := dry_feed_flow * (1 - co2_dry_ppm * 1e-6) * 0.00970;
+		R.inlet.f['H2O'] := 0.015 {mol/s};
+		R.inlet.f['CO2'] := 4.3e-4 {mol/s};
+		R.inlet.f['NO'] := 0 {mol/s};
+		R.inlet.f['NO2'] := 0 {mol/s};
+		R.inlet.f['CO'] := 0 {mol/s};
+		R.inlet.f['H2'] := 0 {mol/s};
+
+		R.outlet.T := 3000 {K};
+		R.outlet.f['N2'] := R.inlet.f['N2'];
+		R.outlet.f['O2'] := R.inlet.f['O2'];
+		R.outlet.f['Ar'] := R.inlet.f['Ar'];
+		R.outlet.f['H2O'] := R.inlet.f['H2O'];
+		R.outlet.f['CO2'] := R.inlet.f['CO2'];
+		R.outlet.f['NO'] := 1e-9 {mol/s};
+		R.outlet.f['NO2'] := 1e-12 {mol/s};
+		R.outlet.f['CO'] := 1e-9 {mol/s};
+		R.outlet.f['H2'] := 1e-9 {mol/s};
+		(* Trace NOx rows need tighter outer-solver scaling than generic molar_rate. *)
+		R.outlet.f['NO'].nominal := 1e-1 {mol/s};
+		R.outlet.f['NO2'].nominal := 1e-1 {mol/s};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD specify;
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.f['NO'];
+		FIX R.inlet.f['NO2'];
+		FIX R.inlet.f['CO'];
+		FIX R.inlet.f['H2'];
+		FIX R.outlet.T;
+		FIX R.DeltaP;
+		FIX ambient_RH;
+		FIX co2_dry_ppm;
+		FIX dry_feed_flow;
+	END specify;
+
+	METHOD solve_case;
+		RUN specify;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		SOLVE;
+	END solve_case;
+
+	METHOD reset_for_study_point;
+		DELETE SYSTEM;
+		RUN default_self;
+		RUN specify;
+	END reset_for_study_point;
+
+	METHOD temperature_study;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		STUDY nox_out_ppm, no_out_ppm, no2_out_ppm, co_out_ppm, h2_out_ppm, nox_out, R.Qdot
+			VARY T_reactor FROM 3000 {K} TO 1100 {K} STEPS 19
+			NOW
+			FILE "nox_air_temperature_study.tsv";
+	END temperature_study;
+
+	METHOD temperature_study_cold;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		STUDY nox_out_ppm, no_out_ppm, no2_out_ppm, co_out_ppm, h2_out_ppm, nox_out, R.Qdot
+			VARY T_reactor FROM 3000 {K} TO 300 {K} STEPS 54
+			NOW
+			FILE "nox_air_temperature_study_cold.tsv";
+	END temperature_study_cold;
+
+	METHOD temperature_study_cold_fresh;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		STUDY nox_out_ppm, no_out_ppm, no2_out_ppm, co_out_ppm, h2_out_ppm, nox_out, R.Qdot
+			VARY T_reactor FROM 3000 {K} TO 300 {K} STEPS 54
+			RUN reset_for_study_point
+			NOW
+			FILE "nox_air_temperature_study_cold_fresh.tsv";
+	END temperature_study_cold_fresh;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN solve_case;
+		RUN temperature_study;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT R.outlet.f['Ar'] > 0.0096 {mol/s};
+		ASSERT R.outlet.f['Ar'] < 0.0098 {mol/s};
+		ASSERT H2O_in > 0 {mol/s};
+		ASSERT CO2_in > 0 {mol/s};
+		ASSERT NO_out >= 0 {mol/s};
+		ASSERT nox_out_ppm >= 0;
+	END self_test;
+END reactor_equil_nox_air_demo;
+
+MODEL reactive_equil_nox_air_demo REFINES reactor_equil_nox_air_demo;
+END reactive_equil_nox_air_demo;
+
+MODEL reactive_equil_nox_air_debug REFINES reactor_equil_nox_air_demo;
+METHODS
+	METHOD on_load;
+		RUN default_self;
+		RUN solve_case;
+	END on_load;
+END reactive_equil_nox_air_debug;

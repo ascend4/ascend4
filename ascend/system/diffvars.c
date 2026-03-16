@@ -36,6 +36,12 @@
 
 /* #define DIFFVARS_DEBUG */
 
+#ifdef DIFFVARS_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 /*------------------------------------------------------------------------------
 	DERIVATIVES & DIFFERENTIAL VARIABLES
 */
@@ -102,7 +108,7 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		return 0;
 	}
 
-	CONSOLE_DEBUG("Differential variables were seen. Generating diffvars data.");
+	MSG("Differential variables were seen. Generating diffvars data.");
 
 	seqs = gl_create(prob->nr);
 
@@ -302,5 +308,4 @@ void system_diffvars_destroy(slv_system_t sys){
 	ASC_FREE(diffvars);
 	sys->diffvars = NULL;
 }
-
 

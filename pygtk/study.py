@@ -87,14 +87,16 @@ class StudyWin:
 		# fill in upper/.lower bound
 		_u = self.browser.get_instance_display_units(self.instance)
 		_conversion = _u.getConversion()
-		_u = _u.getName().toString()
+		_uname = self._display_unit_name()
 
 		_arr = {self.lowerb: self.instance.getRealValue()
 			,self.upperb: self.instance.getUpperBound() # this upper bound is probably stoopid
 		}
 
 		for _k,_v in _arr.items():
-			_t = str(_v / _conversion)+" "+_u
+			_t = str(_v / _conversion)
+			if _uname != "":
+				_t += " " + _uname
 			##### CELSIUS TEMPERATURE WORKAROUND
 			_t = CelsiusUnits.convert_show(self.instance, str(_v), True, default=_t)
 			##### CELSIUS TEMPERATURE WORKAROUND
@@ -104,6 +106,7 @@ class StudyWin:
 		self.lowerb.select_region(0, -1)
 		self.solve_interrupt = False
 		self.data = {}
+		self.last_validation_error = None
 	
 	def get_step_type(self):
 		_s = self.step_menu.get_active_iter()
@@ -117,10 +120,22 @@ class StudyWin:
 		#FIXME this depends on the ordering, is there a better way?
 		self.dist.set_active({DIST_LINEAR:0, DIST_LOG:1}[dist])
 
+	def _display_unit_name(self):
+		_units = self.browser.get_instance_display_units(self.instance)
+		uname = _units.getName().toString()
+		if uname in ("", "?", "dimensionless", "[dimensionless]"):
+			return ""
+		try:
+			if self.instance.getDimensions().isDimensionless():
+				return ""
+		except Exception:
+			pass
+		return uname
+
 	def _format_real_entry(self, value):
 		_units = self.browser.get_instance_display_units(self.instance)
 		conv = _units.getConversion()
-		uname = _units.getName().toString()
+		uname = self._display_unit_name()
 		text = "%.15g" % (value / conv)
 		if uname != "":
 			text += " " + uname
@@ -198,7 +213,10 @@ class StudyWin:
 
 	def run_now(self):
 		if not self.validate_inputs():
-			self.browser.reporter.reportError("Invalid inputs in METHOD STUDY request.")
+			_msg = "Invalid inputs in METHOD STUDY request."
+			if self.last_validation_error:
+				_msg += " " + self.last_validation_error
+			self.browser.reporter.reportError(_msg)
 			self.studywin.destroy()
 			return False
 		self.solve()
@@ -246,6 +264,7 @@ class StudyWin:
 		Returns 1 if all is valid. If all is not valid, relevant inputs are
 		tainted for user correction.
 		"""
+		self.last_validation_error = None
 		_dist = self.dist.get_active_text()
 
 		_start = self.parse_entry(self.lowerb)
@@ -254,12 +273,20 @@ class StudyWin:
 		
 		if _start is None or _end is None:
 			# error/empty start/end values will already have been tainted
+			self.last_validation_error = "Lower/upper bounds are invalid."
+			self.taint_dist(msg=self.last_validation_error)
+			return 0
+
+		if not steps:
+			if self.last_validation_error is None:
+				self.last_validation_error = "Study step specification is invalid."
 			self.taint_dist()
 			return 0
 
 		if _start == _end:
 			# can't distribute over a zero-width range (and no point)
 			_msg = "Bounds cannot not be equal."
+			self.last_validation_error = _msg
 			self.taint_dist(msg=_msg)
 			self.taint_entry(self.lowerb,msg=_msg)
 			self.taint_entry(self.upperb,msg=_msg)
@@ -270,6 +297,7 @@ class StudyWin:
 			if self.get_step_type() == STEP_RATIO:
 				self.set_step_type(STEP_INCREM)
 			self.taint_dist(good=1)
+			self.last_validation_error = None
 			return 1
 		if _dist == DIST_LOG:
 			flag = 0
@@ -280,7 +308,8 @@ class StudyWin:
 				self.step_menu.set_active(1)
 			if _start == 0 or _end == 0:
 				_msg = "Bounds cannot be 0 for logarithmic distribution."
-				self.taint_dist(_msg)
+				self.last_validation_error = _msg
+				self.taint_dist(msg=_msg)
 				if _start == 0:
 					self.taint_entry(self.lowerb,msg=_msg)
 				else:
@@ -288,12 +317,14 @@ class StudyWin:
 				return 0
 			if (_start/_end) < 0:
 				_msg = "Bounds cannot be of opposite sign for logarithmic distribution."
-				self.taint_dist(_msg)
+				self.last_validation_error = _msg
+				self.taint_dist(msg=_msg)
 				self.taint_entry(self.lowerb,msg=_msg)
 				self.taint_entry(self.upperb,msg=_msg)
 				return 0
 			self.check_dist.set_from_stock('gtk-yes', Gtk.IconSize.BUTTON)
 			self.check_dist.set_tooltip_text("")
+			self.last_validation_error = None
 			return 1
 
 	def on_step_menu_changed(self, *args):
@@ -322,21 +353,35 @@ class StudyWin:
 			except:
 				_fl = None
 			if _fl is None or _fl <= 0:
+				self.last_validation_error = "Step ratio must be positive."
 				self.taint_entry(self.nsteps,"Value must be positive")
 				return 0
+			self.taint_entry(self.nsteps, good=1)
+			return _fl
 		elif _st==STEP_INCREM:
 			# will also handle the tainting, if required:
-			return self.parse_entry(self.nsteps)
+			_step = self.parse_entry(self.nsteps)
+			if _step is None:
+				self.last_validation_error = "Step size is invalid."
+				return 0
+			self.taint_entry(self.nsteps, good=1)
+			return _step
 		elif _st==STEP_NUMBER:
 			try:
-				_int = int(float(_val))
+				_fl = float(_val)
+				_int = int(_fl)
 			except:
+				_fl = None
 				_int = 0
-			if _val != _int or _int < 2:
+			if _fl is None or _fl != _int or _int < 2:
+				self.last_validation_error = "Number of steps must be an integer >= 2."
 				self.taint_entry(self.nsteps,"Number of steps must be positive integer >= 2")
 				return 0
-			self.nsteps.set_text(_int)
+			self.nsteps.set_text(str(_int))
+			self.taint_entry(self.nsteps, good=1)
+			return _int
 		self.taint_entry(self.nsteps, good=1)
+		return 1
 	
 	def on_nsteps_changed(self, *args):
 		self.validate_nsteps()
@@ -496,8 +541,8 @@ class StudyWin:
 					if res != 0:
 						break
 				self.save_data()
-				GObject.idle_add(self.solve_finish_step, reporter, status)
 				browser.sim.postsolve(status)
+				GObject.idle_add(self.solve_finish_step, reporter, status)
 			except RuntimeError as err:
 				browser.reporter.reportError(str(err))
 			finally:
@@ -534,4 +579,5 @@ class StudyWin:
 		reporter.report_observed(self.data)
 		browser.stop_waiting()
 		browser.modelview.refreshtree()
+		browser.update_simulation_statusbar()
 		return False

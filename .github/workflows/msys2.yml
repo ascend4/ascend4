@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: ASCEND4 MSYS2
 
 on:
@@ -33,7 +30,7 @@ jobs:
     - uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
-        update: false
+        update: true
         cache: true
         install: >-
           git swig subversion make flex bison
@@ -51,10 +48,19 @@ jobs:
           mingw-w64-${{matrix.env}}-python-pip
           mingw-w64-${{matrix.env}}-python-wheel
           mingw-w64-${{matrix.env}}-python-matplotlib
-
-    - name: Install Python dependencies
+          mingw-w64-${{matrix.env}}-scons
+        pacboy: >-
+          gcovr:p
+      
+    - name: Install IPOPT package
       run: |
-        python3 -m pip install scons
+        PKG_URL='https://stg.fprops.org/public.php/dav/files/X54WgtSsEbFoFKG/mingw-w64-ucrt-x86_64-ipopt-3.14.19-1-any.pkg.tar.zst'
+        PKG_FILE="${PKG_URL##*/}"
+        curl -L --retry 3 -o "$PKG_FILE" "$PKG_URL"
+        pacman -U --noconfirm "$PKG_FILE"
+        pacman -Q mingw-w64-ucrt-x86_64-ipopt
+
+    - uses: actions/checkout@v4
 
     - name: Get CUnit SVN revision
       id: cunit_rev
@@ -92,30 +98,30 @@ jobs:
           test -f "$CUNIT_PREFIX/lib/libcunit.a" || test -f "$CUNIT_PREFIX/lib/libcunit.dll.a"
         fi
 
-    - uses: actions/checkout@v4
-
     - name: Build ASCEND
       run: |
         CUNIT_PREFIX="$(cygpath -u "$RUNNER_TEMP")/ascend4-msys2-cunit"
         mkdir -p "$CUNIT_PREFIX"
         scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX="$CUNIT_PREFIX" ascend solvers models test a4
 
-    - name: Test ASCEND (solver_ipopt + integrator_lsode)
-      run: |
-        ./a4 cutest solver_ipopt integrator_lsode
-
-    - name: Test ASCEND (mallocdebug except solver_highs)
-      run: |
-        ./a4 cutest -r mallocdebug -e solver_highs
-
-    - name: Test ASCEND (mallocdebug full)
+    - name: Test ASCEND
       run: |
         ./a4 cutest -r mallocdebug
+
+    - name: Generate coverage report
+      run: |
+        gcovr -r . \
+          --cobertura-pretty \
+          --output coverage.xml \
+          --exclude '(^|/)(build|tests?|test|cunit)(/|$)' \
+          --print-summary
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:
-        report_type: coverage
+        files: coverage.xml
+        disable_search: true
+        plugins: noop
         flags: msys2-cunit
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}

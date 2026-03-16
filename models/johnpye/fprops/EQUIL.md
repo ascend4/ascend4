@@ -70,6 +70,14 @@ Ni=oecd_nea_tdb_vol6_nickel;NiO=oecd_nea_tdb_vol6_nickel;*=Moran and Shapiro
 
 The wildcard `*=` gives a default for species not named explicitly.
 
+For reactive-package use, the key may be either a canonical species name
+or a familiar alias such as `CO`, `CO2`, `H2`, or `H2O`. Resolution is
+now done in two stages: first gather the canonical candidates for the
+user token, then apply the per-species source selector against those
+candidates. That means a map like
+`carbonmonoxide=Moran and Shapiro;*=RPP` will still downselect the alias
+`CO` to the intended Moran-and-Shapiro entry.
+
 This is the main mechanism for mixed-source equilibrium problems,
 for example:
 
@@ -245,6 +253,56 @@ As written, it does not introduce reaction stoichiometry, reaction extents, or e
 
 So yes: in its current form, `thermodynamics.a4l` handles phase redistribution of a fixed species set, not chemical reaction equilibrium.
 That ASCEND model remains valuable for process-level phase-equilibrium structure and model composition, while `fprops/eqm` is the appropriate core for reaction equilibrium.
+
+### Reactive flash and metallurgical multiphase work
+
+The next planned `reactive_flash` layer should be understood as a
+general multiphase reacting-equilibrium framework, not merely a
+vapor-liquid flash with reaction.
+
+That distinction matters because there are two quite different
+application classes:
+
+- `UNIFAC`-style gas-liquid systems:
+  - vapor phase
+  - nonideal liquid phase
+  - classic `TPz` flash structure
+- metallurgical systems:
+  - reacting gas
+  - metallic liquid or metallic solution phase
+  - slag liquid phase
+  - possible solid carbon / oxide / spinel / wustite phases
+
+The current `UNIFAC` work is useful because it establishes:
+
+- package-owned phase-model selection
+- source-data / rundata separation
+- native C preparation and caching
+- explicit flash/state interfaces
+
+However, it does **not** by itself provide the thermodynamic models
+needed for smelters, BOFs, EAFs, or slag-metal-gas equilibria.
+
+For that reason, the practical metallurgical path remains:
+
+1. current Tier 3 `Fe-O-H`
+2. next Tier 4 `Fe-O-H-C`
+3. only then broader slag systems such as
+   - `Fe-O-H-C-SiO2`
+   - `Fe-O-H-C-Al2O3-SiO2`
+
+So the role of `reactive_flash` is:
+
+- useful and directly applicable for gas-liquid reacting systems now
+- architecturally useful for metallurgy, provided it is built as a
+  general multiphase package/state framework
+- not yet sufficient for slag/metal equilibrium until suitable phase
+  models exist for those condensed phases
+
+In other words, if `reactive_flash` is built around a generic package
+of phase models, it is the right road. If it is built too narrowly as
+only a `UNIFAC` vapor-liquid reactor, it will not generalize well to
+the Tier 4 and slag work.
 
 ## Part A. Common Principles
 
@@ -542,7 +600,7 @@ Pathway grouping:
 - Reduced-space pathway (primary): `reduced` (with optional 1D special solve, continuation, and active-set boundary handling).
 - Full-space pathway (secondary): `ipopt*` with `slsqp` fallback.
 
-For low-temperature boundary-heavy cases, `reduced` is now the primary robust path.
+For low-temperature boundary-heavy cases, `reduced` is now the primary robust path. In the ASCEND blackbox wrapper, direct unseeded callback evaluation is also intentionally kept on the reduced-only path; seeded/preloaded solver-path calls can still use `auto_reduced`.
 
 ### 7. Reduced Newton method (interior part)
 
@@ -618,7 +676,7 @@ When interior reduced solve fails near boundary, code now runs an active-set see
 - Split species into active set $\mathcal{A}$ (pinned at $n_i=n_{\mathrm{floor}}$) and free set $\mathcal{F}$.
 - Solve reduced problem on free species only.
 - Compute reduced gradients as $r_i = (\mu_i + (\mathbf{A}^T\boldsymbol\lambda)_i)/(RT)$.
-- Recover `lambda` from free species set `F` by solving `A_F^T lambda ≈ -mu_F`, exactly if dimensions permit, otherwise as a least-squares system.
+- Recover `lambda` from free species set `F` by solving `A_F^T lambda approx -mu_F`, exactly if dimensions permit, otherwise as a least-squares system.
 
 - Pivot rules:
   - add species to active set if free species is near bound and $r_i>0$,
@@ -627,6 +685,51 @@ When interior reduced solve fails near boundary, code now runs an active-set see
 Then polish with full reduced solve.
 
 This is the main reason low-temperature mixed cases (like CO/CO2/H2O/H2/O2) now converge down to 298 K.
+
+### 10.1 NOx study lessons for reduced-space startup
+
+The humid-air NOx gas basis exposed an important extra requirement for
+the reduced-space path: startup must be invariant, or nearly invariant,
+to species ordering.
+
+What was observed during the NOx study:
+
+- the same physical humid-air NOx problem could succeed or fail in
+  `auto_reduced` depending on species order alone
+- this was not a thermodynamic multiplicity issue in the direct solve;
+  it came from the reduced-space construction and boundary startup logic
+- once a first reduced solution was accepted, continuation could still
+  be driven onto different low-temperature branches if the startup basis
+  and active-set seed were poor
+
+The fixes that proved important were:
+
+- choose reduced pivots/basis columns using a target-weighted ordering,
+  not raw species index order
+- compute the particular feasible point `n0` from the chosen pivots, so
+  the reduced map and the pivot structure stay consistent
+- classify active/free species using the same near-boundary
+  complementarity logic used by solution validation, rather than only a
+  small-amount cutoff
+- when `n_init == NULL`, build a deterministic bootstrap composition and
+  feed that into reduced startup instead of treating null-init as "no
+  seed at all"
+- score candidate active-set pivots by post-solve KKT quality/objective,
+  rather than taking the first legal add/drop move
+
+Current FPROPS status for this NOx basis:
+
+- direct package-backed solves for the demo gas basis now succeed to
+  `300 K`
+- warm starts from physically reasonable higher-temperature states do
+  not trap the direct reduced solver on the wrong low-temperature branch
+- the remaining low-temperature discrepancy is no longer in the direct
+  FPROPS equilibrium kernel itself; it is in the ASCEND embedding and
+  outer-solver treatment of the returned trace-species rows
+- targeted ASCEND-side scaling of the `NO/NO2` outlet rows can improve
+  the repeated low-temperature branch without changing the direct FPROPS
+  equilibrium result, reinforcing that this remaining issue is outside
+  the core reduced-space thermodynamics
 
 ### 11. Boundary-KKT validation
 
@@ -649,11 +752,18 @@ $$
 n_i \le \max\left(10^{-60},\,\eta\,n_{\mathrm{tot}}\right), \qquad \eta=10^{-22}.
 $$
 
+For the humid-air NOx work, this validation logic was also used as the
+basis for active/free classification in startup. That is a better guide
+than a raw concentration cutoff, because it is tied to complementarity:
+small positive species can be treated as effectively active only when
+their reduced-gradient sign is also consistent with a boundary KKT
+state.
+
 For the secondary full-space interior-point pathway, see Appendix A.
 
 ## Part C. Validation and Operations
 
-### 12. What “correctness” means here
+### 12. What "correctness" means here
 
 For ideal-gas equilibrium we check:
 

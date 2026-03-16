@@ -23,6 +23,12 @@
 
 /* #define JACOBIAN_DEBUG */
 
+#ifdef JACOBIAN_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 int system_jacobian(slv_system_t sys
 	, const rel_filter_t *rfilter, const var_filter_t *vfilter, const int safe
 	, struct SystemJacobianStruct *sysjac
@@ -75,8 +81,8 @@ int system_jacobian(slv_system_t sys
 	}
 	asc_assert(n==nv);
 
-	CONSOLE_DEBUG("nr = %d",nr);
-	CONSOLE_DEBUG("nv = %d",nv);
+	MSG("nr = %d",nr);
+	MSG("nv = %d",nv);
 
 	derivvals = ASC_NEW_ARRAY(double,nv);
 	derivvars = ASC_NEW_ARRAY(int,nv);

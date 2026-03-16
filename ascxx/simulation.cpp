@@ -67,6 +67,7 @@ extern "C"{
 #include "solverreporter.h"
 #include "matrix.h"
 #include "solverhooks.h"
+#include <ascend/compiler/simstatus.h>
 
 //#define SIMULATION_DEBUG
 #ifdef SIMULATION_DEBUG
@@ -88,6 +89,7 @@ Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), sim
 	sing = NULL;
 	activeblock = 0;
 	solverhooks = NULL;
+	asc_simstatus_mark_dirty(i);
 	// Create an Instance object for the 'simulation root' (we'll call
 	// it the 'simulation model') and it can be fetched using 'getModel()'
 	// any time later.
@@ -231,6 +233,15 @@ Simulation::runDefaultMethod(){
 
 void
 Simulation::run(const Method &method, Instanc &model){
+	struct MethodScope{
+		Instance *siminst;
+		explicit MethodScope(Instance *siminst) : siminst(siminst){
+			asc_simstatus_method_enter(siminst);
+		}
+		~MethodScope(){
+			asc_simstatus_method_leave(siminst);
+		}
+	} method_scope(getInternalType());
 
 	// set the 'sim' pointer to our local variable...
 	//CONSOLE_DEBUG("Setting shared pointer 'sim' = %p",this);
@@ -591,6 +602,7 @@ Simulation::setSolver(Solver &solver){
 		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Inelegible solver '%s'", solver.getName().c_str() );
 		throw runtime_error("Inelegible solver");
 	}
+	asc_simstatus_mark_dirty(getInternalType());
 }
 
 const Solver
@@ -662,6 +674,7 @@ Simulation::invalidateSystem(){
 	buildroot = NULL;
 	is_built = false;
 	activeblock = 0;
+	asc_simstatus_mark_dirty(getInternalType());
 }
 
 
@@ -689,6 +702,7 @@ Simulation::setParameters(SolverParameters &P){
 	if(!sys)throw runtime_error("Can't set solver parameters: simulation has not been built yet.");
 	MSG("Calling slv_set_parameters");
 	slv_set_parameters(sys, &(P.getInternalType()));
+	asc_simstatus_mark_dirty(getInternalType());
 }
 
 //------------------------------------------------------------------------------
@@ -959,6 +973,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		if(status.isUnderDefined())throw runtime_error("Solver system is under-defined");
 		throw runtime_error("Error in solver (status.isOK()==FALSE but can't see why)");
 	}
+	asc_simstatus_mark_clean(getInternalType(), buildroot);
 }
 
 void
@@ -996,6 +1011,7 @@ Simulation::postsolve(SolverStatus status) {
 		if(status.isUnderDefined()) throw runtime_error("Solver system is under-defined");
 		throw runtime_error("Error in solver (status.isOK()==FALSE but can't see why)");
 	}
+	asc_simstatus_mark_clean(getInternalType(), buildroot);
 }
 
 SolverStatus
@@ -1140,4 +1156,23 @@ SolverHooks *
 Simulation::getSolverHooks() const{
 	MSG("Got SolverHooks at %p for Simulation at %p",this->solverhooks,this);
 	return this->solverhooks;
+}
+
+bool
+Simulation::isSolveDirty() const{
+	return asc_simstatus_is_dirty(getInternalType()) != 0;
+}
+
+bool
+Simulation::isMethodRunning() const{
+	return asc_simstatus_method_depth(getInternalType()) > 0;
+}
+
+const string
+Simulation::getSolveTargetName() const{
+	Instance *target = asc_simstatus_get_last_solve_target(getInternalType());
+	if(target == NULL){
+		return "";
+	}
+	return getInstanceName(Instanc(target));
 }

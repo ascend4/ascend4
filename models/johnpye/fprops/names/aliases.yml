@@ -1,0 +1,127 @@
+version: 1
+entries:
+  - alias: CO
+    canonical: carbon_monoxide
+    domains: [pure_fluid, eqm_species]
+    sources: [RPP]
+    flags: [manual]
+    priority: 100
+
+  - alias: CO2
+    canonical: carbon_dioxide
+    domains: [pure_fluid, eqm_species]
+    sources: [RPP]
+    flags: [manual]
+    priority: 100
+
+  - alias: CO
+    canonical: carbonmonoxide
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+    flags: [manual]
+    priority: 100
+
+  - alias: CO2
+    canonical: carbondioxide
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+    flags: [manual]
+    priority: 100
+
+  - alias: H2
+    canonical: hydrogen
+    domains: [pure_fluid, eqm_species]
+    sources: [RPP]
+    flags: [manual]
+    priority: 100
+
+  - alias: H2
+    canonical: hydrogen
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+    flags: [manual]
+    priority: 100
+
+  - alias: H2O
+    canonical: water
+    domains: [pure_fluid, eqm_species, mixture_component]
+    sources: [RPP, UNIFAC-orig-2003]
+    flags: [manual, formula]
+    priority: 100
+
+  - alias: H2O
+    canonical: water
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+    flags: [manual, formula]
+    priority: 100
+
+  - alias: O2
+    canonical: oxygen
+    domains: [pure_fluid, eqm_species]
+    sources: [RPP]
+    flags: [manual]
+    priority: 100
+
+  - alias: O2
+    canonical: oxygen
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+    flags: [manual]
+    priority: 100
+
+  - alias: N2
+    canonical: nitrogen
+    domains: [pure_fluid, eqm_species]
+    sources: [RPP]
+    flags: [manual]
+    priority: 100
+
+  - alias: N2
+    canonical: nitrogen
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+    flags: [manual]
+    priority: 100
+
+  - alias: NH3
+    canonical: ammonia
+    domains: [pure_fluid, eqm_species]
+    sources: [RPP]
+    flags: [manual, formula]
+    priority: 100
+
+  - alias: NH3
+    canonical: ammonia
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+    flags: [manual, formula]
+    priority: 100
+
+  - alias: CH4
+    canonical: methane
+    domains: [pure_fluid, eqm_species]
+    sources: [RPP]
+    flags: [manual, formula]
+    priority: 100
+
+  - alias: CH4
+    canonical: methane
+    domains: [pure_fluid, eqm_species]
+    sources: [Moran and Shapiro]
+    flags: [manual, formula]
+    priority: 100
+
+  - alias: MeOH
+    canonical: methanol
+    domains: [pure_fluid, mixture_component]
+    sources: [RPP, UNIFAC-orig-2003]
+    flags: [manual]
+    priority: 100
+
+  - alias: EtOH
+    canonical: ethanol
+    domains: [pure_fluid, mixture_component]
+    sources: [RPP, UNIFAC-orig-2003]
+    flags: [manual]
+    priority: 100

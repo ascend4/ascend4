@@ -1,9 +1,14 @@
 #include "../test.h"
 #include "../eqm.h"
+#include "../flash.h"
+#include "../flash_unifac.h"
 #include "../fluids.h"
 #include "../constcp_species.h"
 #include "../solution.h"
 #include "../wustite_hidayat.h"
+#include "../name_resolve.h"
+#include "../mixtures/unifac_data.h"
+#include "../mixtures/unifac_rundata.h"
 
 #include <math.h>
 #include <string.h>
@@ -347,6 +352,79 @@ static void test_eqm_wgs_reduced(void){
 	assert_log10K_consistent(names, nu, ARRAYLEN(names), n);
 }
 
+static double hr_ammonia_log10_ka(double T){
+	return 2.1
+		+ (1.0 / 4.571) * (9591.0 / T - 0.00046 * T + 0.85e-6 * T * T)
+		- 4.98 * log10(T) / 1.985;
+}
+
+static double hr_ammonia_residual(double xi, double T, double P_atm){
+	double Ka = pow(10.0, hr_ammonia_log10_ka(T));
+	return Ka
+		* pow((1.0 - xi) / 2.0, 0.5)
+		* pow(3.0 * (1.0 - xi) / 2.0, 1.5)
+		* P_atm
+		- xi * (2.0 - xi);
+}
+
+static double hr_ammonia_nh3_percent(double T, double P_atm){
+	double lo = 1e-12;
+	double hi = 1.0 - 1e-12;
+	double flo = hr_ammonia_residual(lo, T, P_atm);
+	double fhi = hr_ammonia_residual(hi, T, P_atm);
+	int iter;
+	CU_ASSERT_TRUE_FATAL(flo * fhi < 0.0);
+	for(iter = 0; iter < 200; ++iter){
+		double mid = 0.5 * (lo + hi);
+		double fmid = hr_ammonia_residual(mid, T, P_atm);
+		if(fabs(fmid) < 1e-14){
+			lo = mid;
+			hi = mid;
+			break;
+		}
+		if(flo * fmid <= 0.0){
+			hi = mid;
+			fhi = fmid;
+		}else{
+			lo = mid;
+			flo = fmid;
+		}
+	}
+	(void)fhi;
+	return 100.0 * (0.5 * (lo + hi)) / (2.0 - 0.5 * (lo + hi));
+}
+
+static void test_eqm_ammonia_synthesis_helmholtz_ref0_matches_hr_grid(void){
+	static const char *names[] = {"nitrogen", "hydrogen", "ammonia"};
+	static const char *elements[] = {"N", "H"};
+	static const double b[] = {1.0, 3.0};
+	static const double temps[] = {473.0, 573.0, 673.0, 773.0, 873.0, 973.0, 1073.0, 1173.0, 1273.0};
+	static const double pressures_atm[] = {1.0, 30.0, 100.0, 200.0};
+	const char *source = "helmholtz+ref0:";
+	size_t it;
+	size_t ip;
+	for(it = 0; it < ARRAYLEN(temps); ++it){
+		for(ip = 0; ip < ARRAYLEN(pressures_atm); ++ip){
+			double P = pressures_atm[ip] * 101325.0;
+			double n[ARRAYLEN(names)] = {0.0, 0.0, 0.0};
+			double H_total = NAN;
+			double ntot = 0.0;
+			double y_nh3;
+			double nh3_pct_eqm;
+			double nh3_pct_hr = hr_ammonia_nh3_percent(temps[it], pressures_atm[ip]);
+			int status = fprops_eqm_tpb(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b,
+				source, temps[it], P, "auto_nullspace", NULL, n, &H_total);
+			CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+			CU_ASSERT_TRUE(isfinite(H_total));
+			ntot = n[0] + n[1] + n[2];
+			CU_ASSERT_TRUE_FATAL(ntot > 0.0);
+			y_nh3 = n[2] / ntot;
+			nh3_pct_eqm = 100.0 * y_nh3;
+			CU_ASSERT_TRUE(fabs(nh3_pct_eqm - nh3_pct_hr) <= 0.25);
+		}
+	}
+}
+
 static void test_fprops_eqm_tpb_wgs_ms_table(void){
 	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
 	static const char *elements[] = {"C", "O", "H"};
@@ -553,6 +631,56 @@ static void test_fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy(v
 	fprops_rxn_package_free(pkg);
 }
 
+static void test_fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves(void){
+	static const char *names[] = {"NH3", "H2", "N2"};
+	static const char *source = "helmholtz+ref0:";
+	FpropsRxnPackage *pkg = NULL;
+	FpropsRxnTPN state;
+	FpropsRxnResult out_pkg;
+	double b[2] = {0.0, 0.0};
+	double n_out[ARRAYLEN(names)] = {0.0, 0.0, 0.0};
+	const double *A = NULL;
+	int status_pkg;
+	int ne;
+	int e;
+
+	pkg = fprops_rxn_package_build(names, ARRAYLEN(names), source);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+	ne = fprops_rxn_package_num_elements(pkg);
+	CU_ASSERT_EQUAL_FATAL(ne, 2);
+	A = fprops_rxn_package_element_matrix(pkg);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(A);
+	for(e = 0; e < ne; ++e){
+		const double *row = &A[e * ARRAYLEN(names)];
+		if(fabs(row[0] - 1.0) < 1e-12 && fabs(row[1]) < 1e-12 && fabs(row[2] - 2.0) < 1e-12){
+			b[e] = 1.0;
+		}else if(fabs(row[0] - 3.0) < 1e-12 && fabs(row[1] - 2.0) < 1e-12 && fabs(row[2]) < 1e-12){
+			b[e] = 3.0;
+		}else{
+			CU_FAIL_FATAL("Unexpected ammonia package element");
+		}
+	}
+
+	state.T = 573.0;
+	state.P = 200.0 * 101325.0;
+	state.n = NULL;
+	out_pkg.status = -99;
+	out_pkg.H = NAN;
+	out_pkg.G = NAN;
+	out_pkg.n_out = n_out;
+
+	status_pkg = fprops_rxn_eqm_tpb(pkg, &state, b, "auto_nullspace", NULL, &out_pkg);
+
+	CU_ASSERT_TRUE(status_pkg == 0 || status_pkg == 1 || status_pkg == 6);
+	CU_ASSERT_TRUE_FATAL(isfinite(n_out[0]));
+	CU_ASSERT_TRUE_FATAL(isfinite(n_out[1]));
+	CU_ASSERT_TRUE_FATAL(isfinite(n_out[2]));
+	CU_ASSERT_TRUE(n_out[0] > 0.7);
+	CU_ASSERT_TRUE(n_out[0] < 0.8);
+
+	fprops_rxn_package_free(pkg);
+}
+
 static void test_fprops_rxn_package_eqm_matches_legacy(void){
 	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
 	static const char *elements[] = {"C", "O", "H"};
@@ -626,6 +754,100 @@ static void test_fprops_rxn_package_eqm_tpy_matches_legacy(void){
 	fprops_rxn_package_free(pkg);
 }
 
+static void test_fprops_rxn_package_eqm_sensitivities_wgs(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const double n_in[] = {1.0, 1.0, 0.0, 0.0};
+	static const double dT = 1e-2;
+	static const double dn = 1e-6;
+	FpropsRxnPackage *pkg = fprops_rxn_package_build(names, ARRAYLEN(names), "Moran and Shapiro");
+	FpropsRxnTPN state;
+	FpropsRxnResult out;
+	double n_eq[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double dn_dT[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double dn_db[ARRAYLEN(names) * 3] = {0.0};
+	double dn_dnin0[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_pm[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_pp[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	double n_in_work[ARRAYLEN(names)] = {0.0, 0.0, 0.0, 0.0};
+	const double *A = NULL;
+	int ne = 0;
+	int status;
+	int i;
+	int e;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+	ne = fprops_rxn_package_num_elements(pkg);
+	A = fprops_rxn_package_element_matrix(pkg);
+	CU_ASSERT_TRUE_FATAL(ne > 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(A);
+	state.T = g_eqm.T;
+	state.P = g_eqm.P;
+	state.n = n_in;
+	out.status = -99;
+	out.H = NAN;
+	out.G = NAN;
+	out.n_out = n_eq;
+
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", NULL, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	status = fprops_rxn_eqm_sensitivities(pkg, &state, n_eq, dn_dT, NULL, dn_db);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		double s = 0.0;
+		for(e = 0; e < ne; ++e){
+			s += dn_db[i * ne + e] * A[e * ARRAYLEN(names) + 0];
+		}
+		dn_dnin0[i] = s;
+	}
+
+	state.T = g_eqm.T - dT;
+	out.n_out = n_pm;
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", n_eq, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	state.T = g_eqm.T + dT;
+	out.n_out = n_pp;
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", n_eq, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		double fd_fwd = (n_pp[i] - n_eq[i]) / dT;
+		double fd_bwd = (n_eq[i] - n_pm[i]) / dT;
+		double fd_ctr = (n_pp[i] - n_pm[i]) / (2.0 * dT);
+		double fd_lo = fmin(fd_fwd, fd_bwd);
+		double fd_hi = fmax(fd_fwd, fd_bwd);
+		double tol = 1e-5 + 5e-3 * fmax(fabs(fd_ctr), fabs(dn_dT[i]));
+		CU_ASSERT_TRUE(fabs(fd_ctr - dn_dT[i]) <= tol);
+		CU_ASSERT_TRUE(dn_dT[i] >= fd_lo - tol);
+		CU_ASSERT_TRUE(dn_dT[i] <= fd_hi + tol);
+	}
+
+	memcpy(n_in_work, n_in, sizeof(n_in_work));
+	n_in_work[0] -= dn;
+	state.T = g_eqm.T;
+	state.n = n_in_work;
+	out.n_out = n_pm;
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", n_eq, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	memcpy(n_in_work, n_in, sizeof(n_in_work));
+	n_in_work[0] += dn;
+	state.n = n_in_work;
+	out.n_out = n_pp;
+	status = fprops_rxn_eqm_tpy(pkg, &state, "reduced", n_eq, &out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		double fd_fwd = (n_pp[i] - n_eq[i]) / dn;
+		double fd_bwd = (n_eq[i] - n_pm[i]) / dn;
+		double fd_ctr = (n_pp[i] - n_pm[i]) / (2.0 * dn);
+		double fd_lo = fmin(fd_fwd, fd_bwd);
+		double fd_hi = fmax(fd_fwd, fd_bwd);
+		double tol = 1e-5 + 5e-3 * fmax(fabs(fd_ctr), fabs(dn_dnin0[i]));
+		CU_ASSERT_TRUE(fabs(fd_ctr - dn_dnin0[i]) <= tol);
+		CU_ASSERT_TRUE(dn_dnin0[i] >= fd_lo - tol);
+		CU_ASSERT_TRUE(dn_dnin0[i] <= fd_hi + tol);
+	}
+
+	fprops_rxn_package_free(pkg);
+}
+
 static void test_eqm_wgs_permutation_invariance(void){
 	static const char *base_names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
 	static const char *base_elements[] = {"C", "O", "H"};
@@ -668,6 +890,71 @@ static void test_eqm_multi_reaction_mixed_system(void){
 	assert_reduced_solve_ok(names, 5, elements, 3, b, n);
 	assert_log10K_consistent(names, nu_co2, 5, n);
 	assert_log10K_consistent(names, nu_wgs, 5, n);
+}
+
+static void test_eqm_humid_air_nox_auto_reduced_lowt(void){
+	static const char *names[] = {
+		"nitrogen", "oxygen", "argon", "water", "carbondioxide",
+		"nitric_oxide", "nitrogen_dioxide", "carbonmonoxide", "hydrogen"
+	};
+	static const double n_in[] = {
+		0.78050661145600002,
+		0.20937052904000001,
+		0.0096958595039999996,
+		0.015,
+		0.00043000000000000002,
+		0.0,
+		0.0,
+		0.0,
+		0.0
+	};
+	static const char *source =
+		"*=RPP;water=Moran and Shapiro;carbondioxide=Moran and Shapiro;"
+		"carbonmonoxide=Moran and Shapiro;hydrogen=Moran and Shapiro";
+	static const struct{
+		double T;
+		double y_no_min;
+		double y_no_max;
+		double y_no2_min;
+		double y_no2_max;
+	} refs[] = {
+		{1000.0, 2.0e-5, 5.0e-5, 1.0e-6, 2.5e-6},
+		{800.0, 1.0e-6, 5.0e-6, 3.0e-7, 1.0e-6}
+	};
+	size_t k;
+
+	for(k = 0; k < ARRAYLEN(refs); ++k){
+		double n_out[ARRAYLEN(names)] = {0.0};
+		double ntot = 0.0;
+		int i_no;
+		int i_no2;
+		int i_co;
+		int i_h2;
+		int status = fprops_eqm_tpy(names, ARRAYLEN(names), n_in, source,
+			refs[k].T, g_eqm.P, "auto_reduced", n_in, n_out);
+
+		CU_ASSERT_EQUAL_FATAL(status, 0);
+		i_no = find_name(names, ARRAYLEN(names), "nitric_oxide");
+		i_no2 = find_name(names, ARRAYLEN(names), "nitrogen_dioxide");
+		i_co = find_name(names, ARRAYLEN(names), "carbonmonoxide");
+		i_h2 = find_name(names, ARRAYLEN(names), "hydrogen");
+		CU_ASSERT_TRUE_FATAL(i_no >= 0);
+		CU_ASSERT_TRUE_FATAL(i_no2 >= 0);
+		CU_ASSERT_TRUE_FATAL(i_co >= 0);
+		CU_ASSERT_TRUE_FATAL(i_h2 >= 0);
+		for(int i = 0; i < ARRAYLEN(names); ++i){
+			CU_ASSERT_TRUE_FATAL(isfinite(n_out[i]));
+			CU_ASSERT_TRUE_FATAL(n_out[i] > 0.0);
+			ntot += n_out[i];
+		}
+		CU_ASSERT_TRUE_FATAL(ntot > 0.0);
+		CU_ASSERT_TRUE(n_out[i_no] / ntot >= refs[k].y_no_min);
+		CU_ASSERT_TRUE(n_out[i_no] / ntot <= refs[k].y_no_max);
+		CU_ASSERT_TRUE(n_out[i_no2] / ntot >= refs[k].y_no2_min);
+		CU_ASSERT_TRUE(n_out[i_no2] / ntot <= refs[k].y_no2_max);
+		CU_ASSERT_TRUE(n_out[i_co] / ntot <= 1e-8);
+		CU_ASSERT_TRUE(n_out[i_h2] / ntot <= 1e-8);
+	}
 }
 
 static void test_eqm_fe_oxide_mu0_data(void){
@@ -914,6 +1201,171 @@ static void test_eqm_feo_pragmatic_low_oxygen_smoke_1400K(void){
 	CU_ASSERT_TRUE(n_wustite > 0.5);
 }
 
+static void test_name_resolve_reactive_and_unifac_domains(void){
+	FpropsResolvedName out;
+	FpropsNameResolveStatus status;
+
+	status = fprops_name_resolve("CO", FPROPS_NAME_DOMAIN_EQM_SPECIES, "Moran and Shapiro", &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_OK);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(out.canonical);
+	CU_ASSERT_STRING_EQUAL(out.canonical->canonical, "carbonmonoxide");
+
+	status = fprops_name_resolve("CO", FPROPS_NAME_DOMAIN_EQM_SPECIES, "RPP", &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_OK);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(out.canonical);
+	CU_ASSERT_STRING_EQUAL(out.canonical->canonical, "carbon_monoxide");
+
+	status = fprops_name_resolve("EtOH", FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT, "UNIFAC-orig-2003", &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_OK);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(out.canonical);
+	CU_ASSERT_STRING_EQUAL(out.canonical->canonical, "ethanol");
+
+	status = fprops_name_resolve("water", FPROPS_NAME_DOMAIN_PURE_FLUID, NULL, &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_OK);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(out.canonical);
+	CU_ASSERT_STRING_EQUAL(out.canonical->canonical, "water");
+
+	status = fprops_name_resolve("H2O",
+		FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT, NULL, &out);
+	CU_ASSERT_EQUAL(status, FPROPS_NAME_RESOLVE_AMBIGUOUS);
+}
+
+static void test_unifac_native_source_data_lookup(void){
+	const FpropsUNIFACSourceData *src = fprops_unifac_source("UNIFAC-orig-2003");
+	const FpropsUNIFACComponentSource *water;
+	const FpropsUNIFACComponentSource *ethanol;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(src);
+	CU_ASSERT_TRUE(src->ncomponents > 0);
+	CU_ASSERT_TRUE(src->nsubgroups > 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(src->interactions);
+	CU_ASSERT_EQUAL(src->interactions->ngroups, 47);
+
+	water = fprops_unifac_component(src, "water");
+	ethanol = fprops_unifac_component(src, "ethanol");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(water);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(ethanol);
+	CU_ASSERT_STRING_EQUAL(water->formula, "H2O");
+	CU_ASSERT_STRING_EQUAL(ethanol->formula, "C2H5OH");
+	CU_ASSERT_TRUE(water->nsubgroups > 0);
+	CU_ASSERT_TRUE(ethanol->nsubgroups > 0);
+	CU_ASSERT_TRUE(water->Pc > 1e6);
+	CU_ASSERT_TRUE(ethanol->Pc > 1e6);
+	CU_ASSERT_TRUE(water->Vliq > 1e-6);
+	CU_ASSERT_TRUE(ethanol->Vliq > 1e-6);
+}
+
+static void test_unifac_runtime_prepare_and_gamma(void){
+	const FpropsUNIFACSourceData *src = fprops_unifac_source("UNIFAC-orig-2003");
+	const char *names[] = {"water", "ethanol"};
+	FpropsUNIFACRunData *run;
+	double x[] = {0.5, 0.5};
+	double gamma[2];
+	int status;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(src);
+	run = fprops_unifac_prepare(src, names, ARRAYLEN(names));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(run);
+	CU_ASSERT_EQUAL(run->nc, 2);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(fprops_unifac_flash_package(run));
+
+	status = fprops_unifac_gamma_run(run, 298.0, x, gamma);
+	CU_ASSERT_EQUAL(status, 0);
+	CU_ASSERT_TRUE(gamma[0] > 1.0);
+	CU_ASSERT_TRUE(gamma[1] > 1.0);
+
+	fprops_unifac_destroy(run);
+}
+
+static void test_flash_prepare_unifac_and_tpz(void){
+	const char *names[] = {"water", "ethanol"};
+	FpropsMultiphasePackage pkg;
+	FpropsFlashTPZ in;
+	FpropsFlashVLResult out;
+	double z[] = {0.5, 0.5};
+	double x[2];
+	double y[2];
+	int status;
+
+	memset(&pkg, 0, sizeof(pkg));
+	status = fprops_flash_prepare_unifac(&pkg, "UNIFAC-orig-2003", names, ARRAYLEN(names));
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_EQUAL(pkg.kind, FPROPS_FLASH_PACKAGE_UNIFAC_IDEAL_VL);
+	CU_ASSERT_EQUAL(pkg.nc, ARRAYLEN(names));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg.data.unifac_ideal_vl.pkg);
+
+	in.T = 351.0;
+	in.P = 101325.0;
+	in.z = z;
+	out.status = -99;
+	out.beta = NAN;
+	out.x = x;
+	out.y = y;
+	status = fprops_flash_tpz(&pkg, &in, &out);
+	CU_ASSERT_EQUAL(status, 0);
+	CU_ASSERT_TRUE(out.beta >= 0.0);
+	CU_ASSERT_TRUE(out.beta <= 1.0);
+	CU_ASSERT_TRUE(x[0] > 0.0);
+	CU_ASSERT_TRUE(x[1] > 0.0);
+	CU_ASSERT_TRUE(y[0] > 0.0);
+	CU_ASSERT_TRUE(y[1] > 0.0);
+
+	fprops_flash_destroy_package(&pkg);
+	CU_ASSERT_EQUAL(pkg.kind, FPROPS_FLASH_PACKAGE_INVALID);
+}
+
+static void test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points(void){
+	const char *names[] = {"water", "ethanol"};
+	const double P = 1.01e5; /* VLE-Calc case shown at 1.01 bar */
+	const double reltol = 2e-2;
+	struct {
+		double T_C;
+		double x_water;
+		double y_water;
+	} cases[] = {
+		{78.0563, 0.10, 0.100401},
+		{79.7169, 0.50, 0.342386},
+		{86.3093, 0.90, 0.555865}
+	};
+	FpropsMultiphasePackage pkg;
+	int i, status;
+
+	memset(&pkg, 0, sizeof(pkg));
+	status = fprops_flash_prepare_unifac(&pkg, "UNIFAC-orig-2003", names, ARRAYLEN(names));
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg.data.unifac_ideal_vl.pkg);
+
+	for(i = 0; i < ARRAYLEN(cases); ++i){
+		double x[2];
+		double fugacity[2];
+		double y_water_expected;
+		double T;
+
+		x[0] = cases[i].x_water;
+		x[1] = 1.0 - x[0];
+		y_water_expected = cases[i].y_water;
+		T = 273.15 + cases[i].T_C;
+
+		status = fprops_unifac_liq_fugacity(pkg.data.unifac_ideal_vl.pkg, T, P, x, fugacity);
+		CU_ASSERT_EQUAL(status, 0);
+		CU_ASSERT_TRUE(fugacity[0] > 0.0);
+		CU_ASSERT_TRUE(fugacity[1] > 0.0);
+
+		if(fabs(fugacity[0] / P - y_water_expected) > reltol){
+			fprintf(stderr,
+				"UNIFAC liq fugacity mismatch at x_water=%.6f, T_C=%.4f:"
+				" yw_calc=%.8f yw_ref=%.8f\n",
+				x[0], cases[i].T_C,
+				fugacity[0] / P, y_water_expected
+			);
+		}
+		CU_ASSERT_DOUBLE_EQUAL(fugacity[0] / P, y_water_expected, reltol);
+	}
+
+	fprops_flash_destroy_package(&pkg);
+	CU_ASSERT_EQUAL(pkg.kind, FPROPS_FLASH_PACKAGE_INVALID);
+}
+
 CU_ErrorCode test_register_eqm(void){
 	CU_pSuite s = CU_add_suite("eqm", eqm_suite_init, eqm_suite_cleanup);
 	if(NULL == s){
@@ -926,6 +1378,10 @@ CU_ErrorCode test_register_eqm(void){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "wgs_reduced", test_eqm_wgs_reduced)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "ammonia_synthesis_helmholtz_ref0_matches_hr_grid",
+			test_eqm_ammonia_synthesis_helmholtz_ref0_matches_hr_grid)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "fprops_eqm_tpb_wgs_ms_table", test_fprops_eqm_tpb_wgs_ms_table)){
@@ -955,6 +1411,10 @@ CU_ErrorCode test_register_eqm(void){
 			test_fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy)){
 		return CUE_NOTEST;
 	}
+	if(NULL == CU_add_test(s, "fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves",
+			test_fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves)){
+		return CUE_NOTEST;
+	}
 	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_matches_legacy",
 			test_fprops_rxn_package_eqm_matches_legacy)){
 		return CUE_NOTEST;
@@ -963,10 +1423,18 @@ CU_ErrorCode test_register_eqm(void){
 			test_fprops_rxn_package_eqm_tpy_matches_legacy)){
 		return CUE_NOTEST;
 	}
+	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_sensitivities_wgs",
+			test_fprops_rxn_package_eqm_sensitivities_wgs)){
+		return CUE_NOTEST;
+	}
 	if(NULL == CU_add_test(s, "wgs_permutation_invariance", test_eqm_wgs_permutation_invariance)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "multi_reaction_mixed_system", test_eqm_multi_reaction_mixed_system)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "humid_air_nox_auto_reduced_lowt",
+			test_eqm_humid_air_nox_auto_reduced_lowt)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "fe_oxide_mu0_data", test_eqm_fe_oxide_mu0_data)){
@@ -1022,6 +1490,26 @@ CU_ErrorCode test_register_eqm(void){
 	(void)test_eqm_feo_pragmatic_low_oxygen_smoke_1400K;
 	if(NULL == CU_add_test(s, "feoh_reaktoro_clone_boundary_912C",
 				test_eqm_feoh_reaktoro_clone_boundary_912C)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "name_resolve_reactive_and_unifac_domains",
+			test_name_resolve_reactive_and_unifac_domains)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "unifac_native_source_data_lookup",
+			test_unifac_native_source_data_lookup)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "unifac_runtime_prepare_and_gamma",
+			test_unifac_runtime_prepare_and_gamma)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "flash_prepare_unifac_and_tpz",
+			test_flash_prepare_unifac_and_tpz)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points",
+			test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points)){
 		return CUE_NOTEST;
 	}
 	return CUE_SUCCESS;

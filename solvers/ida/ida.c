@@ -65,9 +65,17 @@
 #include <ascend/utilities/config.h>
 #include <ascend/integrator/integrator.h>
 
+#ifndef IDA_DEBUG
+# define IDA_DEBUG 0
+#endif
+#if !IDA_DEBUG
+# undef CONSOLE_DEBUG
+# define CONSOLE_DEBUG(...) ((void)0)
+#endif
+
 /* #define FEX_DEBUG */
-#define SOLVE_DEBUG
-#define STATS_DEBUG
+/* #define SOLVE_DEBUG */
+/* #define STATS_DEBUG */
 /* #define DESTROY_DEBUG */
 
 /*-------------------------------------------------------------
@@ -513,14 +521,14 @@ int ida_malloc(IntegratorSystem *integ, void *ida_mem, realtype t0,
 	/* assign tolerances */
 	if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_ATOLVECT)) {
 		CONSOLE_DEBUG("using vector of atol values");
+#if SUNDIALS_VERSION_MAJOR >= 6
 		{
 			IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
-#if SUNDIALS_VERSION_MAJOR >= 6
 			abstolvect = N_VNew_Serial(integ->n_y, enginedata->sunctx);
-#else
-			abstolvect = N_VNew_Serial(integ->n_y);
-#endif
 		}
+#else
+		abstolvect = N_VNew_Serial(integ->n_y);
+#endif
 		integrator_get_atol(integ,NV_DATA_S(abstolvect));
 		IDASVtolerances(ida_mem, reltol, abstolvect);
 		N_VDestroy_Serial(abstolvect);

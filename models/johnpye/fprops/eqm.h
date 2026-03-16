@@ -72,6 +72,24 @@ FpropsRxnPackage *fprops_rxn_package_build(const char **names, int ns, const cha
 void fprops_rxn_package_free(FpropsRxnPackage *pkg);
 
 /**
+ * Return the number of species in a compiled reactive package.
+ */
+int fprops_rxn_package_num_species(const FpropsRxnPackage *pkg);
+
+/**
+ * Return the number of conserved elements in a compiled reactive package.
+ */
+int fprops_rxn_package_num_elements(const FpropsRxnPackage *pkg);
+
+/**
+ * Return the package element matrix A in row-major order with shape [ne x ns].
+ *
+ * The returned pointer is owned by the package and remains valid until the
+ * package is freed.
+ */
+const double *fprops_rxn_package_element_matrix(const FpropsRxnPackage *pkg);
+
+/**
  * Solve equilibrium using a compiled reactive package.
  *
  * This is the package-oriented counterpart of fprops_eqm_tpb(...).
@@ -108,6 +126,29 @@ int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
 		const char *algorithm, const double *n_init, FpropsRxnResult *out);
 
 /**
+ * Compute first sensitivities of an already-solved package equilibrium state.
+ *
+ * This routine currently targets gas-only package equilibria with no
+ * solution-phase members. It linearizes the interior equilibrium KKT
+ * system at the supplied equilibrium composition and returns local
+ * sensitivities with respect to temperature, pressure, and conserved
+ * element totals.
+ *
+ * @param pkg Compiled reactive package.
+ * @param state Input T/P/species-amount state whose conserved element totals
+ *        define the equilibrium problem.
+ * @param n_eq Accepted equilibrium species amounts, length equal to package
+ *        species count.
+ * @param dn_dT Optional output vector, length equal to package species count.
+ * @param dn_dP Optional output vector, length equal to package species count.
+ * @param dn_db Optional output matrix, row-major with shape [ns x ne], where
+ *        `dn_db[i * ne + e] = d n_eq[i] / d b[e]`.
+ * @return 0 on success, negative code on failure or unsupported phase model.
+ */
+int fprops_rxn_eqm_sensitivities(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
+		const double *n_eq, double *dn_dT, double *dn_dP, double *dn_db);
+
+/**
  * Compute total mixture enthalpy using a compiled reactive package.
  *
  * @param pkg Compiled reactive package.
@@ -116,6 +157,23 @@ int fprops_rxn_eqm_tpy(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state,
  * @return 0 on success, negative code on failure.
  */
 int fprops_rxn_mix_h(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, double *H_out);
+
+/**
+ * Compute total mixture volume using a compiled reactive package.
+ *
+ * This is currently a best-effort extensive property path intended for
+ * packages whose member species have meaningful per-species volume data
+ * at the requested `T`, `P`. It is suitable for pure-fluid and selected
+ * condensed-species packages, but may return a negative status for
+ * unsupported solution/species models.
+ *
+ * @param pkg Compiled reactive package.
+ * @param state Input T/P/species-amount state.
+ * @param V_out Output total volume in m^3 on the same extensive basis as
+ *        `state->n`.
+ * @return 0 on success, negative code on failure.
+ */
+int fprops_rxn_mix_v(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, double *V_out);
 
 /**
  * Solve a chemical-equilibrium problem with an explicitly supplied

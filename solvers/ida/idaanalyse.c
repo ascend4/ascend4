@@ -36,7 +36,21 @@
 #include <ascend/system/cond_config.h>
 #include <ascend/solver/slvDOF.h>
 
-#define ANALYSE_DEBUG
+#ifndef IDA_DEBUG
+# define IDA_DEBUG 0
+#endif
+#if !IDA_DEBUG
+# undef CONSOLE_DEBUG
+# define CONSOLE_DEBUG(...) ((void)0)
+#endif
+
+#ifdef IDA_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
+/* #define ANALYSE_DEBUG */
 
 /*
 	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
@@ -333,7 +347,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 		return 2;
 	}
 
-	ERROR_REPORTER_HERE(ASC_USER_NOTE,"moving derivs to start of remainder\n");
+	MSG("moving derivs to start of remainder");
 
 	if(system_cut_rels(integ->system, 0, &integrator_ida_rel, &nr)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");
@@ -365,7 +379,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 */
 static int integrator_ida_create_lists(IntegratorSystem *integ){
 	const SolverDiffVarCollection *diffvars;
-	int i, j;
+	int i, j, n_good;
 	struct var_variable *v;
 
 	SolverDiffVarSequence seq;
@@ -389,9 +403,10 @@ static int integrator_ida_create_lists(IntegratorSystem *integ){
 		asc_assert(integ->ydot[i] == 0);
 	}
 
-#ifdef ANALYSE_DEBUG
+	#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Passing through chains...");
-#endif
+	#endif
+	n_good = 0;
 	/* create the lists y and ydot, ignoring 'bad' vars */
 	for(i=0; i<diffvars->nseqs; ++i){
 		/* CONSOLE_DEBUG("i = %d",i); */
@@ -406,6 +421,7 @@ static int integrator_ida_create_lists(IntegratorSystem *integ){
 		}
 
 		integ->y[j] = v;
+		n_good++;
 		/* VARMSG("'%s' is good non-deriv"); */
 
 		if(seq.n > 1 && var_apply_filter(seq.vars[1],&integrator_ida_deriv)){
@@ -421,9 +437,9 @@ static int integrator_ida_create_lists(IntegratorSystem *integ){
 		}
 	}
 
-#ifdef ANALYSE_DEBUG
-	CONSOLE_DEBUG("Found %d good non-derivs",j);
-#endif
+	#ifdef ANALYSE_DEBUG
+	CONSOLE_DEBUG("Found %d good non-derivs",n_good);
+	#endif
 	/* create the list y_id by looking at non-NULLs from ydot */
 	integ->y_id = ASC_NEW_ARRAY(int,integ->n_ydot);
 	for(i=0,j=0; i <  integ->n_y; ++i){

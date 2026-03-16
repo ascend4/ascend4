@@ -69,6 +69,9 @@ const ConstCpSpecies *fprops_constcp_species(const char *name, const char *sourc
 	The resolved source is written to `out` and returned as `out`.
 	Returns NULL if no source is resolved.
 */
+const char *fprops_resolve_species_source_ex(const char *source_spec, const char *species_name,
+		char *out, unsigned out_len, int *matched_specific);
+
 const char *fprops_resolve_species_source(const char *source_spec, const char *species_name,
 		char *out, unsigned out_len);
 

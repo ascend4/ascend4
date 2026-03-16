@@ -95,6 +95,12 @@ if test_env.get('WITH_IPOPT'):
 	test_env.Program('eqm_case_runner', test_env['shobjs'] + cmp_objs
 		,LIBS = ipopt_libs
 	)
+	nox_objs = ipopt_solver_objs + [
+		test_env.SharedObject('eqm_nox_runner.c',OBJPREFIX='#/test/eqmnox-test-')
+	]
+	test_env.Program('eqm_nox_runner', test_env['shobjs'] + nox_objs
+		,LIBS = ipopt_libs
+	)
 	mu0_objs = ipopt_solver_objs + [
 		test_env.SharedObject('eqm_mu0_runner.c',OBJPREFIX='#/test/eqmmu0-test-')
 	]

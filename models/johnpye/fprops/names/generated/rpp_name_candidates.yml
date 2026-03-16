@@ -1,0 +1,4898 @@
+version: 1
+entries:
+- alias: C2H3F3
+  canonical: 1_1_1_trifluoroethane
+  formula: C2H3F3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4Cl2
+  canonical: 1_1_dichloroethane
+  formula: C2H4Cl2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2Cl2F4
+  canonical: 1_1_dichlorotetrafluoroetane
+  formula: C2Cl2F4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4F2
+  canonical: 1_1_difluoroethane
+  formula: C2H4F2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H2F2
+  canonical: 1_1_difluoroethene
+  formula: C2H2F2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: 1_1_dimethylcyclohexane
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H14
+  canonical: 1_1_dimethylcyclopentane
+  formula: C7H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2Cl3F3
+  canonical: 1_2_2_trichlorotrifluoroetane
+  formula: C2Cl3F3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H5Cl3
+  canonical: 1_2_3_trichloropropane
+  formula: C3H5Cl3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H12
+  canonical: 1_2_3_trimethylbenzene
+  formula: C9H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H14
+  canonical: 1_2_4_5_tetramethylbenzene
+  formula: C10H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H12
+  canonical: 1_2_4_trimethylbenzene
+  formula: C9H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H6
+  canonical: 1_2_butadiene
+  formula: C4H6
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4Br2
+  canonical: 1_2_dibromoethane
+  formula: C2H4Br2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4Cl2
+  canonical: 1_2_dichloroethane
+  formula: C2H4Cl2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6Cl2
+  canonical: 1_2_dichloropropane
+  formula: C3H6Cl2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2Cl2F4
+  canonical: 1_2_dichlorotetrafluoroethane
+  formula: C2Cl2F4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10O2
+  canonical: 1_2_dimethoxyethane
+  formula: C4H10O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: 1_2_dimethylcyclohexane_cis
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H14
+  canonical: 1_2_dimethylcyclopentane_cis
+  formula: C7H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H14
+  canonical: 1_2_dimethylcyclopentane_trans
+  formula: C7H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H8
+  canonical: 1_2_pentadiene
+  formula: C5H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6O
+  canonical: 1_2_propylene_oxide
+  formula: C3H6O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H12
+  canonical: 1_3_5_trimethylbenzene
+  formula: C9H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H6
+  canonical: 1_3_butadiene
+  formula: C4H6
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: 1_3_dimethylcyclohexane_cis
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: 1_3_dimethylcyclohexane_trans
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H8
+  canonical: 1_3_pentadiene_trans
+  formula: C5H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H14
+  canonical: 1_4_diethylbenzene
+  formula: C10H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H4F2
+  canonical: 1_4_difluorobenzene
+  formula: C6H4F2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: 1_4_dimethylcyclohexane_cis
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: 1_4_dimethylcyclohexane_trans
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O2
+  canonical: 1_4_dioxane
+  formula: C4H8O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H8
+  canonical: 1_4_pentadiene
+  formula: C5H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8
+  canonical: 1_butene
+  formula: C4H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H6
+  canonical: 1_butyne
+  formula: C4H6
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H3ClF2
+  canonical: 1_chloro_1_1_difluoroethane
+  formula: C2H3ClF2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H9Cl
+  canonical: 1_chlorobutane
+  formula: C4H9Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C20H40
+  canonical: 1_cyclopentylpentadecane
+  formula: C20H40
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C19H38
+  canonical: 1_cyclopentyltetradecane
+  formula: C19H38
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H20
+  canonical: 1_decene
+  formula: C10H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C12H24
+  canonical: 1_dodecene
+  formula: C12H24
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16O
+  canonical: 1_heptanol
+  formula: C7H16O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H14
+  canonical: 1_heptene
+  formula: C7H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C16H32
+  canonical: 1_hexadecene
+  formula: C16H32
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14O
+  canonical: 1_hexanol
+  formula: C6H14O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 1_hexene
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H12
+  canonical: 1_methyl_2_ethylbenzene
+  formula: C9H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H12
+  canonical: 1_methyl_3_ethylbenzene
+  formula: C9H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H14
+  canonical: 1_methyl_3_isopropylbenzene
+  formula: C10H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H12
+  canonical: 1_methyl_4_ethylbenzene
+  formula: C9H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C11H10
+  canonical: 1_methylnaphthalene
+  formula: C11H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H18
+  canonical: 1_nonene
+  formula: C9H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C18H36
+  canonical: 1_octadecene
+  formula: C18H36
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18O
+  canonical: 1_octanol
+  formula: C8H18O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: 1_octene
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C15H30
+  canonical: 1_pentadecene
+  formula: C15H30
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H12O
+  canonical: 1_pentanol
+  formula: C5H12O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10
+  canonical: 1_pentene
+  formula: C5H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H8
+  canonical: 1_pentyne
+  formula: C5H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H8O
+  canonical: 1_propanol
+  formula: C3H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C14H28
+  canonical: 1_tetradecene
+  formula: C14H28
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C13H26
+  canonical: 1_tridecene
+  formula: C13H26
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C11H22
+  canonical: 1_undecene
+  formula: C11H22
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H22
+  canonical: 2_2_3_3_tetramethylhexane
+  formula: C10H22
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 2_2_3_3_tetramethylpentane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 2_2_3_4_tetramethylpentane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: 2_2_3_trimethylbutane
+  formula: C7H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 2_2_3_trimethylhexane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_2_3_trimethylpentane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 2_2_4_4_tetramethylpentane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 2_2_4_trimethylhexane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_2_4_trimethylpentane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H22
+  canonical: 2_2_5_5_tetramthylhexane
+  formula: C10H22
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 2_2_5_trimethylhexane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14
+  canonical: 2_2_dimethyl_butane
+  formula: C6H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 2_2_dimethylheptane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_2_dimethylhexane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: 2_2_dimethylpentane
+  formula: C7H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H12
+  canonical: 2_2_dimethylpropane
+  formula: C5H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 2_3_3_4_tetramethylpentane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_3_3_trimethylpentane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_3_4_trimethylpentane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 2_3_dimethyl_1_butene
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 2_3_dimethyl_2_butene
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14
+  canonical: 2_3_dimethyl_butane
+  formula: C6H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_3_dimethylhexane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: 2_3_dimethylpentane
+  formula: C7H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_4_dimethylhexane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: 2_4_dimethylpentane
+  formula: C7H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_5_dimethylhexane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10O
+  canonical: 2_butanol
+  formula: C4H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8
+  canonical: 2_butene_cis
+  formula: C4H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8
+  canonical: 2_butene_trans
+  formula: C4H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H6
+  canonical: 2_butyne
+  formula: C4H6
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H9Cl
+  canonical: 2_chlorobutane
+  formula: C4H9Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 2_hexene_cis
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 2_hexene_trans
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H8
+  canonical: 2_methyl_1_3_butadiene
+  formula: C5H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10
+  canonical: 2_methyl_1_butene
+  formula: C5H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10
+  canonical: 2_methyl_2_butene
+  formula: C5H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 2_methyl_2_pentene
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_methyl_3_ethylpentane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H12
+  canonical: 2_methyl_butane
+  formula: C5H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14
+  canonical: 2_methyl_pentane
+  formula: C6H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 2_methylheptane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: 2_methylhexane
+  formula: C7H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C11H10
+  canonical: 2_methylnaphthalene
+  formula: C11H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 2_methyloctane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H7N
+  canonical: 2_methylpyridine
+  formula: C6H7N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: 2_octene_trans
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10
+  canonical: 2_pentene_cis
+  formula: C5H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10
+  canonical: 2_pentene_trans
+  formula: C5H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H22
+  canonical: 3_3_5_trimethylheptane
+  formula: C10H22
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: 3_3_diethylpentane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 3_3_dimethyl_1_butene
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 3_3_dimethylhexane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: 3_3_dimethylpentane
+  formula: C7H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 3_4_dimethylhexane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 3_ethylhexane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: 3_ethylpentane
+  formula: C7H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 3_hexene_cis
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 3_hexene_trans
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H8
+  canonical: 3_methyl_1_2_butadiene
+  formula: C5H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10
+  canonical: 3_methyl_1_butene
+  formula: C5H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 3_methyl_2_pentene_cis
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 3_methyl_2_pentene_trans
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 3_methyl_3_ethylpentane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14
+  canonical: 3_methyl_pentane
+  formula: C6H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 3_methylheptane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: 3_methylhexane
+  formula: C7H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 4_methyl_2_pentene_cis
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 4_methyl_2_pentene_trans
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: 4_methylheptane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H7N
+  canonical: 4_methylpyridine
+  formula: C6H7N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4O
+  canonical: acetaldehyde
+  formula: C2H4O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4O2
+  canonical: acetic_acid
+  formula: C2H4O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H6O3
+  canonical: acetic_anhydride
+  formula: C4H6O3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (CH3)2CO
+  canonical: acetone
+  formula: (CH3)2CO
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H3N
+  canonical: acetonitrile
+  formula: C2H3N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H3ClO
+  canonical: acetyl_chloride
+  formula: C2H3ClO
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H2
+  canonical: acetylene
+  formula: C2H2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H4O
+  canonical: acrolein
+  formula: C3H4O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H4O2
+  canonical: acrylic_acid
+  formula: C3H4O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H3N
+  canonical: acrylonitrile
+  formula: C3H3N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H5Cl
+  canonical: allyl_chloride
+  formula: C3H5Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H5N
+  canonical: allyl_cyanide
+  formula: C4H5N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: AlBr3
+  canonical: aluminum_tribromide
+  formula: AlBr3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: AlCl3
+  canonical: aluminum_trichloride
+  formula: AlCl3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: H3N
+  canonical: ammonia
+  formula: H3N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H7N
+  canonical: aniline
+  formula: C6H7N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Ar
+  canonical: argon
+  formula: Ar
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H6O
+  canonical: benzaldehyde
+  formula: C7H6O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H6
+  canonical: benzene
+  formula: C6H6
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H6O2
+  canonical: benzoic_acid
+  formula: C7H6O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H5N
+  canonical: benzonitrile
+  formula: C7H5N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: BCl3
+  canonical: boron_trichloride
+  formula: BCl3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: BF3
+  canonical: boron_trifluoride
+  formula: BF3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Br2
+  canonical: bromine
+  formula: Br2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5Br
+  canonical: bromobenzene
+  formula: C6H5Br
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8
+  canonical: butene_1
+  formula: C4H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C11H14O2
+  canonical: butyl_benzoate
+  formula: C11H14O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H20
+  canonical: butylcyclohexane
+  formula: C10H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H7N
+  canonical: butyronitrile
+  formula: C4H7N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CO2
+  canonical: carbon_dioxide
+  formula: CO2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CS2
+  canonical: carbon_disulfide
+  formula: CS2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CO
+  canonical: carbon_monoxide
+  formula: CO
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CCl4
+  canonical: carbon_tetrachloride
+  formula: CCl4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CF4
+  canonical: carbon_tetrafluoride
+  formula: CF4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: COS
+  canonical: carbonyl_sulfide
+  formula: COS
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Cl2
+  canonical: chlorine
+  formula: Cl2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: ClF5
+  canonical: chlorine_pentafluoride
+  formula: ClF5
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5Cl
+  canonical: chloro_benzene
+  formula: C6H5Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5Cl
+  canonical: chlorobenzene
+  formula: C6H5Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CHClF2
+  canonical: chlorodifluoromethane
+  formula: CHClF2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CHCl3
+  canonical: chloroform
+  formula: CHCl3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2ClF5
+  canonical: chloropentafluoroetane
+  formula: C2ClF5
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CClF3
+  canonical: chlorotrifluoromethane
+  formula: CClF3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H18
+  canonical: cis_decalin
+  formula: C10H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F2N2
+  canonical: cis_difluorodiazine
+  formula: F2N2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2N2
+  canonical: cyanogen
+  formula: C2N2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8
+  canonical: cyclobutane
+  formula: C4H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H14
+  canonical: cycloheptane
+  formula: C7H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: cyclohexane
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12O
+  canonical: cyclohexanol
+  formula: C6H12O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H10
+  canonical: cyclohexene
+  formula: C6H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10
+  canonical: cyclopentane
+  formula: C5H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H8O
+  canonical: cyclopentanone
+  formula: C5H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6
+  canonical: cyclopropane
+  formula: C3H6
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: D2
+  canonical: deuterium_equilibrium
+  formula: D2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: D2O
+  canonical: deuterium_oxide
+  formula: D2O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CD4
+  canonical: deutromethane
+  formula: CD4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H19N
+  canonical: dibutyl_amine
+  formula: C8H19N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18O
+  canonical: dibutyl_ether
+  formula: C8H18O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CCl2F2
+  canonical: dichlorodifluoromethane
+  formula: CCl2F2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH2Cl2
+  canonical: dichloromethane
+  formula: CH2Cl2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CHCl2F
+  canonical: dichloromonofluoromethane
+  formula: CHCl2F
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H11N
+  canonical: diethyl_amine
+  formula: C4H11N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10O
+  canonical: diethyl_ether
+  formula: C4H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10O
+  canonical: diethyl_ketone
+  formula: C5H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10S
+  canonical: diethyl_sulfide
+  formula: C4H10S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H4(C2H5)2
+  canonical: diethylbenzene
+  formula: C6H4(C2H5)2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH2F2
+  canonical: difluoromethane
+  formula: CH2F2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C12H26O
+  canonical: dihexylether
+  formula: C12H26O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14O
+  canonical: diisopropyl_ether
+  formula: C6H14O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H6O
+  canonical: dimethyl_ether
+  formula: C2H6O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H6S
+  canonical: dimethyl_sulphide
+  formula: C2H6S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H7N
+  canonical: dimethylamine
+  formula: C2H7N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (C6H5)2
+  canonical: diphenyl
+  formula: (C6H5)2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C12H10O
+  canonical: diphenyl_ether
+  formula: C12H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14O
+  canonical: dipropyl_ether
+  formula: C6H14O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H15N
+  canonical: dipropylamine
+  formula: C6H15N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C12H26
+  canonical: dodecane
+  formula: C12H26
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H6
+  canonical: ethane
+  formula: C2H6
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H5OH
+  canonical: ethanol
+  formula: C2H5OH
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O2
+  canonical: ethyl_acetate
+  formula: C4H8O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H8O2
+  canonical: ethyl_acrylate
+  formula: C5H8O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H7N
+  canonical: ethyl_amine
+  formula: C2H7N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H10O2
+  canonical: ethyl_benzoate
+  formula: C9H10O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H5Br
+  canonical: ethyl_bromide
+  formula: C2H5Br
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14O
+  canonical: ethyl_butyl_ether
+  formula: C6H14O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12O2
+  canonical: ethyl_butyrate
+  formula: C6H12O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H5Cl
+  canonical: ethyl_chloride
+  formula: C2H5Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H5F
+  canonical: ethyl_flouride
+  formula: C2H5F
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6O2
+  canonical: ethyl_formate
+  formula: C3H6O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H6S
+  canonical: ethyl_mercaptan
+  formula: C2H6S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10O2
+  canonical: ethyl_propionate
+  formula: C5H10O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5C2H5
+  canonical: ethylbenzene
+  formula: C6H5C2H5
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: ethylcyclohexane
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H14
+  canonical: ethylcyclopentane
+  formula: C7H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4
+  canonical: ethylene
+  formula: C2H4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4O
+  canonical: ethylene_oxide
+  formula: C2H4O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H8N2
+  canonical: ethylenediamine
+  formula: C2H8N2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F2
+  canonical: fluorine
+  formula: F2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5F
+  canonical: fluorobenzene
+  formula: C6H5F
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CHF3
+  canonical: fluoroform
+  formula: CHF3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH2O
+  canonical: formaldehyde
+  formula: CH2O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H4O
+  canonical: furan
+  formula: C4H4O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: HE
+  canonical: helium_3
+  formula: HE
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: He
+  canonical: helium_4
+  formula: He
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: H4N2
+  canonical: hydrazine
+  formula: H4N2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: H2
+  canonical: hydrogen
+  formula: H2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: HBr
+  canonical: hydrogen_bromide
+  formula: HBr
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: HCl
+  canonical: hydrogen_chloride
+  formula: HCl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: HCN
+  canonical: hydrogen_cyanide
+  formula: HCN
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: HD
+  canonical: hydrogen_deuteride
+  formula: HD
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: H2
+  canonical: hydrogen_equilib
+  formula: H2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: HF
+  canonical: hydrogen_fluoride
+  formula: HF
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: HI
+  canonical: hydrogen_iodide
+  formula: HI
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: H2S
+  canonical: hydrogen_sulfide
+  formula: H2S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (CH3)3CH
+  canonical: i_butane
+  formula: (CH3)3CH
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (CH3)2CHCH2OH
+  canonical: i_butanol
+  formula: (CH3)2CHCH2OH
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H5CH(CH3)2
+  canonical: i_pentane
+  formula: C2H5CH(CH3)2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (CH3)2CHOH
+  canonical: i_propanol
+  formula: (CH3)2CHOH
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5I
+  canonical: iodobenzene
+  formula: C6H5I
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10
+  canonical: isobutane
+  formula: C4H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10O
+  canonical: isobutaol
+  formula: C4H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12O2
+  canonical: isobutyl_acetate
+  formula: C6H12O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H11N
+  canonical: isobutyl_amine
+  formula: C4H11N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10O2
+  canonical: isobutyl_formate
+  formula: C5H10O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8
+  canonical: isobutylene
+  formula: C4H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O
+  canonical: isobutyraldehyde
+  formula: C4H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O2
+  canonical: isobutyric_acid
+  formula: C4H8O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H8O
+  canonical: isopropyl_alcohol
+  formula: C3H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H9N
+  canonical: isopropyl_amine
+  formula: C3H9N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H7Cl
+  canonical: isopropyl_chloride
+  formula: C3H7Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H12
+  canonical: isopropylbenzene
+  formula: C9H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H2O
+  canonical: ketene
+  formula: C2H2O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Kr
+  canonical: krypton
+  formula: Kr
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H8O
+  canonical: m_cresol
+  formula: C7H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H9N
+  canonical: m_toluidine
+  formula: C7H9N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H10
+  canonical: m_xylene
+  formula: C8H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Hg
+  canonical: mercury
+  formula: Hg
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH4
+  canonical: methane
+  formula: CH4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH3OH
+  canonical: methanol
+  formula: CH3OH
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6O2
+  canonical: methyl_acetate
+  formula: C3H6O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H4
+  canonical: methyl_acetylene
+  formula: C3H4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H6O2
+  canonical: methyl_acrylate
+  formula: C4H6O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH5N
+  canonical: methyl_amine
+  formula: CH5N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H8O2
+  canonical: methyl_benzoate
+  formula: C8H8O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH3Cl
+  canonical: methyl_chloride
+  formula: CH3Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H8O
+  canonical: methyl_ethyl_ether
+  formula: C3H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O
+  canonical: methyl_ethyl_ketone
+  formula: C4H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H8S
+  canonical: methyl_ethyl_sulfide
+  formula: C3H8S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH3F
+  canonical: methyl_fluoride
+  formula: CH3F
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4O2
+  canonical: methyl_formate
+  formula: C2H4O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12O
+  canonical: methyl_isobutyl_ketone
+  formula: C6H12O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H3NO
+  canonical: methyl_isocyanate
+  formula: C2H3NO
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10O
+  canonical: methyl_isopropyl_ether
+  formula: C4H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10O
+  canonical: methyl_isopropyl_ketone
+  formula: C5H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH4S
+  canonical: methyl_mercaptan
+  formula: CH4S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10O
+  canonical: methyl_n_propyl_ketone
+  formula: C5H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H8O
+  canonical: methyl_phenyl_ketone
+  formula: C8H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O2
+  canonical: methyl_propionate
+  formula: C4H8O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10O
+  canonical: methyl_propyl_ether
+  formula: C4H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H14
+  canonical: methylcyclohexane
+  formula: C7H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: methylcyclopentane
+  formula: C6H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H9NO
+  canonical: morpholine
+  formula: C4H9NO
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10
+  canonical: n_butane
+  formula: C4H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H9OH
+  canonical: n_butanol
+  formula: C4H9OH
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12O2
+  canonical: n_butyl_acetate
+  formula: C6H12O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H11N
+  canonical: n_butyl_amine
+  formula: C4H11N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H14
+  canonical: n_butylbenzene
+  formula: C10H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O
+  canonical: n_butyraldehyde
+  formula: C4H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O2
+  canonical: n_butyric_acid
+  formula: C4H8O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H22
+  canonical: n_decane
+  formula: C10H22
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C16H32
+  canonical: n_decylcyclohexane
+  formula: C16H32
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C15H30
+  canonical: n_decylcyclopentane
+  formula: C15H30
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C12H26
+  canonical: n_dodecane
+  formula: C12H26
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C17H34
+  canonical: n_dodecylcyclopentane
+  formula: C17H34
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C20H42
+  canonical: n_eicosane
+  formula: C20H42
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C17H36
+  canonical: n_heptadecane
+  formula: C17H36
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: n_heptane
+  formula: C7H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C12H24
+  canonical: n_heptylcyclopentane
+  formula: C12H24
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C16H34
+  canonical: n_hexadecane
+  formula: C16H34
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14
+  canonical: n_hexane
+  formula: C6H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C11H22
+  canonical: n_hexylcylopentane
+  formula: C11H22
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C19H40
+  canonical: n_nonadecane
+  formula: C19H40
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H20
+  canonical: n_nonane
+  formula: C9H20
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C14H28
+  canonical: n_nonylcyclopentane
+  formula: C14H28
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C18H38
+  canonical: n_octadecane
+  formula: C18H38
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: n_octane
+  formula: C8H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C13H26
+  canonical: n_octylcyclopentane
+  formula: C13H26
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C15H32
+  canonical: n_pentadecane
+  formula: C15H32
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H12
+  canonical: n_pentane
+  formula: C5H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H12
+  canonical: n_pentate
+  formula: C5H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H7OH
+  canonical: n_propanol
+  formula: C3H7OH
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10O2
+  canonical: n_propyl_acetate
+  formula: C5H10O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H9N
+  canonical: n_propyl_amine
+  formula: C3H9N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H12
+  canonical: n_propylbenzene
+  formula: C9H12
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C9H18
+  canonical: n_propylcyclohexane
+  formula: C9H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H16
+  canonical: n_propylcyclopentane
+  formula: C8H16
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C14H30
+  canonical: n_tetradecane
+  formula: C14H30
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C13H28
+  canonical: n_tridecane
+  formula: C13H28
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C18H36
+  canonical: n_tridecylcylopentane
+  formula: C18H36
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C11H24
+  canonical: n_undecane
+  formula: C11H24
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H8
+  canonical: naphthalene
+  formula: C10H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Ne
+  canonical: neon
+  formula: Ne
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: 'NO'
+  canonical: nitric_oxide
+  formula: 'NO'
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: N2
+  canonical: nitrogen
+  formula: N2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: NO2
+  canonical: nitrogen_dioxide
+  formula: NO2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: N2O4
+  canonical: nitrogen_tetroxide
+  formula: N2O4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F3N
+  canonical: nitrogen_trifluoride
+  formula: F3N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH3NO2
+  canonical: nitromethane
+  formula: CH3NO2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: N2O
+  canonical: nitrous_oxide
+  formula: N2O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H8O
+  canonical: o_cresol
+  formula: C7H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H4Cl2
+  canonical: o_dichlorobenzene
+  formula: C6H4Cl2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H10
+  canonical: o_xylene
+  formula: C8H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: O2
+  canonical: oxygen
+  formula: O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: O3
+  canonical: ozone
+  formula: O3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H8O
+  canonical: p_cresol
+  formula: C7H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H10
+  canonical: p_xylene
+  formula: C8H10
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H12O
+  canonical: pentanol_1
+  formula: C5H12O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: ClFO3
+  canonical: perchloryl_fluoride
+  formula: ClFO3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6F6
+  canonical: perflourobenzene
+  formula: C6F6
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2F4
+  canonical: perfluoroethene
+  formula: C2F4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H6O
+  canonical: phenol
+  formula: C6H6O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CCl2O
+  canonical: phosgene
+  formula: CCl2O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: H3P
+  canonical: phosphine
+  formula: H3P
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F3P
+  canonical: phosphorus_trifluoride
+  formula: F3P
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H11N
+  canonical: piperidine
+  formula: C5H11N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H4
+  canonical: propadiene
+  formula: C3H4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H8
+  canonical: propane
+  formula: C3H8
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6O
+  canonical: propionaldehyde
+  formula: C3H6O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6O2
+  canonical: propionic_acid
+  formula: C3H6O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H5N
+  canonical: propionitrile
+  formula: C3H5N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H7Cl
+  canonical: propyl_chloride
+  formula: C3H7Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6
+  canonical: propylene
+  formula: C3H6
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H5N
+  canonical: pyradine
+  formula: C5H5N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H9N
+  canonical: pyrrolidine
+  formula: C4H9N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Rn
+  canonical: radon
+  formula: Rn
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H14
+  canonical: sec_butylbenzene
+  formula: C10H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: H4Si
+  canonical: silane
+  formula: H4Si
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Cl4Si
+  canonical: silicon_tetrachloride
+  formula: Cl4Si
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F4Si
+  canonical: silicon_tetrafluoride
+  formula: F4Si
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5C2H3
+  canonical: styrene
+  formula: C6H5C2H3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: O2S
+  canonical: sulfur_dioxide
+  formula: O2S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F6S
+  canonical: sulfur_hexafluoride
+  formula: F6S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: O3S
+  canonical: sulfur_trioxide
+  formula: O3S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10O
+  canonical: tert_butanol
+  formula: C4H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H9Cl
+  canonical: tert_butyl_chloride
+  formula: C4H9Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H12O
+  canonical: tert_butyl_methyl_ether
+  formula: C5H12O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H14
+  canonical: tert_butylbenzene
+  formula: C10H14
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F4N2
+  canonical: tetrafluorohydrazine
+  formula: F4N2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O
+  canonical: tetrahydrofuran
+  formula: C4H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H4S
+  canonical: thiophene
+  formula: C4H4S
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F3PS
+  canonical: thiophosphoryl_trifluoride
+  formula: F3PS
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Cl4Ti
+  canonical: titanium_tetrachloride
+  formula: Cl4Ti
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5CH3
+  canonical: toluene
+  formula: C6H5CH3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H2Cl2
+  canonical: trans_1_2_dichloroethene
+  formula: C2H2Cl2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H18
+  canonical: trans_decalin
+  formula: C10H18
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F2N2
+  canonical: trans_difluorodiazine
+  formula: F2N2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2HCl3
+  canonical: trichloroethene
+  formula: C2HCl3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CCl3F
+  canonical: trichlorofluoromethane
+  formula: CCl3F
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H15N
+  canonical: triethylamine
+  formula: C6H15N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2F3N
+  canonical: trifluoroacetonitrile
+  formula: C2F3N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: F3NO
+  canonical: trifluoroamine_oxide
+  formula: F3NO
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CBrF3
+  canonical: trifluorobromomethane
+  formula: CBrF3
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H9N
+  canonical: trimethyl_amine
+  formula: C3H9N
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H10O
+  canonical: valeraldehyde
+  formula: C5H10O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H6O2
+  canonical: vinyl_acetate
+  formula: C4H6O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H3Cl
+  canonical: vinyl_chloride
+  formula: C2H3Cl
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8O
+  canonical: vinyl_ethyl_ether
+  formula: C4H8O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H4O2
+  canonical: vinyl_formate
+  formula: C3H4O2
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6O
+  canonical: vinyl_methyl_ether
+  formula: C3H6O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H4
+  canonical: vinylacetylene
+  formula: C4H4
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: H2O
+  canonical: water
+  formula: H2O
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: Xe
+  canonical: xenon
+  formula: Xe
+  domains:
+  - pure_fluid
+  - eqm_species
+  sources:
+  - RPP
+  flags:
+  - auto
+  - formula
+  priority: 10

@@ -6,6 +6,7 @@
 #include "solverreporter.h"
 #include "registry.h"
 #include "value.h"
+#include <ascend/compiler/simstatus.h>
 
 #include <map>
 #include <stdexcept>
@@ -289,6 +290,7 @@ SolverHooks::setSolver(const char *solvername, Simulation *S){
 		return SLVREQ_UNKNOWN_SOLVER;
 	}
 	MSG("Solver set to '%s'",solvername);
+	asc_simstatus_mark_dirty(S->getInternalType());
 	return 0;
 }
 
@@ -307,6 +309,7 @@ SolverHooks::setOption(const char *optionname, Value val, Simulation *S){
 	int res = apply_option_to_system(S, optionname, val.v);
 	if(res == 0){
 		remember_option(get_solver_config(S), optionname, val.v);
+		asc_simstatus_mark_dirty(S->getInternalType());
 	}
 	return res;
 }
@@ -335,6 +338,7 @@ SolverHooks::doSolve(Instance *i, Simulation *S){
 	}
 
 	/* solver succeeded */
+	asc_simstatus_mark_clean(S->getInternalType(), i);
 	return 0;
 }
 
@@ -590,12 +594,16 @@ cleanup:
 	if(close_fp && fp != NULL){
 		fclose(fp);
 	}
+	if(res == 0 && request.hasVary() && request.getMode() != SLVREQ_STUDY_NONE){
+		asc_simstatus_mark_clean(S->getInternalType(), S->getModel().getInternalType());
+	}
 	return res;
 }
 
 int
 SolverHooks::deleteSystem(Simulation *S){
 	S->invalidateSystem();
+	asc_simstatus_mark_dirty(S->getInternalType());
 	return 0;
 }
 

@@ -1,0 +1,75 @@
+REQUIRE "kinetics.a4l";
+REQUIRE "johnpye/fprops/reactive_stoic.a4l";
+PROVIDE "johnpye/fprops/reactive_kinetic.a4l";
+
+MODEL kinetic_reaction_set(
+	components WILL_BE set OF symbol_constant;
+	reactions WILL_BE set OF symbol_constant;
+	T_reac WILL_BE temperature;
+	conc[components] WILL_BE molar_density;
+);
+	species[reactions] IS_A set OF symbol_constant;
+	k[reactions] IS_A constant;
+	active_energy[reactions] IS_A constant;
+	nu[components][reactions] IS_A integer_constant;
+
+	reac IS_A element_kinetics(
+		components, reactions, k, active_energy, T_reac, species, nu, conc
+	);
+
+	FOR r IN reactions CREATE
+		rate[r] ALIASES reac.rate[r];
+	END FOR;
+	FOR i IN components CREATE
+		production[i] ALIASES reac.production[i];
+	END FOR;
+
+METHODS
+	METHOD default_self;
+		RUN reac.default_self;
+	END default_self;
+END kinetic_reaction_set;
+
+MODEL reactor_kinetic(
+	pkg WILL_BE reactive_package;
+	reactions WILL_BE set OF symbol_constant;
+);
+	components ALIASES pkg.components;
+	reference_component IS_A symbol_constant;
+
+	inlet IS_A reactive_stream(pkg);
+	outlet IS_A reactive_stream(pkg);
+	holdup IS_A reactive_holdup(pkg);
+	kinetics IS_A kinetic_reaction_set(components, reactions, holdup.T, holdup.c);
+
+	Volume ALIASES holdup.V;
+	Qdot IS_A energy_rate;
+	DeltaP IS_A delta_pressure;
+
+	FOR i IN components CREATE
+		mbal[i]: outlet.f[i] = inlet.f[i] + Volume * kinetics.production[i];
+	END FOR;
+	FOR i IN components - [reference_component] CREATE
+		holdup_y[i]: holdup.y[i] = outlet.y[i];
+	END FOR;
+	holdup_T: holdup.T = outlet.T;
+	holdup_P: holdup.P = outlet.P;
+	pbal: outlet.P = inlet.P - DeltaP;
+	ebal: outlet.H_flow = inlet.H_flow + Qdot;
+
+METHODS
+	METHOD default_self;
+		RUN inlet.default_self;
+		RUN outlet.default_self;
+		RUN holdup.default_self;
+		RUN kinetics.default_self;
+		Qdot := 0 {W};
+		DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD specify;
+		RUN inlet.specify;
+		FIX Volume;
+		FIX DeltaP;
+	END specify;
+END reactor_kinetic;

@@ -142,6 +142,9 @@ public:
 	
 	void setSolverHooks(SolverHooks *H);
 	SolverHooks *getSolverHooks() const;
+	bool isSolveDirty() const;
+	bool isMethodRunning() const;
+	const std::string getSolveTargetName() const;
 };
 
 #endif

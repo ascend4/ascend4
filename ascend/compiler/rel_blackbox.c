@@ -21,6 +21,7 @@
 #include <math.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <string.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
 
@@ -65,6 +66,23 @@ static int32 ArgsDifferent(double new, double old, double tol){
 		return 1;
 	} else {
 		return 0;
+	}
+}
+
+static int BlackBoxNeedsCurrentOutputSeed(struct ExternalFunc *efunc){
+	const char *name = efunc ? ExternalFuncName(efunc) : NULL;
+	return name && 0 == strcmp(name, "fprops_rxn_eqm_TPn");
+}
+
+static void BlackBoxCacheLoadCurrentOutputs(struct BlackBoxCache *common){
+	int32 i;
+	if(!common || !common->outputs || !common->outputVars){
+		return;
+	}
+	for(i = 0; i < common->outputsLen; ++i){
+		if(common->outputVars[i]){
+			common->outputs[i] = RealAtomValue(common->outputVars[i]);
+		}
 	}
 }
 
@@ -222,6 +240,9 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r){
 			value = RealAtomValue(arg);
 			common->inputs[c] = value;
 		}
+		if(BlackBoxNeedsCurrentOutputSeed(efunc)){
+			BlackBoxCacheLoadCurrentOutputs(common);
+		}
 		common->interp.task = bb_func_eval;
 
 		nok = (*evalFunc)(&(common->interp),
@@ -231,7 +252,14 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r){
 				common->outputs,
 				common->jacobian);
 		if(nok)CONSOLE_DEBUG("Error '%d' returned by external relation '%s' eval.",nok,ExternalFuncName(efunc));
-		common->residCount++;
+		if(!nok){
+			common->residCount++;
+		}
+	}
+	if(nok){
+		/* On evaluation failure, do not read cached/stale outputs. */
+		*res = 1.0e8;
+		return nok;
 	}
 	value = common->outputs[outputIndex];
 
@@ -322,6 +350,9 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 			value = RealAtomValue(arg);
 			common->inputsJac[c] = value;
 		}
+		if(BlackBoxNeedsCurrentOutputSeed(efunc)){
+			BlackBoxCacheLoadCurrentOutputs(common);
+		}
 		common->interp.task = bb_deriv_eval;
 
 		if(derivFunc){
@@ -348,11 +379,19 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 			);
 			if(nok)CONSOLE_DEBUG("Error '%d' returned for finite difference gradient for '%s'.",nok,ExternalFuncName(efunc));		
 		}
-		common->gradCount++;
+		if(!nok){
+			common->gradCount++;
+		}
 	}
 
 	for (k = 0; k < varlistLen; k++) {
 		gradient[k] = 0.0;
+	}
+	if(nok){
+		/* Keep the row finite if caller inspects it despite the error. */
+		k = lhsVar - 1;
+		gradient[k] = 1.0;
+		return nok;
 	}
 
 	/* now compute d(y-yhat)/dx for this row as ( I - dyhat/dx ) */
@@ -380,7 +419,7 @@ struct Instance *BlackBoxGetOutputVar(CONST struct relation *r){
 
 static int g_cbbdcount=0;
 struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common){
-	struct BlackBoxData *b = (struct BlackBoxData *)malloc(sizeof(struct BlackBoxData));
+	struct BlackBoxData *b = (struct BlackBoxData *)ascmalloc(sizeof(struct BlackBoxData));
 	g_cbbdcount++;
 	b->count = g_cbbdcount;
 	assert(common!=NULL);
@@ -540,7 +579,7 @@ struct BlackBoxCache *CreateBlackBoxCache(
 	struct ExternalFunc *efunc
 )
 {
-	struct BlackBoxCache *b = (struct BlackBoxCache *)malloc(sizeof(struct BlackBoxCache));
+	struct BlackBoxCache *b = (struct BlackBoxCache *)ascmalloc(sizeof(struct BlackBoxCache));
 	g_cbbccount++;
 	g_bbccurrent++;
 	b->count = g_cbbccount;
@@ -556,6 +595,7 @@ struct BlackBoxCache *CreateBlackBoxCache(
 	b->inputs = (double *)ascmalloc(inputsLen*sizeof(double));
 	b->inputsJac = (double *)ascmalloc(inputsLen*sizeof(double));
 	b->outputs = (double *)ascmalloc(outputsLen*sizeof(double));
+	b->outputVars = outputsLen > 0 ? (struct Instance **)ascmalloc(outputsLen*sizeof(struct Instance *)) : NULL;
 	b->jacobian = (double*)ascmalloc(outputsLen*inputsLen*sizeof(double)+sizeof(double));
 	b->jacobian[outputsLen*inputsLen] = JACMAGIC;
 	b->hessian = NULL;
@@ -563,6 +603,11 @@ struct BlackBoxCache *CreateBlackBoxCache(
 	b->gradCount = 0;
 	b->refCount = 1;
 	b->efunc = efunc;
+	for(int32 i = 0; i < outputsLen; ++i){
+		if(b->outputVars){
+			b->outputVars[i] = NULL;
+		}
+	}
 	return b;
 }
 
@@ -598,6 +643,18 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b){
 		tmp = FindInstancesFromNames(context,tmp,&err);
 		assert(tmp != NULL);
 		gl_append_ptr(arglist,tmp);
+	}
+	if(b->outputVars && b->outputsLen > 0){
+		long out = (long)b->outputsLen;
+		for(br = nbr; br >= 1 && out > 0; --br){
+			struct gl_list_t *ilist = (struct gl_list_t *)gl_fetch(arglist, br);
+			unsigned long len = gl_length(ilist);
+			while(len > 0 && out > 0){
+				b->outputVars[out - 1] = (struct Instance *)gl_fetch(ilist, len);
+				--out;
+				--len;
+			}
+		}
 	}
 
 	/* now do the init */
@@ -640,6 +697,7 @@ static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b){
 	ascfree(b->inputs);
 	ascfree(b->inputsJac);
 	ascfree(b->outputs);
+	ascfree(b->outputVars);
 	ascfree(b->jacobian);
 	DeepDestroySpecialList(b->argListNames,(DestroyFunc)DestroyName);
 	b->argListNames = NULL;
@@ -652,6 +710,7 @@ static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b){
 	b->inputs = NULL;
 	b->inputsJac = NULL;
 	b->outputs = NULL;
+	b->outputVars = NULL;
 	b->jacobian = NULL;
 	b->hessian = NULL;
 	b->residCount = -(b->residCount);
@@ -699,4 +758,3 @@ void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b){
 		*b = NULL;
 	}
 }
-

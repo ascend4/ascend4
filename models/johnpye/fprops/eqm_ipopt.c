@@ -61,7 +61,7 @@ static void eqm_compute_x(const EqmData *D, const Number *xvars, double *S, doub
 	*Z = sum;
 }
 
-static int eval_f(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
+static Bool eval_f(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
 	EqmData *D = (EqmData *)user_data;
 	double *x_i = NULL;
 	double *n_i = NULL;
@@ -101,7 +101,7 @@ static int eval_f(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr
 	return TRUE;
 }
 
-static int eval_grad_f(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
+static Bool eval_grad_f(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
 	EqmData *D = (EqmData *)user_data;
 	const int nvars = D->ns + 1;
 	const double eps = 1e-6;
@@ -138,7 +138,7 @@ static int eval_grad_f(Index n, Number *x, Bool new_x, Number *grad_f, UserDataP
 	return TRUE;
 }
 
-static int eval_g(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPtr user_data){
+static Bool eval_g(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPtr user_data){
 	EqmData *D = (EqmData *)user_data;
 	double *x_i = NULL;
 	double S = 0.0;
@@ -161,7 +161,7 @@ static int eval_g(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPt
 	return TRUE;
 }
 
-static int eval_f_logn(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
+static Bool eval_f_logn(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
 	EqmLogN *D = (EqmLogN *)user_data;
 	double *n_i = (double *)calloc((size_t)D->ns, sizeof(double));
 	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
@@ -198,7 +198,7 @@ static int eval_f_logn(Index n, Number *x, Bool new_x, Number *obj_value, UserDa
 	return TRUE;
 }
 
-static int eval_f_n(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
+static Bool eval_f_n(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
 	EqmN *D = (EqmN *)user_data;
 	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
 	double logn_tot;
@@ -228,7 +228,7 @@ static int eval_f_n(Index n, Number *x, Bool new_x, Number *obj_value, UserDataP
 	return TRUE;
 }
 
-static int eval_grad_f_logn(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
+static Bool eval_grad_f_logn(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
 	EqmLogN *D = (EqmLogN *)user_data;
 	double *n_i = (double *)calloc((size_t)D->ns, sizeof(double));
 	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
@@ -272,7 +272,7 @@ static int eval_grad_f_logn(Index n, Number *x, Bool new_x, Number *grad_f, User
 	return TRUE;
 }
 
-static int eval_grad_f_n(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
+static Bool eval_grad_f_n(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
 	EqmN *D = (EqmN *)user_data;
 	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
 	double logn_tot;
@@ -309,7 +309,7 @@ static int eval_grad_f_n(Index n, Number *x, Bool new_x, Number *grad_f, UserDat
 	return TRUE;
 }
 
-static int eval_g_logn(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPtr user_data){
+static Bool eval_g_logn(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPtr user_data){
 	EqmLogN *D = (EqmLogN *)user_data;
 	(void)n;
 	(void)new_x;
@@ -325,7 +325,7 @@ static int eval_g_logn(Index n, Number *x, Bool new_x, Index m, Number *g, UserD
 	return TRUE;
 }
 
-static int eval_g_n(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPtr user_data){
+static Bool eval_g_n(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPtr user_data){
 	EqmN *D = (EqmN *)user_data;
 	(void)n;
 	(void)new_x;
@@ -341,7 +341,7 @@ static int eval_g_n(Index n, Number *x, Bool new_x, Index m, Number *g, UserData
 	return TRUE;
 }
 
-static int eval_jac_g_logn(Index n, Number *x, Bool new_x, Index m,
+static Bool eval_jac_g_logn(Index n, Number *x, Bool new_x, Index m,
 		Index nele_jac, Index *iRow, Index *jCol, Number *values,
 		UserDataPtr user_data){
 	EqmLogN *D = (EqmLogN *)user_data;
@@ -374,7 +374,7 @@ static int eval_jac_g_logn(Index n, Number *x, Bool new_x, Index m,
 	return TRUE;
 }
 
-static int eval_jac_g_n(Index n, Number *x, Bool new_x, Index m,
+static Bool eval_jac_g_n(Index n, Number *x, Bool new_x, Index m,
 		Index nele_jac, Index *iRow, Index *jCol, Number *values,
 		UserDataPtr user_data){
 	EqmN *D = (EqmN *)user_data;
@@ -492,7 +492,7 @@ static void eval_grad_L_n(const EqmN *D, const Number *xvars, Number obj_factor,
 	free(mu);
 }
 
-static int eval_h_logn(Index n, Number *x, Bool new_x, Number obj_factor,
+static Bool eval_h_logn(Index n, Number *x, Bool new_x, Number obj_factor,
 		Index m, Number *lambda, Bool new_lambda,
 		Index nele_hess, Index *iRow, Index *jCol, Number *values,
 		UserDataPtr user_data){
@@ -538,7 +538,7 @@ static int eval_h_logn(Index n, Number *x, Bool new_x, Number obj_factor,
 	return TRUE;
 }
 
-static int eval_h_n(Index n, Number *x, Bool new_x, Number obj_factor,
+static Bool eval_h_n(Index n, Number *x, Bool new_x, Number obj_factor,
 		Index m, Number *lambda, Bool new_lambda,
 		Index nele_hess, Index *iRow, Index *jCol, Number *values,
 		UserDataPtr user_data){
@@ -584,7 +584,7 @@ static int eval_h_n(Index n, Number *x, Bool new_x, Number obj_factor,
 	return TRUE;
 }
 
-static int eval_jac_g(Index n, Number *x, Bool new_x, Index m,
+static Bool eval_jac_g(Index n, Number *x, Bool new_x, Index m,
 		Index nele_jac, Index *iRow, Index *jCol, Number *values,
 		UserDataPtr user_data){
 	EqmData *D = (EqmData *)user_data;
@@ -679,7 +679,7 @@ static void eval_grad_L(const EqmData *D, const Number *xvars, Number obj_factor
 	free(x_i);
 }
 
-static int eval_h(Index n, Number *x, Bool new_x, Number obj_factor,
+static Bool eval_h(Index n, Number *x, Bool new_x, Number obj_factor,
 		Index m, Number *lambda, Bool new_lambda,
 		Index nele_hess, Index *iRow, Index *jCol, Number *values,
 		UserDataPtr user_data){

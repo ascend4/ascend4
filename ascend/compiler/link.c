@@ -43,6 +43,12 @@
 #include "instance_io.h"
 #include "relerr.h"
 
+#ifdef LINK_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 /**< DS: beginning of LINK functions *******/
 /* implemented functions related to the LINK statements, probably they shouldn't be here*/
 
@@ -376,8 +382,8 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 
 			/**< DS: in case the link entry is non-declartive, it is appended to the linktable in the model instance */
 			gl_append_ptr(MOD_INST(model)->link_table,(VOIDPTR)link_entry);
-			CONSOLE_DEBUG("procedural LINK no of instances in cache: %ld", gl_length(link_entry->instances_cache));
-			CONSOLE_DEBUG("procedural LINK key '%s'", SCP(key));
+			MSG("procedural LINK no of instances in cache: %ld", gl_length(link_entry->instances_cache));
+			MSG("procedural LINK key '%s'", SCP(key));
 		}else{
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"The LINK entry to-be added is already present in the non-declarative LINK table.");
 		}
@@ -412,8 +418,8 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 				gl_append_ptr(modelType->u.modarg.link_table,(VOIDPTR)link_entry);
 
 				/* DS: testing purposes: */
-				CONSOLE_DEBUG("declarative LINK no of instances in cache: %ld", gl_length(link_entry->instances_cache));
-				CONSOLE_DEBUG("declarative LINK key %s", SCP(key));
+				MSG("declarative LINK no of instances in cache: %ld", gl_length(link_entry->instances_cache));
+				MSG("declarative LINK key %s", SCP(key));
 			}else{
 			 	ERROR_REPORTER_HERE(ASC_USER_WARNING,"The LINK entry to-be added is already present in the declarative LINK table.");
 			}
@@ -764,7 +770,7 @@ extern int getOdeId(struct Instance *model,struct Instance *inst){
 	der_links = getLinks(model,der_key,0);
 
 	for(i=1;i<=gl_length(der_links);i++) {
-		CONSOLE_DEBUG("Inside for");
+		MSG("Inside for");
 		link_entry = (struct link_entry_t*) gl_fetch(der_links,i);
 		var = link_entry->u.vl;
 
@@ -798,13 +804,13 @@ void TestingRoutine(struct Instance *model)
 	symchar *keyc1 = NULL;
 	linkTypes = getLinkTypes(model,0);
 	len1 = gl_length(linkTypes);
-	CONSOLE_DEBUG("\n number of unique link types: %d \n",len1);
-	CONSOLE_DEBUG("\n The unique link keys are: ");
+	MSG("\n number of unique link types: %d \n",len1);
+	MSG("\n The unique link keys are: ");
 	for(c1=1;c1<=len1;c1++){
 		keyc1= (symchar *)gl_fetch(linkTypes,c1);
-		CONSOLE_DEBUG("%s ",SCP(keyc1));
+		MSG("%s ",SCP(keyc1));
 	}
-	CONSOLE_DEBUG("\n");
+	MSG("\n");
 	if(len1 < 1){
 		gl_destroy(linkTypes);
 		return;
@@ -816,7 +822,7 @@ void TestingRoutine(struct Instance *model)
 	struct Instance *i1;
 	links = getLinks(model,keyc1,0);
 	len2 = gl_length(links);
-	CONSOLE_DEBUG("\n number of links with key %s is: %d \n",SCP(keyc1),len2);
+	MSG("\n number of links with key %s is: %d \n",SCP(keyc1),len2);
 
 	/* just a test for comparing two instances pointer-wise */
 	/*
@@ -836,7 +842,7 @@ void TestingRoutine(struct Instance *model)
 		/* take the first link from all the non-declarative and declarative LINK Tables, just for testing */
 	populateLinkCache(model);
 	i1= (struct Instance *)gl_fetch(lnk->instances_cache,1);
-	CONSOLE_DEBUG("\n number links referencing the first instance and key %s is %ld \n"
+	MSG("\n number links referencing the first instance and key %s is %ld \n"
 		,SCP(keyc1),gl_length(getLinksReferencing(model,keyc1,i1,0))
 	);
 
@@ -846,10 +852,10 @@ void TestingRoutine(struct Instance *model)
 
 	/* test isDeclarative */
 	modelType = InstanceTypeDesc(model);
-	CONSOLE_DEBUG("\n the link should be declarative %d\n"
+	MSG("\n the link should be declarative %d\n"
 		,isDeclarative(model,(struct link_entry_t *)gl_fetch(modelType->u.modarg.link_table,1))
 	);
-	CONSOLE_DEBUG("\n the link should be non-declarative %d\n"
+	MSG("\n the link should be non-declarative %d\n"
 		,isDeclarative(model,(struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1))
 	);
 

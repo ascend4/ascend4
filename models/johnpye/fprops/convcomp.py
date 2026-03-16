@@ -9,7 +9,8 @@ There may have been custom edits to _rpp.c, check for these before committing
 changes to _rpp.c!
 """
 
-import re, os
+import re, os, sys
+import yaml
 try:
 	import periodictable as _periodictable
 except ImportError:
@@ -508,6 +509,34 @@ for d in cf:
 	f.write("%sF(%s)"%(s,cf[d].name))
 f.write("\n\n/* end of auto-generated file */\n")
 f.close()
-	
+
+def emit_name_candidates(path):
+	dirname = os.path.dirname(path)
+	if dirname:
+		os.makedirs(dirname, exist_ok=True)
+	entries = []
+	for name in sorted(cf):
+		fluid = cf[name]
+		formula = fluid.formula.strip().strip("'\"")
+		entries.append({
+			'alias': formula,
+			'canonical': name,
+			'formula': formula,
+			'domains': ['pure_fluid', 'eqm_species'],
+			'sources': ['RPP'],
+			'flags': ['auto', 'formula'],
+			'priority': 10,
+		})
+	with open(path, "w", encoding="utf-8") as outf:
+		yaml.safe_dump({'version': 1, 'entries': entries}, outf, sort_keys=False)
+
+if '--emit-name-candidates' in sys.argv:
+	i = sys.argv.index('--emit-name-candidates')
+	try:
+		outpath = sys.argv[i + 1]
+	except IndexError:
+		raise SystemExit("--emit-name-candidates requires a path")
+	emit_name_candidates(outpath)
+	print("name_candidates = %s" % outpath)
 
 #print d,f.mw,f.Tc
