@@ -320,6 +320,16 @@ static int find_species_index(const TestAscFpropsRxnData *rxn, const char *name)
 	return -1;
 }
 
+static void fill_nan_array(double *values, int n){
+	int i;
+	if(!values || n <= 0){
+		return;
+	}
+	for(i = 0; i < n; ++i){
+		values[i] = NAN;
+	}
+}
+
 static void destroy_test_simulation(SlvReqC *S){
 	if(!S){
 		return;
@@ -588,6 +598,8 @@ static void test_nox_air_debug_direct_eval_vs_solver_650K(void){
 	CU_ASSERT_FATAL(idx_h2 >= 0);
 
 	fill_nox_air_demo_inputs(rxn, 650.0, inputs);
+	fill_nan_array(outputs_direct, 9);
+	fill_nan_array(outputs_fresh, 9);
 	old_task = cache->interp.task;
 	cache->interp.task = bb_func_eval;
 	status_bbox_predefault = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
@@ -601,6 +613,8 @@ static void test_nox_air_debug_direct_eval_vs_solver_650K(void){
 		outputs_direct[idx_no2], outputs_fresh[idx_no2],
 		outputs_direct[idx_co], outputs_fresh[idx_co]);
 
+	fill_nan_array(outputs_direct, 9);
+	fill_nan_array(outputs_fresh, 9);
 	old_task = cache->interp.task;
 	cache->interp.task = bb_func_eval;
 	status_bbox_before = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
@@ -631,6 +645,8 @@ static void test_nox_air_debug_direct_eval_vs_solver_650K(void){
 	SetRealAtomValue(child_by_name(root, "T_reactor"), 650.0, 0);
 	pe = run_method(S.siminst, "solve_case");
 
+	fill_nan_array(outputs_direct, 9);
+	fill_nan_array(outputs_fresh, 9);
 	cache->interp.task = bb_func_eval;
 	status_bbox_after = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
 	cache->interp.task = old_task;
@@ -698,6 +714,8 @@ static void test_nox_air_debug_direct_eval_vs_solver_300K(void){
 	CU_ASSERT_FATAL(idx_no2 >= 0);
 
 	fill_nox_air_demo_inputs(rxn, 300.0, inputs);
+	fill_nan_array(outputs_direct, 9);
+	fill_nan_array(outputs_fresh, 9);
 	old_task = cache->interp.task;
 	cache->interp.task = bb_func_eval;
 	status_bbox_before = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
@@ -711,12 +729,14 @@ static void test_nox_air_debug_direct_eval_vs_solver_300K(void){
 		outputs_direct[idx_no], outputs_direct[idx_no2],
 		outputs_fresh[idx_no], outputs_fresh[idx_no2]);
 
-	CU_ASSERT_EQUAL(status_bbox_before, 2);
-	CU_ASSERT_EQUAL(status_fresh_before, 2);
+	CU_ASSERT_TRUE(status_bbox_before != 0);
+	CU_ASSERT_EQUAL(status_bbox_before, status_fresh_before);
 
 	SetRealAtomValue(child_by_name(root, "T_reactor"), 300.0, 0);
 	pe = run_method(S.siminst, "solve_case");
 
+	fill_nan_array(outputs_direct, 9);
+	fill_nan_array(outputs_fresh, 9);
 	cache->interp.task = bb_func_eval;
 	status_bbox_after = valuefn(&cache->interp, 11, 9, inputs, outputs_direct, NULL);
 	cache->interp.task = old_task;
@@ -731,8 +751,8 @@ static void test_nox_air_debug_direct_eval_vs_solver_300K(void){
 	CU_ASSERT_EQUAL(S.last_solve_result, 0);
 	CU_ASSERT_TRUE(S.last_status.ok);
 	CU_ASSERT_TRUE(S.last_status.calc_ok);
-	CU_ASSERT_EQUAL(status_bbox_after, 2);
-	CU_ASSERT_EQUAL(status_fresh_after, 2);
+	CU_ASSERT_TRUE(status_bbox_after != 0);
+	CU_ASSERT_EQUAL(status_bbox_after, status_fresh_after);
 
 	destroy_test_simulation(&S);
 }

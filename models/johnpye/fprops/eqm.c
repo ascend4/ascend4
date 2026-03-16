@@ -108,6 +108,47 @@ static const FpropsRxnPackage *eqm_current_package = NULL;
 static int eqm_parse_selector(const char *spec, EqmMuModel *model_out, int *use_ref0_out,
 		const char **source_out);
 
+static const char *eqm_resolve_rxn_source(const char *name, const char *source_spec,
+		unsigned domains, char *out, unsigned out_len){
+	const char *source_i;
+	int matched_specific = 0;
+
+	if(!source_spec || !source_spec[0]){
+		return NULL;
+	}
+	source_i = fprops_resolve_species_source_ex(source_spec, name, out, out_len, &matched_specific);
+	if(matched_specific || !strchr(source_spec, '=')){
+		return source_i;
+	}
+	if(name && name[0]){
+		const FpropsNameCanonical *matches[32];
+		char candidate_source_buf[512];
+		int nmatches = fprops_name_collect_matches(name, domains, NULL, matches, 32);
+		int explicit_matches = 0;
+		int i;
+		for(i = 0; i < nmatches && i < 32; ++i){
+			int candidate_specific = 0;
+			const char *candidate_source = fprops_resolve_species_source_ex(source_spec,
+				matches[i]->canonical, candidate_source_buf, (unsigned)sizeof(candidate_source_buf),
+				&candidate_specific);
+			if(candidate_specific && candidate_source && candidate_source[0]){
+				if(explicit_matches == 0){
+					snprintf(out, out_len, "%s", candidate_source);
+					out[out_len - 1] = '\0';
+				}
+				++explicit_matches;
+				if(explicit_matches > 1){
+					break;
+				}
+			}
+		}
+		if(explicit_matches == 1){
+			return out;
+		}
+	}
+	return source_i;
+}
+
 static const char *eqm_resolve_rxn_name(const char *name, const char *source,
 		char *buf, unsigned buflen, const char **resolved_source){
 	FpropsResolvedName resolved;
@@ -117,7 +158,7 @@ static const char *eqm_resolve_rxn_name(const char *name, const char *source,
 	EqmMuModel selector_model = EQM_MODEL_AUTO;
 	int use_ref0 = 0;
 	const char *selector_source = NULL;
-	const char *source_i = fprops_resolve_species_source(source, name, source_buf,
+	const char *source_i = eqm_resolve_rxn_source(name, source, domains, source_buf,
 		(unsigned)sizeof(source_buf));
 	const char *name_source = NULL;
 	(void)use_ref0;

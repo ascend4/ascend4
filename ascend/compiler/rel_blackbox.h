@@ -97,6 +97,7 @@ struct BlackBoxCache { /* was extrelcache, sort of. */
 	int32 hessianLen;
 	double *inputs; /**< aka x; previous input for func eval. */
 	double *outputs; /**< aka yhat. previous output for func eval. */
+	struct Instance **outputVars; /**< current output variable instances, if tracked. */
 	double *inputsJac; /**< aka x; previous input for gradient eval. */
 	double *jacobian; /**< sensitivity dyhat/dx ; row major format; previous gradient output. */
 	double *hessian; /**< undetermined format */

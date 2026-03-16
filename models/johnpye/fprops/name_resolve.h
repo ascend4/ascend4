@@ -26,6 +26,14 @@ FpropsNameResolveStatus fprops_name_resolve(
 	FpropsResolvedName *out
 );
 
+int fprops_name_collect_matches(
+	const char *token,
+	unsigned domains,
+	const char *source,
+	const FpropsNameCanonical **out,
+	int out_cap
+);
+
 #ifdef __cplusplus
 }
 #endif

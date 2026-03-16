@@ -178,11 +178,14 @@ static void copy_trimmed_range(const char *a, const char *b, char *out, unsigned
 	out[n] = '\0';
 }
 
-const char *fprops_resolve_species_source(const char *source_spec, const char *species_name,
-		char *out, unsigned out_len){
+const char *fprops_resolve_species_source_ex(const char *source_spec, const char *species_name,
+		char *out, unsigned out_len, int *matched_specific){
 	const char *p;
 	char default_source[256];
 	int have_default = 0;
+	if(matched_specific){
+		*matched_specific = 0;
+	}
 	if(!source_spec || !source_spec[0]){
 		return NULL;
 	}
@@ -213,6 +216,9 @@ const char *fprops_resolve_species_source(const char *source_spec, const char *s
 			copy_trimmed_range(eq + 1, q, val, (unsigned)sizeof(val));
 			if(key[0] && val[0]){
 				if(0 == strcmp(key, species_name)){
+					if(matched_specific){
+						*matched_specific = 1;
+					}
 					copy_trimmed_range(val, val + strlen(val), out, out_len);
 					return out[0] ? out : NULL;
 				}
@@ -229,6 +235,11 @@ const char *fprops_resolve_species_source(const char *source_spec, const char *s
 		return out[0] ? out : NULL;
 	}
 	return NULL;
+}
+
+const char *fprops_resolve_species_source(const char *source_spec, const char *species_name,
+		char *out, unsigned out_len){
+	return fprops_resolve_species_source_ex(source_spec, species_name, out, out_len, NULL);
 }
 
 int fprops_build_element_matrix_source(const char **names, int ns, const char **elements, int ne,

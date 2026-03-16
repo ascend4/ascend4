@@ -104,12 +104,104 @@ static const char *effective_source_filter(const char *requested, const char *al
 	return requested;
 }
 
-
 static unsigned effective_domain_filter(unsigned requested, unsigned alias_domains){
 	if(requested == FPROPS_NAME_DOMAIN_NONE || requested == FPROPS_NAME_DOMAIN_ANY){
 		return alias_domains;
 	}
 	return requested & alias_domains;
+}
+
+static int canonical_list_contains(const FpropsNameCanonical **list, int n,
+		const FpropsNameCanonical *candidate){
+	int i;
+	for(i = 0; i < n; ++i){
+		if(!canonicals_differ(list[i], candidate)){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static void append_unique_canonical_match(const FpropsNameCanonical *candidate,
+		const FpropsNameCanonical **out, int out_cap, int *count){
+	if(candidate == NULL || count == NULL){
+		return;
+	}
+	if(canonical_list_contains(out, *count < out_cap ? *count : out_cap, candidate)){
+		return;
+	}
+	if(out != NULL && *count < out_cap){
+		out[*count] = candidate;
+	}
+	*count += 1;
+}
+
+static void collect_named_canonical_matches(const char *canonical, const char *source,
+		unsigned domains, const FpropsNameCanonical **out, int out_cap, int *count){
+	int i;
+	for(i = 0; i < fprops_name_registry.ncanonicals; ++i){
+		const FpropsNameCanonical *c = &fprops_name_registry.canonicals[i];
+		if(!token_matches(canonical, c->canonical)){
+			continue;
+		}
+		if(!source_matches(source, c->source)){
+			continue;
+		}
+		if(!domain_matches(domains, c->domains)){
+			continue;
+		}
+		append_unique_canonical_match(c, out, out_cap, count);
+	}
+}
+
+static void collect_alias_canonical_matches(const char *token, unsigned domains,
+		const char *source, const FpropsNameCanonical **out, int out_cap, int *count){
+	int i;
+	for(i = 0; i < fprops_name_registry.naliases; ++i){
+		const FpropsNameAlias *a = &fprops_name_registry.aliases[i];
+		const char *candidate_source;
+		unsigned candidate_domains;
+		if(!token_matches(token, a->alias)){
+			continue;
+		}
+		if(!source_matches(source, a->source)){
+			continue;
+		}
+		if(!domain_matches(domains, a->domains)){
+			continue;
+		}
+		candidate_source = effective_source_filter(source, a->source);
+		candidate_domains = effective_domain_filter(domains, a->domains);
+		collect_named_canonical_matches(a->canonical, candidate_source, candidate_domains,
+			out, out_cap, count);
+	}
+}
+
+int fprops_name_collect_matches(
+	const char *token,
+	unsigned domains,
+	const char *source,
+	const FpropsNameCanonical **out,
+	int out_cap
+){
+	int count = 0;
+	char normalized[256];
+
+	if(token == NULL || token[0] == '\0'){
+		return 0;
+	}
+	if(out_cap < 0){
+		out_cap = 0;
+	}
+
+	collect_named_canonical_matches(token, source, domains, out, out_cap, &count);
+	collect_alias_canonical_matches(token, domains, source, out, out_cap, &count);
+
+	normalize_token(token, normalized, sizeof(normalized));
+	if(normalized[0] != '\0' && strcmp(normalized, token) != 0){
+		collect_alias_canonical_matches(normalized, domains, source, out, out_cap, &count);
+	}
+	return count;
 }
 
 FpropsNameResolveStatus fprops_name_resolve(

@@ -23,6 +23,9 @@
 #include <stdio.h>
 #include <ctype.h>
 
+/* Seed reuse remains ASCEND-runtime-driven via cache preload; keep wrapper-local reuse disabled. */
+
+
 /* include the external function API from libascend... */
 #include <ascend/compiler/extfunc.h>
 #include <ascend/compiler/extcall.h>
@@ -245,13 +248,54 @@ static int asc_fprops_parse_selector(const char *spec, const char **source_out){
 	return 1;
 }
 
+static const char *asc_fprops_resolve_rxn_source(const char *name, const char *source_spec,
+		unsigned domains, char *out, unsigned out_len){
+	const char *source_i;
+	int matched_specific = 0;
+
+	if(!source_spec || !source_spec[0]){
+		return NULL;
+	}
+	source_i = fprops_resolve_species_source_ex(source_spec, name, out, out_len, &matched_specific);
+	if(matched_specific || !strchr(source_spec, '=')){
+		return source_i;
+	}
+	if(name && name[0]){
+		const FpropsNameCanonical *matches[32];
+		char candidate_source_buf[512];
+		int nmatches = fprops_name_collect_matches(name, domains, NULL, matches, 32);
+		int explicit_matches = 0;
+		int i;
+		for(i = 0; i < nmatches && i < 32; ++i){
+			int candidate_specific = 0;
+			const char *candidate_source = fprops_resolve_species_source_ex(source_spec,
+				matches[i]->canonical, candidate_source_buf, (unsigned)sizeof(candidate_source_buf),
+				&candidate_specific);
+			if(candidate_specific && candidate_source && candidate_source[0]){
+				if(explicit_matches == 0){
+					snprintf(out, out_len, "%s", candidate_source);
+					out[out_len - 1] = '\0';
+				}
+				++explicit_matches;
+				if(explicit_matches > 1){
+					break;
+				}
+			}
+		}
+		if(explicit_matches == 1){
+			return out;
+		}
+	}
+	return source_i;
+}
+
 static const char *asc_fprops_resolve_rxn_name(const char *name, const char *source,
 		char *buf, unsigned buflen){
 	FpropsResolvedName resolved;
 	FpropsNameResolveStatus status;
 	unsigned domains = FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_EQM_SPECIES;
 	char source_buf[512];
-	const char *source_i = fprops_resolve_species_source(source, name, source_buf,
+	const char *source_i = asc_fprops_resolve_rxn_source(name, source, domains, source_buf,
 		(unsigned)sizeof(source_buf));
 	const char *selector_source = NULL;
 	const char *name_source = NULL;
@@ -996,10 +1040,8 @@ void asc_fprops_rxn_final(struct BBoxInterp *bbox){
 	bbox->user_data = NULL;
 }
 
-#if defined(__GNUC__)
-__attribute__((visibility("default")))
-#endif
-int asc_fprops_rxn_eqm_debug_fresh_compare(const void *user_data, double T, double P,
+extern
+ASC_EXPORT int asc_fprops_rxn_eqm_debug_fresh_compare(const void *user_data, double T, double P,
 		const double *n_in, double *n_out){
 	const AscFpropsRxnData *rxn = (const AscFpropsRxnData *)user_data;
 	FpropsRxnPackage *pkg = NULL;
@@ -1014,6 +1056,9 @@ int asc_fprops_rxn_eqm_debug_fresh_compare(const void *user_data, double T, doub
 	}
 	source = (rxn->source && rxn->source[0]) ? rxn->source : NULL;
 	algorithm = (rxn->algorithm && rxn->algorithm[0]) ? rxn->algorithm : "auto_reduced";
+	if(0 == strcmp(algorithm, "auto_reduced")){
+		algorithm = "reduced";
+	}
 	pkg = fprops_rxn_package_build((const char **)rxn->names, rxn->ns, source);
 	if(!pkg){
 		return -12;
@@ -1969,11 +2014,10 @@ static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnDat
 	FpropsRxnResult out;
 	double *n_guess = NULL;
 	const double *n_init = NULL;
+	const char *algorithm = NULL;
 	int status;
 	int do_trace = 0;
 	int i;
-#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
-#endif
 
 	if(!bbox || !rxn || !rxn->pkg){
 		return -6;
@@ -2002,16 +2046,8 @@ static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnDat
 		asc_fprops_rxn_state_trace("eval_enter", bbox, rxn, state.T, state.P, state.n, NULL, 0);
 	}
 	n_guess = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
-#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
-	if(n_guess && rxn->have_last_n && rxn->last_n){
-		for(i = 0; i < rxn->ns; ++i){
-			double ni = rxn->last_n[i];
-			n_guess[i] = (isfinite(ni) && ni > 1e-30) ? ni : 1e-30;
-		}
-		n_init = n_guess;
-	}
-#endif
-	if(n_init == NULL && n_guess && bbox && bbox->task == bb_func_eval){
+	algorithm = (rxn->algorithm && rxn->algorithm[0]) ? rxn->algorithm : "auto_reduced";
+	if(n_guess && bbox && bbox->task == bb_func_eval){
 		int ok_init = 1;
 		for(i = 0; i < rxn->ns; ++i){
 			if(!isfinite(outputs[i]) || outputs[i] < 0.0){
@@ -2022,15 +2058,13 @@ static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnDat
 		}
 		if(ok_init){
 			n_init = n_guess;
+		}else if(0 == strcmp(algorithm, "auto_reduced")){
+			algorithm = "reduced";
 		}
 	}
-	status = fprops_rxn_eqm_tpy(rxn->pkg, &state,
-		rxn->algorithm ? rxn->algorithm : "auto_reduced",
-		n_init, &out);
+	status = fprops_rxn_eqm_tpy(rxn->pkg, &state, algorithm, n_init, &out);
 	if(!asc_fprops_rxn_eqm_status_ok(status) && n_init != NULL){
-		status = fprops_rxn_eqm_tpy(rxn->pkg, &state,
-			rxn->algorithm ? rxn->algorithm : "auto_reduced",
-			NULL, &out);
+		status = fprops_rxn_eqm_tpy(rxn->pkg, &state, algorithm, NULL, &out);
 	}
 	if(do_trace || (asc_fprops_rxn_eqm_trace_enabled() && !asc_fprops_rxn_eqm_status_ok(status))){
 		asc_fprops_rxn_eqm_trace_report(rxn, state.T, state.P, state.n, status,
@@ -2039,14 +2073,6 @@ static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnDat
 	if(trace_state){
 		asc_fprops_rxn_state_trace("eval_exit", bbox, rxn, state.T, state.P, state.n, outputs, status);
 	}
-#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
-	if(asc_fprops_rxn_eqm_status_ok(status) && rxn->last_n){
-		for(i = 0; i < rxn->ns; ++i){
-			rxn->last_n[i] = (isfinite(outputs[i]) && outputs[i] > 0.0) ? outputs[i] : 1e-30;
-		}
-		rxn->have_last_n = 1;
-	}
-#endif
 	ASC_FREE(n_guess);
 	return status;
 }
@@ -2096,6 +2122,7 @@ static int asc_fprops_rxn_eqm_fd_jacobian(struct BBoxInterp *bbox, AscFpropsRxnD
 	ASC_FREE(outputs_work);
 	return 0;
 }
+
 
 int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
