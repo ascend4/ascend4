@@ -1,6 +1,8 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV CUNIT_VERSION=2.2.3
+ENV CUNIT_RELEASE_BASENAME=cunit-2.2-3
 ENV HIGHS_VERSION=v1.13.1
 ENV HOME=/root
 ENV PATH=/root/.local/bin:${PATH}
@@ -32,8 +34,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     coinor-libipopt-dev \
     libmumps-seq-dev \
     libpcre3-dev \
-    subversion \
     cmake \
+    curl \
     git \
     pkg-config \
     ca-certificates \
@@ -41,13 +43,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 /tmp/cunit \
- && cd /tmp/cunit \
- && ./bootstrap \
+RUN curl -L --retry 3 -o "/tmp/${CUNIT_RELEASE_BASENAME}.tar.gz" \
+      "https://github.com/ascend4/cunit/releases/download/v${CUNIT_VERSION}/${CUNIT_RELEASE_BASENAME}.tar.gz" \
+ && tar -xzf "/tmp/${CUNIT_RELEASE_BASENAME}.tar.gz" -C /tmp \
+ && cd "/tmp/${CUNIT_RELEASE_BASENAME}" \
  && ./configure --prefix=$HOME/.local --enable-examples --enable-debug \
  && make -j"$(nproc)" \
  && make install \
- && rm -rf /tmp/cunit
+ && rm -rf "/tmp/${CUNIT_RELEASE_BASENAME}" "/tmp/${CUNIT_RELEASE_BASENAME}.tar.gz"
 
 RUN git clone --branch "$HIGHS_VERSION" --depth 1 https://github.com/ERGO-Code/HiGHS.git /tmp/highs \
  && cd /tmp/highs \
