@@ -111,9 +111,10 @@ jobs:
     - name: Generate coverage report
       run: |
         gcovr -r . \
+          --gcov-ignore-parse-errors=negative_hits.warn_once_per_file \
           --cobertura-pretty \
           --output coverage.xml \
-          --exclude '(^|/)(build|tests?|test|cunit)(/|$)' \
+          --exclude '(^|/)(test)(/|$)' \
           --print-summary
 
     - name: Upload coverage reports to Codecov
