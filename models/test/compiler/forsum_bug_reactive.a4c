@@ -7,9 +7,8 @@ MODEL forsum_bug_reactive;
 	rxns :== ['r1','r2'];
 
 	pkg IS_A reactive_package(components);
-	pkg.species_name['H2'] :== 'hydrogen';
-	pkg.species_name['H2O'] :== 'water';
 	pkg.source :== 'Moran and Shapiro';
+	pkg.algorithm :== 'ideal+ref0';
 
 	inlet IS_A reactive_stream(pkg);
 	outlet IS_A reactive_stream(pkg);
@@ -35,9 +34,8 @@ MODEL forsum_bug_reactive_child;
 	rxns :== ['r1','r2'];
 
 	pkg IS_A reactive_package(components);
-	pkg.species_name['H2'] :== 'hydrogen';
-	pkg.species_name['H2O'] :== 'water';
 	pkg.source :== 'Moran and Shapiro';
+	pkg.algorithm :== 'ideal+ref0';
 
 	inlet IS_A reactive_stream(pkg);
 	outlet IS_A reactive_stream(pkg);

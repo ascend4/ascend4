@@ -306,6 +306,8 @@ ASC_DLLSPEC const dim_type *CheckDimensionsMatch(const dim_type *d1, const dim_t
 ASC_DLLSPEC void PrintDimen(FILE *f ,const dim_type *d);
 /**< Print a dimension to a file.  Used in interface */
 
+ASC_DLLSPEC char *WriteDimensionBracketsString(CONST dim_type *d);
+/**< Return a newly allocated compact string like "[M*L^2/T^2]". */
 
 ASC_DLLSPEC void PrintDimenMessage(const char *message
 		, const char *label1, const dim_type *d1

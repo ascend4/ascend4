@@ -1748,6 +1748,49 @@ static void ExecuteInitSwitch(struct procFrame *fm, struct Statement *stat){
   return;
 }
 
+static char *AssignmentDimenLabel(struct procFrame *fm, struct Instance *i){
+  char *name, *label;
+  const char *typename;
+
+  name = NULL;
+  if(fm != NULL && fm->stat != NULL && StatementType(fm->stat) == ASGN){
+    name = WriteNameString(DefaultStatVar(fm->stat));
+  }
+  if(name == NULL && i != NULL){
+    name = WriteInstanceNameString(i, fm != NULL ? fm->i : NULL);
+  }
+  if(name == NULL){
+    return ASC_STRDUP("LHS");
+  }
+
+  typename = NULL;
+  if(i != NULL && InstanceTypeDesc(i) != NULL && GetName(InstanceTypeDesc(i)) != NULL){
+    typename = SCP(GetName(InstanceTypeDesc(i)));
+  }
+  if(typename == NULL){
+    return name;
+  }
+
+  label = ASC_NEW_ARRAY(char,strlen(name) + strlen(typename) + 11);
+  sprintf(label,"%s (IS_A %s)",name,typename);
+  ascfree(name);
+  return label;
+}
+
+static void WriteAssignmentDimenError(struct procFrame *fm, struct Instance *i, const dim_type *rhsdim){
+  char *lhslabel, *lhsdim, *rhsdimstr;
+  lhslabel = AssignmentDimenLabel(fm,i);
+  lhsdim = WriteDimensionBracketsString(RealAtomDims(i));
+  rhsdimstr = WriteDimensionBracketsString(rhsdim);
+  WriteStatementError(ASC_USER_ERROR,fm->stat,0,
+    "Inconsistent units in assignment: %s has dimensions %s, but RHS term has dimensions %s",
+    lhslabel,lhsdim,rhsdimstr
+  );
+  ascfree(rhsdimstr);
+  ascfree(lhsdim);
+  ascfree(lhslabel);
+}
+
 /* i is generally NOT fm->i, but in the scope of fm->i */
 static void AssignInitValue(struct Instance *i, struct value_t v
 	, struct procFrame *fm
@@ -1793,10 +1836,8 @@ static void AssignInitValue(struct Instance *i, struct value_t v
     case real_value:
       dim = CheckDimensionsMatch(RealValueDimensions(v),RealAtomDims(i));
       if(dim==NULL){
-        PrintDimenMessage("Inconsistent units in assignment"
-              ,"LHS",RealAtomDims(i)
-              ,"RHS",RealValueDimensions(v)
-        );
+        WriteAssignmentDimenError(fm,i,RealValueDimensions(v));
+        assignerr = 0;
         fm->ErrNo = Proc_nonconsistent_assignment;
         fm->flow = FrameError;
       }else{
@@ -1810,10 +1851,8 @@ static void AssignInitValue(struct Instance *i, struct value_t v
     case integer_value:
       dim = CheckDimensionsMatch(Dimensionless(),RealAtomDims(i));
       if(dim==NULL){
-        PrintDimenMessage("Inconsistent units in assignment"
-              ,"LHS",RealAtomDims(i)
-              ,"RHS",RealValueDimensions(v)
-        );
+        WriteAssignmentDimenError(fm,i,Dimensionless());
+        assignerr = 0;
         fm->ErrNo = Proc_nonconsistent_assignment;
         fm->flow = FrameError;
       }else{

@@ -5951,6 +5951,35 @@ static void ReAssignmentError(CONST char *str, struct Statement *statement){
   ascfree(msg);
 }
 
+static char *AssignmentDimenLabel(struct Statement *statement, struct Instance *inst){
+  char *name, *label;
+  const char *typename;
+
+  name = NULL;
+  if(statement != NULL && (StatementType(statement) == ASGN || StatementType(statement) == CASGN)){
+    name = WriteNameString(AssignStatVar(statement));
+  }
+  if(name == NULL && inst != NULL){
+    name = WriteInstanceNameString(inst,NULL);
+  }
+  if(name == NULL){
+    return ASC_STRDUP("LHS");
+  }
+
+  typename = NULL;
+  if(inst != NULL && InstanceTypeDesc(inst) != NULL && GetName(InstanceTypeDesc(inst)) != NULL){
+    typename = SCP(GetName(InstanceTypeDesc(inst)));
+  }
+  if(typename == NULL){
+    return name;
+  }
+
+  label = ASC_NEW_ARRAY(char,strlen(name) + strlen(typename) + 11);
+  sprintf(label,"%s (IS_A %s)",name,typename);
+  ascfree(name);
+  return label;
+}
+
 
 /**
 	returns 1 if ok, 0 if unhappy.
@@ -5990,7 +6019,14 @@ static int AssignStructuralValue(struct Instance *inst
         if (!AtomAssigned(inst)) {
           if ( !IsWild(RealAtomDims(inst)) &&
                !SameDimen(RealValueDimensions(value),RealAtomDims(inst)) ) {
+            char *lhslabel;
             STATEMENT_ERROR(statement, "Dimensionally inconsistent assignment");
+            lhslabel = AssignmentDimenLabel(statement,inst);
+            PrintDimenMessage("Mismatched dimensions"
+              ,lhslabel,RealAtomDims(inst)
+              ,"RHS term",RealValueDimensions(value)
+            );
+            ascfree(lhslabel);
             return 0;
           }else{
       	    if (IsWild(RealAtomDims(inst))) {
@@ -6014,7 +6050,14 @@ static int AssignStructuralValue(struct Instance *inst
         if (!AtomAssigned(inst)) {
           if ( !IsWild(RealAtomDims(inst)) &&
                !SameDimen(Dimensionless(),RealAtomDims(inst)) ) {
+            char *lhslabel;
             STATEMENT_ERROR(statement, "Dimensionally inconsistent assignment");
+            lhslabel = AssignmentDimenLabel(statement,inst);
+            PrintDimenMessage("Mismatched dimensions"
+              ,lhslabel,RealAtomDims(inst)
+              ,"RHS term",Dimensionless()
+            );
+            ascfree(lhslabel);
             return 0;
           }else{
       	    if (IsWild(RealAtomDims(inst))) {

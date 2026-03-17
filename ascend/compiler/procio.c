@@ -305,12 +305,6 @@ void ProcWriteStackCheck(struct procFrame *fm,
   if ( fm->ErrNo == Proc_return) {
     return;
   }
-  if(fm->stat != NULL){
-    error_reporter_start(ASC_PROG_ERROR,SCP(Asc_ModuleBestName(StatementModule(fm->stat))),StatementLineNum(fm->stat),NULL);
-  }else{
-	error_reporter_start(ASC_PROG_ERROR,NULL,0,NULL);
-  }
-
   if (fm->ErrNo == Proc_stack_exceeded_this_frame) {
     /* stack error message not suppressible */
     unwind = 1;
@@ -323,9 +317,12 @@ void ProcWriteStackCheck(struct procFrame *fm,
     }
   } 
   if(!unwind){
-	/* FIXME use _end_clean instead, if available. */
-    error_reporter_end_flush();
     return;
+  }
+  if(fm->stat != NULL){
+    error_reporter_start(ASC_PROG_ERROR,SCP(Asc_ModuleBestName(StatementModule(fm->stat))),StatementLineNum(fm->stat),NULL);
+  }else{
+	error_reporter_start(ASC_PROG_ERROR,NULL,0,NULL);
   }
   FPRINTF(fm->err," METHOD ");
   if (class != NULL) {
@@ -411,6 +408,5 @@ void ProcWriteSlvReqError(struct procFrame *fm){
 	}
 	WriteInitErr(fm,msg);
 }
-
 
 
