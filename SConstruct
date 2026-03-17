@@ -604,6 +604,11 @@ vars.Add(PackageVariable("IPOPT_PREFIX"
 	,default_user_local
 ))
 
+vars.Add(PackageVariable("HSL_PREFIX"
+	,"Prefix for your HSL install (used to extend PKG_CONFIG_PATH for coinhsl.pc)"
+	,default_user_local
+))
+
 #------- HIGHS -------
 
 vars.Add(PackageVariable("HIGHS_PREFIX"

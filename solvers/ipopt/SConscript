@@ -1,5 +1,6 @@
 Import('env')
 import platform
+import re
 
 # build the ASCEND IPOPT solver. we will do any configuration testing here now,
 # also, only if the solver is requested.
@@ -19,6 +20,102 @@ int main(void){
 	return 0;
 }
 """
+
+ipopt_hsl_test_text = r"""
+#include <stdio.h>
+#include <string.h>
+
+#include <HSLLoader.h>
+
+int main(void){
+	char msg[1024];
+	const char *lib = %(probe_target)s;
+	int load_rc;
+
+	memset(msg, 0, sizeof(msg));
+	load_rc = LSL_loadHSL(lib, msg, (int)sizeof(msg));
+
+	printf("probe_target=%%s\n", lib ? lib : "");
+	printf("load_rc=%%d\n", load_rc);
+	printf("loaded=%%d\n", LSL_isHSLLoaded() ? 1 : 0);
+	printf("ma27=%%d\n", LSL_isMA27available() ? 1 : 0);
+	printf("ma97=%%d\n", LSL_isMA97available() ? 1 : 0);
+	printf("mc19=%%d\n", LSL_isMC19available() ? 1 : 0);
+	printf("message=%%s\n", msg);
+
+	if(LSL_isHSLLoaded()){
+		LSL_unloadHSL();
+	}
+	return 0;
+}
+"""
+
+def _c_string_literal(value):
+	if value is None:
+		return 'NULL'
+	return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"') + '"'
+
+def _parse_probe_output(output):
+	result = {}
+	if isinstance(output, bytes):
+		output = output.decode('utf-8', 'replace')
+	for line in (output or '').splitlines():
+		match = re.match(r'^([a-z0-9_]+)=(.*)$', line.strip())
+		if match:
+			result[match.group(1)] = match.group(2)
+	return result
+
+def CheckIPOPTHSL(context):
+	context.Message('Checking whether IPOPT can load HSL at runtime (MA27, MA97)... ')
+
+	probe_target = context.env.get('IPOPT_HSL_PROBE_TARGET')
+	if not probe_target:
+		context.env['IPOPT_HSL_LOADABLE'] = False
+		context.env['IPOPT_HSL_MA27_AVAILABLE'] = False
+		context.env['IPOPT_HSL_MA97_AVAILABLE'] = False
+		context.env['IPOPT_HSL_STATUS'] = context.env.get('IPOPT_HSL_REASON') or 'no HSL probe target'
+		context.Result("no (%s)" % context.env['IPOPT_HSL_STATUS'])
+		return False
+
+	is_ok, output = context.TryRun(
+		ipopt_hsl_test_text % {'probe_target': _c_string_literal(probe_target)},
+		".c"
+	)
+	if not is_ok:
+		context.env['IPOPT_HSL_LOADABLE'] = False
+		context.env['IPOPT_HSL_MA27_AVAILABLE'] = False
+		context.env['IPOPT_HSL_MA97_AVAILABLE'] = False
+		context.env['IPOPT_HSL_STATUS'] = 'runtime probe failed to compile or run'
+		context.Result("no (runtime probe failed)")
+		return False
+
+	parsed = _parse_probe_output(output)
+	loadable = parsed.get('load_rc') == '0' and parsed.get('loaded') == '1'
+	ma27_available = parsed.get('ma27') == '1'
+	ma97_available = parsed.get('ma97') == '1'
+	mc19_available = parsed.get('mc19') == '1'
+	message = parsed.get('message') or ''
+
+	context.env['IPOPT_HSL_LOADABLE'] = loadable
+	context.env['IPOPT_HSL_MA27_AVAILABLE'] = ma27_available
+	context.env['IPOPT_HSL_MA97_AVAILABLE'] = ma97_available
+	if parsed.get('probe_target'):
+		context.env['IPOPT_HSL_PROBE_TARGET'] = parsed['probe_target']
+
+	status = []
+	if context.env.get('IPOPT_HSL_FOUND'):
+		status.append('found')
+	else:
+		status.append('not pre-located')
+	status.append('load ok' if loadable else 'load failed')
+	status.append('MA27 yes' if ma27_available else 'MA27 no')
+	status.append('MA97 yes' if ma97_available else 'MA97 no')
+	status.append('MC19 yes' if mc19_available else 'MC19 no')
+	if message and not loadable:
+		status.append('note: %s' % message)
+	context.env['IPOPT_HSL_STATUS'] = ', '.join(status)
+	context.Result(context.env['IPOPT_HSL_STATUS'])
+	return loadable
 
 def CheckIPOPT(context):
 	context.Message( 'Checking for IPOPT... ' )
@@ -41,13 +138,30 @@ def CheckIPOPT(context):
 if env.get('WITH_IPOPT'):
 	solver_env = env.Clone()
 	
-	conf = solver_env.Configure(custom_tests={'CheckIPOPT':CheckIPOPT})
+	conf = solver_env.Configure(custom_tests={
+		'CheckIPOPT':CheckIPOPT,
+		'CheckIPOPTHSL':CheckIPOPTHSL,
+	})
 	if not conf.CheckIPOPT():
 		conf.env['WITH_IPOPT'] = False
+	else:
+		conf.CheckIPOPTHSL()
 	solver_env = conf.Finish()
 
 	# tell the top-level if our conf test failed
 	env.set_optional('ipopt',active=solver_env['WITH_IPOPT'],reason=solver_env.get('IPOPT_REASON') or "not found");
+	for key in (
+		'IPOPT_HSL_FOUND',
+		'IPOPT_HSL_LIBRARY',
+		'IPOPT_HSL_PROBE_TARGET',
+		'IPOPT_HSL_REASON',
+		'IPOPT_HSL_LOADABLE',
+		'IPOPT_HSL_MA27_AVAILABLE',
+		'IPOPT_HSL_MA97_AVAILABLE',
+		'IPOPT_HSL_STATUS',
+	):
+		if key in solver_env:
+			env[key] = solver_env[key]
 	
 	if env['WITH_IPOPT']:
 		if platform.system()=="Windows":
