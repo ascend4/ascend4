@@ -18,7 +18,7 @@ csrcs = Split("""
 	parpend.c pending.c plot.c proc.c procframe.c
 	procio.c prototype.c qlfdid.c refineinst.c rel_common.c relation.c
 	rel_blackbox.c relerr.c
-	relation_io.c relation_util.c rootfind.c reverse_ad.c 
+	relation_io.c relation_util.c rootfind.c reverse_ad.c simstatus.c
 	safe.c
 	select.c setinst_io.c setinstval.c setio.c
 	sets.c slist.c slvreq.c simlist.c statement.c statio.c switch.c

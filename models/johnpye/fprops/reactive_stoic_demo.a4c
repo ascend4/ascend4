@@ -1,0 +1,59 @@
+REQUIRE "johnpye/fprops/reactive_stoic.a4l";
+
+MODEL reactor_stoic_wgs_demo;
+	components IS_A set OF symbol_constant;
+	reactions IS_A set OF symbol_constant;
+
+	pkg IS_A reactive_package(components);
+	pkg.source :== 'Moran and Shapiro';
+
+	R IS_A reactor_stoic(pkg, reactions);
+	TABLE nu_table[reactions,components] IS_A real_constant;
+		    CO   H2O  CO2  H2
+		WGS -1   -1    1   1
+	END TABLE;
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+		FIX R.rxns.nu[components][reactions];
+		FOR i IN components DO
+			FOR r IN reactions DO
+				R.rxns.nu[i][r] := nu_table[r][i];
+			END FOR;
+		END FOR;
+
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.f[components];
+
+		FIX R.xi[reactions];
+		FIX R.Qdot;
+		FIX R.DeltaP;
+
+		R.inlet.T := 900 {K};
+		R.inlet.P := 1 {bar};
+		R.inlet.f['CO'] := 0.5 {mol/s};
+		R.inlet.f['H2O'] := 0.5 {mol/s};
+		R.inlet.f['CO2'] := 0 {mol/s};
+		R.inlet.f['H2'] := 0 {mol/s};
+
+		R.xi['WGS'] := 0.1 {mol/s};
+		R.Qdot := 0 {W};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD self_test;
+		ASSERT nu_table['WGS']['CO'] = -1;
+		ASSERT nu_table['WGS']['H2O'] = -1;
+		ASSERT nu_table['WGS']['CO2'] = 1;
+		ASSERT nu_table['WGS']['H2'] = 1;
+	END self_test;
+
+	METHOD on_load;
+		RUN default_self;
+	END on_load;
+END reactor_stoic_wgs_demo;
+
+MODEL reactive_stoic_demo REFINES reactor_stoic_wgs_demo;
+END reactive_stoic_demo;

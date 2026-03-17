@@ -65,6 +65,14 @@
 #include <ascend/utilities/config.h>
 #include <ascend/integrator/integrator.h>
 
+#ifndef IDA_DEBUG
+# define IDA_DEBUG 0
+#endif
+#if !IDA_DEBUG
+# undef CONSOLE_DEBUG
+# define CONSOLE_DEBUG(...) ((void)0)
+#endif
+
 /**
 	This routine just outputs the stats to the CONSOLE_DEBUG routine.
 
@@ -140,7 +148,9 @@ int integrator_ida_write_matrix(const IntegratorSystem *integ, FILE *f, const ch
 	/* IntegratorIdaData *enginedata; */
 	struct SystemJacobianStruct J = {NULL,NULL,NULL,0,0};
 	int status=1;
+#ifdef ASC_WITH_MMIO
 	mtx_region_t R;
+#endif
 
 	if(type==NULL)type = "dx'/dx";
 
@@ -204,11 +214,16 @@ int integrator_ida_write_matrix(const IntegratorSystem *integ, FILE *f, const ch
 	if(status){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating matrix");
 	}else{
+#ifdef ASC_WITH_MMIO
 		/* send the region explicitly, so that we handle non-square correctly */
 		R.row.low = 0; R.col.low = 0;
 		R.row.high = J.n_rels - 1; R.col.high = J.n_vars - 1;
 		/* note that we're not fussy about empty matrices here... */
 		mtx_write_region_mmio(f,J.M,&R);
+#else
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix Market export support is unavailable in this build");
+		status = 1;
+#endif
 	}
 
 	if(J.vars)ASC_FREE(J.vars);
@@ -409,4 +424,3 @@ void integrator_ida_error(int error_code
 	/* use our all-purpose error reporting to get stuff back to the GUI */
 	error_reporter(sev,module,0,function,"%s (error %d)",msg,error_code);
 }
-

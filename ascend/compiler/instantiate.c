@@ -564,6 +564,13 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
   desc = InstanceTypeDesc(work);
   clp = GetChildList(desc);
   statement = (struct Statement *)ChildStatement(clp,cnum);
+  if(statement == NULL){
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Unable to determine declaration statement for child '%s' while reporting array expansion failure",
+      SCP(ChildStrPtr(clp,cnum))
+    );
+    return;
+  }
   if ( StatWrong(statement) != 0) {
     return;
   }
@@ -5255,6 +5262,11 @@ struct gl_list_t *GetExtCallArgs(struct Instance *inst, struct Statement *stat
   *names = NULL;
   if (result != NULL) {
     *names = ProcessExtRelArgNames(inst,vl,&err2);
+    if (*names == NULL) {
+      DestroySpecialList(result);
+      rel_errorlist_set_find_error(err, rel_errorlist_get_find_error(&err2));
+      return NULL;
+    }
     asc_assert(rel_errorlist_get_find_error(err) == rel_errorlist_get_find_error(&err2));
   }
   return result;
@@ -5336,6 +5348,7 @@ apparently is too hard for some.
 @param statement: the EXT bbox statement.
 */
 int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *statement){
+  int rval = 1;
   symchar *name;
   struct Expr *ex, *one, *en;
   unsigned long c,len;
@@ -5344,9 +5357,8 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   struct set_t *sptr;
   struct for_var_t *fv;
 
-  struct BlackBoxCache * common;
-  ExtBBoxInitFunc * init;
-  char *context;
+  struct BlackBoxCache * common = NULL;
+  char *context = NULL;
   struct Instance *data=NULL, *subject = NULL;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *arglist=NULL;
@@ -5354,10 +5366,13 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   CONST char *funcname = NULL;
   unsigned long n_input_args=0L, n_output_args=0L; /* formal arg counts */
   unsigned long n_inputs_actual=0L, n_outputs_actual=0L; /* atomic arg counts */
-  struct gl_list_t *inputs, *outputs, *argListNames;
+  struct gl_list_t *inputs = NULL, *outputs = NULL, *argListNames = NULL;
   struct Name *dataName = NULL;
   unsigned long start,end;
   struct Set *extrange= NULL;
+  int value_ready = 0;
+
+  IVAL(value);
 
   /* common stuff do once ------------ */
 
@@ -5373,16 +5388,16 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
       switch(rel_errorlist_get_find_error(&err)){
       case unmade_instance:
 		STATEMENT_ERROR(statement,"Statement contains unmade data instance");
-        return 1;
+        goto cleanup;
       case undefined_instance:
         STATEMENT_ERROR(statement,"Statement contains undefined data instance\n");
-        return 1; /* for the time being give another crack */
+        goto cleanup; /* for the time being give another crack */
       case impossible_instance:
         STATEMENT_ERROR(statement,"Statement contains impossible data instance\n");
-        return 1;
+        goto cleanup;
       default:
         STATEMENT_ERROR(statement,"Unhandled case!");
-        return 1;
+        goto cleanup;
       }
     }
   }
@@ -5394,22 +5409,22 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
       STATEMENT_ERROR(statement,"Statement contains unmade argument instance\n");
-      return 1;
+      goto cleanup;
     case undefined_instance:
       STATEMENT_ERROR(statement,"Statement contains undefined argument instance\n");
-      return 1;
+      goto cleanup;
     case impossible_instance:
       instantiation_error(ASC_USER_ERROR,statement,"Statement contains impossible instance\n");
-      return 1;
+      goto cleanup;
     default:
       instantiation_error(ASC_PROG_ERR,statement,"Unhandled case!");
-      return 1;
+      goto cleanup;
     }
   }
   funcname = ExternalStatFuncName(statement);
   efunc = LookupExtFunc(funcname);
   if (efunc == NULL) {
-    return 1;
+    goto cleanup;
   }
 /*
   n_input_args = NumberInputArgs(efunc);
@@ -5423,24 +5438,31 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     instantiation_error(ASC_PROG_ERR,statement
 		,"Unable to create external expression structure."
 	);
-    return 1;
+    goto cleanup;
   }
 
   /* we should have a valid arglist at this stage */
   if (CheckExtCallArgTypes(arglist)) {
     instantiation_error(ASC_USER_ERROR,statement,"Wrong type of args to external statement");
-    DestroySpecialList(arglist);
-    return 1;
+    goto cleanup;
   }
   start = 1L;
   end = n_input_args;
   inputs = LinearizeArgList(arglist,start,end);
+  if (inputs == NULL) {
+    instantiation_error(ASC_PROG_ERR,statement,"Unable to linearize external input arguments.");
+    goto cleanup;
+  }
   n_inputs_actual = gl_length(inputs);
 
   /* Now process the outputs */
   start = n_input_args+1;
   end = n_input_args + n_output_args;
   outputs = LinearizeArgList(arglist,start,end);
+  if (outputs == NULL) {
+    instantiation_error(ASC_PROG_ERR,statement,"Unable to linearize external output arguments.");
+    goto cleanup;
+  }
   n_outputs_actual = gl_length(outputs);
 
 /*
@@ -5451,7 +5473,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
 
   /* Now create the relations, all with the same common. */
   common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, argListNames, dataName, efunc);
-  common->interp.task = bb_first_call;
+  InitBBox(inst, common);
   context = WriteInstanceNameString(inst, NULL);
 
   /* now set up the for loop index --------------------------------*/
@@ -5468,6 +5490,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   extrange = CreateRangeSet(one,en);
   ex = CreateSetExpr(extrange);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
+  value_ready = 1;
   SetEvaluationContext(NULL);
 
   ASC_ASSERT_EQ(ValueKind(value),set_value);
@@ -5488,32 +5511,46 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     /*  currently designed to always succeed or fail permanently */
   }
   RemoveForVariable(GetEvaluationForTable());
-  DestroyValue(&value);
-  DestroySetNode(extrange);
+  rval = 1;
+cleanup:
+  if (value_ready) {
+    DestroyValue(&value);
+  }
+  if (extrange != NULL) {
+    DestroySetNode(extrange);
+  }
 
 /* ------------ */ /* ------------ */
   /* and now for cleaning up shared data. */
-  init = GetInitFunc(efunc);
-  if(init){
-    if( (*init)( &(common->interp), data, arglist) ){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in blackbox initfn");
-    }
+  if (common != NULL) {
+    common->interp.task = bb_none;
+    DeleteRefBlackBoxCache(NULL, &common);
   }
-  common->interp.task = bb_none;
-  ascfree(context);
-  DeleteRefBlackBoxCache(NULL, &common);
-  gl_destroy(inputs);
-  gl_destroy(outputs);
-  DestroySpecialList(arglist);
-  DeepDestroySpecialList(argListNames,(DestroyFunc)DestroyName);
-  DestroyName(dataName);
+  if (context != NULL) {
+    ascfree(context);
+  }
+  if (inputs != NULL) {
+    gl_destroy(inputs);
+  }
+  if (outputs != NULL) {
+    gl_destroy(outputs);
+  }
+  if (arglist != NULL) {
+    DestroySpecialList(arglist);
+  }
+  if (argListNames != NULL) {
+    DeepDestroySpecialList(argListNames,(DestroyFunc)DestroyName);
+  }
+  if (dataName != NULL) {
+    DestroyName(dataName);
+  }
 /* ------------ */ /* ------------ */
 
   /*  currently designed to always succeed or fail permanently.
    *  We reached this point meaning we've processed everything.
    *  Therefore the statment returns 1 and becomes no longer pending.
    */
-  return 1;
+  return rval;
 }
 
 int ExecuteBBOXElement(struct Instance *inst
@@ -6361,6 +6398,12 @@ struct table_cell_value_t {
   double rval;
 };
 
+struct scalar_units_runtime_t {
+  int has_units;
+  double conv;
+  CONST dim_type *dims;
+};
+
 struct table_domain_ref_t {
   CONST struct Expr *expr;
   CONST struct Name *set_name;
@@ -6371,6 +6414,7 @@ static int TableAssignCell(struct Instance *work,
                            CONST struct table_domain_t *domains,
                            unsigned ndims,
                            CONST unsigned long *positions,
+                           CONST struct scalar_units_runtime_t *units_runtime,
                            int is_int,
                            long ival,
                            double rval);
@@ -6379,6 +6423,7 @@ static int TableAssignCellMaybeWait(struct Instance *work,
                                     CONST struct table_domain_t *domains,
                                     unsigned ndims,
                                     CONST unsigned long *positions,
+                                    CONST struct scalar_units_runtime_t *units_runtime,
                                     int is_int,
                                     long ival,
                                     double rval);
@@ -6479,6 +6524,109 @@ static int DatasetParseBooleanToken(CONST char *tok, int *bval)
     return 1;
   }
   return 0;
+}
+
+static int ResolveScalarUnits(CONST char *units,
+                              struct Statement *statement,
+                              CONST char *kind,
+                              struct scalar_units_runtime_t *out)
+{
+  unsigned long pos;
+  int error_code;
+  CONST struct Units *u;
+
+  if (out == NULL) {
+    return 0;
+  }
+  out->has_units = 0;
+  out->conv = 1.0;
+  out->dims = Dimensionless();
+
+  if (units == NULL) {
+    return 1;
+  }
+
+  u = FindOrDefineUnits(units,&pos,&error_code);
+  if (u == NULL) {
+    if (strcmp(kind,"TABLE") == 0) {
+      STATEMENT_ERROR(statement,"TABLE units are invalid");
+    } else {
+      STATEMENT_ERROR(statement,"DATASET units are invalid");
+    }
+    return 0;
+  }
+
+  out->has_units = 1;
+  out->conv = UnitsConvFactor(u);
+  out->dims = UnitsDimensions(u);
+  return 1;
+}
+
+static int AssignNumericToConstantInstance(struct Instance *inst,
+                                           struct Statement *statement,
+                                           int is_int,
+                                           long ival,
+                                           double rval,
+                                           CONST struct scalar_units_runtime_t *units_runtime,
+                                           CONST dim_type *default_real_dims,
+                                           CONST char *kind)
+{
+  struct value_t value;
+  int ok;
+
+  if (inst == NULL) {
+    if (strcmp(kind,"TABLE") == 0) {
+      STATEMENT_ERROR(statement,"TABLE assignment target instance is NULL");
+    } else {
+      STATEMENT_ERROR(statement,"DATASET assignment target instance is NULL");
+    }
+    return 0;
+  }
+
+  switch (InstanceKind(inst)) {
+  case REAL_CONSTANT_INST:
+    if (units_runtime != NULL && units_runtime->has_units) {
+      value = CreateRealValue((is_int ? (double)ival : rval) * units_runtime->conv,
+                              units_runtime->dims,1);
+    } else if (is_int) {
+      value = CreateIntegerValue(ival,1);
+    } else {
+      value = CreateRealValue(rval,
+                              default_real_dims != NULL ? default_real_dims : Dimensionless(),
+                              1);
+    }
+    ok = AssignStructuralValue(inst,value,statement);
+    DestroyValue(&value);
+    return ok;
+  case INTEGER_CONSTANT_INST:
+    if (units_runtime != NULL && units_runtime->has_units) {
+      if (strcmp(kind,"TABLE") == 0) {
+        STATEMENT_ERROR(statement,"TABLE units are not allowed for integer values");
+      } else {
+        STATEMENT_ERROR(statement,"DATASET units are not allowed for integer values");
+      }
+      return 0;
+    }
+    if (!is_int) {
+      if (strcmp(kind,"TABLE") == 0) {
+        STATEMENT_ERROR(statement,"TABLE value is not a valid integer");
+      } else {
+        STATEMENT_ERROR(statement,"DATASET value is not a valid integer");
+      }
+      return 0;
+    }
+    value = CreateIntegerValue(ival,1);
+    ok = AssignStructuralValue(inst,value,statement);
+    DestroyValue(&value);
+    return ok;
+  default:
+    if (strcmp(kind,"TABLE") == 0) {
+      STATEMENT_ERROR(statement,"TABLE assignment target is not a constant");
+    } else {
+      STATEMENT_ERROR(statement,"DATASET assignment target is not a constant");
+    }
+    return 0;
+  }
 }
 
 static double DatasetNowSeconds(void)
@@ -7750,6 +7898,7 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
 {
   struct table_domain_t domains[2];
   struct table_domain_ref_t refs[2];
+  struct scalar_units_runtime_t units_runtime;
   unsigned ndims = 0;
   char *bodycopy = NULL;
   char *line_ctx = NULL;
@@ -7774,6 +7923,11 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
   }
   if (ndims != 2) {
     STATEMENT_ERROR(statement,"Dense non-POSITIONAL TABLE requires exactly 2 indices");
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+
+  if (!ResolveScalarUnits(statement->v.table.units,statement,"TABLE",&units_runtime)) {
     MarkStatContext(statement,context_WRONG);
     return 1;
   }
@@ -8039,7 +8193,9 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
       int assign_result;
       pos[0] = row_pos[d];
       pos[1] = col_pos[c];
-      assign_result = TableAssignCellMaybeWait(work,statement,domains,2,pos,cell->is_int,cell->ival,cell->rval);
+      assign_result = TableAssignCellMaybeWait(work,statement,domains,2,pos,
+                                               &units_runtime,
+                                               cell->is_int,cell->ival,cell->rval);
       if (assign_result < 0) {
         rval = 0;
         goto cleanup;
@@ -8147,13 +8303,13 @@ static int TableAssignCell(struct Instance *work,
                            CONST struct table_domain_t *domains,
                            unsigned ndims,
                            CONST unsigned long *positions,
+                           CONST struct scalar_units_runtime_t *units_runtime,
                            int is_int,
                            long ival,
                            double rval)
 {
   struct Name *lhs;
   struct gl_list_t *instances;
-  struct value_t value;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *inst;
   int ok;
@@ -8176,12 +8332,8 @@ static int TableAssignCell(struct Instance *work,
   inst = (struct Instance *)gl_fetch(instances,1);
   gl_destroy(instances);
 
-  value = is_int
-    ? CreateIntegerValue(ival,1)
-    : CreateRealValue(rval,WildDimension(),1);
-
-  ok = AssignStructuralValue(inst,value,statement);
-  DestroyValue(&value);
+  ok = AssignNumericToConstantInstance(inst,statement,is_int,ival,rval,
+                                       units_runtime,Dimensionless(),"TABLE");
   return ok;
 }
 
@@ -8190,13 +8342,13 @@ static int TableAssignCellMaybeWait(struct Instance *work,
                                     CONST struct table_domain_t *domains,
                                     unsigned ndims,
                                     CONST unsigned long *positions,
+                                    CONST struct scalar_units_runtime_t *units_runtime,
                                     int is_int,
                                     long ival,
                                     double rval)
 {
   struct Name *lhs;
   struct gl_list_t *instances;
-  struct value_t value;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *inst;
   int ok;
@@ -8227,11 +8379,8 @@ static int TableAssignCellMaybeWait(struct Instance *work,
   inst = (struct Instance *)gl_fetch(instances,1);
   gl_destroy(instances);
 
-  value = is_int
-    ? CreateIntegerValue(ival,1)
-    : CreateRealValue(rval,WildDimension(),1);
-  ok = AssignStructuralValue(inst,value,statement);
-  DestroyValue(&value);
+  ok = AssignNumericToConstantInstance(inst,statement,is_int,ival,rval,
+                                       units_runtime,Dimensionless(),"TABLE");
   return ok;
 }
 
@@ -8465,17 +8614,13 @@ static int DatasetAssignTokenToInstance(struct Instance *inst,
                                         CONST char *token,
                                         CONST char *units)
 {
-  struct value_t value;
   CONST char *valtok = token;
   CONST char *cell_units = NULL;
   char *valbuf = NULL;
   char *unitbuf = NULL;
+  struct scalar_units_runtime_t units_runtime;
+  struct value_t value;
   int ok;
-
-  if (inst == NULL) {
-    STATEMENT_ERROR(statement,"DATASET assignment target instance is NULL");
-    return 0;
-  }
 
   if (valtok != NULL) {
     const char *brace = strchr(valtok,'{');
@@ -8503,49 +8648,34 @@ static int DatasetAssignTokenToInstance(struct Instance *inst,
     units = cell_units;
   }
 
+  if (!ResolveScalarUnits(units,statement,"DATASET",&units_runtime)) {
+    ok = 0;
+    goto cleanup_units;
+  }
+
   switch (InstanceKind(inst)) {
   case REAL_CONSTANT_INST:
     {
       double rval;
-      CONST dim_type *dims = Dimensionless();
       if (!DatasetParseRealToken(valtok,&rval)) {
         STATEMENT_ERROR(statement,"DATASET value is not a valid real");
         ok = 0;
         break;
       }
-      if (units != NULL) {
-        unsigned long pos;
-        int error_code;
-        CONST struct Units *u = FindOrDefineUnits(units,&pos,&error_code);
-        if (u == NULL) {
-          STATEMENT_ERROR(statement,"DATASET units are invalid");
-          ok = 0;
-          break;
-        }
-        rval = rval * UnitsConvFactor(u);
-        dims = UnitsDimensions(u);
-      }
-      value = CreateRealValue(rval,dims,1);
-      ok = AssignStructuralValue(inst,value,statement);
-      DestroyValue(&value);
+      ok = AssignNumericToConstantInstance(inst,statement,0,0,rval,
+                                           &units_runtime,Dimensionless(),"DATASET");
     }
     break;
   case INTEGER_CONSTANT_INST:
     {
       long ival;
-      if (units != NULL) {
-        STATEMENT_ERROR(statement,"DATASET units are not allowed for integer values");
-        ok = 0;
-        break;
-      }
       if (!TableParseIntegerToken(valtok,&ival)) {
         STATEMENT_ERROR(statement,"DATASET value is not a valid integer");
         ok = 0;
         break;
       }
-      value = CreateIntegerValue(ival,1);
-      ok = AssignStructuralValue(inst,value,statement);
-      DestroyValue(&value);
+      ok = AssignNumericToConstantInstance(inst,statement,1,ival,(double)ival,
+                                           &units_runtime,Dimensionless(),"DATASET");
     }
     break;
   case SYMBOL_CONSTANT_INST:
@@ -9238,6 +9368,7 @@ cleanup:
 
 static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
   struct table_domain_t domains[2];
+  struct scalar_units_runtime_t units_runtime;
   CONST struct Name *node;
   unsigned ndims = 0;
   int rval = 1;
@@ -9259,6 +9390,11 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
   }
   if (!statement->v.table.positional) {
     return ExecuteTABLEDense(work,statement);
+  }
+
+  if (!ResolveScalarUnits(statement->v.table.units,statement,"TABLE",&units_runtime)) {
+    MarkStatContext(statement,context_WRONG);
+    return 1;
   }
 
   for (di = 0; di < 2; ++di) {
@@ -9370,7 +9506,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
           goto cleanup;
         }
         pos[0] = flat_index;
-        if (!TableAssignCell(work,statement,domains,1,pos,is_int,ival,rvalnum)) {
+        if (!TableAssignCell(work,statement,domains,1,pos,&units_runtime,is_int,ival,rvalnum)) {
           MarkStatContext(statement,context_WRONG);
           goto cleanup;
         }
@@ -9387,7 +9523,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
         }
         pos[0] = row_index;
         pos[1] = col_index;
-        if (!TableAssignCell(work,statement,domains,2,pos,is_int,ival,rvalnum)) {
+        if (!TableAssignCell(work,statement,domains,2,pos,&units_runtime,is_int,ival,rvalnum)) {
           MarkStatContext(statement,context_WRONG);
           goto cleanup;
         }
@@ -9484,6 +9620,9 @@ static int ExecuteCASGN(struct Instance *work, struct Statement *statement){
 	}else{
 		STATEMENT_ERROR(statement, "Floating-point error while evaluating assignment statement");
         MarkStatContext(statement,context_WRONG);
+		gl_destroy(instances);
+		SetEvaluationContext(NULL);
+		Asc_SignalHandlerPopDefault(SIGFPE);
 		SetDeclarativeContext(previous_context);
 		return 1;
 	}
@@ -12103,7 +12242,11 @@ void ExecuteWhenStatements(struct Instance *inst,
                       "Inappropriate statement type in WHEN Statement");
       ASC_PANIC("Inappropriate statement type in WHEN Statement");
     }
-    asc_assert(return_value);
+    if(!return_value){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "while running %s on statement inside FOR", __FUNCTION__);
+      return;
+    }
   }
 }
 
@@ -12243,7 +12386,11 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
                       "Inappropriate statement type in WHEN Statement");
       ASC_PANIC("Inappropriate statement type in WHEN Statement");
     }
-    asc_assert(return_value);
+    if(!return_value){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "while running %s on statement inside FOR", __FUNCTION__);
+      return;
+    }
   }
 }
 
@@ -13342,7 +13489,11 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       ASC_PANIC("Inappropriate statement type"
                 " in declarative section relations");
     }
-    asc_assert(return_value);
+    if(!return_value){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "while running %s on statement inside FOR", __FUNCTION__);
+      return;
+    }
   }
 }
 

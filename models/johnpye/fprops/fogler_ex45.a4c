@@ -1,0 +1,66 @@
+REQUIRE "atoms.a4l";
+IMPORT "qrslv";
+
+ATOM inverse_conc_rate REFINES solver_var
+	DIMENSION L^3*T/Q
+	DEFAULT 1 {m^3*s/mol};
+	lower_bound := 0 {m^3*s/mol};
+	upper_bound := 1e50 {m^3*s/mol};
+	nominal := 1 {m^3*s/mol};
+END inverse_conc_rate;
+
+MODEL fogler_ex45;
+	T IS_A temperature;
+	P IS_A pressure;
+	R IS_A molar_gas_constant;
+	(* R :== 1{GAS_C};*)
+	Kc IS_A molar_density;
+	kA IS_A frequency;
+	FA0 IS_A molar_rate;
+
+	eps IS_A factor;
+	X, Xef IS_A fraction;
+
+	CA0, CA, CB IS_A molar_density;
+
+	minus_rA IS_A conc_rate;
+	one_over_minus_rA IS_A inverse_conc_rate;
+	F_over_r IS_A volume;
+	V_CSTR IS_A volume;
+
+	eps_eqn:    eps = 1;
+	ca0_eqn:    CA0 = P / (R * T);
+	xef_eqn:    Kc = 4 * CA0 * Xef * Xef / ((1 - Xef) * (1 + eps * Xef));
+	ca_eqn:     CA = CA0 * (1 - X) / (1 + eps * X);
+	cb_eqn:     CB = 2 * CA0 * X / (1 + eps * X);
+	rate_eqn:   minus_rA = kA * (CA - CB * CB / Kc);
+	inv_rate_eqn: one_over_minus_rA * minus_rA = 1;
+	f_over_r_eqn: F_over_r = FA0 / minus_rA;
+	vcstr_eqn:    V_CSTR = X * F_over_r;
+
+METHODS
+	METHOD on_load;
+		FIX T := 340 {K};
+		FIX P := 202.6 {kPa};
+		FIX Kc := 100 {mol/m^3};    (* Fogler: 0.1 mol/dm^3 *)
+		FIX kA := 0.5 {1/min};
+		FIX FA0 := 3 {mol/min};
+		FIX X := 0.4;               (* Fogler part 4 uses 80% of 0.51, ie X = 0.4 *)
+	END on_load;
+
+	METHOD levenspiel_study;
+		SOLVER QRSlv;
+		STUDY one_over_minus_rA, minus_rA, F_over_r, V_CSTR, Xef
+			VARY X FROM 0.001 TO 0.999 * Xef STEPS 60
+			NOW;
+	END levenspiel_study;
+
+	METHOD self_test;
+		ASSERT Xef > 0.50;
+		ASSERT Xef < 0.52;
+		ASSERT minus_rA > 0 {mol/m^3/s};
+		ASSERT one_over_minus_rA > 0 {m^3*s/mol};
+		ASSERT V_CSTR > 0.16 {m^3};
+		ASSERT V_CSTR < 0.19 {m^3};
+	END self_test;
+END fogler_ex45;

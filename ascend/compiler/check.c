@@ -471,9 +471,32 @@ static void ClearConsLists(void)
 
 static FILE *g_diagf;
 /**< global pointer so gliterate will have a file to print to in WriteConsLists */
+static struct Instance *g_diagroot;
+/**< root used so reported instance names can be relative to the simulation root */
+
+static struct Instance *GetDiagnosticRoot(CONST struct Instance *i){
+  struct Instance *sim;
+  if(i == NULL){
+    return NULL;
+  }
+  if(InstanceKind(i) == SIM_INST){
+    return GetSimulationRoot((struct Instance *)i);
+  }
+  sim = FindSimulationInstance((struct Instance *)i);
+  if(sim != NULL){
+    return GetSimulationRoot(sim);
+  }
+  return (struct Instance *)i;
+}
 
 static void Diagnose(struct Instance *i){
-        if(InstanceKind(i)== REAL_CONSTANT_INST){
+	const char *filename = NULL;
+	int lineno = 0;
+	(void)InstanceDeclarationLocation(i,NULL,&filename,&lineno);
+	if(g_diagf == ASCERR){
+		error_reporter_start(ASC_USER_ERROR,filename,lineno,NULL);
+	}
+	if(InstanceKind(i)== REAL_CONSTANT_INST){
 		if(IsWild(RealAtomDims(i))) {
 		  FPRINTF(g_diagf,"Undimensioned ");
 		}
@@ -481,20 +504,18 @@ static void Diagnose(struct Instance *i){
 		  FPRINTF(g_diagf,"Unassigned ");
 		}
 		FPRINTF(g_diagf,"real constant ");
-		WriteInstanceName(g_diagf,i,NULL);
+		WriteInstanceName(g_diagf,i,g_diagroot);
 		FPRINTF(g_diagf,"\n");
 	}else{
-		if(g_diagf == ASCERR){
-			ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
-		}
 		FPRINTF(g_diagf,"Unassigned constant \"");
-		WriteInstanceName(g_diagf,i,NULL);
+		WriteInstanceName(g_diagf,i,g_diagroot);
 		FPRINTF(g_diagf,"\"");
-		if(g_diagf == ASCERR){
-			error_reporter_end_flush();
-		}else{
+		if(g_diagf != ASCERR){
 			FPRINTF(g_diagf,"\n");
 		}
+	}
+	if(g_diagf == ASCERR){
+		error_reporter_end_flush();
 	}
 }
 
@@ -513,6 +534,7 @@ void CheckInstanceLevel(FILE *f, CONST struct Instance *i,int pass)
 {
   InitConsLists();
   BeginChildIndexCachePass();
+  g_diagroot = GetDiagnosticRoot(i);
   g_suppressions = GetStatioSuppressions();
   if (pass<5) g_suppressions[ASGN]=1;
   if (pass<4) g_suppressions[WHEN]=1;
@@ -528,6 +550,7 @@ void CheckInstanceStructure(FILE *f,CONST struct Instance *i)
 {
   InitConsLists();
   BeginChildIndexCachePass();
+  g_diagroot = GetDiagnosticRoot(i);
   RecursiveCheckInstance(f,i,NULL,5);
   WriteConsLists(f,0,1,1,1);
   ClearConsLists();

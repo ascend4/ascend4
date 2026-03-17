@@ -47,10 +47,16 @@ static const HelmholtzData helmholtz_data_carbonmonoxide = {
 			,.m = 3.3683460039 /* linear, a_2, adjust to solver h */
 		}}
 	}
-    , 0.0497 /* acentric factor */
-    , &ideal_data_carbonmonoxide
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-110530.0e3 / CARBONMONOXIDE_M) /* M&S G9e Table A-25, CO(g) */
+		, .s0 = (197.54e3 / CARBONMONOXIDE_M) /* M&S G9e Table A-25, CO(g) */
+	}}}
+    , .omega = 0.0497 /* acentric factor */
+    , .ideal = &ideal_data_carbonmonoxide
+    , .np = 12 /* power terms */
+    , .pt = (const HelmholtzPowTerm[]){
         /* a_i, 	t_i, 	d_i, 	l_i */
         {0.90554,	0.25,	1.0,	0.0}
         , {-2.4515,	1.125,	1.0,	0.0}
@@ -65,10 +71,10 @@ static const HelmholtzData helmholtz_data_carbonmonoxide = {
         , {-0.034154,	14.5,	3.0,	3.0}
         , {0.016329,	12.0,	4.0,	3.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+    , .ng = 0 /* gaussian terms */
+    , .gt = 0
+    , .nc = 0 /* critical terms */
+    , .ct = 0
 };
 
 const EosData eos_carbonmonoxide = {

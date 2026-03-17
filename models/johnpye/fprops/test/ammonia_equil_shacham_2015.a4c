@@ -1,0 +1,145 @@
+REQUIRE "atoms.a4l";
+
+(* Exploring ammonia synthesis, following simple example of Shacham 2015.
+   https://doi.org/10.1016/j.ece.2015.09.001 
+   
+   This model implements the Haber–le Rossignol correlation for the equilibrium 
+   concentration of ammonia.
+*)
+MODEL ammonia_HR;
+	temp IS_A temperature;
+	press IS_A pressure;
+	press_ref IS_A pressure;
+
+	mLogKa, Ka, xi IS_A factor;
+	y_N2, y_H2, y_NH3 IS_A fraction;
+	NH3_percent IS_A factor;
+
+	mlogka_eqn:
+		mLogKa
+		=
+		2.1
+		+ (1 / 4.571) * (9591 {K} / temp - 0.00046 * (temp / 1 {K}) + 0.85e-6 * (temp / 1 {K})^2)
+		- 4.98 * log10(temp / 1 {K}) / 1.985;
+
+	ka_eqn: Ka = exp(ln(10) * mLogKa);
+
+	eqm_eqn:
+		Ka
+		* ((1 - xi) / 2)^0.5
+		* (3 * (1 - xi) / 2)^1.5
+		* (press / press_ref)
+		=
+		xi * (2 - xi);
+
+	y_n2_eqn: y_N2 = (1 - xi) / (2 * (2 - xi));
+	y_h2_eqn: y_H2 = 3 * (1 - xi) / (2 * (2 - xi));
+	y_nh3_eqn: y_NH3 = xi / (2 - xi);
+	nh3_percent_eqn: NH3_percent = 100 * y_NH3;
+
+METHODS
+	METHOD default_self;
+		xi.lower_bound := 1e-8;
+		xi.upper_bound := 0.999999;
+		xi := 0.5;
+		temp := 573 {K};
+		press := 200 {atm};
+		press_ref := 1 {atm};
+	END default_self;
+
+	METHOD specify;
+		FIX temp;
+		FIX press;
+		FIX press_ref;
+	END specify;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN specify;
+		SOLVER QRSlv;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT xi > 0.7;
+		ASSERT xi < 0.8;
+		ASSERT y_NH3 > 0.6;
+		ASSERT y_NH3 < 0.65;
+	END self_test;
+END ammonia_HR;
+
+(*
+    This model calculates the composition at different pressures, to
+    faciliate a STUDY sweep
+*)
+MODEL ammonia_HR_pressures;
+	pp IS_A set OF symbol_constant;
+	pp :== ['p1atm', 'p30atm', 'p100atm', 'p200atm'];
+
+	press_case[pp] IS_A pressure;
+	case[pp] IS_A ammonia_HR;
+	temp IS_A temperature;
+	NH3_percent_1atm IS_A factor;
+	NH3_percent_30atm IS_A factor;
+	NH3_percent_100atm IS_A factor;
+	NH3_percent_200atm IS_A factor;
+
+	FOR p IN pp CREATE
+		t_eqn[p]: case[p].temp = temp;
+		p_eqn[p]: case[p].press = press_case[p];
+	END FOR;
+
+	nh3_1_eqn: NH3_percent_1atm = case['p1atm'].NH3_percent;
+	nh3_30_eqn: NH3_percent_30atm = case['p30atm'].NH3_percent;
+	nh3_100_eqn: NH3_percent_100atm = case['p100atm'].NH3_percent;
+	nh3_200_eqn: NH3_percent_200atm = case['p200atm'].NH3_percent;
+
+METHODS
+	METHOD default_self;
+		temp := 573 {K};
+
+		FOR p IN pp DO
+			case[p].xi.lower_bound := 1e-8;
+			case[p].xi.upper_bound := 0.999999;
+			case[p].xi := 0.5;
+			case[p].press_ref := 1 {atm};
+		END FOR;
+
+		press_case['p1atm'] := 1 {atm};
+		press_case['p30atm'] := 30 {atm};
+		press_case['p100atm'] := 100 {atm};
+		press_case['p200atm'] := 200 {atm};
+	END default_self;
+
+	METHOD specify;
+		FIX temp;
+		FIX press_case[pp];
+		FIX case[pp].press_ref;
+	END specify;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN specify;
+		SOLVER QRSlv;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT NH3_percent_1atm < NH3_percent_30atm;
+		ASSERT NH3_percent_30atm < NH3_percent_100atm;
+		ASSERT NH3_percent_100atm < NH3_percent_200atm;
+	END self_test;
+END ammonia_HR_pressures;
+
+MODEL ammonia_HR_pressures_study REFINES ammonia_HR_pressures;
+METHODS
+	METHOD on_load;
+		RUN ammonia_HR_pressures::on_load;
+		STUDY
+			NH3_percent_1atm,
+			NH3_percent_30atm,
+			NH3_percent_100atm,
+			NH3_percent_200atm
+			VARY temp FROM 473 {K} TO 1273 {K} STEPS 8
+			NOW
+			FILE "ammonia_equil_shacham_2015.tsv";
+	END on_load;
+END ammonia_HR_pressures_study;

@@ -1,0 +1,169 @@
+REQUIRE "atoms.a4l";
+IMPORT "johnpye/fprops/fprops";
+PROVIDE "johnpye/fprops/reactive_stoic.a4l";
+
+MODEL reactive_package(species WILL_BE set OF symbol_constant;);
+	components ALIASES species;
+	source IS_A symbol_constant;
+	algorithm IS_A symbol_constant;
+END reactive_package;
+
+MODEL reactive_state(pkg WILL_BE reactive_package;);
+	components ALIASES pkg.components;
+
+	T IS_A temperature;
+	P IS_A pressure;
+	y[components] IS_A fraction;
+	H IS_A molar_energy;
+
+	sum_y: SUM[y[i] | i IN components] = 1;
+
+	calc_H: fprops_rxn_h_TPn(
+		T, P, y[components] : INPUT;
+		H : OUTPUT;
+		pkg : DATA
+	);
+
+METHODS
+	METHOD default_self;
+		T := 298.15 {K};
+		P := 1 {bar};
+		FOR i IN components DO
+			y[i] := 1 / CARD[components];
+		END FOR;
+		H := 0 {J/mol};
+	END default_self;
+END reactive_state;
+
+MODEL reactive_stream(pkg WILL_BE reactive_package;);
+	components ALIASES pkg.components;
+	T IS_A temperature;
+	P IS_A pressure;
+
+	flow IS_A molar_rate;
+	y[components] IS_A fraction;
+	f[components] IS_A molar_rate;
+	H_flow IS_A energy_rate;
+
+	flow_eqn: flow = SUM[f[i] | i IN components];
+	FOR i IN components CREATE
+		f_eqn[i]: f[i] = y[i] * flow;
+	END FOR;
+	calc_H_flow: fprops_rxn_h_TPn(
+		T, P, f[components] : INPUT;
+		H_flow : OUTPUT;
+		pkg : DATA
+	);
+
+METHODS
+	METHOD default_self;
+		T := 298.15 {K};
+		P := 1 {bar};
+		flow := 1 {mol/s};
+		FOR i IN components DO
+			y[i] := 1 / CARD[components];
+			f[i] := flow / CARD[components];
+		END FOR;
+		H_flow := 0 {W};
+	END default_self;
+
+	METHOD specify;
+		FIX T;
+		FIX P;
+		FIX f[components];
+		FREE flow;
+		FREE y[components];
+		FREE H_flow;
+	END specify;
+END reactive_stream;
+
+MODEL reactive_holdup(pkg WILL_BE reactive_package;);
+	components ALIASES pkg.components;
+
+	state IS_A reactive_state(pkg);
+	T ALIASES state.T;
+	P ALIASES state.P;
+	FOR i IN components CREATE
+		y[i] ALIASES state.y[i];
+	END FOR;
+
+	n[components] IS_A mole;
+	N IS_A mole;
+	H IS_A energy;
+	V IS_A volume;
+	V_molar IS_A molar_volume;
+	c[components] IS_A molar_density;
+	c_tot IS_A molar_density;
+
+	calc_V: fprops_rxn_v_TPn(
+		T, P, y[components] : INPUT;
+		V_molar : OUTPUT;
+		pkg : DATA
+	);
+	FOR i IN components CREATE
+		y_eqn[i]: n[i] = y[i] * N;
+		c_eqn[i]: c[i] = n[i] / V;
+	END FOR;
+	H_eqn: H = N * state.H;
+	V_eqn: V = N * V_molar;
+	c_tot_eqn: c_tot = N / V;
+
+	METHODS
+		METHOD default_self;
+			RUN state.default_self;
+			N := 1 {mol};
+			FOR i IN components DO
+				n[i] := (1 / CARD[components]) * 1 {mol};
+				c[i] := 1 {mol/m^3};
+			END FOR;
+			V_molar := 0.02479 {m^3/mol};
+			H := 0 {J};
+		V := V_molar * N;
+		c_tot := N / V;
+	END default_self;
+END reactive_holdup;
+
+MODEL stoic_reaction_set(
+	components WILL_BE set OF symbol_constant;
+	reactions WILL_BE set OF symbol_constant;
+);
+	nu[components][reactions] IS_A factor;
+
+METHODS
+	METHOD default_self;
+		FIX nu[components][reactions];
+	END default_self;
+END stoic_reaction_set;
+
+MODEL reactor_stoic(
+	pkg WILL_BE reactive_package;
+	reactions WILL_BE set OF symbol_constant;
+);
+	components ALIASES pkg.components;
+
+	inlet IS_A reactive_stream(pkg);
+	outlet IS_A reactive_stream(pkg);
+	rxns IS_A stoic_reaction_set(components, reactions);
+
+	xi[reactions] IS_A molar_rate;
+	Qdot IS_A energy_rate;
+	DeltaP IS_A delta_pressure;
+
+	FOR k IN components CREATE
+		mbal[k]: outlet.f[k] = inlet.f[k] + SUM[rxns.nu[k][r] * xi[r] | r IN reactions];
+	END FOR;
+	pbal: outlet.P = inlet.P - DeltaP;
+	ebal: outlet.H_flow = inlet.H_flow + Qdot;
+
+METHODS
+	METHOD default_self;
+		RUN inlet.default_self;
+		RUN outlet.default_self;
+		RUN rxns.default_self;
+		Qdot := 0 {W};
+		DeltaP := 0 {Pa};
+		FOR r IN reactions DO
+			xi[r] := 0 {mol/s};
+		END FOR;
+	END default_self;
+END reactor_stoic;

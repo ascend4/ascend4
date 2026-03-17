@@ -680,10 +680,8 @@ int Asc_IntegInstIntegrableCmd(ClientData cdata,Tcl_Interp *interp,
 
   if (strncmp(argv[2],"blsode",3)==0) {
     integrator = INTEG_LSODE;
-#ifdef ASC_WITH_IDA
   }else if (strncmp(argv[2],"ida",3)==0) {
     integrator = INTEG_IDA;
-#endif
   }
 
   result = (integrator != INTEG_UNKNOWN);
@@ -937,4 +935,3 @@ int Asc_IntegReporterClose(IntegratorSystem *blsys){
 	}
 	return 1;
 }
-

@@ -36,7 +36,21 @@
 #include <ascend/system/cond_config.h>
 #include <ascend/solver/slvDOF.h>
 
-#define ANALYSE_DEBUG
+#ifndef IDA_DEBUG
+# define IDA_DEBUG 0
+#endif
+#if !IDA_DEBUG
+# undef CONSOLE_DEBUG
+# define CONSOLE_DEBUG(...) ((void)0)
+#endif
+
+#ifdef IDA_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
+/* #define ANALYSE_DEBUG */
 
 /*
 	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
@@ -67,6 +81,89 @@ const rel_filter_t integrator_ida_rel = {
 	REL_INCLUDED | REL_EQUALITY | REL_ACTIVE,
 	REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
 };
+
+static int integrator_ida_var_in_list(struct var_variable **list, int n, struct var_variable *var){
+	int i;
+	for(i = 0; i < n; ++i){
+		if(list[i] == var){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int integrator_ida_rebuild_var_order(IntegratorSystem *integ, int *ny1, int *nydot){
+	const SolverDiffVarCollection *diffvars;
+	struct var_variable **oldvars, **mastervars, **newvars, *v;
+	SolverDiffVarSequence seq;
+	int i, oldn, newn, count_y, count_ydot;
+
+	diffvars = system_get_diffvars(integ->system);
+	if(diffvars == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Derivative structure is empty");
+		return 1;
+	}
+
+	oldvars = slv_get_solvers_var_list(integ->system);
+	mastervars = slv_get_master_var_list(integ->system);
+	oldn = slv_get_num_solvers_vars(integ->system);
+	newvars = ASC_NEW_ARRAY(struct var_variable *, oldn + diffvars->nseqs + 1);
+	if(newvars == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory while rebuilding IDA variable ordering");
+		return 1;
+	}
+
+	newn = 0;
+	count_y = 0;
+	for(i = 0; i < diffvars->nseqs; ++i){
+		seq = diffvars->seqs[i];
+		asc_assert(seq.n >= 1);
+		v = seq.vars[0];
+		if(!var_apply_filter(v, &integrator_ida_nonderiv)){
+			continue;
+		}
+		if(!integrator_ida_var_in_list(newvars, newn, v)){
+			newvars[newn++] = v;
+		}
+		count_y++;
+	}
+
+	count_ydot = 0;
+	for(i = 0; i < diffvars->nseqs; ++i){
+		seq = diffvars->seqs[i];
+		asc_assert(seq.n >= 1);
+		if(!var_apply_filter(seq.vars[0], &integrator_ida_nonderiv)){
+			continue;
+		}
+		if(seq.n > 1 && var_apply_filter(seq.vars[1], &integrator_ida_deriv)){
+			v = seq.vars[1];
+			if(!integrator_ida_var_in_list(newvars, newn, v)){
+				newvars[newn++] = v;
+			}
+			count_ydot++;
+		}
+	}
+
+	for(i = 0; i < oldn; ++i){
+		v = oldvars[i];
+		if(!integrator_ida_var_in_list(newvars, newn, v)){
+			newvars[newn++] = v;
+		}
+	}
+
+	newvars[newn] = NULL;
+	for(i = 0; i < newn; ++i){
+		var_set_sindex(newvars[i], i);
+	}
+
+	slv_set_solvers_var_list(integ->system, newvars, newn);
+	if(oldvars != NULL && oldvars != mastervars){
+		ascfree(oldvars);
+	}
+	*ny1 = count_y;
+	*nydot = count_ydot;
+	return 0;
+}
 
 /**
 	This is the first step in the DAE analysis process. We inspect the
@@ -122,7 +219,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 				var_set_active(v,0);
 				vok = 0;
 			}else{
-				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Non-incident var with an incident derivative. ASCEND can't handle this case at the moment, but we hope to fix it.");
+				ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Including non-incident state because its derivative is present in the DAE system.");
 #ifdef DERIV_WITHOUT_DIFF
 				VARMSG("'%s' has a derivative present, so needs to be included in the system");
 				CONSOLE_DEBUG("That var %s active",(var_active(v) ? "is" : "is NOT"));
@@ -234,21 +331,23 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 	/* but we should have found some variables (and know how many) */
 	asc_assert(integ->n_y);
 
-	if(system_cut_vars(integ->system, 0, &integrator_ida_nonderiv, &ny1)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting non-derivs");
+	if(integrator_ida_rebuild_var_order(integ, &ny1, &nydot)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem ordering IDA variables");
 		return 1;
 	}
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Cut %d non-derivative vars to start of list. cf integ->n_y = %d",ny1,integ->n_y);
 #endif
-	asc_assert(ny1 == integ->n_y);
-
-	ERROR_REPORTER_HERE(ASC_USER_NOTE,"moving derivs to start of remainder\n");
-	if(system_cut_vars(integ->system, ny1, &integrator_ida_deriv, &nydot)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");
-		return 1;
+	if(ny1 != integ->n_y){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR
+			,"Unable to order IDA variables consistently (expected %d state/algebraic vars, found %d incident vars)."
+			, integ->n_y, ny1
+		);
+		return 2;
 	}
+
+	MSG("moving derivs to start of remainder");
 
 	if(system_cut_rels(integ->system, 0, &integrator_ida_rel, &nr)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");
@@ -257,7 +356,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 
 	if(ny1 != nr){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem is not square (ny = %d, nr = %d)",ny1,nr);
-		return 2;
+		return 3;
 	}
 
 	return 0;
@@ -280,7 +379,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 */
 static int integrator_ida_create_lists(IntegratorSystem *integ){
 	const SolverDiffVarCollection *diffvars;
-	int i, j;
+	int i, j, n_good;
 	struct var_variable *v;
 
 	SolverDiffVarSequence seq;
@@ -304,9 +403,10 @@ static int integrator_ida_create_lists(IntegratorSystem *integ){
 		asc_assert(integ->ydot[i] == 0);
 	}
 
-#ifdef ANALYSE_DEBUG
+	#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Passing through chains...");
-#endif
+	#endif
+	n_good = 0;
 	/* create the lists y and ydot, ignoring 'bad' vars */
 	for(i=0; i<diffvars->nseqs; ++i){
 		/* CONSOLE_DEBUG("i = %d",i); */
@@ -321,6 +421,7 @@ static int integrator_ida_create_lists(IntegratorSystem *integ){
 		}
 
 		integ->y[j] = v;
+		n_good++;
 		/* VARMSG("'%s' is good non-deriv"); */
 
 		if(seq.n > 1 && var_apply_filter(seq.vars[1],&integrator_ida_deriv)){
@@ -336,9 +437,9 @@ static int integrator_ida_create_lists(IntegratorSystem *integ){
 		}
 	}
 
-#ifdef ANALYSE_DEBUG
-	CONSOLE_DEBUG("Found %d good non-derivs",j);
-#endif
+	#ifdef ANALYSE_DEBUG
+	CONSOLE_DEBUG("Found %d good non-derivs",n_good);
+	#endif
 	/* create the list y_id by looking at non-NULLs from ydot */
 	integ->y_id = ASC_NEW_ARRAY(int,integ->n_ydot);
 	for(i=0,j=0; i <  integ->n_y; ++i){
@@ -365,7 +466,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	linsolqr_system_t L;
 	mtx_range_t range;
 	mtx_region_t R;
-	int res, r;
+	int res, r, index_error;
 	struct SystemJacobianStruct df_dydp, dg_dya;
 
 	CONSOLE_DEBUG("system has total of %d rels and %d vars"
@@ -391,6 +492,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating df/dyd'");
+		return 1;
 	}
 	CONSOLE_DEBUG("df/dyd': nr = %d, nv = %d",df_dydp.n_rels,df_dydp.n_vars);
 
@@ -403,6 +505,10 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating dg/dya");
+		ASC_FREE(df_dydp.vars);
+		ASC_FREE(df_dydp.rels);
+		mtx_destroy(df_dydp.M);
+		return 1;
 	}
 	CONSOLE_DEBUG("dg/dya: nr = %d, nv = %d",dg_dya.n_rels,dg_dya.n_vars);
 
@@ -410,10 +516,13 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"df/dyd' is a bit ambiguous");
 	}
 
+	index_error = 0;
+
 	if(dg_dya.n_rels <= 0){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No algebraic equations were found in the DAE system!");
 	}else if(dg_dya.n_rels != dg_dya.n_vars){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"The algebraic part of the DAE jacobian, dg/dya, is not square!");
+		index_error = 1;
 	}else{
 		/* check the rank */
 		range.low = 0; range.high = mtx_order(dg_dya.M) - 1;
@@ -431,6 +540,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 		if(r != dg_dya.n_rels){
 			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Your DAE system has an index problem: the matrix dg/dya is not full rank");
+			index_error = 1;
 		}
 	}
 
@@ -463,6 +573,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 		if(r != df_dydp.n_rels){
 			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Your DAE system has an index problem: the matrix df/dyd' is not full rank");
+			index_error = 1;
 		}
 	}
 
@@ -473,7 +584,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	ASC_FREE(df_dydp.vars);
 	ASC_FREE(df_dydp.rels);
 	mtx_destroy(df_dydp.M);
-	return 0;
+	return index_error;
 #else
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"check_index disabled");
 	return 0;
@@ -962,4 +1073,3 @@ int integrator_ida_diffindex1(const IntegratorSystem *integ, const struct var_va
 	if(var_sindex(deriv) < integ->n_y + integ->n_ydot)return -2;
 	return integ->y_id[var_sindex(deriv) - integ->n_y];
 }
-

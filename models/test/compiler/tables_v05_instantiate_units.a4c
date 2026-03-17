@@ -1,0 +1,15 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_instantiate_units;
+	r IS_A set OF integer_constant;
+	c IS_A set OF integer_constant;
+
+	r :== [1..2];
+	c :== [1..2];
+
+	TABLE temp[r,c] IS_A temperature_constant UNITS {K};
+		1 2
+		1: 273.15 298.15
+		2: 310.5 325.0
+	END TABLE;
+END tables_v05_instantiate_units;

@@ -6,7 +6,21 @@
 # compile and run.
 
 Import('env')
+import shutil
+
 fprops_env = env.Clone()
+
+if not fprops_env.get('HAVE_IPOPT'):
+	fprops_env.ensure_ipopt()
+
+if fprops_env.get('HAVE_IPOPT'):
+	fprops_env.AppendUnique(CPPDEFINES=['HAVE_IPOPT'])
+	if fprops_env.get('IPOPT_CPPPATH'):
+		fprops_env.AppendUnique(CPPPATH=fprops_env['IPOPT_CPPPATH'])
+	if fprops_env.get('IPOPT_LIBPATH'):
+		fprops_env.AppendUnique(LIBPATH=fprops_env['IPOPT_LIBPATH'])
+	if fprops_env.get('IPOPT_LIBS'):
+		fprops_env.AppendUnique(LIBS=fprops_env['IPOPT_LIBS'])
 
 # automatically create fluids/fluids_list.h...
 fprops_env.SConscript("fluids/SConscript",['fprops_env'])
@@ -16,9 +30,24 @@ fprops_env.Depends("fluids.c","fluids/fluids_list.h")
 coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
 	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c'
 	, 'solve_pT.c'
-	, 'fluids.c','cp0.c'
+	, 'fluids.c','cp0.c','mixture.c','thermo.c','thermo_pure.c','constcp.c','constcp_species.c','constcp_data.c'
+	, 'shomate.c','shomate_species.c','shomate_data.c'
+	, 'fprops_species.c','thermo_constcp.c','thermo_mix_ideal.c'
+	, 'gibbs_species.c'
+	, 'solution.c','solution_data.c','thermo_solution_binary.c','wustite_hidayat.c'
+	, 'bcc_iron_hidayat.c','fcc_iron_hidayat.c'
+	, 'spinel_data.c','spinel_fe_degterov.c'
 	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c', 'incomp.c'
+	, 'eqm.c', 'flash.c', 'flash_unifac.c', 'name_resolve.c', 'names/_name_registry.c'
+	, 'mixtures/unifac_rundata.c'
+	, 'mixtures/_unifac_groups.c', 'mixtures/_unifac_components.c', 'mixtures/_unifac_lookup.c'
 ]
+
+if fprops_env.get('HAVE_IPOPT'):
+	coresrcs += ['eqm_ipopt.c']
+
+if fprops_env.get('HAVE_NLOPT'):
+	coresrcs += ['eqm_slsqp.c']
 
 srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 
@@ -31,17 +60,19 @@ if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 	asc_env = fprops_env.Clone()
 	asc_env.AppendUnique(LIBPATH=["."])
 	asc_env.AppendUnique(LIBPATH=["#"])
+	asc_env.AppendUnique(LIBS=["ascend"])
+	asc_coresrcs = list(coresrcs)
+	asc_srcs = asc_coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
+	asc_shobjs = [asc_env.SharedObject(s, OBJPREFIX='#/models/johnpye/fprops/asc-') for s in asc_srcs]
 
 	lib1 = asc_env.SharedLibrary("fprops"
-		,['asc_fprops.c'] + fprops_env['shobjs']
-		,LIBS = ["ascend"]
+		,['asc_fprops.c'] + asc_shobjs
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
 
 	lib2 = asc_env.SharedLibrary("heatex_pinch"
-		,['asc_heatex_pinch.c'] + fprops_env['shobjs']
-		,LIBS = ["ascend"]
+		,['asc_heatex_pinch.c'] + asc_shobjs
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
@@ -70,4 +101,3 @@ prog_env.Program("test_cubicroots",['cubicroots.c'] + fprops_env['shobjs'],OBJPR
  #vim: set syntax=python:
 
 fprops_env.SConscript("test/SConscript",['fprops_env'])
-

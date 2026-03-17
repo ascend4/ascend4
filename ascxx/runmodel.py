@@ -1,6 +1,81 @@
 import pathlib, sys, argparse, re
 
-def run_ascend_model(filen,model=None,printvars=None,test=True):
+def _print_requested_vars(sim, printvars):
+	re1 = re.compile(r"^[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*(\.[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*)*$")
+	for varname in printvars:
+		if not re1.match(varname):
+			raise RuntimeError(f"Requested variable name '{varname}' does not match allowable pattern.")
+		var = eval(f"sim.{varname}")
+		print(f"{var} = {var.getValue()}")
+
+def _print_default_study_vars(sim):
+	hooks = sim.getSolverHooks()
+	if hooks is None:
+		return
+	for var in hooks.getStudyPrintVars(sim):
+		print(f"{sim.getInstanceName(var)} = {var.getValue()}")
+
+def _find_method(model_type, method_name):
+	for meth in model_type.getMethods():
+		if meth.getName() == method_name:
+			return meth
+	raise RuntimeError(f"Method '{method_name}' not found.")
+
+def _find_optional_method(model_type, method_name):
+	for meth in model_type.getMethods():
+		if meth.getName() == method_name:
+			return meth
+	return None
+
+def _needs_final_solve(sim):
+	return sim.isSolveDirty()
+
+def _status_label(status):
+	if status.isConverged():
+		return "converged"
+	if status.isReadyToSolve():
+		return "ready"
+	if status.isDiverged():
+		return "diverged"
+	if status.isInterrupted():
+		return "interrupted"
+	if status.hasExceededTimeLimit():
+		return "time-limit"
+	if status.hasExceededIterationLimit():
+		return "iteration-limit"
+	if status.hasResidualCalculationErrors():
+		return "residual-errors"
+	if status.isOverDefined():
+		return "over-defined"
+	if status.isUnderDefined():
+		return "under-defined"
+	return "not-converged"
+
+def _print_simstatus(sim):
+	state = "solved"
+	parts = []
+	if sim.isMethodRunning():
+		state = "running-method"
+	elif sim.isSolveDirty():
+		state = "dirty"
+	parts.append(f"state={state}")
+	try:
+		target = sim.getSolveTargetName()
+	except Exception:
+		target = ""
+	if target:
+		parts.append(f"target={target}")
+	try:
+		parts.append(f"solver={sim.getSolver().getName()}")
+	except Exception:
+		pass
+	try:
+		parts.append(f"solver_status={_status_label(sim.getStatus())}")
+	except Exception:
+		pass
+	print("STATUS: " + ", ".join(parts))
+
+def run_ascend_model(filen,model=None,printvars=None,test=True,runmethod=None):
 	"""
 	This function (and the associated command-line argument parser) is for
 	easing the job of quickly running ASCEND models from the command line.
@@ -9,6 +84,7 @@ def run_ascend_model(filen,model=None,printvars=None,test=True):
 	`model`: name of the model to instantiate. Defaults to the filename stem.
 	`printvars`: a list of variable names which, if present, will be printed out (in dev). Forces test=False.
 	`test`: whether or not to run the `self_test` method, if it exists. Defaults true.
+	`runmethod`: optional method name to run after `on_load` and before the final solve.
 	"""
 	
 	import platform
@@ -34,28 +110,30 @@ def run_ascend_model(filen,model=None,printvars=None,test=True):
 		sys.exit(2)
 		
 	M = T.getSimulation('sim',True) # run default method = True
+	if runmethod is not None:
+		M.run(_find_method(T, runmethod))
 	try:
 		solver = M.getSolver()
 	except RuntimeError:
 		solver = ascpy.Solver("QRSlv")
-	M.solve(solver,ascpy.SolverReporter())
+	if _needs_final_solve(M):
+		M.solve(solver,ascpy.SolverReporter())
 	
 	if printvars is not None:
 		test = False
-		re1 = re.compile(r"^[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*(\.[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*)*$")
-		for varname in printvars:
-			if not re1.match(varname):
-				raise RuntimeError(f"Requested variable name '{varname}' does not match allowable pattern.")
-			var = eval(f"M.{varname}")
-			print(f"{var} = {var.getValue()}")
+		_print_requested_vars(M, printvars)
+	else:
+		_print_default_study_vars(M)
 	
 	if test:
 		try:
-			for meth in T.getMethods():
-				if meth.getName() == "self_test":
-					M.run(meth)
+			self_test = _find_optional_method(T, "self_test")
+			if self_test is not None:
+				M.run(self_test)
 		except Exception as e:
 			raise RuntimeError(f"While attempting to run 'self_test': {str(e)}")
+
+	_print_simstatus(M)
 	
 	# TODO: we can add a customised solverreporter here
 	# TODO: we could also extend the user interface to support setting of solver parameters etc.
@@ -69,13 +147,14 @@ if __name__=="__main__":
 	p = argparse.ArgumentParser(description='Solve ASCEND models via the command line.')
 	p.add_argument('file',type=pathlib.Path,help='ASCEND model file to be opened')
 	p.add_argument('--model','-m', help="Name of MODEL to instantiate (defaults to filename without extension)");
+	p.add_argument('-r', '--run-method', dest='runmethod', help="Run METHOD after 'on_load' and before the final solve");
 	p.add_argument('-p', '--print', dest='printvars', action='extend', nargs='+', help='Variables to print (can be used multiple times). Implies --no-test.')
 	p.add_argument('--no-test','-n',action='store_false', help="Suppress running of 'self_test' method after solving");
 	args = p.parse_args()
 		
 	#print("sys.argv =",sys.argv)
 	try:
-		run_ascend_model(filen=args.file,model=args.model,printvars=args.printvars,test=args.no_test)
+		run_ascend_model(filen=args.file,model=args.model,printvars=args.printvars,test=args.no_test,runmethod=args.runmethod)
 		sys.exit(0)
 	except Exception as e:
 		sys.stderr.write(f"{pathlib.Path(sys.argv[0]).name}: {str(e)}\n")

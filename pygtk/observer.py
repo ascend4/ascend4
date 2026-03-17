@@ -61,18 +61,9 @@ class ObserverColumn:
 			else:
 				units = instance.getDisplayUnits()
 
-		uname = str(units.getName())
-
 		self.units = units
-		self.uname = uname
-
-		##### CELSIUS TEMPERATURE WORKAROUND
-		self.instance = instance
-		if instance.getType().isRefinedReal() and str(instance.getType().getDimensions()) == 'TMP':
-			units = Preferences().getPreferredUnitsOrigin(str(instance.getType().getName()))
-			if units == CelsiusUnits.get_celsius_sign():
-				uname = CelsiusUnits.get_celsius_sign()
-		##### CELSIUS TEMPERATURE WORKAROUND
+		self.uname = self.display_unit_name()
+		uname = self.uname
 
 		if len(uname) or uname.find("/")!=-1:
 			uname = "["+uname+"]"
@@ -87,6 +78,21 @@ class ObserverColumn:
 
 	def __repr__(self):
 		return "ObserverColumn(name="+self.name+")"
+
+	def display_unit_name(self):
+		uname = CelsiusUnits.get_display_unit_name(self.instance, str(self.units.getName()))
+		if uname in ("", "?", "dimensionless", "[dimensionless]"):
+			return ""
+		try:
+			if self.instance.getType().getDimensions().isDimensionless():
+				return ""
+		except Exception:
+			pass
+		return uname
+
+	def display_value(self, rawval):
+		value = rawval / self.units.getConversion()
+		return CelsiusUnits.convert_show_value(self.instance, value)
 
 	def cellvalue(self, column, cell, model, row_iter, user_data=None):
 		_rowobject = model.get_value(row_iter,0)
@@ -103,12 +109,12 @@ class ObserverColumn:
 						cell.set_property('foreground',OBSERVER_EDIT_COLOR)
 					else:
 						cell.set_property('foreground',OBSERVER_NOEDIT_COLOR)
-				_dataval = _rawval / self.units.getConversion()
+				_dataval = self.display_value(_rawval)
 			else:
 				cell.set_property('foreground',OBSERVER_NORMAL_COLOR)
 				try :
 					_rawval = _rowobject.values[self.index]
-					_dataval = _rawval / self.units.getConversion()
+					_dataval = self.display_value(_rawval)
 				except:
 					_dataval = ""
 			if _rowobject.tainted is True:
@@ -119,9 +125,6 @@ class ObserverColumn:
 			else:
 				cell.set_property('background', None)
 
-			##### CELSIUS TEMPERATURE WORKAROUND
-			_dataval = CelsiusUnits.convert_show(self.instance, str(_dataval), False)
-			##### CELSIUS TEMPERATURE WORKAROUND
 		except Exception as e:
 			_dataval = ""
 
@@ -160,13 +163,13 @@ class ObserverRow:
 		if not self.active:
 			for k,v in table.cols.items():
 				try:
-					vv[k]=(self.values[v.index]/v.units.getConversion())
+					vv[k] = v.display_value(self.values[v.index])
 				except:
 					vv[k]=""
 			return vv
 		else:
 			for index, col in table.cols.items():
-				vv[index] = float(col.instance.getRealValue())/col.units.getConversion()
+				vv[index] = col.display_value(float(col.instance.getRealValue()))
 			return vv
 
 class ObserverTab:
@@ -280,17 +283,6 @@ class ObserverTab:
 			if y is None:
 				y=[self.cols[1]]
 
-		##### CELSIUS TEMPERATURE WORKAROUND
-		size = len(CelsiusUnits.get_celsius_sign())
-		xtit = x.title.find(CelsiusUnits.get_celsius_sign())
-		if xtit != -1:
-			x.title = x.title[:xtit] + "K" + x.title[xtit + size:]
-		for yy in y:
-			ytit = yy.title.find(CelsiusUnits.get_celsius_sign())
-			if ytit != -1:
-				yy.title = yy.title[:ytit] + "K" + yy.title[ytit + size:]
-		##### CELSIUS TEMPERATURE WORKAROUND
-
 		# if column indices are provided instead of columns, convert them
 		if x.__class__ is int and x>=0 and x<len(self.cols):
 			x=self.cols[x]
@@ -371,25 +363,27 @@ class ObserverTab:
 				start+=1
 
 		fig = pylab.figure()
-		def _series_type(col):
-			try:
-				return str(col.instance.getType().getName())
-			except Exception:
-				return "unknown"
-
 		def _series_units(col):
 			try:
-				return str(col.uname)
+				return col.display_unit_name()
 			except Exception:
 				return ""
 
+		def _series_group_key(col):
+			try:
+				return (str(col.instance.getType().getDimensions()), _series_units(col))
+			except Exception:
+				return ("unknown", _series_units(col))
+
 		def _group_ylabel(cols):
-			type_name = _series_type(cols[0]) if cols else "unknown"
-			names = ", ".join([c.name for c in cols])
 			units = sorted(set([u for u in [_series_units(c) for c in cols] if u != ""]))
-			if len(units) > 0:
-				return "%s: %s [%s]" % (type_name, names, ", ".join(units))
-			return "%s: %s" % (type_name, names)
+			if len(cols) > 1:
+				if len(units) == 1:
+					return "[%s]" % units[0]
+				return ""
+			if len(cols) == 1:
+				return cols[0].title
+			return ""
 
 		def _legend_draggable(leg):
 			if leg is None:
@@ -399,18 +393,19 @@ class ObserverTab:
 			elif hasattr(leg, "draggable"):
 				leg.draggable()
 
-		# Group y-series by ASCEND type while preserving user-selected order.
+		# Group y-series by compatible dimensions/display-units while preserving user-selected order.
 		grouped = {}
 		group_order = []
 		for yi, ycol in enumerate(y):
-			t = _series_type(ycol)
-			if t not in grouped:
-				grouped[t] = []
-				group_order.append(t)
-			grouped[t].append((yi, ycol))
+			g = _series_group_key(ycol)
+			if g not in grouped:
+				grouped[g] = []
+				group_order.append(g)
+			grouped[g].append((yi, ycol))
 
 		color_cycle = ['b','r','g','y','c','m','k']
 		n_groups = len(group_order)
+		single_series = len(y) == 1
 		sharex = None
 		for gi, gkey in enumerate(group_order):
 			if gi == 0:
@@ -428,13 +423,16 @@ class ObserverTab:
 			if gi + 1 != n_groups:
 				pylab.setp(ax.get_xticklabels(),visible=False)
 			else:
-				ax.set_xlabel("X: %s" % x.title)
+				ax.set_xlabel(x.title)
 
-			ax.set_ylabel(_group_ylabel(group_cols),labelpad=20)
-			leg = ax.legend(loc='upper left')
-			if leg is not None:
-				leg.get_frame().set_alpha(0.3)
-			_legend_draggable(leg)
+			if single_series and len(group_cols) == 1:
+				ax.set_ylabel(group_cols[0].title,labelpad=20)
+			else:
+				ax.set_ylabel(_group_ylabel(group_cols),labelpad=20)
+				leg = ax.legend(loc='upper left')
+				if leg is not None:
+					leg.get_frame().set_alpha(0.3)
+				_legend_draggable(leg)
 
 		# FIXME why can't I drag the legend?
 
@@ -720,33 +718,27 @@ class ObserverTab:
 			_col_type = _col.instance.getType()
 			if instance_type is None or str(_col_type.getName()) == str(instance_type.getName()):
 				_units = self.browser.get_instance_display_units(_col.instance)
-				_uname = str(_units.getName())
+				_col.units = _units
 				if self.browser == None:
 					name = "UNNAMED"
 				else:
 					name = self.browser.sim.getInstanceName(_col.instance)
 
-				##### CELSIUS TEMPERATURE WORKAROUND
-				if _col.instance.getType().isRefinedReal() and str(_col.instance.getType().getDimensions()) == 'TMP':
-					units = Preferences().getPreferredUnitsOrigin(str(_col.instance.getType().getName()))
-					if units == CelsiusUnits.get_celsius_sign():
-						_uname = CelsiusUnits.get_celsius_sign()
-				##### CELSIUS TEMPERATURE WORKAROUND
+				_uname = _col.display_unit_name()
 				if len(_uname) or _uname.find("/")!=-1:
 					_uname = "["+_uname+"]"
 
 				if _uname == "":
 					_title = "%s" % (name)
 				else:
-					_title = "%s / %s" % (name, _uname) 
+					_title = "%s / %s" % (name, _uname)
 				for _tvcol in self.view.get_columns():
 					if _tvcol.title == _col.title:
 						_tvcol.label.set_text(str(_title))
 						_tvcol.title = _title
 						_tvcol.set_title(_title)
 				_col.title = _title
-				_col.units = _units
-				_col.uname = _uname
+				_col.uname = _col.display_unit_name()
 				_col.name = name
 	def set_dead(self):
 		if self.alive == False and self.reloaded == True:

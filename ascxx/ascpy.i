@@ -71,11 +71,14 @@ extern "C"{
 		def __init__(self,set):
 			self.set=set
 			self.index=0
-		def next(self):
+		def __iter__(self):
+			return self
+		def __next__(self):
 			if self.index==self.set.length():
 				raise StopIteration
 			self.index = self.index + 1
 			return self.set[self.index]
+		next = __next__
 }
 
 template<class T>
@@ -359,7 +362,7 @@ public:
 	~Instanc();
 	std::vector<Instanc> getChildren();
 	const std::string getKindStr() const;
-	const SymChar &getName();
+	const SymChar getName();
 	const Type getType() const;
 	const bool isAtom() const;
 	const bool isFixed() const;

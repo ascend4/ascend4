@@ -17,8 +17,18 @@
 	Wrapper for FPROPS to allow access from ASCEND.
 */
 
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <stdio.h>
+#include <ctype.h>
+
+/* Seed reuse remains ASCEND-runtime-driven via cache preload; keep wrapper-local reuse disabled. */
+
+
 /* include the external function API from libascend... */
 #include <ascend/compiler/extfunc.h>
+#include <ascend/compiler/extcall.h>
 
 /* include error reporting API as well, so we can send messages to user */
 #include <ascend/utilities/error.h>
@@ -36,6 +46,9 @@
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/instmacro.h>
 #include <ascend/compiler/instance_types.h>
+#include <ascend/compiler/arrayinst.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/setinstval.h>
 
 /* the code that we're wrapping... */
 #include "fprops.h"
@@ -43,6 +56,12 @@
 #include "solve_ph.h"
 #include "thcond.h"
 #include "visc.h"
+#include "eqm.h"
+#include "flash.h"
+#include "flash_unifac.h"
+#include "mixtures/unifac_data.h"
+#include "mixtures/unifac_rundata.h"
+#include "name_resolve.h"
 
 /* for the moment, species data are defined in C code, we'll implement something
 better later on, hopefully. */
@@ -61,6 +80,7 @@ better later on, hopefully. */
 
 #define ERRMSG(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_USER_ERROR,MSG,##ARGS);
 #define ERRMSGP(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_PROG_ERR,MSG,##ARGS);
+#define ASCFPROPS_UNIFAC_MAX_GROUP 47
 
 /*------------------------------------------------------------------------------
   FORWARD DECLARATIONS
@@ -89,6 +109,22 @@ ExtBBoxFunc fprops_cp_T_incomp_calc;
 ExtBBoxFunc fprops_phsx_vT_calc;
 ExtBBoxFunc fprops_Tvsx_ph_calc;
 ExtBBoxFunc fprops_Tvsx_h_incomp_calc;
+ExtBBoxInitFunc asc_fprops_rxn_prepare;
+ExtBBoxInitFunc asc_fprops_rxneq_prepare;
+ExtBBoxInitFunc asc_fprops_flash_prepare;
+ExtBBoxInitFunc asc_fprops_unifac_flash_prepare;
+ExtBBoxInitFunc asc_fprops_unifac_gamma_prepare;
+ExtBBoxInitFunc asc_fprops_unifac_liq_fugacity_prepare;
+ExtBBoxFinalFunc asc_fprops_rxn_final;
+ExtBBoxFinalFunc asc_fprops_unifac_flash_final;
+ExtBBoxFunc fprops_rxn_h_TPn_calc;
+ExtBBoxFunc fprops_rxn_v_TPn_calc;
+ExtBBoxFunc fprops_rxn_eqm_TPn_calc;
+ExtBBoxFunc fprops_rxn_eqm_TPn_deriv;
+ExtBBoxFunc fprops_flash_TPz_calc;
+ExtBBoxFunc fprops_unifac_flash_TPz_calc;
+ExtBBoxFunc fprops_unifac_gamma_Tx_calc;
+ExtBBoxFunc fprops_unifac_liq_fugacity_TPx_calc;
 
 /* FIXME need incompressible fluid functions that depend only on T or h, to 
 	avoid unpivoted external relations...
@@ -134,6 +170,358 @@ static const char *fprops_phsx_vT_help = "Calculate p, h, s, x from specific vol
 
 static const char *fprops_Tvsx_ph_help = "Calculate T, v, s, x from pressure and enthalpy, using FPROPS";
 static const char *fprops_Tvsx_h_incomp_help = "Calculate T, v, s, x for incompressible fluid from enthalpy, using FPROPS";
+static const char *fprops_rxn_h_TPn_help = "Calculate package-based reactive mixture enthalpy from temperature, pressure and species molar vector, using FPROPS";
+static const char *fprops_rxn_v_TPn_help = "Calculate package-based reactive mixture volume from temperature, pressure and species molar vector, using FPROPS";
+static const char *fprops_rxn_eqm_TPn_help = "Calculate package-based equilibrium outlet species molar vector from temperature, pressure and inlet species molar vector, using FPROPS";
+static const char *fprops_flash_TPz_help = "Calculate package-based TPz flash from temperature, pressure and overall composition, using FPROPS";
+static const char *fprops_unifac_flash_TPz_help = "Calculate ideal-vapor plus UNIFAC-liquid TPz flash from temperature, pressure and overall composition, using FPROPS";
+static const char *fprops_unifac_gamma_Tx_help = "Calculate original-UNIFAC liquid activity coefficients from temperature and liquid composition, using FPROPS";
+static const char *fprops_unifac_liq_fugacity_TPx_help = "Calculate ideal-vapor-reference UNIFAC liquid component fugacities from temperature, pressure and liquid composition, using FPROPS";
+
+typedef struct{
+	int ns;
+	FpropsRxnPackage *pkg;
+	char *algorithm;
+	char *source;
+	char **names;
+	/* Keep the equilibrium blackbox stateless by default; opt in only when
+	   seed reuse is explicitly being studied. */
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
+	double *last_n;
+	int have_last_n;
+#endif
+} AscFpropsRxnData;
+
+typedef struct{
+	int nc;
+	int nsub;
+	FpropsMultiphasePackage mpkg;
+	FpropsUNIFACFlashPackage pkg;
+	FpropsUNIFACComponentData *components;
+	FpropsUNIFACSubgroupData *subgroups;
+	int *sub_index_data;
+	double *nu_data;
+	double *a;
+} AscFpropsUNIFACFlashData;
+
+static int asc_fprops_parse_selector(const char *spec, const char **source_out){
+	char model_buf[32];
+	const char *colon = NULL;
+	size_t n = 0;
+	if(source_out){
+		*source_out = spec;
+	}
+	if(!spec || !spec[0]){
+		return 1;
+	}
+	colon = strchr(spec, ':');
+	if(!colon){
+		return 1;
+	}
+	while(spec[n] && &spec[n] < colon && n < sizeof(model_buf) - 1){
+		model_buf[n] = (char)tolower((unsigned char)spec[n]);
+		++n;
+	}
+	model_buf[n] = '\0';
+	if(n == 0){
+		return 1;
+	}
+	if(n > 5 && (strcmp(model_buf + n - 5, "+ref0") == 0
+			|| strcmp(model_buf + n - 5, "_ref0") == 0)){
+		model_buf[n - 5] = '\0';
+	}
+	if(strcmp(model_buf, "auto") != 0
+			&& strcmp(model_buf, "ideal") != 0
+			&& strcmp(model_buf, "constcp") != 0
+			&& strcmp(model_buf, "shomate") != 0
+			&& strcmp(model_buf, "helmholtz") != 0
+			&& strcmp(model_buf, "pengrob") != 0){
+		return 1;
+	}
+	if(source_out){
+		const char *src = colon + 1;
+		while(*src && isspace((unsigned char)*src)){
+			++src;
+		}
+		*source_out = (*src) ? src : NULL;
+	}
+	return 1;
+}
+
+static const char *asc_fprops_resolve_rxn_source(const char *name, const char *source_spec,
+		unsigned domains, char *out, unsigned out_len){
+	const char *source_i;
+	int matched_specific = 0;
+
+	if(!source_spec || !source_spec[0]){
+		return NULL;
+	}
+	source_i = fprops_resolve_species_source_ex(source_spec, name, out, out_len, &matched_specific);
+	if(matched_specific || !strchr(source_spec, '=')){
+		return source_i;
+	}
+	if(name && name[0]){
+		const FpropsNameCanonical *matches[32];
+		char candidate_source_buf[512];
+		int nmatches = fprops_name_collect_matches(name, domains, NULL, matches, 32);
+		int explicit_matches = 0;
+		int i;
+		for(i = 0; i < nmatches && i < 32; ++i){
+			int candidate_specific = 0;
+			const char *candidate_source = fprops_resolve_species_source_ex(source_spec,
+				matches[i]->canonical, candidate_source_buf, (unsigned)sizeof(candidate_source_buf),
+				&candidate_specific);
+			if(candidate_specific && candidate_source && candidate_source[0]){
+				if(explicit_matches == 0){
+					snprintf(out, out_len, "%s", candidate_source);
+					out[out_len - 1] = '\0';
+				}
+				++explicit_matches;
+				if(explicit_matches > 1){
+					break;
+				}
+			}
+		}
+		if(explicit_matches == 1){
+			return out;
+		}
+	}
+	return source_i;
+}
+
+static const char *asc_fprops_resolve_rxn_name(const char *name, const char *source,
+		char *buf, unsigned buflen){
+	FpropsResolvedName resolved;
+	FpropsNameResolveStatus status;
+	unsigned domains = FPROPS_NAME_DOMAIN_PURE_FLUID | FPROPS_NAME_DOMAIN_EQM_SPECIES;
+	char source_buf[512];
+	const char *source_i = asc_fprops_resolve_rxn_source(name, source, domains, source_buf,
+		(unsigned)sizeof(source_buf));
+	const char *selector_source = NULL;
+	const char *name_source = NULL;
+
+	if(!name || !name[0] || !buf || buflen == 0){
+		return name;
+	}
+	asc_fprops_parse_selector(source_i, &selector_source);
+	if(selector_source && selector_source[0]){
+		name_source = selector_source;
+	}
+	status = fprops_name_resolve(name, domains, name_source, &resolved);
+	if(status != FPROPS_NAME_RESOLVE_OK || !resolved.canonical || !resolved.canonical->canonical){
+		return name;
+	}
+	snprintf(buf, buflen, "%s", resolved.canonical->canonical);
+	buf[buflen - 1] = '\0';
+	return buf;
+}
+
+static int asc_fprops_rxn_eqm_trace_enabled(void){
+	static int enabled = -1;
+	if(enabled < 0){
+		const char *v = getenv("ASC_FPROPS_RXN_EQM_TRACE");
+		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
+	}
+	return enabled;
+}
+
+static int asc_fprops_rxn_state_trace_enabled(void){
+	static int enabled = -1;
+	if(enabled < 0){
+		const char *v = getenv("ASC_FPROPS_RXN_STATE_TRACE");
+		enabled = (v && v[0] && strcmp(v, "0") != 0) ? 1 : 0;
+	}
+	return enabled;
+}
+
+static void asc_fprops_rxn_state_trace(const char *event, const struct BBoxInterp *bbox,
+		const AscFpropsRxnData *rxn, double T, double P, const double *inputs_n,
+		const double *outputs_n, int status){
+	static long seq = 0;
+	double inlet_sum = 0.0;
+	double outlet_sum = 0.0;
+	int i;
+	if(!asc_fprops_rxn_state_trace_enabled()){
+		return;
+	}
+	++seq;
+	if(rxn && inputs_n){
+		for(i = 0; i < rxn->ns; ++i){
+			if(isfinite(inputs_n[i])){
+				inlet_sum += inputs_n[i];
+			}
+		}
+	}
+	if(rxn && outputs_n){
+		for(i = 0; i < rxn->ns; ++i){
+			if(isfinite(outputs_n[i])){
+				outlet_sum += outputs_n[i];
+			}
+		}
+	}
+	fprintf(stderr,
+		"ASC_FPROPS_RXN_STATE_TRACE seq=%ld event=%s bbox=%p user_data=%p pkg=%p task=%d ns=%d"
+		" T=%.17g P=%.17g inlet_sum=%.17g outlet_sum=%.17g status=%d alg=%s\n",
+		seq, event ? event : "(null)", (void *)bbox, bbox ? bbox->user_data : NULL,
+		(void *)(rxn ? rxn->pkg : NULL), bbox ? (int)bbox->task : -1, rxn ? rxn->ns : -1,
+		T, P, inlet_sum, outlet_sum, status, (rxn && rxn->algorithm) ? rxn->algorithm : "(null)");
+	fflush(stderr);
+}
+
+static int asc_fprops_rxn_eqm_status_ok(int status){
+	return status == 0 || status == 1 || status == 6;
+}
+
+static int asc_fprops_rxn_find_name_index(const AscFpropsRxnData *rxn, const char *name){
+	int i;
+	if(!rxn || !rxn->names || !name){
+		return -1;
+	}
+	for(i = 0; i < rxn->ns; ++i){
+		if(rxn->names[i] && 0 == strcmp(rxn->names[i], name)){
+			return i;
+		}
+	}
+	return -1;
+}
+
+static void asc_fprops_rxn_eqm_trace_report(const AscFpropsRxnData *rxn, double T, double P,
+		const double *inputs_n, int status_pkg, const double *out_pkg, int bbox_task){
+	static long seq = 0;
+	int i_n2, i_o2, i_ar, i_h2o, i_co2, i_no, i_no2, i_co, i_h2;
+	double inlet_sum = 0.0;
+	int i;
+	if(!asc_fprops_rxn_eqm_trace_enabled() || !rxn){
+		return;
+	}
+	++seq;
+	i_n2 = asc_fprops_rxn_find_name_index(rxn, "nitrogen");
+	i_o2 = asc_fprops_rxn_find_name_index(rxn, "oxygen");
+	i_ar = asc_fprops_rxn_find_name_index(rxn, "argon");
+	i_h2o = asc_fprops_rxn_find_name_index(rxn, "water");
+	i_co2 = asc_fprops_rxn_find_name_index(rxn, "carbondioxide");
+	i_no = asc_fprops_rxn_find_name_index(rxn, "nitric_oxide");
+	i_no2 = asc_fprops_rxn_find_name_index(rxn, "nitrogen_dioxide");
+	i_co = asc_fprops_rxn_find_name_index(rxn, "carbonmonoxide");
+	i_h2 = asc_fprops_rxn_find_name_index(rxn, "hydrogen");
+	for(i = 0; i < rxn->ns; ++i){
+		if(inputs_n && isfinite(inputs_n[i])){
+			inlet_sum += inputs_n[i];
+		}
+	}
+	fprintf(stderr,
+		"ASC_FPROPS_RXN_EQM_TRACE seq=%ld task=%d alg=%s T=%.17g P=%.17g inlet_sum=%.17g"
+		" in[N2]=%.17g in[O2]=%.17g in[Ar]=%.17g in[H2O]=%.17g in[CO2]=%.17g"
+		" pkg_status=%d"
+		" pkg[NO]=%.17g pkg[NO2]=%.17g pkg[CO]=%.17g pkg[H2]=%.17g"
+		"\n",
+		seq, bbox_task, rxn->algorithm ? rxn->algorithm : "(null)", T, P, inlet_sum,
+		(inputs_n && i_n2 >= 0) ? inputs_n[i_n2] : NAN,
+		(inputs_n && i_o2 >= 0) ? inputs_n[i_o2] : NAN,
+		(inputs_n && i_ar >= 0) ? inputs_n[i_ar] : NAN,
+		(inputs_n && i_h2o >= 0) ? inputs_n[i_h2o] : NAN,
+		(inputs_n && i_co2 >= 0) ? inputs_n[i_co2] : NAN,
+		status_pkg,
+		(out_pkg && i_no >= 0) ? out_pkg[i_no] : NAN,
+		(out_pkg && i_no2 >= 0) ? out_pkg[i_no2] : NAN,
+		(out_pkg && i_co >= 0) ? out_pkg[i_co] : NAN,
+		(out_pkg && i_h2 >= 0) ? out_pkg[i_h2] : NAN
+	);
+	fflush(stderr);
+}
+
+static const char *asc_name_domain_label(unsigned domains){
+	switch(domains){
+	case FPROPS_NAME_DOMAIN_PURE_FLUID:
+		return "pure fluid";
+	case FPROPS_NAME_DOMAIN_EQM_SPECIES:
+		return "equilibrium species";
+	case FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT:
+		return "mixture component";
+	default:
+		return "FPROPS name";
+	}
+}
+
+static int asc_resolve_name_or_error(const char *token, unsigned domains,
+		const char *source, const char *context, const char **canonical_out){
+	FpropsResolvedName resolved;
+	FpropsNameResolveStatus status;
+	const char *label = asc_name_domain_label(domains);
+
+	if(!canonical_out){
+		return 1;
+	}
+	*canonical_out = NULL;
+	status = fprops_name_resolve(token, domains, source, &resolved);
+	if(status == FPROPS_NAME_RESOLVE_OK && resolved.canonical
+			&& resolved.canonical->canonical && resolved.canonical->canonical[0]){
+		*canonical_out = resolved.canonical->canonical;
+		return 0;
+	}
+	switch(status){
+	case FPROPS_NAME_RESOLVE_NOT_FOUND:
+		if(source && source[0]){
+			ERRMSG("%s '%s' is not a registered %s for source '%s'%s%s",
+				label, token ? token : "(null)", label, source,
+				context ? " in " : "", context ? context : "");
+		}else{
+			ERRMSG("%s '%s' is not a registered %s%s%s",
+				label, token ? token : "(null)", label,
+				context ? " in " : "", context ? context : "");
+		}
+		break;
+	case FPROPS_NAME_RESOLVE_AMBIGUOUS:
+		if(source && source[0]){
+			ERRMSG("%s '%s' is ambiguous for source '%s'%s%s",
+				label, token ? token : "(null)", source,
+				context ? " in " : "", context ? context : "");
+		}else{
+			ERRMSG("%s '%s' is ambiguous; specify a source%s%s",
+				label, token ? token : "(null)",
+				context ? " in " : "", context ? context : "");
+		}
+		break;
+	case FPROPS_NAME_RESOLVE_INVALID:
+		ERRMSG("Invalid %s '%s'%s%s",
+			label, token ? token : "(null)",
+			context ? " in " : "", context ? context : "");
+		break;
+	default:
+		ERRMSG("Unable to resolve %s '%s'%s%s",
+			label, token ? token : "(null)",
+			context ? " in " : "", context ? context : "");
+	}
+	return 1;
+}
+
+static int asc_check_unique_canonical_names(const char **tokens, const char **canonicals,
+		unsigned long n, const char *context){
+	unsigned long i, j;
+	if(!canonicals){
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		if(!canonicals[i] || !canonicals[i][0]){
+			ERRMSG("Empty canonical name at position %lu%s%s", i + 1,
+				context ? " in " : "", context ? context : "");
+			return 1;
+		}
+		for(j = i + 1; j < n; ++j){
+			if(canonicals[j] && 0 == strcmp(canonicals[i], canonicals[j])){
+				ERRMSG("%s '%s' resolves to canonical '%s', which duplicates %s '%s'%s%s",
+					tokens && tokens[j] ? "Name" : "Entry",
+					tokens && tokens[j] ? tokens[j] : "(unknown)",
+					canonicals[j],
+					tokens && tokens[i] ? "name" : "entry",
+					tokens && tokens[i] ? tokens[i] : "(unknown)",
+					context ? " in " : "", context ? context : "");
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
 */
@@ -195,6 +583,76 @@ ASC_EXPORT int fprops_register(){
 	CALCFN(fprops_phsx_vT,2,4);
 	CALCFN(fprops_Tvsx_ph,2,4);
 	CALCFN(fprops_Tvsx_h_incomp,2,4);
+	result += CreateUserFunctionBlackBox("fprops_rxn_h_TPn"
+		, asc_fprops_rxn_prepare
+		, fprops_rxn_h_TPn_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_rxn_final
+		, 3,1
+		, fprops_rxn_h_TPn_help
+		, 0.0
+	);
+	result += CreateUserFunctionBlackBox("fprops_rxn_v_TPn"
+		, asc_fprops_rxn_prepare
+		, fprops_rxn_v_TPn_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_rxn_final
+		, 3,1
+		, fprops_rxn_v_TPn_help
+		, 0.0
+	);
+	result += CreateUserFunctionBlackBox("fprops_rxn_eqm_TPn"
+		, asc_fprops_rxneq_prepare
+		, fprops_rxn_eqm_TPn_calc
+		, fprops_rxn_eqm_TPn_deriv
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_rxn_final
+		, 3,1
+		, fprops_rxn_eqm_TPn_help
+		, 0.0
+	);
+	result += CreateUserFunctionBlackBox("fprops_flash_TPz"
+		, asc_fprops_flash_prepare
+		, fprops_flash_TPz_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_unifac_flash_final
+		, 3,3
+		, fprops_flash_TPz_help
+		, 0.0
+	);
+	result += CreateUserFunctionBlackBox("fprops_unifac_flash_TPz"
+		, asc_fprops_unifac_flash_prepare
+		, fprops_unifac_flash_TPz_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_unifac_flash_final
+		, 3,3
+		, fprops_unifac_flash_TPz_help
+		, 0.0
+	);
+	result += CreateUserFunctionBlackBox("fprops_unifac_gamma_Tx"
+		, asc_fprops_unifac_gamma_prepare
+		, fprops_unifac_gamma_Tx_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_unifac_flash_final
+		, 2,1
+		, fprops_unifac_gamma_Tx_help
+		, 0.0
+	);
+	result += CreateUserFunctionBlackBox("fprops_unifac_liq_fugacity_TPx"
+		, asc_fprops_unifac_liq_fugacity_prepare
+		, fprops_unifac_liq_fugacity_TPx_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_unifac_flash_final
+		, 3,1
+		, fprops_unifac_liq_fugacity_TPx_help
+		, 0.0
+	);
 
 #undef CALCFN
 
@@ -213,7 +671,9 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	   struct gl_list_t *arglist
 ){
 	struct Instance *compinst, *typeinst, *srcinst;
-	const char *comp, *type = NULL, *src = NULL;
+	const char *comp, *resolved_comp = NULL, *type = NULL, *src = NULL;
+	FpropsResolvedName resolved;
+	FpropsNameResolveStatus status;
 
 	fprops_symbols[0] = AddSymbol("component");
 	fprops_symbols[1] = AddSymbol("type");
@@ -259,13 +719,27 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 		if(src && strlen(src)==0)src = NULL;
 	}
 
-	bbox->user_data = (void *)fprops_fluid(comp,type,src);
-	if(bbox->user_data == NULL){
-		ERRMSG("Unsupported component requested (name='%s',type='%s'). Check source-code for supported species.",comp,type);
+	status = fprops_name_resolve(comp, FPROPS_NAME_DOMAIN_PURE_FLUID, src, &resolved);
+	if(status == FPROPS_NAME_RESOLVE_OK && resolved.canonical
+			&& resolved.canonical->canonical && resolved.canonical->canonical[0]){
+		resolved_comp = resolved.canonical->canonical;
+	}else if(status == FPROPS_NAME_RESOLVE_NOT_FOUND){
+		resolved_comp = comp;
+		MSG("Pure fluid '%s' is not in the generated name registry; falling back to direct EOS lookup.", comp);
+	}else if(asc_resolve_name_or_error(comp, FPROPS_NAME_DOMAIN_PURE_FLUID, src,
+			"FPROPS DATA", &resolved_comp)){
 		return 1;
 	}
 
-	MSG("Prepared component '%s'%s%s%s OK.",comp, type?" type '":"", type?type:"" ,type?"'":""
+	bbox->user_data = (void *)fprops_fluid(resolved_comp,type,src);
+	if(bbox->user_data == NULL){
+		ERRMSG("Unsupported component requested (name='%s', canonical='%s', type='%s', source='%s'). Check generated FPROPS data.",
+			comp, resolved_comp, type ? type : "", src ? src : "");
+		return 1;
+	}
+
+	MSG("Prepared component '%s' as '%s'%s%s%s OK.",comp, resolved_comp,
+		type?" type '":"", type?type:"" ,type?"'":""
 	);
 	return 0;
 }
@@ -275,6 +749,583 @@ void asc_fprops_final(struct BBoxInterp *bbox){
 		return;
 	}
 	fprops_fluid_destroy((PureFluid *)bbox->user_data);
+	bbox->user_data = NULL;
+}
+
+int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	/* Reactive-package source selectors are resolved in the C-side FPROPS layer. */
+	struct Instance *srcinst, *alginst, *components_inst;
+	const char *source = NULL;
+	const char *algorithm = NULL;
+	const char **names = NULL;
+	const char **resolved_names = NULL;
+	AscFpropsRxnData *rxn = NULL;
+	unsigned long actual_inputs, actual_outputs, c, ns;
+	symchar *components_sym, *source_sym, *algorithm_sym;
+	const struct set_t *components_set = NULL;
+
+	if(!bbox || !data || !arglist){
+		ERRMSG("Reactive FPROPS blackbox received invalid prepare arguments");
+		return 1;
+	}
+	if(gl_length(arglist) != 4){
+		ERRMSG("Reactive FPROPS blackbox expects 3 INPUT groups and 1 OUTPUT group");
+		return 1;
+	}
+	actual_inputs = CountNumberOfArgs(arglist,1,3);
+	actual_outputs = CountNumberOfArgs(arglist,4,4);
+	if(actual_inputs < 3){
+		ERRMSG("Reactive FPROPS blackbox requires T, P and a species flow vector");
+		return 1;
+	}
+	if(actual_outputs < 1){
+		ERRMSG("Reactive FPROPS blackbox requires at least one output");
+		return 1;
+	}
+
+	components_sym = AddSymbol("components");
+	source_sym = AddSymbol("source");
+	algorithm_sym = AddSymbol("algorithm");
+	components_inst = ChildByChar(data, components_sym);
+	if(!components_inst){
+		ERRMSG("Couldn't locate 'components' in reactive package DATA");
+		return 1;
+	}
+	if(components_inst){
+		components_set = SetAtomList(components_inst);
+		if(!components_set || SetKind(components_set) != string_set){
+			ERRMSG("Reactive package components must be a symbol-valued set");
+			return 1;
+		}
+	}
+	ns = components_set ? Cardinality(components_set) : 0;
+	if(ns == 0){
+		ERRMSG("Reactive package DATA contains no components");
+		return 1;
+	}
+	if(actual_inputs != ns + 2){
+		ERRMSG("Reactive package input vector length mismatch: got %lu species inputs, expected %lu",
+			actual_inputs - 2, ns);
+		return 1;
+	}
+
+	names = (const char **)calloc((size_t)ns, sizeof(char *));
+	resolved_names = (const char **)calloc((size_t)ns, sizeof(char *));
+	rxn = (AscFpropsRxnData *)calloc(1, sizeof(AscFpropsRxnData));
+	if(!names || !resolved_names || !rxn){
+		ERRMSG("Unable to allocate reactive FPROPS blackbox workspace");
+		free(names);
+		free(resolved_names);
+		free(rxn);
+		return 1;
+	}
+
+	for(c = 1; c <= ns; ++c){
+		const char *fallback_name = NULL;
+		if(components_set){
+			symchar *comp_sym = FetchStrMember(components_set, c);
+			fallback_name = comp_sym ? SCP(comp_sym) : NULL;
+		}
+		names[c - 1] = fallback_name;
+		if(!names[c - 1] || strlen(names[c - 1]) == 0){
+			ERRMSG("Reactive package DATA contains an empty component name");
+			free(names);
+			free(resolved_names);
+			free(rxn);
+			return 1;
+		}
+	}
+
+	srcinst = ChildByChar(data, source_sym);
+	if(srcinst){
+		if(InstanceKind(srcinst) != SYMBOL_CONSTANT_INST){
+			ERRMSG("DATA member 'source' must be a symbol_constant");
+			free(names);
+			free(resolved_names);
+			free(rxn);
+			return 1;
+		}
+		source = SCP(SYMC_INST(srcinst)->value);
+		if(source && strlen(source) == 0)source = NULL;
+	}
+	alginst = ChildByChar(data, algorithm_sym);
+	if(alginst){
+		if(InstanceKind(alginst) != SYMBOL_CONSTANT_INST){
+			ERRMSG("DATA member 'algorithm' must be a symbol_constant");
+			free(names);
+			free(resolved_names);
+			free(rxn);
+			return 1;
+		}
+			algorithm = SCP(SYMC_INST(alginst)->value);
+			if(algorithm && strlen(algorithm) == 0)algorithm = NULL;
+		}
+
+	for(c = 0; c < ns; ++c){
+		char resolved_name_buf[256];
+		const char *resolved_name = asc_fprops_resolve_rxn_name(names[c], source,
+			resolved_name_buf, (unsigned)sizeof(resolved_name_buf));
+		if(resolved_name != names[c] && resolved_name == resolved_name_buf){
+			char *copy = ASC_STRDUP(resolved_name_buf);
+			if(!copy){
+				ERRMSG("Unable to copy resolved reactive FPROPS species name");
+				free(names);
+				free(resolved_names);
+				free(rxn);
+				return 1;
+			}
+			resolved_names[c] = copy;
+		}else{
+			resolved_names[c] = resolved_name;
+		}
+	}
+	if(asc_check_unique_canonical_names(names, resolved_names, ns, "reactive package DATA")){
+		for(c = 0; c < ns; ++c){
+			if(resolved_names[c] && resolved_names[c] != names[c]){
+				ASC_FREE((void *)resolved_names[c]);
+			}
+		}
+		free(names);
+		free(resolved_names);
+		free(rxn);
+		return 1;
+	}
+
+	rxn->pkg = fprops_rxn_package_build(names, (int)ns, source);
+	if(!rxn->pkg){
+		ERRMSG("Failed to build reactive FPROPS package from DATA; check component names and source selector");
+		for(c = 0; c < ns; ++c){
+			if(resolved_names[c] && resolved_names[c] != names[c]){
+				ASC_FREE((void *)resolved_names[c]);
+			}
+		}
+		free(names);
+		free(resolved_names);
+		free(rxn);
+		return 1;
+	}
+	if(algorithm){
+		rxn->algorithm = ASC_NEW_ARRAY(char, strlen(algorithm) + 1);
+		if(!rxn->algorithm){
+			fprops_rxn_package_free(rxn->pkg);
+			free(rxn);
+			ERRMSG("Unable to allocate reactive FPROPS algorithm string");
+			return 1;
+		}
+		strcpy(rxn->algorithm, algorithm);
+	}
+	rxn->ns = (int)ns;
+	rxn->names = ASC_NEW_ARRAY(char *, ns);
+	if(!rxn->names){
+		fprops_rxn_package_free(rxn->pkg);
+		ascfree(rxn->algorithm);
+		free(rxn);
+		ERRMSG("Unable to allocate reactive FPROPS species-name cache");
+		return 1;
+	}
+	for(c = 0; c < ns; ++c){
+		const char *cache_name = resolved_names[c] ? resolved_names[c] : names[c];
+		rxn->names[c] = ASC_NEW_ARRAY(char, strlen(cache_name) + 1);
+		if(!rxn->names[c]){
+			while(c > 0){
+				--c;
+				ascfree(rxn->names[c]);
+			}
+			ascfree(rxn->names);
+			fprops_rxn_package_free(rxn->pkg);
+			ascfree(rxn->algorithm);
+			free(rxn);
+			ERRMSG("Unable to copy reactive FPROPS species name");
+			return 1;
+		}
+		strcpy(rxn->names[c], cache_name);
+	}
+	if(source){
+		rxn->source = ASC_NEW_ARRAY(char, strlen(source) + 1);
+		if(!rxn->source){
+			for(c = 0; c < ns; ++c){
+				ascfree(rxn->names[c]);
+			}
+			ascfree(rxn->names);
+			fprops_rxn_package_free(rxn->pkg);
+			ascfree(rxn->algorithm);
+			free(rxn);
+			ERRMSG("Unable to copy reactive FPROPS source string");
+			return 1;
+		}
+		strcpy(rxn->source, source);
+	}
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
+	rxn->last_n = ASC_NEW_ARRAY(double, ns);
+	if(!rxn->last_n){
+		for(c = 0; c < ns; ++c){
+			ascfree(rxn->names[c]);
+		}
+		ascfree(rxn->names);
+		ascfree(rxn->source);
+		fprops_rxn_package_free(rxn->pkg);
+		ascfree(rxn->algorithm);
+		free(rxn);
+		ERRMSG("Unable to allocate reactive FPROPS cached seed vector");
+		return 1;
+	}
+	rxn->have_last_n = 0;
+#endif
+	for(c = 0; c < ns; ++c){
+		if(resolved_names[c] && resolved_names[c] != names[c]){
+			ASC_FREE((void *)resolved_names[c]);
+		}
+	}
+	free(names);
+	free(resolved_names);
+	bbox->user_data = (void *)rxn;
+	asc_fprops_rxn_state_trace("prepare", bbox, rxn, NAN, NAN, NULL, NULL, 0);
+	return 0;
+}
+
+int asc_fprops_rxneq_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	int status;
+	AscFpropsRxnData *rxn = NULL;
+	if(!bbox || !data || !arglist){
+		ERRMSG("Reactive FPROPS equilibrium blackbox received invalid prepare arguments");
+		return 1;
+	}
+	status = asc_fprops_rxn_prepare(bbox, data, arglist);
+	if(status){
+		return status;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn){
+		ERRMSG("Reactive FPROPS equilibrium blackbox prepare returned no package");
+		return 1;
+	}
+	if(CountNumberOfArgs(arglist,4,4) != (unsigned long)rxn->ns){
+		ERRMSG("Reactive FPROPS equilibrium blackbox requires one output per package species (got %lu, expected %d)",
+			CountNumberOfArgs(arglist,4,4), rxn->ns);
+		asc_fprops_rxn_final(bbox);
+		return 1;
+	}
+	asc_fprops_rxn_state_trace("prepare_eqm", bbox, rxn, NAN, NAN, NULL, NULL, 0);
+	return 0;
+}
+
+void asc_fprops_rxn_final(struct BBoxInterp *bbox){
+	AscFpropsRxnData *rxn;
+	if(!bbox || !bbox->user_data){
+		return;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	asc_fprops_rxn_state_trace("final", bbox, rxn, NAN, NAN, NULL, NULL, 0);
+	if(rxn->pkg){
+		fprops_rxn_package_free(rxn->pkg);
+	}
+	if(rxn->names){
+		for(int i = 0; i < rxn->ns; ++i){
+			ascfree(rxn->names[i]);
+		}
+		ascfree(rxn->names);
+	}
+	ascfree(rxn->source);
+#ifdef ASC_FPROPS_RXN_EQM_REUSE_SEEDS
+	ascfree(rxn->last_n);
+#endif
+	ascfree(rxn->algorithm);
+	free(rxn);
+	bbox->user_data = NULL;
+}
+
+extern
+ASC_EXPORT int asc_fprops_rxn_eqm_debug_fresh_compare(const void *user_data, double T, double P,
+		const double *n_in, double *n_out){
+	const AscFpropsRxnData *rxn = (const AscFpropsRxnData *)user_data;
+	FpropsRxnPackage *pkg = NULL;
+	FpropsRxnTPN state;
+	FpropsRxnResult out;
+	const char *algorithm;
+	const char *source;
+	int status;
+
+	if(!rxn || !rxn->names || !n_in || !n_out || rxn->ns <= 0){
+		return -11;
+	}
+	source = (rxn->source && rxn->source[0]) ? rxn->source : NULL;
+	algorithm = (rxn->algorithm && rxn->algorithm[0]) ? rxn->algorithm : "auto_reduced";
+	if(0 == strcmp(algorithm, "auto_reduced")){
+		algorithm = "reduced";
+	}
+	pkg = fprops_rxn_package_build((const char **)rxn->names, rxn->ns, source);
+	if(!pkg){
+		return -12;
+	}
+	state.T = T;
+	state.P = P;
+	state.n = n_in;
+	out.status = -99;
+	out.H = NAN;
+	out.G = NAN;
+	out.n_out = n_out;
+	status = fprops_rxn_eqm_tpy(pkg, &state, algorithm, NULL, &out);
+	fprops_rxn_package_free(pkg);
+	return status;
+}
+
+static void asc_unifac_flash_free_data(AscFpropsUNIFACFlashData *fp){
+	if(!fp){
+		return;
+	}
+	fprops_flash_destroy_package(&fp->mpkg);
+	ascfree(fp->components);
+	ascfree(fp->subgroups);
+	ascfree(fp->sub_index_data);
+	ascfree(fp->nu_data);
+	ascfree(fp->a);
+	ascfree(fp);
+}
+
+static int asc_build_unifac_flash_package_native(struct Instance *cd, AscFpropsUNIFACFlashData **outpkg){
+	struct Instance *components_inst;
+	const struct set_t *components_set;
+	const FpropsUNIFACSourceData *src;
+	AscFpropsUNIFACFlashData *fp = NULL;
+	const char **names = NULL;
+	const char **tokens = NULL;
+	unsigned long nc_ul, i_ul;
+
+	if(!cd || !outpkg){
+		return 1;
+	}
+
+	src = fprops_unifac_source("UNIFAC-orig-2003");
+	if(!src){
+		ERRMSG("Unable to locate native UNIFAC source data");
+		return 1;
+	}
+
+	components_inst = ChildByChar(cd, AddSymbol("components"));
+	components_set = components_inst ? SetAtomList(components_inst) : NULL;
+	if(!components_set || SetKind(components_set) != string_set){
+		ERRMSG("UNIFAC flash DATA requires a string-valued components set");
+		return 1;
+	}
+	nc_ul = Cardinality(components_set);
+	if(nc_ul == 0){
+		ERRMSG("UNIFAC flash DATA contains no components");
+		return 1;
+	}
+	names = ASC_NEW_ARRAY(const char *, nc_ul);
+	tokens = ASC_NEW_ARRAY(const char *, nc_ul);
+	if(!names || !tokens){
+		ERRMSG("Unable to allocate native UNIFAC component-name list");
+		ascfree(names);
+		ascfree(tokens);
+		return 1;
+	}
+
+	fp = ASC_NEW(AscFpropsUNIFACFlashData);
+	if(!fp){
+		ascfree(names);
+		ERRMSG("Unable to allocate native UNIFAC flash package");
+		return 1;
+	}
+	memset(fp, 0, sizeof(*fp));
+
+	for(i_ul = 1; i_ul <= nc_ul; ++i_ul){
+		symchar *comp_sym = FetchStrMember(components_set, i_ul);
+		const char *comp_name = SCP(comp_sym);
+		tokens[i_ul - 1] = comp_name;
+		if(asc_resolve_name_or_error(comp_name, FPROPS_NAME_DOMAIN_MIXTURE_COMPONENT,
+				"UNIFAC-orig-2003", "UNIFAC flash DATA", &comp_name)){
+			asc_unifac_flash_free_data(fp);
+			ascfree(names);
+			ascfree(tokens);
+			return 1;
+		}
+		names[i_ul - 1] = comp_name;
+	}
+	if(asc_check_unique_canonical_names(tokens, names, nc_ul, "UNIFAC flash DATA")){
+		asc_unifac_flash_free_data(fp);
+		ascfree(names);
+		ascfree(tokens);
+		return 1;
+	}
+
+	if(fprops_flash_prepare_unifac(&fp->mpkg, "UNIFAC-orig-2003", names, (int)nc_ul)){
+		asc_unifac_flash_free_data(fp);
+		ascfree(names);
+		ascfree(tokens);
+		ERRMSG("Unable to prepare native UNIFAC flash package");
+		return 1;
+	}
+	fp->nc = fp->mpkg.nc;
+	fp->nsub = fp->mpkg.data.unifac_ideal_vl.pkg ? fp->mpkg.data.unifac_ideal_vl.pkg->nsub : 0;
+	if(fp->mpkg.data.unifac_ideal_vl.pkg){
+		fp->pkg = *fp->mpkg.data.unifac_ideal_vl.pkg;
+	}
+	*outpkg = fp;
+	ascfree(names);
+	ascfree(tokens);
+	return 0;
+}
+
+static int asc_build_unifac_flash_package(struct Instance *cd, AscFpropsUNIFACFlashData **outpkg){
+	return asc_build_unifac_flash_package_native(cd, outpkg);
+}
+
+int asc_fprops_flash_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	return asc_fprops_unifac_flash_prepare(bbox, data, arglist);
+}
+
+int asc_fprops_unifac_flash_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	AscFpropsUNIFACFlashData *fp = NULL;
+	unsigned long actual_inputs, actual_outputs;
+	struct Instance *components_inst;
+	const struct set_t *components_set;
+	unsigned long nc;
+
+	if(!bbox || !data || !arglist){
+		ERRMSG("UNIFAC flash blackbox received invalid prepare arguments");
+		return 1;
+	}
+	if(gl_length(arglist) != 6){
+		ERRMSG("UNIFAC flash blackbox expects 3 INPUT groups and 3 OUTPUT groups");
+		return 1;
+	}
+	actual_inputs = CountNumberOfArgs(arglist, 1, 3);
+	actual_outputs = CountNumberOfArgs(arglist, 4, 6);
+
+	components_inst = ChildByChar(data, AddSymbol("components"));
+	components_set = components_inst ? SetAtomList(components_inst) : NULL;
+	if(!components_set){
+		ERRMSG("UNIFAC flash DATA must provide a components set");
+		return 1;
+	}
+	nc = Cardinality(components_set);
+	if(actual_inputs != nc + 2){
+		ERRMSG("UNIFAC flash input vector length mismatch: got %lu component inputs, expected %lu",
+			actual_inputs - 2, nc);
+		return 1;
+	}
+	if(actual_outputs != 1 + 2 * nc){
+		ERRMSG("UNIFAC flash output vector length mismatch: got %lu outputs, expected %lu",
+			actual_outputs, 1 + 2 * nc);
+		return 1;
+	}
+	if(asc_build_unifac_flash_package(data, &fp)){
+		return 1;
+	}
+	bbox->user_data = fp;
+	return 0;
+}
+
+int asc_fprops_unifac_gamma_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	AscFpropsUNIFACFlashData *fp = NULL;
+	unsigned long actual_inputs, actual_outputs;
+	struct Instance *components_inst;
+	const struct set_t *components_set;
+	unsigned long nc;
+
+	if(!bbox || !data || !arglist){
+		ERRMSG("UNIFAC gamma blackbox received invalid prepare arguments");
+		return 1;
+	}
+	if(gl_length(arglist) != 3){
+		ERRMSG("UNIFAC gamma blackbox expects 2 INPUT groups and 1 OUTPUT group");
+		return 1;
+	}
+	actual_inputs = CountNumberOfArgs(arglist, 1, 2);
+	actual_outputs = CountNumberOfArgs(arglist, 3, 3);
+
+	components_inst = ChildByChar(data, AddSymbol("components"));
+	components_set = components_inst ? SetAtomList(components_inst) : NULL;
+	if(!components_set){
+		ERRMSG("UNIFAC gamma DATA must provide a components set");
+		return 1;
+	}
+	nc = Cardinality(components_set);
+	if(actual_inputs != nc + 1){
+		ERRMSG("UNIFAC gamma input vector length mismatch: got %lu composition inputs, expected %lu",
+			actual_inputs - 1, nc);
+		return 1;
+	}
+	if(actual_outputs != nc){
+		ERRMSG("UNIFAC gamma output vector length mismatch: got %lu outputs, expected %lu",
+			actual_outputs, nc);
+		return 1;
+	}
+	if(asc_build_unifac_flash_package(data, &fp)){
+		return 1;
+	}
+	bbox->user_data = fp;
+	return 0;
+}
+
+int asc_fprops_unifac_liq_fugacity_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	AscFpropsUNIFACFlashData *fp = NULL;
+	unsigned long actual_inputs, actual_outputs;
+	struct Instance *components_inst;
+	const struct set_t *components_set;
+	unsigned long nc;
+
+	if(!bbox || !data || !arglist){
+		ERRMSG("UNIFAC liquid fugacity blackbox received invalid prepare arguments");
+		return 1;
+	}
+	if(gl_length(arglist) != 4){
+		ERRMSG("UNIFAC liquid fugacity blackbox expects 3 INPUT groups and 1 OUTPUT group");
+		return 1;
+	}
+	actual_inputs = CountNumberOfArgs(arglist, 1, 3);
+	actual_outputs = CountNumberOfArgs(arglist, 4, 4);
+
+	components_inst = ChildByChar(data, AddSymbol("components"));
+	components_set = components_inst ? SetAtomList(components_inst) : NULL;
+	if(!components_set){
+		ERRMSG("UNIFAC liquid fugacity DATA must provide a components set");
+		return 1;
+	}
+	nc = Cardinality(components_set);
+	if(actual_inputs != nc + 2){
+		ERRMSG("UNIFAC liquid fugacity input vector length mismatch: got %lu composition inputs, expected %lu",
+			actual_inputs - 2, nc);
+		return 1;
+	}
+	if(actual_outputs != nc){
+		ERRMSG("UNIFAC liquid fugacity output vector length mismatch: got %lu outputs, expected %lu",
+			actual_outputs, nc);
+		return 1;
+	}
+	if(asc_build_unifac_flash_package(data, &fp)){
+		return 1;
+	}
+	bbox->user_data = fp;
+	return 0;
+}
+
+void asc_fprops_unifac_flash_final(struct BBoxInterp *bbox){
+	AscFpropsUNIFACFlashData *fp;
+	if(!bbox || !bbox->user_data){
+		return;
+	}
+	fp = (AscFpropsUNIFACFlashData *)bbox->user_data;
+	asc_unifac_flash_free_data(fp);
 	bbox->user_data = NULL;
 }
 
@@ -291,6 +1342,7 @@ static const char *noutputs_msg = "Incorrect call: %u outputs received, but expe
 	if(inputs==NULL)return -3; \
 	if(outputs==NULL)return -4; \
 	if(bbox==NULL)return -5; \
+	if(bbox->user_data==NULL){ERRMSG("Pure-fluid FPROPS blackbox has no prepared fluid data");return -6;} \
 	\
 	/* the 'user_data' in the black box object will contain the */\
 	/* coefficients required for this fluid; cast it to the required form: */\
@@ -829,7 +1881,7 @@ int fprops_Tvsx_h_incomp_calc(struct BBoxInterp *bbox,
 	static const PureFluid *last = NULL;
 	double p = 1e5; // arbitrary!
 	static double h,T,v,s,x;
-	if(last == FLUID && h == inputs[1]){
+	if(last == FLUID && h == inputs[0]){
 		outputs[0] = T;
 		outputs[1] = v;
 		outputs[2] = s;
@@ -870,4 +1922,452 @@ int fprops_Tvsx_h_incomp_calc(struct BBoxInterp *bbox,
 	}
 }
 
+int fprops_rxn_h_TPn_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsRxnData *rxn;
+	FpropsRxnTPN state;
+	double H = 0.0;
+	int status;
+	(void)jacobian;
 
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn->pkg){
+		ERRMSG("Reactive FPROPS blackbox has no prepared package");
+		return -6;
+	}
+	if(ninputs != rxn->ns + 2){
+		ERRMSG("Reactive FPROPS blackbox received %d inputs, expected %d", ninputs, rxn->ns + 2);
+		return -1;
+	}
+	if(noutputs != 1){
+		ERRMSG("Reactive FPROPS blackbox received %d outputs, expected 1", noutputs);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	state.T = inputs[0];
+	state.P = inputs[1];
+	state.n = &inputs[2];
+	status = fprops_rxn_mix_h(rxn->pkg, &state, &H);
+	if(status){
+		ERRMSG("Reactive FPROPS enthalpy evaluation failed with status %d", status);
+		return status;
+	}
+	outputs[0] = H;
+	return 0;
+}
+
+int fprops_rxn_v_TPn_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsRxnData *rxn;
+	FpropsRxnTPN state;
+	double V = 0.0;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn->pkg){
+		ERRMSG("Reactive FPROPS volume blackbox has no prepared package");
+		return -6;
+	}
+	if(ninputs != rxn->ns + 2){
+		ERRMSG("Reactive FPROPS volume blackbox received %d inputs, expected %d", ninputs, rxn->ns + 2);
+		return -1;
+	}
+	if(noutputs != 1){
+		ERRMSG("Reactive FPROPS volume blackbox received %d outputs, expected 1", noutputs);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	state.T = inputs[0];
+	state.P = inputs[1];
+	state.n = &inputs[2];
+	status = fprops_rxn_mix_v(rxn->pkg, &state, &V);
+	if(status){
+		ERRMSG("Reactive FPROPS volume evaluation failed with status %d", status);
+		return status;
+	}
+	outputs[0] = V;
+	return 0;
+}
+
+static int asc_fprops_rxn_eqm_eval_core(struct BBoxInterp *bbox, AscFpropsRxnData *rxn,
+		int ninputs, int noutputs, double *inputs, double *outputs, int trace_state){
+	FpropsRxnTPN state;
+	FpropsRxnResult out;
+	double *n_guess = NULL;
+	const double *n_init = NULL;
+	const char *algorithm = NULL;
+	int status;
+	int do_trace = 0;
+	int i;
+
+	if(!bbox || !rxn || !rxn->pkg){
+		return -6;
+	}
+	if(ninputs != rxn->ns + 2){
+		ERRMSG("Reactive FPROPS equilibrium blackbox received %d inputs, expected %d", ninputs, rxn->ns + 2);
+		return -1;
+	}
+	if(noutputs != rxn->ns){
+		ERRMSG("Reactive FPROPS equilibrium blackbox received %d outputs, expected %d", noutputs, rxn->ns);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	state.T = inputs[0];
+	state.P = inputs[1];
+	state.n = &inputs[2];
+	out.status = -99;
+	out.H = NAN;
+	out.G = NAN;
+	out.n_out = outputs;
+	do_trace = asc_fprops_rxn_eqm_trace_enabled() && state.T <= 800.0;
+	if(trace_state){
+		asc_fprops_rxn_state_trace("eval_enter", bbox, rxn, state.T, state.P, state.n, NULL, 0);
+	}
+	n_guess = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
+	algorithm = (rxn->algorithm && rxn->algorithm[0]) ? rxn->algorithm : "auto_reduced";
+	if(n_guess && bbox && bbox->task == bb_func_eval){
+		int ok_init = 1;
+		for(i = 0; i < rxn->ns; ++i){
+			if(!isfinite(outputs[i]) || outputs[i] < 0.0){
+				ok_init = 0;
+				break;
+			}
+			n_guess[i] = outputs[i] > 1e-30 ? outputs[i] : 1e-30;
+		}
+		if(ok_init){
+			n_init = n_guess;
+		}else if(0 == strcmp(algorithm, "auto_reduced")){
+			algorithm = "reduced";
+		}
+	}
+	status = fprops_rxn_eqm_tpy(rxn->pkg, &state, algorithm, n_init, &out);
+	if(!asc_fprops_rxn_eqm_status_ok(status) && n_init != NULL){
+		status = fprops_rxn_eqm_tpy(rxn->pkg, &state, algorithm, NULL, &out);
+	}
+	if(do_trace || (asc_fprops_rxn_eqm_trace_enabled() && !asc_fprops_rxn_eqm_status_ok(status))){
+		asc_fprops_rxn_eqm_trace_report(rxn, state.T, state.P, state.n, status,
+			outputs, bbox ? (int)bbox->task : -1);
+	}
+	if(trace_state){
+		asc_fprops_rxn_state_trace("eval_exit", bbox, rxn, state.T, state.P, state.n, outputs, status);
+	}
+	ASC_FREE(n_guess);
+	return status;
+}
+
+static int asc_fprops_rxn_eqm_fd_jacobian(struct BBoxInterp *bbox, AscFpropsRxnData *rxn,
+		int ninputs, int noutputs, const double *inputs, const double *outputs, double *jacobian){
+	double *inputs_work = NULL;
+	double *outputs_work = NULL;
+	int j;
+
+	if(!bbox || !rxn || !inputs || !outputs || !jacobian){
+		return -11;
+	}
+	inputs_work = ASC_NEW_ARRAY(double, (size_t)ninputs);
+	outputs_work = ASC_NEW_ARRAY(double, (size_t)noutputs);
+	if(!inputs_work || !outputs_work){
+		ASC_FREE(inputs_work);
+		ASC_FREE(outputs_work);
+		return -12;
+	}
+	for(j = 0; j < ninputs; ++j){
+		double x = inputs[j];
+		double step = 1e-7 * fmax(fabs(x), 1.0);
+		int status;
+		if(j == 0 || j == 1){
+			if(x + step <= 0.0){
+				step = fmax(1e-7, 0.5 * fmax(x, 1e-7));
+			}
+		}
+		memcpy(inputs_work, inputs, sizeof(double) * (size_t)ninputs);
+		inputs_work[j] = x + step;
+		if((j == 0 || j == 1) && !(inputs_work[j] > 0.0)){
+			inputs_work[j] = fmax(1e-7, x + fabs(step));
+		}
+		status = asc_fprops_rxn_eqm_eval_core(bbox, rxn, ninputs, noutputs,
+			inputs_work, outputs_work, 0);
+		if(!asc_fprops_rxn_eqm_status_ok(status)){
+			ASC_FREE(inputs_work);
+			ASC_FREE(outputs_work);
+			return status;
+		}
+		for(int i = 0; i < noutputs; ++i){
+			jacobian[i * ninputs + j] = (outputs_work[i] - outputs[i]) / (inputs_work[j] - x);
+		}
+	}
+	ASC_FREE(inputs_work);
+	ASC_FREE(outputs_work);
+	return 0;
+}
+
+
+int fprops_rxn_eqm_TPn_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsRxnData *rxn;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn->pkg){
+		ERRMSG("Reactive FPROPS equilibrium blackbox has no prepared package");
+		return -6;
+	}
+	status = asc_fprops_rxn_eqm_eval_core(bbox, rxn, ninputs, noutputs, inputs, outputs, 1);
+	if(!asc_fprops_rxn_eqm_status_ok(status)){
+		ERRMSG("Reactive FPROPS equilibrium evaluation failed with status %d", status);
+		return status;
+	}
+	return 0;
+}
+
+int fprops_rxn_eqm_TPn_deriv(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsRxnData *rxn;
+	FpropsRxnTPN state;
+	double *dn_dT = NULL;
+	double *dn_dP = NULL;
+	double *dn_db = NULL;
+	const double *A = NULL;
+	int ne = 0;
+	int status;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn || !rxn->pkg){
+		return -6;
+	}
+	if(!jacobian){
+		return -3;
+	}
+	status = asc_fprops_rxn_eqm_eval_core(bbox, rxn, ninputs, noutputs, inputs, outputs, 0);
+	if(!asc_fprops_rxn_eqm_status_ok(status)){
+		return status;
+	}
+
+	ne = fprops_rxn_package_num_elements(rxn->pkg);
+	A = fprops_rxn_package_element_matrix(rxn->pkg);
+	if(ne <= 0 || !A){
+		return asc_fprops_rxn_eqm_fd_jacobian(bbox, rxn, ninputs, noutputs, inputs, outputs, jacobian);
+	}
+
+	dn_dT = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
+	dn_dP = ASC_NEW_ARRAY(double, (size_t)rxn->ns);
+	dn_db = ASC_NEW_ARRAY(double, (size_t)(rxn->ns * ne));
+	if(!dn_dT || !dn_dP || !dn_db){
+		ASC_FREE(dn_dT);
+		ASC_FREE(dn_dP);
+		ASC_FREE(dn_db);
+		return -12;
+	}
+
+	state.T = inputs[0];
+	state.P = inputs[1];
+	state.n = &inputs[2];
+	status = fprops_rxn_eqm_sensitivities(rxn->pkg, &state, outputs, dn_dT, dn_dP, dn_db);
+	if(status == 0){
+		for(int i = 0; i < rxn->ns; ++i){
+			jacobian[i * ninputs + 0] = dn_dT[i];
+			jacobian[i * ninputs + 1] = dn_dP[i];
+			for(int j = 0; j < rxn->ns; ++j){
+				double s = 0.0;
+				for(int e = 0; e < ne; ++e){
+					s += dn_db[i * ne + e] * A[e * rxn->ns + j];
+				}
+				jacobian[i * ninputs + (2 + j)] = s;
+			}
+		}
+	}else{
+		status = asc_fprops_rxn_eqm_fd_jacobian(bbox, rxn, ninputs, noutputs, inputs, outputs, jacobian);
+	}
+
+	ASC_FREE(dn_dT);
+	ASC_FREE(dn_dP);
+	ASC_FREE(dn_db);
+	return status;
+}
+
+int fprops_flash_TPz_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsUNIFACFlashData *fp;
+	FpropsFlashTPZ in;
+	FpropsFlashVLResult out;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	fp = (AscFpropsUNIFACFlashData *)bbox->user_data;
+	if(ninputs != fp->nc + 2){
+		ERRMSG("FPROPS flash blackbox received %d inputs, expected %d", ninputs, fp->nc + 2);
+		return -1;
+	}
+	if(noutputs != 1 + 2 * fp->nc){
+		ERRMSG("FPROPS flash blackbox received %d outputs, expected %d", noutputs, 1 + 2 * fp->nc);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	in.T = inputs[0];
+	in.P = inputs[1];
+	in.z = &inputs[2];
+	out.status = -99;
+	out.beta = NAN;
+	out.x = &outputs[1];
+	out.y = &outputs[1 + fp->nc];
+	status = fprops_flash_tpz(&fp->mpkg, &in, &out);
+	if(status){
+		ERRMSG("FPROPS flash evaluation failed with status %d", status);
+		return status;
+	}
+	outputs[0] = out.beta;
+	return 0;
+}
+
+int fprops_unifac_flash_TPz_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsUNIFACFlashData *fp;
+	FpropsFlashTPZ in;
+	FpropsFlashVLResult out;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	fp = (AscFpropsUNIFACFlashData *)bbox->user_data;
+	if(ninputs != fp->nc + 2){
+		ERRMSG("UNIFAC flash blackbox received %d inputs, expected %d", ninputs, fp->nc + 2);
+		return -1;
+	}
+	if(noutputs != 1 + 2 * fp->nc){
+		ERRMSG("UNIFAC flash blackbox received %d outputs, expected %d", noutputs, 1 + 2 * fp->nc);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	in.T = inputs[0];
+	in.P = inputs[1];
+	in.z = &inputs[2];
+	out.status = -99;
+	out.beta = NAN;
+	out.x = &outputs[1];
+	out.y = &outputs[1 + fp->nc];
+	status = fprops_unifac_flash_tpz(&fp->pkg, &in, &out);
+	if(status){
+		ERRMSG("UNIFAC flash evaluation failed with status %d", status);
+		return status;
+	}
+	outputs[0] = out.beta;
+	return 0;
+}
+
+int fprops_unifac_gamma_Tx_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsUNIFACFlashData *fp;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	fp = (AscFpropsUNIFACFlashData *)bbox->user_data;
+	if(ninputs != fp->nc + 1){
+		ERRMSG("UNIFAC gamma blackbox received %d inputs, expected %d", ninputs, fp->nc + 1);
+		return -1;
+	}
+	if(noutputs != fp->nc){
+		ERRMSG("UNIFAC gamma blackbox received %d outputs, expected %d", noutputs, fp->nc);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	status = fprops_unifac_gamma(&fp->pkg, inputs[0], &inputs[1], outputs);
+	if(status){
+		ERRMSG("UNIFAC gamma evaluation failed with status %d", status);
+		return status;
+	}
+	return 0;
+}
+
+int fprops_unifac_liq_fugacity_TPx_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsUNIFACFlashData *fp;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	fp = (AscFpropsUNIFACFlashData *)bbox->user_data;
+	if(ninputs != fp->nc + 2){
+		ERRMSG("UNIFAC liquid fugacity blackbox received %d inputs, expected %d", ninputs, fp->nc + 2);
+		return -1;
+	}
+	if(noutputs != fp->nc){
+		ERRMSG("UNIFAC liquid fugacity blackbox received %d outputs, expected %d", noutputs, fp->nc);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	status = fprops_unifac_liq_fugacity(&fp->pkg, inputs[0], inputs[1], &inputs[2], outputs);
+	if(status){
+		ERRMSG("UNIFAC liquid fugacity evaluation failed with status %d", status);
+		return status;
+	}
+	return 0;
+}

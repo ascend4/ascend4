@@ -209,6 +209,7 @@ struct table_parse_state {
   symchar *decl_type;
   struct Set *decl_typeargs;
   symchar *decl_set_type;
+  char *units;
   struct Expr *default_expr;
   Asc_DString body;
   unsigned long rows;
@@ -216,7 +217,7 @@ struct table_parse_state {
   unsigned long items;
 };
 
-static struct table_parse_state g_table_parse = {0,0,0,0,NULL,NULL,NULL,NULL,{0},0,0,0};
+static struct table_parse_state g_table_parse = {0,0,0,0,NULL,NULL,NULL,NULL,NULL,{0},0,0,0};
 
 struct dataset_parse_state {
   int active;
@@ -242,6 +243,10 @@ static void TableParseBegin(void){
   }
   g_table_parse.decl_type = NULL;
   g_table_parse.decl_set_type = NULL;
+  if (g_table_parse.units != NULL) {
+    ascfree(g_table_parse.units);
+    g_table_parse.units = NULL;
+  }
   if (g_table_parse.default_expr != NULL) {
     DestroyExprList(g_table_parse.default_expr);
   }
@@ -263,6 +268,10 @@ static void TableParseAbort(void){
   }
   g_table_parse.decl_type = NULL;
   g_table_parse.decl_set_type = NULL;
+  if (g_table_parse.units != NULL) {
+    ascfree(g_table_parse.units);
+    g_table_parse.units = NULL;
+  }
   if (g_table_parse.default_expr != NULL) {
     DestroyExprList(g_table_parse.default_expr);
     g_table_parse.default_expr = NULL;
@@ -679,6 +688,39 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
 static void ProcessNotes(int);
 static void CollectNote(struct Note *);
 
+struct StudyParse {
+  struct Name *vary;
+  struct Expr *lower;
+  struct Expr *upper;
+  struct Expr *value;
+  long steps;
+  enum StudyMode mode;
+  enum StudyDistribution dist;
+  symchar *run_method;
+  unsigned int now;
+  CONST char *filename;
+};
+
+static struct StudyParse StudyParseEmpty(void){
+  struct StudyParse spec;
+  spec.vary = NULL;
+  spec.lower = NULL;
+  spec.upper = NULL;
+  spec.value = NULL;
+  spec.steps = 0;
+  spec.mode = study_none;
+  spec.dist = study_dist_default;
+  spec.run_method = NULL;
+  spec.now = 0;
+  spec.filename = NULL;
+  return spec;
+}
+
+static struct StudyParse g_study_parse;
+static symchar *g_study_run_method = NULL;
+static unsigned int g_study_now = 0;
+static CONST char *g_study_filename = NULL;
+
 /* For 'inline' notes, note on DQUOTE_TOK from scanner.l:
  * Remember that DQUOTE_TOK is a string value which is local to the
  * production that finds it. It must be copied if you want to
@@ -733,23 +775,29 @@ static void CollectNote(struct Note *);
 %token BEQ_TOK BNE_TOK BREAK_TOK
 %token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
 %token CONTINUE_TOK CREATE_TOK
-%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DER_TOK DIMENSION_TOK
+%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DELETE_TOK DER_TOK DIMENSION_TOK
 %token DIMENSIONLESS_TOK DO_TOK
 %token ELSE_TOK END_TOK EXPECT_TOK EXTERNAL_TOK
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
+%token FILE_TOK
 %token GLOBAL_TOK
 %token IF_TOK  IGNORE_TOK IMPORT_TOK IN_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK INDEPENDENT_TOK
 %token INTERSECTION_TOK ISA_TOK _IS_T ISREFINEDTO_TOK
+%token LINEAR_TOK LOG_TOK
+%token NOW_TOK
 %token LINK_TOK
 %token MAXIMIZE_TOK MAXINTEGER_TOK MAXREAL_TOK METHODS_TOK METHOD_TOK MINIMIZE_TOK MODEL_TOK
 %token NOT_TOK NOTES_TOK
 %token OF_TOK OPTION_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
 %token /* PATCH_TOK */ PROD_TOK PROVIDE_TOK
+%token RATIO_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
-%token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
+%token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK SYSTEM_TOK
+%token STEP_TOK STEPS_TOK STUDY_TOK
 %token TABLE_TOK VALUES_TOK DATASET_TOK POSITIONAL_TOK INDEX_TOK COLUMN_TOK EOL_TOK
-%token THEN_TOK TRUE_TOK
+%token THEN_TOK TO_TOK TRUE_TOK
 %token UNION_TOK UNITS_TOK LADDER_TOK UNIVERSAL_TOK UNLINK_TOK
+%token VARY_TOK
 %token WHEN_TOK WHERE_TOK WHILE_TOK WILLBE_TOK WILLBETHESAME_TOK WILLNOTBETHESAME_TOK
 %token ASSIGN_TOK CASSIGN_TOK DBLCOLON_TOK USE_TOK LEQ_TOK GEQ_TOK NEQ_TOK
 %token DOTDOT_TOK WITH_TOK VALUE_TOK WITH_VALUE_T
@@ -794,7 +842,7 @@ static void CollectNote(struct Note *);
 %type <statptr> when_statement use_statement select_statement
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
-%type <statptr> solve_statement solver_statement option_statement switch_statement
+%type <statptr> delete_statement solve_statement solver_statement option_statement study_statement switch_statement
 %type <statptr> table_statement values_statement dataset_statement
 %type <braced_ptr> dataset_units_opt
 %type <id_ptr> dataset_type_opt dataset_type_req dataset_column_ref dataset_column_selector
@@ -1603,6 +1651,7 @@ table_statement:
 	                   g_table_parse.decl_type,
 	                   g_table_parse.decl_typeargs,
 	                   g_table_parse.decl_set_type,
+	                   g_table_parse.units,
 	                   g_table_parse.default_expr,
 	                   g_table_parse.positional,
 	                   g_table_parse.rows,
@@ -1612,6 +1661,7 @@ table_statement:
 	  g_table_parse.decl_type = NULL;
 	  g_table_parse.decl_typeargs = NULL;
 	  g_table_parse.decl_set_type = NULL;
+	  g_table_parse.units = NULL;
 	  g_table_parse.default_expr = NULL;
 	}
 	| TABLE_TOK fname table_begin table_decl_opt table_options ';' table_mode_on error END_TOK TABLE_TOK table_mode_off
@@ -1656,6 +1706,10 @@ table_decl_opt:
 	{
 	  g_table_parse.decl_type = NULL;
 	  g_table_parse.decl_set_type = NULL;
+	  if (g_table_parse.units != NULL) {
+	    ascfree(g_table_parse.units);
+	  }
+	  g_table_parse.units = NULL;
 	  if (g_table_parse.decl_typeargs != NULL) {
 	    DestroySetList(g_table_parse.decl_typeargs);
 	  }
@@ -1684,6 +1738,13 @@ table_option:
 	    DestroyExprList(g_table_parse.default_expr);
 	  }
 	  g_table_parse.default_expr = $2;
+	}
+	| UNITS_TOK BRACEDTEXT_TOK
+	{
+	  if (g_table_parse.units != NULL) {
+	    ascfree(g_table_parse.units);
+	  }
+	  g_table_parse.units = ASC_STRDUP($2);
 	}
 	;
 
@@ -2138,6 +2199,8 @@ statement:
     | solver_statement
     | solve_statement
     | option_statement
+    | study_statement
+    | delete_statement
     | assert_statement
     | if_statement
     | while_statement
@@ -2725,7 +2788,110 @@ solve_statement:
 	SOLVE_TOK
 	{
 		/*CONSOLE_DEBUG("GOT 'SOLVE' STATEMENT");*/
-		$$ = CreateSOLVE();
+		$$ = CreateSOLVE(NULL);
+	}
+	| SOLVE_TOK fname
+	{
+		$$ = CreateSOLVE($2);
+	}
+	;
+
+study_statement:
+	STUDY_TOK
+	{
+		g_study_parse = StudyParseEmpty();
+		g_study_run_method = NULL;
+		g_study_now = 0;
+		g_study_filename = NULL;
+	}
+	fvarlist study_vary_opt study_run_opt study_now_opt study_file_opt
+	{
+		$$ = CreateSTUDY($3, g_study_parse.vary, g_study_parse.lower, g_study_parse.upper,
+			g_study_parse.steps, g_study_parse.value, g_study_parse.mode, g_study_parse.dist,
+			g_study_run_method, g_study_now, g_study_filename);
+	}
+	;
+
+study_vary_opt:
+	/* empty */
+	{
+	}
+	| VARY_TOK fname FROM_TOK expr TO_TOK expr STEPS_TOK INTEGER_TOK study_distribution_opt
+	{
+		g_study_parse.vary = $2;
+		g_study_parse.lower = $4;
+		g_study_parse.upper = $6;
+		g_study_parse.steps = $8;
+		g_study_parse.mode = study_steps;
+	}
+	| VARY_TOK fname FROM_TOK expr TO_TOK expr STEP_TOK expr
+	{
+		g_study_parse.vary = $2;
+		g_study_parse.lower = $4;
+		g_study_parse.upper = $6;
+		g_study_parse.value = $8;
+		g_study_parse.mode = study_step;
+		g_study_parse.dist = study_dist_linear;
+	}
+	| VARY_TOK fname FROM_TOK expr TO_TOK expr RATIO_TOK expr
+	{
+		g_study_parse.vary = $2;
+		g_study_parse.lower = $4;
+		g_study_parse.upper = $6;
+		g_study_parse.value = $8;
+		g_study_parse.mode = study_ratio;
+		g_study_parse.dist = study_dist_log;
+	}
+	;
+
+study_distribution_opt:
+	/* empty */
+	{
+	}
+	| LINEAR_TOK
+	{
+		g_study_parse.dist = study_dist_linear;
+	}
+	| LOG_TOK
+	{
+		g_study_parse.dist = study_dist_log;
+	}
+	;
+
+study_run_opt:
+	/* empty */
+	{
+	}
+	| RUN_TOK IDENTIFIER_TOK
+	{
+		g_study_run_method = $2;
+	}
+	;
+
+study_file_opt:
+	/* empty */
+	{
+	}
+	| FILE_TOK DQUOTE_TOK
+	{
+		g_study_filename = $2;
+	}
+	;
+
+study_now_opt:
+	/* empty */
+	{
+	}
+	| NOW_TOK
+	{
+		g_study_now = 1;
+	}
+	;
+
+delete_statement:
+	DELETE_TOK SYSTEM_TOK
+	{
+		$$ = CreateDELETESYSTEM();
 	}
 	;
 

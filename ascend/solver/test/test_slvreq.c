@@ -52,11 +52,30 @@
 typedef struct SlvReqC_struct{
 	struct Instance *siminst;
 	slv_system_t sys;
+	struct Instance *buildroot;
+	char solvername[64];
+	int delete_count;
+	int study_count;
+	unsigned long study_n_observed;
+	long study_steps;
+	enum SlvReqStudyMode study_mode;
+	enum SlvReqStudyDistribution study_dist;
+	double study_lower;
+	double study_upper;
+	double study_value;
+	unsigned int study_now;
+	char study_vary[128];
+	char study_obs0[128];
+	char study_obs1[128];
+	char study_run_method[64];
+	char study_filename[256];
 } SlvReqC;
 
 SlvReqSetSolverFn slvreq_c_set_solver;
 SlvReqSetOptionFn slvreq_c_set_option;
 SlvReqDoSolveFn slvreq_c_do_solve;
+SlvReqDoStudyFn slvreq_c_do_study;
+SlvReqDeleteSystemFn slvreq_c_delete_system;
 
 static int find_param_index(const slv_parameters_t *pp, const char *name){
 	int i;
@@ -83,7 +102,9 @@ int slvreq_c_set_solver(const char *solvername, void *user_data){
 	if(S->sys == NULL){
 		CONSOLE_DEBUG("Building system...");
 		S->sys = system_build(GetSimulationRoot(S->siminst));
+		S->buildroot = GetSimulationRoot(S->siminst);
 	}
+	snprintf(S->solvername,sizeof(S->solvername),"%s",solvername);
 
 	if(slv_select_solver(S->sys,index) == -1){
 		CONSOLE_DEBUG("Failed to select solver '%s' (solver was found, though)",solvername);
@@ -164,7 +185,29 @@ int slvreq_c_set_option(const char *optionname, struct value_t *val, void *user_
 int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 	SlvReqC *S = (SlvReqC *)user_data;
 	int res;
-	if(S->sys==NULL)return SLVREQ_NO_SOLVER_SELECTED;
+	if(instance == NULL){
+		instance = GetSimulationRoot(S->siminst);
+	}
+	if(S->sys != NULL && S->buildroot != instance){
+		system_destroy(S->sys);
+		S->sys = NULL;
+		S->buildroot = NULL;
+		++S->delete_count;
+	}
+	if(S->sys == NULL){
+		S->sys = system_build(instance);
+		S->buildroot = instance;
+		if(S->sys == NULL){
+			return SLVREQ_PRESOLVE_FAIL;
+		}
+		if(S->solvername[0] == '\0'){
+			return SLVREQ_NO_SOLVER_SELECTED;
+		}
+		int index = slv_lookup_client(S->solvername);
+		if(index == -1 || slv_select_solver(S->sys,index) == -1){
+			return SLVREQ_NO_SOLVER_SELECTED;
+		}
+	}
 
 	res = slv_presolve(S->sys);
 	if(res)return SLVREQ_PRESOLVE_FAIL;
@@ -194,6 +237,61 @@ int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 	if(status.time_limit_exceeded)CONSOLE_DEBUG("Solver exceeded time limit");
 
 	return SLVREQ_SOLVE_FAIL;
+}
+
+int slvreq_c_delete_system(void *user_data){
+	SlvReqC *S = (SlvReqC *)user_data;
+	if(S->sys != NULL){
+		system_destroy(S->sys);
+		S->sys = NULL;
+		S->buildroot = NULL;
+		++S->delete_count;
+	}
+	return 0;
+}
+
+int slvreq_c_do_study(const SlvReqStudyRequest *request, void *user_data){
+	SlvReqC *S = (SlvReqC *)user_data;
+	struct Instance *root = GetSimulationRoot(S->siminst);
+	char *name = NULL;
+
+	++S->study_count;
+	S->study_n_observed = request->n_observed;
+	S->study_steps = request->steps;
+	S->study_mode = request->mode;
+	S->study_dist = request->distribution;
+	S->study_lower = RealValue(request->lower);
+	S->study_upper = RealValue(request->upper);
+	S->study_value = (ValueKind(request->value) == real_value) ? RealValue(request->value) : 0.0;
+	S->study_now = request->now;
+	S->study_vary[0] = '\0';
+	S->study_obs0[0] = '\0';
+	S->study_obs1[0] = '\0';
+	S->study_run_method[0] = '\0';
+	S->study_filename[0] = '\0';
+
+	if(request->vary != NULL){
+		name = WriteInstanceNameString(request->vary, root);
+		snprintf(S->study_vary,sizeof(S->study_vary),"%s",name);
+		ascfree(name);
+	}
+	if(request->n_observed > 0){
+		name = WriteInstanceNameString(request->observed[0], root);
+		snprintf(S->study_obs0,sizeof(S->study_obs0),"%s",name);
+		ascfree(name);
+	}
+	if(request->n_observed > 1){
+		name = WriteInstanceNameString(request->observed[1], root);
+		snprintf(S->study_obs1,sizeof(S->study_obs1),"%s",name);
+		ascfree(name);
+	}
+	if(request->run_method != NULL){
+		snprintf(S->study_run_method,sizeof(S->study_run_method),"%s",request->run_method);
+	}
+	if(request->filename != NULL){
+		snprintf(S->study_filename,sizeof(S->study_filename),"%s",request->filename);
+	}
+	return 0;
 }
 
 /*
@@ -230,7 +328,19 @@ static void test_slvreq_c(void){
 
 	/* do the solver hooks */
 	S.sys = NULL;
-	slvreq_assign_hooks(S.siminst, &slvreq_c_set_solver, &slvreq_c_set_option, &slvreq_c_do_solve, &S);
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
 
     CONSOLE_DEBUG("RUNNING ON_LOAD");
 
@@ -245,6 +355,316 @@ static void test_slvreq_c(void){
 	CONSOLE_DEBUG("DESTROYING NOW...");
 	CU_ASSERT(NULL != S.siminst)
 	if(S.sys)system_destroy(S.sys);
+
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_target_switch(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+
+	m = Asc_OpenModule("test/slvreq/test3.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test3"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test3"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.delete_count, 2);
+
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_delete_system(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+
+	m = Asc_OpenModule("test/slvreq/test4.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test4"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test4"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.delete_count, 2);
+
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_study(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+
+	m = Asc_OpenModule("test/slvreq/test5.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test5"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test5"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.do_study_fn = &slvreq_c_do_study,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.study_count, 1);
+	CU_ASSERT_EQUAL(S.study_n_observed, 2);
+	CU_ASSERT_EQUAL(S.study_mode, SLVREQ_STUDY_STEPS);
+	CU_ASSERT_EQUAL(S.study_dist, SLVREQ_STUDY_DIST_DEFAULT);
+	CU_ASSERT_EQUAL(S.study_steps, 4);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_lower, 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_upper, 6.0, 1e-12);
+	CU_ASSERT_STRING_EQUAL(S.study_vary, "time_run");
+	CU_ASSERT_STRING_EQUAL(S.study_obs0, "accel_required");
+	CU_ASSERT_STRING_EQUAL(S.study_obs1, "time_run");
+	CU_ASSERT_STRING_EQUAL(S.study_run_method, "");
+	CU_ASSERT_STRING_EQUAL(S.study_filename, "study.tsv");
+
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_study_observe_only(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test6.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test6"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test6"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.do_study_fn = &slvreq_c_do_study,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.study_count, 1);
+	CU_ASSERT_EQUAL(S.study_n_observed, 2);
+	CU_ASSERT_EQUAL(S.study_mode, SLVREQ_STUDY_NONE);
+	CU_ASSERT_EQUAL(S.study_dist, SLVREQ_STUDY_DIST_DEFAULT);
+	CU_ASSERT_STRING_EQUAL(S.study_vary, "");
+	CU_ASSERT_STRING_EQUAL(S.study_obs0, "y");
+	CU_ASSERT_STRING_EQUAL(S.study_obs1, "x");
+	CU_ASSERT_STRING_EQUAL(S.study_run_method, "");
+	CU_ASSERT_STRING_EQUAL(S.study_filename, "");
+
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_study_log(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test7.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test7"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test7"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.do_study_fn = &slvreq_c_do_study,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.study_count, 1);
+	CU_ASSERT_EQUAL(S.study_mode, SLVREQ_STUDY_STEPS);
+	CU_ASSERT_EQUAL(S.study_dist, SLVREQ_STUDY_DIST_LOG);
+	CU_ASSERT_EQUAL(S.study_steps, 2);
+	CU_ASSERT_EQUAL(S.study_now, 1);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_lower, 1.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_upper, 100.0, 1e-12);
+	CU_ASSERT_STRING_EQUAL(S.study_vary, "x");
+
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_study_ratio(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test8.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test8"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test8"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.do_study_fn = &slvreq_c_do_study,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.study_count, 1);
+	CU_ASSERT_EQUAL(S.study_mode, SLVREQ_STUDY_RATIO);
+	CU_ASSERT_EQUAL(S.study_dist, SLVREQ_STUDY_DIST_LOG);
+	CU_ASSERT_EQUAL(S.study_now, 0);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_lower, 1.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_upper, 16.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(S.study_value, 2.0, 1e-12);
+	CU_ASSERT_STRING_EQUAL(S.study_vary, "x");
 
 	system_free_reused_mem();
 	sim_destroy(S.siminst);
@@ -281,8 +701,19 @@ static void test_slvreq_highs_options(void){
 	S.siminst = SimsCreateInstance(AddSymbol("highs_opts"), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(S.siminst!=NULL);
 	S.sys = NULL;
-
-	slvreq_assign_hooks(S.siminst, &slvreq_c_set_solver, &slvreq_c_set_option, &slvreq_c_do_solve, &S);
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
 
 	{
 		struct Name *name = CreateIdName(AddSymbol("on_load"));
@@ -370,8 +801,19 @@ static void test_slvreq_highs_options_invalid(void){
 	S.siminst = SimsCreateInstance(AddSymbol("highs_opts_invalid"), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(S.siminst!=NULL);
 	S.sys = NULL;
-
-	slvreq_assign_hooks(S.siminst, &slvreq_c_set_solver, &slvreq_c_set_option, &slvreq_c_do_solve, &S);
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
 
 	{
 		struct Name *name = CreateIdName(AddSymbol("on_load"));
@@ -414,6 +856,12 @@ cleanup:
 
 #define TESTS(T) \
 	T(slvreq_c) \
+	T(slvreq_target_switch) \
+	T(slvreq_delete_system) \
+	T(slvreq_study) \
+	T(slvreq_study_observe_only) \
+	T(slvreq_study_log) \
+	T(slvreq_study_ratio) \
 	T(slvreq_highs_options) \
 	T(slvreq_highs_options_invalid)
 

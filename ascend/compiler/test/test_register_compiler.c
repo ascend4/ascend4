@@ -20,6 +20,7 @@
 
 #define TESTS(T) \
 	T(basics) \
+	T(tables) \
 	T(dataset) \
 	T(relation) \
 	T(autodiff) \
@@ -28,6 +29,7 @@
 	T(fixfree) \
 	T(blackbox) \
 	T(fixassign) \
+	T(simstatus) \
 	T(dimen) \
 	T(fractions) \
 	T(units) \

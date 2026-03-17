@@ -117,6 +117,8 @@ enum stat_t {
   SOLVER,       /**< SOLVER statement */
   OPTION,       /**< OPTION statement */
   SOLVE,        /**< SOLVE statement */
+  STUDY,        /**< STUDY statement */
+  DELETESYSTEM, /**< DELETE SYSTEM statement */
   SELECT,       /**< SELECT statement */
   SWITCH,       /**< SWITCH statement */
   WHILE,        /**< WHILE statement */
@@ -403,12 +405,46 @@ struct StateOPTION{
   struct Expr *rhs;
  };
 
+/** used for SOLVE statement */
+struct StateSOLVE{
+  struct Name *target; /**< optional target model name */
+ };
+
+enum StudyMode {
+  study_none = 0,
+  study_steps,
+  study_step,
+  study_ratio
+};
+
+enum StudyDistribution {
+  study_dist_default = 0,
+  study_dist_linear,
+  study_dist_log
+};
+
+/** used for STUDY statement */
+struct StateSTUDY{
+  struct VariableList *obsvars;   /**< variables to observe */
+  struct Name *vary;              /**< optional variable to vary */
+  struct Expr *lower;             /**< optional lower bound */
+  struct Expr *upper;             /**< optional upper bound */
+  struct Expr *value;             /**< STEP/RATIO expression */
+  long steps;                     /**< STEPS count */
+  enum StudyMode mode;            /**< spacing mode */
+  enum StudyDistribution dist;    /**< optional distribution override */
+  symchar *run_method;            /**< optional method to run before each step */
+  unsigned int now;               /**< execute immediately if true */
+  char *filename;                 /**< optional output filename */
+ };
+
 /** used for TABLE statement (parse metadata in v0). */
 struct StateTABLE{
   struct Name *name;           /**< target array name */
   symchar *decl_type;          /**< inline TABLE declaration type (optional) */
   struct Set *decl_typeargs;   /**< inline TABLE type arguments (optional) */
   symchar *decl_set_type;      /**< inline TABLE set type for set-valued targets */
+  char *units;                 /**< table-level units string, without braces (optional) */
   struct Expr *default_expr;   /**< DEFAULT expression, if supplied */
   char *body;                  /**< canonical tokenized body text */
   unsigned long rows;          /**< parsed non-empty table rows */
@@ -502,6 +538,8 @@ union StateUnion {
   struct StateFlow       flow;
   struct StateSOLVER     solver;
   struct StateOPTION     option;
+  struct StateSOLVE      solve;
+  struct StateSTUDY      study;
   struct StateLINK	     lnk;
   struct StateTABLE      table;
   struct StateDATASET    dataset;

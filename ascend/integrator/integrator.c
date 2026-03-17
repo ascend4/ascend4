@@ -47,6 +47,12 @@
 /* #define ATOL_DEBUG */
 
 #ifdef INTEGRATOR_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
+#ifdef INTEGRATOR_DEBUG
 static void integ_debug_list(const char *label, struct gl_list_t *list){
 	if(list == NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s list is NULL", label);
@@ -251,12 +257,12 @@ static struct gl_list_t *integrator_get_list(int free_space){
 		for(i=0; defaultintegrators[i]!=NULL;++i){
 			error = package_load(defaultintegrators[i],NULL);
 			if(error){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR
-					,"Unable to register integrator '%s' (error %d)."
+				ERROR_REPORTER_HERE(ASC_PROG_NOTE
+					,"Integrator '%s' is not available (error %d)."
 					,defaultintegrators[i],error
 				);
 			}else{
-				CONSOLE_DEBUG("Integrator '%s' registered OK",defaultintegrators[i]);
+				MSG("Integrator '%s' registered OK",defaultintegrators[i]);
 			}
 		}
 	}
@@ -294,7 +300,7 @@ int integrator_set_engine(IntegratorSystem *sys, const char *name){
 	if(Ifound){
 		/** @TODO tests for applicability of this engine... */
 
-		CONSOLE_DEBUG("Setting engine...");
+		MSG("Setting engine...");
 		if(Ifound->engine == sys->engine){
 			// already set...
 			return 0;
@@ -397,8 +403,8 @@ int integrator_register(const IntegratorInternals *integ){
 		return 1;
 	}
 
-	CONSOLE_DEBUG("REGISTERING INTEGRATOR");
-	CONSOLE_DEBUG("There were %lu registered integrators", gl_length(integrator_get_list(0)));
+	MSG("REGISTERING INTEGRATOR");
+	MSG("There were %lu registered integrators", gl_length(integrator_get_list(0)));
 
 	int i;
 	IntegratorInternals *I;
@@ -414,11 +420,11 @@ int integrator_register(const IntegratorInternals *integ){
 		}
 	}
 
-	CONSOLE_DEBUG("Adding engine '%s'",integ->name);
+	MSG("Adding engine '%s'",integ->name);
 
 	gl_append_ptr(L,(void *)integ);
 
-	CONSOLE_DEBUG("There are now %lu registered integrators", gl_length(integrator_get_list(0)));
+	MSG("There are now %lu registered integrators", gl_length(integrator_get_list(0)));
 	return 0;
 }
 
@@ -475,7 +481,7 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 
 	/* if the indep var has been found, we don't look again (we assume the user won't fiddle with ode_type!) */
 	if(sys->x != NULL){
-		CONSOLE_DEBUG("sys->x already set");
+		MSG("sys->x already set");
 		return 0; /* success */
 	}
 
@@ -488,13 +494,13 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 
 	IntegInitSymbols();
 
-	CONSOLE_DEBUG("Looking for independent var...");
+	MSG("Looking for independent var...");
 	integrator_visit_system_vars(sys,&integrator_classify_indep_var);
 #ifdef ANALYSE_DEBUG
 	if(gl_length(sys->indepvars)){
-		CONSOLE_DEBUG("Found %lu indepvars",gl_length(sys->indepvars));
+		MSG("Found %lu indepvars",gl_length(sys->indepvars));
 	}else{
-		CONSOLE_DEBUG("NO INDEP VARS FOUND");
+		MSG("NO INDEP VARS FOUND");
 	}
 #endif
 
@@ -510,10 +516,10 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 	if(!result){
 		asc_assert(sys->x);
 		varname = var_make_name(sys->system, sys->x);
-		CONSOLE_DEBUG("Indep var is '%s'",varname);
+		MSG("Indep var is '%s'",varname);
 		ASC_FREE(varname);
 	}else{
-		CONSOLE_DEBUG("No indep var was found");
+		MSG("No indep var was found");
 	}
 #endif
 
@@ -535,7 +541,7 @@ int integrator_analyse(IntegratorSystem *sys){
 	int res;
 
 #ifdef ANALYSE_DEBUG
-	CONSOLE_DEBUG("Analysing integration system...");
+	MSG("Analysing integration system...");
 #endif
 	asc_assert(sys);
 	if(sys->engine==INTEG_UNKNOWN){
@@ -552,14 +558,14 @@ int integrator_analyse(IntegratorSystem *sys){
 		}
 #ifdef ANALYSE_DEBUG
 		else{
-			CONSOLE_DEBUG("got 0 from  integrator_find_indep_var");
+			MSG("got 0 from  integrator_find_indep_var");
 		}
 #endif
 	}
 
 	res = (sys->internals->analysefn)(sys);
 #ifdef ANALYSE_DEBUG
-	CONSOLE_DEBUG("integrator_analyse returning %d",res);
+	MSG("integrator_analyse returning %d",res);
 #endif
 	return res;
 }
@@ -621,9 +627,9 @@ int integrator_analyse_ode(IntegratorSystem *sys){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"System must have solver 'QRSlv' assigned to it before integration");
 	return 2;
   }
-  CONSOLE_DEBUG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
+  MSG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
 
-  CONSOLE_DEBUG("Starting ODE analysis");
+  MSG("Starting ODE analysis");
   IntegInitSymbols();
 
   /* collect potential states and derivatives */
@@ -648,7 +654,7 @@ int integrator_analyse_ode(IntegratorSystem *sys){
 
   len = gl_length(sys->dynvars);
   half = len/2;
-  CONSOLE_DEBUG("NUMBER OF DYNAMIC VARIABLES = %ld",half);
+  MSG("NUMBER OF DYNAMIC VARIABLES = %ld",half);
 
   if (len % 2 || len == 0L || sys->nstates != sys->nderivs ) {
     /* list length must be even for vars to pair off */
@@ -787,7 +793,7 @@ static int integrator_sort_obs_vars(IntegratorSystem *sys){
 static void integrator_print_var_stats(IntegratorSystem *sys){
 	int v = gl_length(sys->dynvars);
 	int i = gl_length(sys->indepvars);
-	CONSOLE_DEBUG("Currently %d vars, %d indep",v,i);
+	MSG("Currently %d vars, %d indep",v,i);
 }
 
 /**
@@ -801,7 +807,7 @@ static int integrator_check_indep_var(IntegratorSystem *sys){
   char *varname;
 
   if(sys->x){
-	CONSOLE_DEBUG("Indep var already assigned");
+	MSG("Indep var already assigned");
 	return 1;
   }
 
@@ -895,7 +901,7 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 
 	if( var_apply_filter(var,&vfilt) ) {
 		if(!var_active(var)){
-			CONSOLE_DEBUG("VARIABLE IS NOT ACTIVE");
+			MSG("VARIABLE IS NOT ACTIVE");
 			return;
 		}
 
@@ -1146,7 +1152,7 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 		return -4;
 	}
 
-	CONSOLE_DEBUG("RUNNING INTEGRATION...");
+	MSG("RUNNING INTEGRATION...");
 
 	return (sys->internals->solvefn)(sys,start_index,finish_index);
 }

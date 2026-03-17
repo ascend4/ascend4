@@ -514,6 +514,9 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
         FPRINTF(f," OF %s",SCP(s->v.table.decl_set_type));
       }
     }
+    if (s->v.table.units != NULL) {
+      FPRINTF(f," UNITS {%s}",s->v.table.units);
+    }
     if (s->v.table.positional) {
       FPRINTF(f," POSITIONAL");
     }
@@ -598,7 +601,58 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
 	FPRINTF(f,";\n");
 	break;
   case SOLVE:
-  	FPRINTF(f,"SOLVE;\n");
+  	FPRINTF(f,"SOLVE");
+	if (s->v.solve.target != NULL) {
+		FPRINTF(f," ");
+		WriteName(f,s->v.solve.target);
+	}
+	FPRINTF(f,";\n");
+	break;
+  case STUDY:
+	FPRINTF(f,"STUDY ");
+	WriteVariableList(f,s->v.study.obsvars);
+	if (s->v.study.vary != NULL) {
+		FPRINTF(f," VARY ");
+		WriteName(f,s->v.study.vary);
+		FPRINTF(f," FROM ");
+		WriteExpr(f,s->v.study.lower);
+		FPRINTF(f," TO ");
+		WriteExpr(f,s->v.study.upper);
+		switch (s->v.study.mode) {
+		case study_steps:
+			FPRINTF(f," STEPS %ld",s->v.study.steps);
+			if (s->v.study.dist == study_dist_linear) {
+				FPRINTF(f," LINEAR");
+			} else if (s->v.study.dist == study_dist_log) {
+				FPRINTF(f," LOG");
+			}
+			break;
+		case study_step:
+			FPRINTF(f," STEP ");
+			WriteExpr(f,s->v.study.value);
+			break;
+		case study_ratio:
+			FPRINTF(f," RATIO ");
+			WriteExpr(f,s->v.study.value);
+			break;
+		case study_none:
+		default:
+			break;
+		}
+	}
+	if (s->v.study.run_method != NULL) {
+		FPRINTF(f," RUN %s",SCP(s->v.study.run_method));
+	}
+	if (s->v.study.now) {
+		FPRINTF(f," NOW");
+	}
+	if (s->v.study.filename != NULL) {
+		FPRINTF(f," FILE \"%s\"",s->v.study.filename);
+	}
+	FPRINTF(f,";\n");
+	break;
+  case DELETESYSTEM:
+	FPRINTF(f,"DELETE SYSTEM;\n");
 	break;
   case CALL:
     FPRINTF(f,"CALL %s(",SCP(CallStatId(s)));
@@ -893,6 +947,11 @@ symchar *StatementTypeString(CONST struct Statement *s){
     g_statio_stattypenames[ASGN] = AddSymbol("Assignment");
     g_statio_stattypenames[CASGN] = AddSymbol("Constant assignment");
     g_statio_stattypenames[RUN] = AddSymbol("RUN");
+    g_statio_stattypenames[SOLVER] = AddSymbol("SOLVER");
+    g_statio_stattypenames[OPTION] = AddSymbol("OPTION");
+    g_statio_stattypenames[SOLVE] = AddSymbol("SOLVE");
+    g_statio_stattypenames[STUDY] = AddSymbol("STUDY");
+    g_statio_stattypenames[DELETESYSTEM] = AddSymbol("DELETE SYSTEM");
     g_statio_stattypenames[IF] = AddSymbol("IF");
     g_statio_stattypenames[WHEN] = GetBaseTypeName(when_type);
     g_statio_stattypenames[FNAME] = AddSymbol("FNAME");

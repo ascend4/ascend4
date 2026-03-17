@@ -9,7 +9,7 @@ This page documents the TABLE/VALUES/DATASET syntax and behavior that is actuall
 == TABLE Syntax (Implemented) ==
 
 <source lang=ascend>
-TABLE <target_name> [IS_A <type_name>[(<type_args>)] [OF <set_type>]] [POSITIONAL] [DEFAULT <expr>];
+TABLE <target_name> [IS_A <type_name>[(<type_args>)] [OF <set_type>]] [UNITS {<units_name>}] [POSITIONAL] [DEFAULT <expr>];
     ...
 END TABLE;
 </source>
@@ -30,6 +30,7 @@ Notes:
 
 * Inline declaration is supported, eg <code>TABLE cost[r,c] IS_A factor_constant;</code>.
 * When inline declaration is used, ASCEND injects an equivalent <code>IS_A</code> declaration statement before the TABLE statement during parsing.
+* <code>UNITS {..}</code> is a statement-level units declaration for numeric table cells. It applies to every numeric cell in the TABLE body.
 * <code>POSITIONAL</code> and <code>DEFAULT</code> may both be written.
 * Body rows are newline-based.
 * Tokens accepted in TABLE body include identifiers, quoted symbols, integers, reals, <code>{...}</code>, and punctuation <code>:</code> <code>=</code> <code>,</code> <code>+</code> <code>-</code> <code>;</code>.
@@ -49,11 +50,25 @@ Implemented behavior:
 
 * Supports 1-D and 2-D targets.
 * Values must be numeric (integer or real).
+* If <code>UNITS {..}</code> is present, every numeric cell is interpreted in those units.
+* Units are resolved once per TABLE statement and reused for all cell assignments.
+* Units are accepted only for real constant targets.
+* Units must be dimensionally compatible with the TABLE target type.
 * Signs <code>+</code>/<code>-</code> are supported.
 * Comma can be used as a value separator.
 * A sequence containing at least one semicolon and/or newline ends the current row.
 * Enforces row/column/value counts against index cardinality.
 * Sparse punctuation (<code>:</code>, <code>=</code>) is rejected in POSITIONAL mode.
+
+Example:
+
+<source lang=ascend>
+TABLE t[i] IS_A temperature_constant UNITS {K} POSITIONAL;
+    300
+    315
+    330
+END TABLE;
+</source>
 
 === 2) Dense non-POSITIONAL TABLE ===
 
@@ -72,12 +87,54 @@ Implemented behavior:
 * Header may optionally start with <code>:</code>.
 * Each data row begins with a row label; <code>:</code> after row label is optional.
 * Cell values are numeric only (integer or real).
+* If <code>UNITS {..}</code> is present, every numeric cell is interpreted in those units.
+* Units are accepted only for real constant targets.
+* Units must be dimensionally compatible with the TABLE target type.
 * Row/column labels can be integer or symbol-valued.
 * Duplicate row labels and duplicate column labels are rejected.
 * Label membership is checked against index sets when those sets are already defined.
 * Row/column counts must match first/second index set cardinality.
 * Comma-separated rows (CSV-like) are accepted.
 * A sequence containing at least one semicolon and/or newline ends the current row.
+
+Example:
+
+<source lang=ascend>
+TABLE a[group,group] IS_A temperature_constant UNITS {K};
+       1       2
+    1  0.0    86.02
+    2 -35.36   0.0
+END TABLE;
+</source>
+
+== TABLE Units Semantics (Implemented) ==
+
+Rules for <code>UNITS {..}</code>:
+
+* The units clause applies to the whole TABLE, not to individual cells.
+* ASCEND resolves the declared units once and reuses the same conversion metadata for all assignments in that TABLE.
+* Numeric TABLE cells remain plain numeric literals in the body; the units come from the TABLE header, not from the cell text.
+* If <code>UNITS {..}</code> is omitted, numeric TABLE cells are treated as unitless numerics.
+* Integer targets reject <code>UNITS {..}</code>.
+* Invalid units names are rejected at compile/instantiation time.
+* A dimensional mismatch between <code>UNITS {..}</code> and the TABLE target type is rejected.
+
+Examples:
+
+<source lang=ascend>
+TABLE load[i] IS_A factor_constant;
+    1.0
+    0.8
+END TABLE;
+</source>
+
+<source lang=ascend>
+TABLE temp[i,j] IS_A temperature_constant UNITS {K};
+    1 2
+    1 273.15 274.15
+    2 283.15 284.15
+END TABLE;
+</source>
 
 == Label Rules ==
 
@@ -132,6 +189,7 @@ Behavior:
 * Sparse non-POSITIONAL TABLE assignment (e.g. <code>row: col=value ...</code>) is not implemented.
 * <code>DEFAULT &lt;expr&gt;</code> is parsed and stored but not yet used in TABLE lowering.
 * Non-numeric TABLE cell values are not yet supported.
+* Per-cell TABLE units (eg <code>86.02{K}</code> inside the TABLE body) are not supported. Use statement-level <code>UNITS {..}</code>.
 * TABLE index ranges written directly in index expressions are not currently supported by dense lowering.
 * DATASET explicit index sets are limited to integer or symbol sets (real-valued indices not yet supported).
 * DATASET implicit-row mode currently supports only one undeclared index set per statement.
@@ -266,8 +324,10 @@ The implemented TABLE behavior above is covered in <code>compiler_basics</code> 
 
 * POSITIONAL success/fail paths.
 * Dense integer labels.
+* Dense real-valued cells.
 * Dense string labels.
 * Dense implicit-set inference.
 * Dense invalid row/column label failures.
+* TABLE statement-level units success/failure paths.
 
 [[Category:Development]]

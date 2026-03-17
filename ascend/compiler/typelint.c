@@ -928,6 +928,8 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case SOLVER:
     case OPTION:
     case SOLVE:
+    case STUDY:
+    case DELETESYSTEM:
       break;
     case WHILE:
       if (WhileStatBlock(s) != NULL) {

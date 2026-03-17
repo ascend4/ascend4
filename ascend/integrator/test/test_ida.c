@@ -1,48 +1,47 @@
-#include <string.h>
-#include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <ascend/general/env.h>
-#include <ascend/general/ospath.h>
 #include <ascend/general/list.h>
 #include <ascend/general/ltmatrix.h>
-
+#include <ascend/general/ospath.h>
 #include <ascend/general/platform.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/utilities/error.h>
 
 #include <ascend/compiler/ascCompiler.h>
-#include <ascend/compiler/module.h>
-#include <ascend/compiler/parser.h>
-#include <ascend/compiler/library.h>
-#include <ascend/compiler/symtab.h>
-#include <ascend/compiler/simlist.h>
-#include <ascend/compiler/instquery.h>
-#include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/atomvalue.h>
-#include <ascend/compiler/relation_io.h>
-#include <ascend/compiler/reverse_ad.h>
-#include <ascend/compiler/relation_util.h>
-#include <ascend/compiler/mathinst.h>
-#include <ascend/compiler/watchpt.h>
-#include <ascend/compiler/initialize.h>
-#include <ascend/compiler/name.h>
-#include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/functype.h>
-#include <ascend/compiler/safe.h>
-#include <ascend/compiler/qlfdid.h>
+#include <ascend/compiler/initialize.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/library.h>
+#include <ascend/compiler/mathinst.h>
+#include <ascend/compiler/module.h>
+#include <ascend/compiler/name.h>
 #include <ascend/compiler/packages.h>
-
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/parser.h>
+#include <ascend/compiler/qlfdid.h>
+#include <ascend/compiler/relation_io.h>
+#include <ascend/compiler/relation_util.h>
+#include <ascend/compiler/reverse_ad.h>
+#include <ascend/compiler/safe.h>
+#include <ascend/compiler/simlist.h>
 #include <ascend/compiler/slvreq.h>
+#include <ascend/compiler/symtab.h>
+#include <ascend/compiler/visitinst.h>
+#include <ascend/compiler/watchpt.h>
 
-#include <ascend/system/system.h>
-#include <ascend/system/slv_client.h>
-#include <ascend/solver/solver.h>
-#include <ascend/system/slv_server.h>
-#include <ascend/system/slv_param.h>
 #include <ascend/integrator/integrator.h>
+#include <ascend/solver/solver.h>
+#include <ascend/system/slv_client.h>
+#include <ascend/system/slv_param.h>
+#include <ascend/system/slv_server.h>
+#include <ascend/system/system.h>
 
 #include <test/common.h>
 #include <test/test_globals.h>
@@ -51,394 +50,261 @@
 # define PI 3.14159265358979
 #endif
 
-/* a simple integrator reporter for testing */
-int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
+typedef struct IdaTestSystemStruct{
+	struct Instance *siminst;
+	slv_system_t sys;
+	IntegratorSystem *integ;
+} IdaTestSystem;
+
+static int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
+	(void)integ;
 	return 0;
 }
 
-int test_ida_reporter_write(struct IntegratorSystemStruct *integ) {
-	double val;
-	val = var_value(integ->y[0]);
-	CONSOLE_DEBUG("y[0] = %g", val);
-	return 0; /* no interrupt */
-}
-
-int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ) {
-	CONSOLE_DEBUG("x = %f", var_value(integ->x));
+static int test_ida_reporter_write(struct IntegratorSystemStruct *integ) {
+	(void)integ;
 	return 0;
 }
 
-int test_ida_reporter_close(struct IntegratorSystemStruct *integ) {
+static int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ) {
+	(void)integ;
 	return 0;
 }
 
-IntegratorReporter test_ida_reporter = { test_ida_reporter_init,
-		test_ida_reporter_write, test_ida_reporter_writeobs,
-		test_ida_reporter_close };
+static int test_ida_reporter_close(struct IntegratorSystemStruct *integ) {
+	(void)integ;
+	return 0;
+}
 
-/*
-	Test using simple harmonic motion model.
-*/
+static IntegratorReporter test_ida_reporter = {
+	test_ida_reporter_init,
+	test_ida_reporter_write,
+	test_ida_reporter_writeobs,
+	test_ida_reporter_close
+};
+
+static int ida_find_param(const slv_parameters_t *params, const char *name){
+	unsigned long i;
+	for(i = 0; i < params->num_parms; ++i){
+		if(params->parms[i].name != NULL && 0 == strcmp(params->parms[i].name, name)){
+			return (int)i;
+		}
+	}
+	return -1;
+}
+
+static void ida_set_char_option(IntegratorSystem *integ, const char *name, const char *value){
+	slv_parameters_t params;
+	int idx;
+
+	CU_ASSERT_FATAL(0 == integrator_params_get(integ, &params));
+	idx = ida_find_param(&params, name);
+	CU_ASSERT_FATAL(idx >= 0);
+	slv_set_char_parameter(&(SLV_PARAM_CHAR(&params, idx)), value);
+	CU_ASSERT_FATAL(0 == integrator_params_set(integ, &params));
+}
+
+static SampleList *ida_create_samplelist(double start, double end, int num_steps){
+	dim_type d;
+	SampleList *samplelist;
+	double value, inc;
+	int i;
+
+	SetDimFraction(d, D_TIME, CreateFraction(1,1));
+	samplelist = samplelist_new(num_steps + 1, &d);
+	value = start;
+	inc = (end - start) / num_steps;
+	for(i = 0; i <= num_steps; ++i){
+		samplelist_set(samplelist, i, value);
+		value += inc;
+	}
+	return samplelist;
+}
+
+static void ida_cleanup(IdaTestSystem *testsys){
+	if(testsys->integ != NULL){
+		integrator_free(testsys->integ);
+		testsys->integ = NULL;
+	}
+	if(testsys->sys != NULL){
+		system_destroy(testsys->sys);
+		testsys->sys = NULL;
+	}
+	system_free_reused_mem();
+	solver_destroy_engines();
+	integrator_free_engines();
+	if(testsys->siminst != NULL){
+		sim_destroy(testsys->siminst);
+		testsys->siminst = NULL;
+	}
+	Asc_CompilerDestroy();
+}
+
+static int ida_run_method(struct Instance *root, const char *method){
+	struct Name *name = CreateIdName(AddSymbol(method));
+	return Initialize(root, name, "sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+}
+
+static int ida_test_load(const char *module_path, const char *type_name, int need_lrslv, IdaTestSystem *testsys){
+	int status;
+	struct Instance *root;
+
+	memset(testsys, 0, sizeof(*testsys));
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv" OSPATH_DIV "solvers/lsode");
+
+	if(need_lrslv && 0 != package_load("lrslv", NULL)){
+		ida_cleanup(testsys);
+		CONSOLE_DEBUG("Skipping IDA test: lrslv not available");
+		return 1;
+	}
+
+	Asc_OpenModule(module_path, &status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol(type_name)) != NULL);
+
+	testsys->siminst = SimsCreateInstance(AddSymbol(type_name), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(testsys->siminst != NULL);
+	root = GetSimulationRoot(testsys->siminst);
+	CU_ASSERT_FATAL(root != NULL);
+
+	CU_ASSERT_FATAL(Proc_all_ok == ida_run_method(root, "on_load"));
+
+	testsys->sys = system_build(root);
+	CU_ASSERT_FATAL(testsys->sys != NULL);
+
+	testsys->integ = integrator_new(testsys->sys, root);
+	CU_ASSERT_FATAL(testsys->integ != NULL);
+
+	if(0 != integrator_set_engine(testsys->integ, "IDA")){
+		ida_cleanup(testsys);
+		CONSOLE_DEBUG("Skipping IDA test: integrator not available");
+		return 1;
+	}
+
+	ida_set_char_option(testsys->integ, "linsolver", "DENSE");
+	ida_set_char_option(testsys->integ, "prec", "NONE");
+	return 0;
+}
+
+static void ida_configure_runtime(IntegratorSystem *integ, double start, double end, int num_steps){
+	SampleList *samplelist = ida_create_samplelist(start, end, num_steps);
+	integrator_set_reporter(integ, &test_ida_reporter);
+	integrator_set_minstep(integ, 1e-4);
+	integrator_set_maxstep(integ, 0.5);
+	integrator_set_stepzero(integ, 1e-3);
+	integrator_set_maxsubsteps(integ, 1000);
+	integrator_set_samples(integ, samplelist);
+}
+
+static void ida_free_runtime(IntegratorSystem *integ){
+	SampleList *samplelist = integ->samples;
+	if(samplelist != NULL){
+		samplelist_free(samplelist);
+		integrator_set_samples(integ, NULL);
+	}
+}
+
+static struct Instance *ida_child(struct Instance *root, const char *name){
+	struct Instance *child = ChildByChar(root, AddSymbol(name));
+	CU_ASSERT_FATAL(child != NULL);
+	return child;
+}
+
 static void test_shm(){
+	IdaTestSystem testsys;
+	struct Instance *root, *ix, *iv;
 
-	Asc_CompilerInit(1);
-
-	/* set paths relative to test executable */
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lsode");
-	//CU_TEST_FATAL(0 == package_load("ida",NULL));
-
-	/* load the file */
-#define FILESTEM "shm"
-	char path[PATH_MAX] = "test/ida/" FILESTEM ".a4c";
-	{
-		int status;
-		Asc_OpenModule(path, &status);
-		CU_ASSERT_FATAL(status == 0);
-	}
-
-	/* parse it */
-	CU_ASSERT(0 == zz_parse());
-
-	/* find the model */
-	CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
-
-	/* instantiate it */
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(siminst!=NULL);
-#undef FILESTEM
-
-	CONSOLE_DEBUG("RUNNING ON_LOAD");
-
-	/** Call on_load */
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
-
-	/* create the integrator */
-
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
-
-	IntegratorSystem *integ = integrator_new(sys,siminst);
-
-	int res = integrator_set_engine(integ,"IDA");
-	if(0!=res){
-		system_destroy(sys);
-		solver_destroy_engines();
-		integrator_free_engines();
-		sim_destroy(siminst);
-		Asc_CompilerDestroy();
-		CONSOLE_DEBUG("Skipping IDA test_shm: integrator not available");
+	if(ida_test_load("test/ida/shm.a4c", "shm", 0, &testsys)){
 		return;
 	}
-	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
 
-	slv_parameters_t p;
-	CU_ASSERT(0 == integrator_params_get(integ,&p));
-	/* TODO set some parameters? */
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, PI, 40);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
 
-	/* perform problem analysis */
-	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
+	root = GetSimulationRoot(testsys.siminst);
+	ix = ida_child(root, "x");
+	iv = ida_child(root, "v");
+	CU_TEST(fabs(RealAtomValue(ix) + 10.0) < 3e-3);
+	CU_TEST(fabs(RealAtomValue(iv)) < 4e-4);
 
-	/* TODO assign an integrator reporter */
-	integrator_set_reporter(integ, &test_ida_reporter);
-
-	integrator_set_minstep(integ,0.0001);
-	integrator_set_maxstep(integ,0.1);
-	integrator_set_stepzero(integ,0.001);
-	integrator_set_maxsubsteps(integ,200);
-
-	/* set a linearly-distributed samplelist */
-	double start = 0, end = PI;
-	int num = 20;
-	dim_type d;
-	SetDimFraction(d,D_TIME,CreateFraction(1,1));
-	SampleList *samplelist = samplelist_new(num+1, &d);
-	double val = start;
-	double inc = (end-start)/(num);
-	unsigned long i;
-	for(i=0; i<=num; ++i){
-		samplelist_set(samplelist,i,val);
-		val += inc;
-	}
-	integrator_set_samples(integ,samplelist);
-
-	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
-
-	integrator_free(integ);
-	samplelist_free(samplelist);
-
-	CU_ASSERT_FATAL(NULL != sys);
-	system_destroy(sys);
-	system_free_reused_mem();
-
-	struct Instance *simroot = GetSimulationRoot(siminst);
-	CU_TEST(simroot != NULL);
-	struct Instance *ix = ChildByChar(simroot,AddSymbol("x"));
-	struct Instance *iv = ChildByChar(simroot,AddSymbol("v"));
-	CU_TEST(ix != NULL);
-	CU_TEST(iv != NULL);
-
-	CONSOLE_DEBUG("Final x = %e",RealAtomValue(ix));
-	CONSOLE_DEBUG("Final v = %e",RealAtomValue(iv));
-
-	CU_TEST(fabs(RealAtomValue(ix) - 10) < 2e-3);
-	CU_TEST(fabs(RealAtomValue(iv) - 0) < 4e-4);
-
-	/* destroy all that stuff */
-	CU_ASSERT(siminst != NULL);
-
-	solver_destroy_engines();
-	integrator_free_engines();
-	sim_destroy(siminst);
-	Asc_CompilerDestroy();
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
 }
 
-/*
-	Test solving a simple IDA model
-*/
 static void test_boundary(){
-	Asc_CompilerInit(1);
+	IdaTestSystem testsys;
+	struct Instance *root, *iy, *ir, *iv;
+	double y, r, v;
 
-	/* set paths relative to test executable */
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv");
-	if(0 != package_load("lrslv",NULL)){
-		solver_destroy_engines();
-		integrator_free_engines();
-		Asc_CompilerDestroy();
-		CONSOLE_DEBUG("Skipping IDA test_boundary: lrslv not available");
+	if(ida_test_load("test/ida/leon/bouncingball.a4c", "bouncingball", 1, &testsys)){
 		return;
 	}
 
-	/* load the file */
-	char path[PATH_MAX];
-	strcpy((char *) path, "test/ida/leon/");
-#define FILESTEM "bouncingball"
-	strncat(path, FILESTEM, PATH_MAX - strlen(path));
-	strncat(path, ".a4c", PATH_MAX - strlen(path));
-	{
-		int status;
-		Asc_OpenModule(path, &status);
-		CU_ASSERT_FATAL(status == 0);
-	}
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 30.0, 120);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
 
-	/* parse it */
-	CU_ASSERT(0 == zz_parse());
+	root = GetSimulationRoot(testsys.siminst);
+	iy = ida_child(root, "y");
+	ir = ida_child(root, "r");
+	iv = ida_child(root, "v");
+	y = RealAtomValue(iy);
+	r = RealAtomValue(ir);
+	v = RealAtomValue(iv);
 
-	/* find the model */
-	// CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
+	CU_TEST(y >= r - 1e-6);
+	CU_TEST(y < 25.0);
+	CU_TEST(fabs(v) < 50.0);
 
-	/* instantiate it */
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM),
-			AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(siminst!=NULL);
-#undef FILESTEM
-
-	CONSOLE_DEBUG("RUNNING ON_LOAD");
-
-	/** Call on_load */
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst), name, "sim1",
-			ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
-
-	/* create the integrator */
-
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
-
-	IntegratorSystem *integ = integrator_new(sys,GetSimulationRoot(siminst));
-
-	int res = integrator_set_engine(integ,"IDA");
-	if(0!=res){
-		system_destroy(sys);
-		solver_destroy_engines();
-		integrator_free_engines();
-		sim_destroy(siminst);
-		Asc_CompilerDestroy();
-		CONSOLE_DEBUG("Skipping IDA test_boundary: integrator not available");
-		return;
-	}
-	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
-
-	slv_parameters_t p;
-	CU_ASSERT(0 == integrator_params_get(integ,&p));
-	/* TODO set some parameters? */
-
-	/* perform problem analysis */
-	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
-
-	integrator_set_reporter(integ, &test_ida_reporter);
-
-	integrator_set_minstep(integ, .01);
-	integrator_set_maxstep(integ, 1);
-	integrator_set_stepzero(integ, .001);
-	integrator_set_maxsubsteps(integ, 200);
-
-	/* set a linearly-distributed samplelist */
-	double start = 0, end = 30;
-	int num = 100;
-	dim_type d;
-	SetDimFraction(d,D_TIME,CreateFraction(1,1));
-	SampleList *samplelist = samplelist_new(num + 1, &d);
-	double val = start;
-	double inc = (end - start) / (num);
-	unsigned long i;
-	for (i = 0; i <= num; ++i) {
-		samplelist_set(samplelist, i, val);
-		val += inc;
-	}
-	integrator_set_samples(integ, samplelist);
-
-	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
-
-	integrator_free(integ);
-	samplelist_free(samplelist);
-
-	CU_ASSERT_FATAL(NULL != sys);
-	system_destroy(sys);
-	system_free_reused_mem();
-
-	/* destroy all that stuff */
-	CONSOLE_DEBUG("Destroying instance tree");
-	CU_ASSERT(siminst != NULL);
-
-	solver_destroy_engines();
-	integrator_free_engines();
-	sim_destroy(siminst);
-	Asc_CompilerDestroy();
-
-	/* FIXME this test only checks that nothing catastrophic happens... it's not
-	actually testing the answer. */
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
 }
 
-/*
-	Check that we can integrate a constant!
-*/
 static void test_integ1(){
-	Asc_CompilerInit(1);
+	IdaTestSystem testsys;
+	struct Instance *root, *iy, *ix, *it;
 
-	/* set paths relative to test executable */
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv");
-
-	/* FIXME shouldn't be necessary to load this explicitly, surely?? */
-	if(0 != package_load("lrslv",NULL)){
-		solver_destroy_engines();
-		integrator_free_engines();
-		Asc_CompilerDestroy();
-		CONSOLE_DEBUG("Skipping IDA test_integ1: lrslv not available");
+	if(ida_test_load("test/ida/integ1.a4c", "integ1", 1, &testsys)){
 		return;
 	}
 
-	/* load the file */
-	char path[PATH_MAX];
-	strcpy((char *) path, "test/ida/");
-#define FILESTEM "integ1"
-	strncat(path, FILESTEM, PATH_MAX - strlen(path));
-	strncat(path, ".a4c", PATH_MAX - strlen(path));
-	{
-		int status;
-		Asc_OpenModule(path, &status);
-		CU_ASSERT_FATAL(status == 0);
-	}
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 10.0, 40);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
 
-	/* parse it */
-	CU_ASSERT(0 == zz_parse());
+	root = GetSimulationRoot(testsys.siminst);
+	iy = ida_child(root, "y");
+	ix = ida_child(root, "x");
+	it = ida_child(root, "t");
 
-	/* instantiate it */
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM),
-		AddSymbol("sim1"), e_normal, NULL
-	);
-	CU_ASSERT_FATAL(siminst!=NULL);
-#undef FILESTEM
+	CU_TEST(fabs(RealAtomValue(it) - 10.0) < 1e-5);
+	CU_TEST(fabs(RealAtomValue(ix) - 1.0) < 1e-10);
+	CU_TEST(fabs(RealAtomValue(iy) - 10.0) < 1e-5);
 
-	/** Call on_load */
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst), name, "sim1",
-		ASCERR, WP_STOPONERR, NULL, NULL
-	);
-	CU_ASSERT(pe==Proc_all_ok);
-
-	/* create the integrator */
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
-
-	IntegratorSystem *integ = integrator_new(sys,GetSimulationRoot(siminst));
-
-	int res = integrator_set_engine(integ,"IDA");
-	if(0!=res){
-		system_destroy(sys);
-		solver_destroy_engines();
-		integrator_free_engines();
-		sim_destroy(siminst);
-		Asc_CompilerDestroy();
-		CONSOLE_DEBUG("Skipping IDA test_integ1: integrator not available");
-		return;
-	}
-
-	slv_parameters_t p;
-	CU_ASSERT(0 == integrator_params_get(integ,&p));
-	/* TODO set some parameters? */
-
-	/* perform problem analysis */
-	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
-
-	integrator_set_reporter(integ, &test_ida_reporter);
-
-	integrator_set_minstep(integ, .01);
-	integrator_set_maxstep(integ, 1);
-	integrator_set_stepzero(integ, .001);
-	integrator_set_maxsubsteps(integ, 200);
-
-	/* set a linearly-distributed samplelist */
-	double start = 0, end = 30;
-	int num = 100;
-	dim_type d;
-	SetDimFraction(d,D_TIME,CreateFraction(1,1));
-	SampleList *samplelist = samplelist_new(num + 1, &d);
-	double val = start;
-	double inc = (end - start) / (num);
-	unsigned long i;
-	for (i = 0; i <= num; ++i) {
-		samplelist_set(samplelist, i, val);
-		val += inc;
-	}
-	integrator_set_samples(integ, samplelist);
-
-	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
-
-	/* run the self-test */
-	CreateIdName(AddSymbol("self_test"));
-	pe = Initialize(GetSimulationRoot(siminst), name, "sim1",
-		ASCERR, WP_STOPONERR, NULL, NULL
-	);
-	CU_ASSERT(pe==Proc_all_ok);
-
-	/* clean up */
-	integrator_free(integ);
-	samplelist_free(samplelist);
-
-	CU_ASSERT_FATAL(NULL != sys);
-	system_destroy(sys);
-	system_free_reused_mem();
-
-	CU_ASSERT(siminst != NULL);
-	solver_destroy_engines();
-	integrator_free_engines();
-	sim_destroy(siminst);
-	Asc_CompilerDestroy();
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
 }
 
+static void test_high_index(){
+	IdaTestSystem testsys;
 
-/*===========================================================================*/
-/* Registration information */
+	if(ida_test_load("test/ida/highindex.a4c", "ida_highindex", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(testsys.integ), 0);
+	ida_cleanup(&testsys);
+}
 
 #define TESTS(T) \
 	T(shm) \
 	T(boundary) \
-	T(integ1)
+	T(integ1) \
+	T(high_index)
 
 REGISTER_TESTS_SIMPLE(integrator_ida, TESTS)

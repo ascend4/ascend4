@@ -65,2792 +65,17 @@
 #include "../filedata.h"
 
 
-static const IdealData ideal_data_chloropentafluoroetane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{27.83, 0}
-			,{0.3492, 1}
-			,{-2.89E-04, 2}
-			,{8.14E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_chloropentafluoroetane = {
-	.M = 154.467
-	,.T_c = 353.2
-	,.p_c = (32.3 * 1e5)
-	,.rho_c = (1000 * 154.467 / 251.8)
-	,.T_t = 0
-	,.omega = 0.279
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chloropentafluoroetane
-};
-
-const EosData eos_rpp_chloropentafluoroetane = {
-	"chloropentafluoroetane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chloropentafluoroetane}
-};
-
-
-static const IdealData ideal_data_bromobenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-28.81, 0}
-			,{0.5351, 1}
-			,{-4.08E-04, 2}
-			,{1.21E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_bromobenzene = {
-	.M = 157.010
-	,.T_c = 670.0
-	,.p_c = (45.2 * 1e5)
-	,.rho_c = (1000 * 157.010 / 324.0)
-	,.T_t = 0
-	,.omega = 0.251
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (105100 / 157.010), (138600 / 157.010)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_bromobenzene
-};
-
-const EosData eos_rpp_bromobenzene = {
-	"bromobenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_bromobenzene}
-};
-
-
-static const IdealData ideal_data_ammonia = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{27.31, 0}
-			,{0.02383, 1}
-			,{1.71E-05, 2}
-			,{-1.19E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ammonia = {
-	.M = 17.031
-	,.T_c = 405.5
-	,.p_c = (113.5 * 1e5)
-	,.rho_c = (1000 * 17.031 / 72.5)
-	,.T_t = 0
-	,.omega = 0.250
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-45730 / 17.031), (-16160 / 17.031)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ammonia
-};
-
-const EosData eos_rpp_ammonia = {
-	"ammonia"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ammonia}
-};
-
-
-static const IdealData ideal_data_propyl_chloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.35, 0}
-			,{0.3626, 1}
-			,{-2.51E-04, 2}
-			,{7.45E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_propyl_chloride = {
-	.M = 78.542
-	,.T_c = 503.0
-	,.p_c = (45.8 * 1e5)
-	,.rho_c = (1000 * 78.542 / 254.0)
-	,.T_t = 0
-	,.omega = 0.235
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-130200 / 78.542), (-50700 / 78.542)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_propyl_chloride
-};
-
-const EosData eos_rpp_propyl_chloride = {
-	"propyl_chloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_propyl_chloride}
-};
-
-
-static const IdealData ideal_data_tert_butyl_methyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{2.53, 0}
-			,{0.5136, 1}
-			,{-2.60E-04, 2}
-			,{4.30E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_tert_butyl_methyl_ether = {
-	.M = 88.150
-	,.T_c = 496.4
-	,.p_c = (33.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.269
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-293100 / 88.150), (-125500 / 88.150)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_tert_butyl_methyl_ether
-};
-
-const EosData eos_rpp_tert_butyl_methyl_ether = {
-	"tert_butyl_methyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_tert_butyl_methyl_ether}
-};
-
-
-static const IdealData ideal_data_n_octylcyclopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-59.95, 0}
-			,{1.317, 1}
-			,{-7.61E-04, 2}
-			,{1.71E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_octylcyclopentane = {
-	.M = 182.351
-	,.T_c = 694.0
-	,.p_c = (17.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.564
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-250900 / 182.351), (95120 / 182.351)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_octylcyclopentane
-};
-
-const EosData eos_rpp_n_octylcyclopentane = {
-	"n_octylcyclopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_octylcyclopentane}
-};
-
-
-static const IdealData ideal_data_n_decylcyclopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-61.92, 0}
-			,{1.508, 1}
-			,{-8.72E-04, 2}
-			,{1.96E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_decylcyclopentane = {
-	.M = 210.405
-	,.T_c = 723.8
-	,.p_c = (15.2 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.654
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-292200 / 210.405), (111900 / 210.405)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_decylcyclopentane
-};
-
-const EosData eos_rpp_n_decylcyclopentane = {
-	"n_decylcyclopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_decylcyclopentane}
-};
-
-
-static const IdealData ideal_data_2_2_4_4_tetramethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-67.40, 0}
-			,{1.168, 1}
-			,{-8.61E-04, 2}
-			,{2.57E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_4_4_tetramethylpentane = {
-	.M = 128.259
-	,.T_c = 574.7
-	,.p_c = (24.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.312
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-242100 / 128.259), (34040 / 128.259)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_4_4_tetramethylpentane
-};
-
-const EosData eos_rpp_2_2_4_4_tetramethylpentane = {
-	"2_2_4_4_tetramethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_4_4_tetramethylpentane}
-};
-
-
-static const IdealData ideal_data_1_3_dimethylcyclohexane_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-65.16, 0}
-			,{0.8838, 1}
-			,{-4.93E-04, 2}
-			,{1.02E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_3_dimethylcyclohexane_cis = {
-	.M = 112.216
-	,.T_c = 591.0
-	,.p_c = (29.6 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.224
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-184900 / 112.216), (29850 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_3_dimethylcyclohexane_cis
-};
-
-const EosData eos_rpp_1_3_dimethylcyclohexane_cis = {
-	"1_3_dimethylcyclohexane_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_3_dimethylcyclohexane_cis}
-};
-
-
-static const IdealData ideal_data_1_3_dimethylcyclohexane_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-64.15, 0}
-			,{0.8826, 1}
-			,{-5.02E-04, 2}
-			,{1.07E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_3_dimethylcyclohexane_trans = {
-	.M = 112.216
-	,.T_c = 598.0
-	,.p_c = (29.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.189
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-176700 / 112.216), (36340 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_3_dimethylcyclohexane_trans
-};
-
-const EosData eos_rpp_1_3_dimethylcyclohexane_trans = {
-	"1_3_dimethylcyclohexane_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_3_dimethylcyclohexane_trans}
-};
-
-
-static const IdealData ideal_data_n_pentate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.63, 0}
-			,{0.4873, 1}
-			,{-2.58E-04, 2}
-			,{5.31E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_pentate = {
-	.M = 72.151
-	,.T_c = 469.7
-	,.p_c = (33.7 * 1e5)
-	,.rho_c = (1000 * 72.151 / 304.0)
-	,.T_t = 0
-	,.omega = 0.251
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-146500 / 72.151), (-8.37 / 72.151)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_pentate
-};
-
-const EosData eos_rpp_n_pentate = {
-	"n_pentate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_pentate}
-};
-
-
-static const IdealData ideal_data_2_pentene_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{1.95, 0}
-			,{0.4182, 1}
-			,{-2.18E-04, 2}
-			,{4.41E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_pentene_trans = {
-	.M = 70.135
-	,.T_c = 475.0
-	,.p_c = (36.6 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.259
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-31780 / 70.135), (69960 / 70.135)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_pentene_trans
-};
-
-const EosData eos_rpp_2_pentene_trans = {
-	"2_pentene_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_pentene_trans}
-};
-
-
-static const IdealData ideal_data_benzonitrile = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-26.05, 0}
-			,{0.5732, 1}
-			,{-4.43E-04, 2}
-			,{1.35E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_benzonitrile = {
-	.M = 103.124
-	,.T_c = 699.4
-	,.p_c = (42.2 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.362
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (219000 / 103.124), (261000 / 103.124)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_benzonitrile
-};
-
-const EosData eos_rpp_benzonitrile = {
-	"benzonitrile"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_benzonitrile}
-};
-
-
-static const IdealData ideal_data_4_methyl_2_pentene_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{12.63, 0}
-			,{0.5154, 1}
-			,{-3.01E-04, 2}
-			,{7.33E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_4_methyl_2_pentene_trans = {
-	.M = 84.162
-	,.T_c = 493.0
-	,.p_c = (30.4 * 1e5)
-	,.rho_c = (1000 * 84.162 / 360.0)
-	,.T_t = 0
-	,.omega = 0.290
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-61500 / 84.162), (79670 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_4_methyl_2_pentene_trans
-};
-
-const EosData eos_rpp_4_methyl_2_pentene_trans = {
-	"4_methyl_2_pentene_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_4_methyl_2_pentene_trans}
-};
-
-
-static const IdealData ideal_data_methyl_formate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{1.43, 0}
-			,{0.27, 1}
-			,{-1.95E-04, 2}
-			,{5.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_formate = {
-	.M = 60.052
-	,.T_c = 487.2
-	,.p_c = (60.0 * 1e5)
-	,.rho_c = (1000 * 60.052 / 172.0)
-	,.T_t = 0
-	,.omega = 0.257
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-350000 / 60.052), (-297400 / 60.052)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_formate
-};
-
-const EosData eos_rpp_methyl_formate = {
-	"methyl_formate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_formate}
-};
-
-
-static const IdealData ideal_data_n_eicosane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-22.38, 0}
-			,{1.939, 1}
-			,{-1.12E-03, 2}
-			,{2.53E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_eicosane = {
-	.M = 282.556
-	,.T_c = 767.0
-	,.p_c = (11.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.907
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-456100 / 282.556), (117400 / 282.556)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_eicosane
-};
-
-const EosData eos_rpp_n_eicosane = {
-	"n_eicosane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_eicosane}
-};
-
-
-static const IdealData ideal_data_2_methylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-39.39, 0}
-			,{0.8642, 1}
-			,{-6.29E-04, 2}
-			,{1.84E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methylhexane = {
-	.M = 100.295
-	,.T_c = 530.4
-	,.p_c = (27.3 * 1e5)
-	,.rho_c = (1000 * 100.295 / 421.0)
-	,.T_t = 0
-	,.omega = 0.329
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (195100 / 100.295), (3220 / 100.295)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methylhexane
-};
-
-const EosData eos_rpp_2_methylhexane = {
-	"2_methylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methylhexane}
-};
-
-
-static const IdealData ideal_data_butyronitrile = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{15.21, 0}
-			,{0.3206, 1}
-			,{-1.64E-04, 2}
-			,{2.98E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_butyronitrile = {
-	.M = 69.107
-	,.T_c = 582.2
-	,.p_c = (37.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.373
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (34100 / 69.107), (108700 / 69.107)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_butyronitrile
-};
-
-const EosData eos_rpp_butyronitrile = {
-	"butyronitrile"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_butyronitrile}
-};
-
-
-static const IdealData ideal_data_ethylcyclohexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-63.89, 0}
-			,{0.8893, 1}
-			,{-5.11E-04, 2}
-			,{1.10E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethylcyclohexane = {
-	.M = 112.216
-	,.T_c = 609.0
-	,.p_c = (30.0 * 1e5)
-	,.rho_c = (1000 * 112.216 / 450.0)
-	,.T_t = 0
-	,.omega = 0.243
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-171900 / 112.216), (39270 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethylcyclohexane
-};
-
-const EosData eos_rpp_ethylcyclohexane = {
-	"ethylcyclohexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethylcyclohexane}
-};
-
-
-static const IdealData ideal_data_n_propylcyclohexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-62.52, 0}
-			,{0.9889, 1}
-			,{-5.80E-04, 2}
-			,{1.29E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_propylcyclohexane = {
-	.M = 126.243
-	,.T_c = 639.0
-	,.p_c = (28.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.258
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.93E+05 / 126.243), (4.74E+04 / 126.243)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_propylcyclohexane
-};
-
-const EosData eos_rpp_n_propylcyclohexane = {
-	"n_propylcyclohexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_propylcyclohexane}
-};
-
-
-static const IdealData ideal_data_n_propylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-31.29, 0}
-			,{0.7486, 1}
-			,{-4.60E-04, 2}
-			,{1.08E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_propylbenzene = {
-	.M = 120.195
-	,.T_c = 638.2
-	,.p_c = (32.0 * 1e5)
-	,.rho_c = (1000 * 120.195 / 44.0)
-	,.T_t = 0
-	,.omega = 0.344
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (7.83E+03 / 120.195), (1.37E+05 / 120.195)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_propylbenzene
-};
-
-const EosData eos_rpp_n_propylbenzene = {
-	"n_propylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_propylbenzene}
-};
-
-
-static const IdealData ideal_data_1_1_dimethylcyclopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-57.89, 0}
-			,{0.767, 1}
-			,{-4.50E-04, 2}
-			,{1.01E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_1_dimethylcyclopentane = {
-	.M = 98.189
-	,.T_c = 547.0
-	,.p_c = (34.4 * 1e5)
-	,.rho_c = (1000 * 98.189 / 360.0)
-	,.T_t = 0
-	,.omega = 0.273
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-138400 / 98.189), (39060 / 98.189)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_1_dimethylcyclopentane
-};
-
-const EosData eos_rpp_1_1_dimethylcyclopentane = {
-	"1_1_dimethylcyclopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_1_dimethylcyclopentane}
-};
-
-
-static const IdealData ideal_data_methane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{19.25, 0}
-			,{5.213e-2, 1}
-			,{1.197e-5, 2}
-			,{-1.132e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methane = {
-	.M = 16.043
-	,.T_c = 190.4
-	,.p_c = (46.0 * 1e5)
-	,.rho_c = (1000 * 16.043 / 99.0)
-	,.T_t = 0
-	,.omega = 0.011
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-7.490e+4 / 16.043), (-5.087e+4 / 16.043)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methane
-};
-
-const EosData eos_rpp_methane = {
-	"methane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methane}
-};
-
-
-static const IdealData ideal_data_4_methylpyridine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-17.43, 0}
-			,{0.4882, 1}
-			,{-2.80E-04, 2}
-			,{5.45E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_4_methylpyridine = {
-	.M = 93.129
-	,.T_c = 646.0
-	,.p_c = (44.6 * 1e5)
-	,.rho_c = (1000 * 93.129 / 311.0)
-	,.T_t = 0
-	,.omega = 0.301
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (102300 / 93.129), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_4_methylpyridine
-};
-
-const EosData eos_rpp_4_methylpyridine = {
-	"4_methylpyridine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_4_methylpyridine}
-};
-
-
-static const IdealData ideal_data_2_methyl_3_ethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methyl_3_ethylpentane = {
-	.M = 114.232
-	,.T_c = 567.1
-	,.p_c = (27.0 * 1e5)
-	,.rho_c = (1000 * 114.232 / 433.0)
-	,.T_t = 0
-	,.omega = 0.330
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-211300 / 114.232), (21270 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methyl_3_ethylpentane
-};
-
-const EosData eos_rpp_2_methyl_3_ethylpentane = {
-	"2_methyl_3_ethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methyl_3_ethylpentane}
-};
-
-
-static const IdealData ideal_data_n_nonadecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-15.49, 0}
-			,{1.812, 1}
-			,{-1.02E-03, 2}
-			,{2.21E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_nonadecane = {
-	.M = 268.529
-	,.T_c = 756.0
-	,.p_c = (11.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.827
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-435400 / 268.529), (109000 / 268.529)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_nonadecane
-};
-
-const EosData eos_rpp_n_nonadecane = {
-	"n_nonadecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_nonadecane}
-};
-
-
-static const IdealData ideal_data_nitric_oxide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{29.35, 0}
-			,{-0.0009378, 1}
-			,{9.75E-06, 2}
-			,{-4.19E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_nitric_oxide = {
-	.M = 30.006
-	,.T_c = 180.0
-	,.p_c = (64.8 * 1e5)
-	,.rho_c = (1000 * 30.006 / 57.7)
-	,.T_t = 0
-	,.omega = 0.588
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (90430 / 30.006), (86750 / 30.006)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_nitric_oxide
-};
-
-const EosData eos_rpp_nitric_oxide = {
-	"nitric_oxide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_nitric_oxide}
-};
-
-
-static const IdealData ideal_data_ethyl_butyrate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{21.51, 0}
-			,{0.4928, 1}
-			,{-1.94E-04, 2}
-			,{3.56E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_butyrate = {
-	.M = 116.160
-	,.T_c = 569.0
-	,.p_c = (29.6 * 1e5)
-	,.rho_c = (1000 * 116.160 / 421.0)
-	,.T_t = 0
-	,.omega = 0.461
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_butyrate
-};
-
-const EosData eos_rpp_ethyl_butyrate = {
-	"ethyl_butyrate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_butyrate}
-};
-
-
-static const IdealData ideal_data_diphenyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-60.73, 0}
-			,{0.9282, 1}
-			,{-5.87E-04, 2}
-			,{1.36E-04, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_diphenyl_ether = {
-	.M = 170.211
-	,.T_c = 766.0
-	,.p_c = (31.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.440
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (49990 / 170.211), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_diphenyl_ether
-};
-
-const EosData eos_rpp_diphenyl_ether = {
-	"diphenyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_diphenyl_ether}
-};
-
-
-static const IdealData ideal_data_2_3_dimethyl_2_butene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{2.29, 0}
-			,{0.4827, 1}
-			,{-2.20E-04, 2}
-			,{3.04E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_3_dimethyl_2_butene = {
-	.M = 84.162
-	,.T_c = 524.0
-	,.p_c = (33.6 * 1e5)
-	,.rho_c = (1000 * 84.162 / 351.0)
-	,.T_t = 0
-	,.omega = 0.239
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-69840 / 84.162), (75910 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_3_dimethyl_2_butene
-};
-
-const EosData eos_rpp_2_3_dimethyl_2_butene = {
-	"2_3_dimethyl_2_butene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_3_dimethyl_2_butene}
-};
-
-
-static const IdealData ideal_data_tetrafluorohydrazine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.55, 0}
-			,{0.3509, 1}
-			,{-3.64E-04, 2}
-			,{1.34E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_tetrafluorohydrazine = {
-	.M = 104.016
-	,.T_c = 309.0
-	,.p_c = (37.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.206
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-8374 / 104.016), (79880 / 104.016)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_tetrafluorohydrazine
-};
-
-const EosData eos_rpp_tetrafluorohydrazine = {
-	"tetrafluorohydrazine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_tetrafluorohydrazine}
-};
-
-
-static const IdealData ideal_data_methyl_ethyl_ketone = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{10.94, 0}
-			,{0.3559, 1}
-			,{-1.90E-04, 2}
-			,{3.92E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_ethyl_ketone = {
-	.M = 72.107
-	,.T_c = 536.8
-	,.p_c = (42.1 * 1e5)
-	,.rho_c = (1000 * 72.107 / 267.0)
-	,.T_t = 0
-	,.omega = 0.320
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-238500 / 72.107), (-146200 / 72.107)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_ethyl_ketone
-};
-
-const EosData eos_rpp_methyl_ethyl_ketone = {
-	"methyl_ethyl_ketone"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_ethyl_ketone}
-};
-
-
-static const IdealData ideal_data_dichlorodifluoromethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{31.60, 0}
-			,{0.1782, 1}
-			,{-1.51E-04, 2}
-			,{4.34E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dichlorodifluoromethane = {
-	.M = 120.914
-	,.T_c = 385.0
-	,.p_c = (41.4 * 1e5)
-	,.rho_c = (1000 * 120.914 / 216.7)
-	,.T_t = 0
-	,.omega = 0.204
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-481500 / 120.914), (-442500 / 120.914)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dichlorodifluoromethane
-};
-
-const EosData eos_rpp_dichlorodifluoromethane = {
-	"dichlorodifluoromethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dichlorodifluoromethane}
-};
-
-
-static const IdealData ideal_data_isobutane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-1.39, 0}
-			,{0.3847, 1}
-			,{-1.85E-04, 2}
-			,{2.90E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isobutane = {
-	.M = 58.124
-	,.T_c = 408.2
-	,.p_c = (36.5 * 1e5)
-	,.rho_c = (1000 * 58.124 / 263.0)
-	,.T_t = 0
-	,.omega = 0.183
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-134600 / 58.124), (-20900 / 58.124)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isobutane
-};
-
-const EosData eos_rpp_isobutane = {
-	"isobutane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isobutane}
-};
-
-
-static const IdealData ideal_data_water = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{32.24, 0}
-			,{1.924e-3, 1}
-			,{1.055e-5, 2}
-			,{-3.596e-9, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_water = {
-	.M = 18.015
-	,.T_c = 647.3
-	,.p_c = (221.2 * 1e5)
-	,.rho_c = (1000 * 18.015 / 57.1)
-	,.T_t = 0
-	,.omega = 0.344
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.420e+5 / 18.015), (-2.288e+5 / 18.015)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_water
-};
-
-const EosData eos_rpp_water = {
-	"water"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_water}
-};
-
-
-static const IdealData ideal_data_bromine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{33.86, 0}
-			,{0.01125, 1}
-			,{-1.19E-05, 2}
-			,{4.53E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_bromine = {
-	.M = 159.808
-	,.T_c = 588.0
-	,.p_c = (103.0 * 1e5)
-	,.rho_c = (1000 * 159.808 / 127.2)
-	,.T_t = 0
-	,.omega = 0.108
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (30930 / 159.808), (3136 / 159.808)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_bromine
-};
-
-const EosData eos_rpp_bromine = {
-	"bromine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_bromine}
-};
-
-
-static const IdealData ideal_data_ethanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{9.014, 0}
-			,{2.141e-1, 1}
-			,{-8.390e-5, 2}
-			,{1.373e-9, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethanol = {
-	.M = 46.069
-	,.T_c = 513.9
-	,.p_c = (61.4 * 1e5)
-	,.rho_c = (1000 * 46.069 / 167.1)
-	,.T_t = 0
-	,.omega = 0.644
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.350e+5 / 46.069), (-1.684e+5 / 46.069)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethanol
-};
-
-const EosData eos_rpp_ethanol = {
-	"ethanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethanol}
-};
-
-
-static const IdealData ideal_data_dichloromonofluoromethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{23.66, 0}
-			,{0.1581, 1}
-			,{-1.20E-04, 2}
-			,{3.26E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dichloromonofluoromethane = {
-	.M = 102.923
-	,.T_c = 451.6
-	,.p_c = (51.8 * 1e5)
-	,.rho_c = (1000 * 102.923 / 196.4)
-	,.T_t = 0
-	,.omega = 0.210
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-298900 / 102.923), (-268400 / 102.923)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dichloromonofluoromethane
-};
-
-const EosData eos_rpp_dichloromonofluoromethane = {
-	"dichloromonofluoromethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dichloromonofluoromethane}
-};
-
-
-static const IdealData ideal_data_1_chloro_1_1_difluoroethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{16.82, 0}
-			,{0.2757, 1}
-			,{-1.99E-04, 2}
-			,{5.31E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_chloro_1_1_difluoroethane = {
-	.M = 100.496
-	,.T_c = 409.6
-	,.p_c = (43.3 * 1e5)
-	,.rho_c = (1000 * 100.496 / 231.0)
-	,.T_t = 0
-	,.omega = 0.251
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_chloro_1_1_difluoroethane
-};
-
-const EosData eos_rpp_1_chloro_1_1_difluoroethane = {
-	"1_chloro_1_1_difluoroethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_chloro_1_1_difluoroethane}
-};
-
-
-static const IdealData ideal_data_1_nonene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.72, 0}
-			,{0.8122, 1}
-			,{-4.51E-04, 2}
-			,{9.71E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_nonene = {
-	.M = 126.243
-	,.T_c = 592.0
-	,.p_c = (23.4 * 1e5)
-	,.rho_c = (1000 * 126.243 / 580.0)
-	,.T_t = 0
-	,.omega = 0.430
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-103600 / 126.243), (112800 / 126.243)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_nonene
-};
-
-const EosData eos_rpp_1_nonene = {
-	"1_nonene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_nonene}
-};
-
-
-static const IdealData ideal_data_1_4_dimethylcyclohexane_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-70.36, 0}
-			,{0.9131, 1}
-			,{-5.31E-04, 2}
-			,{1.16E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_4_dimethylcyclohexane_trans = {
-	.M = 112.216
-	,.T_c = 587.7
-	,.p_c = (29.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.242
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-184700 / 112.216), (31740 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_4_dimethylcyclohexane_trans
-};
-
-const EosData eos_rpp_1_4_dimethylcyclohexane_trans = {
-	"1_4_dimethylcyclohexane_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_4_dimethylcyclohexane_trans}
-};
-
-
-static const IdealData ideal_data_isopropyl_chloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{1.84, 0}
-			,{0.3488, 1}
-			,{-2.24E-04, 2}
-			,{5.86E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isopropyl_chloride = {
-	.M = 78.542
-	,.T_c = 485.0
-	,.p_c = (47.2 * 1e5)
-	,.rho_c = (1000 * 78.542 / 230.0)
-	,.T_t = 0
-	,.omega = 0.232
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-146500 / 78.542), (-62550 / 78.542)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isopropyl_chloride
-};
-
-const EosData eos_rpp_isopropyl_chloride = {
-	"isopropyl_chloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isopropyl_chloride}
-};
-
-
-static const IdealData ideal_data_ethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{5.409, 0}
-			,{1.781e-1, 1}
-			,{-6.938e-5, 2}
-			,{8.713e-9, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethane = {
-	.M = 30.070
-	,.T_c = 305.4
-	,.p_c = (48.8 * 1e5)
-	,.rho_c = (1000 * 30.070 / 148.3)
-	,.T_t = 0
-	,.omega = 0.099
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-8.474e+4 / 30.070), (-3.295e+4 / 30.070)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethane
-};
-
-const EosData eos_rpp_ethane = {
-	"ethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethane}
-};
-
-
-static const IdealData ideal_data_1_butene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-2.99, 0}
-			,{0.3532, 1}
-			,{-1.99E-04, 2}
-			,{4.46E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_butene = {
-	.M = 56.108
-	,.T_c = 419.6
-	,.p_c = (40.2 * 1e5)
-	,.rho_c = (1000 * 56.108 / 240.0)
-	,.T_t = 0
-	,.omega = 0.191
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-126 / 56.108), (71340 / 56.108)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_butene
-};
-
-const EosData eos_rpp_1_butene = {
-	"1_butene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_butene}
-};
-
-
-static const IdealData ideal_data_3_3_diethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-67.27, 0}
-			,{1.126, 1}
-			,{-7.99E-04, 2}
-			,{2.31E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_3_diethylpentane = {
-	.M = 128.259
-	,.T_c = 610.0
-	,.p_c = (26.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.338
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-232100 / 128.259), (35090 / 128.259)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_3_diethylpentane
-};
-
-const EosData eos_rpp_3_3_diethylpentane = {
-	"3_3_diethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_3_diethylpentane}
-};
-
-
-static const IdealData ideal_data_dipropyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{18.62, 0}
-			,{0.5335, 1}
-			,{-2.29E-04, 2}
-			,{2.44E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dipropyl_ether = {
-	.M = 102.177
-	,.T_c = 530.6
-	,.p_c = (30.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.369
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-293100 / 102.177), (-105600 / 102.177)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dipropyl_ether
-};
-
-const EosData eos_rpp_dipropyl_ether = {
-	"dipropyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dipropyl_ether}
-};
-
-
-static const IdealData ideal_data_isobutyl_formate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{19.85, 0}
-			,{0.4034, 1}
-			,{-1.44E-04, 2}
-			,{-7.40E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isobutyl_formate = {
-	.M = 102.134
-	,.T_c = 554.0
-	,.p_c = (37.3 * 1e5)
-	,.rho_c = (1000 * 102.134 / 352.0)
-	,.T_t = 0
-	,.omega = 0.396
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isobutyl_formate
-};
-
-const EosData eos_rpp_isobutyl_formate = {
-	"isobutyl_formate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isobutyl_formate}
-};
-
-
-static const IdealData ideal_data_ketene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{6.39, 0}
-			,{0.16938, 1}
-			,{-1.08E-04, 2}
-			,{2.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ketene = {
-	.M = 42.038
-	,.T_c = 380.0
-	,.p_c = (65.0 * 1e5)
-	,.rho_c = (1000 * 42.038 / 145.0)
-	,.T_t = 0
-	,.omega = 0.210
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-61130 / 42.038), (-60330 / 42.038)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ketene
-};
-
-const EosData eos_rpp_ketene = {
-	"ketene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ketene}
-};
-
-
-static const IdealData ideal_data_dimethyl_sulphide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{24.30, 0}
-			,{0.1875, 1}
-			,{-6.79E-05, 2}
-			,{4.10E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dimethyl_sulphide = {
-	.M = 62.130
-	,.T_c = 503.0
-	,.p_c = (55.3 * 1e5)
-	,.rho_c = (1000 * 62.130 / 201.0)
-	,.T_t = 0
-	,.omega = 0.191
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-37560 / 62.130), (6950 / 62.130)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dimethyl_sulphide
-};
-
-const EosData eos_rpp_dimethyl_sulphide = {
-	"dimethyl_sulphide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dimethyl_sulphide}
-};
-
-
-static const IdealData ideal_data_1_1_dichloroethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{12.47, 0}
-			,{0.2696, 1}
-			,{-2.05E-04, 2}
-			,{6.30E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_1_dichloroethane = {
-	.M = 98.960
-	,.T_c = 523.0
-	,.p_c = (50.7 * 1e5)
-	,.rho_c = (1000 * 98.960 / 236.0)
-	,.T_t = 0
-	,.omega = 0.240
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-130000 / 98.960), (-73140 / 98.960)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_1_dichloroethane
-};
-
-const EosData eos_rpp_1_1_dichloroethane = {
-	"1_1_dichloroethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_1_dichloroethane}
-};
-
-
-static const IdealData ideal_data_2_butene_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{0.44, 0}
-			,{0.2953, 1}
-			,{-1.02E-04, 2}
-			,{-6.16E-10, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_butene_cis = {
-	.M = 56.108
-	,.T_c = 435.6
-	,.p_c = (42.0 * 1e5)
-	,.rho_c = (1000 * 56.108 / 234.0)
-	,.T_t = 0
-	,.omega = 0.202
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-6990 / 56.108), (65900 / 56.108)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_butene_cis
-};
-
-const EosData eos_rpp_2_butene_cis = {
-	"2_butene_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_butene_cis}
-};
-
-
-static const IdealData ideal_data_piperidine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-53.07, 0}
-			,{0.6289, 1}
-			,{-3.36E-04, 2}
-			,{6.43E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_piperidine = {
-	.M = 85.150
-	,.T_c = 594.0
-	,.p_c = (47.6 * 1e5)
-	,.rho_c = (1000 * 85.150 / 289.0)
-	,.T_t = 0
-	,.omega = 0.251
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-49030 / 85.150), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_piperidine
-};
-
-const EosData eos_rpp_piperidine = {
-	"piperidine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_piperidine}
-};
-
-
-static const IdealData ideal_data_ethylene_oxide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.52, 0}
-			,{0.2222, 1}
-			,{-1.26E-04, 2}
-			,{2.59E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethylene_oxide = {
-	.M = 44.054
-	,.T_c = 469.0
-	,.p_c = (71.9 * 1e5)
-	,.rho_c = (1000 * 44.054 / 140.0)
-	,.T_t = 0
-	,.omega = 0.202
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-52670 / 44.054), (-13100 / 44.054)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethylene_oxide
-};
-
-const EosData eos_rpp_ethylene_oxide = {
-	"ethylene_oxide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethylene_oxide}
-};
-
-
-static const IdealData ideal_data_1_tetradecene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.97, 0}
-			,{1.826, 1}
-			,{-7.21E-04, 2}
-			,{1.57E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_tetradecene = {
-	.M = 196.378
-	,.T_c = 689.0
-	,.p_c = (15.6 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.644
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-206700 / 196.378), (154900 / 196.378)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_tetradecene
-};
-
-const EosData eos_rpp_1_tetradecene = {
-	"1_tetradecene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_tetradecene}
-};
-
-
-static const IdealData ideal_data_n_butanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.266, 0}
-			,{4.180e-1, 1}
-			,{-2.242e-4, 2}
-			,{4.685e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_butanol = {
-	.M = 74.123
-	,.T_c = 563.1
-	,.p_c = (44.2 * 1e5)
-	,.rho_c = (1000 * 74.123 / 274.0)
-	,.T_t = 0
-	,.omega = 0.593
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.749e+5 / 74.123), (-1.509e+5 / 74.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_butanol
-};
-
-const EosData eos_rpp_n_butanol = {
-	"n_butanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_butanol}
-};
-
-
-static const IdealData ideal_data_2_butyne = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{15.93, 0}
-			,{0.2381, 1}
-			,{-1.07E-04, 2}
-			,{1.75E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_butyne = {
-	.M = 54.092
-	,.T_c = 488.7
-	,.p_c = (50.8 * 1e5)
-	,.rho_c = (1000 * 54.092 / 221.0)
-	,.T_t = 0
-	,.omega = 0.124
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (146400 / 54.092), (185600 / 54.092)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_butyne
-};
-
-const EosData eos_rpp_2_butyne = {
-	"2_butyne"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_butyne}
-};
-
-
-static const IdealData ideal_data_titanium_tetrachloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{70.64, 0}
-			,{0.1224, 1}
-			,{-1.44E-04, 2}
-			,{5.82E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_titanium_tetrachloride = {
-	.M = 189.712
-	,.T_c = 638.0
-	,.p_c = (46.6 * 1e5)
-	,.rho_c = (1000 * 189.712 / 339.2)
-	,.T_t = 0
-	,.omega = 0.268
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-763700 / 189.712), (-727200 / 189.712)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_titanium_tetrachloride
-};
-
-const EosData eos_rpp_titanium_tetrachloride = {
-	"titanium_tetrachloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_titanium_tetrachloride}
-};
-
-
-static const IdealData ideal_data_nitromethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{7.43, 0}
-			,{0.1978, 1}
-			,{-1.08E-04, 2}
-			,{2.09E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_nitromethane = {
-	.M = 61.041
-	,.T_c = 588.0
-	,.p_c = (63.1 * 1e5)
-	,.rho_c = (1000 * 61.041 / 173.2)
-	,.T_t = 0
-	,.omega = 0.310
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-74780 / 61.041), (-6950 / 61.041)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_nitromethane
-};
-
-const EosData eos_rpp_nitromethane = {
-	"nitromethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_nitromethane}
-};
-
-
-static const IdealData ideal_data_1_methylnaphthalene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-64.82, 0}
-			,{0.9387, 1}
-			,{-6.49E-04, 2}
-			,{2.02E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_methylnaphthalene = {
-	.M = 142.201
-	,.T_c = 772.0
-	,.p_c = (36.0 * 1e5)
-	,.rho_c = (1000 * 142.201 / 462.0)
-	,.T_t = 0
-	,.omega = 0.310
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (116900 / 142.201), (217800 / 142.201)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_methylnaphthalene
-};
-
-const EosData eos_rpp_1_methylnaphthalene = {
-	"1_methylnaphthalene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_methylnaphthalene}
-};
-
-
-static const IdealData ideal_data_n_propyl_acetate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{15.42, 0}
-			,{0.4501, 1}
-			,{-1.69E-04, 2}
-			,{-1.44E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_propyl_acetate = {
-	.M = 102.134
-	,.T_c = 549.4
-	,.p_c = (33.3 * 1e5)
-	,.rho_c = (1000 * 102.134 / 345.0)
-	,.T_t = 0
-	,.omega = 0.391
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-466000 / 102.134), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_propyl_acetate
-};
-
-const EosData eos_rpp_n_propyl_acetate = {
-	"n_propyl_acetate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_propyl_acetate}
-};
-
-
-static const IdealData ideal_data_carbon_tetrafluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{13.98, 0}
-			,{0.2026, 1}
-			,{-1.63E-04, 2}
-			,{4.51E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_carbon_tetrafluoride = {
-	.M = 88.005
-	,.T_c = 227.6
-	,.p_c = (37.4 * 1e5)
-	,.rho_c = (1000 * 88.005 / 139.6)
-	,.T_t = 0
-	,.omega = 0.177
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-933700 / 88.005), (-889000 / 88.005)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_carbon_tetrafluoride
-};
-
-const EosData eos_rpp_carbon_tetrafluoride = {
-	"carbon_tetrafluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_carbon_tetrafluoride}
-};
-
-
-static const IdealData ideal_data_2_hexene_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-32.92, 0}
-			,{0.6929, 1}
-			,{-5.62E-04, 2}
-			,{2.01E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_hexene_trans = {
-	.M = 84.162
-	,.T_c = 516.0
-	,.p_c = (32.7 * 1e5)
-	,.rho_c = (1000 * 84.162 / 351.0)
-	,.T_t = 0
-	,.omega = 0.242
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-53930 / 84.162), (76490 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_hexene_trans
-};
-
-const EosData eos_rpp_2_hexene_trans = {
-	"2_hexene_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_hexene_trans}
-};
-
-
-static const IdealData ideal_data_2_2_3_trimethylbutane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-22.94, 0}
-			,{0.7159, 1}
-			,{-4.42E-04, 2}
-			,{1.01E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_3_trimethylbutane = {
-	.M = 100.205
-	,.T_c = 531.2
-	,.p_c = (29.5 * 1e5)
-	,.rho_c = (1000 * 100.205 / 398.0)
-	,.T_t = 0
-	,.omega = 0.250
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-205000 / 100.205), (4270 / 100.205)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_3_trimethylbutane
-};
-
-const EosData eos_rpp_2_2_3_trimethylbutane = {
-	"2_2_3_trimethylbutane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_3_trimethylbutane}
-};
-
-
-static const IdealData ideal_data_i_butanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.708, 0}
-			,{4.689e-1, 1}
-			,{-2.884e-4, 2}
-			,{7.231e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_i_butanol = {
-	.M = 74.123
-	,.T_c = 547.8
-	,.p_c = (43.0 * 1e5)
-	,.rho_c = (1000 * 74.123 / 273)
-	,.T_t = 0
-	,.omega = 0.592
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.834e+5 / 74.123), (-1.674e+5 / 74.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_i_butanol
-};
-
-const EosData eos_rpp_i_butanol = {
-	"i_butanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_i_butanol}
-};
-
-
-static const IdealData ideal_data_pyradine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{39.79, 0}
-			,{0.4928, 1}
-			,{-3.56E-04, 2}
-			,{1.00E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_pyradine = {
-	.M = 79.102
-	,.T_c = 620.0
-	,.p_c = (56.3 * 1e5)
-	,.rho_c = (1000 * 79.102 / 254.0)
-	,.T_t = 0
-	,.omega = 0.243
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (140300 / 79.102), (190300 / 79.102)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_pyradine
-};
-
-const EosData eos_rpp_pyradine = {
-	"pyradine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_pyradine}
-};
-
-
-static const IdealData ideal_data_methyl_phenyl_ketone = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-29.58, 0}
-			,{0.641, 1}
-			,{-4.07E-04, 2}
-			,{9.72E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_phenyl_ketone = {
-	.M = 120.151
-	,.T_c = 714.0
-	,.p_c = (40.6 * 1e5)
-	,.rho_c = (1000 * 120.151 / 376.0)
-	,.T_t = 0
-	,.omega = 0.420
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-86900 / 120.151), (1840 / 120.151)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_phenyl_ketone
-};
-
-const EosData eos_rpp_methyl_phenyl_ketone = {
-	"methyl_phenyl_ketone"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_phenyl_ketone}
-};
-
-
-static const IdealData ideal_data_radon = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
-			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_radon = {
-	.M = 222.000
-	,.T_c = 377.0
-	,.p_c = (62.8 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = -0.008
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 222.000), (0 / 222.000)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_radon
-};
-
-const EosData eos_rpp_radon = {
-	"radon"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_radon}
-};
-
-
-static const IdealData ideal_data_1_4_pentadiene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{7.00, 0}
-			,{0.3952, 1}
-			,{-2.37E-04, 2}
-			,{5.60E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_4_pentadiene = {
-	.M = 68.119
-	,.T_c = 478.0
-	,.p_c = (37.9 * 1e5)
-	,.rho_c = (1000 * 68.119 / 276.0)
-	,.T_t = 0
-	,.omega = 0.104
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (105500 / 68.119), (170400 / 68.119)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_4_pentadiene
-};
-
-const EosData eos_rpp_1_4_pentadiene = {
-	"1_4_pentadiene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_4_pentadiene}
-};
-
-
-static const IdealData ideal_data_n_dodecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.24, 0}
-			,{1.149, 1}
-			,{-6.35E-04, 2}
-			,{1.36E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_dodecane = {
-	.M = 170.340
-	,.T_c = 658.2
-	,.p_c = (18.2 * 1e5)
-	,.rho_c = (1000 * 170.340 / 713.0)
-	,.T_t = 0
-	,.omega = 0.575
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-291100 / 170.340), (50070 / 170.340)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_dodecane
-};
-
-const EosData eos_rpp_n_dodecane = {
-	"n_dodecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_dodecane}
-};
-
-
-static const IdealData ideal_data_1_pentene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-0.13, 0}
-			,{0.4329, 1}
-			,{-2.32E-04, 2}
-			,{4.68E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_pentene = {
-	.M = 70.135
-	,.T_c = 464.8
-	,.p_c = (35.3 * 1e5)
-	,.rho_c = (1000 * 70.135 / 300.0)
-	,.T_t = 0
-	,.omega = 0.233
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-20930 / 70.135), (79170 / 70.135)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_pentene
-};
-
-const EosData eos_rpp_1_pentene = {
-	"1_pentene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_pentene}
-};
-
-
-static const IdealData ideal_data_butylcyclohexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-62.96, 0}
-			,{1.081, 1}
-			,{-6.31E-04, 2}
-			,{1.40E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_butylcyclohexane = {
-	.M = 140.260
-	,.T_c = 667.0
-	,.p_c = (31.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.362
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-213300 / 140.260), (56480 / 140.260)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_butylcyclohexane
-};
-
-const EosData eos_rpp_butylcyclohexane = {
-	"butylcyclohexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_butylcyclohexane}
-};
-
-
-static const IdealData ideal_data_aniline = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-40.52, 0}
-			,{0.6385, 1}
-			,{-5.13E-04, 2}
-			,{1.63E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_aniline = {
-	.M = 93.129
-	,.T_c = 699.0
-	,.p_c = (53.1 * 1e5)
-	,.rho_c = (1000 * 93.129 / 274.0)
-	,.T_t = 0
-	,.omega = 0.384
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (86920 / 93.129), (166800 / 93.129)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_aniline
-};
-
-const EosData eos_rpp_aniline = {
-	"aniline"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_aniline}
-};
-
-
-static const IdealData ideal_data_aluminum_tribromide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{64.94, 0}
-			,{0.06098, 1}
-			,{-7.31E-05, 2}
-			,{2.98E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_aluminum_tribromide = {
-	.M = 266.694
-	,.T_c = 763.0
-	,.p_c = (28.9 * 1e5)
-	,.rho_c = (1000 * 266.694 / 310.0)
-	,.T_t = 0
-	,.omega = 0.399
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-423300 / 266.694), (-452200 / 266.694)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_aluminum_tribromide
-};
-
-const EosData eos_rpp_aluminum_tribromide = {
-	"aluminum_tribromide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_aluminum_tribromide}
-};
-
-
-static const IdealData ideal_data_n_butyraldehyde = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{14.08, 0}
-			,{0.3457, 1}
-			,{-1.72E-04, 2}
-			,{2.89E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_butyraldehyde = {
-	.M = 72.107
-	,.T_c = 545.4
-	,.p_c = (53.8 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.352
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-205200 / 72.107), (-114800 / 72.107)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_butyraldehyde
-};
-
-const EosData eos_rpp_n_butyraldehyde = {
-	"n_butyraldehyde"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_butyraldehyde}
-};
-
-
-static const IdealData ideal_data_n_heptane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-5.146, 0}
-			,{6.762e-1, 1}
-			,{-3.651e-4, 2}
-			,{7.658e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_heptane = {
-	.M = 100.205
-	,.T_c = 540.3
-	,.p_c = (27.4 * 1e5)
-	,.rho_c = (1000 * 100.205 / 432)
-	,.T_t = 0
-	,.omega = 0.349
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.879e+5 / 100.205), (8.000e+3 / 100.205)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_heptane
-};
-
-const EosData eos_rpp_n_heptane = {
-	"n_heptane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_heptane}
-};
-
-
 static const IdealData ideal_data_hydrogen = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 2.016)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{27.14, 0}
-			,{9.274e+1, 1}
-			,{-1.381e-5, 2}
-			,{7.645e-9, 3}
+			{3.26419191928243, 0}
+			,{0.00111540589017779, 1}
+			,{-1.66096132665034e-06, 2}
+			,{9.19482211603322e-10, 3}
 		}
 	}}
 };
@@ -2862,9 +87,14 @@ static const CubicData cubic_data_hydrogen = {
 	,.rho_c = (1000 * 2.016 / 64.3)
 	,.T_t = 0
 	,.omega = -0.216
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0.00 / 2.016), (0.00 / 2.016)}}}
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (0.00 * 1000 / 2.016), (130.57 * 1000 / 2.016)}}}
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_hydrogen
+};
+
+static const ElementComp elements_rpp_hydrogen[] = {
+	{"H", 2}
 };
 
 const EosData eos_rpp_hydrogen = {
@@ -2874,10565 +104,22 @@ const EosData eos_rpp_hydrogen = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_hydrogen}
-};
-
-
-static const IdealData ideal_data_ethyl_bromide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{6.66, 0}
-			,{0.2348, 1}
-			,{-1.47E-04, 2}
-			,{3.80E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_bromide = {
-	.M = 108.966
-	,.T_c = 503.9
-	,.p_c = (62.3 * 1e5)
-	,.rho_c = (1000 * 108.966 / 215.0)
-	,.T_t = 0
-	,.omega = 0.229
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-64060 / 108.966), (-26330 / 108.966)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_bromide
-};
-
-const EosData eos_rpp_ethyl_bromide = {
-	"ethyl_bromide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_bromide}
-};
-
-
-static const IdealData ideal_data_1_3_5_trimethylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-19.59, 0}
-			,{0.6724, 1}
-			,{-3.69E-04, 2}
-			,{7.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_3_5_trimethylbenzene = {
-	.M = 120.195
-	,.T_c = 637.3
-	,.p_c = (31.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.399
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.61E+04 / 120.195), (1.18E+05 / 120.195)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_3_5_trimethylbenzene
-};
-
-const EosData eos_rpp_1_3_5_trimethylbenzene = {
-	"1_3_5_trimethylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_3_5_trimethylbenzene}
-};
-
-
-static const IdealData ideal_data_2_5_dimethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_5_dimethylhexane = {
-	.M = 114.232
-	,.T_c = 550.1
-	,.p_c = (24.9 * 1e5)
-	,.rho_c = (1000 * 114.232 / 482.0)
-	,.T_t = 0
-	,.omega = 0.356
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-222800 / 114.232), (10470 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_5_dimethylhexane
-};
-
-const EosData eos_rpp_2_5_dimethylhexane = {
-	"2_5_dimethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_5_dimethylhexane}
-};
-
-
-static const IdealData ideal_data_1_methyl_3_ethylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-29.00, 0}
-			,{0.7293, 1}
-			,{-4.36E-04, 2}
-			,{1.00E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_methyl_3_ethylbenzene = {
-	.M = 120.195
-	,.T_c = 637.0
-	,.p_c = (28.4 * 1e5)
-	,.rho_c = (1000 * 120.195 / 490.0)
-	,.T_t = 0
-	,.omega = 0.360
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.93E+03 / 120.195), (1.27E+05 / 120.195)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_methyl_3_ethylbenzene
-};
-
-const EosData eos_rpp_1_methyl_3_ethylbenzene = {
-	"1_methyl_3_ethylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_methyl_3_ethylbenzene}
-};
-
-
-static const IdealData ideal_data_2_octene_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-12.82, 0}
-			,{0.7532, 1}
-			,{-4.44E-04, 2}
-			,{1.05E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_octene_trans = {
-	.M = 112.216
-	,.T_c = 580.0
-	,.p_c = (27.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.350
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-94580 / 112.216), (92740 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_octene_trans
-};
-
-const EosData eos_rpp_2_octene_trans = {
-	"2_octene_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_octene_trans}
-};
-
-
-static const IdealData ideal_data_1_propanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{2.47, 0}
-			,{0.3325, 1}
-			,{-1.86E-04, 2}
-			,{4.30E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_propanol = {
-	.M = 60.096
-	,.T_c = 536.8
-	,.p_c = (51.7 * 1e5)
-	,.rho_c = (1000 * 60.096 / 219.0)
-	,.T_t = 0
-	,.omega = 0.623
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-256600 / 60.096), (-161900 / 60.096)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_propanol
-};
-
-const EosData eos_rpp_1_propanol = {
-	"1_propanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_propanol}
-};
-
-
-static const IdealData ideal_data_1_octadecene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-11.33, 0}
-			,{1.664, 1}
-			,{-9.37E-04, 2}
-			,{2.05E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_octadecene = {
-	.M = 252.486
-	,.T_c = 739.0
-	,.p_c = (11.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.807
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-289200 / 252.486), (188400 / 252.486)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_octadecene
-};
-
-const EosData eos_rpp_1_octadecene = {
-	"1_octadecene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_octadecene}
-};
-
-
-static const IdealData ideal_data_propane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-4.224, 0}
-			,{3.063e-1, 1}
-			,{-1.586e-4, 2}
-			,{3.215e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_propane = {
-	.M = 44.094
-	,.T_c = 369.8
-	,.p_c = (42.5 * 1e5)
-	,.rho_c = (1000 * 44.094 / 203.0)
-	,.T_t = 0
-	,.omega = 0.153
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.039e+5 / 44.094), (-2.349e+4 / 44.094)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_propane
-};
-
-const EosData eos_rpp_propane = {
-	"propane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_propane}
-};
-
-
-static const IdealData ideal_data_methanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{21.15, 0}
-			,{7.092e-2, 1}
-			,{2.587e-5, 2}
-			,{-2.852e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methanol = {
-	.M = 32.042
-	,.T_c = 512.6
-	,.p_c = (80.9 * 1e5)
-	,.rho_c = (1000 * 32.042 / 118.0)
-	,.T_t = 0
-	,.omega = 0.556
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.0133e+5 / 32.042), (-1.626e+5 / 32.042)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methanol
-};
-
-const EosData eos_rpp_methanol = {
-	"methanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methanol}
-};
-
-
-static const IdealData ideal_data_methyl_propionate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{18.20, 0}
-			,{0.314, 1}
-			,{-9.35E-05, 2}
-			,{-1.83E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_propionate = {
-	.M = 88.107
-	,.T_c = 530.6
-	,.p_c = (40.0 * 1e5)
-	,.rho_c = (1000 * 88.107 / 282.0)
-	,.T_t = 0
-	,.omega = 0.350
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_propionate
-};
-
-const EosData eos_rpp_methyl_propionate = {
-	"methyl_propionate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_propionate}
-};
-
-
-static const IdealData ideal_data_n_decylcyclohexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-69.02, 0}
-			,{1.654, 1}
-			,{-9.61E-04, 2}
-			,{2.14E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_decylcyclohexane = {
-	.M = 224.432
-	,.T_c = 750.0
-	,.p_c = (13.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.583
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_decylcyclohexane
-};
-
-const EosData eos_rpp_n_decylcyclohexane = {
-	"n_decylcyclohexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_decylcyclohexane}
-};
-
-
-static const IdealData ideal_data_sulfur_trioxide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{19.21, 0}
-			,{0.1374, 1}
-			,{-1.18E-04, 2}
-			,{3.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_sulfur_trioxide = {
-	.M = 80.058
-	,.T_c = 491.0
-	,.p_c = (82.1 * 1e5)
-	,.rho_c = (1000 * 80.058 / 127.3)
-	,.T_t = 0
-	,.omega = 0.481
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-396000 / 80.058), (-371700 / 80.058)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_sulfur_trioxide
-};
-
-const EosData eos_rpp_sulfur_trioxide = {
-	"sulfur_trioxide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_sulfur_trioxide}
-};
-
-
-static const IdealData ideal_data_tert_butanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-48.61, 0}
-			,{0.7172, 1}
-			,{-7.08E-04, 2}
-			,{2.92E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_tert_butanol = {
-	.M = 74.123
-	,.T_c = 506.2
-	,.p_c = (39.7 * 1e5)
-	,.rho_c = (1000 * 74.123 / 275.0)
-	,.T_t = 0
-	,.omega = 0.612
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-312800 / 74.123), (-177800 / 74.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_tert_butanol
-};
-
-const EosData eos_rpp_tert_butanol = {
-	"tert_butanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_tert_butanol}
-};
-
-
-static const IdealData ideal_data_hydrogen_fluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{29.06, 0}
-			,{0.0006611, 1}
-			,{-2.03E-06, 2}
-			,{2.50E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_hydrogen_fluoride = {
-	.M = 20.006
-	,.T_c = 461.0
-	,.p_c = (64.8 * 1e5)
-	,.rho_c = (1000 * 20.006 / 69.2)
-	,.T_t = 0
-	,.omega = 0.329
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-271300 / 20.006), (-273400 / 20.006)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_hydrogen_fluoride
-};
-
-const EosData eos_rpp_hydrogen_fluoride = {
-	"hydrogen_fluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_hydrogen_fluoride}
-};
-
-
-static const IdealData ideal_data_carbonyl_sulfide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{23.57, 0}
-			,{0.07984, 1}
-			,{-7.02E-05, 2}
-			,{2.45E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_carbonyl_sulfide = {
-	.M = 60.070
-	,.T_c = 378.8
-	,.p_c = (63.5 * 1e5)
-	,.rho_c = (1000 * 60.070 / 136.3)
-	,.T_t = 0
-	,.omega = 0.105
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-138500 / 60.070), (-165800 / 60.070)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_carbonyl_sulfide
-};
-
-const EosData eos_rpp_carbonyl_sulfide = {
-	"carbonyl_sulfide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_carbonyl_sulfide}
-};
-
-
-static const IdealData ideal_data_2_methyl_2_pentene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-14.75, 0}
-			,{0.5669, 1}
-			,{-3.34E-04, 2}
-			,{7.96E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methyl_2_pentene = {
-	.M = 84.162
-	,.T_c = 518.0
-	,.p_c = (32.8 * 1e5)
-	,.rho_c = (1000 * 84.162 / 351.0)
-	,.T_t = 0
-	,.omega = 0.229
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-66530 / 84.162), (71260 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methyl_2_pentene
-};
-
-const EosData eos_rpp_2_methyl_2_pentene = {
-	"2_methyl_2_pentene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methyl_2_pentene}
-};
-
-
-static const IdealData ideal_data_methyl_isopropyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{13.53, 0}
-			,{0.3697, 1}
-			,{-1.48E-04, 2}
-			,{1.21E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_isopropyl_ether = {
-	.M = 74.123
-	,.T_c = 464.5
-	,.p_c = (37.6 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.266
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-252200 / 74.123), (-121000 / 74.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_isopropyl_ether
-};
-
-const EosData eos_rpp_methyl_isopropyl_ether = {
-	"methyl_isopropyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_isopropyl_ether}
-};
-
-
-static const IdealData ideal_data_carbon_tetrachloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{40.72, 0}
-			,{0.2049, 1}
-			,{-2.27E-04, 2}
-			,{8.84E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_carbon_tetrachloride = {
-	.M = 153.823
-	,.T_c = 556.4
-	,.p_c = (45.6 * 1e5)
-	,.rho_c = (1000 * 153.823 / 275.9)
-	,.T_t = 0
-	,.omega = 0.193
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-100500 / 153.823), (-58280 / 153.823)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_carbon_tetrachloride
-};
-
-const EosData eos_rpp_carbon_tetrachloride = {
-	"carbon_tetrachloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_carbon_tetrachloride}
-};
-
-
-static const IdealData ideal_data_fluorobenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-38.73, 0}
-			,{0.5669, 1}
-			,{-4.43E-04, 2}
-			,{1.36E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_fluorobenzene = {
-	.M = 96.104
-	,.T_c = 560.1
-	,.p_c = (45.5 * 1e5)
-	,.rho_c = (1000 * 96.104 / 269.0)
-	,.T_t = 0
-	,.omega = 0.244
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-116600 / 96.104), (-69080 / 96.104)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_fluorobenzene
-};
-
-const EosData eos_rpp_fluorobenzene = {
-	"fluorobenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_fluorobenzene}
-};
-
-
-static const IdealData ideal_data_1_3_butadiene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-1.69, 0}
-			,{0.3419, 1}
-			,{-2.34E-04, 2}
-			,{6.34E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_3_butadiene = {
-	.M = 54.092
-	,.T_c = 425.0
-	,.p_c = (43.3 * 1e5)
-	,.rho_c = (1000 * 54.092 / 221.0)
-	,.T_t = 0
-	,.omega = 0.195
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (110200 / 54.092), (150800 / 54.092)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_3_butadiene
-};
-
-const EosData eos_rpp_1_3_butadiene = {
-	"1_3_butadiene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_3_butadiene}
-};
-
-
-static const IdealData ideal_data_cyclohexanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-55.53, 0}
-			,{0.7214, 1}
-			,{-4.09E-04, 2}
-			,{8.24E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cyclohexanol = {
-	.M = 100.160
-	,.T_c = 625.0
-	,.p_c = (37.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.528
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-294800 / 100.160), (-118000 / 100.160)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cyclohexanol
-};
-
-const EosData eos_rpp_cyclohexanol = {
-	"cyclohexanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cyclohexanol}
-};
-
-
-static const IdealData ideal_data_sulfur_hexafluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-0.66, 0}
-			,{0.4639, 1}
-			,{-5.09E-04, 2}
-			,{1.95E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_sulfur_hexafluoride = {
-	.M = 146.054
-	,.T_c = 318.7
-	,.p_c = (37.6 * 1e5)
-	,.rho_c = (1000 * 146.054 / 198.8)
-	,.T_t = 0
-	,.omega = 0.286
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1222000 / 146.054), (-1118000 / 146.054)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_sulfur_hexafluoride
-};
-
-const EosData eos_rpp_sulfur_hexafluoride = {
-	"sulfur_hexafluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_sulfur_hexafluoride}
-};
-
-
-static const IdealData ideal_data_1_pentyne = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{18.07, 0}
-			,{0.3511, 1}
-			,{-1.91E-04, 2}
-			,{4.10E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_pentyne = {
-	.M = 68.119
-	,.T_c = 493.5
-	,.p_c = (40.5 * 1e5)
-	,.rho_c = (1000 * 68.119 / 278.0)
-	,.T_t = 0
-	,.omega = 0.164
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (144400 / 68.119), (210400 / 68.119)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_pentyne
-};
-
-const EosData eos_rpp_1_pentyne = {
-	"1_pentyne"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_pentyne}
-};
-
-
-static const IdealData ideal_data_2_methyl_1_3_butadiene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.41, 0}
-			,{0.45885, 1}
-			,{-3.34E-04, 2}
-			,{1.00E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methyl_1_3_butadiene = {
-	.M = 68.119
-	,.T_c = 484.0
-	,.p_c = (38.5 * 1e5)
-	,.rho_c = (1000 * 68.119 / 276.0)
-	,.T_t = 0
-	,.omega = 0.164
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (75780 / 68.119), (146000 / 68.119)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methyl_1_3_butadiene
-};
-
-const EosData eos_rpp_2_methyl_1_3_butadiene = {
-	"2_methyl_1_3_butadiene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methyl_1_3_butadiene}
-};
-
-
-static const IdealData ideal_data_1_hexanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{4.81, 0}
-			,{0.5891, 1}
-			,{-3.01E-04, 2}
-			,{5.43E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_hexanol = {
-	.M = 102.177
-	,.T_c = 611.0
-	,.p_c = (40.5 * 1e5)
-	,.rho_c = (1000 * 102.177 / 381.0)
-	,.T_t = 0
-	,.omega = 0.560
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-317800 / 102.177), (-135700 / 102.177)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_hexanol
-};
-
-const EosData eos_rpp_1_hexanol = {
-	"1_hexanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_hexanol}
-};
-
-
-static const IdealData ideal_data_1_2_3_trimethylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-6.94, 0}
-			,{0.6335, 1}
-			,{-3.33E-04, 2}
-			,{6.61E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_3_trimethylbenzene = {
-	.M = 120.195
-	,.T_c = 664.5
-	,.p_c = (34.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.366
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-9.59E+03 / 120.195), (1.25E+05 / 120.195)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_3_trimethylbenzene
-};
-
-const EosData eos_rpp_1_2_3_trimethylbenzene = {
-	"1_2_3_trimethylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_3_trimethylbenzene}
-};
-
-
-static const IdealData ideal_data_1_2_dichloropropane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{10.45, 0}
-			,{0.3655, 1}
-			,{-2.60E-04, 2}
-			,{7.74E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_dichloropropane = {
-	.M = 112.987
-	,.T_c = 577.0
-	,.p_c = (44.5 * 1e5)
-	,.rho_c = (1000 * 112.987 / 226.0)
-	,.T_t = 0
-	,.omega = 0.240
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-166000 / 112.987), (-83150 / 112.987)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_dichloropropane
-};
-
-const EosData eos_rpp_1_2_dichloropropane = {
-	"1_2_dichloropropane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_dichloropropane}
-};
-
-
-static const IdealData ideal_data_1_2_dichloroethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{20.49, 0}
-			,{0.231, 1}
-			,{-1.44E-04, 2}
-			,{3.39E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_dichloroethane = {
-	.M = 98.960
-	,.T_c = 566.0
-	,.p_c = (53.7 * 1e5)
-	,.rho_c = (1000 * 98.960 / 225.0)
-	,.T_t = 0
-	,.omega = 0.278
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-129800 / 98.960), (-73900 / 98.960)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_dichloroethane
-};
-
-const EosData eos_rpp_1_2_dichloroethane = {
-	"1_2_dichloroethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_dichloroethane}
-};
-
-
-static const IdealData ideal_data_hydrogen_chloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{30.67, 0}
-			,{-0.007201, 1}
-			,{1.25E-05, 2}
-			,{-3.90E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_hydrogen_chloride = {
-	.M = 36.461
-	,.T_c = 324.7
-	,.p_c = (83.1 * 1e5)
-	,.rho_c = (1000 * 36.461 / 80.9)
-	,.T_t = 0
-	,.omega = 0.133
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-92360 / 36.461), (-95330 / 36.461)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_hydrogen_chloride
-};
-
-const EosData eos_rpp_hydrogen_chloride = {
-	"hydrogen_chloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_hydrogen_chloride}
-};
-
-
-static const IdealData ideal_data_1_octanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{6.17, 0}
-			,{0.7607, 1}
-			,{-3.80E-04, 2}
-			,{6.26E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_octanol = {
-	.M = 130.231
-	,.T_c = 652.5
-	,.p_c = (28.6 * 1e5)
-	,.rho_c = (1000 * 130.231 / 490.0)
-	,.T_t = 0
-	,.omega = 0.587
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-360100 / 130.231), (-1.20E+05 / 130.231)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_octanol
-};
-
-const EosData eos_rpp_1_octanol = {
-	"1_octanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_octanol}
-};
-
-
-static const IdealData ideal_data_2_2_5_5_tetramthylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-62.34, 0}
-			,{1.235, 1}
-			,{-8.96E-04, 2}
-			,{2.62E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_5_5_tetramthylhexane = {
-	.M = 142.286
-	,.T_c = 581.6
-	,.p_c = (21.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.375
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_5_5_tetramthylhexane
-};
-
-const EosData eos_rpp_2_2_5_5_tetramthylhexane = {
-	"2_2_5_5_tetramthylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_5_5_tetramthylhexane}
-};
-
-
-static const IdealData ideal_data_diethyl_amine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{2.04, 0}
-			,{0.443, 1}
-			,{-2.18E-04, 2}
-			,{3.65E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_diethyl_amine = {
-	.M = 73.139
-	,.T_c = 496.5
-	,.p_c = (37.1 * 1e5)
-	,.rho_c = (1000 * 73.139 / 301.0)
-	,.T_t = 0
-	,.omega = 0.291
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-72430 / 73.139), (72140 / 73.139)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_diethyl_amine
-};
-
-const EosData eos_rpp_diethyl_amine = {
-	"diethyl_amine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_diethyl_amine}
-};
-
-
-static const IdealData ideal_data_nitrogen = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.115e1, 0}
-			,{-1.357e-2, 1}
-			,{2.680e-5, 2}
-			,{-1.168e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_nitrogen = {
-	.M = 28.013
-	,.T_c = 126.2
-	,.p_c = (33.9 * 1e5)
-	,.rho_c = (1000 * 28.013 / 89.8)
-	,.T_t = 0
-	,.omega = 0.039
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0.00 / 28.013), (0.00 / 28.013)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_nitrogen
-};
-
-const EosData eos_rpp_nitrogen = {
-	"nitrogen"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_nitrogen}
-};
-
-
-static const IdealData ideal_data_1_cyclopentyltetradecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-64.93, 0}
-			,{1.884, 1}
-			,{-1.09E-03, 2}
-			,{2.43E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_cyclopentyltetradecane = {
-	.M = 266.513
-	,.T_c = 772.0
-	,.p_c = (11.2 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.789
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-374600 / 266.513), (145600 / 266.513)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_cyclopentyltetradecane
-};
-
-const EosData eos_rpp_1_cyclopentyltetradecane = {
-	"1_cyclopentyltetradecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_cyclopentyltetradecane}
-};
-
-
-static const IdealData ideal_data_n_tridecylcylopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-64.21, 0}
-			,{1.79, 1}
-			,{-1.03E-03, 2}
-			,{2.31E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_tridecylcylopentane = {
-	.M = 252.486
-	,.T_c = 761.0
-	,.p_c = (12.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.755
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-354000 / 252.486), (137100 / 252.486)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_tridecylcylopentane
-};
-
-const EosData eos_rpp_n_tridecylcylopentane = {
-	"n_tridecylcylopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_tridecylcylopentane}
-};
-
-
-static const IdealData ideal_data_1_2_dimethylcyclopentane_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{54.52, 0}
-			,{0.7591, 1}
-			,{-4.48E-04, 2}
-			,{1.02E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_dimethylcyclopentane_trans = {
-	.M = 98.189
-	,.T_c = 553.2
-	,.p_c = (34.4 * 1e5)
-	,.rho_c = (1000 * 98.189 / 362.0)
-	,.T_t = 0
-	,.omega = 0.269
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-136800 / 98.189), (38390 / 98.189)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_dimethylcyclopentane_trans
-};
-
-const EosData eos_rpp_1_2_dimethylcyclopentane_trans = {
-	"1_2_dimethylcyclopentane_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_dimethylcyclopentane_trans}
-};
-
-
-static const IdealData ideal_data_1_4_dioxane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-53.57, 0}
-			,{0.5987, 1}
-			,{-4.09E-04, 2}
-			,{1.06E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_4_dioxane = {
-	.M = 88.107
-	,.T_c = 587.0
-	,.p_c = (52.1 * 1e5)
-	,.rho_c = (1000 * 88.107 / 238.0)
-	,.T_t = 0
-	,.omega = 0.281
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-315300 / 88.107), (-180900 / 88.107)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_4_dioxane
-};
-
-const EosData eos_rpp_1_4_dioxane = {
-	"1_4_dioxane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_4_dioxane}
-};
-
-
-static const IdealData ideal_data_n_tridecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-10.46, 0}
-			,{1.245, 1}
-			,{-6.91E-04, 2}
-			,{1.49E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_tridecane = {
-	.M = 184.367
-	,.T_c = 676.0
-	,.p_c = (17.2 * 1e5)
-	,.rho_c = (1000 * 184.367 / 780.0)
-	,.T_t = 0
-	,.omega = 0.619
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-311700 / 184.367), (58490 / 184.367)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_tridecane
-};
-
-const EosData eos_rpp_n_tridecane = {
-	"n_tridecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_tridecane}
-};
-
-
-static const IdealData ideal_data_2_2_3_3_tetramethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-58.83, 0}
-			,{1.231, 1}
-			,{-8.83E-04, 2}
-			,{2.59E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_3_3_tetramethylhexane = {
-	.M = 142.286
-	,.T_c = 623.2
-	,.p_c = (25.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.364
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_3_3_tetramethylhexane
-};
-
-const EosData eos_rpp_2_2_3_3_tetramethylhexane = {
-	"2_2_3_3_tetramethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_3_3_tetramethylhexane}
-};
-
-
-static const IdealData ideal_data_diethyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{21.42, 0}
-			,{0.3359, 1}
-			,{-1.04E-04, 2}
-			,{-9.36E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_diethyl_ether = {
-	.M = 74.123
-	,.T_c = 466.7
-	,.p_c = (36.4 * 1e5)
-	,.rho_c = (1000 * 74.123 / 280.0)
-	,.T_t = 0
-	,.omega = 0.281
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-252400 / 74.123), (-122400 / 74.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_diethyl_ether
-};
-
-const EosData eos_rpp_diethyl_ether = {
-	"diethyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_diethyl_ether}
-};
-
-
-static const IdealData ideal_data_trifluoroamine_oxide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{15.13, 0}
-			,{0.2446, 1}
-			,{-2.53E-04, 2}
-			,{9.38E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_trifluoroamine_oxide = {
-	.M = 87.001
-	,.T_c = 303.0
-	,.p_c = (64.3 * 1e5)
-	,.rho_c = (1000 * 87.001 / 146.9)
-	,.T_t = 0
-	,.omega = 0.212
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-163300 / 87.001), (-96460 / 87.001)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_trifluoroamine_oxide
-};
-
-const EosData eos_rpp_trifluoroamine_oxide = {
-	"trifluoroamine_oxide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_trifluoroamine_oxide}
-};
-
-
-static const IdealData ideal_data_trichlorofluoromethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{40.98, 0}
-			,{0.1668, 1}
-			,{-1.42E-04, 2}
-			,{4.15E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_trichlorofluoromethane = {
-	.M = 137.368
-	,.T_c = 471.2
-	,.p_c = (44.1 * 1e5)
-	,.rho_c = (1000 * 137.368 / 247.8)
-	,.T_t = 0
-	,.omega = 0.189
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-284700 / 137.368), (-245500 / 137.368)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_trichlorofluoromethane
-};
-
-const EosData eos_rpp_trichlorofluoromethane = {
-	"trichlorofluoromethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_trichlorofluoromethane}
-};
-
-
-static const IdealData ideal_data_acetone = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{6.301, 0}
-			,{2.606e-1, 1}
-			,{-1.253e-4, 2}
-			,{2.038e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_acetone = {
-	.M = 58.080
-	,.T_c = 508.1
-	,.p_c = (47.0 * 1e5)
-	,.rho_c = (1000 * 58.080 / 209.0)
-	,.T_t = 0
-	,.omega = 0.304
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.177e+5 / 58.080), (-1.532e+5 / 58.080)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acetone
-};
-
-const EosData eos_rpp_acetone = {
-	"acetone"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acetone}
-};
-
-
-static const IdealData ideal_data_methyl_propyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{21.31, 0}
-			,{0.339, 1}
-			,{-1.13E-04, 2}
-			,{-2.86E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_propyl_ether = {
-	.M = 74.123
-	,.T_c = 476.3
-	,.p_c = (38.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.271
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-237900 / 74.123), (-110000 / 74.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_propyl_ether
-};
-
-const EosData eos_rpp_methyl_propyl_ether = {
-	"methyl_propyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_propyl_ether}
-};
-
-
-static const IdealData ideal_data_2_2_dimethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-50.10, 0}
-			,{0.8956, 1}
-			,{-6.36E-04, 2}
-			,{1.74E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_dimethylpentane = {
-	.M = 100.205
-	,.T_c = 520.5
-	,.p_c = (27.7 * 1e5)
-	,.rho_c = (1000 * 100.205 / 416.0)
-	,.T_t = 0
-	,.omega = 0.287
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-206300 / 100.205), (840 / 100.205)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_dimethylpentane
-};
-
-const EosData eos_rpp_2_2_dimethylpentane = {
-	"2_2_dimethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_dimethylpentane}
-};
-
-
-static const IdealData ideal_data_isobutyl_acetate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{7.31, 0}
-			,{0.574, 1}
-			,{-2.58E-04, 2}
-			,{1.10E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isobutyl_acetate = {
-	.M = 116.160
-	,.T_c = 564.0
-	,.p_c = (30.2 * 1e5)
-	,.rho_c = (1000 * 116.160 / 414.0)
-	,.T_t = 0
-	,.omega = 0.455
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-495500 / 116.160), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isobutyl_acetate
-};
-
-const EosData eos_rpp_isobutyl_acetate = {
-	"isobutyl_acetate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isobutyl_acetate}
-};
-
-
-static const IdealData ideal_data_vinylacetylene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{6.76, 0}
-			,{0.2841, 1}
-			,{-2.27E-04, 2}
-			,{7.46E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_vinylacetylene = {
-	.M = 52.076
-	,.T_c = 455.0
-	,.p_c = (49.6 * 1e5)
-	,.rho_c = (1000 * 52.076 / 202.0)
-	,.T_t = 0
-	,.omega = 0.092
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (304800 / 52.076), (306200 / 52.076)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_vinylacetylene
-};
-
-const EosData eos_rpp_vinylacetylene = {
-	"vinylacetylene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_vinylacetylene}
-};
-
-
-static const IdealData ideal_data_methyl_isopropyl_ketone = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-2.91, 0}
-			,{0.4991, 1}
-			,{-2.94E-04, 2}
-			,{6.67E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_isopropyl_ketone = {
-	.M = 86.134
-	,.T_c = 553.4
-	,.p_c = (38.5 * 1e5)
-	,.rho_c = (1000 * 86.134 / 310.0)
-	,.T_t = 0
-	,.omega = 0.331
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_isopropyl_ketone
-};
-
-const EosData eos_rpp_methyl_isopropyl_ketone = {
-	"methyl_isopropyl_ketone"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_isopropyl_ketone}
-};
-
-
-static const IdealData ideal_data_thiophosphoryl_trifluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{24.92, 0}
-			,{0.2326, 1}
-			,{-2.47E-04, 2}
-			,{9.28E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_thiophosphoryl_trifluoride = {
-	.M = 120.034
-	,.T_c = 346.0
-	,.p_c = (38.2 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.187
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-992300 / 120.034), (-974300 / 120.034)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_thiophosphoryl_trifluoride
-};
-
-const EosData eos_rpp_thiophosphoryl_trifluoride = {
-	"thiophosphoryl_trifluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_thiophosphoryl_trifluoride}
-};
-
-
-static const IdealData ideal_data_methyl_fluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{13.82, 0}
-			,{0.08616, 1}
-			,{-2.07E-05, 2}
-			,{-1.99E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_fluoride = {
-	.M = 34.033
-	,.T_c = 315.0
-	,.p_c = (56.0 * 1e5)
-	,.rho_c = (1000 * 34.033 / 113.2)
-	,.T_t = 0
-	,.omega = 0.187
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-234000 / 34.033), (-210100 / 34.033)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_fluoride
-};
-
-const EosData eos_rpp_methyl_fluoride = {
-	"methyl_fluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_fluoride}
-};
-
-
-static const IdealData ideal_data_isobutyric_acid = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{9.81, 0}
-			,{0.4668, 1}
-			,{-3.72E-04, 2}
-			,{1.35E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isobutyric_acid = {
-	.M = 88.107
-	,.T_c = 609.0
-	,.p_c = (40.5 * 1e5)
-	,.rho_c = (1000 * 88.107 / 292.0)
-	,.T_t = 0
-	,.omega = 0.623
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-484200 / 88.107), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isobutyric_acid
-};
-
-const EosData eos_rpp_isobutyric_acid = {
-	"isobutyric_acid"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isobutyric_acid}
-};
-
-
-static const IdealData ideal_data_1_hexene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-1.75, 0}
-			,{0.5309, 1}
-			,{-2.90E-04, 2}
-			,{6.05E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_hexene = {
-	.M = 84.163
-	,.T_c = 504.0
-	,.p_c = (31.7 * 1e5)
-	,.rho_c = (1000 * 84.163 / 350.0)
-	,.T_t = 0
-	,.omega = 0.285
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-41700 / 84.163), (87500 / 84.163)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_hexene
-};
-
-const EosData eos_rpp_1_hexene = {
-	"1_hexene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_hexene}
-};
-
-
-static const IdealData ideal_data_sec_butylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-65.15, 0}
-			,{0.9893, 1}
-			,{-7.21E-04, 2}
-			,{2.15E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_sec_butylbenzene = {
-	.M = 134.222
-	,.T_c = 664.0
-	,.p_c = (29.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.274
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-17460 / 134.222), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_sec_butylbenzene
-};
-
-const EosData eos_rpp_sec_butylbenzene = {
-	"sec_butylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_sec_butylbenzene}
-};
-
-
-static const IdealData ideal_data_thiophene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-30.61, 0}
-			,{0.448, 1}
-			,{-3.77E-04, 2}
-			,{1.25E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_thiophene = {
-	.M = 84.136
-	,.T_c = 579.4
-	,.p_c = (56.9 * 1e5)
-	,.rho_c = (1000 * 84.136 / 219.0)
-	,.T_t = 0
-	,.omega = 0.196
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (115800 / 84.136), (126900 / 84.136)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_thiophene
-};
-
-const EosData eos_rpp_thiophene = {
-	"thiophene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_thiophene}
-};
-
-
-static const IdealData ideal_data_cyclohexene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-68.65, 0}
-			,{0.7252, 1}
-			,{-5.41E-04, 2}
-			,{1.64E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cyclohexene = {
-	.M = 82.146
-	,.T_c = 560.5
-	,.p_c = (43.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.210
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-5360 / 82.146), (106900 / 82.146)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cyclohexene
-};
-
-const EosData eos_rpp_cyclohexene = {
-	"cyclohexene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cyclohexene}
-};
-
-
-static const IdealData ideal_data_diphenyl = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.707e+1, 0}
-			,{1.106, 1}
-			,{-8.855e-4, 2}
-			,{2.790e-7, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_diphenyl = {
-	.M = 154.212
-	,.T_c = 789.0
-	,.p_c = (38.5 * 1e5)
-	,.rho_c = (1000 * 154.212 / 502.0)
-	,.T_t = 0
-	,.omega = 0.372
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (1.822e+5 / 154.212), (2.803e+5 / 154.212)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_diphenyl
-};
-
-const EosData eos_rpp_diphenyl = {
-	"diphenyl"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_diphenyl}
-};
-
-
-static const IdealData ideal_data_o_cresol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-32.28, 0}
-			,{0.7005, 1}
-			,{-5.92E-04, 2}
-			,{2.21E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_o_cresol = {
-	.M = 108.140
-	,.T_c = 697.6
-	,.p_c = (50.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.433
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-128700 / 108.140), (-33000 / 108.140)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_o_cresol
-};
-
-const EosData eos_rpp_o_cresol = {
-	"o_cresol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_o_cresol}
-};
-
-
-static const IdealData ideal_data_1_1_difluoroethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{86.75, 0}
-			,{0.2396, 1}
-			,{-1.46E-04, 2}
-			,{3.39E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_1_difluoroethane = {
-	.M = 66.051
-	,.T_c = 386.7
-	,.p_c = (45.0 * 1e5)
-	,.rho_c = (1000 * 66.051 / 181.0)
-	,.T_t = 0
-	,.omega = 0.256
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-494000 / 66.051), (-436500 / 66.051)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_1_difluoroethane
-};
-
-const EosData eos_rpp_1_1_difluoroethane = {
-	"1_1_difluoroethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_1_difluoroethane}
-};
-
-
-static const IdealData ideal_data_acetonitrile = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{20.48, 0}
-			,{0.1196, 1}
-			,{-4.49E-05, 2}
-			,{3.20E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_acetonitrile = {
-	.M = 41.053
-	,.T_c = 545.5
-	,.p_c = (48.3 * 1e5)
-	,.rho_c = (1000 * 41.053 / 173.0)
-	,.T_t = 0
-	,.omega = 0.327
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (87920 / 41.053), (105700 / 41.053)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acetonitrile
-};
-
-const EosData eos_rpp_acetonitrile = {
-	"acetonitrile"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acetonitrile}
-};
-
-
-static const IdealData ideal_data_cyanogen = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{35.94, 0}
-			,{0.09253, 1}
-			,{-8.15E-05, 2}
-			,{2.95E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cyanogen = {
-	.M = 52.035
-	,.T_c = 400.0
-	,.p_c = (59.8 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.278
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (309200 / 52.035), (297400 / 52.035)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cyanogen
-};
-
-const EosData eos_rpp_cyanogen = {
-	"cyanogen"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cyanogen}
-};
-
-
-static const IdealData ideal_data_n_undecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-8.40, 0}
-			,{1.054, 1}
-			,{-5.80E-04, 2}
-			,{1.24E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_undecane = {
-	.M = 156.313
-	,.T_c = 638.8
-	,.p_c = (19.7 * 1e5)
-	,.rho_c = (1000 * 156.313 / 660.0)
-	,.T_t = 0
-	,.omega = 0.535
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-270500 / 156.313), (41620 / 156.313)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_undecane
-};
-
-const EosData eos_rpp_n_undecane = {
-	"n_undecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_undecane}
-};
-
-
-static const IdealData ideal_data_2_2_3_trimethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-45.63, 0}
-			,{1.055, 1}
-			,{-7.17E-04, 2}
-			,{1.99E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_3_trimethylhexane = {
-	.M = 128.259
-	,.T_c = 588.0
-	,.p_c = (24.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.332
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-241400 / 128.259), (24530 / 128.259)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_3_trimethylhexane
-};
-
-const EosData eos_rpp_2_2_3_trimethylhexane = {
-	"2_2_3_trimethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_3_trimethylhexane}
-};
-
-
-static const IdealData ideal_data_3_hexene_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-4.34, 0}
-			,{0.551, 1}
-			,{-3.28E-04, 2}
-			,{8.05E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_hexene_trans = {
-	.M = 84.162
-	,.T_c = 519.9
-	,.p_c = (32.5 * 1e5)
-	,.rho_c = (1000 * 84.162 / 350.0)
-	,.T_t = 0
-	,.omega = 0.227
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-54470 / 84.162), (77670 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_hexene_trans
-};
-
-const EosData eos_rpp_3_hexene_trans = {
-	"3_hexene_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_hexene_trans}
-};
-
-
-static const IdealData ideal_data_n_octane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-6.096, 0}
-			,{7.712e-1, 1}
-			,{-4.195e-4, 2}
-			,{8.855e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_octane = {
-	.M = 114.232
-	,.T_c = 568.8
-	,.p_c = (24.9 * 1e5)
-	,.rho_c = (1000 * 114.232 / 492.0)
-	,.T_t = 0
-	,.omega = 0.398
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.086e5 / 114.232), (1.640e4 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_octane
-};
-
-const EosData eos_rpp_n_octane = {
-	"n_octane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_octane}
-};
-
-
-static const IdealData ideal_data_2_methyl_pentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-10.57, 0}
-			,{0.6184, 1}
-			,{-3.57E-04, 2}
-			,{8.09E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methyl_pentane = {
-	.M = 86.178
-	,.T_c = 497.5
-	,.p_c = (30.1 * 1e5)
-	,.rho_c = (1000 * 86.178 / 367.0)
-	,.T_t = 0
-	,.omega = 0.278
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-174400 / 86.178), (-5020 / 86.178)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methyl_pentane
-};
-
-const EosData eos_rpp_2_methyl_pentane = {
-	"2_methyl_pentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methyl_pentane}
-};
-
-
-static const IdealData ideal_data_acrylic_acid = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{1.74, 0}
-			,{0.3191, 1}
-			,{-2.35E-04, 2}
-			,{6.98E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_acrylic_acid = {
-	.M = 72.064
-	,.T_c = 615.0
-	,.p_c = (56.7 * 1e5)
-	,.rho_c = (1000 * 72.064 / 210.0)
-	,.T_t = 0
-	,.omega = 0.560
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-336500 / 72.064), (-286300 / 72.064)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acrylic_acid
-};
-
-const EosData eos_rpp_acrylic_acid = {
-	"acrylic_acid"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acrylic_acid}
-};
-
-
-static const IdealData ideal_data_sulfur_dioxide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{23.85, 0}
-			,{0.06699, 1}
-			,{-4.96E-05, 2}
-			,{1.33E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_sulfur_dioxide = {
-	.M = 64.063
-	,.T_c = 430.8
-	,.p_c = (78.8 * 1e5)
-	,.rho_c = (1000 * 64.063 / 122.2)
-	,.T_t = 0
-	,.omega = 0.256
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-297100 / 64.063), (-300400 / 64.063)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_sulfur_dioxide
-};
-
-const EosData eos_rpp_sulfur_dioxide = {
-	"sulfur_dioxide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_sulfur_dioxide}
-};
-
-
-static const IdealData ideal_data_chlorine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{26.93, 0}
-			,{0.03384, 1}
-			,{-3.87E-05, 2}
-			,{1.55E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_chlorine = {
-	.M = 70.906
-	,.T_c = 416.9
-	,.p_c = (79.8 * 1e5)
-	,.rho_c = (1000 * 70.906 / 123.8)
-	,.T_t = 0
-	,.omega = 0.090
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 70.906), (0 / 70.906)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chlorine
-};
-
-const EosData eos_rpp_chlorine = {
-	"chlorine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chlorine}
-};
-
-
-static const IdealData ideal_data_n_hexylcylopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-58.32, 0}
-			,{1.128, 1}
-			,{-6.54E-04, 2}
-			,{1.47E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_hexylcylopentane = {
-	.M = 154.297
-	,.T_c = 660.1
-	,.p_c = (21.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.476
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-209600 / 154.297), (78250 / 154.297)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_hexylcylopentane
-};
-
-const EosData eos_rpp_n_hexylcylopentane = {
-	"n_hexylcylopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_hexylcylopentane}
-};
-
-
-static const IdealData ideal_data_2_3_3_4_tetramethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-54.92, 0}
-			,{1.091, 1}
-			,{-7.60E-04, 2}
-			,{2.16E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_3_3_4_tetramethylpentane = {
-	.M = 128.259
-	,.T_c = 607.7
-	,.p_c = (27.2 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.313
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-236400 / 128.259), (34120 / 128.259)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_3_3_4_tetramethylpentane
-};
-
-const EosData eos_rpp_2_3_3_4_tetramethylpentane = {
-	"2_3_3_4_tetramethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_3_3_4_tetramethylpentane}
-};
-
-
-static const IdealData ideal_data_1_1_difluoroethene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.07, 0}
-			,{0.2445, 1}
-			,{-2.10E-04, 2}
-			,{7.02E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_1_difluoroethene = {
-	.M = 64.035
-	,.T_c = 302.9
-	,.p_c = (44.6 * 1e5)
-	,.rho_c = (1000 * 64.035 / 154.1)
-	,.T_t = 0
-	,.omega = 0.140
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-345400 / 64.035), (-321700 / 64.035)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_1_difluoroethene
-};
-
-const EosData eos_rpp_1_1_difluoroethene = {
-	"1_1_difluoroethene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_1_difluoroethene}
-};
-
-
-static const IdealData ideal_data_1_heptene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.30, 0}
-			,{0.6297, 1}
-			,{-3.51E-04, 2}
-			,{7.61E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_heptene = {
-	.M = 98.189
-	,.T_c = 537.3
-	,.p_c = (28.3 * 1e5)
-	,.rho_c = (1000 * 98.189 / 440.0)
-	,.T_t = 0
-	,.omega = 0.358
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-62340 / 98.189), (95880 / 98.189)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_heptene
-};
-
-const EosData eos_rpp_1_heptene = {
-	"1_heptene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_heptene}
-};
-
-
-static const IdealData ideal_data_n_tetradecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-10.98, 0}
-			,{1.338, 1}
-			,{-7.42E-04, 2}
-			,{1.60E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_tetradecane = {
-	.M = 198.934
-	,.T_c = 693.0
-	,.p_c = (14.4 * 1e5)
-	,.rho_c = (1000 * 198.934 / 830.0)
-	,.T_t = 0
-	,.omega = 0.581
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-332300 / 198.934), (66860 / 198.934)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_tetradecane
-};
-
-const EosData eos_rpp_n_tetradecane = {
-	"n_tetradecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_tetradecane}
-};
-
-
-static const IdealData ideal_data_4_methyl_2_pentene_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-1.68, 0}
-			,{0.5376, 1}
-			,{-3.04E-04, 2}
-			,{6.75E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_4_methyl_2_pentene_cis = {
-	.M = 84.162
-	,.T_c = 490.0
-	,.p_c = (30.4 * 1e5)
-	,.rho_c = (1000 * 84.162 / 360.0)
-	,.T_t = 0
-	,.omega = 0.290
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-57480 / 84.162), (82190 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_4_methyl_2_pentene_cis
-};
-
-const EosData eos_rpp_4_methyl_2_pentene_cis = {
-	"4_methyl_2_pentene_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_4_methyl_2_pentene_cis}
-};
-
-
-static const IdealData ideal_data_krypton = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
-			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_krypton = {
-	.M = 83.800
-	,.T_c = 209.4
-	,.p_c = (55.0 * 1e5)
-	,.rho_c = (1000 * 83.800 / 91.2)
-	,.T_t = 0
-	,.omega = 0.005
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 83.800), (0 / 83.800)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_krypton
-};
-
-const EosData eos_rpp_krypton = {
-	"krypton"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_krypton}
-};
-
-
-static const IdealData ideal_data_1_hexadecene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.71, 0}
-			,{1.475, 1}
-			,{-8.30E-04, 2}
-			,{1.81E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_hexadecene = {
-	.M = 224.432
-	,.T_c = 717.0
-	,.p_c = (13.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.721
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-248000 / 224.432), (171600 / 224.432)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_hexadecene
-};
-
-const EosData eos_rpp_1_hexadecene = {
-	"1_hexadecene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_hexadecene}
-};
-
-
-static const IdealData ideal_data_fluoroform = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{8.16, 0}
-			,{0.1813, 1}
-			,{-1.38E-04, 2}
-			,{3.94E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_fluoroform = {
-	.M = 70.013
-	,.T_c = 299.3
-	,.p_c = (48.6 * 1e5)
-	,.rho_c = (1000 * 70.013 / 132.7)
-	,.T_t = 0
-	,.omega = 0.260
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-697500 / 70.013), (-662800 / 70.013)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_fluoroform
-};
-
-const EosData eos_rpp_fluoroform = {
-	"fluoroform"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_fluoroform}
-};
-
-
-static const IdealData ideal_data_allyl_cyanide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{21.70, 0}
-			,{0.2572, 1}
-			,{-1.19E-04, 2}
-			,{1.23E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_allyl_cyanide = {
-	.M = 67.091
-	,.T_c = 585.0
-	,.p_c = (39.5 * 1e5)
-	,.rho_c = (1000 * 67.091 / 265.0)
-	,.T_t = 0
-	,.omega = 0.390
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_allyl_cyanide
-};
-
-const EosData eos_rpp_allyl_cyanide = {
-	"allyl_cyanide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_allyl_cyanide}
-};
-
-
-static const IdealData ideal_data_3_methyl_1_2_butadiene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{14.69, 0}
-			,{0.3598, 1}
-			,{-1.98E-04, 2}
-			,{4.26E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_methyl_1_2_butadiene = {
-	.M = 68.119
-	,.T_c = 496.0
-	,.p_c = (41.1 * 1e5)
-	,.rho_c = (1000 * 68.119 / 267.0)
-	,.T_t = 0
-	,.omega = 0.160
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (129800 / 68.119), (198700 / 68.119)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_methyl_1_2_butadiene
-};
-
-const EosData eos_rpp_3_methyl_1_2_butadiene = {
-	"3_methyl_1_2_butadiene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_methyl_1_2_butadiene}
-};
-
-
-static const IdealData ideal_data_methyl_isocyanate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{35.76, 0}
-			,{0.104, 1}
-			,{-5.82E-06, 2}
-			,{-1.69E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_isocyanate = {
-	.M = 57.052
-	,.T_c = 491.0
-	,.p_c = (55.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.278
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-90000 / 57.052), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_isocyanate
-};
-
-const EosData eos_rpp_methyl_isocyanate = {
-	"methyl_isocyanate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_isocyanate}
-};
-
-
-static const IdealData ideal_data_3_methylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_methylhexane = {
-	.M = 100.205
-	,.T_c = 535.3
-	,.p_c = (28.1 * 1e5)
-	,.rho_c = (1000 * 100.205 / 404.0)
-	,.T_t = 0
-	,.omega = 0.323
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-192400 / 100.205), (4600 / 100.205)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_methylhexane
-};
-
-const EosData eos_rpp_3_methylhexane = {
-	"3_methylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_methylhexane}
-};
-
-
-static const IdealData ideal_data_mercury = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
-			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_mercury = {
-	.M = 200.610
-	,.T_c = 1765.0
-	,.p_c = (1510.0 * 1e5)
-	,.rho_c = (1000 * 200.610 / 42.7)
-	,.T_t = 0
-	,.omega = -0.167
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (61340 / 200.610), (31860 / 200.610)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_mercury
-};
-
-const EosData eos_rpp_mercury = {
-	"mercury"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_mercury}
-};
-
-
-static const IdealData ideal_data_dibutyl_amine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{9.76, 0}
-			,{0.8081, 1}
-			,{-4.39E-04, 2}
-			,{9.25E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dibutyl_amine = {
-	.M = 129.247
-	,.T_c = 607.5
-	,.p_c = (26.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.580
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dibutyl_amine
-};
-
-const EosData eos_rpp_dibutyl_amine = {
-	"dibutyl_amine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dibutyl_amine}
-};
-
-
-static const IdealData ideal_data_m_toluidine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-15.99, 0}
-			,{0.5681, 1}
-			,{-3.03E-04, 2}
-			,{4.64E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_m_toluidine = {
-	.M = 107.156
-	,.T_c = 709.0
-	,.p_c = (41.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.410
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_m_toluidine
-};
-
-const EosData eos_rpp_m_toluidine = {
-	"m_toluidine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_m_toluidine}
-};
-
-
-static const IdealData ideal_data_1_2_dibromoethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{25.00, 0}
-			,{0.2517, 1}
-			,{-1.83E-04, 2}
-			,{5.65E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_dibromoethane = {
-	.M = 187.862
-	,.T_c = 646.0
-	,.p_c = (53.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.795
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-38940 / 187.862), (-10600 / 187.862)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_dibromoethane
-};
-
-const EosData eos_rpp_1_2_dibromoethane = {
-	"1_2_dibromoethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_dibromoethane}
-};
-
-
-static const IdealData ideal_data_methyl_acrylate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{15.16, 0}
-			,{0.2796, 1}
-			,{-8.81E-05, 2}
-			,{-1.66E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_acrylate = {
-	.M = 86.091
-	,.T_c = 536.0
-	,.p_c = (43.0 * 1e5)
-	,.rho_c = (1000 * 86.091 / 265.0)
-	,.T_t = 0
-	,.omega = 0.350
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_acrylate
-};
-
-const EosData eos_rpp_methyl_acrylate = {
-	"methyl_acrylate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_acrylate}
-};
-
-
-static const IdealData ideal_data_ethyl_chloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-0.55, 0}
-			,{0.2606, 1}
-			,{-1.84E-04, 2}
-			,{5.55E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_chloride = {
-	.M = 64.515
-	,.T_c = 460.4
-	,.p_c = (52.7 * 1e5)
-	,.rho_c = (1000 * 64.515 / 199.0)
-	,.T_t = 0
-	,.omega = 0.191
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-111800 / 64.515), (-60040 / 64.515)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_chloride
-};
-
-const EosData eos_rpp_ethyl_chloride = {
-	"ethyl_chloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_chloride}
-};
-
-
-static const IdealData ideal_data_methylcyclopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-50.11, 0}
-			,{0.6381, 1}
-			,{-3.64E-04, 2}
-			,{8.01E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methylcyclopentane = {
-	.M = 84.162
-	,.T_c = 532.7
-	,.p_c = (37.8 * 1e5)
-	,.rho_c = (1000 * 84.162 / 319.0)
-	,.T_t = 0
-	,.omega = 0.231
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-106800 / 84.162), (35800 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methylcyclopentane
-};
-
-const EosData eos_rpp_methylcyclopentane = {
-	"methylcyclopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methylcyclopentane}
-};
-
-
-static const IdealData ideal_data_deuterium_oxide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{31.82, 0}
-			,{0.003045, 1}
-			,{2.03E-05, 2}
-			,{-9.74E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_deuterium_oxide = {
-	.M = 20.031
-	,.T_c = 644.0
-	,.p_c = (216.6 * 1e5)
-	,.rho_c = (1000 * 20.031 / 56.6)
-	,.T_t = 0
-	,.omega = 0.351
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-249400 / 20.031), (-234800 / 20.031)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_deuterium_oxide
-};
-
-const EosData eos_rpp_deuterium_oxide = {
-	"deuterium_oxide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_deuterium_oxide}
-};
-
-
-static const IdealData ideal_data_ethyl_mercaptan = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{14.92, 0}
-			,{0.2351, 1}
-			,{-1.36E-04, 2}
-			,{3.16E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_mercaptan = {
-	.M = 62.134
-	,.T_c = 499.0
-	,.p_c = (54.9 * 1e5)
-	,.rho_c = (1000 * 62.134 / 207.0)
-	,.T_t = 0
-	,.omega = 0.191
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-46140 / 62.134), (-4670 / 62.134)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_mercaptan
-};
-
-const EosData eos_rpp_ethyl_mercaptan = {
-	"ethyl_mercaptan"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_mercaptan}
-};
-
-
-static const IdealData ideal_data_tetrahydrofuran = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{19.10, 0}
-			,{0.5162, 1}
-			,{-4.13E-04, 2}
-			,{1.45E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_tetrahydrofuran = {
-	.M = 72.107
-	,.T_c = 540.1
-	,.p_c = (51.9 * 1e5)
-	,.rho_c = (1000 * 72.107 / 224.0)
-	,.T_t = 0
-	,.omega = 0.217
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-184300 / 72.107), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_tetrahydrofuran
-};
-
-const EosData eos_rpp_tetrahydrofuran = {
-	"tetrahydrofuran"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_tetrahydrofuran}
-};
-
-
-static const IdealData ideal_data_silane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{11.18, 0}
-			,{0.122, 1}
-			,{-5.55E-05, 2}
-			,{6.84E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_silane = {
-	.M = 32.122
-	,.T_c = 269.7
-	,.p_c = (48.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.068
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (32660 / 32.122), (55180 / 32.122)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_silane
-};
-
-const EosData eos_rpp_silane = {
-	"silane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_silane}
-};
-
-
-static const IdealData ideal_data_formaldehyde = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{23.48, 0}
-			,{0.03157, 1}
-			,{2.99E-05, 2}
-			,{-2.30E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_formaldehyde = {
-	.M = 30.026
-	,.T_c = 408.0
-	,.p_c = (65.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.253
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-116000 / 30.026), (-110000 / 30.026)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_formaldehyde
-};
-
-const EosData eos_rpp_formaldehyde = {
-	"formaldehyde"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_formaldehyde}
-};
-
-
-static const IdealData ideal_data_1_pentanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.87, 0}
-			,{0.5045, 1}
-			,{-2.64E-04, 2}
-			,{5.12E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_pentanol = {
-	.M = 88.150
-	,.T_c = 588.2
-	,.p_c = (39.1 * 1e5)
-	,.rho_c = (1000 * 88.150 / 326.0)
-	,.T_t = 0
-	,.omega = 0.579
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-298900 / 88.150), (-146100 / 88.150)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_pentanol
-};
-
-const EosData eos_rpp_1_pentanol = {
-	"1_pentanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_pentanol}
-};
-
-
-static const IdealData ideal_data_butene_1 = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-2.994, 0}
-			,{3.532e-1, 1}
-			,{-1.990e-4, 2}
-			,{4.463e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_butene_1 = {
-	.M = 56.108
-	,.T_c = 419.6
-	,.p_c = (40.2 * 1e5)
-	,.rho_c = (1000 * 56.108 / 240)
-	,.T_t = 0
-	,.omega = 0.191
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-37.5e+3 / 56.108), (7.134e+4 / 56.108)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_butene_1
-};
-
-const EosData eos_rpp_butene_1 = {
-	"butene_1"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_butene_1}
-};
-
-
-static const IdealData ideal_data_1_dodecene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-6.54, 0}
-			,{1.098, 1}
-			,{-6.16E-04, 2}
-			,{1.34E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_dodecene = {
-	.M = 168.324
-	,.T_c = 657.0
-	,.p_c = (18.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.558
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-165500 / 168.324), (138000 / 168.324)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_dodecene
-};
-
-const EosData eos_rpp_1_dodecene = {
-	"1_dodecene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_dodecene}
-};
-
-
-static const IdealData ideal_data_hydrogen_equilib = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{27.14, 0}
-			,{0.009274, 1}
-			,{-1.38E-05, 2}
-			,{7.65E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_hydrogen_equilib = {
-	.M = 2.016
-	,.T_c = 33.0
-	,.p_c = (12.9 * 1e5)
-	,.rho_c = (1000 * 2.016 / 64.3)
-	,.T_t = 0
-	,.omega = -0.216
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 2.016), (0 / 2.016)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_hydrogen_equilib
-};
-
-const EosData eos_rpp_hydrogen_equilib = {
-	"hydrogen_equilib"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_hydrogen_equilib}
-};
-
-
-static const IdealData ideal_data_n_hexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-4.413, 0}
-			,{5.820e-1, 1}
-			,{-3.119e-4, 2}
-			,{6.494e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_hexane = {
-	.M = 86.178
-	,.T_c = 507.5
-	,.p_c = (30.1 * 1e5)
-	,.rho_c = (1000 * 86.178 / 370)
-	,.T_t = 0
-	,.omega = 0.299
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.673e+5 / 86.178), (-1.670e+2 / 86.178)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_hexane
-};
-
-const EosData eos_rpp_n_hexane = {
-	"n_hexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_hexane}
-};
-
-
-static const IdealData ideal_data_2_methylnaphthalene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-56.52, 0}
-			,{0.8997, 1}
-			,{-6.47E-04, 2}
-			,{1.84E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methylnaphthalene = {
-	.M = 142.201
-	,.T_c = 761.0
-	,.p_c = (35.0 * 1e5)
-	,.rho_c = (1000 * 142.201 / 462.0)
-	,.T_t = 0
-	,.omega = 0.382
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (116200 / 142.201), (216300 / 142.201)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methylnaphthalene
-};
-
-const EosData eos_rpp_2_methylnaphthalene = {
-	"2_methylnaphthalene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methylnaphthalene}
-};
-
-
-static const IdealData ideal_data_3_methyl_pentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-2.39, 0}
-			,{0.569, 1}
-			,{-2.87E-04, 2}
-			,{5.03E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_methyl_pentane = {
-	.M = 86.178
-	,.T_c = 504.5
-	,.p_c = (31.2 * 1e5)
-	,.rho_c = (1000 * 86.178 / 367.0)
-	,.T_t = 0
-	,.omega = 0.272
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-171700 / 86.178), (-2140 / 86.178)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_methyl_pentane
-};
-
-const EosData eos_rpp_3_methyl_pentane = {
-	"3_methyl_pentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_methyl_pentane}
-};
-
-
-static const IdealData ideal_data_2_3_dimethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_3_dimethylhexane = {
-	.M = 114.232
-	,.T_c = 563.5
-	,.p_c = (26.3 * 1e5)
-	,.rho_c = (1000 * 114.232 / 468.0)
-	,.T_t = 0
-	,.omega = 0.346
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-214100 / 114.232), (17710 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_3_dimethylhexane
-};
-
-const EosData eos_rpp_2_3_dimethylhexane = {
-	"2_3_dimethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_3_dimethylhexane}
-};
-
-
-static const IdealData ideal_data_acetylene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{26.82, 0}
-			,{0.07578, 1}
-			,{-5.01E-05, 2}
-			,{1.41E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_acetylene = {
-	.M = 26.038
-	,.T_c = 308.3
-	,.p_c = (61.4 * 1e5)
-	,.rho_c = (1000 * 26.038 / 112.7)
-	,.T_t = 0
-	,.omega = 0.190
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (226900 / 26.038), (209300 / 26.038)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acetylene
-};
-
-const EosData eos_rpp_acetylene = {
-	"acetylene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acetylene}
-};
-
-
-static const IdealData ideal_data_chloro_benzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-33.89, 0}
-			,{0.5631, 1}
-			,{-4.522e-04, 2}
-			,{1.426e-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_chloro_benzene = {
-	.M = 112.559
-	,.T_c = 632.4
-	,.p_c = (45.2 * 1e5)
-	,.rho_c = (1000 * 112.559 / 308.0)
-	,.T_t = 0
-	,.omega = 0.249
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (5.187e04 / 112.559), (9.923e04 / 112.559)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chloro_benzene
-};
-
-const EosData eos_rpp_chloro_benzene = {
-	"chloro_benzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chloro_benzene}
-};
-
-
-static const IdealData ideal_data_chlorodifluoromethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{17.30, 0}
-			,{0.1618, 1}
-			,{-1.17E-04, 2}
-			,{3.06E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_chlorodifluoromethane = {
-	.M = 86.469
-	,.T_c = 369.3
-	,.p_c = (49.7 * 1e5)
-	,.rho_c = (1000 * 86.469 / 165.6)
-	,.T_t = 0
-	,.omega = 0.221
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-502000 / 86.469), (-470900 / 86.469)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chlorodifluoromethane
-};
-
-const EosData eos_rpp_chlorodifluoromethane = {
-	"chlorodifluoromethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chlorodifluoromethane}
-};
-
-
-static const IdealData ideal_data_2_4_dimethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_4_dimethylhexane = {
-	.M = 114.232
-	,.T_c = 553.5
-	,.p_c = (25.6 * 1e5)
-	,.rho_c = (1000 * 114.232 / 472.0)
-	,.T_t = 0
-	,.omega = 0.343
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-219600 / 114.232), (11720 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_4_dimethylhexane
-};
-
-const EosData eos_rpp_2_4_dimethylhexane = {
-	"2_4_dimethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_4_dimethylhexane}
-};
-
-
-static const IdealData ideal_data_ethyl_propionate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{19.85, 0}
-			,{0.4034, 1}
-			,{-1.44E-04, 2}
-			,{-7.39E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_propionate = {
-	.M = 102.134
-	,.T_c = 546.0
-	,.p_c = (33.6 * 1e5)
-	,.rho_c = (1000 * 102.134 / 345.0)
-	,.T_t = 0
-	,.omega = 0.391
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-470200 / 102.134), (-323700 / 102.134)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_propionate
-};
-
-const EosData eos_rpp_ethyl_propionate = {
-	"ethyl_propionate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_propionate}
-};
-
-
-static const IdealData ideal_data_3_3_5_trimethylheptane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-70.37, 0}
-			,{1.232, 1}
-			,{-8.65E-04, 2}
-			,{2.46E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_3_5_trimethylheptane = {
-	.M = 142.286
-	,.T_c = 609.7
-	,.p_c = (23.2 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.382
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-258700 / 142.286), (33580 / 142.286)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_3_5_trimethylheptane
-};
-
-const EosData eos_rpp_3_3_5_trimethylheptane = {
-	"3_3_5_trimethylheptane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_3_5_trimethylheptane}
-};
-
-
-static const IdealData ideal_data_i_pentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.525, 0}
-			,{5.066e-1, 1}
-			,{-2.729e-4, 2}
-			,{5.723e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_i_pentane = {
-	.M = 72.151
-	,.T_c = 460.4
-	,.p_c = (33.9 * 1e5)
-	,.rho_c = (1000 * 72.151 / 306)
-	,.T_t = 0
-	,.omega = 0.227
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.546e+5 / 72.151), (-1.482e+4 / 72.151)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_i_pentane
-};
-
-const EosData eos_rpp_i_pentane = {
-	"i_pentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_i_pentane}
-};
-
-
-static const IdealData ideal_data_trifluoroacetonitrile = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{22.13, 0}
-			,{0.2519, 1}
-			,{-2.36E-04, 2}
-			,{8.21E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_trifluoroacetonitrile = {
-	.M = 95.023
-	,.T_c = 311.1
-	,.p_c = (36.2 * 1e5)
-	,.rho_c = (1000 * 95.023 / 202.0)
-	,.T_t = 0
-	,.omega = 0.267
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-49570 / 95.023), (-46220 / 95.023)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_trifluoroacetonitrile
-};
-
-const EosData eos_rpp_trifluoroacetonitrile = {
-	"trifluoroacetonitrile"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_trifluoroacetonitrile}
-};
-
-
-static const IdealData ideal_data_methyl_benzoate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-21.21, 0}
-			,{0.5501, 1}
-			,{-1.80E-04, 2}
-			,{4.43E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_benzoate = {
-	.M = 136.151
-	,.T_c = 692.0
-	,.p_c = (36.4 * 1e5)
-	,.rho_c = (1000 * 136.151 / 396.0)
-	,.T_t = 0
-	,.omega = 0.430
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-254000 / 136.151), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_benzoate
-};
-
-const EosData eos_rpp_methyl_benzoate = {
-	"methyl_benzoate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_benzoate}
-};
-
-
-static const IdealData ideal_data_trans_difluorodiazine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{22.54, 0}
-			,{0.1377, 1}
-			,{-1.26E-04, 2}
-			,{4.23E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_trans_difluorodiazine = {
-	.M = 66.010
-	,.T_c = 260.0
-	,.p_c = (55.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.217
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (81220 / 66.010), (120500 / 66.010)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_trans_difluorodiazine
-};
-
-const EosData eos_rpp_trans_difluorodiazine = {
-	"trans_difluorodiazine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_trans_difluorodiazine}
-};
-
-
-static const IdealData ideal_data_perfluoroethene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{29.01, 0}
-			,{0.2277, 1}
-			,{-2.04E-04, 2}
-			,{6.78E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_perfluoroethene = {
-	.M = 100.016
-	,.T_c = 306.5
-	,.p_c = (39.4 * 1e5)
-	,.rho_c = (1000 * 100.016 / 172.0)
-	,.T_t = 0
-	,.omega = 0.233
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-65900 / 100.016), (-624100 / 100.016)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_perfluoroethene
-};
-
-const EosData eos_rpp_perfluoroethene = {
-	"perfluoroethene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_perfluoroethene}
-};
-
-
-static const IdealData ideal_data_2_chlorobutane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.43, 0}
-			,{0.4559, 1}
-			,{-2.98E-04, 2}
-			,{8.26E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_chlorobutane = {
-	.M = 92.569
-	,.T_c = 520.6
-	,.p_c = (39.5 * 1e5)
-	,.rho_c = (1000 * 92.569 / 305.0)
-	,.T_t = 0
-	,.omega = 0.300
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-161600 / 92.569), (-53510 / 92.569)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_chlorobutane
-};
-
-const EosData eos_rpp_2_chlorobutane = {
-	"2_chlorobutane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_chlorobutane}
-};
-
-
-static const IdealData ideal_data_diethyl_sulfide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{13.59, 0}
-			,{0.3959, 1}
-			,{-1.78E-04, 2}
-			,{2.65E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_diethyl_sulfide = {
-	.M = 90.184
-	,.T_c = 557.0
-	,.p_c = (39.6 * 1e5)
-	,.rho_c = (1000 * 90.184 / 318.0)
-	,.T_t = 0
-	,.omega = 0.292
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-83530 / 90.184), (17800 / 90.184)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_diethyl_sulfide
-};
-
-const EosData eos_rpp_diethyl_sulfide = {
-	"diethyl_sulfide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_diethyl_sulfide}
-};
-
-
-static const IdealData ideal_data_cyclopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-53.62, 0}
-			,{0.5426, 1}
-			,{-3.03E-04, 2}
-			,{6.49E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cyclopentane = {
-	.M = 70.135
-	,.T_c = 511.7
-	,.p_c = (45.1 * 1e5)
-	,.rho_c = (1000 * 70.135 / 260.0)
-	,.T_t = 0
-	,.omega = 0.196
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-77290 / 70.135), (38600 / 70.135)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cyclopentane
-};
-
-const EosData eos_rpp_cyclopentane = {
-	"cyclopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cyclopentane}
-};
-
-
-static const IdealData ideal_data_1_2_dimethylcyclohexane_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-68.37, 0}
-			,{0.8972, 1}
-			,{-5.14E-04, 2}
-			,{1.10E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_dimethylcyclohexane_cis = {
-	.M = 112.216
-	,.T_c = 606.0
-	,.p_c = (29.6 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.236
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-172300 / 112.216), (41240 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_dimethylcyclohexane_cis
-};
-
-const EosData eos_rpp_1_2_dimethylcyclohexane_cis = {
-	"1_2_dimethylcyclohexane_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_dimethylcyclohexane_cis}
-};
-
-
-static const IdealData ideal_data_furan = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-35.53, 0}
-			,{0.4321, 1}
-			,{-3.46E-04, 2}
-			,{1.07E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_furan = {
-	.M = 68.075
-	,.T_c = 490.2
-	,.p_c = (55.0 * 1e5)
-	,.rho_c = (1000 * 68.075 / 218.0)
-	,.T_t = 0
-	,.omega = 0.209
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-34700 / 68.075), (879 / 68.075)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_furan
-};
-
-const EosData eos_rpp_furan = {
-	"furan"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_furan}
-};
-
-
-static const IdealData ideal_data_acetaldehyde = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{7.72, 0}
-			,{0.1823, 1}
-			,{-1.01E-04, 2}
-			,{2.38E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_acetaldehyde = {
-	.M = 44.054
-	,.T_c = 461.0
-	,.p_c = (55.7 * 1e5)
-	,.rho_c = (1000 * 44.054 / 154.0)
-	,.T_t = 0
-	,.omega = 0.303
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-164400 / 44.054), (-133400 / 44.054)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acetaldehyde
-};
-
-const EosData eos_rpp_acetaldehyde = {
-	"acetaldehyde"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acetaldehyde}
-};
-
-
-static const IdealData ideal_data_hydrogen_cyanide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{21.86, 0}
-			,{0.06062, 1}
-			,{-4.96E-05, 2}
-			,{1.82E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_hydrogen_cyanide = {
-	.M = 27.026
-	,.T_c = 456.7
-	,.p_c = (53.9 * 1e5)
-	,.rho_c = (1000 * 27.026 / 138.8)
-	,.T_t = 0
-	,.omega = 0.388
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (130600 / 27.026), (120200 / 27.026)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_hydrogen_cyanide
-};
-
-const EosData eos_rpp_hydrogen_cyanide = {
-	"hydrogen_cyanide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_hydrogen_cyanide}
-};
-
-
-static const IdealData ideal_data_4_methylheptane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_4_methylheptane = {
-	.M = 114.232
-	,.T_c = 561.7
-	,.p_c = (25.4 * 1e5)
-	,.rho_c = (1000 * 114.232 / 476.0)
-	,.T_t = 0
-	,.omega = 0.371
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-212200 / 114.232), (16750 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_4_methylheptane
-};
-
-const EosData eos_rpp_4_methylheptane = {
-	"4_methylheptane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_4_methylheptane}
-};
-
-
-static const IdealData ideal_data_morpholine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-42.80, 0}
-			,{0.5388, 1}
-			,{-2.67E-04, 2}
-			,{4.20E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_morpholine = {
-	.M = 87.122
-	,.T_c = 618.0
-	,.p_c = (54.7 * 1e5)
-	,.rho_c = (1000 * 87.122 / 253.0)
-	,.T_t = 0
-	,.omega = 0.370
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_morpholine
-};
-
-const EosData eos_rpp_morpholine = {
-	"morpholine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_morpholine}
-};
-
-
-static const IdealData ideal_data_p_xylene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-25.09, 0}
-			,{0.6042, 1}
-			,{-3.37E-04, 2}
-			,{6.82E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_p_xylene = {
-	.M = 106.168
-	,.T_c = 616.2
-	,.p_c = (35.1 * 1e5)
-	,.rho_c = (1000 * 106.168 / 379.0)
-	,.T_t = 0
-	,.omega = 0.321
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (17960 / 106.168), (121200 / 106.168)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_p_xylene
-};
-
-const EosData eos_rpp_p_xylene = {
-	"p_xylene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_p_xylene}
-};
-
-
-static const IdealData ideal_data_2_3_dimethyl_butane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-14.61, 0}
-			,{0.615, 1}
-			,{-3.38E-04, 2}
-			,{6.82E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_3_dimethyl_butane = {
-	.M = 86.178
-	,.T_c = 500.0
-	,.p_c = (31.3 * 1e5)
-	,.rho_c = (1000 * 86.178 / 358.0)
-	,.T_t = 0
-	,.omega = 0.247
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-177900 / 86.178), (-4100 / 86.178)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_3_dimethyl_butane
-};
-
-const EosData eos_rpp_2_3_dimethyl_butane = {
-	"2_3_dimethyl_butane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_3_dimethyl_butane}
-};
-
-
-static const IdealData ideal_data_methyl_n_propyl_ketone = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{1.15, 0}
-			,{0.4802, 1}
-			,{-2.82E-04, 2}
-			,{6.66E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_n_propyl_ketone = {
-	.M = 86.134
-	,.T_c = 561.1
-	,.p_c = (36.9 * 1e5)
-	,.rho_c = (1000 * 86.134 / 301.0)
-	,.T_t = 0
-	,.omega = 0.346
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-258800 / 86.134), (-137200 / 86.134)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_n_propyl_ketone
-};
-
-const EosData eos_rpp_methyl_n_propyl_ketone = {
-	"methyl_n_propyl_ketone"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_n_propyl_ketone}
-};
-
-
-static const IdealData ideal_data_isopropyl_amine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.49, 0}
-			,{0.4175, 1}
-			,{-2.83E-04, 2}
-			,{8.35E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isopropyl_amine = {
-	.M = 59.112
-	,.T_c = 471.8
-	,.p_c = (45.4 * 1e5)
-	,.rho_c = (1000 * 59.112 / 221.0)
-	,.T_t = 0
-	,.omega = 0.291
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-83820 / 59.112), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isopropyl_amine
-};
-
-const EosData eos_rpp_isopropyl_amine = {
-	"isopropyl_amine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isopropyl_amine}
-};
-
-
-static const IdealData ideal_data_dodecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.328, 0}
-			,{1.149, 1}
-			,{-6.347e-4, 2}
-			,{1.359e-7, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dodecane = {
-	.M = 170.34
-	,.T_c = 658.2
-	,.p_c = (18.2 * 1e5)
-	,.rho_c = (1000 * 170.34 / 713.0)
-	,.T_t = 0
-	,.omega = 0.575
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.911e5 / 170.34), (5.007e4 / 170.34)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dodecane
-};
-
-const EosData eos_rpp_dodecane = {
-	"dodecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dodecane}
-};
-
-
-static const IdealData ideal_data_1_2_dimethylcyclopentane_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-55.64, 0}
-			,{0.7616, 1}
-			,{-4.48E-04, 2}
-			,{1.01E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_dimethylcyclopentane_cis = {
-	.M = 98.189
-	,.T_c = 564.8
-	,.p_c = (34.4 * 1e5)
-	,.rho_c = (1000 * 98.189 / 368.0)
-	,.T_t = 0
-	,.omega = 0.269
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (129600 / 98.189), (45760 / 98.189)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_dimethylcyclopentane_cis
-};
-
-const EosData eos_rpp_1_2_dimethylcyclopentane_cis = {
-	"1_2_dimethylcyclopentane_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_dimethylcyclopentane_cis}
-};
-
-
-static const IdealData ideal_data_chlorine_pentafluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{30.98, 0}
-			,{0.3203, 1}
-			,{-3.69E-04, 2}
-			,{1.46E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_chlorine_pentafluoride = {
-	.M = 130.433
-	,.T_c = 416.0
-	,.p_c = (52.7 * 1e5)
-	,.rho_c = (1000 * 130.433 / 233.0)
-	,.T_t = 0
-	,.omega = 0.216
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-238600 / 130.433), (-146900 / 130.433)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chlorine_pentafluoride
-};
-
-const EosData eos_rpp_chlorine_pentafluoride = {
-	"chlorine_pentafluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chlorine_pentafluoride}
-};
-
-
-static const IdealData ideal_data_silicon_tetrafluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{26.78, 0}
-			,{0.2157, 1}
-			,{-2.20E-04, 2}
-			,{8.03E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_silicon_tetrafluoride = {
-	.M = 104.090
-	,.T_c = 259.0
-	,.p_c = (37.2 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.753
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1616000 / 104.090), (-1574000 / 104.090)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_silicon_tetrafluoride
-};
-
-const EosData eos_rpp_silicon_tetrafluoride = {
-	"silicon_tetrafluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_silicon_tetrafluoride}
-};
-
-
-static const IdealData ideal_data_1_2_butadiene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{11.20, 0}
-			,{0.2724, 1}
-			,{-1.47E-04, 2}
-			,{3.09E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_butadiene = {
-	.M = 54.092
-	,.T_c = 443.7
-	,.p_c = (44.9 * 1e5)
-	,.rho_c = (1000 * 54.092 / 219.0)
-	,.T_t = 0
-	,.omega = 0.255
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (162300 / 54.092), (198600 / 54.092)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_butadiene
-};
-
-const EosData eos_rpp_1_2_butadiene = {
-	"1_2_butadiene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_butadiene}
-};
-
-
-static const IdealData ideal_data_acrylonitrile = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{10.69, 0}
-			,{0.2208, 1}
-			,{-1.57E-04, 2}
-			,{4.60E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_acrylonitrile = {
-	.M = 53.064
-	,.T_c = 536.0
-	,.p_c = (45.6 * 1e5)
-	,.rho_c = (1000 * 53.064 / 210.0)
-	,.T_t = 0
-	,.omega = 0.350
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (185100 / 53.064), (195400 / 53.064)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acrylonitrile
-};
-
-const EosData eos_rpp_acrylonitrile = {
-	"acrylonitrile"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acrylonitrile}
-};
-
-
-static const IdealData ideal_data_3_3_dimethyl_1_butene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-12.56, 0}
-			,{0.5485, 1}
-			,{-2.92E-04, 2}
-			,{5.21E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_3_dimethyl_1_butene = {
-	.M = 84.162
-	,.T_c = 490.0
-	,.p_c = (32.5 * 1e5)
-	,.rho_c = (1000 * 84.162 / 340.0)
-	,.T_t = 0
-	,.omega = 0.121
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-61550 / 84.162), (98220 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_3_dimethyl_1_butene
-};
-
-const EosData eos_rpp_3_3_dimethyl_1_butene = {
-	"3_3_dimethyl_1_butene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_3_dimethyl_1_butene}
-};
-
-
-static const IdealData ideal_data_cyclobutane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-50.25, 0}
-			,{0.5024, 1}
-			,{-3.56E-04, 2}
-			,{1.05E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cyclobutane = {
-	.M = 56.108
-	,.T_c = 460.0
-	,.p_c = (49.9 * 1e5)
-	,.rho_c = (1000 * 56.108 / 210.0)
-	,.T_t = 0
-	,.omega = 0.181
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (26670 / 56.108), (110100 / 56.108)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cyclobutane
-};
-
-const EosData eos_rpp_cyclobutane = {
-	"cyclobutane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cyclobutane}
-};
-
-
-static const IdealData ideal_data_propionitrile = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{15.40, 0}
-			,{0.2245, 1}
-			,{-1.10E-04, 2}
-			,{1.95E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_propionitrile = {
-	.M = 55.080
-	,.T_c = 564.4
-	,.p_c = (41.8 * 1e5)
-	,.rho_c = (1000 * 55.080 / 229.0)
-	,.T_t = 0
-	,.omega = 0.313
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (50660 / 55.080), (96210 / 55.080)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_propionitrile
-};
-
-const EosData eos_rpp_propionitrile = {
-	"propionitrile"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_propionitrile}
-};
-
-
-static const IdealData ideal_data_carbon_monoxide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{30.87, 0}
-			,{-0.01285, 1}
-			,{2.79E-05, 2}
-			,{-1.27E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_carbon_monoxide = {
-	.M = 28.010
-	,.T_c = 132.9
-	,.p_c = (35.0 * 1e5)
-	,.rho_c = (1000 * 28.010 / 93.2)
-	,.T_t = 0
-	,.omega = 0.066
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-110600 / 28.010), (-137400 / 28.010)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_carbon_monoxide
-};
-
-const EosData eos_rpp_carbon_monoxide = {
-	"carbon_monoxide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_carbon_monoxide}
-};
-
-
-static const IdealData ideal_data_boron_trifluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{18.58, 0}
-			,{0.1399, 1}
-			,{-1.22E-04, 2}
-			,{3.92E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_boron_trifluoride = {
-	.M = 67.805
-	,.T_c = 260.8
-	,.p_c = (49.9 * 1e5)
-	,.rho_c = (1000 * 67.805 / 114.7)
-	,.T_t = 0
-	,.omega = 0.393
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1136000 / 67.805), (-1120000 / 67.805)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_boron_trifluoride
-};
-
-const EosData eos_rpp_boron_trifluoride = {
-	"boron_trifluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_boron_trifluoride}
-};
-
-
-static const IdealData ideal_data_ethyl_amine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.69, 0}
-			,{0.2752, 1}
-			,{-1.58E-04, 2}
-			,{3.81E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_amine = {
-	.M = 45.085
-	,.T_c = 456.4
-	,.p_c = (56.4 * 1e5)
-	,.rho_c = (1000 * 45.085 / 182.0)
-	,.T_t = 0
-	,.omega = 0.289
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-46050 / 45.085), (33700 / 45.085)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_amine
-};
-
-const EosData eos_rpp_ethyl_amine = {
-	"ethyl_amine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_amine}
-};
-
-
-static const IdealData ideal_data_1_2_propylene_oxide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-8.46, 0}
-			,{0.3257, 1}
-			,{-1.99E-04, 2}
-			,{4.82E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_propylene_oxide = {
-	.M = 58.080
-	,.T_c = 482.2
-	,.p_c = (49.2 * 1e5)
-	,.rho_c = (1000 * 58.080 / 186.0)
-	,.T_t = 0
-	,.omega = 0.269
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-92820 / 58.080), (-25800 / 58.080)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_propylene_oxide
-};
-
-const EosData eos_rpp_1_2_propylene_oxide = {
-	"1_2_propylene_oxide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_propylene_oxide}
-};
-
-
-static const IdealData ideal_data_1_4_diethylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-37.42, 0}
-			,{0.8671, 1}
-			,{-5.56E-04, 2}
-			,{1.41E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_4_diethylbenzene = {
-	.M = 134.222
-	,.T_c = 657.9
-	,.p_c = (28.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.404
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-22270 / 134.222), (138000 / 134.222)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_4_diethylbenzene
-};
-
-const EosData eos_rpp_1_4_diethylbenzene = {
-	"1_4_diethylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_4_diethylbenzene}
-};
-
-
-static const IdealData ideal_data_phosgene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{28.09, 0}
-			,{0.1361, 1}
-			,{-1.37E-04, 2}
-			,{5.07E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_phosgene = {
-	.M = 98.916
-	,.T_c = 455.0
-	,.p_c = (56.7 * 1e5)
-	,.rho_c = (1000 * 98.916 / 190.1)
-	,.T_t = 0
-	,.omega = 0.205
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-221100 / 98.916), (-206900 / 98.916)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_phosgene
-};
-
-const EosData eos_rpp_phosgene = {
-	"phosgene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_phosgene}
-};
-
-
-static const IdealData ideal_data_trichloroethene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{30.17, 0}
-			,{0.2287, 1}
-			,{-2.23E-04, 2}
-			,{8.24E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_trichloroethene = {
-	.M = 131.389
-	,.T_c = 572.0
-	,.p_c = (50.5 * 1e5)
-	,.rho_c = (1000 * 131.389 / 256.0)
-	,.T_t = 0
-	,.omega = 0.213
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-5862 / 131.389), (19890 / 131.389)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_trichloroethene
-};
-
-const EosData eos_rpp_trichloroethene = {
-	"trichloroethene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_trichloroethene}
-};
-
-
-static const IdealData ideal_data_isobutaol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.71, 0}
-			,{0.4689, 1}
-			,{-2.88E-04, 2}
-			,{7.23E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isobutaol = {
-	.M = 74.123
-	,.T_c = 547.8
-	,.p_c = (43.0 * 1e5)
-	,.rho_c = (1000 * 74.123 / 273.0)
-	,.T_t = 0
-	,.omega = 0.592
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-283400 / 74.123), (-167400 / 74.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isobutaol
-};
-
-const EosData eos_rpp_isobutaol = {
-	"isobutaol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isobutaol}
-};
-
-
-static const IdealData ideal_data_cyclopropane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-35.24, 0}
-			,{0.3813, 1}
-			,{-2.88E-04, 2}
-			,{9.04E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cyclopropane = {
-	.M = 42.081
-	,.T_c = 397.8
-	,.p_c = (54.9 * 1e5)
-	,.rho_c = (1000 * 42.081 / 163.0)
-	,.T_t = 0
-	,.omega = 0.130
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (53340 / 42.081), (104500 / 42.081)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cyclopropane
-};
-
-const EosData eos_rpp_cyclopropane = {
-	"cyclopropane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cyclopropane}
-};
-
-
-static const IdealData ideal_data_1_1_dichlorotetrafluoroetane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{40.45, 0}
-			,{0.3278, 1}
-			,{-2.75E-04, 2}
-			,{7.82E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_1_dichlorotetrafluoroetane = {
-	.M = 170.922
-	,.T_c = 418.6
-	,.p_c = (33.0 * 1e5)
-	,.rho_c = (1000 * 170.922 / 294.2)
-	,.T_t = 0
-	,.omega = 0.263
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_1_dichlorotetrafluoroetane
-};
-
-const EosData eos_rpp_1_1_dichlorotetrafluoroetane = {
-	"1_1_dichlorotetrafluoroetane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_1_dichlorotetrafluoroetane}
-};
-
-
-static const IdealData ideal_data_n_propanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{2.470, 0}
-			,{3.325e-1, 1}
-			,{-1.855e-4, 2}
-			,{4.296e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_propanol = {
-	.M = 60.096
-	,.T_c = 536.7
-	,.p_c = (51.7 * 1e5)
-	,.rho_c = (1000 * 60.096 / 218.5)
-	,.T_t = 0
-	,.omega = 0.623
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.566e+5 / 60.096), (-1.619e+5 / 60.096)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_propanol
-};
-
-const EosData eos_rpp_n_propanol = {
-	"n_propanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_propanol}
-};
-
-
-static const IdealData ideal_data_ethyl_acetate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{7.24, 0}
-			,{0.4072, 1}
-			,{-2.09E-04, 2}
-			,{2.86E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_acetate = {
-	.M = 88.107
-	,.T_c = 523.2
-	,.p_c = (38.3 * 1e5)
-	,.rho_c = (1000 * 88.107 / 286.0)
-	,.T_t = 0
-	,.omega = 0.362
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-443200 / 88.107), (-327600 / 88.107)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_acetate
-};
-
-const EosData eos_rpp_ethyl_acetate = {
-	"ethyl_acetate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_acetate}
-};
-
-
-static const IdealData ideal_data_dibutyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{6.05, 0}
-			,{0.7729, 1}
-			,{-4.09E-04, 2}
-			,{8.09E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dibutyl_ether = {
-	.M = 130.231
-	,.T_c = 580.0
-	,.p_c = (25.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.502
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-334100 / 130.231), (-88590 / 130.231)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dibutyl_ether
-};
-
-const EosData eos_rpp_dibutyl_ether = {
-	"dibutyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dibutyl_ether}
-};
-
-
-static const IdealData ideal_data_3_ethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_ethylhexane = {
-	.M = 114.232
-	,.T_c = 565.5
-	,.p_c = (26.1 * 1e5)
-	,.rho_c = (1000 * 114.232 / 455.0)
-	,.T_t = 0
-	,.omega = 0.361
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-211000 / 114.232), (16940 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_ethylhexane
-};
-
-const EosData eos_rpp_3_ethylhexane = {
-	"3_ethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_ethylhexane}
-};
-
-
-static const IdealData ideal_data_butyl_benzoate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-17.37, 0}
-			,{0.8657, 1}
-			,{-4.61E-04, 2}
-			,{7.25E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_butyl_benzoate = {
-	.M = 178.232
-	,.T_c = 723.0
-	,.p_c = (26.0 * 1e5)
-	,.rho_c = (1000 * 178.232 / 561.0)
-	,.T_t = 0
-	,.omega = 0.580
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_butyl_benzoate
-};
-
-const EosData eos_rpp_butyl_benzoate = {
-	"butyl_benzoate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_butyl_benzoate}
-};
-
-
-static const IdealData ideal_data_nitrogen_trifluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{11.41, 0}
-			,{0.1948, 1}
-			,{-2.02E-04, 2}
-			,{7.45E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_nitrogen_trifluoride = {
-	.M = 71.002
-	,.T_c = 234.0
-	,.p_c = (45.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.135
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-131600 / 71.002), (-90100 / 71.002)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_nitrogen_trifluoride
-};
-
-const EosData eos_rpp_nitrogen_trifluoride = {
-	"nitrogen_trifluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_nitrogen_trifluoride}
-};
-
-
-static const IdealData ideal_data_n_propyl_amine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{6.69, 0}
-			,{0.3498, 1}
-			,{-1.82E-04, 2}
-			,{3.59E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_propyl_amine = {
-	.M = 59.112
-	,.T_c = 497.0
-	,.p_c = (48.1 * 1e5)
-	,.rho_c = (1000 * 59.112 / 233.0)
-	,.T_t = 0
-	,.omega = 0.303
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-72430 / 59.112), (39820 / 59.112)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_propyl_amine
-};
-
-const EosData eos_rpp_n_propyl_amine = {
-	"n_propyl_amine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_propyl_amine}
-};
-
-
-static const IdealData ideal_data_n_propylcyclopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-55.97, 0}
-			,{0.8449, 1}
-			,{-4.92E-04, 2}
-			,{1.12E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_propylcyclopentane = {
-	.M = 112.216
-	,.T_c = 603.0
-	,.p_c = (30.0 * 1e5)
-	,.rho_c = (1000 * 112.216 / 425.0)
-	,.T_t = 0
-	,.omega = 0.335
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-148200 / 112.216), (52630 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_propylcyclopentane
-};
-
-const EosData eos_rpp_n_propylcyclopentane = {
-	"n_propylcyclopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_propylcyclopentane}
-};
-
-
-static const IdealData ideal_data_n_butyl_acetate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{13.62, 0}
-			,{0.5489, 1}
-			,{-2.28E-04, 2}
-			,{7.91E-10, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_butyl_acetate = {
-	.M = 116.160
-	,.T_c = 579.0
-	,.p_c = (31.4 * 1e5)
-	,.rho_c = (1000 * 116.160 / 400.0)
-	,.T_t = 0
-	,.omega = 0.417
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-486800 / 116.160), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_butyl_acetate
-};
-
-const EosData eos_rpp_n_butyl_acetate = {
-	"n_butyl_acetate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_butyl_acetate}
-};
-
-
-static const IdealData ideal_data_1_heptanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{49.07, 0}
-			,{0.6778, 1}
-			,{-3.45E-04, 2}
-			,{6.05E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_heptanol = {
-	.M = 116.204
-	,.T_c = 633.0
-	,.p_c = (30.4 * 1e5)
-	,.rho_c = (1000 * 116.204 / 435.0)
-	,.T_t = 0
-	,.omega = 0.560
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-332000 / 116.204), (-121000 / 116.204)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_heptanol
-};
-
-const EosData eos_rpp_1_heptanol = {
-	"1_heptanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_heptanol}
-};
-
-
-static const IdealData ideal_data_boron_trichloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{32.61, 0}
-			,{0.139, 1}
-			,{-1.46E-04, 2}
-			,{5.44E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_boron_trichloride = {
-	.M = 117.191
-	,.T_c = 455.0
-	,.p_c = (38.7 * 1e5)
-	,.rho_c = (1000 * 117.191 / 239.5)
-	,.T_t = 0
-	,.omega = 0.140
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-403200 / 117.191), (-388200 / 117.191)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_boron_trichloride
-};
-
-const EosData eos_rpp_boron_trichloride = {
-	"boron_trichloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_boron_trichloride}
-};
-
-
-static const IdealData ideal_data_hydrogen_iodide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{31.16, 0}
-			,{-0.01428, 1}
-			,{2.97E-05, 2}
-			,{-1.35E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_hydrogen_iodide = {
-	.M = 127.912
-	,.T_c = 424.0
-	,.p_c = (83.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.049
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (26380 / 127.912), (1591 / 127.912)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_hydrogen_iodide
-};
-
-const EosData eos_rpp_hydrogen_iodide = {
-	"hydrogen_iodide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_hydrogen_iodide}
-};
-
-
-static const IdealData ideal_data_dimethylamine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-0.17, 0}
-			,{0.2695, 1}
-			,{-1.33E-04, 2}
-			,{2.34E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dimethylamine = {
-	.M = 45.085
-	,.T_c = 437.7
-	,.p_c = (53.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.302
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-18800 / 45.085), (68000 / 45.085)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dimethylamine
-};
-
-const EosData eos_rpp_dimethylamine = {
-	"dimethylamine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dimethylamine}
-};
-
-
-static const IdealData ideal_data_phosphorus_trifluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{21.79, 0}
-			,{0.1733, 1}
-			,{-1.85E-04, 2}
-			,{6.97E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_phosphorus_trifluoride = {
-	.M = 87.968
-	,.T_c = 271.2
-	,.p_c = (43.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.326
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-937800 / 87.968), (-925300 / 87.968)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_phosphorus_trifluoride
-};
-
-const EosData eos_rpp_phosphorus_trifluoride = {
-	"phosphorus_trifluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_phosphorus_trifluoride}
-};
-
-
-static const IdealData ideal_data_2_2_3_3_tetramethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-54.58, 0}
-			,{1.089, 1}
-			,{-7.57E-04, 2}
-			,{2.14E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_3_3_tetramethylpentane = {
-	.M = 128.259
-	,.T_c = 607.7
-	,.p_c = (27.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.303
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-237400 / 128.259), (34330 / 128.259)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_3_3_tetramethylpentane
-};
-
-const EosData eos_rpp_2_2_3_3_tetramethylpentane = {
-	"2_2_3_3_tetramethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_3_3_tetramethylpentane}
-};
-
-
-static const IdealData ideal_data_ethyl_acrylate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{16.81, 0}
-			,{0.369, 1}
-			,{-1.38E-04, 2}
-			,{-5.73E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_acrylate = {
-	.M = 100.118
-	,.T_c = 552.0
-	,.p_c = (37.4 * 1e5)
-	,.rho_c = (1000 * 100.118 / 320.0)
-	,.T_t = 0
-	,.omega = 0.400
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_acrylate
-};
-
-const EosData eos_rpp_ethyl_acrylate = {
-	"ethyl_acrylate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_acrylate}
-};
-
-
-static const IdealData ideal_data_3_methyl_1_butene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{21.74, 0}
-			,{0.389, 1}
-			,{-2.01E-04, 2}
-			,{4.01E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_methyl_1_butene = {
-	.M = 70.135
-	,.T_c = 450.0
-	,.p_c = (35.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.209
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-28970 / 70.135), (74820 / 70.135)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_methyl_1_butene
-};
-
-const EosData eos_rpp_3_methyl_1_butene = {
-	"3_methyl_1_butene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_methyl_1_butene}
-};
-
-
-static const IdealData ideal_data_isobutyraldehyde = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{24.46, 0}
-			,{0.3356, 1}
-			,{-2.06E-04, 2}
-			,{6.37E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isobutyraldehyde = {
-	.M = 72.107
-	,.T_c = 513.0
-	,.p_c = (41.5 * 1e5)
-	,.rho_c = (1000 * 72.107 / 274.0)
-	,.T_t = 0
-	,.omega = 0.350
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-215900 / 72.107), (-121400 / 72.107)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isobutyraldehyde
-};
-
-const EosData eos_rpp_isobutyraldehyde = {
-	"isobutyraldehyde"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isobutyraldehyde}
-};
-
-
-static const IdealData ideal_data_cis_difluorodiazine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{11.21, 0}
-			,{0.1745, 1}
-			,{-1.69E-04, 2}
-			,{5.90E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cis_difluorodiazine = {
-	.M = 66.010
-	,.T_c = 272.0
-	,.p_c = (70.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.252
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (68660 / 66.010), (108800 / 66.010)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cis_difluorodiazine
-};
-
-const EosData eos_rpp_cis_difluorodiazine = {
-	"cis_difluorodiazine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cis_difluorodiazine}
-};
-
-
-static const IdealData ideal_data_acetic_anhydride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-23.13, 0}
-			,{0.5087, 1}
-			,{-3.58E-04, 2}
-			,{9.84E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_acetic_anhydride = {
-	.M = 102.089
-	,.T_c = 569.0
-	,.p_c = (46.8 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.908
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-576100 / 102.089), (-477000 / 102.089)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acetic_anhydride
-};
-
-const EosData eos_rpp_acetic_anhydride = {
-	"acetic_anhydride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acetic_anhydride}
-};
-
-
-static const IdealData ideal_data_2_2_4_trimethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.46, 0}
-			,{0.7779, 1}
-			,{-4.29E-04, 2}
-			,{9.17E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_4_trimethylpentane = {
-	.M = 114.232
-	,.T_c = 544.0
-	,.p_c = (25.7 * 1e5)
-	,.rho_c = (1000 * 114.232 / 468.0)
-	,.T_t = 0
-	,.omega = 0.303
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-224300 / 114.232), (13690 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_4_trimethylpentane
-};
-
-const EosData eos_rpp_2_2_4_trimethylpentane = {
-	"2_2_4_trimethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_4_trimethylpentane}
-};
-
-
-static const IdealData ideal_data_m_xylene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-29.17, 0}
-			,{0.6297, 1}
-			,{-3.75E-04, 2}
-			,{8.48E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_m_xylene = {
-	.M = 106.168
-	,.T_c = 617.1
-	,.p_c = (35.4 * 1e5)
-	,.rho_c = (1000 * 106.168 / 376.0)
-	,.T_t = 0
-	,.omega = 0.325
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (17250 / 106.168), (118900 / 106.168)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_m_xylene
-};
-
-const EosData eos_rpp_m_xylene = {
-	"m_xylene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_m_xylene}
-};
-
-
-static const IdealData ideal_data_1_methyl_3_isopropylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-48.76, 0}
-			,{0.9064, 1}
-			,{-6.05E-04, 2}
-			,{1.63E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_methyl_3_isopropylbenzene = {
-	.M = 134.222
-	,.T_c = 666.0
-	,.p_c = (29.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.279
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-29310 / 134.222), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_methyl_3_isopropylbenzene
-};
-
-const EosData eos_rpp_1_methyl_3_isopropylbenzene = {
-	"1_methyl_3_isopropylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_methyl_3_isopropylbenzene}
-};
-
-
-static const IdealData ideal_data_triethylamine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-18.43, 0}
-			,{0.7155, 1}
-			,{-4.39E-04, 2}
-			,{1.09E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_triethylamine = {
-	.M = 101.193
-	,.T_c = 535.0
-	,.p_c = (30.3 * 1e5)
-	,.rho_c = (1000 * 101.193 / 389.0)
-	,.T_t = 0
-	,.omega = 0.320
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-99650 / 101.193), (110400 / 101.193)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_triethylamine
-};
-
-const EosData eos_rpp_triethylamine = {
-	"triethylamine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_triethylamine}
-};
-
-
-static const IdealData ideal_data_acetic_acid = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{4.84, 0}
-			,{0.2549, 1}
-			,{-1.75E-04, 2}
-			,{4.95E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_acetic_acid = {
-	.M = 60.052
-	,.T_c = 592.7
-	,.p_c = (57.9 * 1e5)
-	,.rho_c = (1000 * 60.052 / 171.0)
-	,.T_t = 0
-	,.omega = 0.447
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-435100 / 60.052), (-376900 / 60.052)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acetic_acid
-};
-
-const EosData eos_rpp_acetic_acid = {
-	"acetic_acid"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acetic_acid}
-};
-
-
-static const IdealData ideal_data_n_octadecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-14.47, 0}
-			,{1.717, 1}
-			,{-9.59E-04, 2}
-			,{2.08E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_octadecane = {
-	.M = 254.504
-	,.T_c = 748.0
-	,.p_c = (12.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.790
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-414800 / 254.504), (100600 / 254.504)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_octadecane
-};
-
-const EosData eos_rpp_n_octadecane = {
-	"n_octadecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_octadecane}
-};
-
-
-static const IdealData ideal_data_naphthalene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-68.80, 0}
-			,{0.8499, 1}
-			,{-6.51E-04, 2}
-			,{1.98E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_naphthalene = {
-	.M = 128.174
-	,.T_c = 748.4
-	,.p_c = (40.5 * 1e5)
-	,.rho_c = (1000 * 128.174 / 413.0)
-	,.T_t = 0
-	,.omega = 0.302
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (151100 / 128.174), (223700 / 128.174)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_naphthalene
-};
-
-const EosData eos_rpp_naphthalene = {
-	"naphthalene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_naphthalene}
-};
-
-
-static const IdealData ideal_data_deutromethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{12.49, 0}
-			,{0.101, 1}
-			,{-2.20E-05, 2}
-			,{-8.46E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_deutromethane = {
-	.M = 20.071
-	,.T_c = 189.2
-	,.p_c = (46.6 * 1e5)
-	,.rho_c = (1000 * 20.071 / 98.2)
-	,.T_t = 0
-	,.omega = 0.032
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-88300 / 20.071), (-59540 / 20.071)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_deutromethane
-};
-
-const EosData eos_rpp_deutromethane = {
-	"deutromethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_deutromethane}
-};
-
-
-static const IdealData ideal_data_2_3_dimethyl_1_butene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{7.03, 0}
-			,{0.5585, 1}
-			,{-3.70E-04, 2}
-			,{1.06E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_3_dimethyl_1_butene = {
-	.M = 84.162
-	,.T_c = 501.0
-	,.p_c = (32.4 * 1e5)
-	,.rho_c = (1000 * 84.162 / 343.0)
-	,.T_t = 0
-	,.omega = 0.221
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-66360 / 84.162), (79090 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_3_dimethyl_1_butene
-};
-
-const EosData eos_rpp_2_3_dimethyl_1_butene = {
-	"2_3_dimethyl_1_butene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_3_dimethyl_1_butene}
-};
-
-
-static const IdealData ideal_data_dipropylamine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{6.46, 0}
-			,{0.6293, 1}
-			,{-3.39E-04, 2}
-			,{7.07E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dipropylamine = {
-	.M = 101.193
-	,.T_c = 555.8
-	,.p_c = (29.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.471
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dipropylamine
-};
-
-const EosData eos_rpp_dipropylamine = {
-	"dipropylamine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dipropylamine}
-};
-
-
-static const IdealData ideal_data_n_heptadecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-13.97, 0}
-			,{1.624, 1}
-			,{-9.08E-04, 2}
-			,{1.97E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_heptadecane = {
-	.M = 240.475
-	,.T_c = 733.0
-	,.p_c = (13.0 * 1e5)
-	,.rho_c = (1000 * 240.475 / 1000.0)
-	,.T_t = 0
-	,.omega = 0.770
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-394200 / 240.475), (92150 / 240.475)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_heptadecane
-};
-
-const EosData eos_rpp_n_heptadecane = {
-	"n_heptadecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_heptadecane}
-};
-
-
-static const IdealData ideal_data_2_2_dimethyl_butane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-16.63, 0}
-			,{0.6293, 1}
-			,{-3.48E-04, 2}
-			,{6.85E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_dimethyl_butane = {
-	.M = 86.178
-	,.T_c = 488.8
-	,.p_c = (30.8 * 1e5)
-	,.rho_c = (1000 * 86.178 / 359.0)
-	,.T_t = 0
-	,.omega = 0.232
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-185700 / 86.178), (-9630 / 86.178)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_dimethyl_butane
-};
-
-const EosData eos_rpp_2_2_dimethyl_butane = {
-	"2_2_dimethyl_butane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_dimethyl_butane}
-};
-
-
-static const IdealData ideal_data_2_butanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{5.75, 0}
-			,{0.4245, 1}
-			,{-2.33E-04, 2}
-			,{4.77E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_butanol = {
-	.M = 74.123
-	,.T_c = 536.1
-	,.p_c = (41.8 * 1e5)
-	,.rho_c = (1000 * 74.123 / 269.0)
-	,.T_t = 0
-	,.omega = 0.577
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-292800 / 74.123), (-167700 / 74.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_butanol
-};
-
-const EosData eos_rpp_2_butanol = {
-	"2_butanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_butanol}
-};
-
-
-static const IdealData ideal_data_1_2_3_trichloropropane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{26.88, 0}
-			,{0.3622, 1}
-			,{-2.79E-04, 2}
-			,{8.79E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_3_trichloropropane = {
-	.M = 147.432
-	,.T_c = 651.0
-	,.p_c = (39.5 * 1e5)
-	,.rho_c = (1000 * 147.432 / 348.0)
-	,.T_t = 0
-	,.omega = 0.310
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-185900 / 147.432), (-97850 / 147.432)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_3_trichloropropane
-};
-
-const EosData eos_rpp_1_2_3_trichloropropane = {
-	"1_2_3_trichloropropane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_3_trichloropropane}
-};
-
-
-static const IdealData ideal_data_1_4_difluorobenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-25.96, 0}
-			,{0.5722, 1}
-			,{-4.68E-04, 2}
-			,{1.48E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_4_difluorobenzene = {
-	.M = 114.094
-	,.T_c = 556.0
-	,.p_c = (44.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.299
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-307400 / 114.094), (-253000 / 114.094)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_4_difluorobenzene
-};
-
-const EosData eos_rpp_1_4_difluorobenzene = {
-	"1_4_difluorobenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_4_difluorobenzene}
-};
-
-
-static const IdealData ideal_data_nitrogen_dioxide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{24.23, 0}
-			,{0.04836, 1}
-			,{-2.08E-05, 2}
-			,{2.93E-10, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_nitrogen_dioxide = {
-	.M = 46.006
-	,.T_c = 431.0
-	,.p_c = (101.0 * 1e5)
-	,.rho_c = (1000 * 46.006 / 167.8)
-	,.T_t = 0
-	,.omega = 0.834
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (33870 / 46.006), (52000 / 46.006)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_nitrogen_dioxide
-};
-
-const EosData eos_rpp_nitrogen_dioxide = {
-	"nitrogen_dioxide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_nitrogen_dioxide}
-};
-
-
-static const IdealData ideal_data_methyl_isobutyl_ketone = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.89, 0}
-			,{0.5656, 1}
-			,{-3.32E-04, 2}
-			,{8.23E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_isobutyl_ketone = {
-	.M = 100.160
-	,.T_c = 571.0
-	,.p_c = (32.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.385
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-284000 / 100.160), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_isobutyl_ketone
-};
-
-const EosData eos_rpp_methyl_isobutyl_ketone = {
-	"methyl_isobutyl_ketone"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_isobutyl_ketone}
-};
-
-
-static const IdealData ideal_data_diethyl_ketone = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{30.01, 0}
-			,{0.3939, 1}
-			,{-1.91E-04, 2}
-			,{3.40E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_diethyl_ketone = {
-	.M = 86.134
-	,.T_c = 561.0
-	,.p_c = (37.3 * 1e5)
-	,.rho_c = (1000 * 86.134 / 336.0)
-	,.T_t = 0
-	,.omega = 0.344
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-258800 / 86.134), (-135400 / 86.134)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_diethyl_ketone
-};
-
-const EosData eos_rpp_diethyl_ketone = {
-	"diethyl_ketone"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_diethyl_ketone}
-};
-
-
-static const IdealData ideal_data_propionic_acid = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{5.67, 0}
-			,{0.3689, 1}
-			,{-2.87E-04, 2}
-			,{9.88E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_propionic_acid = {
-	.M = 74.080
-	,.T_c = 612.0
-	,.p_c = (54.0 * 1e5)
-	,.rho_c = (1000 * 74.080 / 222.0)
-	,.T_t = 0
-	,.omega = 0.520
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-455400 / 74.080), (-369600 / 74.080)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_propionic_acid
-};
-
-const EosData eos_rpp_propionic_acid = {
-	"propionic_acid"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_propionic_acid}
-};
-
-
-static const IdealData ideal_data_1_4_dimethylcyclohexane_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-64.15, 0}
-			,{0.8826, 1}
-			,{-5.02E-04, 2}
-			,{1.07E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_4_dimethylcyclohexane_cis = {
-	.M = 112.216
-	,.T_c = 598.0
-	,.p_c = (29.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.234
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-176800 / 112.216), (37970 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_4_dimethylcyclohexane_cis
-};
-
-const EosData eos_rpp_1_4_dimethylcyclohexane_cis = {
-	"1_4_dimethylcyclohexane_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_4_dimethylcyclohexane_cis}
-};
-
-
-static const IdealData ideal_data_3_ethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_ethylpentane = {
-	.M = 100.205
-	,.T_c = 540.6
-	,.p_c = (28.9 * 1e5)
-	,.rho_c = (1000 * 100.205 / 416.0)
-	,.T_t = 0
-	,.omega = 0.310
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-190000 / 100.205), (11000 / 100.205)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_ethylpentane
-};
-
-const EosData eos_rpp_3_ethylpentane = {
-	"3_ethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_ethylpentane}
-};
-
-
-static const IdealData ideal_data_propadiene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{9.906, 0}
-			,{1.977e-1, 1}
-			,{-1.182e-4, 2}
-			,{2.782e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_propadiene = {
-	.M = 40.065
-	,.T_c = 393.0
-	,.p_c = (54.7 * 1e5)
-	,.rho_c = (1000 * 40.065 / 162.0)
-	,.T_t = 0
-	,.omega = 0.313
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (1.923e5 / 40.065), (2.025e5 / 40.065)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_propadiene
-};
-
-const EosData eos_rpp_propadiene = {
-	"propadiene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_propadiene}
-};
-
-
-static const IdealData ideal_data_methyl_ethyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{18.67, 0}
-			,{0.2685, 1}
-			,{-1.03E-04, 2}
-			,{8.95E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_ethyl_ether = {
-	.M = 60.096
-	,.T_c = 437.8
-	,.p_c = (44.0 * 1e5)
-	,.rho_c = (1000 * 60.096 / 221.0)
-	,.T_t = 0
-	,.omega = 0.244
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-216600 / 60.096), (-117700 / 60.096)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_ethyl_ether
-};
-
-const EosData eos_rpp_methyl_ethyl_ether = {
-	"methyl_ethyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_ethyl_ether}
-};
-
-
-static const IdealData ideal_data_3_3_dimethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_3_dimethylpentane = {
-	.M = 100.205
-	,.T_c = 536.4
-	,.p_c = (29.5 * 1e5)
-	,.rho_c = (1000 * 100.205 / 414.0)
-	,.T_t = 0
-	,.omega = 0.267
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-202000 / 100.205), (2640 / 100.205)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_3_dimethylpentane
-};
-
-const EosData eos_rpp_3_3_dimethylpentane = {
-	"3_3_dimethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_3_dimethylpentane}
-};
-
-
-static const IdealData ideal_data_dichloromethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{12.95, 0}
-			,{0.1623, 1}
-			,{-1.30E-04, 2}
-			,{4.21E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dichloromethane = {
-	.M = 84.933
-	,.T_c = 510.0
-	,.p_c = (63.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.199
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-38900 / 84.933), (-68910 / 84.933)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dichloromethane
-};
-
-const EosData eos_rpp_dichloromethane = {
-	"dichloromethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dichloromethane}
-};
-
-
-static const IdealData ideal_data_carbon_disulfide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{27.44, 0}
-			,{0.08127, 1}
-			,{-7.67E-05, 2}
-			,{2.67E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_carbon_disulfide = {
-	.M = 76.131
-	,.T_c = 552.0
-	,.p_c = (79.0 * 1e5)
-	,.rho_c = (1000 * 76.131 / 160.0)
-	,.T_t = 0
-	,.omega = 0.109
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (117100 / 76.131), (66950 / 76.131)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_carbon_disulfide
-};
-
-const EosData eos_rpp_carbon_disulfide = {
-	"carbon_disulfide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_carbon_disulfide}
-};
-
-
-static const IdealData ideal_data_acrolein = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{11.97, 0}
-			,{0.2106, 1}
-			,{-1.07E-04, 2}
-			,{1.91E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_acrolein = {
-	.M = 56.064
-	,.T_c = 506.0
-	,.p_c = (51.6 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.330
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-70920 / 56.064), (-65190 / 56.064)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acrolein
-};
-
-const EosData eos_rpp_acrolein = {
-	"acrolein"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acrolein}
-};
-
-
-static const IdealData ideal_data_1_3_pentadiene_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{30.69, 0}
-			,{0.2811, 1}
-			,{-6.71E-05, 2}
-			,{-2.35E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_3_pentadiene_trans = {
-	.M = 68.119
-	,.T_c = 496.0
-	,.p_c = (39.9 * 1e5)
-	,.rho_c = (1000 * 68.119 / 275.0)
-	,.T_t = 0
-	,.omega = 0.175
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (77870 / 68.119), (146800 / 68.119)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_3_pentadiene_trans
-};
-
-const EosData eos_rpp_1_3_pentadiene_trans = {
-	"1_3_pentadiene_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_3_pentadiene_trans}
-};
-
-
-static const IdealData ideal_data_n_butyl_amine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{5.08, 0}
-			,{0.4476, 1}
-			,{-2.41E-04, 2}
-			,{7.60E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_butyl_amine = {
-	.M = 73.139
-	,.T_c = 531.9
-	,.p_c = (42.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.329
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-92110 / 73.139), (49240 / 73.139)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_butyl_amine
-};
-
-const EosData eos_rpp_n_butyl_amine = {
-	"n_butyl_amine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_butyl_amine}
-};
-
-
-static const IdealData ideal_data_3_hexene_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-21.73, 0}
-			,{0.5811, 1}
-			,{-3.36E-04, 2}
-			,{7.46E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_hexene_cis = {
-	.M = 84.162
-	,.T_c = 517.0
-	,.p_c = (32.8 * 1e5)
-	,.rho_c = (1000 * 84.162 / 350.0)
-	,.T_t = 0
-	,.omega = 0.225
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-47650 / 84.162), (83070 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_hexene_cis
-};
-
-const EosData eos_rpp_3_hexene_cis = {
-	"3_hexene_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_hexene_cis}
-};
-
-
-static const IdealData ideal_data_trimethyl_amine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-8.21, 0}
-			,{0.3972, 1}
-			,{-2.22E-04, 2}
-			,{4.62E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_trimethyl_amine = {
-	.M = 59.112
-	,.T_c = 433.3
-	,.p_c = (40.9 * 1e5)
-	,.rho_c = (1000 * 59.112 / 254.0)
-	,.T_t = 0
-	,.omega = 0.205
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-23860 / 59.112), (98980 / 59.112)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_trimethyl_amine
-};
-
-const EosData eos_rpp_trimethyl_amine = {
-	"trimethyl_amine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_trimethyl_amine}
-};
-
-
-static const IdealData ideal_data_methyl_mercaptan = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{13.27, 0}
-			,{0.1457, 1}
-			,{-8.55E-05, 2}
-			,{2.08E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_mercaptan = {
-	.M = 48.107
-	,.T_c = 470.0
-	,.p_c = (72.3 * 1e5)
-	,.rho_c = (1000 * 48.107 / 144.8)
-	,.T_t = 0
-	,.omega = 0.153
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-22990 / 48.107), (-9923 / 48.107)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_mercaptan
-};
-
-const EosData eos_rpp_methyl_mercaptan = {
-	"methyl_mercaptan"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_mercaptan}
-};
-
-
-static const IdealData ideal_data_tert_butylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-86.00, 0}
-			,{1.102, 1}
-			,{-8.75E-04, 2}
-			,{2.83E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_tert_butylbenzene = {
-	.M = 134.222
-	,.T_c = 660.0
-	,.p_c = (29.6 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.265
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-22690 / 134.222), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_tert_butylbenzene
-};
-
-const EosData eos_rpp_tert_butylbenzene = {
-	"tert_butylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_tert_butylbenzene}
-};
-
-
-static const IdealData ideal_data_ethylcyclopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-55.31, 0}
-			,{0.7511, 1}
-			,{-4.40E-04, 2}
-			,{1.00E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethylcyclopentane = {
-	.M = 98.189
-	,.T_c = 569.5
-	,.p_c = (34.0 * 1e5)
-	,.rho_c = (1000 * 98.189 / 375.0)
-	,.T_t = 0
-	,.omega = 0.271
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-127200 / 98.189), (44590 / 98.189)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethylcyclopentane
-};
-
-const EosData eos_rpp_ethylcyclopentane = {
-	"ethylcyclopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethylcyclopentane}
-};
-
-
-static const IdealData ideal_data_methylcyclohexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-61.92, 0}
-			,{0.7842, 1}
-			,{-4.44E-04, 2}
-			,{9.37E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methylcyclohexane = {
-	.M = 98.189
-	,.T_c = 572.2
-	,.p_c = (34.7 * 1e5)
-	,.rho_c = (1000 * 98.189 / 368.0)
-	,.T_t = 0
-	,.omega = 0.236
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-154900 / 98.189), (27300 / 98.189)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methylcyclohexane
-};
-
-const EosData eos_rpp_methylcyclohexane = {
-	"methylcyclohexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methylcyclohexane}
-};
-
-
-static const IdealData ideal_data_deuterium_equilibrium = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{30.25, 0}
-			,{-0.006615, 1}
-			,{1.17E-05, 2}
-			,{-3.68E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_deuterium_equilibrium = {
-	.M = 4.032
-	,.T_c = 38.2
-	,.p_c = (16.5 * 1e5)
-	,.rho_c = (1000 * 4.032 / 60.3)
-	,.T_t = 0
-	,.omega = -0.137
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 4.032), (0 / 4.032)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_deuterium_equilibrium
-};
-
-const EosData eos_rpp_deuterium_equilibrium = {
-	"deuterium_equilibrium"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_deuterium_equilibrium}
-};
-
-
-static const IdealData ideal_data_2_methyloctane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-10.11, 0}
-			,{0.8805, 1}
-			,{-4.94E-04, 2}
-			,{1.08E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methyloctane = {
-	.M = 128.242
-	,.T_c = 587.0
-	,.p_c = (23.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.423
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-229200 / 128.242), (24830 / 128.242)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methyloctane
-};
-
-const EosData eos_rpp_2_methyloctane = {
-	"2_methyloctane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methyloctane}
-};
-
-
-static const IdealData ideal_data_vinyl_methyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{15.63, 0}
-			,{0.2341, 1}
-			,{-9.70E-05, 2}
-			,{1.06E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_vinyl_methyl_ether = {
-	.M = 58.080
-	,.T_c = 436.0
-	,.p_c = (47.6 * 1e5)
-	,.rho_c = (1000 * 58.080 / 205.0)
-	,.T_t = 0
-	,.omega = 0.340
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_vinyl_methyl_ether
-};
-
-const EosData eos_rpp_vinyl_methyl_ether = {
-	"vinyl_methyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_vinyl_methyl_ether}
-};
-
-
-static const IdealData ideal_data_1_2_dimethoxyethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{32.23, 0}
-			,{0.3567, 1}
-			,{-1.34E-04, 2}
-			,{8.40E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_dimethoxyethane = {
-	.M = 90.123
-	,.T_c = 536.0
-	,.p_c = (38.7 * 1e5)
-	,.rho_c = (1000 * 90.123 / 271.0)
-	,.T_t = 0
-	,.omega = 0.358
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_dimethoxyethane
-};
-
-const EosData eos_rpp_1_2_dimethoxyethane = {
-	"1_2_dimethoxyethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_dimethoxyethane}
-};
-
-
-static const IdealData ideal_data_3_4_dimethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_4_dimethylhexane = {
-	.M = 114.232
-	,.T_c = 568.9
-	,.p_c = (26.9 * 1e5)
-	,.rho_c = (1000 * 114.232 / 466.0)
-	,.T_t = 0
-	,.omega = 0.338
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-213100 / 114.232), (17330 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_4_dimethylhexane
-};
-
-const EosData eos_rpp_3_4_dimethylhexane = {
-	"3_4_dimethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_4_dimethylhexane}
-};
-
-
-static const IdealData ideal_data_pentanol_1 = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.869, 0}
-			,{0.5045, 1}
-			,{-2.639e-04, 2}
-			,{5.120e-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_pentanol_1 = {
-	.M = 88.150
-	,.T_c = 588.2
-	,.p_c = (39.1 * 1e5)
-	,.rho_c = (1000 * 88.150 / 326.0)
-	,.T_t = 0
-	,.omega = 0.579
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.989e05 / 88.150), (-1.461e05 / 88.150)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_pentanol_1
-};
-
-const EosData eos_rpp_pentanol_1 = {
-	"pentanol_1"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_pentanol_1}
-};
-
-
-static const IdealData ideal_data_tert_butyl_chloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.93, 0}
-			,{0.4652, 1}
-			,{-2.89E-04, 2}
-			,{7.87E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_tert_butyl_chloride = {
-	.M = 92.569
-	,.T_c = 507.0
-	,.p_c = (39.5 * 1e5)
-	,.rho_c = (1000 * 92.569 / 295.0)
-	,.T_t = 0
-	,.omega = 0.190
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-183400 / 92.569), (-64140 / 92.569)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_tert_butyl_chloride
-};
-
-const EosData eos_rpp_tert_butyl_chloride = {
-	"tert_butyl_chloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_tert_butyl_chloride}
-};
-
-
-static const IdealData ideal_data_i_propanol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{32.43, 0}
-			,{1.885e-1, 1}
-			,{6.406e-5, 2}
-			,{-9.261e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_i_propanol = {
-	.M = 60.096
-	,.T_c = 508.3
-	,.p_c = (47.6 * 1e5)
-	,.rho_c = (1000 * 60.096 / 220.0)
-	,.T_t = 0
-	,.omega = 0.665
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.726e+5 / 60.096), (-1.177e+5 / 60.096)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_i_propanol
-};
-
-const EosData eos_rpp_i_propanol = {
-	"i_propanol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_i_propanol}
-};
-
-
-static const IdealData ideal_data_diisopropyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{7.51, 0}
-			,{0.5489, 1}
-			,{-3.03E-04, 2}
-			,{5.85E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_diisopropyl_ether = {
-	.M = 102.177
-	,.T_c = 500.3
-	,.p_c = (28.8 * 1e5)
-	,.rho_c = (1000 * 102.177 / 386.0)
-	,.T_t = 0
-	,.omega = 0.331
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-319000 / 102.177), (-122000 / 102.177)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_diisopropyl_ether
-};
-
-const EosData eos_rpp_diisopropyl_ether = {
-	"diisopropyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_diisopropyl_ether}
-};
-
-
-static const IdealData ideal_data_vinyl_formate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{27.81, 0}
-			,{0.1839, 1}
-			,{-3.56E-05, 2}
-			,{-2.34E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_vinyl_formate = {
-	.M = 72.064
-	,.T_c = 475.0
-	,.p_c = (57.7 * 1e5)
-	,.rho_c = (1000 * 72.064 / 210.0)
-	,.T_t = 0
-	,.omega = 0.550
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_vinyl_formate
-};
-
-const EosData eos_rpp_vinyl_formate = {
-	"vinyl_formate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_vinyl_formate}
-};
-
-
-static const IdealData ideal_data_3_methyl_2_pentene_trans = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-14.75, 0}
-			,{0.5669, 1}
-			,{-3.34E-04, 2}
-			,{7.96E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_methyl_2_pentene_trans = {
-	.M = 84.162
-	,.T_c = 521.0
-	,.p_c = (32.9 * 1e5)
-	,.rho_c = (1000 * 84.162 / 350.0)
-	,.T_t = 0
-	,.omega = 0.207
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-63140 / 84.162), (71340 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_methyl_2_pentene_trans
-};
-
-const EosData eos_rpp_3_methyl_2_pentene_trans = {
-	"3_methyl_2_pentene_trans"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_methyl_2_pentene_trans}
-};
-
-
-static const IdealData ideal_data_ethylene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.806, 0}
-			,{1.566e-1, 1}
-			,{-8.348e-5, 2}
-			,{1.755e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethylene = {
-	.M = 28.054
-	,.T_c = 282.4
-	,.p_c = (50.4 * 1e5)
-	,.rho_c = (1000 * 28.054 / 130.4)
-	,.T_t = 0
-	,.omega = 0.089
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (5.234e+4 / 28.054), (6.816e+4 / 28.054)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethylene
-};
-
-const EosData eos_rpp_ethylene = {
-	"ethylene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethylene}
-};
-
-
-static const IdealData ideal_data_1_cyclopentylpentadecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-66.09, 0}
-			,{1.98, 1}
-			,{-1.14E-03, 2}
-			,{2.55E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_cyclopentylpentadecane = {
-	.M = 280.540
-	,.T_c = 780.0
-	,.p_c = (10.2 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.833
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-395300 / 280.540), (154000 / 280.540)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_cyclopentylpentadecane
-};
-
-const EosData eos_rpp_1_cyclopentylpentadecane = {
-	"1_cyclopentylpentadecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_cyclopentylpentadecane}
-};
-
-
-static const IdealData ideal_data_n_hexadecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-13.02, 0}
-			,{1.529, 1}
-			,{-8.54E-04, 2}
-			,{1.85E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_hexadecane = {
-	.M = 226.448
-	,.T_c = 722.0
-	,.p_c = (14.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.742
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-373600 / 226.448), (83740 / 226.448)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_hexadecane
-};
-
-const EosData eos_rpp_n_hexadecane = {
-	"n_hexadecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_hexadecane}
-};
-
-
-static const IdealData ideal_data_methyl_ethyl_sulfide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{19.53, 0}
-			,{0.2891, 1}
-			,{-1.21E-04, 2}
-			,{1.29E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_ethyl_sulfide = {
-	.M = 76.157
-	,.T_c = 533.0
-	,.p_c = (42.6 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.216
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-59660 / 76.157), (11400 / 76.157)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_ethyl_sulfide
-};
-
-const EosData eos_rpp_methyl_ethyl_sulfide = {
-	"methyl_ethyl_sulfide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_ethyl_sulfide}
-};
-
-
-static const IdealData ideal_data_p_cresol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-40.63, 0}
-			,{0.7055, 1}
-			,{-5.76E-04, 2}
-			,{1.97E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_p_cresol = {
-	.M = 108.140
-	,.T_c = 704.6
-	,.p_c = (51.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.505
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-125500 / 108.140), (-30900 / 108.140)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_p_cresol
-};
-
-const EosData eos_rpp_p_cresol = {
-	"p_cresol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_p_cresol}
-};
-
-
-static const IdealData ideal_data_valeraldehyde = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{14.24, 0}
-			,{0.4329, 1}
-			,{-2.11E-04, 2}
-			,{3.16E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_valeraldehyde = {
-	.M = 86.134
-	,.T_c = 554.0
-	,.p_c = (35.4 * 1e5)
-	,.rho_c = (1000 * 86.134 / 333.0)
-	,.T_t = 0
-	,.omega = 0.400
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-228000 / 86.134), (-108400 / 86.134)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_valeraldehyde
-};
-
-const EosData eos_rpp_valeraldehyde = {
-	"valeraldehyde"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_valeraldehyde}
-};
-
-
-static const IdealData ideal_data_ethylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-4.310e1, 0}
-			,{7.072e-1, 1}
-			,{-4.811e-4, 2}
-			,{1.301e-7, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethylbenzene = {
-	.M = 106.168
-	,.T_c = 617.2
-	,.p_c = (36.0 * 1e5)
-	,.rho_c = (1000 * 106.168 / 374)
-	,.T_t = 0
-	,.omega = 0.302
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (2.981e4 / 106.168), (1.307e5 / 106.168)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethylbenzene
-};
-
-const EosData eos_rpp_ethylbenzene = {
-	"ethylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethylbenzene}
-};
-
-
-static const IdealData ideal_data_2_2_dimethylheptane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-20.89, 0}
-			,{0.9668, 1}
-			,{-6.12E-04, 2}
-			,{1.57E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_dimethylheptane = {
-	.M = 128.242
-	,.T_c = 576.8
-	,.p_c = (23.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.390
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-247000 / 128.242), (16750 / 128.242)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_dimethylheptane
-};
-
-const EosData eos_rpp_2_2_dimethylheptane = {
-	"2_2_dimethylheptane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_dimethylheptane}
-};
-
-
-static const IdealData ideal_data_n_decane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.913, 0}
-			,{9.609e-1, 1}
-			,{-5.288e-4, 2}
-			,{1.131e-7, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_decane = {
-	.M = 142.286
-	,.T_c = 617.7
-	,.p_c = (21.2 * 1e5)
-	,.rho_c = (1000 * 142.286 / 603.0)
-	,.T_t = 0
-	,.omega = 0.489
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.498e5 / 142.286), (3.324e4 / 142.286)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_decane
-};
-
-const EosData eos_rpp_n_decane = {
-	"n_decane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_decane}
-};
-
-
-static const IdealData ideal_data_m_cresol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-45.01, 0}
-			,{0.7264, 1}
-			,{-6.03E-04, 2}
-			,{2.08E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_m_cresol = {
-	.M = 108.140
-	,.T_c = 705.8
-	,.p_c = (45.6 * 1e5)
-	,.rho_c = (1000 * 108.140 / 309.0)
-	,.T_t = 0
-	,.omega = 0.454
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-132400 / 108.140), (-40570 / 108.140)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_m_cresol
-};
-
-const EosData eos_rpp_m_cresol = {
-	"m_cresol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_m_cresol}
-};
-
-
-static const IdealData ideal_data_chloroform = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{24.00, 0}
-			,{1.893e-1, 1}
-			,{-1.841e-4, 2}
-			,{6.657e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_chloroform = {
-	.M = 119.378
-	,.T_c = 536.4
-	,.p_c = (53.7 * 1e5)
-	,.rho_c = (1000 * 119.378 / 238.9)
-	,.T_t = 0
-	,.omega = 0.218
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.013e+5 / 119.378), (-6.858e+4 / 119.378)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chloroform
-};
-
-const EosData eos_rpp_chloroform = {
-	"chloroform"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chloroform}
-};
-
-
-static const IdealData ideal_data_trans_decalin = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-97.67, 0}
-			,{1.045, 1}
-			,{-5.48E-04, 2}
-			,{8.98E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_trans_decalin = {
-	.M = 138.254
-	,.T_c = 687.1
-	,.p_c = (31.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.270
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-182400 / 138.254), (73480 / 138.254)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_trans_decalin
-};
-
-const EosData eos_rpp_trans_decalin = {
-	"trans_decalin"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_trans_decalin}
-};
-
-
-static const IdealData ideal_data_ethyl_formate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{24.67, 0}
-			,{0.2316, 1}
-			,{-2.12E-05, 2}
-			,{-5.36E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_formate = {
-	.M = 74.080
-	,.T_c = 508.5
-	,.p_c = (47.4 * 1e5)
-	,.rho_c = (1000 * 74.080 / 229.0)
-	,.T_t = 0
-	,.omega = 0.285
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-371500 / 74.080), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_formate
-};
-
-const EosData eos_rpp_ethyl_formate = {
-	"ethyl_formate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_formate}
-};
-
-
-static const IdealData ideal_data_n_nonane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-8.37, 0}
-			,{0.8729, 1}
-			,{-4.82E-04, 2}
-			,{1.03E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_nonane = {
-	.M = 128.259
-	,.T_c = 594.6
-	,.p_c = (22.9 * 1e5)
-	,.rho_c = (1000 * 128.259 / 548.0)
-	,.T_t = 0
-	,.omega = 0.445
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-229200 / 128.259), (24830 / 128.259)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_nonane
-};
-
-const EosData eos_rpp_n_nonane = {
-	"n_nonane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_nonane}
-};
-
-
-static const IdealData ideal_data_hydrogen_sulfide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{31.94, 0}
-			,{0.001436, 1}
-			,{2.43E-05, 2}
-			,{-1.18E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_hydrogen_sulfide = {
-	.M = 34.080
-	,.T_c = 373.2
-	,.p_c = (89.4 * 1e5)
-	,.rho_c = (1000 * 34.080 / 98.6)
-	,.T_t = 0
-	,.omega = 0.097
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-20180 / 34.080), (-33080 / 34.080)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_hydrogen_sulfide
-};
-
-const EosData eos_rpp_hydrogen_sulfide = {
-	"hydrogen_sulfide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_hydrogen_sulfide}
-};
-
-
-static const IdealData ideal_data_n_butane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{9.487, 0}
-			,{3.313e-1, 1}
-			,{-1.108e-4, 2}
-			,{-2.822e-9, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_butane = {
-	.M = 58.124
-	,.T_c = 425.2
-	,.p_c = (38.0 * 1e5)
-	,.rho_c = (1000 * 58.124 / 255)
-	,.T_t = 0
-	,.omega = 0.199
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.262e+5 / 58.124), (-1.610e+4 / 58.124)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_butane
-};
-
-const EosData eos_rpp_n_butane = {
-	"n_butane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_butane}
-};
-
-
-static const IdealData ideal_data_3_methyl_2_pentene_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-14.75, 0}
-			,{0.5669, 1}
-			,{-3.34E-04, 2}
-			,{7.96E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_methyl_2_pentene_cis = {
-	.M = 84.162
-	,.T_c = 518.0
-	,.p_c = (32.8 * 1e5)
-	,.rho_c = (1000 * 84.162 / 351.0)
-	,.T_t = 0
-	,.omega = 0.269
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-62220 / 84.162), (73270 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_methyl_2_pentene_cis
-};
-
-const EosData eos_rpp_3_methyl_2_pentene_cis = {
-	"3_methyl_2_pentene_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_methyl_2_pentene_cis}
-};
-
-
-static const IdealData ideal_data_1_1_dimethylcyclohexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-72.11, 0}
-			,{0.8997, 1}
-			,{-5.02E-04, 2}
-			,{1.03E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_1_dimethylcyclohexane = {
-	.M = 112.216
-	,.T_c = 591.0
-	,.p_c = (29.6 * 1e5)
-	,.rho_c = (1000 * 112.216 / 416.0)
-	,.T_t = 0
-	,.omega = 0.238
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-181100 / 112.216), (35250 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_1_dimethylcyclohexane
-};
-
-const EosData eos_rpp_1_1_dimethylcyclohexane = {
-	"1_1_dimethylcyclohexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_1_dimethylcyclohexane}
-};
-
-
-static const IdealData ideal_data_1_methyl_4_ethylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-27.31, 0}
-			,{0.7176, 1}
-			,{-4.22E-04, 2}
-			,{9.54E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_methyl_4_ethylbenzene = {
-	.M = 120.195
-	,.T_c = 640.0
-	,.p_c = (29.4 * 1e5)
-	,.rho_c = (1000 * 120.195 / 470.0)
-	,.T_t = 0
-	,.omega = 0.322
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.05E+03 / 120.195), (1.27E+05 / 120.195)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_methyl_4_ethylbenzene
-};
-
-const EosData eos_rpp_1_methyl_4_ethylbenzene = {
-	"1_methyl_4_ethylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_methyl_4_ethylbenzene}
-};
-
-
-static const IdealData ideal_data_perchloryl_fluoride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{12.45, 0}
-			,{0.239, 1}
-			,{-2.35E-04, 2}
-			,{8.32E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_perchloryl_fluoride = {
-	.M = 102.448
-	,.T_c = 368.4
-	,.p_c = (53.7 * 1e5)
-	,.rho_c = (1000 * 102.448 / 160.8)
-	,.T_t = 0
-	,.omega = 0.170
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-21440 / 102.448), (50620 / 102.448)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_perchloryl_fluoride
-};
-
-const EosData eos_rpp_perchloryl_fluoride = {
-	"perchloryl_fluoride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_perchloryl_fluoride}
-};
-
-
-static const IdealData ideal_data_neon = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
-			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_neon = {
-	.M = 20.183
-	,.T_c = 44.4
-	,.p_c = (27.6 * 1e5)
-	,.rho_c = (1000 * 20.183 / 41.6)
-	,.T_t = 0
-	,.omega = -0.029
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 20.183), (0 / 20.183)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_neon
-};
-
-const EosData eos_rpp_neon = {
-	"neon"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_neon}
-};
-
-
-static const IdealData ideal_data_2_2_dimethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_dimethylhexane = {
-	.M = 114.232
-	,.T_c = 549.9
-	,.p_c = (25.3 * 1e5)
-	,.rho_c = (1000 * 114.232 / 478.0)
-	,.T_t = 0
-	,.omega = 0.338
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-224900 / 114.232), (10720 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_dimethylhexane
-};
-
-const EosData eos_rpp_2_2_dimethylhexane = {
-	"2_2_dimethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_dimethylhexane}
-};
-
-
-static const IdealData ideal_data_chlorobenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-33.89, 0}
-			,{0.5631, 1}
-			,{-4.52E-04, 2}
-			,{1.43E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_chlorobenzene = {
-	.M = 112.559
-	,.T_c = 632.4
-	,.p_c = (45.2 * 1e5)
-	,.rho_c = (1000 * 112.559 / 308.0)
-	,.T_t = 0
-	,.omega = 0.249
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (51870 / 112.559), (99230 / 112.559)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chlorobenzene
-};
-
-const EosData eos_rpp_chlorobenzene = {
-	"chlorobenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chlorobenzene}
-};
-
-
-static const IdealData ideal_data_trifluorobromomethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{21.88, 0}
-			,{0.2159, 1}
-			,{-2.11E-04, 2}
-			,{7.46E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_trifluorobromomethane = {
-	.M = 148.910
-	,.T_c = 340.2
-	,.p_c = (39.7 * 1e5)
-	,.rho_c = (1000 * 148.910 / 195.9)
-	,.T_t = 0
-	,.omega = 0.171
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-649400 / 148.910), (-697500 / 148.910)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_trifluorobromomethane
-};
-
-const EosData eos_rpp_trifluorobromomethane = {
-	"trifluorobromomethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_trifluorobromomethane}
-};
-
-
-static const IdealData ideal_data_ethyl_butyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{23.63, 0}
-			,{0.5367, 1}
-			,{2.53E-04, 2}
-			,{4.16E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ethyl_butyl_ether = {
-	.M = 102.177
-	,.T_c = 531.0
-	,.p_c = (30.4 * 1e5)
-	,.rho_c = (1000 * 102.177 / 390.0)
-	,.T_t = 0
-	,.omega = 0.400
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_butyl_ether
-};
-
-const EosData eos_rpp_ethyl_butyl_ether = {
-	"ethyl_butyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_butyl_ether}
-};
-
-
-static const IdealData ideal_data_1_decene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-4.66, 0}
-			,{0.9077, 1}
-			,{-5.06E-04, 2}
-			,{1.10E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_decene = {
-	.M = 140.270
-	,.T_c = 615.0
-	,.p_c = (22.0 * 1e5)
-	,.rho_c = (1000 * 140.270 / 650.0)
-	,.T_t = 0
-	,.omega = 0.491
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-124200 / 140.270), (121100 / 140.270)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_decene
-};
-
-const EosData eos_rpp_1_decene = {
-	"1_decene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_decene}
-};
-
-
-static const IdealData ideal_data_vinyl_acetate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{15.16, 0}
-			,{0.2795, 1}
-			,{-8.81E-05, 2}
-			,{-1.66E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_vinyl_acetate = {
-	.M = 86.091
-	,.T_c = 525.0
-	,.p_c = (43.5 * 1e5)
-	,.rho_c = (1000 * 86.091 / 265.0)
-	,.T_t = 0
-	,.omega = 0.340
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-316000 / 86.091), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_vinyl_acetate
-};
-
-const EosData eos_rpp_vinyl_acetate = {
-	"vinyl_acetate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_vinyl_acetate}
-};
-
-
-static const IdealData ideal_data_n_dodecylcyclopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-63.26, 0}
-			,{1.695, 1}
-			,{-9.77E-04, 2}
-			,{2.19E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_dodecylcyclopentane = {
-	.M = 238.459
-	,.T_c = 750.0
-	,.p_c = (12.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.719
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-336100 / 238.459), (126000 / 238.459)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_dodecylcyclopentane
-};
-
-const EosData eos_rpp_n_dodecylcyclopentane = {
-	"n_dodecylcyclopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_dodecylcyclopentane}
-};
-
-
-static const IdealData ideal_data_cis_decalin = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-112.50, 0}
-			,{1.118, 1}
-			,{-6.61E-04, 2}
-			,{1.44E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cis_decalin = {
-	.M = 138.254
-	,.T_c = 702.3
-	,.p_c = (32.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.286
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-169100 / 138.254), (85870 / 138.254)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cis_decalin
-};
-
-const EosData eos_rpp_cis_decalin = {
-	"cis_decalin"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cis_decalin}
-};
-
-
-static const IdealData ideal_data_3_methyl_3_ethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_methyl_3_ethylpentane = {
-	.M = 114.232
-	,.T_c = 576.6
-	,.p_c = (28.1 * 1e5)
-	,.rho_c = (1000 * 114.232 / 455.0)
-	,.T_t = 0
-	,.omega = 0.303
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-215100 / 114.232), (19930 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_methyl_3_ethylpentane
-};
-
-const EosData eos_rpp_3_methyl_3_ethylpentane = {
-	"3_methyl_3_ethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_methyl_3_ethylpentane}
-};
-
-
-static const IdealData ideal_data_isobutyl_amine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{9.49, 0}
-			,{0.443, 1}
-			,{-2.11E-04, 2}
-			,{2.33E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isobutyl_amine = {
-	.M = 73.139
-	,.T_c = 514.3
-	,.p_c = (41.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.368
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isobutyl_amine
-};
-
-const EosData eos_rpp_isobutyl_amine = {
-	"isobutyl_amine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isobutyl_amine}
-};
-
-
-static const IdealData ideal_data_n_nonylcyclopentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-60.81, 0}
-			,{1.412, 1}
-			,{-8.16E-04, 2}
-			,{1.83E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_nonylcyclopentane = {
-	.M = 196.378
-	,.T_c = 710.5
-	,.p_c = (16.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.610
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-271500 / 196.378), (103500 / 196.378)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_nonylcyclopentane
-};
-
-const EosData eos_rpp_n_nonylcyclopentane = {
-	"n_nonylcyclopentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_nonylcyclopentane}
-};
-
-
-static const IdealData ideal_data_toluene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-2.435e+1, 0}
-			,{5.125e-1, 1}
-			,{-2.765e-4, 2}
-			,{4.911e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_toluene = {
-	.M = 92.141
-	,.T_c = 591.8
-	,.p_c = (41.0 * 1e5)
-	,.rho_c = (1000 * 92.141 / 316)
-	,.T_t = 0
-	,.omega = 0.263
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (5.003e+4 / 92.141), (1.221e+5 / 92.141)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_toluene
-};
-
-const EosData eos_rpp_toluene = {
-	"toluene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_toluene}
-};
-
-
-static const IdealData ideal_data_oxygen = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{2.811e1, 0}
-			,{-3.680e-6, 1}
-			,{1.746e-5, 2}
-			,{-1.065e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_oxygen = {
-	.M = 31.999
-	,.T_c = 154.6
-	,.p_c = (50.4 * 1e5)
-	,.rho_c = (1000 * 31.999 / 73.4)
-	,.T_t = 0
-	,.omega = 0.025
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0.00 / 31.999), (0.00 / 31.999)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_oxygen
-};
-
-const EosData eos_rpp_oxygen = {
-	"oxygen"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_oxygen}
-};
-
-
-static const IdealData ideal_data_hydrogen_deuteride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{29.47, 0}
-			,{-0.001329, 1}
-			,{1.31E-06, 2}
-			,{1.28E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_hydrogen_deuteride = {
-	.M = 3.023
-	,.T_c = 36.0
-	,.p_c = (14.8 * 1e5)
-	,.rho_c = (1000 * 3.023 / 62.7)
-	,.T_t = 0
-	,.omega = -0.179
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (322 / 3.023), (-1465 / 3.023)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_hydrogen_deuteride
-};
-
-const EosData eos_rpp_hydrogen_deuteride = {
-	"hydrogen_deuteride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_hydrogen_deuteride}
-};
-
-
-static const IdealData ideal_data_2_methyl_2_butene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{11.80, 0}
-			,{0.3509, 1}
-			,{-1.12E-04, 2}
-			,{-5.81E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methyl_2_butene = {
-	.M = 70.135
-	,.T_c = 470.0
-	,.p_c = (34.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.244
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-42580 / 70.135), (59700 / 70.135)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methyl_2_butene
-};
-
-const EosData eos_rpp_2_methyl_2_butene = {
-	"2_methyl_2_butene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methyl_2_butene}
-};
-
-
-static const IdealData ideal_data_isopropylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-39.36, 0}
-			,{0.7842, 1}
-			,{-5.09E-04, 2}
-			,{1.29E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isopropylbenzene = {
-	.M = 120.195
-	,.T_c = 631.1
-	,.p_c = (32.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.326
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (3.94E+03 / 120.195), (1.37E+05 / 120.195)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isopropylbenzene
-};
-
-const EosData eos_rpp_isopropylbenzene = {
-	"isopropylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isopropylbenzene}
-};
-
-
-static const IdealData ideal_data_ozone = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{20.54, 0}
-			,{0.08009, 1}
-			,{-6.24E-05, 2}
-			,{1.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_ozone = {
-	.M = 47.998
-	,.T_c = 261.1
-	,.p_c = (55.7 * 1e5)
-	,.rho_c = (1000 * 47.998 / 88.9)
-	,.T_t = 0
-	,.omega = 0.691
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (142800 / 47.998), (162900 / 47.998)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ozone
-};
-
-const EosData eos_rpp_ozone = {
-	"ozone"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ozone}
-};
-
-
-static const IdealData ideal_data_benzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.392e+1, 0}
-			,{4.739e-1, 1}
-			,{-3.017e-4, 2}
-			,{7.130e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_benzene = {
-	.M = 78.114
-	,.T_c = 562.2
-	,.p_c = (48.9 * 1e5)
-	,.rho_c = (1000 * 78.114 / 259)
-	,.T_t = 0
-	,.omega = 0.212
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (8.298e+4 / 78.114), (1.297e+5 / 78.114)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_benzene
-};
-
-const EosData eos_rpp_benzene = {
-	"benzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_benzene}
-};
-
-
-static const IdealData ideal_data_1_2_pentadiene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{8.83, 0}
-			,{0.388, 1}
-			,{-2.28E-04, 2}
-			,{5.25E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_pentadiene = {
-	.M = 68.119
-	,.T_c = 503.0
-	,.p_c = (40.7 * 1e5)
-	,.rho_c = (1000 * 68.119 / 276.0)
-	,.T_t = 0
-	,.omega = 0.173
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (145700 / 68.119), (210600 / 68.119)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_pentadiene
-};
-
-const EosData eos_rpp_1_2_pentadiene = {
-	"1_2_pentadiene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_pentadiene}
-};
-
-
-static const IdealData ideal_data_hydrazine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{9.77, 0}
-			,{0.1895, 1}
-			,{-1.66E-04, 2}
-			,{6.03E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_hydrazine = {
-	.M = 32.045
-	,.T_c = 653.0
-	,.p_c = (147.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.316
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (95250 / 32.045), (158600 / 32.045)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_hydrazine
-};
-
-const EosData eos_rpp_hydrazine = {
-	"hydrazine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_hydrazine}
-};
-
-
-static const IdealData ideal_data_2_2_3_trimethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_3_trimethylpentane = {
-	.M = 114.232
-	,.T_c = 563.5
-	,.p_c = (27.3 * 1e5)
-	,.rho_c = (1000 * 114.232 / 436.0)
-	,.T_t = 0
-	,.omega = 0.297
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-220300 / 114.232), (17120 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_3_trimethylpentane
-};
-
-const EosData eos_rpp_2_2_3_trimethylpentane = {
-	"2_2_3_trimethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_3_trimethylpentane}
-};
-
-
-static const IdealData ideal_data_pyrrolidine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-51.53, 0}
-			,{0.5338, 1}
-			,{-3.24E-04, 2}
-			,{7.53E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_pyrrolidine = {
-	.M = 71.123
-	,.T_c = 568.6
-	,.p_c = (56.1 * 1e5)
-	,.rho_c = (1000 * 71.123 / 249.0)
-	,.T_t = 0
-	,.omega = 0.274
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-3600 / 71.123), (114800 / 71.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_pyrrolidine
-};
-
-const EosData eos_rpp_pyrrolidine = {
-	"pyrrolidine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_pyrrolidine}
-};
-
-
-static const IdealData ideal_data_phosphine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{23.23, 0}
-			,{0.04401, 1}
-			,{1.30E-05, 2}
-			,{-1.60E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_phosphine = {
-	.M = 33.998
-	,.T_c = 324.5
-	,.p_c = (65.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.038
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (22900 / 33.998), (25410 / 33.998)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_phosphine
-};
-
-const EosData eos_rpp_phosphine = {
-	"phosphine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_phosphine}
-};
-
-
-static const IdealData ideal_data_1_undecene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-5.59, 0}
-			,{1.003, 1}
-			,{-5.60E-04, 2}
-			,{1.22E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_undecene = {
-	.M = 154.297
-	,.T_c = 637.0
-	,.p_c = (19.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.518
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.45E-05 / 154.297), (129500 / 154.297)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_undecene
-};
-
-const EosData eos_rpp_1_undecene = {
-	"1_undecene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_undecene}
-};
-
-
-static const IdealData ideal_data_1_octene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-4.10, 0}
-			,{0.7239, 1}
-			,{-4.04E-04, 2}
-			,{8.68E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_octene = {
-	.M = 112.216
-	,.T_c = 566.7
-	,.p_c = (26.2 * 1e5)
-	,.rho_c = (1000 * 112.216 / 464.0)
-	,.T_t = 0
-	,.omega = 0.386
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-82980 / 112.216), (104300 / 112.216)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_octene
-};
-
-const EosData eos_rpp_1_octene = {
-	"1_octene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_octene}
-};
-
-
-static const IdealData ideal_data_n_butyric_acid = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{11.74, 0}
-			,{0.4137, 1}
-			,{-2.43E-04, 2}
-			,{5.53E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_butyric_acid = {
-	.M = 88.107
-	,.T_c = 628.0
-	,.p_c = (52.7 * 1e5)
-	,.rho_c = (1000 * 88.107 / 290.0)
-	,.T_t = 0
-	,.omega = 0.683
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-476200 / 88.107), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_butyric_acid
-};
-
-const EosData eos_rpp_n_butyric_acid = {
-	"n_butyric_acid"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_butyric_acid}
-};
-
-
-static const IdealData ideal_data_2_2_5_trimethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-54.11, 0}
-			,{1.095, 1}
-			,{-7.75E-04, 2}
-			,{2.26E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_5_trimethylhexane = {
-	.M = 128.259
-	,.T_c = 568.0
-	,.p_c = (23.3 * 1e5)
-	,.rho_c = (1000 * 128.259 / 519.0)
-	,.T_t = 0
-	,.omega = 0.357
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-254200 / 128.259), (13440 / 128.259)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_5_trimethylhexane
-};
-
-const EosData eos_rpp_2_2_5_trimethylhexane = {
-	"2_2_5_trimethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_5_trimethylhexane}
-};
-
-
-static const IdealData ideal_data_n_butylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-22.99, 0}
-			,{0.7934, 1}
-			,{-4.40E-04, 2}
-			,{8.57E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_butylbenzene = {
-	.M = 134.222
-	,.T_c = 660.5
-	,.p_c = (28.9 * 1e5)
-	,.rho_c = (1000 * 134.222 / 497.0)
-	,.T_t = 0
-	,.omega = 0.393
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-13820 / 134.222), (144800 / 134.222)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_butylbenzene
-};
-
-const EosData eos_rpp_n_butylbenzene = {
-	"n_butylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_butylbenzene}
-};
-
-
-static const IdealData ideal_data_dihexylether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{33.54, 0}
-			,{1.073, 1}
-			,{-5.54E-04, 2}
-			,{1.68E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dihexylether = {
-	.M = 186.339
-	,.T_c = 657.0
-	,.p_c = (18.2 * 1e5)
-	,.rho_c = (1000 * 186.339 / 720.0)
-	,.T_t = 0
-	,.omega = 0.700
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dihexylether
-};
-
-const EosData eos_rpp_dihexylether = {
-	"dihexylether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dihexylether}
-};
-
-
-static const IdealData ideal_data_1_pentadecene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.20, 0}
-			,{1.382, 1}
-			,{-7.78E-04, 2}
-			,{1.70E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_pentadecene = {
-	.M = 210.405
-	,.T_c = 704.0
-	,.p_c = (14.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.682
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-227400 / 210.405), (163200 / 210.405)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_pentadecene
-};
-
-const EosData eos_rpp_1_pentadecene = {
-	"1_pentadecene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_pentadecene}
-};
-
-
-static const IdealData ideal_data_methyl_acetylene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{14.71, 0}
-			,{0.1864, 1}
-			,{-1.17E-04, 2}
-			,{3.22E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_acetylene = {
-	.M = 40.065
-	,.T_c = 402.4
-	,.p_c = (56.3 * 1e5)
-	,.rho_c = (1000 * 40.065 / 164.0)
-	,.T_t = 0
-	,.omega = 0.215
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (185600 / 40.065), (194600 / 40.065)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_acetylene
-};
-
-const EosData eos_rpp_methyl_acetylene = {
-	"methyl_acetylene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_acetylene}
-};
-
-
-static const IdealData ideal_data_difluoromethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{11.79, 0}
-			,{0.1181, 1}
-			,{-4.84E-05, 2}
-			,{2.13E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_difluoromethane = {
-	.M = 52.023
-	,.T_c = 351.6
-	,.p_c = (58.3 * 1e5)
-	,.rho_c = (1000 * 52.023 / 120.8)
-	,.T_t = 0
-	,.omega = 0.271
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-450900 / 52.023), (-422900 / 52.023)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_difluoromethane
-};
-
-const EosData eos_rpp_difluoromethane = {
-	"difluoromethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_difluoromethane}
-};
-
-
-static const IdealData ideal_data_benzoic_acid = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-51.29, 0}
-			,{0.6293, 1}
-			,{-4.24E-04, 2}
-			,{1.06E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_benzoic_acid = {
-	.M = 122.124
-	,.T_c = 752.0
-	,.p_c = (45.6 * 1e5)
-	,.rho_c = (1000 * 122.124 / 341.0)
-	,.T_t = 0
-	,.omega = 0.620
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-290400 / 122.124), (-210600 / 122.124)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_benzoic_acid
-};
-
-const EosData eos_rpp_benzoic_acid = {
-	"benzoic_acid"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_benzoic_acid}
-};
-
-
-static const IdealData ideal_data_aluminum_trichloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{50.54, 0}
-			,{0.1037, 1}
-			,{-1.20E-04, 2}
-			,{4.79E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_aluminum_trichloride = {
-	.M = 133.341
-	,.T_c = 620.0
-	,.p_c = (26.3 * 1e5)
-	,.rho_c = (1000 * 133.341 / 259.0)
-	,.T_t = 0
-	,.omega = 0.660
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-584900 / 133.341), (-570400 / 133.341)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_aluminum_trichloride
-};
-
-const EosData eos_rpp_aluminum_trichloride = {
-	"aluminum_trichloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_aluminum_trichloride}
-};
-
-
-static const IdealData ideal_data_perflourobenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{36.28, 0}
-			,{0.5267, 1}
-			,{-4.55E-04, 2}
-			,{1.46E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_perflourobenzene = {
-	.M = 186.056
-	,.T_c = 516.7
-	,.p_c = (33.0 * 1e5)
-	,.rho_c = (1000 * 186.056 / 335.0)
-	,.T_t = 0
-	,.omega = 0.396
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-957300 / 186.056), (-880000 / 186.056)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_perflourobenzene
-};
-
-const EosData eos_rpp_perflourobenzene = {
-	"perflourobenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_perflourobenzene}
-};
-
-
-static const IdealData ideal_data_2_methyl_butane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.52, 0}
-			,{0.5066001, 1}
-			,{-2.73E-04, 2}
-			,{5.72E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methyl_butane = {
-	.M = 72.151
-	,.T_c = 460.4
-	,.p_c = (33.9 * 1e5)
-	,.rho_c = (1000 * 72.151 / 306.0)
-	,.T_t = 0
-	,.omega = 0.227
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-154600 / 72.151), (-14820 / 72.151)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methyl_butane
-};
-
-const EosData eos_rpp_2_methyl_butane = {
-	"2_methyl_butane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methyl_butane}
-};
-
-
-static const IdealData ideal_data_2_3_4_trimethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_3_4_trimethylpentane = {
-	.M = 114.232
-	,.T_c = 566.4
-	,.p_c = (27.3 * 1e5)
-	,.rho_c = (1000 * 114.232 / 461.0)
-	,.T_t = 0
-	,.omega = 0.315
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-217600 / 114.232), (18920 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_3_4_trimethylpentane
-};
-
-const EosData eos_rpp_2_3_4_trimethylpentane = {
-	"2_3_4_trimethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_3_4_trimethylpentane}
-};
-
-
-static const IdealData ideal_data_n_pentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.626, 0}
-			,{4.873e-1, 1}
-			,{-2.580e-4, 2}
-			,{5.305e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_n_pentane = {
-	.M = 72.151
-	,.T_c = 469.7
-	,.p_c = (33.7 * 1e5)
-	,.rho_c = (1000 * 72.151 / 304)
-	,.T_t = 0
-	,.omega = 0.251
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.465e+5 / 72.151), (-8.370e+3 / 72.151)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_pentane
-};
-
-const EosData eos_rpp_n_pentane = {
-	"n_pentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_pentane}
-};
-
-
-static const IdealData ideal_data_1_chlorobutane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-2.61, 0}
-			,{0.4497, 1}
-			,{-2.94E-04, 2}
-			,{8.08E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_chlorobutane = {
-	.M = 92.569
-	,.T_c = 542.0
-	,.p_c = (36.8 * 1e5)
-	,.rho_c = (1000 * 92.569 / 312.0)
-	,.T_t = 0
-	,.omega = 0.218
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-147400 / 92.569), (-38810 / 92.569)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_chlorobutane
-};
-
-const EosData eos_rpp_1_chlorobutane = {
-	"1_chlorobutane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_chlorobutane}
-};
-
-
-static const IdealData ideal_data_methyl_amine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{11.48, 0}
-			,{0.1427, 1}
-			,{-5.33E-05, 2}
-			,{4.75E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_amine = {
-	.M = 31.058
-	,.T_c = 430.0
-	,.p_c = (74.3 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.292
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-23030 / 31.058), (32280 / 31.058)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_amine
-};
-
-const EosData eos_rpp_methyl_amine = {
-	"methyl_amine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_amine}
-};
-
-
-static const IdealData ideal_data_dimethyl_ether = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{17.02, 0}
-			,{0.1791, 1}
-			,{-5.23E-05, 2}
-			,{-1.92E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dimethyl_ether = {
-	.M = 46.069
-	,.T_c = 400.0
-	,.p_c = (52.4 * 1e5)
-	,.rho_c = (1000 * 46.069 / 178.0)
-	,.T_t = 0
-	,.omega = 0.200
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-184200 / 46.069), (-113000 / 46.069)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dimethyl_ether
-};
-
-const EosData eos_rpp_dimethyl_ether = {
-	"dimethyl_ether"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dimethyl_ether}
-};
-
-
-static const IdealData ideal_data_3_3_dimethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_3_dimethylhexane = {
-	.M = 114.232
-	,.T_c = 562.0
-	,.p_c = (26.5 * 1e5)
-	,.rho_c = (1000 * 114.232 / 443.0)
-	,.T_t = 0
-	,.omega = 0.320
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-220300 / 114.232), (13270 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_3_dimethylhexane
-};
-
-const EosData eos_rpp_3_3_dimethylhexane = {
-	"3_3_dimethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_3_dimethylhexane}
-};
-
-
-static const IdealData ideal_data_1_methyl_2_ethylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-16.45, 0}
-			,{0.6996, 1}
-			,{-4.12E-04, 2}
-			,{9.33E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_methyl_2_ethylbenzene = {
-	.M = 120.195
-	,.T_c = 651.0
-	,.p_c = (30.4 * 1e5)
-	,.rho_c = (1000 * 120.195 / 460.0)
-	,.T_t = 0
-	,.omega = 0.294
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (1.21E+03 / 120.195), (1.31E+05 / 120.195)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_methyl_2_ethylbenzene
-};
-
-const EosData eos_rpp_1_methyl_2_ethylbenzene = {
-	"1_methyl_2_ethylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_methyl_2_ethylbenzene}
-};
-
-
-static const IdealData ideal_data_1_2_2_trichlorotrifluoroetane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{61.14, 0}
-			,{0.2874, 1}
-			,{-2.42E-04, 2}
-			,{6.90E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_2_trichlorotrifluoroetane = {
-	.M = 187.380
-	,.T_c = 487.3
-	,.p_c = (34.1 * 1e5)
-	,.rho_c = (1000 * 187.380 / 325.5)
-	,.T_t = 0
-	,.omega = 0.256
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-745700 / 187.380), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_2_trichlorotrifluoroetane
-};
-
-const EosData eos_rpp_1_2_2_trichlorotrifluoroetane = {
-	"1_2_2_trichlorotrifluoroetane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_2_trichlorotrifluoroetane}
-};
-
-
-static const IdealData ideal_data_2_2_3_4_tetramethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-54.58, 0}
-			,{1.089, 1}
-			,{-7.57E-04, 2}
-			,{2.14E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_3_4_tetramethylpentane = {
-	.M = 128.259
-	,.T_c = 592.7
-	,.p_c = (26.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.313
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-237100 / 128.259), (32660 / 128.259)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_3_4_tetramethylpentane
-};
-
-const EosData eos_rpp_2_2_3_4_tetramethylpentane = {
-	"2_2_3_4_tetramethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_3_4_tetramethylpentane}
-};
-
-
-static const IdealData ideal_data_1_1_1_trifluoroethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{5.74, 0}
-			,{0.3141, 1}
-			,{-2.60E-04, 2}
-			,{8.42E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_1_1_trifluoroethane = {
-	.M = 84.041
-	,.T_c = 346.3
-	,.p_c = (37.6 * 1e5)
-	,.rho_c = (1000 * 84.041 / 194.0)
-	,.T_t = 0
-	,.omega = 0.251
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-746100 / 84.041), (-679200 / 84.041)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_1_1_trifluoroethane
-};
-
-const EosData eos_rpp_1_1_1_trifluoroethane = {
-	"1_1_1_trifluoroethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_1_1_trifluoroethane}
-};
-
-
-static const IdealData ideal_data_fluorine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{23.22, 0}
-			,{0.03657, 1}
-			,{-3.61E-05, 2}
-			,{1.20E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_fluorine = {
-	.M = 37.997
-	,.T_c = 144.3
-	,.p_c = (52.2 * 1e5)
-	,.rho_c = (1000 * 37.997 / 66.3)
-	,.T_t = 0
-	,.omega = 0.054
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 37.997), (0 / 37.997)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_fluorine
-};
-
-const EosData eos_rpp_fluorine = {
-	"fluorine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_fluorine}
-};
-
-
-static const IdealData ideal_data_1_2_4_5_tetramethylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{16.52, 0}
-			,{0.6519, 1}
-			,{-2.88E-04, 2}
-			,{3.26E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_4_5_tetramethylbenzene = {
-	.M = 134.222
-	,.T_c = 675.0
-	,.p_c = (29.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.435
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-45300 / 134.222), (119500 / 134.222)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_4_5_tetramethylbenzene
-};
-
-const EosData eos_rpp_1_2_4_5_tetramethylbenzene = {
-	"1_2_4_5_tetramethylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_4_5_tetramethylbenzene}
-};
-
-
-static const IdealData ideal_data_1_tridecene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.12, 0}
-			,{1.191, 1}
-			,{-6.67E-04, 2}
-			,{1.45E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_tridecene = {
-	.M = 182.351
-	,.T_c = 674.0
-	,.p_c = (17.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.598
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-186100 / 182.351), (146400 / 182.351)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_tridecene
-};
-
-const EosData eos_rpp_1_tridecene = {
-	"1_tridecene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_tridecene}
-};
-
-
-static const IdealData ideal_data_silicon_tetrachloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{56.58, 0}
-			,{0.1636, 1}
-			,{-1.90E-04, 2}
-			,{7.57E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_silicon_tetrachloride = {
-	.M = 169.898
-	,.T_c = 508.1
-	,.p_c = (35.9 * 1e5)
-	,.rho_c = (1000 * 169.898 / 325.7)
-	,.T_t = 0
-	,.omega = 0.232
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-657700 / 169.898), (-617800 / 169.898)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_silicon_tetrachloride
-};
-
-const EosData eos_rpp_silicon_tetrachloride = {
-	"silicon_tetrachloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_silicon_tetrachloride}
-};
-
-
-static const IdealData ideal_data_styrene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-2.825e+1, 0}
-			,{6.159e-1, 1}
-			,{-4.023e-4, 2}
-			,{9.935e-8, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_styrene = {
-	.M = 104.152
-	,.T_c = 647
-	,.p_c = (39.9 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.257
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (1.475e+5 / 104.152), (2.139e+5 / 104.152)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_styrene
-};
-
-const EosData eos_rpp_styrene = {
-	"styrene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_styrene}
-};
-
-
-static const IdealData ideal_data_2_3_3_trimethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_3_3_trimethylpentane = {
-	.M = 114.232
-	,.T_c = 573.6
-	,.p_c = (28.2 * 1e5)
-	,.rho_c = (1000 * 114.232 / 455.0)
-	,.T_t = 0
-	,.omega = 0.290
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.17E+05 / 114.232), (1.89E+04 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_3_3_trimethylpentane
-};
-
-const EosData eos_rpp_2_3_3_trimethylpentane = {
-	"2_3_3_trimethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_3_3_trimethylpentane}
-};
-
-
-static const IdealData ideal_data_trans_1_2_dichloroethene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{18.28, 0}
-			,{0.21, 1}
-			,{-1.76E-04, 2}
-			,{5.80E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_trans_1_2_dichloroethene = {
-	.M = 96.944
-	,.T_c = 513.0
-	,.p_c = (48.1 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.232
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (4190 / 96.944), (26600 / 96.944)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_trans_1_2_dichloroethene
-};
-
-const EosData eos_rpp_trans_1_2_dichloroethene = {
-	"trans_1_2_dichloroethene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_trans_1_2_dichloroethene}
-};
-
-
-static const IdealData ideal_data_2_methylheptane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-89.70, 0}
-			,{1.242, 1}
-			,{-1.18E-03, 2}
-			,{4.62E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methylheptane = {
-	.M = 114.232
-	,.T_c = 559.6
-	,.p_c = (24.8 * 1e5)
-	,.rho_c = (1000 * 114.232 / 488.0)
-	,.T_t = 0
-	,.omega = 0.378
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-215600 / 114.232), (12770 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methylheptane
-};
-
-const EosData eos_rpp_2_methylheptane = {
-	"2_methylheptane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methylheptane}
+	,.elements = elements_rpp_hydrogen
+	,.nelements = (int)(sizeof(elements_rpp_hydrogen) / sizeof(elements_rpp_hydrogen[0]))
 };
 
 
 static const IdealData ideal_data_carbon_dioxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 44.010)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{19.80, 0}
-			,{7.344e-2, 1}
-			,{-5.602e-5, 2}
-			,{1.715e-8, 3}
+			{2.38139277825321, 0}
+			,{0.00883280230479372, 1}
+			,{-6.73765774938105e-06, 2}
+			,{2.0626710175274e-09, 3}
 		}
 	}}
 };
@@ -13444,9 +131,15 @@ static const CubicData cubic_data_carbon_dioxide = {
 	,.rho_c = (1000 * 44.010 / 93.9)
 	,.T_t = 0
 	,.omega = 0.239
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-3.938e+5 / 44.010), (-3.946e+5 / 44.010)}}}
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-3.938e+5 * 1000 / 44.010), (213.453213147744 * 1000 / 44.010)}}}
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_carbon_dioxide
+};
+
+static const ElementComp elements_rpp_carbon_dioxide[] = {
+	{"C", 1}
+	,{"O", 2}
 };
 
 const EosData eos_rpp_carbon_dioxide = {
@@ -13456,242 +149,339 @@ const EosData eos_rpp_carbon_dioxide = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_carbon_dioxide}
+	,.elements = elements_rpp_carbon_dioxide
+	,.nelements = (int)(sizeof(elements_rpp_carbon_dioxide) / sizeof(elements_rpp_carbon_dioxide[0]))
 };
 
 
-static const IdealData ideal_data_ethyl_flouride = {
+static const IdealData ideal_data_water = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 18.015)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{4.35, 0}
-			,{0.218, 1}
-			,{-1.17E-04, 2}
-			,{2.41E-08, 3}
+			{3.87758096822644, 0}
+			,{0.00023140402552319, 1}
+			,{1.26887342477633e-06, 2}
+			,{-4.32499415686795e-10, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_ethyl_flouride = {
-	.M = 48.060
-	,.T_c = 375.3
-	,.p_c = (50.2 * 1e5)
-	,.rho_c = (1000 * 48.060 / 169.0)
+static const CubicData cubic_data_water = {
+	.M = 18.015
+	,.T_c = 647.3
+	,.p_c = (221.2 * 1e5)
+	,.rho_c = (1000 * 18.015 / 57.1)
 	,.T_t = 0
-	,.omega = 0.215
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-261700 / 48.060), (-209700 / 48.060)}}}
+	,.omega = 0.344
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.420e+5 * 1000 / 18.015), (188.811983062217 * 1000 / 18.015)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_flouride
+	,.ideal = &ideal_data_water
 };
 
-const EosData eos_rpp_ethyl_flouride = {
-	"ethyl_flouride"
+static const ElementComp elements_rpp_water[] = {
+	{"H", 2}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_water = {
+	"water"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_flouride}
+	,.data = {.cubic=&cubic_data_water}
+	,.elements = elements_rpp_water
+	,.nelements = (int)(sizeof(elements_rpp_water) / sizeof(elements_rpp_water[0]))
 };
 
 
-static const IdealData ideal_data_ethyl_benzoate = {
+static const IdealData ideal_data_chloroform = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 119.378)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.67, 0}
-			,{0.6887, 1}
-			,{-3.61E-04, 2}
-			,{5.06E-08, 3}
+			{2.88653670091298, 0}
+			,{0.0227675582284511, 1}
+			,{-2.21421419432533e-05, 2}
+			,{8.00653117415738e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_ethyl_benzoate = {
-	.M = 150.178
-	,.T_c = 668.7
-	,.p_c = (23.2 * 1e5)
-	,.rho_c = -1
+static const CubicData cubic_data_chloroform = {
+	.M = 119.378
+	,.T_c = 536.4
+	,.p_c = (53.7 * 1e5)
+	,.rho_c = (1000 * 119.378 / 238.9)
 	,.T_t = 0
-	,.omega = 0.480
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
+	,.omega = 0.218
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-1.013e+5 / 119.378), (-6.858e+4 / 119.378)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethyl_benzoate
+	,.ideal = &ideal_data_chloroform
 };
 
-const EosData eos_rpp_ethyl_benzoate = {
-	"ethyl_benzoate"
+static const ElementComp elements_rpp_chloroform[] = {
+	{"C", 1}
+	,{"Cl", 3}
+	,{"H", 1}
+};
+
+const EosData eos_rpp_chloroform = {
+	"chloroform"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethyl_benzoate}
+	,.data = {.cubic=&cubic_data_chloroform}
+	,.elements = elements_rpp_chloroform
+	,.nelements = (int)(sizeof(elements_rpp_chloroform) / sizeof(elements_rpp_chloroform[0]))
 };
 
 
-static const IdealData ideal_data_helium_3 = {
+static const IdealData ideal_data_methane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 16.043)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
-			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			{2.31524297885729, 0}
+			,{0.00626979825910807, 1}
+			,{1.43966017958035e-06, 2}
+			,{-1.36148314393062e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_helium_3 = {
-	.M = 3.017
-	,.T_c = 3.3
-	,.p_c = (1.1 * 1e5)
-	,.rho_c = (1000 * 3.017 / 72.9)
+static const CubicData cubic_data_methane = {
+	.M = 16.043
+	,.T_c = 190.4
+	,.p_c = (46.0 * 1e5)
+	,.rho_c = (1000 * 16.043 / 99.0)
 	,.T_t = 0
-	,.omega = -0.473
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
+	,.omega = 0.011
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-7.490e+4 * 1000 / 16.043), (186.282985074627 * 1000 / 16.043)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_helium_3
+	,.ideal = &ideal_data_methane
 };
 
-const EosData eos_rpp_helium_3 = {
-	"helium_3"
+static const ElementComp elements_rpp_methane[] = {
+	{"C", 1}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_methane = {
+	"methane"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_helium_3}
+	,.data = {.cubic=&cubic_data_methane}
+	,.elements = elements_rpp_methane
+	,.nelements = (int)(sizeof(elements_rpp_methane) / sizeof(elements_rpp_methane[0]))
 };
 
 
-static const IdealData ideal_data_propionaldehyde = {
+static const IdealData ideal_data_methanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 32.042)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{11.72, 0}
-			,{0.2614, 1}
-			,{-1.30E-04, 2}
-			,{2.13E-08, 3}
+			{2.54376046767956, 0}
+			,{0.00852971595119785, 1}
+			,{3.11144601885912e-06, 2}
+			,{-3.43016777958492e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_propionaldehyde = {
-	.M = 58.080
-	,.T_c = 515.3
-	,.p_c = (63.3 * 1e5)
-	,.rho_c = -1
+static const CubicData cubic_data_methanol = {
+	.M = 32.042
+	,.T_c = 512.6
+	,.p_c = (80.9 * 1e5)
+	,.rho_c = (1000 * 32.042 / 118.0)
 	,.T_t = 0
-	,.omega = 0.313
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-192200 / 58.080), (-130500 / 58.080)}}}
+	,.omega = 0.556
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.0133e+5 * 1000 / 32.042), (239.493943484823 * 1000 / 32.042)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_propionaldehyde
+	,.ideal = &ideal_data_methanol
 };
 
-const EosData eos_rpp_propionaldehyde = {
-	"propionaldehyde"
+static const ElementComp elements_rpp_methanol[] = {
+	{"C", 1}
+	,{"H", 4}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methanol = {
+	"methanol"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_propionaldehyde}
+	,.data = {.cubic=&cubic_data_methanol}
+	,.elements = elements_rpp_methanol
+	,.nelements = (int)(sizeof(elements_rpp_methanol) / sizeof(elements_rpp_methanol[0]))
 };
 
 
-static const IdealData ideal_data_o_xylene = {
+static const IdealData ideal_data_ethylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 28.054)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-15.85, 0}
-			,{0.5962, 1}
-			,{-3.44E-04, 2}
-			,{7.53E-08, 3}
+			{0.457756611819783, 0}
+			,{0.0188346519734572, 1}
+			,{-1.00403368246756e-05, 2}
+			,{2.11077996254262e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_o_xylene = {
-	.M = 106.168
-	,.T_c = 630.3
-	,.p_c = (37.3 * 1e5)
-	,.rho_c = (1000 * 106.168 / 369.0)
+static const CubicData cubic_data_ethylene = {
+	.M = 28.054
+	,.T_c = 282.4
+	,.p_c = (50.4 * 1e5)
+	,.rho_c = (1000 * 28.054 / 130.4)
 	,.T_t = 0
-	,.omega = 0.310
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (19000 / 106.168), (122200 / 106.168)}}}
+	,.omega = 0.089
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (5.234e+4 * 1000 / 28.054), (219.559460003354 * 1000 / 28.054)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_o_xylene
+	,.ideal = &ideal_data_ethylene
 };
 
-const EosData eos_rpp_o_xylene = {
-	"o_xylene"
+static const ElementComp elements_rpp_ethylene[] = {
+	{"C", 2}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_ethylene = {
+	"ethylene"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_o_xylene}
+	,.data = {.cubic=&cubic_data_ethylene}
+	,.elements = elements_rpp_ethylene
+	,.nelements = (int)(sizeof(elements_rpp_ethylene) / sizeof(elements_rpp_ethylene[0]))
 };
 
 
-static const IdealData ideal_data_helium_4 = {
+static const IdealData ideal_data_ethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 30.070)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
-			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			{0.650553208968263, 0}
+			,{0.0214205077680251, 1}
+			,{-8.34449651288927e-06, 2}
+			,{1.04793309479395e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_helium_4 = {
-	.M = 4.003
-	,.T_c = 5.2
-	,.p_c = (2.3 * 1e5)
-	,.rho_c = (1000 * 4.003 / 57.4)
+static const CubicData cubic_data_ethane = {
+	.M = 30.070
+	,.T_c = 305.4
+	,.p_c = (48.8 * 1e5)
+	,.rho_c = (1000 * 30.070 / 148.3)
 	,.T_t = 0
-	,.omega = -0.365
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
+	,.omega = 0.099
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-8.474e+4 * 1000 / 30.070), (229.485488847895 * 1000 / 30.070)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_helium_4
+	,.ideal = &ideal_data_ethane
 };
 
-const EosData eos_rpp_helium_4 = {
-	"helium_4"
+static const ElementComp elements_rpp_ethane[] = {
+	{"C", 2}
+	,{"H", 6}
+};
+
+const EosData eos_rpp_ethane = {
+	"ethane"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_helium_4}
+	,.data = {.cubic=&cubic_data_ethane}
+	,.elements = elements_rpp_ethane
+	,.nelements = (int)(sizeof(elements_rpp_ethane) / sizeof(elements_rpp_ethane[0]))
+};
+
+
+static const IdealData ideal_data_ethanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 46.069)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.0841350759179, 0}
+			,{0.0257503128193945, 1}
+			,{-1.00908512169416e-05, 2}
+			,{1.6513395376473e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethanol = {
+	.M = 46.069
+	,.T_c = 513.9
+	,.p_c = (61.4 * 1e5)
+	,.rho_c = (1000 * 46.069 / 167.1)
+	,.T_t = 0
+	,.omega = 0.644
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.350e+5 * 1000 / 46.069), (282.327505450277 * 1000 / 46.069)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethanol
+};
+
+static const ElementComp elements_rpp_ethanol[] = {
+	{"C", 2}
+	,{"H", 6}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_ethanol = {
+	"ethanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethanol}
+	,.elements = elements_rpp_ethanol
+	,.nelements = (int)(sizeof(elements_rpp_ethanol) / sizeof(elements_rpp_ethanol[0]))
 };
 
 
 static const IdealData ideal_data_propylene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 42.081)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{3.710, 0}
-			,{2.345e-1, 1}
-			,{-1.160e-4, 2}
-			,{2.205e-8, 3}
+			{0.446210465016131, 0}
+			,{0.0282038690151706, 1}
+			,{-1.39515940544127e-05, 2}
+			,{2.6520055939638e-09, 3}
 		}
 	}}
 };
@@ -13703,9 +493,15 @@ static const CubicData cubic_data_propylene = {
 	,.rho_c = (1000 * 42.081 / 181.0)
 	,.T_t = 0
 	,.omega = 0.144
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (2.043e+4 / 42.081), (6.276e+4 / 42.081)}}}
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (2.043e+4 * 1000 / 42.081), (266.954484319973 * 1000 / 42.081)}}}
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_propylene
+};
+
+static const ElementComp elements_rpp_propylene[] = {
+	{"C", 3}
+	,{"H", 6}
 };
 
 const EosData eos_rpp_propylene = {
@@ -13715,945 +511,295 @@ const EosData eos_rpp_propylene = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_propylene}
+	,.elements = elements_rpp_propylene
+	,.nelements = (int)(sizeof(elements_rpp_propylene) / sizeof(elements_rpp_propylene[0]))
 };
 
 
-static const IdealData ideal_data_n_pentadecane = {
+static const IdealData ideal_data_acetone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.080)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-11.92, 0}
-			,{1.433, 1}
-			,{-7.97E-04, 2}
-			,{1.72E-07, 3}
+			{0.757836156352195, 0}
+			,{0.0313429776774134, 1}
+			,{-1.50701270260165e-05, 2}
+			,{2.45115074852527e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_n_pentadecane = {
-	.M = 212.421
-	,.T_c = 707.0
-	,.p_c = (15.2 * 1e5)
-	,.rho_c = (1000 * 212.421 / 880.0)
+static const CubicData cubic_data_acetone = {
+	.M = 58.080
+	,.T_c = 508.1
+	,.p_c = (47.0 * 1e5)
+	,.rho_c = (1000 * 58.080 / 209.0)
 	,.T_t = 0
-	,.omega = 0.706
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-353000 / 212.421), (75280 / 212.421)}}}
+	,.omega = 0.304
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.177e+5 * 1000 / 58.080), (295.110939963106 * 1000 / 58.080)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_pentadecane
+	,.ideal = &ideal_data_acetone
 };
 
-const EosData eos_rpp_n_pentadecane = {
-	"n_pentadecane"
+static const ElementComp elements_rpp_acetone[] = {
+	{"C", 3}
+	,{"H", 6}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_acetone = {
+	"acetone"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_pentadecane}
+	,.data = {.cubic=&cubic_data_acetone}
+	,.elements = elements_rpp_acetone
+	,.nelements = (int)(sizeof(elements_rpp_acetone) / sizeof(elements_rpp_acetone[0]))
 };
 
 
-static const IdealData ideal_data_iodobenzene = {
+static const IdealData ideal_data_propane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 44.094)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-29.27, 0}
-			,{0.5564, 1}
-			,{-4.51E-04, 2}
-			,{1.44E-07, 3}
+			{-0.508030459360684, 0}
+			,{0.0368394246454019, 1}
+			,{-1.90751966985333e-05, 2}
+			,{3.86675645559801e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_iodobenzene = {
-	.M = 204.011
-	,.T_c = 721.0
-	,.p_c = (45.2 * 1e5)
-	,.rho_c = (1000 * 204.011 / 351.0)
+static const CubicData cubic_data_propane = {
+	.M = 44.094
+	,.T_c = 369.8
+	,.p_c = (42.5 * 1e5)
+	,.rho_c = (1000 * 44.094 / 203.0)
 	,.T_t = 0
-	,.omega = 0.249
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (162700 / 204.011), (187900 / 204.011)}}}
+	,.omega = 0.153
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.039e+5 * 1000 / 44.094), (269.803538487339 * 1000 / 44.094)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_iodobenzene
+	,.ideal = &ideal_data_propane
 };
 
-const EosData eos_rpp_iodobenzene = {
-	"iodobenzene"
+static const ElementComp elements_rpp_propane[] = {
+	{"C", 3}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_propane = {
+	"propane"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_iodobenzene}
+	,.data = {.cubic=&cubic_data_propane}
+	,.elements = elements_rpp_propane
+	,.nelements = (int)(sizeof(elements_rpp_propane) / sizeof(elements_rpp_propane[0]))
 };
 
 
-static const IdealData ideal_data_cycloheptane = {
+static const IdealData ideal_data_propadiene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 40.065)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-76.19, 0}
-			,{0.7867, 1}
-			,{4.20E-04, 2}
-			,{7.56E-08, 3}
+			{1.19141802330183, 0}
+			,{0.0237778460737707, 1}
+			,{-1.42161932519964e-05, 2}
+			,{3.34597712580829e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_cycloheptane = {
-	.M = 98.189
-	,.T_c = 604.2
-	,.p_c = (38.1 * 1e5)
-	,.rho_c = (1000 * 98.189 / 353.0)
+static const CubicData cubic_data_propadiene = {
+	.M = 40.065
+	,.T_c = 393.0
+	,.p_c = (54.7 * 1e5)
+	,.rho_c = (1000 * 40.065 / 162.0)
 	,.T_t = 0
-	,.omega = 0.237
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-119400 / 98.189), (63050 / 98.189)}}}
+	,.omega = 0.313
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (1.923e5 * 1000 / 40.065), (244.149032366259 * 1000 / 40.065)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cycloheptane
+	,.ideal = &ideal_data_propadiene
 };
 
-const EosData eos_rpp_cycloheptane = {
-	"cycloheptane"
+static const ElementComp elements_rpp_propadiene[] = {
+	{"C", 3}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_propadiene = {
+	"propadiene"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cycloheptane}
+	,.data = {.cubic=&cubic_data_propadiene}
+	,.elements = elements_rpp_propadiene
+	,.nelements = (int)(sizeof(elements_rpp_propadiene) / sizeof(elements_rpp_propadiene[0]))
 };
 
 
-static const IdealData ideal_data_vinyl_ethyl_ether = {
+static const IdealData ideal_data_n_propanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.096)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{17.28, 0}
-			,{0.3236, 1}
-			,{-1.47E-04, 2}
-			,{2.15E-08, 3}
+			{0.297072735468961, 0}
+			,{0.0399905605438986, 1}
+			,{-2.23105232508066e-05, 2}
+			,{5.16690069463423e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_vinyl_ethyl_ether = {
-	.M = 72.107
-	,.T_c = 475.0
-	,.p_c = (40.7 * 1e5)
-	,.rho_c = -1
+static const CubicData cubic_data_n_propanol = {
+	.M = 60.096
+	,.T_c = 536.7
+	,.p_c = (51.7 * 1e5)
+	,.rho_c = (1000 * 60.096 / 218.5)
 	,.T_t = 0
-	,.omega = 0.268
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-140300 / 72.107), (475 / 72.107)}}}
+	,.omega = 0.623
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.566e+5 * 1000 / 60.096), (324.389643635754 * 1000 / 60.096)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_vinyl_ethyl_ether
+	,.ideal = &ideal_data_n_propanol
 };
 
-const EosData eos_rpp_vinyl_ethyl_ether = {
-	"vinyl_ethyl_ether"
+static const ElementComp elements_rpp_n_propanol[] = {
+	{"C", 3}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_n_propanol = {
+	"n_propanol"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_vinyl_ethyl_ether}
+	,.data = {.cubic=&cubic_data_n_propanol}
+	,.elements = elements_rpp_n_propanol
+	,.nelements = (int)(sizeof(elements_rpp_n_propanol) / sizeof(elements_rpp_n_propanol[0]))
 };
 
 
-static const IdealData ideal_data_ethylenediamine = {
+static const IdealData ideal_data_i_propanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 60.096)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{38.30, 0}
-			,{0.2407, 1}
-			,{-4.34E-05, 2}
-			,{-3.95E-08, 3}
+			{3.90043271710866, 0}
+			,{0.0226713403384207, 1}
+			,{7.70464754418689e-06, 2}
+			,{-1.1138423494648e-08, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_ethylenediamine = {
-	.M = 60.099
-	,.T_c = 593.0
-	,.p_c = (62.8 * 1e5)
-	,.rho_c = (1000 * 60.099 / 206.0)
-	,.T_t = 0
-	,.omega = 0.510
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_ethylenediamine
-};
-
-const EosData eos_rpp_ethylenediamine = {
-	"ethylenediamine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_ethylenediamine}
-};
-
-
-static const IdealData ideal_data_1_2_dichlorotetrafluoroethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{38.78, 0}
-			,{0.344, 1}
-			,{-2.95E-04, 2}
-			,{8.51E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_2_dichlorotetrafluoroethane = {
-	.M = 170.922
-	,.T_c = 418.9
-	,.p_c = (32.6 * 1e5)
-	,.rho_c = (1000 * 170.922 / 293.8)
-	,.T_t = 0
-	,.omega = 0.246
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-898500 / 170.922), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_dichlorotetrafluoroethane
-};
-
-const EosData eos_rpp_1_2_dichlorotetrafluoroethane = {
-	"1_2_dichlorotetrafluoroethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_dichlorotetrafluoroethane}
-};
-
-
-static const IdealData ideal_data_cyclopentanone = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-40.64, 0}
-			,{0.5255, 1}
-			,{-3.12E-04, 2}
-			,{7.13E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cyclopentanone = {
-	.M = 84.118
-	,.T_c = 634.6
-	,.p_c = (51.1 * 1e5)
-	,.rho_c = (1000 * 84.118 / 268.0)
-	,.T_t = 0
-	,.omega = 0.350
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-192800 / 84.118), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cyclopentanone
-};
-
-const EosData eos_rpp_cyclopentanone = {
-	"cyclopentanone"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cyclopentanone}
-};
-
-
-static const IdealData ideal_data_methyl_acetate = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{16.55, 0}
-			,{0.2245, 1}
-			,{-4.34E-05, 2}
-			,{2.91E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_acetate = {
-	.M = 74.080
-	,.T_c = 506.8
-	,.p_c = (46.9 * 1e5)
-	,.rho_c = (1000 * 74.080 / 228.0)
-	,.T_t = 0
-	,.omega = 0.326
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-409700 / 74.080), NAN}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_acetate
-};
-
-const EosData eos_rpp_methyl_acetate = {
-	"methyl_acetate"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_acetate}
-};
-
-
-static const IdealData ideal_data_chlorotrifluoromethane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{22.81, 0}
-			,{0.1911, 1}
-			,{-1.58E-04, 2}
-			,{4.46E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_chlorotrifluoromethane = {
-	.M = 104.459
-	,.T_c = 302.0
-	,.p_c = (38.7 * 1e5)
-	,.rho_c = (1000 * 104.459 / 180.4)
-	,.T_t = 0
-	,.omega = 0.198
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-695000 / 104.459), (-654400 / 104.459)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chlorotrifluoromethane
-};
-
-const EosData eos_rpp_chlorotrifluoromethane = {
-	"chlorotrifluoromethane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chlorotrifluoromethane}
-};
-
-
-static const IdealData ideal_data_2_pentene_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-14.29, 0}
-			,{0.4601, 1}
-			,{-2.54E-04, 2}
-			,{5.46E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_pentene_cis = {
-	.M = 70.135
-	,.T_c = 476.0
-	,.p_c = (36.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.251
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-28090 / 70.135), (71890 / 70.135)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_pentene_cis
-};
-
-const EosData eos_rpp_2_pentene_cis = {
-	"2_pentene_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_pentene_cis}
-};
-
-
-static const IdealData ideal_data_hydrogen_bromide = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{30.65, 0}
-			,{-0.009462, 1}
-			,{1.72E-05, 2}
-			,{-6.24E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_hydrogen_bromide = {
-	.M = 80.912
-	,.T_c = 363.2
-	,.p_c = (85.5 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.088
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-36260 / 80.912), (-53300 / 80.912)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_hydrogen_bromide
-};
-
-const EosData eos_rpp_hydrogen_bromide = {
-	"hydrogen_bromide"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_hydrogen_bromide}
-};
-
-
-static const IdealData ideal_data_3_methylheptane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.22, 0}
-			,{0.7859, 1}
-			,{-4.40E-04, 2}
-			,{9.70E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_3_methylheptane = {
-	.M = 114.232
-	,.T_c = 563.7
-	,.p_c = (25.5 * 1e5)
-	,.rho_c = (1000 * 114.232 / 464.0)
-	,.T_t = 0
-	,.omega = 0.370
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-212800 / 114.232), (13730 / 114.232)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_3_methylheptane
-};
-
-const EosData eos_rpp_3_methylheptane = {
-	"3_methylheptane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_3_methylheptane}
-};
-
-
-static const IdealData ideal_data_isopropyl_alcohol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{32.43, 0}
-			,{0.1885, 1}
-			,{6.41E-05, 2}
-			,{-9.26E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isopropyl_alcohol = {
+static const CubicData cubic_data_i_propanol = {
 	.M = 60.096
 	,.T_c = 508.3
 	,.p_c = (47.6 * 1e5)
 	,.rho_c = (1000 * 60.096 / 220.0)
 	,.T_t = 0
 	,.omega = 0.665
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-272600 / 60.096), (-173500 / 60.096)}}}
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.726e+5 * 1000 / 60.096), (122.477854267986 * 1000 / 60.096)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isopropyl_alcohol
+	,.ideal = &ideal_data_i_propanol
 };
 
-const EosData eos_rpp_isopropyl_alcohol = {
-	"isopropyl_alcohol"
+static const ElementComp elements_rpp_i_propanol[] = {
+	{"C", 3}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_i_propanol = {
+	"i_propanol"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isopropyl_alcohol}
+	,.data = {.cubic=&cubic_data_i_propanol}
+	,.elements = elements_rpp_i_propanol
+	,.nelements = (int)(sizeof(elements_rpp_i_propanol) / sizeof(elements_rpp_i_propanol[0]))
 };
 
 
-static const IdealData ideal_data_n_heptylcyclopentane = {
+static const IdealData ideal_data_n_butane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.124)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-59.26, 0}
-			,{1.223, 1}
-			,{-7.08E-04, 2}
-			,{1.60E-07, 3}
+			{1.14102390339839, 0}
+			,{0.0398462337088529, 1}
+			,{-1.33261777692149e-05, 2}
+			,{-3.39408607082351e-10, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_n_heptylcyclopentane = {
-	.M = 168.324
-	,.T_c = 679.0
-	,.p_c = (19.4 * 1e5)
-	,.rho_c = -1
+static const CubicData cubic_data_n_butane = {
+	.M = 58.124
+	,.T_c = 425.2
+	,.p_c = (38.0 * 1e5)
+	,.rho_c = (1000 * 58.124 / 255)
 	,.T_t = 0
-	,.omega = 0.515
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-230300 / 168.324), (86670 / 168.324)}}}
+	,.omega = 0.199
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.262e+5 * 1000 / 58.124), (306.532790541674 * 1000 / 58.124)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_heptylcyclopentane
+	,.ideal = &ideal_data_n_butane
 };
 
-const EosData eos_rpp_n_heptylcyclopentane = {
-	"n_heptylcyclopentane"
+static const ElementComp elements_rpp_n_butane[] = {
+	{"C", 4}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_n_butane = {
+	"n_butane"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_heptylcyclopentane}
-};
-
-
-static const IdealData ideal_data_diethylbenzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-3.742e+1, 0}
-			,{8.671e-1, 1}
-			,{-5.560e-4, 2}
-			,{1.411e-7, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_diethylbenzene = {
-	.M = 134.222
-	,.T_c = 657.9
-	,.p_c = (28.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.404
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.227e+4 / 134.222), (1.380e+5 / 134.222)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_diethylbenzene
-};
-
-const EosData eos_rpp_diethylbenzene = {
-	"diethylbenzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_diethylbenzene}
-};
-
-
-static const IdealData ideal_data_2_methylpyridine = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-36.26, 0}
-			,{0.5584, 1}
-			,{-3.70E-04, 2}
-			,{9.66E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_methylpyridine = {
-	.M = 93.129
-	,.T_c = 621.0
-	,.p_c = (46.0 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.299
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (99020 / 93.129), (177200 / 93.129)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methylpyridine
-};
-
-const EosData eos_rpp_2_methylpyridine = {
-	"2_methylpyridine"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methylpyridine}
-};
-
-
-static const IdealData ideal_data_methyl_chloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{13.88, 0}
-			,{0.1014, 1}
-			,{-3.89E-05, 2}
-			,{2.57E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_methyl_chloride = {
-	.M = 50.488
-	,.T_c = 416.3
-	,.p_c = (67.0 * 1e5)
-	,.rho_c = (1000 * 50.488 / 138.9)
-	,.T_t = 0
-	,.omega = 0.153
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-86370 / 50.488), (-62930 / 50.488)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_methyl_chloride
-};
-
-const EosData eos_rpp_methyl_chloride = {
-	"methyl_chloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_methyl_chloride}
-};
-
-
-static const IdealData ideal_data_2_hexene_cis = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.81, 0}
-			,{0.5309, 1}
-			,{-2.72E-04, 2}
-			,{4.83E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_hexene_cis = {
-	.M = 84.162
-	,.T_c = 518.0
-	,.p_c = (32.8 * 1e5)
-	,.rho_c = (1000 * 84.162 / 351.0)
-	,.T_t = 0
-	,.omega = 0.256
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-52380 / 84.162), (76280 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_hexene_cis
-};
-
-const EosData eos_rpp_2_hexene_cis = {
-	"2_hexene_cis"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_hexene_cis}
-};
-
-
-static const IdealData ideal_data_2_4_dimethylpentane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_4_dimethylpentane = {
-	.M = 100.205
-	,.T_c = 519.8
-	,.p_c = (27.4 * 1e5)
-	,.rho_c = (1000 * 100.205 / 418.0)
-	,.T_t = 0
-	,.omega = 0.302
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-202100 / 100.205), (3100 / 100.205)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_4_dimethylpentane
-};
-
-const EosData eos_rpp_2_4_dimethylpentane = {
-	"2_4_dimethylpentane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_4_dimethylpentane}
-};
-
-
-static const IdealData ideal_data_2_2_4_trimethylhexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-60.13, 0}
-			,{1.104, 1}
-			,{-7.71E-04, 2}
-			,{2.19E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_4_trimethylhexane = {
-	.M = 128.259
-	,.T_c = 573.7
-	,.p_c = (23.7 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.321
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-243400 / 128.259), (22520 / 128.259)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_4_trimethylhexane
-};
-
-const EosData eos_rpp_2_2_4_trimethylhexane = {
-	"2_2_4_trimethylhexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_4_trimethylhexane}
-};
-
-
-static const IdealData ideal_data_phenol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-35.84, 0}
-			,{0.5983, 1}
-			,{-4.83E-04, 2}
-			,{1.53E-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_phenol = {
-	.M = 94.113
-	,.T_c = 694.2
-	,.p_c = (61.3 * 1e5)
-	,.rho_c = (1000 * 94.113 / 229.0)
-	,.T_t = 0
-	,.omega = 0.438
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-96420 / 94.113), (-32900 / 94.113)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_phenol
-};
-
-const EosData eos_rpp_phenol = {
-	"phenol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_phenol}
-};
-
-
-static const IdealData ideal_data_2_2_dimethylpropane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-16.59, 0}
-			,{0.5552, 1}
-			,{-3.31E-04, 2}
-			,{7.63E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_2_2_dimethylpropane = {
-	.M = 72.151
-	,.T_c = 433.8
-	,.p_c = (32.0 * 1e5)
-	,.rho_c = (1000 * 72.151 / 303.0)
-	,.T_t = 0
-	,.omega = 0.197
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-166100 / 72.151), (-15240 / 72.151)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_2_dimethylpropane
-};
-
-const EosData eos_rpp_2_2_dimethylpropane = {
-	"2_2_dimethylpropane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_2_dimethylpropane}
-};
-
-
-static const IdealData ideal_data_benzaldehyde = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-12.14, 0}
-			,{0.4961, 1}
-			,{-2.85E-04, 2}
-			,{5.17E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_benzaldehyde = {
-	.M = 106.124
-	,.T_c = 694.8
-	,.p_c = (45.4 * 1e5)
-	,.rho_c = -1
-	,.T_t = 0
-	,.omega = 0.316
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-36800 / 106.124), (22400 / 106.124)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_benzaldehyde
-};
-
-const EosData eos_rpp_benzaldehyde = {
-	"benzaldehyde"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_benzaldehyde}
-};
-
-
-static const IdealData ideal_data_cyclohexane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-54.54, 0}
-			,{0.6113, 1}
-			,{-2.52E-04, 2}
-			,{1.32E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_cyclohexane = {
-	.M = 84.162
-	,.T_c = 553.5
-	,.p_c = (40.7 * 1e5)
-	,.rho_c = (1000 * 84.162 / 308.0)
-	,.T_t = 0
-	,.omega = 0.212
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-123200 / 84.162), (31780 / 84.162)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_cyclohexane
-};
-
-const EosData eos_rpp_cyclohexane = {
-	"cyclohexane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_cyclohexane}
-};
-
-
-static const IdealData ideal_data_vinyl_chloride = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{5.95, 0}
-			,{0.2019, 1}
-			,{-1.54E-04, 2}
-			,{4.77E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_vinyl_chloride = {
-	.M = 62.499
-	,.T_c = 425.0
-	,.p_c = (51.5 * 1e5)
-	,.rho_c = (1000 * 62.499 / 169.0)
-	,.T_t = 0
-	,.omega = 0.122
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (35170 / 62.499), (51540 / 62.499)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_vinyl_chloride
-};
-
-const EosData eos_rpp_vinyl_chloride = {
-	"vinyl_chloride"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_vinyl_chloride}
+	,.data = {.cubic=&cubic_data_n_butane}
+	,.elements = elements_rpp_n_butane
+	,.nelements = (int)(sizeof(elements_rpp_n_butane) / sizeof(elements_rpp_n_butane[0]))
 };
 
 
 static const IdealData ideal_data_i_butane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 58.124)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-1.390, 0}
-			,{3.847e-1, 1}
-			,{-1.846e-4, 2}
-			,{2.895e-8, 3}
+			{-0.167178583927877, 0}
+			,{0.0462687778683843, 1}
+			,{-2.22022781245223e-05, 2}
+			,{3.48188489547628e-09, 3}
 		}
 	}}
 };
@@ -14665,9 +811,15 @@ static const CubicData cubic_data_i_butane = {
 	,.rho_c = (1000 * 58.124 / 263)
 	,.T_t = 0
 	,.omega = 0.183
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.346e+5 / 58.124), (-2.090e+4 / 58.124)}}}
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.346e+5 * 1000 / 58.124), (294.458331376824 * 1000 / 58.124)}}}
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_i_butane
+};
+
+static const ElementComp elements_rpp_i_butane[] = {
+	{"C", 4}
+	,{"H", 10}
 };
 
 const EosData eos_rpp_i_butane = {
@@ -14677,94 +829,2240 @@ const EosData eos_rpp_i_butane = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_i_butane}
+	,.elements = elements_rpp_i_butane
+	,.nelements = (int)(sizeof(elements_rpp_i_butane) / sizeof(elements_rpp_i_butane[0]))
 };
 
 
-static const IdealData ideal_data_1_2_4_trimethylbenzene = {
+static const IdealData ideal_data_butene_1 = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 56.108)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-4.67, 0}
-			,{0.6238, 1}
-			,{-3.26E-04, 2}
-			,{6.38E-08, 3}
+			{-0.360095453438894, 0}
+			,{0.042480198448436, 1}
+			,{-2.39342001450701e-05, 2}
+			,{5.36775554007276e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_1_2_4_trimethylbenzene = {
-	.M = 120.195
-	,.T_c = 649.2
-	,.p_c = (32.3 * 1e5)
+static const CubicData cubic_data_butene_1 = {
+	.M = 56.108
+	,.T_c = 419.6
+	,.p_c = (40.2 * 1e5)
+	,.rho_c = (1000 * 56.108 / 240)
+	,.T_t = 0
+	,.omega = 0.191
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-37.5e+3 * 1000 / 56.108), (180.188851249371 * 1000 / 56.108)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_butene_1
+};
+
+static const ElementComp elements_rpp_butene_1[] = {
+	{"C", 4}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_butene_1 = {
+	"butene_1"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_butene_1}
+	,.elements = elements_rpp_butene_1
+	,.nelements = (int)(sizeof(elements_rpp_butene_1) / sizeof(elements_rpp_butene_1[0]))
+};
+
+
+static const IdealData ideal_data_n_butanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.392809536049241, 0}
+			,{0.050273847540901, 1}
+			,{-2.69650636810287e-05, 2}
+			,{5.63476018490721e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_butanol = {
+	.M = 74.123
+	,.T_c = 563.1
+	,.p_c = (44.2 * 1e5)
+	,.rho_c = (1000 * 74.123 / 274.0)
+	,.T_t = 0
+	,.omega = 0.593
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.749e+5 * 1000 / 74.123), (362.426962099614 * 1000 / 74.123)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_butanol
+};
+
+static const ElementComp elements_rpp_n_butanol[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_n_butanol = {
+	"n_butanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_butanol}
+	,.elements = elements_rpp_n_butanol
+	,.nelements = (int)(sizeof(elements_rpp_n_butanol) / sizeof(elements_rpp_n_butanol[0]))
+};
+
+
+static const IdealData ideal_data_i_butanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.927059370443219, 0}
+			,{0.0563957107940873, 1}
+			,{-3.4686549355971e-05, 2}
+			,{8.69689453512573e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_i_butanol = {
+	.M = 74.123
+	,.T_c = 547.8
+	,.p_c = (43.0 * 1e5)
+	,.rho_c = (1000 * 74.123 / 273)
+	,.T_t = 0
+	,.omega = 0.592
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.834e+5 * 1000 / 74.123), (389.259093577058 * 1000 / 74.123)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_i_butanol
+};
+
+static const ElementComp elements_rpp_i_butanol[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_i_butanol = {
+	"i_butanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_i_butanol}
+	,.elements = elements_rpp_i_butanol
+	,.nelements = (int)(sizeof(elements_rpp_i_butanol) / sizeof(elements_rpp_i_butanol[0]))
+};
+
+
+static const IdealData ideal_data_n_pentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.151)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.436107586562936, 0}
+			,{0.0586087222647873, 1}
+			,{-3.10302695348145e-05, 2}
+			,{6.38044883264306e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_pentane = {
+	.M = 72.151
+	,.T_c = 469.7
+	,.p_c = (33.7 * 1e5)
+	,.rho_c = (1000 * 72.151 / 304)
+	,.T_t = 0
+	,.omega = 0.251
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.465e+5 * 1000 / 72.151), (348.829709877578 * 1000 / 72.151)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_pentane
+};
+
+static const ElementComp elements_rpp_n_pentane[] = {
+	{"C", 5}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_n_pentane = {
+	"n_pentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_pentane}
+	,.elements = elements_rpp_n_pentane
+	,.nelements = (int)(sizeof(elements_rpp_n_pentane) / sizeof(elements_rpp_n_pentane[0]))
+};
+
+
+static const IdealData ideal_data_i_pentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.151)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.14559425317484, 0}
+			,{0.0609299788617715, 1}
+			,{-3.28223277366313e-05, 2}
+			,{6.88318730805207e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_i_pentane = {
+	.M = 72.151
+	,.T_c = 460.4
+	,.p_c = (33.9 * 1e5)
+	,.rho_c = (1000 * 72.151 / 306)
+	,.T_t = 0
+	,.omega = 0.227
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.546e+5 * 1000 / 72.151), (343.295582760355 * 1000 / 72.151)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_i_pentane
+};
+
+static const ElementComp elements_rpp_i_pentane[] = {
+	{"C", 5}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_i_pentane = {
+	"i_pentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_i_pentane}
+	,.elements = elements_rpp_i_pentane
+	,.nelements = (int)(sizeof(elements_rpp_i_pentane) / sizeof(elements_rpp_i_pentane[0]))
+};
+
+
+static const IdealData ideal_data_benzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 78.114)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.07963853729034, 0}
+			,{0.0569970726067775, 1}
+			,{-3.62861717777269e-05, 2}
+			,{8.57541944896231e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_benzene = {
+	.M = 78.114
+	,.T_c = 562.2
+	,.p_c = (48.9 * 1e5)
+	,.rho_c = (1000 * 78.114 / 259)
+	,.T_t = 0
+	,.omega = 0.212
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (8.298e+4 * 1000 / 78.114), (269.450352171726 * 1000 / 78.114)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_benzene
+};
+
+static const ElementComp elements_rpp_benzene[] = {
+	{"C", 6}
+	,{"H", 6}
+};
+
+const EosData eos_rpp_benzene = {
+	"benzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_benzene}
+	,.elements = elements_rpp_benzene
+	,.nelements = (int)(sizeof(elements_rpp_benzene) / sizeof(elements_rpp_benzene[0]))
+};
+
+
+static const IdealData ideal_data_n_hexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.178)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.530761935880374, 0}
+			,{0.0699985149971397, 1}
+			,{-3.75129498756149e-05, 2}
+			,{7.81048722322037e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_hexane = {
+	.M = 86.178
+	,.T_c = 507.5
+	,.p_c = (30.1 * 1e5)
+	,.rho_c = (1000 * 86.178 / 370)
+	,.T_t = 0
+	,.omega = 0.299
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.673e+5 * 1000 / 86.178), (387.863171222539 * 1000 / 86.178)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_hexane
+};
+
+static const ElementComp elements_rpp_n_hexane[] = {
+	{"C", 6}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_n_hexane = {
+	"n_hexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_hexane}
+	,.elements = elements_rpp_n_hexane
+	,.nelements = (int)(sizeof(elements_rpp_n_hexane) / sizeof(elements_rpp_n_hexane[0]))
+};
+
+
+static const IdealData ideal_data_toluene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 92.141)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.92863202780129, 0}
+			,{0.0616395858007459, 1}
+			,{-3.32553082417683e-05, 2}
+			,{5.90657572424318e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_toluene = {
+	.M = 92.141
+	,.T_c = 591.8
+	,.p_c = (41.0 * 1e5)
+	,.rho_c = (1000 * 92.141 / 316)
+	,.T_t = 0
+	,.omega = 0.263
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (5.003e+4 * 1000 / 92.141), (320.736035552574 * 1000 / 92.141)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_toluene
+};
+
+static const ElementComp elements_rpp_toluene[] = {
+	{"C", 7}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_toluene = {
+	"toluene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_toluene}
+	,.elements = elements_rpp_toluene
+	,.nelements = (int)(sizeof(elements_rpp_toluene) / sizeof(elements_rpp_toluene[0]))
+};
+
+
+static const IdealData ideal_data_n_heptane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.205)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.618921577620758, 0}
+			,{0.0813281715482232, 1}
+			,{-4.39114395626387e-05, 2}
+			,{9.21045752316316e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_heptane = {
+	.M = 100.205
+	,.T_c = 540.3
+	,.p_c = (27.4 * 1e5)
+	,.rho_c = (1000 * 100.205 / 432)
+	,.T_t = 0
+	,.omega = 0.349
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.879e+5 * 1000 / 100.205), (427.688180446084 * 1000 / 100.205)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_heptane
+};
+
+static const ElementComp elements_rpp_n_heptane[] = {
+	{"C", 7}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_n_heptane = {
+	"n_heptane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_heptane}
+	,.elements = elements_rpp_n_heptane
+	,.nelements = (int)(sizeof(elements_rpp_n_heptane) / sizeof(elements_rpp_n_heptane[0]))
+};
+
+
+static const IdealData ideal_data_styrene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 104.152)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.39769424169965, 0}
+			,{0.0740757480871793, 1}
+			,{-4.83855714490538e-05, 2}
+			,{1.19490592181544e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_styrene = {
+	.M = 104.152
+	,.T_c = 647
+	,.p_c = (39.9 * 1e5)
 	,.rho_c = -1
 	,.T_t = 0
-	,.omega = 0.376
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.39E+04 / 120.195), (1.17E+05 / 120.195)}}}
+	,.omega = 0.257
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (1.475e+5 * 1000 / 104.152), (345.493308737213 * 1000 / 104.152)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_4_trimethylbenzene
+	,.ideal = &ideal_data_styrene
 };
 
-const EosData eos_rpp_1_2_4_trimethylbenzene = {
-	"1_2_4_trimethylbenzene"
+static const ElementComp elements_rpp_styrene[] = {
+	{"C", 8}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_styrene = {
+	"styrene"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_4_trimethylbenzene}
+	,.data = {.cubic=&cubic_data_styrene}
+	,.elements = elements_rpp_styrene
+	,.nelements = (int)(sizeof(elements_rpp_styrene) / sizeof(elements_rpp_styrene[0]))
 };
 
 
-static const IdealData ideal_data_o_dichlorobenzene = {
+static const IdealData ideal_data_ethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 106.168)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-14.30, 0}
-			,{0.5506, 1}
-			,{-4.51E-04, 2}
-			,{1.43E-07, 3}
+			{-5.18373882538956, 0}
+			,{0.0850566147869025, 1}
+			,{-5.78630336170514e-05, 2}
+			,{1.56474343661991e-08, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_o_dichlorobenzene = {
-	.M = 147.004
-	,.T_c = 729.0
-	,.p_c = (41.0 * 1e5)
-	,.rho_c = (1000 * 147.004 / 360.0)
+static const CubicData cubic_data_ethylbenzene = {
+	.M = 106.168
+	,.T_c = 617.2
+	,.p_c = (36.0 * 1e5)
+	,.rho_c = (1000 * 106.168 / 374)
 	,.T_t = 0
-	,.omega = 0.272
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (30000 / 147.004), (82730 / 147.004)}}}
+	,.omega = 0.302
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (2.981e4 * 1000 / 106.168), (360.383281905081 * 1000 / 106.168)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_o_dichlorobenzene
+	,.ideal = &ideal_data_ethylbenzene
 };
 
-const EosData eos_rpp_o_dichlorobenzene = {
-	"o_dichlorobenzene"
+static const ElementComp elements_rpp_ethylbenzene[] = {
+	{"C", 8}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_ethylbenzene = {
+	"ethylbenzene"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_o_dichlorobenzene}
+	,.data = {.cubic=&cubic_data_ethylbenzene}
+	,.elements = elements_rpp_ethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_ethylbenzene) / sizeof(elements_rpp_ethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_n_octane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.733180322031897, 0}
+			,{0.0927540459893371, 1}
+			,{-5.04542560847081e-05, 2}
+			,{1.06501177027435e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_octane = {
+	.M = 114.232
+	,.T_c = 568.8
+	,.p_c = (24.9 * 1e5)
+	,.rho_c = (1000 * 114.232 / 492.0)
+	,.T_t = 0
+	,.omega = 0.398
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.086e5 * 1000 / 114.232), (466.396302196881 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_octane
+};
+
+static const ElementComp elements_rpp_n_octane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_n_octane = {
+	"n_octane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_octane}
+	,.elements = elements_rpp_n_octane
+	,.nelements = (int)(sizeof(elements_rpp_n_octane) / sizeof(elements_rpp_n_octane[0]))
+};
+
+
+static const IdealData ideal_data_diethylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 134.222)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.50059180617349, 0}
+			,{0.104288165556735, 1}
+			,{-6.68714335711507e-05, 2}
+			,{1.69704303541176e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_diethylbenzene = {
+	.M = 134.222
+	,.T_c = 657.9
+	,.p_c = (28.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.404
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.227e+4 * 1000 / 134.222), (433.841786013751 * 1000 / 134.222)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_diethylbenzene
+};
+
+static const ElementComp elements_rpp_diethylbenzene[] = {
+	{"C", 10}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_diethylbenzene = {
+	"diethylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_diethylbenzene}
+	,.elements = elements_rpp_diethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_diethylbenzene) / sizeof(elements_rpp_diethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_n_decane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 142.286)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.951715204763517, 0}
+			,{0.115569713162803, 1}
+			,{-6.3600025310116e-05, 2}
+			,{1.36028042030524e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_decane = {
+	.M = 142.286
+	,.T_c = 617.7
+	,.p_c = (21.2 * 1e5)
+	,.rho_c = (1000 * 142.286 / 603.0)
+	,.T_t = 0
+	,.omega = 0.489
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.498e5 * 1000 / 142.286), (544.349188328023 * 1000 / 142.286)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_decane
+};
+
+static const ElementComp elements_rpp_n_decane[] = {
+	{"C", 10}
+	,{"H", 22}
+};
+
+const EosData eos_rpp_n_decane = {
+	"n_decane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_decane}
+	,.elements = elements_rpp_n_decane
+	,.nelements = (int)(sizeof(elements_rpp_n_decane) / sizeof(elements_rpp_n_decane[0]))
+};
+
+
+static const IdealData ideal_data_diphenyl = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 154.212)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-11.6748382315676, 0}
+			,{0.133021232967073, 1}
+			,{-0.000106501177027435, 2}
+			,{3.35559891481134e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_diphenyl = {
+	.M = 154.212
+	,.T_c = 789.0
+	,.p_c = (38.5 * 1e5)
+	,.rho_c = (1000 * 154.212 / 502.0)
+	,.T_t = 0
+	,.omega = 0.372
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (1.822e+5 * 1000 / 154.212), (392.70098775784 * 1000 / 154.212)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_diphenyl
+};
+
+static const ElementComp elements_rpp_diphenyl[] = {
+	{"C", 12}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_diphenyl = {
+	"diphenyl"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_diphenyl}
+	,.elements = elements_rpp_diphenyl
+	,.nelements = (int)(sizeof(elements_rpp_diphenyl) / sizeof(elements_rpp_diphenyl[0]))
+};
+
+
+static const IdealData ideal_data_pentanol_1 = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 88.150)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.46533377065968, 0}
+			,{0.0606774069004416, 1}
+			,{-3.1739876473789e-05, 2}
+			,{6.15794496194769e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_pentanol_1 = {
+	.M = 88.150
+	,.T_c = 588.2
+	,.p_c = (39.1 * 1e5)
+	,.rho_c = (1000 * 88.150 / 326.0)
+	,.T_t = 0
+	,.omega = 0.579
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.989e05 * 1000 / 88.150), (402.141288780815 * 1000 / 88.150)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_pentanol_1
+};
+
+static const ElementComp elements_rpp_pentanol_1[] = {
+	{"C", 5}
+	,{"H", 12}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_pentanol_1 = {
+	"pentanol_1"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_pentanol_1}
+	,.elements = elements_rpp_pentanol_1
+	,.nelements = (int)(sizeof(elements_rpp_pentanol_1) / sizeof(elements_rpp_pentanol_1[0]))
+};
+
+
+static const IdealData ideal_data_dodecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 170.34)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.12190059775484, 0}
+			,{0.138192944556209, 1}
+			,{-7.63368685028945e-05, 2}
+			,{1.63450140689197e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dodecane = {
+	.M = 170.34
+	,.T_c = 658.2
+	,.p_c = (18.2 * 1e5)
+	,.rho_c = (1000 * 170.34 / 713.0)
+	,.T_t = 0
+	,.omega = 0.575
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.911e5 * 1000 / 170.34), (622.000212980043 * 1000 / 170.34)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dodecane
+};
+
+static const ElementComp elements_rpp_dodecane[] = {
+	{"C", 12}
+	,{"H", 26}
+};
+
+const EosData eos_rpp_dodecane = {
+	"dodecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dodecane}
+	,.elements = elements_rpp_dodecane
+	,.nelements = (int)(sizeof(elements_rpp_dodecane) / sizeof(elements_rpp_dodecane[0]))
+};
+
+
+static const IdealData ideal_data_chloro_benzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.559)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.0760303664142, 0}
+			,{0.0677253673451708, 1}
+			,{-5.4387162339702e-05, 2}
+			,{1.71508388979246e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_chloro_benzene = {
+	.M = 112.559
+	,.T_c = 632.4
+	,.p_c = (45.2 * 1e5)
+	,.rho_c = (1000 * 112.559 / 308.0)
+	,.T_t = 0
+	,.omega = 0.249
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (5.187e04 / 112.559), (9.923e04 / 112.559)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_chloro_benzene
+};
+
+static const ElementComp elements_rpp_chloro_benzene[] = {
+	{"C", 6}
+	,{"Cl", 1}
+	,{"H", 5}
+};
+
+const EosData eos_rpp_chloro_benzene = {
+	"chloro_benzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_chloro_benzene}
+	,.elements = elements_rpp_chloro_benzene
+	,.nelements = (int)(sizeof(elements_rpp_chloro_benzene) / sizeof(elements_rpp_chloro_benzene[0]))
+};
+
+
+static const IdealData ideal_data_oxygen = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 31.999)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.38085611094433, 0}
+			,{-4.4260229413999e-07, 1}
+			,{2.09995544991419e-06, 2}
+			,{-1.28090066103013e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_oxygen = {
+	.M = 31.999
+	,.T_c = 154.6
+	,.p_c = (50.4 * 1e5)
+	,.rho_c = (1000 * 31.999 / 73.4)
+	,.T_t = 0
+	,.omega = 0.025
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (0.00 * 1000 / 31.999), (205.03 * 1000 / 31.999)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_oxygen
+};
+
+static const ElementComp elements_rpp_oxygen[] = {
+	{"O", 2}
+};
+
+const EosData eos_rpp_oxygen = {
+	"oxygen"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_oxygen}
+	,.elements = elements_rpp_oxygen
+	,.nelements = (int)(sizeof(elements_rpp_oxygen) / sizeof(elements_rpp_oxygen[0]))
+};
+
+
+static const IdealData ideal_data_nitrogen = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 28.013)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.74648409305997, 0}
+			,{-0.00163209595964121, 1}
+			,{3.22329931601949e-06, 2}
+			,{-1.40478119444432e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_nitrogen = {
+	.M = 28.013
+	,.T_c = 126.2
+	,.p_c = (33.9 * 1e5)
+	,.rho_c = (1000 * 28.013 / 89.8)
+	,.T_t = 0
+	,.omega = 0.039
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (0.00 * 1000 / 28.013), (191.609 * 1000 / 28.013)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_nitrogen
+};
+
+static const ElementComp elements_rpp_nitrogen[] = {
+	{"N", 2}
+};
+
+const EosData eos_rpp_nitrogen = {
+	"nitrogen"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_nitrogen}
+	,.elements = elements_rpp_nitrogen
+	,.nelements = (int)(sizeof(elements_rpp_nitrogen) / sizeof(elements_rpp_nitrogen[0]))
+};
+
+
+static const IdealData ideal_data_aluminum_tribromide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 266.694)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{7.81048722322037, 0}
+			,{0.00733420866756973, 1}
+			,{-8.79190970153078e-06, 2}
+			,{3.58411640363362e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_aluminum_tribromide = {
+	.M = 266.694
+	,.T_c = 763.0
+	,.p_c = (28.9 * 1e5)
+	,.rho_c = (1000 * 266.694 / 310.0)
+	,.T_t = 0
+	,.omega = 0.399
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-423300 / 266.694), (-452200 / 266.694)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_aluminum_tribromide
+};
+
+static const ElementComp elements_rpp_aluminum_tribromide[] = {
+	{"Al", 1}
+	,{"Br", 3}
+};
+
+const EosData eos_rpp_aluminum_tribromide = {
+	"aluminum_tribromide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_aluminum_tribromide}
+	,.elements = elements_rpp_aluminum_tribromide
+	,.nelements = (int)(sizeof(elements_rpp_aluminum_tribromide) / sizeof(elements_rpp_aluminum_tribromide[0]))
+};
+
+
+static const IdealData ideal_data_aluminum_trichloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 133.341)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{6.07856520267258, 0}
+			,{0.0124722439951948, 1}
+			,{-1.44326835045649e-05, 2}
+			,{5.76104616557215e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_aluminum_trichloride = {
+	.M = 133.341
+	,.T_c = 620.0
+	,.p_c = (26.3 * 1e5)
+	,.rho_c = (1000 * 133.341 / 259.0)
+	,.T_t = 0
+	,.omega = 0.660
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-584900 / 133.341), (-570400 / 133.341)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_aluminum_trichloride
+};
+
+static const ElementComp elements_rpp_aluminum_trichloride[] = {
+	{"Al", 1}
+	,{"Cl", 3}
+};
+
+const EosData eos_rpp_aluminum_trichloride = {
+	"aluminum_trichloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_aluminum_trichloride}
+	,.elements = elements_rpp_aluminum_trichloride
+	,.nelements = (int)(sizeof(elements_rpp_aluminum_trichloride) / sizeof(elements_rpp_aluminum_trichloride[0]))
+};
+
+
+static const IdealData ideal_data_argon = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 39.948)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.50166514079125, 0}
+			,{0, 1}
+			,{0, 2}
+			,{0, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_argon = {
+	.M = 39.948
+	,.T_c = 150.8
+	,.p_c = (48.7 * 1e5)
+	,.rho_c = (1000 * 39.948 / 74.9)
+	,.T_t = 0
+	,.omega = 0.001
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (0 / 39.948), (0 / 39.948)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_argon
+};
+
+static const ElementComp elements_rpp_argon[] = {
+	{"Ar", 1}
+};
+
+const EosData eos_rpp_argon = {
+	"argon"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_argon}
+	,.elements = elements_rpp_argon
+	,.nelements = (int)(sizeof(elements_rpp_argon) / sizeof(elements_rpp_argon[0]))
+};
+
+
+static const IdealData ideal_data_boron_trichloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 117.191)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.92208174236551, 0}
+			,{0.0167178583927877, 1}
+			,{-1.7559764930554e-05, 2}
+			,{6.54281652206942e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_boron_trichloride = {
+	.M = 117.191
+	,.T_c = 455.0
+	,.p_c = (38.7 * 1e5)
+	,.rho_c = (1000 * 117.191 / 239.5)
+	,.T_t = 0
+	,.omega = 0.140
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-403200 / 117.191), (-388200 / 117.191)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_boron_trichloride
+};
+
+static const ElementComp elements_rpp_boron_trichloride[] = {
+	{"B", 1}
+	,{"Cl", 3}
+};
+
+const EosData eos_rpp_boron_trichloride = {
+	"boron_trichloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_boron_trichloride}
+	,.elements = elements_rpp_boron_trichloride
+	,.nelements = (int)(sizeof(elements_rpp_boron_trichloride) / sizeof(elements_rpp_boron_trichloride[0]))
+};
+
+
+static const IdealData ideal_data_boron_trifluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 67.805)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.2346604959568, 0}
+			,{0.0168261035190719, 1}
+			,{-1.4673228229641e-05, 2}
+			,{4.7146766114912e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_boron_trifluoride = {
+	.M = 67.805
+	,.T_c = 260.8
+	,.p_c = (49.9 * 1e5)
+	,.rho_c = (1000 * 67.805 / 114.7)
+	,.T_t = 0
+	,.omega = 0.393
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-1136000 / 67.805), (-1120000 / 67.805)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_boron_trifluoride
+};
+
+static const ElementComp elements_rpp_boron_trifluoride[] = {
+	{"B", 1}
+	,{"F", 3}
+};
+
+const EosData eos_rpp_boron_trifluoride = {
+	"boron_trifluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_boron_trifluoride}
+	,.elements = elements_rpp_boron_trifluoride
+	,.nelements = (int)(sizeof(elements_rpp_boron_trifluoride) / sizeof(elements_rpp_boron_trifluoride[0]))
+};
+
+
+static const IdealData ideal_data_bromine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 159.808)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.07242219553806, 0}
+			,{0.00135306407855296, 1}
+			,{-1.43124111420269e-06, 2}
+			,{5.44833802297325e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_bromine = {
+	.M = 159.808
+	,.T_c = 588.0
+	,.p_c = (103.0 * 1e5)
+	,.rho_c = (1000 * 159.808 / 127.2)
+	,.T_t = 0
+	,.omega = 0.108
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (30930 / 159.808), (3136 / 159.808)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_bromine
+};
+
+static const ElementComp elements_rpp_bromine[] = {
+	{"Br", 2}
+};
+
+const EosData eos_rpp_bromine = {
+	"bromine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_bromine}
+	,.elements = elements_rpp_bromine
+	,.nelements = (int)(sizeof(elements_rpp_bromine) / sizeof(elements_rpp_bromine[0]))
+};
+
+
+static const IdealData ideal_data_perchloryl_fluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.448)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.49739091359861, 0}
+			,{0.0287450946465917, 1}
+			,{-2.82640051964396e-05, 2}
+			,{1.0006660563165e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_perchloryl_fluoride = {
+	.M = 102.448
+	,.T_c = 368.4
+	,.p_c = (53.7 * 1e5)
+	,.rho_c = (1000 * 102.448 / 160.8)
+	,.T_t = 0
+	,.omega = 0.170
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-21440 / 102.448), (50620 / 102.448)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_perchloryl_fluoride
+};
+
+static const ElementComp elements_rpp_perchloryl_fluoride[] = {
+	{"Cl", 1}
+	,{"F", 1}
+	,{"O", 3}
+};
+
+const EosData eos_rpp_perchloryl_fluoride = {
+	"perchloryl_fluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_perchloryl_fluoride}
+	,.elements = elements_rpp_perchloryl_fluoride
+	,.nelements = (int)(sizeof(elements_rpp_perchloryl_fluoride) / sizeof(elements_rpp_perchloryl_fluoride[0]))
+};
+
+
+static const IdealData ideal_data_chlorine_pentafluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 130.433)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.7260377914285, 0}
+			,{0.0385232377209345, 1}
+			,{-4.43805017765371e-05, 2}
+			,{1.7559764930554e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_chlorine_pentafluoride = {
+	.M = 130.433
+	,.T_c = 416.0
+	,.p_c = (52.7 * 1e5)
+	,.rho_c = (1000 * 130.433 / 233.0)
+	,.T_t = 0
+	,.omega = 0.216
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-238600 / 130.433), (-146900 / 130.433)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_chlorine_pentafluoride
+};
+
+static const ElementComp elements_rpp_chlorine_pentafluoride[] = {
+	{"Cl", 1}
+	,{"F", 5}
+};
+
+const EosData eos_rpp_chlorine_pentafluoride = {
+	"chlorine_pentafluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_chlorine_pentafluoride}
+	,.elements = elements_rpp_chlorine_pentafluoride
+	,.nelements = (int)(sizeof(elements_rpp_chlorine_pentafluoride) / sizeof(elements_rpp_chlorine_pentafluoride[0]))
+};
+
+
+static const IdealData ideal_data_chlorine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 70.906)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.23893472314944, 0}
+			,{0.0040700167482873, 1}
+			,{-4.65454043022218e-06, 2}
+			,{1.86422161933963e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_chlorine = {
+	.M = 70.906
+	,.T_c = 416.9
+	,.p_c = (79.8 * 1e5)
+	,.rho_c = (1000 * 70.906 / 123.8)
+	,.T_t = 0
+	,.omega = 0.090
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (0 / 70.906), (0 / 70.906)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_chlorine
+};
+
+static const ElementComp elements_rpp_chlorine[] = {
+	{"Cl", 2}
+};
+
+const EosData eos_rpp_chlorine = {
+	"chlorine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_chlorine}
+	,.elements = elements_rpp_chlorine
+	,.nelements = (int)(sizeof(elements_rpp_chlorine) / sizeof(elements_rpp_chlorine[0]))
+};
+
+
+static const IdealData ideal_data_silicon_tetrachloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 169.898)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{6.80501027240235, 0}
+			,{0.0196765585112235, 1}
+			,{-2.28517488822278e-05, 2}
+			,{9.10461784412969e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_silicon_tetrachloride = {
+	.M = 169.898
+	,.T_c = 508.1
+	,.p_c = (35.9 * 1e5)
+	,.rho_c = (1000 * 169.898 / 325.7)
+	,.T_t = 0
+	,.omega = 0.232
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-657700 / 169.898), (-617800 / 169.898)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_silicon_tetrachloride
+};
+
+static const ElementComp elements_rpp_silicon_tetrachloride[] = {
+	{"Cl", 4}
+	,{"Si", 1}
+};
+
+const EosData eos_rpp_silicon_tetrachloride = {
+	"silicon_tetrachloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_silicon_tetrachloride}
+	,.elements = elements_rpp_silicon_tetrachloride
+	,.nelements = (int)(sizeof(elements_rpp_silicon_tetrachloride) / sizeof(elements_rpp_silicon_tetrachloride[0]))
+};
+
+
+static const IdealData ideal_data_titanium_tetrachloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 189.712)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{8.4960396896872, 0}
+			,{0.0147213371746562, 1}
+			,{-1.73192202054779e-05, 2}
+			,{6.99985149971397e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_titanium_tetrachloride = {
+	.M = 189.712
+	,.T_c = 638.0
+	,.p_c = (46.6 * 1e5)
+	,.rho_c = (1000 * 189.712 / 339.2)
+	,.T_t = 0
+	,.omega = 0.268
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-763700 / 189.712), (-727200 / 189.712)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_titanium_tetrachloride
+};
+
+static const ElementComp elements_rpp_titanium_tetrachloride[] = {
+	{"Cl", 4}
+	,{"Ti", 1}
+};
+
+const EosData eos_rpp_titanium_tetrachloride = {
+	"titanium_tetrachloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_titanium_tetrachloride}
+	,.elements = elements_rpp_titanium_tetrachloride
+	,.nelements = (int)(sizeof(elements_rpp_titanium_tetrachloride) / sizeof(elements_rpp_titanium_tetrachloride[0]))
+};
+
+
+static const IdealData ideal_data_deuterium_equilibrium = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 4.032)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.63823896677573, 0}
+			,{-0.00079560167818914, 1}
+			,{1.40718664169508e-06, 2}
+			,{-4.4260229413999e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_deuterium_equilibrium = {
+	.M = 4.032
+	,.T_c = 38.2
+	,.p_c = (16.5 * 1e5)
+	,.rho_c = (1000 * 4.032 / 60.3)
+	,.T_t = 0
+	,.omega = -0.137
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (0 / 4.032), (0 / 4.032)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_deuterium_equilibrium
+};
+
+static const ElementComp elements_rpp_deuterium_equilibrium[] = {
+	{"D", 2}
+};
+
+const EosData eos_rpp_deuterium_equilibrium = {
+	"deuterium_equilibrium"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_deuterium_equilibrium}
+	,.elements = elements_rpp_deuterium_equilibrium
+	,.nelements = (int)(sizeof(elements_rpp_deuterium_equilibrium) / sizeof(elements_rpp_deuterium_equilibrium[0]))
+};
+
+
+static const IdealData ideal_data_deuterium_oxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 20.031)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.82706657596046, 0}
+			,{0.000366229343928334, 1}
+			,{2.44152895952223e-06, 2}
+			,{-1.17145281112052e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_deuterium_oxide = {
+	.M = 20.031
+	,.T_c = 644.0
+	,.p_c = (216.6 * 1e5)
+	,.rho_c = (1000 * 20.031 / 56.6)
+	,.T_t = 0
+	,.omega = 0.351
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-249400 / 20.031), (-234800 / 20.031)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_deuterium_oxide
+};
+
+static const ElementComp elements_rpp_deuterium_oxide[] = {
+	{"D", 2}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_deuterium_oxide = {
+	"deuterium_oxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_deuterium_oxide}
+	,.elements = elements_rpp_deuterium_oxide
+	,.nelements = (int)(sizeof(elements_rpp_deuterium_oxide) / sizeof(elements_rpp_deuterium_oxide[0]))
+};
+
+
+static const IdealData ideal_data_fluorine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 37.997)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.79272425813331, 0}
+			,{0.00439836029801615, 1}
+			,{-4.34183228762327e-06, 2}
+			,{1.44326835045649e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_fluorine = {
+	.M = 37.997
+	,.T_c = 144.3
+	,.p_c = (52.2 * 1e5)
+	,.rho_c = (1000 * 37.997 / 66.3)
+	,.T_t = 0
+	,.omega = 0.054
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (0 / 37.997), (0 / 37.997)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_fluorine
+};
+
+static const ElementComp elements_rpp_fluorine[] = {
+	{"F", 2}
+};
+
+const EosData eos_rpp_fluorine = {
+	"fluorine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_fluorine}
+	,.elements = elements_rpp_fluorine
+	,.nelements = (int)(sizeof(elements_rpp_fluorine) / sizeof(elements_rpp_fluorine[0]))
+};
+
+
+static const IdealData ideal_data_cis_difluorodiazine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 66.010)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.34825318405144, 0}
+			,{0.0209875272628881, 1}
+			,{-2.03260292689289e-05, 2}
+			,{7.09606938974441e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cis_difluorodiazine = {
+	.M = 66.010
+	,.T_c = 272.0
+	,.p_c = (70.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.252
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (68660 / 66.010), (108800 / 66.010)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cis_difluorodiazine
+};
+
+static const ElementComp elements_rpp_cis_difluorodiazine[] = {
+	{"F", 2}
+	,{"N", 2}
+};
+
+const EosData eos_rpp_cis_difluorodiazine = {
+	"cis_difluorodiazine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cis_difluorodiazine}
+	,.elements = elements_rpp_cis_difluorodiazine
+	,.nelements = (int)(sizeof(elements_rpp_cis_difluorodiazine) / sizeof(elements_rpp_cis_difluorodiazine[0]))
+};
+
+
+static const IdealData ideal_data_trans_difluorodiazine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 66.010)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.71093905160744, 0}
+			,{0.0165615043214882, 1}
+			,{-1.51543176797931e-05, 2}
+			,{5.08752093535913e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_trans_difluorodiazine = {
+	.M = 66.010
+	,.T_c = 260.0
+	,.p_c = (55.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.217
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (81220 / 66.010), (120500 / 66.010)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_trans_difluorodiazine
+};
+
+static const ElementComp elements_rpp_trans_difluorodiazine[] = {
+	{"F", 2}
+	,{"N", 2}
+};
+
+const EosData eos_rpp_trans_difluorodiazine = {
+	"trans_difluorodiazine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_trans_difluorodiazine}
+	,.elements = elements_rpp_trans_difluorodiazine
+	,.nelements = (int)(sizeof(elements_rpp_trans_difluorodiazine) / sizeof(elements_rpp_trans_difluorodiazine[0]))
+};
+
+
+static const IdealData ideal_data_nitrogen_trifluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 71.002)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.37230765655905, 0}
+			,{0.0234290562224103, 1}
+			,{-2.42950172326842e-05, 2}
+			,{8.96029100908404e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_nitrogen_trifluoride = {
+	.M = 71.002
+	,.T_c = 234.0
+	,.p_c = (45.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.135
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-131600 / 71.002), (-90100 / 71.002)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_nitrogen_trifluoride
+};
+
+static const ElementComp elements_rpp_nitrogen_trifluoride[] = {
+	{"F", 3}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_nitrogen_trifluoride = {
+	"nitrogen_trifluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_nitrogen_trifluoride}
+	,.elements = elements_rpp_nitrogen_trifluoride
+	,.nelements = (int)(sizeof(elements_rpp_nitrogen_trifluoride) / sizeof(elements_rpp_nitrogen_trifluoride[0]))
+};
+
+
+static const IdealData ideal_data_trifluoroamine_oxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 87.001)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.81972084520056, 0}
+			,{0.0294186198768048, 1}
+			,{-3.04289077221243e-05, 2}
+			,{1.12815476060682e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_trifluoroamine_oxide = {
+	.M = 87.001
+	,.T_c = 303.0
+	,.p_c = (64.3 * 1e5)
+	,.rho_c = (1000 * 87.001 / 146.9)
+	,.T_t = 0
+	,.omega = 0.212
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-163300 / 87.001), (-96460 / 87.001)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_trifluoroamine_oxide
+};
+
+static const ElementComp elements_rpp_trifluoroamine_oxide[] = {
+	{"F", 3}
+	,{"N", 1}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_trifluoroamine_oxide = {
+	"trifluoroamine_oxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_trifluoroamine_oxide}
+	,.elements = elements_rpp_trifluoroamine_oxide
+	,.nelements = (int)(sizeof(elements_rpp_trifluoroamine_oxide) / sizeof(elements_rpp_trifluoroamine_oxide[0]))
+};
+
+
+static const IdealData ideal_data_phosphorus_trifluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 87.968)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.62073477970391, 0}
+			,{0.0208432004278425, 1}
+			,{-2.22503870695375e-05, 2}
+			,{8.38298366890144e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_phosphorus_trifluoride = {
+	.M = 87.968
+	,.T_c = 271.2
+	,.p_c = (43.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.326
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-937800 / 87.968), (-925300 / 87.968)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_phosphorus_trifluoride
+};
+
+static const ElementComp elements_rpp_phosphorus_trifluoride[] = {
+	{"F", 3}
+	,{"P", 1}
+};
+
+const EosData eos_rpp_phosphorus_trifluoride = {
+	"phosphorus_trifluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_phosphorus_trifluoride}
+	,.elements = elements_rpp_phosphorus_trifluoride
+	,.nelements = (int)(sizeof(elements_rpp_phosphorus_trifluoride) / sizeof(elements_rpp_phosphorus_trifluoride[0]))
+};
+
+
+static const IdealData ideal_data_thiophosphoryl_trifluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.034)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.99718727444798, 0}
+			,{0.0279753515263483, 1}
+			,{-2.97072735468961e-05, 2}
+			,{1.11612752435302e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_thiophosphoryl_trifluoride = {
+	.M = 120.034
+	,.T_c = 346.0
+	,.p_c = (38.2 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.187
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-992300 / 120.034), (-974300 / 120.034)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_thiophosphoryl_trifluoride
+};
+
+static const ElementComp elements_rpp_thiophosphoryl_trifluoride[] = {
+	{"F", 3}
+	,{"P", 1}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_thiophosphoryl_trifluoride = {
+	"thiophosphoryl_trifluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_thiophosphoryl_trifluoride}
+	,.elements = elements_rpp_thiophosphoryl_trifluoride
+	,.nelements = (int)(sizeof(elements_rpp_thiophosphoryl_trifluoride) / sizeof(elements_rpp_thiophosphoryl_trifluoride[0]))
+};
+
+
+static const IdealData ideal_data_tetrafluorohydrazine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 104.016)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.426966887010045, 0}
+			,{0.0422035720145985, 1}
+			,{-4.37791399638469e-05, 2}
+			,{1.61164965800975e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_tetrafluorohydrazine = {
+	.M = 104.016
+	,.T_c = 309.0
+	,.p_c = (37.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.206
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-8374 / 104.016), (79880 / 104.016)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_tetrafluorohydrazine
+};
+
+static const ElementComp elements_rpp_tetrafluorohydrazine[] = {
+	{"F", 4}
+	,{"N", 2}
+};
+
+const EosData eos_rpp_tetrafluorohydrazine = {
+	"tetrafluorohydrazine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_tetrafluorohydrazine}
+	,.elements = elements_rpp_tetrafluorohydrazine
+	,.nelements = (int)(sizeof(elements_rpp_tetrafluorohydrazine) / sizeof(elements_rpp_tetrafluorohydrazine[0]))
+};
+
+
+static const IdealData ideal_data_silicon_tetrafluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 104.090)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.22089386876873, 0}
+			,{0.0259427485994554, 1}
+			,{-2.6459919758369e-05, 2}
+			,{9.65787071180468e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_silicon_tetrafluoride = {
+	.M = 104.090
+	,.T_c = 259.0
+	,.p_c = (37.2 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.753
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-1616000 / 104.090), (-1574000 / 104.090)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_silicon_tetrafluoride
+};
+
+static const ElementComp elements_rpp_silicon_tetrafluoride[] = {
+	{"F", 4}
+	,{"Si", 1}
+};
+
+const EosData eos_rpp_silicon_tetrafluoride = {
+	"silicon_tetrafluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_silicon_tetrafluoride}
+	,.elements = elements_rpp_silicon_tetrafluoride
+	,.nelements = (int)(sizeof(elements_rpp_silicon_tetrafluoride) / sizeof(elements_rpp_silicon_tetrafluoride[0]))
+};
+
+
+static const IdealData ideal_data_sulfur_hexafluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 146.054)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.0793797592751069, 0}
+			,{0.0557943489813971, 1}
+			,{-6.12186325318628e-05, 2}
+			,{2.3453110694918e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_sulfur_hexafluoride = {
+	.M = 146.054
+	,.T_c = 318.7
+	,.p_c = (37.6 * 1e5)
+	,.rho_c = (1000 * 146.054 / 198.8)
+	,.T_t = 0
+	,.omega = 0.286
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-1222000 / 146.054), (-1118000 / 146.054)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_sulfur_hexafluoride
+};
+
+static const ElementComp elements_rpp_sulfur_hexafluoride[] = {
+	{"F", 6}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_sulfur_hexafluoride = {
+	"sulfur_hexafluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_sulfur_hexafluoride}
+	,.elements = elements_rpp_sulfur_hexafluoride
+	,.nelements = (int)(sizeof(elements_rpp_sulfur_hexafluoride) / sizeof(elements_rpp_sulfur_hexafluoride[0]))
+};
+
+
+static const IdealData ideal_data_helium_3 = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 3.017)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.50166514079125, 0}
+			,{0, 1}
+			,{0, 2}
+			,{0, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_helium_3 = {
+	.M = 3.017
+	,.T_c = 3.3
+	,.p_c = (1.1 * 1e5)
+	,.rho_c = (1000 * 3.017 / 72.9)
+	,.T_t = 0
+	,.omega = -0.473
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_helium_3
+};
+
+static const ElementComp elements_rpp_helium_3[] = {
+	{"He", 1}
+};
+
+const EosData eos_rpp_helium_3 = {
+	"helium_3"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_helium_3}
+	,.elements = elements_rpp_helium_3
+	,.nelements = (int)(sizeof(elements_rpp_helium_3) / sizeof(elements_rpp_helium_3[0]))
+};
+
+
+static const IdealData ideal_data_helium_4 = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 4.003)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.50166514079125, 0}
+			,{0, 1}
+			,{0, 2}
+			,{0, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_helium_4 = {
+	.M = 4.003
+	,.T_c = 5.2
+	,.p_c = (2.3 * 1e5)
+	,.rho_c = (1000 * 4.003 / 57.4)
+	,.T_t = 0
+	,.omega = -0.365
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_helium_4
+};
+
+static const ElementComp elements_rpp_helium_4[] = {
+	{"He", 1}
+};
+
+const EosData eos_rpp_helium_4 = {
+	"helium_4"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_helium_4}
+	,.elements = elements_rpp_helium_4
+	,.nelements = (int)(sizeof(elements_rpp_helium_4) / sizeof(elements_rpp_helium_4[0]))
+};
+
+
+static const IdealData ideal_data_mercury = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 200.610)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.50166514079125, 0}
+			,{0, 1}
+			,{0, 2}
+			,{0, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_mercury = {
+	.M = 200.610
+	,.T_c = 1765.0
+	,.p_c = (1510.0 * 1e5)
+	,.rho_c = (1000 * 200.610 / 42.7)
+	,.T_t = 0
+	,.omega = -0.167
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (61340 / 200.610), (31860 / 200.610)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_mercury
+};
+
+static const ElementComp elements_rpp_mercury[] = {
+	{"Hg", 1}
+};
+
+const EosData eos_rpp_mercury = {
+	"mercury"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_mercury}
+	,.elements = elements_rpp_mercury
+	,.nelements = (int)(sizeof(elements_rpp_mercury) / sizeof(elements_rpp_mercury[0]))
+};
+
+
+static const IdealData ideal_data_krypton = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 83.800)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.50166514079125, 0}
+			,{0, 1}
+			,{0, 2}
+			,{0, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_krypton = {
+	.M = 83.800
+	,.T_c = 209.4
+	,.p_c = (55.0 * 1e5)
+	,.rho_c = (1000 * 83.800 / 91.2)
+	,.T_t = 0
+	,.omega = 0.005
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (0 / 83.800), (0 / 83.800)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_krypton
+};
+
+static const ElementComp elements_rpp_krypton[] = {
+	{"Kr", 1}
+};
+
+const EosData eos_rpp_krypton = {
+	"krypton"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_krypton}
+	,.elements = elements_rpp_krypton
+	,.nelements = (int)(sizeof(elements_rpp_krypton) / sizeof(elements_rpp_krypton[0]))
+};
+
+
+static const IdealData ideal_data_nitric_oxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 30.006)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.5299938404915, 0}
+			,{-0.000112791421588175, 1}
+			,{1.1726555347459e-06, 2}
+			,{-5.03941199034391e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_nitric_oxide = {
+	.M = 30.006
+	,.T_c = 180.0
+	,.p_c = (64.8 * 1e5)
+	,.rho_c = (1000 * 30.006 / 57.7)
+	,.T_t = 0
+	,.omega = 0.588
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (90430 * 1000 / 30.006), (210.662280479624 * 1000 / 30.006)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_nitric_oxide
+};
+
+static const ElementComp elements_rpp_nitric_oxide[] = {
+	{"N", 1}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_nitric_oxide = {
+	"nitric_oxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_nitric_oxide}
+	,.elements = elements_rpp_nitric_oxide
+	,.nelements = (int)(sizeof(elements_rpp_nitric_oxide) / sizeof(elements_rpp_nitric_oxide[0]))
+};
+
+
+static const IdealData ideal_data_nitrogen_dioxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 46.006)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.91419934429673, 0}
+			,{0.00581637145233965, 1}
+			,{-2.50166514079125e-06, 2}
+			,{3.5239802223646e-11, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_nitrogen_dioxide = {
+	.M = 46.006
+	,.T_c = 431.0
+	,.p_c = (101.0 * 1e5)
+	,.rho_c = (1000 * 46.006 / 167.8)
+	,.T_t = 0
+	,.omega = 0.834
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (33870 * 1000 / 46.006), (240.026182039242 * 1000 / 46.006)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_nitrogen_dioxide
+};
+
+static const ElementComp elements_rpp_nitrogen_dioxide[] = {
+	{"N", 1}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_nitrogen_dioxide = {
+	"nitrogen_dioxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_nitrogen_dioxide}
+	,.elements = elements_rpp_nitrogen_dioxide
+	,.nelements = (int)(sizeof(elements_rpp_nitrogen_dioxide) / sizeof(elements_rpp_nitrogen_dioxide[0]))
+};
+
+
+static const IdealData ideal_data_nitrogen_tetroxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 92.011)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.14391955674439, 0}
+			,{0.0304770166671395, 1}
+			,{-3.17037947650276e-05, 2}
+			,{1.18793012478823e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_nitrogen_tetroxide = {
+	.M = 92.011
+	,.T_c = 431.01
+	,.p_c = (101.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 261.95
+	,.omega = 1.007
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (9160 * 1000 / 92.011), (304.201282408184 * 1000 / 92.011)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_nitrogen_tetroxide
+};
+
+static const ElementComp elements_rpp_nitrogen_tetroxide[] = {
+	{"N", 2}
+	,{"O", 4}
+};
+
+const EosData eos_rpp_nitrogen_tetroxide = {
+	"nitrogen_tetroxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_nitrogen_tetroxide}
+	,.elements = elements_rpp_nitrogen_tetroxide
+	,.nelements = (int)(sizeof(elements_rpp_nitrogen_tetroxide) / sizeof(elements_rpp_nitrogen_tetroxide[0]))
 };
 
 
 static const IdealData ideal_data_nitrous_oxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 44.013)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{21.62, 0}
-			,{0.07281, 1}
-			,{-5.78E-05, 2}
-			,{1.83E-08, 3}
+			{2.60028847807244, 0}
+			,{0.00875703071639475, 1}
+			,{-6.95174255469876e-06, 2}
+			,{2.20098423444615e-09, 3}
 		}
 	}}
 };
@@ -14776,9 +3074,15 @@ static const CubicData cubic_data_nitrous_oxide = {
 	,.rho_c = (1000 * 44.013 / 97.4)
 	,.T_t = 0
 	,.omega = 0.165
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (81600 / 44.013), (10370 / 44.013)}}}
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (81600 * 1000 / 44.013), (533.030590642294 * 1000 / 44.013)}}}
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_nitrous_oxide
+};
+
+static const ElementComp elements_rpp_nitrous_oxide[] = {
+	{"N", 2}
+	,{"O", 1}
 };
 
 const EosData eos_rpp_nitrous_oxide = {
@@ -14788,242 +3092,242 @@ const EosData eos_rpp_nitrous_oxide = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_nitrous_oxide}
+	,.elements = elements_rpp_nitrous_oxide
+	,.nelements = (int)(sizeof(elements_rpp_nitrous_oxide) / sizeof(elements_rpp_nitrous_oxide[0]))
 };
 
 
-static const IdealData ideal_data_2_3_dimethylpentane = {
+static const IdealData ideal_data_neon = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 20.183)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{-7.05, 0}
-			,{0.6837, 1}
-			,{-3.73E-04, 2}
-			,{7.83E-08, 3}
+			{2.50166514079125, 0}
+			,{0, 1}
+			,{0, 2}
+			,{0, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_2_3_dimethylpentane = {
-	.M = 100.205
-	,.T_c = 537.4
-	,.p_c = (29.1 * 1e5)
-	,.rho_c = (1000 * 100.205 / 393.0)
+static const CubicData cubic_data_neon = {
+	.M = 20.183
+	,.T_c = 44.4
+	,.p_c = (27.6 * 1e5)
+	,.rho_c = (1000 * 20.183 / 41.6)
 	,.T_t = 0
-	,.omega = 0.296
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-199400 / 100.205), (670 / 100.205)}}}
+	,.omega = -0.029
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (0 / 20.183), (0 / 20.183)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_3_dimethylpentane
+	,.ideal = &ideal_data_neon
 };
 
-const EosData eos_rpp_2_3_dimethylpentane = {
-	"2_3_dimethylpentane"
+static const ElementComp elements_rpp_neon[] = {
+	{"Ne", 1}
+};
+
+const EosData eos_rpp_neon = {
+	"neon"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_3_dimethylpentane}
+	,.data = {.cubic=&cubic_data_neon}
+	,.elements = elements_rpp_neon
+	,.nelements = (int)(sizeof(elements_rpp_neon) / sizeof(elements_rpp_neon[0]))
 };
 
 
-static const IdealData ideal_data_acetyl_chloride = {
+static const IdealData ideal_data_sulfur_dioxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 64.063)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{25.02, 0}
-			,{0.1711, 1}
-			,{-9.86E-05, 2}
-			,{2.22E-08, 3}
+			{2.86849584653227, 0}
+			,{0.00805704556642335, 1}
+			,{-5.96550918188682e-06, 2}
+			,{1.59962242175594e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_acetyl_chloride = {
-	.M = 78.498
-	,.T_c = 508.0
-	,.p_c = (58.7 * 1e5)
-	,.rho_c = (1000 * 78.498 / 204.0)
+static const CubicData cubic_data_sulfur_dioxide = {
+	.M = 64.063
+	,.T_c = 430.8
+	,.p_c = (78.8 * 1e5)
+	,.rho_c = (1000 * 64.063 / 122.2)
 	,.T_t = 0
-	,.omega = 0.344
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-244100 / 78.498), (-206400 / 78.498)}}}
+	,.omega = 0.256
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-297100 * 1000 / 64.063), (248.152254234446 * 1000 / 64.063)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_acetyl_chloride
+	,.ideal = &ideal_data_sulfur_dioxide
 };
 
-const EosData eos_rpp_acetyl_chloride = {
-	"acetyl_chloride"
+static const ElementComp elements_rpp_sulfur_dioxide[] = {
+	{"O", 2}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_sulfur_dioxide = {
+	"sulfur_dioxide"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_acetyl_chloride}
+	,.data = {.cubic=&cubic_data_sulfur_dioxide}
+	,.elements = elements_rpp_sulfur_dioxide
+	,.nelements = (int)(sizeof(elements_rpp_sulfur_dioxide) / sizeof(elements_rpp_sulfur_dioxide[0]))
 };
 
 
-static const IdealData ideal_data_allyl_chloride = {
+static const IdealData ideal_data_ozone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 47.998)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{2.53, 0}
-			,{0.3047, 1}
-			,{-2.28E-04, 2}
-			,{7.29E-08, 3}
+			{2.47039432653136, 0}
+			,{0.00963261351567169, 1}
+			,{-7.50499542237375e-06, 2}
+			,{2.04463016314669e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_allyl_chloride = {
-	.M = 76.526
-	,.T_c = 514.0
-	,.p_c = (47.6 * 1e5)
-	,.rho_c = (1000 * 76.526 / 234.0)
+static const CubicData cubic_data_ozone = {
+	.M = 47.998
+	,.T_c = 261.1
+	,.p_c = (55.7 * 1e5)
+	,.rho_c = (1000 * 47.998 / 88.9)
 	,.T_t = 0
-	,.omega = 0.130
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-628 / 76.526), (43630 / 76.526)}}}
+	,.omega = 0.691
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (142800 * 1000 / 47.998), (240.129269662921 * 1000 / 47.998)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_allyl_chloride
+	,.ideal = &ideal_data_ozone
 };
 
-const EosData eos_rpp_allyl_chloride = {
-	"allyl_chloride"
+static const ElementComp elements_rpp_ozone[] = {
+	{"O", 3}
+};
+
+const EosData eos_rpp_ozone = {
+	"ozone"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_allyl_chloride}
+	,.data = {.cubic=&cubic_data_ozone}
+	,.elements = elements_rpp_ozone
+	,.nelements = (int)(sizeof(elements_rpp_ozone) / sizeof(elements_rpp_ozone[0]))
 };
 
 
-static const IdealData ideal_data_2_methyl_1_butene = {
+static const IdealData ideal_data_sulfur_trioxide = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 80.058)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{10.57, 0}
-			,{0.3997, 1}
-			,{-1.95E-04, 2}
-			,{3.31E-08, 3}
+			{2.31043208435576, 0}
+			,{0.0165254226127268, 1}
+			,{-1.41921387794888e-05, 2}
+			,{4.45007741390751e-09, 3}
 		}
 	}}
 };
 
-static const CubicData cubic_data_2_methyl_1_butene = {
-	.M = 70.135
-	,.T_c = 465.0
-	,.p_c = (34.5 * 1e5)
+static const CubicData cubic_data_sulfur_trioxide = {
+	.M = 80.058
+	,.T_c = 491.0
+	,.p_c = (82.1 * 1e5)
+	,.rho_c = (1000 * 80.058 / 127.3)
+	,.T_t = 0
+	,.omega = 0.481
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-396000 * 1000 / 80.058), (258.096400637263 * 1000 / 80.058)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_sulfur_trioxide
+};
+
+static const ElementComp elements_rpp_sulfur_trioxide[] = {
+	{"O", 3}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_sulfur_trioxide = {
+	"sulfur_trioxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_sulfur_trioxide}
+	,.elements = elements_rpp_sulfur_trioxide
+	,.nelements = (int)(sizeof(elements_rpp_sulfur_trioxide) / sizeof(elements_rpp_sulfur_trioxide[0]))
+};
+
+
+static const IdealData ideal_data_radon = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 222.000)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.50166514079125, 0}
+			,{0, 1}
+			,{0, 2}
+			,{0, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_radon = {
+	.M = 222.000
+	,.T_c = 377.0
+	,.p_c = (62.8 * 1e5)
 	,.rho_c = -1
 	,.T_t = 0
-	,.omega = 0.236
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-36340 / 70.135), (65650 / 70.135)}}}
+	,.omega = -0.008
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (0 / 222.000), (0 / 222.000)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_2_methyl_1_butene
+	,.ideal = &ideal_data_radon
 };
 
-const EosData eos_rpp_2_methyl_1_butene = {
-	"2_methyl_1_butene"
+static const ElementComp elements_rpp_radon[] = {
+	{"Rn", 1}
+};
+
+const EosData eos_rpp_radon = {
+	"radon"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_2_methyl_1_butene}
-};
-
-
-static const IdealData ideal_data_1_butyne = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{12.55, 0}
-			,{0.2744, 1}
-			,{-1.55E-04, 2}
-			,{3.45E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_1_butyne = {
-	.M = 54.092
-	,.T_c = 463.7
-	,.p_c = (47.1 * 1e5)
-	,.rho_c = (1000 * 54.092 / 220.0)
-	,.T_t = 0
-	,.omega = 0.050
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (165300 / 54.092), (202200 / 54.092)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_butyne
-};
-
-const EosData eos_rpp_1_butyne = {
-	"1_butyne"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_butyne}
-};
-
-
-static const IdealData ideal_data_isobutylene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{16.05, 0}
-			,{0.2804, 1}
-			,{-1.09E-04, 2}
-			,{9.10E-09, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isobutylene = {
-	.M = 56.108
-	,.T_c = 417.9
-	,.p_c = (40.0 * 1e5)
-	,.rho_c = (1000 * 56.108 / 239.0)
-	,.T_t = 0
-	,.omega = 0.194
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-16910 / 56.108), (58110 / 56.108)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isobutylene
-};
-
-const EosData eos_rpp_isobutylene = {
-	"isobutylene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isobutylene}
+	,.data = {.cubic=&cubic_data_radon}
+	,.elements = elements_rpp_radon
+	,.nelements = (int)(sizeof(elements_rpp_radon) / sizeof(elements_rpp_radon[0]))
 };
 
 
 static const IdealData ideal_data_xenon = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 131.300)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{20.80, 0}
+			{2.50166514079125, 0}
 			,{0, 1}
-			,{0.00E+00, 2}
-			,{0.00E+00, 3}
+			,{0, 2}
+			,{0, 3}
 		}
 	}}
 };
@@ -15035,9 +3339,13 @@ static const CubicData cubic_data_xenon = {
 	,.rho_c = (1000 * 131.300 / 118.4)
 	,.T_t = 0
 	,.omega = 0.008
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 131.300), (0 / 131.300)}}}
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (0 / 131.300), (0 / 131.300)}}}
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_xenon
+};
+
+static const ElementComp elements_rpp_xenon[] = {
+	{"Xe", 1}
 };
 
 const EosData eos_rpp_xenon = {
@@ -15047,20 +3355,4912 @@ const EosData eos_rpp_xenon = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_xenon}
+	,.elements = elements_rpp_xenon
+	,.nelements = (int)(sizeof(elements_rpp_xenon) / sizeof(elements_rpp_xenon[0]))
+};
+
+
+static const IdealData ideal_data_hydrogen_bromide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 80.912)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.68634791179095, 0}
+			,{-0.00113801709433494, 1}
+			,{2.0686846356543e-06, 2}
+			,{-7.50499542237375e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_hydrogen_bromide = {
+	.M = 80.912
+	,.T_c = 363.2
+	,.p_c = (85.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.088
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-36260 / 80.912), (-53300 / 80.912)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_hydrogen_bromide
+};
+
+static const ElementComp elements_rpp_hydrogen_bromide[] = {
+	{"Br", 1}
+	,{"H", 1}
+};
+
+const EosData eos_rpp_hydrogen_bromide = {
+	"hydrogen_bromide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_hydrogen_bromide}
+	,.elements = elements_rpp_hydrogen_bromide
+	,.nelements = (int)(sizeof(elements_rpp_hydrogen_bromide) / sizeof(elements_rpp_hydrogen_bromide[0]))
+};
+
+
+static const IdealData ideal_data_hydrogen_chloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 36.461)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.68875335904171, 0}
+			,{-0.000866081282636432, 1}
+			,{1.50340453172551e-06, 2}
+			,{-4.69062213898359e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_hydrogen_chloride = {
+	.M = 36.461
+	,.T_c = 324.7
+	,.p_c = (83.1 * 1e5)
+	,.rho_c = (1000 * 36.461 / 80.9)
+	,.T_t = 0
+	,.omega = 0.133
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-92360 / 36.461), (-95330 / 36.461)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_hydrogen_chloride
+};
+
+static const ElementComp elements_rpp_hydrogen_chloride[] = {
+	{"Cl", 1}
+	,{"H", 1}
+};
+
+const EosData eos_rpp_hydrogen_chloride = {
+	"hydrogen_chloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_hydrogen_chloride}
+	,.elements = elements_rpp_hydrogen_chloride
+	,.nelements = (int)(sizeof(elements_rpp_hydrogen_chloride) / sizeof(elements_rpp_hydrogen_chloride[0]))
+};
+
+
+static const IdealData ideal_data_hydrogen_deuteride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 3.023)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.54442652399606, 0}
+			,{-0.000159841969813056, 1}
+			,{1.57556794924833e-07, 2}
+			,{1.53948624048692e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_hydrogen_deuteride = {
+	.M = 3.023
+	,.T_c = 36.0
+	,.p_c = (14.8 * 1e5)
+	,.rho_c = (1000 * 3.023 / 62.7)
+	,.T_t = 0
+	,.omega = -0.179
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (322 / 3.023), (-1465 / 3.023)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_hydrogen_deuteride
+};
+
+static const ElementComp elements_rpp_hydrogen_deuteride[] = {
+	{"D", 1}
+	,{"H", 1}
+};
+
+const EosData eos_rpp_hydrogen_deuteride = {
+	"hydrogen_deuteride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_hydrogen_deuteride}
+	,.elements = elements_rpp_hydrogen_deuteride
+	,.nelements = (int)(sizeof(elements_rpp_hydrogen_deuteride) / sizeof(elements_rpp_hydrogen_deuteride[0]))
+};
+
+
+static const IdealData ideal_data_hydrogen_fluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 20.006)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.49511485535547, 0}
+			,{7.95120588738988e-05, 1}
+			,{-2.44152895952223e-07, 2}
+			,{3.00680906345102e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_hydrogen_fluoride = {
+	.M = 20.006
+	,.T_c = 461.0
+	,.p_c = (64.8 * 1e5)
+	,.rho_c = (1000 * 20.006 / 69.2)
+	,.T_t = 0
+	,.omega = 0.329
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-271300 / 20.006), (-273400 / 20.006)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_hydrogen_fluoride
+};
+
+static const ElementComp elements_rpp_hydrogen_fluoride[] = {
+	{"F", 1}
+	,{"H", 1}
+};
+
+const EosData eos_rpp_hydrogen_fluoride = {
+	"hydrogen_fluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_hydrogen_fluoride}
+	,.elements = elements_rpp_hydrogen_fluoride
+	,.nelements = (int)(sizeof(elements_rpp_hydrogen_fluoride) / sizeof(elements_rpp_hydrogen_fluoride[0]))
+};
+
+
+static const IdealData ideal_data_hydrogen_iodide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 127.912)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.74768681668535, 0}
+			,{-0.00171748933704322, 1}
+			,{3.57208916737981e-06, 2}
+			,{-1.62367689426355e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_hydrogen_iodide = {
+	.M = 127.912
+	,.T_c = 424.0
+	,.p_c = (83.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.049
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (26380 / 127.912), (1591 / 127.912)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_hydrogen_iodide
+};
+
+static const ElementComp elements_rpp_hydrogen_iodide[] = {
+	{"H", 1}
+	,{"I", 1}
+};
+
+const EosData eos_rpp_hydrogen_iodide = {
+	"hydrogen_iodide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_hydrogen_iodide}
+	,.elements = elements_rpp_hydrogen_iodide
+	,.nelements = (int)(sizeof(elements_rpp_hydrogen_iodide) / sizeof(elements_rpp_hydrogen_iodide[0]))
+};
+
+
+static const IdealData ideal_data_hydrogen_equilib = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 2.016)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.26419191928243, 0}
+			,{0.00111540589017779, 1}
+			,{-1.65975860302496e-06, 2}
+			,{9.20083573416012e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_hydrogen_equilib = {
+	.M = 2.016
+	,.T_c = 33.0
+	,.p_c = (12.9 * 1e5)
+	,.rho_c = (1000 * 2.016 / 64.3)
+	,.T_t = 0
+	,.omega = -0.216
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (0 * 1000 / 2.016), (130.57 * 1000 / 2.016)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_hydrogen_equilib
+};
+
+static const ElementComp elements_rpp_hydrogen_equilib[] = {
+	{"H", 2}
+};
+
+const EosData eos_rpp_hydrogen_equilib = {
+	"hydrogen_equilib"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_hydrogen_equilib}
+	,.elements = elements_rpp_hydrogen_equilib
+	,.nelements = (int)(sizeof(elements_rpp_hydrogen_equilib) / sizeof(elements_rpp_hydrogen_equilib[0]))
+};
+
+
+static const IdealData ideal_data_hydrogen_sulfide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 34.080)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.84149925946502, 0}
+			,{0.000172711112604627, 1}
+			,{2.92261840967439e-06, 2}
+			,{-1.41921387794888e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_hydrogen_sulfide = {
+	.M = 34.080
+	,.T_c = 373.2
+	,.p_c = (89.4 * 1e5)
+	,.rho_c = (1000 * 34.080 / 98.6)
+	,.T_t = 0
+	,.omega = 0.097
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-20180 * 1000 / 34.080), (205.890812007379 * 1000 / 34.080)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_hydrogen_sulfide
+};
+
+static const ElementComp elements_rpp_hydrogen_sulfide[] = {
+	{"H", 2}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_hydrogen_sulfide = {
+	"hydrogen_sulfide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_hydrogen_sulfide}
+	,.elements = elements_rpp_hydrogen_sulfide
+	,.nelements = (int)(sizeof(elements_rpp_hydrogen_sulfide) / sizeof(elements_rpp_hydrogen_sulfide[0]))
+};
+
+
+static const IdealData ideal_data_ammonia = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 17.031)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.28463822091389, 0}
+			,{0.00286609039928151, 1}
+			,{2.0566573994005e-06, 2}
+			,{-1.43124111420269e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ammonia = {
+	.M = 17.031
+	,.T_c = 405.5
+	,.p_c = (113.5 * 1e5)
+	,.rho_c = (1000 * 17.031 / 72.5)
+	,.T_t = 0
+	,.omega = 0.250
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-45730 * 1000 / 17.031), (192.481234026497 * 1000 / 17.031)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ammonia
+};
+
+static const ElementComp elements_rpp_ammonia[] = {
+	{"H", 3}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_ammonia = {
+	"ammonia"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ammonia}
+	,.elements = elements_rpp_ammonia
+	,.nelements = (int)(sizeof(elements_rpp_ammonia) / sizeof(elements_rpp_ammonia[0]))
+};
+
+
+static const IdealData ideal_data_phosphine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 33.998)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.79392698175869, 0}
+			,{0.00529318667529918, 1}
+			,{1.56354071299453e-06, 2}
+			,{-1.92435780060865e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_phosphine = {
+	.M = 33.998
+	,.T_c = 324.5
+	,.p_c = (65.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.038
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (22900 * 1000 / 33.998), (228.526418748952 * 1000 / 33.998)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_phosphine
+};
+
+static const ElementComp elements_rpp_phosphine[] = {
+	{"H", 3}
+	,{"P", 1}
+};
+
+const EosData eos_rpp_phosphine = {
+	"phosphine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_phosphine}
+	,.elements = elements_rpp_phosphine
+	,.nelements = (int)(sizeof(elements_rpp_phosphine) / sizeof(elements_rpp_phosphine[0]))
+};
+
+
+static const IdealData ideal_data_hydrazine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 32.045)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.17506098199666, 0}
+			,{0.0227916127009587, 1}
+			,{-1.99652121813148e-05, 2}
+			,{7.25242346104386e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_hydrazine = {
+	.M = 32.045
+	,.T_c = 653.0
+	,.p_c = (147.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.316
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (95250 * 1000 / 32.045), (240.272058862988 * 1000 / 32.045)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_hydrazine
+};
+
+static const ElementComp elements_rpp_hydrazine[] = {
+	{"H", 4}
+	,{"N", 2}
+};
+
+const EosData eos_rpp_hydrazine = {
+	"hydrazine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_hydrazine}
+	,.elements = elements_rpp_hydrazine
+	,.nelements = (int)(sizeof(elements_rpp_hydrazine) / sizeof(elements_rpp_hydrazine[0]))
+};
+
+
+static const IdealData ideal_data_silane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 32.122)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.3446450131753, 0}
+			,{0.014673228229641, 1}
+			,{-6.67511612086126e-06, 2}
+			,{8.22662959760199e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_silane = {
+	.M = 32.122
+	,.T_c = 269.7
+	,.p_c = (48.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.068
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (32660 * 1000 / 32.122), (204.427549890994 * 1000 / 32.122)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_silane
+};
+
+static const ElementComp elements_rpp_silane[] = {
+	{"H", 4}
+	,{"Si", 1}
+};
+
+const EosData eos_rpp_silane = {
+	"silane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_silane}
+	,.elements = elements_rpp_silane
+	,.nelements = (int)(sizeof(elements_rpp_silane) / sizeof(elements_rpp_silane[0]))
+};
+
+
+static const IdealData ideal_data_trifluorobromomethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 148.910)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.63155929233233, 0}
+			,{0.025966803071963, 1}
+			,{-2.53774684955266e-05, 2}
+			,{8.97231824533784e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_trifluorobromomethane = {
+	.M = 148.910
+	,.T_c = 340.2
+	,.p_c = (39.7 * 1e5)
+	,.rho_c = (1000 * 148.910 / 195.9)
+	,.T_t = 0
+	,.omega = 0.171
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-649400 / 148.910), (-697500 / 148.910)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_trifluorobromomethane
+};
+
+static const ElementComp elements_rpp_trifluorobromomethane[] = {
+	{"Br", 1}
+	,{"C", 1}
+	,{"F", 3}
+};
+
+const EosData eos_rpp_trifluorobromomethane = {
+	"trifluorobromomethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_trifluorobromomethane}
+	,.elements = elements_rpp_trifluorobromomethane
+	,.nelements = (int)(sizeof(elements_rpp_trifluorobromomethane) / sizeof(elements_rpp_trifluorobromomethane[0]))
+};
+
+
+static const IdealData ideal_data_chlorotrifluoromethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 104.459)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.74341258949271, 0}
+			,{0.0229840484810196, 1}
+			,{-1.90030332810104e-05, 2}
+			,{5.36414736919662e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_chlorotrifluoromethane = {
+	.M = 104.459
+	,.T_c = 302.0
+	,.p_c = (38.7 * 1e5)
+	,.rho_c = (1000 * 104.459 / 180.4)
+	,.T_t = 0
+	,.omega = 0.198
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-695000 / 104.459), (-654400 / 104.459)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_chlorotrifluoromethane
+};
+
+static const ElementComp elements_rpp_chlorotrifluoromethane[] = {
+	{"C", 1}
+	,{"Cl", 1}
+	,{"F", 3}
+};
+
+const EosData eos_rpp_chlorotrifluoromethane = {
+	"chlorotrifluoromethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_chlorotrifluoromethane}
+	,.elements = elements_rpp_chlorotrifluoromethane
+	,.nelements = (int)(sizeof(elements_rpp_chlorotrifluoromethane) / sizeof(elements_rpp_chlorotrifluoromethane[0]))
+};
+
+
+static const IdealData ideal_data_dichlorodifluoromethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.914)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.80060665620209, 0}
+			,{0.0214325350042789, 1}
+			,{-1.81611267432442e-05, 2}
+			,{5.21982053415097e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dichlorodifluoromethane = {
+	.M = 120.914
+	,.T_c = 385.0
+	,.p_c = (41.4 * 1e5)
+	,.rho_c = (1000 * 120.914 / 216.7)
+	,.T_t = 0
+	,.omega = 0.204
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-481500 / 120.914), (-442500 / 120.914)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dichlorodifluoromethane
+};
+
+static const ElementComp elements_rpp_dichlorodifluoromethane[] = {
+	{"C", 1}
+	,{"Cl", 2}
+	,{"F", 2}
+};
+
+const EosData eos_rpp_dichlorodifluoromethane = {
+	"dichlorodifluoromethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dichlorodifluoromethane}
+	,.elements = elements_rpp_dichlorodifluoromethane
+	,.nelements = (int)(sizeof(elements_rpp_dichlorodifluoromethane) / sizeof(elements_rpp_dichlorodifluoromethane[0]))
+};
+
+
+static const IdealData ideal_data_phosgene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.916)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.37845066369357, 0}
+			,{0.0163690685414274, 1}
+			,{-1.64773136677116e-05, 2}
+			,{6.09780878067867e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_phosgene = {
+	.M = 98.916
+	,.T_c = 455.0
+	,.p_c = (56.7 * 1e5)
+	,.rho_c = (1000 * 98.916 / 190.1)
+	,.T_t = 0
+	,.omega = 0.205
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-221100 / 98.916), (-206900 / 98.916)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_phosgene
+};
+
+static const ElementComp elements_rpp_phosgene[] = {
+	{"C", 1}
+	,{"Cl", 2}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_phosgene = {
+	"phosgene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_phosgene}
+	,.elements = elements_rpp_phosgene
+	,.nelements = (int)(sizeof(elements_rpp_phosgene) / sizeof(elements_rpp_phosgene[0]))
+};
+
+
+static const IdealData ideal_data_trichlorofluoromethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 137.368)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.92876141680891, 0}
+			,{0.0200614300713452, 1}
+			,{-1.70786754804018e-05, 2}
+			,{4.99130304532869e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_trichlorofluoromethane = {
+	.M = 137.368
+	,.T_c = 471.2
+	,.p_c = (44.1 * 1e5)
+	,.rho_c = (1000 * 137.368 / 247.8)
+	,.T_t = 0
+	,.omega = 0.189
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-284700 / 137.368), (-245500 / 137.368)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_trichlorofluoromethane
+};
+
+static const ElementComp elements_rpp_trichlorofluoromethane[] = {
+	{"C", 1}
+	,{"Cl", 3}
+	,{"F", 1}
+};
+
+const EosData eos_rpp_trichlorofluoromethane = {
+	"trichlorofluoromethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_trichlorofluoromethane}
+	,.elements = elements_rpp_trichlorofluoromethane
+	,.nelements = (int)(sizeof(elements_rpp_trichlorofluoromethane) / sizeof(elements_rpp_trichlorofluoromethane[0]))
+};
+
+
+static const IdealData ideal_data_carbon_tetrachloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 153.823)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.89749060254902, 0}
+			,{0.0246438070840446, 1}
+			,{-2.73018262961353e-05, 2}
+			,{1.06320768483628e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_carbon_tetrachloride = {
+	.M = 153.823
+	,.T_c = 556.4
+	,.p_c = (45.6 * 1e5)
+	,.rho_c = (1000 * 153.823 / 275.9)
+	,.T_t = 0
+	,.omega = 0.193
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-100500 / 153.823), (-58280 / 153.823)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_carbon_tetrachloride
+};
+
+static const ElementComp elements_rpp_carbon_tetrachloride[] = {
+	{"C", 1}
+	,{"Cl", 4}
+};
+
+const EosData eos_rpp_carbon_tetrachloride = {
+	"carbon_tetrachloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_carbon_tetrachloride}
+	,.elements = elements_rpp_carbon_tetrachloride
+	,.nelements = (int)(sizeof(elements_rpp_carbon_tetrachloride) / sizeof(elements_rpp_carbon_tetrachloride[0]))
+};
+
+
+static const IdealData ideal_data_deutromethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 20.071)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.50220180810013, 0}
+			,{0.0121475086163421, 1}
+			,{-2.6459919758369e-06, 2}
+			,{-1.01750418707182e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_deutromethane = {
+	.M = 20.071
+	,.T_c = 189.2
+	,.p_c = (46.6 * 1e5)
+	,.rho_c = (1000 * 20.071 / 98.2)
+	,.T_t = 0
+	,.omega = 0.032
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-88300 / 20.071), (-59540 / 20.071)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_deutromethane
+};
+
+static const ElementComp elements_rpp_deutromethane[] = {
+	{"C", 1}
+	,{"D", 4}
+};
+
+const EosData eos_rpp_deutromethane = {
+	"deutromethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_deutromethane}
+	,.elements = elements_rpp_deutromethane
+	,.nelements = (int)(sizeof(elements_rpp_deutromethane) / sizeof(elements_rpp_deutromethane[0]))
+};
+
+
+static const IdealData ideal_data_carbon_tetrafluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 88.005)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.68140762828181, 0}
+			,{0.0243671806502071, 1}
+			,{-1.96043950937006e-05, 2}
+			,{5.42428355046564e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_carbon_tetrafluoride = {
+	.M = 88.005
+	,.T_c = 227.6
+	,.p_c = (37.4 * 1e5)
+	,.rho_c = (1000 * 88.005 / 139.6)
+	,.T_t = 0
+	,.omega = 0.177
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-933700 / 88.005), (-889000 / 88.005)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_carbon_tetrafluoride
+};
+
+static const ElementComp elements_rpp_carbon_tetrafluoride[] = {
+	{"C", 1}
+	,{"F", 4}
+};
+
+const EosData eos_rpp_carbon_tetrafluoride = {
+	"carbon_tetrafluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_carbon_tetrafluoride}
+	,.elements = elements_rpp_carbon_tetrafluoride
+	,.nelements = (int)(sizeof(elements_rpp_carbon_tetrafluoride) / sizeof(elements_rpp_carbon_tetrafluoride[0]))
+};
+
+
+static const IdealData ideal_data_carbon_monoxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 28.010)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.71280783154932, 0}
+			,{-0.00154549985861382, 1}
+			,{3.35559891481134e-06, 2}
+			,{-1.52745900423312e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_carbon_monoxide = {
+	.M = 28.010
+	,.T_c = 132.9
+	,.p_c = (35.0 * 1e5)
+	,.rho_c = (1000 * 28.010 / 93.2)
+	,.T_t = 0
+	,.omega = 0.066
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-110600 * 1000 / 28.010), (198.142640449438 * 1000 / 28.010)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_carbon_monoxide
+};
+
+static const ElementComp elements_rpp_carbon_monoxide[] = {
+	{"C", 1}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_carbon_monoxide = {
+	"carbon_monoxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_carbon_monoxide}
+	,.elements = elements_rpp_carbon_monoxide
+	,.nelements = (int)(sizeof(elements_rpp_carbon_monoxide) / sizeof(elements_rpp_carbon_monoxide[0]))
+};
+
+
+static const IdealData ideal_data_carbonyl_sulfide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 60.070)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.83481958502162, 0}
+			,{0.00960254542503718, 1}
+			,{-8.44311985017046e-06, 2}
+			,{2.946672882182e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_carbonyl_sulfide = {
+	.M = 60.070
+	,.T_c = 378.8
+	,.p_c = (63.5 * 1e5)
+	,.rho_c = (1000 * 60.070 / 136.3)
+	,.T_t = 0
+	,.omega = 0.105
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-138500 * 1000 / 60.070), (231.873648666778 * 1000 / 60.070)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_carbonyl_sulfide
+};
+
+static const ElementComp elements_rpp_carbonyl_sulfide[] = {
+	{"C", 1}
+	,{"O", 1}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_carbonyl_sulfide = {
+	"carbonyl_sulfide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_carbonyl_sulfide}
+	,.elements = elements_rpp_carbonyl_sulfide
+	,.nelements = (int)(sizeof(elements_rpp_carbonyl_sulfide) / sizeof(elements_rpp_carbonyl_sulfide[0]))
+};
+
+
+static const IdealData ideal_data_carbon_disulfide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 76.131)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.30027362804384, 0}
+			,{0.00977453490346658, 1}
+			,{-9.22489020666773e-06, 2}
+			,{3.21127207976569e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_carbon_disulfide = {
+	.M = 76.131
+	,.T_c = 552.0
+	,.p_c = (79.0 * 1e5)
+	,.rho_c = (1000 * 76.131 / 160.0)
+	,.T_t = 0
+	,.omega = 0.109
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (117100 * 1000 / 76.131), (238.051924199229 * 1000 / 76.131)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_carbon_disulfide
+};
+
+static const ElementComp elements_rpp_carbon_disulfide[] = {
+	{"C", 1}
+	,{"S", 2}
+};
+
+const EosData eos_rpp_carbon_disulfide = {
+	"carbon_disulfide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_carbon_disulfide}
+	,.elements = elements_rpp_carbon_disulfide
+	,.nelements = (int)(sizeof(elements_rpp_carbon_disulfide) / sizeof(elements_rpp_carbon_disulfide[0]))
+};
+
+
+static const IdealData ideal_data_chlorodifluoromethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.469)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.08071187190811, 0}
+			,{0.019460068258655, 1}
+			,{-1.40718664169508e-05, 2}
+			,{3.68033429366405e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_chlorodifluoromethane = {
+	.M = 86.469
+	,.T_c = 369.3
+	,.p_c = (49.7 * 1e5)
+	,.rho_c = (1000 * 86.469 / 165.6)
+	,.T_t = 0
+	,.omega = 0.221
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-502000 / 86.469), (-470900 / 86.469)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_chlorodifluoromethane
+};
+
+static const ElementComp elements_rpp_chlorodifluoromethane[] = {
+	{"C", 1}
+	,{"Cl", 1}
+	,{"F", 2}
+	,{"H", 1}
+};
+
+const EosData eos_rpp_chlorodifluoromethane = {
+	"chlorodifluoromethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_chlorodifluoromethane}
+	,.elements = elements_rpp_chlorodifluoromethane
+	,.nelements = (int)(sizeof(elements_rpp_chlorodifluoromethane) / sizeof(elements_rpp_chlorodifluoromethane[0]))
+};
+
+
+static const IdealData ideal_data_dichloromonofluoromethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.923)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.84564409765005, 0}
+			,{0.0190150605172642, 1}
+			,{-1.44326835045649e-05, 2}
+			,{3.92087901874013e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dichloromonofluoromethane = {
+	.M = 102.923
+	,.T_c = 451.6
+	,.p_c = (51.8 * 1e5)
+	,.rho_c = (1000 * 102.923 / 196.4)
+	,.T_t = 0
+	,.omega = 0.210
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-298900 / 102.923), (-268400 / 102.923)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dichloromonofluoromethane
+};
+
+static const ElementComp elements_rpp_dichloromonofluoromethane[] = {
+	{"C", 1}
+	,{"Cl", 2}
+	,{"F", 1}
+	,{"H", 1}
+};
+
+const EosData eos_rpp_dichloromonofluoromethane = {
+	"dichloromonofluoromethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dichloromonofluoromethane}
+	,.elements = elements_rpp_dichloromonofluoromethane
+	,.nelements = (int)(sizeof(elements_rpp_dichloromonofluoromethane) / sizeof(elements_rpp_dichloromonofluoromethane[0]))
+};
+
+
+static const IdealData ideal_data_fluoroform = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 70.013)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.981422478310413, 0}
+			,{0.0218053793281468, 1}
+			,{-1.65975860302496e-05, 2}
+			,{4.73873108399881e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_fluoroform = {
+	.M = 70.013
+	,.T_c = 299.3
+	,.p_c = (48.6 * 1e5)
+	,.rho_c = (1000 * 70.013 / 132.7)
+	,.T_t = 0
+	,.omega = 0.260
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-697500 / 70.013), (-662800 / 70.013)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_fluoroform
+};
+
+static const ElementComp elements_rpp_fluoroform[] = {
+	{"C", 1}
+	,{"F", 3}
+	,{"H", 1}
+};
+
+const EosData eos_rpp_fluoroform = {
+	"fluoroform"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_fluoroform}
+	,.elements = elements_rpp_fluoroform
+	,.nelements = (int)(sizeof(elements_rpp_fluoroform) / sizeof(elements_rpp_fluoroform[0]))
+};
+
+
+static const IdealData ideal_data_hydrogen_cyanide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 27.026)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.62915384508157, 0}
+			,{0.00729091061705603, 1}
+			,{-5.96550918188682e-06, 2}
+			,{2.18895699819234e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_hydrogen_cyanide = {
+	.M = 27.026
+	,.T_c = 456.7
+	,.p_c = (53.9 * 1e5)
+	,.rho_c = (1000 * 27.026 / 138.8)
+	,.T_t = 0
+	,.omega = 0.388
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (130600 * 1000 / 27.026), (201.711270920678 * 1000 / 27.026)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_hydrogen_cyanide
+};
+
+static const ElementComp elements_rpp_hydrogen_cyanide[] = {
+	{"C", 1}
+	,{"H", 1}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_hydrogen_cyanide = {
+	"hydrogen_cyanide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_hydrogen_cyanide}
+	,.elements = elements_rpp_hydrogen_cyanide
+	,.nelements = (int)(sizeof(elements_rpp_hydrogen_cyanide) / sizeof(elements_rpp_hydrogen_cyanide[0]))
+};
+
+
+static const IdealData ideal_data_dichloromethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.933)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.55752709486763, 0}
+			,{0.019520204439924, 1}
+			,{-1.56354071299453e-05, 2}
+			,{5.06346646285152e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dichloromethane = {
+	.M = 84.933
+	,.T_c = 510.0
+	,.p_c = (63.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.199
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-38900 / 84.933), (-68910 / 84.933)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dichloromethane
+};
+
+static const ElementComp elements_rpp_dichloromethane[] = {
+	{"C", 1}
+	,{"Cl", 2}
+	,{"H", 2}
+};
+
+const EosData eos_rpp_dichloromethane = {
+	"dichloromethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dichloromethane}
+	,.elements = elements_rpp_dichloromethane
+	,.nelements = (int)(sizeof(elements_rpp_dichloromethane) / sizeof(elements_rpp_dichloromethane[0]))
+};
+
+
+static const IdealData ideal_data_difluoromethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 52.023)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.4180111543235, 0}
+			,{0.0142041660157426, 1}
+			,{-5.82118234684117e-06, 2}
+			,{2.56180132206027e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_difluoromethane = {
+	.M = 52.023
+	,.T_c = 351.6
+	,.p_c = (58.3 * 1e5)
+	,.rho_c = (1000 * 52.023 / 120.8)
+	,.T_t = 0
+	,.omega = 0.271
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-450900 / 52.023), (-422900 / 52.023)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_difluoromethane
+};
+
+static const ElementComp elements_rpp_difluoromethane[] = {
+	{"C", 1}
+	,{"F", 2}
+	,{"H", 2}
+};
+
+const EosData eos_rpp_difluoromethane = {
+	"difluoromethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_difluoromethane}
+	,.elements = elements_rpp_difluoromethane
+	,.nelements = (int)(sizeof(elements_rpp_difluoromethane) / sizeof(elements_rpp_difluoromethane[0]))
+};
+
+
+static const IdealData ideal_data_formaldehyde = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 30.026)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.8239950723932, 0}
+			,{0.00379699848532595, 1}
+			,{3.59614363988742e-06, 2}
+			,{-2.76626433837494e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_formaldehyde = {
+	.M = 30.026
+	,.T_c = 408.0
+	,.p_c = (65.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.253
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-116000 * 1000 / 30.026), (218.700901391917 * 1000 / 30.026)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_formaldehyde
+};
+
+static const ElementComp elements_rpp_formaldehyde[] = {
+	{"C", 1}
+	,{"H", 2}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_formaldehyde = {
+	"formaldehyde"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_formaldehyde}
+	,.elements = elements_rpp_formaldehyde
+	,.nelements = (int)(sizeof(elements_rpp_formaldehyde) / sizeof(elements_rpp_formaldehyde[0]))
+};
+
+
+static const IdealData ideal_data_methyl_chloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 50.488)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.66938039202801, 0}
+			,{0.0121956175613573, 1}
+			,{-4.67859490272979e-06, 2}
+			,{3.09099971722765e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_chloride = {
+	.M = 50.488
+	,.T_c = 416.3
+	,.p_c = (67.0 * 1e5)
+	,.rho_c = (1000 * 50.488 / 138.9)
+	,.T_t = 0
+	,.omega = 0.153
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-86370 / 50.488), (-62930 / 50.488)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_chloride
+};
+
+static const ElementComp elements_rpp_methyl_chloride[] = {
+	{"C", 1}
+	,{"Cl", 1}
+	,{"H", 3}
+};
+
+const EosData eos_rpp_methyl_chloride = {
+	"methyl_chloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_chloride}
+	,.elements = elements_rpp_methyl_chloride
+	,.nelements = (int)(sizeof(elements_rpp_methyl_chloride) / sizeof(elements_rpp_methyl_chloride[0]))
+};
+
+
+static const IdealData ideal_data_methyl_fluoride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 34.033)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.66216405027572, 0}
+			,{0.0103626667562776, 1}
+			,{-2.48963790453744e-06, 2}
+			,{-2.39342001450701e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_fluoride = {
+	.M = 34.033
+	,.T_c = 315.0
+	,.p_c = (56.0 * 1e5)
+	,.rho_c = (1000 * 34.033 / 113.2)
+	,.T_t = 0
+	,.omega = 0.187
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-234000 / 34.033), (-210100 / 34.033)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_fluoride
+};
+
+static const ElementComp elements_rpp_methyl_fluoride[] = {
+	{"C", 1}
+	,{"F", 1}
+	,{"H", 3}
+};
+
+const EosData eos_rpp_methyl_fluoride = {
+	"methyl_fluoride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_fluoride}
+	,.elements = elements_rpp_methyl_fluoride
+	,.nelements = (int)(sizeof(elements_rpp_methyl_fluoride) / sizeof(elements_rpp_methyl_fluoride[0]))
+};
+
+
+static const IdealData ideal_data_nitromethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 61.041)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.893623653657643, 0}
+			,{0.0237898733100245, 1}
+			,{-1.29894151541084e-05, 2}
+			,{2.51369237704505e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_nitromethane = {
+	.M = 61.041
+	,.T_c = 588.0
+	,.p_c = (63.1 * 1e5)
+	,.rho_c = (1000 * 61.041 / 173.2)
+	,.T_t = 0
+	,.omega = 0.310
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-74780 * 1000 / 61.041), (274.92656523562 * 1000 / 61.041)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_nitromethane
+};
+
+static const ElementComp elements_rpp_nitromethane[] = {
+	{"C", 1}
+	,{"H", 3}
+	,{"N", 1}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_nitromethane = {
+	"nitromethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_nitromethane}
+	,.elements = elements_rpp_nitromethane
+	,.nelements = (int)(sizeof(elements_rpp_nitromethane) / sizeof(elements_rpp_nitromethane[0]))
+};
+
+
+static const IdealData ideal_data_methyl_mercaptan = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 48.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.5960142508798, 0}
+			,{0.0175236832217925, 1}
+			,{-1.02832869970025e-05, 2}
+			,{2.50166514079125e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_mercaptan = {
+	.M = 48.107
+	,.T_c = 470.0
+	,.p_c = (72.3 * 1e5)
+	,.rho_c = (1000 * 48.107 / 144.8)
+	,.T_t = 0
+	,.omega = 0.153
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-22990 * 1000 / 48.107), (255.107067248029 * 1000 / 48.107)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_mercaptan
+};
+
+static const ElementComp elements_rpp_methyl_mercaptan[] = {
+	{"C", 1}
+	,{"H", 4}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_methyl_mercaptan = {
+	"methyl_mercaptan"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_mercaptan}
+	,.elements = elements_rpp_methyl_mercaptan
+	,.nelements = (int)(sizeof(elements_rpp_methyl_mercaptan) / sizeof(elements_rpp_methyl_mercaptan[0]))
+};
+
+
+static const IdealData ideal_data_methyl_amine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 31.058)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.38072672193671, 0}
+			,{0.0171628661341784, 1}
+			,{-6.41051692327757e-06, 2}
+			,{5.71293722055694e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_amine = {
+	.M = 31.058
+	,.T_c = 430.0
+	,.p_c = (74.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.292
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-23030 * 1000 / 31.058), (242.45885099782 * 1000 / 31.058)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_amine
+};
+
+static const ElementComp elements_rpp_methyl_amine[] = {
+	{"C", 1}
+	,{"H", 5}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_methyl_amine = {
+	"methyl_amine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_amine}
+	,.elements = elements_rpp_methyl_amine
+	,.nelements = (int)(sizeof(elements_rpp_methyl_amine) / sizeof(elements_rpp_methyl_amine[0]))
+};
+
+
+static const IdealData ideal_data_chloropentafluoroetane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 154.467)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.34717984943368, 0}
+			,{0.0419991089982838, 1}
+			,{-3.47587127734938e-05, 2}
+			,{9.79017031059652e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_chloropentafluoroetane = {
+	.M = 154.467
+	,.T_c = 353.2
+	,.p_c = (32.3 * 1e5)
+	,.rho_c = (1000 * 154.467 / 251.8)
+	,.T_t = 0
+	,.omega = 0.279
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_chloropentafluoroetane
+};
+
+static const ElementComp elements_rpp_chloropentafluoroetane[] = {
+	{"C", 2}
+	,{"Cl", 1}
+	,{"F", 5}
+};
+
+const EosData eos_rpp_chloropentafluoroetane = {
+	"chloropentafluoroetane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_chloropentafluoroetane}
+	,.elements = elements_rpp_chloropentafluoroetane
+	,.nelements = (int)(sizeof(elements_rpp_chloropentafluoroetane) / sizeof(elements_rpp_chloropentafluoroetane[0]))
+};
+
+
+static const IdealData ideal_data_1_1_dichlorotetrafluoroetane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 170.922)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.86501706466375, 0}
+			,{0.0394252804399698, 1}
+			,{-3.30748996979612e-05, 2}
+			,{9.40529875047479e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_1_dichlorotetrafluoroetane = {
+	.M = 170.922
+	,.T_c = 418.6
+	,.p_c = (33.0 * 1e5)
+	,.rho_c = (1000 * 170.922 / 294.2)
+	,.T_t = 0
+	,.omega = 0.263
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_1_dichlorotetrafluoroetane
+};
+
+static const ElementComp elements_rpp_1_1_dichlorotetrafluoroetane[] = {
+	{"C", 2}
+	,{"Cl", 2}
+	,{"F", 4}
+};
+
+const EosData eos_rpp_1_1_dichlorotetrafluoroetane = {
+	"1_1_dichlorotetrafluoroetane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_1_dichlorotetrafluoroetane}
+	,.elements = elements_rpp_1_1_dichlorotetrafluoroetane
+	,.nelements = (int)(sizeof(elements_rpp_1_1_dichlorotetrafluoroetane) / sizeof(elements_rpp_1_1_dichlorotetrafluoroetane[0]))
+};
+
+
+static const IdealData ideal_data_1_2_dichlorotetrafluoroethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 170.922)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.66416221922522, 0}
+			,{0.041373692713086, 1}
+			,{-3.5480346948722e-05, 2}
+			,{1.02351780519873e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_dichlorotetrafluoroethane = {
+	.M = 170.922
+	,.T_c = 418.9
+	,.p_c = (32.6 * 1e5)
+	,.rho_c = (1000 * 170.922 / 293.8)
+	,.T_t = 0
+	,.omega = 0.246
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-898500 / 170.922), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_dichlorotetrafluoroethane
+};
+
+static const ElementComp elements_rpp_1_2_dichlorotetrafluoroethane[] = {
+	{"C", 2}
+	,{"Cl", 2}
+	,{"F", 4}
+};
+
+const EosData eos_rpp_1_2_dichlorotetrafluoroethane = {
+	"1_2_dichlorotetrafluoroethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_dichlorotetrafluoroethane}
+	,.elements = elements_rpp_1_2_dichlorotetrafluoroethane
+	,.nelements = (int)(sizeof(elements_rpp_1_2_dichlorotetrafluoroethane) / sizeof(elements_rpp_1_2_dichlorotetrafluoroethane[0]))
+};
+
+
+static const IdealData ideal_data_1_2_2_trichlorotrifluoroetane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 187.380)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{7.35345224557581, 0}
+			,{0.0345662769934329, 1}
+			,{-2.91059117342059e-05, 2}
+			,{8.29879301512481e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_2_trichlorotrifluoroetane = {
+	.M = 187.380
+	,.T_c = 487.3
+	,.p_c = (34.1 * 1e5)
+	,.rho_c = (1000 * 187.380 / 325.5)
+	,.T_t = 0
+	,.omega = 0.256
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-745700 / 187.380), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_2_trichlorotrifluoroetane
+};
+
+static const ElementComp elements_rpp_1_2_2_trichlorotrifluoroetane[] = {
+	{"C", 2}
+	,{"Cl", 3}
+	,{"F", 3}
+};
+
+const EosData eos_rpp_1_2_2_trichlorotrifluoroetane = {
+	"1_2_2_trichlorotrifluoroetane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_2_trichlorotrifluoroetane}
+	,.elements = elements_rpp_1_2_2_trichlorotrifluoroetane
+	,.nelements = (int)(sizeof(elements_rpp_1_2_2_trichlorotrifluoroetane) / sizeof(elements_rpp_1_2_2_trichlorotrifluoroetane[0]))
+};
+
+
+static const IdealData ideal_data_trifluoroacetonitrile = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 95.023)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.66162738296684, 0}
+			,{0.0302966081233325, 1}
+			,{-2.83842775589776e-05, 2}
+			,{9.87436096437315e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_trifluoroacetonitrile = {
+	.M = 95.023
+	,.T_c = 311.1
+	,.p_c = (36.2 * 1e5)
+	,.rho_c = (1000 * 95.023 / 202.0)
+	,.T_t = 0
+	,.omega = 0.267
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-49570 / 95.023), (-46220 / 95.023)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_trifluoroacetonitrile
+};
+
+static const ElementComp elements_rpp_trifluoroacetonitrile[] = {
+	{"C", 2}
+	,{"F", 3}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_trifluoroacetonitrile = {
+	"trifluoroacetonitrile"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_trifluoroacetonitrile}
+	,.elements = elements_rpp_trifluoroacetonitrile
+	,.nelements = (int)(sizeof(elements_rpp_trifluoroacetonitrile) / sizeof(elements_rpp_trifluoroacetonitrile[0]))
+};
+
+
+static const IdealData ideal_data_perfluoroethene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.016)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.48910123722856, 0}
+			,{0.0273860169499119, 1}
+			,{-2.45355619577603e-05, 2}
+			,{8.15446618007917e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_perfluoroethene = {
+	.M = 100.016
+	,.T_c = 306.5
+	,.p_c = (39.4 * 1e5)
+	,.rho_c = (1000 * 100.016 / 172.0)
+	,.T_t = 0
+	,.omega = 0.233
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-65900 / 100.016), (-624100 / 100.016)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_perfluoroethene
+};
+
+static const ElementComp elements_rpp_perfluoroethene[] = {
+	{"C", 2}
+	,{"F", 4}
+};
+
+const EosData eos_rpp_perfluoroethene = {
+	"perfluoroethene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_perfluoroethene}
+	,.elements = elements_rpp_perfluoroethene
+	,.nelements = (int)(sizeof(elements_rpp_perfluoroethene) / sizeof(elements_rpp_perfluoroethene[0]))
+};
+
+
+static const IdealData ideal_data_cyanogen = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 52.035)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.32258870961719, 0}
+			,{0.0111288017056449, 1}
+			,{-9.80219754685032e-06, 2}
+			,{3.5480346948722e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cyanogen = {
+	.M = 52.035
+	,.T_c = 400.0
+	,.p_c = (59.8 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.278
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (309200 * 1000 / 52.035), (242.66639392923 * 1000 / 52.035)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cyanogen
+};
+
+static const ElementComp elements_rpp_cyanogen[] = {
+	{"C", 2}
+	,{"N", 2}
+};
+
+const EosData eos_rpp_cyanogen = {
+	"cyanogen"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cyanogen}
+	,.elements = elements_rpp_cyanogen
+	,.nelements = (int)(sizeof(elements_rpp_cyanogen) / sizeof(elements_rpp_cyanogen[0]))
+};
+
+
+static const IdealData ideal_data_trichloroethene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 131.389)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.62861717777269, 0}
+			,{0.0275062893124499, 1}
+			,{-2.68207368459831e-05, 2}
+			,{9.91044267313456e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_trichloroethene = {
+	.M = 131.389
+	,.T_c = 572.0
+	,.p_c = (50.5 * 1e5)
+	,.rho_c = (1000 * 131.389 / 256.0)
+	,.T_t = 0
+	,.omega = 0.213
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-5862 / 131.389), (19890 / 131.389)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_trichloroethene
+};
+
+static const ElementComp elements_rpp_trichloroethene[] = {
+	{"C", 2}
+	,{"Cl", 3}
+	,{"H", 1}
+};
+
+const EosData eos_rpp_trichloroethene = {
+	"trichloroethene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_trichloroethene}
+	,.elements = elements_rpp_trichloroethene
+	,.nelements = (int)(sizeof(elements_rpp_trichloroethene) / sizeof(elements_rpp_trichloroethene[0]))
+};
+
+
+static const IdealData ideal_data_acetylene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 26.038)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.22570476327025, 0}
+			,{0.00911423963313273, 1}
+			,{-6.02564536315584e-06, 2}
+			,{1.69584031178638e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_acetylene = {
+	.M = 26.038
+	,.T_c = 308.3
+	,.p_c = (61.4 * 1e5)
+	,.rho_c = (1000 * 26.038 / 112.7)
+	,.T_t = 0
+	,.omega = 0.190
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (226900 * 1000 / 26.038), (201.080689250377 * 1000 / 26.038)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_acetylene
+};
+
+static const ElementComp elements_rpp_acetylene[] = {
+	{"C", 2}
+	,{"H", 2}
+};
+
+const EosData eos_rpp_acetylene = {
+	"acetylene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_acetylene}
+	,.elements = elements_rpp_acetylene
+	,.nelements = (int)(sizeof(elements_rpp_acetylene) / sizeof(elements_rpp_acetylene[0]))
+};
+
+
+static const IdealData ideal_data_trans_1_2_dichloroethene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 96.944)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.19857878719539, 0}
+			,{0.0252571961329886, 1}
+			,{-2.11679358066952e-05, 2}
+			,{6.97579702720637e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_trans_1_2_dichloroethene = {
+	.M = 96.944
+	,.T_c = 513.0
+	,.p_c = (48.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.232
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (4190 / 96.944), (26600 / 96.944)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_trans_1_2_dichloroethene
+};
+
+static const ElementComp elements_rpp_trans_1_2_dichloroethene[] = {
+	{"C", 2}
+	,{"Cl", 2}
+	,{"H", 2}
+};
+
+const EosData eos_rpp_trans_1_2_dichloroethene = {
+	"trans_1_2_dichloroethene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_trans_1_2_dichloroethene}
+	,.elements = elements_rpp_trans_1_2_dichloroethene
+	,.nelements = (int)(sizeof(elements_rpp_trans_1_2_dichloroethene) / sizeof(elements_rpp_trans_1_2_dichloroethene[0]))
+};
+
+
+static const IdealData ideal_data_1_1_difluoroethene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 64.035)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.369236152991785, 0}
+			,{0.029406592640551, 1}
+			,{-2.52571961329886e-05, 2}
+			,{8.44311985017046e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_1_difluoroethene = {
+	.M = 64.035
+	,.T_c = 302.9
+	,.p_c = (44.6 * 1e5)
+	,.rho_c = (1000 * 64.035 / 154.1)
+	,.T_t = 0
+	,.omega = 0.140
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-345400 / 64.035), (-321700 / 64.035)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_1_difluoroethene
+};
+
+static const ElementComp elements_rpp_1_1_difluoroethene[] = {
+	{"C", 2}
+	,{"F", 2}
+	,{"H", 2}
+};
+
+const EosData eos_rpp_1_1_difluoroethene = {
+	"1_1_difluoroethene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_1_difluoroethene}
+	,.elements = elements_rpp_1_1_difluoroethene
+	,.nelements = (int)(sizeof(elements_rpp_1_1_difluoroethene) / sizeof(elements_rpp_1_1_difluoroethene[0]))
+};
+
+
+static const IdealData ideal_data_ketene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 42.038)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.768540396618081, 0}
+			,{0.0203717327666934, 1}
+			,{-1.29894151541084e-05, 2}
+			,{3.2473537885271e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ketene = {
+	.M = 42.038
+	,.T_c = 380.0
+	,.p_c = (65.0 * 1e5)
+	,.rho_c = (1000 * 42.038 / 145.0)
+	,.T_t = 0
+	,.omega = 0.210
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-61130 * 1000 / 42.038), (241.881786852256 * 1000 / 42.038)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ketene
+};
+
+static const ElementComp elements_rpp_ketene[] = {
+	{"C", 2}
+	,{"H", 2}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_ketene = {
+	"ketene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ketene}
+	,.elements = elements_rpp_ketene
+	,.nelements = (int)(sizeof(elements_rpp_ketene) / sizeof(elements_rpp_ketene[0]))
+};
+
+
+static const IdealData ideal_data_vinyl_chloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 62.499)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.715620557101343, 0}
+			,{0.0242829899964304, 1}
+			,{-1.85219438308583e-05, 2}
+			,{5.73699169306455e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_vinyl_chloride = {
+	.M = 62.499
+	,.T_c = 425.0
+	,.p_c = (51.5 * 1e5)
+	,.rho_c = (1000 * 62.499 / 169.0)
+	,.T_t = 0
+	,.omega = 0.122
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (35170 / 62.499), (51540 / 62.499)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_vinyl_chloride
+};
+
+static const ElementComp elements_rpp_vinyl_chloride[] = {
+	{"C", 2}
+	,{"Cl", 1}
+	,{"H", 3}
+};
+
+const EosData eos_rpp_vinyl_chloride = {
+	"vinyl_chloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_vinyl_chloride}
+	,.elements = elements_rpp_vinyl_chloride
+	,.nelements = (int)(sizeof(elements_rpp_vinyl_chloride) / sizeof(elements_rpp_vinyl_chloride[0]))
+};
+
+
+static const IdealData ideal_data_1_chloro_1_1_difluoroethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.496)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.02298113788985, 0}
+			,{0.0331590903517378, 1}
+			,{-2.39342001450701e-05, 2}
+			,{6.38646245076997e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_chloro_1_1_difluoroethane = {
+	.M = 100.496
+	,.T_c = 409.6
+	,.p_c = (43.3 * 1e5)
+	,.rho_c = (1000 * 100.496 / 231.0)
+	,.T_t = 0
+	,.omega = 0.251
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_chloro_1_1_difluoroethane
+};
+
+static const ElementComp elements_rpp_1_chloro_1_1_difluoroethane[] = {
+	{"C", 2}
+	,{"Cl", 1}
+	,{"F", 2}
+	,{"H", 3}
+};
+
+const EosData eos_rpp_1_chloro_1_1_difluoroethane = {
+	"1_chloro_1_1_difluoroethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_chloro_1_1_difluoroethane}
+	,.elements = elements_rpp_1_chloro_1_1_difluoroethane
+	,.nelements = (int)(sizeof(elements_rpp_1_chloro_1_1_difluoroethane) / sizeof(elements_rpp_1_chloro_1_1_difluoroethane[0]))
+};
+
+
+static const IdealData ideal_data_acetyl_chloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 78.498)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.00921451070178, 0}
+			,{0.0205786012302588, 1}
+			,{-1.18588549462508e-05, 2}
+			,{2.67004644834451e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_acetyl_chloride = {
+	.M = 78.498
+	,.T_c = 508.0
+	,.p_c = (58.7 * 1e5)
+	,.rho_c = (1000 * 78.498 / 204.0)
+	,.T_t = 0
+	,.omega = 0.344
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-244100 / 78.498), (-206400 / 78.498)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_acetyl_chloride
+};
+
+static const ElementComp elements_rpp_acetyl_chloride[] = {
+	{"C", 2}
+	,{"Cl", 1}
+	,{"H", 3}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_acetyl_chloride = {
+	"acetyl_chloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_acetyl_chloride}
+	,.elements = elements_rpp_acetyl_chloride
+	,.nelements = (int)(sizeof(elements_rpp_acetyl_chloride) / sizeof(elements_rpp_acetyl_chloride[0]))
+};
+
+
+static const IdealData ideal_data_1_1_1_trifluoroethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.041)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.690363360968354, 0}
+			,{0.0377775490731986, 1}
+			,{-3.12708142598906e-05, 2}
+			,{1.0126932925703e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_1_1_trifluoroethane = {
+	.M = 84.041
+	,.T_c = 346.3
+	,.p_c = (37.6 * 1e5)
+	,.rho_c = (1000 * 84.041 / 194.0)
+	,.T_t = 0
+	,.omega = 0.251
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-746100 / 84.041), (-679200 / 84.041)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_1_1_trifluoroethane
+};
+
+static const ElementComp elements_rpp_1_1_1_trifluoroethane[] = {
+	{"C", 2}
+	,{"F", 3}
+	,{"H", 3}
+};
+
+const EosData eos_rpp_1_1_1_trifluoroethane = {
+	"1_1_1_trifluoroethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_1_1_trifluoroethane}
+	,.elements = elements_rpp_1_1_1_trifluoroethane
+	,.nelements = (int)(sizeof(elements_rpp_1_1_1_trifluoroethane) / sizeof(elements_rpp_1_1_1_trifluoroethane[0]))
+};
+
+
+static const IdealData ideal_data_acetonitrile = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 41.053)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.46317798477908, 0}
+			,{0.0143845745595497, 1}
+			,{-5.40022907795803e-06, 2}
+			,{3.84871560121731e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_acetonitrile = {
+	.M = 41.053
+	,.T_c = 545.5
+	,.p_c = (48.3 * 1e5)
+	,.rho_c = (1000 * 41.053 / 173.0)
+	,.T_t = 0
+	,.omega = 0.327
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (87920 * 1000 / 41.053), (243.50508779138 * 1000 / 41.053)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_acetonitrile
+};
+
+static const ElementComp elements_rpp_acetonitrile[] = {
+	{"C", 2}
+	,{"H", 3}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_acetonitrile = {
+	"acetonitrile"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_acetonitrile}
+	,.elements = elements_rpp_acetonitrile
+	,.nelements = (int)(sizeof(elements_rpp_acetonitrile) / sizeof(elements_rpp_acetonitrile[0]))
+};
+
+
+static const IdealData ideal_data_methyl_isocyanate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 57.052)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.30093968436034, 0}
+			,{0.0125083257039562, 1}
+			,{-6.99985149971397e-07, 2}
+			,{-2.03260292689289e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_isocyanate = {
+	.M = 57.052
+	,.T_c = 491.0
+	,.p_c = (55.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.278
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-90000 / 57.052), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_isocyanate
+};
+
+static const ElementComp elements_rpp_methyl_isocyanate[] = {
+	{"C", 2}
+	,{"H", 3}
+	,{"N", 1}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methyl_isocyanate = {
+	"methyl_isocyanate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_isocyanate}
+	,.elements = elements_rpp_methyl_isocyanate
+	,.nelements = (int)(sizeof(elements_rpp_methyl_isocyanate) / sizeof(elements_rpp_methyl_isocyanate[0]))
+};
+
+
+static const IdealData ideal_data_1_2_dibromoethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 187.862)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.00680906345102, 0}
+			,{0.0302725536508249, 1}
+			,{-2.20098423444615e-05, 2}
+			,{6.79538848339931e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_dibromoethane = {
+	.M = 187.862
+	,.T_c = 646.0
+	,.p_c = (53.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.795
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-38940 / 187.862), (-10600 / 187.862)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_dibromoethane
+};
+
+static const ElementComp elements_rpp_1_2_dibromoethane[] = {
+	{"Br", 2}
+	,{"C", 2}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_1_2_dibromoethane = {
+	"1_2_dibromoethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_dibromoethane}
+	,.elements = elements_rpp_1_2_dibromoethane
+	,.nelements = (int)(sizeof(elements_rpp_1_2_dibromoethane) / sizeof(elements_rpp_1_2_dibromoethane[0]))
+};
+
+
+static const IdealData ideal_data_1_1_dichloroethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.960)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.49979636084937, 0}
+			,{0.0324254289402558, 1}
+			,{-2.46558343202984e-05, 2}
+			,{7.57715883989657e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_1_dichloroethane = {
+	.M = 98.960
+	,.T_c = 523.0
+	,.p_c = (50.7 * 1e5)
+	,.rho_c = (1000 * 98.960 / 236.0)
+	,.T_t = 0
+	,.omega = 0.240
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-130000 / 98.960), (-73140 / 98.960)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_1_dichloroethane
+};
+
+static const ElementComp elements_rpp_1_1_dichloroethane[] = {
+	{"C", 2}
+	,{"Cl", 2}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_1_1_dichloroethane = {
+	"1_1_dichloroethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_1_dichloroethane}
+	,.elements = elements_rpp_1_1_dichloroethane
+	,.nelements = (int)(sizeof(elements_rpp_1_1_dichloroethane) / sizeof(elements_rpp_1_1_dichloroethane[0]))
+};
+
+
+static const IdealData ideal_data_1_2_dichloroethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.960)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.46438070840446, 0}
+			,{0.0277829157462874, 1}
+			,{-1.73192202054779e-05, 2}
+			,{4.07723309003958e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_dichloroethane = {
+	.M = 98.960
+	,.T_c = 566.0
+	,.p_c = (53.7 * 1e5)
+	,.rho_c = (1000 * 98.960 / 225.0)
+	,.T_t = 0
+	,.omega = 0.278
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-129800 / 98.960), (-73900 / 98.960)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_dichloroethane
+};
+
+static const ElementComp elements_rpp_1_2_dichloroethane[] = {
+	{"C", 2}
+	,{"Cl", 2}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_1_2_dichloroethane = {
+	"1_2_dichloroethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_dichloroethane}
+	,.elements = elements_rpp_1_2_dichloroethane
+	,.nelements = (int)(sizeof(elements_rpp_1_2_dichloroethane) / sizeof(elements_rpp_1_2_dichloroethane[0]))
+};
+
+
+static const IdealData ideal_data_1_1_difluoroethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 66.051)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{10.433627450175, 0}
+			,{0.0288172580641146, 1}
+			,{-1.7559764930554e-05, 2}
+			,{4.07723309003958e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_1_difluoroethane = {
+	.M = 66.051
+	,.T_c = 386.7
+	,.p_c = (45.0 * 1e5)
+	,.rho_c = (1000 * 66.051 / 181.0)
+	,.T_t = 0
+	,.omega = 0.256
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-494000 / 66.051), (-436500 / 66.051)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_1_difluoroethane
+};
+
+static const ElementComp elements_rpp_1_1_difluoroethane[] = {
+	{"C", 2}
+	,{"F", 2}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_1_1_difluoroethane = {
+	"1_1_difluoroethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_1_difluoroethane}
+	,.elements = elements_rpp_1_1_difluoroethane
+	,.nelements = (int)(sizeof(elements_rpp_1_1_difluoroethane) / sizeof(elements_rpp_1_1_difluoroethane[0]))
+};
+
+
+static const IdealData ideal_data_acetaldehyde = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 44.054)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.928502638793675, 0}
+			,{0.0219256516906848, 1}
+			,{-1.21475086163421e-05, 2}
+			,{2.86248222840537e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_acetaldehyde = {
+	.M = 44.054
+	,.T_c = 461.0
+	,.p_c = (55.7 * 1e5)
+	,.rho_c = (1000 * 44.054 / 154.0)
+	,.T_t = 0
+	,.omega = 0.303
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-164400 * 1000 / 44.054), (271.160490524904 * 1000 / 44.054)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_acetaldehyde
+};
+
+static const ElementComp elements_rpp_acetaldehyde[] = {
+	{"C", 2}
+	,{"H", 4}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_acetaldehyde = {
+	"acetaldehyde"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_acetaldehyde}
+	,.elements = elements_rpp_acetaldehyde
+	,.nelements = (int)(sizeof(elements_rpp_acetaldehyde) / sizeof(elements_rpp_acetaldehyde[0]))
+};
+
+
+static const IdealData ideal_data_ethylene_oxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 44.054)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.904448166286067, 0}
+			,{0.0267245189559527, 1}
+			,{-1.51543176797931e-05, 2}
+			,{3.11505418973526e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethylene_oxide = {
+	.M = 44.054
+	,.T_c = 469.0
+	,.p_c = (71.9 * 1e5)
+	,.rho_c = (1000 * 44.054 / 140.0)
+	,.T_t = 0
+	,.omega = 0.202
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-52670 * 1000 / 44.054), (242.416569679691 * 1000 / 44.054)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethylene_oxide
+};
+
+static const ElementComp elements_rpp_ethylene_oxide[] = {
+	{"C", 2}
+	,{"H", 4}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_ethylene_oxide = {
+	"ethylene_oxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethylene_oxide}
+	,.elements = elements_rpp_ethylene_oxide
+	,.nelements = (int)(sizeof(elements_rpp_ethylene_oxide) / sizeof(elements_rpp_ethylene_oxide[0]))
+};
+
+
+static const IdealData ideal_data_acetic_acid = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 60.052)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.582118234684117, 0}
+			,{0.0306574252109466, 1}
+			,{-2.10476634441571e-05, 2}
+			,{5.95348194563302e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_acetic_acid = {
+	.M = 60.052
+	,.T_c = 592.7
+	,.p_c = (57.9 * 1e5)
+	,.rho_c = (1000 * 60.052 / 171.0)
+	,.T_t = 0
+	,.omega = 0.447
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-435100 * 1000 / 60.052), (282.446243501593 * 1000 / 60.052)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_acetic_acid
+};
+
+static const ElementComp elements_rpp_acetic_acid[] = {
+	{"C", 2}
+	,{"H", 4}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_acetic_acid = {
+	"acetic_acid"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_acetic_acid}
+	,.elements = elements_rpp_acetic_acid
+	,.nelements = (int)(sizeof(elements_rpp_acetic_acid) / sizeof(elements_rpp_acetic_acid[0]))
+};
+
+
+static const IdealData ideal_data_methyl_formate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 60.052)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.171989478429398, 0}
+			,{0.032473537885271, 1}
+			,{-2.3453110694918e-05, 2}
+			,{6.85552466466833e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_formate = {
+	.M = 60.052
+	,.T_c = 487.2
+	,.p_c = (60.0 * 1e5)
+	,.rho_c = (1000 * 60.052 / 172.0)
+	,.T_t = 0
+	,.omega = 0.257
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-350000 * 1000 / 60.052), (301.228735535804 * 1000 / 60.052)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_formate
+};
+
+static const ElementComp elements_rpp_methyl_formate[] = {
+	{"C", 2}
+	,{"H", 4}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_methyl_formate = {
+	"methyl_formate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_formate}
+	,.elements = elements_rpp_methyl_formate
+	,.nelements = (int)(sizeof(elements_rpp_methyl_formate) / sizeof(elements_rpp_methyl_formate[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_bromide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 108.966)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.801013934503352, 0}
+			,{0.028239950723932, 1}
+			,{-1.7680037293092e-05, 2}
+			,{4.57034977644555e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_bromide = {
+	.M = 108.966
+	,.T_c = 503.9
+	,.p_c = (62.3 * 1e5)
+	,.rho_c = (1000 * 108.966 / 215.0)
+	,.T_t = 0
+	,.omega = 0.229
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-64060 / 108.966), (-26330 / 108.966)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_bromide
+};
+
+static const ElementComp elements_rpp_ethyl_bromide[] = {
+	{"Br", 1}
+	,{"C", 2}
+	,{"H", 5}
+};
+
+const EosData eos_rpp_ethyl_bromide = {
+	"ethyl_bromide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_bromide}
+	,.elements = elements_rpp_ethyl_bromide
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_bromide) / sizeof(elements_rpp_ethyl_bromide[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_chloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 64.515)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.0661497993959224, 0}
+			,{0.0313429776774134, 1}
+			,{-2.21301147069995e-05, 2}
+			,{6.67511612086126e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_chloride = {
+	.M = 64.515
+	,.T_c = 460.4
+	,.p_c = (52.7 * 1e5)
+	,.rho_c = (1000 * 64.515 / 199.0)
+	,.T_t = 0
+	,.omega = 0.191
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-111800 / 64.515), (-60040 / 64.515)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_chloride
+};
+
+static const ElementComp elements_rpp_ethyl_chloride[] = {
+	{"C", 2}
+	,{"Cl", 1}
+	,{"H", 5}
+};
+
+const EosData eos_rpp_ethyl_chloride = {
+	"ethyl_chloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_chloride}
+	,.elements = elements_rpp_ethyl_chloride
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_chloride) / sizeof(elements_rpp_ethyl_chloride[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_flouride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 48.060)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.523184777040477, 0}
+			,{0.0262193750332929, 1}
+			,{-1.40718664169508e-05, 2}
+			,{2.89856393716678e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_flouride = {
+	.M = 48.060
+	,.T_c = 375.3
+	,.p_c = (50.2 * 1e5)
+	,.rho_c = (1000 * 48.060 / 169.0)
+	,.T_t = 0
+	,.omega = 0.215
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-261700 / 48.060), (-209700 / 48.060)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_flouride
+};
+
+static const ElementComp elements_rpp_ethyl_flouride[] = {
+	{"C", 2}
+	,{"F", 1}
+	,{"H", 5}
+};
+
+const EosData eos_rpp_ethyl_flouride = {
+	"ethyl_flouride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_flouride}
+	,.elements = elements_rpp_ethyl_flouride
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_flouride) / sizeof(elements_rpp_ethyl_flouride[0]))
+};
+
+
+static const IdealData ideal_data_dimethyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 46.069)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.04703561039745, 0}
+			,{0.0215407801305631, 1}
+			,{-6.29024456073953e-06, 2}
+			,{-2.30922936073038e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dimethyl_ether = {
+	.M = 46.069
+	,.T_c = 400.0
+	,.p_c = (52.4 * 1e5)
+	,.rho_c = (1000 * 46.069 / 178.0)
+	,.T_t = 0
+	,.omega = 0.200
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-184200 * 1000 / 46.069), (266.899029850746 * 1000 / 46.069)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dimethyl_ether
+};
+
+static const ElementComp elements_rpp_dimethyl_ether[] = {
+	{"C", 2}
+	,{"H", 6}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_dimethyl_ether = {
+	"dimethyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dimethyl_ether}
+	,.elements = elements_rpp_dimethyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_dimethyl_ether) / sizeof(elements_rpp_dimethyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_mercaptan = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 62.134)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.79446364906757, 0}
+			,{0.0282760324326934, 1}
+			,{-1.63570413051735e-05, 2}
+			,{3.80060665620209e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_mercaptan = {
+	.M = 62.134
+	,.T_c = 499.0
+	,.p_c = (54.9 * 1e5)
+	,.rho_c = (1000 * 62.134 / 207.0)
+	,.T_t = 0
+	,.omega = 0.191
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-46140 * 1000 / 62.134), (296.152938453798 * 1000 / 62.134)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_mercaptan
+};
+
+static const ElementComp elements_rpp_ethyl_mercaptan[] = {
+	{"C", 2}
+	,{"H", 6}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_ethyl_mercaptan = {
+	"ethyl_mercaptan"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_mercaptan}
+	,.elements = elements_rpp_ethyl_mercaptan
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_mercaptan) / sizeof(elements_rpp_ethyl_mercaptan[0]))
+};
+
+
+static const IdealData ideal_data_dimethyl_sulphide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 62.130)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.92261840967439, 0}
+			,{0.0225510679758827, 1}
+			,{-8.16649341633297e-06, 2}
+			,{4.93116686405967e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dimethyl_sulphide = {
+	.M = 62.130
+	,.T_c = 503.0
+	,.p_c = (55.3 * 1e5)
+	,.rho_c = (1000 * 62.130 / 201.0)
+	,.T_t = 0
+	,.omega = 0.191
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-37560 * 1000 / 62.130), (285.95672849237 * 1000 / 62.130)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dimethyl_sulphide
+};
+
+static const ElementComp elements_rpp_dimethyl_sulphide[] = {
+	{"C", 2}
+	,{"H", 6}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_dimethyl_sulphide = {
+	"dimethyl_sulphide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dimethyl_sulphide}
+	,.elements = elements_rpp_dimethyl_sulphide
+	,.nelements = (int)(sizeof(elements_rpp_dimethyl_sulphide) / sizeof(elements_rpp_dimethyl_sulphide[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_amine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 45.085)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.443805017765371, 0}
+			,{0.0330989541704688, 1}
+			,{-1.90030332810104e-05, 2}
+			,{4.58237701269935e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_amine = {
+	.M = 45.085
+	,.T_c = 456.4
+	,.p_c = (56.4 * 1e5)
+	,.rho_c = (1000 * 45.085 / 182.0)
+	,.T_t = 0
+	,.omega = 0.289
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-46050 * 1000 / 45.085), (296.796689334228 * 1000 / 45.085)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_amine
+};
+
+static const ElementComp elements_rpp_ethyl_amine[] = {
+	{"C", 2}
+	,{"H", 7}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_ethyl_amine = {
+	"ethyl_amine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_amine}
+	,.elements = elements_rpp_ethyl_amine
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_amine) / sizeof(elements_rpp_ethyl_amine[0]))
+};
+
+
+static const IdealData ideal_data_dimethylamine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 45.085)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.0204463016314669, 0}
+			,{0.032413401704002, 1}
+			,{-1.59962242175594e-05, 2}
+			,{2.81437328339015e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dimethylamine = {
+	.M = 45.085
+	,.T_c = 437.7
+	,.p_c = (53.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.302
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-18800 * 1000 / 45.085), (273.15087346973 * 1000 / 45.085)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dimethylamine
+};
+
+static const ElementComp elements_rpp_dimethylamine[] = {
+	{"C", 2}
+	,{"H", 7}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_dimethylamine = {
+	"dimethylamine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dimethylamine}
+	,.elements = elements_rpp_dimethylamine
+	,.nelements = (int)(sizeof(elements_rpp_dimethylamine) / sizeof(elements_rpp_dimethylamine[0]))
+};
+
+
+static const IdealData ideal_data_ethylenediamine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 60.099)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.60643148520696, 0}
+			,{0.0289495576629064, 1}
+			,{-5.21982053415097e-06, 2}
+			,{-4.75075832025261e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethylenediamine = {
+	.M = 60.099
+	,.T_c = 593.0
+	,.p_c = (62.8 * 1e5)
+	,.rho_c = (1000 * 60.099 / 206.0)
+	,.T_t = 0
+	,.omega = 0.510
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethylenediamine
+};
+
+static const ElementComp elements_rpp_ethylenediamine[] = {
+	{"C", 2}
+	,{"H", 8}
+	,{"N", 2}
+};
+
+const EosData eos_rpp_ethylenediamine = {
+	"ethylenediamine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethylenediamine}
+	,.elements = elements_rpp_ethylenediamine
+	,.nelements = (int)(sizeof(elements_rpp_ethylenediamine) / sizeof(elements_rpp_ethylenediamine[0]))
+};
+
+
+static const IdealData ideal_data_acrylonitrile = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 53.064)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.28571155553166, 0}
+			,{0.0265561376483994, 1}
+			,{-1.88827609184724e-05, 2}
+			,{5.53252867674988e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_acrylonitrile = {
+	.M = 53.064
+	,.T_c = 536.0
+	,.p_c = (45.6 * 1e5)
+	,.rho_c = (1000 * 53.064 / 210.0)
+	,.T_t = 0
+	,.omega = 0.350
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (185100 * 1000 / 53.064), (274.333130722791 * 1000 / 53.064)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_acrylonitrile
+};
+
+static const ElementComp elements_rpp_acrylonitrile[] = {
+	{"C", 3}
+	,{"H", 3}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_acrylonitrile = {
+	"acrylonitrile"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_acrylonitrile}
+	,.elements = elements_rpp_acrylonitrile
+	,.nelements = (int)(sizeof(elements_rpp_acrylonitrile) / sizeof(elements_rpp_acrylonitrile[0]))
+};
+
+
+static const IdealData ideal_data_methyl_acetylene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 40.065)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.76920645293458, 0}
+			,{0.0224187683770908, 1}
+			,{-1.40718664169508e-05, 2}
+			,{3.87277007372491e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_acetylene = {
+	.M = 40.065
+	,.T_c = 402.4
+	,.p_c = (56.3 * 1e5)
+	,.rho_c = (1000 * 40.065 / 164.0)
+	,.T_t = 0
+	,.omega = 0.215
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (185600 * 1000 / 40.065), (248.173852087875 * 1000 / 40.065)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_acetylene
+};
+
+static const ElementComp elements_rpp_methyl_acetylene[] = {
+	{"C", 3}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_methyl_acetylene = {
+	"methyl_acetylene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_acetylene}
+	,.elements = elements_rpp_methyl_acetylene
+	,.nelements = (int)(sizeof(elements_rpp_methyl_acetylene) / sizeof(elements_rpp_methyl_acetylene[0]))
+};
+
+
+static const IdealData ideal_data_acrolein = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 56.064)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.43966017958035, 0}
+			,{0.0253293595505114, 1}
+			,{-1.28691427915704e-05, 2}
+			,{2.29720212447658e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_acrolein = {
+	.M = 56.064
+	,.T_c = 506.0
+	,.p_c = (51.6 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.330
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-70920 * 1000 / 56.064), (361.656485829281 * 1000 / 56.064)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_acrolein
+};
+
+static const ElementComp elements_rpp_acrolein[] = {
+	{"C", 3}
+	,{"H", 4}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_acrolein = {
+	"acrolein"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_acrolein}
+	,.elements = elements_rpp_acrolein
+	,.nelements = (int)(sizeof(elements_rpp_acrolein) / sizeof(elements_rpp_acrolein[0]))
+};
+
+
+static const IdealData ideal_data_acrylic_acid = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.064)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.209273910816191, 0}
+			,{0.0383789108858888, 1}
+			,{-2.82640051964396e-05, 2}
+			,{8.39501090515525e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_acrylic_acid = {
+	.M = 72.064
+	,.T_c = 615.0
+	,.p_c = (56.7 * 1e5)
+	,.rho_c = (1000 * 72.064 / 210.0)
+	,.T_t = 0
+	,.omega = 0.560
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-336500 * 1000 / 72.064), (315.018374979037 * 1000 / 72.064)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_acrylic_acid
+};
+
+static const ElementComp elements_rpp_acrylic_acid[] = {
+	{"C", 3}
+	,{"H", 4}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_acrylic_acid = {
+	"acrylic_acid"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_acrylic_acid}
+	,.elements = elements_rpp_acrylic_acid
+	,.nelements = (int)(sizeof(elements_rpp_acrylic_acid) / sizeof(elements_rpp_acrylic_acid[0]))
+};
+
+
+static const IdealData ideal_data_vinyl_formate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.064)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.34477440218291, 0}
+			,{0.0221180874707457, 1}
+			,{-4.28169610635425e-06, 2}
+			,{-2.81437328339015e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_vinyl_formate = {
+	.M = 72.064
+	,.T_c = 475.0
+	,.p_c = (57.7 * 1e5)
+	,.rho_c = (1000 * 72.064 / 210.0)
+	,.T_t = 0
+	,.omega = 0.550
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_vinyl_formate
+};
+
+static const ElementComp elements_rpp_vinyl_formate[] = {
+	{"C", 3}
+	,{"H", 4}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_vinyl_formate = {
+	"vinyl_formate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_vinyl_formate}
+	,.elements = elements_rpp_vinyl_formate
+	,.nelements = (int)(sizeof(elements_rpp_vinyl_formate) / sizeof(elements_rpp_vinyl_formate[0]))
+};
+
+
+static const IdealData ideal_data_allyl_chloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 76.526)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.304289077221243, 0}
+			,{0.036646988865341, 1}
+			,{-2.74220986586733e-05, 2}
+			,{8.76785522902317e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_allyl_chloride = {
+	.M = 76.526
+	,.T_c = 514.0
+	,.p_c = (47.6 * 1e5)
+	,.rho_c = (1000 * 76.526 / 234.0)
+	,.T_t = 0
+	,.omega = 0.130
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-628 / 76.526), (43630 / 76.526)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_allyl_chloride
+};
+
+static const ElementComp elements_rpp_allyl_chloride[] = {
+	{"C", 3}
+	,{"Cl", 1}
+	,{"H", 5}
+};
+
+const EosData eos_rpp_allyl_chloride = {
+	"allyl_chloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_allyl_chloride}
+	,.elements = elements_rpp_allyl_chloride
+	,.nelements = (int)(sizeof(elements_rpp_allyl_chloride) / sizeof(elements_rpp_allyl_chloride[0]))
+};
+
+
+static const IdealData ideal_data_1_2_3_trichloropropane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 147.432)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.23292110502254, 0}
+			,{0.0435626497112784, 1}
+			,{-3.35559891481134e-05, 2}
+			,{1.05719406670938e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_3_trichloropropane = {
+	.M = 147.432
+	,.T_c = 651.0
+	,.p_c = (39.5 * 1e5)
+	,.rho_c = (1000 * 147.432 / 348.0)
+	,.T_t = 0
+	,.omega = 0.310
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-185900 / 147.432), (-97850 / 147.432)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_3_trichloropropane
+};
+
+static const ElementComp elements_rpp_1_2_3_trichloropropane[] = {
+	{"C", 3}
+	,{"Cl", 3}
+	,{"H", 5}
+};
+
+const EosData eos_rpp_1_2_3_trichloropropane = {
+	"1_2_3_trichloropropane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_3_trichloropropane}
+	,.elements = elements_rpp_1_2_3_trichloropropane
+	,.nelements = (int)(sizeof(elements_rpp_1_2_3_trichloropropane) / sizeof(elements_rpp_1_2_3_trichloropropane[0]))
+};
+
+
+static const IdealData ideal_data_propionitrile = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 55.080)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.85219438308583, 0}
+			,{0.0270011453897902, 1}
+			,{-1.32299598791845e-05, 2}
+			,{2.3453110694918e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_propionitrile = {
+	.M = 55.080
+	,.T_c = 564.4
+	,.p_c = (41.8 * 1e5)
+	,.rho_c = (1000 * 55.080 / 229.0)
+	,.T_t = 0
+	,.omega = 0.313
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (50660 * 1000 / 55.080), (286.674051400302 * 1000 / 55.080)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_propionitrile
+};
+
+static const ElementComp elements_rpp_propionitrile[] = {
+	{"C", 3}
+	,{"H", 5}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_propionitrile = {
+	"propionitrile"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_propionitrile}
+	,.elements = elements_rpp_propionitrile
+	,.nelements = (int)(sizeof(elements_rpp_propionitrile) / sizeof(elements_rpp_propionitrile[0]))
+};
+
+
+static const IdealData ideal_data_cyclopropane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 42.081)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.23839805584056, 0}
+			,{0.045859851835755, 1}
+			,{-3.46384404109557e-05, 2}
+			,{1.08726215734389e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cyclopropane = {
+	.M = 42.081
+	,.T_c = 397.8
+	,.p_c = (54.9 * 1e5)
+	,.rho_c = (1000 * 42.081 / 163.0)
+	,.T_t = 0
+	,.omega = 0.130
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (53340 * 1000 / 42.081), (237.338519201744 * 1000 / 42.081)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cyclopropane
+};
+
+static const ElementComp elements_rpp_cyclopropane[] = {
+	{"C", 3}
+	,{"H", 6}
+};
+
+const EosData eos_rpp_cyclopropane = {
+	"cyclopropane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cyclopropane}
+	,.elements = elements_rpp_cyclopropane
+	,.nelements = (int)(sizeof(elements_rpp_cyclopropane) / sizeof(elements_rpp_cyclopropane[0]))
+};
+
+
+static const IdealData ideal_data_1_2_dichloropropane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.987)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.25684618852253, 0}
+			,{0.0439595485076539, 1}
+			,{-3.12708142598906e-05, 2}
+			,{9.30908086044436e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_dichloropropane = {
+	.M = 112.987
+	,.T_c = 577.0
+	,.p_c = (44.5 * 1e5)
+	,.rho_c = (1000 * 112.987 / 226.0)
+	,.T_t = 0
+	,.omega = 0.240
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-166000 / 112.987), (-83150 / 112.987)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_dichloropropane
+};
+
+static const ElementComp elements_rpp_1_2_dichloropropane[] = {
+	{"C", 3}
+	,{"Cl", 2}
+	,{"H", 6}
+};
+
+const EosData eos_rpp_1_2_dichloropropane = {
+	"1_2_dichloropropane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_dichloropropane}
+	,.elements = elements_rpp_1_2_dichloropropane
+	,.nelements = (int)(sizeof(elements_rpp_1_2_dichloropropane) / sizeof(elements_rpp_1_2_dichloropropane[0]))
+};
+
+
+static const IdealData ideal_data_propionaldehyde = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 58.080)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.40959208894584, 0}
+			,{0.0314391955674439, 1}
+			,{-1.56354071299453e-05, 2}
+			,{2.56180132206027e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_propionaldehyde = {
+	.M = 58.080
+	,.T_c = 515.3
+	,.p_c = (63.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.313
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-192200 * 1000 / 58.080), (304.502185980211 * 1000 / 58.080)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_propionaldehyde
+};
+
+static const ElementComp elements_rpp_propionaldehyde[] = {
+	{"C", 3}
+	,{"H", 6}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_propionaldehyde = {
+	"propionaldehyde"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_propionaldehyde}
+	,.elements = elements_rpp_propionaldehyde
+	,.nelements = (int)(sizeof(elements_rpp_propionaldehyde) / sizeof(elements_rpp_propionaldehyde[0]))
+};
+
+
+static const IdealData ideal_data_1_2_propylene_oxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 58.080)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.01750418707183, 0}
+			,{0.0391727084786399, 1}
+			,{-2.39342001450701e-05, 2}
+			,{5.79712787433357e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_propylene_oxide = {
+	.M = 58.080
+	,.T_c = 482.2
+	,.p_c = (49.2 * 1e5)
+	,.rho_c = (1000 * 58.080 / 186.0)
+	,.T_t = 0
+	,.omega = 0.269
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-92820 * 1000 / 58.080), (286.658818547711 * 1000 / 58.080)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_propylene_oxide
+};
+
+static const ElementComp elements_rpp_1_2_propylene_oxide[] = {
+	{"C", 3}
+	,{"H", 6}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_1_2_propylene_oxide = {
+	"1_2_propylene_oxide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_propylene_oxide}
+	,.elements = elements_rpp_1_2_propylene_oxide
+	,.nelements = (int)(sizeof(elements_rpp_1_2_propylene_oxide) / sizeof(elements_rpp_1_2_propylene_oxide[0]))
+};
+
+
+static const IdealData ideal_data_vinyl_methyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 58.080)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.87985702646958, 0}
+			,{0.0281557600701553, 1}
+			,{-1.166641916619e-05, 2}
+			,{1.27488704290323e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_vinyl_methyl_ether = {
+	.M = 58.080
+	,.T_c = 436.0
+	,.p_c = (47.6 * 1e5)
+	,.rho_c = (1000 * 58.080 / 205.0)
+	,.T_t = 0
+	,.omega = 0.340
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_vinyl_methyl_ether
+};
+
+static const ElementComp elements_rpp_vinyl_methyl_ether[] = {
+	{"C", 3}
+	,{"H", 6}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_vinyl_methyl_ether = {
+	"vinyl_methyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_vinyl_methyl_ether}
+	,.elements = elements_rpp_vinyl_methyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_vinyl_methyl_ether) / sizeof(elements_rpp_vinyl_methyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_propionic_acid = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.080)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.681944295590691, 0}
+			,{0.0443684745402832, 1}
+			,{-3.45181680484177e-05, 2}
+			,{1.18829094187584e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_propionic_acid = {
+	.M = 74.080
+	,.T_c = 612.0
+	,.p_c = (54.0 * 1e5)
+	,.rho_c = (1000 * 74.080 / 222.0)
+	,.T_t = 0
+	,.omega = 0.520
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-455400 * 1000 / 74.080), (326.18538990441 * 1000 / 74.080)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_propionic_acid
+};
+
+static const ElementComp elements_rpp_propionic_acid[] = {
+	{"C", 3}
+	,{"H", 6}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_propionic_acid = {
+	"propionic_acid"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_propionic_acid}
+	,.elements = elements_rpp_propionic_acid
+	,.nelements = (int)(sizeof(elements_rpp_propionic_acid) / sizeof(elements_rpp_propionic_acid[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_formate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.080)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.96711918381347, 0}
+			,{0.0278550791638102, 1}
+			,{-2.54977408580646e-06, 2}
+			,{-6.44659863203899e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_formate = {
+	.M = 74.080
+	,.T_c = 508.5
+	,.p_c = (47.4 * 1e5)
+	,.rho_c = (1000 * 74.080 / 229.0)
+	,.T_t = 0
+	,.omega = 0.285
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-371500 / 74.080), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_formate
+};
+
+static const ElementComp elements_rpp_ethyl_formate[] = {
+	{"C", 3}
+	,{"H", 6}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_ethyl_formate = {
+	"ethyl_formate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_formate}
+	,.elements = elements_rpp_ethyl_formate
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_formate) / sizeof(elements_rpp_ethyl_formate[0]))
+};
+
+
+static const IdealData ideal_data_methyl_acetate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.080)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.99050760000458, 0}
+			,{0.0270011453897902, 1}
+			,{-5.21982053415097e-06, 2}
+			,{3.49992574985699e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_acetate = {
+	.M = 74.080
+	,.T_c = 506.8
+	,.p_c = (46.9 * 1e5)
+	,.rho_c = (1000 * 74.080 / 228.0)
+	,.T_t = 0
+	,.omega = 0.326
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-409700 / 74.080), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_acetate
+};
+
+static const ElementComp elements_rpp_methyl_acetate[] = {
+	{"C", 3}
+	,{"H", 6}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_methyl_acetate = {
+	"methyl_acetate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_acetate}
+	,.elements = elements_rpp_methyl_acetate
+	,.nelements = (int)(sizeof(elements_rpp_methyl_acetate) / sizeof(elements_rpp_methyl_acetate[0]))
+};
+
+
+static const IdealData ideal_data_propyl_chloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 78.542)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.402912414502437, 0}
+			,{0.0436107586562936, 1}
+			,{-3.01883629970482e-05, 2}
+			,{8.96029100908404e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_propyl_chloride = {
+	.M = 78.542
+	,.T_c = 503.0
+	,.p_c = (45.8 * 1e5)
+	,.rho_c = (1000 * 78.542 / 254.0)
+	,.T_t = 0
+	,.omega = 0.235
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-130200 / 78.542), (-50700 / 78.542)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_propyl_chloride
+};
+
+static const ElementComp elements_rpp_propyl_chloride[] = {
+	{"C", 3}
+	,{"Cl", 1}
+	,{"H", 7}
+};
+
+const EosData eos_rpp_propyl_chloride = {
+	"propyl_chloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_propyl_chloride}
+	,.elements = elements_rpp_propyl_chloride
+	,.nelements = (int)(sizeof(elements_rpp_propyl_chloride) / sizeof(elements_rpp_propyl_chloride[0]))
+};
+
+
+static const IdealData ideal_data_isopropyl_chloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 78.542)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.221301147069995, 0}
+			,{0.0419510000532686, 1}
+			,{-2.69410092085211e-05, 2}
+			,{7.04796044472919e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isopropyl_chloride = {
+	.M = 78.542
+	,.T_c = 485.0
+	,.p_c = (47.2 * 1e5)
+	,.rho_c = (1000 * 78.542 / 230.0)
+	,.T_t = 0
+	,.omega = 0.232
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-146500 / 78.542), (-62550 / 78.542)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isopropyl_chloride
+};
+
+static const ElementComp elements_rpp_isopropyl_chloride[] = {
+	{"C", 3}
+	,{"Cl", 1}
+	,{"H", 7}
+};
+
+const EosData eos_rpp_isopropyl_chloride = {
+	"isopropyl_chloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isopropyl_chloride}
+	,.elements = elements_rpp_isopropyl_chloride
+	,.nelements = (int)(sizeof(elements_rpp_isopropyl_chloride) / sizeof(elements_rpp_isopropyl_chloride[0]))
+};
+
+
+static const IdealData ideal_data_1_propanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 60.096)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.297072735468961, 0}
+			,{0.0399905605438986, 1}
+			,{-2.23706594320756e-05, 2}
+			,{5.17171158913575e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_propanol = {
+	.M = 60.096
+	,.T_c = 536.8
+	,.p_c = (51.7 * 1e5)
+	,.rho_c = (1000 * 60.096 / 219.0)
+	,.T_t = 0
+	,.omega = 0.623
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-256600 * 1000 / 60.096), (324.389643635754 * 1000 / 60.096)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_propanol
+};
+
+static const ElementComp elements_rpp_1_propanol[] = {
+	{"C", 3}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_1_propanol = {
+	"1_propanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_propanol}
+	,.elements = elements_rpp_1_propanol
+	,.nelements = (int)(sizeof(elements_rpp_1_propanol) / sizeof(elements_rpp_1_propanol[0]))
+};
+
+
+static const IdealData ideal_data_isopropyl_alcohol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 60.096)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.90043271710866, 0}
+			,{0.0226713403384207, 1}
+			,{7.70945843868841e-06, 2}
+			,{-1.11372207710226e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isopropyl_alcohol = {
+	.M = 60.096
+	,.T_c = 508.3
+	,.p_c = (47.6 * 1e5)
+	,.rho_c = (1000 * 60.096 / 220.0)
+	,.T_t = 0
+	,.omega = 0.665
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-272600 * 1000 / 60.096), (309.631971323159 * 1000 / 60.096)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isopropyl_alcohol
+};
+
+static const ElementComp elements_rpp_isopropyl_alcohol[] = {
+	{"C", 3}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_isopropyl_alcohol = {
+	"isopropyl_alcohol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isopropyl_alcohol}
+	,.elements = elements_rpp_isopropyl_alcohol
+	,.nelements = (int)(sizeof(elements_rpp_isopropyl_alcohol) / sizeof(elements_rpp_isopropyl_alcohol[0]))
+};
+
+
+static const IdealData ideal_data_methyl_ethyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 60.096)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.24548500858522, 0}
+			,{0.032293129341464, 1}
+			,{-1.23880533414182e-05, 2}
+			,{1.07643764471547e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_ethyl_ether = {
+	.M = 60.096
+	,.T_c = 437.8
+	,.p_c = (44.0 * 1e5)
+	,.rho_c = (1000 * 60.096 / 221.0)
+	,.T_t = 0
+	,.omega = 0.244
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-216600 * 1000 / 60.096), (310.302774610096 * 1000 / 60.096)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_ethyl_ether
+};
+
+static const ElementComp elements_rpp_methyl_ethyl_ether[] = {
+	{"C", 3}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methyl_ethyl_ether = {
+	"methyl_ethyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_ethyl_ether}
+	,.elements = elements_rpp_methyl_ethyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_methyl_ethyl_ether) / sizeof(elements_rpp_methyl_ethyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_methyl_ethyl_sulfide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 76.157)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.34891924036794, 0}
+			,{0.0347707400097476, 1}
+			,{-1.45529558671029e-05, 2}
+			,{1.55151347674073e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_ethyl_sulfide = {
+	.M = 76.157
+	,.T_c = 533.0
+	,.p_c = (42.6 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.216
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-59660 * 1000 / 76.157), (333.217592151601 * 1000 / 76.157)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_ethyl_sulfide
+};
+
+static const ElementComp elements_rpp_methyl_ethyl_sulfide[] = {
+	{"C", 3}
+	,{"H", 8}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_methyl_ethyl_sulfide = {
+	"methyl_ethyl_sulfide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_ethyl_sulfide}
+	,.elements = elements_rpp_methyl_ethyl_sulfide
+	,.nelements = (int)(sizeof(elements_rpp_methyl_ethyl_sulfide) / sizeof(elements_rpp_methyl_ethyl_sulfide[0]))
+};
+
+
+static const IdealData ideal_data_n_propyl_amine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 59.112)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.804622105379493, 0}
+			,{0.0420712724158067, 1}
+			,{-2.18895699819234e-05, 2}
+			,{4.31777781511566e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_propyl_amine = {
+	.M = 59.112
+	,.T_c = 497.0
+	,.p_c = (48.1 * 1e5)
+	,.rho_c = (1000 * 59.112 / 233.0)
+	,.T_t = 0
+	,.omega = 0.303
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-72430 * 1000 / 59.112), (324.10115520711 * 1000 / 59.112)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_propyl_amine
+};
+
+static const ElementComp elements_rpp_n_propyl_amine[] = {
+	{"C", 3}
+	,{"H", 9}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_n_propyl_amine = {
+	"n_propyl_amine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_propyl_amine}
+	,.elements = elements_rpp_n_propyl_amine
+	,.nelements = (int)(sizeof(elements_rpp_n_propyl_amine) / sizeof(elements_rpp_n_propyl_amine[0]))
+};
+
+
+static const IdealData ideal_data_isopropyl_amine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 59.112)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.900839995409926, 0}
+			,{0.050213711359632, 1}
+			,{-3.40370785982655e-05, 2}
+			,{1.00427422719264e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isopropyl_amine = {
+	.M = 59.112
+	,.T_c = 471.8
+	,.p_c = (45.4 * 1e5)
+	,.rho_c = (1000 * 59.112 / 221.0)
+	,.T_t = 0
+	,.omega = 0.291
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-83820 / 59.112), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isopropyl_amine
+};
+
+static const ElementComp elements_rpp_isopropyl_amine[] = {
+	{"C", 3}
+	,{"H", 9}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_isopropyl_amine = {
+	"isopropyl_amine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isopropyl_amine}
+	,.elements = elements_rpp_isopropyl_amine
+	,.nelements = (int)(sizeof(elements_rpp_isopropyl_amine) / sizeof(elements_rpp_isopropyl_amine[0]))
+};
+
+
+static const IdealData ideal_data_trimethyl_amine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 59.112)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.987436096437315, 0}
+			,{0.0477721824001098, 1}
+			,{-2.67004644834451e-05, 2}
+			,{5.55658314925748e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_trimethyl_amine = {
+	.M = 59.112
+	,.T_c = 433.3
+	,.p_c = (40.9 * 1e5)
+	,.rho_c = (1000 * 59.112 / 254.0)
+	,.T_t = 0
+	,.omega = 0.205
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-23860 * 1000 / 59.112), (288.582121163844 * 1000 / 59.112)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_trimethyl_amine
+};
+
+static const ElementComp elements_rpp_trimethyl_amine[] = {
+	{"C", 3}
+	,{"H", 9}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_trimethyl_amine = {
+	"trimethyl_amine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_trimethyl_amine}
+	,.elements = elements_rpp_trimethyl_amine
+	,.nelements = (int)(sizeof(elements_rpp_trimethyl_amine) / sizeof(elements_rpp_trimethyl_amine[0]))
+};
+
+
+static const IdealData ideal_data_vinylacetylene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 52.076)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.813041170757156, 0}
+			,{0.0341693781970574, 1}
+			,{-2.73018262961353e-05, 2}
+			,{8.97231824533784e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_vinylacetylene = {
+	.M = 52.076
+	,.T_c = 455.0
+	,.p_c = (49.6 * 1e5)
+	,.rho_c = (1000 * 52.076 / 202.0)
+	,.T_t = 0
+	,.omega = 0.092
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (304800 * 1000 / 52.076), (279.404376991447 * 1000 / 52.076)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_vinylacetylene
+};
+
+static const ElementComp elements_rpp_vinylacetylene[] = {
+	{"C", 4}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_vinylacetylene = {
+	"vinylacetylene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_vinylacetylene}
+	,.elements = elements_rpp_vinylacetylene
+	,.nelements = (int)(sizeof(elements_rpp_vinylacetylene) / sizeof(elements_rpp_vinylacetylene[0]))
+};
+
+
+static const IdealData ideal_data_furan = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 68.075)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.27327704097659, 0}
+			,{0.0519696878526874, 1}
+			,{-4.16142374381621e-05, 2}
+			,{1.28691427915704e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_furan = {
+	.M = 68.075
+	,.T_c = 490.2
+	,.p_c = (55.0 * 1e5)
+	,.rho_c = (1000 * 68.075 / 218.0)
+	,.T_t = 0
+	,.omega = 0.209
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-34700 * 1000 / 68.075), (267.282449270501 * 1000 / 68.075)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_furan
+};
+
+static const ElementComp elements_rpp_furan[] = {
+	{"C", 4}
+	,{"H", 4}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_furan = {
+	"furan"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_furan}
+	,.elements = elements_rpp_furan
+	,.nelements = (int)(sizeof(elements_rpp_furan) / sizeof(elements_rpp_furan[0]))
+};
+
+
+static const IdealData ideal_data_thiophene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.136)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.68153701728943, 0}
+			,{0.0538820184170423, 1}
+			,{-4.53426806768414e-05, 2}
+			,{1.50340453172551e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_thiophene = {
+	.M = 84.136
+	,.T_c = 579.4
+	,.p_c = (56.9 * 1e5)
+	,.rho_c = (1000 * 84.136 / 219.0)
+	,.T_t = 0
+	,.omega = 0.196
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (115800 * 1000 / 84.136), (278.924417575046 * 1000 / 84.136)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_thiophene
+};
+
+static const ElementComp elements_rpp_thiophene[] = {
+	{"C", 4}
+	,{"H", 4}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_thiophene = {
+	"thiophene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_thiophene}
+	,.elements = elements_rpp_thiophene
+	,.nelements = (int)(sizeof(elements_rpp_thiophene) / sizeof(elements_rpp_thiophene[0]))
+};
+
+
+static const IdealData ideal_data_allyl_cyanide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 67.091)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.60991026707549, 0}
+			,{0.0309340516447841, 1}
+			,{-1.43124111420269e-05, 2}
+			,{1.4793500592179e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_allyl_cyanide = {
+	.M = 67.091
+	,.T_c = 585.0
+	,.p_c = (39.5 * 1e5)
+	,.rho_c = (1000 * 67.091 / 265.0)
+	,.T_t = 0
+	,.omega = 0.390
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_allyl_cyanide
+};
+
+static const ElementComp elements_rpp_allyl_cyanide[] = {
+	{"C", 4}
+	,{"H", 5}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_allyl_cyanide = {
+	"allyl_cyanide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_allyl_cyanide}
+	,.elements = elements_rpp_allyl_cyanide
+	,.nelements = (int)(sizeof(elements_rpp_allyl_cyanide) / sizeof(elements_rpp_allyl_cyanide[0]))
+};
+
+
+static const IdealData ideal_data_1_butyne = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 54.092)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.50941814985241, 0}
+			,{0.0330027362804384, 1}
+			,{-1.86422161933963e-05, 2}
+			,{4.14939650756241e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_butyne = {
+	.M = 54.092
+	,.T_c = 463.7
+	,.p_c = (47.1 * 1e5)
+	,.rho_c = (1000 * 54.092 / 220.0)
+	,.T_t = 0
+	,.omega = 0.050
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (165300 * 1000 / 54.092), (290.906793560288 * 1000 / 54.092)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_butyne
+};
+
+static const ElementComp elements_rpp_1_butyne[] = {
+	{"C", 4}
+	,{"H", 6}
+};
+
+const EosData eos_rpp_1_butyne = {
+	"1_butyne"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_butyne}
+	,.elements = elements_rpp_1_butyne
+	,.nelements = (int)(sizeof(elements_rpp_1_butyne) / sizeof(elements_rpp_1_butyne[0]))
+};
+
+
+static const IdealData ideal_data_2_butyne = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 54.092)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.91593873523099, 0}
+			,{0.0286368495203075, 1}
+			,{-1.28691427915704e-05, 2}
+			,{2.10476634441571e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_butyne = {
+	.M = 54.092
+	,.T_c = 488.7
+	,.p_c = (50.8 * 1e5)
+	,.rho_c = (1000 * 54.092 / 221.0)
+	,.T_t = 0
+	,.omega = 0.124
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (146400 * 1000 / 54.092), (283.192555760523 * 1000 / 54.092)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_butyne
+};
+
+static const ElementComp elements_rpp_2_butyne[] = {
+	{"C", 4}
+	,{"H", 6}
+};
+
+const EosData eos_rpp_2_butyne = {
+	"2_butyne"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_butyne}
+	,.elements = elements_rpp_2_butyne
+	,.nelements = (int)(sizeof(elements_rpp_2_butyne) / sizeof(elements_rpp_2_butyne[0]))
+};
+
+
+static const IdealData ideal_data_1_2_butadiene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 54.092)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.34705046042606, 0}
+			,{0.0327621915553623, 1}
+			,{-1.7680037293092e-05, 2}
+			,{3.71641600242546e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_butadiene = {
+	.M = 54.092
+	,.T_c = 443.7
+	,.p_c = (44.9 * 1e5)
+	,.rho_c = (1000 * 54.092 / 219.0)
+	,.T_t = 0
+	,.omega = 0.255
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (162300 * 1000 / 54.092), (292.919203421097 * 1000 / 54.092)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_butadiene
+};
+
+static const ElementComp elements_rpp_1_2_butadiene[] = {
+	{"C", 4}
+	,{"H", 6}
+};
+
+const EosData eos_rpp_1_2_butadiene = {
+	"1_2_butadiene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_butadiene}
+	,.elements = elements_rpp_1_2_butadiene
+	,.nelements = (int)(sizeof(elements_rpp_1_2_butadiene) / sizeof(elements_rpp_1_2_butadiene[0]))
+};
+
+
+static const IdealData ideal_data_1_3_butadiene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 54.092)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.203260292689289, 0}
+			,{0.0411211207517561, 1}
+			,{-2.81437328339015e-05, 2}
+			,{7.62526778491179e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_3_butadiene = {
+	.M = 54.092
+	,.T_c = 425.0
+	,.p_c = (43.3 * 1e5)
+	,.rho_c = (1000 * 54.092 / 221.0)
+	,.T_t = 0
+	,.omega = 0.195
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (110200 * 1000 / 54.092), (278.49693275197 * 1000 / 54.092)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_3_butadiene
+};
+
+static const ElementComp elements_rpp_1_3_butadiene[] = {
+	{"C", 4}
+	,{"H", 6}
+};
+
+const EosData eos_rpp_1_3_butadiene = {
+	"1_3_butadiene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_3_butadiene}
+	,.elements = elements_rpp_1_3_butadiene
+	,.nelements = (int)(sizeof(elements_rpp_1_3_butadiene) / sizeof(elements_rpp_1_3_butadiene[0]))
+};
+
+
+static const IdealData ideal_data_vinyl_acetate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.091)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.8233290160767, 0}
+			,{0.0336161253293824, 1}
+			,{-1.05959951396014e-05, 2}
+			,{-1.99652121813148e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_vinyl_acetate = {
+	.M = 86.091
+	,.T_c = 525.0
+	,.p_c = (43.5 * 1e5)
+	,.rho_c = (1000 * 86.091 / 265.0)
+	,.T_t = 0
+	,.omega = 0.340
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-316000 / 86.091), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_vinyl_acetate
+};
+
+static const ElementComp elements_rpp_vinyl_acetate[] = {
+	{"C", 4}
+	,{"H", 6}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_vinyl_acetate = {
+	"vinyl_acetate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_vinyl_acetate}
+	,.elements = elements_rpp_vinyl_acetate
+	,.nelements = (int)(sizeof(elements_rpp_vinyl_acetate) / sizeof(elements_rpp_vinyl_acetate[0]))
+};
+
+
+static const IdealData ideal_data_acetic_anhydride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.089)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.78189974550488, 0}
+			,{0.0611825508231014, 1}
+			,{-4.30575057886186e-05, 2}
+			,{1.18348004737432e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_acetic_anhydride = {
+	.M = 102.089
+	,.T_c = 569.0
+	,.p_c = (46.8 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.908
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-576100 * 1000 / 102.089), (389.831971323159 * 1000 / 102.089)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_acetic_anhydride
+};
+
+static const ElementComp elements_rpp_acetic_anhydride[] = {
+	{"C", 4}
+	,{"H", 6}
+	,{"O", 3}
+};
+
+const EosData eos_rpp_acetic_anhydride = {
+	"acetic_anhydride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_acetic_anhydride}
+	,.elements = elements_rpp_acetic_anhydride
+	,.nelements = (int)(sizeof(elements_rpp_acetic_anhydride) / sizeof(elements_rpp_acetic_anhydride[0]))
+};
+
+
+static const IdealData ideal_data_butyronitrile = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 69.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.8293426342036, 0}
+			,{0.0385593194296959, 1}
+			,{-1.97246674562387e-05, 2}
+			,{3.58411640363362e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_butyronitrile = {
+	.M = 69.107
+	,.T_c = 582.2
+	,.p_c = (37.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.373
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (34100 * 1000 / 69.107), (325.549873972832 * 1000 / 69.107)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_butyronitrile
+};
+
+static const ElementComp elements_rpp_butyronitrile[] = {
+	{"C", 4}
+	,{"H", 7}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_butyronitrile = {
+	"butyronitrile"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_butyronitrile}
+	,.elements = elements_rpp_butyronitrile
+	,.nelements = (int)(sizeof(elements_rpp_butyronitrile) / sizeof(elements_rpp_butyronitrile[0]))
+};
+
+
+static const IdealData ideal_data_methyl_acrylate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.091)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.8233290160767, 0}
+			,{0.0336281525656362, 1}
+			,{-1.05959951396014e-05, 2}
+			,{-1.99652121813148e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_acrylate = {
+	.M = 86.091
+	,.T_c = 536.0
+	,.p_c = (43.0 * 1e5)
+	,.rho_c = (1000 * 86.091 / 265.0)
+	,.T_t = 0
+	,.omega = 0.350
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_acrylate
+};
+
+static const ElementComp elements_rpp_methyl_acrylate[] = {
+	{"C", 4}
+	,{"H", 6}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_methyl_acrylate = {
+	"methyl_acrylate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_acrylate}
+	,.elements = elements_rpp_methyl_acrylate
+	,.nelements = (int)(sizeof(elements_rpp_methyl_acrylate) / sizeof(elements_rpp_methyl_acrylate[0]))
+};
+
+
+static const IdealData ideal_data_1_butene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 56.108)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.359614363988742, 0}
+			,{0.042480198448436, 1}
+			,{-2.39342001450701e-05, 2}
+			,{5.36414736919662e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_butene = {
+	.M = 56.108
+	,.T_c = 419.6
+	,.p_c = (40.2 * 1e5)
+	,.rho_c = (1000 * 56.108 / 240.0)
+	,.T_t = 0
+	,.omega = 0.191
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-126 * 1000 / 56.108), (305.541861479121 * 1000 / 56.108)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_butene
+};
+
+static const ElementComp elements_rpp_1_butene[] = {
+	{"C", 4}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_1_butene = {
+	"1_butene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_butene}
+	,.elements = elements_rpp_1_butene
+	,.nelements = (int)(sizeof(elements_rpp_1_butene) / sizeof(elements_rpp_1_butene[0]))
+};
+
+
+static const IdealData ideal_data_2_butene_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 56.108)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.0529198395167379, 0}
+			,{0.0355164286574834, 1}
+			,{-1.22677809788802e-05, 2}
+			,{-7.40877753234331e-11, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_butene_cis = {
+	.M = 56.108
+	,.T_c = 435.6
+	,.p_c = (42.0 * 1e5)
+	,.rho_c = (1000 * 56.108 / 234.0)
+	,.T_t = 0
+	,.omega = 0.202
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-6990 * 1000 / 56.108), (300.765742076136 * 1000 / 56.108)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_butene_cis
+};
+
+static const ElementComp elements_rpp_2_butene_cis[] = {
+	{"C", 4}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_2_butene_cis = {
+	"2_butene_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_butene_cis}
+	,.elements = elements_rpp_2_butene_cis
+	,.nelements = (int)(sizeof(elements_rpp_2_butene_cis) / sizeof(elements_rpp_2_butene_cis[0]))
 };
 
 
 static const IdealData ideal_data_2_butene_trans = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
-		.cp0star = 1
+		.cp0star = (R_UNIVERSAL / 56.108)
 		,.Tstar = 1
 		,.np = 4
 		,.pt = (const Cp0PowTerm[]){
-			{18.32, 0}
-			,{0.2564, 1}
-			,{-7.01E-05, 2}
-			,{-8.99E-09, 3}
+			{2.20338968169691, 0}
+			,{0.0308378337547537, 1}
+			,{-8.43109261391666e-06, 2}
+			,{-1.08124853921699e-09, 3}
 		}
 	}}
 };
@@ -15072,9 +8272,15 @@ static const CubicData cubic_data_2_butene_trans = {
 	,.rho_c = (1000 * 56.108 / 238.0)
 	,.T_t = 0
 	,.omega = 0.205
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-11180 / 56.108), (63010 / 56.108)}}}
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-11180 * 1000 / 56.108), (296.405520711051 * 1000 / 56.108)}}}
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_2_butene_trans
+};
+
+static const ElementComp elements_rpp_2_butene_trans[] = {
+	{"C", 4}
+	,{"H", 8}
 };
 
 const EosData eos_rpp_2_butene_trans = {
@@ -15084,5 +8290,10167 @@ const EosData eos_rpp_2_butene_trans = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_2_butene_trans}
+	,.elements = elements_rpp_2_butene_trans
+	,.nelements = (int)(sizeof(elements_rpp_2_butene_trans) / sizeof(elements_rpp_2_butene_trans[0]))
+};
+
+
+static const IdealData ideal_data_cyclobutane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 56.108)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.04368621753655, 0}
+			,{0.0604248349391117, 1}
+			,{-4.28169610635425e-05, 2}
+			,{1.26285980664943e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cyclobutane = {
+	.M = 56.108
+	,.T_c = 460.0
+	,.p_c = (49.9 * 1e5)
+	,.rho_c = (1000 * 56.108 / 210.0)
+	,.T_t = 0
+	,.omega = 0.181
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (26670 * 1000 / 56.108), (265.414408854603 * 1000 / 56.108)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cyclobutane
+};
+
+static const ElementComp elements_rpp_cyclobutane[] = {
+	{"C", 4}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_cyclobutane = {
+	"cyclobutane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cyclobutane}
+	,.elements = elements_rpp_cyclobutane
+	,.nelements = (int)(sizeof(elements_rpp_cyclobutane) / sizeof(elements_rpp_cyclobutane[0]))
+};
+
+
+static const IdealData ideal_data_isobutylene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 56.108)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.93037141873555, 0}
+			,{0.0337243704556666, 1}
+			,{-1.31096875166464e-05, 2}
+			,{1.09447849909617e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isobutylene = {
+	.M = 56.108
+	,.T_c = 417.9
+	,.p_c = (40.0 * 1e5)
+	,.rho_c = (1000 * 56.108 / 239.0)
+	,.T_t = 0
+	,.omega = 0.194
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-16910 * 1000 / 56.108), (293.621687070267 * 1000 / 56.108)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isobutylene
+};
+
+static const ElementComp elements_rpp_isobutylene[] = {
+	{"C", 4}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_isobutylene = {
+	"isobutylene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isobutylene}
+	,.elements = elements_rpp_isobutylene
+	,.nelements = (int)(sizeof(elements_rpp_isobutylene) / sizeof(elements_rpp_isobutylene[0]))
+};
+
+
+static const IdealData ideal_data_n_butyraldehyde = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.69343486453561, 0}
+			,{0.0415781557294007, 1}
+			,{-2.0686846356543e-05, 2}
+			,{3.47587127734938e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_butyraldehyde = {
+	.M = 72.107
+	,.T_c = 545.4
+	,.p_c = (53.8 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.352
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-205200 * 1000 / 72.107), (344.55191430488 * 1000 / 72.107)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_butyraldehyde
+};
+
+static const ElementComp elements_rpp_n_butyraldehyde[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_n_butyraldehyde = {
+	"n_butyraldehyde"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_butyraldehyde}
+	,.elements = elements_rpp_n_butyraldehyde
+	,.nelements = (int)(sizeof(elements_rpp_n_butyraldehyde) / sizeof(elements_rpp_n_butyraldehyde[0]))
+};
+
+
+static const IdealData ideal_data_isobutyraldehyde = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.94186198768048, 0}
+			,{0.0403634048677665, 1}
+			,{-2.47761066828364e-05, 2}
+			,{7.6613494936732e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isobutyraldehyde = {
+	.M = 72.107
+	,.T_c = 513.0
+	,.p_c = (41.5 * 1e5)
+	,.rho_c = (1000 * 72.107 / 274.0)
+	,.T_t = 0
+	,.omega = 0.350
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-215900 * 1000 / 72.107), (330.80044692269 * 1000 / 72.107)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isobutyraldehyde
+};
+
+static const ElementComp elements_rpp_isobutyraldehyde[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_isobutyraldehyde = {
+	"isobutyraldehyde"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isobutyraldehyde}
+	,.elements = elements_rpp_isobutyraldehyde
+	,.nelements = (int)(sizeof(elements_rpp_isobutyraldehyde) / sizeof(elements_rpp_isobutyraldehyde[0]))
+};
+
+
+static const IdealData ideal_data_methyl_ethyl_ketone = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.31577964616617, 0}
+			,{0.0428049338272887, 1}
+			,{-2.28517488822278e-05, 2}
+			,{4.7146766114912e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_ethyl_ketone = {
+	.M = 72.107
+	,.T_c = 536.8
+	,.p_c = (42.1 * 1e5)
+	,.rho_c = (1000 * 72.107 / 267.0)
+	,.T_t = 0
+	,.omega = 0.320
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-238500 * 1000 / 72.107), (338.179283078987 * 1000 / 72.107)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_ethyl_ketone
+};
+
+static const ElementComp elements_rpp_methyl_ethyl_ketone[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methyl_ethyl_ketone = {
+	"methyl_ethyl_ketone"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_ethyl_ketone}
+	,.elements = elements_rpp_methyl_ethyl_ketone
+	,.nelements = (int)(sizeof(elements_rpp_methyl_ethyl_ketone) / sizeof(elements_rpp_methyl_ethyl_ketone[0]))
+};
+
+
+static const IdealData ideal_data_tetrahydrofuran = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.29720212447658, 0}
+			,{0.0620845935421367, 1}
+			,{-4.96724857282108e-05, 2}
+			,{1.74394925680159e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_tetrahydrofuran = {
+	.M = 72.107
+	,.T_c = 540.1
+	,.p_c = (51.9 * 1e5)
+	,.rho_c = (1000 * 72.107 / 224.0)
+	,.T_t = 0
+	,.omega = 0.217
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-184300 / 72.107), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_tetrahydrofuran
+};
+
+static const ElementComp elements_rpp_tetrahydrofuran[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_tetrahydrofuran = {
+	"tetrahydrofuran"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_tetrahydrofuran}
+	,.elements = elements_rpp_tetrahydrofuran
+	,.nelements = (int)(sizeof(elements_rpp_tetrahydrofuran) / sizeof(elements_rpp_tetrahydrofuran[0]))
+};
+
+
+static const IdealData ideal_data_vinyl_ethyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.07830642465735, 0}
+			,{0.03892013651731, 1}
+			,{-1.7680037293092e-05, 2}
+			,{2.58585579456788e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_vinyl_ethyl_ether = {
+	.M = 72.107
+	,.T_c = 475.0
+	,.p_c = (40.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.268
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-140300 * 1000 / 72.107), (175.593336407848 * 1000 / 72.107)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_vinyl_ethyl_ether
+};
+
+static const ElementComp elements_rpp_vinyl_ethyl_ether[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_vinyl_ethyl_ether = {
+	"vinyl_ethyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_vinyl_ethyl_ether}
+	,.elements = elements_rpp_vinyl_ethyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_vinyl_ethyl_ether) / sizeof(elements_rpp_vinyl_ethyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_n_butyric_acid = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 88.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.4119975361966, 0}
+			,{0.0497566763819875, 1}
+			,{-2.92261840967439e-05, 2}
+			,{6.65106164835366e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_butyric_acid = {
+	.M = 88.107
+	,.T_c = 628.0
+	,.p_c = (52.7 * 1e5)
+	,.rho_c = (1000 * 88.107 / 290.0)
+	,.T_t = 0
+	,.omega = 0.683
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-476200 / 88.107), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_butyric_acid
+};
+
+static const ElementComp elements_rpp_n_butyric_acid[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_n_butyric_acid = {
+	"n_butyric_acid"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_butyric_acid}
+	,.elements = elements_rpp_n_butyric_acid
+	,.nelements = (int)(sizeof(elements_rpp_n_butyric_acid) / sizeof(elements_rpp_n_butyric_acid[0]))
+};
+
+
+static const IdealData ideal_data_isobutyric_acid = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 88.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.17987187649818, 0}
+			,{0.0561431388327574, 1}
+			,{-4.47413188641512e-05, 2}
+			,{1.62367689426355e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isobutyric_acid = {
+	.M = 88.107
+	,.T_c = 609.0
+	,.p_c = (40.5 * 1e5)
+	,.rho_c = (1000 * 88.107 / 292.0)
+	,.T_t = 0
+	,.omega = 0.623
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-484200 / 88.107), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isobutyric_acid
+};
+
+static const ElementComp elements_rpp_isobutyric_acid[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_isobutyric_acid = {
+	"isobutyric_acid"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isobutyric_acid}
+	,.elements = elements_rpp_isobutyric_acid
+	,.nelements = (int)(sizeof(elements_rpp_isobutyric_acid) / sizeof(elements_rpp_isobutyric_acid[0]))
+};
+
+
+static const IdealData ideal_data_1_4_dioxane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 88.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.44299046116285, 0}
+			,{0.072007063451525, 1}
+			,{-4.91913962780587e-05, 2}
+			,{1.27488704290323e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_4_dioxane = {
+	.M = 88.107
+	,.T_c = 587.0
+	,.p_c = (52.1 * 1e5)
+	,.rho_c = (1000 * 88.107 / 238.0)
+	,.T_t = 0
+	,.omega = 0.281
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-315300 * 1000 / 88.107), (299.490191178937 * 1000 / 88.107)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_4_dioxane
+};
+
+static const ElementComp elements_rpp_1_4_dioxane[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_1_4_dioxane = {
+	"1_4_dioxane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_4_dioxane}
+	,.elements = elements_rpp_1_4_dioxane
+	,.nelements = (int)(sizeof(elements_rpp_1_4_dioxane) / sizeof(elements_rpp_1_4_dioxane[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_acetate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 88.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.870771904775415, 0}
+			,{0.0489749060254902, 1}
+			,{-2.51369237704505e-05, 2}
+			,{3.43978956858797e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_acetate = {
+	.M = 88.107
+	,.T_c = 523.2
+	,.p_c = (38.3 * 1e5)
+	,.rho_c = (1000 * 88.107 / 286.0)
+	,.T_t = 0
+	,.omega = 0.362
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-443200 * 1000 / 88.107), (362.545700150931 * 1000 / 88.107)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_acetate
+};
+
+static const ElementComp elements_rpp_ethyl_acetate[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_ethyl_acetate = {
+	"ethyl_acetate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_acetate}
+	,.elements = elements_rpp_ethyl_acetate
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_acetate) / sizeof(elements_rpp_ethyl_acetate[0]))
+};
+
+
+static const IdealData ideal_data_methyl_propionate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 88.107)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.18895699819234, 0}
+			,{0.0377655218369448, 1}
+			,{-1.12454658973068e-05, 2}
+			,{-2.20098423444615e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_propionate = {
+	.M = 88.107
+	,.T_c = 530.6
+	,.p_c = (40.0 * 1e5)
+	,.rho_c = (1000 * 88.107 / 282.0)
+	,.T_t = 0
+	,.omega = 0.350
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_propionate
+};
+
+static const ElementComp elements_rpp_methyl_propionate[] = {
+	{"C", 4}
+	,{"H", 8}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_methyl_propionate = {
+	"methyl_propionate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_propionate}
+	,.elements = elements_rpp_methyl_propionate
+	,.nelements = (int)(sizeof(elements_rpp_methyl_propionate) / sizeof(elements_rpp_methyl_propionate[0]))
+};
+
+
+static const IdealData ideal_data_1_chlorobutane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 92.569)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.313910866224286, 0}
+			,{0.0540864814333569, 1}
+			,{-3.5360074586184e-05, 2}
+			,{9.7180068930737e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_chlorobutane = {
+	.M = 92.569
+	,.T_c = 542.0
+	,.p_c = (36.8 * 1e5)
+	,.rho_c = (1000 * 92.569 / 312.0)
+	,.T_t = 0
+	,.omega = 0.218
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-147400 / 92.569), (-38810 / 92.569)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_chlorobutane
+};
+
+static const ElementComp elements_rpp_1_chlorobutane[] = {
+	{"C", 4}
+	,{"Cl", 1}
+	,{"H", 9}
+};
+
+const EosData eos_rpp_1_chlorobutane = {
+	"1_chlorobutane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_chlorobutane}
+	,.elements = elements_rpp_1_chlorobutane
+	,.nelements = (int)(sizeof(elements_rpp_1_chlorobutane) / sizeof(elements_rpp_1_chlorobutane[0]))
+};
+
+
+static const IdealData ideal_data_2_chlorobutane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 92.569)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.41253420350548, 0}
+			,{0.0548321700810928, 1}
+			,{-3.58411640363362e-05, 2}
+			,{9.93449714564217e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_chlorobutane = {
+	.M = 92.569
+	,.T_c = 520.6
+	,.p_c = (39.5 * 1e5)
+	,.rho_c = (1000 * 92.569 / 305.0)
+	,.T_t = 0
+	,.omega = 0.300
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-161600 / 92.569), (-53510 / 92.569)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_chlorobutane
+};
+
+static const ElementComp elements_rpp_2_chlorobutane[] = {
+	{"C", 4}
+	,{"Cl", 1}
+	,{"H", 9}
+};
+
+const EosData eos_rpp_2_chlorobutane = {
+	"2_chlorobutane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_chlorobutane}
+	,.elements = elements_rpp_2_chlorobutane
+	,.nelements = (int)(sizeof(elements_rpp_2_chlorobutane) / sizeof(elements_rpp_2_chlorobutane[0]))
+};
+
+
+static const IdealData ideal_data_tert_butyl_chloride = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 92.569)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.4726703847745, 0}
+			,{0.0559507030526966, 1}
+			,{-3.47587127734938e-05, 2}
+			,{9.46543493174381e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_tert_butyl_chloride = {
+	.M = 92.569
+	,.T_c = 507.0
+	,.p_c = (39.5 * 1e5)
+	,.rho_c = (1000 * 92.569 / 295.0)
+	,.T_t = 0
+	,.omega = 0.190
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-183400 / 92.569), (-64140 / 92.569)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_tert_butyl_chloride
+};
+
+static const ElementComp elements_rpp_tert_butyl_chloride[] = {
+	{"C", 4}
+	,{"Cl", 1}
+	,{"H", 9}
+};
+
+const EosData eos_rpp_tert_butyl_chloride = {
+	"tert_butyl_chloride"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_tert_butyl_chloride}
+	,.elements = elements_rpp_tert_butyl_chloride
+	,.nelements = (int)(sizeof(elements_rpp_tert_butyl_chloride) / sizeof(elements_rpp_tert_butyl_chloride[0]))
+};
+
+
+static const IdealData ideal_data_pyrrolidine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 71.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.19763484158524, 0}
+			,{0.0642013871228062, 1}
+			,{-3.89682454623252e-05, 2}
+			,{9.05650889911447e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_pyrrolidine = {
+	.M = 71.123
+	,.T_c = 568.6
+	,.p_c = (56.1 * 1e5)
+	,.rho_c = (1000 * 71.123 / 249.0)
+	,.T_t = 0
+	,.omega = 0.274
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-3600 * 1000 / 71.123), (309.213954133825 * 1000 / 71.123)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_pyrrolidine
+};
+
+static const ElementComp elements_rpp_pyrrolidine[] = {
+	{"C", 4}
+	,{"H", 9}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_pyrrolidine = {
+	"pyrrolidine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_pyrrolidine}
+	,.elements = elements_rpp_pyrrolidine
+	,.nelements = (int)(sizeof(elements_rpp_pyrrolidine) / sizeof(elements_rpp_pyrrolidine[0]))
+};
+
+
+static const IdealData ideal_data_morpholine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 87.122)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-5.14765711662815, 0}
+			,{0.0648027489354964, 1}
+			,{-3.21127207976569e-05, 2}
+			,{5.05143922659771e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_morpholine = {
+	.M = 87.122
+	,.T_c = 618.0
+	,.p_c = (54.7 * 1e5)
+	,.rho_c = (1000 * 87.122 / 253.0)
+	,.T_t = 0
+	,.omega = 0.370
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_morpholine
+};
+
+static const ElementComp elements_rpp_morpholine[] = {
+	{"C", 4}
+	,{"H", 9}
+	,{"N", 1}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_morpholine = {
+	"morpholine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_morpholine}
+	,.elements = elements_rpp_morpholine
+	,.nelements = (int)(sizeof(elements_rpp_morpholine) / sizeof(elements_rpp_morpholine[0]))
+};
+
+
+static const IdealData ideal_data_isobutane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 58.124)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.167178583927877, 0}
+			,{0.0462687778683843, 1}
+			,{-2.22503870695375e-05, 2}
+			,{3.48789851360318e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isobutane = {
+	.M = 58.124
+	,.T_c = 408.2
+	,.p_c = (36.5 * 1e5)
+	,.rho_c = (1000 * 58.124 / 263.0)
+	,.T_t = 0
+	,.omega = 0.183
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-134600 * 1000 / 58.124), (294.458331376824 * 1000 / 58.124)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isobutane
+};
+
+static const ElementComp elements_rpp_isobutane[] = {
+	{"C", 4}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_isobutane = {
+	"isobutane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isobutane}
+	,.elements = elements_rpp_isobutane
+	,.nelements = (int)(sizeof(elements_rpp_isobutane) / sizeof(elements_rpp_isobutane[0]))
+};
+
+
+static const IdealData ideal_data_2_butanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.691566084593735, 0}
+			,{0.0510556178973983, 1}
+			,{-2.80234604713635e-05, 2}
+			,{5.73699169306455e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_butanol = {
+	.M = 74.123
+	,.T_c = 536.1
+	,.p_c = (41.8 * 1e5)
+	,.rho_c = (1000 * 74.123 / 269.0)
+	,.T_t = 0
+	,.omega = 0.577
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-292800 * 1000 / 74.123), (358.737544021466 * 1000 / 74.123)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_butanol
+};
+
+static const ElementComp elements_rpp_2_butanol[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_2_butanol = {
+	"2_butanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_butanol}
+	,.elements = elements_rpp_2_butanol
+	,.nelements = (int)(sizeof(elements_rpp_2_butanol) / sizeof(elements_rpp_2_butanol[0]))
+};
+
+
+static const IdealData ideal_data_isobutaol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.927299915168294, 0}
+			,{0.0563957107940873, 1}
+			,{-3.46384404109557e-05, 2}
+			,{8.69569181150035e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isobutaol = {
+	.M = 74.123
+	,.T_c = 547.8
+	,.p_c = (43.0 * 1e5)
+	,.rho_c = (1000 * 74.123 / 273.0)
+	,.T_t = 0
+	,.omega = 0.592
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-283400 * 1000 / 74.123), (389.259093577058 * 1000 / 74.123)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isobutaol
+};
+
+static const ElementComp elements_rpp_isobutaol[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_isobutaol = {
+	"isobutaol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isobutaol}
+	,.elements = elements_rpp_isobutaol
+	,.nelements = (int)(sizeof(elements_rpp_isobutaol) / sizeof(elements_rpp_isobutaol[0]))
+};
+
+
+static const IdealData ideal_data_tert_butanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-5.84643954297416, 0}
+			,{0.0862593384122829, 1}
+			,{-8.51528326769329e-05, 2}
+			,{3.51195298611079e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_tert_butanol = {
+	.M = 74.123
+	,.T_c = 506.2
+	,.p_c = (39.7 * 1e5)
+	,.rho_c = (1000 * 74.123 / 275.0)
+	,.T_t = 0
+	,.omega = 0.612
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-312800 * 1000 / 74.123), (325.532781318128 * 1000 / 74.123)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_tert_butanol
+};
+
+static const ElementComp elements_rpp_tert_butanol[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_tert_butanol = {
+	"tert_butanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_tert_butanol}
+	,.elements = elements_rpp_tert_butanol
+	,.nelements = (int)(sizeof(elements_rpp_tert_butanol) / sizeof(elements_rpp_tert_butanol[0]))
+};
+
+
+static const IdealData ideal_data_diethyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.57623400556483, 0}
+			,{0.0403994865765279, 1}
+			,{-1.25083257039562e-05, 2}
+			,{-1.12574931335606e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_diethyl_ether = {
+	.M = 74.123
+	,.T_c = 466.7
+	,.p_c = (36.4 * 1e5)
+	,.rho_c = (1000 * 74.123 / 280.0)
+	,.T_t = 0
+	,.omega = 0.281
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-252400 * 1000 / 74.123), (342.302863491531 * 1000 / 74.123)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_diethyl_ether
+};
+
+static const ElementComp elements_rpp_diethyl_ether[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_diethyl_ether = {
+	"diethyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_diethyl_ether}
+	,.elements = elements_rpp_diethyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_diethyl_ether) / sizeof(elements_rpp_diethyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_methyl_propyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.56300404568565, 0}
+			,{0.0407723309003958, 1}
+			,{-1.35907769667986e-05, 2}
+			,{-3.43978956858797e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_propyl_ether = {
+	.M = 74.123
+	,.T_c = 476.3
+	,.p_c = (38.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.271
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-237900 * 1000 / 74.123), (349.34629800436 * 1000 / 74.123)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_propyl_ether
+};
+
+static const ElementComp elements_rpp_methyl_propyl_ether[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methyl_propyl_ether = {
+	"methyl_propyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_propyl_ether}
+	,.elements = elements_rpp_methyl_propyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_methyl_propyl_ether) / sizeof(elements_rpp_methyl_propyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_methyl_isopropyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 74.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.62728506513969, 0}
+			,{0.0444646924303137, 1}
+			,{-1.780030965563e-05, 2}
+			,{1.45529558671029e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_isopropyl_ether = {
+	.M = 74.123
+	,.T_c = 464.5
+	,.p_c = (37.6 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.266
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-252200 * 1000 / 74.123), (338.278043769914 * 1000 / 74.123)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_isopropyl_ether
+};
+
+static const ElementComp elements_rpp_methyl_isopropyl_ether[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methyl_isopropyl_ether = {
+	"methyl_isopropyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_isopropyl_ether}
+	,.elements = elements_rpp_methyl_isopropyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_methyl_isopropyl_ether) / sizeof(elements_rpp_methyl_isopropyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_1_2_dimethoxyethane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 90.123)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.87637824460105, 0}
+			,{0.0429011517173192, 1}
+			,{-1.61164965800975e-05, 2}
+			,{1.01028784531954e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_dimethoxyethane = {
+	.M = 90.123
+	,.T_c = 536.0
+	,.p_c = (38.7 * 1e5)
+	,.rho_c = (1000 * 90.123 / 271.0)
+	,.T_t = 0
+	,.omega = 0.358
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_dimethoxyethane
+};
+
+static const ElementComp elements_rpp_1_2_dimethoxyethane[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_1_2_dimethoxyethane = {
+	"1_2_dimethoxyethane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_dimethoxyethane}
+	,.elements = elements_rpp_1_2_dimethoxyethane
+	,.nelements = (int)(sizeof(elements_rpp_1_2_dimethoxyethane) / sizeof(elements_rpp_1_2_dimethoxyethane[0]))
+};
+
+
+static const IdealData ideal_data_diethyl_sulfide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 90.184)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.63450140689197, 0}
+			,{0.0476158283288103, 1}
+			,{-2.14084805317713e-05, 2}
+			,{3.18721760725808e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_diethyl_sulfide = {
+	.M = 90.184
+	,.T_c = 557.0
+	,.p_c = (39.6 * 1e5)
+	,.rho_c = (1000 * 90.184 / 318.0)
+	,.T_t = 0
+	,.omega = 0.292
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-83530 * 1000 / 90.184), (368.001514673822 * 1000 / 90.184)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_diethyl_sulfide
+};
+
+static const ElementComp elements_rpp_diethyl_sulfide[] = {
+	{"C", 4}
+	,{"H", 10}
+	,{"S", 1}
+};
+
+const EosData eos_rpp_diethyl_sulfide = {
+	"diethyl_sulfide"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_diethyl_sulfide}
+	,.elements = elements_rpp_diethyl_sulfide
+	,.nelements = (int)(sizeof(elements_rpp_diethyl_sulfide) / sizeof(elements_rpp_diethyl_sulfide[0]))
+};
+
+
+static const IdealData ideal_data_n_butyl_amine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 73.139)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.610983601693247, 0}
+			,{0.0538339094720271, 1}
+			,{-2.89856393716678e-05, 2}
+			,{9.1406995528911e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_butyl_amine = {
+	.M = 73.139
+	,.T_c = 531.9
+	,.p_c = (42.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.329
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-92110 * 1000 / 73.139), (362.809276957907 * 1000 / 73.139)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_butyl_amine
+};
+
+static const ElementComp elements_rpp_n_butyl_amine[] = {
+	{"C", 4}
+	,{"H", 11}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_n_butyl_amine = {
+	"n_butyl_amine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_butyl_amine}
+	,.elements = elements_rpp_n_butyl_amine
+	,.nelements = (int)(sizeof(elements_rpp_n_butyl_amine) / sizeof(elements_rpp_n_butyl_amine[0]))
+};
+
+
+static const IdealData ideal_data_isobutyl_amine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 73.139)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.14138472048601, 0}
+			,{0.0532806566043521, 1}
+			,{-2.53774684955266e-05, 2}
+			,{2.80234604713635e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isobutyl_amine = {
+	.M = 73.139
+	,.T_c = 514.3
+	,.p_c = (41.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.368
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isobutyl_amine
+};
+
+static const ElementComp elements_rpp_isobutyl_amine[] = {
+	{"C", 4}
+	,{"H", 11}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_isobutyl_amine = {
+	"isobutyl_amine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isobutyl_amine}
+	,.elements = elements_rpp_isobutyl_amine
+	,.nelements = (int)(sizeof(elements_rpp_isobutyl_amine) / sizeof(elements_rpp_isobutyl_amine[0]))
+};
+
+
+static const IdealData ideal_data_diethyl_amine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 73.139)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.245355619577603, 0}
+			,{0.0532806566043521, 1}
+			,{-2.62193750332929e-05, 2}
+			,{4.38994123263849e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_diethyl_amine = {
+	.M = 73.139
+	,.T_c = 496.5
+	,.p_c = (37.1 * 1e5)
+	,.rho_c = (1000 * 73.139 / 301.0)
+	,.T_t = 0
+	,.omega = 0.291
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-72430 * 1000 / 73.139), (352.009344038236 * 1000 / 73.139)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_diethyl_amine
+};
+
+static const ElementComp elements_rpp_diethyl_amine[] = {
+	{"C", 4}
+	,{"H", 11}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_diethyl_amine = {
+	"diethyl_amine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_diethyl_amine}
+	,.elements = elements_rpp_diethyl_amine
+	,.nelements = (int)(sizeof(elements_rpp_diethyl_amine) / sizeof(elements_rpp_diethyl_amine[0]))
+};
+
+
+static const IdealData ideal_data_pyradine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 79.102)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.78563730538864, 0}
+			,{0.0592702202587465, 1}
+			,{-4.28169610635425e-05, 2}
+			,{1.20272362538041e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_pyradine = {
+	.M = 79.102
+	,.T_c = 620.0
+	,.p_c = (56.3 * 1e5)
+	,.rho_c = (1000 * 79.102 / 254.0)
+	,.T_t = 0
+	,.omega = 0.243
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (140300 * 1000 / 79.102), (283.228678265973 * 1000 / 79.102)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_pyradine
+};
+
+static const ElementComp elements_rpp_pyradine[] = {
+	{"C", 5}
+	,{"H", 5}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_pyradine = {
+	"pyradine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_pyradine}
+	,.elements = elements_rpp_pyradine
+	,.nelements = (int)(sizeof(elements_rpp_pyradine) / sizeof(elements_rpp_pyradine[0]))
+};
+
+
+static const IdealData ideal_data_1_2_pentadiene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 68.119)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.0620049612109, 0}
+			,{0.0466656766647598, 1}
+			,{-2.74220986586733e-05, 2}
+			,{6.31429903324714e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_pentadiene = {
+	.M = 68.119
+	,.T_c = 503.0
+	,.p_c = (40.7 * 1e5)
+	,.rho_c = (1000 * 68.119 / 276.0)
+	,.T_t = 0
+	,.omega = 0.173
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (145700 * 1000 / 68.119), (333.304333389234 * 1000 / 68.119)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_pentadiene
+};
+
+static const ElementComp elements_rpp_1_2_pentadiene[] = {
+	{"C", 5}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_1_2_pentadiene = {
+	"1_2_pentadiene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_pentadiene}
+	,.elements = elements_rpp_1_2_pentadiene
+	,.nelements = (int)(sizeof(elements_rpp_1_2_pentadiene) / sizeof(elements_rpp_1_2_pentadiene[0]))
+};
+
+
+static const IdealData ideal_data_1_3_pentadiene_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 68.119)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.69115880629247, 0}
+			,{0.0338085611094433, 1}
+			,{-8.07027552630254e-06, 2}
+			,{-2.82640051964396e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_3_pentadiene_trans = {
+	.M = 68.119
+	,.T_c = 496.0
+	,.p_c = (39.9 * 1e5)
+	,.rho_c = (1000 * 68.119 / 275.0)
+	,.T_t = 0
+	,.omega = 0.175
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (77870 * 1000 / 68.119), (319.787647157471 * 1000 / 68.119)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_3_pentadiene_trans
+};
+
+static const ElementComp elements_rpp_1_3_pentadiene_trans[] = {
+	{"C", 5}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_1_3_pentadiene_trans = {
+	"1_3_pentadiene_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_3_pentadiene_trans}
+	,.elements = elements_rpp_1_3_pentadiene_trans
+	,.nelements = (int)(sizeof(elements_rpp_1_3_pentadiene_trans) / sizeof(elements_rpp_1_3_pentadiene_trans[0]))
+};
+
+
+static const IdealData ideal_data_1_4_pentadiene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 68.119)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.841906537766286, 0}
+			,{0.0475316376750337, 1}
+			,{-2.85045499215157e-05, 2}
+			,{6.73525230213028e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_4_pentadiene = {
+	.M = 68.119
+	,.T_c = 478.0
+	,.p_c = (37.9 * 1e5)
+	,.rho_c = (1000 * 68.119 / 276.0)
+	,.T_t = 0
+	,.omega = 0.104
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (105500 * 1000 / 68.119), (333.304333389234 * 1000 / 68.119)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_4_pentadiene
+};
+
+static const ElementComp elements_rpp_1_4_pentadiene[] = {
+	{"C", 5}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_1_4_pentadiene = {
+	"1_4_pentadiene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_4_pentadiene}
+	,.elements = elements_rpp_1_4_pentadiene
+	,.nelements = (int)(sizeof(elements_rpp_1_4_pentadiene) / sizeof(elements_rpp_1_4_pentadiene[0]))
+};
+
+
+static const IdealData ideal_data_1_pentyne = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 68.119)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.1733215910624, 0}
+			,{0.0422276264871061, 1}
+			,{-2.29720212447658e-05, 2}
+			,{4.93116686405967e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_pentyne = {
+	.M = 68.119
+	,.T_c = 493.5
+	,.p_c = (40.5 * 1e5)
+	,.rho_c = (1000 * 68.119 / 278.0)
+	,.T_t = 0
+	,.omega = 0.164
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (144400 * 1000 / 68.119), (329.614915311085 * 1000 / 68.119)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_pentyne
+};
+
+static const ElementComp elements_rpp_1_pentyne[] = {
+	{"C", 5}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_1_pentyne = {
+	"1_pentyne"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_pentyne}
+	,.elements = elements_rpp_1_pentyne
+	,.nelements = (int)(sizeof(elements_rpp_1_pentyne) / sizeof(elements_rpp_1_pentyne[0]))
+};
+
+
+static const IdealData ideal_data_2_methyl_1_3_butadiene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 68.119)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.410128756254719, 0}
+			,{0.05518697355058, 1}
+			,{-4.01709690877056e-05, 2}
+			,{1.20272362538041e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methyl_1_3_butadiene = {
+	.M = 68.119
+	,.T_c = 484.0
+	,.p_c = (38.5 * 1e5)
+	,.rho_c = (1000 * 68.119 / 276.0)
+	,.T_t = 0
+	,.omega = 0.164
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (75780 * 1000 / 68.119), (315.460965956733 * 1000 / 68.119)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methyl_1_3_butadiene
+};
+
+static const ElementComp elements_rpp_2_methyl_1_3_butadiene[] = {
+	{"C", 5}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_2_methyl_1_3_butadiene = {
+	"2_methyl_1_3_butadiene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methyl_1_3_butadiene}
+	,.elements = elements_rpp_2_methyl_1_3_butadiene
+	,.nelements = (int)(sizeof(elements_rpp_2_methyl_1_3_butadiene) / sizeof(elements_rpp_2_methyl_1_3_butadiene[0]))
+};
+
+
+static const IdealData ideal_data_3_methyl_1_2_butadiene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 68.119)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.76680100568382, 0}
+			,{0.0432739960411871, 1}
+			,{-2.38139277825321e-05, 2}
+			,{5.12360264412054e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_methyl_1_2_butadiene = {
+	.M = 68.119
+	,.T_c = 496.0
+	,.p_c = (41.1 * 1e5)
+	,.rho_c = (1000 * 68.119 / 267.0)
+	,.T_t = 0
+	,.omega = 0.160
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (129800 * 1000 / 68.119), (319.888267650511 * 1000 / 68.119)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_methyl_1_2_butadiene
+};
+
+static const ElementComp elements_rpp_3_methyl_1_2_butadiene[] = {
+	{"C", 5}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_3_methyl_1_2_butadiene = {
+	"3_methyl_1_2_butadiene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_methyl_1_2_butadiene}
+	,.elements = elements_rpp_3_methyl_1_2_butadiene
+	,.nelements = (int)(sizeof(elements_rpp_3_methyl_1_2_butadiene) / sizeof(elements_rpp_3_methyl_1_2_butadiene[0]))
+};
+
+
+static const IdealData ideal_data_cyclopentanone = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.118)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.88786881354598, 0}
+			,{0.0632031265137404, 1}
+			,{-3.75249771118687e-05, 2}
+			,{8.57541944896231e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cyclopentanone = {
+	.M = 84.118
+	,.T_c = 634.6
+	,.p_c = (51.1 * 1e5)
+	,.rho_c = (1000 * 84.118 / 268.0)
+	,.T_t = 0
+	,.omega = 0.350
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-192800 / 84.118), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cyclopentanone
+};
+
+static const ElementComp elements_rpp_cyclopentanone[] = {
+	{"C", 5}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_cyclopentanone = {
+	"cyclopentanone"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cyclopentanone}
+	,.elements = elements_rpp_cyclopentanone
+	,.nelements = (int)(sizeof(elements_rpp_cyclopentanone) / sizeof(elements_rpp_cyclopentanone[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_acrylate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.118)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.02177841426447, 0}
+			,{0.0443805017765371, 1}
+			,{-1.65975860302496e-05, 2}
+			,{-6.89160637342974e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_acrylate = {
+	.M = 100.118
+	,.T_c = 552.0
+	,.p_c = (37.4 * 1e5)
+	,.rho_c = (1000 * 100.118 / 320.0)
+	,.T_t = 0
+	,.omega = 0.400
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_acrylate
+};
+
+static const ElementComp elements_rpp_ethyl_acrylate[] = {
+	{"C", 5}
+	,{"H", 8}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_ethyl_acrylate = {
+	"ethyl_acrylate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_acrylate}
+	,.elements = elements_rpp_ethyl_acrylate
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_acrylate) / sizeof(elements_rpp_ethyl_acrylate[0]))
+};
+
+
+static const IdealData ideal_data_cyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 70.135)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.44900407928975, 0}
+			,{0.0652597839131409, 1}
+			,{-3.64425258490264e-05, 2}
+			,{7.80567632871885e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cyclopentane = {
+	.M = 70.135
+	,.T_c = 511.7
+	,.p_c = (45.1 * 1e5)
+	,.rho_c = (1000 * 70.135 / 260.0)
+	,.T_t = 0
+	,.omega = 0.196
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-77290 * 1000 / 70.135), (292.853035384873 * 1000 / 70.135)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cyclopentane
+};
+
+static const ElementComp elements_rpp_cyclopentane[] = {
+	{"C", 5}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_cyclopentane = {
+	"cyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cyclopentane}
+	,.elements = elements_rpp_cyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_cyclopentane) / sizeof(elements_rpp_cyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_1_pentene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 70.135)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.0156354071299453, 0}
+			,{0.0520659057427179, 1}
+			,{-2.79031881088255e-05, 2}
+			,{5.62874656678031e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_pentene = {
+	.M = 70.135
+	,.T_c = 464.8
+	,.p_c = (35.3 * 1e5)
+	,.rho_c = (1000 * 70.135 / 300.0)
+	,.T_t = 0
+	,.omega = 0.233
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-20930 * 1000 / 70.135), (345.812954888479 * 1000 / 70.135)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_pentene
+};
+
+static const ElementComp elements_rpp_1_pentene[] = {
+	{"C", 5}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_1_pentene = {
+	"1_pentene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_pentene}
+	,.elements = elements_rpp_1_pentene
+	,.nelements = (int)(sizeof(elements_rpp_1_pentene) / sizeof(elements_rpp_1_pentene[0]))
+};
+
+
+static const IdealData ideal_data_2_pentene_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 70.135)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.7186920606686, 0}
+			,{0.0553373140037526, 1}
+			,{-3.05491800846624e-05, 2}
+			,{6.56687099457703e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_pentene_cis = {
+	.M = 70.135
+	,.T_c = 476.0
+	,.p_c = (36.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.251
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-28090 * 1000 / 70.135), (346.21543686064 * 1000 / 70.135)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_pentene_cis
+};
+
+static const ElementComp elements_rpp_2_pentene_cis[] = {
+	{"C", 5}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_2_pentene_cis = {
+	"2_pentene_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_pentene_cis}
+	,.elements = elements_rpp_2_pentene_cis
+	,.nelements = (int)(sizeof(elements_rpp_2_pentene_cis) / sizeof(elements_rpp_2_pentene_cis[0]))
+};
+
+
+static const IdealData ideal_data_2_pentene_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 70.135)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.23453110694918, 0}
+			,{0.0502979020134087, 1}
+			,{-2.62193750332929e-05, 2}
+			,{5.3040111879276e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_pentene_trans = {
+	.M = 70.135
+	,.T_c = 475.0
+	,.p_c = (36.6 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.259
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-31780 * 1000 / 70.135), (340.312367935603 * 1000 / 70.135)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_pentene_trans
+};
+
+static const ElementComp elements_rpp_2_pentene_trans[] = {
+	{"C", 5}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_2_pentene_trans = {
+	"2_pentene_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_pentene_trans}
+	,.elements = elements_rpp_2_pentene_trans
+	,.nelements = (int)(sizeof(elements_rpp_2_pentene_trans) / sizeof(elements_rpp_2_pentene_trans[0]))
+};
+
+
+static const IdealData ideal_data_2_methyl_1_butene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 70.135)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.27127887202709, 0}
+			,{0.0480728633064549, 1}
+			,{-2.3453110694918e-05, 2}
+			,{3.98101520000915e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methyl_1_butene = {
+	.M = 70.135
+	,.T_c = 465.0
+	,.p_c = (34.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.236
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-36340 * 1000 / 70.135), (339.473863826933 * 1000 / 70.135)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methyl_1_butene
+};
+
+static const ElementComp elements_rpp_2_methyl_1_butene[] = {
+	{"C", 5}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_2_methyl_1_butene = {
+	"2_methyl_1_butene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methyl_1_butene}
+	,.elements = elements_rpp_2_methyl_1_butene
+	,.nelements = (int)(sizeof(elements_rpp_2_methyl_1_butene) / sizeof(elements_rpp_2_methyl_1_butene[0]))
+};
+
+
+static const IdealData ideal_data_2_methyl_2_butene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 70.135)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.41921387794888, 0}
+			,{0.0422035720145985, 1}
+			,{-1.34705046042606e-05, 2}
+			,{-6.98782426346017e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methyl_2_butene = {
+	.M = 70.135
+	,.T_c = 470.0
+	,.p_c = (34.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.244
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-42580 * 1000 / 70.135), (338.501199060875 * 1000 / 70.135)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methyl_2_butene
+};
+
+static const ElementComp elements_rpp_2_methyl_2_butene[] = {
+	{"C", 5}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_2_methyl_2_butene = {
+	"2_methyl_2_butene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methyl_2_butene}
+	,.elements = elements_rpp_2_methyl_2_butene
+	,.nelements = (int)(sizeof(elements_rpp_2_methyl_2_butene) / sizeof(elements_rpp_2_methyl_2_butene[0]))
+};
+
+
+static const IdealData ideal_data_3_methyl_1_butene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 70.135)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.61472116157701, 0}
+			,{0.0467859490272979, 1}
+			,{-2.41747448701462e-05, 2}
+			,{4.82292173777544e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_methyl_1_butene = {
+	.M = 70.135
+	,.T_c = 450.0
+	,.p_c = (35.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.209
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-28970 * 1000 / 70.135), (333.436634244508 * 1000 / 70.135)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_methyl_1_butene
+};
+
+static const ElementComp elements_rpp_3_methyl_1_butene[] = {
+	{"C", 5}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_3_methyl_1_butene = {
+	"3_methyl_1_butene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_methyl_1_butene}
+	,.elements = elements_rpp_3_methyl_1_butene
+	,.nelements = (int)(sizeof(elements_rpp_3_methyl_1_butene) / sizeof(elements_rpp_3_methyl_1_butene[0]))
+};
+
+
+static const IdealData ideal_data_valeraldehyde = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.134)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.7126784425417, 0}
+			,{0.0520659057427179, 1}
+			,{-2.53774684955266e-05, 2}
+			,{3.80060665620209e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_valeraldehyde = {
+	.M = 86.134
+	,.T_c = 554.0
+	,.p_c = (35.4 * 1e5)
+	,.rho_c = (1000 * 86.134 / 333.0)
+	,.T_t = 0
+	,.omega = 0.400
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-228000 * 1000 / 86.134), (382.924634412208 * 1000 / 86.134)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_valeraldehyde
+};
+
+static const ElementComp elements_rpp_valeraldehyde[] = {
+	{"C", 5}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_valeraldehyde = {
+	"valeraldehyde"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_valeraldehyde}
+	,.elements = elements_rpp_valeraldehyde
+	,.nelements = (int)(sizeof(elements_rpp_valeraldehyde) / sizeof(elements_rpp_valeraldehyde[0]))
+};
+
+
+static const IdealData ideal_data_methyl_n_propyl_ketone = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.134)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.138313216918747, 0}
+			,{0.0577547884907672, 1}
+			,{-3.39168062357275e-05, 2}
+			,{8.01013934503352e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_n_propyl_ketone = {
+	.M = 86.134
+	,.T_c = 561.1
+	,.p_c = (36.9 * 1e5)
+	,.rho_c = (1000 * 86.134 / 301.0)
+	,.T_t = 0
+	,.omega = 0.346
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-258800 * 1000 / 86.134), (376.216601542847 * 1000 / 86.134)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_n_propyl_ketone
+};
+
+static const ElementComp elements_rpp_methyl_n_propyl_ketone[] = {
+	{"C", 5}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methyl_n_propyl_ketone = {
+	"methyl_n_propyl_ketone"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_n_propyl_ketone}
+	,.elements = elements_rpp_methyl_n_propyl_ketone
+	,.nelements = (int)(sizeof(elements_rpp_methyl_n_propyl_ketone) / sizeof(elements_rpp_methyl_n_propyl_ketone[0]))
+};
+
+
+static const IdealData ideal_data_methyl_isopropyl_ketone = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.134)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.349992574985699, 0}
+			,{0.0600279361427362, 1}
+			,{-3.5360074586184e-05, 2}
+			,{8.02216658128732e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_isopropyl_ketone = {
+	.M = 86.134
+	,.T_c = 553.4
+	,.p_c = (38.5 * 1e5)
+	,.rho_c = (1000 * 86.134 / 310.0)
+	,.T_t = 0
+	,.omega = 0.331
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_isopropyl_ketone
+};
+
+static const ElementComp elements_rpp_methyl_isopropyl_ketone[] = {
+	{"C", 5}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methyl_isopropyl_ketone = {
+	"methyl_isopropyl_ketone"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_isopropyl_ketone}
+	,.elements = elements_rpp_methyl_isopropyl_ketone
+	,.nelements = (int)(sizeof(elements_rpp_methyl_isopropyl_ketone) / sizeof(elements_rpp_methyl_isopropyl_ketone[0]))
+};
+
+
+static const IdealData ideal_data_diethyl_ketone = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.134)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{3.6093735997666, 0}
+			,{0.0473752836037343, 1}
+			,{-2.29720212447658e-05, 2}
+			,{4.08926032629339e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_diethyl_ketone = {
+	.M = 86.134
+	,.T_c = 561.0
+	,.p_c = (37.3 * 1e5)
+	,.rho_c = (1000 * 86.134 / 336.0)
+	,.T_t = 0
+	,.omega = 0.344
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-258800 * 1000 / 86.134), (370.179371960422 * 1000 / 86.134)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_diethyl_ketone
+};
+
+static const ElementComp elements_rpp_diethyl_ketone[] = {
+	{"C", 5}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_diethyl_ketone = {
+	"diethyl_ketone"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_diethyl_ketone}
+	,.elements = elements_rpp_diethyl_ketone
+	,.nelements = (int)(sizeof(elements_rpp_diethyl_ketone) / sizeof(elements_rpp_diethyl_ketone[0]))
+};
+
+
+static const IdealData ideal_data_isobutyl_formate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.134)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.38740639638011, 0}
+			,{0.0485178710478457, 1}
+			,{-1.73192202054779e-05, 2}
+			,{-8.90015482781502e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isobutyl_formate = {
+	.M = 102.134
+	,.T_c = 554.0
+	,.p_c = (37.3 * 1e5)
+	,.rho_c = (1000 * 102.134 / 352.0)
+	,.T_t = 0
+	,.omega = 0.396
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isobutyl_formate
+};
+
+static const ElementComp elements_rpp_isobutyl_formate[] = {
+	{"C", 5}
+	,{"H", 10}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_isobutyl_formate = {
+	"isobutyl_formate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isobutyl_formate}
+	,.elements = elements_rpp_isobutyl_formate
+	,.nelements = (int)(sizeof(elements_rpp_isobutyl_formate) / sizeof(elements_rpp_isobutyl_formate[0]))
+};
+
+
+static const IdealData ideal_data_n_propyl_acetate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.134)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.85459983033659, 0}
+			,{0.0541345903783722, 1}
+			,{-2.03260292689289e-05, 2}
+			,{-1.73192202054779e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_propyl_acetate = {
+	.M = 102.134
+	,.T_c = 549.4
+	,.p_c = (33.3 * 1e5)
+	,.rho_c = (1000 * 102.134 / 345.0)
+	,.T_t = 0
+	,.omega = 0.391
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-466000 / 102.134), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_propyl_acetate
+};
+
+static const ElementComp elements_rpp_n_propyl_acetate[] = {
+	{"C", 5}
+	,{"H", 10}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_n_propyl_acetate = {
+	"n_propyl_acetate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_propyl_acetate}
+	,.elements = elements_rpp_n_propyl_acetate
+	,.nelements = (int)(sizeof(elements_rpp_n_propyl_acetate) / sizeof(elements_rpp_n_propyl_acetate[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_propionate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.134)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.38740639638011, 0}
+			,{0.0485178710478457, 1}
+			,{-1.73192202054779e-05, 2}
+			,{-8.88812759156122e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_propionate = {
+	.M = 102.134
+	,.T_c = 546.0
+	,.p_c = (33.6 * 1e5)
+	,.rho_c = (1000 * 102.134 / 345.0)
+	,.T_t = 0
+	,.omega = 0.391
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-470200 * 1000 / 102.134), (395.216592319302 * 1000 / 102.134)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_propionate
+};
+
+static const ElementComp elements_rpp_ethyl_propionate[] = {
+	{"C", 5}
+	,{"H", 10}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_ethyl_propionate = {
+	"ethyl_propionate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_propionate}
+	,.elements = elements_rpp_ethyl_propionate
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_propionate) / sizeof(elements_rpp_ethyl_propionate[0]))
+};
+
+
+static const IdealData ideal_data_piperidine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 85.150)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.38285427989382, 0}
+			,{0.0756392888001739, 1}
+			,{-4.04115138127817e-05, 2}
+			,{7.73351291119602e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_piperidine = {
+	.M = 85.150
+	,.T_c = 594.0
+	,.p_c = (47.6 * 1e5)
+	,.rho_c = (1000 * 85.150 / 289.0)
+	,.T_t = 0
+	,.omega = 0.251
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-49030 / 85.150), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_piperidine
+};
+
+static const ElementComp elements_rpp_piperidine[] = {
+	{"C", 5}
+	,{"H", 11}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_piperidine = {
+	"piperidine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_piperidine}
+	,.elements = elements_rpp_piperidine
+	,.nelements = (int)(sizeof(elements_rpp_piperidine) / sizeof(elements_rpp_piperidine[0]))
+};
+
+
+static const IdealData ideal_data_n_pentate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.151)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.436588676013088, 0}
+			,{0.0586087222647873, 1}
+			,{-3.10302695348145e-05, 2}
+			,{6.38646245076997e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_pentate = {
+	.M = 72.151
+	,.T_c = 469.7
+	,.p_c = (33.7 * 1e5)
+	,.rho_c = (1000 * 72.151 / 304.0)
+	,.T_t = 0
+	,.omega = 0.251
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-146500 * 1000 / 72.151), (320.784665436861 * 1000 / 72.151)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_pentate
+};
+
+static const ElementComp elements_rpp_n_pentate[] = {
+	{"C", 5}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_n_pentate = {
+	"n_pentate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_pentate}
+	,.elements = elements_rpp_n_pentate
+	,.nelements = (int)(sizeof(elements_rpp_n_pentate) / sizeof(elements_rpp_n_pentate[0]))
+};
+
+
+static const IdealData ideal_data_2_methyl_butane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.151)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.14499289136215, 0}
+			,{0.0609299908890077, 1}
+			,{-3.28343549728851e-05, 2}
+			,{6.87957913717593e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methyl_butane = {
+	.M = 72.151
+	,.T_c = 460.4
+	,.p_c = (33.9 * 1e5)
+	,.rho_c = (1000 * 72.151 / 306.0)
+	,.T_t = 0
+	,.omega = 0.227
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-154600 * 1000 / 72.151), (343.295582760355 * 1000 / 72.151)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methyl_butane
+};
+
+static const ElementComp elements_rpp_2_methyl_butane[] = {
+	{"C", 5}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_2_methyl_butane = {
+	"2_methyl_butane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methyl_butane}
+	,.elements = elements_rpp_2_methyl_butane
+	,.nelements = (int)(sizeof(elements_rpp_2_methyl_butane) / sizeof(elements_rpp_2_methyl_butane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_dimethylpropane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 72.151)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.9953184945061, 0}
+			,{0.0667752156811203, 1}
+			,{-3.98101520000915e-05, 2}
+			,{9.17678126165251e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_dimethylpropane = {
+	.M = 72.151
+	,.T_c = 433.8
+	,.p_c = (32.0 * 1e5)
+	,.rho_c = (1000 * 72.151 / 303.0)
+	,.T_t = 0
+	,.omega = 0.197
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-166100 * 1000 / 72.151), (306.133080664095 * 1000 / 72.151)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_dimethylpropane
+};
+
+static const ElementComp elements_rpp_2_2_dimethylpropane[] = {
+	{"C", 5}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_2_2_dimethylpropane = {
+	"2_2_dimethylpropane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_dimethylpropane}
+	,.elements = elements_rpp_2_2_dimethylpropane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_dimethylpropane) / sizeof(elements_rpp_2_2_dimethylpropane[0]))
+};
+
+
+static const IdealData ideal_data_1_pentanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 88.150)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.465454043022218, 0}
+			,{0.0606774069004416, 1}
+			,{-3.17519037100428e-05, 2}
+			,{6.15794496194769e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_pentanol = {
+	.M = 88.150
+	,.T_c = 588.2
+	,.p_c = (39.1 * 1e5)
+	,.rho_c = (1000 * 88.150 / 326.0)
+	,.T_t = 0
+	,.omega = 0.579
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-298900 * 1000 / 88.150), (402.141288780815 * 1000 / 88.150)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_pentanol
+};
+
+static const ElementComp elements_rpp_1_pentanol[] = {
+	{"C", 5}
+	,{"H", 12}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_1_pentanol = {
+	"1_pentanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_pentanol}
+	,.elements = elements_rpp_1_pentanol
+	,.nelements = (int)(sizeof(elements_rpp_1_pentanol) / sizeof(elements_rpp_1_pentanol[0]))
+};
+
+
+static const IdealData ideal_data_tert_butyl_methyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 88.150)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.304289077221243, 0}
+			,{0.0617718853995377, 1}
+			,{-3.12708142598906e-05, 2}
+			,{5.17171158913575e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_tert_butyl_methyl_ether = {
+	.M = 88.150
+	,.T_c = 496.4
+	,.p_c = (33.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.269
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-293100 * 1000 / 88.150), (352.501845547543 * 1000 / 88.150)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_tert_butyl_methyl_ether
+};
+
+static const ElementComp elements_rpp_tert_butyl_methyl_ether[] = {
+	{"C", 5}
+	,{"H", 12}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_tert_butyl_methyl_ether = {
+	"tert_butyl_methyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_tert_butyl_methyl_ether}
+	,.elements = elements_rpp_tert_butyl_methyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_tert_butyl_methyl_ether) / sizeof(elements_rpp_tert_butyl_methyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_perflourobenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 186.056)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.36348131288012, 0}
+			,{0.0633474533487861, 1}
+			,{-5.47239249548086e-05, 2}
+			,{1.7559764930554e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_perflourobenzene = {
+	.M = 186.056
+	,.T_c = 516.7
+	,.p_c = (33.0 * 1e5)
+	,.rho_c = (1000 * 186.056 / 335.0)
+	,.T_t = 0
+	,.omega = 0.396
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-957300 / 186.056), (-880000 / 186.056)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_perflourobenzene
+};
+
+static const ElementComp elements_rpp_perflourobenzene[] = {
+	{"C", 6}
+	,{"F", 6}
+};
+
+const EosData eos_rpp_perflourobenzene = {
+	"perflourobenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_perflourobenzene}
+	,.elements = elements_rpp_perflourobenzene
+	,.nelements = (int)(sizeof(elements_rpp_perflourobenzene) / sizeof(elements_rpp_perflourobenzene[0]))
+};
+
+
+static const IdealData ideal_data_o_dichlorobenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 147.004)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.71989478429398, 0}
+			,{0.0662219628134453, 1}
+			,{-5.42428355046564e-05, 2}
+			,{1.71989478429398e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_o_dichlorobenzene = {
+	.M = 147.004
+	,.T_c = 729.0
+	,.p_c = (41.0 * 1e5)
+	,.rho_c = (1000 * 147.004 / 360.0)
+	,.T_t = 0
+	,.omega = 0.272
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (30000 / 147.004), (82730 / 147.004)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_o_dichlorobenzene
+};
+
+static const ElementComp elements_rpp_o_dichlorobenzene[] = {
+	{"C", 6}
+	,{"Cl", 2}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_o_dichlorobenzene = {
+	"o_dichlorobenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_o_dichlorobenzene}
+	,.elements = elements_rpp_o_dichlorobenzene
+	,.nelements = (int)(sizeof(elements_rpp_o_dichlorobenzene) / sizeof(elements_rpp_o_dichlorobenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_4_difluorobenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.094)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.12227053148754, 0}
+			,{0.068819845844267, 1}
+			,{-5.62874656678031e-05, 2}
+			,{1.780030965563e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_4_difluorobenzene = {
+	.M = 114.094
+	,.T_c = 556.0
+	,.p_c = (44.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.299
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-307400 / 114.094), (-253000 / 114.094)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_4_difluorobenzene
+};
+
+static const ElementComp elements_rpp_1_4_difluorobenzene[] = {
+	{"C", 6}
+	,{"F", 2}
+	,{"H", 4}
+};
+
+const EosData eos_rpp_1_4_difluorobenzene = {
+	"1_4_difluorobenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_4_difluorobenzene}
+	,.elements = elements_rpp_1_4_difluorobenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_4_difluorobenzene) / sizeof(elements_rpp_1_4_difluorobenzene[0]))
+};
+
+
+static const IdealData ideal_data_bromobenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 157.010)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.46504676472096, 0}
+			,{0.0643577411941056, 1}
+			,{-4.90711239155206e-05, 2}
+			,{1.45529558671029e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_bromobenzene = {
+	.M = 157.010
+	,.T_c = 670.0
+	,.p_c = (45.2 * 1e5)
+	,.rho_c = (1000 * 157.010 / 324.0)
+	,.T_t = 0
+	,.omega = 0.251
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (105100 / 157.010), (138600 / 157.010)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_bromobenzene
+};
+
+static const ElementComp elements_rpp_bromobenzene[] = {
+	{"Br", 1}
+	,{"C", 6}
+	,{"H", 5}
+};
+
+const EosData eos_rpp_bromobenzene = {
+	"bromobenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_bromobenzene}
+	,.elements = elements_rpp_bromobenzene
+	,.nelements = (int)(sizeof(elements_rpp_bromobenzene) / sizeof(elements_rpp_bromobenzene[0]))
+};
+
+
+static const IdealData ideal_data_chlorobenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.559)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.0760303664142, 0}
+			,{0.0677253673451708, 1}
+			,{-5.43631078671944e-05, 2}
+			,{1.71989478429398e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_chlorobenzene = {
+	.M = 112.559
+	,.T_c = 632.4
+	,.p_c = (45.2 * 1e5)
+	,.rho_c = (1000 * 112.559 / 308.0)
+	,.T_t = 0
+	,.omega = 0.249
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (51870 / 112.559), (99230 / 112.559)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_chlorobenzene
+};
+
+static const ElementComp elements_rpp_chlorobenzene[] = {
+	{"C", 6}
+	,{"Cl", 1}
+	,{"H", 5}
+};
+
+const EosData eos_rpp_chlorobenzene = {
+	"chlorobenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_chlorobenzene}
+	,.elements = elements_rpp_chlorobenzene
+	,.nelements = (int)(sizeof(elements_rpp_chlorobenzene) / sizeof(elements_rpp_chlorobenzene[0]))
+};
+
+
+static const IdealData ideal_data_fluorobenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 96.104)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.65814860109832, 0}
+			,{0.0681824023228153, 1}
+			,{-5.32806566043521e-05, 2}
+			,{1.63570413051735e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_fluorobenzene = {
+	.M = 96.104
+	,.T_c = 560.1
+	,.p_c = (45.5 * 1e5)
+	,.rho_c = (1000 * 96.104 / 269.0)
+	,.T_t = 0
+	,.omega = 0.244
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-116600 / 96.104), (-69080 / 96.104)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_fluorobenzene
+};
+
+static const ElementComp elements_rpp_fluorobenzene[] = {
+	{"C", 6}
+	,{"F", 1}
+	,{"H", 5}
+};
+
+const EosData eos_rpp_fluorobenzene = {
+	"fluorobenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_fluorobenzene}
+	,.elements = elements_rpp_fluorobenzene
+	,.nelements = (int)(sizeof(elements_rpp_fluorobenzene) / sizeof(elements_rpp_fluorobenzene[0]))
+};
+
+
+static const IdealData ideal_data_iodobenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 204.011)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.52037205148845, 0}
+			,{0.0669195425161659, 1}
+			,{-5.42428355046564e-05, 2}
+			,{1.73192202054779e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_iodobenzene = {
+	.M = 204.011
+	,.T_c = 721.0
+	,.p_c = (45.2 * 1e5)
+	,.rho_c = (1000 * 204.011 / 351.0)
+	,.T_t = 0
+	,.omega = 0.249
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (162700 / 204.011), (187900 / 204.011)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_iodobenzene
+};
+
+static const ElementComp elements_rpp_iodobenzene[] = {
+	{"C", 6}
+	,{"H", 5}
+	,{"I", 1}
+};
+
+const EosData eos_rpp_iodobenzene = {
+	"iodobenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_iodobenzene}
+	,.elements = elements_rpp_iodobenzene
+	,.nelements = (int)(sizeof(elements_rpp_iodobenzene) / sizeof(elements_rpp_iodobenzene[0]))
+};
+
+
+static const IdealData ideal_data_phenol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 94.113)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.31056147336338, 0}
+			,{0.0719589545065098, 1}
+			,{-5.80915511058737e-05, 2}
+			,{1.84016714683202e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_phenol = {
+	.M = 94.113
+	,.T_c = 694.2
+	,.p_c = (61.3 * 1e5)
+	,.rho_c = (1000 * 94.113 / 229.0)
+	,.T_t = 0
+	,.omega = 0.438
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-96420 * 1000 / 94.113), (315.617876069093 * 1000 / 94.113)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_phenol
+};
+
+static const ElementComp elements_rpp_phenol[] = {
+	{"C", 6}
+	,{"H", 6}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_phenol = {
+	"phenol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_phenol}
+	,.elements = elements_rpp_phenol
+	,.nelements = (int)(sizeof(elements_rpp_phenol) / sizeof(elements_rpp_phenol[0]))
+};
+
+
+static const IdealData ideal_data_aniline = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 93.129)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.87343613004141, 0}
+			,{0.076793903480539, 1}
+			,{-6.16997219820149e-05, 2}
+			,{1.96043950937006e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_aniline = {
+	.M = 93.129
+	,.T_c = 699.0
+	,.p_c = (53.1 * 1e5)
+	,.rho_c = (1000 * 93.129 / 274.0)
+	,.T_t = 0
+	,.omega = 0.384
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (86920 * 1000 / 93.129), (319.320667197719 * 1000 / 93.129)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_aniline
+};
+
+static const ElementComp elements_rpp_aniline[] = {
+	{"C", 6}
+	,{"H", 7}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_aniline = {
+	"aniline"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_aniline}
+	,.elements = elements_rpp_aniline
+	,.nelements = (int)(sizeof(elements_rpp_aniline) / sizeof(elements_rpp_aniline[0]))
+};
+
+
+static const IdealData ideal_data_2_methylpyridine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 93.129)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.36107586562936, 0}
+			,{0.067160087241242, 1}
+			,{-4.45007741390751e-05, 2}
+			,{1.16183102211747e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methylpyridine = {
+	.M = 93.129
+	,.T_c = 621.0
+	,.p_c = (46.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.299
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (99020 * 1000 / 93.129), (325.022495136676 * 1000 / 93.129)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methylpyridine
+};
+
+static const ElementComp elements_rpp_2_methylpyridine[] = {
+	{"C", 6}
+	,{"H", 7}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_2_methylpyridine = {
+	"2_methylpyridine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methylpyridine}
+	,.elements = elements_rpp_2_methylpyridine
+	,.nelements = (int)(sizeof(elements_rpp_2_methylpyridine) / sizeof(elements_rpp_2_methylpyridine[0]))
+};
+
+
+static const IdealData ideal_data_4_methylpyridine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 93.129)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.09634727903805, 0}
+			,{0.0587169673910715, 1}
+			,{-3.36762615106514e-05, 2}
+			,{6.55484375832322e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_4_methylpyridine = {
+	.M = 93.129
+	,.T_c = 646.0
+	,.p_c = (44.6 * 1e5)
+	,.rho_c = (1000 * 93.129 / 311.0)
+	,.T_t = 0
+	,.omega = 0.301
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (102300 / 93.129), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_4_methylpyridine
+};
+
+static const ElementComp elements_rpp_4_methylpyridine[] = {
+	{"C", 6}
+	,{"H", 7}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_4_methylpyridine = {
+	"4_methylpyridine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_4_methylpyridine}
+	,.elements = elements_rpp_4_methylpyridine
+	,.nelements = (int)(sizeof(elements_rpp_4_methylpyridine) / sizeof(elements_rpp_4_methylpyridine[0]))
+};
+
+
+static const IdealData ideal_data_cyclohexene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 82.146)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-8.2566976882365, 0}
+			,{0.0872215173125872, 1}
+			,{-6.50673481330801e-05, 2}
+			,{1.97246674562387e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cyclohexene = {
+	.M = 82.146
+	,.T_c = 560.5
+	,.p_c = (43.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.210
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-5360 * 1000 / 82.146), (310.768115042764 * 1000 / 82.146)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cyclohexene
+};
+
+static const ElementComp elements_rpp_cyclohexene[] = {
+	{"C", 6}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_cyclohexene = {
+	"cyclohexene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cyclohexene}
+	,.elements = elements_rpp_cyclohexene
+	,.nelements = (int)(sizeof(elements_rpp_cyclohexene) / sizeof(elements_rpp_cyclohexene[0]))
+};
+
+
+static const IdealData ideal_data_cyclohexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.55965465282474, 0}
+			,{0.0735224952195043, 1}
+			,{-3.03086353595863e-05, 2}
+			,{1.58759518550214e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cyclohexane = {
+	.M = 84.162
+	,.T_c = 553.5
+	,.p_c = (40.7 * 1e5)
+	,.rho_c = (1000 * 84.162 / 308.0)
+	,.T_t = 0
+	,.omega = 0.212
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-123200 * 1000 / 84.162), (298.054532953211 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cyclohexane
+};
+
+static const ElementComp elements_rpp_cyclohexane[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_cyclohexane = {
+	"cyclohexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cyclohexane}
+	,.elements = elements_rpp_cyclohexane
+	,.nelements = (int)(sizeof(elements_rpp_cyclohexane) / sizeof(elements_rpp_cyclohexane[0]))
+};
+
+
+static const IdealData ideal_data_methylcyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.02684808678122, 0}
+			,{0.0767457945355238, 1}
+			,{-4.37791399638469e-05, 2}
+			,{9.63381623929707e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methylcyclopentane = {
+	.M = 84.162
+	,.T_c = 532.7
+	,.p_c = (37.8 * 1e5)
+	,.rho_c = (1000 * 84.162 / 319.0)
+	,.T_t = 0
+	,.omega = 0.231
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-106800 * 1000 / 84.162), (339.577256414556 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methylcyclopentane
+};
+
+static const ElementComp elements_rpp_methylcyclopentane[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_methylcyclopentane = {
+	"methylcyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methylcyclopentane}
+	,.elements = elements_rpp_methylcyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_methylcyclopentane) / sizeof(elements_rpp_methylcyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_1_hexene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.163)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.210476634441571, 0}
+			,{0.0638525972714459, 1}
+			,{-3.48789851360318e-05, 2}
+			,{7.27647793355147e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_hexene = {
+	.M = 84.163
+	,.T_c = 504.0
+	,.p_c = (31.7 * 1e5)
+	,.rho_c = (1000 * 84.163 / 350.0)
+	,.T_t = 0
+	,.omega = 0.285
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-41700 * 1000 / 84.163), (384.521076639275 * 1000 / 84.163)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_hexene
+};
+
+static const ElementComp elements_rpp_1_hexene[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_1_hexene = {
+	"1_hexene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_hexene}
+	,.elements = elements_rpp_1_hexene
+	,.nelements = (int)(sizeof(elements_rpp_1_hexene) / sizeof(elements_rpp_1_hexene[0]))
+};
+
+
+static const IdealData ideal_data_2_hexene_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.17987187649818, 0}
+			,{0.0638525972714459, 1}
+			,{-3.27140826103471e-05, 2}
+			,{5.80915511058737e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_hexene_cis = {
+	.M = 84.162
+	,.T_c = 518.0
+	,.p_c = (32.8 * 1e5)
+	,.rho_c = (1000 * 84.162 / 351.0)
+	,.T_t = 0
+	,.omega = 0.256
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-52380 * 1000 / 84.162), (386.332245514003 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_hexene_cis
+};
+
+static const ElementComp elements_rpp_2_hexene_cis[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_2_hexene_cis = {
+	"2_hexene_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_hexene_cis}
+	,.elements = elements_rpp_2_hexene_cis
+	,.nelements = (int)(sizeof(elements_rpp_2_hexene_cis) / sizeof(elements_rpp_2_hexene_cis[0]))
+};
+
+
+static const IdealData ideal_data_2_hexene_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.9593661747523, 0}
+			,{0.0833367200026085, 1}
+			,{-6.75930677463789e-05, 2}
+			,{2.41747448701462e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_hexene_trans = {
+	.M = 84.162
+	,.T_c = 516.0
+	,.p_c = (32.7 * 1e5)
+	,.rho_c = (1000 * 84.162 / 351.0)
+	,.T_t = 0
+	,.omega = 0.242
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-53930 * 1000 / 84.162), (380.429176588965 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_hexene_trans
+};
+
+static const ElementComp elements_rpp_2_hexene_trans[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_2_hexene_trans = {
+	"2_hexene_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_hexene_trans}
+	,.elements = elements_rpp_2_hexene_trans
+	,.nelements = (int)(sizeof(elements_rpp_2_hexene_trans) / sizeof(elements_rpp_2_hexene_trans[0]))
+};
+
+
+static const IdealData ideal_data_3_hexene_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.61351843795163, 0}
+			,{0.0698902698708555, 1}
+			,{-4.04115138127817e-05, 2}
+			,{8.97231824533784e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_hexene_cis = {
+	.M = 84.162
+	,.T_c = 517.0
+	,.p_c = (32.8 * 1e5)
+	,.rho_c = (1000 * 84.162 / 350.0)
+	,.T_t = 0
+	,.omega = 0.225
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-47650 * 1000 / 84.162), (379.422971658561 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_hexene_cis
+};
+
+static const ElementComp elements_rpp_3_hexene_cis[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_3_hexene_cis = {
+	"3_hexene_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_hexene_cis}
+	,.elements = elements_rpp_3_hexene_cis
+	,.nelements = (int)(sizeof(elements_rpp_3_hexene_cis) / sizeof(elements_rpp_3_hexene_cis[0]))
+};
+
+
+static const IdealData ideal_data_3_hexene_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.521982053415097, 0}
+			,{0.0662700717584605, 1}
+			,{-3.94493349124774e-05, 2}
+			,{9.68192518431228e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_hexene_trans = {
+	.M = 84.162
+	,.T_c = 519.9
+	,.p_c = (32.5 * 1e5)
+	,.rho_c = (1000 * 84.162 / 350.0)
+	,.T_t = 0
+	,.omega = 0.227
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-54470 * 1000 / 84.162), (374.660268321315 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_hexene_trans
+};
+
+static const ElementComp elements_rpp_3_hexene_trans[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_3_hexene_trans = {
+	"3_hexene_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_hexene_trans}
+	,.elements = elements_rpp_3_hexene_trans
+	,.nelements = (int)(sizeof(elements_rpp_3_hexene_trans) / sizeof(elements_rpp_3_hexene_trans[0]))
+};
+
+
+static const IdealData ideal_data_2_methyl_2_pentene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.7740173474361, 0}
+			,{0.0681824023228153, 1}
+			,{-4.01709690877056e-05, 2}
+			,{9.57368005802805e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methyl_2_pentene = {
+	.M = 84.162
+	,.T_c = 518.0
+	,.p_c = (32.8 * 1e5)
+	,.rho_c = (1000 * 84.162 / 351.0)
+	,.T_t = 0
+	,.omega = 0.229
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-66530 * 1000 / 84.162), (355.71007546537 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methyl_2_pentene
+};
+
+static const ElementComp elements_rpp_2_methyl_2_pentene[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_2_methyl_2_pentene = {
+	"2_methyl_2_pentene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methyl_2_pentene}
+	,.elements = elements_rpp_2_methyl_2_pentene
+	,.nelements = (int)(sizeof(elements_rpp_2_methyl_2_pentene) / sizeof(elements_rpp_2_methyl_2_pentene[0]))
+};
+
+
+static const IdealData ideal_data_3_methyl_2_pentene_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.7740173474361, 0}
+			,{0.0681824023228153, 1}
+			,{-4.01709690877056e-05, 2}
+			,{9.57368005802805e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_methyl_2_pentene_cis = {
+	.M = 84.162
+	,.T_c = 518.0
+	,.p_c = (32.8 * 1e5)
+	,.rho_c = (1000 * 84.162 / 351.0)
+	,.T_t = 0
+	,.omega = 0.269
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-62220 * 1000 / 84.162), (363.424313265135 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_methyl_2_pentene_cis
+};
+
+static const ElementComp elements_rpp_3_methyl_2_pentene_cis[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_3_methyl_2_pentene_cis = {
+	"3_methyl_2_pentene_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_methyl_2_pentene_cis}
+	,.elements = elements_rpp_3_methyl_2_pentene_cis
+	,.nelements = (int)(sizeof(elements_rpp_3_methyl_2_pentene_cis) / sizeof(elements_rpp_3_methyl_2_pentene_cis[0]))
+};
+
+
+static const IdealData ideal_data_3_methyl_2_pentene_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.7740173474361, 0}
+			,{0.0681824023228153, 1}
+			,{-4.01709690877056e-05, 2}
+			,{9.57368005802805e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_methyl_2_pentene_trans = {
+	.M = 84.162
+	,.T_c = 521.0
+	,.p_c = (32.9 * 1e5)
+	,.rho_c = (1000 * 84.162 / 350.0)
+	,.T_t = 0
+	,.omega = 0.207
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-63140 * 1000 / 84.162), (366.811869864162 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_methyl_2_pentene_trans
+};
+
+static const ElementComp elements_rpp_3_methyl_2_pentene_trans[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_3_methyl_2_pentene_trans = {
+	"3_methyl_2_pentene_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_methyl_2_pentene_trans}
+	,.elements = elements_rpp_3_methyl_2_pentene_trans
+	,.nelements = (int)(sizeof(elements_rpp_3_methyl_2_pentene_trans) / sizeof(elements_rpp_3_methyl_2_pentene_trans[0]))
+};
+
+
+static const IdealData ideal_data_4_methyl_2_pentene_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.202057569063909, 0}
+			,{0.0646584221004507, 1}
+			,{-3.65627982115644e-05, 2}
+			,{8.11838447131775e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_4_methyl_2_pentene_cis = {
+	.M = 84.162
+	,.T_c = 490.0
+	,.p_c = (30.4 * 1e5)
+	,.rho_c = (1000 * 84.162 / 360.0)
+	,.T_t = 0
+	,.omega = 0.290
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-57480 * 1000 / 84.162), (349.40452456817 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_4_methyl_2_pentene_cis
+};
+
+static const ElementComp elements_rpp_4_methyl_2_pentene_cis[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_4_methyl_2_pentene_cis = {
+	"4_methyl_2_pentene_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_4_methyl_2_pentene_cis}
+	,.elements = elements_rpp_4_methyl_2_pentene_cis
+	,.nelements = (int)(sizeof(elements_rpp_4_methyl_2_pentene_cis) / sizeof(elements_rpp_4_methyl_2_pentene_cis[0]))
+};
+
+
+static const IdealData ideal_data_4_methyl_2_pentene_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.51903993885546, 0}
+			,{0.0619883756521062, 1}
+			,{-3.62019811239503e-05, 2}
+			,{8.81596417403839e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_4_methyl_2_pentene_trans = {
+	.M = 84.162
+	,.T_c = 493.0
+	,.p_c = (30.4 * 1e5)
+	,.rho_c = (1000 * 84.162 / 360.0)
+	,.T_t = 0
+	,.omega = 0.290
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-61500 * 1000 / 84.162), (344.37349991615 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_4_methyl_2_pentene_trans
+};
+
+static const ElementComp elements_rpp_4_methyl_2_pentene_trans[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_4_methyl_2_pentene_trans = {
+	"4_methyl_2_pentene_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_4_methyl_2_pentene_trans}
+	,.elements = elements_rpp_4_methyl_2_pentene_trans
+	,.nelements = (int)(sizeof(elements_rpp_4_methyl_2_pentene_trans) / sizeof(elements_rpp_4_methyl_2_pentene_trans[0]))
+};
+
+
+static const IdealData ideal_data_2_3_dimethyl_1_butene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.845514708642427, 0}
+			,{0.0671721144774958, 1}
+			,{-4.45007741390751e-05, 2}
+			,{1.27488704290323e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_3_dimethyl_1_butene = {
+	.M = 84.162
+	,.T_c = 501.0
+	,.p_c = (32.4 * 1e5)
+	,.rho_c = (1000 * 84.162 / 343.0)
+	,.T_t = 0
+	,.omega = 0.221
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-66360 * 1000 / 84.162), (330.018309575717 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_3_dimethyl_1_butene
+};
+
+static const ElementComp elements_rpp_2_3_dimethyl_1_butene[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_2_3_dimethyl_1_butene = {
+	"2_3_dimethyl_1_butene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_3_dimethyl_1_butene}
+	,.elements = elements_rpp_2_3_dimethyl_1_butene
+	,.nelements = (int)(sizeof(elements_rpp_2_3_dimethyl_1_butene) / sizeof(elements_rpp_2_3_dimethyl_1_butene[0]))
+};
+
+
+static const IdealData ideal_data_2_3_dimethyl_2_butene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.275423710212113, 0}
+			,{0.0580554693971123, 1}
+			,{-2.6459919758369e-05, 2}
+			,{3.65627982115644e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_3_dimethyl_2_butene = {
+	.M = 84.162
+	,.T_c = 524.0
+	,.p_c = (33.6 * 1e5)
+	,.rho_c = (1000 * 84.162 / 351.0)
+	,.T_t = 0
+	,.omega = 0.239
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-69840 * 1000 / 84.162), (329.012104645313 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_3_dimethyl_2_butene
+};
+
+static const ElementComp elements_rpp_2_3_dimethyl_2_butene[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_2_3_dimethyl_2_butene = {
+	"2_3_dimethyl_2_butene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_3_dimethyl_2_butene}
+	,.elements = elements_rpp_2_3_dimethyl_2_butene
+	,.nelements = (int)(sizeof(elements_rpp_2_3_dimethyl_2_butene) / sizeof(elements_rpp_2_3_dimethyl_2_butene[0]))
+};
+
+
+static const IdealData ideal_data_3_3_dimethyl_1_butene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 84.162)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.51062087347779, 0}
+			,{0.0659693908521154, 1}
+			,{-3.51195298611079e-05, 2}
+			,{6.26619008823193e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_3_dimethyl_1_butene = {
+	.M = 84.162
+	,.T_c = 490.0
+	,.p_c = (32.5 * 1e5)
+	,.rho_c = (1000 * 84.162 / 340.0)
+	,.T_t = 0
+	,.omega = 0.121
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-61550 * 1000 / 84.162), (281.988794231092 * 1000 / 84.162)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_3_dimethyl_1_butene
+};
+
+static const ElementComp elements_rpp_3_3_dimethyl_1_butene[] = {
+	{"C", 6}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_3_3_dimethyl_1_butene = {
+	"3_3_dimethyl_1_butene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_3_dimethyl_1_butene}
+	,.elements = elements_rpp_3_3_dimethyl_1_butene
+	,.nelements = (int)(sizeof(elements_rpp_3_3_dimethyl_1_butene) / sizeof(elements_rpp_3_3_dimethyl_1_butene[0]))
+};
+
+
+static const IdealData ideal_data_cyclohexanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.160)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.67872429173741, 0}
+			,{0.0867644823349426, 1}
+			,{-4.91913962780587e-05, 2}
+			,{9.91044267313456e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cyclohexanol = {
+	.M = 100.160
+	,.T_c = 625.0
+	,.p_c = (37.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.528
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-294800 * 1000 / 100.160), (327.384894348482 * 1000 / 100.160)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cyclohexanol
+};
+
+static const ElementComp elements_rpp_cyclohexanol[] = {
+	{"C", 6}
+	,{"H", 12}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_cyclohexanol = {
+	"cyclohexanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cyclohexanol}
+	,.elements = elements_rpp_cyclohexanol
+	,.nelements = (int)(sizeof(elements_rpp_cyclohexanol) / sizeof(elements_rpp_cyclohexanol[0]))
+};
+
+
+static const IdealData ideal_data_methyl_isobutyl_ketone = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.160)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.467859490272979, 0}
+			,{0.0680260482515159, 1}
+			,{-3.99304243626295e-05, 2}
+			,{9.89841543688076e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_isobutyl_ketone = {
+	.M = 100.160
+	,.T_c = 571.0
+	,.p_c = (32.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.385
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-284000 / 100.160), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_isobutyl_ketone
+};
+
+static const ElementComp elements_rpp_methyl_isobutyl_ketone[] = {
+	{"C", 6}
+	,{"H", 12}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methyl_isobutyl_ketone = {
+	"methyl_isobutyl_ketone"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_isobutyl_ketone}
+	,.elements = elements_rpp_methyl_isobutyl_ketone
+	,.nelements = (int)(sizeof(elements_rpp_methyl_isobutyl_ketone) / sizeof(elements_rpp_methyl_isobutyl_ketone[0]))
+};
+
+
+static const IdealData ideal_data_n_butyl_acetate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 116.160)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.63810957776812, 0}
+			,{0.0660174997971306, 1}
+			,{-2.74220986586733e-05, 2}
+			,{9.51354387675903e-11, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_butyl_acetate = {
+	.M = 116.160
+	,.T_c = 579.0
+	,.p_c = (31.4 * 1e5)
+	,.rho_c = (1000 * 116.160 / 400.0)
+	,.T_t = 0
+	,.omega = 0.417
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-486800 / 116.160), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_butyl_acetate
+};
+
+static const ElementComp elements_rpp_n_butyl_acetate[] = {
+	{"C", 6}
+	,{"H", 12}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_n_butyl_acetate = {
+	"n_butyl_acetate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_butyl_acetate}
+	,.elements = elements_rpp_n_butyl_acetate
+	,.nelements = (int)(sizeof(elements_rpp_n_butyl_acetate) / sizeof(elements_rpp_n_butyl_acetate[0]))
+};
+
+
+static const IdealData ideal_data_isobutyl_acetate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 116.160)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.879190970153078, 0}
+			,{0.0690363360968354, 1}
+			,{-3.10302695348145e-05, 2}
+			,{1.32299598791845e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isobutyl_acetate = {
+	.M = 116.160
+	,.T_c = 564.0
+	,.p_c = (30.2 * 1e5)
+	,.rho_c = (1000 * 116.160 / 414.0)
+	,.T_t = 0
+	,.omega = 0.455
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-495500 / 116.160), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isobutyl_acetate
+};
+
+static const ElementComp elements_rpp_isobutyl_acetate[] = {
+	{"C", 6}
+	,{"H", 12}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_isobutyl_acetate = {
+	"isobutyl_acetate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isobutyl_acetate}
+	,.elements = elements_rpp_isobutyl_acetate
+	,.nelements = (int)(sizeof(elements_rpp_isobutyl_acetate) / sizeof(elements_rpp_isobutyl_acetate[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_butyrate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 116.160)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.58705851819326, 0}
+			,{0.0592702202587465, 1}
+			,{-2.33328383323799e-05, 2}
+			,{4.28169610635425e-10, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_butyrate = {
+	.M = 116.160
+	,.T_c = 569.0
+	,.p_c = (29.6 * 1e5)
+	,.rho_c = (1000 * 116.160 / 421.0)
+	,.T_t = 0
+	,.omega = 0.461
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_butyrate
+};
+
+static const ElementComp elements_rpp_ethyl_butyrate[] = {
+	{"C", 6}
+	,{"H", 12}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_ethyl_butyrate = {
+	"ethyl_butyrate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_butyrate}
+	,.elements = elements_rpp_ethyl_butyrate
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_butyrate) / sizeof(elements_rpp_ethyl_butyrate[0]))
+};
+
+
+static const IdealData ideal_data_2_methyl_pentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.178)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.27127887202709, 0}
+			,{0.0743764289935244, 1}
+			,{-4.29372334260806e-05, 2}
+			,{9.7300341293275e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methyl_pentane = {
+	.M = 86.178
+	,.T_c = 497.5
+	,.p_c = (30.1 * 1e5)
+	,.rho_c = (1000 * 86.178 / 367.0)
+	,.T_t = 0
+	,.omega = 0.278
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-174400 * 1000 / 86.178), (380.326696293812 * 1000 / 86.178)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methyl_pentane
+};
+
+static const ElementComp elements_rpp_2_methyl_pentane[] = {
+	{"C", 6}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_2_methyl_pentane = {
+	"2_methyl_pentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methyl_pentane}
+	,.elements = elements_rpp_2_methyl_pentane
+	,.nelements = (int)(sizeof(elements_rpp_2_methyl_pentane) / sizeof(elements_rpp_2_methyl_pentane[0]))
+};
+
+
+static const IdealData ideal_data_3_methyl_pentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.178)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.287450946465918, 0}
+			,{0.0684349742841452, 1}
+			,{-3.45181680484177e-05, 2}
+			,{6.04969983566345e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_methyl_pentane = {
+	.M = 86.178
+	,.T_c = 504.5
+	,.p_c = (31.2 * 1e5)
+	,.rho_c = (1000 * 86.178 / 367.0)
+	,.T_t = 0
+	,.omega = 0.272
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-171700 * 1000 / 86.178), (379.722973335569 * 1000 / 86.178)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_methyl_pentane
+};
+
+static const ElementComp elements_rpp_3_methyl_pentane[] = {
+	{"C", 6}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_3_methyl_pentane = {
+	"3_methyl_pentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_methyl_pentane}
+	,.elements = elements_rpp_3_methyl_pentane
+	,.nelements = (int)(sizeof(elements_rpp_3_methyl_pentane) / sizeof(elements_rpp_3_methyl_pentane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_dimethyl_butane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.178)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.00012938900762, 0}
+			,{0.0756873977451891, 1}
+			,{-4.18547821632382e-05, 2}
+			,{8.23865683385579e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_dimethyl_butane = {
+	.M = 86.178
+	,.T_c = 488.8
+	,.p_c = (30.8 * 1e5)
+	,.rho_c = (1000 * 86.178 / 359.0)
+	,.T_t = 0
+	,.omega = 0.232
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-185700 * 1000 / 86.178), (357.888326345799 * 1000 / 86.178)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_dimethyl_butane
+};
+
+static const ElementComp elements_rpp_2_2_dimethyl_butane[] = {
+	{"C", 6}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_2_2_dimethyl_butane = {
+	"2_2_dimethyl_butane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_dimethyl_butane}
+	,.elements = elements_rpp_2_2_dimethyl_butane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_dimethyl_butane) / sizeof(elements_rpp_2_2_dimethyl_butane[0]))
+};
+
+
+static const IdealData ideal_data_2_3_dimethyl_butane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 86.178)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.75717921668078, 0}
+			,{0.0739675029608951, 1}
+			,{-4.06520585378578e-05, 2}
+			,{8.20257512509438e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_3_dimethyl_butane = {
+	.M = 86.178
+	,.T_c = 500.0
+	,.p_c = (31.3 * 1e5)
+	,.rho_c = (1000 * 86.178 / 358.0)
+	,.T_t = 0
+	,.omega = 0.247
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-177900 * 1000 / 86.178), (365.501943652524 * 1000 / 86.178)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_3_dimethyl_butane
+};
+
+static const ElementComp elements_rpp_2_3_dimethyl_butane[] = {
+	{"C", 6}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_2_3_dimethyl_butane = {
+	"2_3_dimethyl_butane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_3_dimethyl_butane}
+	,.elements = elements_rpp_2_3_dimethyl_butane
+	,.nelements = (int)(sizeof(elements_rpp_2_3_dimethyl_butane) / sizeof(elements_rpp_2_3_dimethyl_butane[0]))
+};
+
+
+static const IdealData ideal_data_1_hexanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.177)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.578510063807976, 0}
+			,{0.0708524487711598, 1}
+			,{-3.62019811239503e-05, 2}
+			,{6.53078928581562e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_hexanol = {
+	.M = 102.177
+	,.T_c = 611.0
+	,.p_c = (40.5 * 1e5)
+	,.rho_c = (1000 * 102.177 / 381.0)
+	,.T_t = 0
+	,.omega = 0.560
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-317800 * 1000 / 102.177), (440.178607244675 * 1000 / 102.177)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_hexanol
+};
+
+static const ElementComp elements_rpp_1_hexanol[] = {
+	{"C", 6}
+	,{"H", 14}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_1_hexanol = {
+	"1_hexanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_hexanol}
+	,.elements = elements_rpp_1_hexanol
+	,.nelements = (int)(sizeof(elements_rpp_1_hexanol) / sizeof(elements_rpp_1_hexanol[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_butyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.177)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.8420359267739, 0}
+			,{0.0645501769741665, 1}
+			,{3.04289077221243e-05, 2}
+			,{5.0033302815825e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_butyl_ether = {
+	.M = 102.177
+	,.T_c = 531.0
+	,.p_c = (30.4 * 1e5)
+	,.rho_c = (1000 * 102.177 / 390.0)
+	,.T_t = 0
+	,.omega = 0.400
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_butyl_ether
+};
+
+static const ElementComp elements_rpp_ethyl_butyl_ether[] = {
+	{"C", 6}
+	,{"H", 14}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_ethyl_butyl_ether = {
+	"ethyl_butyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_butyl_ether}
+	,.elements = elements_rpp_ethyl_butyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_butyl_ether) / sizeof(elements_rpp_ethyl_butyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_dipropyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.177)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.23947139045832, 0}
+			,{0.0641653054140448, 1}
+			,{-2.75423710212113e-05, 2}
+			,{2.9346456459282e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dipropyl_ether = {
+	.M = 102.177
+	,.T_c = 530.6
+	,.p_c = (30.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.369
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-293100 * 1000 / 102.177), (422.0669184974 * 1000 / 102.177)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dipropyl_ether
+};
+
+static const ElementComp elements_rpp_dipropyl_ether[] = {
+	{"C", 6}
+	,{"H", 14}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_dipropyl_ether = {
+	"dipropyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dipropyl_ether}
+	,.elements = elements_rpp_dipropyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_dipropyl_ether) / sizeof(elements_rpp_dipropyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_diisopropyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 102.177)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.903245442660686, 0}
+			,{0.0660174997971306, 1}
+			,{-3.64425258490264e-05, 2}
+			,{7.03593320847539e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_diisopropyl_ether = {
+	.M = 102.177
+	,.T_c = 500.3
+	,.p_c = (28.8 * 1e5)
+	,.rho_c = (1000 * 102.177 / 386.0)
+	,.T_t = 0
+	,.omega = 0.331
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-319000 * 1000 / 102.177), (390.203762367936 * 1000 / 102.177)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_diisopropyl_ether
+};
+
+static const ElementComp elements_rpp_diisopropyl_ether[] = {
+	{"C", 6}
+	,{"H", 14}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_diisopropyl_ether = {
+	"diisopropyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_diisopropyl_ether}
+	,.elements = elements_rpp_diisopropyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_diisopropyl_ether) / sizeof(elements_rpp_diisopropyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_dipropylamine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 101.193)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.776959461995744, 0}
+			,{0.0756873977451891, 1}
+			,{-4.07723309003958e-05, 2}
+			,{8.50325603143948e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dipropylamine = {
+	.M = 101.193
+	,.T_c = 555.8
+	,.p_c = (29.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.471
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dipropylamine
+};
+
+static const ElementComp elements_rpp_dipropylamine[] = {
+	{"C", 6}
+	,{"H", 15}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_dipropylamine = {
+	"dipropylamine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dipropylamine}
+	,.elements = elements_rpp_dipropylamine
+	,.nelements = (int)(sizeof(elements_rpp_dipropylamine) / sizeof(elements_rpp_dipropylamine[0]))
+};
+
+
+static const IdealData ideal_data_triethylamine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 101.193)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.21661964157609, 0}
+			,{0.0860548753959682, 1}
+			,{-5.27995671541999e-05, 2}
+			,{1.31096875166464e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_triethylamine = {
+	.M = 101.193
+	,.T_c = 535.0
+	,.p_c = (30.3 * 1e5)
+	,.rho_c = (1000 * 101.193 / 389.0)
+	,.T_t = 0
+	,.omega = 0.320
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-99650 * 1000 / 101.193), (405.008347895355 * 1000 / 101.193)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_triethylamine
+};
+
+static const ElementComp elements_rpp_triethylamine[] = {
+	{"C", 6}
+	,{"H", 15}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_triethylamine = {
+	"triethylamine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_triethylamine}
+	,.elements = elements_rpp_triethylamine
+	,.nelements = (int)(sizeof(elements_rpp_triethylamine) / sizeof(elements_rpp_triethylamine[0]))
+};
+
+
+static const IdealData ideal_data_benzonitrile = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 103.124)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.13309504411596, 0}
+			,{0.068940118206805, 1}
+			,{-5.32806566043521e-05, 2}
+			,{1.62367689426355e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_benzonitrile = {
+	.M = 103.124
+	,.T_c = 699.4
+	,.p_c = (42.2 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.362
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (219000 * 1000 / 103.124), (321.540809743418 * 1000 / 103.124)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_benzonitrile
+};
+
+static const ElementComp elements_rpp_benzonitrile[] = {
+	{"C", 7}
+	,{"H", 5}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_benzonitrile = {
+	"benzonitrile"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_benzonitrile}
+	,.elements = elements_rpp_benzonitrile
+	,.nelements = (int)(sizeof(elements_rpp_benzonitrile) / sizeof(elements_rpp_benzonitrile[0]))
+};
+
+
+static const IdealData ideal_data_benzaldehyde = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 106.124)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.46010648121182, 0}
+			,{0.059667119055122, 1}
+			,{-3.42776233233416e-05, 2}
+			,{6.21808114321671e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_benzaldehyde = {
+	.M = 106.124
+	,.T_c = 694.8
+	,.p_c = (45.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.316
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-36800 * 1000 / 106.124), (335.847227066913 * 1000 / 106.124)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_benzaldehyde
+};
+
+static const ElementComp elements_rpp_benzaldehyde[] = {
+	{"C", 7}
+	,{"H", 6}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_benzaldehyde = {
+	"benzaldehyde"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_benzaldehyde}
+	,.elements = elements_rpp_benzaldehyde
+	,.nelements = (int)(sizeof(elements_rpp_benzaldehyde) / sizeof(elements_rpp_benzaldehyde[0]))
+};
+
+
+static const IdealData ideal_data_benzoic_acid = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 122.124)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.16876947457611, 0}
+			,{0.0756873977451891, 1}
+			,{-5.09954817161293e-05, 2}
+			,{1.27488704290323e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_benzoic_acid = {
+	.M = 122.124
+	,.T_c = 752.0
+	,.p_c = (45.6 * 1e5)
+	,.rho_c = (1000 * 122.124 / 341.0)
+	,.T_t = 0
+	,.omega = 0.620
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-290400 * 1000 / 122.124), (369.269488512494 * 1000 / 122.124)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_benzoic_acid
+};
+
+static const ElementComp elements_rpp_benzoic_acid[] = {
+	{"C", 7}
+	,{"H", 6}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_benzoic_acid = {
+	"benzoic_acid"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_benzoic_acid}
+	,.elements = elements_rpp_benzoic_acid
+	,.nelements = (int)(sizeof(elements_rpp_benzoic_acid) / sizeof(elements_rpp_benzoic_acid[0]))
+};
+
+
+static const IdealData ideal_data_o_cresol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 108.140)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.88239186272796, 0}
+			,{0.0842507899578976, 1}
+			,{-7.12012386225202e-05, 2}
+			,{2.6580192120907e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_o_cresol = {
+	.M = 108.140
+	,.T_c = 697.6
+	,.p_c = (50.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.433
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-128700 * 1000 / 108.140), (343.995627201073 * 1000 / 108.140)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_o_cresol
+};
+
+static const ElementComp elements_rpp_o_cresol[] = {
+	{"C", 7}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_o_cresol = {
+	"o_cresol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_o_cresol}
+	,.elements = elements_rpp_o_cresol
+	,.nelements = (int)(sizeof(elements_rpp_o_cresol) / sizeof(elements_rpp_o_cresol[0]))
+};
+
+
+static const IdealData ideal_data_m_cresol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 108.140)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-5.41345903783722, 0}
+			,{0.0873658441476328, 1}
+			,{-7.25242346104386e-05, 2}
+			,{2.50166514079125e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_m_cresol = {
+	.M = 108.140
+	,.T_c = 705.8
+	,.p_c = (45.6 * 1e5)
+	,.rho_c = (1000 * 108.140 / 309.0)
+	,.T_t = 0
+	,.omega = 0.454
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-132400 * 1000 / 108.140), (356.975670803287 * 1000 / 108.140)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_m_cresol
+};
+
+static const ElementComp elements_rpp_m_cresol[] = {
+	{"C", 7}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_m_cresol = {
+	"m_cresol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_m_cresol}
+	,.elements = elements_rpp_m_cresol
+	,.nelements = (int)(sizeof(elements_rpp_m_cresol) / sizeof(elements_rpp_m_cresol[0]))
+};
+
+
+static const IdealData ideal_data_p_cresol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 108.140)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.8866660899206, 0}
+			,{0.0848521517705878, 1}
+			,{-6.92768808219115e-05, 2}
+			,{2.3693655419994e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_p_cresol = {
+	.M = 108.140
+	,.T_c = 704.6
+	,.p_c = (51.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.505
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-125500 * 1000 / 108.140), (347.685045279222 * 1000 / 108.140)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_p_cresol
+};
+
+static const ElementComp elements_rpp_p_cresol[] = {
+	{"C", 7}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_p_cresol = {
+	"p_cresol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_p_cresol}
+	,.elements = elements_rpp_p_cresol
+	,.nelements = (int)(sizeof(elements_rpp_p_cresol) / sizeof(elements_rpp_p_cresol[0]))
+};
+
+
+static const IdealData ideal_data_m_toluidine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 107.156)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.92315507698327, 0}
+			,{0.068326729157861, 1}
+			,{-3.64425258490264e-05, 2}
+			,{5.58063762176509e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_m_toluidine = {
+	.M = 107.156
+	,.T_c = 709.0
+	,.p_c = (41.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.410
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_m_toluidine
+};
+
+static const ElementComp elements_rpp_m_toluidine[] = {
+	{"C", 7}
+	,{"H", 9}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_m_toluidine = {
+	"m_toluidine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_m_toluidine}
+	,.elements = elements_rpp_m_toluidine
+	,.nelements = (int)(sizeof(elements_rpp_m_toluidine) / sizeof(elements_rpp_m_toluidine[0]))
+};
+
+
+static const IdealData ideal_data_cycloheptane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.189)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-9.16355130177333, 0}
+			,{0.0946182676086767, 1}
+			,{5.05143922659771e-05, 2}
+			,{9.09259060787588e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cycloheptane = {
+	.M = 98.189
+	,.T_c = 604.2
+	,.p_c = (38.1 * 1e5)
+	,.rho_c = (1000 * 98.189 / 353.0)
+	,.T_t = 0
+	,.omega = 0.237
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-119400 * 1000 / 98.189), (342.229701492537 * 1000 / 98.189)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cycloheptane
+};
+
+static const ElementComp elements_rpp_cycloheptane[] = {
+	{"C", 7}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_cycloheptane = {
+	"cycloheptane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cycloheptane}
+	,.elements = elements_rpp_cycloheptane
+	,.nelements = (int)(sizeof(elements_rpp_cycloheptane) / sizeof(elements_rpp_cycloheptane[0]))
+};
+
+
+static const IdealData ideal_data_1_1_dimethylcyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.189)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.96256706732718, 0}
+			,{0.0922489020666773, 1}
+			,{-5.41225631421184e-05, 2}
+			,{1.21475086163421e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_1_dimethylcyclopentane = {
+	.M = 98.189
+	,.T_c = 547.0
+	,.p_c = (34.4 * 1e5)
+	,.rho_c = (1000 * 98.189 / 360.0)
+	,.T_t = 0
+	,.omega = 0.273
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-138400 * 1000 / 98.189), (358.966243501593 * 1000 / 98.189)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_1_dimethylcyclopentane
+};
+
+static const ElementComp elements_rpp_1_1_dimethylcyclopentane[] = {
+	{"C", 7}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_1_1_dimethylcyclopentane = {
+	"1_1_dimethylcyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_1_dimethylcyclopentane}
+	,.elements = elements_rpp_1_1_dimethylcyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_1_1_dimethylcyclopentane) / sizeof(elements_rpp_1_1_dimethylcyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_1_2_dimethylcyclopentane_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.189)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.69195425161659, 0}
+			,{0.0915994313089719, 1}
+			,{-5.38820184170423e-05, 2}
+			,{1.21475086163421e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_dimethylcyclopentane_cis = {
+	.M = 98.189
+	,.T_c = 564.8
+	,.p_c = (34.4 * 1e5)
+	,.rho_c = (1000 * 98.189 / 368.0)
+	,.T_t = 0
+	,.omega = 0.269
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (129600 * 1000 / 98.189), (1235.37073788362 * 1000 / 98.189)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_dimethylcyclopentane_cis
+};
+
+static const ElementComp elements_rpp_1_2_dimethylcyclopentane_cis[] = {
+	{"C", 7}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_1_2_dimethylcyclopentane_cis = {
+	"1_2_dimethylcyclopentane_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_dimethylcyclopentane_cis}
+	,.elements = elements_rpp_1_2_dimethylcyclopentane_cis
+	,.nelements = (int)(sizeof(elements_rpp_1_2_dimethylcyclopentane_cis) / sizeof(elements_rpp_1_2_dimethylcyclopentane_cis[0]))
+};
+
+
+static const IdealData ideal_data_1_2_dimethylcyclopentane_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.189)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{6.55724920557398, 0}
+			,{0.0912987504026268, 1}
+			,{-5.38820184170423e-05, 2}
+			,{1.22677809788802e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_dimethylcyclopentane_trans = {
+	.M = 98.189
+	,.T_c = 553.2
+	,.p_c = (34.4 * 1e5)
+	,.rho_c = (1000 * 98.189 / 362.0)
+	,.T_t = 0
+	,.omega = 0.269
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-136800 * 1000 / 98.189), (366.579860808318 * 1000 / 98.189)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_dimethylcyclopentane_trans
+};
+
+static const ElementComp elements_rpp_1_2_dimethylcyclopentane_trans[] = {
+	{"C", 7}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_1_2_dimethylcyclopentane_trans = {
+	"1_2_dimethylcyclopentane_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_dimethylcyclopentane_trans}
+	,.elements = elements_rpp_1_2_dimethylcyclopentane_trans
+	,.nelements = (int)(sizeof(elements_rpp_1_2_dimethylcyclopentane_trans) / sizeof(elements_rpp_1_2_dimethylcyclopentane_trans[0]))
+};
+
+
+static const IdealData ideal_data_ethylcyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.189)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.65226437197904, 0}
+			,{0.0903365715023224, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.20272362538041e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethylcyclopentane = {
+	.M = 98.189
+	,.T_c = 569.5
+	,.p_c = (34.0 * 1e5)
+	,.rho_c = (1000 * 98.189 / 375.0)
+	,.T_t = 0
+	,.omega = 0.271
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-127200 * 1000 / 98.189), (377.983516686232 * 1000 / 98.189)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethylcyclopentane
+};
+
+static const ElementComp elements_rpp_ethylcyclopentane[] = {
+	{"C", 7}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_ethylcyclopentane = {
+	"ethylcyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethylcyclopentane}
+	,.elements = elements_rpp_ethylcyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_ethylcyclopentane) / sizeof(elements_rpp_ethylcyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_methylcyclohexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.189)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.44726468835549, 0}
+			,{0.0943175867023316, 1}
+			,{-5.34009289668901e-05, 2}
+			,{1.12695203698144e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methylcyclohexane = {
+	.M = 98.189
+	,.T_c = 572.2
+	,.p_c = (34.7 * 1e5)
+	,.rho_c = (1000 * 98.189 / 368.0)
+	,.T_t = 0
+	,.omega = 0.236
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-154900 * 1000 / 98.189), (343.068205601207 * 1000 / 98.189)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methylcyclohexane
+};
+
+static const ElementComp elements_rpp_methylcyclohexane[] = {
+	{"C", 7}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_methylcyclohexane = {
+	"methylcyclohexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methylcyclohexane}
+	,.elements = elements_rpp_methylcyclohexane
+	,.nelements = (int)(sizeof(elements_rpp_methylcyclohexane) / sizeof(elements_rpp_methylcyclohexane[0]))
+};
+
+
+static const IdealData ideal_data_1_heptene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 98.189)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.396898796375535, 0}
+			,{0.0757355066902043, 1}
+			,{-4.22155992508523e-05, 2}
+			,{9.1527267891449e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_heptene = {
+	.M = 98.189
+	,.T_c = 537.3
+	,.p_c = (28.3 * 1e5)
+	,.rho_c = (1000 * 98.189 / 440.0)
+	,.T_t = 0
+	,.omega = 0.358
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-62340 * 1000 / 98.189), (423.497519704847 * 1000 / 98.189)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_heptene
+};
+
+static const ElementComp elements_rpp_1_heptene[] = {
+	{"C", 7}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_1_heptene = {
+	"1_heptene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_heptene}
+	,.elements = elements_rpp_1_heptene
+	,.nelements = (int)(sizeof(elements_rpp_1_heptene) / sizeof(elements_rpp_1_heptene[0]))
+};
+
+
+static const IdealData ideal_data_2_methylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.295)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.73752836037343, 0}
+			,{0.103939375705375, 1}
+			,{-7.56513160364277e-05, 2}
+			,{2.21301147069995e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methylhexane = {
+	.M = 100.295
+	,.T_c = 530.4
+	,.p_c = (27.3 * 1e5)
+	,.rho_c = (1000 * 100.295 / 421.0)
+	,.T_t = 0
+	,.omega = 0.329
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (195100 * 1000 / 100.295), (1728.3086734865 * 1000 / 100.295)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methylhexane
+};
+
+static const ElementComp elements_rpp_2_methylhexane[] = {
+	{"C", 7}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_2_methylhexane = {
+	"2_methylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methylhexane}
+	,.elements = elements_rpp_2_methylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_methylhexane) / sizeof(elements_rpp_2_methylhexane[0]))
+};
+
+
+static const IdealData ideal_data_3_methylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.205)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_methylhexane = {
+	.M = 100.205
+	,.T_c = 535.3
+	,.p_c = (28.1 * 1e5)
+	,.rho_c = (1000 * 100.205 / 404.0)
+	,.T_t = 0
+	,.omega = 0.323
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-192400 * 1000 / 100.205), (423.998762367935 * 1000 / 100.205)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_methylhexane
+};
+
+static const ElementComp elements_rpp_3_methylhexane[] = {
+	{"C", 7}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_3_methylhexane = {
+	"3_methylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_methylhexane}
+	,.elements = elements_rpp_3_methylhexane
+	,.nelements = (int)(sizeof(elements_rpp_3_methylhexane) / sizeof(elements_rpp_3_methylhexane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_dimethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.205)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.02564536315584, 0}
+			,{0.107715927889069, 1}
+			,{-7.64932225741939e-05, 2}
+			,{2.09273910816191e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_dimethylpentane = {
+	.M = 100.205
+	,.T_c = 520.5
+	,.p_c = (27.7 * 1e5)
+	,.rho_c = (1000 * 100.205 / 416.0)
+	,.T_t = 0
+	,.omega = 0.287
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-206300 * 1000 / 100.205), (389.989035720275 * 1000 / 100.205)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_dimethylpentane
+};
+
+static const ElementComp elements_rpp_2_2_dimethylpentane[] = {
+	{"C", 7}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_2_2_dimethylpentane = {
+	"2_2_dimethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_dimethylpentane}
+	,.elements = elements_rpp_2_2_dimethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_dimethylpentane) / sizeof(elements_rpp_2_2_dimethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_3_dimethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.205)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_3_dimethylpentane = {
+	.M = 100.205
+	,.T_c = 537.4
+	,.p_c = (29.1 * 1e5)
+	,.rho_c = (1000 * 100.205 / 393.0)
+	,.T_t = 0
+	,.omega = 0.296
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-199400 * 1000 / 100.205), (413.701931913466 * 1000 / 100.205)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_3_dimethylpentane
+};
+
+static const ElementComp elements_rpp_2_3_dimethylpentane[] = {
+	{"C", 7}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_2_3_dimethylpentane = {
+	"2_3_dimethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_3_dimethylpentane}
+	,.elements = elements_rpp_2_3_dimethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_3_dimethylpentane) / sizeof(elements_rpp_2_3_dimethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_4_dimethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.205)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_4_dimethylpentane = {
+	.M = 100.205
+	,.T_c = 519.8
+	,.p_c = (27.4 * 1e5)
+	,.rho_c = (1000 * 100.205 / 418.0)
+	,.T_t = 0
+	,.omega = 0.302
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-202100 * 1000 / 100.205), (396.495827603555 * 1000 / 100.205)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_4_dimethylpentane
+};
+
+static const ElementComp elements_rpp_2_4_dimethylpentane[] = {
+	{"C", 7}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_2_4_dimethylpentane = {
+	"2_4_dimethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_4_dimethylpentane}
+	,.elements = elements_rpp_2_4_dimethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_4_dimethylpentane) / sizeof(elements_rpp_2_4_dimethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_3_3_dimethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.205)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_3_dimethylpentane = {
+	.M = 100.205
+	,.T_c = 536.4
+	,.p_c = (29.5 * 1e5)
+	,.rho_c = (1000 * 100.205 / 414.0)
+	,.T_t = 0
+	,.omega = 0.267
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-202000 * 1000 / 100.205), (398.374076806976 * 1000 / 100.205)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_3_dimethylpentane
+};
+
+static const ElementComp elements_rpp_3_3_dimethylpentane[] = {
+	{"C", 7}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_3_3_dimethylpentane = {
+	"3_3_dimethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_3_dimethylpentane}
+	,.elements = elements_rpp_3_3_dimethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_3_3_dimethylpentane) / sizeof(elements_rpp_3_3_dimethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_3_ethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.205)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.847920155893188, 0}
+			,{0.0822302142672585, 1}
+			,{-4.48615912266892e-05, 2}
+			,{9.4173259867286e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_ethylpentane = {
+	.M = 100.205
+	,.T_c = 540.6
+	,.p_c = (28.9 * 1e5)
+	,.rho_c = (1000 * 100.205 / 416.0)
+	,.T_t = 0
+	,.omega = 0.310
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-190000 * 1000 / 100.205), (410.582696629213 * 1000 / 100.205)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_ethylpentane
+};
+
+static const ElementComp elements_rpp_3_ethylpentane[] = {
+	{"C", 7}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_3_ethylpentane = {
+	"3_ethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_ethylpentane}
+	,.elements = elements_rpp_3_ethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_3_ethylpentane) / sizeof(elements_rpp_3_ethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_3_trimethylbutane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 100.205)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.75904799662266, 0}
+			,{0.0861029843409834, 1}
+			,{-5.3160384241814e-05, 2}
+			,{1.21475086163421e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_3_trimethylbutane = {
+	.M = 100.205
+	,.T_c = 531.2
+	,.p_c = (29.5 * 1e5)
+	,.rho_c = (1000 * 100.205 / 398.0)
+	,.T_t = 0
+	,.omega = 0.250
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-205000 * 1000 / 100.205), (382.844980714405 * 1000 / 100.205)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_3_trimethylbutane
+};
+
+static const ElementComp elements_rpp_2_2_3_trimethylbutane[] = {
+	{"C", 7}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_2_2_3_trimethylbutane = {
+	"2_2_3_trimethylbutane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_3_trimethylbutane}
+	,.elements = elements_rpp_2_2_3_trimethylbutane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_3_trimethylbutane) / sizeof(elements_rpp_2_2_3_trimethylbutane[0]))
+};
+
+
+static const IdealData ideal_data_1_heptanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 116.204)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{5.90176482974166, 0}
+			,{0.081520607328284, 1}
+			,{-4.14939650756241e-05, 2}
+			,{7.27647793355147e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_heptanol = {
+	.M = 116.204
+	,.T_c = 633.0
+	,.p_c = (30.4 * 1e5)
+	,.rho_c = (1000 * 116.204 / 435.0)
+	,.T_t = 0
+	,.omega = 0.560
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-332000 * 1000 / 116.204), (479.557532282408 * 1000 / 116.204)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_heptanol
+};
+
+static const ElementComp elements_rpp_1_heptanol[] = {
+	{"C", 7}
+	,{"H", 16}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_1_heptanol = {
+	"1_heptanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_heptanol}
+	,.elements = elements_rpp_1_heptanol
+	,.nelements = (int)(sizeof(elements_rpp_1_heptanol) / sizeof(elements_rpp_1_heptanol[0]))
+};
+
+
+static const IdealData ideal_data_methyl_phenyl_ketone = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.151)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.55765648387525, 0}
+			,{0.0770945843868842, 1}
+			,{-4.89508515529826e-05, 2}
+			,{1.16904736386976e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_phenyl_ketone = {
+	.M = 120.151
+	,.T_c = 714.0
+	,.p_c = (40.6 * 1e5)
+	,.rho_c = (1000 * 120.151 / 376.0)
+	,.T_t = 0
+	,.omega = 0.420
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-86900 * 1000 / 120.151), (373.07958158645 * 1000 / 120.151)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_phenyl_ketone
+};
+
+static const ElementComp elements_rpp_methyl_phenyl_ketone[] = {
+	{"C", 8}
+	,{"H", 8}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_methyl_phenyl_ketone = {
+	"methyl_phenyl_ketone"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_phenyl_ketone}
+	,.elements = elements_rpp_methyl_phenyl_ketone
+	,.nelements = (int)(sizeof(elements_rpp_methyl_phenyl_ketone) / sizeof(elements_rpp_methyl_phenyl_ketone[0]))
+};
+
+
+static const IdealData ideal_data_methyl_benzoate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 136.151)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.55097680943185, 0}
+			,{0.0661618266321762, 1}
+			,{-2.16490252568473e-05, 2}
+			,{5.32806566043521e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_methyl_benzoate = {
+	.M = 136.151
+	,.T_c = 692.0
+	,.p_c = (36.4 * 1e5)
+	,.rho_c = (1000 * 136.151 / 396.0)
+	,.T_t = 0
+	,.omega = 0.430
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-254000 / 136.151), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_methyl_benzoate
+};
+
+static const ElementComp elements_rpp_methyl_benzoate[] = {
+	{"C", 8}
+	,{"H", 8}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_methyl_benzoate = {
+	"methyl_benzoate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_methyl_benzoate}
+	,.elements = elements_rpp_methyl_benzoate
+	,.nelements = (int)(sizeof(elements_rpp_methyl_benzoate) / sizeof(elements_rpp_methyl_benzoate[0]))
+};
+
+
+static const IdealData ideal_data_o_xylene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 106.168)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.90631694622795, 0}
+			,{0.0717063825451799, 1}
+			,{-4.1373692713086e-05, 2}
+			,{9.05650889911447e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_o_xylene = {
+	.M = 106.168
+	,.T_c = 630.3
+	,.p_c = (37.3 * 1e5)
+	,.rho_c = (1000 * 106.168 / 369.0)
+	,.T_t = 0
+	,.omega = 0.310
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (19000 * 1000 / 106.168), (352.635503940969 * 1000 / 106.168)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_o_xylene
+};
+
+static const ElementComp elements_rpp_o_xylene[] = {
+	{"C", 8}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_o_xylene = {
+	"o_xylene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_o_xylene}
+	,.elements = elements_rpp_o_xylene
+	,.nelements = (int)(sizeof(elements_rpp_o_xylene) / sizeof(elements_rpp_o_xylene[0]))
+};
+
+
+static const IdealData ideal_data_m_xylene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 106.168)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.50834481523465, 0}
+			,{0.0757355066902043, 1}
+			,{-4.51021359517653e-05, 2}
+			,{1.01990963432259e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_m_xylene = {
+	.M = 106.168
+	,.T_c = 617.1
+	,.p_c = (35.4 * 1e5)
+	,.rho_c = (1000 * 106.168 / 376.0)
+	,.T_t = 0
+	,.omega = 0.325
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (17250 * 1000 / 106.168), (357.834229414724 * 1000 / 106.168)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_m_xylene
+};
+
+static const ElementComp elements_rpp_m_xylene[] = {
+	{"C", 8}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_m_xylene = {
+	"m_xylene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_m_xylene}
+	,.elements = elements_rpp_m_xylene
+	,.nelements = (int)(sizeof(elements_rpp_m_xylene) / sizeof(elements_rpp_m_xylene[0]))
+};
+
+
+static const IdealData ideal_data_p_xylene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 106.168)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.01763357607944, 0}
+			,{0.0726685614454842, 1}
+			,{-4.05317861753197e-05, 2}
+			,{8.20257512509438e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_p_xylene = {
+	.M = 106.168
+	,.T_c = 616.2
+	,.p_c = (35.1 * 1e5)
+	,.rho_c = (1000 * 106.168 / 379.0)
+	,.T_t = 0
+	,.omega = 0.321
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (17960 * 1000 / 106.168), (352.501343283582 * 1000 / 106.168)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_p_xylene
+};
+
+static const ElementComp elements_rpp_p_xylene[] = {
+	{"C", 8}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_p_xylene = {
+	"p_xylene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_p_xylene}
+	,.elements = elements_rpp_p_xylene
+	,.nelements = (int)(sizeof(elements_rpp_p_xylene) / sizeof(elements_rpp_p_xylene[0]))
+};
+
+
+static const IdealData ideal_data_1_1_dimethylcyclohexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-8.67284006261812, 0}
+			,{0.108209044575475, 1}
+			,{-6.03767259940965e-05, 2}
+			,{1.23880533414182e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_1_dimethylcyclohexane = {
+	.M = 112.216
+	,.T_c = 591.0
+	,.p_c = (29.6 * 1e5)
+	,.rho_c = (1000 * 112.216 / 416.0)
+	,.T_t = 0
+	,.omega = 0.238
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-181100 * 1000 / 112.216), (364.838544356867 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_1_dimethylcyclohexane
+};
+
+static const ElementComp elements_rpp_1_1_dimethylcyclohexane[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_1_1_dimethylcyclohexane = {
+	"1_1_dimethylcyclohexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_1_dimethylcyclohexane}
+	,.elements = elements_rpp_1_1_dimethylcyclohexane
+	,.nelements = (int)(sizeof(elements_rpp_1_1_dimethylcyclohexane) / sizeof(elements_rpp_1_1_dimethylcyclohexane[0]))
+};
+
+
+static const IdealData ideal_data_1_2_dimethylcyclohexane_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-8.22302142672585, 0}
+			,{0.10790836366913, 1}
+			,{-6.1819994344553e-05, 2}
+			,{1.32299598791845e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_dimethylcyclohexane_cis = {
+	.M = 112.216
+	,.T_c = 606.0
+	,.p_c = (29.6 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.236
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-172300 * 1000 / 112.216), (374.263330538319 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_dimethylcyclohexane_cis
+};
+
+static const ElementComp elements_rpp_1_2_dimethylcyclohexane_cis[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_1_2_dimethylcyclohexane_cis = {
+	"1_2_dimethylcyclohexane_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_dimethylcyclohexane_cis}
+	,.elements = elements_rpp_1_2_dimethylcyclohexane_cis
+	,.nelements = (int)(sizeof(elements_rpp_1_2_dimethylcyclohexane_cis) / sizeof(elements_rpp_1_2_dimethylcyclohexane_cis[0]))
+};
+
+
+static const IdealData ideal_data_1_3_dimethylcyclohexane_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.83694714297874, 0}
+			,{0.10629671401112, 1}
+			,{-5.92942747312541e-05, 2}
+			,{1.22677809788802e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_3_dimethylcyclohexane_cis = {
+	.M = 112.216
+	,.T_c = 591.0
+	,.p_c = (29.6 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.224
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-184900 * 1000 / 112.216), (370.204970652356 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_3_dimethylcyclohexane_cis
+};
+
+static const ElementComp elements_rpp_1_3_dimethylcyclohexane_cis[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_1_3_dimethylcyclohexane_cis = {
+	"1_3_dimethylcyclohexane_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_3_dimethylcyclohexane_cis}
+	,.elements = elements_rpp_1_3_dimethylcyclohexane_cis
+	,.nelements = (int)(sizeof(elements_rpp_1_3_dimethylcyclohexane_cis) / sizeof(elements_rpp_1_3_dimethylcyclohexane_cis[0]))
+};
+
+
+static const IdealData ideal_data_1_3_dimethylcyclohexane_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.71547205681532, 0}
+			,{0.106152387176075, 1}
+			,{-6.03767259940965e-05, 2}
+			,{1.28691427915704e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_3_dimethylcyclohexane_trans = {
+	.M = 112.216
+	,.T_c = 598.0
+	,.p_c = (29.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.189
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-176700 * 1000 / 112.216), (375.94033875566 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_3_dimethylcyclohexane_trans
+};
+
+static const ElementComp elements_rpp_1_3_dimethylcyclohexane_trans[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_1_3_dimethylcyclohexane_trans = {
+	"1_3_dimethylcyclohexane_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_3_dimethylcyclohexane_trans}
+	,.elements = elements_rpp_1_3_dimethylcyclohexane_trans
+	,.nelements = (int)(sizeof(elements_rpp_1_3_dimethylcyclohexane_trans) / sizeof(elements_rpp_1_3_dimethylcyclohexane_trans[0]))
+};
+
+
+static const IdealData ideal_data_1_4_dimethylcyclohexane_cis = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.71547205681532, 0}
+			,{0.106152387176075, 1}
+			,{-6.03767259940965e-05, 2}
+			,{1.28691427915704e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_4_dimethylcyclohexane_cis = {
+	.M = 112.216
+	,.T_c = 598.0
+	,.p_c = (29.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.234
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-176800 * 1000 / 112.216), (370.137890323662 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_4_dimethylcyclohexane_cis
+};
+
+static const ElementComp elements_rpp_1_4_dimethylcyclohexane_cis[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_1_4_dimethylcyclohexane_cis = {
+	"1_4_dimethylcyclohexane_cis"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_4_dimethylcyclohexane_cis}
+	,.elements = elements_rpp_1_4_dimethylcyclohexane_cis
+	,.nelements = (int)(sizeof(elements_rpp_1_4_dimethylcyclohexane_cis) / sizeof(elements_rpp_1_4_dimethylcyclohexane_cis[0]))
+};
+
+
+static const IdealData ideal_data_1_4_dimethylcyclohexane_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-8.46236342817655, 0}
+			,{0.109820694233485, 1}
+			,{-6.38646245076997e-05, 2}
+			,{1.39515940544127e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_4_dimethylcyclohexane_trans = {
+	.M = 112.216
+	,.T_c = 587.7
+	,.p_c = (29.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.242
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-184700 * 1000 / 112.216), (364.536682877746 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_4_dimethylcyclohexane_trans
+};
+
+static const ElementComp elements_rpp_1_4_dimethylcyclohexane_trans[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_1_4_dimethylcyclohexane_trans = {
+	"1_4_dimethylcyclohexane_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_4_dimethylcyclohexane_trans}
+	,.elements = elements_rpp_1_4_dimethylcyclohexane_trans
+	,.nelements = (int)(sizeof(elements_rpp_1_4_dimethylcyclohexane_trans) / sizeof(elements_rpp_1_4_dimethylcyclohexane_trans[0]))
+};
+
+
+static const IdealData ideal_data_ethylcyclohexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.68420124255543, 0}
+			,{0.10695821200508, 1}
+			,{-6.14591772569388e-05, 2}
+			,{1.32299598791845e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethylcyclohexane = {
+	.M = 112.216
+	,.T_c = 609.0
+	,.p_c = (30.0 * 1e5)
+	,.rho_c = (1000 * 112.216 / 450.0)
+	,.T_t = 0
+	,.omega = 0.243
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-171900 * 1000 / 112.216), (382.212349488512 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethylcyclohexane
+};
+
+static const ElementComp elements_rpp_ethylcyclohexane[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_ethylcyclohexane = {
+	"ethylcyclohexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethylcyclohexane}
+	,.elements = elements_rpp_ethylcyclohexane
+	,.nelements = (int)(sizeof(elements_rpp_ethylcyclohexane) / sizeof(elements_rpp_ethylcyclohexane[0]))
+};
+
+
+static const IdealData ideal_data_n_propylcyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.73164413125414, 0}
+			,{0.101618119108391, 1}
+			,{-5.91740023687161e-05, 2}
+			,{1.34705046042606e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_propylcyclopentane = {
+	.M = 112.216
+	,.T_c = 603.0
+	,.p_c = (30.0 * 1e5)
+	,.rho_c = (1000 * 112.216 / 425.0)
+	,.T_t = 0
+	,.omega = 0.335
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-148200 * 1000 / 112.216), (416.892879423109 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_propylcyclopentane
+};
+
+static const ElementComp elements_rpp_n_propylcyclopentane[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_n_propylcyclopentane = {
+	"n_propylcyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_propylcyclopentane}
+	,.elements = elements_rpp_n_propylcyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_n_propylcyclopentane) / sizeof(elements_rpp_n_propylcyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_1_octene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.493116686405967, 0}
+			,{0.0870651632412877, 1}
+			,{-4.85900344653685e-05, 2}
+			,{1.04396410683019e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_octene = {
+	.M = 112.216
+	,.T_c = 566.7
+	,.p_c = (26.2 * 1e5)
+	,.rho_c = (1000 * 112.216 / 464.0)
+	,.T_t = 0
+	,.omega = 0.386
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-82980 * 1000 / 112.216), (462.33980211303 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_octene
+};
+
+static const ElementComp elements_rpp_1_octene[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_1_octene = {
+	"1_octene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_octene}
+	,.elements = elements_rpp_1_octene
+	,.nelements = (int)(sizeof(elements_rpp_1_octene) / sizeof(elements_rpp_1_octene[0]))
+};
+
+
+static const IdealData ideal_data_2_octene_trans = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 112.216)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.54189168773768, 0}
+			,{0.0905891434636523, 1}
+			,{-5.34009289668901e-05, 2}
+			,{1.26285980664943e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_octene_trans = {
+	.M = 112.216
+	,.T_c = 580.0
+	,.p_c = (27.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.350
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-94580 * 1000 / 112.216), (462.205641455643 * 1000 / 112.216)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_octene_trans
+};
+
+static const ElementComp elements_rpp_2_octene_trans[] = {
+	{"C", 8}
+	,{"H", 16}
+};
+
+const EosData eos_rpp_2_octene_trans = {
+	"2_octene_trans"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_octene_trans}
+	,.elements = elements_rpp_2_octene_trans
+	,.nelements = (int)(sizeof(elements_rpp_2_octene_trans) / sizeof(elements_rpp_2_octene_trans[0]))
+};
+
+
+static const IdealData ideal_data_2_methylheptane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-10.7884309196623, 0}
+			,{0.149378274272247, 1}
+			,{-0.000141921387794888, 2}
+			,{5.55658314925748e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methylheptane = {
+	.M = 114.232
+	,.T_c = 559.6
+	,.p_c = (24.8 * 1e5)
+	,.rho_c = (1000 * 114.232 / 488.0)
+	,.T_t = 0
+	,.omega = 0.378
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-215600 * 1000 / 114.232), (455.093266812007 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methylheptane
+};
+
+static const ElementComp elements_rpp_2_methylheptane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_methylheptane = {
+	"2_methylheptane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methylheptane}
+	,.elements = elements_rpp_2_methylheptane
+	,.nelements = (int)(sizeof(elements_rpp_2_methylheptane) / sizeof(elements_rpp_2_methylheptane[0]))
+};
+
+
+static const IdealData ideal_data_3_methylheptane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_methylheptane = {
+	.M = 114.232
+	,.T_c = 563.7
+	,.p_c = (25.5 * 1e5)
+	,.rho_c = (1000 * 114.232 / 464.0)
+	,.T_t = 0
+	,.omega = 0.370
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-212800 * 1000 / 114.232), (461.264657051819 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_methylheptane
+};
+
+static const ElementComp elements_rpp_3_methylheptane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_3_methylheptane = {
+	"3_methylheptane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_methylheptane}
+	,.elements = elements_rpp_3_methylheptane
+	,.nelements = (int)(sizeof(elements_rpp_3_methylheptane) / sizeof(elements_rpp_3_methylheptane[0]))
+};
+
+
+static const IdealData ideal_data_4_methylheptane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_4_methylheptane = {
+	.M = 114.232
+	,.T_c = 561.7
+	,.p_c = (25.4 * 1e5)
+	,.rho_c = (1000 * 114.232 / 476.0)
+	,.T_t = 0
+	,.omega = 0.371
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-212200 * 1000 / 114.232), (453.147937279892 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_4_methylheptane
+};
+
+static const ElementComp elements_rpp_4_methylheptane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_4_methylheptane = {
+	"4_methylheptane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_4_methylheptane}
+	,.elements = elements_rpp_4_methylheptane
+	,.nelements = (int)(sizeof(elements_rpp_4_methylheptane) / sizeof(elements_rpp_4_methylheptane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_dimethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_dimethylhexane = {
+	.M = 114.232
+	,.T_c = 549.9
+	,.p_c = (25.3 * 1e5)
+	,.rho_c = (1000 * 114.232 / 478.0)
+	,.T_t = 0
+	,.omega = 0.338
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-224900 * 1000 / 114.232), (430.776647660573 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_dimethylhexane
+};
+
+static const ElementComp elements_rpp_2_2_dimethylhexane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_2_dimethylhexane = {
+	"2_2_dimethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_dimethylhexane}
+	,.elements = elements_rpp_2_2_dimethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_dimethylhexane) / sizeof(elements_rpp_2_2_dimethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_2_3_dimethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_3_dimethylhexane = {
+	.M = 114.232
+	,.T_c = 563.5
+	,.p_c = (26.3 * 1e5)
+	,.rho_c = (1000 * 114.232 / 468.0)
+	,.T_t = 0
+	,.omega = 0.346
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-214100 * 1000 / 114.232), (443.555450276706 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_3_dimethylhexane
+};
+
+static const ElementComp elements_rpp_2_3_dimethylhexane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_3_dimethylhexane = {
+	"2_3_dimethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_3_dimethylhexane}
+	,.elements = elements_rpp_2_3_dimethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_3_dimethylhexane) / sizeof(elements_rpp_2_3_dimethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_2_4_dimethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_4_dimethylhexane = {
+	.M = 114.232
+	,.T_c = 553.5
+	,.p_c = (25.6 * 1e5)
+	,.rho_c = (1000 * 114.232 / 472.0)
+	,.T_t = 0
+	,.omega = 0.343
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-219600 * 1000 / 114.232), (445.1989183297 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_4_dimethylhexane
+};
+
+static const ElementComp elements_rpp_2_4_dimethylhexane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_4_dimethylhexane = {
+	"2_4_dimethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_4_dimethylhexane}
+	,.elements = elements_rpp_2_4_dimethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_4_dimethylhexane) / sizeof(elements_rpp_2_4_dimethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_2_5_dimethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_5_dimethylhexane = {
+	.M = 114.232
+	,.T_c = 550.1
+	,.p_c = (24.9 * 1e5)
+	,.rho_c = (1000 * 114.232 / 482.0)
+	,.T_t = 0
+	,.omega = 0.356
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-222800 * 1000 / 114.232), (438.658586282073 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_5_dimethylhexane
+};
+
+static const ElementComp elements_rpp_2_5_dimethylhexane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_5_dimethylhexane = {
+	"2_5_dimethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_5_dimethylhexane}
+	,.elements = elements_rpp_2_5_dimethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_5_dimethylhexane) / sizeof(elements_rpp_2_5_dimethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_3_3_dimethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_3_dimethylhexane = {
+	.M = 114.232
+	,.T_c = 562.0
+	,.p_c = (26.5 * 1e5)
+	,.rho_c = (1000 * 114.232 / 443.0)
+	,.T_t = 0
+	,.omega = 0.320
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-220300 * 1000 / 114.232), (437.652381351668 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_3_dimethylhexane
+};
+
+static const ElementComp elements_rpp_3_3_dimethylhexane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_3_3_dimethylhexane = {
+	"3_3_dimethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_3_dimethylhexane}
+	,.elements = elements_rpp_3_3_dimethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_3_3_dimethylhexane) / sizeof(elements_rpp_3_3_dimethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_3_4_dimethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_4_dimethylhexane = {
+	.M = 114.232
+	,.T_c = 568.9
+	,.p_c = (26.9 * 1e5)
+	,.rho_c = (1000 * 114.232 / 466.0)
+	,.T_t = 0
+	,.omega = 0.338
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-213100 * 1000 / 114.232), (448.183992956565 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_4_dimethylhexane
+};
+
+static const ElementComp elements_rpp_3_4_dimethylhexane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_3_4_dimethylhexane = {
+	"3_4_dimethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_4_dimethylhexane}
+	,.elements = elements_rpp_3_4_dimethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_3_4_dimethylhexane) / sizeof(elements_rpp_3_4_dimethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_3_ethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_ethylhexane = {
+	.M = 114.232
+	,.T_c = 565.5
+	,.p_c = (26.1 * 1e5)
+	,.rho_c = (1000 * 114.232 / 455.0)
+	,.T_t = 0
+	,.omega = 0.361
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-211000 * 1000 / 114.232), (456.53549387892 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_ethylhexane
+};
+
+static const ElementComp elements_rpp_3_ethylhexane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_3_ethylhexane = {
+	"3_ethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_ethylhexane}
+	,.elements = elements_rpp_3_ethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_3_ethylhexane) / sizeof(elements_rpp_3_ethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_3_trimethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_3_trimethylpentane = {
+	.M = 114.232
+	,.T_c = 563.5
+	,.p_c = (27.3 * 1e5)
+	,.rho_c = (1000 * 114.232 / 436.0)
+	,.T_t = 0
+	,.omega = 0.297
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-220300 * 1000 / 114.232), (424.739418078148 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_3_trimethylpentane
+};
+
+static const ElementComp elements_rpp_2_2_3_trimethylpentane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_2_3_trimethylpentane = {
+	"2_2_3_trimethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_3_trimethylpentane}
+	,.elements = elements_rpp_2_2_3_trimethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_3_trimethylpentane) / sizeof(elements_rpp_2_2_3_trimethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_4_trimethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.897231824533784, 0}
+			,{0.0935598708183419, 1}
+			,{-5.15968435288195e-05, 2}
+			,{1.10289756447383e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_4_trimethylpentane = {
+	.M = 114.232
+	,.T_c = 544.0
+	,.p_c = (25.7 * 1e5)
+	,.rho_c = (1000 * 114.232 / 468.0)
+	,.T_t = 0
+	,.omega = 0.303
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-224300 * 1000 / 114.232), (422.827628710381 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_4_trimethylpentane
+};
+
+static const ElementComp elements_rpp_2_2_4_trimethylpentane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_2_4_trimethylpentane = {
+	"2_2_4_trimethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_4_trimethylpentane}
+	,.elements = elements_rpp_2_2_4_trimethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_4_trimethylpentane) / sizeof(elements_rpp_2_2_4_trimethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_3_3_trimethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_3_3_trimethylpentane = {
+	.M = 114.232
+	,.T_c = 573.6
+	,.p_c = (28.2 * 1e5)
+	,.rho_c = (1000 * 114.232 / 455.0)
+	,.T_t = 0
+	,.omega = 0.290
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.17E+05 * 1000 / 114.232), (429.837523058863 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_3_3_trimethylpentane
+};
+
+static const ElementComp elements_rpp_2_3_3_trimethylpentane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_3_3_trimethylpentane = {
+	"2_3_3_trimethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_3_3_trimethylpentane}
+	,.elements = elements_rpp_2_3_3_trimethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_3_3_trimethylpentane) / sizeof(elements_rpp_2_3_3_trimethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_3_4_trimethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_3_4_trimethylpentane = {
+	.M = 114.232
+	,.T_c = 566.4
+	,.p_c = (27.3 * 1e5)
+	,.rho_c = (1000 * 114.232 / 461.0)
+	,.T_t = 0
+	,.omega = 0.315
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-217600 * 1000 / 114.232), (427.758032869361 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_3_4_trimethylpentane
+};
+
+static const ElementComp elements_rpp_2_3_4_trimethylpentane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_3_4_trimethylpentane = {
+	"2_3_4_trimethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_3_4_trimethylpentane}
+	,.elements = elements_rpp_2_3_4_trimethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_3_4_trimethylpentane) / sizeof(elements_rpp_2_3_4_trimethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_methyl_3_ethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methyl_3_ethylpentane = {
+	.M = 114.232
+	,.T_c = 567.1
+	,.p_c = (27.0 * 1e5)
+	,.rho_c = (1000 * 114.232 / 433.0)
+	,.T_t = 0
+	,.omega = 0.330
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-211300 * 1000 / 114.232), (441.006397786349 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methyl_3_ethylpentane
+};
+
+static const ElementComp elements_rpp_2_methyl_3_ethylpentane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_2_methyl_3_ethylpentane = {
+	"2_methyl_3_ethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methyl_3_ethylpentane}
+	,.elements = elements_rpp_2_methyl_3_ethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_methyl_3_ethylpentane) / sizeof(elements_rpp_2_methyl_3_ethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_3_methyl_3_ethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 114.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10891118260074, 0}
+			,{0.0945220497186463, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.166641916619e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_methyl_3_ethylpentane = {
+	.M = 114.232
+	,.T_c = 576.6
+	,.p_c = (28.1 * 1e5)
+	,.rho_c = (1000 * 114.232 / 455.0)
+	,.T_t = 0
+	,.omega = 0.303
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-215100 * 1000 / 114.232), (432.755517357035 * 1000 / 114.232)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_methyl_3_ethylpentane
+};
+
+static const ElementComp elements_rpp_3_methyl_3_ethylpentane[] = {
+	{"C", 8}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_3_methyl_3_ethylpentane = {
+	"3_methyl_3_ethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_methyl_3_ethylpentane}
+	,.elements = elements_rpp_3_methyl_3_ethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_3_methyl_3_ethylpentane) / sizeof(elements_rpp_3_methyl_3_ethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_1_octanol = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 130.231)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.742080476859712, 0}
+			,{0.0914911861826876, 1}
+			,{-4.57034977644555e-05, 2}
+			,{7.52904989488135e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_octanol = {
+	.M = 130.231
+	,.T_c = 652.5
+	,.p_c = (28.6 * 1e5)
+	,.rho_c = (1000 * 130.231 / 490.0)
+	,.T_t = 0
+	,.omega = 0.587
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-360100 * 1000 / 130.231), (518.265654033205 * 1000 / 130.231)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_octanol
+};
+
+static const ElementComp elements_rpp_1_octanol[] = {
+	{"C", 8}
+	,{"H", 18}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_1_octanol = {
+	"1_octanol"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_octanol}
+	,.elements = elements_rpp_1_octanol
+	,.nelements = (int)(sizeof(elements_rpp_1_octanol) / sizeof(elements_rpp_1_octanol[0]))
+};
+
+
+static const IdealData ideal_data_dibutyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 130.231)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{0.727647793355147, 0}
+			,{0.0929585090056517, 1}
+			,{-4.91913962780587e-05, 2}
+			,{9.7300341293275e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dibutyl_ether = {
+	.M = 130.231
+	,.T_c = 580.0
+	,.p_c = (25.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.502
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-334100 * 1000 / 130.231), (500.120425121583 * 1000 / 130.231)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dibutyl_ether
+};
+
+static const ElementComp elements_rpp_dibutyl_ether[] = {
+	{"C", 8}
+	,{"H", 18}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_dibutyl_ether = {
+	"dibutyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dibutyl_ether}
+	,.elements = elements_rpp_dibutyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_dibutyl_ether) / sizeof(elements_rpp_dibutyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_dibutyl_amine = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 129.247)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.17385825837128, 0}
+			,{0.0971920961669908, 1}
+			,{-5.27995671541999e-05, 2}
+			,{1.11251935347688e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dibutyl_amine = {
+	.M = 129.247
+	,.T_c = 607.5
+	,.p_c = (26.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.580
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dibutyl_amine
+};
+
+static const ElementComp elements_rpp_dibutyl_amine[] = {
+	{"C", 8}
+	,{"H", 19}
+	,{"N", 1}
+};
+
+const EosData eos_rpp_dibutyl_amine = {
+	"dibutyl_amine"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dibutyl_amine}
+	,.elements = elements_rpp_dibutyl_amine
+	,.nelements = (int)(sizeof(elements_rpp_dibutyl_amine) / sizeof(elements_rpp_dibutyl_amine[0]))
+};
+
+
+static const IdealData ideal_data_ethyl_benzoate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 150.178)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{2.4860297336613, 0}
+			,{0.0828315760799487, 1}
+			,{-4.34183228762327e-05, 2}
+			,{6.08578154442486e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_ethyl_benzoate = {
+	.M = 150.178
+	,.T_c = 668.7
+	,.p_c = (23.2 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.480
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_ethyl_benzoate
+};
+
+static const ElementComp elements_rpp_ethyl_benzoate[] = {
+	{"C", 9}
+	,{"H", 10}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_ethyl_benzoate = {
+	"ethyl_benzoate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_ethyl_benzoate}
+	,.elements = elements_rpp_ethyl_benzoate
+	,.nelements = (int)(sizeof(elements_rpp_ethyl_benzoate) / sizeof(elements_rpp_ethyl_benzoate[0]))
+};
+
+
+static const IdealData ideal_data_n_propylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.195)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.7633222238153, 0}
+			,{0.0900358905959773, 1}
+			,{-5.53252867674988e-05, 2}
+			,{1.29894151541084e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_propylbenzene = {
+	.M = 120.195
+	,.T_c = 638.2
+	,.p_c = (32.0 * 1e5)
+	,.rho_c = (1000 * 120.195 / 44.0)
+	,.T_t = 0
+	,.omega = 0.344
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (7.83E+03 * 1000 / 120.195), (401.841697132316 * 1000 / 120.195)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_propylbenzene
+};
+
+static const ElementComp elements_rpp_n_propylbenzene[] = {
+	{"C", 9}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_n_propylbenzene = {
+	"n_propylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_propylbenzene}
+	,.elements = elements_rpp_n_propylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_n_propylbenzene) / sizeof(elements_rpp_n_propylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_isopropylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.195)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.73392018949729, 0}
+			,{0.0943175867023316, 1}
+			,{-6.12186325318628e-05, 2}
+			,{1.55151347674073e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_isopropylbenzene = {
+	.M = 120.195
+	,.T_c = 631.1
+	,.p_c = (32.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.326
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (3.94E+03 * 1000 / 120.195), (388.794573201409 * 1000 / 120.195)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_isopropylbenzene
+};
+
+static const ElementComp elements_rpp_isopropylbenzene[] = {
+	{"C", 9}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_isopropylbenzene = {
+	"isopropylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_isopropylbenzene}
+	,.elements = elements_rpp_isopropylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_isopropylbenzene) / sizeof(elements_rpp_isopropylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_methyl_2_ethylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.195)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.97848036375077, 0}
+			,{0.0841425448316133, 1}
+			,{-4.95522133656728e-05, 2}
+			,{1.12214114247992e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_methyl_2_ethylbenzene = {
+	.M = 120.195
+	,.T_c = 651.0
+	,.p_c = (30.4 * 1e5)
+	,.rho_c = (1000 * 120.195 / 460.0)
+	,.T_t = 0
+	,.omega = 0.294
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (1.21E+03 * 1000 / 120.195), (399.762206942814 * 1000 / 120.195)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_methyl_2_ethylbenzene
+};
+
+static const ElementComp elements_rpp_1_methyl_2_ethylbenzene[] = {
+	{"C", 9}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_1_methyl_2_ethylbenzene = {
+	"1_methyl_2_ethylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_methyl_2_ethylbenzene}
+	,.elements = elements_rpp_1_methyl_2_ethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_methyl_2_ethylbenzene) / sizeof(elements_rpp_1_methyl_2_ethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_methyl_3_ethylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.195)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.48789851360318, 0}
+			,{0.0877146339989931, 1}
+			,{-5.24387500665858e-05, 2}
+			,{1.20272362538041e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_methyl_3_ethylbenzene = {
+	.M = 120.195
+	,.T_c = 637.0
+	,.p_c = (28.4 * 1e5)
+	,.rho_c = (1000 * 120.195 / 490.0)
+	,.T_t = 0
+	,.omega = 0.360
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.93E+03 * 1000 / 120.195), (402.646661076639 * 1000 / 120.195)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_methyl_3_ethylbenzene
+};
+
+static const ElementComp elements_rpp_1_methyl_3_ethylbenzene[] = {
+	{"C", 9}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_1_methyl_3_ethylbenzene = {
+	"1_methyl_3_ethylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_methyl_3_ethylbenzene}
+	,.elements = elements_rpp_1_methyl_3_ethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_methyl_3_ethylbenzene) / sizeof(elements_rpp_1_methyl_3_ethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_methyl_4_ethylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.195)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-3.28463822091389, 0}
+			,{0.0863074473572981, 1}
+			,{-5.07549369910532e-05, 2}
+			,{1.14739833861291e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_methyl_4_ethylbenzene = {
+	.M = 120.195
+	,.T_c = 640.0
+	,.p_c = (29.4 * 1e5)
+	,.rho_c = (1000 * 120.195 / 470.0)
+	,.T_t = 0
+	,.omega = 0.322
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-2.05E+03 * 1000 / 120.195), (402.244179104478 * 1000 / 120.195)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_methyl_4_ethylbenzene
+};
+
+static const ElementComp elements_rpp_1_methyl_4_ethylbenzene[] = {
+	{"C", 9}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_1_methyl_4_ethylbenzene = {
+	"1_methyl_4_ethylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_methyl_4_ethylbenzene}
+	,.elements = elements_rpp_1_methyl_4_ethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_methyl_4_ethylbenzene) / sizeof(elements_rpp_1_methyl_4_ethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_2_3_trimethylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.195)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.834690196014003, 0}
+			,{0.0761925416678488, 1}
+			,{-4.00506967251676e-05, 2}
+			,{7.9500031637645e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_3_trimethylbenzene = {
+	.M = 120.195
+	,.T_c = 664.5
+	,.p_c = (34.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.366
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-9.59E+03 * 1000 / 120.195), (383.662928056347 * 1000 / 120.195)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_3_trimethylbenzene
+};
+
+static const ElementComp elements_rpp_1_2_3_trimethylbenzene[] = {
+	{"C", 9}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_1_2_3_trimethylbenzene = {
+	"1_2_3_trimethylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_3_trimethylbenzene}
+	,.elements = elements_rpp_1_2_3_trimethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_2_3_trimethylbenzene) / sizeof(elements_rpp_1_2_3_trimethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_2_4_trimethylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.195)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.561671933052651, 0}
+			,{0.0750258997512298, 1}
+			,{-3.92087901874013e-05, 2}
+			,{7.673376729927e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_4_trimethylbenzene = {
+	.M = 120.195
+	,.T_c = 649.2
+	,.p_c = (32.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.376
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.39E+04 * 1000 / 120.195), (396.039248700319 * 1000 / 120.195)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_4_trimethylbenzene
+};
+
+static const ElementComp elements_rpp_1_2_4_trimethylbenzene[] = {
+	{"C", 9}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_1_2_4_trimethylbenzene = {
+	"1_2_4_trimethylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_4_trimethylbenzene}
+	,.elements = elements_rpp_1_2_4_trimethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_2_4_trimethylbenzene) / sizeof(elements_rpp_1_2_4_trimethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_3_5_trimethylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 120.195)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.35613558212022, 0}
+			,{0.0808711365705786, 1}
+			,{-4.43805017765371e-05, 2}
+			,{9.26097191542914e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_3_5_trimethylbenzene = {
+	.M = 120.195
+	,.T_c = 637.3
+	,.p_c = (31.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.399
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.61E+04 * 1000 / 120.195), (385.306396109341 * 1000 / 120.195)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_3_5_trimethylbenzene
+};
+
+static const ElementComp elements_rpp_1_3_5_trimethylbenzene[] = {
+	{"C", 9}
+	,{"H", 12}
+};
+
+const EosData eos_rpp_1_3_5_trimethylbenzene = {
+	"1_3_5_trimethylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_3_5_trimethylbenzene}
+	,.elements = elements_rpp_1_3_5_trimethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_3_5_trimethylbenzene) / sizeof(elements_rpp_1_3_5_trimethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_n_propylcyclohexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 126.243)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.51942810587831, 0}
+			,{0.118937339313869, 1}
+			,{-6.97579702720637e-05, 2}
+			,{1.55151347674073e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_propylcyclohexane = {
+	.M = 126.243
+	,.T_c = 639.0
+	,.p_c = (28.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.258
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.93E+05 * 1000 / 126.243), (420.4844491028 * 1000 / 126.243)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_propylcyclohexane
+};
+
+static const ElementComp elements_rpp_n_propylcyclohexane[] = {
+	{"C", 9}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_n_propylcyclohexane = {
+	"n_propylcyclohexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_propylcyclohexane}
+	,.elements = elements_rpp_n_propylcyclohexane
+	,.nelements = (int)(sizeof(elements_rpp_n_propylcyclohexane) / sizeof(elements_rpp_n_propylcyclohexane[0]))
+};
+
+
+static const IdealData ideal_data_1_nonene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 126.243)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.447413188641512, 0}
+			,{0.0976852128533967, 1}
+			,{-5.42428355046564e-05, 2}
+			,{1.16784464024438e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_nonene = {
+	.M = 126.243
+	,.T_c = 592.0
+	,.p_c = (23.4 * 1e5)
+	,.rho_c = (1000 * 126.243 / 580.0)
+	,.T_t = 0
+	,.omega = 0.430
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-103600 * 1000 / 126.243), (500.980843535133 * 1000 / 126.243)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_nonene
+};
+
+static const ElementComp elements_rpp_1_nonene[] = {
+	{"C", 9}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_1_nonene = {
+	"1_nonene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_nonene}
+	,.elements = elements_rpp_1_nonene
+	,.nelements = (int)(sizeof(elements_rpp_1_nonene) / sizeof(elements_rpp_1_nonene[0]))
+};
+
+
+static const IdealData ideal_data_n_nonane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.259)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.0066796744434, 0}
+			,{0.104985745259456, 1}
+			,{-5.79712787433357e-05, 2}
+			,{1.23880533414182e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_nonane = {
+	.M = 128.259
+	,.T_c = 594.6
+	,.p_c = (22.9 * 1e5)
+	,.rho_c = (1000 * 128.259 / 548.0)
+	,.T_t = 0
+	,.omega = 0.445
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-229200 * 1000 / 128.259), (505.339205098105 * 1000 / 128.259)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_nonane
+};
+
+static const ElementComp elements_rpp_n_nonane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_n_nonane = {
+	"n_nonane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_nonane}
+	,.elements = elements_rpp_n_nonane
+	,.nelements = (int)(sizeof(elements_rpp_n_nonane) / sizeof(elements_rpp_n_nonane[0]))
+};
+
+
+static const IdealData ideal_data_2_methyloctane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.242)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.21595358525959, 0}
+			,{0.105899815214745, 1}
+			,{-5.94145470937921e-05, 2}
+			,{1.29894151541084e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methyloctane = {
+	.M = 128.242
+	,.T_c = 587.0
+	,.p_c = (23.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.423
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-229200 * 1000 / 128.242), (505.339205098105 * 1000 / 128.242)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methyloctane
+};
+
+static const ElementComp elements_rpp_2_methyloctane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_2_methyloctane = {
+	"2_methyloctane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methyloctane}
+	,.elements = elements_rpp_2_methyloctane
+	,.nelements = (int)(sizeof(elements_rpp_2_methyloctane) / sizeof(elements_rpp_2_methyloctane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_dimethylheptane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.242)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.51248965341967, 0}
+			,{0.116279320101778, 1}
+			,{-7.3606685873281e-05, 2}
+			,{1.88827609184724e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_dimethylheptane = {
+	.M = 128.242
+	,.T_c = 576.8
+	,.p_c = (23.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.390
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-247000 * 1000 / 128.242), (472.73816535301 * 1000 / 128.242)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_dimethylheptane
+};
+
+static const ElementComp elements_rpp_2_2_dimethylheptane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_2_2_dimethylheptane = {
+	"2_2_dimethylheptane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_dimethylheptane}
+	,.elements = elements_rpp_2_2_dimethylheptane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_dimethylheptane) / sizeof(elements_rpp_2_2_dimethylheptane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_3_trimethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.259)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-5.4880279026108, 0}
+			,{0.126887342477633, 1}
+			,{-8.62352839397752e-05, 2}
+			,{2.39342001450701e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_3_trimethylhexane = {
+	.M = 128.259
+	,.T_c = 588.0
+	,.p_c = (24.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.332
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-241400 * 1000 / 128.259), (465.426409525406 * 1000 / 128.259)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_3_trimethylhexane
+};
+
+static const ElementComp elements_rpp_2_2_3_trimethylhexane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_2_2_3_trimethylhexane = {
+	"2_2_3_trimethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_3_trimethylhexane}
+	,.elements = elements_rpp_2_2_3_trimethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_3_trimethylhexane) / sizeof(elements_rpp_2_2_3_trimethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_4_trimethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.259)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.23197715941239, 0}
+			,{0.132780688241997, 1}
+			,{-9.27299915168295e-05, 2}
+			,{2.63396473958309e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_4_trimethylhexane = {
+	.M = 128.259
+	,.T_c = 573.7
+	,.p_c = (23.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.321
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-243400 * 1000 / 128.259), (465.459949689753 * 1000 / 128.259)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_4_trimethylhexane
+};
+
+static const ElementComp elements_rpp_2_2_4_trimethylhexane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_2_2_4_trimethylhexane = {
+	"2_2_4_trimethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_4_trimethylhexane}
+	,.elements = elements_rpp_2_2_4_trimethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_4_trimethylhexane) / sizeof(elements_rpp_2_2_4_trimethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_5_trimethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.259)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.50793753693339, 0}
+			,{0.131698236979155, 1}
+			,{-9.32110809669816e-05, 2}
+			,{2.71815539335972e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_5_trimethylhexane = {
+	.M = 128.259
+	,.T_c = 568.0
+	,.p_c = (23.3 * 1e5)
+	,.rho_c = (1000 * 128.259 / 519.0)
+	,.T_t = 0
+	,.omega = 0.357
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-254200 * 1000 / 128.259), (459.691041422103 * 1000 / 128.259)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_5_trimethylhexane
+};
+
+static const ElementComp elements_rpp_2_2_5_trimethylhexane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_2_2_5_trimethylhexane = {
+	"2_2_5_trimethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_5_trimethylhexane}
+	,.elements = elements_rpp_2_2_5_trimethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_5_trimethylhexane) / sizeof(elements_rpp_2_2_5_trimethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_3_3_diethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.259)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-8.090721827934, 0}
+			,{0.135426680217834, 1}
+			,{-9.60976176678946e-05, 2}
+			,{2.77829157462874e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_3_diethylpentane = {
+	.M = 128.259
+	,.T_c = 610.0
+	,.p_c = (26.7 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.338
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-232100 * 1000 / 128.259), (461.200348817709 * 1000 / 128.259)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_3_diethylpentane
+};
+
+static const ElementComp elements_rpp_3_3_diethylpentane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_3_3_diethylpentane = {
+	"3_3_diethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_3_diethylpentane}
+	,.elements = elements_rpp_3_3_diethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_3_3_diethylpentane) / sizeof(elements_rpp_3_3_diethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_3_3_tetramethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.259)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.56446554732627, 0}
+			,{0.130976602803926, 1}
+			,{-9.10461784412969e-05, 2}
+			,{2.57382855831407e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_3_3_tetramethylpentane = {
+	.M = 128.259
+	,.T_c = 607.7
+	,.p_c = (27.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.303
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-237400 * 1000 / 128.259), (445.973114204259 * 1000 / 128.259)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_3_3_tetramethylpentane
+};
+
+static const ElementComp elements_rpp_2_2_3_3_tetramethylpentane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_2_2_3_3_tetramethylpentane = {
+	"2_2_3_3_tetramethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_3_3_tetramethylpentane}
+	,.elements = elements_rpp_2_2_3_3_tetramethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_3_3_tetramethylpentane) / sizeof(elements_rpp_2_2_3_3_tetramethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_3_4_tetramethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.259)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.56446554732627, 0}
+			,{0.130976602803926, 1}
+			,{-9.10461784412969e-05, 2}
+			,{2.57382855831407e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_3_4_tetramethylpentane = {
+	.M = 128.259
+	,.T_c = 592.7
+	,.p_c = (26.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.313
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-237100 * 1000 / 128.259), (452.58052658058 * 1000 / 128.259)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_3_4_tetramethylpentane
+};
+
+static const ElementComp elements_rpp_2_2_3_4_tetramethylpentane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_2_2_3_4_tetramethylpentane = {
+	"2_2_3_4_tetramethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_3_4_tetramethylpentane}
+	,.elements = elements_rpp_2_2_3_4_tetramethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_3_4_tetramethylpentane) / sizeof(elements_rpp_2_2_3_4_tetramethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_4_4_tetramethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.259)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-8.10635723506395, 0}
+			,{0.140478119444432, 1}
+			,{-0.000103554504145253, 2}
+			,{3.09099971722765e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_4_4_tetramethylpentane = {
+	.M = 128.259
+	,.T_c = 574.7
+	,.p_c = (24.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.312
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-242100 * 1000 / 128.259), (431.181901727318 * 1000 / 128.259)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_4_4_tetramethylpentane
+};
+
+static const ElementComp elements_rpp_2_2_4_4_tetramethylpentane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_2_2_4_4_tetramethylpentane = {
+	"2_2_4_4_tetramethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_4_4_tetramethylpentane}
+	,.elements = elements_rpp_2_2_4_4_tetramethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_4_4_tetramethylpentane) / sizeof(elements_rpp_2_2_4_4_tetramethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_2_3_3_4_tetramethylpentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.259)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.6053581505892, 0}
+			,{0.131217147529003, 1}
+			,{-9.1406995528911e-05, 2}
+			,{2.59788303082168e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_3_3_4_tetramethylpentane = {
+	.M = 128.259
+	,.T_c = 607.7
+	,.p_c = (27.2 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.313
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-236400 * 1000 / 128.259), (450.031474090223 * 1000 / 128.259)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_3_3_4_tetramethylpentane
+};
+
+static const ElementComp elements_rpp_2_3_3_4_tetramethylpentane[] = {
+	{"C", 9}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_2_3_3_4_tetramethylpentane = {
+	"2_3_3_4_tetramethylpentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_3_3_4_tetramethylpentane}
+	,.elements = elements_rpp_2_3_3_4_tetramethylpentane
+	,.nelements = (int)(sizeof(elements_rpp_2_3_3_4_tetramethylpentane) / sizeof(elements_rpp_2_3_3_4_tetramethylpentane[0]))
+};
+
+
+static const IdealData ideal_data_naphthalene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 128.174)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-8.27473854261721, 0}
+			,{0.102219480921081, 1}
+			,{-7.82973080122646e-05, 2}
+			,{2.38139277825321e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_naphthalene = {
+	.M = 128.174
+	,.T_c = 748.4
+	,.p_c = (40.5 * 1e5)
+	,.rho_c = (1000 * 128.174 / 413.0)
+	,.T_t = 0
+	,.omega = 0.302
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (151100 * 1000 / 128.174), (336.178406842193 * 1000 / 128.174)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_naphthalene
+};
+
+static const ElementComp elements_rpp_naphthalene[] = {
+	{"C", 10}
+	,{"H", 8}
+};
+
+const EosData eos_rpp_naphthalene = {
+	"naphthalene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_naphthalene}
+	,.elements = elements_rpp_naphthalene
+	,.nelements = (int)(sizeof(elements_rpp_naphthalene) / sizeof(elements_rpp_naphthalene[0]))
+};
+
+
+static const IdealData ideal_data_n_butylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 134.222)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.76506161474956, 0}
+			,{0.0954240924376816, 1}
+			,{-5.2919839516738e-05, 2}
+			,{1.03073414695101e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_butylbenzene = {
+	.M = 134.222
+	,.T_c = 660.5
+	,.p_c = (28.9 * 1e5)
+	,.rho_c = (1000 * 134.222 / 497.0)
+	,.T_t = 0
+	,.omega = 0.393
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-13820 * 1000 / 134.222), (439.375913130974 * 1000 / 134.222)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_butylbenzene
+};
+
+static const ElementComp elements_rpp_n_butylbenzene[] = {
+	{"C", 10}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_n_butylbenzene = {
+	"n_butylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_butylbenzene}
+	,.elements = elements_rpp_n_butylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_n_butylbenzene) / sizeof(elements_rpp_n_butylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_sec_butylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 134.222)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.83574441935336, 0}
+			,{0.118985448258884, 1}
+			,{-8.67163733899274e-05, 2}
+			,{2.58585579456788e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_sec_butylbenzene = {
+	.M = 134.222
+	,.T_c = 664.0
+	,.p_c = (29.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.274
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-17460 / 134.222), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_sec_butylbenzene
+};
+
+static const ElementComp elements_rpp_sec_butylbenzene[] = {
+	{"C", 10}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_sec_butylbenzene = {
+	"sec_butylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_sec_butylbenzene}
+	,.elements = elements_rpp_sec_butylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_sec_butylbenzene) / sizeof(elements_rpp_sec_butylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_tert_butylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 134.222)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-10.3434231782715, 0}
+			,{0.132540143516921, 1}
+			,{-0.000105238317220786, 2}
+			,{3.40370785982655e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_tert_butylbenzene = {
+	.M = 134.222
+	,.T_c = 660.0
+	,.p_c = (29.6 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.265
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-22690 / 134.222), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_tert_butylbenzene
+};
+
+static const ElementComp elements_rpp_tert_butylbenzene[] = {
+	{"C", 10}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_tert_butylbenzene = {
+	"tert_butylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_tert_butylbenzene}
+	,.elements = elements_rpp_tert_butylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_tert_butylbenzene) / sizeof(elements_rpp_tert_butylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_methyl_3_isopropylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 134.222)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-5.86448039735487, 0}
+			,{0.10901486940448, 1}
+			,{-7.27647793355147e-05, 2}
+			,{1.96043950937006e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_methyl_3_isopropylbenzene = {
+	.M = 134.222
+	,.T_c = 666.0
+	,.p_c = (29.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.279
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (-29310 / 134.222), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_methyl_3_isopropylbenzene
+};
+
+static const ElementComp elements_rpp_1_methyl_3_isopropylbenzene[] = {
+	{"C", 10}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_1_methyl_3_isopropylbenzene = {
+	"1_methyl_3_isopropylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_methyl_3_isopropylbenzene}
+	,.elements = elements_rpp_1_methyl_3_isopropylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_methyl_3_isopropylbenzene) / sizeof(elements_rpp_1_methyl_3_isopropylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_4_diethylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 134.222)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-4.50059180617349, 0}
+			,{0.104288165556735, 1}
+			,{-6.68714335711507e-05, 2}
+			,{1.69584031178638e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_4_diethylbenzene = {
+	.M = 134.222
+	,.T_c = 657.9
+	,.p_c = (28.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.404
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-22270 * 1000 / 134.222), (433.841786013751 * 1000 / 134.222)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_4_diethylbenzene
+};
+
+static const ElementComp elements_rpp_1_4_diethylbenzene[] = {
+	{"C", 10}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_1_4_diethylbenzene = {
+	"1_4_diethylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_4_diethylbenzene}
+	,.elements = elements_rpp_1_4_diethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_4_diethylbenzene) / sizeof(elements_rpp_1_4_diethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_1_2_4_5_tetramethylbenzene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 134.222)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{1.98689942912843, 0}
+			,{0.0784055531385488, 1}
+			,{-3.46384404109557e-05, 2}
+			,{3.92087901874013e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_2_4_5_tetramethylbenzene = {
+	.M = 134.222
+	,.T_c = 675.0
+	,.p_c = (29.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.435
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-45300 * 1000 / 134.222), (418.648091564649 * 1000 / 134.222)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_2_4_5_tetramethylbenzene
+};
+
+static const ElementComp elements_rpp_1_2_4_5_tetramethylbenzene[] = {
+	{"C", 10}
+	,{"H", 14}
+};
+
+const EosData eos_rpp_1_2_4_5_tetramethylbenzene = {
+	"1_2_4_5_tetramethylbenzene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_2_4_5_tetramethylbenzene}
+	,.elements = elements_rpp_1_2_4_5_tetramethylbenzene
+	,.nelements = (int)(sizeof(elements_rpp_1_2_4_5_tetramethylbenzene) / sizeof(elements_rpp_1_2_4_5_tetramethylbenzene[0]))
+};
+
+
+static const IdealData ideal_data_cis_decalin = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 138.254)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-13.5306407855296, 0}
+			,{0.13446450131753, 1}
+			,{-7.9500031637645e-05, 2}
+			,{1.73192202054779e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_cis_decalin = {
+	.M = 138.254
+	,.T_c = 702.3
+	,.p_c = (32.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.286
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-169100 * 1000 / 138.254), (377.356429649505 * 1000 / 138.254)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_cis_decalin
+};
+
+static const ElementComp elements_rpp_cis_decalin[] = {
+	{"C", 10}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_cis_decalin = {
+	"cis_decalin"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_cis_decalin}
+	,.elements = elements_rpp_cis_decalin
+	,.nelements = (int)(sizeof(elements_rpp_cis_decalin) / sizeof(elements_rpp_cis_decalin[0]))
+};
+
+
+static const IdealData ideal_data_trans_decalin = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 138.254)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-11.7470016490904, 0}
+			,{0.125684618852253, 1}
+			,{-6.59092546708464e-05, 2}
+			,{1.08004581559161e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_trans_decalin = {
+	.M = 138.254
+	,.T_c = 687.1
+	,.p_c = (31.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.270
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-182400 * 1000 / 138.254), (374.304274693946 * 1000 / 138.254)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_trans_decalin
+};
+
+static const ElementComp elements_rpp_trans_decalin[] = {
+	{"C", 10}
+	,{"H", 18}
+};
+
+const EosData eos_rpp_trans_decalin = {
+	"trans_decalin"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_trans_decalin}
+	,.elements = elements_rpp_trans_decalin
+	,.nelements = (int)(sizeof(elements_rpp_trans_decalin) / sizeof(elements_rpp_trans_decalin[0]))
+};
+
+
+static const IdealData ideal_data_butylcyclohexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 140.260)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.57234794539505, 0}
+			,{0.130014423903622, 1}
+			,{-7.58918607615037e-05, 2}
+			,{1.68381307553257e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_butylcyclohexane = {
+	.M = 140.260
+	,.T_c = 667.0
+	,.p_c = (31.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.362
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-213300 * 1000 / 140.260), (458.253446251886 * 1000 / 140.260)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_butylcyclohexane
+};
+
+static const ElementComp elements_rpp_butylcyclohexane[] = {
+	{"C", 10}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_butylcyclohexane = {
+	"butylcyclohexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_butylcyclohexane}
+	,.elements = elements_rpp_butylcyclohexane
+	,.nelements = (int)(sizeof(elements_rpp_butylcyclohexane) / sizeof(elements_rpp_butylcyclohexane[0]))
+};
+
+
+static const IdealData ideal_data_1_decene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 140.270)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.56046920942727, 0}
+			,{0.10917122347578, 1}
+			,{-6.08578154442486e-05, 2}
+			,{1.32299598791845e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_decene = {
+	.M = 140.270
+	,.T_c = 615.0
+	,.p_c = (22.0 * 1e5)
+	,.rho_c = (1000 * 140.270 / 650.0)
+	,.T_t = 0
+	,.omega = 0.491
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-124200 * 1000 / 140.270), (540.359768572866 * 1000 / 140.270)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_decene
+};
+
+static const ElementComp elements_rpp_1_decene[] = {
+	{"C", 10}
+	,{"H", 20}
+};
+
+const EosData eos_rpp_1_decene = {
+	"1_decene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_decene}
+	,.elements = elements_rpp_1_decene
+	,.nelements = (int)(sizeof(elements_rpp_1_decene) / sizeof(elements_rpp_1_decene[0]))
+};
+
+
+static const IdealData ideal_data_3_3_5_trimethylheptane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 142.286)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-8.46356615180193, 0}
+			,{0.148175550646866, 1}
+			,{-0.000104035593595405, 2}
+			,{2.9587001184358e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_3_3_5_trimethylheptane = {
+	.M = 142.286
+	,.T_c = 609.7
+	,.p_c = (23.2 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.382
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-258700 * 1000 / 142.286), (513.358076471575 * 1000 / 142.286)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_3_3_5_trimethylheptane
+};
+
+static const ElementComp elements_rpp_3_3_5_trimethylheptane[] = {
+	{"C", 10}
+	,{"H", 22}
+};
+
+const EosData eos_rpp_3_3_5_trimethylheptane = {
+	"3_3_5_trimethylheptane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_3_3_5_trimethylheptane}
+	,.elements = elements_rpp_3_3_5_trimethylheptane
+	,.nelements = (int)(sizeof(elements_rpp_3_3_5_trimethylheptane) / sizeof(elements_rpp_3_3_5_trimethylheptane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_3_3_tetramethylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 142.286)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.07562308811294, 0}
+			,{0.148055278284328, 1}
+			,{-0.00010620049612109, 2}
+			,{3.11505418973526e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_3_3_tetramethylhexane = {
+	.M = 142.286
+	,.T_c = 623.2
+	,.p_c = (25.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.364
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_3_3_tetramethylhexane
+};
+
+static const ElementComp elements_rpp_2_2_3_3_tetramethylhexane[] = {
+	{"C", 10}
+	,{"H", 22}
+};
+
+const EosData eos_rpp_2_2_3_3_tetramethylhexane = {
+	"2_2_3_3_tetramethylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_3_3_tetramethylhexane}
+	,.elements = elements_rpp_2_2_3_3_tetramethylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_3_3_tetramethylhexane) / sizeof(elements_rpp_2_2_3_3_tetramethylhexane[0]))
+};
+
+
+static const IdealData ideal_data_2_2_5_5_tetramthylhexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 142.286)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.49777908062146, 0}
+			,{0.14853636773448, 1}
+			,{-0.000107764036834085, 2}
+			,{3.15113589849667e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_2_5_5_tetramthylhexane = {
+	.M = 142.286
+	,.T_c = 581.6
+	,.p_c = (21.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.375
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_2_5_5_tetramthylhexane
+};
+
+static const ElementComp elements_rpp_2_2_5_5_tetramthylhexane[] = {
+	{"C", 10}
+	,{"H", 22}
+};
+
+const EosData eos_rpp_2_2_5_5_tetramthylhexane = {
+	"2_2_5_5_tetramthylhexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_2_5_5_tetramthylhexane}
+	,.elements = elements_rpp_2_2_5_5_tetramthylhexane
+	,.nelements = (int)(sizeof(elements_rpp_2_2_5_5_tetramthylhexane) / sizeof(elements_rpp_2_2_5_5_tetramthylhexane[0]))
+};
+
+
+static const IdealData ideal_data_1_methylnaphthalene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 142.201)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.7960545397158, 0}
+			,{0.112899666714459, 1}
+			,{-7.80567632871885e-05, 2}
+			,{2.42950172326842e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_methylnaphthalene = {
+	.M = 142.201
+	,.T_c = 772.0
+	,.p_c = (36.0 * 1e5)
+	,.rho_c = (1000 * 142.201 / 462.0)
+	,.T_t = 0
+	,.omega = 0.310
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (116900 * 1000 / 142.201), (377.569741740734 * 1000 / 142.201)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_methylnaphthalene
+};
+
+static const ElementComp elements_rpp_1_methylnaphthalene[] = {
+	{"C", 11}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_1_methylnaphthalene = {
+	"1_methylnaphthalene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_methylnaphthalene}
+	,.elements = elements_rpp_1_methylnaphthalene
+	,.nelements = (int)(sizeof(elements_rpp_1_methylnaphthalene) / sizeof(elements_rpp_1_methylnaphthalene[0]))
+};
+
+
+static const IdealData ideal_data_2_methylnaphthalene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 142.201)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-6.79779393065007, 0}
+			,{0.108209044575475, 1}
+			,{-7.78162185621124e-05, 2}
+			,{2.21301147069995e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_2_methylnaphthalene = {
+	.M = 142.201
+	,.T_c = 761.0
+	,.p_c = (35.0 * 1e5)
+	,.rho_c = (1000 * 142.201 / 462.0)
+	,.T_t = 0
+	,.omega = 0.382
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (116200 * 1000 / 142.201), (380.252954888479 * 1000 / 142.201)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_2_methylnaphthalene
+};
+
+static const ElementComp elements_rpp_2_methylnaphthalene[] = {
+	{"C", 11}
+	,{"H", 10}
+};
+
+const EosData eos_rpp_2_methylnaphthalene = {
+	"2_methylnaphthalene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_2_methylnaphthalene}
+	,.elements = elements_rpp_2_methylnaphthalene
+	,.nelements = (int)(sizeof(elements_rpp_2_methylnaphthalene) / sizeof(elements_rpp_2_methylnaphthalene[0]))
+};
+
+
+static const IdealData ideal_data_butyl_benzoate = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 178.232)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.08913093728577, 0}
+			,{0.104119784249182, 1}
+			,{-5.54455591300368e-05, 2}
+			,{8.71974628400796e-09, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_butyl_benzoate = {
+	.M = 178.232
+	,.T_c = 723.0
+	,.p_c = (26.0 * 1e5)
+	,.rho_c = (1000 * 178.232 / 561.0)
+	,.T_t = 0
+	,.omega = 0.580
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_butyl_benzoate
+};
+
+static const ElementComp elements_rpp_butyl_benzoate[] = {
+	{"C", 11}
+	,{"H", 14}
+	,{"O", 2}
+};
+
+const EosData eos_rpp_butyl_benzoate = {
+	"butyl_benzoate"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_butyl_benzoate}
+	,.elements = elements_rpp_butyl_benzoate
+	,.nelements = (int)(sizeof(elements_rpp_butyl_benzoate) / sizeof(elements_rpp_butyl_benzoate[0]))
+};
+
+
+static const IdealData ideal_data_n_hexylcylopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 154.297)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.01428418321854, 0}
+			,{0.13566722494291, 1}
+			,{-7.86581250998787e-05, 2}
+			,{1.7680037293092e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_hexylcylopentane = {
+	.M = 154.297
+	,.T_c = 660.1
+	,.p_c = (21.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.476
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-209600 * 1000 / 154.297), (533.956369277209 * 1000 / 154.297)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_hexylcylopentane
+};
+
+static const ElementComp elements_rpp_n_hexylcylopentane[] = {
+	{"C", 11}
+	,{"H", 22}
+};
+
+const EosData eos_rpp_n_hexylcylopentane = {
+	"n_hexylcylopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_hexylcylopentane}
+	,.elements = elements_rpp_n_hexylcylopentane
+	,.nelements = (int)(sizeof(elements_rpp_n_hexylcylopentane) / sizeof(elements_rpp_n_hexylcylopentane[0]))
+};
+
+
+static const IdealData ideal_data_1_undecene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 154.297)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.672322506587648, 0}
+			,{0.120633179625655, 1}
+			,{-6.73525230213028e-05, 2}
+			,{1.4673228229641e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_undecene = {
+	.M = 154.297
+	,.T_c = 637.0
+	,.p_c = (19.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.518
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-1.45E-05 * 1000 / 154.297), (1065.06487166024 * 1000 / 154.297)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_undecene
+};
+
+static const ElementComp elements_rpp_1_undecene[] = {
+	{"C", 11}
+	,{"H", 22}
+};
+
+const EosData eos_rpp_1_undecene = {
+	"1_undecene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_undecene}
+	,.elements = elements_rpp_1_undecene
+	,.nelements = (int)(sizeof(elements_rpp_1_undecene) / sizeof(elements_rpp_1_undecene[0]))
+};
+
+
+static const IdealData ideal_data_n_undecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 156.313)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.01028784531954, 0}
+			,{0.126767070115095, 1}
+			,{-6.97579702720637e-05, 2}
+			,{1.49137729547171e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_undecane = {
+	.M = 156.313
+	,.T_c = 638.8
+	,.p_c = (19.7 * 1e5)
+	,.rho_c = (1000 * 156.313 / 660.0)
+	,.T_t = 0
+	,.omega = 0.535
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-270500 * 1000 / 156.313), (583.124390407513 * 1000 / 156.313)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_undecane
+};
+
+static const ElementComp elements_rpp_n_undecane[] = {
+	{"C", 11}
+	,{"H", 24}
+};
+
+const EosData eos_rpp_n_undecane = {
+	"n_undecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_undecane}
+	,.elements = elements_rpp_n_undecane
+	,.nelements = (int)(sizeof(elements_rpp_n_undecane) / sizeof(elements_rpp_n_undecane[0]))
+};
+
+
+static const IdealData ideal_data_diphenyl_ether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 170.211)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.30414057693522, 0}
+			,{0.111636806907809, 1}
+			,{-7.05998768098299e-05, 2}
+			,{1.63570413051735e-05, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_diphenyl_ether = {
+	.M = 170.211
+	,.T_c = 766.0
+	,.p_c = (31.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.440
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, (49990 / 170.211), NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_diphenyl_ether
+};
+
+static const ElementComp elements_rpp_diphenyl_ether[] = {
+	{"C", 12}
+	,{"H", 10}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_diphenyl_ether = {
+	"diphenyl_ether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_diphenyl_ether}
+	,.elements = elements_rpp_diphenyl_ether
+	,.nelements = (int)(sizeof(elements_rpp_diphenyl_ether) / sizeof(elements_rpp_diphenyl_ether[0]))
+};
+
+
+static const IdealData ideal_data_n_heptylcyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 168.324)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.1273402040043, 0}
+			,{0.147093099384024, 1}
+			,{-8.51528326769329e-05, 2}
+			,{1.92435780060865e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_heptylcyclopentane = {
+	.M = 168.324
+	,.T_c = 679.0
+	,.p_c = (19.4 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.515
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-230300 * 1000 / 168.324), (572.597410699312 * 1000 / 168.324)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_heptylcyclopentane
+};
+
+static const ElementComp elements_rpp_n_heptylcyclopentane[] = {
+	{"C", 12}
+	,{"H", 24}
+};
+
+const EosData eos_rpp_n_heptylcyclopentane = {
+	"n_heptylcyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_heptylcyclopentane}
+	,.elements = elements_rpp_n_heptylcyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_n_heptylcyclopentane) / sizeof(elements_rpp_n_heptylcyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_1_dodecene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 168.324)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.786581250998787, 0}
+			,{0.132059054066769, 1}
+			,{-7.40877753234331e-05, 2}
+			,{1.61164965800975e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_dodecene = {
+	.M = 168.324
+	,.T_c = 657.0
+	,.p_c = (18.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.558
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-165500 * 1000 / 168.324), (617.776012074459 * 1000 / 168.324)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_dodecene
+};
+
+static const ElementComp elements_rpp_1_dodecene[] = {
+	{"C", 12}
+	,{"H", 24}
+};
+
+const EosData eos_rpp_1_dodecene = {
+	"1_dodecene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_dodecene}
+	,.elements = elements_rpp_1_dodecene
+	,.nelements = (int)(sizeof(elements_rpp_1_dodecene) / sizeof(elements_rpp_1_dodecene[0]))
+};
+
+
+static const IdealData ideal_data_n_dodecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 170.340)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.1113166298515, 0}
+			,{0.138192944556209, 1}
+			,{-7.63729502116559e-05, 2}
+			,{1.63570413051735e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_dodecane = {
+	.M = 170.340
+	,.T_c = 658.2
+	,.p_c = (18.2 * 1e5)
+	,.rho_c = (1000 * 170.340 / 713.0)
+	,.T_t = 0
+	,.omega = 0.575
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-291100 * 1000 / 170.340), (622.000212980043 * 1000 / 170.340)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_dodecane
+};
+
+static const ElementComp elements_rpp_n_dodecane[] = {
+	{"C", 12}
+	,{"H", 26}
+};
+
+const EosData eos_rpp_n_dodecane = {
+	"n_dodecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_dodecane}
+	,.elements = elements_rpp_n_dodecane
+	,.nelements = (int)(sizeof(elements_rpp_n_dodecane) / sizeof(elements_rpp_n_dodecane[0]))
+};
+
+
+static const IdealData ideal_data_dihexylether = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 186.339)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{4.03393503952589, 0}
+			,{0.129052245003318, 1}
+			,{-6.66308888460746e-05, 2}
+			,{2.02057569063909e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_dihexylether = {
+	.M = 186.339
+	,.T_c = 657.0
+	,.p_c = (18.2 * 1e5)
+	,.rho_c = (1000 * 186.339 / 720.0)
+	,.T_t = 0
+	,.omega = 0.700
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_dihexylether
+};
+
+static const ElementComp elements_rpp_dihexylether[] = {
+	{"C", 12}
+	,{"H", 26}
+	,{"O", 1}
+};
+
+const EosData eos_rpp_dihexylether = {
+	"dihexylether"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_dihexylether}
+	,.elements = elements_rpp_dihexylether
+	,.nelements = (int)(sizeof(elements_rpp_dihexylether) / sizeof(elements_rpp_dihexylether[0]))
+};
+
+
+static const IdealData ideal_data_n_octylcyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 182.351)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.21032813415555, 0}
+			,{0.1583987014626, 1}
+			,{-9.1527267891449e-05, 2}
+			,{2.0566573994005e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_octylcyclopentane = {
+	.M = 182.351
+	,.T_c = 694.0
+	,.p_c = (17.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.564
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-250900 * 1000 / 182.351), (611.473233271843 * 1000 / 182.351)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_octylcyclopentane
+};
+
+static const ElementComp elements_rpp_n_octylcyclopentane[] = {
+	{"C", 13}
+	,{"H", 26}
+};
+
+const EosData eos_rpp_n_octylcyclopentane = {
+	"n_octylcyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_octylcyclopentane}
+	,.elements = elements_rpp_n_octylcyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_n_octylcyclopentane) / sizeof(elements_rpp_n_octylcyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_1_tridecene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 182.351)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.85633922127085, 0}
+			,{0.143244383782807, 1}
+			,{-8.02216658128732e-05, 2}
+			,{1.74394925680159e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_tridecene = {
+	.M = 182.351
+	,.T_c = 674.0
+	,.p_c = (17.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.598
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-186100 * 1000 / 182.351), (656.819535468724 * 1000 / 182.351)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_tridecene
+};
+
+static const ElementComp elements_rpp_1_tridecene[] = {
+	{"C", 13}
+	,{"H", 26}
+};
+
+const EosData eos_rpp_1_tridecene = {
+	"1_tridecene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_tridecene}
+	,.elements = elements_rpp_1_tridecene
+	,.nelements = (int)(sizeof(elements_rpp_1_tridecene) / sizeof(elements_rpp_1_tridecene[0]))
+};
+
+
+static const IdealData ideal_data_n_tridecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 184.367)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.25804891214791, 0}
+			,{0.149739091359861, 1}
+			,{-8.31082025137862e-05, 2}
+			,{1.79205820181681e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_tridecane = {
+	.M = 184.367
+	,.T_c = 676.0
+	,.p_c = (17.2 * 1e5)
+	,.rho_c = (1000 * 184.367 / 780.0)
+	,.T_t = 0
+	,.omega = 0.619
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-311700 * 1000 / 184.367), (660.976656045615 * 1000 / 184.367)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_tridecane
+};
+
+static const ElementComp elements_rpp_n_tridecane[] = {
+	{"C", 13}
+	,{"H", 28}
+};
+
+const EosData eos_rpp_n_tridecane = {
+	"n_tridecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_tridecane}
+	,.elements = elements_rpp_n_tridecane
+	,.nelements = (int)(sizeof(elements_rpp_n_tridecane) / sizeof(elements_rpp_n_tridecane[0]))
+};
+
+
+static const IdealData ideal_data_n_nonylcyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 196.378)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.31376236593826, 0}
+			,{0.169824575903714, 1}
+			,{-9.81422478310413e-05, 2}
+			,{2.20098423444615e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_nonylcyclopentane = {
+	.M = 196.378
+	,.T_c = 710.5
+	,.p_c = (16.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.610
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-271500 * 1000 / 196.378), (650.583836994801 * 1000 / 196.378)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_nonylcyclopentane
+};
+
+static const ElementComp elements_rpp_n_nonylcyclopentane[] = {
+	{"C", 14}
+	,{"H", 28}
+};
+
+const EosData eos_rpp_n_nonylcyclopentane = {
+	"n_nonylcyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_nonylcyclopentane}
+	,.elements = elements_rpp_n_nonylcyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_n_nonylcyclopentane) / sizeof(elements_rpp_n_nonylcyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_1_tetradecene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 196.378)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-0.958570729428185, 0}
+			,{0.219617333994463, 1}
+			,{-8.67163733899274e-05, 2}
+			,{1.88827609184724e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_tetradecene = {
+	.M = 196.378
+	,.T_c = 689.0
+	,.p_c = (15.6 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.644
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-206700 * 1000 / 196.378), (695.52765721952 * 1000 / 196.378)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_tetradecene
+};
+
+static const ElementComp elements_rpp_1_tetradecene[] = {
+	{"C", 14}
+	,{"H", 28}
+};
+
+const EosData eos_rpp_1_tetradecene = {
+	"1_tetradecene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_tetradecene}
+	,.elements = elements_rpp_1_tetradecene
+	,.nelements = (int)(sizeof(elements_rpp_1_tetradecene) / sizeof(elements_rpp_1_tetradecene[0]))
+};
+
+
+static const IdealData ideal_data_n_tetradecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 198.934)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.32059054066769, 0}
+			,{0.160924421075899, 1}
+			,{-8.92420930032263e-05, 2}
+			,{1.92435780060865e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_tetradecane = {
+	.M = 198.934
+	,.T_c = 693.0
+	,.p_c = (14.4 * 1e5)
+	,.rho_c = (1000 * 198.934 / 830.0)
+	,.T_t = 0
+	,.omega = 0.581
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-332300 * 1000 / 198.934), (700.120799932919 * 1000 / 198.934)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_tetradecane
+};
+
+static const ElementComp elements_rpp_n_tetradecane[] = {
+	{"C", 14}
+	,{"H", 30}
+};
+
+const EosData eos_rpp_n_tetradecane = {
+	"n_tetradecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_tetradecane}
+	,.elements = elements_rpp_n_tetradecane
+	,.nelements = (int)(sizeof(elements_rpp_n_tetradecane) / sizeof(elements_rpp_n_tetradecane[0]))
+};
+
+
+static const IdealData ideal_data_n_decylcyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 210.405)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.44726468835549, 0}
+			,{0.181370722707366, 1}
+			,{-0.000104877500133172, 2}
+			,{2.3573383057456e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_decylcyclopentane = {
+	.M = 210.405
+	,.T_c = 723.8
+	,.p_c = (15.2 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.654
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-292200 * 1000 / 210.405), (689.291958745598 * 1000 / 210.405)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_decylcyclopentane
+};
+
+static const ElementComp elements_rpp_n_decylcyclopentane[] = {
+	{"C", 15}
+	,{"H", 30}
+};
+
+const EosData eos_rpp_n_decylcyclopentane = {
+	"n_decylcyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_decylcyclopentane}
+	,.elements = elements_rpp_n_decylcyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_n_decylcyclopentane) / sizeof(elements_rpp_n_decylcyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_1_pentadecene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 210.405)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.10650573534998, 0}
+			,{0.166216405027572, 1}
+			,{-9.35718980545957e-05, 2}
+			,{2.04463016314669e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_pentadecene = {
+	.M = 210.405
+	,.T_c = 704.0
+	,.p_c = (14.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.682
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-227400 * 1000 / 210.405), (734.571180613785 * 1000 / 210.405)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_pentadecene
+};
+
+static const ElementComp elements_rpp_1_pentadecene[] = {
+	{"C", 15}
+	,{"H", 30}
+};
+
+const EosData eos_rpp_1_pentadecene = {
+	"1_pentadecene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_pentadecene}
+	,.elements = elements_rpp_1_pentadecene
+	,.nelements = (int)(sizeof(elements_rpp_1_pentadecene) / sizeof(elements_rpp_1_pentadecene[0]))
+};
+
+
+static const IdealData ideal_data_n_pentadecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 212.421)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.43364656145345, 0}
+			,{0.172350295517012, 1}
+			,{-9.58570729428185e-05, 2}
+			,{2.0686846356543e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_pentadecane = {
+	.M = 212.421
+	,.T_c = 707.0
+	,.p_c = (15.2 * 1e5)
+	,.rho_c = (1000 * 212.421 / 880.0)
+	,.T_t = 0
+	,.omega = 0.706
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-353000 * 1000 / 212.421), (738.761841355022 * 1000 / 212.421)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_pentadecane
+};
+
+static const ElementComp elements_rpp_n_pentadecane[] = {
+	{"C", 15}
+	,{"H", 32}
+};
+
+const EosData eos_rpp_n_pentadecane = {
+	"n_pentadecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_pentadecane}
+	,.elements = elements_rpp_n_pentadecane
+	,.nelements = (int)(sizeof(elements_rpp_n_pentadecane) / sizeof(elements_rpp_n_pentadecane[0]))
+};
+
+
+static const IdealData ideal_data_n_decylcyclohexane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 224.432)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-8.30119846237558, 0}
+			,{0.198930487637919, 1}
+			,{-0.000115581740399057, 2}
+			,{2.57382855831407e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_decylcyclohexane = {
+	.M = 224.432
+	,.T_c = 750.0
+	,.p_c = (13.5 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.583
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.15, 101325, NAN, NAN}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_decylcyclohexane
+};
+
+static const ElementComp elements_rpp_n_decylcyclohexane[] = {
+	{"C", 16}
+	,{"H", 32}
+};
+
+const EosData eos_rpp_n_decylcyclohexane = {
+	"n_decylcyclohexane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_decylcyclohexane}
+	,.elements = elements_rpp_n_decylcyclohexane
+	,.nelements = (int)(sizeof(elements_rpp_n_decylcyclohexane) / sizeof(elements_rpp_n_decylcyclohexane[0]))
+};
+
+
+static const IdealData ideal_data_1_hexadecene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 224.432)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.16784464024438, 0}
+			,{0.17740173474361, 1}
+			,{-9.98260609065739e-05, 2}
+			,{2.17692976193854e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_hexadecene = {
+	.M = 224.432
+	,.T_c = 717.0
+	,.p_c = (13.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.721
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-248000 * 1000 / 224.432), (773.614704008049 * 1000 / 224.432)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_hexadecene
+};
+
+static const ElementComp elements_rpp_1_hexadecene[] = {
+	{"C", 16}
+	,{"H", 32}
+};
+
+const EosData eos_rpp_1_hexadecene = {
+	"1_hexadecene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_hexadecene}
+	,.elements = elements_rpp_1_hexadecene
+	,.nelements = (int)(sizeof(elements_rpp_1_hexadecene) / sizeof(elements_rpp_1_hexadecene[0]))
+};
+
+
+static const IdealData ideal_data_n_hexadecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 226.448)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.56594616024529, 0}
+			,{0.183896442320664, 1}
+			,{-0.000102712597607487, 2}
+			,{2.22503870695375e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_hexadecane = {
+	.M = 226.448
+	,.T_c = 722.0
+	,.p_c = (14.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.742
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-373600 * 1000 / 226.448), (777.604123763206 * 1000 / 226.448)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_hexadecane
+};
+
+static const ElementComp elements_rpp_n_hexadecane[] = {
+	{"C", 16}
+	,{"H", 34}
+};
+
+const EosData eos_rpp_n_hexadecane = {
+	"n_hexadecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_hexadecane}
+	,.elements = elements_rpp_n_hexadecane
+	,.nelements = (int)(sizeof(elements_rpp_n_hexadecane) / sizeof(elements_rpp_n_hexadecane[0]))
+};
+
+
+static const IdealData ideal_data_n_dodecylcyclopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 238.459)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.60842965415646, 0}
+			,{0.203861654501979, 1}
+			,{-0.000117506098199666, 2}
+			,{2.63396473958309e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_dodecylcyclopentane = {
+	.M = 238.459
+	,.T_c = 750.0
+	,.p_c = (12.9 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.719
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-336100 * 1000 / 238.459), (767.379005534127 * 1000 / 238.459)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_dodecylcyclopentane
+};
+
+static const ElementComp elements_rpp_n_dodecylcyclopentane[] = {
+	{"C", 17}
+	,{"H", 34}
+};
+
+const EosData eos_rpp_n_dodecylcyclopentane = {
+	"n_dodecylcyclopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_dodecylcyclopentane}
+	,.elements = elements_rpp_n_dodecylcyclopentane
+	,.nelements = (int)(sizeof(elements_rpp_n_dodecylcyclopentane) / sizeof(elements_rpp_n_dodecylcyclopentane[0]))
+};
+
+
+static const IdealData ideal_data_n_heptadecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 240.475)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.68020490465643, 0}
+			,{0.195322316761778, 1}
+			,{-0.000109207305184541, 2}
+			,{2.3693655419994e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_heptadecane = {
+	.M = 240.475
+	,.T_c = 733.0
+	,.p_c = (13.0 * 1e5)
+	,.rho_c = (1000 * 240.475 / 1000.0)
+	,.T_t = 0
+	,.omega = 0.770
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-394200 * 1000 / 240.475), (816.614106993124 * 1000 / 240.475)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_heptadecane
+};
+
+static const ElementComp elements_rpp_n_heptadecane[] = {
+	{"C", 17}
+	,{"H", 36}
+};
+
+const EosData eos_rpp_n_heptadecane = {
+	"n_heptadecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_heptadecane}
+	,.elements = elements_rpp_n_heptadecane
+	,.nelements = (int)(sizeof(elements_rpp_n_heptadecane) / sizeof(elements_rpp_n_heptadecane[0]))
+};
+
+
+static const IdealData ideal_data_1_octadecene = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 252.486)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.362685867556, 0}
+			,{0.2001332112633, 1}
+			,{-0.000112695203698144, 2}
+			,{2.46558343202984e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_octadecene = {
+	.M = 252.486
+	,.T_c = 739.0
+	,.p_c = (11.3 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.807
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-289200 * 1000 / 252.486), (851.701750796578 * 1000 / 252.486)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_octadecene
+};
+
+static const ElementComp elements_rpp_1_octadecene[] = {
+	{"C", 18}
+	,{"H", 36}
+};
+
+const EosData eos_rpp_1_octadecene = {
+	"1_octadecene"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_octadecene}
+	,.elements = elements_rpp_1_octadecene
+	,.nelements = (int)(sizeof(elements_rpp_1_octadecene) / sizeof(elements_rpp_1_octadecene[0]))
+};
+
+
+static const IdealData ideal_data_n_tridecylcylopentane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 252.486)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.7226883985676, 0}
+			,{0.215287528943093, 1}
+			,{-0.000123880533414182, 2}
+			,{2.77829157462874e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_tridecylcylopentane = {
+	.M = 252.486
+	,.T_c = 761.0
+	,.p_c = (12.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.755
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-354000 * 1000 / 252.486), (806.422528928391 * 1000 / 252.486)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_tridecylcylopentane
+};
+
+static const ElementComp elements_rpp_n_tridecylcylopentane[] = {
+	{"C", 18}
+	,{"H", 36}
+};
+
+const EosData eos_rpp_n_tridecylcylopentane = {
+	"n_tridecylcylopentane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_tridecylcylopentane}
+	,.elements = elements_rpp_n_tridecylcylopentane
+	,.nelements = (int)(sizeof(elements_rpp_n_tridecylcylopentane) / sizeof(elements_rpp_n_tridecylcylopentane[0]))
+};
+
+
+static const IdealData ideal_data_n_octadecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 254.504)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.74034108592545, 0}
+			,{0.206507646477816, 1}
+			,{-0.000115341195673981, 2}
+			,{2.50166514079125e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_octadecane = {
+	.M = 254.504
+	,.T_c = 748.0
+	,.p_c = (12.0 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.790
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-414800 * 1000 / 254.504), (855.489929565655 * 1000 / 254.504)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_octadecane
+};
+
+static const ElementComp elements_rpp_n_octadecane[] = {
+	{"C", 18}
+	,{"H", 38}
+};
+
+const EosData eos_rpp_n_octadecane = {
+	"n_octadecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_octadecane}
+	,.elements = elements_rpp_n_octadecane
+	,.nelements = (int)(sizeof(elements_rpp_n_octadecane) / sizeof(elements_rpp_n_octadecane[0]))
+};
+
+
+static const IdealData ideal_data_1_cyclopentyltetradecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 266.513)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.80928449959499, 0}
+			,{0.226593131021669, 1}
+			,{-0.000131096875166464, 2}
+			,{2.92261840967439e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_cyclopentyltetradecane = {
+	.M = 266.513
+	,.T_c = 772.0
+	,.p_c = (11.2 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.789
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-374600 * 1000 / 266.513), (845.130650679188 * 1000 / 266.513)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_cyclopentyltetradecane
+};
+
+static const ElementComp elements_rpp_1_cyclopentyltetradecane[] = {
+	{"C", 19}
+	,{"H", 38}
+};
+
+const EosData eos_rpp_1_cyclopentyltetradecane = {
+	"1_cyclopentyltetradecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_cyclopentyltetradecane}
+	,.elements = elements_rpp_1_cyclopentyltetradecane
+	,.nelements = (int)(sizeof(elements_rpp_1_cyclopentyltetradecane) / sizeof(elements_rpp_1_cyclopentyltetradecane[0]))
+};
+
+
+static const IdealData ideal_data_n_nonadecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 268.529)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-1.86301889571425, 0}
+			,{0.21793352091893, 1}
+			,{-0.000122677809788802, 2}
+			,{2.6580192120907e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_nonadecane = {
+	.M = 268.529
+	,.T_c = 756.0
+	,.p_c = (11.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.827
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-435400 * 1000 / 268.529), (894.533452959919 * 1000 / 268.529)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_nonadecane
+};
+
+static const ElementComp elements_rpp_n_nonadecane[] = {
+	{"C", 19}
+	,{"H", 40}
+};
+
+const EosData eos_rpp_n_nonadecane = {
+	"n_nonadecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_nonadecane}
+	,.elements = elements_rpp_n_nonadecane
+	,.nelements = (int)(sizeof(elements_rpp_n_nonadecane) / sizeof(elements_rpp_n_nonadecane[0]))
+};
+
+
+static const IdealData ideal_data_1_cyclopentylpentadecane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 280.540)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-7.94880044013912, 0}
+			,{0.238139277825321, 1}
+			,{-0.000137110493293366, 2}
+			,{3.06694524472004e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_1_cyclopentylpentadecane = {
+	.M = 280.540
+	,.T_c = 780.0
+	,.p_c = (10.2 * 1e5)
+	,.rho_c = -1
+	,.T_t = 0
+	,.omega = 0.833
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-395300 * 1000 / 280.540), (883.838772429984 * 1000 / 280.540)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_1_cyclopentylpentadecane
+};
+
+static const ElementComp elements_rpp_1_cyclopentylpentadecane[] = {
+	{"C", 20}
+	,{"H", 40}
+};
+
+const EosData eos_rpp_1_cyclopentylpentadecane = {
+	"1_cyclopentylpentadecane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_1_cyclopentylpentadecane}
+	,.elements = elements_rpp_1_cyclopentylpentadecane
+	,.nelements = (int)(sizeof(elements_rpp_1_cyclopentylpentadecane) / sizeof(elements_rpp_1_cyclopentylpentadecane[0]))
+};
+
+
+static const IdealData ideal_data_n_eicosane = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = (R_UNIVERSAL / 282.556)
+		,.Tstar = 1
+		,.np = 4
+		,.pt = (const Cp0PowTerm[]){
+			{-2.69169547360135, 0}
+			,{0.233208110961261, 1}
+			,{-0.000134705046042606, 2}
+			,{3.04289077221243e-08, 3}
+		}
+	}}
+};
+
+static const CubicData cubic_data_n_eicosane = {
+	.M = 282.556
+	,.T_c = 767.0
+	,.p_c = (11.1 * 1e5)
+	,.rho_c = -1
+	,.T_t = 309.64
+	,.omega = 0.907
+	/* ref0 rebuilt from RPP DelHf0/DelGf0 plus elemental Sdeg(298.15 K); see convcomp.py Eq. 3-1.9 notes */
+	,.ref0 = {FPROPS_REF_TPHS0,{.tphs={298.15, 101325, (-456100 * 1000 / 282.556), (933.241574710716 * 1000 / 282.556)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_n_eicosane
+};
+
+static const ElementComp elements_rpp_n_eicosane[] = {
+	{"C", 20}
+	,{"H", 42}
+};
+
+const EosData eos_rpp_n_eicosane = {
+	"n_eicosane"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_n_eicosane}
+	,.elements = elements_rpp_n_eicosane
+	,.nelements = (int)(sizeof(elements_rpp_n_eicosane) / sizeof(elements_rpp_n_eicosane[0]))
 };
 

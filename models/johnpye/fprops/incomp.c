@@ -114,6 +114,13 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	D->rho_c = NAN;
 	D->omega = NAN;
 
+	if(I->rho.np == 0 || I->rho.pt == NULL){
+		ERRMSG("Density data missing in the provided filedata");
+		FPROPS_FREE(P->data);
+		FPROPS_FREE(P);
+		return NULL;
+	}
+
 	IncompRunData *R = FPROPS_NEW(IncompRunData);
 	D->corr.incomp = R;
 
@@ -169,6 +176,19 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	//MSG("P->data->corr.incomp = %p",P->data->corr.incomp);
 
 	return P;
+}
+
+void incomp_destroy(PureFluid *P){
+	if(!P){
+		return;
+	}
+	if(P->data){
+		FPROPS_FREE(P->data->corr.incomp);
+		P->data->corr.incomp = NULL;
+		FPROPS_FREE(P->data);
+		P->data = NULL;
+	}
+	FPROPS_FREE(P);
 }
 
 

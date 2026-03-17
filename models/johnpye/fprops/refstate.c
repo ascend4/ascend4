@@ -55,7 +55,10 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 	P->data->cp0->c = 0;
 	P->data->cp0->m = 0;
 	int err;
-	FluidState2 S1, S2;
+	FluidState2 S1;
+#ifdef REF_DEBUG
+	FluidState2 S2;
+#endif
 	double T, p, rho, rho_f, rho_g, h1, h2, s1, s2, resid;
 #ifdef REF_DEBUG
 	double u, g2;
@@ -71,43 +74,24 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPHS0:
-		/* FIXME we seem to have errors here, as tested with fluids/oxygen.c */
 		T = ref->data.tphs.T0;
 		p = ref->data.tphs.p0;
 		h1 = ref->data.tphs.h0;
 		s1 = ref->data.tphs.s0;
-		MSG("state: p=%f, T=%f",p,T);
-		MSG("R = %f",P->data->R);
-		/* at this state, rho0 = p/R*T -- by ideal gas equation. */
+		/* For zero-pressure reference data, anchor against the ideal-gas state
+		   at rho = p/(R T), then shift only the phi0 constants c and m. */
 		double rho0 = p / P->data->R / T;
 
 		P->data->cp0->m = 0;
 		P->data->cp0->c = 0;
 
+		h2 = ideal_h((FluidStateUnion){.Trho={T, rho0}}, P->data, &res);
+		if(res)return 9000 + res;
+		s2 = ideal_s((FluidStateUnion){.Trho={T, rho0}}, P->data, &res);
+		if(res)return 10000 + res;
 
-		h2 = ideal_h((FluidStateUnion){.Trho={T,rho0}},P->data,&res);
-		s2 = ideal_s((FluidStateUnion){.Trho={T,rho0}},P->data,&res);
-		MSG("h2 = %f",h2);
-
-		P->data->cp0->m = -h1 / P->data->R / P->data->T_c;
-
-#if 1
-		P->data->cp0->m = -h1 / P->data->R / P->data->T_c;
-		P->data->cp0->c = -s1/P->data->R - 1. - log(p/(P->data->rhostar*P->data->R*T)) + log(P->data->Tstar/T);
-#else
-		h2 = ideal_h(T,rho0,P->data,&res);
-		if(res)return 9000+res;
-		s2 = ideal_s(T,rho0,P->data,&res);
-		if(res)return 10000+res;
-		P->data->cp0->c = (s2 - s1)/P->data->R;
-		P->data->cp0->m = -(h2 - h1) / P->data->R / P->data->T_c;
-#endif
-		MSG("m = %f",P->data->cp0->m);
-		MSG("c = %f",P->data->cp0->c);
-		if(1){
-			MSG("ideal_h(p0,T0) = %g",ideal_h((FluidStateUnion){.Trho={T,rho0}},P->data,&res));
-			MSG("ideal_s(p0,T0) = %g",ideal_s((FluidStateUnion){.Trho={T,rho0}},P->data,&res));
-		}
+		P->data->cp0->c = -(s1 - s2) / P->data->R;
+		P->data->cp0->m = (h1 - h2) / P->data->R / P->data->Tstar;
 		MSG("Set TPHS0 reference state.");
 		return 0;
 
@@ -148,7 +132,7 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 		s2 = 1e3;
 
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
 
 		MSG("Done");
 		return 0;
@@ -179,7 +163,7 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 		if(res)return 3000+res;
 		h2 = 0; s2 = 0;
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
 		MSG("h at T,rhof = %f",fprops_h(S1,&res));
 		MSG("s at T,rhof = %f",fprops_s(S1,&res));
 		return 0;
@@ -202,7 +186,7 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 		s2 = ref->data.trhs.s0;
 
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
 		MSG("Set TRHS reference state.");
 		return 0;
 
@@ -233,7 +217,7 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 		s2 = ref->data.tpus.s0;
 
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
 
 #ifdef REF_DEBUG
 		S1 = fprops_set_Trho(T,rho,P,&res);
@@ -249,11 +233,11 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 		MSG("Set TRUS reference state.");
 		return 0;
 
-	case FPROPS_REF_TPHS:
-		/* need to solve for T,p first... */
-		T = ref->data.tphs.T0;
-		p = ref->data.tphs.p0;
-		h2 = ref->data.tphs.h0;
+		case FPROPS_REF_TPHS:
+			/* need to solve for T,p first... */
+			T = ref->data.tphs.T0;
+			p = ref->data.tphs.p0;
+			h2 = ref->data.tphs.h0;
 		s2 = ref->data.tphs.s0;
 
 		switch(P->type){
@@ -266,7 +250,7 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 			if(res){ERRMSG("Unable to calculate s(T0,p0)");return 1900+res;}
 
 			P->data->cp0->c = -(s2 - s1)/P->data->R;
-			P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+			P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
 
 			S2 = fprops_set_Tp(T,p,P,&res);
 			break;
@@ -286,28 +270,32 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 			MSG("Check: p(T,rho) = %f", fprops_p(fprops_set_Trho(T,rho,P,&res),&res));
 		}
 
-		S1 = fprops_set_Trho(T,rho,P,&res);
-		h1 = fprops_h(S1,&res);
-		if(res)return 2000+res;
-		s1 = fprops_s(S1,&res);
-		if(res)return 3000+res;
+			S1 = fprops_set_Trho(T,rho,P,&res);
+			h1 = fprops_h(S1,&res);
+			if(res)return 2000+res;
+			s1 = fprops_s(S1,&res);
+			if(res)return 3000+res;
+				break;
+			default:
+				ERRMSG("Not implemented: FPROPS_REF_TPHS with this fluid type.");
+				return 1;
+			}
+			P->data->cp0->c = -(s2 - s1)/P->data->R;
+			P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
 
-		S2 = fprops_set_Trho(T,rho,P,&res);
-			break;
-		default:
-			ERRMSG("Not implemented: FPROPS_REF_TPHS with this fluid type.");
-			return 1;
-		}
-		h2 = fprops_h(S2,&res);
-		s2 = fprops_s(S2,&res);
-		p = fprops_p(S2,&res);
-		if(res)return 4000+res;
+#ifdef REF_DEBUG
+			S2 = fprops_set_Trho(T,rho,P,&res);
+			if(res)return 3500+res;
+			h2 = fprops_h(S2,&res);
+			s2 = fprops_s(S2,&res);
+			p = fprops_p(S2,&res);
+			if(res)return 4000+res;
+			MSG("Resulting reference values: h = %f, s = %f, p = %f kPa",h2,s2,p);
+			MSG("...at T = %f K , rho = %f kg/m3",T, rho);
+#endif
 
-		MSG("Resulting reference values: h = %f, s = %f, p = %f kPa",h2,s2,p);
-		MSG("...at T = %f K , rho = %f kg/m3",T, rho);
-
-		MSG("Set TPHS reference state.");
-		return 0;
+			MSG("Set TPHS reference state.");
+			return 0;
 
 	case FPROPS_REF_TPF:
 		if(P->type == FPROPS_IDEAL){
@@ -326,7 +314,7 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 		h2 = 0;
 		s2 = 0;
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
 		MSG("Set TPF reference state.");
 		return 0;
 
@@ -347,7 +335,7 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 		h2 = p / rho_f;
 		s2 = 0;
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
 		MSG("Set TPFU reference state.");
 		return 0;
 
@@ -384,18 +372,18 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 			MSG("Check: p(T,rho) = %f", fprops_p(fprops_set_Trho(T,rho,P,&res),&res));
 		}
 
-		S1 = fprops_set_Trho(T,rho,P,&res);
-		h1 = fprops_h(S1,&res);
-		if(res)return 2000+res;
-		s1 = fprops_g(S1,&res);
-		if(res)return 3000+res;
+			S1 = fprops_set_Trho(T,rho,P,&res);
+			h1 = fprops_h(S1,&res);
+			if(res)return 2000+res;
+			s1 = fprops_s(S1,&res);
+			if(res)return 3000+res;
 
 		// calculuate target entropy value from reference h0, g0, T0 (using g = h - Ts)
 		h2 = ref->data.tphg.h0;
 		s2 = (ref->data.tphg.h0 - ref->data.tphg.g0) / ref->data.tphg.T0;
 
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
 
 #ifdef REF_DEBUG
 		S2 = fprops_set_Trho(T,rho,P,&res);

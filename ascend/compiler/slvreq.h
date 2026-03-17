@@ -43,23 +43,53 @@
 typedef int SlvReqSetSolverFn(const char *solvername, void *user_data);
 typedef int SlvReqSetOptionFn(const char *optionname, struct value_t *val, void *user_data);
 typedef int SlvReqDoSolveFn(struct Instance *instance, void *user_data);
+typedef int SlvReqDeleteSystemFn(void *user_data);
+
+enum SlvReqStudyMode{
+	SLVREQ_STUDY_NONE = 0,
+	SLVREQ_STUDY_STEPS,
+	SLVREQ_STUDY_STEP,
+	SLVREQ_STUDY_RATIO
+};
+
+enum SlvReqStudyDistribution{
+	SLVREQ_STUDY_DIST_DEFAULT = 0,
+	SLVREQ_STUDY_DIST_LINEAR,
+	SLVREQ_STUDY_DIST_LOG
+};
+
+typedef struct SlvReqStudyRequest_struct{
+	unsigned long n_observed;
+	struct Instance **observed;
+	struct Instance *vary;
+	struct value_t lower;
+	struct value_t upper;
+	struct value_t value;
+	long steps;
+	enum SlvReqStudyMode mode;
+	enum SlvReqStudyDistribution distribution;
+	const char *run_method;
+	unsigned int now;
+	const char *filename;
+} SlvReqStudyRequest;
+
+typedef int SlvReqDoStudyFn(const SlvReqStudyRequest *request, void *user_data);
 
 typedef struct SlvReqHooks_struct{
 	SlvReqSetSolverFn *set_solver_fn;
 	SlvReqSetOptionFn *set_option_fn;
 	SlvReqDoSolveFn *do_solve_fn;
+	SlvReqDoStudyFn *do_study_fn;
+	SlvReqDeleteSystemFn *delete_system_fn;
 	void *user_data;
 } SlvReqHooks;
+
+#define SLVREQ_HOOKS_EMPTY {NULL, NULL, NULL, NULL, NULL, NULL}
 
 /**
 	Store hook functions in the simulation instance.
 */
-ASC_DLLSPEC int slvreq_assign_hooks(struct Instance *siminst
-		, SlvReqSetSolverFn *set_solver_fn
-		, SlvReqSetOptionFn *set_option_fn
-		, SlvReqDoSolveFn *do_solve_fn
-		, void *user_data
-);
+ASC_DLLSPEC int slvreq_assign_hooks(struct Instance *siminst, const SlvReqHooks *hooks);
 
 /**
 	Free the little bit of memory where slvreq hooks are stored, if
@@ -140,5 +170,17 @@ int slvreq_set_option(struct Instance *inst, const char *optionname, struct valu
 */
 int slvreq_do_solve(struct Instance *inst);
 
-#endif /* ASC_SLVREQ_H */
+#define SLVREQ_STUDY_HOOK_NOT_SET -1
+#define SLVREQ_STUDY_INVALID_REQUEST 1
+#define SLVREQ_STUDY_IO_ERROR 2
+/**
+	Request the user interface to execute or surface a STUDY request.
+	The interface may choose to run immediately, open a dialog, or write
+	results to a file/console according to its own capabilities.
+*/
+int slvreq_do_study(struct Instance *inst, const SlvReqStudyRequest *request);
 
+#define SLVREQ_DELETE_HOOK_NOT_SET -1
+int slvreq_delete_system(struct Instance *inst);
+
+#endif /* ASC_SLVREQ_H */

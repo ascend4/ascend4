@@ -180,9 +180,14 @@ int ida_bnd_update_relist(IntegratorSystem *integ){
 	return 0;
 }
 
-N_Vector ida_bnd_new_zero_NV(long int vec_length){
+N_Vector ida_bnd_new_zero_NV(IntegratorSystem *integ, long int vec_length){
 	int i;
+#if SUNDIALS_VERSION_MAJOR >= 6
+	IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+	N_Vector nv = N_VNew_Serial(vec_length, enginedata->sunctx);
+#else
 	N_Vector nv = N_VNew_Serial(vec_length);
+#endif
 	for(i= 0; i< vec_length; i++) {
 		NV_Ith_S(nv,i) = 0.0;
 	}
@@ -197,10 +202,10 @@ void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vect
 	N_VDestroy_Serial(yp0);
 	/* retrieve new initial values from the system */
 	t0 = integrator_get_t(integ);
-	y0 = ida_bnd_new_zero_NV(integ->n_y);
+	y0 = ida_bnd_new_zero_NV(integ, integ->n_y);
 	integrator_get_y(integ, NV_DATA_S(y0));
 
-	yp0 = ida_bnd_new_zero_NV(integ->n_y);
+	yp0 = ida_bnd_new_zero_NV(integ, integ->n_y);
 	integrator_get_ydot(integ, NV_DATA_S(yp0));
 
 #ifdef IDA_BND_DEBUG
@@ -230,7 +235,7 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	IntegratorIdaData *enginedata;
 	slv_status_t status;
 
-	struct bnd_boundary *bnd;
+	struct bnd_boundary *bnd = NULL;
 	int i, num_bnds;
 
 	/* Flag the crossed boundary and update bnd_cond_states */
@@ -266,7 +271,9 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	}
 
 	/* Reset the boundary flag */
-	bnd_set_ida_crossed(bnd, 0);
+	if(bnd != NULL){
+		bnd_set_ida_crossed(bnd, 0);
+	}
 
 	/* update the main system if required */
 	if (some_dis_vars_changed(integ->system)) {

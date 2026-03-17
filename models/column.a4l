@@ -941,6 +941,44 @@ METHOD default_all;
 	RUN default_self;
 END default_all;
 
+METHOD reset_to_mass_balance;
+	RUN Column.reset_to_mass_balance;
+END reset_to_mass_balance;
+
+METHOD reset_to_full_thermo;
+	RUN Column.reset_to_full_thermo;
+END reset_to_full_thermo;
+
+METHOD reset_to_adiabatic;
+	RUN Column.reset_to_adiabatic;
+END reset_to_adiabatic;
+
+METHOD on_load;
+	RUN default_all;
+	RUN values;
+	SOLVER QRSlv;
+	RUN reset_to_mass_balance;
+	SOLVE Column;
+	RUN check_self;
+	DELETE SYSTEM;
+	RUN reset_to_full_thermo;
+	SOLVE Column;
+	RUN check_self;
+	DELETE SYSTEM;
+	RUN reset_to_adiabatic;
+	SOLVE Column;
+	RUN check_self;
+END on_load;
+
+METHOD self_test;
+	ASSERT abs(Distillate.T - 298.0 {K}) < 1e-4 {K};
+	ASSERT abs(Bottoms.T - 356.40811286782946 {K}) < 1e-4 {K};
+	ASSERT abs(Distillate.f['n_pentane'] - 2.962078641034945 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(Distillate.f['n_hexane'] - 1.1524339840455957 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(Bottoms.f['n_heptane'] - 2.99379391908281 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(Bottoms.f['n_pentane'] - 0.03792135896505528 {mole/s}) < 1e-5 {mole/s};
+END self_test;
+
 METHOD values;
 	Column.feed_tray.alpha['n_pentane'] := 3;
 	Column.feed_tray.alpha['n_hexane'] := 2;
@@ -1105,7 +1143,7 @@ METHOD default_self;
 	RUN demo.default_self;
 END default_self;
 METHOD default_all;
-	RUN demo.scale_all;
+	RUN demo.default_all;
 END default_all;
 METHOD scale_self;
 	RUN demo.scale_self;
@@ -1140,21 +1178,62 @@ METHOD reset_to_adiabatic;
 	RUN demo.Column.reset_to_adiabatic;
 END reset_to_adiabatic;
 
+METHOD on_load;
+	RUN default_all;
+	RUN values;
+	SOLVER QRSlv;
+	RUN reset_to_mass_balance;
+	SOLVE demo.Column;
+	RUN check_self;
+	DELETE SYSTEM;
+	RUN reset_to_full_thermo;
+	SOLVE demo.Column;
+	RUN check_self;
+	DELETE SYSTEM;
+	RUN reset_to_adiabatic;
+	SOLVE demo.Column;
+	RUN check_self;
+END on_load;
+
 END test_demo_column;
 
 MODEL mw_demo_column() REFINES test_demo_column();
 	demo IS_A demo_column(['methanol','water'],'water',13,7);
 METHODS
+METHOD self_test;
+	ASSERT abs(demo.Distillate.T - 298.0 {K}) < 1e-4 {K};
+	ASSERT abs(demo.Bottoms.T - 358.80781228734696 {K}) < 1e-4 {K};
+	ASSERT abs(demo.Distillate.f['methanol'] - 2.6701220626574003 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(demo.Distillate.f['water'] - 0.07451819708618523 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(demo.Bottoms.f['water'] - 2.925481802913813 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(demo.Bottoms.f['methanol'] - 0.329877937342603 {mole/s}) < 1e-5 {mole/s};
+END self_test;
 END mw_demo_column;
 
 MODEL abc_demo_column() REFINES test_demo_column();
 	demo IS_A
 	demo_column(['benzene','chloroform','acetone'],'benzene',13,7);
 METHODS
+METHOD self_test;
+	ASSERT abs(demo.Distillate.T - 298.0 {K}) < 1e-4 {K};
+	ASSERT abs(demo.Bottoms.T - 342.07269028269167 {K}) < 1e-4 {K};
+	ASSERT abs(demo.Distillate.f['acetone'] - 2.112947073156358 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(demo.Distillate.f['benzene'] - 0.599692029837991 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(demo.Bottoms.f['chloroform'] - 1.8402117830460596 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(demo.Bottoms.f['acetone'] - 0.8870529268436411 {mole/s}) < 1e-5 {mole/s};
+END self_test;
 END abc_demo_column;
 
 MODEL c567_demo_column() REFINES test_demo_column();
 	demo IS_A
 	demo_column(['n_pentane','n_hexane','n_heptane'],'n_heptane',13,7);
 METHODS
+METHOD self_test;
+	ASSERT abs(demo.Distillate.T - 298.0 {K}) < 1e-4 {K};
+	ASSERT abs(demo.Bottoms.T - 356.40811286782946 {K}) < 1e-4 {K};
+	ASSERT abs(demo.Distillate.f['n_pentane'] - 2.962078641034949 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(demo.Distillate.f['n_hexane'] - 1.1524339840455966 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(demo.Bottoms.f['n_heptane'] - 2.993793919082802 {mole/s}) < 1e-5 {mole/s};
+	ASSERT abs(demo.Bottoms.f['n_pentane'] - 0.03792135896505477 {mole/s}) < 1e-5 {mole/s};
+END self_test;
 END c567_demo_column;

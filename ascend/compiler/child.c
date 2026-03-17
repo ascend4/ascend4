@@ -361,7 +361,7 @@ unsigned int ChildParametric(ChildListPtr cl, unsigned long int n)
 
 CONST struct Statement *ChildStatement(ChildListPtr cl, unsigned long int n)
 {
-  assert(cl!=NULL && CGET(cl,n)->statement!=NULL);
+  assert(cl!=NULL && n && n <= gl_length(GL(cl)));
   return CGET(cl,n)->statement;
 }
 
@@ -488,4 +488,3 @@ extern int CompareChildLists(ChildListPtr cl1,
     return -1;
   }
 }
-

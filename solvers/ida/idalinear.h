@@ -49,6 +49,7 @@ typedef int IntegratorSparseJacFn(long int Neq, realtype tt
 
 #define IDAASCEND_MEM_NULL -1
 #define IDAASCEND_LMEM_NULL -2
+#define IDAASCEND_ILL_INPUT -3
 #define IDAASCEND_MEM_FAIL -4
 #define IDAASCEND_JACFN_UNDEF -5
 #define IDAASCEND_JACFN_UNRECVR -6
@@ -73,11 +74,11 @@ int IDAASCENDSetJacFn(void *ida_mem, IntegratorSparseJacFn *jacfn, void *jac_dat
 	@param flag variable into which the last flag is returned
 	@return non-zero if unable to retrieve the last flag successfully (eg if ida_mem is NULL)
 */
-int IDAASCENDGetLastFlag(void *ida_mem, int *flag);
+int IDAASCENDGetLastFlag(void *ida_mem, long int *flag);
 
 /**
 	You need to free the returned string here.
 */
-char *IDAASCENDGetReturnFlagName(int flag);
+char *IDAASCENDGetReturnFlagName(long int flag);
 
 #endif

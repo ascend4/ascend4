@@ -1,47 +1,160 @@
 Import('env')
+import SCons.Util
 
-if env.get('WITH_IDA'):
+sundials_version_major_required = 5
+sundials_version_minor_min = 0
 
-	solver_env = env.Clone()
+sundials_version_text = """
+#include <sundials/sundials_config.h>
+#include <stdio.h>
+int main(void){
+	printf("%s", SUNDIALS_VERSION);
+	return 0;
+}
+"""
 
-	if env.get('WITH_MMIO'):
-		solver_env.Append(CPPPATH=["#/mmio"])
+ida_test_text = """
+#if SUNDIALS_VERSION_MAJOR >= 6
+# include <sundials/sundials_config.h>
+# include <sundials/sundials_context.h>
+# include <nvector/nvector_serial.h>
+# include <ida/ida.h>
+#else
+# include <sundials/sundials_config.h>
+# include <nvector/nvector_serial.h>
+# include <ida/ida.h>
+# include <ida/ida_ls.h>
+# include <sunmatrix/sunmatrix_dense.h>
+# include <sunlinsol/sunlinsol_dense.h>
+#endif
+int main(void){
+	void *ida_mem;
+#if SUNDIALS_VERSION_MAJOR >= 6
+	SUNContext sunctx;
+# if SUNDIALS_VERSION_MAJOR >= 7
+	SUNContext_Create(SUN_COMM_NULL, &sunctx);
+# else
+	SUNContext_Create(NULL, &sunctx);
+# endif
+	ida_mem = IDACreate(sunctx);
+#else
+	ida_mem = IDACreate();
+#endif
+	return ida_mem == NULL;
+}
+"""
 
-	if env.get('SUNDIALS_CPPPATH'):
-		solver_env.Append(CPPPATH=[env.get('SUNDIALS_CPPPATH')])
+def _as_list(value):
+	if value is None:
+		return []
+	if SCons.Util.is_List(value):
+		return list(value)
+	return [value]
 
-	if env.get('SUNDIALS_CPPPATH_EXTRA'):
-		solver_env.AppendUnique(
-			CPPPATH=env.get('SUNDIALS_CPPPATH_EXTRA')
+def _default_sundials_libs(major):
+	libs = ['sundials_ida', 'sundials_nvecserial']
+	if major >= 5:
+		core_lib = 'sundials_generic'
+		if major >= 7:
+			core_lib = 'sundials_core'
+		libs.extend([
+			'sundials_sunlinsoldense',
+			'sundials_sunlinsolspgmr',
+			'sundials_sunlinsolspbcgs',
+			'sundials_sunlinsolsptfqmr',
+			'sundials_sunmatrixdense',
+			core_lib,
+		])
+	libs.append('m')
+	return libs
+
+def CheckSUNDIALSVersion(context):
+	context.Message('Checking for SUNDIALS... ')
+	is_ok, output = context.TryRun(sundials_version_text, '.c')
+	if not is_ok:
+		context.Result('no')
+		return False
+
+	try:
+		major, minor, patch = tuple(int(i) for i in output.split('.'))
+	except Exception:
+		context.Result('no (unparseable version)')
+		return False
+
+	context.env['SUNDIALS_VERSION_MAJOR'] = major
+	context.env['SUNDIALS_VERSION_MINOR'] = minor
+	context.env['SUNDIALS_CPPPATH_EXTRA'] = []
+	if major == 2 and minor == 2 and context.env.get('SUNDIALS_CPPPATH'):
+		extra_cpppath = ['%s/sundials' % p for p in _as_list(context.env.get('SUNDIALS_CPPPATH'))]
+		context.env.AppendUnique(
+			SUNDIALS_CPPPATH_EXTRA=extra_cpppath
 		)
 
-	solver_env.Append(
-		CPPDEFINES=[
-			('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR")
-			,('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")
-			,'ASC_WITH_IDA'
-		]
-	)
+	if major < sundials_version_major_required or (
+		major == sundials_version_major_required and minor < sundials_version_minor_min
+	):
+		context.Result('%s (bad version)' % output.strip())
+		return False
 
-	solver_env.Append(
-		LIBPATH=[env.get('SUNDIALS_LIBPATH'),"#"]
-		,LIBS=[env.get('SUNDIALS_LIBS'),"ascend"]
-	)
+	context.env.AppendUnique(SUNDIALS_LIBS=_default_sundials_libs(major))
+	context.Result('%d.%d.%d, good' % (major, minor, patch))
+	return True
 
-	srcs = ['ida.c', 'idacalc.c', 'idalinear.c', 'idaio.c', 'idaprec.c', 'idaanalyse.c', 'idaboundary.c']
-	lib = solver_env.SharedLibrary("ida",srcs
-		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
-		,SHLIBPREFIX = env['EXTLIB_PREFIX']
-	)
+def CheckIDA(context):
+	context.Message('Checking for IDA... ')
+	context.env.AppendUnique(CPPPATH=context.env.get('SUNDIALS_CPPPATH_EXTRA') or [])
+	context.env.AppendUnique(LIBS=context.env.get('SUNDIALS_LIBS') or [])
+	is_ok = context.TryLink(ida_test_text, '.c')
+	context.Result(is_ok)
+	return is_ok
 
-	env.Depends(lib,env['libascend'])
+if env.get('WITH_IDA'):
+	solver_env = env.Clone()
+	ida_reason = None
 
-	env['extfns'] += lib
-	
-	print("WITH_IDA=",env.get('WITH_IDA'))	
-	
-	if env.get('CAN_INSTALL'):
-		dir = Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS"))
-		env.InstallShared(dir,lib)
+	if env.get('WITH_MMIO'):
+		solver_env.AppendUnique(CPPPATH=['#/mmio'])
+
+	if env.get('SUNDIALS_CPPPATH'):
+		solver_env.AppendUnique(CPPPATH=_as_list(env.get('SUNDIALS_CPPPATH')))
+	if env.get('SUNDIALS_LIBPATH'):
+		solver_env.AppendUnique(LIBPATH=_as_list(env.get('SUNDIALS_LIBPATH')))
+	if env.get('SUNDIALS_LIBS'):
+		solver_env.AppendUnique(LIBS=_as_list(env.get('SUNDIALS_LIBS')))
+
+	conf = solver_env.Configure(custom_tests={
+		'CheckSUNDIALSVersion': CheckSUNDIALSVersion,
+		'CheckIDA': CheckIDA,
+	})
+	if not conf.CheckSUNDIALSVersion():
+		conf.env['WITH_IDA'] = False
+		ida_reason = 'SUNDIALS not found, or bad version'
+	elif not conf.CheckIDA():
+		conf.env['WITH_IDA'] = False
+		ida_reason = 'Unable to compile/link against SUNDIALS/IDA'
+	solver_env = conf.Finish()
+
+	env.set_optional('ida', active=solver_env['WITH_IDA'], reason=ida_reason)
+
+	if solver_env['WITH_IDA']:
+		solver_env.AppendUnique(CPPPATH=solver_env.get('SUNDIALS_CPPPATH_EXTRA') or [])
+		solver_env.AppendUnique(LIBS=solver_env.get('SUNDIALS_LIBS') or [])
+		solver_env.AppendUnique(LIBPATH=['#'])
+		solver_env.AppendUnique(LIBS=['ascend'])
+
+		srcs = ['ida.c', 'idacalc.c', 'idalinear.c', 'idaio.c', 'idaprec.c', 'idaanalyse.c', 'idaboundary.c']
+		lib = solver_env.SharedLibrary('ida', srcs,
+			SHLIBSUFFIX=env['EXTLIB_SUFFIX'],
+			SHLIBPREFIX=env['EXTLIB_PREFIX']
+		)
+
+		env.Depends(lib, env['libascend'])
+		env['extfns'] += lib
+
+		if env.get('CAN_INSTALL'):
+			dir = Dir(env.subst('$INSTALL_ROOT$INSTALL_SOLVERS'))
+			env.InstallShared(dir, lib)
+	else:
+		print("Skipping... IDA solver won't be built.")
 
 # vim: set syntax=python:

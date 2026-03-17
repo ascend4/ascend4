@@ -83,6 +83,10 @@ loading.print_status("Starting GUI")
 # for the original source code on which my implementation was based.
 
 ESCAPE_KEY = 65307
+SIMSTATUS_GLYPH_IDLE = "\u26AA"
+SIMSTATUS_GLYPH_SOLVED = "\U0001F7E2"
+SIMSTATUS_GLYPH_DIRTY = "\U0001F534"
+SIMSTATUS_GLYPH_RUNNING = "\U0001F7E1"
 
 HELP_ROOT = None
 
@@ -258,6 +262,8 @@ class Browser:
 			setattr(self,n,self.builder.get_object(n))
 
 		self.autotoggle.connect("toggled",self.auto_toggle)
+		self.simstatus_context = self.statusbar.get_context_id("simulation_status")
+		self._simstatus_visible = False
 
 		self.show_solving_popup=self.builder.get_object("show_solving_popup")
 		self.show_solving_popup.set_active(self.prefs.getBoolPref("SolverReporter","show_popup",True))
@@ -590,6 +596,7 @@ uses '.' as the decimal point separator, such as en_US or en_AU. Note that faili
 to make this change will cause input and output values to be truncated.
 For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			)
+		self.update_simulation_statusbar()
 
 	def run(self):
 		if not self.options.test:
@@ -720,6 +727,41 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		else:
 			value = str(instance.getValue())
 		return CelsiusUnits.convert_show(instance, value, True)
+
+	def _get_simulation_status_message(self):
+		if self.sim is None:
+			return "%s no simulation loaded" % SIMSTATUS_GLYPH_IDLE
+
+		try:
+			target = self.sim.getSolveTargetName()
+		except Exception:
+			target = ""
+
+		targetmsg = ""
+		if target:
+			targetmsg = " | target: %s" % target
+
+		try:
+			if self.sim.isMethodRunning():
+				return "%s running method%s" % (SIMSTATUS_GLYPH_RUNNING, targetmsg)
+		except Exception:
+			pass
+
+		try:
+			if self.sim.isSolveDirty():
+				return "%s needs solve%s" % (SIMSTATUS_GLYPH_DIRTY, targetmsg)
+		except Exception:
+			return "%s status unavailable" % SIMSTATUS_GLYPH_IDLE
+
+		return "%s solved%s" % (SIMSTATUS_GLYPH_SOLVED, targetmsg)
+
+	def update_simulation_statusbar(self):
+		if not hasattr(self, "statusbar"):
+			return
+		if self._simstatus_visible:
+			self.statusbar.pop(self.simstatus_context)
+		self.statusbar.push(self.simstatus_context, self._get_simulation_status_message())
+		self._simstatus_visible = True
 
 
 #   ------------------
@@ -864,6 +906,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		self.sim = None;
 		self.maintabs.set_current_page(0);
+		self.update_simulation_statusbar()
 	
 	# See http://www.daa.com.au/pipermail/pygtk/2005-October/011303.html
 	# for details on how the 'wait cursor' is done. (OUTDATED)
@@ -907,6 +950,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			#self.reporter.reportNote("SIMULATION ASSIGNED")
 		except RuntimeError as e:
 			self.stop_waiting()
+			self.update_simulation_statusbar()
 			self.reporter.reportError(str(e))
 			return
 
@@ -933,11 +977,13 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.sim.runDefaultMethod()
 		except RuntimeError as e:
 			self.stop_waiting()
+			self.update_simulation_statusbar()
 			self.reporter.reportError(str(e))
-			return			
+			return
 		self.stop_waiting()
 
 		self.modelview.refreshtree()
+		self.update_simulation_statusbar()
 	
 	def do_solve_if_auto(self):
 		if self.is_auto:
@@ -949,6 +995,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			except RuntimeError as e:
 				self.reporter.reportError(str(e))
 			self.modelview.refreshtree()
+			self.update_simulation_statusbar()
 
 		self.sync_observers()
 
@@ -976,6 +1023,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def do_solve_finish(self, reporter, status):
 		reporter.finalise(status)
 		self.modelview.refreshtree()
+		self.update_simulation_statusbar()
 		return False
 
 	def do_solve_thread(self, reporter):
@@ -992,8 +1040,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				time.sleep(0.001)
 				if res != 0:
 					break
-			GObject.idle_add(self.do_solve_finish, reporter, status)
 			self.sim.postsolve(status)
+			GObject.idle_add(self.do_solve_finish, reporter, status)
 		except RuntimeError as err:
 			self.reporter.reportError(str(err))
 		finally:
@@ -1042,6 +1090,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			_integratorreporter.run()
 			self.sim.processVarStatus()
 			self.modelview.refreshtree()
+			self.update_simulation_statusbar()
 
 	def do_check(self):
 		if self.no_built_system():
@@ -1093,6 +1142,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		self.stop_waiting()
 		self.modelview.refreshtree()
+		self.update_simulation_statusbar()
 
 	def do_method(self,method):
 
@@ -1103,6 +1153,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 		self.sim.processVarStatus()
 		self.modelview.refreshtree()
+		self.update_simulation_statusbar()
 
 	def do_quit(self):
 		self.reporter.clearPythonErrorCallback()
@@ -1206,13 +1257,19 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.tabs[self.currentobservertab].do_add_row()
 
 	def on_copy_observer_matrix_click(self,*args):
-		if self.clip == None:
-			self.clip = Gtk.Clipboard()
-
-		if len(self.observers) <= 0:
+		if self.currentobservertab is None:
 			self.reporter.reportError("No observer defined!")
 			return
-		self.tabs[self.currentpage].copy_to_clipboard(self.clip)
+		if self.clip is None:
+			display = Gdk.Display.get_default()
+			if display is None:
+				self.reporter.reportError("Unable to access the GTK display clipboard")
+				return
+			self.clip = Gtk.Clipboard.get_default(display)
+			if self.clip is None:
+				self.reporter.reportError("Unable to access the system clipboard")
+				return
+		self.tabs[self.currentobservertab].copy_to_clipboard(self.clip)
 
 	def on_use_relation_sharing_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()
@@ -1468,6 +1525,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		if _paramswin.run() == Gtk.ResponseType.OK:
 			print("PARAMS UPDATED")
 			self.sim.setParameters(_paramswin.params)
+			self.update_simulation_statusbar()
 		else:
 			print("PARAMS NOT UPDATED")
 
@@ -1580,8 +1638,23 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		title = "Fixed Variables"
 		text += "\n"
 		if len(v):
+			_name_width = 20
 			for var in v:
-				text += "\n%s\t= %f"%(str(var),var.getValue())
+				_instance = None
+				try:
+					_instance = var.getInstance()
+				except Exception:
+					_instance = None
+				if _instance is not None and _instance.isReal():
+					_display = self.get_instance_display_value(_instance)
+				elif _instance is not None:
+					_display = str(_instance.getValue())
+				else:
+					_display = str(var.getValue())
+				_name = str(var)
+				if len(_name) < _name_width:
+					_name = _name.ljust(_name_width)
+				text += "\n%s = %s" % (_name, _display)
 		else:
 			text += "\nnone"
 		_dialog = InfoDialog(self,self.window,text,title,tabs=[100,200])
@@ -1780,6 +1853,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		for button in list:
 			if self.builder.get_object(button) != None:
 			   self.builder.get_object(button).set_sensitive(True)
+	def disable_on_sim_delete(self):
+		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+				"show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1"]
+		for button in list:
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(False)
 	def disable_on_first_run(self):
 		list=["reloadbutton","reload","show_external_functions","notes_view"]
 		for button in list:

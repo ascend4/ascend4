@@ -170,20 +170,9 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res);
 
 /**
   Get the file and line for a relation Instance.
-  FIXME needs error checking/handling?
 */
 static void get_relinst_location(const struct Instance *relinst, const char **filename, int *lineno){
-  *filename = NULL;
-  *lineno = 0;
-  
-  //MSG("finding file/line of relinst %p",relinst);
-  struct Instance *p = InstanceParent(relinst,1);
-  
-  unsigned long ci = ChildIndex(p,relinst);
-  
-  const struct Statement *s = ChildDeclaration(p,ci);
-  *filename = Asc_ModuleFileName(StatementModule(s));
-  *lineno = StatementLineNum(s);
+  (void)InstanceDeclarationLocation(relinst,NULL,filename,lineno);
 }
 
 /**
@@ -4497,4 +4486,3 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res){
 #endif
 
 /* vim: set sw=2 ts=8 et: */
-

@@ -2351,11 +2351,15 @@ struct relation_term *CreateTermFromInst(struct Instance *inst,
       return term;
     }
     else{
+      char *instname;
+      instname = WriteInstanceNameString(inst,NULL);
       if ( IsWild(RealAtomDims(inst)) && AtomAssigned(inst) ) {
         rel_errorlist_set_code(err,real_value_wild);
       } else {
         rel_errorlist_set_code(err,real_value_undefined);
       }
+      rel_errorlist_set_instname(err, instname);
+      ASC_FREE(instname);
       return NULL;
     }
   case INTEGER_CONSTANT_INST:
@@ -2364,7 +2368,11 @@ struct relation_term *CreateTermFromInst(struct Instance *inst,
       return term;
     }
     else{
+      char *instname;
       rel_errorlist_set_code(err,integer_value_undefined);
+      instname = WriteInstanceNameString(inst,NULL);
+      rel_errorlist_set_instname(err, instname);
+      ASC_FREE(instname);
       return NULL;
     }
   case REAL_INST:

@@ -1,5 +1,5 @@
 #!@PYTHON@
-import os, argparse, pathlib, sys, platform, shutil
+import os, argparse, pathlib, sys, platform, shutil, subprocess
 
 DEBUG=0
 def MSG(*args):
@@ -8,6 +8,19 @@ def MSG(*args):
 	else:
 		pass
 PYTHON=pathlib.Path(r'@PYTHON@')
+
+def get_effective_home():
+	home = os.environ.get('HOME')
+	if home:
+		return pathlib.Path(home)
+	userprofile = os.environ.get('USERPROFILE')
+	if userprofile:
+		return pathlib.Path(userprofile)
+	homedrive = os.environ.get('HOMEDRIVE')
+	homepath = os.environ.get('HOMEPATH')
+	if homedrive and homepath:
+		return pathlib.Path(homedrive + homepath)
+	return pathlib.Path.home()
 
 def add_at_start(envvar,pathcomponents):
 	"""
@@ -70,10 +83,10 @@ def shebang(script,args):
 		if not found:
 			raise RuntimeError(f"script '{script}' either doesn't exist is or not executable")
 		return [found]+args
-	with open(p,'r') as f:
+	with open(p,'rb') as f:
 		line1 = f.readline()
-		if line1.startswith("#!"):
-			interp = line1[2:].strip().split()
+		if line1.startswith(b"#!"):
+			interp = line1[2:].decode('utf-8', errors='replace').strip().split()
 			if interp:
 				pi = pathlib.Path(interp[0])
 				if str(pi)[0] == "/":
@@ -90,12 +103,36 @@ def shebang(script,args):
 	# does not start with shebang, could be natively executable (we'll just try)
 	return [script]+args
 
+def resolve_cmd_for_debugger(cmd):
+	"""Resolve the target command before passing it to GDB.
+
+	This is mainly needed on Windows, where GDB won't expand PATHEXT for a
+	command like ``test/test`` but ``subprocess.run`` can still execute the
+	corresponding ``test/test.exe``.
+	"""
+	if not cmd:
+		return cmd
+	return shebang(cmd[0], cmd[1:])
+
 if __name__ == "__main__":
+	argv = list(sys.argv)
+	if (
+		len(argv) >= 3
+		and argv[1] == 'cutest'
+		and '--' not in argv[2:]
+		and any(arg in ('-h', '--help') for arg in argv[2:])
+	):
+		argv[2:] = ['--help' if arg == '-h' else arg for arg in argv[2:]]
+		# Forward cutest help flags to the underlying runner instead of
+		# letting argparse consume them as subcommand help.
+		argv.insert(2, '--')
+
 	p = argparse.ArgumentParser(description='ASCEND launcher')
 
 	p.add_argument('--debug',action='store_true',help='Show launcher debug output')
 	g = p.add_mutually_exclusive_group()
 	g.add_argument('--gdb',action='store_true',help='Run action via GDB')
+	g.add_argument('--gdb1',action='store_true',help='Run action via non-interactive GDB with backtrace on exit')
 	g.add_argument('--valgrind',action='store_true',help='Run action via Valgrind')
 	g.add_argument('--callgrind',action='store_true',help='Run action via Valgrind Callgrind profiler')
 
@@ -143,7 +180,7 @@ if __name__ == "__main__":
 	p_sh = s.add_parser('q',help = 'Quick shortcut test -- test a4.in source for details.')
 	p_sh.set_defaults(action='q')
 
-	args, unknown = p.parse_known_args()
+	args, unknown = p.parse_known_args(argv[1:])
 	if unknown:
 		if hasattr(args, 'action') and args.action == 'cutest':
 			# Pass unknown args through to the test runner.
@@ -159,7 +196,6 @@ if __name__ == "__main__":
 	else:
 		sys.tracebacklimit=0
 
-	import subprocess, os
 	sourceroot=pathlib.Path("@SOURCE_ROOT@")
 	script=os.path.join(sys.argv[0])
 	SEP = os.pathsep
@@ -188,7 +224,8 @@ if __name__ == "__main__":
 		restart.append('ASCENDSOLVERS')
 
 	# ensure that we have our shared libraries in the LD_LIBRARY_PATH
-	libdirs = [sourceroot, pathlib.Path.home() / '.local/lib']
+	local_bindir = get_effective_home() / '.local/bin' if platform.system() == 'Windows' else get_effective_home() / '.local/lib'
+	libdirs = [sourceroot, local_bindir]
 	if add_at_start(LD_LIBRARY_PATH,libdirs):
 		restart.append(LD_LIBRARY_PATH)
 
@@ -211,8 +248,11 @@ if __name__ == "__main__":
 	MSG("ARGS",args)
 		
 	precmd = []
+	debugger_batch = False
 	if args.gdb:
 		precmd = ['gdb','--args']
+	elif args.gdb1:
+		debugger_batch = True
 	elif args.valgrind:
 		VALGRIND = shutil.which('valgrind')
 		if VALGRIND == None:
@@ -255,11 +295,10 @@ if __name__ == "__main__":
 	elif args.action == 'script':
 		cmd += shebang(args.file,args.rest)
 	elif args.action == 'cutest':
-		cmd += [sourceroot / 'test' / 'test']
 		rest = list(args.rest)
 		if rest and rest[0] == '--':
 			rest = rest[1:]
-		cmd += rest
+		cmd += shebang(sourceroot / 'test' / 'test', rest)
 	elif args.action == 'env' :
 		shargs = []
 		if os.environ.get('ASCEND_SHELL'):
@@ -291,6 +330,18 @@ if __name__ == "__main__":
 	else:
 		print("unrecognised command")
 		sys.exit(1);
+
+	if debugger_batch:
+		cmd = [
+			'gdb'
+			, '-batch'
+			, '-return-child-result'
+			, '-ex', 'set debuginfod enabled off'
+			, '-ex', 'set pagination off'
+			, '-ex', 'run'
+			, '-ex', 'thread apply all bt full'
+			, '--args'
+		] + resolve_cmd_for_debugger(cmd)
 		
 	MSG("CMD =",cmd)
 	proc = subprocess.run(cmd)

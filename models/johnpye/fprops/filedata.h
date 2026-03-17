@@ -64,8 +64,8 @@ typedef enum{
 	,FPROPS_REF_TPHS = 6 /**< Reference state specified by T0, p0, h0 and s0 */
 	,FPROPS_REF_TPF = 7  /**< Reference state of h=0 and s=0 for liquid at the triple point */
 	,FPROPS_REF_TPFU = 8 /**< Reference state of u=0 and s=0 for liquid at the triple point */
-	,FPROPS_REF_TPHG = 9 /**< Reference state specified by T0, p0, h0 and g0 (Gibbs energy) */
-	,FPROPS_REF_TPHS0 = 10 /**< Reference state specified by T0, p0, h0 and s0 for ideal (zero-pressure) case */
+	,FPROPS_REF_TPHG = 9 /**< Reference state specified by T0, p0, absolute h0 and absolute g0 (not formation values) */
+	,FPROPS_REF_TPHS0 = 10 /**< Reference state specified by T0, p0, absolute h0 and absolute s0 for ideal/zero-pressure standard-state data */
 /* HACK?: */
 	,FPROPS_REF_REF0 /**< Special case: apply the 'ref0' reference state, which should allow calculuation of enthalpy of formation and absolute entropy */
 } ReferenceStateType;
@@ -334,6 +334,7 @@ typedef struct HelmholtzData_struct{
 	const HelmholtzGausTerm *gt; /* critical terms of the first kind */
 	unsigned nc; /* number of critical terms of the second kind */
 	const HelmholtzCritTerm *ct; /* critical terms of the second kind */
+	ReferenceState ref0; /**< formation/reference-state anchor for chemistry use */
 } HelmholtzData;
 
 /*___________________________CUBIC_________________________________*/
@@ -565,6 +566,11 @@ typedef union EosUnion_union{
 	/* maybe more later */
 } EosUnion;
 
+typedef struct ElementComp_struct{
+	const char *symbol;
+	double count;
+} ElementComp;
+
 
 /** Data and metadata for a particular property correlation for a partcular species */
 typedef struct EosData_struct{
@@ -576,6 +582,8 @@ typedef struct EosData_struct{
 	const EosUnion data;
 	const ViscosityData *visc;
 	const ThermalConductivityData *thcond;
+	const ElementComp *elements; /**< optional elemental composition, NULL if unknown */
+	int nelements; /**< number of entries in elements, 0 if unknown */
 } EosData;
 
 #endif

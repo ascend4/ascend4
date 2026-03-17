@@ -36,6 +36,9 @@
 #include <ascend/general/list.h>
 #include "logical_relation.h"
 #include <ascend/utilities/bit.h>
+#include "slvreq.h"
+
+struct asc_simstatus;
 
 /** @file
  *  Real Ascend Instance Types.
@@ -634,13 +637,14 @@ struct SimulationInstance {
   /* these have *no* parents, yet */
   enum inst_t t;
   VOIDPTR interface_ptr;
+  struct asc_simstatus *simstatus;
   struct TypeDescription *desc; /**< copy of the typedesc of its lone child */
   symchar *name;                /**< name of its lone child */
   struct Instance **extvars;    /**< external variables handles hack */
   unsigned long tmp_num;        /**< used when an instance tree is being copied*/
   unsigned int anon_flags;      /**< anonymous field to be manipulated */
   /* add other interesting stuff here */
-  VOIDPTR slvreq_hooks;
+  SlvReqHooks slvreq_hooks;
 };
 
 /** dummy instance for unselected children of models
@@ -673,4 +677,3 @@ struct GlobalDummyInstance {
 /* @} */
 
 #endif /* ASC_INSTANCE_TYPES_H */
-

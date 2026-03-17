@@ -1,0 +1,66 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+ATOM signed_conc_rate REFINES solver_var
+	DIMENSION Q/L^3/T
+	DEFAULT 0 {mol/m^3/s};
+	lower_bound := -1e50 {mol/m^3/s};
+	upper_bound := 1e50 {mol/m^3/s};
+	nominal := 1 {mol/m^3/s};
+END signed_conc_rate;
+
+MODEL fogler_ex45_batch;
+	Rgas IS_A molar_gas_constant;
+	T IS_A temperature;
+	P0 IS_A pressure;
+	Kc IS_A molar_density;
+	kA IS_A frequency;
+
+	t IS_A time;
+	X IS_A fraction;
+	dX_dt IS_A rate;
+	Xeb IS_A fraction;
+	Xtarget IS_A fraction;
+
+	CA0 IS_A molar_density;
+	CA IS_A molar_density;
+	CB IS_A molar_density;
+	minus_rA IS_A signed_conc_rate;
+
+	ca0_eqn: CA0 = P0 / (Rgas * T);
+	xeb_eqn: Kc = 4 * CA0 * Xeb * Xeb / (1 - Xeb);
+	xtarget_eqn: Xtarget = 0.8 * Xeb;
+	ca_eqn: CA = CA0 * (1 - X);
+	cb_eqn: CB = 2 * CA0 * X;
+	rate_eqn: minus_rA = kA * (CA - CB * CB / Kc);
+	conv_ode: dX_dt = minus_rA / CA0;
+
+METHODS
+	METHOD on_load;
+		FIX T, P0, Kc, kA;
+
+		T := 340 {K};
+		P0 := 2 {atm};
+		Kc := 100 {mol/m^3};
+		kA := 0.5 {1/min};
+
+		t := 0 {s};
+		X := 0;
+		dX_dt := 0.5 {1/min};
+		CA0 := 71.68618084 {mol/m^3};
+		CA := 71.68618084 {mol/m^3};
+		CB := 0 {mol/m^3};
+		Xeb := 0.4413784501;
+		Xtarget := 0.3531027601;
+		minus_rA := 35.84309042 {mol/m^3/min};
+
+		INDEPENDENT t;
+		DER(dX_dt, X);
+
+		X.obs_id := 1;
+		minus_rA.obs_id := 2;
+		Xeb.obs_id := 3;
+		Xtarget.obs_id := 4;
+		dX_dt.obs_id := 5;
+	END on_load;
+END fogler_ex45_batch;

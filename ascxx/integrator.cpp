@@ -8,6 +8,12 @@ using namespace std;
 
 // #define DESTROY_DEBUG
 
+#ifdef INTEGRATOR_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 /**
 	'creating' an integrator in the context of the GUI just means an object
 	we can store the parameters that will be later sent to the underlying
@@ -64,9 +70,6 @@ void
 Integrator::setReporter(IntegratorReporterCxx *reporter){
 	blsys->clientdata = reporter; /* this *is* necessary, as well as the following */
 	integrator_set_reporter(blsys,reporter->getInternalType());
-	//CONSOLE_DEBUG("REPORTER HAS BEEN SET");
-	(*(blsys->reporter->init))(blsys);
-	//CONSOLE_DEBUG("DONE TESTING OUTPUT_INIT");
 }
 
 double
@@ -107,10 +110,10 @@ Integrator::analyse(){
 		code, as it gets called by Simulation::build.
 	*/
 	res = integrator_analyse(blsys);
-	CONSOLE_DEBUG("Got return-code '%d' from integrator_analyse",res);
+	MSG("Got return-code '%d' from integrator_analyse",res);
 
 	if(res){
-		CONSOLE_DEBUG("...which is bad");
+		MSG("...which is bad");
 		stringstream ss;
 		ss << "Failed system analysis (error " << res << ")";
 		throw runtime_error(ss.str());
@@ -153,9 +156,6 @@ Integrator::solve(){
 		ss << "Failed integration (integrator_solve returned " << res << ")";
 		throw runtime_error(ss.str());
 	}
-
-	// communicate solver variable status back to the instance tree via 'interface_ptr'
-	simulation.processVarStatus();
 }
 
 void
@@ -264,8 +264,7 @@ Integrator::getCurrentObservations(){
 	double *d = ASC_NEW_ARRAY(double,getNumObservedVars());
 	integrator_get_observations(blsys,d);
 	vector<double> v=vector<double>(d,d+getNumObservedVars());
-	// do I need to free d?
-	// can I do this in such a way as I avoid all this memory-copying?
+	ASC_FREE(d);
 	return v;
 }
 

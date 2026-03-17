@@ -1,0 +1,69 @@
+REQUIRE "johnpye/fprops/reactive_kineq.a4l";
+PROVIDE "johnpye/fprops/reactive_kineq_demo.a4c";
+
+MODEL test_reactive_kineq_single_phase;
+	components IS_A set OF symbol_constant;
+	reactions IS_A set OF symbol_constant;
+
+	pkg IS_A reactive_package(components);
+	R IS_A reactor_kineq(pkg, reactions);
+
+	components :== ['n_butane', 'butene_1', 'n_octane'];
+	reactions :== ['r1'];
+
+	pkg.source :== 'RPP';
+	pkg.algorithm :== 'auto';
+	R.reference_component :== 'n_octane';
+
+	R.kinetics.species['r1'] :== ['n_butane', 'butene_1', 'n_octane'];
+
+	R.kinetics.k_forward['r1'] :== 0.1 {m^3/mol/s};
+	R.kinetics.active_energy['r1'] :== 50 {J/mol};
+	R.kinetics.K_eq['r1'] := 0.01;
+
+	R.kinetics.nu['n_butane']['r1'] :== -1;
+	R.kinetics.nu['butene_1']['r1'] :== -1;
+	R.kinetics.nu['n_octane']['r1'] :== 1;
+
+METHODS
+	METHOD values;
+		RUN R.default_self;
+		R.inlet.f['n_butane'] := 100 {kmol/h};
+		R.inlet.f['butene_1'] := 100 {kmol/h};
+		R.inlet.f['n_octane'] := 1e-11 {kmol/h};
+		R.inlet.T := 300 {K};
+		R.inlet.P := 1 {atm};
+
+		R.outlet.f['n_butane'] := 85.2 {kmol/h};
+		R.outlet.f['butene_1'] := 85.2 {kmol/h};
+		R.outlet.f['n_octane'] := 14.8 {kmol/h};
+		R.outlet.T := 320 {K};
+		R.Volume := 25 {m^3};
+		R.DeltaP := 0 {Pa};
+
+		R.holdup.V := R.Volume;
+		R.holdup.V_molar := 0.026 {m^3/mol};
+		R.holdup.N := R.holdup.V / R.holdup.V_molar;
+		FOR i IN components DO
+			R.holdup.y[i] := R.outlet.f[i] / SUM[R.outlet.f[j] | j IN components];
+			R.holdup.n[i] := R.holdup.y[i] * R.holdup.N;
+			R.holdup.c[i] := R.holdup.n[i] / R.holdup.V;
+		END FOR;
+		R.holdup.c_tot := R.holdup.N / R.holdup.V;
+		R.kinetics.rate_forward['r1'] := 32 {mol/m^3/s};
+		R.kinetics.rate_reverse['r1'] := 30.5 {mol/m^3/s};
+		R.kinetics.rate['r1'] := 1.45 {mol/m^3/s};
+	END values;
+
+	METHOD on_load;
+		RUN values;
+		RUN R.specify;
+		FIX R.outlet.T;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT R.outlet.f['n_octane'] > 1e-6 {mol/s};
+		ASSERT R.kinetics.rate['r1'] > 0 {mol/m^3/s};
+		ASSERT R.holdup.V > 0 {m^3};
+	END self_test;
+END test_reactive_kineq_single_phase;

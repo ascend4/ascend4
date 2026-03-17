@@ -50,11 +50,17 @@ static HelmholtzData helmholtz_data_methane = {
 	, /* T_t */ 90.6941
 
 	,{FPROPS_REF_NBP}
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-74850.0e3 / METHANE_M) /* M&S G9e Table A-25, CH4(g) */
+		, .s0 = (186.16e3 / METHANE_M) /* M&S G9e Table A-25, CH4(g) */
+	}}}
 
-    , 0.01142 /* acentric factor */
-    , &ideal_data_methane
-    , 36 /* power terms */
-    , (const HelmholtzPowTerm[]){
+    , .omega = 0.01142 /* acentric factor */
+    , .ideal = &ideal_data_methane
+    , .np = 36 /* power terms */
+    , .pt = (const HelmholtzPowTerm[]){
         /* n_i, 		t_i, 	d_i, 	l_i */
         {0.4367901028e-01,	-0.5,	1.0,	0.0}
         , {0.6709236199e+00,	0.5,	1.0,	0.0}
@@ -93,16 +99,16 @@ static HelmholtzData helmholtz_data_methane = {
         , {0.3389489599e-01,	18.0,	5.0,	4.0}
         , {-0.2927378753e-02,	14.0,	6.0,	4.0}
     }
-    , 4 /* gaussian terms */
-    , (const HelmholtzGausTerm[]){
+    , .ng = 4 /* gaussian terms */
+    , .gt = (const HelmholtzGausTerm[]){
         /* n_i,			t_i,	d_i,	alpha_i,beta_i,	gamma_i,delta_i */
         {0.9324799946e-04,	2.0,	2.0,	20.0,	200.0,	1.07,	1.0}
         , {-0.6287171518e+01,	0.0,	0.0,	40.0,	250.0,	1.11,	1.0}
         , {0.1271069467e+02,	1.0,	0.0,	40.0,	250.0,	1.11,	1.0}
         , {-0.6423953466e+01,	2.0,	0.0,	40.0,	250.0,	1.11,	1.0}
     }
-    , 0 /* critical terms */
-    , 0
+    , .nc = 0 /* critical terms */
+    , .ct = 0
 };
 
 const EosData eos_methane = {

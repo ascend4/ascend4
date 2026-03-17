@@ -231,9 +231,29 @@ extern struct Statement *CreateOPTION(CONST char *optname, struct Expr *value);
 	Create a 'SOLVER' statement node.
 */
 
-extern struct Statement *CreateSOLVE();
+extern struct Statement *CreateSOLVE(struct Name *target);
 /**<
 	Create a 'SOLVE' statement node.
+*/
+
+extern struct Statement *CreateSTUDY(struct VariableList *obsvars,
+                                     struct Name *vary,
+                                     struct Expr *lower,
+                                     struct Expr *upper,
+                                     long steps,
+                                     struct Expr *value,
+                                     enum StudyMode mode,
+                                     enum StudyDistribution dist,
+                                     symchar *run_method,
+                                     unsigned int now,
+                                     CONST char *filename);
+/**<
+	Create a 'STUDY' statement node.
+*/
+
+extern struct Statement *CreateDELETESYSTEM();
+/**<
+	Create a 'DELETE SYSTEM' statement node.
 */
 
 extern struct Statement *CreateWBTS(struct VariableList *vl);
@@ -473,6 +493,7 @@ extern struct Statement *CreateTABLE(struct Name *n,
                                      symchar *decl_type,
                                      struct Set *decl_typeargs,
                                      symchar *decl_set_type,
+                                     char *units,
                                      struct Expr *default_expr,
                                      int positional,
                                      unsigned long rows,
@@ -481,7 +502,7 @@ extern struct Statement *CreateTABLE(struct Name *n,
                                      char *body);
 /**<
  *  Create a TABLE statement node.
- *  The statement takes ownership of n, default_expr, and body.
+ *  The statement takes ownership of n, units, default_expr, and body.
  */
 
 extern struct Statement *CreateDATASET(symchar *name,
@@ -1532,6 +1553,53 @@ extern struct VariableList *FixFreeStatVarsF(CONST struct Statement *s);
 /**<
 	Implementation function for FixFreeStatVars(). Do not call this directory, use FixStatVars instead.
 */
+
+#ifdef NDEBUG
+# define SolveStatTarget(s) ((s)->v.solve.target)
+#else
+# define SolveStatTarget(s) SolveStatTargetF(s)
+#endif
+/**<
+	Returns the optional target name for a SOLVE statement.
+*/
+extern struct Name *SolveStatTargetF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+# define StudyStatObserved(s) ((s)->v.study.obsvars)
+# define StudyStatVary(s) ((s)->v.study.vary)
+# define StudyStatLower(s) ((s)->v.study.lower)
+# define StudyStatUpper(s) ((s)->v.study.upper)
+# define StudyStatValue(s) ((s)->v.study.value)
+# define StudyStatSteps(s) ((s)->v.study.steps)
+# define StudyStatMode(s) ((s)->v.study.mode)
+# define StudyStatDistribution(s) ((s)->v.study.dist)
+# define StudyStatRunMethod(s) ((s)->v.study.run_method)
+# define StudyStatNow(s) ((s)->v.study.now)
+# define StudyStatFilename(s) ((s)->v.study.filename)
+#else
+# define StudyStatObserved(s) StudyStatObservedF(s)
+# define StudyStatVary(s) StudyStatVaryF(s)
+# define StudyStatLower(s) StudyStatLowerF(s)
+# define StudyStatUpper(s) StudyStatUpperF(s)
+# define StudyStatValue(s) StudyStatValueF(s)
+# define StudyStatSteps(s) StudyStatStepsF(s)
+# define StudyStatMode(s) StudyStatModeF(s)
+# define StudyStatDistribution(s) StudyStatDistributionF(s)
+# define StudyStatRunMethod(s) StudyStatRunMethodF(s)
+# define StudyStatNow(s) StudyStatNowF(s)
+# define StudyStatFilename(s) StudyStatFilenameF(s)
+#endif
+extern struct VariableList *StudyStatObservedF(CONST struct Statement *s);
+extern struct Name *StudyStatVaryF(CONST struct Statement *s);
+extern struct Expr *StudyStatLowerF(CONST struct Statement *s);
+extern struct Expr *StudyStatUpperF(CONST struct Statement *s);
+extern struct Expr *StudyStatValueF(CONST struct Statement *s);
+extern long StudyStatStepsF(CONST struct Statement *s);
+extern enum StudyMode StudyStatModeF(CONST struct Statement *s);
+extern enum StudyDistribution StudyStatDistributionF(CONST struct Statement *s);
+extern symchar *StudyStatRunMethodF(CONST struct Statement *s);
+extern unsigned int StudyStatNowF(CONST struct Statement *s);
+extern CONST char *StudyStatFilenameF(CONST struct Statement *s);
 
 /* * * StateCall functions * * */
 

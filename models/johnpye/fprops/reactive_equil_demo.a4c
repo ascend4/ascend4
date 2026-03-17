@@ -1,0 +1,49 @@
+REQUIRE "johnpye/fprops/reactive_equil.a4l";
+
+MODEL reactor_equil_wgs_demo;
+	components IS_A set OF symbol_constant;
+	components :== ['CO', 'H2O', 'CO2', 'H2'];
+
+	pkg IS_A reactive_package(components);
+	pkg.source :== 'Moran and Shapiro';
+	pkg.algorithm :== 'reduced';
+
+	R IS_A reactor_equil(pkg);
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.f[components];
+		FIX R.outlet.T;
+		FIX R.DeltaP;
+
+		R.inlet.T := 1000 {K};
+		R.inlet.P := 1 {atm};
+		R.inlet.f['CO'] := 1 {mol/s};
+		R.inlet.f['H2O'] := 1 {mol/s};
+		R.inlet.f['CO2'] := 0 {mol/s};
+		R.inlet.f['H2'] := 0 {mol/s};
+
+		R.outlet.T := 1000 {K};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD self_test;
+		ASSERT abs(R.outlet.flow - 2 {mol/s}) < 1e-8 {mol/s};
+		ASSERT abs(
+			ln((R.outlet.f['CO'] * R.outlet.f['H2O'])
+				/ (R.outlet.f['CO2'] * R.outlet.f['H2'])) / ln(10)
+			- (-0.159)
+		) < 0.03;
+	END self_test;
+
+	METHOD on_load;
+		RUN default_self;
+	END on_load;
+END reactor_equil_wgs_demo;
+
+MODEL reactive_equil_demo REFINES reactor_equil_wgs_demo;
+END reactive_equil_demo;
