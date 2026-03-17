@@ -148,6 +148,7 @@
 					<keyword>INTERSECTION</keyword>
 					<keyword>IS_A</keyword>
 					<keyword>IS_REFINED_TO</keyword>
+					<keyword>LADDER</keyword>
 					<keyword>MAX</keyword>
 					<keyword>MAXIMIZE</keyword>
 					<keyword>METHOD</keyword>
