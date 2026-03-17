@@ -11,8 +11,8 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     env:
-      CUNIT_VERSION: "2.2.3"
-      CUNIT_RELEASE_BASENAME: "cunit-2.2-3"
+      CUNIT_VERSION: "2.2.4"
+      CUNIT_RELEASE_BASENAME: "cunit-2.2-4"
       HIGHS_VERSION: v1.13.1
     strategy:
       fail-fast: false
@@ -38,6 +38,7 @@ jobs:
         curl -L --retry 3 -o "$CUNIT_TARBALL" "$CUNIT_URL"
         tar -xzf "$CUNIT_TARBALL"
         cd "$CUNIT_RELEASE_BASENAME"
+        ./bootstrap
         ./configure --prefix=$HOME/.local --enable-examples --enable-debug
         make -j"$(nproc)"
         make install
