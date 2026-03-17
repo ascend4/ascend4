@@ -31,6 +31,7 @@
 
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
+#include <ascend/general/dstring.h>
 #include <ascend/utilities/error.h>
 #include <ascend/general/list.h>
 
@@ -420,23 +421,168 @@ void PrintDimen(FILE *file, const dim_type *dim){
   }
 }
 
+static int DimenHasTerms(const dim_type *dim){
+  int i;
+  for(i=0; i<NUM_DIMENS; ++i){
+    if (Numerator(GetDimFraction(*dim,i))) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static void PrintDimenFactor(FILE *file, const char *name, struct fraction power){
+  FRACPART num = Numerator(power);
+  FRACPART den = Denominator(power);
+  if (num == 1 && den == 1) {
+    FPRINTF(file,"%s",name);
+  } else if (den == 1) {
+    FPRINTF(file,"%s^%d",name,(int)num);
+  } else {
+    FPRINTF(file,"%s^(%d/%d)",name,(int)num,(int)den);
+  }
+}
+
+static void PrintDimenProduct(FILE *file, const dim_type *dim, int negative){
+  int i, printed;
+  printed = 0;
+  for(i=0; i<NUM_DIMENS; ++i){
+    struct fraction power = GetDimFraction(*dim,i);
+    FRACPART num = Numerator(power);
+    if (num == 0) {
+      continue;
+    }
+    if ((negative && num > 0) || (!negative && num < 0)) {
+      continue;
+    }
+    if (printed) {
+      FPRINTF(file,"*");
+    }
+    if (num < 0) {
+      num = -num;
+    }
+    PrintDimenFactor(file,DimName(i),CreateFraction(num,Denominator(power)));
+    printed = 1;
+  }
+  if (!printed) {
+    FPRINTF(file,"1");
+  }
+}
+
+static void PrintDimenReadable(FILE *file, const dim_type *dim){
+  int i, has_negative;
+  if (WILD(dim)) {
+    FPRINTF(file,"[wild]");
+    return;
+  }
+  if (!DimenHasTerms(dim)) {
+    FPRINTF(file,"[dimensionless]");
+    return;
+  }
+  has_negative = 0;
+  for(i=0; i<NUM_DIMENS; ++i){
+    if (Numerator(GetDimFraction(*dim,i)) < 0) {
+      has_negative = 1;
+      break;
+    }
+  }
+  FPRINTF(file,"[");
+  PrintDimenProduct(file,dim,0);
+  if (has_negative) {
+    FPRINTF(file,"/");
+    PrintDimenProduct(file,dim,1);
+  }
+  FPRINTF(file,"]");
+}
+
+static void WriteDimenFactor2Str(Asc_DString *dsPtr, const char *name, struct fraction power){
+  char buf[64];
+  FRACPART num = Numerator(power);
+  FRACPART den = Denominator(power);
+  if (num == 1 && den == 1) {
+    Asc_DStringAppend(dsPtr,name,-1);
+  } else if (den == 1) {
+    snprintf(buf,sizeof(buf),"%s^%d",name,(int)num);
+    Asc_DStringAppend(dsPtr,buf,-1);
+  } else {
+    snprintf(buf,sizeof(buf),"%s^(%d/%d)",name,(int)num,(int)den);
+    Asc_DStringAppend(dsPtr,buf,-1);
+  }
+}
+
+static void WriteDimenProduct2Str(Asc_DString *dsPtr, const dim_type *dim, int negative){
+  int i, printed;
+  printed = 0;
+  for(i=0; i<NUM_DIMENS; ++i){
+    struct fraction power = GetDimFraction(*dim,i);
+    FRACPART num = Numerator(power);
+    if (num == 0) {
+      continue;
+    }
+    if ((negative && num > 0) || (!negative && num < 0)) {
+      continue;
+    }
+    if (printed) {
+      Asc_DStringAppend(dsPtr,"*",1);
+    }
+    if (num < 0) {
+      num = -num;
+    }
+    WriteDimenFactor2Str(dsPtr,DimName(i),CreateFraction(num,Denominator(power)));
+    printed = 1;
+  }
+  if (!printed) {
+    Asc_DStringAppend(dsPtr,"1",1);
+  }
+}
+
+ASC_DLLSPEC char *WriteDimensionBracketsString(CONST dim_type *dim){
+  Asc_DString ds;
+  char *result;
+  int i, has_negative;
+
+  Asc_DStringInit(&ds);
+  if (WILD(dim)) {
+    Asc_DStringAppend(&ds,"[wild]",-1);
+  } else if (!DimenHasTerms(dim)) {
+    Asc_DStringAppend(&ds,"[dimensionless]",-1);
+  } else {
+    has_negative = 0;
+    for(i=0; i<NUM_DIMENS; ++i){
+      if (Numerator(GetDimFraction(*dim,i)) < 0) {
+        has_negative = 1;
+        break;
+      }
+    }
+    Asc_DStringAppend(&ds,"[",1);
+    WriteDimenProduct2Str(&ds,dim,0);
+    if (has_negative) {
+      Asc_DStringAppend(&ds,"/",1);
+      WriteDimenProduct2Str(&ds,dim,1);
+    }
+    Asc_DStringAppend(&ds,"]",1);
+  }
+  result = Asc_DStringResult(&ds);
+  Asc_DStringFree(&ds);
+  return result;
+}
+
 
 ASC_DLLSPEC void PrintDimenMessage(const char *message
 		, const char *label1, const dim_type *d1
 		, const char *label2, const dim_type *d2
 ){
-#if 0
-		error_reporter_start(ASC_USER_ERROR,NULL,0,NULL);
-		FPRINTF(ASCERR,"%s: %s='", message, label1);
-		PrintDimen(ASCERR,d1);
-		FPRINTF(ASCERR,"', %s='",label2);
-		PrintDimen(ASCERR,d2);
-		FPRINTF(ASCERR,"'");
-		error_reporter_end_flush();
-#else
-	(void)message; (void)label1; (void)d1; (void)d2; (void)label2;
-#endif
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid dimensions");
+	error_reporter_start(ASC_USER_ERROR,NULL,0,NULL);
+	FPRINTF(ASCERR,"%s",message ? message : "Dimension mismatch");
+	if(label1 != NULL && d1 != NULL){
+		FPRINTF(ASCERR,": %s has dimensions ",label1);
+		PrintDimenReadable(ASCERR,d1);
+	}
+	if(label2 != NULL && d2 != NULL){
+		FPRINTF(ASCERR,", but %s has dimensions ",label2);
+		PrintDimenReadable(ASCERR,d2);
+	}
+	error_reporter_end_flush();
 }
 
 
@@ -475,4 +621,3 @@ char *DimName(const int ndx){
    else
       return NULL;
 }
-

@@ -339,8 +339,8 @@ static void EvaluateAssignment(struct Statement *stat,
           else{
             STATEMENT_ERROR(stat, "Dimensionally inconsistent assignment");
             PrintDimenMessage("Mismatched dimensions"
-            	,"LHS",RealValueDimensions(result)
-            	,"RHS",RealDimensions(rec)
+            	,SCP(lhs),RealDimensions(rec)
+            	,"RHS term",RealValueDimensions(result)
             );
           }
         }
@@ -362,8 +362,8 @@ static void EvaluateAssignment(struct Statement *stat,
           else{
             STATEMENT_ERROR(stat, "Dimensionally inconsistent assignment");
             PrintDimenMessage("Mismatched dimensions"
-            	,"LHS",Dimensionless()
-            	,"RHS",RealDimensions(rec)
+            	,SCP(lhs),RealDimensions(rec)
+            	,"RHS term",Dimensionless()
             );
           }
         }
@@ -545,4 +545,3 @@ unsigned long CalcByteSize(enum type_kind t,
   }
   /*NOTREACHED*/
 }
-
