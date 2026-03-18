@@ -38,6 +38,7 @@
 
 #include <ascend/system/system.h>
 #include <ascend/system/slv_client.h>
+#include <ascend/system/var.h>
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_server.h>
 
@@ -205,6 +206,105 @@ static void test_fixedbug564_repeat(void){
 	load_solve_test_qrslv("models","test/qrslv/akash_eos.a4c","akash_eos",1);
 }
 
+static struct Instance *child_by_name(struct Instance *inst, const char *name){
+	struct Instance *child = ChildByChar(inst, AddSymbol(name));
+	CU_ASSERT_FATAL(child != NULL);
+	return child;
+}
+
+static struct var_variable *solver_var_by_instance(slv_system_t sys, struct Instance *inst){
+	struct var_variable **vp;
+	for(vp = slv_get_solvers_var_list(sys); *vp != NULL; ++vp){
+		if(var_instance(*vp) == inst){
+			return *vp;
+		}
+	}
+	return NULL;
+}
+
+static void test_singleton_sticky_resolve(void){
+	char env1[2*PATH_MAX];
+	int status;
+	int qrslv_index;
+	struct Instance *siminst;
+	struct Instance *root;
+	struct Instance *d_inst;
+	struct var_variable *d_var;
+	struct Name *name;
+	enum Proc_enum pe;
+	slv_system_t sys;
+	slv_status_t status1;
+	slv_parameters_t pp;
+	static const double d_expected = 4.202626828875603e-16;
+	static const double d_stale = 1e-12;
+
+	Asc_CompilerInit(1);
+
+	snprintf(env1,2*PATH_MAX,ASC_ENV_LIBRARY "=%s","models");
+	CU_TEST(0 == Asc_PutEnv(env1));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv"));
+
+	package_load("qrslv",NULL);
+	qrslv_index = slv_lookup_client("QRSlv");
+	CU_ASSERT_FATAL(qrslv_index != -1);
+
+	Asc_OpenModule("test/qrslv/singleton_sticky.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("singleton_sticky")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("singleton_sticky"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+
+	name = CreateIdName(AddSymbol("on_load"));
+	pe = Initialize(root, name, "sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT_FATAL(pe == Proc_all_ok);
+
+	sys = system_build(root);
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys, qrslv_index));
+
+	slv_get_parameters(sys, &pp);
+	CU_ASSERT_FATAL(0 == slv_param_char_choose(&pp, "convopt", "RELNOM_SCALE"));
+	slv_set_parameters(sys, &pp);
+
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	slv_get_status(sys, &status1);
+	CU_ASSERT_FATAL(status1.ready_to_solve);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+	slv_get_status(sys, &status1);
+	CU_ASSERT_FATAL(status1.ok);
+
+	d_inst = child_by_name(root, "D");
+	CU_ASSERT_FATAL(InstanceKind(d_inst) == REAL_ATOM_INST);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(d_inst), d_expected, 1e-24);
+
+	d_var = solver_var_by_instance(sys, d_inst);
+	CU_ASSERT_FATAL(d_var != NULL);
+
+	var_set_fixed(d_var, TRUE);
+	var_set_value(d_var, d_stale);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(d_inst), d_stale, 1e-24);
+	var_set_fixed(d_var, FALSE);
+
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	slv_get_status(sys, &status1);
+	CU_ASSERT_FATAL(status1.ready_to_solve);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+	slv_get_status(sys, &status1);
+	CU_ASSERT_FATAL(status1.ok);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(d_inst), d_expected, 1e-24);
+	CU_ASSERT_TRUE(RealAtomValue(d_inst) < 1e-15);
+
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+	solver_destroy_engines();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -213,7 +313,8 @@ static void test_fixedbug564_repeat(void){
 	X T(fixedbug513_simplify) \
 	X T(fixedbug567) \
 	X T(fixedbug564) \
-	X T(fixedbug564_repeat)
+	X T(fixedbug564_repeat) \
+	X T(singleton_sticky_resolve)
 
 #define X
 #define TESTS(T) TESTS1(T,X)

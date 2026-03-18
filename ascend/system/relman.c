@@ -526,8 +526,8 @@ real64 relman_scale(struct rel_relation *rel){
   real64 relnom;
   assert(rel!=NULL);
   relnom = CalcRelationNominal(rel_instance(rel));
-  if(relnom < 0.0000001) {
-    /* take care of small relnoms and relnom = 0 error returns */
+  if(!asc_finite(relnom) || relnom <= 0.0) {
+    /* Preserve tiny finite nominals; only fall back for invalid values. */
     relnom = 1.0;
   }
   rel_set_nominal(rel,relnom);
