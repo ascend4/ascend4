@@ -113,6 +113,107 @@ saveDisplayUnitsOverrides(void){
 	return rc;
 }
 
+const std::string
+getDisplayUnitsOverridesPath(void){
+	char *path = UnitsOverridesDefaultPath();
+	string out;
+	if (path != NULL) {
+		out = path;
+		ASC_FREE(path);
+	}
+	return out;
+}
+
+static void
+ascxx_set_display_units_override(
+	const enum UnitsOverrideKind kind,
+	const std::string &scope,
+	const std::string &name,
+	const std::string &units
+){
+	struct UnitsOverridesDB *db = ascxx_get_units_overrides_db();
+	int rc;
+	if (db == NULL) {
+		throw runtime_error("display-units overrides DB unavailable");
+	}
+	rc = UnitsOverridesSet(
+		db,
+		kind,
+		scope.empty() ? NULL : scope.c_str(),
+		name.c_str(),
+		units.c_str()
+	);
+	if (rc != 0) {
+		stringstream ss;
+		ss << "set display-units override failed (rc=" << rc << ")";
+		throw runtime_error(ss.str());
+	}
+}
+
+static void
+ascxx_clear_display_units_override(
+	const enum UnitsOverrideKind kind,
+	const std::string &scope,
+	const std::string &name
+){
+	struct UnitsOverridesDB *db = ascxx_get_units_overrides_db();
+	int rc;
+	if (db == NULL) {
+		throw runtime_error("display-units overrides DB unavailable");
+	}
+	rc = UnitsOverridesUnset(
+		db,
+		kind,
+		scope.empty() ? NULL : scope.c_str(),
+		name.c_str()
+	);
+	if (rc != 0) {
+		stringstream ss;
+		ss << "clear display-units override failed (rc=" << rc << ")";
+		throw runtime_error(ss.str());
+	}
+}
+
+void
+setDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &units,
+	const std::string &scope
+){
+	ascxx_set_display_units_override(UNITS_OVERRIDE_TYPE,scope,type_name,units);
+}
+
+void
+clearDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &scope
+){
+	ascxx_clear_display_units_override(UNITS_OVERRIDE_TYPE,scope,type_name);
+}
+
+void
+setDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &units,
+	const std::string &scope
+){
+	if (scope.empty()) {
+		throw runtime_error("name overrides require a non-empty scope");
+	}
+	ascxx_set_display_units_override(UNITS_OVERRIDE_NAME,scope,name,units);
+}
+
+void
+clearDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &scope
+){
+	if (scope.empty()) {
+		throw runtime_error("name overrides require a non-empty scope");
+	}
+	ascxx_clear_display_units_override(UNITS_OVERRIDE_NAME,scope,name);
+}
+
 /**
 	Create an instance of a type. @see Simulation for instantiation.
 */
