@@ -1,4 +1,6 @@
 REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/fboard_plot";
 (*
 	Working on a model of gas diffusion through a TGA freeboard
 *)
@@ -223,6 +225,41 @@ MODEL freeboard_1d_stagnant_kineq(
 	N_H2O IS_A molar_flux;
 	N_Ar IS_A molar_flux;
 
+	(*
+		Literature-based FeO -> Fe hydrogen-reduction coefficient used to
+		parameterise the reversible bed-boundary kinetics.
+
+		Liu et al. (Chem. Eng. Sci. 120 (2014) 149-166) propose, for the
+		wüstite-to-iron stage in H2 and for 0.05 < X < 0.2, the linear-rate
+		expression reported in their Eq. (42). Their Table 5 gives the
+		corresponding Arrhenius parameters, after unit conversion, as an
+		area-based coefficient with A = 1.8 m/s and E = 62 kJ/mol for H2.
+		That fit was reported from experiments at 1073-1223 K, so using it at
+		the present 900 K default is an extrapolation.
+
+		The present freeboard model does not yet track solid conversion X at
+		the bed. To obtain a single effective boundary coefficient, the
+		(X + 0.13) term in Liu et al.'s Eq. (42) is collapsed using a
+		representative early FeO -> Fe conversion X_rep = 0.1. This gives
+		an effective area-based coefficient:
+
+			k_A_eff = 1.8 * (X_rep + 0.13) * exp(-62 kJ/mol / RT)   [m/s]
+
+		which is then mapped into the present pressure-form boundary law via:
+
+			k_p_lit = k_A_eff / (R T)
+
+		Fradet et al.'s review emphasises that hydrogen reduction kinetics in
+		the FeO -> Fe stage are quite dispersed across the literature and are
+		strongly affected by H2O inhibition, so this should be treated as a
+		first-cut estimate rather than a universal constant.
+	*)
+	X_rep_FeO_to_Fe IS_A factor_constant;
+	X_rep_FeO_to_Fe :== 0.1;
+	k_A_FeO_to_Fe_eff IS_A speed;
+	k_p_lit IS_A molar_flux_per_pressure;
+	k_p_multiplier IS_A positive_factor;
+
 	k_p IS_A molar_flux_per_pressure;
 	K_ratio_eq IS_A positive_factor;
 
@@ -235,6 +272,17 @@ MODEL freeboard_1d_stagnant_kineq(
 
 	tr_T: tr.T = T;
 	tr_p: tr.p = p;
+
+	kA_lit_eq:
+		k_A_FeO_to_Fe_eff
+		=
+		1.8 {m/s}
+		* (X_rep_FeO_to_Fe + 0.13)
+		* exp(-62 {kJ/mol} / (1 {GAS_C} * T));
+	kp_lit_eq:
+		k_p_lit = k_A_FeO_to_Fe_eff / (1 {GAS_C} * T);
+	kp_scale_eq:
+		k_p = k_p_multiplier * k_p_lit;
 
 	FOR i IN nodes CREATE
 		z_eqn[i]: z[i] = i * dz;
@@ -302,8 +350,10 @@ METHODS
 		T := 900 {K};
 		p := 1 {bar};
 		L := 5 {mm};
-		(* 1e-6 mol/m^2/s/Pa corresponds to about 7.5e-3 m/s at 900 K. *)
-		k_p := 1e-6 {mol/m^2/s/Pa};
+		k_p_multiplier := 1;
+		k_A_FeO_to_Fe_eff := 1e-4 {m/s};
+		k_p_lit := 1e-8 {mol/m^2/s/Pa};
+		k_p := 1e-8 {mol/m^2/s/Pa};
 		(* Placeholder equilibrium ratio for exploratory runs. *)
 		K_ratio_eq := 0.3;
 
@@ -333,7 +383,7 @@ METHODS
 	END values;
 
 	METHOD specify;
-		FIX T, p, L, k_p, K_ratio_eq;
+		FIX T, p, L, k_p_multiplier, K_ratio_eq;
 	END specify;
 
 	METHOD on_load;
@@ -343,6 +393,9 @@ METHODS
 		OPTION convopt 'RELNOM_SCALE';
 		SOLVE;
 	END on_load;
+	METHOD profile_plot;
+		EXTERNAL freeboard_plot_profile(SELF);
+	END profile_plot;
 END freeboard_1d_stagnant_kineq;
 
 MODEL freeboard_1d_stagnant_kineq_demo;
@@ -361,6 +414,7 @@ METHODS
 			runmodel.py will print this list after the final solve.
 		*)
 		STUDY
+			fb.k_A_FeO_to_Fe_eff, fb.k_p_lit, fb.k_p,
 			fb.J_forward, fb.J_reverse, fb.J_net,
 			fb.N_H2, fb.N_H2O, fb.N_Ar,
 			fb.tr.D_H2O_H2, fb.tr.D_H2O_Ar, fb.tr.D_H2_Ar,
@@ -369,6 +423,9 @@ METHODS
 			fb.y_H2O[0], fb.y_H2O[1], fb.y_H2O[2], fb.y_H2O[3], fb.y_H2O[4], fb.y_H2O[5],
 			fb.y_Ar[0], fb.y_Ar[1], fb.y_Ar[2], fb.y_Ar[3], fb.y_Ar[4], fb.y_Ar[5];
 	END on_load;
+	METHOD profile_plot;
+		EXTERNAL freeboard_plot_profile(SELF);
+	END profile_plot;
 END freeboard_1d_stagnant_kineq_demo;
 
 
