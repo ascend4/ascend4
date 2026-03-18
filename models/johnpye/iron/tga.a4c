@@ -1,0 +1,458 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/fboard.a4c";
+
+(*
+	First-cut TGA screening model for hydrogen reduction of hematite.
+
+	Purpose:
+	- screen whether freeboard + bed-scale gas transport are large enough to
+	  obscure the local three-step reduction kinetics that we would like to
+	  infer from TGA data;
+	- keep the model simple enough for robust DAE initialization in ASCEND;
+	- preserve the same "kinetics toward equilibrium" structure that will later
+	  be needed in more detailed distributed-bed models.
+
+	Scope and deliberate simplifications:
+	- one lumped reacting zone representing a bed-averaged particle ensemble;
+	- three dynamic reaction extents xi1, xi2, xi3 for:
+	    1. 3 Fe2O3 + H2  <->  2 Fe3O4 + H2O
+	    2. Fe3O4  + H2   <->  3 FeO   + H2O
+	    3. FeO    + H2   <->  Fe      + H2O
+	- freeboard and bed transport represented as two resistances in series,
+	  collapsed to a single overall gas-side transfer coefficient;
+	- pseudo-binary transport of H2 / H2O against an inert background, with the
+	  reacting-gas argon fraction assumed equal to the bulk-gas argon fraction;
+	- temperature-dependent step equilibrium ratios are represented here by
+	  simple placeholder ln(K) = A - B/T correlations, intended to be replaced
+	  later by the Fe-O-H equilibrium machinery already being developed.
+
+	The intent is not to make this the final mechanistic model. It is a
+	screening tool that should tell us whether bed/freeboard transport is large
+	enough to explain strong sample-mass effects such as the 10 mg vs 100 mg
+	TGA observations.
+*)
+
+ATOM rate_per_pressure REFINES solver_var
+	DIMENSION T*L/M
+	DEFAULT 1e-8 {1/s/Pa};
+	lower_bound := 0 {1/s/Pa};
+	upper_bound := 1e6 {1/s/Pa};
+	nominal := 1e-8 {1/s/Pa};
+END rate_per_pressure;
+
+ATOM reduction_extent REFINES factor
+	DEFAULT 0;
+	lower_bound := 0;
+	upper_bound := 3;
+	nominal := 0.1;
+END reduction_extent;
+
+ATOM extent_rate REFINES solver_var
+	DIMENSION T^-1
+	DEFAULT 1e-4 {1/s};
+	lower_bound := -1e3 {1/s};
+	upper_bound := 1e3 {1/s};
+	nominal := 1e-4 {1/s};
+END extent_rate;
+
+ATOM transport_resistance REFINES solver_var
+	DIMENSION T/L
+	DEFAULT 1 {s/m};
+	lower_bound := 1e-12 {s/m};
+	upper_bound := 1e12 {s/m};
+	nominal := 1 {s/m};
+END transport_resistance;
+
+ATOM mole_per_area REFINES solver_var
+	DIMENSION Q/L^2
+	DEFAULT 1 {mol/m^2};
+	lower_bound := 0 {mol/m^2};
+	upper_bound := 1e12 {mol/m^2};
+	nominal := 1 {mol/m^2};
+END mole_per_area;
+
+
+MODEL tga_reduction_screen;
+	steps IS_A set OF integer_constant;
+	steps :== [1..3];
+
+	(*
+		Independent variable.
+		Only the extents are differential states in this screening model.
+		Gas transport and local rates remain algebraic, giving an index-1 DAE
+		structure appropriate for IDA.
+	*)
+	t IS_A time;
+
+	(*
+		Gas-side conditions and simple TGA geometry.
+	*)
+	T IS_A temperature;
+	p IS_A pressure;
+	A_crucible IS_A area;
+	L_freeboard IS_A distance;
+
+	m_sample_init IS_A mass;
+	m_sample IS_A mass;
+	rho_bulk_bed IS_A mass_density;
+	H_bed IS_A distance;
+
+	eps_bed IS_A positive_factor;
+	tau_bed IS_A positive_factor;
+	k_fb_multiplier IS_A positive_factor;
+	k_bed_multiplier IS_A positive_factor;
+
+	(*
+		Bulk gas composition at the top of the freeboard and the single
+		reacting-gas composition seen by the lumped bed-average solid.
+	*)
+	y_H2_bulk IS_A mole_fraction;
+	y_H2O_bulk IS_A mole_fraction;
+	y_Ar_bulk IS_A mole_fraction;
+
+	y_H2_react IS_A mole_fraction;
+	y_H2O_react IS_A mole_fraction;
+	y_Ar_react IS_A mole_fraction;
+
+	c_tot IS_A molar_density;
+
+	(*
+		Gas transport properties.
+
+		D_screen is taken here as a harmonic-mean screening diffusivity based on
+		the H2-Ar and H2O-Ar Chapman-Enskog values. This is a conservative
+		pseudo-binary approximation for H2/H2O transport through an inert-rich
+		background, not a substitute for the full Maxwell-Stefan freeboard model.
+	*)
+	tr IS_A diffusion_h2o_h2_ar;
+	D_screen IS_A diffusivity;
+	D_eff_bed IS_A diffusivity;
+
+	k_fb IS_A speed;
+	k_bed IS_A speed;
+	k_overall IS_A speed;
+
+	R_fb IS_A transport_resistance;
+	R_bed IS_A transport_resistance;
+	R_overall IS_A transport_resistance;
+
+	J_transport IS_A molar_flux;
+	J_freeboard_cap IS_A molar_flux;
+	J_bed_cap IS_A molar_flux;
+	J_overall_cap IS_A molar_flux;
+	transport_screen_freeboard IS_A factor;
+	transport_screen_bed IS_A factor;
+	transport_screen_overall IS_A factor;
+
+	(*
+		Solid inventory and three-step reduction extents.
+	*)
+	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
+	n0_Fe2O3 IS_A mole;
+	n0_per_area IS_A mole_per_area;
+
+	xi[steps] IS_A reduction_extent;
+	dxi_dt[steps] IS_A extent_rate;
+
+	n_Fe2O3, n_Fe3O4, n_FeO, n_Fe IS_A mole;
+	oxygen_remaining IS_A mole;
+	reduction_degree IS_A factor;
+
+	(*
+		Stepwise kineq-style local kinetics.
+
+		k0[r] and E_a[r] are stepwise Arrhenius parameters in a pressure-form
+		rate law. K_eq_lnA/B are temperature-dependent equilibrium-ratio
+		correlations:
+
+			K_ratio_eq[r] = exp( K_eq_lnA[r] - K_eq_lnB[r] / T )
+
+		The current K_ratio_eq fits are derived from the existing Fe-O-H FPROPS
+		work as documented in models/johnpye/iron/TGA.md:
+
+		- step 1 (hematite -> magnetite): direct Delta G degree from the mixed
+		  source string
+		      "Fe2O3=hidayat_2015;Fe3O4=hidayat_2015;*=helmholtz+ref0:"
+		  for 3 Fe2O3 + H2 <-> 2 Fe3O4 + H2O;
+		- step 2 (magnetite -> wustite): H2/H2O ratio from the provisional
+		  wustite|spinel boundary helper in
+		      models/johnpye/fprops/test/feoh_hydrogen_boundary.py;
+		- step 3 (wustite -> iron): H2/H2O ratio from the Fe|wustite boundary
+		  helper in the same file.
+
+		The fit range is 873.15 K to 1473.15 K (600 C to 1200 C). Step 2
+		remains the least certain thermodynamically because the reduced spinel
+		model is still provisional in the underlying Fe-O-H work.
+	*)
+	k0[steps] IS_A rate_per_pressure;
+	E_a[steps] IS_A molar_energy;
+	k_step[steps] IS_A rate_per_pressure;
+
+	K_eq_lnA[steps] IS_A factor;
+	K_eq_lnB[steps] IS_A factor;
+	K_ratio_eq[steps] IS_A positive_factor;
+
+	availability[steps] IS_A factor;
+	drive[steps] IS_A delta_pressure;
+	rate_forward[steps] IS_A extent_rate;
+	rate_reverse[steps] IS_A extent_rate;
+	rate_net[steps] IS_A extent_rate;
+
+	J_reaction IS_A molar_flux;
+
+	tr_T: tr.T = T;
+	tr_p: tr.p = p;
+
+	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+
+	(* Bulk-gas closure *)
+	bulk_sum: y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
+
+	(* Reacting-gas closure for the pseudo-binary screening approximation *)
+	react_ar_eq: y_Ar_react = y_Ar_bulk;
+	react_sum: y_H2O_react = 1 - y_Ar_react - y_H2_react;
+
+	(* Solid molar masses *)
+	MW_fe2o3_eq: MW_Fe2O3 = 159.687 {g/g_mole};
+	MW_fe3o4_eq: MW_Fe3O4 = 231.531 {g/g_mole};
+	MW_feo_eq: MW_FeO = 71.844 {g/g_mole};
+	MW_fe_eq: MW_Fe = 55.845 {g/g_mole};
+
+	(* Initial amount of hematite from initial sample mass *)
+	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+	n0area_eq: n0_per_area = n0_Fe2O3 / A_crucible;
+
+	(* Phase inventories from the three extents *)
+	nhe_eq: n_Fe2O3 = n0_Fe2O3 * (1 - 3 * xi[1]);
+	nmag_eq: n_Fe3O4 = n0_Fe2O3 * (2 * xi[1] - xi[2]);
+	nwu_eq: n_FeO = n0_Fe2O3 * (3 * xi[2] - xi[3]);
+	nfe_eq: n_Fe = n0_Fe2O3 * xi[3];
+
+	(* Current sample mass and bed height.
+	   First-cut assumption: the bed retains a constant bulk density as oxygen
+	   is removed, so the bed height scales with current sample mass. *)
+	msample_eq:
+		m_sample
+		=
+		n_Fe2O3 * MW_Fe2O3
+		+ n_Fe3O4 * MW_Fe3O4
+		+ n_FeO * MW_FeO
+		+ n_Fe * MW_Fe;
+	Hbed_eq: H_bed = m_sample / (rho_bulk_bed * A_crucible);
+
+	(* Overall reduction degree based on oxygen removal relative to fully
+	   reduced metallic iron. *)
+	oxygen_eq: oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+	reduction_degree_eq:
+		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
+
+	(* Transport screening coefficients *)
+	Dscreen_eq:
+		D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
+	Deffbed_eq: D_eff_bed = (eps_bed / tau_bed) * D_screen;
+
+	kfb_eq: k_fb = k_fb_multiplier * D_screen / L_freeboard;
+	kbed_eq: k_bed = k_bed_multiplier * D_eff_bed / H_bed;
+	koverall_eq: k_overall = k_fb * k_bed / (k_fb + k_bed);
+
+	Rfb_eq: R_fb = 1 / k_fb;
+	Rbed_eq: R_bed = 1 / k_bed;
+	Roverall_eq: R_overall = 1 / k_overall;
+
+	(*
+		Transport capacity and actual transport flux.
+
+		J_transport is written here from the H2-side concentration difference.
+		Because y_Ar is held equal between bulk and reacting gas, the same flux
+		is implied from the H2O-side concentration rise.
+	*)
+	Jtrans_eq: J_transport = c_tot * k_overall * (y_H2_bulk - y_H2_react);
+	Jfbcap_eq: J_freeboard_cap = c_tot * k_fb * y_H2_bulk;
+	Jbedcap_eq: J_bed_cap = c_tot * k_bed * y_H2_bulk;
+	Joverallcap_eq: J_overall_cap = c_tot * k_overall * y_H2_bulk;
+
+	screen_fb_eq: transport_screen_freeboard = J_reaction / J_freeboard_cap;
+	screen_bed_eq: transport_screen_bed = J_reaction / J_bed_cap;
+	screen_overall_eq: transport_screen_overall = J_reaction / J_overall_cap;
+
+	(* Local step availabilities *)
+	avail1_eq: availability[1] = n_Fe2O3 / n0_Fe2O3;
+	avail2_eq: availability[2] = n_Fe3O4 / n0_Fe2O3;
+	avail3_eq: availability[3] = n_FeO / n0_Fe2O3;
+
+	FOR r IN steps CREATE
+		kstep_eq[r]:
+			k_step[r] = k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+		Keq_eq[r]:
+			K_ratio_eq[r]
+			=
+			exp(
+				K_eq_lnA[r]
+				- K_eq_lnB[r] / (T / 1 {K})
+			);
+		drive_eq[r]:
+			drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
+		rf_eq[r]:
+			rate_forward[r] = availability[r] * k_step[r] * p * y_H2_react;
+		rr_eq[r]:
+			rate_reverse[r] = availability[r] * k_step[r] * p * y_H2O_react / K_ratio_eq[r];
+		rnet_eq[r]:
+			rate_net[r] = rate_forward[r] - rate_reverse[r];
+		ode_eq[r]:
+			dxi_dt[r] = rate_net[r];
+	END FOR;
+
+	(* Hydrogen demand from the three-step solid reduction block.
+	   Each unit of xi1, xi2, xi3 consumes one mol H2 per initial mol Fe2O3. *)
+	Jrxn_eq:
+		J_reaction = n0_per_area * (rate_net[1] + rate_net[2] + rate_net[3]);
+
+	(* Screening closure: gas-side transport must supply the same H2 flux that
+	   the lumped reacting solid consumes. *)
+	transport_match: J_transport = J_reaction;
+
+METHODS
+	METHOD values;
+		T := 900 {K};
+		p := 1 {bar};
+		A_crucible := 20 {mm^2};
+		L_freeboard := 5 {mm};
+
+		m_sample_init := 100 {mg};
+		rho_bulk_bed := 1500 {kg/m^3};
+
+		eps_bed := 0.45;
+		tau_bed := 3.0;
+		k_fb_multiplier := 1.0;
+		k_bed_multiplier := 1.0;
+
+		y_H2_bulk := 0.8;
+		y_H2O_bulk := 0.0;
+		y_Ar_bulk := 0.2;
+		y_H2_react := 0.6;
+		y_H2O_react := 0.2;
+		y_Ar_react := 0.2;
+
+		(* Placeholder stepwise Arrhenius parameters.
+		   These are not yet calibrated and are only intended to support
+		   transport-screening runs. *)
+		k0[1] := 2e-5 {1/s/Pa};
+		k0[2] := 1e-5 {1/s/Pa};
+		k0[3] := 5e-5 {1/s/Pa};
+
+		E_a[1] := 55 {kJ/mol};
+		E_a[2] := 60 {kJ/mol};
+		E_a[3] := 62 {kJ/mol};
+
+		(* Fitted equilibrium-ratio correlations from the existing Fe-O-H
+		   FPROPS work. See models/johnpye/iron/TGA.md for derivation details,
+		   source utilities, and fit errors over 600 C to 1200 C.
+
+		     step 1: hematite | magnetite, max fit error about 12%
+		     step 2: wustite | spinel,   max fit error about 5.3%
+		     step 3: Fe | wustite,       max fit error about 0.8%
+		*)
+		K_eq_lnA[1] := 8.54050167864375;
+		K_eq_lnA[2] := 8.447122204684765;
+		K_eq_lnA[3] := 1.0604569618298618;
+		K_eq_lnB[1] := 2552.121942697152;
+		K_eq_lnB[2] := 8067.2733483476295;
+		K_eq_lnB[3] := 1856.1489018164739;
+
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
+		dxi_dt[1] := 1e-5 {1/s};
+		dxi_dt[2] := 1e-6 {1/s};
+		dxi_dt[3] := 1e-6 {1/s};
+
+		t := 0 {s};
+	END values;
+
+	METHOD specify;
+		FIX T, p, A_crucible, L_freeboard, m_sample_init, rho_bulk_bed;
+		FIX eps_bed, tau_bed, k_fb_multiplier, k_bed_multiplier;
+		FIX y_H2_bulk, y_H2O_bulk;
+		FIX k0[steps], E_a[steps], K_eq_lnA[steps], K_eq_lnB[steps];
+		FIX xi[steps];
+	END specify;
+
+	METHOD steady_init;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		OPTION iterationlimit 1000;
+		SOLVE;
+	END steady_init;
+
+	METHOD ode_init;
+		FREE xi[steps], dxi_dt[steps];
+		FOR r IN steps DO
+			xi[r].ode_id := r;
+			dxi_dt[r].ode_id := r;
+			xi[r].ode_type := 1;
+			dxi_dt[r].ode_type := 2;
+		END FOR;
+		t.ode_type := -1;
+		t := 0 {s};
+
+		t.obs_id := 1;
+		m_sample.obs_id := 2;
+		reduction_degree.obs_id := 3;
+		y_H2_react.obs_id := 4;
+		J_transport.obs_id := 5;
+	END ode_init;
+
+	METHOD case_10mg;
+		m_sample_init := 10 {mg};
+	END case_10mg;
+
+	METHOD case_100mg;
+		m_sample_init := 100 {mg};
+	END case_100mg;
+
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+		RUN specify;
+		RUN steady_init;
+	END on_load;
+END tga_reduction_screen;
+
+
+MODEL tga_reduction_screen_demo;
+	R IS_A tga_reduction_screen;
+METHODS
+	METHOD on_load;
+		RUN R.values;
+		RUN R.specify;
+		RUN R.steady_init;
+		STUDY
+			R.m_sample_init, R.m_sample, R.H_bed,
+			R.k_fb, R.k_bed, R.k_overall,
+			R.R_fb, R.R_bed, R.R_overall,
+			R.y_H2_react, R.y_H2O_react, R.y_Ar_react,
+			R.K_ratio_eq[1], R.K_ratio_eq[2], R.K_ratio_eq[3],
+			R.rate_net[1], R.rate_net[2], R.rate_net[3],
+			R.J_transport, R.J_reaction,
+			R.transport_screen_freeboard, R.transport_screen_bed, R.transport_screen_overall,
+			R.reduction_degree;
+	END on_load;
+
+	METHOD case_10mg;
+		R.m_sample_init := 10 {mg};
+	END case_10mg;
+
+	METHOD case_100mg;
+		R.m_sample_init := 100 {mg};
+	END case_100mg;
+
+	METHOD ode_init;
+		RUN R.ode_init;
+	END ode_init;
+END tga_reduction_screen_demo;
+
+
+(* vim: sw=4:noet:ts=4
+*)

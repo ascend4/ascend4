@@ -46,10 +46,10 @@ MODEL diffusion_binary_species_data;
 		  User's Guide, Fuller-Schettler-Giddings diffusion-volume table.
 	*)
 	TABLE data[species,fields];
-		MW_kg_per_kmol sigma_angstrom eps_over_k_K fuller_volume
-		H2O 18.01528 2.641 809.1 13.1
-		H2 2.01588 2.827 59.7 6.12
-		Ar 39.948 3.542 93.3 16.2
+		    MW_kg_per_kmol sigma_angstrom eps_over_k_K fuller_volume
+		H2O    18.01528       2.641       809.1           13.1
+		H2      2.01588       2.827        59.7           6.12
+		Ar     39.948         3.542        93.3           16.2
 	END TABLE;
 END diffusion_binary_species_data;
 
