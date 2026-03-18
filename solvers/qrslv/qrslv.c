@@ -2713,7 +2713,12 @@ static void find_next_unconverged_block( qrslv_system_t sys){
      debug_out_var_values(stderr,sys);
      debug_out_rel_residuals(stderr,sys);
 #endif
-   }while(!sys->s.converged && block_feasible(sys) && !OPTIMIZING(sys));
+     /*
+      * Always pass singleton blocks through qrslv_iterate so they get a
+      * direct-solve attempt instead of being skipped as merely "feasible".
+      */
+   }while(!sys->s.converged && block_feasible(sys) && !OPTIMIZING(sys)
+      && sys->s.block.current_size != 1);
 
    reorder_new_block(sys);
 }
@@ -3786,6 +3791,15 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
   }
 
   if(sys->s.block.current_block==-1) {
+    if(SLV_PARAM_BOOL(&(sys->p),RELNOMSCALE) == 1 /*|| (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0) ||
+       (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM+ITERATIVE") == 0)*/ ){
+      /*
+       * Relation satisfaction checks in find_next_unconverged_block depend on
+       * relation nominals when convopt == RELNOM_SCALE, so compute them before
+       * the first block-feasibility pass.
+       */
+      calc_relnoms(sys);
+    }
     find_next_unconverged_block(sys);
 	if(!sys->s.calc_ok){
 #if DEBUG
@@ -3794,10 +3808,6 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
       return 10;
 	}
     update_status(sys);
-    if(SLV_PARAM_BOOL(&(sys->p),RELNOMSCALE) == 1 /*|| (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0) ||
-       (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM+ITERATIVE") == 0)*/ ){
-      calc_relnoms(sys);
-    }
     return 0; /* not sure if this is an error? */
   }
   if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||
