@@ -433,6 +433,25 @@ public:
 
 int saveDisplayUnitsOverrides(void);
 int reloadDisplayUnitsOverrides(void);
+const std::string getDisplayUnitsOverridesPath(void);
+void setDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &units,
+	const std::string &scope=""
+);
+void clearDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &scope=""
+);
+void setDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &units,
+	const std::string &scope
+);
+void clearDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &scope
+);
 
 %extend Instanc{
 	const char *__repr__(){

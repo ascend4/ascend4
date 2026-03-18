@@ -126,6 +126,16 @@ if __name__ == "__main__":
 		# Forward cutest help flags to the underlying runner instead of
 		# letting argparse consume them as subcommand help.
 		argv.insert(2, '--')
+	if (
+		len(argv) >= 3
+		and argv[1] == 'units'
+		and '--' not in argv[2:]
+		and any(arg in ('-h', '--help') for arg in argv[2:])
+	):
+		argv[2:] = ['--help' if arg == '-h' else arg for arg in argv[2:]]
+		# Forward units help flags to the underlying runner instead of
+		# letting argparse consume them as subcommand help.
+		argv.insert(2, '--')
 
 	p = argparse.ArgumentParser(description='ASCEND launcher')
 
@@ -170,6 +180,10 @@ if __name__ == "__main__":
 	p_cutest = s.add_parser('cutest',help = 'Run ASCEND CUnit test runner with ASCEND environment set')
 	p_cutest.set_defaults(action='cutest')
 	p_cutest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to test/test')
+
+	p_units = s.add_parser('units',help = 'Manage display-units overrides')
+	p_units.set_defaults(action='units')
+	p_units.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to rununits.py')
 	
 	p_sh = s.add_parser('env',help = 'Create a sub-shell in which ASCEND environment variables are set.')
 	p_sh.set_defaults(action='env')
@@ -299,6 +313,11 @@ if __name__ == "__main__":
 		if rest and rest[0] == '--':
 			rest = rest[1:]
 		cmd += shebang(sourceroot / 'test' / 'test', rest)
+	elif args.action == 'units':
+		rest = list(args.rest)
+		if rest and rest[0] == '--':
+			rest = rest[1:]
+		cmd += [PYTHON, sourceroot / 'ascxx' / 'rununits.py'] + rest
 	elif args.action == 'env' :
 		shargs = []
 		if os.environ.get('ASCEND_SHELL'):
