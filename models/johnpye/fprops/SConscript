@@ -21,6 +21,11 @@ if fprops_env.get('HAVE_IPOPT'):
 		fprops_env.AppendUnique(LIBPATH=fprops_env['IPOPT_LIBPATH'])
 	if fprops_env.get('IPOPT_LIBS'):
 		fprops_env.AppendUnique(LIBS=fprops_env['IPOPT_LIBS'])
+	if fprops_env.get('IPOPT_HSLIB_SUPPORTED') and fprops_env.get('IPOPT_HSL_LIBRARY'):
+		fprops_env.AppendUnique(CPPDEFINES=['ASC_WITH_IPOPT_HSLIB'])
+		fprops_env.AppendUnique(CPPDEFINES=[
+			('ASC_IPOPT_HSL_LIBRARY', '"%s"' % str(fprops_env['IPOPT_HSL_LIBRARY']).replace('"', '\\"'))
+		])
 
 # automatically create fluids/fluids_list.h...
 fprops_env.SConscript("fluids/SConscript",['fprops_env'])

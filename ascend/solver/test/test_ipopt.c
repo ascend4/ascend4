@@ -37,6 +37,7 @@
 #include <ascend/compiler/slvreq.h>
 
 #include <ascend/system/system.h>
+#include <ascend/system/slv_param.h>
 #include <ascend/system/slv_client.h>
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_server.h>
@@ -53,7 +54,7 @@
 /*
 	Test solving a simple IPOPT model
 */
-static void test_ipopt(const char *filenamestem){
+static void test_ipopt(const char *filenamestem, const char *linear_solver){
 
 	struct module_t *m;
 
@@ -109,6 +110,16 @@ static void test_ipopt(const char *filenamestem){
 	CU_ASSERT_FATAL(slv_select_solver(sys,index));
 	CONSOLE_DEBUG("Assigned solver '%s'...",solvername);
 
+	if(linear_solver != NULL){
+		slv_parameters_t pp;
+		int linear_solver_idx;
+		slv_get_parameters(sys,&pp);
+		linear_solver_idx = slv_param_lookup(&pp,"linear_solver");
+		CU_ASSERT_FATAL(linear_solver_idx != -1);
+		CU_ASSERT_FATAL(0 == slv_param_char_choose(&pp,"linear_solver",linear_solver));
+		slv_set_parameters(sys,&pp);
+	}
+
 	CU_ASSERT_FATAL(0 == slv_presolve(sys));
 
 	slv_status_t status;
@@ -162,16 +173,38 @@ static void test_ipopt(const char *filenamestem){
 /* define the tests: each test loads the model, solves with IPOPT, then runs the
 self_test method. */
 #define T(N) static void test_##N(void){\
-		test_ipopt(#N);\
+		test_ipopt(#N,NULL);\
 	}
 #define X
 TESTS1(T,X)
 #undef T
 #undef X
 
+#ifdef ASC_WITH_IPOPT_HSL_MA27
+static void test_lp1_ma27(void){
+	test_ipopt("lp1","ma27");
+}
+#else
+static void test_lp1_ma27(void){
+	CONSOLE_DEBUG("Skipping IPOPT MA27 test: HSL MA27 not detected at build time");
+}
+#endif
+
+#ifdef ASC_WITH_IPOPT_HSL_MA97
+static void test_lp1_ma97(void){
+	test_ipopt("lp1","ma97");
+}
+#else
+static void test_lp1_ma97(void){
+	CONSOLE_DEBUG("Skipping IPOPT MA97 test: HSL MA97 not detected at build time");
+}
+#endif
+
 #define X
 #define TESTS(T) \
-	TESTS1(T,X)
+	TESTS1(T,X) \
+	X T(lp1_ma27) \
+	X T(lp1_ma97)
 
 REGISTER_TESTS_SIMPLE(solver_ipopt, TESTS)
 #undef X

@@ -493,12 +493,12 @@ int32 ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 			" solution of the augmented linear system (for obtaining the search"
 			" directions). Note, the code must have been compiled with the"
 			" linear solver you want to choose. Depending on your Ipopt"
-			" installation, not all options are available. The default value"
-			" for this string option is 'ma27'."
-			" Available options *may* include: ma27, ma57, pardiso, wsmp,"
-			" mumps, custom."
+			" installation, not all options are available. ASCEND defaults"
+			" this option to 'mumps'."
+			" Available options *may* include: ma27, ma57, ma77, ma86,"
+			" ma97, pardiso, wsmp, mumps, custom."
 		}, "mumps"}, (char *[]){
-			"ma27","ma57","pardiso","wsmp","mumps","custom",NULL
+			"ma27","ma57","ma77","ma86","ma97","pardiso","wsmp","mumps","custom",NULL
 		}
 	);
 
@@ -1283,6 +1283,9 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	/** QUASI-NEWTON OPTIONS */
 	AddIpoptStrOption(sys->nlp, "hessian_approximation", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_HESS_APPROX));
 	/** LINEAR SOLVER OPTIONS */
+#ifdef ASC_WITH_IPOPT_HSLIB
+	AddIpoptStrOption(sys->nlp, "hsllib", ASC_IPOPT_HSL_LIBRARY);
+#endif
 	AddIpoptStrOption(sys->nlp, "linear_solver", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_LINEAR_SOLVER));
 
 

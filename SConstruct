@@ -2750,29 +2750,6 @@ if platform.system()=="Linux":
 env.Alias('libascend',libtargets)
 
 #-------------
-# UNIT TESTS (C CODE)
-
-test_env = env.Clone()
-test_env.PrependUnique(CPPPATH=['#'])
-
-if env['WITH_CUNIT']:
-	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']
-	testsrcs = []
-	for testdir in testdirs:
-		path = 'ascend/'+testdir+'/test/'
-		test_env.SConscript([path+'SConscript'],'test_env')
-		testsrcs += [i.path for i in test_env['TESTSRCS_'+testdir.upper()]]
-	test_env['TESTDIRS'] = testdirs
-
-	#print "TESTSRCS =",testsrcs
-	
-	test_env.SConscript(['test/SConscript'],'test_env')
-
-	env.Alias('test',[env.Dir('test')])	
-else:
-	print("Skipping... CUnit tests aren't being built:")
-
-#-------------
 # EXTERNAL SOLVERS
 
 env['extfns']=[]
@@ -2789,6 +2766,34 @@ modeldirs = env.SConscript(['models/SConscript'],'env')
 for _f in env['extfns']:
 	env.Depends(_f,'libascend')
 env.Alias('extfns',env['extfns'])
+
+#-------------
+# UNIT TESTS (C CODE)
+
+test_env = env.Clone()
+test_env.PrependUnique(CPPPATH=['#'])
+
+if env['WITH_CUNIT']:
+	if env.get('IPOPT_HSL_MA27_AVAILABLE'):
+		test_env.AppendUnique(CPPDEFINES=['ASC_WITH_IPOPT_HSL_MA27'])
+	if env.get('IPOPT_HSL_MA97_AVAILABLE'):
+		test_env.AppendUnique(CPPDEFINES=['ASC_WITH_IPOPT_HSL_MA97'])
+
+	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']
+	testsrcs = []
+	for testdir in testdirs:
+		path = 'ascend/'+testdir+'/test/'
+		test_env.SConscript([path+'SConscript'],'test_env')
+		testsrcs += [i.path for i in test_env['TESTSRCS_'+testdir.upper()]]
+	test_env['TESTDIRS'] = testdirs
+
+	#print "TESTSRCS =",testsrcs
+
+	test_env.SConscript(['test/SConscript'],'test_env')
+
+	env.Alias('test',[env.Dir('test')])
+else:
+	print("Skipping... CUnit tests aren't being built:")
 
 #-------------
 # FPROPS python bindings
