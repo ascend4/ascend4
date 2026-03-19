@@ -45,6 +45,9 @@ static void eqm_ipopt_apply_options(IpoptProblem prob, double T, const char *hes
 	AddIpoptStrOption(prob, "hessian_approximation", (char *)hess_approx);
 	AddIpoptStrOption(prob, "mu_strategy", (char *)"adaptive");
 	AddIpoptIntOption(prob, "print_level", 0);
+#ifdef ASC_WITH_IPOPT_HSLIB
+	AddIpoptStrOption(prob, "hsllib", ASC_IPOPT_HSL_LIBRARY);
+#endif
 }
 
 static void eqm_compute_x(const EqmData *D, const Number *xvars, double *S, double *x, double *Z){

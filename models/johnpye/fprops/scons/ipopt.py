@@ -200,7 +200,10 @@ def _copy_ipopt_result_to_env(env, result):
 	env['IPOPT_HSL_LIBRARY'] = result.get('hsl_library')
 	env['IPOPT_HSL_PROBE_TARGET'] = result.get('hsl_probe_target')
 	env['IPOPT_HSL_REASON'] = result.get('hsl_reason')
+	env['IPOPT_HSLIB_SUPPORTED'] = False
 	env['IPOPT_HSL_LOADABLE'] = False
+	env['IPOPT_HSL_MA27_SYMBOL_AVAILABLE'] = False
+	env['IPOPT_HSL_MA97_SYMBOL_AVAILABLE'] = False
 	env['IPOPT_HSL_MA27_AVAILABLE'] = False
 	env['IPOPT_HSL_MA97_AVAILABLE'] = False
 	env['IPOPT_HSL_STATUS'] = result.get('hsl_reason') or 'not checked'
