@@ -1,0 +1,358 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/fboard.a4c";
+REQUIRE "johnpye/iron/tga.a4c";
+
+(*
+	First dynamic TGA screening model using INDEPENDENT t / DER(...)
+	and intended for integration with IDA.
+
+	This is a dynamic counterpart to johnpye/iron/tga.a4c:
+	- the same lumped freeboard + bed transport closure is retained;
+	- the same three kineq-style reduction steps are retained;
+	- the gas side remains quasi-steady and algebraic;
+	- the solid extents xi[1..3] are now true dynamic states.
+
+	The first target is not a full distributed bed model. It is a minimal
+	time-domain screening model that can reproduce reduction_degree(t) and
+	estimate t_RD50 for comparison with TGA data.
+*)
+
+MODEL tga_reduction_screen_dyn;
+	steps IS_A set OF integer_constant;
+	steps :== [1..3];
+
+	(* Independent variable *)
+	t IS_A time;
+
+	(* Gas-side conditions and simple TGA geometry *)
+	T IS_A temperature;
+	p IS_A pressure;
+	A_crucible IS_A area;
+	L_freeboard IS_A distance;
+
+	m_sample_init IS_A mass;
+	m_sample IS_A mass;
+	rho_bulk_bed IS_A mass_density;
+	H_bed IS_A distance;
+
+	eps_bed IS_A positive_factor;
+	tau_bed IS_A positive_factor;
+	k_fb_multiplier IS_A positive_factor;
+	k_bed_multiplier IS_A positive_factor;
+
+	(* Gas compositions *)
+	y_H2_bulk IS_A mole_fraction;
+	y_H2O_bulk IS_A mole_fraction;
+	y_Ar_bulk IS_A mole_fraction;
+
+	y_H2_react IS_A mole_fraction;
+	y_H2O_react IS_A mole_fraction;
+	y_Ar_react IS_A mole_fraction;
+
+	c_tot IS_A molar_density;
+
+	(* Gas transport properties *)
+	tr IS_A diffusion_h2o_h2_ar;
+	D_screen IS_A diffusivity;
+	D_eff_bed IS_A diffusivity;
+
+	k_fb IS_A speed;
+	k_bed IS_A speed;
+	k_overall IS_A speed;
+
+	R_fb IS_A transport_resistance;
+	R_bed IS_A transport_resistance;
+	R_overall IS_A transport_resistance;
+
+	J_transport IS_A molar_flux;
+	J_freeboard_cap IS_A molar_flux;
+	J_bed_cap IS_A molar_flux;
+	J_overall_cap IS_A molar_flux;
+	transport_screen_freeboard IS_A factor;
+	transport_screen_bed IS_A factor;
+	transport_screen_overall IS_A factor;
+
+	(* Solid inventory and dynamic extents *)
+	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
+	n0_Fe2O3 IS_A mole;
+	n0_per_area IS_A mole_per_area;
+
+	xi[steps] IS_A reduction_extent;
+	dxi_dt[steps] IS_A extent_rate;
+
+	n_Fe2O3, n_Fe3O4, n_FeO, n_Fe IS_A mole;
+	oxygen_remaining IS_A mole;
+	reduction_degree IS_A factor;
+
+	(* Stepwise kineq-style local kinetics *)
+	k0[steps] IS_A rate_per_pressure;
+	E_a[steps] IS_A molar_energy;
+	k_step[steps] IS_A rate_per_pressure;
+
+	K_eq_lnA[steps] IS_A factor;
+	K_eq_lnB[steps] IS_A factor;
+	K_ratio_eq[steps] IS_A positive_factor;
+
+	availability[steps] IS_A factor;
+	drive[steps] IS_A delta_pressure;
+	rate_forward[steps] IS_A extent_rate;
+	rate_reverse[steps] IS_A extent_rate;
+	rate_net[steps] IS_A extent_rate;
+
+	J_reaction IS_A molar_flux;
+
+	(* Held crossing-time tracker for RD = 0.5.
+	   This integrates at 1 while RD < 0.5 and at 0 afterwards, so it becomes
+	   a model-side t_RD50 estimate without needing post-processing. *)
+	t_RD50 IS_A time;
+	dt_RD50_dt IS_A factor;
+	rd50_reached IS_A boolean_var;
+
+	tr_T: tr.T = T;
+	tr_p: tr.p = p;
+
+	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+
+	bulk_sum: y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
+
+	react_ar_eq: y_Ar_react = y_Ar_bulk;
+	react_sum: y_H2O_react = 1 - y_Ar_react - y_H2_react;
+
+	MW_fe2o3_eq: MW_Fe2O3 = 159.687 {g/g_mole};
+	MW_fe3o4_eq: MW_Fe3O4 = 231.531 {g/g_mole};
+	MW_feo_eq: MW_FeO = 71.844 {g/g_mole};
+	MW_fe_eq: MW_Fe = 55.845 {g/g_mole};
+
+	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+	n0area_eq: n0_per_area = n0_Fe2O3 / A_crucible;
+
+	nhe_eq: n_Fe2O3 = n0_Fe2O3 * (1 - 3 * xi[1]);
+	nmag_eq: n_Fe3O4 = n0_Fe2O3 * (2 * xi[1] - xi[2]);
+	nwu_eq: n_FeO = n0_Fe2O3 * (3 * xi[2] - xi[3]);
+	nfe_eq: n_Fe = n0_Fe2O3 * xi[3];
+
+	msample_eq:
+		m_sample
+		=
+		n_Fe2O3 * MW_Fe2O3
+		+ n_Fe3O4 * MW_Fe3O4
+		+ n_FeO * MW_FeO
+		+ n_Fe * MW_Fe;
+	Hbed_eq: H_bed = m_sample / (rho_bulk_bed * A_crucible);
+
+	oxygen_eq: oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+	reduction_degree_eq:
+		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
+
+	Dscreen_eq:
+		D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
+	Deffbed_eq: D_eff_bed = (eps_bed / tau_bed) * D_screen;
+
+	kfb_eq: k_fb = k_fb_multiplier * D_screen / L_freeboard;
+	kbed_eq: k_bed = k_bed_multiplier * D_eff_bed / H_bed;
+	koverall_eq: k_overall = k_fb * k_bed / (k_fb + k_bed);
+
+	Rfb_eq: R_fb = 1 / k_fb;
+	Rbed_eq: R_bed = 1 / k_bed;
+	Roverall_eq: R_overall = 1 / k_overall;
+
+	Jtrans_eq: J_transport = c_tot * k_overall * (y_H2_bulk - y_H2_react);
+	Jfbcap_eq: J_freeboard_cap = c_tot * k_fb * y_H2_bulk;
+	Jbedcap_eq: J_bed_cap = c_tot * k_bed * y_H2_bulk;
+	Joverallcap_eq: J_overall_cap = c_tot * k_overall * y_H2_bulk;
+
+	screen_fb_eq: transport_screen_freeboard = J_reaction / J_freeboard_cap;
+	screen_bed_eq: transport_screen_bed = J_reaction / J_bed_cap;
+	screen_overall_eq: transport_screen_overall = J_reaction / J_overall_cap;
+
+	avail1_eq: availability[1] = n_Fe2O3 / n0_Fe2O3;
+	avail2_eq: availability[2] = n_Fe3O4 / n0_Fe2O3;
+	avail3_eq: availability[3] = n_FeO / n0_Fe2O3;
+
+	FOR r IN steps CREATE
+		kstep_eq[r]:
+			k_step[r] = k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+		Keq_eq[r]:
+			K_ratio_eq[r]
+			=
+			exp(
+				K_eq_lnA[r]
+				- K_eq_lnB[r] / (T / 1 {K})
+			);
+		drive_eq[r]:
+			drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
+		rf_eq[r]:
+			rate_forward[r] = availability[r] * k_step[r] * p * y_H2_react;
+		rr_eq[r]:
+			rate_reverse[r] = availability[r] * k_step[r] * p * y_H2O_react / K_ratio_eq[r];
+		rnet_eq[r]:
+			rate_net[r] = rate_forward[r] - rate_reverse[r];
+		ode_eq[r]:
+			dxi_dt[r] = rate_net[r];
+	END FOR;
+
+	Jrxn_eq:
+		J_reaction = n0_per_area * (rate_net[1] + rate_net[2] + rate_net[3]);
+
+	transport_match: J_transport = J_reaction;
+
+CONDITIONAL
+	rd50_boundary: reduction_degree >= 0.5;
+END CONDITIONAL;
+
+	rd50_sat: rd50_reached == SATISFIED(rd50_boundary, 1e-6);
+	rd50_counting: dt_RD50_dt = 1;
+	rd50_hold: dt_RD50_dt = 0;
+
+	WHEN (rd50_reached)
+		CASE FALSE:
+			USE rd50_counting;
+		CASE TRUE:
+			USE rd50_hold;
+	END WHEN;
+
+METHODS
+	METHOD values;
+		T := 800 {K};
+		p := 1 {bar};
+		A_crucible := 20 {mm^2};
+		L_freeboard := 8.3 {mm};
+
+		m_sample_init := 100 {mg};
+		rho_bulk_bed := 1500 {kg/m^3};
+		H_bed := 2 {mm};
+
+		eps_bed := 0.45;
+		tau_bed := 3.0;
+		k_fb_multiplier := 1.0;
+		k_bed_multiplier := 1.0;
+
+		y_H2_bulk := 0.8;
+		y_H2O_bulk := 0.0;
+		y_Ar_bulk := 0.2;
+		y_H2_react := 0.6;
+		y_H2O_react := 0.2;
+		y_Ar_react := 0.2;
+
+		k0[1] := 2e-5 {1/s/Pa};
+		k0[2] := 1e-5 {1/s/Pa};
+		k0[3] := 5e-5 {1/s/Pa};
+
+		E_a[1] := 55 {kJ/mol};
+		E_a[2] := 60 {kJ/mol};
+		E_a[3] := 62 {kJ/mol};
+
+		K_eq_lnA[1] := 8.54050167864375;
+		K_eq_lnA[2] := 8.447122204684765;
+		K_eq_lnA[3] := 1.0604569618298618;
+		K_eq_lnB[1] := 2552.121942697152;
+		K_eq_lnB[2] := 8067.2733483476295;
+		K_eq_lnB[3] := 1856.1489018164739;
+
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
+		dxi_dt[1] := 1e-5 {1/s};
+		dxi_dt[2] := 1e-6 {1/s};
+		dxi_dt[3] := 1e-6 {1/s};
+
+		t := 0 {s};
+		t_RD50 := 0 {s};
+		dt_RD50_dt := 1;
+		rd50_reached := FALSE;
+	END values;
+
+	METHOD specify;
+		FIX T, p, A_crucible, L_freeboard, m_sample_init;
+		FIX eps_bed, tau_bed, k_fb_multiplier, k_bed_multiplier;
+		FIX y_H2_bulk, y_H2O_bulk;
+		FIX k0[steps], E_a[steps], K_eq_lnA[steps], K_eq_lnB[steps];
+	END specify;
+
+	METHOD use_measured_bed_height;
+		FIX H_bed;
+		FREE rho_bulk_bed;
+	END use_measured_bed_height;
+
+	METHOD use_bulk_density_model;
+		FIX rho_bulk_bed;
+		FREE H_bed;
+	END use_bulk_density_model;
+
+	METHOD steady_init;
+		FIX xi[steps], t_RD50;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		OPTION iterationlimit 1000;
+		SOLVE;
+		FREE xi[steps], t_RD50;
+	END steady_init;
+
+	METHOD reinitialise;
+		t := 0 {s};
+		t_RD50 := 0 {s};
+		dt_RD50_dt := 1;
+		rd50_reached := FALSE;
+		RUN steady_init;
+	END reinitialise;
+
+	METHOD case_10mg;
+		m_sample_init := 10 {mg};
+		RUN reinitialise;
+	END case_10mg;
+
+	METHOD case_100mg;
+		m_sample_init := 100 {mg};
+		RUN reinitialise;
+	END case_100mg;
+
+	METHOD case_sahar_600C;
+		T := 600 {C};
+		y_H2_bulk := 0.8;
+		H_bed := 2 {mm};
+		L_freeboard := 8.3 {mm};
+		m_sample_init := 100 {mg};
+		RUN use_measured_bed_height;
+		RUN reinitialise;
+	END case_sahar_600C;
+
+	METHOD case_sahar_800C;
+		T := 800 {C};
+		y_H2_bulk := 0.8;
+		H_bed := 2 {mm};
+		L_freeboard := 8.3 {mm};
+		m_sample_init := 100 {mg};
+		RUN use_measured_bed_height;
+		RUN reinitialise;
+	END case_sahar_800C;
+
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+		RUN specify;
+		RUN use_measured_bed_height;
+		RUN steady_init;
+
+		INDEPENDENT t;
+		DER(dxi_dt[1], xi[1]);
+		DER(dxi_dt[2], xi[2]);
+		DER(dxi_dt[3], xi[3]);
+		DER(dt_RD50_dt, t_RD50);
+
+		reduction_degree.obs_id := 1;
+		m_sample.obs_id := 2;
+		y_H2_react.obs_id := 3;
+		y_H2O_react.obs_id := 4;
+		J_transport.obs_id := 5;
+		rate_net[1].obs_id := 6;
+		rate_net[2].obs_id := 7;
+		rate_net[3].obs_id := 8;
+		t_RD50.obs_id := 9;
+	END on_load;
+END tga_reduction_screen_dyn;
+
+
+(* vim: sw=4:noet:ts=4
+*)
