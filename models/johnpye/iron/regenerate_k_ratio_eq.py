@@ -193,6 +193,7 @@ def main() -> int:
     temperatures_k = [tc + 273.15 for tc in parse_temps_c(args.temps_c)]
     rows: list[DataPoint] = []
     for temperature_k in temperatures_k:
+        print(f"Temperature {temperature_k}...");
         rows.append(
             DataPoint(
                 temperature_k=temperature_k,
