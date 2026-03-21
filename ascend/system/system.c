@@ -32,10 +32,13 @@
 #include <ascend/compiler/check.h>
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/instquery.h>
+#include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/name.h>
+#include <ascend/compiler/relation.h>
 #include <ascend/compiler/vlist.h>
 #include <ascend/compiler/cmpfunc.h>
+#include <ascend/compiler/visitinst.h>
 
 #include <ascend/linear/mtx.h>
 
@@ -91,6 +94,53 @@ static void count_link_key(struct gl_list_t *table, symchar *key, int *count){
 	}
 }
 
+struct der_usage_walk {
+	int found;
+};
+
+static int relation_side_has_der(union RelationTermUnion *side, unsigned long len){
+	unsigned long i;
+	struct relation_term *term;
+	if(side == NULL){
+		return 0;
+	}
+	for(i = 0; i < len; ++i){
+		term = A_TERM(&(side[i]));
+		if(term != NULL && term->t == e_der){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static void find_der_terms_in_relation(struct Instance *inst, VOIDPTR userdata){
+	struct der_usage_walk *walk = (struct der_usage_walk *)userdata;
+	struct relation *rel;
+
+	if(walk == NULL || walk->found || InstanceKind(inst) != REL_INST){
+		return;
+	}
+	if(GetInstanceRelationType(inst) != e_token){
+		return;
+	}
+	rel = (struct relation *)GetInstanceRelationOnly(inst);
+	if(rel == NULL){
+		return;
+	}
+
+	if(relation_side_has_der(RTOKEN(rel).lhs, RTOKEN(rel).lhs_len)
+	    || relation_side_has_der(RTOKEN(rel).rhs, RTOKEN(rel).rhs_len)){
+		walk->found = 1;
+	}
+}
+
+static int system_has_der_terms(struct Instance *inst){
+	struct der_usage_walk walk;
+	walk.found = 0;
+	VisitInstanceTreeTwo(inst, (VisitTwoProc)find_der_terms_in_relation, 0, 0, &walk);
+	return walk.found;
+}
+
 static int check_ode_independent_links(struct Instance *inst){
 	symchar *ode_key = AddSymbol("ode");
 	symchar *indep_key = AddSymbol("independent");
@@ -98,6 +148,7 @@ static int check_ode_independent_links(struct Instance *inst){
 	struct gl_list_t *proc = getLinkTableProcedural(inst);
 	int ode_count = 0;
 	int indep_count = 0;
+	int has_der_terms = 0;
 	struct gl_list_t *indep_instances;
 	unsigned long i;
 
@@ -105,20 +156,14 @@ static int check_ode_independent_links(struct Instance *inst){
 	count_link_key(proc, ode_key, &ode_count);
 	count_link_key(decl, indep_key, &indep_count);
 	count_link_key(proc, indep_key, &indep_count);
+	has_der_terms = system_has_der_terms(inst);
 
-	if(ode_count > 0 && indep_count != 1){
+	if((ode_count > 0 || has_der_terms) && indep_count != 1){
 		ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 		FPRINTF(ASCERR,"ODE model requires exactly one INDEPENDENT variable; found %d.\n", indep_count);
 		error_reporter_end_flush();
 		return 1;
 	}
-	if(ode_count == 0 && indep_count > 0){
-		ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-		FPRINTF(ASCERR,"INDEPENDENT specified but no DER statements found.\n");
-		error_reporter_end_flush();
-		return 1;
-	}
-
 	/* verify that no DER entries reference the independent variable */
 	indep_instances = gl_create(4);
 	if(decl){

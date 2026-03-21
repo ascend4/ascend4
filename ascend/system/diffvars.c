@@ -26,6 +26,7 @@
 #include <ascend/utilities/error.h>
 
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/instquery.h>
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/vlist.h>
 #include <ascend/compiler/name.h>
@@ -77,6 +78,102 @@ int CmpDiffVars(const struct solver_ipdata *a, const struct solver_ipdata *b){
 	return 0;
 }
 
+static int diffvars_instance_matches(struct Instance *a, struct Instance *b){
+	struct Instance *p;
+	if(a == NULL || b == NULL){
+		return 0;
+	}
+	if(a == b){
+		return 1;
+	}
+	p = a;
+	do{
+		if(p == b){
+			return 1;
+		}
+		p = NextCliqueMember(p);
+	}while(p != a);
+	return 0;
+}
+
+static struct solver_ipdata *diffvars_find_ipdata(struct gl_list_t *list, struct Instance *inst){
+	unsigned long i, len;
+	if(list == NULL || inst == NULL){
+		return NULL;
+	}
+	len = gl_length(list);
+	for(i = 1; i <= len; ++i){
+		struct solver_ipdata *ip = (struct solver_ipdata *)gl_fetch(list, i);
+		if(ip != NULL && diffvars_instance_matches(ip->i, inst)){
+			return ip;
+		}
+	}
+	return NULL;
+}
+
+static struct solver_ipdata *diffvars_find_var_ipdata(struct problem_t *prob, struct Instance *inst){
+	struct solver_ipdata *ip;
+	ip = diffvars_find_ipdata(prob->vars, inst);
+	if(ip != NULL)return ip;
+	return diffvars_find_ipdata(prob->unas, inst);
+}
+
+static int diffvars_build_registry_views(
+	struct problem_t *prob,
+	struct gl_list_t **dynips_out,
+	struct gl_list_t **indepips_out
+){
+	unsigned long i, len;
+	struct gl_list_t *dynips, *indepips;
+
+	if(prob == NULL || dynips_out == NULL || indepips_out == NULL){
+		return 1;
+	}
+	*dynips_out = NULL;
+	*indepips_out = NULL;
+	if(prob->dynreg == NULL || gl_length(prob->dynreg) == 0){
+		return 0;
+	}
+
+	dynips = gl_create(gl_length(prob->dynreg));
+	indepips = gl_create(gl_length(prob->dynreg));
+	if(dynips == NULL || indepips == NULL){
+		if(dynips != NULL)gl_destroy(dynips);
+		if(indepips != NULL)gl_destroy(indepips);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory while building dynamic registry views.");
+		return 1;
+	}
+
+	len = gl_length(prob->dynreg);
+	for(i = 1; i <= len; ++i){
+		struct dynreg_entry *entry = (struct dynreg_entry *)gl_fetch(prob->dynreg, i);
+		struct solver_ipdata *ip;
+		if(entry == NULL || entry->inst == NULL){
+			continue;
+		}
+		ip = diffvars_find_var_ipdata(prob, entry->inst);
+		if(ip == NULL){
+			ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+			FPRINTF(ASCERR,"Failed to map dynamic registry entry for '");
+			WriteInstanceName(ASCERR, entry->inst, prob->root);
+			FPRINTF(ASCERR,"' onto a solver variable");
+			error_reporter_end_flush();
+			gl_destroy(dynips);
+			gl_destroy(indepips);
+			return 1;
+		}
+		if(entry->odeid != 0){
+			gl_append_ptr(dynips, (void *)ip);
+		}else if(entry->deriv == -1){
+			gl_append_ptr(indepips, (void *)ip);
+		}
+	}
+
+	*dynips_out = dynips;
+	*indepips_out = indepips;
+	return 0;
+}
+
 /**
 	This function steals a lot of what was in integrator.c, but we try to make
 	it more general and capable of extracting info about high-order derivative
@@ -94,7 +191,8 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	SolverDiffVarCollection *diffvars = NULL;
 	struct solver_ipdata *vip, *vipnext;
 	SolverDiffVarSequence *seq;
-	struct gl_list_t *seqs;
+	struct gl_list_t *seqs, *dynips = NULL, *indepips = NULL;
+	struct gl_list_t *source_diffvars, *source_indepvars;
 	long i, seqstart, nalg, ndiff;
 	short j;
 	char cont;
@@ -103,8 +201,16 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	asc_assert(prob);
 
 
-	if(gl_length(prob->diffvars)==0){
+	if(diffvars_build_registry_views(prob, &dynips, &indepips)){
+		return 1;
+	}
+	source_diffvars = (dynips != NULL && gl_length(dynips) > 0) ? dynips : prob->diffvars;
+	source_indepvars = (indepips != NULL && gl_length(indepips) > 0) ? indepips : prob->indepvars;
+
+	if(gl_length(source_diffvars)==0){
 		sys->diffvars = NULL;
+		if(dynips != NULL)gl_destroy(dynips);
+		if(indepips != NULL)gl_destroy(indepips);
 		return 0;
 	}
 
@@ -126,27 +232,29 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	}
 #ifdef DIFFVARS_DEBUG
 	CONSOLE_DEBUG("Added %ld algebraic vars to chains",nalg);
-	CONSOLE_DEBUG("Sorting %ld differential & derivative vars...",gl_length(prob->diffvars));
+	CONSOLE_DEBUG("Sorting %ld differential & derivative vars...",gl_length(source_diffvars));
 #endif
 
 	/* first sort the list of diffvars */
-	gl_sort(prob->diffvars, (CmpFunc)CmpDiffVars);
+	gl_sort(source_diffvars, (CmpFunc)CmpDiffVars);
 
 	/* scan the list for derivs that are missing vars */
 	i = 1; cont = TRUE; seqstart =1; ndiff = 0;
-	vip = (struct solver_ipdata *)gl_fetch(prob->diffvars,i);
+	vip = (struct solver_ipdata *)gl_fetch(source_diffvars,i);
 	if(vip->u.v.deriv > 1){
 		ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 		FPRINTF(ASCERR,"Missing ode_type %d for ode_id %d (check var '",vip->u.v.deriv+1,vip->u.v.odeid);
 		WriteInstanceName(ASCERR,vip->i,prob->root);
 		FPRINTF(ASCERR,"')");
 		error_reporter_end_flush();
+		if(dynips != NULL)gl_destroy(dynips);
+		if(indepips != NULL)gl_destroy(indepips);
 		return 2;
 	}
 	while(cont){
 		/* CONSOLE_DEBUG("Working, seqstart=%ld",seqstart); */
-		if(i >= gl_length(prob->diffvars))cont = FALSE;
-		else vipnext = (struct solver_ipdata *)gl_fetch(prob->diffvars,i+1);
+		if(i >= gl_length(source_diffvars))cont = FALSE;
+		else vipnext = (struct solver_ipdata *)gl_fetch(source_diffvars,i+1);
 
 		if(cont && vipnext->u.v.odeid == vip->u.v.odeid){
 			/* same sequence, check that it's the next derivative */
@@ -158,6 +266,8 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 				WriteInstanceName(ASCERR,vip->i,prob->root);
 				FPRINTF(ASCERR,"')");
 				error_reporter_end_flush();
+				if(dynips != NULL)gl_destroy(dynips);
+				if(indepips != NULL)gl_destroy(indepips);
 				return 1;
 			}else if(vipnext->u.v.deriv > vip->u.v.deriv + 1){
 				ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
@@ -165,6 +275,8 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 				WriteInstanceName(ASCERR,vip->i,prob->root);
 				FPRINTF(ASCERR,"')");
 				error_reporter_end_flush();
+				if(dynips != NULL)gl_destroy(dynips);
+				if(indepips != NULL)gl_destroy(indepips);
 				return 2;
 			}
 
@@ -179,6 +291,8 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 			WriteInstanceName(ASCWAR,vip->i,prob->root);
 			FPRINTF(ASCERR,"' declared differential without derivative being identified (ode_id=%d)",vip->u.v.odeid);
 			error_reporter_end_flush();
+			if(dynips != NULL)gl_destroy(dynips);
+			if(indepips != NULL)gl_destroy(indepips);
 			return 3;
 		}
 		seq = ASC_NEW(SolverDiffVarSequence);
@@ -189,7 +303,7 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		CONSOLE_DEBUG("Saving sequence ode_id = %ld, n = %d",seq->ode_id,seq->n);
 #endif
 		for(j=0;j<seq->n;++j){
-			vip = (struct solver_ipdata *)gl_fetch(prob->diffvars,seqstart+j);
+			vip = (struct solver_ipdata *)gl_fetch(source_diffvars,seqstart+j);
 			seq->vars[j]=vip->u.v.data;
 			/* set the VAR_ALGEB flag as req */
 			var_set_diff(seq->vars[j],j==0 && seq->n > 1);
@@ -219,6 +333,8 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 			WriteInstanceName(ASCWAR,vip->i,prob->root);
 			FPRINTF(ASCERR,"' (ode_id = %d, ode_type = %d)",vip->u.v.odeid,vip->u.v.deriv);
 			error_reporter_end_flush();
+			if(dynips != NULL)gl_destroy(dynips);
+			if(indepips != NULL)gl_destroy(indepips);
 			return 4;
 		}
 		continue;
@@ -240,11 +356,11 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	diffvars->nalg = nalg;
 	diffvars->ndiff = ndiff;
 
-	diffvars->nindep = gl_length(prob->indepvars);
+	diffvars->nindep = gl_length(source_indepvars);
 
 	diffvars->indep = ASC_NEW_ARRAY(struct var_variable *,diffvars->nindep);
 	for(i=0;i<diffvars->nindep;++i){
-		vip = (struct solver_ipdata *)gl_fetch(prob->indepvars,i+1);
+		vip = (struct solver_ipdata *)gl_fetch(source_indepvars,i+1);
 		diffvars->indep[i] = vip->u.v.data;
 	}
 #ifdef DIFFVARS_DEBUG
@@ -264,6 +380,8 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 #endif
 
 	slv_set_diffvars(sys,(void *)diffvars);
+	if(dynips != NULL)gl_destroy(dynips);
+	if(indepips != NULL)gl_destroy(indepips);
 
 	return 0;
 }
@@ -308,4 +426,3 @@ void system_diffvars_destroy(slv_system_t sys){
 	ASC_FREE(diffvars);
 	sys->diffvars = NULL;
 }
-

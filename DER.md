@@ -116,9 +116,19 @@ Current implementation status:
   [analyze.c](./ascend/system/analyze.c)
 - that registry is built once from legacy `ode` / `independent` LINK metadata
   before `classify_instance`
-- `classify_instance` now consults the registry first and only falls back to
-  `getOdeType(...)` / `getOdeId(...)` when the registry does not yet have a
-  safe canonical answer
+- `classify_instance` now uses that registry directly for legacy LINK-derived
+  dynamic metadata, rather than calling `getOdeType(...)` / `getOdeId(...)`
+  per variable during tree walk
+- the same registry is now also populated from simple pure-binding equations of
+  the form `v = der(x)` or `der(x) = v`, with no legacy `DER(...)` statement
+  required
+- the late `der(x)` binder in
+  [relation.c](./ascend/compiler/relation.c) now resolves derivative terms
+  through a caller-provided resolver, so analysis can use registry-backed
+  materialisations first and fall back to legacy `ode` chains only for
+  compatibility
+- simple no-`DER(...)` models now reach IDA successfully for both direct and
+  nested scalar cases
 
 This is still transitional, but it is now happening at the correct phase:
 after instantiation, before solver analysis.
@@ -130,8 +140,12 @@ Important qualification:
 - array aliases are now materially improved because `getLinks(...)` and
   `getLinksReferencing(...)` no longer skip entries during key filtering
 - however, the registry is still transitional because `diffvars` generation is
-  still sourced from legacy `(ode_id, ode_type)` metadata rather than directly
-  from the registry
+  still produces compatibility metadata on the per-variable side
+- `system_generate_diffvars(...)` now prefers registry-derived views of the
+  differential and independent-variable sets when the registry is present
+- the remaining old-path dependency is therefore narrower: the compatibility
+  lists still exist, but they are no longer the normal source of diffvar chain
+  input
 
 ### Current test status
 
@@ -142,7 +156,15 @@ A new CUnit suite now exists in:
 It currently covers:
 
 - direct scalar `der(y)` with legacy `DER(dy_dt, y)` bridge
+- direct scalar `dy_dt = der(y)` with no `DER(...)`
+- direct scalar `der(y)` with neither `DER(...)` nor a materialisation equation
 - nested scalar `der(cell.y)` with legacy bridge
+- nested scalar `cell.dy_dt = der(cell.y)` with no `DER(...)`
+- nested scalar `der(cell.y)` with neither `DER(...)` nor a materialisation equation
+- direct array `der(y[i])` with neither `DER(...)` nor a materialisation equation
+- nested array `der(cell.y[i])` with neither `DER(...)` nor a materialisation equation
+- implicit scalar mass-matrix form such as `tau * der(y) + y = 0`
+- mixed multi-state forms such as `a * der(x) + b * der(y) + x - y = 0`
 - scalar `ALIASES`
 - array `ARE_THE_SAME`
 - array `ALIASES`
@@ -150,15 +172,88 @@ It currently covers:
 Current observed results:
 
 - `der_expr_direct_ok`: passes system build and IDA analyse
+- `der_equation_direct_ok`: passes system build and IDA analyse
+- `der_only_direct_ok`: passes system build and IDA analyse
 - `der_expr_nested_ok`: passes system build and IDA analyse
+- `der_equation_nested_ok`: passes system build and IDA analyse
+- `der_only_nested_ok`: passes system build and IDA analyse
+- `der_only_array_direct_ok`: passes system build and IDA analyse
+- `der_only_array_nested_ok`: passes system build and IDA analyse
+- `der_implicit_mass_ok`: passes system build and IDA analyse
+- `der_mixed_ok`: passes system build and IDA analyse
 - `alias_der_alias_fail`: now passes system build and IDA analyse
 - `alias_der_array_same`: passes system build and IDA analyse
 - `alias_der_array_alias_fail`: now passes system build and IDA analyse
 
 So the current bridge + registry path now covers direct, nested, scalar alias,
-array `ARE_THE_SAME`, and array `ALIASES` cases. The remaining work is no
-longer "make aliases work at all"; it is "replace the old metadata path with a
-canonical dynamic representation".
+direct array, nested array, implicit scalar mass-matrix forms, mixed
+multi-state forms, array `ARE_THE_SAME`, and array `ALIASES` cases, and it
+also has a first working end-to-end path that does not depend on `DER(...)`
+at all.
+
+For the direct/nested array and more general implicit no-`DER(...)` cases, the
+current test guarantee is:
+
+- dynamic chain discovery is correct
+- IDA analyse succeeds
+
+The CUnit suite does **not** currently pin an exact solver-relation count for
+those cases, because `FOR ... CREATE` expansion and more general implicit token
+relation forms do not preserve the same simple one-relation-per-state counting
+assumption used in the scalar explicit tests. That is a test-shape issue, not
+a known failure of dynamic analysis.
+
+The new part is that there is now also a first working end-to-end path that
+does not require either `DER(...)` *or* an explicit materialisation equation
+such as `dy_dt = der(y)`.
+
+Current implementation approach for that case:
+
+- when analysis sees a `der(y)` term and no explicit materialised derivative
+  variable is available, it now auto-creates a hidden backend-only
+  `solver_var` instance
+- that hidden instance is registered in the canonical dynamic registry as the
+  order-1 derivative quantity associated with the state $y$
+- the later derivative-term binding pass rewrites `der(y)` onto that hidden
+  instance, so the existing relation evaluation, incidence, and Jacobian code
+  can continue to work without deeper immediate refactoring
+- those hidden instances are appended to the solver variable pool during
+  system analysis, not inserted into the user model tree
+- ownership of those hidden instances is transferred to the `slv_system_t`,
+  and they are destroyed with the system
+
+This is explicitly still a transitional backend strategy:
+
+- it avoids the artificial user-written binding equation
+- it keeps compatibility with the current IDA bookkeeping
+- but it still materialises derivative quantities internally
+- a future deeper design may remove even this internal materialisation step if
+  the residual/Jacobian/incidence machinery is redesigned around first-class
+  derivative objects
+
+Important implementation note for the no-`DER(...)` path:
+
+- a pure binding equation such as `dy_dt = der(y)` is currently treated as
+  **structural binding metadata**, not as a residual that remains in the DAE
+  system
+- once analysis has used that equation to register that $dy\_dt \equiv der(y)$,
+  the relation is excluded from the solver system
+
+This is necessary with the current IDA bookkeeping, because the backend already
+materialises $der(y)$ as the derivative slot corresponding to the state $y$.
+Leaving the binding equation in the residual system would otherwise introduce
+an extra equality without a corresponding extra unknown in the current IDA
+counting scheme.
+
+That exclusion now has to happen in two places:
+
+- analysis-side metadata must mark the relation as excluded
+- the relation instance's `included` child must also be set to `FALSE`
+
+The second point is required because ASCEND's conditional reanalysis and some
+other relation-management code call `rel_included(rel)`, which resynchronises
+the runtime flag from the compiler-side `included` atom on the relation
+instance.
 
 ### Conditional models and IDA reanalysis
 
@@ -254,6 +349,25 @@ Restriction for first implementation:
 
 This means it must have backend identity, even if it is not a literal child in
 the instance tree.
+
+### Compatibility and transition status
+
+The current intended transition is now:
+
+- old models using `DER(...)` continue to work
+- new models may start using plain equations such as
+  $$
+  \dot y = der(y)
+  $$
+  without any `DER(...)`
+- `DER(...)` remains compatibility syntax only
+
+The medium-term goal is:
+
+- `DER(...)` becomes deprecated in documentation
+- new in-tree examples migrate to `der(x)`-based forms
+- old `ode_type` / `ode_id` style metadata remains accepted only as a legacy
+  ingestion path into the canonical registry
 
 ### `DER(...)` is transitional only
 

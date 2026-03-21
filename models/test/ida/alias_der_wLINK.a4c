@@ -44,6 +44,26 @@ MODEL der_expr_direct_ok;
 END der_expr_direct_ok;
 
 
+MODEL der_equation_direct_ok;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+
+	bind: dy_dt = der(y);
+	dyn: dy_dt = -4 * y;
+	INDEPENDENT t;
+END der_equation_direct_ok;
+
+
+MODEL der_only_direct_ok;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	dyn: der(y) = -4 * y;
+	INDEPENDENT t;
+END der_only_direct_ok;
+
+
 MODEL alias_der_nested_ok;
 	cell IS_A alias_der_inner;
 	t IS_A solver_var;
@@ -63,6 +83,93 @@ MODEL der_expr_nested_ok;
 	INDEPENDENT t;
 	DER(cell.dy_dt, cell.y);
 END der_expr_nested_ok;
+
+
+MODEL der_equation_nested_ok;
+	cell IS_A der_expr_inner;
+	t IS_A solver_var;
+
+	bind: cell.dy_dt = der(cell.y);
+	dyn: cell.dy_dt = -4 * cell.y;
+	INDEPENDENT t;
+END der_equation_nested_ok;
+
+
+MODEL der_only_inner;
+	y IS_A solver_var;
+END der_only_inner;
+
+
+MODEL der_only_nested_ok;
+	cell IS_A der_only_inner;
+	t IS_A solver_var;
+
+	dyn: der(cell.y) = -4 * cell.y;
+	INDEPENDENT t;
+END der_only_nested_ok;
+
+
+MODEL der_only_array_direct_ok;
+	a[1..3] IS_A solver_var;
+	y[1..3] IS_A solver_var;
+	t IS_A solver_var;
+
+	a[1] = 4;
+	a[2] = 5;
+	a[3] = 6;
+
+	FOR i IN [1..3] CREATE
+		dyn[i]: der(y[i]) = -a[i] * y[i];
+	END FOR;
+	INDEPENDENT t;
+END der_only_array_direct_ok;
+
+
+MODEL der_only_array_inner;
+	a[1..3] IS_A solver_var;
+	y[1..3] IS_A solver_var;
+
+	a[1] = 4;
+	a[2] = 5;
+	a[3] = 6;
+END der_only_array_inner;
+
+
+MODEL der_only_array_nested_ok;
+	cell IS_A der_only_array_inner;
+	t IS_A solver_var;
+
+	FOR i IN [1..3] CREATE
+		dyn[i]: der(cell.y[i]) = -cell.a[i] * cell.y[i];
+	END FOR;
+	INDEPENDENT t;
+END der_only_array_nested_ok;
+
+
+MODEL der_implicit_mass_ok;
+	y IS_A solver_var;
+	tau IS_A solver_var;
+	t IS_A solver_var;
+
+	tau = 2;
+	dyn: tau * der(y) + y = 0;
+	INDEPENDENT t;
+END der_implicit_mass_ok;
+
+
+MODEL der_mixed_ok;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	a IS_A solver_var;
+	b IS_A solver_var;
+	t IS_A solver_var;
+
+	a = 2;
+	b = 3;
+	dyn1: a * der(x) + b * der(y) + x - y = 0;
+	dyn2: der(y) - x = 0;
+	INDEPENDENT t;
+END der_mixed_ok;
 
 
 MODEL alias_der_alias_fail;

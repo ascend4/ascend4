@@ -91,6 +91,20 @@ static void assert_diffvars_shape(slv_system_t sys, long ndiff, long nindep, sho
 	CU_ASSERT(ndiff_found == ndiff);
 }
 
+static void assert_ida_relation_count(slv_system_t sys, int nrels){
+	rel_filter_t rf;
+	rf.matchbits = REL_INCLUDED | REL_EQUALITY | REL_ACTIVE;
+	rf.matchvalue = REL_INCLUDED | REL_EQUALITY | REL_ACTIVE;
+	CU_ASSERT(slv_count_solvers_rels(sys, &rf) == nrels);
+}
+
+static void assert_included_equality_relation_count(slv_system_t sys, int nrels){
+	rel_filter_t rf;
+	rf.matchbits = REL_INCLUDED | REL_EQUALITY;
+	rf.matchvalue = REL_INCLUDED | REL_EQUALITY;
+	CU_ASSERT(slv_count_solvers_rels(sys, &rf) == nrels);
+}
+
 static void test_der_expr_direct_ok(void){
 	struct Instance *siminst = NULL;
 	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_expr_direct_ok",&siminst);
@@ -98,10 +112,74 @@ static void test_der_expr_direct_ok(void){
 	destroy_loaded_system(sys,siminst);
 }
 
+static void test_der_equation_direct_ok(void){
+	struct Instance *siminst = NULL;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_equation_direct_ok",&siminst);
+	assert_diffvars_shape(sys,1,1,2);
+	assert_ida_relation_count(sys,1);
+	assert_included_equality_relation_count(sys,1);
+	destroy_loaded_system(sys,siminst);
+}
+
+static void test_der_only_direct_ok(void){
+	struct Instance *siminst = NULL;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_only_direct_ok",&siminst);
+	assert_diffvars_shape(sys,1,1,2);
+	assert_ida_relation_count(sys,1);
+	assert_included_equality_relation_count(sys,1);
+	destroy_loaded_system(sys,siminst);
+}
+
 static void test_der_expr_nested_ok(void){
 	struct Instance *siminst = NULL;
 	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_expr_nested_ok",&siminst);
 	assert_diffvars_shape(sys,1,1,2);
+	destroy_loaded_system(sys,siminst);
+}
+
+static void test_der_equation_nested_ok(void){
+	struct Instance *siminst = NULL;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_equation_nested_ok",&siminst);
+	assert_diffvars_shape(sys,1,1,2);
+	assert_ida_relation_count(sys,1);
+	assert_included_equality_relation_count(sys,1);
+	destroy_loaded_system(sys,siminst);
+}
+
+static void test_der_only_nested_ok(void){
+	struct Instance *siminst = NULL;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_only_nested_ok",&siminst);
+	assert_diffvars_shape(sys,1,1,2);
+	assert_ida_relation_count(sys,1);
+	assert_included_equality_relation_count(sys,1);
+	destroy_loaded_system(sys,siminst);
+}
+
+static void test_der_only_array_direct_ok(void){
+	struct Instance *siminst = NULL;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_only_array_direct_ok",&siminst);
+	assert_diffvars_shape(sys,3,1,2);
+	destroy_loaded_system(sys,siminst);
+}
+
+static void test_der_only_array_nested_ok(void){
+	struct Instance *siminst = NULL;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_only_array_nested_ok",&siminst);
+	assert_diffvars_shape(sys,3,1,2);
+	destroy_loaded_system(sys,siminst);
+}
+
+static void test_der_implicit_mass_ok(void){
+	struct Instance *siminst = NULL;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_implicit_mass_ok",&siminst);
+	assert_diffvars_shape(sys,1,1,2);
+	destroy_loaded_system(sys,siminst);
+}
+
+static void test_der_mixed_ok(void){
+	struct Instance *siminst = NULL;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_mixed_ok",&siminst);
+	assert_diffvars_shape(sys,2,1,2);
 	destroy_loaded_system(sys,siminst);
 }
 
@@ -128,7 +206,15 @@ static void test_der_array_same_ok(void){
 
 #define TESTS(T) \
 	T(der_expr_direct_ok) \
+	T(der_equation_direct_ok) \
+	T(der_only_direct_ok) \
 	T(der_expr_nested_ok) \
+	T(der_equation_nested_ok) \
+	T(der_only_nested_ok) \
+	T(der_only_array_direct_ok) \
+	T(der_only_array_nested_ok) \
+	T(der_implicit_mass_ok) \
+	T(der_mixed_ok) \
 	T(der_alias_scalar_ok) \
 	T(der_alias_array_ok) \
 	T(der_array_same_ok)

@@ -81,6 +81,9 @@
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/createinst.h>
+#include <ascend/compiler/destroyinst.h>
+#include <ascend/compiler/library.h>
 #include <ascend/compiler/find.h>
 #include <ascend/compiler/extcall.h>
 #include <ascend/compiler/rel_blackbox.h>
@@ -115,6 +118,7 @@ static symchar *g_strings[6];
 
 struct derivative_bind_data {
   struct Instance *root;
+  struct problem_t *problem;
   int errors;
 };
 
@@ -226,7 +230,20 @@ static int dynamic_registry_add(struct problem_t *p_data, struct Instance *inst,
   entry->inst = inst;
   entry->deriv = deriv;
   entry->odeid = odeid;
+  entry->hidden = 0;
   gl_append_ptr(p_data->dynreg, entry);
+  return 0;
+}
+
+static int dynamic_registry_add_hidden(struct problem_t *p_data, struct Instance *inst, int deriv, int odeid){
+  struct dynreg_entry *entry;
+  if(dynamic_registry_add(p_data, inst, deriv, odeid)){
+    return 1;
+  }
+  entry = dynamic_registry_lookup(p_data, inst);
+  if(entry != NULL){
+    entry->hidden = 1;
+  }
   return 0;
 }
 
@@ -287,6 +304,332 @@ static int analyze_build_dynamic_registry(struct problem_t *p_data){
   return 0;
 }
 
+static int dynamic_registry_next_odeid(struct problem_t *p_data){
+  unsigned long i, len;
+  int max_odeid = 0;
+
+  if(p_data == NULL || p_data->dynreg == NULL){
+    return 1;
+  }
+
+  len = gl_length(p_data->dynreg);
+  for(i = 1; i <= len; ++i){
+    struct dynreg_entry *entry = (struct dynreg_entry *)gl_fetch(p_data->dynreg, i);
+    if(entry != NULL && entry->inst != NULL && entry->odeid > max_odeid){
+      max_odeid = entry->odeid;
+    }
+  }
+  return max_odeid + 1;
+}
+
+static struct Instance *dynamic_registry_find_by_chain(struct problem_t *p_data,
+  int odeid, int deriv
+){
+  unsigned long i, len;
+
+  if(p_data == NULL || p_data->dynreg == NULL || odeid == 0){
+    return NULL;
+  }
+
+  len = gl_length(p_data->dynreg);
+  for(i = 1; i <= len; ++i){
+    struct dynreg_entry *entry = (struct dynreg_entry *)gl_fetch(p_data->dynreg, i);
+    if(entry != NULL && entry->inst != NULL && entry->odeid == odeid && entry->deriv == deriv){
+      return entry->inst;
+    }
+  }
+  return NULL;
+}
+
+static int dynamic_binding_relation_mark(struct problem_t *p_data, struct Instance *relinst){
+  unsigned long i, len;
+  if(p_data == NULL || relinst == NULL){
+    return 1;
+  }
+  if(p_data->dynbindrels == NULL){
+    p_data->dynbindrels = gl_create(4);
+    if(p_data->dynbindrels == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for dynamic binding relation list.");
+      return 1;
+    }
+  }
+  len = gl_length(p_data->dynbindrels);
+  for(i = 1; i <= len; ++i){
+    if((struct Instance *)gl_fetch(p_data->dynbindrels, i) == relinst){
+      return 0;
+    }
+  }
+  gl_append_ptr(p_data->dynbindrels, relinst);
+  return 0;
+}
+
+static int dynamic_binding_relation_exclude_instance(struct Instance *relinst){
+  struct Instance *included;
+  included = ChildByChar(relinst, AddSymbol("included"));
+  if(included == NULL){
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+    FPRINTF(ASCERR,"Derivative binding relation is missing 'included' child");
+    error_reporter_end_flush();
+    return 1;
+  }
+  SetBooleanAtomValue(included, FALSE, 0U);
+  return 0;
+}
+
+static int dynamic_binding_relation_is_marked(struct problem_t *p_data, struct Instance *relinst){
+  unsigned long i, len;
+  if(p_data == NULL || p_data->dynbindrels == NULL || relinst == NULL){
+    return 0;
+  }
+  len = gl_length(p_data->dynbindrels);
+  for(i = 1; i <= len; ++i){
+    if((struct Instance *)gl_fetch(p_data->dynbindrels, i) == relinst){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static struct Instance *dynamic_create_hidden_derivative(struct problem_t *p_data, struct Instance *base){
+  struct dynreg_entry *base_entry;
+  struct TypeDescription *solver_var_type;
+  struct Instance *deriv;
+  int odeid;
+
+  if(p_data == NULL || base == NULL){
+    return NULL;
+  }
+
+  base_entry = dynamic_registry_lookup(p_data, base);
+  if(base_entry != NULL && base_entry->inst == NULL){
+    return NULL;
+  }
+  if(base_entry != NULL && base_entry->deriv == -1){
+    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+    FPRINTF(ASCERR,"Variable '%s' cannot be both independent and a differential state",
+      WriteInstanceNameString(base, p_data->root));
+    error_reporter_end_flush();
+    return NULL;
+  }
+
+  if(base_entry == NULL){
+    odeid = dynamic_registry_next_odeid(p_data);
+    if(dynamic_registry_add(p_data, base, 1, odeid)){
+      return NULL;
+    }
+    base_entry = dynamic_registry_lookup(p_data, base);
+  }else{
+    if(base_entry->deriv != 1 || base_entry->odeid == 0){
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"Unsupported implicit derivative materialisation for variable '%s'",
+        WriteInstanceNameString(base, p_data->root));
+      error_reporter_end_flush();
+      return NULL;
+    }
+    odeid = base_entry->odeid;
+  }
+
+  deriv = dynamic_registry_find_by_chain(p_data, odeid, 2);
+  if(deriv != NULL){
+    return deriv;
+  }
+
+  solver_var_type = FindType(AddSymbol(SOLVER_VAR_STR));
+  if(solver_var_type == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"'solver_var' not defined while creating hidden derivative variable");
+    return NULL;
+  }
+  deriv = CreateRealInstance(solver_var_type);
+  if(deriv == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to create hidden derivative instance");
+    return NULL;
+  }
+
+  if(p_data->dynhiddeninsts == NULL){
+    p_data->dynhiddeninsts = gl_create(4);
+    if(p_data->dynhiddeninsts == NULL){
+      DestroyInstance(deriv,NULL);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for hidden derivative tracking.");
+      return NULL;
+    }
+  }
+  gl_append_ptr(p_data->dynhiddeninsts, deriv);
+
+  if(dynamic_registry_add_hidden(p_data, deriv, 2, odeid)){
+    return NULL;
+  }
+
+  p_data->nv++;
+  return deriv;
+}
+
+static struct Instance *resolve_materialised_derivative(struct Instance *base, void *userdata){
+  struct derivative_bind_data *data = (struct derivative_bind_data *)userdata;
+  struct dynreg_entry *entry;
+  struct Instance *deriv;
+
+  if(data == NULL || base == NULL){
+    return NULL;
+  }
+
+  if(data->problem != NULL){
+    entry = dynamic_registry_lookup(data->problem, base);
+    if(entry != NULL && entry->inst != NULL && entry->odeid != 0){
+      deriv = dynamic_registry_find_by_chain(data->problem, entry->odeid, entry->deriv + 1);
+      if(deriv != NULL){
+        return deriv;
+      }
+    }
+    deriv = dynamic_create_hidden_derivative(data->problem, base);
+    if(deriv != NULL){
+      return deriv;
+    }
+  }
+
+  return getOdeDerivative(data->root, base);
+}
+
+struct derivative_infer_data {
+  struct Instance *root;
+  struct problem_t *problem;
+  int next_odeid;
+  int errors;
+};
+
+static int infer_derivative_binding_from_relation(struct derivative_infer_data *data,
+  struct Instance *relinst
+){
+  struct relation *rel;
+  CONST struct relation_term *lhs, *rhs, *varterm, *derterm;
+  struct Instance *base, *deriv;
+  struct dynreg_entry *base_entry, *deriv_entry;
+  int odeid;
+
+  if(data == NULL || relinst == NULL || GetInstanceRelationType(relinst) != e_token){
+    return 0;
+  }
+
+  rel = (struct relation *)GetInstanceRelationOnly(relinst);
+  if(rel == NULL || RelationRelop(rel) != e_equal){
+    return 0;
+  }
+  if(RTOKEN(rel).lhs == NULL || RTOKEN(rel).rhs == NULL ||
+     RTOKEN(rel).lhs_len != 1 || RTOKEN(rel).rhs_len != 1){
+    return 0;
+  }
+
+  lhs = A_TERM(&(RTOKEN(rel).lhs[0]));
+  rhs = A_TERM(&(RTOKEN(rel).rhs[0]));
+  if(lhs->t == e_var && rhs->t == e_der){
+    varterm = lhs;
+    derterm = rhs;
+  }else if(lhs->t == e_der && rhs->t == e_var){
+    varterm = rhs;
+    derterm = lhs;
+  }else{
+    return 0;
+  }
+
+  base = RelationVariable(rel, TermVarNumber(derterm));
+  deriv = RelationVariable(rel, TermVarNumber(varterm));
+  if(!dynamic_registry_can_track(base) || !dynamic_registry_can_track(deriv)){
+    return 0;
+  }
+  if(dynamic_instance_matches(base, deriv)){
+    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+    FPRINTF(ASCERR,"Invalid derivative binding in relation '");
+    WriteInstanceName(ASCERR,relinst,data->root);
+    FPRINTF(ASCERR,"': der(");
+    WriteInstanceName(ASCERR,base,data->root);
+    FPRINTF(ASCERR,") cannot be materialised by the same variable");
+    error_reporter_end_flush();
+    return 1;
+  }
+
+  base_entry = dynamic_registry_lookup(data->problem, base);
+  deriv_entry = dynamic_registry_lookup(data->problem, deriv);
+
+  if(base_entry != NULL && base_entry->inst != NULL && base_entry->odeid != 0){
+    if(base_entry->deriv != 1){
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"Unsupported higher-order derivative binding in relation '");
+      WriteInstanceName(ASCERR,relinst,data->root);
+      FPRINTF(ASCERR,"': der(");
+      WriteInstanceName(ASCERR,base,data->root);
+      FPRINTF(ASCERR,") currently requires the base variable to be a state");
+      error_reporter_end_flush();
+      return 1;
+    }
+    odeid = base_entry->odeid;
+  }else if(deriv_entry != NULL && deriv_entry->inst != NULL && deriv_entry->odeid != 0){
+    if(deriv_entry->deriv != 2){
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"Unsupported higher-order derivative materialisation in relation '");
+      WriteInstanceName(ASCERR,relinst,data->root);
+      FPRINTF(ASCERR,"': variable '");
+      WriteInstanceName(ASCERR,deriv,data->root);
+      FPRINTF(ASCERR,"' is already registered at derivative order %d",deriv_entry->deriv);
+      error_reporter_end_flush();
+      return 1;
+    }
+    odeid = deriv_entry->odeid;
+  }else{
+    odeid = data->next_odeid++;
+  }
+
+  if(base_entry != NULL && base_entry->inst != NULL &&
+      (base_entry->odeid != odeid || base_entry->deriv != 1)){
+    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+    FPRINTF(ASCERR,"Conflicting derivative binding for base variable '");
+    WriteInstanceName(ASCERR,base,data->root);
+    FPRINTF(ASCERR,"' in relation '");
+    WriteInstanceName(ASCERR,relinst,data->root);
+    FPRINTF(ASCERR,"'");
+    error_reporter_end_flush();
+    return 1;
+  }
+  if(deriv_entry != NULL && deriv_entry->inst != NULL &&
+      (deriv_entry->odeid != odeid || deriv_entry->deriv != 2)){
+    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+    FPRINTF(ASCERR,"Conflicting derivative materialisation for variable '");
+    WriteInstanceName(ASCERR,deriv,data->root);
+    FPRINTF(ASCERR,"' in relation '");
+    WriteInstanceName(ASCERR,relinst,data->root);
+    FPRINTF(ASCERR,"'");
+    error_reporter_end_flush();
+    return 1;
+  }
+
+  if(base_entry == NULL && dynamic_registry_add(data->problem, base, 1, odeid)){
+    return 1;
+  }
+  if(deriv_entry == NULL && dynamic_registry_add(data->problem, deriv, 2, odeid)){
+    return 1;
+  }
+  if(dynamic_binding_relation_mark(data->problem, relinst)){
+    return 1;
+  }
+  if(dynamic_binding_relation_exclude_instance(relinst)){
+    return 1;
+  }
+  return 0;
+}
+
+static void infer_derivative_terms(struct Instance *inst, VOIDPTR userdata)
+{
+  struct derivative_infer_data *data = (struct derivative_infer_data *)userdata;
+
+  if(data == NULL || data->errors){
+    return;
+  }
+  if(InstanceKind(inst) != REL_INST){
+    return;
+  }
+  if(infer_derivative_binding_from_relation(data, inst)){
+    data->errors = 1;
+  }
+}
+
 /* symbol table entries we need */
 #define INCLUDED_A g_strings[0]
 #define FIXED_A g_strings[1]
@@ -313,6 +656,7 @@ struct gl_list_t *g_symbol_values_list = NULL;
 */
 static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
                                  struct gl_list_t *, struct gl_list_t *);
+static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data);
 
 /*------------------------------------------------------------------------------
   SOME STUFF WITH INTERFACE POINTERS
@@ -775,9 +1119,6 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
         if(dyn != NULL){
           ip->u.v.deriv = dyn->deriv;
           ip->u.v.odeid = dyn->odeid;
-        }else{
-          ip->u.v.deriv = getOdeType(p_data->root,inst);
-          ip->u.v.odeid = getOdeId(p_data->root,inst);
         }
       }
 	  //printf("\n ode_type: %d, ode_id: %d \n",ip->u.v.deriv,ip->u.v.odeid);
@@ -968,6 +1309,9 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
       ip->u.r.inwhen = 0;
     }
     ip->u.r.included = BooleanChildValue(inst,INCLUDED_A);
+    if(ip->u.r.included && dynamic_binding_relation_is_marked(p_data, inst)){
+      ip->u.r.included = 0;
+    }
     ip->u.r.model = 0;
     ip->u.r.index = 0;
     return ip;
@@ -1238,6 +1582,9 @@ int analyze_make_master_lists(struct problem_t *p_data){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 1;
   }
+  if(analyze_append_hidden_dynamic_vars(p_data)){
+    return 1;
+  }
 
   /*
   	collect relations, objectives, logrels and whens recording the
@@ -1471,6 +1818,19 @@ void analyze_free_lists(struct problem_t *p_data){
   ADUN(algebvars);
   ADUN(indepvars);
   ADUN(obsvars); /* observed variables */
+  ADUN(dynbindrels);
+  if(p_data->dynhiddeninsts != NULL){
+    unsigned long i, len = gl_length(p_data->dynhiddeninsts);
+    for(i = 1; i <= len; ++i){
+      struct Instance *inst = (struct Instance *)gl_fetch(p_data->dynhiddeninsts, i);
+      if(inst != NULL){
+        SetInterfacePtr(inst,NULL);
+        DestroyInstance(inst,NULL);
+      }
+    }
+    gl_destroy(p_data->dynhiddeninsts);
+    p_data->dynhiddeninsts = NULL;
+  }
 
   /* blocks of memory use AFUN */
   AFUN(blocks);  AFUN(reldata);  AFUN(objdata);
@@ -2852,6 +3212,8 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
   /* and finally... */
   slv_set_num_models(sys,p_data->nm);
   slv_set_need_consistency(sys,p_data->need_consistency);
+  slv_set_hidden_instance_list(sys,p_data->dynhiddeninsts);
+  p_data->dynhiddeninsts = NULL;
 
   PopInterfacePtrs(p_data->oldips,NULL,NULL);
   p_data->oldips = NULL;
@@ -2868,9 +3230,49 @@ static void bind_derivative_terms(struct Instance *inst, VOIDPTR userdata)
   if(InstanceKind(inst) != REL_INST){
     return;
   }
-  if(BindDerivativeTermsInRelation(data->root,inst)){
+  if(BindDerivativeTermsInRelation(data->root,inst,resolve_materialised_derivative,data)){
     data->errors = 1;
   }
+}
+
+static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data){
+  unsigned long i, len;
+
+  if(p_data == NULL || p_data->dynhiddeninsts == NULL){
+    return 0;
+  }
+
+  len = gl_length(p_data->dynhiddeninsts);
+  for(i = 1; i <= len; ++i){
+    struct Instance *inst = (struct Instance *)gl_fetch(p_data->dynhiddeninsts, i);
+    struct dynreg_entry *dyn;
+    struct solver_ipdata *ip;
+
+    if(inst == NULL || GetInterfacePtr(inst) != NULL){
+      continue;
+    }
+    dyn = dynamic_registry_lookup(p_data, inst);
+    if(dyn == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Hidden derivative instance missing from dynamic registry.");
+      return 1;
+    }
+    ip = analyze_getip();
+    memset(ip, 0, sizeof(*ip));
+    ip->i = inst;
+    ip->u.v.active = 1;
+    ip->u.v.fixed = 0;
+    ip->u.v.solvervar = 1;
+    ip->u.v.basis = 1;
+    ip->u.v.incident = 0;
+    ip->u.v.in_block = 0;
+    ip->u.v.deriv = dyn->deriv;
+    ip->u.v.odeid = dyn->odeid;
+    ip->u.v.obsid = 0;
+    SetInterfacePtr(inst, ip);
+    gl_append_ptr(p_data->vars, ip);
+  }
+
+  return 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -2899,6 +3301,7 @@ static void bind_derivative_terms(struct Instance *inst, VOIDPTR userdata)
 int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   int stat;
   struct derivative_bind_data bind_data;
+  struct derivative_infer_data infer_data;
 
   struct problem_t thisproblem; /* note default zero intitialisation. note also: local var! */
   struct problem_t *p_data; /* need to malloc, free, or make &local */
@@ -2922,6 +3325,7 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   }
 
   bind_data.root = inst;
+  bind_data.problem = p_data;
   bind_data.errors = 0;
 
   stat = analyze_build_dynamic_registry(p_data);
@@ -2929,6 +3333,18 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
     analyze_free_lists(p_data);
     p_data->root = NULL;
     return 1;
+  }
+
+  infer_data.root = inst;
+  infer_data.problem = p_data;
+  infer_data.next_odeid = dynamic_registry_next_odeid(p_data);
+  infer_data.errors = 0;
+  VisitInstanceTreeTwo(inst,(VisitTwoProc)infer_derivative_terms,TRUE,FALSE,
+                       (VOIDPTR)&infer_data);
+  if(infer_data.errors){
+    analyze_free_lists(p_data);
+    p_data->root = NULL;
+    return 2;
   }
 
   VisitInstanceTreeTwo(inst,(VisitTwoProc)bind_derivative_terms,TRUE,FALSE,

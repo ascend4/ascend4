@@ -459,19 +459,27 @@ extern void DoInOrderVisit(struct relation_term *term,
  *  as these are parts of an array.
  */
 
+typedef struct Instance *(*DerivativeTermResolverFn)(struct Instance *base,
+                                                     void *userdata);
+
 extern int BindDerivativeTermsInRelation(struct Instance *root,
-                                         struct Instance *relinst);
+                                         struct Instance *relinst,
+                                         DerivativeTermResolverFn resolver,
+                                         void *userdata);
 /**<
  *  Rewrite any `der(x)` terms in a token relation onto the currently
- *  materialised derivative variable for `x`, if one has been declared via
- *  legacy `DER(...)` metadata.
+ *  materialised derivative variable for `x`.
  *
  *  This is a transitional bridge: `der(x)` is preserved through
- *  instantiation, then bound later once the full instance tree and declarative
- *  ODE metadata are available.
+ *  instantiation, then bound later once the full instance tree and dynamic
+ *  metadata are available. Callers provide a resolver that maps the base
+ *  variable `x` to the currently materialised derivative variable.
  *
- *  @param root scope used for resolving legacy `ode` chains.
+ *  @param root scope used for diagnostics.
  *  @param relinst relation instance containing the token relation.
+ *  @param resolver callback that resolves `x` to the materialised variable for
+ *      `der(x)`.
+ *  @param userdata callback userdata passed to `resolver`.
  *  @return 0 on success, nonzero if an unresolved derivative term remains.
  */
 

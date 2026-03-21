@@ -3286,7 +3286,9 @@ static int BindDerivativeTermsOnSide(struct Instance *root,
                                      struct Instance *relinst,
                                      struct relation *rel,
                                      union RelationTermUnion *side,
-                                     unsigned long len)
+                                     unsigned long len,
+                                     DerivativeTermResolverFn resolver,
+                                     void *userdata)
 {
   unsigned long c, pos;
   struct relation_term *term;
@@ -3303,14 +3305,14 @@ static int BindDerivativeTermsOnSide(struct Instance *root,
     }
 
     base = (struct Instance *)gl_fetch(rel->vars,V_TERM(term)->varnum);
-    deriv = getOdeDerivative(root,base);
+    deriv = (resolver != NULL) ? (*resolver)(base, userdata) : NULL;
     if(deriv == NULL){
       ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"Unable to bind der(");
       WriteInstanceName(ASCERR,base,root);
       FPRINTF(ASCERR,") in relation '");
       WriteInstanceName(ASCERR,relinst,root);
-      FPRINTF(ASCERR,"': no materialised derivative variable is currently declared");
+      FPRINTF(ASCERR,"': no materialised derivative variable is currently available");
       error_reporter_end_flush();
       return 1;
     }
@@ -3322,7 +3324,9 @@ static int BindDerivativeTermsOnSide(struct Instance *root,
   return 0;
 }
 
-int BindDerivativeTermsInRelation(struct Instance *root, struct Instance *relinst)
+int BindDerivativeTermsInRelation(struct Instance *root, struct Instance *relinst,
+                                  DerivativeTermResolverFn resolver,
+                                  void *userdata)
 {
   struct relation *rel;
 
@@ -3338,10 +3342,10 @@ int BindDerivativeTermsInRelation(struct Instance *root, struct Instance *relins
     return 0;
   }
 
-  if(BindDerivativeTermsOnSide(root,relinst,rel,RTOKEN(rel).lhs,RTOKEN(rel).lhs_len)){
+  if(BindDerivativeTermsOnSide(root,relinst,rel,RTOKEN(rel).lhs,RTOKEN(rel).lhs_len,resolver,userdata)){
     return 1;
   }
-  if(BindDerivativeTermsOnSide(root,relinst,rel,RTOKEN(rel).rhs,RTOKEN(rel).rhs_len)){
+  if(BindDerivativeTermsOnSide(root,relinst,rel,RTOKEN(rel).rhs,RTOKEN(rel).rhs_len,resolver,userdata)){
     return 1;
   }
   return 0;
