@@ -224,6 +224,15 @@ extern int getOdeType(struct Instance *model,struct Instance *inst);
 		variables in decreasing order and the last instance is always the independent variable.
 */
 
+extern struct Instance *getOdeDerivative(struct Instance *model, struct Instance *inst);
+/**<
+	@param model the scope instance of the LINK (should be a model/simulation root)
+	@param inst the variable instance whose immediate materialised derivative is sought
+
+	@return the linked derivative instance immediately above inst in an `ode` chain,
+	        or NULL if no such materialised derivative exists
+*/
+
 /**
 	DS: Function used to test the above implmented functions.
 	FIXME It will be removed eventually

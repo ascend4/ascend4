@@ -266,8 +266,15 @@ void WriteTerm(FILE *f,
   struct Instance *cur_var;
   switch(RelationTermType(term)){
   case e_var:
+  case e_der:
     cur_var = RelationVariable(rel,TermVarNumber(term));
-    WriteInstanceName(f,cur_var,inst);
+    if(RelationTermType(term)==e_der){
+      FPRINTF(f,"der(");
+      WriteInstanceName(f,cur_var,inst);
+      PUTC(')',f);
+    }else{
+      WriteInstanceName(f,cur_var,inst);
+    }
     break;
   case e_func:
     FPRINTF(f,FuncName(TermFunc(term)));
@@ -308,8 +315,15 @@ void WriteTermDS(Asc_DString *dsPtr,
   struct Instance *cur_var;
   switch(RelationTermType(term)){
   case e_var:
+  case e_der:
     cur_var = RelationVariable(rel,TermVarNumber(term));
-    WriteInstanceNameDS(dsPtr,cur_var,inst);
+    if(RelationTermType(term)==e_der){
+      Asc_DStringAppend(dsPtr,"der(",4);
+      WriteInstanceNameDS(dsPtr,cur_var,inst);
+      Asc_DStringAppend(dsPtr,")",1);
+    }else{
+      WriteInstanceNameDS(dsPtr,cur_var,inst);
+    }
     break;
   case e_func:
     Asc_DStringAppend(dsPtr,FuncName(TermFunc(term)),-1);
@@ -544,6 +558,7 @@ unsigned long LeftHandSide(CONST struct relation *r,
     case e_zero:
     case e_real:
     case e_var:
+    case e_der:
       depth--;
       break;
     case e_func:
@@ -576,6 +591,7 @@ unsigned Priority(enum Expr_enum t)
   switch(t){
   case e_zero:
   case e_var:
+  case e_der:
   case e_int:
   case e_real:
   case e_func:
@@ -608,6 +624,7 @@ int NeedParen(enum Expr_enum parent_op, enum Expr_enum child_op, int rhs)
   switch(child_op){
   case e_zero:
   case e_var:
+  case e_der:
   case e_int:
   case e_real:
   case e_func:
@@ -643,8 +660,15 @@ void WriteSide(FILE *f,
     term = RelationTerm(r,pos,side);
     switch(t = RelationTermType(term)){
     case e_var:
+    case e_der:
       cur_var = RelationVariable(r,TermVarNumber(term));
-      WriteInstanceName(f,cur_var,ref);
+      if(t==e_der){
+        FPRINTF(f,"der(");
+        WriteInstanceName(f,cur_var,ref);
+        PUTC(')',f);
+      }else{
+        WriteInstanceName(f,cur_var,ref);
+      }
       break;
     case e_int:
       FPRINTF(f,"%ld",TermInteger(term));
@@ -714,6 +738,7 @@ void WriteSide(FILE *f,
 	case e_int:
 	case e_real:
 	case e_var:
+	case e_der:
 	case e_func:
 	case e_uminus:
 	  break;
@@ -731,6 +756,7 @@ void WriteSide(FILE *f,
 	case e_zero:
 	case e_real:
 	case e_var:
+	case e_der:
 	case e_func:
 	case e_uminus:
 	  break;
@@ -775,12 +801,25 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
     t = RelationTermType(term);
     switch (t) {
     case e_var:
+    case e_der:
       if (func == NULL) {
         cur_var = RelationVariable(r,TermVarNumber(term));
-        WriteInstanceNameDS(dsPtr,cur_var,ref);
+        if(t==e_der){
+          Asc_DStringAppend(dsPtr,"der(",4);
+          WriteInstanceNameDS(dsPtr,cur_var,ref);
+          Asc_DStringAppend(dsPtr,")",1);
+        }else{
+          WriteInstanceNameDS(dsPtr,cur_var,ref);
+        }
       } else {
         username = (*func)(r,TermVarNumber(term),userdata);
-        Asc_DStringAppend(dsPtr,username,-1);
+        if(t==e_der){
+          Asc_DStringAppend(dsPtr,"der(",4);
+          Asc_DStringAppend(dsPtr,username,-1);
+          Asc_DStringAppend(dsPtr,")",1);
+        }else{
+          Asc_DStringAppend(dsPtr,username,-1);
+        }
       }
       break;
     case e_int:
@@ -950,6 +989,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
         case e_int:
         case e_real:
         case e_var:
+        case e_der:
         case e_func:
         case e_uminus:
           break;
@@ -967,6 +1007,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
         case e_zero:
         case e_real:
         case e_var:
+        case e_der:
         case e_func:
         case e_uminus:
           break;
@@ -1088,8 +1129,15 @@ void Infix_WriteSide(FILE *f,
 
   switch(t = RelationTermType(term)) {
   case e_var:
+  case e_der:
     cur_var = RelationVariable(r,TermVarNumber(term));
-    WriteInstanceName(f,cur_var,ref);
+    if(t==e_der){
+      FPRINTF(f,"der(");
+      WriteInstanceName(f,cur_var,ref);
+      PUTC(')',f);
+    }else{
+      WriteInstanceName(f,cur_var,ref);
+    }
     break;
   case e_int:
     FPRINTF(f,"%ld",TermInteger(term));
@@ -1566,6 +1614,7 @@ void SaveTokenRelnSide(FILE *fp,CONST struct relation *r,
     count += FPRINTF(fp," %d ",(int)t);	/* the opcode is the enum */
     switch (t) {
     case e_var:
+    case e_der:
       count += FPRINTF(fp,"%lu",TermVarNumber(term));
       break;
     case e_func:

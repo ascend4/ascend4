@@ -3629,6 +3629,10 @@ expr:
 	{
 	  $$ = CreateVarExpr($1);
 	}
+    | DER_TOK '(' fname ')'
+	{
+	  $$ = CreateDiffExpr($3);
+	}
     | '[' set ']'
 	{
 	  $$ = CreateSetExpr($2);

@@ -459,6 +459,22 @@ extern void DoInOrderVisit(struct relation_term *term,
  *  as these are parts of an array.
  */
 
+extern int BindDerivativeTermsInRelation(struct Instance *root,
+                                         struct Instance *relinst);
+/**<
+ *  Rewrite any `der(x)` terms in a token relation onto the currently
+ *  materialised derivative variable for `x`, if one has been declared via
+ *  legacy `DER(...)` metadata.
+ *
+ *  This is a transitional bridge: `der(x)` is preserved through
+ *  instantiation, then bound later once the full instance tree and declarative
+ *  ODE metadata are available.
+ *
+ *  @param root scope used for resolving legacy `ode` chains.
+ *  @param relinst relation instance containing the token relation.
+ *  @return 0 on success, nonzero if an unresolved derivative term remains.
+ */
+
 extern struct relation
 *CopyRelationByReference(CONST struct Instance *src_instance,
                          struct Instance *target_instance,

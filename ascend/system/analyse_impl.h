@@ -96,6 +96,12 @@ struct whenip{
   int inwhen;           /* is it in a when */
 };
 
+struct dynreg_entry {
+  struct Instance *inst; /* canonical or representative instance from a dynamic chain */
+  int deriv;             /* -1 independent, 0 algebraic/unregistered, 1 state, 2 first derivative, ... */
+  int odeid;             /* derivative chain id, 0 for independent variables */
+};
+
 struct modip {
   int index;        /* set in make master lists. 1..nmodels */
   int inwhen;       /* is it in a when */
@@ -184,6 +190,7 @@ struct problem_t {
   struct gl_list_t *algebvars; /* subset of vars: all vars with ode_id == 0 */
   struct gl_list_t *indepvars; /* subset of vars: all vars with ode_type == -1 */
   struct gl_list_t *obsvars; /* subset of vars: all vars with ode_type == -1 */
+  struct gl_list_t *dynreg; /* canonical dynamic registry, populated before classify_instance */
 
   /* bridge ip data */
   struct gl_list_t *oldips;	/* buffer of oldip crap we're protecting */

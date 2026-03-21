@@ -237,6 +237,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"DEFAULT"		{ return DEFAULT_TOK		; }
 <INITIAL>"DEFINITION"		{ return DEFINITION_TOK		; }
 <INITIAL>"DER" { return DER_TOK ; }
+<INITIAL>"der" { return DER_TOK ; }
 <INITIAL>"DIMENSION"		{ return DIMENSION_TOK		; }
 <INITIAL>"DIMENSIONLESS"	{ return DIMENSIONLESS_TOK	; }
 <INITIAL>"DO"			{ return DO_TOK			; }

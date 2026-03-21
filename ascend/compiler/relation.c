@@ -59,6 +59,7 @@
 #include "atomvalue.h"
 #include "mathinst.h"
 #include "instquery.h"
+#include "link.h"
 #include "tmpnum.h"
 #include "vlist.h"
 #include "relation.h"
@@ -683,6 +684,7 @@ static int ArgsForToken(enum Expr_enum t) {
   case e_real:
   case e_int:
   case e_var:
+  case e_der:
     return 0;
   case e_uminus:
   case e_func:
@@ -755,6 +757,7 @@ SimplifyTermBuf_SubExprLimit(unsigned long CONST *ts,
     case e_real:
     case e_int:
     case e_var:
+    case e_der:
       req_args--;
       break;
     case e_plus:
@@ -890,6 +893,7 @@ static unsigned long SimplifyTermBuf(int level,
   /* should check that stack doesn't start pos 1 with binary operator */
   switch (b[0]->t) {
   case e_var:
+  case e_der:
   case e_int:
   case e_real:
   case e_zero:
@@ -922,6 +926,7 @@ static unsigned long SimplifyTermBuf(int level,
        readability. do not use fall throughs */
     switch (b[top]->t) {
     case e_var:
+    case e_der:
     case e_int:
     case e_real:
     case e_zero:
@@ -990,6 +995,7 @@ static unsigned long SimplifyTermBuf(int level,
       }
       switch (b[TS_TOP]->t) {
       case e_var:
+      case e_der:
         if ( ZEROTERM(b[TS_LEFT]) ) {
           /* 0 V + => NULL NULL V */
           /*
@@ -1144,6 +1150,7 @@ static unsigned long SimplifyTermBuf(int level,
       }
       switch (b[TS_TOP]->t) {
       case e_var:
+      case e_der:
         if ( ZEROTERM(b[TS_LEFT]) ) {
           /* 0 V - => NULL V uminus */
         /*
@@ -1940,16 +1947,18 @@ static struct relation_term *CreateOpTerm(enum Expr_enum t)
  * x = hold(x);
  * which could be pretty darn common forms.
  */
-static struct relation_term *CreateVarTerm(CONST struct Instance *i)
+static struct relation_term *CreateVarTermType(CONST struct Instance *i,
+                                               enum Expr_enum t)
 {
   struct relation_term *term;
   unsigned long pos;
+  assert(t == e_var || t == e_der);
   if (0 != (pos = gl_search(g_relation_var_list,i,(CmpFunc)CmpP))) {
     /* find var if already on relations var list */
     term = POOL_ALLOCTERM;
     assert(term!=NULL);
     PTINIT(term);
-    term->t = e_var;
+    term->t = t;
     V_TERM(term) -> varnum = pos;
   } else {
     /* or add it to the var list */
@@ -1957,7 +1966,7 @@ static struct relation_term *CreateVarTerm(CONST struct Instance *i)
     term = POOL_ALLOCTERM;
     assert(term!=NULL);
     PTINIT(term);
-    term->t = e_var;
+    term->t = t;
     V_TERM(term) -> varnum = gl_length(g_relation_var_list);
   }
   return term;
@@ -2328,21 +2337,23 @@ CONST struct Expr *ExprContainsSuchThat(CONST struct Expr *ex){
 
 /**
  *  Here we give up if vars are not well defined.
- *  At present e_var acceptable ARE:
+ *  At present e_var / e_der acceptable ARE:
  *  REAL_ATOM_INSTANCE
  *  Well defined Real and Integer constants.
  *  Everything else is trash.
  *  CreateTermFromInst() and CheckExpr() must have matching semantics.
  */
 static
-struct relation_term *CreateTermFromInst(struct Instance *inst,
+struct relation_term *CreateTermFromInstType(struct Instance *inst,
 					 struct Instance *rel,
-					 rel_errorlist *err)
+					 rel_errorlist *err,
+                                         enum Expr_enum t)
 {
   struct relation_term *term;
+  assert(t == e_var || t == e_der);
   switch(InstanceKind(inst)){
   case REAL_ATOM_INST:
-    term = CreateVarTerm(inst);
+    term = CreateVarTermType(inst,t);
     AddRelation(inst,rel);
     return term;
   case REAL_CONSTANT_INST:
@@ -2499,6 +2510,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
       AppendTermBuf(term);
       break;
     case e_var:
+    case e_der:
       str = SimpleNameIdPtr(ExprName(ptr));
       //CONSOLE_DEBUG("name=%s",SCP(str));
       if(str&&TempExists(str)){
@@ -2535,7 +2547,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
             len = gl_length(instances);
             for(c=1;c<=len;c++){
               inst = (struct Instance *)gl_fetch(instances,c);
-              if((term=CreateTermFromInst(inst,rel,err))!=NULL){
+              if((term=CreateTermFromInstType(inst,rel,err,ExprType(ptr)))!=NULL){
                 AppendTermBuf(term);
                 if(my_added++){
                   switch(i){
@@ -2559,7 +2571,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
             if(gl_length(instances)==1){
               inst = (struct Instance *)gl_fetch(instances,1);
               gl_destroy(instances);
-              if((term=CreateTermFromInst(inst,rel,err))!=NULL){
+              if((term=CreateTermFromInstType(inst,rel,err,ExprType(ptr)))!=NULL){
                 my_added++;
                 AppendTermBuf(term);
               }else
@@ -2690,6 +2702,7 @@ static int CorrectSuchThat(CONST struct Expr *ex
     switch(ExprType(ex)){
     case e_zero:
     case e_var:
+    case e_der:
     case e_int:
     case e_real:
     case e_boolean:
@@ -2935,8 +2948,9 @@ static int ConvertExpr(CONST struct Expr *start,
       AppendTermBuf(term);
       break;
     case e_var:
+    case e_der:
 	  // try to write the name of the var...
-      if(GetEvaluationForTable() &&
+      if(ExprType(start)==e_var && GetEvaluationForTable() &&
           (NULL != (str = SimpleNameIdPtr(ExprName(start)))) &&
           (NULL != (fvp = FindForVar(GetEvaluationForTable(),str)))
       ){
@@ -2954,7 +2968,7 @@ static int ConvertExpr(CONST struct Expr *start,
           if (gl_length(instances)==1){
             inst = (struct Instance *)gl_fetch(instances,1);
             gl_destroy(instances);
-            if ((term = CreateTermFromInst(inst,rel,err))!=NULL){
+            if ((term = CreateTermFromInstType(inst,rel,err,ExprType(start)))!=NULL){
               AppendTermBuf(term);
             }
             else{
@@ -2962,14 +2976,15 @@ static int ConvertExpr(CONST struct Expr *start,
               return 0;
             }
           }else{
-            rel_errorlist_set_code(err,incorrect_structure);
-            ERROR_REPORTER_HERE(ASC_PROG_ERR,"incorrect structure (1)");
             gl_destroy(instances);
+            rel_errorlist_set_code(err,incorrect_structure);
             DestroyTermList();
             return 0;
           }
         }else{
-          rel_errorlist_set_code(err,find_error);
+          if(rel_errorlist_get_code(err) == okay){
+            rel_errorlist_set_code(err,find_error);
+          }
           if(rel_errorlist_get_find_error(err) == impossible_instance){
 			ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
             FPRINTF(ASCERR,"Impossible name or subscript in '");
@@ -3073,6 +3088,7 @@ CONST struct Expr *FindRHS(CONST struct Expr *ex)
     switch(ExprType(ex)){
     case e_zero:
     case e_var:
+    case e_der:
     case e_int:
     case e_real:
     case e_boolean:
@@ -3168,6 +3184,7 @@ static struct relation_term
     term = A_TERM(&(tmp->side[count])); /* aka tmp->side+count */
     switch(t = RelationTermType(term)) {
     case e_var:
+    case e_der:
     case e_int:
     case e_real:
     case e_zero:
@@ -3220,6 +3237,7 @@ void DoInOrderVisit(struct relation_term *term,
     switch(RelationTermType(term)) {
     case e_zero:
     case e_var:
+    case e_der:
     case e_int:
     case e_real:
       (*func)(term,r);
@@ -3246,6 +3264,87 @@ void DoInOrderVisit(struct relation_term *term,
       return;
     }
   }
+}
+
+static unsigned long RelationEnsureVar(struct relation *rel,
+                                       struct Instance *var,
+                                       struct Instance *relinst)
+{
+  unsigned long pos;
+
+  pos = gl_search(rel->vars,var,(CmpFunc)CmpP);
+  if(pos != 0){
+    return pos;
+  }
+
+  gl_append_ptr(rel->vars,(VOIDPTR)var);
+  AddRelation(var,relinst);
+  return gl_length(rel->vars);
+}
+
+static int BindDerivativeTermsOnSide(struct Instance *root,
+                                     struct Instance *relinst,
+                                     struct relation *rel,
+                                     union RelationTermUnion *side,
+                                     unsigned long len)
+{
+  unsigned long c, pos;
+  struct relation_term *term;
+  struct Instance *base, *deriv;
+
+  if(side == NULL){
+    return 0;
+  }
+
+  for(c = 0; c < len; ++c){
+    term = A_TERM(&(side[c]));
+    if(term->t != e_der){
+      continue;
+    }
+
+    base = (struct Instance *)gl_fetch(rel->vars,V_TERM(term)->varnum);
+    deriv = getOdeDerivative(root,base);
+    if(deriv == NULL){
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"Unable to bind der(");
+      WriteInstanceName(ASCERR,base,root);
+      FPRINTF(ASCERR,") in relation '");
+      WriteInstanceName(ASCERR,relinst,root);
+      FPRINTF(ASCERR,"': no materialised derivative variable is currently declared");
+      error_reporter_end_flush();
+      return 1;
+    }
+
+    pos = RelationEnsureVar(rel,deriv,relinst);
+    term->t = e_var;
+    V_TERM(term)->varnum = pos;
+  }
+  return 0;
+}
+
+int BindDerivativeTermsInRelation(struct Instance *root, struct Instance *relinst)
+{
+  struct relation *rel;
+
+  if(root == NULL || relinst == NULL){
+    return 1;
+  }
+  if(GetInstanceRelationType(relinst) != e_token){
+    return 0;
+  }
+
+  rel = (struct relation *)GetInstanceRelationOnly(relinst);
+  if(rel == NULL){
+    return 0;
+  }
+
+  if(BindDerivativeTermsOnSide(root,relinst,rel,RTOKEN(rel).lhs,RTOKEN(rel).lhs_len)){
+    return 1;
+  }
+  if(BindDerivativeTermsOnSide(root,relinst,rel,RTOKEN(rel).rhs,RTOKEN(rel).rhs_len)){
+    return 1;
+  }
+  return 0;
 }
 
 #if 0 /* potential future use */
@@ -3281,6 +3380,7 @@ void DestroyTermTree(struct relation_term *term)
       break;
     case e_zero:
     case e_var:
+    case e_der:
     case e_int:
     case e_real:
       ascfree((char *)term);
@@ -3592,7 +3692,7 @@ void ChangeTermSide(union RelationTermUnion *side,
   struct relation_term *term;
   for(c=len-1;c>=0;c--){
     term = A_TERM(&(side[c]));
-    if (term->t == e_var){
+    if (term->t == e_var || term->t == e_der){
       if (V_TERM(term)->varnum == old) {
 	V_TERM(term)->varnum = new;
       } else {
@@ -4234,6 +4334,12 @@ static int CheckExpr(CONST struct Instance *ref,
       case 1: return 1;
       }
       break;
+    case e_der:
+      switch(CheckExprVar(ref,ExprName(start),list)){
+      case 0: return 0;
+      case 1: return 1;
+      }
+      break;
     case e_card:
       if (!CheckCard(ref,ExprBuiltinSet(start))) return 0;
       break;
@@ -4474,6 +4580,7 @@ static union RelationTermUnion *CopyRelationSide(
       break;
     case e_zero:
     case e_var:			/* the var number will be correct */
+    case e_der:
     case e_int:
     case e_real:
       break;

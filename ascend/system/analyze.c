@@ -113,6 +113,148 @@
 
 static symchar *g_strings[6];
 
+struct derivative_bind_data {
+  struct Instance *root;
+  int errors;
+};
+
+static int dynamic_instance_matches(struct Instance *a, struct Instance *b){
+  struct Instance *p;
+  if(a == NULL || b == NULL){
+    return 0;
+  }
+  if(a == b){
+    return 1;
+  }
+  p = a;
+  do{
+    if(p == b){
+      return 1;
+    }
+    p = NextCliqueMember(p);
+  }while(p != a);
+  return 0;
+}
+
+static int dynamic_registry_can_track(struct Instance *inst){
+  if(inst == NULL){
+    return 0;
+  }
+  switch(InstanceKind(inst)){
+  case REAL_ATOM_INST:
+  case BOOLEAN_ATOM_INST:
+  case INTEGER_ATOM_INST:
+  case SYMBOL_ATOM_INST:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+static struct dynreg_entry *dynamic_registry_lookup(struct problem_t *p_data, struct Instance *inst){
+  unsigned long i, len;
+  if(p_data == NULL || p_data->dynreg == NULL || inst == NULL){
+    return NULL;
+  }
+  len = gl_length(p_data->dynreg);
+  for(i = 1; i <= len; ++i){
+    struct dynreg_entry *entry = (struct dynreg_entry *)gl_fetch(p_data->dynreg, i);
+    if(entry != NULL && dynamic_instance_matches(entry->inst, inst)){
+      return entry;
+    }
+  }
+  return NULL;
+}
+
+static int dynamic_registry_add(struct problem_t *p_data, struct Instance *inst, int deriv, int odeid){
+  struct dynreg_entry *entry;
+  if(p_data == NULL || inst == NULL){
+    return 1;
+  }
+  entry = dynamic_registry_lookup(p_data, inst);
+  if(entry != NULL){
+    if(entry->deriv == deriv && entry->odeid == odeid){
+      return 0;
+    }
+    /* Ambiguous link resolution, most notably in some array-alias cases.
+       Leave this instance to the legacy fallback path rather than aborting. */
+    entry->inst = NULL;
+    entry->deriv = 0;
+    entry->odeid = 0;
+    return 0;
+  }
+  entry = ASC_NEW(struct dynreg_entry);
+  entry->inst = inst;
+  entry->deriv = deriv;
+  entry->odeid = odeid;
+  gl_append_ptr(p_data->dynreg, entry);
+  return 0;
+}
+
+static int analyze_build_dynamic_registry(struct problem_t *p_data){
+  struct gl_list_t *der_links, *independent_links;
+  symchar *der_key, *independent_key;
+  unsigned long i, k, len;
+
+  if(p_data == NULL || p_data->root == NULL){
+    return 1;
+  }
+
+  p_data->dynreg = gl_create(8);
+  if(p_data->dynreg == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for dynamic registry.");
+    return 1;
+  }
+
+  der_key = AddSymbol("ode");
+  der_links = getLinks(p_data->root, der_key, 0);
+  len = gl_length(der_links);
+  for(i = 1; i <= len; ++i){
+    struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(der_links, i);
+    CONST struct gl_list_t *instances = getLinkInstancesFlat(p_data->root, entry, 0);
+    unsigned long ninst;
+    if(instances == NULL){
+      continue;
+    }
+    ninst = gl_length((struct gl_list_t *)instances);
+    for(k = 1; k <= ninst; ++k){
+      struct Instance *linked = (struct Instance *)gl_fetch((struct gl_list_t *)instances, k);
+      int deriv = (int)(ninst - k + 1);
+      if(!dynamic_registry_can_track(linked)){
+        continue;
+      }
+      if(dynamic_registry_add(p_data, linked, deriv, (int)i)){
+        gl_destroy(der_links);
+        return 1;
+      }
+    }
+  }
+  gl_destroy(der_links);
+
+  independent_key = AddSymbol("independent");
+  independent_links = getLinks(p_data->root, independent_key, 0);
+  len = gl_length(independent_links);
+  for(i = 1; i <= len; ++i){
+    struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(independent_links, i);
+    CONST struct gl_list_t *instances = getLinkInstancesFlat(p_data->root, entry, 0);
+    if(instances == NULL){
+      continue;
+    }
+    for(k = 1; k <= gl_length((struct gl_list_t *)instances); ++k){
+      struct Instance *linked = (struct Instance *)gl_fetch((struct gl_list_t *)instances, k);
+      if(!dynamic_registry_can_track(linked)){
+        continue;
+      }
+      if(dynamic_registry_add(p_data, linked, -1, 0)){
+        gl_destroy(independent_links);
+        return 1;
+      }
+    }
+  }
+  gl_destroy(independent_links);
+  return 0;
+}
+
 /* symbol table entries we need */
 #define INCLUDED_A g_strings[0]
 #define FIXED_A g_strings[1]
@@ -596,10 +738,16 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
       ip->u.v.obsid = IntegerChildValue(inst,OBSID_A);
 	  /* CONSOLE_DEBUG("FOUND A VAR: deriv = %d, %s = %d",ip->u.v.deriv,SCP(ODEID_A),ip->u.v.odeid); */
 
-	  if(ip->u.v.deriv == 0){
-		ip->u.v.deriv = getOdeType(p_data->root,inst);
-		ip->u.v.odeid = getOdeId(p_data->root,inst);
-	  }
+      if(ip->u.v.deriv == 0 && ip->u.v.odeid == 0){
+        struct dynreg_entry *dyn = dynamic_registry_lookup(p_data, inst);
+        if(dyn != NULL){
+          ip->u.v.deriv = dyn->deriv;
+          ip->u.v.odeid = dyn->odeid;
+        }else{
+          ip->u.v.deriv = getOdeType(p_data->root,inst);
+          ip->u.v.odeid = getOdeId(p_data->root,inst);
+        }
+      }
 	  //printf("\n ode_type: %d, ode_id: %d \n",ip->u.v.deriv,ip->u.v.odeid);
 
       if(RelationsCount(inst)) {
@@ -1311,6 +1459,18 @@ void analyze_free_lists(struct problem_t *p_data){
 
 #undef AFUN
 #undef ADUN
+
+  if(p_data->dynreg != NULL){
+    unsigned long i, len = gl_length(p_data->dynreg);
+    for(i = 1; i <= len; ++i){
+      struct dynreg_entry *entry = (struct dynreg_entry *)gl_fetch(p_data->dynreg, i);
+      if(entry != NULL){
+        ascfree(entry);
+      }
+    }
+    gl_destroy(p_data->dynreg);
+    p_data->dynreg = NULL;
+  }
 }
 
 
@@ -2666,6 +2826,21 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
   return 0;
 }
 
+static void bind_derivative_terms(struct Instance *inst, VOIDPTR userdata)
+{
+  struct derivative_bind_data *data = (struct derivative_bind_data *)userdata;
+
+  if(data == NULL || data->errors){
+    return;
+  }
+  if(InstanceKind(inst) != REL_INST){
+    return;
+  }
+  if(BindDerivativeTermsInRelation(data->root,inst)){
+    data->errors = 1;
+  }
+}
+
 /*----------------------------------------------------------------------------*/
 /*
 	This is the entry point for problem analysis. It takes the compiler
@@ -2691,6 +2866,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
 */
 int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   int stat;
+  struct derivative_bind_data bind_data;
 
   struct problem_t thisproblem; /* note default zero intitialisation. note also: local var! */
   struct problem_t *p_data; /* need to malloc, free, or make &local */
@@ -2709,6 +2885,23 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   VisitInstanceTreeTwo(inst,(VisitTwoProc)CountStuffInTree,TRUE,FALSE,
                        (VOIDPTR)p_data);
   if(p_data->bad_rel_in_list) {
+    p_data->root = NULL;
+    return 2;
+  }
+
+  bind_data.root = inst;
+  bind_data.errors = 0;
+
+  stat = analyze_build_dynamic_registry(p_data);
+  if(stat){
+    analyze_free_lists(p_data);
+    p_data->root = NULL;
+    return 1;
+  }
+
+  VisitInstanceTreeTwo(inst,(VisitTwoProc)bind_derivative_terms,TRUE,FALSE,
+                       (VOIDPTR)&bind_data);
+  if(bind_data.errors){
     p_data->root = NULL;
     return 2;
   }
