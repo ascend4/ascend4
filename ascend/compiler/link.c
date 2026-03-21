@@ -306,12 +306,11 @@ extern struct gl_list_t *getLinks(struct Instance *model
 
 	len_result = gl_length(result);
 
-	for(c1=1;c1<=len_result;c1++) {
+	for(c1=len_result;c1>=1;c1--) {
 		link_entry = (struct link_entry_t *)gl_fetch(result,c1);
 		symchar *entry_key = link_entry_key_resolved(link_entry);
 		if(entry_key == NULL || CmpSymchar(entry_key,target_key) !=0 ){
 			gl_delete(result,c1,0);	/* if the link entry does not have sought key we delete it from the result list */
-			len_result--;
 		}
 	}
 	return result;
@@ -336,7 +335,7 @@ extern struct gl_list_t *getLinksReferencing (struct Instance *model
 
 	/* DS: get all the links that contain the target instance */
 	len_result = gl_length(result);
-	for(c1=1;c1<=len_result;c1++){
+	for(c1=len_result;c1>=1;c1--){
 		link_entry = (struct link_entry_t *)gl_fetch(result,c1);
 		if(link_entry->instances_cache == NULL ) {
 			link_instances = FindInsts(model,link_entry->u.vl,&err);
@@ -357,7 +356,6 @@ extern struct gl_list_t *getLinksReferencing (struct Instance *model
 		}
 		if(!containsInst){
 			gl_delete(result,c1,0);	/* if the link entry does not have sought key we delete it from the result list */
-			len_result--;
 		}
 	}
 	return result;

@@ -45,19 +45,30 @@ Current observed behaviour:
 - scalar alias case works
 - nested array direct case works
 - array `ARE_THE_SAME` case works
-- array `ALIASES` case still fails with empty derivative structure
+- array `ALIASES` case now works again
 
-This suggests that the remaining problem is not generic nested naming, but the
-way array aliases interact with dynamic variable identity.
+The original array-`ALIASES` failure turned out not to be a fundamental
+dynamic-identity problem in the new registry. The decisive bug was in
+[link.c](./ascend/compiler/link.c): `getLinks(...)` filtered its collected
+entries by deleting in a forward loop, so an entry that shifted left after a
+deletion could be skipped. In the failing reproducer this allowed an `ode`
+entry to leak into the `independent` result set.
+
+A second semantic check is now also enforced in the registry builder:
+
+- a variable cannot be both an independent variable and a member of a
+  derivative chain
+
+This restores the intended failure for invalid cases such as
+`DER(dy_dt, t)`.
 
 After the first deferred `der(x)` bridge was added, the picture is now:
 
 - `der(y)` with explicit legacy `DER(dy_dt, y)` bridge works for direct and
   nested scalar models
 - the old scalar `ALIASES` reproducer also analyses successfully
-- the remaining known failure is still the legacy array `ALIASES` case
-- that remaining failure now sits squarely in legacy `diffvars` discovery, not
-  in `der(x)` relation compilation
+- the array `ALIASES` reproducer now also analyses successfully
+- the deferred `der(x)` bridge is no longer blocked on the old array alias case
 
 ### First `der(x)` compiler experiment
 
@@ -116,10 +127,11 @@ Important qualification:
 
 - the first registry pass is intentionally conservative
 - it currently tracks scalar atom instances cleanly
-- some array-`ALIASES` cases still collapse ambiguously in the legacy LINK
-  resolution APIs
-- those ambiguous cases are therefore left on the legacy fallback path for
-  now, rather than being mis-registered in the new registry
+- array aliases are now materially improved because `getLinks(...)` and
+  `getLinksReferencing(...)` no longer skip entries during key filtering
+- however, the registry is still transitional because `diffvars` generation is
+  still sourced from legacy `(ode_id, ode_type)` metadata rather than directly
+  from the registry
 
 ### Current test status
 
@@ -133,7 +145,7 @@ It currently covers:
 - nested scalar `der(cell.y)` with legacy bridge
 - scalar `ALIASES`
 - array `ARE_THE_SAME`
-- array `ALIASES` as an explicit known-gap regression
+- array `ALIASES`
 
 Current observed results:
 
@@ -141,11 +153,12 @@ Current observed results:
 - `der_expr_nested_ok`: passes system build and IDA analyse
 - `alias_der_alias_fail`: now passes system build and IDA analyse
 - `alias_der_array_same`: passes system build and IDA analyse
-- `alias_der_array_alias_fail`: still fails IDA analyse with empty derivative
-  structure
+- `alias_der_array_alias_fail`: now passes system build and IDA analyse
 
-So the new registry is already improving the scalar and nested cases, but the
-array-`ALIASES` case remains the main unresolved dynamic-identity gap.
+So the current bridge + registry path now covers direct, nested, scalar alias,
+array `ARE_THE_SAME`, and array `ALIASES` cases. The remaining work is no
+longer "make aliases work at all"; it is "replace the old metadata path with a
+canonical dynamic representation".
 
 ### Conditional models and IDA reanalysis
 
@@ -479,9 +492,11 @@ entanglement with full structural index-changing behaviour.
 
 Short term, the architecture should be pushed toward:
 
-- replacing the remaining array-`ALIASES` fallback with proper canonical array
-  element identity in the dynamic registry
-- then moving `diffvars` generation off raw `(ode_id, ode_type)` discovery and
-  onto the registry itself
+- removing the remaining reliance on `getOdeType(...)` / `getOdeId(...)` as the
+  primary source of dynamic truth
+- moving `diffvars` generation off raw `(ode_id, ode_type)` discovery and onto
+  the registry itself
+- then using the same canonical representation to support plain equation forms
+  such as $\dot x = \mathrm{der}(x)$ without needing `DER(...)`
 
 rather than continuing to patch name-based resolution edge cases.

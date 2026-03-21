@@ -112,10 +112,10 @@ static void test_der_alias_scalar_ok(void){
 	destroy_loaded_system(sys,siminst);
 }
 
-static void test_der_alias_array_known_gap(void){
+static void test_der_alias_array_ok(void){
 	struct Instance *siminst = NULL;
 	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","alias_der_array_alias_fail",&siminst);
-	CU_ASSERT(system_get_diffvars(sys) == NULL);
+	assert_diffvars_shape(sys,3,1,2);
 	destroy_loaded_system(sys,siminst);
 }
 
@@ -130,7 +130,7 @@ static void test_der_array_same_ok(void){
 	T(der_expr_direct_ok) \
 	T(der_expr_nested_ok) \
 	T(der_alias_scalar_ok) \
-	T(der_alias_array_known_gap) \
+	T(der_alias_array_ok) \
 	T(der_array_same_ok)
 
 REGISTER_TESTS_SIMPLE(system_der, TESTS)

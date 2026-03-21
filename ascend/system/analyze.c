@@ -151,6 +151,36 @@ static int dynamic_registry_can_track(struct Instance *inst){
   }
 }
 
+static struct Instance *dynamic_resolve_name_relative(struct Instance *ctx, CONST struct Name *name){
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  struct gl_list_t *instances;
+  struct Instance *inst = NULL;
+
+  if(ctx == NULL || name == NULL){
+    return NULL;
+  }
+
+  instances = FindInstances(ctx, name, &err);
+  if(instances == NULL){
+    return NULL;
+  }
+  if(gl_length(instances) == 1){
+    inst = (struct Instance *)gl_fetch(instances, 1);
+  }
+  gl_destroy(instances);
+
+  if(inst == NULL){
+    return NULL;
+  }
+  if(dynamic_registry_can_track(inst)){
+    return inst;
+  }
+  if(NextName(name) != NULL && NumberChildren(inst) > 0){
+    return dynamic_resolve_name_relative(inst, NextName(name));
+  }
+  return NULL;
+}
+
 static struct dynreg_entry *dynamic_registry_lookup(struct problem_t *p_data, struct Instance *inst){
   unsigned long i, len;
   if(p_data == NULL || p_data->dynreg == NULL || inst == NULL){
@@ -175,6 +205,15 @@ static int dynamic_registry_add(struct problem_t *p_data, struct Instance *inst,
   if(entry != NULL){
     if(entry->deriv == deriv && entry->odeid == odeid){
       return 0;
+    }
+    if((entry->deriv == -1 && odeid != 0) || (entry->odeid != 0 && deriv == -1)){
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,
+        "Variable '%s' cannot be both independent and part of a derivative chain",
+        WriteInstanceNameString(inst, p_data->root)
+      );
+      error_reporter_end_flush();
+      return 1;
     }
     /* Ambiguous link resolution, most notably in some array-alias cases.
        Leave this instance to the legacy fallback path rather than aborting. */
@@ -211,14 +250,10 @@ static int analyze_build_dynamic_registry(struct problem_t *p_data){
   len = gl_length(der_links);
   for(i = 1; i <= len; ++i){
     struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(der_links, i);
-    CONST struct gl_list_t *instances = getLinkInstancesFlat(p_data->root, entry, 0);
-    unsigned long ninst;
-    if(instances == NULL){
-      continue;
-    }
-    ninst = gl_length((struct gl_list_t *)instances);
-    for(k = 1; k <= ninst; ++k){
-      struct Instance *linked = (struct Instance *)gl_fetch((struct gl_list_t *)instances, k);
+    CONST struct VariableList *vl = entry->u.vl;
+    unsigned long ninst = VariableListLength(vl);
+    for(k = 1; vl != NULL; ++k, vl = NextVariableNode(vl)){
+      struct Instance *linked = dynamic_resolve_name_relative(p_data->root, NamePointer(vl));
       int deriv = (int)(ninst - k + 1);
       if(!dynamic_registry_can_track(linked)){
         continue;
@@ -236,12 +271,9 @@ static int analyze_build_dynamic_registry(struct problem_t *p_data){
   len = gl_length(independent_links);
   for(i = 1; i <= len; ++i){
     struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(independent_links, i);
-    CONST struct gl_list_t *instances = getLinkInstancesFlat(p_data->root, entry, 0);
-    if(instances == NULL){
-      continue;
-    }
-    for(k = 1; k <= gl_length((struct gl_list_t *)instances); ++k){
-      struct Instance *linked = (struct Instance *)gl_fetch((struct gl_list_t *)instances, k);
+    CONST struct VariableList *vl = entry->u.vl;
+    for(k = 1; vl != NULL; ++k, vl = NextVariableNode(vl)){
+      struct Instance *linked = dynamic_resolve_name_relative(p_data->root, NamePointer(vl));
       if(!dynamic_registry_can_track(linked)){
         continue;
       }
