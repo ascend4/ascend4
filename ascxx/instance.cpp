@@ -938,6 +938,9 @@ void
 Instanc::setFixed(const bool &val){
 	if(isFixed()==val)return;
 	//CONSOLE_DEBUG("Fixing solver_var at %p",i);
+	if(IsDerivativeInstance(i)){
+		DerivativeInstanceClearAlgebraicDefault(i);
+	}
 	getChild("fixed").setBoolValue(val);
 }
 
@@ -949,6 +952,12 @@ Instanc::setIncluded(const bool &val){
 
 void
 Instanc::setBoolValue(const bool &val, const unsigned &depth){
+	if(InstanceKind(i) == BOOLEAN_INST){
+		struct Instance *p = InstanceParent(i,1);
+		if(p != NULL && IsDerivativeInstance(p)){
+			DerivativeInstanceClearAlgebraicDefault(p);
+		}
+	}
 	if(isDefined() && getBoolValue() == val){
 		return;
 	}
@@ -967,6 +976,9 @@ Instanc::setIntValue(const long &val, const unsigned &depth){
 
 void
 Instanc::setRealValue(const double &val, const unsigned &depth){
+	if(IsDerivativeInstance(i)){
+		DerivativeInstanceClearAlgebraicDefault(i);
+	}
 	if(isDefined() && getRealValue() == val){
 		return;
 	}
@@ -980,6 +992,9 @@ Instanc::setRealValue(const double &val, const unsigned &depth){
 */
 void
 Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &depth){
+	if(IsDerivativeInstance(i)){
+		DerivativeInstanceClearAlgebraicDefault(i);
+	}
 
 	if(isConst()){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Can't change the value of a constant");

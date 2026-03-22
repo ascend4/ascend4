@@ -87,7 +87,6 @@
 #include "bintoken.h"
 #include "childio.h"
 #include "importhandler.h"
-#include "deriv_pending.h"
 #include "derivinst.h"
 /* #include "redirectFile.h" */
 #include "ascCompiler.h"
@@ -221,7 +220,6 @@ int Asc_CompilerInit(int simp)
  */
 void Asc_CompilerDestroy(void)
 {
-  deriv_pending_clear_all();
   DerivativeInstancesClearAll();
   Asc_DestroySimulations();
   InterfaceNotify = NULL;

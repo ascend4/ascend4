@@ -14,6 +14,8 @@ ASC_DLLSPEC int IsDerivativeInstance(CONST struct Instance *inst);
 ASC_DLLSPEC struct Instance *DerivativeInstanceBase(CONST struct Instance *inst);
 ASC_DLLSPEC unsigned long DerivativeInstanceOrder(CONST struct Instance *inst);
 ASC_DLLSPEC struct Instance *DerivativeInstanceIndependent(CONST struct Instance *inst);
+ASC_DLLSPEC int DerivativeInstanceUsesAlgebraicDefault(CONST struct Instance *inst);
+ASC_DLLSPEC void DerivativeInstanceClearAlgebraicDefault(struct Instance *inst);
 
 /* browser / interactive dynamic-child API */
 ASC_DLLSPEC unsigned long InstanceDynamicChildCount(struct Instance *inst);

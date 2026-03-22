@@ -204,6 +204,7 @@ static int RecordDerivativeFixFree(
       ProcWriteFixError(fm, name);
       return 1;
     }
+    DerivativeInstanceClearAlgebraicDefault(inst);
     SetBooleanAtomValue(fixedinst, val, 0U);
   }
   gl_destroy(instances);
@@ -230,6 +231,7 @@ static int RecordDerivativeAssignment(
   oldflow = fm->flow;
   for(i = 1; i <= len; ++i){
     struct Instance *inst = (struct Instance *)gl_fetch(instances, i);
+    DerivativeInstanceClearAlgebraicDefault(inst);
     AssignInitValue(inst, value, fm);
     if(fm->flow == FrameError){
       break;

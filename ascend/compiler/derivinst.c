@@ -29,6 +29,7 @@ struct derivinst_entry {
   struct Instance *inst;
   unsigned int present;
   unsigned int solver_owned;
+  unsigned int algebraic_default;
 };
 
 struct derivinst_rootinfo {
@@ -206,6 +207,7 @@ static struct derivinst_entry *derivinst_get_or_create_entry(struct Instance *ro
   entry->inst = NULL;
   entry->present = 0;
   entry->solver_owned = 0;
+  entry->algebraic_default = 1;
   gl_append_ptr(g_derivinst_entries, entry);
   return entry;
 }
@@ -404,6 +406,7 @@ static struct Instance *derivinst_create_instance(struct Instance *base, struct 
   if(inst == NULL){
     return NULL;
   }
+  SetRealAtomValue(inst, 0.0, 0U);
   derivinst_set_dimensions(inst, base, root);
   return inst;
 }
@@ -572,6 +575,18 @@ struct Instance *DerivativeInstanceIndependent(CONST struct Instance *inst){
     return NULL;
   }
   return derivinst_independent_instance(root);
+}
+
+int DerivativeInstanceUsesAlgebraicDefault(CONST struct Instance *inst){
+  struct derivinst_entry *entry = derivinst_lookup_by_inst(inst);
+  return entry != NULL ? (entry->algebraic_default != 0U) : 0;
+}
+
+void DerivativeInstanceClearAlgebraicDefault(struct Instance *inst){
+  struct derivinst_entry *entry = derivinst_lookup_by_inst(inst);
+  if(entry != NULL){
+    entry->algebraic_default = 0U;
+  }
 }
 
 void DerivativeInstanceMarkSolverOwned(struct Instance *inst){

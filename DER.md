@@ -196,8 +196,8 @@ That means:
 - `FREE der(x)`
 - `der(x) := ...`
 
-now act on a real runtime object at method time, rather than being recorded as
-pending operations for later application during `system_build`.
+now act on a real runtime object at method time. The older pending-operation
+mechanism has been removed.
 
 This is materially better aligned with ASCEND METHOD semantics.
 
@@ -358,4 +358,3 @@ After that:
 
 4. define `INITIAL`, `pre(x)`, and `REINIT` semantics
 5. expand hybrid/event support on top of the current derivative model
-

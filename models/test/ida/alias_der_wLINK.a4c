@@ -200,6 +200,33 @@ METHODS
 END der_method_free_ok;
 
 
+MODEL der_qrslv_default_fixed_ok;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	eq1: x = 1;
+	eq2: y = der(x) + 2;
+	INDEPENDENT t;
+END der_qrslv_default_fixed_ok;
+
+
+MODEL der_qrslv_free_ok;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	eq1: x = 1;
+	eq2: y = der(x) + 2;
+	eq3: der(x) = 3;
+	INDEPENDENT t;
+METHODS
+	METHOD on_load;
+		FREE der(x);
+	END on_load;
+END der_qrslv_free_ok;
+
+
 MODEL alias_der_alias_fail;
 	cell IS_A alias_der_inner;
 	y ALIASES cell.y;

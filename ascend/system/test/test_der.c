@@ -12,6 +12,7 @@
 #include <ascend/compiler/module.h>
 #include <ascend/compiler/parser.h>
 #include <ascend/compiler/library.h>
+#include <ascend/compiler/packages.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/simlist.h>
 #include <ascend/compiler/initialize.h>
@@ -33,6 +34,7 @@
 #include <ascend/system/diffvars.h>
 #include <ascend/system/diffvars_impl.h>
 #include <ascend/system/var.h>
+#include <ascend/solver/solver.h>
 
 #include <test/common.h>
 
@@ -81,6 +83,40 @@ static slv_system_t build_system_for_model(const char *filename, const char *mod
 		sim_destroy(siminst);
 	}
 	return sys;
+}
+
+static int ensure_qrslv_loaded(void){
+	int qrslv_index;
+	qrslv_index = slv_lookup_client("QRSlv");
+	if(qrslv_index == -1){
+		CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+		qrslv_index = slv_lookup_client("QRSlv");
+	}
+	CU_ASSERT_FATAL(qrslv_index != -1);
+	return qrslv_index;
+}
+
+static struct var_variable *find_derivative_var(slv_system_t sys){
+	struct var_variable **vp;
+	CU_ASSERT_FATAL(sys != NULL);
+	vp = slv_get_solvers_var_list(sys);
+	CU_ASSERT_FATAL(vp != NULL);
+	for(; *vp != NULL; ++vp){
+		struct Instance *inst = (struct Instance *)var_instance(*vp);
+		if(inst != NULL && IsDerivativeInstance(inst)){
+			return *vp;
+		}
+	}
+	return NULL;
+}
+
+static void qrslv_presolve_or_fail(slv_system_t sys){
+	slv_status_t status;
+	int qrslv_index = ensure_qrslv_loaded();
+	CU_ASSERT_FATAL(slv_select_solver(sys, qrslv_index));
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	slv_get_status(sys, &status);
+	CU_ASSERT_FATAL(status.ready_to_solve);
 }
 
 static void destroy_loaded_system(slv_system_t sys, struct Instance *siminst){
@@ -360,6 +396,62 @@ static void test_der_method_free_ok(void){
 	destroy_loaded_system(sys,siminst);
 }
 
+static void test_der_qrslv_default_fixed_ok(void){
+	struct Instance *siminst = NULL;
+	struct Instance *root, *x, *y, *deriv;
+	struct var_variable *dvar;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_qrslv_default_fixed_ok",&siminst);
+
+	qrslv_presolve_or_fail(sys);
+	dvar = find_derivative_var(sys);
+	CU_ASSERT_FATAL(dvar != NULL);
+	CU_ASSERT_TRUE(var_flagbit(dvar, VAR_FIXED));
+	CU_ASSERT_TRUE(var_potentially_fixed(dvar));
+
+	slv_solve(sys);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	x = ChildByChar(root, AddSymbol("x"));
+	y = ChildByChar(root, AddSymbol("y"));
+	CU_ASSERT_FATAL(x != NULL);
+	CU_ASSERT_FATAL(y != NULL);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(x), 1.0, 1e-8);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(y), 2.0, 1e-8);
+	deriv = InstanceGetDerivative(x);
+	CU_ASSERT_FATAL(deriv != NULL);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(deriv), 0.0, 1e-12);
+
+	destroy_loaded_system(sys,siminst);
+}
+
+static void test_der_qrslv_free_ok(void){
+	struct Instance *siminst = NULL;
+	struct Instance *root, *x, *y, *deriv;
+	struct var_variable *dvar;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_qrslv_free_ok",&siminst);
+
+	qrslv_presolve_or_fail(sys);
+	dvar = find_derivative_var(sys);
+	CU_ASSERT_FATAL(dvar != NULL);
+	CU_ASSERT_FALSE(var_flagbit(dvar, VAR_FIXED));
+	CU_ASSERT_FALSE(var_potentially_fixed(dvar));
+
+	slv_solve(sys);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	x = ChildByChar(root, AddSymbol("x"));
+	y = ChildByChar(root, AddSymbol("y"));
+	CU_ASSERT_FATAL(x != NULL);
+	CU_ASSERT_FATAL(y != NULL);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(x), 1.0, 1e-8);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(y), 5.0, 1e-8);
+	deriv = InstanceGetDerivative(x);
+	CU_ASSERT_FATAL(deriv != NULL);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(deriv), 3.0, 1e-8);
+
+	destroy_loaded_system(sys,siminst);
+}
+
 static void test_der_alias_scalar_ok(void){
 	struct Instance *siminst = NULL;
 	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","alias_der_alias_fail",&siminst);
@@ -399,6 +491,8 @@ static void test_der_array_same_ok(void){
 	T(der_method_fix_assign_before_build_ok) \
 	T(der_method_fix_assign_ok) \
 	T(der_method_free_ok) \
+	T(der_qrslv_default_fixed_ok) \
+	T(der_qrslv_free_ok) \
 	T(der_alias_scalar_ok) \
 	T(der_alias_array_ok) \
 	T(der_array_same_ok)
