@@ -39,6 +39,7 @@
 #include <ascend/compiler/vlist.h>
 #include <ascend/compiler/cmpfunc.h>
 #include <ascend/compiler/visitinst.h>
+#include <ascend/compiler/when_util.h>
 
 #include <ascend/linear/mtx.h>
 
@@ -60,6 +61,22 @@
 #endif
 
 #define IPTR(i) ((struct Instance *) (i))
+
+static struct Instance *system_root_instance(struct Instance *inst){
+	if(inst == NULL){
+		return NULL;
+	}
+	if(InstanceKind(inst) == SIM_INST){
+		return GetSimulationRoot(inst);
+	}
+	{
+		struct Instance *sim = FindSimulationInstance(inst);
+		if(sim != NULL){
+			return GetSimulationRoot(sim);
+		}
+	}
+	return inst;
+}
 
 static symchar *system_link_entry_key(struct link_entry_t *entry){
 	if(entry == NULL){
@@ -234,7 +251,15 @@ static int check_ode_independent_links(struct Instance *inst){
 	return 0;
 }
 
-slv_system_t system_build(SlvBackendToken inst){
+void system_set_build_mode(SlvBackendToken inst, SystemBuildMode mode){
+	struct Instance *root = system_root_instance(IPTR(inst));
+	if(root == NULL){
+		return;
+	}
+	SetInitialRelationInclusion(root, mode == SYSTEM_BUILD_INITIAL ? TRUE : FALSE);
+}
+
+static slv_system_t system_build_internal(SlvBackendToken inst){
   slv_system_t sys;
   int stat;
 
@@ -292,6 +317,15 @@ slv_system_t system_build(SlvBackendToken inst){
     return sys;
   }
   return(sys);
+}
+
+slv_system_t system_build_with_mode(SlvBackendToken inst, SystemBuildMode mode){
+	system_set_build_mode(inst, mode);
+	return system_build_internal(inst);
+}
+
+slv_system_t system_build(SlvBackendToken inst){
+	return system_build_with_mode(inst, SYSTEM_BUILD_NORMAL);
 }
 
 void system_destroy(slv_system_t sys){

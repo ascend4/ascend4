@@ -15,6 +15,7 @@ ASC_DLLSPEC struct Instance *DerivativeInstanceBase(CONST struct Instance *inst)
 ASC_DLLSPEC unsigned long DerivativeInstanceOrder(CONST struct Instance *inst);
 ASC_DLLSPEC struct Instance *DerivativeInstanceIndependent(CONST struct Instance *inst);
 ASC_DLLSPEC int DerivativeInstanceUsesAlgebraicDefault(CONST struct Instance *inst);
+ASC_DLLSPEC void DerivativeInstanceSetAlgebraicDefault(struct Instance *inst, int use_default);
 ASC_DLLSPEC void DerivativeInstanceClearAlgebraicDefault(struct Instance *inst);
 ASC_DLLSPEC void DerivativeInstanceNoteMutation(struct Instance *inst);
 

@@ -28,6 +28,7 @@ const IntegratorInternals integrator_aww_internals = {
 	integrator_aww_create
 	,integrator_aww_params_default
 	,integrator_aww_analyse
+	,NULL
 	,integrator_aww_solve
 	,NULL /* writematrixfn */
 	,NULL /* debugfn */
@@ -179,4 +180,3 @@ int integrator_aww_solve(IntegratorSystem *blsys
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
 	return 1;
 }
-

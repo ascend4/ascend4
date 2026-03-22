@@ -41,6 +41,7 @@
 #include <ascend/compiler/childio.h>
 #include <ascend/compiler/instance_name.h>
 #include <ascend/compiler/units.h>
+#include <ascend/compiler/when_util.h>
 
 #include <ascend/compiler/initialize.h>
 
@@ -281,8 +282,10 @@ static void test_initial_section_basic(void){
 	const char *model = "(* INITIAL syntax smoke test *)\n\
 		DEFINITION relation\n\
 		    included IS_A boolean;\n\
+		    initial IS_A boolean;\n\
 		    message IS_A symbol;\n\
 		    included := TRUE;\n\
+		    initial := FALSE;\n\
 		    message := 'none';\n\
 		END relation;\n\
 		MODEL test_initial_basic;\n\
@@ -317,8 +320,111 @@ static void test_initial_section_basic(void){
 	CU_ASSERT(ChildByChar(root, AddSymbol("x_rel")) != NULL);
 	CU_ASSERT_FATAL(ChildByChar(root, AddSymbol("x_init")) != NULL);
 	CU_ASSERT(InstanceKind(ChildByChar(root, AddSymbol("x_init"))) == REL_INST);
+	CU_ASSERT_FATAL(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("initial")) != NULL);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("initial"))) == TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("included"))) == FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_rel")), AddSymbol("initial"))) == FALSE);
+
+	SetInitialRelationInclusion(root, TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("included"))) == TRUE);
+	SetInitialRelationInclusion(root, FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("included"))) == FALSE);
 
 	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_initial_section_hierarchical(void){
+	const char *model = "(* INITIAL hierarchy test *)\n\
+		DEFINITION relation\n\
+		    included IS_A boolean;\n\
+		    initial IS_A boolean;\n\
+		    message IS_A symbol;\n\
+		    included := TRUE;\n\
+		    initial := FALSE;\n\
+		    message := 'none';\n\
+		END relation;\n\
+		MODEL child_initial;\n\
+			y IS_A real;\n\
+			y_rel: y - 2 = 0;\n\
+		INITIAL\n\
+			y_init: y = 3;\n\
+		END child_initial;\n\
+		MODEL parent_initial;\n\
+			c IS_A child_initial;\n\
+			parent_rel: c.y - 2 = 0;\n\
+		INITIAL\n\
+			parent_init: c.y = 4;\n\
+		END parent_initial;\n";
+
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+	struct Instance *child;
+	struct Instance *y_init;
+	struct Instance *parent_init;
+
+	Asc_CompilerInit(1);
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(zz_parse() == 0);
+
+	sim = SimsCreateInstance(AddSymbol("parent_initial"), AddSymbol("sim_parent_initial"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim != NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root != NULL);
+	child = ChildByChar(root, AddSymbol("c"));
+	CU_ASSERT_FATAL(child != NULL);
+	y_init = ChildByChar(child, AddSymbol("y_init"));
+	parent_init = ChildByChar(root, AddSymbol("parent_init"));
+	CU_ASSERT_FATAL(y_init != NULL);
+	CU_ASSERT_FATAL(parent_init != NULL);
+
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("parent_init")), AddSymbol("initial"))) == TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(child, AddSymbol("y_init")), AddSymbol("initial"))) == TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("parent_init")), AddSymbol("included"))) == FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(child, AddSymbol("y_init")), AddSymbol("included"))) == FALSE);
+
+	SetInitialRelationInclusion(root, TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("parent_init")), AddSymbol("included"))) == TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(child, AddSymbol("y_init")), AddSymbol("included"))) == TRUE);
+
+	SetInitialRelationInclusion(root, FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("parent_init")), AddSymbol("included"))) == FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(child, AddSymbol("y_init")), AddSymbol("included"))) == FALSE);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_initial_section_illegal_statement_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		MODEL initial_illegal;\n\
+			x IS_A real;\n\
+		INITIAL\n\
+			y IS_A real;\n\
+		END initial_illegal;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "Statement not allowed in context") != NULL);
+	CU_ASSERT(FindType(AddSymbol("initial_illegal")) == NULL);
+
+	error_reporter_set_callback(NULL);
 	Asc_CompilerDestroy();
 }
 
@@ -1037,6 +1143,8 @@ static void test_units_ladder_invalid_anchor_rejected(void){
 	T(parse_string_module) \
 	T(instantiate_string) \
 	T(initial_section_basic) \
+	T(initial_section_hierarchical) \
+	T(initial_section_illegal_statement_rejected) \
 	T(parse_basemodel) \
 	T(parse_file) \
 	T(instantiate_file) \

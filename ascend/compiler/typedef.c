@@ -4799,7 +4799,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       TypeLintIllegalReductionStats(ASCERR,name,rsl) != DEF_OKAY ||
       /* structural assignments only */
       TypeLintIllegalBodyStats(ASCERR,name,sl,context_MODEL) != DEF_OKAY ||
-      TypeLintIllegalBodyStats(ASCERR,name,isl,context_MODEL | context_INITIAL) != DEF_OKAY ||
+      TypeLintIllegalInitialStats(ASCERR,name,isl,context_MODEL | context_INITIAL) != DEF_OKAY ||
       /* no WILL_BE,IF,RUN statements in body */
       TypeLintIllegalMethodStats(ASCERR,name,pl,context_METH) != DEF_OKAY
       /* no structural stuff in methods -- yet */) {

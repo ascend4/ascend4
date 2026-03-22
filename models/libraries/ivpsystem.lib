@@ -56,7 +56,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 DEFINITION relation
 
     included IS_A boolean;
+    initial  IS_A boolean;
     included := TRUE;
+    initial := FALSE;
 
 END relation;
 
@@ -64,7 +66,9 @@ END relation;
 DEFINITION logic_relation
 
     included IS_A boolean;
+    initial  IS_A boolean;
     included := TRUE;
+    initial := FALSE;
 
 END logic_relation;
 
@@ -156,5 +160,4 @@ ATOM solver_semi REFINES solver_var
     upper_bound := 1e20 {?};
     nominal     := 1.0 {?};
 END solver_semi;
-
 

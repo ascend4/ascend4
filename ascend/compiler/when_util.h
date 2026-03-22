@@ -271,6 +271,11 @@ extern void logrelinst_set_flagbit(struct Instance *rel,
  *  </pre>
  */
 
+ASC_DLLSPEC int relinst_initial(CONST struct Instance *rel);
+ASC_DLLSPEC int logrelinst_initial(CONST struct Instance *lrel);
+ASC_DLLSPEC void SetInitialRelationInclusion(struct Instance *inst,
+  unsigned int active);
+
 /**< relation bit flags. explained afterward.*/
 #define RELINST_ON              0x1  /**< Bit flag - is the relation part of my problem? */
 #define RELINST_CONDITIONAL     0x2  /**< Bit flag - is the relation a boundary expression? */
@@ -318,4 +323,3 @@ extern void logrelinst_set_flagbit(struct Instance *rel,
 /* @} */
 
 #endif  /* ASC_WHEN_UTIL_H */
-

@@ -19,9 +19,10 @@ removed.
 
 ## Current Status
 
-The core `der(x)` path is implemented and working for the tested cases.
+The core first-order `der(x)` path is implemented and working for the tested
+cases.
 
-Implemented:
+Implemented and passing:
 
 - parser support for lower-case `der(fname)` in equations
 - equation instantiation preserving `der(...)` as a distinct expression form
@@ -34,27 +35,27 @@ Implemented:
 - METHOD-time manipulation of derivatives through pseudo-instances
 - browser and ascxx/Python instance-view access to derivative pseudo-children
 - compatibility retention for legacy `DER(...)`
+- QRSlv semantics for derivative pseudo-instances
+- HiGHS regression coverage for derivative-containing linear models
 
-Test coverage:
+Primary regression coverage:
 
 - [test_der.c](./ascend/system/test/test_der.c)
 - [alias_der_wLINK.a4c](./models/test/ida/alias_der_wLINK.a4c)
 - [check_alias_der.py](./models/test/ida/check_alias_der.py)
-
-Current verified cases include:
-
-- direct, nested, array, and implicit `der(...)` equations
-- scalar `ALIASES`
-- array `ALIASES`
-- array `ARE_THE_SAME`
-- METHOD-time `FIX`, `FREE`, and assignment on `der(x)`
-- qlfdid resolution of both `der(x)` and `x.der`
-- browser/ascxx exposure of dynamic pseudo-children
+- [test_lsode.c](./ascend/integrator/test/test_lsode.c)
+- [test_ida.c](./ascend/integrator/test/test_ida.c)
+- [test_highs.c](./ascend/solver/test/test_highs.c)
 
 At the time of writing:
 
 - `./a4 cutest system_der -v` passes
+- existing non-`INITIAL` LSODE and IDA regressions pass
 - `tcltk` and `ascxx` compile successfully in this environment
+
+The new `INITIAL` startup regressions do not yet pass. The compiler/runtime
+plumbing is in place, but the temporary initialization problem formulation is
+still wrong.
 
 ## Design Decisions
 
@@ -327,13 +328,10 @@ Conservative first-phase assumptions remain sensible:
 - `WHEN` should not yet change the canonical differential state set
 - guards should not depend on `der(...)` initially
 
-## Proposed `INITIAL` Semantics
+## `INITIAL`
 
-### Scope and placement
-
-The proposed ASCEND syntax is a new declarative section inside `MODEL`,
-positioned between the main declarative statement list and the `METHODS`
-section:
+`INITIAL` is a declarative section inside `MODEL`, positioned between the main
+declarative statement list and the `METHODS` section:
 
 ```ascend
 MODEL foo;
@@ -351,10 +349,10 @@ METHODS
 END foo;
 ```
 
-This is intentionally **not** a METHOD. It is a second declarative equation
+It is intentionally **not** a METHOD. It is a second declarative equation
 section.
 
-### Core meaning
+### Semantics
 
 `INITIAL` equations are additional equations that hold only in the
 initialization problem at
@@ -381,8 +379,6 @@ This follows the same broad semantic direction as Modelica
 `initial equation` and gPROMS `INITIAL`: initialization is a separate
 declarative equation set, not imperative setup code.
 
-### Relationship with `METHODS`
-
 `METHODS` and `INITIAL` should have distinct roles.
 
 `INITIAL` is for:
@@ -399,16 +395,12 @@ declarative equation set, not imperative setup code.
 - solver/integrator selection
 - orchestration such as `SOLVE`
 
-So the user should not need to emulate `INITIAL` by writing METHOD code that
-manually toggles relation `included` flags.
+The user should not need to emulate `INITIAL` by writing METHOD code that
+manually toggles relation `included` flags. Internally, ASCEND may still use
+the existing `included` machinery to realise the initialization split, but
+that remains an implementation detail.
 
-Internally, ASCEND may still use the existing `included` machinery to realise
-the initialization/non-initialization split, but that should remain an
-implementation detail.
-
-### First implementation limits
-
-For a first implementation, `INITIAL` should be deliberately narrow.
+For v1, `INITIAL` is deliberately narrow.
 
 Allowed:
 
@@ -429,8 +421,6 @@ Not yet allowed:
 - `CONDITIONAL`
 
 That keeps `INITIAL` as an equation section, not a second procedural language.
-
-### Interaction with `der(...)`
 
 During initialization, `der(x)` should be usable as an ordinary algebraic
 quantity in equations.
@@ -454,90 +444,42 @@ INITIAL
 That is the key behavior needed for steady-state initialization and consistent
 DAE startup.
 
-### Implementation shape
+`INITIAL` composes hierarchically in the same way as ordinary model equations:
 
-The current compiler/runtime layout suggests a clean implementation path:
+- a child model's `INITIAL` equations belong wherever that child is
+  instantiated
+- a parent may add cross-component initialization constraints in its own
+  `INITIAL` section
+- build mode determines whether instantiated `INITIAL` relations are included
 
-1. extend the grammar so `MODEL` contains:
-   - main declarative statements
-   - optional `INITIAL` statement list
-   - optional `METHODS`
-2. add a second declarative statement-list slot to `TypeDescription`
-3. instantiate `INITIAL` statements as relation instances flagged as
-   initialization-only
-4. build an initialization-mode system that includes:
-   - normal equations
-   - `INITIAL` equations
-5. keep ordinary system builds excluding the `INITIAL` equations
+This is preferable to a flat, simulation-root-only interpretation.
 
-This is preferable to encoding initialization purely through METHOD-side edits
-to `included`.
+### Implementation status
 
-### Parser strategy: avoid duplicating equation grammar
+Implemented so far:
 
-The preferred parser strategy is to **reuse the existing declarative statement
-grammar** rather than clone a parallel "initial equation" grammar.
+- `INITIAL` parses as a distinct model section
+- `TypeDescription` stores a separate `initstats` list
+- statements in `INITIAL` carry `context_INITIAL`
+- child-list derivation sees names declared in both the normal body and
+  `INITIAL`
+- executable statement traversal for model instantiation runs over both normal
+  statements and `INITIAL`
+- relation/logrelation definitions now carry an `initial` boolean child
+- relations/logrelations instantiated from `INITIAL` are marked with
+  `initial := TRUE`
+- those equations default to `included := FALSE`
+- `SetInitialRelationInclusion(root, active)` toggles all initial equations in
+  a tree
+- this already composes through hierarchy
+- `SYSTEM_BUILD_NORMAL` and `SYSTEM_BUILD_INITIAL` now exist
 
-Recommended approach:
+The v1 semantic fence is also in place:
 
-1. add an optional `INITIAL` section in the `MODEL` grammar
-2. parse its contents using the same statement-list machinery already used for
-   the main declarative section
-3. mark those statements with a new statement-context bit such as
-   `context_INITIAL`
-4. run a semantic validation pass that rejects statement types not permitted
-   in `INITIAL`
+- `INITIAL` accepts only equation-building declarative constructs
+- non-equation body constructs in `INITIAL` are rejected during typelint
 
-This keeps all existing relation/logrelation/`FOR` lowering paths shared.
-
-The context bit then becomes the key to later stages:
-
-- instantiation knows the statement came from `INITIAL`
-- relation instances created from it can be flagged initialization-only
-- system-build mode can include or exclude them without re-parsing anything
-
-This is much cleaner than carrying a parser-global mode that changes relation
-construction implicitly, and it avoids duplicating large amounts of parser
-logic.
-
-### Hierarchical model semantics
-
-`INITIAL` should compose through hierarchy in the same way as ordinary model
-equations.
-
-That means:
-
-- if a submodel type has an `INITIAL` section, those initialization equations
-  belong to that submodel wherever it is instantiated
-- when a parent model is built in initialization mode, the active
-  initialization problem includes:
-  - the parent's normal equations
-  - the parent's `INITIAL` equations
-  - each instantiated child model's normal equations
-  - each instantiated child model's `INITIAL` equations
-
-So initialization is hierarchical and declarative, not local-only.
-
-This also allows a parent model to add cross-component initialization
-constraints, for example:
-
-```ascend
-INITIAL
-    child1.x = child2.x;
-```
-
-without needing to modify the child types themselves.
-
-The natural implementation model is therefore:
-
-- `INITIAL` is attached to the type where it is declared
-- instantiation propagates it exactly like ordinary statements
-- build mode determines whether those instantiated relations are included
-
-This is preferable to a flat, simulation-root-only interpretation of
-initialization.
-
-### Out of scope for `INITIAL` v1
+### Out of scope for v1
 
 The following should be treated as later work:
 
@@ -549,6 +491,55 @@ The following should be treated as later work:
 
 Those features belong to the broader hybrid/event roadmap, not to the minimal
 equation-based `INITIAL` section.
+
+### Integrator architecture
+
+The correct architectural split is now:
+
+- `integrator_analyse` remains structural and solver-independent
+- startup initialization, if any, is engine-owned and occurs from
+  `integrator_solve` via an optional `initialisefn` hook
+
+Integrator families are currently split as follows:
+
+- LSODE, DOPRI5, and RADAU5 share the generic ODE analysis path and already
+  depend on an algebraic solver during stepping
+- IDA has its own analyse function and its own IC machinery
+
+So:
+
+- LSODE/DOPRI5/RADAU5 share one ODE-family initialization hook
+- IDA has a separate initialization hook in its own engine module
+
+This replaced an earlier attempt to run a QRSlv-based initialization solve
+from `integrator_analyse`, which was the wrong layer.
+
+### Current blocker
+
+The architecture is now in the right place, but the startup initialization
+solve is still not correct.
+
+The simplest new regressions:
+
+- [deriv.a4c](./models/test/lsode/deriv.a4c) `initial_decay`
+- [initial.a4c](./models/test/ida/initial.a4c) `ida_initial_decay`
+
+still fail.
+
+Observed symptom:
+
+- the temporary initialization solve reports a row-rank-deficient or otherwise
+  inconsistent algebraic system
+- the intended startup condition
+
+$$
+y(t_0) = 1
+$$
+
+is not being applied correctly before integration begins
+
+So the remaining problem is no longer parser/type plumbing. It is the exact
+formulation of the temporary initialization problem built for startup.
 
 ## Python / Object-View Support
 
@@ -566,106 +557,34 @@ This is useful because it keeps:
 
 without introducing extra spelling variants.
 
-## What Is Solid Now
-
-These parts now look like the right foundation:
-
-- `der(x)` as the modern equation-level syntax
-- compatibility retention for `DER(...)`
-- analysis-side dynamic registry
-- derivative pseudo-instances as runtime objects
-- separate dynamic-child API instead of modifying ordinary structural child
-  traversal
-- qlfdid support for both canonical and tree-path derivative references
-- METHOD-time direct manipulation of derivative pseudo-instances
-- browser and ascxx exposure of derivative pseudo-children
-- QRSlv treatment of derivative pseudo-instances as ordinary variables, fixed
-  to zero by default until explicitly edited
-
 ## Current Squishy Bits
 
-The main unresolved areas are now narrower.
-
-### 1. Full GUI semantics
-
-The browser/object path is working, and the edit paths now clear derivative
-algebraic defaults consistently. More end-to-end interactive exercise is still
-useful, but the core mutation semantics are no longer just intended behavior.
-
-### 2. Broader non-DAE solver semantics
-
-QRSlv is now the tested reference implementation for algebraic solves.
-The remaining question is how broadly to encode the same policy for other
-non-DAE solver contexts.
-
-### 3. Hybrid/event semantics
-
-The derivative design is compatible with later work on events, but that work
-has not yet been done.
-
-### 4. Higher derivatives
-
-The APIs expose derivative order, but the practical implementation focus is
-still first-order derivatives.
+- `INITIAL` startup system formulation
+  - architecture is correct
+  - algebraic problem formulation is still wrong for the new startup tests
+- full GUI semantics
+  - browser/object path is working
+  - broader end-to-end GUI exercise is still useful
+- hybrid/event semantics
+  - `WHEN`, `pre(x)`, and `REINIT` are still future work
+- higher derivatives
+  - the APIs expose derivative order
+  - practical implementation is still first-order only
 
 ## Recommended Next Steps
 
 Near term:
 
-1. generalize the QRSlv derivative-default policy cleanly across other
-   non-DAE solver contexts where appropriate
-2. exercise browser/GUI mutation paths against derivative pseudo-instances
-   more directly
-3. implement `INITIAL` as a second declarative statement section on models
-4. keep `system_der` coverage growing as behavior is clarified
+1. inspect the temporary `SYSTEM_BUILD_INITIAL` solver system for the failing
+   `initial_decay` models
+2. verify the solver var list, fixed status, and incident relations for the
+   state variable, its derivative pseudo-instance, and the `INITIAL` relation
+3. correct the temporary initialization problem formulation
+4. rerun the new LSODE and IDA startup regressions
 
 After that:
 
-5. define `pre(x)` and `REINIT` semantics
-6. expand hybrid/event support on top of the current derivative model
-
-## `INITIAL` Implementation Status
-
-Current implemented pieces:
-
-- `INITIAL` is now a parser-recognized section inside `MODEL`
-- `TypeDescription` now stores a separate `initstats` statement list
-- statements in the `INITIAL` section are marked with `context_INITIAL`
-- child-list derivation now sees names declared in both the normal body and
-  `INITIAL`
-- executable-statement traversal for model instantiation now runs over:
-  - normal declarative statements
-  - then `INITIAL` statements
-
-This is enough to make `INITIAL` real in the compiler/runtime structure:
-
-- the syntax parses
-- the statements are preserved separately on the type
-- named relations in `INITIAL` instantiate as children
-
-However, this is **not yet the final semantics**.
-
-Current limitation:
-
-- `INITIAL` relations/logrelations are still instantiated and executed like
-  ordinary declarative equations
-- there is not yet an initialization-only relation flag
-- there is not yet a build-mode switch that includes/excludes `INITIAL`
-  equations
-
-So the current implementation should be understood as:
-
-- parser/type/instantiation plumbing complete enough to build on
-- initialization-mode semantics still pending
-
-The next implementation step is therefore:
-
-1. mark instantiated relations/logrelations created from `context_INITIAL`
-   statements
-2. add internal mode switching for:
-   - normal build
-   - initialization build
-3. include `INITIAL` equations only in initialization mode
-
-Until that is done, `INITIAL` is structurally present but not yet
-semantically isolated.
+5. decide whether to expose convenience `METHOD`s for advanced QRSlv-based
+   initialization exploration
+6. define `pre(x)` and `REINIT` semantics
+7. expand hybrid/event support on top of the current derivative model

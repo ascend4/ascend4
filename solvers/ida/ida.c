@@ -54,6 +54,7 @@
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/panic.h>
 #include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/packages.h>
 
 #include <ascend/system/slv_client.h>
 #include <ascend/system/relman.h>
@@ -89,6 +90,7 @@
 */
 static IntegratorCreateFn integrator_ida_create;
 static IntegratorParamsDefaultFn integrator_ida_params_default;
+static IntegratorInitialiseFn integrator_ida_initialise;
 static IntegratorSolveFn integrator_ida_solve;
 static IntegratorFreeFn integrator_ida_free;
 
@@ -98,7 +100,7 @@ static IntegratorFreeFn integrator_ida_free;
  */
 static const IntegratorInternals integrator_ida_internals = {
 		integrator_ida_create, integrator_ida_params_default,
-		integrator_ida_analyse, integrator_ida_solve,
+		integrator_ida_analyse, integrator_ida_initialise, integrator_ida_solve,
 		integrator_ida_write_matrix, integrator_ida_debug, integrator_ida_free,
 		INTEG_IDA, "IDA" };
 
@@ -213,6 +215,24 @@ static void integrator_ida_free(void *enginedata) {
 #ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("enginedata freed");
 #endif
+}
+
+static int integrator_ida_initialise(IntegratorSystem *integ){
+	int qrslv_index;
+
+	if(!integrator_has_initial_relations(integ)){
+		return 0;
+	}
+	if(package_load("qrslv", NULL) != 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to load QRSlv for IDA initialization solve");
+		return 1;
+	}
+	qrslv_index = slv_lookup_client("QRSlv");
+	if(qrslv_index < 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv is unavailable for IDA initialization solve");
+		return 2;
+	}
+	return integrator_initialise_with_solver(integ, qrslv_index);
 }
 
 IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *integ) {

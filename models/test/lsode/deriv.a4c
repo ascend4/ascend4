@@ -53,3 +53,21 @@ METHODS
 		RUN values;
 	END on_load;
 END der_shm;
+
+
+MODEL initial_decay;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	dyn: der(y) = -4 * y;
+	INDEPENDENT t;
+	INITIAL
+		y0: y = 1;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0;
+		FREE der(y);
+	END on_load;
+END initial_decay;

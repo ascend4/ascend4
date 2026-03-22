@@ -180,6 +180,12 @@ typedef int IntegratorSolveFn(struct IntegratorSystemStruct *blsys
 	@return 0 on success.
 */
 
+typedef int IntegratorInitialiseFn(struct IntegratorSystemStruct *blsys);
+/**<
+	Optional engine-owned startup hook to solve any initialization problem
+	before time stepping begins.
+*/
+
 typedef int IntegratorWriteMatrixFn(const struct IntegratorSystemStruct *blsys, FILE *fp, const char *type);
 /**<
 	Write Matrix. This method allows the user to request output of 'a matrix'
@@ -211,6 +217,7 @@ typedef struct IntegratorInternalsStruct{
 	IntegratorCreateFn *createfn;
 	IntegratorParamsDefaultFn *paramsdefaultfn;
 	IntegratorAnalyseFn *analysefn;
+	IntegratorInitialiseFn *initialisefn;
 	IntegratorSolveFn *solvefn;
 	IntegratorWriteMatrixFn *writematrixfn; /* this is a general file-reporting mechanism actually */
 	IntegratorDebugFn *debugfn;
@@ -265,6 +272,7 @@ struct IntegratorSystemStruct{
   int n_obs;
   int n_diffeqs;              /**< number of differential equations (used by idaanalyse) */
   int currentstep;            /**< current step number (also @see integrator_getnsamples) */
+  int initial_mode_prepared;  /**< one-shot INITIAL startup solve has been handled */
 
   /** @TODO move the following to the 'params' structure? Or maybe better not to? */
   int maxsubsteps;            /**< most steps between mesh poins */
@@ -575,6 +583,10 @@ ASC_DLLSPEC int integrator_output_write_obs(IntegratorSystem *blsys);
 	user notification or screen update, etc.
 */
 ASC_DLLSPEC int integrator_output_close(IntegratorSystem *blsys);
+
+ASC_DLLSPEC int integrator_has_initial_relations(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_initialise_with_solver(IntegratorSystem *blsys, int solver_index);
+ASC_DLLSPEC int integrator_initialise_ode(IntegratorSystem *blsys);
 
 /*----------------------------------
 	DYNAMIC LIST OF INTEGRATORS

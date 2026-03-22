@@ -571,6 +571,93 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
   return rval;
 }
 
+enum typelinterr TypeLintIllegalInitialStats(FILE *fp,
+                                             symchar *name,
+                                             CONST struct StatementList *sl,
+                                             unsigned int context)
+{
+  unsigned long c,len;
+  struct gl_list_t *gl;
+  struct Statement *s;
+  enum typelinterr rval = DEF_OKAY, tmperr;
+
+  g_tlibs_depth++;
+  assert(name != NULL);
+  len = StatementListLength(sl);
+  if (len == 0L) {
+    g_tlibs_depth--;
+    return rval;
+  }
+  gl = GetList(sl);
+  for (c = 1; c <= len; ++c) {
+    s = (struct Statement *)gl_fetch(gl,c);
+    switch (StatementType(s)) {
+    case REL:
+      if (NameCompound(RelationStatName(s)) != 0) {
+        if (TLINT_ERROR) {
+          FPRINTF(fp,"%sCannot create relations in another object.\n",
+                  StatioLabel(3));
+        }
+        rval = DEF_NAME_INCORRECT;
+        TypeLintError(fp,s,rval);
+      }
+      if (NumberOfRelOps(RelationStatExpr(s)) > 1) {
+        rval = DEF_TOOMANY_RELOP;
+        TypeLintError(fp,s,rval);
+      }
+      break;
+    case LOGREL:
+      if (NameCompound(LogicalRelStatName(s)) != 0) {
+        if (TLINT_ERROR) {
+          FPRINTF(fp,"%sCannot create logical relations in another object.\n",
+                  StatioLabel(3));
+        }
+        rval = DEF_NAME_INCORRECT;
+        TypeLintError(fp,s,rval);
+      }
+      if (NumberOfRelOps(LogicalRelStatExpr(s)) > 1) {
+        rval = DEF_TOOMANY_LOGOP;
+        TypeLintError(fp,s,rval);
+      }
+      break;
+    case FOR:
+      if (ForContainsSelect(s)) {
+        rval = DEF_ILLEGAL_SELECT;
+        TypeLintError(fp,s,rval);
+      }
+      if (ForLoopKind(s) != fk_create) {
+        rval = DEF_FOR_NOTBODY;
+        TypeLintError(fp,s,rval);
+      } else {
+        tmperr = TypeLintIllegalInitialStats(fp,name,ForStatStmts(s),
+                                             (context | context_FOR));
+        if (tmperr != DEF_OKAY) {
+          rval = tmperr;
+        }
+      }
+      break;
+    case COND:
+      tmperr = TypeLintIllegalInitialStats(fp,name,CondStatList(s),
+                                           (context | context_COND));
+      if (tmperr != DEF_OKAY) {
+        rval = tmperr;
+      }
+      break;
+    default:
+      TypeLintError(fp,s,DEF_STAT_MISLOCATED);
+      rval = DEF_STAT_MISLOCATED;
+      if (TLINT_ERROR) {
+        FPRINTF(fp,"  Only equation-building declarative statements are allowed in INITIAL.\n");
+      }
+    }
+  }
+  if (rval != DEF_OKAY && g_tlibs_depth < 2) {
+    FPRINTF(fp,"  Errors detected in INITIAL section of '%s'\n", SCP(name));
+  }
+  g_tlibs_depth--;
+  return rval;
+}
+
 enum typelinterr TypeLintIllegalParamStats(FILE * fp,
                                            symchar *name,
                                            CONST struct StatementList *sl)

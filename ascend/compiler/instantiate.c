@@ -4804,6 +4804,23 @@ struct Instance *MakeRelationInstance(struct Name *name,
   }
 }
 
+static void ApplyInitialStatementFlags(struct Instance *eqninst,
+                                       struct Statement *statement)
+{
+  struct Instance *flaginst;
+  if ((GetStatContext(statement) & context_INITIAL) == 0) {
+    return;
+  }
+  flaginst = ChildByChar(eqninst, AddSymbol("initial"));
+  if (flaginst != NULL && InstanceKind(flaginst) == BOOLEAN_INST) {
+    SetBooleanAtomValue(flaginst, TRUE, 0U);
+  }
+  flaginst = ChildByChar(eqninst, AddSymbol("included"));
+  if (flaginst != NULL && InstanceKind(flaginst) == BOOLEAN_INST) {
+    SetBooleanAtomValue(flaginst, FALSE, 0U);
+  }
+}
+
 
 /**
 	ok, now we can whine real loud about what's missing.
@@ -4877,6 +4894,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 		reln = CreateTokenRelation(inst,child,RelationStatExpr(statement),&err);
 		if(reln != NULL){
 			SetInstanceRelation(child,reln,e_token);
+      ApplyInitialStatementFlags(child,statement);
 #ifdef DEBUG_RELS
 			STATEMENT_NOTE(statement, "Created relation");
 #endif
@@ -5142,6 +5160,7 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
 		inst,child,LogicalRelStatExpr(statement),&err)
 	)){
       SetInstanceLogRel(child,lreln);
+      ApplyInitialStatementFlags(child,statement);
       return 1;
     }else{
       SetInstanceLogRel(child,NULL);

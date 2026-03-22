@@ -582,11 +582,15 @@ int DerivativeInstanceUsesAlgebraicDefault(CONST struct Instance *inst){
   return entry != NULL ? (entry->algebraic_default != 0U) : 0;
 }
 
-void DerivativeInstanceClearAlgebraicDefault(struct Instance *inst){
+void DerivativeInstanceSetAlgebraicDefault(struct Instance *inst, int use_default){
   struct derivinst_entry *entry = derivinst_lookup_by_inst(inst);
   if(entry != NULL){
-    entry->algebraic_default = 0U;
+    entry->algebraic_default = use_default ? 1U : 0U;
   }
+}
+
+void DerivativeInstanceClearAlgebraicDefault(struct Instance *inst){
+  DerivativeInstanceSetAlgebraicDefault(inst, FALSE);
 }
 
 void DerivativeInstanceNoteMutation(struct Instance *inst){

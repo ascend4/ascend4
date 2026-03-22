@@ -153,7 +153,7 @@ static int ida_test_load(const char *module_path, const char *type_name, int nee
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv" OSPATH_DIV "solvers/lsode");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv" OSPATH_DIV "solvers/lsode" OSPATH_DIV "solvers/qrslv");
 
 	if(need_lrslv && 0 != package_load("lrslv", NULL)){
 		ida_cleanup(testsys);
@@ -301,10 +301,32 @@ static void test_high_index(){
 	ida_cleanup(&testsys);
 }
 
+static void test_initial_decay(){
+	IdaTestSystem testsys;
+	struct Instance *root, *iy;
+
+	if(ida_test_load("test/ida/initial.a4c", "ida_initial_decay", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	root = GetSimulationRoot(testsys.siminst);
+	iy = ida_child(root, "y");
+	CU_TEST(fabs(RealAtomValue(iy) - 1.0) < 1e-10);
+
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 20);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+	CU_TEST(fabs(RealAtomValue(iy) - exp(-4.0)) < 2e-4);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
 #define TESTS(T) \
 	T(shm) \
 	T(boundary) \
 	T(integ1) \
-	T(high_index)
+	T(high_index) \
+	T(initial_decay)
 
 REGISTER_TESTS_SIMPLE(integrator_ida, TESTS)

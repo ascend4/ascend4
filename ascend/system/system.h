@@ -48,6 +48,23 @@
 	@{
 */
 
+typedef enum SystemBuildMode {
+  SYSTEM_BUILD_NORMAL = 0,
+  SYSTEM_BUILD_INITIAL = 1
+} SystemBuildMode;
+
+ASC_DLLSPEC void system_set_build_mode(SlvBackendToken inst, SystemBuildMode mode);
+/**<
+	Sets equation inclusion on the instance tree to match the requested build mode.
+	Normal mode excludes `INITIAL` equations; initial mode includes them.
+ */
+
+ASC_DLLSPEC slv_system_t system_build_with_mode(SlvBackendToken inst, SystemBuildMode mode);
+/**<
+	Builds a solver system after first setting the instance tree to the requested
+	build mode. The instance tree remains in that mode after the call.
+ */
+
 ASC_DLLSPEC slv_system_t system_build(SlvBackendToken inst);
 /**<
 	In ascend, backendtoken is a struct Instance *.
