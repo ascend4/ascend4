@@ -20,6 +20,7 @@
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/relation_util.h>
 #include <ascend/compiler/packages.h>
+#include <ascend/compiler/derivinst.h>
 
 #include <ascend/utilities/error.h>
 
@@ -813,6 +814,183 @@ cleanup:
 	Asc_CompilerDestroy();
 }
 
+static void test_highs_deriv_trivial_objective(void){
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	struct Instance *root = NULL;
+	struct Instance *x = NULL;
+	struct Instance *y = NULL;
+	struct Instance *d = NULL;
+	struct Instance *objinst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t status;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/highs"));
+
+	if(0 != package_load("highs",NULL)){
+		CONSOLE_DEBUG("Skipping HiGHS derivative-trivial-objective test: solver package not available");
+		goto cleanup;
+	}
+	solver_index = slv_lookup_client("HiGHS");
+	if(solver_index == -1){
+		CONSOLE_DEBUG("Skipping HiGHS derivative-trivial-objective test: solver not registered");
+		goto cleanup;
+	}
+
+	{
+		int status_open;
+		Asc_OpenModule("models/test/highs/deriv_lp.a4c",&status_open);
+		CU_ASSERT_FATAL(status_open == 0);
+	}
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("highs_deriv_trivial")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("highs_deriv_trivial"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe == Proc_all_ok);
+	}
+
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	x = ChildByChar(root,AddSymbol("x"));
+	y = ChildByChar(root,AddSymbol("y"));
+	objinst = ChildByChar(root,AddSymbol("obj"));
+	CU_ASSERT_FATAL(x != NULL);
+	CU_ASSERT_FATAL(y != NULL);
+	CU_ASSERT_FATAL(objinst != NULL);
+
+	sys = system_build(root);
+	CU_ASSERT_FATAL(sys != NULL);
+	d = InstanceGetDerivative(x);
+	CU_ASSERT_FATAL(d != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	CU_ASSERT_TRUE(slv_eligible_solver(sys));
+
+	{
+		slv_parameters_t pp;
+		int nonlin_idx;
+		int relaxed_idx;
+		slv_get_parameters(sys,&pp);
+		nonlin_idx = find_param_index(&pp,"nonlin");
+		relaxed_idx = find_param_index(&pp,"relaxed");
+		CU_ASSERT_FATAL(nonlin_idx != -1);
+		CU_ASSERT_FATAL(relaxed_idx != -1);
+		SLV_PARAM_BOOL(&pp,nonlin_idx) = FALSE;
+		SLV_PARAM_BOOL(&pp,relaxed_idx) = FALSE;
+		highs_apply_ci_serial_overrides(&pp);
+		slv_set_parameters(sys,&pp);
+	}
+
+	(void)slv_presolve(sys);
+	(void)slv_solve(sys);
+	slv_get_status(sys,&status);
+	CU_ASSERT_TRUE(status.converged);
+	CU_ASSERT_DOUBLE_EQUAL(0.0,RealAtomValue(y),1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(0.0,RealAtomValue(d),1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(0.0,RelationResidual(GetInstanceRelationOnly(objinst)),1e-7);
+
+cleanup:
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+	solver_destroy_engines();
+	if(siminst)sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
+static void test_highs_deriv_free_variable(void){
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	struct Instance *root = NULL;
+	struct Instance *x = NULL;
+	struct Instance *d = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t status;
+	struct Instance *y = NULL;
+	struct Instance *objinst = NULL;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/highs"));
+
+	if(0 != package_load("highs",NULL)){
+		CONSOLE_DEBUG("Skipping HiGHS derivative-free-variable test: solver package not available");
+		goto cleanup;
+	}
+	solver_index = slv_lookup_client("HiGHS");
+	if(solver_index == -1){
+		CONSOLE_DEBUG("Skipping HiGHS derivative-free-variable test: solver not registered");
+		goto cleanup;
+	}
+
+	{
+		int status_open;
+		Asc_OpenModule("models/test/highs/deriv_lp.a4c",&status_open);
+		CU_ASSERT_FATAL(status_open == 0);
+	}
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("highs_deriv_free")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("highs_deriv_free"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe == Proc_all_ok);
+	}
+
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	x = ChildByChar(root,AddSymbol("x"));
+	y = ChildByChar(root,AddSymbol("y"));
+	objinst = ChildByChar(root,AddSymbol("obj"));
+	CU_ASSERT_FATAL(x != NULL);
+	CU_ASSERT_FATAL(y != NULL);
+	CU_ASSERT_FATAL(objinst != NULL);
+	d = InstanceGetDerivative(x);
+	CU_ASSERT_FATAL(d != NULL);
+	CU_ASSERT_FALSE(GetBooleanAtomValue(ChildByChar(d,AddSymbol("fixed"))));
+
+	sys = system_build(root);
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	CU_ASSERT_TRUE(slv_eligible_solver(sys));
+
+	{
+		slv_parameters_t pp;
+		int nonlin_idx;
+		int relaxed_idx;
+		slv_get_parameters(sys,&pp);
+		nonlin_idx = find_param_index(&pp,"nonlin");
+		relaxed_idx = find_param_index(&pp,"relaxed");
+		CU_ASSERT_FATAL(nonlin_idx != -1);
+		CU_ASSERT_FATAL(relaxed_idx != -1);
+		SLV_PARAM_BOOL(&pp,nonlin_idx) = FALSE;
+		SLV_PARAM_BOOL(&pp,relaxed_idx) = FALSE;
+		highs_apply_ci_serial_overrides(&pp);
+		slv_set_parameters(sys,&pp);
+	}
+
+	(void)slv_presolve(sys);
+	(void)slv_solve(sys);
+	slv_get_status(sys,&status);
+	CU_ASSERT_TRUE(status.converged);
+	CU_ASSERT_DOUBLE_EQUAL(3.0,RealAtomValue(d),1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(3.0,RealAtomValue(y),1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(3.0,RelationResidual(GetInstanceRelationOnly(objinst)),1e-7);
+
+cleanup:
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+	solver_destroy_engines();
+	if(siminst)sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
 static void test_highs_infeasible_diagnostics(void){
 	/* Infeasible MIP should set status flags and emit non-optimal diagnostics. */
 	int solver_index = -1;
@@ -1083,6 +1261,8 @@ cleanup:
 	T(highs_afiro) \
 	T(highs_option_surface) \
 	T(highs_ineligible_without_objective) \
+	T(highs_deriv_trivial_objective) \
+	T(highs_deriv_free_variable) \
 	T(highs_infeasible_diagnostics) \
 	T(highs_progress_callback_reporting) \
 	T(highs_interrupt_request)

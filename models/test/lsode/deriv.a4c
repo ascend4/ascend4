@@ -1,0 +1,55 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL der_decay;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	dyn: der(y) = -4 * y;
+	INDEPENDENT t;
+
+METHODS
+	METHOD specify;
+		FIX y;
+		FREE der(y);
+		FREE t;
+	END specify;
+
+	METHOD values;
+		y := 1;
+		t := 0;
+	END values;
+
+	METHOD on_load;
+		RUN specify;
+		RUN values;
+	END on_load;
+END der_decay;
+
+
+MODEL der_shm;
+	x IS_A solver_var;
+	v IS_A solver_var;
+	t IS_A solver_var;
+
+	motion: der(x) - v = 0;
+	force: der(v) = -x;
+	INDEPENDENT t;
+
+METHODS
+	METHOD specify;
+		FIX x, v;
+		FREE der(x), der(v);
+		FREE t;
+	END specify;
+
+	METHOD values;
+		x := 10;
+		v := 0;
+		t := 0;
+	END values;
+
+	METHOD on_load;
+		RUN specify;
+		RUN values;
+	END on_load;
+END der_shm;

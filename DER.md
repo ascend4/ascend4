@@ -78,6 +78,9 @@ $$
 is treated as an object-model alias for the same quantity, not as the primary
 language surface.
 
+For textual diagnostics and generated names, derivative pseudo-instances are
+now rendered in the canonical form `der(x)` rather than `x.der`.
+
 ### 2. `DER(...)` remains compatibility syntax
 
 Legacy syntax:
@@ -255,6 +258,22 @@ Explicit mutation is now handled consistently across:
 - METHOD-time `FIX`, `FREE`, and assignment
 - ascxx/Python edits
 - Tcl/Tk browser/unit-setting edits
+
+### HiGHS
+
+HiGHS now has explicit regression coverage for derivative-containing linear
+models.
+
+Current verified behavior:
+
+- a model containing `der(x)` is eligible for HiGHS provided it also has an
+  objective relation
+- a trivial objective such as `MINIMIZE 0*x` is sufficient to satisfy that
+  requirement
+- with no explicit derivative mutation, `der(x)` follows the algebraic default
+  and behaves as fixed-at-zero
+- if `der(x)` is explicitly freed, it can participate as an ordinary LP
+  variable
 
 ## Aliasing and Identity
 
