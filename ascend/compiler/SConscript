@@ -6,6 +6,7 @@ csrcs = Split("""
 	atomsize.c atomvalue.c bintoken.c braced.c
 	case.c check.c child.c childdef.c childio.c childinfo.c cmpfunc.c
 	commands.c copyinst.c createinst.c defaultpaths.c destroyinst.c
+	deriv_pending.c derivinst.c
 	dimen.c dimen_io.c dump.c
 	evaluate.c exprio.c exprs.c extcall.c
 	extfunc.c extinst.c find.c forvars.c fractions.c

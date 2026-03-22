@@ -36,6 +36,8 @@
 #include "extinst.h"
 #include "cmpfunc.h"
 #include "instantiate.h"
+#include "deriv_pending.h"
+#include "derivinst.h"
 
 #include <ascend/general/list.h>
 #include <ascend/general/tm_time.h>
@@ -54,6 +56,8 @@ void sim_destroy(struct Instance *sim){
 #ifdef SIMLIST_DEBUG
 	CONSOLE_DEBUG("Destroying instance %s", SCP(GetSimulationName(sim)) );
 #endif
+    deriv_pending_clear_root(GetSimulationRoot(sim));
+    DerivativeInstancesClearRoot(GetSimulationRoot(sim));
     DestroyInstance(sim,NULL);
   }
 }
@@ -220,4 +224,3 @@ symchar *Asc_SimsFindSimulationName(CONST struct Instance *root)
   }
   return NULL;
 }
-

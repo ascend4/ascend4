@@ -3282,6 +3282,9 @@ static unsigned long RelationEnsureVar(struct relation *rel,
   return gl_length(rel->vars);
 }
 
+static union RelationUnion *CopyRelationShare(union RelationUnion *ru,
+                                              enum Expr_enum type);
+
 static int BindDerivativeTermsOnSide(struct Instance *root,
                                      struct Instance *relinst,
                                      struct relation *rel,
@@ -3302,6 +3305,14 @@ static int BindDerivativeTermsOnSide(struct Instance *root,
     term = A_TERM(&(side[c]));
     if(term->t != e_der){
       continue;
+    }
+
+    if(RelationRefCount(rel) > 1){
+      RelationRefCount(rel)--;
+      rel->share = CopyRelationShare(rel->share, e_token);
+      RelationRefCount(rel) = 1;
+      side = (side == RTOKEN(rel).lhs) ? RTOKEN(rel).lhs : RTOKEN(rel).rhs;
+      term = A_TERM(&(side[c]));
     }
 
     base = (struct Instance *)gl_fetch(rel->vars,V_TERM(term)->varnum);

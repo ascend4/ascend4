@@ -74,6 +74,7 @@
 #include <ascend/general/mathmacros.h>
 
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/dimen.h>
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/expr_types.h>
@@ -97,6 +98,8 @@
 #include <ascend/compiler/case.h>
 #include <ascend/compiler/when_util.h>
 #include <ascend/compiler/link.h>
+#include <ascend/compiler/deriv_pending.h>
+#include <ascend/compiler/derivinst.h>
 
 #include "slv_server.h"
 #include "cond_config.h"
@@ -122,22 +125,16 @@ struct derivative_bind_data {
   int errors;
 };
 
+struct derivative_pending_apply_data {
+  struct Instance *root;
+  struct problem_t *problem;
+};
+
 static int dynamic_instance_matches(struct Instance *a, struct Instance *b){
-  struct Instance *p;
   if(a == NULL || b == NULL){
     return 0;
   }
-  if(a == b){
-    return 1;
-  }
-  p = a;
-  do{
-    if(p == b){
-      return 1;
-    }
-    p = NextCliqueMember(p);
-  }while(p != a);
-  return 0;
+  return a == b;
 }
 
 static int dynamic_registry_can_track(struct Instance *inst){
@@ -434,12 +431,15 @@ static struct Instance *dynamic_create_hidden_derivative(struct problem_t *p_dat
     return deriv;
   }
 
-  solver_var_type = FindType(AddSymbol(SOLVER_VAR_STR));
-  if(solver_var_type == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"'solver_var' not defined while creating hidden derivative variable");
-    return NULL;
+  deriv = InstanceEnsureDerivative(base);
+  if(deriv == NULL){
+    solver_var_type = FindType(AddSymbol(SOLVER_VAR_STR));
+    if(solver_var_type == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"'solver_var' not defined while creating hidden derivative variable");
+      return NULL;
+    }
+    deriv = CreateRealInstance(solver_var_type);
   }
-  deriv = CreateRealInstance(solver_var_type);
   if(deriv == NULL){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to create hidden derivative instance");
     return NULL;
@@ -454,6 +454,7 @@ static struct Instance *dynamic_create_hidden_derivative(struct problem_t *p_dat
     }
   }
   gl_append_ptr(p_data->dynhiddeninsts, deriv);
+  DerivativeInstanceMarkSolverOwned(deriv);
 
   if(dynamic_registry_add_hidden(p_data, deriv, 2, odeid)){
     return NULL;
@@ -487,6 +488,98 @@ static struct Instance *resolve_materialised_derivative(struct Instance *base, v
   }
 
   return getOdeDerivative(data->root, base);
+}
+
+static int apply_pending_derivative_operation(
+  struct Instance *base,
+  enum deriv_pending_kind kind,
+  CONST struct value_t *value,
+  void *userdata
+){
+  struct derivative_pending_apply_data *data =
+    (struct derivative_pending_apply_data *)userdata;
+  struct derivative_bind_data bind;
+  struct Instance *deriv, *fixedinst;
+  CONST dim_type *dim;
+
+  if(data == NULL || data->problem == NULL || base == NULL){
+    return 1;
+  }
+
+  bind.root = data->root;
+  bind.problem = data->problem;
+  bind.errors = 0;
+  deriv = resolve_materialised_derivative(base, &bind);
+  if(deriv == NULL){
+    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+    FPRINTF(ASCERR,"Unable to materialise der(");
+    WriteInstanceName(ASCERR, base, data->root);
+    FPRINTF(ASCERR,") for pending method operation");
+    error_reporter_end_flush();
+    return 1;
+  }
+
+  switch(kind){
+  case deriv_pending_assign:
+    if(value == NULL){
+      return 1;
+    }
+    switch(ValueKind(*value)){
+    case real_value:
+      dim = CheckDimensionsMatch(RealValueDimensions(*value), RealAtomDims(deriv));
+      if(dim == NULL){
+        ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+        FPRINTF(ASCERR,"Inconsistent units in assignment to der(");
+        WriteInstanceName(ASCERR, base, data->root);
+        FPRINTF(ASCERR,")");
+        error_reporter_end_flush();
+        return 1;
+      }
+      if(dim != RealAtomDims(deriv)){
+        SetRealAtomDims(deriv, dim);
+      }
+      SetRealAtomValue(deriv, RealValue(*value), 0);
+      break;
+    case integer_value:
+      dim = CheckDimensionsMatch(Dimensionless(), RealAtomDims(deriv));
+      if(dim == NULL){
+        ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+        FPRINTF(ASCERR,"Inconsistent units in assignment to der(");
+        WriteInstanceName(ASCERR, base, data->root);
+        FPRINTF(ASCERR,")");
+        error_reporter_end_flush();
+        return 1;
+      }
+      if(dim != RealAtomDims(deriv)){
+        SetRealAtomDims(deriv, dim);
+      }
+      SetRealAtomValue(deriv, (double)IntegerValue(*value), 0);
+      break;
+    default:
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"Only real/integer values can be assigned to der(");
+      WriteInstanceName(ASCERR, base, data->root);
+      FPRINTF(ASCERR,")");
+      error_reporter_end_flush();
+      return 1;
+    }
+    break;
+  case deriv_pending_fix:
+  case deriv_pending_free:
+    fixedinst = ChildByChar(deriv, AddSymbol("fixed"));
+    if(fixedinst == NULL || InstanceKind(fixedinst) != BOOLEAN_INST){
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+      FPRINTF(ASCERR,"Materialised derivative variable is missing boolean child 'fixed'");
+      error_reporter_end_flush();
+      return 1;
+    }
+    SetBooleanAtomValue(fixedinst, kind == deriv_pending_fix ? TRUE : FALSE, 0U);
+    break;
+  default:
+    return 1;
+  }
+
+  return 0;
 }
 
 struct derivative_infer_data {
@@ -1824,6 +1917,7 @@ void analyze_free_lists(struct problem_t *p_data){
     for(i = 1; i <= len; ++i){
       struct Instance *inst = (struct Instance *)gl_fetch(p_data->dynhiddeninsts, i);
       if(inst != NULL){
+        DerivativeInstanceDetach(inst);
         SetInterfacePtr(inst,NULL);
         DestroyInstance(inst,NULL);
       }
@@ -3302,6 +3396,7 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   int stat;
   struct derivative_bind_data bind_data;
   struct derivative_infer_data infer_data;
+  struct derivative_pending_apply_data pending_data;
 
   struct problem_t thisproblem; /* note default zero intitialisation. note also: local var! */
   struct problem_t *p_data; /* need to malloc, free, or make &local */
@@ -3335,6 +3430,8 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
     return 1;
   }
 
+  DerivativeInstancesPrepareRoot(inst);
+
   infer_data.root = inst;
   infer_data.problem = p_data;
   infer_data.next_odeid = dynamic_registry_next_odeid(p_data);
@@ -3350,6 +3447,14 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   VisitInstanceTreeTwo(inst,(VisitTwoProc)bind_derivative_terms,TRUE,FALSE,
                        (VOIDPTR)&bind_data);
   if(bind_data.errors){
+    p_data->root = NULL;
+    return 2;
+  }
+
+  pending_data.root = inst;
+  pending_data.problem = p_data;
+  if(deriv_pending_apply(inst, apply_pending_derivative_operation, &pending_data)){
+    analyze_free_lists(p_data);
     p_data->root = NULL;
     return 2;
   }

@@ -2,615 +2,360 @@
 
 ## Purpose
 
-This note records the evolving design concept for `DER(...)`, `INDEPENDENT`,
-and future `der(x)` support in ASCEND.
+This note records the current design direction and implementation status for
+dynamic derivatives in ASCEND.
 
-The current implementation is still largely LINK-driven and instance-name
-driven in places. The goal is to move toward one canonical internal
-representation of dynamic structure that is robust under:
+The main goal is to support equation-level derivative syntax
 
-- nested models
-- arrays
-- `ALIASES`
-- `ARE_THE_SAME`
-- future index-reduction work
+$$
+\mathrm{der}(x)
+$$
 
-## Current Findings
+as a first-class construct, while preserving compatibility for existing models
+that still use `DER(...)` and legacy ODE metadata.
 
-### Current ODE metadata path
+The note is intentionally compact. Superseded exploratory detail has been
+removed.
 
-At present, dynamic structure is still reconstructed late during system
-analysis:
+## Current Status
 
-- [analyze.c](./ascend/system/analyze.c) classifies solver variables
-- it reads `ode_type`, `ode_id`, `obs_id` from child atoms if present
-- otherwise it falls back to `getOdeType(...)` / `getOdeId(...)`
-- those functions still depend on compiler LINK metadata
-- [diffvars.c](./ascend/system/diffvars.c) then builds derivative chains from
-  `(ode_id, ode_type)` pairs
+The core `der(x)` path is implemented and working for the tested cases.
 
-This is workable, but too indirect and too fragile.
+Implemented:
 
-### Reproducer status
+- parser support for lower-case `der(fname)` in equations
+- equation instantiation preserving `der(...)` as a distinct expression form
+- analysis-side dynamic registry
+- derivative pseudo-instances, exposed as dynamic pseudo-children such as
+  `x.der`
+- qlfdid support for both:
+  - `der(model.part.var)`
+  - `model.part.var.der`
+- METHOD-time manipulation of derivatives through pseudo-instances
+- browser and ascxx/Python instance-view access to derivative pseudo-children
+- compatibility retention for legacy `DER(...)`
 
-Minimal reproducer models and scripts are in:
+Test coverage:
 
+- [test_der.c](./ascend/system/test/test_der.c)
 - [alias_der_wLINK.a4c](./models/test/ida/alias_der_wLINK.a4c)
 - [check_alias_der.py](./models/test/ida/check_alias_der.py)
 
-Current observed behaviour:
+Current verified cases include:
 
-- top-level scalar `DER(dy_dt, y)` works
-- nested scalar `DER(cell.dy_dt, cell.y)` works
-- scalar alias case works
-- nested array direct case works
-- array `ARE_THE_SAME` case works
-- array `ALIASES` case now works again
-
-The original array-`ALIASES` failure turned out not to be a fundamental
-dynamic-identity problem in the new registry. The decisive bug was in
-[link.c](./ascend/compiler/link.c): `getLinks(...)` filtered its collected
-entries by deleting in a forward loop, so an entry that shifted left after a
-deletion could be skipped. In the failing reproducer this allowed an `ode`
-entry to leak into the `independent` result set.
-
-A second semantic check is now also enforced in the registry builder:
-
-- a variable cannot be both an independent variable and a member of a
-  derivative chain
-
-This restores the intended failure for invalid cases such as
-`DER(dy_dt, t)`.
-
-After the first deferred `der(x)` bridge was added, the picture is now:
-
-- `der(y)` with explicit legacy `DER(dy_dt, y)` bridge works for direct and
-  nested scalar models
-- the old scalar `ALIASES` reproducer also analyses successfully
-- the array `ALIASES` reproducer now also analyses successfully
-- the deferred `der(x)` bridge is no longer blocked on the old array alias case
-
-### First `der(x)` compiler experiment
-
-An initial compiler experiment has now been made:
-
-- lower-case `der(fname)` is accepted in the parser as an expression-level
-  construct
-- it is carried as a distinct expression node rather than being collapsed to a
-  plain variable name
-- relation-building code was then trialled with an *early* bridge that tried
-  to resolve `der(x)` immediately to an already-materialised derivative
-  instance from an `ode` chain
-
-That experiment is useful because it exposed an important architectural
-constraint:
-
-- declarative relations are checked and compiled during instantiation
-- method-level dynamic setup is too late for that
-- even declarative `DER(...)` / `INDEPENDENT` metadata is not a good long-term
-  basis for relation-time resolution of `der(x)`
-
-Practical conclusion:
-
-- `der(x)` should survive instantiation as a derivative reference to base
-  instance `x`
-- it should not be forced to resolve immediately to an explicit derivative
-  variable during relation compilation
-- binding/materialisation must therefore move deeper, into a later dynamic
-  analysis stage
-
-This is a strong argument that the correct bridge is not "smarter LINK lookup"
-but "deferred derivative binding".
-
-Current implementation status:
-
-- token relations can now carry an explicit `e_der` term kind whose payload is
-  still the base-variable incidence entry
-- this is enough for `der(x)` to survive parsing and relation instantiation
-- a first deferred bridge now runs in [analyze.c](./ascend/system/analyze.c)
-  before solver lists are built
-- that bridge walks token relations, resolves each `e_der` term through the
-  currently declared legacy `DER(...)` / `ode` chain, and rewrites the term
-  onto the materialised derivative variable
-- a first analysis-side dynamic registry now also exists in
-  [analyze.c](./ascend/system/analyze.c)
-- that registry is built once from legacy `ode` / `independent` LINK metadata
-  before `classify_instance`
-- `classify_instance` now uses that registry directly for legacy LINK-derived
-  dynamic metadata, rather than calling `getOdeType(...)` / `getOdeId(...)`
-  per variable during tree walk
-- the same registry is now also populated from simple pure-binding equations of
-  the form `v = der(x)` or `der(x) = v`, with no legacy `DER(...)` statement
-  required
-- the late `der(x)` binder in
-  [relation.c](./ascend/compiler/relation.c) now resolves derivative terms
-  through a caller-provided resolver, so analysis can use registry-backed
-  materialisations first and fall back to legacy `ode` chains only for
-  compatibility
-- simple no-`DER(...)` models now reach IDA successfully for both direct and
-  nested scalar cases
-
-This is still transitional, but it is now happening at the correct phase:
-after instantiation, before solver analysis.
-
-Important qualification:
-
-- the first registry pass is intentionally conservative
-- it currently tracks scalar atom instances cleanly
-- array aliases are now materially improved because `getLinks(...)` and
-  `getLinksReferencing(...)` no longer skip entries during key filtering
-- however, the registry is still transitional because `diffvars` generation is
-  still produces compatibility metadata on the per-variable side
-- `system_generate_diffvars(...)` now prefers registry-derived views of the
-  differential and independent-variable sets when the registry is present
-- the remaining old-path dependency is therefore narrower: the compatibility
-  lists still exist, but they are no longer the normal source of diffvar chain
-  input
-
-### Current test status
-
-A new CUnit suite now exists in:
-
-- [test_der.c](./ascend/system/test/test_der.c)
-
-It currently covers:
-
-- direct scalar `der(y)` with legacy `DER(dy_dt, y)` bridge
-- direct scalar `dy_dt = der(y)` with no `DER(...)`
-- direct scalar `der(y)` with neither `DER(...)` nor a materialisation equation
-- nested scalar `der(cell.y)` with legacy bridge
-- nested scalar `cell.dy_dt = der(cell.y)` with no `DER(...)`
-- nested scalar `der(cell.y)` with neither `DER(...)` nor a materialisation equation
-- direct array `der(y[i])` with neither `DER(...)` nor a materialisation equation
-- nested array `der(cell.y[i])` with neither `DER(...)` nor a materialisation equation
-- implicit scalar mass-matrix form such as `tau * der(y) + y = 0`
-- mixed multi-state forms such as `a * der(x) + b * der(y) + x - y = 0`
+- direct, nested, array, and implicit `der(...)` equations
 - scalar `ALIASES`
-- array `ARE_THE_SAME`
 - array `ALIASES`
+- array `ARE_THE_SAME`
+- METHOD-time `FIX`, `FREE`, and assignment on `der(x)`
+- qlfdid resolution of both `der(x)` and `x.der`
+- browser/ascxx exposure of dynamic pseudo-children
 
-Current observed results:
+At the time of writing:
 
-- `der_expr_direct_ok`: passes system build and IDA analyse
-- `der_equation_direct_ok`: passes system build and IDA analyse
-- `der_only_direct_ok`: passes system build and IDA analyse
-- `der_expr_nested_ok`: passes system build and IDA analyse
-- `der_equation_nested_ok`: passes system build and IDA analyse
-- `der_only_nested_ok`: passes system build and IDA analyse
-- `der_only_array_direct_ok`: passes system build and IDA analyse
-- `der_only_array_nested_ok`: passes system build and IDA analyse
-- `der_implicit_mass_ok`: passes system build and IDA analyse
-- `der_mixed_ok`: passes system build and IDA analyse
-- `alias_der_alias_fail`: now passes system build and IDA analyse
-- `alias_der_array_same`: passes system build and IDA analyse
-- `alias_der_array_alias_fail`: now passes system build and IDA analyse
+- `./a4 cutest system_der -v` passes
+- `tcltk` and `ascxx` compile successfully in this environment
 
-So the current bridge + registry path now covers direct, nested, scalar alias,
-direct array, nested array, implicit scalar mass-matrix forms, mixed
-multi-state forms, array `ARE_THE_SAME`, and array `ALIASES` cases, and it
-also has a first working end-to-end path that does not depend on `DER(...)`
-at all.
+## Design Decisions
 
-For the direct/nested array and more general implicit no-`DER(...)` cases, the
-current test guarantee is:
+### 1. Canonical language syntax is `der(x)`
 
-- dynamic chain discovery is correct
-- IDA analyse succeeds
+The preferred user-facing derivative syntax is:
 
-The CUnit suite does **not** currently pin an exact solver-relation count for
-those cases, because `FOR ... CREATE` expansion and more general implicit token
-relation forms do not preserve the same simple one-relation-per-state counting
-assumption used in the scalar explicit tests. That is a test-shape issue, not
-a known failure of dynamic analysis.
+$$
+\mathrm{der}(x)
+$$
 
-The new part is that there is now also a first working end-to-end path that
-does not require either `DER(...)` *or* an explicit materialisation equation
-such as `dy_dt = der(y)`.
+This is the form to use in equations and, where practical, in METHODs and
+other user-facing references.
 
-Current implementation approach for that case:
+The tree-oriented path form
 
-- when analysis sees a `der(y)` term and no explicit materialised derivative
-  variable is available, it now auto-creates a hidden backend-only
-  `solver_var` instance
-- that hidden instance is registered in the canonical dynamic registry as the
-  order-1 derivative quantity associated with the state $y$
-- the later derivative-term binding pass rewrites `der(y)` onto that hidden
-  instance, so the existing relation evaluation, incidence, and Jacobian code
-  can continue to work without deeper immediate refactoring
-- those hidden instances are appended to the solver variable pool during
-  system analysis, not inserted into the user model tree
-- ownership of those hidden instances is transferred to the `slv_system_t`,
-  and they are destroyed with the system
+$$
+x.\mathrm{der}
+$$
 
-This is explicitly still a transitional backend strategy:
+is treated as an object-model alias for the same quantity, not as the primary
+language surface.
 
-- it avoids the artificial user-written binding equation
-- it keeps compatibility with the current IDA bookkeeping
-- but it still materialises derivative quantities internally
-- a future deeper design may remove even this internal materialisation step if
-  the residual/Jacobian/incidence machinery is redesigned around first-class
-  derivative objects
+### 2. `DER(...)` remains compatibility syntax
 
-Important implementation note for the no-`DER(...)` path:
+Legacy syntax:
 
-- a pure binding equation such as `dy_dt = der(y)` is currently treated as
-  **structural binding metadata**, not as a residual that remains in the DAE
-  system
-- once analysis has used that equation to register that $dy\_dt \equiv der(y)$,
-  the relation is excluded from the solver system
+$$
+\mathrm{DER}(\dot x, x)
+$$
 
-This is necessary with the current IDA bookkeeping, because the backend already
-materialises $der(y)$ as the derivative slot corresponding to the state $y$.
-Leaving the binding equation in the residual system would otherwise introduce
-an extra equality without a corresponding extra unknown in the current IDA
-counting scheme.
+is still supported.
 
-That exclusion now has to happen in two places:
+Its role is now compatibility and optional explicit materialisation of a user
+declared derivative variable. It is not the preferred modern surface syntax.
 
-- analysis-side metadata must mark the relation as excluded
-- the relation instance's `included` child must also be set to `FALSE`
+### 3. Derivatives are exposed as pseudo-instances
 
-The second point is required because ASCEND's conditional reanalysis and some
-other relation-management code call `rel_included(rel)`, which resynchronises
-the runtime flag from the compiler-side `included` atom on the relation
-instance.
+The implementation no longer treats derivatives as solver-only hidden objects.
+Instead, when needed, a derivative is materialised as a runtime pseudo-instance
+associated with a base variable.
 
-### Conditional models and IDA reanalysis
+Example conceptual mapping:
 
-The current IDA path already shares ASCEND's conditional-model machinery with
-CMSlv.
+$$
+\mathrm{der}(y) \leftrightarrow y.\mathrm{der}
+$$
 
-Relevant observations from the current implementation:
+Important constraints:
 
-- `configure_conditional_problem(...)` records per-case relation structure and
-  per-case incident-variable sets
-- `reanalyze_solver_lists(...)` is used to rebuild the active solver lists when
-  discrete state changes alter the active conditional structure
-- both CMSlv and IDA call into this machinery
-- IDA boundary/event handling can trigger a full reanalysis of its solver-side
-  variable and relation lists after a conditional change
+- derivative pseudo-instances are runtime-generated
+- they are not ordinary declared source-language children
+- they are visible through dynamic-child APIs, not through ordinary structural
+  child traversal
 
-This means that the active variable incidence pattern can already change when a
-`WHEN` condition switches.
+### 4. Do not overload ordinary structural child traversal
 
-However, that should not be confused with full support for arbitrary changes in
-dynamic state identity. The current reanalysis path is much more clearly aimed
-at:
+Derivative pseudo-instances are intentionally **not** ordinary structural
+children of the instance tree.
 
-- changing which relations are active
-- changing which variables are incident in the active configuration
+Current split:
 
-than at:
+- structural child APIs remain unchanged
+- dynamic pseudo-children are accessed through dedicated APIs
 
-- changing which variables are differential states
-- changing derivative order requirements
-- changing derivative-chain identity across branches
+This keeps compiler/system tree walking stable while still allowing browser and
+interactive tooling to expose derivatives.
 
-Working conservative rule for first `der(x)` implementation:
+## Current Object Model
 
-- permit `WHEN`-driven changes in active equations
-- require the canonical dynamic state set to remain fixed across branches
-- require the highest derivative order for each state to remain fixed across
-  branches
+The public derivative API is currently centred around:
 
-This should be revisited later if hybrid DAE support is extended further.
+- [derivinst.h](./ascend/compiler/derivinst.h)
 
-## Working Design Direction
+Main instance-centric entry points:
 
-### Canonical dynamic identity
+- `InstanceHasDerivative`
+- `InstanceGetDerivative`
+- `InstanceEnsureDerivative`
+- `IsDerivativeInstance`
+- `DerivativeInstanceBase`
+- `DerivativeInstanceOrder`
+- `DerivativeInstanceIndependent`
 
-Dynamic quantities should not be keyed by:
+Dynamic-child view:
 
-- name strings
-- path strings
-- `interface_ptr`
-- late LINK string matching
+- `InstanceDynamicChildCount`
+- `InstanceDynamicChild`
+- `InstanceDynamicChildName`
+- `InstanceDynamicChildByChar`
+- `InstanceDynamicChildIndex`
 
-They should be keyed by a canonical variable identity, ideally:
+This is the current "half-citizen" design:
 
-- canonical base instance (clique-aware)
-- canonical independent instance
-- derivative order
+- derivatives are real runtime objects
+- they are visible to interactive tooling
+- they are not yet ordinary structural children
+
+## qlfdid and User Reference Forms
+
+Current supported equivalent lookups include:
+
+$$
+\mathrm{der}(\mathrm{cell}.y)
+$$
+
+and
+
+$$
+\mathrm{cell}.y.\mathrm{der}
+$$
+
+The first form is the canonical user-facing derivative syntax.
+The second form is the tree/object path alias.
+
+The intent is:
+
+- equations and user documentation prefer `der(model.part.var)`
+- browser and object-path tooling may naturally expose `model.part.var.der`
+
+We do **not** currently intend to support a mixed form such as:
+
+$$
+\mathrm{model}.\mathrm{part}.\mathrm{der}(x)
+$$
+
+because it muddies the distinction between expression syntax and path syntax.
+
+## METHOD and Interactive Semantics
+
+### Current state
+
+METHOD operations on derivatives now resolve directly to derivative
+pseudo-instances during `Initialize(...)`.
+
+That means:
+
+- `FIX der(x)`
+- `FREE der(x)`
+- `der(x) := ...`
+
+now act on a real runtime object at method time, rather than being recorded as
+pending operations for later application during `system_build`.
+
+This is materially better aligned with ASCEND METHOD semantics.
+
+### Remaining caveat
+
+The object model is improved, but not yet fully settled for all GUI actions.
+The core browser/path plumbing now works, but some broader GUI interactions
+have not yet been exercised end-to-end.
+
+## Solver Semantics
+
+### IDA
+
+For IDA, derivative pseudo-instances map naturally onto true dynamic
+derivative quantities.
 
 Conceptually:
 
-```text
-dyn_quantity := (base_instance, indep_instance, order)
-```
+- base state $x$ belongs to the state vector
+- pseudo-instance $x.\mathrm{der}$ corresponds to the derivative slot for $x$
 
-Examples:
+So for IDA, the pseudo-instance is not merely decorative. It is a user-visible
+handle on a genuine solver quantity.
 
-```text
-x         => (x, t, 0)
-der(x)    => (x, t, 1)
-der2(x)   => (x, t, 2)
-```
+### QRSlv
 
-### `der(x)` as first-class quantity
+QRSlv semantics are the next concrete area to finish.
 
-The long-term direction is to support expression-level derivatives:
+The intended direction is:
 
-```text
-der(y) = x - y;
-der(x) = y - 2*x;
-```
+- derivative pseudo-instances should appear to QRSlv as ordinary variables
+- they should be fixed to zero by default
+- if the user frees them, QRSlv should solve for them like any other free
+  variable
+- if the user fixes them to a nonzero value, equation evaluation should use
+  that value
 
-Restriction for first implementation:
+In other words, for QRSlv they should behave like normal atom instances from
+the solver's perspective.
 
-- allow only `der(variable)`
-- do not allow `der(expression)`
-- do not allow `der(...)` in `WHEN` guards initially
+This is a system-analysis problem, not a parsing problem.
 
-`der(x)` should be:
+## Aliasing and Identity
 
-- a first-class dynamic quantity
-- not necessarily a user-declared instance
-- still available for fixing, observation, and initialization
+Canonical derivative identity is not the same thing as the base variable
+itself.
 
-This means it must have backend identity, even if it is not a literal child in
-the instance tree.
+Important rule:
 
-### Compatibility and transition status
+- `der(x)` is **not** in the same clique as `x`
 
-The current intended transition is now:
+Instead, derivative identity is inferred from:
 
-- old models using `DER(...)` continue to work
-- new models may start using plain equations such as
-  $$
-  \dot y = der(y)
-  $$
-  without any `DER(...)`
-- `DER(...)` remains compatibility syntax only
+- the canonical base variable identity
+- derivative order
+- the canonical independent variable
 
-The medium-term goal is:
+This is the basis for ensuring that if two variables are aliased or otherwise
+merged, their derivatives resolve consistently as the same dynamic quantity.
 
-- `DER(...)` becomes deprecated in documentation
-- new in-tree examples migrate to `der(x)`-based forms
-- old `ode_type` / `ode_id` style metadata remains accepted only as a legacy
-  ingestion path into the canonical registry
+## Compatibility and Transition
 
-### `DER(...)` is transitional only
+The transition policy is:
 
-The intended end state is that `DER(...)` disappears from the language.
+1. keep legacy `DER(...)` working
+2. prefer `der(x)` in new models
+3. keep old ODE metadata working as compatibility input
+4. avoid a flag-day rewrite of old models
 
-Target user-facing syntax:
+So:
 
-```text
-INDEPENDENT t;
+- compatibility is preserved
+- deprecation, not immediate removal, is the current plan
 
-der(y) = x - y;
-der(x) = y - 2*x;
-```
+## Hybrid / Event Scope
 
-If a user wants an explicit variable for a derivative, that should be optional:
+The current `der(x)` work is primarily about smooth ODE/DAE support.
 
-```text
-x_dot = der(x);
-```
+Future hybrid/event support will also need:
 
-So explicit derivative instances are not the canonical dynamic objects. They are
-ordinary variables that a user may constrain to equal a derivative quantity.
+- `INITIAL`
+- `WHEN` / `CONDITIONAL`
+- `REINIT`
+- `pre(x)`
 
-Compatibility interpretation:
+The current derivative design should leave room for those features, but it does
+not complete them.
 
-```text
-DER(x_dot, x)
-```
+Conservative first-phase assumptions remain sensible:
 
-should be viewed as transitional sugar for:
-
-```text
-x_dot = der(x)
-```
-
-plus any convenience metadata needed during migration.
-
-### Do not model `der(x)` as `x.der` child
-
-The notion of derivative as an "attribute" on an instance is useful
-conceptually, but should probably not be represented as a normal tree child.
-
-Reasons:
-
-- it pollutes the user instance tree with backend artefacts
-- arrays become awkward
-- higher derivatives become awkward
-- it entangles model structure with solver representation
-
-Better approach:
-
-- keep the user instance tree unchanged
-- store derivative quantities in a dynamic registry keyed on canonical
-  instances
-- materialise hidden backend variables if a solver requires them
-
-## Proposed Internal Representation
-
-Possible backend structures:
-
-```c
-struct dyn_quantity {
-    struct Instance *base;
-    struct Instance *indep;
-    unsigned order;
-    struct var_variable *var; /* if materialised */
-    unsigned flags;
-};
-
-struct dyn_chain {
-    struct Instance *base;
-    struct Instance *indep;
-    unsigned max_order;
-    struct dyn_quantity **q; /* q[0]=x, q[1]=der(x), ... */
-};
-```
-
-`diffvars` should eventually become a solver-facing view of these canonical
-chains, rather than the thing that discovers them.
-
-For compatibility with existing solver backends, a `dyn_quantity` may be
-materialised as a hidden solver variable even if there is no user-declared
-instance for it.
-
-## `INDEPENDENT`
-
-Working rule:
-
-- dynamic solve requires exactly one canonical independent variable
-- algebraic solve may have zero
-- if `der(...)` appears and no independent variable exists, this should be an
-  error
-
-Multiple `INDEPENDENT` declarations may be permitted if they collapse to one
-canonical independent variable.
-
-Useful interpretation:
-
-- declaring multiple independent variables means the user intends them to be
-  the same one
-- this should be handled by the dynamic registry / canonicalization logic, not
-  by interface hacks
-
-## Interpretation of `DER(dy_dt, y)`
-
-Transitional interpretation:
-
-```text
-DER(dy_dt, y)
-```
-
-is sugar for:
-
-```text
-dy_dt, der(y) ARE_THE_SAME
-```
-
-This is conceptually useful, with one caveat:
-
-- `ARE_THE_SAME` normally works over instance identities already present in the
-  tree
-- `der(y)` is not yet a normal instance in the current design
-
-So this should not be implemented literally as an instance-tree merge.
-
-However, it remains a good semantic model:
-
-- `DER(dy_dt, y)` states that user-declared `dy_dt` is the materialised
-  representation of the dynamic quantity `der(y)`
-
-That suggests the following lowering rule:
-
-```text
-DER(dy_dt, y)
-=> register chain entry (base=y, order=1)
-=> bind user instance dy_dt as the materialised variable for der(y)
-```
-
-This is probably the right compatibility meaning while `DER(...)` still exists.
-
-Long term, the preferred user-written form should be:
-
-$$
-\dot y = \mathrm{der}(y)
-$$
-
-or simply direct use of $\mathrm{der}(y)$ in equations, with no `DER(...)`
-statement at all.
-
-## Hybrid / Event Considerations
-
-The `der(x)` redesign should leave room for hybrid IVP/DAE models such as the
-bouncing ball, but the first implementation should remain conservative.
-
-Important distinctions:
-
-- smooth DAE support and hybrid/event support are related but not identical
-- event detection, state reset, and post-event consistent reinitialisation are
-  separate concerns from smooth residual evaluation
-
-Important first-phase restrictions:
-
-- `der(...)` may appear in smooth equations
-- `WHEN` may change active equation sets
-- `WHEN` should not change the canonical differential state set
-- `WHEN` should not change the highest derivative order required for a state
+- `WHEN` may change active equations
+- `WHEN` should not yet change the canonical differential state set
 - guards should not depend on `der(...)` initially
 
-This is compatible with many useful hybrid models while avoiding immediate
-entanglement with full structural index-changing behaviour.
+## Python / Object-View Support
 
-## Proposed Implementation Stages
+Current Python-facing access now includes:
 
-### Stage 1
+- `inst.der`
+- `ascpy.der(inst)`
 
-- keep `DER(...)` and `INDEPENDENT` syntax
-- implement lower-case `der(fname)` parser support as an expression-level form
-- restrict `fname` to ordinary variable references
-- preserve `der(fname)` as an explicit derivative reference through
-  instantiation, rather than requiring immediate resolution to a materialised
-  derivative variable
-- keep `DER(...)` working as a compatibility path during migration
-- allow token relations to carry unresolved `e_der` terms through compilation
-- add a late rewrite step that can bind `e_der(x)` onto an explicit derivative
-  variable when a legacy `DER(...)` chain exists
-- introduce a system-side dynamic registry
-- canonicalize base/independent variables by clique-aware instance identity
-  where the legacy LINK APIs provide enough information
-- use the registry as the primary source for dynamic classification
-- retain `getOdeType(...)` / `getOdeId(...)` only as fallback for cases not yet
-  captured canonically
+These both resolve to the same derivative pseudo-instance.
 
-### Stage 2
+This is useful because it keeps:
 
-- make `der(x)` the primary dynamic surface syntax
-- treat `DER(...)` as deprecated compatibility syntax
-- allow explicit derivative variables to be written as ordinary equations, eg
-  $\dot x = \mathrm{der}(x)$
-- build canonical derivative chains from explicit dynamic metadata instead of
-  legacy LINK reconstruction
-- move `diffvars` generation fully onto the canonical registry
-- keep compatibility lowering only for legacy models during transition
+- a tree/object form: `inst.der`
+- a language-like form: `ascpy.der(inst)`
 
-### Stage 3
+without introducing extra spelling variants.
 
-- allow mixed use of:
-  - user-declared derivative instances
-  - implicit `der(x)` quantities
-- support direct fixing / observation / initialization of `der(x)`
-- support explicit equations of the form
-  $$
-  \dot x = \mathrm{der}(x)
-  $$
-  as the normal way for users to expose a derivative as a variable
+## What Is Solid Now
 
-### Stage 4
+These parts now look like the right foundation:
 
-- deprecate `DER(...)`
-- retain only `der(x)` and ordinary equations
-- use the same registry and derivative expression representation as the basis
-  for Pantelides-style index reduction
+- `der(x)` as the modern equation-level syntax
+- compatibility retention for `DER(...)`
+- analysis-side dynamic registry
+- derivative pseudo-instances as runtime objects
+- separate dynamic-child API instead of modifying ordinary structural child
+  traversal
+- qlfdid support for both canonical and tree-path derivative references
+- METHOD-time direct manipulation of derivative pseudo-instances
+- browser and ascxx exposure of derivative pseudo-children
 
-## Open Questions
+## Current Squishy Bits
 
-- How should canonical representative selection be implemented for aliased
-  variables?
-- Should materialised derivative variables always exist in the backend, or only
-  on demand?
-- How should initialization syntax expose `der(x)(t0)` cleanly?
-- Where exactly should the dynamic registry live: compiler side, system side,
-  or split across both?
-- How much of the old `ode_id` / `ode_type` machinery should be retained as a
-  compatibility layer during transition?
+The main unresolved areas are now narrower.
 
-## Immediate Next Step
+### 1. Full GUI semantics
 
-Short term, the architecture should be pushed toward:
+The browser/object path is working, but broader GUI editing/action paths still
+need deliberate exercise against derivative pseudo-instances.
 
-- removing the remaining reliance on `getOdeType(...)` / `getOdeId(...)` as the
-  primary source of dynamic truth
-- moving `diffvars` generation off raw `(ode_id, ode_type)` discovery and onto
-  the registry itself
-- then using the same canonical representation to support plain equation forms
-  such as $\dot x = \mathrm{der}(x)$ without needing `DER(...)`
+### 2. QRSlv semantics
 
-rather than continuing to patch name-based resolution edge cases.
+The intended QRSlv behavior is clear, but the full system-analysis path still
+needs to be implemented and tested.
+
+### 3. Hybrid/event semantics
+
+The derivative design is compatible with later work on events, but that work
+has not yet been done.
+
+### 4. Higher derivatives
+
+The APIs expose derivative order, but the practical implementation focus is
+still first-order derivatives.
+
+## Recommended Next Steps
+
+Near term:
+
+1. complete QRSlv semantics for derivative pseudo-instances
+2. exercise browser/GUI mutation paths against derivative pseudo-instances
+3. keep `system_der` coverage growing as behavior is clarified
+
+After that:
+
+4. define `INITIAL`, `pre(x)`, and `REINIT` semantics
+5. expand hybrid/event support on top of the current derivative model
+

@@ -827,10 +827,10 @@ static CONST char *g_study_filename = NULL;
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
-%type <nptr> data_args fname name dataset_target /* optional_scope */
+%type <nptr> data_args fname name dataset_target fvarref /* optional_scope */
 %type <eptr> relation expr relop logrelop optional_with_value
 %type <sptr> set setexprlist optional_set_values
-%type <lptr> fvarlist input_args output_args varlist
+%type <lptr> fvarlist input_args output_args varlist method_fvarlist method_varlist
 
 %type <statptr> statement isa_statement willbe_statement aliases_statement
 %type <statptr> is_statement isrefinedto_statement arealike_statement link_statement unlink_statement der_statement independent_statement
@@ -2528,11 +2528,11 @@ willnotbethesame_statement:
     ;
 
 assignment_statement:
-    fname ASSIGN_TOK expr
+    fvarref ASSIGN_TOK expr
 	{
 	  $$ = CreateASSIGN($1,$3);
 	}
-    | fname CASSIGN_TOK expr
+    | fvarref CASSIGN_TOK expr
 	{
 	  $$ = CreateCASSIGN($1,$3);
 	}
@@ -2740,7 +2740,7 @@ run_statement:
     ;
 
 fix_statement:
-	FIX_TOK fvarlist
+	FIX_TOK method_fvarlist
 	{
 		/*CONSOLE_DEBUG("GOT 'FIX' STATEMENT...");*/
 		$$ = CreateFIX($2);
@@ -2762,7 +2762,7 @@ fix_and_assign_statement:
      ;
 
 free_statement:
-	FREE_TOK fvarlist
+	FREE_TOK method_fvarlist
 	{
 		$$ = CreateFREE($2);
 	}
@@ -3258,6 +3258,43 @@ varlist:
 	   * destroying here is inconvenient
 	   */
 	  g_untrapped_error++;
+	}
+    ;
+
+method_fvarlist:
+    method_varlist
+	{
+	  $$ = ReverseVariableList($1);
+	}
+    ;
+
+method_varlist:
+    fvarref
+	{
+	  $$ = CreateVariableNode($1);
+	}
+    | method_varlist ',' fvarref
+	{
+	  $$ = CreateVariableNode($3);
+	  LinkVariableNodes($$,$1);
+	}
+    | method_varlist fvarref
+	{
+	  ErrMsg_CommaName("name",$2);
+	  $$ = CreateVariableNode($2);
+	  LinkVariableNodes($$,$1);
+	  g_untrapped_error++;
+	}
+    ;
+
+fvarref:
+    fname
+	{
+	  $$ = $1;
+	}
+    | DER_TOK '(' fname ')'
+	{
+	  $$ = CreateDerivativeRefName($3);
 	}
     ;
 

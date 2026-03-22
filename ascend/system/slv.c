@@ -34,6 +34,7 @@
 #include <ascend/general/panic.h>
 
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/derivinst.h>
 #include <ascend/compiler/destroyinst.h>
 #include <ascend/compiler/instquery.h>
 
@@ -243,6 +244,7 @@ if (ret) {
 		for(i = 1; i <= len; ++i){
 			struct Instance *inst = (struct Instance *)gl_fetch(sys->hidden_instances, i);
 			if(inst != NULL){
+				DerivativeInstanceDetach(inst);
 				SetInterfacePtr(inst,NULL);
 				DestroyInstance(inst,NULL);
 			}

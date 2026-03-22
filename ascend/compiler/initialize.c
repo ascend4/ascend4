@@ -69,6 +69,7 @@
 #include "simstatus.h"
 #include "link.h"
 #include "relerr.h"
+#include "derivinst.h"
 
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
@@ -95,6 +96,151 @@ struct {
   unsigned long limit;
   unsigned long depth;
 } g_proc = {INITSTACKLIMIT,0L};
+
+static void AssignInitValue(struct Instance *, struct value_t, struct procFrame *);
+
+static struct Instance *InitMethodRoot(struct procFrame *fm)
+{
+  struct Instance *sim;
+  if(fm == NULL || fm->i == NULL){
+    return NULL;
+  }
+  sim = FindSimulationInstance(fm->i);
+  if(sim != NULL){
+    return GetSimulationRoot(sim);
+  }
+  return fm->i;
+}
+
+static struct gl_list_t *ResolveDerivativeBaseInstances(
+  struct procFrame *fm,
+  CONST struct Name *name,
+  REL_ERRORLIST *err
+){
+  CONST struct Name *base;
+  if(fm == NULL || name == NULL || !NameIsDerivativeRef(name)){
+    return NULL;
+  }
+  base = DerivativeRefBaseName(name);
+  if(base == NULL){
+    return NULL;
+  }
+  return FindInstances(fm->i, (struct Name *)base, err);
+}
+
+static struct gl_list_t *ResolveDerivativeInstances(
+  struct procFrame *fm,
+  CONST struct Name *name
+){
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  struct gl_list_t *bases;
+  struct gl_list_t *derivs;
+  struct Instance *root;
+  unsigned i, len;
+  bases = ResolveDerivativeBaseInstances(fm, name, &err);
+  if(bases == NULL){
+    return NULL;
+  }
+  root = InitMethodRoot(fm);
+  derivs = gl_create(gl_length(bases) > 0 ? gl_length(bases) : 1);
+  if(derivs == NULL){
+    gl_destroy(bases);
+    return NULL;
+  }
+  len = gl_length(bases);
+  for(i = 1; i <= len; ++i){
+    struct Instance *base = (struct Instance *)gl_fetch(bases, i);
+    struct Instance *deriv;
+    if(base == NULL || InstanceKind(base) != REAL_ATOM_INST){
+      gl_destroy(bases);
+      gl_destroy(derivs);
+      return NULL;
+    }
+    if(DerivativeInstancesMarkPresent(root, base)){
+      gl_destroy(bases);
+      gl_destroy(derivs);
+      return NULL;
+    }
+    deriv = InstanceEnsureDerivative(base);
+    if(deriv == NULL){
+      gl_destroy(bases);
+      gl_destroy(derivs);
+      return NULL;
+    }
+    gl_append_ptr(derivs, deriv);
+  }
+  gl_destroy(bases);
+  return derivs;
+}
+
+static int RecordDerivativeFixFree(
+  struct procFrame *fm,
+  CONST struct Name *name,
+  int val
+){
+  struct gl_list_t *instances;
+  unsigned i, len;
+  symchar *fixed = AddSymbol("fixed");
+  instances = ResolveDerivativeInstances(fm, name);
+  if(instances == NULL){
+    fm->ErrNo = Proc_bad_name;
+    ProcWriteFixError(fm, name);
+    return 1;
+  }
+  len = gl_length(instances);
+  for(i = 1; i <= len; ++i){
+    struct Instance *inst = (struct Instance *)gl_fetch(instances, i);
+    struct Instance *fixedinst;
+    if(inst == NULL || InstanceKind(inst) != REAL_ATOM_INST){
+      gl_destroy(instances);
+      fm->ErrNo = Proc_illegal_type_use;
+      ProcWriteFixError(fm, name);
+      return 1;
+    }
+    fixedinst = ChildByChar(inst, fixed);
+    if(fixedinst == NULL || InstanceKind(fixedinst) != BOOLEAN_INST){
+      gl_destroy(instances);
+      fm->ErrNo = Proc_illegal_type_use;
+      ProcWriteFixError(fm, name);
+      return 1;
+    }
+    SetBooleanAtomValue(fixedinst, val, 0U);
+  }
+  gl_destroy(instances);
+  asc_simstatus_mark_dirty(fm->i);
+  return 0;
+}
+
+static int RecordDerivativeAssignment(
+  struct procFrame *fm,
+  CONST struct Name *name,
+  struct value_t value
+){
+  struct gl_list_t *instances;
+  unsigned i, len;
+  enum FrameControl oldflow;
+  instances = ResolveDerivativeInstances(fm, name);
+  if(instances == NULL){
+    fm->ErrNo = Proc_lhs_error;
+    fm->flow = FrameError;
+    ProcWriteAssignmentError(fm);
+    return 1;
+  }
+  len = gl_length(instances);
+  oldflow = fm->flow;
+  for(i = 1; i <= len; ++i){
+    struct Instance *inst = (struct Instance *)gl_fetch(instances, i);
+    AssignInitValue(inst, value, fm);
+    if(fm->flow == FrameError){
+      break;
+    }
+  }
+  if(fm->flow == oldflow){
+    asc_simstatus_mark_dirty(fm->i);
+  }
+  gl_destroy(instances);
+  return fm->flow == FrameError ? 1 : 0;
+}
 
 unsigned long GetProcStackLimit(void)
 {
@@ -280,6 +426,14 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 	vars = stat->v.fx.vars;
 	while(vars!=NULL){
 		name = NamePointer(vars);
+		if(NameIsDerivativeRef(name)){
+			if(RecordDerivativeFixFree(fm, name, val)){
+				fm->flow = FrameError;
+				return;
+			}
+			vars = NextVariableNode(vars);
+			continue;
+		}
 		temp = FindInstances(fm->i, name, &err);
 
 		if(temp==NULL){
@@ -1907,6 +2061,24 @@ static void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat){
   enum FrameControl oldflow;
   struct value_t value;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+
+  if(NameIsDerivativeRef(DefaultStatVar(stat))){
+    assert(GetEvaluationContext()==NULL);
+    SetEvaluationContext(fm->i);
+    value = EvaluateExpr(DefaultStatRHS(stat),NULL,InstanceEvaluateName);
+    SetEvaluationContext(NULL);
+    if(ValueKind(value)==error_value){
+      fm->ErrNo = Proc_rhs_error;
+      fm->flow = FrameError;
+      ProcWriteAssignmentError(fm);
+    }else{
+      if(RecordDerivativeAssignment(fm, DefaultStatVar(stat), value)){
+        /* error flow/value reporting already handled */
+      }
+    }
+    DestroyValue(&value);
+    return;
+  }
 
   instances = FindInstances(fm->i,DefaultStatVar(stat),&err);
   if(instances != NULL){

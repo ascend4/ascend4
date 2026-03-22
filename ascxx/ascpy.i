@@ -63,6 +63,13 @@ extern "C"{
 // Import the preferences module
 %pythoncode {
 	import preferences;
+
+	def der(inst):
+		"""Return the first derivative pseudo-child of an instance."""
+		try:
+			return inst.der
+		except AttributeError as e:
+			raise RuntimeError("No derivative pseudo-instance is available for this instance") from e
 }
 
 // Set-valued instance variable

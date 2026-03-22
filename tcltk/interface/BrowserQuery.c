@@ -62,6 +62,7 @@
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/derivinst.h>
 #include <ascend/compiler/module.h>
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/setinstval.h>
@@ -857,7 +858,7 @@ int Asc_BrowWriteAtomValue(char *ftorv, CONST struct Instance *i)
 
 int Asc_BrowWriteAtomChildren(Tcl_Interp *interp, CONST struct Instance *i)
 {
-  unsigned long c,len;
+  unsigned long c,len,dynlen;
   unsigned long start,end;
   struct InstanceName rec;
   CONST struct Instance *child;
@@ -866,12 +867,14 @@ int Asc_BrowWriteAtomChildren(Tcl_Interp *interp, CONST struct Instance *i)
   struct TypeDescription *desc;
   ChildListPtr clist;
   int domany=0; /* if 0, only one child is asked for and so,ignore visibility*/
+  unsigned long dynstart, dynend;
 
   if (i==NULL) {
     return TCL_ERROR;
   }
   len = NumberChildren(i);
-  if (!len) {
+  dynlen = InstanceDynamicChildCount((struct Instance *)i);
+  if (!len && !dynlen) {
     return TCL_ERROR;
   }
   desc = InstanceTypeDesc(i);
@@ -883,6 +886,13 @@ int Asc_BrowWriteAtomChildren(Tcl_Interp *interp, CONST struct Instance *i)
     start = 1;
     end = len;
     domany = 1;
+  }
+  dynstart = dynend = 0;
+  if(g_do_onechild > len && g_do_onechild <= len + dynlen){
+    dynstart = dynend = g_do_onechild - len;
+  }else if(g_do_onechild == 0){
+    dynstart = 1;
+    dynend = dynlen;
   }
   fname = Asc_MakeInitString(256);               /* Make the strings */
   ftorv = Asc_MakeInitString(256);
@@ -922,6 +932,40 @@ int Asc_BrowWriteAtomChildren(Tcl_Interp *interp, CONST struct Instance *i)
         } else {
           Tcl_AppendResult(interp,"{",fname," = ",ftorv,"}"," ",(char *)NULL);
         }
+      }
+    } else {
+      sprintf(ftorv,"%s ",SCP(InstanceType(child)));
+      Tcl_AppendResult(interp,"{",fname," IS_A ",ftorv,"}"," ",(char *)NULL);
+    }
+    Asc_ReInitString(fname); Asc_ReInitString(ftorv); Asc_ReInitString(fdims);
+  }
+  for(c = dynstart; c <= dynend && dynstart != 0; ++c) {
+    child = InstanceDynamicChild((struct Instance *)i, c);
+    if(child == NULL){
+      continue;
+    }
+    kind = InstanceKind(child);
+    sprintf(fname,"%s ",SCP(InstanceDynamicChildName((struct Instance *)i, c)));
+
+    if (g_do_values) {
+      Asc_BrowWriteAtomValue(ftorv,child);
+      if ((kind==REAL_INST)||
+          (kind==REAL_ATOM_INST)||
+          (kind==REAL_CONSTANT_INST)||
+          (kind==REL_INST)) {
+        char * ustr = Asc_UnitValue(child);
+        char op[5] = " = ";
+        if (kind==REL_INST) {
+          sprintf(&op[0]," : ");
+        }
+        if (ustr!=NULL) {
+          Tcl_AppendResult(interp,"{",fname,&op[0],ustr,"}"," ",(char *)NULL);
+        } else {
+          Tcl_AppendResult(interp,
+                           "{",fname,&op[0],"????","}"," ",(char *)NULL);
+        }
+      } else {
+        Tcl_AppendResult(interp,"{",fname," = ",ftorv,"}"," ",(char *)NULL);
       }
     } else {
       sprintf(ftorv,"%s ",SCP(InstanceType(child)));

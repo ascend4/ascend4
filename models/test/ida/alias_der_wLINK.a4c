@@ -172,6 +172,34 @@ MODEL der_mixed_ok;
 END der_mixed_ok;
 
 
+MODEL der_method_fix_assign_ok;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	dyn: der(y) = -4 * y;
+METHODS
+	METHOD on_load;
+		INDEPENDENT t;
+		FIX der(y);
+		der(y) := 2;
+	END on_load;
+END der_method_fix_assign_ok;
+
+
+MODEL der_method_free_ok;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	dyn: der(y) = -4 * y;
+METHODS
+	METHOD on_load;
+		INDEPENDENT t;
+		FIX der(y);
+		FREE der(y);
+	END on_load;
+END der_method_free_ok;
+
+
 MODEL alias_der_alias_fail;
 	cell IS_A alias_der_inner;
 	y ALIASES cell.y;
