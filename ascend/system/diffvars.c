@@ -51,6 +51,42 @@ SolverDiffVarCollection *system_get_diffvars(slv_system_t sys){
 	return sys->diffvars;
 }
 
+long system_diffvars_var_role(slv_system_t sys, struct var_variable *var, long *index){
+	SolverDiffVarCollection *diffvars;
+	long i, j;
+
+	if(index != NULL){
+		*index = 0;
+	}
+	if(sys == NULL || var == NULL){
+		return 0;
+	}
+	diffvars = system_get_diffvars(sys);
+	if(diffvars == NULL){
+		return 0;
+	}
+
+	for(i = 0; i < diffvars->nindep; ++i){
+		if(diffvars->indep[i] == var){
+			return -1;
+		}
+	}
+
+	for(i = 0; i < diffvars->nseqs; ++i){
+		SolverDiffVarSequence *seq = &diffvars->seqs[i];
+		for(j = 0; j < seq->n; ++j){
+			if(seq->vars[j] == var){
+				if(index != NULL){
+					*index = seq->ode_id;
+				}
+				return j + 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
 #if 0 /* unused function, currently */
 /**<DS: compare the names of the instances from the problem_t that will be sent to the solver and a symchar, on success return the pointer to the respective solver_ipdata */
 static struct solver_ipdata *FindVarIPdata(struct problem_t *prob,symchar *varName){

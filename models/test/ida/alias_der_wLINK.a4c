@@ -227,6 +227,36 @@ METHODS
 END der_qrslv_free_ok;
 
 
+MODEL der_qrslv_assign_nonzero_ok;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	eq1: x = 1;
+	eq2: y = der(x) + 2;
+	INDEPENDENT t;
+METHODS
+	METHOD on_load;
+		der(x) := 5;
+	END on_load;
+END der_qrslv_assign_nonzero_ok;
+
+
+MODEL der_qrslv_fix_assign_nonzero_ok;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	eq1: x = 1;
+	eq2: y = der(x) + 2;
+	INDEPENDENT t;
+METHODS
+	METHOD on_load;
+		FIX der(x) := 5;
+	END on_load;
+END der_qrslv_fix_assign_nonzero_ok;
+
+
 MODEL alias_der_alias_fail;
 	cell IS_A alias_der_inner;
 	y ALIASES cell.y;

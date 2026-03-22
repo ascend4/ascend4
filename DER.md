@@ -224,9 +224,10 @@ handle on a genuine solver quantity.
 
 ### QRSlv
 
-QRSlv semantics are the next concrete area to finish.
+QRSlv semantics are now implemented and tested for the current first-order
+derivative model.
 
-The intended direction is:
+Current behavior:
 
 - derivative pseudo-instances should appear to QRSlv as ordinary variables
 - they should be fixed to zero by default
@@ -235,10 +236,25 @@ The intended direction is:
 - if the user fixes them to a nonzero value, equation evaluation should use
   that value
 
-In other words, for QRSlv they should behave like normal atom instances from
-the solver's perspective.
+In other words, for QRSlv they behave like normal atom instances from the
+solver's perspective, with one extra defaulting rule for untouched
+derivatives.
 
-This is a system-analysis problem, not a parsing problem.
+The important implementation detail is:
+
+- an untouched derivative pseudo-instance uses an algebraic default
+- QRSlv treats that default as "fixed at zero"
+- an explicit `FREE` clears that default
+- a plain assignment to `der(x)` updates the pseudo-instance value without
+  implicitly fixing it
+- an explicit `FIX der(x) := value` records a fixed derivative value before any
+  solver is loaded
+
+Explicit mutation is now handled consistently across:
+
+- METHOD-time `FIX`, `FREE`, and assignment
+- ascxx/Python edits
+- Tcl/Tk browser/unit-setting edits
 
 ## Aliasing and Identity
 
@@ -321,6 +337,8 @@ These parts now look like the right foundation:
 - qlfdid support for both canonical and tree-path derivative references
 - METHOD-time direct manipulation of derivative pseudo-instances
 - browser and ascxx exposure of derivative pseudo-children
+- QRSlv treatment of derivative pseudo-instances as ordinary variables, fixed
+  to zero by default until explicitly edited
 
 ## Current Squishy Bits
 
@@ -328,13 +346,15 @@ The main unresolved areas are now narrower.
 
 ### 1. Full GUI semantics
 
-The browser/object path is working, but broader GUI editing/action paths still
-need deliberate exercise against derivative pseudo-instances.
+The browser/object path is working, and the edit paths now clear derivative
+algebraic defaults consistently. More end-to-end interactive exercise is still
+useful, but the core mutation semantics are no longer just intended behavior.
 
-### 2. QRSlv semantics
+### 2. Broader non-DAE solver semantics
 
-The intended QRSlv behavior is clear, but the full system-analysis path still
-needs to be implemented and tested.
+QRSlv is now the tested reference implementation for algebraic solves.
+The remaining question is how broadly to encode the same policy for other
+non-DAE solver contexts.
 
 ### 3. Hybrid/event semantics
 
@@ -350,8 +370,10 @@ still first-order derivatives.
 
 Near term:
 
-1. complete QRSlv semantics for derivative pseudo-instances
+1. generalize the QRSlv derivative-default policy cleanly across other
+   non-DAE solver contexts where appropriate
 2. exercise browser/GUI mutation paths against derivative pseudo-instances
+   more directly
 3. keep `system_der` coverage growing as behavior is clarified
 
 After that:

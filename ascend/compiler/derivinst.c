@@ -589,6 +589,21 @@ void DerivativeInstanceClearAlgebraicDefault(struct Instance *inst){
   }
 }
 
+void DerivativeInstanceNoteMutation(struct Instance *inst){
+  struct Instance *parent;
+  if(inst == NULL){
+    return;
+  }
+  if(IsDerivativeInstance(inst)){
+    DerivativeInstanceClearAlgebraicDefault(inst);
+    return;
+  }
+  parent = InstanceParent(inst, 1);
+  if(parent != NULL && IsDerivativeInstance(parent)){
+    DerivativeInstanceClearAlgebraicDefault(parent);
+  }
+}
+
 void DerivativeInstanceMarkSolverOwned(struct Instance *inst){
   struct derivinst_entry *entry = derivinst_lookup_by_inst(inst);
   if(entry != NULL){

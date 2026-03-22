@@ -34,6 +34,7 @@
 #include <ascend/system/slv_common.h>
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/block.h>
+#include <ascend/system/diffvars.h>
 
 #include <ascend/solver/solver.h>
 
@@ -1043,6 +1044,7 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 static long DynamicVarInfo(struct var_variable *v,long *index, IntegratorSystem *sys){
   struct Instance *c, *d, *i;
 	int type;
+	long dtype;
 
   i = var_instance(v);
 
@@ -1053,6 +1055,11 @@ static long DynamicVarInfo(struct var_variable *v,long *index, IntegratorSystem 
   d = ChildByChar(i,STATEINDEX);
 
 
+
+  dtype = system_diffvars_var_role(sys->system, v, index);
+  if(dtype != INTEG_ALGEBRAIC_VAR){
+    return dtype;
+  }
 
   /* lazy evaluation is important in the following if */
   if(c == NULL

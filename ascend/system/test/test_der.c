@@ -87,11 +87,8 @@ static slv_system_t build_system_for_model(const char *filename, const char *mod
 
 static int ensure_qrslv_loaded(void){
 	int qrslv_index;
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
 	qrslv_index = slv_lookup_client("QRSlv");
-	if(qrslv_index == -1){
-		CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
-		qrslv_index = slv_lookup_client("QRSlv");
-	}
 	CU_ASSERT_FATAL(qrslv_index != -1);
 	return qrslv_index;
 }
@@ -452,6 +449,52 @@ static void test_der_qrslv_free_ok(void){
 	destroy_loaded_system(sys,siminst);
 }
 
+static void test_der_qrslv_assign_nonzero_ok(void){
+	struct Instance *siminst = load_sim_for_model("test/ida/alias_der_wLINK.a4c","der_qrslv_assign_nonzero_ok");
+	struct Instance *root, *x, *deriv, *fixed;
+	CU_ASSERT_FATAL(siminst != NULL);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	x = ChildByChar(root, AddSymbol("x"));
+	CU_ASSERT_FATAL(x != NULL);
+	deriv = InstanceGetDerivative(x);
+	CU_ASSERT_FATAL(deriv != NULL);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(deriv), 5.0, 1e-12);
+	fixed = ChildByChar(deriv, AddSymbol("fixed"));
+	CU_ASSERT_FATAL(fixed != NULL);
+	CU_ASSERT_FALSE(GetBooleanAtomValue(fixed));
+
+	destroy_loaded_system(NULL,siminst);
+}
+
+static void test_der_qrslv_fix_assign_nonzero_ok(void){
+	struct Instance *siminst = NULL;
+	struct Instance *root, *x, *y, *deriv;
+	struct var_variable *dvar;
+	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_qrslv_fix_assign_nonzero_ok",&siminst);
+
+	qrslv_presolve_or_fail(sys);
+	dvar = find_derivative_var(sys);
+	CU_ASSERT_FATAL(dvar != NULL);
+	CU_ASSERT_TRUE(var_flagbit(dvar, VAR_FIXED));
+	CU_ASSERT_FALSE(var_potentially_fixed(dvar));
+
+	slv_solve(sys);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	x = ChildByChar(root, AddSymbol("x"));
+	y = ChildByChar(root, AddSymbol("y"));
+	CU_ASSERT_FATAL(x != NULL);
+	CU_ASSERT_FATAL(y != NULL);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(x), 1.0, 1e-8);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(y), 7.0, 1e-8);
+	deriv = InstanceGetDerivative(x);
+	CU_ASSERT_FATAL(deriv != NULL);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(deriv), 5.0, 1e-8);
+
+	destroy_loaded_system(sys,siminst);
+}
+
 static void test_der_alias_scalar_ok(void){
 	struct Instance *siminst = NULL;
 	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","alias_der_alias_fail",&siminst);
@@ -493,6 +536,8 @@ static void test_der_array_same_ok(void){
 	T(der_method_free_ok) \
 	T(der_qrslv_default_fixed_ok) \
 	T(der_qrslv_free_ok) \
+	T(der_qrslv_assign_nonzero_ok) \
+	T(der_qrslv_fix_assign_nonzero_ok) \
 	T(der_alias_scalar_ok) \
 	T(der_alias_array_ok) \
 	T(der_array_same_ok)
