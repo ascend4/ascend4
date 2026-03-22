@@ -257,6 +257,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"ASSERT"       { return ASSERT_TOK			; }
 <INITIAL>"IF"			{ return IF_TOK			; }
 <INITIAL>"'ignore'"		{ return IGNORE_TOK 	;}
+<INITIAL>"INITIAL"		{ return INITIAL_TOK		; }
 <INITIAL>"INDEPENDENT" { return INDEPENDENT_TOK ;}
 <INITIAL>"IMPORT"		{ return IMPORT_TOK		; }
 <INITIAL>"IN"			{ return IN_TOK			; }

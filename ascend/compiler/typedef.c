@@ -4755,6 +4755,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
         				   struct module_t *mod,
         				   int univ,
         				   struct StatementList *sl,
+        				   struct StatementList *isl,
         				   struct gl_list_t *pl,
         				   struct StatementList *psl,
         				   struct StatementList *rsl,
@@ -4765,6 +4766,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   ChildListPtr clist;
   struct gl_list_t *childlist;	    /* child list gl after parameters found */
   struct StatementList *tsl = NULL; /* reduced parameters derived */
+  struct StatementList *allsl = NULL; /* combined body + INITIAL statements */
   struct StatementList *pslbase = NULL; /* parameter list psl must match */
   unsigned long len;                /* length of sl */
   unsigned long c;
@@ -4783,6 +4785,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       "Model definition '%s' abandoned due to syntax errors.",
       SCP(name)
     );
+    DestroyStatementList(isl);
     DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
     return NULL;
   }
@@ -4796,9 +4799,11 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       TypeLintIllegalReductionStats(ASCERR,name,rsl) != DEF_OKAY ||
       /* structural assignments only */
       TypeLintIllegalBodyStats(ASCERR,name,sl,context_MODEL) != DEF_OKAY ||
+      TypeLintIllegalBodyStats(ASCERR,name,isl,context_MODEL | context_INITIAL) != DEF_OKAY ||
       /* no WILL_BE,IF,RUN statements in body */
       TypeLintIllegalMethodStats(ASCERR,name,pl,context_METH) != DEF_OKAY
       /* no structural stuff in methods -- yet */) {
+    DestroyStatementList(isl);
     DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
     return NULL;
   } else {
@@ -4821,6 +4826,19 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
     DestroyStatementList(sl);
     sl = newstatl;
   }
+  if (SlistHasWhat(isl) & contains_SELECT) {
+    len = StatementListLength(isl);
+    newstatl = EmptyStatementList();
+    for (c=1; c<=len; c++) {
+      stat = GetStatement(isl,c);
+      AppendStatement(newstatl,stat);
+      if (StatementType(stat) == SELECT) {
+        FlatListSelectStmts(newstatl,stat);
+      }
+    }
+    DestroyStatementList(isl);
+    isl = newstatl;
+  }
 
   if (refines==NULL) {
     rdesc = NULL;
@@ -4830,6 +4848,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"Model '%s' attempts to refine '%s', which is not a known type.",
               SCP(name), SCP(refines));
+      DestroyStatementList(isl);
       DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
 	  error_reporter_end_flush();
       return NULL;
@@ -4838,6 +4857,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 	  FPRINTF(ASCERR,"Model '%s' attempts to refine non-MODEL type '%s'.\n",
               SCP(name),SCP(refines));
+      DestroyStatementList(isl);
       DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
 	  error_reporter_end_flush();
       return NULL;
@@ -4847,6 +4867,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
     if (GetUniversalFlag(rdesc)) univ = 1;
     /* add the new statements/procedures and those from the refined type */
     sl = AppendStatementLists(GetStatementList(rdesc),sl);
+    isl = AppendStatementLists(GetInitialStatementList(rdesc),isl);
     pl = MergeProcedureLists(GetInitializationList(rdesc),pl);
     /* new procedures will have a parseid of 0 that yet needs setting. */
   }
@@ -4857,6 +4878,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
      * type.
      */
     if (ParametricChildList(name,psl,CHECKSUBS) != DEF_OKAY) {
+      DestroyStatementList(isl);
       DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
       /* ParametricChildList will whine, so we don't whine here.
        */
@@ -4873,6 +4895,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
           SCP(name),SCP(refines));
         WriteStatementList(ASCERR,rsl,4);
 		error_reporter_end_flush();
+        DestroyStatementList(isl);
         DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
         return NULL;
       }
@@ -4887,10 +4910,12 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
           /* contents of tsl have been checked already */
 		  ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Model %s victim of bizarre error 1.",
 				SCP(name));
+          DestroyStatementList(isl);
           DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
         }
       }
       if (ParametricChildList(name,psl,CHECKSUBS) != DEF_OKAY ) {
+        DestroyStatementList(isl);
         DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
         /* ParametricChildList will whine, so we don't here */
         return NULL;
@@ -4903,6 +4928,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       if (StatementListLength(rsl) != 0L) {
         /* absorb isas/:== if required */
         if (ReduceModelParameters(name,rdesc,rsl,&pslbase,&tsl)!=DEF_OKAY) {
+          DestroyStatementList(isl);
           DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
           DestroyStatementList(pslbase);
           /* ReduceParameters will whine, so we don't here */
@@ -4928,6 +4954,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
         WriteStatementList(ASCERR,tsl,2);
 		error_reporter_end_flush();
 
+        DestroyStatementList(isl);
         DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
         DestroyStatementList(pslbase);
         return NULL;
@@ -4935,6 +4962,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       /* verify parameter order/matching up to length of pslbase.
        */
       if (MatchModelParameters(name,refines,pslbase,psl) != DEF_OKAY) {
+        DestroyStatementList(isl);
         DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
         DestroyStatementList(pslbase);
         ClearLCL();
@@ -4952,6 +4980,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       if (ParametricChildList(name,psl,CHECKSUBS) != DEF_OKAY ||
           MatchParameterWheres(name,refines,GetModelParameterWheres(rdesc),wsl)
           != DEF_OKAY) {
+        DestroyStatementList(isl);
         DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
         ClearLCL();
         /* tests will whine, so we don't here */
@@ -4962,6 +4991,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
 
   if (univ==1 && StatementListLength(psl)!=0L) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"UNIVERSAL type %s cannot have parameters because only the first instance of the type could set them.",SCP(name));
+    DestroyStatementList(isl);
     DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
     ClearLCL();
     return NULL;
@@ -4970,6 +5000,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   childlist = CopyLCLToGL();
   if (CheckParameterWheres(name,wsl,childlist)!= DEF_OKAY) {
     ClearLCL();
+    DestroyStatementList(isl);
     DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
     gl_destroy(childlist);
     childlist = NULL;
@@ -4977,13 +5008,20 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   }
   gl_destroy(childlist);
   childlist = NULL;
-  /* ok, eat regular body statements of new type */
-  clist = FinishChildList(name,sl);
+  /* child declarations can arise from both body and INITIAL sections. */
+  allsl = AppendStatementLists(sl,EmptyStatementList());
+  len = StatementListLength(isl);
+  for (c=1; c<=len; c++) {
+    AppendStatement(allsl,GetStatement(isl,c));
+  }
+  clist = FinishChildList(name,allsl);
+  DestroyStatementList(allsl);
   if (clist != NULL) {
     return CreateModelTypeDesc(name,rdesc,mod,
-                               clist,pl,sl,univ,psl,rsl,tsl,wsl);
+                               clist,pl,sl,isl,univ,psl,rsl,tsl,wsl);
   } else {
     /* FinishChildList will whine, so we don't here */
+    DestroyStatementList(isl);
     DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
     return NULL;
   }
@@ -5335,7 +5373,7 @@ static void DefineEMType(symchar *sym, enum type_kind t)
   struct TypeDescription *def;
   (void) t;
   def = CreateModelTypeDesc(sym,NULL,NULL,NULL,NULL,
-          EmptyStatementList(),0,EmptyStatementList(),
+          EmptyStatementList(),EmptyStatementList(),0,EmptyStatementList(),
           EmptyStatementList(), EmptyStatementList(),EmptyStatementList());
   if (def) {
     AddType(def);

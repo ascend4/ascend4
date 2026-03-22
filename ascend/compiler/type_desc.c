@@ -398,6 +398,7 @@ struct TypeDescription
 		ChildListPtr cl, /* list of the type's child names */
 		struct gl_list_t *pl, /* list of initialization procedures */
 		struct StatementList *sl, /* list of declarative statements */
+		struct StatementList *isl, /* list of initialization-only statements */
 		int univ, /* UNIVERSAL flag */
 		struct StatementList *psl, /* list of parameter statements */
 		struct StatementList *rsl,  /* list of reduction statements */
@@ -419,6 +420,7 @@ struct TypeDescription
   result->children = cl;
   result->init = pl;
   result->stats = sl;
+  result->initstats = isl;
   result->universal = univ;
   result->flags = 0;
   result->flags |=  StatListHasDefaults(sl);
@@ -451,6 +453,7 @@ struct TypeDescription
   result->children = NULL;
   result->init = NULL;
   result->stats = EmptyStatementList();
+  result->initstats = EmptyStatementList();
   result->universal = 1;
   result->flags = 0;
   result->flags |=  TYPESHOW;
@@ -485,6 +488,7 @@ struct TypeDescription *CreateConstantTypeDesc(
   result->children = NULL;
   result->init = NULL;
   result->stats = EmptyStatementList();
+  result->initstats = EmptyStatementList();
   result->universal = univ;
   result->flags = 0;
   result->flags |=  TYPESHOW;
@@ -548,6 +552,7 @@ struct TypeDescription
   result->children = childl;
   result->init = procl;
   result->stats = statl;
+  result->initstats = EmptyStatementList();
   result->universal = univ;
   result->flags = 0;
   result->flags |=  StatListHasDefaults(statl);
@@ -716,6 +721,7 @@ struct TypeDescription *CreateArrayTypeDesc(struct module_t *mod,
     result->children = NULL;
     result->init = NULL;
     result->stats = NULL;
+    result->initstats = NULL;
     result->universal = 0;
     result->flags = 0;
     result->flags |=  TYPESHOW;
@@ -757,6 +763,7 @@ struct TypeDescription *CreateRelationTypeDesc(struct module_t *mod,
   result->children = clist;
   result->init = plist;
   result->stats = statl;
+  result->initstats = EmptyStatementList();
   result->universal = 0;
   result->flags = 0;
   result->flags |=  StatListHasDefaults(statl);
@@ -822,6 +829,7 @@ struct TypeDescription
   result->children = NULL;
   result->init = plist;
   result->stats = statl;
+  result->initstats = EmptyStatementList();
   result->universal = 0;
   result->flags = 0;
   result->flags |=  TYPESHOW;
@@ -984,6 +992,36 @@ CONST struct StatementList *GetStatementListF(CONST struct TypeDescription *d){
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
   return d->stats;
+}
+
+CONST struct StatementList *GetInitialStatementListF(CONST struct TypeDescription *d){
+  AssertAllocatedMemory(d,sizeof(struct TypeDescription));
+  assert((d->t&ERROR_KIND)==0);
+  assert(d->ref_count > 0);
+  return d->initstats;
+}
+
+unsigned long GetExecutableStatementCountF(CONST struct TypeDescription *d){
+  AssertAllocatedMemory(d,sizeof(struct TypeDescription));
+  assert((d->t&ERROR_KIND)==0);
+  assert(d->ref_count > 0);
+  return StatementListLength(d->stats) + StatementListLength(d->initstats);
+}
+
+struct Statement *GetExecutableStatementF(CONST struct TypeDescription *d,
+                                          unsigned long index){
+  unsigned long nbody;
+  AssertAllocatedMemory(d,sizeof(struct TypeDescription));
+  assert((d->t&ERROR_KIND)==0);
+  assert(d->ref_count > 0);
+  nbody = StatementListLength(d->stats);
+  if (index == 0) {
+    return NULL;
+  }
+  if (index <= nbody) {
+    return GetStatement(d->stats,index);
+  }
+  return GetStatement(d->initstats,index - nbody);
 }
 
 struct gl_list_t *GetInitializationListF(CONST struct TypeDescription *d){
@@ -1324,6 +1362,7 @@ void DeleteTypeDesc(struct TypeDescription *d){
       DestroyChildList(d->children);
     }
     DestroyStatementList(d->stats);
+    DestroyStatementList(d->initstats);
     DestroyProcedureList(d->init);
     d->t = ERROR_KIND; /* should be error_type. patch will do */
     d->parseid = -(d->parseid); /* flip the sign */

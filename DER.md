@@ -327,6 +327,229 @@ Conservative first-phase assumptions remain sensible:
 - `WHEN` should not yet change the canonical differential state set
 - guards should not depend on `der(...)` initially
 
+## Proposed `INITIAL` Semantics
+
+### Scope and placement
+
+The proposed ASCEND syntax is a new declarative section inside `MODEL`,
+positioned between the main declarative statement list and the `METHODS`
+section:
+
+```ascend
+MODEL foo;
+    ...
+    r1: der(x) = -x;
+
+INITIAL
+    x = 1;
+    der(x) = 0;
+
+METHODS
+    METHOD on_load;
+        ...
+    END on_load;
+END foo;
+```
+
+This is intentionally **not** a METHOD. It is a second declarative equation
+section.
+
+### Core meaning
+
+`INITIAL` equations are additional equations that hold only in the
+initialization problem at
+
+$$
+t = t_0
+$$
+
+and are not included in the normal simulation problem for
+
+$$
+t > t_0.
+$$
+
+The intended initialization system is therefore:
+
+$$
+\text{normal model equations at } t_0
+\;+\;
+\text{INITIAL equations}
+$$
+
+This follows the same broad semantic direction as Modelica
+`initial equation` and gPROMS `INITIAL`: initialization is a separate
+declarative equation set, not imperative setup code.
+
+### Relationship with `METHODS`
+
+`METHODS` and `INITIAL` should have distinct roles.
+
+`INITIAL` is for:
+
+- equations that are true only at initialization
+- initial algebraic constraints
+- steady-state initialization constraints such as `der(x) = 0`
+
+`METHODS` remain for:
+
+- guesses
+- bounds
+- `FIX/FREE`
+- solver/integrator selection
+- orchestration such as `SOLVE`
+
+So the user should not need to emulate `INITIAL` by writing METHOD code that
+manually toggles relation `included` flags.
+
+Internally, ASCEND may still use the existing `included` machinery to realise
+the initialization/non-initialization split, but that should remain an
+implementation detail.
+
+### First implementation limits
+
+For a first implementation, `INITIAL` should be deliberately narrow.
+
+Allowed:
+
+- relation statements
+- logical relation statements if needed for initialization consistency
+- `FOR`
+- parameter-structural `IF`
+
+Not yet allowed:
+
+- `RUN`
+- `FIX`
+- `FREE`
+- `SOLVE`
+- `STUDY`
+- `OPTION`
+- `WHEN`
+- `CONDITIONAL`
+
+That keeps `INITIAL` as an equation section, not a second procedural language.
+
+### Interaction with `der(...)`
+
+During initialization, `der(x)` should be usable as an ordinary algebraic
+quantity in equations.
+
+Examples:
+
+```ascend
+INITIAL
+    x = 1;
+    der(x) = 0;
+```
+
+or
+
+```ascend
+INITIAL
+    x + y = 3;
+    der(x) + der(y) = 0;
+```
+
+That is the key behavior needed for steady-state initialization and consistent
+DAE startup.
+
+### Implementation shape
+
+The current compiler/runtime layout suggests a clean implementation path:
+
+1. extend the grammar so `MODEL` contains:
+   - main declarative statements
+   - optional `INITIAL` statement list
+   - optional `METHODS`
+2. add a second declarative statement-list slot to `TypeDescription`
+3. instantiate `INITIAL` statements as relation instances flagged as
+   initialization-only
+4. build an initialization-mode system that includes:
+   - normal equations
+   - `INITIAL` equations
+5. keep ordinary system builds excluding the `INITIAL` equations
+
+This is preferable to encoding initialization purely through METHOD-side edits
+to `included`.
+
+### Parser strategy: avoid duplicating equation grammar
+
+The preferred parser strategy is to **reuse the existing declarative statement
+grammar** rather than clone a parallel "initial equation" grammar.
+
+Recommended approach:
+
+1. add an optional `INITIAL` section in the `MODEL` grammar
+2. parse its contents using the same statement-list machinery already used for
+   the main declarative section
+3. mark those statements with a new statement-context bit such as
+   `context_INITIAL`
+4. run a semantic validation pass that rejects statement types not permitted
+   in `INITIAL`
+
+This keeps all existing relation/logrelation/`FOR` lowering paths shared.
+
+The context bit then becomes the key to later stages:
+
+- instantiation knows the statement came from `INITIAL`
+- relation instances created from it can be flagged initialization-only
+- system-build mode can include or exclude them without re-parsing anything
+
+This is much cleaner than carrying a parser-global mode that changes relation
+construction implicitly, and it avoids duplicating large amounts of parser
+logic.
+
+### Hierarchical model semantics
+
+`INITIAL` should compose through hierarchy in the same way as ordinary model
+equations.
+
+That means:
+
+- if a submodel type has an `INITIAL` section, those initialization equations
+  belong to that submodel wherever it is instantiated
+- when a parent model is built in initialization mode, the active
+  initialization problem includes:
+  - the parent's normal equations
+  - the parent's `INITIAL` equations
+  - each instantiated child model's normal equations
+  - each instantiated child model's `INITIAL` equations
+
+So initialization is hierarchical and declarative, not local-only.
+
+This also allows a parent model to add cross-component initialization
+constraints, for example:
+
+```ascend
+INITIAL
+    child1.x = child2.x;
+```
+
+without needing to modify the child types themselves.
+
+The natural implementation model is therefore:
+
+- `INITIAL` is attached to the type where it is declared
+- instantiation propagates it exactly like ordinary statements
+- build mode determines whether those instantiated relations are included
+
+This is preferable to a flat, simulation-root-only interpretation of
+initialization.
+
+### Out of scope for `INITIAL` v1
+
+The following should be treated as later work:
+
+- `initial algorithm`-style procedural initialization
+- `pre(x)`
+- `REINIT`
+- event-triggered reinitialization
+- changing the differential state set during initialization
+
+Those features belong to the broader hybrid/event roadmap, not to the minimal
+equation-based `INITIAL` section.
+
 ## Python / Object-View Support
 
 Current Python-facing access now includes:
@@ -393,9 +616,56 @@ Near term:
    non-DAE solver contexts where appropriate
 2. exercise browser/GUI mutation paths against derivative pseudo-instances
    more directly
-3. keep `system_der` coverage growing as behavior is clarified
+3. implement `INITIAL` as a second declarative statement section on models
+4. keep `system_der` coverage growing as behavior is clarified
 
 After that:
 
-4. define `INITIAL`, `pre(x)`, and `REINIT` semantics
-5. expand hybrid/event support on top of the current derivative model
+5. define `pre(x)` and `REINIT` semantics
+6. expand hybrid/event support on top of the current derivative model
+
+## `INITIAL` Implementation Status
+
+Current implemented pieces:
+
+- `INITIAL` is now a parser-recognized section inside `MODEL`
+- `TypeDescription` now stores a separate `initstats` statement list
+- statements in the `INITIAL` section are marked with `context_INITIAL`
+- child-list derivation now sees names declared in both the normal body and
+  `INITIAL`
+- executable-statement traversal for model instantiation now runs over:
+  - normal declarative statements
+  - then `INITIAL` statements
+
+This is enough to make `INITIAL` real in the compiler/runtime structure:
+
+- the syntax parses
+- the statements are preserved separately on the type
+- named relations in `INITIAL` instantiate as children
+
+However, this is **not yet the final semantics**.
+
+Current limitation:
+
+- `INITIAL` relations/logrelations are still instantiated and executed like
+  ordinary declarative equations
+- there is not yet an initialization-only relation flag
+- there is not yet a build-mode switch that includes/excludes `INITIAL`
+  equations
+
+So the current implementation should be understood as:
+
+- parser/type/instantiation plumbing complete enough to build on
+- initialization-mode semantics still pending
+
+The next implementation step is therefore:
+
+1. mark instantiated relations/logrelations created from `context_INITIAL`
+   statements
+2. add internal mode switching for:
+   - normal build
+   - initialization build
+3. include `INITIAL` equations only in initialization mode
+
+Until that is done, `INITIAL` is structurally present but not yet
+semantically isolated.

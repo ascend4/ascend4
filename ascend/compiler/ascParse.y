@@ -781,7 +781,7 @@ static CONST char *g_study_filename = NULL;
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
 %token FILE_TOK
 %token GLOBAL_TOK
-%token IF_TOK  IGNORE_TOK IMPORT_TOK IN_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK INDEPENDENT_TOK
+%token IF_TOK  IGNORE_TOK IMPORT_TOK IN_TOK INITIAL_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK INDEPENDENT_TOK
 %token INTERSECTION_TOK ISA_TOK _IS_T ISREFINEDTO_TOK
 %token LINEAR_TOK LOG_TOK
 %token NOW_TOK
@@ -847,7 +847,7 @@ static CONST char *g_study_filename = NULL;
 %type <braced_ptr> dataset_units_opt
 %type <id_ptr> dataset_type_opt dataset_type_req dataset_column_ref dataset_column_selector
 
-%type <slptr> fstatements global_def optional_else
+%type <slptr> fstatements global_def initial optional_else
 %type <slptr> optional_model_parameters optional_parameter_reduction
 %type <slptr> optional_parameter_wheres
 %type <septr> selectlist selectlistf
@@ -1388,16 +1388,16 @@ constant_val:
     ;
 
 model_def:
-    universal model_head fstatements methods end ';'
+    universal model_head fstatements initial methods end ';'
 	{
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
-	  if(( $5 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
+	  if(( $6 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
 	    WarnMsg_MismatchEnd("MODEL", SCP(g_type_name),
-	                        $5, SCP(g_type_name));
+	                        $6, SCP(g_type_name));
 	  }
 	  def_ptr = CreateModelTypeDef(g_type_name,
 	                               g_refines_name,
@@ -1405,6 +1405,7 @@ model_def:
 	                               $1,
 	                               $3,
 	                               $4,
+	                               $5,
 	                               g_model_parameters,
 	                               g_parameter_reduction,
 	                               g_parameter_wheres,
@@ -2017,6 +2018,18 @@ methods:
     proclist
 	{
 	  $$ = $3;
+	}
+    ;
+
+initial:
+    /* empty */
+	{
+	  $$ = EmptyStatementList();
+	}
+    | INITIAL_TOK fstatements
+	{
+	  AddContext($2,context_INITIAL);
+	  $$ = $2;
 	}
     ;
 

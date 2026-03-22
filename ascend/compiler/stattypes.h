@@ -154,6 +154,7 @@ enum stat_t {
 #define context_SWITCH   0x100 /**< statement is in SWITCH's statement list */
 #define context_WHILE    0x200 /**< statement is in WHILE's statement list */
 #define context_MODWHERE 0x400 /**< statement is in model where list */
+#define context_INITIAL  0x800 /**< statement is in an INITIAL section */
 
 /*
  * Certain statement types are more easily interpreted if we cache
