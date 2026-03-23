@@ -1,18 +1,63 @@
 REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
 
+CONSTANT inverse_time_constant REFINES real_constant DIMENSION 1/T;
+CONSTANT activation_temperature_constant REFINES real_constant DIMENSION TMP;
+CONSTANT temperature_per_molar_density_constant REFINES real_constant DIMENSION TMP*L^3/Q;
+
+ATOM molar_density_rate REFINES solver_var
+	DIMENSION Q/(L^3*T)
+	DEFAULT 0{mole/m^3/s};
+	lower_bound := -1e50{mole/m^3/s};
+	upper_bound := 1e50{mole/m^3/s};
+	nominal := 1{mole/m^3/s};
+END molar_density_rate;
+
+(* 
+	Reference reactor model for Pantelides/index-reduction discussion.
+	This is a simple stirred-tank style dynamic model with a concentration
+	balance, a temperature balance, an Arrhenius-style algebraic rate law,
+	and an imposed concentration/input constraint.
+
+	It is intended as a structural reference case rather than a calibrated
+	physical reactor model.
+*)
 MODEL pantelides_reactor;
-	K, K1, K2, K3, K4, C0, T0 IS_A real_constant;
-	C, T, R, Tc, u IS_A solver_var;
-	t IS_A solver_var;
+	k_d "dilution rate constant" IS_A inverse_time_constant;
+	k_t "inlet temperature relaxation rate constant" IS_A inverse_time_constant;
+	k_h "temperature rise per reaction-rate unit" IS_A temperature_per_molar_density_constant;
+	k_c "cooling/heat-transfer rate constant" IS_A inverse_time_constant;
+	k_r "reaction pre-exponential rate constant" IS_A inverse_time_constant;
+	theta "activation temperature parameter" IS_A activation_temperature_constant;
 
-	eq1: der(C) = K * (C0 - C) - R;
-	eq2: der(T) = K1 * (T0 - T) + K2 * R - K3 * (T - Tc);
-	eq3: 0 = R - K3 * exp(-K4 / T) * C;
-	eq4: 0 = C - u;
+	k_d :== 1{s^-1};
+	k_t :== 1{s^-1};
+	k_h :== 10{K*m^3/mole};
+	k_c :== 0.5{s^-1};
+	k_r :== 2{s^-1};
+	theta :== 500{K};
+
+	C_in, C, C_set IS_A molar_density;
+	T_in, T, T_cool IS_A temperature;
+	r_rxn IS_A molar_density_rate;
+	t IS_A time;
+
+	mass_balance: der(C) = k_d * (C_in - C) - r_rxn;
+	energy_balance: der(T) = k_t * (T_in - T) + k_h * r_rxn - k_c * (T - T_cool);
+	rate_law: r_rxn = k_r * exp(-theta / T) * C;
+	input_constraint: C = C_set;
 	INDEPENDENT t;
 
 METHODS
 	METHOD on_load;
-		(* Reference model for Pantelides discussion only. *)
+		C_in := 2{mole/m^3};
+		C := 1{mole/m^3};
+		C_set := 1{mole/m^3};
+		T_in := 350{K};
+		T := 330{K};
+		T_cool := 300{K};
+		t := 0{s};
+
+		FREE der(C), der(T);
 	END on_load;
 END pantelides_reactor;

@@ -309,6 +309,28 @@ static void test_high_index(){
 	ida_cleanup(&testsys);
 }
 
+static void test_pantelides_pendulum_high_index(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/pantelides/pendulum.a4c", "pantelides_pendulum", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(testsys.integ), 0);
+	ida_cleanup(&testsys);
+}
+
+static void test_pantelides_reactor_high_index(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/pantelides/reactor.a4c", "pantelides_reactor", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(testsys.integ), 0);
+	ida_cleanup(&testsys);
+}
+
 static void test_initial_decay(){
 	IdaTestSystem testsys;
 	struct Instance *root, *iy;
@@ -433,6 +455,8 @@ static void test_initial_alias_binding_bug(){
 	T(boundary) \
 	T(integ1) \
 	T(high_index) \
+	T(pantelides_pendulum_high_index) \
+	T(pantelides_reactor_high_index) \
 	T(initial_decay) \
 	T(initial_shm) \
 	T(initial_hier_decay) \
