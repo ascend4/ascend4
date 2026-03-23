@@ -3341,6 +3341,11 @@ name:
 	  $$ = CreateIdName($3);
 	  LinkNames($$,$1);
 	}
+	| name '.' DER_TOK
+	{
+	  $$ = CreateIdName(AddSymbol("der"));
+	  LinkNames($$,$1);
+	}
 	| name '[' set ']'
 	{
 	  if ($3 == NULL) {
