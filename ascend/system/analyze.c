@@ -381,55 +381,6 @@ static struct Instance *dynamic_registry_find_by_chain(struct problem_t *p_data,
   return NULL;
 }
 
-static int dynamic_binding_relation_mark(struct problem_t *p_data, struct Instance *relinst){
-  unsigned long i, len;
-  if(p_data == NULL || relinst == NULL){
-    return 1;
-  }
-  if(p_data->dynbindrels == NULL){
-    p_data->dynbindrels = gl_create(4);
-    if(p_data->dynbindrels == NULL){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for dynamic binding relation list.");
-      return 1;
-    }
-  }
-  len = gl_length(p_data->dynbindrels);
-  for(i = 1; i <= len; ++i){
-    if((struct Instance *)gl_fetch(p_data->dynbindrels, i) == relinst){
-      return 0;
-    }
-  }
-  gl_append_ptr(p_data->dynbindrels, relinst);
-  return 0;
-}
-
-static int dynamic_binding_relation_exclude_instance(struct Instance *relinst){
-  struct Instance *included;
-  included = ChildByChar(relinst, AddSymbol("included"));
-  if(included == NULL){
-    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
-    FPRINTF(ASCERR,"Derivative binding relation is missing 'included' child");
-    error_reporter_end_flush();
-    return 1;
-  }
-  SetBooleanAtomValue(included, FALSE, 0U);
-  return 0;
-}
-
-static int dynamic_binding_relation_is_marked(struct problem_t *p_data, struct Instance *relinst){
-  unsigned long i, len;
-  if(p_data == NULL || p_data->dynbindrels == NULL || relinst == NULL){
-    return 0;
-  }
-  len = gl_length(p_data->dynbindrels);
-  for(i = 1; i <= len; ++i){
-    if((struct Instance *)gl_fetch(p_data->dynbindrels, i) == relinst){
-      return 1;
-    }
-  }
-  return 0;
-}
-
 static struct Instance *dynamic_create_hidden_derivative(struct problem_t *p_data, struct Instance *base){
   struct dynreg_entry *base_entry;
   struct TypeDescription *solver_var_type;
@@ -532,13 +483,6 @@ static struct Instance *resolve_materialised_derivative(struct Instance *base, v
   return getOdeDerivative(data->root, base);
 }
 
-struct derivative_infer_data {
-  struct Instance *root;
-  struct problem_t *problem;
-  int next_odeid;
-  int errors;
-};
-
 struct derivative_recover_data {
   struct Instance *root;
   struct problem_t *problem;
@@ -636,140 +580,6 @@ static void recover_bound_derivative_terms(struct Instance *inst, VOIDPTR userda
       data->errors = 1;
       return;
     }
-  }
-}
-
-static int infer_derivative_binding_from_relation(struct derivative_infer_data *data,
-  struct Instance *relinst
-){
-  struct relation *rel;
-  CONST struct relation_term *lhs, *rhs, *varterm, *derterm;
-  struct Instance *base, *deriv;
-  struct dynreg_entry *base_entry, *deriv_entry;
-  int odeid;
-
-  if(data == NULL || relinst == NULL || GetInstanceRelationType(relinst) != e_token){
-    return 0;
-  }
-
-  rel = (struct relation *)GetInstanceRelationOnly(relinst);
-  if(rel == NULL || RelationRelop(rel) != e_equal){
-    return 0;
-  }
-  if(RTOKEN(rel).lhs == NULL || RTOKEN(rel).rhs == NULL ||
-     RTOKEN(rel).lhs_len != 1 || RTOKEN(rel).rhs_len != 1){
-    return 0;
-  }
-
-  lhs = A_TERM(&(RTOKEN(rel).lhs[0]));
-  rhs = A_TERM(&(RTOKEN(rel).rhs[0]));
-  if(lhs->t == e_var && rhs->t == e_der){
-    varterm = lhs;
-    derterm = rhs;
-  }else if(lhs->t == e_der && rhs->t == e_var){
-    varterm = rhs;
-    derterm = lhs;
-  }else{
-    return 0;
-  }
-
-  base = RelationVariable(rel, TermVarNumber(derterm));
-  deriv = RelationVariable(rel, TermVarNumber(varterm));
-  if(!dynamic_registry_can_track(base) || !dynamic_registry_can_track(deriv)){
-    return 0;
-  }
-  if(dynamic_instance_matches(base, deriv)){
-    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-    FPRINTF(ASCERR,"Invalid derivative binding in relation '");
-    WriteInstanceName(ASCERR,relinst,data->root);
-    FPRINTF(ASCERR,"': der(");
-    WriteInstanceName(ASCERR,base,data->root);
-    FPRINTF(ASCERR,") cannot be materialised by the same variable");
-    error_reporter_end_flush();
-    return 1;
-  }
-
-  base_entry = dynamic_registry_lookup(data->problem, base);
-  deriv_entry = dynamic_registry_lookup(data->problem, deriv);
-
-  if(base_entry != NULL && base_entry->inst != NULL && base_entry->odeid != 0){
-    if(base_entry->deriv != 1){
-      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-      FPRINTF(ASCERR,"Unsupported higher-order derivative binding in relation '");
-      WriteInstanceName(ASCERR,relinst,data->root);
-      FPRINTF(ASCERR,"': der(");
-      WriteInstanceName(ASCERR,base,data->root);
-      FPRINTF(ASCERR,") currently requires the base variable to be a state");
-      error_reporter_end_flush();
-      return 1;
-    }
-    odeid = base_entry->odeid;
-  }else if(deriv_entry != NULL && deriv_entry->inst != NULL && deriv_entry->odeid != 0){
-    if(deriv_entry->deriv != 2){
-      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-      FPRINTF(ASCERR,"Unsupported higher-order derivative materialisation in relation '");
-      WriteInstanceName(ASCERR,relinst,data->root);
-      FPRINTF(ASCERR,"': variable '");
-      WriteInstanceName(ASCERR,deriv,data->root);
-      FPRINTF(ASCERR,"' is already registered at derivative order %d",deriv_entry->deriv);
-      error_reporter_end_flush();
-      return 1;
-    }
-    odeid = deriv_entry->odeid;
-  }else{
-    odeid = data->next_odeid++;
-  }
-
-  if(base_entry != NULL && base_entry->inst != NULL &&
-      (base_entry->odeid != odeid || base_entry->deriv != 1)){
-    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-    FPRINTF(ASCERR,"Conflicting derivative binding for base variable '");
-    WriteInstanceName(ASCERR,base,data->root);
-    FPRINTF(ASCERR,"' in relation '");
-    WriteInstanceName(ASCERR,relinst,data->root);
-    FPRINTF(ASCERR,"'");
-    error_reporter_end_flush();
-    return 1;
-  }
-  if(deriv_entry != NULL && deriv_entry->inst != NULL &&
-      (deriv_entry->odeid != odeid || deriv_entry->deriv != 2)){
-    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-    FPRINTF(ASCERR,"Conflicting derivative materialisation for variable '");
-    WriteInstanceName(ASCERR,deriv,data->root);
-    FPRINTF(ASCERR,"' in relation '");
-    WriteInstanceName(ASCERR,relinst,data->root);
-    FPRINTF(ASCERR,"'");
-    error_reporter_end_flush();
-    return 1;
-  }
-
-  if(base_entry == NULL && dynamic_registry_add(data->problem, base, 1, odeid)){
-    return 1;
-  }
-  if(deriv_entry == NULL && dynamic_registry_add(data->problem, deriv, 2, odeid)){
-    return 1;
-  }
-  if(dynamic_binding_relation_mark(data->problem, relinst)){
-    return 1;
-  }
-  if(dynamic_binding_relation_exclude_instance(relinst)){
-    return 1;
-  }
-  return 0;
-}
-
-static void infer_derivative_terms(struct Instance *inst, VOIDPTR userdata)
-{
-  struct derivative_infer_data *data = (struct derivative_infer_data *)userdata;
-
-  if(data == NULL || data->errors){
-    return;
-  }
-  if(InstanceKind(inst) != REL_INST){
-    return;
-  }
-  if(infer_derivative_binding_from_relation(data, inst)){
-    data->errors = 1;
   }
 }
 
@@ -1452,9 +1262,6 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
       ip->u.r.inwhen = 0;
     }
     ip->u.r.included = BooleanChildValue(inst,INCLUDED_A);
-    if(ip->u.r.included && dynamic_binding_relation_is_marked(p_data, inst)){
-      ip->u.r.included = 0;
-    }
     ip->u.r.model = 0;
     ip->u.r.index = 0;
     return ip;
@@ -3443,8 +3250,6 @@ static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data){
 int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   int stat;
   struct derivative_bind_data bind_data;
-  struct derivative_infer_data infer_data;
-
   struct problem_t thisproblem; /* note default zero intitialisation. note also: local var! */
   struct problem_t *p_data; /* need to malloc, free, or make &local */
 
@@ -3479,17 +3284,11 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
 
   DerivativeInstancesPrepareRoot(inst);
 
-  infer_data.root = inst;
-  infer_data.problem = p_data;
-  infer_data.next_odeid = dynamic_registry_next_odeid(p_data);
-  infer_data.errors = 0;
-  VisitInstanceTreeTwo(inst,(VisitTwoProc)infer_derivative_terms,TRUE,FALSE,
-                       (VOIDPTR)&infer_data);
-  if(infer_data.errors){
-    analyze_free_lists(p_data);
-    p_data->root = NULL;
-    return 2;
-  }
+  /*
+   * Preserve ordinary equation semantics for relations such as `v = der(x)`.
+   * These relations currently remain equations rather than being co-opted
+   * into derivative-binding metadata.
+   */
 
   VisitInstanceTreeTwo(inst,(VisitTwoProc)bind_derivative_terms,TRUE,FALSE,
                        (VOIDPTR)&bind_data);
