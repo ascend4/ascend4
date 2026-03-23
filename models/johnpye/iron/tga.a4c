@@ -357,9 +357,9 @@ METHODS
 		K_eq_lnA[1] := 8.54050167864375;
 		K_eq_lnA[2] := 8.447122204684765;
 		K_eq_lnA[3] := 1.0604569618298618;
-		K_eq_lnB[1] := 2552.121942697152;
-		K_eq_lnB[2] := 8067.2733483476295;
-		K_eq_lnB[3] := 1856.1489018164739;
+			K_eq_lnB[1] := 2552.121942697152;
+			K_eq_lnB[2] := 8067.2733483476295;
+			K_eq_lnB[3] := 1856.1489018164739;
 
 		xi[1] := 0;
 		xi[2] := 0;
@@ -371,13 +371,23 @@ METHODS
 		t := 0 {s};
 	END values;
 
-	METHOD specify;
-		FIX T, p, A_crucible, L_freeboard, m_sample_init, rho_bulk_bed;
-		FIX eps_bed, tau_bed, k_fb_multiplier, k_bed_multiplier;
-		FIX y_H2_bulk, y_H2O_bulk;
+		METHOD specify;
+			FIX T, p, A_crucible, L_freeboard, m_sample_init, rho_bulk_bed;
+			FIX eps_bed, tau_bed, k_fb_multiplier, k_bed_multiplier;
+			FIX y_H2_bulk, y_H2O_bulk;
 		FIX k0[steps], E_a[steps], K_eq_lnA[steps], K_eq_lnB[steps];
 		FIX xi[steps];
 	END specify;
+
+	METHOD use_measured_bed_height;
+		FIX H_bed;
+		FREE rho_bulk_bed;
+	END use_measured_bed_height;
+
+	METHOD use_bulk_density_model;
+		FIX rho_bulk_bed;
+		FREE H_bed;
+	END use_bulk_density_model;
 
 	METHOD steady_init;
 		SOLVER QRSlv;
@@ -411,6 +421,30 @@ METHODS
 	METHOD case_100mg;
 		m_sample_init := 100 {mg};
 	END case_100mg;
+
+	METHOD prep_sahar_873K;
+		T := 873.15 {K};
+		y_H2_bulk := 0.8;
+		H_bed := 2 {mm};
+		L_freeboard := 8.3 {mm};
+		m_sample_init := 100 {mg};
+		RUN use_measured_bed_height;
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
+	END prep_sahar_873K;
+
+	METHOD prep_sahar_1073K;
+		T := 1073.15 {K};
+		y_H2_bulk := 0.8;
+		H_bed := 2 {mm};
+		L_freeboard := 8.3 {mm};
+		m_sample_init := 100 {mg};
+		RUN use_measured_bed_height;
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
+	END prep_sahar_1073K;
 
 	METHOD on_load;
 		RUN reset;

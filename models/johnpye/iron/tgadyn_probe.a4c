@@ -1,0 +1,274 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/fboard.a4c";
+
+ATOM extent_rate_probe REFINES solver_var
+	DIMENSION T^-1
+	DEFAULT 1e-4 {1/s};
+	lower_bound := -1e3 {1/s};
+	upper_bound := 1e3 {1/s};
+	nominal := 1e-4 {1/s};
+END extent_rate_probe;
+
+MODEL tga_ida_probe_minimal;
+	steps IS_A set OF integer_constant;
+	steps :== [1..3];
+
+	t IS_A time;
+	x[steps] IS_A fraction;
+	dx_dt[steps] IS_A extent_rate_probe;
+	k[steps] IS_A frequency;
+	xsum IS_A factor;
+
+	sum_eq: xsum = x[1] + x[2] + x[3];
+
+	FOR i IN steps CREATE
+		rate_eq[i]: dx_dt[i] = k[i] * (1 - x[i]);
+	END FOR;
+
+METHODS
+	METHOD on_load;
+		k[1] := 0.02 {1/s};
+		k[2] := 0.01 {1/s};
+		k[3] := 0.005 {1/s};
+		x[1] := 0;
+		x[2] := 0;
+		x[3] := 0;
+		dx_dt[1] := 0.02 {1/s};
+		dx_dt[2] := 0.01 {1/s};
+		dx_dt[3] := 0.005 {1/s};
+		t := 0 {s};
+
+		INDEPENDENT t;
+		DER(dx_dt[1], x[1]);
+		DER(dx_dt[2], x[2]);
+		DER(dx_dt[3], x[3]);
+
+		x[1].obs_id := 1;
+		x[2].obs_id := 2;
+		x[3].obs_id := 3;
+		xsum.obs_id := 4;
+	END on_load;
+END tga_ida_probe_minimal;
+
+MODEL tga_ida_probe_three_scalar;
+	t IS_A time;
+	x1, x2, x3 IS_A fraction;
+	dx1_dt, dx2_dt, dx3_dt IS_A extent_rate_probe;
+	xsum IS_A factor;
+
+	sum_eq: xsum = x1 + x2 + x3;
+	rate1_eq: dx1_dt = 0.02 {1/s} * (1 - x1);
+	rate2_eq: dx2_dt = 0.01 {1/s} * (1 - x2);
+	rate3_eq: dx3_dt = 0.005 {1/s} * (1 - x3);
+
+METHODS
+	METHOD on_load;
+		x1 := 0;
+		x2 := 0;
+		x3 := 0;
+		dx1_dt := 0.02 {1/s};
+		dx2_dt := 0.01 {1/s};
+		dx3_dt := 0.005 {1/s};
+		t := 0 {s};
+
+		INDEPENDENT t;
+		DER(dx1_dt, x1);
+		DER(dx2_dt, x2);
+		DER(dx3_dt, x3);
+
+		x1.obs_id := 1;
+		x2.obs_id := 2;
+		x3.obs_id := 3;
+		xsum.obs_id := 4;
+	END on_load;
+END tga_ida_probe_three_scalar;
+
+MODEL tga_ida_probe_array_one;
+	steps IS_A set OF integer_constant;
+	steps :== [1..1];
+
+	t IS_A time;
+	x[steps] IS_A fraction;
+	dx_dt[steps] IS_A extent_rate_probe;
+
+	rate_eq: dx_dt[1] = 0.02 {1/s} * (1 - x[1]);
+
+METHODS
+	METHOD on_load;
+		x[1] := 0;
+		dx_dt[1] := 0.02 {1/s};
+		t := 0 {s};
+
+		INDEPENDENT t;
+		DER(dx_dt[1], x[1]);
+
+		x[1].obs_id := 1;
+	END on_load;
+END tga_ida_probe_array_one;
+
+MODEL tga_ida_probe_three_scalar_steadyinit;
+	t IS_A time;
+	x1, x2, x3 IS_A fraction;
+	dx1_dt, dx2_dt, dx3_dt IS_A extent_rate_probe;
+	xsum IS_A factor;
+
+	sum_eq: xsum = x1 + x2 + x3;
+	rate1_eq: dx1_dt = 0.02 {1/s} * (1 - x1);
+	rate2_eq: dx2_dt = 0.01 {1/s} * (1 - x2);
+	rate3_eq: dx3_dt = 0.005 {1/s} * (1 - x3);
+
+METHODS
+	METHOD values;
+		x1 := 0;
+		x2 := 0;
+		x3 := 0;
+		dx1_dt := 0.02 {1/s};
+		dx2_dt := 0.01 {1/s};
+		dx3_dt := 0.005 {1/s};
+		t := 0 {s};
+	END values;
+
+	METHOD steady_init;
+		FIX x1, x2, x3;
+		SOLVER QRSlv;
+		SOLVE;
+		FREE x1, x2, x3;
+	END steady_init;
+
+	METHOD on_load;
+		RUN values;
+		RUN steady_init;
+
+		x1.ode_id := 1;
+		dx1_dt.ode_id := 1;
+		x1.ode_type := 1;
+		dx1_dt.ode_type := 2;
+
+		x2.ode_id := 2;
+		dx2_dt.ode_id := 2;
+		x2.ode_type := 1;
+		dx2_dt.ode_type := 2;
+
+		x3.ode_id := 3;
+		dx3_dt.ode_id := 3;
+		x3.ode_type := 1;
+		dx3_dt.ode_type := 2;
+
+		t.ode_type := -1;
+		t := 0 {s};
+
+		x1.obs_id := 1;
+		x2.obs_id := 2;
+		x3.obs_id := 3;
+		xsum.obs_id := 4;
+	END on_load;
+END tga_ida_probe_three_scalar_steadyinit;
+
+MODEL tga_ida_probe_three_scalar_postinit;
+	t IS_A time;
+	x1, x2, x3 IS_A fraction;
+	dx1_dt, dx2_dt, dx3_dt IS_A extent_rate_probe;
+	xsum IS_A factor;
+
+	sum_eq: xsum = x1 + x2 + x3;
+	rate1_eq: dx1_dt = 0.02 {1/s} * (1 - x1);
+	rate2_eq: dx2_dt = 0.01 {1/s} * (1 - x2);
+	rate3_eq: dx3_dt = 0.005 {1/s} * (1 - x3);
+
+METHODS
+	METHOD values;
+		x1 := 0;
+		x2 := 0;
+		x3 := 0;
+		dx1_dt := 0.02 {1/s};
+		dx2_dt := 0.01 {1/s};
+		dx3_dt := 0.005 {1/s};
+		t := 0 {s};
+	END values;
+
+	METHOD steady_init;
+		FIX x1, x2, x3;
+		SOLVER QRSlv;
+		SOLVE;
+		FREE x1, x2, x3;
+	END steady_init;
+
+	METHOD ode_init;
+		x1.ode_id := 1;
+		dx1_dt.ode_id := 1;
+		x1.ode_type := 1;
+		dx1_dt.ode_type := 2;
+
+		x2.ode_id := 2;
+		dx2_dt.ode_id := 2;
+		x2.ode_type := 1;
+		dx2_dt.ode_type := 2;
+
+		x3.ode_id := 3;
+		dx3_dt.ode_id := 3;
+		x3.ode_type := 1;
+		dx3_dt.ode_type := 2;
+
+		t.ode_type := -1;
+		t := 0 {s};
+
+		x1.obs_id := 1;
+		x2.obs_id := 2;
+		x3.obs_id := 3;
+		xsum.obs_id := 4;
+	END ode_init;
+
+	METHOD on_load;
+		RUN values;
+		RUN steady_init;
+	END on_load;
+END tga_ida_probe_three_scalar_postinit;
+
+MODEL tga_ida_probe_transport;
+	t IS_A time;
+	x IS_A fraction;
+	dx_dt IS_A extent_rate_probe;
+	T IS_A temperature;
+	p IS_A pressure;
+	y_H2_bulk IS_A mole_fraction;
+	y_H2_react IS_A mole_fraction;
+	c_tot IS_A molar_density;
+	L_freeboard IS_A distance;
+	tr IS_A diffusion_h2o_h2_ar;
+	D_screen IS_A diffusivity;
+	k_fb IS_A speed;
+	J_transport IS_A molar_flux;
+
+	tr_T: tr.T = T;
+	tr_p: tr.p = p;
+	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+	Dscreen_eq: D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
+	kfb_eq: k_fb = D_screen / L_freeboard;
+	react_eq: y_H2_react = y_H2_bulk * (1 - 0.2 * x);
+	flux_eq: J_transport = c_tot * k_fb * (y_H2_bulk - y_H2_react);
+	rate_eq: dx_dt = 0.01 {1/s} * (1 - x) * (J_transport / (1e-6 {mol/m^2/s}));
+
+METHODS
+	METHOD on_load;
+		T := 1073.15 {K};
+		p := 1 {bar};
+		y_H2_bulk := 0.8;
+		y_H2_react := 0.7;
+		L_freeboard := 8.3 {mm};
+		x := 0;
+		dx_dt := 0.01 {1/s};
+		t := 0 {s};
+
+		INDEPENDENT t;
+		DER(dx_dt, x);
+
+		x.obs_id := 1;
+		y_H2_react.obs_id := 2;
+		J_transport.obs_id := 3;
+	END on_load;
+END tga_ida_probe_transport;
+
+(* vim: sw=4:noet:ts=4
+*)

@@ -1,5 +1,5 @@
 #!@PYTHON@
-import os, argparse, pathlib, sys, platform, shutil, subprocess
+import os, argparse, pathlib, sys, platform, shutil, subprocess, tempfile
 
 DEBUG=0
 def MSG(*args):
@@ -114,6 +114,38 @@ def resolve_cmd_for_debugger(cmd):
 		return cmd
 	return shebang(cmd[0], cmd[1:])
 
+def preprocess_gprofng_args(argv):
+	"""Normalize gprofng options so argparse doesn't consume the subcommand.
+
+	We support:
+	- ``--gprofng``
+	- ``--gprofng EXPERIMENT``
+	- ``--gprofng=EXPERIMENT``
+	"""
+	subcommands = {'open', 'gui', 'run', 'script', 'cutest', 'units', 'env', 'q'}
+	rewritten = [argv[0]]
+	i = 1
+	while i < len(argv):
+		arg = argv[i]
+		if arg == '--gprofng':
+			if i + 1 < len(argv):
+				next_arg = argv[i + 1]
+				if not next_arg.startswith('-') and next_arg not in subcommands:
+					rewritten.append('--gprofng=' + next_arg)
+					i += 2
+					continue
+			rewritten.append('--gprofng=')
+		else:
+			rewritten.append(arg)
+		i += 1
+	return rewritten
+
+def default_gprofng_output():
+	fd, path = tempfile.mkstemp(prefix='a4-gprofng-', suffix='.er', dir=tempfile.gettempdir())
+	os.close(fd)
+	os.unlink(path)
+	return pathlib.Path(path)
+
 if __name__ == "__main__":
 	argv = list(sys.argv)
 	if (
@@ -137,6 +169,8 @@ if __name__ == "__main__":
 		# letting argparse consume them as subcommand help.
 		argv.insert(2, '--')
 
+	argv = preprocess_gprofng_args(argv)
+
 	p = argparse.ArgumentParser(description='ASCEND launcher')
 
 	p.add_argument('--debug',action='store_true',help='Show launcher debug output')
@@ -145,6 +179,7 @@ if __name__ == "__main__":
 	g.add_argument('--gdb1',action='store_true',help='Run action via non-interactive GDB with backtrace on exit')
 	g.add_argument('--valgrind',action='store_true',help='Run action via Valgrind')
 	g.add_argument('--callgrind',action='store_true',help='Run action via Valgrind Callgrind profiler')
+	g.add_argument('--gprofng',dest='gprofng',nargs='?',const='',metavar='EXPERIMENT',help='Run action via gprofng collect app; default output goes under the temp directory')
 
 	s = p.add_subparsers(help='sub-command help')
 	
@@ -283,6 +318,13 @@ if __name__ == "__main__":
 			, '--trace-children=yes'
 			, '--callgrind-out-file=%s' % callgrind_out
 		]
+	elif args.gprofng is not None:
+		GPROFNG = shutil.which('gprofng')
+		if GPROFNG == None:
+			raise RuntimeError("Could not locate 'gprofng' in the PATH")
+		gprofng_out = pathlib.Path(args.gprofng) if args.gprofng else default_gprofng_output()
+		MSG("GPROFNG output =", gprofng_out)
+		precmd = [GPROFNG, 'collect', 'app', '-o', gprofng_out]
 	
 	cmd = precmd
 	if not hasattr(args,'action') or args.action == 'gui':

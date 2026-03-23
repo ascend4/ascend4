@@ -12,7 +12,7 @@ REQUIRE "johnpye/iron/tga.a4c";
 	- the same lumped freeboard + bed transport closure is retained;
 	- the same three kineq-style reduction steps are retained;
 	- the gas side remains quasi-steady and algebraic;
-	- the solid extents xi[1..3] are now true dynamic states.
+	- the solid extents xi1, xi2, xi3 are now true dynamic states.
 
 	The first target is not a full distributed bed model. It is a minimal
 	time-domain screening model that can reproduce reduction_degree(t) and
@@ -36,6 +36,7 @@ MODEL tga_reduction_screen_dyn;
 	m_sample IS_A mass;
 	rho_bulk_bed IS_A mass_density;
 	H_bed IS_A distance;
+	m_sample.lower_bound := -1 {kg};
 
 	eps_bed IS_A positive_factor;
 	tau_bed IS_A positive_factor;
@@ -78,18 +79,23 @@ MODEL tga_reduction_screen_dyn;
 	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
 	n0_Fe2O3 IS_A mole;
 	n0_per_area IS_A mole_per_area;
-
-	xi[steps] IS_A reduction_extent;
-	dxi_dt[steps] IS_A extent_rate;
+	xi1, xi2, xi3 IS_A reduction_extent;
+	dxi1_dt, dxi2_dt, dxi3_dt IS_A extent_rate;
 
 	n_Fe2O3, n_Fe3O4, n_FeO, n_Fe IS_A mole;
 	oxygen_remaining IS_A mole;
 	reduction_degree IS_A factor;
+	n_Fe2O3.lower_bound := -1e-12 {mol};
+	n_Fe3O4.lower_bound := -1e-12 {mol};
+	n_FeO.lower_bound := -1e-12 {mol};
+	n_Fe.lower_bound := -1e-12 {mol};
+	oxygen_remaining.lower_bound := -1e-12 {mol};
 
 	(* Stepwise kineq-style local kinetics *)
 	k0[steps] IS_A rate_per_pressure;
 	E_a[steps] IS_A molar_energy;
 	k_step[steps] IS_A rate_per_pressure;
+	k_step[steps].lower_bound := -1e6 {1/s/Pa};
 
 	K_eq_lnA[steps] IS_A factor;
 	K_eq_lnB[steps] IS_A factor;
@@ -102,16 +108,27 @@ MODEL tga_reduction_screen_dyn;
 	rate_net[steps] IS_A extent_rate;
 
 	J_reaction IS_A molar_flux;
+	tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
+	tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
+	tr.h2_ar.sigma_ij.lower_bound := -1 {m};
+	tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
+	tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
+	tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
+	tr.h2o_h2.T_star.lower_bound := -1e6;
+	tr.h2o_ar.T_star.lower_bound := -1e6;
+	tr.h2_ar.T_star.lower_bound := -1e6;
+	tr.h2o_h2.Omega_D.lower_bound := -1e6;
+	tr.h2o_ar.Omega_D.lower_bound := -1e6;
+	tr.h2_ar.Omega_D.lower_bound := -1e6;
+	tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
+	tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
+	tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
+	tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
+	tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+	tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
 
-	(* Held crossing-time tracker for RD = 0.5.
-	   This integrates at 1 while RD < 0.5 and at 0 afterwards, so it becomes
-	   a model-side t_RD50 estimate without needing post-processing. *)
-	t_RD50 IS_A time;
-	dt_RD50_dt IS_A factor;
-	rd50_reached IS_A boolean_var;
-
-	tr_T: tr.T = T;
-	tr_p: tr.p = p;
+		tr_T: tr.T = T;
+		tr_p: tr.p = p;
 
 	ctot_eq: c_tot = p / (1 {GAS_C} * T);
 
@@ -127,11 +144,10 @@ MODEL tga_reduction_screen_dyn;
 
 	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
 	n0area_eq: n0_per_area = n0_Fe2O3 / A_crucible;
-
-	nhe_eq: n_Fe2O3 = n0_Fe2O3 * (1 - 3 * xi[1]);
-	nmag_eq: n_Fe3O4 = n0_Fe2O3 * (2 * xi[1] - xi[2]);
-	nwu_eq: n_FeO = n0_Fe2O3 * (3 * xi[2] - xi[3]);
-	nfe_eq: n_Fe = n0_Fe2O3 * xi[3];
+	nhe_eq: n_Fe2O3 = n0_Fe2O3 * (1 - 3 * xi1);
+	nmag_eq: n_Fe3O4 = n0_Fe2O3 * (2 * xi1 - xi2);
+	nwu_eq: n_FeO = n0_Fe2O3 * (3 * xi2 - xi3);
+	nfe_eq: n_Fe = n0_Fe2O3 * xi3;
 
 	msample_eq:
 		m_sample
@@ -189,36 +205,23 @@ MODEL tga_reduction_screen_dyn;
 			rate_reverse[r] = availability[r] * k_step[r] * p * y_H2O_react / K_ratio_eq[r];
 		rnet_eq[r]:
 			rate_net[r] = rate_forward[r] - rate_reverse[r];
-		ode_eq[r]:
-			dxi_dt[r] = rate_net[r];
 	END FOR;
+
+	ode1_eq: dxi1_dt = rate_net[1];
+	ode2_eq: dxi2_dt = rate_net[2];
+	ode3_eq: dxi3_dt = rate_net[3];
 
 	Jrxn_eq:
 		J_reaction = n0_per_area * (rate_net[1] + rate_net[2] + rate_net[3]);
 
 	transport_match: J_transport = J_reaction;
 
-CONDITIONAL
-	rd50_boundary: reduction_degree >= 0.5;
-END CONDITIONAL;
-
-	rd50_sat: rd50_reached == SATISFIED(rd50_boundary, 1e-6);
-	rd50_counting: dt_RD50_dt = 1;
-	rd50_hold: dt_RD50_dt = 0;
-
-	WHEN (rd50_reached)
-		CASE FALSE:
-			USE rd50_counting;
-		CASE TRUE:
-			USE rd50_hold;
-	END WHEN;
-
 METHODS
-	METHOD values;
-		T := 800 {K};
-		p := 1 {bar};
-		A_crucible := 20 {mm^2};
-		L_freeboard := 8.3 {mm};
+		METHOD values;
+			T := 1073.15 {K};
+			p := 1 {bar};
+			A_crucible := 20 {mm^2};
+			L_freeboard := 8.3 {mm};
 
 		m_sample_init := 100 {mg};
 		rho_bulk_bed := 1500 {kg/m^3};
@@ -244,25 +247,22 @@ METHODS
 		E_a[2] := 60 {kJ/mol};
 		E_a[3] := 62 {kJ/mol};
 
-		K_eq_lnA[1] := 8.54050167864375;
+			K_eq_lnA[1] := 8.54050167864375;
 		K_eq_lnA[2] := 8.447122204684765;
 		K_eq_lnA[3] := 1.0604569618298618;
-		K_eq_lnB[1] := 2552.121942697152;
-		K_eq_lnB[2] := 8067.2733483476295;
-		K_eq_lnB[3] := 1856.1489018164739;
+			K_eq_lnB[1] := 2552.121942697152;
+			K_eq_lnB[2] := 8067.2733483476295;
+			K_eq_lnB[3] := 1856.1489018164739;
 
-		xi[1] := 0;
-		xi[2] := 0;
-		xi[3] := 0;
-		dxi_dt[1] := 1e-5 {1/s};
-		dxi_dt[2] := 1e-6 {1/s};
-		dxi_dt[3] := 1e-6 {1/s};
+			xi1 := 0;
+			xi2 := 0;
+			xi3 := 0;
+			dxi1_dt := 1e-5 {1/s};
+			dxi2_dt := 1e-6 {1/s};
+			dxi3_dt := 1e-6 {1/s};
 
-		t := 0 {s};
-		t_RD50 := 0 {s};
-		dt_RD50_dt := 1;
-		rd50_reached := FALSE;
-	END values;
+			t := 0 {s};
+		END values;
 
 	METHOD specify;
 		FIX T, p, A_crucible, L_freeboard, m_sample_init;
@@ -281,65 +281,102 @@ METHODS
 		FREE H_bed;
 	END use_bulk_density_model;
 
-	METHOD steady_init;
-		FIX xi[steps], t_RD50;
-		SOLVER QRSlv;
-		OPTION convopt 'RELNOM_SCALE';
-		OPTION iterationlimit 1000;
-		SOLVE;
-		FREE xi[steps], t_RD50;
-	END steady_init;
+	METHOD algebraic_base;
+		RUN reset;
+		RUN values;
+		RUN specify;
+		RUN use_measured_bed_height;
+	END algebraic_base;
 
-	METHOD reinitialise;
-		t := 0 {s};
-		t_RD50 := 0 {s};
-		dt_RD50_dt := 1;
-		rd50_reached := FALSE;
-		RUN steady_init;
-	END reinitialise;
+	METHOD steady_init;
+			FIX xi1, xi2, xi3;
+			SOLVER QRSlv;
+			OPTION convopt 'RELNOM_SCALE';
+			OPTION iterationlimit 1000;
+			SOLVE;
+			FREE xi1, xi2, xi3;
+		END steady_init;
+
+		METHOD dynamic_reset;
+			xi1 := 0;
+			xi2 := 0;
+			xi3 := 0;
+			dxi1_dt := 1e-5 {1/s};
+			dxi2_dt := 1e-6 {1/s};
+			dxi3_dt := 1e-6 {1/s};
+			t := 0 {s};
+		END dynamic_reset;
+
+		METHOD reinitialise;
+			RUN dynamic_reset;
+			RUN steady_init;
+		END reinitialise;
 
 	METHOD case_10mg;
 		m_sample_init := 10 {mg};
 		RUN reinitialise;
 	END case_10mg;
 
-	METHOD case_100mg;
-		m_sample_init := 100 {mg};
-		RUN reinitialise;
-	END case_100mg;
+		METHOD case_100mg;
+			m_sample_init := 100 {mg};
+			RUN reinitialise;
+		END case_100mg;
 
-	METHOD case_sahar_600C;
-		T := 600 {C};
-		y_H2_bulk := 0.8;
-		H_bed := 2 {mm};
-		L_freeboard := 8.3 {mm};
-		m_sample_init := 100 {mg};
-		RUN use_measured_bed_height;
-		RUN reinitialise;
-	END case_sahar_600C;
+		METHOD prep_sahar_873K;
+			T := 873.15 {K};
+			y_H2_bulk := 0.8;
+			H_bed := 2 {mm};
+			L_freeboard := 8.3 {mm};
+			m_sample_init := 100 {mg};
+			RUN use_measured_bed_height;
+			RUN dynamic_reset;
+		END prep_sahar_873K;
 
-	METHOD case_sahar_800C;
-		T := 800 {C};
-		y_H2_bulk := 0.8;
-		H_bed := 2 {mm};
-		L_freeboard := 8.3 {mm};
-		m_sample_init := 100 {mg};
-		RUN use_measured_bed_height;
-		RUN reinitialise;
-	END case_sahar_800C;
+		METHOD prep_sahar_1073K;
+			T := 1073.15 {K};
+			y_H2_bulk := 0.8;
+			H_bed := 2 {mm};
+			L_freeboard := 8.3 {mm};
+			m_sample_init := 100 {mg};
+			RUN use_measured_bed_height;
+			RUN dynamic_reset;
+		END prep_sahar_1073K;
 
-	METHOD on_load;
-		RUN reset;
-		RUN values;
-		RUN specify;
-		RUN use_measured_bed_height;
-		RUN steady_init;
+		METHOD case_sahar_600C;
+			T := 873.15 {K};
+			y_H2_bulk := 0.8;
+			H_bed := 2 {mm};
+			L_freeboard := 8.3 {mm};
+			m_sample_init := 100 {mg};
+			RUN use_measured_bed_height;
+			RUN reinitialise;
+		END case_sahar_600C;
 
+		METHOD case_sahar_800C;
+			T := 1073.15 {K};
+			y_H2_bulk := 0.8;
+			H_bed := 2 {mm};
+			L_freeboard := 8.3 {mm};
+			m_sample_init := 100 {mg};
+			RUN use_measured_bed_height;
+			RUN reinitialise;
+		END case_sahar_800C;
+
+		METHOD case_sahar_873K;
+			RUN case_sahar_600C;
+		END case_sahar_873K;
+
+		METHOD case_sahar_1073K;
+			RUN case_sahar_800C;
+		END case_sahar_1073K;
+
+	METHOD ode_init;
 		INDEPENDENT t;
-		DER(dxi_dt[1], xi[1]);
-		DER(dxi_dt[2], xi[2]);
-		DER(dxi_dt[3], xi[3]);
-		DER(dt_RD50_dt, t_RD50);
+		DER(dxi1_dt, xi1);
+		DER(dxi2_dt, xi2);
+		DER(dxi3_dt, xi3);
+
+		t := 0 {s};
 
 		reduction_degree.obs_id := 1;
 		m_sample.obs_id := 2;
@@ -349,9 +386,38 @@ METHODS
 		rate_net[1].obs_id := 6;
 		rate_net[2].obs_id := 7;
 		rate_net[3].obs_id := 8;
-		t_RD50.obs_id := 9;
+		xi1.obs_id := 9;
+		xi2.obs_id := 10;
+		xi3.obs_id := 11;
+	END ode_init;
+
+	METHOD on_load;
+		RUN reset;
+		RUN values;
+		RUN specify;
+		RUN use_measured_bed_height;
+		RUN dynamic_reset;
+
+		INDEPENDENT t;
+		DER(dxi1_dt, xi1);
+		DER(dxi2_dt, xi2);
+		DER(dxi3_dt, xi3);
+
+		t := 0 {s};
+
+		reduction_degree.obs_id := 1;
+		m_sample.obs_id := 2;
+		y_H2_react.obs_id := 3;
+		y_H2O_react.obs_id := 4;
+		J_transport.obs_id := 5;
+		rate_net[1].obs_id := 6;
+		rate_net[2].obs_id := 7;
+		rate_net[3].obs_id := 8;
+		xi1.obs_id := 9;
+		xi2.obs_id := 10;
+		xi3.obs_id := 11;
 	END on_load;
-END tga_reduction_screen_dyn;
+	END tga_reduction_screen_dyn;
 
 
 (* vim: sw=4:noet:ts=4
