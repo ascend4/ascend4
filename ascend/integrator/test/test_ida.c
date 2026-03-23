@@ -411,6 +411,23 @@ static void test_initial_bad_overdetermined(){
 	CU_ASSERT(0 != solve_res);
 }
 
+static void test_initial_alias_binding_bug(){
+	IdaTestSystem testsys;
+	int solve_res;
+
+	if(ida_test_load("test/ida/initial_alias.a4c", "ida_initial_alias_binding_bug", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 20);
+	solve_res = integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+	CU_ASSERT_FATAL(0 == solve_res);
+}
+
 #define TESTS(T) \
 	T(shm) \
 	T(boundary) \
@@ -420,6 +437,7 @@ static void test_initial_bad_overdetermined(){
 	T(initial_shm) \
 	T(initial_hier_decay) \
 	T(initial_dae) \
-	T(initial_bad_overdetermined)
+	T(initial_bad_overdetermined) \
+	T(initial_alias_binding_bug)
 
 REGISTER_TESTS_SIMPLE(integrator_ida, TESTS)
