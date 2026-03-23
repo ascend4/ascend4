@@ -1,0 +1,18 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL test11;
+	x IS_A solver_var;
+	t IS_A solver_var;
+
+	eq1: der(x) = -x;
+	INDEPENDENT t;
+METHODS
+METHOD on_load;
+	x.der.obs_id := 3;
+	x.der.ode_id := 4;
+	x.der.ode_type := 2;
+	ASSERT x.der.obs_id == 3;
+	ASSERT x.der.ode_id == 4;
+	ASSERT x.der.ode_type == 2;
+END on_load;
+END test11;

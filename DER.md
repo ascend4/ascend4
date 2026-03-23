@@ -177,6 +177,10 @@ The intent is:
 
 - equations and user documentation prefer `der(model.part.var)`
 - browser and object-path tooling may naturally expose `model.part.var.der`
+- transitional METHOD-time attribute access currently uses the tree/object
+  path form, eg `x.der.obs_id := 1`
+- canonical attribute syntax such as `der(x).obs_id := 1` is not yet
+  implemented
 
 We do **not** currently intend to support a mixed form such as:
 
@@ -209,6 +213,21 @@ This is materially better aligned with ASCEND METHOD semantics.
 The object model is improved, but not yet fully settled for all GUI actions.
 The core browser/path plumbing now works, but some broader GUI interactions
 have not yet been exercised end-to-end.
+
+### Observation metadata
+
+Derivative pseudo-instances now support METHOD-time metadata assignment
+through the transitional tree-style syntax:
+
+- `x.der.obs_id := 1`
+- `x.der.ode_id := 2`
+- `x.der.ode_type := 1`
+
+This is sufficient for current integrator observation workflows.
+
+The source of truth for what the integrator observes remains `obs_id` on the
+runtime instances. Observer tabs are presentation state, not authoritative
+observation-definition state.
 
 ## Solver Semantics
 
@@ -658,6 +677,16 @@ Current implementation support is still partial here:
   - mark the simulation dirty
   - invalidate any current solver system so the next `SOLVE` rebuilds in the
     new mode
+
+These helper methods are available in normal library usage because
+`basemodel.a4l` augments the global `MODEL` definition using
+`ADD METHODS IN DEFINITION MODEL;`.
+
+This is important:
+
+- models do **not** implicitly `REFINE basemodel`
+- the helper methods are available once `basemodel.a4l` has been loaded
+  because it mutates the base `MODEL` definition itself
 
 So the current explicit workflow is:
 

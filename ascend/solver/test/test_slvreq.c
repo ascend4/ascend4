@@ -33,6 +33,7 @@
 #include <ascend/compiler/qlfdid.h>
 #include <ascend/compiler/instance_io.h>
 #include <ascend/compiler/packages.h>
+#include <ascend/compiler/derivinst.h>
 
 #include <ascend/compiler/slvreq.h>
 
@@ -864,6 +865,42 @@ static void test_slvreq_fixed_derivative_operating_point(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_slvreq_derivative_attribute_access(void){
+	struct module_t *m;
+	int status;
+	struct Instance *siminst, *root, *x, *deriv;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test11.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test11"))!=NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("test11"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL((x = ChildByChar(root, AddSymbol("x"))) != NULL);
+	CU_ASSERT_FATAL((deriv = InstanceDynamicChildByChar(x, AddSymbol("der"))) != NULL);
+	CU_ASSERT_EQUAL(GetIntegerAtomValue(ChildByChar(deriv, AddSymbol("obs_id"))), 3);
+	CU_ASSERT_EQUAL(GetIntegerAtomValue(ChildByChar(deriv, AddSymbol("ode_id"))), 4);
+	CU_ASSERT_EQUAL(GetIntegerAtomValue(ChildByChar(deriv, AddSymbol("ode_type"))), 2);
+
+	system_free_reused_mem();
+	sim_destroy(siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
 static void test_slvreq_highs_options_invalid(void){
 	struct module_t *m = NULL;
 	int status = 0;
@@ -952,6 +989,7 @@ cleanup:
 	T(slvreq_delete_system) \
 	T(slvreq_initial_mode_toggle) \
 	T(slvreq_fixed_derivative_operating_point) \
+	T(slvreq_derivative_attribute_access) \
 	T(slvreq_study) \
 	T(slvreq_study_observe_only) \
 	T(slvreq_study_log) \
