@@ -1,12 +1,14 @@
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
+REQUIRE "basemodel.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "johnpye/fboard.a4c";
 REQUIRE "johnpye/iron/tga.a4c";
 
 (*
-	First dynamic TGA screening model using INDEPENDENT t / DER(...)
-	and intended for integration with IDA.
+		First dynamic TGA screening model using declarative INDEPENDENT t,
+		der(...) equations, and INITIAL startup constraints
+		and intended for integration with IDA.
 
 	This is a dynamic counterpart to johnpye/iron/tga.a4c:
 	- the same lumped freeboard + bed transport closure is retained;
@@ -25,6 +27,7 @@ MODEL tga_reduction_screen_dyn;
 
 	(* Independent variable *)
 	t IS_A time;
+	INDEPENDENT t;
 
 	(* Gas-side conditions and simple TGA geometry *)
 	T IS_A temperature;
@@ -80,7 +83,6 @@ MODEL tga_reduction_screen_dyn;
 	n0_Fe2O3 IS_A mole;
 	n0_per_area IS_A mole_per_area;
 	xi1, xi2, xi3 IS_A reduction_extent;
-	dxi1_dt, dxi2_dt, dxi3_dt IS_A extent_rate;
 
 	n_Fe2O3, n_Fe3O4, n_FeO, n_Fe IS_A mole;
 	oxygen_remaining IS_A mole;
@@ -207,19 +209,24 @@ MODEL tga_reduction_screen_dyn;
 			rate_net[r] = rate_forward[r] - rate_reverse[r];
 	END FOR;
 
-	ode1_eq: dxi1_dt = rate_net[1];
-	ode2_eq: dxi2_dt = rate_net[2];
-	ode3_eq: dxi3_dt = rate_net[3];
+		ode1_eq: der(xi1) = rate_net[1];
+		ode2_eq: der(xi2) = rate_net[2];
+		ode3_eq: der(xi3) = rate_net[3];
 
 	Jrxn_eq:
 		J_reaction = n0_per_area * (rate_net[1] + rate_net[2] + rate_net[3]);
 
 	transport_match: J_transport = J_reaction;
 
+INITIAL
+		xi1_initial: xi1 = 0;
+		xi2_initial: xi2 = 0;
+		xi3_initial: xi3 = 0;
+
 METHODS
-		METHOD values;
-			T := 1073.15 {K};
-			p := 1 {bar};
+			METHOD values;
+				T := 1073.15 {K};
+				p := 1 {bar};
 			A_crucible := 20 {mm^2};
 			L_freeboard := 8.3 {mm};
 
@@ -254,20 +261,18 @@ METHODS
 			K_eq_lnB[2] := 8067.2733483476295;
 			K_eq_lnB[3] := 1856.1489018164739;
 
-			xi1 := 0;
-			xi2 := 0;
-			xi3 := 0;
-			dxi1_dt := 1e-5 {1/s};
-			dxi2_dt := 1e-6 {1/s};
-			dxi3_dt := 1e-6 {1/s};
+				xi1 := 0;
+				xi2 := 0;
+				xi3 := 0;
 
-			t := 0 {s};
-		END values;
+				t := 0 {s};
+			END values;
 
-	METHOD specify;
-		FIX T, p, A_crucible, L_freeboard, m_sample_init;
-		FIX eps_bed, tau_bed, k_fb_multiplier, k_bed_multiplier;
-		FIX y_H2_bulk, y_H2O_bulk;
+		METHOD specify;
+			FIX t;
+			FIX T, p, A_crucible, L_freeboard, m_sample_init;
+			FIX eps_bed, tau_bed, k_fb_multiplier, k_bed_multiplier;
+			FIX y_H2_bulk, y_H2O_bulk;
 		FIX k0[steps], E_a[steps], K_eq_lnA[steps], K_eq_lnB[steps];
 	END specify;
 
@@ -286,26 +291,24 @@ METHODS
 		RUN values;
 		RUN specify;
 		RUN use_measured_bed_height;
-	END algebraic_base;
+		END algebraic_base;
 
-	METHOD steady_init;
-			FIX xi1, xi2, xi3;
-			SOLVER QRSlv;
-			OPTION convopt 'RELNOM_SCALE';
-			OPTION iterationlimit 1000;
-			SOLVE;
-			FREE xi1, xi2, xi3;
-		END steady_init;
+		METHOD steady_init;
+				FREE der(xi1), der(xi2), der(xi3);
+				RUN enter_initial_mode;
+				SOLVER QRSlv;
+				OPTION convopt 'RELNOM_SCALE';
+				OPTION iterationlimit 1000;
+				SOLVE;
+				RUN leave_initial_mode;
+			END steady_init;
 
-		METHOD dynamic_reset;
-			xi1 := 0;
-			xi2 := 0;
-			xi3 := 0;
-			dxi1_dt := 1e-5 {1/s};
-			dxi2_dt := 1e-6 {1/s};
-			dxi3_dt := 1e-6 {1/s};
-			t := 0 {s};
-		END dynamic_reset;
+			METHOD dynamic_reset;
+				xi1 := 0;
+				xi2 := 0;
+				xi3 := 0;
+				t := 0 {s};
+			END dynamic_reset;
 
 		METHOD reinitialise;
 			RUN dynamic_reset;
@@ -370,15 +373,12 @@ METHODS
 			RUN case_sahar_800C;
 		END case_sahar_1073K;
 
-	METHOD ode_init;
-		INDEPENDENT t;
-		DER(dxi1_dt, xi1);
-		DER(dxi2_dt, xi2);
-		DER(dxi3_dt, xi3);
+		METHOD ode_init;
+			FIX t;
+			FREE der(xi1), der(xi2), der(xi3);
+			t := 0 {s};
 
-		t := 0 {s};
-
-		reduction_degree.obs_id := 1;
+			reduction_degree.obs_id := 1;
 		m_sample.obs_id := 2;
 		y_H2_react.obs_id := 3;
 		y_H2O_react.obs_id := 4;
@@ -391,19 +391,14 @@ METHODS
 		xi3.obs_id := 11;
 	END ode_init;
 
-	METHOD on_load;
-		RUN reset;
-		RUN values;
-		RUN specify;
-		RUN use_measured_bed_height;
-		RUN dynamic_reset;
-
-		INDEPENDENT t;
-		DER(dxi1_dt, xi1);
-		DER(dxi2_dt, xi2);
-		DER(dxi3_dt, xi3);
-
-		t := 0 {s};
+		METHOD on_load;
+			RUN reset;
+			RUN values;
+			RUN specify;
+			RUN use_measured_bed_height;
+			RUN dynamic_reset;
+			FREE der(xi1), der(xi2), der(xi3);
+			t := 0 {s};
 
 		reduction_degree.obs_id := 1;
 		m_sample.obs_id := 2;

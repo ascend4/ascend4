@@ -270,5 +270,88 @@ METHODS
 	END on_load;
 END tga_ida_probe_transport;
 
+MODEL tga_ida_probe_factor_initial;
+	t IS_A time;
+	x IS_A factor;
+
+	dyn: der(x) = 0.02 * (1 - x) / (1 {s});
+	INDEPENDENT t;
+INITIAL
+		x0: x = 0;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0 {s};
+		FREE der(x);
+		x.obs_id := 1;
+	END on_load;
+END tga_ida_probe_factor_initial;
+
+MODEL tga_ida_probe_factor_initial_alias;
+	t IS_A time;
+	x IS_A factor;
+	dx_dt IS_A extent_rate_probe;
+
+	bind: dx_dt = der(x);
+	dyn: dx_dt = 0.02 * (1 - x) / (1 {s});
+	INDEPENDENT t;
+INITIAL
+		x0: x = 0;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0 {s};
+		FREE dx_dt;
+		x.obs_id := 1;
+	END on_load;
+END tga_ida_probe_factor_initial_alias;
+
+MODEL tga_ida_probe_factor_initial_three;
+	t IS_A time;
+	x1, x2, x3 IS_A factor;
+
+	dyn1: der(x1) = 0.02 * (1 - x1) / (1 {s});
+	dyn2: der(x2) = 0.01 * (1 - x2) / (1 {s});
+	dyn3: der(x3) = 0.005 * (1 - x3) / (1 {s});
+	INDEPENDENT t;
+INITIAL
+		x10: x1 = 0;
+		x20: x2 = 0;
+		x30: x3 = 0;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0 {s};
+		FREE der(x1), der(x2), der(x3);
+		x1.obs_id := 1;
+		x2.obs_id := 2;
+		x3.obs_id := 3;
+	END on_load;
+END tga_ida_probe_factor_initial_three;
+
+MODEL tga_ida_probe_factor_initial_dae;
+	t IS_A time;
+	x IS_A factor;
+	z IS_A factor;
+
+	dyn: der(x) + z / (1 {s}) = 0;
+	alg: z - 2 * x = 0;
+	INDEPENDENT t;
+INITIAL
+		x0: x = 1;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0 {s};
+		FREE der(x);
+		x.obs_id := 1;
+		z.obs_id := 2;
+	END on_load;
+END tga_ida_probe_factor_initial_dae;
+
 (* vim: sw=4:noet:ts=4
 *)

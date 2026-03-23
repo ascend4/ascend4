@@ -163,9 +163,6 @@ def copy_initializer_state(init_sim, dyn_sim) -> None:
 		for idx in ("1", "2", "3"):
 			array_child(dst_array, idx).setRealValue(array_child(src_array, idx).getRealValue())
 
-	dyn_sim.dxi1_dt.setRealValue(array_child(init_sim.rate_net, "1").getRealValue())
-	dyn_sim.dxi2_dt.setRealValue(array_child(init_sim.rate_net, "2").getRealValue())
-	dyn_sim.dxi3_dt.setRealValue(array_child(init_sim.rate_net, "3").getRealValue())
 	copy_real_tree(init_sim.tr, dyn_sim.tr)
 
 
