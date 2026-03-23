@@ -894,9 +894,21 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   half = len/2;
   MSG("NUMBER OF DYNAMIC VARIABLES = %ld",half);
 
-  if (len % 2 || len == 0L || sys->nstates != sys->nderivs ) {
+  if (len == 0L) {
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+      "No dynamic variables were found for ODE integration."
+      " This model is not in first-order ODE form."
+    );
+    return 3;
+  }
+  if (len % 2 || sys->nstates != sys->nderivs ) {
     /* list length must be even for vars to pair off */
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"n_y != n_ydot, or no dynamic vars found. Fix your indexing.");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+      "Model is not in first-order ODE form (states=%ld, derivatives=%ld)."
+      " This may be a high-index DAE or constrained system;"
+      " LSODE requires a first-order ODE formulation or prior index reduction."
+      , sys->nstates, sys->nderivs
+    );
     return 3;
   }
   gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
@@ -927,7 +939,9 @@ int integrator_analyse_ode(IntegratorSystem *sys){
     }
   }
   if (!happy) {
-	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem with ode_id and ode_type values");
+	ERROR_REPORTER_HERE(ASC_USER_ERROR,
+		"Problem with legacy ODE indexing metadata (ode_id/ode_type values)."
+	);
     return 5;
   }
   sys->n_y = half;

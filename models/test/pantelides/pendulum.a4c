@@ -1,5 +1,5 @@
-REQUIRE "atoms.a4l";
 REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
 
 (* Reference model for Pantelides discussion only. *)
 
@@ -21,7 +21,13 @@ MODEL pantelides_pendulum;
 
 METHODS
 	METHOD on_load;
-		FIX m := 1{kg};
-		FIX L := 1{m};
+		m := 1{kg};
+		L := 1{m};
+		x := 0.5{m};
+		y := -sqrt(3)/2 * 1{m};
+		vx := 0{m/s};
+		vy := 0{m/s};
+		t := 0{s};
+		FREE der(x), der(y), der(vx), der(vy);
 	END on_load;
 END pantelides_pendulum;
