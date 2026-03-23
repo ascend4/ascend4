@@ -146,8 +146,8 @@ static void test_lsode_destroy_integrator(IntegratorSystem *integ){
 	integrator_free(integ);
 	if(sys != NULL){
 		system_destroy(sys);
-		system_free_reused_mem();
 	}
+	system_free_reused_mem();
 	solver_destroy_engines();
 	integrator_free_engines();
 	if(siminst != NULL){
@@ -355,6 +355,86 @@ static void test_initial_decay(){
 	test_lsode_destroy_integrator(integ);
 }
 
+static void test_initial_shm(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/lsode/deriv.a4c", "initial_shm");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.5,1e-3,1000);
+	struct Instance *root = GetSimulationRoot(siminst);
+	struct Instance *ix = ChildByChar(root, AddSymbol("x"));
+	struct Instance *iv = ChildByChar(root, AddSymbol("v"));
+	CU_ASSERT_FATAL(ix != NULL);
+	CU_ASSERT_FATAL(iv != NULL);
+
+	SampleList *samplelist = test_lsode_create_samplelist(0.0, PI, 40);
+	integrator_set_samples(integ,samplelist);
+
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+	CU_TEST(fabs(RealAtomValue(ix) + 10.0) < 3e-3);
+	CU_TEST(fabs(RealAtomValue(iv)) < 7e-4);
+
+	samplelist_free(samplelist);
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_initial_hier_decay(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/lsode/deriv.a4c", "initial_hier_decay");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.1,1e-3,1000);
+	struct Instance *root = GetSimulationRoot(siminst);
+	struct Instance *child = ChildByChar(root, AddSymbol("c"));
+	struct Instance *iy = child ? ChildByChar(child, AddSymbol("y")) : NULL;
+	CU_ASSERT_FATAL(child != NULL);
+	CU_ASSERT_FATAL(iy != NULL);
+
+	SampleList *samplelist = test_lsode_create_samplelist(0.0, 1.0, 20);
+	integrator_set_samples(integ,samplelist);
+
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+	CU_TEST(fabs(RealAtomValue(iy) - exp(-4.0)) < 2e-4);
+
+	samplelist_free(samplelist);
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_initial_bad_overdetermined(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/lsode/deriv.a4c", "initial_bad_overdetermined");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.1,1e-3,1000);
+	SampleList *samplelist = test_lsode_create_samplelist(0.0, 1.0, 20);
+	int solve_res;
+	integrator_set_samples(integ,samplelist);
+
+	solve_res = integrator_solve(integ, 0, samplelist_length(samplelist)-1);
+
+	samplelist_free(samplelist);
+	test_lsode_destroy_integrator(integ);
+	CU_ASSERT(0 != solve_res);
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -363,6 +443,9 @@ static void test_initial_decay(){
 	T(shm) \
 	T(der_decay) \
 	T(der_shm) \
-	T(initial_decay)
+	T(initial_decay) \
+	T(initial_shm) \
+	T(initial_hier_decay) \
+	T(initial_bad_overdetermined)
 
 REGISTER_TESTS_SIMPLE(integrator_lsode, TESTS)

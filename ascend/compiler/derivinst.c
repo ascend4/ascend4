@@ -296,13 +296,66 @@ static void derivinst_remove_rootinfo(struct Instance *root){
   }
 }
 
-static CONST dim_type *derivinst_independent_dimensions(struct Instance *root){
+struct derivinst_indep_search {
+  struct Instance *found;
+  const dim_type *dim;
+  int invalid;
+};
+
+static void *derivinst_find_independent(struct Instance *inst, struct derivinst_indep_search *search){
   struct gl_list_t *links;
-  CONST struct gl_list_t *instances;
+  unsigned long i;
+
+  if(search == NULL || inst == NULL || search->invalid){
+    return NULL;
+  }
+  if(InstanceKind(inst) != MODEL_INST && InstanceKind(inst) != SIM_INST){
+    return NULL;
+  }
+
+  links = getLinks(inst, AddSymbol("independent"), 0);
+  if(links == NULL){
+    return NULL;
+  }
+
+  for(i = 1; i <= gl_length(links); ++i){
+    struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(links, i);
+    CONST struct gl_list_t *instances;
+    struct Instance *indep;
+
+    if(entry == NULL){
+      continue;
+    }
+
+    instances = getLinkInstances(inst, entry, 0);
+    if(instances == NULL || gl_length((struct gl_list_t *)instances) != 1){
+      search->invalid = 1;
+      break;
+    }
+
+    indep = (struct Instance *)gl_fetch((struct gl_list_t *)instances, 1);
+    if(indep == NULL || InstanceKind(indep) != REAL_ATOM_INST){
+      search->invalid = 1;
+      break;
+    }
+
+    if(search->found == NULL){
+      search->found = indep;
+      search->dim = RealAtomDims(indep);
+    }else if(search->found != indep){
+      search->invalid = 1;
+      break;
+    }
+  }
+
+  gl_destroy(links);
+  return NULL;
+}
+
+static CONST dim_type *derivinst_independent_dimensions(struct Instance *root){
   CONST dim_type *dim = NULL;
   struct derivinst_rootinfo *info;
-  symchar *independent_key;
-  unsigned long i;
+  struct derivinst_indep_search search;
 
   if(root == NULL){
     return NULL;
@@ -313,40 +366,19 @@ static CONST dim_type *derivinst_independent_dimensions(struct Instance *root){
     return info->indepdim;
   }
 
-  independent_key = AddSymbol("independent");
-  links = getLinks(root, independent_key, 0);
-  if(links == NULL){
-    return NULL;
+  search.found = NULL;
+  search.dim = NULL;
+  search.invalid = 0;
+  VisitInstanceTreeTwo(root, (VisitTwoProc)derivinst_find_independent, 0, 0, &search);
+  if(!search.invalid){
+    if(info != NULL){
+      info->indepinst = search.found;
+    }
+    dim = search.dim;
+  }else if(info != NULL){
+    info->indepinst = NULL;
   }
 
-  for(i = 1; i <= gl_length(links); ++i){
-    struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(links, i);
-    if(entry == NULL){
-      continue;
-    }
-    instances = getLinkInstances(root, entry, 0);
-    if(instances == NULL || gl_length((struct gl_list_t *)instances) != 1){
-      dim = NULL;
-      break;
-    }
-    {
-      struct Instance *indep = (struct Instance *)gl_fetch((struct gl_list_t *)instances, 1);
-      if(indep != NULL && InstanceKind(indep) == REAL_ATOM_INST){
-        if(info != NULL){
-          info->indepinst = indep;
-        }
-        dim = RealAtomDims(indep);
-      }else{
-        if(info != NULL){
-          info->indepinst = NULL;
-        }
-        dim = NULL;
-      }
-    }
-    break;
-  }
-
-  gl_destroy(links);
   if(info != NULL){
     info->indepdim = dim;
   }

@@ -72,6 +72,8 @@ static void integ_debug_list(const char *label, struct gl_list_t *list){
 }
 #endif
 
+static int integrator_report_initial_status_failure(const slv_status_t *status, int presolve);
+
 /*------------------------------------------------------------------------------
    The following names are of solver_var children or attributes
  * we support (at least temporarily) to determine who is a state and
@@ -264,10 +266,8 @@ static struct gl_list_t *integrator_get_list(int free_space){
 		for(i=0; defaultintegrators[i]!=NULL;++i){
 			error = package_load(defaultintegrators[i],NULL);
 			if(error){
-				ERROR_REPORTER_HERE(ASC_PROG_NOTE
-					,"Integrator '%s' is not available (error %d)."
-					,defaultintegrators[i],error
-				);
+				MSG("Integrator '%s' is not available (error %d)."
+					,defaultintegrators[i],error);
 			}else{
 				MSG("Integrator '%s' registered OK",defaultintegrators[i]);
 			}
@@ -692,7 +692,11 @@ int integrator_initialise_with_solver(IntegratorSystem *sys, int solver_index){
 			defaults[ndefaults++] = inst;
 		}
 	}
+	slv_block_set_dof_messages_enabled(FALSE);
 	if(slv_presolve(init_sys)){
+		slv_status_t status;
+		slv_get_status(init_sys, &status);
+		slv_block_set_dof_messages_enabled(TRUE);
 		for(i = 0; i < ndefaults; ++i){
 			if(defaults[i] != NULL){
 				DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
@@ -703,10 +707,32 @@ int integrator_initialise_with_solver(IntegratorSystem *sys, int solver_index){
 		}
 		system_destroy(init_sys);
 		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Initialization presolve failed");
+		integrator_report_initial_status_failure(&status, 1);
 		return 5;
 	}
+	{
+		slv_status_t status;
+		slv_get_status(init_sys, &status);
+		slv_block_set_dof_messages_enabled(TRUE);
+		if(status.over_defined || status.under_defined || status.struct_singular || status.inconsistent){
+			for(i = 0; i < ndefaults; ++i){
+				if(defaults[i] != NULL){
+					DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
+				}
+			}
+			if(defaults != NULL){
+				ASC_FREE(defaults);
+			}
+			system_destroy(init_sys);
+			system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
+			integrator_report_initial_status_failure(&status, 1);
+			return 5;
+		}
+	}
 	res = slv_solve(init_sys);
+	{
+		slv_status_t status;
+		slv_get_status(init_sys, &status);
 	for(i = 0; i < ndefaults; ++i){
 		if(defaults[i] != NULL){
 			DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
@@ -716,10 +742,11 @@ int integrator_initialise_with_solver(IntegratorSystem *sys, int solver_index){
 		ASC_FREE(defaults);
 	}
 	system_destroy(init_sys);
-	if(res){
+	if(res || !status.ok || !status.converged){
 		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Initialization solve failed");
+		integrator_report_initial_status_failure(&status, 0);
 		return 6;
+	}
 	}
 	normal_sys = system_build_with_mode(root, SYSTEM_BUILD_NORMAL);
 	if(normal_sys == NULL){
@@ -754,6 +781,33 @@ int integrator_initialise_ode(IntegratorSystem *sys){
 	return 0;
 }
 
+static int integrator_report_initial_status_failure(const slv_status_t *status, int presolve){
+	const char *phase = presolve ? "presolve" : "solve";
+	if(status == NULL){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Initialization %s failed. Check INITIAL equations and startup FIX/FREE settings.", phase);
+		return 1;
+	}
+	if(status->over_defined || status->under_defined || status->struct_singular){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Initialization problem is not square. Check INITIAL equations and startup FIX/FREE settings.");
+		return 1;
+	}
+	if(status->inconsistent){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Initialization problem is inconsistent. Check INITIAL equations and startup values.");
+		return 1;
+	}
+	if(status->diverged || status->iteration_limit_exceeded || status->time_limit_exceeded || !status->calc_ok){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Initialization solve did not converge. Check INITIAL equations, startup values, and solver guesses.");
+		return 1;
+	}
+	ERROR_REPORTER_HERE(ASC_USER_ERROR,
+		"Initialization %s failed. Check INITIAL equations and startup FIX/FREE settings.", phase);
+	return 1;
+}
+
 
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitfn){
   struct var_variable **vlist;
@@ -761,8 +815,8 @@ void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *
 
   /* visit all the slv_system_t master var lists to collect vars */
   /* find the vars mostly in this one */
-  vlist = slv_get_solvers_var_list(sys->system);
-  vlen = slv_get_num_solvers_vars(sys->system);
+  vlist = slv_get_master_var_list(sys->system);
+  vlen = slv_get_num_master_vars(sys->system);
   for (i=0;i<vlen;i++) {
     (*visitfn)(sys, vlist[i], &i);
   }
@@ -1402,7 +1456,6 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 
 	if(!sys->initial_mode_prepared && sys->internals->initialisefn != NULL){
 		if((sys->internals->initialisefn)(sys)){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to prepare initialization problem");
 			return -5;
 		}
 		sys->initial_mode_prepared = 1;

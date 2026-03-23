@@ -124,6 +124,14 @@ struct derivative_bind_data {
   int errors;
 };
 
+struct dynreg_collect_data {
+  struct problem_t *problem;
+  symchar *key;
+  int is_der;
+  int next_odeid;
+  int errors;
+};
+
 static int dynamic_instance_matches(struct Instance *a, struct Instance *b){
   if(a == NULL || b == NULL){
     return 0;
@@ -238,10 +246,70 @@ static int dynamic_registry_add_hidden(struct problem_t *p_data, struct Instance
   return 0;
 }
 
+static void *analyze_collect_dynamic_links(struct Instance *inst, struct dynreg_collect_data *data){
+  struct gl_list_t *links;
+  unsigned long i;
+
+  if(data == NULL || data->problem == NULL || inst == NULL){
+    return NULL;
+  }
+  if(InstanceKind(inst) != MODEL_INST && InstanceKind(inst) != SIM_INST){
+    return NULL;
+  }
+
+  links = getLinks(inst, data->key, 0);
+  if(links == NULL){
+    return NULL;
+  }
+
+  for(i = 1; i <= gl_length(links); ++i){
+    struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(links, i);
+    CONST struct VariableList *vl;
+    unsigned long k;
+
+    if(entry == NULL){
+      continue;
+    }
+
+    vl = entry->u.vl;
+    if(data->is_der){
+      unsigned long ninst = VariableListLength(vl);
+      int odeid = data->next_odeid++;
+      for(k = 1; vl != NULL; ++k, vl = NextVariableNode(vl)){
+        struct Instance *linked = dynamic_resolve_name_relative(inst, NamePointer(vl));
+        int deriv = (int)(ninst - k + 1);
+        if(!dynamic_registry_can_track(linked)){
+          continue;
+        }
+        if(dynamic_registry_add(data->problem, linked, deriv, odeid)){
+          data->errors = 1;
+          break;
+        }
+      }
+    }else{
+      for(k = 1; vl != NULL; ++k, vl = NextVariableNode(vl)){
+        struct Instance *linked = dynamic_resolve_name_relative(inst, NamePointer(vl));
+        if(!dynamic_registry_can_track(linked)){
+          continue;
+        }
+        if(dynamic_registry_add(data->problem, linked, -1, 0)){
+          data->errors = 1;
+          break;
+        }
+      }
+    }
+
+    if(data->errors){
+      break;
+    }
+  }
+
+  gl_destroy(links);
+  return NULL;
+}
+
 static int analyze_build_dynamic_registry(struct problem_t *p_data){
-  struct gl_list_t *der_links, *independent_links;
-  symchar *der_key, *independent_key;
-  unsigned long i, k, len;
+  struct dynreg_collect_data der_data, indep_data;
 
   if(p_data == NULL || p_data->root == NULL){
     return 1;
@@ -253,45 +321,26 @@ static int analyze_build_dynamic_registry(struct problem_t *p_data){
     return 1;
   }
 
-  der_key = AddSymbol("ode");
-  der_links = getLinks(p_data->root, der_key, 0);
-  len = gl_length(der_links);
-  for(i = 1; i <= len; ++i){
-    struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(der_links, i);
-    CONST struct VariableList *vl = entry->u.vl;
-    unsigned long ninst = VariableListLength(vl);
-    for(k = 1; vl != NULL; ++k, vl = NextVariableNode(vl)){
-      struct Instance *linked = dynamic_resolve_name_relative(p_data->root, NamePointer(vl));
-      int deriv = (int)(ninst - k + 1);
-      if(!dynamic_registry_can_track(linked)){
-        continue;
-      }
-      if(dynamic_registry_add(p_data, linked, deriv, (int)i)){
-        gl_destroy(der_links);
-        return 1;
-      }
-    }
+  der_data.problem = p_data;
+  der_data.key = AddSymbol("ode");
+  der_data.is_der = 1;
+  der_data.next_odeid = 1;
+  der_data.errors = 0;
+  VisitInstanceTreeTwo(p_data->root, (VisitTwoProc)analyze_collect_dynamic_links, 0, 0, &der_data);
+  if(der_data.errors){
+    return 1;
   }
-  gl_destroy(der_links);
 
-  independent_key = AddSymbol("independent");
-  independent_links = getLinks(p_data->root, independent_key, 0);
-  len = gl_length(independent_links);
-  for(i = 1; i <= len; ++i){
-    struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(independent_links, i);
-    CONST struct VariableList *vl = entry->u.vl;
-    for(k = 1; vl != NULL; ++k, vl = NextVariableNode(vl)){
-      struct Instance *linked = dynamic_resolve_name_relative(p_data->root, NamePointer(vl));
-      if(!dynamic_registry_can_track(linked)){
-        continue;
-      }
-      if(dynamic_registry_add(p_data, linked, -1, 0)){
-        gl_destroy(independent_links);
-        return 1;
-      }
-    }
+  indep_data.problem = p_data;
+  indep_data.key = AddSymbol("independent");
+  indep_data.is_der = 0;
+  indep_data.next_odeid = der_data.next_odeid;
+  indep_data.errors = 0;
+  VisitInstanceTreeTwo(p_data->root, (VisitTwoProc)analyze_collect_dynamic_links, 0, 0, &indep_data);
+  if(indep_data.errors){
+    return 1;
   }
-  gl_destroy(independent_links);
+
   return 0;
 }
 

@@ -329,11 +329,97 @@ static void test_initial_decay(){
 	ida_cleanup(&testsys);
 }
 
+static void test_initial_shm(){
+	IdaTestSystem testsys;
+	struct Instance *root, *ix, *iv;
+
+	if(ida_test_load("test/ida/initial.a4c", "ida_initial_shm", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	root = GetSimulationRoot(testsys.siminst);
+	ix = ida_child(root, "x");
+	iv = ida_child(root, "v");
+
+	ida_configure_runtime(testsys.integ, 0.0, PI, 40);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+	CU_TEST(fabs(RealAtomValue(ix) + 10.0) < 3e-3);
+	CU_TEST(fabs(RealAtomValue(iv)) < 4e-4);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_initial_hier_decay(){
+	IdaTestSystem testsys;
+	struct Instance *root, *child, *iy;
+
+	if(ida_test_load("test/ida/initial.a4c", "ida_initial_hier_decay", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	root = GetSimulationRoot(testsys.siminst);
+	child = ida_child(root, "c");
+	iy = ida_child(child, "y");
+
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 20);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+	CU_TEST(fabs(RealAtomValue(iy) - exp(-4.0)) < 2e-4);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_initial_dae(){
+	IdaTestSystem testsys;
+	struct Instance *root, *iy, *iz;
+
+	if(ida_test_load("test/ida/initial.a4c", "ida_initial_dae", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	root = GetSimulationRoot(testsys.siminst);
+	iy = ida_child(root, "y");
+	iz = ida_child(root, "z");
+
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 20);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+	CU_TEST(fabs(RealAtomValue(iy) - exp(-2.0)) < 3e-4);
+	CU_TEST(fabs(RealAtomValue(iz) - 2.0 * exp(-2.0)) < 8e-4);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_initial_bad_overdetermined(){
+	IdaTestSystem testsys;
+	int solve_res;
+
+	if(ida_test_load("test/ida/initial.a4c", "ida_initial_bad_overdetermined", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 20);
+	solve_res = integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+	CU_ASSERT(0 != solve_res);
+}
+
 #define TESTS(T) \
 	T(shm) \
 	T(boundary) \
 	T(integ1) \
 	T(high_index) \
-	T(initial_decay)
+	T(initial_decay) \
+	T(initial_shm) \
+	T(initial_hier_decay) \
+	T(initial_dae) \
+	T(initial_bad_overdetermined)
 
 REGISTER_TESTS_SIMPLE(integrator_ida, TESTS)

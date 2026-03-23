@@ -519,6 +519,10 @@ The startup path now works for the new focused regressions:
 
 - [deriv.a4c](./models/test/lsode/deriv.a4c) `initial_decay`
 - [initial.a4c](./models/test/ida/initial.a4c) `ida_initial_decay`
+- hierarchical startup cases in both LSODE and IDA
+- mixed differential/algebraic `INITIAL` cases in IDA
+- overdetermined/conflicting `INITIAL` startup cases now fail early with a
+  clear user-facing initialization message
 
 The key fixes were:
 
@@ -531,9 +535,103 @@ The key fixes were:
   and end-user diagnostics remain on `error_reporter`
 - the unsupported IDA `minstep` option now reports once per integrator
   instance, rather than on every internal reinitialisation
+- temporary initialization-mode presolve now suppresses generic DOF/rank
+  chatter and relies on one higher-level user-facing message such as
+  `Initialization problem is not square...`
+- bad-startup integrator tests now clean up without leaving process-exit memory
+  leaks
 
 So the remaining work is no longer basic startup correctness. It is refinement
-and cleanup around the new initialization mode.
+around explicit initialization-mode use outside automatic integrator startup.
+
+### QRSlv-based initialization exploration
+
+For user-facing guidance, it is important to state clearly that QRSlv is not
+being used here to "run the IVP". It is only being used to solve the
+initialization problem at
+
+$$
+t = t_0
+$$
+
+for inspection and debugging.
+
+The intended user model is:
+
+1. write the dynamic model using normal equations plus `INITIAL`
+2. use IDA or LSODE for actual time integration
+3. if startup is troublesome, temporarily switch to QRSlv to solve the
+   initialization problem explicitly
+4. inspect and adjust startup values, derivative values, and FIX/FREE choices
+5. switch back to IDA or LSODE for the transient run
+
+So QRSlv should be documented as a startup-analysis tool in this context, not
+as an alternative transient integrator.
+
+More broadly, this sits inside a more important model-reuse goal:
+
+- the same dynamic component model should behave sensibly in steady-state
+  algebraic solves
+- the same model should support explicit initialization solving
+- the same model should support transient integration
+
+That means the overall derivative/`INITIAL` design should be understood in
+terms of three distinct problem modes, not just "QRSlv versus IDA".
+
+That implies three distinct problem modes:
+
+- normal algebraic solve
+  - `INITIAL` equations are excluded
+  - untouched `der(x)` behaves as zero, so the model can still be used
+    rationally in a steady-state context
+- initialization-mode algebraic solve
+  - normal equations at `t0` plus `INITIAL`
+- time integration
+  - IDA or LSODE, possibly using an internal initialization solve first
+
+The wording in APIs and UI should reflect this. Prefer:
+
+- "solve initialization problem"
+- "enter initialization mode"
+- "leave initialization mode"
+
+and avoid wording like:
+
+- "solve the DAE with QRSlv"
+
+because it invites the wrong mental model.
+
+This three-mode framing is important because it is what allows a user to write
+one model and reuse it for:
+
+- steady-state studies
+- startup/IVP consistency analysis
+- transient simulation
+
+without maintaining separate model variants.
+
+For the explicit QRSlv exploration path, the minimum practical workflow is:
+
+- enter initialization mode
+- rebuild the solver system
+- solve with the currently selected algebraic solver
+- inspect values and residuals while still in initialization mode
+- leave initialization mode and rebuild the normal system when finished
+
+The important usability point is that after a successful startup solve, the
+user should normally remain in initialization mode long enough to inspect the
+startup problem. A one-shot "solve and immediately switch back" workflow is
+less useful for debugging.
+
+Current implementation support is still partial here:
+
+- the low-level build-mode machinery exists
+- startup initialization through integrators exists
+- explicit user-facing initialization-mode solves outside integrator startup do
+  not yet have a settled surface
+
+That surface should be decided before implementing more QRSlv-specific
+workflow.
 
 ## Python / Object-View Support
 
@@ -554,9 +652,10 @@ without introducing extra spelling variants.
 ## Current Squishy Bits
 
 - `INITIAL` explicit solve workflow
-  - focused integrator startup regressions now pass
-  - broader semantics still need to be hardened, especially around future
-    explicit initialization-mode solves outside the integrator path
+  - focused integrator startup regressions now pass, including obvious
+    overdetermined failure cases
+  - broader semantics still need to be hardened for explicit
+    initialization-mode solves outside the integrator path
 - full GUI semantics
   - browser/object path is working
   - broader end-to-end GUI exercise is still useful
@@ -572,8 +671,10 @@ Near term:
 
 1. decide whether to expose convenience `METHOD`s for advanced QRSlv-based
    initialization exploration
-2. exercise more hierarchical and multi-state `INITIAL` examples
-3. clarify how non-integrator initialization-mode solves should be surfaced
+2. add more explicit initialization-mode solves outside integrator startup
+   and define the expected user workflow there
+3. continue broadening `INITIAL` coverage only where it adds semantic value,
+   not just more variants of already-covered startup cases
 
 After that:
 
