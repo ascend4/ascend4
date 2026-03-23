@@ -52,20 +52,19 @@ MODEL tga_reduction_screen_dyn;
 	p ALIASES tr.p;
 	D_screen, D_eff_bed IS_A diffusivity;
 
-	k_fb, k_bed, k_overall IS_A speed;
-	R_fb, R_bed, R_overall IS_A transport_resistance;
-	J_transport, J_freeboard_cap, J_bed_cap, J_overall_cap IS_A molar_flux;
+		R_fb, R_bed, R_overall IS_A transport_resistance;
+		J_transport IS_A molar_flux;
 	
 	(* transport screening factor ~1 if becoming limiting *)
 	TS_freeboard, TS_bed, TS_overall IS_A factor;
 
 	(* Solid inventory and dynamic extents *)
-	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
-	n0_Fe2O3 IS_A mole;
-	n0_per_area IS_A mole_per_area;
-	xi[steps] IS_A reduction_extent;
-	
-	n_reactant[steps] IS_A mole;
+		MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
+		n0_Fe2O3 IS_A mole;
+		n0_per_area IS_A mole_per_area;
+		xi[steps] IS_A reduction_extent;
+		
+		n_reactant[steps] IS_A mole;
 	n_Fe2O3 ALIASES n_reactant[1];
 	n_Fe3O4 ALIASES n_reactant[2];
 	n_FeO ALIASES n_reactant[3];
@@ -83,10 +82,9 @@ MODEL tga_reduction_screen_dyn;
 	K_eq_lnB[steps] IS_A factor;
 	K_ratio_eq[steps] IS_A positive_factor;
 
-	availability[steps] IS_A factor;
-	drive[steps] IS_A delta_pressure;
-	rate_forward[steps] IS_A extent_rate;
-	rate_reverse[steps] IS_A extent_rate;
+		drive[steps] IS_A delta_pressure;
+		rate_forward[steps] IS_A extent_rate;
+		rate_reverse[steps] IS_A extent_rate;
 	rate_net[steps] IS_A extent_rate;
 
 	J_reaction IS_A molar_flux;
@@ -97,12 +95,12 @@ MODEL tga_reduction_screen_dyn;
 	react_ar_eq: y_Ar_react = y_Ar_bulk;
 	react_sum: y_H2O_react = 1 - y_Ar_react - y_H2_react;
 
-		n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
 	n0area_eq: n0_per_area = n0_Fe2O3 / A_crucible;
-	nhe_eq: n_Fe2O3 = n0_Fe2O3 * (1 - 3 * xi[1]);
-	nmag_eq: n_Fe3O4 = n0_Fe2O3 * (2 * xi[1] - xi[2]);
-	nwu_eq: n_FeO = n0_Fe2O3 * (3 * xi[2] - xi[3]);
-	nfe_eq: n_Fe = n0_Fe2O3 * xi[3];
+		nhe_eq: n_Fe2O3 = n0_Fe2O3 * (1 - 3 * xi[1]);
+		nmag_eq: n_Fe3O4 = n0_Fe2O3 * (2 * xi[1] - xi[2]);
+		nwu_eq: n_FeO = n0_Fe2O3 * (3 * xi[2] - xi[3]);
+		nfe_eq: n_Fe = n0_Fe2O3 * xi[3];
 
 	msample_eq:
 		m_sample
@@ -121,53 +119,54 @@ MODEL tga_reduction_screen_dyn;
 		D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
 	Deffbed_eq: D_eff_bed = (eps_bed / tau_bed) * D_screen;
 
-	kfb_eq: k_fb = k_fb_multiplier * D_screen / L_freeboard;
-	kbed_eq: k_bed = k_bed_multiplier * D_eff_bed / H_bed;
-	koverall_eq: k_overall = k_fb * k_bed / (k_fb + k_bed);
+		Rfb_eq: R_fb = L_freeboard / (k_fb_multiplier * D_screen);
+		Rbed_eq: R_bed = H_bed / (k_bed_multiplier * D_eff_bed);
+		Roverall_eq: R_overall = R_fb + R_bed;
 
-	Rfb_eq: R_fb = 1 / k_fb;
-	Rbed_eq: R_bed = 1 / k_bed;
-	Roverall_eq: R_overall = 1 / k_overall;
+		Jtrans_eq: R_overall * J_transport = c_tot * (y_H2_bulk - y_H2_react);
 
-	Jtrans_eq: J_transport = c_tot * k_overall * (y_H2_bulk - y_H2_react);
-	Jfbcap_eq: J_freeboard_cap = c_tot * k_fb * y_H2_bulk;
-	Jbedcap_eq: J_bed_cap = c_tot * k_bed * y_H2_bulk;
-	Joverallcap_eq: J_overall_cap = c_tot * k_overall * y_H2_bulk;
+		screen_fb_eq: TS_freeboard = J_reaction * R_fb / (c_tot * y_H2_bulk);
+		screen_bed_eq: TS_bed = J_reaction * R_bed / (c_tot * y_H2_bulk);
+		screen_overall_eq: TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
 
-	screen_fb_eq: TS_freeboard = J_reaction / J_freeboard_cap;
-	screen_bed_eq: TS_bed = J_reaction / J_bed_cap;
-	screen_overall_eq: TS_overall = J_reaction / J_overall_cap;
+		FOR r IN steps CREATE
+			kstep_eq[r]:
+				k_step[r] = k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+			Keq_eq[r]:
+				K_ratio_eq[r] = exp(K_eq_lnA[r]
+										- K_eq_lnB[r] / (T / 1 {K}));
+			drive_eq[r]:
+				drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
+			rnet_eq[r]:
+				rate_net[r] = rate_forward[r] - rate_reverse[r];
 
-	FOR r IN steps CREATE
-		avail_eq[r]:
-			availability[r] = n_reactant[r] / n0_Fe2O3;
+			ode_eq[r]: der(xi[r]) = rate_net[r];
+		END FOR;
 
-		kstep_eq[r]:
-			k_step[r] = k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
-		Keq_eq[r]:
-			K_ratio_eq[r] = exp(K_eq_lnA[r]
-									- K_eq_lnB[r] / (T / 1 {K}));
-		drive_eq[r]:
-			drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
-		rf_eq[r]:
-			rate_forward[r] = availability[r] * k_step[r] * p * y_H2_react;
-		rr_eq[r]:
-			rate_reverse[r] = availability[r] * k_step[r] * p * y_H2O_react / K_ratio_eq[r];
-		rnet_eq[r]:
-			rate_net[r] = rate_forward[r] - rate_reverse[r];
+		rf1_eq:
+			rate_forward[1] = (n_Fe2O3 / n0_Fe2O3) * k_step[1] * p * y_H2_react;
+		rr1_eq:
+			rate_reverse[1] = (n_Fe3O4 / n0_Fe2O3) * k_step[1] * p * y_H2O_react / K_ratio_eq[1];
 
-		ode_eq[r]: der(xi[r]) = rate_net[r];
-	END FOR;
+		rf2_eq:
+			rate_forward[2] = (n_Fe3O4 / n0_Fe2O3) * k_step[2] * p * y_H2_react;
+		rr2_eq:
+			rate_reverse[2] = (n_FeO / n0_Fe2O3) * k_step[2] * p * y_H2O_react / K_ratio_eq[2];
+
+		rf3_eq:
+			rate_forward[3] = (n_FeO / n0_Fe2O3) * k_step[3] * p * y_H2_react;
+		rr3_eq:
+			rate_reverse[3] = (n_Fe / n0_Fe2O3) * k_step[3] * p * y_H2O_react / K_ratio_eq[3];
 
 	Jrxn_eq:
 	J_reaction = n0_per_area * (rate_net[1] + rate_net[2] + rate_net[3]);
 
 	transport_match: J_transport = J_reaction;
 
-INITIAL
-	xi1_initial: xi[1] = 0;
-	xi2_initial: xi[2] = 0;
-	xi3_initial: xi[3] = 0;
+	INITIAL
+		xi1_initial: xi[1] = 0;
+		xi2_initial: xi[2] = 0;
+		xi3_initial: xi[3] = 0;
 
 METHODS
 	METHOD values;
@@ -182,14 +181,14 @@ METHODS
 
 		FIX eps_bed := 0.45;
 		FIX tau_bed := 3.0;
-		FIX k_fb_multiplier := 1.0;
-		FIX k_bed_multiplier := 1.0;
+			FIX k_fb_multiplier := 1.0;
+			FIX k_bed_multiplier := 2.0;
 
 		FIX y_H2_bulk := 0.8;
 		FIX y_H2O_bulk := 0.0;
 		y_Ar_bulk := 0.2;
-		y_H2_react := 0.6;
-		y_H2O_react := 0.2;
+			y_H2_react := 0.75;
+			y_H2O_react := 0.05;
 		y_Ar_react := 0.2;
 
 		FIX MW_Fe2O3 := 159.687 {g/g_mole};
@@ -197,13 +196,13 @@ METHODS
 		FIX MW_FeO := 71.844 {g/g_mole};
 		FIX MW_Fe := 55.845 {g/g_mole};
 
-		FIX k0[1] := 2e-5 {1/s/Pa};
-		FIX k0[2] := 1e-5 {1/s/Pa};
-		FIX k0[3] := 5e-5 {1/s/Pa};
+			FIX k0[1] := 3e-4 {1/s/Pa};
+			FIX k0[2] := 1.5e-4 {1/s/Pa};
+			FIX k0[3] := 7.5e-4 {1/s/Pa};
 
-		FIX E_a[1] := 55 {kJ/mol};
-		FIX E_a[2] := 60 {kJ/mol};
-		FIX E_a[3] := 62 {kJ/mol};
+			FIX E_a[1] := 55 {kJ/mol};
+			FIX E_a[2] := 60 {kJ/mol};
+			FIX E_a[3] := 62 {kJ/mol};
 
 		FIX K_eq_lnA[1] := 8.54050167864375;
 		FIX K_eq_lnA[2] := 8.447122204684765;
@@ -212,9 +211,9 @@ METHODS
 		FIX K_eq_lnB[2] := 8067.2733483476295;
 		FIX K_eq_lnB[3] := 1856.1489018164739;
 
-		xi[1] := 0;
-		xi[2] := 0;
-		xi[3] := 0;
+			xi[1] := 0;
+			xi[2] := 0;
+			xi[3] := 0;
 
 		FIX t := 0 {s};
 	END values;
@@ -263,9 +262,9 @@ METHODS
 		RUN use_measured_bed_height;
 	END algebraic_base;
 
-	METHOD steady_init;
-		FREE der(xi[1]), der(xi[2]), der(xi[3]);
-		RUN enter_initial_mode;
+		METHOD steady_init;
+			FREE der(xi[1]), der(xi[2]), der(xi[3]);
+			RUN enter_initial_mode;
 		SOLVER QRSlv;
 		OPTION convopt 'RELNOM_SCALE';
 		OPTION iterationlimit 1000;
@@ -273,10 +272,10 @@ METHODS
 		RUN leave_initial_mode;
 	END steady_init;
 
-	METHOD dynamic_reset;
-		xi[1] := 0;
-		xi[2] := 0;
-		xi[3] := 0;
+		METHOD dynamic_reset;
+			xi[1] := 0;
+			xi[2] := 0;
+			xi[3] := 0;
 		t := 0 {s};
 	END dynamic_reset;
 
@@ -359,19 +358,19 @@ METHODS
 		RUN case_sahar_800C;
 	END case_sahar_1073K;
 
-	METHOD ode_init;
-		FIX t;
-		FREE der(xi[1]), der(xi[2]), der(xi[3]);
-		RUN dynamic_reset;
-		RUN observe_default;
-	END ode_init;
+		METHOD ode_init;
+			FIX t;
+			FREE der(xi[1]), der(xi[2]), der(xi[3]);
+			RUN dynamic_reset;
+			RUN observe_default;
+		END ode_init;
 
-	METHOD on_load;
-		RUN algebraic_base;
-		RUN dynamic_reset;
-		FREE der(xi[1]), der(xi[2]), der(xi[3]);
-		RUN observe_default;
-	END on_load;
+		METHOD on_load;
+			RUN algebraic_base;
+			RUN dynamic_reset;
+			FREE der(xi[1]), der(xi[2]), der(xi[3]);
+			RUN observe_default;
+		END on_load;
 END tga_reduction_screen_dyn;
 
 (* vim: sw=4:noet:ts=4

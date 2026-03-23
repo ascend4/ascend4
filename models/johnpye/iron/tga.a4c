@@ -60,7 +60,7 @@ END extent_rate;
 ATOM transport_resistance REFINES solver_var
 	DIMENSION T/L
 	DEFAULT 1 {s/m};
-	lower_bound := 1e-12 {s/m};
+	lower_bound := 0 {s/m};
 	upper_bound := 1e12 {s/m};
 	nominal := 1 {s/m};
 END transport_resistance;
@@ -89,10 +89,8 @@ MODEL tga_reduction_screen;
 	(*
 		Gas-side conditions and simple TGA geometry.
 	*)
-	T IS_A temperature;
-	p IS_A pressure;
-	A_crucible IS_A area;
-	L_freeboard IS_A distance;
+		A_crucible IS_A area;
+		L_freeboard IS_A distance;
 
 	m_sample_init IS_A mass;
 	m_sample IS_A mass;
@@ -125,23 +123,18 @@ MODEL tga_reduction_screen;
 		the H2-Ar and H2O-Ar Chapman-Enskog values. This is a conservative
 		pseudo-binary approximation for H2/H2O transport through an inert-rich
 		background, not a substitute for the full Maxwell-Stefan freeboard model.
-	*)
-	tr IS_A diffusion_h2o_h2_ar;
-	D_screen IS_A diffusivity;
-	D_eff_bed IS_A diffusivity;
-
-	k_fb IS_A speed;
-	k_bed IS_A speed;
-	k_overall IS_A speed;
+		*)
+		tr IS_A diffusion_h2o_h2_ar;
+		T ALIASES tr.T;
+		p ALIASES tr.p;
+		D_screen IS_A diffusivity;
+		D_eff_bed IS_A diffusivity;
 
 	R_fb IS_A transport_resistance;
 	R_bed IS_A transport_resistance;
 	R_overall IS_A transport_resistance;
 
 	J_transport IS_A molar_flux;
-	J_freeboard_cap IS_A molar_flux;
-	J_bed_cap IS_A molar_flux;
-	J_overall_cap IS_A molar_flux;
 	TS_freeboard IS_A factor;
 	TS_bed IS_A factor;
 	TS_overall IS_A factor;
@@ -194,16 +187,12 @@ MODEL tga_reduction_screen;
 	K_eq_lnB[steps] IS_A factor;
 	K_ratio_eq[steps] IS_A positive_factor;
 
-	availability[steps] IS_A factor;
-	drive[steps] IS_A delta_pressure;
-	rate_forward[steps] IS_A extent_rate;
-	rate_reverse[steps] IS_A extent_rate;
+		drive[steps] IS_A delta_pressure;
+		rate_forward[steps] IS_A extent_rate;
+		rate_reverse[steps] IS_A extent_rate;
 	rate_net[steps] IS_A extent_rate;
 
 	J_reaction IS_A molar_flux;
-
-	tr_T: tr.T = T;
-	tr_p: tr.p = p;
 
 	ctot_eq: c_tot = p / (1 {GAS_C} * T);
 
@@ -253,38 +242,21 @@ MODEL tga_reduction_screen;
 		D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
 	Deffbed_eq: D_eff_bed = (eps_bed / tau_bed) * D_screen;
 
-	kfb_eq: k_fb = k_fb_multiplier * D_screen / L_freeboard;
-	kbed_eq: k_bed = k_bed_multiplier * D_eff_bed / H_bed;
-	koverall_eq: k_overall = k_fb * k_bed / (k_fb + k_bed);
+		Rfb_eq: R_fb = L_freeboard / (k_fb_multiplier * D_screen);
+		Rbed_eq: R_bed = H_bed / (k_bed_multiplier * D_eff_bed);
+		Roverall_eq: R_overall = R_fb + R_bed;
 
-	Rfb_eq: R_fb = 1 / k_fb;
-	Rbed_eq: R_bed = 1 / k_bed;
-	Roverall_eq: R_overall = 1 / k_overall;
+		(* Transport drop is written directly in resistance form, so zero total
+		   resistance simply implies y_H2_react = y_H2_bulk. *)
+		Jtrans_eq: R_overall * J_transport = c_tot * (y_H2_bulk - y_H2_react);
 
-	(*
-		Transport capacity and actual transport flux.
+		screen_fb_eq: TS_freeboard = J_reaction * R_fb / (c_tot * y_H2_bulk);
+		screen_bed_eq: TS_bed = J_reaction * R_bed / (c_tot * y_H2_bulk);
+		screen_overall_eq: TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
 
-		J_transport is written here from the H2-side concentration difference.
-		Because y_Ar is held equal between bulk and reacting gas, the same flux
-		is implied from the H2O-side concentration rise.
-	*)
-	Jtrans_eq: J_transport = c_tot * k_overall * (y_H2_bulk - y_H2_react);
-	Jfbcap_eq: J_freeboard_cap = c_tot * k_fb * y_H2_bulk;
-	Jbedcap_eq: J_bed_cap = c_tot * k_bed * y_H2_bulk;
-	Joverallcap_eq: J_overall_cap = c_tot * k_overall * y_H2_bulk;
-
-	screen_fb_eq: TS_freeboard = J_reaction / J_freeboard_cap;
-	screen_bed_eq: TS_bed = J_reaction / J_bed_cap;
-	screen_overall_eq: TS_overall = J_reaction / J_overall_cap;
-
-	(* Local step availabilities *)
-	avail1_eq: availability[1] = n_Fe2O3 / n0_Fe2O3;
-	avail2_eq: availability[2] = n_Fe3O4 / n0_Fe2O3;
-	avail3_eq: availability[3] = n_FeO / n0_Fe2O3;
-
-	FOR r IN steps CREATE
-		kstep_eq[r]:
-			k_step[r] = k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+		FOR r IN steps CREATE
+			kstep_eq[r]:
+				k_step[r] = k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
 		Keq_eq[r]:
 			K_ratio_eq[r]
 			=
@@ -292,17 +264,28 @@ MODEL tga_reduction_screen;
 				K_eq_lnA[r]
 				- K_eq_lnB[r] / (T / 1 {K})
 			);
-		drive_eq[r]:
-			drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
-		rf_eq[r]:
-			rate_forward[r] = availability[r] * k_step[r] * p * y_H2_react;
-		rr_eq[r]:
-			rate_reverse[r] = availability[r] * k_step[r] * p * y_H2O_react / K_ratio_eq[r];
-		rnet_eq[r]:
-			rate_net[r] = rate_forward[r] - rate_reverse[r];
-		ode_eq[r]:
-			dxi_dt[r] = rate_net[r];
-	END FOR;
+			drive_eq[r]:
+				drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
+			rnet_eq[r]:
+				rate_net[r] = rate_forward[r] - rate_reverse[r];
+			ode_eq[r]:
+				dxi_dt[r] = rate_net[r];
+		END FOR;
+
+		rf1_eq:
+			rate_forward[1] = (n_Fe2O3 / n0_Fe2O3) * k_step[1] * p * y_H2_react;
+		rr1_eq:
+			rate_reverse[1] = (n_Fe3O4 / n0_Fe2O3) * k_step[1] * p * y_H2O_react / K_ratio_eq[1];
+
+		rf2_eq:
+			rate_forward[2] = (n_Fe3O4 / n0_Fe2O3) * k_step[2] * p * y_H2_react;
+		rr2_eq:
+			rate_reverse[2] = (n_FeO / n0_Fe2O3) * k_step[2] * p * y_H2O_react / K_ratio_eq[2];
+
+		rf3_eq:
+			rate_forward[3] = (n_FeO / n0_Fe2O3) * k_step[3] * p * y_H2_react;
+		rr3_eq:
+			rate_reverse[3] = (n_Fe / n0_Fe2O3) * k_step[3] * p * y_H2O_react / K_ratio_eq[3];
 
 	(* Hydrogen demand from the three-step solid reduction block.
 	   Each unit of xi1, xi2, xi3 consumes one mol H2 per initial mol Fe2O3. *)
@@ -325,26 +308,26 @@ METHODS
 
 		eps_bed := 0.45;
 		tau_bed := 3.0;
-		k_fb_multiplier := 1.0;
-		k_bed_multiplier := 1.0;
+			k_fb_multiplier := 1.0;
+			k_bed_multiplier := 2.0;
 
 		y_H2_bulk := 0.8;
 		y_H2O_bulk := 0.0;
 		y_Ar_bulk := 0.2;
-		y_H2_react := 0.6;
-		y_H2O_react := 0.2;
+			y_H2_react := 0.75;
+			y_H2O_react := 0.05;
 		y_Ar_react := 0.2;
 
 		(* Placeholder stepwise Arrhenius parameters.
 		   These are not yet calibrated and are only intended to support
 		   transport-screening runs. *)
-		k0[1] := 2e-5 {1/s/Pa};
-		k0[2] := 1e-5 {1/s/Pa};
-		k0[3] := 5e-5 {1/s/Pa};
+			k0[1] := 3e-4 {1/s/Pa};
+			k0[2] := 1.5e-4 {1/s/Pa};
+			k0[3] := 7.5e-4 {1/s/Pa};
 
-		E_a[1] := 55 {kJ/mol};
-		E_a[2] := 60 {kJ/mol};
-		E_a[3] := 62 {kJ/mol};
+			E_a[1] := 55 {kJ/mol};
+			E_a[2] := 60 {kJ/mol};
+			E_a[3] := 62 {kJ/mol};
 
 		(* Fitted equilibrium-ratio correlations from the existing Fe-O-H
 		   FPROPS work. See models/johnpye/iron/TGA.md for derivation details,
@@ -464,8 +447,7 @@ METHODS
 		RUN R.steady_init;
 		STUDY
 			R.m_sample_init, R.m_sample, R.H_bed,
-			R.k_fb, R.k_bed, R.k_overall,
-			R.R_fb, R.R_bed, R.R_overall,
+				R.R_fb, R.R_bed, R.R_overall,
 			R.y_H2_react, R.y_H2O_react, R.y_Ar_react,
 			R.K_ratio_eq[1], R.K_ratio_eq[2], R.K_ratio_eq[3],
 			R.rate_net[1], R.rate_net[2], R.rate_net[3],
