@@ -589,6 +589,25 @@ That implies three distinct problem modes:
 - time integration
   - IDA or LSODE, possibly using an internal initialization solve first
 
+Typical examples are:
+
+- steady-state reuse of a dynamic model
+  - leave normal mode active
+  - untouched `der(x)` defaults to zero
+- non-steady algebraic operating point
+  - explicitly fix a derivative to a nonzero value, for example
+
+```ascend
+METHOD operating_point;
+    SOLVER QRSlv;
+    FIX der(E_stored) := 2 {kW};
+    SOLVE;
+END operating_point;
+```
+
+- startup solve with `INITIAL`
+  - enter initialization mode, solve, inspect, then leave initialization mode
+
 The wording in APIs and UI should reflect this. Prefer:
 
 - "solve initialization problem"
@@ -627,11 +646,48 @@ Current implementation support is still partial here:
 
 - the low-level build-mode machinery exists
 - startup initialization through integrators exists
-- explicit user-facing initialization-mode solves outside integrator startup do
-  not yet have a settled surface
+- explicit user-facing initialization-mode control now exists via built-in
+  wrapper METHODS:
+  - `enter_initial_mode`
+  - `leave_initial_mode`
+- these are implemented in `basemodel.a4l` using built-in external methods:
+  - `set_initial_mode_on`
+  - `set_initial_mode_off`
+- those operations:
+  - flip instantiated `INITIAL` relation inclusion on the current simulation
+  - mark the simulation dirty
+  - invalidate any current solver system so the next `SOLVE` rebuilds in the
+    new mode
 
-That surface should be decided before implementing more QRSlv-specific
-workflow.
+So the current explicit workflow is:
+
+```ascend
+METHOD inspect_startup;
+    SOLVER QRSlv;
+    RUN enter_initial_mode;
+    SOLVE;
+    (* inspect/fix/free values *)
+    RUN leave_initial_mode;
+END inspect_startup;
+```
+
+The non-steady operating-point workflow in normal algebraic mode is equally
+explicit:
+
+```ascend
+METHOD operating_point;
+    SOLVER QRSlv;
+    FIX der(x) := 5;
+    SOLVE;
+END operating_point;
+```
+
+That keeps `INITIAL` excluded while overriding the usual steady-state default
+for the selected derivative quantity.
+
+There is still no built-in one-shot `solve_initial` helper. That remains an
+open UX question, but the explicit mode-switch workflow is now implemented and
+tested.
 
 ## Python / Object-View Support
 
@@ -669,12 +725,12 @@ without introducing extra spelling variants.
 
 Near term:
 
-1. decide whether to expose convenience `METHOD`s for advanced QRSlv-based
-   initialization exploration
-2. add more explicit initialization-mode solves outside integrator startup
-   and define the expected user workflow there
-3. continue broadening `INITIAL` coverage only where it adds semantic value,
+1. continue documenting and testing explicit steady-state versus
+   initialization-mode workflows with small example models
+2. continue broadening `INITIAL` coverage only where it adds semantic value,
    not just more variants of already-covered startup cases
+3. move on to `pre(x)` / `REINIT` / hybrid-event semantics once the example
+   workflows feel stable
 
 After that:
 

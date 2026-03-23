@@ -1,0 +1,31 @@
+REQUIRE "atoms.a4l";
+REQUIRE "basemodel.a4l";
+IMPORT "qrslv";
+
+MODEL test9;
+	x, y IS_A solver_var;
+	r: y = x + 1;
+INITIAL
+	x_init: x = 3;
+METHODS
+METHOD on_load;
+	SOLVER QRSlv;
+	FIX y;
+	y := 5;
+	SOLVE;
+	ASSERT x == 4;
+	ASSERT x_init.included == FALSE;
+
+	RUN enter_initial_mode;
+	ASSERT x_init.included == TRUE;
+	y := 4;
+	SOLVE;
+	ASSERT x == 3;
+
+	RUN leave_initial_mode;
+	ASSERT x_init.included == FALSE;
+	y := 5;
+	SOLVE;
+	ASSERT x == 4;
+END on_load;
+END test9;

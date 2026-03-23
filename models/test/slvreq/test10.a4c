@@ -1,0 +1,18 @@
+REQUIRE "atoms.a4l";
+IMPORT "qrslv";
+
+MODEL test10;
+	x, y IS_A solver_var;
+	t IS_A solver_var;
+
+	eq1: x = 1;
+	eq2: y = der(x) + 2;
+	INDEPENDENT t;
+METHODS
+METHOD on_load;
+	SOLVER QRSlv;
+	FIX der(x) := 5;
+	SOLVE;
+	ASSERT y == 7;
+END on_load;
+END test10;
