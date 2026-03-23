@@ -3,6 +3,16 @@
 #include <ascend/utilities/error.h>
 #include <ascend/general/ascMalloc.h>
 
+#ifndef IDA_DEBUG
+# define IDA_DEBUG 0
+#endif
+
+#if IDA_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 /** FIXME should the following be moved to ida.h? */
 #include <sundials/sundials_math.h>
 #define ZERO RCONST(0.0)
@@ -211,7 +221,7 @@ int integrator_ida_linit(IDAMem IDA_mem){
   	IntegratorIdaAscendMem *iamem;
 	iamem = (IntegratorIdaAscendMem *)lmem;
   
-	CONSOLE_DEBUG("Initialising IDA linear solver");
+	MSG("Initialising IDA linear solver");
 	nje = 0;
 	nre = 0;
 	jacfn = NULL;
@@ -230,7 +240,7 @@ int integrator_ida_lsetup(IDAMem IDA_mem
   	IntegratorIdaAscendMem *iamem;
 	iamem = (IntegratorIdaAscendMem *)lmem;
 
-	CONSOLE_DEBUG("Setting up IDA linear problem");
+	MSG("Setting up IDA linear problem");
 
 	if(jacfn==NULL){
 		lastflag = IDAASCEND_JACFN_UNDEF;
@@ -300,7 +310,7 @@ int integrator_ida_lsolve(IDAMem IDA_mem
 }
 
 int integrator_ida_lfree(IDAMem IDA_mem){
-	CONSOLE_DEBUG("Freeing IDA linear solver data");
+	MSG("Freeing IDA linear solver data");
 
 	/* free jacobian mtx_matrix_t data ?? */
 

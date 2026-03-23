@@ -60,6 +60,9 @@ int system_jacobian(slv_system_t sys
 	sysjac->vars = ASC_NEW_ARRAY(struct var_variable*, nv);
 	sysjac->rels = ASC_NEW_ARRAY(struct rel_relation*, nr);
 	vartocol = ASC_NEW_ARRAY(int,nsv);
+	sysjac->M = NULL;
+	sysjac->n_rels = nr;
+	sysjac->n_vars = nv;
 
 	/* now create a the lists of vars and rels, and temp mapping array */
 	n = 0;
@@ -83,6 +86,11 @@ int system_jacobian(slv_system_t sys
 
 	MSG("nr = %d",nr);
 	MSG("nv = %d",nv);
+
+	if(nr == 0 || nv == 0){
+		ASC_FREE(vartocol);
+		return 0;
+	}
 
 	derivvals = ASC_NEW_ARRAY(double,nv);
 	derivvars = ASC_NEW_ARRAY(int,nv);
@@ -115,9 +123,6 @@ int system_jacobian(slv_system_t sys
 			err = 1;
 		}
 	}
-
-	sysjac->n_rels = nr;
-	sysjac->n_vars = nv;
 
 	ASC_FREE(derivvals);
 	ASC_FREE(derivvars);

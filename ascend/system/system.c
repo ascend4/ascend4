@@ -31,10 +31,15 @@
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/compiler/check.h>
 #include <ascend/compiler/link.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/name.h>
+#include <ascend/compiler/relation.h>
 #include <ascend/compiler/vlist.h>
 #include <ascend/compiler/cmpfunc.h>
+#include <ascend/compiler/visitinst.h>
+#include <ascend/compiler/when_util.h>
 
 #include <ascend/linear/mtx.h>
 
@@ -57,16 +62,100 @@
 
 #define IPTR(i) ((struct Instance *) (i))
 
+static struct Instance *system_root_instance(struct Instance *inst){
+	if(inst == NULL){
+		return NULL;
+	}
+	if(InstanceKind(inst) == SIM_INST){
+		return GetSimulationRoot(inst);
+	}
+	{
+		struct Instance *sim = FindSimulationInstance(inst);
+		if(sim != NULL){
+			return GetSimulationRoot(sim);
+		}
+	}
+	return inst;
+}
+
+static symchar *system_link_entry_key(struct link_entry_t *entry){
+	if(entry == NULL){
+		return NULL;
+	}
+	if(entry->key_cache != NULL){
+		return entry->key_cache;
+	}
+	if(entry->u.statptr != NULL){
+		return LINKStatKey(entry->u.statptr);
+	}
+	return NULL;
+}
+
+static int system_instance_matches(struct Instance *a, struct Instance *b){
+	if(a == NULL || b == NULL){
+		return 0;
+	}
+	return a == b;
+}
+
 static void count_link_key(struct gl_list_t *table, symchar *key, int *count){
 	unsigned long i, len;
 	if(!table) return;
 	len = gl_length(table);
 	for(i=1; i<=len; ++i){
 		struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(table, i);
-		if(entry && entry->key_cache && CmpSymchar(entry->key_cache, key) == 0){
+		symchar *entry_key = system_link_entry_key(entry);
+		if(entry_key && CmpSymchar(entry_key, key) == 0){
 			(*count)++;
 		}
 	}
+}
+
+struct der_usage_walk {
+	int found;
+};
+
+static int relation_side_has_der(union RelationTermUnion *side, unsigned long len){
+	unsigned long i;
+	struct relation_term *term;
+	if(side == NULL){
+		return 0;
+	}
+	for(i = 0; i < len; ++i){
+		term = A_TERM(&(side[i]));
+		if(term != NULL && term->t == e_der){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static void find_der_terms_in_relation(struct Instance *inst, VOIDPTR userdata){
+	struct der_usage_walk *walk = (struct der_usage_walk *)userdata;
+	struct relation *rel;
+
+	if(walk == NULL || walk->found || InstanceKind(inst) != REL_INST){
+		return;
+	}
+	if(GetInstanceRelationType(inst) != e_token){
+		return;
+	}
+	rel = (struct relation *)GetInstanceRelationOnly(inst);
+	if(rel == NULL){
+		return;
+	}
+
+	if(relation_side_has_der(RTOKEN(rel).lhs, RTOKEN(rel).lhs_len)
+	    || relation_side_has_der(RTOKEN(rel).rhs, RTOKEN(rel).rhs_len)){
+		walk->found = 1;
+	}
+}
+
+static int system_has_der_terms(struct Instance *inst){
+	struct der_usage_walk walk;
+	walk.found = 0;
+	VisitInstanceTreeTwo(inst, (VisitTwoProc)find_der_terms_in_relation, 0, 0, &walk);
+	return walk.found;
 }
 
 static int check_ode_independent_links(struct Instance *inst){
@@ -76,39 +165,36 @@ static int check_ode_independent_links(struct Instance *inst){
 	struct gl_list_t *proc = getLinkTableProcedural(inst);
 	int ode_count = 0;
 	int indep_count = 0;
-	struct gl_list_t *indep_names;
+	int has_der_terms = 0;
+	struct gl_list_t *indep_instances;
 	unsigned long i;
 
 	count_link_key(decl, ode_key, &ode_count);
 	count_link_key(proc, ode_key, &ode_count);
 	count_link_key(decl, indep_key, &indep_count);
 	count_link_key(proc, indep_key, &indep_count);
+	has_der_terms = system_has_der_terms(inst);
 
-	if(ode_count > 0 && indep_count != 1){
+	if((ode_count > 0 || has_der_terms) && indep_count != 1){
 		ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 		FPRINTF(ASCERR,"ODE model requires exactly one INDEPENDENT variable; found %d.\n", indep_count);
 		error_reporter_end_flush();
 		return 1;
 	}
-	if(ode_count == 0 && indep_count > 0){
-		ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-		FPRINTF(ASCERR,"INDEPENDENT specified but no DER statements found.\n");
-		error_reporter_end_flush();
-		return 1;
-	}
-
 	/* verify that no DER entries reference the independent variable */
-	indep_names = gl_create(4);
+	indep_instances = gl_create(4);
 	if(decl){
 		unsigned long len = gl_length(decl);
 		for(i=1;i<=len;i++){
 			struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(decl,i);
-			if(entry && entry->key_cache && CmpSymchar(entry->key_cache, indep_key) == 0){
-				CONST struct VariableList *var = entry->u.vl;
-				while(var!=NULL){
-					symchar *name = SimpleNameIdPtr(NamePointer(var));
-					gl_append_ptr(indep_names, (VOIDPTR)name);
-					var = NextVariableNode(var);
+			symchar *entry_key = system_link_entry_key(entry);
+			if(entry_key && CmpSymchar(entry_key, indep_key) == 0){
+				CONST struct gl_list_t *instances = getLinkInstances(inst, entry, 0);
+				if(instances){
+					unsigned long j, n = gl_length((struct gl_list_t *)instances);
+					for(j=1;j<=n;j++){
+						gl_append_ptr(indep_instances, gl_fetch((struct gl_list_t *)instances, j));
+					}
 				}
 			}
 		}
@@ -117,18 +203,20 @@ static int check_ode_independent_links(struct Instance *inst){
 		unsigned long len = gl_length(proc);
 		for(i=1;i<=len;i++){
 			struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(proc,i);
-			if(entry && entry->key_cache && CmpSymchar(entry->key_cache, indep_key) == 0){
-				CONST struct VariableList *var = entry->u.vl;
-				while(var!=NULL){
-					symchar *name = SimpleNameIdPtr(NamePointer(var));
-					gl_append_ptr(indep_names, (VOIDPTR)name);
-					var = NextVariableNode(var);
+			symchar *entry_key = system_link_entry_key(entry);
+			if(entry_key && CmpSymchar(entry_key, indep_key) == 0){
+				CONST struct gl_list_t *instances = getLinkInstances(inst, entry, 0);
+				if(instances){
+					unsigned long j, n = gl_length((struct gl_list_t *)instances);
+					for(j=1;j<=n;j++){
+						gl_append_ptr(indep_instances, gl_fetch((struct gl_list_t *)instances, j));
+					}
 				}
 			}
 		}
 	}
 
-	if(gl_length(indep_names) > 0){
+	if(gl_length(indep_instances) > 0){
 		struct gl_list_t *tables[2] = {decl, proc};
 		for(int t=0;t<2;t++){
 			struct gl_list_t *table = tables[t];
@@ -136,31 +224,42 @@ static int check_ode_independent_links(struct Instance *inst){
 			unsigned long len = gl_length(table);
 			for(i=1;i<=len;i++){
 				struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(table,i);
-				if(entry && entry->key_cache && CmpSymchar(entry->key_cache, ode_key) == 0){
-					CONST struct VariableList *var = entry->u.vl;
-					while(var!=NULL){
-						symchar *name = SimpleNameIdPtr(NamePointer(var));
-						unsigned long j;
-						for(j=1;j<=gl_length(indep_names);j++){
-							if(CmpSymchar((symchar *)gl_fetch(indep_names,j), name) == 0){
-								ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-								FPRINTF(ASCERR,"DER uses independent variable '%s'.\n", SCP(name));
-								error_reporter_end_flush();
-								gl_destroy(indep_names);
-								return 1;
+				symchar *entry_key = system_link_entry_key(entry);
+				if(entry_key && CmpSymchar(entry_key, ode_key) == 0){
+					CONST struct gl_list_t *instances = getLinkInstances(inst, entry, 0);
+					if(instances){
+						unsigned long j, k, n = gl_length((struct gl_list_t *)instances);
+						for(j=1;j<=n;j++){
+							struct Instance *odeinst = (struct Instance *)gl_fetch((struct gl_list_t *)instances, j);
+							for(k=1;k<=gl_length(indep_instances);k++){
+								struct Instance *indepinst = (struct Instance *)gl_fetch(indep_instances, k);
+								if(system_instance_matches(indepinst, odeinst)){
+									ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+									FPRINTF(ASCERR,"DER uses independent variable.\n");
+									error_reporter_end_flush();
+									gl_destroy(indep_instances);
+									return 1;
+								}
 							}
 						}
-						var = NextVariableNode(var);
 					}
 				}
 			}
 		}
 	}
-	gl_destroy(indep_names);
+	gl_destroy(indep_instances);
 	return 0;
 }
 
-slv_system_t system_build(SlvBackendToken inst){
+void system_set_build_mode(SlvBackendToken inst, SystemBuildMode mode){
+	struct Instance *root = system_root_instance(IPTR(inst));
+	if(root == NULL){
+		return;
+	}
+	SetInitialRelationInclusion(root, mode == SYSTEM_BUILD_INITIAL ? TRUE : FALSE);
+}
+
+static slv_system_t system_build_internal(SlvBackendToken inst){
   slv_system_t sys;
   int stat;
 
@@ -218,6 +317,15 @@ slv_system_t system_build(SlvBackendToken inst){
     return sys;
   }
   return(sys);
+}
+
+slv_system_t system_build_with_mode(SlvBackendToken inst, SystemBuildMode mode){
+	system_set_build_mode(inst, mode);
+	return system_build_internal(inst);
+}
+
+slv_system_t system_build(SlvBackendToken inst){
+	return system_build_with_mode(inst, SYSTEM_BUILD_NORMAL);
 }
 
 void system_destroy(slv_system_t sys){

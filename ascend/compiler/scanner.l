@@ -237,6 +237,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"DEFAULT"		{ return DEFAULT_TOK		; }
 <INITIAL>"DEFINITION"		{ return DEFINITION_TOK		; }
 <INITIAL>"DER" { return DER_TOK ; }
+<INITIAL>"der" { return DER_TOK ; }
 <INITIAL>"DIMENSION"		{ return DIMENSION_TOK		; }
 <INITIAL>"DIMENSIONLESS"	{ return DIMENSIONLESS_TOK	; }
 <INITIAL>"DO"			{ return DO_TOK			; }
@@ -256,6 +257,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"ASSERT"       { return ASSERT_TOK			; }
 <INITIAL>"IF"			{ return IF_TOK			; }
 <INITIAL>"'ignore'"		{ return IGNORE_TOK 	;}
+<INITIAL>"INITIAL"		{ return INITIAL_TOK		; }
 <INITIAL>"INDEPENDENT" { return INDEPENDENT_TOK ;}
 <INITIAL>"IMPORT"		{ return IMPORT_TOK		; }
 <INITIAL>"IN"			{ return IN_TOK			; }

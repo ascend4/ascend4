@@ -1,0 +1,36 @@
+REQUIRE "system.a4l";
+
+MODEL highs_deriv_trivial;
+	x IS_A solver_var;
+	y IS_A solver_var;
+
+	c1: y - der(x) = 0;
+	obj: MINIMIZE 0 * x;
+
+METHODS
+
+METHOD on_load;
+	FIX x := 1;
+	FREE y;
+END on_load;
+
+END highs_deriv_trivial;
+
+
+MODEL highs_deriv_free;
+	x IS_A solver_var;
+	y IS_A solver_var;
+
+	c1: y - der(x) = 0;
+	c2: der(x) = 3;
+	obj: MINIMIZE y;
+
+METHODS
+
+METHOD on_load;
+	FIX x := 1;
+	FREE y;
+	FREE der(x);
+END on_load;
+
+END highs_deriv_free;

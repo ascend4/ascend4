@@ -63,6 +63,7 @@
 #include "child.h"
 #include "type_desc.h"
 #include "copyinst.h"
+#include "derivinst.h"
 #include "instance_io.h"
 #include "module.h"
 
@@ -88,6 +89,9 @@ static const struct InstanceEnumLookup g_instancetypenames[] = {
 #undef LIST_X
 
 };
+
+int WriteInstanceName(FILE *f, CONST struct Instance *i, CONST struct Instance *ref);
+void WriteInstanceNameDS(Asc_DString *dsPtr, CONST struct Instance *i, CONST struct Instance *ref);
 
 /*------------------------------------------------------------------------------
   INSTANCE TYPE
@@ -243,6 +247,61 @@ char *WritePathString(CONST struct gl_list_t *path){
   return result;
 }
 
+static int WriteDerivativeInstanceName(FILE *f,
+	CONST struct Instance *i, CONST struct Instance *ref
+){
+  CONST struct Instance *base, *baseref;
+  int count = 0;
+  if(!IsDerivativeInstance(i)){
+    return -1;
+  }
+  if(i == ref){
+    return 0;
+  }
+  base = DerivativeInstanceBase(i);
+  if(base == NULL){
+    FPRINTF(ASCERR,"Cannot print name.\n");
+    return FPRINTF(f,"?????");
+  }
+  baseref = ref;
+  if(IsDerivativeInstance(ref)){
+    baseref = DerivativeInstanceBase(ref);
+  }
+  count += FPRINTF(f,"der(");
+  if(base != baseref){
+    count += WriteInstanceName(f,base,baseref);
+  }
+  count += FPRINTF(f,")");
+  return count;
+}
+
+static void WriteDerivativeInstanceNameDS(Asc_DString *dsPtr,
+	CONST struct Instance *i, CONST struct Instance *ref
+){
+  CONST struct Instance *base, *baseref;
+  if(!IsDerivativeInstance(i)){
+    return;
+  }
+  if(i == ref){
+    return;
+  }
+  base = DerivativeInstanceBase(i);
+  if(base == NULL){
+    FPRINTF(ASCERR,"Cannot print name.\n");
+    Asc_DStringAppend(dsPtr,"?????",5);
+    return;
+  }
+  baseref = ref;
+  if(IsDerivativeInstance(ref)){
+    baseref = DerivativeInstanceBase(ref);
+  }
+  Asc_DStringAppend(dsPtr,"der(",4);
+  if(base != baseref){
+    WriteInstanceNameDS(dsPtr,base,baseref);
+  }
+  Asc_DStringAppend(dsPtr,")",1);
+}
+
 /*------------------------------------------------------------------------------
   INSTANCE NAME OUTPUTTERS
 */
@@ -259,6 +318,10 @@ int WriteInstanceName(FILE *f
     FPRINTF(ASCERR,"\n");
   }
   */
+  count = WriteDerivativeInstanceName(f,i,ref);
+  if(count >= 0){
+    return count;
+  }
   path = ShortestPath(i,ref,0,UINT_MAX);
   count = WritePath(f,path);
   gl_destroy(path);
@@ -270,6 +333,10 @@ void WriteInstanceNameDS(Asc_DString *dsPtr,
 		      CONST struct Instance *ref)
 {
   struct gl_list_t *path;
+  if(IsDerivativeInstance(i)){
+    WriteDerivativeInstanceNameDS(dsPtr,i,ref);
+    return;
+  }
   path = ShortestPath(i,ref,0,UINT_MAX);
   WritePathDS(dsPtr,path);
   gl_destroy(path);

@@ -137,7 +137,8 @@ extern CONST struct gl_list_t *getLinkInstances(struct Instance *model, struct l
 	@param link_entry pointer to a link_entry in some link_table
 	@param status     Find status of the instances in the LINK (TODO not yet impl)
 
-	@return gl_list with all the instances that are LINK-ed by the given LINK entry
+	@return borrowed flattened gl_list with all the instances that are LINK-ed by
+	        the given LINK entry. The returned list is owned by the link cache.
 */
 
 
@@ -147,7 +148,8 @@ extern CONST struct gl_list_t *getLinkInstancesFlat(struct Instance *model, stru
 	@param link_entry  pointer to a link_entry in some link_table
 	@param status      Find status of the instances in the LINK (TODO not yet impl)
 
-	@return gl_list with all the instances that are LINK-ed by the given LINK entry
+	@return borrowed flattened gl_list with all the instances that are LINK-ed by
+	        the given LINK entry. The returned list is owned by the link cache.
 */
 
 
@@ -222,6 +224,15 @@ extern int getOdeType(struct Instance *model,struct Instance *inst);
 	Note: The values are taken from the position of the variables in the LINK instance list:
 		LINK('ode',dx_dt,x,t),where the first instance are the differential and derivative
 		variables in decreasing order and the last instance is always the independent variable.
+*/
+
+extern struct Instance *getOdeDerivative(struct Instance *model, struct Instance *inst);
+/**<
+	@param model the scope instance of the LINK (should be a model/simulation root)
+	@param inst the variable instance whose immediate materialised derivative is sought
+
+	@return the linked derivative instance immediately above inst in an `ode` chain,
+	        or NULL if no such materialised derivative exists
 */
 
 /**

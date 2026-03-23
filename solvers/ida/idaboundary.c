@@ -22,7 +22,15 @@
 #include <ascend/system/logrel.h>
 #include <ascend/system/rel.h>
 
-#define IDA_BND_DEBUG
+#ifndef IDA_BND_DEBUG
+# define IDA_BND_DEBUG 0
+#endif
+
+#if IDA_BND_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
 /*
  *
  *
@@ -46,7 +54,7 @@ int some_dis_vars_changed(slv_system_t sys) {
 
 #ifdef IDA_BND_DEBUG
 		dis_name = dis_make_name(sys, cur_dis);
-		CONSOLE_DEBUG("Boundary %s index, current, prev = %d, %d, %d ", dis_name,
+		MSG("Boundary %s index, current, prev = %d, %d, %d ", dis_name,
 				i, dis_value(cur_dis), dis_previous_value(cur_dis));
 		ASC_FREE(dis_name);
 #endif
@@ -75,7 +83,7 @@ void ida_setup_lrslv(IntegratorSystem *integ) {
 	}
 
 #ifdef IDA_BND_DEBUG
-	CONSOLE_DEBUG("Solver selected is '%s'",slv_solver_name
+	MSG("Solver selected is '%s'",slv_solver_name
 			(slv_get_selected_solver(integ->system)));
 #endif
 
@@ -160,7 +168,7 @@ int ida_bnd_update_relist(IntegratorSystem *integ){
 		if (rel_apply_filter(rels[i], &integrator_ida_rel)) {
 #ifdef IDA_BND_DEBUG
 			relname = rel_make_name(integ->system, rels[i]);
-			CONSOLE_DEBUG("rel '%s': 0x%x", relname, rel_flags(rels[i]));
+			MSG("rel '%s': 0x%x", relname, rel_flags(rels[i]));
 			ASC_FREE(relname);
 #endif
 			enginedata->rellist[j++] = rels[i];
@@ -209,13 +217,13 @@ void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vect
 	integrator_get_ydot(integ, NV_DATA_S(yp0));
 
 #ifdef IDA_BND_DEBUG
-	CONSOLE_DEBUG("BEFORE IC SOLVING:");
-	CONSOLE_DEBUG("TIME: %f", t0);
-	CONSOLE_DEBUG("Y");
+	MSG("BEFORE IC SOLVING:");
+	MSG("TIME: %f", t0);
+	MSG("Y");
 	N_VPrint_Serial(y0);
-	CONSOLE_DEBUG("Yp");
+	MSG("Yp");
 	N_VPrint_Serial(yp0);
-	CONSOLE_DEBUG("Press any to continue...");
+	MSG("Press any to continue...");
 	getchar();
 #endif
 

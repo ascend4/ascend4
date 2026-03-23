@@ -194,6 +194,19 @@ TypeLintIllegalBodyStats(FILE *fp,
  */
 
 extern enum typelinterr
+TypeLintIllegalInitialStats(FILE *fp,
+                            symchar *typename,
+                            CONST struct StatementList *statements,
+                            unsigned int context);
+/**<
+ *  Checks statements allowed in an INITIAL section.
+ *  v1 permits only declarative equation-building constructs:
+ *  REL, LOGREL, FOR/CREATE and COND containing the same.
+ *  Returns DEF_OKAY under normal circumstances,
+ *  DEF_ILLEGAL or other when unhappy.
+ */
+
+extern enum typelinterr
 TypeLintIllegalParamStats(FILE *fp,
                           symchar *typename,
                           CONST struct StatementList *statements);
@@ -252,4 +265,3 @@ TypeLintIllegalMethodStats(FILE *fp,
 /* @} */
 
 #endif  /* ASC_TYPELINT_H */
-

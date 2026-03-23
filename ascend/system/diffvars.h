@@ -75,6 +75,25 @@ typedef struct SolverDiffVarCollectionStruct SolverDiffVarCollection;
 */
 ASC_DLLSPEC SolverDiffVarCollection *system_get_diffvars(slv_system_t sys);
 
+/**
+	Return the dynamic role of a solver variable using the built diffvars view.
+
+	Return values follow the historical integrator conventions:
+	- `-1` independent variable
+	- `0` algebraic / not in diffvars
+	- `1` state variable
+	- `2` first derivative
+	- `3` second derivative, etc
+
+	If `index` is non-null, the derivative-chain id is written there for
+	state/derivative variables. For independent variables, `*index` is set to 0.
+*/
+ASC_DLLSPEC long system_diffvars_var_role(
+	slv_system_t sys,
+	struct var_variable *var,
+	long *index
+);
+
 int system_diffvars_build(slv_system_t sys, struct problem_t *prob);
 
 /**

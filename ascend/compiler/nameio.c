@@ -51,6 +51,12 @@ void WriteNameNode(FILE *f, CONST struct Name *n)
 
 void WriteName(FILE *f, CONST struct Name *n)
 {
+  if(NameIsDerivativeRef(n)){
+    FPRINTF(f,"der(");
+    WriteName(f, DerivativeRefBaseName(n));
+    PUTC(')',f);
+    return;
+  }
   while (n!=NULL) {
     WriteNameNode(f,n);
     n = NextName(n);
@@ -89,6 +95,12 @@ char *WriteNameString(CONST struct Name *n)
 
 void WriteName2Str(Asc_DString *dstring, CONST struct Name *n)
 {
+  if(NameIsDerivativeRef(n)){
+    Asc_DStringAppend(dstring,"der(",4);
+    WriteName2Str(dstring, DerivativeRefBaseName(n));
+    Asc_DStringAppend(dstring,")",1);
+    return;
+  }
   while (n!=NULL) {
     WriteNameNode2Str(dstring,n);
     n = NextName(n);
@@ -96,5 +108,4 @@ void WriteName2Str(Asc_DString *dstring, CONST struct Name *n)
       Asc_DStringAppend(dstring,".",-1);
   }
 }
-
 

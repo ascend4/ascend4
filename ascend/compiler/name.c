@@ -50,6 +50,15 @@
 #define TRUE 1
 #endif
 
+static symchar *g_derivative_ref_tag = NULL;
+
+static symchar *DerivativeRefTag(void){
+  if(g_derivative_ref_tag == NULL){
+    g_derivative_ref_tag = AddSymbol("<der>");
+  }
+  return g_derivative_ref_tag;
+}
+
 #ifdef ASC_NO_POOL
 #define NAMEUSESPOOL FALSE
 #else
@@ -208,6 +217,32 @@ struct Name *CreateReservedIndexName(symchar *reserved)
   s = CreateSingleSet(ex);
   result = CreateSetName(s);
   return result;
+}
+
+struct Name *CreateDerivativeRefName(struct Name *base)
+{
+  struct Name *result;
+  assert(base != NULL);
+  result = CreateSystemIdName(DerivativeRefTag());
+  LinkNames(result, base);
+  return result;
+}
+
+int NameIsDerivativeRef(CONST struct Name *n)
+{
+  return n != NULL
+    && NameId(n)
+    && NameAuto(n)
+    && NameIdPtr(n) == DerivativeRefTag()
+    && NextName(n) != NULL;
+}
+
+CONST struct Name *DerivativeRefBaseName(CONST struct Name *n)
+{
+  if(!NameIsDerivativeRef(n)){
+    return NULL;
+  }
+  return NextName(n);
 }
 
 struct Name *CreateEnumElementName(symchar *senum)
@@ -457,4 +492,3 @@ int CompareNames(CONST struct Name *n1, CONST struct Name *n2)
   }
   return 0;
 }
-

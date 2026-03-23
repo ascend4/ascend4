@@ -4804,6 +4804,23 @@ struct Instance *MakeRelationInstance(struct Name *name,
   }
 }
 
+static void ApplyInitialStatementFlags(struct Instance *eqninst,
+                                       struct Statement *statement)
+{
+  struct Instance *flaginst;
+  if ((GetStatContext(statement) & context_INITIAL) == 0) {
+    return;
+  }
+  flaginst = ChildByChar(eqninst, AddSymbol("initial"));
+  if (flaginst != NULL && InstanceKind(flaginst) == BOOLEAN_INST) {
+    SetBooleanAtomValue(flaginst, TRUE, 0U);
+  }
+  flaginst = ChildByChar(eqninst, AddSymbol("included"));
+  if (flaginst != NULL && InstanceKind(flaginst) == BOOLEAN_INST) {
+    SetBooleanAtomValue(flaginst, FALSE, 0U);
+  }
+}
+
 
 /**
 	ok, now we can whine real loud about what's missing.
@@ -4877,6 +4894,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 		reln = CreateTokenRelation(inst,child,RelationStatExpr(statement),&err);
 		if(reln != NULL){
 			SetInstanceRelation(child,reln,e_token);
+      ApplyInitialStatementFlags(child,statement);
 #ifdef DEBUG_RELS
 			STATEMENT_NOTE(statement, "Created relation");
 #endif
@@ -5142,6 +5160,7 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
 		inst,child,LogicalRelStatExpr(statement),&err)
 	)){
       SetInstanceLogRel(child,lreln);
+      ApplyInitialStatementFlags(child,statement);
       return 1;
     }else{
       SetInstanceLogRel(child,NULL);
@@ -15088,15 +15107,12 @@ void Pass5ExecuteLinkStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
+  struct Statement *stat;
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   for(c=FirstNonZeroBit(blist);c<BLength(blist);c++){
     if (ReadBit(blist,c)){
-      if ( Pass5ExecuteStatement(work,
-           (struct Statement *)gl_fetch(statements,c+1)) ) {
+      stat = GetExecutableStatement(def,c+1);
+      if ( Pass5ExecuteStatement(work,stat) ) {
         ClearBit(blist,c);
         *changed = 1;
       }
@@ -15117,15 +15133,12 @@ void Pass4ExecuteWhenStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
+  struct Statement *stat;
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   for(c=FirstNonZeroBit(blist);c<BLength(blist);c++){
     if (ReadBit(blist,c)){
-      if ( Pass4ExecuteStatement(work,
-           (struct Statement *)gl_fetch(statements,c+1)) ) {
+      stat = GetExecutableStatement(def,c+1);
+      if ( Pass4ExecuteStatement(work,stat) ) {
         ClearBit(blist,c);
         *changed = 1;
       }
@@ -15145,15 +15158,12 @@ void Pass3ExecuteLogRelStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
+  struct Statement *stat;
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   for(c=FirstNonZeroBit(blist);c<BLength(blist);c++){
     if (ReadBit(blist,c)){
-      if ( Pass3ExecuteStatement(work,
-           (struct Statement *)gl_fetch(statements,c+1)) ) {
+      stat = GetExecutableStatement(def,c+1);
+      if ( Pass3ExecuteStatement(work,stat) ) {
         ClearBit(blist,c);
         *changed = 1;
       }
@@ -15173,15 +15183,12 @@ void Pass2ExecuteRelationStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
+  struct Statement *stat;
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   for(c=FirstNonZeroBit(blist);c<BLength(blist);c++){
     if (ReadBit(blist,c)){
-      if ( Pass2ExecuteStatement(work,
-           (struct Statement *)gl_fetch(statements,c+1)) ) {
+      stat = GetExecutableStatement(def,c+1);
+      if ( Pass2ExecuteStatement(work,stat) ) {
         //CONSOLE_DEBUG("Got error code here, clearing bit in blist, setting '*changed' to 1");
         ClearBit(blist,c);
         *changed = 1;
@@ -15203,17 +15210,13 @@ void Pass1ExecuteInstanceStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
   struct Statement *stat;
 
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   c=FirstNonZeroBit(blist);
   while(c<BLength(blist)) {
     if (ReadBit(blist,c)){
-      stat = (struct Statement *)gl_fetch(statements,c+1);
+      stat = GetExecutableStatement(def,c+1);
       if ( Pass1ExecuteStatement(work,&c,stat) ) {
         if (StatementType(stat) != SELECT ) {
           ClearBit(blist,c);
@@ -15961,16 +15964,12 @@ void Pass5SetLinkBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
       changed=0;
-      if (BLength(blist)) {
-        statements = GetList(GetStatementList(InstanceTypeDesc(inst)));
-      }
       for(c=0;c<BLength(blist);c++){
-        stat = (struct Statement *)gl_fetch(statements,c+1);
+        stat = GetExecutableStatement(InstanceTypeDesc(inst),c+1);
         st= StatementType(stat);
         if (st == SELECT) {
           if (SelectContainsLink(stat)) {
@@ -16031,16 +16030,12 @@ void Pass4SetWhenBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
       changed=0;
-      if (BLength(blist)) {
-        statements = GetList(GetStatementList(InstanceTypeDesc(inst)));
-      }
       for(c=0;c<BLength(blist);c++){
-        stat = (struct Statement *)gl_fetch(statements,c+1);
+        stat = GetExecutableStatement(InstanceTypeDesc(inst),c+1);
         st= StatementType(stat);
         if (st == SELECT) {
           if (SelectContainsWhen(stat)) {
@@ -16101,16 +16096,12 @@ void Pass3SetLogRelBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
       changed=0;
-      if (BLength(blist)) {
-        statements = GetList(GetStatementList(InstanceTypeDesc(inst)));
-      }
       for(c=0;c<BLength(blist);c++){
-        stat = (struct Statement *)gl_fetch(statements,c+1);
+        stat = GetExecutableStatement(InstanceTypeDesc(inst),c+1);
         st= StatementType(stat);
         if (st == SELECT) {
           if (SelectContainsLogRelations(stat)) {
@@ -16201,16 +16192,12 @@ void Pass2SetRelationBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
       changed=0;
-      if (BLength(blist)) {
-        statements = GetList(GetStatementList(InstanceTypeDesc(inst)));
-      }
       for(c=0;c<BLength(blist);c++){
-        stat = (struct Statement *)gl_fetch(statements,c+1);
+        stat = GetExecutableStatement(InstanceTypeDesc(inst),c+1);
         st= StatementType(stat);
         if (st == SELECT) {
           if (SelectContainsRelations(stat) ||

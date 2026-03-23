@@ -36,6 +36,7 @@ extern "C"{
 #include <ascend/compiler/relation_io.h>
 #include <ascend/compiler/functype.h>
 #include <ascend/compiler/relation_util.h>
+#include <ascend/compiler/derivinst.h>
 #include <ascend/compiler/logrel_util.h>
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/when_io.h>
@@ -48,6 +49,29 @@ extern "C"{
 #include <sstream>
 
 using namespace std;
+
+static void
+ascxx_mark_instance_dirty(struct Instance *inst){
+	struct Instance *cursor;
+	if(inst == NULL){
+		return;
+	}
+	cursor = inst;
+	while(cursor != NULL){
+		if(IsDerivativeInstance(cursor)){
+			struct Instance *base = DerivativeInstanceBase(cursor);
+			if(base != NULL){
+				inst = base;
+				break;
+			}
+		}
+		if(NumberParents(cursor) < 1){
+			break;
+		}
+		cursor = InstanceParent(cursor, 1);
+	}
+	asc_simstatus_mark_dirty(inst);
+}
 
 struct UnitsOverridesDB *ascxx_get_units_overrides_db(void){
 	static struct UnitsOverridesDB *db = NULL;
@@ -689,7 +713,7 @@ Instanc::setSymbolValue(const SymChar &sym){
 	}
 
 	SetSymbolAtomValue(i,sym.getInternalType());
-	asc_simstatus_mark_dirty(i);
+	ascxx_mark_instance_dirty(i);
 }
 
 const string
@@ -846,6 +870,13 @@ Instanc::getChildren()
 
 		children.push_back(c);
 	}
+	unsigned long dynlen = InstanceDynamicChildCount(i);
+	for(unsigned long ci=1; ci<=dynlen; ++ci){
+		struct Instance *dyn = InstanceDynamicChild(i, ci);
+		symchar *dynname = InstanceDynamicChildName(i, ci);
+		if(dyn==NULL || dynname==NULL)continue;
+		children.push_back(Instanc(dyn, SymChar(SCP(dynname))));
+	}
 	return children;
 }
 
@@ -853,6 +884,9 @@ Instanc
 Instanc::getChild(const SymChar &name) const{
 	struct Instance *c = ChildByChar(i,name.getInternalType());
 	stringstream ss;
+	if(c==NULL){
+		c = InstanceDynamicChildByChar(i, name.getInternalType());
+	}
 	if(c==NULL){
 		ss << "Child '" << name << "'  not found in " << getName();
 		throw runtime_error(ss.str());
@@ -904,6 +938,7 @@ void
 Instanc::setFixed(const bool &val){
 	if(isFixed()==val)return;
 	//CONSOLE_DEBUG("Fixing solver_var at %p",i);
+	DerivativeInstanceNoteMutation(i);
 	getChild("fixed").setBoolValue(val);
 }
 
@@ -915,11 +950,12 @@ Instanc::setIncluded(const bool &val){
 
 void
 Instanc::setBoolValue(const bool &val, const unsigned &depth){
+	DerivativeInstanceNoteMutation(i);
 	if(isDefined() && getBoolValue() == val){
 		return;
 	}
 	SetBooleanAtomValue(i, val, depth);
-	asc_simstatus_mark_dirty(i);
+	ascxx_mark_instance_dirty(i);
 }
 
 void
@@ -928,16 +964,17 @@ Instanc::setIntValue(const long &val, const unsigned &depth){
 		return;
 	}
 	SetIntegerAtomValue(i, val, depth);
-	asc_simstatus_mark_dirty(i);
+	ascxx_mark_instance_dirty(i);
 }
 
 void
 Instanc::setRealValue(const double &val, const unsigned &depth){
+	DerivativeInstanceNoteMutation(i);
 	if(isDefined() && getRealValue() == val){
 		return;
 	}
 	SetRealAtomValue(i,val, depth);
-	asc_simstatus_mark_dirty(i);
+	ascxx_mark_instance_dirty(i);
 	//ERROR_REPORTER_HERE(ASC_USER_NOTE,"Set %s to %f",getName().toString(),val);
 }
 
@@ -946,6 +983,7 @@ Instanc::setRealValue(const double &val, const unsigned &depth){
 */
 void
 Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &depth){
+	DerivativeInstanceNoteMutation(i);
 
 	if(isConst()){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Can't change the value of a constant");
@@ -976,7 +1014,7 @@ Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &de
 	}
 
 	SetRealAtomValue(i,val,depth);
-	asc_simstatus_mark_dirty(i);
+	ascxx_mark_instance_dirty(i);
 }
 
 /**

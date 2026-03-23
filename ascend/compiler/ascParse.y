@@ -781,7 +781,7 @@ static CONST char *g_study_filename = NULL;
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
 %token FILE_TOK
 %token GLOBAL_TOK
-%token IF_TOK  IGNORE_TOK IMPORT_TOK IN_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK INDEPENDENT_TOK
+%token IF_TOK  IGNORE_TOK IMPORT_TOK IN_TOK INITIAL_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK INDEPENDENT_TOK
 %token INTERSECTION_TOK ISA_TOK _IS_T ISREFINEDTO_TOK
 %token LINEAR_TOK LOG_TOK
 %token NOW_TOK
@@ -827,10 +827,10 @@ static CONST char *g_study_filename = NULL;
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
-%type <nptr> data_args fname name dataset_target /* optional_scope */
+%type <nptr> data_args fname name dataset_target fvarref /* optional_scope */
 %type <eptr> relation expr relop logrelop optional_with_value
 %type <sptr> set setexprlist optional_set_values
-%type <lptr> fvarlist input_args output_args varlist
+%type <lptr> fvarlist input_args output_args varlist method_fvarlist method_varlist
 
 %type <statptr> statement isa_statement willbe_statement aliases_statement
 %type <statptr> is_statement isrefinedto_statement arealike_statement link_statement unlink_statement der_statement independent_statement
@@ -847,7 +847,7 @@ static CONST char *g_study_filename = NULL;
 %type <braced_ptr> dataset_units_opt
 %type <id_ptr> dataset_type_opt dataset_type_req dataset_column_ref dataset_column_selector
 
-%type <slptr> fstatements global_def optional_else
+%type <slptr> fstatements global_def initial optional_else
 %type <slptr> optional_model_parameters optional_parameter_reduction
 %type <slptr> optional_parameter_wheres
 %type <septr> selectlist selectlistf
@@ -1388,16 +1388,16 @@ constant_val:
     ;
 
 model_def:
-    universal model_head fstatements methods end ';'
+    universal model_head fstatements initial methods end ';'
 	{
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
-	  if(( $5 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
+	  if(( $6 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
 	    WarnMsg_MismatchEnd("MODEL", SCP(g_type_name),
-	                        $5, SCP(g_type_name));
+	                        $6, SCP(g_type_name));
 	  }
 	  def_ptr = CreateModelTypeDef(g_type_name,
 	                               g_refines_name,
@@ -1405,6 +1405,7 @@ model_def:
 	                               $1,
 	                               $3,
 	                               $4,
+	                               $5,
 	                               g_model_parameters,
 	                               g_parameter_reduction,
 	                               g_parameter_wheres,
@@ -2020,6 +2021,18 @@ methods:
 	}
     ;
 
+initial:
+    /* empty */
+	{
+	  $$ = EmptyStatementList();
+	}
+    | INITIAL_TOK fstatements
+	{
+	  AddContext($2,context_INITIAL);
+	  $$ = $2;
+	}
+    ;
+
 proclist:
     proclistf
 	{
@@ -2528,11 +2541,11 @@ willnotbethesame_statement:
     ;
 
 assignment_statement:
-    fname ASSIGN_TOK expr
+    fvarref ASSIGN_TOK expr
 	{
 	  $$ = CreateASSIGN($1,$3);
 	}
-    | fname CASSIGN_TOK expr
+    | fvarref CASSIGN_TOK expr
 	{
 	  $$ = CreateCASSIGN($1,$3);
 	}
@@ -2740,7 +2753,7 @@ run_statement:
     ;
 
 fix_statement:
-	FIX_TOK fvarlist
+	FIX_TOK method_fvarlist
 	{
 		/*CONSOLE_DEBUG("GOT 'FIX' STATEMENT...");*/
 		$$ = CreateFIX($2);
@@ -2762,7 +2775,7 @@ fix_and_assign_statement:
      ;
 
 free_statement:
-	FREE_TOK fvarlist
+	FREE_TOK method_fvarlist
 	{
 		$$ = CreateFREE($2);
 	}
@@ -3261,6 +3274,43 @@ varlist:
 	}
     ;
 
+method_fvarlist:
+    method_varlist
+	{
+	  $$ = ReverseVariableList($1);
+	}
+    ;
+
+method_varlist:
+    fvarref
+	{
+	  $$ = CreateVariableNode($1);
+	}
+    | method_varlist ',' fvarref
+	{
+	  $$ = CreateVariableNode($3);
+	  LinkVariableNodes($$,$1);
+	}
+    | method_varlist fvarref
+	{
+	  ErrMsg_CommaName("name",$2);
+	  $$ = CreateVariableNode($2);
+	  LinkVariableNodes($$,$1);
+	  g_untrapped_error++;
+	}
+    ;
+
+fvarref:
+    fname
+	{
+	  $$ = $1;
+	}
+    | DER_TOK '(' fname ')'
+	{
+	  $$ = CreateDerivativeRefName($3);
+	}
+    ;
+
 fname:
     name optional_notes
 	{
@@ -3628,6 +3678,10 @@ expr:
     | fname
 	{
 	  $$ = CreateVarExpr($1);
+	}
+    | DER_TOK '(' fname ')'
+	{
+	  $$ = CreateDiffExpr($3);
 	}
     | '[' set ']'
 	{

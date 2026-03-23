@@ -36,6 +36,7 @@ const IntegratorInternals integrator_radau5_internals = {
 	integrator_radau5_create
 	,integrator_radau5_params_default
 	,integrator_analyse_ode /* note, this routine is back in integrator.c */
+	,integrator_initialise_ode
 	,integrator_radau5_solve
 	,NULL /*integrator_radau5_write_matrix not implemented */
 	,NULL /* debugfn */
@@ -686,5 +687,4 @@ unsigned long start_index, unsigned long finish_index
 	CONSOLE_DEBUG("--- RADAU5 done ---");
 	return 0; /* success */
 }
-
 

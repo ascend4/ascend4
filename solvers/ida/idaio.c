@@ -73,15 +73,21 @@
 # define CONSOLE_DEBUG(...) ((void)0)
 #endif
 
+#if IDA_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 /**
-	This routine just outputs the stats to the CONSOLE_DEBUG routine.
+	This routine just outputs developer-facing stats via MSG.
 
 	@TODO provide a GUI way of stats reporting from IDA.
 */
 void integrator_ida_write_stats(IntegratorIdaStats *stats){
-# define SL(N) CONSOLE_DEBUG("%s = %ld",#N,stats->N)
-# define SI(N) CONSOLE_DEBUG("%s = %d",#N,stats->N)
-# define SR(N) CONSOLE_DEBUG("%s = %f",#N,stats->N)
+# define SL(N) MSG("%s = %ld",#N,stats->N)
+# define SI(N) MSG("%s = %d",#N,stats->N)
+# define SR(N) MSG("%s = %f",#N,stats->N)
 		SL(nsteps); SL(nrevals); SL(nlinsetups); SL(netfails);
 		SI(qlast); SI(qcur);
 		SR(hinused); SR(hlast); SR(hcur); SR(tcur);
@@ -155,49 +161,49 @@ int integrator_ida_write_matrix(const IntegratorSystem *integ, FILE *f, const ch
 	if(type==NULL)type = "dx'/dx";
 
 	if(0==strcmp(type,"dg/dz")){
-		CONSOLE_DEBUG("Calculating dg/dz...");
+		MSG("Calculating dg/dz...");
 		status = system_jacobian(integ->system
 			, &system_rfilter_algeb, &system_vfilter_algeb
 			, 1 /* safe */
 			, &J
 		);
 	}else if(0==strcmp(type,"dg/dx")){
-		CONSOLE_DEBUG("Calculating dg/dx...");
+		MSG("Calculating dg/dx...");
 		status = system_jacobian(integ->system
 			, &system_rfilter_algeb, &system_vfilter_diff
 			, 1 /* safe */
 			, &J
 		);
 	}else if(0==strcmp(type,"df/dx'")){
-		CONSOLE_DEBUG("Calculating df/dx'...");
+		MSG("Calculating df/dx'...");
 		status = system_jacobian(integ->system
 			, &system_rfilter_diff, &system_vfilter_deriv
 			, 1 /* safe */
 			, &J
 		);
 	}else if(0==strcmp(type,"df/dz")){
-		CONSOLE_DEBUG("Calculating df/dz...");
+		MSG("Calculating df/dz...");
 		status = system_jacobian(integ->system
 			, &system_rfilter_diff, &system_vfilter_algeb
 			, 1 /* safe */
 			, &J
 		);
 	}else if(0==strcmp(type,"df/dx")){
-		CONSOLE_DEBUG("Calculating df/dx...");
+		MSG("Calculating df/dx...");
 		status = system_jacobian(integ->system
 			, &system_rfilter_diff, &system_vfilter_diff
 			, 1 /* safe */
 			, &J
 		);
 	}else if(0==strcmp(type,"dF/dy")){
-		CONSOLE_DEBUG("Calculating dF/dy...");
+		MSG("Calculating dF/dy...");
 		status = system_jacobian(integ->system
 			, &system_rfilter_all, &system_vfilter_nonderiv
 			, 1 /* safe */
 			, &J
 		);
 	}else if(0==strcmp(type,"dF/dy'")){
-		CONSOLE_DEBUG("Calculating dF/dy'...");
+		MSG("Calculating dF/dy'...");
 		status = system_jacobian(integ->system
 			, &system_rfilter_all, &system_vfilter_deriv
 			, 1 /* safe */
@@ -247,14 +253,14 @@ void integrator_ida_write_incidence(IntegratorSystem *integ){
 	char *relname;
 
 	if(enginedata->nrels > 100){
-		CONSOLE_DEBUG("Ignoring call (matrix size too big = %d)",enginedata->nrels);
+		MSG("Ignoring call (matrix size too big = %d)",enginedata->nrels);
 		return;
 	}
 
 	variables = ASC_NEW_ARRAY(struct var_variable *, integ->n_y * 2);
 	derivatives = ASC_NEW_ARRAY(double, integ->n_y * 2);
 
-	CONSOLE_DEBUG("Outputting incidence information to console...");
+	MSG("Outputting incidence information to console...");
 
 	for(i=0, relptr = enginedata->rellist;
 			i< enginedata->nrels && relptr != NULL;
@@ -265,7 +271,7 @@ void integrator_ida_write_incidence(IntegratorSystem *integ){
 		/* get derivatives for this particular relation */
 		status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
-			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
+			MSG("ERROR calculating derivatives for relation '%s'",relname);
 			ASC_FREE(relname);
 			break;
 		}

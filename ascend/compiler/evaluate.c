@@ -184,6 +184,7 @@ unsigned int ExprStackDepth(CONST struct Expr *ex,
     AssertMemory(ex);
     switch(ExprType(ex)){
     case e_var:
+    case e_der:
     case e_zero:
     case e_int:
     case e_satisfied:
@@ -671,6 +672,11 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
       }
       StackPush(stack,top);
       break;
+    case e_der:
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,"der(...) is not supported in directly evaluatable expressions");
+      top = CreateErrorValue(undefined_value);
+      StackPush(stack,top);
+      break;
     case e_func:		/* function evaluation */
       top = ApplyFunction(StackPopTop(stack),ExprFunc(expr));
       StackPush(stack,top);
@@ -894,6 +900,7 @@ struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *expr,
     AssertMemory(expr);
     switch(ExprType(expr)){
     case e_var:        /* variable */
+    case e_der:        /* derivative expression depends on the base variable name */
       cptr = SimpleNameIdPtr(ExprName(expr));
       if ( cptr == NULL || TempExists(cptr)==0 ) {
         /* append if name not already seen in list */
@@ -989,6 +996,7 @@ struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *expr,
     AssertMemory(expr);
     switch(ExprType(expr)){
     case e_var:			/* variable */
+    case e_der:			/* derivative expression depends on the base variable name */
       cptr = SimpleNameIdPtr(ExprName(expr));
       if ( cptr == NULL || TempExists(cptr)==0 ) {
         /* append if name not already seen in list */

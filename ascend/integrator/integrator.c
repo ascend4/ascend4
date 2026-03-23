@@ -27,13 +27,17 @@
 
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/compiler/packages.h>
 #include <ascend/compiler/link.h>
+#include <ascend/compiler/derivinst.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/visitinst.h>
+#include <ascend/compiler/when_util.h>
 
 
 #include <ascend/system/slv_common.h>
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/block.h>
+#include <ascend/system/diffvars.h>
 
 #include <ascend/solver/solver.h>
 
@@ -67,6 +71,8 @@ static void integ_debug_list(const char *label, struct gl_list_t *list){
 	);
 }
 #endif
+
+static int integrator_report_initial_status_failure(const slv_status_t *status, int presolve);
 
 /*------------------------------------------------------------------------------
    The following names are of solver_var children or attributes
@@ -128,6 +134,8 @@ IntegratorVarVisitorFn integrator_dae_show_var;
 static int integrator_sort_obs_vars(IntegratorSystem *sys);
 static void integrator_print_var_stats(IntegratorSystem *sys);
 static int integrator_check_indep_var(IntegratorSystem *sys);
+static void integrator_clear_analysis(IntegratorSystem *sys);
+static void integrator_fix_ode_states(IntegratorSystem *sys);
 
 static int Integ_CmpDynVars(struct Integ_var_t *v1, struct Integ_var_t *v2);
 static int Integ_CmpObs(struct Integ_var_t *v1, struct Integ_var_t *v2);
@@ -168,6 +176,7 @@ IntegratorSystem *integrator_new(slv_system_t slvsys, struct Instance *inst){
 	sys->ydot = NULL;
 	sys->obs = NULL;
 	sys->n_y = 0;
+	sys->initial_mode_prepared = 0;
 	return sys;
 }
 
@@ -257,10 +266,8 @@ static struct gl_list_t *integrator_get_list(int free_space){
 		for(i=0; defaultintegrators[i]!=NULL;++i){
 			error = package_load(defaultintegrators[i],NULL);
 			if(error){
-				ERROR_REPORTER_HERE(ASC_PROG_NOTE
-					,"Integrator '%s' is not available (error %d)."
-					,defaultintegrators[i],error
-				);
+				MSG("Integrator '%s' is not available (error %d)."
+					,defaultintegrators[i],error);
 			}else{
 				MSG("Integrator '%s' registered OK",defaultintegrators[i]);
 			}
@@ -570,6 +577,237 @@ int integrator_analyse(IntegratorSystem *sys){
 	return res;
 }
 
+struct IntegratorInitialWalk{
+	int found;
+};
+
+static void integrator_find_initial_relations(struct Instance *inst, VOIDPTR userdata){
+	struct IntegratorInitialWalk *walk = (struct IntegratorInitialWalk *)userdata;
+	if(walk == NULL || walk->found || inst == NULL){
+		return;
+	}
+	switch(InstanceKind(inst)){
+	case REL_INST:
+		walk->found = relinst_initial(inst) ? 1 : 0;
+		break;
+	case LREL_INST:
+		walk->found = logrelinst_initial(inst) ? 1 : 0;
+		break;
+	default:
+		break;
+	}
+}
+
+static struct Instance *integrator_root_instance(const IntegratorSystem *sys){
+	struct Instance *inst;
+	if(sys == NULL){
+		return NULL;
+	}
+	inst = sys->instance;
+	if(inst == NULL){
+		return NULL;
+	}
+	if(InstanceKind(inst) == SIM_INST){
+		return GetSimulationRoot(inst);
+	}
+	{
+		struct Instance *sim = FindSimulationInstance(inst);
+		if(sim != NULL){
+			return GetSimulationRoot(sim);
+		}
+	}
+	return inst;
+}
+
+static int integrator_root_has_initial_relations(struct Instance *root){
+	struct IntegratorInitialWalk walk;
+	walk.found = 0;
+	if(root == NULL){
+		return 0;
+	}
+	VisitInstanceTreeTwo(root, (VisitTwoProc)integrator_find_initial_relations, 0, 0, &walk);
+	return walk.found;
+}
+
+int integrator_has_initial_relations(IntegratorSystem *sys){
+	struct Instance *root;
+	root = integrator_root_instance(sys);
+	return integrator_root_has_initial_relations(root);
+}
+
+int integrator_initialise_with_solver(IntegratorSystem *sys, int solver_index){
+	struct Instance *root;
+	slv_system_t init_sys = NULL;
+	slv_system_t normal_sys = NULL;
+	unsigned long res;
+	struct var_variable **vlist = NULL;
+	unsigned long nvars = 0, i = 0;
+	struct Instance **defaults = NULL;
+	unsigned long ndefaults = 0;
+
+	if(sys == NULL){
+		return 1;
+	}
+	root = integrator_root_instance(sys);
+	if(root == NULL || !integrator_root_has_initial_relations(root)){
+		return 0;
+	}
+	if(solver_index < 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No algebraic solver selected for initialization");
+		return 2;
+	}
+	if(sys->system != NULL){
+		system_destroy(sys->system);
+		sys->system = NULL;
+	}
+	integrator_clear_analysis(sys);
+
+	init_sys = system_build_with_mode(root, SYSTEM_BUILD_INITIAL);
+	if(init_sys == NULL){
+		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build initialization-mode system");
+		return 3;
+	}
+	if(slv_select_solver(init_sys, solver_index) == -1){
+		system_destroy(init_sys);
+		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to select algebraic solver for initialization solve");
+		return 4;
+	}
+
+	vlist = slv_get_solvers_var_list(init_sys);
+	nvars = (unsigned long)slv_get_num_solvers_vars(init_sys);
+	if(nvars > 0){
+		defaults = ASC_NEW_ARRAY_CLEAR(struct Instance *, nvars);
+	}
+	for(i = 0; i < nvars; ++i){
+		struct var_variable *var = vlist[i];
+		struct Instance *inst;
+		if(var == NULL){
+			continue;
+		}
+		inst = (struct Instance *)var_instance(var);
+		if(inst != NULL && IsDerivativeInstance(inst) && DerivativeInstanceUsesAlgebraicDefault(inst)){
+			DerivativeInstanceSetAlgebraicDefault(inst, FALSE);
+			defaults[ndefaults++] = inst;
+		}
+	}
+	slv_block_set_dof_messages_enabled(FALSE);
+	if(slv_presolve(init_sys)){
+		slv_status_t status;
+		slv_get_status(init_sys, &status);
+		slv_block_set_dof_messages_enabled(TRUE);
+		for(i = 0; i < ndefaults; ++i){
+			if(defaults[i] != NULL){
+				DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
+			}
+		}
+		if(defaults != NULL){
+			ASC_FREE(defaults);
+		}
+		system_destroy(init_sys);
+		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
+		integrator_report_initial_status_failure(&status, 1);
+		return 5;
+	}
+	{
+		slv_status_t status;
+		slv_get_status(init_sys, &status);
+		slv_block_set_dof_messages_enabled(TRUE);
+		if(status.over_defined || status.under_defined || status.struct_singular || status.inconsistent){
+			for(i = 0; i < ndefaults; ++i){
+				if(defaults[i] != NULL){
+					DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
+				}
+			}
+			if(defaults != NULL){
+				ASC_FREE(defaults);
+			}
+			system_destroy(init_sys);
+			system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
+			integrator_report_initial_status_failure(&status, 1);
+			return 5;
+		}
+	}
+	res = slv_solve(init_sys);
+	{
+		slv_status_t status;
+		slv_get_status(init_sys, &status);
+	for(i = 0; i < ndefaults; ++i){
+		if(defaults[i] != NULL){
+			DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
+		}
+	}
+	if(defaults != NULL){
+		ASC_FREE(defaults);
+	}
+	system_destroy(init_sys);
+	if(res || !status.ok || !status.converged){
+		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
+		integrator_report_initial_status_failure(&status, 0);
+		return 6;
+	}
+	}
+	normal_sys = system_build_with_mode(root, SYSTEM_BUILD_NORMAL);
+	if(normal_sys == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to rebuild normal-mode system after initialization solve");
+		return 7;
+	}
+	if(solver_index >= 0 && slv_select_solver(normal_sys, solver_index) == -1){
+		system_destroy(normal_sys);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to restore solver after initialization solve");
+		return 8;
+	}
+	if(sys->system != NULL){
+		system_destroy(sys->system);
+	}
+	sys->system = normal_sys;
+	integrator_clear_analysis(sys);
+	if(integrator_analyse(sys)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to reanalyse normal-mode system after initialization solve");
+		return 9;
+	}
+	return 0;
+}
+
+int integrator_initialise_ode(IntegratorSystem *sys){
+	if(sys == NULL || sys->system == NULL){
+		return 1;
+	}
+	if(integrator_initialise_with_solver(sys, slv_get_selected_solver(sys->system))){
+		return 1;
+	}
+	integrator_fix_ode_states(sys);
+	return 0;
+}
+
+static int integrator_report_initial_status_failure(const slv_status_t *status, int presolve){
+	const char *phase = presolve ? "presolve" : "solve";
+	if(status == NULL){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Initialization %s failed. Check INITIAL equations and startup FIX/FREE settings.", phase);
+		return 1;
+	}
+	if(status->over_defined || status->under_defined || status->struct_singular){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Initialization problem is not square. Check INITIAL equations and startup FIX/FREE settings.");
+		return 1;
+	}
+	if(status->inconsistent){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Initialization problem is inconsistent. Check INITIAL equations and startup values.");
+		return 1;
+	}
+	if(status->diverged || status->iteration_limit_exceeded || status->time_limit_exceeded || !status->calc_ok){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Initialization solve did not converge. Check INITIAL equations, startup values, and solver guesses.");
+		return 1;
+	}
+	ERROR_REPORTER_HERE(ASC_USER_ERROR,
+		"Initialization %s failed. Check INITIAL equations and startup FIX/FREE settings.", phase);
+	return 1;
+}
+
 
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitfn){
   struct var_variable **vlist;
@@ -577,8 +815,8 @@ void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *
 
   /* visit all the slv_system_t master var lists to collect vars */
   /* find the vars mostly in this one */
-  vlist = slv_get_solvers_var_list(sys->system);
-  vlen = slv_get_num_solvers_vars(sys->system);
+  vlist = slv_get_master_var_list(sys->system);
+  vlen = slv_get_num_master_vars(sys->system);
   for (i=0;i<vlen;i++) {
     (*visitfn)(sys, vlist[i], &i);
   }
@@ -712,14 +950,6 @@ int integrator_analyse_ode(IntegratorSystem *sys){
 	return 7;
   }
 
-  /* FIX all states */
-  for(i=0; i<sys->n_y; ++i){
-	if(!var_fixed(sys->y[i])){
-      ERROR_REPORTER_HERE(ASC_USER_WARNING,"Fixing state %d",i);
-	  var_set_fixed(sys->y[i], TRUE);
-	}
-  }
-
   /* don't need the gl_lists now that we have arrays for everyone */
   gl_destroy(sys->states);
   gl_destroy(sys->derivs);
@@ -788,6 +1018,70 @@ static int integrator_sort_obs_vars(IntegratorSystem *sys){
   }
 
   return 0;
+}
+
+static void integrator_clear_analysis(IntegratorSystem *sys){
+  if(sys == NULL){
+    return;
+  }
+  if(sys->states != NULL){
+    gl_destroy(sys->states);
+    sys->states = NULL;
+  }
+  if(sys->derivs != NULL){
+    gl_destroy(sys->derivs);
+    sys->derivs = NULL;
+  }
+  if(sys->dynvars != NULL){
+    gl_free_and_destroy(sys->dynvars);
+    sys->dynvars = NULL;
+  }
+  if(sys->obslist != NULL){
+    gl_free_and_destroy(sys->obslist);
+    sys->obslist = NULL;
+  }
+  if(sys->indepvars != NULL){
+    gl_free_and_destroy(sys->indepvars);
+    sys->indepvars = NULL;
+  }
+  if(sys->y_id != NULL){
+    ASC_FREE(sys->y_id);
+    sys->y_id = NULL;
+  }
+  if(sys->obs_id != NULL){
+    ASC_FREE(sys->obs_id);
+    sys->obs_id = NULL;
+  }
+  if(sys->y != NULL){
+    ASC_FREE(sys->y);
+    sys->y = NULL;
+  }
+  if(sys->ydot != NULL){
+    ASC_FREE(sys->ydot);
+    sys->ydot = NULL;
+  }
+  if(sys->obs != NULL){
+    ASC_FREE(sys->obs);
+    sys->obs = NULL;
+  }
+  sys->x = NULL;
+  sys->n_y = 0;
+  sys->n_obs = 0;
+  sys->nstates = 0;
+  sys->nderivs = 0;
+}
+
+static void integrator_fix_ode_states(IntegratorSystem *sys){
+  int i;
+  if(sys == NULL || sys->y == NULL){
+    return;
+  }
+  for(i = 0; i < sys->n_y; ++i){
+    if(!var_fixed(sys->y[i])){
+      ERROR_REPORTER_HERE(ASC_USER_WARNING,"Fixing state %d",i);
+      var_set_fixed(sys->y[i], TRUE);
+    }
+  }
 }
 
 static void integrator_print_var_stats(IntegratorSystem *sys){
@@ -1043,6 +1337,7 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 static long DynamicVarInfo(struct var_variable *v,long *index, IntegratorSystem *sys){
   struct Instance *c, *d, *i;
 	int type;
+	long dtype;
 
   i = var_instance(v);
 
@@ -1053,6 +1348,11 @@ static long DynamicVarInfo(struct var_variable *v,long *index, IntegratorSystem 
   d = ChildByChar(i,STATEINDEX);
 
 
+
+  dtype = system_diffvars_var_role(sys->system, v, index);
+  if(dtype != INTEG_ALGEBRAIC_VAR){
+    return dtype;
+  }
 
   /* lazy evaluation is important in the following if */
   if(c == NULL
@@ -1153,6 +1453,13 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 	}
 
 	MSG("RUNNING INTEGRATION...");
+
+	if(!sys->initial_mode_prepared && sys->internals->initialisefn != NULL){
+		if((sys->internals->initialisefn)(sys)){
+			return -5;
+		}
+		sys->initial_mode_prepared = 1;
+	}
 
 	return (sys->internals->solvefn)(sys,start_index,finish_index);
 }

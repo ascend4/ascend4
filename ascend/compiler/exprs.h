@@ -39,8 +39,7 @@ ASC_DLLSPEC struct Expr *CreateVarExpr(struct Name *n);
 
 extern struct Expr *CreateDiffExpr(struct Name *n);
 /**<
-	Create a time-derivative-of-a-single-variable node. Currently just returns
-	the same as 0.0 (a real-valued expression with wildcard dimensions)
+	Create a derivative-of-a-single-variable expression node.
 */
 
 extern void InitVarExpr(struct Expr *e, CONST struct Name *n);
@@ -461,4 +460,3 @@ extern void exprs_report_pool(void);
 /* @} */
 
 #endif /* ASC_EXPRS_H */
-

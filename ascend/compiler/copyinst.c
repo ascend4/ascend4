@@ -345,8 +345,11 @@ struct Instance *CopyRelationInst(CONST struct Instance *i)
   size = GetByteSize(src->desc);
   result = RELN_INST(ascmalloc((unsigned)size));
   ascbcopy((char *)src,(char *)result,(int)size);
+  result->interface_ptr = NULL;
   result->parent[0] = NULL;
   result->parent[1] = NULL;
+  result->visited = 0;
+  result->tmp_num = 0;
   result->whens = NULL;
   result->logrels = NULL;
   result->anon_flags = 0x0;
@@ -375,8 +378,11 @@ struct Instance *CopyLogRelInst(CONST struct Instance *i)
   size = GetByteSize(src->desc);
   result = LRELN_INST(ascmalloc((unsigned)size));
   ascbcopy((char *)src,(char *)result,(int)size);
+  result->interface_ptr = NULL;
   result->parent[0] = NULL;
   result->parent[1] = NULL;
+  result->visited = 0;
+  result->tmp_num = 0;
   result->whens = NULL;
   result->logrels = NULL;
   result->anon_flags = 0x0;
@@ -1207,4 +1213,3 @@ struct Instance *CopyInstance(CONST struct Instance *i)
   }
 }
 /************ end of copy stuff ****************/
-

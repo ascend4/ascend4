@@ -56,6 +56,7 @@ extern struct TypeDescription
                     struct module_t *mod,
                     int univ,                  /* universal ? */
                     struct StatementList *sl,  /* declarative statements*/
+                    struct StatementList *isl, /* initial-only statements */
                     struct gl_list_t *pl,      /* initialization procs */
                     struct StatementList *psl, /* parameter statements */
                     struct StatementList *rsl, /* parameter reductions */
@@ -80,6 +81,7 @@ extern struct TypeDescription
  *  @param mod      Module where the type is defined.
  *  @param univ     FALSE non-universal, TRUE universal type.
  *  @param sl       Declarative statements.
+ *  @param isl      Initialization-only declarative statements.
  *  @param pl       List of procedures or NULL.
  *  @param psl      Declarative parameter statements.
  *  @param rsl      Parameter reductions.

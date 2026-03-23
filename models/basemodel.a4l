@@ -258,6 +258,22 @@ declared default needs.
 	RUN default_self;
 END default_all;
 
+METHOD enter_initial_mode;
+NOTES 'purpose' SELF {
+Enable INITIAL equations for the current simulation so that the next SOLVE
+rebuilds the solver system in initialization mode.
+} END NOTES;
+	EXTERNAL set_initial_mode_on(SELF);
+END enter_initial_mode;
+
+METHOD leave_initial_mode;
+NOTES 'purpose' SELF {
+Disable INITIAL equations for the current simulation so that the next SOLVE
+rebuilds the solver system in normal mode.
+} END NOTES;
+	EXTERNAL set_initial_mode_off(SELF);
+END leave_initial_mode;
+
 METHOD specify;
 NOTES 'purpose' SELF {
  * Assuming ClearAll has been run on the MODEL, this method
