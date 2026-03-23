@@ -435,6 +435,60 @@ static void test_initial_bad_overdetermined(){
 	CU_ASSERT(0 != solve_res);
 }
 
+static void test_pantelides_pendulum_high_index(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/pantelides/pendulum.a4c", "pantelides_pendulum");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	int index = slv_lookup_client("QRSlv");
+	CU_ASSERT_FATAL(index != -1);
+
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,index));
+
+	IntegratorSystem *integ = integrator_new(sys,siminst);
+	CU_ASSERT_FATAL(integ != NULL);
+	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(integ), 0);
+
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_pantelides_reactor_high_index(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/pantelides/reactor.a4c", "pantelides_reactor");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	int index = slv_lookup_client("QRSlv");
+	CU_ASSERT_FATAL(index != -1);
+
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,index));
+
+	IntegratorSystem *integ = integrator_new(sys,siminst);
+	CU_ASSERT_FATAL(integ != NULL);
+	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(integ), 0);
+
+	test_lsode_destroy_integrator(integ);
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -446,6 +500,8 @@ static void test_initial_bad_overdetermined(){
 	T(initial_decay) \
 	T(initial_shm) \
 	T(initial_hier_decay) \
-	T(initial_bad_overdetermined)
+	T(initial_bad_overdetermined) \
+	T(pantelides_pendulum_high_index) \
+	T(pantelides_reactor_high_index)
 
 REGISTER_TESTS_SIMPLE(integrator_lsode, TESTS)

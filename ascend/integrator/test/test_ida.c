@@ -309,6 +309,28 @@ static void test_high_index(){
 	ida_cleanup(&testsys);
 }
 
+static void test_pantelides_pendulum_high_index(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/pantelides/pendulum.a4c", "pantelides_pendulum", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(testsys.integ), 0);
+	ida_cleanup(&testsys);
+}
+
+static void test_pantelides_reactor_high_index(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/pantelides/reactor.a4c", "pantelides_reactor", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(testsys.integ), 0);
+	ida_cleanup(&testsys);
+}
+
 static void test_initial_decay(){
 	IdaTestSystem testsys;
 	struct Instance *root, *iy;
@@ -411,15 +433,35 @@ static void test_initial_bad_overdetermined(){
 	CU_ASSERT(0 != solve_res);
 }
 
+static void test_initial_alias_binding_bug(){
+	IdaTestSystem testsys;
+	int solve_res;
+
+	if(ida_test_load("test/ida/initial_alias.a4c", "ida_initial_alias_binding_bug", 0, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 20);
+	solve_res = integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+	CU_ASSERT_FATAL(0 == solve_res);
+}
+
 #define TESTS(T) \
 	T(shm) \
 	T(boundary) \
 	T(integ1) \
 	T(high_index) \
+	T(pantelides_pendulum_high_index) \
+	T(pantelides_reactor_high_index) \
 	T(initial_decay) \
 	T(initial_shm) \
 	T(initial_hier_decay) \
 	T(initial_dae) \
-	T(initial_bad_overdetermined)
+	T(initial_bad_overdetermined) \
+	T(initial_alias_binding_bug)
 
 REGISTER_TESTS_SIMPLE(integrator_ida, TESTS)

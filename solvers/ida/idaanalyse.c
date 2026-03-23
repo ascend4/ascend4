@@ -355,7 +355,11 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 	}
 
 	if(ny1 != nr){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem is not square (ny = %d, nr = %d)",ny1,nr);
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Model is not in a consistent first-order DAE form for IDA (variables=%d, differential relations=%d)."
+			" This may be a high-index DAE or constrained system; index reduction may be required."
+			, ny1, nr
+		);
 		return 3;
 	}
 
@@ -661,7 +665,9 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 
 	res = integrator_ida_sort_rels_and_vars(integ);
 	if(res){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem sorting rels and vars");
+		if(res != 3){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem sorting rels and vars");
+		}
 		return 1;
 	}
 
