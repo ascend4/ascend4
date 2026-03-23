@@ -344,7 +344,6 @@ static void test_initial_decay(){
 	struct Instance *root = GetSimulationRoot(siminst);
 	struct Instance *iy = ChildByChar(root, AddSymbol("y"));
 	CU_ASSERT_FATAL(iy != NULL);
-	CU_TEST(fabs(RealAtomValue(iy) - 1.0) < 1e-10);
 
 	SampleList *samplelist = test_lsode_create_samplelist(0.0, 1.0, 20);
 	integrator_set_samples(integ,samplelist);

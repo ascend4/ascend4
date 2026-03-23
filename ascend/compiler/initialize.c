@@ -474,6 +474,7 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 				CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a real atom type.");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
+				gl_destroy(temp);
 				return;
 			}
 			t = InstanceTypeDesc(i1);
@@ -481,6 +482,7 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 				CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a refined solver_var.");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
+				gl_destroy(temp);
 				return;
 			}
 			i2 = ChildByChar(i1,fixed);
@@ -488,12 +490,14 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 				CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var that doesn't have a 'fixed' child!");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
+				gl_destroy(temp);
 				return;
 			}
 			if(InstanceKind(i2)!=BOOLEAN_INST){
 				CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var whose 'fixed' child is not boolean!");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
+				gl_destroy(temp);
 				return;
 			}
 			SetBooleanAtomValue(i2,val,0);

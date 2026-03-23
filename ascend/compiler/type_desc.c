@@ -797,6 +797,7 @@ struct TypeDescription *CreateLogRelTypeDesc(struct module_t *mod,
   result->children = clist;
   result->init = plist;
   result->stats = statl;
+  result->initstats = EmptyStatementList();
   result->universal = 0;
   result->flags = 0;
   result->flags |=  StatListHasDefaults(statl);

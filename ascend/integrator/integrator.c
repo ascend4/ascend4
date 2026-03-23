@@ -736,7 +736,7 @@ int integrator_initialise_with_solver(IntegratorSystem *sys, int solver_index){
 	}
 	sys->system = normal_sys;
 	integrator_clear_analysis(sys);
-	if((sys->internals->analysefn)(sys)){
+	if(integrator_analyse(sys)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to reanalyse normal-mode system after initialization solve");
 		return 9;
 	}

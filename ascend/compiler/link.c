@@ -50,6 +50,7 @@
 #endif
 
 static symchar *link_entry_key_resolved(struct link_entry_t *link_entry);
+static CONST struct gl_list_t *link_entry_instances_cached(struct Instance *model, struct link_entry_t *link_entry);
 
 /**< DS: beginning of LINK functions *******/
 /* implemented functions related to the LINK statements, probably they shouldn't be here*/
@@ -563,44 +564,16 @@ extern void removeNonDeclarativeLinkEntry(struct Instance *model
 const struct gl_list_t *getLinkInstances(struct Instance *inst
 	, struct link_entry_t *link_entry,int status
 ){
-	struct gl_list_t *result = gl_create(AVG_LINKS_INST);
-	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
-
-	result = FindInstsNonFlat(inst,link_entry->u.vl,&err);
-
-	if(result==NULL) {
-		switch(rel_errorlist_get_find_error(&err)){
-		case impossible_instance:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"LINK entry contains imposible instance name");
-		default:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"incomplete instances in LINK entry");
-		}
-	}
-	return result;
+	(void)status;
+	return link_entry_instances_cached(inst, link_entry);
 }
 
 
 const struct gl_list_t *getLinkInstancesFlat(struct Instance *inst
 	, struct link_entry_t *link_entry,int status
 ){
-	struct gl_list_t *result = gl_create(AVG_LINKS_INST);
-	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
-	if(link_entry->instances_cache == NULL) {
-		result = FindInsts(inst,link_entry->u.vl,&err);
-		if (result==NULL) {
-			switch(rel_errorlist_get_find_error(&err)){
-			case impossible_instance:
-				ERROR_REPORTER_HERE(ASC_USER_ERROR,"LINK entry contains impossible instance name");
-			default:
-				ERROR_REPORTER_HERE(ASC_USER_ERROR,"incomplete instances in LINK entry");
-				/* statement is not ready to be executed */
-			}
-		}
-		return result;
-	}else{
-		result = link_entry->instances_cache;
-	}
-	return result;
+	(void)status;
+	return link_entry_instances_cached(inst, link_entry);
 }
 
 

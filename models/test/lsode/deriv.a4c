@@ -61,8 +61,8 @@ MODEL initial_decay;
 
 	dyn: der(y) = -4 * y;
 	INDEPENDENT t;
-	INITIAL
-		y0: y = 1;
+INITIAL
+	y0: y = 1;
 
 METHODS
 	METHOD on_load;

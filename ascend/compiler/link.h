@@ -137,7 +137,8 @@ extern CONST struct gl_list_t *getLinkInstances(struct Instance *model, struct l
 	@param link_entry pointer to a link_entry in some link_table
 	@param status     Find status of the instances in the LINK (TODO not yet impl)
 
-	@return gl_list with all the instances that are LINK-ed by the given LINK entry
+	@return borrowed flattened gl_list with all the instances that are LINK-ed by
+	        the given LINK entry. The returned list is owned by the link cache.
 */
 
 
@@ -147,7 +148,8 @@ extern CONST struct gl_list_t *getLinkInstancesFlat(struct Instance *model, stru
 	@param link_entry  pointer to a link_entry in some link_table
 	@param status      Find status of the instances in the LINK (TODO not yet impl)
 
-	@return gl_list with all the instances that are LINK-ed by the given LINK entry
+	@return borrowed flattened gl_list with all the instances that are LINK-ed by
+	        the given LINK entry. The returned list is owned by the link cache.
 */
 
 

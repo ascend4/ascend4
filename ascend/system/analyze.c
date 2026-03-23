@@ -448,7 +448,6 @@ static struct Instance *dynamic_create_hidden_derivative(struct problem_t *p_dat
     }
   }
   gl_append_ptr(p_data->dynhiddeninsts, deriv);
-  DerivativeInstanceMarkSolverOwned(deriv);
 
   if(dynamic_registry_add_hidden(p_data, deriv, 2, odeid)){
     return NULL;
@@ -490,6 +489,106 @@ struct derivative_infer_data {
   int next_odeid;
   int errors;
 };
+
+struct derivative_recover_data {
+  struct Instance *root;
+  struct problem_t *problem;
+  int next_odeid;
+  int errors;
+};
+
+static int dynamic_hidden_list_append_unique(struct problem_t *p_data, struct Instance *inst){
+  unsigned long i, len;
+
+  if(p_data == NULL || inst == NULL){
+    return 1;
+  }
+  if(p_data->dynhiddeninsts == NULL){
+    p_data->dynhiddeninsts = gl_create(4);
+    if(p_data->dynhiddeninsts == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for hidden derivative tracking.");
+      return 1;
+    }
+  }
+  len = gl_length(p_data->dynhiddeninsts);
+  for(i = 1; i <= len; ++i){
+    if((struct Instance *)gl_fetch(p_data->dynhiddeninsts, i) == inst){
+      return 0;
+    }
+  }
+  gl_append_ptr(p_data->dynhiddeninsts, inst);
+  return 0;
+}
+
+static int dynamic_recover_bound_derivative(struct derivative_recover_data *data,
+  struct Instance *deriv
+){
+  struct Instance *base;
+  struct dynreg_entry *base_entry, *deriv_entry;
+  int odeid;
+
+  if(data == NULL || data->problem == NULL || deriv == NULL){
+    return 1;
+  }
+
+  base = DerivativeInstanceBase(deriv);
+  if(base == NULL || !dynamic_registry_can_track(base)){
+    return 0;
+  }
+
+  base_entry = dynamic_registry_lookup(data->problem, base);
+  deriv_entry = dynamic_registry_lookup(data->problem, deriv);
+
+  if(base_entry != NULL && base_entry->inst != NULL && base_entry->odeid != 0){
+    odeid = base_entry->odeid;
+  }else if(deriv_entry != NULL && deriv_entry->inst != NULL && deriv_entry->odeid != 0){
+    odeid = deriv_entry->odeid;
+  }else{
+    odeid = data->next_odeid++;
+  }
+
+  if(base_entry == NULL && dynamic_registry_add(data->problem, base, 1, odeid)){
+    return 1;
+  }
+  if(deriv_entry == NULL && dynamic_registry_add_hidden(data->problem, deriv, 2, odeid)){
+    return 1;
+  }
+  if(dynamic_hidden_list_append_unique(data->problem, deriv)){
+    return 1;
+  }
+  return 0;
+}
+
+static void recover_bound_derivative_terms(struct Instance *inst, VOIDPTR userdata)
+{
+  struct derivative_recover_data *data = (struct derivative_recover_data *)userdata;
+  struct relation *rel;
+  unsigned long v, vlen;
+
+  if(data == NULL || data->errors){
+    return;
+  }
+  if(InstanceKind(inst) != REL_INST){
+    return;
+  }
+
+  rel = (struct relation *)GetInstanceRelationOnly(inst);
+  if(rel == NULL){
+    return;
+  }
+
+  vlen = NumberVariables(rel);
+  for(v = 1; v <= vlen; ++v){
+    struct Instance *var = RelationVariable(rel, v);
+    if(var == NULL || !IsDerivativeInstance(var)){
+      continue;
+    }
+    if(dynamic_recover_bound_derivative(data, var)){
+      data->errors = 1;
+      return;
+    }
+  }
+}
 
 static int infer_derivative_binding_from_relation(struct derivative_infer_data *data,
   struct Instance *relinst
@@ -1819,9 +1918,7 @@ void analyze_free_lists(struct problem_t *p_data){
     for(i = 1; i <= len; ++i){
       struct Instance *inst = (struct Instance *)gl_fetch(p_data->dynhiddeninsts, i);
       if(inst != NULL){
-        DerivativeInstanceDetach(inst);
         SetInterfacePtr(inst,NULL);
-        DestroyInstance(inst,NULL);
       }
     }
     gl_destroy(p_data->dynhiddeninsts);
@@ -3350,6 +3447,21 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   if(bind_data.errors){
     p_data->root = NULL;
     return 2;
+  }
+
+  {
+    struct derivative_recover_data recover_data;
+    recover_data.root = inst;
+    recover_data.problem = p_data;
+    recover_data.next_odeid = dynamic_registry_next_odeid(p_data);
+    recover_data.errors = 0;
+    VisitInstanceTreeTwo(inst,(VisitTwoProc)recover_bound_derivative_terms,TRUE,FALSE,
+                         (VOIDPTR)&recover_data);
+    if(recover_data.errors){
+      analyze_free_lists(p_data);
+      p_data->root = NULL;
+      return 2;
+    }
   }
 
   /* decorate instances with temporary ips, collect them and etc */

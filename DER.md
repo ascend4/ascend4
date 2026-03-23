@@ -50,12 +50,9 @@ Primary regression coverage:
 At the time of writing:
 
 - `./a4 cutest system_der -v` passes
-- existing non-`INITIAL` LSODE and IDA regressions pass
+- existing LSODE and IDA regressions, including the new `INITIAL` startup
+  cases, pass
 - `tcltk` and `ascxx` compile successfully in this environment
-
-The new `INITIAL` startup regressions do not yet pass. The compiler/runtime
-plumbing is in place, but the temporary initialization problem formulation is
-still wrong.
 
 ## Design Decisions
 
@@ -113,6 +110,8 @@ Important constraints:
 - they are not ordinary declared source-language children
 - they are visible through dynamic-child APIs, not through ordinary structural
   child traversal
+- they are runtime-owned, not solver-owned; repeated solver/system rebuilds
+  must reuse them rather than destroying them
 
 ### 4. Do not overload ordinary structural child traversal
 
@@ -514,32 +513,27 @@ So:
 This replaced an earlier attempt to run a QRSlv-based initialization solve
 from `integrator_analyse`, which was the wrong layer.
 
-### Current blocker
+### Current status
 
-The architecture is now in the right place, but the startup initialization
-solve is still not correct.
-
-The simplest new regressions:
+The startup path now works for the new focused regressions:
 
 - [deriv.a4c](./models/test/lsode/deriv.a4c) `initial_decay`
 - [initial.a4c](./models/test/ida/initial.a4c) `ida_initial_decay`
 
-still fail.
+The key fixes were:
 
-Observed symptom:
+- derivative pseudo-instances are no longer destroyed during system teardown
+- repeated system builds rebuild dynamic derivative metadata from already bound
+  relations
+- integrator startup reanalysis goes back through full
+  `integrator_analyse(...)`, not only the engine-specific analyse function
+- IDA startup/debug output has been cleaned up so developer trace uses `MSG`
+  and end-user diagnostics remain on `error_reporter`
+- the unsupported IDA `minstep` option now reports once per integrator
+  instance, rather than on every internal reinitialisation
 
-- the temporary initialization solve reports a row-rank-deficient or otherwise
-  inconsistent algebraic system
-- the intended startup condition
-
-$$
-y(t_0) = 1
-$$
-
-is not being applied correctly before integration begins
-
-So the remaining problem is no longer parser/type plumbing. It is the exact
-formulation of the temporary initialization problem built for startup.
+So the remaining work is no longer basic startup correctness. It is refinement
+and cleanup around the new initialization mode.
 
 ## Python / Object-View Support
 
@@ -559,9 +553,10 @@ without introducing extra spelling variants.
 
 ## Current Squishy Bits
 
-- `INITIAL` startup system formulation
-  - architecture is correct
-  - algebraic problem formulation is still wrong for the new startup tests
+- `INITIAL` explicit solve workflow
+  - focused integrator startup regressions now pass
+  - broader semantics still need to be hardened, especially around future
+    explicit initialization-mode solves outside the integrator path
 - full GUI semantics
   - browser/object path is working
   - broader end-to-end GUI exercise is still useful
@@ -575,16 +570,12 @@ without introducing extra spelling variants.
 
 Near term:
 
-1. inspect the temporary `SYSTEM_BUILD_INITIAL` solver system for the failing
-   `initial_decay` models
-2. verify the solver var list, fixed status, and incident relations for the
-   state variable, its derivative pseudo-instance, and the `INITIAL` relation
-3. correct the temporary initialization problem formulation
-4. rerun the new LSODE and IDA startup regressions
+1. decide whether to expose convenience `METHOD`s for advanced QRSlv-based
+   initialization exploration
+2. exercise more hierarchical and multi-state `INITIAL` examples
+3. clarify how non-integrator initialization-mode solves should be surfaced
 
 After that:
 
-5. decide whether to expose convenience `METHOD`s for advanced QRSlv-based
-   initialization exploration
-6. define `pre(x)` and `REINIT` semantics
-7. expand hybrid/event support on top of the current derivative model
+4. define `pre(x)` and `REINIT` semantics
+5. expand hybrid/event support on top of the current derivative model

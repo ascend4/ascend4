@@ -244,9 +244,7 @@ if (ret) {
 		for(i = 1; i <= len; ++i){
 			struct Instance *inst = (struct Instance *)gl_fetch(sys->hidden_instances, i);
 			if(inst != NULL){
-				DerivativeInstanceDetach(inst);
 				SetInterfacePtr(inst,NULL);
-				DestroyInstance(inst,NULL);
 			}
 		}
 		gl_destroy(sys->hidden_instances);

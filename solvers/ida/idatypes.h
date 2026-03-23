@@ -53,6 +53,7 @@ typedef struct IntegratorIdaDataStruct{
 	int nbnds; /* number of boundaries */
 
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
+	int warned_minstep_ignored;      /**< whether unsupported minstep has already been reported */
 	var_filter_t vfilter;
 	rel_filter_t rfilter;            /**< Used to filter relations from solver's rellist (@TODO needs work) */
 	void *precdata;                  /**< For use by the preconditioner */
