@@ -6,9 +6,9 @@ REQUIRE "johnpye/fboard.a4c";
 REQUIRE "johnpye/iron/tga.a4c";
 
 (*
-		First dynamic TGA screening model using declarative INDEPENDENT t,
-		der(...) equations, and INITIAL startup constraints
-		and intended for integration with IDA.
+	First dynamic TGA screening model using declarative INDEPENDENT t,
+	der(...) equations, and INITIAL startup constraints
+	and intended for integration with IDA.
 
 	This is a dynamic counterpart to johnpye/iron/tga.a4c:
 	- the same lumped freeboard + bed transport closure is retained;
@@ -22,76 +22,56 @@ REQUIRE "johnpye/iron/tga.a4c";
 *)
 
 MODEL tga_reduction_screen_dyn;
-	steps IS_A set OF integer_constant;
-	steps :== [1..3];
+	steps "reduction reaction steps" IS_A set OF integer_constant;
+	steps :== [1..3]; 
 
 	(* Independent variable *)
 	t IS_A time;
 	INDEPENDENT t;
 
 	(* Gas-side conditions and simple TGA geometry *)
-	T IS_A temperature;
-	p IS_A pressure;
 	A_crucible IS_A area;
-	L_freeboard IS_A distance;
+	L_freeboard, H_bed IS_A distance;
 
-	m_sample_init IS_A mass;
-	m_sample IS_A mass;
+	m_sample_init, m_sample IS_A mass;
 	rho_bulk_bed IS_A mass_density;
-	H_bed IS_A distance;
 	m_sample.lower_bound := -1 {kg};
 
-	eps_bed IS_A positive_factor;
-	tau_bed IS_A positive_factor;
-	k_fb_multiplier IS_A positive_factor;
-	k_bed_multiplier IS_A positive_factor;
+	eps_bed, tau_bed IS_A positive_factor;
+	k_fb_multiplier, k_bed_multiplier IS_A positive_factor;
 
 	(* Gas compositions *)
-	y_H2_bulk IS_A mole_fraction;
-	y_H2O_bulk IS_A mole_fraction;
-	y_Ar_bulk IS_A mole_fraction;
-
-	y_H2_react IS_A mole_fraction;
-	y_H2O_react IS_A mole_fraction;
-	y_Ar_react IS_A mole_fraction;
+	y_H2_bulk, y_H2O_bulk, y_Ar_bulk IS_A mole_fraction;
+	y_H2_react, y_H2O_react, y_Ar_react IS_A mole_fraction;
 
 	c_tot IS_A molar_density;
 
 	(* Gas transport properties *)
 	tr IS_A diffusion_h2o_h2_ar;
-	D_screen IS_A diffusivity;
-	D_eff_bed IS_A diffusivity;
+	T ALIASES tr.T;
+	p ALIASES tr.p;
+	D_screen, D_eff_bed IS_A diffusivity;
 
-	k_fb IS_A speed;
-	k_bed IS_A speed;
-	k_overall IS_A speed;
-
-	R_fb IS_A transport_resistance;
-	R_bed IS_A transport_resistance;
-	R_overall IS_A transport_resistance;
-
-	J_transport IS_A molar_flux;
-	J_freeboard_cap IS_A molar_flux;
-	J_bed_cap IS_A molar_flux;
-	J_overall_cap IS_A molar_flux;
-	transport_screen_freeboard IS_A factor;
-	transport_screen_bed IS_A factor;
-	transport_screen_overall IS_A factor;
+	k_fb, k_bed, k_overall IS_A speed;
+	R_fb, R_bed, R_overall IS_A transport_resistance;
+	J_transport, J_freeboard_cap, J_bed_cap, J_overall_cap IS_A molar_flux;
+	
+	(* transport screening factor ~1 if becoming limiting *)
+	TS_freeboard, TS_bed, TS_overall IS_A factor;
 
 	(* Solid inventory and dynamic extents *)
 	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
 	n0_Fe2O3 IS_A mole;
 	n0_per_area IS_A mole_per_area;
-	xi1, xi2, xi3 IS_A reduction_extent;
-
-	n_Fe2O3, n_Fe3O4, n_FeO, n_Fe IS_A mole;
+	xi[steps] IS_A reduction_extent;
+	
+	n_reactant[steps] IS_A mole;
+	n_Fe2O3 ALIASES n_reactant[1];
+	n_Fe3O4 ALIASES n_reactant[2];
+	n_FeO ALIASES n_reactant[3];
+	n_Fe IS_A mole;
 	oxygen_remaining IS_A mole;
 	reduction_degree IS_A factor;
-	n_Fe2O3.lower_bound := -1e-12 {mol};
-	n_Fe3O4.lower_bound := -1e-12 {mol};
-	n_FeO.lower_bound := -1e-12 {mol};
-	n_Fe.lower_bound := -1e-12 {mol};
-	oxygen_remaining.lower_bound := -1e-12 {mol};
 
 	(* Stepwise kineq-style local kinetics *)
 	k0[steps] IS_A rate_per_pressure;
@@ -110,46 +90,19 @@ MODEL tga_reduction_screen_dyn;
 	rate_net[steps] IS_A extent_rate;
 
 	J_reaction IS_A molar_flux;
-	tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
-	tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
-	tr.h2_ar.sigma_ij.lower_bound := -1 {m};
-	tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
-	tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
-	tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
-	tr.h2o_h2.T_star.lower_bound := -1e6;
-	tr.h2o_ar.T_star.lower_bound := -1e6;
-	tr.h2_ar.T_star.lower_bound := -1e6;
-	tr.h2o_h2.Omega_D.lower_bound := -1e6;
-	tr.h2o_ar.Omega_D.lower_bound := -1e6;
-	tr.h2_ar.Omega_D.lower_bound := -1e6;
-	tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
-	tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
-	tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
-	tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
-	tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
-	tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
-
-		tr_T: tr.T = T;
-		tr_p: tr.p = p;
-
-	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+		ctot_eq: c_tot = p / (1 {GAS_C} * T);
 
 	bulk_sum: y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
 
 	react_ar_eq: y_Ar_react = y_Ar_bulk;
 	react_sum: y_H2O_react = 1 - y_Ar_react - y_H2_react;
 
-	MW_fe2o3_eq: MW_Fe2O3 = 159.687 {g/g_mole};
-	MW_fe3o4_eq: MW_Fe3O4 = 231.531 {g/g_mole};
-	MW_feo_eq: MW_FeO = 71.844 {g/g_mole};
-	MW_fe_eq: MW_Fe = 55.845 {g/g_mole};
-
-	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+		n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
 	n0area_eq: n0_per_area = n0_Fe2O3 / A_crucible;
-	nhe_eq: n_Fe2O3 = n0_Fe2O3 * (1 - 3 * xi1);
-	nmag_eq: n_Fe3O4 = n0_Fe2O3 * (2 * xi1 - xi2);
-	nwu_eq: n_FeO = n0_Fe2O3 * (3 * xi2 - xi3);
-	nfe_eq: n_Fe = n0_Fe2O3 * xi3;
+	nhe_eq: n_Fe2O3 = n0_Fe2O3 * (1 - 3 * xi[1]);
+	nmag_eq: n_Fe3O4 = n0_Fe2O3 * (2 * xi[1] - xi[2]);
+	nwu_eq: n_FeO = n0_Fe2O3 * (3 * xi[2] - xi[3]);
+	nfe_eq: n_Fe = n0_Fe2O3 * xi[3];
 
 	msample_eq:
 		m_sample
@@ -181,24 +134,19 @@ MODEL tga_reduction_screen_dyn;
 	Jbedcap_eq: J_bed_cap = c_tot * k_bed * y_H2_bulk;
 	Joverallcap_eq: J_overall_cap = c_tot * k_overall * y_H2_bulk;
 
-	screen_fb_eq: transport_screen_freeboard = J_reaction / J_freeboard_cap;
-	screen_bed_eq: transport_screen_bed = J_reaction / J_bed_cap;
-	screen_overall_eq: transport_screen_overall = J_reaction / J_overall_cap;
-
-	avail1_eq: availability[1] = n_Fe2O3 / n0_Fe2O3;
-	avail2_eq: availability[2] = n_Fe3O4 / n0_Fe2O3;
-	avail3_eq: availability[3] = n_FeO / n0_Fe2O3;
+	screen_fb_eq: TS_freeboard = J_reaction / J_freeboard_cap;
+	screen_bed_eq: TS_bed = J_reaction / J_bed_cap;
+	screen_overall_eq: TS_overall = J_reaction / J_overall_cap;
 
 	FOR r IN steps CREATE
+		avail_eq[r]:
+			availability[r] = n_reactant[r] / n0_Fe2O3;
+
 		kstep_eq[r]:
 			k_step[r] = k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
 		Keq_eq[r]:
-			K_ratio_eq[r]
-			=
-			exp(
-				K_eq_lnA[r]
-				- K_eq_lnB[r] / (T / 1 {K})
-			);
+			K_ratio_eq[r] = exp(K_eq_lnA[r]
+									- K_eq_lnB[r] / (T / 1 {K}));
 		drive_eq[r]:
 			drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
 		rf_eq[r]:
@@ -207,75 +155,97 @@ MODEL tga_reduction_screen_dyn;
 			rate_reverse[r] = availability[r] * k_step[r] * p * y_H2O_react / K_ratio_eq[r];
 		rnet_eq[r]:
 			rate_net[r] = rate_forward[r] - rate_reverse[r];
+
+		ode_eq[r]: der(xi[r]) = rate_net[r];
 	END FOR;
 
-		ode1_eq: der(xi1) = rate_net[1];
-		ode2_eq: der(xi2) = rate_net[2];
-		ode3_eq: der(xi3) = rate_net[3];
-
 	Jrxn_eq:
-		J_reaction = n0_per_area * (rate_net[1] + rate_net[2] + rate_net[3]);
+	J_reaction = n0_per_area * (rate_net[1] + rate_net[2] + rate_net[3]);
 
 	transport_match: J_transport = J_reaction;
 
 INITIAL
-		xi1_initial: xi1 = 0;
-		xi2_initial: xi2 = 0;
-		xi3_initial: xi3 = 0;
+	xi1_initial: xi[1] = 0;
+	xi2_initial: xi[2] = 0;
+	xi3_initial: xi[3] = 0;
 
 METHODS
-			METHOD values;
-				T := 1073.15 {K};
-				p := 1 {bar};
-			A_crucible := 20 {mm^2};
-			L_freeboard := 8.3 {mm};
+	METHOD values;
+		FIX T := 1073.15 {K};
+		FIX p := 1 {bar};
+		FIX A_crucible := 20 {mm^2};
+		FIX L_freeboard := 8.3 {mm};
 
-		m_sample_init := 100 {mg};
+		FIX m_sample_init := 100 {mg};
 		rho_bulk_bed := 1500 {kg/m^3};
 		H_bed := 2 {mm};
 
-		eps_bed := 0.45;
-		tau_bed := 3.0;
-		k_fb_multiplier := 1.0;
-		k_bed_multiplier := 1.0;
+		FIX eps_bed := 0.45;
+		FIX tau_bed := 3.0;
+		FIX k_fb_multiplier := 1.0;
+		FIX k_bed_multiplier := 1.0;
 
-		y_H2_bulk := 0.8;
-		y_H2O_bulk := 0.0;
+		FIX y_H2_bulk := 0.8;
+		FIX y_H2O_bulk := 0.0;
 		y_Ar_bulk := 0.2;
 		y_H2_react := 0.6;
 		y_H2O_react := 0.2;
 		y_Ar_react := 0.2;
 
-		k0[1] := 2e-5 {1/s/Pa};
-		k0[2] := 1e-5 {1/s/Pa};
-		k0[3] := 5e-5 {1/s/Pa};
+		FIX MW_Fe2O3 := 159.687 {g/g_mole};
+		FIX MW_Fe3O4 := 231.531 {g/g_mole};
+		FIX MW_FeO := 71.844 {g/g_mole};
+		FIX MW_Fe := 55.845 {g/g_mole};
 
-		E_a[1] := 55 {kJ/mol};
-		E_a[2] := 60 {kJ/mol};
-		E_a[3] := 62 {kJ/mol};
+		FIX k0[1] := 2e-5 {1/s/Pa};
+		FIX k0[2] := 1e-5 {1/s/Pa};
+		FIX k0[3] := 5e-5 {1/s/Pa};
 
-			K_eq_lnA[1] := 8.54050167864375;
-		K_eq_lnA[2] := 8.447122204684765;
-		K_eq_lnA[3] := 1.0604569618298618;
-			K_eq_lnB[1] := 2552.121942697152;
-			K_eq_lnB[2] := 8067.2733483476295;
-			K_eq_lnB[3] := 1856.1489018164739;
+		FIX E_a[1] := 55 {kJ/mol};
+		FIX E_a[2] := 60 {kJ/mol};
+		FIX E_a[3] := 62 {kJ/mol};
 
-				xi1 := 0;
-				xi2 := 0;
-				xi3 := 0;
+		FIX K_eq_lnA[1] := 8.54050167864375;
+		FIX K_eq_lnA[2] := 8.447122204684765;
+		FIX K_eq_lnA[3] := 1.0604569618298618;
+		FIX K_eq_lnB[1] := 2552.121942697152;
+		FIX K_eq_lnB[2] := 8067.2733483476295;
+		FIX K_eq_lnB[3] := 1856.1489018164739;
 
-				t := 0 {s};
-			END values;
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
 
-		METHOD specify;
-			FIX t;
-			FIX T, p, A_crucible, L_freeboard, m_sample_init;
-			FIX eps_bed, tau_bed, k_fb_multiplier, k_bed_multiplier;
-			FIX y_H2_bulk, y_H2O_bulk;
-		FIX k0[steps], E_a[steps], K_eq_lnA[steps], K_eq_lnB[steps];
-	END specify;
+		FIX t := 0 {s};
+	END values;
 
+	METHOD bound_self;
+		n_Fe2O3.lower_bound := -1e-12 {mol};
+		n_Fe3O4.lower_bound := -1e-12 {mol};
+		n_FeO.lower_bound := -1e-12 {mol};
+		n_Fe.lower_bound := -1e-12 {mol};
+		oxygen_remaining.lower_bound := -1e-12 {mol};
+
+		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_h2.T_star.lower_bound := -1e6;
+		tr.h2o_ar.T_star.lower_bound := -1e6;
+		tr.h2_ar.T_star.lower_bound := -1e6;
+		tr.h2o_h2.Omega_D.lower_bound := -1e6;
+		tr.h2o_ar.Omega_D.lower_bound := -1e6;
+		tr.h2_ar.Omega_D.lower_bound := -1e6;
+		tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+	END bound_self;
+	
 	METHOD use_measured_bed_height;
 		FIX H_bed;
 		FREE rho_bulk_bed;
@@ -289,117 +259,33 @@ METHODS
 	METHOD algebraic_base;
 		RUN reset;
 		RUN values;
-		RUN specify;
+		RUN bound_self;
 		RUN use_measured_bed_height;
-		END algebraic_base;
+	END algebraic_base;
 
-		METHOD steady_init;
-				FREE der(xi1), der(xi2), der(xi3);
-				RUN enter_initial_mode;
-				SOLVER QRSlv;
-				OPTION convopt 'RELNOM_SCALE';
-				OPTION iterationlimit 1000;
-				SOLVE;
-				RUN leave_initial_mode;
-			END steady_init;
+	METHOD steady_init;
+		FREE der(xi[1]), der(xi[2]), der(xi[3]);
+		RUN enter_initial_mode;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		OPTION iterationlimit 1000;
+		SOLVE;
+		RUN leave_initial_mode;
+	END steady_init;
 
-			METHOD dynamic_reset;
-				xi1 := 0;
-				xi2 := 0;
-				xi3 := 0;
-				t := 0 {s};
-			END dynamic_reset;
+	METHOD dynamic_reset;
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
+		t := 0 {s};
+	END dynamic_reset;
 
-		METHOD reinitialise;
-			RUN dynamic_reset;
-			RUN steady_init;
-		END reinitialise;
+	METHOD reinitialise;
+		RUN dynamic_reset;
+		RUN steady_init;
+	END reinitialise;
 
-	METHOD case_10mg;
-		m_sample_init := 10 {mg};
-		RUN reinitialise;
-	END case_10mg;
-
-		METHOD case_100mg;
-			m_sample_init := 100 {mg};
-			RUN reinitialise;
-		END case_100mg;
-
-		METHOD prep_sahar_873K;
-			T := 873.15 {K};
-			y_H2_bulk := 0.8;
-			H_bed := 2 {mm};
-			L_freeboard := 8.3 {mm};
-			m_sample_init := 100 {mg};
-			RUN use_measured_bed_height;
-			RUN dynamic_reset;
-		END prep_sahar_873K;
-
-		METHOD prep_sahar_1073K;
-			T := 1073.15 {K};
-			y_H2_bulk := 0.8;
-			H_bed := 2 {mm};
-			L_freeboard := 8.3 {mm};
-			m_sample_init := 100 {mg};
-			RUN use_measured_bed_height;
-			RUN dynamic_reset;
-		END prep_sahar_1073K;
-
-		METHOD case_sahar_600C;
-			T := 873.15 {K};
-			y_H2_bulk := 0.8;
-			H_bed := 2 {mm};
-			L_freeboard := 8.3 {mm};
-			m_sample_init := 100 {mg};
-			RUN use_measured_bed_height;
-			RUN reinitialise;
-		END case_sahar_600C;
-
-		METHOD case_sahar_800C;
-			T := 1073.15 {K};
-			y_H2_bulk := 0.8;
-			H_bed := 2 {mm};
-			L_freeboard := 8.3 {mm};
-			m_sample_init := 100 {mg};
-			RUN use_measured_bed_height;
-			RUN reinitialise;
-		END case_sahar_800C;
-
-		METHOD case_sahar_873K;
-			RUN case_sahar_600C;
-		END case_sahar_873K;
-
-		METHOD case_sahar_1073K;
-			RUN case_sahar_800C;
-		END case_sahar_1073K;
-
-		METHOD ode_init;
-			FIX t;
-			FREE der(xi1), der(xi2), der(xi3);
-			t := 0 {s};
-
-			reduction_degree.obs_id := 1;
-		m_sample.obs_id := 2;
-		y_H2_react.obs_id := 3;
-		y_H2O_react.obs_id := 4;
-		J_transport.obs_id := 5;
-		rate_net[1].obs_id := 6;
-		rate_net[2].obs_id := 7;
-		rate_net[3].obs_id := 8;
-		xi1.obs_id := 9;
-		xi2.obs_id := 10;
-		xi3.obs_id := 11;
-	END ode_init;
-
-		METHOD on_load;
-			RUN reset;
-			RUN values;
-			RUN specify;
-			RUN use_measured_bed_height;
-			RUN dynamic_reset;
-			FREE der(xi1), der(xi2), der(xi3);
-			t := 0 {s};
-
+	METHOD observe_default;
 		reduction_degree.obs_id := 1;
 		m_sample.obs_id := 2;
 		y_H2_react.obs_id := 3;
@@ -408,12 +294,85 @@ METHODS
 		rate_net[1].obs_id := 6;
 		rate_net[2].obs_id := 7;
 		rate_net[3].obs_id := 8;
-		xi1.obs_id := 9;
-		xi2.obs_id := 10;
-		xi3.obs_id := 11;
-	END on_load;
-	END tga_reduction_screen_dyn;
+		xi[1].obs_id := 9;
+		xi[2].obs_id := 10;
+		xi[3].obs_id := 11;
+		n_Fe2O3.obs_id := 12;
+		n_Fe3O4.obs_id := 13;
+		n_FeO.obs_id := 14;
+		n_Fe.obs_id := 15;
+	END observe_default;
 
+	METHOD sahar_873K_setup;
+		T := 873.15 {K};
+		y_H2_bulk := 0.8;
+		H_bed := 2 {mm};
+		L_freeboard := 8.3 {mm};
+		m_sample_init := 100 {mg};
+		RUN use_measured_bed_height;
+	END sahar_873K_setup;
+
+	METHOD sahar_1073K_setup;
+		T := 1073.15 {K};
+		y_H2_bulk := 0.8;
+		H_bed := 2 {mm};
+		L_freeboard := 8.3 {mm};
+		m_sample_init := 100 {mg};
+		RUN use_measured_bed_height;
+	END sahar_1073K_setup;
+
+	METHOD case_10mg;
+		m_sample_init := 10 {mg};
+		RUN reinitialise;
+	END case_10mg;
+
+	METHOD case_100mg;
+		m_sample_init := 100 {mg};
+		RUN reinitialise;
+	END case_100mg;
+
+	METHOD prep_sahar_873K;
+		RUN sahar_873K_setup;
+		RUN dynamic_reset;
+	END prep_sahar_873K;
+
+	METHOD prep_sahar_1073K;
+		RUN sahar_1073K_setup;
+		RUN dynamic_reset;
+	END prep_sahar_1073K;
+
+	METHOD case_sahar_600C;
+		RUN prep_sahar_873K;
+		RUN steady_init;
+	END case_sahar_600C;
+
+	METHOD case_sahar_800C;
+		RUN prep_sahar_1073K;
+		RUN steady_init;
+	END case_sahar_800C;
+
+	METHOD case_sahar_873K;
+		RUN case_sahar_600C;
+	END case_sahar_873K;
+
+	METHOD case_sahar_1073K;
+		RUN case_sahar_800C;
+	END case_sahar_1073K;
+
+	METHOD ode_init;
+		FIX t;
+		FREE der(xi[1]), der(xi[2]), der(xi[3]);
+		RUN dynamic_reset;
+		RUN observe_default;
+	END ode_init;
+
+	METHOD on_load;
+		RUN algebraic_base;
+		RUN dynamic_reset;
+		FREE der(xi[1]), der(xi[2]), der(xi[3]);
+		RUN observe_default;
+	END on_load;
+END tga_reduction_screen_dyn;
 
 (* vim: sw=4:noet:ts=4
 *)

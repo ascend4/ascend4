@@ -10,6 +10,8 @@ needs the Integrator API for time marching.
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import sys
 
 try:
@@ -73,8 +75,10 @@ def array_child(array_instance, child_name: str):
 	raise KeyError(child_name)
 
 
-def copy_named_real(src, dst, name: str) -> None:
-	getattr(dst, name).setRealValue(getattr(src, name).getRealValue())
+def copy_named_real(src, dst, src_name: str, dst_name: str | None = None) -> None:
+	if dst_name is None:
+		dst_name = src_name
+	getattr(dst, dst_name).setRealValue(getattr(src, src_name).getRealValue())
 
 
 def copy_real_tree(src, dst) -> None:
@@ -92,57 +96,57 @@ def copy_real_tree(src, dst) -> None:
 
 
 def copy_initializer_state(init_sim, dyn_sim) -> None:
-	scalars = [
-		"T",
-		"p",
-		"A_crucible",
-		"L_freeboard",
-		"m_sample_init",
-		"m_sample",
-		"rho_bulk_bed",
-		"H_bed",
-		"eps_bed",
-		"tau_bed",
-		"k_fb_multiplier",
-		"k_bed_multiplier",
-		"y_H2_bulk",
-		"y_H2O_bulk",
-		"y_Ar_bulk",
-		"y_H2_react",
-		"y_H2O_react",
-		"y_Ar_react",
-		"c_tot",
-		"D_screen",
-		"D_eff_bed",
-		"k_fb",
-		"k_bed",
-		"k_overall",
-		"R_fb",
-		"R_bed",
-		"R_overall",
-		"J_transport",
-		"J_freeboard_cap",
-		"J_bed_cap",
-		"J_overall_cap",
-		"transport_screen_freeboard",
-		"transport_screen_bed",
-		"transport_screen_overall",
-		"MW_Fe2O3",
-		"MW_Fe3O4",
-		"MW_FeO",
-		"MW_Fe",
-		"n0_Fe2O3",
-		"n0_per_area",
-		"n_Fe2O3",
-		"n_Fe3O4",
-		"n_FeO",
-		"n_Fe",
-		"oxygen_remaining",
-		"reduction_degree",
-		"J_reaction",
+	scalar_pairs = [
+		("T", "T"),
+		("p", "p"),
+		("A_crucible", "A_crucible"),
+		("L_freeboard", "L_freeboard"),
+		("m_sample_init", "m_sample_init"),
+		("m_sample", "m_sample"),
+		("rho_bulk_bed", "rho_bulk_bed"),
+		("H_bed", "H_bed"),
+		("eps_bed", "eps_bed"),
+		("tau_bed", "tau_bed"),
+		("k_fb_multiplier", "k_fb_multiplier"),
+		("k_bed_multiplier", "k_bed_multiplier"),
+		("y_H2_bulk", "y_H2_bulk"),
+		("y_H2O_bulk", "y_H2O_bulk"),
+		("y_Ar_bulk", "y_Ar_bulk"),
+		("y_H2_react", "y_H2_react"),
+		("y_H2O_react", "y_H2O_react"),
+		("y_Ar_react", "y_Ar_react"),
+		("c_tot", "c_tot"),
+		("D_screen", "D_screen"),
+		("D_eff_bed", "D_eff_bed"),
+		("k_fb", "k_fb"),
+		("k_bed", "k_bed"),
+		("k_overall", "k_overall"),
+		("R_fb", "R_fb"),
+		("R_bed", "R_bed"),
+		("R_overall", "R_overall"),
+		("J_transport", "J_transport"),
+		("J_freeboard_cap", "J_freeboard_cap"),
+		("J_bed_cap", "J_bed_cap"),
+		("J_overall_cap", "J_overall_cap"),
+		("TS_freeboard", "TS_freeboard"),
+		("TS_bed", "TS_bed"),
+		("TS_overall", "TS_overall"),
+		("MW_Fe2O3", "MW_Fe2O3"),
+		("MW_Fe3O4", "MW_Fe3O4"),
+		("MW_FeO", "MW_FeO"),
+		("MW_Fe", "MW_Fe"),
+		("n0_Fe2O3", "n0_Fe2O3"),
+		("n0_per_area", "n0_per_area"),
+		("n_Fe2O3", "n_Fe2O3"),
+		("n_Fe3O4", "n_Fe3O4"),
+		("n_FeO", "n_FeO"),
+		("n_Fe", "n_Fe"),
+		("oxygen_remaining", "oxygen_remaining"),
+		("reduction_degree", "reduction_degree"),
+		("J_reaction", "J_reaction"),
 	]
-	for name in scalars:
-		copy_named_real(init_sim, dyn_sim, name)
+	for src_name, dst_name in scalar_pairs:
+		copy_named_real(init_sim, dyn_sim, src_name, dst_name)
 
 	step_arrays = [
 		"k0",
@@ -164,6 +168,71 @@ def copy_initializer_state(init_sim, dyn_sim) -> None:
 			array_child(dst_array, idx).setRealValue(array_child(src_array, idx).getRealValue())
 
 	copy_real_tree(init_sim.tr, dyn_sim.tr)
+
+
+def maybe_set_real(obj, value: float | None) -> None:
+	if value is not None:
+		obj.setRealValue(value)
+
+
+def apply_overrides(sim, args) -> None:
+	maybe_set_real(sim.T, args.T_K)
+	maybe_set_real(sim.y_H2_bulk, args.y_H2)
+	maybe_set_real(sim.H_bed, None if args.H_bed_mm is None else args.H_bed_mm * 1e-3)
+	maybe_set_real(sim.L_freeboard, None if args.L_freeboard_mm is None else args.L_freeboard_mm * 1e-3)
+	maybe_set_real(sim.m_sample_init, None if args.m_sample_mg is None else args.m_sample_mg * 1e-6)
+
+
+def plot_mode_allows_display(plot_mode: str) -> bool:
+	if plot_mode == "never":
+		return False
+	if plot_mode == "always":
+		return True
+	return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
+def maybe_plot_component_moles(
+	obs_names: list[str],
+	observations: list[list[float]] | list[tuple[float, ...]],
+	plot_mode: str,
+) -> str:
+	if not observations:
+		return "skipped_no_observations"
+	if not plot_mode_allows_display(plot_mode):
+		return "skipped_no_display"
+	try:
+		import matplotlib
+		import matplotlib.pyplot as plt
+	except Exception:
+		return "skipped_no_matplotlib"
+	backend = str(matplotlib.get_backend()).lower()
+	if plot_mode == "auto" and backend in ("agg", "module://matplotlib.backends.backend_agg"):
+		return f"skipped_backend_{backend}"
+
+	time_idx = len(obs_names)
+	species = [
+		("n_Fe2O3", "Fe2O3"),
+		("n_Fe3O4", "Fe3O4"),
+		("n_FeO", "FeO"),
+		("n_Fe", "Fe"),
+	]
+	try:
+		series = [(label, find_observation_index(obs_names, obs_name)) for obs_name, label in species]
+	except RuntimeError:
+		return "skipped_missing_observations"
+
+	time_min = [float(row[time_idx]) / 60.0 for row in observations]
+	fig, ax = plt.subplots()
+	for label, idx in series:
+		ax.plot(time_min, [float(row[idx]) for row in observations], label=label)
+	ax.set_xlabel("Time [min]")
+	ax.set_ylabel("Moles [mol]")
+	ax.set_title("Solid-Phase Inventories vs Time")
+	ax.grid(True)
+	ax.legend()
+	fig.tight_layout()
+	plt.show()
+	return "shown"
 
 
 def main() -> int:
@@ -192,6 +261,22 @@ def main() -> int:
 		"--run-method",
 		help="Optional ASCEND METHOD to run after base initialization and before ode_init. Prefer no-solve prep methods such as prep_sahar_873K or prep_sahar_1073K.",
 	)
+	ap.add_argument("--T-K", type=float, help="Override temperature in kelvin.")
+	ap.add_argument("--y-H2", type=float, help="Override bulk hydrogen mole fraction.")
+	ap.add_argument("--H-bed-mm", type=float, help="Override measured bed height in mm.")
+	ap.add_argument("--L-freeboard-mm", type=float, help="Override freeboard height in mm.")
+	ap.add_argument("--m-sample-mg", type=float, help="Override initial sample mass in mg.")
+	ap.add_argument(
+		"--json-summary",
+		action="store_true",
+		help="Emit a final machine-readable JSON summary line prefixed with 'json_summary='.",
+	)
+	ap.add_argument(
+		"--plot",
+		choices=("auto", "always", "never"),
+		default="auto",
+		help="Display a moles-vs-time plot if possible.",
+	)
 	ap.add_argument(
 		"--t-end-min",
 		type=float,
@@ -219,8 +304,8 @@ def main() -> int:
 	ap.add_argument(
 		"--max-step-s",
 		type=float,
-		default=5.0,
-		help="Maximum IDA substep in seconds.",
+		default=1.0,
+		help="Maximum IDA substep in seconds. Smaller values are more robust near hematite depletion.",
 	)
 	args = ap.parse_args()
 
@@ -234,6 +319,7 @@ def main() -> int:
 	sim_init.setSolver(ascpy.Solver("QRSlv"))
 	if args.run_method:
 		sim_init.run(find_method(init_model_type, args.run_method))
+	apply_overrides(sim_init, args)
 	print("integrator_stage=steady_init", flush=True)
 	sim_init.solve(sim_init.getSolver(), ascpy.SolverReporter())
 
@@ -242,8 +328,10 @@ def main() -> int:
 
 	if args.run_method:
 		sim.run(find_method(model_type, args.run_method))
+	apply_overrides(sim, args)
 	print("integrator_stage=copy_init", flush=True)
 	copy_initializer_state(sim_init, sim)
+	apply_overrides(sim, args)
 
 	integrator = ascpy.Integrator(sim)
 	integrator.setEngine("IDA")
@@ -272,6 +360,10 @@ def main() -> int:
 	print(f"final_t_min={sim.t.getRealValue() / 60.0:.12g}")
 	print(f"final_reduction_degree={sim.reduction_degree.getRealValue():.12g}")
 	print(f"final_m_sample_kg={sim.m_sample.getRealValue():.12g}")
+	print(f"final_n_Fe2O3_mol={sim.n_Fe2O3.getRealValue():.12g}")
+	print(f"final_n_Fe3O4_mol={sim.n_Fe3O4.getRealValue():.12g}")
+	print(f"final_n_FeO_mol={sim.n_FeO.getRealValue():.12g}")
+	print(f"final_n_Fe_mol={sim.n_Fe.getRealValue():.12g}")
 	print(f"final_y_H2_react={sim.y_H2_react.getRealValue():.12g}")
 	print(f"final_y_H2O_react={sim.y_H2O_react.getRealValue():.12g}")
 	print(f"final_J_transport={sim.J_transport.getRealValue():.12g}")
@@ -296,6 +388,31 @@ def main() -> int:
 		print("rd50_reached=True")
 	if obs:
 		print("last_observation=" + ",".join(f"{v:.12g}" for v in obs[-1]))
+	print(f"plot_status={maybe_plot_component_moles(obs_names, obs, args.plot)}")
+
+	summary = {
+		"run_method": args.run_method,
+		"T_K": sim.T.getRealValue(),
+		"y_H2_bulk": sim.y_H2_bulk.getRealValue(),
+		"H_bed_m": sim.H_bed.getRealValue(),
+		"L_freeboard_m": sim.L_freeboard.getRealValue(),
+		"m_sample_init_kg": sim.m_sample_init.getRealValue(),
+		"integration_status": "success" if solve_error is None else "failed",
+		"t_final_s": sim.t.getRealValue(),
+		"reduction_degree_final": sim.reduction_degree.getRealValue(),
+		"n_Fe2O3_final_mol": sim.n_Fe2O3.getRealValue(),
+		"n_Fe3O4_final_mol": sim.n_Fe3O4.getRealValue(),
+		"n_FeO_final_mol": sim.n_FeO.getRealValue(),
+		"n_Fe_final_mol": sim.n_Fe.getRealValue(),
+		"t_RD50_s": t_rd50_s,
+		"t_RD50_min": None if t_rd50_s is None else t_rd50_s / 60.0,
+		"rd50_reached": t_rd50_s is not None,
+		"num_observations": len(obs),
+	}
+	if solve_error is not None:
+		summary["integration_error"] = str(solve_error)
+	if args.json_summary:
+		print("json_summary=" + json.dumps(summary, sort_keys=True))
 
 	if solve_error is not None and t_rd50_s is None:
 		return 1

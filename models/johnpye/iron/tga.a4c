@@ -142,9 +142,9 @@ MODEL tga_reduction_screen;
 	J_freeboard_cap IS_A molar_flux;
 	J_bed_cap IS_A molar_flux;
 	J_overall_cap IS_A molar_flux;
-	transport_screen_freeboard IS_A factor;
-	transport_screen_bed IS_A factor;
-	transport_screen_overall IS_A factor;
+	TS_freeboard IS_A factor;
+	TS_bed IS_A factor;
+	TS_overall IS_A factor;
 
 	(*
 		Solid inventory and three-step reduction extents.
@@ -273,9 +273,9 @@ MODEL tga_reduction_screen;
 	Jbedcap_eq: J_bed_cap = c_tot * k_bed * y_H2_bulk;
 	Joverallcap_eq: J_overall_cap = c_tot * k_overall * y_H2_bulk;
 
-	screen_fb_eq: transport_screen_freeboard = J_reaction / J_freeboard_cap;
-	screen_bed_eq: transport_screen_bed = J_reaction / J_bed_cap;
-	screen_overall_eq: transport_screen_overall = J_reaction / J_overall_cap;
+	screen_fb_eq: TS_freeboard = J_reaction / J_freeboard_cap;
+	screen_bed_eq: TS_bed = J_reaction / J_bed_cap;
+	screen_overall_eq: TS_overall = J_reaction / J_overall_cap;
 
 	(* Local step availabilities *)
 	avail1_eq: availability[1] = n_Fe2O3 / n0_Fe2O3;
@@ -470,7 +470,7 @@ METHODS
 			R.K_ratio_eq[1], R.K_ratio_eq[2], R.K_ratio_eq[3],
 			R.rate_net[1], R.rate_net[2], R.rate_net[3],
 			R.J_transport, R.J_reaction,
-			R.transport_screen_freeboard, R.transport_screen_bed, R.transport_screen_overall,
+				R.TS_freeboard, R.TS_bed, R.TS_overall,
 			R.reduction_degree;
 	END on_load;
 
