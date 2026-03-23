@@ -312,6 +312,133 @@ Instead, derivative identity is inferred from:
 This is the basis for ensuring that if two variables are aliased or otherwise
 merged, their derivatives resolve consistently as the same dynamic quantity.
 
+## Derivative Chains and Named Derivatives
+
+There is an important distinction between:
+
+- an equation such as `v = der(x)`
+- true identity / aliasing of `v` with the derivative quantity of `x`
+- structural derivative-chain information for dynamic analysis
+
+These are **not** the same thing.
+
+### Current rule
+
+Relations of the form
+
+- `v = der(x)`
+- `der(x) = v`
+
+are currently treated as ordinary equations again.
+
+They are **not** currently reinterpreted as:
+
+- `ALIASES`
+- `ARE_THE_SAME`
+- hidden derivative-binding metadata
+
+This is deliberate. The current design is that equations remain equations and
+should not be silently co-opted into a different semantic role during system
+analysis.
+
+### What this means
+
+- `v = der(x)` may still be a useful and natural modelling equation
+- it does **not** currently make `v` the canonical derivative representative
+  of `x`
+- it does **not** currently add `v` into a maintained derivative alias clique
+
+So at present:
+
+- `der(x)` has a canonical runtime pseudo-instance identity
+- `v` may be constrained equal to that quantity by equation
+- but `v` is not thereby identical to `der(x)`
+
+### Why this is a design concern
+
+This matters for future work such as:
+
+- Pantelides-style structural index analysis
+- index reduction
+- higher-order derivative chains
+- consistent initialization of more difficult DAEs
+
+If `v = der(x)` is treated only as an equation, then chain information may be
+harder to recover structurally.
+
+If `v = der(x)` is treated as hidden aliasing metadata, then equation semantics
+are violated.
+
+So the open problem is:
+
+- how to preserve honest equation semantics
+- while still detecting useful derivative-chain structure for structural DAE
+  algorithms
+
+That is now an explicit next-phase design issue.
+
+### Current conservative position
+
+- keep `v = der(x)` as an equation
+- do not currently allow true aliasing such as `v ALIASES der(x)`
+- keep higher-order intent explicit as `der(der(x))`, `der(der(der(x)))`, etc
+
+This avoids ambiguity in current first-order IDA/LSODE handling, especially
+around accidentally treating a named derivative alias as an ordinary state.
+
+The long-term solution may involve either:
+
+- explicit structural inference from equations like `v = der(x)` without
+  removing them from the active problem, or
+- a distinct explicit derivative-identity syntax separate from equation
+  equality
+
+That design has not yet been settled.
+
+## Pantelides Reference Cases
+
+Two classic reference problems are now recorded under
+[models/test/pantelides](./models/test/pantelides):
+
+- [reactor.a4c](./models/test/pantelides/reactor.a4c)
+- [pendulum.a4c](./models/test/pantelides/pendulum.a4c)
+
+These are discussion/reference models, not yet solver regressions for current
+ASCEND functionality.
+
+They are important because they make the current derivative-chain design issue
+concrete:
+
+- the models use explicit equations such as `Cdot = der(C)` and `xdot = der(x)`
+- those equations should remain equations
+- but Pantelides-style structural analysis still needs to understand that they
+  define derivative-chain membership
+
+So these examples strengthen the current conclusion:
+
+- `v = der(x)` should not be silently reinterpreted as aliasing or hidden
+  metadata
+- but future structural analysis should probably still be able to infer chain
+  structure from such equations
+
+The reactor example also contains an external forcing placeholder:
+
+- the original reference problem uses `u(t)`
+- ASCEND can already express time dependence through explicit use of the
+  independent variable `t`, and time-series data can also be supplied via the
+  `models/johnpye/datareader` path
+- the current ASCEND reference model still uses a plain variable `u` in the
+  structural equation `0 = C - u`, simply to keep the reference case focused
+  on derivative-chain structure rather than forcing-function syntax
+
+These two models are the current reference starting point for future work on:
+
+- structural index detection
+- Pantelides algorithm design
+- index reduction in the presence of `der(...)`
+- understanding how `INITIAL` equations should participate in higher-index
+  dynamic problems
+
 ## Compatibility and Transition
 
 The transition policy is:

@@ -1,0 +1,18 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL pantelides_reactor;
+	K, K1, K2, K3, K4, C0, T0 IS_A real_constant;
+	C, T, R, Tc, u IS_A solver_var;
+	t IS_A solver_var;
+
+	eq1: der(C) = K * (C0 - C) - R;
+	eq2: der(T) = K1 * (T0 - T) + K2 * R - K3 * (T - Tc);
+	eq3: 0 = R - K3 * exp(-K4 / T) * C;
+	eq4: 0 = C - u;
+	INDEPENDENT t;
+
+METHODS
+	METHOD on_load;
+		(* Reference model for Pantelides discussion only. *)
+	END on_load;
+END pantelides_reactor;

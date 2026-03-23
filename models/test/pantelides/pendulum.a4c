@@ -1,0 +1,27 @@
+REQUIRE "atoms.a4l";
+REQUIRE "ivpsystem.a4l";
+
+(* Reference model for Pantelides discussion only. *)
+
+MODEL pantelides_pendulum;
+	g IS_A gravity_constant;
+	m "pendulum mass" IS_A mass;
+	T "string tension" IS_A force;
+	L "string length" IS_A distance;
+	x, y IS_A distance;
+	vx, vy IS_A speed;
+	t IS_A time;
+
+	eq1: vx = der(x);
+	eq2: vy = der(y);
+	eq3: m * der(vx) = T * x / L;
+	eq4: m * der(vy) = T * y / L - g;
+	eq5: L^2 = x^2 + y^2;
+	INDEPENDENT t;
+
+METHODS
+	METHOD on_load;
+		FIX m := 1{kg};
+		FIX L := 1{m};
+	END on_load;
+END pantelides_pendulum;
