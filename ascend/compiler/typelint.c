@@ -490,6 +490,12 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
         }
       }
       break;
+    case REINIT:
+      if ((context & context_WHEN) == 0) {
+        rval = DEF_STAT_MISLOCATED;
+        TypeLintError(fp,s,rval);
+      }
+      break;
     case WHEN:
       /* check simple name */
      /* vicente, what's up with this? we can name whens? */

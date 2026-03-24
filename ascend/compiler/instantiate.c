@@ -320,6 +320,54 @@ static void ExecuteUnSelectedStatements(struct Instance *i,unsigned long *,
 static void ExecuteUnSelectedWhenStatements(struct Instance *,
                                             struct StatementList *);
 static int ExecuteUnSelectedWHEN(struct Instance *, struct Statement *);
+
+static int IsReinitStatement(CONST struct Statement *statement){
+  return statement != NULL && StatementType(statement) == REINIT;
+}
+
+static struct gl_list_t *CollectWhenReinitStatements(struct StatementList *sl){
+  struct gl_list_t *result = NULL;
+  struct gl_list_t *list;
+  unsigned long c, len;
+
+  if(sl == NULL){
+    return NULL;
+  }
+  list = GetList(sl);
+  len = gl_length(list);
+  for(c = 1; c <= len; ++c){
+    struct Statement *statement = (struct Statement *)gl_fetch(list, c);
+    if(statement == NULL){
+      continue;
+    }
+    switch(StatementType(statement)){
+    case REINIT:
+      if(result == NULL){
+        result = gl_create(2L);
+      }
+      gl_append_ptr(result, CopyStatement(statement));
+      break;
+    case FOR:
+    {
+      struct gl_list_t *nested = CollectWhenReinitStatements(ForStatStmts(statement));
+      if(nested != NULL){
+        unsigned long i, nlen = gl_length(nested);
+        if(result == NULL){
+          result = gl_create(nlen);
+        }
+        for(i = 1; i <= nlen; ++i){
+          gl_append_ptr(result, gl_fetch(nested, i));
+        }
+        gl_destroy(nested);
+      }
+      break;
+    }
+    default:
+      break;
+    }
+  }
+  return result;
+}
 static void ReEvaluateSELECT(struct Instance *, unsigned long *,
                              struct Statement *, int, int *);
 static int ExecuteLNK(struct Instance *inst, struct Statement *statement);
@@ -10833,6 +10881,8 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
       return CheckWHEN(inst,statement);
     case FNAME:
       return CheckFNAME(inst,statement);
+    case REINIT:
+      return 1;
     case FOR:
       return Pass4RealCheckFOR(inst,statement);
     case ALIASES:
@@ -12173,6 +12223,8 @@ void MakeWhenCaseReferences(struct Instance *inst,
     case FOR:
       MakeWhenCaseReferencesFOR(inst,child,statement,listref);
       break;
+    case REINIT:
+      break;
     default:
       WSEM(stderr,statement,
                       "Inappropriate statement type in WHEN Statement");
@@ -12213,6 +12265,8 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
       break;
     case FOR:
       MakeRealWhenCaseReferencesFOR(inst,child,statement,listref);
+      break;
+    case REINIT:
       break;
     default:
       STATEMENT_ERROR(statement,
@@ -12295,6 +12349,9 @@ void ExecuteWhenStatements(struct Instance *inst,
     case FNAME:
       return_value = ExecuteFNAME(inst,statement);
       break;
+    case REINIT:
+      return_value = 1;
+      break;
     case FOR:
       return_value = 1;
       Pass4ExecuteFOR(inst,statement);
@@ -12327,6 +12384,7 @@ struct Case *RealExecuteWhenStatements(struct Instance *inst,
   struct StatementList *sl;
   struct Case *cur_case;
   struct gl_list_t *listref;
+  struct gl_list_t *reinit;
   struct Set *set;
 
   listref = gl_create(AVG_REF);
@@ -12336,7 +12394,9 @@ struct Case *RealExecuteWhenStatements(struct Instance *inst,
   sl = WhenStatementList(w1);
   ExecuteWhenStatements(inst,sl);
   MakeWhenCaseReferences(inst,child,sl,listref);
+  reinit = CollectWhenReinitStatements(sl);
   SetCaseReferences(cur_case,listref);
+  SetCaseReinitStatements(cur_case,reinit);
   return cur_case;
 }
 
@@ -12437,6 +12497,9 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
       return_value = ExecuteUnSelectedWHEN(inst,statement);
       break;
     case FNAME:
+      return_value = 1;
+      break;
+    case REINIT:
       return_value = 1;
       break;
     case FOR:

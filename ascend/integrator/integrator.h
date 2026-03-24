@@ -326,6 +326,12 @@ ASC_DLLSPEC int integrator_debug(const IntegratorSystem *blsys, FILE *fp);
 	What this will be depends on which integrator you are using.
 */
 
+ASC_DLLSPEC int integrator_apply_reinits(IntegratorSystem *blsys);
+/**<
+	Apply active REINIT actions after event/WHEN reconfiguration and before
+	the engine performs any consistent restart calculations.
+*/
+
 ASC_DLLSPEC void integrator_free(IntegratorSystem *blsys);
 /**<
 	Deallocates any memory used and sets all integration global points to NULL.

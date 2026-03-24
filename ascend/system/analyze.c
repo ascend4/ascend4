@@ -96,6 +96,7 @@
 #include <ascend/compiler/logical_relation.h>
 #include <ascend/compiler/logrel_util.h>
 #include <ascend/compiler/case.h>
+#include <ascend/compiler/statement.h>
 #include <ascend/compiler/when_util.h>
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/derivinst.h>
@@ -1978,6 +1979,57 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
   }
 }
 
+static struct gl_list_t *ProcessWhenReinits(struct Instance *context, struct Case *cur_case){
+  struct gl_list_t *src;
+  struct gl_list_t *dest;
+  unsigned long i, len;
+
+  if(cur_case == NULL){
+    return NULL;
+  }
+
+  src = GetCaseReinitStatements(cur_case);
+  if(src == NULL || gl_length(src) == 0){
+    return NULL;
+  }
+
+  len = gl_length(src);
+  dest = gl_create(len);
+  for(i = 1; i <= len; ++i){
+    struct Statement *statement = (struct Statement *)gl_fetch(src, i);
+    struct gl_list_t *instances;
+    struct Instance *target;
+    REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+    struct when_reinit *wr;
+
+    if(statement == NULL || StatementType(statement) != REINIT){
+      continue;
+    }
+
+    instances = FindInstances(context, ReinitStatVar(statement), &err);
+    if(instances == NULL || gl_length(instances) != 1){
+      if(instances != NULL)gl_destroy(instances);
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,
+        "Unable to resolve REINIT target while analysing WHEN cases");
+      continue;
+    }
+
+    target = (struct Instance *)gl_fetch(instances, 1);
+    gl_destroy(instances);
+
+    wr = when_reinit_create(NULL);
+    when_reinit_set_target(wr, (SlvBackendToken)target);
+    when_reinit_set_rhs(wr, ReinitStatRHS(statement));
+    gl_append_ptr(dest, wr);
+  }
+
+  if(gl_length(dest) == 0){
+    gl_destroy(dest);
+    return NULL;
+  }
+  return dest;
+}
+
 
 /**
 	Fill in the list of cases and variables of a w_when structure with
@@ -2004,10 +2056,12 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct gl_list_t *rels;
   struct gl_list_t *logrels;
   struct gl_list_t *whens;
+  struct gl_list_t *reinits;
   struct gl_list_t *diswhens;
   struct Set *ValueList;
   struct Instance *cur_inst;
   struct Case *cur_case;
+  struct Instance *context;
   struct solver_ipdata *ip;
   struct dis_discrete *dvar;
   struct rel_relation *rel;
@@ -2016,6 +2070,11 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct when_case *cur_sol_case;
   int c,r,len,lref;
   int *value;
+
+  context = InstanceParent(i, 1);
+  if(context == NULL){
+    context = i;
+  }
 
   scratch = GetInstanceWhenVars(i);
   len = gl_length(scratch);
@@ -2083,6 +2142,8 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     when_case_set_rels_list(cur_sol_case,rels);
     when_case_set_logrels_list(cur_sol_case,logrels);
     when_case_set_whens_list(cur_sol_case,whens);
+    reinits = ProcessWhenReinits(context, cur_case);
+    when_case_set_reinits_list(cur_sol_case, reinits);
     when_case_set_active(cur_sol_case,FALSE);
     gl_append_ptr(when->cases,cur_sol_case);
   }

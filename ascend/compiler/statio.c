@@ -247,6 +247,7 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl){
     case FOR: 	/* that this isn't handled further may be a bug */
     case ASGN:
     case CASGN:
+    case REINIT:
     case RUN:
     case IF:
     case WHEN:
@@ -659,6 +660,13 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
     WriteSet(f,CallStatArgs(s));
     FPRINTF(f,");\n");
     break;
+  case REINIT:
+    FPRINTF(f,"REINIT(");
+    WriteName(f,ReinitStatVar(s));
+    FPRINTF(f,", ");
+    WriteExpr(f,ReinitStatRHS(s));
+    FPRINTF(f,");\n");
+    break;
   case ASSERT:
 	FPRINTF(f,"ASSERT ");
 	WriteExpr(f,AssertStatExpr(s));
@@ -966,6 +974,7 @@ symchar *StatementTypeString(CONST struct Statement *s){
     g_statio_stattypenames[COND] = AddSymbol("CONDITIONAL");
     g_statio_stattypenames[WBTS] = AddSymbol("WILL_BE_THE_SAME");
     g_statio_stattypenames[WNBTS] = AddSymbol("WILL_NOT_BE_THE_SAME");
+    g_statio_stattypenames[REINIT] = AddSymbol("REINIT");
     g_statio_stattypenames[TABLESTAT] = AddSymbol("TABLE");
     g_statio_stattypenames[DATASETSTAT] = AddSymbol("DATASET");
     g_statio_stattypenames[WILLBE] = AddSymbol("WILL_BE");
@@ -999,6 +1008,7 @@ symchar *StatementTypeString(CONST struct Statement *s){
   case SWITCH:
   case EXT:
   case CALL:
+  case REINIT:
   case ASSERT:
   case REF:
   case COND:

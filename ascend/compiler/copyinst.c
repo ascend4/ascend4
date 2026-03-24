@@ -73,6 +73,7 @@
 #include "tmpnum.h"
 #include "cmpfunc.h"
 #include "setinstval.h"
+#include "statement.h"
 #include "copyinst.h"
 
 /*
@@ -637,10 +638,10 @@ static void BuildWhenCasesList(CONST struct Instance *src,
 			      struct gl_list_t *dest_list)
 {
   struct Instance *dest;
-  struct gl_list_t *src_caselist,*srcref_list;
-  struct gl_list_t *destref_list,*caselist;
+  struct gl_list_t *src_caselist,*srcref_list,*srcreinit_list;
+  struct gl_list_t *destref_list,*destreinit_list,*caselist;
   struct Case *src_case,*dest_case;
-  unsigned long len,c,copynum;
+  unsigned long len,c,copynum,i,rlen;
 
   assert(src->t==WHEN_INST);
   copynum = GetTmpNum(src);
@@ -657,6 +658,16 @@ static void BuildWhenCasesList(CONST struct Instance *src,
     srcref_list = GetCaseReferences(src_case);
     destref_list = BuildWhenCasesRefList(dest,srcref_list,dest_list);
     SetCaseReferences(dest_case,destref_list);
+    srcreinit_list = GetCaseReinitStatements(src_case);
+    if (srcreinit_list != NULL) {
+      rlen = gl_length(srcreinit_list);
+      destreinit_list = gl_create(rlen);
+      for (i = 1; i <= rlen; ++i) {
+        gl_append_ptr(destreinit_list,
+          (VOIDPTR)CopyStatement((struct Statement *)gl_fetch(srcreinit_list,i)));
+      }
+      SetCaseReinitStatements(dest_case,destreinit_list);
+    }
     gl_append_ptr(caselist,(VOIDPTR)dest_case);
   }
   W_INST(dest)->cases = caselist;

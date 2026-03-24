@@ -1199,6 +1199,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						 integrator_output_write(integ);
 						 integrator_output_write_obs(integ);
 
+						if (integrator_apply_reinits(integ) != 0) {
+							return 1;
+						}
+
 						/* Need to destroy and rebuild system */
 						//IDAFree(ida_mem);
 						//ida_mem = IDACreate();

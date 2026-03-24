@@ -42,6 +42,11 @@ extern struct Expr *CreateDiffExpr(struct Name *n);
 	Create a derivative-of-a-single-variable expression node.
 */
 
+extern struct Expr *CreatePreExpr(struct Name *n);
+/**<
+	Create an event-time pre-value-of-a-single-variable expression node.
+*/
+
 extern void InitVarExpr(struct Expr *e, CONST struct Name *n);
 /**< 
  *  Given an empty expr node, initialize it to contain the name.

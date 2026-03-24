@@ -9,11 +9,13 @@
 #include <stdio.h>
 
 #include <ascend/general/platform.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/panic.h>
 
 #include <ascend/solver/solver.h>
 
+#include <ascend/system/conditional.h>
 #include <ascend/system/slv_client.h>
 #include <ascend/system/cond_config.h>
 #include <ascend/system/discrete.h>

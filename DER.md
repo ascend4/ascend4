@@ -528,6 +528,180 @@ Conservative first-phase assumptions remain sensible:
 - `WHEN` should not yet change the canonical differential state set
 - guards should not depend on `der(...)` initially
 
+### Proposed Hybrid Surface Syntax
+
+The most practical path is to stage hybrid syntax in two layers:
+
+1. add the missing hybrid semantics on top of the existing backend
+2. add a lighter surface syntax afterward as sugar
+
+That keeps the current `CONDITIONAL` / `SATISFIED(...)` / `WHEN ... CASE`
+machinery as the execution model, while giving users something less awkward to
+write.
+
+#### Phase 1: minimal semantics-first extension
+
+Add:
+
+- `pre(x)` as an event-time left-limit operator
+- `REINIT(x, expr);` as a new statement allowed inside a `WHEN` case body
+
+Example:
+
+```ascend
+CONDITIONAL
+    boundary: y <= r;
+END CONDITIONAL;
+
+switch == SATISFIED(boundary, 1e-8{m});
+
+WHEN(switch)
+    CASE TRUE:
+        REINIT(v, -e * pre(v));
+        USE bouncing;
+    CASE FALSE:
+        USE airborn;
+END WHEN;
+```
+
+This is intentionally close to the existing implementation model:
+
+- the guard still comes from a conditional relation
+- the boolean selector still comes from `SATISFIED(...)`
+- the active equation set still switches through `USE ...`
+- only the missing event-memory and state-reset semantics are added
+
+This is the lowest-risk route because current `WHEN` checking already exists,
+and only needs to be widened to allow `REINIT(...)` in addition to `USE`,
+nested `WHEN`, and `FOR`.
+
+#### `REINIT` spelling
+
+For ASCEND, the best spelling is:
+
+```ascend
+REINIT(v, -e * pre(v));
+```
+
+not:
+
+```ascend
+REINIT v := -e * pre(v);
+REINIT v = -e * pre(v);
+```
+
+Reasons:
+
+- `:=` already means ordinary assignment in ASCEND
+- `=` already means a relation statement
+- `REINIT(x, expr)` avoids pretending that a reset is either a procedural
+  assignment or an always-active algebraic equation
+- the function-style spelling matches the intended event-time semantics and
+  keeps parsing simple
+
+`REINIT` should therefore be treated as its own statement form, not as
+syntactic sugar for assignment.
+
+#### Declarative meaning
+
+Even if the syntax later becomes `WHEN ... DO`, the meaning should stay
+declarative.
+
+A `REINIT` is not "execute this assignment in source order". It is a
+reinitialisation condition that becomes active when an event fires. The event
+handler should:
+
+1. detect a guard crossing
+2. determine the active branch
+3. form the post-event system
+4. apply the `REINIT(...)` conditions
+5. solve for a consistent restarted state
+
+That keeps the language aligned with ASCEND's equation-based semantics and
+avoids making event behavior depend on statement ordering.
+
+#### Phase 2: user-facing sugar
+
+Once `pre(x)` and `REINIT(...)` exist, a lighter surface form can be added and
+lowered to the same backend:
+
+```ascend
+WHEN y <= r DO
+    REINIT(v, -e * pre(v));
+    USE bouncing;
+ELSE
+    USE airborn;
+END WHEN;
+```
+
+This should be treated as sugar for:
+
+- an implicit conditional relation
+- an implicit `SATISFIED(...)` selector
+- the existing `WHEN (...) CASE ... END WHEN` machinery
+
+So `WHEN ... DO` is not the semantic foundation. It is only a better front
+end.
+
+#### Sensible v1 restrictions
+
+For a first implementation, the following limits are sensible:
+
+- `REINIT(...)` is only legal inside `WHEN` cases
+- Phase 1A should restrict the `REINIT` target to continuous real
+  differential/integrator states only
+- event-memory variables such as `t_last_event` are important, but should come
+  later as a separate extension rather than being mixed into the first working
+  reset implementation
+- `pre(x)` should parse as a normal expression operator, but in Phase 1A it is
+  only semantically legal inside `REINIT(...)`
+- outside active event/reinitialisation processing, `pre(x)` should not be
+  treated as having a meaningful runtime value
+- Phase 1A semantics should be defined solver-neutrally as "apply explicit
+  post-event values to selected continuous states, then compute a consistent
+  restart". For IDA this is expected to map onto the existing restart /
+  `IDACalcIC` path, effectively with `YA_YDP`-style behavior for the reset
+  states.
+- the event/reset data should be lowered onto solver-side `when_case`
+  structures in `slv_system_t`, analogous to existing `WHEN`/boundary
+  lowering, rather than having solver engines reach back into compiler
+  `Statement` trees at runtime
+- guards should remain free of `der(...)` in v1
+- branch switching may change active equations, but should not change the
+  canonical differential state set
+
+For the later event-memory extension, it is preferable not to create a third
+parallel family of real atom types. A better direction is likely to be:
+
+- keep the existing `IS_A` variable declarations
+- add an extra classification flag on real atom instances for
+  discrete/event-memory behavior
+- filter such flagged variables out of continuous solver-variable/state lists
+  while still allowing them to store values between events
+
+This keeps the implementation closer to the existing `solver_var` machinery and
+avoids duplicating every measure/type into a new discrete-real family.
+
+Expression-level event generation, more in the style of Modelica, may also be
+desirable later. However, that should be treated as a future event-source layer
+above the same backend semantics; it is not required for Phase 1A.
+
+#### Future richer STN syntax
+
+If ASCEND later wants first-class state-transition models, that should be a
+third layer, not the first one. For example:
+
+```ascend
+STATE idle, filling, draining;
+
+TRANSITION idle -> filling WHEN start_cmd;
+TRANSITION filling -> draining WHEN level >= high;
+TRANSITION draining -> idle WHEN level <= low;
+```
+
+That kind of syntax could still lower to the same event backend, but it should
+not block the smaller and more urgent `pre(x)` / `REINIT(...)` work.
+
 ## `INITIAL`
 
 `INITIAL` is a declarative section inside `MODEL`, positioned between the main

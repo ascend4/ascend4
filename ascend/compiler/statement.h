@@ -489,6 +489,13 @@ extern struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs);
  *  The statement's line number is set to the current line number.
  */
 
+extern struct Statement *CreateREINIT(struct Name *n, struct Expr *rhs);
+/**<
+ *  Create an event-time reinitialisation statement node.
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ */
+
 extern struct Statement *CreateTABLE(struct Name *n,
                                      symchar *decl_type,
                                      struct Set *decl_typeargs,
@@ -1211,6 +1218,34 @@ extern struct Expr *AssignStatRHSF(CONST struct Statement *s);
 /**<
  *  Implementation function for AssignStatRHS().  Do not call this
  *  function directly - use AssignStatRHS() instead.
+ */
+
+/* * * StateReinit functions * * */
+
+#ifdef NDEBUG
+#define ReinitStatVar(sptr) ((sptr)->v.reinit.nptr)
+#else
+#define ReinitStatVar(sptr) ReinitStatVarF(sptr)
+#endif
+/**<
+ *  Return the target variable of a REINIT statement.
+ */
+extern struct Name *ReinitStatVarF(CONST struct Statement *s);
+/**<
+ *  Implementation function for ReinitStatVar().
+ */
+
+#ifdef NDEBUG
+#define ReinitStatRHS(s) ((s)->v.reinit.rhs)
+#else
+#define ReinitStatRHS(s) ReinitStatRHSF(s)
+#endif
+/**<
+ *  Return the right-hand expression of a REINIT statement.
+ */
+extern struct Expr *ReinitStatRHSF(CONST struct Statement *s);
+/**<
+ *  Implementation function for ReinitStatRHS().
  */
 
 /* * * StateRelation functions * * */

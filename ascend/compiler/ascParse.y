@@ -792,7 +792,7 @@ static CONST char *g_study_filename = NULL;
 %token /* PATCH_TOK */ PROD_TOK PROVIDE_TOK
 %token RATIO_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
-%token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK SYSTEM_TOK
+%token REINIT_TOK SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK SYSTEM_TOK
 %token STEP_TOK STEPS_TOK STUDY_TOK
 %token TABLE_TOK VALUES_TOK DATASET_TOK POSITIONAL_TOK INDEX_TOK COLUMN_TOK EOL_TOK
 %token THEN_TOK TO_TOK TRUE_TOK
@@ -836,6 +836,7 @@ static CONST char *g_study_filename = NULL;
 %type <statptr> is_statement isrefinedto_statement arealike_statement link_statement unlink_statement der_statement independent_statement
 %type <statptr> arethesame_statement willbethesame_statement
 %type <statptr> willnotbethesame_statement assignment_statement
+%type <statptr> reinit_statement
 %type <statptr> relation_statement /* glassbox_statement */ blackbox_statement
 %type <statptr> call_statement units_statement
 %type <statptr> external_statement for_statement run_statement if_statement assert_statement fix_statement free_statement
@@ -2200,6 +2201,7 @@ statement:
     | willbethesame_statement
     | willnotbethesame_statement
     | assignment_statement
+    | reinit_statement
     | relation_statement
     /* | glassbox_statement */ 
     | blackbox_statement
@@ -2548,6 +2550,13 @@ assignment_statement:
     | fvarref CASSIGN_TOK expr
 	{
 	  $$ = CreateCASSIGN($1,$3);
+	}
+    ;
+
+reinit_statement:
+    REINIT_TOK '(' fvarref ',' expr ')'
+	{
+	  $$ = CreateREINIT($3,$5);
 	}
     ;
 
@@ -3841,7 +3850,18 @@ expr:
     | IDENTIFIER_TOK '(' expr ')'
 	{
 	  CONST struct Func *fptr;
-	  if ((fptr = LookupFunc(SCP($1)))!=NULL) {
+	  if (strcmp(SCP($1),"pre")==0) {
+	    if ($3 != NULL && NextExpr($3) == NULL && ExprType($3) == e_var) {
+	      $$ = CreatePreExpr(CopyName(ExprName($3)));
+	      DestroyExprList($3);
+	    } else {
+	      $$ = NULL;
+	      if($3 != NULL) DestroyExprList($3);
+	      error_reporter_current_line(ASC_USER_ERROR,
+	        "pre(...) currently requires a single variable reference argument.");
+	      g_untrapped_error++;
+	    }
+	  } else if ((fptr = LookupFunc(SCP($1)))!=NULL) {
 	    $$ = JoinExprLists($3,CreateFuncExpr(fptr));
 	  } else {
 	    $$ = NULL;
