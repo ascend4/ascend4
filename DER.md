@@ -344,15 +344,20 @@ analysis.
 ### What this means
 
 - `v = der(x)` may still be a useful and natural modelling equation
-- it does **not** currently make `v` the canonical derivative representative
-  of `x`
+- it does **not** currently make `v` the canonical runtime derivative
+  identity of `x`
 - it does **not** currently add `v` into a maintained derivative alias clique
+- but simple equations such as `v = der(x)` may now be used by the advisory
+  Pantelides pass as structural named-derivative representatives, without
+  changing the runtime identity model
 
 So at present:
 
 - `der(x)` has a canonical runtime pseudo-instance identity
 - `v` may be constrained equal to that quantity by equation
 - but `v` is not thereby identical to `der(x)`
+- and structural analysis may still choose to follow `v` as the named first
+  derivative representative of `x` in limited cases
 
 ### Why this is a design concern
 
@@ -444,25 +449,34 @@ These two models are the current reference starting point for future work on:
 
 There is now also a first-pass advisory Pantelides reporter in
 [pantelides.c](./ascend/integrator/pantelides.c), exposed through
-`integrator_pantelides_advisory(...)`. This analysis is solver-neutral and
-read-only:
+`integrator_pantelides_advisory(...)` and now also wrapped at system stage
+through `Simulation.getPantelidesReport()` for ascxx/Python/GUI use. This
+analysis is solver-neutral and read-only:
 
 - it works from the active `slv_system_t`
 - it uses the current `diffvars` view plus active solver relations
 - it reports the derivative chains and equations that ASCEND currently sees
 - it does **not** yet create symbolic differentiated equations or mutate the
   working problem
+- it can be captured to a file or string at the C layer and is now available
+  to Python scripts and the GTK browser
 
-That advisory pass already gives a useful result on the reference models:
+That advisory pass now gives two distinct useful results on the reference
+models:
 
-- it runs successfully on both `reactor.a4c` and `pendulum.a4c`
-- it does **not** yet suggest any differentiation steps for them
-- this is not because the models are fine as-is; it is because the current
-  structural chain view is still too weak to support Pantelides on these
-  canonical `der(...)` formulations
+- for `pendulum.a4c`, it now infers the named derivative representatives
+  `vx = der(x)` and `vy = der(y)` and advises differentiating the holonomic
+  constraint `eq5` twice
+- for `reactor.a4c`, it no longer hangs; instead it stops with an explicit
+  advisory-analysis limit note, which is a safer and more honest failure mode
+  for the current prototype
 
-So the precise use-case for derivative-chain inference is no longer purely
-abstract. The current concrete gap is:
+This sharpens the chain-inference use-case. The real structural question is not
+whether `der(x)` is a derivative of `x` (that is already explicit), but whether
+an ordinary variable such as `vx` should be recognised as the named
+representative of that derivative quantity for structural analysis purposes.
+
+The current concrete gap is therefore:
 
 - if a future structural algorithm such as Pantelides needs to follow chains
   through named derivative variables, it will need some structural notion of
@@ -470,8 +484,15 @@ abstract. The current concrete gap is:
 - that structural notion should not require treating `v = der(x)` as aliasing
   or deleting the equation from the active system
 
-That is now the first point to sharpen in the next design phase, before any
-symbolic differentiation or automatic index reduction is attempted.
+The advisory pass now has enough structural information to make progress on the
+pendulum example, but it still lacks:
+
+- symbolic differentiated-relation generation
+- stronger stopping rules / reformulation logic for cases like the reactor
+- a broader structural treatment of named derivative representatives beyond the
+  simplest `v = der(x)` form
+
+Those are the next steps before automatic index reduction can be attempted.
 
 ## Compatibility and Transition
 
@@ -885,6 +906,7 @@ Current Python-facing access now includes:
 
 - `inst.der`
 - `ascpy.der(inst)`
+- `sim.getPantelidesReport()`
 
 These both resolve to the same derivative pseudo-instance.
 
@@ -892,6 +914,7 @@ This is useful because it keeps:
 
 - a tree/object form: `inst.der`
 - a language-like form: `ascpy.der(inst)`
+- a scriptable system-stage Pantelides text report: `sim.getPantelidesReport()`
 
 without introducing extra spelling variants.
 
@@ -904,6 +927,7 @@ without introducing extra spelling variants.
     initialization-mode solves outside the integrator path
 - full GUI semantics
   - browser/object path is working
+  - Pantelides advisory text is now exposed in the GTK browser
   - broader end-to-end GUI exercise is still useful
 - hybrid/event semantics
   - `WHEN`, `pre(x)`, and `REINIT` are still future work

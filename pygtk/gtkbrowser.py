@@ -1660,6 +1660,16 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_dialog = InfoDialog(self,self.window,text,title,tabs=[100,200])
 		_dialog.run()
 
+	def on_show_pantelides_report_activate(self,*args):
+		try:
+			text = self.sim.getPantelidesReport()
+		except RuntimeError as e:
+			self.reporter.reportError("Unable to show Pantelides analysis: %s"%str(e))
+			return
+		title = "Pantelides Analysis"
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
+
 	def on_show_freeable_variables_activate(self,*args):
 		try:
 			v = self.sim.getFreeableVariables()
@@ -1812,7 +1822,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 	def disable_menu(self):
 		list=["free_variable","fix_variable","sparsity","propsmenuitem","copy_observer_matrix",
-				"incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+				"incidencegraph","diagnose_blocks","show_fixed_vars","show_pantelides_report","show_freeable_vars",
 				"show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1",
 				"repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
 				"check1","solve1","integrate1","units","add_observer","keep_observed","preferences","notes_view"]
@@ -1848,13 +1858,13 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				self.builder.get_object("propsmenuitem").set_sensitive(True)
 		
 	def enable_on_sim_build(self):
-		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_pantelides_report","show_freeable_vars",
 				"show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1","notes_view"]
 		for button in list:
 			if self.builder.get_object(button) != None:
 			   self.builder.get_object(button).set_sensitive(True)
 	def disable_on_sim_delete(self):
-		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_pantelides_report","show_freeable_vars",
 				"show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1"]
 		for button in list:
 			if self.builder.get_object(button) != None:

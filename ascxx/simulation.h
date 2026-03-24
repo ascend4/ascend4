@@ -119,6 +119,7 @@ public:
 	std::vector<Variable> getVariablesFarFromNominals(const double &bignum);
 	std::vector<Variable> getFixedVariables();
 	std::vector<Variable> getallVariables();
+	std::string getPantelidesReport() const;
 	Matrix getMatrix();
 
 	void write(const char *fname,const char *type=NULL) const;

@@ -5,9 +5,12 @@
 
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/pairlist.h>
+#include <ascend/compiler/mathinst.h>
+#include <ascend/compiler/relation_util.h>
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/compiler/relation_io.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/derivinst.h>
 #include <ascend/system/slv_server.h>
 #include <ascend/system/rel.h>
 #include <ascend/system/var.h>
@@ -22,7 +25,9 @@ struct PantelidesVarStruct{
 	char *name;
 	PantelidesVar *derivative;
 	PantelidesVar *base;
+	PantelidesVar *represented_derivative;
 	PantelidesEq *assigned;
+	PantelidesEq *representative_eq;
 	long role;
 	long chain_id;
 	unsigned generated:1;
@@ -51,6 +56,7 @@ typedef struct PantelidesContextStruct{
 	struct gl_list_t *generated_vars;
 	struct gl_list_t *generated_eqs;
 	struct gl_list_t *differentiation_order;
+	unsigned analysis_limited:1;
 } PantelidesContext;
 
 static PantelidesVar *pantelides_var_from_real(PantelidesContext *ctx, const struct var_variable *var){
@@ -63,6 +69,20 @@ static PantelidesVar *pantelides_var_from_real(PantelidesContext *ctx, const str
 		return NULL;
 	}
 	return (PantelidesVar *)pairlist_valueAt(ctx->varmap, pos);
+}
+
+static PantelidesVar *pantelides_var_from_instance(PantelidesContext *ctx, const struct Instance *inst){
+	unsigned long i;
+	if(ctx == NULL || inst == NULL || ctx->vars == NULL){
+		return NULL;
+	}
+	for(i = 1; i <= gl_length(ctx->vars); ++i){
+		PantelidesVar *var = (PantelidesVar *)gl_fetch(ctx->vars, i);
+		if(var != NULL && var->var != NULL && var_instance(var->var) == inst){
+			return var;
+		}
+	}
+	return NULL;
 }
 
 static int pantelides_edge_contains(struct gl_list_t *edges, PantelidesVar *var){
@@ -282,6 +302,7 @@ static int pantelides_build_context(PantelidesContext *ctx, slv_system_t sys){
 		pvar->name = var_make_name(sys, vars[i]);
 		pvar->role = system_diffvars_var_role(sys, vars[i], &chain_id);
 		pvar->chain_id = chain_id;
+		pvar->deleted = var_fixed(vars[i]) ? 1u : 0u;
 		if(pvar->name == NULL){
 			ASC_FREE(pvar);
 			return 1;
@@ -343,6 +364,82 @@ static int pantelides_build_context(PantelidesContext *ctx, slv_system_t sys){
 		}
 	}
 
+	for(i = 1; i <= gl_length(ctx->vars); ++i){
+		PantelidesVar *deriv = (PantelidesVar *)gl_fetch(ctx->vars, i);
+		struct Instance *derivinst, *baseinst;
+		PantelidesVar *base;
+		if(deriv == NULL || deriv->var == NULL){
+			continue;
+		}
+		derivinst = var_instance(deriv->var);
+		if(derivinst == NULL || !IsDerivativeInstance(derivinst)){
+			continue;
+		}
+		baseinst = DerivativeInstanceBase(derivinst);
+		base = pantelides_var_from_instance(ctx, baseinst);
+		if(base != NULL){
+			base->derivative = deriv;
+			deriv->base = base;
+		}
+	}
+
+	for(i = 1; i <= gl_length(ctx->eqs); ++i){
+		PantelidesEq *peq = (PantelidesEq *)gl_fetch(ctx->eqs, i);
+		struct relation *rel;
+		const struct relation_term *lhs, *rhs;
+		struct Instance *lhsinst, *rhsinst;
+		PantelidesVar *ordinary = NULL, *deriv = NULL, *base = NULL;
+		if(peq == NULL || peq->rel == NULL){
+			continue;
+		}
+		if(GetInstanceRelationType(rel_instance(peq->rel)) != e_token){
+			continue;
+		}
+		rel = (struct relation *)GetInstanceRelationOnly(rel_instance(peq->rel));
+		if(rel == NULL || RelationRelop(rel) != e_equal){
+			continue;
+		}
+		if(RelationLength(rel, 1) != 1 || RelationLength(rel, 0) != 1){
+			continue;
+		}
+		lhs = NewRelationTermF(rel, 0, 1);
+		rhs = NewRelationTermF(rel, 0, 0);
+		if(lhs == NULL || rhs == NULL){
+			continue;
+		}
+		if(RelationTermType(lhs) != e_var || RelationTermType(rhs) != e_var){
+			continue;
+		}
+		lhsinst = RelationVariable(rel, TermVarNumber(lhs));
+		rhsinst = RelationVariable(rel, TermVarNumber(rhs));
+		if(lhsinst == NULL || rhsinst == NULL){
+			continue;
+		}
+		if(IsDerivativeInstance(lhsinst) && !IsDerivativeInstance(rhsinst)){
+			deriv = pantelides_var_from_instance(ctx, lhsinst);
+			ordinary = pantelides_var_from_instance(ctx, rhsinst);
+			base = pantelides_var_from_instance(ctx, DerivativeInstanceBase(lhsinst));
+		}else if(IsDerivativeInstance(rhsinst) && !IsDerivativeInstance(lhsinst)){
+			deriv = pantelides_var_from_instance(ctx, rhsinst);
+			ordinary = pantelides_var_from_instance(ctx, lhsinst);
+			base = pantelides_var_from_instance(ctx, DerivativeInstanceBase(rhsinst));
+		}
+		if(base == NULL || ordinary == NULL || deriv == NULL || ordinary == base){
+			continue;
+		}
+
+		base->derivative = ordinary;
+		ordinary->base = base;
+		ordinary->represented_derivative = deriv;
+		ordinary->representative_eq = peq;
+		if(ordinary->chain_id == 0){
+			ordinary->chain_id = base->chain_id;
+		}
+		if(ordinary->role == 0 && deriv->role > 0){
+			ordinary->role = deriv->role;
+		}
+	}
+
 	return 0;
 }
 
@@ -383,12 +480,19 @@ static void pantelides_free_context(PantelidesContext *ctx){
 
 static int pantelides_run(PantelidesContext *ctx){
 	unsigned long initial_eqs, eqi;
+	unsigned long max_iterations;
 	initial_eqs = gl_length(ctx->eqs);
+	max_iterations = 2 * (gl_length(ctx->vars) + gl_length(ctx->eqs)) + 16;
 	for(eqi = 1; eqi <= initial_eqs; ++eqi){
 		PantelidesEq *current = (PantelidesEq *)gl_fetch(ctx->eqs, eqi);
 		int path_found = 0;
+		unsigned long iter = 0;
 		while(!path_found){
 			unsigned long i;
+			if(++iter > max_iterations){
+				ctx->analysis_limited = 1;
+				return 0;
+			}
 			for(i = 1; i <= gl_length(ctx->vars); ++i){
 				PantelidesVar *var = (PantelidesVar *)gl_fetch(ctx->vars, i);
 				if(var != NULL && !var->deleted && var->derivative != NULL){
@@ -451,6 +555,31 @@ static void pantelides_write_report(PantelidesContext *ctx, FILE *fp){
 	system_diffvars_debug(ctx->sys, fp);
 	fprintf(fp, "\n\n");
 
+	fprintf(fp, "Named derivative representatives inferred from equations:\n");
+	for(i = 1; i <= gl_length(ctx->vars); ++i){
+		PantelidesVar *var = (PantelidesVar *)gl_fetch(ctx->vars, i);
+		if(var == NULL || var->representative_eq == NULL || var->base == NULL || var->represented_derivative == NULL){
+			continue;
+		}
+		fprintf(fp, "  %s represents %s via %s\n",
+			var->name, var->represented_derivative->name, var->representative_eq->name
+		);
+	}
+	if(gl_length(ctx->vars) > 0){
+		int found = 0;
+		for(i = 1; i <= gl_length(ctx->vars); ++i){
+			PantelidesVar *var = (PantelidesVar *)gl_fetch(ctx->vars, i);
+			if(var != NULL && var->representative_eq != NULL){
+				found = 1;
+				break;
+			}
+		}
+		if(!found){
+			fprintf(fp, "  none\n");
+		}
+	}
+	fprintf(fp, "\n");
+
 	fprintf(fp, "Active equations:\n");
 	for(i = 1; i <= gl_length(ctx->eqs); ++i){
 		PantelidesEq *eq = (PantelidesEq *)gl_fetch(ctx->eqs, i);
@@ -460,6 +589,14 @@ static void pantelides_write_report(PantelidesContext *ctx, FILE *fp){
 		fprintf(fp, "  %s: %s\n", eq->name, eq->detail);
 	}
 	fprintf(fp, "\n");
+	if(ctx->analysis_limited){
+		fprintf(fp,
+			"Advisory analysis limit reached:\n"
+			"  the current structural prototype could not complete the Pantelides\n"
+			"  walk for this system without further symbolic machinery or stopping\n"
+			"  rules. The report below is partial.\n\n"
+		);
+	}
 
 	fprintf(fp, "Differentiation steps:\n");
 	if(gl_length(ctx->differentiation_order) == 0){
@@ -512,10 +649,9 @@ static void pantelides_write_report(PantelidesContext *ctx, FILE *fp){
 	}
 	fprintf(fp, "\n");
 	fprintf(fp,
-		"Note: this first-pass report uses the current explicit der(...) chains\n"
-		"already present in the system. It does not yet infer additional chain\n"
-		"links from ordinary equations such as v = der(x), and it does not yet\n"
-		"build symbolic differentiated relations.\n"
+		"Note: this first-pass report uses explicit derivative pseudo-instances\n"
+		"and simple named-derivative equations such as v = der(x) to infer chain\n"
+		"structure. It does not yet build symbolic differentiated relations.\n"
 	);
 }
 

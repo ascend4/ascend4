@@ -57,6 +57,7 @@ METHODS
 		T := 330{K};
 		T_cool := 300{K};
 		t := 0{s};
+		FIX C_in, C_set, T_in, T_cool;
 
 		FREE der(C), der(T);
 	END on_load;

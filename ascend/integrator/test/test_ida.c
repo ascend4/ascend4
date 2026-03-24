@@ -333,7 +333,10 @@ static void test_pantelides_pendulum_high_index(){
 	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
 	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
 	CU_ASSERT_PTR_NOT_NULL(strstr(report, "eq5:"));
-	CU_ASSERT_PTR_NOT_NULL(strstr(report, "No differentiations were suggested"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "vx represents der(x) via eq1"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "vy represents der(y) via eq2"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Differentiate eq5"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Differentiate d/dt(eq5)"));
 	free(report);
 	ida_cleanup(&testsys);
 }
@@ -351,7 +354,7 @@ static void test_pantelides_reactor_high_index(){
 	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
 	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
 	CU_ASSERT_PTR_NOT_NULL(strstr(report, "input_constraint"));
-	CU_ASSERT_PTR_NOT_NULL(strstr(report, "No differentiations were suggested"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Advisory analysis limit reached"));
 	free(report);
 	ida_cleanup(&testsys);
 }
