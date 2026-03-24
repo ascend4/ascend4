@@ -428,6 +428,36 @@ static void test_initial_section_illegal_statement_rejected(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_pre_outside_reinit_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		MODEL pre_illegal;\n\
+			x, y IS_A real;\n\
+			bad: y = pre(x);\n\
+		END pre_illegal;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "pre(...) is only allowed inside REINIT") != NULL);
+	CU_ASSERT(FindType(AddSymbol("pre_illegal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
 static void test_parse_basemodel(void){
 
 	struct module_t *m;
@@ -1145,6 +1175,7 @@ static void test_units_ladder_invalid_anchor_rejected(void){
 	T(initial_section_basic) \
 	T(initial_section_hierarchical) \
 	T(initial_section_illegal_statement_rejected) \
+	T(pre_outside_reinit_rejected) \
 	T(parse_basemodel) \
 	T(parse_file) \
 	T(instantiate_file) \

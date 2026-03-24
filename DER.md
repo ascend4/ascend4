@@ -666,6 +666,10 @@ For a first implementation, the following limits are sensible:
   structures in `slv_system_t`, analogous to existing `WHEN`/boundary
   lowering, rather than having solver engines reach back into compiler
   `Statement` trees at runtime
+- in Phase 1A, IDA is the intended execution path for `REINIT`; LSODE should
+  reject models that require `WHEN`/boundary event handling, and CMSlv may
+  safely ignore `REINIT` actions since they are not part of its algebraic
+  conditional solve semantics
 - guards should remain free of `der(...)` in v1
 - branch switching may change active equations, but should not change the
   canonical differential state set

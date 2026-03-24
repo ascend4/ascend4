@@ -1049,6 +1049,14 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   }
   MSG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
 
+  if(slv_get_num_solvers_bnds(sys->system) > 0 || slv_get_num_solvers_whens(sys->system) > 0){
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+      "LSODE does not support CONDITIONAL/WHEN event handling or REINIT."
+      " Use IDA for hybrid/evented models."
+    );
+    return 2;
+  }
+
   MSG("Starting ODE analysis");
   IntegInitSymbols();
 
