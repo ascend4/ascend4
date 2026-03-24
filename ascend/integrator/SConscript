@@ -4,7 +4,7 @@ Import('libascend_env')
 objs = []
 
 csrcs = Split("""
-	integrator.c samplelist.c
+	integrator.c samplelist.c pantelides.c
 """)
 # aww.c
 
@@ -30,4 +30,3 @@ print("OBJS =",objs)
 Return('objs')
 
 # vim: set syntax=python:
-

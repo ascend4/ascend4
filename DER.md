@@ -403,33 +403,36 @@ Two classic reference problems are now recorded under
 - [reactor.a4c](./models/test/pantelides/reactor.a4c)
 - [pendulum.a4c](./models/test/pantelides/pendulum.a4c)
 
-These are discussion/reference models, not yet solver regressions for current
-ASCEND functionality.
+These began as discussion/reference models and are now also used as explicit
+high-index / non-reduced structural regression cases in:
+
+- [test_lsode.c](./ascend/integrator/test/test_lsode.c)
+- [test_ida.c](./ascend/integrator/test/test_ida.c)
+
+Current expected behavior is rejection during analysis, with user-facing
+messages indicating that the models are not in first-order ODE/DAE form and
+that index reduction may be required.
 
 They are important because they make the current derivative-chain design issue
 concrete:
 
-- the models use explicit equations such as `Cdot = der(C)` and `xdot = der(x)`
+- the models use canonical `der(...)` equations directly, such as
+  `vx = der(x)` and `der(C) = ...`
 - those equations should remain equations
-- but Pantelides-style structural analysis still needs to understand that they
-  define derivative-chain membership
+- but Pantelides-style structural analysis may still need to infer derivative
+  chain structure from equations of the form `v = der(x)` when users choose to
+  introduce named first-derivative variables
 
 So these examples strengthen the current conclusion:
 
 - `v = der(x)` should not be silently reinterpreted as aliasing or hidden
   metadata
-- but future structural analysis should probably still be able to infer chain
-  structure from such equations
+- but future structural analysis may still need to infer chain structure from
+  such equations, without removing them from the active problem
 
-The reactor example also contains an external forcing placeholder:
-
-- the original reference problem uses `u(t)`
-- ASCEND can already express time dependence through explicit use of the
-  independent variable `t`, and time-series data can also be supplied via the
-  `models/johnpye/datareader` path
-- the current ASCEND reference model still uses a plain variable `u` in the
-  structural equation `0 = C - u`, simply to keep the reference case focused
-  on derivative-chain structure rather than forcing-function syntax
+The reactor example is now written in a more ASCEND-style physical form with
+dimensioned temperatures, molar densities, and rate constants, but it is still
+intended as a structural reference case rather than a calibrated reactor model.
 
 These two models are the current reference starting point for future work on:
 
@@ -438,6 +441,37 @@ These two models are the current reference starting point for future work on:
 - index reduction in the presence of `der(...)`
 - understanding how `INITIAL` equations should participate in higher-index
   dynamic problems
+
+There is now also a first-pass advisory Pantelides reporter in
+[pantelides.c](./ascend/integrator/pantelides.c), exposed through
+`integrator_pantelides_advisory(...)`. This analysis is solver-neutral and
+read-only:
+
+- it works from the active `slv_system_t`
+- it uses the current `diffvars` view plus active solver relations
+- it reports the derivative chains and equations that ASCEND currently sees
+- it does **not** yet create symbolic differentiated equations or mutate the
+  working problem
+
+That advisory pass already gives a useful result on the reference models:
+
+- it runs successfully on both `reactor.a4c` and `pendulum.a4c`
+- it does **not** yet suggest any differentiation steps for them
+- this is not because the models are fine as-is; it is because the current
+  structural chain view is still too weak to support Pantelides on these
+  canonical `der(...)` formulations
+
+So the precise use-case for derivative-chain inference is no longer purely
+abstract. The current concrete gap is:
+
+- if a future structural algorithm such as Pantelides needs to follow chains
+  through named derivative variables, it will need some structural notion of
+  `v` being the first derivative representative of `x`
+- that structural notion should not require treating `v = der(x)` as aliasing
+  or deleting the equation from the active system
+
+That is now the first point to sharpen in the next design phase, before any
+symbolic differentiation or automatic index reduction is attempted.
 
 ## Compatibility and Transition
 
