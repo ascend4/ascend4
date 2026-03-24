@@ -58,19 +58,15 @@ MODEL tga_reduction_screen_dyn;
 	(* transport screening factor ~1 if becoming limiting *)
 	TS_freeboard, TS_bed, TS_overall IS_A factor;
 
-	(* Solid inventory and dynamic extents *)
+		(* Solid inventory and dynamic extents *)
 		MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
 		n0_Fe2O3 IS_A mole;
 		n0_per_area IS_A mole_per_area;
 		xi[steps] IS_A reduction_extent;
-		
-		n_reactant[steps] IS_A mole;
-	n_Fe2O3 ALIASES n_reactant[1];
-	n_Fe3O4 ALIASES n_reactant[2];
-	n_FeO ALIASES n_reactant[3];
-	n_Fe IS_A mole;
-	oxygen_remaining IS_A mole;
-	reduction_degree IS_A factor;
+
+		n_Fe2O3, n_Fe3O4, n_FeO, n_Fe IS_A mole;
+		oxygen_remaining IS_A mole;
+		reduction_degree IS_A factor;
 
 	(* Stepwise kineq-style local kinetics *)
 	k0[steps] IS_A rate_per_pressure;
@@ -95,12 +91,11 @@ MODEL tga_reduction_screen_dyn;
 	react_ar_eq: y_Ar_react = y_Ar_bulk;
 	react_sum: y_H2O_react = 1 - y_Ar_react - y_H2_react;
 
-	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
-	n0area_eq: n0_per_area = n0_Fe2O3 / A_crucible;
-		nhe_eq: n_Fe2O3 = n0_Fe2O3 * (1 - 3 * xi[1]);
-		nmag_eq: n_Fe3O4 = n0_Fe2O3 * (2 * xi[1] - xi[2]);
-		nwu_eq: n_FeO = n0_Fe2O3 * (3 * xi[2] - xi[3]);
-		nfe_eq: n_Fe = n0_Fe2O3 * xi[3];
+		n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+		n0area_eq: n0_per_area = n0_Fe2O3 / A_crucible;
+		xi1_eq: xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
+		xi2_eq: xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+		xi3_eq: xi[3] = n_Fe / n0_Fe2O3;
 
 	msample_eq:
 		m_sample
@@ -140,8 +135,12 @@ MODEL tga_reduction_screen_dyn;
 			rnet_eq[r]:
 				rate_net[r] = rate_forward[r] - rate_reverse[r];
 
-			ode_eq[r]: der(xi[r]) = rate_net[r];
 		END FOR;
+
+		nhe_ode: der(n_Fe2O3) = -3 * n0_Fe2O3 * rate_net[1];
+		nmag_ode: der(n_Fe3O4) = n0_Fe2O3 * (2 * rate_net[1] - rate_net[2]);
+		nwu_ode: der(n_FeO) = n0_Fe2O3 * (3 * rate_net[2] - rate_net[3]);
+		nfe_ode: der(n_Fe) = n0_Fe2O3 * rate_net[3];
 
 		rf1_eq:
 			rate_forward[1] = (n_Fe2O3 / n0_Fe2O3) * k_step[1] * p * y_H2_react;
@@ -164,9 +163,10 @@ MODEL tga_reduction_screen_dyn;
 	transport_match: J_transport = J_reaction;
 
 	INITIAL
-		xi1_initial: xi[1] = 0;
-		xi2_initial: xi[2] = 0;
-		xi3_initial: xi[3] = 0;
+		nhe_initial: n_Fe2O3 = m_sample_init / MW_Fe2O3;
+		nmag_initial: n_Fe3O4 = 0 {mol};
+		nwu_initial: n_FeO = 0 {mol};
+		nfe_initial: n_Fe = 0 {mol};
 
 METHODS
 	METHOD values;
@@ -263,9 +263,9 @@ METHODS
 	END algebraic_base;
 
 		METHOD steady_init;
-			FREE der(xi[1]), der(xi[2]), der(xi[3]);
+			FREE der(n_Fe2O3), der(n_Fe3O4), der(n_FeO), der(n_Fe);
 			RUN enter_initial_mode;
-		SOLVER QRSlv;
+			SOLVER QRSlv;
 		OPTION convopt 'RELNOM_SCALE';
 		OPTION iterationlimit 1000;
 		SOLVE;
@@ -273,11 +273,12 @@ METHODS
 	END steady_init;
 
 		METHOD dynamic_reset;
-			xi[1] := 0;
-			xi[2] := 0;
-			xi[3] := 0;
-		t := 0 {s};
-	END dynamic_reset;
+			n_Fe2O3 := m_sample_init / MW_Fe2O3;
+			n_Fe3O4 := 0 {mol};
+			n_FeO := 0 {mol};
+			n_Fe := 0 {mol};
+			t := 0 {s};
+		END dynamic_reset;
 
 	METHOD reinitialise;
 		RUN dynamic_reset;
@@ -360,7 +361,7 @@ METHODS
 
 		METHOD ode_init;
 			FIX t;
-			FREE der(xi[1]), der(xi[2]), der(xi[3]);
+			FREE der(n_Fe2O3), der(n_Fe3O4), der(n_FeO), der(n_Fe);
 			RUN dynamic_reset;
 			RUN observe_default;
 		END ode_init;
@@ -368,7 +369,7 @@ METHODS
 		METHOD on_load;
 			RUN algebraic_base;
 			RUN dynamic_reset;
-			FREE der(xi[1]), der(xi[2]), der(xi[3]);
+			FREE der(n_Fe2O3), der(n_Fe3O4), der(n_FeO), der(n_Fe);
 			RUN observe_default;
 		END on_load;
 END tga_reduction_screen_dyn;
