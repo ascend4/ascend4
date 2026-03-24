@@ -222,6 +222,17 @@ static struct Instance *ida_child(struct Instance *root, const char *name){
 	return child;
 }
 
+static char *ida_capture_pantelides_report(slv_system_t sys){
+	char *buf = NULL;
+	size_t len = 0;
+	FILE *fp = open_memstream(&buf, &len);
+	CU_ASSERT_FATAL(fp != NULL);
+	CU_ASSERT_FATAL(0 == integrator_pantelides_advisory(sys, fp));
+	CU_ASSERT_FATAL(0 == fclose(fp));
+	CU_ASSERT_FATAL(buf != NULL);
+	return buf;
+}
+
 static void test_shm(){
 	IdaTestSystem testsys;
 	struct Instance *root, *ix, *iv;
@@ -311,23 +322,37 @@ static void test_high_index(){
 
 static void test_pantelides_pendulum_high_index(){
 	IdaTestSystem testsys;
+	char *report;
 
 	if(ida_test_load("test/pantelides/pendulum.a4c", "pantelides_pendulum", 0, &testsys)){
 		return;
 	}
 
 	CU_ASSERT_NOT_EQUAL(integrator_analyse(testsys.integ), 0);
+	report = ida_capture_pantelides_report(testsys.integ->system);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "eq5:"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "No differentiations were suggested"));
+	free(report);
 	ida_cleanup(&testsys);
 }
 
 static void test_pantelides_reactor_high_index(){
 	IdaTestSystem testsys;
+	char *report;
 
 	if(ida_test_load("test/pantelides/reactor.a4c", "pantelides_reactor", 0, &testsys)){
 		return;
 	}
 
 	CU_ASSERT_NOT_EQUAL(integrator_analyse(testsys.integ), 0);
+	report = ida_capture_pantelides_report(testsys.integ->system);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "input_constraint"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "No differentiations were suggested"));
+	free(report);
 	ida_cleanup(&testsys);
 }
 

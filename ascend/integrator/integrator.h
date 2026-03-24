@@ -66,6 +66,7 @@
 #include <ascend/system/slv_client.h>
 
 #include "samplelist.h"
+#include "pantelides.h"
 
 /*---------------------------*/
 

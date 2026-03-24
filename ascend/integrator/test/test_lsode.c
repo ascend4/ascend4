@@ -156,6 +156,17 @@ static void test_lsode_destroy_integrator(IntegratorSystem *integ){
 	Asc_CompilerDestroy();
 }
 
+static char *test_capture_pantelides_report(slv_system_t sys){
+	char *buf = NULL;
+	size_t len = 0;
+	FILE *fp = open_memstream(&buf, &len);
+	CU_ASSERT_FATAL(fp != NULL);
+	CU_ASSERT_FATAL(0 == integrator_pantelides_advisory(sys, fp));
+	CU_ASSERT_FATAL(0 == fclose(fp));
+	CU_ASSERT_FATAL(buf != NULL);
+	return buf;
+}
+
 /*
 	Test solving a simple LSODE model. This test integrates a model that deliberately
 	goes out of bounds, and checks that LSODE catches and aborts.
@@ -458,6 +469,14 @@ static void test_pantelides_pendulum_high_index(){
 	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
 
 	CU_ASSERT_NOT_EQUAL(integrator_analyse(integ), 0);
+	char *report = test_capture_pantelides_report(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Active equations"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "eq5:"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "No differentiations were suggested"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "v = der(x)"));
+	free(report);
 
 	test_lsode_destroy_integrator(integ);
 }
@@ -485,6 +504,13 @@ static void test_pantelides_reactor_high_index(){
 	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
 
 	CU_ASSERT_NOT_EQUAL(integrator_analyse(integ), 0);
+	char *report = test_capture_pantelides_report(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Active equations"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "input_constraint"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "No differentiations were suggested"));
+	free(report);
 
 	test_lsode_destroy_integrator(integ);
 }
