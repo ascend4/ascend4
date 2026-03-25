@@ -41,6 +41,7 @@ struct varip {
   int incident;		      /* set 0 in classify_instance, 1 make_master_lists */
   int in_block;		      /* set 0 in classify_instance */
   int fixed;		      /* set in classify_instance */
+  int discrete;           /* set in classify_instance */
   int solvervar;	      /* set in classify_instance */
   int active;             /* is this var a part of my problem */
   int basis;              /* set in classify_instance */

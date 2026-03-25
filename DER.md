@@ -344,15 +344,20 @@ analysis.
 ### What this means
 
 - `v = der(x)` may still be a useful and natural modelling equation
-- it does **not** currently make `v` the canonical derivative representative
-  of `x`
+- it does **not** currently make `v` the canonical runtime derivative
+  identity of `x`
 - it does **not** currently add `v` into a maintained derivative alias clique
+- but simple equations such as `v = der(x)` may now be used by the advisory
+  Pantelides pass as structural named-derivative representatives, without
+  changing the runtime identity model
 
 So at present:
 
 - `der(x)` has a canonical runtime pseudo-instance identity
 - `v` may be constrained equal to that quantity by equation
 - but `v` is not thereby identical to `der(x)`
+- and structural analysis may still choose to follow `v` as the named first
+  derivative representative of `x` in limited cases
 
 ### Why this is a design concern
 
@@ -444,25 +449,34 @@ These two models are the current reference starting point for future work on:
 
 There is now also a first-pass advisory Pantelides reporter in
 [pantelides.c](./ascend/integrator/pantelides.c), exposed through
-`integrator_pantelides_advisory(...)`. This analysis is solver-neutral and
-read-only:
+`integrator_pantelides_advisory(...)` and now also wrapped at system stage
+through `Simulation.getPantelidesReport()` for ascxx/Python/GUI use. This
+analysis is solver-neutral and read-only:
 
 - it works from the active `slv_system_t`
 - it uses the current `diffvars` view plus active solver relations
 - it reports the derivative chains and equations that ASCEND currently sees
 - it does **not** yet create symbolic differentiated equations or mutate the
   working problem
+- it can be captured to a file or string at the C layer and is now available
+  to Python scripts and the GTK browser
 
-That advisory pass already gives a useful result on the reference models:
+That advisory pass now gives two distinct useful results on the reference
+models:
 
-- it runs successfully on both `reactor.a4c` and `pendulum.a4c`
-- it does **not** yet suggest any differentiation steps for them
-- this is not because the models are fine as-is; it is because the current
-  structural chain view is still too weak to support Pantelides on these
-  canonical `der(...)` formulations
+- for `pendulum.a4c`, it now infers the named derivative representatives
+  `vx = der(x)` and `vy = der(y)` and advises differentiating the holonomic
+  constraint `eq5` twice
+- for `reactor.a4c`, it no longer hangs; instead it stops with an explicit
+  advisory-analysis limit note, which is a safer and more honest failure mode
+  for the current prototype
 
-So the precise use-case for derivative-chain inference is no longer purely
-abstract. The current concrete gap is:
+This sharpens the chain-inference use-case. The real structural question is not
+whether `der(x)` is a derivative of `x` (that is already explicit), but whether
+an ordinary variable such as `vx` should be recognised as the named
+representative of that derivative quantity for structural analysis purposes.
+
+The current concrete gap is therefore:
 
 - if a future structural algorithm such as Pantelides needs to follow chains
   through named derivative variables, it will need some structural notion of
@@ -470,8 +484,15 @@ abstract. The current concrete gap is:
 - that structural notion should not require treating `v = der(x)` as aliasing
   or deleting the equation from the active system
 
-That is now the first point to sharpen in the next design phase, before any
-symbolic differentiation or automatic index reduction is attempted.
+The advisory pass now has enough structural information to make progress on the
+pendulum example, but it still lacks:
+
+- symbolic differentiated-relation generation
+- stronger stopping rules / reformulation logic for cases like the reactor
+- a broader structural treatment of named derivative representatives beyond the
+  simplest `v = der(x)` form
+
+Those are the next steps before automatic index reduction can be attempted.
 
 ## Compatibility and Transition
 
@@ -506,6 +527,222 @@ Conservative first-phase assumptions remain sensible:
 - `WHEN` may change active equations
 - `WHEN` should not yet change the canonical differential state set
 - guards should not depend on `der(...)` initially
+
+### Proposed Hybrid Surface Syntax
+
+The most practical path is to stage hybrid syntax in two layers:
+
+1. add the missing hybrid semantics on top of the existing backend
+2. add a lighter surface syntax afterward as sugar
+
+That keeps the current `CONDITIONAL` / `SATISFIED(...)` / `WHEN ... CASE`
+machinery as the execution model, while giving users something less awkward to
+write.
+
+#### Phase 1: minimal semantics-first extension
+
+Add:
+
+- `pre(x)` as an event-time left-limit operator
+- `REINIT(x, expr);` as a new statement allowed inside a `WHEN` case body
+
+Example:
+
+```ascend
+CONDITIONAL
+    boundary: y <= r;
+END CONDITIONAL;
+
+switch == SATISFIED(boundary, 1e-8{m});
+
+WHEN(switch)
+    CASE TRUE:
+        REINIT(v, -e * pre(v));
+        USE bouncing;
+    CASE FALSE:
+        USE airborn;
+END WHEN;
+```
+
+This is intentionally close to the existing implementation model:
+
+- the guard still comes from a conditional relation
+- the boolean selector still comes from `SATISFIED(...)`
+- the active equation set still switches through `USE ...`
+- only the missing event-memory and state-reset semantics are added
+
+This is the lowest-risk route because current `WHEN` checking already exists,
+and only needs to be widened to allow `REINIT(...)` in addition to `USE`,
+nested `WHEN`, and `FOR`.
+
+#### `REINIT` spelling
+
+For ASCEND, the best spelling is:
+
+```ascend
+REINIT(v, -e * pre(v));
+```
+
+not:
+
+```ascend
+REINIT v := -e * pre(v);
+REINIT v = -e * pre(v);
+```
+
+Reasons:
+
+- `:=` already means ordinary assignment in ASCEND
+- `=` already means a relation statement
+- `REINIT(x, expr)` avoids pretending that a reset is either a procedural
+  assignment or an always-active algebraic equation
+- the function-style spelling matches the intended event-time semantics and
+  keeps parsing simple
+
+`REINIT` should therefore be treated as its own statement form, not as
+syntactic sugar for assignment.
+
+#### Declarative meaning
+
+Even if the syntax later becomes `WHEN ... DO`, the meaning should stay
+declarative.
+
+A `REINIT` is not "execute this assignment in source order". It is a
+reinitialisation condition that becomes active when an event fires. The event
+handler should:
+
+1. detect a guard crossing
+2. determine the active branch
+3. form the post-event system
+4. apply the `REINIT(...)` conditions
+5. solve for a consistent restarted state
+
+That keeps the language aligned with ASCEND's equation-based semantics and
+avoids making event behavior depend on statement ordering.
+
+#### Phase 2: user-facing sugar
+
+Once `pre(x)` and `REINIT(...)` exist, a lighter surface form can be added and
+lowered to the same backend:
+
+```ascend
+WHEN y <= r DO
+    REINIT(v, -e * pre(v));
+    USE bouncing;
+ELSE
+    USE airborn;
+END WHEN;
+```
+
+This should be treated as sugar for:
+
+- an implicit conditional relation
+- an implicit `SATISFIED(...)` selector
+- the existing `WHEN (...) CASE ... END WHEN` machinery
+
+So `WHEN ... DO` is not the semantic foundation. It is only a better front
+end.
+
+#### Sensible v1 restrictions
+
+For a first implementation, the following limits are sensible:
+
+- `REINIT(...)` is only legal inside `WHEN` cases
+- Phase 1A should restrict the `REINIT` target to continuous real
+  differential/integrator states only
+- event-memory variables such as `t_last_event` are important, but should come
+  later as a separate extension rather than being mixed into the first working
+  reset implementation
+- `pre(x)` should parse as a normal expression operator, but in Phase 1A it is
+  only semantically legal inside `REINIT(...)`
+- outside active event/reinitialisation processing, `pre(x)` should not be
+  treated as having a meaningful runtime value
+- Phase 1A semantics should be defined solver-neutrally as "apply explicit
+  post-event values to selected continuous states, then compute a consistent
+  restart". For IDA this is expected to map onto the existing restart /
+  `IDACalcIC` path, effectively with `YA_YDP`-style behavior for the reset
+  states.
+- the event/reset data should be lowered onto solver-side `when_case`
+  structures in `slv_system_t`, analogous to existing `WHEN`/boundary
+  lowering, rather than having solver engines reach back into compiler
+  `Statement` trees at runtime
+- in Phase 1A, IDA is the intended execution path for `REINIT`; LSODE should
+  reject models that require `WHEN`/boundary event handling, and CMSlv may
+  safely ignore `REINIT` actions since they are not part of its algebraic
+  conditional solve semantics
+- guards should remain free of `der(...)` in v1
+- branch switching may change active equations, but should not change the
+  canonical differential state set
+
+For the later event-memory extension, it is preferable not to create a third
+parallel family of real atom types. A better direction is likely to be:
+
+- keep the existing `IS_A` variable declarations
+- add an extra classification flag on real atom instances for
+  discrete/event-memory behavior
+- filter such flagged variables out of continuous solver-variable/state lists
+  while still allowing them to store values between events
+
+This keeps the implementation closer to the existing `solver_var` machinery and
+avoids duplicating every measure/type into a new discrete-real family.
+
+Phase 1B now follows that direction in a minimal way:
+
+- `solver_var` carries a `discrete` boolean child, currently intended to be set
+  from methods such as `on_load`
+- discrete real variables are treated as fixed between events for solver
+  purposes
+- they are excluded from the continuous integrator state vectors
+- they may nevertheless be targeted by `REINIT(...)` so they can act as simple
+  real-valued event memory
+- IDA now carries a regression exercising repeated event-memory updates with a
+  lengthening-period sawtooth, which depends on reinitialising IDA rootfinding
+  state after each event restart
+- after applying `REINIT(...)`, IDA also needs a small post-reset logical
+  settling pass so that discrete variables and active cases are recomputed from
+  the post-event state before continuous integration resumes; this is a first
+  form of event iteration
+- simultaneous boundary crossings from different sources now need to be
+  treated as one combined logical event, not silently truncated to the first
+  crossed boundary reported by IDA
+- the current implementation now combines simultaneous crossings when they all
+  imply the same target truth value, but still rejects mixed TRUE/FALSE target
+  sets because LRSlv's current perturb interface only carries one target truth
+  mode for the whole solve
+
+Modelica and gPROMS both keep a semantic distinction here:
+
+- Modelica `reinit(x, expr)` is for continuous `Real` states, while ordinary
+  discrete/event-memory variables are updated directly in `when` equations
+- gPROMS `REINITIAL ... WITH ...` is likewise aimed at differential variables,
+  while other discontinuous value changes are handled through separate
+  mechanisms such as `REASSIGN`
+
+For ASCEND Phase 1B it is still reasonable to keep a single `REINIT(...)`
+surface form for both continuous-state resets and discrete real event-memory
+updates, provided the backend continues to distinguish those two target classes.
+This keeps the first implementation small, while leaving open the option of a
+cleaner split in surface syntax later if it proves worthwhile.
+
+Expression-level event generation, more in the style of Modelica, may also be
+desirable later. However, that should be treated as a future event-source layer
+above the same backend semantics; it is not required for Phase 1A.
+
+#### Future richer STN syntax
+
+If ASCEND later wants first-class state-transition models, that should be a
+third layer, not the first one. For example:
+
+```ascend
+STATE idle, filling, draining;
+
+TRANSITION idle -> filling WHEN start_cmd;
+TRANSITION filling -> draining WHEN level >= high;
+TRANSITION draining -> idle WHEN level <= low;
+```
+
+That kind of syntax could still lower to the same event backend, but it should
+not block the smaller and more urgent `pre(x)` / `REINIT(...)` work.
 
 ## `INITIAL`
 
@@ -885,6 +1122,7 @@ Current Python-facing access now includes:
 
 - `inst.der`
 - `ascpy.der(inst)`
+- `sim.getPantelidesReport()`
 
 These both resolve to the same derivative pseudo-instance.
 
@@ -892,6 +1130,7 @@ This is useful because it keeps:
 
 - a tree/object form: `inst.der`
 - a language-like form: `ascpy.der(inst)`
+- a scriptable system-stage Pantelides text report: `sim.getPantelidesReport()`
 
 without introducing extra spelling variants.
 
@@ -904,6 +1143,7 @@ without introducing extra spelling variants.
     initialization-mode solves outside the integrator path
 - full GUI semantics
   - browser/object path is working
+  - Pantelides advisory text is now exposed in the GTK browser
   - broader end-to-end GUI exercise is still useful
 - hybrid/event semantics
   - `WHEN`, `pre(x)`, and `REINIT` are still future work

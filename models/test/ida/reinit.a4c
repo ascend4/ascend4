@@ -1,0 +1,79 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_reinit_reflect;
+
+	y       IS_A distance;
+	v, ydot IS_A speed;
+	a       IS_A acceleration;
+
+	F_net   IS_A force;
+	F_g     IS_A force;
+	F_d     IS_A force;
+	F_s     IS_A force;
+
+	m       IS_A mass;
+	g       IS_A acceleration;
+	r       IS_A distance;
+	k1      IS_A stiffness;
+	k2      IS_A damping_coefficient;
+	e       IS_A fraction;
+
+	t, t_last_event IS_A time;
+
+	switch  IS_A boolean_var;
+
+	motion:     m * a = F_net;
+	gravity:    F_g = -1 * m * g;
+	damping:    F_d = -1 * k2 * v;
+	spring:     F_s = k1 * (r - y);
+	kinematics: v = ydot;
+	airborne:   F_net = F_g;
+	contact:    F_net = F_g + F_d + F_s;
+
+CONDITIONAL
+	wall: y <= r;
+END CONDITIONAL;
+
+	switch == SATISFIED(wall, 1e-8 {m});
+
+WHEN(switch)
+	CASE TRUE:
+		USE contact;
+		REINIT(v, -e * pre(v));
+		REINIT(t_last_event, t);
+	CASE FALSE:
+		USE airborne;
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		RUN values;
+		t_last_event.discrete := TRUE;
+	END on_load;
+
+	METHOD ode_init;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		v.ode_type := 1; a.ode_type := 2;
+		v.ode_id := 2;   a.ode_id := 2;
+		t.ode_type := -1;
+	END ode_init;
+
+	METHOD values;
+		FIX m, g, r, k1, k2, e;
+		m := 1 {kg};
+		g := 0 {m/s^2};
+		r := 1 {m};
+		k1 := 0 {N/m};
+		k2 := 0 {N*s/m};
+		e := 1;
+		y := 2 {m};
+		v := -1 {m/s};
+		a := 0 {m/s^2};
+		t := 0 {s};
+		t_last_event := -1 {s};
+		switch := FALSE;
+	END values;
+END ida_reinit_reflect;

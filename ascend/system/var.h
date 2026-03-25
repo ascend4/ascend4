@@ -91,6 +91,8 @@
 	system of equations. Can't have both alg&deriv flags set (unless higher
 	order derivatives have been implemented?)
 */
+#define VAR_DISCRETE 0x200
+/**< var is discrete/event-memory and should be treated as fixed between events */
 
 /*
 	The remaining flagbit definitions are those flags to be
@@ -491,6 +493,10 @@ ASC_DLLSPEC uint32 var_fixed(struct var_variable *var);
 /**< Returns the fixed flag of var.  Has side effects in the ascend instance. */
 ASC_DLLSPEC void var_set_fixed(struct var_variable *var, uint32 fixed);
 /**< Sets the fixed flag of var.  Has side effects in the ascend instance. */
+ASC_DLLSPEC uint32 var_discrete(struct var_variable *var);
+/**< Returns the discrete flag of var. Has side effects in the ascend instance. */
+ASC_DLLSPEC void var_set_discrete(struct var_variable *var, uint32 discrete);
+/**< Sets the discrete flag of var. Has side effects in the ascend instance. */
 ASC_DLLSPEC uint32 var_relaxed(struct var_variable *var);
 /**< Returns the relaxed flag of var.  Has side effects in the ascend instance. */
 extern void var_set_relaxed(struct var_variable *var, uint32 fixed);
@@ -511,6 +517,8 @@ extern void var_set_interface(struct var_variable *var, uint32 fixed);
   /**<  Returns the deriv flag of var as a uint32. */
 # define var_diff(var) ((var)->flags & VAR_DIFF)
   /**<  Returns the deriv flag of var as a uint32. */
+# define var_discrete_flag(var) ((var)->flags & VAR_DISCRETE)
+  /**<  Returns the discrete flag of var as a uint32. */
 # define var_active(var)   ((var)->flags & VAR_ACTIVE)
   /**<  Returns the active flag of var as a uint32. */
 # define var_nonbasic(var) ((var)->flags & VAR_NONBASIC)
@@ -535,6 +543,8 @@ extern void var_set_interface(struct var_variable *var, uint32 fixed);
   /**<  Returns the deriv flag of var as a uint32. */
 # define var_diff(var)         var_flagbit((var),VAR_DIFF)
   /**<  Returns the deriv flag of var as a uint32. */
+# define var_discrete_flag(var) var_flagbit((var),VAR_DISCRETE)
+  /**<  Returns the discrete flag of var as a uint32. */
 # define var_active(var)        var_flagbit((var),VAR_ACTIVE)
   /**<  Returns the active flag of var as a uint32. */
 # define var_nonbasic(var)      var_flagbit((var),VAR_NONBASIC)
@@ -563,6 +573,9 @@ extern void var_set_interface(struct var_variable *var, uint32 fixed);
 #define var_set_diff(var,oneorzero)      \
         var_set_flagbit((var),VAR_DIFF,(oneorzero))
 /**<  Sets the algeb flag of var on (1) or off (0). */
+#define var_set_discrete_flag(var,oneorzero)      \
+        var_set_flagbit((var),VAR_DISCRETE,(oneorzero))
+/**<  Sets the discrete flag of var on (1) or off (0). */
 #define var_set_interface(var,oneorzero)     \
         var_set_flagbit((var),VAR_INTERFACE,(oneorzero))
 /**<  Sets the interface flag of var on (1) or off (0). */

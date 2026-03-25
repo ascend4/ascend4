@@ -254,6 +254,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case LOGREL:
     case ASGN:
     case CASGN:
+    case REINIT:
     case CALL:
     case EXT:
     case REF:
@@ -621,6 +622,8 @@ unsigned int SlistHasWhat(struct StatementList *slist)
       break;
     case ASGN:
       what |= contains_DEF;
+      break;
+    case REINIT:
       break;
     case REL:
       what |= contains_REL;
@@ -992,6 +995,15 @@ struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs)
   return result;
 }
 
+struct Statement *CreateREINIT(struct Name *n, struct Expr *rhs)
+{
+  struct Statement *result;
+  result=create_statement_here(REINIT);
+  result->v.reinit.nptr = n;
+  result->v.reinit.rhs = rhs;
+  return result;
+}
+
 struct Statement *CreateTABLE(struct Name *n,
                               symchar *decl_type,
                               struct Set *decl_typeargs,
@@ -1178,6 +1190,12 @@ void DestroyStatement(struct Statement *s)
         s->v.asgn.nptr = NULL;
         DestroyExprList(s->v.asgn.rhs);
         s->v.asgn.rhs = NULL;
+        break;
+      case REINIT:
+        DestroyName(s->v.reinit.nptr);
+        s->v.reinit.nptr = NULL;
+        DestroyExprList(s->v.reinit.rhs);
+        s->v.reinit.rhs = NULL;
         break;
       case TABLESTAT:
         DestroyName(s->v.table.name);
@@ -1433,6 +1451,10 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.asgn.nptr = CopyName(s->v.asgn.nptr);
     result->v.asgn.rhs = CopyExprList(s->v.asgn.rhs);
     break;
+  case REINIT:
+    result->v.reinit.nptr = CopyName(s->v.reinit.nptr);
+    result->v.reinit.rhs = CopyExprList(s->v.reinit.rhs);
+    break;
   case TABLESTAT:
     result->v.table.name = CopyName(s->v.table.name);
     result->v.table.decl_type = s->v.table.decl_type;
@@ -1566,6 +1588,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case LOGREL:
   case ASGN:
   case CASGN:
+  case REINIT:
   case FOR:
   case CALL:
   case EXT:
@@ -1615,6 +1638,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case LOGREL:
   case ASGN:
   case CASGN:
+  case REINIT:
   case FOR:
   case CALL:
   case EXT:
@@ -1666,6 +1690,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case LOGREL:
   case ASGN:
   case CASGN:
+  case REINIT:
   case FOR:
   case CALL:
   case EXT:
@@ -2053,6 +2078,22 @@ struct Expr *AssignStatRHSF(CONST struct Statement *s)
   assert(s->ref_count);
   assert(s->t==CASGN);
   return s->v.asgn.rhs;
+}
+
+struct Name *ReinitStatVarF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==REINIT);
+  return s->v.reinit.nptr;
+}
+
+struct Expr *ReinitStatRHSF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==REINIT);
+  return s->v.reinit.rhs;
 }
 
 struct Name *RelationStatNameF(CONST struct Statement *s)
@@ -2876,6 +2917,12 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareExprs(AssignStatRHS(s1),AssignStatRHS(s2));
+  case REINIT:
+    ctmp = CompareNames(ReinitStatVar(s1),ReinitStatVar(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    return CompareExprs(ReinitStatRHS(s1),ReinitStatRHS(s2));
   case TABLESTAT:
     ctmp = CompareNames(s1->v.table.name,s2->v.table.name);
     if (ctmp != 0) {
@@ -3229,6 +3276,7 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case UNLNK:
   case ASGN:
   case CASGN:
+  case REINIT:
   case RUN:
   case CALL:
   case ASSERT:

@@ -174,6 +174,17 @@ struct Expr *CreateDiffExpr(struct Name *n)
   return result;
 }
 
+struct Expr *CreatePreExpr(struct Name *n)
+{
+  struct Expr *result;
+  assert(n!=NULL);
+  AssertMemory(n);
+  EXPR_NEW(result,e_pre);
+  result->v.nptr = n;
+  EXPR_CHECK_MEMORY(result);
+  return result;
+}
+
 void InitVarExpr(struct Expr *result,CONST struct Name *n)
 {
   assert(n!=NULL);
@@ -399,6 +410,7 @@ struct Expr *CopyExprList(CONST struct Expr *e)
     break;
   case e_var:
   case e_der:
+  case e_pre:
     result = EPMALLOC;
     result->v.nptr = CopyName(ep->v.nptr);
     break;
@@ -451,6 +463,7 @@ struct Expr *CopyExprList(CONST struct Expr *e)
       break;
     case e_var:
     case e_der:
+    case e_pre:
       p->next = EPMALLOC;
       p = p->next;
       p->v.nptr = CopyName(ep->v.nptr);
@@ -515,6 +528,7 @@ void DestroyExprList(struct Expr *e)
     switch(ep->t) {
 		case e_var:
 		case e_der:
+		case e_pre:
 			DestroyName(ep->v.nptr);
 			break;
 		case e_set:
@@ -661,6 +675,7 @@ int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2)
     switch(ExprType(e1)){
     case e_var:
     case e_der:
+    case e_pre:
       ctmp = CompareNames(ExprName(e1),ExprName(e2));
       if (ctmp != 0) return ctmp;
       break;

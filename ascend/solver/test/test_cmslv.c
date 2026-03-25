@@ -152,7 +152,8 @@ static void test_cmslv(const char *filenamestem){
 #define TESTS(T) \
 	T(linmassbal)\
 	T(pipeline)\
-	T(heatex)
+	T(heatex)\
+	T(reinitignore)
 
 /* define the tests: each test loads the model, solves with CMSlv, then runs the
 self_test method. */

@@ -96,6 +96,7 @@
 #include <ascend/compiler/logical_relation.h>
 #include <ascend/compiler/logrel_util.h>
 #include <ascend/compiler/case.h>
+#include <ascend/compiler/statement.h>
 #include <ascend/compiler/when_util.h>
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/derivinst.h>
@@ -116,7 +117,7 @@
   GLOBAL VARS
 */
 
-static symchar *g_strings[6];
+static symchar *g_strings[7];
 
 struct derivative_bind_data {
   struct Instance *root;
@@ -590,6 +591,7 @@ static void recover_bound_derivative_terms(struct Instance *inst, VOIDPTR userda
 #define DERIV_A g_strings[3]
 #define ODEID_A g_strings[4]
 #define OBSID_A g_strings[5]
+#define DISCRETE_A g_strings[6]
 
 /*
 	a bridge buffer used so much we aren't going to free it, just reuse it
@@ -1058,9 +1060,10 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     ip->u.v.index = 0;
     ip->u.v.active = 0;
     if(solver_var(inst)){
-	  //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
+      //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
-      ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
+      ip->u.v.discrete = BooleanChildValue(inst,DISCRETE_A);
+      ip->u.v.fixed = BooleanChildValue(inst,FIXED_A) || ip->u.v.discrete;
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
       ip->u.v.odeid = IntegerChildValue(inst,ODEID_A);
@@ -1088,11 +1091,11 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 	/* CONSOLE_DEBUG("Added to obsvars"); */
       	  }
 	/* make the algebraic/differential/derivative cut */
-	if(ip->u.v.odeid){
+	if(ip->u.v.odeid && !ip->u.v.discrete){
             gl_append_ptr(p_data->diffvars,(POINTER)ip);
 	/* CONSOLE_DEBUG("Added var to diffvars"); */
           }else{
-	if(ip->u.v.deriv==-1){
+	if(ip->u.v.deriv==-1 && !ip->u.v.discrete){
 		//printf("\n smth smth \n");
 		struct solver_ipdata *original_indep_var = NULL;
 		if(gl_length(p_data->indepvars) != 0) {
@@ -1978,6 +1981,57 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
   }
 }
 
+static struct gl_list_t *ProcessWhenReinits(struct Instance *context, struct Case *cur_case){
+  struct gl_list_t *src;
+  struct gl_list_t *dest;
+  unsigned long i, len;
+
+  if(cur_case == NULL){
+    return NULL;
+  }
+
+  src = GetCaseReinitStatements(cur_case);
+  if(src == NULL || gl_length(src) == 0){
+    return NULL;
+  }
+
+  len = gl_length(src);
+  dest = gl_create(len);
+  for(i = 1; i <= len; ++i){
+    struct Statement *statement = (struct Statement *)gl_fetch(src, i);
+    struct gl_list_t *instances;
+    struct Instance *target;
+    REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+    struct when_reinit *wr;
+
+    if(statement == NULL || StatementType(statement) != REINIT){
+      continue;
+    }
+
+    instances = FindInstances(context, ReinitStatVar(statement), &err);
+    if(instances == NULL || gl_length(instances) != 1){
+      if(instances != NULL)gl_destroy(instances);
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,
+        "Unable to resolve REINIT target while analysing WHEN cases");
+      continue;
+    }
+
+    target = (struct Instance *)gl_fetch(instances, 1);
+    gl_destroy(instances);
+
+    wr = when_reinit_create(NULL);
+    when_reinit_set_target(wr, (SlvBackendToken)target);
+    when_reinit_set_rhs(wr, ReinitStatRHS(statement));
+    gl_append_ptr(dest, wr);
+  }
+
+  if(gl_length(dest) == 0){
+    gl_destroy(dest);
+    return NULL;
+  }
+  return dest;
+}
+
 
 /**
 	Fill in the list of cases and variables of a w_when structure with
@@ -2004,10 +2058,12 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct gl_list_t *rels;
   struct gl_list_t *logrels;
   struct gl_list_t *whens;
+  struct gl_list_t *reinits;
   struct gl_list_t *diswhens;
   struct Set *ValueList;
   struct Instance *cur_inst;
   struct Case *cur_case;
+  struct Instance *context;
   struct solver_ipdata *ip;
   struct dis_discrete *dvar;
   struct rel_relation *rel;
@@ -2016,6 +2072,11 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct when_case *cur_sol_case;
   int c,r,len,lref;
   int *value;
+
+  context = InstanceParent(i, 1);
+  if(context == NULL){
+    context = i;
+  }
 
   scratch = GetInstanceWhenVars(i);
   len = gl_length(scratch);
@@ -2083,6 +2144,8 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     when_case_set_rels_list(cur_sol_case,rels);
     when_case_set_logrels_list(cur_sol_case,logrels);
     when_case_set_whens_list(cur_sol_case,whens);
+    reinits = ProcessWhenReinits(context, cur_case);
+    when_case_set_reinits_list(cur_sol_case, reinits);
     when_case_set_active(cur_sol_case,FALSE);
     gl_append_ptr(when->cases,cur_sol_case);
   }
@@ -2488,6 +2551,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.incident)  flags |= VAR_INCIDENT;
     if(vip->u.v.in_block)  flags |= VAR_INBLOCK;
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
+    if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
     if(vip->u.v.deriv > 1) flags |= VAR_DERIV; /* so that we can do relman_diffs with just the ydot vars */
@@ -3259,6 +3323,7 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   DERIV_A = AddSymbol("ode_type");
   ODEID_A = AddSymbol("ode_id");
   OBSID_A = AddSymbol("obs_id");
+  DISCRETE_A = AddSymbol("discrete");
 
   p_data = &thisproblem;
   p_data->bad_rel_in_list = FALSE;

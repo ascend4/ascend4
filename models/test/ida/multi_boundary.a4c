@@ -1,0 +1,64 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_multi_boundary_same_direction;
+	y, ydot    IS_A generic_real;
+	sample, z  IS_A generic_real;
+	out1, out2 IS_A generic_real;
+	k1, k2     IS_A generic_real;
+	t          IS_A time;
+	switch1, switch2 IS_A boolean_var;
+
+	drive: ydot = 1;
+	observe: sample = y;
+	link: z = 2 * y;
+	off1: out1 = 0;
+	on1:  out1 = 1;
+	off2: out2 = 0;
+	on2:  out2 = 1;
+
+CONDITIONAL
+	c1: y >= k1;
+	c2: z >= k2;
+END CONDITIONAL;
+
+	switch1 == SATISFIED(c1, 1e-8);
+	switch2 == SATISFIED(c2, 1e-8);
+
+WHEN(switch1)
+	CASE TRUE:
+		USE on1;
+	CASE FALSE:
+		USE off1;
+END WHEN;
+
+WHEN(switch2)
+	CASE TRUE:
+		USE on2;
+	CASE FALSE:
+		USE off2;
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		FIX k1, k2;
+		k1 := 1;
+		k2 := 2;
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		z := 0;
+		out1 := 0;
+		out2 := 0;
+		t := 0 {s};
+		switch1 := FALSE;
+		switch2 := FALSE;
+	END values;
+END ida_multi_boundary_same_direction;

@@ -241,11 +241,17 @@ const struct when_case g_case_defaults = {
    NULL,		/* relations */
    NULL,		/* logrelations */
    NULL,		/* whens */
+   NULL,                /* reinits */
    -1,                  /* case number */
    -1,                  /* number relations */
    -1,                  /* number vars */
    NULL,                /* master indeces of incidente vars */
    (0x0)
+};
+
+static const struct when_reinit g_when_reinit_defaults = {
+  NULL,
+  NULL
 };
 
 
@@ -266,6 +272,39 @@ struct when_case *when_case_create(struct when_case *newcase){
   return(newcase);
 }
 
+struct when_reinit *when_reinit_create(struct when_reinit *newreinit){
+  if(newreinit == NULL){
+    newreinit = (struct when_reinit *)ascmalloc(sizeof(struct when_reinit));
+  }
+  *newreinit = g_when_reinit_defaults;
+  return newreinit;
+}
+
+void when_reinit_destroy(struct when_reinit *wr){
+  if(wr == NULL)return;
+  ascfree((POINTER)wr);
+}
+
+SlvBackendToken when_reinit_target(const struct when_reinit *wr){
+  assert(wr);
+  return wr->target;
+}
+
+void when_reinit_set_target(struct when_reinit *wr, SlvBackendToken target){
+  assert(wr);
+  wr->target = target;
+}
+
+const struct Expr *when_reinit_rhs(const struct when_reinit *wr){
+  assert(wr);
+  return wr->rhs;
+}
+
+void when_reinit_set_rhs(struct when_reinit *wr, const struct Expr *rhs){
+  assert(wr);
+  wr->rhs = rhs;
+}
+
 
 void when_case_destroy(struct when_case *wc){
    if (wc->rels != NULL) {
@@ -279,6 +318,15 @@ void when_case_destroy(struct when_case *wc){
    if (wc->whens != NULL ) {
      gl_destroy(wc->whens);
      wc->whens = NULL;
+   }
+   if (wc->reinits != NULL ) {
+     unsigned long i, len = gl_length(wc->reinits);
+     for(i = 1; i <= len; ++i){
+       struct when_reinit *wr = (struct when_reinit *)gl_fetch(wc->reinits, i);
+       when_reinit_destroy(wr);
+     }
+     gl_destroy(wc->reinits);
+     wc->reinits = NULL;
    }
    if (wc->ind_inc != NULL ) {
      ascfree(wc->ind_inc);
@@ -340,6 +388,16 @@ struct gl_list_t *when_case_whens_list( struct when_case *wc){
 void when_case_set_whens_list( struct when_case *wc, struct gl_list_t *wlist){
    assert(wc);
    wc->whens = wlist;
+}
+
+struct gl_list_t *when_case_reinits_list(struct when_case *wc){
+   assert(wc);
+   return wc->reinits;
+}
+
+void when_case_set_reinits_list(struct when_case *wc, struct gl_list_t *rlist){
+   assert(wc);
+   wc->reinits = rlist;
 }
 
 
@@ -423,5 +481,4 @@ void when_case_set_flagbit(struct when_case *wc, uint32 field,
     wc->flags &= ~field;
   }
 }
-
 

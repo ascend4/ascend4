@@ -31,6 +31,8 @@
 
 #include "slv_types.h"
 
+struct Expr;
+
 /**	@addtogroup system_cond
 	@{
 */
@@ -268,12 +270,25 @@ struct when_case {
   struct gl_list_t *rels;         /**< pointer to relations */
   struct gl_list_t *logrels;      /**< pointer to logrelations */
   struct gl_list_t *whens;        /**< pointer to whens */
+  struct gl_list_t *reinits;      /**< pointer to REINIT actions */
   int32 case_number;              /**< number of case */
   int32 num_rels;                 /**< number of relations */
   int32 num_inc_var;              /**< number of incident variables */
   int32 *ind_inc;                 /**< master indeces of incidences */
   uint32 flags;                   /**< flags ?? */
 };
+
+struct when_reinit {
+  SlvBackendToken target;         /**< resolved target instance */
+  const struct Expr *rhs;         /**< RHS expression evaluated at event time */
+};
+
+extern struct when_reinit *when_reinit_create(struct when_reinit *newreinit);
+extern void when_reinit_destroy(struct when_reinit *wr);
+extern SlvBackendToken when_reinit_target(const struct when_reinit *wr);
+extern void when_reinit_set_target(struct when_reinit *wr, SlvBackendToken target);
+extern const struct Expr *when_reinit_rhs(const struct when_reinit *wr);
+extern void when_reinit_set_rhs(struct when_reinit *wr, const struct Expr *rhs);
 
 extern struct when_case *when_case_create(struct when_case *newcase);
 /**<
@@ -317,6 +332,14 @@ extern void when_case_set_whens_list( struct when_case *wc,
                                       struct gl_list_t *wlist);
 /**<
  *  Sets the list of whens nested in the given case.
+ */
+
+extern struct gl_list_t *when_case_reinits_list(struct when_case *wc);
+/**< Retrieves the list of REINIT actions of the given case. */
+extern void when_case_set_reinits_list(struct when_case *wc,
+                                       struct gl_list_t *rlist);
+/**<
+ *  Sets the list of REINIT actions of the given case.
  */
 
 extern int32 when_case_case_number(struct when_case *wc);
@@ -422,4 +445,3 @@ extern void when_case_set_flagbit(struct when_case *wc,
 /* @} */
 
 #endif  /* ASC_CONDITIONAL_H */
-

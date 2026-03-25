@@ -128,6 +128,7 @@ enum stat_t {
   COND,         /**< CONDITIONAL statement */
   WBTS,         /**< WILL_BE_THE_SAME */
   WNBTS,        /**< WILL_NOT_BE_THE_SAME */
+  REINIT,       /**< REINIT statement */
   TABLESTAT,    /**< TABLE statement */
   DATASETSTAT,  /**< DATASET statement */
   WILLBE        /**< WILL_BE */
@@ -289,6 +290,12 @@ struct StateARE {
 
 /** used for assignment :==,:= statements */
 struct StateAssign {
+  struct Name *nptr;
+  struct Expr *rhs;
+};
+
+/** used for event-time state reinitialisation statements */
+struct StateReinit {
   struct Name *nptr;
   struct Expr *rhs;
 };
@@ -520,6 +527,7 @@ union StateUnion {
   struct StateIS         i;
   struct StateARE        a;
   struct StateAssign     asgn;
+  struct StateReinit     reinit;
   struct StateRelation   rel;
   struct StateLogicalRel lrel;
   struct StateFOR        f;

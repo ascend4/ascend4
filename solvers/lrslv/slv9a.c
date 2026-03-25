@@ -986,18 +986,31 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
     }
   }
 
-  /* stick the boundary to be toggled onto per_insts. Should only be 1 instance
-   * in the list, i.e only single boundary crossings (for the moment....) */
+  /* Stick crossed boundaries onto per_insts for IDA-triggered reconfiguration.
+   * At present we support simultaneous crossings only when they all imply the
+   * same target truth value. Mixed TRUE/FALSE target sets need a richer API
+   * than the current single 'per_value' perturb mode.
+   */
   if (WITH_IDA) {
 		numbnds = slv_get_num_solvers_bnds(server);
 		for (nb = 0; nb < numbnds; nb++) {
 			cur_bnd = blist[nb];
 			if (bnd_ida_crossed(cur_bnd)) {
-				per_insts = gl_create(1);
-				if(bnd_ida_value(cur_bnd)) {
-					per_value = 2;
-				} else {
-					per_value = 3;
+				int cur_value = bnd_ida_value(cur_bnd) ? 2 : 3;
+				if(per_insts == NULL){
+					per_insts = gl_create(numbnds);
+					per_value = cur_value;
+				}else if(per_value != cur_value){
+					ERROR_REPORTER_HERE(ASC_USER_ERROR,
+						"Simultaneous boundary crossings with mixed target truth values are not supported.");
+					if(per_insts != NULL){
+						gl_destroy(per_insts);
+					}
+					per_insts = NULL;
+					sys->s.inconsistent = TRUE;
+					iteration_ends(sys);
+					update_status(sys);
+					return 8;
 				}
 
 				if (bnd_kind(cur_bnd) == e_bnd_rel) {
@@ -1169,4 +1182,3 @@ static const SlvFunctionsT slv9a_internals = {
 int lrslv_register(void){
 	return solver_register(&slv9a_internals);
 }
-

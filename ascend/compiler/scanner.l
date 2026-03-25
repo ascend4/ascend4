@@ -290,6 +290,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"POSITIONAL"		{ return POSITIONAL_TOK		; }
 <INITIAL>"RATIO"		{ return RATIO_TOK		; }
 <INITIAL>"REFINES"		{ return REFINES_TOK		; }
+<INITIAL>"REINIT"		{ return REINIT_TOK		; }
 <INITIAL>"REPLACE"		{ return REPLACE_TOK		; }
 <INITIAL>"REQUIRE"		{ return REQUIRE_TOK		; }
 <INITIAL>"RETURN"		{ return RETURN_TOK		; }

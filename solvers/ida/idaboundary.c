@@ -9,11 +9,13 @@
 #include <stdio.h>
 
 #include <ascend/general/platform.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/panic.h>
 
 #include <ascend/solver/solver.h>
 
+#include <ascend/system/conditional.h>
 #include <ascend/system/slv_client.h>
 #include <ascend/system/cond_config.h>
 #include <ascend/system/discrete.h>
@@ -114,6 +116,7 @@ void ida_setup_lrslv(IntegratorSystem *integ) {
 }
 
 int ida_bnd_reanalyse(IntegratorSystem *integ){
+	IntegratorIdaData *enginedata;
 
 	if (integ->y_id != NULL) {
 		ASC_FREE(integ->y_id);
@@ -141,8 +144,38 @@ int ida_bnd_reanalyse(IntegratorSystem *integ){
 
 
 	integrator_ida_analyse(integ);
+	enginedata = integrator_ida_enginedata(integ);
+	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
+	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
 
 	return 0;
+}
+
+int ida_bnd_postreinit_iterate(IntegratorSystem *integ){
+	slv_status_t status;
+	int iter;
+	const int max_iter = 20;
+
+	for(iter = 0; iter < max_iter; ++iter){
+		slv_presolve(integ->system);
+		slv_solve(integ->system);
+		slv_get_status(integ->system, &status);
+		if(!status.converged){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Non-convergence in logical solver during post-REINIT event iteration");
+			return 1;
+		}
+		if(!some_dis_vars_changed(integ->system)){
+			return 0;
+		}
+		if(ida_bnd_reanalyse(integ) != 0){
+			return 1;
+		}
+	}
+
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,
+		"Post-REINIT event iteration did not converge");
+	return 1;
 }
 
 int ida_bnd_update_relist(IntegratorSystem *integ){
@@ -243,15 +276,19 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	IntegratorIdaData *enginedata;
 	slv_status_t status;
 
-	struct bnd_boundary *bnd = NULL;
 	int i, num_bnds;
+	int any_crossed = 0;
 
 	/* Flag the crossed boundary and update bnd_cond_states */
 	enginedata = integ->enginedata;
 	num_bnds = enginedata->nbnds;
 	for (i = 0; i < num_bnds; i++) {
 		if (rootsfound[i]) {
-			integrator_output_write(integ);
+			struct bnd_boundary *bnd;
+			if(!any_crossed){
+				integrator_output_write(integ);
+				any_crossed = 1;
+			}
 			bnd = enginedata->bndlist[i];
 			bnd_set_ida_crossed(bnd, 1);
 
@@ -263,7 +300,6 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 				bnd_set_ida_value(bnd, 0);
 				bnd_cond_states[i] = 0;
 			}
-			break;
 		}
 	}
 
@@ -279,8 +315,11 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	}
 
 	/* Reset the boundary flag */
-	if(bnd != NULL){
-		bnd_set_ida_crossed(bnd, 0);
+	for (i = 0; i < num_bnds; i++) {
+		if (rootsfound[i]) {
+			struct bnd_boundary *bnd = enginedata->bndlist[i];
+			bnd_set_ida_crossed(bnd, 0);
+		}
 	}
 
 	/* update the main system if required */

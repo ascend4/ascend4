@@ -29,13 +29,19 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/derivinst.h>
+#include <ascend/compiler/evaluate.h>
+#include <ascend/compiler/find.h>
 #include <ascend/compiler/instquery.h>
+#include <ascend/compiler/relerr.h>
+#include <ascend/compiler/value_type.h>
 #include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/when_util.h>
 
 
 #include <ascend/system/slv_common.h>
+#include <ascend/system/conditional.h>
 #include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/slv_client.h>
 #include <ascend/system/block.h>
 #include <ascend/system/diffvars.h>
 
@@ -81,7 +87,7 @@ static int integrator_report_initial_status_failure(const slv_status_t *status, 
  * These should be supported directly in a future solveratominst.
  */
 
-static symchar *g_symbols[3];
+static symchar *g_symbols[4];
 
 #define STATEFLAG g_symbols[0]
 /*
@@ -101,6 +107,8 @@ static symchar *g_symbols[3];
 /* Integer child. All variables with OBSINDEX !=0 will be sent to the
 	IntegratorOutputWriteObsFn allowing output to a file, graph, console, etc.
  */
+#define DISCRETEFLAG g_symbols[3]
+/* Boolean child. TRUE means the real atom is event-memory and fixed between events. */
 
 
 /** Temporary catcher of dynamic variable and observation variable data */
@@ -225,6 +233,189 @@ static void IntegInitSymbols(void){
 	STATEFLAG = AddSymbol("ode_type");
 	STATEINDEX = AddSymbol("ode_id");
 	OBSINDEX = AddSymbol("obs_id");
+	DISCRETEFLAG = AddSymbol("discrete");
+}
+
+typedef struct IntegratorPreValueEntry{
+	const struct Instance *inst;
+	double value;
+	const dim_type *dims;
+} IntegratorPreValueEntry;
+
+typedef struct IntegratorPreSnapshot{
+	IntegratorSystem *sys;
+	IntegratorPreValueEntry *entries;
+	unsigned long nentries;
+} IntegratorPreSnapshot;
+
+static void integrator_pre_snapshot_destroy(IntegratorPreSnapshot *snapshot){
+	if(snapshot->entries != NULL){
+		ASC_FREE(snapshot->entries);
+		snapshot->entries = NULL;
+	}
+	snapshot->nentries = 0;
+}
+
+static int integrator_pre_snapshot_contains(const IntegratorPreSnapshot *snapshot, const struct Instance *inst){
+	unsigned long i;
+	for(i = 0; i < snapshot->nentries; ++i){
+		if(snapshot->entries[i].inst == inst){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int integrator_pre_snapshot_build(IntegratorPreSnapshot *snapshot, IntegratorSystem *sys){
+	struct var_variable **vars;
+	unsigned long i, nvars, capacity;
+	const struct Instance *xinst = NULL;
+
+	snapshot->sys = sys;
+	snapshot->entries = NULL;
+	snapshot->nentries = 0;
+
+	nvars = (unsigned long)slv_get_num_master_vars(sys->system);
+	capacity = nvars + 1;
+	snapshot->entries = ASC_NEW_ARRAY(IntegratorPreValueEntry, capacity);
+	vars = slv_get_master_var_list(sys->system);
+	for(i = 0; i < nvars; ++i){
+		const struct Instance *inst = (const struct Instance *)var_instance(vars[i]);
+		snapshot->entries[snapshot->nentries].inst = inst;
+		snapshot->entries[snapshot->nentries].value = var_value(vars[i]);
+		snapshot->entries[snapshot->nentries].dims = RealAtomDims((struct Instance *)inst);
+		++snapshot->nentries;
+	}
+	if(sys->x != NULL){
+		xinst = (const struct Instance *)var_instance(sys->x);
+		if(xinst != NULL && !integrator_pre_snapshot_contains(snapshot, xinst)){
+			snapshot->entries[snapshot->nentries].inst = xinst;
+			snapshot->entries[snapshot->nentries].value = var_value(sys->x);
+			snapshot->entries[snapshot->nentries].dims = RealAtomDims((struct Instance *)xinst);
+			++snapshot->nentries;
+		}
+	}
+	return 0;
+}
+
+static const IntegratorPreValueEntry *integrator_pre_snapshot_lookup(const IntegratorPreSnapshot *snapshot, const struct Instance *inst){
+	unsigned long i;
+	for(i = 0; i < snapshot->nentries; ++i){
+		if(snapshot->entries[i].inst == inst){
+			return snapshot->entries + i;
+		}
+	}
+	return NULL;
+}
+
+static struct value_t integrator_evaluate_pre_name(const struct Name *nptr, void *userdata){
+	IntegratorPreSnapshot *snapshot = (IntegratorPreSnapshot *)userdata;
+	struct gl_list_t *instances;
+	struct Instance *inst;
+	struct Instance *context;
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+	const IntegratorPreValueEntry *entry;
+
+	if(GetEvaluationContext() == NULL){
+		return CreateErrorValue(incorrect_name);
+	}
+
+	context = GetEvaluationContext();
+	SetEvaluationContext(NULL);
+	instances = FindInstances(context, nptr, &err);
+	SetEvaluationContext(context);
+	if(instances == NULL || gl_length(instances) != 1){
+		if(instances != NULL)gl_destroy(instances);
+		return CreateErrorValue(incorrect_name);
+	}
+
+	inst = (struct Instance *)gl_fetch(instances, 1);
+	gl_destroy(instances);
+
+	switch(InstanceKind(inst)){
+	case REAL_ATOM_INST:
+	case REAL_CONSTANT_INST:
+		entry = integrator_pre_snapshot_lookup(snapshot, inst);
+		if(entry != NULL){
+			return CreateRealValue(entry->value, entry->dims, 0);
+		}
+		return CreateRealValue(RealAtomValue(inst), RealAtomDims(inst), 0);
+	default:
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"pre(...) currently requires a real-valued variable reference");
+		return CreateErrorValue(type_conflict);
+	}
+}
+
+static int integrator_reinit_target_is_state(const IntegratorSystem *sys, const struct Instance *inst){
+	struct Instance *flag;
+	long i;
+
+	flag = inst != NULL ? ChildByChar((struct Instance *)inst, DISCRETEFLAG) : NULL;
+	if(flag != NULL && GetBooleanAtomValue(flag)){
+		return 1;
+	}
+	for(i = 0; i < sys->n_y; ++i){
+		if(sys->y[i] != NULL && (const struct Instance *)var_instance(sys->y[i]) == inst){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance *context,
+		struct gl_list_t *reinit_list, IntegratorPreSnapshot *snapshot){
+	unsigned long i, len;
+
+	if(reinit_list == NULL){
+		return 0;
+	}
+
+	len = gl_length(reinit_list);
+	for(i = 1; i <= len; ++i){
+		struct when_reinit *wr = (struct when_reinit *)gl_fetch(reinit_list, i);
+		struct Instance *target;
+		struct value_t value;
+
+		if(wr == NULL){
+			continue;
+		}
+
+		target = (struct Instance *)when_reinit_target(wr);
+		if(target == NULL){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to resolve REINIT target");
+			return 1;
+		}
+		if(!integrator_reinit_target_is_state(sys, target)){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,
+				"Phase 1B REINIT target must be a continuous state variable or discrete real");
+			return 1;
+		}
+
+		asc_assert(GetEvaluationContext() == NULL);
+		SetEvaluationContext(context);
+		SetEvaluationPreNameFn(integrator_evaluate_pre_name, snapshot);
+		value = EvaluateExpr((struct Expr *)when_reinit_rhs(wr), NULL, InstanceEvaluateName);
+		SetEvaluationPreNameFn(NULL, NULL);
+		SetEvaluationContext(NULL);
+
+		switch(value.t){
+		case real_value:
+			SetRealAtomValue(target, RealValue(value), 0);
+			break;
+		case integer_value:
+			SetRealAtomValue(target, (double)IntegerValue(value), 0);
+			break;
+		default:
+			DestroyValue(&value);
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,
+				"Unable to evaluate REINIT expression");
+			return 1;
+		}
+		DestroyValue(&value);
+	}
+
+	return 0;
 }
 
 /*------------------------------------------------------------------------------
@@ -867,6 +1058,14 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   }
   MSG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
 
+  if(slv_get_num_solvers_bnds(sys->system) > 0 || slv_get_num_solvers_whens(sys->system) > 0){
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+      "LSODE does not support CONDITIONAL/WHEN event handling or REINIT."
+      " Use IDA for hybrid/evented models."
+    );
+    return 2;
+  }
+
   MSG("Starting ODE analysis");
   IntegInitSymbols();
 
@@ -1207,7 +1406,13 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 
 	asc_assert(var != NULL && var_instance(var)!=NULL );
 
-	if( var_apply_filter(var,&vfilt) ) {
+  if( var_apply_filter(var,&vfilt) ) {
+		if(var_discrete(var)){
+			if(ObservationVar(var,&index) != NULL && index > 0L) {
+				INTEG_ADD_TO_LIST(info,0L,index,var,varindx,sys->obslist);
+			}
+			return;
+		}
 		if(!var_active(var)){
 			MSG("VARIABLE IS NOT ACTIVE");
 			return;
@@ -1264,6 +1469,12 @@ void integrator_ode_classify_var(IntegratorSystem *sys, struct var_variable *var
   asc_assert(var != NULL && var_instance(var)!=NULL );
 
   if( var_apply_filter(var,&vfilt) ) {
+	if(var_discrete(var)){
+		if(ObservationVar(var,&index) != NULL && index > 0L) {
+			INTEG_ADD_TO_LIST(info,0L,index,var,varindx,sys->obslist);
+		}
+		return;
+	}
 	/* it's a solver var: what type of variable? */
     type = DynamicVarInfo(var,&index,sys);
 
@@ -1312,6 +1523,9 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 #endif
 
 	if( var_apply_filter(var,&vfilt) ) {
+		if(var_discrete(var)){
+			return;
+		}
 		type = DynamicVarInfo(var,&index,sys);
 
 		if(type==INTEG_OTHER_VAR){
@@ -1730,6 +1944,67 @@ int integrator_debug(const IntegratorSystem *sys, FILE *fp){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Integrator '%s' defines no write_matrix function.",sys->internals->name);
 		return -1;
 	}
+}
+
+int integrator_apply_reinits(IntegratorSystem *sys){
+	struct w_when **whens;
+	int32 nwhens, w;
+	IntegratorPreSnapshot snapshot;
+	int applied = 0;
+
+	if(sys == NULL || sys->system == NULL){
+		return 0;
+	}
+
+	integrator_pre_snapshot_build(&snapshot, sys);
+	whens = slv_get_solvers_when_list(sys->system);
+	nwhens = slv_get_num_solvers_whens(sys->system);
+
+	for(w = 0; w < nwhens; ++w){
+		struct w_when *when = whens[w];
+		struct Instance *wheninst;
+		struct Instance *context;
+		struct gl_list_t *solver_cases;
+		unsigned long c, ncases;
+
+		if(when == NULL){
+			continue;
+		}
+
+		wheninst = (struct Instance *)when_instance(when);
+		if(wheninst == NULL){
+			continue;
+		}
+
+		context = InstanceParent(wheninst, 1);
+		if(context == NULL){
+			context = wheninst;
+		}
+
+		solver_cases = when_cases_list(when);
+		if(solver_cases == NULL){
+			continue;
+		}
+
+		ncases = gl_length(solver_cases);
+		for(c = 1; c <= ncases; ++c){
+			struct when_case *solver_case = (struct when_case *)gl_fetch(solver_cases, c);
+			if(solver_case != NULL && when_case_active(solver_case)){
+				struct gl_list_t *reinit_list = when_case_reinits_list(solver_case);
+				if(reinit_list != NULL){
+					applied += (int)gl_length(reinit_list);
+				}
+				if(integrator_apply_case_reinits(sys, context,
+						reinit_list, &snapshot) != 0){
+					integrator_pre_snapshot_destroy(&snapshot);
+					return -1;
+				}
+			}
+		}
+	}
+
+	integrator_pre_snapshot_destroy(&snapshot);
+	return applied;
 }
 
 /*----------------------------------------------------

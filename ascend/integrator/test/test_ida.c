@@ -309,6 +309,104 @@ static void test_integ1(){
 	ida_cleanup(&testsys);
 }
 
+static void test_reinit_reflect(){
+	IdaTestSystem testsys;
+	struct Instance *root, *iy, *iv, *it, *itlast;
+	int i;
+
+	if(ida_test_load("test/ida/reinit.a4c", "ida_reinit_reflect", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	iy = ida_child(root, "y");
+	iv = ida_child(root, "v");
+	it = ida_child(root, "t");
+	itlast = ida_child(root, "t_last_event");
+
+	for(i = 0; i < testsys.integ->n_y; ++i){
+		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != itlast);
+	}
+
+	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(iv) - 1.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(itlast) - 1.0) < 5e-5);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_reinit_discrete_sawtooth(){
+	IdaTestSystem testsys;
+	struct Instance *root, *it, *iy, *isample, *iperiod, *itlast;
+	int i;
+
+	if(ida_test_load("test/ida/reinit_discrete.a4c", "ida_reinit_discrete_sawtooth", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 4.0, 80);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	it = ida_child(root, "t");
+	iy = ida_child(root, "y");
+	isample = ida_child(root, "sample");
+	iperiod = ida_child(root, "period");
+	itlast = ida_child(root, "t_last_event");
+
+	for(i = 0; i < testsys.integ->n_y; ++i){
+		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != iperiod);
+		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != itlast);
+	}
+
+	CU_TEST(fabs(RealAtomValue(it) - 4.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 1.5) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 1.5) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(iperiod) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(itlast) - 2.5) < 5e-5);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_multi_boundary_same_direction(){
+	IdaTestSystem testsys;
+	struct Instance *root, *it, *iy, *iout1, *iout2, *isw1, *isw2;
+
+	if(ida_test_load("test/ida/multi_boundary.a4c", "ida_multi_boundary_same_direction", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 1.2, 24);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	it = ida_child(root, "t");
+	iy = ida_child(root, "y");
+	iout1 = ida_child(root, "out1");
+	iout2 = ida_child(root, "out2");
+	isw1 = ida_child(root, "switch1");
+	isw2 = ida_child(root, "switch2");
+
+	CU_TEST(fabs(RealAtomValue(it) - 1.2) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 1.2) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(iout1) - 1.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(iout2) - 1.0) < 5e-5);
+	CU_TEST(GetBooleanAtomValue(isw1));
+	CU_TEST(GetBooleanAtomValue(isw2));
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
 static void test_high_index(){
 	IdaTestSystem testsys;
 
@@ -333,7 +431,10 @@ static void test_pantelides_pendulum_high_index(){
 	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
 	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
 	CU_ASSERT_PTR_NOT_NULL(strstr(report, "eq5:"));
-	CU_ASSERT_PTR_NOT_NULL(strstr(report, "No differentiations were suggested"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "vx represents der(x) via eq1"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "vy represents der(y) via eq2"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Differentiate eq5"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Differentiate d/dt(eq5)"));
 	free(report);
 	ida_cleanup(&testsys);
 }
@@ -351,7 +452,7 @@ static void test_pantelides_reactor_high_index(){
 	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
 	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
 	CU_ASSERT_PTR_NOT_NULL(strstr(report, "input_constraint"));
-	CU_ASSERT_PTR_NOT_NULL(strstr(report, "No differentiations were suggested"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Advisory analysis limit reached"));
 	free(report);
 	ida_cleanup(&testsys);
 }
@@ -479,6 +580,9 @@ static void test_initial_alias_binding_bug(){
 	T(shm) \
 	T(boundary) \
 	T(integ1) \
+	T(reinit_reflect) \
+	T(reinit_discrete_sawtooth) \
+	T(multi_boundary_same_direction) \
 	T(high_index) \
 	T(pantelides_pendulum_high_index) \
 	T(pantelides_reactor_high_index) \
