@@ -1,0 +1,38 @@
+REQUIRE "atoms.a4l";
+
+MODEL reinitignore;
+
+	x IS_A factor;
+	bol IS_A boolean_var;
+
+CONDITIONAL
+	cond: x >= 0;
+END CONDITIONAL;
+
+	bol == SATISFIED(cond, 1e-8);
+
+	pos: x = 1;
+	neg: x = -1;
+
+WHEN (bol)
+	CASE TRUE:
+		USE pos;
+		REINIT(x, pre(x));
+	CASE FALSE:
+		USE neg;
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		x := 1;
+		bol := SATISFIED(cond, 1e-8);
+	END values;
+
+	METHOD self_test;
+		ASSERT abs(x - 1) < 1e-12;
+	END self_test;
+END reinitignore;

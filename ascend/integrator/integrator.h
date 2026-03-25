@@ -330,6 +330,8 @@ ASC_DLLSPEC int integrator_apply_reinits(IntegratorSystem *blsys);
 /**<
 	Apply active REINIT actions after event/WHEN reconfiguration and before
 	the engine performs any consistent restart calculations.
+
+	@return number of REINIT actions applied, or `-1` on error.
 */
 
 ASC_DLLSPEC void integrator_free(IntegratorSystem *blsys);

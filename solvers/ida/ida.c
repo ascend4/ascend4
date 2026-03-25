@@ -57,6 +57,7 @@
 #include <ascend/compiler/packages.h>
 
 #include <ascend/system/slv_client.h>
+#include <ascend/system/bndman.h>
 #include <ascend/system/relman.h>
 #include <ascend/system/block.h>
 #include <ascend/system/slv_stdcalls.h>
@@ -1014,6 +1015,8 @@ int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem,
 	/* calculate initial conditions */
 	ida_setup_IC(integ, ida_mem, tout1, t0, y0, yp0);
 
+	ida_root_init(integ, ida_mem);
+
 	/* Clean up */
 	N_VDestroy_Serial(y0);
 	N_VDestroy_Serial(yp0);
@@ -1043,6 +1046,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	int *rootsfound;			/** < IDA rootfinder reports root index in here */
 	int *rootdir;				/** < Used to tell IDA to ignore doulve crossings */
+	int *crossed_to_state;		/** < Boundary truth states immediately after the crossing */
 	int *bnd_cond_states;		/** < Record of boundary states so that IDA can tell LRSlv
 									   how to evaluate a boundary crossing */
 
@@ -1163,12 +1167,12 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 					/* Store the root index */
 					rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 					rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
+					crossed_to_state = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 
 					if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
 						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
 						return 14;
 					}
-
 #ifdef SOLVE_DEBUG
 					for (i = 0; i < enginedata->nbnds; i++) {
 
@@ -1185,10 +1189,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							bnd_cond_states);
 
 					if (need_to_reconfigure) {
-
-						if (ida_bnd_update_relist(integ) != 0) {
-							/* system not square, failure */
-							return 1;
+						int nreinits;
+						for(i = 0; i < enginedata->nbnds; ++i){
+							crossed_to_state[i] = bnd_cond_states[i];
 						}
 						MSG("Boundaries were crossed; "
 								"need to reinitialise solver...");
@@ -1199,7 +1202,19 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						 integrator_output_write(integ);
 						 integrator_output_write_obs(integ);
 
-						if (integrator_apply_reinits(integ) != 0) {
+						nreinits = integrator_apply_reinits(integ);
+						if (nreinits < 0) {
+							return 1;
+						}
+
+						if (nreinits > 0) {
+							if (ida_bnd_postreinit_iterate(integ) != 0) {
+								return 1;
+							}
+						}
+
+						if (ida_bnd_update_relist(integ) != 0) {
+							/* system not square, failure */
 							return 1;
 						}
 
@@ -1226,10 +1241,23 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						ypret = ida_bnd_new_zero_NV(integ, integ->n_y);
 
 #if SUNDIALS_VERSION_MAJOR >= 5
-						/* set rootdir to -1*rootsfound to set IDA
-						 * to ignore double crossings */
+						/* If the post-event state is still on a boundary, suppress
+						 * the just-seen crossing direction to avoid an immediate
+						 * double hit. Only do this when the post-event state is
+						 * still on the new side of the crossed boundary; if REINIT
+						 * has moved the system to the opposite side we must allow
+						 * the next same-direction crossing. */
 						for(i = 0; i < enginedata->nbnds; i++) {
-							rootdir[i] = -1*rootsfound[i];
+							bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+						}
+						for(i = 0; i < enginedata->nbnds; i++) {
+							int at_zero = bndman_calc_at_zero(enginedata->bndlist[i]);
+							if(rootsfound[i] != 0 && at_zero
+								&& bnd_cond_states[i] == crossed_to_state[i]){
+								rootdir[i] = -1 * rootsfound[i];
+							}else{
+								rootdir[i] = 0;
+							}
 						}
 
 						IDASetRootDirection(ida_mem, rootdir);
@@ -1238,6 +1266,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 					} /* need to reconfigure */
 					ASC_FREE(rootsfound);
 					ASC_FREE(rootdir);
+					ASC_FREE(crossed_to_state);
 				} /* IDA_ROOT_RETURN */
 			} /* nbnds */
 

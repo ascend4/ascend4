@@ -68,13 +68,13 @@ static int integrator_ida_check_diffindex(IntegratorSystem *integ);
 /* static int integrator_ida_rebuild_diffindex(IntegratorSystem *integ); */
 
 const var_filter_t integrator_ida_nonderiv = {
-	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV,
-	VAR_SVAR | VAR_ACTIVE | 0         | 0
+	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV | VAR_DISCRETE,
+	VAR_SVAR | VAR_ACTIVE | 0         | 0         | 0
 };
 
 const var_filter_t integrator_ida_deriv = {
-	VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | VAR_FIXED | VAR_DERIV,
-	VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | 0         | VAR_DERIV
+	VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | VAR_FIXED | VAR_DERIV | VAR_DISCRETE,
+	VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | 0         | VAR_DERIV | 0
 };
 
 const rel_filter_t integrator_ida_rel = {

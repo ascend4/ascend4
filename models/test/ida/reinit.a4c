@@ -19,7 +19,7 @@ MODEL ida_reinit_reflect;
 	k2      IS_A damping_coefficient;
 	e       IS_A fraction;
 
-	t       IS_A time;
+	t, t_last_event IS_A time;
 
 	switch  IS_A boolean_var;
 
@@ -41,6 +41,7 @@ WHEN(switch)
 	CASE TRUE:
 		USE contact;
 		REINIT(v, -e * pre(v));
+		REINIT(t_last_event, t);
 	CASE FALSE:
 		USE airborne;
 END WHEN;
@@ -49,6 +50,7 @@ METHODS
 	METHOD on_load;
 		RUN ode_init;
 		RUN values;
+		t_last_event.discrete := TRUE;
 	END on_load;
 
 	METHOD ode_init;
@@ -71,6 +73,7 @@ METHODS
 		v := -1 {m/s};
 		a := 0 {m/s^2};
 		t := 0 {s};
+		t_last_event := -1 {s};
 		switch := FALSE;
 	END values;
 END ida_reinit_reflect;

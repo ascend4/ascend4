@@ -87,7 +87,7 @@ static int integrator_report_initial_status_failure(const slv_status_t *status, 
  * These should be supported directly in a future solveratominst.
  */
 
-static symchar *g_symbols[3];
+static symchar *g_symbols[4];
 
 #define STATEFLAG g_symbols[0]
 /*
@@ -107,6 +107,8 @@ static symchar *g_symbols[3];
 /* Integer child. All variables with OBSINDEX !=0 will be sent to the
 	IntegratorOutputWriteObsFn allowing output to a file, graph, console, etc.
  */
+#define DISCRETEFLAG g_symbols[3]
+/* Boolean child. TRUE means the real atom is event-memory and fixed between events. */
 
 
 /** Temporary catcher of dynamic variable and observation variable data */
@@ -231,6 +233,7 @@ static void IntegInitSymbols(void){
 	STATEFLAG = AddSymbol("ode_type");
 	STATEINDEX = AddSymbol("ode_id");
 	OBSINDEX = AddSymbol("obs_id");
+	DISCRETEFLAG = AddSymbol("discrete");
 }
 
 typedef struct IntegratorPreValueEntry{
@@ -345,7 +348,13 @@ static struct value_t integrator_evaluate_pre_name(const struct Name *nptr, void
 }
 
 static int integrator_reinit_target_is_state(const IntegratorSystem *sys, const struct Instance *inst){
+	struct Instance *flag;
 	long i;
+
+	flag = inst != NULL ? ChildByChar((struct Instance *)inst, DISCRETEFLAG) : NULL;
+	if(flag != NULL && GetBooleanAtomValue(flag)){
+		return 1;
+	}
 	for(i = 0; i < sys->n_y; ++i){
 		if(sys->y[i] != NULL && (const struct Instance *)var_instance(sys->y[i]) == inst){
 			return 1;
@@ -379,7 +388,7 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 		}
 		if(!integrator_reinit_target_is_state(sys, target)){
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,
-				"Phase 1A REINIT target must be a continuous state variable");
+				"Phase 1B REINIT target must be a continuous state variable or discrete real");
 			return 1;
 		}
 
@@ -1397,7 +1406,13 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 
 	asc_assert(var != NULL && var_instance(var)!=NULL );
 
-	if( var_apply_filter(var,&vfilt) ) {
+  if( var_apply_filter(var,&vfilt) ) {
+		if(var_discrete(var)){
+			if(ObservationVar(var,&index) != NULL && index > 0L) {
+				INTEG_ADD_TO_LIST(info,0L,index,var,varindx,sys->obslist);
+			}
+			return;
+		}
 		if(!var_active(var)){
 			MSG("VARIABLE IS NOT ACTIVE");
 			return;
@@ -1454,6 +1469,12 @@ void integrator_ode_classify_var(IntegratorSystem *sys, struct var_variable *var
   asc_assert(var != NULL && var_instance(var)!=NULL );
 
   if( var_apply_filter(var,&vfilt) ) {
+	if(var_discrete(var)){
+		if(ObservationVar(var,&index) != NULL && index > 0L) {
+			INTEG_ADD_TO_LIST(info,0L,index,var,varindx,sys->obslist);
+		}
+		return;
+	}
 	/* it's a solver var: what type of variable? */
     type = DynamicVarInfo(var,&index,sys);
 
@@ -1502,6 +1523,9 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 #endif
 
 	if( var_apply_filter(var,&vfilt) ) {
+		if(var_discrete(var)){
+			return;
+		}
 		type = DynamicVarInfo(var,&index,sys);
 
 		if(type==INTEG_OTHER_VAR){
@@ -1926,6 +1950,7 @@ int integrator_apply_reinits(IntegratorSystem *sys){
 	struct w_when **whens;
 	int32 nwhens, w;
 	IntegratorPreSnapshot snapshot;
+	int applied = 0;
 
 	if(sys == NULL || sys->system == NULL){
 		return 0;
@@ -1965,17 +1990,21 @@ int integrator_apply_reinits(IntegratorSystem *sys){
 		for(c = 1; c <= ncases; ++c){
 			struct when_case *solver_case = (struct when_case *)gl_fetch(solver_cases, c);
 			if(solver_case != NULL && when_case_active(solver_case)){
+				struct gl_list_t *reinit_list = when_case_reinits_list(solver_case);
+				if(reinit_list != NULL){
+					applied += (int)gl_length(reinit_list);
+				}
 				if(integrator_apply_case_reinits(sys, context,
-						when_case_reinits_list(solver_case), &snapshot) != 0){
+						reinit_list, &snapshot) != 0){
 					integrator_pre_snapshot_destroy(&snapshot);
-					return 1;
+					return -1;
 				}
 			}
 		}
 	}
 
 	integrator_pre_snapshot_destroy(&snapshot);
-	return 0;
+	return applied;
 }
 
 /*----------------------------------------------------

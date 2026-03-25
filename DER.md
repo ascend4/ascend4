@@ -686,6 +686,44 @@ parallel family of real atom types. A better direction is likely to be:
 This keeps the implementation closer to the existing `solver_var` machinery and
 avoids duplicating every measure/type into a new discrete-real family.
 
+Phase 1B now follows that direction in a minimal way:
+
+- `solver_var` carries a `discrete` boolean child, currently intended to be set
+  from methods such as `on_load`
+- discrete real variables are treated as fixed between events for solver
+  purposes
+- they are excluded from the continuous integrator state vectors
+- they may nevertheless be targeted by `REINIT(...)` so they can act as simple
+  real-valued event memory
+- IDA now carries a regression exercising repeated event-memory updates with a
+  lengthening-period sawtooth, which depends on reinitialising IDA rootfinding
+  state after each event restart
+- after applying `REINIT(...)`, IDA also needs a small post-reset logical
+  settling pass so that discrete variables and active cases are recomputed from
+  the post-event state before continuous integration resumes; this is a first
+  form of event iteration
+- simultaneous boundary crossings from different sources now need to be
+  treated as one combined logical event, not silently truncated to the first
+  crossed boundary reported by IDA
+- the current implementation now combines simultaneous crossings when they all
+  imply the same target truth value, but still rejects mixed TRUE/FALSE target
+  sets because LRSlv's current perturb interface only carries one target truth
+  mode for the whole solve
+
+Modelica and gPROMS both keep a semantic distinction here:
+
+- Modelica `reinit(x, expr)` is for continuous `Real` states, while ordinary
+  discrete/event-memory variables are updated directly in `when` equations
+- gPROMS `REINITIAL ... WITH ...` is likewise aimed at differential variables,
+  while other discontinuous value changes are handled through separate
+  mechanisms such as `REASSIGN`
+
+For ASCEND Phase 1B it is still reasonable to keep a single `REINIT(...)`
+surface form for both continuous-state resets and discrete real event-memory
+updates, provided the backend continues to distinguish those two target classes.
+This keeps the first implementation small, while leaving open the option of a
+cleaner split in surface syntax later if it proves worthwhile.
+
 Expression-level event generation, more in the style of Modelica, may also be
 desirable later. However, that should be treated as a future event-source layer
 above the same backend semantics; it is not required for Phase 1A.

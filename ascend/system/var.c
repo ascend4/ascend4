@@ -65,11 +65,12 @@
 #define NOMINAL_V g_strings[4]
 #define INTERFACE_V g_strings[5]
 #define ODEATOL_V g_strings[6]
+#define DISCRETE_V g_strings[7]
 
 /*
  * array of those symbol table entries we need.
  */
-static symchar * g_strings[7];
+static symchar * g_strings[8];
 
 SlvBackendToken var_instanceF(const struct var_variable *var)
 { if (var==NULL || var->ratom==NULL) {
@@ -304,6 +305,8 @@ void var_set_flagsF(struct var_variable *var, uint32 flags)
 uint32 var_fixed(struct var_variable *var)
 {
   struct Instance *c;
+  uint32 fixed;
+  uint32 discrete;
   if (var==NULL || var->ratom==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return FALSE;
@@ -314,13 +317,16 @@ uint32 var_fixed(struct var_variable *var)
     /* WriteInstance(stderr,IPTR(var->ratom)); */
     return FALSE;
   }
-  var_set_flagbit(var,VAR_FIXED,GetBooleanAtomValue(c));
-  return( GetBooleanAtomValue(c) );
+  fixed = GetBooleanAtomValue(c);
+  discrete = var_discrete(var);
+  var_set_flagbit(var,VAR_FIXED,fixed || discrete);
+  return fixed || discrete;
 }
 
 void var_set_fixed(struct var_variable *var, uint32 fixed)
 {
   struct Instance *c;
+  uint32 discrete;
   if (var==NULL || var->ratom==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return;
@@ -332,7 +338,46 @@ void var_set_fixed(struct var_variable *var, uint32 fixed)
     return;
   }
   SetBooleanAtomValue(c,fixed,(unsigned)0);
-  var_set_flagbit(var,VAR_FIXED,fixed);
+  discrete = var_discrete(var);
+  var_set_flagbit(var,VAR_FIXED,fixed || discrete);
+}
+
+ASC_DLLSPEC uint32 var_discrete(struct var_variable *var)
+{
+  struct Instance *c;
+  if (var==NULL || var->ratom==NULL) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
+    return FALSE;
+  }
+  c = ChildByChar(IPTR(var->ratom),DISCRETE_V);
+  if( c == NULL ) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'discrete' field");
+    return FALSE;
+  }
+  var_set_flagbit(var,VAR_DISCRETE,GetBooleanAtomValue(c));
+  return GetBooleanAtomValue(c);
+}
+
+ASC_DLLSPEC void var_set_discrete(struct var_variable *var, uint32 discrete)
+{
+  struct Instance *c, *fixedc;
+  uint32 fixed = FALSE;
+  if (var==NULL || var->ratom==NULL) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
+    return;
+  }
+  c = ChildByChar(IPTR(var->ratom),DISCRETE_V);
+  if( c == NULL ) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'discrete' field");
+    return;
+  }
+  fixedc = ChildByChar(IPTR(var->ratom),FIXED_V);
+  if(fixedc != NULL){
+    fixed = GetBooleanAtomValue(fixedc);
+  }
+  SetBooleanAtomValue(c,discrete,(unsigned)0);
+  var_set_flagbit(var,VAR_DISCRETE,discrete);
+  var_set_flagbit(var,VAR_FIXED,fixed || discrete);
 }
 
 ASC_DLLSPEC uint32 var_relaxed(struct var_variable *var)
@@ -578,6 +623,7 @@ boolean set_solver_types(void) {
   FIXED_V = AddSymbol("fixed");
   INTERFACE_V = AddSymbol("interface");
   ODEATOL_V = AddSymbol("ode_atol");
+  DISCRETE_V = AddSymbol("discrete");
   return nerr;
 }
 

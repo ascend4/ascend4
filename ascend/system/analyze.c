@@ -117,7 +117,7 @@
   GLOBAL VARS
 */
 
-static symchar *g_strings[6];
+static symchar *g_strings[7];
 
 struct derivative_bind_data {
   struct Instance *root;
@@ -591,6 +591,7 @@ static void recover_bound_derivative_terms(struct Instance *inst, VOIDPTR userda
 #define DERIV_A g_strings[3]
 #define ODEID_A g_strings[4]
 #define OBSID_A g_strings[5]
+#define DISCRETE_A g_strings[6]
 
 /*
 	a bridge buffer used so much we aren't going to free it, just reuse it
@@ -1059,9 +1060,10 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     ip->u.v.index = 0;
     ip->u.v.active = 0;
     if(solver_var(inst)){
-	  //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
+      //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
-      ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
+      ip->u.v.discrete = BooleanChildValue(inst,DISCRETE_A);
+      ip->u.v.fixed = BooleanChildValue(inst,FIXED_A) || ip->u.v.discrete;
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
       ip->u.v.odeid = IntegerChildValue(inst,ODEID_A);
@@ -1089,11 +1091,11 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 	/* CONSOLE_DEBUG("Added to obsvars"); */
       	  }
 	/* make the algebraic/differential/derivative cut */
-	if(ip->u.v.odeid){
+	if(ip->u.v.odeid && !ip->u.v.discrete){
             gl_append_ptr(p_data->diffvars,(POINTER)ip);
 	/* CONSOLE_DEBUG("Added var to diffvars"); */
           }else{
-	if(ip->u.v.deriv==-1){
+	if(ip->u.v.deriv==-1 && !ip->u.v.discrete){
 		//printf("\n smth smth \n");
 		struct solver_ipdata *original_indep_var = NULL;
 		if(gl_length(p_data->indepvars) != 0) {
@@ -2549,6 +2551,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.incident)  flags |= VAR_INCIDENT;
     if(vip->u.v.in_block)  flags |= VAR_INBLOCK;
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
+    if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
     if(vip->u.v.deriv > 1) flags |= VAR_DERIV; /* so that we can do relman_diffs with just the ydot vars */
@@ -3320,6 +3323,7 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   DERIV_A = AddSymbol("ode_type");
   ODEID_A = AddSymbol("ode_id");
   OBSID_A = AddSymbol("obs_id");
+  DISCRETE_A = AddSymbol("discrete");
 
   p_data = &thisproblem;
   p_data->bad_rel_in_list = FALSE;
