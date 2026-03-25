@@ -88,7 +88,7 @@ static int integrator_report_initial_status_failure(const slv_status_t *status, 
  * These should be supported directly in a future solveratominst.
  */
 
-static symchar *g_symbols[4];
+static symchar *g_symbols[3];
 
 #define STATEFLAG g_symbols[0]
 /*
@@ -108,10 +108,6 @@ static symchar *g_symbols[4];
 /* Integer child. All variables with OBSINDEX !=0 will be sent to the
 	IntegratorOutputWriteObsFn allowing output to a file, graph, console, etc.
  */
-#define DISCRETEFLAG g_symbols[3]
-/* Boolean child. TRUE means the real atom is event-memory and fixed between events. */
-
-
 /** Temporary catcher of dynamic variable and observation variable data */
 struct Integ_var_t {
   long index;
@@ -234,7 +230,6 @@ static void IntegInitSymbols(void){
 	STATEFLAG = AddSymbol("ode_type");
 	STATEINDEX = AddSymbol("ode_id");
 	OBSINDEX = AddSymbol("obs_id");
-	DISCRETEFLAG = AddSymbol("discrete");
 }
 
 typedef struct IntegratorPreValueEntry{
@@ -348,16 +343,46 @@ static struct value_t integrator_evaluate_pre_name(const struct Name *nptr, void
 	}
 }
 
-static int integrator_reinit_target_is_state(const IntegratorSystem *sys, const struct Instance *inst){
-	struct Instance *flag;
-	long i;
+static struct var_variable *integrator_find_real_target(const IntegratorSystem *sys, const struct Instance *inst){
+	struct var_variable **vars;
+	struct var_variable **unas;
+	int32 nvars, i;
+	int32 nunas;
 
-	flag = inst != NULL ? ChildByChar((struct Instance *)inst, DISCRETEFLAG) : NULL;
-	if(flag != NULL && GetBooleanAtomValue(flag)){
-		return 1;
+	if(sys == NULL || sys->system == NULL || inst == NULL){
+		return NULL;
+	}
+
+	vars = slv_get_solvers_var_list(sys->system);
+	nvars = slv_get_num_solvers_vars(sys->system);
+	for(i = 0; i < nvars; ++i){
+		struct var_variable *var = vars[i];
+		if(var != NULL && (const struct Instance *)var_instance(var) == inst){
+			return var;
+		}
+	}
+
+	unas = slv_get_solvers_unattached_list(sys->system);
+	nunas = slv_get_num_solvers_unattached(sys->system);
+	for(i = 0; i < nunas; ++i){
+		struct var_variable *var = unas[i];
+		if(var != NULL && (const struct Instance *)var_instance(var) == inst){
+			return var;
+		}
+	}
+	return NULL;
+}
+
+static int integrator_reinit_target_is_diff_state(const IntegratorSystem *sys, const struct Instance *inst){
+	int i;
+
+	if(sys == NULL || inst == NULL){
+		return 0;
 	}
 	for(i = 0; i < sys->n_y; ++i){
-		if(sys->y[i] != NULL && (const struct Instance *)var_instance(sys->y[i]) == inst){
+		if(sys->y[i] != NULL
+			&& (const struct Instance *)var_instance(sys->y[i]) == inst
+			&& sys->ydot[i] != NULL){
 			return 1;
 		}
 	}
@@ -416,8 +441,10 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 		struct when_reinit *wr = (struct when_reinit *)gl_fetch(reinit_list, i);
 		struct Instance *target;
 		struct dis_discrete *dtarget;
+		struct var_variable *rtarget;
 		struct value_t value;
-		int target_is_real_state;
+		int target_is_diff_state;
+		int target_is_discrete_real;
 
 		if(wr == NULL){
 			continue;
@@ -432,11 +459,13 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 			return 1;
 		}
 		dtarget = integrator_find_discrete_target(sys, target);
-		target_is_real_state = integrator_reinit_target_is_state(sys, target);
-		if(!target_is_real_state
+		rtarget = integrator_find_real_target(sys, target);
+		target_is_diff_state = integrator_reinit_target_is_diff_state(sys, target);
+		target_is_discrete_real = (rtarget != NULL && var_discrete(rtarget));
+		if(!(target_is_diff_state || target_is_discrete_real)
 			&& !(dtarget != NULL && dis_kind(dtarget) == e_dis_boolean_t)){
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,
-				"Phase 1C REINIT target must be a continuous state variable, discrete real, or boolean discrete variable");
+				"REINIT target must be a differential state, inferred discrete real event-memory variable, or boolean discrete variable");
 			return 1;
 		}
 
@@ -447,7 +476,7 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 		SetEvaluationPreNameFn(NULL, NULL);
 		SetEvaluationContext(NULL);
 
-		if(target_is_real_state){
+		if(target_is_diff_state || target_is_discrete_real){
 			switch(value.t){
 			case real_value:
 				SetRealAtomValue(target, RealValue(value), 0);

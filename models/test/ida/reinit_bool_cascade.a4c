@@ -41,7 +41,6 @@ METHODS
 		y.ode_type := 1; ydot.ode_type := 2;
 		y.ode_id := 1;   ydot.ode_id := 1;
 		t.ode_type := -1;
-		stage.discrete := TRUE;
 		RUN values;
 	END on_load;
 

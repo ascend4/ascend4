@@ -50,7 +50,6 @@ METHODS
 	METHOD on_load;
 		RUN ode_init;
 		RUN values;
-		t_last_event.discrete := TRUE;
 	END on_load;
 
 	METHOD ode_init;

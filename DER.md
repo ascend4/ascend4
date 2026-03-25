@@ -675,26 +675,25 @@ For a first implementation, the following limits are sensible:
   canonical differential state set
 
 For the later event-memory extension, it is preferable not to create a third
-parallel family of real atom types. A better direction is likely to be:
+parallel family of real atom types. The current implementation therefore keeps
+the existing `IS_A` real-variable declarations and infers discrete real
+event-memory from `REINIT(...)` use during system analysis.
 
-- keep the existing `IS_A` variable declarations
-- add an extra classification flag on real atom instances for
-  discrete/event-memory behavior
-- filter such flagged variables out of continuous solver-variable/state lists
-  while still allowing them to store values between events
+Phase 1B now works as follows:
 
-This keeps the implementation closer to the existing `solver_var` machinery and
-avoids duplicating every measure/type into a new discrete-real family.
-
-Phase 1B now follows that direction in a minimal way:
-
-- `solver_var` carries a `discrete` boolean child, currently intended to be set
-  from methods such as `on_load`
-- discrete real variables are treated as fixed between events for solver
+- no explicit `.discrete := TRUE` flag is required on real atoms
+- a real `REINIT(...)` target is accepted as a continuous state if it is a
+  differential/integrator state
+- otherwise, if it is a real `solver_var` that is not part of the continuous
+  DAE relation set, it is inferred as a discrete real event-memory variable
+- inferred discrete reals are treated as fixed between events for solver
   purposes
 - they are excluded from the continuous integrator state vectors
 - they may nevertheless be targeted by `REINIT(...)` so they can act as simple
   real-valued event memory
+- real algebraic variables in ordinary equations are rejected explicitly as
+  `REINIT(...)` targets, because any such reset would only be an inconsistent
+  guess that the post-event DAE solve would immediately overwrite
 - IDA now carries a regression exercising repeated event-memory updates with a
   lengthening-period sawtooth, which depends on reinitialising IDA rootfinding
   state after each event restart
@@ -776,6 +775,15 @@ These examples are intended to be readable rather than merely minimal solver
 regressions, and they are also covered by IDA tests so they should remain
 executable.
 
+The regression coverage now also includes a small negative suite for the most
+likely incorrect uses of the current syntax:
+
+- `pre(...)` outside `REINIT(...)`, including in `CONDITIONAL` guards
+- `REINIT(...)` applied to algebraic real variables
+- `REINIT(...)` applied to the independent variable or derivative variables
+- `REINIT(...)` applied to unsupported integer targets
+- type-mismatched RHS expressions for real and boolean `REINIT(...)` targets
+
 Modelica and gPROMS both keep a semantic distinction here:
 
 - Modelica `reinit(x, expr)` is for continuous `Real` states, while ordinary
@@ -785,10 +793,11 @@ Modelica and gPROMS both keep a semantic distinction here:
   mechanisms such as `REASSIGN`
 
 For ASCEND Phase 1B it is still reasonable to keep a single `REINIT(...)`
-surface form for both continuous-state resets and discrete real event-memory
-updates, provided the backend continues to distinguish those two target classes.
-This keeps the first implementation small, while leaving open the option of a
-cleaner split in surface syntax later if it proves worthwhile.
+surface form for continuous-state resets, inferred discrete real event-memory
+updates, and boolean discrete updates, provided the backend continues to
+distinguish those target classes. This keeps the first implementation small,
+while leaving open the option of a cleaner split in surface syntax later if it
+proves worthwhile.
 
 Expression-level event generation, more in the style of Modelica, may also be
 desirable later. However, that should be treated as a future event-source layer
@@ -805,11 +814,11 @@ already extended `REINIT(...)` so it can update:
 
 - continuous real states
 - discrete real event-memory variables
+- boolean discrete variables
 
 What is still missing is true `REASSIGN`-like behavior for discrete non-real
 state:
 
-- boolean mode/state variables
 - integer selector variables
 - symbolic / enumerated selector variables
 

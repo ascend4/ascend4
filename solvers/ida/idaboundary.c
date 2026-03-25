@@ -159,7 +159,7 @@ int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1
 	const int max_iter = 20;
 	struct gl_list_t *applied_reinits;
 	int need_consistency = 1;
-	int need_logical_solve = 1;
+	int need_logical_solve = 0;
 
 	applied_reinits = gl_create(8);
 	if(applied_reinits == NULL){

@@ -99,11 +99,10 @@ METHODS
         RUN values;
 
         (*
-            `t_last_event` is a real-valued event-memory variable:
-            it is updated at events but excluded from the continuous state
-            vector during time integration.
+            `t_last_event` is inferred as a real-valued event-memory
+            variable because it is reinitialized at events but excluded from
+            the continuous DAE relation set.
         *)
-        t_last_event.discrete := TRUE;
     END on_load;
 
     METHOD ode_init;

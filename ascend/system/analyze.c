@@ -117,7 +117,7 @@
   GLOBAL VARS
 */
 
-static symchar *g_strings[7];
+static symchar *g_strings[6];
 
 struct derivative_bind_data {
   struct Instance *root;
@@ -591,7 +591,10 @@ static void recover_bound_derivative_terms(struct Instance *inst, VOIDPTR userda
 #define DERIV_A g_strings[3]
 #define ODEID_A g_strings[4]
 #define OBSID_A g_strings[5]
-#define DISCRETE_A g_strings[6]
+
+#define ANALYZE_REINIT_OTHER_VAR -1L
+#define ANALYZE_REINIT_ALGEBRAIC_VAR 0L
+#define ANALYZE_REINIT_STATE_VAR 1L
 
 /*
 	a bridge buffer used so much we aren't going to free it, just reuse it
@@ -612,6 +615,196 @@ struct gl_list_t *g_symbol_values_list = NULL;
 static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
                                  struct gl_list_t *, struct gl_list_t *);
 static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data);
+static int analyze_reinit_marks_discrete_real(struct problem_t *p_data, const struct Instance *inst);
+static int BooleanChildValue(struct Instance *i,symchar *sc);
+static int IntegerChildValue(struct Instance *i,symchar *sc);
+
+static int analyze_instance_in_list(struct gl_list_t *list, const struct Instance *inst){
+  unsigned long i, len;
+
+  if(list == NULL || inst == NULL){
+    return 0;
+  }
+
+  len = gl_length(list);
+  for(i = 1; i <= len; ++i){
+    if((const struct Instance *)gl_fetch(list, i) == inst){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static long analyze_real_target_role(struct problem_t *p_data, struct Instance *inst){
+  long deriv = 0;
+  long odeid = 0;
+  struct dynreg_entry *dyn;
+
+  if(inst == NULL || InstanceKind(inst) != REAL_ATOM_INST){
+    return ANALYZE_REINIT_ALGEBRAIC_VAR;
+  }
+
+  deriv = IntegerChildValue(inst, DERIV_A);
+  odeid = IntegerChildValue(inst, ODEID_A);
+  if(deriv == 0 && odeid == 0){
+    dyn = dynamic_registry_lookup(p_data, inst);
+    if(dyn != NULL){
+      deriv = dyn->deriv;
+      odeid = dyn->odeid;
+    }
+  }
+
+  if(deriv == ANALYZE_REINIT_OTHER_VAR){
+    return ANALYZE_REINIT_OTHER_VAR;
+  }
+  if(deriv == ANALYZE_REINIT_STATE_VAR && odeid != 0){
+    return ANALYZE_REINIT_STATE_VAR;
+  }
+  if(deriv > ANALYZE_REINIT_STATE_VAR){
+    return deriv;
+  }
+  return ANALYZE_REINIT_ALGEBRAIC_VAR;
+}
+
+static int analyze_real_target_has_continuous_relation(struct Instance *inst){
+  unsigned long i, len;
+
+  if(inst == NULL || InstanceKind(inst) != REAL_ATOM_INST){
+    return 0;
+  }
+
+  len = RelationsCount(inst);
+  for(i = 1; i <= len; ++i){
+    struct Instance *relinst = RelationsForAtom(inst, i);
+    const struct relation *rel;
+    if(relinst == NULL || InstanceKind(relinst) != REL_INST){
+      continue;
+    }
+    rel = GetInstanceRelationOnly(relinst);
+    if(rel != NULL && !RelationIsCond(rel)){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static int analyze_append_reinit_discrete_real(struct problem_t *p_data, struct Instance *target){
+  long role;
+  char *targetname = NULL;
+
+  if(p_data == NULL || target == NULL){
+    return 1;
+  }
+  if(InstanceKind(target) != REAL_ATOM_INST){
+    return 0;
+  }
+  if(!solver_var(target)){
+    targetname = WriteInstanceNameString(target, p_data->root);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "REINIT target '%s' must be a solver_var, boolean_var, or other supported discrete variable",
+      targetname);
+    ascfree(targetname);
+    return 1;
+  }
+
+  role = analyze_real_target_role(p_data, target);
+  if(role == ANALYZE_REINIT_STATE_VAR){
+    return 0;
+  }
+  if(role == ANALYZE_REINIT_OTHER_VAR || role > ANALYZE_REINIT_STATE_VAR){
+    targetname = WriteInstanceNameString(target, p_data->root);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "REINIT target '%s' must be a differential state or inferred discrete/event-memory variable, not an independent/derivative variable",
+      targetname);
+    ascfree(targetname);
+    return 1;
+  }
+  if(analyze_real_target_has_continuous_relation(target)){
+    targetname = WriteInstanceNameString(target, p_data->root);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "REINIT target '%s' is a real algebraic variable in ordinary equations; only differential states and event-memory reals are supported",
+      targetname);
+    ascfree(targetname);
+    return 1;
+  }
+
+  if(p_data->reinit_discretes == NULL){
+    p_data->reinit_discretes = gl_create(4L);
+    if(p_data->reinit_discretes == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory while inferring REINIT target classes.");
+      return 1;
+    }
+  }
+  if(!analyze_instance_in_list(p_data->reinit_discretes, target)){
+    gl_append_ptr(p_data->reinit_discretes, target);
+  }
+  return 0;
+}
+
+static void *analyze_collect_reinit_targets(struct Instance *inst, struct problem_t *p_data){
+  struct gl_list_t *cases;
+  struct Instance *context;
+  unsigned long c, nc;
+
+  if(p_data == NULL || inst == NULL || InstanceKind(inst) != WHEN_INST){
+    return NULL;
+  }
+
+  context = InstanceParent(inst, 1);
+  if(context == NULL){
+    context = inst;
+  }
+
+  cases = GetInstanceWhenCases(inst);
+  nc = cases != NULL ? gl_length(cases) : 0;
+  for(c = 1; c <= nc; ++c){
+    struct Case *cur_case = (struct Case *)gl_fetch(cases, c);
+    struct gl_list_t *src = GetCaseReinitStatements(cur_case);
+    unsigned long i, len = src != NULL ? gl_length(src) : 0;
+    for(i = 1; i <= len; ++i){
+      struct Statement *statement = (struct Statement *)gl_fetch(src, i);
+      struct gl_list_t *instances;
+      struct Instance *target;
+      REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+
+      if(statement == NULL || StatementType(statement) != REINIT){
+        continue;
+      }
+
+      instances = FindInstances(context, ReinitStatVar(statement), &err);
+      if(instances == NULL || gl_length(instances) != 1){
+        if(instances != NULL)gl_destroy(instances);
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "Unable to resolve REINIT target while analysing WHEN cases");
+        p_data->bad_rel_in_list = TRUE;
+        return NULL;
+      }
+
+      target = (struct Instance *)gl_fetch(instances, 1);
+      gl_destroy(instances);
+
+      if(analyze_append_reinit_discrete_real(p_data, target)){
+        p_data->bad_rel_in_list = TRUE;
+        return NULL;
+      }
+    }
+  }
+
+  return NULL;
+}
+
+static int analyze_infer_reinit_targets(struct problem_t *p_data){
+  if(p_data == NULL || p_data->root == NULL){
+    return 1;
+  }
+  VisitInstanceTreeTwo(p_data->root, (VisitTwoProc)analyze_collect_reinit_targets, TRUE, FALSE,
+                       (VOIDPTR)p_data);
+  return p_data->bad_rel_in_list ? 1 : 0;
+}
+
+static int analyze_reinit_marks_discrete_real(struct problem_t *p_data, const struct Instance *inst){
+  return analyze_instance_in_list(p_data != NULL ? p_data->reinit_discretes : NULL, inst);
+}
 
 /*------------------------------------------------------------------------------
   SOME STUFF WITH INTERFACE POINTERS
@@ -1062,7 +1255,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     if(solver_var(inst)){
       //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
-      ip->u.v.discrete = BooleanChildValue(inst,DISCRETE_A);
+      ip->u.v.discrete = analyze_reinit_marks_discrete_real(p_data, inst);
       ip->u.v.fixed = BooleanChildValue(inst,FIXED_A) || ip->u.v.discrete;
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
@@ -1772,6 +1965,7 @@ void analyze_free_lists(struct problem_t *p_data){
   ADUN(indepvars);
   ADUN(obsvars); /* observed variables */
   ADUN(dynbindrels);
+  ADUN(reinit_discretes);
   if(p_data->dynhiddeninsts != NULL){
     unsigned long i, len = gl_length(p_data->dynhiddeninsts);
     for(i = 1; i <= len; ++i){
@@ -2602,6 +2796,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     /* turn on appropriate ones */
     if(vip->u.v.incident)  flags |= VAR_INCIDENT;
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
+    if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
 	/* CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var); */
     /* others may be appropriate (PVAR) */
@@ -3278,6 +3473,7 @@ static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data){
     ip->u.v.basis = 1;
     ip->u.v.incident = 0;
     ip->u.v.in_block = 0;
+    ip->u.v.discrete = 0;
     ip->u.v.deriv = dyn->deriv;
     ip->u.v.odeid = dyn->odeid;
     ip->u.v.obsid = 0;
@@ -3323,7 +3519,6 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   DERIV_A = AddSymbol("ode_type");
   ODEID_A = AddSymbol("ode_id");
   OBSID_A = AddSymbol("obs_id");
-  DISCRETE_A = AddSymbol("discrete");
 
   p_data = &thisproblem;
   p_data->bad_rel_in_list = FALSE;
@@ -3375,6 +3570,13 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
       p_data->root = NULL;
       return 2;
     }
+  }
+
+  stat = analyze_infer_reinit_targets(p_data);
+  if(stat){
+    analyze_free_lists(p_data);
+    p_data->root = NULL;
+    return 2;
   }
 
   /* decorate instances with temporary ips, collect them and etc */

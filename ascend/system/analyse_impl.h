@@ -195,6 +195,7 @@ struct problem_t {
   struct gl_list_t *dynreg; /* canonical dynamic registry, populated before classify_instance */
   struct gl_list_t *dynbindrels; /* pure derivative-binding relations to be excluded after analysis */
   struct gl_list_t *dynhiddeninsts; /* hidden derivative instances created for der(x) support */
+  struct gl_list_t *reinit_discretes; /* inferred discrete real event-memory targets from REINIT usage */
 
   /* bridge ip data */
   struct gl_list_t *oldips;	/* buffer of oldip crap we're protecting */

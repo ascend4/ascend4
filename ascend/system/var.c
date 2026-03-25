@@ -65,12 +65,11 @@
 #define NOMINAL_V g_strings[4]
 #define INTERFACE_V g_strings[5]
 #define ODEATOL_V g_strings[6]
-#define DISCRETE_V g_strings[7]
 
 /*
  * array of those symbol table entries we need.
  */
-static symchar * g_strings[8];
+static symchar * g_strings[7];
 
 SlvBackendToken var_instanceF(const struct var_variable *var)
 { if (var==NULL || var->ratom==NULL) {
@@ -344,38 +343,25 @@ void var_set_fixed(struct var_variable *var, uint32 fixed)
 
 ASC_DLLSPEC uint32 var_discrete(struct var_variable *var)
 {
-  struct Instance *c;
   if (var==NULL || var->ratom==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
     return FALSE;
   }
-  c = ChildByChar(IPTR(var->ratom),DISCRETE_V);
-  if( c == NULL ) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'discrete' field");
-    return FALSE;
-  }
-  var_set_flagbit(var,VAR_DISCRETE,GetBooleanAtomValue(c));
-  return GetBooleanAtomValue(c);
+  return var_discrete_flag(var) ? TRUE : FALSE;
 }
 
 ASC_DLLSPEC void var_set_discrete(struct var_variable *var, uint32 discrete)
 {
-  struct Instance *c, *fixedc;
+  struct Instance *fixedc;
   uint32 fixed = FALSE;
   if (var==NULL || var->ratom==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
-    return;
-  }
-  c = ChildByChar(IPTR(var->ratom),DISCRETE_V);
-  if( c == NULL ) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"no 'discrete' field");
     return;
   }
   fixedc = ChildByChar(IPTR(var->ratom),FIXED_V);
   if(fixedc != NULL){
     fixed = GetBooleanAtomValue(fixedc);
   }
-  SetBooleanAtomValue(c,discrete,(unsigned)0);
   var_set_flagbit(var,VAR_DISCRETE,discrete);
   var_set_flagbit(var,VAR_FIXED,fixed || discrete);
 }
@@ -623,7 +609,6 @@ boolean set_solver_types(void) {
   FIXED_V = AddSymbol("fixed");
   INTERFACE_V = AddSymbol("interface");
   ODEATOL_V = AddSymbol("ode_atol");
-  DISCRETE_V = AddSymbol("discrete");
   return nerr;
 }
 

@@ -17,8 +17,9 @@ REQUIRE "atoms.a4l";
     - records the event time in `t_last_event`
     - lengthens the next period by `dperiod`
 
-    The variables `period` and `t_last_event` are flagged as discrete reals in
-    `on_load`, so they retain values between events but are not integrated as
+    The variables `period` and `t_last_event` are inferred as discrete real
+    event-memory variables from their REINIT use outside the continuous state
+    set, so they retain values between events but are not integrated as
     continuous states.
 
     This model is intended for IDA.
@@ -76,8 +77,6 @@ METHODS
             they change only at events and are excluded from IDA's continuous
             state vector.
         *)
-        period.discrete := TRUE;
-        t_last_event.discrete := TRUE;
     END on_load;
 
     METHOD ode_init;

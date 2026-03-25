@@ -198,6 +198,40 @@ static int ida_test_load(const char *module_path, const char *type_name, int nee
 	return 0;
 }
 
+static void ida_expect_system_build_failure(const char *module_path, const char *type_name, int need_lrslv){
+	IdaTestSystem testsys;
+	int status;
+	struct Instance *root;
+
+	memset(&testsys, 0, sizeof(testsys));
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv" OSPATH_DIV "solvers/lsode" OSPATH_DIV "solvers/qrslv");
+
+	if(need_lrslv && 0 != package_load("lrslv", NULL)){
+		ida_cleanup(&testsys);
+		CONSOLE_DEBUG("Skipping IDA test: lrslv not available");
+		return;
+	}
+
+	Asc_OpenModule(module_path, &status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol(type_name)) != NULL);
+
+	testsys.siminst = SimsCreateInstance(AddSymbol(type_name), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(testsys.siminst != NULL);
+	root = GetSimulationRoot(testsys.siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	CU_ASSERT_FATAL(Proc_all_ok == ida_run_method(root, "on_load"));
+
+	testsys.sys = system_build(root);
+	CU_TEST(testsys.sys == NULL);
+
+	ida_cleanup(&testsys);
+}
+
 static void ida_configure_runtime(IntegratorSystem *integ, double start, double end, int num_steps){
 	SampleList *samplelist = ida_create_samplelist(start, end, num_steps);
 	integrator_set_reporter(integ, &test_ida_reporter);
@@ -257,8 +291,8 @@ static void test_shm(){
 
 static void test_boundary(){
 	IdaTestSystem testsys;
-	struct Instance *root, *iy, *ir, *iv;
-	double y, r, v;
+	struct Instance *root, *iy, *ir, *iv, *im, *ig, *ik1;
+	double y, r, v, m, g, k1, yeq;
 
 	if(ida_test_load("test/ida/leon/bouncingball.a4c", "bouncingball", 1, &testsys)){
 		return;
@@ -272,13 +306,20 @@ static void test_boundary(){
 	iy = ida_child(root, "y");
 	ir = ida_child(root, "r");
 	iv = ida_child(root, "v");
+	im = ida_child(root, "m");
+	ig = ida_child(root, "g");
+	ik1 = ida_child(root, "k1");
 	y = RealAtomValue(iy);
 	r = RealAtomValue(ir);
 	v = RealAtomValue(iv);
+	m = RealAtomValue(im);
+	g = RealAtomValue(ig);
+	k1 = RealAtomValue(ik1);
+	yeq = r - m * g / k1;
 
-	CU_TEST(y >= r - 1e-6);
+	CU_TEST(fabs(y - yeq) < 5e-4);
 	CU_TEST(y < 25.0);
-	CU_TEST(fabs(v) < 50.0);
+	CU_TEST(fabs(v) < 1e-3);
 
 	ida_free_runtime(testsys.integ);
 	ida_cleanup(&testsys);
@@ -467,6 +508,63 @@ static void test_reinit_boolean_cascade(){
 	CU_TEST(fabs(RealAtomValue(istage) - 2.0) < 5e-5);
 	CU_TEST(GetBooleanAtomValue(itrigger));
 	CU_TEST(GetBooleanAtomValue(ilatched));
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_reinit_algebraic_target_rejected(){
+	ida_expect_system_build_failure("test/ida/reinit_algebraic_bad.a4c", "ida_reinit_bad_algebraic", 1);
+}
+
+static void test_reinit_indep_target_rejected(){
+	ida_expect_system_build_failure("test/ida/reinit_bad_targets.a4c", "ida_reinit_bad_indep", 1);
+}
+
+static void test_reinit_derivative_target_rejected(){
+	ida_expect_system_build_failure("test/ida/reinit_bad_targets.a4c", "ida_reinit_bad_derivative", 1);
+}
+
+static void test_reinit_integer_target_unsupported(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/ida/reinit_bad_targets.a4c", "ida_reinit_bad_integer_target", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	CU_ASSERT_NOT_EQUAL(integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1), 0);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_reinit_boolean_rhs_type_rejected(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/ida/reinit_bad_targets.a4c", "ida_reinit_bad_boolean_rhs", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	CU_ASSERT_NOT_EQUAL(integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1), 0);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_reinit_real_rhs_type_rejected(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/ida/reinit_bad_targets.a4c", "ida_reinit_bad_real_rhs", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	CU_ASSERT_NOT_EQUAL(integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1), 0);
 
 	ida_free_runtime(testsys.integ);
 	ida_cleanup(&testsys);
@@ -717,6 +815,12 @@ static void test_initial_alias_binding_bug(){
 	T(multi_boundary_same_direction) \
 	T(reinit_boolean_latch) \
 	T(reinit_boolean_cascade) \
+	T(reinit_algebraic_target_rejected) \
+	T(reinit_indep_target_rejected) \
+	T(reinit_derivative_target_rejected) \
+	T(reinit_integer_target_unsupported) \
+	T(reinit_boolean_rhs_type_rejected) \
+	T(reinit_real_rhs_type_rejected) \
 	T(example_ideal_rebound) \
 	T(example_lengthening_sawtooth) \
 	T(high_index) \

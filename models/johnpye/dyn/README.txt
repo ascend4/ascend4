@@ -6,7 +6,7 @@ current Phase 1A/1B hybrid-event features:
 
 - `REINIT(x, expr);`
 - `pre(x)` on the right-hand side of `REINIT`
-- discrete real event-memory variables via `var.discrete := TRUE`
+- inferred discrete real event-memory variables from `REINIT(...)` use
 
 At present these examples are intended for use with the IDA integrator.
 LSODE does not support `CONDITIONAL` / `WHEN` event handling or `REINIT`.

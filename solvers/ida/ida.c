@@ -1043,6 +1043,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	N_Vector ypret, yret;
 	IntegratorIdaData *enginedata;
 	int i, flag = 0;
+	int statuscode = 0;
 
 	int *rootsfound;			/** < IDA rootfinder reports root index in here */
 	int *rootdir;				/** < Used to tell IDA to ignore doulve crossings */
@@ -1169,10 +1170,11 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 					rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 					crossed_to_state = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 
-					if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
-						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
-						return 14;
-					}
+						if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
+							ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
+							statuscode = 14;
+							goto root_cleanup;
+						}
 #ifdef SOLVE_DEBUG
 					for (i = 0; i < enginedata->nbnds; i++) {
 
@@ -1201,9 +1203,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						 integrator_output_write(integ);
 						 integrator_output_write_obs(integ);
 
-						if (ida_bnd_event_iterate(integ, ida_mem, tout) != 0) {
-							return 1;
-						}
+							if (ida_bnd_event_iterate(integ, ida_mem, tout) != 0) {
+								statuscode = 1;
+								goto root_cleanup;
+							}
 
 						/* Need to destroy and rebuild system */
 						//IDAFree(ida_mem);
@@ -1249,11 +1252,15 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 #endif
 
 					} /* need to reconfigure */
-					ASC_FREE(rootsfound);
-					ASC_FREE(rootdir);
-					ASC_FREE(crossed_to_state);
-				} /* IDA_ROOT_RETURN */
-			} /* nbnds */
+root_cleanup:
+						ASC_FREE(rootsfound);
+						ASC_FREE(rootdir);
+						ASC_FREE(crossed_to_state);
+						if(statuscode != 0){
+							goto ida_cleanup;
+						}
+					} /* IDA_ROOT_RETURN */
+				} /* nbnds */
 
 		} while (need_to_reinteg); /* end of solve time step */
 
@@ -1276,8 +1283,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	}/* loop through next sample timestep */
 
-	/* -- close the IntegratorReporter */
-	integrator_output_close(integ);
+ida_cleanup:
+		/* -- close the IntegratorReporter */
+		integrator_output_close(integ);
 
 	/* get optional outputs */
 #ifdef STATS_DEBUG
@@ -1302,10 +1310,14 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	/* free solver memory */
 	IDAFree(&ida_mem);
 
-	if (flag < -500) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", tout);
-		return -flag;
-	}
+		if (statuscode != 0) {
+			return statuscode;
+		}
+
+		if (flag < -500) {
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", tout);
+			return -flag;
+		}
 
 	if (flag < 0) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solving aborted while attempting t = %f", tout);
