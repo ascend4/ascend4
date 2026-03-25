@@ -1,0 +1,110 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+    lengthening_sawtooth
+    ====================
+
+    This example shows two things at once:
+
+    1. a reset event implemented with `REINIT(...)`
+    2. simple event memory using discrete real variables
+
+    The continuous state `y` ramps upward with unit slope. When it reaches the
+    current `period`, an event fires and the model:
+
+    - resets `y` to zero
+    - records the event time in `t_last_event`
+    - lengthens the next period by `dperiod`
+
+    The variables `period` and `t_last_event` are flagged as discrete reals in
+    `on_load`, so they retain values between events but are not integrated as
+    continuous states.
+
+    This model is intended for IDA.
+*)
+MODEL lengthening_sawtooth;
+
+    (* Continuous ramp state. *)
+    y, ydot        IS_A generic_real;
+    sample         IS_A generic_real;
+
+    (* Event-memory reals. *)
+    period, dperiod IS_A generic_real;
+    t, t_last_event IS_A time;
+
+    (* Boundary-driven event selector. *)
+    tick           IS_A boolean_var;
+
+    (* Unit-slope ramp. *)
+    drive:   ydot = 1;
+    observe: sample = y;
+
+CONDITIONAL
+    tick_boundary: y >= period;
+END CONDITIONAL;
+
+    tick == SATISFIED(tick_boundary, 1e-8);
+
+WHEN(tick)
+    CASE TRUE:
+        (*
+            At each event we:
+
+            - restart the ramp from zero
+            - lengthen the next period
+            - record the event time
+        *)
+        REINIT(y, 0);
+        REINIT(period, pre(period) + dperiod);
+        REINIT(t_last_event, t);
+    CASE FALSE:
+        (*
+            No-op placeholder for the FALSE branch in the current surface
+            syntax.
+        *)
+        REINIT(y, pre(y));
+END WHEN;
+
+METHODS
+    METHOD on_load;
+        RUN ode_init;
+        RUN values;
+
+        (*
+            These two quantities behave like event memory:
+            they change only at events and are excluded from IDA's continuous
+            state vector.
+        *)
+        period.discrete := TRUE;
+        t_last_event.discrete := TRUE;
+    END on_load;
+
+    METHOD ode_init;
+        y.ode_type := 1; ydot.ode_type := 2;
+        y.ode_id   := 1; ydot.ode_id   := 1;
+        t.ode_type := -1;
+    END ode_init;
+
+    METHOD values;
+        FIX dperiod;
+
+        dperiod := 0.5;
+
+        (*
+            Starting from `period = 1`, successive events occur at
+
+                t = 1.0, 2.5, 4.5, ...
+
+            because the period grows by `0.5` after each reset.
+        *)
+        y := 0;
+        ydot := 1;
+        sample := 0;
+
+        period := 1;
+        t := 0 {s};
+        t_last_event := -1 {s};
+        tick := FALSE;
+    END values;
+END lengthening_sawtooth;

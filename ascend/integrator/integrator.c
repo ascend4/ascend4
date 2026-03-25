@@ -43,6 +43,7 @@
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/slv_client.h>
 #include <ascend/system/block.h>
+#include <ascend/system/discrete.h>
 #include <ascend/system/diffvars.h>
 
 #include <ascend/solver/solver.h>
@@ -363,8 +364,47 @@ static int integrator_reinit_target_is_state(const IntegratorSystem *sys, const 
 	return 0;
 }
 
+static struct dis_discrete *integrator_find_discrete_target(const IntegratorSystem *sys, const struct Instance *inst){
+	struct dis_discrete **dvars;
+	int32 ndvars, i;
+
+	if(sys == NULL || sys->system == NULL || inst == NULL){
+		return NULL;
+	}
+
+	dvars = slv_get_solvers_dvar_list(sys->system);
+	ndvars = slv_get_num_solvers_dvars(sys->system);
+	for(i = 0; i < ndvars; ++i){
+		struct dis_discrete *dvar = dvars[i];
+		if(dvar != NULL && (const struct Instance *)dis_instance(dvar) == inst){
+			return dvar;
+		}
+	}
+
+	return NULL;
+}
+
+static int integrator_reinit_already_applied(const struct gl_list_t *applied_reinits,
+		const struct when_reinit *wr){
+	unsigned long i, len;
+
+	if(applied_reinits == NULL || wr == NULL){
+		return 0;
+	}
+
+	len = gl_length((struct gl_list_t *)applied_reinits);
+	for(i = 1; i <= len; ++i){
+		if((const struct when_reinit *)gl_fetch((struct gl_list_t *)applied_reinits, i) == wr){
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance *context,
-		struct gl_list_t *reinit_list, IntegratorPreSnapshot *snapshot){
+		struct gl_list_t *reinit_list, IntegratorPreSnapshot *snapshot,
+		struct gl_list_t *applied_reinits, int *applied_count){
 	unsigned long i, len;
 
 	if(reinit_list == NULL){
@@ -375,9 +415,14 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 	for(i = 1; i <= len; ++i){
 		struct when_reinit *wr = (struct when_reinit *)gl_fetch(reinit_list, i);
 		struct Instance *target;
+		struct dis_discrete *dtarget;
 		struct value_t value;
+		int target_is_real_state;
 
 		if(wr == NULL){
+			continue;
+		}
+		if(integrator_reinit_already_applied(applied_reinits, wr)){
 			continue;
 		}
 
@@ -386,9 +431,12 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to resolve REINIT target");
 			return 1;
 		}
-		if(!integrator_reinit_target_is_state(sys, target)){
+		dtarget = integrator_find_discrete_target(sys, target);
+		target_is_real_state = integrator_reinit_target_is_state(sys, target);
+		if(!target_is_real_state
+			&& !(dtarget != NULL && dis_kind(dtarget) == e_dis_boolean_t)){
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,
-				"Phase 1B REINIT target must be a continuous state variable or discrete real");
+				"Phase 1C REINIT target must be a continuous state variable, discrete real, or boolean discrete variable");
 			return 1;
 		}
 
@@ -399,20 +447,42 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 		SetEvaluationPreNameFn(NULL, NULL);
 		SetEvaluationContext(NULL);
 
-		switch(value.t){
-		case real_value:
-			SetRealAtomValue(target, RealValue(value), 0);
-			break;
-		case integer_value:
-			SetRealAtomValue(target, (double)IntegerValue(value), 0);
-			break;
-		default:
-			DestroyValue(&value);
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,
-				"Unable to evaluate REINIT expression");
-			return 1;
+		if(target_is_real_state){
+			switch(value.t){
+			case real_value:
+				SetRealAtomValue(target, RealValue(value), 0);
+				break;
+			case integer_value:
+				SetRealAtomValue(target, (double)IntegerValue(value), 0);
+				break;
+			default:
+				DestroyValue(&value);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,
+					"Unable to evaluate REINIT expression");
+				return 1;
+			}
+		}else{
+			switch(value.t){
+			case boolean_value:
+				dis_set_boolean_value(dtarget, BooleanValue(value));
+				break;
+			case integer_value:
+				dis_set_boolean_value(dtarget, IntegerValue(value) ? 1 : 0);
+				break;
+			default:
+				DestroyValue(&value);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,
+					"Boolean REINIT target requires a boolean-valued expression");
+				return 1;
+			}
 		}
 		DestroyValue(&value);
+		if(applied_reinits != NULL){
+			gl_append_ptr(applied_reinits, wr);
+		}
+		if(applied_count != NULL){
+			++(*applied_count);
+		}
 	}
 
 	return 0;
@@ -1946,7 +2016,7 @@ int integrator_debug(const IntegratorSystem *sys, FILE *fp){
 	}
 }
 
-int integrator_apply_reinits(IntegratorSystem *sys){
+int integrator_apply_reinits_tracked(IntegratorSystem *sys, struct gl_list_t *applied_reinits){
 	struct w_when **whens;
 	int32 nwhens, w;
 	IntegratorPreSnapshot snapshot;
@@ -1991,11 +2061,8 @@ int integrator_apply_reinits(IntegratorSystem *sys){
 			struct when_case *solver_case = (struct when_case *)gl_fetch(solver_cases, c);
 			if(solver_case != NULL && when_case_active(solver_case)){
 				struct gl_list_t *reinit_list = when_case_reinits_list(solver_case);
-				if(reinit_list != NULL){
-					applied += (int)gl_length(reinit_list);
-				}
 				if(integrator_apply_case_reinits(sys, context,
-						reinit_list, &snapshot) != 0){
+						reinit_list, &snapshot, applied_reinits, &applied) != 0){
 					integrator_pre_snapshot_destroy(&snapshot);
 					return -1;
 				}
@@ -2005,6 +2072,10 @@ int integrator_apply_reinits(IntegratorSystem *sys){
 
 	integrator_pre_snapshot_destroy(&snapshot);
 	return applied;
+}
+
+int integrator_apply_reinits(IntegratorSystem *sys){
+	return integrator_apply_reinits_tracked(sys, NULL);
 }
 
 /*----------------------------------------------------

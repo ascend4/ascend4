@@ -407,6 +407,138 @@ static void test_multi_boundary_same_direction(){
 	ida_cleanup(&testsys);
 }
 
+static void test_reinit_boolean_latch(){
+	IdaTestSystem testsys;
+	struct Instance *root, *it, *iy, *isample, *itrigger, *ilatched;
+
+	if(ida_test_load("test/ida/reinit_bool.a4c", "ida_reinit_boolean_latch", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	it = ida_child(root, "t");
+	iy = ida_child(root, "y");
+	isample = ida_child(root, "sample");
+	itrigger = ida_child(root, "trigger");
+	ilatched = ida_child(root, "latched");
+
+	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 2.0) < 5e-5);
+	CU_TEST(GetBooleanAtomValue(itrigger));
+	CU_TEST(GetBooleanAtomValue(ilatched));
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_reinit_boolean_cascade(){
+	IdaTestSystem testsys;
+	struct Instance *root, *it, *iy, *isample, *istage, *itrigger, *ilatched;
+	int i;
+
+	if(ida_test_load("test/ida/reinit_bool_cascade.a4c", "ida_reinit_boolean_cascade", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	it = ida_child(root, "t");
+	iy = ida_child(root, "y");
+	isample = ida_child(root, "sample");
+	istage = ida_child(root, "stage");
+	itrigger = ida_child(root, "trigger");
+	ilatched = ida_child(root, "latched");
+
+	for(i = 0; i < testsys.integ->n_y; ++i){
+		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != istage);
+	}
+
+	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(istage) - 2.0) < 5e-5);
+	CU_TEST(GetBooleanAtomValue(itrigger));
+	CU_TEST(GetBooleanAtomValue(ilatched));
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_example_ideal_rebound(){
+	IdaTestSystem testsys;
+	struct Instance *root, *iy, *iv, *it, *itlast;
+	int i;
+
+	if(ida_test_load("johnpye/dyn/ideal_rebound.a4c", "ideal_rebound", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	iy = ida_child(root, "y");
+	iv = ida_child(root, "v");
+	it = ida_child(root, "t");
+	itlast = ida_child(root, "t_last_event");
+
+	for(i = 0; i < testsys.integ->n_y; ++i){
+		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != itlast);
+	}
+
+	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(iv) - 1.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(itlast) - 1.0) < 5e-5);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_example_lengthening_sawtooth(){
+	IdaTestSystem testsys;
+	struct Instance *root, *it, *iy, *isample, *iperiod, *itlast;
+	int i;
+
+	if(ida_test_load("johnpye/dyn/lengthening_sawtooth.a4c", "lengthening_sawtooth", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 4.0, 80);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	it = ida_child(root, "t");
+	iy = ida_child(root, "y");
+	isample = ida_child(root, "sample");
+	iperiod = ida_child(root, "period");
+	itlast = ida_child(root, "t_last_event");
+
+	for(i = 0; i < testsys.integ->n_y; ++i){
+		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != iperiod);
+		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != itlast);
+	}
+
+	CU_TEST(fabs(RealAtomValue(it) - 4.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 1.5) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 1.5) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(iperiod) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(itlast) - 2.5) < 5e-5);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
 static void test_high_index(){
 	IdaTestSystem testsys;
 
@@ -583,6 +715,10 @@ static void test_initial_alias_binding_bug(){
 	T(reinit_reflect) \
 	T(reinit_discrete_sawtooth) \
 	T(multi_boundary_same_direction) \
+	T(reinit_boolean_latch) \
+	T(reinit_boolean_cascade) \
+	T(example_ideal_rebound) \
+	T(example_lengthening_sawtooth) \
 	T(high_index) \
 	T(pantelides_pendulum_high_index) \
 	T(pantelides_reactor_high_index) \

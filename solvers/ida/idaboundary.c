@@ -24,6 +24,8 @@
 #include <ascend/system/logrel.h>
 #include <ascend/system/rel.h>
 
+int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem, realtype tout1);
+
 #ifndef IDA_BND_DEBUG
 # define IDA_BND_DEBUG 0
 #endif
@@ -151,30 +153,80 @@ int ida_bnd_reanalyse(IntegratorSystem *integ){
 	return 0;
 }
 
-int ida_bnd_postreinit_iterate(IntegratorSystem *integ){
+int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1){
 	slv_status_t status;
 	int iter;
 	const int max_iter = 20;
+	struct gl_list_t *applied_reinits;
+	int need_consistency = 1;
+	int need_logical_solve = 1;
+
+	applied_reinits = gl_create(8);
+	if(applied_reinits == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+			"Unable to allocate REINIT tracking state for event iteration");
+		return 1;
+	}
 
 	for(iter = 0; iter < max_iter; ++iter){
-		slv_presolve(integ->system);
-		slv_solve(integ->system);
-		slv_get_status(integ->system, &status);
-		if(!status.converged){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,
-				"Non-convergence in logical solver during post-REINIT event iteration");
+		int nreinits;
+
+		if(need_logical_solve){
+			slv_presolve(integ->system);
+			slv_solve(integ->system);
+			slv_get_status(integ->system, &status);
+			if(!status.converged){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,
+					"Non-convergence in logical solver during event iteration");
+				gl_destroy(applied_reinits);
+				return 1;
+			}
+			if(some_dis_vars_changed(integ->system)){
+				if(ida_bnd_reanalyse(integ) != 0){
+					gl_destroy(applied_reinits);
+					return 1;
+				}
+				need_consistency = 1;
+			}
+			need_logical_solve = 0;
+		}
+
+		nreinits = integrator_apply_reinits_tracked(integ, applied_reinits);
+		if(nreinits < 0){
+			gl_destroy(applied_reinits);
 			return 1;
 		}
-		if(!some_dis_vars_changed(integ->system)){
+		if(nreinits > 0){
+			need_consistency = 1;
+		}
+		if(!need_consistency){
+			gl_destroy(applied_reinits);
 			return 0;
 		}
-		if(ida_bnd_reanalyse(integ) != 0){
-			return 1;
+
+		{
+			realtype reinit_tout = tout1;
+			realtype t0 = integrator_get_t(integ);
+			if(reinit_tout <= t0 + 1e-4){
+				reinit_tout = t0 + 1e-4;
+			}
+			if(ida_bnd_update_relist(integ) != 0){
+				gl_destroy(applied_reinits);
+				return 1;
+			}
+			if(ida_reinit_integrator(integ, ida_mem, reinit_tout) != 0){
+				gl_destroy(applied_reinits);
+				return 1;
+			}
 		}
+		need_consistency = 0;
+		need_logical_solve = 1;
 	}
 
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,
-		"Post-REINIT event iteration did not converge");
+		"Event iteration did not converge after %d iterations (possible state cycle)",
+		max_iter);
+	gl_destroy(applied_reinits);
 	return 1;
 }
 

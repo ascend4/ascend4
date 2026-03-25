@@ -1,0 +1,59 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_reinit_boolean_cascade;
+	t, trip_time      IS_A time;
+	y, ydot           IS_A generic_real;
+	sample, stage     IS_A generic_real;
+	trigger, latched  IS_A boolean_var;
+
+	drive:        ydot = 1;
+	before_latch: sample = y;
+	after_latch:  sample = y;
+
+CONDITIONAL
+	trip: y >= trip_time;
+END CONDITIONAL;
+
+	trigger == SATISFIED(trip, 1e-8);
+
+	(* First event action: increment the discrete stage counter and latch the mode. *)
+	WHEN(trigger)
+		CASE TRUE:
+			REINIT(stage, pre(stage) + 1);
+			REINIT(latched, TRUE);
+		CASE FALSE:
+	END WHEN;
+
+	(* Second event action becomes active only after 'latched' is reassigned.
+	   The active relation set is kept structurally unchanged here; a latch-driven
+	   structural switch is still a harder case than this Phase 1C regression. *)
+	WHEN(latched)
+		CASE TRUE:
+			USE after_latch;
+			REINIT(stage, pre(stage) + 1);
+		CASE FALSE:
+			USE before_latch;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		stage.discrete := TRUE;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		FIX trip_time;
+		trip_time := 1 {s};
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		stage := 0;
+		t := 0 {s};
+		trigger := FALSE;
+		latched := FALSE;
+	END values;
+END ida_reinit_boolean_cascade;

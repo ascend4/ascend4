@@ -1189,7 +1189,6 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							bnd_cond_states);
 
 					if (need_to_reconfigure) {
-						int nreinits;
 						for(i = 0; i < enginedata->nbnds; ++i){
 							crossed_to_state[i] = bnd_cond_states[i];
 						}
@@ -1202,19 +1201,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						 integrator_output_write(integ);
 						 integrator_output_write_obs(integ);
 
-						nreinits = integrator_apply_reinits(integ);
-						if (nreinits < 0) {
-							return 1;
-						}
-
-						if (nreinits > 0) {
-							if (ida_bnd_postreinit_iterate(integ) != 0) {
-								return 1;
-							}
-						}
-
-						if (ida_bnd_update_relist(integ) != 0) {
-							/* system not square, failure */
+						if (ida_bnd_event_iterate(integ, ida_mem, tout) != 0) {
 							return 1;
 						}
 
@@ -1232,7 +1219,6 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							skipping_output = 1;
 						}
 
-						ida_reinit_integrator(integ, ida_mem, tout);
 						/* n_y may have changed */
 						N_VDestroy_Serial(yret);
 						N_VDestroy_Serial(ypret);
@@ -1251,10 +1237,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
 						}
 						for(i = 0; i < enginedata->nbnds; i++) {
-							int at_zero = bndman_calc_at_zero(enginedata->bndlist[i]);
-							if(rootsfound[i] != 0 && at_zero
+							if(rootsfound[i] != 0
 								&& bnd_cond_states[i] == crossed_to_state[i]){
-								rootdir[i] = -1 * rootsfound[i];
+								rootdir[i] = rootsfound[i];
 							}else{
 								rootdir[i] = 0;
 							}
