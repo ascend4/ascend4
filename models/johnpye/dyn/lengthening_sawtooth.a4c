@@ -83,6 +83,16 @@ METHODS
         y.ode_type := 1; ydot.ode_type := 2;
         y.ode_id   := 1; ydot.ode_id   := 1;
         t.ode_type := -1;
+
+        (*
+            Provide a small default observation set so the integrator reporter
+            has something useful to show immediately in the GUI.
+        *)
+        t.obs_id := 1;
+        y.obs_id := 2;
+        sample.obs_id := 3;
+        period.obs_id := 4;
+        t_last_event.obs_id := 5;
     END ode_init;
 
     METHOD values;
