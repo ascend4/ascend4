@@ -538,11 +538,12 @@ static void test_parse_file(void){
 	CU_ASSERT(status==0);
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
-	MSG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
+	unsigned long n = gl_length(l);
+	MSG("%lu library entries loaded from %s",n,Asc_ModuleName(m));
 	gl_destroy(l);
 
-	/* there are only 8 things declared in system.a4l: */
-	CU_ASSERT(gl_length(l)==8)
+	/* system.a4l now declares 9 public types, including selector. */
+	CU_ASSERT(n==9)
 
 	/* here they are... */
 	CU_ASSERT(FindType(AddSymbol("relation"))!=NULL);
@@ -551,6 +552,7 @@ static void test_parse_file(void){
 	CU_ASSERT(FindType(AddSymbol("solver_int"))!=NULL);
 	CU_ASSERT(FindType(AddSymbol("generic_real"))!=NULL);
 	CU_ASSERT(FindType(AddSymbol("boolean_var"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("selector"))!=NULL);
 	CU_ASSERT(FindType(AddSymbol("solver_binary"))!=NULL);
 	CU_ASSERT(FindType(AddSymbol("solver_semi"))!=NULL);
 
