@@ -15,9 +15,9 @@ Examples in this directory
 --------------------------
 
 - `ideal_rebound.a4c`
-  A minimal "bouncing ball without contact kinetics" example. The ball moves
-  at constant velocity between events and reflects instantaneously at the
-  floor by applying `REINIT(v, -e * pre(v));`.
+  A minimal "bouncing ball without contact kinetics" example. The ball falls
+  under gravity and reflects instantaneously at the floor by applying
+  `REINIT(v, -e * pre(v));`, with smaller bounce heights after each impact.
 
 - `lengthening_sawtooth.a4c`
   A reset oscillator with simple event memory. Each event resets the state,

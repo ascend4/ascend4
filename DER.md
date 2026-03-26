@@ -849,6 +849,16 @@ END WHEN;
 where `trigger` is itself a discrete/logical variable, for example from
 `SATISFIED(...)`.
 
+The `IF` part is already syntactically and semantically a general
+boolean-valued expression, not merely a single boolean variable. So forms like
+
+```ascend
+SWITCH TO 'running' IF start_cmd AND cooldown_ok AND NOT tripped;
+```
+
+are conceptually already in scope, provided the names used there are existing
+boolean/integer/logical quantities.
+
 So the earlier runtime blocker on non-boolean `WHEN` reconfiguration has now
 been resolved for the current Phase 2 groundwork, and the first `SWITCH TO`
 runtime path is working.
@@ -865,6 +875,20 @@ required boundary/event source automatically. For now, the working path is to
 express the event source separately through existing `CONDITIONAL` /
 `SATISFIED(...)` machinery and use that discrete boolean in the `SWITCH TO`
 guard.
+
+So the current split is:
+
+- `SWITCH TO ... IF ...` can already consume fairly rich logical expressions
+- but the event/logical conditions appearing there still need to be defined
+  separately using existing `CONDITIONAL`, `SATISFIED(...)`, and/or logrel
+  machinery
+
+That is acceptable for the current transition slice, and it is also a useful
+reminder that the newer state-transition syntax does **not** eliminate the need
+for explicit condition/logical syntax in the language. Even after Phase 2
+progresses, there will still be modelling cases where directly expressing a
+condition or logrelation remains clearer than hiding everything inside an
+`IF ...` clause.
 
 The chosen surface direction is now closer to ASCEND's existing
 `WHEN(...) CASE ... END WHEN` shell than to the earlier `CASE ... OF WHEN ...`
@@ -934,10 +958,29 @@ The recommended Phase 2 semantic target is:
 - explicit selector/mode memory
 - state-local equation selection
 - state-local outgoing transitions
+- optional common equations that remain outside the selector block
 - optional transition actions (`REINIT`, later `REASSIGN`)
 - post-transition event iteration until the discrete configuration is stable
 - explicit priority / exclusivity rules for multiple enabled outgoing
   transitions
+
+That "optional common equations" point is important. The current backend can
+force awkward duplication such as:
+
+```ascend
+CASE 'free':
+    USE free_flight;
+    SWITCH TO 'impact' IF hit_floor AND descending;
+CASE 'impact':
+    USE free_flight;
+    REINIT(v, -e * pre(v));
+```
+
+even though the continuous equations are really common to both states and only
+the transition/action logic differs. The eventual Phase 2 surface syntax should
+not force that duplication. State-local equations should be *possible*, but not
+mandatory; globally active equations plus state-local transitions/actions should
+also be expressible naturally.
 
 The important point is not the exact spelling, but that the source state, the
 guard, and the target state appear together in one place. That is the key

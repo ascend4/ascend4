@@ -121,17 +121,38 @@ def integrate_ascend_model(filen,model=None,engine="IDA",start=None,duration=100
 		os.add_dll_directory(pathlib.Path(__file__).parent.parent)
 	import ascpy
 
-	class CollectingIntegratorReporter(ascpy.IntegratorReporterCxx):
-		def __init__(self, integrator):
+	class TabularIntegratorReporter(ascpy.IntegratorReporterCxx):
+		def __init__(self, integrator, filep):
 			ascpy.IntegratorReporterCxx.__init__(self, integrator)
+			self.filep = filep
+			self.headers = []
+			self.conversions = []
 		def initOutput(self):
+			indep = self.getIntegrator().getIndependentVariable()
+			indep_units = _get_instance_units(indep.getInstance())
+			self.headers = [f"{indep.getName()} [{indep_units.getName().toString()}]"]
+			self.conversions = [indep_units.getConversion()]
+			for i in range(self.getIntegrator().getNumObservedVars()):
+				var = self.getIntegrator().getObservedVariable(i)
+				units = _get_instance_units(var.getInstance())
+				self.headers.append(f"{var.getName()} [{units.getName().toString()}]")
+				self.conversions.append(units.getConversion())
+			self.filep.write("\t".join(self.headers) + "\n")
+			self.filep.flush()
 			return 1
 		def closeOutput(self):
+			self.filep.flush()
 			return 0
 		def updateStatus(self):
 			return 1
 		def recordObservedValues(self):
-			self.getIntegrator().saveObservations()
+			I = self.getIntegrator()
+			row = [I.getCurrentTime() / self.conversions[0]]
+			for i, value in enumerate(I.getCurrentObservations()):
+				row.append(value / self.conversions[i + 1])
+			self.filep.write("\t".join([f"{value:.15g}" for value in row]) + "\n")
+			self.filep.flush()
+			I.saveObservations()
 			return 1
 
 	L = ascpy.Library()
@@ -153,18 +174,19 @@ def integrate_ascend_model(filen,model=None,engine="IDA",start=None,duration=100
 
 	I.setLinearTimesteps(bounds_units, float(start), float(start) + float(duration), int(steps))
 	I.analyse()
-	reporter = CollectingIntegratorReporter(I)
+
+	if output is None and not plot:
+		reporter = ascpy.IntegratorReporterConsole(I)
+	elif output is None:
+		reporter = TabularIntegratorReporter(I, sys.stdout)
+	else:
+		reporter = TabularIntegratorReporter(I, open(output, "w"))
+
 	I.setReporter(reporter)
 	I.solve()
 
-	headers, rows = _get_integrator_output(I)
-	if output is not None:
-		with open(output, "w") as fp:
-			_write_integrator_table(fp, headers, rows)
-	else:
-		_write_integrator_table(sys.stdout, headers, rows)
-
 	if plot:
+		headers, rows = _get_integrator_output(I)
 		if I.getNumObservedVars() < 1:
 			raise RuntimeError("No observed variables are available to plot.")
 		import matplotlib.pyplot as plt
