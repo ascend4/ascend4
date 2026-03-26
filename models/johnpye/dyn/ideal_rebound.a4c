@@ -99,7 +99,7 @@ WHEN(mode)
 
             The free-flight equations remain globally active; this mode only
             controls the event-time action and the immediate switch back to
-            `free` once the post-impact velocity is non-negative.
+            `free`.
         *)
         REINIT(v, -e * pre(v));
         REINIT(t_last_event, t);

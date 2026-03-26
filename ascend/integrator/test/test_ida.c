@@ -909,6 +909,23 @@ static void test_example_lengthening_sawtooth(){
 	ida_cleanup(&testsys);
 }
 
+static void test_example_ideal_rebound_zeno_stop(){
+	IdaTestSystem testsys;
+	int solve_res;
+
+	if(ida_test_load("johnpye/dyn/ideal_rebound.a4c", "ideal_rebound", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 5.0, 100);
+	solve_res = integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1);
+	CU_ASSERT_NOT_EQUAL(solve_res, 0);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
 static void test_high_index(){
 	IdaTestSystem testsys;
 
@@ -1104,6 +1121,7 @@ static void test_initial_alias_binding_bug(){
 	T(when_integer_initial_case) \
 	T(when_symbol_initial_case) \
 	T(example_ideal_rebound) \
+	T(example_ideal_rebound_zeno_stop) \
 	T(example_lengthening_sawtooth) \
 	T(high_index) \
 	T(pantelides_pendulum_high_index) \

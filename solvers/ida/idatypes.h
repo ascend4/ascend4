@@ -58,6 +58,10 @@ typedef struct IntegratorIdaDataStruct{
 	rel_filter_t rfilter;            /**< Used to filter relations from solver's rellist (@TODO needs work) */
 	void *precdata;                  /**< For use by the preconditioner */
 	IntegratorIdaPrecFreeFn *pfree;	 /**< Store instructions here on how to free precdata */
+	realtype *event_times;           /**< ring buffer of recent boundary-event times for simple Zeno detection */
+	int event_times_cap;             /**< allocated length of event_times */
+	int event_times_count;           /**< number of valid entries currently stored */
+	int event_times_next;            /**< next ring-buffer slot to overwrite */
 
 	/* Error flag look-up data */
 	IdaFlagFn *flagfn;

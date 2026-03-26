@@ -152,6 +152,10 @@ static void integrator_ida_create(IntegratorSystem *integ) {
 	enginedata->rellist = NULL;
 	enginedata->safeeval = 0;
 	enginedata->warned_minstep_ignored = 0;
+	enginedata->event_times = NULL;
+	enginedata->event_times_cap = 0;
+	enginedata->event_times_count = 0;
+	enginedata->event_times_next = 0;
 	enginedata->vfilter.matchbits = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE
 			| VAR_FIXED;
 	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | 0;
@@ -201,6 +205,10 @@ static void integrator_ida_free(void *enginedata) {
 	}
 
 	ASC_FREE(d->rellist);
+	if(d->event_times != NULL){
+		ASC_FREE(d->event_times);
+		d->event_times = NULL;
+	}
 
 #if SUNDIALS_VERSION_MAJOR >= 5
 	if(d->linear_solver != NULL){
@@ -271,6 +279,8 @@ enum ida_parameters {
 	IDA_PARAM_GSMODIFIED,
 	IDA_PARAM_MAXNCF,
 	IDA_PARAM_PREC,
+	IDA_PARAM_ZENO_NCYCLES,
+	IDA_PARAM_ZENO_DURATION,
 	IDA_PARAMS_SIZE
 };
 
@@ -410,10 +420,96 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 			},"NONE"}, (char *[]) {"NONE","JACOBI","DIAG",NULL}
 	);
 
+	slv_param_int(p,IDA_PARAM_ZENO_NCYCLES
+		,(SlvParameterInitInt) { {"zeno_ncycles"
+				,"Boundary events in window before stopping",2
+				,"Stop integration if at least this many boundary-triggered"
+				" reconfiguration events occur within 'zeno_duration'."
+			}, 20, 0, 1000000}
+	);
+
+	slv_param_real(p,IDA_PARAM_ZENO_DURATION
+		,(SlvParameterInitReal) { {"zeno_duration"
+				,"Event accumulation time window",2
+				,"Window in independent-variable units used with"
+				" 'zeno_ncycles' to detect rapidly accumulating boundary events."
+			}, 1e-4, 0.0, 1e20}
+	);
+
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
 
 	MSG("Created %d params", p->num_parms);
 
+	return 0;
+}
+
+static int ida_prepare_event_window(IntegratorSystem *integ){
+	IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+	int ncycles = SLV_PARAM_INT(&(integ->params), IDA_PARAM_ZENO_NCYCLES);
+
+	if(ncycles <= 1){
+		if(enginedata->event_times != NULL){
+			ASC_FREE(enginedata->event_times);
+			enginedata->event_times = NULL;
+		}
+		enginedata->event_times_cap = 0;
+		enginedata->event_times_count = 0;
+		enginedata->event_times_next = 0;
+		return 0;
+	}
+
+	if(enginedata->event_times_cap != ncycles || enginedata->event_times == NULL){
+		if(enginedata->event_times != NULL){
+			ASC_FREE(enginedata->event_times);
+		}
+		enginedata->event_times = ASC_NEW_ARRAY(realtype, ncycles);
+		if(enginedata->event_times == NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Unable to allocate IDA event accumulation buffer");
+			enginedata->event_times_cap = 0;
+			return 1;
+		}
+		enginedata->event_times_cap = ncycles;
+	}
+
+	enginedata->event_times_count = 0;
+	enginedata->event_times_next = 0;
+	return 0;
+}
+
+static int ida_check_event_accumulation(IntegratorSystem *integ, realtype event_time){
+	IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+	int ncycles = SLV_PARAM_INT(&(integ->params), IDA_PARAM_ZENO_NCYCLES);
+	realtype duration = SLV_PARAM_REAL(&(integ->params), IDA_PARAM_ZENO_DURATION);
+	realtype oldest_time;
+
+	if(ncycles <= 1 || duration <= 0.0){
+		return 0;
+	}
+	if(enginedata->event_times == NULL || enginedata->event_times_cap != ncycles){
+		if(ida_prepare_event_window(integ) != 0){
+			return 1;
+		}
+	}
+
+	if(enginedata->event_times_count < enginedata->event_times_cap){
+		enginedata->event_times[enginedata->event_times_count++] = event_time;
+		enginedata->event_times_next = enginedata->event_times_count % enginedata->event_times_cap;
+		if(enginedata->event_times_count < enginedata->event_times_cap){
+			return 0;
+		}
+	}else{
+		enginedata->event_times[enginedata->event_times_next] = event_time;
+		enginedata->event_times_next = (enginedata->event_times_next + 1) % enginedata->event_times_cap;
+	}
+
+	oldest_time = enginedata->event_times[enginedata->event_times_next];
+	if(event_time - oldest_time <= duration){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Event accumulation detected near t = %.8g: %d boundary events occurred within %.8g time units",
+			event_time, ncycles, duration);
+		return 1;
+	}
 	return 0;
 }
 
@@ -1039,7 +1135,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	void *ida_mem;
 	int t_index;
 	realtype t0, tout, tret, tol = 0.0001;
-	N_Vector ypret, yret;
+	N_Vector ypret = NULL, yret = NULL;
 	IntegratorIdaData *enginedata;
 	int i, flag = 0;
 	int statuscode = 0;
@@ -1065,6 +1161,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
 	enginedata->safeeval = SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_SAFEEVAL);
 	MSG("safeeval = %d",enginedata->safeeval);
+	if(ida_prepare_event_window(integ) != 0){
+		statuscode = 1;
+		goto ida_cleanup;
+	}
 
 
 
@@ -1193,6 +1293,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							bnd_cond_states);
 
 					if (need_to_reconfigure) {
+						if(ida_check_event_accumulation(integ, tret) != 0){
+							statuscode = 1;
+							goto root_cleanup;
+						}
 						for(i = 0; i < enginedata->nbnds; ++i){
 							crossed_to_state[i] = bnd_cond_states[i];
 						}
@@ -1301,8 +1405,12 @@ ida_cleanup:
 
 
 	/* free solution memory */
-	N_VDestroy_Serial(yret);
-	N_VDestroy_Serial(ypret);
+	if(yret != NULL){
+		N_VDestroy_Serial(yret);
+	}
+	if(ypret != NULL){
+		N_VDestroy_Serial(ypret);
+	}
 
 	/* free bnd states if appropriate */
 	if (enginedata->nbnds) {
