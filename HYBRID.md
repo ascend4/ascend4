@@ -277,6 +277,11 @@ kept readable rather than purely regression-oriented:
   - ideal bounce without contact kinetics
   - now uses selector-style syntax
   - intentionally does not settle to rest, so it remains a useful Zeno test
+- [resting_rebound.a4c](./models/johnpye/dyn/resting_rebound.a4c)
+  - settling counterpart to `ideal_rebound`
+  - demonstrates a working `'free'` / `'impact'` / `'rest'` selector model
+  - shows that a resting contact mode is now possible when the active-case
+    formulation preserves a coherent first-order DAE shape
 - [lengthening_sawtooth.a4c](./models/johnpye/dyn/lengthening_sawtooth.a4c)
   - repeated resets using discrete real event-memory
 - [overflowing_weir.a4c](./models/johnpye/dyn/overflowing_weir.a4c)
