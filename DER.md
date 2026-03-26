@@ -675,33 +675,28 @@ For a first implementation, the following limits are sensible:
   canonical differential state set
 
 For the later event-memory extension, it is preferable not to create a third
-parallel family of real atom types. A better direction is likely to be:
+parallel family of real atom types. The current implementation therefore keeps
+the existing `IS_A` real-variable declarations and infers discrete real
+event-memory from `REINIT(...)` use during system analysis.
 
-- keep the existing `IS_A` variable declarations
-- add an extra classification flag on real atom instances for
-  discrete/event-memory behavior
-- filter such flagged variables out of continuous solver-variable/state lists
-  while still allowing them to store values between events
+Phase 1B now works as follows:
 
-This keeps the implementation closer to the existing `solver_var` machinery and
-avoids duplicating every measure/type into a new discrete-real family.
-
-Phase 1B now follows that direction in a minimal way:
-
-- `solver_var` carries a `discrete` boolean child, currently intended to be set
-  from methods such as `on_load`
-- discrete real variables are treated as fixed between events for solver
+- no explicit `.discrete := TRUE` flag is required on real atoms
+- a real `REINIT(...)` target is accepted as a continuous state if it is a
+  differential/integrator state
+- otherwise, if it is a real `solver_var` that is not part of the continuous
+  DAE relation set, it is inferred as a discrete real event-memory variable
+- inferred discrete reals are treated as fixed between events for solver
   purposes
 - they are excluded from the continuous integrator state vectors
 - they may nevertheless be targeted by `REINIT(...)` so they can act as simple
   real-valued event memory
+- real algebraic variables in ordinary equations are rejected explicitly as
+  `REINIT(...)` targets, because any such reset would only be an inconsistent
+  guess that the post-event DAE solve would immediately overwrite
 - IDA now carries a regression exercising repeated event-memory updates with a
   lengthening-period sawtooth, which depends on reinitialising IDA rootfinding
   state after each event restart
-- after applying `REINIT(...)`, IDA also needs a small post-reset logical
-  settling pass so that discrete variables and active cases are recomputed from
-  the post-event state before continuous integration resumes; this is a first
-  form of event iteration
 - simultaneous boundary crossings from different sources now need to be
   treated as one combined logical event, not silently truncated to the first
   crossed boundary reported by IDA
@@ -709,6 +704,84 @@ Phase 1B now follows that direction in a minimal way:
   imply the same target truth value, but still rejects mixed TRUE/FALSE target
   sets because LRSlv's current perturb interface only carries one target truth
   mode for the whole solve
+
+There are now also small documented example models for the current feature set
+under `models/johnpye/dyn`:
+
+- `ideal_rebound.a4c` shows a clean "bounce without contact kinetics" using
+  `REINIT(v, -e * pre(v));`
+- `lengthening_sawtooth.a4c` shows repeated resets plus discrete real
+  event-memory updates
+
+Phase 1C now extends this one step further for discrete state:
+
+- `REINIT(...)` may also target boolean discrete variables
+- this is enough to support simple latched boolean event memory and
+  state-selection booleans in some cases
+- the implementation should update both the atom instance and the solver-side
+  `dis_discrete` record so that LRSlv / event iteration sees the new value
+  immediately
+- a small regression now exercises this with a boundary-triggered boolean
+  latch in `models/test/ida/reinit_bool.a4c`
+
+There is still an important limitation to keep in mind:
+
+- boolean `REINIT(...)` is now workable when the follow-on `WHEN` structure is
+  either unchanged or structurally equivalent
+- but if that freshly reassigned boolean immediately drives a second
+  structurally different `WHEN` reconfiguration, the current IDA restart path
+  can still become non-square
+- that is therefore a real follow-on problem for later hybrid/state-machine
+  work, not something Phase 1C fully solves by itself
+
+The current IDA event handling is now one step closer to the intended hybrid
+semantics:
+
+- event handling is no longer just "apply one batch of `REINIT(...)` then
+  restart"
+- instead, IDA now performs a same-time event-iteration loop:
+  - settle logical/discrete configuration with LRSlv
+  - apply any newly active `REINIT(...)` actions that have not yet fired in the
+    current event
+  - perform one same-time consistency restart
+  - repeat until no new discrete changes or newly active `REINIT(...)` actions
+    remain
+- within this loop, `pre(x)` now advances with each event iteration rather than
+  staying frozen at the value from immediately before the first event action
+
+That "advancing `pre(x)`" choice is deliberate. It means:
+
+- most event iterations still see `x = pre(x)`
+- but if an earlier event action in the same cascade changes `x`, a later
+  `REINIT(...)` in that same cascade will see the updated value through
+  `pre(x)`
+
+A regression for this now exists in `models/test/ida/reinit_bool_cascade.a4c`:
+
+- one `WHEN` increments a discrete real stage counter and latches a boolean
+- a second `WHEN`, activated only after that latch, increments the stage
+  counter again
+- the final stage value of `2` confirms that `pre(stage)` advanced between the
+  first and second event iterations
+
+There is also one important practical detail in the IDA restart path:
+
+- the post-event root-direction suppression had to be corrected to match the
+  actual semantics of `IDASetRootDirection`
+- otherwise a rebound-style model could immediately fire a second event on the
+  way back out of the boundary and undo the intended `REINIT(...)`
+
+These examples are intended to be readable rather than merely minimal solver
+regressions, and they are also covered by IDA tests so they should remain
+executable.
+
+The regression coverage now also includes a small negative suite for the most
+likely incorrect uses of the current syntax:
+
+- `pre(...)` outside `REINIT(...)`, including in `CONDITIONAL` guards
+- `REINIT(...)` applied to algebraic real variables
+- `REINIT(...)` applied to the independent variable or derivative variables
+- type-mismatched RHS expressions for real and boolean `REINIT(...)` targets
 
 Modelica and gPROMS both keep a semantic distinction here:
 
@@ -718,31 +791,292 @@ Modelica and gPROMS both keep a semantic distinction here:
   while other discontinuous value changes are handled through separate
   mechanisms such as `REASSIGN`
 
-For ASCEND Phase 1B it is still reasonable to keep a single `REINIT(...)`
-surface form for both continuous-state resets and discrete real event-memory
-updates, provided the backend continues to distinguish those two target classes.
-This keeps the first implementation small, while leaving open the option of a
-cleaner split in surface syntax later if it proves worthwhile.
+For ASCEND Phase 1 it is still reasonable to keep a single `REINIT(...)`
+surface form for continuous-state resets, inferred discrete real event-memory
+updates, and discrete boolean/integer/symbol updates, provided the backend
+continues to distinguish those target classes. This keeps the first
+implementation small, while leaving open the option of a cleaner split in
+surface syntax later if it proves worthwhile.
 
 Expression-level event generation, more in the style of Modelica, may also be
 desirable later. However, that should be treated as a future event-source layer
 above the same backend semantics; it is not required for Phase 1A.
 
-#### Future richer STN syntax
+#### Phase 2 plan: gPROMS-like state transitions
 
-If ASCEND later wants first-class state-transition models, that should be a
-third layer, not the first one. For example:
+The next major step should be to move from "event actions inside existing
+`WHEN` cases" toward an explicit state-transition notation, while still
+lowering onto the current `CONDITIONAL` / `SATISFIED(...)` / `WHEN` backend.
+
+The main missing capability is not real-valued reset any more. Phase 1
+already extended `REINIT(...)` so it can update:
+
+- continuous real states
+- discrete real event-memory variables
+- boolean discrete variables
+- integer discrete variables
+- symbol discrete variables
+
+The latest backend work has now taken the first Phase 2 runtime slice a step
+further:
+
+- integer and symbol discrete values can now be updated correctly at event
+  time
+- direct integer/symbol-controlled `WHEN(...)` dispatch already works in IDA
+  analysis and solve
+- the event-time path now also works for those non-boolean discrete changes:
+  after a `REINIT(...)` updates an integer or symbol discrete variable, IDA
+  now performs an unconditional reanalysis before the same-time consistency
+  solve, so the newly selected `WHEN` case becomes active immediately
+- this is now covered by regressions for:
+  - integer and symbol cases selected from the initial state
+  - integer and symbol mode switches triggered by a boundary event
+
+In addition, a first cut of `SWITCH TO value IF guard;` is now implemented on
+top of the existing backend. This currently works for raw integer/symbol mode
+variables in `WHEN(mode)` cases, for example:
 
 ```ascend
-STATE idle, filling, draining;
-
-TRANSITION idle -> filling WHEN start_cmd;
-TRANSITION filling -> draining WHEN level >= high;
-TRANSITION draining -> idle WHEN level <= low;
+WHEN(mode)
+    CASE 'low':
+        USE before_trip;
+        SWITCH TO 'high' IF trigger;
+    CASE 'high':
+        USE after_trip;
+END WHEN;
 ```
 
-That kind of syntax could still lower to the same event backend, but it should
-not block the smaller and more urgent `pre(x)` / `REINIT(...)` work.
+where `trigger` is itself a discrete/logical variable, for example from
+`SATISFIED(...)`.
+
+So the earlier runtime blocker on non-boolean `WHEN` reconfiguration has now
+been resolved for the current Phase 2 groundwork, and the first `SWITCH TO`
+runtime path is working.
+
+What is **not** yet implemented is implicit event generation from direct
+continuous guards such as:
+
+```ascend
+SWITCH TO 'aboveweir' IF h > h_weir;
+```
+
+That still needs a selector/front-end layer that can generate or bind the
+required boundary/event source automatically. For now, the working path is to
+express the event source separately through existing `CONDITIONAL` /
+`SATISFIED(...)` machinery and use that discrete boolean in the `SWITCH TO`
+guard.
+
+The chosen surface direction is now closer to ASCEND's existing
+`WHEN(...) CASE ... END WHEN` shell than to the earlier `CASE ... OF WHEN ...`
+sketch.
+
+The intended declaration style is:
+
+```ascend
+modes IS_A set OF symbol_constant;
+modes :== ['aboveweir', 'belowweir'];
+
+mode IS_A selector OF modes DEFAULT 'belowweir';
+```
+
+and the intended control syntax is:
+
+```ascend
+WHEN(mode)
+    CASE 'belowweir':
+        USE below_weir_eqns;
+        SWITCH TO 'aboveweir' IF h > h_weir;
+    CASE 'aboveweir':
+        USE above_weir_eqns;
+        SWITCH TO 'belowweir' IF h < h_weir;
+END WHEN;
+```
+
+This keeps the current ASCEND `WHEN ... CASE` outer form, while adding the
+gPROMS-like `SWITCH TO ... IF ...` declaration that puts source state, guard,
+and target state together in one place.
+
+That selector declaration syntax is now implemented in a first working form.
+The current slice is intentionally thin:
+
+- `selector` is currently just a lightweight type refining `symbol`
+- `mode IS_A selector OF modes DEFAULT '...'` now parses and instantiates
+- the declaration-time `DEFAULT` value is checked against the declared domain
+  set
+- selector-driven `WHEN(mode)` cases run on top of the existing integer/symbol
+  `WHEN` machinery
+- selector `CASE` values and `SWITCH TO` targets are now checked against the
+  declared selector domain
+
+This is enough to exercise the new syntax and semantics in IDA regressions.
+What it does **not** yet provide is a rich instance-tree representation of the
+selector's domain/default metadata; at present those still live primarily in
+the declaration statement rather than as inspectable child nodes.
+
+The intended semantic rules are:
+
+- old boolean-list `WHEN(bool1, bool2, ...)` remains valid unchanged
+- new selector form is `WHEN(mode)` with exactly one selector argument
+- mixed forms such as `WHEN(mode, some_boolean)` should be rejected
+- selector `CASE` labels must belong to the selector's declared value set
+- `SWITCH TO` targets must likewise belong to that set
+- selector-driven `WHEN`s should ideally be exhaustive; `OTHERWISE` should not
+  be required
+
+The first three of those rules are now enforced for the current selector
+slice. Exhaustiveness is not yet checked globally; the current implementation
+does reject `OTHERWISE`-style selector fallthrough only indirectly, and a
+non-exhaustive selector `WHEN` can still be diagnosed later as "no case
+matched".
+
+The recommended Phase 2 semantic target is:
+
+- explicit selector/mode memory
+- state-local equation selection
+- state-local outgoing transitions
+- optional transition actions (`REINIT`, later `REASSIGN`)
+- post-transition event iteration until the discrete configuration is stable
+- explicit priority / exclusivity rules for multiple enabled outgoing
+  transitions
+
+The important point is not the exact spelling, but that the source state, the
+guard, and the target state appear together in one place. That is the key
+readability advantage of the gPROMS style.
+
+The existing backend can still do most of the heavy lifting:
+
+- transition guards lower to `CONDITIONAL` relations / logrelations
+- guard truth values lower through `SATISFIED(...)` or logical relations
+- active-state equation selection lowers to current `WHEN` / `CASE`
+- transition actions lower to solver-side action lists attached to the active
+  case
+
+What Phase 2 needs in addition is a first-class selector variable and
+transition-action model.
+
+##### User-interface / instance-tree implications
+
+If Phase 2 is only lowered silently to today's `WHEN` / `CASE` nodes, the GTK
+instance tree will become hard to read. The user will see a forest of boundary
+booleans and cases, but not the higher-level state machine they wrote.
+
+So the compiler-side representation should preserve state/transition structure
+for the UI, even if the solver backend still receives lowered `WHEN` data.
+
+A sensible tree shape would be:
+
+- selector node
+- state nodes beneath the selector
+- transition nodes beneath each state
+- under each transition:
+  - guard
+  - target state
+  - action list (`REINIT`, later `REASSIGN`)
+
+This could be done either with new instance kinds or with synthetic child nodes
+attached to an enriched `WHEN` instance. The important requirement is that the
+browser view should show the source-state-local transitions directly.
+
+##### Example-driven requirements
+
+The following examples are good anchors for Phase 2 semantics:
+
+- overflowing weir:
+  two-mode structure (`below_weir` / `overflowing`), mostly equation
+  switching, little or no reset logic
+- bursting disc:
+  one-way transition (`intact -> burst`) that never returns; requires explicit
+  mode memory
+- safety relief valve:
+  open / closed transitions with hysteresis and possible priorities if several
+  valve conditions are present
+- adaptive cruise control:
+  multiple control modes, mode-local equations, and source-state-dependent
+  transition availability
+- bouncing ball:
+  transition action semantics (`REINIT(v, -e * pre(v))`) plus post-event
+  settling
+
+Together these examples imply that Phase 2 must support:
+
+- reversible transitions
+- one-shot transitions
+- hysteresis
+- state-conditioned guards
+- transition-local actions
+- multiple outgoing transitions from the same state
+- explicit conflict resolution when several outgoing transitions are enabled
+
+##### Concrete implementation slices
+
+To keep Phase 2 reviewable and incremental, it should probably be split into
+small semantic slices rather than attempted as one parser rewrite:
+
+- Phase 2A: backend prerequisite
+  - completed groundwork:
+    integer/symbol-controlled `WHEN` reconfiguration now works in the
+    IDA/LRSlv event path
+  - next step is to expose that capability through selector syntax rather than
+    raw integer/symbol variables
+- Phase 2B: first-class selector declaration syntax in the compiler
+  - add `selector` as an instance-backed concept
+  - allow `mode IS_A selector OF modes DEFAULT '...'`
+  - preserve selector/value-set structure in the compiler representation for
+    UI display
+- Phase 2C: transition syntax
+  - current implemented slice:
+    `SWITCH TO 'state' IF guard;` inside raw integer/symbol `WHEN(mode)`
+  - next step:
+    connect that syntax to first-class selector declarations rather than raw
+    integer/symbol variables
+  - keep `USE` in the first cut
+- Phase 2D: runtime transition semantics
+  - define transition priority / exclusivity
+  - define event iteration when a transition action enables another transition
+  - define one-shot vs reversible transition behavior
+- Phase 2E: UI / instance-tree presentation
+  - show selectors, states, transitions, guards, and actions directly in the
+    browser tree
+  - avoid exposing only the lowered forest of `SATISFIED(...)` booleans and
+    backend `WHEN` nodes
+
+The recommended implementation order is:
+
+1. add selector declaration syntax while preserving selector structure for the
+   UI
+2. add `SWITCH TO` lowering on top of the existing backend
+3. exercise selector syntax on top of the now-working non-boolean
+   reconfiguration path
+4. then refine priority, actions, and inline-equation support once the basic
+   models are executable
+
+##### Why widened `REINIT(...)` is not enough
+
+Phase 1B intentionally stretched `REINIT(...)` further than either Modelica or
+gPROMS by also allowing discrete real event-memory targets.
+
+That still does **not** make it a full replacement for a future
+`REASSIGN`-like syntax, because the missing Phase 2 capability is not merely
+"resetting something discontinuously". The missing part is "changing named
+discrete state in a way that the source language can express directly, that
+the backend can use to reconfigure active equations, and that the UI can
+display intelligibly".
+
+##### What current syntax still cannot cover cleanly
+
+Current Phase 1 syntax can express many present-time conditions, but it still
+cannot cleanly express:
+
+- rising-edge detection on a calculated boolean, e.g.
+  `ready AND NOT pre(ready)`
+- a latched mode transition such as
+  "if state is `off` and cooldown has expired and storage is sufficient, move
+  to `running` and stay there until a different stop transition fires"
+- symbolic selector updates such as `mode := running`
+- transition priorities between several enabled target states from the same
+  source state
+
+Those are exactly the gaps Phase 2 should close.
 
 ## `INITIAL`
 

@@ -306,6 +306,9 @@ static int TypeLintRejectPreOutsideReinit(CONST struct Statement *s, CONST struc
   if(expr == NULL || !ExprContainsPreSimple(expr, NULL)){
     return 0;
   }
+  if(s != NULL && StatementType(s) == REINIT){
+    return 0;
+  }
   WriteStatementError(ASC_USER_ERROR, s, 1,
     "pre(...) is only allowed inside REINIT(...) in Phase 1A.");
   return 1;
@@ -520,6 +523,21 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
       if ((context & context_WHEN) == 0) {
         rval = DEF_STAT_MISLOCATED;
         TypeLintError(fp,s,rval);
+      }else{
+        if (TypeLintRejectPreOutsideReinit(s, ReinitStatRHS(s))) {
+          rval = DEF_MISC_ERROR;
+        }
+      }
+      break;
+    case SWITCHTO:
+      if ((context & context_WHEN) == 0) {
+        rval = DEF_STAT_MISLOCATED;
+        TypeLintError(fp,s,rval);
+      }else{
+        if (TypeLintRejectPreOutsideReinit(s, SwitchToStatValue(s))
+            || TypeLintRejectPreOutsideReinit(s, SwitchToStatGuard(s))) {
+          rval = DEF_MISC_ERROR;
+        }
       }
       break;
     case WHEN:

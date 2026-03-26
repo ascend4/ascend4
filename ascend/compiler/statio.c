@@ -248,6 +248,7 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl){
     case ASGN:
     case CASGN:
     case REINIT:
+    case SWITCHTO:
     case RUN:
     case IF:
     case WHEN:
@@ -320,15 +321,18 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
       if (GetStatTypeArgs(s) != NULL) {
         FPRINTF(f,"(");
         WriteSet(f,GetStatTypeArgs(s));
-        FPRINTF(f,");\n");
-      } else {
-        FPRINTF(f,";\n");
+        FPRINTF(f,")");
       }
     } else {
       /* no parameters to sets */
-      FPRINTF(f," IS_A %s OF %s;\n",
+      FPRINTF(f," IS_A %s OF %s",
               SCP(GetStatType(s)),SCP(GetStatSetType(s)));
     }
+    if (GetStatCheckValue(s)!=NULL ) {
+      FPRINTF(f, GetStatCheckKind(s)==ISCV_WITH_VALUE ? " WITH_VALUE " : " DEFAULT ");
+      WriteExpr(f,GetStatCheckValue(s));
+    }
+    FPRINTF(f,";\n");
     break;
   case WILLBE:
     WriteVariableList(f,GetStatVarList(s));
@@ -667,6 +671,13 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
     WriteExpr(f,ReinitStatRHS(s));
     FPRINTF(f,");\n");
     break;
+  case SWITCHTO:
+    FPRINTF(f,"SWITCH TO ");
+    WriteExpr(f,SwitchToStatValue(s));
+    FPRINTF(f," IF ");
+    WriteExpr(f,SwitchToStatGuard(s));
+    FPRINTF(f,";\n");
+    break;
   case ASSERT:
 	FPRINTF(f,"ASSERT ");
 	WriteExpr(f,AssertStatExpr(s));
@@ -975,6 +986,7 @@ symchar *StatementTypeString(CONST struct Statement *s){
     g_statio_stattypenames[WBTS] = AddSymbol("WILL_BE_THE_SAME");
     g_statio_stattypenames[WNBTS] = AddSymbol("WILL_NOT_BE_THE_SAME");
     g_statio_stattypenames[REINIT] = AddSymbol("REINIT");
+    g_statio_stattypenames[SWITCHTO] = AddSymbol("SWITCHTO");
     g_statio_stattypenames[TABLESTAT] = AddSymbol("TABLE");
     g_statio_stattypenames[DATASETSTAT] = AddSymbol("DATASET");
     g_statio_stattypenames[WILLBE] = AddSymbol("WILL_BE");
@@ -1009,6 +1021,7 @@ symchar *StatementTypeString(CONST struct Statement *s){
   case EXT:
   case CALL:
   case REINIT:
+  case SWITCHTO:
   case ASSERT:
   case REF:
   case COND:

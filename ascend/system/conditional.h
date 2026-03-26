@@ -281,6 +281,7 @@ struct when_case {
 struct when_reinit {
   SlvBackendToken target;         /**< resolved target instance */
   const struct Expr *rhs;         /**< RHS expression evaluated at event time */
+  const struct Expr *guard;       /**< optional guard expression evaluated at event time */
 };
 
 extern struct when_reinit *when_reinit_create(struct when_reinit *newreinit);
@@ -289,6 +290,8 @@ extern SlvBackendToken when_reinit_target(const struct when_reinit *wr);
 extern void when_reinit_set_target(struct when_reinit *wr, SlvBackendToken target);
 extern const struct Expr *when_reinit_rhs(const struct when_reinit *wr);
 extern void when_reinit_set_rhs(struct when_reinit *wr, const struct Expr *rhs);
+extern const struct Expr *when_reinit_guard(const struct when_reinit *wr);
+extern void when_reinit_set_guard(struct when_reinit *wr, const struct Expr *guard);
 
 extern struct when_case *when_case_create(struct when_case *newcase);
 /**<

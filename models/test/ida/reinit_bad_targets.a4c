@@ -1,0 +1,220 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_reinit_bad_indep;
+
+	t      IS_A time;
+	y      IS_A distance;
+	ydot   IS_A speed;
+	switch IS_A boolean_var;
+
+	drive: ydot = 1 {m/s};
+
+CONDITIONAL
+	trigger: t >= 1 {s};
+END CONDITIONAL;
+
+	switch == SATISFIED(trigger, 1e-8 {s});
+
+WHEN(switch)
+	CASE TRUE:
+		REINIT(t, 0 {s});
+	CASE FALSE:
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		RUN values;
+	END on_load;
+
+	METHOD ode_init;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+	END ode_init;
+
+	METHOD values;
+		y := 0 {m};
+		t := 0 {s};
+		switch := FALSE;
+	END values;
+END ida_reinit_bad_indep;
+
+MODEL ida_reinit_bad_derivative;
+
+	t      IS_A time;
+	y      IS_A distance;
+	ydot   IS_A speed;
+	switch IS_A boolean_var;
+
+	drive: ydot = 1 {m/s};
+
+CONDITIONAL
+	trigger: t >= 1 {s};
+END CONDITIONAL;
+
+	switch == SATISFIED(trigger, 1e-8 {s});
+
+WHEN(switch)
+	CASE TRUE:
+		REINIT(ydot, 0 {m/s});
+	CASE FALSE:
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		RUN values;
+	END on_load;
+
+	METHOD ode_init;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+	END ode_init;
+
+	METHOD values;
+		y := 0 {m};
+		t := 0 {s};
+		switch := FALSE;
+	END values;
+END ida_reinit_bad_derivative;
+
+MODEL ida_reinit_bad_integer_target;
+
+	y, ydot        IS_A generic_real;
+	sample         IS_A generic_real;
+	period         IS_A generic_real;
+	t              IS_A time;
+	mode           IS_A integer;
+	tick           IS_A boolean_var;
+
+	drive:   ydot = 1;
+	observe: sample = y;
+
+CONDITIONAL
+	tick_boundary: y >= period;
+END CONDITIONAL;
+
+	tick == SATISFIED(tick_boundary, 1e-8);
+
+WHEN(tick)
+	CASE TRUE:
+		REINIT(mode, 1);
+	CASE FALSE:
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		RUN values;
+	END on_load;
+
+	METHOD ode_init;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id   := 1; ydot.ode_id   := 1;
+		t.ode_type := -1;
+	END ode_init;
+
+	METHOD values;
+		y := 0;
+		period := 1;
+		mode := 0;
+		t := 0 {s};
+		tick := FALSE;
+	END values;
+END ida_reinit_bad_integer_target;
+
+MODEL ida_reinit_bad_boolean_rhs;
+
+	t, trip_time     IS_A time;
+	y, ydot          IS_A generic_real;
+	sample           IS_A generic_real;
+	trigger, latched IS_A boolean_var;
+
+	drive:       ydot = 1;
+	before_latch: sample = y;
+	after_latch:  sample = y;
+
+CONDITIONAL
+	trip: y >= trip_time;
+END CONDITIONAL;
+
+	trigger == SATISFIED(trip, 1e-8);
+
+WHEN(trigger)
+	CASE TRUE:
+		REINIT(latched, y);
+	CASE FALSE:
+END WHEN;
+
+WHEN(latched)
+	CASE TRUE:
+		USE after_latch;
+	CASE FALSE:
+		USE before_latch;
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		FIX trip_time;
+		trip_time := 1 {s};
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		t := 0 {s};
+		trigger := FALSE;
+		latched := FALSE;
+	END values;
+END ida_reinit_bad_boolean_rhs;
+
+MODEL ida_reinit_bad_real_rhs;
+
+	y, ydot        IS_A generic_real;
+	sample         IS_A generic_real;
+	period         IS_A generic_real;
+	t              IS_A time;
+	tick           IS_A boolean_var;
+
+	drive:   ydot = 1;
+	observe: sample = y;
+
+CONDITIONAL
+	tick_boundary: y >= period;
+END CONDITIONAL;
+
+	tick == SATISFIED(tick_boundary, 1e-8);
+
+WHEN(tick)
+	CASE TRUE:
+		REINIT(y, TRUE);
+	CASE FALSE:
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		RUN values;
+	END on_load;
+
+	METHOD ode_init;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id   := 1; ydot.ode_id   := 1;
+		t.ode_type := -1;
+	END ode_init;
+
+	METHOD values;
+		y := 0;
+		period := 1;
+		t := 0 {s};
+		tick := FALSE;
+	END values;
+END ida_reinit_bad_real_rhs;

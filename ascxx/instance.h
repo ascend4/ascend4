@@ -100,6 +100,7 @@ public:
 	const bool isBool() const;
 	const bool isInt() const;
 	const bool isSymbol() const;
+	const bool isSelector() const;
 	const bool isReal() const;
 	const bool isAssigned() const;
 	const bool isModel() const;
@@ -110,6 +111,7 @@ public:
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+	const SymChar getSelectorValue() const;
 
 	const std::string getWhenAsString(const Instanc &relative_to) const;
 	const std::string getLogrelAsString(const Instanc &relative_to) const;
@@ -126,6 +128,7 @@ public:
 	void setRealValue(const double&, const unsigned &depth=0);
 	void setRealValueWithUnits(double, const char *, const unsigned &depth=0);
 	void setSymbolValue(const SymChar &);
+	void setSelectorValue(const SymChar &);
 
 	template<class T>
 	const ASCXX_Set<T> getSetValue() const{

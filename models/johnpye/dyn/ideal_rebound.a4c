@@ -1,0 +1,144 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+    ideal_rebound
+    ==============
+
+    This is a minimal, readable "bouncing ball without contact kinetics"
+    example for ASCEND's current `REINIT(...)` / `pre(x)` support.
+
+    Important point:
+    The *impact law* is not represented by a spring or damper. The actual
+    change of velocity at impact is imposed by
+
+        REINIT(v, -e * pre(v));
+
+    The extra force variables below are only present so that the model sits in
+    the same first-order DAE shape already known to work well with the current
+    IDA analysis path. In the default parameter set we set
+
+        g  = 0
+        k1 = 0
+        k2 = 0
+
+    so there is no gravitational forcing and no continuous contact force.
+    Between events the ball therefore moves with constant velocity, and the
+    only real "bounce" mechanism is the event-time reset.
+
+    This model is intended for IDA.
+*)
+MODEL ideal_rebound;
+
+    (* Continuous states and their derivatives. *)
+    y           IS_A distance;      (* ball centre position *)
+    v, ydot     IS_A speed;         (* velocity and dy/dt alias *)
+    a           IS_A acceleration;  (* dv/dt *)
+
+    (* Force bookkeeping used to keep a well-tested DAE structure. *)
+    F_net       IS_A force;
+    F_g         IS_A force;
+    F_d         IS_A force;
+    F_s         IS_A force;
+
+    (* Physical parameters. *)
+    m           IS_A mass;
+    g           IS_A acceleration;
+    r           IS_A distance;
+    k1          IS_A stiffness;
+    k2          IS_A damping_coefficient;
+    e           IS_A fraction;
+
+    (* Independent variable and event memory. *)
+    t, t_last_event IS_A time;
+
+    (* Boundary-driven event selector. *)
+    impact      IS_A boolean_var;
+
+    (*
+        Continuous dynamics:
+
+        - `v = ydot` binds the named velocity to the derivative of position.
+        - `m*a = F_net` is the acceleration equation for the second state.
+        - with the default values below, the force terms are all zero between
+          events, so the ball travels at constant velocity.
+    *)
+    motion:     m * a = F_net;
+    gravity:    F_g = -1 * m * g;
+    damping:    F_d = -1 * k2 * v;
+    spring:     F_s = k1 * (r - y);
+    kinematics: v = ydot;
+    free_flight: F_net = F_g;
+    contact_stub: F_net = F_g + F_d + F_s;
+
+CONDITIONAL
+    floor_contact: y <= r;
+END CONDITIONAL;
+
+    impact == SATISFIED(floor_contact, 1e-8 {m});
+
+WHEN(impact)
+    CASE TRUE:
+        (*
+            Event-time reset:
+
+            - `pre(v)` is the velocity immediately before the event.
+            - the post-event velocity is the reflected value.
+            - we also store the event time for later inspection.
+        *)
+        USE contact_stub;
+        REINIT(v, -e * pre(v));
+        REINIT(t_last_event, t);
+    CASE FALSE:
+        USE free_flight;
+END WHEN;
+
+METHODS
+    METHOD on_load;
+        RUN ode_init;
+        RUN values;
+
+        (*
+            `t_last_event` is inferred as a real-valued event-memory
+            variable because it is reinitialized at events but excluded from
+            the continuous DAE relation set.
+        *)
+    END on_load;
+
+    METHOD ode_init;
+        y.ode_type := 1; ydot.ode_type := 2;
+        y.ode_id   := 1; ydot.ode_id   := 1;
+
+        v.ode_type := 1; a.ode_type := 2;
+        v.ode_id   := 2; a.ode_id   := 2;
+
+        t.ode_type := -1;
+    END ode_init;
+
+    METHOD values;
+        FIX m, g, r, k1, k2, e;
+
+        m  := 1 {kg};
+        g  := 0 {m/s^2};
+        r  := 1 {m};
+        k1 := 0 {N/m};
+        k2 := 0 {N*s/m};
+        e  := 1;
+
+        (*
+            The default initial condition gives a single clean reflection:
+
+            - the ball starts at `y = 2 m`
+            - it moves downward at `1 m/s`
+            - it reaches the floor at `t = 1 s`
+            - after the event it moves upward at `1 m/s`
+        *)
+        y := 2 {m};
+        v := -1 {m/s};
+        a := 0 {m/s^2};
+
+        t := 0 {s};
+        t_last_event := -1 {s};
+        impact := FALSE;
+    END values;
+END ideal_rebound;

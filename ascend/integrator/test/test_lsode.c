@@ -266,7 +266,6 @@ static void test_shm(){
 	int index = slv_lookup_client("QRSlv");
 	CU_ASSERT_FATAL(index != -1);
 	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.5,1e-3,1000);
-	slv_system_t sys = integ->system;
 
 	SampleList *samplelist = test_lsode_create_samplelist(0.0, PI, 40);
 	integrator_set_samples(integ,samplelist);

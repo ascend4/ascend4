@@ -327,6 +327,8 @@ ASC_DLLSPEC int integrator_debug(const IntegratorSystem *blsys, FILE *fp);
 */
 
 ASC_DLLSPEC int integrator_apply_reinits(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_apply_reinits_tracked(IntegratorSystem *blsys,
+	struct gl_list_t *applied_reinits);
 /**<
 	Apply active REINIT actions after event/WHEN reconfiguration and before
 	the engine performs any consistent restart calculations.

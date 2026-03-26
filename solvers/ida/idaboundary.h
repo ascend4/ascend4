@@ -44,12 +44,13 @@ void ida_setup_lrslv(IntegratorSystem *integ);
 int ida_bnd_reanalyse(IntegratorSystem *integ);
 
 /**
- * After applying REINIT actions, settle the discrete/logical configuration to
- * a fixed point without executing another round of REINIT statements.
+ * Perform same-time event iteration after a boundary-triggered reconfiguration.
+ * Newly activated REINIT actions are applied at most once per event, with an
+ * IDA consistency solve and LRSlv settling pass between iterations.
  *
  * @return 0 on success
  */
-int ida_bnd_postreinit_iterate(IntegratorSystem *integ);
+int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1);
 
 /**
  * Update the relist, as equations may have been added/removed after a crossing

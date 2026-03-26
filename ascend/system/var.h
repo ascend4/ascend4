@@ -494,9 +494,9 @@ ASC_DLLSPEC uint32 var_fixed(struct var_variable *var);
 ASC_DLLSPEC void var_set_fixed(struct var_variable *var, uint32 fixed);
 /**< Sets the fixed flag of var.  Has side effects in the ascend instance. */
 ASC_DLLSPEC uint32 var_discrete(struct var_variable *var);
-/**< Returns the discrete flag of var. Has side effects in the ascend instance. */
+/**< Returns the discrete/event-memory flag of var from solver-side classification. */
 ASC_DLLSPEC void var_set_discrete(struct var_variable *var, uint32 discrete);
-/**< Sets the discrete flag of var. Has side effects in the ascend instance. */
+/**< Sets the discrete/event-memory flag of var and keeps VAR_FIXED in sync. */
 ASC_DLLSPEC uint32 var_relaxed(struct var_variable *var);
 /**< Returns the relaxed flag of var.  Has side effects in the ascend instance. */
 extern void var_set_relaxed(struct var_variable *var, uint32 fixed);

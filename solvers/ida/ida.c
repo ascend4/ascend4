@@ -132,7 +132,9 @@ typedef void ( IntegratorVarVisitorFn)(IntegratorSystem *integ,
  static void integrator_visit_system_vars(IntegratorSystem *integ,IntegratorVarVisitorFn *visitor);
  static void integrator_dae_show_var(IntegratorSystem *integ, struct var_variable *var, const int *varindx); */
 
+#ifdef STATS_DEBUG
 static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
+#endif
 
 /*-------------------------------------------------------------
  SETUP/TEARDOWN ROUTINES
@@ -422,7 +424,6 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 int ida_load_rellist(IntegratorSystem *integ) {
 	IntegratorIdaData *enginedata;
 	struct rel_relation **rels;
-	char *relname;
 	int i, j, n_solverrels, n_active_rels;
 
 	enginedata = integrator_ida_enginedata(integ);
@@ -947,12 +948,10 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 	yp0 = ida_bnd_new_zero_NV(integ, integ->n_y);
 
 	int i;
-	double val;
 	MSG("Values of the derivatives present in the model");
 	for(i=0; i < integ->n_y; i++) {
 		if(integ->ydot[i]){
-			val = var_value(integ->ydot[i]);
-			MSG("ydot[%d]= %g", i, val);
+			MSG("ydot[%d]= %g", i, var_value(integ->ydot[i]));
 		}
 	}
 
@@ -1043,6 +1042,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	N_Vector ypret, yret;
 	IntegratorIdaData *enginedata;
 	int i, flag = 0;
+	int statuscode = 0;
 
 	int *rootsfound;			/** < IDA rootfinder reports root index in here */
 	int *rootdir;				/** < Used to tell IDA to ignore doulve crossings */
@@ -1169,10 +1169,11 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 					rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 					crossed_to_state = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 
-					if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
-						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
-						return 14;
-					}
+						if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
+							ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
+							statuscode = 14;
+							goto root_cleanup;
+						}
 #ifdef SOLVE_DEBUG
 					for (i = 0; i < enginedata->nbnds; i++) {
 
@@ -1189,7 +1190,6 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							bnd_cond_states);
 
 					if (need_to_reconfigure) {
-						int nreinits;
 						for(i = 0; i < enginedata->nbnds; ++i){
 							crossed_to_state[i] = bnd_cond_states[i];
 						}
@@ -1202,21 +1202,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						 integrator_output_write(integ);
 						 integrator_output_write_obs(integ);
 
-						nreinits = integrator_apply_reinits(integ);
-						if (nreinits < 0) {
-							return 1;
-						}
-
-						if (nreinits > 0) {
-							if (ida_bnd_postreinit_iterate(integ) != 0) {
-								return 1;
+							if (ida_bnd_event_iterate(integ, ida_mem, tout) != 0) {
+								statuscode = 1;
+								goto root_cleanup;
 							}
-						}
-
-						if (ida_bnd_update_relist(integ) != 0) {
-							/* system not square, failure */
-							return 1;
-						}
 
 						/* Need to destroy and rebuild system */
 						//IDAFree(ida_mem);
@@ -1232,7 +1221,6 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							skipping_output = 1;
 						}
 
-						ida_reinit_integrator(integ, ida_mem, tout);
 						/* n_y may have changed */
 						N_VDestroy_Serial(yret);
 						N_VDestroy_Serial(ypret);
@@ -1251,10 +1239,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
 						}
 						for(i = 0; i < enginedata->nbnds; i++) {
-							int at_zero = bndman_calc_at_zero(enginedata->bndlist[i]);
-							if(rootsfound[i] != 0 && at_zero
+							if(rootsfound[i] != 0
 								&& bnd_cond_states[i] == crossed_to_state[i]){
-								rootdir[i] = -1 * rootsfound[i];
+								rootdir[i] = rootsfound[i];
 							}else{
 								rootdir[i] = 0;
 							}
@@ -1264,11 +1251,15 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 #endif
 
 					} /* need to reconfigure */
-					ASC_FREE(rootsfound);
-					ASC_FREE(rootdir);
-					ASC_FREE(crossed_to_state);
-				} /* IDA_ROOT_RETURN */
-			} /* nbnds */
+root_cleanup:
+						ASC_FREE(rootsfound);
+						ASC_FREE(rootdir);
+						ASC_FREE(crossed_to_state);
+						if(statuscode != 0){
+							goto ida_cleanup;
+						}
+					} /* IDA_ROOT_RETURN */
+				} /* nbnds */
 
 		} while (need_to_reinteg); /* end of solve time step */
 
@@ -1291,8 +1282,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	}/* loop through next sample timestep */
 
-	/* -- close the IntegratorReporter */
-	integrator_output_close(integ);
+ida_cleanup:
+		/* -- close the IntegratorReporter */
+		integrator_output_close(integ);
 
 	/* get optional outputs */
 #ifdef STATS_DEBUG
@@ -1317,10 +1309,14 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	/* free solver memory */
 	IDAFree(&ida_mem);
 
-	if (flag < -500) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", tout);
-		return -flag;
-	}
+		if (statuscode != 0) {
+			return statuscode;
+		}
+
+		if (flag < -500) {
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", tout);
+			return -flag;
+		}
 
 	if (flag < 0) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solving aborted while attempting t = %f", tout);
@@ -1341,6 +1337,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
  @return IDA_SUCCESS on success.
  */
+#ifdef STATS_DEBUG
 static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
 
 	return IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals, &s->nlinsetups
@@ -1348,5 +1345,6 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
 			,&s->hlast, &s->hcur, &s->tcur
 	);
 }
+#endif
 
 /* vim: set ts=4: */

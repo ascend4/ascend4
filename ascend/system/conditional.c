@@ -251,6 +251,7 @@ const struct when_case g_case_defaults = {
 
 static const struct when_reinit g_when_reinit_defaults = {
   NULL,
+  NULL,
   NULL
 };
 
@@ -303,6 +304,16 @@ const struct Expr *when_reinit_rhs(const struct when_reinit *wr){
 void when_reinit_set_rhs(struct when_reinit *wr, const struct Expr *rhs){
   assert(wr);
   wr->rhs = rhs;
+}
+
+const struct Expr *when_reinit_guard(const struct when_reinit *wr){
+  assert(wr);
+  return wr->guard;
+}
+
+void when_reinit_set_guard(struct when_reinit *wr, const struct Expr *guard){
+  assert(wr);
+  wr->guard = guard;
 }
 
 
@@ -481,4 +492,3 @@ void when_case_set_flagbit(struct when_case *wc, uint32 field,
     wc->flags &= ~field;
   }
 }
-

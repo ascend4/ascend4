@@ -115,7 +115,7 @@ static struct Instance *InitMethodRoot(struct procFrame *fm)
 static struct gl_list_t *ResolveDerivativeBaseInstances(
   struct procFrame *fm,
   CONST struct Name *name,
-  REL_ERRORLIST *err
+  rel_errorlist *err
 ){
   CONST struct Name *base;
   if(fm == NULL || name == NULL || !NameIsDerivativeRef(name)){
@@ -132,44 +132,45 @@ static struct gl_list_t *ResolveDerivativeInstances(
   struct procFrame *fm,
   CONST struct Name *name
 ){
-  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  rel_errorlist err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *bases;
-  struct gl_list_t *derivs;
+  struct gl_list_t *derivs = NULL;
   struct Instance *root;
   unsigned i, len;
   bases = ResolveDerivativeBaseInstances(fm, name, &err);
   if(bases == NULL){
-    return NULL;
+    goto cleanup;
   }
   root = InitMethodRoot(fm);
   derivs = gl_create(gl_length(bases) > 0 ? gl_length(bases) : 1);
   if(derivs == NULL){
-    gl_destroy(bases);
-    return NULL;
+    goto cleanup;
   }
   len = gl_length(bases);
   for(i = 1; i <= len; ++i){
     struct Instance *base = (struct Instance *)gl_fetch(bases, i);
     struct Instance *deriv;
     if(base == NULL || InstanceKind(base) != REAL_ATOM_INST){
-      gl_destroy(bases);
       gl_destroy(derivs);
-      return NULL;
+      derivs = NULL;
+      goto cleanup;
     }
     if(DerivativeInstancesMarkPresent(root, base)){
-      gl_destroy(bases);
       gl_destroy(derivs);
-      return NULL;
+      derivs = NULL;
+      goto cleanup;
     }
     deriv = InstanceEnsureDerivative(base);
     if(deriv == NULL){
-      gl_destroy(bases);
       gl_destroy(derivs);
-      return NULL;
+      derivs = NULL;
+      goto cleanup;
     }
     gl_append_ptr(derivs, deriv);
   }
+cleanup:
   gl_destroy(bases);
+  rel_errorlist_destroy_contents(&err);
   return derivs;
 }
 

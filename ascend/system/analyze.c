@@ -76,6 +76,7 @@
 #include <ascend/compiler/atomvalue.h>
 #include <ascend/compiler/dimen.h>
 #include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/name.h>
 #include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/expr_types.h>
 #include <ascend/compiler/exprs.h>
@@ -100,6 +101,8 @@
 #include <ascend/compiler/when_util.h>
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/derivinst.h>
+#include <ascend/compiler/evaluate.h>
+#include <ascend/compiler/setinstval.h>
 
 #include "slv_server.h"
 #include "cond_config.h"
@@ -117,7 +120,7 @@
   GLOBAL VARS
 */
 
-static symchar *g_strings[7];
+static symchar *g_strings[6];
 
 struct derivative_bind_data {
   struct Instance *root;
@@ -591,7 +594,10 @@ static void recover_bound_derivative_terms(struct Instance *inst, VOIDPTR userda
 #define DERIV_A g_strings[3]
 #define ODEID_A g_strings[4]
 #define OBSID_A g_strings[5]
-#define DISCRETE_A g_strings[6]
+
+#define ANALYZE_REINIT_OTHER_VAR -1L
+#define ANALYZE_REINIT_ALGEBRAIC_VAR 0L
+#define ANALYZE_REINIT_STATE_VAR 1L
 
 /*
 	a bridge buffer used so much we aren't going to free it, just reuse it
@@ -611,7 +617,199 @@ struct gl_list_t *g_symbol_values_list = NULL;
 */
 static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
                                  struct gl_list_t *, struct gl_list_t *);
+static void ProcessSwitchGuardDiscreteDeps(struct Instance *context,
+    const struct Expr *guard);
 static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data);
+static int analyze_reinit_marks_discrete_real(struct problem_t *p_data, const struct Instance *inst);
+static int BooleanChildValue(struct Instance *i,symchar *sc);
+static int IntegerChildValue(struct Instance *i,symchar *sc);
+
+static int analyze_instance_in_list(struct gl_list_t *list, const struct Instance *inst){
+  unsigned long i, len;
+
+  if(list == NULL || inst == NULL){
+    return 0;
+  }
+
+  len = gl_length(list);
+  for(i = 1; i <= len; ++i){
+    if((const struct Instance *)gl_fetch(list, i) == inst){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static long analyze_real_target_role(struct problem_t *p_data, struct Instance *inst){
+  long deriv = 0;
+  long odeid = 0;
+  struct dynreg_entry *dyn;
+
+  if(inst == NULL || InstanceKind(inst) != REAL_ATOM_INST){
+    return ANALYZE_REINIT_ALGEBRAIC_VAR;
+  }
+
+  deriv = IntegerChildValue(inst, DERIV_A);
+  odeid = IntegerChildValue(inst, ODEID_A);
+  if(deriv == 0 && odeid == 0){
+    dyn = dynamic_registry_lookup(p_data, inst);
+    if(dyn != NULL){
+      deriv = dyn->deriv;
+      odeid = dyn->odeid;
+    }
+  }
+
+  if(deriv == ANALYZE_REINIT_OTHER_VAR){
+    return ANALYZE_REINIT_OTHER_VAR;
+  }
+  if(deriv == ANALYZE_REINIT_STATE_VAR && odeid != 0){
+    return ANALYZE_REINIT_STATE_VAR;
+  }
+  if(deriv > ANALYZE_REINIT_STATE_VAR){
+    return deriv;
+  }
+  return ANALYZE_REINIT_ALGEBRAIC_VAR;
+}
+
+static int analyze_real_target_has_continuous_relation(struct Instance *inst){
+  unsigned long i, len;
+
+  if(inst == NULL || InstanceKind(inst) != REAL_ATOM_INST){
+    return 0;
+  }
+
+  len = RelationsCount(inst);
+  for(i = 1; i <= len; ++i){
+    struct Instance *relinst = RelationsForAtom(inst, i);
+    const struct relation *rel;
+    if(relinst == NULL || InstanceKind(relinst) != REL_INST){
+      continue;
+    }
+    rel = GetInstanceRelationOnly(relinst);
+    if(rel != NULL && !RelationIsCond(rel)){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static int analyze_append_reinit_discrete_real(struct problem_t *p_data, struct Instance *target){
+  long role;
+  char *targetname = NULL;
+
+  if(p_data == NULL || target == NULL){
+    return 1;
+  }
+  if(InstanceKind(target) != REAL_ATOM_INST){
+    return 0;
+  }
+  if(!solver_var(target)){
+    targetname = WriteInstanceNameString(target, p_data->root);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "REINIT target '%s' must be a solver_var, boolean_var, or other supported discrete variable",
+      targetname);
+    ascfree(targetname);
+    return 1;
+  }
+
+  role = analyze_real_target_role(p_data, target);
+  if(role == ANALYZE_REINIT_STATE_VAR){
+    return 0;
+  }
+  if(role == ANALYZE_REINIT_OTHER_VAR || role > ANALYZE_REINIT_STATE_VAR){
+    targetname = WriteInstanceNameString(target, p_data->root);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "REINIT target '%s' must be a differential state or inferred discrete/event-memory variable, not an independent/derivative variable",
+      targetname);
+    ascfree(targetname);
+    return 1;
+  }
+  if(analyze_real_target_has_continuous_relation(target)){
+    targetname = WriteInstanceNameString(target, p_data->root);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "REINIT target '%s' is a real algebraic variable in ordinary equations; only differential states and event-memory reals are supported",
+      targetname);
+    ascfree(targetname);
+    return 1;
+  }
+
+  if(p_data->reinit_discretes == NULL){
+    p_data->reinit_discretes = gl_create(4L);
+    if(p_data->reinit_discretes == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory while inferring REINIT target classes.");
+      return 1;
+    }
+  }
+  if(!analyze_instance_in_list(p_data->reinit_discretes, target)){
+    gl_append_ptr(p_data->reinit_discretes, target);
+  }
+  return 0;
+}
+
+static void *analyze_collect_reinit_targets(struct Instance *inst, struct problem_t *p_data){
+  struct gl_list_t *cases;
+  struct Instance *context;
+  unsigned long c, nc;
+
+  if(p_data == NULL || inst == NULL || InstanceKind(inst) != WHEN_INST){
+    return NULL;
+  }
+
+  context = InstanceParent(inst, 1);
+  if(context == NULL){
+    context = inst;
+  }
+
+  cases = GetInstanceWhenCases(inst);
+  nc = cases != NULL ? gl_length(cases) : 0;
+  for(c = 1; c <= nc; ++c){
+    struct Case *cur_case = (struct Case *)gl_fetch(cases, c);
+    struct gl_list_t *src = GetCaseReinitStatements(cur_case);
+    unsigned long i, len = src != NULL ? gl_length(src) : 0;
+    for(i = 1; i <= len; ++i){
+      struct Statement *statement = (struct Statement *)gl_fetch(src, i);
+      struct gl_list_t *instances;
+      struct Instance *target;
+      REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+
+      if(statement == NULL || StatementType(statement) != REINIT){
+        continue;
+      }
+
+      instances = FindInstances(context, ReinitStatVar(statement), &err);
+      if(instances == NULL || gl_length(instances) != 1){
+        if(instances != NULL)gl_destroy(instances);
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "Unable to resolve REINIT target while analysing WHEN cases");
+        p_data->bad_rel_in_list = TRUE;
+        return NULL;
+      }
+
+      target = (struct Instance *)gl_fetch(instances, 1);
+      gl_destroy(instances);
+
+      if(analyze_append_reinit_discrete_real(p_data, target)){
+        p_data->bad_rel_in_list = TRUE;
+        return NULL;
+      }
+    }
+  }
+
+  return NULL;
+}
+
+static int analyze_infer_reinit_targets(struct problem_t *p_data){
+  if(p_data == NULL || p_data->root == NULL){
+    return 1;
+  }
+  VisitInstanceTreeTwo(p_data->root, (VisitTwoProc)analyze_collect_reinit_targets, TRUE, FALSE,
+                       (VOIDPTR)p_data);
+  return p_data->bad_rel_in_list ? 1 : 0;
+}
+
+static int analyze_reinit_marks_discrete_real(struct problem_t *p_data, const struct Instance *inst){
+  return analyze_instance_in_list(p_data != NULL ? p_data->reinit_discretes : NULL, inst);
+}
 
 /*------------------------------------------------------------------------------
   SOME STUFF WITH INTERFACE POINTERS
@@ -1062,7 +1260,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     if(solver_var(inst)){
       //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
-      ip->u.v.discrete = BooleanChildValue(inst,DISCRETE_A);
+      ip->u.v.discrete = analyze_reinit_marks_discrete_real(p_data, inst);
       ip->u.v.fixed = BooleanChildValue(inst,FIXED_A) || ip->u.v.discrete;
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
@@ -1772,6 +1970,7 @@ void analyze_free_lists(struct problem_t *p_data){
   ADUN(indepvars);
   ADUN(obsvars); /* observed variables */
   ADUN(dynbindrels);
+  ADUN(reinit_discretes);
   if(p_data->dynhiddeninsts != NULL){
     unsigned long i, len = gl_length(p_data->dynhiddeninsts);
     for(i = 1; i <= len; ++i){
@@ -1863,6 +2062,116 @@ void ProcessValueList(struct Set *ValueList, int *value
     }
   }else{
     *value = -1;  /* OTHERWISE */
+  }
+}
+
+static int AnalyzeIsSelectorType(CONST struct TypeDescription *desc)
+{
+  symchar *selector_name = AddSymbol("selector");
+  while (desc != NULL) {
+    if (GetName(desc) == selector_name) {
+      return 1;
+    }
+    desc = GetRefinement(desc);
+  }
+  return 0;
+}
+
+static CONST struct set_t *AnalyzeSelectorDomain(struct Instance *context,
+                                                 struct Instance *selector,
+                                                 CONST struct Statement **decl_out)
+{
+  CONST struct Statement *decl;
+  struct Name *domain_name;
+  struct gl_list_t *instances;
+  struct Instance *domain;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  symchar *domain_id;
+
+  if (decl_out != NULL) {
+    *decl_out = NULL;
+  }
+  if (context == NULL || selector == NULL || !AnalyzeIsSelectorType(InstanceTypeDesc(selector))) {
+    return NULL;
+  }
+
+  decl = InstanceDeclarationStatement(selector,context);
+  if (decl_out != NULL) {
+    *decl_out = decl;
+  }
+  if (decl == NULL) {
+    return NULL;
+  }
+
+  domain_id = GetStatSetType(decl);
+  if (domain_id == NULL) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Selector declaration is missing a domain set");
+    return NULL;
+  }
+
+  domain_name = CreateIdName(domain_id);
+  instances = FindInstances(context,domain_name,&err);
+  DestroyName(domain_name);
+  if (instances == NULL || gl_length(instances) != 1) {
+    if (instances != NULL) gl_destroy(instances);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Unable to resolve selector domain set '%s'", SCP(domain_id));
+    return NULL;
+  }
+
+  domain = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+  if (domain == NULL || InstanceKind(domain) != SET_ATOM_INST) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Selector domain '%s' must be a set instance", SCP(domain_id));
+    return NULL;
+  }
+
+  return SetAtomList(domain);
+}
+
+static int AnalyzeSelectorExprInDomain(CONST struct Expr *expr,
+                                       CONST struct set_t *domain)
+{
+  if (expr == NULL || domain == NULL) {
+    return 0;
+  }
+
+  switch (ExprType(expr)) {
+  case e_symbol:
+    return StrMember(ExprSymValue(expr),domain);
+  case e_int:
+    return IntMember((asc_intptr_t)ExprIValue(expr),domain);
+  default:
+    return 0;
+  }
+}
+
+static void ValidateSelectorCaseValues(struct Instance *context,
+                                       struct Instance *selector,
+                                       struct Set *values)
+{
+  CONST struct set_t *domain;
+  struct Set *s;
+
+  domain = AnalyzeSelectorDomain(context,selector,NULL);
+  if (domain == NULL) {
+    return;
+  }
+  if (values == NULL) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Selector WHEN cases must enumerate explicit selector states; OTHERWISE is not supported");
+    return;
+  }
+
+  for (s = values; s != NULL; s = NextSet(s)) {
+    CONST struct Expr *expr = GetSingleExpr(s);
+    if (!AnalyzeSelectorExprInDomain(expr,domain)) {
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,
+        "CASE value is not a member of the selector domain");
+      return;
+    }
   }
 }
 
@@ -1981,7 +2290,8 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
   }
 }
 
-static struct gl_list_t *ProcessWhenReinits(struct Instance *context, struct Case *cur_case){
+static struct gl_list_t *ProcessWhenReinits(struct Instance *context, struct Case *cur_case,
+    struct gl_list_t *whenvars){
   struct gl_list_t *src;
   struct gl_list_t *dest;
   unsigned long i, len;
@@ -2004,24 +2314,57 @@ static struct gl_list_t *ProcessWhenReinits(struct Instance *context, struct Cas
     REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
     struct when_reinit *wr;
 
-    if(statement == NULL || StatementType(statement) != REINIT){
+    if(statement == NULL){
       continue;
     }
 
-    instances = FindInstances(context, ReinitStatVar(statement), &err);
-    if(instances == NULL || gl_length(instances) != 1){
-      if(instances != NULL)gl_destroy(instances);
-      ERROR_REPORTER_HERE(ASC_USER_ERROR,
-        "Unable to resolve REINIT target while analysing WHEN cases");
+    switch(StatementType(statement)){
+    case REINIT:
+      instances = FindInstances(context, ReinitStatVar(statement), &err);
+      if(instances == NULL || gl_length(instances) != 1){
+        if(instances != NULL)gl_destroy(instances);
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "Unable to resolve REINIT target while analysing WHEN cases");
+        continue;
+      }
+      target = (struct Instance *)gl_fetch(instances, 1);
+      gl_destroy(instances);
+      break;
+    case SWITCHTO:
+      if(whenvars == NULL || gl_length(whenvars) != 1){
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "SWITCH TO is only supported inside WHEN statements with exactly one controlling variable");
+        continue;
+      }
+      target = (struct Instance *)gl_fetch(whenvars, 1);
+      if(target == NULL || (InstanceKind(target) != INTEGER_ATOM_INST && InstanceKind(target) != SYMBOL_ATOM_INST)){
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "SWITCH TO requires an integer or symbol controlling variable");
+        continue;
+      }
+      if(AnalyzeIsSelectorType(InstanceTypeDesc(target))){
+        CONST struct set_t *domain = AnalyzeSelectorDomain(context,target,NULL);
+        if(domain != NULL && !AnalyzeSelectorExprInDomain(SwitchToStatValue(statement),domain)){
+          ERROR_REPORTER_HERE(ASC_USER_ERROR,
+            "SWITCH TO target is not a member of the selector domain");
+          continue;
+        }
+      }
+      break;
+    default:
       continue;
     }
-
-    target = (struct Instance *)gl_fetch(instances, 1);
-    gl_destroy(instances);
 
     wr = when_reinit_create(NULL);
     when_reinit_set_target(wr, (SlvBackendToken)target);
-    when_reinit_set_rhs(wr, ReinitStatRHS(statement));
+    if(StatementType(statement) == REINIT){
+      when_reinit_set_rhs(wr, ReinitStatRHS(statement));
+      when_reinit_set_guard(wr, NULL);
+    }else{
+      when_reinit_set_rhs(wr, SwitchToStatValue(statement));
+      when_reinit_set_guard(wr, SwitchToStatGuard(statement));
+      ProcessSwitchGuardDiscreteDeps(context, SwitchToStatGuard(statement));
+    }
     gl_append_ptr(dest, wr);
   }
 
@@ -2030,6 +2373,69 @@ static struct gl_list_t *ProcessWhenReinits(struct Instance *context, struct Cas
     return NULL;
   }
   return dest;
+}
+
+static void ProcessSwitchGuardDiscreteDeps(struct Instance *context,
+    const struct Expr *guard){
+  struct gl_list_t *names;
+  unsigned long i, len;
+
+  if(context == NULL || guard == NULL){
+    return;
+  }
+
+  names = EvaluateNamesNeededShallow(guard, NULL, NULL);
+  if(names == NULL){
+    return;
+  }
+
+  len = gl_length(names);
+  for(i = 1; i <= len; ++i){
+    struct Name *name = (struct Name *)gl_fetch(names, i);
+    struct gl_list_t *instances;
+    struct Instance *inst;
+    struct solver_ipdata *ip;
+    REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+
+    if(name == NULL){
+      continue;
+    }
+
+    instances = FindInstances(context, name, &err);
+    if(instances == NULL || gl_length(instances) != 1){
+      if(instances != NULL){
+        gl_destroy(instances);
+      }
+      continue;
+    }
+
+    inst = (struct Instance *)gl_fetch(instances, 1);
+    gl_destroy(instances);
+    if(inst == NULL){
+      continue;
+    }
+
+    switch(InstanceKind(inst)){
+    case BOOLEAN_ATOM_INST:
+    case BOOLEAN_CONSTANT_INST:
+    case INTEGER_ATOM_INST:
+    case INTEGER_CONSTANT_INST:
+    case SYMBOL_ATOM_INST:
+    case SYMBOL_CONSTANT_INST:
+      ip = SIP(GetInterfacePtr(inst));
+      if(ip != NULL){
+        ip->u.dv.inwhen = 1;
+        if(ip->u.dv.data != NULL){
+          dis_set_inwhen(ip->u.dv.data, TRUE);
+        }
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
+  gl_destroy(names);
 }
 
 
@@ -2053,6 +2459,7 @@ static struct gl_list_t *ProcessWhenReinits(struct Instance *context, struct Cas
 static
 void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct gl_list_t *scratch;
+  struct gl_list_t *whenvars_src;
   struct gl_list_t *wvars;
   struct gl_list_t *ref;
   struct gl_list_t *rels;
@@ -2072,14 +2479,22 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct when_case *cur_sol_case;
   int c,r,len,lref;
   int *value;
+  struct Instance *selector_target = NULL;
 
   context = InstanceParent(i, 1);
   if(context == NULL){
     context = i;
   }
 
-  scratch = GetInstanceWhenVars(i);
+  whenvars_src = GetInstanceWhenVars(i);
+  scratch = whenvars_src;
   len = gl_length(scratch);
+  if(len == 1){
+    selector_target = (struct Instance *)gl_fetch(scratch,1);
+    if(selector_target != NULL && !AnalyzeIsSelectorType(InstanceTypeDesc(selector_target))){
+      selector_target = NULL;
+    }
+  }
   wvars = gl_create(len);
   when->dvars = wvars;
   for(c=1;c<=len;c++){
@@ -2103,6 +2518,9 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     cur_sol_case = when_case_create(NULL);
     cur_case = (struct Case *)(gl_fetch(scratch,c));
     ValueList = GetCaseValues(cur_case);
+    if(selector_target != NULL){
+      ValidateSelectorCaseValues(context,selector_target,ValueList);
+    }
     value = &(cur_sol_case->values[0]);
     if(g_symbol_values_list == NULL) {
       g_symbol_values_list = gl_create(2L);
@@ -2144,7 +2562,7 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     when_case_set_rels_list(cur_sol_case,rels);
     when_case_set_logrels_list(cur_sol_case,logrels);
     when_case_set_whens_list(cur_sol_case,whens);
-    reinits = ProcessWhenReinits(context, cur_case);
+    reinits = ProcessWhenReinits(context, cur_case, whenvars_src);
     when_case_set_reinits_list(cur_sol_case, reinits);
     when_case_set_active(cur_sol_case,FALSE);
     gl_append_ptr(when->cases,cur_sol_case);
@@ -2602,6 +3020,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     /* turn on appropriate ones */
     if(vip->u.v.incident)  flags |= VAR_INCIDENT;
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
+    if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
 	/* CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var); */
     /* others may be appropriate (PVAR) */
@@ -3278,6 +3697,7 @@ static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data){
     ip->u.v.basis = 1;
     ip->u.v.incident = 0;
     ip->u.v.in_block = 0;
+    ip->u.v.discrete = 0;
     ip->u.v.deriv = dyn->deriv;
     ip->u.v.odeid = dyn->odeid;
     ip->u.v.obsid = 0;
@@ -3323,7 +3743,6 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   DERIV_A = AddSymbol("ode_type");
   ODEID_A = AddSymbol("ode_id");
   OBSID_A = AddSymbol("obs_id");
-  DISCRETE_A = AddSymbol("discrete");
 
   p_data = &thisproblem;
   p_data->bad_rel_in_list = FALSE;
@@ -3375,6 +3794,13 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
       p_data->root = NULL;
       return 2;
     }
+  }
+
+  stat = analyze_infer_reinit_targets(p_data);
+  if(stat){
+    analyze_free_lists(p_data);
+    p_data->root = NULL;
+    return 2;
   }
 
   /* decorate instances with temporary ips, collect them and etc */

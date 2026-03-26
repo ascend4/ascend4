@@ -724,6 +724,11 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				return "undefined"
 			units = self.get_instance_display_units(instance, autoscale)
 			value = units.getConvertedValue(instance.getRealValue())
+		elif instance.isSelector():
+			if not instance.isDefined():
+				value = "undefined"
+			else:
+				value = "'%s'" % instance.getSelectorValue()
 		else:
 			value = str(instance.getValue())
 		return CelsiusUnits.convert_show(instance, value, True)
