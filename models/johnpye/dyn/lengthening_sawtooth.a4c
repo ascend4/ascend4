@@ -87,12 +87,14 @@ METHODS
         (*
             Provide a small default observation set so the integrator reporter
             has something useful to show immediately in the GUI.
+
+            The integrator reporter already prepends the independent
+            variable, so we do not observe `t` here.
         *)
-        t.obs_id := 1;
-        y.obs_id := 2;
+        y.obs_id := 4;
         sample.obs_id := 3;
-        period.obs_id := 4;
-        t_last_event.obs_id := 5;
+        period.obs_id := 2;
+        t_last_event.obs_id := 1;
     END ode_init;
 
     METHOD values;

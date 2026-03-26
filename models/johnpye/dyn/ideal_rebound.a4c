@@ -116,13 +116,15 @@ METHODS
 
         (*
             Provide a useful default observation set for the GUI integrator
-            reporter. This gives an immediately plottable trajectory without
-            requiring the user to configure an Observer first.
+            reporter. The integrator reporter already prepends the
+            independent variable, so we do not observe `t` here.
+
+            This gives an immediately plottable trajectory without requiring
+            the user to configure an Observer first.
         *)
-        t.obs_id := 1;
-        y.obs_id := 2;
-        v.obs_id := 3;
-        t_last_event.obs_id := 4;
+        y.obs_id := 3;
+        v.obs_id := 2;
+        t_last_event.obs_id := 1;
     END ode_init;
 
     METHOD values;

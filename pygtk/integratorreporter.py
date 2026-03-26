@@ -21,6 +21,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def __init__(self,browser,integrator):
 		self.browser=browser
 		ascpy.IntegratorReporterCxx.__init__(self,integrator)
+		self.autoplot_results = True
 		
 		# GUI elements
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["integratorstatusdialog"])
@@ -106,6 +107,8 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			_label.set_text(_obs.name)
 			self.browser.observers.append(_obs)
 			self.browser.tabs[_tab]=_obs
+			self.browser.currentobservertab = _tab
+			self.browser.currentpage = _tab
 
 			# add the columns
 			_obs.add_instance(integrator.getIndependentVariable().getInstance())
@@ -117,6 +120,10 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 				# time is always last element in tuple
 				_vals, _time = data[:-1], data[-1]
 				_obs.do_add_row([_time] + [_v for _v in _vals])
+			self.browser.maintabs.set_current_page(_tab)
+			if self.autoplot_results and self.browser.prefs.getBoolPref("Integrator", "autoplotresults", True):
+				if len(_obs.cols) >= 2:
+					_obs.plot(x=0, y=[len(_obs.cols) - 1])
 		except Exception as e:
 			sys.stderr.write("\n\n\nIntegratorReporter.close_output: error: %s: %s\n\n\n" % (e.__class__,str(e)))
 			self.solve_status = 1
@@ -222,6 +229,7 @@ class IntegratorReporterPlot(IntegratorReporterPython):
 		self.lines = None
 		loading.load_matplotlib(alert=True)
 		IntegratorReporterPython.__init__(self, browser, integrator)
+		self.autoplot_results = False
 
 	def init_output(self):
 		IntegratorReporterPython.init_output(self)

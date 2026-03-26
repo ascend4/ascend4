@@ -858,11 +858,10 @@ static void test_example_ideal_rebound(){
 	it = ida_child(root, "t");
 	itlast = ida_child(root, "t_last_event");
 
-	CU_ASSERT_EQUAL(testsys.integ->n_obs, 4);
-	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[0]), it);
-	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[1]), iy);
-	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[2]), iv);
-	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[3]), itlast);
+	CU_ASSERT_EQUAL(testsys.integ->n_obs, 3);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[0]), itlast);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[1]), iv);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[2]), iy);
 
 	for(i = 0; i < testsys.integ->n_y; ++i){
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != itlast);
@@ -897,12 +896,11 @@ static void test_example_lengthening_sawtooth(){
 	iperiod = ida_child(root, "period");
 	itlast = ida_child(root, "t_last_event");
 
-	CU_ASSERT_EQUAL(testsys.integ->n_obs, 5);
-	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[0]), it);
-	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[1]), iy);
-	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[2]), isample);
-	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[3]), iperiod);
-	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[4]), itlast);
+	CU_ASSERT_EQUAL(testsys.integ->n_obs, 4);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[0]), iperiod);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[1]), isample);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[2]), itlast);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[3]), iy);
 
 	for(i = 0; i < testsys.integ->n_y; ++i){
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != iperiod);
