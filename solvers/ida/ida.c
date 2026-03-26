@@ -132,7 +132,9 @@ typedef void ( IntegratorVarVisitorFn)(IntegratorSystem *integ,
  static void integrator_visit_system_vars(IntegratorSystem *integ,IntegratorVarVisitorFn *visitor);
  static void integrator_dae_show_var(IntegratorSystem *integ, struct var_variable *var, const int *varindx); */
 
+#ifdef STATS_DEBUG
 static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
+#endif
 
 /*-------------------------------------------------------------
  SETUP/TEARDOWN ROUTINES
@@ -422,7 +424,6 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 int ida_load_rellist(IntegratorSystem *integ) {
 	IntegratorIdaData *enginedata;
 	struct rel_relation **rels;
-	char *relname;
 	int i, j, n_solverrels, n_active_rels;
 
 	enginedata = integrator_ida_enginedata(integ);
@@ -947,12 +948,10 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 	yp0 = ida_bnd_new_zero_NV(integ, integ->n_y);
 
 	int i;
-	double val;
 	MSG("Values of the derivatives present in the model");
 	for(i=0; i < integ->n_y; i++) {
 		if(integ->ydot[i]){
-			val = var_value(integ->ydot[i]);
-			MSG("ydot[%d]= %g", i, val);
+			MSG("ydot[%d]= %g", i, var_value(integ->ydot[i]));
 		}
 	}
 
@@ -1338,6 +1337,7 @@ ida_cleanup:
 
  @return IDA_SUCCESS on success.
  */
+#ifdef STATS_DEBUG
 static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
 
 	return IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals, &s->nlinsetups
@@ -1345,5 +1345,6 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
 			,&s->hlast, &s->hcur, &s->tcur
 	);
 }
+#endif
 
 /* vim: set ts=4: */

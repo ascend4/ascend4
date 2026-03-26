@@ -32,6 +32,7 @@
 #include <ascend/compiler/evaluate.h>
 #include <ascend/compiler/find.h>
 #include <ascend/compiler/instquery.h>
+#include <ascend/compiler/packages.h>
 #include <ascend/compiler/relerr.h>
 #include <ascend/compiler/value_type.h>
 #include <ascend/compiler/visitinst.h>
@@ -1468,9 +1469,10 @@ static void integrator_fix_ode_states(IntegratorSystem *sys){
 }
 
 static void integrator_print_var_stats(IntegratorSystem *sys){
-	int v = gl_length(sys->dynvars);
-	int i = gl_length(sys->indepvars);
-	MSG("Currently %d vars, %d indep",v,i);
+	MSG("Currently %lu vars, %lu indep"
+		, (unsigned long)gl_length(sys->dynvars)
+		, (unsigned long)gl_length(sys->indepvars)
+	);
 }
 
 /**

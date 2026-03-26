@@ -80,8 +80,8 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	const int ref_was_explicit = (ref != NULL);
 	const ReferenceState *ref_apply = ref;
 	MSG("Preparing PR fluid '%s'...",E->name);
-	PureFluid *P = FPROPS_NEW(PureFluid);
-	P->data = FPROPS_NEW(FluidData);
+	PureFluid *P = FPROPS_NEW_CLEAR(PureFluid);
+	P->data = FPROPS_NEW_CLEAR(FluidData);
 
 	/* metadata */
 	// TODO should we copy this so that we can uncouple the filedata? */
@@ -130,12 +130,15 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 				PureFluid *PH = helmholtz_prepare(E,ref_apply);
 				if(!PH){
 					ERRMSG("Failed to create Helmholtz runtime data");
+					pengrob_destroy(P);
 					return NULL;
 				}
 			D->p_c = PH->p_fn((FluidStateUnion){.Trho={D->T_c, D->rho_c}}, PH->data, &herr);
 			MSG("Calculated p_c = %f from Helmholtz data",D->p_c);
 			if(herr){
 				ERRMSG("Failed to calculate critical pressure (%s)",fprops_error(herr));
+				helmholtz_destroy(PH);
+				pengrob_destroy(P);
 				return NULL;
 			}
 			double Zc = 0.307;

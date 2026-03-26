@@ -778,7 +778,7 @@ static unsigned char g_decl_checkkind = ISCV_NONE;
 %token BEQ_TOK BNE_TOK BREAK_TOK
 %token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
 %token CONTINUE_TOK CREATE_TOK
-%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DELETE_TOK DER_TOK DIMENSION_TOK
+%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DELETE_TOK DERIV_TOK DERLINK_TOK DIMENSION_TOK
 %token DIMENSIONLESS_TOK DO_TOK
 %token ELSE_TOK END_TOK EXPECT_TOK EXTERNAL_TOK
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
@@ -2513,7 +2513,7 @@ unlink_statement:
     ;
 
 der_statement:
-    DER_TOK '(' fvarlist ')'
+    DERLINK_TOK '(' fvarlist ')'
 	{
 	    symchar *str;
 	    str = AddSymbol("ode");
@@ -3330,7 +3330,7 @@ fvarref:
 	{
 	  $$ = $1;
 	}
-    | DER_TOK '(' fname ')'
+    | DERIV_TOK '(' fname ')'
 	{
 	  $$ = CreateDerivativeRefName($3);
 	}
@@ -3366,7 +3366,7 @@ name:
 	  $$ = CreateIdName($3);
 	  LinkNames($$,$1);
 	}
-	| name '.' DER_TOK
+	| name '.' DERIV_TOK
 	{
 	  $$ = CreateIdName(AddSymbol("der"));
 	  LinkNames($$,$1);
@@ -3709,7 +3709,7 @@ expr:
 	{
 	  $$ = CreateVarExpr($1);
 	}
-    | DER_TOK '(' fname ')'
+    | DERIV_TOK '(' fname ')'
 	{
 	  $$ = CreateDiffExpr($3);
 	}

@@ -44,6 +44,8 @@ typedef enum FpropsError_enum{
 
 #define FPROPS_NEW(TYPE) ((TYPE *)malloc(sizeof(TYPE)))
 
+#define FPROPS_NEW_CLEAR(TYPE) ((TYPE *)calloc(1, sizeof(TYPE)))
+
 #define FPROPS_FREE(PTR) free(PTR)
 
 #define FPROPS_NEW_ARRAY(TYPE,SIZE) ((TYPE*)malloc(sizeof(TYPE)*(SIZE)))

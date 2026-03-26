@@ -41,9 +41,19 @@
 #ifndef ASC_STATEMENT_H
 #define ASC_STATEMENT_H
 
+#include "stattypes.h"
+
 /**	@addtogroup compiler_stmt Compiler Statements
 	@{
 */
+
+struct StatementList;
+struct VariableList;
+struct WhenList;
+struct SelectList;
+struct SwitchList;
+struct DatasetIndexItem;
+struct DatasetMapItem;
 
 extern void AddContext(struct StatementList *slist ,unsigned int c);
 /**<

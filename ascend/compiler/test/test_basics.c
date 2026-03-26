@@ -490,6 +490,64 @@ static void test_pre_in_conditional_rejected(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_lowercase_der_statement_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		MODEL der_stmt_case_illegal;\n\
+			x, y IS_A real;\n\
+			der(x, y);\n\
+		END der_stmt_case_illegal;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(FindType(AddSymbol("der_stmt_case_illegal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_uppercase_der_expr_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		MODEL der_expr_case_illegal;\n\
+			x, y IS_A real;\n\
+			eq: y = DER(x);\n\
+		END der_expr_case_illegal;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(FindType(AddSymbol("der_expr_case_illegal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
 static void test_parse_basemodel(void){
 
 	struct module_t *m;
@@ -1211,6 +1269,8 @@ static void test_units_ladder_invalid_anchor_rejected(void){
 	T(initial_section_illegal_statement_rejected) \
 	T(pre_outside_reinit_rejected) \
 	T(pre_in_conditional_rejected) \
+	T(lowercase_der_statement_rejected) \
+	T(uppercase_der_expr_rejected) \
 	T(parse_basemodel) \
 	T(parse_file) \
 	T(instantiate_file) \

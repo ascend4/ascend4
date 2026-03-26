@@ -36,6 +36,8 @@
 	@{
 */
 
+struct TypeDescription;
+
 extern void ZeroNewChildrenEntries(struct Instance **ary, unsigned long int num);
 /**<
 	Sets num entries of ary to NULL.
