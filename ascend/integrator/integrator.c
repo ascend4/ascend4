@@ -1219,15 +1219,28 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   struct Integ_var_t *v1,*v2;
   long half,i,len;
   int happy=1;
+  int solver_index;
   char *varname1, *varname2;
 
   asc_assert(sys->system!=NULL);
 
-  if(strcmp(slv_solver_name(slv_get_selected_solver(sys->system)),"QRSlv")!=0){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System must have solver 'QRSlv' assigned to it before integration");
-	return 2;
+  solver_index = slv_get_selected_solver(sys->system);
+  if(solver_index < 0 || strcmp(slv_solver_name(solver_index),"QRSlv")!=0){
+    int qrslv_index;
+    if(package_load("qrslv", NULL) != 0){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "Unable to load QRSlv for ODE integration analysis");
+	  return 2;
+    }
+    qrslv_index = slv_lookup_client("QRSlv");
+    if(qrslv_index < 0 || slv_select_solver(sys->system, qrslv_index) == -1){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "QRSlv is unavailable for ODE integration analysis");
+	  return 2;
+    }
+    solver_index = qrslv_index;
   }
-  MSG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
+  MSG("Checked that NLA solver is set to '%s'",slv_solver_name(solver_index));
 
   if(slv_get_num_solvers_bnds(sys->system) > 0 || slv_get_num_solvers_whens(sys->system) > 0){
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
