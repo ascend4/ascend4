@@ -11063,6 +11063,12 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
       return CheckWHEN(inst,statement);
     case FNAME:
       return CheckFNAME(inst,statement);
+    case REL:
+      return CheckREL(inst,statement);
+    case LOGREL:
+      return CheckLOGREL(inst,statement);
+    case EXT:
+      return CheckEXT(inst,statement);
     case REINIT:
     case SWITCHTO:
       return 1;
@@ -11076,9 +11082,6 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
     case AA:
     case LNK:
     case UNLNK:
-    case REL:
-    case LOGREL:
-    case EXT:
     case CALL:
     case ASGN:
     case SELECT:
@@ -12376,6 +12379,38 @@ void MakeWhenReference(struct Instance *ref,
   }
 }
 
+static void MakeWhenStatementReference(struct Instance *ref,
+                                       struct Instance *child,
+                                       struct Statement *statement,
+                                       struct gl_list_t *listref)
+{
+  struct Name *name = NULL;
+
+  switch(StatementType(statement)){
+  case WHEN:
+    name = WhenStatName(statement);
+    break;
+  case FNAME:
+    name = FnameStat(statement);
+    break;
+  case REL:
+    name = RelationStatName(statement);
+    break;
+  case LOGREL:
+    name = LogicalRelStatName(statement);
+    break;
+  case EXT:
+    name = ExternalStatNameRelation(statement);
+    break;
+  default:
+    return;
+  }
+
+  if(name != NULL){
+    MakeWhenReference(ref,child,name,listref);
+  }
+}
+
 /**
 	creating list of reference for each CASE in a WHEN: (3) nested WHENs,
 	nested FOR loops etc.
@@ -12387,7 +12422,6 @@ void MakeWhenCaseReferences(struct Instance *inst,
                             struct gl_list_t *listref)
 {
   struct Statement *statement;
-  struct Name *name;
   unsigned long c,len;
   struct gl_list_t *list;
   list = GetList(sl);
@@ -12396,12 +12430,11 @@ void MakeWhenCaseReferences(struct Instance *inst,
     statement = (struct Statement *)gl_fetch(list,c);
     switch(StatementType(statement)){
     case WHEN:
-      name = WhenStatName(statement);
-      MakeWhenReference(inst,child,name,listref);
-      break;
     case FNAME:
-      name = FnameStat(statement);
-      MakeWhenReference(inst,child,name,listref);
+    case REL:
+    case LOGREL:
+    case EXT:
+      MakeWhenStatementReference(inst,child,statement,listref);
       break;
     case FOR:
       MakeWhenCaseReferencesFOR(inst,child,statement,listref);
@@ -12431,7 +12464,6 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
                                     struct gl_list_t *listref)
 {
   struct Statement *statement;
-  struct Name *name;
   unsigned long c,len;
   struct gl_list_t *list;
   list = GetList(sl);
@@ -12440,12 +12472,11 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
     statement = (struct Statement *)gl_fetch(list,c);
     switch(StatementType(statement)){
     case WHEN:
-      name = WhenStatName(statement);
-      MakeWhenReference(inst,child,name,listref);
-      break;
     case FNAME:
-      name = FnameStat(statement);
-      MakeWhenReference(inst,child,name,listref);
+    case REL:
+    case LOGREL:
+    case EXT:
+      MakeWhenStatementReference(inst,child,statement,listref);
       break;
     case FOR:
       MakeRealWhenCaseReferencesFOR(inst,child,statement,listref);
@@ -12533,6 +12564,15 @@ void ExecuteWhenStatements(struct Instance *inst,
       break;
     case FNAME:
       return_value = ExecuteFNAME(inst,statement);
+      break;
+    case REL:
+      return_value = ExecuteREL(inst,statement);
+      break;
+    case LOGREL:
+      return_value = ExecuteLOGREL(inst,statement);
+      break;
+    case EXT:
+      return_value = ExecuteEXT(inst,statement);
       break;
     case REINIT:
     case SWITCHTO:
@@ -12684,6 +12724,11 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
       break;
     case FNAME:
       return_value = 1;
+      break;
+    case REL:
+    case LOGREL:
+    case EXT:
+      return_value = ExecuteUnSelectedEQN(inst,statement);
       break;
     case REINIT:
     case SWITCHTO:

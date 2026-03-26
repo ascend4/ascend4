@@ -7,6 +7,10 @@ current Phase 1A/1B hybrid-event features:
 - `REINIT(x, expr);`
 - `pre(x)` on the right-hand side of `REINIT`
 - inferred discrete real event-memory variables from `REINIT(...)` use
+- selector-driven `WHEN(mode)` with `SWITCH TO ... IF ...`
+- direct continuous guards on `SWITCH TO ... IF ...` for simple real-valued
+  comparison events
+- state-local equations inside selector `CASE` branches
 
 At present these examples are intended for use with the IDA integrator.
 LSODE does not support `CONDITIONAL` / `WHEN` event handling or `REINIT`.
@@ -19,9 +23,19 @@ Examples in this directory
   under gravity and reflects instantaneously at the floor by applying
   `REINIT(v, -e * pre(v));`, with smaller bounce heights after each impact.
 
+- `resting_rebound.a4c`
+  A settling variant of the ideal bounce. It uses selector modes
+  `'free'`, `'impact'`, and `'rest'` so the ball can latch to a resting
+  contact state after sufficiently small bounces.
+
 - `lengthening_sawtooth.a4c`
   A reset oscillator with simple event memory. Each event resets the state,
   records the event time, and lengthens the next period.
+
+- `overflowing_weir.a4c`
+  A two-state selector example showing state-local equations directly inside
+  selector cases, with direct transition guards: below the crest the overflow
+  is zero, above the crest it follows a weir law.
 
 These are example models rather than solver-regression models, but they are
 also covered by automated IDA tests so they should remain executable.

@@ -23,9 +23,143 @@
 #include <ascend/system/slv_common.h>
 #include <ascend/system/logrel.h>
 #include <ascend/system/rel.h>
+#include <ascend/system/system_impl.h>
 
 #include <ascend/compiler/atomvalue.h>
 #include <ascend/compiler/packages.h>
+
+static int ida_collect_active_guardroots_in_when(struct w_when *when, struct gl_list_t *roots, struct gl_list_t *contexts){
+	struct gl_list_t *cases;
+	struct Instance *wheninst;
+	struct Instance *context;
+	unsigned long c, ncases;
+
+	if(when == NULL || roots == NULL || contexts == NULL){
+		return 1;
+	}
+
+	wheninst = (struct Instance *)when->instance;
+	context = wheninst != NULL ? InstanceParent(wheninst, 1) : NULL;
+	if(context == NULL){
+		context = wheninst;
+	}
+
+	cases = when->cases;
+	if(cases == NULL){
+		return 0;
+	}
+
+	ncases = gl_length(cases);
+	for(c = 1; c <= ncases; ++c){
+		struct when_case *solver_case = (struct when_case *)gl_fetch(cases, c);
+		struct gl_list_t *reinit_list;
+		unsigned long r, nr;
+
+		if(solver_case == NULL || !(solver_case->flags & WHEN_CASE_ACTIVE)){
+			continue;
+		}
+
+		reinit_list = solver_case->reinits;
+		if(reinit_list != NULL){
+			nr = gl_length(reinit_list);
+			for(r = 1; r <= nr; ++r){
+				struct when_reinit *wr = (struct when_reinit *)gl_fetch(reinit_list, r);
+				const struct Expr *guard = wr != NULL ? wr->guard : NULL;
+				if(guard != NULL && integrator_direct_guard_rootable(guard)){
+					gl_append_ptr(roots, wr);
+					gl_append_ptr(contexts, context);
+				}
+			}
+		}
+
+		if(solver_case->whens != NULL){
+			unsigned long w, nw = gl_length(solver_case->whens);
+			for(w = 1; w <= nw; ++w){
+				struct w_when *nested = (struct w_when *)gl_fetch(solver_case->whens, w);
+				if(ida_collect_active_guardroots_in_when(nested, roots, contexts) != 0){
+					return 1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+int ida_refresh_event_roots(IntegratorSystem *integ){
+	IntegratorIdaData *enginedata;
+	struct gl_list_t *roots = NULL, *contexts = NULL;
+	struct w_when **whenlist;
+	int nwhens, i;
+
+	if(integ == NULL){
+		return 1;
+	}
+
+	enginedata = integrator_ida_enginedata(integ);
+	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
+	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
+
+	if(enginedata->guardroots != NULL){
+		ASC_FREE(enginedata->guardroots);
+		enginedata->guardroots = NULL;
+	}
+	if(enginedata->guardcontexts != NULL){
+		ASC_FREE(enginedata->guardcontexts);
+		enginedata->guardcontexts = NULL;
+	}
+	enginedata->nguardroots = 0;
+	enginedata->nroots = enginedata->nbnds;
+
+	roots = gl_create(4);
+	contexts = gl_create(4);
+	if(roots == NULL || contexts == NULL){
+		if(roots != NULL)gl_destroy(roots);
+		if(contexts != NULL)gl_destroy(contexts);
+		return 1;
+	}
+
+	whenlist = integ->system->whens.solver;
+	nwhens = integ->system->whens.snum;
+	for(i = 0; i < nwhens; ++i){
+		if(whenlist[i] != NULL && ida_collect_active_guardroots_in_when(whenlist[i], roots, contexts) != 0){
+			gl_destroy(roots);
+			gl_destroy(contexts);
+			return 1;
+		}
+	}
+
+	enginedata->nguardroots = (int)gl_length(roots);
+	if(enginedata->nguardroots > 0){
+		unsigned long n = (unsigned long)enginedata->nguardroots;
+		unsigned long k;
+		enginedata->guardroots = ASC_NEW_ARRAY(struct when_reinit *, n);
+		enginedata->guardcontexts = ASC_NEW_ARRAY(struct Instance *, n);
+		if(enginedata->guardroots == NULL || enginedata->guardcontexts == NULL){
+			if(enginedata->guardroots != NULL){
+				ASC_FREE(enginedata->guardroots);
+				enginedata->guardroots = NULL;
+			}
+			if(enginedata->guardcontexts != NULL){
+				ASC_FREE(enginedata->guardcontexts);
+				enginedata->guardcontexts = NULL;
+			}
+			gl_destroy(roots);
+			gl_destroy(contexts);
+			return 1;
+		}
+		for(k = 0; k < n; ++k){
+			enginedata->guardroots[k] = (struct when_reinit *)gl_fetch(roots, k + 1);
+			enginedata->guardcontexts[k] = (struct Instance *)gl_fetch(contexts, k + 1);
+		}
+	}
+
+	enginedata->nroots = enginedata->nbnds + enginedata->nguardroots;
+
+	gl_destroy(roots);
+	gl_destroy(contexts);
+	return 0;
+}
 
 int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem, realtype tout1);
 
@@ -69,6 +203,21 @@ static void ida_sync_discretes_to_instances(slv_system_t sys){
 			break;
 		}
 	}
+}
+
+static int ida_event_has_logical_solver(slv_system_t sys){
+	int selected;
+
+	if(sys == NULL){
+		return 0;
+	}
+
+	selected = slv_get_selected_solver(sys);
+	if(selected < 0){
+		return 0;
+	}
+
+	return strcmp(slv_solver_name(selected), "LRSlv") == 0;
 }
 
 #if IDA_BND_DEBUG
@@ -201,10 +350,8 @@ int ida_bnd_reanalyse(IntegratorSystem *integ){
 
 	integrator_ida_analyse(integ);
 	enginedata = integrator_ida_enginedata(integ);
-	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
-	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
-
-	return 0;
+	(void)enginedata;
+	return ida_refresh_event_roots(integ);
 }
 
 int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1){
@@ -279,7 +426,7 @@ int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1
 			}
 		}
 		need_consistency = 0;
-		need_logical_solve = 1;
+		need_logical_solve = ida_event_has_logical_solver(integ->system);
 	}
 
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,
@@ -415,6 +562,11 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	}
 
 	/* solve the logical relations in the model, if possible */
+	if(num_bnds > 0 && !ida_event_has_logical_solver(integ->system)){
+		if(ida_setup_lrslv(integ) != 0){
+			return -1;
+		}
+	}
 	slv_presolve(integ->system);
 	slv_solve(integ->system);
 	ida_sync_discretes_to_instances(integ->system);

@@ -30,6 +30,7 @@
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/derivinst.h>
 #include <ascend/compiler/evaluate.h>
+#include <ascend/compiler/exprs.h>
 #include <ascend/compiler/find.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/packages.h>
@@ -79,6 +80,222 @@ static void integ_debug_list(const char *label, struct gl_list_t *list){
 	);
 }
 #endif
+
+static int integrator_guard_push_value(struct value_t *stack, int *sp, struct value_t value){
+	stack[(*sp)++] = value;
+	return 0;
+}
+
+static void integrator_guard_destroy_stack(struct value_t *stack, int sp){
+	int i;
+	for(i = 0; i < sp; ++i){
+		DestroyValue(&stack[i]);
+	}
+}
+
+int integrator_direct_guard_rootable(const struct Expr *expr){
+	int depth = 0;
+	const struct Expr *ex;
+
+	if(expr == NULL){
+		return 0;
+	}
+
+	for(ex = expr; ex != NULL; ex = NextExpr(ex)){
+		switch(ExprType(ex)){
+		case e_zero:
+		case e_real:
+		case e_int:
+		case e_var:
+		case e_der:
+			++depth;
+			break;
+		case e_func:
+		case e_uminus:
+			if(depth < 1){
+				return 0;
+			}
+			break;
+		case e_plus:
+		case e_minus:
+		case e_times:
+		case e_divide:
+		case e_power:
+		case e_ipower:
+			if(depth < 2){
+				return 0;
+			}
+			--depth;
+			break;
+		case e_less:
+		case e_greater:
+		case e_lesseq:
+		case e_greatereq:
+			return (NextExpr(ex) == NULL && depth == 2);
+		default:
+			return 0;
+		}
+	}
+
+	return 0;
+}
+
+int integrator_eval_direct_guard_root(const struct Expr *expr,
+	struct Instance *context, double *residual){
+	const struct Expr *ex;
+	struct value_t *stack = NULL;
+	struct value_t value;
+	int sp = 0;
+	int n = 0;
+
+	if(expr == NULL || context == NULL || residual == NULL){
+		return 1;
+	}
+	if(!integrator_direct_guard_rootable(expr)){
+		return 14;
+	}
+
+	for(ex = expr; ex != NULL; ex = NextExpr(ex)){
+		++n;
+	}
+	stack = ASC_NEW_ARRAY(struct value_t, n > 0 ? n : 1);
+	if(stack == NULL){
+		return 2;
+	}
+
+	for(ex = expr; ex != NULL; ex = NextExpr(ex)){
+		switch(ExprType(ex)){
+		case e_zero:
+			value = CreateRealValue(0.0, WildDimension(), 1);
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_real:
+			value = CreateRealValue(ExprRValue(ex), ExprRDimensions(ex), 1);
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_int:
+			value = CreateIntegerValue(ExprIValue(ex), 1);
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_var:
+		case e_der:
+			asc_assert(GetEvaluationContext() == NULL);
+			SetEvaluationContext(context);
+			value = EvaluateExpr(ex, NextExpr(ex), InstanceEvaluateName);
+			SetEvaluationContext(NULL);
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 3;
+			}
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_func:
+			if(sp < 1){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 4;
+			}
+			value = ApplyFunction(stack[sp - 1], ExprFunc(ex));
+			DestroyValue(&stack[sp - 1]);
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp - 1);
+				ASC_FREE(stack);
+				return 5;
+			}
+			stack[sp - 1] = value;
+			break;
+		case e_uminus:
+			if(sp < 1){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 6;
+			}
+			value = NegateValue(stack[sp - 1]);
+			DestroyValue(&stack[sp - 1]);
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp - 1);
+				ASC_FREE(stack);
+				return 7;
+			}
+			stack[sp - 1] = value;
+			break;
+		case e_plus:
+		case e_minus:
+		case e_times:
+		case e_divide:
+		case e_power:
+		case e_ipower:
+			if(sp < 2){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 8;
+			}
+			switch(ExprType(ex)){
+			case e_plus:
+				value = AddValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_minus:
+				value = SubtractValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_times:
+				value = MultiplyValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_divide:
+				value = DivideValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_power:
+			case e_ipower:
+				value = PowerValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			default:
+				value = CreateErrorValue(type_conflict);
+			}
+			DestroyValue(&stack[sp - 1]);
+			DestroyValue(&stack[sp - 2]);
+			sp -= 2;
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 9;
+			}
+			stack[sp++] = value;
+			break;
+		case e_less:
+		case e_greater:
+		case e_lesseq:
+		case e_greatereq:
+			if(sp != 2){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 10;
+			}
+			value = SubtractValues(stack[sp - 2], stack[sp - 1]);
+			DestroyValue(&stack[sp - 1]);
+			DestroyValue(&stack[sp - 2]);
+			if(value.t == real_value){
+				*residual = RealValue(value);
+			}else if(value.t == integer_value){
+				*residual = (double)IntegerValue(value);
+			}else{
+				DestroyValue(&value);
+				ASC_FREE(stack);
+				return 11;
+			}
+			DestroyValue(&value);
+			ASC_FREE(stack);
+			return 0;
+		default:
+			integrator_guard_destroy_stack(stack, sp);
+			ASC_FREE(stack);
+			return 12;
+		}
+	}
+
+	integrator_guard_destroy_stack(stack, sp);
+	ASC_FREE(stack);
+	return 13;
+}
 
 static int integrator_report_initial_status_failure(const slv_status_t *status, int presolve);
 

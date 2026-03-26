@@ -138,6 +138,10 @@ typedef int IntegratorOutputWriteObsFn(struct IntegratorSystemStruct *);
 */
 typedef int IntegratorOutputCloseFn(struct IntegratorSystemStruct *);
 
+ASC_DLLSPEC int integrator_eval_direct_guard_root(const struct Expr *expr,
+	struct Instance *context, double *residual);
+ASC_DLLSPEC int integrator_direct_guard_rootable(const struct Expr *expr);
+
 /**
 	This struct allows arbitrary functions to be used for the reporting
 	of integrator progress.

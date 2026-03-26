@@ -1,0 +1,147 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+    resting_rebound
+    ===============
+
+    This is the settling counterpart to `ideal_rebound.a4c`.
+
+    It keeps the same ideal event-time impact law
+
+        REINIT(v, -e * pre(v));
+
+    but adds a third selector state, `'rest'`, to test whether the current
+    selector/event machinery can carry a hybrid model into a latched resting
+    contact mode that IDA will accept.
+
+    The key modelling choice is to stay close to the already-working
+    first-order DAE shape from `ideal_rebound.a4c`. We keep the global motion
+    and gravity bookkeeping
+
+        m * a = F_net
+        F_g = -m * g
+        v = ydot
+
+    and let the selector choose the active force law:
+
+    - `'free'`/`'impact'`: `F_net = F_g`
+    - `'rest'`: `F_net = 0`
+
+    The auxiliary spring/damper force variables are retained, with zero default
+    coefficients, to keep the model in the same well-tested DAE shape as the
+    existing `ideal_rebound` example.
+
+    The transition into `'rest'` occurs only once the predicted rebound speed
+    has fallen below `v_stop`. On entering `'rest'` we explicitly clamp the
+    state to the floor:
+
+        REINIT(y, r);
+        REINIT(v, 0 {m/s});
+
+    After that, zero net force keeps the ball at rest.
+*)
+MODEL resting_rebound;
+
+    modes       IS_A set OF symbol_constant;
+    modes :== ['free', 'impact', 'rest'];
+    mode        IS_A selector OF modes DEFAULT 'free';
+
+    y           IS_A distance;
+    v, ydot     IS_A speed;
+    a           IS_A acceleration;
+
+    F_net       IS_A force;
+    F_g         IS_A force;
+    F_d         IS_A force;
+    F_s         IS_A force;
+
+    m           IS_A mass;
+    g           IS_A acceleration;
+    r           IS_A distance;
+    k1          IS_A stiffness;
+    k2          IS_A damping_coefficient;
+    e           IS_A fraction;
+    v_stop      IS_A speed;
+
+    t, t_last_event IS_A time;
+
+    hit_floor, descending, settling IS_A boolean_var;
+
+    motion:     m * a = F_net;
+    gravity:    F_g = -1 * m * g;
+    damping:    F_d = -1 * k2 * v;
+    spring:     F_s = k1 * (r - y);
+    kinematics: v = ydot;
+
+CONDITIONAL
+    floor_contact: y <= r;
+    falling: v < 0 {m/s};
+    slow_enough: -e * v <= v_stop;
+END CONDITIONAL;
+
+    hit_floor == SATISFIED(floor_contact, 1e-8 {m});
+    descending == SATISFIED(falling, 1e-8 {m/s});
+    settling == SATISFIED(slow_enough, 1e-8 {m/s});
+
+WHEN(mode)
+    CASE 'free':
+        free_force: F_net = F_g;
+        SWITCH TO 'impact' IF hit_floor AND descending;
+        SWITCH TO 'rest' IF hit_floor AND descending AND settling;
+
+    CASE 'impact':
+        impact_force: F_net = F_g;
+        REINIT(v, -e * pre(v));
+        REINIT(t_last_event, t);
+        SWITCH TO 'free' IF TRUE;
+
+    CASE 'rest':
+        rest_force: F_net = 0 {N};
+        REINIT(y, r);
+        REINIT(v, 0 {m/s});
+        REINIT(t_last_event, t);
+END WHEN;
+
+METHODS
+    METHOD on_load;
+        RUN ode_init;
+        RUN values;
+    END on_load;
+
+    METHOD ode_init;
+        y.ode_type := 1; ydot.ode_type := 2;
+        y.ode_id   := 1; ydot.ode_id   := 1;
+
+        v.ode_type := 1; a.ode_type := 2;
+        v.ode_id   := 2; a.ode_id   := 2;
+
+        t.ode_type := -1;
+
+        y.obs_id := 3;
+        v.obs_id := 2;
+        t_last_event.obs_id := 1;
+    END ode_init;
+
+    METHOD values;
+        FIX m, g, r, k1, k2, e, v_stop;
+
+        m := 1 {kg};
+        g := 9.81 {m/s^2};
+        r := 1 {m};
+        k1 := 0 {N/m};
+        k2 := 0 {N*s/m};
+        e := 0.4;
+        v_stop := 0.35 {m/s};
+
+        y := 2.5 {m};
+        v := 0 {m/s};
+        a := -9.81 {m/s^2};
+
+        t := 0 {s};
+        t_last_event := -1 {s};
+        hit_floor := FALSE;
+        descending := FALSE;
+        settling := FALSE;
+    END values;
+END resting_rebound;

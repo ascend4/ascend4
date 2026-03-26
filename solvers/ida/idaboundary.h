@@ -39,6 +39,13 @@ int some_dis_vars_changed(slv_system_t sys);
 int ida_setup_lrslv(IntegratorSystem *integ);
 
 /**
+ * Refresh the currently active IDA root list. This includes ordinary
+ * conditional boundaries and the currently active simple comparison guards
+ * from SWITCH TO statements.
+ */
+int ida_refresh_event_roots(IntegratorSystem *integ);
+
+/**
  * Throw out old values and reanalyse the system after a boundary crossing
  */
 int ida_bnd_reanalyse(IntegratorSystem *integ);

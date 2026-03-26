@@ -215,11 +215,12 @@ WHEN(mode)
 END WHEN;
 ```
 
-Important current limitation:
+Current guard support is now split into two working tiers:
 
-- `SWITCH TO ... IF ...` can already consume rich boolean-valued expressions
-- but continuous event sources still need to be defined separately through
-  `CONDITIONAL`, `SATISFIED(...)`, and/or logrelations
+- `SWITCH TO ... IF ...` can consume rich boolean-valued expressions over
+  already-declared discrete conditions
+- simple active-case continuous comparison guards such as `h >= h_weir` are
+  now also exposed directly as IDA root functions
 
 So this works today:
 
@@ -227,13 +228,24 @@ So this works today:
 SWITCH TO 'running' IF start_cmd AND cooldown_ok AND NOT tripped;
 ```
 
-but this is not yet a first-class event source on its own:
+and this now works too:
 
 ```ascend
 SWITCH TO 'aboveweir' IF h > h_weir;
 ```
 
-For now, the latter still needs explicit old-style condition plumbing.
+What is still *not* first-class yet is the automatic lowering of arbitrarily
+complex continuous/logical combinations into event sources. For those cases,
+explicit `CONDITIONAL`, `SATISFIED(...)`, and/or logrelations are still the
+right path.
+
+State-local equations inside selector cases now work in a first useful slice.
+For example, [overflowing_weir.a4c](./models/johnpye/dyn/overflowing_weir.a4c)
+uses:
+
+- globally active mass-balance equations outside the selector block
+- selector-local overflow equations inside sibling `CASE` branches
+- `SWITCH TO` transitions driven by an explicitly declared boundary boolean
 
 ## Event Iteration and Restart Semantics
 
@@ -267,6 +279,9 @@ kept readable rather than purely regression-oriented:
   - intentionally does not settle to rest, so it remains a useful Zeno test
 - [lengthening_sawtooth.a4c](./models/johnpye/dyn/lengthening_sawtooth.a4c)
   - repeated resets using discrete real event-memory
+- [overflowing_weir.a4c](./models/johnpye/dyn/overflowing_weir.a4c)
+  - selector-driven switching with equations local to sibling selector cases
+  - now uses direct `SWITCH TO ... IF V >= A * h_weir` style guards
 
 ## Zeno / Event Accumulation
 
@@ -293,9 +308,11 @@ behavior remains exercised and visible.
 
 ## Current Limitations
 
-### 1. State-local equations are not yet true replacing cases
+### 1. State-local equations are only implemented in a first cut
 
-The major remaining syntax/runtime gap is state-local equation selection.
+The major remaining syntax/runtime gap is not "can we put equations in cases"
+any more. That first slice now works. The remaining issue is to harden and
+generalize the semantics.
 
 What is wanted eventually:
 
@@ -317,16 +334,32 @@ END WHEN;
 What is possible now:
 
 - globally active equations outside the `WHEN`
-- optional `USE ...` inside cases
+- equations directly inside selector `CASE` bodies
+- optional `USE ...` inside cases where that is still convenient
 - transition logic and actions inside the cases
 
-What is **not** yet possible cleanly:
+What is **not** yet hardened enough:
 
-- equations inside sibling selector cases that replace one another structurally
+- the full replacing semantics for more complex state-local equation sets
+- nested/richer combinations that would let us express arbitrary resting or
+  contact states without worrying about the active-case DAE shape
 
-Current case-local activation is effectively additive. That is why a proper
-`rest` mode for the bouncing ball still cannot be expressed cleanly without
-overconstraining the model.
+So the work has moved from "syntax missing" to "semantics need hardening".
+
+Recent probing clarified the current practical boundary:
+
+- a settling bouncing-ball `'rest'` mode now works in `resting_rebound.a4c`
+- the key was to keep the active-case formulation close to the already-working
+  first-order DAE shape from `ideal_rebound.a4c`
+- earlier attempts that introduced an extra algebraic support-force balance or
+  moved too much of the derivative structure inside the cases were rejected by
+  IDA analysis
+
+So the lesson is now clearer:
+
+- a resting/contact state is possible with the current machinery
+- but it still needs a carefully chosen post-switch formulation that preserves
+  a coherent first-order DAE shape for IDA
 
 ### 2. Common equations should not need duplication
 
@@ -338,13 +371,25 @@ The language should allow:
 It should **not** force duplicated `USE free_flight;`-style clauses when the
 continuous equations are actually common across states.
 
-### 3. Direct continuous `SWITCH TO` guards are not yet event sources
+### 3. Direct continuous `SWITCH TO` guards are implemented narrowly
 
-As noted above, current `SWITCH TO ... IF ...` guards can consume rich boolean
-logic, but the condition definitions themselves still need the older explicit
-condition/logrel layer.
+The current direct-guard path is deliberately narrow:
 
-That is a real remaining Phase 2 gap, not merely a cosmetic syntax issue.
+- simple active-case comparison guards such as `h >= h_weir` now become extra
+  IDA root functions
+- rich boolean combinations over already-defined discrete conditions also work
+
+What is still missing is automatic event-source generation for arbitrary mixed
+continuous/logical guard expressions. For example, something like
+
+```ascend
+SWITCH TO 'running' IF start_cmd AND storage > storage_min AND t - t_last > deadtime;
+```
+
+still benefits from explicit `CONDITIONAL` / `SATISFIED(...)` plumbing today.
+
+So the remaining gap is no longer "no direct continuous guards"; it is
+"general composite guard lowering is not there yet".
 
 ### 4. Some lower-bound chatter still appears near impacts
 
@@ -357,15 +402,19 @@ This is mainly a runtime polish issue rather than a semantic gap.
 
 Near term:
 
-1. add true state-local equation support in selector `CASE` bodies
-2. define replacing semantics between sibling state branches
-3. add direct continuous/event-source generation for `SWITCH TO ... IF ...`
-   guards
-4. improve selector exhaustiveness diagnostics and browser/tree presentation
+1. define and harden the replacing semantics between sibling selector cases
+   now that the first-cut state-local equation path exists
+2. extend the `models/johnpye/dyn` examples from first-cut working cases to
+   richer settling/mode-holding examples
+3. improve selector exhaustiveness diagnostics and browser/tree presentation
+4. add transition-conflict diagnostics when multiple outgoing transitions from
+   one state are simultaneously enabled
+5. widen direct-guard lowering from simple comparisons to richer mixed
+   continuous/logical expressions where worthwhile
 
 After that:
 
-5. revisit surface syntax for richer discrete reassignment if it becomes
+6. revisit surface syntax for richer discrete reassignment if it becomes
    clearly worthwhile beyond current widened `REINIT(...)`
-6. refine event/logical syntax so explicit condition/logrel declarations and
+7. refine event/logical syntax so explicit condition/logrel declarations and
    selector transitions work together naturally rather than competing

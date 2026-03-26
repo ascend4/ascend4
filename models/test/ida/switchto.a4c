@@ -140,6 +140,43 @@ METHODS
 	END values;
 END ida_switchto_selector_mode;
 
+MODEL ida_switchto_selector_direct_guard;
+	modes           IS_A set OF symbol_constant;
+	modes :== ['low', 'high'];
+	mode            IS_A selector OF modes DEFAULT 'low';
+	t               IS_A time;
+	y, ydot         IS_A generic_real;
+	sample          IS_A generic_real;
+	threshold       IS_A generic_real;
+
+	drive: ydot = 1;
+
+	WHEN(mode)
+		CASE 'low':
+			low_sample: sample = y;
+			SWITCH TO 'high' IF y >= threshold;
+		CASE 'high':
+			high_sample: sample = y + 10;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		FIX threshold;
+		threshold := 1;
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		t := 0 {s};
+	END values;
+END ida_switchto_selector_direct_guard;
+
 MODEL ida_switchto_selector_bad_switch;
 	modes           IS_A set OF symbol_constant;
 	modes :== ['low', 'high'];

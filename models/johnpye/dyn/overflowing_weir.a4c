@@ -1,0 +1,108 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+    overflowing_weir
+    =================
+
+    This example demonstrates the next step beyond simple reset actions:
+    equations local to selector `CASE` branches.
+
+    The tank volume `V` rises according to
+
+        dV/dt = Fin - Fdrain - Foverflow
+
+    and the selector `mode` chooses which algebraic overflow law is active:
+
+    - in state `'below'`, overflow is zero
+    - in state `'above'`, overflow follows a simple linearised weir law
+
+    This example also uses the current direct-guard `SWITCH TO ... IF ...`
+    path, so the transition conditions are written directly on the outgoing
+    state transitions rather than via explicit `CONDITIONAL` /
+    `SATISFIED(...)` booleans.
+
+    This model is intended for IDA.
+*)
+MODEL overflowing_weir;
+
+    modes           IS_A set OF symbol_constant;
+    modes :== ['below', 'above'];
+    mode            IS_A selector OF modes DEFAULT 'below';
+
+    (* Continuous state and derivative. *)
+    V, Vdot         IS_A generic_real;
+    h               IS_A generic_real;
+
+    (* Algebraic flow terms and parameters. *)
+    Fin, Fdrain     IS_A generic_real;
+    Foverflow       IS_A generic_real;
+    A, h_weir       IS_A generic_real;
+    alpha           IS_A generic_real;
+
+    t               IS_A time;
+
+    level:          h = V / A;
+    balance:        Vdot = Fin - Fdrain - Foverflow;
+
+WHEN(mode)
+    CASE 'below':
+        (*
+        State-local equation:
+        while the liquid level is below the weir crest, no overflow
+        occurs.
+        *)
+        no_overflow: Foverflow = 0;
+        SWITCH TO 'above' IF V >= A * h_weir;
+
+    CASE 'above':
+        (*
+            State-local equation:
+            once the level rises above the crest, overflow increases with the
+            excess height above the weir.
+        *)
+        overflow_law: Foverflow = alpha * (h - h_weir);
+        SWITCH TO 'below' IF V < A * h_weir;
+END WHEN;
+
+METHODS
+    METHOD on_load;
+        RUN ode_init;
+        RUN values;
+    END on_load;
+
+    METHOD ode_init;
+        V.ode_type := 1; Vdot.ode_type := 2;
+        V.ode_id   := 1; Vdot.ode_id   := 1;
+        t.ode_type := -1;
+
+        (*
+            Default observation set for CLI/GUI integration.
+        *)
+        h.obs_id := 3;
+        Foverflow.obs_id := 2;
+        V.obs_id := 1;
+    END ode_init;
+
+    METHOD values;
+        FIX Fin, Fdrain, A, h_weir, alpha;
+
+        Fin    := 1.4;
+        Fdrain := 0.2;
+        A      := 1.0;
+        h_weir := 1.0;
+        alpha  := 2.5;
+
+        (*
+            Starting below the crest, the level rises until the `'above'`
+            case becomes active. After that, the overflow law limits the
+            level to a new operating point above the weir.
+        *)
+        V := 0.3;
+        Vdot := 1.2;
+        h := 0.3;
+        Foverflow := 0;
+
+        t := 0 {s};
+    END values;
+END overflowing_weir;
