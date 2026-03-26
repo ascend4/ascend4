@@ -578,6 +578,8 @@ static void DatasetAppendImplicitSetDecls(struct gl_list_t *list, struct Stateme
           ,GetBaseTypeName(set_type)
           ,NULL
           ,GetBaseTypeName(integer_constant_type)
+          ,NULL
+          ,ISCV_NONE
         );
         decl->mod = dataset_stat->mod;
         decl->linenum = dataset_stat->linenum;
@@ -720,6 +722,7 @@ static struct StudyParse g_study_parse;
 static symchar *g_study_run_method = NULL;
 static unsigned int g_study_now = 0;
 static CONST char *g_study_filename = NULL;
+static unsigned char g_decl_checkkind = ISCV_NONE;
 
 /* For 'inline' notes, note on DQUOTE_TOK from scanner.l:
  * Remember that DQUOTE_TOK is a string value which is local to the
@@ -836,7 +839,7 @@ static CONST char *g_study_filename = NULL;
 %type <statptr> is_statement isrefinedto_statement arealike_statement link_statement unlink_statement der_statement independent_statement
 %type <statptr> arethesame_statement willbethesame_statement
 %type <statptr> willnotbethesame_statement assignment_statement
-%type <statptr> reinit_statement
+%type <statptr> reinit_statement switchto_statement
 %type <statptr> relation_statement /* glassbox_statement */ blackbox_statement
 %type <statptr> call_statement units_statement
 %type <statptr> external_statement for_statement run_statement if_statement assert_statement fix_statement free_statement
@@ -2117,6 +2120,8 @@ statements:
 	        ,$2->v.table.decl_type
 	        ,CopySetList($2->v.table.decl_typeargs)
 	        ,$2->v.table.decl_set_type
+	        ,NULL
+	        ,ISCV_NONE
 	      );
 	      decl->mod = $2->mod;
 	      decl->linenum = $2->linenum;
@@ -2137,6 +2142,8 @@ statements:
 	              ,GetBaseTypeName(set_type)
 	              ,NULL
 	              ,idx->type_name
+	              ,NULL
+	              ,ISCV_NONE
 	            );
 	            decl->mod = $2->mod;
 	            decl->linenum = $2->linenum;
@@ -2158,6 +2165,8 @@ statements:
 	              ,map->type_name
 	              ,NULL
 	              ,NULL
+	              ,NULL
+	              ,ISCV_NONE
 	            );
 	            decl->mod = $2->mod;
 	            decl->linenum = $2->linenum;
@@ -2202,6 +2211,7 @@ statement:
     | willnotbethesame_statement
     | assignment_statement
     | reinit_statement
+    | switchto_statement
     | relation_statement
     /* | glassbox_statement */ 
     | blackbox_statement
@@ -2242,38 +2252,30 @@ isa_statement:
 	{
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($3);
-	  if ($5 != NULL) {
-	    ErrMsg_Generic("WITH VALUE clause not allowed in IS_A.");
-	    g_untrapped_error++;
-	    DestroyVariableList($1);
-	    DestroySetList(g_typeargs);
-	    DestroyExprList($5);
-	    $$ = NULL;
-	  } else {
-	    if (tmptype != NULL) {
-	      if ((GetBaseType(tmptype) != model_type) &&
-	          (g_typeargs != NULL)) {
-	        error_reporter_current_line(ASC_USER_ERROR,
-	                "IS_A has arguments to the nonmodel type %s.\n",
-	                SCP($3));
-	        DestroyVariableList($1);
-	        DestroySetList(g_typeargs);
-	        DestroyExprList($5);
-	        g_untrapped_error++;
-	        $$ = NULL;
-	      } else {
-	        $$ = CreateISA($1,$3,g_typeargs,$4);
-	      }
-	    } else {
-	      error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP($3));
+	  if (tmptype != NULL) {
+	    if ((GetBaseType(tmptype) != model_type) &&
+	        (g_typeargs != NULL)) {
+	      error_reporter_current_line(ASC_USER_ERROR,
+	              "IS_A has arguments to the nonmodel type %s.\n",
+	              SCP($3));
 	      DestroyVariableList($1);
 	      DestroySetList(g_typeargs);
 	      DestroyExprList($5);
 	      g_untrapped_error++;
 	      $$ = NULL;
+	    } else {
+	      $$ = CreateISA($1,$3,g_typeargs,$4,$5,g_decl_checkkind);
 	    }
+	  } else {
+	    error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP($3));
+	    DestroyVariableList($1);
+	    DestroySetList(g_typeargs);
+	    DestroyExprList($5);
+	    g_untrapped_error++;
+	    $$ = NULL;
 	  }
 	  g_typeargs = NULL;
+	  g_decl_checkkind = ISCV_NONE;
 
 	}
     ;
@@ -2293,7 +2295,7 @@ willbe_statement:
 	      g_untrapped_error++;
 	      $$ = NULL;
 	    } else {
-	      $$ = CreateWILLBE($1,$3,g_typeargs,$4,$5);
+	      $$ = CreateWILLBE($1,$3,g_typeargs,$4,$5,g_decl_checkkind);
 	    }
 	  } else {
 	    DestroyVariableList($1);
@@ -2304,6 +2306,7 @@ willbe_statement:
 	    error_reporter_current_line(ASC_USER_ERROR,"WILL_BE uses the undefined type %s.",SCP($3));
 	  }
 	  g_typeargs = NULL;
+	  g_decl_checkkind = ISCV_NONE;
 	}
     ;
 
@@ -2466,6 +2469,12 @@ optional_with_value:
 	}
     | WITH_VALUE_T expr
 	{
+	  g_decl_checkkind = ISCV_WITH_VALUE;
+	  $$ = $2;
+	}
+    | DEFAULT_TOK expr
+	{
+	  g_decl_checkkind = ISCV_DEFAULT;
 	  $$ = $2;
 	}
     ;
@@ -2557,6 +2566,13 @@ reinit_statement:
     REINIT_TOK '(' fvarref ',' expr ')'
 	{
 	  $$ = CreateREINIT($3,$5);
+	}
+    ;
+
+switchto_statement:
+    SWITCH_TOK TO_TOK expr IF_TOK expr
+	{
+	  $$ = CreateSWITCHTO($3,$5);
 	}
     ;
 

@@ -268,6 +268,10 @@ class ModelView:
 			_editable = True
 			_fgcolor = BROWSER_SETTING_COLOR
 			_fontweight = Pango.Weight.BOLD
+		elif instance.isSelector():
+			_editable = True
+			_fgcolor = BROWSER_SETTING_COLOR
+			_fontweight = Pango.Weight.BOLD
 		elif instance.isSymbol() and not instance.isConst():
 			_editable = True
 			_fgcolor = BROWSER_SETTING_COLOR
@@ -396,6 +400,12 @@ class ModelView:
 					self.browser.reporter.reportNote("Integer atom '%s' was not altered" % _instance.getName())
 					return True
 				_instance.setIntValue(_val)
+			elif _instance.isSelector():
+				_val = str(newtext)
+				if _val == str(_instance.getSelectorValue()):
+					self.browser.reporter.reportNote("Selector '%s' was not altered" % _instance.getName())
+					return True
+				_instance.setSelectorValue(ascpy.SymChar(_val))
 			elif _instance.isSymbol():
 				_val = str(newtext)
 				if _val == _instance.getValue():
@@ -800,7 +810,10 @@ class ModelView:
 				if piter:
 					opath = _model.get_value(piter, ORIGINAL_PATH_INDEX)
 					_name, _inst = self.otank[opath]
-					tooltip.set_text(str(_name))
+					if _inst.isSelector():
+						tooltip.set_text("Selector state: %s" % self.browser.get_instance_display_value(_inst))
+					else:
+						tooltip.set_text(str(_name))
 					if _inst.isAtom():
 						# it would be useful to have a _inst.parent() method, but we don't have it, so use the treemodel
 						parent = _model.iter_parent(piter)

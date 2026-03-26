@@ -442,15 +442,45 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 		struct Instance *target;
 		struct dis_discrete *dtarget;
 		struct var_variable *rtarget;
+		const struct Expr *guard;
 		struct value_t value;
 		int target_is_diff_state;
 		int target_is_discrete_real;
+		int target_is_discrete_nonreal;
 
 		if(wr == NULL){
 			continue;
 		}
 		if(integrator_reinit_already_applied(applied_reinits, wr)){
 			continue;
+		}
+		guard = when_reinit_guard(wr);
+		if(guard != NULL){
+			struct value_t guard_value;
+			int guard_true;
+			asc_assert(GetEvaluationContext() == NULL);
+			SetEvaluationContext(context);
+			SetEvaluationPreNameFn(integrator_evaluate_pre_name, snapshot);
+			guard_value = EvaluateExpr((struct Expr *)guard, NULL, InstanceEvaluateName);
+			SetEvaluationPreNameFn(NULL, NULL);
+			SetEvaluationContext(NULL);
+			switch(guard_value.t){
+			case boolean_value:
+				guard_true = BooleanValue(guard_value) ? 1 : 0;
+				break;
+			case integer_value:
+				guard_true = IntegerValue(guard_value) ? 1 : 0;
+				break;
+			default:
+				DestroyValue(&guard_value);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,
+					"SWITCH TO guard requires a boolean-valued expression");
+				return 1;
+			}
+			DestroyValue(&guard_value);
+			if(!guard_true){
+				continue;
+			}
 		}
 
 		target = (struct Instance *)when_reinit_target(wr);
@@ -462,10 +492,14 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 		rtarget = integrator_find_real_target(sys, target);
 		target_is_diff_state = integrator_reinit_target_is_diff_state(sys, target);
 		target_is_discrete_real = (rtarget != NULL && var_discrete(rtarget));
+		target_is_discrete_nonreal = (dtarget != NULL
+			&& (dis_kind(dtarget) == e_dis_boolean_t
+				|| dis_kind(dtarget) == e_dis_integer_t
+				|| dis_kind(dtarget) == e_dis_symbol_t));
 		if(!(target_is_diff_state || target_is_discrete_real)
-			&& !(dtarget != NULL && dis_kind(dtarget) == e_dis_boolean_t)){
+			&& !target_is_discrete_nonreal){
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,
-				"REINIT target must be a differential state, inferred discrete real event-memory variable, or boolean discrete variable");
+				"REINIT target must be a differential state, inferred discrete real event-memory variable, or discrete boolean/integer/symbol variable");
 			return 1;
 		}
 
@@ -491,17 +525,54 @@ static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance 
 				return 1;
 			}
 		}else{
-			switch(value.t){
-			case boolean_value:
-				dis_set_boolean_value(dtarget, BooleanValue(value));
+			switch(dis_kind(dtarget)){
+			case e_dis_boolean_t:
+				switch(value.t){
+				case boolean_value:
+					dis_set_boolean_value(dtarget, BooleanValue(value));
+					break;
+				case integer_value:
+					dis_set_boolean_value(dtarget, IntegerValue(value) ? 1 : 0);
+					break;
+				default:
+					DestroyValue(&value);
+					ERROR_REPORTER_HERE(ASC_USER_ERROR,
+						"Boolean REINIT target requires a boolean-valued expression");
+					return 1;
+				}
 				break;
-			case integer_value:
-				dis_set_boolean_value(dtarget, IntegerValue(value) ? 1 : 0);
+			case e_dis_integer_t:
+				switch(value.t){
+				case integer_value:
+					dis_set_inst_and_field_value(dtarget, IntegerValue(value));
+					break;
+				case boolean_value:
+					dis_set_inst_and_field_value(dtarget, BooleanValue(value) ? 1 : 0);
+					break;
+				default:
+					DestroyValue(&value);
+					ERROR_REPORTER_HERE(ASC_USER_ERROR,
+						"Integer REINIT target requires an integer-valued expression");
+					return 1;
+				}
+				break;
+			case e_dis_symbol_t:
+				switch(value.t){
+				case symbol_value:
+					SetSymbolAtomValue(target, SymbolValue(value));
+					dis_set_value_from_inst(dtarget, slv_get_symbol_list(sys->system));
+					break;
+				default:
+					DestroyValue(&value);
+					ERROR_REPORTER_HERE(ASC_USER_ERROR,
+						"Symbol REINIT target requires a symbol-valued expression");
+					return 1;
+				}
 				break;
 			default:
 				DestroyValue(&value);
-				ERROR_REPORTER_HERE(ASC_USER_ERROR,
-					"Boolean REINIT target requires a boolean-valued expression");
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,
+					"Unsupported discrete REINIT target kind");
 				return 1;
 			}
 		}

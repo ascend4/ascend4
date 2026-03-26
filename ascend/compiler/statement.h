@@ -114,7 +114,9 @@ extern struct Statement *CreateARR(struct VariableList *aname,
 extern struct Statement *CreateISA(struct VariableList *vl,
                                    symchar *t,
                                    struct Set *ta,
-                                   symchar *st);
+                                   symchar *st,
+                                   struct Expr *cv,
+                                   unsigned char ck);
 /**<
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
@@ -124,13 +126,15 @@ extern struct Statement *CreateISA(struct VariableList *vl,
  *  @param t  instance type
  *  @param ta arguments for type t
  *  @param st set type
+ *  @param cv optional declaration-time default/check value
  */
 
 extern struct Statement *CreateWILLBE(struct VariableList *vl,
                                       symchar *t,
                                       struct Set *ta,
                                       symchar *st,
-                                      struct Expr *cv);
+                                      struct Expr *cv,
+                                      unsigned char ck);
 /**<
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
@@ -496,6 +500,13 @@ extern struct Statement *CreateREINIT(struct Name *n, struct Expr *rhs);
  *  The statement's line number is set to the current line number.
  */
 
+extern struct Statement *CreateSWITCHTO(struct Expr *value, struct Expr *guard);
+/**<
+ *  Create an event-time SWITCH TO statement node.
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ */
+
 extern struct Statement *CreateTABLE(struct Name *n,
                                      symchar *decl_type,
                                      struct Set *decl_typeargs,
@@ -790,17 +801,24 @@ extern symchar *GetStatSetTypeF(CONST struct Statement *s);
 #define GetStatCheckValue(s) GetStatCheckValueF(s)
 #endif
 /**<
- *  Return the value expression for a WILLBE.  Often this will be NULL,
- *  which means that there is no WITH_VALUE part to the WILL_BE.
+ *  Return the value expression for an IS_A or WILL_BE.  Often this will be
+ *  NULL, which means that there is no declaration-time default/check value.
  *  @param s CONST struct Statement*, the statement to query.
  *  @return The expression as a CONST struct Expr*.
  *  @see GetStatCheckValueF()
  */
 extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s);
+extern unsigned char GetStatCheckKindF(CONST struct Statement *s);
 /**<
  *  Implementation function for GetStatCheckValue().  Do not call this
  *  function directly - use GetStatCheckValue() instead.
  */
+
+#ifdef NDEBUG
+#define GetStatCheckKind(s) ((s)->v.i.checkkind)
+#else
+#define GetStatCheckKind(s) GetStatCheckKindF(s)
+#endif
 
 /* * * StateLink functions * * */
 
@@ -1247,6 +1265,26 @@ extern struct Expr *ReinitStatRHSF(CONST struct Statement *s);
 /**<
  *  Implementation function for ReinitStatRHS().
  */
+
+#ifdef NDEBUG
+#define SwitchToStatValue(s) ((s)->v.switchto.value)
+#else
+#define SwitchToStatValue(s) SwitchToStatValueF(s)
+#endif
+/**<
+ *  Return the target-state expression of a SWITCH TO statement.
+ */
+extern struct Expr *SwitchToStatValueF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+#define SwitchToStatGuard(s) ((s)->v.switchto.guard)
+#else
+#define SwitchToStatGuard(s) SwitchToStatGuardF(s)
+#endif
+/**<
+ *  Return the guard expression of a SWITCH TO statement.
+ */
+extern struct Expr *SwitchToStatGuardF(CONST struct Statement *s);
 
 /* * * StateRelation functions * * */
 

@@ -781,7 +781,6 @@ likely incorrect uses of the current syntax:
 - `pre(...)` outside `REINIT(...)`, including in `CONDITIONAL` guards
 - `REINIT(...)` applied to algebraic real variables
 - `REINIT(...)` applied to the independent variable or derivative variables
-- `REINIT(...)` applied to unsupported integer targets
 - type-mismatched RHS expressions for real and boolean `REINIT(...)` targets
 
 Modelica and gPROMS both keep a semantic distinction here:
@@ -792,12 +791,12 @@ Modelica and gPROMS both keep a semantic distinction here:
   while other discontinuous value changes are handled through separate
   mechanisms such as `REASSIGN`
 
-For ASCEND Phase 1B it is still reasonable to keep a single `REINIT(...)`
+For ASCEND Phase 1 it is still reasonable to keep a single `REINIT(...)`
 surface form for continuous-state resets, inferred discrete real event-memory
-updates, and boolean discrete updates, provided the backend continues to
-distinguish those target classes. This keeps the first implementation small,
-while leaving open the option of a cleaner split in surface syntax later if it
-proves worthwhile.
+updates, and discrete boolean/integer/symbol updates, provided the backend
+continues to distinguish those target classes. This keeps the first
+implementation small, while leaving open the option of a cleaner split in
+surface syntax later if it proves worthwhile.
 
 Expression-level event generation, more in the style of Modelica, may also be
 desirable later. However, that should be treated as a future event-source layer
@@ -809,61 +808,140 @@ The next major step should be to move from "event actions inside existing
 `WHEN` cases" toward an explicit state-transition notation, while still
 lowering onto the current `CONDITIONAL` / `SATISFIED(...)` / `WHEN` backend.
 
-The main missing capability is not real-valued reset any more. Phase 1B
+The main missing capability is not real-valued reset any more. Phase 1
 already extended `REINIT(...)` so it can update:
 
 - continuous real states
 - discrete real event-memory variables
 - boolean discrete variables
+- integer discrete variables
+- symbol discrete variables
 
-What is still missing is true `REASSIGN`-like behavior for discrete non-real
-state:
+The latest backend work has now taken the first Phase 2 runtime slice a step
+further:
 
-- integer selector variables
-- symbolic / enumerated selector variables
+- integer and symbol discrete values can now be updated correctly at event
+  time
+- direct integer/symbol-controlled `WHEN(...)` dispatch already works in IDA
+  analysis and solve
+- the event-time path now also works for those non-boolean discrete changes:
+  after a `REINIT(...)` updates an integer or symbol discrete variable, IDA
+  now performs an unconditional reanalysis before the same-time consistency
+  solve, so the newly selected `WHEN` case becomes active immediately
+- this is now covered by regressions for:
+  - integer and symbol cases selected from the initial state
+  - integer and symbol mode switches triggered by a boundary event
 
-That is why Phase 2 still needs something beyond the current widened
-`REINIT(...)`. We do not yet have a clean way to say "the active state becomes
-`running` now" unless that state can be encoded indirectly through existing
-condition booleans.
+In addition, a first cut of `SWITCH TO value IF guard;` is now implemented on
+top of the existing backend. This currently works for raw integer/symbol mode
+variables in `WHEN(mode)` cases, for example:
+
+```ascend
+WHEN(mode)
+    CASE 'low':
+        USE before_trip;
+        SWITCH TO 'high' IF trigger;
+    CASE 'high':
+        USE after_trip;
+END WHEN;
+```
+
+where `trigger` is itself a discrete/logical variable, for example from
+`SATISFIED(...)`.
+
+So the earlier runtime blocker on non-boolean `WHEN` reconfiguration has now
+been resolved for the current Phase 2 groundwork, and the first `SWITCH TO`
+runtime path is working.
+
+What is **not** yet implemented is implicit event generation from direct
+continuous guards such as:
+
+```ascend
+SWITCH TO 'aboveweir' IF h > h_weir;
+```
+
+That still needs a selector/front-end layer that can generate or bind the
+required boundary/event source automatically. For now, the working path is to
+express the event source separately through existing `CONDITIONAL` /
+`SATISFIED(...)` machinery and use that discrete boolean in the `SWITCH TO`
+guard.
+
+The chosen surface direction is now closer to ASCEND's existing
+`WHEN(...) CASE ... END WHEN` shell than to the earlier `CASE ... OF WHEN ...`
+sketch.
+
+The intended declaration style is:
+
+```ascend
+modes IS_A set OF symbol_constant;
+modes :== ['aboveweir', 'belowweir'];
+
+mode IS_A selector OF modes DEFAULT 'belowweir';
+```
+
+and the intended control syntax is:
+
+```ascend
+WHEN(mode)
+    CASE 'belowweir':
+        USE below_weir_eqns;
+        SWITCH TO 'aboveweir' IF h > h_weir;
+    CASE 'aboveweir':
+        USE above_weir_eqns;
+        SWITCH TO 'belowweir' IF h < h_weir;
+END WHEN;
+```
+
+This keeps the current ASCEND `WHEN ... CASE` outer form, while adding the
+gPROMS-like `SWITCH TO ... IF ...` declaration that puts source state, guard,
+and target state together in one place.
+
+That selector declaration syntax is now implemented in a first working form.
+The current slice is intentionally thin:
+
+- `selector` is currently just a lightweight type refining `symbol`
+- `mode IS_A selector OF modes DEFAULT '...'` now parses and instantiates
+- the declaration-time `DEFAULT` value is checked against the declared domain
+  set
+- selector-driven `WHEN(mode)` cases run on top of the existing integer/symbol
+  `WHEN` machinery
+- selector `CASE` values and `SWITCH TO` targets are now checked against the
+  declared selector domain
+
+This is enough to exercise the new syntax and semantics in IDA regressions.
+What it does **not** yet provide is a rich instance-tree representation of the
+selector's domain/default metadata; at present those still live primarily in
+the declaration statement rather than as inspectable child nodes.
+
+The intended semantic rules are:
+
+- old boolean-list `WHEN(bool1, bool2, ...)` remains valid unchanged
+- new selector form is `WHEN(mode)` with exactly one selector argument
+- mixed forms such as `WHEN(mode, some_boolean)` should be rejected
+- selector `CASE` labels must belong to the selector's declared value set
+- `SWITCH TO` targets must likewise belong to that set
+- selector-driven `WHEN`s should ideally be exhaustive; `OTHERWISE` should not
+  be required
+
+The first three of those rules are now enforced for the current selector
+slice. Exhaustiveness is not yet checked globally; the current implementation
+does reject `OTHERWISE`-style selector fallthrough only indirectly, and a
+non-exhaustive selector `WHEN` can still be diagnosed later as "no case
+matched".
 
 The recommended Phase 2 semantic target is:
 
 - explicit selector/mode memory
-- state-local equations
+- state-local equation selection
 - state-local outgoing transitions
 - optional transition actions (`REINIT`, later `REASSIGN`)
 - post-transition event iteration until the discrete configuration is stable
 - explicit priority / exclusivity rules for multiple enabled outgoing
   transitions
 
-A syntax direction closer to gPROMS would be appropriate, for example:
-
-```ascend
-SELECTOR mode IS_A symbol OF [off, running];
-
-CASE mode OF
-    WHEN off DO
-        USE off_equations;
-        TRANSITION TO running IF cooldown_ok AND storage_ok;
-    END WHEN;
-
-    WHEN running DO
-        USE running_equations;
-        TRANSITION TO off IF shutdown_cmd;
-    END WHEN;
-END CASE;
-```
-
 The important point is not the exact spelling, but that the source state, the
 guard, and the target state appear together in one place. That is the key
 readability advantage of the gPROMS style.
-
-ASCEND already has existing `SELECT` and `SWITCH` statements in the grammar,
-so Phase 2 should copy the gPROMS structural idea more than the exact keyword
-spelling. The surface syntax may therefore need to use `STATE` /
-`TRANSITION`, or some other non-conflicting form, even if the underlying
-semantics are very similar to gPROMS `SELECTOR` / `CASE` / `SWITCH TO IF`.
 
 The existing backend can still do most of the heavy lifting:
 
@@ -934,20 +1012,29 @@ Together these examples imply that Phase 2 must support:
 To keep Phase 2 reviewable and incremental, it should probably be split into
 small semantic slices rather than attempted as one parser rewrite:
 
-- Phase 2A: first-class selector / state syntax in the compiler
-  - add source-level state / transition syntax
-  - preserve that structure in the compiler representation for UI display
-  - lower it to today's `WHEN` / `CASE` machinery for execution
-- Phase 2B: explicit transition actions for discrete non-real state
-  - add `REASSIGN`-like actions for boolean, integer, and symbolic selector
-    targets
-  - keep `REINIT(...)` for continuous-state resets and real-valued event
-    memory
-- Phase 2C: runtime transition semantics
+- Phase 2A: backend prerequisite
+  - completed groundwork:
+    integer/symbol-controlled `WHEN` reconfiguration now works in the
+    IDA/LRSlv event path
+  - next step is to expose that capability through selector syntax rather than
+    raw integer/symbol variables
+- Phase 2B: first-class selector declaration syntax in the compiler
+  - add `selector` as an instance-backed concept
+  - allow `mode IS_A selector OF modes DEFAULT '...'`
+  - preserve selector/value-set structure in the compiler representation for
+    UI display
+- Phase 2C: transition syntax
+  - current implemented slice:
+    `SWITCH TO 'state' IF guard;` inside raw integer/symbol `WHEN(mode)`
+  - next step:
+    connect that syntax to first-class selector declarations rather than raw
+    integer/symbol variables
+  - keep `USE` in the first cut
+- Phase 2D: runtime transition semantics
   - define transition priority / exclusivity
   - define event iteration when a transition action enables another transition
   - define one-shot vs reversible transition behavior
-- Phase 2D: UI / instance-tree presentation
+- Phase 2E: UI / instance-tree presentation
   - show selectors, states, transitions, guards, and actions directly in the
     browser tree
   - avoid exposing only the lowered forest of `SATISFIED(...)` booleans and
@@ -955,29 +1042,25 @@ small semantic slices rather than attempted as one parser rewrite:
 
 The recommended implementation order is:
 
-1. preserve a high-level state/transition structure in the compiler and UI
-2. lower that structure onto existing solver-side `WHEN` / `CASE` support
-3. add discrete non-real transition actions
-4. then refine priority and event-iteration rules once the basic models are
-   executable
+1. add selector declaration syntax while preserving selector structure for the
+   UI
+2. add `SWITCH TO` lowering on top of the existing backend
+3. exercise selector syntax on top of the now-working non-boolean
+   reconfiguration path
+4. then refine priority, actions, and inline-equation support once the basic
+   models are executable
 
 ##### Why widened `REINIT(...)` is not enough
 
 Phase 1B intentionally stretched `REINIT(...)` further than either Modelica or
 gPROMS by also allowing discrete real event-memory targets.
 
-That still does **not** make it a full replacement for `REASSIGN`, because
-Phase 1B does not yet cover:
-
-- boolean state updates
-- integer selector updates
-- symbolic / enumerated mode updates
-- general discrete assignment semantics outside real-valued storage
-
-So the missing Phase 2 capability is not "resetting something discontinuously"
-in the abstract. The missing part is "changing named discrete state in a way
-that the source language can express directly and the UI can display
-intelligibly".
+That still does **not** make it a full replacement for a future
+`REASSIGN`-like syntax, because the missing Phase 2 capability is not merely
+"resetting something discontinuously". The missing part is "changing named
+discrete state in a way that the source language can express directly, that
+the backend can use to reconfigure active equations, and that the UI can
+display intelligibly".
 
 ##### What current syntax still cannot cover cleanly
 

@@ -265,6 +265,8 @@ static void AddIncompleteInst(struct Instance *);
 static int CheckALIASES(struct Instance *, struct Statement *);
 static int CheckARR(struct Instance *, struct Statement *);
 static int CheckISA(struct Instance *, struct Statement *);
+static int IsSelectorTypeDesc(CONST struct TypeDescription *);
+static int AssignISAInitialValue(struct Instance *, struct Statement *, struct Instance *);
 static int AssignStructuralValue(struct Instance *,struct value_t,struct Statement *);
 static int  CheckSELECT(struct Instance *, struct Statement *);
 static int  CheckWHEN(struct Instance *, struct Statement *);
@@ -321,10 +323,6 @@ static void ExecuteUnSelectedWhenStatements(struct Instance *,
                                             struct StatementList *);
 static int ExecuteUnSelectedWHEN(struct Instance *, struct Statement *);
 
-static int IsReinitStatement(CONST struct Statement *statement){
-  return statement != NULL && StatementType(statement) == REINIT;
-}
-
 static struct gl_list_t *CollectWhenReinitStatements(struct StatementList *sl){
   struct gl_list_t *result = NULL;
   struct gl_list_t *list;
@@ -342,6 +340,7 @@ static struct gl_list_t *CollectWhenReinitStatements(struct StatementList *sl){
     }
     switch(StatementType(statement)){
     case REINIT:
+    case SWITCHTO:
       if(result == NULL){
         result = gl_create(2L);
       }
@@ -4116,6 +4115,7 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
   struct Instance *arginst = NULL;
   int mpi;
   int intset;
+  int selector_type;
 
   asc_assert(StatementType(statement)==ISA);
   if (StatWrong(statement)) {
@@ -4125,7 +4125,20 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
     return 1;
   }
   if ((def = FindType(GetStatType(statement)))!=NULL){
-    if ((GetStatSetType(statement)!=NULL) != (GetBaseType(def)==set_type)){
+    selector_type = IsSelectorTypeDesc(def);
+    if (GetStatCheckKind(statement) == ISCV_DEFAULT
+        && (StatementType(statement) != ISA || !selector_type)) {
+      STATEMENT_ERROR(statement,
+        "Declaration DEFAULT is only supported for selector IS_A declarations");
+      return 1;
+    }
+    if ((GetStatSetType(statement)!=NULL)
+        && (GetBaseType(def)!=set_type)
+        && !selector_type) {
+      WriteSetError(statement,def);
+      return 1;
+    }
+    if ((GetStatSetType(statement)==NULL) && (GetBaseType(def)==set_type)){
       WriteSetError(statement,def);
       return 1;
     }
@@ -4148,15 +4161,42 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
         return 1;
       }
     }
-    intset = CalcSetType(GetStatSetType(statement),statement);
-    if (intset < 0) { /* incorrect set type */
-      STATEMENT_ERROR(statement,"Illegal set type encountered.");
-      /* should never happen due to lint */
-      return 0;
+    if (GetBaseType(def)==set_type) {
+      intset = CalcSetType(GetStatSetType(statement),statement);
+      if (intset < 0) { /* incorrect set type */
+        STATEMENT_ERROR(statement,"Illegal set type encountered.");
+        /* should never happen due to lint */
+        return 0;
+      }
+    }else{
+      intset = -1;
     }
     vlist = GetStatVarList(statement);
     while (vlist!=NULL){
+      REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+      struct gl_list_t *instances;
       MakeInstance(NamePointer(vlist),def,intset,inst,statement,arginst);
+      if (GetStatCheckValue(statement) != NULL) {
+        instances = FindInstances(inst,NamePointer(vlist),&err);
+        if (instances == NULL || gl_length(instances) != 1) {
+          if (instances != NULL) {
+            gl_destroy(instances);
+          }
+          if (arginst != NULL) {
+            DestroyParameterInst(arginst);
+          }
+          STATEMENT_ERROR(statement,"DEFAULT declaration target must resolve to exactly one scalar instance");
+          return 0;
+        }
+        if (!AssignISAInitialValue(inst,statement,(struct Instance *)gl_fetch(instances,1))) {
+          gl_destroy(instances);
+          if (arginst != NULL) {
+            DestroyParameterInst(arginst);
+          }
+          return 0;
+        }
+        gl_destroy(instances);
+      }
       vlist = NextVariableNode(vlist);
     }
     if (arginst != NULL) {
@@ -10187,6 +10227,148 @@ static int CheckISA(struct Instance *inst, struct Statement *stat){
   return 1;
 }
 
+static int IsSelectorTypeDesc(CONST struct TypeDescription *desc)
+{
+  symchar *selector_name = AddSymbol("selector");
+  while (desc != NULL) {
+    if (GetName(desc) == selector_name) {
+      return 1;
+    }
+    desc = GetRefinement(desc);
+  }
+  return 0;
+}
+
+static CONST struct set_t *ResolveSelectorDomain(struct Instance *scope,
+                                                 struct Statement *statement)
+{
+  struct Name *domain_name;
+  struct gl_list_t *instances;
+  struct Instance *domain;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  symchar *domain_id;
+
+  domain_id = GetStatSetType(statement);
+  if (domain_id == NULL) {
+    STATEMENT_ERROR(statement,"Selector declaration is missing a domain set");
+    return NULL;
+  }
+
+  domain_name = CreateIdName(domain_id);
+  instances = FindInstances(scope,domain_name,&err);
+  DestroyName(domain_name);
+  if (instances == NULL || gl_length(instances) != 1) {
+    if (instances != NULL) gl_destroy(instances);
+    STATEMENT_ERROR(statement,"Unable to resolve selector domain set");
+    return NULL;
+  }
+
+  domain = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+  if (domain == NULL || InstanceKind(domain) != SET_ATOM_INST) {
+    STATEMENT_ERROR(statement,"Selector domain must be a set instance");
+    return NULL;
+  }
+
+  return SetAtomList(domain);
+}
+
+static int AssignISAInitialValue(struct Instance *scope,
+                                 struct Statement *statement,
+                                 struct Instance *target)
+{
+  struct value_t value;
+  CONST struct set_t *domain = NULL;
+  int previous_context;
+
+  if (GetStatCheckValue(statement) == NULL) {
+    return 1;
+  }
+
+  previous_context = GetDeclarativeContext();
+  SetDeclarativeContext(0);
+  asc_assert(GetEvaluationContext()==NULL);
+  SetEvaluationContext(scope);
+  value = EvaluateExpr(GetStatCheckValue(statement),NULL,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+  SetDeclarativeContext(previous_context);
+
+  if (ValueKind(value)==error_value) {
+    switch(ErrorValue(value)){
+    case undefined_value:
+    case name_unfound:
+      DestroyValue(&value);
+      return 0;
+    default:
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"Unable to evaluate declaration DEFAULT expression");
+      return 0;
+    }
+  }
+
+  if (IsSelectorTypeDesc(InstanceTypeDesc(target))) {
+    domain = ResolveSelectorDomain(scope,statement);
+    if (domain == NULL) {
+      DestroyValue(&value);
+      return 0;
+    }
+    switch (ValueKind(value)) {
+    case symbol_value:
+      if (!StrMember(SymbolValue(value),domain)) {
+        DestroyValue(&value);
+        STATEMENT_ERROR(statement,"DEFAULT selector value is not a member of the selector domain");
+        return 0;
+      }
+      break;
+    case integer_value:
+      if (!IntMember((asc_intptr_t)IntegerValue(value),domain)) {
+        DestroyValue(&value);
+        STATEMENT_ERROR(statement,"DEFAULT selector value is not a member of the selector domain");
+        return 0;
+      }
+      break;
+    default:
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"DEFAULT selector value must match the selector domain type");
+      return 0;
+    }
+  }
+
+  switch(InstanceKind(target)) {
+  case SYMBOL_ATOM_INST:
+    if (ValueKind(value) != symbol_value) {
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"DEFAULT value for symbol declaration must be a symbol");
+      return 0;
+    }
+    SetSymbolAtomValue(target, SymbolValue(value));
+    break;
+  case INTEGER_ATOM_INST:
+    if (ValueKind(value) != integer_value) {
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"DEFAULT value for integer declaration must be an integer");
+      return 0;
+    }
+    SetIntegerAtomValue(target, IntegerValue(value), 0);
+    break;
+  case BOOLEAN_ATOM_INST:
+    if (ValueKind(value) != boolean_value) {
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"DEFAULT value for boolean declaration must be boolean");
+      return 0;
+    }
+    SetBooleanAtomValue(target, BooleanValue(value), 0);
+    break;
+  default:
+    DestroyValue(&value);
+    STATEMENT_ERROR(statement,"DEFAULT is only supported on scalar atomic declarations");
+    return 0;
+  }
+
+  DestroyValue(&value);
+  return 1;
+}
+
 /**
 	checks that all the names in a varlist exist as instances.
 	returns 1 if TRUE, 0 if not.
@@ -10882,6 +11064,7 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
     case FNAME:
       return CheckFNAME(inst,statement);
     case REINIT:
+    case SWITCHTO:
       return 1;
     case FOR:
       return Pass4RealCheckFOR(inst,statement);
@@ -12224,6 +12407,7 @@ void MakeWhenCaseReferences(struct Instance *inst,
       MakeWhenCaseReferencesFOR(inst,child,statement,listref);
       break;
     case REINIT:
+    case SWITCHTO:
       break;
     default:
       WSEM(stderr,statement,
@@ -12267,6 +12451,7 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
       MakeRealWhenCaseReferencesFOR(inst,child,statement,listref);
       break;
     case REINIT:
+    case SWITCHTO:
       break;
     default:
       STATEMENT_ERROR(statement,
@@ -12350,6 +12535,7 @@ void ExecuteWhenStatements(struct Instance *inst,
       return_value = ExecuteFNAME(inst,statement);
       break;
     case REINIT:
+    case SWITCHTO:
       return_value = 1;
       break;
     case FOR:
@@ -12500,6 +12686,7 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
       return_value = 1;
       break;
     case REINIT:
+    case SWITCHTO:
       return_value = 1;
       break;
     case FOR:

@@ -255,6 +255,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case ASGN:
     case CASGN:
     case REINIT:
+    case SWITCHTO:
     case CALL:
     case EXT:
     case REF:
@@ -367,7 +368,9 @@ struct Statement *CreateARR(struct VariableList *avlname,
 struct Statement *CreateISA(struct VariableList *vl,
 			    symchar *t,
                             struct Set *ta,
-			    symchar *st)
+			    symchar *st,
+                            struct Expr *cv,
+                            unsigned char ck)
 {
   struct Statement *result;
   result=create_statement_here(ISA);
@@ -375,13 +378,15 @@ struct Statement *CreateISA(struct VariableList *vl,
   result->v.i.type = t;
   result->v.i.typeargs = ta;
   result->v.i.settype = st;
-  result->v.i.checkvalue = NULL;
+  result->v.i.checkvalue = cv;
+  result->v.i.checkkind = ck;
   return result;
 }
 
 struct Statement *CreateWILLBE(struct VariableList *vl, symchar *t,
                                struct Set *ta,
-			       symchar *st, struct Expr *cv)
+			       symchar *st, struct Expr *cv,
+                               unsigned char ck)
 {
   struct Statement *result;
   result=create_statement_here(WILLBE);
@@ -390,6 +395,7 @@ struct Statement *CreateWILLBE(struct VariableList *vl, symchar *t,
   result->v.i.typeargs = ta;
   result->v.i.settype = st;
   result->v.i.checkvalue = cv;
+  result->v.i.checkkind = ck;
   return result;
 }
 
@@ -402,6 +408,7 @@ struct Statement *CreateIRT(struct VariableList *vl, symchar *t,
   result->v.i.typeargs = ta;
   result->v.i.settype = NULL;
   result->v.i.checkvalue = NULL;
+  result->v.i.checkkind = ISCV_NONE;
   result->v.i.vl = vl;
   return result;
 }
@@ -624,6 +631,8 @@ unsigned int SlistHasWhat(struct StatementList *slist)
       what |= contains_DEF;
       break;
     case REINIT:
+      break;
+    case SWITCHTO:
       break;
     case REL:
       what |= contains_REL;
@@ -1004,6 +1013,15 @@ struct Statement *CreateREINIT(struct Name *n, struct Expr *rhs)
   return result;
 }
 
+struct Statement *CreateSWITCHTO(struct Expr *value, struct Expr *guard)
+{
+  struct Statement *result;
+  result=create_statement_here(SWITCHTO);
+  result->v.switchto.value = value;
+  result->v.switchto.guard = guard;
+  return result;
+}
+
 struct Statement *CreateTABLE(struct Name *n,
                               symchar *decl_type,
                               struct Set *decl_typeargs,
@@ -1197,6 +1215,12 @@ void DestroyStatement(struct Statement *s)
         DestroyExprList(s->v.reinit.rhs);
         s->v.reinit.rhs = NULL;
         break;
+      case SWITCHTO:
+        DestroyExprList(s->v.switchto.value);
+        s->v.switchto.value = NULL;
+        DestroyExprList(s->v.switchto.guard);
+        s->v.switchto.guard = NULL;
+        break;
       case TABLESTAT:
         DestroyName(s->v.table.name);
         s->v.table.name = NULL;
@@ -1388,6 +1412,7 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.i.settype = s->v.i.settype;
     result->v.i.vl = CopyVariableList(s->v.i.vl);
     result->v.i.checkvalue =  CopyExprList(s->v.i.checkvalue);
+    result->v.i.checkkind = s->v.i.checkkind;
     /* is this complete for IS_A with args to type? */
     break;
   case UNLNK:
@@ -1454,6 +1479,10 @@ struct Statement *CopyToModify(struct Statement *s)
   case REINIT:
     result->v.reinit.nptr = CopyName(s->v.reinit.nptr);
     result->v.reinit.rhs = CopyExprList(s->v.reinit.rhs);
+    break;
+  case SWITCHTO:
+    result->v.switchto.value = CopyExprList(s->v.switchto.value);
+    result->v.switchto.guard = CopyExprList(s->v.switchto.guard);
     break;
   case TABLESTAT:
     result->v.table.name = CopyName(s->v.table.name);
@@ -1589,6 +1618,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case ASGN:
   case CASGN:
   case REINIT:
+  case SWITCHTO:
   case FOR:
   case CALL:
   case EXT:
@@ -1639,6 +1669,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case ASGN:
   case CASGN:
   case REINIT:
+  case SWITCHTO:
   case FOR:
   case CALL:
   case EXT:
@@ -1691,6 +1722,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case ASGN:
   case CASGN:
   case REINIT:
+  case SWITCHTO:
   case FOR:
   case CALL:
   case EXT:
@@ -1801,8 +1833,16 @@ CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->ref_count);
-  assert(s->t==WILLBE);
+  assert(s->t==ISA || s->t==WILLBE);
   return s->v.i.checkvalue;
+}
+
+unsigned char GetStatCheckKindF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==ISA || s->t==WILLBE);
+  return s->v.i.checkkind;
 }
 
 symchar *LINKStatKeyF(CONST struct Statement *s)
@@ -2094,6 +2134,22 @@ struct Expr *ReinitStatRHSF(CONST struct Statement *s)
   assert(s->ref_count);
   assert(s->t==REINIT);
   return s->v.reinit.rhs;
+}
+
+struct Expr *SwitchToStatValueF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==SWITCHTO);
+  return s->v.switchto.value;
+}
+
+struct Expr *SwitchToStatGuardF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==SWITCHTO);
+  return s->v.switchto.guard;
 }
 
 struct Name *RelationStatNameF(CONST struct Statement *s)
@@ -2859,7 +2915,14 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     if (ctmp != 0) {
       return ctmp;
     }
-    return CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
+    ctmp = CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (GetStatCheckKind(s1) != GetStatCheckKind(s2)) {
+      return GetStatCheckKind(s1) < GetStatCheckKind(s2) ? -1 : 1;
+    }
+    return 0;
   case LNK: /* fallthru */ /* FIXME check this? */
   case UNLNK: /* fallthru */
     CONSOLE_DEBUG("CHECK HERE! don't we also need to check the TYPE of link?");
@@ -2923,6 +2986,12 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareExprs(ReinitStatRHS(s1),ReinitStatRHS(s2));
+  case SWITCHTO:
+    ctmp = CompareExprs(SwitchToStatValue(s1), SwitchToStatValue(s2));
+    if(ctmp != 0){
+      return ctmp;
+    }
+    return CompareExprs(SwitchToStatGuard(s1), SwitchToStatGuard(s2));
   case TABLESTAT:
     ctmp = CompareNames(s1->v.table.name,s2->v.table.name);
     if (ctmp != 0) {
@@ -3205,8 +3274,11 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     if (ctmp != 0) {
       return ctmp;
     }
-    return CompareVariableLists(GetStatVarList(s1),GetStatVarList(s2));
-    /* IS_A IS_REFINED_TO have not WITH_VALUE part */
+    ctmp = CompareVariableLists(GetStatVarList(s1),GetStatVarList(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    return CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
   case WILLBE:
     /* compare set OF parts */
     if (GetStatSetType(s1) != NULL || GetStatSetType(s2) != NULL) {
@@ -3239,10 +3311,15 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     if (GetStatCheckValue(s1) != NULL) {
-      return CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
-    } else {
-      return 0;
+      ctmp = CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
+      if (ctmp != 0) {
+        return ctmp;
+      }
     }
+    if (GetStatCheckKind(s1) != GetStatCheckKind(s2)) {
+      return GetStatCheckKind(s1) < GetStatCheckKind(s2) ? -1 : 1;
+    }
+    return 0;
   case WBTS: /* fallthru */
   case WNBTS:
     return CompareVariableLists(GetStatVarList(s1),GetStatVarList(s2));
@@ -3277,6 +3354,7 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case ASGN:
   case CASGN:
   case REINIT:
+  case SWITCHTO:
   case RUN:
   case CALL:
   case ASSERT:

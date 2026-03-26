@@ -336,17 +336,23 @@ Instanc::getKindStr() const{
 		case REAL_INST: ss << "Real"; break;
 		case INTEGER_INST: ss << "Integer"; break;
 		case BOOLEAN_INST: ss << "Boolean"; break;
-		case SYMBOL_INST: ss << "Symbol"; break;
+		case SYMBOL_INST:
+			ss << (isSelector() ? "Selector" : "Symbol");
+			break;
 		case SET_INST: ss << "Set"; break;
 		case REAL_ATOM_INST: ss << "Real atom"; break;
 		case INTEGER_ATOM_INST: ss << "Integer atom"; break;
 		case BOOLEAN_ATOM_INST: ss << "Boolean atom"; break;
-		case SYMBOL_ATOM_INST: ss << "Symbol atom"; break;
+		case SYMBOL_ATOM_INST:
+			ss << (isSelector() ? "Selector atom" : "Symbol atom");
+			break;
 		case SET_ATOM_INST: ss << "Set atom"; break;
 		case REAL_CONSTANT_INST: ss << "Real constant"; break;
 		case BOOLEAN_CONSTANT_INST: ss << "Boolean constant"; break;
 		case INTEGER_CONSTANT_INST: ss << "Integer constant"; break;
-		case SYMBOL_CONSTANT_INST: ss << "Symbol constant"; break;
+		case SYMBOL_CONSTANT_INST:
+			ss << (isSelector() ? "Selector constant" : "Symbol constant");
+			break;
 		case DUMMY_INST: ss << "Dummy"; break;
 		default:
 			throw runtime_error("Invalid instance type");
@@ -530,6 +536,11 @@ Instanc::isSymbol() const{
 }
 
 const bool
+Instanc::isSelector() const{
+	return isSymbol() && getType().isRefinedSelector();
+}
+
+const bool
 Instanc::isDefined() const{
 	if(!isAtom() && !isFund() && !isConst())throw runtime_error("Instanc::isDefined: not an atom/fund/const");
 	return AtomAssigned(i);
@@ -697,6 +708,15 @@ Instanc::getSymbolValue() const{
 	return SCP(GetSymbolAtomValue(i));
 }
 
+const SymChar
+Instanc::getSelectorValue() const{
+	if(!isSelector()){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not selector-valued",getName().toString());
+		return SymChar("ERROR");
+	}
+	return getSymbolValue();
+}
+
 void
 Instanc::setSymbolValue(const SymChar &sym){
 	stringstream ss;
@@ -714,6 +734,16 @@ Instanc::setSymbolValue(const SymChar &sym){
 
 	SetSymbolAtomValue(i,sym.getInternalType());
 	ascxx_mark_instance_dirty(i);
+}
+
+void
+Instanc::setSelectorValue(const SymChar &sym){
+	stringstream ss;
+	if(!isSelector()){
+		ss << "Instance '" << getName().toString() << "' is not selector-valued.";
+		throw runtime_error(ss.str());
+	}
+	setSymbolValue(sym);
 }
 
 const string

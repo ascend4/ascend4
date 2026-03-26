@@ -263,6 +263,18 @@ Type::isRefinedSolverVar() const{
 }
 
 const bool
+Type::isRefinedSelector() const{
+	const TypeDescription *selector_type;
+	Type t1 = Library().findType(SymChar("selector"));
+	selector_type=t1.getInternalType();
+
+	if(MoreRefined(t, selector_type)==t){
+		return true;
+	}
+	return false;
+}
+
+const bool
 Type::isFundamental() const{
 	return CheckFundamental(getName().getInternalType());
 }

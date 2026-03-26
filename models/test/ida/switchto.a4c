@@ -1,0 +1,251 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_switchto_integer_mode;
+	t               IS_A time;
+	y, ydot         IS_A generic_real;
+	sample          IS_A generic_real;
+	stage           IS_A integer;
+	trigger         IS_A boolean_var;
+	trip_time       IS_A time;
+
+	drive:       ydot = 1;
+	before_trip: sample = y;
+	after_trip:  sample = y + 10;
+
+CONDITIONAL
+	trip: y >= trip_time;
+END CONDITIONAL;
+
+	trigger == SATISFIED(trip, 1e-8);
+
+	WHEN(stage)
+		CASE 0:
+			USE before_trip;
+			SWITCH TO 1 IF trigger;
+		CASE 1:
+			USE after_trip;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		FIX trip_time;
+		trip_time := 1 {s};
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		stage := 0;
+		trigger := FALSE;
+		t := 0 {s};
+	END values;
+END ida_switchto_integer_mode;
+
+MODEL ida_switchto_symbol_mode;
+	t               IS_A time;
+	y, ydot         IS_A generic_real;
+	sample          IS_A generic_real;
+	mode            IS_A symbol;
+	trigger         IS_A boolean_var;
+	trip_time       IS_A time;
+
+	drive:       ydot = 1;
+	before_trip: sample = y;
+	after_trip:  sample = y + 10;
+
+CONDITIONAL
+	trip: y >= trip_time;
+END CONDITIONAL;
+
+	trigger == SATISFIED(trip, 1e-8);
+
+	WHEN(mode)
+		CASE 'low':
+			USE before_trip;
+			SWITCH TO 'high' IF trigger;
+		CASE 'high':
+			USE after_trip;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		FIX trip_time;
+		trip_time := 1 {s};
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		mode := 'low';
+		trigger := FALSE;
+		t := 0 {s};
+	END values;
+END ida_switchto_symbol_mode;
+
+MODEL ida_switchto_selector_mode;
+	modes           IS_A set OF symbol_constant;
+	modes :== ['low', 'high'];
+	mode            IS_A selector OF modes DEFAULT 'low';
+	t               IS_A time;
+	y, ydot         IS_A generic_real;
+	sample          IS_A generic_real;
+	trigger         IS_A boolean_var;
+	trip_time       IS_A time;
+
+	drive:       ydot = 1;
+	before_trip: sample = y;
+	after_trip:  sample = y + 10;
+
+CONDITIONAL
+	trip: y >= trip_time;
+END CONDITIONAL;
+
+	trigger == SATISFIED(trip, 1e-8);
+
+	WHEN(mode)
+		CASE 'low':
+			USE before_trip;
+			SWITCH TO 'high' IF trigger;
+		CASE 'high':
+			USE after_trip;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		FIX trip_time;
+		trip_time := 1 {s};
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		trigger := FALSE;
+		t := 0 {s};
+	END values;
+END ida_switchto_selector_mode;
+
+MODEL ida_switchto_selector_bad_switch;
+	modes           IS_A set OF symbol_constant;
+	modes :== ['low', 'high'];
+	mode            IS_A selector OF modes DEFAULT 'low';
+	t               IS_A time;
+	y, ydot         IS_A generic_real;
+	sample          IS_A generic_real;
+	trigger         IS_A boolean_var;
+	trip_time       IS_A time;
+
+	drive:       ydot = 1;
+	before_trip: sample = y;
+	after_trip:  sample = y + 10;
+
+CONDITIONAL
+	trip: y >= trip_time;
+END CONDITIONAL;
+
+	trigger == SATISFIED(trip, 1e-8);
+
+	WHEN(mode)
+		CASE 'low':
+			USE before_trip;
+			SWITCH TO 'bogus' IF trigger;
+		CASE 'high':
+			USE after_trip;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		FIX trip_time;
+		trip_time := 1 {s};
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		trigger := FALSE;
+		t := 0 {s};
+	END values;
+END ida_switchto_selector_bad_switch;
+
+MODEL ida_switchto_selector_bad_case;
+	modes           IS_A set OF symbol_constant;
+	modes :== ['low', 'high'];
+	mode            IS_A selector OF modes DEFAULT 'low';
+	t               IS_A time;
+	y, ydot         IS_A generic_real;
+	sample          IS_A generic_real;
+
+	drive:       ydot = 1;
+	before_trip: sample = y;
+	after_trip:  sample = y + 10;
+
+	WHEN(mode)
+		CASE 'bogus':
+			USE before_trip;
+		CASE 'high':
+			USE after_trip;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		t := 0 {s};
+	END values;
+END ida_switchto_selector_bad_case;
+
+MODEL ida_switchto_selector_bad_default;
+	modes           IS_A set OF symbol_constant;
+	modes :== ['low', 'high'];
+	mode            IS_A selector OF modes DEFAULT 'bogus';
+	t               IS_A time;
+	y, ydot         IS_A generic_real;
+
+	drive: ydot = 1;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		y := 0;
+		ydot := 1;
+		t := 0 {s};
+	END values;
+END ida_switchto_selector_bad_default;
+
+MODEL ida_switchto_nonselector_default_bad;
+    badmode IS_A symbol DEFAULT 'low';
+END ida_switchto_nonselector_default_bad;

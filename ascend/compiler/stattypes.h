@@ -129,6 +129,7 @@ enum stat_t {
   WBTS,         /**< WILL_BE_THE_SAME */
   WNBTS,        /**< WILL_NOT_BE_THE_SAME */
   REINIT,       /**< REINIT statement */
+  SWITCHTO,     /**< SWITCH TO ... IF ... statement */
   TABLESTAT,    /**< TABLE statement */
   DATASETSTAT,  /**< DATASET statement */
   WILLBE        /**< WILL_BE */
@@ -243,12 +244,19 @@ struct StateSWITCH {
 };
 
 /** used for IS_A, IS_REFINED_TO, WILL_BE */
+enum StateISCheckKind {
+  ISCV_NONE = 0,
+  ISCV_WITH_VALUE = 1,
+  ISCV_DEFAULT = 2
+};
+
 struct StateIS {
   struct VariableList *vl;  /**< all, but WILL_BE may want len=1. */
   symchar *type;            /**< all */
   struct Set *typeargs;     /**< all, parameter list. may be NULL */
   symchar *settype;         /**< IS_A only */
-  struct Expr *checkvalue;  /**< WILL_BE only */
+  struct Expr *checkvalue;  /**< declaration-time default/check value */
+  unsigned char checkkind;  /**< distinguishes WITH_VALUE from DEFAULT */
   /* note that checkvalue!=NULL and typeargs!=NULL are mutually exclusive
    * because checkvalues go with constants which are never parameterized.
    */
@@ -298,6 +306,12 @@ struct StateAssign {
 struct StateReinit {
   struct Name *nptr;
   struct Expr *rhs;
+};
+
+/** used for event-time selector/mode transition statements */
+struct StateSwitchTo {
+  struct Expr *value;
+  struct Expr *guard;
 };
 
 /** used for general external methods */
@@ -528,6 +542,7 @@ union StateUnion {
   struct StateARE        a;
   struct StateAssign     asgn;
   struct StateReinit     reinit;
+  struct StateSwitchTo   switchto;
   struct StateRelation   rel;
   struct StateLogicalRel lrel;
   struct StateFOR        f;

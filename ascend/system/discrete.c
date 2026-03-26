@@ -420,14 +420,7 @@ uint32 dis_fixed(struct dis_discrete *dis)
     return FALSE;
   }
   if (!boolean_var(dis->datom)) {
-    if (dis_const(dis)) {
-      FPRINTF(stderr,"dis_fixed called on a dis constant\n");
-      return TRUE;
-    }
-    else {
-      FPRINTF(stderr,"dis_fixed called on a bad dis var\n");
-      return FALSE;
-    }
+    return dis_flagbit(dis,DIS_FIXED);
   }
   c = ChildByChar(IPTR(dis->datom),FIXED_V);
   if( c == NULL ) {
@@ -449,14 +442,8 @@ void dis_set_fixed(struct dis_discrete *dis, uint32 fixed)
     return;
   }
   if (!boolean_var(dis->datom)) {
-    if (dis_const(dis)) {
-      FPRINTF(stderr,"dis_set_fixed called on a dis constant\n");
-      return;
-    }
-    else {
-      FPRINTF(stderr,"dis_set_fixed called on a bad dvar\n");
-      return;
-    }
+    dis_set_flagbit(dis,DIS_FIXED,fixed);
+    return;
   }
   c = ChildByChar(IPTR(dis->datom),FIXED_V);
   if( c == NULL ) {
@@ -590,4 +577,3 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
   PopInterfacePtrs(oldips,NULL,NULL);
   return result;
 }
-

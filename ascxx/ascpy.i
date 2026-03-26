@@ -390,6 +390,7 @@ public:
 	const bool isBool() const;
 	const bool isInt() const;
 	const bool isSymbol() const;
+	const bool isSelector() const;
 	const bool isReal() const;
 	const bool isModel() const;
 
@@ -403,6 +404,7 @@ public:
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+	const SymChar getSelectorValue() const;
 	const std::string getValueAsString() const; ///< Use carefully: rounding will occur for doubles!
 	const std::string getWhenAsString(const Instanc &relative_to) const;
 	const std::string getLogrelAsString(const Instanc &relative_to) const;
@@ -423,6 +425,7 @@ public:
 	void setBoolValue(const bool &val);
 	void setIntValue(const long &val);
 	void setSymbolValue(const SymChar &sym);
+	void setSelectorValue(const SymChar &sym);
 	void write(const char *fname);
 
 	const InstanceStatus getStatus() const;
