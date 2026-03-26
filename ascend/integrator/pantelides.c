@@ -545,6 +545,7 @@ static int pantelides_run(PantelidesContext *ctx){
 
 static void pantelides_write_report(PantelidesContext *ctx, FILE *fp){
 	unsigned long i;
+	const unsigned long max_list_items = 50;
 	fprintf(fp, "Pantelides advisory report\n");
 	fprintf(fp, "==========================\n");
 	fprintf(fp, "Variables: %lu\n", (unsigned long)gl_length(ctx->vars));
@@ -606,12 +607,19 @@ static void pantelides_write_report(PantelidesContext *ctx, FILE *fp){
 			"  currently recognised in this system.\n"
 		);
 	}else{
+		unsigned long shown = 0;
 		for(i = 1; i <= gl_length(ctx->differentiation_order); ++i){
 			PantelidesEq *eq = (PantelidesEq *)gl_fetch(ctx->differentiation_order, i);
 			if(eq == NULL || eq->differentiated == NULL){
 				continue;
 			}
-			fprintf(fp, "  %lu. Differentiate %s: %s\n", i, eq->name, eq->detail);
+			++shown;
+			if(shown > max_list_items){
+				fprintf(fp, "  ... %lu additional differentiation steps omitted ...\n",
+					(unsigned long)(gl_length(ctx->differentiation_order) - max_list_items));
+				break;
+			}
+			fprintf(fp, "  %lu. Differentiate %s: %s\n", shown, eq->name, eq->detail);
 			fprintf(fp, "     add %s\n", eq->differentiated->name);
 		}
 	}
@@ -625,6 +633,11 @@ static void pantelides_write_report(PantelidesContext *ctx, FILE *fp){
 			PantelidesVar *var = (PantelidesVar *)gl_fetch(ctx->generated_vars, i);
 			if(var == NULL){
 				continue;
+			}
+			if(i > max_list_items){
+				fprintf(fp, "  ... %lu additional generated derivative quantities omitted ...\n",
+					(unsigned long)(gl_length(ctx->generated_vars) - max_list_items));
+				break;
 			}
 			fprintf(fp, "  %s", var->name);
 			if(var->base != NULL){
@@ -643,6 +656,11 @@ static void pantelides_write_report(PantelidesContext *ctx, FILE *fp){
 			PantelidesEq *eq = (PantelidesEq *)gl_fetch(ctx->generated_eqs, i);
 			if(eq == NULL){
 				continue;
+			}
+			if(i > max_list_items){
+				fprintf(fp, "  ... %lu additional generated equations omitted ...\n",
+					(unsigned long)(gl_length(ctx->generated_eqs) - max_list_items));
+				break;
 			}
 			fprintf(fp, "  %s: %s\n", eq->name, eq->detail);
 		}

@@ -36,7 +36,7 @@ int some_dis_vars_changed(slv_system_t sys);
 /**
  * Setup LRSlv for use with IDA. Solve the problem at startup to check the analysis
  */
-void ida_setup_lrslv(IntegratorSystem *integ);
+int ida_setup_lrslv(IntegratorSystem *integ);
 
 /**
  * Throw out old values and reanalyse the system after a boundary crossing

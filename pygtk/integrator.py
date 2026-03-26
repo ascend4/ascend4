@@ -192,17 +192,11 @@ class IntegratorWindow:
 				self.browser.reporter.reportError(str(e))
 				self.window.destroy()
 				if self.prefs.getBoolPref("Integrator","debuganalyse",True):
-					text = ""
-					try:
-						text = self.browser.sim.getPantelidesReport()
-					except RuntimeError:
-						text = ""
-					if not text:
-						with tempfile.TemporaryDirectory() as tmpdirname:
-							fn = pathlib.Path(tmpdirname) / "debug"
-							self.integrator.writeDebug(fn)
-							with open(fn) as fp:
-								text = fp.read()
+					with tempfile.TemporaryDirectory() as tmpdirname:
+						fn = pathlib.Path(tmpdirname) / "debug"
+						self.integrator.writeDebug(fn)
+						with open(fn) as fp:
+							text = fp.read()
 					title = "Integrator Analysis Failed"
 					_dialog = InfoDialog(self.browser,self.browser.window,text,title,tabs=(70,200,300,400,500))
 					_dialog.run()	

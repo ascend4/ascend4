@@ -1080,7 +1080,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 		for (i = 0; i < enginedata->nbnds; i++) {
 			bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
 		}
-		ida_setup_lrslv(integ);
+		statuscode = ida_setup_lrslv(integ);
+		if(statuscode != 0){
+			goto ida_cleanup;
+		}
 
 	}
 

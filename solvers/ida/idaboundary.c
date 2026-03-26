@@ -25,6 +25,7 @@
 #include <ascend/system/rel.h>
 
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/packages.h>
 
 int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem, realtype tout1);
 
@@ -114,16 +115,25 @@ int some_dis_vars_changed(slv_system_t sys) {
 
 }
 
-void ida_setup_lrslv(IntegratorSystem *integ) {
+int ida_setup_lrslv(IntegratorSystem *integ) {
 	slv_parameters_t parameters;
 	slv_status_t status;
 	int i, num_params, slv_index;
 	char *pname;
 
 	/* Setup the logical solver */
+	if(package_load("lrslv", NULL) != 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to load LRSlv for IDA boundary handling");
+		return 1;
+	}
 	slv_index = slv_lookup_client("LRSlv");
+	if (slv_index < 0) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv is unavailable for IDA boundary handling");
+		return 2;
+	}
 	if (slv_select_solver(integ->system, slv_index) == -1) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error attempting to load LRSlv");
+		return 3;
 	}
 
 #ifdef IDA_BND_DEBUG
@@ -151,11 +161,14 @@ void ida_setup_lrslv(IntegratorSystem *integ) {
 		if (!status.converged) {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in logical solver at"
 					"intialisation");
+			return 4;
 		}
 
 		if(some_dis_vars_changed(integ->system)) {
-			ida_bnd_reanalyse(integ);
+			return ida_bnd_reanalyse(integ);
 		}
+
+	return 0;
 }
 
 int ida_bnd_reanalyse(IntegratorSystem *integ){
