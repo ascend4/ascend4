@@ -111,6 +111,8 @@ METHODS
         RUN ode_init;
         RUN values;
         OBSERVE t_last_event, v, y, mode;
+        INTEGRATOR IDA;
+        INTEGRATE FROM 0 {s} TO 3 {s} STEPS 60;
 
         (*
             `t_last_event` is inferred as a real-valued event-memory
@@ -160,6 +162,7 @@ METHODS
             - because `e < 1`, successive bounce heights decrease
         *)
         y := 2.5 {m};
+        y.lower_bound := -1e20 {m};
         v := 0 {m/s};
         a := -9.81 {m/s^2};
 

@@ -765,6 +765,14 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 		}
 	}
 
+	/*
+	 * Emit the post-logical-settling state at the same event time. This lets
+	 * higher-level reporters distinguish event microstates from the simple
+	 * pre-event / post-event endpoints when requested.
+	 */
+	integrator_output_write(integ);
+	integrator_output_write_obs(integ);
+
 	/* update the main system if required */
 	if (ida_discrete_snapshot_changed(&dshot)) {
 		ida_discrete_snapshot_clear(&dshot);

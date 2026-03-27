@@ -108,6 +108,8 @@ METHODS
         RUN ode_init;
         RUN values;
         OBSERVE t_last_event, v, y, mode;
+        INTEGRATOR IDA;
+        INTEGRATE FROM 0 {s} TO 5 {s} STEPS 80;
     END on_load;
 
     METHOD ode_init;
@@ -136,6 +138,7 @@ METHODS
         v_stop := 0.35 {m/s};
 
         y := 2.5 {m};
+        y.lower_bound := -1e20 {m};
         v := 0 {m/s};
         a := -9.81 {m/s^2};
 

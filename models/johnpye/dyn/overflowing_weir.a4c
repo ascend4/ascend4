@@ -70,6 +70,8 @@ METHODS
         RUN ode_init;
         RUN values;
         OBSERVE V, Foverflow, h, mode;
+        INTEGRATOR IDA;
+        INTEGRATE FROM 0 {s} TO 3 {s} STEPS 60;
     END on_load;
 
     METHOD ode_init;

@@ -71,6 +71,9 @@ METHODS
     METHOD on_load;
         RUN ode_init;
         RUN values;
+        OBSERVE t_last_event, period, sample, y;
+        INTEGRATOR IDA;
+        INTEGRATE FROM 0 {s} TO 8 {s} STEPS 80;
 
         (*
             These two quantities behave like event memory:

@@ -1407,6 +1407,14 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							skipping_output = 1;
 						}
 
+						ida_reinit_integrator(integ, ida_mem, tout);
+						/*
+						 * Emit the post-reinitialisation consistent state at the same
+						 * event time. Default CLI output collapses this back to
+						 * endpoints, while '--microstates all' can expose it.
+						 */
+						integrator_output_write(integ);
+						integrator_output_write_obs(integ);
 						/* n_y may have changed */
 						N_VDestroy_Serial(yret);
 						N_VDestroy_Serial(ypret);
