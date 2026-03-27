@@ -545,6 +545,36 @@ ExecuteInitSolver(struct procFrame *fm, struct Statement *stat){
 }
 
 static void
+ExecuteInitIntegrator(struct procFrame *fm, struct Statement *stat){
+	int res;
+	CONST char *integratorname = IntegratorStatName(stat);
+	assert(fm->i != NULL);
+	res = slvreq_set_integrator(fm->i, integratorname);
+	if(res){
+		switch(res){
+			case SLVREQ_NOT_IMPLEMENTED:
+				fm->ErrNo = Proc_slvreq_not_implemented;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_INTEGRATOR_HOOK_NOT_SET:
+				fm->ErrNo = Proc_slvreq_unhooked;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_UNKNOWN_INTEGRATOR:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Unknown integrator '%s'",integratorname);
+				break;
+			default:
+				fm->ErrNo = Proc_slvreq_error;
+				ProcWriteSlvReqError(fm);
+				break;
+		}
+		return;
+	}
+	fm->ErrNo = Proc_all_ok;
+}
+
+static void
 ExecuteInitOption(struct procFrame *fm, struct Statement *stat){
 	CONST char *optionname = stat->v.option.name;
 	struct value_t value;
@@ -758,6 +788,63 @@ ExecuteInitSolve(struct procFrame *fm, struct Statement *stat){
 }
 
 static void
+ExecuteInitObserve(struct procFrame *fm, struct Statement *stat){
+	SlvReqObserveRequest req;
+	CONST struct VariableList *vars;
+	unsigned long index = 0;
+	int res;
+
+	req.n_observed = VariableListLength(ObserveStatObserved(stat));
+	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	req.name = (ObserveStatName(stat) != NULL) ? SCP(ObserveStatName(stat)) : NULL;
+
+	for(vars = ObserveStatObserved(stat); vars != NULL; vars = NextVariableNode(vars)){
+		struct Instance *obs = NULL;
+		if(ResolveStudyInstance(fm, stat, NamePointer(vars), "observed variable", &obs)){
+			goto cleanup;
+		}
+		switch(InstanceKind(obs)){
+			case REAL_INST:
+			case REAL_ATOM_INST:
+			case REAL_CONSTANT_INST:
+			case BOOLEAN_INST:
+			case BOOLEAN_ATOM_INST:
+			case BOOLEAN_CONSTANT_INST:
+			case INTEGER_INST:
+			case INTEGER_ATOM_INST:
+			case INTEGER_CONSTANT_INST:
+			case SYMBOL_INST:
+			case SYMBOL_ATOM_INST:
+			case SYMBOL_CONSTANT_INST:
+				break;
+			default:
+				WriteStatementError(ASC_USER_ERROR,stat,1,"OBSERVE target must be scalar real, boolean, integer, or symbol");
+				fm->ErrNo = Proc_illegal_type_use;
+				fm->flow = FrameError;
+				goto cleanup;
+		}
+		req.observed[index++] = obs;
+	}
+
+	res = slvreq_do_observe(fm->i, &req);
+	if(res){
+		switch(res){
+			case SLVREQ_OBSERVE_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
+		}
+		ProcWriteSlvReqError(fm);
+		goto cleanup;
+	}
+	fm->ErrNo = Proc_all_ok;
+
+cleanup:
+	if(req.observed != NULL){
+		ASC_FREE(req.observed);
+	}
+}
+
+static void
 ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	SlvReqStudyRequest req;
 	CONST struct VariableList *vars;
@@ -788,9 +875,18 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 			case REAL_INST:
 			case REAL_ATOM_INST:
 			case REAL_CONSTANT_INST:
+			case BOOLEAN_INST:
+			case BOOLEAN_ATOM_INST:
+			case BOOLEAN_CONSTANT_INST:
+			case INTEGER_INST:
+			case INTEGER_ATOM_INST:
+			case INTEGER_CONSTANT_INST:
+			case SYMBOL_INST:
+			case SYMBOL_ATOM_INST:
+			case SYMBOL_CONSTANT_INST:
 				break;
 			default:
-				WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY observed variable must be real-valued");
+				WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY observed variable must be scalar real, boolean, integer, or symbol");
 				fm->ErrNo = Proc_illegal_type_use;
 				fm->flow = FrameError;
 				goto cleanup;
@@ -906,6 +1002,76 @@ cleanup:
 	DestroyValue(&req.lower);
 	DestroyValue(&req.upper);
 	DestroyValue(&req.value);
+}
+
+static void
+ExecuteInitIntegrate(struct procFrame *fm, struct Statement *stat){
+	SlvReqIntegrateRequest req;
+	int res;
+
+	if(IntegrateStatSteps(stat) <= 0){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"INTEGRATE STEPS must be positive");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		return;
+	}
+
+	IVAL(req.start);
+	IVAL(req.stop);
+	req.steps = IntegrateStatSteps(stat);
+
+	if(EvaluateStudyRealExpr(fm, stat, IntegrateStatStart(stat), "start", NULL, &req.start)){
+		return;
+	}
+	if(EvaluateStudyRealExpr(fm, stat, IntegrateStatStop(stat), "stop", RealValueDimensions(req.start), &req.stop)){
+		DestroyValue(&req.start);
+		return;
+	}
+	if(RealValue(req.stop) < RealValue(req.start)){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"INTEGRATE stop time must be greater than or equal to start time");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		DestroyValue(&req.start);
+		DestroyValue(&req.stop);
+		return;
+	}
+
+	res = slvreq_do_integrate(fm->i, &req);
+	if(res){
+		switch(res){
+			case SLVREQ_NOT_IMPLEMENTED:
+				fm->ErrNo = Proc_slvreq_not_implemented;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_INTEGRATE_HOOK_NOT_SET:
+				fm->ErrNo = Proc_slvreq_unhooked;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_NO_INTEGRATOR_SELECTED:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"No integrator has been selected");
+				break;
+			case SLVREQ_INTEGRATE_INVALID_REQUEST:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid INTEGRATE request");
+				break;
+			case SLVREQ_INTEGRATE_FAIL:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Integration failed");
+				break;
+			default:
+				fm->ErrNo = Proc_slvreq_error;
+				ProcWriteSlvReqError(fm);
+				break;
+		}
+		DestroyValue(&req.start);
+		DestroyValue(&req.stop);
+		return;
+	}
+
+	fm->ErrNo = Proc_all_ok;
+	DestroyValue(&req.start);
+	DestroyValue(&req.stop);
 }
 
 static void
@@ -2222,15 +2388,24 @@ static void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat){
   case SOLVER:
 	ExecuteInitSolver(fm,stat);
 	break;
+  case INTEGRATOR:
+	ExecuteInitIntegrator(fm,stat);
+	break;
   case OPTION:
 	ExecuteInitOption(fm,stat);
 	break;
   case SOLVE:
     ExecuteInitSolve(fm,stat);
 	break;
+  case INTEGRATE:
+	ExecuteInitIntegrate(fm,stat);
+	break;
   case STUDY:
     ExecuteInitStudy(fm,stat);
-	break;
+    break;
+  case OBSERVE:
+    ExecuteInitObserve(fm,stat);
+    break;
   case DELETESYSTEM:
 	ExecuteInitDeleteSystem(fm,stat);
 	break;

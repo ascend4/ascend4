@@ -356,9 +356,12 @@ public:
 
 %feature("director") SolverHooks;
 %ignore ascxx_slvreq_set_solver;
+%ignore ascxx_slvreq_set_integrator;
 %ignore ascxx_slvreq_set_option;
 %ignore ascxx_slvreq_do_solve;
+%ignore ascxx_slvreq_do_observe;
 %ignore ascxx_slvreq_do_study;
+%ignore ascxx_slvreq_do_integrate;
 %ignore ascxx_slvreq_delete_system;
 %apply SWIGTYPE *DISOWN {SolverReporter *reporter};
 %apply SWIGTYPE *DISOWN {SolverHooks *hooks};

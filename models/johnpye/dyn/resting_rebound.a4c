@@ -107,6 +107,7 @@ METHODS
     METHOD on_load;
         RUN ode_init;
         RUN values;
+        OBSERVE t_last_event, v, y, mode;
     END on_load;
 
     METHOD ode_init;

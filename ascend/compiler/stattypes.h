@@ -115,8 +115,11 @@ enum stat_t {
   WHEN,         /**< WHEN statement */
   FNAME,        /**< Name of model or relation */
   SOLVER,       /**< SOLVER statement */
+  INTEGRATOR,   /**< INTEGRATOR statement */
   OPTION,       /**< OPTION statement */
   SOLVE,        /**< SOLVE statement */
+  INTEGRATE,    /**< INTEGRATE statement */
+  OBSERVE,      /**< OBSERVE statement */
   STUDY,        /**< STUDY statement */
   DELETESYSTEM, /**< DELETE SYSTEM statement */
   SELECT,       /**< SELECT statement */
@@ -460,6 +463,24 @@ struct StateSTUDY{
   char *filename;                 /**< optional output filename */
  };
 
+/** used for INTEGRATOR statement */
+struct StateINTEGRATOR{
+  CONST char *name;              /**< requested integrator engine name */
+};
+
+/** used for INTEGRATE statement */
+struct StateINTEGRATE{
+  struct Expr *start;            /**< integration start time */
+  struct Expr *stop;             /**< integration stop time */
+  long steps;                    /**< number of reporting steps */
+};
+
+/** used for OBSERVE statement */
+struct StateOBSERVE{
+  struct VariableList *obsvars;   /**< variables to observe */
+  symchar *name;                  /**< optional observation set name */
+};
+
 /** used for TABLE statement (parse metadata in v0). */
 struct StateTABLE{
   struct Name *name;           /**< target array name */
@@ -561,8 +582,11 @@ union StateUnion {
   struct StateWhile      loop;
   struct StateFlow       flow;
   struct StateSOLVER     solver;
+  struct StateINTEGRATOR integrator;
   struct StateOPTION     option;
   struct StateSOLVE      solve;
+  struct StateINTEGRATE  integrate;
+  struct StateOBSERVE    observe;
   struct StateSTUDY      study;
   struct StateLINK	     lnk;
   struct StateTABLE      table;

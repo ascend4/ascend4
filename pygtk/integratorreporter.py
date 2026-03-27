@@ -17,6 +17,24 @@ except:
 
 INTEGRATOR_NUM = 0
 
+def _observed_instances(integrator):
+	return [integrator.getObservedInstance(i) for i in range(0, integrator.getNumObservedItems())]
+
+def _observed_values(integrator):
+	values = []
+	for inst in _observed_instances(integrator):
+		if inst.isSelector():
+			values.append(str(inst.getSelectorValue()))
+		elif inst.isSymbol():
+			values.append(str(inst.getSymbolValue()))
+		elif inst.isBool():
+			values.append(bool(inst.getBoolValue()))
+		elif inst.isInt():
+			values.append(int(inst.getIntValue()))
+		else:
+			values.append(inst.getRealValue())
+	return values
+
 class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def __init__(self,browser,integrator):
 		self.browser=browser
@@ -33,6 +51,13 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.progress=self.browser.builder.get_object("integratorprogress")
 		self.solve_status = 1
 		self.cancelrequested = False
+		self.observed_rows = []
+
+	def _get_observed_instances(self):
+		return _observed_instances(self.getIntegrator())
+
+	def _get_current_observed_values(self):
+		return _observed_values(self.getIntegrator())
 
 	def solve_thread(self):
 		try:
@@ -79,6 +104,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.nsteps = self.getIntegrator().getNumSteps()
 		self.progress.set_text("Starting...")
 		self.progress.set_fraction(0.0)
+		self.observed_rows = []
 
 	def initOutput(self):
 		return 1
@@ -112,18 +138,17 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 
 			# add the columns
 			_obs.add_instance(integrator.getIndependentVariable().getInstance())
-			for _v in [integrator.getObservedVariable(_i) for _i in range(0,integrator.getNumObservedVars())]:
-				_obs.add_instance(_v.getInstance())
+			for _inst in self._get_observed_instances():
+				_obs.add_instance(_inst)
 
-			obs = self.getIntegrator().getObservations()
-			for data in obs:
-				# time is always last element in tuple
+			for data in self.observed_rows:
 				_vals, _time = data[:-1], data[-1]
 				_obs.do_add_row([_time] + [_v for _v in _vals])
 			self.browser.maintabs.set_current_page(_tab)
 			if self.autoplot_results and self.browser.prefs.getBoolPref("Integrator", "autoplotresults", True):
-				if len(_obs.cols) >= 2:
-					_obs.plot(x=0, y=[len(_obs.cols) - 1])
+				_plottable = [idx for idx, col in _obs.cols.items() if col.is_plottable()]
+				if len(_plottable) >= 2:
+					_obs.plot(x=_plottable[0], y=[_plottable[-1]])
 		except Exception as e:
 			sys.stderr.write("\n\n\nIntegratorReporter.close_output: error: %s: %s\n\n\n" % (e.__class__,str(e)))
 			self.solve_status = 1
@@ -157,7 +182,10 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		return self.solve_status
 
 	def recordObservedValues(self):
-		self.getIntegrator().saveObservations()
+		I = self.getIntegrator()
+		self.observed_rows.append(self._get_current_observed_values() + [I.getCurrentTime()])
+		if I.getNumObservedVars() > 0:
+			self.getIntegrator().saveObservations()
 		return 1
 
 # no need to move solving to background task because there is no way to interrupt it
@@ -178,9 +206,7 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 			I = self.getIntegrator()
 			self.numsteps=I.getNumSteps()
 			self.indepname = I.getIndependentVariable().getName()
-			names = [I.getObservedVariable(i).getName() for i \
-				in range(I.getNumObservedVars())
-			]
+			names = [inst.getName() for inst in _observed_instances(I)]
 			self.filep.write("#%s\t" % self.indepname)
 			self.filep.write("\t".join(names)+"\n")
 		except Exception as e:
@@ -208,10 +234,9 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 	def recordObservedValues(self):
 		try:
 			I = self.getIntegrator()
-			obs = I.getCurrentObservations()
 			#print str(obs)
 			self.filep.write("%f\t" % I.getCurrentTime())
-			self.filep.write("\t".join([str(i) for i in obs])+"\n")
+			self.filep.write("\t".join([str(i) for i in _observed_values(I)])+"\n")
 		except Exception as e:
 			print("ERROR %s" % str(e))
 			return 0
@@ -276,8 +301,10 @@ class IntegratorReporterPlot(IntegratorReporterPython):
 	def recordObservedValues(self):
 		try:
 			i = self.getIntegrator()
-			obs = i.getCurrentObservations()
+			obs = [v for v in self._get_current_observed_values() if isinstance(v, (int, float)) and not isinstance(v, bool)]
 			self.x.append(i.getCurrentTime())
+			if len(obs) == 0:
+				raise RuntimeError("Plot reporter requires at least one real-valued observed instance")
 			self.y.append(obs[0])
 		except Exception as e:
 			print("ERROR record %s" % str(e))

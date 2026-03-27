@@ -398,7 +398,9 @@ IntegratorSystem *integrator_new(slv_system_t slvsys, struct Instance *inst){
 	sys->y = NULL;
 	sys->ydot = NULL;
 	sys->obs = NULL;
+	sys->observed_instances = NULL;
 	sys->n_y = 0;
+	sys->n_observed_instances = 0;
 	sys->initial_mode_prepared = 0;
 	return sys;
 }
@@ -430,6 +432,7 @@ void integrator_free(IntegratorSystem *sys){
 	if(sys->y != NULL)ASC_FREE(sys->y);
 	if(sys->ydot != NULL)ASC_FREE(sys->ydot);
 	if(sys->obs != NULL)ASC_FREE(sys->obs);
+	if(sys->observed_instances != NULL)ASC_FREE(sys->observed_instances);
 
 	slv_destroy_parms(&(sys->params));
 
@@ -1678,9 +1681,14 @@ static void integrator_clear_analysis(IntegratorSystem *sys){
     ASC_FREE(sys->obs);
     sys->obs = NULL;
   }
+  if(sys->observed_instances != NULL){
+    ASC_FREE(sys->observed_instances);
+    sys->observed_instances = NULL;
+  }
   sys->x = NULL;
   sys->n_y = 0;
   sys->n_obs = 0;
+  sys->n_observed_instances = 0;
   sys->nstates = 0;
   sys->nderivs = 0;
 }
@@ -2311,6 +2319,96 @@ struct var_variable *integrator_get_observed_var(IntegratorSystem *sys, const lo
 	asc_assert(i>=0);
 	asc_assert(i<sys->n_obs);
 	return sys->obs[i];
+}
+
+int integrator_set_observed_instances(IntegratorSystem *sys, struct Instance **instances, int n){
+	int i;
+	asc_assert(sys != NULL);
+
+	if(sys->observed_instances != NULL){
+		ASC_FREE(sys->observed_instances);
+		sys->observed_instances = NULL;
+		sys->n_observed_instances = 0;
+	}
+
+	if(instances == NULL || n <= 0){
+		return 0;
+	}
+
+	sys->observed_instances = ASC_NEW_ARRAY(struct Instance *, n);
+	if(sys->observed_instances == NULL){
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		sys->observed_instances[i] = instances[i];
+	}
+	sys->n_observed_instances = n;
+	return 0;
+}
+
+int integrator_get_num_observed_instances(IntegratorSystem *sys){
+	asc_assert(sys != NULL);
+	if(sys->observed_instances != NULL){
+		return sys->n_observed_instances;
+	}
+	return sys->n_obs;
+}
+
+struct Instance *integrator_get_observed_instance(IntegratorSystem *sys, const long i){
+	asc_assert(sys != NULL);
+	asc_assert(i >= 0);
+	if(sys->observed_instances != NULL){
+		asc_assert(i < sys->n_observed_instances);
+		return sys->observed_instances[i];
+	}
+	asc_assert(i < sys->n_obs);
+	return (struct Instance *)var_instance(sys->obs[i]);
+}
+
+static int integrator_instance_value(struct Instance *inst, struct value_t *value){
+	asc_assert(value != NULL);
+	if(inst == NULL){
+		*value = CreateErrorValue(undefined_value);
+		return 1;
+	}
+	if(!AtomAssigned(inst)){
+		*value = CreateErrorValue(undefined_value);
+		return 1;
+	}
+	switch(InstanceKind(inst)){
+	case REAL_INST:
+	case REAL_ATOM_INST:
+	case REAL_CONSTANT_INST:
+		*value = CreateRealValue(RealAtomValue(inst), RealAtomDims(inst), 0);
+		return 0;
+	case BOOLEAN_INST:
+	case BOOLEAN_ATOM_INST:
+	case BOOLEAN_CONSTANT_INST:
+		*value = CreateBooleanValue(GetBooleanAtomValue(inst), 0);
+		return 0;
+	case INTEGER_INST:
+	case INTEGER_ATOM_INST:
+	case INTEGER_CONSTANT_INST:
+		*value = CreateIntegerValue(GetIntegerAtomValue(inst), 0);
+		return 0;
+	case SYMBOL_INST:
+	case SYMBOL_ATOM_INST:
+	case SYMBOL_CONSTANT_INST:
+		*value = CreateSymbolValue(GetSymbolAtomValue(inst), 0);
+		return 0;
+	default:
+		*value = CreateErrorValue(type_conflict);
+		return 2;
+	}
+}
+
+int integrator_get_observation_value(IntegratorSystem *sys, const long i, struct value_t *value){
+	struct Instance *inst;
+	if(sys == NULL || value == NULL){
+		return 1;
+	}
+	inst = integrator_get_observed_instance(sys, i);
+	return integrator_instance_value(inst, value);
 }
 
 /**

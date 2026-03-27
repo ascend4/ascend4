@@ -21,10 +21,12 @@ not support `CONDITIONAL` / `WHEN` event handling or `REINIT`.
 The non-GUI integration path is:
 
 ```bash
-./a4 int path/to/model.a4c -m model_name -d DURATION -u s --steps N
+./a4 run --integrate path/to/model.a4c -m model_name -d DURATION -u s --steps N
 ```
 
 Add `--plot` if you want an immediate quick plot after the run.
+
+`./a4 int ...` remains available as a shorthand alias for the same path.
 
 ### GUI
 
@@ -41,8 +43,11 @@ Then in the GUI:
 3. set the integration end time / number of reporting steps if desired
 4. click `Integ`
 
-The example models set `obs_id` on key variables, so the integrator reporter
-has something useful to show immediately after integration.
+The example models set `obs_id` on key real variables, so the integrator
+reporter has something useful to show immediately after integration. The
+selector-based examples also define default `OBSERVE` lists so
+`./a4 run --integrate ...` includes the current selector state in the CLI
+table output.
 
 ## Examples
 
@@ -56,7 +61,7 @@ reset at impact. This is the intentionally non-settling case, so if you run
 long enough you will hit the Zeno/event-accumulation stop.
 
 ```bash
-./a4 int models/johnpye/dyn/ideal_rebound.a4c -m ideal_rebound -d 3 -u s --steps 60
+./a4 run --integrate models/johnpye/dyn/ideal_rebound.a4c -m ideal_rebound -d 3 -u s --steps 60
 ./a4 open models/johnpye/dyn/ideal_rebound.a4c -m ideal_rebound
 ```
 
@@ -67,7 +72,7 @@ A settling variant of the ideal rebound. The ball transitions through
 sufficiently small rebounds.
 
 ```bash
-./a4 int models/johnpye/dyn/resting_rebound.a4c -m resting_rebound -d 5 -u s --steps 80
+./a4 run --integrate models/johnpye/dyn/resting_rebound.a4c -m resting_rebound -d 5 -u s --steps 80
 ./a4 open models/johnpye/dyn/resting_rebound.a4c -m resting_rebound
 ```
 
@@ -77,7 +82,7 @@ A reset oscillator with simple event memory. Each event resets the state,
 records the last event time, and lengthens the next period.
 
 ```bash
-./a4 int models/johnpye/dyn/lengthening_sawtooth.a4c -m lengthening_sawtooth -d 8 -u s --steps 80
+./a4 run --integrate models/johnpye/dyn/lengthening_sawtooth.a4c -m lengthening_sawtooth -d 8 -u s --steps 80
 ./a4 open models/johnpye/dyn/lengthening_sawtooth.a4c -m lengthening_sawtooth
 ```
 
@@ -88,7 +93,7 @@ selector cases. Below the weir crest the overflow is zero; above the crest it
 follows a simple weir law.
 
 ```bash
-./a4 int models/johnpye/dyn/overflowing_weir.a4c -m overflowing_weir -d 3 -u s --steps 60
+./a4 run --integrate models/johnpye/dyn/overflowing_weir.a4c -m overflowing_weir -d 3 -u s --steps 60
 ./a4 open models/johnpye/dyn/overflowing_weir.a4c -m overflowing_weir
 ```
 

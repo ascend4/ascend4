@@ -785,13 +785,15 @@ static unsigned char g_decl_checkkind = ISCV_NONE;
 %token FILE_TOK
 %token GLOBAL_TOK
 %token IF_TOK  IGNORE_TOK IMPORT_TOK IN_TOK INITIAL_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK INDEPENDENT_TOK
+%token INTEGRATE_TOK INTEGRATOR_TOK
 %token INTERSECTION_TOK ISA_TOK _IS_T ISREFINEDTO_TOK
+%token AS_TOK
 %token LINEAR_TOK LOG_TOK
 %token NOW_TOK
 %token LINK_TOK
 %token MAXIMIZE_TOK MAXINTEGER_TOK MAXREAL_TOK METHODS_TOK METHOD_TOK MINIMIZE_TOK MODEL_TOK
 %token NOT_TOK NOTES_TOK
-%token OF_TOK OPTION_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
+%token OBSERVE_TOK OF_TOK OPTION_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
 %token /* PATCH_TOK */ PROD_TOK PROVIDE_TOK
 %token RATIO_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
@@ -846,10 +848,12 @@ static unsigned char g_decl_checkkind = ISCV_NONE;
 %type <statptr> when_statement use_statement select_statement
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
-%type <statptr> delete_statement solve_statement solver_statement option_statement study_statement switch_statement
+%type <statptr> delete_statement solve_statement solver_statement integrator_statement option_statement integrate_statement observe_statement study_statement switch_statement
 %type <statptr> table_statement values_statement dataset_statement
 %type <braced_ptr> dataset_units_opt
 %type <id_ptr> dataset_type_opt dataset_type_req dataset_column_ref dataset_column_selector
+%type <id_ptr> observe_as_opt
+%type <lptr> study_obs_opt
 
 %type <slptr> fstatements global_def initial optional_else
 %type <slptr> optional_model_parameters optional_parameter_reduction
@@ -2222,8 +2226,11 @@ statement:
     | fix_statement
     | free_statement
     | solver_statement
+    | integrator_statement
     | solve_statement
     | option_statement
+    | integrate_statement
+    | observe_statement
     | study_statement
     | delete_statement
     | assert_statement
@@ -2814,6 +2821,13 @@ solver_statement:
 	}
 	;
 
+integrator_statement:
+	INTEGRATOR_TOK IDENTIFIER_TOK
+	{
+		$$ = CreateINTEGRATOR(SCP($2));
+	}
+	;
+
 option_statement:
 	OPTION_TOK IDENTIFIER_TOK expr
 	{
@@ -2834,6 +2848,31 @@ solve_statement:
 	}
 	;
 
+integrate_statement:
+	INTEGRATE_TOK FROM_TOK expr TO_TOK expr STEPS_TOK INTEGER_TOK
+	{
+		$$ = CreateINTEGRATE($3, $5, $7);
+	}
+	;
+
+observe_statement:
+	OBSERVE_TOK fvarlist observe_as_opt
+	{
+		$$ = CreateOBSERVE($2, $3);
+	}
+	;
+
+observe_as_opt:
+	/* empty */
+	{
+		$$ = NULL;
+	}
+	| AS_TOK IDENTIFIER_TOK
+	{
+		$$ = $2;
+	}
+	;
+
 study_statement:
 	STUDY_TOK
 	{
@@ -2842,11 +2881,22 @@ study_statement:
 		g_study_now = 0;
 		g_study_filename = NULL;
 	}
-	fvarlist study_vary_opt study_run_opt study_now_opt study_file_opt
+	study_obs_opt study_vary_opt study_run_opt study_now_opt study_file_opt
 	{
 		$$ = CreateSTUDY($3, g_study_parse.vary, g_study_parse.lower, g_study_parse.upper,
 			g_study_parse.steps, g_study_parse.value, g_study_parse.mode, g_study_parse.dist,
 			g_study_run_method, g_study_now, g_study_filename);
+	}
+	;
+
+study_obs_opt:
+	/* empty */
+	{
+		$$ = NULL;
+	}
+	| fvarlist
+	{
+		$$ = $1;
 	}
 	;
 

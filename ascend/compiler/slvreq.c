@@ -40,6 +40,17 @@ int slvreq_set_solver(struct Instance *inst, const char *solvername){
 	return (*(hooks->set_solver_fn))(solvername, hooks->user_data);
 }
 
+int slvreq_set_integrator(struct Instance *inst, const char *integratorname){
+	struct Instance *sim = FindSimulationInstance(inst);
+	SlvReqHooks *hooks = &((struct SimulationInstance *)sim)->slvreq_hooks;
+	if(hooks==NULL || hooks->set_integrator_fn==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No INTEGRATOR hook set");
+		return -1;
+	}
+
+	return (*(hooks->set_integrator_fn))(integratorname, hooks->user_data);
+}
+
 int slvreq_set_option(struct Instance *inst, const char *optionname, struct value_t *val){
 	struct Instance *sim = FindSimulationInstance(inst);
 	SlvReqHooks *hooks = &((struct SimulationInstance *)sim)->slvreq_hooks;
@@ -63,6 +74,17 @@ int slvreq_do_solve(struct Instance *inst){
 	return (*(hooks->do_solve_fn))(inst, hooks->user_data);
 }
 
+int slvreq_do_observe(struct Instance *inst, const SlvReqObserveRequest *request){
+	struct Instance *sim = FindSimulationInstance(inst);
+	SlvReqHooks *hooks = &((struct SimulationInstance *)sim)->slvreq_hooks;
+	if(hooks==NULL || hooks->do_observe_fn==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No OBSERVE hook set");
+		return -1;
+	}
+
+	return (*(hooks->do_observe_fn))(request, hooks->user_data);
+}
+
 int slvreq_do_study(struct Instance *inst, const SlvReqStudyRequest *request){
 	struct Instance *sim = FindSimulationInstance(inst);
 	SlvReqHooks *hooks = &((struct SimulationInstance *)sim)->slvreq_hooks;
@@ -72,6 +94,17 @@ int slvreq_do_study(struct Instance *inst, const SlvReqStudyRequest *request){
 	}
 
 	return (*(hooks->do_study_fn))(request, hooks->user_data);
+}
+
+int slvreq_do_integrate(struct Instance *inst, const SlvReqIntegrateRequest *request){
+	struct Instance *sim = FindSimulationInstance(inst);
+	SlvReqHooks *hooks = &((struct SimulationInstance *)sim)->slvreq_hooks;
+	if(hooks==NULL || hooks->do_integrate_fn==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No INTEGRATE hook set");
+		return -1;
+	}
+
+	return (*(hooks->do_integrate_fn))(request, hooks->user_data);
 }
 
 int slvreq_delete_system(struct Instance *inst){

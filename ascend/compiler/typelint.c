@@ -1069,8 +1069,11 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case FREE:
     case CALL:
     case SOLVER:
+    case INTEGRATOR:
     case OPTION:
     case SOLVE:
+    case INTEGRATE:
+    case OBSERVE:
     case STUDY:
     case DELETESYSTEM:
       break;

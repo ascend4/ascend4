@@ -81,31 +81,69 @@ def _get_instance_units(inst):
 	except Exception:
 		return inst.getType().getDeclaredUnits()
 
-def _get_integrator_output(integrator):
+def _is_real_instance(inst):
+	return inst.isReal()
+
+def _get_instance_value(inst):
+	if inst.isSelector():
+		return str(inst.getSelectorValue())
+	if inst.isSymbol():
+		return str(inst.getSymbolValue())
+	if inst.isBool():
+		return bool(inst.getBoolValue())
+	if inst.isInt():
+		return int(inst.getIntValue())
+	return inst.getRealValue()
+
+def _get_integrator_observed_instances(sim, integrator):
+	hooks = sim.getSolverHooks()
+	if hooks is not None:
+		observed = hooks.getObservedVars(sim)
+		if len(observed):
+			return observed
+	return [integrator.getObservedInstance(i) for i in range(integrator.getNumObservedItems())]
+
+def _get_integrator_output(sim, integrator):
 	indep = integrator.getIndependentVariable()
 	indep_units = _get_instance_units(indep.getInstance())
 	headers = [f"{indep.getName()} [{indep_units.getName().toString()}]"]
 	conversions = [indep_units.getConversion()]
-	for i in range(integrator.getNumObservedVars()):
-		var = integrator.getObservedVariable(i)
-		units = _get_instance_units(var.getInstance())
-		headers.append(f"{var.getName()} [{units.getName().toString()}]")
-		conversions.append(units.getConversion())
+	observed = [integrator.getObservedInstance(i) for i in range(integrator.getNumObservedItems())]
+	for inst in observed:
+		name = sim.getInstanceName(inst)
+		if _is_real_instance(inst):
+			units = _get_instance_units(inst)
+			headers.append(f"{name} [{units.getName().toString()}]")
+			conversions.append(units.getConversion())
+		else:
+			headers.append(f"{name}")
+			conversions.append(None)
 
 	rows = []
-	for data in integrator.getObservations():
-		obs_vals = list(data[:-1])
-		indep_val = data[-1]
-		row = [indep_val / conversions[0]]
-		for i, value in enumerate(obs_vals):
-			row.append(value / conversions[i + 1])
-		rows.append(row)
+	if integrator.getNumObservedVars() == integrator.getNumObservedItems():
+		for data in integrator.getObservations():
+			obs_vals = list(data[:-1])
+			indep_val = data[-1]
+			row = [indep_val / conversions[0]]
+			for i, value in enumerate(obs_vals):
+				conv = conversions[i + 1]
+				row.append(value / conv if conv not in (None, 0) else value)
+			rows.append(row)
 	return headers, rows
 
 def _write_integrator_table(filep, headers, rows):
 	filep.write("\t".join(headers) + "\n")
 	for row in rows:
-		filep.write("\t".join([f"{value:.15g}" for value in row]) + "\n")
+		filep.write("\t".join([_format_integrator_value(value) for value in row]) + "\n")
+
+def _format_integrator_value(value):
+	if isinstance(value, float):
+		return f"{value:.15g}"
+	if isinstance(value, bool):
+		return "TRUE" if value else "FALSE"
+	if isinstance(value, str):
+		return value
+	return str(value)
 
 def integrate_ascend_model(filen,model=None,engine="IDA",start=None,duration=100.0,steps=30,units=None,output=None,plot=False):
 	"""
@@ -127,16 +165,22 @@ def integrate_ascend_model(filen,model=None,engine="IDA",start=None,duration=100
 			self.filep = filep
 			self.headers = []
 			self.conversions = []
+			self.observed = []
+			self.rows = []
 		def initOutput(self):
 			indep = self.getIntegrator().getIndependentVariable()
 			indep_units = _get_instance_units(indep.getInstance())
 			self.headers = [f"{indep.getName()} [{indep_units.getName().toString()}]"]
 			self.conversions = [indep_units.getConversion()]
-			for i in range(self.getIntegrator().getNumObservedVars()):
-				var = self.getIntegrator().getObservedVariable(i)
-				units = _get_instance_units(var.getInstance())
-				self.headers.append(f"{var.getName()} [{units.getName().toString()}]")
-				self.conversions.append(units.getConversion())
+			self.observed = [self.getIntegrator().getObservedInstance(i) for i in range(self.getIntegrator().getNumObservedItems())]
+			for inst in self.observed:
+				if _is_real_instance(inst):
+					units = _get_instance_units(inst)
+					self.headers.append(f"{M.getInstanceName(inst)} [{units.getName().toString()}]")
+					self.conversions.append(units.getConversion())
+				else:
+					self.headers.append(f"{M.getInstanceName(inst)}")
+					self.conversions.append(None)
 			self.filep.write("\t".join(self.headers) + "\n")
 			self.filep.flush()
 			return 1
@@ -148,11 +192,17 @@ def integrate_ascend_model(filen,model=None,engine="IDA",start=None,duration=100
 		def recordObservedValues(self):
 			I = self.getIntegrator()
 			row = [I.getCurrentTime() / self.conversions[0]]
-			for i, value in enumerate(I.getCurrentObservations()):
-				row.append(value / self.conversions[i + 1])
-			self.filep.write("\t".join([f"{value:.15g}" for value in row]) + "\n")
+			for i, inst in enumerate(self.observed):
+				value = _get_instance_value(inst)
+				conv = self.conversions[i + 1]
+				if conv not in (None, 0):
+					value = value / conv
+				row.append(value)
+			self.rows.append(row)
+			self.filep.write("\t".join([_format_integrator_value(value) for value in row]) + "\n")
 			self.filep.flush()
-			I.saveObservations()
+			if I.getNumObservedVars() > 0:
+				I.saveObservations()
 			return 1
 
 	L = ascpy.Library()
@@ -165,6 +215,8 @@ def integrate_ascend_model(filen,model=None,engine="IDA",start=None,duration=100
 
 	I = ascpy.Integrator(M)
 	I.setEngine(engine)
+	for inst in _get_integrator_observed_instances(M, I):
+		I.addObservedInstance(inst)
 	I.findIndependentVar()
 
 	indep_inst = I.getIndependentVariable().getInstance()
@@ -186,15 +238,20 @@ def integrate_ascend_model(filen,model=None,engine="IDA",start=None,duration=100
 	I.solve()
 
 	if plot:
-		headers, rows = _get_integrator_output(I)
-		if I.getNumObservedVars() < 1:
+		if isinstance(reporter, TabularIntegratorReporter):
+			headers, rows = reporter.headers, reporter.rows
+		else:
+			headers, rows = _get_integrator_output(M, I)
+		real_indices = [idx for idx, inst in enumerate(_get_integrator_observed_instances(M, I), start=1) if _is_real_instance(inst)]
+		if len(real_indices) < 1:
 			raise RuntimeError("No observed variables are available to plot.")
 		import matplotlib.pyplot as plt
 		x = [row[0] for row in rows]
-		y = [row[-1] for row in rows]
+		yindex = real_indices[0]
+		y = [row[yindex] for row in rows]
 		plt.plot(x, y, "-o")
 		plt.xlabel(headers[0])
-		plt.ylabel(headers[-1])
+		plt.ylabel(headers[yindex])
 		plt.grid(True)
 		plt.show()
 

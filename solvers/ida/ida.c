@@ -1375,16 +1375,23 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						/* so, now we need to restart the integration. we will assume that
 						 everything changes: number of variables, etc, etc, etc. */
 
-						/* First output data exactly on the boundary */
-						 integrator_output_write(integ);
-						 integrator_output_write_obs(integ);
+						/* First write the left-limit state exactly at the event time. */
+						integrator_set_t(integ, (double)tret);
+						integrator_set_y(integ, NV_DATA_S(yret));
+						integrator_set_ydot(integ, NV_DATA_S(ypret));
+						integrator_output_write(integ);
+						integrator_output_write_obs(integ);
 						 ida_hybrid_trace(integ, "before_event_iterate", tret);
 
 							if (ida_bnd_event_iterate(integ, ida_mem, tout) != 0) {
 								statuscode = 1;
 								goto root_cleanup;
 							}
-						 ida_hybrid_trace(integ, "after_event_iterate", integrator_get_t(integ));
+						/* Then write the settled right-limit state at the same event time. */
+						integrator_set_t(integ, (double)tret);
+						integrator_output_write(integ);
+						integrator_output_write_obs(integ);
+						ida_hybrid_trace(integ, "after_event_iterate", integrator_get_t(integ));
 
 						/* Need to destroy and rebuild system */
 						//IDAFree(ida_mem);

@@ -174,6 +174,30 @@ This preserves the existing `WHEN ... CASE` shell while adding the gPROMS-like
 `SWITCH TO ... IF ...` syntax that keeps source state, guard, and target state
 together.
 
+### 7. Selector transition syntax is dynamic, not steady-state MIP semantics
+
+The current selector form is fundamentally transition-based:
+
+- `CASE 'state'` describes the equations/actions active while *in* that state
+- `SWITCH TO 'other' IF ...` describes the condition for *leaving* that state
+
+That is appropriate for hybrid DAE/event simulation, but it is not the same
+thing as CMSlv/MIP-style configuration semantics, where the discrete logic
+describes which state is currently admissible at steady state.
+
+So:
+
+- current selector/`SWITCH TO` syntax is meaningful for dynamic simulation
+- it can also be used in steady-state only when the selector value is already
+  fixed and the `WHEN` just dispatches the active equations
+- it is **not** yet a direct front-end for solver-chosen LP/MIP mode
+  selection
+
+If ASCEND later wants true steady-state optimisation over selector states, it
+will likely need a separate configuration/disjunction interpretation above the
+current dynamic transition semantics, even if selector declarations and
+state-local equation blocks are shared.
+
 ## Current Working Syntax
 
 ### Minimal event/reset syntax

@@ -240,6 +240,11 @@ extern struct Statement *CreateSOLVER(CONST char *solvername);
 	Create a 'SOLVER' statement node.
 */
 
+extern struct Statement *CreateINTEGRATOR(CONST char *integratorname);
+/**<
+	Create an 'INTEGRATOR' statement node.
+*/
+
 extern struct Statement *CreateOPTION(CONST char *optname, struct Expr *value);
 /**<
 	Create a 'SOLVER' statement node.
@@ -248,6 +253,16 @@ extern struct Statement *CreateOPTION(CONST char *optname, struct Expr *value);
 extern struct Statement *CreateSOLVE(struct Name *target);
 /**<
 	Create a 'SOLVE' statement node.
+*/
+
+extern struct Statement *CreateINTEGRATE(struct Expr *start, struct Expr *stop, long steps);
+/**<
+	Create an 'INTEGRATE' statement node.
+*/
+
+extern struct Statement *CreateOBSERVE(struct VariableList *obsvars, symchar *name);
+/**<
+	Create an 'OBSERVE' statement node.
 */
 
 extern struct Statement *CreateSTUDY(struct VariableList *obsvars,
@@ -1646,6 +1661,36 @@ extern struct VariableList *FixFreeStatVarsF(CONST struct Statement *s);
 	Returns the optional target name for a SOLVE statement.
 */
 extern struct Name *SolveStatTargetF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+# define IntegratorStatName(s) ((s)->v.integrator.name)
+#else
+# define IntegratorStatName(s) IntegratorStatNameF(s)
+#endif
+extern CONST char *IntegratorStatNameF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+# define IntegrateStatStart(s) ((s)->v.integrate.start)
+# define IntegrateStatStop(s) ((s)->v.integrate.stop)
+# define IntegrateStatSteps(s) ((s)->v.integrate.steps)
+#else
+# define IntegrateStatStart(s) IntegrateStatStartF(s)
+# define IntegrateStatStop(s) IntegrateStatStopF(s)
+# define IntegrateStatSteps(s) IntegrateStatStepsF(s)
+#endif
+extern struct Expr *IntegrateStatStartF(CONST struct Statement *s);
+extern struct Expr *IntegrateStatStopF(CONST struct Statement *s);
+extern long IntegrateStatStepsF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+# define ObserveStatObserved(s) ((s)->v.observe.obsvars)
+# define ObserveStatName(s) ((s)->v.observe.name)
+#else
+# define ObserveStatObserved(s) ObserveStatObservedF(s)
+# define ObserveStatName(s) ObserveStatNameF(s)
+#endif
+extern struct VariableList *ObserveStatObservedF(CONST struct Statement *s);
+extern symchar *ObserveStatNameF(CONST struct Statement *s);
 
 #ifdef NDEBUG
 # define StudyStatObserved(s) ((s)->v.study.obsvars)

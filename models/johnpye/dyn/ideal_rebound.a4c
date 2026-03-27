@@ -110,6 +110,7 @@ METHODS
     METHOD on_load;
         RUN ode_init;
         RUN values;
+        OBSERVE t_last_event, v, y, mode;
 
         (*
             `t_last_event` is inferred as a real-valued event-memory

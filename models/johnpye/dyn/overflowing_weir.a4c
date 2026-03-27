@@ -69,6 +69,7 @@ METHODS
     METHOD on_load;
         RUN ode_init;
         RUN values;
+        OBSERVE V, Foverflow, h, mode;
     END on_load;
 
     METHOD ode_init;
