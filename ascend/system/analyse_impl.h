@@ -41,6 +41,7 @@ struct varip {
   int incident;		      /* set 0 in classify_instance, 1 make_master_lists */
   int in_block;		      /* set 0 in classify_instance */
   int fixed;		      /* set in classify_instance */
+  int discrete;           /* set in classify_instance */
   int solvervar;	      /* set in classify_instance */
   int active;             /* is this var a part of my problem */
   int basis;              /* set in classify_instance */
@@ -194,6 +195,7 @@ struct problem_t {
   struct gl_list_t *dynreg; /* canonical dynamic registry, populated before classify_instance */
   struct gl_list_t *dynbindrels; /* pure derivative-binding relations to be excluded after analysis */
   struct gl_list_t *dynhiddeninsts; /* hidden derivative instances created for der(x) support */
+  struct gl_list_t *reinit_discretes; /* inferred discrete real event-memory targets from REINIT usage */
 
   /* bridge ip data */
   struct gl_list_t *oldips;	/* buffer of oldip crap we're protecting */

@@ -39,6 +39,7 @@ public:
 	std::vector<Method> getMethods() const; ///< FIXME this does not report 'built in' methods like reset, ClearAll
 	Method getMethod(const SymChar &name) const; ///< exception if not found
 	const bool isRefinedSolverVar() const; ///< is this type a refinement of solver_var?
+	const bool isRefinedSelector() const; ///< is this type a refinement of selector?
 	const bool isRefinedAtom() const;
 	const bool isRefinedReal() const;
 	const bool isRefinedConstant() const;

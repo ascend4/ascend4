@@ -1,0 +1,20 @@
+REQUIRE "atoms.a4l";
+
+MODEL test15;
+	stage IS_A integer;
+	modes IS_A set OF symbol_constant;
+	mode IS_A selector OF modes DEFAULT 'low';
+	x IS_A solver_var;
+
+METHODS
+	METHOD default_self;
+		modes := ['low', 'high'];
+		stage := 0;
+	END default_self;
+
+	METHOD on_load;
+		OBSERVE stage, mode;
+		INTEGRATOR IDA;
+		INTEGRATE FROM 0{s} TO 1{s} STEPS 1;
+	END on_load;
+END test15;

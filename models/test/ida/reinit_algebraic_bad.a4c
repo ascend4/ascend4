@@ -1,0 +1,46 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_reinit_bad_algebraic;
+
+	t      IS_A time;
+	y      IS_A distance;
+	ydot   IS_A speed;
+	z      IS_A distance;
+
+	switch IS_A boolean_var;
+
+	kinematics: ydot = 1 {m/s};
+	algebraic:  z = y;
+
+CONDITIONAL
+	trigger: t >= 1 {s};
+END CONDITIONAL;
+
+	switch == SATISFIED(trigger, 1e-8 {s});
+
+WHEN(switch)
+	CASE TRUE:
+		REINIT(z, 0 {m});
+	CASE FALSE:
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		RUN values;
+	END on_load;
+
+	METHOD ode_init;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+	END ode_init;
+
+	METHOD values;
+		y := 0 {m};
+		z := 0 {m};
+		t := 0 {s};
+		switch := FALSE;
+	END values;
+END ida_reinit_bad_algebraic;

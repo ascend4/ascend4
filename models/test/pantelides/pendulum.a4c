@@ -23,6 +23,7 @@ METHODS
 	METHOD on_load;
 		m := 1{kg};
 		L := 1{m};
+		FIX m, L;
 		x := 0.5{m};
 		y := -sqrt(3)/2 * 1{m};
 		vx := 0{m/s};

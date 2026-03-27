@@ -72,16 +72,17 @@ enum Expr_enum {
 */
   e_var		= 7,     /**< real variable */
   e_der		= 8,     /**< expression-level derivative of a variable */
+  e_pre		= 9,     /**< event-time pre-value of a variable */
 
-  e_uminus	= 9,  /**< unary minus */
-  e_func	= 10,    /**< unary real function */
+  e_uminus	= 10,  /**< unary minus */
+  e_func	= 11,    /**< unary real function */
 
-  e_plus	= 11,    /**< addition, set union */
-  e_minus	= 12,    /**< subtraction, set difference */
-  e_times	= 13,    /**< multiplication, set intersection */
-  e_divide	= 14,  /**< division */
-  e_power	= 15,    /**< a^x */
-  e_ipower	= 16,  /**< a^n */
+  e_plus	= 12,    /**< addition, set union */
+  e_minus	= 13,    /**< subtraction, set difference */
+  e_times	= 14,    /**< multiplication, set intersection */
+  e_divide	= 15,  /**< division */
+  e_power	= 16,    /**< a^x */
+  e_ipower	= 17,  /**< a^n */
   /* Don't mess with the ordering of the above items */
 
   /* Boolean Relations  */
@@ -136,7 +137,7 @@ enum Expr_enum {
 #define NUM_EXPR_ENUMS ((int)(e_qstring + 1))
 
 #define TOK_SCALAR_LOW    e_zero
-#define TOK_SCALAR_HIGH   e_der
+#define TOK_SCALAR_HIGH   e_pre
 #define TOK_CONSTANT_LOW  e_zero
 #define TOK_CONSTANT_HIGH e_int
 #define TOK_XARY_LOW      e_uminus

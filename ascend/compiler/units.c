@@ -181,6 +181,8 @@ void InitUnitsTable(void){
 void DestroyUnitsTable(void){
   unsigned long c;
   struct Units *ptr,*next;
+  /* Release any cached explanatory line buffer from UnitsExplainError. */
+  UnitsExplainError(NULL,-1,0);
   for(c=0;c<UNITS_HASH_SIZE;g_units_hash_table[c++]=NULL){
     next = g_units_hash_table[c];
     while((ptr = next)!=NULL){

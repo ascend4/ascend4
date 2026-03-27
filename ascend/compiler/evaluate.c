@@ -46,10 +46,28 @@
 #include "exprio.h"
 
 static struct gl_list_t *g_names_needed = NULL;
+static EvaluatePreNameFn *g_evaluation_pre_name_fn = NULL;
+static void *g_evaluation_pre_user_data = NULL;
 /* global var so we are not passing nlist everywhere
  * that we used to pass *EvaluateName.
  */
 #define GNN g_names_needed
+
+void SetEvaluationPreNameFn(EvaluatePreNameFn *fn, void *userdata)
+{
+  g_evaluation_pre_name_fn = fn;
+  g_evaluation_pre_user_data = userdata;
+}
+
+EvaluatePreNameFn *GetEvaluationPreNameFn(void)
+{
+  return g_evaluation_pre_name_fn;
+}
+
+void *GetEvaluationPreUserData(void)
+{
+  return g_evaluation_pre_user_data;
+}
 
 /*------------------------------------------------------------------------------
   STACK ROUTINES
@@ -185,6 +203,7 @@ unsigned int ExprStackDepth(CONST struct Expr *ex,
     switch(ExprType(ex)){
     case e_var:
     case e_der:
+    case e_pre:
     case e_zero:
     case e_int:
     case e_satisfied:
@@ -677,6 +696,16 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
       top = CreateErrorValue(undefined_value);
       StackPush(stack,top);
       break;
+    case e_pre:
+      if (g_evaluation_pre_name_fn == NULL) {
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "pre(...) is only valid while processing reinitialisation");
+        top = CreateErrorValue(undefined_value);
+      } else {
+        top = (*g_evaluation_pre_name_fn)(ExprName(expr), g_evaluation_pre_user_data);
+      }
+      StackPush(stack,top);
+      break;
     case e_func:		/* function evaluation */
       top = ApplyFunction(StackPopTop(stack),ExprFunc(expr));
       StackPush(stack,top);
@@ -901,6 +930,7 @@ struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *expr,
     switch(ExprType(expr)){
     case e_var:        /* variable */
     case e_der:        /* derivative expression depends on the base variable name */
+    case e_pre:        /* pre-expression depends on the base variable name */
       cptr = SimpleNameIdPtr(ExprName(expr));
       if ( cptr == NULL || TempExists(cptr)==0 ) {
         /* append if name not already seen in list */
@@ -997,6 +1027,7 @@ struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *expr,
     switch(ExprType(expr)){
     case e_var:			/* variable */
     case e_der:			/* derivative expression depends on the base variable name */
+    case e_pre:			/* pre-expression depends on the base variable name */
       cptr = SimpleNameIdPtr(ExprName(expr));
       if ( cptr == NULL || TempExists(cptr)==0 ) {
         /* append if name not already seen in list */

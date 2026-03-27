@@ -85,6 +85,10 @@ ATOM boolean_var REFINES boolean
 
 END boolean_var;
 
+ATOM selector REFINES symbol
+    DEFAULT 'unset';
+END selector;
+
 ATOM solver_var REFINES real
     DEFAULT 0.5 {?};
 

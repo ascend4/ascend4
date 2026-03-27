@@ -29,14 +29,23 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/derivinst.h>
+#include <ascend/compiler/evaluate.h>
+#include <ascend/compiler/exprs.h>
+#include <ascend/compiler/find.h>
 #include <ascend/compiler/instquery.h>
+#include <ascend/compiler/packages.h>
+#include <ascend/compiler/relerr.h>
+#include <ascend/compiler/value_type.h>
 #include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/when_util.h>
 
 
 #include <ascend/system/slv_common.h>
+#include <ascend/system/conditional.h>
 #include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/slv_client.h>
 #include <ascend/system/block.h>
+#include <ascend/system/discrete.h>
 #include <ascend/system/diffvars.h>
 
 #include <ascend/solver/solver.h>
@@ -72,6 +81,222 @@ static void integ_debug_list(const char *label, struct gl_list_t *list){
 }
 #endif
 
+static int integrator_guard_push_value(struct value_t *stack, int *sp, struct value_t value){
+	stack[(*sp)++] = value;
+	return 0;
+}
+
+static void integrator_guard_destroy_stack(struct value_t *stack, int sp){
+	int i;
+	for(i = 0; i < sp; ++i){
+		DestroyValue(&stack[i]);
+	}
+}
+
+int integrator_direct_guard_rootable(const struct Expr *expr){
+	int depth = 0;
+	const struct Expr *ex;
+
+	if(expr == NULL){
+		return 0;
+	}
+
+	for(ex = expr; ex != NULL; ex = NextExpr(ex)){
+		switch(ExprType(ex)){
+		case e_zero:
+		case e_real:
+		case e_int:
+		case e_var:
+		case e_der:
+			++depth;
+			break;
+		case e_func:
+		case e_uminus:
+			if(depth < 1){
+				return 0;
+			}
+			break;
+		case e_plus:
+		case e_minus:
+		case e_times:
+		case e_divide:
+		case e_power:
+		case e_ipower:
+			if(depth < 2){
+				return 0;
+			}
+			--depth;
+			break;
+		case e_less:
+		case e_greater:
+		case e_lesseq:
+		case e_greatereq:
+			return (NextExpr(ex) == NULL && depth == 2);
+		default:
+			return 0;
+		}
+	}
+
+	return 0;
+}
+
+int integrator_eval_direct_guard_root(const struct Expr *expr,
+	struct Instance *context, double *residual){
+	const struct Expr *ex;
+	struct value_t *stack = NULL;
+	struct value_t value;
+	int sp = 0;
+	int n = 0;
+
+	if(expr == NULL || context == NULL || residual == NULL){
+		return 1;
+	}
+	if(!integrator_direct_guard_rootable(expr)){
+		return 14;
+	}
+
+	for(ex = expr; ex != NULL; ex = NextExpr(ex)){
+		++n;
+	}
+	stack = ASC_NEW_ARRAY(struct value_t, n > 0 ? n : 1);
+	if(stack == NULL){
+		return 2;
+	}
+
+	for(ex = expr; ex != NULL; ex = NextExpr(ex)){
+		switch(ExprType(ex)){
+		case e_zero:
+			value = CreateRealValue(0.0, WildDimension(), 1);
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_real:
+			value = CreateRealValue(ExprRValue(ex), ExprRDimensions(ex), 1);
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_int:
+			value = CreateIntegerValue(ExprIValue(ex), 1);
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_var:
+		case e_der:
+			asc_assert(GetEvaluationContext() == NULL);
+			SetEvaluationContext(context);
+			value = EvaluateExpr(ex, NextExpr(ex), InstanceEvaluateName);
+			SetEvaluationContext(NULL);
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 3;
+			}
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_func:
+			if(sp < 1){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 4;
+			}
+			value = ApplyFunction(stack[sp - 1], ExprFunc(ex));
+			DestroyValue(&stack[sp - 1]);
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp - 1);
+				ASC_FREE(stack);
+				return 5;
+			}
+			stack[sp - 1] = value;
+			break;
+		case e_uminus:
+			if(sp < 1){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 6;
+			}
+			value = NegateValue(stack[sp - 1]);
+			DestroyValue(&stack[sp - 1]);
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp - 1);
+				ASC_FREE(stack);
+				return 7;
+			}
+			stack[sp - 1] = value;
+			break;
+		case e_plus:
+		case e_minus:
+		case e_times:
+		case e_divide:
+		case e_power:
+		case e_ipower:
+			if(sp < 2){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 8;
+			}
+			switch(ExprType(ex)){
+			case e_plus:
+				value = AddValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_minus:
+				value = SubtractValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_times:
+				value = MultiplyValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_divide:
+				value = DivideValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_power:
+			case e_ipower:
+				value = PowerValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			default:
+				value = CreateErrorValue(type_conflict);
+			}
+			DestroyValue(&stack[sp - 1]);
+			DestroyValue(&stack[sp - 2]);
+			sp -= 2;
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 9;
+			}
+			stack[sp++] = value;
+			break;
+		case e_less:
+		case e_greater:
+		case e_lesseq:
+		case e_greatereq:
+			if(sp != 2){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 10;
+			}
+			value = SubtractValues(stack[sp - 2], stack[sp - 1]);
+			DestroyValue(&stack[sp - 1]);
+			DestroyValue(&stack[sp - 2]);
+			if(value.t == real_value){
+				*residual = RealValue(value);
+			}else if(value.t == integer_value){
+				*residual = (double)IntegerValue(value);
+			}else{
+				DestroyValue(&value);
+				ASC_FREE(stack);
+				return 11;
+			}
+			DestroyValue(&value);
+			ASC_FREE(stack);
+			return 0;
+		default:
+			integrator_guard_destroy_stack(stack, sp);
+			ASC_FREE(stack);
+			return 12;
+		}
+	}
+
+	integrator_guard_destroy_stack(stack, sp);
+	ASC_FREE(stack);
+	return 13;
+}
+
 static int integrator_report_initial_status_failure(const slv_status_t *status, int presolve);
 
 /*------------------------------------------------------------------------------
@@ -101,8 +326,6 @@ static symchar *g_symbols[3];
 /* Integer child. All variables with OBSINDEX !=0 will be sent to the
 	IntegratorOutputWriteObsFn allowing output to a file, graph, console, etc.
  */
-
-
 /** Temporary catcher of dynamic variable and observation variable data */
 struct Integ_var_t {
   long index;
@@ -175,7 +398,9 @@ IntegratorSystem *integrator_new(slv_system_t slvsys, struct Instance *inst){
 	sys->y = NULL;
 	sys->ydot = NULL;
 	sys->obs = NULL;
+	sys->observed_instances = NULL;
 	sys->n_y = 0;
+	sys->n_observed_instances = 0;
 	sys->initial_mode_prepared = 0;
 	return sys;
 }
@@ -207,6 +432,7 @@ void integrator_free(IntegratorSystem *sys){
 	if(sys->y != NULL)ASC_FREE(sys->y);
 	if(sys->ydot != NULL)ASC_FREE(sys->ydot);
 	if(sys->obs != NULL)ASC_FREE(sys->obs);
+	if(sys->observed_instances != NULL)ASC_FREE(sys->observed_instances);
 
 	slv_destroy_parms(&(sys->params));
 
@@ -225,6 +451,362 @@ static void IntegInitSymbols(void){
 	STATEFLAG = AddSymbol("ode_type");
 	STATEINDEX = AddSymbol("ode_id");
 	OBSINDEX = AddSymbol("obs_id");
+}
+
+typedef struct IntegratorPreValueEntry{
+	const struct Instance *inst;
+	double value;
+	const dim_type *dims;
+} IntegratorPreValueEntry;
+
+typedef struct IntegratorPreSnapshot{
+	IntegratorSystem *sys;
+	IntegratorPreValueEntry *entries;
+	unsigned long nentries;
+} IntegratorPreSnapshot;
+
+static void integrator_pre_snapshot_destroy(IntegratorPreSnapshot *snapshot){
+	if(snapshot->entries != NULL){
+		ASC_FREE(snapshot->entries);
+		snapshot->entries = NULL;
+	}
+	snapshot->nentries = 0;
+}
+
+static int integrator_pre_snapshot_contains(const IntegratorPreSnapshot *snapshot, const struct Instance *inst){
+	unsigned long i;
+	for(i = 0; i < snapshot->nentries; ++i){
+		if(snapshot->entries[i].inst == inst){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int integrator_pre_snapshot_build(IntegratorPreSnapshot *snapshot, IntegratorSystem *sys){
+	struct var_variable **vars;
+	unsigned long i, nvars, capacity;
+	const struct Instance *xinst = NULL;
+
+	snapshot->sys = sys;
+	snapshot->entries = NULL;
+	snapshot->nentries = 0;
+
+	nvars = (unsigned long)slv_get_num_master_vars(sys->system);
+	capacity = nvars + 1;
+	snapshot->entries = ASC_NEW_ARRAY(IntegratorPreValueEntry, capacity);
+	vars = slv_get_master_var_list(sys->system);
+	for(i = 0; i < nvars; ++i){
+		const struct Instance *inst = (const struct Instance *)var_instance(vars[i]);
+		snapshot->entries[snapshot->nentries].inst = inst;
+		snapshot->entries[snapshot->nentries].value = var_value(vars[i]);
+		snapshot->entries[snapshot->nentries].dims = RealAtomDims((struct Instance *)inst);
+		++snapshot->nentries;
+	}
+	if(sys->x != NULL){
+		xinst = (const struct Instance *)var_instance(sys->x);
+		if(xinst != NULL && !integrator_pre_snapshot_contains(snapshot, xinst)){
+			snapshot->entries[snapshot->nentries].inst = xinst;
+			snapshot->entries[snapshot->nentries].value = var_value(sys->x);
+			snapshot->entries[snapshot->nentries].dims = RealAtomDims((struct Instance *)xinst);
+			++snapshot->nentries;
+		}
+	}
+	return 0;
+}
+
+static const IntegratorPreValueEntry *integrator_pre_snapshot_lookup(const IntegratorPreSnapshot *snapshot, const struct Instance *inst){
+	unsigned long i;
+	for(i = 0; i < snapshot->nentries; ++i){
+		if(snapshot->entries[i].inst == inst){
+			return snapshot->entries + i;
+		}
+	}
+	return NULL;
+}
+
+static struct value_t integrator_evaluate_pre_name(const struct Name *nptr, void *userdata){
+	IntegratorPreSnapshot *snapshot = (IntegratorPreSnapshot *)userdata;
+	struct gl_list_t *instances;
+	struct Instance *inst;
+	struct Instance *context;
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+	const IntegratorPreValueEntry *entry;
+
+	if(GetEvaluationContext() == NULL){
+		return CreateErrorValue(incorrect_name);
+	}
+
+	context = GetEvaluationContext();
+	SetEvaluationContext(NULL);
+	instances = FindInstances(context, nptr, &err);
+	SetEvaluationContext(context);
+	if(instances == NULL || gl_length(instances) != 1){
+		if(instances != NULL)gl_destroy(instances);
+		return CreateErrorValue(incorrect_name);
+	}
+
+	inst = (struct Instance *)gl_fetch(instances, 1);
+	gl_destroy(instances);
+
+	switch(InstanceKind(inst)){
+	case REAL_ATOM_INST:
+	case REAL_CONSTANT_INST:
+		entry = integrator_pre_snapshot_lookup(snapshot, inst);
+		if(entry != NULL){
+			return CreateRealValue(entry->value, entry->dims, 0);
+		}
+		return CreateRealValue(RealAtomValue(inst), RealAtomDims(inst), 0);
+	default:
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"pre(...) currently requires a real-valued variable reference");
+		return CreateErrorValue(type_conflict);
+	}
+}
+
+static struct var_variable *integrator_find_real_target(const IntegratorSystem *sys, const struct Instance *inst){
+	struct var_variable **vars;
+	struct var_variable **unas;
+	int32 nvars, i;
+	int32 nunas;
+
+	if(sys == NULL || sys->system == NULL || inst == NULL){
+		return NULL;
+	}
+
+	vars = slv_get_solvers_var_list(sys->system);
+	nvars = slv_get_num_solvers_vars(sys->system);
+	for(i = 0; i < nvars; ++i){
+		struct var_variable *var = vars[i];
+		if(var != NULL && (const struct Instance *)var_instance(var) == inst){
+			return var;
+		}
+	}
+
+	unas = slv_get_solvers_unattached_list(sys->system);
+	nunas = slv_get_num_solvers_unattached(sys->system);
+	for(i = 0; i < nunas; ++i){
+		struct var_variable *var = unas[i];
+		if(var != NULL && (const struct Instance *)var_instance(var) == inst){
+			return var;
+		}
+	}
+	return NULL;
+}
+
+static int integrator_reinit_target_is_diff_state(const IntegratorSystem *sys, const struct Instance *inst){
+	int i;
+
+	if(sys == NULL || inst == NULL){
+		return 0;
+	}
+	for(i = 0; i < sys->n_y; ++i){
+		if(sys->y[i] != NULL
+			&& (const struct Instance *)var_instance(sys->y[i]) == inst
+			&& sys->ydot[i] != NULL){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static struct dis_discrete *integrator_find_discrete_target(const IntegratorSystem *sys, const struct Instance *inst){
+	struct dis_discrete **dvars;
+	int32 ndvars, i;
+
+	if(sys == NULL || sys->system == NULL || inst == NULL){
+		return NULL;
+	}
+
+	dvars = slv_get_solvers_dvar_list(sys->system);
+	ndvars = slv_get_num_solvers_dvars(sys->system);
+	for(i = 0; i < ndvars; ++i){
+		struct dis_discrete *dvar = dvars[i];
+		if(dvar != NULL && (const struct Instance *)dis_instance(dvar) == inst){
+			return dvar;
+		}
+	}
+
+	return NULL;
+}
+
+static int integrator_reinit_already_applied(const struct gl_list_t *applied_reinits,
+		const struct when_reinit *wr){
+	unsigned long i, len;
+
+	if(applied_reinits == NULL || wr == NULL){
+		return 0;
+	}
+
+	len = gl_length((struct gl_list_t *)applied_reinits);
+	for(i = 1; i <= len; ++i){
+		if((const struct when_reinit *)gl_fetch((struct gl_list_t *)applied_reinits, i) == wr){
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int integrator_apply_case_reinits(IntegratorSystem *sys, struct Instance *context,
+		struct gl_list_t *reinit_list, IntegratorPreSnapshot *snapshot,
+		struct gl_list_t *applied_reinits, int *applied_count){
+	unsigned long i, len;
+
+	if(reinit_list == NULL){
+		return 0;
+	}
+
+	len = gl_length(reinit_list);
+	for(i = 1; i <= len; ++i){
+		struct when_reinit *wr = (struct when_reinit *)gl_fetch(reinit_list, i);
+		struct Instance *target;
+		struct dis_discrete *dtarget;
+		struct var_variable *rtarget;
+		const struct Expr *guard;
+		struct value_t value;
+		int target_is_diff_state;
+		int target_is_discrete_real;
+		int target_is_discrete_nonreal;
+
+		if(wr == NULL){
+			continue;
+		}
+		if(integrator_reinit_already_applied(applied_reinits, wr)){
+			continue;
+		}
+		guard = when_reinit_guard(wr);
+		if(guard != NULL){
+			struct value_t guard_value;
+			int guard_true;
+			asc_assert(GetEvaluationContext() == NULL);
+			SetEvaluationContext(context);
+			SetEvaluationPreNameFn(integrator_evaluate_pre_name, snapshot);
+			guard_value = EvaluateExpr((struct Expr *)guard, NULL, InstanceEvaluateName);
+			SetEvaluationPreNameFn(NULL, NULL);
+			SetEvaluationContext(NULL);
+			switch(guard_value.t){
+			case boolean_value:
+				guard_true = BooleanValue(guard_value) ? 1 : 0;
+				break;
+			case integer_value:
+				guard_true = IntegerValue(guard_value) ? 1 : 0;
+				break;
+			default:
+				DestroyValue(&guard_value);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,
+					"SWITCH TO guard requires a boolean-valued expression");
+				return 1;
+			}
+			DestroyValue(&guard_value);
+			if(!guard_true){
+				continue;
+			}
+		}
+
+		target = (struct Instance *)when_reinit_target(wr);
+		if(target == NULL){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to resolve REINIT target");
+			return 1;
+		}
+		dtarget = integrator_find_discrete_target(sys, target);
+		rtarget = integrator_find_real_target(sys, target);
+		target_is_diff_state = integrator_reinit_target_is_diff_state(sys, target);
+		target_is_discrete_real = (rtarget != NULL && var_discrete(rtarget));
+		target_is_discrete_nonreal = (dtarget != NULL
+			&& (dis_kind(dtarget) == e_dis_boolean_t
+				|| dis_kind(dtarget) == e_dis_integer_t
+				|| dis_kind(dtarget) == e_dis_symbol_t));
+		if(!(target_is_diff_state || target_is_discrete_real)
+			&& !target_is_discrete_nonreal){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,
+				"REINIT target must be a differential state, inferred discrete real event-memory variable, or discrete boolean/integer/symbol variable");
+			return 1;
+		}
+
+		asc_assert(GetEvaluationContext() == NULL);
+		SetEvaluationContext(context);
+		SetEvaluationPreNameFn(integrator_evaluate_pre_name, snapshot);
+		value = EvaluateExpr((struct Expr *)when_reinit_rhs(wr), NULL, InstanceEvaluateName);
+		SetEvaluationPreNameFn(NULL, NULL);
+		SetEvaluationContext(NULL);
+
+		if(target_is_diff_state || target_is_discrete_real){
+			switch(value.t){
+			case real_value:
+				SetRealAtomValue(target, RealValue(value), 0);
+				break;
+			case integer_value:
+				SetRealAtomValue(target, (double)IntegerValue(value), 0);
+				break;
+			default:
+				DestroyValue(&value);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,
+					"Unable to evaluate REINIT expression");
+				return 1;
+			}
+		}else{
+			switch(dis_kind(dtarget)){
+			case e_dis_boolean_t:
+				switch(value.t){
+				case boolean_value:
+					dis_set_boolean_value(dtarget, BooleanValue(value));
+					break;
+				case integer_value:
+					dis_set_boolean_value(dtarget, IntegerValue(value) ? 1 : 0);
+					break;
+				default:
+					DestroyValue(&value);
+					ERROR_REPORTER_HERE(ASC_USER_ERROR,
+						"Boolean REINIT target requires a boolean-valued expression");
+					return 1;
+				}
+				break;
+			case e_dis_integer_t:
+				switch(value.t){
+				case integer_value:
+					dis_set_inst_and_field_value(dtarget, IntegerValue(value));
+					break;
+				case boolean_value:
+					dis_set_inst_and_field_value(dtarget, BooleanValue(value) ? 1 : 0);
+					break;
+				default:
+					DestroyValue(&value);
+					ERROR_REPORTER_HERE(ASC_USER_ERROR,
+						"Integer REINIT target requires an integer-valued expression");
+					return 1;
+				}
+				break;
+			case e_dis_symbol_t:
+				switch(value.t){
+				case symbol_value:
+					SetSymbolAtomValue(target, SymbolValue(value));
+					dis_set_value_from_inst(dtarget, slv_get_symbol_list(sys->system));
+					break;
+				default:
+					DestroyValue(&value);
+					ERROR_REPORTER_HERE(ASC_USER_ERROR,
+						"Symbol REINIT target requires a symbol-valued expression");
+					return 1;
+				}
+				break;
+			default:
+				DestroyValue(&value);
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,
+					"Unsupported discrete REINIT target kind");
+				return 1;
+			}
+		}
+		DestroyValue(&value);
+		if(applied_reinits != NULL){
+			gl_append_ptr(applied_reinits, wr);
+		}
+		if(applied_count != NULL){
+			++(*applied_count);
+		}
+	}
+
+	return 0;
 }
 
 /*------------------------------------------------------------------------------
@@ -857,15 +1439,36 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   struct Integ_var_t *v1,*v2;
   long half,i,len;
   int happy=1;
+  int solver_index;
   char *varname1, *varname2;
 
   asc_assert(sys->system!=NULL);
 
-  if(strcmp(slv_solver_name(slv_get_selected_solver(sys->system)),"QRSlv")!=0){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System must have solver 'QRSlv' assigned to it before integration");
-	return 2;
+  solver_index = slv_get_selected_solver(sys->system);
+  if(solver_index < 0 || strcmp(slv_solver_name(solver_index),"QRSlv")!=0){
+    int qrslv_index;
+    if(package_load("qrslv", NULL) != 0){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "Unable to load QRSlv for ODE integration analysis");
+	  return 2;
+    }
+    qrslv_index = slv_lookup_client("QRSlv");
+    if(qrslv_index < 0 || slv_select_solver(sys->system, qrslv_index) == -1){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "QRSlv is unavailable for ODE integration analysis");
+	  return 2;
+    }
+    solver_index = qrslv_index;
   }
-  MSG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
+  MSG("Checked that NLA solver is set to '%s'",slv_solver_name(solver_index));
+
+  if(slv_get_num_solvers_bnds(sys->system) > 0 || slv_get_num_solvers_whens(sys->system) > 0){
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+      "LSODE does not support CONDITIONAL/WHEN event handling or REINIT."
+      " Use IDA for hybrid/evented models."
+    );
+    return 2;
+  }
 
   MSG("Starting ODE analysis");
   IntegInitSymbols();
@@ -1078,9 +1681,14 @@ static void integrator_clear_analysis(IntegratorSystem *sys){
     ASC_FREE(sys->obs);
     sys->obs = NULL;
   }
+  if(sys->observed_instances != NULL){
+    ASC_FREE(sys->observed_instances);
+    sys->observed_instances = NULL;
+  }
   sys->x = NULL;
   sys->n_y = 0;
   sys->n_obs = 0;
+  sys->n_observed_instances = 0;
   sys->nstates = 0;
   sys->nderivs = 0;
 }
@@ -1099,9 +1707,10 @@ static void integrator_fix_ode_states(IntegratorSystem *sys){
 }
 
 static void integrator_print_var_stats(IntegratorSystem *sys){
-	int v = gl_length(sys->dynvars);
-	int i = gl_length(sys->indepvars);
-	MSG("Currently %d vars, %d indep",v,i);
+	MSG("Currently %lu vars, %lu indep"
+		, (unsigned long)gl_length(sys->dynvars)
+		, (unsigned long)gl_length(sys->indepvars)
+	);
 }
 
 /**
@@ -1207,7 +1816,13 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 
 	asc_assert(var != NULL && var_instance(var)!=NULL );
 
-	if( var_apply_filter(var,&vfilt) ) {
+  if( var_apply_filter(var,&vfilt) ) {
+		if(var_discrete(var)){
+			if(ObservationVar(var,&index) != NULL && index > 0L) {
+				INTEG_ADD_TO_LIST(info,0L,index,var,varindx,sys->obslist);
+			}
+			return;
+		}
 		if(!var_active(var)){
 			MSG("VARIABLE IS NOT ACTIVE");
 			return;
@@ -1264,6 +1879,12 @@ void integrator_ode_classify_var(IntegratorSystem *sys, struct var_variable *var
   asc_assert(var != NULL && var_instance(var)!=NULL );
 
   if( var_apply_filter(var,&vfilt) ) {
+	if(var_discrete(var)){
+		if(ObservationVar(var,&index) != NULL && index > 0L) {
+			INTEG_ADD_TO_LIST(info,0L,index,var,varindx,sys->obslist);
+		}
+		return;
+	}
 	/* it's a solver var: what type of variable? */
     type = DynamicVarInfo(var,&index,sys);
 
@@ -1312,6 +1933,9 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 #endif
 
 	if( var_apply_filter(var,&vfilt) ) {
+		if(var_discrete(var)){
+			return;
+		}
 		type = DynamicVarInfo(var,&index,sys);
 
 		if(type==INTEG_OTHER_VAR){
@@ -1697,6 +2321,96 @@ struct var_variable *integrator_get_observed_var(IntegratorSystem *sys, const lo
 	return sys->obs[i];
 }
 
+int integrator_set_observed_instances(IntegratorSystem *sys, struct Instance **instances, int n){
+	int i;
+	asc_assert(sys != NULL);
+
+	if(sys->observed_instances != NULL){
+		ASC_FREE(sys->observed_instances);
+		sys->observed_instances = NULL;
+		sys->n_observed_instances = 0;
+	}
+
+	if(instances == NULL || n <= 0){
+		return 0;
+	}
+
+	sys->observed_instances = ASC_NEW_ARRAY(struct Instance *, n);
+	if(sys->observed_instances == NULL){
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		sys->observed_instances[i] = instances[i];
+	}
+	sys->n_observed_instances = n;
+	return 0;
+}
+
+int integrator_get_num_observed_instances(IntegratorSystem *sys){
+	asc_assert(sys != NULL);
+	if(sys->observed_instances != NULL){
+		return sys->n_observed_instances;
+	}
+	return sys->n_obs;
+}
+
+struct Instance *integrator_get_observed_instance(IntegratorSystem *sys, const long i){
+	asc_assert(sys != NULL);
+	asc_assert(i >= 0);
+	if(sys->observed_instances != NULL){
+		asc_assert(i < sys->n_observed_instances);
+		return sys->observed_instances[i];
+	}
+	asc_assert(i < sys->n_obs);
+	return (struct Instance *)var_instance(sys->obs[i]);
+}
+
+static int integrator_instance_value(struct Instance *inst, struct value_t *value){
+	asc_assert(value != NULL);
+	if(inst == NULL){
+		*value = CreateErrorValue(undefined_value);
+		return 1;
+	}
+	if(!AtomAssigned(inst)){
+		*value = CreateErrorValue(undefined_value);
+		return 1;
+	}
+	switch(InstanceKind(inst)){
+	case REAL_INST:
+	case REAL_ATOM_INST:
+	case REAL_CONSTANT_INST:
+		*value = CreateRealValue(RealAtomValue(inst), RealAtomDims(inst), 0);
+		return 0;
+	case BOOLEAN_INST:
+	case BOOLEAN_ATOM_INST:
+	case BOOLEAN_CONSTANT_INST:
+		*value = CreateBooleanValue(GetBooleanAtomValue(inst), 0);
+		return 0;
+	case INTEGER_INST:
+	case INTEGER_ATOM_INST:
+	case INTEGER_CONSTANT_INST:
+		*value = CreateIntegerValue(GetIntegerAtomValue(inst), 0);
+		return 0;
+	case SYMBOL_INST:
+	case SYMBOL_ATOM_INST:
+	case SYMBOL_CONSTANT_INST:
+		*value = CreateSymbolValue(GetSymbolAtomValue(inst), 0);
+		return 0;
+	default:
+		*value = CreateErrorValue(type_conflict);
+		return 2;
+	}
+}
+
+int integrator_get_observation_value(IntegratorSystem *sys, const long i, struct value_t *value){
+	struct Instance *inst;
+	if(sys == NULL || value == NULL){
+		return 1;
+	}
+	inst = integrator_get_observed_instance(sys, i);
+	return integrator_instance_value(inst, value);
+}
+
 /**
 	@NOTE Although this shouldn't be required for implementation of solver
 	engines, this is useful for GUI reporting of integration results.
@@ -1730,6 +2444,68 @@ int integrator_debug(const IntegratorSystem *sys, FILE *fp){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Integrator '%s' defines no write_matrix function.",sys->internals->name);
 		return -1;
 	}
+}
+
+int integrator_apply_reinits_tracked(IntegratorSystem *sys, struct gl_list_t *applied_reinits){
+	struct w_when **whens;
+	int32 nwhens, w;
+	IntegratorPreSnapshot snapshot;
+	int applied = 0;
+
+	if(sys == NULL || sys->system == NULL){
+		return 0;
+	}
+
+	integrator_pre_snapshot_build(&snapshot, sys);
+	whens = slv_get_solvers_when_list(sys->system);
+	nwhens = slv_get_num_solvers_whens(sys->system);
+
+	for(w = 0; w < nwhens; ++w){
+		struct w_when *when = whens[w];
+		struct Instance *wheninst;
+		struct Instance *context;
+		struct gl_list_t *solver_cases;
+		unsigned long c, ncases;
+
+		if(when == NULL){
+			continue;
+		}
+
+		wheninst = (struct Instance *)when_instance(when);
+		if(wheninst == NULL){
+			continue;
+		}
+
+		context = InstanceParent(wheninst, 1);
+		if(context == NULL){
+			context = wheninst;
+		}
+
+		solver_cases = when_cases_list(when);
+		if(solver_cases == NULL){
+			continue;
+		}
+
+		ncases = gl_length(solver_cases);
+		for(c = 1; c <= ncases; ++c){
+			struct when_case *solver_case = (struct when_case *)gl_fetch(solver_cases, c);
+			if(solver_case != NULL && when_case_active(solver_case)){
+				struct gl_list_t *reinit_list = when_case_reinits_list(solver_case);
+				if(integrator_apply_case_reinits(sys, context,
+						reinit_list, &snapshot, applied_reinits, &applied) != 0){
+					integrator_pre_snapshot_destroy(&snapshot);
+					return -1;
+				}
+			}
+		}
+	}
+
+	integrator_pre_snapshot_destroy(&snapshot);
+	return applied;
+}
+
+int integrator_apply_reinits(IntegratorSystem *sys){
+	return integrator_apply_reinits_tracked(sys, NULL);
 }
 
 /*----------------------------------------------------

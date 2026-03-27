@@ -58,8 +58,8 @@
 */
 
 PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
-	PureFluid *P = FPROPS_NEW(PureFluid);
-	P->data = FPROPS_NEW(FluidData);
+	PureFluid *P = FPROPS_NEW_CLEAR(PureFluid);
+	P->data = FPROPS_NEW_CLEAR(FluidData);
 #define D P->data
 
 	//MSG("...");

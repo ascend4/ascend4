@@ -115,7 +115,7 @@ static struct Instance *InitMethodRoot(struct procFrame *fm)
 static struct gl_list_t *ResolveDerivativeBaseInstances(
   struct procFrame *fm,
   CONST struct Name *name,
-  REL_ERRORLIST *err
+  rel_errorlist *err
 ){
   CONST struct Name *base;
   if(fm == NULL || name == NULL || !NameIsDerivativeRef(name)){
@@ -132,44 +132,45 @@ static struct gl_list_t *ResolveDerivativeInstances(
   struct procFrame *fm,
   CONST struct Name *name
 ){
-  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  rel_errorlist err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *bases;
-  struct gl_list_t *derivs;
+  struct gl_list_t *derivs = NULL;
   struct Instance *root;
   unsigned i, len;
   bases = ResolveDerivativeBaseInstances(fm, name, &err);
   if(bases == NULL){
-    return NULL;
+    goto cleanup;
   }
   root = InitMethodRoot(fm);
   derivs = gl_create(gl_length(bases) > 0 ? gl_length(bases) : 1);
   if(derivs == NULL){
-    gl_destroy(bases);
-    return NULL;
+    goto cleanup;
   }
   len = gl_length(bases);
   for(i = 1; i <= len; ++i){
     struct Instance *base = (struct Instance *)gl_fetch(bases, i);
     struct Instance *deriv;
     if(base == NULL || InstanceKind(base) != REAL_ATOM_INST){
-      gl_destroy(bases);
       gl_destroy(derivs);
-      return NULL;
+      derivs = NULL;
+      goto cleanup;
     }
     if(DerivativeInstancesMarkPresent(root, base)){
-      gl_destroy(bases);
       gl_destroy(derivs);
-      return NULL;
+      derivs = NULL;
+      goto cleanup;
     }
     deriv = InstanceEnsureDerivative(base);
     if(deriv == NULL){
-      gl_destroy(bases);
       gl_destroy(derivs);
-      return NULL;
+      derivs = NULL;
+      goto cleanup;
     }
     gl_append_ptr(derivs, deriv);
   }
+cleanup:
   gl_destroy(bases);
+  rel_errorlist_destroy_contents(&err);
   return derivs;
 }
 
@@ -544,6 +545,36 @@ ExecuteInitSolver(struct procFrame *fm, struct Statement *stat){
 }
 
 static void
+ExecuteInitIntegrator(struct procFrame *fm, struct Statement *stat){
+	int res;
+	CONST char *integratorname = IntegratorStatName(stat);
+	assert(fm->i != NULL);
+	res = slvreq_set_integrator(fm->i, integratorname);
+	if(res){
+		switch(res){
+			case SLVREQ_NOT_IMPLEMENTED:
+				fm->ErrNo = Proc_slvreq_not_implemented;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_INTEGRATOR_HOOK_NOT_SET:
+				fm->ErrNo = Proc_slvreq_unhooked;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_UNKNOWN_INTEGRATOR:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Unknown integrator '%s'",integratorname);
+				break;
+			default:
+				fm->ErrNo = Proc_slvreq_error;
+				ProcWriteSlvReqError(fm);
+				break;
+		}
+		return;
+	}
+	fm->ErrNo = Proc_all_ok;
+}
+
+static void
 ExecuteInitOption(struct procFrame *fm, struct Statement *stat){
 	CONST char *optionname = stat->v.option.name;
 	struct value_t value;
@@ -646,6 +677,73 @@ ResolveStudyInstance(struct procFrame *fm, struct Statement *stat, CONST struct 
 		return 1;
 	}
 	*result = (struct Instance *)gl_fetch(instances,1);
+	gl_destroy(instances);
+	return 0;
+}
+
+static int
+AppendObservedInstances(struct procFrame *fm, struct Statement *stat, CONST struct Name *name,
+		const char *stmtkind, const char *what, struct gl_list_t *result)
+{
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+	struct gl_list_t *instances = FindInstances(fm->i, (struct Name *)name, &err);
+	const char *errstr = NULL;
+	unsigned long i, len;
+
+	if(instances==NULL){
+		errstr = "unknown error";
+		fm->ErrNo = Proc_bad_name;
+	}
+	switch(rel_errorlist_get_find_error(&err)){
+		case unmade_instance: errstr = "unmade instance"; fm->ErrNo = Proc_instance_not_found; break;
+		case undefined_instance: errstr = "undefined instance"; fm->ErrNo = Proc_name_not_found; break;
+		case impossible_instance: errstr = "impossible instance"; fm->ErrNo = Proc_illegal_name_use; break;
+		case correct_instance: break;
+	}
+	if(errstr){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid %s %s (%s)",stmtkind,what,errstr);
+		if(instances != NULL){
+			gl_destroy(instances);
+		}
+		fm->flow = FrameError;
+		return 1;
+	}
+
+	len = gl_length(instances);
+	if(len < 1){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"%s %s must resolve to at least one instance",stmtkind,what);
+		gl_destroy(instances);
+		fm->ErrNo = Proc_bad_name;
+		fm->flow = FrameError;
+		return 1;
+	}
+
+	for(i = 1; i <= len; ++i){
+		struct Instance *inst = (struct Instance *)gl_fetch(instances,i);
+		switch(InstanceKind(inst)){
+			case REAL_INST:
+			case REAL_ATOM_INST:
+			case REAL_CONSTANT_INST:
+			case BOOLEAN_INST:
+			case BOOLEAN_ATOM_INST:
+			case BOOLEAN_CONSTANT_INST:
+			case INTEGER_INST:
+			case INTEGER_ATOM_INST:
+			case INTEGER_CONSTANT_INST:
+			case SYMBOL_INST:
+			case SYMBOL_ATOM_INST:
+			case SYMBOL_CONSTANT_INST:
+				gl_append_ptr(result, inst);
+				break;
+			default:
+				WriteStatementError(ASC_USER_ERROR,stat,1,"%s %s must resolve to scalar real, boolean, integer, or symbol instances",stmtkind,what);
+				gl_destroy(instances);
+				fm->ErrNo = Proc_illegal_type_use;
+				fm->flow = FrameError;
+				return 1;
+		}
+	}
+
 	gl_destroy(instances);
 	return 0;
 }
@@ -757,9 +855,61 @@ ExecuteInitSolve(struct procFrame *fm, struct Statement *stat){
 }
 
 static void
+ExecuteInitObserve(struct procFrame *fm, struct Statement *stat){
+	SlvReqObserveRequest req;
+	CONST struct VariableList *vars;
+	struct gl_list_t *observed = NULL;
+	unsigned long index = 0;
+	int res;
+
+	req.n_observed = 0;
+	req.observed = NULL;
+	req.name = (ObserveStatName(stat) != NULL) ? SCP(ObserveStatName(stat)) : NULL;
+	observed = gl_create(VariableListLength(ObserveStatObserved(stat)) > 0 ? VariableListLength(ObserveStatObserved(stat)) : 1);
+	if(observed == NULL){
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		goto cleanup;
+	}
+
+	for(vars = ObserveStatObserved(stat); vars != NULL; vars = NextVariableNode(vars)){
+		if(AppendObservedInstances(fm, stat, NamePointer(vars), "OBSERVE", "target", observed)){
+			goto cleanup;
+		}
+	}
+
+	req.n_observed = gl_length(observed);
+	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	for(index = 0; index < req.n_observed; ++index){
+		req.observed[index] = (struct Instance *)gl_fetch(observed, index + 1);
+	}
+
+	res = slvreq_do_observe(fm->i, &req);
+	if(res){
+		switch(res){
+			case SLVREQ_OBSERVE_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
+		}
+		ProcWriteSlvReqError(fm);
+		goto cleanup;
+	}
+	fm->ErrNo = Proc_all_ok;
+
+cleanup:
+	if(observed != NULL){
+		gl_destroy(observed);
+	}
+	if(req.observed != NULL){
+		ASC_FREE(req.observed);
+	}
+}
+
+static void
 ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	SlvReqStudyRequest req;
 	CONST struct VariableList *vars;
+	struct gl_list_t *observed = NULL;
 	struct Instance *vary = NULL;
 	unsigned long index = 0;
 	int res;
@@ -768,8 +918,8 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	IVAL(req.lower);
 	IVAL(req.upper);
 	IVAL(req.value);
-	req.n_observed = VariableListLength(StudyStatObserved(stat));
-	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	req.n_observed = 0;
+	req.observed = NULL;
 	req.vary = NULL;
 	req.steps = StudyStatSteps(stat);
 	req.mode = (enum SlvReqStudyMode)StudyStatMode(stat);
@@ -777,24 +927,23 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	req.run_method = (StudyStatRunMethod(stat) != NULL) ? SCP(StudyStatRunMethod(stat)) : NULL;
 	req.now = StudyStatNow(stat);
 	req.filename = StudyStatFilename(stat);
+	observed = gl_create(VariableListLength(StudyStatObserved(stat)) > 0 ? VariableListLength(StudyStatObserved(stat)) : 1);
+	if(observed == NULL){
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		goto cleanup;
+	}
 
 	for(vars = StudyStatObserved(stat); vars != NULL; vars = NextVariableNode(vars)){
-		struct Instance *obs = NULL;
-		if(ResolveStudyInstance(fm, stat, NamePointer(vars), "observed variable", &obs)){
+		if(AppendObservedInstances(fm, stat, NamePointer(vars), "STUDY", "observed variable", observed)){
 			goto cleanup;
 		}
-		switch(InstanceKind(obs)){
-			case REAL_INST:
-			case REAL_ATOM_INST:
-			case REAL_CONSTANT_INST:
-				break;
-			default:
-				WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY observed variable must be real-valued");
-				fm->ErrNo = Proc_illegal_type_use;
-				fm->flow = FrameError;
-				goto cleanup;
-		}
-		req.observed[index++] = obs;
+	}
+
+	req.n_observed = gl_length(observed);
+	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	for(index = 0; index < req.n_observed; ++index){
+		req.observed[index] = (struct Instance *)gl_fetch(observed, index + 1);
 	}
 
 	if(StudyStatVary(stat) != NULL){
@@ -899,12 +1048,85 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	fm->ErrNo = Proc_all_ok;
 
 cleanup:
+	if(observed != NULL){
+		gl_destroy(observed);
+	}
 	if(req.observed != NULL){
 		ASC_FREE(req.observed);
 	}
 	DestroyValue(&req.lower);
 	DestroyValue(&req.upper);
 	DestroyValue(&req.value);
+}
+
+static void
+ExecuteInitIntegrate(struct procFrame *fm, struct Statement *stat){
+	SlvReqIntegrateRequest req;
+	int res;
+
+	if(IntegrateStatSteps(stat) <= 0){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"INTEGRATE STEPS must be positive");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		return;
+	}
+
+	IVAL(req.start);
+	IVAL(req.stop);
+	req.steps = IntegrateStatSteps(stat);
+
+	if(EvaluateStudyRealExpr(fm, stat, IntegrateStatStart(stat), "start", NULL, &req.start)){
+		return;
+	}
+	if(EvaluateStudyRealExpr(fm, stat, IntegrateStatStop(stat), "stop", RealValueDimensions(req.start), &req.stop)){
+		DestroyValue(&req.start);
+		return;
+	}
+	if(RealValue(req.stop) < RealValue(req.start)){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"INTEGRATE stop time must be greater than or equal to start time");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		DestroyValue(&req.start);
+		DestroyValue(&req.stop);
+		return;
+	}
+
+	res = slvreq_do_integrate(fm->i, &req);
+	if(res){
+		switch(res){
+			case SLVREQ_NOT_IMPLEMENTED:
+				fm->ErrNo = Proc_slvreq_not_implemented;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_INTEGRATE_HOOK_NOT_SET:
+				fm->ErrNo = Proc_slvreq_unhooked;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_NO_INTEGRATOR_SELECTED:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"No integrator has been selected");
+				break;
+			case SLVREQ_INTEGRATE_INVALID_REQUEST:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid INTEGRATE request");
+				break;
+			case SLVREQ_INTEGRATE_FAIL:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Integration failed");
+				break;
+			default:
+				fm->ErrNo = Proc_slvreq_error;
+				ProcWriteSlvReqError(fm);
+				break;
+		}
+		DestroyValue(&req.start);
+		DestroyValue(&req.stop);
+		return;
+	}
+
+	fm->ErrNo = Proc_all_ok;
+	DestroyValue(&req.start);
+	DestroyValue(&req.stop);
 }
 
 static void
@@ -2221,15 +2443,24 @@ static void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat){
   case SOLVER:
 	ExecuteInitSolver(fm,stat);
 	break;
+  case INTEGRATOR:
+	ExecuteInitIntegrator(fm,stat);
+	break;
   case OPTION:
 	ExecuteInitOption(fm,stat);
 	break;
   case SOLVE:
     ExecuteInitSolve(fm,stat);
 	break;
+  case INTEGRATE:
+	ExecuteInitIntegrate(fm,stat);
+	break;
   case STUDY:
     ExecuteInitStudy(fm,stat);
-	break;
+    break;
+  case OBSERVE:
+    ExecuteInitObserve(fm,stat);
+    break;
   case DELETESYSTEM:
 	ExecuteInitDeleteSystem(fm,stat);
 	break;

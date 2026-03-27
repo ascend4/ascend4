@@ -22,8 +22,6 @@
 
 #include "cond_config.h"
 
-#include <stdarg.h>
-
 #include <ascend/general/platform.h>
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
@@ -997,9 +995,11 @@ static int32 *order_incidences_of_relation(struct var_variable **var_list,
 /*
  * Compare structure of two CASEs of a WHEN
  */
-static int32 compare_alternative_cases(struct when_case *cur_case1,
+static int32 compare_alternative_cases(struct w_when *when,
+                                      struct when_case *cur_case1,
 				      struct when_case *cur_case2)
 {
+  (void)when;
   struct gl_list_t *rel_list1, *rel_list2;
   struct rel_relation *rel1, *rel2;
   struct var_variable **inc1, **inc2;
@@ -1077,7 +1077,7 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
       return 0;
     }
     inc1 = rel_incidence_list_to_modify(rel1);
-    inc2 = rel_incidence_list_to_modify(rel1);
+    inc2 = rel_incidence_list_to_modify(rel2);
     ord_ind1 = order_incidences_of_relation(inc1,nivr1);
     ord_ind2 = order_incidences_of_relation(inc2,nivr2);
     for (v=0; v<nivr1; v++) {
@@ -1128,7 +1128,7 @@ static int32 compare_alternative_structures_in_when(struct w_when *when)
     cur_case1 = (struct when_case *)(gl_fetch(cases,1));
     for (c=2; c<=clen; c++) {
       cur_case2 = (struct when_case *)(gl_fetch(cases,c));
-      if (!compare_alternative_cases(cur_case1,cur_case2)) {
+      if (!compare_alternative_cases(when,cur_case1,cur_case2)) {
 #ifdef PREANALYSIS_DEBUG
         FPRINTF(ASCERR,"CASEs have different structure\n");
 #endif
@@ -1441,9 +1441,11 @@ static void order_relations_in_case(struct when_case *cur_case)
  * incident variables, order relation and variables by master index)
  * a CASE of a WHEN statement
  */
-static int32 analyze_structure_of_case(struct when_case *cur_case,
+static int32 analyze_structure_of_case(struct w_when *when,
+                                       struct when_case *cur_case,
 				       struct var_variable **mastervl)
 {
+  (void)when;
   struct gl_list_t *rels;
   struct gl_list_t *whens;
   int32 rlen;
@@ -1511,7 +1513,7 @@ static int32 analyze_alternative_structures_in_when(struct w_when *when,
 
   for (c=1; c<=clen; c++) {
     cur_case = (struct when_case *)(gl_fetch(cases,c));
-    if (!analyze_structure_of_case(cur_case,mastervl)) {
+    if (!analyze_structure_of_case(when,cur_case,mastervl)) {
       when_set_changes_structure(when,TRUE);
 #ifdef PREANALYSIS_DEBUG
       FPRINTF(ASCERR,"WHEN CHANGES structure\n");

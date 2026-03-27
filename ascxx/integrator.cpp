@@ -72,6 +72,24 @@ Integrator::setReporter(IntegratorReporterCxx *reporter){
 	integrator_set_reporter(blsys,reporter->getInternalType());
 }
 
+void
+Integrator::clearObservedInstances(){
+	observed_instances.clear();
+	if(integrator_set_observed_instances(blsys, NULL, 0)){
+		throw runtime_error("Failed to clear explicit observed instances");
+	}
+}
+
+void
+Integrator::addObservedInstance(const Instanc &inst){
+	std::vector<struct Instance *> raw;
+	observed_instances.push_back(inst.getInternalType());
+	raw = observed_instances;
+	if(integrator_set_observed_instances(blsys, raw.empty() ? NULL : &raw[0], (int)raw.size())){
+		throw runtime_error("Failed to set explicit observed instances");
+	}
+}
+
 double
 Integrator::getCurrentTime(){
 	return integrator_get_t(blsys);
@@ -85,6 +103,20 @@ Integrator::getCurrentStep(){
 long
 Integrator::getNumSteps(){
 	return integrator_getnsamples(blsys);
+}
+
+long
+Integrator::getNumObservedItems(){
+	return integrator_get_num_observed_instances(blsys);
+}
+
+Instanc
+Integrator::getObservedInstance(const long &i){
+	struct Instance *inst = integrator_get_observed_instance(blsys, i);
+	if(inst == NULL){
+		throw runtime_error("Observed instance is null");
+	}
+	return Instanc(inst);
 }
 
 /**

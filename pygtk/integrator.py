@@ -192,7 +192,6 @@ class IntegratorWindow:
 				self.browser.reporter.reportError(str(e))
 				self.window.destroy()
 				if self.prefs.getBoolPref("Integrator","debuganalyse",True):
-					text = ""
 					with tempfile.TemporaryDirectory() as tmpdirname:
 						fn = pathlib.Path(tmpdirname) / "debug"
 						self.integrator.writeDebug(fn)

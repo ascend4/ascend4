@@ -1,0 +1,15 @@
+REQUIRE "atoms.a4l";
+IMPORT "qrslv";
+
+MODEL test12;
+	x, y IS_A solver_var;
+	y = 2 * x;
+METHODS
+	METHOD on_load;
+		FIX x;
+		x := 3;
+		SOLVER QRSlv;
+		OBSERVE y, x;
+		STUDY;
+	END on_load;
+END test12;

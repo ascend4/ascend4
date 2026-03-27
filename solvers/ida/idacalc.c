@@ -43,6 +43,7 @@
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/panic.h>
 #include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/exprs.h>
 
 #include <ascend/system/slv_client.h>
 #include <ascend/system/relman.h>
@@ -678,6 +679,19 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
 			case e_bnd_undefined:
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid boundary type e_bnd_undefined");
 				return 1;
+		}
+	}
+
+	for(i = 0; i < enginedata->nguardroots; ++i){
+		int status = integrator_eval_direct_guard_root(
+			enginedata->guardroots[i] != NULL ? enginedata->guardroots[i]->guard : NULL,
+			enginedata->guardcontexts != NULL ? enginedata->guardcontexts[i] : NULL,
+			&gout[enginedata->nbnds + i]
+		);
+		if(status != 0){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Unable to evaluate direct SWITCH TO guard root %d", i);
+			return 1;
 		}
 	}
 

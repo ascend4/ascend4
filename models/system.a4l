@@ -99,6 +99,10 @@ ATOM boolean_var REFINES boolean
 
 END boolean_var;
 
+ATOM selector REFINES symbol
+	DEFAULT 'unset';
+END selector;
+
 ATOM generic_real REFINES solver_var
 	DIMENSIONLESS
 	DEFAULT 0.5;

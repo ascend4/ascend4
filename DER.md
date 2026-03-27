@@ -344,15 +344,20 @@ analysis.
 ### What this means
 
 - `v = der(x)` may still be a useful and natural modelling equation
-- it does **not** currently make `v` the canonical derivative representative
-  of `x`
+- it does **not** currently make `v` the canonical runtime derivative
+  identity of `x`
 - it does **not** currently add `v` into a maintained derivative alias clique
+- but simple equations such as `v = der(x)` may now be used by the advisory
+  Pantelides pass as structural named-derivative representatives, without
+  changing the runtime identity model
 
 So at present:
 
 - `der(x)` has a canonical runtime pseudo-instance identity
 - `v` may be constrained equal to that quantity by equation
 - but `v` is not thereby identical to `der(x)`
+- and structural analysis may still choose to follow `v` as the named first
+  derivative representative of `x` in limited cases
 
 ### Why this is a design concern
 
@@ -403,33 +408,36 @@ Two classic reference problems are now recorded under
 - [reactor.a4c](./models/test/pantelides/reactor.a4c)
 - [pendulum.a4c](./models/test/pantelides/pendulum.a4c)
 
-These are discussion/reference models, not yet solver regressions for current
-ASCEND functionality.
+These began as discussion/reference models and are now also used as explicit
+high-index / non-reduced structural regression cases in:
+
+- [test_lsode.c](./ascend/integrator/test/test_lsode.c)
+- [test_ida.c](./ascend/integrator/test/test_ida.c)
+
+Current expected behavior is rejection during analysis, with user-facing
+messages indicating that the models are not in first-order ODE/DAE form and
+that index reduction may be required.
 
 They are important because they make the current derivative-chain design issue
 concrete:
 
-- the models use explicit equations such as `Cdot = der(C)` and `xdot = der(x)`
+- the models use canonical `der(...)` equations directly, such as
+  `vx = der(x)` and `der(C) = ...`
 - those equations should remain equations
-- but Pantelides-style structural analysis still needs to understand that they
-  define derivative-chain membership
+- but Pantelides-style structural analysis may still need to infer derivative
+  chain structure from equations of the form `v = der(x)` when users choose to
+  introduce named first-derivative variables
 
 So these examples strengthen the current conclusion:
 
 - `v = der(x)` should not be silently reinterpreted as aliasing or hidden
   metadata
-- but future structural analysis should probably still be able to infer chain
-  structure from such equations
+- but future structural analysis may still need to infer chain structure from
+  such equations, without removing them from the active problem
 
-The reactor example also contains an external forcing placeholder:
-
-- the original reference problem uses `u(t)`
-- ASCEND can already express time dependence through explicit use of the
-  independent variable `t`, and time-series data can also be supplied via the
-  `models/johnpye/datareader` path
-- the current ASCEND reference model still uses a plain variable `u` in the
-  structural equation `0 = C - u`, simply to keep the reference case focused
-  on derivative-chain structure rather than forcing-function syntax
+The reactor example is now written in a more ASCEND-style physical form with
+dimensioned temperatures, molar densities, and rate constants, but it is still
+intended as a structural reference case rather than a calibrated reactor model.
 
 These two models are the current reference starting point for future work on:
 
@@ -438,6 +446,53 @@ These two models are the current reference starting point for future work on:
 - index reduction in the presence of `der(...)`
 - understanding how `INITIAL` equations should participate in higher-index
   dynamic problems
+
+There is now also a first-pass advisory Pantelides reporter in
+[pantelides.c](./ascend/integrator/pantelides.c), exposed through
+`integrator_pantelides_advisory(...)` and now also wrapped at system stage
+through `Simulation.getPantelidesReport()` for ascxx/Python/GUI use. This
+analysis is solver-neutral and read-only:
+
+- it works from the active `slv_system_t`
+- it uses the current `diffvars` view plus active solver relations
+- it reports the derivative chains and equations that ASCEND currently sees
+- it does **not** yet create symbolic differentiated equations or mutate the
+  working problem
+- it can be captured to a file or string at the C layer and is now available
+  to Python scripts and the GTK browser
+
+That advisory pass now gives two distinct useful results on the reference
+models:
+
+- for `pendulum.a4c`, it now infers the named derivative representatives
+  `vx = der(x)` and `vy = der(y)` and advises differentiating the holonomic
+  constraint `eq5` twice
+- for `reactor.a4c`, it no longer hangs; instead it stops with an explicit
+  advisory-analysis limit note, which is a safer and more honest failure mode
+  for the current prototype
+
+This sharpens the chain-inference use-case. The real structural question is not
+whether `der(x)` is a derivative of `x` (that is already explicit), but whether
+an ordinary variable such as `vx` should be recognised as the named
+representative of that derivative quantity for structural analysis purposes.
+
+The current concrete gap is therefore:
+
+- if a future structural algorithm such as Pantelides needs to follow chains
+  through named derivative variables, it will need some structural notion of
+  `v` being the first derivative representative of `x`
+- that structural notion should not require treating `v = der(x)` as aliasing
+  or deleting the equation from the active system
+
+The advisory pass now has enough structural information to make progress on the
+pendulum example, but it still lacks:
+
+- symbolic differentiated-relation generation
+- stronger stopping rules / reformulation logic for cases like the reactor
+- a broader structural treatment of named derivative representatives beyond the
+  simplest `v = der(x)` form
+
+Those are the next steps before automatic index reduction can be attempted.
 
 ## Compatibility and Transition
 
@@ -453,25 +508,21 @@ So:
 - compatibility is preserved
 - deprecation, not immediate removal, is the current plan
 
-## Hybrid / Event Scope
+## Hybrid / Event Work
 
-The current `der(x)` work is primarily about smooth ODE/DAE support.
+Hybrid/event design and implementation notes now live in
+[HYBRID.md](./HYBRID.md).
 
-Future hybrid/event support will also need:
+That split keeps this note focused on:
 
+- `der(x)` and derivative pseudo-instances
+- derivative-related solver semantics
 - `INITIAL`
-- `WHEN` / `CONDITIONAL`
-- `REINIT`
-- `pre(x)`
+- Pantelides / index-analysis guidance
 
-The current derivative design should leave room for those features, but it does
-not complete them.
-
-Conservative first-phase assumptions remain sensible:
-
-- `WHEN` may change active equations
-- `WHEN` should not yet change the canonical differential state set
-- guards should not depend on `der(...)` initially
+The derivative work here should still remain compatible with hybrid/event
+features, but the current `pre(x)` / `REINIT(...)` / selector /
+`SWITCH TO ... IF ...` semantics are documented separately.
 
 ## `INITIAL`
 
@@ -629,12 +680,11 @@ The v1 semantic fence is also in place:
 The following should be treated as later work:
 
 - `initial algorithm`-style procedural initialization
-- `pre(x)`
-- `REINIT`
-- event-triggered reinitialization
 - changing the differential state set during initialization
 
-Those features belong to the broader hybrid/event roadmap, not to the minimal
+Hybrid/event features such as `pre(x)`, `REINIT(...)`, selector transitions,
+and event-triggered reinitialisation are documented separately in
+[HYBRID.md](./HYBRID.md). They are intentionally outside the minimal
 equation-based `INITIAL` section.
 
 ### Integrator architecture
@@ -851,6 +901,7 @@ Current Python-facing access now includes:
 
 - `inst.der`
 - `ascpy.der(inst)`
+- `sim.getPantelidesReport()`
 
 These both resolve to the same derivative pseudo-instance.
 
@@ -858,24 +909,9 @@ This is useful because it keeps:
 
 - a tree/object form: `inst.der`
 - a language-like form: `ascpy.der(inst)`
+- a scriptable system-stage Pantelides text report: `sim.getPantelidesReport()`
 
 without introducing extra spelling variants.
-
-## Current Squishy Bits
-
-- `INITIAL` explicit solve workflow
-  - focused integrator startup regressions now pass, including obvious
-    overdetermined failure cases
-  - broader semantics still need to be hardened for explicit
-    initialization-mode solves outside the integrator path
-- full GUI semantics
-  - browser/object path is working
-  - broader end-to-end GUI exercise is still useful
-- hybrid/event semantics
-  - `WHEN`, `pre(x)`, and `REINIT` are still future work
-- higher derivatives
-  - the APIs expose derivative order
-  - practical implementation is still first-order only
 
 ## Recommended Next Steps
 
@@ -885,10 +921,10 @@ Near term:
    initialization-mode workflows with small example models
 2. continue broadening `INITIAL` coverage only where it adds semantic value,
    not just more variants of already-covered startup cases
-3. move on to `pre(x)` / `REINIT` / hybrid-event semantics once the example
-   workflows feel stable
+3. keep the derivative, `INITIAL`, and Pantelides documentation aligned with
+   the now-separated hybrid/event work in [HYBRID.md](./HYBRID.md)
 
 After that:
 
-4. define `pre(x)` and `REINIT` semantics
-5. expand hybrid/event support on top of the current derivative model
+4. revisit higher derivatives when there is a concrete solver-facing use case
+5. continue refining explicit initialization-mode UX and diagnostics

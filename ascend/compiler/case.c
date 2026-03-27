@@ -34,6 +34,7 @@
 #include "expr_types.h"
 #include "sets.h"
 #include "case.h"
+#include "statement.h"
 
 /********************************************************************\
                         Case processing
@@ -46,6 +47,7 @@ struct Case *CreateCase(struct Set *vl, struct gl_list_t *refinst){
   assert(result!=NULL);
   result->ValueList = vl;
   result->ref = refinst;
+  result->reinit = NULL;
   result->active = 0;
   return result;
 }
@@ -60,6 +62,11 @@ struct Set *GetCaseValuesF(struct Case *c){
 struct gl_list_t *GetCaseReferencesF(struct Case *c){
   assert(c);
   return c->ref;
+}
+
+struct gl_list_t *GetCaseReinitStatementsF(struct Case *c){
+  assert(c);
+  return c->reinit;
 }
 
 
@@ -77,6 +84,12 @@ struct Case *SetCaseValues(struct Case *c, struct Set *vl){
 struct Case *SetCaseReferences(struct Case *c, struct gl_list_t *refinst){
   assert(c);
   c->ref = refinst;
+  return c;
+}
+
+struct Case *SetCaseReinitStatements(struct Case *c, struct gl_list_t *reinit){
+  assert(c);
+  c->reinit = reinit;
   return c;
 }
 
@@ -115,6 +128,17 @@ void DestroyCase(struct Case *c){
       }
     }
     gl_destroy(c->ref);
+    if(c->reinit != NULL){
+      unsigned long i, len = gl_length(c->reinit);
+      for(i = 1; i <= len; ++i){
+        struct Statement *stat = (struct Statement *)gl_fetch(c->reinit, i);
+        if(stat != NULL){
+          DestroyStatement(stat);
+        }
+      }
+      gl_destroy(c->reinit);
+      c->reinit = NULL;
+    }
     c->active = 0;
     ASC_FREE(c);
   }
@@ -127,9 +151,18 @@ struct Case *CopyCase(struct Case *c){
   if (c->ValueList) result->ValueList = CopySetByReference(c->ValueList);
   else result->ValueList = c->ValueList;
   result->ref = gl_copy(c->ref);
+  if(c->reinit != NULL){
+    unsigned long i, len = gl_length(c->reinit);
+    result->reinit = gl_create(len);
+    for(i = 1; i <= len; ++i){
+      struct Statement *stat = (struct Statement *)gl_fetch(c->reinit, i);
+      gl_append_ptr(result->reinit, CopyStatement(stat));
+    }
+  }else{
+    result->reinit = NULL;
+  }
   result->active = c->active;
   return result;
 }
 
 /* vim: set noai ts=8 sw=2 et: */
-

@@ -58,30 +58,6 @@ static CONST struct gl_list_t *link_entry_instances_cached(struct Instance *mode
 /**
 	Find instances: Make sure at least one thing is found for each name item
 	on list (else returned list will be NULL) and return the collected instances.
-	DS: it returns a non-flattened list of the instances
-*/
-static struct gl_list_t *FindInstsNonFlat(struct Instance *inst
-	,CONST struct VariableList *list
-	,rel_errorlist *err
-){
-  struct gl_list_t *result,*temp;
-
-  result = gl_create(AVG_LINKS_INST);
-  while(list!=NULL){
-    temp = FindInstances(inst,NamePointer(list),err);
-    if (temp==NULL){
-      gl_destroy(result);
-      return NULL;
-    }
-    gl_append_ptr(result,temp);
-    list = NextVariableNode(list);
-  }
-  return result;
-}
-
-/**
-	Find instances: Make sure at least one thing is found for each name item
-	on list (else returned list will be NULL) and return the collected instances.
 	DS: it returns a flattened list of the instances
 */
 struct gl_list_t *FindInsts(
@@ -875,9 +851,7 @@ extern int getOdeId(struct Instance *model,struct Instance *inst){
 /* function that tests the LINK functions implemented - prints the output in the console */
 void TestingRoutine(struct Instance *model)
 {
-	struct TypeDescription *modelType;
-	modelType = InstanceTypeDesc(model);
-	int c1, len1, len2;
+	int c1, len1;
 
 	/* test getLinkTypes */
 	struct gl_list_t *linkTypes;
@@ -898,11 +872,10 @@ void TestingRoutine(struct Instance *model)
 
 	/* test getLinks */
 	struct gl_list_t *links;
-	struct link_entry_t *lnk;
-	struct Instance *i1;
 	links = getLinks(model,keyc1,0);
-	len2 = gl_length(links);
-	MSG("\n number of links with key %s is: %d \n",SCP(keyc1),len2);
+	MSG("\n number of links with key %s is: %lu \n"
+		,SCP(keyc1),(unsigned long)gl_length(links));
+	gl_destroy(links);
 
 	/* just a test for comparing two instances pointer-wise */
 	/*
@@ -918,12 +891,14 @@ void TestingRoutine(struct Instance *model)
 	} */
 
 	/* test getLinksReferencing */
-	lnk	= (struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1);
-		/* take the first link from all the non-declarative and declarative LINK Tables, just for testing */
 	populateLinkCache(model);
-	i1= (struct Instance *)gl_fetch(lnk->instances_cache,1);
 	MSG("\n number links referencing the first instance and key %s is %ld \n"
-		,SCP(keyc1),gl_length(getLinksReferencing(model,keyc1,i1,0))
+		,SCP(keyc1),gl_length(getLinksReferencing(
+			model,keyc1,
+			(struct Instance *)gl_fetch(
+				((struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1))->instances_cache,1
+			),0
+		))
 	);
 
 	/* test getLinkInstances */
@@ -931,13 +906,17 @@ void TestingRoutine(struct Instance *model)
 	/* test getLinkInstancesFlat */
 
 	/* test isDeclarative */
-	modelType = InstanceTypeDesc(model);
+#ifdef LINK_DEBUG
+	{
+	struct TypeDescription *modelType = InstanceTypeDesc(model);
 	MSG("\n the link should be declarative %d\n"
 		,isDeclarative(model,(struct link_entry_t *)gl_fetch(modelType->u.modarg.link_table,1))
 	);
 	MSG("\n the link should be non-declarative %d\n"
 		,isDeclarative(model,(struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1))
 	);
+	}
+#endif
 
 	/* test removeNonDeclarative LINKs */
 	removeNonDeclarativeLinkEntry(model,NULL,0); /*since the key is NULL, all non declarative LINKS are removed */

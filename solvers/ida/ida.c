@@ -57,6 +57,7 @@
 #include <ascend/compiler/packages.h>
 
 #include <ascend/system/slv_client.h>
+#include <ascend/system/bndman.h>
 #include <ascend/system/relman.h>
 #include <ascend/system/block.h>
 #include <ascend/system/slv_stdcalls.h>
@@ -131,7 +132,9 @@ typedef void ( IntegratorVarVisitorFn)(IntegratorSystem *integ,
  static void integrator_visit_system_vars(IntegratorSystem *integ,IntegratorVarVisitorFn *visitor);
  static void integrator_dae_show_var(IntegratorSystem *integ, struct var_variable *var, const int *varindx); */
 
+#ifdef STATS_DEBUG
 static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
+#endif
 
 /*-------------------------------------------------------------
  SETUP/TEARDOWN ROUTINES
@@ -147,8 +150,18 @@ static void integrator_ida_create(IntegratorSystem *integ) {
 	enginedata = ASC_NEW(IntegratorIdaData);
 	MSG("enginedata = %p",enginedata);
 	enginedata->rellist = NULL;
+	enginedata->bndlist = NULL;
+	enginedata->nbnds = 0;
+	enginedata->guardroots = NULL;
+	enginedata->guardcontexts = NULL;
+	enginedata->nguardroots = 0;
+	enginedata->nroots = 0;
 	enginedata->safeeval = 0;
 	enginedata->warned_minstep_ignored = 0;
+	enginedata->event_times = NULL;
+	enginedata->event_times_cap = 0;
+	enginedata->event_times_count = 0;
+	enginedata->event_times_next = 0;
 	enginedata->vfilter.matchbits = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE
 			| VAR_FIXED;
 	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | 0;
@@ -198,6 +211,18 @@ static void integrator_ida_free(void *enginedata) {
 	}
 
 	ASC_FREE(d->rellist);
+	if(d->guardroots != NULL){
+		ASC_FREE(d->guardroots);
+		d->guardroots = NULL;
+	}
+	if(d->guardcontexts != NULL){
+		ASC_FREE(d->guardcontexts);
+		d->guardcontexts = NULL;
+	}
+	if(d->event_times != NULL){
+		ASC_FREE(d->event_times);
+		d->event_times = NULL;
+	}
 
 #if SUNDIALS_VERSION_MAJOR >= 5
 	if(d->linear_solver != NULL){
@@ -268,6 +293,8 @@ enum ida_parameters {
 	IDA_PARAM_GSMODIFIED,
 	IDA_PARAM_MAXNCF,
 	IDA_PARAM_PREC,
+	IDA_PARAM_ZENO_NCYCLES,
+	IDA_PARAM_ZENO_DURATION,
 	IDA_PARAMS_SIZE
 };
 
@@ -407,10 +434,96 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 			},"NONE"}, (char *[]) {"NONE","JACOBI","DIAG",NULL}
 	);
 
+	slv_param_int(p,IDA_PARAM_ZENO_NCYCLES
+		,(SlvParameterInitInt) { {"zeno_ncycles"
+				,"Boundary events in window before stopping",2
+				,"Stop integration if at least this many boundary-triggered"
+				" reconfiguration events occur within 'zeno_duration'."
+			}, 20, 0, 1000000}
+	);
+
+	slv_param_real(p,IDA_PARAM_ZENO_DURATION
+		,(SlvParameterInitReal) { {"zeno_duration"
+				,"Event accumulation time window",2
+				,"Window in independent-variable units used with"
+				" 'zeno_ncycles' to detect rapidly accumulating boundary events."
+			}, 1e-4, 0.0, 1e20}
+	);
+
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
 
 	MSG("Created %d params", p->num_parms);
 
+	return 0;
+}
+
+static int ida_prepare_event_window(IntegratorSystem *integ){
+	IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+	int ncycles = SLV_PARAM_INT(&(integ->params), IDA_PARAM_ZENO_NCYCLES);
+
+	if(ncycles <= 1){
+		if(enginedata->event_times != NULL){
+			ASC_FREE(enginedata->event_times);
+			enginedata->event_times = NULL;
+		}
+		enginedata->event_times_cap = 0;
+		enginedata->event_times_count = 0;
+		enginedata->event_times_next = 0;
+		return 0;
+	}
+
+	if(enginedata->event_times_cap != ncycles || enginedata->event_times == NULL){
+		if(enginedata->event_times != NULL){
+			ASC_FREE(enginedata->event_times);
+		}
+		enginedata->event_times = ASC_NEW_ARRAY(realtype, ncycles);
+		if(enginedata->event_times == NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Unable to allocate IDA event accumulation buffer");
+			enginedata->event_times_cap = 0;
+			return 1;
+		}
+		enginedata->event_times_cap = ncycles;
+	}
+
+	enginedata->event_times_count = 0;
+	enginedata->event_times_next = 0;
+	return 0;
+}
+
+static int ida_check_event_accumulation(IntegratorSystem *integ, realtype event_time){
+	IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+	int ncycles = SLV_PARAM_INT(&(integ->params), IDA_PARAM_ZENO_NCYCLES);
+	realtype duration = SLV_PARAM_REAL(&(integ->params), IDA_PARAM_ZENO_DURATION);
+	realtype oldest_time;
+
+	if(ncycles <= 1 || duration <= 0.0){
+		return 0;
+	}
+	if(enginedata->event_times == NULL || enginedata->event_times_cap != ncycles){
+		if(ida_prepare_event_window(integ) != 0){
+			return 1;
+		}
+	}
+
+	if(enginedata->event_times_count < enginedata->event_times_cap){
+		enginedata->event_times[enginedata->event_times_count++] = event_time;
+		enginedata->event_times_next = enginedata->event_times_count % enginedata->event_times_cap;
+		if(enginedata->event_times_count < enginedata->event_times_cap){
+			return 0;
+		}
+	}else{
+		enginedata->event_times[enginedata->event_times_next] = event_time;
+		enginedata->event_times_next = (enginedata->event_times_next + 1) % enginedata->event_times_cap;
+	}
+
+	oldest_time = enginedata->event_times[enginedata->event_times_next];
+	if(event_time - oldest_time <= duration){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Event accumulation detected near t = %.8g: %d boundary events occurred within %.8g time units",
+			event_time, ncycles, duration);
+		return 1;
+	}
 	return 0;
 }
 
@@ -421,7 +534,6 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 int ida_load_rellist(IntegratorSystem *integ) {
 	IntegratorIdaData *enginedata;
 	struct rel_relation **rels;
-	char *relname;
 	int i, j, n_solverrels, n_active_rels;
 
 	enginedata = integrator_ida_enginedata(integ);
@@ -509,6 +621,45 @@ int ida_retrieve_IVs(IntegratorSystem *integ, realtype t0, N_Vector y0,
 		ASC_FREE(varname);
 	}
 #endif
+
+	return 0;
+}
+
+static int ida_refresh_bnd_cond_states(IntegratorSystem *integ, int **states, int *nstates){
+	IntegratorIdaData *enginedata;
+	int nbnds, i;
+
+	if(integ == NULL || states == NULL || nstates == NULL){
+		return 1;
+	}
+
+	enginedata = integrator_ida_enginedata(integ);
+	nbnds = enginedata != NULL ? enginedata->nbnds : 0;
+
+	if(nbnds <= 0){
+		if(*states != NULL){
+			ASC_FREE(*states);
+			*states = NULL;
+		}
+		*nstates = 0;
+		return 0;
+	}
+
+	if(*states == NULL || *nstates != nbnds){
+		if(*states != NULL){
+			ASC_FREE(*states);
+		}
+		*states = ASC_NEW_ARRAY_CLEAR(int, nbnds);
+		if(*states == NULL){
+			*nstates = 0;
+			return 1;
+		}
+		*nstates = nbnds;
+	}
+
+	for(i = 0; i < nbnds; ++i){
+		(*states)[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+	}
 
 	return 0;
 }
@@ -920,9 +1071,9 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 int ida_root_init(IntegratorSystem *integ, void *ida_mem) {
 	IntegratorIdaData *enginedata = integ->enginedata;
 
-	if (enginedata->nbnds) {
+	if (enginedata->nroots) {
 #if SUNDIALS_VERSION_MAJOR >= 5
-		IDARootInit(ida_mem, enginedata->nbnds, &integrator_ida_rootfn);
+		IDARootInit(ida_mem, enginedata->nroots, &integrator_ida_rootfn);
 #endif
 	}
 
@@ -946,12 +1097,10 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 	yp0 = ida_bnd_new_zero_NV(integ, integ->n_y);
 
 	int i;
-	double val;
 	MSG("Values of the derivatives present in the model");
 	for(i=0; i < integ->n_y; i++) {
 		if(integ->ydot[i]){
-			val = var_value(integ->ydot[i]);
-			MSG("ydot[%d]= %g", i, val);
+			MSG("ydot[%d]= %g", i, var_value(integ->ydot[i]));
 		}
 	}
 
@@ -1014,6 +1163,8 @@ int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem,
 	/* calculate initial conditions */
 	ida_setup_IC(integ, ida_mem, tout1, t0, y0, yp0);
 
+	ida_root_init(integ, ida_mem);
+
 	/* Clean up */
 	N_VDestroy_Serial(y0);
 	N_VDestroy_Serial(yp0);
@@ -1037,14 +1188,17 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	void *ida_mem;
 	int t_index;
 	realtype t0, tout, tret, tol = 0.0001;
-	N_Vector ypret, yret;
+	N_Vector ypret = NULL, yret = NULL;
 	IntegratorIdaData *enginedata;
 	int i, flag = 0;
+	int statuscode = 0;
 
 	int *rootsfound;			/** < IDA rootfinder reports root index in here */
 	int *rootdir;				/** < Used to tell IDA to ignore doulve crossings */
+	int *crossed_to_state;		/** < Boundary truth states immediately after the crossing */
 	int *bnd_cond_states;		/** < Record of boundary states so that IDA can tell LRSlv
-									   how to evaluate a boundary crossing */
+										   how to evaluate a boundary crossing */
+	int n_bnd_cond_states;
 
 	int	need_to_reconfigure;	/** < Flag to indicate system rebuild after crossing */
 	int need_to_reinteg = 0;	/** < Flag for when crossings happen on or very close to timesteps */
@@ -1057,10 +1211,14 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	MSG("STARTING IDA...");
 	/* Setup boundary list */
 	enginedata = integrator_ida_enginedata(integ);
-	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
-	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
+	bnd_cond_states = NULL;
+	n_bnd_cond_states = 0;
 	enginedata->safeeval = SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_SAFEEVAL);
 	MSG("safeeval = %d",enginedata->safeeval);
+	if(ida_prepare_event_window(integ) != 0){
+		statuscode = 1;
+		goto ida_cleanup;
+	}
 
 
 
@@ -1071,13 +1229,23 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
 	if (enginedata->nbnds) {
-		bnd_cond_states = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
-
-		for (i = 0; i < enginedata->nbnds; i++) {
-			bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+		if(ida_refresh_bnd_cond_states(integ, &bnd_cond_states, &n_bnd_cond_states) != 0){
+			statuscode = 1;
+			goto ida_cleanup;
 		}
-		ida_setup_lrslv(integ);
+		statuscode = ida_setup_lrslv(integ);
+		if(statuscode != 0){
+			goto ida_cleanup;
+		}
 
+	}
+	if(ida_refresh_event_roots(integ) != 0){
+		statuscode = 1;
+		goto ida_cleanup;
+	}
+	if(ida_refresh_bnd_cond_states(integ, &bnd_cond_states, &n_bnd_cond_states) != 0){
+		statuscode = 1;
+		goto ida_cleanup;
 	}
 
 	/* store reference to list of relations (in enginedata) */
@@ -1133,6 +1301,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 		do {
 			if(need_to_reinteg) {
 				MSG("Resuming integration from %f to %f", integrator_get_t(integ), tout);
+				ida_hybrid_trace(integ, "before_resumed_idasolve", integrator_get_t(integ));
 				integrator_output_write(integ);
 			}
 
@@ -1154,21 +1323,22 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 			Asc_SignalHandlerPopDefault(SIGINT);
 #endif
 
-			if (enginedata->nbnds) {
+			if (enginedata->nroots) {
 
 
 				if (flag == IDA_ROOT_RETURN) {
 					MSG("IDA reports root found!");
 
 					/* Store the root index */
-					rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
-					rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
+					rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nroots);
+					rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nroots);
+					crossed_to_state = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds > 0 ? enginedata->nbnds : 1);
 
-					if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
-						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
-						return 14;
-					}
-
+						if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
+							ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
+							statuscode = 14;
+							goto root_cleanup;
+						}
 #ifdef SOLVE_DEBUG
 					for (i = 0; i < enginedata->nbnds; i++) {
 
@@ -1181,23 +1351,47 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						}
 					}
 #endif
-					need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
-							bnd_cond_states);
+					need_to_reconfigure = 0;
+					if(enginedata->nbnds){
+						need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
+								bnd_cond_states);
+					}
+					for(i = enginedata->nbnds; i < enginedata->nroots; ++i){
+						if(rootsfound[i] != 0){
+							need_to_reconfigure = 1;
+						}
+					}
 
 					if (need_to_reconfigure) {
-
-						if (ida_bnd_update_relist(integ) != 0) {
-							/* system not square, failure */
-							return 1;
+						if(ida_check_event_accumulation(integ, tret) != 0){
+							statuscode = 1;
+							goto root_cleanup;
+						}
+						for(i = 0; i < enginedata->nbnds; ++i){
+							crossed_to_state[i] = bnd_cond_states[i];
 						}
 						MSG("Boundaries were crossed; "
 								"need to reinitialise solver...");
 						/* so, now we need to restart the integration. we will assume that
 						 everything changes: number of variables, etc, etc, etc. */
 
-						/* First output data exactly on the boundary */
-						 integrator_output_write(integ);
-						 integrator_output_write_obs(integ);
+						/* First write the left-limit state exactly at the event time. */
+						integrator_set_t(integ, (double)tret);
+						integrator_set_y(integ, NV_DATA_S(yret));
+						integrator_set_ydot(integ, NV_DATA_S(ypret));
+						integrator_output_write(integ);
+						integrator_output_write_obs(integ);
+						 ida_hybrid_trace(integ, "before_event_iterate", tret);
+
+							if (ida_bnd_event_iterate(integ, ida_mem, tout) != 0) {
+								statuscode = 1;
+								goto root_cleanup;
+							}
+						/* Then write the settled right-limit state at the same event time. */
+						integrator_set_t(integ, (double)tret);
+						integrator_output_write(integ);
+						integrator_output_write_obs(integ);
+						ida_hybrid_trace(integ, "after_event_iterate", integrator_get_t(integ));
 
 						/* Need to destroy and rebuild system */
 						//IDAFree(ida_mem);
@@ -1214,6 +1408,13 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						}
 
 						ida_reinit_integrator(integ, ida_mem, tout);
+						/*
+						 * Emit the post-reinitialisation consistent state at the same
+						 * event time. Default CLI output collapses this back to
+						 * endpoints, while '--microstates all' can expose it.
+						 */
+						integrator_output_write(integ);
+						integrator_output_write_obs(integ);
 						/* n_y may have changed */
 						N_VDestroy_Serial(yret);
 						N_VDestroy_Serial(ypret);
@@ -1222,24 +1423,46 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						ypret = ida_bnd_new_zero_NV(integ, integ->n_y);
 
 #if SUNDIALS_VERSION_MAJOR >= 5
-						/* set rootdir to -1*rootsfound to set IDA
-						 * to ignore double crossings */
+						/* If the post-event state is still on a boundary, suppress
+						 * the just-seen crossing direction to avoid an immediate
+						 * double hit. Only do this when the post-event state is
+						 * still on the new side of the crossed boundary; if REINIT
+						 * has moved the system to the opposite side we must allow
+						 * the next same-direction crossing. */
+						if(ida_refresh_bnd_cond_states(integ, &bnd_cond_states, &n_bnd_cond_states) != 0){
+							statuscode = 1;
+							goto root_cleanup;
+						}
 						for(i = 0; i < enginedata->nbnds; i++) {
-							rootdir[i] = -1*rootsfound[i];
+							if(rootsfound[i] != 0
+								&& bnd_cond_states[i] == crossed_to_state[i]){
+								rootdir[i] = rootsfound[i];
+							}else{
+								rootdir[i] = 0;
+							}
+						}
+						for(i = enginedata->nbnds; i < enginedata->nroots; ++i){
+							rootdir[i] = 0;
 						}
 
 						IDASetRootDirection(ida_mem, rootdir);
 #endif
 
 					} /* need to reconfigure */
-					ASC_FREE(rootsfound);
-					ASC_FREE(rootdir);
-				} /* IDA_ROOT_RETURN */
-			} /* nbnds */
+root_cleanup:
+						ASC_FREE(rootsfound);
+						ASC_FREE(rootdir);
+						ASC_FREE(crossed_to_state);
+						if(statuscode != 0){
+							goto ida_cleanup;
+						}
+					} /* IDA_ROOT_RETURN */
+				} /* nbnds */
 
 		} while (need_to_reinteg); /* end of solve time step */
 
 		if (!skipping_output) {
+			ida_hybrid_trace(integ, "before_final_output", tret);
 			/* pass the values of everything back to the compiler */
 			integrator_set_t(integ, (double) tret);
 			integrator_set_y(integ, NV_DATA_S(yret));
@@ -1258,8 +1481,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	}/* loop through next sample timestep */
 
-	/* -- close the IntegratorReporter */
-	integrator_output_close(integ);
+ida_cleanup:
+		/* -- close the IntegratorReporter */
+		integrator_output_close(integ);
 
 	/* get optional outputs */
 #ifdef STATS_DEBUG
@@ -1273,8 +1497,12 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 
 	/* free solution memory */
-	N_VDestroy_Serial(yret);
-	N_VDestroy_Serial(ypret);
+	if(yret != NULL){
+		N_VDestroy_Serial(yret);
+	}
+	if(ypret != NULL){
+		N_VDestroy_Serial(ypret);
+	}
 
 	/* free bnd states if appropriate */
 	if (enginedata->nbnds) {
@@ -1284,10 +1512,14 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	/* free solver memory */
 	IDAFree(&ida_mem);
 
-	if (flag < -500) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", tout);
-		return -flag;
-	}
+		if (statuscode != 0) {
+			return statuscode;
+		}
+
+		if (flag < -500) {
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", tout);
+			return -flag;
+		}
 
 	if (flag < 0) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solving aborted while attempting t = %f", tout);
@@ -1308,6 +1540,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
  @return IDA_SUCCESS on success.
  */
+#ifdef STATS_DEBUG
 static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
 
 	return IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals, &s->nlinsetups
@@ -1315,5 +1548,6 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
 			,&s->hlast, &s->hcur, &s->tcur
 	);
 }
+#endif
 
 /* vim: set ts=4: */
