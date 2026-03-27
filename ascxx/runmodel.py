@@ -66,14 +66,17 @@ def _status_label(status):
 	return "not-converged"
 
 
-def _print_simstatus(sim):
-	state = "solved"
+def _print_simstatus(sim, integrated=False):
+	state = "integrated" if integrated else "solved"
 	parts = []
 	if sim.isMethodRunning():
 		state = "running-method"
-	elif sim.isSolveDirty():
+	elif (not integrated) and sim.isSolveDirty():
 		state = "dirty"
 	parts.append(f"state={state}")
+	if integrated:
+		print("STATUS: " + ", ".join(parts))
+		return
 	try:
 		target = sim.getSolveTargetName()
 	except Exception:
@@ -561,7 +564,7 @@ def run_ascend_model(
 			except Exception as e:
 				raise RuntimeError(f"While attempting to run 'self_test': {str(e)}")
 
-		_print_simstatus(M)
+		_print_simstatus(M, integrated=integrate or cli_hooks.did_integrate(M))
 	finally:
 		ascpy.SolverHooksManager.Instance().setHooks(old_hooks)
 

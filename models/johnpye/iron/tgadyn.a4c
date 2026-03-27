@@ -219,11 +219,18 @@ METHODS
 	END values;
 
 	METHOD bound_self;
-		n_Fe2O3.lower_bound := -1e-12 {mol};
+		(*
+			The first depletion event is still a known weak spot for this model.
+			Allow a small amount of negative trial-state chatter during IDA root
+			localisation so the default CLI integration path does not fail just
+			from transient below-bound probes before we add a proper depletion
+			boundary/state transition.
+		*)
+		n_Fe2O3.lower_bound := -1e-9 {mol};
 		n_Fe3O4.lower_bound := -1e-12 {mol};
 		n_FeO.lower_bound := -1e-12 {mol};
 		n_Fe.lower_bound := -1e-12 {mol};
-		oxygen_remaining.lower_bound := -1e-12 {mol};
+		oxygen_remaining.lower_bound := -1e-9 {mol};
 
 		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
 		tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
@@ -303,6 +310,13 @@ METHODS
 		n_Fe.obs_id := 15;
 	END observe_default;
 
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, m_sample,
+			n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+			y_H2_react, y_H2O_react,
+			J_transport;
+	END observe_cli_default;
+
 	METHOD sahar_873K_setup;
 		T := 873.15 {K};
 		y_H2_bulk := 0.8;
@@ -371,6 +385,9 @@ METHODS
 			RUN dynamic_reset;
 			FREE der(n_Fe2O3), der(n_Fe3O4), der(n_FeO), der(n_Fe);
 			RUN observe_default;
+			RUN observe_cli_default;
+			INTEGRATOR IDA;
+			INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
 		END on_load;
 END tga_reduction_screen_dyn;
 
