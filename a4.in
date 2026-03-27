@@ -392,7 +392,6 @@ if __name__ == "__main__":
 			if args.microstates != 'endpoints':
 				cmd += ["--microstates",args.microstates]
 		if hasattr(args,'printvars') and args.printvars:
->>>>>>> new-der-impl
 			cmd += ["--print"] + args.printvars
 		if hasattr(args,'no_test') and args.no_test:
 			cmd += ["--no-test"]
