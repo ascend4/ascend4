@@ -1,4 +1,5 @@
 import pathlib, sys, argparse, re
+from plotutils import group_series, group_ylabel, COLOR_CYCLE
 
 def _print_requested_vars(sim, printvars):
 	re1 = re.compile(r"^[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*(\.[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*)*$")
@@ -81,6 +82,18 @@ def _get_instance_units(inst):
 	except Exception:
 		return inst.getType().getDeclaredUnits()
 
+def _display_unit_name(inst):
+	try:
+		units = _get_instance_units(inst)
+		name = units.getName().toString()
+		if name in ("", "?", "dimensionless", "[dimensionless]"):
+			return ""
+		if units.getDimensions().isWild() and inst.isDimensionless():
+			return ""
+		return name
+	except Exception:
+		return ""
+
 def _is_real_instance(inst):
 	return inst.isReal()
 
@@ -130,6 +143,64 @@ def _get_integrator_output(sim, integrator):
 				row.append(value / conv if conv not in (None, 0) else value)
 			rows.append(row)
 	return headers, rows
+
+def _plot_integrator_results(sim, observed, headers, rows):
+	real_entries = []
+	for idx, inst in enumerate(observed, start=1):
+		if _is_real_instance(inst):
+			real_entries.append((idx, inst))
+	if len(real_entries) < 1:
+		raise RuntimeError("No observed variables are available to plot.")
+
+	import matplotlib.pyplot as plt
+
+	x = [row[0] for row in rows]
+
+	def _series_group_key(inst):
+		try:
+			return (str(inst.getType().getDimensions()), _display_unit_name(inst))
+		except Exception:
+			return ("unknown", _display_unit_name(inst))
+
+	def _group_ylabel(entries):
+		return group_ylabel(entries, lambda e: _display_unit_name(e[1]), lambda e: headers[e[0]])
+
+	grouped, group_order = group_series(real_entries, lambda entry: _series_group_key(entry[1]))
+	n_groups = len(group_order)
+	single_series = len(real_entries) == 1
+	sharex = None
+	for gi, gkey in enumerate(group_order):
+		if gi == 0:
+			ax = plt.subplot(n_groups,1,gi+1)
+			sharex = ax
+		else:
+			ax = plt.subplot(n_groups,1,gi+1,sharex=sharex)
+
+		group_entries = grouped[gkey]
+		for si, (col_index, _inst) in enumerate(group_entries):
+			color = COLOR_CYCLE[si % len(COLOR_CYCLE)]
+			y = [row[col_index] for row in rows]
+			ax.plot(x, y, "-" + color + "o", label=headers[col_index])
+
+		if gi + 1 != n_groups:
+			plt.setp(ax.get_xticklabels(), visible=False)
+		else:
+			ax.set_xlabel(headers[0])
+
+		if single_series and len(group_entries) == 1:
+			ax.set_ylabel(headers[group_entries[0][0]], labelpad=20)
+		else:
+			ax.set_ylabel(_group_ylabel(group_entries), labelpad=20)
+			leg = ax.legend(loc='upper left')
+			if leg is not None:
+				leg.get_frame().set_alpha(0.3)
+				if hasattr(leg, "set_draggable"):
+					leg.set_draggable(True)
+				elif hasattr(leg, "draggable"):
+					leg.draggable()
+		ax.grid(True)
+
+	plt.show()
 
 def _write_integrator_table(filep, headers, rows):
 	filep.write("\t".join(headers) + "\n")
@@ -242,18 +313,7 @@ def integrate_ascend_model(filen,model=None,engine="IDA",start=None,duration=100
 			headers, rows = reporter.headers, reporter.rows
 		else:
 			headers, rows = _get_integrator_output(M, I)
-		real_indices = [idx for idx, inst in enumerate(_get_integrator_observed_instances(M, I), start=1) if _is_real_instance(inst)]
-		if len(real_indices) < 1:
-			raise RuntimeError("No observed variables are available to plot.")
-		import matplotlib.pyplot as plt
-		x = [row[0] for row in rows]
-		yindex = real_indices[0]
-		y = [row[yindex] for row in rows]
-		plt.plot(x, y, "-o")
-		plt.xlabel(headers[0])
-		plt.ylabel(headers[yindex])
-		plt.grid(True)
-		plt.show()
+		_plot_integrator_results(M, _get_integrator_observed_instances(M, I), headers, rows)
 
 def run_ascend_model(filen,model=None,printvars=None,test=True,runmethod=None):
 	"""

@@ -1,6 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 import os.path
+from plotutils import group_series, group_ylabel, COLOR_CYCLE
 
 from study import *
 from unitsdialog import *
@@ -451,16 +452,6 @@ class ObserverTab:
 			except Exception:
 				return ("unknown", _series_units(col))
 
-		def _group_ylabel(cols):
-			units = sorted(set([u for u in [_series_units(c) for c in cols] if u != ""]))
-			if len(cols) > 1:
-				if len(units) == 1:
-					return "[%s]" % units[0]
-				return ""
-			if len(cols) == 1:
-				return cols[0].title
-			return ""
-
 		def _legend_draggable(leg):
 			if leg is None:
 				return
@@ -470,16 +461,10 @@ class ObserverTab:
 				leg.draggable()
 
 		# Group y-series by compatible dimensions/display-units while preserving user-selected order.
-		grouped = {}
-		group_order = []
-		for yi, ycol in enumerate(y):
-			g = _series_group_key(ycol)
-			if g not in grouped:
-				grouped[g] = []
-				group_order.append(g)
-			grouped[g].append((yi, ycol))
-
-		color_cycle = ['b','r','g','y','c','m','k']
+		grouped, group_order = group_series(
+			[(yi, ycol) for yi, ycol in enumerate(y)],
+			lambda entry: _series_group_key(entry[1])
+		)
 		n_groups = len(group_order)
 		single_series = len(y) == 1
 		sharex = None
@@ -493,7 +478,7 @@ class ObserverTab:
 			group_entries = grouped[gkey]
 			group_cols = [c for _, c in group_entries]
 			for yi, ycol in group_entries:
-				color = color_cycle[yi % len(color_cycle)]
+				color = COLOR_CYCLE[yi % len(COLOR_CYCLE)]
 				ax.plot(A[:,0],A[:,yi+1],'-'+color+'o',label=ycol.title)
 
 			if gi + 1 != n_groups:
@@ -504,7 +489,7 @@ class ObserverTab:
 			if single_series and len(group_cols) == 1:
 				ax.set_ylabel(group_cols[0].title,labelpad=20)
 			else:
-				ax.set_ylabel(_group_ylabel(group_cols),labelpad=20)
+				ax.set_ylabel(group_ylabel(group_cols, _series_units, lambda c: c.title),labelpad=20)
 				leg = ax.legend(loc='upper left')
 				if leg is not None:
 					leg.get_frame().set_alpha(0.3)
