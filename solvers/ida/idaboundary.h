@@ -94,4 +94,12 @@ void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vect
 int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 		int *bnd_cond_states);
 
+/**
+ * Lightweight opt-in trace of hybrid event state for debugging and diagnostics.
+ * Enabled when the environment variable ASCEND_HYBRID_TRACE is set to a
+ * non-empty, non-zero value.
+ */
+int ida_hybrid_trace_enabled(void);
+void ida_hybrid_trace(IntegratorSystem *integ, const char *label, realtype t);
+
 #endif  /* ASC_IDA_H */

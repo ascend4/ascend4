@@ -342,9 +342,12 @@ What is possible now:
 - equations directly inside selector `CASE` bodies
 - optional `USE ...` inside cases where that is still convenient
 - transition logic and actions inside the cases
+- sibling case-local relations already replace each other at the ACTIVE-bit
+  level; only the selected case contributes its local relations
 
 What is **not** yet hardened enough:
 
+- the validation and diagnostics around more complex replacing case families
 - the full replacing semantics for more complex state-local equation sets
 - nested/richer combinations that would let us express arbitrary resting or
   contact states without worrying about the active-case DAE shape
@@ -365,6 +368,10 @@ So the lesson is now clearer:
 - a resting/contact state is possible with the current machinery
 - but it still needs a carefully chosen post-switch formulation that preserves
   a coherent first-order DAE shape for IDA
+- the old alternative-structure checker is part of this story, and has already
+  been tightened to correctly detect at least one previously missed mismatch:
+  same number of local equations, same overall incident-variable set, but a
+  different per-relation incidence grouping across sibling cases
 
 ### 2. Common equations should not need duplication
 
@@ -396,6 +403,15 @@ still benefits from explicit `CONDITIONAL` / `SATISFIED(...)` plumbing today.
 So the remaining gap is no longer "no direct continuous guards"; it is
 "general composite guard lowering is not there yet".
 
+The LRSlv-backed path is now working again:
+
+- selector/integer/symbol `SWITCH TO` driven by an explicit discrete trigger
+  boolean works in the `switchto_*_mode` regressions
+- the newer direct continuous-guard selector path still works too
+
+The important repair there was more reliable same-time discrete-change
+detection during boundary/event iteration, not a second transition mechanism.
+
 ### 4. Some lower-bound chatter still appears near impacts
 
 The current ideal-bounce path can still emit noisy lower-bound messages during
@@ -403,12 +419,30 @@ root localisation near impacts, even though the sampled trajectory is correct.
 
 This is mainly a runtime polish issue rather than a semantic gap.
 
+### 5. Opt-in hybrid trace now exists for debugging
+
+The IDA wrapper now has a lightweight opt-in event trace:
+
+- set `ASCEND_HYBRID_TRACE=1`
+- the solver will emit checkpoint lines around event iteration and
+  continuation
+- current output includes:
+  - checkpoint label and time
+  - currently selected solver
+  - discrete variables participating in `WHEN`s
+  - active `WHEN` cases
+
+This is still developer-oriented rather than polished user-facing output, but
+it is already useful for diagnosing event-iteration and reconfiguration bugs.
+
 ## Future Work
 
 Near term:
 
 1. define and harden the replacing semantics between sibling selector cases
    now that the first-cut state-local equation path exists
+   - treat this mainly as a validation/diagnostics problem now, because the
+     basic ACTIVE-bit replacement is already in place
 2. extend the `models/johnpye/dyn` examples from first-cut working cases to
    richer settling/mode-holding examples
 3. improve selector exhaustiveness diagnostics and browser/tree presentation
@@ -416,10 +450,11 @@ Near term:
    one state are simultaneously enabled
 5. widen direct-guard lowering from simple comparisons to richer mixed
    continuous/logical expressions where worthwhile
+6. refine the current hybrid trace into clearer user-facing event diagnostics
 
 After that:
 
-6. revisit surface syntax for richer discrete reassignment if it becomes
+7. revisit surface syntax for richer discrete reassignment if it becomes
    clearly worthwhile beyond current widened `REINIT(...)`
-7. refine event/logical syntax so explicit condition/logrel declarations and
+8. refine event/logical syntax so explicit condition/logrel declarations and
    selector transitions work together naturally rather than competing

@@ -1301,6 +1301,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 		do {
 			if(need_to_reinteg) {
 				MSG("Resuming integration from %f to %f", integrator_get_t(integ), tout);
+				ida_hybrid_trace(integ, "before_resumed_idasolve", integrator_get_t(integ));
 				integrator_output_write(integ);
 			}
 
@@ -1377,11 +1378,13 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						/* First output data exactly on the boundary */
 						 integrator_output_write(integ);
 						 integrator_output_write_obs(integ);
+						 ida_hybrid_trace(integ, "before_event_iterate", tret);
 
 							if (ida_bnd_event_iterate(integ, ida_mem, tout) != 0) {
 								statuscode = 1;
 								goto root_cleanup;
 							}
+						 ida_hybrid_trace(integ, "after_event_iterate", integrator_get_t(integ));
 
 						/* Need to destroy and rebuild system */
 						//IDAFree(ida_mem);
@@ -1444,6 +1447,7 @@ root_cleanup:
 		} while (need_to_reinteg); /* end of solve time step */
 
 		if (!skipping_output) {
+			ida_hybrid_trace(integ, "before_final_output", tret);
 			/* pass the values of everything back to the compiler */
 			integrator_set_t(integ, (double) tret);
 			integrator_set_y(integ, NV_DATA_S(yret));

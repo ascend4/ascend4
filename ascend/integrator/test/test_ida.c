@@ -507,9 +507,9 @@ static void test_reinit_boolean_latch(){
 	itrigger = ida_child(root, "trigger");
 	ilatched = ida_child(root, "latched");
 
-	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
-	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(isample) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(it) - 3.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 3.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 3.0) < 5e-5);
 	CU_TEST(GetBooleanAtomValue(itrigger));
 	CU_TEST(GetBooleanAtomValue(ilatched));
 
@@ -542,9 +542,9 @@ static void test_reinit_boolean_cascade(){
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != istage);
 	}
 
-	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
-	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(isample) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(it) - 3.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 3.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 3.0) < 5e-5);
 	CU_TEST(fabs(RealAtomValue(istage) - 2.0) < 5e-5);
 	CU_TEST(GetBooleanAtomValue(itrigger));
 	CU_TEST(GetBooleanAtomValue(ilatched));
@@ -618,9 +618,9 @@ static void test_reinit_integer_mode_switch(){
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != istage);
 	}
 
-	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
-	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(isample) - 12.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(it) - 3.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 3.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 13.0) < 5e-5);
 	CU_TEST(GetIntegerAtomValue(istage) == 1);
 
 	ida_free_runtime(testsys.integ);
@@ -796,6 +796,18 @@ static void test_switchto_selector_bad_default_rejected(){
 
 static void test_switchto_nonselector_default_rejected(){
 	ida_expect_instantiation_error("test/ida/switchto.a4c", "ida_switchto_nonselector_default_bad", 1);
+}
+
+static void test_switchto_selector_structure_change_detected(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/ida/switchto.a4c", "ida_switchto_selector_structure_change", 1, &testsys)){
+		return;
+	}
+
+	CU_TEST_FATAL(slv_need_consistency(testsys.integ->system));
+
+	ida_cleanup(&testsys);
 }
 
 static void test_when_integer_initial_case(){
@@ -1206,6 +1218,7 @@ static void test_initial_alias_binding_bug(){
 	T(switchto_selector_bad_case_rejected) \
 	T(switchto_selector_bad_default_rejected) \
 	T(switchto_nonselector_default_rejected) \
+	T(switchto_selector_structure_change_detected) \
 	T(when_integer_initial_case) \
 	T(when_symbol_initial_case) \
 	T(example_ideal_rebound) \

@@ -286,3 +286,51 @@ END ida_switchto_selector_bad_default;
 MODEL ida_switchto_nonselector_default_bad;
     badmode IS_A symbol DEFAULT 'low';
 END ida_switchto_nonselector_default_bad;
+
+MODEL ida_switchto_selector_structure_change;
+	modes           IS_A set OF symbol_constant;
+	modes :== ['left', 'right'];
+	mode            IS_A selector OF modes DEFAULT 'left';
+	t               IS_A time;
+	x, xdot         IS_A generic_real;
+	y, ydot         IS_A generic_real;
+	z               IS_A generic_real;
+	sample          IS_A generic_real;
+	aux             IS_A generic_real;
+
+	xdrive: xdot = 1;
+	ydrive: ydot = 2;
+	xkin:   x = xdot * t;
+	ykin:   y = ydot * t;
+	zfix:   z = 0;
+
+	WHEN(mode)
+		CASE 'left':
+			left_sample: sample = x + y;
+			left_aux:    aux = z;
+		CASE 'right':
+			right_sample: sample = x + z;
+			right_aux:    aux = y;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		x.ode_type := 1; xdot.ode_type := 2;
+		x.ode_id := 1;   xdot.ode_id := 1;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 2;   ydot.ode_id := 2;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		x := 0;
+		xdot := 1;
+		y := 0;
+		ydot := 2;
+		z := 0;
+		sample := 0;
+		aux := 0;
+		t := 0 {s};
+	END values;
+END ida_switchto_selector_structure_change;
