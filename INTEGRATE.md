@@ -8,8 +8,8 @@ requests and integrator-side reporting.
 
 It is separate from:
 
-- [`DER.md`](/home/john/ascend/DER.md) for derivative and index-analysis work
-- [`HYBRID.md`](/home/john/ascend/HYBRID.md) for hybrid/event semantics
+- [`DER.md`](DER.md) for derivative and index-analysis work
+- [`HYBRID.md`](HYBRID.md) for hybrid/event semantics
 
 ## Design Direction
 
