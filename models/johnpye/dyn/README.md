@@ -18,7 +18,14 @@ not support `CONDITIONAL` / `WHEN` event handling or `REINIT`.
 
 ### CLI
 
-The non-GUI integration path is:
+These example models now include default `INTEGRATOR ...;` / `INTEGRATE ...;`
+requests in `on_load`, so the shortest non-GUI path is:
+
+```bash
+./a4 run path/to/model.a4c
+```
+
+To override the model-supplied integration settings from the command line, use:
 
 ```bash
 ./a4 run --integrate path/to/model.a4c -m model_name -d DURATION -u s --steps N
@@ -27,6 +34,9 @@ The non-GUI integration path is:
 Add `--plot` if you want an immediate quick plot after the run.
 
 `./a4 int ...` remains available as a shorthand alias for the same path.
+
+For the fuller CLI behavior and current `--microstates` semantics, see
+[`INTEGRATE.md`](../../../INTEGRATE.md).
 
 ### GUI
 
@@ -61,7 +71,7 @@ reset at impact. This is the intentionally non-settling case, so if you run
 long enough you will hit the Zeno/event-accumulation stop.
 
 ```bash
-./a4 run --integrate models/johnpye/dyn/ideal_rebound.a4c -m ideal_rebound -d 3 -u s --steps 60
+./a4 run models/johnpye/dyn/ideal_rebound.a4c
 ./a4 open models/johnpye/dyn/ideal_rebound.a4c -m ideal_rebound
 ```
 
@@ -72,7 +82,7 @@ A settling variant of the ideal rebound. The ball transitions through
 sufficiently small rebounds.
 
 ```bash
-./a4 run --integrate models/johnpye/dyn/resting_rebound.a4c -m resting_rebound -d 5 -u s --steps 80
+./a4 run models/johnpye/dyn/resting_rebound.a4c
 ./a4 open models/johnpye/dyn/resting_rebound.a4c -m resting_rebound
 ```
 
@@ -82,7 +92,7 @@ A reset oscillator with simple event memory. Each event resets the state,
 records the last event time, and lengthens the next period.
 
 ```bash
-./a4 run --integrate models/johnpye/dyn/lengthening_sawtooth.a4c -m lengthening_sawtooth -d 8 -u s --steps 80
+./a4 run models/johnpye/dyn/lengthening_sawtooth.a4c
 ./a4 open models/johnpye/dyn/lengthening_sawtooth.a4c -m lengthening_sawtooth
 ```
 
@@ -93,7 +103,7 @@ selector cases. Below the weir crest the overflow is zero; above the crest it
 follows a simple weir law.
 
 ```bash
-./a4 run --integrate models/johnpye/dyn/overflowing_weir.a4c -m overflowing_weir -d 3 -u s --steps 60
+./a4 run models/johnpye/dyn/overflowing_weir.a4c
 ./a4 open models/johnpye/dyn/overflowing_weir.a4c -m overflowing_weir
 ```
 

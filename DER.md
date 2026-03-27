@@ -913,21 +913,6 @@ This is useful because it keeps:
 
 without introducing extra spelling variants.
 
-## Current Squishy Bits
-
-- `INITIAL` explicit solve workflow
-  - focused integrator startup regressions now pass, including obvious
-    overdetermined failure cases
-  - broader semantics still need to be hardened for explicit
-    initialization-mode solves outside the integrator path
-- full GUI semantics
-  - browser/object path is working
-  - Pantelides advisory text is now exposed in the GTK browser
-  - broader end-to-end GUI exercise is still useful
-- higher derivatives
-  - the APIs expose derivative order
-  - practical implementation is still first-order only
-
 ## Recommended Next Steps
 
 Near term:

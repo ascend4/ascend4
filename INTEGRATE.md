@@ -140,6 +140,18 @@ with plotting remaining an optional CLI add-on for both.
 For compatibility and convenience, `./a4 int ...` can remain as a shorthand
 alias for `./a4 run --integrate ...`.
 
+Current CLI behavior for dynamic models is:
+
+- `./a4 run model.a4c`
+  - if the model's methods issue `INTEGRATOR ...;` / `INTEGRATE ...;`, those
+    requests are honored and the model integrates
+  - otherwise `run` stays on the ordinary steady-state solve path
+- `./a4 run model.a4c --integrate ...`
+  - forces the Python integration path and allows CLI overrides for engine,
+    bounds, steps, plotting, and microstate display
+- `./a4 int model.a4c ...`
+  - shorthand alias for `./a4 run --integrate ...`
+
 ## Why `OBSERVE` Is Procedural
 
 Observation lists need to be usable:
@@ -187,15 +199,22 @@ Implemented now:
   integer, symbol, and selector observations
 - GTK `Observer` / integrator-reporter tables now display mixed typed observed
   values, with plotting restricted to real-valued columns
+- `./a4 run` now honors in-model `INTEGRATOR` / `INTEGRATE` requests for the
+  dynamic examples
+- `./a4 run --integrate ...` and `./a4 int ...` are unified on the same
+  Python integration path
+- CLI integration reporting now supports `--microstates none|endpoints|all`
+  and optional plotting with event rows shown as distinct markers
 
-Current first-pass limitations:
+Current limitations:
 
 - named observe-set selection by `STUDY` or `INTEGRATE`
-- GTK `Observer` / integrator-reporter widgets now accept mixed real/boolean/
-  integer/symbol/selector columns in their tabular output, but plotting remains
-  limited to real-valued columns
 - plotting remains numeric-only
 - GUI/editor support for named observation sets
+- `--microstates all` currently exposes all rows emitted by the lower-level
+  reporter, not a richer semantic event trace beyond that
+- the GTK typed-view/reporting work has been implemented but still needs live
+  end-to-end click-testing in the GUI
 
 ## Open Design Points
 
@@ -221,7 +240,7 @@ Current working assumption:
 - solver/integrator-specific options should be stored per selected engine and
   restored when that engine is re-selected
 
-## First Implementation Sequence
+## Implementation Sequence
 
 1. `OBSERVE` statement and default observe storage.
 2. `STUDY` fallback to default observe list.
@@ -230,12 +249,15 @@ Current working assumption:
 5. typed observation output for integrator reporters.
 6. GUI/CLI exposure of named observe sets and dynamic reporting options.
 
-The repository is now between steps 5 and 6:
+The repository is now at step 6 in a first useful form:
 
 - METHOD `OBSERVE`, `STUDY`, and `INTEGRATE` now accept/report real,
   boolean, integer, symbol, and selector observations in the hook-driven
   CLI/console path
 - the lower-level integrator API now has a typed observed-instance path
   alongside the legacy `double *` observation API
-- the GTK study/integrator viewers still need to be moved onto that typed
-  path
+- the GTK study/integrator viewers now display mixed typed columns in their
+  tabular path
+- the main remaining work is refinement rather than basic plumbing:
+  named observe-set selection, GUI/editor UX around named lists, and any
+  richer event/microstate presentation

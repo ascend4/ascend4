@@ -44,7 +44,9 @@ Primary regression and example coverage:
 - [multi_boundary.a4c](./models/test/ida/multi_boundary.a4c)
 - [switchto.a4c](./models/test/ida/switchto.a4c)
 - [ideal_rebound.a4c](./models/johnpye/dyn/ideal_rebound.a4c)
+- [resting_rebound.a4c](./models/johnpye/dyn/resting_rebound.a4c)
 - [lengthening_sawtooth.a4c](./models/johnpye/dyn/lengthening_sawtooth.a4c)
+- [overflowing_weir.a4c](./models/johnpye/dyn/overflowing_weir.a4c)
 
 At the time of writing:
 
@@ -55,6 +57,13 @@ At the time of writing:
 - selector state is exposed in the browser/`ascpy` object view, although the
   selector domain/default metadata are not yet richly represented as their own
   inspectable child structure
+- the `johnpye/dyn` examples now run directly from `./a4 run ...` via
+  in-model `INTEGRATOR` / `INTEGRATE` requests
+- CLI integration output now supports typed observed values, and
+  `--microstates` supports:
+  - `none`
+  - `endpoints`
+  - `all`
 
 ## Design Decisions
 
@@ -263,13 +272,12 @@ complex continuous/logical combinations into event sources. For those cases,
 explicit `CONDITIONAL`, `SATISFIED(...)`, and/or logrelations are still the
 right path.
 
-State-local equations inside selector cases now work in a first useful slice.
-For example, [overflowing_weir.a4c](./models/johnpye/dyn/overflowing_weir.a4c)
-uses:
+State-local equations inside selector cases now work and are used in
+[overflowing_weir.a4c](./models/johnpye/dyn/overflowing_weir.a4c):
 
 - globally active mass-balance equations outside the selector block
 - selector-local overflow equations inside sibling `CASE` branches
-- `SWITCH TO` transitions driven by an explicitly declared boundary boolean
+- direct `SWITCH TO` comparison guards on the active case
 
 ## Event Iteration and Restart Semantics
 
@@ -369,7 +377,7 @@ What is possible now:
 - sibling case-local relations already replace each other at the ACTIVE-bit
   level; only the selected case contributes its local relations
 
-What is **not** yet hardened enough:
+What still needs hardening:
 
 - the validation and diagnostics around more complex replacing case families
 - the full replacing semantics for more complex state-local equation sets
@@ -436,14 +444,7 @@ The LRSlv-backed path is now working again:
 The important repair there was more reliable same-time discrete-change
 detection during boundary/event iteration, not a second transition mechanism.
 
-### 4. Some lower-bound chatter still appears near impacts
-
-The current ideal-bounce path can still emit noisy lower-bound messages during
-root localisation near impacts, even though the sampled trajectory is correct.
-
-This is mainly a runtime polish issue rather than a semantic gap.
-
-### 5. Opt-in hybrid trace now exists for debugging
+### 4. Opt-in hybrid trace now exists for debugging
 
 The IDA wrapper now has a lightweight opt-in event trace:
 
@@ -459,6 +460,16 @@ The IDA wrapper now has a lightweight opt-in event trace:
 This is still developer-oriented rather than polished user-facing output, but
 it is already useful for diagnosing event-iteration and reconfiguration bugs.
 
+## Current Polish Gaps
+
+- event/microstate output is now available through the CLI path, but `all`
+  still means "all states currently emitted by the IDA wrapper", not a richer
+  semantic event trace
+- selector domain/default metadata are still thinly represented in the browser
+  compared with ordinary structural children
+- some solver/debug notes still leak into CLI output where a quieter
+  end-user presentation would be preferable
+
 ## Future Work
 
 Near term:
@@ -467,18 +478,16 @@ Near term:
    now that the first-cut state-local equation path exists
    - treat this mainly as a validation/diagnostics problem now, because the
      basic ACTIVE-bit replacement is already in place
-2. extend the `models/johnpye/dyn` examples from first-cut working cases to
-   richer settling/mode-holding examples
-3. improve selector exhaustiveness diagnostics and browser/tree presentation
-4. add transition-conflict diagnostics when multiple outgoing transitions from
+2. improve selector exhaustiveness diagnostics and browser/tree presentation
+3. add transition-conflict diagnostics when multiple outgoing transitions from
    one state are simultaneously enabled
-5. widen direct-guard lowering from simple comparisons to richer mixed
+4. widen direct-guard lowering from simple comparisons to richer mixed
    continuous/logical expressions where worthwhile
-6. refine the current hybrid trace into clearer user-facing event diagnostics
+5. refine the current hybrid trace into clearer user-facing event diagnostics
 
 After that:
 
-7. revisit surface syntax for richer discrete reassignment if it becomes
+6. revisit surface syntax for richer discrete reassignment if it becomes
    clearly worthwhile beyond current widened `REINIT(...)`
-8. refine event/logical syntax so explicit condition/logrel declarations and
+7. refine event/logical syntax so explicit condition/logrel declarations and
    selector transitions work together naturally rather than competing
