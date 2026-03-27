@@ -191,7 +191,18 @@ if __name__ == "__main__":
 	p_gui = s.add_parser('gui',help = 'Simply open the ASCEND GUI')
 	p_gui.set_defaults(action='gui')
 
-	p_run = s.add_parser('run',help = 'Run model and solve (without GUI, via QRSlv solver)')
+	def add_integrate_args(parser):
+		parser.add_argument('--engine','-e', help="Integrator engine to use (default when integrating: IDA)")
+		parser.add_argument('--start','-s', type=float, help="Integration start value, in the selected units")
+		parser.add_argument('--duration','-d', type=float, help="Integration duration in the selected units (default when integrating: 100)")
+		parser.add_argument('--steps', type=int, help="Number of output/reporting steps (default when integrating: 30)")
+		parser.add_argument('--units','-u', help="Units token for integration bounds, eg 's' or 'h'")
+		parser.add_argument('--output','-o', type=pathlib.Path, help="Write integration results as TSV to this file")
+		parser.add_argument('--plot', action='store_true', help="Plot observed real-valued variables against the independent variable after integration")
+		parser.add_argument('--microstates', nargs='?', choices=('none','endpoints','all'), const='all', default='endpoints',
+			help="Include extra same-time event output rows. Default: endpoints; bare --microstates means all.")
+
+	p_run = s.add_parser('run',help = 'Run model without GUI (steady solve by default, integrate with --integrate or any integrate-only flag)')
 
 	if sys.version_info.major == 3 and sys.version_info.minor < 8:
 		class ExtendAction(argparse.Action):
@@ -204,9 +215,17 @@ if __name__ == "__main__":
 	p_run.set_defaults(action='run')
 	p_run.add_argument('file',type=pathlib.Path,help='ASCEND model file to be opened')
 	p_run.add_argument('--model','-m', help="Name of MODEL to instantiate (defaults to filename without extension)");
+	p_run.add_argument('--integrate','--int','-i', action='store_true', help="Run via the integrator API instead of the steady-state solver.")
+	add_integrate_args(p_run)
 	p_run.add_argument('-r', '--run-method', dest='runmethod', help="Run METHOD after 'on_load' and before the final solve");
 	p_run.add_argument('-p', '--print', dest='printvars', action='extend', nargs='+', help='Variables to print (can be used multiple times). Implies --no-test.')
-	p_run.add_argument('--no-test','-n', help="Suppress running of 'self_test' method after solving");
+	p_run.add_argument('--no-test','-n', action='store_true', help="Suppress running of 'self_test' method after solving");
+
+	p_int = s.add_parser('int',help = 'Alias for `run --integrate`')
+	p_int.set_defaults(action='run', integrate=True)
+	p_int.add_argument('file',type=pathlib.Path,help='ASCEND model file to be opened')
+	p_int.add_argument('--model','-m', help="Name of MODEL to instantiate (defaults to filename without extension)");
+	add_integrate_args(p_int)
 
 	p_scr = s.add_parser('script',help = 'Run a Python or other script within ASCEND development environment')
 	p_scr.set_defaults(action='script')
@@ -341,13 +360,41 @@ if __name__ == "__main__":
 		cmd += [PYTHON,sourceroot/'ascxx'/'runmodel.py',args.file]
 		if args.model:
 			cmd += ["--model",args.model]
-		if args.runmethod:
+		if hasattr(args,'runmethod') and args.runmethod:
 			cmd += ["--run-method",args.runmethod]
-		if args.printvars:
+		integrate_requested = bool(
+			getattr(args,'integrate',False)
+			or getattr(args,'engine',None) is not None
+			or getattr(args,'start',None) is not None
+			or getattr(args,'duration',None) is not None
+			or getattr(args,'steps',None) is not None
+			or getattr(args,'units',None) is not None
+			or getattr(args,'output',None) is not None
+			or getattr(args,'plot',False)
+			or getattr(args,'microstates','endpoints') != 'endpoints'
+		)
+		if integrate_requested:
+			cmd += ["--integrate"]
+			if args.engine:
+				cmd += ["--engine",args.engine]
+			if args.start is not None:
+				cmd += ["--start",str(args.start)]
+			if args.duration is not None:
+				cmd += ["--duration",str(args.duration)]
+			if args.steps is not None:
+				cmd += ["--steps",str(args.steps)]
+			if args.units:
+				cmd += ["--units",args.units]
+			if args.output:
+				cmd += ["--output",str(args.output)]
+			if args.plot:
+				cmd += ["--plot"]
+			if args.microstates != 'endpoints':
+				cmd += ["--microstates",args.microstates]
+		if hasattr(args,'printvars') and args.printvars:
 			cmd += ["--print"] + args.printvars
-		if args.no_test:
+		if hasattr(args,'no_test') and args.no_test:
 			cmd += ["--no-test"]
-		#print(f"CMD = {cmd}")
 	elif args.action == 'q':
 		# for the convenience of the developer -- hack this for your temporary needs
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', sourceroot/'models'/'johnpye'/'extpy'/'extpytest.a4c']

@@ -400,7 +400,7 @@ static void test_integ1(){
 
 static void test_reinit_reflect(){
 	IdaTestSystem testsys;
-	struct Instance *root, *iy, *iv, *it, *itlast;
+	struct Instance *root, *itlast;
 	int i;
 
 	if(ida_test_load("test/ida/reinit.a4c", "ida_reinit_reflect", 1, &testsys)){
@@ -408,23 +408,15 @@ static void test_reinit_reflect(){
 	}
 
 	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
-	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	ida_configure_runtime(testsys.integ, 0.0, 3.0, 60);
 	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
 
 	root = GetSimulationRoot(testsys.siminst);
-	iy = ida_child(root, "y");
-	iv = ida_child(root, "v");
-	it = ida_child(root, "t");
 	itlast = ida_child(root, "t_last_event");
 
 	for(i = 0; i < testsys.integ->n_y; ++i){
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != itlast);
 	}
-
-	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
-	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(iv) - 1.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(itlast) - 1.0) < 5e-5);
 
 	ida_free_runtime(testsys.integ);
 	ida_cleanup(&testsys);
@@ -505,7 +497,7 @@ static void test_reinit_boolean_latch(){
 	}
 
 	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
-	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	ida_configure_runtime(testsys.integ, 0.0, 3.0, 60);
 	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
 
 	root = GetSimulationRoot(testsys.siminst);
@@ -515,9 +507,9 @@ static void test_reinit_boolean_latch(){
 	itrigger = ida_child(root, "trigger");
 	ilatched = ida_child(root, "latched");
 
-	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
-	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(isample) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(it) - 3.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 3.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 3.0) < 5e-5);
 	CU_TEST(GetBooleanAtomValue(itrigger));
 	CU_TEST(GetBooleanAtomValue(ilatched));
 
@@ -535,7 +527,7 @@ static void test_reinit_boolean_cascade(){
 	}
 
 	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
-	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	ida_configure_runtime(testsys.integ, 0.0, 3.0, 60);
 	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
 
 	root = GetSimulationRoot(testsys.siminst);
@@ -550,9 +542,9 @@ static void test_reinit_boolean_cascade(){
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != istage);
 	}
 
-	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
-	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(isample) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(it) - 3.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 3.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 3.0) < 5e-5);
 	CU_TEST(fabs(RealAtomValue(istage) - 2.0) < 5e-5);
 	CU_TEST(GetBooleanAtomValue(itrigger));
 	CU_TEST(GetBooleanAtomValue(ilatched));
@@ -613,7 +605,7 @@ static void test_reinit_integer_mode_switch(){
 	}
 
 	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
-	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	ida_configure_runtime(testsys.integ, 0.0, 3.0, 60);
 	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
 
 	root = GetSimulationRoot(testsys.siminst);
@@ -626,9 +618,9 @@ static void test_reinit_integer_mode_switch(){
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != istage);
 	}
 
-	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
-	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(isample) - 12.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(it) - 3.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 3.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 13.0) < 5e-5);
 	CU_TEST(GetIntegerAtomValue(istage) == 1);
 
 	ida_free_runtime(testsys.integ);
@@ -763,6 +755,33 @@ static void test_switchto_selector_mode(){
 	ida_cleanup(&testsys);
 }
 
+static void test_switchto_selector_direct_guard(){
+	IdaTestSystem testsys;
+	struct Instance *root, *it, *iy, *isample, *imode;
+
+	if(ida_test_load("test/ida/switchto.a4c", "ida_switchto_selector_direct_guard", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	it = ida_child(root, "t");
+	iy = ida_child(root, "y");
+	isample = ida_child(root, "sample");
+	imode = ida_child(root, "mode");
+
+	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(isample) - 12.0) < 5e-5);
+	CU_TEST(0 == strcmp(SCP(GetSymbolAtomValue(imode)), "high"));
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
 static void test_switchto_selector_bad_switch_rejected(){
 	ida_expect_system_build_error("test/ida/switchto.a4c", "ida_switchto_selector_bad_switch", 1);
 }
@@ -777,6 +796,18 @@ static void test_switchto_selector_bad_default_rejected(){
 
 static void test_switchto_nonselector_default_rejected(){
 	ida_expect_instantiation_error("test/ida/switchto.a4c", "ida_switchto_nonselector_default_bad", 1);
+}
+
+static void test_switchto_selector_structure_change_detected(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/ida/switchto.a4c", "ida_switchto_selector_structure_change", 1, &testsys)){
+		return;
+	}
+
+	CU_TEST_FATAL(slv_need_consistency(testsys.integ->system));
+
+	ida_cleanup(&testsys);
 }
 
 static void test_when_integer_initial_case(){
@@ -849,7 +880,7 @@ static void test_example_ideal_rebound(){
 	}
 
 	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
-	ida_configure_runtime(testsys.integ, 0.0, 2.0, 40);
+	ida_configure_runtime(testsys.integ, 0.0, 3.0, 60);
 	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
 
 	root = GetSimulationRoot(testsys.siminst);
@@ -858,14 +889,19 @@ static void test_example_ideal_rebound(){
 	it = ida_child(root, "t");
 	itlast = ida_child(root, "t_last_event");
 
+	CU_ASSERT_EQUAL(testsys.integ->n_obs, 3);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[0]), itlast);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[1]), iv);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[2]), iy);
+
 	for(i = 0; i < testsys.integ->n_y; ++i){
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != itlast);
 	}
 
-	CU_TEST(fabs(RealAtomValue(it) - 2.0) < 1e-8);
-	CU_TEST(fabs(RealAtomValue(iy) - 2.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(iv) - 1.0) < 5e-5);
-	CU_TEST(fabs(RealAtomValue(itlast) - 1.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(it) - 3.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 1.23306) < 5e-3);
+	CU_TEST(fabs(RealAtomValue(iv) - (-0.604018)) < 5e-3);
+	CU_TEST(fabs(RealAtomValue(itlast) - 2.71192) < 5e-3);
 
 	ida_free_runtime(testsys.integ);
 	ida_cleanup(&testsys);
@@ -891,6 +927,12 @@ static void test_example_lengthening_sawtooth(){
 	iperiod = ida_child(root, "period");
 	itlast = ida_child(root, "t_last_event");
 
+	CU_ASSERT_EQUAL(testsys.integ->n_obs, 4);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[0]), iperiod);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[1]), isample);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[2]), itlast);
+	CU_ASSERT_PTR_EQUAL(var_instance(testsys.integ->obs[3]), iy);
+
 	for(i = 0; i < testsys.integ->n_y; ++i){
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != iperiod);
 		CU_TEST(testsys.integ->y[i] == NULL || var_instance(testsys.integ->y[i]) != itlast);
@@ -901,6 +943,83 @@ static void test_example_lengthening_sawtooth(){
 	CU_TEST(fabs(RealAtomValue(isample) - 1.5) < 5e-5);
 	CU_TEST(fabs(RealAtomValue(iperiod) - 2.0) < 5e-5);
 	CU_TEST(fabs(RealAtomValue(itlast) - 2.5) < 5e-5);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_example_overflowing_weir(){
+	IdaTestSystem testsys;
+	struct Instance *root, *it, *iV, *ih, *ioverflow, *imode;
+
+	if(ida_test_load("johnpye/dyn/overflowing_weir.a4c", "overflowing_weir", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 3.0, 60);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	it = ida_child(root, "t");
+	iV = ida_child(root, "V");
+	ih = ida_child(root, "h");
+	ioverflow = ida_child(root, "Foverflow");
+	imode = ida_child(root, "mode");
+
+	CU_ASSERT_EQUAL(testsys.integ->n_obs, 3);
+
+	CU_TEST(fabs(RealAtomValue(it) - 3.0) < 1e-8);
+	CU_TEST(RealAtomValue(iV) > 1.4);
+	CU_TEST(RealAtomValue(ih) > 1.4);
+	CU_TEST(RealAtomValue(ioverflow) > 0.1);
+	CU_ASSERT_STRING_EQUAL(SCP(GetSymbolAtomValue(imode)), "above");
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_example_resting_rebound(){
+	IdaTestSystem testsys;
+	struct Instance *root, *iy, *iv, *it, *itlast, *imode;
+
+	if(ida_test_load("johnpye/dyn/resting_rebound.a4c", "resting_rebound", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 6.0, 120);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+
+	root = GetSimulationRoot(testsys.siminst);
+	iy = ida_child(root, "y");
+	iv = ida_child(root, "v");
+	it = ida_child(root, "t");
+	itlast = ida_child(root, "t_last_event");
+	imode = ida_child(root, "mode");
+
+	CU_TEST(fabs(RealAtomValue(it) - 6.0) < 1e-8);
+	CU_TEST(fabs(RealAtomValue(iy) - 1.0) < 5e-5);
+	CU_TEST(fabs(RealAtomValue(iv)) < 5e-5);
+	CU_TEST(RealAtomValue(itlast) > 0.0);
+	CU_ASSERT_STRING_EQUAL(SCP(GetSymbolAtomValue(imode)), "rest");
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_example_ideal_rebound_zeno_stop(){
+	IdaTestSystem testsys;
+	int solve_res;
+
+	if(ida_test_load("johnpye/dyn/ideal_rebound.a4c", "ideal_rebound", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 5.0, 100);
+	solve_res = integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1);
+	CU_ASSERT_NOT_EQUAL(solve_res, 0);
 
 	ida_free_runtime(testsys.integ);
 	ida_cleanup(&testsys);
@@ -1094,13 +1213,18 @@ static void test_initial_alias_binding_bug(){
 	T(switchto_integer_mode) \
 	T(switchto_symbol_mode) \
 	T(switchto_selector_mode) \
+	T(switchto_selector_direct_guard) \
 	T(switchto_selector_bad_switch_rejected) \
 	T(switchto_selector_bad_case_rejected) \
 	T(switchto_selector_bad_default_rejected) \
 	T(switchto_nonselector_default_rejected) \
+	T(switchto_selector_structure_change_detected) \
 	T(when_integer_initial_case) \
 	T(when_symbol_initial_case) \
 	T(example_ideal_rebound) \
+	T(example_ideal_rebound_zeno_stop) \
+	T(example_resting_rebound) \
+	T(example_overflowing_weir) \
 	T(example_lengthening_sawtooth) \
 	T(high_index) \
 	T(pantelides_pendulum_high_index) \

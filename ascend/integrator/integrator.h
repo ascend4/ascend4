@@ -60,6 +60,7 @@
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/value_type.h>
 
 #include <ascend/linear/mtx.h>
 
@@ -137,6 +138,10 @@ typedef int IntegratorOutputWriteObsFn(struct IntegratorSystemStruct *);
 	close files, terminate GUI status reporting, etc.
 */
 typedef int IntegratorOutputCloseFn(struct IntegratorSystemStruct *);
+
+ASC_DLLSPEC int integrator_eval_direct_guard_root(const struct Expr *expr,
+	struct Instance *context, double *residual);
+ASC_DLLSPEC int integrator_direct_guard_rootable(const struct Expr *expr);
 
 /**
 	This struct allows arbitrary functions to be used for the reporting
@@ -266,11 +271,13 @@ struct IntegratorSystemStruct{
   struct var_variable **y;    /**< array form of states */
   struct var_variable **ydot; /**< array form of derivatives */
   struct var_variable **obs;  /**< array form of observed variables */
+  struct Instance **observed_instances; /**< explicit typed observed instances */
   int *y_id;                  /**< array form of y/ydot user indices, for DAEs we use negatives here for derivative vars */
   int *obs_id;                /**< array form of obs user indices */
   int n_y;
   int n_ydot;
   int n_obs;
+  int n_observed_instances;
   int n_diffeqs;              /**< number of differential equations (used by idaanalyse) */
   int currentstep;            /**< current step number (also @see integrator_getnsamples) */
   int initial_mode_prepared;  /**< one-shot INITIAL startup solve has been handled */
@@ -549,6 +556,34 @@ ASC_DLLSPEC double *integrator_get_observations(IntegratorSystem *blsys, double 
 ASC_DLLSPEC struct var_variable *integrator_get_observed_var(IntegratorSystem *blsys, const long i);
 /**<
 	Returns the var_variable contained in the ith position in the observed variable list.
+*/
+
+ASC_DLLSPEC int integrator_set_observed_instances(IntegratorSystem *blsys, struct Instance **instances, int n);
+/**<
+	Set an explicit typed observation list for the integrator.
+
+	If `instances` is NULL or `n <= 0`, any explicit list is cleared and the
+	legacy `obs_id`-derived observation list remains available.
+*/
+
+ASC_DLLSPEC int integrator_get_num_observed_instances(IntegratorSystem *blsys);
+/**<
+	Return the number of explicitly observed items, if present, otherwise the
+	number of legacy real-valued observed solver variables.
+*/
+
+ASC_DLLSPEC struct Instance *integrator_get_observed_instance(IntegratorSystem *blsys, const long i);
+/**<
+	Return the ith observed instance from the explicit observed list, or from
+	the legacy `obs_id`-derived observation list if no explicit list exists.
+*/
+
+ASC_DLLSPEC int integrator_get_observation_value(IntegratorSystem *blsys, const long i, struct value_t *value);
+/**<
+	Return the current value of the ith observed instance in typed form.
+
+	The caller owns the returned `value_t` contents and must eventually call
+	`DestroyValue` on it.
 */
 
 ASC_DLLSPEC struct var_variable *integrator_get_independent_var(IntegratorSystem *blsys);

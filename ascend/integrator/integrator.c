@@ -30,6 +30,7 @@
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/derivinst.h>
 #include <ascend/compiler/evaluate.h>
+#include <ascend/compiler/exprs.h>
 #include <ascend/compiler/find.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/packages.h>
@@ -79,6 +80,222 @@ static void integ_debug_list(const char *label, struct gl_list_t *list){
 	);
 }
 #endif
+
+static int integrator_guard_push_value(struct value_t *stack, int *sp, struct value_t value){
+	stack[(*sp)++] = value;
+	return 0;
+}
+
+static void integrator_guard_destroy_stack(struct value_t *stack, int sp){
+	int i;
+	for(i = 0; i < sp; ++i){
+		DestroyValue(&stack[i]);
+	}
+}
+
+int integrator_direct_guard_rootable(const struct Expr *expr){
+	int depth = 0;
+	const struct Expr *ex;
+
+	if(expr == NULL){
+		return 0;
+	}
+
+	for(ex = expr; ex != NULL; ex = NextExpr(ex)){
+		switch(ExprType(ex)){
+		case e_zero:
+		case e_real:
+		case e_int:
+		case e_var:
+		case e_der:
+			++depth;
+			break;
+		case e_func:
+		case e_uminus:
+			if(depth < 1){
+				return 0;
+			}
+			break;
+		case e_plus:
+		case e_minus:
+		case e_times:
+		case e_divide:
+		case e_power:
+		case e_ipower:
+			if(depth < 2){
+				return 0;
+			}
+			--depth;
+			break;
+		case e_less:
+		case e_greater:
+		case e_lesseq:
+		case e_greatereq:
+			return (NextExpr(ex) == NULL && depth == 2);
+		default:
+			return 0;
+		}
+	}
+
+	return 0;
+}
+
+int integrator_eval_direct_guard_root(const struct Expr *expr,
+	struct Instance *context, double *residual){
+	const struct Expr *ex;
+	struct value_t *stack = NULL;
+	struct value_t value;
+	int sp = 0;
+	int n = 0;
+
+	if(expr == NULL || context == NULL || residual == NULL){
+		return 1;
+	}
+	if(!integrator_direct_guard_rootable(expr)){
+		return 14;
+	}
+
+	for(ex = expr; ex != NULL; ex = NextExpr(ex)){
+		++n;
+	}
+	stack = ASC_NEW_ARRAY(struct value_t, n > 0 ? n : 1);
+	if(stack == NULL){
+		return 2;
+	}
+
+	for(ex = expr; ex != NULL; ex = NextExpr(ex)){
+		switch(ExprType(ex)){
+		case e_zero:
+			value = CreateRealValue(0.0, WildDimension(), 1);
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_real:
+			value = CreateRealValue(ExprRValue(ex), ExprRDimensions(ex), 1);
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_int:
+			value = CreateIntegerValue(ExprIValue(ex), 1);
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_var:
+		case e_der:
+			asc_assert(GetEvaluationContext() == NULL);
+			SetEvaluationContext(context);
+			value = EvaluateExpr(ex, NextExpr(ex), InstanceEvaluateName);
+			SetEvaluationContext(NULL);
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 3;
+			}
+			integrator_guard_push_value(stack, &sp, value);
+			break;
+		case e_func:
+			if(sp < 1){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 4;
+			}
+			value = ApplyFunction(stack[sp - 1], ExprFunc(ex));
+			DestroyValue(&stack[sp - 1]);
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp - 1);
+				ASC_FREE(stack);
+				return 5;
+			}
+			stack[sp - 1] = value;
+			break;
+		case e_uminus:
+			if(sp < 1){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 6;
+			}
+			value = NegateValue(stack[sp - 1]);
+			DestroyValue(&stack[sp - 1]);
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp - 1);
+				ASC_FREE(stack);
+				return 7;
+			}
+			stack[sp - 1] = value;
+			break;
+		case e_plus:
+		case e_minus:
+		case e_times:
+		case e_divide:
+		case e_power:
+		case e_ipower:
+			if(sp < 2){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 8;
+			}
+			switch(ExprType(ex)){
+			case e_plus:
+				value = AddValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_minus:
+				value = SubtractValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_times:
+				value = MultiplyValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_divide:
+				value = DivideValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			case e_power:
+			case e_ipower:
+				value = PowerValues(stack[sp - 2], stack[sp - 1]);
+				break;
+			default:
+				value = CreateErrorValue(type_conflict);
+			}
+			DestroyValue(&stack[sp - 1]);
+			DestroyValue(&stack[sp - 2]);
+			sp -= 2;
+			if(value.t == error_value){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 9;
+			}
+			stack[sp++] = value;
+			break;
+		case e_less:
+		case e_greater:
+		case e_lesseq:
+		case e_greatereq:
+			if(sp != 2){
+				integrator_guard_destroy_stack(stack, sp);
+				ASC_FREE(stack);
+				return 10;
+			}
+			value = SubtractValues(stack[sp - 2], stack[sp - 1]);
+			DestroyValue(&stack[sp - 1]);
+			DestroyValue(&stack[sp - 2]);
+			if(value.t == real_value){
+				*residual = RealValue(value);
+			}else if(value.t == integer_value){
+				*residual = (double)IntegerValue(value);
+			}else{
+				DestroyValue(&value);
+				ASC_FREE(stack);
+				return 11;
+			}
+			DestroyValue(&value);
+			ASC_FREE(stack);
+			return 0;
+		default:
+			integrator_guard_destroy_stack(stack, sp);
+			ASC_FREE(stack);
+			return 12;
+		}
+	}
+
+	integrator_guard_destroy_stack(stack, sp);
+	ASC_FREE(stack);
+	return 13;
+}
 
 static int integrator_report_initial_status_failure(const slv_status_t *status, int presolve);
 
@@ -181,7 +398,9 @@ IntegratorSystem *integrator_new(slv_system_t slvsys, struct Instance *inst){
 	sys->y = NULL;
 	sys->ydot = NULL;
 	sys->obs = NULL;
+	sys->observed_instances = NULL;
 	sys->n_y = 0;
+	sys->n_observed_instances = 0;
 	sys->initial_mode_prepared = 0;
 	return sys;
 }
@@ -213,6 +432,7 @@ void integrator_free(IntegratorSystem *sys){
 	if(sys->y != NULL)ASC_FREE(sys->y);
 	if(sys->ydot != NULL)ASC_FREE(sys->ydot);
 	if(sys->obs != NULL)ASC_FREE(sys->obs);
+	if(sys->observed_instances != NULL)ASC_FREE(sys->observed_instances);
 
 	slv_destroy_parms(&(sys->params));
 
@@ -1219,15 +1439,28 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   struct Integ_var_t *v1,*v2;
   long half,i,len;
   int happy=1;
+  int solver_index;
   char *varname1, *varname2;
 
   asc_assert(sys->system!=NULL);
 
-  if(strcmp(slv_solver_name(slv_get_selected_solver(sys->system)),"QRSlv")!=0){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"System must have solver 'QRSlv' assigned to it before integration");
-	return 2;
+  solver_index = slv_get_selected_solver(sys->system);
+  if(solver_index < 0 || strcmp(slv_solver_name(solver_index),"QRSlv")!=0){
+    int qrslv_index;
+    if(package_load("qrslv", NULL) != 0){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "Unable to load QRSlv for ODE integration analysis");
+	  return 2;
+    }
+    qrslv_index = slv_lookup_client("QRSlv");
+    if(qrslv_index < 0 || slv_select_solver(sys->system, qrslv_index) == -1){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "QRSlv is unavailable for ODE integration analysis");
+	  return 2;
+    }
+    solver_index = qrslv_index;
   }
-  MSG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
+  MSG("Checked that NLA solver is set to '%s'",slv_solver_name(solver_index));
 
   if(slv_get_num_solvers_bnds(sys->system) > 0 || slv_get_num_solvers_whens(sys->system) > 0){
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
@@ -1448,9 +1681,14 @@ static void integrator_clear_analysis(IntegratorSystem *sys){
     ASC_FREE(sys->obs);
     sys->obs = NULL;
   }
+  if(sys->observed_instances != NULL){
+    ASC_FREE(sys->observed_instances);
+    sys->observed_instances = NULL;
+  }
   sys->x = NULL;
   sys->n_y = 0;
   sys->n_obs = 0;
+  sys->n_observed_instances = 0;
   sys->nstates = 0;
   sys->nderivs = 0;
 }
@@ -2081,6 +2319,96 @@ struct var_variable *integrator_get_observed_var(IntegratorSystem *sys, const lo
 	asc_assert(i>=0);
 	asc_assert(i<sys->n_obs);
 	return sys->obs[i];
+}
+
+int integrator_set_observed_instances(IntegratorSystem *sys, struct Instance **instances, int n){
+	int i;
+	asc_assert(sys != NULL);
+
+	if(sys->observed_instances != NULL){
+		ASC_FREE(sys->observed_instances);
+		sys->observed_instances = NULL;
+		sys->n_observed_instances = 0;
+	}
+
+	if(instances == NULL || n <= 0){
+		return 0;
+	}
+
+	sys->observed_instances = ASC_NEW_ARRAY(struct Instance *, n);
+	if(sys->observed_instances == NULL){
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		sys->observed_instances[i] = instances[i];
+	}
+	sys->n_observed_instances = n;
+	return 0;
+}
+
+int integrator_get_num_observed_instances(IntegratorSystem *sys){
+	asc_assert(sys != NULL);
+	if(sys->observed_instances != NULL){
+		return sys->n_observed_instances;
+	}
+	return sys->n_obs;
+}
+
+struct Instance *integrator_get_observed_instance(IntegratorSystem *sys, const long i){
+	asc_assert(sys != NULL);
+	asc_assert(i >= 0);
+	if(sys->observed_instances != NULL){
+		asc_assert(i < sys->n_observed_instances);
+		return sys->observed_instances[i];
+	}
+	asc_assert(i < sys->n_obs);
+	return (struct Instance *)var_instance(sys->obs[i]);
+}
+
+static int integrator_instance_value(struct Instance *inst, struct value_t *value){
+	asc_assert(value != NULL);
+	if(inst == NULL){
+		*value = CreateErrorValue(undefined_value);
+		return 1;
+	}
+	if(!AtomAssigned(inst)){
+		*value = CreateErrorValue(undefined_value);
+		return 1;
+	}
+	switch(InstanceKind(inst)){
+	case REAL_INST:
+	case REAL_ATOM_INST:
+	case REAL_CONSTANT_INST:
+		*value = CreateRealValue(RealAtomValue(inst), RealAtomDims(inst), 0);
+		return 0;
+	case BOOLEAN_INST:
+	case BOOLEAN_ATOM_INST:
+	case BOOLEAN_CONSTANT_INST:
+		*value = CreateBooleanValue(GetBooleanAtomValue(inst), 0);
+		return 0;
+	case INTEGER_INST:
+	case INTEGER_ATOM_INST:
+	case INTEGER_CONSTANT_INST:
+		*value = CreateIntegerValue(GetIntegerAtomValue(inst), 0);
+		return 0;
+	case SYMBOL_INST:
+	case SYMBOL_ATOM_INST:
+	case SYMBOL_CONSTANT_INST:
+		*value = CreateSymbolValue(GetSymbolAtomValue(inst), 0);
+		return 0;
+	default:
+		*value = CreateErrorValue(type_conflict);
+		return 2;
+	}
+}
+
+int integrator_get_observation_value(IntegratorSystem *sys, const long i, struct value_t *value){
+	struct Instance *inst;
+	if(sys == NULL || value == NULL){
+		return 1;
+	}
+	inst = integrator_get_observed_instance(sys, i);
+	return integrator_instance_value(inst, value);
 }
 
 /**

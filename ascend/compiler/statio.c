@@ -600,6 +600,9 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
   case SOLVER:
   	FPRINTF(f,"SOLVER %s;\n",s->v.solver.name);
 	break;
+  case INTEGRATOR:
+	FPRINTF(f,"INTEGRATOR %s;\n",s->v.integrator.name);
+	break;
   case OPTION:
   	FPRINTF(f,"OPTION %s ",s->v.option.name);
 	WriteExpr(f,s->v.option.rhs);
@@ -613,9 +616,28 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
 	}
 	FPRINTF(f,";\n");
 	break;
+  case INTEGRATE:
+	FPRINTF(f,"INTEGRATE FROM ");
+	WriteExpr(f,s->v.integrate.start);
+	FPRINTF(f," TO ");
+	WriteExpr(f,s->v.integrate.stop);
+	FPRINTF(f," STEPS %ld;\n",s->v.integrate.steps);
+	break;
+  case OBSERVE:
+	FPRINTF(f,"OBSERVE ");
+	if (s->v.observe.obsvars != NULL) {
+		WriteVariableList(f,s->v.observe.obsvars);
+	}
+	if (s->v.observe.name != NULL) {
+		FPRINTF(f," AS %s",SCP(s->v.observe.name));
+	}
+	FPRINTF(f,";\n");
+	break;
   case STUDY:
 	FPRINTF(f,"STUDY ");
-	WriteVariableList(f,s->v.study.obsvars);
+	if (s->v.study.obsvars != NULL) {
+		WriteVariableList(f,s->v.study.obsvars);
+	}
 	if (s->v.study.vary != NULL) {
 		FPRINTF(f," VARY ");
 		WriteName(f,s->v.study.vary);

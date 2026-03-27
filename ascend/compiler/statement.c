@@ -262,8 +262,11 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case FIX:
     case FREE:
     case SOLVER:
+    case INTEGRATOR:
     case OPTION:
     case SOLVE:
+    case INTEGRATE:
+    case OBSERVE:
     case STUDY:
     case DELETESYSTEM:
     case RUN:
@@ -508,6 +511,13 @@ struct Statement *CreateSOLVER(CONST char *solvername){
 	return result;
 }
 
+struct Statement *CreateINTEGRATOR(CONST char *integratorname){
+	struct Statement *result;
+	result=create_statement_here(INTEGRATOR);
+	result->v.integrator.name = integratorname;
+	return result;
+}
+
 struct Statement *CreateOPTION(CONST char *optname, struct Expr *rhs){
 	struct Statement *result;
 	result=create_statement_here(OPTION);
@@ -520,6 +530,23 @@ struct Statement *CreateSOLVE(struct Name *target){
 	struct Statement *result;
 	result=create_statement_here(SOLVE);
 	result->v.solve.target = target;
+	return result;
+}
+
+struct Statement *CreateINTEGRATE(struct Expr *start, struct Expr *stop, long steps){
+	struct Statement *result;
+	result = create_statement_here(INTEGRATE);
+	result->v.integrate.start = start;
+	result->v.integrate.stop = stop;
+	result->v.integrate.steps = steps;
+	return result;
+}
+
+struct Statement *CreateOBSERVE(struct VariableList *obsvars, symchar *name){
+	struct Statement *result;
+	result = create_statement_here(OBSERVE);
+	result->v.observe.obsvars = obsvars;
+	result->v.observe.name = name;
 	return result;
 }
 
@@ -1279,6 +1306,10 @@ void DestroyStatement(struct Statement *s)
         s->v.solver.name = NULL;
         break;
 
+      case INTEGRATOR:
+        s->v.integrator.name = NULL;
+        break;
+
       case OPTION:
         s->v.option.name = NULL;
         DestroyExprList(s->v.option.rhs);
@@ -1287,6 +1318,20 @@ void DestroyStatement(struct Statement *s)
       case SOLVE:
         DestroyName(s->v.solve.target);
         s->v.solve.target = NULL;
+        break;
+
+      case INTEGRATE:
+        DestroyExprList(s->v.integrate.start);
+        DestroyExprList(s->v.integrate.stop);
+        s->v.integrate.start = NULL;
+        s->v.integrate.stop = NULL;
+        s->v.integrate.steps = 0;
+        break;
+
+      case OBSERVE:
+        DestroyVariableList(s->v.observe.obsvars);
+        s->v.observe.obsvars = NULL;
+        s->v.observe.name = NULL;
         break;
 
       case STUDY:
@@ -1527,6 +1572,10 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.solver.name = s->v.solver.name;
     break;
 
+  case INTEGRATOR:
+    result->v.integrator.name = s->v.integrator.name;
+    break;
+
   case OPTION:
     result->v.option.name = s->v.option.name;
     result->v.option.rhs = CopyExprList(s->v.option.rhs);
@@ -1534,6 +1583,17 @@ struct Statement *CopyToModify(struct Statement *s)
 
   case SOLVE:
     result->v.solve.target = CopyName(s->v.solve.target);
+    break;
+
+  case INTEGRATE:
+    result->v.integrate.start = CopyExprList(s->v.integrate.start);
+    result->v.integrate.stop = CopyExprList(s->v.integrate.stop);
+    result->v.integrate.steps = s->v.integrate.steps;
+    break;
+
+  case OBSERVE:
+    result->v.observe.obsvars = CopyVariableList(s->v.observe.obsvars);
+    result->v.observe.name = s->v.observe.name;
     break;
 
   case STUDY:
@@ -1627,8 +1687,11 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case FIX:
   case FREE:
   case SOLVER:
+  case INTEGRATOR:
   case OPTION:
   case SOLVE:
+  case INTEGRATE:
+  case OBSERVE:
   case STUDY:
   case DELETESYSTEM:
   case ASSERT:
@@ -1678,8 +1741,11 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case FIX:
   case FREE:
   case SOLVER:
+  case INTEGRATOR:
   case OPTION:
   case SOLVE:
+  case INTEGRATE:
+  case OBSERVE:
   case STUDY:
   case DELETESYSTEM:
   case ASSERT:
@@ -1731,8 +1797,11 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case FIX:
   case FREE:
   case SOLVER:
+  case INTEGRATOR:
   case OPTION:
   case SOLVE:
+  case INTEGRATE:
+  case OBSERVE:
   case STUDY:
   case DELETESYSTEM:
   case ASSERT:
@@ -2299,6 +2368,42 @@ struct Name *SolveStatTargetF(CONST struct Statement *s){
 	assert(s!=NULL);
 	assert(s->t==SOLVE);
 	return s->v.solve.target;
+}
+
+CONST char *IntegratorStatNameF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==INTEGRATOR);
+	return s->v.integrator.name;
+}
+
+struct Expr *IntegrateStatStartF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==INTEGRATE);
+	return s->v.integrate.start;
+}
+
+struct Expr *IntegrateStatStopF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==INTEGRATE);
+	return s->v.integrate.stop;
+}
+
+long IntegrateStatStepsF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==INTEGRATE);
+	return s->v.integrate.steps;
+}
+
+struct VariableList *ObserveStatObservedF(CONST struct Statement *s){
+	assert(s != NULL);
+	assert(s->t == OBSERVE);
+	return s->v.observe.obsvars;
+}
+
+symchar *ObserveStatNameF(CONST struct Statement *s){
+	assert(s != NULL);
+	assert(s->t == OBSERVE);
+	return s->v.observe.name;
 }
 
 struct VariableList *StudyStatObservedF(CONST struct Statement *s){
@@ -3068,8 +3173,29 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareNames(RunStatAccess(s1),RunStatAccess(s2));
+  case INTEGRATOR:
+    return strcmp(IntegratorStatName(s1), IntegratorStatName(s2));
   case SOLVE:
     return CompareNames(SolveStatTarget(s1),SolveStatTarget(s2));
+  case INTEGRATE:
+    ctmp = CompareExprs(IntegrateStatStart(s1), IntegrateStatStart(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CompareExprs(IntegrateStatStop(s1), IntegrateStatStop(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (IntegrateStatSteps(s1) == IntegrateStatSteps(s2)) {
+      return 0;
+    }
+    return (IntegrateStatSteps(s1) > IntegrateStatSteps(s2)) ? 1 : -1;
+  case OBSERVE:
+    ctmp = CompareVariableLists(ObserveStatObserved(s1), ObserveStatObserved(s2));
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    return CmpSymchar(ObserveStatName(s1), ObserveStatName(s2));
   case STUDY:
     ctmp = CompareVariableLists(StudyStatObserved(s1),StudyStatObserved(s2));
     if (ctmp != 0) {

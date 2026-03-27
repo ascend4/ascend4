@@ -7,6 +7,7 @@
 #include "idaio.h"
 #include "idaboundary.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
@@ -23,8 +24,143 @@
 #include <ascend/system/slv_common.h>
 #include <ascend/system/logrel.h>
 #include <ascend/system/rel.h>
+#include <ascend/system/system_impl.h>
 
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/packages.h>
+
+static int ida_collect_active_guardroots_in_when(struct w_when *when, struct gl_list_t *roots, struct gl_list_t *contexts){
+	struct gl_list_t *cases;
+	struct Instance *wheninst;
+	struct Instance *context;
+	unsigned long c, ncases;
+
+	if(when == NULL || roots == NULL || contexts == NULL){
+		return 1;
+	}
+
+	wheninst = (struct Instance *)when->instance;
+	context = wheninst != NULL ? InstanceParent(wheninst, 1) : NULL;
+	if(context == NULL){
+		context = wheninst;
+	}
+
+	cases = when->cases;
+	if(cases == NULL){
+		return 0;
+	}
+
+	ncases = gl_length(cases);
+	for(c = 1; c <= ncases; ++c){
+		struct when_case *solver_case = (struct when_case *)gl_fetch(cases, c);
+		struct gl_list_t *reinit_list;
+		unsigned long r, nr;
+
+		if(solver_case == NULL || !(solver_case->flags & WHEN_CASE_ACTIVE)){
+			continue;
+		}
+
+		reinit_list = solver_case->reinits;
+		if(reinit_list != NULL){
+			nr = gl_length(reinit_list);
+			for(r = 1; r <= nr; ++r){
+				struct when_reinit *wr = (struct when_reinit *)gl_fetch(reinit_list, r);
+				const struct Expr *guard = wr != NULL ? wr->guard : NULL;
+				if(guard != NULL && integrator_direct_guard_rootable(guard)){
+					gl_append_ptr(roots, wr);
+					gl_append_ptr(contexts, context);
+				}
+			}
+		}
+
+		if(solver_case->whens != NULL){
+			unsigned long w, nw = gl_length(solver_case->whens);
+			for(w = 1; w <= nw; ++w){
+				struct w_when *nested = (struct w_when *)gl_fetch(solver_case->whens, w);
+				if(ida_collect_active_guardroots_in_when(nested, roots, contexts) != 0){
+					return 1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+int ida_refresh_event_roots(IntegratorSystem *integ){
+	IntegratorIdaData *enginedata;
+	struct gl_list_t *roots = NULL, *contexts = NULL;
+	struct w_when **whenlist;
+	int nwhens, i;
+
+	if(integ == NULL){
+		return 1;
+	}
+
+	enginedata = integrator_ida_enginedata(integ);
+	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
+	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
+
+	if(enginedata->guardroots != NULL){
+		ASC_FREE(enginedata->guardroots);
+		enginedata->guardroots = NULL;
+	}
+	if(enginedata->guardcontexts != NULL){
+		ASC_FREE(enginedata->guardcontexts);
+		enginedata->guardcontexts = NULL;
+	}
+	enginedata->nguardroots = 0;
+	enginedata->nroots = enginedata->nbnds;
+
+	roots = gl_create(4);
+	contexts = gl_create(4);
+	if(roots == NULL || contexts == NULL){
+		if(roots != NULL)gl_destroy(roots);
+		if(contexts != NULL)gl_destroy(contexts);
+		return 1;
+	}
+
+	whenlist = integ->system->whens.solver;
+	nwhens = integ->system->whens.snum;
+	for(i = 0; i < nwhens; ++i){
+		if(whenlist[i] != NULL && ida_collect_active_guardroots_in_when(whenlist[i], roots, contexts) != 0){
+			gl_destroy(roots);
+			gl_destroy(contexts);
+			return 1;
+		}
+	}
+
+	enginedata->nguardroots = (int)gl_length(roots);
+	if(enginedata->nguardroots > 0){
+		unsigned long n = (unsigned long)enginedata->nguardroots;
+		unsigned long k;
+		enginedata->guardroots = ASC_NEW_ARRAY(struct when_reinit *, n);
+		enginedata->guardcontexts = ASC_NEW_ARRAY(struct Instance *, n);
+		if(enginedata->guardroots == NULL || enginedata->guardcontexts == NULL){
+			if(enginedata->guardroots != NULL){
+				ASC_FREE(enginedata->guardroots);
+				enginedata->guardroots = NULL;
+			}
+			if(enginedata->guardcontexts != NULL){
+				ASC_FREE(enginedata->guardcontexts);
+				enginedata->guardcontexts = NULL;
+			}
+			gl_destroy(roots);
+			gl_destroy(contexts);
+			return 1;
+		}
+		for(k = 0; k < n; ++k){
+			enginedata->guardroots[k] = (struct when_reinit *)gl_fetch(roots, k + 1);
+			enginedata->guardcontexts[k] = (struct Instance *)gl_fetch(contexts, k + 1);
+		}
+	}
+
+	enginedata->nroots = enginedata->nbnds + enginedata->nguardroots;
+
+	gl_destroy(roots);
+	gl_destroy(contexts);
+	return 0;
+}
 
 int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem, realtype tout1);
 
@@ -68,6 +204,170 @@ static void ida_sync_discretes_to_instances(slv_system_t sys){
 			break;
 		}
 	}
+}
+
+static int ida_event_has_logical_solver(slv_system_t sys){
+	int selected;
+
+	if(sys == NULL){
+		return 0;
+	}
+
+	selected = slv_get_selected_solver(sys);
+	if(selected < 0){
+		return 0;
+	}
+
+	return strcmp(slv_solver_name(selected), "LRSlv") == 0;
+}
+
+int ida_hybrid_trace_enabled(void){
+	const char *env = getenv("ASCEND_HYBRID_TRACE");
+	return env != NULL && env[0] != '\0' && strcmp(env, "0") != 0;
+}
+
+void ida_hybrid_trace(IntegratorSystem *integ, const char *label, realtype t){
+	slv_system_t sys;
+	struct dis_discrete **dvars;
+	int ndvars, nwhens, i;
+	int selected;
+
+	if(!ida_hybrid_trace_enabled() || integ == NULL || integ->system == NULL){
+		return;
+	}
+
+	sys = integ->system;
+	selected = slv_get_selected_solver(sys);
+	FPRINTF(ASCERR, "[HYBRID] %s t=%.17g solver=%s\n",
+		label != NULL ? label : "(null)",
+		t,
+		selected >= 0 ? slv_solver_name(selected) : "(none)");
+
+	dvars = slv_get_solvers_dvar_list(sys);
+	ndvars = slv_get_num_solvers_dvars(sys);
+	for(i = 0; i < ndvars; ++i){
+		struct dis_discrete *dvar = dvars[i];
+		char *name;
+
+		if(dvar == NULL || !dis_inwhen(dvar)){
+			continue;
+		}
+		name = dis_make_name(sys, dvar);
+		FPRINTF(ASCERR, "[HYBRID]   dvar %s kind=%d value=%ld prev=%ld active=%d\n",
+			name != NULL ? name : "(unnamed)",
+			(int)dis_kind(dvar),
+			(long)dis_value(dvar),
+			(long)dis_previous_value(dvar),
+			(int)dis_active(dvar));
+		if(name != NULL){
+			ASC_FREE(name);
+		}
+	}
+
+	nwhens = sys->whens.snum;
+	for(i = 0; i < nwhens; ++i){
+		struct w_when *when = sys->whens.solver[i];
+		struct gl_list_t *cases;
+		unsigned long c, clen;
+		char *name;
+
+		if(when == NULL){
+			continue;
+		}
+		name = when_make_name(sys, when);
+		FPRINTF(ASCERR, "[HYBRID]   when %s\n", name != NULL ? name : "(unnamed)");
+		if(name != NULL){
+			ASC_FREE(name);
+		}
+		cases = when->cases;
+		clen = cases != NULL ? gl_length(cases) : 0;
+		for(c = 1; c <= clen; ++c){
+			struct when_case *wc = (struct when_case *)gl_fetch(cases, c);
+			if(wc != NULL && (wc->flags & WHEN_CASE_ACTIVE)){
+				FPRINTF(ASCERR, "[HYBRID]     active case #%ld local_case=%ld\n",
+					(long)c, (long)wc->case_number);
+			}
+		}
+	}
+}
+
+typedef struct IdaDiscreteSnapshotEntry{
+	struct dis_discrete *dvar;
+	int32 value;
+} IdaDiscreteSnapshotEntry;
+
+typedef struct IdaDiscreteSnapshot{
+	IdaDiscreteSnapshotEntry *entries;
+	int count;
+} IdaDiscreteSnapshot;
+
+static void ida_discrete_snapshot_clear(IdaDiscreteSnapshot *snapshot){
+	if(snapshot == NULL){
+		return;
+	}
+	if(snapshot->entries != NULL){
+		ASC_FREE(snapshot->entries);
+		snapshot->entries = NULL;
+	}
+	snapshot->count = 0;
+}
+
+static int ida_discrete_snapshot_capture(slv_system_t sys, IdaDiscreteSnapshot *snapshot){
+	struct dis_discrete **dvars;
+	int ndvars, i, count;
+
+	if(sys == NULL || snapshot == NULL){
+		return 1;
+	}
+
+	ida_discrete_snapshot_clear(snapshot);
+	dvars = slv_get_solvers_dvar_list(sys);
+	ndvars = slv_get_num_solvers_dvars(sys);
+
+	count = 0;
+	for(i = 0; i < ndvars; ++i){
+		if(dvars[i] != NULL && dis_inwhen(dvars[i])){
+			++count;
+		}
+	}
+
+	if(count == 0){
+		return 0;
+	}
+
+	snapshot->entries = ASC_NEW_ARRAY(IdaDiscreteSnapshotEntry, count);
+	if(snapshot->entries == NULL){
+		return 1;
+	}
+
+	snapshot->count = count;
+	count = 0;
+	for(i = 0; i < ndvars; ++i){
+		if(dvars[i] != NULL && dis_inwhen(dvars[i])){
+			snapshot->entries[count].dvar = dvars[i];
+			snapshot->entries[count].value = dis_value(dvars[i]);
+			++count;
+		}
+	}
+
+	return 0;
+}
+
+static int ida_discrete_snapshot_changed(const IdaDiscreteSnapshot *snapshot){
+	int i;
+
+	if(snapshot == NULL){
+		return 0;
+	}
+
+	for(i = 0; i < snapshot->count; ++i){
+		if(snapshot->entries[i].dvar != NULL
+			&& dis_value(snapshot->entries[i].dvar) != snapshot->entries[i].value){
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 #if IDA_BND_DEBUG
@@ -114,16 +414,25 @@ int some_dis_vars_changed(slv_system_t sys) {
 
 }
 
-void ida_setup_lrslv(IntegratorSystem *integ) {
+int ida_setup_lrslv(IntegratorSystem *integ) {
 	slv_parameters_t parameters;
 	slv_status_t status;
 	int i, num_params, slv_index;
 	char *pname;
 
 	/* Setup the logical solver */
+	if(package_load("lrslv", NULL) != 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to load LRSlv for IDA boundary handling");
+		return 1;
+	}
 	slv_index = slv_lookup_client("LRSlv");
+	if (slv_index < 0) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv is unavailable for IDA boundary handling");
+		return 2;
+	}
 	if (slv_select_solver(integ->system, slv_index) == -1) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error attempting to load LRSlv");
+		return 3;
 	}
 
 #ifdef IDA_BND_DEBUG
@@ -151,11 +460,14 @@ void ida_setup_lrslv(IntegratorSystem *integ) {
 		if (!status.converged) {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in logical solver at"
 					"intialisation");
+			return 4;
 		}
 
 		if(some_dis_vars_changed(integ->system)) {
-			ida_bnd_reanalyse(integ);
+			return ida_bnd_reanalyse(integ);
 		}
+
+	return 0;
 }
 
 int ida_bnd_reanalyse(IntegratorSystem *integ){
@@ -188,10 +500,8 @@ int ida_bnd_reanalyse(IntegratorSystem *integ){
 
 	integrator_ida_analyse(integ);
 	enginedata = integrator_ida_enginedata(integ);
-	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
-	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
-
-	return 0;
+	(void)enginedata;
+	return ida_refresh_event_roots(integ);
 }
 
 int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1){
@@ -201,6 +511,7 @@ int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1
 	struct gl_list_t *applied_reinits;
 	int need_consistency = 1;
 	int need_logical_solve = 0;
+	IdaDiscreteSnapshot dshot = {NULL, 0};
 
 	applied_reinits = gl_create(8);
 	if(applied_reinits == NULL){
@@ -213,22 +524,42 @@ int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1
 		int nreinits;
 
 		if(need_logical_solve){
-			slv_presolve(integ->system);
-			slv_solve(integ->system);
-			ida_sync_discretes_to_instances(integ->system);
-			slv_get_status(integ->system, &status);
-			if(!status.converged){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,
-					"Non-convergence in logical solver during event iteration");
+			int already_solved = 0;
+
+			if(ida_discrete_snapshot_capture(integ->system, &dshot) != 0){
 				gl_destroy(applied_reinits);
 				return 1;
 			}
-			if(some_dis_vars_changed(integ->system)){
+			if(!ida_event_has_logical_solver(integ->system)){
+				if(ida_setup_lrslv(integ) != 0){
+					ida_discrete_snapshot_clear(&dshot);
+					gl_destroy(applied_reinits);
+					return 1;
+				}
+				already_solved = 1;
+			}
+			if(!already_solved){
+				slv_presolve(integ->system);
+				slv_solve(integ->system);
+				ida_sync_discretes_to_instances(integ->system);
+				slv_get_status(integ->system, &status);
+				if(!status.converged){
+					ida_discrete_snapshot_clear(&dshot);
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,
+						"Non-convergence in logical solver during event iteration");
+					gl_destroy(applied_reinits);
+					return 1;
+				}
+			}
+			if(ida_discrete_snapshot_changed(&dshot)){
+				ida_discrete_snapshot_clear(&dshot);
 				if(ida_bnd_reanalyse(integ) != 0){
 					gl_destroy(applied_reinits);
 					return 1;
 				}
 				need_consistency = 1;
+			}else{
+				ida_discrete_snapshot_clear(&dshot);
 			}
 			need_logical_solve = 0;
 		}
@@ -266,12 +597,13 @@ int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1
 			}
 		}
 		need_consistency = 0;
-		need_logical_solve = 1;
+		need_logical_solve = ida_event_has_logical_solver(integ->system);
 	}
 
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,
 		"Event iteration did not converge after %d iterations (possible state cycle)",
 		max_iter);
+	ida_discrete_snapshot_clear(&dshot);
 	gl_destroy(applied_reinits);
 	return 1;
 }
@@ -376,6 +708,7 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 
 	int i, num_bnds;
 	int any_crossed = 0;
+	IdaDiscreteSnapshot dshot = {NULL, 0};
 
 	/* Flag the crossed boundary and update bnd_cond_states */
 	enginedata = integ->enginedata;
@@ -402,15 +735,26 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	}
 
 	/* solve the logical relations in the model, if possible */
-	slv_presolve(integ->system);
-	slv_solve(integ->system);
-	ida_sync_discretes_to_instances(integ->system);
-
-	/* Check for convergence */
-	slv_get_status(integ->system, &status);
-	if (!status.converged) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in logical solver.");
+	if(ida_discrete_snapshot_capture(integ->system, &dshot) != 0){
 		return -1;
+	}
+	if(num_bnds > 0 && !ida_event_has_logical_solver(integ->system)){
+		if(ida_setup_lrslv(integ) != 0){
+			ida_discrete_snapshot_clear(&dshot);
+			return -1;
+		}
+	}else{
+		slv_presolve(integ->system);
+		slv_solve(integ->system);
+		ida_sync_discretes_to_instances(integ->system);
+
+		/* Check for convergence */
+		slv_get_status(integ->system, &status);
+		if (!status.converged) {
+			ida_discrete_snapshot_clear(&dshot);
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in logical solver.");
+			return -1;
+		}
 	}
 
 	/* Reset the boundary flag */
@@ -421,12 +765,22 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 		}
 	}
 
+	/*
+	 * Emit the post-logical-settling state at the same event time. This lets
+	 * higher-level reporters distinguish event microstates from the simple
+	 * pre-event / post-event endpoints when requested.
+	 */
+	integrator_output_write(integ);
+	integrator_output_write_obs(integ);
+
 	/* update the main system if required */
-	if (some_dis_vars_changed(integ->system)) {
+	if (ida_discrete_snapshot_changed(&dshot)) {
+		ida_discrete_snapshot_clear(&dshot);
 		ida_bnd_reanalyse(integ);
 
 		return 1;
 	} else {
+		ida_discrete_snapshot_clear(&dshot);
 		/* Boundary crossing that has no effect on system */
 		return 0;
 	}

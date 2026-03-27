@@ -36,7 +36,14 @@ int some_dis_vars_changed(slv_system_t sys);
 /**
  * Setup LRSlv for use with IDA. Solve the problem at startup to check the analysis
  */
-void ida_setup_lrslv(IntegratorSystem *integ);
+int ida_setup_lrslv(IntegratorSystem *integ);
+
+/**
+ * Refresh the currently active IDA root list. This includes ordinary
+ * conditional boundaries and the currently active simple comparison guards
+ * from SWITCH TO statements.
+ */
+int ida_refresh_event_roots(IntegratorSystem *integ);
 
 /**
  * Throw out old values and reanalyse the system after a boundary crossing
@@ -86,5 +93,13 @@ void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vect
 */
 int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 		int *bnd_cond_states);
+
+/**
+ * Lightweight opt-in trace of hybrid event state for debugging and diagnostics.
+ * Enabled when the environment variable ASCEND_HYBRID_TRACE is set to a
+ * non-empty, non-zero value.
+ */
+int ida_hybrid_trace_enabled(void);
+void ida_hybrid_trace(IntegratorSystem *integ, const char *label, realtype t);
 
 #endif  /* ASC_IDA_H */

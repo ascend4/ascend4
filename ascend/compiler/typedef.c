@@ -1118,6 +1118,10 @@ enum typelinterr ProcessWhenCases(symchar *type,
 {
   enum typelinterr error_code;
   while (whenlist!=NULL){
+    error_code = DoRelations(type,WhenStatementList(whenlist),ft);
+    if (error_code != DEF_OKAY) {
+      return error_code;
+    }
     error_code = DoWhens(type,WhenStatementList(whenlist),ft);
     if (error_code != DEF_OKAY) {
       return error_code;

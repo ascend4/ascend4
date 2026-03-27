@@ -2,9 +2,6 @@ REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 
 (*
-    ideal_rebound
-    ==============
-
     This is a minimal, readable "bouncing ball without contact kinetics"
     example for ASCEND's current `REINIT(...)` / `pre(x)` support.
 
@@ -18,17 +15,23 @@ REQUIRE "atoms.a4l";
     the same first-order DAE shape already known to work well with the current
     IDA analysis path. In the default parameter set we set
 
-        g  = 0
+        g  > 0
         k1 = 0
         k2 = 0
+        e  < 1
 
-    so there is no gravitational forcing and no continuous contact force.
-    Between events the ball therefore moves with constant velocity, and the
-    only real "bounce" mechanism is the event-time reset.
+    so the ball falls under gravity and rebounds to a smaller height after
+    each impact. The only real "bounce" mechanism is the event-time reset.
+    There is no spring-damper contact model and no separate impact dynamics.
 
     This model is intended for IDA.
 *)
 MODEL ideal_rebound;
+
+    (* Discrete mode memory using the current selector syntax. *)
+    modes       IS_A set OF symbol_constant;
+    modes :== ['free', 'impact'];
+    mode        IS_A selector OF modes DEFAULT 'free';
 
     (* Continuous states and their derivatives. *)
     y           IS_A distance;      (* ball centre position *)
@@ -52,16 +55,16 @@ MODEL ideal_rebound;
     (* Independent variable and event memory. *)
     t, t_last_event IS_A time;
 
-    (* Boundary-driven event selector. *)
-    impact      IS_A boolean_var;
+    (* Boundary-driven event conditions. *)
+    hit_floor, descending IS_A boolean_var;
 
     (*
         Continuous dynamics:
 
         - `v = ydot` binds the named velocity to the derivative of position.
         - `m*a = F_net` is the acceleration equation for the second state.
-        - with the default values below, the force terms are all zero between
-          events, so the ball travels at constant velocity.
+        - with the default values below, the ball accelerates downward under
+          gravity between events.
     *)
     motion:     m * a = F_net;
     gravity:    F_g = -1 * m * g;
@@ -69,34 +72,47 @@ MODEL ideal_rebound;
     spring:     F_s = k1 * (r - y);
     kinematics: v = ydot;
     free_flight: F_net = F_g;
-    contact_stub: F_net = F_g + F_d + F_s;
 
 CONDITIONAL
     floor_contact: y <= r;
+    falling: v < 0 {m/s};
 END CONDITIONAL;
 
-    impact == SATISFIED(floor_contact, 1e-8 {m});
+    hit_floor == SATISFIED(floor_contact, 1e-8 {m});
+    descending == SATISFIED(falling, 1e-8 {m/s});
 
-WHEN(impact)
-    CASE TRUE:
+WHEN(mode)
+    CASE 'free':
+        (*
+            While descending toward the floor we remain in free flight.
+            The switch to `impact` is triggered when the floor-contact event
+            is detected on a downward crossing.
+        *)
+        SWITCH TO 'impact' IF hit_floor AND descending;
+    CASE 'impact':
         (*
             Event-time reset:
 
             - `pre(v)` is the velocity immediately before the event.
             - the post-event velocity is the reflected value.
             - we also store the event time for later inspection.
+
+            The free-flight equations remain globally active; this mode only
+            controls the event-time action and the immediate switch back to
+            `free`.
         *)
-        USE contact_stub;
         REINIT(v, -e * pre(v));
         REINIT(t_last_event, t);
-    CASE FALSE:
-        USE free_flight;
+        SWITCH TO 'free' IF TRUE;
 END WHEN;
 
 METHODS
     METHOD on_load;
         RUN ode_init;
         RUN values;
+        OBSERVE t_last_event, v, y, mode;
+        INTEGRATOR IDA;
+        INTEGRATE FROM 0 {s} TO 3 {s} STEPS 60;
 
         (*
             `t_last_event` is inferred as a real-valued event-memory
@@ -113,32 +129,46 @@ METHODS
         v.ode_id   := 2; a.ode_id   := 2;
 
         t.ode_type := -1;
+
+        (*
+            Provide a useful default observation set for the GUI integrator
+            reporter. The integrator reporter already prepends the
+            independent variable, so we do not observe `t` here.
+
+            This gives an immediately plottable trajectory without requiring
+            the user to configure an Observer first.
+        *)
+        y.obs_id := 3;
+        v.obs_id := 2;
+        t_last_event.obs_id := 1;
     END ode_init;
 
     METHOD values;
         FIX m, g, r, k1, k2, e;
 
         m  := 1 {kg};
-        g  := 0 {m/s^2};
+        g  := 9.81 {m/s^2};
         r  := 1 {m};
         k1 := 0 {N/m};
         k2 := 0 {N*s/m};
-        e  := 1;
+        e  := 0.8;
 
         (*
-            The default initial condition gives a single clean reflection:
+            The default initial condition gives a visible decaying bounce:
 
-            - the ball starts at `y = 2 m`
-            - it moves downward at `1 m/s`
-            - it reaches the floor at `t = 1 s`
-            - after the event it moves upward at `1 m/s`
+            - the ball starts at rest above the floor
+            - gravity accelerates it downward
+            - each impact applies `v+ = -e * v-`
+            - because `e < 1`, successive bounce heights decrease
         *)
-        y := 2 {m};
-        v := -1 {m/s};
-        a := 0 {m/s^2};
+        y := 2.5 {m};
+        y.lower_bound := -1e20 {m};
+        v := 0 {m/s};
+        a := -9.81 {m/s^2};
 
         t := 0 {s};
         t_last_event := -1 {s};
-        impact := FALSE;
+        hit_floor := FALSE;
+        descending := FALSE;
     END values;
 END ideal_rebound;
