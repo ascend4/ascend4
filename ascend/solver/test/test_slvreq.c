@@ -959,6 +959,59 @@ static void test_slvreq_integrate_with_typed_observe_default(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_slvreq_observe_range_expands(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test16.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test16"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test16"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.integratorname[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	S.observe_count = 0;
+	S.integrate_count = 0;
+	S.observe_n_observed = 0;
+	S.observe_name[0] = '\0';
+	S.observe_obs0[0] = '\0';
+	S.observe_obs1[0] = '\0';
+	{
+		SlvReqHooks hooks = {
+			.do_observe_fn = &slvreq_c_do_observe,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.observe_count, 1);
+	CU_ASSERT_EQUAL(S.observe_n_observed, 2);
+	CU_ASSERT_STRING_EQUAL(S.observe_obs0, "x[1]");
+	CU_ASSERT_STRING_EQUAL(S.observe_obs1, "x[2]");
+
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
 static void test_slvreq_study_log(void){
 	struct module_t *m;
 	int status;
@@ -1382,6 +1435,7 @@ cleanup:
 	T(slvreq_integrate_with_observe_default) \
 	T(slvreq_integrator_option_with_integrate) \
 	T(slvreq_integrate_with_typed_observe_default) \
+	T(slvreq_observe_range_expands) \
 	T(slvreq_study_log) \
 	T(slvreq_study_ratio) \
 	T(slvreq_highs_options) \

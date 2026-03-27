@@ -682,6 +682,73 @@ ResolveStudyInstance(struct procFrame *fm, struct Statement *stat, CONST struct 
 }
 
 static int
+AppendObservedInstances(struct procFrame *fm, struct Statement *stat, CONST struct Name *name,
+		const char *stmtkind, const char *what, struct gl_list_t *result)
+{
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+	struct gl_list_t *instances = FindInstances(fm->i, (struct Name *)name, &err);
+	const char *errstr = NULL;
+	unsigned long i, len;
+
+	if(instances==NULL){
+		errstr = "unknown error";
+		fm->ErrNo = Proc_bad_name;
+	}
+	switch(rel_errorlist_get_find_error(&err)){
+		case unmade_instance: errstr = "unmade instance"; fm->ErrNo = Proc_instance_not_found; break;
+		case undefined_instance: errstr = "undefined instance"; fm->ErrNo = Proc_name_not_found; break;
+		case impossible_instance: errstr = "impossible instance"; fm->ErrNo = Proc_illegal_name_use; break;
+		case correct_instance: break;
+	}
+	if(errstr){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid %s %s (%s)",stmtkind,what,errstr);
+		if(instances != NULL){
+			gl_destroy(instances);
+		}
+		fm->flow = FrameError;
+		return 1;
+	}
+
+	len = gl_length(instances);
+	if(len < 1){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"%s %s must resolve to at least one instance",stmtkind,what);
+		gl_destroy(instances);
+		fm->ErrNo = Proc_bad_name;
+		fm->flow = FrameError;
+		return 1;
+	}
+
+	for(i = 1; i <= len; ++i){
+		struct Instance *inst = (struct Instance *)gl_fetch(instances,i);
+		switch(InstanceKind(inst)){
+			case REAL_INST:
+			case REAL_ATOM_INST:
+			case REAL_CONSTANT_INST:
+			case BOOLEAN_INST:
+			case BOOLEAN_ATOM_INST:
+			case BOOLEAN_CONSTANT_INST:
+			case INTEGER_INST:
+			case INTEGER_ATOM_INST:
+			case INTEGER_CONSTANT_INST:
+			case SYMBOL_INST:
+			case SYMBOL_ATOM_INST:
+			case SYMBOL_CONSTANT_INST:
+				gl_append_ptr(result, inst);
+				break;
+			default:
+				WriteStatementError(ASC_USER_ERROR,stat,1,"%s %s must resolve to scalar real, boolean, integer, or symbol instances",stmtkind,what);
+				gl_destroy(instances);
+				fm->ErrNo = Proc_illegal_type_use;
+				fm->flow = FrameError;
+				return 1;
+		}
+	}
+
+	gl_destroy(instances);
+	return 0;
+}
+
+static int
 EvaluateStudyRealExpr(struct procFrame *fm, struct Statement *stat, struct Expr *expr,
 		const char *what, const dim_type *expected, struct value_t *result)
 {
@@ -791,39 +858,30 @@ static void
 ExecuteInitObserve(struct procFrame *fm, struct Statement *stat){
 	SlvReqObserveRequest req;
 	CONST struct VariableList *vars;
+	struct gl_list_t *observed = NULL;
 	unsigned long index = 0;
 	int res;
 
-	req.n_observed = VariableListLength(ObserveStatObserved(stat));
-	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	req.n_observed = 0;
+	req.observed = NULL;
 	req.name = (ObserveStatName(stat) != NULL) ? SCP(ObserveStatName(stat)) : NULL;
+	observed = gl_create(VariableListLength(ObserveStatObserved(stat)) > 0 ? VariableListLength(ObserveStatObserved(stat)) : 1);
+	if(observed == NULL){
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		goto cleanup;
+	}
 
 	for(vars = ObserveStatObserved(stat); vars != NULL; vars = NextVariableNode(vars)){
-		struct Instance *obs = NULL;
-		if(ResolveStudyInstance(fm, stat, NamePointer(vars), "observed variable", &obs)){
+		if(AppendObservedInstances(fm, stat, NamePointer(vars), "OBSERVE", "target", observed)){
 			goto cleanup;
 		}
-		switch(InstanceKind(obs)){
-			case REAL_INST:
-			case REAL_ATOM_INST:
-			case REAL_CONSTANT_INST:
-			case BOOLEAN_INST:
-			case BOOLEAN_ATOM_INST:
-			case BOOLEAN_CONSTANT_INST:
-			case INTEGER_INST:
-			case INTEGER_ATOM_INST:
-			case INTEGER_CONSTANT_INST:
-			case SYMBOL_INST:
-			case SYMBOL_ATOM_INST:
-			case SYMBOL_CONSTANT_INST:
-				break;
-			default:
-				WriteStatementError(ASC_USER_ERROR,stat,1,"OBSERVE target must be scalar real, boolean, integer, or symbol");
-				fm->ErrNo = Proc_illegal_type_use;
-				fm->flow = FrameError;
-				goto cleanup;
-		}
-		req.observed[index++] = obs;
+	}
+
+	req.n_observed = gl_length(observed);
+	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	for(index = 0; index < req.n_observed; ++index){
+		req.observed[index] = (struct Instance *)gl_fetch(observed, index + 1);
 	}
 
 	res = slvreq_do_observe(fm->i, &req);
@@ -839,6 +897,9 @@ ExecuteInitObserve(struct procFrame *fm, struct Statement *stat){
 	fm->ErrNo = Proc_all_ok;
 
 cleanup:
+	if(observed != NULL){
+		gl_destroy(observed);
+	}
 	if(req.observed != NULL){
 		ASC_FREE(req.observed);
 	}
@@ -848,6 +909,7 @@ static void
 ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	SlvReqStudyRequest req;
 	CONST struct VariableList *vars;
+	struct gl_list_t *observed = NULL;
 	struct Instance *vary = NULL;
 	unsigned long index = 0;
 	int res;
@@ -856,8 +918,8 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	IVAL(req.lower);
 	IVAL(req.upper);
 	IVAL(req.value);
-	req.n_observed = VariableListLength(StudyStatObserved(stat));
-	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	req.n_observed = 0;
+	req.observed = NULL;
 	req.vary = NULL;
 	req.steps = StudyStatSteps(stat);
 	req.mode = (enum SlvReqStudyMode)StudyStatMode(stat);
@@ -865,33 +927,23 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	req.run_method = (StudyStatRunMethod(stat) != NULL) ? SCP(StudyStatRunMethod(stat)) : NULL;
 	req.now = StudyStatNow(stat);
 	req.filename = StudyStatFilename(stat);
+	observed = gl_create(VariableListLength(StudyStatObserved(stat)) > 0 ? VariableListLength(StudyStatObserved(stat)) : 1);
+	if(observed == NULL){
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		goto cleanup;
+	}
 
 	for(vars = StudyStatObserved(stat); vars != NULL; vars = NextVariableNode(vars)){
-		struct Instance *obs = NULL;
-		if(ResolveStudyInstance(fm, stat, NamePointer(vars), "observed variable", &obs)){
+		if(AppendObservedInstances(fm, stat, NamePointer(vars), "STUDY", "observed variable", observed)){
 			goto cleanup;
 		}
-		switch(InstanceKind(obs)){
-			case REAL_INST:
-			case REAL_ATOM_INST:
-			case REAL_CONSTANT_INST:
-			case BOOLEAN_INST:
-			case BOOLEAN_ATOM_INST:
-			case BOOLEAN_CONSTANT_INST:
-			case INTEGER_INST:
-			case INTEGER_ATOM_INST:
-			case INTEGER_CONSTANT_INST:
-			case SYMBOL_INST:
-			case SYMBOL_ATOM_INST:
-			case SYMBOL_CONSTANT_INST:
-				break;
-			default:
-				WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY observed variable must be scalar real, boolean, integer, or symbol");
-				fm->ErrNo = Proc_illegal_type_use;
-				fm->flow = FrameError;
-				goto cleanup;
-		}
-		req.observed[index++] = obs;
+	}
+
+	req.n_observed = gl_length(observed);
+	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	for(index = 0; index < req.n_observed; ++index){
+		req.observed[index] = (struct Instance *)gl_fetch(observed, index + 1);
 	}
 
 	if(StudyStatVary(stat) != NULL){
@@ -996,6 +1048,9 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 	fm->ErrNo = Proc_all_ok;
 
 cleanup:
+	if(observed != NULL){
+		gl_destroy(observed);
+	}
 	if(req.observed != NULL){
 		ASC_FREE(req.observed);
 	}
