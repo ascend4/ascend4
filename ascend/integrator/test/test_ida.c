@@ -305,11 +305,24 @@ static struct Instance *ida_child(struct Instance *root, const char *name){
 }
 
 static char *ida_capture_pantelides_report(slv_system_t sys){
-	char *buf = NULL;
-	size_t len = 0;
-	FILE *fp = open_memstream(&buf, &len);
+	FILE *fp;
+	long len;
+	char *buf;
+
+	fp = tmpfile();
 	CU_ASSERT_FATAL(fp != NULL);
 	CU_ASSERT_FATAL(0 == integrator_pantelides_advisory(sys, fp));
+	CU_ASSERT_FATAL(0 == fflush(fp));
+	CU_ASSERT_FATAL(0 == fseek(fp, 0, SEEK_END));
+	len = ftell(fp);
+	CU_ASSERT_FATAL(len >= 0);
+	buf = malloc((size_t)len + 1);
+	CU_ASSERT_FATAL(buf != NULL);
+	CU_ASSERT_FATAL(0 == fseek(fp, 0, SEEK_SET));
+	if(len > 0){
+		CU_ASSERT_FATAL((size_t)len == fread(buf, 1, (size_t)len, fp));
+	}
+	buf[len] = '\0';
 	CU_ASSERT_FATAL(0 == fclose(fp));
 	CU_ASSERT_FATAL(buf != NULL);
 	return buf;
