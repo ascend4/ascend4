@@ -55,6 +55,7 @@
 #include "extcall.h"
 #include "forvars.h"
 #include "exprs.h"
+#include "exprio.h"
 #include "nameio.h"
 #include "evaluate.h"
 #include "value_type.h"
@@ -370,6 +371,17 @@ static struct gl_list_t *CollectWhenReinitStatements(struct StatementList *sl){
 static void ReEvaluateSELECT(struct Instance *, unsigned long *,
                              struct Statement *, int, int *);
 static int ExecuteLNK(struct Instance *inst, struct Statement *statement);
+
+static CONST struct Expr *ConstraintStatementExpr(CONST struct Statement *statement){
+  switch (StatementType(statement)) {
+  case REL:
+    return RelationStatExpr(statement);
+  case LOGREL:
+    return LogicalRelStatExpr(statement);
+  default:
+    return NULL;
+  }
+}
 
 /*-----------------------------------------------------------------------------
 	...
@@ -2323,6 +2335,7 @@ static
 int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
 {
   struct value_t value;
+  CONST struct Expr *constraint_expr;
 
   IVAL(value);
 
@@ -2368,8 +2381,31 @@ int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
         DestroyValue(&value);
         return MPIOK;
       }else{
+        char *infix = NULL;
+        Asc_DString ds;
         DestroyValue(&value);
-        STATEMENT_ERROR(statement, "Arguments do not conform to requirements");
+        constraint_expr = ConstraintStatementExpr(statement);
+        Asc_DStringInit(&ds);
+        if (constraint_expr != NULL) {
+          WriteExprInfix2Str(&ds,constraint_expr);
+          infix = Asc_DStringResult(&ds);
+        } else {
+          Asc_DStringFree(&ds);
+        }
+        if (infix != NULL) {
+          WriteStatementError(ASC_PROG_ERR,statement,0,
+            "Parameter requirement evaluated FALSE for the supplied arguments. "
+            "Failed requirement: %s. "
+            "If this model is instantiated via REFINES, check the values assigned in the REFINES clause.",
+            infix
+          );
+          ASC_FREE(infix);
+        } else {
+          WriteStatementError(ASC_PROG_ERR,statement,0,
+            "Parameter requirement evaluated FALSE for the supplied arguments. "
+            "If this model is instantiated via REFINES, check the values assigned in the REFINES clause."
+          );
+        }
         return MPIBADREL;
       }
     }else{
@@ -17027,6 +17063,10 @@ struct Instance *NewInstantiate(symchar *type, symchar *name, int intset,
   ClearIteration();
   result = CreateSimulationInstance(def,name);
   root = NewRealInstantiate(def,intset);
+  if (root == NULL) {
+    DestroyInstance(result,NULL);
+    return NULL;
+  }
   LinkToParentByPos(result,root,1);
   if (g_ExtVariablesTable!=NULL) {
     SetSimulationExtVars(result,g_ExtVariablesTable);

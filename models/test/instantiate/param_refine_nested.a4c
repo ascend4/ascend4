@@ -51,3 +51,10 @@ MODEL outer_checked_refined_ok() WHERE (
 	n :== 2;
 );
 END outer_checked_refined_ok;
+
+MODEL outer_checked_refined_fail() WHERE (
+	n > 1;
+) REFINES outer_checked(
+	n :== 1;
+);
+END outer_checked_refined_fail;

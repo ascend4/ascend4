@@ -164,7 +164,51 @@ static void test_write(void){
 	errno=0;
 	memset(s,'\0',LEN);
 	CU_TEST(fread(s,1,LEN,tmp));
-	CU_TEST(0==strncmp(s,"B A AND C OR",LEN));
+	CU_TEST(0==strncmp(s,"B A AND C OR",strlen("B A AND C OR")));
+	rewind(tmp);
+
+	WriteExprInfix(tmp,C_or_AandB);
+	rewind(tmp);
+	errno=0;
+	memset(s,'\0',LEN);
+	CU_TEST(fread(s,1,LEN,tmp));
+	CU_TEST(0==strncmp(s,"((B AND A) OR C)",strlen("((B AND A) OR C)")));
+	rewind(tmp);
+
+	struct Expr *Asubexpr = JoinExprLists(
+		CreateVarExpr(CreateIdName(AddSymbol("A")))
+		,CreateOpExpr(e_subexpr)
+	);
+	WriteExprInfix(tmp,Asubexpr);
+	rewind(tmp);
+	errno=0;
+	memset(s,'\0',LEN);
+	CU_TEST(fread(s,1,LEN,tmp));
+	CU_TEST(0==strncmp(s,"(A)",strlen("(A)")));
+	rewind(tmp);
+
+	struct Expr *Aconst = JoinExprLists(
+		CreateVarExpr(CreateIdName(AddSymbol("A")))
+		,CreateOpExpr(e_const)
+	);
+	WriteExprInfix(tmp,Aconst);
+	rewind(tmp);
+	errno=0;
+	memset(s,'\0',LEN);
+	CU_TEST(fread(s,1,LEN,tmp));
+	CU_TEST(0==strncmp(s,"A",strlen("A")));
+	rewind(tmp);
+
+	struct Expr *Apar = JoinExprLists(
+		CreateVarExpr(CreateIdName(AddSymbol("A")))
+		,CreateOpExpr(e_par)
+	);
+	WriteExprInfix(tmp,Apar);
+	rewind(tmp);
+	errno=0;
+	memset(s,'\0',LEN);
+	CU_TEST(fread(s,1,LEN,tmp));
+	CU_TEST(0==strncmp(s,"A",strlen("A")));
 	rewind(tmp);
 
 	struct Expr *Ap357t35 = JoinExprLists(
