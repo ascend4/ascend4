@@ -50,14 +50,21 @@ static void test_param_refine_nested_direct_ok(void){
 }
 
 static void test_param_refine_nested_refined_bug(void){
-	/* Current compiler behaviour: nested parameterised submodels do not see
-	   refinement-assigned constants early enough for phase-1 instantiation.
-	   This test documents the bug without failing the suite outright. */
-	instantiate_case("outer_refined_bug", 1);
+	instantiate_case("outer_refined_bug", 0);
+}
+
+static void test_param_refine_nested_where_direct_ok(void){
+	instantiate_case("outer_checked_direct_ok", 0);
+}
+
+static void test_param_refine_nested_where_refined_ok(void){
+	instantiate_case("outer_checked_refined_ok", 0);
 }
 
 #define TESTS(T) \
 	T(param_refine_nested_direct_ok) \
-	T(param_refine_nested_refined_bug)
+	T(param_refine_nested_refined_bug) \
+	T(param_refine_nested_where_direct_ok) \
+	T(param_refine_nested_where_refined_ok)
 
 REGISTER_TESTS_SIMPLE(compiler_instantiate_param_refine, TESTS)

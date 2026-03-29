@@ -3048,6 +3048,70 @@ int MakeParameterInst(struct Instance *parent,
   return MPIOK;
 }
 
+static
+int BuildInstanceFromAbsorbedParameters(struct TypeDescription *d,
+                                        struct Instance **arginstptr)
+{
+  struct Instance *tmpinst;
+  struct StatementList *absorbed;
+  struct gl_list_t *args;
+  struct for_table_t *SavedForTable;
+  struct Statement *trigger;
+  int suberr;
+
+  asc_assert(d != NULL);
+  asc_assert(arginstptr != NULL);
+  *arginstptr = NULL;
+
+  absorbed = GetModelAbsorbedParameters(d);
+  if (StatementListLength(absorbed) == 0L) {
+    return MPIOK;
+  }
+
+  tmpinst = CreateModelInstance(d);
+  if (tmpinst == NULL) {
+    return MPIINSMEM;
+  }
+  args = gl_create(0L);
+  if (args == NULL) {
+    DestroyParameterInst(tmpinst);
+    return MPIINSMEM;
+  }
+
+  trigger = GetStatement(absorbed,1);
+  suberr = DigestArguments(
+    tmpinst,
+    args,
+    GetModelParameterList(d),
+    absorbed,
+    trigger
+  );
+  switch (suberr) {
+  case MPIOK:
+    break;
+  default:
+    ClearMPImem(args,NULL,tmpinst,NULL,NULL);
+    return suberr;
+  }
+
+  SavedForTable = GetEvaluationForTable();
+  SetEvaluationForTable(CreateForTable());
+  suberr = CheckWhereStatements(tmpinst,GetModelParameterWheres(d));
+  DestroyForTable(GetEvaluationForTable());
+  SetEvaluationForTable(SavedForTable);
+  switch (suberr) {
+  case MPIOK:
+    break;
+  default:
+    ClearMPImem(args,NULL,tmpinst,NULL,NULL);
+    return suberr;
+  }
+
+  ClearMPImem(args,NULL,NULL,NULL,NULL);
+  *arginstptr = tmpinst;
+  return MPIOK;
+}
+
 static int MPICheckWBTS(struct Instance *tmpinst, struct Statement *statement){
   struct gl_list_t *instances;
   unsigned long c,len;
@@ -16551,6 +16615,7 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
                                        struct Instance *oldresult)
 {
   struct Instance *result;
+  struct Instance *arginst = NULL;
   struct for_table_t *SavedForTable;
   SavedForTable = GetEvaluationForTable();
   SetEvaluationForTable(CreateForTable());
@@ -16563,7 +16628,17 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
   if (def!=NULL) { /* usual case */
     result = ShortCutMakeUniversalInstance(def);
     if (result==NULL) {
-      result = CreateModelInstance(def); /*need to account for absorbed here.*/
+      result = CreateModelInstance(def);
+      if (result != NULL
+          && GetModelParameterCount(def) == 0
+          && StatementListLength(GetModelAbsorbedParameters(def)) != 0L) {
+        if (BuildInstanceFromAbsorbedParameters(def,&arginst) != MPIOK) {
+          DestroyParameterInst(result);
+          result = NULL;
+        } else {
+          ConfigureInstFromArgs(result,arginst);
+        }
+      }
       /* at present, creating parameterized sims illegal */
     }
   }else{
@@ -16607,6 +16682,9 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
         a review protocol in place post instantiation. */
     }
     ClearList();
+  }
+  if (arginst != NULL) {
+    DestroyParameterInst(arginst);
   }
   DatasetCacheClear();
   DestroyForTable(GetEvaluationForTable());
