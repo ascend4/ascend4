@@ -20,6 +20,14 @@ MODEL outer(
 	child IS_A inner(n);
 END outer;
 
+MODEL outer_checked(
+	n IS_A integer_constant;
+) WHERE (
+	n > 1;
+);
+	child IS_A inner(n);
+END outer_checked;
+
 MODEL outer_direct_ok;
 	n IS_A integer_constant;
 	n :== 2;
@@ -30,3 +38,16 @@ MODEL outer_refined_bug() REFINES outer(
 	n :== 2;
 );
 END outer_refined_bug;
+
+MODEL outer_checked_direct_ok;
+	n IS_A integer_constant;
+	n :== 2;
+	o IS_A outer_checked(n);
+END outer_checked_direct_ok;
+
+MODEL outer_checked_refined_ok() WHERE (
+	n > 1;
+) REFINES outer_checked(
+	n :== 2;
+);
+END outer_checked_refined_ok;
