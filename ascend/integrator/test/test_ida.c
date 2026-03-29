@@ -1151,6 +1151,14 @@ static void test_initial_hier_decay(){
 	ida_cleanup(&testsys);
 }
 
+static void test_initial_hier_array_decay_build_failure(){
+	ida_expect_system_build_failure("test/ida/nested_array_independent.a4c", "ida_nested_array_decay_build_failure", 0);
+}
+
+static void test_initial_hier_array_decay_same_t_build_failure(){
+	ida_expect_system_build_failure("test/ida/nested_array_independent.a4c", "ida_nested_array_decay_same_t_build_failure", 0);
+}
+
 static void test_initial_dae(){
 	IdaTestSystem testsys;
 	struct Instance *root, *iy, *iz;
@@ -1245,6 +1253,8 @@ static void test_initial_alias_binding_bug(){
 	T(initial_decay) \
 	T(initial_shm) \
 	T(initial_hier_decay) \
+	T(initial_hier_array_decay_build_failure) \
+	T(initial_hier_array_decay_same_t_build_failure) \
 	T(initial_dae) \
 	T(initial_bad_overdetermined) \
 	T(initial_alias_binding_bug)
