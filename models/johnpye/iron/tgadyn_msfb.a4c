@@ -11,17 +11,21 @@ REQUIRE "johnpye/iron/tga.a4c";
 	and intended for integration with IDA.
 
 	This is a dynamic counterpart to johnpye/iron/tga.a4c:
-	- the same lumped freeboard + bed transport closure is retained;
+	- a discretised quasi-steady Maxwell-Stefan freeboard is retained;
+	- the bed transport closure remains lumped in this phase;
 	- the same three kineq-style reduction steps are retained;
 	- the gas side remains quasi-steady and algebraic;
 	- the solid extents xi1, xi2, xi3 are now true dynamic states.
 
-	The first target is not a full distributed bed model. It is a minimal
-	time-domain screening model that can reproduce reduction_degree(t) and
-	estimate t_RD50 for comparison with TGA data.
+	The first target is not a full distributed bed model. It upgrades only
+	the freeboard transport closure so that the measured freeboard effect can
+	be compared against a physically structured diffusion model while the bed
+	and particle ensemble remain lumped.
 *)
 
-MODEL tga_reduction_screen_dyn;
+MODEL tga_reduction_screen_dyn_msfb(
+	n_fb_segs IS_A integer_constant;
+);
 	steps "reduction reaction steps" IS_A set OF integer_constant;
 	steps :== [1..3]; 
 
@@ -38,7 +42,8 @@ MODEL tga_reduction_screen_dyn;
 	m_sample.lower_bound := -1 {kg};
 
 	eps_bed, tau_bed IS_A positive_factor;
-	k_fb_multiplier, k_bed_multiplier IS_A positive_factor;
+	L_mult, k_bed_multiplier IS_A positive_factor;
+	L_add IS_A distance;
 
 	(* Gas compositions *)
 	y_H2_bulk, y_H2O_bulk, y_Ar_bulk IS_A mole_fraction;
@@ -51,6 +56,8 @@ MODEL tga_reduction_screen_dyn;
 	T ALIASES tr.T;
 	p ALIASES tr.p;
 	D_screen, D_eff_bed IS_A diffusivity;
+	L_freeboard_eff IS_A distance;
+	fb IS_A freeboard_1d_stagnant_transport(n_fb_segs);
 
 	R_fb, R_bed, R_overall IS_A transport_resistance;
 	J_transport IS_A molar_flux;
@@ -89,7 +96,16 @@ MODEL tga_reduction_screen_dyn;
 
 	bulk_sum: y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
 
-	react_ar_eq: y_Ar_react = y_Ar_bulk;
+	Lfb_eff_eq: L_freeboard_eff = L_add + L_mult * L_freeboard;
+	fb_T_eq: fb.T = T;
+	fb_p_eq: fb.p = p;
+	fb_L_eq: fb.L = L_freeboard_eff;
+	fb_top_h2_eq: fb.y_H2_top = y_H2_bulk;
+	fb_top_h2o_eq: fb.y_H2O_top = y_H2O_bulk;
+	fb_flux_h2_eq: fb.N_H2 = J_transport;
+	fb_flux_h2o_eq: fb.N_H2O = -J_transport;
+
+	react_ar_eq: y_Ar_react = fb.y_Ar[n_fb_segs];
 	react_sum: y_H2O_react = 1 - y_Ar_react - y_H2_react;
 
 	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
@@ -115,15 +131,23 @@ MODEL tga_reduction_screen_dyn;
 		D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
 	Deffbed_eq: D_eff_bed = (eps_bed / tau_bed) * D_screen;
 
-	Rfb_eq: R_fb = L_freeboard / (k_fb_multiplier * D_screen);
 	Rbed_eq: R_bed = H_bed / (k_bed_multiplier * D_eff_bed);
-	Roverall_eq: R_overall = R_fb + R_bed;
+	Roverall_eq: R_overall * J_transport = c_tot * (y_H2_bulk - y_H2_react);
 
-	Jtrans_eq: R_overall * J_transport = c_tot * (y_H2_bulk - y_H2_react);
-
-	screen_fb_eq: TS_freeboard = J_reaction * R_fb / (c_tot * y_H2_bulk);
-	screen_bed_eq: TS_bed = J_reaction * R_bed / (c_tot * y_H2_bulk);
-	screen_overall_eq: TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
+	SELECT (n_fb_segs)
+	CASE 0:
+		Rfb_eq_zero: R_fb = 0 {s/m};
+		Jtrans_eq_zero: R_bed * J_transport = c_tot * (y_H2_bulk - y_H2_react);
+		screen_fb_eq_zero: TS_freeboard = 0;
+		screen_bed_eq_zero: TS_bed = J_reaction * R_bed / (c_tot * y_H2_bulk);
+		screen_overall_eq_zero: TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
+	OTHERWISE:
+		Rfb_eq: R_fb * J_transport = c_tot * (y_H2_bulk - fb.y_H2[n_fb_segs]);
+		Jtrans_eq: R_bed * J_transport = c_tot * (fb.y_H2[n_fb_segs] - y_H2_react);
+		screen_fb_eq: TS_freeboard = J_reaction * R_fb / (c_tot * y_H2_bulk);
+		screen_bed_eq: TS_bed = J_reaction * R_bed / (c_tot * fb.y_H2[n_fb_segs]);
+		screen_overall_eq: TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
+	END SELECT;
 
 	FOR r IN steps CREATE
 		kstep_eq[r]:
@@ -171,6 +195,7 @@ INITIAL
 
 METHODS
 	METHOD values;
+		RUN fb.values;
 		FIX T := 1073.15 {K};
 		FIX p := 1 {bar};
 		FIX A_crucible := 20 {mm^2};
@@ -182,14 +207,15 @@ METHODS
 
 		FIX eps_bed := 0.45;
 		FIX tau_bed := 3.0;
-			FIX k_fb_multiplier := 1.0;
-			FIX k_bed_multiplier := 2.0;
+		FIX L_mult := 1.0;
+		FIX L_add := 0 {mm};
+		FIX k_bed_multiplier := 2.0;
 
 		FIX y_H2_bulk := 0.8;
 		FIX y_H2O_bulk := 0.0;
 		y_Ar_bulk := 0.2;
-			y_H2_react := 0.75;
-			y_H2O_react := 0.05;
+		y_H2_react := 0.75;
+		y_H2O_react := 0.05;
 		y_Ar_react := 0.2;
 
 		FIX MW_Fe2O3 := 159.687 {g/g_mole};
@@ -236,6 +262,7 @@ METHODS
 		n_FeO.lower_bound := -1e-12 {mol};
 		n_Fe.lower_bound := -1e-12 {mol};
 		oxygen_remaining.lower_bound := -1e-9 {mol};
+		L_add.lower_bound := 0 {mm};
 
 		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
 		tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
@@ -255,6 +282,24 @@ METHODS
 		tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
 		tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
 		tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+		fb.tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
+		fb.tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
+		fb.tr.h2_ar.sigma_ij.lower_bound := -1 {m};
+		fb.tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
+		fb.tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
+		fb.tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
+		fb.tr.h2o_h2.T_star.lower_bound := -1e6;
+		fb.tr.h2o_ar.T_star.lower_bound := -1e6;
+		fb.tr.h2_ar.T_star.lower_bound := -1e6;
+		fb.tr.h2o_h2.Omega_D.lower_bound := -1e6;
+		fb.tr.h2o_ar.Omega_D.lower_bound := -1e6;
+		fb.tr.h2_ar.Omega_D.lower_bound := -1e6;
+		fb.tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
+		fb.tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
+		fb.tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
+		fb.tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
+		fb.tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+		fb.tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
 	END bound_self;
 
 	METHOD use_measured_bed_height;
@@ -303,16 +348,20 @@ METHODS
 		y_H2_react.obs_id := 3;
 		y_H2O_react.obs_id := 4;
 		J_transport.obs_id := 5;
-		rate_net[1].obs_id := 6;
-		rate_net[2].obs_id := 7;
-		rate_net[3].obs_id := 8;
-		xi[1].obs_id := 9;
-		xi[2].obs_id := 10;
-		xi[3].obs_id := 11;
-		n_Fe2O3.obs_id := 12;
-		n_Fe3O4.obs_id := 13;
-		n_FeO.obs_id := 14;
-		n_Fe.obs_id := 15;
+		FOR i IN [0..n_fb_segs] DO
+			fb.y_H2[i].obs_id := 6 + i;
+			fb.y_H2O[i].obs_id := 40 + i;
+		END FOR;
+		rate_net[1].obs_id := 18;
+		rate_net[2].obs_id := 19;
+		rate_net[3].obs_id := 20;
+		xi[1].obs_id := 21;
+		xi[2].obs_id := 22;
+		xi[3].obs_id := 23;
+		n_Fe2O3.obs_id := 24;
+		n_Fe3O4.obs_id := 25;
+		n_FeO.obs_id := 26;
+		n_Fe.obs_id := 27;
 	END observe_default;
 
 	METHOD observe_cli_default;
@@ -391,10 +440,8 @@ METHODS
 		FREE der(n_Fe2O3), der(n_Fe3O4), der(n_FeO), der(n_Fe);
 		RUN observe_default;
 		RUN observe_cli_default;
-		INTEGRATOR IDA;
-		INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
 	END on_load;
-END tga_reduction_screen_dyn;
+END tga_reduction_screen_dyn_msfb;
 
 (* vim: sw=4:noet:ts=4
 *)

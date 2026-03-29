@@ -181,6 +181,146 @@ METHODS
 END diffusion_h2o_h2_ar;
 
 
+MODEL freeboard_1d_stagnant_transport(
+	n_segs WILL_BE integer_constant;
+);
+	nodes IS_A set OF integer_constant;
+	nodes :== [0..n_segs];
+	faces IS_A set OF integer_constant;
+	faces :== [1..n_segs];
+
+	T IS_A temperature;
+	p IS_A pressure;
+	L IS_A distance;
+	dz IS_A distance;
+
+	z[nodes] IS_A distance;
+
+	c_tot IS_A molar_density;
+
+	y_H2_top, y_H2O_top, y_Ar_top IS_A mole_fraction;
+
+	y_H2[nodes] IS_A mole_fraction;
+	y_H2O[nodes] IS_A mole_fraction;
+	y_Ar[nodes] IS_A mole_fraction;
+
+	y_H2_face[faces] IS_A mole_fraction;
+	y_H2O_face[faces] IS_A mole_fraction;
+	y_Ar_face[faces] IS_A mole_fraction;
+
+	tr IS_A diffusion_h2o_h2_ar;
+	D_H2O_H2[faces] IS_A diffusivity;
+	D_H2O_Ar[faces] IS_A diffusivity;
+	D_H2_Ar[faces] IS_A diffusivity;
+
+	N_H2 IS_A molar_flux;
+	N_H2O IS_A molar_flux;
+	N_Ar IS_A molar_flux;
+
+	ctot_eq: c_tot = p / (1{GAS_C} * T);
+
+	tr_T: tr.T = T;
+	tr_p: tr.p = p;
+
+	top_sum_eq: y_Ar_top = 1 - y_H2_top - y_H2O_top;
+
+	SELECT (n_segs)
+	CASE 0:
+		dz_eq_zero: dz = 0 {mm};
+	OTHERWISE:
+		dz_eq: dz = L / n_segs;
+	END SELECT;
+
+	FOR i IN nodes CREATE
+		z_eqn[i]: z[i] = i * dz;
+		sum_y[i]: y_Ar[i] = 1 - y_H2[i] - y_H2O[i];
+	END FOR;
+
+	top_h2: y_H2[0] = y_H2_top;
+	top_h2o: y_H2O[0] = y_H2O_top;
+
+	FOR f IN faces CREATE
+		face_h2_eq[f]:
+			y_H2_face[f] = 0.5 * (y_H2[f - 1] + y_H2[f]);
+		face_h2o_eq[f]:
+			y_H2O_face[f] = 0.5 * (y_H2O[f - 1] + y_H2O[f]);
+		face_ar_eq[f]:
+			y_Ar_face[f] = 1 - y_H2_face[f] - y_H2O_face[f];
+
+		D_h2o_h2_eq[f]:
+			D_H2O_H2[f] = tr.D_H2O_H2;
+		D_h2o_ar_eq[f]:
+			D_H2O_Ar[f] = tr.D_H2O_Ar;
+		D_h2_ar_eq[f]:
+			D_H2_Ar[f] = tr.D_H2_Ar;
+
+		ms_h2[f]:
+			-c_tot * (y_H2[f] - y_H2[f - 1]) / dz
+			=
+			(y_H2O_face[f] * N_H2 - y_H2_face[f] * N_H2O) / D_H2O_H2[f]
+			+ (y_Ar_face[f] * N_H2 - y_H2_face[f] * N_Ar) / D_H2_Ar[f];
+		ms_h2o[f]:
+			-c_tot * (y_H2O[f] - y_H2O[f - 1]) / dz
+			=
+			(y_H2_face[f] * N_H2O - y_H2O_face[f] * N_H2) / D_H2O_H2[f]
+			+ (y_Ar_face[f] * N_H2O - y_H2O_face[f] * N_Ar) / D_H2O_Ar[f];
+	END FOR;
+
+	Nar_eq: N_Ar = -N_H2 - N_H2O;
+
+METHODS
+	METHOD values;
+		T := 900 {K};
+		p := 1 {bar};
+		L := 5 {mm};
+		y_H2_top := 0.8;
+		y_H2O_top := 0.0;
+
+		SWITCH (n_segs)
+		CASE 0:
+			y_H2[0] := y_H2_top;
+			y_H2O[0] := y_H2O_top;
+			y_Ar[0] := 1 - y_H2[0] - y_H2O[0];
+			z[0] := 0 {mm};
+		OTHERWISE:
+			FOR i IN nodes DO
+				y_H2[i] := y_H2_top - 0.03 * i / n_segs;
+				y_H2O[i] := y_H2O_top + 0.03 * i / n_segs;
+				y_Ar[i] := 1 - y_H2[i] - y_H2O[i];
+				z[i] := i * 1.0 * L / n_segs;
+			END FOR;
+			FOR f IN faces DO
+				y_H2_face[f] := 0.5 * (y_H2[f - 1] + y_H2[f]);
+				y_H2O_face[f] := 0.5 * (y_H2O[f - 1] + y_H2O[f]);
+				y_Ar_face[f] := 1 - y_H2_face[f] - y_H2O_face[f];
+				D_H2O_H2[f] := 7 {cm^2/s};
+				D_H2O_Ar[f] := 2 {cm^2/s};
+				D_H2_Ar[f] := 7 {cm^2/s};
+			END FOR;
+		END SWITCH;
+		tr.D_H2O_H2 := 7 {cm^2/s};
+		tr.D_H2O_Ar := 2 {cm^2/s};
+		tr.D_H2_Ar := 7 {cm^2/s};
+		N_H2 := 0.08 {mol/m^2/s};
+		N_H2O := -0.08 {mol/m^2/s};
+		N_Ar := 0 {mol/m^2/s};
+	END values;
+
+	METHOD specify;
+		FIX T, p, L, y_H2_top, y_H2O_top, N_H2, N_H2O;
+		FREE N_Ar;
+	END specify;
+
+	METHOD on_load;
+		RUN values;
+		RUN specify;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		SOLVE;
+	END on_load;
+END freeboard_1d_stagnant_transport;
+
+
 MODEL freeboard_1d_stagnant_kineq(
 	n_segs WILL_BE integer_constant;
 );
