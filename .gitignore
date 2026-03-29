@@ -15,6 +15,7 @@ coverage.info
 *.exe
 .scon*
 a4
+tmp/
 ascend/compiler/ascParse.c
 ascend/compiler/ascParse.h
 ascend/compiler/scanner.c
