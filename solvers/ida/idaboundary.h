@@ -24,6 +24,17 @@
 
 #include <ascend/integrator/integrator.h>
 
+enum ida_microstates_mode{
+	IDA_MICROSTATES_NONE = 0,
+	IDA_MICROSTATES_ENDPOINTS,
+	IDA_MICROSTATES_ALL
+};
+
+enum ida_microstates_emit_kind{
+	IDA_MICROSTATES_EVENT_ENDPOINT = 0,
+	IDA_MICROSTATES_EVENT_DETAIL
+};
+
 
 /*
  * Check to see if and of the system discrete variables have changed.
@@ -93,6 +104,9 @@ void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vect
 */
 int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 		int *bnd_cond_states);
+
+enum ida_microstates_mode ida_get_microstates_mode(IntegratorSystem *integ);
+int ida_output_write_obs_event(IntegratorSystem *integ, enum ida_microstates_emit_kind kind);
 
 /**
  * Lightweight opt-in trace of hybrid event state for debugging and diagnostics.

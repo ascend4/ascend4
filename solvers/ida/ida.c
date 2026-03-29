@@ -295,6 +295,7 @@ enum ida_parameters {
 	IDA_PARAM_PREC,
 	IDA_PARAM_ZENO_NCYCLES,
 	IDA_PARAM_ZENO_DURATION,
+	IDA_PARAM_MICROSTATES,
 	IDA_PARAMS_SIZE
 };
 
@@ -450,11 +451,56 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 			}, 1e-4, 0.0, 1e20}
 	);
 
+	slv_param_char(p,IDA_PARAM_MICROSTATES
+		,(SlvParameterInitChar) { {"microstates"
+				,"Event microstate reporting",2
+				,"Control same-time event reporting for IDA. 'none' suppresses"
+				" extra event rows, 'endpoints' emits pre/post-event endpoints,"
+				" and 'all' emits each event-time consistency state that IDA"
+				" settles through."
+			}, "endpoints"}, (char *[]) {"none","endpoints","all",NULL}
+	);
+
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
 
 	MSG("Created %d params", p->num_parms);
 
 	return 0;
+}
+
+enum ida_microstates_mode
+ida_get_microstates_mode(IntegratorSystem *integ){
+	const char *mode;
+
+	asc_assert(integ != NULL);
+	mode = SLV_PARAM_CHAR(&(integ->params), IDA_PARAM_MICROSTATES);
+	if(mode == NULL || 0 == strcmp(mode, "endpoints")){
+		return IDA_MICROSTATES_ENDPOINTS;
+	}
+	if(0 == strcmp(mode, "none")){
+		return IDA_MICROSTATES_NONE;
+	}
+	if(0 == strcmp(mode, "all")){
+		return IDA_MICROSTATES_ALL;
+	}
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,
+		"Unknown IDA microstates mode '%s'; using endpoints", mode);
+	return IDA_MICROSTATES_ENDPOINTS;
+}
+
+int
+ida_output_write_obs_event(IntegratorSystem *integ, enum ida_microstates_emit_kind kind){
+	enum ida_microstates_mode mode;
+
+	mode = ida_get_microstates_mode(integ);
+	if(mode == IDA_MICROSTATES_NONE){
+		return 1;
+	}
+	if(mode == IDA_MICROSTATES_ENDPOINTS && kind == IDA_MICROSTATES_EVENT_DETAIL){
+		return 1;
+	}
+	integrator_output_write(integ);
+	return integrator_output_write_obs(integ);
 }
 
 static int ida_prepare_event_window(IntegratorSystem *integ){
@@ -1379,18 +1425,20 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						integrator_set_t(integ, (double)tret);
 						integrator_set_y(integ, NV_DATA_S(yret));
 						integrator_set_ydot(integ, NV_DATA_S(ypret));
-						integrator_output_write(integ);
-						integrator_output_write_obs(integ);
+						ida_output_write_obs_event(integ, IDA_MICROSTATES_EVENT_ENDPOINT);
 						 ida_hybrid_trace(integ, "before_event_iterate", tret);
 
 							if (ida_bnd_event_iterate(integ, ida_mem, tout) != 0) {
 								statuscode = 1;
 								goto root_cleanup;
 							}
-						/* Then write the settled right-limit state at the same event time. */
+						/*
+						 * Then write the settled event-time state before the final
+						 * post-reinitialisation consistency solve. This is an
+						 * event microstate, not a simple pre/post-event endpoint.
+						 */
 						integrator_set_t(integ, (double)tret);
-						integrator_output_write(integ);
-						integrator_output_write_obs(integ);
+						ida_output_write_obs_event(integ, IDA_MICROSTATES_EVENT_DETAIL);
 						ida_hybrid_trace(integ, "after_event_iterate", integrator_get_t(integ));
 
 						/* Need to destroy and rebuild system */
@@ -1409,12 +1457,11 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 						ida_reinit_integrator(integ, ida_mem, tout);
 						/*
-						 * Emit the post-reinitialisation consistent state at the same
-						 * event time. Default CLI output collapses this back to
-						 * endpoints, while '--microstates all' can expose it.
+						 * Emit the final post-event consistent state at the same
+						 * event time. This is the natural "right endpoint" when
+						 * microstate output is limited to endpoints.
 						 */
-						integrator_output_write(integ);
-						integrator_output_write_obs(integ);
+						ida_output_write_obs_event(integ, IDA_MICROSTATES_EVENT_ENDPOINT);
 						/* n_y may have changed */
 						N_VDestroy_Serial(yret);
 						N_VDestroy_Serial(ypret);

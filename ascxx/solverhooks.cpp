@@ -932,6 +932,14 @@ SolverHooks::getObservedVars(Simulation *S) const{
 	return study_config.default_observed;
 }
 
+int
+SolverHooks::applyIntegratorConfig(Integrator *I, Simulation *S) const{
+	if(I == NULL || S == NULL){
+		return SLVREQ_INTEGRATE_INVALID_REQUEST;
+	}
+	return apply_stored_integrator_config(*I, get_integrator_config(S));
+}
+
 void
 SolverHooks::assign(Simulation *S){
 	S->setSolverHooks(this);

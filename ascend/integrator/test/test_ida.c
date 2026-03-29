@@ -56,8 +56,12 @@ typedef struct IdaTestSystemStruct{
 	IntegratorSystem *integ;
 } IdaTestSystem;
 
+static int g_test_ida_reporter_writeobs_count = 0;
+static int g_test_ida_reporter_count_enabled = 0;
+
 static int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
 	(void)integ;
+	g_test_ida_reporter_writeobs_count = 0;
 	return 0;
 }
 
@@ -68,6 +72,9 @@ static int test_ida_reporter_write(struct IntegratorSystemStruct *integ) {
 
 static int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ) {
 	(void)integ;
+	if(g_test_ida_reporter_count_enabled){
+		++g_test_ida_reporter_writeobs_count;
+	}
 	return 0;
 }
 
@@ -1025,6 +1032,43 @@ static void test_example_ideal_rebound_zeno_stop(){
 	ida_cleanup(&testsys);
 }
 
+static int ida_count_observed_rows_for_microstates(const char *value){
+	IdaTestSystem testsys;
+	int solve_res;
+	int count = -1;
+
+	if(ida_test_load("johnpye/dyn/ideal_rebound.a4c", "ideal_rebound", 1, &testsys)){
+		return -1;
+	}
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_set_char_option(testsys.integ, "microstates", value);
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 10);
+	g_test_ida_reporter_count_enabled = 1;
+	solve_res = integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1);
+	g_test_ida_reporter_count_enabled = 0;
+	CU_ASSERT_FATAL(0 == solve_res);
+	count = g_test_ida_reporter_writeobs_count;
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+	return count;
+}
+
+static void test_microstates_option_controls_event_output(){
+	int none_count;
+	int endpoints_count;
+	int all_count;
+
+	none_count = ida_count_observed_rows_for_microstates("none");
+	endpoints_count = ida_count_observed_rows_for_microstates("endpoints");
+	all_count = ida_count_observed_rows_for_microstates("all");
+
+	CU_TEST(none_count > 0);
+	CU_TEST(endpoints_count > none_count);
+	CU_TEST(all_count > endpoints_count);
+}
+
 static void test_high_index(){
 	IdaTestSystem testsys;
 
@@ -1226,6 +1270,7 @@ static void test_initial_alias_binding_bug(){
 	T(example_resting_rebound) \
 	T(example_overflowing_weir) \
 	T(example_lengthening_sawtooth) \
+	T(microstates_option_controls_event_output) \
 	T(high_index) \
 	T(pantelides_pendulum_high_index) \
 	T(pantelides_reactor_high_index) \

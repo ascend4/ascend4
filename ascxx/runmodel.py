@@ -191,6 +191,43 @@ def _filter_rows(rows, microstates):
 	return filtered
 
 
+def _integrator_has_param(integrator, name):
+	try:
+		for param in integrator.getParameters():
+			if param.getName() == name:
+				return True
+	except Exception:
+		return False
+	return False
+
+
+def _set_integrator_string_param_if_available(integrator, name, value):
+	try:
+		params = integrator.getParameters()
+	except Exception:
+		return False
+	for param in params:
+		if param.getName() == name:
+			if not param.isStr():
+				raise RuntimeError(f"Integrator parameter '{name}' is not string-valued.")
+			param.setStrValue(value)
+			integrator.setParameters(params)
+			return True
+	return False
+
+
+def _get_integrator_string_param_value(integrator, name):
+	try:
+		for param in integrator.getParameters():
+			if param.getName() == name:
+				if not param.isStr():
+					return None
+				return param.getStrValue()
+	except Exception:
+		return None
+	return None
+
+
 def _print_table(headers, rows):
 	table_rows = [[_format_cell(v) for v in row] for row in rows]
 	widths = [len(h) for h in headers]
@@ -315,7 +352,7 @@ class CliIntegratorReporter:
 		}
 		self.rows.append(row)
 
-	def build_report(self, microstates):
+	def build_report(self, microstates, legacy_filter=False):
 		indep = self.integrator.getIndependentVariable().getInstance()
 		time_units, _ = _get_units_info(indep)
 		time_label = self.integrator.getIndependentVariable().getName()
@@ -323,7 +360,8 @@ class CliIntegratorReporter:
 			time_label += f" [{time_units}]"
 		rows = list(self.rows)
 		_mark_event_rows(rows)
-		rows = _filter_rows(rows, microstates)
+		if legacy_filter:
+			rows = _filter_rows(rows, microstates)
 		return {
 			"time_label": time_label,
 			"columns": self.columns,
@@ -339,8 +377,10 @@ class CliSolverHooks:
 				ascpy.SolverHooks.__init__(self)
 
 			def setIntegrator(self, integratorname, sim):
-				self._owner.integrator_name = integratorname
-				return 0
+				res = ascpy.SolverHooks.setIntegrator(self, integratorname, sim)
+				if res == 0:
+					self._owner.integrator_name = integratorname
+				return res
 
 			def doObserve(self, request, sim):
 				return ascpy.SolverHooks.doObserve(self, request, sim)
@@ -405,10 +445,38 @@ def _configure_integrator_observed(sim, integrator):
 		integrator.addObservedInstance(inst)
 
 
+def _apply_stored_integrator_config(sim, integrator):
+	hooks = sim.getSolverHooks()
+	if hooks is None:
+		return
+	try:
+		res = hooks.applyIntegratorConfig(integrator, sim)
+	except Exception:
+		return
+	if res not in (None, 0):
+		raise RuntimeError("Failed to apply stored integrator options.")
+
+
 def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, output, plot, microstates):
 	sim.build()
 	integrator = ascpy.Integrator(sim)
 	integrator.setEngine(engine or DEFAULT_INTEGRATOR)
+	_apply_stored_integrator_config(sim, integrator)
+	engine_has_microstates = _integrator_has_param(integrator, "microstates")
+	legacy_microstate_filter = False
+	if microstates != "endpoints":
+		if engine_has_microstates:
+			_set_integrator_string_param_if_available(integrator, "microstates", microstates)
+		else:
+			legacy_microstate_filter = True
+			print(f"NOTE: engine '{integrator.getName()}' does not support a native 'microstates' option; using legacy CLI row filtering.")
+	effective_microstates = microstates
+	if engine_has_microstates:
+		param_value = _get_integrator_string_param_value(integrator, "microstates")
+		if param_value:
+			effective_microstates = param_value
+	if effective_microstates == "endpoints":
+		legacy_microstate_filter = True
 	integrator.findIndependentVar()
 	indep = integrator.getIndependentVariable()
 	indep_inst = indep.getInstance()
@@ -438,7 +506,7 @@ def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, ou
 
 	reporter._capture_columns()
 	integrator.solve()
-	report = reporter.build_report(microstates)
+	report = reporter.build_report(effective_microstates, legacy_filter=legacy_microstate_filter)
 
 	headers = [report["time_label"]]
 	headers.extend(

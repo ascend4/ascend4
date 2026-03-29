@@ -15,6 +15,10 @@ The implemented feature set currently centres on:
 The note is intentionally compact. It keeps only the rationale and outstanding
 issues that still matter for current implementation and review.
 
+For structured runtime event reporting, buffering, and event-trace design, see
+[`EVENT.md`](EVENT.md). This note stays focused on hybrid DAE semantics rather
+than the reporting transport/API.
+
 ## Current Status
 
 Implemented and passing for the tested IDA cases:

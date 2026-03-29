@@ -10,6 +10,7 @@ It is separate from:
 
 - [`DER.md`](DER.md) for derivative and index-analysis work
 - [`HYBRID.md`](HYBRID.md) for hybrid/event semantics
+- [`EVENT.md`](EVENT.md) for structured solver/integrator event reporting
 
 ## Design Direction
 
@@ -213,6 +214,8 @@ Current limitations:
 - GUI/editor support for named observation sets
 - `--microstates all` currently exposes all rows emitted by the lower-level
   reporter, not a richer semantic event trace beyond that
+- richer microstate/event metadata belongs in the structured event-reporting
+  work captured in [`EVENT.md`](EVENT.md)
 - the GTK typed-view/reporting work has been implemented but still needs live
   end-to-end click-testing in the GUI
 
