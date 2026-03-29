@@ -1,0 +1,102 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL ida_initial_decay;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	dyn: der(y) = -4 * y;
+	INDEPENDENT t;
+	INITIAL
+		y0: y = 1;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0;
+		FREE der(y);
+	END on_load;
+END ida_initial_decay;
+
+
+MODEL ida_initial_shm;
+	x IS_A solver_var;
+	v IS_A solver_var;
+	t IS_A solver_var;
+
+	motion: der(x) - v = 0;
+	force: der(v) = -x;
+	INDEPENDENT t;
+	INITIAL
+		x0: x = 10;
+		v0: v = 0;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0;
+		FREE der(x), der(v);
+	END on_load;
+END ida_initial_shm;
+
+
+MODEL ida_initial_child_decay;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	dyn: der(y) = -4 * y;
+	INDEPENDENT t;
+END ida_initial_child_decay;
+
+
+MODEL ida_initial_hier_decay;
+	c IS_A ida_initial_child_decay;
+
+	INITIAL
+		y0: c.y = 1;
+
+METHODS
+	METHOD on_load;
+		FIX c.t;
+		c.t := 0;
+		FREE der(c.y);
+	END on_load;
+END ida_initial_hier_decay;
+
+
+MODEL ida_initial_dae;
+	y IS_A solver_var;
+	z IS_A solver_var;
+	t IS_A solver_var;
+
+	dyn: der(y) + z = 0;
+	alg: z - 2 * y = 0;
+	INDEPENDENT t;
+	INITIAL
+		y0: y = 1;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0;
+		FREE der(y);
+	END on_load;
+END ida_initial_dae;
+
+
+MODEL ida_initial_bad_overdetermined;
+	y IS_A solver_var;
+	t IS_A solver_var;
+
+	dyn: der(y) = -4 * y;
+	INDEPENDENT t;
+	INITIAL
+		y0: y = 1;
+		y1: y = 2;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0;
+		FREE der(y);
+	END on_load;
+END ida_initial_bad_overdetermined;

@@ -33,6 +33,7 @@
 #include <ascend/compiler/qlfdid.h>
 #include <ascend/compiler/instance_io.h>
 #include <ascend/compiler/packages.h>
+#include <ascend/compiler/derivinst.h>
 
 #include <ascend/compiler/slvreq.h>
 
@@ -54,10 +55,17 @@ typedef struct SlvReqC_struct{
 	slv_system_t sys;
 	struct Instance *buildroot;
 	char solvername[64];
+	char integratorname[64];
 	int delete_count;
 	int study_count;
+	int observe_count;
+	int integrate_count;
 	unsigned long study_n_observed;
+	unsigned long observe_n_observed;
+	long integrate_steps;
 	long study_steps;
+	double integrate_start;
+	double integrate_stop;
 	enum SlvReqStudyMode study_mode;
 	enum SlvReqStudyDistribution study_dist;
 	double study_lower;
@@ -69,12 +77,25 @@ typedef struct SlvReqC_struct{
 	char study_obs1[128];
 	char study_run_method[64];
 	char study_filename[256];
+	char observe_name[64];
+	char observe_obs0[128];
+	char observe_obs1[128];
+	char integrate_obs0[128];
+	char integrate_obs1[128];
+	int focus_kind;
+	char option_name[64];
+	long option_int_value;
+	double option_real_value;
+	char option_sym_value[128];
 } SlvReqC;
 
 SlvReqSetSolverFn slvreq_c_set_solver;
+SlvReqSetIntegratorFn slvreq_c_set_integrator;
 SlvReqSetOptionFn slvreq_c_set_option;
 SlvReqDoSolveFn slvreq_c_do_solve;
+SlvReqDoObserveFn slvreq_c_do_observe;
 SlvReqDoStudyFn slvreq_c_do_study;
+SlvReqDoIntegrateFn slvreq_c_do_integrate;
 SlvReqDeleteSystemFn slvreq_c_delete_system;
 
 static int find_param_index(const slv_parameters_t *pp, const char *name){
@@ -105,6 +126,7 @@ int slvreq_c_set_solver(const char *solvername, void *user_data){
 		S->buildroot = GetSimulationRoot(S->siminst);
 	}
 	snprintf(S->solvername,sizeof(S->solvername),"%s",solvername);
+	S->focus_kind = 1;
 
 	if(slv_select_solver(S->sys,index) == -1){
 		CONSOLE_DEBUG("Failed to select solver '%s' (solver was found, though)",solvername);
@@ -114,12 +136,39 @@ int slvreq_c_set_solver(const char *solvername, void *user_data){
 	return 0;
 }
 
+int slvreq_c_set_integrator(const char *integratorname, void *user_data){
+	SlvReqC *S = (SlvReqC *)user_data;
+	snprintf(S->integratorname,sizeof(S->integratorname),"%s",integratorname);
+	S->focus_kind = 2;
+	return 0;
+}
+
 /*
 	This function actually does the job of setting solver options in our little
 	'test' simulation environment.
 */
 int slvreq_c_set_option(const char *optionname, struct value_t *val, void *user_data){
 	SlvReqC *S = (SlvReqC *)user_data;
+	snprintf(S->option_name,sizeof(S->option_name),"%s",optionname);
+	S->option_int_value = 0;
+	S->option_real_value = 0.0;
+	S->option_sym_value[0] = '\0';
+	if(S->focus_kind == 2){
+		switch(ValueKind(*val)){
+		case integer_value:
+			S->option_int_value = IntegerValue(*val);
+			break;
+		case real_value:
+			S->option_real_value = RealValue(*val);
+			break;
+		case symbol_value:
+			snprintf(S->option_sym_value,sizeof(S->option_sym_value),"%s",SCP(SymbolValue(*val)));
+			break;
+		default:
+			break;
+		}
+		return 0;
+	}
 	slv_parameters_t pp;
 	if(S->sys == NULL){
 		/* no solver has been assigned so the system isn't built*/
@@ -254,9 +303,23 @@ int slvreq_c_do_study(const SlvReqStudyRequest *request, void *user_data){
 	SlvReqC *S = (SlvReqC *)user_data;
 	struct Instance *root = GetSimulationRoot(S->siminst);
 	char *name = NULL;
+	unsigned long observed_count = request->n_observed;
+	struct Instance *fallback_observed[2];
+	struct Instance **observed = request->observed;
+
+	if(observed_count == 0 && S->observe_n_observed > 0){
+		observed_count = 0;
+		if(S->observe_obs0[0] != '\0'){
+			fallback_observed[observed_count++] = ChildByChar(root, AddSymbol(S->observe_obs0));
+		}
+		if(S->observe_obs1[0] != '\0'){
+			fallback_observed[observed_count++] = ChildByChar(root, AddSymbol(S->observe_obs1));
+		}
+		observed = fallback_observed;
+	}
 
 	++S->study_count;
-	S->study_n_observed = request->n_observed;
+	S->study_n_observed = observed_count;
 	S->study_steps = request->steps;
 	S->study_mode = request->mode;
 	S->study_dist = request->distribution;
@@ -275,13 +338,13 @@ int slvreq_c_do_study(const SlvReqStudyRequest *request, void *user_data){
 		snprintf(S->study_vary,sizeof(S->study_vary),"%s",name);
 		ascfree(name);
 	}
-	if(request->n_observed > 0){
-		name = WriteInstanceNameString(request->observed[0], root);
+	if(observed_count > 0){
+		name = WriteInstanceNameString(observed[0], root);
 		snprintf(S->study_obs0,sizeof(S->study_obs0),"%s",name);
 		ascfree(name);
 	}
-	if(request->n_observed > 1){
-		name = WriteInstanceNameString(request->observed[1], root);
+	if(observed_count > 1){
+		name = WriteInstanceNameString(observed[1], root);
 		snprintf(S->study_obs1,sizeof(S->study_obs1),"%s",name);
 		ascfree(name);
 	}
@@ -290,6 +353,73 @@ int slvreq_c_do_study(const SlvReqStudyRequest *request, void *user_data){
 	}
 	if(request->filename != NULL){
 		snprintf(S->study_filename,sizeof(S->study_filename),"%s",request->filename);
+	}
+	return 0;
+}
+
+int slvreq_c_do_observe(const SlvReqObserveRequest *request, void *user_data){
+	SlvReqC *S = (SlvReqC *)user_data;
+	struct Instance *root = GetSimulationRoot(S->siminst);
+	char *name = NULL;
+
+	++S->observe_count;
+	S->observe_n_observed = request->n_observed;
+	S->observe_name[0] = '\0';
+	S->observe_obs0[0] = '\0';
+	S->observe_obs1[0] = '\0';
+
+	if(request->name != NULL){
+		snprintf(S->observe_name, sizeof(S->observe_name), "%s", request->name);
+	}
+	if(request->n_observed > 0){
+		name = WriteInstanceNameString(request->observed[0], root);
+		snprintf(S->observe_obs0, sizeof(S->observe_obs0), "%s", name);
+		ascfree(name);
+	}
+	if(request->n_observed > 1){
+		name = WriteInstanceNameString(request->observed[1], root);
+		snprintf(S->observe_obs1, sizeof(S->observe_obs1), "%s", name);
+		ascfree(name);
+	}
+	return 0;
+}
+
+int slvreq_c_do_integrate(const SlvReqIntegrateRequest *request, void *user_data){
+	SlvReqC *S = (SlvReqC *)user_data;
+	struct Instance *root = GetSimulationRoot(S->siminst);
+	char *name = NULL;
+	unsigned long observed_count = S->observe_n_observed;
+	struct Instance *fallback_observed[2];
+	struct Instance **observed = fallback_observed;
+
+	fallback_observed[0] = NULL;
+	fallback_observed[1] = NULL;
+	if(observed_count == 0){
+		return SLVREQ_INTEGRATE_INVALID_REQUEST;
+	}
+	if(S->observe_obs0[0] != '\0'){
+		fallback_observed[0] = ChildByChar(root, AddSymbol(S->observe_obs0));
+	}
+	if(S->observe_obs1[0] != '\0'){
+		fallback_observed[1] = ChildByChar(root, AddSymbol(S->observe_obs1));
+	}
+
+	++S->integrate_count;
+	S->integrate_steps = request->steps;
+	S->integrate_start = RealValue(request->start);
+	S->integrate_stop = RealValue(request->stop);
+	S->integrate_obs0[0] = '\0';
+	S->integrate_obs1[0] = '\0';
+
+	if(observed_count > 0 && observed[0] != NULL){
+		name = WriteInstanceNameString(observed[0], root);
+		snprintf(S->integrate_obs0, sizeof(S->integrate_obs0), "%s", name);
+		ascfree(name);
+	}
+	if(observed_count > 1 && observed[1] != NULL){
+		name = WriteInstanceNameString(observed[1], root);
+		snprintf(S->integrate_obs1, sizeof(S->integrate_obs1), "%s", name);
+		ascfree(name);
 	}
 	return 0;
 }
@@ -523,6 +653,7 @@ static void test_slvreq_study_observe_only(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
 
 	m = Asc_OpenModule("test/slvreq/test6.a4c",&status);
 	CU_ASSERT_FATAL(m != NULL);
@@ -566,6 +697,315 @@ static void test_slvreq_study_observe_only(void){
 	CU_ASSERT_STRING_EQUAL(S.study_filename, "");
 
 	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_study_with_observe_default(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+
+	m = Asc_OpenModule("test/slvreq/test12.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test12"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test12"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	S.observe_count = 0;
+	S.observe_n_observed = 0;
+	S.observe_name[0] = '\0';
+	S.observe_obs0[0] = '\0';
+	S.observe_obs1[0] = '\0';
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.do_observe_fn = &slvreq_c_do_observe,
+			.do_study_fn = &slvreq_c_do_study,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.study_count, 1);
+	CU_ASSERT_EQUAL(S.observe_count, 1);
+	CU_ASSERT_EQUAL(S.study_n_observed, 2);
+	CU_ASSERT_EQUAL(S.study_mode, SLVREQ_STUDY_NONE);
+	CU_ASSERT_STRING_EQUAL(S.study_obs0, "y");
+	CU_ASSERT_STRING_EQUAL(S.study_obs1, "x");
+
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_integrate_with_observe_default(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test13.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test13"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test13"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.integratorname[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	S.observe_count = 0;
+	S.integrate_count = 0;
+	S.observe_n_observed = 0;
+	S.integrate_steps = 0;
+	S.integrate_start = 0.0;
+	S.integrate_stop = 0.0;
+	S.observe_name[0] = '\0';
+	S.observe_obs0[0] = '\0';
+	S.observe_obs1[0] = '\0';
+	S.integrate_obs0[0] = '\0';
+	S.integrate_obs1[0] = '\0';
+	{
+		SlvReqHooks hooks = {
+			.set_integrator_fn = &slvreq_c_set_integrator,
+			.do_observe_fn = &slvreq_c_do_observe,
+			.do_integrate_fn = &slvreq_c_do_integrate,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.observe_count, 1);
+	CU_ASSERT_EQUAL(S.integrate_count, 1);
+	CU_ASSERT_STRING_EQUAL(S.integratorname, "IDA");
+	CU_ASSERT_EQUAL(S.integrate_steps, 10);
+	CU_ASSERT_DOUBLE_EQUAL(S.integrate_start, 0.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(S.integrate_stop, 5.0, 1e-12);
+	CU_ASSERT_STRING_EQUAL(S.integrate_obs0, "y");
+	CU_ASSERT_STRING_EQUAL(S.integrate_obs1, "x");
+
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_integrator_option_with_integrate(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test14.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test14"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test14"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.integratorname[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	S.observe_count = 0;
+	S.integrate_count = 0;
+	S.observe_n_observed = 0;
+	S.integrate_steps = 0;
+	S.integrate_start = 0.0;
+	S.integrate_stop = 0.0;
+	S.observe_name[0] = '\0';
+	S.observe_obs0[0] = '\0';
+	S.observe_obs1[0] = '\0';
+	S.integrate_obs0[0] = '\0';
+	S.integrate_obs1[0] = '\0';
+	S.focus_kind = 0;
+	S.option_name[0] = '\0';
+	S.option_int_value = 0;
+	S.option_real_value = 0.0;
+	S.option_sym_value[0] = '\0';
+	{
+		SlvReqHooks hooks = {
+			.set_integrator_fn = &slvreq_c_set_integrator,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_observe_fn = &slvreq_c_do_observe,
+			.do_integrate_fn = &slvreq_c_do_integrate,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.observe_count, 1);
+	CU_ASSERT_EQUAL(S.integrate_count, 1);
+	CU_ASSERT_STRING_EQUAL(S.integratorname, "IDA");
+	CU_ASSERT_STRING_EQUAL(S.option_name, "zeno_ncycles");
+	CU_ASSERT_EQUAL(S.option_int_value, 7);
+	CU_ASSERT_EQUAL(S.focus_kind, 2);
+
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_integrate_with_typed_observe_default(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test15.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test15"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test15"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.integratorname[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	S.observe_count = 0;
+	S.integrate_count = 0;
+	S.observe_n_observed = 0;
+	S.integrate_steps = 0;
+	S.integrate_start = 0.0;
+	S.integrate_stop = 0.0;
+	S.observe_name[0] = '\0';
+	S.observe_obs0[0] = '\0';
+	S.observe_obs1[0] = '\0';
+	S.integrate_obs0[0] = '\0';
+	S.integrate_obs1[0] = '\0';
+	{
+		SlvReqHooks hooks = {
+			.set_integrator_fn = &slvreq_c_set_integrator,
+			.do_observe_fn = &slvreq_c_do_observe,
+			.do_integrate_fn = &slvreq_c_do_integrate,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.observe_count, 1);
+	CU_ASSERT_EQUAL(S.observe_n_observed, 2);
+	CU_ASSERT_EQUAL(S.integrate_count, 1);
+	CU_ASSERT_STRING_EQUAL(S.observe_obs0, "stage");
+	CU_ASSERT_STRING_EQUAL(S.observe_obs1, "mode");
+	CU_ASSERT_STRING_EQUAL(S.integrate_obs0, "stage");
+	CU_ASSERT_STRING_EQUAL(S.integrate_obs1, "mode");
+	CU_ASSERT_STRING_EQUAL(S.integratorname, "IDA");
+
+	system_free_reused_mem();
+	sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_observe_range_expands(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test16.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test16"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test16"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.integratorname[0] = '\0';
+	S.delete_count = 0;
+	S.study_count = 0;
+	S.observe_count = 0;
+	S.integrate_count = 0;
+	S.observe_n_observed = 0;
+	S.observe_name[0] = '\0';
+	S.observe_obs0[0] = '\0';
+	S.observe_obs1[0] = '\0';
+	{
+		SlvReqHooks hooks = {
+			.do_observe_fn = &slvreq_c_do_observe,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.observe_count, 1);
+	CU_ASSERT_EQUAL(S.observe_n_observed, 2);
+	CU_ASSERT_STRING_EQUAL(S.observe_obs0, "x[1]");
+	CU_ASSERT_STRING_EQUAL(S.observe_obs1, "x[2]");
+
 	system_free_reused_mem();
 	sim_destroy(S.siminst);
 	solver_destroy_engines();
@@ -772,6 +1212,134 @@ cleanup:
 	Asc_CompilerDestroy();
 }
 
+static void test_slvreq_initial_mode_toggle(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+
+	m = Asc_OpenModule("test/slvreq/test9.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test9"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test9"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_EQUAL(S.delete_count, 2);
+
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	if(S.siminst)sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_fixed_derivative_operating_point(void){
+	struct module_t *m;
+	int status;
+	SlvReqC S;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+
+	m = Asc_OpenModule("test/slvreq/test10.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test10"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("test10"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+	S.buildroot = NULL;
+	S.solvername[0] = '\0';
+	S.delete_count = 0;
+	{
+		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
+			.delete_system_fn = &slvreq_c_delete_system,
+			.user_data = &S
+		};
+		slvreq_assign_hooks(S.siminst, &hooks);
+	}
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	if(S.siminst)sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_derivative_attribute_access(void){
+	struct module_t *m;
+	int status;
+	struct Instance *siminst, *root, *x, *deriv;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/slvreq/test11.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("test11"))!=NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("test11"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL((x = ChildByChar(root, AddSymbol("x"))) != NULL);
+	CU_ASSERT_FATAL((deriv = InstanceDynamicChildByChar(x, AddSymbol("der"))) != NULL);
+	CU_ASSERT_EQUAL(GetIntegerAtomValue(ChildByChar(deriv, AddSymbol("obs_id"))), 3);
+	CU_ASSERT_EQUAL(GetIntegerAtomValue(ChildByChar(deriv, AddSymbol("ode_id"))), 4);
+	CU_ASSERT_EQUAL(GetIntegerAtomValue(ChildByChar(deriv, AddSymbol("ode_type"))), 2);
+
+	system_free_reused_mem();
+	sim_destroy(siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
 static void test_slvreq_highs_options_invalid(void){
 	struct module_t *m = NULL;
 	int status = 0;
@@ -858,8 +1426,16 @@ cleanup:
 	T(slvreq_c) \
 	T(slvreq_target_switch) \
 	T(slvreq_delete_system) \
+	T(slvreq_initial_mode_toggle) \
+	T(slvreq_fixed_derivative_operating_point) \
+	T(slvreq_derivative_attribute_access) \
 	T(slvreq_study) \
 	T(slvreq_study_observe_only) \
+	T(slvreq_study_with_observe_default) \
+	T(slvreq_integrate_with_observe_default) \
+	T(slvreq_integrator_option_with_integrate) \
+	T(slvreq_integrate_with_typed_observe_default) \
+	T(slvreq_observe_range_expands) \
 	T(slvreq_study_log) \
 	T(slvreq_study_ratio) \
 	T(slvreq_highs_options) \

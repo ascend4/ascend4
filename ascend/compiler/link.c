@@ -49,32 +49,11 @@
 # define MSG(...)
 #endif
 
+static symchar *link_entry_key_resolved(struct link_entry_t *link_entry);
+static CONST struct gl_list_t *link_entry_instances_cached(struct Instance *model, struct link_entry_t *link_entry);
+
 /**< DS: beginning of LINK functions *******/
 /* implemented functions related to the LINK statements, probably they shouldn't be here*/
-
-/**
-	Find instances: Make sure at least one thing is found for each name item
-	on list (else returned list will be NULL) and return the collected instances.
-	DS: it returns a non-flattened list of the instances
-*/
-static struct gl_list_t *FindInstsNonFlat(struct Instance *inst
-	,CONST struct VariableList *list
-	,rel_errorlist *err
-){
-  struct gl_list_t *result,*temp;
-
-  result = gl_create(AVG_LINKS_INST);
-  while(list!=NULL){
-    temp = FindInstances(inst,NamePointer(list),err);
-    if (temp==NULL){
-      gl_destroy(result);
-      return NULL;
-    }
-    gl_append_ptr(result,temp);
-    list = NextVariableNode(list);
-  }
-  return result;
-}
 
 /**
 	Find instances: Make sure at least one thing is found for each name item
@@ -116,8 +95,17 @@ static int CmpLinkEntry(symchar *key, struct VariableList *vlist,struct link_ent
 	statement is executed */
 
 	struct VariableList *linkEntry_vlist;
+	symchar *entry_key;
 
-	if(CmpSymchar(key,linkEntry->key_cache) != 0) {
+	entry_key = linkEntry->key_cache;
+	if(entry_key == NULL && linkEntry->u.statptr != NULL){
+		entry_key = LINKStatKey(linkEntry->u.statptr);
+	}
+	if(key == NULL || entry_key == NULL){
+		return 1;
+	}
+
+	if(CmpSymchar(key,entry_key) != 0) {
 		/* if the keys are different, the LINKs are different */
 		return 1;
 	}
@@ -152,17 +140,16 @@ void CollectLinkTypes(struct Instance *model, struct gl_list_t *result)
 
 		for(c1=1;c1<=len_table;c1++){
 			link_entry = (struct link_entry_t *)gl_fetch(modelType->u.modarg.link_table,c1);
-			if(link_entry->key_cache == NULL){			/**< in case the cache is empty we need to find keys from the statements */
-				key = LINKStatKey(link_entry->u.statptr);
-			}else{
-				key = link_entry->key_cache;
+			key = link_entry_key_resolved(link_entry);
+			if(key == NULL){
+				continue;
 			}
 			// verify that any new info obtained is kept uniquely in the result list.(not efficient at all DS TODO)
 			len_result = gl_length(result);
 			existent = 0;
 			for(c2=1;c2<=len_result;c2++){
 				key_result = (symchar *)gl_fetch(result,c2);
-				if(CmpSymchar(key,key_result) == 0){
+				if(key_result != NULL && CmpSymchar(key,key_result) == 0){
 					existent = 1;
 				}
 			}
@@ -176,10 +163,9 @@ void CollectLinkTypes(struct Instance *model, struct gl_list_t *result)
 		len_table = gl_length(MOD_INST(model)->link_table);
 		for(c1=1;c1<=len_table;c1++){
 			link_entry = (struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,c1);
-			if(link_entry->key_cache == NULL){			/**< in case the cache is empty we need to find keys from the statements */
-				key = LINKStatKey(link_entry->u.statptr);
-			}else{
-				key = link_entry->key_cache;
+			key = link_entry_key_resolved(link_entry);
+			if(key == NULL){
+				continue;
 			}
 			/* verify that any new info obtained is kept uniquely in the result
 			list.(not efficient at all DS TODO) */
@@ -187,7 +173,7 @@ void CollectLinkTypes(struct Instance *model, struct gl_list_t *result)
 			existent = 0;
 			for(c2=1;c2<=len_result;c2++){
 				key_result = (symchar *)gl_fetch(result,c2);
-				if(CmpSymchar(key,key_result) == 0){
+				if(key_result != NULL && CmpSymchar(key,key_result) == 0){
 					existent = 1;
 				}
 			}
@@ -217,6 +203,7 @@ extern struct gl_list_t *getLinkTypes (struct Instance *model, int recursive){
 void CollectLinks(struct Instance *model, struct gl_list_t *result){
 	struct TypeDescription *modelType;
 	struct link_entry_t *link_entry, *link_entry_result;
+	symchar *entry_key;
 	int c1, c2, len_table, len_result, existent;
 
 	modelType = InstanceTypeDesc(model);
@@ -227,13 +214,20 @@ void CollectLinks(struct Instance *model, struct gl_list_t *result){
 		len_table = gl_length(modelType->u.modarg.link_table);
 		for(c1=1;c1<=len_table;c1++){
 			link_entry = (struct link_entry_t *)gl_fetch(modelType->u.modarg.link_table,c1);
+			entry_key = link_entry->key_cache;
+			if(entry_key == NULL && link_entry->u.statptr != NULL){
+				entry_key = LINKStatKey(link_entry->u.statptr);
+			}
+			if(entry_key == NULL){
+				continue;
+			}
 			// verify if the LINK is unique in the result list
 			len_result = gl_length(result);
 			existent = 0;
 
 			for(c2=1;c2<=len_result;c2++){
 				link_entry_result = (struct link_entry_t *)gl_fetch(result,c2);
-				if(CmpLinkEntry(link_entry->key_cache,link_entry->u.vl,link_entry_result) == 0){
+				if(CmpLinkEntry(entry_key,link_entry->u.vl,link_entry_result) == 0){
 					existent = 1;
 				}
 			}
@@ -247,13 +241,20 @@ void CollectLinks(struct Instance *model, struct gl_list_t *result){
 		len_table = gl_length(MOD_INST(model)->link_table);
 		for(c1=1;c1<=len_table;c1++){
 			link_entry = (struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,c1);
+			entry_key = link_entry->key_cache;
+			if(entry_key == NULL && link_entry->u.statptr != NULL){
+				entry_key = LINKStatKey(link_entry->u.statptr);
+			}
+			if(entry_key == NULL){
+				continue;
+			}
 			existent = 0;
 			// verify if the LINK is unique in the result list
 			len_result = gl_length(result);
 
 			for(c2=1;c2<=len_result;c2++){
 				link_entry_result = (struct link_entry_t *)gl_fetch(result,c2);
-				if(CmpLinkEntry(link_entry->key_cache,link_entry->u.vl,link_entry_result) == 0){
+				if(CmpLinkEntry(entry_key,link_entry->u.vl,link_entry_result) == 0){
 					existent = 1;
 				}
 			}
@@ -282,11 +283,11 @@ extern struct gl_list_t *getLinks(struct Instance *model
 
 	len_result = gl_length(result);
 
-	for(c1=1;c1<=len_result;c1++) {
+	for(c1=len_result;c1>=1;c1--) {
 		link_entry = (struct link_entry_t *)gl_fetch(result,c1);
-		if(CmpSymchar(link_entry->key_cache,target_key) !=0 ){
+		symchar *entry_key = link_entry_key_resolved(link_entry);
+		if(entry_key == NULL || CmpSymchar(entry_key,target_key) !=0 ){
 			gl_delete(result,c1,0);	/* if the link entry does not have sought key we delete it from the result list */
-			len_result--;
 		}
 	}
 	return result;
@@ -311,7 +312,7 @@ extern struct gl_list_t *getLinksReferencing (struct Instance *model
 
 	/* DS: get all the links that contain the target instance */
 	len_result = gl_length(result);
-	for(c1=1;c1<=len_result;c1++){
+	for(c1=len_result;c1>=1;c1--){
 		link_entry = (struct link_entry_t *)gl_fetch(result,c1);
 		if(link_entry->instances_cache == NULL ) {
 			link_instances = FindInsts(model,link_entry->u.vl,&err);
@@ -321,7 +322,8 @@ extern struct gl_list_t *getLinksReferencing (struct Instance *model
 
 		len_inst = gl_length(link_instances);
 		containsInst = 0;
-		if(CmpSymchar(link_entry->key_cache,key) == 0){
+		symchar *entry_key = link_entry_key_resolved(link_entry);
+		if(entry_key != NULL && CmpSymchar(entry_key,key) == 0){
 			for(c2=1;c2<=len_inst;c2++){
 				inst = (struct Instance *)gl_fetch(link_instances,c2);
 				if(inst == targetInstance){
@@ -331,7 +333,6 @@ extern struct gl_list_t *getLinksReferencing (struct Instance *model
 		}
 		if(!containsInst){
 			gl_delete(result,c1,0);	/* if the link entry does not have sought key we delete it from the result list */
-			len_result--;
 		}
 	}
 	return result;
@@ -522,7 +523,7 @@ extern void removeNonDeclarativeLinkEntry(struct Instance *model
  	while(len != 0 || c<=len) {
  		link_entry = (struct link_entry_t *)gl_fetch( MOD_INST(model)->link_table,c);
 
-	 	if ((key == NULL || CmpSymchar(key,link_entry->key_cache) == 0) && isDeclarative(model,link_entry) == 0 ) { /*DS: if the key is NULL then remove all entries from the link_table */
+	 	if ((key == NULL || (link_entry_key_resolved(link_entry) != NULL && CmpSymchar(key,link_entry_key_resolved(link_entry)) == 0)) && isDeclarative(model,link_entry) == 0 ) { /*DS: if the key is NULL then remove all entries from the link_table */
 			printf("\n execute removed LinkEntry \n");
 			gl_delete(MOD_INST(model)->link_table,c,1);
 			len--;
@@ -539,44 +540,16 @@ extern void removeNonDeclarativeLinkEntry(struct Instance *model
 const struct gl_list_t *getLinkInstances(struct Instance *inst
 	, struct link_entry_t *link_entry,int status
 ){
-	struct gl_list_t *result = gl_create(AVG_LINKS_INST);
-	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
-
-	result = FindInstsNonFlat(inst,link_entry->u.vl,&err);
-
-	if(result==NULL) {
-		switch(rel_errorlist_get_find_error(&err)){
-		case impossible_instance:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"LINK entry contains imposible instance name");
-		default:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"incomplete instances in LINK entry");
-		}
-	}
-	return result;
+	(void)status;
+	return link_entry_instances_cached(inst, link_entry);
 }
 
 
 const struct gl_list_t *getLinkInstancesFlat(struct Instance *inst
 	, struct link_entry_t *link_entry,int status
 ){
-	struct gl_list_t *result = gl_create(AVG_LINKS_INST);
-	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
-	if(link_entry->instances_cache == NULL) {
-		result = FindInsts(inst,link_entry->u.vl,&err);
-		if (result==NULL) {
-			switch(rel_errorlist_get_find_error(&err)){
-			case impossible_instance:
-				ERROR_REPORTER_HERE(ASC_USER_ERROR,"LINK entry contains impossible instance name");
-			default:
-				ERROR_REPORTER_HERE(ASC_USER_ERROR,"incomplete instances in LINK entry");
-				/* statement is not ready to be executed */
-			}
-		}
-		return result;
-	}else{
-		result = link_entry->instances_cache;
-	}
-	return result;
+	(void)status;
+	return link_entry_instances_cached(inst, link_entry);
 }
 
 
@@ -702,13 +675,63 @@ extern void populateLinkCache(struct Instance* model){
 	}
 }
 
+static int link_instance_matches(struct Instance *a, struct Instance *b){
+	struct Instance *p;
+	if(a == NULL || b == NULL){
+		return 0;
+	}
+	if(a == b){
+		return 1;
+	}
+	p = a;
+	do{
+		if(p == b){
+			return 1;
+		}
+		p = NextCliqueMember(p);
+	}while(p != a);
+	return 0;
+}
+
+static symchar *link_entry_key_resolved(struct link_entry_t *link_entry){
+	if(link_entry == NULL){
+		return NULL;
+	}
+	if(link_entry->key_cache != NULL){
+		return link_entry->key_cache;
+	}
+	if(link_entry->u.statptr != NULL){
+		return LINKStatKey(link_entry->u.statptr);
+	}
+	return NULL;
+}
+
+static CONST struct gl_list_t *link_entry_instances_cached(struct Instance *model, struct link_entry_t *link_entry){
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+	if(link_entry->instances_cache == NULL){
+		link_entry->instances_cache = FindInsts(model,link_entry->u.vl,&err);
+		if(link_entry->instances_cache == NULL){
+			switch(rel_errorlist_get_find_error(&err)){
+			case impossible_instance:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"LINK statement contains an impossible instance name");
+				break;
+			default:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Incomplete instances in LINK");
+				break;
+			}
+		}
+	}
+	return link_entry->instances_cache;
+}
+
 
 extern int getOdeType(struct Instance *model ,struct Instance *inst){
 
 	struct link_entry_t *link_entry;
 	struct gl_list_t *der_links,*independent_links;
 	symchar *der_key,*independent_key;
-	CONST struct VariableList *var;
+	CONST struct gl_list_t *instances;
+	struct Instance *linked;
 	int i,k,maxorder;
 
 	der_key = AddSymbol("ode");
@@ -716,20 +739,19 @@ extern int getOdeType(struct Instance *model ,struct Instance *inst){
 
 	for(i=1;i<=gl_length(der_links);i++) {
 		link_entry = (struct link_entry_t*) gl_fetch(der_links,i);
-		var = link_entry->u.vl;
-
-		maxorder = link_entry->length;
+		instances = link_entry_instances_cached(model, link_entry);
+		if(instances == NULL){
+			continue;
+		}
+		maxorder = gl_length((struct gl_list_t *)instances);
 		k = 0;
-		while(var!=NULL){
-			char *s = WriteInstanceNameString(inst,model);
-			int c = strcmp(SCP(SimpleNameIdPtr(NamePointer(var))),s);
-			ASC_FREE(s);
-			if(c == 0 ) {
+		while(k < maxorder){
+			linked = (struct Instance *)gl_fetch((struct gl_list_t *)instances, k + 1);
+			if(link_instance_matches(linked, inst)) {
 				gl_destroy(der_links);
 				return maxorder - k;
 			}
 			k++;
-			var = NextVariableNode(var);
 		}
 	}
 
@@ -739,19 +761,16 @@ extern int getOdeType(struct Instance *model ,struct Instance *inst){
 
 	for(i=1;i<=gl_length(independent_links);i++) {
 		link_entry = (struct link_entry_t*) gl_fetch(independent_links,i);
-		var = link_entry->u.vl;
-
-		k = 0;
-		while(var!=NULL){
-			char *s = WriteInstanceNameString(inst,model);
-			int c = strcmp(SCP(SimpleNameIdPtr(NamePointer(var))),s);
-			ASC_FREE(s);
-			if(c == 0 ) {
+		instances = link_entry_instances_cached(model, link_entry);
+		if(instances == NULL){
+			continue;
+		}
+		for(k = 1; k <= gl_length((struct gl_list_t *)instances); ++k){
+			linked = (struct Instance *)gl_fetch((struct gl_list_t *)instances, k);
+			if(link_instance_matches(linked, inst)) {
 				gl_destroy(independent_links);
 				return -1;
 			}
-			k++;
-			var = NextVariableNode(var);
 		}
 	}
 
@@ -759,12 +778,50 @@ extern int getOdeType(struct Instance *model ,struct Instance *inst){
 	return 0;
 }
 
+extern struct Instance *getOdeDerivative(struct Instance *model,struct Instance *inst){
+	struct link_entry_t *link_entry;
+	struct gl_list_t *der_links;
+	symchar *der_key;
+	CONST struct gl_list_t *instances;
+	struct Instance *linked;
+	int i, k, len;
+
+	if(model == NULL || inst == NULL){
+		return NULL;
+	}
+
+	der_key = AddSymbol("ode");
+	der_links = getLinks(model,der_key,0);
+
+	for(i=1;i<=gl_length(der_links);i++) {
+		link_entry = (struct link_entry_t*) gl_fetch(der_links,i);
+		instances = link_entry_instances_cached(model, link_entry);
+		if(instances == NULL){
+			continue;
+		}
+		len = gl_length((struct gl_list_t *)instances);
+		for(k = 1; k <= len; ++k){
+			linked = (struct Instance *)gl_fetch((struct gl_list_t *)instances, k);
+			if(link_instance_matches(linked, inst)){
+				gl_destroy(der_links);
+				if(k <= 1){
+					return NULL;
+				}
+				return (struct Instance *)gl_fetch((struct gl_list_t *)instances, k - 1);
+			}
+		}
+	}
+	gl_destroy(der_links);
+	return NULL;
+}
+
 extern int getOdeId(struct Instance *model,struct Instance *inst){
 	struct link_entry_t *link_entry;
 	struct gl_list_t *der_links;
 	symchar *der_key;
-	CONST struct VariableList *var;
-	int i;
+	CONST struct gl_list_t *instances;
+	struct Instance *linked;
+	int i, k;
 
 	der_key = AddSymbol("ode");
 	der_links = getLinks(model,der_key,0);
@@ -772,17 +829,16 @@ extern int getOdeId(struct Instance *model,struct Instance *inst){
 	for(i=1;i<=gl_length(der_links);i++) {
 		MSG("Inside for");
 		link_entry = (struct link_entry_t*) gl_fetch(der_links,i);
-		var = link_entry->u.vl;
-
-		while(var!=NULL){
-			char *s = WriteInstanceNameString(inst,model);
-			int c = strcmp(SCP(SimpleNameIdPtr(NamePointer(var))),s);
-			ASC_FREE(s);
-			if(c == 0){
+		instances = link_entry_instances_cached(model, link_entry);
+		if(instances == NULL){
+			continue;
+		}
+		for(k = 1; k <= gl_length((struct gl_list_t *)instances); ++k){
+			linked = (struct Instance *)gl_fetch((struct gl_list_t *)instances, k);
+			if(link_instance_matches(linked, inst)){
 				gl_destroy(der_links);
 				return i;
 			}
-			var = NextVariableNode(var);
 		}
 	}
 	gl_destroy(der_links);
@@ -795,9 +851,7 @@ extern int getOdeId(struct Instance *model,struct Instance *inst){
 /* function that tests the LINK functions implemented - prints the output in the console */
 void TestingRoutine(struct Instance *model)
 {
-	struct TypeDescription *modelType;
-	modelType = InstanceTypeDesc(model);
-	int c1, len1, len2;
+	int c1, len1;
 
 	/* test getLinkTypes */
 	struct gl_list_t *linkTypes;
@@ -818,11 +872,10 @@ void TestingRoutine(struct Instance *model)
 
 	/* test getLinks */
 	struct gl_list_t *links;
-	struct link_entry_t *lnk;
-	struct Instance *i1;
 	links = getLinks(model,keyc1,0);
-	len2 = gl_length(links);
-	MSG("\n number of links with key %s is: %d \n",SCP(keyc1),len2);
+	MSG("\n number of links with key %s is: %lu \n"
+		,SCP(keyc1),(unsigned long)gl_length(links));
+	gl_destroy(links);
 
 	/* just a test for comparing two instances pointer-wise */
 	/*
@@ -838,12 +891,14 @@ void TestingRoutine(struct Instance *model)
 	} */
 
 	/* test getLinksReferencing */
-	lnk	= (struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1);
-		/* take the first link from all the non-declarative and declarative LINK Tables, just for testing */
 	populateLinkCache(model);
-	i1= (struct Instance *)gl_fetch(lnk->instances_cache,1);
 	MSG("\n number links referencing the first instance and key %s is %ld \n"
-		,SCP(keyc1),gl_length(getLinksReferencing(model,keyc1,i1,0))
+		,SCP(keyc1),gl_length(getLinksReferencing(
+			model,keyc1,
+			(struct Instance *)gl_fetch(
+				((struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1))->instances_cache,1
+			),0
+		))
 	);
 
 	/* test getLinkInstances */
@@ -851,13 +906,17 @@ void TestingRoutine(struct Instance *model)
 	/* test getLinkInstancesFlat */
 
 	/* test isDeclarative */
-	modelType = InstanceTypeDesc(model);
+#ifdef LINK_DEBUG
+	{
+	struct TypeDescription *modelType = InstanceTypeDesc(model);
 	MSG("\n the link should be declarative %d\n"
 		,isDeclarative(model,(struct link_entry_t *)gl_fetch(modelType->u.modarg.link_table,1))
 	);
 	MSG("\n the link should be non-declarative %d\n"
 		,isDeclarative(model,(struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1))
 	);
+	}
+#endif
 
 	/* test removeNonDeclarative LINKs */
 	removeNonDeclarativeLinkEntry(model,NULL,0); /*since the key is NULL, all non declarative LINKS are removed */

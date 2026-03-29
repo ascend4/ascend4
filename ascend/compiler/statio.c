@@ -247,6 +247,8 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl){
     case FOR: 	/* that this isn't handled further may be a bug */
     case ASGN:
     case CASGN:
+    case REINIT:
+    case SWITCHTO:
     case RUN:
     case IF:
     case WHEN:
@@ -319,15 +321,18 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
       if (GetStatTypeArgs(s) != NULL) {
         FPRINTF(f,"(");
         WriteSet(f,GetStatTypeArgs(s));
-        FPRINTF(f,");\n");
-      } else {
-        FPRINTF(f,";\n");
+        FPRINTF(f,")");
       }
     } else {
       /* no parameters to sets */
-      FPRINTF(f," IS_A %s OF %s;\n",
+      FPRINTF(f," IS_A %s OF %s",
               SCP(GetStatType(s)),SCP(GetStatSetType(s)));
     }
+    if (GetStatCheckValue(s)!=NULL ) {
+      FPRINTF(f, GetStatCheckKind(s)==ISCV_WITH_VALUE ? " WITH_VALUE " : " DEFAULT ");
+      WriteExpr(f,GetStatCheckValue(s));
+    }
+    FPRINTF(f,";\n");
     break;
   case WILLBE:
     WriteVariableList(f,GetStatVarList(s));
@@ -595,6 +600,9 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
   case SOLVER:
   	FPRINTF(f,"SOLVER %s;\n",s->v.solver.name);
 	break;
+  case INTEGRATOR:
+	FPRINTF(f,"INTEGRATOR %s;\n",s->v.integrator.name);
+	break;
   case OPTION:
   	FPRINTF(f,"OPTION %s ",s->v.option.name);
 	WriteExpr(f,s->v.option.rhs);
@@ -608,9 +616,28 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
 	}
 	FPRINTF(f,";\n");
 	break;
+  case INTEGRATE:
+	FPRINTF(f,"INTEGRATE FROM ");
+	WriteExpr(f,s->v.integrate.start);
+	FPRINTF(f," TO ");
+	WriteExpr(f,s->v.integrate.stop);
+	FPRINTF(f," STEPS %ld;\n",s->v.integrate.steps);
+	break;
+  case OBSERVE:
+	FPRINTF(f,"OBSERVE ");
+	if (s->v.observe.obsvars != NULL) {
+		WriteVariableList(f,s->v.observe.obsvars);
+	}
+	if (s->v.observe.name != NULL) {
+		FPRINTF(f," AS %s",SCP(s->v.observe.name));
+	}
+	FPRINTF(f,";\n");
+	break;
   case STUDY:
 	FPRINTF(f,"STUDY ");
-	WriteVariableList(f,s->v.study.obsvars);
+	if (s->v.study.obsvars != NULL) {
+		WriteVariableList(f,s->v.study.obsvars);
+	}
 	if (s->v.study.vary != NULL) {
 		FPRINTF(f," VARY ");
 		WriteName(f,s->v.study.vary);
@@ -658,6 +685,20 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
     FPRINTF(f,"CALL %s(",SCP(CallStatId(s)));
     WriteSet(f,CallStatArgs(s));
     FPRINTF(f,");\n");
+    break;
+  case REINIT:
+    FPRINTF(f,"REINIT(");
+    WriteName(f,ReinitStatVar(s));
+    FPRINTF(f,", ");
+    WriteExpr(f,ReinitStatRHS(s));
+    FPRINTF(f,");\n");
+    break;
+  case SWITCHTO:
+    FPRINTF(f,"SWITCH TO ");
+    WriteExpr(f,SwitchToStatValue(s));
+    FPRINTF(f," IF ");
+    WriteExpr(f,SwitchToStatGuard(s));
+    FPRINTF(f,";\n");
     break;
   case ASSERT:
 	FPRINTF(f,"ASSERT ");
@@ -966,6 +1007,8 @@ symchar *StatementTypeString(CONST struct Statement *s){
     g_statio_stattypenames[COND] = AddSymbol("CONDITIONAL");
     g_statio_stattypenames[WBTS] = AddSymbol("WILL_BE_THE_SAME");
     g_statio_stattypenames[WNBTS] = AddSymbol("WILL_NOT_BE_THE_SAME");
+    g_statio_stattypenames[REINIT] = AddSymbol("REINIT");
+    g_statio_stattypenames[SWITCHTO] = AddSymbol("SWITCHTO");
     g_statio_stattypenames[TABLESTAT] = AddSymbol("TABLE");
     g_statio_stattypenames[DATASETSTAT] = AddSymbol("DATASET");
     g_statio_stattypenames[WILLBE] = AddSymbol("WILL_BE");
@@ -999,6 +1042,8 @@ symchar *StatementTypeString(CONST struct Statement *s){
   case SWITCH:
   case EXT:
   case CALL:
+  case REINIT:
+  case SWITCHTO:
   case ASSERT:
   case REF:
   case COND:

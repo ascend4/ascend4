@@ -48,6 +48,7 @@ const IntegratorInternals integrator_dopri5_internals =
 		integrator_dopri5_create
 		,integrator_dopri5_params_default
 		,integrator_analyse_ode /* note, this routine is back in integrator.c */
+		,integrator_initialise_ode
 		,integrator_dopri5_solve
 		,NULL
 		,NULL /* debugfn */
@@ -782,4 +783,3 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	CONSOLE_DEBUG("--- DOPRI5 done ---");
 	return 0; /* success */
 }
-

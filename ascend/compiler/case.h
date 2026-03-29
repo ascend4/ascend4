@@ -47,6 +47,7 @@ struct Case {
                                  NULL if OTHERWISE  */
     struct gl_list_t *ref;  /**< References to RelationInstance
                                  ModelInstance or WhenInstance */
+    struct gl_list_t *reinit; /**< REINIT action statements attached to the case */
     unsigned active;        /**<  1:active   0:inactive  */
 };
 
@@ -78,6 +79,18 @@ extern struct gl_list_t *GetCaseReferencesF(struct Case *cs);
  */
 
 #ifdef NDEBUG
+#define GetCaseReinitStatements(c) ((c)->reinit)
+#else
+#define GetCaseReinitStatements(c) GetCaseReinitStatementsF(c)
+#endif
+/**<  Return the list of REINIT statements attached to a Case. */
+extern struct gl_list_t *GetCaseReinitStatementsF(struct Case *cs);
+/**
+ *  Return the list of REINIT statements attached to a Case.
+ *  Implementation of GetCaseReinitStatements().
+ */
+
+#ifdef NDEBUG
 #define GetCaseStatus(c) ((c)->active)
 #else
 #define GetCaseStatus(c) GetCaseStatusF(c)
@@ -96,6 +109,11 @@ extern struct Case *SetCaseValues(struct Case *cs, struct Set *set);
 extern struct Case *SetCaseReferences(struct Case *cs, struct gl_list_t *refinst);
 /**<
  *  Set the List of References of a Case.
+ */
+
+extern struct Case *SetCaseReinitStatements(struct Case *cs, struct gl_list_t *reinit);
+/**<
+ *  Set the list of REINIT statements of a Case.
  */
 
 extern struct Case *SetCaseStatus(struct Case *cs, int status);
@@ -127,4 +145,3 @@ extern struct Case *CopyCase(struct Case *cs);
 /* @} */
 
 #endif  /* ASC_CASE_H */
-

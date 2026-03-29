@@ -39,6 +39,7 @@
 #include "instance_name.h"
 #include "instquery.h"
 #include "parentchild.h"
+#include "derivinst.h"
 
 
 #include "expr_types.h"
@@ -183,12 +184,9 @@ static
 int CheckChildExist(struct InstanceName name){
   unsigned long ndx,nch;
   symchar  *tablename; /* hacky, but centralized slop avoidance */
+  struct Instance *deriv;
   /* remember that a struct passed by value can be overwritten safely. */
   nch = NumberChildren(g_search_inst);
-  if (!nch) {
-    g_search_inst = NULL;
-    return 0;
-  }
   switch (InstanceNameType(name)) {
   case IntArrayIndex:
     break;
@@ -204,18 +202,68 @@ int CheckChildExist(struct InstanceName name){
     Asc_Panic(2,"%s: CheckChildExist called with bad arguments.",__FILE__);
     break;
   }
-  ndx = ChildSearch(g_search_inst,&name); /* symchar safe */
+  ndx = nch ? ChildSearch(g_search_inst,&name) : 0; /* symchar safe */
   if (ndx) {
     g_search_inst = InstanceChild(g_search_inst,ndx);
     return ndx;
+  } else if(InstanceNameType(name) == StrName
+      && (InstanceNameStr(name) != NULL)
+      && (deriv = InstanceDynamicChildByChar(g_search_inst, InstanceNameStr(name))) != NULL){
+    g_search_inst = deriv;
+    return 1;
   } else {
     g_search_inst = NULL;
     return 0;
   }
 }
 
+static char *QlfdidRewriteDerivativePath(CONST char *str){
+  size_t len, innerlen;
+  char *rewritten;
+
+  if(str == NULL){
+    return NULL;
+  }
+  len = strlen(str);
+  if(len < 6 || strncmp(str, "der(", 4) != 0 || str[len - 1] != ')'){
+    return NULL;
+  }
+
+  innerlen = len - 5; /* exclude "der(" and trailing ')' */
+  if(innerlen == 0){
+    return NULL;
+  }
+
+  rewritten = ASC_NEW_ARRAY(char, innerlen + 5);
+  if(rewritten == NULL){
+    return NULL;
+  }
+  memcpy(rewritten, str + 4, innerlen);
+  memcpy(rewritten + innerlen, ".der", 5);
+  return rewritten;
+}
+
+static struct gl_list_t *Asc_BrowQlfdidSearchInternal(char *str, char *temp);
 
 struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp){
+  char *rewritten = QlfdidRewriteDerivativePath(str);
+  struct gl_list_t *result;
+
+  if(rewritten != NULL){
+    char *rewtemp = ASC_STRDUP(rewritten);
+    if(rewtemp == NULL){
+      ascfree(rewritten);
+      return NULL;
+    }
+    result = Asc_BrowQlfdidSearchInternal(rewritten, rewtemp);
+    ascfree(rewtemp);
+    ascfree(rewritten);
+    return result;
+  }
+  return Asc_BrowQlfdidSearchInternal(str, temp);
+}
+
+static struct gl_list_t *Asc_BrowQlfdidSearchInternal(char *str, char *temp){
   char *ptr, *org;
   struct InstanceName name;
   struct gl_list_t *search_list = NULL;
@@ -384,8 +432,27 @@ int Asc_QlfdidSearch2(char *str){
 
 	FIXME merge this code into Asc_QlfdidSearch3, no need for a separate func??
 */
-static
-struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative){
+static struct Instance *BrowQlfdidSearch3Internal(CONST char *str, char *temp,int relative);
+
+static struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative){
+  char *rewritten = QlfdidRewriteDerivativePath(str);
+  struct Instance *result;
+
+  if(rewritten != NULL){
+    char *rewtemp = ASC_STRDUP(rewritten);
+    if(rewtemp == NULL){
+      ascfree(rewritten);
+      return NULL;
+    }
+    result = BrowQlfdidSearch3Internal(rewritten, rewtemp, relative);
+    ascfree(rewtemp);
+    ascfree(rewritten);
+    return result;
+  }
+  return BrowQlfdidSearch3Internal(str, temp, relative);
+}
+
+static struct Instance *BrowQlfdidSearch3Internal(CONST char *str, char *temp,int relative){
   char *ptr;
   struct InstanceName name;
   int ndx = 0;
@@ -546,11 +613,3 @@ int Asc_QlfdidSearch3(CONST char *str, int relative){
     return 1;
   }
 }
-
-
-
-
-
-
-
-

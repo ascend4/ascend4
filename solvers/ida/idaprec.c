@@ -30,7 +30,15 @@
 #include <ascend/general/platform.h>
 #include <ascend/system/relman.h>
 
-#define PREC_DEBUG
+#ifndef PREC_DEBUG
+# define PREC_DEBUG 0
+#endif
+
+#if PREC_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
 
 /*------
   Full jacobian preconditioner -- experimental
@@ -97,7 +105,7 @@ static void integrator_ida_pcreate_jacobian(IntegratorSystem *integ){
 
 	enginedata->pfree = &integrator_ida_pfree_jacobian;
 	enginedata->precdata = precdata;
-	CONSOLE_DEBUG("Allocated memory for Full Jacobian preconditioner");
+	MSG("Allocated memory for Full Jacobian preconditioner");
 }
 
 void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
@@ -112,7 +120,7 @@ void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
 		ASC_FREE(precdata);
 		enginedata->precdata = NULL;
 
-		CONSOLE_DEBUG("Freed memory for Full Jacobian preconditioner");
+		MSG("Freed memory for Full Jacobian preconditioner");
 	}
 	enginedata->pfree = NULL;
 }
@@ -149,7 +157,7 @@ static int integrator_ida_psetup_jacobian(realtype tt,
 	P = linsolqr_get_matrix(L);
 	mtx_clear(P);
 
-	CONSOLE_DEBUG("Setting up Jacobian preconditioner");
+	MSG("Setting up Jacobian preconditioner");
 
 	variables = ASC_NEW_ARRAY(struct var_variable*, NV_LENGTH_S(yy) * 2);
 	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
@@ -167,11 +175,11 @@ static int integrator_ida_psetup_jacobian(realtype tt,
 		status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
 			relname = rel_make_name(integ->system, *relptr);
-			CONSOLE_DEBUG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
+			MSG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
 			ASC_FREE(relname);
 			break;
 		}
-		/* CONSOLE_DEBUG("Got %d derivatives from relation %d",count,i); */
+		/* MSG("Got %d derivatives from relation %d",count,i); */
 		/* find the diagonal elements */
 		for(j=0; j<count; ++j){
 			if(var_deriv(variables[j])){
@@ -185,7 +193,7 @@ static int integrator_ida_psetup_jacobian(realtype tt,
 	mtx_assemble(P);
 
 	if(status){
-		CONSOLE_DEBUG("Error found when evaluating derivatives");
+		MSG("Error found when evaluating derivatives");
 		res = 1; goto finish; /* recoverable */
 	}
 
@@ -236,7 +244,7 @@ static int integrator_ida_psolve_jacobian(realtype tt,
 
 	linsolqr_remove_rhs(L,NV_DATA_S(rvec));
 
-	CONSOLE_DEBUG("Solving Jacobian preconditioner (c_j = %f)",c_j);
+	MSG("Solving Jacobian preconditioner (c_j = %f)",c_j);
 	return 0;
 };
 
@@ -262,7 +270,7 @@ static void integrator_ida_pcreate_jacobi(IntegratorSystem *integ){
 
 	enginedata->pfree = &integrator_ida_pfree_jacobi;
 	enginedata->precdata = precdata;
-	CONSOLE_DEBUG("Allocated memory for Jacobi preconditioner");
+	MSG("Allocated memory for Jacobi preconditioner");
 }
 
 void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
@@ -272,7 +280,7 @@ void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
 
 		ASC_FREE(precdata);
 		enginedata->precdata = NULL;
-		CONSOLE_DEBUG("Freed memory for Jacobi preconditioner");
+		MSG("Freed memory for Jacobi preconditioner");
 	}
 	enginedata->pfree = NULL;
 }
@@ -302,7 +310,7 @@ static int integrator_ida_psetup_jacobi(realtype tt,
 	int count, status;
 	char *relname;
 
-	CONSOLE_DEBUG("Setting up Jacobi preconditioner");
+	MSG("Setting up Jacobi preconditioner");
 
 	variables = ASC_NEW_ARRAY(struct var_variable*, NV_LENGTH_S(yy) * 2);
 	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
@@ -321,11 +329,11 @@ static int integrator_ida_psetup_jacobi(realtype tt,
 		status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
 			relname = rel_make_name(integ->system, *relptr);
-			CONSOLE_DEBUG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
+			MSG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
 			ASC_FREE(relname);
 			break;
 		}
-		/* CONSOLE_DEBUG("Got %d derivatives from relation %d",count,i); */
+		/* MSG("Got %d derivatives from relation %d",count,i); */
 		/* find the diagonal elements */
 		for(j=0; j<count; ++j){
 			if(var_sindex(variables[j])==i){
@@ -338,12 +346,12 @@ static int integrator_ida_psetup_jacobi(realtype tt,
 			}
 		}
 #ifdef PREC_DEBUG
-		CONSOLE_DEBUG("PI[%d] = %f",i,NV_Ith_S(precdata->PIii,i));
+		MSG("PI[%d] = %f",i,NV_Ith_S(precdata->PIii,i));
 #endif
 	}
 
 	if(status){
-		CONSOLE_DEBUG("Error found when evaluating derivatives");
+		MSG("Error found when evaluating derivatives");
 		res = 1; goto finish; /* recoverable */
 	}
 
@@ -379,7 +387,7 @@ static int integrator_ida_psolve_jacobi(realtype tt,
 	data = integ->enginedata;
 	precdata = (IntegratorIdaPrecDataJacobi *)(data->precdata);
 
-	CONSOLE_DEBUG("Solving Jacobi preconditioner (c_j = %f)",c_j);
+	MSG("Solving Jacobi preconditioner (c_j = %f)",c_j);
 	N_VProd(precdata->PIii, rvec, zvec);
 	return 0;
 };

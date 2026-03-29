@@ -1,5 +1,3 @@
-
-/* :ex: set ts=2 */
 /*	ASCEND modelling environment
 	Copyright 1997, Carnegie Mellon University
 	Copyright (C) 2006-2007 Carnegie Mellon University
@@ -73,9 +71,11 @@
 /* #define TIMING_DEBUG */
 
 #ifdef LSODE_DEBUG
-# define MSG CONSOLE_DEBUG
+# define MSG(...) CONSOLE_DEBUG(__VA_ARGS__)
+# define ERR(...) CONSOLE_DEBUG(__VA_ARGS__)
 #else
-# define MSG(...)
+# define MSG(...) ((void)0)
+# define ERR(...) ((void)0)
 #endif
 
 static IntegratorCreateFn integrator_lsode_create;
@@ -88,6 +88,7 @@ static const IntegratorInternals integrator_lsode_internals = {
 	integrator_lsode_create
 	,integrator_lsode_params_default
 	,integrator_analyse_ode /* note, this routine is back in integrator.c */
+	,integrator_initialise_ode
 	,integrator_lsode_solve
 	,integrator_lsode_write_matrix
 	,NULL /* debugfn */
@@ -521,9 +522,9 @@ static double *lsode_get_atol( IntegratorSystem *blsys) {
     return atoli;
   }
 
-  if(!SLV_PARAM_BOOL(&(blsys->params),LSODE_PARAM_ATOLVECT)){
-	atol = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOL);
-	CONSOLE_DEBUG("Using ATOL = %f for all vars", atol);
+	if(!SLV_PARAM_BOOL(&(blsys->params),LSODE_PARAM_ATOLVECT)){
+		atol = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOL);
+		MSG("Using ATOL = %f for all vars", atol);
     for(i=0; i<len; ++i){
       atoli[i] = atol;
 	}
@@ -534,13 +535,13 @@ static double *lsode_get_atol( IntegratorSystem *blsys) {
       tol = ChildByChar(var_instance(blsys->y[i]),STATEATOL);
       if (tol == NULL || !AtomAssigned(tol) ) {
         atoli[i] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_ATOL);
-        ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Assuming atol = %3g"
-      	  "for ode_atol child undefined for state variable %ld."
-        	,atoli[i], blsys->y_id[i]
+        ERROR_REPORTER_HERE(ASC_USER_WARNING,
+          "Assuming atol = %3g for state variable %ld because child 'ode_atol' is undefined."
+          ,atoli[i], blsys->y_id[i]
         );
       } else {
         atoli[i] = RealAtomValue(tol);
-        CONSOLE_DEBUG("Using atol %3g for state variable %d.",atoli[i], blsys->y_id[i]);
+        MSG("Using atol %3g for state variable %d.",atoli[i], blsys->y_id[i]);
       }
     }
   }
@@ -566,7 +567,7 @@ static double *lsode_get_rtol( IntegratorSystem *blsys) {
   }
   if(!SLV_PARAM_BOOL(&(blsys->params),LSODE_PARAM_RTOLVECT)){
 	rtol = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOL);
-	CONSOLE_DEBUG("Using RTOL = %f for all vars", rtol);
+	MSG("Using RTOL = %f for all vars", rtol);
     for(i=0; i<len; ++i){
       rtoli[i] = rtol;
 	}
@@ -577,9 +578,9 @@ static double *lsode_get_rtol( IntegratorSystem *blsys) {
       if (tol == NULL || !AtomAssigned(tol) ) {
         rtoli[i] = SLV_PARAM_REAL(&(blsys->params),LSODE_PARAM_RTOL);
 
-        ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Assuming rtol = %3g"
-        	"for ode_rtol child undefined for state variable %ld."
-        	,rtoli[i], blsys->y_id[i]
+        ERROR_REPORTER_HERE(ASC_USER_WARNING,
+          "Assuming rtol = %3g for state variable %ld because child 'ode_rtol' is undefined."
+          ,rtoli[i], blsys->y_id[i]
         );
 
       } else {
@@ -688,24 +689,24 @@ static int integrator_lsode_derivatives(IntegratorSystem *blsys
   (void)NumberFreeVars(NULL);		/* used to re-init the system */
   (void)NumberIncludedRels(NULL);	/* used to re-init the system */
   if (!blsys->system) {
-    FPRINTF(stderr,"The solve system does not exist !\n");
+    ERR("The solve system does not exist");
     return 1;
   }
 
   result = Compute_J(blsys->system);
   if (result) {
-    FPRINTF(stderr,"Early termination due to failure in calc Jacobian\n");
+    ERR("Early termination due to failure in calc Jacobian");
     return 1;
   }
 
   linsys = slv_get_linsolqr_sys(blsys->system);	/* get the linear system */
   if (linsys==NULL) {
-    FPRINTF(stderr,"Early termination due to missing linsolqr system.\n");
+    ERR("Early termination due to missing linsolqr system");
     return 1;
   }
   mtx = slv_get_sys_mtx(blsys->system);	/* get the matrix */
   if (mtx==NULL) {
-    FPRINTF(stderr,"Early termination due to missing mtx in linsolqr.\n");
+    ERR("Early termination due to missing matrix in linsolqr");
     return 1;
   }
   capacity = mtx_capacity(mtx);
@@ -714,7 +715,7 @@ static int integrator_lsode_derivatives(IntegratorSystem *blsys
 
   result = LUFactorJacobian(blsys->system);
   if (result) {
-    FPRINTF(stderr,"Early termination due to failure in LUFactorJacobian\n");
+    ERR("Early termination due to failure in LUFactorJacobian");
     goto error;
   }
   result = Compute_dy_dx_smart(blsys->system, scratch_vector, enginedata->dydot_dy,
@@ -723,7 +724,7 @@ static int integrator_lsode_derivatives(IntegratorSystem *blsys
 
   linsolqr_remove_rhs(linsys,scratch_vector);
   if (result) {
-    FPRINTF(stderr,"Early termination due to failure in Compute_dy_dx\n");
+    ERR("Early termination due to failure in Compute_dy_dx");
     goto error;
   }
 
@@ -757,7 +758,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
   /* CONSOLE_DEBUG("Calling for a function evaluation"); */
 
 #ifdef TIMING_DEBUG
-  CONSOLE_DEBUG("Calling for a function evaluation");
+  MSG("Calling for a function evaluation");
   time1 = clock();
 #endif
 
@@ -773,7 +774,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
 
   switch(lsodedata->lastcall) {
   case lsode_none:		/* first call */
-	CONSOLE_DEBUG("FIRST CALL...");
+	MSG("FIRST CALL...");
 
   case lsode_derivative:
     if (lsodedata->partitioned) {
@@ -781,7 +782,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
       slv_presolve(l_lsode_blsys->system);
     } else {
 			/** @TODO this doesn't ever seem to be called */
-			CONSOLE_DEBUG("RE-SOLVE");
+			MSG("RE-SOLVE");
       slv_resolve(l_lsode_blsys->system);
     }
     break;
@@ -792,11 +793,11 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
   }
 
   if((res = slv_solve(l_lsode_blsys->system))){
-		CONSOLE_DEBUG("solver returns error %ld",res);
+		MSG("solver returns error %ld",res);
 	}
 
   slv_get_status(l_lsode_blsys->system, &status);
-  CONSOLE_DEBUG("Calling slv_check_bounds with lo = 0, hi = -1");
+  MSG("Calling slv_check_bounds with lo = 0, hi = -1");
   if(slv_check_bounds(l_lsode_blsys->system,0,-1,"")){
     lsodedata->status = lsode_nok;
   }
@@ -817,7 +818,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
 #endif
 
   if(res){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
+    MSG("Failed to solve for derivatives (%d)",res);
 #if 0
   	ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
     FPRINTF(ASCERR,"Unable to compute the vector of derivatives with the following values for the state variables:\n");
@@ -840,7 +841,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
   lsodedata->lastcall = lsode_function;
 #ifdef TIMING_DEBUG
   time1 = clock() - time1;
-  CONSOLE_DEBUG("Function evalulation has been completed in %ld ticks. True function call time = %ld ticks",time1,time2);
+  MSG("Function evalulation has been completed in %ld ticks. True function call time = %ld ticks",time1,time2);
 #endif
 }
 
@@ -865,7 +866,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y
 #ifdef TIMING_DEBUG
   clock_t time1;
 
-  CONSOLE_DEBUG("Calling for a gradient evaluation");
+  MSG("Calling for a gradient evaluation");
   time1 = clock();
 #endif
   /*
@@ -878,7 +879,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y
   );
 
   if(nok){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in computing the derivatives for the system. Failing...");
+    MSG("Error in computing the derivatives for the system. Failing...");
     lsodedata->status = lsode_nok;
     lsodedata->lastcall = lsode_derivative;
     lsodedata->stop = 1;
@@ -892,7 +893,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y
 	if((++clockcheck % ASC_CLOCK_CHECK_PERIOD)==0){
 		/* do we need to update the GUI? */
 #ifdef TIMING_DEBUG
-		CONSOLE_DEBUG("CLOCK = %ld", clock());
+		MSG("CLOCK = %ld", clock());
 #endif
 		if((clock() - lsodedata->lastwrite) > ASC_CLOCK_MAX_GUI_WAIT){
 			integrator_output_write(l_lsode_blsys);
@@ -915,7 +916,7 @@ static void LSODE_JEX(int *neq ,double *t, double *y
 
 #ifdef TIMING_DEBUG
   time1 = clock() - time1;
-  CONSOLE_DEBUG("Time to do gradient evaluation %ld ticks",time1);
+  MSG("Time to do gradient evaluation %ld ticks",time1);
 #endif
 
   return;
@@ -972,7 +973,7 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
 		return 1;
 	}
 
-	CONSOLE_DEBUG("Solver selected is '%s'",slv_solver_name(slv_get_selected_solver(blsys->system)));
+	MSG("Solver selected is '%s'",slv_solver_name(slv_get_selected_solver(blsys->system)));
 
 	slv_get_status(blsys->system, &status);
 
@@ -997,25 +998,25 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
 		return 5;
 	}
 	if(strcmp(method,"BDF")==0){
-		CONSOLE_DEBUG("method = BDF");
+		MSG("method = BDF");
 		mf = 20 + miter;
 		if(maxord > 5){
 			maxord = 5;
-			CONSOLE_DEBUG("MAXORD reduced to 5 for BDF");
+			MSG("MAXORD reduced to 5 for BDF");
 		}
 	}else if(strcmp(method,"AM")==0){
-		CONSOLE_DEBUG("method = AM");
+		MSG("method = AM");
 		if(maxord > 12){
 			maxord = 12;
-			CONSOLE_DEBUG("MAXORD reduced to 12 for AM");
+			MSG("MAXORD reduced to 12 for AM");
 		}
 		mf = 10 + miter;
         }else{
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unacceptable value '%d' of parameter 'meth'",method);
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unacceptable value '%s' of parameter 'meth'",method);
 		return 5;
 	}
 
-	CONSOLE_DEBUG("MF = %d",mf);
+	MSG("MF = %d",mf);
 
   nsamples = integrator_getnsamples(blsys);
   if (nsamples <2) {
@@ -1073,9 +1074,9 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
   rwork[4] = integrator_get_stepzero(blsys);
   rwork[5] = integrator_get_maxstep(blsys);
   rwork[6] = integrator_get_minstep(blsys);
-  iwork[5] = integrator_get_maxsubsteps(blsys);
+	iwork[5] = integrator_get_maxsubsteps(blsys);
 	iwork[4] = maxord;
-	CONSOLE_DEBUG("MAXORD = %d",maxord);
+	MSG("MAXORD = %d",maxord);
 
   if(x[0] > integrator_getsample(blsys, 2)){
     ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid initialisation time: exceeds second timestep value");
@@ -1118,18 +1119,18 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
     if(s_fpe == 0 && s_int == 0) {
 # endif /* ASC_SIGNAL_TRAPS */
 
-      CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend);
+      MSG("Calling LSODE with end-time = %f",xend);
       switch(mf){
 		case 10:
-			CONSOLE_DEBUG("Non-stiff (Adams) method; no Jacobian will be used"); break;
+			MSG("Non-stiff (Adams) method; no Jacobian will be used"); break;
 		case 21:
-			CONSOLE_DEBUG("Stiff (BDF) method, user-supplied full Jacobian"); break;
+			MSG("Stiff (BDF) method, user-supplied full Jacobian"); break;
 		case 22:
-			CONSOLE_DEBUG("Stiff (BDF) method, internally generated full Jacobian"); break;
+			MSG("Stiff (BDF) method, internally generated full Jacobian"); break;
 		case 24:
-			CONSOLE_DEBUG("Stiff (BDF) method, user-supplied banded jacobian"); break;
+			MSG("Stiff (BDF) method, user-supplied banded jacobian"); break;
 		case 25:
-			CONSOLE_DEBUG("Stiff (BDF) method, internally generated banded jacobian"); break;
+			MSG("Stiff (BDF) method, internally generated banded jacobian"); break;
 		default:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid method id %d for LSODE",mf);
 			return 0;
@@ -1147,19 +1148,27 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
       /* clear the global var */
       LSODEDATA_RELEASE();
 
-      CONSOLE_DEBUG("...");
+      MSG("...");
 
 # ifdef ASC_SIGNAL_TRAPS
     }else{
       if(s_fpe){
-        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE call.");
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "Integration terminated due to a floating-point error during LSODE integration."
+        );
         lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
         d->status = lsode_ok;		/* clean up before we go */
         d->lastcall = lsode_none;
         return 6;
       }
       if(s_int){
-        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration aborted or interrupted.");
+        if(d->stop){
+          ERROR_REPORTER_HERE(ASC_USER_ERROR,
+            "Integration terminated because derivatives could not be computed for the current model state."
+          );
+        }else{
+          ERROR_REPORTER_HERE(ASC_USER_WARNING,"Integration aborted or interrupted.");
+        }
         lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
         d->status = lsode_ok;		/* clean up before we go */
         d->lastcall = lsode_none;
@@ -1184,7 +1193,7 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
 
     if (istate < 0 ) {
       /* some kind of error occurred... */
-      ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
+      ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
       lsode_write_istate(istate);
       FPRINTF(ASCERR, "\nFurthest point reached was t = %g.\n",x[0]);
       error_reporter_end_flush();
@@ -1195,7 +1204,9 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
     }
 
     if (d->status==lsode_nok) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to an error in derivative computations.");
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,
+        "Integration terminated because derivatives could not be computed for the current model state."
+      );
       lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
       d->status = lsode_ok;		/* clean up before we go */
       d->lastcall = lsode_none;
@@ -1242,7 +1253,9 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
 
 # ifdef ASC_SIGNAL_TRAPS
       } else {
-      	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE FEX call.");
+      	ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "Integration terminated due to a floating-point error while evaluating derivatives."
+        );
         lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
         d->status = lsode_ok;               /* clean up before we go */
         d->lastcall = lsode_none;
@@ -1254,11 +1267,11 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
     /* CONSOLE_DEBUG("Integration completed from %3g to %3g.",xprev,x[0]); */
   }
 
-  CONSOLE_DEBUG("...");
-  CONSOLE_DEBUG("Number of steps taken: %1d.", iwork[10]);
-  CONSOLE_DEBUG("Number of function evaluations: %1d.", iwork[11]);
-  CONSOLE_DEBUG("Number of Jacobian evaluations: %1d.", iwork[12]);
-  CONSOLE_DEBUG("...");
+  MSG("...");
+  MSG("Number of steps taken: %1d.", iwork[10]);
+  MSG("Number of function evaluations: %1d.", iwork[11]);
+  MSG("Number of Jacobian evaluations: %1d.", iwork[12]);
+  MSG("...");
 
 
   lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
@@ -1272,7 +1285,7 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
 
   integrator_output_close(blsys);
 
-  CONSOLE_DEBUG("--- LSODE done ---");
+  MSG("--- LSODE done ---");
   return 0; /* success */
 }
 
@@ -1317,7 +1330,7 @@ void XASCWV( char *msg, /* pointer to start of message */
 			} break;
 		case 52:
 			if(*nr==2){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Illegal t = %f, not in range (t - hu,t) = (%f,%f)", r1last, *r1, *r2);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Illegal t = %f, not in range (t - hu,t) = (%f,%f)", r1last, *r1, *r2);
 				return;
 			}else if(*nr==1){
 				r1last = *r1;
@@ -1326,29 +1339,31 @@ void XASCWV( char *msg, /* pointer to start of message */
 		case 201:
 			if(*nr==0 && *ni==0)return;
 			if(*nr==1 && *ni==1){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"At current t=%f, mxstep=%d steps taken on this call before reaching tout.",*r1,*i1);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"At current t=%f, mxstep=%d steps taken on this call before reaching tout.",*r1,*i1);
 				return;
 			} break;
 		case 204:
 			if(*nr==0 && *ni==0)return;
 			if(*nr==2){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Error test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
 				return;
 			} break;
 		case 205:
 			if(*nr==0 && *ni==0)return;
 			if(*nr==2){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Corrector convergence test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Corrector convergence test failed repeatedly or with abs(h)=hmin.\nt=%f and step size h=%f",*r1,*r2);
 				return;
 			} break;
 		case 27:
 			if(*nr==1 && *ni==1){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Trouble with INTDY: itask = %d, tout = %f", *i1, *r1);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "LSODE reported trouble with INTDY (itask = %d, tout = %f).", *i1, *r1
+        );
 				return;
 			} break;
 	}
 
-	ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+	ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 
 	/* note that %.*s means that a string length (integer) and string pointer are being required */
 	FPRINTF(stderr,"LSODE error: (%d) %.*s",*nerr,*nmes,msg);
@@ -1380,15 +1395,19 @@ static int integrator_lsode_write_matrix(const IntegratorSystem *blsys, FILE *fp
 	enginedata = (IntegratorLsodeData *)blsys->enginedata;
 
 	if(!DENSEMATRIX_DATA(enginedata->dydot_dy)){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"dydot_dy contains no data");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "No LSODE derivative matrix data are available yet for this model."
+    );
 	}
 
 #ifdef ASC_WITH_MMIO
 	densematrix_write_mmio(enginedata->dydot_dy,fp);
-	CONSOLE_DEBUG("Returning after matrix output");
+	MSG("Returning after matrix output");
 	return 0;
 #else
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"MMIO routines not available");
 	return 1;
 #endif
 }
+
+/* vim: set ts=2: */

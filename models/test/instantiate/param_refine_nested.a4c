@@ -1,0 +1,53 @@
+REQUIRE "system.a4l";
+
+(* Minimal reproducer for nested parameter propagation through REFINES.
+   According to the parameterised model docs, the refined case should be
+   structurally equivalent to the direct case below. At present the direct
+   case instantiates, while the refined case leaves the inner parameter
+   unresolved during phase-1 instantiation. *)
+
+MODEL inner(
+	n IS_A integer_constant;
+);
+	s IS_A set OF integer_constant;
+	s :== [1..n];
+	x[s] IS_A real;
+END inner;
+
+MODEL outer(
+	n IS_A integer_constant;
+);
+	child IS_A inner(n);
+END outer;
+
+MODEL outer_checked(
+	n IS_A integer_constant;
+) WHERE (
+	n > 1;
+);
+	child IS_A inner(n);
+END outer_checked;
+
+MODEL outer_direct_ok;
+	n IS_A integer_constant;
+	n :== 2;
+	o IS_A outer(n);
+END outer_direct_ok;
+
+MODEL outer_refined_bug() REFINES outer(
+	n :== 2;
+);
+END outer_refined_bug;
+
+MODEL outer_checked_direct_ok;
+	n IS_A integer_constant;
+	n :== 2;
+	o IS_A outer_checked(n);
+END outer_checked_direct_ok;
+
+MODEL outer_checked_refined_ok() WHERE (
+	n > 1;
+) REFINES outer_checked(
+	n :== 2;
+);
+END outer_checked_refined_ok;

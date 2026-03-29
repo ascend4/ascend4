@@ -21,6 +21,8 @@
 
 #include "ida.h"
 #include "idalinear.h"
+#include <ascend/compiler/expr_types.h>
+#include <ascend/compiler/instance_enum.h>
 
 /* residual function forward declaration */
 int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data);
@@ -44,3 +46,6 @@ IntegratorSparseJacFn integrator_ida_sjex;
 
 /* boundary-detection function */
 int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout, void *g_data);
+
+/* helper support for direct SWITCH TO comparison guards */
+int ida_guard_expr_rootable(const struct Expr *expr);

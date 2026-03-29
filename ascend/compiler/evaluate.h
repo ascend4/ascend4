@@ -47,6 +47,11 @@ typedef struct value_t EvaluateNameFn(CONST struct Name *nptr);
  *  Should return a struct value_t for that Name.
  */
 
+typedef struct value_t EvaluatePreNameFn(CONST struct Name *nptr, void *userdata);
+/**<
+ *  A callback used only when evaluating pre(name) expressions.
+ */
+
 extern struct value_t EvaluateSet(CONST struct Set *sptr
 	, EvaluateNameFn *EvaluateName
 );
@@ -132,6 +137,21 @@ extern struct gl_list_t
  *  a list with duplication already in it, we will not clean it up for you.
  */
 
+extern void SetEvaluationPreNameFn(EvaluatePreNameFn *fn, void *userdata);
+/**<
+ *  Set or clear the ambient callback used for evaluating pre(name).
+ */
+
+extern EvaluatePreNameFn *GetEvaluationPreNameFn(void);
+/**<
+ *  Retrieve the currently installed pre(name) evaluation callback.
+ */
+
+extern void *GetEvaluationPreUserData(void);
+/**<
+ *  Retrieve the currently installed pre(name) callback userdata.
+ */
+
 extern struct gl_list_t
 *EvaluateSetNamesNeededShallow(CONST struct Set *sptr, struct gl_list_t *list);
 /**<
@@ -170,4 +190,3 @@ extern void ClearRecycleStack(void);
 /* @} */
 
 #endif /* ASC_EVALUATE_H */
-

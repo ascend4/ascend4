@@ -291,6 +291,29 @@ CONST struct Name *ExtractARRName(CONST struct Statement *s)
 
 static int g_tlibs_depth=0;
 /* counter to avoid redundant spew */
+
+static int ExprContainsPreSimple(CONST struct Expr *expr, CONST struct Expr *stop){
+  while(expr != stop){
+    if(ExprType(expr) == e_pre){
+      return 1;
+    }
+    expr = NextExpr(expr);
+  }
+  return 0;
+}
+
+static int TypeLintRejectPreOutsideReinit(CONST struct Statement *s, CONST struct Expr *expr){
+  if(expr == NULL || !ExprContainsPreSimple(expr, NULL)){
+    return 0;
+  }
+  if(s != NULL && StatementType(s) == REINIT){
+    return 0;
+  }
+  WriteStatementError(ASC_USER_ERROR, s, 1,
+    "pre(...) is only allowed inside REINIT(...) in Phase 1A.");
+  return 1;
+}
+
 enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
                                           symchar *name,
                                           CONST struct StatementList *sl,
@@ -396,6 +419,9 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
         rval = DEF_TOOMANY_RELOP;
         TypeLintError(fp,s,rval);
       }
+      if (TypeLintRejectPreOutsideReinit(s, RelationStatExpr(s))) {
+        rval = DEF_MISC_ERROR;
+      }
       break;
     case LOGREL:
       /* check simple name */
@@ -410,6 +436,9 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
       if (NumberOfRelOps(LogicalRelStatExpr(s)) > 1) {
         rval = DEF_TOOMANY_LOGOP;
         TypeLintError(fp,s,rval);
+      }
+      if (TypeLintRejectPreOutsideReinit(s, LogicalRelStatExpr(s))) {
+        rval = DEF_MISC_ERROR;
       }
       break;
     case IRT:
@@ -490,6 +519,27 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
         }
       }
       break;
+    case REINIT:
+      if ((context & context_WHEN) == 0) {
+        rval = DEF_STAT_MISLOCATED;
+        TypeLintError(fp,s,rval);
+      }else{
+        if (TypeLintRejectPreOutsideReinit(s, ReinitStatRHS(s))) {
+          rval = DEF_MISC_ERROR;
+        }
+      }
+      break;
+    case SWITCHTO:
+      if ((context & context_WHEN) == 0) {
+        rval = DEF_STAT_MISLOCATED;
+        TypeLintError(fp,s,rval);
+      }else{
+        if (TypeLintRejectPreOutsideReinit(s, SwitchToStatValue(s))
+            || TypeLintRejectPreOutsideReinit(s, SwitchToStatGuard(s))) {
+          rval = DEF_MISC_ERROR;
+        }
+      }
+      break;
     case WHEN:
       /* check simple name */
      /* vicente, what's up with this? we can name whens? */
@@ -566,6 +616,99 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
   if (rval != DEF_OKAY && g_tlibs_depth < 2 /* at top */) {
     FPRINTF(fp,"  Errors detected in declarative section of '%s'\n",
             SCP(name));
+  }
+  g_tlibs_depth--;
+  return rval;
+}
+
+enum typelinterr TypeLintIllegalInitialStats(FILE *fp,
+                                             symchar *name,
+                                             CONST struct StatementList *sl,
+                                             unsigned int context)
+{
+  unsigned long c,len;
+  struct gl_list_t *gl;
+  struct Statement *s;
+  enum typelinterr rval = DEF_OKAY, tmperr;
+
+  g_tlibs_depth++;
+  assert(name != NULL);
+  len = StatementListLength(sl);
+  if (len == 0L) {
+    g_tlibs_depth--;
+    return rval;
+  }
+  gl = GetList(sl);
+  for (c = 1; c <= len; ++c) {
+    s = (struct Statement *)gl_fetch(gl,c);
+    switch (StatementType(s)) {
+    case REL:
+      if (NameCompound(RelationStatName(s)) != 0) {
+        if (TLINT_ERROR) {
+          FPRINTF(fp,"%sCannot create relations in another object.\n",
+                  StatioLabel(3));
+        }
+        rval = DEF_NAME_INCORRECT;
+        TypeLintError(fp,s,rval);
+      }
+      if (NumberOfRelOps(RelationStatExpr(s)) > 1) {
+        rval = DEF_TOOMANY_RELOP;
+        TypeLintError(fp,s,rval);
+      }
+      if (TypeLintRejectPreOutsideReinit(s, RelationStatExpr(s))) {
+        rval = DEF_MISC_ERROR;
+      }
+      break;
+    case LOGREL:
+      if (NameCompound(LogicalRelStatName(s)) != 0) {
+        if (TLINT_ERROR) {
+          FPRINTF(fp,"%sCannot create logical relations in another object.\n",
+                  StatioLabel(3));
+        }
+        rval = DEF_NAME_INCORRECT;
+        TypeLintError(fp,s,rval);
+      }
+      if (NumberOfRelOps(LogicalRelStatExpr(s)) > 1) {
+        rval = DEF_TOOMANY_LOGOP;
+        TypeLintError(fp,s,rval);
+      }
+      if (TypeLintRejectPreOutsideReinit(s, LogicalRelStatExpr(s))) {
+        rval = DEF_MISC_ERROR;
+      }
+      break;
+    case FOR:
+      if (ForContainsSelect(s)) {
+        rval = DEF_ILLEGAL_SELECT;
+        TypeLintError(fp,s,rval);
+      }
+      if (ForLoopKind(s) != fk_create) {
+        rval = DEF_FOR_NOTBODY;
+        TypeLintError(fp,s,rval);
+      } else {
+        tmperr = TypeLintIllegalInitialStats(fp,name,ForStatStmts(s),
+                                             (context | context_FOR));
+        if (tmperr != DEF_OKAY) {
+          rval = tmperr;
+        }
+      }
+      break;
+    case COND:
+      tmperr = TypeLintIllegalInitialStats(fp,name,CondStatList(s),
+                                           (context | context_COND));
+      if (tmperr != DEF_OKAY) {
+        rval = tmperr;
+      }
+      break;
+    default:
+      TypeLintError(fp,s,DEF_STAT_MISLOCATED);
+      rval = DEF_STAT_MISLOCATED;
+      if (TLINT_ERROR) {
+        FPRINTF(fp,"  Only equation-building declarative statements are allowed in INITIAL.\n");
+      }
+    }
+  }
+  if (rval != DEF_OKAY && g_tlibs_depth < 2) {
+    FPRINTF(fp,"  Errors detected in INITIAL section of '%s'\n", SCP(name));
   }
   g_tlibs_depth--;
   return rval;
@@ -926,12 +1069,19 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case FREE:
     case CALL:
     case SOLVER:
+    case INTEGRATOR:
     case OPTION:
     case SOLVE:
+    case INTEGRATE:
+    case OBSERVE:
     case STUDY:
     case DELETESYSTEM:
       break;
     case WHILE:
+      if (TypeLintRejectPreOutsideReinit(s, WhileStatExpr(s))) {
+        rval = DEF_MISC_ERROR;
+        break;
+      }
       if (WhileStatBlock(s) != NULL) {
         tmperr = TypeLintIllegalMethodStatList(fp,name,pname,WhileStatBlock(s),
                                                (context | context_WHILE));
@@ -942,10 +1092,17 @@ TypeLintIllegalMethodStatList(FILE *fp,
       }
       break;
     case ASSERT:
+      if (TypeLintRejectPreOutsideReinit(s, AssertStatExpr(s))) {
+        rval = DEF_MISC_ERROR;
+      }
       /* no sublists for TEST */
       break;
 
     case IF:
+      if (TypeLintRejectPreOutsideReinit(s, IfStatExpr(s))) {
+        rval = DEF_MISC_ERROR;
+        break;
+      }
       if (IfStatThen(s) != NULL) {
         tmperr = TypeLintIllegalMethodStatList(fp,name,pname,IfStatThen(s),
                                                (context | context_IF));

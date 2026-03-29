@@ -38,6 +38,11 @@
 /* global to get around the mr header (for tear_subreorder) */
 static
 enum mtx_reorder_method g_blockmethod = mtx_UNKNOWN;
+static int g_block_dof_messages_enabled = 1;
+
+void slv_block_set_dof_messages_enabled(int enabled){
+  g_block_dof_messages_enabled = enabled ? 1 : 0;
+}
 
 /*-----------------------------------------------------------------------------
   VAR/REL ORDERING (TO MATCH MATRIX PERMUTATIONS)
@@ -200,11 +205,11 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
   /* CONSOLE_DEBUG("FIRST REL = %p",rp[0]); */
 
   /* lot of whining about dof */
-  if (rank < nrow) {
+  if (rank < nrow && g_block_dof_messages_enabled) {
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"System is row rank deficient (%d dependent equations)",
             nrow - rank);
   }
-  if (rank < ncol) {
+  if (rank < ncol && g_block_dof_messages_enabled) {
     if ( nrow != rank) {
       ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"System is row rank deficient with %d excess columns.",
               ncol - rank);
@@ -212,7 +217,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
       ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"System has %d degrees of freedom.", ncol - rank);
     }
   }
-  if (ncol == nrow) {
+  if (ncol == nrow && g_block_dof_messages_enabled) {
     if (ncol != rank) {
       ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"System is (%d) square but rank deficient.",ncol);
     } else {
@@ -1125,4 +1130,3 @@ LIST_DEBUG(rel,rel_relation)
 
 SYSTEM_CUT_LIST(var,var_variable);
 SYSTEM_CUT_LIST(rel,rel_relation);
-

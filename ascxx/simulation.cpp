@@ -20,6 +20,8 @@
 #include <iomanip>
 #include <stdexcept>
 #include <sstream>
+#include <cstdio>
+#include <cstdlib>
 using namespace std;
 
 #include "config.h"
@@ -55,6 +57,7 @@ extern "C"{
 #include <ascend/system/slv_server.h>
 #include <ascend/system/graph.h>
 #include <ascend/solver/solver.h>
+#include <ascend/integrator/pantelides.h>
 }
 
 #include "simulation.h"
@@ -779,6 +782,36 @@ Simulation::getallVariables(){
 	for(unsigned long i=0;i<nvars;++i)
 		vars.push_back(Variable(this,vlist[i]));
 	return vars;
+}
+
+string
+Simulation::getPantelidesReport() const{
+	if(!sys)throw runtime_error("Simulation system not built yet");
+
+	char *buf = NULL;
+	size_t len = 0;
+	FILE *fp = open_memstream(&buf, &len);
+	if(fp == NULL){
+		throw runtime_error("Unable to open Pantelides report stream");
+	}
+	if(integrator_pantelides_advisory(sys, fp)){
+		fclose(fp);
+		if(buf != NULL){
+			free(buf);
+		}
+		throw runtime_error("Pantelides advisory analysis failed");
+	}
+	if(fclose(fp)){
+		if(buf != NULL){
+			free(buf);
+		}
+		throw runtime_error("Unable to finalise Pantelides report");
+	}
+	string report = (buf != NULL) ? string(buf) : string();
+	if(buf != NULL){
+		free(buf);
+	}
+	return report;
 }
 
 /**

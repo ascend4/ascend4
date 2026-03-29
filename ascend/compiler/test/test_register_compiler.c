@@ -51,6 +51,7 @@
 	T(instantiate_arr) \
 	T(instantiate_for) \
 	T(instantiate_when_select) \
+	T(instantiate_param_refine) \
 	T(instantiate_alias) \
 	T(instantiate_set_type_errors) \
 	T(instantiate_cond) \

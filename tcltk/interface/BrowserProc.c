@@ -70,6 +70,7 @@
 #include <ascend/compiler/simlist.h>
 #include <ascend/compiler/anontype.h>
 #include <ascend/compiler/qlfdid.h>
+#include <ascend/compiler/derivinst.h>
 
 #include <ascend/system/slv_types.h>
 
@@ -151,6 +152,27 @@ unsigned long ChildNumberbyChar(struct Instance *i, char *name)
 }
 
 static
+struct Instance *ChildInstanceByChar(struct Instance *i, char *name)
+{
+  unsigned long c;
+  struct Instance *dyn;
+  if((!i)||(!name)) {
+    FPRINTF(ASCERR,"Null Instance or name in ChildInstanceByChar\n");
+    FFLUSH(ASCERR);
+    return NULL;
+  }
+  c = ChildNumberbyChar(i,name);
+  if(c){
+    return InstanceChild(i,c);
+  }
+  dyn = InstanceDynamicChildByChar(i, AddSymbol(name));
+  if(dyn != NULL){
+    return dyn;
+  }
+  return NULL;
+}
+
+static
 int BrowRootInit(char *sim_name)
 {
   struct Instance *ptr;
@@ -209,7 +231,8 @@ int Asc_BrowRootCmd(ClientData cdata, Tcl_Interp *interp,
 /* This command takes the form : root $arg1$.
    This will set the current search positions.
 */
-  unsigned long nch,c;
+  unsigned long nch;
+  struct Instance *child;
 
   UNUSED_PARAMETER(cdata);
 
@@ -221,11 +244,11 @@ int Asc_BrowRootCmd(ClientData cdata, Tcl_Interp *interp,
     Tcl_SetResult(interp, "Call exp_b $sim$  first!!", TCL_STATIC);
     return TCL_ERROR;
   }
-  nch = NumberChildren(g_curinst);
+  nch = NumberChildren(g_curinst) + InstanceDynamicChildCount(g_curinst);
   if (nch) {
-    c = ChildNumberbyChar(g_curinst,QUIET(argv[1]));
-    if (c) {
-      g_curinst = InstanceChild(g_curinst,c);
+    child = ChildInstanceByChar(g_curinst,QUIET(argv[1]));
+    if (child != NULL) {
+      g_curinst = child;
       g_depth++;
       g_instlist[g_depth] = g_curinst;
       return TCL_OK;
@@ -450,6 +473,8 @@ int Asc_BrowInstListCmd(ClientData cdata, Tcl_Interp *interp,
                     int argc, CONST84 char *argv[])
 {
   struct Instance *p, *c;
+  symchar *dynname;
+  unsigned long dynindex;
   struct InstanceName name;
   unsigned long cc, cindex;
 
@@ -479,6 +504,11 @@ int Asc_BrowInstListCmd(ClientData cdata, Tcl_Interp *interp,
       case StrName:
         PRINTF("%s\n",SCP(InstanceNameStr(name)));
         break;
+      }
+    } else if((dynindex = InstanceDynamicChildIndex(p,c)) != 0) {
+      dynname = InstanceDynamicChildName(p, dynindex);
+      if(dynname != NULL){
+        PRINTF("%s\n",SCP(dynname));
       }
     }
   }
@@ -818,7 +848,7 @@ static
 int BrowInstNChild(struct Instance *i, unsigned long *l)
 {
   unsigned long nch;
-  nch = NumberChildren(i);
+  nch = NumberChildren(i) + InstanceDynamicChildCount(i);
   if (nch) {
     *l = nch;
     return 0;
@@ -1068,8 +1098,9 @@ int Asc_BrowInstQueryCmd(ClientData cdata, Tcl_Interp *interp,
   }
 
   if (strncmp(argv[1],"child",3)==0) {
+    unsigned long dynch = InstanceDynamicChildCount(i);
     nch = NumberChildren(i);
-    if (nch) {
+    if (nch || dynch) {
       tmps = Asc_MakeInitString(256);
       for(c=1;c<=nch;c++) {
         in = ChildName(i,c);
@@ -1086,6 +1117,13 @@ int Asc_BrowInstQueryCmd(ClientData cdata, Tcl_Interp *interp,
           Tcl_AppendElement(interp,tmps);
           break;
         }
+      }
+      for(c=1;c<=dynch;c++) {
+        symchar *dynname = InstanceDynamicChildName(i,c);
+        if(dynname == NULL){
+          continue;
+        }
+        Tcl_AppendElement(interp,(char *)dynname);
       }
       ascfree(tmps);
       return TCL_OK;
@@ -1420,5 +1458,3 @@ int Asc_BrowAnonTypesCmd(ClientData cdata, Tcl_Interp *interp,
   DumpAT(stdout,i);
   return TCL_OK;
 }
-
-

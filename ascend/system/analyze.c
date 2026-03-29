@@ -74,13 +74,18 @@
 #include <ascend/general/mathmacros.h>
 
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/dimen.h>
 #include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/name.h>
 #include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/expr_types.h>
 #include <ascend/compiler/exprs.h>
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/createinst.h>
+#include <ascend/compiler/destroyinst.h>
+#include <ascend/compiler/library.h>
 #include <ascend/compiler/find.h>
 #include <ascend/compiler/extcall.h>
 #include <ascend/compiler/rel_blackbox.h>
@@ -92,8 +97,12 @@
 #include <ascend/compiler/logical_relation.h>
 #include <ascend/compiler/logrel_util.h>
 #include <ascend/compiler/case.h>
+#include <ascend/compiler/statement.h>
 #include <ascend/compiler/when_util.h>
 #include <ascend/compiler/link.h>
+#include <ascend/compiler/derivinst.h>
+#include <ascend/compiler/evaluate.h>
+#include <ascend/compiler/setinstval.h>
 
 #include "slv_server.h"
 #include "cond_config.h"
@@ -113,6 +122,471 @@
 
 static symchar *g_strings[6];
 
+struct derivative_bind_data {
+  struct Instance *root;
+  struct problem_t *problem;
+  int errors;
+};
+
+struct dynreg_collect_data {
+  struct problem_t *problem;
+  symchar *key;
+  int is_der;
+  int next_odeid;
+  int errors;
+};
+
+static int dynamic_instance_matches(struct Instance *a, struct Instance *b){
+  if(a == NULL || b == NULL){
+    return 0;
+  }
+  return a == b;
+}
+
+static int dynamic_registry_can_track(struct Instance *inst){
+  if(inst == NULL){
+    return 0;
+  }
+  switch(InstanceKind(inst)){
+  case REAL_ATOM_INST:
+  case BOOLEAN_ATOM_INST:
+  case INTEGER_ATOM_INST:
+  case SYMBOL_ATOM_INST:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+static struct Instance *dynamic_resolve_name_relative(struct Instance *ctx, CONST struct Name *name){
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  struct gl_list_t *instances;
+  struct Instance *inst = NULL;
+
+  if(ctx == NULL || name == NULL){
+    return NULL;
+  }
+
+  instances = FindInstances(ctx, name, &err);
+  if(instances == NULL){
+    return NULL;
+  }
+  if(gl_length(instances) == 1){
+    inst = (struct Instance *)gl_fetch(instances, 1);
+  }
+  gl_destroy(instances);
+
+  if(inst == NULL){
+    return NULL;
+  }
+  if(dynamic_registry_can_track(inst)){
+    return inst;
+  }
+  if(NextName(name) != NULL && NumberChildren(inst) > 0){
+    return dynamic_resolve_name_relative(inst, NextName(name));
+  }
+  return NULL;
+}
+
+static struct dynreg_entry *dynamic_registry_lookup(struct problem_t *p_data, struct Instance *inst){
+  unsigned long i, len;
+  if(p_data == NULL || p_data->dynreg == NULL || inst == NULL){
+    return NULL;
+  }
+  len = gl_length(p_data->dynreg);
+  for(i = 1; i <= len; ++i){
+    struct dynreg_entry *entry = (struct dynreg_entry *)gl_fetch(p_data->dynreg, i);
+    if(entry != NULL && dynamic_instance_matches(entry->inst, inst)){
+      return entry;
+    }
+  }
+  return NULL;
+}
+
+static int dynamic_registry_add(struct problem_t *p_data, struct Instance *inst, int deriv, int odeid){
+  struct dynreg_entry *entry;
+  if(p_data == NULL || inst == NULL){
+    return 1;
+  }
+  entry = dynamic_registry_lookup(p_data, inst);
+  if(entry != NULL){
+    if(entry->deriv == deriv && entry->odeid == odeid){
+      return 0;
+    }
+    if((entry->deriv == -1 && odeid != 0) || (entry->odeid != 0 && deriv == -1)){
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,
+        "Variable '%s' cannot be both independent and part of a derivative chain",
+        WriteInstanceNameString(inst, p_data->root)
+      );
+      error_reporter_end_flush();
+      return 1;
+    }
+    /* Ambiguous link resolution, most notably in some array-alias cases.
+       Leave this instance to the legacy fallback path rather than aborting. */
+    entry->inst = NULL;
+    entry->deriv = 0;
+    entry->odeid = 0;
+    return 0;
+  }
+  entry = ASC_NEW(struct dynreg_entry);
+  entry->inst = inst;
+  entry->deriv = deriv;
+  entry->odeid = odeid;
+  entry->hidden = 0;
+  gl_append_ptr(p_data->dynreg, entry);
+  return 0;
+}
+
+static int dynamic_registry_add_hidden(struct problem_t *p_data, struct Instance *inst, int deriv, int odeid){
+  struct dynreg_entry *entry;
+  if(dynamic_registry_add(p_data, inst, deriv, odeid)){
+    return 1;
+  }
+  entry = dynamic_registry_lookup(p_data, inst);
+  if(entry != NULL){
+    entry->hidden = 1;
+  }
+  return 0;
+}
+
+static void *analyze_collect_dynamic_links(struct Instance *inst, struct dynreg_collect_data *data){
+  struct gl_list_t *links;
+  unsigned long i;
+
+  if(data == NULL || data->problem == NULL || inst == NULL){
+    return NULL;
+  }
+  if(InstanceKind(inst) != MODEL_INST && InstanceKind(inst) != SIM_INST){
+    return NULL;
+  }
+
+  links = getLinks(inst, data->key, 0);
+  if(links == NULL){
+    return NULL;
+  }
+
+  for(i = 1; i <= gl_length(links); ++i){
+    struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(links, i);
+    CONST struct VariableList *vl;
+    unsigned long k;
+
+    if(entry == NULL){
+      continue;
+    }
+
+    vl = entry->u.vl;
+    if(data->is_der){
+      unsigned long ninst = VariableListLength(vl);
+      int odeid = data->next_odeid++;
+      for(k = 1; vl != NULL; ++k, vl = NextVariableNode(vl)){
+        struct Instance *linked = dynamic_resolve_name_relative(inst, NamePointer(vl));
+        int deriv = (int)(ninst - k + 1);
+        if(!dynamic_registry_can_track(linked)){
+          continue;
+        }
+        if(dynamic_registry_add(data->problem, linked, deriv, odeid)){
+          data->errors = 1;
+          break;
+        }
+      }
+    }else{
+      for(k = 1; vl != NULL; ++k, vl = NextVariableNode(vl)){
+        struct Instance *linked = dynamic_resolve_name_relative(inst, NamePointer(vl));
+        if(!dynamic_registry_can_track(linked)){
+          continue;
+        }
+        if(dynamic_registry_add(data->problem, linked, -1, 0)){
+          data->errors = 1;
+          break;
+        }
+      }
+    }
+
+    if(data->errors){
+      break;
+    }
+  }
+
+  gl_destroy(links);
+  return NULL;
+}
+
+static int analyze_build_dynamic_registry(struct problem_t *p_data){
+  struct dynreg_collect_data der_data, indep_data;
+
+  if(p_data == NULL || p_data->root == NULL){
+    return 1;
+  }
+
+  p_data->dynreg = gl_create(8);
+  if(p_data->dynreg == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for dynamic registry.");
+    return 1;
+  }
+
+  der_data.problem = p_data;
+  der_data.key = AddSymbol("ode");
+  der_data.is_der = 1;
+  der_data.next_odeid = 1;
+  der_data.errors = 0;
+  VisitInstanceTreeTwo(p_data->root, (VisitTwoProc)analyze_collect_dynamic_links, 0, 0, &der_data);
+  if(der_data.errors){
+    return 1;
+  }
+
+  indep_data.problem = p_data;
+  indep_data.key = AddSymbol("independent");
+  indep_data.is_der = 0;
+  indep_data.next_odeid = der_data.next_odeid;
+  indep_data.errors = 0;
+  VisitInstanceTreeTwo(p_data->root, (VisitTwoProc)analyze_collect_dynamic_links, 0, 0, &indep_data);
+  if(indep_data.errors){
+    return 1;
+  }
+
+  return 0;
+}
+
+static int dynamic_registry_next_odeid(struct problem_t *p_data){
+  unsigned long i, len;
+  int max_odeid = 0;
+
+  if(p_data == NULL || p_data->dynreg == NULL){
+    return 1;
+  }
+
+  len = gl_length(p_data->dynreg);
+  for(i = 1; i <= len; ++i){
+    struct dynreg_entry *entry = (struct dynreg_entry *)gl_fetch(p_data->dynreg, i);
+    if(entry != NULL && entry->inst != NULL && entry->odeid > max_odeid){
+      max_odeid = entry->odeid;
+    }
+  }
+  return max_odeid + 1;
+}
+
+static struct Instance *dynamic_registry_find_by_chain(struct problem_t *p_data,
+  int odeid, int deriv
+){
+  unsigned long i, len;
+
+  if(p_data == NULL || p_data->dynreg == NULL || odeid == 0){
+    return NULL;
+  }
+
+  len = gl_length(p_data->dynreg);
+  for(i = 1; i <= len; ++i){
+    struct dynreg_entry *entry = (struct dynreg_entry *)gl_fetch(p_data->dynreg, i);
+    if(entry != NULL && entry->inst != NULL && entry->odeid == odeid && entry->deriv == deriv){
+      return entry->inst;
+    }
+  }
+  return NULL;
+}
+
+static struct Instance *dynamic_create_hidden_derivative(struct problem_t *p_data, struct Instance *base){
+  struct dynreg_entry *base_entry;
+  struct TypeDescription *solver_var_type;
+  struct Instance *deriv;
+  int odeid;
+
+  if(p_data == NULL || base == NULL){
+    return NULL;
+  }
+
+  base_entry = dynamic_registry_lookup(p_data, base);
+  if(base_entry != NULL && base_entry->inst == NULL){
+    return NULL;
+  }
+  if(base_entry != NULL && base_entry->deriv == -1){
+    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+    FPRINTF(ASCERR,"Variable '%s' cannot be both independent and a differential state",
+      WriteInstanceNameString(base, p_data->root));
+    error_reporter_end_flush();
+    return NULL;
+  }
+
+  if(base_entry == NULL){
+    odeid = dynamic_registry_next_odeid(p_data);
+    if(dynamic_registry_add(p_data, base, 1, odeid)){
+      return NULL;
+    }
+    base_entry = dynamic_registry_lookup(p_data, base);
+  }else{
+    if(base_entry->deriv != 1 || base_entry->odeid == 0){
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      FPRINTF(ASCERR,"Unsupported implicit derivative materialisation for variable '%s'",
+        WriteInstanceNameString(base, p_data->root));
+      error_reporter_end_flush();
+      return NULL;
+    }
+    odeid = base_entry->odeid;
+  }
+
+  deriv = dynamic_registry_find_by_chain(p_data, odeid, 2);
+  if(deriv != NULL){
+    return deriv;
+  }
+
+  deriv = InstanceEnsureDerivative(base);
+  if(deriv == NULL){
+    solver_var_type = FindType(AddSymbol(SOLVER_VAR_STR));
+    if(solver_var_type == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"'solver_var' not defined while creating hidden derivative variable");
+      return NULL;
+    }
+    deriv = CreateRealInstance(solver_var_type);
+  }
+  if(deriv == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to create hidden derivative instance");
+    return NULL;
+  }
+
+  if(p_data->dynhiddeninsts == NULL){
+    p_data->dynhiddeninsts = gl_create(4);
+    if(p_data->dynhiddeninsts == NULL){
+      DestroyInstance(deriv,NULL);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for hidden derivative tracking.");
+      return NULL;
+    }
+  }
+  gl_append_ptr(p_data->dynhiddeninsts, deriv);
+
+  if(dynamic_registry_add_hidden(p_data, deriv, 2, odeid)){
+    return NULL;
+  }
+
+  p_data->nv++;
+  return deriv;
+}
+
+static struct Instance *resolve_materialised_derivative(struct Instance *base, void *userdata){
+  struct derivative_bind_data *data = (struct derivative_bind_data *)userdata;
+  struct dynreg_entry *entry;
+  struct Instance *deriv;
+
+  if(data == NULL || base == NULL){
+    return NULL;
+  }
+
+  if(data->problem != NULL){
+    entry = dynamic_registry_lookup(data->problem, base);
+    if(entry != NULL && entry->inst != NULL && entry->odeid != 0){
+      deriv = dynamic_registry_find_by_chain(data->problem, entry->odeid, entry->deriv + 1);
+      if(deriv != NULL){
+        return deriv;
+      }
+    }
+    deriv = dynamic_create_hidden_derivative(data->problem, base);
+    if(deriv != NULL){
+      return deriv;
+    }
+  }
+
+  return getOdeDerivative(data->root, base);
+}
+
+struct derivative_recover_data {
+  struct Instance *root;
+  struct problem_t *problem;
+  int next_odeid;
+  int errors;
+};
+
+static int dynamic_hidden_list_append_unique(struct problem_t *p_data, struct Instance *inst){
+  unsigned long i, len;
+
+  if(p_data == NULL || inst == NULL){
+    return 1;
+  }
+  if(p_data->dynhiddeninsts == NULL){
+    p_data->dynhiddeninsts = gl_create(4);
+    if(p_data->dynhiddeninsts == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for hidden derivative tracking.");
+      return 1;
+    }
+  }
+  len = gl_length(p_data->dynhiddeninsts);
+  for(i = 1; i <= len; ++i){
+    if((struct Instance *)gl_fetch(p_data->dynhiddeninsts, i) == inst){
+      return 0;
+    }
+  }
+  gl_append_ptr(p_data->dynhiddeninsts, inst);
+  return 0;
+}
+
+static int dynamic_recover_bound_derivative(struct derivative_recover_data *data,
+  struct Instance *deriv
+){
+  struct Instance *base;
+  struct dynreg_entry *base_entry, *deriv_entry;
+  int odeid;
+
+  if(data == NULL || data->problem == NULL || deriv == NULL){
+    return 1;
+  }
+
+  base = DerivativeInstanceBase(deriv);
+  if(base == NULL || !dynamic_registry_can_track(base)){
+    return 0;
+  }
+
+  base_entry = dynamic_registry_lookup(data->problem, base);
+  deriv_entry = dynamic_registry_lookup(data->problem, deriv);
+
+  if(base_entry != NULL && base_entry->inst != NULL && base_entry->odeid != 0){
+    odeid = base_entry->odeid;
+  }else if(deriv_entry != NULL && deriv_entry->inst != NULL && deriv_entry->odeid != 0){
+    odeid = deriv_entry->odeid;
+  }else{
+    odeid = data->next_odeid++;
+  }
+
+  if(base_entry == NULL && dynamic_registry_add(data->problem, base, 1, odeid)){
+    return 1;
+  }
+  if(deriv_entry == NULL && dynamic_registry_add_hidden(data->problem, deriv, 2, odeid)){
+    return 1;
+  }
+  if(dynamic_hidden_list_append_unique(data->problem, deriv)){
+    return 1;
+  }
+  return 0;
+}
+
+static void recover_bound_derivative_terms(struct Instance *inst, VOIDPTR userdata)
+{
+  struct derivative_recover_data *data = (struct derivative_recover_data *)userdata;
+  struct relation *rel;
+  unsigned long v, vlen;
+
+  if(data == NULL || data->errors){
+    return;
+  }
+  if(InstanceKind(inst) != REL_INST){
+    return;
+  }
+
+  rel = (struct relation *)GetInstanceRelationOnly(inst);
+  if(rel == NULL){
+    return;
+  }
+
+  vlen = NumberVariables(rel);
+  for(v = 1; v <= vlen; ++v){
+    struct Instance *var = RelationVariable(rel, v);
+    if(var == NULL || !IsDerivativeInstance(var)){
+      continue;
+    }
+    if(dynamic_recover_bound_derivative(data, var)){
+      data->errors = 1;
+      return;
+    }
+  }
+}
+
 /* symbol table entries we need */
 #define INCLUDED_A g_strings[0]
 #define FIXED_A g_strings[1]
@@ -120,6 +594,10 @@ static symchar *g_strings[6];
 #define DERIV_A g_strings[3]
 #define ODEID_A g_strings[4]
 #define OBSID_A g_strings[5]
+
+#define ANALYZE_REINIT_OTHER_VAR -1L
+#define ANALYZE_REINIT_ALGEBRAIC_VAR 0L
+#define ANALYZE_REINIT_STATE_VAR 1L
 
 /*
 	a bridge buffer used so much we aren't going to free it, just reuse it
@@ -139,6 +617,199 @@ struct gl_list_t *g_symbol_values_list = NULL;
 */
 static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
                                  struct gl_list_t *, struct gl_list_t *);
+static void ProcessSwitchGuardDiscreteDeps(struct Instance *context,
+    const struct Expr *guard);
+static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data);
+static int analyze_reinit_marks_discrete_real(struct problem_t *p_data, const struct Instance *inst);
+static int BooleanChildValue(struct Instance *i,symchar *sc);
+static int IntegerChildValue(struct Instance *i,symchar *sc);
+
+static int analyze_instance_in_list(struct gl_list_t *list, const struct Instance *inst){
+  unsigned long i, len;
+
+  if(list == NULL || inst == NULL){
+    return 0;
+  }
+
+  len = gl_length(list);
+  for(i = 1; i <= len; ++i){
+    if((const struct Instance *)gl_fetch(list, i) == inst){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static long analyze_real_target_role(struct problem_t *p_data, struct Instance *inst){
+  long deriv = 0;
+  long odeid = 0;
+  struct dynreg_entry *dyn;
+
+  if(inst == NULL || InstanceKind(inst) != REAL_ATOM_INST){
+    return ANALYZE_REINIT_ALGEBRAIC_VAR;
+  }
+
+  deriv = IntegerChildValue(inst, DERIV_A);
+  odeid = IntegerChildValue(inst, ODEID_A);
+  if(deriv == 0 && odeid == 0){
+    dyn = dynamic_registry_lookup(p_data, inst);
+    if(dyn != NULL){
+      deriv = dyn->deriv;
+      odeid = dyn->odeid;
+    }
+  }
+
+  if(deriv == ANALYZE_REINIT_OTHER_VAR){
+    return ANALYZE_REINIT_OTHER_VAR;
+  }
+  if(deriv == ANALYZE_REINIT_STATE_VAR && odeid != 0){
+    return ANALYZE_REINIT_STATE_VAR;
+  }
+  if(deriv > ANALYZE_REINIT_STATE_VAR){
+    return deriv;
+  }
+  return ANALYZE_REINIT_ALGEBRAIC_VAR;
+}
+
+static int analyze_real_target_has_continuous_relation(struct Instance *inst){
+  unsigned long i, len;
+
+  if(inst == NULL || InstanceKind(inst) != REAL_ATOM_INST){
+    return 0;
+  }
+
+  len = RelationsCount(inst);
+  for(i = 1; i <= len; ++i){
+    struct Instance *relinst = RelationsForAtom(inst, i);
+    const struct relation *rel;
+    if(relinst == NULL || InstanceKind(relinst) != REL_INST){
+      continue;
+    }
+    rel = GetInstanceRelationOnly(relinst);
+    if(rel != NULL && !RelationIsCond(rel)){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static int analyze_append_reinit_discrete_real(struct problem_t *p_data, struct Instance *target){
+  long role;
+  char *targetname = NULL;
+
+  if(p_data == NULL || target == NULL){
+    return 1;
+  }
+  if(InstanceKind(target) != REAL_ATOM_INST){
+    return 0;
+  }
+  if(!solver_var(target)){
+    targetname = WriteInstanceNameString(target, p_data->root);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "REINIT target '%s' must be a solver_var, boolean_var, or other supported discrete variable",
+      targetname);
+    ascfree(targetname);
+    return 1;
+  }
+
+  role = analyze_real_target_role(p_data, target);
+  if(role == ANALYZE_REINIT_STATE_VAR){
+    return 0;
+  }
+  if(role == ANALYZE_REINIT_OTHER_VAR || role > ANALYZE_REINIT_STATE_VAR){
+    targetname = WriteInstanceNameString(target, p_data->root);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "REINIT target '%s' must be a differential state or inferred discrete/event-memory variable, not an independent/derivative variable",
+      targetname);
+    ascfree(targetname);
+    return 1;
+  }
+  if(analyze_real_target_has_continuous_relation(target)){
+    targetname = WriteInstanceNameString(target, p_data->root);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "REINIT target '%s' is a real algebraic variable in ordinary equations; only differential states and event-memory reals are supported",
+      targetname);
+    ascfree(targetname);
+    return 1;
+  }
+
+  if(p_data->reinit_discretes == NULL){
+    p_data->reinit_discretes = gl_create(4L);
+    if(p_data->reinit_discretes == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory while inferring REINIT target classes.");
+      return 1;
+    }
+  }
+  if(!analyze_instance_in_list(p_data->reinit_discretes, target)){
+    gl_append_ptr(p_data->reinit_discretes, target);
+  }
+  return 0;
+}
+
+static void *analyze_collect_reinit_targets(struct Instance *inst, struct problem_t *p_data){
+  struct gl_list_t *cases;
+  struct Instance *context;
+  unsigned long c, nc;
+
+  if(p_data == NULL || inst == NULL || InstanceKind(inst) != WHEN_INST){
+    return NULL;
+  }
+
+  context = InstanceParent(inst, 1);
+  if(context == NULL){
+    context = inst;
+  }
+
+  cases = GetInstanceWhenCases(inst);
+  nc = cases != NULL ? gl_length(cases) : 0;
+  for(c = 1; c <= nc; ++c){
+    struct Case *cur_case = (struct Case *)gl_fetch(cases, c);
+    struct gl_list_t *src = GetCaseReinitStatements(cur_case);
+    unsigned long i, len = src != NULL ? gl_length(src) : 0;
+    for(i = 1; i <= len; ++i){
+      struct Statement *statement = (struct Statement *)gl_fetch(src, i);
+      struct gl_list_t *instances;
+      struct Instance *target;
+      REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+
+      if(statement == NULL || StatementType(statement) != REINIT){
+        continue;
+      }
+
+      instances = FindInstances(context, ReinitStatVar(statement), &err);
+      if(instances == NULL || gl_length(instances) != 1){
+        if(instances != NULL)gl_destroy(instances);
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "Unable to resolve REINIT target while analysing WHEN cases");
+        p_data->bad_rel_in_list = TRUE;
+        return NULL;
+      }
+
+      target = (struct Instance *)gl_fetch(instances, 1);
+      gl_destroy(instances);
+
+      if(analyze_append_reinit_discrete_real(p_data, target)){
+        p_data->bad_rel_in_list = TRUE;
+        return NULL;
+      }
+    }
+  }
+
+  return NULL;
+}
+
+static int analyze_infer_reinit_targets(struct problem_t *p_data){
+  if(p_data == NULL || p_data->root == NULL){
+    return 1;
+  }
+  VisitInstanceTreeTwo(p_data->root, (VisitTwoProc)analyze_collect_reinit_targets, TRUE, FALSE,
+                       (VOIDPTR)p_data);
+  return p_data->bad_rel_in_list ? 1 : 0;
+}
+
+static int analyze_reinit_marks_discrete_real(struct problem_t *p_data, const struct Instance *inst){
+  return analyze_instance_in_list(p_data != NULL ? p_data->reinit_discretes : NULL, inst);
+}
 
 /*------------------------------------------------------------------------------
   SOME STUFF WITH INTERFACE POINTERS
@@ -587,19 +1258,23 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     ip->u.v.index = 0;
     ip->u.v.active = 0;
     if(solver_var(inst)){
-	  //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
+      //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
-      ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
+      ip->u.v.discrete = analyze_reinit_marks_discrete_real(p_data, inst);
+      ip->u.v.fixed = BooleanChildValue(inst,FIXED_A) || ip->u.v.discrete;
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
       ip->u.v.odeid = IntegerChildValue(inst,ODEID_A);
       ip->u.v.obsid = IntegerChildValue(inst,OBSID_A);
 	  /* CONSOLE_DEBUG("FOUND A VAR: deriv = %d, %s = %d",ip->u.v.deriv,SCP(ODEID_A),ip->u.v.odeid); */
 
-	  if(ip->u.v.deriv == 0){
-		ip->u.v.deriv = getOdeType(p_data->root,inst);
-		ip->u.v.odeid = getOdeId(p_data->root,inst);
-	  }
+      if(ip->u.v.deriv == 0 && ip->u.v.odeid == 0){
+        struct dynreg_entry *dyn = dynamic_registry_lookup(p_data, inst);
+        if(dyn != NULL){
+          ip->u.v.deriv = dyn->deriv;
+          ip->u.v.odeid = dyn->odeid;
+        }
+      }
 	  //printf("\n ode_type: %d, ode_id: %d \n",ip->u.v.deriv,ip->u.v.odeid);
 
       if(RelationsCount(inst)) {
@@ -614,11 +1289,11 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 	/* CONSOLE_DEBUG("Added to obsvars"); */
       	  }
 	/* make the algebraic/differential/derivative cut */
-	if(ip->u.v.odeid){
+	if(ip->u.v.odeid && !ip->u.v.discrete){
             gl_append_ptr(p_data->diffvars,(POINTER)ip);
 	/* CONSOLE_DEBUG("Added var to diffvars"); */
           }else{
-	if(ip->u.v.deriv==-1){
+	if(ip->u.v.deriv==-1 && !ip->u.v.discrete){
 		//printf("\n smth smth \n");
 		struct solver_ipdata *original_indep_var = NULL;
 		if(gl_length(p_data->indepvars) != 0) {
@@ -1058,6 +1733,9 @@ int analyze_make_master_lists(struct problem_t *p_data){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 1;
   }
+  if(analyze_append_hidden_dynamic_vars(p_data)){
+    return 1;
+  }
 
   /*
   	collect relations, objectives, logrels and whens recording the
@@ -1291,6 +1969,19 @@ void analyze_free_lists(struct problem_t *p_data){
   ADUN(algebvars);
   ADUN(indepvars);
   ADUN(obsvars); /* observed variables */
+  ADUN(dynbindrels);
+  ADUN(reinit_discretes);
+  if(p_data->dynhiddeninsts != NULL){
+    unsigned long i, len = gl_length(p_data->dynhiddeninsts);
+    for(i = 1; i <= len; ++i){
+      struct Instance *inst = (struct Instance *)gl_fetch(p_data->dynhiddeninsts, i);
+      if(inst != NULL){
+        SetInterfacePtr(inst,NULL);
+      }
+    }
+    gl_destroy(p_data->dynhiddeninsts);
+    p_data->dynhiddeninsts = NULL;
+  }
 
   /* blocks of memory use AFUN */
   AFUN(blocks);  AFUN(reldata);  AFUN(objdata);
@@ -1311,6 +2002,18 @@ void analyze_free_lists(struct problem_t *p_data){
 
 #undef AFUN
 #undef ADUN
+
+  if(p_data->dynreg != NULL){
+    unsigned long i, len = gl_length(p_data->dynreg);
+    for(i = 1; i <= len; ++i){
+      struct dynreg_entry *entry = (struct dynreg_entry *)gl_fetch(p_data->dynreg, i);
+      if(entry != NULL){
+        ascfree(entry);
+      }
+    }
+    gl_destroy(p_data->dynreg);
+    p_data->dynreg = NULL;
+  }
 }
 
 
@@ -1359,6 +2062,116 @@ void ProcessValueList(struct Set *ValueList, int *value
     }
   }else{
     *value = -1;  /* OTHERWISE */
+  }
+}
+
+static int AnalyzeIsSelectorType(CONST struct TypeDescription *desc)
+{
+  symchar *selector_name = AddSymbol("selector");
+  while (desc != NULL) {
+    if (GetName(desc) == selector_name) {
+      return 1;
+    }
+    desc = GetRefinement(desc);
+  }
+  return 0;
+}
+
+static CONST struct set_t *AnalyzeSelectorDomain(struct Instance *context,
+                                                 struct Instance *selector,
+                                                 CONST struct Statement **decl_out)
+{
+  CONST struct Statement *decl;
+  struct Name *domain_name;
+  struct gl_list_t *instances;
+  struct Instance *domain;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  symchar *domain_id;
+
+  if (decl_out != NULL) {
+    *decl_out = NULL;
+  }
+  if (context == NULL || selector == NULL || !AnalyzeIsSelectorType(InstanceTypeDesc(selector))) {
+    return NULL;
+  }
+
+  decl = InstanceDeclarationStatement(selector,context);
+  if (decl_out != NULL) {
+    *decl_out = decl;
+  }
+  if (decl == NULL) {
+    return NULL;
+  }
+
+  domain_id = GetStatSetType(decl);
+  if (domain_id == NULL) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Selector declaration is missing a domain set");
+    return NULL;
+  }
+
+  domain_name = CreateIdName(domain_id);
+  instances = FindInstances(context,domain_name,&err);
+  DestroyName(domain_name);
+  if (instances == NULL || gl_length(instances) != 1) {
+    if (instances != NULL) gl_destroy(instances);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Unable to resolve selector domain set '%s'", SCP(domain_id));
+    return NULL;
+  }
+
+  domain = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+  if (domain == NULL || InstanceKind(domain) != SET_ATOM_INST) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Selector domain '%s' must be a set instance", SCP(domain_id));
+    return NULL;
+  }
+
+  return SetAtomList(domain);
+}
+
+static int AnalyzeSelectorExprInDomain(CONST struct Expr *expr,
+                                       CONST struct set_t *domain)
+{
+  if (expr == NULL || domain == NULL) {
+    return 0;
+  }
+
+  switch (ExprType(expr)) {
+  case e_symbol:
+    return StrMember(ExprSymValue(expr),domain);
+  case e_int:
+    return IntMember((asc_intptr_t)ExprIValue(expr),domain);
+  default:
+    return 0;
+  }
+}
+
+static void ValidateSelectorCaseValues(struct Instance *context,
+                                       struct Instance *selector,
+                                       struct Set *values)
+{
+  CONST struct set_t *domain;
+  struct Set *s;
+
+  domain = AnalyzeSelectorDomain(context,selector,NULL);
+  if (domain == NULL) {
+    return;
+  }
+  if (values == NULL) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Selector WHEN cases must enumerate explicit selector states; OTHERWISE is not supported");
+    return;
+  }
+
+  for (s = values; s != NULL; s = NextSet(s)) {
+    CONST struct Expr *expr = GetSingleExpr(s);
+    if (!AnalyzeSelectorExprInDomain(expr,domain)) {
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,
+        "CASE value is not a member of the selector domain");
+      return;
+    }
   }
 }
 
@@ -1477,6 +2290,154 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
   }
 }
 
+static struct gl_list_t *ProcessWhenReinits(struct Instance *context, struct Case *cur_case,
+    struct gl_list_t *whenvars){
+  struct gl_list_t *src;
+  struct gl_list_t *dest;
+  unsigned long i, len;
+
+  if(cur_case == NULL){
+    return NULL;
+  }
+
+  src = GetCaseReinitStatements(cur_case);
+  if(src == NULL || gl_length(src) == 0){
+    return NULL;
+  }
+
+  len = gl_length(src);
+  dest = gl_create(len);
+  for(i = 1; i <= len; ++i){
+    struct Statement *statement = (struct Statement *)gl_fetch(src, i);
+    struct gl_list_t *instances;
+    struct Instance *target;
+    REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+    struct when_reinit *wr;
+
+    if(statement == NULL){
+      continue;
+    }
+
+    switch(StatementType(statement)){
+    case REINIT:
+      instances = FindInstances(context, ReinitStatVar(statement), &err);
+      if(instances == NULL || gl_length(instances) != 1){
+        if(instances != NULL)gl_destroy(instances);
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "Unable to resolve REINIT target while analysing WHEN cases");
+        continue;
+      }
+      target = (struct Instance *)gl_fetch(instances, 1);
+      gl_destroy(instances);
+      break;
+    case SWITCHTO:
+      if(whenvars == NULL || gl_length(whenvars) != 1){
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "SWITCH TO is only supported inside WHEN statements with exactly one controlling variable");
+        continue;
+      }
+      target = (struct Instance *)gl_fetch(whenvars, 1);
+      if(target == NULL || (InstanceKind(target) != INTEGER_ATOM_INST && InstanceKind(target) != SYMBOL_ATOM_INST)){
+        ERROR_REPORTER_HERE(ASC_USER_ERROR,
+          "SWITCH TO requires an integer or symbol controlling variable");
+        continue;
+      }
+      if(AnalyzeIsSelectorType(InstanceTypeDesc(target))){
+        CONST struct set_t *domain = AnalyzeSelectorDomain(context,target,NULL);
+        if(domain != NULL && !AnalyzeSelectorExprInDomain(SwitchToStatValue(statement),domain)){
+          ERROR_REPORTER_HERE(ASC_USER_ERROR,
+            "SWITCH TO target is not a member of the selector domain");
+          continue;
+        }
+      }
+      break;
+    default:
+      continue;
+    }
+
+    wr = when_reinit_create(NULL);
+    when_reinit_set_target(wr, (SlvBackendToken)target);
+    if(StatementType(statement) == REINIT){
+      when_reinit_set_rhs(wr, ReinitStatRHS(statement));
+      when_reinit_set_guard(wr, NULL);
+    }else{
+      when_reinit_set_rhs(wr, SwitchToStatValue(statement));
+      when_reinit_set_guard(wr, SwitchToStatGuard(statement));
+      ProcessSwitchGuardDiscreteDeps(context, SwitchToStatGuard(statement));
+    }
+    gl_append_ptr(dest, wr);
+  }
+
+  if(gl_length(dest) == 0){
+    gl_destroy(dest);
+    return NULL;
+  }
+  return dest;
+}
+
+static void ProcessSwitchGuardDiscreteDeps(struct Instance *context,
+    const struct Expr *guard){
+  struct gl_list_t *names;
+  unsigned long i, len;
+
+  if(context == NULL || guard == NULL){
+    return;
+  }
+
+  names = EvaluateNamesNeededShallow(guard, NULL, NULL);
+  if(names == NULL){
+    return;
+  }
+
+  len = gl_length(names);
+  for(i = 1; i <= len; ++i){
+    struct Name *name = (struct Name *)gl_fetch(names, i);
+    struct gl_list_t *instances;
+    struct Instance *inst;
+    struct solver_ipdata *ip;
+    REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+
+    if(name == NULL){
+      continue;
+    }
+
+    instances = FindInstances(context, name, &err);
+    if(instances == NULL || gl_length(instances) != 1){
+      if(instances != NULL){
+        gl_destroy(instances);
+      }
+      continue;
+    }
+
+    inst = (struct Instance *)gl_fetch(instances, 1);
+    gl_destroy(instances);
+    if(inst == NULL){
+      continue;
+    }
+
+    switch(InstanceKind(inst)){
+    case BOOLEAN_ATOM_INST:
+    case BOOLEAN_CONSTANT_INST:
+    case INTEGER_ATOM_INST:
+    case INTEGER_CONSTANT_INST:
+    case SYMBOL_ATOM_INST:
+    case SYMBOL_CONSTANT_INST:
+      ip = SIP(GetInterfacePtr(inst));
+      if(ip != NULL){
+        ip->u.dv.inwhen = 1;
+        if(ip->u.dv.data != NULL){
+          dis_set_inwhen(ip->u.dv.data, TRUE);
+        }
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
+  gl_destroy(names);
+}
+
 
 /**
 	Fill in the list of cases and variables of a w_when structure with
@@ -1498,15 +2459,18 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
 static
 void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct gl_list_t *scratch;
+  struct gl_list_t *whenvars_src;
   struct gl_list_t *wvars;
   struct gl_list_t *ref;
   struct gl_list_t *rels;
   struct gl_list_t *logrels;
   struct gl_list_t *whens;
+  struct gl_list_t *reinits;
   struct gl_list_t *diswhens;
   struct Set *ValueList;
   struct Instance *cur_inst;
   struct Case *cur_case;
+  struct Instance *context;
   struct solver_ipdata *ip;
   struct dis_discrete *dvar;
   struct rel_relation *rel;
@@ -1515,9 +2479,22 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct when_case *cur_sol_case;
   int c,r,len,lref;
   int *value;
+  struct Instance *selector_target = NULL;
 
-  scratch = GetInstanceWhenVars(i);
+  context = InstanceParent(i, 1);
+  if(context == NULL){
+    context = i;
+  }
+
+  whenvars_src = GetInstanceWhenVars(i);
+  scratch = whenvars_src;
   len = gl_length(scratch);
+  if(len == 1){
+    selector_target = (struct Instance *)gl_fetch(scratch,1);
+    if(selector_target != NULL && !AnalyzeIsSelectorType(InstanceTypeDesc(selector_target))){
+      selector_target = NULL;
+    }
+  }
   wvars = gl_create(len);
   when->dvars = wvars;
   for(c=1;c<=len;c++){
@@ -1541,6 +2518,9 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     cur_sol_case = when_case_create(NULL);
     cur_case = (struct Case *)(gl_fetch(scratch,c));
     ValueList = GetCaseValues(cur_case);
+    if(selector_target != NULL){
+      ValidateSelectorCaseValues(context,selector_target,ValueList);
+    }
     value = &(cur_sol_case->values[0]);
     if(g_symbol_values_list == NULL) {
       g_symbol_values_list = gl_create(2L);
@@ -1582,6 +2562,8 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     when_case_set_rels_list(cur_sol_case,rels);
     when_case_set_logrels_list(cur_sol_case,logrels);
     when_case_set_whens_list(cur_sol_case,whens);
+    reinits = ProcessWhenReinits(context, cur_case, whenvars_src);
+    when_case_set_reinits_list(cur_sol_case, reinits);
     when_case_set_active(cur_sol_case,FALSE);
     gl_append_ptr(when->cases,cur_sol_case);
   }
@@ -1987,6 +2969,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.incident)  flags |= VAR_INCIDENT;
     if(vip->u.v.in_block)  flags |= VAR_INBLOCK;
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
+    if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
     if(vip->u.v.deriv > 1) flags |= VAR_DERIV; /* so that we can do relman_diffs with just the ydot vars */
@@ -2037,6 +3020,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     /* turn on appropriate ones */
     if(vip->u.v.incident)  flags |= VAR_INCIDENT;
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
+    if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
 	/* CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var); */
     /* others may be appropriate (PVAR) */
@@ -2660,9 +3644,67 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
   /* and finally... */
   slv_set_num_models(sys,p_data->nm);
   slv_set_need_consistency(sys,p_data->need_consistency);
+  slv_set_hidden_instance_list(sys,p_data->dynhiddeninsts);
+  p_data->dynhiddeninsts = NULL;
 
   PopInterfacePtrs(p_data->oldips,NULL,NULL);
   p_data->oldips = NULL;
+  return 0;
+}
+
+static void bind_derivative_terms(struct Instance *inst, VOIDPTR userdata)
+{
+  struct derivative_bind_data *data = (struct derivative_bind_data *)userdata;
+
+  if(data == NULL || data->errors){
+    return;
+  }
+  if(InstanceKind(inst) != REL_INST){
+    return;
+  }
+  if(BindDerivativeTermsInRelation(data->root,inst,resolve_materialised_derivative,data)){
+    data->errors = 1;
+  }
+}
+
+static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data){
+  unsigned long i, len;
+
+  if(p_data == NULL || p_data->dynhiddeninsts == NULL){
+    return 0;
+  }
+
+  len = gl_length(p_data->dynhiddeninsts);
+  for(i = 1; i <= len; ++i){
+    struct Instance *inst = (struct Instance *)gl_fetch(p_data->dynhiddeninsts, i);
+    struct dynreg_entry *dyn;
+    struct solver_ipdata *ip;
+
+    if(inst == NULL || GetInterfacePtr(inst) != NULL){
+      continue;
+    }
+    dyn = dynamic_registry_lookup(p_data, inst);
+    if(dyn == NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Hidden derivative instance missing from dynamic registry.");
+      return 1;
+    }
+    ip = analyze_getip();
+    memset(ip, 0, sizeof(*ip));
+    ip->i = inst;
+    ip->u.v.active = 1;
+    ip->u.v.fixed = 0;
+    ip->u.v.solvervar = 1;
+    ip->u.v.basis = 1;
+    ip->u.v.incident = 0;
+    ip->u.v.in_block = 0;
+    ip->u.v.discrete = 0;
+    ip->u.v.deriv = dyn->deriv;
+    ip->u.v.odeid = dyn->odeid;
+    ip->u.v.obsid = 0;
+    SetInterfacePtr(inst, ip);
+    gl_append_ptr(p_data->vars, ip);
+  }
+
   return 0;
 }
 
@@ -2691,7 +3733,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
 */
 int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   int stat;
-
+  struct derivative_bind_data bind_data;
   struct problem_t thisproblem; /* note default zero intitialisation. note also: local var! */
   struct problem_t *p_data; /* need to malloc, free, or make &local */
 
@@ -2709,6 +3751,54 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   VisitInstanceTreeTwo(inst,(VisitTwoProc)CountStuffInTree,TRUE,FALSE,
                        (VOIDPTR)p_data);
   if(p_data->bad_rel_in_list) {
+    p_data->root = NULL;
+    return 2;
+  }
+
+  bind_data.root = inst;
+  bind_data.problem = p_data;
+  bind_data.errors = 0;
+
+  stat = analyze_build_dynamic_registry(p_data);
+  if(stat){
+    analyze_free_lists(p_data);
+    p_data->root = NULL;
+    return 1;
+  }
+
+  DerivativeInstancesPrepareRoot(inst);
+
+  /*
+   * Preserve ordinary equation semantics for relations such as `v = der(x)`.
+   * These relations currently remain equations rather than being co-opted
+   * into derivative-binding metadata.
+   */
+
+  VisitInstanceTreeTwo(inst,(VisitTwoProc)bind_derivative_terms,TRUE,FALSE,
+                       (VOIDPTR)&bind_data);
+  if(bind_data.errors){
+    p_data->root = NULL;
+    return 2;
+  }
+
+  {
+    struct derivative_recover_data recover_data;
+    recover_data.root = inst;
+    recover_data.problem = p_data;
+    recover_data.next_odeid = dynamic_registry_next_odeid(p_data);
+    recover_data.errors = 0;
+    VisitInstanceTreeTwo(inst,(VisitTwoProc)recover_bound_derivative_terms,TRUE,FALSE,
+                         (VOIDPTR)&recover_data);
+    if(recover_data.errors){
+      analyze_free_lists(p_data);
+      p_data->root = NULL;
+      return 2;
+    }
+  }
+
+  stat = analyze_infer_reinit_targets(p_data);
+  if(stat){
+    analyze_free_lists(p_data);
     p_data->root = NULL;
     return 2;
   }

@@ -38,6 +38,7 @@
 #include "UnitsProc.h"
 
 #include "config.h"
+#include <ascend/compiler/derivinst.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
 #include <ascend/general/list.h>
@@ -1009,6 +1010,7 @@ int Asc_UnitSetRealAtomValue(CONST struct Instance *i,
 
   /* get valid units struct */
   if (ustr==NULL || strlen(ustr)==0 || strcmp(ustr,"*")==0) {
+    DerivativeInstanceNoteMutation((struct Instance *)i);
     SetRealAtomValue((struct Instance *)i,dval,depth);
   } else {
     dim_type *dimp = NULL;
@@ -1036,6 +1038,7 @@ int Asc_UnitSetRealAtomValue(CONST struct Instance *i,
     if (Unit_UnconvertReal(dval,up,&sival)) {
       return 3;
     }
+    DerivativeInstanceNoteMutation((struct Instance *)i);
     SetRealAtomValue((struct Instance *)i,sival,depth);
   }
   return 0;
@@ -2168,4 +2171,3 @@ int Asc_UnitHelpList(ClientData cdata, Tcl_Interp *interp,
   }
   return TCL_OK;
 }
-

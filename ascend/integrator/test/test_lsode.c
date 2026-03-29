@@ -106,6 +106,67 @@ static struct Instance *test_lsode_load_model(const char *path, const char *mode
 	return siminst;
 }
 
+static IntegratorSystem *test_lsode_prepare_integrator(
+	struct Instance *siminst,
+	double minstep,
+	double maxstep,
+	double stepzero,
+	int maxsubsteps
+){
+	slv_system_t sys;
+	IntegratorSystem *integ;
+	int index = slv_lookup_client("QRSlv");
+	CU_ASSERT_FATAL(index != -1);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,index));
+
+	integ = integrator_new(sys,siminst);
+	CU_ASSERT_FATAL(integ != NULL);
+	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
+	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
+
+	integrator_set_reporter(integ, &test_lsode_reporter);
+	integrator_set_minstep(integ,minstep);
+	integrator_set_maxstep(integ,maxstep);
+	integrator_set_stepzero(integ,stepzero);
+	integrator_set_maxsubsteps(integ,maxsubsteps);
+	return integ;
+}
+
+static void test_lsode_destroy_integrator(IntegratorSystem *integ){
+	struct Instance *siminst;
+	slv_system_t sys;
+	if(integ == NULL){
+		return;
+	}
+	sys = integ->system;
+	siminst = integ->instance;
+	integrator_free(integ);
+	if(sys != NULL){
+		system_destroy(sys);
+	}
+	system_free_reused_mem();
+	solver_destroy_engines();
+	integrator_free_engines();
+	if(siminst != NULL){
+		sim_destroy(siminst);
+	}
+	Asc_CompilerDestroy();
+}
+
+static char *test_capture_pantelides_report(slv_system_t sys){
+	char *buf = NULL;
+	size_t len = 0;
+	FILE *fp = open_memstream(&buf, &len);
+	CU_ASSERT_FATAL(fp != NULL);
+	CU_ASSERT_FATAL(0 == integrator_pantelides_advisory(sys, fp));
+	CU_ASSERT_FATAL(0 == fclose(fp));
+	CU_ASSERT_FATAL(buf != NULL);
+	return buf;
+}
+
 /*
 	Test solving a simple LSODE model. This test integrates a model that deliberately
 	goes out of bounds, and checks that LSODE catches and aborts.
@@ -204,20 +265,7 @@ static void test_shm(){
 
 	int index = slv_lookup_client("QRSlv");
 	CU_ASSERT_FATAL(index != -1);
-
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
-	CU_ASSERT_FATAL(slv_select_solver(sys,index));
-
-	IntegratorSystem *integ = integrator_new(sys,siminst);
-	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
-	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
-
-	integrator_set_reporter(integ, &test_lsode_reporter);
-	integrator_set_minstep(integ,0);
-	integrator_set_maxstep(integ,0.5);
-	integrator_set_stepzero(integ,1e-3);
-	integrator_set_maxsubsteps(integ,1000);
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.5,1e-3,1000);
 
 	SampleList *samplelist = test_lsode_create_samplelist(0.0, PI, 40);
 	integrator_set_samples(integ,samplelist);
@@ -232,14 +280,267 @@ static void test_shm(){
 	CU_TEST(fabs(RealAtomValue(ix) + 10.0) < 3e-3);
 	CU_TEST(fabs(RealAtomValue(iv)) < 7e-4);
 
-	integrator_free(integ);
 	samplelist_free(samplelist);
-	system_destroy(sys);
-	system_free_reused_mem();
-	solver_destroy_engines();
-	integrator_free_engines();
-	sim_destroy(siminst);
-	Asc_CompilerDestroy();
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_der_decay(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/lsode/deriv.a4c", "der_decay");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.1,1e-3,1000);
+	SampleList *samplelist = test_lsode_create_samplelist(0.0, 1.0, 20);
+	integrator_set_samples(integ,samplelist);
+
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+
+	struct Instance *root = GetSimulationRoot(siminst);
+	struct Instance *iy = ChildByChar(root, AddSymbol("y"));
+	CU_ASSERT_FATAL(iy != NULL);
+	CU_TEST(fabs(RealAtomValue(iy) - exp(-4.0)) < 2e-4);
+
+	samplelist_free(samplelist);
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_der_shm(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/lsode/deriv.a4c", "der_shm");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.5,1e-3,1000);
+	SampleList *samplelist = test_lsode_create_samplelist(0.0, PI, 40);
+	integrator_set_samples(integ,samplelist);
+
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+
+	struct Instance *root = GetSimulationRoot(siminst);
+	struct Instance *ix = ChildByChar(root, AddSymbol("x"));
+	struct Instance *iv = ChildByChar(root, AddSymbol("v"));
+	CU_ASSERT_FATAL(ix != NULL);
+	CU_ASSERT_FATAL(iv != NULL);
+	CU_TEST(fabs(RealAtomValue(ix) + 10.0) < 3e-3);
+	CU_TEST(fabs(RealAtomValue(iv)) < 7e-4);
+
+	samplelist_free(samplelist);
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_initial_decay(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/lsode/deriv.a4c", "initial_decay");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.1,1e-3,1000);
+	struct Instance *root = GetSimulationRoot(siminst);
+	struct Instance *iy = ChildByChar(root, AddSymbol("y"));
+	CU_ASSERT_FATAL(iy != NULL);
+
+	SampleList *samplelist = test_lsode_create_samplelist(0.0, 1.0, 20);
+	integrator_set_samples(integ,samplelist);
+
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+	CU_TEST(fabs(RealAtomValue(iy) - exp(-4.0)) < 2e-4);
+
+	samplelist_free(samplelist);
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_initial_shm(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/lsode/deriv.a4c", "initial_shm");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.5,1e-3,1000);
+	struct Instance *root = GetSimulationRoot(siminst);
+	struct Instance *ix = ChildByChar(root, AddSymbol("x"));
+	struct Instance *iv = ChildByChar(root, AddSymbol("v"));
+	CU_ASSERT_FATAL(ix != NULL);
+	CU_ASSERT_FATAL(iv != NULL);
+
+	SampleList *samplelist = test_lsode_create_samplelist(0.0, PI, 40);
+	integrator_set_samples(integ,samplelist);
+
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+	CU_TEST(fabs(RealAtomValue(ix) + 10.0) < 3e-3);
+	CU_TEST(fabs(RealAtomValue(iv)) < 7e-4);
+
+	samplelist_free(samplelist);
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_initial_hier_decay(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/lsode/deriv.a4c", "initial_hier_decay");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.1,1e-3,1000);
+	struct Instance *root = GetSimulationRoot(siminst);
+	struct Instance *child = ChildByChar(root, AddSymbol("c"));
+	struct Instance *iy = child ? ChildByChar(child, AddSymbol("y")) : NULL;
+	CU_ASSERT_FATAL(child != NULL);
+	CU_ASSERT_FATAL(iy != NULL);
+
+	SampleList *samplelist = test_lsode_create_samplelist(0.0, 1.0, 20);
+	integrator_set_samples(integ,samplelist);
+
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+	CU_TEST(fabs(RealAtomValue(iy) - exp(-4.0)) < 2e-4);
+
+	samplelist_free(samplelist);
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_initial_bad_overdetermined(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/lsode/deriv.a4c", "initial_bad_overdetermined");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	IntegratorSystem *integ = test_lsode_prepare_integrator(siminst,0,0.1,1e-3,1000);
+	SampleList *samplelist = test_lsode_create_samplelist(0.0, 1.0, 20);
+	int solve_res;
+	integrator_set_samples(integ,samplelist);
+
+	solve_res = integrator_solve(integ, 0, samplelist_length(samplelist)-1);
+
+	samplelist_free(samplelist);
+	test_lsode_destroy_integrator(integ);
+	CU_ASSERT(0 != solve_res);
+}
+
+static void test_pantelides_pendulum_high_index(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/pantelides/pendulum.a4c", "pantelides_pendulum");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	int index = slv_lookup_client("QRSlv");
+	CU_ASSERT_FATAL(index != -1);
+
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,index));
+
+	IntegratorSystem *integ = integrator_new(sys,siminst);
+	CU_ASSERT_FATAL(integ != NULL);
+	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(integ), 0);
+	char *report = test_capture_pantelides_report(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Active equations"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "eq5:"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "vx represents der(x) via eq1"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "vy represents der(y) via eq2"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Differentiate eq5"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Differentiate d/dt(eq5)"));
+	free(report);
+
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_pantelides_reactor_high_index(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/pantelides/reactor.a4c", "pantelides_reactor");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	int index = slv_lookup_client("QRSlv");
+	CU_ASSERT_FATAL(index != -1);
+
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,index));
+
+	IntegratorSystem *integ = integrator_new(sys,siminst);
+	CU_ASSERT_FATAL(integ != NULL);
+	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(integ), 0);
+	char *report = test_capture_pantelides_report(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Current derivative chains"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Active equations"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "input_constraint"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "Advisory analysis limit reached"));
+	free(report);
+
+	test_lsode_destroy_integrator(integ);
+}
+
+static void test_reinit_boundary_unsupported(){
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+
+	struct Instance *siminst = test_lsode_load_model("test/ida/reinit.a4c", "ida_reinit_reflect");
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	int index = slv_lookup_client("QRSlv");
+	CU_ASSERT_FATAL(index != -1);
+
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,index));
+
+	IntegratorSystem *integ = integrator_new(sys,siminst);
+	CU_ASSERT_FATAL(integ != NULL);
+	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
+
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(integ), 0);
+
+	test_lsode_destroy_integrator(integ);
 }
 
 /*===========================================================================*/
@@ -247,6 +548,15 @@ static void test_shm(){
 
 #define TESTS(T) \
 	T(bounds) \
-	T(shm)
+	T(shm) \
+	T(der_decay) \
+	T(der_shm) \
+	T(initial_decay) \
+	T(initial_shm) \
+	T(initial_hier_decay) \
+	T(initial_bad_overdetermined) \
+	T(pantelides_pendulum_high_index) \
+	T(pantelides_reactor_high_index) \
+	T(reinit_boundary_unsupported)
 
 REGISTER_TESTS_SIMPLE(integrator_lsode, TESTS)

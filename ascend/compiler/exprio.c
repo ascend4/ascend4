@@ -64,6 +64,10 @@ CONST char *ExprEnumName(CONST enum Expr_enum t)
     return "e_int";
   case e_var:
     return "e_var";
+  case e_der:
+    return "e_der";
+  case e_pre:
+    return "e_pre";
   case e_uminus:
     return "e_uminus";
   case e_func:
@@ -213,6 +217,16 @@ void WriteExprNode(FILE *f, CONST struct Expr *e)
     break;
   case e_var:
     WriteName(f,ExprName(e));
+    break;
+  case e_der:
+    FPRINTF(f,"der(");
+    WriteName(f,ExprName(e));
+    PUTC(')',f);
+    break;
+  case e_pre:
+    FPRINTF(f,"pre(");
+    WriteName(f,ExprName(e));
+    PUTC(')',f);
     break;
   case e_int:
     FPRINTF(f,"%ld",ExprIValue(e));
@@ -454,8 +468,6 @@ void WriteExpr2Str(Asc_DString *dstring, CONST struct Expr *e)
   }
   return;
 }
-
-
 
 
 

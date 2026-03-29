@@ -56,7 +56,7 @@ IntegratorReporterConsole::~IntegratorReporterConsole(){
 
 int
 IntegratorReporterConsole::initOutput(){
-	long nobs = integrator->getNumObservedVars();
+	long nobs = integrator->getNumObservedItems();
 	stringstream ss;
 	Variable indep = integrator->getIndependentVariable();
 	UnitsM indep_units = indep.getInstance().getDisplayUnits(false);
@@ -72,16 +72,18 @@ IntegratorReporterConsole::initOutput(){
 	f << setw(20) << right << indep_label;
 	ss << setw(20)<< right << "--------------------";
 	for(long i=0; i<nobs; ++i){
-		Variable v = integrator->getObservedVariable(i);
-		string label = v.getName();
-		UnitsM units = v.getInstance().getDisplayUnits(false);
-		string units_name = units.getName().toString();
-		bool show_units = !units_name.empty() && units_name != "1";
-		if(units.getDimensions().isWild() && v.getInstance().isDimensionless()){
-			show_units = false;
-		}
-		if(show_units){
-			label += " [" + units_name + "]";
+		Instanc inst = integrator->getObservedInstance(i);
+		string label = integrator->simulation.getInstanceName(inst);
+		if(inst.isReal()){
+			UnitsM units = inst.getDisplayUnits(false);
+			string units_name = units.getName().toString();
+			bool show_units = !units_name.empty() && units_name != "1";
+			if(units.getDimensions().isWild() && inst.isDimensionless()){
+				show_units = false;
+			}
+			if(show_units){
+				label += " [" + units_name + "]";
+			}
 		}
 		f << "  " << setw(20) << right << label;
 		ss<< "  " << setw(20) << right << "--------------------";
@@ -105,14 +107,37 @@ int IntegratorReporterConsole::recordObservedValues(){
 	UnitsM indep_units = indep.getInstance().getDisplayUnits(false);
 	double indep_value = integrator_get_t(sys) / indep_units.getConversion();
 	f << setw(20) << indep_value;
-	vector<double> data(integrator->getNumObservedVars());
-	integrator_get_observations(sys,&data[0]);
-	integrator->saveObservations();
-	for(long j = 0; j < integrator->getNumObservedVars(); ++j){
-		Variable v = integrator->getObservedVariable(j);
-		UnitsM units = v.getInstance().getDisplayUnits(false);
-		double value = data[j] / units.getConversion();
+	for(long j = 0; j < integrator->getNumObservedItems(); ++j){
+		Instanc inst = integrator->getObservedInstance(j);
+		string value;
+		if(inst.isAssigned()){
+			if(inst.isReal()){
+				UnitsM units = inst.getDisplayUnits(false);
+				double conversion = units.getConversion();
+				if(conversion == 0.0){
+					conversion = 1.0;
+				}
+				stringstream ss;
+				ss << (inst.getRealValue() / conversion);
+				value = ss.str();
+			}else if(inst.isBool()){
+				value = inst.getBoolValue() ? "TRUE" : "FALSE";
+			}else if(inst.isInt()){
+				stringstream ss;
+				ss << inst.getIntValue();
+				value = ss.str();
+			}else if(inst.isSymbol()){
+				value = string("'") + inst.getSymbolValue().toString() + "'";
+			}else{
+				value = inst.getValueAsString();
+			}
+		}else{
+			value = "undefined";
+		}
 		f << "  " << setw(20) << value;
+	}
+	if(integrator->getNumObservedVars() > 0){
+		integrator->saveObservations();
 	}
 	f << endl;
 	return 1;

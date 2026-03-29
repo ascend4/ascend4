@@ -43,6 +43,7 @@
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/panic.h>
 #include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/exprs.h>
 
 #include <ascend/system/slv_client.h>
 #include <ascend/system/relman.h>
@@ -60,6 +61,12 @@
 #if !IDA_DEBUG
 # undef CONSOLE_DEBUG
 # define CONSOLE_DEBUG(...) ((void)0)
+#endif
+
+#if IDA_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
 #endif
 
 
@@ -83,7 +90,7 @@ fenv_t integrator_ida_fenv_old;
 void integrator_ida_write_feinfo(){
 	int f;
 	f = fegetexcept();
-	CONSOLE_DEBUG("Locating nature of exception...");
+	MSG("Locating nature of exception...");
 	if(f & FE_DIVBYZERO)ERROR_REPORTER_HERE(ASC_PROG_ERR,"DIV BY ZERO");
 	if(f & FE_INEXACT)ERROR_REPORTER_HERE(ASC_PROG_ERR,"INEXACT");
 	if(f & FE_INVALID)ERROR_REPORTER_HERE(ASC_PROG_ERR,"INVALID");
@@ -99,7 +106,7 @@ void integrator_ida_sig(int sig){
 		raise(sig);
 	}
 	integrator_ida_write_feinfo();
-	CONSOLE_DEBUG("Caught SIGFPE=%d (in signal handler). Jumping to...",sig);
+	MSG("Caught SIGFPE=%d (in signal handler). Jumping to...",sig);
 	longjmp(integrator_ida_jmp_buf,sig);
 }
 #endif
@@ -135,15 +142,15 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 
 #ifdef FEX_DEBUG
 	/* fprintf(stderr,"\n\n"); */
-	CONSOLE_DEBUG("EVALUTE RESIDUALS...");
+	MSG("EVALUTE RESIDUALS...");
 #endif
 
 	if(NV_LENGTH_S(rr)!=enginedata->nrels){
-		CONSOLE_DEBUG("y");
+		MSG("y");
 		N_VPrint_Serial(yy);
-		CONSOLE_DEBUG("yp");
+		MSG("yp");
 		N_VPrint_Serial(yp);
-		CONSOLE_DEBUG("r");
+		MSG("r");
 		N_VPrint_Serial(rr);
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid residuals nrels!=length(rr)");
 		return -1; /* unrecoverable */
@@ -170,7 +177,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 		Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
 	}else{
 # ifdef FEX_DEBUG
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"SETTING TO CATCH SIGFPE...");
+		MSG("Setting to catch SIGFPE...");
 # endif
 		Asc_SignalHandlerPushDefault(SIGFPE);
 	}
@@ -193,7 +200,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 			/* presumable some output already made? */
 			is_error = 1;
 		}/*else{
-			CONSOLE_DEBUG("Calc OK");
+			MSG("Calc OK");
 		}*/
 	}
 
@@ -206,7 +213,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 		}
 #ifdef FEX_DEBUG
 		if(!is_error){
-			CONSOLE_DEBUG("No NAN detected");
+			MSG("No NAN detected");
 		}
 #endif
 	}
@@ -229,7 +236,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 
 #ifdef FEX_DEBUG
 	/* output residuals to console */
-	CONSOLE_DEBUG("RESIDUAL OUTPUT");
+	MSG("RESIDUAL OUTPUT");
 	fprintf(stderr,"index\t%25s\t%25s\t%s\n","y","ydot","resid");
 	for(i=0; i<integ->n_y; ++i){
 		varname = var_make_name(integ->system,integ->y[i]);
@@ -252,7 +259,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	}
 
 #ifdef FEX_DEBUG
-	CONSOLE_DEBUG("RESIDUAL OK");
+	MSG("RESIDUAL OK");
 #endif
 	return 0;
 }
@@ -311,7 +318,7 @@ int integrator_ida_djex(realtype tt, realtype c_j
 	/* print vars */
 	for(i=0; i < integ->n_y; ++i){
 		varname = var_make_name(integ->system, integ->y[i]);
-		CONSOLE_DEBUG("%s = %f",varname,NV_Ith_S(yy,i));
+		MSG("%s = %f",varname,NV_Ith_S(yy,i));
 		asc_assert(NV_Ith_S(yy,i) == var_value(integ->y[i]));
 		ASC_FREE(varname);
 	}
@@ -320,17 +327,17 @@ int integrator_ida_djex(realtype tt, realtype c_j
 	for(i=0; i < integ->n_y; ++i){
 		if(integ->ydot[i]){
 			varname = var_make_name(integ->system, integ->ydot[i]);
-			CONSOLE_DEBUG("%s = %f =%g",varname,NV_Ith_S(yp,i),var_value(integ->ydot[i]));
+			MSG("%s = %f =%g",varname,NV_Ith_S(yp,i),var_value(integ->ydot[i]));
 			ASC_FREE(varname);
 		}else{
 			varname = var_make_name(integ->system, integ->y[i]);
-			CONSOLE_DEBUG("diff(%s) = %g",varname,NV_Ith_S(yp,i));
+			MSG("diff(%s) = %g",varname,NV_Ith_S(yp,i));
 			ASC_FREE(varname);
 		}
 	}
 
 	/* print step size */
-	CONSOLE_DEBUG("<c_j> = %g",c_j);
+	MSG("<c_j> = %g",c_j);
 #endif
 
 	/* build up the dense jacobian matrix... */
@@ -344,7 +351,7 @@ int integrator_ida_djex(realtype tt, realtype c_j
 
 		if(status){
 			relname = rel_make_name(integ->system, *relptr);
-			CONSOLE_DEBUG("ERROR calculating derivatives for relation '%s'",relname);
+			MSG("ERROR calculating derivatives for relation '%s'",relname);
 			ASC_FREE(relname);
 			is_error = 1;
 			break;
@@ -393,7 +400,7 @@ int integrator_ida_djex(realtype tt, realtype c_j
 
 #ifdef DJEX_DEBUG
 	ASC_FREE(relname);
-	CONSOLE_DEBUG("PRINTING JAC");
+	MSG("PRINTING JAC");
 	fprintf(stderr,"\t");
 	for(j=0; j < integ->n_y; ++j){
 		if(j)fprintf(stderr,"\t");
@@ -427,7 +434,7 @@ int integrator_ida_djex(realtype tt, realtype c_j
 		}
 #ifdef DJEX_DEBUG
 		if(!is_error){
-			CONSOLE_DEBUG("No NAN detected");
+			MSG("No NAN detected");
 		}
 #endif
 	}
@@ -445,7 +452,7 @@ int integrator_ida_djex(realtype tt, realtype c_j
 	}
 
 #ifdef DJEX_DEBUG
-	CONSOLE_DEBUG("DJEX RETURNING 0");
+	MSG("DJEX RETURNING 0");
 	/* ASC_PANIC("Quitting"); */
 #endif
 	return 0;
@@ -485,7 +492,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 	int count;
 #ifdef JEX_DEBUG
 
-	CONSOLE_DEBUG("EVALUATING JACOBIAN...");
+	MSG("EVALUATING JACOBIAN...");
 #endif
 
 	integ = (IntegratorSystem *)jac_data;
@@ -501,7 +508,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 	i = NV_LENGTH_S(yy) * 2;
 #ifdef JEX_DEBUG
-	CONSOLE_DEBUG("Allocating 'variables' with length %d",i);
+	MSG("Allocating 'variables' with length %d",i);
 #endif
 	variables = ASC_NEW_ARRAY(struct var_variable*, i);
 	derivatives = ASC_NEW_ARRAY(double, i);
@@ -520,7 +527,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 			/* get derivatives for this particular relation */
 			status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 #ifdef JEX_DEBUG
-			CONSOLE_DEBUG("Got derivatives against %d matching variables, status = %d", count,status);
+			MSG("Got derivatives against %d matching variables, status = %d", count,status);
 #endif
 
 			if(status){
@@ -539,13 +546,13 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 			Jv_i = 0;
 			for(j=0; j < count; ++j){
-				/* CONSOLE_DEBUG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], integ->n_y);
+				/* MSG("j = %d, variables[j] = %d, n_y = %ld", j, variables[j], integ->n_y);
 				varname = var_make_name(integ->system, enginedata->varlist[variables[j]]);
 				if(varname){
-					CONSOLE_DEBUG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
+					MSG("Variable %d '%s' derivative = %f", variables[j],varname,derivatives[j]);
 					ASC_FREE(varname);
 				}else{
-					CONSOLE_DEBUG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
+					MSG("Variable %d (UNKNOWN!): derivative = %f",variables[j],derivatives[j]);
 				}
 				*/
 
@@ -553,7 +560,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 				asc_assert(variables[j]>=0);
 				if(variables[j] == integ->x) continue;
 #ifdef JEX_DEBUG
-				CONSOLE_DEBUG("j = %d: variables[j] = %d",j,var_sindex(variables[j]));
+				MSG("j = %d: variables[j] = %d",j,var_sindex(variables[j]));
 #endif
 				if(var_deriv(variables[j])){
 #define DIFFINDEX integrator_ida_diffindex(integ,variables[j])
@@ -585,9 +592,9 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 
 			NV_Ith_S(Jv,i) = Jv_i;
 #ifdef JEX_DEBUG
-			CONSOLE_DEBUG("rel = %p",*relptr);
+			MSG("rel = %p",*relptr);
 			relname = rel_make_name(integ->system, *relptr);
-			CONSOLE_DEBUG("'%s': Jv[%d] = %f", relname, i, NV_Ith_S(Jv,i));
+			MSG("'%s': Jv[%d] = %f", relname, i, NV_Ith_S(Jv,i));
 			ASC_FREE(relname);
 			return 1;
 #endif
@@ -603,7 +610,7 @@ int integrator_ida_jvex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr
 #endif
 
 	if(is_error){
-		CONSOLE_DEBUG("SOME ERRORS FOUND IN EVALUATION");
+		MSG("SOME ERRORS FOUND IN EVALUATION");
 		return 1;
 	}
 	return 0;
@@ -641,7 +648,7 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
 	asc_assert(gout!=NULL);
 
 #ifdef ROOT_DEBUG
-	CONSOLE_DEBUG("t = %f",tt);
+	MSG("t = %f",tt);
 #endif
 
 	/* evaluate the residuals for each of the boundaries */
@@ -651,27 +658,40 @@ int integrator_ida_rootfn(realtype tt, N_Vector yy, N_Vector yp, realtype *gout,
 				gout[i] = bndman_real_eval(enginedata->bndlist[i]);
 #ifdef ROOT_DEBUG
 				relname = bnd_make_name(integ->system,enginedata->bndlist[i]);
-				CONSOLE_DEBUG("gout[%d] = %f (boundary '%s')", i, gout[i], relname);
+				MSG("gout[%d] = %f (boundary '%s')", i, gout[i], relname);
 				ASC_FREE(relname);
 #endif
 				break;
 			case e_bnd_logrel:
 				if(bndman_log_eval(enginedata->bndlist[i])){
-					CONSOLE_DEBUG("bnd[%d] = TRUE",i);
+					MSG("bnd[%d] = TRUE",i);
 #ifdef ROOT_DEBUG
 					relname = bnd_make_name(integ->system,enginedata->bndlist[i]);
-					CONSOLE_DEBUG("gout[%d] = %f (boundary '%s')", i, gout[i], relname);
+					MSG("gout[%d] = %f (boundary '%s')", i, gout[i], relname);
 					ASC_FREE(relname);
 #endif
 					gout[i] = +1.0;
 				}else{
-					CONSOLE_DEBUG("bnd[%d] = FALSE",i);
+					MSG("bnd[%d] = FALSE",i);
 					gout[i] = -1.0;
 				}
 				break;
 			case e_bnd_undefined:
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid boundary type e_bnd_undefined");
 				return 1;
+		}
+	}
+
+	for(i = 0; i < enginedata->nguardroots; ++i){
+		int status = integrator_eval_direct_guard_root(
+			enginedata->guardroots[i] != NULL ? enginedata->guardroots[i]->guard : NULL,
+			enginedata->guardcontexts != NULL ? enginedata->guardcontexts[i] : NULL,
+			&gout[enginedata->nbnds + i]
+		);
+		if(status != 0){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Unable to evaluate direct SWITCH TO guard root %d", i);
+			return 1;
 		}
 	}
 

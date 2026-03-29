@@ -49,6 +49,7 @@
 #include <ascend/compiler/type_desc.h>
 #include <ascend/compiler/units.h>
 #include <ascend/compiler/qlfdid.h>
+#include <ascend/compiler/derivinst.h>
 
 #include <ascend/system/slv_types.h>
 
@@ -240,10 +241,12 @@ int BrowDoAssignment(Tcl_Interp *interp,struct Instance *i,
     tmps = strcpy(buffer,value_str);
     lowerstring(tmps);
     if(strcmp(tmps,"true")==0 || strcmp(tmps,"1")==0 || strcmp(tmps,"yes")==0){
+      DerivativeInstanceNoteMutation(i);
       SetBooleanAtomValue(i,1,0);
     } else if (strcmp(tmps,"false")==0
                || strcmp(tmps,"0")==0
                || strcmp(tmps,"no")==0) {
+      DerivativeInstanceNoteMutation(i);
       SetBooleanAtomValue(i,0,0);
     } else {
       Tcl_SetResult(interp, "Incorrect boolean value", TCL_STATIC);
@@ -480,12 +483,14 @@ int Asc_BrowSetAtomAttribute(Tcl_Interp *interp, struct Instance *i,
   }
   switch (InstanceKind(ch)) {
   case REAL_INST:
+    DerivativeInstanceNoteMutation(ch);
     SetRealAtomValue(ch,*(double *)value,0);
     break;
   case INTEGER_INST:
     SetIntegerAtomValue(ch,*(long *)value,0);
     break;
   case BOOLEAN_INST:
+    DerivativeInstanceNoteMutation(ch);
     SetBooleanAtomValue(ch,(*(int *)value != 0),0);
     break;
   case SYMBOL_INST:
@@ -513,7 +518,6 @@ int Asc_BrowSetAtomAttribute(Tcl_Interp *interp, struct Instance *i,
  * are not met. Except that if the childname or symbol value given
  * are not in the symbol table, then does not return.
 */
-
 
 
 

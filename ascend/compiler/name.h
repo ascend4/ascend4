@@ -80,6 +80,23 @@ ASC_DLLSPEC struct Name *CreateIntegerElementName(long i);
 */
 
 extern struct Name *CreateReservedIndexName(symchar *reserved);
+
+ASC_DLLSPEC struct Name *CreateDerivativeRefName(struct Name *base);
+/**<
+	Create a special internal Name encoding for a derivative reference in
+	method-time contexts such as FIX der(x) or der(x) := value.
+*/
+
+ASC_DLLSPEC int NameIsDerivativeRef(CONST struct Name *n);
+/**<
+	Return nonzero iff the Name encodes an internal derivative reference.
+*/
+
+ASC_DLLSPEC CONST struct Name *DerivativeRefBaseName(CONST struct Name *n);
+/**<
+	Return the base-variable name encoded within an internal derivative ref,
+	or NULL if n is not a derivative reference.
+*/
 /**<
  * Make subscript index from the reserved identifier given, 
  * which in most uses will

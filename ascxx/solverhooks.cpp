@@ -4,6 +4,8 @@
 #include "solver.h"
 #include "solverparameters.h"
 #include "solverreporter.h"
+#include "integrator.h"
+#include "integratorreporter.h"
 #include "registry.h"
 #include "value.h"
 #include <ascend/compiler/simstatus.h>
@@ -75,16 +77,37 @@ struct StoredSolverConfig{
 	std::vector<StoredOption> options;
 };
 
+struct StoredIntegratorConfig{
+	bool have_integrator = false;
+	std::string integrator_name;
+	std::vector<StoredOption> options;
+};
+
+enum StoredFocus{
+	FOCUS_NONE = 0,
+	FOCUS_SOLVER,
+	FOCUS_INTEGRATOR
+};
+
 struct StoredStudyConfig{
 	std::vector<Instanc> print_vars;
 	bool suppress_print = false;
+	std::vector<Instanc> default_observed;
+	std::map<std::string, std::vector<Instanc> > named_observed;
 };
 
 struct StudyColumn{
+	enum Kind{
+		OBS_REAL,
+		OBS_BOOL,
+		OBS_INT,
+		OBS_SYMBOL
+	};
 	Instance *inst;
 	std::string name;
 	std::string units;
 	double conversion;
+	Kind kind;
 };
 
 static StudyColumn get_study_column(Instance *inst, Simulation *S){
@@ -93,26 +116,40 @@ static StudyColumn get_study_column(Instance *inst, Simulation *S){
 
 	column.inst = inst;
 	column.name = S->getInstanceName(wrapped);
-	column.units = "1";
+	column.units.clear();
 	column.conversion = 1.0;
-	try{
-		UnitsM display_units = wrapped.getDisplayUnits(false);
-		column.units = display_units.getName().toString();
-		column.conversion = display_units.getConversion();
-		if(column.conversion == 0.0){
+	if(wrapped.isReal()){
+		column.kind = StudyColumn::OBS_REAL;
+		try{
+			UnitsM display_units = wrapped.getDisplayUnits(false);
+			column.units = display_units.getName().toString();
+			column.conversion = display_units.getConversion();
+			if(column.conversion == 0.0){
+				column.conversion = 1.0;
+			}
+		}catch(std::runtime_error &){
+			column.units = wrapped.isDimensionless() ? "1" : "?";
 			column.conversion = 1.0;
 		}
-	}catch(std::runtime_error &){
-		column.units = wrapped.isDimensionless() ? "1" : "?";
-		column.conversion = 1.0;
+	}else if(wrapped.isBool()){
+		column.kind = StudyColumn::OBS_BOOL;
+	}else if(wrapped.isInt()){
+		column.kind = StudyColumn::OBS_INT;
+	}else{
+		column.kind = StudyColumn::OBS_SYMBOL;
 	}
 	return column;
 }
 
 static void write_study_headers(FILE *fp, const std::vector<StudyColumn> &columns){
 	for(std::vector<StudyColumn>::size_type i = 0; i < columns.size(); ++i){
-		fprintf(fp, "%s [%s]%s", columns[i].name.c_str(), columns[i].units.c_str(),
-			(i + 1 < columns.size()) ? "\t" : "");
+		if(columns[i].kind == StudyColumn::OBS_REAL){
+			fprintf(fp, "%s [%s]%s", columns[i].name.c_str(), columns[i].units.c_str(),
+				(i + 1 < columns.size()) ? "\t" : "");
+		}else{
+			fprintf(fp, "%s%s", columns[i].name.c_str(),
+				(i + 1 < columns.size()) ? "\t" : "");
+		}
 	}
 	fprintf(fp, "\n");
 }
@@ -120,14 +157,29 @@ static void write_study_headers(FILE *fp, const std::vector<StudyColumn> &column
 static int write_study_row(FILE *fp, const std::vector<StudyColumn> &columns){
 	for(std::vector<StudyColumn>::size_type i = 0; i < columns.size(); ++i){
 		Instanc obs(columns[i].inst);
-		double value = obs.getRealValue() / columns[i].conversion;
-		fprintf(fp, "%.15g%s", value, (i + 1 < columns.size()) ? "\t" : "");
+		switch(columns[i].kind){
+		case StudyColumn::OBS_REAL:
+			fprintf(fp, "%.15g", obs.getRealValue() / columns[i].conversion);
+			break;
+		case StudyColumn::OBS_BOOL:
+			fprintf(fp, "%s", obs.getBoolValue() ? "TRUE" : "FALSE");
+			break;
+		case StudyColumn::OBS_INT:
+			fprintf(fp, "%ld", obs.getIntValue());
+			break;
+		case StudyColumn::OBS_SYMBOL:
+			fprintf(fp, "'%s'", obs.getSymbolValue().toString());
+			break;
+		}
+		fprintf(fp, "%s", (i + 1 < columns.size()) ? "\t" : "");
 	}
 	return fprintf(fp, "\n");
 }
 
 static std::map<Instance *, StoredSolverConfig> g_solver_configs;
+static std::map<Instance *, StoredIntegratorConfig> g_integrator_configs;
 static std::map<Instance *, StoredStudyConfig> g_study_configs;
+static std::map<Instance *, StoredFocus> g_focus_configs;
 
 static StoredSolverConfig &get_solver_config(Simulation *S){
 	return g_solver_configs[S->getInternalType()];
@@ -135,6 +187,14 @@ static StoredSolverConfig &get_solver_config(Simulation *S){
 
 static StoredStudyConfig &get_study_config(Simulation *S){
 	return g_study_configs[S->getInternalType()];
+}
+
+static StoredIntegratorConfig &get_integrator_config(Simulation *S){
+	return g_integrator_configs[S->getInternalType()];
+}
+
+static StoredFocus &get_focus_config(Simulation *S){
+	return g_focus_configs[S->getInternalType()];
 }
 
 static bool has_instance(const std::vector<Instanc> &vars, const Instanc &inst){
@@ -146,9 +206,7 @@ static bool has_instance(const std::vector<Instanc> &vars, const Instanc &inst){
 	return false;
 }
 
-static int apply_option_to_system(Simulation *S, const char *optionname, const value_t *val){
-	SolverParameters pp = S->getParameters();
-
+static int apply_option_to_parameters(SolverParameters &pp, const char *optionname, const value_t *val){
 	try{
 		SolverParameter p = pp.getParameter(optionname);
 		try{
@@ -159,13 +217,10 @@ static int apply_option_to_system(Simulation *S, const char *optionname, const v
 	}catch(std::runtime_error &){
 		return SLVREQ_INVALID_OPTION_NAME;
 	}
-	S->setParameters(pp);
 	return 0;
 }
 
-static int apply_option_to_system(Simulation *S, const StoredOption &stored){
-	SolverParameters pp = S->getParameters();
-
+static int apply_option_to_parameters(SolverParameters &pp, const StoredOption &stored){
 	try{
 		SolverParameter p = pp.getParameter(stored.name);
 		try{
@@ -189,11 +244,40 @@ static int apply_option_to_system(Simulation *S, const StoredOption &stored){
 	}catch(std::runtime_error &){
 		return SLVREQ_INVALID_OPTION_NAME;
 	}
+	return 0;
+}
+
+static int apply_option_to_system(Simulation *S, const char *optionname, const value_t *val){
+	SolverParameters pp = S->getParameters();
+	int res = apply_option_to_parameters(pp, optionname, val);
+	if(res != 0){
+		return res;
+	}
+	S->setParameters(pp);
+	return 0;
+}
+
+static int apply_option_to_system(Simulation *S, const StoredOption &stored){
+	SolverParameters pp = S->getParameters();
+	int res = apply_option_to_parameters(pp, stored);
+	if(res != 0){
+		return res;
+	}
 	S->setParameters(pp);
 	return 0;
 }
 
 static void remember_option(StoredSolverConfig &config, const char *optionname, const value_t *val){
+	for(std::vector<StoredOption>::iterator i = config.options.begin(); i != config.options.end(); ++i){
+		if(i->name == optionname){
+			*i = StoredOption(optionname, *val);
+			return;
+		}
+	}
+	config.options.push_back(StoredOption(optionname, *val));
+}
+
+static void remember_option(StoredIntegratorConfig &config, const char *optionname, const value_t *val){
 	for(std::vector<StoredOption>::iterator i = config.options.begin(); i != config.options.end(); ++i){
 		if(i->name == optionname){
 			*i = StoredOption(optionname, *val);
@@ -218,6 +302,18 @@ static int apply_stored_solver_config(Simulation *S){
 	return 0;
 }
 
+static int apply_stored_integrator_config(Integrator &I, const StoredIntegratorConfig &config){
+	SolverParameters pp = I.getParameters();
+	for(std::vector<StoredOption>::const_iterator i = config.options.begin(); i != config.options.end(); ++i){
+		int res = apply_option_to_parameters(pp, *i);
+		if(res != 0){
+			return res;
+		}
+	}
+	I.setParameters(pp);
+	return 0;
+}
+
 }
 
 //------------------------------------------------------------------------------
@@ -228,6 +324,12 @@ int ascxx_slvreq_set_solver(const char *solvername, void *user_data){
 	if(NULL==S->getSolverHooks())return SLVREQ_SOLVER_HOOK_NOT_SET;
 	MSG("Got solver hooks at %p from Simulation at %p",S->getSolverHooks(),S);
 	return S->getSolverHooks()->setSolver(solvername, S);
+}
+
+int ascxx_slvreq_set_integrator(const char *integratorname, void *user_data){
+	Simulation *S = (Simulation *)user_data;
+	if(NULL==S->getSolverHooks())return SLVREQ_INTEGRATOR_HOOK_NOT_SET;
+	return S->getSolverHooks()->setIntegrator(integratorname, S);
 }
 
 int ascxx_slvreq_set_option(const char *optionname, value_t *val, void *user_data){
@@ -246,6 +348,13 @@ int ascxx_slvreq_do_solve(struct Instance *instance, void *user_data){
 	return res;
 }
 
+int ascxx_slvreq_do_observe(const SlvReqObserveRequest *request, void *user_data){
+	Simulation *S = (Simulation *)user_data;
+	if(NULL==S->getSolverHooks())return SLVREQ_OBSERVE_HOOK_NOT_SET;
+	ObserveRequest observe_request(request);
+	return S->getSolverHooks()->doObserve(observe_request, S);
+}
+
 int ascxx_slvreq_do_study(const SlvReqStudyRequest *request, void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_STUDY_HOOK_NOT_SET;
@@ -253,10 +362,52 @@ int ascxx_slvreq_do_study(const SlvReqStudyRequest *request, void *user_data){
 	return S->getSolverHooks()->doStudy(study_request, S);
 }
 
+int ascxx_slvreq_do_integrate(const SlvReqIntegrateRequest *request, void *user_data){
+	Simulation *S = (Simulation *)user_data;
+	if(NULL==S->getSolverHooks())return SLVREQ_INTEGRATE_HOOK_NOT_SET;
+	IntegrateRequest integrate_request(request);
+	return S->getSolverHooks()->doIntegrate(integrate_request, S);
+}
+
 int ascxx_slvreq_delete_system(void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_DELETE_HOOK_NOT_SET;
 	return S->getSolverHooks()->deleteSystem(S);
+}
+
+ObserveRequest::ObserveRequest() : observed(), name(){
+}
+
+ObserveRequest::ObserveRequest(const SlvReqObserveRequest *request) : observed(), name(){
+	unsigned long i;
+	if(request == NULL){
+		return;
+	}
+	if(request->observed != NULL){
+		for(i = 0; i < request->n_observed; ++i){
+			if(request->observed[i] != NULL){
+				observed.push_back(Instanc(request->observed[i]));
+			}
+		}
+	}
+	if(request->name != NULL){
+		name = request->name;
+	}
+}
+
+std::vector<Instanc>
+ObserveRequest::getObserved() const{
+	return observed;
+}
+
+bool
+ObserveRequest::hasName() const{
+	return !name.empty();
+}
+
+std::string
+ObserveRequest::getName() const{
+	return name;
 }
 
 
@@ -289,29 +440,87 @@ SolverHooks::setSolver(const char *solvername, Simulation *S){
 	}catch(std::runtime_error &E){
 		return SLVREQ_UNKNOWN_SOLVER;
 	}
+	get_focus_config(S) = FOCUS_SOLVER;
 	MSG("Solver set to '%s'",solvername);
 	asc_simstatus_mark_dirty(S->getInternalType());
 	return 0;
 }
 
 int
+SolverHooks::setIntegrator(const char *integratorname, Simulation *S){
+	std::vector<std::string> engines = Integrator::getEngines();
+	for(std::vector<std::string>::const_iterator i = engines.begin(); i != engines.end(); ++i){
+		if(*i == integratorname){
+			StoredIntegratorConfig &config = get_integrator_config(S);
+			config.have_integrator = true;
+			config.integrator_name = integratorname;
+			get_focus_config(S) = FOCUS_INTEGRATOR;
+			return 0;
+		}
+	}
+	return SLVREQ_UNKNOWN_INTEGRATOR;
+}
+
+int
+SolverHooks::doObserve(const ObserveRequest &request, Simulation *S){
+	StoredStudyConfig &study_config = get_study_config(S);
+	std::vector<Instanc> observed = request.getObserved();
+
+	if(observed.empty()){
+		return SLVREQ_OBSERVE_INVALID_REQUEST;
+	}
+
+	if(request.hasName()){
+		study_config.named_observed[request.getName()] = observed;
+	}else{
+		study_config.default_observed = observed;
+	}
+	return 0;
+}
+
+int
 SolverHooks::setOption(const char *optionname, Value val, Simulation *S){
-	try{
-		S->build();
-	}catch(std::runtime_error &){
-		return SLVREQ_OPTIONS_UNAVAILABLE;
+	StoredFocus focus = get_focus_config(S);
+	if(focus == FOCUS_SOLVER){
+		try{
+			S->build();
+		}catch(std::runtime_error &){
+			return SLVREQ_OPTIONS_UNAVAILABLE;
+		}
+		try{
+			(void)S->getSolver();
+		}catch(std::runtime_error &){
+			return SLVREQ_OPTIONS_UNAVAILABLE;
+		}
+		int res = apply_option_to_system(S, optionname, val.v);
+		if(res == 0){
+			remember_option(get_solver_config(S), optionname, val.v);
+			asc_simstatus_mark_dirty(S->getInternalType());
+		}
+		return res;
+	}else if(focus == FOCUS_INTEGRATOR){
+		StoredIntegratorConfig &config = get_integrator_config(S);
+		if(!config.have_integrator){
+			return SLVREQ_OPTIONS_UNAVAILABLE;
+		}
+		try{
+			S->build();
+			Integrator I(*S);
+			I.setEngine(config.integrator_name);
+			SolverParameters pp = I.getParameters();
+			int res = apply_option_to_parameters(pp, optionname, val.v);
+			if(res != 0){
+				return res;
+			}
+			I.setParameters(pp);
+			remember_option(config, optionname, val.v);
+			asc_simstatus_mark_dirty(S->getInternalType());
+			return 0;
+		}catch(std::runtime_error &){
+			return SLVREQ_OPTIONS_UNAVAILABLE;
+		}
 	}
-	try{
-		(void)S->getSolver();
-	}catch(std::runtime_error &){
-		return SLVREQ_OPTIONS_UNAVAILABLE;
-	}
-	int res = apply_option_to_system(S, optionname, val.v);
-	if(res == 0){
-		remember_option(get_solver_config(S), optionname, val.v);
-		asc_simstatus_mark_dirty(S->getInternalType());
-	}
-	return res;
+	return SLVREQ_OPTIONS_UNAVAILABLE;
 }
 
 int
@@ -458,6 +667,39 @@ StudyRequest::getFilename() const{
 	return filename;
 }
 
+IntegrateRequest::IntegrateRequest()
+	: start(0.0), stop(0.0), steps(0){
+}
+
+IntegrateRequest::IntegrateRequest(const SlvReqIntegrateRequest *request)
+	: start(0.0), stop(0.0), steps(0){
+	if(request == NULL){
+		return;
+	}
+	if(ValueKind(request->start) == real_value){
+		start = RealValue(request->start);
+	}
+	if(ValueKind(request->stop) == real_value){
+		stop = RealValue(request->stop);
+	}
+	steps = request->steps;
+}
+
+double
+IntegrateRequest::getStart() const{
+	return start;
+}
+
+double
+IntegrateRequest::getStop() const{
+	return stop;
+}
+
+long
+IntegrateRequest::getSteps() const{
+	return steps;
+}
+
 int
 SolverHooks::doStudy(const StudyRequest &request, Simulation *S){
 	FILE *fp = stdout;
@@ -469,6 +711,13 @@ SolverHooks::doStudy(const StudyRequest &request, Simulation *S){
 	StoredStudyConfig &study_config = get_study_config(S);
 
 	if(observed.empty()){
+		observed = study_config.default_observed;
+	}
+
+	if(observed.empty()){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+			"STUDY requires observed variables, either explicitly or via a prior OBSERVE statement."
+		);
 		return SLVREQ_STUDY_INVALID_REQUEST;
 	}
 
@@ -601,6 +850,67 @@ cleanup:
 }
 
 int
+SolverHooks::doIntegrate(const IntegrateRequest &request, Simulation *S){
+	StoredStudyConfig &study_config = get_study_config(S);
+	StoredIntegratorConfig &integrator_config = get_integrator_config(S);
+	std::vector<Instanc> observed = study_config.default_observed;
+	int res = 0;
+
+	if(!integrator_config.have_integrator){
+		return SLVREQ_NO_INTEGRATOR_SELECTED;
+	}
+	if(observed.empty()){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+			"INTEGRATE requires observed variables via a prior OBSERVE statement."
+		);
+		return SLVREQ_INTEGRATE_INVALID_REQUEST;
+	}
+	if(request.getSteps() <= 0 || request.getStop() < request.getStart()){
+		return SLVREQ_INTEGRATE_INVALID_REQUEST;
+	}
+
+	try{
+		S->build();
+		{
+			Integrator I(*S);
+			IntegratorReporterConsole reporter(&I);
+			I.setEngine(integrator_config.integrator_name);
+			I.clearObservedInstances();
+			for(std::vector<Instanc>::const_iterator i = observed.begin(); i != observed.end(); ++i){
+				I.addObservedInstance(*i);
+			}
+			res = apply_stored_integrator_config(I, integrator_config);
+			if(res != 0){
+				return res;
+			}
+			I.findIndependentVar();
+
+			Instanc indep_inst = I.getIndependentVariable().getInstance();
+			UnitsM bounds_units = indep_inst.getDisplayUnits(false);
+			double conversion = bounds_units.getConversion();
+			if(conversion == 0.0){
+				conversion = 1.0;
+			}
+
+			I.setLinearTimesteps(
+				bounds_units,
+				request.getStart() / conversion,
+				request.getStop() / conversion,
+				(unsigned long)request.getSteps()
+			);
+			I.analyse();
+			I.setReporter(&reporter);
+			I.solve();
+		}
+
+		asc_simstatus_mark_clean(S->getInternalType(), S->getModel().getInternalType());
+	}catch(std::runtime_error &){
+		res = SLVREQ_INTEGRATE_FAIL;
+	}
+	return res;
+}
+
+int
 SolverHooks::deleteSystem(Simulation *S){
 	S->invalidateSystem();
 	asc_simstatus_mark_dirty(S->getInternalType());
@@ -616,16 +926,27 @@ SolverHooks::getStudyPrintVars(Simulation *S) const{
 	return study_config.print_vars;
 }
 
+std::vector<Instanc>
+SolverHooks::getObservedVars(Simulation *S) const{
+	const StoredStudyConfig &study_config = get_study_config(S);
+	return study_config.default_observed;
+}
+
 void
 SolverHooks::assign(Simulation *S){
 	S->setSolverHooks(this);
 	MSG("Assigning SolverHooks to Simulation...");
 	get_study_config(S) = StoredStudyConfig();
+	get_integrator_config(S) = StoredIntegratorConfig();
+	get_focus_config(S) = FOCUS_NONE;
 	SlvReqHooks hooks = SLVREQ_HOOKS_EMPTY;
 	hooks.set_solver_fn = &ascxx_slvreq_set_solver;
+	hooks.set_integrator_fn = &ascxx_slvreq_set_integrator;
 	hooks.set_option_fn = &ascxx_slvreq_set_option;
 	hooks.do_solve_fn = &ascxx_slvreq_do_solve;
+	hooks.do_observe_fn = &ascxx_slvreq_do_observe;
 	hooks.do_study_fn = &ascxx_slvreq_do_study;
+	hooks.do_integrate_fn = &ascxx_slvreq_do_integrate;
 	hooks.delete_system_fn = &ascxx_slvreq_delete_system;
 	hooks.user_data = (void *)S;
 	slvreq_assign_hooks(S->getInternalType(), &hooks);

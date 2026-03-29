@@ -34,6 +34,9 @@
 #include <ascend/general/panic.h>
 
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/derivinst.h>
+#include <ascend/compiler/destroyinst.h>
+#include <ascend/compiler/instquery.h>
 
 #include <ascend/linear/mtx.h>
 
@@ -232,9 +235,21 @@ int slv_destroy(slv_system_t sys)
       }
     }
   }
-  if (ret) {
+if (ret) {
 	ERROR_REPORTER_HERE(ASC_PROG_FATAL,"slv_destroy: slv_system_t 0x%p not freed.",sys);
   } else {
+
+	if(sys->hidden_instances != NULL){
+		unsigned long i, len = gl_length(sys->hidden_instances);
+		for(i = 1; i <= len; ++i){
+			struct Instance *inst = (struct Instance *)gl_fetch(sys->hidden_instances, i);
+			if(inst != NULL){
+				SetInterfacePtr(inst,NULL);
+			}
+		}
+		gl_destroy(sys->hidden_instances);
+		sys->hidden_instances = NULL;
+	}
 
 	SLV_FREE_BUFS(SLV_FREE_BUF, SLV_FREE_BUF_GLOBAL)
 
@@ -325,6 +340,15 @@ void slv_set_symbol_list(slv_system_t sys,
     DestroySymbolValuesList(sys->symbollist);
   }
   sys->symbollist = sv;
+}
+
+void slv_set_hidden_instance_list(slv_system_t sys,
+			 struct gl_list_t *sv)
+{
+  if (sys->hidden_instances != NULL) {
+    Asc_Panic(2,"slv_set_hidden_instance_list","bad call: sys->hidden_instances is already defined!");
+  }
+  sys->hidden_instances = sv;
 }
 
 /*--------------------------------------------------------]

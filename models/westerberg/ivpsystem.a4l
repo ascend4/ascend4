@@ -56,9 +56,11 @@ PROVIDE "system.a4l";
 DEFINITION relation
 
     included IS_A boolean;
+    initial  IS_A boolean;
     message  IS_A symbol;
 
     included := TRUE;
+    initial := FALSE;
     message := 'none';
 END relation;
 
@@ -66,7 +68,9 @@ END relation;
 DEFINITION logic_relation
 
     included IS_A boolean;
+    initial  IS_A boolean;
     included := TRUE;
+    initial := FALSE;
 
     message  IS_A symbol;
     message := 'none';
@@ -80,6 +84,9 @@ ATOM boolean_var REFINES boolean
     fixed := FALSE;
 
 END boolean_var;
+
+ATOM selector REFINES symbol;
+END selector;
 
 ATOM solver_var REFINES real
     DEFAULT 0.5 {?};

@@ -94,6 +94,8 @@ John Pye (C) 2005
 		<keyword>IF</keyword>
 		<keyword>IMPORT</keyword>
 		<keyword>IN</keyword>
+		<keyword>INDEPENDENT</keyword>
+		<keyword>INITIAL</keyword>
 		<keyword>INPUT</keyword>
 		<keyword>INTERSECTION</keyword>
 		<keyword>IS_A</keyword>
@@ -249,6 +251,7 @@ John Pye (C) 2005
 	<keyword-list _name="Numerical Functions" style="Function" case-sensitive="TRUE">
 		<keyword>abs</keyword>
 		<keyword>(arc)?(cos|sin|tan)h?</keyword>
+		<keyword>der</keyword>
 		<keyword>erf</keyword>
 		<keyword>exp</keyword>
 		<keyword>lnm?</keyword>

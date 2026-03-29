@@ -54,7 +54,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 DEFINITION relation
 
     included IS_A boolean;
+    initial  IS_A boolean;
     included := TRUE;
+    initial := FALSE;
 
 END relation;
 
@@ -62,7 +64,9 @@ END relation;
 DEFINITION logic_relation
 
     included IS_A boolean;
+    initial  IS_A boolean;
     included := TRUE;
+    initial := FALSE;
 
 END logic_relation;
 
@@ -159,4 +163,3 @@ MODEL cmuascend();
  * BAA, 8/97.
  *)
 END cmuascend;
-

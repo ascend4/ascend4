@@ -209,6 +209,7 @@ struct system_structure {
 	struct rel_relation *obj; /**< selected for optimization from list */
 	struct var_variable *objvar; /**< selected for optimization from list */
 	struct gl_list_t *symbollist; /**< list of symbol values struct used to assign an integer value to a symbol value */
+	struct gl_list_t *hidden_instances; /**< hidden backend-only instances created during dynamic analysis */
 	struct {
 		struct var_variable **incidence; /**< all relation incidence list memory */
 		struct rel_relation **varincidence; /**< all variable incidence list memory */
@@ -228,4 +229,3 @@ struct system_structure {
 };
 
 /* @} */
-

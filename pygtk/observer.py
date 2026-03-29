@@ -1,6 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 import os.path
+from plotutils import group_series, group_ylabel, COLOR_CYCLE
 
 from study import *
 from unitsdialog import *
@@ -48,6 +49,7 @@ class ObserverColumn:
 		self.instance = instance
 		self.name = name
 		self.index = index
+		self.kind = self._detect_kind()
 
 		if name==None:
 			if browser == None:
@@ -55,7 +57,7 @@ class ObserverColumn:
 			else:
 				name = browser.sim.getInstanceName(instance)
 
-		if units is None:
+		if self.is_real() and units is None:
 			if browser is not None:
 				units = browser.get_instance_display_units(instance)
 			else:
@@ -80,6 +82,8 @@ class ObserverColumn:
 		return "ObserverColumn(name="+self.name+")"
 
 	def display_unit_name(self):
+		if not self.is_real() or self.units is None:
+			return ""
 		uname = CelsiusUnits.get_display_unit_name(self.instance, str(self.units.getName()))
 		if uname in ("", "?", "dimensionless", "[dimensionless]"):
 			return ""
@@ -90,9 +94,54 @@ class ObserverColumn:
 			pass
 		return uname
 
+	def _detect_kind(self):
+		if self.instance.isSelector():
+			return "selector"
+		if self.instance.isSymbol():
+			return "symbol"
+		if self.instance.isBool():
+			return "bool"
+		if self.instance.isInt():
+			return "int"
+		if self.instance.isReal():
+			return "real"
+		return "other"
+
+	def is_real(self):
+		return self.kind == "real"
+
+	def is_plottable(self):
+		return self.is_real()
+
+	def current_value(self):
+		if self.instance.isSelector():
+			return str(self.instance.getSelectorValue())
+		if self.instance.isSymbol():
+			return str(self.instance.getSymbolValue())
+		if self.instance.isBool():
+			return bool(self.instance.getBoolValue())
+		if self.instance.isInt():
+			return int(self.instance.getIntValue())
+		if self.instance.isReal():
+			return self.instance.getRealValue()
+		return self.instance.getValueAsString()
+
 	def display_value(self, rawval):
+		if not self.is_real():
+			if rawval is None:
+				return ""
+			if self.kind == "bool":
+				return "TRUE" if bool(rawval) else "FALSE"
+			if self.kind in ("symbol", "selector"):
+				return "'%s'" % rawval
+			return str(rawval)
 		value = rawval / self.units.getConversion()
 		return CelsiusUnits.convert_show_value(self.instance, value)
+
+	def plot_value(self, rawval):
+		if not self.is_plottable():
+			raise TypeError("Column '%s' is not plottable" % self.title)
+		return rawval / self.units.getConversion()
 
 	def cellvalue(self, column, cell, model, row_iter, user_data=None):
 		_rowobject = model.get_value(row_iter,0)
@@ -101,8 +150,8 @@ class ObserverColumn:
 		cell.set_property('weight',400)
 		try:
 			if _rowobject.active or _rowobject.dead:
-				_rawval = self.instance.getRealValue()
-				if self.instance.getType().isRefinedSolverVar():
+				_rawval = self.current_value()
+				if self.is_real() and self.instance.getType().isRefinedSolverVar():
 					if self.instance.isFixed():
 						cell.set_property('editable',True)
 						cell.set_property('weight',700)
@@ -152,7 +201,7 @@ class ObserverRow:
 		if values is None:
 			_v = {}
 			for col in list(table.cols.values()):
-				_v[col.index] = col.instance.getRealValue()
+				_v[col.index] = col.current_value()
 			self.values = _v
 		else:
 			self.values = values
@@ -169,7 +218,28 @@ class ObserverRow:
 			return vv
 		else:
 			for index, col in table.cols.items():
-				vv[index] = col.display_value(float(col.instance.getRealValue()))
+				vv[index] = col.display_value(col.current_value())
+			return vv
+
+	def get_plot_values(self,table):
+		vv = {}
+		if not self.active:
+			for k,v in table.cols.items():
+				if not v.is_plottable():
+					continue
+				try:
+					vv[k] = v.plot_value(self.values[v.index])
+				except:
+					vv[k] = None
+			return vv
+		else:
+			for index, col in table.cols.items():
+				if not col.is_plottable():
+					continue
+				try:
+					vv[index] = col.plot_value(col.current_value())
+				except:
+					vv[index] = None
 			return vv
 
 class ObserverTab:
@@ -250,7 +320,7 @@ class ObserverTab:
 	def get_values(self):
 		_v = []
 		for col in list(self.cols.values()):
-			_v.append(col.instance.getRealValue())
+			_v.append(col.current_value())
 		return _v
 
 	def on_add_clicked(self,*args):
@@ -288,6 +358,11 @@ class ObserverTab:
 			x=self.cols[x]
 		if y.__class__ is int and y>=0 and y<len(self.cols):
 			y=[self.cols[y]]
+		if not x.is_plottable():
+			raise Exception("Selected X axis '%s' is not plottable" % x.title)
+		for ycol in y:
+			if not ycol.is_plottable():
+				raise Exception("Selected Y axis '%s' is not plottable" % ycol.title)
 
 		start = None
 		_p = self.browser.prefs
@@ -300,13 +375,14 @@ class ObserverTab:
 			for i in range(len(self.rows)):
 				try:
 					r = self.rows[i].get_values(self)
+					pr = self.rows[i].get_plot_values(self)
 					# flag if any row are empty -- no data? FIXME why would that happen?
 					flag = True
 					for j in y:
-						if r[j.index]=="":
+						if j.index not in pr or pr[j.index] is None:
 							flag = False
 							break
-					if r[x.index]!="" and flag==True:
+					if x.index in pr and pr[x.index] is not None and flag==True:
 						if start == None:
 							start = i
 							break
@@ -319,10 +395,10 @@ class ObserverTab:
 			i = 0
 			j = start
 			while j <len(self.rows)-1:
-				r = self.rows[j].get_values(self)
-				A[i,0]=r[x.index]
+				pr = self.rows[j].get_plot_values(self)
+				A[i,0]=pr[x.index]
 				for k in range(len(y)):
-					A[i,k+1]=r[y[k].index]
+					A[i,k+1]=pr[y[k].index]
 				j+=1
 				i+=1
 		else:
@@ -335,12 +411,13 @@ class ObserverTab:
 				if self.rows[i].tainted is False:
 					try:
 						r = self.rows[i].get_values(self)
+						pr = self.rows[i].get_plot_values(self)
 						flag = True
 						for l in y:
-							if r[l.index]=="":
+							if l.index not in pr or pr[l.index] is None:
 								flag = False
 								break
-						if r[x.index]!="" and flag == True:
+						if x.index in pr and pr[x.index] is not None and flag == True:
 							if start == None:
 								start = i
 								j=0
@@ -355,10 +432,10 @@ class ObserverTab:
 				if self.rows[start].tainted is True:
 					start+=1
 					continue
-				r = self.rows[start].get_values(self)
-				A[k,0]=r[x.index]
+				pr = self.rows[start].get_plot_values(self)
+				A[k,0]=pr[x.index]
 				for j in range(len(y)):
-					A[k,j+1]=r[y[j].index]
+					A[k,j+1]=pr[y[j].index]
 				k+=1
 				start+=1
 
@@ -375,16 +452,6 @@ class ObserverTab:
 			except Exception:
 				return ("unknown", _series_units(col))
 
-		def _group_ylabel(cols):
-			units = sorted(set([u for u in [_series_units(c) for c in cols] if u != ""]))
-			if len(cols) > 1:
-				if len(units) == 1:
-					return "[%s]" % units[0]
-				return ""
-			if len(cols) == 1:
-				return cols[0].title
-			return ""
-
 		def _legend_draggable(leg):
 			if leg is None:
 				return
@@ -394,16 +461,10 @@ class ObserverTab:
 				leg.draggable()
 
 		# Group y-series by compatible dimensions/display-units while preserving user-selected order.
-		grouped = {}
-		group_order = []
-		for yi, ycol in enumerate(y):
-			g = _series_group_key(ycol)
-			if g not in grouped:
-				grouped[g] = []
-				group_order.append(g)
-			grouped[g].append((yi, ycol))
-
-		color_cycle = ['b','r','g','y','c','m','k']
+		grouped, group_order = group_series(
+			[(yi, ycol) for yi, ycol in enumerate(y)],
+			lambda entry: _series_group_key(entry[1])
+		)
 		n_groups = len(group_order)
 		single_series = len(y) == 1
 		sharex = None
@@ -417,7 +478,7 @@ class ObserverTab:
 			group_entries = grouped[gkey]
 			group_cols = [c for _, c in group_entries]
 			for yi, ycol in group_entries:
-				color = color_cycle[yi % len(color_cycle)]
+				color = COLOR_CYCLE[yi % len(COLOR_CYCLE)]
 				ax.plot(A[:,0],A[:,yi+1],'-'+color+'o',label=ycol.title)
 
 			if gi + 1 != n_groups:
@@ -428,7 +489,7 @@ class ObserverTab:
 			if single_series and len(group_cols) == 1:
 				ax.set_ylabel(group_cols[0].title,labelpad=20)
 			else:
-				ax.set_ylabel(_group_ylabel(group_cols),labelpad=20)
+				ax.set_ylabel(group_ylabel(group_cols, _series_units, lambda c: c.title),labelpad=20)
 				leg = ax.legend(loc='upper left')
 				if leg is not None:
 					leg.get_frame().set_alpha(0.3)
@@ -447,8 +508,8 @@ class ObserverTab:
 #		_d.destroy()
 #		return
 		try:
-			if len(self.cols)<2:
-				raise Exception("Not enough columns to plot (need 2+)")
+			if len([c for c in self.cols.values() if c.is_plottable()])<2:
+				raise Exception("Not enough plottable columns (need 2+ real-valued columns)")
 			_plotwin = PlotDialog(self.browser, self)
 			_plot = _plotwin.run()
 			if _plot:
@@ -476,6 +537,9 @@ class ObserverTab:
 			
 	def on_view_cell_edited(self, renderer, path, newtext, col):
 		# we can assume it's always the self.activeiter that is edited...
+		if not col.is_real():
+			self.browser.reporter.reportError("Only real variables can be edited from the Observer")
+			return
 		##### CELSIUS TEMPERATURE WORKAROUND
 		newtext = CelsiusUnits.convert_edit(col.instance, newtext, False)
 		##### CELSIUS TEMPERATURE WORKAROUND
@@ -682,8 +746,8 @@ class ObserverTab:
 		_d.destroy()
 		return
 		try:
-			if len(self.cols)<2:
-				raise Exception("Not enough columns to plot (need 2+)")
+			if len([c for c in self.cols.values() if c.is_plottable()])<2:
+				raise Exception("Not enough plottable columns (need 2+ real-valued columns)")
 			_plotwin = PlotDialog(self.browser, self)
 			_plotwin.select_ycol(self.cols[self.current_col_key], self)
 			_plot = _plotwin.run()
@@ -717,7 +781,9 @@ class ObserverTab:
 		for _col in list(self.cols.values()):
 			_col_type = _col.instance.getType()
 			if instance_type is None or str(_col_type.getName()) == str(instance_type.getName()):
-				_units = self.browser.get_instance_display_units(_col.instance)
+				_units = None
+				if _col.is_real():
+					_units = self.browser.get_instance_display_units(_col.instance)
 				_col.units = _units
 				if self.browser == None:
 					name = "UNNAMED"
@@ -820,7 +886,11 @@ class PlotDialog:
 		
 		self.xcol = None
 		self.ycol = None
+		_xiter = None
+		_yiter = None
 		for _cols in tab.cols:
+			if not tab.cols[_cols].is_plottable():
+				continue
 			_xtemp = _xstore.append(None, [tab.cols[_cols]])
 			_ytemp = _ystore.append(None, [tab.cols[_cols]])
 			if self.xcol is None:
@@ -831,6 +901,8 @@ class PlotDialog:
 				self.ycol = tab.cols[_cols]
 				_yiter = _ytemp
 				self.plotbutton.set_sensitive(True)
+		if _xiter is None or _yiter is None:
+			raise Exception("Not enough plottable columns (need 2+ real-valued columns)")
 		
 		_selx = self.xview.get_selection()
 		_selx.select_iter(_xiter)

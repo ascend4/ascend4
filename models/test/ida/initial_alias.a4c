@@ -1,0 +1,20 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL ida_initial_alias_binding_bug;
+	y IS_A solver_var;
+	dy IS_A solver_var;
+	t IS_A solver_var;
+
+	bind: dy = der(y);
+	dyn: dy = -4 * y;
+	INDEPENDENT t;
+	INITIAL
+		y0: y = 1;
+
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0;
+		FREE dy;
+	END on_load;
+END ida_initial_alias_binding_bug;

@@ -72,6 +72,7 @@
 #include "extfunc.h"
 #include <ascend/packages/ascFreeAllVars.h>
 #include <ascend/packages/defaultall.h>
+#include <ascend/packages/initmode.h>
 #include "module.h"
 #include "packages.h"
 #include "defaultpaths.h"
@@ -130,6 +131,22 @@ int Builtins_Init(void){
 		,defaultself_visit_submodels
 		,1 /* num of args */
 		,"Call 'default_self' methods on any nested sub-models." /* help */
+		,NULL /* user_data */
+		,NULL /* destroy fn */
+  );
+
+  result = CreateUserFunctionMethod("set_initial_mode_on"
+		,Asc_EnterInitialMode
+		,1 /* num of args */
+		,"Enable INITIAL equations for the current simulation and invalidate any current solver system." /* help */
+		,NULL /* user_data */
+		,NULL /* destroy fn */
+  );
+
+  result = CreateUserFunctionMethod("set_initial_mode_off"
+		,Asc_LeaveInitialMode
+		,1 /* num of args */
+		,"Disable INITIAL equations for the current simulation and invalidate any current solver system." /* help */
 		,NULL /* user_data */
 		,NULL /* destroy fn */
   );
@@ -235,4 +252,3 @@ void AddUserFunctions(void){
 		);
 	}
 }
-
