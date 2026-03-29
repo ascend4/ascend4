@@ -43,10 +43,11 @@ MODEL tga_reduction_screen_dyn_msfb(
 
 	eps_bed, tau_bed IS_A positive_factor;
 	L_mult, k_bed_multiplier IS_A positive_factor;
-	L_add IS_A distance;
+	L_bl IS_A distance;
 
 	(* Gas compositions *)
 	y_H2_bulk, y_H2O_bulk, y_Ar_bulk IS_A mole_fraction;
+	y_H2_fb_top, y_H2O_fb_top, y_Ar_fb_top IS_A mole_fraction;
 	y_H2_react, y_H2O_react, y_Ar_react IS_A mole_fraction;
 
 	c_tot IS_A molar_density;
@@ -59,11 +60,11 @@ MODEL tga_reduction_screen_dyn_msfb(
 	L_freeboard_eff IS_A distance;
 	fb IS_A freeboard_1d_stagnant_transport(n_fb_segs);
 
-	R_fb, R_bed, R_overall IS_A transport_resistance;
+	R_bl, R_fb, R_bed, R_overall IS_A transport_resistance;
 	J_transport IS_A molar_flux;
 
 	(* transport screening factor ~1 if becoming limiting *)
-	TS_freeboard, TS_bed, TS_overall IS_A factor;
+	TS_bl, TS_freeboard, TS_bed, TS_overall IS_A factor;
 
 	(* Solid inventory and dynamic extents *)
 	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
@@ -96,12 +97,16 @@ MODEL tga_reduction_screen_dyn_msfb(
 
 	bulk_sum: y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
 
-	Lfb_eff_eq: L_freeboard_eff = L_add + L_mult * L_freeboard;
+	Lfb_eff_eq: L_freeboard_eff = L_mult * L_freeboard;
 	fb_T_eq: fb.T = T;
 	fb_p_eq: fb.p = p;
 	fb_L_eq: fb.L = L_freeboard_eff;
-	fb_top_h2_eq: fb.y_H2_top = y_H2_bulk;
-	fb_top_h2o_eq: fb.y_H2O_top = y_H2O_bulk;
+	bl_ar_eq: y_Ar_fb_top = y_Ar_bulk;
+	bl_sum_eq: y_H2O_fb_top = 1 - y_Ar_fb_top - y_H2_fb_top;
+	Rbl_eq: R_bl = L_bl / D_screen;
+	Jbl_eq: R_bl * J_transport = c_tot * (y_H2_bulk - y_H2_fb_top);
+	fb_top_h2_eq: fb.y_H2_top = y_H2_fb_top;
+	fb_top_h2o_eq: fb.y_H2O_top = y_H2O_fb_top;
 	fb_flux_h2_eq: fb.N_H2 = J_transport;
 	fb_flux_h2o_eq: fb.N_H2O = -J_transport;
 
@@ -133,16 +138,17 @@ MODEL tga_reduction_screen_dyn_msfb(
 
 	Rbed_eq: R_bed = H_bed / (k_bed_multiplier * D_eff_bed);
 	Roverall_eq: R_overall * J_transport = c_tot * (y_H2_bulk - y_H2_react);
+	screen_bl_eq: TS_bl = J_reaction * R_bl / (c_tot * y_H2_bulk);
 
 	SELECT (n_fb_segs)
 	CASE 0:
 		Rfb_eq_zero: R_fb = 0 {s/m};
-		Jtrans_eq_zero: R_bed * J_transport = c_tot * (y_H2_bulk - y_H2_react);
+		Jtrans_eq_zero: R_bed * J_transport = c_tot * (fb.y_H2[n_fb_segs] - y_H2_react);
 		screen_fb_eq_zero: TS_freeboard = 0;
-		screen_bed_eq_zero: TS_bed = J_reaction * R_bed / (c_tot * y_H2_bulk);
+		screen_bed_eq_zero: TS_bed = J_reaction * R_bed / (c_tot * fb.y_H2[n_fb_segs]);
 		screen_overall_eq_zero: TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
 	OTHERWISE:
-		Rfb_eq: R_fb * J_transport = c_tot * (y_H2_bulk - fb.y_H2[n_fb_segs]);
+		Rfb_eq: R_fb * J_transport = c_tot * (y_H2_fb_top - fb.y_H2[n_fb_segs]);
 		Jtrans_eq: R_bed * J_transport = c_tot * (fb.y_H2[n_fb_segs] - y_H2_react);
 		screen_fb_eq: TS_freeboard = J_reaction * R_fb / (c_tot * y_H2_bulk);
 		screen_bed_eq: TS_bed = J_reaction * R_bed / (c_tot * fb.y_H2[n_fb_segs]);
@@ -208,7 +214,7 @@ METHODS
 		FIX eps_bed := 0.45;
 		FIX tau_bed := 3.0;
 		FIX L_mult := 1.0;
-		FIX L_add := 0 {mm};
+		FIX L_bl := 0 {mm};
 		FIX k_bed_multiplier := 2.0;
 
 		FIX y_H2_bulk := 0.8;
@@ -262,7 +268,7 @@ METHODS
 		n_FeO.lower_bound := -1e-12 {mol};
 		n_Fe.lower_bound := -1e-12 {mol};
 		oxygen_remaining.lower_bound := -1e-9 {mol};
-		L_add.lower_bound := 0 {mm};
+		L_bl.lower_bound := 0 {mm};
 
 		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
 		tr.h2o_ar.sigma_ij.lower_bound := -1 {m};

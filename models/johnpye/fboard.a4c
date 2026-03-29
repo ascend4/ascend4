@@ -276,13 +276,12 @@ METHODS
 		y_H2_top := 0.8;
 		y_H2O_top := 0.0;
 
-		SWITCH (n_segs)
-		CASE 0:
+		IF (n_segs == 0) THEN
 			y_H2[0] := y_H2_top;
 			y_H2O[0] := y_H2O_top;
 			y_Ar[0] := 1 - y_H2[0] - y_H2O[0];
 			z[0] := 0 {mm};
-		OTHERWISE:
+		ELSE
 			FOR i IN nodes DO
 				y_H2[i] := y_H2_top - 0.03 * i / n_segs;
 				y_H2O[i] := y_H2O_top + 0.03 * i / n_segs;
@@ -297,7 +296,7 @@ METHODS
 				D_H2O_Ar[f] := 2 {cm^2/s};
 				D_H2_Ar[f] := 7 {cm^2/s};
 			END FOR;
-		END SWITCH;
+		END IF;
 		tr.D_H2O_H2 := 7 {cm^2/s};
 		tr.D_H2O_Ar := 2 {cm^2/s};
 		tr.D_H2_Ar := 7 {cm^2/s};
