@@ -1,0 +1,506 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "basemodel.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/fboard.a4c";
+REQUIRE "johnpye/iron/tga.a4c";
+
+(* Reusable particle-history resistance for one bed slice. *)
+MODEL tga_particle_history_resistance;
+	T IS_A temperature;
+	d_p IS_A distance;
+	D_eff_bed IS_A diffusivity;
+	Sh_particle IS_A positive_factor;
+	a_open, a_close, beta_T IS_A factor;
+	a_open.lower_bound := 0;
+	a_close.lower_bound := 0;
+
+	xi1, xi3 IS_A reduction_extent;
+	close_temp_factor IS_A positive_factor;
+	morph_factor IS_A positive_factor;
+	R_part IS_A transport_resistance;
+
+	close_temp_factor_eq:
+		close_temp_factor = exp(beta_T * ((T / 1 {K}) - 873.15) / 873.15);
+	morph_factor_eq:
+		morph_factor = exp(-a_open * xi1 + a_close * close_temp_factor * xi3);
+	R_part_eq:
+		R_part = d_p * morph_factor / (Sh_particle * D_eff_bed);
+END tga_particle_history_resistance;
+
+(* Dynamic TGA screening model with a discretised porous bed and a lumped
+   freeboard resistance. The dynamic state remains top-level like the working
+   baseline, while the history-dependent particle resistance is factored into
+   a reusable helper model. *)
+MODEL tga_reduction_screen_dyn_msbed_mod(
+	n_bed_segs IS_A integer_constant;
+);
+	steps "reduction reaction steps" IS_A set OF integer_constant;
+	steps :== [1..3];
+
+	t IS_A time;
+	INDEPENDENT t;
+
+	(* Geometry and sample loading *)
+	A_crucible IS_A area;
+	d_p IS_A distance;
+	L_freeboard, H_bed, dz_bed IS_A distance;
+
+	m_sample_init, m_sample IS_A mass;
+	rho_bulk_bed IS_A mass_density;
+	m_sample.lower_bound := -1 {kg};
+
+	eps_bed, tau_bed IS_A positive_factor;
+	k_fb_multiplier, k_bed_multiplier IS_A positive_factor;
+
+	(* Gas compositions *)
+	y_H2_bulk, y_H2O_bulk, y_Ar_bulk IS_A mole_fraction;
+	y_H2_if, y_H2O_if, y_Ar_if IS_A mole_fraction;
+	y_H2_react, y_H2O_react, y_Ar_react IS_A mole_fraction;
+
+	y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs], y_Ar_zone[1..n_bed_segs] IS_A mole_fraction;
+	y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs], y_Ar_part[1..n_bed_segs] IS_A mole_fraction;
+	y_H2_face[0..n_bed_segs - 1], y_H2O_face[0..n_bed_segs - 1], y_Ar_face[0..n_bed_segs - 1] IS_A mole_fraction;
+
+	c_tot IS_A molar_density;
+
+	(* Gas transport *)
+	tr IS_A diffusion_h2o_h2_ar;
+	T ALIASES tr.T;
+	p ALIASES tr.p;
+	D_screen IS_A diffusivity;
+	D_H2O_H2_bed, D_H2O_Ar_bed, D_H2_Ar_bed, D_eff_bed IS_A diffusivity;
+
+	R_fb, R_bed, R_overall IS_A transport_resistance;
+	R_part[1..n_bed_segs] IS_A transport_resistance;
+	J_transport IS_A molar_flux;
+	N_H2[0..n_bed_segs], N_H2O[0..n_bed_segs], N_Ar[0..n_bed_segs] IS_A molar_flux;
+	Sh_particle IS_A positive_factor;
+
+	TS_freeboard, TS_bed, TS_overall IS_A factor;
+
+	(* Solid inventory *)
+	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
+	n0_Fe2O3, n0_per_area IS_A mole;
+	n0_Fe2O3_zone[1..n_bed_segs] IS_A mole;
+	n0_per_area_zone[1..n_bed_segs] IS_A mole_per_area;
+
+	xi[steps] IS_A reduction_extent;
+	xi_zone[steps][1..n_bed_segs] IS_A reduction_extent;
+
+	n_Fe2O3, n_Fe3O4, n_FeO, n_Fe IS_A mole;
+	n_Fe2O3_zone[1..n_bed_segs], n_Fe3O4_zone[1..n_bed_segs], n_FeO_zone[1..n_bed_segs], n_Fe_zone[1..n_bed_segs] IS_A mole;
+	oxygen_remaining IS_A mole;
+	oxygen_remaining_zone[1..n_bed_segs] IS_A mole;
+	reduction_degree IS_A factor;
+
+	(* Kinetics and morphology *)
+	etak0[steps] IS_A rate_per_pressure;
+	E_a[steps] IS_A molar_energy;
+	k_step[steps] IS_A rate_per_pressure;
+	k_step[steps].lower_bound := -1e6 {1/s/Pa};
+	a_open, a_close IS_A factor;
+	a_open.lower_bound := 0;
+	a_close.lower_bound := 0;
+	beta_T IS_A factor;
+	close_temp_factor IS_A positive_factor;
+	morph_factor[1..n_bed_segs] IS_A positive_factor;
+
+	K_eq_lnA[steps] IS_A factor;
+	K_eq_lnB[steps] IS_A factor;
+	K_ratio_eq[steps] IS_A positive_factor;
+
+	drive[steps] IS_A delta_pressure;
+	drive_zone[steps][1..n_bed_segs] IS_A delta_pressure;
+	rate_forward[steps], rate_reverse[steps], rate_net[steps] IS_A extent_rate;
+	rate_forward_zone[steps][1..n_bed_segs], rate_reverse_zone[steps][1..n_bed_segs], rate_net_zone[steps][1..n_bed_segs] IS_A extent_rate;
+	k_step_zone[steps][1..n_bed_segs] IS_A rate_per_pressure;
+	K_ratio_eq_zone[steps][1..n_bed_segs] IS_A positive_factor;
+
+	J_reaction IS_A molar_flux;
+	J_reaction_zone[1..n_bed_segs] IS_A molar_flux;
+
+	particle_res[1..n_bed_segs] IS_A tga_particle_history_resistance;
+
+	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+	bulk_sum: y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
+
+	if_ar_eq: y_Ar_if = y_Ar_bulk;
+	if_sum_eq: y_H2O_if = 1 - y_Ar_if - y_H2_if;
+
+	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+	n0area_eq: n0_per_area = n0_Fe2O3 / A_crucible;
+
+	nhe_total_eq: n_Fe2O3 = SUM[n_Fe2O3_zone[z] | z IN [1..n_bed_segs]];
+	nmag_total_eq: n_Fe3O4 = SUM[n_Fe3O4_zone[z] | z IN [1..n_bed_segs]];
+	nwu_total_eq: n_FeO = SUM[n_FeO_zone[z] | z IN [1..n_bed_segs]];
+	nfe_total_eq: n_Fe = SUM[n_Fe_zone[z] | z IN [1..n_bed_segs]];
+
+	msample_eq:
+		m_sample
+		=
+		n_Fe2O3 * MW_Fe2O3
+		+ n_Fe3O4 * MW_Fe3O4
+		+ n_FeO * MW_FeO
+		+ n_Fe * MW_Fe;
+	Hbed_eq: H_bed = m_sample / (rho_bulk_bed * A_crucible);
+	dzbed_eq: dz_bed = H_bed / n_bed_segs;
+
+	oxygen_eq: oxygen_remaining = SUM[oxygen_remaining_zone[z] | z IN [1..n_bed_segs]];
+	reduction_degree_eq:
+		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
+
+	xi1_eq: xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
+	xi2_eq: xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+	xi3_eq: xi[3] = n_Fe / n0_Fe2O3;
+
+	yh2_avg_eq: y_H2_react = SUM[y_H2_part[z] | z IN [1..n_bed_segs]] / n_bed_segs;
+	yh2o_avg_eq: y_H2O_react = SUM[y_H2O_part[z] | z IN [1..n_bed_segs]] / n_bed_segs;
+	yar_avg_eq: y_Ar_react = SUM[y_Ar_part[z] | z IN [1..n_bed_segs]] / n_bed_segs;
+
+	Dscreen_eq: D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
+	Dh2oh2bed_eq: D_H2O_H2_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2O_H2;
+	Dh2oarbed_eq: D_H2O_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2O_Ar;
+	Dh2arbed_eq: D_H2_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2_Ar;
+	Deffbed_eq: D_eff_bed = k_bed_multiplier * (eps_bed / tau_bed) * D_screen;
+	close_temp_factor_eq: close_temp_factor = SUM[particle_res[z].close_temp_factor | z IN [1..n_bed_segs]] / n_bed_segs;
+
+	Rfb_eq: R_fb = L_freeboard / (k_fb_multiplier * D_screen);
+	Rbed_eq: R_bed = H_bed / D_eff_bed;
+	Roverall_eq: R_overall = R_fb + R_bed;
+	Jfb_eq: R_fb * J_transport = c_tot * (y_H2_bulk - y_H2_if);
+	Jtransport_eq: J_transport = N_H2[0];
+
+	screen_fb_eq: TS_freeboard = J_reaction * R_fb / (c_tot * y_H2_bulk);
+	screen_bed_eq: TS_bed = J_reaction * R_bed / (c_tot * y_H2_if);
+	screen_overall_eq: TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
+
+	top_face_h2_eq: y_H2_face[0] = 0.5 * (y_H2_if + y_H2_zone[1]);
+	top_face_h2o_eq: y_H2O_face[0] = 0.5 * (y_H2O_if + y_H2O_zone[1]);
+	top_face_ar_eq: y_Ar_face[0] = 1 - y_H2_face[0] - y_H2O_face[0];
+
+	top_ms_h2:
+		-c_tot * (y_H2_zone[1] - y_H2_if) / (0.5 * dz_bed)
+		=
+		(y_H2O_face[0] * N_H2[0] - y_H2_face[0] * N_H2O[0]) / D_H2O_H2_bed
+		+ (y_Ar_face[0] * N_H2[0] - y_H2_face[0] * N_Ar[0]) / D_H2_Ar_bed;
+
+	top_ms_h2o:
+		-c_tot * (y_H2O_zone[1] - y_H2O_if) / (0.5 * dz_bed)
+		=
+		(y_H2_face[0] * N_H2O[0] - y_H2O_face[0] * N_H2[0]) / D_H2O_H2_bed
+		+ (y_Ar_face[0] * N_H2O[0] - y_H2O_face[0] * N_Ar[0]) / D_H2O_Ar_bed;
+
+	FOR f IN [1..n_bed_segs - 1] CREATE
+		face_h2_eq[f]:
+			y_H2_face[f] = 0.5 * (y_H2_zone[f] + y_H2_zone[f + 1]);
+		face_h2o_eq[f]:
+			y_H2O_face[f] = 0.5 * (y_H2O_zone[f] + y_H2O_zone[f + 1]);
+		face_ar_eq[f]:
+			y_Ar_face[f] = 1 - y_H2_face[f] - y_H2O_face[f];
+
+		ms_h2[f]:
+			-c_tot * (y_H2_zone[f + 1] - y_H2_zone[f]) / dz_bed
+			=
+			(y_H2O_face[f] * N_H2[f] - y_H2_face[f] * N_H2O[f]) / D_H2O_H2_bed
+			+ (y_Ar_face[f] * N_H2[f] - y_H2_face[f] * N_Ar[f]) / D_H2_Ar_bed;
+
+		ms_h2o[f]:
+			-c_tot * (y_H2O_zone[f + 1] - y_H2O_zone[f]) / dz_bed
+			=
+			(y_H2_face[f] * N_H2O[f] - y_H2O_face[f] * N_H2[f]) / D_H2O_H2_bed
+			+ (y_Ar_face[f] * N_H2O[f] - y_H2O_face[f] * N_Ar[f]) / D_H2O_Ar_bed;
+	END FOR;
+
+	FOR f IN [0..n_bed_segs] CREATE
+		Nar_eq[f]: N_Ar[f] = -N_H2[f] - N_H2O[f];
+	END FOR;
+	bottom_h2_eq: N_H2[n_bed_segs] = 0 {mol/m^2/s};
+	bottom_h2o_eq: N_H2O[n_bed_segs] = 0 {mol/m^2/s};
+
+	FOR z IN [1..n_bed_segs] CREATE
+		yar_zone_eq[z]: y_Ar_zone[z] = 1 - y_H2_zone[z] - y_H2O_zone[z];
+		yar_part_eq[z]: y_Ar_part[z] = y_Ar_zone[z];
+		part_sum_eq[z]: y_H2O_part[z] = 1 - y_Ar_part[z] - y_H2_part[z];
+		n0_zone_eq[z]: n0_Fe2O3_zone[z] = n0_Fe2O3 / n_bed_segs;
+		n0area_zone_eq[z]: n0_per_area_zone[z] = n0_per_area / n_bed_segs;
+		oxygen_zone_eq[z]:
+			oxygen_remaining_zone[z] = 3 * n_Fe2O3_zone[z] + 4 * n_Fe3O4_zone[z] + n_FeO_zone[z];
+		xi1_zone_eq[z]:
+			xi_zone[1][z] = (1 - n_Fe2O3_zone[z] / n0_Fe2O3_zone[z]) / 3;
+		xi2_zone_eq[z]:
+			xi_zone[2][z] = 2 * xi_zone[1][z] - n_Fe3O4_zone[z] / n0_Fe2O3_zone[z];
+		xi3_zone_eq[z]:
+			xi_zone[3][z] = n_Fe_zone[z] / n0_Fe2O3_zone[z];
+		nhe_ode[z]: der(n_Fe2O3_zone[z]) = -3 * n0_Fe2O3_zone[z] * rate_net_zone[1][z];
+		nmag_ode[z]: der(n_Fe3O4_zone[z]) = n0_Fe2O3_zone[z] * (2 * rate_net_zone[1][z] - rate_net_zone[2][z]);
+		nwu_ode[z]: der(n_FeO_zone[z]) = n0_Fe2O3_zone[z] * (3 * rate_net_zone[2][z] - rate_net_zone[3][z]);
+		nfe_ode[z]: der(n_Fe_zone[z]) = n0_Fe2O3_zone[z] * rate_net_zone[3][z];
+
+		h2_balance_eq[z]:
+			N_H2[z - 1] - N_H2[z] = J_reaction_zone[z];
+		h2o_balance_eq[z]:
+			N_H2O[z - 1] - N_H2O[z] = -J_reaction_zone[z];
+
+		part_T_eq[z]: particle_res[z].T = T;
+		part_dp_eq[z]: particle_res[z].d_p = d_p;
+		part_Deff_eq[z]: particle_res[z].D_eff_bed = D_eff_bed;
+		part_Sh_eq[z]: particle_res[z].Sh_particle = Sh_particle;
+		part_open_eq[z]: particle_res[z].a_open = a_open;
+		part_close_eq[z]: particle_res[z].a_close = a_close;
+		part_beta_eq[z]: particle_res[z].beta_T = beta_T;
+		part_xi1_eq[z]: particle_res[z].xi1 = xi_zone[1][z];
+		part_xi3_eq[z]: particle_res[z].xi3 = xi_zone[3][z];
+		Rpart_eq[z]: R_part[z] = particle_res[z].R_part;
+		morph_factor_eq[z]: morph_factor[z] = particle_res[z].morph_factor;
+
+		Jpart_eq[z]:
+			R_part[z] * J_reaction_zone[z] = c_tot * (y_H2_zone[z] - y_H2_part[z]);
+		Jrxn_zone_eq[z]:
+			J_reaction_zone[z] = n0_per_area_zone[z] * (rate_net_zone[1][z] + rate_net_zone[2][z] + rate_net_zone[3][z]);
+	END FOR;
+
+	FOR r IN steps CREATE
+		kstep_eq[r]:
+			k_step[r] = etak0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+		Keq_eq[r]:
+			K_ratio_eq[r] = exp(K_eq_lnA[r] - K_eq_lnB[r] / (T / 1 {K}));
+		drive_avg_eq[r]:
+			drive[r] = SUM[drive_zone[r][z] | z IN [1..n_bed_segs]] / n_bed_segs;
+		rf_avg_eq[r]:
+			rate_forward[r] = SUM[rate_forward_zone[r][z] | z IN [1..n_bed_segs]] / n_bed_segs;
+		rr_avg_eq[r]:
+			rate_reverse[r] = SUM[rate_reverse_zone[r][z] | z IN [1..n_bed_segs]] / n_bed_segs;
+		rnet_avg_eq[r]:
+			rate_net[r] = SUM[rate_net_zone[r][z] | z IN [1..n_bed_segs]] / n_bed_segs;
+
+		FOR z IN [1..n_bed_segs] CREATE
+			drive_zone_eq[r][z]:
+				drive_zone[r][z] = p * (y_H2_part[z] - y_H2O_part[z] / K_ratio_eq[r]);
+			rnet_zone_eq[r][z]:
+				rate_net_zone[r][z] = rate_forward_zone[r][z] - rate_reverse_zone[r][z];
+			kstep_zone_eq[r][z]:
+				k_step_zone[r][z] = k_step[r];
+			Keq_zone_eq[r][z]:
+				K_ratio_eq_zone[r][z] = K_ratio_eq[r];
+		END FOR;
+	END FOR;
+
+	FOR z IN [1..n_bed_segs] CREATE
+		rf1_eq[z]:
+			rate_forward_zone[1][z] = (n_Fe2O3_zone[z] / n0_Fe2O3_zone[z]) * k_step[1] * p * y_H2_part[z];
+		rr1_eq[z]:
+			rate_reverse_zone[1][z] = (n_Fe3O4_zone[z] / n0_Fe2O3_zone[z]) * k_step[1] * p * y_H2O_part[z] / K_ratio_eq[1];
+
+		rf2_eq[z]:
+			rate_forward_zone[2][z] = (n_Fe3O4_zone[z] / n0_Fe2O3_zone[z]) * k_step[2] * p * y_H2_part[z];
+		rr2_eq[z]:
+			rate_reverse_zone[2][z] = (n_FeO_zone[z] / n0_Fe2O3_zone[z]) * k_step[2] * p * y_H2O_part[z] / K_ratio_eq[2];
+
+		rf3_eq[z]:
+			rate_forward_zone[3][z] = (n_FeO_zone[z] / n0_Fe2O3_zone[z]) * k_step[3] * p * y_H2_part[z];
+		rr3_eq[z]:
+			rate_reverse_zone[3][z] = (n_Fe_zone[z] / n0_Fe2O3_zone[z]) * k_step[3] * p * y_H2O_part[z] / K_ratio_eq[3];
+	END FOR;
+
+	Jrxn_eq: J_reaction = SUM[J_reaction_zone[z] | z IN [1..n_bed_segs]];
+
+INITIAL
+	FOR z IN [1..n_bed_segs] CREATE
+		nhe_initial[z]: n_Fe2O3_zone[z] = m_sample_init / (MW_Fe2O3 * n_bed_segs);
+		nmag_initial[z]: n_Fe3O4_zone[z] = 0 {mol};
+		nwu_initial[z]: n_FeO_zone[z] = 0 {mol};
+		nfe_initial[z]: n_Fe_zone[z] = 0 {mol};
+	END FOR;
+
+METHODS
+	METHOD values;
+		FIX T := 1073.15 {K};
+		FIX p := 1 {bar};
+		FIX A_crucible := 20 {mm^2};
+		FIX d_p := 175 {um};
+		FIX L_freeboard := 8.3 {mm};
+
+		FIX m_sample_init := 100 {mg};
+		rho_bulk_bed := 1500 {kg/m^3};
+		H_bed := 2 {mm};
+
+		FIX eps_bed := 0.45;
+		FIX tau_bed := 3.0;
+		FIX k_fb_multiplier := 1.0;
+		FIX k_bed_multiplier := 1.0;
+		FIX Sh_particle := 2.0;
+		FIX a_open := 0.0;
+		FIX a_close := 0.0;
+		FIX beta_T := 0.0;
+
+		FIX y_H2_bulk := 0.8;
+		FIX y_H2O_bulk := 0.0;
+		y_Ar_bulk := 0.2;
+		y_H2_if := 0.75;
+		y_H2O_if := 0.05;
+		y_Ar_if := 0.2;
+		y_H2_zone[1..n_bed_segs] := 0.75;
+		y_H2O_zone[1..n_bed_segs] := 0.05;
+		y_H2_part[1..n_bed_segs] := 0.72;
+		y_H2O_part[1..n_bed_segs] := 0.08;
+
+		FIX MW_Fe2O3 := 159.687 {g/g_mole};
+		FIX MW_Fe3O4 := 231.531 {g/g_mole};
+		FIX MW_FeO := 71.844 {g/g_mole};
+		FIX MW_Fe := 55.845 {g/g_mole};
+
+		FIX etak0[1] := 3e-4 {1/s/Pa};
+		FIX etak0[2] := 1.5e-4 {1/s/Pa};
+		FIX etak0[3] := 7.5e-4 {1/s/Pa};
+
+		FIX E_a[1] := 55 {kJ/mol};
+		FIX E_a[2] := 60 {kJ/mol};
+		FIX E_a[3] := 62 {kJ/mol};
+
+		FIX K_eq_lnA[1] := 8.54050167864375;
+		FIX K_eq_lnA[2] := 8.447122204684765;
+		FIX K_eq_lnA[3] := 1.0604569618298618;
+		FIX K_eq_lnB[1] := 2552.121942697152;
+		FIX K_eq_lnB[2] := 8067.2733483476295;
+		FIX K_eq_lnB[3] := 1856.1489018164739;
+
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
+
+		FIX t := 0 {s};
+	END values;
+
+	METHOD bound_self;
+		y_H2O_if.lower_bound := -1e-9;
+		n_Fe2O3.lower_bound := -1e-9 {mol};
+		n_Fe3O4.lower_bound := -1e-12 {mol};
+		n_FeO.lower_bound := -1e-12 {mol};
+		n_Fe.lower_bound := -1e-12 {mol};
+		oxygen_remaining.lower_bound := -1e-9 {mol};
+		n_Fe2O3_zone[1..n_bed_segs].lower_bound := -1e-9 {mol};
+		n_Fe3O4_zone[1..n_bed_segs].lower_bound := -1e-12 {mol};
+		n_FeO_zone[1..n_bed_segs].lower_bound := -1e-12 {mol};
+		n_Fe_zone[1..n_bed_segs].lower_bound := -1e-12 {mol};
+		oxygen_remaining_zone[1..n_bed_segs].lower_bound := -1e-9 {mol};
+
+		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_h2.T_star.lower_bound := -1e6;
+		tr.h2o_ar.T_star.lower_bound := -1e6;
+		tr.h2_ar.T_star.lower_bound := -1e6;
+		tr.h2o_h2.Omega_D.lower_bound := -1e6;
+		tr.h2o_ar.Omega_D.lower_bound := -1e6;
+		tr.h2_ar.Omega_D.lower_bound := -1e6;
+		tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+	END bound_self;
+
+	METHOD use_measured_bed_height;
+		FIX H_bed;
+		FREE rho_bulk_bed;
+	END use_measured_bed_height;
+
+	METHOD use_bulk_density_model;
+		FIX rho_bulk_bed;
+		FREE H_bed;
+	END use_bulk_density_model;
+
+	METHOD algebraic_base;
+		RUN reset;
+		RUN values;
+		RUN bound_self;
+		RUN use_measured_bed_height;
+	END algebraic_base;
+
+	METHOD steady_init;
+		FOR z IN [1..n_bed_segs] DO
+			FREE der(n_Fe2O3_zone[z]), der(n_Fe3O4_zone[z]), der(n_FeO_zone[z]), der(n_Fe_zone[z]);
+		END FOR;
+		RUN enter_initial_mode;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		OPTION iterationlimit 1000;
+		SOLVE;
+		RUN leave_initial_mode;
+	END steady_init;
+
+	METHOD dynamic_reset;
+		FOR z IN [1..n_bed_segs] DO
+			n_Fe2O3_zone[z] := m_sample_init / (MW_Fe2O3 * n_bed_segs);
+			n_Fe3O4_zone[z] := 0 {mol};
+			n_FeO_zone[z] := 0 {mol};
+			n_Fe_zone[z] := 0 {mol};
+		END FOR;
+		t := 0 {s};
+	END dynamic_reset;
+
+	METHOD reinitialise;
+		RUN dynamic_reset;
+		RUN steady_init;
+	END reinitialise;
+
+	METHOD observe_default;
+		reduction_degree.obs_id := 1;
+		m_sample.obs_id := 2;
+		y_H2_react.obs_id := 3;
+		y_H2O_react.obs_id := 4;
+		J_transport.obs_id := 5;
+		rate_net[1].obs_id := 6;
+		rate_net[2].obs_id := 7;
+		rate_net[3].obs_id := 8;
+		xi[1].obs_id := 9;
+		xi[2].obs_id := 10;
+		xi[3].obs_id := 11;
+		n_Fe2O3.obs_id := 12;
+		n_Fe3O4.obs_id := 13;
+		n_FeO.obs_id := 14;
+		n_Fe.obs_id := 15;
+		FOR z IN [1..n_bed_segs] DO
+			y_H2_zone[z].obs_id := 15 + z;
+			y_H2O_zone[z].obs_id := 15 + n_bed_segs + z;
+			y_H2_part[z].obs_id := 15 + 2 * n_bed_segs + z;
+			y_H2O_part[z].obs_id := 15 + 3 * n_bed_segs + z;
+		END FOR;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, m_sample,
+			n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+			y_H2_react, y_H2O_react,
+			y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs],
+			y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
+			J_transport;
+	END observe_cli_default;
+
+	METHOD ode_init;
+		FIX t;
+		FOR z IN [1..n_bed_segs] DO
+			FREE der(n_Fe2O3_zone[z]), der(n_Fe3O4_zone[z]), der(n_FeO_zone[z]), der(n_Fe_zone[z]);
+		END FOR;
+		RUN dynamic_reset;
+		RUN observe_default;
+	END ode_init;
+
+	METHOD on_load;
+		RUN algebraic_base;
+		RUN dynamic_reset;
+		FOR z IN [1..n_bed_segs] DO
+			FREE der(n_Fe2O3_zone[z]), der(n_Fe3O4_zone[z]), der(n_FeO_zone[z]), der(n_Fe_zone[z]);
+		END FOR;
+		RUN observe_default;
+		RUN observe_cli_default;
+	END on_load;
+END tga_reduction_screen_dyn_msbed_mod;
+
+(* vim: sw=4:noet:ts=4
+*)
