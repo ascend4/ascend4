@@ -87,6 +87,8 @@ MODEL tga_reduction_screen_dyn_msbed(
 	a_open, a_close IS_A factor;
 	a_open.lower_bound := 0;
 	a_close.lower_bound := 0;
+	beta_T IS_A factor;
+	close_temp_factor IS_A positive_factor;
 	morph_factor[1..n_bed_segs] IS_A positive_factor;
 
 	K_eq_lnA[steps] IS_A factor;
@@ -142,6 +144,8 @@ MODEL tga_reduction_screen_dyn_msbed(
 	Dh2oarbed_eq: D_H2O_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2O_Ar;
 	Dh2arbed_eq: D_H2_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2_Ar;
 	Deffbed_eq: D_eff_bed = k_bed_multiplier * (eps_bed / tau_bed) * D_screen;
+	close_temp_factor_eq:
+		close_temp_factor = exp(beta_T * ((T / 1 {K}) - 873.15) / 873.15);
 
 	Rfb_eq: R_fb = L_freeboard / (k_fb_multiplier * D_screen);
 	Rbed_eq: R_bed = H_bed / D_eff_bed;
@@ -208,10 +212,10 @@ MODEL tga_reduction_screen_dyn_msbed(
 			xi_zone[1][z] = (1 - n_Fe2O3_zone[z] / n0_Fe2O3_zone[z]) / 3;
 		xi2_zone_eq[z]:
 			xi_zone[2][z] = 2 * xi_zone[1][z] - n_Fe3O4_zone[z] / n0_Fe2O3_zone[z];
-		xi3_zone_eq[z]:
-			xi_zone[3][z] = n_Fe_zone[z] / n0_Fe2O3_zone[z];
-		morph_factor_eq[z]:
-			morph_factor[z] = exp(-a_open * xi_zone[1][z] + a_close * xi_zone[3][z]);
+			xi3_zone_eq[z]:
+				xi_zone[3][z] = n_Fe_zone[z] / n0_Fe2O3_zone[z];
+			morph_factor_eq[z]:
+				morph_factor[z] = exp(-a_open * xi_zone[1][z] + a_close * close_temp_factor * xi_zone[3][z]);
 		Rpart_eq[z]:
 			R_part[z] = d_p * morph_factor[z] / (Sh_particle * D_eff_bed);
 		Jpart_eq[z]:
@@ -300,6 +304,7 @@ METHODS
 		FIX Sh_particle := 2.0;
 		FIX a_open := 0.0;
 		FIX a_close := 0.0;
+		FIX beta_T := 0.0;
 
 		FIX y_H2_bulk := 0.8;
 		FIX y_H2O_bulk := 0.0;
