@@ -719,7 +719,14 @@ static symchar *link_entry_key_resolved(struct link_entry_t *link_entry){
 static CONST struct gl_list_t *link_entry_instances_cached(struct Instance *model, struct link_entry_t *link_entry){
 	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 	if(link_entry->instances_cache == NULL){
+		struct Instance *saved_context = GetEvaluationContext();
+		if(saved_context != NULL){
+			SetEvaluationContext(NULL);
+		}
 		link_entry->instances_cache = FindInsts(model,link_entry->u.vl,&err);
+		if(saved_context != NULL){
+			SetEvaluationContext(saved_context);
+		}
 		if(link_entry->instances_cache == NULL){
 			switch(rel_errorlist_get_find_error(&err)){
 			case impossible_instance:
