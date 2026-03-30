@@ -52,7 +52,7 @@ default_with_graphviz = True
 default_tcl_lib = "tcl8.6"
 default_tk_lib = "tk8.6"
 default_tktable_lib = "Tktable2.9"
-default_ida_prefix="$DEFAULT_PREFIX"
+default_sundials_prefix=None
 #default_ipopt_libpath = "$IPOPT_PREFIX/lib"
 #default_ipopt_dll = ["$DEFAULT_PREFIX/bin/%s.dll"%i for i in ["libgfortran$MINGW64SUFF-3", "libstdc++$MINGW64SUFF-6","libquadmath$MINGW64SUFF-0","libgcc_s$MINGW64EXCPT$MINGW64SUFF-1"]]+[None] # should be five here
 #default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
@@ -61,6 +61,7 @@ default_conopt_libpath="$CONOPT_PREFIX"
 default_conopt_cpppath="$CONOPT_PREFIX"
 default_conopt_dlpath="$CONOPT_PREFIX"
 default_prefix="/usr"
+default_sundials_prefix=default_prefix
 default_libpath="$DEFAULT_PREFIX/lib"
 default_cpppath="$DEFAULT_PREFIX/include"
 default_f2c_lib="gfortran"
@@ -104,8 +105,8 @@ if platform.system()=="Windows":
 	default_library_rel_dist = 'models'
 	default_solvers_rel_dist = 'solvers'
 	
-	# where to look for IDA solver libraries, headers, etc.
-	default_ida_prefix = "$DEFAULT_PREFIX"
+	# where to look for SUNDIALS libraries, headers, etc.
+	default_sundials_prefix = default_prefix
 	
 	# IPOPT. we now prefer to build our own version.
 #	default_ipopt_libs = ["ipopt",'stdc++','coinmumps','coinmetis','coinlapack','coinblas','gfortran','pthread']
@@ -247,8 +248,8 @@ else: # LINUX, unix we hope
 	default_with_scrollkeeper=False
 	pathsep = ":"
 
-if not os.path.exists(default_ida_prefix):
-	default_ida_prefix = None
+if default_sundials_prefix is not None and not os.path.exists(default_sundials_prefix):
+	default_sundials_prefix = None
 
 def cygpath(mypath):
 	cmd = [pathlib.Path(shutil.which('cygpath')),'-w',mypath]
@@ -334,6 +335,20 @@ def get_default_cunit_paths():
 	return candidates[0] if candidates else str(default_pref), inc, lib
 
 default_cunit_prefix, default_cunit_cpppath, default_cunit_libpath = get_default_cunit_paths()
+
+def get_default_sundials_paths():
+	"""
+	Choose SUNDIALS defaults from the platform runtime prefix and handle both
+	lib and lib64 installs.
+	"""
+	default_pref = exists_maybe_cygpath(default_sundials_prefix or default_prefix) or str(default_sundials_prefix or default_prefix)
+	inc = existing_path_anysep(os.path.join(default_pref,"include")) or os.path.join(default_pref,"include")
+	lib = existing_path_anysep(os.path.join(default_pref,"lib64"))
+	if lib is None:
+		lib = existing_path_anysep(os.path.join(default_pref,"lib")) or os.path.join(default_pref,"lib")
+	return default_pref, inc, lib
+
+default_sundials_prefix, default_sundials_cpppath, default_sundials_libpath = get_default_sundials_paths()
 
 soname_clean = "${SHLIBPREFIX}ascend${SHLIBSUFFIX}"
 soname_full = "%s%s" % (soname_clean,soname_major)
@@ -559,6 +574,28 @@ vars.Add(PackageVariable('CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
 	,default_cunit_libpath
 ))
+
+#------ sundials --------
+
+vars.Add(PackageVariable('SUNDIALS_PREFIX'
+	,"Where are your SUNDIALS files?"
+	,default_sundials_prefix
+))
+
+vars.Add('SUNDIALS_CPPPATH'
+	,"Where are your SUNDIALS include files?"
+	,default_sundials_cpppath
+)
+
+vars.Add('SUNDIALS_LIBPATH'
+	,"Where are your SUNDIALS libraries?"
+	,default_sundials_libpath
+)
+
+vars.Add('SUNDIALS_LIBS'
+	,"Optional comma-separated override for SUNDIALS libraries"
+	,""
+)
 
 # ----- conopt-----
 
@@ -1032,6 +1069,18 @@ if 'CUNIT_PREFIX' in ARGUMENTS:
 			env['CUNIT_CPPPATH'] = str(pathlib.Path(str(cunit_prefix)) / 'include')
 		if env.get('CUNIT_LIBPATH') == default_cunit_libpath:
 			env['CUNIT_LIBPATH'] = str(pathlib.Path(str(cunit_prefix)) / 'lib')
+
+if 'SUNDIALS_PREFIX' in ARGUMENTS:
+	sundials_prefix = env.get('SUNDIALS_PREFIX')
+	if sundials_prefix:
+		if env.get('SUNDIALS_CPPPATH') == default_sundials_cpppath:
+			env['SUNDIALS_CPPPATH'] = str(pathlib.Path(str(sundials_prefix)) / 'include')
+		if env.get('SUNDIALS_LIBPATH') == default_sundials_libpath:
+			lib64 = existing_path_anysep(pathlib.Path(str(sundials_prefix)) / 'lib64')
+			if lib64:
+				env['SUNDIALS_LIBPATH'] = lib64
+			else:
+				env['SUNDIALS_LIBPATH'] = str(pathlib.Path(str(sundials_prefix)) / 'lib')
 
 for l in ['SUNDIALS','IPOPT']:
 	var = "%s_LIBS" % l
