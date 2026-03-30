@@ -173,6 +173,7 @@ struct problem_t {
   struct gl_list_t *models;	/* models in tree. modips */
 
   int bad_rel_in_list;
+  int bad_dynamic_structure;
 
   /*
   	The following gllists contain pointers to interface ptrs as

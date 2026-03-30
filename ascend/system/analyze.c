@@ -573,7 +573,6 @@ static void recover_bound_derivative_terms(struct Instance *inst, VOIDPTR userda
   if(rel == NULL){
     return;
   }
-
   vlen = NumberVariables(rel);
   for(v = 1; v <= vlen; ++v){
     struct Instance *var = RelationVariable(rel, v);
@@ -603,9 +602,9 @@ static void recover_bound_derivative_terms(struct Instance *inst, VOIDPTR userda
 	a bridge buffer used so much we aren't going to free it, just reuse it
 */
 static struct reuse_t {
-  size_t ipcap;			/* number of ips allocated in ipbuf */
-  size_t ipused;		/* number of ips in use */
-  struct solver_ipdata *ipbuf;
+	size_t ipcap;			/* number of ips allocated in ipbuf */
+	size_t ipused;		/* number of ips in use */
+	struct solver_ipdata *ipbuf;
 } g_reuse = {0,0,NULL};
 
 
@@ -621,6 +620,7 @@ static void ProcessSwitchGuardDiscreteDeps(struct Instance *context,
     const struct Expr *guard);
 static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data);
 static int analyze_reinit_marks_discrete_real(struct problem_t *p_data, const struct Instance *inst);
+static int analyze_instances_share_clique(CONST struct Instance *a, CONST struct Instance *b);
 static int BooleanChildValue(struct Instance *i,symchar *sc);
 static int IntegerChildValue(struct Instance *i,symchar *sc);
 
@@ -809,6 +809,24 @@ static int analyze_infer_reinit_targets(struct problem_t *p_data){
 
 static int analyze_reinit_marks_discrete_real(struct problem_t *p_data, const struct Instance *inst){
   return analyze_instance_in_list(p_data != NULL ? p_data->reinit_discretes : NULL, inst);
+}
+
+static int analyze_instances_share_clique(CONST struct Instance *a, CONST struct Instance *b){
+  CONST struct Instance *p;
+  if(a == NULL || b == NULL){
+    return FALSE;
+  }
+  if(a == b){
+    return TRUE;
+  }
+  p = NextCliqueMember(a);
+  while(p != a){
+    if(p == b){
+      return TRUE;
+    }
+    p = NextCliqueMember(p);
+  }
+  return FALSE;
 }
 
 /*------------------------------------------------------------------------------
@@ -1301,14 +1319,21 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 			//printf("\n asadada %d \n",original_indep_var->i == inst);
 		  }
 		  /*>>DS: Checking that the independent variable is the same one in each derivative chains */
-		  if(gl_length(p_data->indepvars) == 0 || strcmp(WriteInstanceNameString(original_indep_var->i,p_data->root),WriteInstanceNameString(inst,p_data->root))== 0 ) {
+		  if(gl_length(p_data->indepvars) == 0 || analyze_instances_share_clique(original_indep_var->i, inst)) {
 			//printf("\n ttttttt %ld %s \n",gl_length(p_data->indepvars),WriteInstanceNameString(inst,p_data->root));
 		        gl_append_ptr(p_data->indepvars,(POINTER)ip);
 			/* CONSOLE_DEBUG("Added to indep vars"); */
 		  }else{
-		    ERROR_REPORTER_HERE(ASC_USER_ERROR,"Set the same independent variable for all derivative chains!" );
-			FPRINTF(ASCERR,"All derivative chains must contain one and the same independent variable \n");
-			/* ASC_PANIC("Set the same independent variable for all derivative chains!.\n"); */
+		    if(!p_data->bad_dynamic_structure){
+		      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+		      FPRINTF(ASCERR,
+		        "Multiple distinct INDEPENDENT variables were found in the resolved dynamic system. "
+		        "All derivative chains must share one INDEPENDENT variable. "
+		        "Merge the child independents with ARE_THE_SAME or pass one shared independent into the child models."
+		      );
+		      error_reporter_end_flush();
+		    }
+		    p_data->bad_dynamic_structure = TRUE;
 		  }
 		}else{
 		  gl_append_ptr(p_data->algebvars,(POINTER)ip);
@@ -1956,6 +1981,11 @@ void analyze_free_lists(struct problem_t *p_data){
   /* if(p_data->extrels != NULL)gl_free_and_destroy(p_data->extrels); */
 
   if(p_data->extrels!=NULL)gl_destroy(p_data->extrels); /* -- JP HACK */
+
+  if(p_data->oldips != NULL){
+    PopInterfacePtrs(p_data->oldips,NULL,NULL);
+    p_data->oldips = NULL;
+  }
 
 #define AFUN(P) if(p_data->P!=NULL) ascfree(p_data->P); (p_data->P) = NULL
 #define ADUN(P) if(p_data->P!=NULL) gl_destroy(p_data->P); (p_data->P) = NULL
@@ -3664,6 +3694,7 @@ static void bind_derivative_terms(struct Instance *inst, VOIDPTR userdata)
   }
   if(BindDerivativeTermsInRelation(data->root,inst,resolve_materialised_derivative,data)){
     data->errors = 1;
+    return;
   }
 }
 
@@ -3813,6 +3844,15 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
     analyze_free_lists(p_data);
     ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Insufficient memory (master lists)");
     return 1;
+  }
+  if(p_data->bad_dynamic_structure){
+    if(p_data->oldips != NULL){
+      PopInterfacePtrs(p_data->oldips,NULL,NULL);
+      p_data->oldips = NULL;
+    }
+    analyze_free_lists(p_data);
+    p_data->root = NULL;
+    return 2;
   }
 
   /* rearrange all the stuff we found and index things */

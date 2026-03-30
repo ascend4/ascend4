@@ -27,17 +27,21 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/tm_time.h>
+#include <string.h>
 
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/compiler/check.h>
 #include <ascend/compiler/link.h>
 #include <ascend/compiler/instquery.h>
+#include <ascend/compiler/instance_io.h>
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/name.h>
 #include <ascend/compiler/relation.h>
+#include <ascend/compiler/relation_io.h>
 #include <ascend/compiler/vlist.h>
 #include <ascend/compiler/cmpfunc.h>
+#include <ascend/compiler/derivinst.h>
 #include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/when_util.h>
 
@@ -45,6 +49,7 @@
 
 #include "slv_client.h"
 #include "diffvars.h"
+#include "diffvars_impl.h"
 
 #include "relman.h"
 #include "slv_server.h"
@@ -317,6 +322,148 @@ static slv_system_t system_build_internal(SlvBackendToken inst){
     return sys;
   }
   return(sys);
+}
+
+static char *system_debug_instance_name(CONST struct Instance *inst){
+	char *name;
+	if(inst == NULL){
+		name = ASC_NEW_ARRAY(char, 7);
+		strcpy(name, "<null>");
+		return name;
+	}
+	if(IsDerivativeInstance(inst)){
+		struct Instance *base = DerivativeInstanceBase(inst);
+		char *basename = system_debug_instance_name(base);
+		size_t len = strlen(basename) + 6;
+		name = ASC_NEW_ARRAY(char, len);
+		SNPRINTF(name, len, "der(%s)", basename);
+		ASC_FREE(basename);
+		return name;
+	}
+	name = WriteInstanceNameString(inst, NULL);
+	if(name == NULL || name[0] == '\0'){
+		if(name != NULL)ASC_FREE(name);
+		name = ASC_NEW_ARRAY(char, 10);
+		strcpy(name, "<unnamed>");
+	}
+	return name;
+}
+
+static void system_write_precheck_dae_report(FILE *fp, slv_system_t sys){
+	const SolverDiffVarCollection *diffvars;
+	struct var_variable **vars;
+	struct rel_relation **rels;
+	long i;
+	int nvars, nrels;
+
+	diffvars = system_get_diffvars(sys);
+	FPRINTF(fp, "PRECHECK DAE REPORT\n\n");
+	if(diffvars == NULL){
+		FPRINTF(fp, "NO DIFFVARS AVAILABLE\n");
+		return;
+	}
+
+	FPRINTF(fp, "DIFFVAR COUNTS\n");
+	FPRINTF(fp, "  sequences: %ld\n", diffvars->nseqs);
+	FPRINTF(fp, "  states: %ld\n", diffvars->ndiff);
+	FPRINTF(fp, "  algebraics: %ld\n", diffvars->nalg);
+	FPRINTF(fp, "  independents: %ld\n", diffvars->nindep);
+	FPRINTF(fp, "  observations: %ld\n", diffvars->nobs);
+	FPRINTF(fp, "  maxorder: %ld\n", diffvars->maxorder);
+
+	FPRINTF(fp, "\nINDEPENDENT VARIABLES (%ld)\n", diffvars->nindep);
+	for(i = 0; i < diffvars->nindep; ++i){
+		char *name = system_debug_instance_name((struct Instance *)var_instance(diffvars->indep[i]));
+		FPRINTF(fp, "  %ld: %s\n", i, name);
+		ASC_FREE(name);
+	}
+
+	nvars = slv_get_num_solvers_vars(sys);
+	vars = slv_get_solvers_var_list(sys);
+	FPRINTF(fp, "\nSOLVER VARIABLES (%d)\n", nvars);
+	for(i = 0; i < nvars; ++i){
+		long ode_id = 0;
+		long role = system_diffvars_var_role(sys, vars[i], &ode_id);
+		const char *role_name = "algebraic";
+		char *name = system_debug_instance_name((struct Instance *)var_instance(vars[i]));
+		if(role < 0){
+			role_name = "independent";
+		}else if(role == 1){
+			role_name = "state";
+		}else if(role > 1){
+			role_name = "derivative";
+		}
+		FPRINTF(fp, "  %ld: %s [role=%s", i, name, role_name);
+		if(role > 0){
+			FPRINTF(fp, ", order=%ld, ode_id=%ld", role, ode_id);
+		}
+		FPRINTF(fp, ", sindex=%d", var_sindex(vars[i]));
+		if(var_deriv(vars[i]))FPRINTF(fp, ", deriv");
+		if(var_fixed(vars[i]))FPRINTF(fp, ", fixed");
+		if(!var_active(vars[i]))FPRINTF(fp, ", inactive");
+		if(!var_incident(vars[i]))FPRINTF(fp, ", not-incident");
+		FPRINTF(fp, "]\n");
+		ASC_FREE(name);
+	}
+
+	FPRINTF(fp, "\nDERIVATIVE CHAINS\n");
+	FPRINTF(fp, "Derivative chains in slv_system...\n");
+	for(i = 0; i < diffvars->nseqs; ++i){
+		int j;
+		SolverDiffVarSequence seq = diffvars->seqs[i];
+		FPRINTF(fp, "%ld: ", i);
+		for(j = 0; j < seq.n; ++j){
+			char *name = system_debug_instance_name((struct Instance *)var_instance(seq.vars[j]));
+			if(j)FPRINTF(fp, " <-- ");
+			FPRINTF(fp, "%d: (%p)'%s'", var_sindex(seq.vars[j]), (void *)seq.vars[j], name);
+			ASC_FREE(name);
+		}
+		FPRINTF(fp, "\n");
+	}
+
+	nrels = slv_get_num_solvers_rels(sys);
+	rels = slv_get_solvers_rel_list(sys);
+	FPRINTF(fp, "\nSOLVER RELATIONS (%d)\n", nrels);
+	for(i = 0; i < nrels; ++i){
+		char *name = system_debug_instance_name((struct Instance *)rel_instance(rels[i]));
+		char *expr = WriteRelationString(rel_instance(rels[i]), NULL, NULL, NULL, relio_ascend, NULL);
+		FPRINTF(fp, "  %ld: [%s] %s", i, rel_classify_differential(rels[i]) ? "differential" : "algebraic", name);
+		if(expr != NULL){
+			FPRINTF(fp, " :: %s", expr);
+			ASC_FREE(expr);
+		}
+		FPRINTF(fp, "\n");
+		ASC_FREE(name);
+	}
+}
+
+int system_debug_precheck_dae(SlvBackendToken inst, FILE *fp){
+	slv_system_t sys;
+	int stat;
+
+	if(inst == NULL || fp == NULL){
+		return 1;
+	}
+
+	sys = slv_create();
+	if(sys == NULL){
+		return 1;
+	}
+	if(set_solver_types() || set_boolean_types()){
+		system_destroy(sys);
+		return 1;
+	}
+
+	stat = analyze_make_problem(sys, IPTR(inst));
+	if(stat){
+		system_destroy(sys);
+		return stat;
+	}
+
+	slv_set_instance(sys, inst);
+	system_write_precheck_dae_report(fp, sys);
+	system_destroy(sys);
+	return 0;
 }
 
 slv_system_t system_build_with_mode(SlvBackendToken inst, SystemBuildMode mode){

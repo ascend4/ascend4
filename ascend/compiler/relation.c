@@ -3294,6 +3294,7 @@ static int BindDerivativeTermsOnSide(struct Instance *root,
                                      void *userdata)
 {
   unsigned long c, pos;
+  int is_lhs;
   struct relation_term *term;
   struct Instance *base, *deriv;
 
@@ -3308,10 +3309,11 @@ static int BindDerivativeTermsOnSide(struct Instance *root,
     }
 
     if(RelationRefCount(rel) > 1){
+      is_lhs = (side == RTOKEN(rel).lhs);
       RelationRefCount(rel)--;
       rel->share = CopyRelationShare(rel->share, e_token);
       RelationRefCount(rel) = 1;
-      side = (side == RTOKEN(rel).lhs) ? RTOKEN(rel).lhs : RTOKEN(rel).rhs;
+      side = is_lhs ? RTOKEN(rel).lhs : RTOKEN(rel).rhs;
       term = A_TERM(&(side[c]));
     }
 

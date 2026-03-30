@@ -56,6 +56,8 @@ typedef struct IdaTestSystemStruct{
 	IntegratorSystem *integ;
 } IdaTestSystem;
 
+static void ida_maybe_dump_precheck_dae_report(const char *type_name);
+
 static int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
 	(void)integ;
 	return 0;
@@ -225,6 +227,7 @@ static void ida_expect_system_build_failure(const char *module_path, const char 
 	root = GetSimulationRoot(testsys.siminst);
 	CU_ASSERT_FATAL(root != NULL);
 	CU_ASSERT_FATAL(Proc_all_ok == ida_run_method(root, "on_load"));
+	ida_maybe_dump_precheck_dae_report(type_name);
 
 	testsys.sys = system_build(root);
 	CU_TEST(testsys.sys == NULL);
@@ -304,14 +307,16 @@ static struct Instance *ida_child(struct Instance *root, const char *name){
 	return child;
 }
 
-static char *ida_capture_pantelides_report(slv_system_t sys){
-	FILE *fp;
+static struct Instance *ida_array_child(struct Instance *array, unsigned long index){
+	struct Instance *child = InstanceChild(array, index);
+	CU_ASSERT_FATAL(child != NULL);
+	return child;
+}
+
+static char *ida_capture_stream(FILE *fp){
 	long len;
 	char *buf;
 
-	fp = tmpfile();
-	CU_ASSERT_FATAL(fp != NULL);
-	CU_ASSERT_FATAL(0 == integrator_pantelides_advisory(sys, fp));
 	CU_ASSERT_FATAL(0 == fflush(fp));
 	CU_ASSERT_FATAL(0 == fseek(fp, 0, SEEK_END));
 	len = ftell(fp);
@@ -326,6 +331,48 @@ static char *ida_capture_pantelides_report(slv_system_t sys){
 	CU_ASSERT_FATAL(0 == fclose(fp));
 	CU_ASSERT_FATAL(buf != NULL);
 	return buf;
+}
+
+static char *ida_capture_pantelides_report(slv_system_t sys){
+	FILE *fp;
+
+	fp = tmpfile();
+	CU_ASSERT_FATAL(fp != NULL);
+	CU_ASSERT_FATAL(0 == integrator_pantelides_advisory(sys, fp));
+	return ida_capture_stream(fp);
+}
+
+static char *ida_capture_precheck_dae_report(struct Instance *root){
+	FILE *fp;
+
+	CU_ASSERT_FATAL(root != NULL);
+	fp = tmpfile();
+	CU_ASSERT_FATAL(fp != NULL);
+	CU_ASSERT_FATAL(0 == system_debug_precheck_dae(root, fp));
+	return ida_capture_stream(fp);
+}
+
+static void ida_maybe_dump_precheck_dae_report(const char *type_name){
+	const char *opt;
+	char *report;
+	struct Instance *root;
+	struct Instance *siminst;
+
+	opt = getenv("ASC_IDA_DUMP_PRECHECK");
+	if(opt == NULL || opt[0] == '\0' || (opt[0] == '0' && opt[1] == '\0')){
+		return;
+	}
+
+	siminst = SimsCreateInstance(AddSymbol(type_name), AddSymbol("sim_precheck"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	CU_ASSERT_FATAL(Proc_all_ok == ida_run_method(root, "on_load"));
+	report = ida_capture_precheck_dae_report(root);
+	CU_ASSERT_FATAL(report != NULL);
+	fprintf(stderr, "\n==== PRECHECK DAE REPORT: %s ====\n%s\n", type_name, report);
+	free(report);
+	sim_destroy(siminst);
 }
 
 static void test_shm(){
@@ -1155,8 +1202,73 @@ static void test_initial_hier_array_decay_build_failure(){
 	ida_expect_system_build_failure("test/ida/nested_array_independent.a4c", "ida_nested_array_decay_build_failure", 0);
 }
 
-static void test_initial_hier_array_decay_same_t_build_failure(){
-	ida_expect_system_build_failure("test/ida/nested_array_independent.a4c", "ida_nested_array_decay_same_t_build_failure", 0);
+static void ida_test_hier_array_decay_success(const char *type_name){
+	IdaTestSystem testsys;
+	struct Instance *root, *carr, *c1, *c2, *c3;
+	struct Instance *y1, *y2, *y3;
+	if(ida_test_load("test/ida/nested_array_independent.a4c", type_name, 0, &testsys)){
+		return;
+	}
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	root = GetSimulationRoot(testsys.siminst);
+	carr = ida_child(root, "c");
+	c1 = ida_array_child(carr, 1);
+	c2 = ida_array_child(carr, 2);
+	c3 = ida_array_child(carr, 3);
+	y1 = ida_child(c1, "y");
+	y2 = ida_child(c2, "y");
+	y3 = ida_child(c3, "y");
+
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 20);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
+	CU_TEST(fabs(RealAtomValue(y1) - exp(-1.0)) < 2e-4);
+	CU_TEST(fabs(RealAtomValue(y2) - exp(-2.0)) < 2e-4);
+	CU_TEST(fabs(RealAtomValue(y3) - exp(-3.0)) < 2e-4);
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+/* This is the obvious user workaround for multiple child independents and should work. */
+static void test_initial_hier_array_decay_same_t(){
+	ida_test_hier_array_decay_success("ida_nested_array_decay_same_t_build_failure");
+}
+
+/* Passing one shared t into the child models should also work. */
+static void test_initial_hier_array_decay_param_t(){
+	IdaTestSystem testsys;
+	int status;
+	struct Instance *root;
+	char *report;
+
+	memset(&testsys, 0, sizeof(testsys));
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv" OSPATH_DIV "solvers/lsode" OSPATH_DIV "solvers/qrslv");
+
+	Asc_OpenModule("test/ida/nested_array_independent.a4c", &status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("ida_nested_array_decay_param_t_build_failure")) != NULL);
+
+	testsys.siminst = SimsCreateInstance(AddSymbol("ida_nested_array_decay_param_t_build_failure"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(testsys.siminst != NULL);
+	root = GetSimulationRoot(testsys.siminst);
+	CU_ASSERT_FATAL(root != NULL);
+	CU_ASSERT_FATAL(Proc_all_ok == ida_run_method(root, "on_load"));
+
+	report = ida_capture_precheck_dae_report(root);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(report);
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "INDEPENDENT VARIABLES"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "SOLVER VARIABLES"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "SOLVER RELATIONS"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "independents: 1"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "c[1].y [role=state, order=1, ode_id=1"));
+	CU_ASSERT_PTR_NOT_NULL(strstr(report, "c[1].y' <--"));
+	free(report);
+	ida_cleanup(&testsys);
+
+	ida_test_hier_array_decay_success("ida_nested_array_decay_param_t_build_failure");
 }
 
 static void test_initial_dae(){
@@ -1250,12 +1362,13 @@ static void test_initial_alias_binding_bug(){
 	T(high_index) \
 	T(pantelides_pendulum_high_index) \
 	T(pantelides_reactor_high_index) \
-	T(initial_decay) \
-	T(initial_shm) \
-	T(initial_hier_decay) \
-	T(initial_hier_array_decay_build_failure) \
-	T(initial_hier_array_decay_same_t_build_failure) \
-	T(initial_dae) \
+		T(initial_decay) \
+		T(initial_shm) \
+		T(initial_hier_decay) \
+		T(initial_hier_array_decay_build_failure) \
+		T(initial_hier_array_decay_same_t) \
+		T(initial_hier_array_decay_param_t) \
+		T(initial_dae) \
 	T(initial_bad_overdetermined) \
 	T(initial_alias_binding_bug)
 
