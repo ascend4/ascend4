@@ -833,6 +833,114 @@ void WriteStatementSuppressed(FILE *f, CONST struct Statement *stat){
   }
 }
 
+static void WriteSourceContextLine(FILE *f, unsigned long line, CONST char *text, int len){
+  FPRINTF(f,"  %5lu | %.*s\n",line,len,text);
+}
+
+static int WriteModuleSourceLineFromString(FILE *f, CONST char *source, unsigned long line){
+  unsigned long current = 1;
+  unsigned long first = (line > 1) ? (line - 1) : line;
+  int wrote = 0;
+  CONST char *start, *end;
+
+  if (source == NULL || line == 0) {
+    return 0;
+  }
+
+  start = source;
+  while (*start != '\0') {
+    end = start;
+    while (*end != '\0' && *end != '\n') {
+      ++end;
+    }
+    if (current >= first && current <= line) {
+      if (!wrote) {
+        FPRINTF(f,"Source:\n");
+      }
+      WriteSourceContextLine(f,current,start,(int)(end - start));
+      wrote = 1;
+      if (current == line) {
+        break;
+      }
+    }
+    if (*end == '\0') {
+      break;
+    }
+    start = end + 1;
+    ++current;
+  }
+
+  return wrote;
+}
+
+static int WriteModuleSourceLineFromFile(FILE *f, CONST char *filename, unsigned long line){
+  FILE *src;
+  char buffer[512];
+  unsigned long current = 1;
+  unsigned long first = (line > 1) ? (line - 1) : line;
+  int wrote = 0;
+  int chunk_has_newline = 0;
+
+  if (filename == NULL || line == 0 || filename[0] == '\0') {
+    return 0;
+  }
+
+  src = fopen(filename,"r");
+  if (src == NULL) {
+    return 0;
+  }
+
+  while (fgets(buffer,sizeof(buffer),src) != NULL) {
+    chunk_has_newline = (strchr(buffer,'\n') != NULL);
+    if (current >= first && current <= line) {
+      if (!wrote) {
+        FPRINTF(f,"Source:\n");
+      }
+      if (chunk_has_newline) {
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+          --len;
+        }
+        WriteSourceContextLine(f,current,buffer,(int)len);
+      } else {
+        WriteSourceContextLine(f,current,buffer,(int)strlen(buffer));
+      }
+      wrote = 1;
+      if (current == line && chunk_has_newline) {
+        break;
+      }
+    }
+    if (chunk_has_newline) {
+      ++current;
+      if (wrote && current > line) {
+        break;
+      }
+    }
+  }
+  fclose(src);
+
+  if (wrote && !chunk_has_newline) {
+    PUTC('\n',f);
+  }
+  return wrote;
+}
+
+static int WriteStatementSourceLine(FILE *f, CONST struct Statement *stat){
+  CONST struct module_t *mod;
+  CONST char *source;
+
+  if (stat == NULL) {
+    return 0;
+  }
+
+  mod = StatementModule(stat);
+  source = Asc_ModuleString(mod);
+  if (source != NULL) {
+    return WriteModuleSourceLineFromString(f,source,StatementLineNum(stat));
+  }
+  return WriteModuleSourceLineFromFile(f,Asc_ModuleFileName(mod),StatementLineNum(stat));
+}
+
 void WriteStatementError(const error_severity_t sev
 		, const struct Statement *stat
 		, const int outputstatement
@@ -846,8 +954,11 @@ void WriteStatementError(const error_severity_t sev
 	vfprintf_error_reporter(ASCERR,fmt,args2);
 	va_end(args);
 	va_end(args2);
-	if(outputstatement){
+	if(stat != NULL){
 		FPRINTF(ASCERR,"\n");
+		(void)WriteStatementSourceLine(ASCERR,stat);
+	}
+	if(outputstatement){
 		WriteStatement(ASCERR,stat,4);
 	}
 	error_reporter_end_flush();
@@ -887,6 +998,7 @@ void WriteStatementErrorMessage(
 
   if(stat!=NULL){
     /* write some more detail */
+    (void)WriteStatementSourceLine(ASCERR,stat);
     g_show_statement_detail = ((noisy!=0) ? 1 : 0);
     WriteStatement(ASCERR,stat,2);
     g_show_statement_detail = 1;

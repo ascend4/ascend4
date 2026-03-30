@@ -25,6 +25,7 @@
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/dstring.h>
+#include <string.h>
 
 #include "functype.h"
 #include "expr_types.h"
@@ -161,6 +162,7 @@ void WriteExprNode(FILE *f, CONST struct Expr *e)
     PUTC('/',f);
     break;
   case e_power:
+  case e_ipower:
     PUTC('^',f);
     break;
   case e_boolean:
@@ -296,6 +298,15 @@ void WriteExprNode(FILE *f, CONST struct Expr *e)
     }
     PUTC(')',f);
     break;
+  case e_subexpr:
+    FPRINTF(f,"SUBEXPR");
+    break;
+  case e_const:
+    FPRINTF(f,"CONST");
+    break;
+  case e_par:
+    FPRINTF(f,"PAR");
+    break;
   default:
     FPRINTF(f,"<term>");
     break;
@@ -314,6 +325,210 @@ void WriteExpr(FILE *f, CONST struct Expr *e)
     }
   }
   return;
+}
+
+static char *WriteExprNodeMalloc(CONST struct Expr *e)
+{
+  Asc_DString ds;
+  Asc_DStringInit(&ds);
+  WriteExprNode2Str(&ds,e);
+  return Asc_DStringResult(&ds);
+}
+
+static int ExprIsInfixLeaf(enum Expr_enum t)
+{
+  switch(t) {
+  case e_zero:
+  case e_real:
+  case e_int:
+  case e_var:
+  case e_der:
+  case e_pre:
+  case e_boolean:
+  case e_set:
+  case e_symbol:
+  case e_qstring:
+  case e_card:
+  case e_choice:
+  case e_sum:
+  case e_prod:
+  case e_union:
+  case e_inter:
+  case e_minimize:
+  case e_maximize:
+  case e_satisfied:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+static CONST char *ExprInfixBinaryOperator(enum Expr_enum t)
+{
+  switch(t) {
+  case e_plus: return "+";
+  case e_minus: return "-";
+  case e_times: return "*";
+  case e_divide: return "/";
+  case e_power:
+  case e_ipower:
+    return "^";
+  case e_notequal: return "<>";
+  case e_equal: return "=";
+  case e_boolean_eq: return "==";
+  case e_boolean_neq: return "!=";
+  case e_less: return "<";
+  case e_greater: return ">";
+  case e_lesseq: return "<=";
+  case e_greatereq: return ">=";
+  case e_or: return "OR";
+  case e_and: return "AND";
+  case e_in: return "IN";
+  case e_st: return "|";
+  default:
+    return NULL;
+  }
+}
+
+static char *ExprFormatUnaryPrefix(CONST char *op, CONST char *arg)
+{
+  Asc_DString ds;
+  Asc_DStringInit(&ds);
+  Asc_DStringAppend(&ds,"(",-1);
+  Asc_DStringAppend(&ds,op,-1);
+  Asc_DStringAppend(&ds," ",-1);
+  Asc_DStringAppend(&ds,arg,-1);
+  Asc_DStringAppend(&ds,")",-1);
+  return Asc_DStringResult(&ds);
+}
+
+static char *ExprFormatUnaryMinus(CONST char *arg)
+{
+  Asc_DString ds;
+  Asc_DStringInit(&ds);
+  Asc_DStringAppend(&ds,"(-",-1);
+  Asc_DStringAppend(&ds,arg,-1);
+  Asc_DStringAppend(&ds,")",-1);
+  return Asc_DStringResult(&ds);
+}
+
+static char *ExprFormatFunction(CONST char *funcname, CONST char *arg)
+{
+  Asc_DString ds;
+  Asc_DStringInit(&ds);
+  Asc_DStringAppend(&ds,funcname,-1);
+  Asc_DStringAppend(&ds,"(",-1);
+  Asc_DStringAppend(&ds,arg,-1);
+  Asc_DStringAppend(&ds,")",-1);
+  return Asc_DStringResult(&ds);
+}
+
+static char *ExprFormatTransparent(CONST char *arg, int force_parens)
+{
+  if (force_parens) {
+    Asc_DString ds;
+    Asc_DStringInit(&ds);
+    Asc_DStringAppend(&ds,"(",-1);
+    Asc_DStringAppend(&ds,arg,-1);
+    Asc_DStringAppend(&ds,")",-1);
+    return Asc_DStringResult(&ds);
+  }
+  return ASC_STRDUP(arg);
+}
+
+static char *ExprFormatBinary(CONST char *lhs, CONST char *op, CONST char *rhs)
+{
+  Asc_DString ds;
+  Asc_DStringInit(&ds);
+  Asc_DStringAppend(&ds,"(",-1);
+  Asc_DStringAppend(&ds,lhs,-1);
+  Asc_DStringAppend(&ds," ",-1);
+  Asc_DStringAppend(&ds,op,-1);
+  Asc_DStringAppend(&ds," ",-1);
+  Asc_DStringAppend(&ds,rhs,-1);
+  Asc_DStringAppend(&ds,")",-1);
+  return Asc_DStringResult(&ds);
+}
+
+static int WriteExprInfixResult(Asc_DString *dstring, CONST struct Expr *e)
+{
+  unsigned long exprlen, top;
+  char **stack;
+  int ok = 1;
+
+  exprlen = ExprListLength(e);
+  stack = ASC_NEW_ARRAY_CLEAR(char *, exprlen + 1);
+  if (stack == NULL) {
+    return 0;
+  }
+
+  top = 0;
+  while (e != NULL && ok) {
+    enum Expr_enum t = ExprType(e);
+    if (ExprIsInfixLeaf(t)) {
+      stack[top] = WriteExprNodeMalloc(e);
+      ok = (stack[top] != NULL);
+      if (ok) {
+        ++top;
+      }
+    } else if (t == e_uminus || t == e_not || t == e_func
+               || t == e_subexpr || t == e_const || t == e_par) {
+      char *arg, *exprtxt = NULL;
+      if (top < 1) {
+        ok = 0;
+      } else {
+        arg = stack[--top];
+        if (t == e_uminus) {
+          exprtxt = ExprFormatUnaryMinus(arg);
+        } else if (t == e_not) {
+          exprtxt = ExprFormatUnaryPrefix("NOT",arg);
+        } else if (t == e_func) {
+          exprtxt = ExprFormatFunction(FuncName(ExprFunc(e)),arg);
+        } else if (t == e_subexpr) {
+          exprtxt = ExprFormatTransparent(arg,1);
+        } else {
+          exprtxt = ExprFormatTransparent(arg,0);
+        }
+        ASC_FREE(arg);
+        if (exprtxt == NULL) {
+          ok = 0;
+        } else {
+          stack[top++] = exprtxt;
+        }
+      }
+    } else {
+      CONST char *op = ExprInfixBinaryOperator(t);
+      char *lhs, *rhs, *exprtxt;
+      if (op == NULL || top < 2) {
+        ok = 0;
+      } else {
+        rhs = stack[--top];
+        lhs = stack[--top];
+        exprtxt = ExprFormatBinary(lhs,op,rhs);
+        ASC_FREE(lhs);
+        ASC_FREE(rhs);
+        if (exprtxt == NULL) {
+          ok = 0;
+        } else {
+          stack[top++] = exprtxt;
+        }
+      }
+    }
+    e = NextExpr(e);
+  }
+
+  if (!ok || top != 1) {
+    while (top > 0) {
+      ASC_FREE(stack[--top]);
+    }
+    ASC_FREE(stack);
+    return 0;
+  }
+
+  Asc_DStringAppend(dstring,stack[0],-1);
+  ASC_FREE(stack[0]);
+  ASC_FREE(stack);
+  return 1;
 }
 
 /*
@@ -352,7 +567,17 @@ void WriteExprNode2Str(Asc_DString *dstring, CONST struct Expr *e)
     strcpy(tmp,"^");
     break;
   case e_boolean:
-    ExprBValue(e) ? strcpy(tmp,"TRUE") : strcpy(tmp,"FALSE");
+    switch (ExprBValue(e)) {
+    case 0:
+      strcpy(tmp,"FALSE");
+      break;
+    case 2:
+      strcpy(tmp,"ANY");
+      break;
+    default:
+      strcpy(tmp,"TRUE");
+      break;
+    }
     break;
   case e_and:
     strcpy(tmp,"AND");
@@ -369,6 +594,12 @@ void WriteExprNode2Str(Asc_DString *dstring, CONST struct Expr *e)
   case e_notequal:
     strcpy(tmp,"<>");
     break;
+  case e_boolean_eq:
+    strcpy(tmp,"==");
+    break;
+  case e_boolean_neq:
+    strcpy(tmp,"!=");
+    break;
   case e_less:
     strcpy(tmp,"<");
     break;
@@ -382,13 +613,23 @@ void WriteExprNode2Str(Asc_DString *dstring, CONST struct Expr *e)
     strcpy(tmp,">=");
     break;
   case e_st:
-    strcpy(tmp,"/");
+    strcpy(tmp,"|");
     break;
   case e_in:
     strcpy(tmp,"IN");
     break;
   case e_var:
     WriteName2Str(dstring,ExprName(e));
+    return;
+  case e_der:
+    Asc_DStringAppend(dstring,"der(",-1);
+    WriteName2Str(dstring,ExprName(e));
+    Asc_DStringAppend(dstring,")",-1);
+    return;
+  case e_pre:
+    Asc_DStringAppend(dstring,"pre(",-1);
+    WriteName2Str(dstring,ExprName(e));
+    Asc_DStringAppend(dstring,")",-1);
     return;
   case e_int:
     sprintf(tmp,"%ld",ExprIValue(e));
@@ -449,6 +690,24 @@ void WriteExprNode2Str(Asc_DString *dstring, CONST struct Expr *e)
   case e_func:
     strcpy(tmp,FuncName(ExprFunc(e)));
     break;
+  case e_satisfied:
+    Asc_DStringAppend(dstring,"SATISFIED(",-1);
+    WriteName2Str(dstring,SatisfiedExprName(e));
+    if (SatisfiedExprRValue(e)!=DBL_MAX){
+      sprintf(tmp,",%g",SatisfiedExprRValue(e));
+      Asc_DStringAppend(dstring,tmp,-1);
+    }
+    Asc_DStringAppend(dstring,")",-1);
+    return;
+  case e_subexpr:
+    strcpy(tmp,"SUBEXPR");
+    break;
+  case e_const:
+    strcpy(tmp,"CONST");
+    break;
+  case e_par:
+    strcpy(tmp,"PAR");
+    break;
   default:
     strcpy(tmp,"<term>");
     break;
@@ -469,9 +728,18 @@ void WriteExpr2Str(Asc_DString *dstring, CONST struct Expr *e)
   return;
 }
 
+void WriteExprInfix(FILE *f, CONST struct Expr *e)
+{
+  Asc_DString ds;
+  Asc_DStringInit(&ds);
+  WriteExprInfix2Str(&ds,e);
+  FPRINTF(f,"%s",Asc_DStringValue(&ds));
+  Asc_DStringFree(&ds);
+}
 
-
-
-
-
-
+void WriteExprInfix2Str(Asc_DString *dstring, CONST struct Expr *e)
+{
+  if (!WriteExprInfixResult(dstring,e)) {
+    WriteExpr2Str(dstring,e);
+  }
+}
