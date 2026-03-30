@@ -349,6 +349,9 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 
 	if(strcmp("TestingRoutine",SCP(key)) == 0) {
 	TestingRoutine(model);
+	if(instances != NULL){
+		gl_destroy(instances);
+	}
 	return;
 	}
 
@@ -386,6 +389,9 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 			MSG("procedural LINK no of instances in cache: %ld", gl_length(link_entry->instances_cache));
 			MSG("procedural LINK key '%s'", SCP(key));
 		}else{
+			if(instances != NULL){
+				gl_destroy(instances);
+			}
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"The LINK entry to-be added is already present in the non-declarative LINK table.");
 		}
 	}else{
@@ -411,17 +417,21 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 			  link_entry->u.statptr = stat;
 				link_entry->link_type = stat->v.lnk.key_type;
 				link_entry->u.vl = LINKStatVlist(stat);
-				link_entry->instances_cache = instances;
+				link_entry->instances_cache = NULL;
 				link_entry->flags = 1;
 			  link_entry->length = gl_length(instances);
+				gl_destroy(instances);
 
 				/**< DS: in case the link entry is declarative, it is appeneded to the linktable in the model type description */
 				gl_append_ptr(modelType->u.modarg.link_table,(VOIDPTR)link_entry);
 
 				/* DS: testing purposes: */
-				MSG("declarative LINK no of instances in cache: %ld", gl_length(link_entry->instances_cache));
+				MSG("declarative LINK cached lazily, length %u", link_entry->length);
 				MSG("declarative LINK key %s", SCP(key));
 			}else{
+				if(instances != NULL){
+					gl_destroy(instances);
+				}
 			 	ERROR_REPORTER_HERE(ASC_USER_WARNING,"The LINK entry to-be added is already present in the declarative LINK table.");
 			}
 		}

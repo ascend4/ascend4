@@ -9,6 +9,16 @@ MODEL ida_nested_array_child_decay;
 	INDEPENDENT t;
 END ida_nested_array_child_decay;
 
+MODEL ida_nested_array_child_decay_param_t(
+	t WILL_BE solver_var;
+);
+	y IS_A solver_var;
+	k IS_A solver_var;
+
+	dyn: der(y) = -k * y;
+	INDEPENDENT t;
+END ida_nested_array_child_decay_param_t;
+
 
 MODEL ida_nested_array_decay_build_failure;
 
@@ -50,3 +60,24 @@ METHOD on_load;
 	END FOR;
 END on_load;
 END ida_nested_array_decay_same_t_build_failure;
+
+
+MODEL ida_nested_array_decay_param_t_build_failure;
+
+	t IS_A solver_var;
+	c[1..3] IS_A ida_nested_array_child_decay_param_t(t);
+
+INITIAL
+	y10: c[1].y = 1;
+	y20: c[2].y = 1;
+	y30: c[3].y = 1;
+
+METHODS
+METHOD on_load;
+	FIX t := 0;
+	FOR i IN [1..3] DO
+		FIX c[i].k := i;
+		FREE der(c[i].y);
+	END FOR;
+END on_load;
+END ida_nested_array_decay_param_t_build_failure;
