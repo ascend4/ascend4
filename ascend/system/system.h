@@ -42,6 +42,7 @@
 #define ASC_SYSTEM_H
 
 #include <ascend/general/platform.h>
+#include <stdio.h>
 #include "slv_types.h"
 
 /**	@addtogroup system System
@@ -74,6 +75,17 @@ ASC_DLLSPEC slv_system_t system_build(SlvBackendToken inst);
 	This function needs to be called before slv_select_solver, but does not
 	need to be re-called if the a new solver is selected. -- JP
 */
+
+ASC_DLLSPEC int system_debug_precheck_dae(SlvBackendToken inst, FILE *fp);
+/**<
+	Builds a temporary solver system up to the point just before final
+	top-level ODE independent-variable validation, then writes a diagnostic
+	report describing independents, derivative chains, solver variables and
+	solver relations.
+
+	This is intended for debugging cases where system_build() would otherwise
+	discard the partially built slv_system_t on failure.
+ */
 
 ASC_DLLSPEC void system_destroy(slv_system_t sys);
 /**<
