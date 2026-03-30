@@ -327,12 +327,12 @@ METHODS
 
 		FIX eps_bed := 0.45;
 		FIX tau_bed := 3.0;
-		FIX k_fb_multiplier := 1.0;
-		FIX k_bed_multiplier := 1.0;
-		FIX Sh_particle := 2.0;
-		FIX a_open := 0.0;
-		FIX a_close := 0.0;
-		FIX beta_T := 0.0;
+		FIX k_fb_multiplier := 0.27732238;
+		FIX k_bed_multiplier := 0.35665202;
+		FIX Sh_particle := 0.76583406;
+		FIX a_open := 0.81142394;
+		FIX a_close := 2.5472071;
+		FIX beta_T := -0.19173506;
 
 		FIX y_H2_bulk := 0.8;
 		FIX y_H2O_bulk := 0.0;
@@ -350,13 +350,13 @@ METHODS
 		FIX MW_FeO := 71.844 {g/g_mole};
 		FIX MW_Fe := 55.845 {g/g_mole};
 
-		FIX etak0[1] := 3e-4 {1/s/Pa};
-		FIX etak0[2] := 1.5e-4 {1/s/Pa};
-		FIX etak0[3] := 7.5e-4 {1/s/Pa};
+		FIX etak0[1] := 0.0015754844 {1/s/Pa};
+		FIX etak0[2] := 0.00076929627 {1/s/Pa};
+		FIX etak0[3] := 0.00039695573 {1/s/Pa};
 
-		FIX E_a[1] := 55 {kJ/mol};
-		FIX E_a[2] := 60 {kJ/mol};
-		FIX E_a[3] := 62 {kJ/mol};
+		FIX E_a[1] := 68.270416 {kJ/mol};
+		FIX E_a[2] := 56.743108 {kJ/mol};
+		FIX E_a[3] := 58.431754 {kJ/mol};
 
 		FIX K_eq_lnA[1] := 8.54050167864375;
 		FIX K_eq_lnA[2] := 8.447122204684765;
@@ -481,6 +481,21 @@ METHODS
 			y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
 			J_transport;
 	END observe_cli_default;
+
+	METHOD observe_cli_detailed;
+		OBSERVE reduction_degree, m_sample,
+			n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+			rate_net[1], rate_net[2], rate_net[3],
+			xi[1], xi[2], xi[3],
+			rate_net_zone[1][1], rate_net_zone[2][1], rate_net_zone[3][1],
+			rate_net_zone[1][n_bed_segs], rate_net_zone[2][n_bed_segs], rate_net_zone[3][n_bed_segs],
+			xi_zone[1][1], xi_zone[2][1], xi_zone[3][1],
+			xi_zone[1][n_bed_segs], xi_zone[2][n_bed_segs], xi_zone[3][n_bed_segs],
+			y_H2_react, y_H2O_react,
+			y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs],
+			y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
+			J_transport;
+	END observe_cli_detailed;
 
 	METHOD ode_init;
 		FIX t;
