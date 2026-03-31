@@ -173,6 +173,7 @@ struct Instance *CreateSimulationInstance(struct TypeDescription *type,
   result->name = name;
   result->extvars = NULL;
   result->slvreq_hooks = (SlvReqHooks)SLVREQ_HOOKS_EMPTY;
+  *SIM_CHILD(result,0) = NULL;
   return INST(result);
 }
 
