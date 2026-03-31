@@ -3294,6 +3294,7 @@ static int BindDerivativeTermsOnSide(struct Instance *root,
                                      void *userdata)
 {
   unsigned long c, pos;
+  int is_lhs;
   struct relation_term *term;
   struct Instance *base, *deriv;
 
@@ -3308,10 +3309,11 @@ static int BindDerivativeTermsOnSide(struct Instance *root,
     }
 
     if(RelationRefCount(rel) > 1){
+      is_lhs = (side == RTOKEN(rel).lhs);
       RelationRefCount(rel)--;
       rel->share = CopyRelationShare(rel->share, e_token);
       RelationRefCount(rel) = 1;
-      side = (side == RTOKEN(rel).lhs) ? RTOKEN(rel).lhs : RTOKEN(rel).rhs;
+      side = is_lhs ? RTOKEN(rel).lhs : RTOKEN(rel).rhs;
       term = A_TERM(&(side[c]));
     }
 
@@ -3750,7 +3752,7 @@ union RelationUnion *CopyRelationShareToken(union RelationUnion *ru)
 
   src = (struct TokenRelation *)ru;
   /* yes, the sizeof in the following is correct. TOKENDOMINANT. */
-  result = (struct TokenRelation *)ascmalloc(sizeof(union RelationUnion));
+  result = (struct TokenRelation *)asccalloc(1,sizeof(union RelationUnion));
   if (result==NULL) {
     ASC_PANIC("Insufficient memory.");
     return NULL; /* NOT REACHED */
@@ -3776,6 +3778,11 @@ union RelationUnion *CopyRelationShareToken(union RelationUnion *ru)
   }
   result->relop = src->relop;
   result->ref_count = src->ref_count;
+  result->btable = src->btable;
+  result->bindex = src->bindex;
+  if(result->btable > 0 && result->btable < INT_MAX){
+    BinTokenAddReference(result->btable);
+  }
 
   return (union RelationUnion *)result;
 }

@@ -261,9 +261,15 @@ struct StaticSolverRegistration{
 */
 static const struct StaticSolverRegistration slv_reg[]={
 	{"qrslv"}
+#ifdef ASC_WITH_IPOPT
 	,{"ipopt"}
+#endif
+#ifdef ASC_WITH_MAKEMPS
 	,{"makemps"}
+#endif
+#ifdef ASC_WITH_HIGHS
 	,{"highs"}
+#endif
 #if 0
 	,{"conopt"}
 	,{"lrslv"}
