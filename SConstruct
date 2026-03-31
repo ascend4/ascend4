@@ -2309,6 +2309,19 @@ if conf.CheckFunc('isnan') is False and conf.CheckFunc('_isnan') is False:
 	print("Didn't find isnan")
 #	Exit(1)
 
+if platform.system() != "Windows":
+	have_getrusage = conf.TryLink(r'''
+#include <sys/time.h>
+#include <sys/resource.h>
+int main(void){
+	struct rusage usage;
+	return getrusage(RUSAGE_SELF, &usage);
+}
+''', '.c')
+	print("Checking for getrusage() in <sys/resource.h>... %s" % ("yes" if have_getrusage else "no"))
+	if have_getrusage:
+		conf.env['HAVE_GETRUSAGE'] = True
+
 # GCC visibility
 
 if conf.CheckGcc():
@@ -2630,6 +2643,7 @@ for k,v in {
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
 			,'HAVE_ERF':env.get('HAVE_ERF')
 			,'HAVE_FNMATCH':env.get('HAVE_FNMATCH')
+			,'HAVE_GETRUSAGE':env.get('HAVE_GETRUSAGE')
 			,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
 		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY',0)

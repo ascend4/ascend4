@@ -154,6 +154,11 @@ typedef unsigned long long asc_intptr_t;
 */
 @HAVE_FNMATCH@
 
+/*
+	Whether getrusage() is available in <sys/resource.h>.
+*/
+@HAVE_GETRUSAGE@
+
 /* #define ASC_DLLDIRS "@DLLDIRS@" */
 
 #define ASC_SOURCE_ROOT "@SOURCE_ROOT@"
