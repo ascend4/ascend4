@@ -2,6 +2,7 @@ import argparse
 import pathlib
 import re
 import sys
+import traceback
 
 from plotutils import COLOR_CYCLE, group_series, group_ylabel
 
@@ -342,38 +343,50 @@ class CliSolverHooks:
 				ascpy.SolverHooks.__init__(self)
 
 			def setIntegrator(self, integratorname, sim):
-				self._owner.integrator_name = integratorname
-				return 0
+				try:
+					self._owner.integrator_name = integratorname
+					return 0
+				except Exception:
+					traceback.print_exc(file=sys.stderr)
+					return 1
 
 			def doObserve(self, request, sim):
-				return ascpy.SolverHooks.doObserve(self, request, sim)
+				try:
+					return ascpy.SolverHooks.doObserve(self, request, sim)
+				except Exception:
+					traceback.print_exc(file=sys.stderr)
+					return 1
 
 			def doIntegrate(self, request, sim):
-				self._owner.integrate_request = {
-					"start": request.getStart(),
-					"stop": request.getStop(),
-					"steps": request.getSteps(),
-				}
-				self._owner.saw_integrate_request = True
-				if self._owner.suppress_integrate:
+				try:
+					self._owner.integrate_request = {
+						"start": request.getStart(),
+						"stop": request.getStop(),
+						"steps": request.getSteps(),
+					}
+					self._owner.saw_integrate_request = True
+					if self._owner.suppress_integrate:
+						return 0
+					start = request.getStart()
+					stop = request.getStop()
+					steps = request.getSteps()
+					_run_integration(
+						ascpy=self._owner.ascpy,
+						sim=sim,
+						engine=self._owner.integrator_name or DEFAULT_INTEGRATOR,
+						start=start,
+						duration=stop - start,
+						steps=steps,
+						units_token=None,
+						output=None,
+						plot=False,
+						microstates="endpoints",
+					)
+					self._owner.integrated = True
 					return 0
-				start = request.getStart()
-				stop = request.getStop()
-				steps = request.getSteps()
-				_run_integration(
-					ascpy=self._owner.ascpy,
-					sim=sim,
-					engine=self._owner.integrator_name or DEFAULT_INTEGRATOR,
-					start=start,
-					duration=stop - start,
-					steps=steps,
-					units_token=None,
-					output=None,
-					plot=False,
-					microstates="endpoints",
-				)
-				self._owner.integrated = True
-				return 0
+				except Exception:
+					traceback.print_exc(file=sys.stderr)
+					return 1
 
 		self.ascpy = ascpy
 		self.suppress_integrate = suppress_integrate
