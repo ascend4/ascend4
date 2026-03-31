@@ -11,6 +11,7 @@
 #include <ascend/compiler/simstatus.h>
 
 #include <map>
+#include <exception>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -109,6 +110,16 @@ struct StudyColumn{
 	double conversion;
 	Kind kind;
 };
+
+static int report_slvreq_callback_exception(const char *hook_name, int fallback_code){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR, "Unhandled exception in SolverHooks.%s", hook_name);
+	return fallback_code;
+}
+
+static int report_slvreq_callback_exception(const char *hook_name, const std::exception &e, int fallback_code){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR, "Unhandled exception in SolverHooks.%s: %s", hook_name, e.what());
+	return fallback_code;
+}
 
 static StudyColumn get_study_column(Instance *inst, Simulation *S){
 	StudyColumn column;
@@ -326,8 +337,9 @@ int ascxx_slvreq_set_solver(const char *solvername, void *user_data){
 	try{
 		return S->getSolverHooks()->setSolver(solvername, S);
 	}catch(const std::exception &e){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
-		return SLVREQ_UNKNOWN_SOLVER;
+		return report_slvreq_callback_exception("setSolver", e, 999);
+	}catch(...){
+		return report_slvreq_callback_exception("setSolver", 999);
 	}
 }
 
@@ -337,8 +349,9 @@ int ascxx_slvreq_set_integrator(const char *integratorname, void *user_data){
 	try{
 		return S->getSolverHooks()->setIntegrator(integratorname, S);
 	}catch(const std::exception &e){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
-		return SLVREQ_UNKNOWN_INTEGRATOR;
+		return report_slvreq_callback_exception("setIntegrator", e, 999);
+	}catch(...){
+		return report_slvreq_callback_exception("setIntegrator", 999);
 	}
 }
 
@@ -348,8 +361,9 @@ int ascxx_slvreq_set_option(const char *optionname, value_t *val, void *user_dat
 	try{
 		return S->getSolverHooks()->setOption(optionname, Value(val), S);
 	}catch(const std::exception &e){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
-		return SLVREQ_WRONG_OPTION_VALUE_TYPE;
+		return report_slvreq_callback_exception("setOption", e, 999);
+	}catch(...){
+		return report_slvreq_callback_exception("setOption", 999);
 	}
 }
 
@@ -363,8 +377,10 @@ int ascxx_slvreq_do_solve(struct Instance *instance, void *user_data){
 		res = S->getSolverHooks()->doSolve(instance, S);
 	}catch(const std::exception &e){
 		reg.setPointer("slvreq_target", NULL);
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
-		return SLVREQ_SOLVE_FAIL;
+		return report_slvreq_callback_exception("doSolve", e, 999);
+	}catch(...){
+		reg.setPointer("slvreq_target", NULL);
+		return report_slvreq_callback_exception("doSolve", 999);
 	}
 	reg.setPointer("slvreq_target", NULL);
 	return res;
@@ -377,8 +393,9 @@ int ascxx_slvreq_do_observe(const SlvReqObserveRequest *request, void *user_data
 	try{
 		return S->getSolverHooks()->doObserve(observe_request, S);
 	}catch(const std::exception &e){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
-		return SLVREQ_OBSERVE_INVALID_REQUEST;
+		return report_slvreq_callback_exception("doObserve", e, 999);
+	}catch(...){
+		return report_slvreq_callback_exception("doObserve", 999);
 	}
 }
 
@@ -389,8 +406,9 @@ int ascxx_slvreq_do_study(const SlvReqStudyRequest *request, void *user_data){
 	try{
 		return S->getSolverHooks()->doStudy(study_request, S);
 	}catch(const std::exception &e){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
-		return SLVREQ_STUDY_INVALID_REQUEST;
+		return report_slvreq_callback_exception("doStudy", e, 999);
+	}catch(...){
+		return report_slvreq_callback_exception("doStudy", 999);
 	}
 }
 
@@ -401,8 +419,9 @@ int ascxx_slvreq_do_integrate(const SlvReqIntegrateRequest *request, void *user_
 	try{
 		return S->getSolverHooks()->doIntegrate(integrate_request, S);
 	}catch(const std::exception &e){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
-		return SLVREQ_INTEGRATE_INVALID_REQUEST;
+		return report_slvreq_callback_exception("doIntegrate", e, 999);
+	}catch(...){
+		return report_slvreq_callback_exception("doIntegrate", 999);
 	}
 }
 
@@ -412,8 +431,9 @@ int ascxx_slvreq_delete_system(void *user_data){
 	try{
 		return S->getSolverHooks()->deleteSystem(S);
 	}catch(const std::exception &e){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
-		return SLVREQ_DELETE_HOOK_NOT_SET;
+		return report_slvreq_callback_exception("deleteSystem", e, 999);
+	}catch(...){
+		return report_slvreq_callback_exception("deleteSystem", 999);
 	}
 }
 
