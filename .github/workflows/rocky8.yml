@@ -52,6 +52,7 @@ jobs:
         curl -L --retry 3 -o "$CUNIT_TARBALL" "$CUNIT_URL"
         tar -xzf "$CUNIT_TARBALL"
         cd "$CUNIT_RELEASE_BASENAME"
+        touch README
         ./bootstrap
         ./configure --prefix="$HOME/.local" --enable-examples --enable-debug
         make -j"$(nproc)"
