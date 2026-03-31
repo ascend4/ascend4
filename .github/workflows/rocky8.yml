@@ -31,7 +31,7 @@ jobs:
         dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools || true
         dnf -y install \
           gcc gcc-c++ gcc-gfortran \
-          make flex bison scons swig \
+          make flex bison swig \
           autoconf automake libtool m4 \
           git curl patch which diffutils findutils tar gzip xz \
           cmake3 pkgconf-pkg-config \
@@ -40,6 +40,10 @@ jobs:
           graphviz graphviz-devel \
           blas-devel lapack-devel \
           pcre-devel zlib-devel xz-devel
+
+    - name: Install SCons
+      run: |
+        python3 -m pip install --user scons
 
     - name: Build and install CUnit
       run: |
