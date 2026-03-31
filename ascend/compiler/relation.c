@@ -3752,7 +3752,7 @@ union RelationUnion *CopyRelationShareToken(union RelationUnion *ru)
 
   src = (struct TokenRelation *)ru;
   /* yes, the sizeof in the following is correct. TOKENDOMINANT. */
-  result = (struct TokenRelation *)ascmalloc(sizeof(union RelationUnion));
+  result = (struct TokenRelation *)asccalloc(1,sizeof(union RelationUnion));
   if (result==NULL) {
     ASC_PANIC("Insufficient memory.");
     return NULL; /* NOT REACHED */
@@ -3778,6 +3778,11 @@ union RelationUnion *CopyRelationShareToken(union RelationUnion *ru)
   }
   result->relop = src->relop;
   result->ref_count = src->ref_count;
+  result->btable = src->btable;
+  result->bindex = src->bindex;
+  if(result->btable > 0 && result->btable < INT_MAX){
+    BinTokenAddReference(result->btable);
+  }
 
   return (union RelationUnion *)result;
 }
