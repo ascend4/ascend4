@@ -2625,30 +2625,27 @@ if env.get('WITH_DOC'):
 
 # bool options...
 for k,v in {
-				'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
-				,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
-				,'ASC_WITH_MMIO':env['WITH_MMIO']
-				,'ASC_WITH_ZLIB':env['WITH_ZLIB']
-				,'ASC_WITH_LZMA':env['WITH_LZMA']
-				,'ASC_WITH_MAKEMPS':env['WITH_MAKEMPS']
-				,'ASC_WITH_IPOPT':env['WITH_IPOPT']
-				,'ASC_WITH_HIGHS':env['WITH_HIGHS']
-				,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
-				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
-				,'ASC_WITH_PCRE':env['WITH_PCRE']
+			'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
+			,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
+			,'ASC_WITH_MMIO':env['WITH_MMIO']
+			,'ASC_WITH_ZLIB':env['WITH_ZLIB']
+			,'ASC_WITH_LZMA':env['WITH_LZMA']
+			,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
+			,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
+			,'ASC_WITH_PCRE':env['WITH_PCRE']
 			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
-		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
-		,'HAVE_GCCVISIBILITY':env.get('HAVE_GCCVISIBILITY')
-		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
-		,'HAVE_IEEE':env.get('HAVE_IEEE')
+			,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
+			,'HAVE_GCCVISIBILITY':env.get('HAVE_GCCVISIBILITY')
+			,'HAVE_C99FPE':env.get('HAVE_C99FPE')
+			,'HAVE_IEEE':env.get('HAVE_IEEE')
 			,'HAVE_ERF':env.get('HAVE_ERF')
 			,'HAVE_FNMATCH':env.get('HAVE_FNMATCH')
 			,'HAVE_GETRUSAGE':env.get('HAVE_GETRUSAGE')
 			,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
-		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
-		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY',0)
-		,'HAVE_SNPRINTF':env.get('HAVE_SNPRINTF')
-		,'HAVE__SNPRINTF':env.get('HAVE__SNPRINTF')
+			,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
+			,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY',0)
+			,'HAVE_SNPRINTF':env.get('HAVE_SNPRINTF')
+			,'HAVE__SNPRINTF':env.get('HAVE__SNPRINTF')
 		}.items():
 		
 #	if v: subst_dict["/\\* #\\s*define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
@@ -2822,6 +2819,16 @@ env['extfns']=[]
 env['BUILDING_ASCEND'] = 1
 
 env.SConscript(['solvers/SConscript'],'env')
+
+for k,v in {
+	'ASC_HAVE_MAKEMPS': env['OPTIONALS'].get('makemps', (False, None))[0],
+	'ASC_HAVE_IPOPT': env['OPTIONALS'].get('ipopt', (False, None))[0],
+	'ASC_HAVE_HIGHS': env['OPTIONALS'].get('highs', (False, None))[0],
+}.items():
+	subst_dict['@%s@' %(k,)] = "#define %s 1" %(k,) if v else "// %s is not set." %(k,)
+
+env['SUBST_DICT'].update(subst_dict)
+env.Substfile(target='ascend/general/config.h', source='ascend/general/config.h.in')
 
 #-------------
 # EXTERNAL FUNCTIONS
