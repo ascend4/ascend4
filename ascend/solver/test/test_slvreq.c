@@ -1037,7 +1037,10 @@ static void test_slvreq_study_log(void){
 	{
 		SlvReqHooks hooks = {
 			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
 			.do_study_fn = &slvreq_c_do_study,
+			.delete_system_fn = &slvreq_c_delete_system,
 			.user_data = &S
 		};
 		slvreq_assign_hooks(S.siminst, &hooks);
@@ -1058,6 +1061,7 @@ static void test_slvreq_study_log(void){
 	CU_ASSERT_DOUBLE_EQUAL(S.study_upper, 100.0, 1e-12);
 	CU_ASSERT_STRING_EQUAL(S.study_vary, "x");
 
+	if(S.sys)system_destroy(S.sys);
 	system_free_reused_mem();
 	sim_destroy(S.siminst);
 	solver_destroy_engines();
@@ -1089,7 +1093,10 @@ static void test_slvreq_study_ratio(void){
 	{
 		SlvReqHooks hooks = {
 			.set_solver_fn = &slvreq_c_set_solver,
+			.set_option_fn = &slvreq_c_set_option,
+			.do_solve_fn = &slvreq_c_do_solve,
 			.do_study_fn = &slvreq_c_do_study,
+			.delete_system_fn = &slvreq_c_delete_system,
 			.user_data = &S
 		};
 		slvreq_assign_hooks(S.siminst, &hooks);
@@ -1110,6 +1117,7 @@ static void test_slvreq_study_ratio(void){
 	CU_ASSERT_DOUBLE_EQUAL(S.study_value, 2.0, 1e-12);
 	CU_ASSERT_STRING_EQUAL(S.study_vary, "x");
 
+	if(S.sys)system_destroy(S.sys);
 	system_free_reused_mem();
 	sim_destroy(S.siminst);
 	solver_destroy_engines();
