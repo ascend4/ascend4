@@ -116,24 +116,24 @@ typedef unsigned long long asc_intptr_t;
 @ASC_WITH_LZMA@
 
 /*
-	Whether the makemps solver module was built.
+	Whether the makemps solver module is available in this build.
 */
-@ASC_WITH_MAKEMPS@
+@ASC_HAVE_MAKEMPS@
 
 /*
-	Whether the IPOPT solver module was built.
+	Whether the IPOPT solver module is available in this build.
 */
-@ASC_WITH_IPOPT@
+@ASC_HAVE_IPOPT@
 
 /*
-	Whether the HiGHS solver module was built.
+	Whether the HiGHS solver module is available in this build.
 */
-@ASC_WITH_HIGHS@
+@ASC_HAVE_HIGHS@
 
 /*
 	Whether Graphviz support is enabled.
 */
-@WITH_GRAPHVIZ@
+@ASC_HAVE_GRAPHVIZ@
 
 /*
 	Whether Graphviz headers require HAVE_BOOLEAN to be declared.
