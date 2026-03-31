@@ -84,7 +84,13 @@ extern "C"{
 
 	@TODO fix mutex on compile command filenames
 */
-Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), simroot(GetSimulationRoot(i),SymChar("simroot")){
+Simulation::Simulation(Instance *i, const SymChar &name)
+	: Instanc(i, name)
+	, simroot(i != NULL ? GetSimulationRoot(i) : NULL, SymChar("simroot"))
+{
+	if(i==NULL){
+		throw runtime_error("Simulation::Simulation received NULL simulation instance");
+	}
 	MSG("Created simulation at %p",this);	
 	sys = NULL;
 	buildroot = NULL;

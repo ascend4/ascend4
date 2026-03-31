@@ -169,14 +169,20 @@ Type::getSimulation(const SymChar &sym
 	error_reporter_tree_start();
 
 	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, NULL);
-	Simulation sim(i,sym);
-
 	bool has_error = FALSE;
 	if(error_reporter_tree_has_error()){
 		has_error = TRUE;
 	}
 
 	error_reporter_tree_end();
+	if(i==NULL){
+		if(has_error){
+			stringstream ss;
+			ss << "Error(s) during instantiation of type '" << getName() << "'";
+			throw runtime_error(ss.str());
+		}
+		throw runtime_error("Failed to create instance");
+	}
 	if(has_error){
 
 		stringstream ss;
@@ -185,6 +191,8 @@ Type::getSimulation(const SymChar &sym
 	}else{
 		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Instantiated %s",SCP(getInternalType()->name));
 	}
+
+	Simulation sim(i,sym);
 
 #if 1
 	//CONSOLE_DEBUG("CHECKING INSTANCE...");
@@ -203,12 +211,7 @@ Type::getSimulation(const SymChar &sym
 	sim.checkStatistics();
 	CONSOLE_DEBUG("...DONE CHECKING STATISTICS");
 #endif
-
-	if(i==NULL){
-		throw runtime_error("Failed to create instance");
-	}
-
-	if(rundefaultmethod){
+		if(rundefaultmethod){
 		//CONSOLE_DEBUG("RUNNING DEFAULT METHOD");
 		sim.runDefaultMethod();
 	}
