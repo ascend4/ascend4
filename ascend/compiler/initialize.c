@@ -535,8 +535,10 @@ ExecuteInitSolver(struct procFrame *fm, struct Statement *stat){
 			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
 			case SLVREQ_SOLVER_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
 			case SLVREQ_UNKNOWN_SOLVER: fm->ErrNo = Proc_slvreq_unknown_solver; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
 		}
 		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
 		return;
 	}else{
 		fm->ErrNo = Proc_all_ok;
@@ -639,6 +641,7 @@ ExecuteInitOption(struct procFrame *fm, struct Statement *stat){
 	}
 	if(fm->ErrNo != Proc_all_ok){
 		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
 	}
 	DestroyValue(&value);
 	return;
@@ -850,6 +853,7 @@ ExecuteInitSolve(struct procFrame *fm, struct Statement *stat){
 			default: fm->ErrNo = Proc_slvreq_error; break;
 		}
 		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
 		return;
 	}
 	fm->ErrNo = Proc_all_ok;
@@ -893,6 +897,7 @@ ExecuteInitObserve(struct procFrame *fm, struct Statement *stat){
 			default: fm->ErrNo = Proc_slvreq_error; break;
 		}
 		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
 		goto cleanup;
 	}
 	fm->ErrNo = Proc_all_ok;
@@ -1044,6 +1049,7 @@ ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
 			default: fm->ErrNo = Proc_slvreq_error; break;
 		}
 		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
 		goto cleanup;
 	}
 	fm->ErrNo = Proc_all_ok;
@@ -1143,6 +1149,7 @@ ExecuteInitDeleteSystem(struct procFrame *fm, struct Statement *stat){
 			default: fm->ErrNo = Proc_slvreq_error; break;
 		}
 		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
 		return;
 	}
 	fm->ErrNo = Proc_all_ok;
