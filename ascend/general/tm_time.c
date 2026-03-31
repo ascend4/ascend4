@@ -20,6 +20,9 @@
 */
 
 #include <sys/time.h>
+#ifndef __WIN32__
+# include <sys/resource.h>
+#endif
 #include "platform.h"
 #include "panic.h"
 #include "tm_time.h"
@@ -34,15 +37,27 @@ static boolean f_first = TRUE;
 
 double tm_cpu_time(void){
 #ifndef __WIN32__
-	static struct timespec ref;
-	struct timespec now;
+	static double ref;
+	double now;
+	struct rusage usage;
+
+	if (getrusage(RUSAGE_SELF, &usage) == 0) {
+		now =
+			usage.ru_utime.tv_sec + 1e-6 * usage.ru_utime.tv_usec
+			+ usage.ru_stime.tv_sec + 1e-6 * usage.ru_stime.tv_usec;
+	}else{
+		struct timespec ts;
+		if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) != 0) {
+			return 0.0;
+		}
+		now = ts.tv_sec + 1e-9 * ts.tv_nsec;
+	}
 
 	if( f_first ) {
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ref);
+		ref = now;
 		f_first = FALSE;
 	}
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
-	return (now.tv_sec - ref.tv_sec) + 1e-9*(now.tv_nsec - ref.tv_nsec);
+	return now - ref;
 #else /* WIN32 */
 	static LARGE_INTEGER ref, f;
 	LARGE_INTEGER now;
