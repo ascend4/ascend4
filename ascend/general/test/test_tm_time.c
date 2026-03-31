@@ -24,8 +24,50 @@
 #include <ascend/general/list.h>
 #include <ascend/general/tm_time.h>
 
+#ifndef __WIN32__
+# include <time.h>
+#endif
+
 #include <test/common.h>
 #include <test/assertimpl.h>
+
+#ifndef __WIN32__
+static double test_wall_time_monotonic(void)
+{
+  struct timespec ts;
+  if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
+    return 0.0;
+  }
+  return ts.tv_sec + 1e-9 * ts.tv_nsec;
+}
+
+static double test_cpu_time_resolution(void)
+{
+  struct timespec ts;
+  if (clock_getres(CLOCK_PROCESS_CPUTIME_ID, &ts) != 0) {
+    return 0.01;
+  }
+  return ts.tv_sec + 1e-9 * ts.tv_nsec;
+}
+#endif
+
+static void test_burn_cpu(volatile unsigned long *burn, unsigned long count)
+{
+  unsigned long i;
+  for (i = 0; i < count; ++i) {
+    *burn += (i & 1U);
+  }
+}
+
+#ifndef __WIN32__
+static void test_burn_cpu_for(volatile unsigned long *burn, double seconds)
+{
+  double deadline = test_wall_time_monotonic() + seconds;
+  do {
+    test_burn_cpu(burn, 5000000UL);
+  } while (test_wall_time_monotonic() < deadline);
+}
+#endif
 
 /*
  *  This is pretty simplistic, but so is tm_time.[ch].
@@ -33,13 +75,15 @@
  */
 static void test_tm_time(void)
 {
-  unsigned long i;
   unsigned long retry;
   double start;
   double end;
   double elapsed[7];
   unsigned long prior_meminuse;
   volatile unsigned long burn = 0;
+#ifndef __WIN32__
+  double wall_deadline;
+#endif
 
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
 
@@ -87,16 +131,32 @@ static void test_tm_time(void)
   start = tm_cpu_time();                /* record the initial time */
   //CU_TEST(start == 0.0);
 
-  for (i=0 ; i<10000000 ; ++i) {         /* consume some CPU time deterministically */
-    burn += (i & 1U);
-  }
+#ifndef __WIN32__
+  test_burn_cpu_for(&burn, 0.05);        /* aim for detectable CPU time, but keep test short */
+#else
+  test_burn_cpu(&burn, 50000000UL);
+#endif
  
   end = tm_cpu_time();
-  for (retry = 0; retry < 50 && end <= start; ++retry) {
-    for (i = 0; i < 1000000; ++i) {
-      burn += ((i + retry) & 1U);
+#ifndef __WIN32__
+  wall_deadline = test_wall_time_monotonic() + 0.05;
+#endif
+  for (retry = 0; retry < 200 && end <= start; ++retry) {
+#ifndef __WIN32__
+    test_burn_cpu_for(&burn, 0.01);
+#else
+    unsigned long retry_work = 10000000UL * (retry + 1);
+    if (retry_work > 100000000UL) {
+      retry_work = 100000000UL;
     }
+    test_burn_cpu(&burn, retry_work);
+#endif
     end = tm_cpu_time();
+#ifndef __WIN32__
+    if (test_wall_time_monotonic() >= wall_deadline) {
+      break;
+    }
+#endif
   }
   CU_TEST(burn > 0);
   CU_TEST(end > start); /* should see an increase in elapsed CPU time */
@@ -118,7 +178,10 @@ static void test_tm_time(void)
 #ifdef __WIN32__
   double dtmin = 0.04;
 #else
-  double dtmin = 0.01;
+  double dtmin = test_cpu_time_resolution();
+  if (dtmin < 0.01) {
+    dtmin = 0.01;
+  }
 #endif
 
   CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[1], dtmin);

@@ -19,8 +19,11 @@
 	Last in CVS: $Date: 2000/01/25 02:21:26 $ $Author: ballan $
 */
 
-#include <sys/time.h>
 #include "platform.h"
+#include <sys/time.h>
+#if defined(HAVE_GETRUSAGE)
+# include <sys/resource.h>
+#endif
 #include "panic.h"
 #include "tm_time.h"
 
@@ -34,15 +37,31 @@ static boolean f_first = TRUE;
 
 double tm_cpu_time(void){
 #ifndef __WIN32__
-	static struct timespec ref;
-	struct timespec now;
+	static double ref;
+	double now;
+	
+#ifdef HAVE_GETRUSAGE
+	struct rusage usage;
+	if (getrusage(RUSAGE_SELF, &usage) == 0) {
+		now =
+			usage.ru_utime.tv_sec + 1e-6 * usage.ru_utime.tv_usec
+			+ usage.ru_stime.tv_sec + 1e-6 * usage.ru_stime.tv_usec;
+	}else{
+#endif
+		struct timespec ts;
+		if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) != 0) {
+			return 0.0;
+		}
+		now = ts.tv_sec + 1e-9 * ts.tv_nsec;
+#ifdef HAVE_GETRUSAGE
+	}
+#endif
 
 	if( f_first ) {
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ref);
+		ref = now;
 		f_first = FALSE;
 	}
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
-	return (now.tv_sec - ref.tv_sec) + 1e-9*(now.tv_nsec - ref.tv_nsec);
+	return now - ref;
 #else /* WIN32 */
 	static LARGE_INTEGER ref, f;
 	LARGE_INTEGER now;
