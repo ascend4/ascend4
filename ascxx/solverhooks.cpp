@@ -323,19 +323,34 @@ int ascxx_slvreq_set_solver(const char *solvername, void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_SOLVER_HOOK_NOT_SET;
 	MSG("Got solver hooks at %p from Simulation at %p",S->getSolverHooks(),S);
-	return S->getSolverHooks()->setSolver(solvername, S);
+	try{
+		return S->getSolverHooks()->setSolver(solvername, S);
+	}catch(const std::exception &e){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
+		return SLVREQ_UNKNOWN_SOLVER;
+	}
 }
 
 int ascxx_slvreq_set_integrator(const char *integratorname, void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_INTEGRATOR_HOOK_NOT_SET;
-	return S->getSolverHooks()->setIntegrator(integratorname, S);
+	try{
+		return S->getSolverHooks()->setIntegrator(integratorname, S);
+	}catch(const std::exception &e){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
+		return SLVREQ_UNKNOWN_INTEGRATOR;
+	}
 }
 
 int ascxx_slvreq_set_option(const char *optionname, value_t *val, void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_OPTION_HOOK_NOT_SET;
-	return S->getSolverHooks()->setOption(optionname, Value(val), S);
+	try{
+		return S->getSolverHooks()->setOption(optionname, Value(val), S);
+	}catch(const std::exception &e){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
+		return SLVREQ_WRONG_OPTION_VALUE_TYPE;
+	}
 }
 
 int ascxx_slvreq_do_solve(struct Instance *instance, void *user_data){
@@ -343,7 +358,14 @@ int ascxx_slvreq_do_solve(struct Instance *instance, void *user_data){
 	if(NULL==S->getSolverHooks())return SLVREQ_SOLVE_HOOK_NOT_SET;
 	Registry reg;
 	reg.setPointer("slvreq_target", instance);
-	int res = S->getSolverHooks()->doSolve(instance, S);
+	int res;
+	try{
+		res = S->getSolverHooks()->doSolve(instance, S);
+	}catch(const std::exception &e){
+		reg.setPointer("slvreq_target", NULL);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
+		return SLVREQ_SOLVE_FAIL;
+	}
 	reg.setPointer("slvreq_target", NULL);
 	return res;
 }
@@ -352,27 +374,47 @@ int ascxx_slvreq_do_observe(const SlvReqObserveRequest *request, void *user_data
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_OBSERVE_HOOK_NOT_SET;
 	ObserveRequest observe_request(request);
-	return S->getSolverHooks()->doObserve(observe_request, S);
+	try{
+		return S->getSolverHooks()->doObserve(observe_request, S);
+	}catch(const std::exception &e){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
+		return SLVREQ_OBSERVE_INVALID_REQUEST;
+	}
 }
 
 int ascxx_slvreq_do_study(const SlvReqStudyRequest *request, void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_STUDY_HOOK_NOT_SET;
 	StudyRequest study_request(request);
-	return S->getSolverHooks()->doStudy(study_request, S);
+	try{
+		return S->getSolverHooks()->doStudy(study_request, S);
+	}catch(const std::exception &e){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
+		return SLVREQ_STUDY_INVALID_REQUEST;
+	}
 }
 
 int ascxx_slvreq_do_integrate(const SlvReqIntegrateRequest *request, void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_INTEGRATE_HOOK_NOT_SET;
 	IntegrateRequest integrate_request(request);
-	return S->getSolverHooks()->doIntegrate(integrate_request, S);
+	try{
+		return S->getSolverHooks()->doIntegrate(integrate_request, S);
+	}catch(const std::exception &e){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
+		return SLVREQ_INTEGRATE_INVALID_REQUEST;
+	}
 }
 
 int ascxx_slvreq_delete_system(void *user_data){
 	Simulation *S = (Simulation *)user_data;
 	if(NULL==S->getSolverHooks())return SLVREQ_DELETE_HOOK_NOT_SET;
-	return S->getSolverHooks()->deleteSystem(S);
+	try{
+		return S->getSolverHooks()->deleteSystem(S);
+	}catch(const std::exception &e){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s", e.what());
+		return SLVREQ_DELETE_HOOK_NOT_SET;
+	}
 }
 
 ObserveRequest::ObserveRequest() : observed(), name(){

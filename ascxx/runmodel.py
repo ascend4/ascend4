@@ -341,6 +341,11 @@ class CliSolverHooks:
 
 			def setIntegrator(self, integratorname, sim):
 				try:
+					# Validate immediately so METHOD execution fails at the
+					# INTEGRATOR statement, not later at INTEGRATE. Use the
+					# registered-engine list rather than creating engine state.
+					if integratorname not in ascpy.Integrator.getEngines():
+						return 1
 					self._owner.integrator_name = integratorname
 					return 0
 				except Exception:
