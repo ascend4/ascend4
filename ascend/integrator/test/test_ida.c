@@ -56,7 +56,98 @@ typedef struct IdaTestSystemStruct{
 	IntegratorSystem *integ;
 } IdaTestSystem;
 
+typedef struct IdaMethodHooksStruct{
+	int solver_selected;
+	int integrator_selected;
+} IdaMethodHooks;
+
 static void ida_maybe_dump_precheck_dae_report(const char *type_name);
+
+static int ida_hook_set_solver(const char *solvername, void *user_data){
+	IdaMethodHooks *hooks = (IdaMethodHooks *)user_data;
+	if(slv_lookup_client(solvername) == -1){
+		return SLVREQ_UNKNOWN_SOLVER;
+	}
+	hooks->solver_selected = 1;
+	return 0;
+}
+
+static int ida_hook_set_integrator(const char *integratorname, void *user_data){
+	IdaMethodHooks *hooks = (IdaMethodHooks *)user_data;
+	const struct gl_list_t *engines;
+	unsigned long i, len;
+
+	engines = integrator_get_engines();
+	len = gl_length(engines);
+	for(i = 1; i <= len; ++i){
+		const IntegratorInternals *internals = (const IntegratorInternals *)gl_fetch(engines, i);
+		if(internals != NULL && internals->name != NULL && 0 == strcmp(internals->name, integratorname)){
+			hooks->integrator_selected = 1;
+			return 0;
+		}
+	}
+	return SLVREQ_UNKNOWN_INTEGRATOR;
+}
+
+static int ida_hook_set_option(const char *optionname, struct value_t *val, void *user_data){
+	IdaMethodHooks *hooks = (IdaMethodHooks *)user_data;
+	(void)optionname;
+	(void)val;
+	if(hooks->integrator_selected || hooks->solver_selected){
+		return 0;
+	}
+	return SLVREQ_OPTIONS_UNAVAILABLE;
+}
+
+static int ida_hook_do_solve(struct Instance *instance, void *user_data){
+	IdaMethodHooks *hooks = (IdaMethodHooks *)user_data;
+	(void)instance;
+	if(!hooks->solver_selected){
+		return SLVREQ_NO_SOLVER_SELECTED;
+	}
+	return 0;
+}
+
+static int ida_hook_do_observe(const SlvReqObserveRequest *request, void *user_data){
+	(void)request;
+	(void)user_data;
+	return 0;
+}
+
+static int ida_hook_do_study(const SlvReqStudyRequest *request, void *user_data){
+	(void)request;
+	(void)user_data;
+	return 0;
+}
+
+static int ida_hook_do_integrate(const SlvReqIntegrateRequest *request, void *user_data){
+	IdaMethodHooks *hooks = (IdaMethodHooks *)user_data;
+	(void)request;
+	if(!hooks->integrator_selected){
+		return SLVREQ_NO_INTEGRATOR_SELECTED;
+	}
+	return 0;
+}
+
+static int ida_hook_delete_system(void *user_data){
+	(void)user_data;
+	return 0;
+}
+
+static void ida_assign_method_hooks(struct Instance *siminst, IdaMethodHooks *hookstate){
+	SlvReqHooks hooks = {
+		.set_solver_fn = &ida_hook_set_solver,
+		.set_integrator_fn = &ida_hook_set_integrator,
+		.set_option_fn = &ida_hook_set_option,
+		.do_solve_fn = &ida_hook_do_solve,
+		.do_observe_fn = &ida_hook_do_observe,
+		.do_study_fn = &ida_hook_do_study,
+		.do_integrate_fn = &ida_hook_do_integrate,
+		.delete_system_fn = &ida_hook_delete_system,
+		.user_data = hookstate
+	};
+	slvreq_assign_hooks(siminst, &hooks);
+}
 
 static int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
 	(void)integ;
@@ -157,8 +248,10 @@ static int ida_run_method(struct Instance *root, const char *method){
 static int ida_test_load(const char *module_path, const char *type_name, int need_lrslv, IdaTestSystem *testsys){
 	int status;
 	struct Instance *root;
+	IdaMethodHooks hookstate;
 
 	memset(testsys, 0, sizeof(*testsys));
+	memset(&hookstate, 0, sizeof(hookstate));
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
@@ -177,6 +270,7 @@ static int ida_test_load(const char *module_path, const char *type_name, int nee
 
 	testsys->siminst = SimsCreateInstance(AddSymbol(type_name), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(testsys->siminst != NULL);
+	ida_assign_method_hooks(testsys->siminst, &hookstate);
 	root = GetSimulationRoot(testsys->siminst);
 	CU_ASSERT_FATAL(root != NULL);
 
@@ -204,8 +298,10 @@ static void ida_expect_system_build_failure(const char *module_path, const char 
 	IdaTestSystem testsys;
 	int status;
 	struct Instance *root;
+	IdaMethodHooks hookstate;
 
 	memset(&testsys, 0, sizeof(testsys));
+	memset(&hookstate, 0, sizeof(hookstate));
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
@@ -224,6 +320,7 @@ static void ida_expect_system_build_failure(const char *module_path, const char 
 
 	testsys.siminst = SimsCreateInstance(AddSymbol(type_name), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(testsys.siminst != NULL);
+	ida_assign_method_hooks(testsys.siminst, &hookstate);
 	root = GetSimulationRoot(testsys.siminst);
 	CU_ASSERT_FATAL(root != NULL);
 	CU_ASSERT_FATAL(Proc_all_ok == ida_run_method(root, "on_load"));
