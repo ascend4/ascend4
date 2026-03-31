@@ -1,0 +1,114 @@
+name: ASCEND4 Rocky 8
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ $default-branch, python3, master, main ]
+  pull_request:
+    branches: [ $default-branch, python3, master, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: rockylinux/rockylinux:8.10
+
+    env:
+      CUNIT_VERSION: "2.2.4"
+      CUNIT_RELEASE_BASENAME: "cunit-2.2-4"
+      SUNDIALS_VERSION: "7.6.0"
+      HIGHS_VERSION: "v1.13.1"
+      OMP_NUM_THREADS: "1"
+      ASCEND_CI_HIGHS_SERIAL: "1"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Enable extra repositories and install dependencies
+      run: |
+        dnf -y update
+        dnf -y install epel-release dnf-plugins-core
+        dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools || true
+        dnf -y install \
+          gcc gcc-c++ gcc-gfortran \
+          make flex bison scons swig \
+          autoconf automake libtool m4 \
+          git curl patch which diffutils findutils tar gzip xz \
+          cmake3 pkgconf-pkg-config \
+          python3 python3-devel python3-pip python3-packaging python3-numpy \
+          tcl-devel tk-devel \
+          graphviz graphviz-devel \
+          blas-devel lapack-devel \
+          pcre-devel zlib-devel xz-devel
+
+    - name: Build and install CUnit
+      run: |
+        CUNIT_TARBALL="${CUNIT_RELEASE_BASENAME}.tar.gz"
+        CUNIT_URL="https://github.com/ascend4/cunit/releases/download/v${CUNIT_VERSION}/${CUNIT_TARBALL}"
+        curl -L --retry 3 -o "$CUNIT_TARBALL" "$CUNIT_URL"
+        tar -xzf "$CUNIT_TARBALL"
+        cd "$CUNIT_RELEASE_BASENAME"
+        ./bootstrap
+        ./configure --prefix="$HOME/.local" --enable-examples --enable-debug
+        make -j"$(nproc)"
+        make install
+
+    - name: Build and install SUNDIALS
+      run: |
+        SUNDIALS_TARBALL="sundials-${SUNDIALS_VERSION}.tar.gz"
+        SUNDIALS_URL="https://github.com/LLNL/sundials/releases/download/v${SUNDIALS_VERSION}/${SUNDIALS_TARBALL}"
+        curl -L --retry 3 -o "$SUNDIALS_TARBALL" "$SUNDIALS_URL"
+        tar -xzf "$SUNDIALS_TARBALL"
+        cmake3 -S "sundials-${SUNDIALS_VERSION}" -B sundials-build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
+          -DBUILD_SHARED_LIBS=ON \
+          -DBUILD_ARKODE=OFF \
+          -DBUILD_CVODE=OFF \
+          -DBUILD_CVODES=OFF \
+          -DBUILD_IDA=ON \
+          -DBUILD_IDAS=OFF \
+          -DBUILD_KINSOL=OFF \
+          -DBUILD_TESTING=OFF \
+          -DEXAMPLES_ENABLE_C=OFF \
+          -DEXAMPLES_ENABLE_CXX=OFF \
+          -DEXAMPLES_INSTALL=OFF
+        cmake3 --build sundials-build -j"$(nproc)"
+        cmake3 --install sundials-build
+
+    - name: Build and install HiGHS
+      run: |
+        git clone --branch "$HIGHS_VERSION" --depth 1 https://github.com/ERGO-Code/HiGHS.git highs
+        cmake3 -S highs -B highs/build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
+          -DBUILD_SHARED_LIBS=ON
+        cmake3 --build highs/build -j"$(nproc)"
+        cmake3 --install highs/build
+
+    - name: Build ASCEND
+      run: |
+        export PATH="$HOME/.local/bin:$PATH"
+        export PKG_CONFIG_PATH="$HOME/.local/lib/pkgconfig:$HOME/.local/lib64/pkgconfig:${PKG_CONFIG_PATH:-}"
+        export LD_LIBRARY_PATH="$HOME/.local/lib64:$HOME/.local/lib:${LD_LIBRARY_PATH:-}"
+        scons GCOV=1 MALLOC_DEBUG=1 \
+          CUNIT_PREFIX="$HOME/.local" \
+          SUNDIALS_PREFIX="$HOME/.local" \
+          HIGHS_PREFIX="$HOME/.local" \
+          ascend models solvers ascxx test a4
+
+    - name: ASCEND CUnit tests
+      run: |
+        ./a4 cutest -r mallocdebug
+
+    - name: FPROPS CUnit tests
+      run: |
+        ./a4 script models/johnpye/fprops/test/cutest
+
+    - name: ASCEND FPROPS external function test
+      run: |
+        ./a4 run models/johnpye/fprops/rankine_fprops.a4c -m stream_state_test
+
+    - name: Rocky dynamic run smoke test
+      run: |
+        ./a4 run models/johnpye/iron/tgadyn_msbed_mod.a4c --steps 2 -d 1
