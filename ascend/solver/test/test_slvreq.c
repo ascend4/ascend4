@@ -1019,6 +1019,7 @@ static void test_slvreq_study_log(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
 
 	m = Asc_OpenModule("test/slvreq/test7.a4c",&status);
 	CU_ASSERT_FATAL(m != NULL);
@@ -1035,6 +1036,7 @@ static void test_slvreq_study_log(void){
 	S.study_count = 0;
 	{
 		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
 			.do_study_fn = &slvreq_c_do_study,
 			.user_data = &S
 		};
@@ -1069,6 +1071,7 @@ static void test_slvreq_study_ratio(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
 
 	m = Asc_OpenModule("test/slvreq/test8.a4c",&status);
 	CU_ASSERT_FATAL(m != NULL);
@@ -1085,6 +1088,7 @@ static void test_slvreq_study_ratio(void){
 	S.study_count = 0;
 	{
 		SlvReqHooks hooks = {
+			.set_solver_fn = &slvreq_c_set_solver,
 			.do_study_fn = &slvreq_c_do_study,
 			.user_data = &S
 		};
