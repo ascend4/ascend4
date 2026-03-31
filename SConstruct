@@ -2617,6 +2617,23 @@ subst_dict = {
 	, '@ASCXX_USE_PYTHON@' : "1" if env['WITH_PYTHON'] else "0"
 }
 
+def _a4_runtime_libdirs(env):
+	out = []
+	for key in ('SUNDIALS_LIBPATH', 'IPOPT_LIBPATH', 'CONOPT_LIBPATH', 'ZLIB_LIBPATH', 'LZMA_LIBPATH'):
+		value = env.get(key)
+		if not value:
+			continue
+		items = value if isinstance(value, (list, tuple)) else str(value).split(os.pathsep)
+		for item in items:
+			if not item:
+				continue
+			item = str(item)
+			if item not in out:
+				out.append(item)
+	return repr(out)
+
+subst_dict['@A4_RUNTIME_LIBDIRS@'] = _a4_runtime_libdirs(env)
+
 
 
 if env.get('WITH_DOC'):

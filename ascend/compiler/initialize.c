@@ -569,6 +569,7 @@ ExecuteInitIntegrator(struct procFrame *fm, struct Statement *stat){
 				ProcWriteSlvReqError(fm);
 				break;
 		}
+		fm->flow = FrameError;
 		return;
 	}
 	fm->ErrNo = Proc_all_ok;
@@ -1119,6 +1120,7 @@ ExecuteInitIntegrate(struct procFrame *fm, struct Statement *stat){
 				ProcWriteSlvReqError(fm);
 				break;
 		}
+		fm->flow = FrameError;
 		DestroyValue(&req.start);
 		DestroyValue(&req.stop);
 		return;
