@@ -517,5 +517,15 @@ METHODS
 	END on_load;
 END tga_reduction_screen_dyn_msbed_mod;
 
+MODEL tgadyn_msbed_mod;
+	m IS_A tga_reduction_screen_dyn_msbed_mod(10);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+	INTEGRATOR IDA;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END on_load;
+END tgadyn_msbed_mod;
+
 (* vim: sw=4:noet:ts=4
 *)
