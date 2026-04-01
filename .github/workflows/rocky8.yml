@@ -39,6 +39,7 @@ jobs:
           tcl-devel tk-devel \
           graphviz graphviz-devel \
           blas-devel lapack-devel \
+          nlopt-devel \
           pcre-devel zlib-devel xz-devel
 
     - name: Install SCons
