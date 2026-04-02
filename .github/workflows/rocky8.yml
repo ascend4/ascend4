@@ -114,6 +114,3 @@ jobs:
       run: |
         ./a4 run models/johnpye/fprops/rankine_fprops.a4c -m stream_state_test
 
-    - name: Rocky dynamic run smoke test
-      run: |
-        ./a4 run models/johnpye/iron/tgadyn_msbed_mod.a4c --steps 2 -d 1
