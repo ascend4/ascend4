@@ -2,7 +2,6 @@ import argparse
 import pathlib
 import re
 import sys
-import traceback
 
 from plotutils import COLOR_CYCLE, group_series, group_ylabel
 
@@ -343,54 +342,40 @@ class CliSolverHooks:
 				ascpy.SolverHooks.__init__(self)
 
 			def setIntegrator(self, integratorname, sim):
-				try:
-					# Delegate to the base hook so C++ keeps the selected
-					# integrator/focus state for subsequent OPTION handling.
-					res = ascpy.SolverHooks.setIntegrator(self, integratorname, sim)
-					if res == 0:
-						self._owner.integrator_name = integratorname
-					return res
-				except Exception:
-					traceback.print_exc(file=sys.stderr)
-					return 1
+				res = ascpy.SolverHooks.setIntegrator(self, integratorname, sim)
+				if res == 0:
+					self._owner.integrator_name = integratorname
+				return res
 
 			def doObserve(self, request, sim):
-				try:
-					return ascpy.SolverHooks.doObserve(self, request, sim)
-				except Exception:
-					traceback.print_exc(file=sys.stderr)
-					return 1
+				return ascpy.SolverHooks.doObserve(self, request, sim)
 
 			def doIntegrate(self, request, sim):
-				try:
-					self._owner.integrate_request = {
-						"start": request.getStart(),
-						"stop": request.getStop(),
-						"steps": request.getSteps(),
-					}
-					self._owner.saw_integrate_request = True
-					if self._owner.suppress_integrate:
-						return 0
-					start = request.getStart()
-					stop = request.getStop()
-					steps = request.getSteps()
-					_run_integration(
-						ascpy=self._owner.ascpy,
-						sim=sim,
-						engine=self._owner.integrator_name or DEFAULT_INTEGRATOR,
-						start=start,
-						duration=stop - start,
-						steps=steps,
-						units_token=None,
-						output=None,
-						plot=False,
-						microstates="endpoints",
-					)
-					self._owner.integrated = True
+				self._owner.integrate_request = {
+					"start": request.getStart(),
+					"stop": request.getStop(),
+					"steps": request.getSteps(),
+				}
+				self._owner.saw_integrate_request = True
+				if self._owner.suppress_integrate:
 					return 0
-				except Exception:
-					traceback.print_exc(file=sys.stderr)
-					return 1
+				start = request.getStart()
+				stop = request.getStop()
+				steps = request.getSteps()
+				_run_integration(
+					ascpy=self._owner.ascpy,
+					sim=sim,
+					engine=self._owner.integrator_name or DEFAULT_INTEGRATOR,
+					start=start,
+					duration=stop - start,
+					steps=steps,
+					units_token=None,
+					output=None,
+					plot=False,
+					microstates="endpoints",
+				)
+				self._owner.integrated = True
+				return 0
 
 		self.ascpy = ascpy
 		self.suppress_integrate = suppress_integrate
@@ -591,7 +576,7 @@ if __name__ == "__main__":
 	p.add_argument("file", type=pathlib.Path, help="ASCEND model file to be opened")
 	p.add_argument("--model", "-m", help="Name of MODEL to instantiate (defaults to filename without extension)")
 	p.add_argument("-r", "--run-method", dest="runmethod", help="Run METHOD after 'on_load' and before the final action")
-	p.add_argument("-p", "--print", dest="printvars", action="extend", nargs="+", help="Variables to print (can be used multiple times). Implies --no-test.")
+	p.add_argument("-p", "--print", dest="printvars", action="append", nargs="+", help="Variables to print (can be used multiple times). Implies --no-test.")
 	p.add_argument("--no-test", "-n", action="store_false", help="Suppress running of 'self_test' method after solving")
 	p.add_argument("--integrate", "--int", "-i", action="store_true", help="Run via the integrator API instead of steady-state solve")
 	p.add_argument("--engine", "-e", help=f"Integrator engine to use (default when integrating: {DEFAULT_INTEGRATOR})")
@@ -610,12 +595,15 @@ if __name__ == "__main__":
 		help="Include extra same-time event output rows. Default: endpoints; bare --microstates means all.",
 	)
 	args = p.parse_args()
+	printvars = None
+	if args.printvars:
+		printvars = [name for group in args.printvars for name in group]
 
 	try:
 		run_ascend_model(
 			filen=args.file,
 			model=args.model,
-			printvars=args.printvars,
+			printvars=printvars,
 			test=args.no_test,
 			runmethod=args.runmethod,
 			integrate=_is_integrate_requested(args),
