@@ -4,6 +4,7 @@ REQUIRE "basemodel.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "johnpye/fboard.a4c";
 REQUIRE "johnpye/iron/tga.a4c";
+REQUIRE "johnpye/iron/tgadyn.a4c";
 REQUIRE "johnpye/iron/tgadyn_msfb.a4c";
 
 (* Reusable particle-history resistance for one bed slice. *)
@@ -117,7 +118,6 @@ MODEL tga_reduction_screen_dyn_msbed_mod(
 	D_H2O_Ar_bed "bed Maxwell-Stefan diffusivity for H2O/Ar" IS_A diffusivity;
 	D_H2_Ar_bed "bed Maxwell-Stefan diffusivity for H2/Ar" IS_A diffusivity;
 	D_eff_bed "effective pseudo-binary bed diffusivity" IS_A diffusivity;
-	fb IS_A freeboard_1d_stagnant_transport(n_fb_segs);
 
 	R_fb "freeboard-side transport resistance" IS_A transport_resistance;
 	R_bed "bed-scale transport resistance" IS_A transport_resistance;
@@ -222,16 +222,8 @@ MODEL tga_reduction_screen_dyn_msbed_mod(
 	Dh2arbed_eq: D_H2_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2_Ar;
 	Deffbed_eq: D_eff_bed = k_bed_multiplier * (eps_bed / tau_bed) * D_screen;
 
-	fb_T_eq: fb.T = T;
-	fb_p_eq: fb.p = p;
-	fb_top_h2_eq: fb.y_H2_top = y_H2_bulk;
-	fb_top_h2o_eq: fb.y_H2O_top = y_H2O_bulk;
-	fb_flux_h2_eq: fb.N_H2 = J_transport;
-	fb_flux_h2o_eq: fb.N_H2O = -J_transport;
-
 	SELECT (freeboard_model)
 	CASE 'lumped':
-		Lfb_zero_eq: fb.L = 0 {mm};
 		if_ar_eq_lumped: y_Ar_if = y_Ar_bulk;
 		if_sum_eq_lumped: y_H2O_if = 1 - y_Ar_if - y_H2_if;
 
@@ -240,6 +232,14 @@ MODEL tga_reduction_screen_dyn_msbed_mod(
 			R_fb * J_transport = c_tot * (y_H2_bulk - y_H2_if);
 
 	CASE 'discretised':
+		fb IS_A freeboard_1d_stagnant_transport(n_fb_segs);
+		fb_T_eq: fb.T = T;
+		fb_p_eq: fb.p = p;
+		fb_top_h2_eq: fb.y_H2_top = y_H2_bulk;
+		fb_top_h2o_eq: fb.y_H2O_top = y_H2O_bulk;
+		fb_flux_h2_eq: fb.N_H2 = J_transport;
+		fb_flux_h2o_eq: fb.N_H2O = -J_transport;
+
 		Lfb_eff_eq: L_freeboard_eff = L_freeboard / k_fb_multiplier;
 		fb_L_eq: fb.L = L_freeboard_eff;
 
@@ -525,24 +525,26 @@ METHODS
 		tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
 		tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
 
-		fb.tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
-		fb.tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
-		fb.tr.h2_ar.sigma_ij.lower_bound := -1 {m};
-		fb.tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
-		fb.tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
-		fb.tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
-		fb.tr.h2o_h2.T_star.lower_bound := -1e6;
-		fb.tr.h2o_ar.T_star.lower_bound := -1e6;
-		fb.tr.h2_ar.T_star.lower_bound := -1e6;
-		fb.tr.h2o_h2.Omega_D.lower_bound := -1e6;
-		fb.tr.h2o_ar.Omega_D.lower_bound := -1e6;
-		fb.tr.h2_ar.Omega_D.lower_bound := -1e6;
-		fb.tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
-		fb.tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
-		fb.tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
-		fb.tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
-		fb.tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
-		fb.tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+		IF freeboard_model = 'discretised' THEN
+			fb.tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
+			fb.tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
+			fb.tr.h2_ar.sigma_ij.lower_bound := -1 {m};
+			fb.tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
+			fb.tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
+			fb.tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
+			fb.tr.h2o_h2.T_star.lower_bound := -1e6;
+			fb.tr.h2o_ar.T_star.lower_bound := -1e6;
+			fb.tr.h2_ar.T_star.lower_bound := -1e6;
+			fb.tr.h2o_h2.Omega_D.lower_bound := -1e6;
+			fb.tr.h2o_ar.Omega_D.lower_bound := -1e6;
+			fb.tr.h2_ar.Omega_D.lower_bound := -1e6;
+			fb.tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
+			fb.tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
+			fb.tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
+			fb.tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
+			fb.tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+			fb.tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+		END IF;
 	END bound_self;
 
 	METHOD use_measured_bed_height;
@@ -662,16 +664,22 @@ MODEL tgadyn_msfb_configurable(
 );
 	m IS_A tga_reduction_screen_dyn_msfb(n_fb_segs);
 METHODS
-METHOD on_load;
-	RUN m.on_load;
-	FIX der(m.n_Fe2O3), der(m.n_Fe3O4), der(m.n_FeO), der(m.n_Fe);
-END on_load;
-METHOD integrate_default;
+METHOD prepare_dynamic;
+	RUN m.algebraic_base;
+	RUN m.dynamic_reset;
 	FREE der(m.n_Fe2O3), der(m.n_Fe3O4), der(m.n_FeO), der(m.n_Fe);
+	RUN m.observe_default;
+	RUN m.observe_cli_default;
+END prepare_dynamic;
+METHOD integrate_default;
+	RUN prepare_dynamic;
 	FIX m.t;
 	INTEGRATOR IDA;
 	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
 END integrate_default;
+METHOD on_load;
+	RUN integrate_default;
+END on_load;
 END tgadyn_msfb_configurable;
 
 MODEL tgadyn_msbed_mod_configurable(
@@ -687,13 +695,17 @@ MODEL tgadyn_msbed_mod_configurable(
 		particle_res_model
 	);
 METHODS
-METHOD on_load;
-	RUN m.on_load;
+METHOD prepare_dynamic;
+	RUN m.algebraic_base;
+	RUN m.dynamic_reset;
 	FOR z IN [1..n_bed_segs] DO
-		FIX der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
+		FREE der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
 	END FOR;
-END on_load;
+	RUN m.observe_default;
+	RUN m.observe_cli_default;
+END prepare_dynamic;
 METHOD integrate_default;
+	RUN prepare_dynamic;
 	FOR z IN [1..n_bed_segs] DO
 		FREE der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
 	END FOR;
@@ -701,125 +713,118 @@ METHOD integrate_default;
 	INTEGRATOR IDA;
 	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
 END integrate_default;
+METHOD on_load;
+	RUN integrate_default;
+END on_load;
 END tgadyn_msbed_mod_configurable;
 
-(* Named runnable variants for ./a4 run ... -m MODELNAME *)
-MODEL tgadyn_ms_lumped_lumped;
-	m IS_A tga_reduction_screen_dyn_msfb(0);
+MODEL tgadyn_msbed_mod_morph_configurable(
+	n_bed_segs IS_A integer_constant;
+	freeboard_model IS_A symbol_constant;
+	n_fb_segs IS_A integer_constant;
+	particle_res_model IS_A symbol_constant;
+	morphology_model IS_A symbol_constant;
+);
+	m IS_A tga_reduction_screen_dyn_msbed_mod(
+		n_bed_segs,
+		freeboard_model,
+		n_fb_segs,
+		particle_res_model
+	);
 METHODS
-METHOD on_load;
-	RUN m.on_load;
-	FIX der(m.n_Fe2O3), der(m.n_Fe3O4), der(m.n_FeO), der(m.n_Fe);
-END on_load;
+METHOD configure_morphology;
+	IF morphology_model = 'nomorph' THEN
+		(* Disable extent/temperature-dependent morphology feedback. *)
+		m.a_open := 0;
+		m.a_close := 0;
+		m.beta_T := 0;
+	END IF;
+END configure_morphology;
+METHOD prepare_dynamic;
+	RUN m.algebraic_base;
+	RUN m.dynamic_reset;
+	RUN configure_morphology;
+	FOR z IN [1..n_bed_segs] DO
+		FREE der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
+	END FOR;
+	RUN m.observe_default;
+	RUN m.observe_cli_default;
+END prepare_dynamic;
 METHOD integrate_default;
-	FREE der(m.n_Fe2O3), der(m.n_Fe3O4), der(m.n_FeO), der(m.n_Fe);
+	RUN prepare_dynamic;
 	FIX m.t;
 	INTEGRATOR IDA;
 	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END integrate_default;
+METHOD on_load;
+	RUN integrate_default;
+END on_load;
+END tgadyn_msbed_mod_morph_configurable;
+
+(* Named runnable variants for ./a4 run ... -m MODELNAME *)
+MODEL tgadyn_ms_lumped_lumped;
+	m IS_A tga_reduction_screen_dyn;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+METHOD integrate_default;
+	RUN m.on_load;
 END integrate_default;
 END tgadyn_ms_lumped_lumped;
 
 MODEL tgadyn_ms_lumped_fbdisc;
-	m IS_A tga_reduction_screen_dyn_msfb(10);
+	m IS_A tgadyn_msfb_configurable(10);
 METHODS
 METHOD on_load;
 	RUN m.on_load;
-	FIX der(m.n_Fe2O3), der(m.n_Fe3O4), der(m.n_FeO), der(m.n_Fe);
 END on_load;
 METHOD integrate_default;
-	FREE der(m.n_Fe2O3), der(m.n_Fe3O4), der(m.n_FeO), der(m.n_Fe);
-	FIX m.t;
-	INTEGRATOR IDA;
-	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+	RUN m.integrate_default;
 END integrate_default;
 END tgadyn_ms_lumped_fbdisc;
 
 MODEL tgadyn_msbed_mod;
-	m IS_A tga_reduction_screen_dyn_msbed_mod(10, 'lumped', 0, 'history');
+	m IS_A tgadyn_msbed_mod_morph_configurable(10, 'lumped', 0, 'history', 'coupled');
 METHODS
 METHOD on_load;
 	RUN m.on_load;
-	RUN m.steady_init;
-	FOR z IN [1..10] DO
-		FIX der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
-	END FOR;
 END on_load;
 METHOD integrate_default;
-	FOR z IN [1..10] DO
-		FREE der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
-	END FOR;
-	FIX m.t;
-	INTEGRATOR IDA;
-	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+	RUN m.integrate_default;
 END integrate_default;
 END tgadyn_msbed_mod;
 
 MODEL tgadyn_msbed_mod_nomorph;
-	m IS_A tga_reduction_screen_dyn_msbed_mod(10, 'lumped', 0, 'history');
+	m IS_A tgadyn_msbed_mod_morph_configurable(10, 'lumped', 0, 'history', 'nomorph');
 METHODS
 METHOD on_load;
 	RUN m.on_load;
-	m.a_open := 0;
-	m.a_close := 0;
-	m.beta_T := 0;
-	FOR z IN [1..10] DO
-		FIX der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
-	END FOR;
 END on_load;
 METHOD integrate_default;
-	m.a_open := 0;
-	m.a_close := 0;
-	m.beta_T := 0;
-	FOR z IN [1..10] DO
-		FREE der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
-	END FOR;
-	FIX m.t;
-	INTEGRATOR IDA;
-	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+	RUN m.integrate_default;
 END integrate_default;
 END tgadyn_msbed_mod_nomorph;
 
 MODEL tgadyn_msbed_mod_fbdisc;
-	m IS_A tga_reduction_screen_dyn_msbed_mod(10, 'discretised', 10, 'history');
+	m IS_A tgadyn_msbed_mod_morph_configurable(10, 'discretised', 10, 'history', 'coupled');
 METHODS
 METHOD on_load;
 	RUN m.on_load;
-	FOR z IN [1..10] DO
-		FIX der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
-	END FOR;
 END on_load;
 METHOD integrate_default;
-	FOR z IN [1..10] DO
-		FREE der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
-	END FOR;
-	FIX m.t;
-	INTEGRATOR IDA;
-	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+	RUN m.integrate_default;
 END integrate_default;
 END tgadyn_msbed_mod_fbdisc;
 
 MODEL tgadyn_msbed_mod_fbdisc_nomorph;
-	m IS_A tga_reduction_screen_dyn_msbed_mod(10, 'discretised', 10, 'history');
+	m IS_A tgadyn_msbed_mod_morph_configurable(10, 'discretised', 10, 'history', 'nomorph');
 METHODS
 METHOD on_load;
 	RUN m.on_load;
-	m.a_open := 0;
-	m.a_close := 0;
-	m.beta_T := 0;
-	FOR z IN [1..10] DO
-		FIX der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
-	END FOR;
 END on_load;
 METHOD integrate_default;
-	m.a_open := 0;
-	m.a_close := 0;
-	m.beta_T := 0;
-	FOR z IN [1..10] DO
-		FREE der(m.n_Fe2O3_zone[z]), der(m.n_Fe3O4_zone[z]), der(m.n_FeO_zone[z]), der(m.n_Fe_zone[z]);
-	END FOR;
-	FIX m.t;
-	INTEGRATOR IDA;
-	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+	RUN m.integrate_default;
 END integrate_default;
 END tgadyn_msbed_mod_fbdisc_nomorph;
 
