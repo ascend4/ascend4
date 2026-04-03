@@ -41,6 +41,28 @@ typedef int IdaFlagFn(void *, long int *);
 typedef char *IdaFlagNameFn(long int);
 
 /**
+	Indexes into the IDA integrator parameter table.
+*/
+enum ida_parameters {
+	IDA_PARAM_LINSOLVER,
+	IDA_PARAM_MAXL,
+	IDA_PARAM_MAXORD,
+	IDA_PARAM_AUTODIFF,
+	IDA_PARAM_CALCIC,
+	IDA_PARAM_SAFEEVAL,
+	IDA_PARAM_RTOL,
+	IDA_PARAM_ATOL,
+	IDA_PARAM_ATOLVECT,
+	IDA_PARAM_GSMODIFIED,
+	IDA_PARAM_MAXNCF,
+	IDA_PARAM_PREC,
+	IDA_PARAM_ZENO_NCYCLES,
+	IDA_PARAM_ZENO_DURATION,
+	IDA_PARAM_DIAGNOSTICS,
+	IDA_PARAMS_SIZE
+};
+
+/**
 	Struct containing any stuff that IDA needs that doesn't fit into the
 	common IntegratorSystem struct.
 */

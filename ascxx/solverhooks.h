@@ -33,6 +33,7 @@
 
 class SolverReporter;
 class Simulation;
+class Integrator;
 
 extern "C"{
 #include <ascend/general/platform.h>
@@ -154,6 +155,9 @@ public:
 
 	/// Return the default observed variables registered by OBSERVE.
 	virtual std::vector<Instanc> getObservedVars(Simulation *S) const;
+
+	/// Apply stored INTEGRATOR/OPTION settings to an Integrator instance.
+	virtual int applyIntegratorConfig(Integrator &I, Simulation *S) const;
 
 	SolverReporter *getSolverReporter();
 
