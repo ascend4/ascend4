@@ -1,0 +1,589 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "basemodel.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/fboard.a4c";
+REQUIRE "johnpye/iron/tga.a4c";
+REQUIRE "johnpye/iron/tgadyn_msbed_mod.a4c";
+
+(* Minimal Maxwell-Stefan gas-transport node shared between neighbouring
+   slices. The node intentionally stores only the independent transport
+   variables so that the same connector can later be reused in both bed and
+   freeboard assemblies without embedding constitutive equations here. *)
+MODEL tga_ms_gas_node;
+	y_H2 "hydrogen mole fraction at the interface" IS_A mole_fraction;
+	y_H2O "steam mole fraction at the interface" IS_A mole_fraction;
+	N_H2 "hydrogen molar flux through the interface" IS_A molar_flux;
+	N_H2O "steam molar flux through the interface" IS_A molar_flux;
+END tga_ms_gas_node;
+
+(* One dynamic bed slice with top/bottom gas ports. The intra-slice transport
+   is written in half-cell form so that adjacent slices can share a node using
+   ARE_THE_SAME without changing the underlying centred-difference stencil. *)
+MODEL tga_reduction_bed_slice_dyn;
+	steps IS_A set OF integer_constant;
+	steps :== [1..3];
+
+	top "upper gas-transport node for this slice" IS_A tga_ms_gas_node;
+	bot "lower gas-transport node for this slice" IS_A tga_ms_gas_node;
+
+	T "gas and solids temperature" IS_A temperature;
+	p "system pressure" IS_A pressure;
+	c_tot "total gas molar density" IS_A molar_density;
+	dz "slice height" IS_A distance;
+	d_p "particle diameter" IS_A distance;
+	D_H2O_H2_bed "bed Maxwell-Stefan diffusivity for H2O/H2" IS_A diffusivity;
+	D_H2O_Ar_bed "bed Maxwell-Stefan diffusivity for H2O/Ar" IS_A diffusivity;
+	D_H2_Ar_bed "bed Maxwell-Stefan diffusivity for H2/Ar" IS_A diffusivity;
+	D_eff_bed "effective pseudo-binary bed diffusivity" IS_A diffusivity;
+	Sh_particle "particle Sherwood-number-like transfer factor" IS_A positive_factor;
+	a_open "extent-driven opening coefficient" IS_A factor;
+	a_close "extent-driven closing coefficient" IS_A factor;
+	beta_T "temperature sensitivity of pore closing" IS_A factor;
+
+	n0_Fe2O3_slice "initial hematite inventory in this slice" IS_A mole;
+	n0_per_area_slice "initial hematite inventory per area in this slice" IS_A mole_per_area;
+	MW_Fe2O3 "molar mass of hematite" IS_A molar_mass;
+	MW_Fe3O4 "molar mass of magnetite" IS_A molar_mass;
+	MW_FeO "molar mass of wustite" IS_A molar_mass;
+	MW_Fe "molar mass of iron" IS_A molar_mass;
+
+	k_step[steps] "stepwise reversible kinetic coefficients" IS_A rate_per_pressure;
+	K_ratio_eq[steps] "equilibrium ratios for each reduction step" IS_A positive_factor;
+
+	y_H2 "hydrogen mole fraction at the slice centre" IS_A mole_fraction;
+	y_H2O "steam mole fraction at the slice centre" IS_A mole_fraction;
+	y_Ar "argon mole fraction at the slice centre" IS_A mole_fraction;
+	y_H2_part "hydrogen mole fraction at the particle surface" IS_A mole_fraction;
+	y_H2O_part "steam mole fraction at the particle surface" IS_A mole_fraction;
+	y_Ar_part "argon mole fraction at the particle surface" IS_A mole_fraction;
+
+	y_Ar_top "argon mole fraction at the upper node" IS_A mole_fraction;
+	y_Ar_bot "argon mole fraction at the lower node" IS_A mole_fraction;
+	N_Ar_top "argon flux at the upper node" IS_A molar_flux;
+	N_Ar_bot "argon flux at the lower node" IS_A molar_flux;
+
+	y_H2_face_top "hydrogen mole fraction at the upper face" IS_A mole_fraction;
+	y_H2O_face_top "steam mole fraction at the upper face" IS_A mole_fraction;
+	y_Ar_face_top "argon mole fraction at the upper face" IS_A mole_fraction;
+	y_H2_face_bot "hydrogen mole fraction at the lower face" IS_A mole_fraction;
+	y_H2O_face_bot "steam mole fraction at the lower face" IS_A mole_fraction;
+	y_Ar_face_bot "argon mole fraction at the lower face" IS_A mole_fraction;
+
+	n_Fe2O3 "hematite inventory in this slice" IS_A mole;
+	n_Fe3O4 "magnetite inventory in this slice" IS_A mole;
+	n_FeO "wustite inventory in this slice" IS_A mole;
+	n_Fe "iron inventory in this slice" IS_A mole;
+	oxygen_remaining "oxygen still bound in this slice" IS_A mole;
+	xi[steps] "local reaction extents for this slice" IS_A reduction_extent;
+
+	drive[steps] "local kinetic driving force for each step" IS_A delta_pressure;
+	rate_forward[steps], rate_reverse[steps], rate_net[steps] IS_A extent_rate;
+	J_reaction "net reaction flux in this slice" IS_A molar_flux;
+
+	particle_res "particle-scale transport resistance model for this slice"
+		IS_A tga_particle_history_resistance;
+	R_part "particle-scale transport resistance in this slice" IS_A transport_resistance;
+	morph_factor "morphology correction factor in this slice" IS_A positive_factor;
+
+	yar_top_eq: y_Ar_top = 1 - top.y_H2 - top.y_H2O;
+	yar_bot_eq: y_Ar_bot = 1 - bot.y_H2 - bot.y_H2O;
+	Nar_top_eq: N_Ar_top = -top.N_H2 - top.N_H2O;
+	Nar_bot_eq: N_Ar_bot = -bot.N_H2 - bot.N_H2O;
+
+	yar_eq: y_Ar = 1 - y_H2 - y_H2O;
+	yar_part_eq: y_Ar_part = y_Ar;
+	part_sum_eq: y_H2O_part = 1 - y_Ar_part - y_H2_part;
+
+	xi1_eq: xi[1] = (1 - n_Fe2O3 / n0_Fe2O3_slice) / 3;
+	xi2_eq: xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3_slice;
+	xi3_eq: xi[3] = n_Fe / n0_Fe2O3_slice;
+	oxygen_eq: oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+
+	part_T_eq: particle_res.T = T;
+	part_dp_eq: particle_res.d_p = d_p;
+	part_Deff_eq: particle_res.D_eff_bed = D_eff_bed;
+	part_Sh_eq: particle_res.Sh_particle = Sh_particle;
+	part_open_eq: particle_res.a_open = a_open;
+	part_close_eq: particle_res.a_close = a_close;
+	part_beta_eq: particle_res.beta_T = beta_T;
+	part_xi1_eq: particle_res.xi1 = xi[1];
+	part_xi3_eq: particle_res.xi3 = xi[3];
+	Rpart_eq: R_part = particle_res.R_part;
+	morph_factor_eq: morph_factor = particle_res.morph_factor;
+
+	top_face_h2_eq: y_H2_face_top = 0.5 * (top.y_H2 + y_H2);
+	top_face_h2o_eq: y_H2O_face_top = 0.5 * (top.y_H2O + y_H2O);
+	top_face_ar_eq: y_Ar_face_top = 1 - y_H2_face_top - y_H2O_face_top;
+	bot_face_h2_eq: y_H2_face_bot = 0.5 * (y_H2 + bot.y_H2);
+	bot_face_h2o_eq: y_H2O_face_bot = 0.5 * (y_H2O + bot.y_H2O);
+	bot_face_ar_eq: y_Ar_face_bot = 1 - y_H2_face_bot - y_H2O_face_bot;
+
+	top_ms_h2:
+		-c_tot * (y_H2 - top.y_H2) / (0.5 * dz)
+		=
+		(y_H2O_face_top * top.N_H2 - y_H2_face_top * top.N_H2O) / D_H2O_H2_bed
+		+ (y_Ar_face_top * top.N_H2 - y_H2_face_top * N_Ar_top) / D_H2_Ar_bed;
+	top_ms_h2o:
+		-c_tot * (y_H2O - top.y_H2O) / (0.5 * dz)
+		=
+		(y_H2_face_top * top.N_H2O - y_H2O_face_top * top.N_H2) / D_H2O_H2_bed
+		+ (y_Ar_face_top * top.N_H2O - y_H2O_face_top * N_Ar_top) / D_H2O_Ar_bed;
+
+	bot_ms_h2:
+		-c_tot * (bot.y_H2 - y_H2) / (0.5 * dz)
+		=
+		(y_H2O_face_bot * bot.N_H2 - y_H2_face_bot * bot.N_H2O) / D_H2O_H2_bed
+		+ (y_Ar_face_bot * bot.N_H2 - y_H2_face_bot * N_Ar_bot) / D_H2_Ar_bed;
+	bot_ms_h2o:
+		-c_tot * (bot.y_H2O - y_H2O) / (0.5 * dz)
+		=
+		(y_H2_face_bot * bot.N_H2O - y_H2O_face_bot * bot.N_H2) / D_H2O_H2_bed
+		+ (y_Ar_face_bot * bot.N_H2O - y_H2O_face_bot * N_Ar_bot) / D_H2O_Ar_bed;
+
+	h2_balance_eq: top.N_H2 - bot.N_H2 = J_reaction;
+	h2o_balance_eq: top.N_H2O - bot.N_H2O = -J_reaction;
+	Jpart_eq: R_part * J_reaction = c_tot * (y_H2 - y_H2_part);
+	Jrxn_eq: J_reaction = n0_per_area_slice * (rate_net[1] + rate_net[2] + rate_net[3]);
+
+	drive1_eq: drive[1] = p * (y_H2_part - y_H2O_part / K_ratio_eq[1]);
+	drive2_eq: drive[2] = p * (y_H2_part - y_H2O_part / K_ratio_eq[2]);
+	drive3_eq: drive[3] = p * (y_H2_part - y_H2O_part / K_ratio_eq[3]);
+	rnet1_eq: rate_net[1] = rate_forward[1] - rate_reverse[1];
+	rnet2_eq: rate_net[2] = rate_forward[2] - rate_reverse[2];
+	rnet3_eq: rate_net[3] = rate_forward[3] - rate_reverse[3];
+
+	rf1_eq:
+		rate_forward[1] = (n_Fe2O3 / n0_Fe2O3_slice) * k_step[1] * p * y_H2_part;
+	rr1_eq:
+		rate_reverse[1] = (n_Fe3O4 / n0_Fe2O3_slice) * k_step[1] * p * y_H2O_part / K_ratio_eq[1];
+	rf2_eq:
+		rate_forward[2] = (n_Fe3O4 / n0_Fe2O3_slice) * k_step[2] * p * y_H2_part;
+	rr2_eq:
+		rate_reverse[2] = (n_FeO / n0_Fe2O3_slice) * k_step[2] * p * y_H2O_part / K_ratio_eq[2];
+	rf3_eq:
+		rate_forward[3] = (n_FeO / n0_Fe2O3_slice) * k_step[3] * p * y_H2_part;
+	rr3_eq:
+		rate_reverse[3] = (n_Fe / n0_Fe2O3_slice) * k_step[3] * p * y_H2O_part / K_ratio_eq[3];
+
+	nhe_ode: der(n_Fe2O3) = -3 * n0_Fe2O3_slice * rate_net[1];
+	nmag_ode: der(n_Fe3O4) = n0_Fe2O3_slice * (2 * rate_net[1] - rate_net[2]);
+	nwu_ode: der(n_FeO) = n0_Fe2O3_slice * (3 * rate_net[2] - rate_net[3]);
+	nfe_ode: der(n_Fe) = n0_Fe2O3_slice * rate_net[3];
+
+INITIAL
+	nhe_initial: n_Fe2O3 = n0_Fe2O3_slice;
+	nmag_initial: n_Fe3O4 = 0 {mol};
+	nwu_initial: n_FeO = 0 {mol};
+	nfe_initial: n_Fe = 0 {mol};
+END tga_reduction_bed_slice_dyn;
+
+(* Experimental port-based bed assembly using shared gas nodes between
+   neighbouring slices. This first prototype keeps the freeboard lumped so the
+   structural experiment stays focused on the bed assembly itself. *)
+MODEL tga_reduction_screen_dyn_msbed_ports(
+	n_bed_segs IS_A integer_constant;
+	morphology_model IS_A symbol_constant;
+) WHERE (
+	(morphology_model = 'coupled') OR (morphology_model = 'nomorph');
+);
+	steps IS_A set OF integer_constant;
+	steps :== [1..3];
+
+	t IS_A time;
+	INDEPENDENT t;
+
+	A_crucible "crucible cross-sectional area" IS_A area;
+	d_p "particle diameter" IS_A distance;
+	L_freeboard "measured freeboard height above the bed" IS_A distance;
+	H_bed "current packed-bed height" IS_A distance;
+	dz_bed "height of one bed slice" IS_A distance;
+
+	m_sample_init "initial sample mass" IS_A mass;
+	m_sample "current sample mass" IS_A mass;
+	rho_bulk_bed "bulk bed density" IS_A mass_density;
+	m_sample.lower_bound := -1 {kg};
+
+	eps_bed "bed void fraction" IS_A positive_factor;
+	tau_bed "bed tortuosity factor" IS_A positive_factor;
+	k_fb_multiplier "freeboard transport multiplier" IS_A positive_factor;
+	k_bed_multiplier "bed diffusivity multiplier" IS_A positive_factor;
+	Sh_particle "particle Sherwood-number-like transfer factor" IS_A positive_factor;
+	a_open "extent-driven opening coefficient" IS_A factor;
+	a_close "extent-driven closing coefficient" IS_A factor;
+	a_open.lower_bound := 0;
+	a_close.lower_bound := 0;
+	beta_T "temperature sensitivity of pore closing" IS_A factor;
+
+	y_H2_bulk "bulk-gas hydrogen mole fraction above the freeboard" IS_A mole_fraction;
+	y_H2O_bulk "bulk-gas steam mole fraction above the freeboard" IS_A mole_fraction;
+	y_Ar_bulk "bulk-gas argon mole fraction above the freeboard" IS_A mole_fraction;
+	y_H2_if "hydrogen mole fraction at the bed inlet interface" IS_A mole_fraction;
+	y_H2O_if "steam mole fraction at the bed inlet interface" IS_A mole_fraction;
+	y_Ar_if "argon mole fraction at the bed inlet interface" IS_A mole_fraction;
+	y_H2_react "bed-averaged reacting-gas hydrogen mole fraction" IS_A mole_fraction;
+	y_H2O_react "bed-averaged reacting-gas steam mole fraction" IS_A mole_fraction;
+	y_Ar_react "bed-averaged reacting-gas argon mole fraction" IS_A mole_fraction;
+
+	y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs] IS_A mole_fraction;
+	y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs] IS_A mole_fraction;
+	morph_factor[1..n_bed_segs] IS_A positive_factor;
+
+	c_tot "total gas molar density" IS_A molar_density;
+	tr IS_A diffusion_h2o_h2_ar;
+	T ALIASES tr.T;
+	p ALIASES tr.p;
+	D_screen "screening diffusivity used for bulk transport closures" IS_A diffusivity;
+	D_H2O_H2_bed "bed Maxwell-Stefan diffusivity for H2O/H2" IS_A diffusivity;
+	D_H2O_Ar_bed "bed Maxwell-Stefan diffusivity for H2O/Ar" IS_A diffusivity;
+	D_H2_Ar_bed "bed Maxwell-Stefan diffusivity for H2/Ar" IS_A diffusivity;
+	D_eff_bed "effective pseudo-binary bed diffusivity" IS_A diffusivity;
+
+	R_fb "freeboard-side transport resistance" IS_A transport_resistance;
+	R_bed "bed-scale transport resistance" IS_A transport_resistance;
+	R_overall "overall freeboard-plus-bed transport resistance" IS_A transport_resistance;
+	J_transport "gas transport flux supplied to the bed" IS_A molar_flux;
+
+	TS_freeboard "dimensionless freeboard transport screening factor" IS_A factor;
+	TS_bed "dimensionless bed transport screening factor" IS_A factor;
+	TS_overall "dimensionless overall transport screening factor" IS_A factor;
+
+	MW_Fe2O3 "molar mass of hematite" IS_A molar_mass;
+	MW_Fe3O4 "molar mass of magnetite" IS_A molar_mass;
+	MW_FeO "molar mass of wustite" IS_A molar_mass;
+	MW_Fe "molar mass of iron" IS_A molar_mass;
+	n0_Fe2O3 "initial amount of hematite in the sample" IS_A mole;
+	n0_per_area "initial hematite inventory per crucible area" IS_A mole_per_area;
+
+	n_Fe2O3 "current total amount of hematite" IS_A mole;
+	n_Fe3O4 "current total amount of magnetite" IS_A mole;
+	n_FeO "current total amount of wustite" IS_A mole;
+	n_Fe "current total amount of metallic iron" IS_A mole;
+	oxygen_remaining "oxygen still bound in the solids" IS_A mole;
+	reduction_degree "overall reduction degree relative to fully reduced iron" IS_A factor;
+
+	xi[steps] IS_A reduction_extent;
+	rate_net[steps] IS_A extent_rate;
+	k_step[steps] IS_A rate_per_pressure;
+	K_ratio_eq[steps] IS_A positive_factor;
+	etak0[steps] IS_A rate_per_pressure;
+	E_a[steps] IS_A molar_energy;
+	K_eq_lnA[steps] IS_A factor;
+	K_eq_lnB[steps] IS_A factor;
+
+	J_reaction "total reaction flux summed over the bed" IS_A molar_flux;
+	J_reaction_zone[1..n_bed_segs] IS_A molar_flux;
+
+	node[0..n_bed_segs] IS_A tga_ms_gas_node;
+	slice[1..n_bed_segs] IS_A tga_reduction_bed_slice_dyn;
+
+	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+	bulk_sum: y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
+
+	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+	n0area_eq: n0_per_area = n0_Fe2O3 / A_crucible;
+
+	nhe_total_eq: n_Fe2O3 = SUM[slice[z].n_Fe2O3 | z IN [1..n_bed_segs]];
+	nmag_total_eq: n_Fe3O4 = SUM[slice[z].n_Fe3O4 | z IN [1..n_bed_segs]];
+	nwu_total_eq: n_FeO = SUM[slice[z].n_FeO | z IN [1..n_bed_segs]];
+	nfe_total_eq: n_Fe = SUM[slice[z].n_Fe | z IN [1..n_bed_segs]];
+	oxygen_eq: oxygen_remaining = SUM[slice[z].oxygen_remaining | z IN [1..n_bed_segs]];
+	reduction_degree_eq:
+		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
+	xi1_eq: xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
+	xi2_eq: xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+	xi3_eq: xi[3] = n_Fe / n0_Fe2O3;
+
+	msample_eq:
+		m_sample
+		=
+		n_Fe2O3 * MW_Fe2O3
+		+ n_Fe3O4 * MW_Fe3O4
+		+ n_FeO * MW_FeO
+		+ n_Fe * MW_Fe;
+	Hbed_eq: H_bed = m_sample / (rho_bulk_bed * A_crucible);
+	dzbed_eq: dz_bed = H_bed / n_bed_segs;
+
+	yh2_avg_eq: y_H2_react = SUM[slice[z].y_H2_part | z IN [1..n_bed_segs]] / n_bed_segs;
+	yh2o_avg_eq: y_H2O_react = SUM[slice[z].y_H2O_part | z IN [1..n_bed_segs]] / n_bed_segs;
+	yar_avg_eq: y_Ar_react = SUM[slice[z].y_Ar_part | z IN [1..n_bed_segs]] / n_bed_segs;
+
+	Dscreen_eq: D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
+	Dh2oh2bed_eq: D_H2O_H2_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2O_H2;
+	Dh2oarbed_eq: D_H2O_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2O_Ar;
+	Dh2arbed_eq: D_H2_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2_Ar;
+	Deffbed_eq: D_eff_bed = k_bed_multiplier * (eps_bed / tau_bed) * D_screen;
+
+	Rfb_eq: R_fb = L_freeboard / (k_fb_multiplier * D_screen);
+	Rbed_eq: R_bed = H_bed / D_eff_bed;
+	Roverall_eq: R_overall = R_fb + R_bed;
+	Jtransport_eq: J_transport = node[0].N_H2;
+
+	if_ar_eq: y_Ar_if = y_Ar_bulk;
+	if_sum_eq: y_H2O_if = 1 - y_Ar_if - y_H2_if;
+	inlet_h2_eq: node[0].y_H2 = y_H2_if;
+	inlet_h2o_eq: node[0].y_H2O = y_H2O_if;
+	Jfb_eq: R_fb * J_transport = c_tot * (y_H2_bulk - y_H2_if);
+	bottom_h2_eq: node[n_bed_segs].N_H2 = 0 {mol/m^2/s};
+	bottom_h2o_eq: node[n_bed_segs].N_H2O = 0 {mol/m^2/s};
+
+	screen_fb_eq: TS_freeboard = J_reaction * R_fb / (c_tot * y_H2_bulk);
+	screen_bed_eq: TS_bed = J_reaction * R_bed / (c_tot * y_H2_if);
+	screen_overall_eq: TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
+
+	FOR r IN steps CREATE
+		kstep_eq[r]:
+			k_step[r] = etak0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+		Keq_eq[r]:
+			K_ratio_eq[r] = exp(K_eq_lnA[r] - K_eq_lnB[r] / (T / 1 {K}));
+		rnet_avg_eq[r]:
+			rate_net[r] = SUM[slice[z].rate_net[r] | z IN [1..n_bed_segs]] / n_bed_segs;
+	END FOR;
+
+	FOR z IN [1..n_bed_segs] CREATE
+		slice[z].top.y_H2, node[z - 1].y_H2 ARE_THE_SAME;
+		slice[z].top.y_H2O, node[z - 1].y_H2O ARE_THE_SAME;
+		slice[z].top.N_H2, node[z - 1].N_H2 ARE_THE_SAME;
+		slice[z].top.N_H2O, node[z - 1].N_H2O ARE_THE_SAME;
+		slice[z].bot.y_H2, node[z].y_H2 ARE_THE_SAME;
+		slice[z].bot.y_H2O, node[z].y_H2O ARE_THE_SAME;
+		slice[z].bot.N_H2, node[z].N_H2 ARE_THE_SAME;
+		slice[z].bot.N_H2O, node[z].N_H2O ARE_THE_SAME;
+
+		slice_t_eq[z]: slice[z].T = T;
+		slice_p_eq[z]: slice[z].p = p;
+		slice_ctot_eq[z]: slice[z].c_tot = c_tot;
+		slice_dz_eq[z]: slice[z].dz = dz_bed;
+		slice_dp_eq[z]: slice[z].d_p = d_p;
+		slice_Dh2oh2_eq[z]: slice[z].D_H2O_H2_bed = D_H2O_H2_bed;
+		slice_Dh2oar_eq[z]: slice[z].D_H2O_Ar_bed = D_H2O_Ar_bed;
+		slice_Dh2ar_eq[z]: slice[z].D_H2_Ar_bed = D_H2_Ar_bed;
+		slice_Deff_eq[z]: slice[z].D_eff_bed = D_eff_bed;
+		slice_Sh_eq[z]: slice[z].Sh_particle = Sh_particle;
+		slice_open_eq[z]: slice[z].a_open = a_open;
+		slice_close_eq[z]: slice[z].a_close = a_close;
+		slice_beta_eq[z]: slice[z].beta_T = beta_T;
+		slice_n0_eq[z]: slice[z].n0_Fe2O3_slice = n0_Fe2O3 / n_bed_segs;
+		slice_n0area_eq[z]: slice[z].n0_per_area_slice = n0_per_area / n_bed_segs;
+		slice_MWhe_eq[z]: slice[z].MW_Fe2O3 = MW_Fe2O3;
+		slice_MWmag_eq[z]: slice[z].MW_Fe3O4 = MW_Fe3O4;
+		slice_MWwu_eq[z]: slice[z].MW_FeO = MW_FeO;
+		slice_MWfe_eq[z]: slice[z].MW_Fe = MW_Fe;
+
+		yh2_zone_eq[z]: y_H2_zone[z] = slice[z].y_H2;
+		yh2o_zone_eq[z]: y_H2O_zone[z] = slice[z].y_H2O;
+		yh2_part_eq[z]: y_H2_part[z] = slice[z].y_H2_part;
+		yh2o_part_eq[z]: y_H2O_part[z] = slice[z].y_H2O_part;
+		morph_eq[z]: morph_factor[z] = slice[z].morph_factor;
+		Jrxn_zone_eq[z]: J_reaction_zone[z] = slice[z].J_reaction;
+
+		FOR r IN steps CREATE
+			slice_kstep_eq[z][r]: slice[z].k_step[r] = k_step[r];
+			slice_Keq_eq[z][r]: slice[z].K_ratio_eq[r] = K_ratio_eq[r];
+		END FOR;
+	END FOR;
+
+	Jrxn_eq: J_reaction = SUM[J_reaction_zone[z] | z IN [1..n_bed_segs]];
+
+METHODS
+	METHOD values;
+		FIX T := 1073.15 {K};
+		FIX p := 1 {bar};
+		FIX A_crucible := 20 {mm^2};
+		FIX d_p := 175 {um};
+		FIX L_freeboard := 8.3 {mm};
+
+		FIX m_sample_init := 100 {mg};
+		rho_bulk_bed := 1500 {kg/m^3};
+		H_bed := 2 {mm};
+
+		FIX eps_bed := 0.45;
+		FIX tau_bed := 3.0;
+		FIX k_fb_multiplier := 0.27732238;
+		FIX k_bed_multiplier := 0.35665202;
+		FIX Sh_particle := 0.76583406;
+		FIX a_open := 0.81142394;
+		FIX a_close := 2.5472071;
+		FIX beta_T := -0.19173506;
+		IF morphology_model = 'nomorph' THEN
+			a_open := 0;
+			a_close := 0;
+			beta_T := 0;
+		END IF;
+
+		FIX y_H2_bulk := 0.8;
+		FIX y_H2O_bulk := 0.0;
+		y_Ar_bulk := 0.2;
+		y_H2_if := 0.75;
+		y_H2O_if := 0.05;
+		y_Ar_if := 0.2;
+		y_H2_zone[1..n_bed_segs] := 0.75;
+		y_H2O_zone[1..n_bed_segs] := 0.05;
+		y_H2_part[1..n_bed_segs] := 0.72;
+		y_H2O_part[1..n_bed_segs] := 0.08;
+
+		FIX MW_Fe2O3 := 159.687 {g/g_mole};
+		FIX MW_Fe3O4 := 231.531 {g/g_mole};
+		FIX MW_FeO := 71.844 {g/g_mole};
+		FIX MW_Fe := 55.845 {g/g_mole};
+
+		FIX etak0[1] := 0.0015754844 {1/s/Pa};
+		FIX etak0[2] := 0.00076929627 {1/s/Pa};
+		FIX etak0[3] := 0.00039695573 {1/s/Pa};
+
+		FIX E_a[1] := 68.270416 {kJ/mol};
+		FIX E_a[2] := 56.743108 {kJ/mol};
+		FIX E_a[3] := 58.431754 {kJ/mol};
+
+		FIX K_eq_lnA[1] := 8.54050167864375;
+		FIX K_eq_lnA[2] := 8.447122204684765;
+		FIX K_eq_lnA[3] := 1.0604569618298618;
+		FIX K_eq_lnB[1] := 2552.121942697152;
+		FIX K_eq_lnB[2] := 8067.2733483476295;
+		FIX K_eq_lnB[3] := 1856.1489018164739;
+
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
+
+		FOR i IN [0..n_bed_segs] DO
+			node[i].y_H2 := 0.75;
+			node[i].y_H2O := 0.05;
+			node[i].N_H2 := 0.58 {mol/m^2/s} * (n_bed_segs - i) / n_bed_segs;
+			node[i].N_H2O := -node[i].N_H2;
+		END FOR;
+
+		FIX t := 0 {s};
+	END values;
+
+	METHOD bound_self;
+		y_H2O_if.lower_bound := -1e-9;
+		n_Fe2O3.lower_bound := -1e-9 {mol};
+		n_Fe3O4.lower_bound := -1e-12 {mol};
+		n_FeO.lower_bound := -1e-12 {mol};
+		n_Fe.lower_bound := -1e-12 {mol};
+		oxygen_remaining.lower_bound := -1e-9 {mol};
+
+		FOR z IN [1..n_bed_segs] DO
+			slice[z].n_Fe2O3.lower_bound := -1e-9 {mol};
+			slice[z].n_Fe3O4.lower_bound := -1e-12 {mol};
+			slice[z].n_FeO.lower_bound := -1e-12 {mol};
+			slice[z].n_Fe.lower_bound := -1e-12 {mol};
+			slice[z].oxygen_remaining.lower_bound := -1e-9 {mol};
+		END FOR;
+
+		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_h2.T_star.lower_bound := -1e6;
+		tr.h2o_ar.T_star.lower_bound := -1e6;
+		tr.h2_ar.T_star.lower_bound := -1e6;
+		tr.h2o_h2.Omega_D.lower_bound := -1e6;
+		tr.h2o_ar.Omega_D.lower_bound := -1e6;
+		tr.h2_ar.Omega_D.lower_bound := -1e6;
+		tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+	END bound_self;
+
+	METHOD use_measured_bed_height;
+		FIX H_bed;
+		FREE rho_bulk_bed;
+	END use_measured_bed_height;
+
+	METHOD use_bulk_density_model;
+		FIX rho_bulk_bed;
+		FREE H_bed;
+	END use_bulk_density_model;
+
+	METHOD algebraic_base;
+		RUN reset;
+		RUN values;
+		RUN bound_self;
+		RUN use_measured_bed_height;
+	END algebraic_base;
+
+	METHOD dynamic_reset;
+		FOR z IN [1..n_bed_segs] DO
+			slice[z].n_Fe2O3 := m_sample_init / (MW_Fe2O3 * n_bed_segs);
+			slice[z].n_Fe3O4 := 0 {mol};
+			slice[z].n_FeO := 0 {mol};
+			slice[z].n_Fe := 0 {mol};
+		END FOR;
+		t := 0 {s};
+	END dynamic_reset;
+
+	METHOD observe_default;
+		reduction_degree.obs_id := 1;
+		m_sample.obs_id := 2;
+		y_H2_react.obs_id := 3;
+		y_H2O_react.obs_id := 4;
+		J_transport.obs_id := 5;
+		rate_net[1].obs_id := 6;
+		rate_net[2].obs_id := 7;
+		rate_net[3].obs_id := 8;
+		xi[1].obs_id := 9;
+		xi[2].obs_id := 10;
+		xi[3].obs_id := 11;
+		n_Fe2O3.obs_id := 12;
+		n_Fe3O4.obs_id := 13;
+		n_FeO.obs_id := 14;
+		n_Fe.obs_id := 15;
+		FOR z IN [1..n_bed_segs] DO
+			y_H2_zone[z].obs_id := 15 + z;
+			y_H2O_zone[z].obs_id := 15 + n_bed_segs + z;
+			y_H2_part[z].obs_id := 15 + 2 * n_bed_segs + z;
+			y_H2O_part[z].obs_id := 15 + 3 * n_bed_segs + z;
+		END FOR;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, m_sample,
+			n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+			y_H2_react, y_H2O_react,
+			y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs],
+			y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
+			J_transport;
+	END observe_cli_default;
+
+	METHOD on_load;
+		RUN algebraic_base;
+		RUN dynamic_reset;
+		FOR z IN [1..n_bed_segs] DO
+			FREE der(slice[z].n_Fe2O3), der(slice[z].n_Fe3O4), der(slice[z].n_FeO), der(slice[z].n_Fe);
+		END FOR;
+		RUN observe_default;
+		RUN observe_cli_default;
+	END on_load;
+END tga_reduction_screen_dyn_msbed_ports;
+
+MODEL tgadyn_msbed_ported;
+	m IS_A tga_reduction_screen_dyn_msbed_ports(10, 'coupled');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+	FIX m.t;
+	INTEGRATOR IDA;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END on_load;
+END tgadyn_msbed_ported;
+
+MODEL tgadyn_msbed_ported_nomorph;
+	m IS_A tga_reduction_screen_dyn_msbed_ports(10, 'nomorph');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+	FIX m.t;
+	INTEGRATOR IDA;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END on_load;
+END tgadyn_msbed_ported_nomorph;
+
+(* vim: sw=4:noet:ts=4
+*)
