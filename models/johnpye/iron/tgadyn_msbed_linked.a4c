@@ -763,10 +763,10 @@ METHODS
 		   Allow small negative trial-state chatter during IDA localisation so
 		   those topological limit cases run cleanly without introducing extra
 		   event logic here. *)
-		y_H2_feed.lower_bound := -1e-9;
-		y_H2O_feed.lower_bound := -1e-9;
-		y_H2_react.lower_bound := -1e-9;
-		y_H2O_react.lower_bound := -1e-9;
+		y_H2_feed.lower_bound := -1e-6;
+		y_H2O_feed.lower_bound := -1e-6;
+		y_H2_react.lower_bound := -1e-6;
+		y_H2O_react.lower_bound := -1e-6;
 		n_Fe2O3.lower_bound := -1 {mol};
 		n_Fe3O4.lower_bound := -1 {mol};
 		n_FeO.lower_bound := -1 {mol};
