@@ -1848,11 +1848,46 @@ END tgadyn_msbed_linked_nofb;
 
 MODEL tgadyn_msbed_linked_nofb_nomorph;
 	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 0, 'nomorph', 'three_step_wustite');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_2, etak0_3, E_a_1, E_a_2, E_a_3.
+Transport only: k_bed_multiplier, eps_bed, tau_bed, Sh_particle.
+Morphology and freeboard parameters are inactive here.
+} END NOTES;
 METHODS
 METHOD on_load;
 	RUN m.on_load;
 END on_load;
 END tgadyn_msbed_linked_nofb_nomorph;
+
+MODEL tgadyn_msbed_linked_nofb_direct;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 0, 'coupled', 'two_step_direct');
+NOTES 'purpose' SELF {
+Discretised-bed linked model with zero freeboard layers and the low-temperature
+direct magnetite-to-iron chemistry.
+}
+'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4.
+Transport and morphology: k_bed_multiplier, eps_bed, tau_bed, Sh_particle,
+a_open, a_close, beta_T. Freeboard transport is absent here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_direct;
+
+MODEL tgadyn_msbed_linked_nofb_nomorph_direct;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 0, 'nomorph', 'two_step_direct');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4.
+Transport only: k_bed_multiplier, eps_bed, tau_bed, Sh_particle.
+Morphology and freeboard parameters are inactive here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_nomorph_direct;
 
 (* Low-temperature direct-chemistry variants. These keep the transport
    topology fixed and only swap the reaction network. *)
