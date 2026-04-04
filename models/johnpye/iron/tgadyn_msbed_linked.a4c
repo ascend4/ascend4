@@ -128,12 +128,16 @@ MODEL tga_reduction_bed_slice_local(
 
 	centre "shared slice-centre gas state" IS_A tga_ms_gas_state;
 	surface "shared particle-surface gas state" IS_A tga_ms_gas_state;
-	y_H2 ALIASES centre.y_H2;
-	y_H2O ALIASES centre.y_H2O;
+	y_H2 "hydrogen mole fraction at the slice centre" ALIASES centre.y_H2;
+	y_H2O "steam mole fraction at the slice centre" ALIASES centre.y_H2O;
 	y_Ar "argon mole fraction at the slice centre" IS_A mole_fraction;
-	y_H2_part ALIASES surface.y_H2;
-	y_H2O_part ALIASES surface.y_H2O;
+	y_H2_part "hydrogen mole fraction at the particle surface" ALIASES surface.y_H2;
+	y_H2O_part "steam mole fraction at the particle surface" ALIASES surface.y_H2O;
 	y_Ar_part "argon mole fraction at the particle surface" IS_A mole_fraction;
+	y_H2_centre "exposed slice-centre hydrogen mole fraction" ALIASES centre.y_H2;
+	y_H2O_centre "exposed slice-centre steam mole fraction" ALIASES centre.y_H2O;
+	y_H2_surface "exposed particle-surface hydrogen mole fraction" ALIASES surface.y_H2;
+	y_H2O_surface "exposed particle-surface steam mole fraction" ALIASES surface.y_H2O;
 
 	n_Fe2O3 "hematite inventory in this slice" IS_A mole;
 	n_Fe3O4 "magnetite inventory in this slice" IS_A mole;
@@ -152,6 +156,9 @@ MODEL tga_reduction_bed_slice_local(
 		IS_A tga_particle_history_resistance;
 	R_part "particle-scale gas transport resistance in this slice" IS_A transport_resistance;
 	morph_factor "morphology correction factor in this slice" IS_A positive_factor;
+	morph_factor_local "exposed morphology correction factor for this slice"
+		ALIASES morph_factor;
+	J_reaction_local "exposed net reaction flux for this slice" ALIASES J_reaction;
 
 	yar_eq:
 		y_Ar = 1 - y_H2 - y_H2O;
@@ -1170,30 +1177,29 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 	END FOR;
 
 	FOR z IN [1..n_bed_segs] CREATE
-		slice[z].T, T ARE_THE_SAME;
-		slice[z].p, p ARE_THE_SAME;
-		slice[z].c_tot, c_tot ARE_THE_SAME;
-		slice[z].d_p, d_p ARE_THE_SAME;
-		slice[z].D_eff_bed, D_eff_bed ARE_THE_SAME;
-		slice[z].Sh_particle, Sh_particle ARE_THE_SAME;
-		slice[z].a_open, a_open ARE_THE_SAME;
-		slice[z].a_close, a_close ARE_THE_SAME;
-		slice[z].beta_T, beta_T ARE_THE_SAME;
 		slice_n0_eq[z]:
 		slice[z].n0_Fe2O3_slice = n0_Fe2O3 / n_bed_segs;
 		slice_n0area_eq[z]:
 			slice[z].n0_per_area_slice = n0_per_area / n_bed_segs;
-		y_H2_zone[z], slice[z].centre.y_H2 ARE_THE_SAME;
-		y_H2O_zone[z], slice[z].centre.y_H2O ARE_THE_SAME;
-		y_H2_part[z], slice[z].surface.y_H2 ARE_THE_SAME;
-		y_H2O_part[z], slice[z].surface.y_H2O ARE_THE_SAME;
-		morph_factor[z], slice[z].morph_factor ARE_THE_SAME;
-		J_reaction_zone[z], slice[z].J_reaction ARE_THE_SAME;
-
-		FOR r IN steps CREATE
-			slice[z].k_step[r], k_step[r] ARE_THE_SAME;
-			slice[z].K_ratio_eq[r], K_ratio_eq[r] ARE_THE_SAME;
-		END FOR;
+		y_H2_zone[z], slice[z].y_H2_centre ARE_THE_SAME;
+		y_H2O_zone[z], slice[z].y_H2O_centre ARE_THE_SAME;
+		y_H2_part[z], slice[z].y_H2_surface ARE_THE_SAME;
+		y_H2O_part[z], slice[z].y_H2O_surface ARE_THE_SAME;
+		morph_factor[z], slice[z].morph_factor_local ARE_THE_SAME;
+		J_reaction_zone[z], slice[z].J_reaction_local ARE_THE_SAME;
+	END FOR;
+	T, slice[1..n_bed_segs].T ARE_THE_SAME;
+	p, slice[1..n_bed_segs].p ARE_THE_SAME;
+	c_tot, slice[1..n_bed_segs].c_tot ARE_THE_SAME;
+	d_p, slice[1..n_bed_segs].d_p ARE_THE_SAME;
+	D_eff_bed, slice[1..n_bed_segs].D_eff_bed ARE_THE_SAME;
+	Sh_particle, slice[1..n_bed_segs].Sh_particle ARE_THE_SAME;
+	a_open, slice[1..n_bed_segs].a_open ARE_THE_SAME;
+	a_close, slice[1..n_bed_segs].a_close ARE_THE_SAME;
+	beta_T, slice[1..n_bed_segs].beta_T ARE_THE_SAME;
+	FOR r IN steps CREATE
+		k_step[r], slice[1..n_bed_segs].k_step[r] ARE_THE_SAME;
+		K_ratio_eq[r], slice[1..n_bed_segs].K_ratio_eq[r] ARE_THE_SAME;
 	END FOR;
 
 	Jrxn_eq:
