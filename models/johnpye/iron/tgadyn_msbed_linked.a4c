@@ -22,6 +22,36 @@ MODEL tga_ms_gas_port;
 	N_H2O "steam molar flux through the interface" IS_A molar_flux;
 END tga_ms_gas_port;
 
+MODEL tga_reduction_keq_fits;
+	steps "reduction reaction steps" IS_A set OF integer_constant;
+	steps :== [1..4];
+
+	A[steps] "constant term in ln(K)" IS_A factor;
+	B[steps] "inverse-temperature term in ln(K)" IS_A factor;
+	C[steps] "log-temperature term in ln(K)" IS_A factor;
+	D[steps] "linear-temperature term in ln(K)" IS_A factor;
+
+METHODS
+	METHOD values;
+		FIX A[1] := 275.5950899625076;
+		FIX A[2] := 54.79019894028178;
+		FIX A[3] := -31.58593152453788;
+		FIX A[4] := 30.51949661506154;
+		FIX B[1] := -26283.26419177231;
+		FIX B[2] := -10556.58318912153;
+		FIX B[3] := 660.7218135785515;
+		FIX B[4] := -5849.579888718082;
+		FIX C[1] := -37.2540654519026;
+		FIX C[2] := -6.951008925726938;
+		FIX C[3] := 4.668826943343771;
+		FIX C[4] := -3.746980537603341;
+		FIX D[1] := 0.01408952822924074;
+		FIX D[2] := 0.004147837907387222;
+		FIX D[3] := -0.00212400615445666;
+		FIX D[4] := 0.0006347698842184886;
+	END values;
+END tga_reduction_keq_fits;
+
 (* One inter-slice transport link. The equations here are copied in the same
    centred-difference form used previously at the top level, so the
    modularisation does not change the transport stencil. *)
@@ -109,8 +139,10 @@ MODEL tga_reduction_bed_slice_local(
 	n_Fe3O4 "magnetite inventory in this slice" IS_A mole;
 	n_FeO "wustite inventory in this slice" IS_A mole;
 	n_Fe "iron inventory in this slice" IS_A mole;
-	oxygen_remaining "oxygen still bound in this slice" IS_A mole;
-	xi[steps] "local reaction extents in this slice" IS_A reduction_extent;
+	xi1 "local Fe2O3 -> Fe3O4 extent used by the particle morphology model"
+		IS_A reduction_extent;
+	xi3 "local FeO -> Fe extent used by the particle morphology model"
+		IS_A reduction_extent;
 
 	drive[steps] "local kinetic driving force for each step" IS_A delta_pressure;
 	rate_forward[steps], rate_reverse[steps], rate_net[steps] IS_A extent_rate;
@@ -129,28 +161,9 @@ MODEL tga_reduction_bed_slice_local(
 		y_H2O_part = 1 - y_Ar_part - y_H2_part;
 
 	xi1_eq:
-		xi[1] = (1 - n_Fe2O3 / n0_Fe2O3_slice) / 3;
+		xi1 = (1 - n_Fe2O3 / n0_Fe2O3_slice) / 3;
 	xi3_eq:
-		xi[3] = n_Fe / n0_Fe2O3_slice;
-	SELECT (reaction_model)
-	CASE 'three_step_wustite':
-		xi2_eq_three_step:
-			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3_slice;
-		xi4_eq_three_step:
-			xi[4] = 0;
-		oxygen_eq_three_step:
-			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
-	CASE 'two_step_direct':
-		xi2_eq_two_step:
-			xi[2] = 0;
-		(* In the low-temperature direct branch, xi[4] is the oxygen-removal
-		   extent of the direct Fe3O4 -> Fe step. It rises from 0 to 8/3 over
-		   complete reduction of one Fe2O3 basis unit. *)
-		xi4_eq_two_step:
-			xi[4] = 8 * xi[1] - 4 * n_Fe3O4 / n0_Fe2O3_slice;
-		oxygen_eq_two_step:
-			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4;
-	END SELECT;
+		xi3 = n_Fe / n0_Fe2O3_slice;
 
 	part_T_eq:
 		particle_res.T = T;
@@ -167,9 +180,9 @@ MODEL tga_reduction_bed_slice_local(
 	part_beta_eq:
 		particle_res.beta_T = beta_T;
 	part_xi1_eq:
-		particle_res.xi1 = xi[1];
+		particle_res.xi1 = xi1;
 	part_xi3_eq:
-		particle_res.xi3 = xi[3];
+		particle_res.xi3 = xi3;
 	Rpart_eq:
 		R_part = particle_res.R_part;
 	morph_factor_eq:
@@ -382,10 +395,7 @@ MODEL tga_reduction_screen_dyn_lumpedbed_linked(
 	k_step[steps] IS_A rate_per_pressure;
 	k_step[steps].lower_bound := -1e6 {1/s/Pa};
 
-	K_eq_fit_A[steps] IS_A factor;
-	K_eq_fit_B[steps] IS_A factor;
-	K_eq_fit_C[steps] IS_A factor;
-	K_eq_fit_D[steps] IS_A factor;
+	K_fit "shared four-term equilibrium-ratio fits" IS_A tga_reduction_keq_fits;
 	K_ratio_eq[steps] IS_A positive_factor;
 
 	drive[steps] IS_A delta_pressure;
@@ -492,6 +502,11 @@ MODEL tga_reduction_screen_dyn_lumpedbed_linked(
 		OTHERWISE:
 			dzfb_eq:
 				dz_fb = L_freeboard_eff / n_fb_segs;
+			c_tot, fb_link[1..n_fb_segs].c_tot ARE_THE_SAME;
+			dz_fb, fb_link[1..n_fb_segs].delta ARE_THE_SAME;
+			tr.D_H2O_H2, fb_link[1..n_fb_segs].D_H2O_H2_bed ARE_THE_SAME;
+			tr.D_H2O_Ar, fb_link[1..n_fb_segs].D_H2O_Ar_bed ARE_THE_SAME;
+			tr.D_H2_Ar, fb_link[1..n_fb_segs].D_H2_Ar_bed ARE_THE_SAME;
 			fb_top_h2_eq:
 				fb_node[0].y_H2 = y_H2_fb_top;
 			fb_top_h2o_eq:
@@ -504,19 +519,9 @@ MODEL tga_reduction_screen_dyn_lumpedbed_linked(
 				y_Ar_feed = 1 - y_H2_feed - y_H2O_feed;
 
 			FOR f IN [1..n_fb_segs] CREATE
-				fb_link[f].c_tot, c_tot ARE_THE_SAME;
-				fb_link[f].delta, dz_fb ARE_THE_SAME;
-				fb_link[f].D_H2O_H2_bed, tr.D_H2O_H2 ARE_THE_SAME;
-				fb_link[f].D_H2O_Ar_bed, tr.D_H2O_Ar ARE_THE_SAME;
-				fb_link[f].D_H2_Ar_bed, tr.D_H2_Ar ARE_THE_SAME;
-				fb_link[f].up.y_H2, fb_node[f - 1].y_H2 ARE_THE_SAME;
-				fb_link[f].up.y_H2O, fb_node[f - 1].y_H2O ARE_THE_SAME;
-				fb_link[f].down.y_H2, fb_node[f].y_H2 ARE_THE_SAME;
-				fb_link[f].down.y_H2O, fb_node[f].y_H2O ARE_THE_SAME;
-				fb_link[f].face.y_H2, fb_face[f].y_H2 ARE_THE_SAME;
-				fb_link[f].face.y_H2O, fb_face[f].y_H2O ARE_THE_SAME;
-				fb_link[f].face.N_H2, fb_face[f].N_H2 ARE_THE_SAME;
-				fb_link[f].face.N_H2O, fb_face[f].N_H2O ARE_THE_SAME;
+				fb_link[f].up, fb_node[f - 1] ARE_THE_SAME;
+				fb_link[f].down, fb_node[f] ARE_THE_SAME;
+				fb_link[f].face, fb_face[f] ARE_THE_SAME;
 				fb_flux_h2_eq[f]:
 					fb_face[f].N_H2 = J_transport;
 				fb_flux_h2o_eq[f]:
@@ -568,10 +573,10 @@ MODEL tga_reduction_screen_dyn_lumpedbed_linked(
 				k_step[r] = eta[r] * k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
 			Keq_eq[r]:
 			K_ratio_eq[r] = exp(
-				K_eq_fit_A[r]
-				+ K_eq_fit_B[r] / (T / 1 {K})
-				+ K_eq_fit_C[r] * ln(T / 1 {K})
-				+ K_eq_fit_D[r] * (T / 1 {K})
+				K_fit.A[r]
+				+ K_fit.B[r] / (T / 1 {K})
+				+ K_fit.C[r] * ln(T / 1 {K})
+				+ K_fit.D[r] * (T / 1 {K})
 			);
 	END FOR;
 
@@ -736,23 +741,7 @@ METHODS
 		FIX E_a[2] := 60 {kJ/mol};
 		FIX E_a[3] := 62 {kJ/mol};
 		FIX E_a[4] := 60 {kJ/mol};
-
-		FIX K_eq_fit_A[1] := 275.5950899625076;
-		FIX K_eq_fit_A[2] := 54.79019894028178;
-		FIX K_eq_fit_A[3] := -31.58593152453788;
-		FIX K_eq_fit_A[4] := 30.51949661506154;
-		FIX K_eq_fit_B[1] := -26283.26419177231;
-		FIX K_eq_fit_B[2] := -10556.58318912153;
-		FIX K_eq_fit_B[3] := 660.7218135785515;
-		FIX K_eq_fit_B[4] := -5849.579888718082;
-		FIX K_eq_fit_C[1] := -37.2540654519026;
-		FIX K_eq_fit_C[2] := -6.951008925726938;
-		FIX K_eq_fit_C[3] := 4.668826943343771;
-		FIX K_eq_fit_C[4] := -3.746980537603341;
-		FIX K_eq_fit_D[1] := 0.01408952822924074;
-		FIX K_eq_fit_D[2] := 0.004147837907387222;
-		FIX K_eq_fit_D[3] := -0.00212400615445666;
-		FIX K_eq_fit_D[4] := 0.0006347698842184886;
+		RUN K_fit.values;
 
 		xi[1] := 0;
 		xi[2] := 0;
@@ -948,10 +937,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 	K_ratio_eq[steps] "equilibrium ratios for the reduction steps" IS_A positive_factor;
 	etak0[steps] IS_A rate_per_pressure;
 	E_a[steps] IS_A molar_energy;
-	K_eq_fit_A[steps] IS_A factor;
-	K_eq_fit_B[steps] IS_A factor;
-	K_eq_fit_C[steps] IS_A factor;
-	K_eq_fit_D[steps] IS_A factor;
+	K_fit "shared four-term equilibrium-ratio fits" IS_A tga_reduction_keq_fits;
 
 	J_reaction "total reaction flux summed over the bed" IS_A molar_flux;
 	J_reaction_zone[1..n_bed_segs] IS_A molar_flux;
@@ -998,7 +984,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 	SELECT (reaction_model)
 	CASE 'three_step_wustite':
 		oxygen_eq_three_step:
-			oxygen_remaining = SUM[slice[z].oxygen_remaining | z IN [1..n_bed_segs]];
+			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
 		xi2_eq_three_step:
 			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
 		xi4_eq_three_step:
@@ -1094,6 +1080,11 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 		OTHERWISE:
 			dzfb_eq:
 				dz_fb = L_freeboard_eff / n_fb_segs;
+			c_tot, fb_link[1..n_fb_segs].c_tot ARE_THE_SAME;
+			dz_fb, fb_link[1..n_fb_segs].delta ARE_THE_SAME;
+			tr.D_H2O_H2, fb_link[1..n_fb_segs].D_H2O_H2_bed ARE_THE_SAME;
+			tr.D_H2O_Ar, fb_link[1..n_fb_segs].D_H2O_Ar_bed ARE_THE_SAME;
+			tr.D_H2_Ar, fb_link[1..n_fb_segs].D_H2_Ar_bed ARE_THE_SAME;
 
 			fb_top_h2_eq:
 				fb_node[0].y_H2 = y_H2_fb_top;
@@ -1107,19 +1098,9 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 				y_Ar_if = 1 - y_H2_if - y_H2O_if;
 
 			FOR f IN [1..n_fb_segs] CREATE
-				fb_link[f].c_tot, c_tot ARE_THE_SAME;
-				fb_link[f].delta, dz_fb ARE_THE_SAME;
-				fb_link[f].D_H2O_H2_bed, tr.D_H2O_H2 ARE_THE_SAME;
-				fb_link[f].D_H2O_Ar_bed, tr.D_H2O_Ar ARE_THE_SAME;
-				fb_link[f].D_H2_Ar_bed, tr.D_H2_Ar ARE_THE_SAME;
-				fb_link[f].up.y_H2, fb_node[f - 1].y_H2 ARE_THE_SAME;
-				fb_link[f].up.y_H2O, fb_node[f - 1].y_H2O ARE_THE_SAME;
-				fb_link[f].down.y_H2, fb_node[f].y_H2 ARE_THE_SAME;
-				fb_link[f].down.y_H2O, fb_node[f].y_H2O ARE_THE_SAME;
-				fb_link[f].face.y_H2, fb_face[f].y_H2 ARE_THE_SAME;
-				fb_link[f].face.y_H2O, fb_face[f].y_H2O ARE_THE_SAME;
-				fb_link[f].face.N_H2, fb_face[f].N_H2 ARE_THE_SAME;
-				fb_link[f].face.N_H2O, fb_face[f].N_H2O ARE_THE_SAME;
+				fb_link[f].up, fb_node[f - 1] ARE_THE_SAME;
+				fb_link[f].down, fb_node[f] ARE_THE_SAME;
+				fb_link[f].face, fb_face[f] ARE_THE_SAME;
 				fb_flux_h2_eq[f]:
 					fb_face[f].N_H2 = J_transport;
 				fb_flux_h2o_eq[f]:
@@ -1147,47 +1128,23 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 
 	top_link_delta_eq:
 		link[0].delta = 0.5 * dz_bed;
-	link[0].c_tot, c_tot ARE_THE_SAME;
-	link[0].D_H2O_H2_bed, D_H2O_H2_bed ARE_THE_SAME;
-	link[0].D_H2O_Ar_bed, D_H2O_Ar_bed ARE_THE_SAME;
-	link[0].D_H2_Ar_bed, D_H2_Ar_bed ARE_THE_SAME;
+	c_tot, link[0..n_bed_segs - 1].c_tot ARE_THE_SAME;
+	D_H2O_H2_bed, link[0..n_bed_segs - 1].D_H2O_H2_bed ARE_THE_SAME;
+	D_H2O_Ar_bed, link[0..n_bed_segs - 1].D_H2O_Ar_bed ARE_THE_SAME;
+	D_H2_Ar_bed, link[0..n_bed_segs - 1].D_H2_Ar_bed ARE_THE_SAME;
+	dz_bed, link[1..n_bed_segs - 1].delta ARE_THE_SAME;
 	link[0].up.y_H2, y_H2_if ARE_THE_SAME;
 	link[0].up.y_H2O, y_H2O_if ARE_THE_SAME;
-	link[0].down.y_H2, slice[1].centre.y_H2 ARE_THE_SAME;
-	link[0].down.y_H2O, slice[1].centre.y_H2O ARE_THE_SAME;
-
-	link[0].face.y_H2, face[0].y_H2 ARE_THE_SAME;
-	link[0].face.y_H2O, face[0].y_H2O ARE_THE_SAME;
-	link[0].face.N_H2, face[0].N_H2 ARE_THE_SAME;
-	link[0].face.N_H2O, face[0].N_H2O ARE_THE_SAME;
-	slice[1].top.y_H2, face[0].y_H2 ARE_THE_SAME;
-	slice[1].top.y_H2O, face[0].y_H2O ARE_THE_SAME;
-	slice[1].top.N_H2, face[0].N_H2 ARE_THE_SAME;
-	slice[1].top.N_H2O, face[0].N_H2O ARE_THE_SAME;
+	link[0].down, slice[1].centre ARE_THE_SAME;
+	link[0].face, face[0] ARE_THE_SAME;
+	slice[1].top, face[0] ARE_THE_SAME;
 
 	FOR f IN [1..n_bed_segs - 1] CREATE
-		link[f].c_tot, c_tot ARE_THE_SAME;
-		link[f].delta, dz_bed ARE_THE_SAME;
-		link[f].D_H2O_H2_bed, D_H2O_H2_bed ARE_THE_SAME;
-		link[f].D_H2O_Ar_bed, D_H2O_Ar_bed ARE_THE_SAME;
-		link[f].D_H2_Ar_bed, D_H2_Ar_bed ARE_THE_SAME;
-		link[f].up.y_H2, slice[f].centre.y_H2 ARE_THE_SAME;
-		link[f].up.y_H2O, slice[f].centre.y_H2O ARE_THE_SAME;
-		link[f].down.y_H2, slice[f + 1].centre.y_H2 ARE_THE_SAME;
-		link[f].down.y_H2O, slice[f + 1].centre.y_H2O ARE_THE_SAME;
-
-		link[f].face.y_H2, face[f].y_H2 ARE_THE_SAME;
-		link[f].face.y_H2O, face[f].y_H2O ARE_THE_SAME;
-		link[f].face.N_H2, face[f].N_H2 ARE_THE_SAME;
-		link[f].face.N_H2O, face[f].N_H2O ARE_THE_SAME;
-		slice[f].bot.y_H2, face[f].y_H2 ARE_THE_SAME;
-		slice[f].bot.y_H2O, face[f].y_H2O ARE_THE_SAME;
-		slice[f].bot.N_H2, face[f].N_H2 ARE_THE_SAME;
-		slice[f].bot.N_H2O, face[f].N_H2O ARE_THE_SAME;
-		slice[f + 1].top.y_H2, face[f].y_H2 ARE_THE_SAME;
-		slice[f + 1].top.y_H2O, face[f].y_H2O ARE_THE_SAME;
-		slice[f + 1].top.N_H2, face[f].N_H2 ARE_THE_SAME;
-		slice[f + 1].top.N_H2O, face[f].N_H2O ARE_THE_SAME;
+		link[f].up, slice[f].centre ARE_THE_SAME;
+		link[f].down, slice[f + 1].centre ARE_THE_SAME;
+		link[f].face, face[f] ARE_THE_SAME;
+		slice[f].bot, face[f] ARE_THE_SAME;
+		slice[f + 1].top, face[f] ARE_THE_SAME;
 	END FOR;
 
 	bottom_h2_eq:
@@ -1196,20 +1153,17 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 		bottom_port.N_H2O = 0 {mol/m^2/s};
 	bottom_port.y_H2, slice[n_bed_segs].centre.y_H2 ARE_THE_SAME;
 	bottom_port.y_H2O, slice[n_bed_segs].centre.y_H2O ARE_THE_SAME;
-	slice[n_bed_segs].bot.y_H2, bottom_port.y_H2 ARE_THE_SAME;
-	slice[n_bed_segs].bot.y_H2O, bottom_port.y_H2O ARE_THE_SAME;
-	slice[n_bed_segs].bot.N_H2, bottom_port.N_H2 ARE_THE_SAME;
-	slice[n_bed_segs].bot.N_H2O, bottom_port.N_H2O ARE_THE_SAME;
+	slice[n_bed_segs].bot, bottom_port ARE_THE_SAME;
 
 	FOR r IN steps CREATE
 		kstep_eq[r]:
 			k_step[r] = etak0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
 		Keq_eq[r]:
 			K_ratio_eq[r] = exp(
-				K_eq_fit_A[r]
-				+ K_eq_fit_B[r] / (T / 1 {K})
-				+ K_eq_fit_C[r] * ln(T / 1 {K})
-				+ K_eq_fit_D[r] * (T / 1 {K})
+				K_fit.A[r]
+				+ K_fit.B[r] / (T / 1 {K})
+				+ K_fit.C[r] * ln(T / 1 {K})
+				+ K_fit.D[r] * (T / 1 {K})
 			);
 		rnet_avg_eq[r]:
 			rate_net[r] = SUM[slice[z].rate_net[r] | z IN [1..n_bed_segs]] / n_bed_segs;
@@ -1229,7 +1183,6 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 		slice[z].n0_Fe2O3_slice = n0_Fe2O3 / n_bed_segs;
 		slice_n0area_eq[z]:
 			slice[z].n0_per_area_slice = n0_per_area / n_bed_segs;
-
 		y_H2_zone[z], slice[z].centre.y_H2 ARE_THE_SAME;
 		y_H2O_zone[z], slice[z].centre.y_H2O ARE_THE_SAME;
 		y_H2_part[z], slice[z].surface.y_H2 ARE_THE_SAME;
@@ -1315,23 +1268,7 @@ METHODS
 		FIX E_a[2] := 56.743108 {kJ/mol};
 		FIX E_a[3] := 58.431754 {kJ/mol};
 		FIX E_a[4] := 56.743108 {kJ/mol};
-
-		FIX K_eq_fit_A[1] := 275.5950899625076;
-		FIX K_eq_fit_A[2] := 54.79019894028178;
-		FIX K_eq_fit_A[3] := -31.58593152453788;
-		FIX K_eq_fit_A[4] := 30.51949661506154;
-		FIX K_eq_fit_B[1] := -26283.26419177231;
-		FIX K_eq_fit_B[2] := -10556.58318912153;
-		FIX K_eq_fit_B[3] := 660.7218135785515;
-		FIX K_eq_fit_B[4] := -5849.579888718082;
-		FIX K_eq_fit_C[1] := -37.2540654519026;
-		FIX K_eq_fit_C[2] := -6.951008925726938;
-		FIX K_eq_fit_C[3] := 4.668826943343771;
-		FIX K_eq_fit_C[4] := -3.746980537603341;
-		FIX K_eq_fit_D[1] := 0.01408952822924074;
-		FIX K_eq_fit_D[2] := 0.004147837907387222;
-		FIX K_eq_fit_D[3] := -0.00212400615445666;
-		FIX K_eq_fit_D[4] := 0.0006347698842184886;
+		RUN K_fit.values;
 
 		xi[1] := 0;
 		xi[2] := 0;
@@ -1372,7 +1309,6 @@ METHODS
 			slice[z].n_Fe3O4.lower_bound := -1e-12 {mol};
 			slice[z].n_FeO.lower_bound := -1e-12 {mol};
 			slice[z].n_Fe.lower_bound := -1e-12 {mol};
-			slice[z].oxygen_remaining.lower_bound := -1e-9 {mol};
 		END FOR;
 
 		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
