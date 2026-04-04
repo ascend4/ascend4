@@ -25,8 +25,10 @@ REQUIRE "johnpye/fboard.a4c";
 	- pseudo-binary transport of H2 / H2O against an inert background, with the
 	  reacting-gas argon fraction assumed equal to the bulk-gas argon fraction;
 	- temperature-dependent step equilibrium ratios are represented here by
-	  simple placeholder ln(K) = A - B/T correlations, intended to be replaced
-	  later by the Fe-O-H equilibrium machinery already being developed.
+	  thermo-shaped surrogate correlations
+	      ln(K) = A + B/T + C ln(T) + D T
+	  fitted to the current Fe-O-H FPROPS boundary calculations over
+	  600 C to 1200 C.
 
 	The intent is not to make this the final mechanistic model. It is a
 	screening tool that should tell us whether bed/freeboard transport is large
@@ -157,10 +159,15 @@ MODEL tga_reduction_screen;
 		Stepwise kineq-style local kinetics.
 
 		k0[r] and E_a[r] are stepwise Arrhenius parameters in a pressure-form
-		rate law. K_eq_lnA/B are temperature-dependent equilibrium-ratio
+		rate law. K_eq_fit_A/B/C/D are thermo-shaped equilibrium-ratio
 		correlations:
 
-			K_ratio_eq[r] = exp( K_eq_lnA[r] - K_eq_lnB[r] / T )
+			K_ratio_eq[r] = exp(
+				K_eq_fit_A[r]
+				+ K_eq_fit_B[r] / T[K]
+				+ K_eq_fit_C[r] * ln(T[K])
+				+ K_eq_fit_D[r] * T[K]
+			)
 
 		The current K_ratio_eq fits are derived from the existing Fe-O-H FPROPS
 		work as documented in models/johnpye/iron/TGA.md:
@@ -183,9 +190,11 @@ MODEL tga_reduction_screen;
 	E_a[steps] IS_A molar_energy;
 	k_step[steps] IS_A rate_per_pressure;
 
-	K_eq_lnA[steps] IS_A factor;
-	K_eq_lnB[steps] IS_A factor;
-	K_ratio_eq[steps] IS_A positive_factor;
+		K_eq_fit_A[steps] IS_A factor;
+		K_eq_fit_B[steps] IS_A factor;
+		K_eq_fit_C[steps] IS_A factor;
+		K_eq_fit_D[steps] IS_A factor;
+		K_ratio_eq[steps] IS_A positive_factor;
 
 		drive[steps] IS_A delta_pressure;
 		rate_forward[steps] IS_A extent_rate;
@@ -260,10 +269,12 @@ MODEL tga_reduction_screen;
 		Keq_eq[r]:
 			K_ratio_eq[r]
 			=
-			exp(
-				K_eq_lnA[r]
-				- K_eq_lnB[r] / (T / 1 {K})
-			);
+				exp(
+					K_eq_fit_A[r]
+					+ K_eq_fit_B[r] / (T / 1 {K})
+					+ K_eq_fit_C[r] * ln(T / 1 {K})
+					+ K_eq_fit_D[r] * (T / 1 {K})
+				);
 			drive_eq[r]:
 				drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
 			rnet_eq[r]:
@@ -321,28 +332,35 @@ METHODS
 		(* Placeholder stepwise Arrhenius parameters.
 		   These are not yet calibrated and are only intended to support
 		   transport-screening runs. *)
-			k0[1] := 3e-4 {1/s/Pa};
-			k0[2] := 1.5e-4 {1/s/Pa};
-			k0[3] := 7.5e-4 {1/s/Pa};
+		k0[1] := 3e-4 {1/s/Pa};
+		k0[2] := 1.5e-4 {1/s/Pa};
+		k0[3] := 7.5e-4 {1/s/Pa};
 
-			E_a[1] := 55 {kJ/mol};
-			E_a[2] := 60 {kJ/mol};
-			E_a[3] := 62 {kJ/mol};
+		E_a[1] := 55 {kJ/mol};
+		E_a[2] := 60 {kJ/mol};
+		E_a[3] := 62 {kJ/mol};
 
 		(* Fitted equilibrium-ratio correlations from the existing Fe-O-H
-		   FPROPS work. See models/johnpye/iron/TGA.md for derivation details,
-		   source utilities, and fit errors over 600 C to 1200 C.
+		   FPROPS work using the thermo-shaped form
+		     ln(K) = A + B/T + C ln(T) + D T
+		   over 600 C to 1200 C.
 
-		     step 1: hematite | magnetite, max fit error about 12%
-		     step 2: wustite | spinel,   max fit error about 5.3%
-		     step 3: Fe | wustite,       max fit error about 0.8%
+		     step 1: hematite | magnetite, max fit error about 0.93%
+		     step 2: wustite | spinel,   max fit error about 0.23%
+		     step 3: Fe | wustite,       max fit error about 0.25%
 		*)
-		K_eq_lnA[1] := 8.54050167864375;
-		K_eq_lnA[2] := 8.447122204684765;
-		K_eq_lnA[3] := 1.0604569618298618;
-			K_eq_lnB[1] := 2552.121942697152;
-			K_eq_lnB[2] := 8067.2733483476295;
-			K_eq_lnB[3] := 1856.1489018164739;
+		K_eq_fit_A[1] := 275.5950899625076;
+		K_eq_fit_A[2] := 54.79019894028178;
+		K_eq_fit_A[3] := -31.58593152453788;
+		K_eq_fit_B[1] := -26283.26419177231;
+		K_eq_fit_B[2] := -10556.58318912153;
+		K_eq_fit_B[3] := 660.7218135785515;
+		K_eq_fit_C[1] := -37.2540654519026;
+		K_eq_fit_C[2] := -6.951008925726938;
+		K_eq_fit_C[3] := 4.668826943343771;
+		K_eq_fit_D[1] := 0.01408952822924074;
+		K_eq_fit_D[2] := 0.004147837907387222;
+		K_eq_fit_D[3] := -0.00212400615445666;
 
 		xi[1] := 0;
 		xi[2] := 0;
@@ -354,11 +372,11 @@ METHODS
 		t := 0 {s};
 	END values;
 
-		METHOD specify;
-			FIX T, p, A_crucible, L_freeboard, m_sample_init, rho_bulk_bed;
-			FIX eps_bed, tau_bed, k_fb_multiplier, k_bed_multiplier;
-			FIX y_H2_bulk, y_H2O_bulk;
-		FIX k0[steps], E_a[steps], K_eq_lnA[steps], K_eq_lnB[steps];
+	METHOD specify;
+		FIX T, p, A_crucible, L_freeboard, m_sample_init, rho_bulk_bed;
+		FIX eps_bed, tau_bed, k_fb_multiplier, k_bed_multiplier;
+		FIX y_H2_bulk, y_H2O_bulk;
+		FIX k0[steps], E_a[steps], K_eq_fit_A[steps], K_eq_fit_B[steps], K_eq_fit_C[steps], K_eq_fit_D[steps];
 		FIX xi[steps];
 	END specify;
 
