@@ -82,6 +82,72 @@ const rel_filter_t integrator_ida_rel = {
 	REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
 };
 
+const var_filter_t integrator_ida_active_free_incident = {
+	VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | VAR_FIXED,
+	VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | 0
+};
+
+static const char *integrator_ida_dof_status_name(int status){
+	switch(status){
+	case 1:
+		return "underspecified";
+	case 2:
+		return "square";
+	case 3:
+		return "structurally singular";
+	case 4:
+		return "overspecified";
+	default:
+		return "analysis error";
+	}
+}
+
+static void integrator_ida_report_diagnostics(IntegratorSystem *integ){
+	int dof_status = 5;
+	int dof = 0;
+	int active_rels;
+	int active_free_vars;
+	int total_vars;
+	int total_rels;
+	int total_bnds;
+	int algebraic_vars;
+	int algebraic_rels;
+	int extra_active_vars;
+
+	if(!slvDOF_status(integ->system, &dof_status, &dof)){
+		dof_status = 5;
+		dof = 0;
+	}
+
+	active_rels = slv_count_solvers_rels(integ->system, &integrator_ida_rel);
+	active_free_vars = slv_count_solvers_vars(integ->system, &integrator_ida_active_free_incident);
+	total_vars = slv_get_num_solvers_vars(integ->system);
+	total_rels = slv_get_num_solvers_rels(integ->system);
+	total_bnds = slv_get_num_solvers_bnds(integ->system);
+
+	algebraic_vars = integ->n_y - integ->n_ydot;
+	if(algebraic_vars < 0){
+		algebraic_vars = 0;
+	}
+	algebraic_rels = active_rels - integ->n_diffeqs;
+	if(algebraic_rels < 0){
+		algebraic_rels = 0;
+	}
+	extra_active_vars = active_free_vars - (integ->n_y + integ->n_ydot);
+	if(extra_active_vars < 0){
+		extra_active_vars = 0;
+	}
+
+	ERROR_REPORTER_NOLINE(ASC_USER_NOTE,
+		"IDA preflight: structure=%s, dof=%d, active rels=%d, free incident vars=%d, solver vars=%d, solver rels=%d",
+		integrator_ida_dof_status_name(dof_status), dof, active_rels, active_free_vars, total_vars, total_rels
+	);
+	ERROR_REPORTER_NOLINE(ASC_USER_NOTE,
+		"IDA partition: y=%d (%d differential, %d algebraic), ydot=%d, differential rels=%d, algebraic rels=%d, extra active vars=%d, boundaries=%d",
+		integ->n_y, integ->n_ydot, algebraic_vars, integ->n_ydot, integ->n_diffeqs, algebraic_rels, extra_active_vars, total_bnds
+	);
+}
+
 static int integrator_ida_var_in_list(struct var_variable **list, int n, struct var_variable *var){
 	int i;
 	for(i = 0; i < n; ++i){
@@ -798,6 +864,10 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 	MSG("At the end of ida_analyse, there are %d rels active"
 		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
+
+	if(SLV_PARAM_BOOL(&(integ->params), IDA_PARAM_DIAGNOSTICS)){
+		integrator_ida_report_diagnostics(integ);
+	}
 
 	return 0;
 }

@@ -280,24 +280,6 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *integ) {
  PARAMETERS FOR IDA
  */
 
-enum ida_parameters {
-	IDA_PARAM_LINSOLVER,
-	IDA_PARAM_MAXL,
-	IDA_PARAM_MAXORD,
-	IDA_PARAM_AUTODIFF,
-	IDA_PARAM_CALCIC,
-	IDA_PARAM_SAFEEVAL,
-	IDA_PARAM_RTOL,
-	IDA_PARAM_ATOL,
-	IDA_PARAM_ATOLVECT,
-	IDA_PARAM_GSMODIFIED,
-	IDA_PARAM_MAXNCF,
-	IDA_PARAM_PREC,
-	IDA_PARAM_ZENO_NCYCLES,
-	IDA_PARAM_ZENO_DURATION,
-	IDA_PARAMS_SIZE
-};
-
 /**
  Here the full set of parameters is defined, along with upper/lower bounds,
  etc. The values are stuck into the integ->params structure.
@@ -448,6 +430,14 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 				,"Window in independent-variable units used with"
 				" 'zeno_ncycles' to detect rapidly accumulating boundary events."
 			}, 1e-4, 0.0, 1e20}
+	);
+
+	slv_param_bool(p,IDA_PARAM_DIAGNOSTICS
+		,(SlvParameterInitBool) { {"diagnostics"
+				,"Print IDA preflight diagnostics?",2
+				,"Emit a concise structural and DAE-partitioning report during"
+				" IDA analyse() before time integration begins."
+			}, FALSE}
 	);
 
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);

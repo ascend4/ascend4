@@ -414,6 +414,12 @@ def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, ou
 	sim.build()
 	integrator = ascpy.Integrator(sim)
 	integrator.setEngine(engine or DEFAULT_INTEGRATOR)
+	hooks = sim.getSolverHooks()
+	if hooks is not None:
+		try:
+			hooks.applyIntegratorConfig(integrator, sim)
+		except Exception:
+			pass
 	integrator.findIndependentVar()
 	indep = integrator.getIndependentVariable()
 	indep_inst = indep.getInstance()

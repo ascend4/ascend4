@@ -690,6 +690,13 @@ METHOD integrate_default;
 	INTEGRATOR IDA;
 	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
 END integrate_default;
+METHOD integrate_diagnostics;
+	RUN prepare_dynamic;
+	FIX m.t;
+	INTEGRATOR IDA;
+	OPTION diagnostics TRUE;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END integrate_diagnostics;
 METHOD on_load;
 	RUN integrate_default;
 END on_load;
@@ -726,6 +733,13 @@ METHOD integrate_default;
 	INTEGRATOR IDA;
 	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
 END integrate_default;
+METHOD integrate_diagnostics;
+	RUN prepare_dynamic;
+	FIX m.t;
+	INTEGRATOR IDA;
+	OPTION diagnostics TRUE;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END integrate_diagnostics;
 METHOD on_load;
 	RUN integrate_default;
 END on_load;
@@ -769,6 +783,13 @@ METHOD integrate_default;
 	INTEGRATOR IDA;
 	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
 END integrate_default;
+METHOD integrate_diagnostics;
+	RUN prepare_dynamic;
+	FIX m.t;
+	INTEGRATOR IDA;
+	OPTION diagnostics TRUE;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END integrate_diagnostics;
 METHOD on_load;
 	RUN integrate_default;
 END on_load;
@@ -840,6 +861,23 @@ METHOD integrate_default;
 	RUN m.integrate_default;
 END integrate_default;
 END tgadyn_msbed_mod_fbdisc_nomorph;
+
+(* Diagnostic entry points that enable IDA preflight reporting from the CLI. *)
+MODEL tgadyn_msbed_mod_diag;
+	m IS_A tgadyn_msbed_mod_morph_configurable(10, 'lumped', 0, 'history', 'coupled');
+METHODS
+METHOD on_load;
+	RUN m.integrate_diagnostics;
+END on_load;
+END tgadyn_msbed_mod_diag;
+
+MODEL tgadyn_msbed_mod_fbdisc_diag;
+	m IS_A tgadyn_msbed_mod_morph_configurable(10, 'discretised', 10, 'history', 'coupled');
+METHODS
+METHOD on_load;
+	RUN m.integrate_diagnostics;
+END on_load;
+END tgadyn_msbed_mod_fbdisc_diag;
 
 (* vim: sw=4:noet:ts=4
 *)
