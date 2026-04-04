@@ -763,12 +763,18 @@ METHODS
 		   Allow small negative trial-state chatter during IDA localisation so
 		   those topological limit cases run cleanly without introducing extra
 		   event logic here. *)
+		y_H2_feed.lower_bound := -1e-9;
+		y_H2O_feed.lower_bound := -1e-9;
+		y_H2_react.lower_bound := -1e-9;
+		y_H2O_react.lower_bound := -1e-9;
 		n_Fe2O3.lower_bound := -1 {mol};
 		n_Fe3O4.lower_bound := -1 {mol};
 		n_FeO.lower_bound := -1 {mol};
 		n_Fe.lower_bound := -1 {mol};
 		oxygen_remaining.lower_bound := -1 {mol};
 		L_bl.lower_bound := 0 {mm};
+		L_freeboard_eff.lower_bound := -1e-9 {mm};
+		R_fb.lower_bound := -1e-12 {s/m};
 		IF freeboard_model = 'discretised' THEN
 			fb_node[0..n_fb_segs].y_H2.lower_bound := -1e-9;
 			fb_node[0..n_fb_segs].y_H2O.lower_bound := -1e-9;
