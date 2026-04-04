@@ -28,3 +28,17 @@ METHOD on_load;
 END on_load;
 END test3;
 
+MODEL child4;
+	x,y,z IS_A solver_var;
+	x = y + z;
+END child4;
+
+MODEL test4;
+	c IS_A child4;
+METHODS
+METHOD on_load;
+	FIX c.y;
+	FIX c.z;
+	FREE c.z;
+END on_load;
+END test4;
