@@ -42,9 +42,7 @@ def build_progress_reporter(ascpy, progress_delay=10.0, progress_interval=5.0):
 						if status.hasMipGap():
 							parts.append(f"gap={status.getMipGap():.4g}")
 						if status.hasMipPrimalBound():
-							parts.append(f"primal={status.getMipPrimalBound():.6g}")
-						if status.hasMipDualBound():
-							parts.append(f"dual={status.getMipDualBound():.6g}")
+							parts.append(f"obj={status.getMipPrimalBound():.6g}")
 					elif status.hasLpObjective():
 						parts.append(f"obj={status.getLpObjective():.6g}")
 				except Exception:

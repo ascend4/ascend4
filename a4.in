@@ -185,6 +185,8 @@ if __name__ == "__main__":
 	p_run.add_argument('-r', '--run-method', dest='runmethod', help="Run METHOD after 'on_load' and before the final solve");
 	p_run.add_argument('-p', '--print', dest='printvars', action='extend', nargs='+', help='Variables to print (can be used multiple times). Implies --no-test.')
 	p_run.add_argument('--no-test','-n', action='store_true', help="Suppress running of 'self_test' method after solving");
+	p_run.add_argument('--progress-delay', type=float, default=10.0, help='Seconds before emitting solver progress (default: 10).')
+	p_run.add_argument('--progress-interval', type=float, default=5.0, help='Minimum seconds between progress lines (default: 5).')
 
 	p_int = s.add_parser('int',help = 'Alias for `run --integrate`')
 	p_int.set_defaults(action='run', integrate=True)
@@ -327,6 +329,10 @@ if __name__ == "__main__":
 			cmd += ["--model",args.model]
 		if hasattr(args,'runmethod') and args.runmethod:
 			cmd += ["--run-method",args.runmethod]
+		if hasattr(args,'progress_delay') and args.progress_delay != 10.0:
+			cmd += ["--progress-delay",str(args.progress_delay)]
+		if hasattr(args,'progress_interval') and args.progress_interval != 5.0:
+			cmd += ["--progress-interval",str(args.progress_interval)]
 		integrate_requested = bool(
 			getattr(args,'integrate',False)
 			or getattr(args,'engine',None) is not None

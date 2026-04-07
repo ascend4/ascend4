@@ -1677,9 +1677,15 @@ static void highs_report_progress(
 	}
 
 	highs_progress_append(details,sizeof(details),&n
-		,"tag=%s, t=%.3gs, iter=%d"
-		,tag,running_time,iteration_count
+		,"tag=%s, t=%.3gs"
+		,tag,running_time
 	);
+	if(iteration_count > 0){
+		highs_progress_append(details,sizeof(details),&n
+			,", iter=%d"
+			,iteration_count
+		);
+	}
 	if(isfinite(data_out->objective_function_value)){
 		highs_progress_append(details,sizeof(details),&n
 			,", obj=%.17g",data_out->objective_function_value
@@ -1687,36 +1693,12 @@ static void highs_report_progress(
 	}
 	if(have_mip_data && data_out->mip_node_count >= 0){
 		highs_progress_append(details,sizeof(details),&n
-			,", mip_nodes=%lld",(long long)data_out->mip_node_count
-		);
-	}
-	if(have_mip_data && data_out->mip_total_lp_iterations >= 0){
-		highs_progress_append(details,sizeof(details),&n
-			,", mip_lp_iter=%lld",(long long)data_out->mip_total_lp_iterations
-		);
-	}
-	if(have_mip_data && isfinite(data_out->mip_primal_bound)){
-		highs_progress_append(details,sizeof(details),&n
-			,", mip_primal=%.17g",data_out->mip_primal_bound
-		);
-	}
-	if(have_mip_data && isfinite(data_out->mip_dual_bound)){
-		highs_progress_append(details,sizeof(details),&n
-			,", mip_dual=%.17g",data_out->mip_dual_bound
+			,", nodes=%lld",(long long)data_out->mip_node_count
 		);
 	}
 	if(have_mip_data && isfinite(data_out->mip_gap)){
 		highs_progress_append(details,sizeof(details),&n
-			,", mip_gap=%.17g",data_out->mip_gap
-		);
-	}else if(
-		have_mip_data
-		&& isfinite(data_out->mip_primal_bound)
-		&& isfinite(data_out->mip_dual_bound)
-	){
-		double abs_gap = fabs(data_out->mip_primal_bound - data_out->mip_dual_bound);
-		highs_progress_append(details,sizeof(details),&n
-			,", mip_abs_gap=%.17g",abs_gap
+			,", gap=%.17g",data_out->mip_gap
 		);
 	}
 
