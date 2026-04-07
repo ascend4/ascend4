@@ -8,8 +8,10 @@ REQUIRE "johnpye/iron/tgadyn_msbed_linked.a4c";
 
 MODEL tga_reduction_bed_slice_radial_local(
 	n_radial_segs IS_A integer_constant;
+	reaction_model IS_A symbol_constant;
 	morphology_model IS_A symbol_constant;
 ) WHERE (
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph');
 );
 	steps IS_A set OF integer_constant;
@@ -86,8 +88,11 @@ MODEL tga_reduction_bed_slice_radial_local(
 	A_face_density[faces] IS_A positive_factor;
 
 	rate_forward_1[shells], rate_forward_2[shells], rate_forward_3[shells] IS_A extent_rate;
+	rate_forward_4[shells] IS_A extent_rate;
 	rate_reverse_1[shells], rate_reverse_2[shells], rate_reverse_3[shells] IS_A extent_rate;
+	rate_reverse_4[shells] IS_A extent_rate;
 	rate_net_1[shells], rate_net_2[shells], rate_net_3[shells] IS_A extent_rate;
+	rate_net_4[shells] IS_A extent_rate;
 	rate_net[steps] IS_A extent_rate;
 	J_reaction IS_A molar_flux;
 	J_reaction_local ALIASES J_reaction;
@@ -131,8 +136,6 @@ MODEL tga_reduction_bed_slice_radial_local(
 			xi1_shell[s] = (1 - n_radial_segs * n_Fe2O3_shell[s] / n0_Fe2O3_slice) / 3;
 		xi3_shell_eq[s]:
 			xi3_shell[s] = n_radial_segs * n_Fe_shell[s] / n0_Fe2O3_slice;
-		Jshell_eq[s]:
-			J_shell[s] = (n0_per_area_slice / n_radial_segs) * (rate_net_1[s] + rate_net_2[s] + rate_net_3[s]);
 		rf1_eq[s]:
 			rate_forward_1[s] = (n_radial_segs * n_Fe2O3_shell[s] / n0_Fe2O3_slice) * k_step[1] * p * y_H2_shell[s];
 		rr1_eq[s]:
@@ -145,21 +148,54 @@ MODEL tga_reduction_bed_slice_radial_local(
 			rate_forward_3[s] = (n_radial_segs * n_FeO_shell[s] / n0_Fe2O3_slice) * k_step[3] * p * y_H2_shell[s];
 		rr3_eq[s]:
 			rate_reverse_3[s] = (n_radial_segs * n_Fe_shell[s] / n0_Fe2O3_slice) * k_step[3] * p * y_H2O_shell[s] / K_ratio_eq[3];
+		rf4_eq[s]:
+			rate_forward_4[s] = (n_radial_segs * n_Fe3O4_shell[s] / n0_Fe2O3_slice) * k_step[4] * p * y_H2_shell[s];
+		rr4_eq[s]:
+			rate_reverse_4[s] = (n_radial_segs * n_Fe_shell[s] / n0_Fe2O3_slice) * k_step[4] * p * y_H2O_shell[s] / K_ratio_eq[4];
 		rnet1_eq[s]:
 			rate_net_1[s] = rate_forward_1[s] - rate_reverse_1[s];
-		rnet2_eq[s]:
-			rate_net_2[s] = rate_forward_2[s] - rate_reverse_2[s];
-		rnet3_eq[s]:
-			rate_net_3[s] = rate_forward_3[s] - rate_reverse_3[s];
-		nhe_ode_eq[s]:
-			der(n_Fe2O3_shell[s]) = -3 * (n0_Fe2O3_slice / n_radial_segs) * rate_net_1[s];
-		nmag_ode_eq[s]:
-			der(n_Fe3O4_shell[s]) = (n0_Fe2O3_slice / n_radial_segs) * (2 * rate_net_1[s] - rate_net_2[s]);
-		nwu_ode_eq[s]:
-			der(n_FeO_shell[s]) = (n0_Fe2O3_slice / n_radial_segs) * (3 * rate_net_2[s] - rate_net_3[s]);
-		nfe_ode_eq[s]:
-			der(n_Fe_shell[s]) = (n0_Fe2O3_slice / n_radial_segs) * rate_net_3[s];
 	END FOR;
+
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		FOR s IN shells CREATE
+			Jshell_eq_three_step[s]:
+				J_shell[s] = (n0_per_area_slice / n_radial_segs) * (rate_net_1[s] + rate_net_2[s] + rate_net_3[s]);
+			rnet2_eq_three_step[s]:
+				rate_net_2[s] = rate_forward_2[s] - rate_reverse_2[s];
+			rnet3_eq_three_step[s]:
+				rate_net_3[s] = rate_forward_3[s] - rate_reverse_3[s];
+			rnet4_eq_three_step[s]:
+				rate_net_4[s] = 0 {1/s};
+			nhe_ode_eq_three_step[s]:
+				der(n_Fe2O3_shell[s]) = -3 * (n0_Fe2O3_slice / n_radial_segs) * rate_net_1[s];
+			nmag_ode_eq_three_step[s]:
+				der(n_Fe3O4_shell[s]) = (n0_Fe2O3_slice / n_radial_segs) * (2 * rate_net_1[s] - rate_net_2[s]);
+			nwu_ode_eq_three_step[s]:
+				der(n_FeO_shell[s]) = (n0_Fe2O3_slice / n_radial_segs) * (3 * rate_net_2[s] - rate_net_3[s]);
+			nfe_ode_eq_three_step[s]:
+				der(n_Fe_shell[s]) = (n0_Fe2O3_slice / n_radial_segs) * rate_net_3[s];
+		END FOR;
+	CASE 'two_step_direct':
+		FOR s IN shells CREATE
+			Jshell_eq_two_step[s]:
+				J_shell[s] = (n0_per_area_slice / n_radial_segs) * (rate_net_1[s] + rate_net_4[s]);
+			rnet2_eq_two_step[s]:
+				rate_net_2[s] = 0 {1/s};
+			rnet3_eq_two_step[s]:
+				rate_net_3[s] = 0 {1/s};
+			rnet4_eq_two_step[s]:
+				rate_net_4[s] = rate_forward_4[s] - rate_reverse_4[s];
+			nhe_ode_eq_two_step[s]:
+				der(n_Fe2O3_shell[s]) = -3 * (n0_Fe2O3_slice / n_radial_segs) * rate_net_1[s];
+			nmag_ode_eq_two_step[s]:
+				der(n_Fe3O4_shell[s]) = (n0_Fe2O3_slice / n_radial_segs) * (2 * rate_net_1[s] - rate_net_4[s] / 4);
+			nwu_ode_eq_two_step[s]:
+				der(n_FeO_shell[s]) = 0 {mol/s};
+			nfe_ode_eq_two_step[s]:
+				der(n_Fe_shell[s]) = 3 * (n0_Fe2O3_slice / n_radial_segs) * rate_net_4[s] / 4;
+		END FOR;
+	END SELECT;
 
 	close_temp_factor_eq:
 		close_temp_factor = exp(beta_T * ((T / 1 {K}) - 873.15) / 873.15);
@@ -214,7 +250,7 @@ MODEL tga_reduction_bed_slice_radial_local(
 	rnet3_avg_eq:
 		rate_net[3] = SUM[rate_net_3[s] | s IN shells] / n_radial_segs;
 	rnet4_avg_eq:
-		rate_net[4] = 0 {1/s};
+		rate_net[4] = SUM[rate_net_4[s] | s IN shells] / n_radial_segs;
 
 INITIAL
 	FOR s IN shells CREATE
@@ -228,8 +264,10 @@ END tga_reduction_bed_slice_radial_local;
 MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	n_bed_segs IS_A integer_constant;
 	n_radial_segs IS_A integer_constant;
+	reaction_model IS_A symbol_constant;
 	morphology_model IS_A symbol_constant;
 ) WHERE (
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph');
 );
 	steps IS_A set OF integer_constant;
@@ -323,7 +361,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	face[0..n_bed_segs - 1] IS_A tga_ms_gas_port;
 	bottom_port IS_A tga_ms_gas_port;
 	link[0..n_bed_segs - 1] IS_A tga_ms_bed_link;
-	slice[1..n_bed_segs] IS_A tga_reduction_bed_slice_radial_local(n_radial_segs, morphology_model);
+	slice[1..n_bed_segs] IS_A tga_reduction_bed_slice_radial_local(n_radial_segs, reaction_model, morphology_model);
 
 	ctot_eq:
 		c_tot = p / (1 {GAS_C} * T);
@@ -343,19 +381,29 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		n_FeO = SUM[slice[z].n_FeO | z IN [1..n_bed_segs]];
 	nfe_total_eq:
 		n_Fe = SUM[slice[z].n_Fe | z IN [1..n_bed_segs]];
-	oxygen_eq:
-		oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
 	reduction_degree_eq:
 		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
 
 	xi1_eq:
 		xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
-	xi2_eq:
-		xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
 	xi3_eq:
 		xi[3] = n_Fe / n0_Fe2O3;
-	xi4_eq:
-		xi[4] = 0;
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		oxygen_eq_three_step:
+			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+		xi2_eq_three_step:
+			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+		xi4_eq_three_step:
+			xi[4] = 0;
+	CASE 'two_step_direct':
+		oxygen_eq_two_step:
+			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4;
+		xi2_eq_two_step:
+			xi[2] = 0;
+		xi4_eq_two_step:
+			xi[4] = 8 * xi[1] - 4 * n_Fe3O4 / n0_Fe2O3;
+	END SELECT;
 
 	msample_eq:
 		m_sample
@@ -443,7 +491,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	bottom_port.y_H2O, slice[n_bed_segs].centre.y_H2O ARE_THE_SAME;
 	slice[n_bed_segs].bot, bottom_port ARE_THE_SAME;
 
-	FOR r IN [1..3] CREATE
+	FOR r IN steps CREATE
 		kstep_eq[r]:
 			k_step[r] = etak0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
 		Keq_eq[r]:
@@ -456,12 +504,6 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		rnet_avg_eq[r]:
 			rate_net[r] = SUM[slice[z].rate_net[r] | z IN [1..n_bed_segs]] / n_bed_segs;
 	END FOR;
-	kstep4_eq:
-		k_step[4] = 0 {1/s/Pa};
-	Keq4_eq:
-		K_ratio_eq[4] = 1;
-	rnet4_avg_eq:
-		rate_net[4] = 0 {1/s};
 
 	FOR z IN [1..n_bed_segs] CREATE
 		slice_n0_eq[z]:
@@ -673,13 +715,16 @@ END tga_reduction_screen_dyn_msbed_linked_radial;
 MODEL tgadyn_msbed_linked_radial_family(
 	n_bed_segs IS_A integer_constant;
 	n_radial_segs IS_A integer_constant;
+	reaction_model IS_A symbol_constant;
 	morphology_model IS_A symbol_constant;
 ) WHERE (
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph');
 );
 	m IS_A tga_reduction_screen_dyn_msbed_linked_radial(
 		n_bed_segs,
 		n_radial_segs,
+		reaction_model,
 		morphology_model
 	);
 METHODS
@@ -717,7 +762,7 @@ MODEL tgadyn_msbed_linked_radial_configurable(
 	n_bed_segs IS_A integer_constant;
 	n_radial_segs IS_A integer_constant;
 );
-	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'coupled');
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'three_step_wustite', 'coupled');
 METHODS
 METHOD on_load;
 	RUN m.on_load;
@@ -728,12 +773,34 @@ MODEL tgadyn_msbed_linked_radial_nomorph_configurable(
 	n_bed_segs IS_A integer_constant;
 	n_radial_segs IS_A integer_constant;
 );
-	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'nomorph');
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'three_step_wustite', 'nomorph');
 METHODS
 METHOD on_load;
 	RUN m.on_load;
 END on_load;
 END tgadyn_msbed_linked_radial_nomorph_configurable;
+
+MODEL tgadyn_msbed_linked_radial_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+	n_radial_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'two_step_direct', 'coupled');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_radial_direct_configurable;
+
+MODEL tgadyn_msbed_linked_radial_nomorph_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+	n_radial_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'two_step_direct', 'nomorph');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_radial_nomorph_direct_configurable;
 
 MODEL tgadyn_msbed_linked_radial;
 	m IS_A tgadyn_msbed_linked_radial_configurable(10, 5);
@@ -759,3 +826,19 @@ METHOD on_load;
 	RUN m.on_load;
 END on_load;
 END tgadyn_msbed_linked_radial_nomorph;
+
+MODEL tgadyn_msbed_linked_radial_direct;
+	m IS_A tgadyn_msbed_linked_radial_direct_configurable(10, 5);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_radial_direct;
+
+MODEL tgadyn_msbed_linked_radial_nomorph_direct;
+	m IS_A tgadyn_msbed_linked_radial_nomorph_direct_configurable(10, 5);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_radial_nomorph_direct;
