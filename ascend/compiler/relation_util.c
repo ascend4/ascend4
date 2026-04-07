@@ -170,20 +170,9 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res);
 
 /**
   Get the file and line for a relation Instance.
-  FIXME needs error checking/handling?
 */
 static void get_relinst_location(const struct Instance *relinst, const char **filename, int *lineno){
-  *filename = NULL;
-  *lineno = 0;
-  
-  //MSG("finding file/line of relinst %p",relinst);
-  struct Instance *p = InstanceParent(relinst,1);
-  
-  unsigned long ci = ChildIndex(p,relinst);
-  
-  const struct Statement *s = ChildDeclaration(p,ci);
-  *filename = Asc_ModuleFileName(StatementModule(s));
-  *lineno = StatementLineNum(s);
+  (void)InstanceDeclarationLocation(relinst,NULL,filename,lineno);
 }
 
 /**
@@ -254,7 +243,8 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
          first->type = type;
          break;
 
-      case e_var: {
+      case e_var:
+      case e_der: {
          MSG("var term");
          struct Instance *var = RelationVariable(rel,TermVarNumber(rt));
          CopyDimensions(RealAtomDims(var),&(first->d));
@@ -738,6 +728,7 @@ static double RelationBranchEvaluator(struct relation_term *term)
     return FuncEval(TermFunc(term),
       RelationBranchEvaluator(TermFuncLeft(term)) );
   case e_var:
+  case e_der:
     return TermVariable(glob_rel , term);
   case e_int:
     return (double)TermInteger(term);
@@ -801,6 +792,7 @@ RelationEvaluatePostfixBranch(CONST struct relation *r,
   case e_int:
     return TermInteger(term);
   case e_var:
+  case e_der:
     return TermVariable(r, term);
   case e_plus:
     (*pos)--;
@@ -866,6 +858,7 @@ RelationEvaluatePostfixBranchSafe(CONST struct relation *r,
   case e_int:
     return TermInteger(term);
   case e_var:
+  case e_der:
     return TermVariable(r, term);
   case e_plus:
     (*pos)--; y = RECURSE(r, pos, lhs, serr); /* = RHS of '+' */
@@ -966,6 +959,7 @@ RelationEvaluateResidualPostfix(CONST struct relation *r)
     case e_int:
       s++;  res_stack[s] = TermInteger(term);  break;
     case e_var:
+    case e_der:
       s++;  res_stack[s] = TermVariable(r, term);  break;
     case e_plus:
       res_stack[s-1] += res_stack[s];  s--;  break;
@@ -1109,6 +1103,7 @@ RelationEvaluateResidualGradient(CONST struct relation *r,
       res_stack(s) = TermInteger(term);
       break;
     case e_var:
+    case e_der:
       s++;
       for( v = 1; v <= num_var; v++ ) grad_stack(v,s) = 0.0;
       grad_stack(TermVarNumber(term),s) = 1.0;
@@ -1305,6 +1300,7 @@ RelationEvaluateResidualGradientSafe(CONST struct relation *r,
       res_stack(s) = TermInteger(term);
       break;
     case e_var:
+    case e_der:
       s++;
       for( v = 1; v <= num_var; v++ ) grad_stack(v,s) = 0.0;
       grad_stack(TermVarNumber(term),s) = 1.0;
@@ -1492,6 +1488,7 @@ RelationEvaluateDerivative(CONST struct relation *r,
       res_stack(s) = TermInteger(term);
       break;
     case e_var:
+    case e_der:
       s++;
       grad_stack(s) = ( (pos == TermVarNumber(term)) ? 1.0 : 0.0 );
       res_stack(s) = TermVariable(r, term);
@@ -1644,6 +1641,7 @@ RelationEvaluateDerivativeSafe(CONST struct relation *r,
       res_stack(s) = TermInteger(term);
       break;
     case e_var:
+    case e_der:
       s++;
       grad_stack(s) = ( (pos == TermVarNumber(term)) ? 1.0 : 0.0 );
       res_stack(s) = TermVariable(r, term);
@@ -1846,7 +1844,7 @@ enum Expr_enum RelationTermTypeF(CONST struct relation_term *term)
 
 unsigned long TermVarNumber(CONST struct relation_term *term)
 {
-  assert(term&&term->t == e_var);
+  assert(term&&(term->t == e_var || term->t == e_der));
   AssertMemory(term);
   return V_TERM(term)->varnum;
 }
@@ -2020,6 +2018,7 @@ static void CalcDepth(CONST struct relation *rel,
     case e_int:
     case e_real:
     case e_var:
+    case e_der:
       if(++(*depth) > *maxdepth) *maxdepth = *depth;
       break;
     case e_func:
@@ -3514,7 +3513,8 @@ static int RelationTmpCopySide(union RelationTermUnion *old,
       ADJPTR(B_TERM(term)->right);
       break;
     case e_zero:
-    case e_var:			/* the var number will be correct */
+    case e_var:
+    case e_der:			/* the var number will be correct */
     case e_int:
     case e_real:
       break;
@@ -3663,6 +3663,7 @@ static int SearchEval_Branch(struct relation_term *term){
   assert(term != NULL);
   switch(RelationTermType(term)) {
   case e_var:
+  case e_der:
     if(TermVarNumber(term) == glob_varnum) {
         ++glob_done;
         return 1;
@@ -3755,6 +3756,7 @@ static int SetUpInvertToken(struct relation_term *term,
       *invert_side = TermFuncLeft(term);
       return 0;
   case e_var:
+  case e_der:
       assert(TermVarNumber(term)==glob_varnum);
       *invert_side = term;
       return 0; /*could set glob_done here??*/
@@ -3767,6 +3769,7 @@ static int SetUpInvertToken(struct relation_term *term,
           *invert_side = TermBinLeft(term);
           return 0;
       case e_var:
+      case e_der:
           if(TermVarNumber(TermBinRight(term)) != glob_varnum) {
               *value = RelationBranchEvaluator(TermBinRight(term));
               *invert_side = TermBinLeft(term);
@@ -3797,6 +3800,7 @@ static void SetUpInvertTokenTop(
       *invert_side = Infix_LhsSide(glob_rel);
       return;
   case e_var:
+  case e_der:
       if(TermVarNumber(Infix_RhsSide(glob_rel)) != glob_varnum) {
           *value = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
           *invert_side = Infix_LhsSide(glob_rel);
@@ -4120,6 +4124,7 @@ int RelationInvertToken(struct relation_term **term,
       ASC_PANIC("Unexpected error with real/zero/int type");
       break;
     case e_var:
+    case e_der:
       ++glob_done;
       return(TRUE);  /*solution found*/
 
@@ -4328,6 +4333,7 @@ int ArgsForRealToken(enum Expr_enum type){
    case e_int:
    case e_real:
    case e_var:
+   case e_der:
      return 0;
 
    case e_func:
@@ -4497,4 +4503,3 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res){
 #endif
 
 /* vim: set sw=2 ts=8 et: */
-

@@ -42,11 +42,29 @@
 #define ASC_SYSTEM_H
 
 #include <ascend/general/platform.h>
+#include <stdio.h>
 #include "slv_types.h"
 
 /**	@addtogroup system System
 	@{
 */
+
+typedef enum SystemBuildMode {
+  SYSTEM_BUILD_NORMAL = 0,
+  SYSTEM_BUILD_INITIAL = 1
+} SystemBuildMode;
+
+ASC_DLLSPEC void system_set_build_mode(SlvBackendToken inst, SystemBuildMode mode);
+/**<
+	Sets equation inclusion on the instance tree to match the requested build mode.
+	Normal mode excludes `INITIAL` equations; initial mode includes them.
+ */
+
+ASC_DLLSPEC slv_system_t system_build_with_mode(SlvBackendToken inst, SystemBuildMode mode);
+/**<
+	Builds a solver system after first setting the instance tree to the requested
+	build mode. The instance tree remains in that mode after the call.
+ */
 
 ASC_DLLSPEC slv_system_t system_build(SlvBackendToken inst);
 /**<
@@ -57,6 +75,17 @@ ASC_DLLSPEC slv_system_t system_build(SlvBackendToken inst);
 	This function needs to be called before slv_select_solver, but does not
 	need to be re-called if the a new solver is selected. -- JP
 */
+
+ASC_DLLSPEC int system_debug_precheck_dae(SlvBackendToken inst, FILE *fp);
+/**<
+	Builds a temporary solver system up to the point just before final
+	top-level ODE independent-variable validation, then writes a diagnostic
+	report describing independents, derivative chains, solver variables and
+	solver relations.
+
+	This is intended for debugging cases where system_build() would otherwise
+	discard the partially built slv_system_t on failure.
+ */
 
 ASC_DLLSPEC void system_destroy(slv_system_t sys);
 /**<

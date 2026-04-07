@@ -100,16 +100,18 @@ public:
 	const bool isBool() const;
 	const bool isInt() const;
 	const bool isSymbol() const;
+	const bool isSelector() const;
 	const bool isReal() const;
 	const bool isAssigned() const;
 	const bool isModel() const;
-	const SymChar &getName() const;
+	const SymChar getName() const;
 	const double getRealValue() const;
 	const bool isDimensionless() const;
 	const Dimensions getDimensions() const;
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+	const SymChar getSelectorValue() const;
 
 	const std::string getWhenAsString(const Instanc &relative_to) const;
 	const std::string getLogrelAsString(const Instanc &relative_to) const;
@@ -126,6 +128,7 @@ public:
 	void setRealValue(const double&, const unsigned &depth=0);
 	void setRealValueWithUnits(double, const char *, const unsigned &depth=0);
 	void setSymbolValue(const SymChar &);
+	void setSelectorValue(const SymChar &);
 
 	template<class T>
 	const ASCXX_Set<T> getSetValue() const{
@@ -167,5 +170,24 @@ public:
 
 int saveDisplayUnitsOverrides(void);
 int reloadDisplayUnitsOverrides(void);
+const std::string getDisplayUnitsOverridesPath(void);
+void setDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &units,
+	const std::string &scope=""
+);
+void clearDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &scope=""
+);
+void setDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &units,
+	const std::string &scope
+);
+void clearDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &scope
+);
 
 #endif

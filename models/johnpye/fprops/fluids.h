@@ -3,6 +3,7 @@
 
 #include "fprops.h"
 #include "rundata.h"
+#include "constcp_species.h"
 
 /**
 	Look up the named fluid and return its internal data structure, or
@@ -11,6 +12,16 @@
 const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source);
 
 void fprops_fluid_destroy(PureFluid *fluid);
+
+/**
+	Look up the named fluid and return its EosData (metadata) record.
+*/
+const EosData *fprops_eos(const char *name, const char *corrtype, const char *source);
+
+/**
+	Build an element matrix A[ne * ns] (row-major) from species composition data.
+*/
+int fprops_build_element_matrix(const char **names, int ns, const char **elements, int ne, double *A_out);
 
 /**
 	@return number of fluids in the database.
@@ -26,5 +37,42 @@ int fprops_num_fluids();
 */
 const PureFluid *fprops_get_fluid(int i);
 
-#endif
+/**
+	Build an element matrix A[ne * ns] (row-major) from species composition data, using a source filter.
+*/
+int fprops_build_element_matrix_source(const char **names, int ns, const char **elements, int ne,
+		const char *source, double *A_out);
 
+/**
+	Collect the unique set of element symbols present in the provided species list.
+
+	The returned strings are heap-allocated and must be freed with
+	fprops_free_elements(...).
+*/
+int fprops_collect_elements_source(const char **names, int ns, const char *source,
+		char ***elements_out, int *ne_out);
+
+/**
+	Free an element-symbol array returned by fprops_collect_elements_source(...).
+*/
+void fprops_free_elements(char ***elements, int *ne);
+
+const ConstCpSpecies *fprops_constcp_species(const char *name, const char *source);
+
+/**
+	Resolve a source selector for one species.
+
+	If `source_spec` is a plain source string (no '='), that string is returned.
+	If `source_spec` is a map, the syntax is:
+	    species=source;other=source2;*=defaultsource
+	(`default=` is also accepted instead of `*=`).
+	The resolved source is written to `out` and returned as `out`.
+	Returns NULL if no source is resolved.
+*/
+const char *fprops_resolve_species_source_ex(const char *source_spec, const char *species_name,
+		char *out, unsigned out_len, int *matched_specific);
+
+const char *fprops_resolve_species_source(const char *source_spec, const char *species_name,
+		char *out, unsigned out_len);
+
+#endif

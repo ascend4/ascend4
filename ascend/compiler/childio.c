@@ -370,20 +370,28 @@ char *WriteChildDetails(ChildListPtr cl,unsigned long n)
     stat = ChildStatement(cl,n);
     /* fullname */
     sym = ChildStrPtr(cl,n);
-    name = ExtractChildName(stat,sym,desc);
-    if (name == NULL) {
-      ASC_PANIC("Name %s not found in defining statement",
-            SCP(sym));
+    if(stat != NULL){
+      name = ExtractChildName(stat,sym,desc);
+      if (name == NULL) {
+        ASC_PANIC("Name %s not found in defining statement",
+              SCP(sym));
+      }
+      WriteName2Str(dsPtr,name);
+    }else{
+      Asc_DStringAppend(dsPtr,SCP(sym),SCLEN(sym));
     }
-    WriteName2Str(dsPtr,name);
     Asc_DStringAppend(dsPtr,"} {",3);
     /* module */
-    tmp = Asc_ModuleBestName(StatementModule(stat));
-    Asc_DStringAppend(dsPtr,tmp,-1);
+    if(stat != NULL){
+      tmp = Asc_ModuleBestName(StatementModule(stat));
+      Asc_DStringAppend(dsPtr,tmp,-1);
+    }
     Asc_DStringAppend(dsPtr,"} {",3);
     /* line */
-    sprintf(longspace,"%lu",StatementLineNum(stat));
-    Asc_DStringAppend(dsPtr,longspace,-1);
+    if(stat != NULL){
+      sprintf(longspace,"%lu",StatementLineNum(stat));
+      Asc_DStringAppend(dsPtr,longspace,-1);
+    }
     /* statement */
     Asc_DStringAppend(dsPtr,"} {}",4); /* statement to dsPtr not done */
     result = Asc_DStringResult(dsPtr);
@@ -415,4 +423,3 @@ void WriteChildMissing(FILE *fp, char *fcn, symchar *childname)
     CONSOLE_DEBUG("Child '%s' not found (requested by %s).",SCP(childname),fcn);
   }
 }
-

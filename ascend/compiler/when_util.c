@@ -40,8 +40,12 @@
 #include "instance_types.h"
 #include "instquery.h"
 #include "mathinst.h"
+#include "parentchild.h"
 #include "rel_common.h"
 #include "instmacro.h"
+#include "atomvalue.h"
+#include "symtab.h"
+#include "visitinst.h"
 #include "when_util.h"
 
 
@@ -382,5 +386,63 @@ void logrelinst_set_flagbit(struct Instance *lrel, unsigned int field,
   }
 }
 
+static int relation_initial_flag(CONST struct Instance *inst)
+{
+  struct Instance *flaginst;
+  flaginst = ChildByChar((struct Instance *)inst, AddSymbol("initial"));
+  if (flaginst == NULL || InstanceKind(flaginst) != BOOLEAN_INST) {
+    return FALSE;
+  }
+  return GetBooleanAtomValue(flaginst);
+}
 
+int relinst_initial(CONST struct Instance *rel)
+{
+  assert(rel != NULL && InstanceKind(rel) == REL_INST);
+  return relation_initial_flag(rel);
+}
 
+int logrelinst_initial(CONST struct Instance *lrel)
+{
+  assert(lrel != NULL && InstanceKind(lrel) == LREL_INST);
+  return relation_initial_flag(lrel);
+}
+
+static unsigned int g_initial_relation_inclusion = FALSE;
+
+static void set_initial_relation_inclusion_visit(struct Instance *inst)
+{
+  struct Instance *included;
+
+  if (inst == NULL) {
+    return;
+  }
+  switch (InstanceKind(inst)) {
+  case REL_INST:
+    if (!relinst_initial(inst)) {
+      return;
+    }
+    break;
+  case LREL_INST:
+    if (!logrelinst_initial(inst)) {
+      return;
+    }
+    break;
+  default:
+    return;
+  }
+
+  included = ChildByChar(inst, AddSymbol("included"));
+  if (included != NULL && InstanceKind(included) == BOOLEAN_INST) {
+    SetBooleanAtomValue(included, g_initial_relation_inclusion, 0U);
+  }
+}
+
+void SetInitialRelationInclusion(struct Instance *inst, unsigned int active)
+{
+  if (inst == NULL) {
+    return;
+  }
+  g_initial_relation_inclusion = active ? TRUE : FALSE;
+  VisitInstanceTree(inst, set_initial_relation_inclusion_visit, 0, 0);
+}

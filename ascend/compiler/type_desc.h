@@ -218,6 +218,7 @@ struct TypeDescription {
   ChildListPtr children;            /**< list of children. Never NULL for models */
   struct gl_list_t *init;           /**< initialization procedures */
   struct StatementList *stats;      /**< statements */
+  struct StatementList *initstats;  /**< initialization-only statements */
   struct gl_list_t *refiners;       /**< list of types that refine this. alpha */
   unsigned long ref_count;          /**< count includes instances, other types */
   long int parseid;                 /**< n as in 'nth definition made' */
@@ -316,8 +317,17 @@ ASC_DLLSPEC enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
 
 #ifdef NDEBUG
 #define GetStatementList(d) ((d)->stats)
+#define GetInitialStatementList(d) ((d)->initstats)
+#define GetExecutableStatementCount(d) (StatementListLength((d)->stats) + StatementListLength((d)->initstats))
+#define GetExecutableStatement(d,i) \
+	((i) <= StatementListLength((d)->stats) ? \
+	 GetStatement((d)->stats,(i)) : \
+	 GetStatement((d)->initstats,((i) - StatementListLength((d)->stats))))
 #else
 #define GetStatementList(d) GetStatementListF(d)
+#define GetInitialStatementList(d) GetInitialStatementListF(d)
+#define GetExecutableStatementCount(d) GetExecutableStatementCountF(d)
+#define GetExecutableStatement(d,i) GetExecutableStatementF((d),(i))
 #endif
 /**<
  *  Returns the statement list for models and atoms.  In the case of
@@ -331,6 +341,19 @@ ASC_DLLSPEC enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
  */
 ASC_DLLSPEC CONST struct StatementList *GetStatementListF(
 	CONST struct TypeDescription *d
+);
+
+ASC_DLLSPEC CONST struct StatementList *GetInitialStatementListF(
+	CONST struct TypeDescription *d
+);
+
+ASC_DLLSPEC unsigned long GetExecutableStatementCountF(
+	CONST struct TypeDescription *d
+);
+
+ASC_DLLSPEC struct Statement *GetExecutableStatementF(
+	CONST struct TypeDescription *d,
+	unsigned long index
 );
 /**<
  *  Implementation function for GetStatementList() (debug mode).
@@ -962,6 +985,7 @@ extern struct TypeDescription
                      ChildListPtr cl,
                      struct gl_list_t *pl,
                      struct StatementList *sl,
+                     struct StatementList *isl,
                      int univ,
                      struct StatementList *psl,
                      struct StatementList *rsl,
@@ -978,6 +1002,7 @@ extern struct TypeDescription
  *  @param cl     List of the type's child names.
  *  @param pl     List of initialization procedures.
  *  @param sl     List of declarative statements.
+ *  @param isl    List of initialization-only declarative statements.
  *  @param univ   TRUE universal FALSE non-universal.
  *  @param psl    List of parameter statements.
  *  @param rsl    List of parameter reducing statements.

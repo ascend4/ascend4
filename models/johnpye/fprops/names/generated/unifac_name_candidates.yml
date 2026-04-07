@@ -1,0 +1,387 @@
+version: 1
+entries:
+- alias: H2O
+  canonical: water
+  formula: H2O
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CHCl3
+  canonical: chloroform
+  formula: CHCl3
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH4
+  canonical: methane
+  formula: CH4
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: CH3OH
+  canonical: methanol
+  formula: CH3OH
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H4
+  canonical: ethylene
+  formula: C2H4
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H6
+  canonical: ethane
+  formula: C2H6
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H5OH
+  canonical: ethanol
+  formula: C2H5OH
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H6
+  canonical: propylene
+  formula: C3H6
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (CH3)2CO
+  canonical: acetone
+  formula: (CH3)2CO
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H8
+  canonical: propane
+  formula: C3H8
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H4
+  canonical: propadiene
+  formula: C3H4
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C3H7OH
+  canonical: n_propanol
+  formula: C3H7OH
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (CH3)2CHOH
+  canonical: i_propanol
+  formula: (CH3)2CHOH
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H6O2
+  canonical: ethylene_glycol
+  formula: C2H6O2
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H10
+  canonical: n_butane
+  formula: C4H10
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (CH3)3CH
+  canonical: i_butane
+  formula: (CH3)3CH
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H8
+  canonical: butene_1
+  formula: C4H8
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C4H9OH
+  canonical: n_butanol
+  formula: C4H9OH
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (CH3)2CHCH2OH
+  canonical: i_butanol
+  formula: (CH3)2CHCH2OH
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H12
+  canonical: n_pentane
+  formula: C5H12
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C2H5CH(CH3)2
+  canonical: i_pentane
+  formula: C2H5CH(CH3)2
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H6
+  canonical: benzene
+  formula: C6H6
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H14
+  canonical: n_hexane
+  formula: C6H14
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5CH3
+  canonical: toluene
+  formula: C6H5CH3
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C7H16
+  canonical: n_heptane
+  formula: C7H16
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5C2H3
+  canonical: styrene
+  formula: C6H5C2H3
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5C2H5
+  canonical: ethylbenzene
+  formula: C6H5C2H5
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C8H18
+  canonical: n_octane
+  formula: C8H18
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H4(C2H5)2
+  canonical: diethylbenzene
+  formula: C6H4(C2H5)2
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C10H22
+  canonical: n_decane
+  formula: C10H22
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: (C6H5)2
+  canonical: diphenyl
+  formula: (C6H5)2
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C5H12O
+  canonical: pentanol_1
+  formula: C5H12O
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C12H26
+  canonical: dodecane
+  formula: C12H26
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H5Cl
+  canonical: chloro_benzene
+  formula: C6H5Cl
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10
+- alias: C6H12
+  canonical: 2_hexene_cis
+  formula: C6H12
+  domains:
+  - mixture_component
+  sources:
+  - UNIFAC-orig-2003
+  flags:
+  - auto
+  - formula
+  priority: 10

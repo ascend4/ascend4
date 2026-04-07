@@ -26,7 +26,10 @@
 #define ASCXX_SOLVERHOOKS_H
 
 #include "config.h"
+#include "instance.h"
 #include "value.h"
+#include <string>
+#include <vector>
 
 class SolverReporter;
 class Simulation;
@@ -38,8 +41,74 @@ extern "C"{
 
 extern "C"{
 SlvReqSetSolverFn ascxx_slvreq_set_solver;
+SlvReqSetIntegratorFn ascxx_slvreq_set_integrator;
 SlvReqSetOptionFn ascxx_slvreq_set_option;
 SlvReqDoSolveFn ascxx_slvreq_do_solve;
+SlvReqDoObserveFn ascxx_slvreq_do_observe;
+SlvReqDoStudyFn ascxx_slvreq_do_study;
+SlvReqDoIntegrateFn ascxx_slvreq_do_integrate;
+SlvReqDeleteSystemFn ascxx_slvreq_delete_system;
+};
+
+class ObserveRequest{
+private:
+	std::vector<Instanc> observed;
+	std::string name;
+public:
+	ObserveRequest();
+	explicit ObserveRequest(const SlvReqObserveRequest *request);
+
+	std::vector<Instanc> getObserved() const;
+	bool hasName() const;
+	std::string getName() const;
+};
+
+class StudyRequest{
+private:
+	std::vector<Instanc> observed;
+	bool have_vary;
+	Instanc vary;
+	double lower;
+	double upper;
+	double value;
+	long steps;
+	int mode;
+	int distribution;
+	std::string run_method;
+	bool now;
+	std::string filename;
+public:
+	StudyRequest();
+	explicit StudyRequest(const SlvReqStudyRequest *request);
+
+	std::vector<Instanc> getObserved() const;
+	bool hasVary() const;
+	Instanc getVary() const;
+	double getLower() const;
+	double getUpper() const;
+	double getValue() const;
+	long getSteps() const;
+	int getMode() const;
+	int getDistribution() const;
+	bool hasRunMethod() const;
+	std::string getRunMethod() const;
+	bool getNow() const;
+	bool hasFilename() const;
+	std::string getFilename() const;
+};
+
+class IntegrateRequest{
+private:
+	double start;
+	double stop;
+	long steps;
+public:
+	IntegrateRequest();
+	explicit IntegrateRequest(const SlvReqIntegrateRequest *request);
+
+	double getStart() const;
+	double getStop() const;
+	long getSteps() const;
 };
 
 /**
@@ -59,11 +128,32 @@ public:
 	/// C++ function that will be called as a result of a 'SOLVER' command
 	virtual int setSolver(const char *solvername, Simulation *S);
 
+	/// C++ function that will be called as a result of an 'INTEGRATOR' command
+	virtual int setIntegrator(const char *integratorname, Simulation *S);
+
 	/// C++ function that will be called as a result of a 'OPTION' command
 	virtual int setOption(const char *optionname, Value val1, Simulation *S);
 
 	/// C++ function that will be called as a result of a 'SOLVE' command
 	virtual int doSolve(Instance *i, Simulation *S);
+
+	/// C++ function that will be called as a result of an 'OBSERVE' command
+	virtual int doObserve(const ObserveRequest &request, Simulation *S);
+
+	/// C++ function that will be called as a result of a 'STUDY' command
+	virtual int doStudy(const StudyRequest &request, Simulation *S);
+
+	/// C++ function that will be called as a result of an 'INTEGRATE' command
+	virtual int doIntegrate(const IntegrateRequest &request, Simulation *S);
+
+	/// C++ function that will be called as a result of a 'DELETE SYSTEM' command
+	virtual int deleteSystem(Simulation *S);
+
+	/// Return deferred post-solve outputs registered by STUDY statements without VARY
+	virtual std::vector<Instanc> getStudyPrintVars(Simulation *S) const;
+
+	/// Return the default observed variables registered by OBSERVE.
+	virtual std::vector<Instanc> getObservedVars(Simulation *S) const;
 
 	SolverReporter *getSolverReporter();
 

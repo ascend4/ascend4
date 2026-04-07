@@ -52,7 +52,7 @@ default_with_graphviz = True
 default_tcl_lib = "tcl8.6"
 default_tk_lib = "tk8.6"
 default_tktable_lib = "Tktable2.9"
-default_ida_prefix="$DEFAULT_PREFIX"
+default_sundials_prefix=None
 #default_ipopt_libpath = "$IPOPT_PREFIX/lib"
 #default_ipopt_dll = ["$DEFAULT_PREFIX/bin/%s.dll"%i for i in ["libgfortran$MINGW64SUFF-3", "libstdc++$MINGW64SUFF-6","libquadmath$MINGW64SUFF-0","libgcc_s$MINGW64EXCPT$MINGW64SUFF-1"]]+[None] # should be five here
 #default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
@@ -61,6 +61,7 @@ default_conopt_libpath="$CONOPT_PREFIX"
 default_conopt_cpppath="$CONOPT_PREFIX"
 default_conopt_dlpath="$CONOPT_PREFIX"
 default_prefix="/usr"
+default_sundials_prefix=default_prefix
 default_libpath="$DEFAULT_PREFIX/lib"
 default_cpppath="$DEFAULT_PREFIX/include"
 default_f2c_lib="gfortran"
@@ -104,8 +105,8 @@ if platform.system()=="Windows":
 	default_library_rel_dist = 'models'
 	default_solvers_rel_dist = 'solvers'
 	
-	# where to look for IDA solver libraries, headers, etc.
-	default_ida_prefix = "$DEFAULT_PREFIX"
+	# where to look for SUNDIALS libraries, headers, etc.
+	default_sundials_prefix = default_prefix
 	
 	# IPOPT. we now prefer to build our own version.
 #	default_ipopt_libs = ["ipopt",'stdc++','coinmumps','coinmetis','coinlapack','coinblas','gfortran','pthread']
@@ -247,8 +248,8 @@ else: # LINUX, unix we hope
 	default_with_scrollkeeper=False
 	pathsep = ":"
 
-if not os.path.exists(default_ida_prefix):
-	default_ida_prefix = None
+if default_sundials_prefix is not None and not os.path.exists(default_sundials_prefix):
+	default_sundials_prefix = None
 
 def cygpath(mypath):
 	cmd = [pathlib.Path(shutil.which('cygpath')),'-w',mypath]
@@ -334,6 +335,20 @@ def get_default_cunit_paths():
 	return candidates[0] if candidates else str(default_pref), inc, lib
 
 default_cunit_prefix, default_cunit_cpppath, default_cunit_libpath = get_default_cunit_paths()
+
+def get_default_sundials_paths():
+	"""
+	Choose SUNDIALS defaults from the platform runtime prefix and handle both
+	lib and lib64 installs.
+	"""
+	default_pref = exists_maybe_cygpath(default_sundials_prefix or default_prefix) or str(default_sundials_prefix or default_prefix)
+	inc = existing_path_anysep(os.path.join(default_pref,"include")) or os.path.join(default_pref,"include")
+	lib = existing_path_anysep(os.path.join(default_pref,"lib64"))
+	if lib is None:
+		lib = existing_path_anysep(os.path.join(default_pref,"lib")) or os.path.join(default_pref,"lib")
+	return default_pref, inc, lib
+
+default_sundials_prefix, default_sundials_cpppath, default_sundials_libpath = get_default_sundials_paths()
 
 soname_clean = "${SHLIBPREFIX}ascend${SHLIBSUFFIX}"
 soname_full = "%s%s" % (soname_clean,soname_major)
@@ -560,6 +575,28 @@ vars.Add(PackageVariable('CUNIT_LIBPATH'
 	,default_cunit_libpath
 ))
 
+#------ sundials --------
+
+vars.Add(PackageVariable('SUNDIALS_PREFIX'
+	,"Where are your SUNDIALS files?"
+	,default_sundials_prefix
+))
+
+vars.Add('SUNDIALS_CPPPATH'
+	,"Where are your SUNDIALS include files?"
+	,default_sundials_cpppath
+)
+
+vars.Add('SUNDIALS_LIBPATH'
+	,"Where are your SUNDIALS libraries?"
+	,default_sundials_libpath
+)
+
+vars.Add('SUNDIALS_LIBS'
+	,"Optional comma-separated override for SUNDIALS libraries"
+	,""
+)
+
 # ----- conopt-----
 
 vars.Add(PackageVariable("CONOPT_PREFIX"
@@ -601,6 +638,11 @@ vars.Add('CONOPT_ENVVAR'
 
 vars.Add(PackageVariable("IPOPT_PREFIX"
 	,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
+	,default_user_local
+))
+
+vars.Add(PackageVariable("HSL_PREFIX"
+	,"Prefix for your HSL install (used to extend PKG_CONFIG_PATH for coinhsl.pc)"
 	,default_user_local
 ))
 
@@ -980,7 +1022,7 @@ envadditional={}
 
 tools = [
 	'lex', 'yacc', 'fortran', 'swig', 'textfile'#, 'substinfile'
-	,'disttar', 'tar', 'sundials', 'dvi', 'pdflatex', 'graphviz'
+	,'disttar', 'tar', 'dvi', 'pdflatex', 'graphviz', 'ipopt'
 ]
 if platform.system()=="Windows":
 	tools += ['nsis']
@@ -1001,7 +1043,7 @@ if platform.system()=="Windows":
 #		envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
 else:
 	envenv = os.environ
-	tools += ['default','doxygen','ipopt']
+	tools += ['default','doxygen']
 
 env = Environment(
 	ENV=envenv
@@ -1019,6 +1061,26 @@ if platform.system()=="Windows":
 #print "CPPPATH =",env['CPPPATH']
 
 vars.Update(env)
+
+if 'CUNIT_PREFIX' in ARGUMENTS:
+	cunit_prefix = env.get('CUNIT_PREFIX')
+	if cunit_prefix:
+		if env.get('CUNIT_CPPPATH') == default_cunit_cpppath:
+			env['CUNIT_CPPPATH'] = str(pathlib.Path(str(cunit_prefix)) / 'include')
+		if env.get('CUNIT_LIBPATH') == default_cunit_libpath:
+			env['CUNIT_LIBPATH'] = str(pathlib.Path(str(cunit_prefix)) / 'lib')
+
+if 'SUNDIALS_PREFIX' in ARGUMENTS:
+	sundials_prefix = env.get('SUNDIALS_PREFIX')
+	if sundials_prefix:
+		if env.get('SUNDIALS_CPPPATH') == default_sundials_cpppath:
+			env['SUNDIALS_CPPPATH'] = str(pathlib.Path(str(sundials_prefix)) / 'include')
+		if env.get('SUNDIALS_LIBPATH') == default_sundials_libpath:
+			lib64 = existing_path_anysep(pathlib.Path(str(sundials_prefix)) / 'lib64')
+			if lib64:
+				env['SUNDIALS_LIBPATH'] = lib64
+			else:
+				env['SUNDIALS_LIBPATH'] = str(pathlib.Path(str(sundials_prefix)) / 'lib')
 
 for l in ['SUNDIALS','IPOPT']:
 	var = "%s_LIBS" % l
@@ -1070,7 +1132,7 @@ def set_optional(env,comp,reason=None,active=None):
 
 AddMethod(Environment, set_optional, 'set_optional')
 
-for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','lzma','mmio','blas','signals','doc','doc_build','pcre','installer']:
+for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','lzma','mmio','blas','signals','doc','doc_build','pcre','installer','nlopt']:
 	env.set_optional(opt)
 
 if not env['WITH_DOC']:
@@ -1297,25 +1359,25 @@ class KeepContext:
 			self.keep[k]=context.env.get(k)
 		
 		if varprefix+'_CPPPATH' in context.env:
-			context.env.AppendUnique(CPPPATH=[env[varprefix+'_CPPPATH']])
+			context.env.AppendUnique(CPPPATH=[context.env[varprefix+'_CPPPATH']])
 			#print "Adding '"+str(env[varprefix+'_CPPPATH'])+"' to cpp path"
 
 		if static:
-			staticlib=env[varprefix+'_LIB']
+			staticlib=context.env[varprefix+'_LIB']
 			#print "STATIC LIB = ",staticlib
 			context.env.Append(
 				LINKFLAGS=[staticlib]
 			)
 		else:
 			if varprefix+'_LIBPATH' in context.env:
-				context.env.Append(LIBPATH=[env[varprefix+'_LIBPATH']])
+				context.env.Append(LIBPATH=[context.env[varprefix+'_LIBPATH']])
 				#print "Adding '"+str(env[varprefix+'_LIBPATH'])+"' to lib path"
 
 			if varprefix+'_LIB' in context.env:
-				context.env.Append(LIBS=[env[varprefix+'_LIB']])
+				context.env.Append(LIBS=[context.env[varprefix+'_LIB']])
 				#print "Adding '"+str(env[varprefix+'_LIB'])+"' to libs"	
 			elif varprefix+'_LIBS' in context.env:
-				context.env.AppendUnique(LIBS=env[varprefix+'_LIBS'])
+				context.env.AppendUnique(LIBS=context.env[varprefix+'_LIBS'])
 
 	def restore(self,context):
 		#print "RESTORING CONTEXT"
@@ -1728,104 +1790,6 @@ def CheckDLOpen(context):
 	return is_ok
 
 #----------------
-# IDA test
-
-sundials_version_major_required = 2
-sundials_version_minor_min = 4
-sundials_version_minor_max = 4
-
-sundials_version_text = """
-#include <sundials/sundials_config.h>
-#include <stdio.h>
-int main(){
-	printf("%s",SUNDIALS_PACKAGE_VERSION);
-	return 0;
-}
-"""
-
-ida_test_text = """
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
-# include <sundials/sundials_config.h>
-# include <sundials/sundials_nvector.h>
-# include <nvector_serial.h>
-# include <ida.h>
-# include <ida/ida_spgmr.h>
-#else
-# include <sundials/sundials_config.h>
-# include <nvector/nvector_serial.h>
-# include <ida/ida.h>
-#endif
-int main(){
-	void *ida_mem;
-	ida_mem = IDACreate();
-	return 0;
-}
-"""
-
-# slightly changed calling convention (IDACalcID) in newer versions of SUNDIALS,
-# so detect the version and act accordingly.
-def CheckSUNDIALS(context):
-	keep = KeepContext(context,'SUNDIALS')
-	context.Message("Checking for SUNDIALS... ")
-	(is_ok,output) = context.TryRun(sundials_version_text,'.c')
-	keep.restore(context)
-	if not is_ok:
-		context.Result(0)
-		return 0
-
-	major,minor,patch = tuple([int(i) for i in output.split(".")])
-	context.env['SUNDIALS_VERSION_MAJOR'] = major
-	context.env['SUNDIALS_VERSION_MINOR'] = minor
-	if major != sundials_version_major_required \
-			or minor < sundials_version_minor_min \
-			or minor > sundials_version_minor_max:
-		context.Result(output+" (bad version)")
-		# bad version
-		return 0
-		
-	# good version
-	context.Result("%d.%d.%d, good" % (major,minor,patch))
-
-	return 1
-	
-
-def CheckIDA(context):
-	context.Message( 'Checking for IDA... ' )
-
-	keep = KeepContext(context,"SUNDIALS")
-
-	major = context.env['SUNDIALS_VERSION_MAJOR']
-	minor = context.env['SUNDIALS_VERSION_MINOR'] 
-
-	cppdef = context.env.get('CPPDEFINES')
-
-	context.env.Append(CPPDEFINES=[
-		('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR")
-		,('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")
-	])
-
-	context.env['SUNDIALS_CPPPATH_EXTRA']=[]
-	if major==2 and minor==2:
-		context.env.Append(SUNDIALS_CPPPATH_EXTRA = ["$SUNDIALS_CPPPATH/sundials"])
-
-	context.env.Append(CPPDEFINES=[('SUNDIALS_VERSION_MAJOR',"$SUNDIALS_VERSION_MAJOR"),('SUNDIALS_VERSION_MINOR',"$SUNDIALS_VERSION_MINOR")])
-	context.env.AppendUnique(LIBS=context.env['SUNDIALS_LIBS'])
-	context.env.AppendUnique(CPPPATH=context.env['SUNDIALS_CPPPATH_EXTRA'])
-
-	is_ok = context.TryLink(ida_test_text,".c")
-	context.Result(is_ok)
-	
-	if cppdef:
-		context.env['CPPDEFINES']=cppdef
-	else:
-		del context.env['CPPDEFINES']
-
-	keep.restore(context)
-		
-	return is_ok
-
-
-#----------------
 # CONOPT test
 
 conopt_test_text = """
@@ -2196,8 +2160,6 @@ conf = Configure(env
 		, 'CheckLexDestroy' : CheckLexDestroy
 		, 'CheckTkTable' : CheckTkTable
 		, 'CheckX11' : CheckX11
-		, 'CheckIDA' : CheckIDA
-		, 'CheckSUNDIALS' : CheckSUNDIALS
 		, 'CheckCONOPT' : CheckCONOPT
 #		, 'CheckIPOPT' : CheckIPOPT
 		, 'CheckScrollkeeperConfig' : CheckScrollkeeperConfig
@@ -2347,6 +2309,19 @@ if conf.CheckFunc('isnan') is False and conf.CheckFunc('_isnan') is False:
 	print("Didn't find isnan")
 #	Exit(1)
 
+if platform.system() != "Windows":
+	have_getrusage = conf.TryLink(r'''
+#include <sys/time.h>
+#include <sys/resource.h>
+int main(void){
+	struct rusage usage;
+	return getrusage(RUSAGE_SELF, &usage);
+}
+''', '.c')
+	print("Checking for getrusage() in <sys/resource.h>... %s" % ("yes" if have_getrusage else "no"))
+	if have_getrusage:
+		conf.env['HAVE_GETRUSAGE'] = True
+
 # GCC visibility
 
 if conf.CheckGcc():
@@ -2437,15 +2412,6 @@ if conf.env['WITH_GRAPHVIZ']:
 if conf.env['WITH_UFSPARSE']:
 	conf.env.set_optional('ufsparse',active=conf.CheckUFSparse(),reason="not found")
 
-# IDA
-
-if conf.env['WITH_IDA']:
-	if not conf.CheckSUNDIALS():
-		conf.env.set_optional('ida',active=False,reason="SUNDIALS not found, or bad version")
-	else:
-		if not conf.CheckIDA():
-			conf.env.set_optional('ida',active=False,reason="Unable to compile/link against SUNDIALS/IDA")
-
 # CONOPT
 
 if conf.env['WITH_CONOPT']:
@@ -2512,6 +2478,28 @@ if conf.env['WITH_LZMA']:
 		conf.env['LZMA_LIBS'] = AddedBuildFlags(lzma_saved['LIBS'],lzma_after['LIBS'])
 	RestoreBuildFlags(conf.env,lzma_saved)
 	conf.env.set_optional('lzma',active=lzma_ok,reason=lzma_reason)
+
+# NLOPT
+
+conf.env['NLOPT_CPPPATH'] = []
+conf.env['NLOPT_LIBPATH'] = []
+conf.env['NLOPT_LIBS'] = []
+nlopt_saved = SnapshotBuildFlags(conf.env)
+nlopt_ok = False
+nlopt_reason = "nlopt not found"
+if TryPkgConfigPackages(conf.env,['nlopt']):
+	if conf.CheckCHeader('nlopt.h'):
+		nlopt_ok = True
+	else:
+		nlopt_reason = "nlopt.h not found"
+nlopt_after = SnapshotBuildFlags(conf.env)
+if nlopt_ok:
+	conf.env['NLOPT_CPPPATH'] = AddedBuildFlags(nlopt_saved['CPPPATH'],nlopt_after['CPPPATH'])
+	conf.env['NLOPT_LIBPATH'] = AddedBuildFlags(nlopt_saved['LIBPATH'],nlopt_after['LIBPATH'])
+	conf.env['NLOPT_LIBS'] = AddedBuildFlags(nlopt_saved['LIBS'],nlopt_after['LIBS'])
+	conf.env['HAVE_NLOPT'] = True
+RestoreBuildFlags(conf.env,nlopt_saved)
+conf.env.set_optional('nlopt',active=nlopt_ok,reason=nlopt_reason)
 
 # LSODE needs Fortran; no fortran then no LSODE
 
@@ -2651,6 +2639,23 @@ subst_dict = {
 	, '@ASCXX_USE_PYTHON@' : "1" if env['WITH_PYTHON'] else "0"
 }
 
+def _a4_runtime_libdirs(env):
+	out = []
+	for key in ('SUNDIALS_LIBPATH', 'IPOPT_LIBPATH', 'CONOPT_LIBPATH', 'ZLIB_LIBPATH', 'LZMA_LIBPATH'):
+		value = env.get(key)
+		if not value:
+			continue
+		items = value if isinstance(value, (list, tuple)) else str(value).split(os.pathsep)
+		for item in items:
+			if not item:
+				continue
+			item = str(item)
+			if item not in out:
+				out.append(item)
+	return repr(out)
+
+subst_dict['@A4_RUNTIME_LIBDIRS@'] = _a4_runtime_libdirs(env)
+
 
 
 if env.get('WITH_DOC'):
@@ -2659,14 +2664,17 @@ if env.get('WITH_DOC'):
 
 # bool options...
 for k,v in {
-			'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
-			,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
-			,'ASC_WITH_MMIO':env['WITH_MMIO']
-			,'ASC_WITH_ZLIB':env['WITH_ZLIB']
-			,'ASC_WITH_LZMA':env['WITH_LZMA']
-			,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
-			,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
-			,'ASC_WITH_PCRE':env['WITH_PCRE']
+				'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
+				,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
+				,'ASC_WITH_MMIO':env['WITH_MMIO']
+				,'ASC_WITH_ZLIB':env['WITH_ZLIB']
+				,'ASC_WITH_LZMA':env['WITH_LZMA']
+				,'ASC_WITH_MAKEMPS':env['WITH_MAKEMPS']
+				,'ASC_WITH_IPOPT':env['WITH_IPOPT']
+				,'ASC_WITH_HIGHS':env['WITH_HIGHS']
+				,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
+				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
+				,'ASC_WITH_PCRE':env['WITH_PCRE']
 			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_GCCVISIBILITY':env.get('HAVE_GCCVISIBILITY')
@@ -2674,6 +2682,7 @@ for k,v in {
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
 			,'HAVE_ERF':env.get('HAVE_ERF')
 			,'HAVE_FNMATCH':env.get('HAVE_FNMATCH')
+			,'HAVE_GETRUSAGE':env.get('HAVE_GETRUSAGE')
 			,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
 		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY',0)
@@ -2728,8 +2737,9 @@ SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, 
 #------------------------------------------------------
 # BUILD...
 
-# so that #include <ascend/modulename/headername.h> works across all modules...
-env.AppendUnique(CPPPATH=['#'])
+# so that #include <ascend/modulename/headername.h> resolves to this checkout
+# even if an older ASCEND tree is present elsewhere on the compiler search path.
+env.PrependUnique(CPPPATH=['#'])
 
 if env['DEBUG']:
 	env.AppendUnique(
@@ -2845,29 +2855,6 @@ if platform.system()=="Linux":
 env.Alias('libascend',libtargets)
 
 #-------------
-# UNIT TESTS (C CODE)
-
-test_env = env.Clone()
-test_env.AppendUnique(CPPPATH=['#'])
-
-if env['WITH_CUNIT']:
-	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']
-	testsrcs = []
-	for testdir in testdirs:
-		path = 'ascend/'+testdir+'/test/'
-		test_env.SConscript([path+'SConscript'],'test_env')
-		testsrcs += [i.path for i in test_env['TESTSRCS_'+testdir.upper()]]
-	test_env['TESTDIRS'] = testdirs
-
-	#print "TESTSRCS =",testsrcs
-	
-	test_env.SConscript(['test/SConscript'],'test_env')
-
-	env.Alias('test',[env.Dir('test')])	
-else:
-	print("Skipping... CUnit tests aren't being built:")
-
-#-------------
 # EXTERNAL SOLVERS
 
 env['extfns']=[]
@@ -2884,6 +2871,34 @@ modeldirs = env.SConscript(['models/SConscript'],'env')
 for _f in env['extfns']:
 	env.Depends(_f,'libascend')
 env.Alias('extfns',env['extfns'])
+
+#-------------
+# UNIT TESTS (C CODE)
+
+test_env = env.Clone()
+test_env.PrependUnique(CPPPATH=['#'])
+
+if env['WITH_CUNIT']:
+	if env.get('IPOPT_HSL_MA27_AVAILABLE'):
+		test_env.AppendUnique(CPPDEFINES=['ASC_WITH_IPOPT_HSL_MA27'])
+	if env.get('IPOPT_HSL_MA97_AVAILABLE'):
+		test_env.AppendUnique(CPPDEFINES=['ASC_WITH_IPOPT_HSL_MA97'])
+
+	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']
+	testsrcs = []
+	for testdir in testdirs:
+		path = 'ascend/'+testdir+'/test/'
+		test_env.SConscript([path+'SConscript'],'test_env')
+		testsrcs += [i.path for i in test_env['TESTSRCS_'+testdir.upper()]]
+	test_env['TESTDIRS'] = testdirs
+
+	#print "TESTSRCS =",testsrcs
+
+	test_env.SConscript(['test/SConscript'],'test_env')
+
+	env.Alias('test',[env.Dir('test')])
+else:
+	print("Skipping... CUnit tests aren't being built:")
 
 #-------------
 # FPROPS python bindings

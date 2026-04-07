@@ -33,9 +33,7 @@ extern "C"{
 }
 
 const int LSODE = INTEG_LSODE;
-#ifdef ASC_WITH_IDA
 const int IDA = INTEG_IDA;
-#endif
 
 #include "simulation.h"
 #include "units.h"
@@ -66,6 +64,10 @@ public:
 
 	void setLinearTimesteps(UnitsM units, double start, double end, unsigned long num);
 	void setLogTimesteps(UnitsM units, double start, double end, unsigned long num);
+	void clearObservedInstances();
+	void addObservedInstance(const Instanc &inst);
+	long getNumObservedItems();
+	Instanc getObservedInstance(const long &i);
 	std::vector<double> getCurrentObservations();
 	void saveObservations();
 	std::vector<std::vector<double> > getObservations();
@@ -92,6 +94,7 @@ private:
 	Simulation &simulation;
 	SampleList *samplelist;
 	IntegratorSystem *blsys;
+	std::vector<struct Instance *> observed_instances;
 	std::vector<std::vector<double> > obs;
 };
 

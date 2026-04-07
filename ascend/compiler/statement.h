@@ -41,9 +41,19 @@
 #ifndef ASC_STATEMENT_H
 #define ASC_STATEMENT_H
 
+#include "stattypes.h"
+
 /**	@addtogroup compiler_stmt Compiler Statements
 	@{
 */
+
+struct StatementList;
+struct VariableList;
+struct WhenList;
+struct SelectList;
+struct SwitchList;
+struct DatasetIndexItem;
+struct DatasetMapItem;
 
 extern void AddContext(struct StatementList *slist ,unsigned int c);
 /**<
@@ -114,7 +124,9 @@ extern struct Statement *CreateARR(struct VariableList *aname,
 extern struct Statement *CreateISA(struct VariableList *vl,
                                    symchar *t,
                                    struct Set *ta,
-                                   symchar *st);
+                                   symchar *st,
+                                   struct Expr *cv,
+                                   unsigned char ck);
 /**<
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
@@ -124,13 +136,15 @@ extern struct Statement *CreateISA(struct VariableList *vl,
  *  @param t  instance type
  *  @param ta arguments for type t
  *  @param st set type
+ *  @param cv optional declaration-time default/check value
  */
 
 extern struct Statement *CreateWILLBE(struct VariableList *vl,
                                       symchar *t,
                                       struct Set *ta,
                                       symchar *st,
-                                      struct Expr *cv);
+                                      struct Expr *cv,
+                                      unsigned char ck);
 /**<
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
@@ -226,14 +240,49 @@ extern struct Statement *CreateSOLVER(CONST char *solvername);
 	Create a 'SOLVER' statement node.
 */
 
+extern struct Statement *CreateINTEGRATOR(CONST char *integratorname);
+/**<
+	Create an 'INTEGRATOR' statement node.
+*/
+
 extern struct Statement *CreateOPTION(CONST char *optname, struct Expr *value);
 /**<
 	Create a 'SOLVER' statement node.
 */
 
-extern struct Statement *CreateSOLVE();
+extern struct Statement *CreateSOLVE(struct Name *target);
 /**<
 	Create a 'SOLVE' statement node.
+*/
+
+extern struct Statement *CreateINTEGRATE(struct Expr *start, struct Expr *stop, long steps);
+/**<
+	Create an 'INTEGRATE' statement node.
+*/
+
+extern struct Statement *CreateOBSERVE(struct VariableList *obsvars, symchar *name);
+/**<
+	Create an 'OBSERVE' statement node.
+*/
+
+extern struct Statement *CreateSTUDY(struct VariableList *obsvars,
+                                     struct Name *vary,
+                                     struct Expr *lower,
+                                     struct Expr *upper,
+                                     long steps,
+                                     struct Expr *value,
+                                     enum StudyMode mode,
+                                     enum StudyDistribution dist,
+                                     symchar *run_method,
+                                     unsigned int now,
+                                     CONST char *filename);
+/**<
+	Create a 'STUDY' statement node.
+*/
+
+extern struct Statement *CreateDELETESYSTEM();
+/**<
+	Create a 'DELETE SYSTEM' statement node.
 */
 
 extern struct Statement *CreateWBTS(struct VariableList *vl);
@@ -469,10 +518,25 @@ extern struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs);
  *  The statement's line number is set to the current line number.
  */
 
+extern struct Statement *CreateREINIT(struct Name *n, struct Expr *rhs);
+/**<
+ *  Create an event-time reinitialisation statement node.
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ */
+
+extern struct Statement *CreateSWITCHTO(struct Expr *value, struct Expr *guard);
+/**<
+ *  Create an event-time SWITCH TO statement node.
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ */
+
 extern struct Statement *CreateTABLE(struct Name *n,
                                      symchar *decl_type,
                                      struct Set *decl_typeargs,
                                      symchar *decl_set_type,
+                                     char *units,
                                      struct Expr *default_expr,
                                      int positional,
                                      unsigned long rows,
@@ -481,7 +545,7 @@ extern struct Statement *CreateTABLE(struct Name *n,
                                      char *body);
 /**<
  *  Create a TABLE statement node.
- *  The statement takes ownership of n, default_expr, and body.
+ *  The statement takes ownership of n, units, default_expr, and body.
  */
 
 extern struct Statement *CreateDATASET(symchar *name,
@@ -762,17 +826,24 @@ extern symchar *GetStatSetTypeF(CONST struct Statement *s);
 #define GetStatCheckValue(s) GetStatCheckValueF(s)
 #endif
 /**<
- *  Return the value expression for a WILLBE.  Often this will be NULL,
- *  which means that there is no WITH_VALUE part to the WILL_BE.
+ *  Return the value expression for an IS_A or WILL_BE.  Often this will be
+ *  NULL, which means that there is no declaration-time default/check value.
  *  @param s CONST struct Statement*, the statement to query.
  *  @return The expression as a CONST struct Expr*.
  *  @see GetStatCheckValueF()
  */
 extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s);
+extern unsigned char GetStatCheckKindF(CONST struct Statement *s);
 /**<
  *  Implementation function for GetStatCheckValue().  Do not call this
  *  function directly - use GetStatCheckValue() instead.
  */
+
+#ifdef NDEBUG
+#define GetStatCheckKind(s) ((s)->v.i.checkkind)
+#else
+#define GetStatCheckKind(s) GetStatCheckKindF(s)
+#endif
 
 /* * * StateLink functions * * */
 
@@ -1192,6 +1263,54 @@ extern struct Expr *AssignStatRHSF(CONST struct Statement *s);
  *  function directly - use AssignStatRHS() instead.
  */
 
+/* * * StateReinit functions * * */
+
+#ifdef NDEBUG
+#define ReinitStatVar(sptr) ((sptr)->v.reinit.nptr)
+#else
+#define ReinitStatVar(sptr) ReinitStatVarF(sptr)
+#endif
+/**<
+ *  Return the target variable of a REINIT statement.
+ */
+extern struct Name *ReinitStatVarF(CONST struct Statement *s);
+/**<
+ *  Implementation function for ReinitStatVar().
+ */
+
+#ifdef NDEBUG
+#define ReinitStatRHS(s) ((s)->v.reinit.rhs)
+#else
+#define ReinitStatRHS(s) ReinitStatRHSF(s)
+#endif
+/**<
+ *  Return the right-hand expression of a REINIT statement.
+ */
+extern struct Expr *ReinitStatRHSF(CONST struct Statement *s);
+/**<
+ *  Implementation function for ReinitStatRHS().
+ */
+
+#ifdef NDEBUG
+#define SwitchToStatValue(s) ((s)->v.switchto.value)
+#else
+#define SwitchToStatValue(s) SwitchToStatValueF(s)
+#endif
+/**<
+ *  Return the target-state expression of a SWITCH TO statement.
+ */
+extern struct Expr *SwitchToStatValueF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+#define SwitchToStatGuard(s) ((s)->v.switchto.guard)
+#else
+#define SwitchToStatGuard(s) SwitchToStatGuardF(s)
+#endif
+/**<
+ *  Return the guard expression of a SWITCH TO statement.
+ */
+extern struct Expr *SwitchToStatGuardF(CONST struct Statement *s);
+
 /* * * StateRelation functions * * */
 
 #ifdef NDEBUG
@@ -1532,6 +1651,83 @@ extern struct VariableList *FixFreeStatVarsF(CONST struct Statement *s);
 /**<
 	Implementation function for FixFreeStatVars(). Do not call this directory, use FixStatVars instead.
 */
+
+#ifdef NDEBUG
+# define SolveStatTarget(s) ((s)->v.solve.target)
+#else
+# define SolveStatTarget(s) SolveStatTargetF(s)
+#endif
+/**<
+	Returns the optional target name for a SOLVE statement.
+*/
+extern struct Name *SolveStatTargetF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+# define IntegratorStatName(s) ((s)->v.integrator.name)
+#else
+# define IntegratorStatName(s) IntegratorStatNameF(s)
+#endif
+extern CONST char *IntegratorStatNameF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+# define IntegrateStatStart(s) ((s)->v.integrate.start)
+# define IntegrateStatStop(s) ((s)->v.integrate.stop)
+# define IntegrateStatSteps(s) ((s)->v.integrate.steps)
+#else
+# define IntegrateStatStart(s) IntegrateStatStartF(s)
+# define IntegrateStatStop(s) IntegrateStatStopF(s)
+# define IntegrateStatSteps(s) IntegrateStatStepsF(s)
+#endif
+extern struct Expr *IntegrateStatStartF(CONST struct Statement *s);
+extern struct Expr *IntegrateStatStopF(CONST struct Statement *s);
+extern long IntegrateStatStepsF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+# define ObserveStatObserved(s) ((s)->v.observe.obsvars)
+# define ObserveStatName(s) ((s)->v.observe.name)
+#else
+# define ObserveStatObserved(s) ObserveStatObservedF(s)
+# define ObserveStatName(s) ObserveStatNameF(s)
+#endif
+extern struct VariableList *ObserveStatObservedF(CONST struct Statement *s);
+extern symchar *ObserveStatNameF(CONST struct Statement *s);
+
+#ifdef NDEBUG
+# define StudyStatObserved(s) ((s)->v.study.obsvars)
+# define StudyStatVary(s) ((s)->v.study.vary)
+# define StudyStatLower(s) ((s)->v.study.lower)
+# define StudyStatUpper(s) ((s)->v.study.upper)
+# define StudyStatValue(s) ((s)->v.study.value)
+# define StudyStatSteps(s) ((s)->v.study.steps)
+# define StudyStatMode(s) ((s)->v.study.mode)
+# define StudyStatDistribution(s) ((s)->v.study.dist)
+# define StudyStatRunMethod(s) ((s)->v.study.run_method)
+# define StudyStatNow(s) ((s)->v.study.now)
+# define StudyStatFilename(s) ((s)->v.study.filename)
+#else
+# define StudyStatObserved(s) StudyStatObservedF(s)
+# define StudyStatVary(s) StudyStatVaryF(s)
+# define StudyStatLower(s) StudyStatLowerF(s)
+# define StudyStatUpper(s) StudyStatUpperF(s)
+# define StudyStatValue(s) StudyStatValueF(s)
+# define StudyStatSteps(s) StudyStatStepsF(s)
+# define StudyStatMode(s) StudyStatModeF(s)
+# define StudyStatDistribution(s) StudyStatDistributionF(s)
+# define StudyStatRunMethod(s) StudyStatRunMethodF(s)
+# define StudyStatNow(s) StudyStatNowF(s)
+# define StudyStatFilename(s) StudyStatFilenameF(s)
+#endif
+extern struct VariableList *StudyStatObservedF(CONST struct Statement *s);
+extern struct Name *StudyStatVaryF(CONST struct Statement *s);
+extern struct Expr *StudyStatLowerF(CONST struct Statement *s);
+extern struct Expr *StudyStatUpperF(CONST struct Statement *s);
+extern struct Expr *StudyStatValueF(CONST struct Statement *s);
+extern long StudyStatStepsF(CONST struct Statement *s);
+extern enum StudyMode StudyStatModeF(CONST struct Statement *s);
+extern enum StudyDistribution StudyStatDistributionF(CONST struct Statement *s);
+extern symchar *StudyStatRunMethodF(CONST struct Statement *s);
+extern unsigned int StudyStatNowF(CONST struct Statement *s);
+extern CONST char *StudyStatFilenameF(CONST struct Statement *s);
 
 /* * * StateCall functions * * */
 

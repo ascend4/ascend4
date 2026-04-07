@@ -2282,6 +2282,16 @@ upper and lower bounds displayed.</property>
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="show_pantelides_report">
+                        <property name="use_action_appearance">False</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Show _Pantelides analysis</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_show_pantelides_report_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="show_freeable_vars">
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>

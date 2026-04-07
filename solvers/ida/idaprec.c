@@ -30,7 +30,15 @@
 #include <ascend/general/platform.h>
 #include <ascend/system/relman.h>
 
-#define PREC_DEBUG
+#ifndef PREC_DEBUG
+# define PREC_DEBUG 0
+#endif
+
+#if PREC_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
 
 /*------
   Full jacobian preconditioner -- experimental
@@ -38,16 +46,13 @@
 
 static int integrator_ida_psetup_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
-		 realtype c_j, void *prec_data,
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
+		 realtype c_j, void *prec_data
 );
 
 static int integrator_ida_psolve_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
-		 realtype c_j, realtype delta, void *prec_data,
-		 N_Vector tmp
+		 realtype c_j, realtype delta, void *prec_data
 );
 
 static void integrator_ida_pcreate_jacobian(IntegratorSystem *integ);
@@ -64,16 +69,13 @@ const IntegratorIdaPrec prec_jacobian = {
 
 static int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
-		 realtype c_j, void *prec_data,
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
+		 realtype c_j, void *prec_data
 );
 
 static int integrator_ida_psolve_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
-		 realtype c_j, realtype delta, void *prec_data,
-		 N_Vector tmp
+		 realtype c_j, realtype delta, void *prec_data
 );
 
 static void integrator_ida_pcreate_jacobi(IntegratorSystem *integ);
@@ -103,7 +105,7 @@ static void integrator_ida_pcreate_jacobian(IntegratorSystem *integ){
 
 	enginedata->pfree = &integrator_ida_pfree_jacobian;
 	enginedata->precdata = precdata;
-	CONSOLE_DEBUG("Allocated memory for Full Jacobian preconditioner");
+	MSG("Allocated memory for Full Jacobian preconditioner");
 }
 
 void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
@@ -118,7 +120,7 @@ void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
 		ASC_FREE(precdata);
 		enginedata->precdata = NULL;
 
-		CONSOLE_DEBUG("Freed memory for Full Jacobian preconditioner");
+		MSG("Freed memory for Full Jacobian preconditioner");
 	}
 	enginedata->pfree = NULL;
 }
@@ -130,10 +132,10 @@ void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
 */
 static int integrator_ida_psetup_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
-		 realtype c_j, void *p_data,
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
+		 realtype c_j, void *p_data
 ){
+	(void)tt;
+	(void)rr;
 	int i, j, res;
 	IntegratorSystem *integ;
 	IntegratorIdaData *enginedata;
@@ -155,7 +157,7 @@ static int integrator_ida_psetup_jacobian(realtype tt,
 	P = linsolqr_get_matrix(L);
 	mtx_clear(P);
 
-	CONSOLE_DEBUG("Setting up Jacobian preconditioner");
+	MSG("Setting up Jacobian preconditioner");
 
 	variables = ASC_NEW_ARRAY(struct var_variable*, NV_LENGTH_S(yy) * 2);
 	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
@@ -173,11 +175,11 @@ static int integrator_ida_psetup_jacobian(realtype tt,
 		status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
 			relname = rel_make_name(integ->system, *relptr);
-			CONSOLE_DEBUG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
+			MSG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
 			ASC_FREE(relname);
 			break;
 		}
-		/* CONSOLE_DEBUG("Got %d derivatives from relation %d",count,i); */
+		/* MSG("Got %d derivatives from relation %d",count,i); */
 		/* find the diagonal elements */
 		for(j=0; j<count; ++j){
 			if(var_deriv(variables[j])){
@@ -191,7 +193,7 @@ static int integrator_ida_psetup_jacobian(realtype tt,
 	mtx_assemble(P);
 
 	if(status){
-		CONSOLE_DEBUG("Error found when evaluating derivatives");
+		MSG("Error found when evaluating derivatives");
 		res = 1; goto finish; /* recoverable */
 	}
 
@@ -212,9 +214,14 @@ finish:
 static int integrator_ida_psolve_jacobian(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
-		 realtype c_j, realtype delta, void *p_data,
-		 N_Vector tmp
+		 realtype c_j, realtype delta, void *p_data
 ){
+	(void)tt;
+	(void)yy;
+	(void)yp;
+	(void)rr;
+	(void)zvec;
+	(void)delta;
 	IntegratorSystem *integ;
 	IntegratorIdaData *data;
 	IntegratorIdaPrecDataJacobian *precdata;
@@ -237,7 +244,7 @@ static int integrator_ida_psolve_jacobian(realtype tt,
 
 	linsolqr_remove_rhs(L,NV_DATA_S(rvec));
 
-	CONSOLE_DEBUG("Solving Jacobian preconditioner (c_j = %f)",c_j);
+	MSG("Solving Jacobian preconditioner (c_j = %f)",c_j);
 	return 0;
 };
 
@@ -252,11 +259,18 @@ static void integrator_ida_pcreate_jacobi(IntegratorSystem *integ){
 	precdata = ASC_NEW(IntegratorIdaPrecDataJacobi);
 
 	asc_assert(integ->n_y);
-	precdata->PIii = N_VNew_Serial(integ->n_y);
+	{
+		IntegratorIdaData *data = integrator_ida_enginedata(integ);
+#if SUNDIALS_VERSION_MAJOR >= 6
+		precdata->PIii = N_VNew_Serial(integ->n_y, data->sunctx);
+#else
+		precdata->PIii = N_VNew_Serial(integ->n_y);
+#endif
+	}
 
 	enginedata->pfree = &integrator_ida_pfree_jacobi;
 	enginedata->precdata = precdata;
-	CONSOLE_DEBUG("Allocated memory for Jacobi preconditioner");
+	MSG("Allocated memory for Jacobi preconditioner");
 }
 
 void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
@@ -266,7 +280,7 @@ void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
 
 		ASC_FREE(precdata);
 		enginedata->precdata = NULL;
-		CONSOLE_DEBUG("Freed memory for Jacobi preconditioner");
+		MSG("Freed memory for Jacobi preconditioner");
 	}
 	enginedata->pfree = NULL;
 }
@@ -278,10 +292,10 @@ void integrator_ida_pfree_jacobi(IntegratorIdaData *enginedata){
 */
 static int integrator_ida_psetup_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
-		 realtype c_j, void *p_data,
-		 N_Vector tmp1, N_Vector tmp2,
-		 N_Vector tmp3
+		 realtype c_j, void *p_data
 ){
+	(void)tt;
+	(void)rr;
 	int i, j, res;
 	IntegratorSystem *integ;
 	IntegratorIdaData *enginedata;
@@ -296,7 +310,7 @@ static int integrator_ida_psetup_jacobi(realtype tt,
 	int count, status;
 	char *relname;
 
-	CONSOLE_DEBUG("Setting up Jacobi preconditioner");
+	MSG("Setting up Jacobi preconditioner");
 
 	variables = ASC_NEW_ARRAY(struct var_variable*, NV_LENGTH_S(yy) * 2);
 	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
@@ -315,11 +329,11 @@ static int integrator_ida_psetup_jacobi(realtype tt,
 		status = relman_diff3(*relptr, &enginedata->vfilter, derivatives, variables, &count, enginedata->safeeval);
 		if(status){
 			relname = rel_make_name(integ->system, *relptr);
-			CONSOLE_DEBUG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
+			MSG("ERROR calculating preconditioner derivatives for relation '%s'",relname);
 			ASC_FREE(relname);
 			break;
 		}
-		/* CONSOLE_DEBUG("Got %d derivatives from relation %d",count,i); */
+		/* MSG("Got %d derivatives from relation %d",count,i); */
 		/* find the diagonal elements */
 		for(j=0; j<count; ++j){
 			if(var_sindex(variables[j])==i){
@@ -332,12 +346,12 @@ static int integrator_ida_psetup_jacobi(realtype tt,
 			}
 		}
 #ifdef PREC_DEBUG
-		CONSOLE_DEBUG("PI[%d] = %f",i,NV_Ith_S(precdata->PIii,i));
+		MSG("PI[%d] = %f",i,NV_Ith_S(precdata->PIii,i));
 #endif
 	}
 
 	if(status){
-		CONSOLE_DEBUG("Error found when evaluating derivatives");
+		MSG("Error found when evaluating derivatives");
 		res = 1; goto finish; /* recoverable */
 	}
 
@@ -358,9 +372,14 @@ finish:
 static int integrator_ida_psolve_jacobi(realtype tt,
 		 N_Vector yy, N_Vector yp, N_Vector rr,
 		 N_Vector rvec, N_Vector zvec,
-		 realtype c_j, realtype delta, void *p_data,
-		 N_Vector tmp
+		 realtype c_j, realtype delta, void *p_data
 ){
+	(void)tt;
+	(void)yy;
+	(void)yp;
+	(void)rr;
+	(void)c_j;
+	(void)delta;
 	IntegratorSystem *integ;
 	IntegratorIdaData *data;
 	IntegratorIdaPrecDataJacobi *precdata;
@@ -368,9 +387,7 @@ static int integrator_ida_psolve_jacobi(realtype tt,
 	data = integ->enginedata;
 	precdata = (IntegratorIdaPrecDataJacobi *)(data->precdata);
 
-	CONSOLE_DEBUG("Solving Jacobi preconditioner (c_j = %f)",c_j);
+	MSG("Solving Jacobi preconditioner (c_j = %f)",c_j);
 	N_VProd(precdata->PIii, rvec, zvec);
 	return 0;
 };
-
-

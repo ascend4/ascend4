@@ -72,10 +72,16 @@ static HelmholtzData helmholtz_data_hydrogen = {
 	, /* rho_c */ 15.508 * HYDROGEN_M
 	, /* T_t */ 13.957
 	, {FPROPS_REF_NBP}
-	, 0.088 /* acentric factor, from Reid, Prausnitz & Polling */
-	, &ideal_data_hydrogen
-	, 9 /* power terms */
-	, (const HelmholtzPowTerm[]){
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = 0.0 /* M&S G9e Table A-25, H2(g) */
+		, .s0 = (130.57e3 / HYDROGEN_M) /* M&S G9e Table A-25, H2(g) */
+	}}}
+	, .omega = 0.088 /* acentric factor, from Reid, Prausnitz & Polling */
+	, .ideal = &ideal_data_hydrogen
+	, .np = 9 /* power terms */
+	, .pt = (const HelmholtzPowTerm[]){
 		/* a_i, t_i, d_i, l_i */
 		{-0.693643e1,  0.6844,   1.0,  0.0}
 		, {0.01,         1.,    4.0,  0.0}
@@ -87,8 +93,8 @@ static HelmholtzData helmholtz_data_hydrogen = {
 		, {-0.777414,  1.754,    1.0,  1.0}
 		, {0.351944,  1.311,    3.0 , 1.0}
 	}
-	, 5 /* critical (gaussian) terms */
- 	, (const HelmholtzGausTerm[]){
+	, .ng = 5 /* critical (gaussian) terms */
+ 	, .gt = (const HelmholtzGausTerm[]){
 		/* a, t, d, alpha, beta, gamma, epsilon */
 		{-0.211716e-1, 4.187,   2.0, 1.685, 0.1710, 0.7164, 1.506}
 		, {0.226312e-1, 5.646,  1.0, 0.489, 0.2245, 1.3444, 0.156}
@@ -136,6 +142,10 @@ static const ViscosityData visc_hydrogen = {
 	}}
 };
 
+static const ElementComp elements_hydrogen[] = {
+	{"H", 2}
+};
+
 const EosData eos_hydrogen = {
 	"hydrogen"
 	,"Jacob Leachman thesis, via email from Steve Penoncello, 2008"
@@ -144,6 +154,8 @@ const EosData eos_hydrogen = {
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_hydrogen}
 	,.visc = &visc_hydrogen
+	,.elements = elements_hydrogen
+	,.nelements = 1
 };
 
 #else
@@ -317,4 +329,3 @@ THCOND_TEST(400.00, 14.524, 251.12, 0.01);
 }
 
 #endif
-

@@ -174,6 +174,12 @@ extern void slv_set_symbol_list(slv_system_t sys, struct gl_list_t *sv);
 	They are used to assign an integer value to a symbol value
 */
 
+extern void slv_set_hidden_instance_list(slv_system_t sys, struct gl_list_t *sv);
+/**<
+	Set gllist of hidden backend-only instances owned by the solver system.
+	These are destroyed with the system.
+*/
+
 extern void slv_set_var_buf(slv_system_t sys, struct var_variable *vbuf);
 /**<
 	Set the array variables of for the system.
@@ -366,4 +372,3 @@ int slv_set_diffvars(slv_system_t sys,void *diffvars);
 /* @} */
 
 #endif  /* ASC_SLV_SERVER_H */
-

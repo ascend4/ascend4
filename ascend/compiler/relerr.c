@@ -25,6 +25,7 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
 #include <ascend/utilities/error.h>
+#include <string.h>
 
 rel_errorlist *rel_errorlist_new(){
 	rel_errorlist *err = ASC_NEW_CLEAR(rel_errorlist);
@@ -41,12 +42,22 @@ void rel_errorlist_destroy(rel_errorlist *err){
 }
 
 void rel_errorlist_destroy_contents(rel_errorlist *err){
-	(void)0;
+	if(err == NULL){
+		return;
+	}
+	if(err->instname != NULL){
+		ASC_FREE(err->instname);
+		err->instname = NULL;
+	}
 }
 
 
 int rel_errorlist_set_find_error(rel_errorlist *err, enum find_errors ferr){
 	assert(err!=NULL);
+	if(err->instname != NULL){
+		ASC_FREE(err->instname);
+		err->instname = NULL;
+	}
 	err->ferr = ferr;
 	err->data.name = NULL;
 	return 0;
@@ -54,6 +65,10 @@ int rel_errorlist_set_find_error(rel_errorlist *err, enum find_errors ferr){
 
 int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr, const struct Name *errname){
 	assert(err!=NULL);
+	if(err->instname != NULL){
+		ASC_FREE(err->instname);
+		err->instname = NULL;
+	}
 	err->ferr = ferr;
 	err->data.name = errname;
 	return 0;
@@ -62,7 +77,23 @@ int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr,
 int rel_errorlist_set_name(rel_errorlist *err, const struct Name *errname){
 	assert(err!=NULL);
 	assert(err->ferr != correct_instance);
+	if(err->instname != NULL){
+		ASC_FREE(err->instname);
+		err->instname = NULL;
+	}
 	err->data.name = errname;
+	return 0;
+}
+
+int rel_errorlist_set_instname(rel_errorlist *err, const char *instname){
+	assert(err!=NULL);
+	if(err->instname != NULL){
+		ASC_FREE(err->instname);
+		err->instname = NULL;
+	}
+	if(instname != NULL){
+		err->instname = ASC_STRDUP(instname);
+	}
 	return 0;
 }
 
@@ -156,9 +187,40 @@ int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat){
 			ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
 		}
 	case integer_value_undefined:
+		if(err->instname != NULL){
+			WriteStatementError(ASC_USER_ERROR,stat,1,
+				"Constant \"%s\" is unassigned in this relation. Assign it in the MODEL declarative section (for example using ':==' or 'TABLE'), not in a METHOD.",
+				err->instname
+			);
+		}else{
+			WriteStatementError(ASC_USER_ERROR,stat,1,
+				"An integer constant used in this relation is unassigned. Assign it in the MODEL declarative section (for example using ':==' or 'TABLE'), not in a METHOD."
+			);
+		}
+		return 1;
 	case real_value_wild:
+		if(err->instname != NULL){
+			WriteStatementError(ASC_USER_ERROR,stat,1,
+				"Constant \"%s\" has wild dimensions in this relation. Assign it in the MODEL declarative section (for example using ':==' or 'TABLE'), not in a METHOD.",
+				err->instname
+			);
+		}else{
+			WriteStatementError(ASC_USER_ERROR,stat,1,
+				"A real constant used in this relation has wild dimensions. Assign it in the MODEL declarative section (for example using ':==' or 'TABLE'), not in a METHOD."
+			);
+		}
+		return 1;
 	case real_value_undefined:
-		WriteStatementError(3,stat,1,"Unassigned constants or wild dimensioned real constant in relation");
+		if(err->instname != NULL){
+			WriteStatementError(ASC_USER_ERROR,stat,1,
+				"Constant \"%s\" is unassigned in this relation. Assign it in the MODEL declarative section (for example using ':==' or 'TABLE'), not in a METHOD.",
+				err->instname
+			);
+		}else{
+			WriteStatementError(ASC_USER_ERROR,stat,1,
+				"A real constant used in this relation is unassigned. Assign it in the MODEL declarative section (for example using ':==' or 'TABLE'), not in a METHOD."
+			);
+		}
 		return 1;
 	case okay:
 		ASC_PANIC("Incorrect 'okay' error response.\n");/*NOTREACHED*/
@@ -166,5 +228,3 @@ int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat){
 	ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
 	return -1;
 }
-
-

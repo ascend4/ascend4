@@ -42,6 +42,7 @@
 #include "instance_enum.h"
 #include "instance_name.h"
 #include "instance_io.h"
+#include "instquery.h"
 #include "mathinst.h"
 #include "name.h"
 #include "nameio.h"
@@ -54,6 +55,7 @@
 #include "forvars.h"
 #include "setinstval.h"
 #include "find.h"
+#include "derivinst.h"
 #include "safe.h"
 #include "relation_util.h"
 #include "logical_relation.h"
@@ -139,6 +141,37 @@ static int ProcessIntegersInSets(CONST struct Instance *i)
 static struct gl_list_t *RealFindInstances(CONST struct Instance *i,
                                     CONST struct Name *n,
                                     rel_errorlist *err);
+
+static struct Instance *FindProceduralDynamicChild(CONST struct Instance *current, symchar *name){
+  struct Instance *child;
+  struct Instance *sim;
+  struct Instance *root;
+
+  if(current == NULL || name == NULL){
+    return NULL;
+  }
+
+  child = InstanceDynamicChildByChar((struct Instance *)current, name);
+  if(child != NULL){
+    return child;
+  }
+
+  if(strcmp(SCP(name), "der") != 0 || InstanceKind(current) != REAL_ATOM_INST){
+    return NULL;
+  }
+
+  sim = FindSimulationInstance((struct Instance *)current);
+  if(sim == NULL){
+    return NULL;
+  }
+  root = GetSimulationRoot(sim);
+  if(root == NULL){
+    return NULL;
+  }
+
+  DerivativeInstancesPrepareRoot(root);
+  return InstanceDynamicChildByChar((struct Instance *)current, name);
+}
 
 struct value_t InstanceEvaluateName(CONST struct Name *nptr)
 {
@@ -708,6 +741,9 @@ static struct gl_list_t *FindNextNameElement(CONST struct Name *n
           gl_destroy(result);
           return NULL;
         }
+      }else if(GetDeclarativeContext()!=0
+          && (child = FindProceduralDynamicChild(current, NameIdPtr(n))) != NULL){
+        gl_append_ptr(result,(VOIDPTR)child);
       }else{
         //CONSOLE_DEBUG("unmade instance %lu of %lu with name '%s'",c,len,SCP(NameIdPtr(n)));
         rel_errorlist_set_find_error(err,unmade_instance);
@@ -724,7 +760,18 @@ static struct gl_list_t *FindNextNameElement(CONST struct Name *n
   }else{
     //CONSOLE_DEBUG("name is a set");
     sptr = NameSetPtr(n);
-    setvalue = EvaluateSet(sptr,InstanceEvaluateName);
+    {
+      int saved_list_mode = ListMode;
+      /*
+       * In ordered-list contexts such as blackbox argument expansion we still
+       * need to be able to evaluate a named set atom (for example
+       * x[components]). Disable ListMode only for the set-expression
+       * evaluation itself, then reapply ordered expansion to the result below.
+       */
+      ListMode = 0;
+      setvalue = EvaluateSet(sptr,InstanceEvaluateName);
+      ListMode = saved_list_mode;
+    }
     switch(ValueKind(setvalue)){
     case integer_value:
     case symbol_value:

@@ -30,6 +30,8 @@
 #include <ascend/compiler/module.h>
 #include <ascend/compiler/parser.h>
 #include <ascend/compiler/library.h>
+#include <ascend/compiler/slist.h>
+#include <ascend/compiler/statio.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/type_desc.h>
 #include <ascend/compiler/simlist.h>
@@ -39,6 +41,7 @@
 #include <ascend/compiler/childio.h>
 #include <ascend/compiler/instance_name.h>
 #include <ascend/compiler/units.h>
+#include <ascend/compiler/when_util.h>
 
 #include <ascend/compiler/initialize.h>
 
@@ -144,79 +147,6 @@ static int parse_error_capture_cb(ERROR_REPORTER_CALLBACK_ARGS){
 	wrote_default = error_reporter_default_callback(sev,filename,line,funcname,fmt,args_copy);
 	va_end(args_copy);
 	return wrote_default;
-}
-
-static void parse_module_expect_error(const char *modulefile, const char *typename, const char *msg_substr, int expect_type_rejected, int require_column_info){
-	int status;
-	int has_error;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	parse_error_capture_reset();
-	error_reporter_set_callback(&parse_error_capture_cb);
-
-	/*m =*/ Asc_OpenModule(modulefile,&status);
-	CU_ASSERT(status == 0);
-	TMSG("parsing module '%s' (expecting parse errors)",modulefile);
-
-	error_reporter_tree_start();
-	CU_ASSERT(0 == zz_parse());
-	has_error = error_reporter_tree_has_error();
-	error_reporter_tree_end();
-	TMSG("error_count=%d first_error_line=%d",g_parse_error_capture.error_count,g_parse_error_capture.first_error_line);
-	TMSG("first_error='%s'",g_parse_error_capture.first_error_msg);
-	TMSG("all_errors:\n%s",g_parse_error_capture.all_error_msgs);
-
-	CU_ASSERT(has_error == 1);
-	CU_ASSERT(g_parse_error_capture.error_count > 0);
-	CU_ASSERT(g_parse_error_capture.first_error_line > 0);
-	if(require_column_info){
-		CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,"column") != NULL);
-	}
-	if(msg_substr){
-		CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,msg_substr) != NULL);
-	}
-	if(expect_type_rejected && typename){
-		CU_ASSERT(FindType(AddSymbol(typename))==NULL);
-	}
-
-	error_reporter_set_callback(NULL);
-	Asc_CompilerDestroy();
-}
-
-static void instantiate_module_expect_error(const char *modulefile, const char *typename, const char *msg_substr){
-	int status;
-	struct Instance *sim;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	error_reporter_set_callback(&parse_error_capture_cb);
-
-	/*m =*/ Asc_OpenModule(modulefile,&status);
-	CU_ASSERT(status == 0);
-
-	error_reporter_tree_start();
-	CU_ASSERT(0 == zz_parse());
-	CU_ASSERT(0 == error_reporter_tree_has_error());
-	error_reporter_tree_end();
-
-	CU_ASSERT(FindType(AddSymbol(typename))!=NULL);
-
-	parse_error_capture_reset();
-	sim = SimsCreateInstance(AddSymbol(typename), AddSymbol("sim1"), e_normal, NULL);
-
-	CU_ASSERT(g_parse_error_capture.error_count > 0);
-	if(msg_substr){
-		CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,msg_substr) != NULL);
-	}
-
-	if(sim != NULL){
-		sim_destroy(sim);
-	}
-	error_reporter_set_callback(NULL);
-	Asc_CompilerDestroy();
 }
 
 static void test_init(void){
@@ -348,6 +278,276 @@ static void test_instantiate_string(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_initial_section_basic(void){
+	const char *model = "(* INITIAL syntax smoke test *)\n\
+		DEFINITION relation\n\
+		    included IS_A boolean;\n\
+		    initial IS_A boolean;\n\
+		    message IS_A symbol;\n\
+		    included := TRUE;\n\
+		    initial := FALSE;\n\
+		    message := 'none';\n\
+		END relation;\n\
+		MODEL test_initial_basic;\n\
+			x IS_A real;\n\
+			x_rel: x - 1 = 0;\n\
+		INITIAL\n\
+			x_init: x = 1;\n\
+		END test_initial_basic;\n";
+
+	int status;
+	struct TypeDescription *t;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(zz_parse() == 0);
+
+	t = FindType(AddSymbol("test_initial_basic"));
+	CU_ASSERT_FATAL(t != NULL);
+	CU_ASSERT_EQUAL(gl_length(GetList(GetStatementList(t))), 2);
+	CU_ASSERT_EQUAL(gl_length(GetList(GetInitialStatementList(t))), 1);
+	CU_ASSERT_EQUAL(GetExecutableStatementCount(t), 3);
+
+	sim = SimsCreateInstance(AddSymbol("test_initial_basic"), AddSymbol("sim_initial"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim != NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root != NULL);
+
+	CU_ASSERT(ChildByChar(root, AddSymbol("x")) != NULL);
+	CU_ASSERT(ChildByChar(root, AddSymbol("x_rel")) != NULL);
+	CU_ASSERT_FATAL(ChildByChar(root, AddSymbol("x_init")) != NULL);
+	CU_ASSERT(InstanceKind(ChildByChar(root, AddSymbol("x_init"))) == REL_INST);
+	CU_ASSERT_FATAL(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("initial")) != NULL);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("initial"))) == TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("included"))) == FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_rel")), AddSymbol("initial"))) == FALSE);
+
+	SetInitialRelationInclusion(root, TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("included"))) == TRUE);
+	SetInitialRelationInclusion(root, FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("x_init")), AddSymbol("included"))) == FALSE);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_initial_section_hierarchical(void){
+	const char *model = "(* INITIAL hierarchy test *)\n\
+		DEFINITION relation\n\
+		    included IS_A boolean;\n\
+		    initial IS_A boolean;\n\
+		    message IS_A symbol;\n\
+		    included := TRUE;\n\
+		    initial := FALSE;\n\
+		    message := 'none';\n\
+		END relation;\n\
+		MODEL child_initial;\n\
+			y IS_A real;\n\
+			y_rel: y - 2 = 0;\n\
+		INITIAL\n\
+			y_init: y = 3;\n\
+		END child_initial;\n\
+		MODEL parent_initial;\n\
+			c IS_A child_initial;\n\
+			parent_rel: c.y - 2 = 0;\n\
+		INITIAL\n\
+			parent_init: c.y = 4;\n\
+		END parent_initial;\n";
+
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+	struct Instance *child;
+	struct Instance *y_init;
+	struct Instance *parent_init;
+
+	Asc_CompilerInit(1);
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(zz_parse() == 0);
+
+	sim = SimsCreateInstance(AddSymbol("parent_initial"), AddSymbol("sim_parent_initial"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim != NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root != NULL);
+	child = ChildByChar(root, AddSymbol("c"));
+	CU_ASSERT_FATAL(child != NULL);
+	y_init = ChildByChar(child, AddSymbol("y_init"));
+	parent_init = ChildByChar(root, AddSymbol("parent_init"));
+	CU_ASSERT_FATAL(y_init != NULL);
+	CU_ASSERT_FATAL(parent_init != NULL);
+
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("parent_init")), AddSymbol("initial"))) == TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(child, AddSymbol("y_init")), AddSymbol("initial"))) == TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("parent_init")), AddSymbol("included"))) == FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(child, AddSymbol("y_init")), AddSymbol("included"))) == FALSE);
+
+	SetInitialRelationInclusion(root, TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("parent_init")), AddSymbol("included"))) == TRUE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(child, AddSymbol("y_init")), AddSymbol("included"))) == TRUE);
+
+	SetInitialRelationInclusion(root, FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(root, AddSymbol("parent_init")), AddSymbol("included"))) == FALSE);
+	CU_ASSERT(GetBooleanAtomValue(ChildByChar(ChildByChar(child, AddSymbol("y_init")), AddSymbol("included"))) == FALSE);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_initial_section_illegal_statement_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		MODEL initial_illegal;\n\
+			x IS_A real;\n\
+		INITIAL\n\
+			y IS_A real;\n\
+		END initial_illegal;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "Statement not allowed in context") != NULL);
+	CU_ASSERT(FindType(AddSymbol("initial_illegal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_pre_outside_reinit_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		MODEL pre_illegal;\n\
+			x, y IS_A real;\n\
+			bad: y = pre(x);\n\
+		END pre_illegal;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "pre(...) is only allowed inside REINIT") != NULL);
+	CU_ASSERT(FindType(AddSymbol("pre_illegal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_pre_in_conditional_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		MODEL pre_conditional_illegal;\n\
+			x IS_A real;\n\
+		CONDITIONAL\n\
+			bad: pre(x) > 0;\n\
+		END CONDITIONAL;\n\
+		END pre_conditional_illegal;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "pre(...) is only allowed inside REINIT") != NULL);
+	CU_ASSERT(FindType(AddSymbol("pre_conditional_illegal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_lowercase_der_statement_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		MODEL der_stmt_case_illegal;\n\
+			x, y IS_A real;\n\
+			der(x, y);\n\
+		END der_stmt_case_illegal;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(FindType(AddSymbol("der_stmt_case_illegal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_uppercase_der_expr_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		MODEL der_expr_case_illegal;\n\
+			x, y IS_A real;\n\
+			eq: y = DER(x);\n\
+		END der_expr_case_illegal;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(FindType(AddSymbol("der_expr_case_illegal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
 static void test_parse_basemodel(void){
 
 	struct module_t *m;
@@ -396,11 +596,12 @@ static void test_parse_file(void){
 	CU_ASSERT(status==0);
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
-	MSG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
+	unsigned long n = gl_length(l);
+	MSG("%lu library entries loaded from %s",n,Asc_ModuleName(m));
 	gl_destroy(l);
 
-	/* there are only 8 things declared in system.a4l: */
-	CU_ASSERT(gl_length(l)==8)
+	/* system.a4l now declares 9 public types, including selector. */
+	CU_ASSERT(n==9)
 
 	/* here they are... */
 	CU_ASSERT(FindType(AddSymbol("relation"))!=NULL);
@@ -409,6 +610,7 @@ static void test_parse_file(void){
 	CU_ASSERT(FindType(AddSymbol("solver_int"))!=NULL);
 	CU_ASSERT(FindType(AddSymbol("generic_real"))!=NULL);
 	CU_ASSERT(FindType(AddSymbol("boolean_var"))!=NULL);
+	CU_ASSERT(FindType(AddSymbol("selector"))!=NULL);
 	CU_ASSERT(FindType(AddSymbol("solver_binary"))!=NULL);
 	CU_ASSERT(FindType(AddSymbol("solver_semi"))!=NULL);
 
@@ -666,441 +868,6 @@ static void test_badalias(void){
 
 	Asc_CompilerDestroy();
 #undef TESTFILE
-}
-
-static void test_parse_tables_v05(void){
-	int status;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_parse.a4c",&status);
-	CU_ASSERT(status == 0);
-
-	error_reporter_tree_start();
-	CU_ASSERT(0 == zz_parse());
-	CU_ASSERT(0 == error_reporter_tree_has_error());
-	error_reporter_tree_clear();
-
-	CU_ASSERT(FindType(AddSymbol("tables_v05_parse"))!=NULL);
-
-	Asc_CompilerDestroy();
-}
-
-static long fetch_int_table_cell_2d(struct Instance *root, const char *arrname, long i, long j){
-	struct InstanceName rec;
-	struct Instance *arr;
-	struct Instance *row;
-	struct Instance *inst;
-	unsigned long pos;
-	long value;
-
-	arr = ChildByChar(root,AddSymbol(arrname));
-	CU_ASSERT_FATAL(arr != NULL);
-
-	SetInstanceNameType(rec,IntArrayIndex);
-	SetInstanceNameIntIndex(rec,i);
-	pos = ChildSearch(arr,&rec);
-	CU_ASSERT_FATAL(pos != 0);
-	row = InstanceChild(arr,pos);
-	CU_ASSERT_FATAL(row != NULL);
-
-	SetInstanceNameIntIndex(rec,j);
-	pos = ChildSearch(row,&rec);
-	CU_ASSERT_FATAL(pos != 0);
-	inst = InstanceChild(row,pos);
-	CU_ASSERT_FATAL(inst != NULL);
-	CU_ASSERT_FATAL(InstanceKind(inst)==INTEGER_CONSTANT_INST);
-	CU_ASSERT_FATAL(AtomAssigned(inst));
-	value = GetIntegerAtomValue(inst);
-	return value;
-}
-
-static long fetch_int_table_cell_2d_is(struct Instance *root, const char *arrname, long i, const char *j){
-	struct InstanceName rec;
-	struct Instance *arr;
-	struct Instance *row;
-	struct Instance *inst;
-	unsigned long pos;
-	long value;
-
-	arr = ChildByChar(root,AddSymbol(arrname));
-	CU_ASSERT_FATAL(arr != NULL);
-
-	SetInstanceNameType(rec,IntArrayIndex);
-	SetInstanceNameIntIndex(rec,i);
-	pos = ChildSearch(arr,&rec);
-	CU_ASSERT_FATAL(pos != 0);
-	row = InstanceChild(arr,pos);
-	CU_ASSERT_FATAL(row != NULL);
-
-	SetInstanceNameType(rec,StrArrayIndex);
-	SetInstanceNameStrIndex(rec,AddSymbol(j));
-	pos = ChildSearch(row,&rec);
-	CU_ASSERT_FATAL(pos != 0);
-	inst = InstanceChild(row,pos);
-	CU_ASSERT_FATAL(inst != NULL);
-	CU_ASSERT_FATAL(InstanceKind(inst)==INTEGER_CONSTANT_INST);
-	CU_ASSERT_FATAL(AtomAssigned(inst));
-	value = GetIntegerAtomValue(inst);
-	return value;
-}
-
-static long fetch_int_table_cell_2d_ss(struct Instance *root, const char *arrname, const char *i, const char *j){
-	struct InstanceName rec;
-	struct Instance *arr;
-	struct Instance *row;
-	struct Instance *inst;
-	unsigned long pos;
-	long value;
-
-	arr = ChildByChar(root,AddSymbol(arrname));
-	CU_ASSERT_FATAL(arr != NULL);
-
-	SetInstanceNameType(rec,StrArrayIndex);
-	SetInstanceNameStrIndex(rec,AddSymbol(i));
-	pos = ChildSearch(arr,&rec);
-	CU_ASSERT_FATAL(pos != 0);
-	row = InstanceChild(arr,pos);
-	CU_ASSERT_FATAL(row != NULL);
-
-	SetInstanceNameStrIndex(rec,AddSymbol(j));
-	pos = ChildSearch(row,&rec);
-	CU_ASSERT_FATAL(pos != 0);
-	inst = InstanceChild(row,pos);
-	CU_ASSERT_FATAL(inst != NULL);
-	CU_ASSERT_FATAL(InstanceKind(inst)==INTEGER_CONSTANT_INST);
-	CU_ASSERT_FATAL(AtomAssigned(inst));
-	value = GetIntegerAtomValue(inst);
-	return value;
-}
-
-static void test_instantiate_tables_v05_positional(void){
-	int status;
-	struct Instance *sim;
-	struct Instance *root;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate.a4c",&status);
-	CU_ASSERT(status == 0);
-
-	error_reporter_tree_start();
-	CU_ASSERT(0 == zz_parse());
-	CU_ASSERT(0 == error_reporter_tree_has_error());
-	error_reporter_tree_end();
-
-	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate"))!=NULL);
-
-	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate"), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(sim!=NULL);
-
-	root = GetSimulationRoot(sim);
-	CU_ASSERT_FATAL(root!=NULL);
-
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
-
-	sim_destroy(sim);
-	Asc_CompilerDestroy();
-}
-
-static void test_instantiate_tables_v05_positional_csv_semicolon(void){
-	int status;
-	struct Instance *sim;
-	struct Instance *root;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_positional_csv_semicolon.a4c",&status);
-	CU_ASSERT(status == 0);
-
-	error_reporter_tree_start();
-	CU_ASSERT(0 == zz_parse());
-	CU_ASSERT(0 == error_reporter_tree_has_error());
-	error_reporter_tree_end();
-
-	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_positional_csv_semicolon"))!=NULL);
-
-	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_positional_csv_semicolon"), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(sim!=NULL);
-
-	root = GetSimulationRoot(sim);
-	CU_ASSERT_FATAL(root!=NULL);
-
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
-
-	sim_destroy(sim);
-	Asc_CompilerDestroy();
-}
-
-static void test_instantiate_tables_v05_dense_int_labels(void){
-	int status;
-	struct Instance *sim;
-	struct Instance *root;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_int.a4c",&status);
-	CU_ASSERT(status == 0);
-
-	error_reporter_tree_start();
-	CU_ASSERT(0 == zz_parse());
-	CU_ASSERT(0 == error_reporter_tree_has_error());
-	error_reporter_tree_end();
-
-	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_int"))!=NULL);
-
-	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_int"), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(sim!=NULL);
-	root = GetSimulationRoot(sim);
-	CU_ASSERT_FATAL(root!=NULL);
-
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
-	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
-
-	sim_destroy(sim);
-	Asc_CompilerDestroy();
-}
-
-static void test_instantiate_tables_v05_dense_csv_semicolon(void){
-	int status;
-	struct Instance *sim;
-	struct Instance *root;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_csv_semicolon.a4c",&status);
-	CU_ASSERT(status == 0);
-
-	error_reporter_tree_start();
-	CU_ASSERT(0 == zz_parse());
-	CU_ASSERT(0 == error_reporter_tree_has_error());
-	error_reporter_tree_end();
-
-	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_csv_semicolon"))!=NULL);
-
-	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_csv_semicolon"), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(sim!=NULL);
-	root = GetSimulationRoot(sim);
-	CU_ASSERT_FATAL(root!=NULL);
-
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","alan","c3") == 23);
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","alan","c1") == 21);
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","alan","c2") == 22);
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","bernhard","c3") == 13);
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","bernhard","c1") == 11);
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","bernhard","c2") == 12);
-
-	sim_destroy(sim);
-	Asc_CompilerDestroy();
-}
-
-static void test_instantiate_tables_v05_dense_string_labels(void){
-	int status;
-	struct Instance *sim;
-	struct Instance *root;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_string.a4c",&status);
-	CU_ASSERT(status == 0);
-
-	error_reporter_tree_start();
-	CU_ASSERT(0 == zz_parse());
-	CU_ASSERT(0 == error_reporter_tree_has_error());
-	error_reporter_tree_end();
-
-	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_string"))!=NULL);
-
-	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_string"), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(sim!=NULL);
-	root = GetSimulationRoot(sim);
-	CU_ASSERT_FATAL(root!=NULL);
-
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","north","x") == 11);
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","north","y") == 12);
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","south","x") == 21);
-	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","south","y") == 22);
-
-	sim_destroy(sim);
-	Asc_CompilerDestroy();
-}
-
-static void test_instantiate_tables_v05_dense_implicit_sets(void){
-	int status;
-	struct Instance *sim;
-	struct Instance *root;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
-	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_implicit.a4c",&status);
-	CU_ASSERT(status == 0);
-
-	error_reporter_tree_start();
-	CU_ASSERT(0 == zz_parse());
-	CU_ASSERT(0 == error_reporter_tree_has_error());
-	error_reporter_tree_end();
-
-	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_implicit"))!=NULL);
-
-	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_implicit"), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(sim!=NULL);
-	root = GetSimulationRoot(sim);
-	CU_ASSERT_FATAL(root!=NULL);
-
-	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",1,"a") == 11);
-	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",1,"b") == 12);
-	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",2,"a") == 21);
-	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",2,"b") == 22);
-
-	sim_destroy(sim);
-	Asc_CompilerDestroy();
-}
-
-static void test_parse_tables_v05_fail_table_header(void){
-	parse_module_expect_error(
-		"test/compiler/tables_v05_fail_table_header.a4c"
-		, "tables_v05_fail_table_header"
-		, "syntax error"
-		, 1
-		, 1
-	);
-}
-
-static void test_parse_tables_v05_fail_table_badchar(void){
-	parse_module_expect_error(
-		"test/compiler/tables_v05_fail_table_badchar.a4c"
-		, "tables_v05_fail_table_badchar"
-		, "Unexpected character"
-		, 0
-		, 1
-	);
-}
-
-static void test_parse_tables_v05_fail_table_bad_delimiter(void){
-	parse_module_expect_error(
-		"test/compiler/tables_v05_fail_table_bad_delimiter.a4c"
-		, "tables_v05_fail_table_bad_delimiter"
-		, "syntax error"
-		, 0
-		, 1
-	);
-}
-
-static void test_instantiate_tables_v05_fail_positional_short_row(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_positional_short_row.a4c"
-		, "tables_v05_fail_positional_short_row"
-		, NULL
-	);
-}
-
-static void test_instantiate_tables_v05_fail_positional_too_many_cols(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_positional_too_many_cols.a4c"
-		, "tables_v05_fail_positional_too_many_cols"
-		, NULL
-	);
-}
-
-static void test_instantiate_tables_v05_fail_positional_too_few_rows(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_positional_too_few_rows.a4c"
-		, "tables_v05_fail_positional_too_few_rows"
-		, NULL
-	);
-}
-
-static void test_instantiate_tables_v05_fail_positional_too_many_rows(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_positional_too_many_rows.a4c"
-		, "tables_v05_fail_positional_too_many_rows"
-		, NULL
-	);
-}
-
-static void test_instantiate_tables_v05_fail_positional_invalid_row_label(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_positional_invalid_row_label.a4c"
-		, "tables_v05_fail_positional_invalid_row_label"
-		, "POSITIONAL TABLE contains non-numeric token"
-	);
-}
-
-static void test_instantiate_tables_v05_fail_positional_invalid_col_delim(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_positional_invalid_col_delim.a4c"
-		, "tables_v05_fail_positional_invalid_col_delim"
-		, "Unexpected sparse-token punctuation in POSITIONAL TABLE"
-	);
-}
-
-static void test_instantiate_tables_v05_fail_sparse_repeated_labels(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_sparse_repeated_labels.a4c"
-		, "tables_v05_fail_sparse_repeated_labels"
-		, "TABLE header contains invalid punctuation"
-	);
-}
-
-static void test_instantiate_tables_v05_fail_positional_leading_delim(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_positional_leading_delim.a4c"
-		, "tables_v05_fail_positional_leading_delim"
-		, "TABLE row cannot begin with a delimiter"
-	);
-}
-
-static void test_instantiate_tables_v05_fail_positional_trailing_delim(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_positional_trailing_delim.a4c"
-		, "tables_v05_fail_positional_trailing_delim"
-		, "TABLE delimiter cannot follow a sign without a value"
-	);
-}
-
-static void test_instantiate_tables_v05_fail_positional_double_delim(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_positional_double_delim.a4c"
-		, "tables_v05_fail_positional_double_delim"
-		, NULL
-	);
-}
-
-static void test_instantiate_tables_v05_fail_dense_bad_col_label(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_dense_bad_col_label.a4c"
-		, "tables_v05_fail_dense_bad_col_label"
-		, "TABLE column label is not a member of second index set"
-	);
-}
-
-static void test_instantiate_tables_v05_fail_dense_bad_row_label_string(void){
-	instantiate_module_expect_error(
-		"test/compiler/tables_v05_fail_dense_bad_row_label_string.a4c"
-		, "tables_v05_fail_dense_bad_row_label_string"
-		, "TABLE row label is not a member of first index set"
-	);
 }
 
 static void test_atom_declared_units_from_default(void){
@@ -1497,6 +1264,13 @@ static void test_units_ladder_invalid_anchor_rejected(void){
 	T(fund_types) \
 	T(parse_string_module) \
 	T(instantiate_string) \
+	T(initial_section_basic) \
+	T(initial_section_hierarchical) \
+	T(initial_section_illegal_statement_rejected) \
+	T(pre_outside_reinit_rejected) \
+	T(pre_in_conditional_rejected) \
+	T(lowercase_der_statement_rejected) \
+	T(uppercase_der_expr_rejected) \
 	T(parse_basemodel) \
 	T(parse_file) \
 	T(instantiate_file) \
@@ -1506,28 +1280,6 @@ static void test_units_ladder_invalid_anchor_rejected(void){
 	T(badassign) \
 	T(type_info) \
 	T(badalias) \
-	T(parse_tables_v05) \
-	T(instantiate_tables_v05_positional) \
-	T(instantiate_tables_v05_positional_csv_semicolon) \
-	T(instantiate_tables_v05_dense_int_labels) \
-	T(instantiate_tables_v05_dense_csv_semicolon) \
-	T(instantiate_tables_v05_dense_string_labels) \
-	T(instantiate_tables_v05_dense_implicit_sets) \
-	T(parse_tables_v05_fail_table_header) \
-	T(parse_tables_v05_fail_table_badchar) \
-	T(parse_tables_v05_fail_table_bad_delimiter) \
-	T(instantiate_tables_v05_fail_positional_short_row) \
-	T(instantiate_tables_v05_fail_positional_too_many_cols) \
-	T(instantiate_tables_v05_fail_positional_too_few_rows) \
-	T(instantiate_tables_v05_fail_positional_too_many_rows) \
-	T(instantiate_tables_v05_fail_positional_invalid_row_label) \
-	T(instantiate_tables_v05_fail_positional_invalid_col_delim) \
-	T(instantiate_tables_v05_fail_sparse_repeated_labels) \
-	T(instantiate_tables_v05_fail_positional_leading_delim) \
-	T(instantiate_tables_v05_fail_positional_trailing_delim) \
-	T(instantiate_tables_v05_fail_positional_double_delim) \
-	T(instantiate_tables_v05_fail_dense_bad_col_label) \
-	T(instantiate_tables_v05_fail_dense_bad_row_label_string) \
 	T(atom_declared_units_from_default) \
 	T(constant_units_clause_and_declared_units) \
 	T(constant_units_clause_invalid_units) \

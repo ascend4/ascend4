@@ -207,12 +207,15 @@ LogTermSatisfied(CONST struct logrelation *lrel,
 
   /* perturb == 2 or 3 implies IDA wants true or false */
   if( ( (perturb == 2) || (perturb == 3) ) && (instances!=NULL) ) {
-	  relname = (struct Instance *)(gl_fetch(instances,1));
-	  if (inst == relname) {
-		  if(perturb == 2) {
-			  return satisfied;
-		  } else {
-			  return not_satisfied;
+	  len = gl_length(instances);
+	  for (n=1; n<=len; ++n) {
+		  relname = (struct Instance *)(gl_fetch(instances,n));
+		  if (inst == relname) {
+			  if(perturb == 2) {
+				  return satisfied;
+			  } else {
+				  return not_satisfied;
+			  }
 		  }
 	  }
   }
@@ -1394,4 +1397,3 @@ void PrintDirectSolveBooleanSolutions(struct Instance *i)
 {
   VisitInstanceTree(i,PrintDirectBooleanResult, 0, 0);
 }
-

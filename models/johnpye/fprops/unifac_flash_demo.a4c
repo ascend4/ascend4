@@ -1,0 +1,174 @@
+REQUIRE "johnpye/fprops/unifac_flash.a4l";
+
+MODEL test_fprops_unifac_gamma_ddbst_ethanol_water REFINES cmumodel;
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
+	ug IS_A fprops_unifac_gamma_state(cd);
+
+METHODS
+	METHOD default_self;
+		RUN ug.default_self;
+	END default_self;
+
+	METHOD values;
+		ug.T := 298 {K};
+		ug.x['water'] := 0.5;
+		ug.x['ethanol'] := 0.5;
+	END values;
+
+	METHOD specify;
+		FIX ug.T;
+		FIX ug.x[cd.other_components];
+	END specify;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN values;
+		RUN specify;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		SOLVE;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(ug.gamma['ethanol'] - 1.2036) < 5e-4;
+		ASSERT abs(ug.gamma['water'] - 1.4968) < 5e-4;
+	END self_test;
+END test_fprops_unifac_gamma_ddbst_ethanol_water;
+
+MODEL test_fprops_unifac_blackbox_ethanol_water REFINES cmumodel;
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
+	fp IS_A fprops_unifac_flash_state(cd);
+
+METHODS
+	METHOD default_self;
+		RUN fp.default_self;
+	END default_self;
+
+	METHOD values;
+		fp.T := 360 {K};
+		fp.P := 1 {atm};
+		fp.z['water'] := 0.6;
+		fp.z['ethanol'] := 0.4;
+	END values;
+
+	METHOD specify;
+		FIX fp.T;
+		FIX fp.P;
+		FIX fp.z[cd.other_components];
+	END specify;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN values;
+		RUN specify;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		SOLVE;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT fp.beta > 0;
+		ASSERT fp.beta < 1;
+		ASSERT abs(fp.x['water'] + fp.x['ethanol'] - 1) < 1e-9;
+		ASSERT abs(fp.y['water'] + fp.y['ethanol'] - 1) < 1e-9;
+	END self_test;
+END test_fprops_unifac_blackbox_ethanol_water;
+
+MODEL test_fprops_flash_blackbox_ethanol_water REFINES cmumodel;
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
+	fp IS_A fprops_flash_state(cd);
+	ref IS_A fprops_unifac_flash_state(cd);
+
+METHODS
+	METHOD default_self;
+		RUN fp.default_self;
+		RUN ref.default_self;
+	END default_self;
+
+	METHOD values;
+		fp.T := 360 {K};
+		fp.P := 1 {atm};
+		fp.z['water'] := 0.6;
+		fp.z['ethanol'] := 0.4;
+		ref.T := fp.T;
+		ref.P := fp.P;
+		ref.z['water'] := fp.z['water'];
+		ref.z['ethanol'] := fp.z['ethanol'];
+	END values;
+
+	METHOD specify;
+		FIX fp.T;
+		FIX fp.P;
+		FIX fp.z[cd.other_components];
+		FIX ref.T;
+		FIX ref.P;
+		FIX ref.z[cd.other_components];
+	END specify;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN values;
+		RUN specify;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		SOLVE;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(fp.beta - ref.beta) < 1e-10;
+		ASSERT abs(fp.x['water'] - ref.x['water']) < 1e-10;
+		ASSERT abs(fp.x['ethanol'] - ref.x['ethanol']) < 1e-10;
+		ASSERT abs(fp.y['water'] - ref.y['water']) < 1e-10;
+		ASSERT abs(fp.y['ethanol'] - ref.y['ethanol']) < 1e-10;
+	END self_test;
+END test_fprops_flash_blackbox_ethanol_water;
+
+MODEL test_fprops_unifac_flash_fugacity_ethanol_water REFINES cmumodel;
+	cd IS_A fprops_component_list_data(['water','ethanol'], 'water');
+	fp IS_A fprops_unifac_flash_state(cd);
+	lf IS_A fprops_unifac_liq_fugacity_state(cd);
+
+	Tflash ALIASES fp.T;
+	Pflash ALIASES fp.P;
+	Tliq ALIASES lf.T;
+	Pliq ALIASES lf.P;
+
+	Tlink: Tliq = Tflash;
+	Plink: Pliq = Pflash;
+	FOR i IN cd.other_components CREATE
+		xlink[i]: lf.x[i] = fp.x[i];
+	END FOR;
+
+METHODS
+	METHOD default_self;
+		RUN fp.default_self;
+		RUN lf.default_self;
+	END default_self;
+
+	METHOD values;
+		fp.T := 360 {K};
+		fp.P := 1 {atm};
+		fp.z['water'] := 0.6;
+		fp.z['ethanol'] := 0.4;
+	END values;
+
+	METHOD specify;
+		FIX fp.T;
+		FIX fp.P;
+		FIX fp.z[cd.other_components];
+	END specify;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN values;
+		RUN specify;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		SOLVE;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(fp.y['water'] * fp.P - lf.fugacity['water']) < 1e-6 {Pa};
+		ASSERT abs(fp.y['ethanol'] * fp.P - lf.fugacity['ethanol']) < 1e-6 {Pa};
+	END self_test;
+END test_fprops_unifac_flash_fugacity_ethanol_water;

@@ -47,6 +47,7 @@ typedef enum{
 
 class Value{
 	friend class SolverParameter;
+	friend class SolverHooks;
 protected:
 	const value_t *v;
 public:

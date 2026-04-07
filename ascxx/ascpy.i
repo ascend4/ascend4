@@ -63,6 +63,13 @@ extern "C"{
 // Import the preferences module
 %pythoncode {
 	import preferences;
+
+	def der(inst):
+		"""Return the first derivative pseudo-child of an instance."""
+		try:
+			return inst.der
+		except AttributeError as e:
+			raise RuntimeError("No derivative pseudo-instance is available for this instance") from e
 }
 
 // Set-valued instance variable
@@ -71,11 +78,14 @@ extern "C"{
 		def __init__(self,set):
 			self.set=set
 			self.index=0
-		def next(self):
+		def __iter__(self):
+			return self
+		def __next__(self):
 			if self.index==self.set.length():
 				raise StopIteration
 			self.index = self.index + 1
 			return self.set[self.index]
+		next = __next__
 }
 
 template<class T>
@@ -359,7 +369,7 @@ public:
 	~Instanc();
 	std::vector<Instanc> getChildren();
 	const std::string getKindStr() const;
-	const SymChar &getName();
+	const SymChar getName();
 	const Type getType() const;
 	const bool isAtom() const;
 	const bool isFixed() const;
@@ -380,6 +390,7 @@ public:
 	const bool isBool() const;
 	const bool isInt() const;
 	const bool isSymbol() const;
+	const bool isSelector() const;
 	const bool isReal() const;
 	const bool isModel() const;
 
@@ -393,6 +404,7 @@ public:
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+	const SymChar getSelectorValue() const;
 	const std::string getValueAsString() const; ///< Use carefully: rounding will occur for doubles!
 	const std::string getWhenAsString(const Instanc &relative_to) const;
 	const std::string getLogrelAsString(const Instanc &relative_to) const;
@@ -413,6 +425,7 @@ public:
 	void setBoolValue(const bool &val);
 	void setIntValue(const long &val);
 	void setSymbolValue(const SymChar &sym);
+	void setSelectorValue(const SymChar &sym);
 	void write(const char *fname);
 
 	const InstanceStatus getStatus() const;
@@ -430,6 +443,25 @@ public:
 
 int saveDisplayUnitsOverrides(void);
 int reloadDisplayUnitsOverrides(void);
+const std::string getDisplayUnitsOverridesPath(void);
+void setDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &units,
+	const std::string &scope=""
+);
+void clearDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &scope=""
+);
+void setDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &units,
+	const std::string &scope
+);
+void clearDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &scope
+);
 
 %extend Instanc{
 	const char *__repr__(){

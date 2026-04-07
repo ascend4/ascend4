@@ -55,6 +55,7 @@
 #include "extcall.h"
 #include "forvars.h"
 #include "exprs.h"
+#include "exprio.h"
 #include "nameio.h"
 #include "evaluate.h"
 #include "value_type.h"
@@ -265,6 +266,8 @@ static void AddIncompleteInst(struct Instance *);
 static int CheckALIASES(struct Instance *, struct Statement *);
 static int CheckARR(struct Instance *, struct Statement *);
 static int CheckISA(struct Instance *, struct Statement *);
+static int IsSelectorTypeDesc(CONST struct TypeDescription *);
+static int AssignISAInitialValue(struct Instance *, struct Statement *, struct Instance *);
 static int AssignStructuralValue(struct Instance *,struct value_t,struct Statement *);
 static int  CheckSELECT(struct Instance *, struct Statement *);
 static int  CheckWHEN(struct Instance *, struct Statement *);
@@ -320,9 +323,65 @@ static void ExecuteUnSelectedStatements(struct Instance *i,unsigned long *,
 static void ExecuteUnSelectedWhenStatements(struct Instance *,
                                             struct StatementList *);
 static int ExecuteUnSelectedWHEN(struct Instance *, struct Statement *);
+
+static struct gl_list_t *CollectWhenReinitStatements(struct StatementList *sl){
+  struct gl_list_t *result = NULL;
+  struct gl_list_t *list;
+  unsigned long c, len;
+
+  if(sl == NULL){
+    return NULL;
+  }
+  list = GetList(sl);
+  len = gl_length(list);
+  for(c = 1; c <= len; ++c){
+    struct Statement *statement = (struct Statement *)gl_fetch(list, c);
+    if(statement == NULL){
+      continue;
+    }
+    switch(StatementType(statement)){
+    case REINIT:
+    case SWITCHTO:
+      if(result == NULL){
+        result = gl_create(2L);
+      }
+      gl_append_ptr(result, CopyStatement(statement));
+      break;
+    case FOR:
+    {
+      struct gl_list_t *nested = CollectWhenReinitStatements(ForStatStmts(statement));
+      if(nested != NULL){
+        unsigned long i, nlen = gl_length(nested);
+        if(result == NULL){
+          result = gl_create(nlen);
+        }
+        for(i = 1; i <= nlen; ++i){
+          gl_append_ptr(result, gl_fetch(nested, i));
+        }
+        gl_destroy(nested);
+      }
+      break;
+    }
+    default:
+      break;
+    }
+  }
+  return result;
+}
 static void ReEvaluateSELECT(struct Instance *, unsigned long *,
                              struct Statement *, int, int *);
 static int ExecuteLNK(struct Instance *inst, struct Statement *statement);
+
+static CONST struct Expr *ConstraintStatementExpr(CONST struct Statement *statement){
+  switch (StatementType(statement)) {
+  case REL:
+    return RelationStatExpr(statement);
+  case LOGREL:
+    return LogicalRelStatExpr(statement);
+  default:
+    return NULL;
+  }
+}
 
 /*-----------------------------------------------------------------------------
 	...
@@ -564,6 +623,13 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
   desc = InstanceTypeDesc(work);
   clp = GetChildList(desc);
   statement = (struct Statement *)ChildStatement(clp,cnum);
+  if(statement == NULL){
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Unable to determine declaration statement for child '%s' while reporting array expansion failure",
+      SCP(ChildStrPtr(clp,cnum))
+    );
+    return;
+  }
   if ( StatWrong(statement) != 0) {
     return;
   }
@@ -2269,6 +2335,7 @@ static
 int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
 {
   struct value_t value;
+  CONST struct Expr *constraint_expr;
 
   IVAL(value);
 
@@ -2314,8 +2381,31 @@ int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
         DestroyValue(&value);
         return MPIOK;
       }else{
+        char *infix = NULL;
+        Asc_DString ds;
         DestroyValue(&value);
-        STATEMENT_ERROR(statement, "Arguments do not conform to requirements");
+        constraint_expr = ConstraintStatementExpr(statement);
+        Asc_DStringInit(&ds);
+        if (constraint_expr != NULL) {
+          WriteExprInfix2Str(&ds,constraint_expr);
+          infix = Asc_DStringResult(&ds);
+        } else {
+          Asc_DStringFree(&ds);
+        }
+        if (infix != NULL) {
+          WriteStatementError(ASC_PROG_ERR,statement,0,
+            "Parameter requirement evaluated FALSE for the supplied arguments. "
+            "Failed requirement: %s. "
+            "If this model is instantiated via REFINES, check the values assigned in the REFINES clause.",
+            infix
+          );
+          ASC_FREE(infix);
+        } else {
+          WriteStatementError(ASC_PROG_ERR,statement,0,
+            "Parameter requirement evaluated FALSE for the supplied arguments. "
+            "If this model is instantiated via REFINES, check the values assigned in the REFINES clause."
+          );
+        }
         return MPIBADREL;
       }
     }else{
@@ -2991,6 +3081,70 @@ int MakeParameterInst(struct Instance *parent,
   }else{
     DestroyParameterInst(tmpinst);
   }
+  return MPIOK;
+}
+
+static
+int BuildInstanceFromAbsorbedParameters(struct TypeDescription *d,
+                                        struct Instance **arginstptr)
+{
+  struct Instance *tmpinst;
+  struct StatementList *absorbed;
+  struct gl_list_t *args;
+  struct for_table_t *SavedForTable;
+  struct Statement *trigger;
+  int suberr;
+
+  asc_assert(d != NULL);
+  asc_assert(arginstptr != NULL);
+  *arginstptr = NULL;
+
+  absorbed = GetModelAbsorbedParameters(d);
+  if (StatementListLength(absorbed) == 0L) {
+    return MPIOK;
+  }
+
+  tmpinst = CreateModelInstance(d);
+  if (tmpinst == NULL) {
+    return MPIINSMEM;
+  }
+  args = gl_create(0L);
+  if (args == NULL) {
+    DestroyParameterInst(tmpinst);
+    return MPIINSMEM;
+  }
+
+  trigger = GetStatement(absorbed,1);
+  suberr = DigestArguments(
+    tmpinst,
+    args,
+    GetModelParameterList(d),
+    absorbed,
+    trigger
+  );
+  switch (suberr) {
+  case MPIOK:
+    break;
+  default:
+    ClearMPImem(args,NULL,tmpinst,NULL,NULL);
+    return suberr;
+  }
+
+  SavedForTable = GetEvaluationForTable();
+  SetEvaluationForTable(CreateForTable());
+  suberr = CheckWhereStatements(tmpinst,GetModelParameterWheres(d));
+  DestroyForTable(GetEvaluationForTable());
+  SetEvaluationForTable(SavedForTable);
+  switch (suberr) {
+  case MPIOK:
+    break;
+  default:
+    ClearMPImem(args,NULL,tmpinst,NULL,NULL);
+    return suberr;
+  }
+
+  ClearMPImem(args,NULL,NULL,NULL,NULL);
+  *arginstptr = tmpinst;
   return MPIOK;
 }
 
@@ -4061,6 +4215,7 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
   struct Instance *arginst = NULL;
   int mpi;
   int intset;
+  int selector_type;
 
   asc_assert(StatementType(statement)==ISA);
   if (StatWrong(statement)) {
@@ -4070,7 +4225,20 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
     return 1;
   }
   if ((def = FindType(GetStatType(statement)))!=NULL){
-    if ((GetStatSetType(statement)!=NULL) != (GetBaseType(def)==set_type)){
+    selector_type = IsSelectorTypeDesc(def);
+    if (GetStatCheckKind(statement) == ISCV_DEFAULT
+        && (StatementType(statement) != ISA || !selector_type)) {
+      STATEMENT_ERROR(statement,
+        "Declaration DEFAULT is only supported for selector IS_A declarations");
+      return 1;
+    }
+    if ((GetStatSetType(statement)!=NULL)
+        && (GetBaseType(def)!=set_type)
+        && !selector_type) {
+      WriteSetError(statement,def);
+      return 1;
+    }
+    if ((GetStatSetType(statement)==NULL) && (GetBaseType(def)==set_type)){
       WriteSetError(statement,def);
       return 1;
     }
@@ -4093,15 +4261,42 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
         return 1;
       }
     }
-    intset = CalcSetType(GetStatSetType(statement),statement);
-    if (intset < 0) { /* incorrect set type */
-      STATEMENT_ERROR(statement,"Illegal set type encountered.");
-      /* should never happen due to lint */
-      return 0;
+    if (GetBaseType(def)==set_type) {
+      intset = CalcSetType(GetStatSetType(statement),statement);
+      if (intset < 0) { /* incorrect set type */
+        STATEMENT_ERROR(statement,"Illegal set type encountered.");
+        /* should never happen due to lint */
+        return 0;
+      }
+    }else{
+      intset = -1;
     }
     vlist = GetStatVarList(statement);
     while (vlist!=NULL){
+      REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+      struct gl_list_t *instances;
       MakeInstance(NamePointer(vlist),def,intset,inst,statement,arginst);
+      if (GetStatCheckValue(statement) != NULL) {
+        instances = FindInstances(inst,NamePointer(vlist),&err);
+        if (instances == NULL || gl_length(instances) != 1) {
+          if (instances != NULL) {
+            gl_destroy(instances);
+          }
+          if (arginst != NULL) {
+            DestroyParameterInst(arginst);
+          }
+          STATEMENT_ERROR(statement,"DEFAULT declaration target must resolve to exactly one scalar instance");
+          return 0;
+        }
+        if (!AssignISAInitialValue(inst,statement,(struct Instance *)gl_fetch(instances,1))) {
+          gl_destroy(instances);
+          if (arginst != NULL) {
+            DestroyParameterInst(arginst);
+          }
+          return 0;
+        }
+        gl_destroy(instances);
+      }
       vlist = NextVariableNode(vlist);
     }
     if (arginst != NULL) {
@@ -4722,12 +4917,14 @@ static int ExecuteLNK(struct Instance *inst, struct Statement *statement){
 			if(statement->v.lnk.key_type == 2) {/* in case the LINK entry has the 'ignore' key */
 				CONSOLE_DEBUG("Ignore declarative link");
 				ignoreDeclLinkEntry(inst,key,LINKStatVlist(statement));
+				gl_destroy(instances);
 			}else{
 				CONSOLE_DEBUG("Adding declarative link");
 				addLinkEntry(inst,key,instances,statement,1);
 			}
 			return 1;
 		default:
+			gl_destroy(instances);
 			STATEMENT_ERROR(statement, "LINK is not called by a model");
 			return 1;
 		}
@@ -4794,6 +4991,23 @@ struct Instance *MakeRelationInstance(struct Name *name,
     }else{
       return NULL;
     }
+  }
+}
+
+static void ApplyInitialStatementFlags(struct Instance *eqninst,
+                                       struct Statement *statement)
+{
+  struct Instance *flaginst;
+  if ((GetStatContext(statement) & context_INITIAL) == 0) {
+    return;
+  }
+  flaginst = ChildByChar(eqninst, AddSymbol("initial"));
+  if (flaginst != NULL && InstanceKind(flaginst) == BOOLEAN_INST) {
+    SetBooleanAtomValue(flaginst, TRUE, 0U);
+  }
+  flaginst = ChildByChar(eqninst, AddSymbol("included"));
+  if (flaginst != NULL && InstanceKind(flaginst) == BOOLEAN_INST) {
+    SetBooleanAtomValue(flaginst, FALSE, 0U);
   }
 }
 
@@ -4870,6 +5084,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 		reln = CreateTokenRelation(inst,child,RelationStatExpr(statement),&err);
 		if(reln != NULL){
 			SetInstanceRelation(child,reln,e_token);
+      ApplyInitialStatementFlags(child,statement);
 #ifdef DEBUG_RELS
 			STATEMENT_NOTE(statement, "Created relation");
 #endif
@@ -5135,6 +5350,7 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
 		inst,child,LogicalRelStatExpr(statement),&err)
 	)){
       SetInstanceLogRel(child,lreln);
+      ApplyInitialStatementFlags(child,statement);
       return 1;
     }else{
       SetInstanceLogRel(child,NULL);
@@ -5255,6 +5471,11 @@ struct gl_list_t *GetExtCallArgs(struct Instance *inst, struct Statement *stat
   *names = NULL;
   if (result != NULL) {
     *names = ProcessExtRelArgNames(inst,vl,&err2);
+    if (*names == NULL) {
+      DestroySpecialList(result);
+      rel_errorlist_set_find_error(err, rel_errorlist_get_find_error(&err2));
+      return NULL;
+    }
     asc_assert(rel_errorlist_get_find_error(err) == rel_errorlist_get_find_error(&err2));
   }
   return result;
@@ -5336,6 +5557,7 @@ apparently is too hard for some.
 @param statement: the EXT bbox statement.
 */
 int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *statement){
+  int rval = 1;
   symchar *name;
   struct Expr *ex, *one, *en;
   unsigned long c,len;
@@ -5344,9 +5566,8 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   struct set_t *sptr;
   struct for_var_t *fv;
 
-  struct BlackBoxCache * common;
-  ExtBBoxInitFunc * init;
-  char *context;
+  struct BlackBoxCache * common = NULL;
+  char *context = NULL;
   struct Instance *data=NULL, *subject = NULL;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *arglist=NULL;
@@ -5354,10 +5575,13 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   CONST char *funcname = NULL;
   unsigned long n_input_args=0L, n_output_args=0L; /* formal arg counts */
   unsigned long n_inputs_actual=0L, n_outputs_actual=0L; /* atomic arg counts */
-  struct gl_list_t *inputs, *outputs, *argListNames;
+  struct gl_list_t *inputs = NULL, *outputs = NULL, *argListNames = NULL;
   struct Name *dataName = NULL;
   unsigned long start,end;
   struct Set *extrange= NULL;
+  int value_ready = 0;
+
+  IVAL(value);
 
   /* common stuff do once ------------ */
 
@@ -5373,16 +5597,16 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
       switch(rel_errorlist_get_find_error(&err)){
       case unmade_instance:
 		STATEMENT_ERROR(statement,"Statement contains unmade data instance");
-        return 1;
+        goto cleanup;
       case undefined_instance:
         STATEMENT_ERROR(statement,"Statement contains undefined data instance\n");
-        return 1; /* for the time being give another crack */
+        goto cleanup; /* for the time being give another crack */
       case impossible_instance:
         STATEMENT_ERROR(statement,"Statement contains impossible data instance\n");
-        return 1;
+        goto cleanup;
       default:
         STATEMENT_ERROR(statement,"Unhandled case!");
-        return 1;
+        goto cleanup;
       }
     }
   }
@@ -5394,22 +5618,22 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
       STATEMENT_ERROR(statement,"Statement contains unmade argument instance\n");
-      return 1;
+      goto cleanup;
     case undefined_instance:
       STATEMENT_ERROR(statement,"Statement contains undefined argument instance\n");
-      return 1;
+      goto cleanup;
     case impossible_instance:
       instantiation_error(ASC_USER_ERROR,statement,"Statement contains impossible instance\n");
-      return 1;
+      goto cleanup;
     default:
       instantiation_error(ASC_PROG_ERR,statement,"Unhandled case!");
-      return 1;
+      goto cleanup;
     }
   }
   funcname = ExternalStatFuncName(statement);
   efunc = LookupExtFunc(funcname);
   if (efunc == NULL) {
-    return 1;
+    goto cleanup;
   }
 /*
   n_input_args = NumberInputArgs(efunc);
@@ -5423,24 +5647,31 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     instantiation_error(ASC_PROG_ERR,statement
 		,"Unable to create external expression structure."
 	);
-    return 1;
+    goto cleanup;
   }
 
   /* we should have a valid arglist at this stage */
   if (CheckExtCallArgTypes(arglist)) {
     instantiation_error(ASC_USER_ERROR,statement,"Wrong type of args to external statement");
-    DestroySpecialList(arglist);
-    return 1;
+    goto cleanup;
   }
   start = 1L;
   end = n_input_args;
   inputs = LinearizeArgList(arglist,start,end);
+  if (inputs == NULL) {
+    instantiation_error(ASC_PROG_ERR,statement,"Unable to linearize external input arguments.");
+    goto cleanup;
+  }
   n_inputs_actual = gl_length(inputs);
 
   /* Now process the outputs */
   start = n_input_args+1;
   end = n_input_args + n_output_args;
   outputs = LinearizeArgList(arglist,start,end);
+  if (outputs == NULL) {
+    instantiation_error(ASC_PROG_ERR,statement,"Unable to linearize external output arguments.");
+    goto cleanup;
+  }
   n_outputs_actual = gl_length(outputs);
 
 /*
@@ -5451,7 +5682,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
 
   /* Now create the relations, all with the same common. */
   common = CreateBlackBoxCache(n_inputs_actual,n_outputs_actual, argListNames, dataName, efunc);
-  common->interp.task = bb_first_call;
+  InitBBox(inst, common);
   context = WriteInstanceNameString(inst, NULL);
 
   /* now set up the for loop index --------------------------------*/
@@ -5468,6 +5699,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   extrange = CreateRangeSet(one,en);
   ex = CreateSetExpr(extrange);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
+  value_ready = 1;
   SetEvaluationContext(NULL);
 
   ASC_ASSERT_EQ(ValueKind(value),set_value);
@@ -5488,32 +5720,46 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
     /*  currently designed to always succeed or fail permanently */
   }
   RemoveForVariable(GetEvaluationForTable());
-  DestroyValue(&value);
-  DestroySetNode(extrange);
+  rval = 1;
+cleanup:
+  if (value_ready) {
+    DestroyValue(&value);
+  }
+  if (extrange != NULL) {
+    DestroySetNode(extrange);
+  }
 
 /* ------------ */ /* ------------ */
   /* and now for cleaning up shared data. */
-  init = GetInitFunc(efunc);
-  if(init){
-    if( (*init)( &(common->interp), data, arglist) ){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in blackbox initfn");
-    }
+  if (common != NULL) {
+    common->interp.task = bb_none;
+    DeleteRefBlackBoxCache(NULL, &common);
   }
-  common->interp.task = bb_none;
-  ascfree(context);
-  DeleteRefBlackBoxCache(NULL, &common);
-  gl_destroy(inputs);
-  gl_destroy(outputs);
-  DestroySpecialList(arglist);
-  DeepDestroySpecialList(argListNames,(DestroyFunc)DestroyName);
-  DestroyName(dataName);
+  if (context != NULL) {
+    ascfree(context);
+  }
+  if (inputs != NULL) {
+    gl_destroy(inputs);
+  }
+  if (outputs != NULL) {
+    gl_destroy(outputs);
+  }
+  if (arglist != NULL) {
+    DestroySpecialList(arglist);
+  }
+  if (argListNames != NULL) {
+    DeepDestroySpecialList(argListNames,(DestroyFunc)DestroyName);
+  }
+  if (dataName != NULL) {
+    DestroyName(dataName);
+  }
 /* ------------ */ /* ------------ */
 
   /*  currently designed to always succeed or fail permanently.
    *  We reached this point meaning we've processed everything.
    *  Therefore the statment returns 1 and becomes no longer pending.
    */
-  return 1;
+  return rval;
 }
 
 int ExecuteBBOXElement(struct Instance *inst
@@ -5914,6 +6160,35 @@ static void ReAssignmentError(CONST char *str, struct Statement *statement){
   ascfree(msg);
 }
 
+static char *AssignmentDimenLabel(struct Statement *statement, struct Instance *inst){
+  char *name, *label;
+  const char *typename;
+
+  name = NULL;
+  if(statement != NULL && (StatementType(statement) == ASGN || StatementType(statement) == CASGN)){
+    name = WriteNameString(AssignStatVar(statement));
+  }
+  if(name == NULL && inst != NULL){
+    name = WriteInstanceNameString(inst,NULL);
+  }
+  if(name == NULL){
+    return ASC_STRDUP("LHS");
+  }
+
+  typename = NULL;
+  if(inst != NULL && InstanceTypeDesc(inst) != NULL && GetName(InstanceTypeDesc(inst)) != NULL){
+    typename = SCP(GetName(InstanceTypeDesc(inst)));
+  }
+  if(typename == NULL){
+    return name;
+  }
+
+  label = ASC_NEW_ARRAY(char,strlen(name) + strlen(typename) + 11);
+  sprintf(label,"%s (IS_A %s)",name,typename);
+  ascfree(name);
+  return label;
+}
+
 
 /**
 	returns 1 if ok, 0 if unhappy.
@@ -5953,7 +6228,14 @@ static int AssignStructuralValue(struct Instance *inst
         if (!AtomAssigned(inst)) {
           if ( !IsWild(RealAtomDims(inst)) &&
                !SameDimen(RealValueDimensions(value),RealAtomDims(inst)) ) {
+            char *lhslabel;
             STATEMENT_ERROR(statement, "Dimensionally inconsistent assignment");
+            lhslabel = AssignmentDimenLabel(statement,inst);
+            PrintDimenMessage("Mismatched dimensions"
+              ,lhslabel,RealAtomDims(inst)
+              ,"RHS term",RealValueDimensions(value)
+            );
+            ascfree(lhslabel);
             return 0;
           }else{
       	    if (IsWild(RealAtomDims(inst))) {
@@ -5977,7 +6259,14 @@ static int AssignStructuralValue(struct Instance *inst
         if (!AtomAssigned(inst)) {
           if ( !IsWild(RealAtomDims(inst)) &&
                !SameDimen(Dimensionless(),RealAtomDims(inst)) ) {
+            char *lhslabel;
             STATEMENT_ERROR(statement, "Dimensionally inconsistent assignment");
+            lhslabel = AssignmentDimenLabel(statement,inst);
+            PrintDimenMessage("Mismatched dimensions"
+              ,lhslabel,RealAtomDims(inst)
+              ,"RHS term",Dimensionless()
+            );
+            ascfree(lhslabel);
             return 0;
           }else{
       	    if (IsWild(RealAtomDims(inst))) {
@@ -6361,6 +6650,12 @@ struct table_cell_value_t {
   double rval;
 };
 
+struct scalar_units_runtime_t {
+  int has_units;
+  double conv;
+  CONST dim_type *dims;
+};
+
 struct table_domain_ref_t {
   CONST struct Expr *expr;
   CONST struct Name *set_name;
@@ -6371,6 +6666,7 @@ static int TableAssignCell(struct Instance *work,
                            CONST struct table_domain_t *domains,
                            unsigned ndims,
                            CONST unsigned long *positions,
+                           CONST struct scalar_units_runtime_t *units_runtime,
                            int is_int,
                            long ival,
                            double rval);
@@ -6379,6 +6675,7 @@ static int TableAssignCellMaybeWait(struct Instance *work,
                                     CONST struct table_domain_t *domains,
                                     unsigned ndims,
                                     CONST unsigned long *positions,
+                                    CONST struct scalar_units_runtime_t *units_runtime,
                                     int is_int,
                                     long ival,
                                     double rval);
@@ -6479,6 +6776,109 @@ static int DatasetParseBooleanToken(CONST char *tok, int *bval)
     return 1;
   }
   return 0;
+}
+
+static int ResolveScalarUnits(CONST char *units,
+                              struct Statement *statement,
+                              CONST char *kind,
+                              struct scalar_units_runtime_t *out)
+{
+  unsigned long pos;
+  int error_code;
+  CONST struct Units *u;
+
+  if (out == NULL) {
+    return 0;
+  }
+  out->has_units = 0;
+  out->conv = 1.0;
+  out->dims = Dimensionless();
+
+  if (units == NULL) {
+    return 1;
+  }
+
+  u = FindOrDefineUnits(units,&pos,&error_code);
+  if (u == NULL) {
+    if (strcmp(kind,"TABLE") == 0) {
+      STATEMENT_ERROR(statement,"TABLE units are invalid");
+    } else {
+      STATEMENT_ERROR(statement,"DATASET units are invalid");
+    }
+    return 0;
+  }
+
+  out->has_units = 1;
+  out->conv = UnitsConvFactor(u);
+  out->dims = UnitsDimensions(u);
+  return 1;
+}
+
+static int AssignNumericToConstantInstance(struct Instance *inst,
+                                           struct Statement *statement,
+                                           int is_int,
+                                           long ival,
+                                           double rval,
+                                           CONST struct scalar_units_runtime_t *units_runtime,
+                                           CONST dim_type *default_real_dims,
+                                           CONST char *kind)
+{
+  struct value_t value;
+  int ok;
+
+  if (inst == NULL) {
+    if (strcmp(kind,"TABLE") == 0) {
+      STATEMENT_ERROR(statement,"TABLE assignment target instance is NULL");
+    } else {
+      STATEMENT_ERROR(statement,"DATASET assignment target instance is NULL");
+    }
+    return 0;
+  }
+
+  switch (InstanceKind(inst)) {
+  case REAL_CONSTANT_INST:
+    if (units_runtime != NULL && units_runtime->has_units) {
+      value = CreateRealValue((is_int ? (double)ival : rval) * units_runtime->conv,
+                              units_runtime->dims,1);
+    } else if (is_int) {
+      value = CreateIntegerValue(ival,1);
+    } else {
+      value = CreateRealValue(rval,
+                              default_real_dims != NULL ? default_real_dims : Dimensionless(),
+                              1);
+    }
+    ok = AssignStructuralValue(inst,value,statement);
+    DestroyValue(&value);
+    return ok;
+  case INTEGER_CONSTANT_INST:
+    if (units_runtime != NULL && units_runtime->has_units) {
+      if (strcmp(kind,"TABLE") == 0) {
+        STATEMENT_ERROR(statement,"TABLE units are not allowed for integer values");
+      } else {
+        STATEMENT_ERROR(statement,"DATASET units are not allowed for integer values");
+      }
+      return 0;
+    }
+    if (!is_int) {
+      if (strcmp(kind,"TABLE") == 0) {
+        STATEMENT_ERROR(statement,"TABLE value is not a valid integer");
+      } else {
+        STATEMENT_ERROR(statement,"DATASET value is not a valid integer");
+      }
+      return 0;
+    }
+    value = CreateIntegerValue(ival,1);
+    ok = AssignStructuralValue(inst,value,statement);
+    DestroyValue(&value);
+    return ok;
+  default:
+    if (strcmp(kind,"TABLE") == 0) {
+      STATEMENT_ERROR(statement,"TABLE assignment target is not a constant");
+    } else {
+      STATEMENT_ERROR(statement,"DATASET assignment target is not a constant");
+    }
+    return 0;
+  }
 }
 
 static double DatasetNowSeconds(void)
@@ -7750,6 +8150,7 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
 {
   struct table_domain_t domains[2];
   struct table_domain_ref_t refs[2];
+  struct scalar_units_runtime_t units_runtime;
   unsigned ndims = 0;
   char *bodycopy = NULL;
   char *line_ctx = NULL;
@@ -7774,6 +8175,11 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
   }
   if (ndims != 2) {
     STATEMENT_ERROR(statement,"Dense non-POSITIONAL TABLE requires exactly 2 indices");
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+
+  if (!ResolveScalarUnits(statement->v.table.units,statement,"TABLE",&units_runtime)) {
     MarkStatContext(statement,context_WRONG);
     return 1;
   }
@@ -8039,7 +8445,9 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
       int assign_result;
       pos[0] = row_pos[d];
       pos[1] = col_pos[c];
-      assign_result = TableAssignCellMaybeWait(work,statement,domains,2,pos,cell->is_int,cell->ival,cell->rval);
+      assign_result = TableAssignCellMaybeWait(work,statement,domains,2,pos,
+                                               &units_runtime,
+                                               cell->is_int,cell->ival,cell->rval);
       if (assign_result < 0) {
         rval = 0;
         goto cleanup;
@@ -8147,13 +8555,13 @@ static int TableAssignCell(struct Instance *work,
                            CONST struct table_domain_t *domains,
                            unsigned ndims,
                            CONST unsigned long *positions,
+                           CONST struct scalar_units_runtime_t *units_runtime,
                            int is_int,
                            long ival,
                            double rval)
 {
   struct Name *lhs;
   struct gl_list_t *instances;
-  struct value_t value;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *inst;
   int ok;
@@ -8176,12 +8584,8 @@ static int TableAssignCell(struct Instance *work,
   inst = (struct Instance *)gl_fetch(instances,1);
   gl_destroy(instances);
 
-  value = is_int
-    ? CreateIntegerValue(ival,1)
-    : CreateRealValue(rval,WildDimension(),1);
-
-  ok = AssignStructuralValue(inst,value,statement);
-  DestroyValue(&value);
+  ok = AssignNumericToConstantInstance(inst,statement,is_int,ival,rval,
+                                       units_runtime,Dimensionless(),"TABLE");
   return ok;
 }
 
@@ -8190,13 +8594,13 @@ static int TableAssignCellMaybeWait(struct Instance *work,
                                     CONST struct table_domain_t *domains,
                                     unsigned ndims,
                                     CONST unsigned long *positions,
+                                    CONST struct scalar_units_runtime_t *units_runtime,
                                     int is_int,
                                     long ival,
                                     double rval)
 {
   struct Name *lhs;
   struct gl_list_t *instances;
-  struct value_t value;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *inst;
   int ok;
@@ -8227,11 +8631,8 @@ static int TableAssignCellMaybeWait(struct Instance *work,
   inst = (struct Instance *)gl_fetch(instances,1);
   gl_destroy(instances);
 
-  value = is_int
-    ? CreateIntegerValue(ival,1)
-    : CreateRealValue(rval,WildDimension(),1);
-  ok = AssignStructuralValue(inst,value,statement);
-  DestroyValue(&value);
+  ok = AssignNumericToConstantInstance(inst,statement,is_int,ival,rval,
+                                       units_runtime,Dimensionless(),"TABLE");
   return ok;
 }
 
@@ -8465,17 +8866,13 @@ static int DatasetAssignTokenToInstance(struct Instance *inst,
                                         CONST char *token,
                                         CONST char *units)
 {
-  struct value_t value;
   CONST char *valtok = token;
   CONST char *cell_units = NULL;
   char *valbuf = NULL;
   char *unitbuf = NULL;
+  struct scalar_units_runtime_t units_runtime;
+  struct value_t value;
   int ok;
-
-  if (inst == NULL) {
-    STATEMENT_ERROR(statement,"DATASET assignment target instance is NULL");
-    return 0;
-  }
 
   if (valtok != NULL) {
     const char *brace = strchr(valtok,'{');
@@ -8503,49 +8900,34 @@ static int DatasetAssignTokenToInstance(struct Instance *inst,
     units = cell_units;
   }
 
+  if (!ResolveScalarUnits(units,statement,"DATASET",&units_runtime)) {
+    ok = 0;
+    goto cleanup_units;
+  }
+
   switch (InstanceKind(inst)) {
   case REAL_CONSTANT_INST:
     {
       double rval;
-      CONST dim_type *dims = Dimensionless();
       if (!DatasetParseRealToken(valtok,&rval)) {
         STATEMENT_ERROR(statement,"DATASET value is not a valid real");
         ok = 0;
         break;
       }
-      if (units != NULL) {
-        unsigned long pos;
-        int error_code;
-        CONST struct Units *u = FindOrDefineUnits(units,&pos,&error_code);
-        if (u == NULL) {
-          STATEMENT_ERROR(statement,"DATASET units are invalid");
-          ok = 0;
-          break;
-        }
-        rval = rval * UnitsConvFactor(u);
-        dims = UnitsDimensions(u);
-      }
-      value = CreateRealValue(rval,dims,1);
-      ok = AssignStructuralValue(inst,value,statement);
-      DestroyValue(&value);
+      ok = AssignNumericToConstantInstance(inst,statement,0,0,rval,
+                                           &units_runtime,Dimensionless(),"DATASET");
     }
     break;
   case INTEGER_CONSTANT_INST:
     {
       long ival;
-      if (units != NULL) {
-        STATEMENT_ERROR(statement,"DATASET units are not allowed for integer values");
-        ok = 0;
-        break;
-      }
       if (!TableParseIntegerToken(valtok,&ival)) {
         STATEMENT_ERROR(statement,"DATASET value is not a valid integer");
         ok = 0;
         break;
       }
-      value = CreateIntegerValue(ival,1);
-      ok = AssignStructuralValue(inst,value,statement);
-      DestroyValue(&value);
+      ok = AssignNumericToConstantInstance(inst,statement,1,ival,(double)ival,
+                                           &units_runtime,Dimensionless(),"DATASET");
     }
     break;
   case SYMBOL_CONSTANT_INST:
@@ -9238,6 +9620,7 @@ cleanup:
 
 static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
   struct table_domain_t domains[2];
+  struct scalar_units_runtime_t units_runtime;
   CONST struct Name *node;
   unsigned ndims = 0;
   int rval = 1;
@@ -9259,6 +9642,11 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
   }
   if (!statement->v.table.positional) {
     return ExecuteTABLEDense(work,statement);
+  }
+
+  if (!ResolveScalarUnits(statement->v.table.units,statement,"TABLE",&units_runtime)) {
+    MarkStatContext(statement,context_WRONG);
+    return 1;
   }
 
   for (di = 0; di < 2; ++di) {
@@ -9370,7 +9758,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
           goto cleanup;
         }
         pos[0] = flat_index;
-        if (!TableAssignCell(work,statement,domains,1,pos,is_int,ival,rvalnum)) {
+        if (!TableAssignCell(work,statement,domains,1,pos,&units_runtime,is_int,ival,rvalnum)) {
           MarkStatContext(statement,context_WRONG);
           goto cleanup;
         }
@@ -9387,7 +9775,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
         }
         pos[0] = row_index;
         pos[1] = col_index;
-        if (!TableAssignCell(work,statement,domains,2,pos,is_int,ival,rvalnum)) {
+        if (!TableAssignCell(work,statement,domains,2,pos,&units_runtime,is_int,ival,rvalnum)) {
           MarkStatContext(statement,context_WRONG);
           goto cleanup;
         }
@@ -9484,6 +9872,9 @@ static int ExecuteCASGN(struct Instance *work, struct Statement *statement){
 	}else{
 		STATEMENT_ERROR(statement, "Floating-point error while evaluating assignment statement");
         MarkStatContext(statement,context_WRONG);
+		gl_destroy(instances);
+		SetEvaluationContext(NULL);
+		Asc_SignalHandlerPopDefault(SIGFPE);
 		SetDeclarativeContext(previous_context);
 		return 1;
 	}
@@ -9935,6 +10326,148 @@ static int CheckISA(struct Instance *inst, struct Statement *stat){
     }
     vlist = NextVariableNode(vlist);
   }
+  return 1;
+}
+
+static int IsSelectorTypeDesc(CONST struct TypeDescription *desc)
+{
+  symchar *selector_name = AddSymbol("selector");
+  while (desc != NULL) {
+    if (GetName(desc) == selector_name) {
+      return 1;
+    }
+    desc = GetRefinement(desc);
+  }
+  return 0;
+}
+
+static CONST struct set_t *ResolveSelectorDomain(struct Instance *scope,
+                                                 struct Statement *statement)
+{
+  struct Name *domain_name;
+  struct gl_list_t *instances;
+  struct Instance *domain;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  symchar *domain_id;
+
+  domain_id = GetStatSetType(statement);
+  if (domain_id == NULL) {
+    STATEMENT_ERROR(statement,"Selector declaration is missing a domain set");
+    return NULL;
+  }
+
+  domain_name = CreateIdName(domain_id);
+  instances = FindInstances(scope,domain_name,&err);
+  DestroyName(domain_name);
+  if (instances == NULL || gl_length(instances) != 1) {
+    if (instances != NULL) gl_destroy(instances);
+    STATEMENT_ERROR(statement,"Unable to resolve selector domain set");
+    return NULL;
+  }
+
+  domain = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+  if (domain == NULL || InstanceKind(domain) != SET_ATOM_INST) {
+    STATEMENT_ERROR(statement,"Selector domain must be a set instance");
+    return NULL;
+  }
+
+  return SetAtomList(domain);
+}
+
+static int AssignISAInitialValue(struct Instance *scope,
+                                 struct Statement *statement,
+                                 struct Instance *target)
+{
+  struct value_t value;
+  CONST struct set_t *domain = NULL;
+  int previous_context;
+
+  if (GetStatCheckValue(statement) == NULL) {
+    return 1;
+  }
+
+  previous_context = GetDeclarativeContext();
+  SetDeclarativeContext(0);
+  asc_assert(GetEvaluationContext()==NULL);
+  SetEvaluationContext(scope);
+  value = EvaluateExpr(GetStatCheckValue(statement),NULL,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+  SetDeclarativeContext(previous_context);
+
+  if (ValueKind(value)==error_value) {
+    switch(ErrorValue(value)){
+    case undefined_value:
+    case name_unfound:
+      DestroyValue(&value);
+      return 0;
+    default:
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"Unable to evaluate declaration DEFAULT expression");
+      return 0;
+    }
+  }
+
+  if (IsSelectorTypeDesc(InstanceTypeDesc(target))) {
+    domain = ResolveSelectorDomain(scope,statement);
+    if (domain == NULL) {
+      DestroyValue(&value);
+      return 0;
+    }
+    switch (ValueKind(value)) {
+    case symbol_value:
+      if (!StrMember(SymbolValue(value),domain)) {
+        DestroyValue(&value);
+        STATEMENT_ERROR(statement,"DEFAULT selector value is not a member of the selector domain");
+        return 0;
+      }
+      break;
+    case integer_value:
+      if (!IntMember((asc_intptr_t)IntegerValue(value),domain)) {
+        DestroyValue(&value);
+        STATEMENT_ERROR(statement,"DEFAULT selector value is not a member of the selector domain");
+        return 0;
+      }
+      break;
+    default:
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"DEFAULT selector value must match the selector domain type");
+      return 0;
+    }
+  }
+
+  switch(InstanceKind(target)) {
+  case SYMBOL_ATOM_INST:
+    if (ValueKind(value) != symbol_value) {
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"DEFAULT value for symbol declaration must be a symbol");
+      return 0;
+    }
+    SetSymbolAtomValue(target, SymbolValue(value));
+    break;
+  case INTEGER_ATOM_INST:
+    if (ValueKind(value) != integer_value) {
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"DEFAULT value for integer declaration must be an integer");
+      return 0;
+    }
+    SetIntegerAtomValue(target, IntegerValue(value), 0);
+    break;
+  case BOOLEAN_ATOM_INST:
+    if (ValueKind(value) != boolean_value) {
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement,"DEFAULT value for boolean declaration must be boolean");
+      return 0;
+    }
+    SetBooleanAtomValue(target, BooleanValue(value), 0);
+    break;
+  default:
+    DestroyValue(&value);
+    STATEMENT_ERROR(statement,"DEFAULT is only supported on scalar atomic declarations");
+    return 0;
+  }
+
+  DestroyValue(&value);
   return 1;
 }
 
@@ -10632,6 +11165,15 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
       return CheckWHEN(inst,statement);
     case FNAME:
       return CheckFNAME(inst,statement);
+    case REL:
+      return CheckREL(inst,statement);
+    case LOGREL:
+      return CheckLOGREL(inst,statement);
+    case EXT:
+      return CheckEXT(inst,statement);
+    case REINIT:
+    case SWITCHTO:
+      return 1;
     case FOR:
       return Pass4RealCheckFOR(inst,statement);
     case ALIASES:
@@ -10642,9 +11184,6 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
     case AA:
     case LNK:
     case UNLNK:
-    case REL:
-    case LOGREL:
-    case EXT:
     case CALL:
     case ASGN:
     case SELECT:
@@ -11942,6 +12481,38 @@ void MakeWhenReference(struct Instance *ref,
   }
 }
 
+static void MakeWhenStatementReference(struct Instance *ref,
+                                       struct Instance *child,
+                                       struct Statement *statement,
+                                       struct gl_list_t *listref)
+{
+  struct Name *name = NULL;
+
+  switch(StatementType(statement)){
+  case WHEN:
+    name = WhenStatName(statement);
+    break;
+  case FNAME:
+    name = FnameStat(statement);
+    break;
+  case REL:
+    name = RelationStatName(statement);
+    break;
+  case LOGREL:
+    name = LogicalRelStatName(statement);
+    break;
+  case EXT:
+    name = ExternalStatNameRelation(statement);
+    break;
+  default:
+    return;
+  }
+
+  if(name != NULL){
+    MakeWhenReference(ref,child,name,listref);
+  }
+}
+
 /**
 	creating list of reference for each CASE in a WHEN: (3) nested WHENs,
 	nested FOR loops etc.
@@ -11953,7 +12524,6 @@ void MakeWhenCaseReferences(struct Instance *inst,
                             struct gl_list_t *listref)
 {
   struct Statement *statement;
-  struct Name *name;
   unsigned long c,len;
   struct gl_list_t *list;
   list = GetList(sl);
@@ -11962,15 +12532,17 @@ void MakeWhenCaseReferences(struct Instance *inst,
     statement = (struct Statement *)gl_fetch(list,c);
     switch(StatementType(statement)){
     case WHEN:
-      name = WhenStatName(statement);
-      MakeWhenReference(inst,child,name,listref);
-      break;
     case FNAME:
-      name = FnameStat(statement);
-      MakeWhenReference(inst,child,name,listref);
+    case REL:
+    case LOGREL:
+    case EXT:
+      MakeWhenStatementReference(inst,child,statement,listref);
       break;
     case FOR:
       MakeWhenCaseReferencesFOR(inst,child,statement,listref);
+      break;
+    case REINIT:
+    case SWITCHTO:
       break;
     default:
       WSEM(stderr,statement,
@@ -11994,7 +12566,6 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
                                     struct gl_list_t *listref)
 {
   struct Statement *statement;
-  struct Name *name;
   unsigned long c,len;
   struct gl_list_t *list;
   list = GetList(sl);
@@ -12003,15 +12574,17 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
     statement = (struct Statement *)gl_fetch(list,c);
     switch(StatementType(statement)){
     case WHEN:
-      name = WhenStatName(statement);
-      MakeWhenReference(inst,child,name,listref);
-      break;
     case FNAME:
-      name = FnameStat(statement);
-      MakeWhenReference(inst,child,name,listref);
+    case REL:
+    case LOGREL:
+    case EXT:
+      MakeWhenStatementReference(inst,child,statement,listref);
       break;
     case FOR:
       MakeRealWhenCaseReferencesFOR(inst,child,statement,listref);
+      break;
+    case REINIT:
+    case SWITCHTO:
       break;
     default:
       STATEMENT_ERROR(statement,
@@ -12094,6 +12667,19 @@ void ExecuteWhenStatements(struct Instance *inst,
     case FNAME:
       return_value = ExecuteFNAME(inst,statement);
       break;
+    case REL:
+      return_value = ExecuteREL(inst,statement);
+      break;
+    case LOGREL:
+      return_value = ExecuteLOGREL(inst,statement);
+      break;
+    case EXT:
+      return_value = ExecuteEXT(inst,statement);
+      break;
+    case REINIT:
+    case SWITCHTO:
+      return_value = 1;
+      break;
     case FOR:
       return_value = 1;
       Pass4ExecuteFOR(inst,statement);
@@ -12103,7 +12689,11 @@ void ExecuteWhenStatements(struct Instance *inst,
                       "Inappropriate statement type in WHEN Statement");
       ASC_PANIC("Inappropriate statement type in WHEN Statement");
     }
-    asc_assert(return_value);
+    if(!return_value){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "while running %s on statement inside FOR", __FUNCTION__);
+      return;
+    }
   }
 }
 
@@ -12122,6 +12712,7 @@ struct Case *RealExecuteWhenStatements(struct Instance *inst,
   struct StatementList *sl;
   struct Case *cur_case;
   struct gl_list_t *listref;
+  struct gl_list_t *reinit;
   struct Set *set;
 
   listref = gl_create(AVG_REF);
@@ -12131,7 +12722,9 @@ struct Case *RealExecuteWhenStatements(struct Instance *inst,
   sl = WhenStatementList(w1);
   ExecuteWhenStatements(inst,sl);
   MakeWhenCaseReferences(inst,child,sl,listref);
+  reinit = CollectWhenReinitStatements(sl);
   SetCaseReferences(cur_case,listref);
+  SetCaseReinitStatements(cur_case,reinit);
   return cur_case;
 }
 
@@ -12234,6 +12827,15 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
     case FNAME:
       return_value = 1;
       break;
+    case REL:
+    case LOGREL:
+    case EXT:
+      return_value = ExecuteUnSelectedEQN(inst,statement);
+      break;
+    case REINIT:
+    case SWITCHTO:
+      return_value = 1;
+      break;
     case FOR:
       return_value = ExecuteUnSelectedForStatements(inst,
                                                     ForStatStmts(statement));
@@ -12243,7 +12845,11 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
                       "Inappropriate statement type in WHEN Statement");
       ASC_PANIC("Inappropriate statement type in WHEN Statement");
     }
-    asc_assert(return_value);
+    if(!return_value){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "while running %s on statement inside FOR", __FUNCTION__);
+      return;
+    }
   }
 }
 
@@ -13342,7 +13948,11 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       ASC_PANIC("Inappropriate statement type"
                 " in declarative section relations");
     }
-    asc_assert(return_value);
+    if(!return_value){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "while running %s on statement inside FOR", __FUNCTION__);
+      return;
+    }
   }
 }
 
@@ -14894,15 +15504,12 @@ void Pass5ExecuteLinkStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
+  struct Statement *stat;
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   for(c=FirstNonZeroBit(blist);c<BLength(blist);c++){
     if (ReadBit(blist,c)){
-      if ( Pass5ExecuteStatement(work,
-           (struct Statement *)gl_fetch(statements,c+1)) ) {
+      stat = GetExecutableStatement(def,c+1);
+      if ( Pass5ExecuteStatement(work,stat) ) {
         ClearBit(blist,c);
         *changed = 1;
       }
@@ -14923,15 +15530,12 @@ void Pass4ExecuteWhenStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
+  struct Statement *stat;
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   for(c=FirstNonZeroBit(blist);c<BLength(blist);c++){
     if (ReadBit(blist,c)){
-      if ( Pass4ExecuteStatement(work,
-           (struct Statement *)gl_fetch(statements,c+1)) ) {
+      stat = GetExecutableStatement(def,c+1);
+      if ( Pass4ExecuteStatement(work,stat) ) {
         ClearBit(blist,c);
         *changed = 1;
       }
@@ -14951,15 +15555,12 @@ void Pass3ExecuteLogRelStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
+  struct Statement *stat;
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   for(c=FirstNonZeroBit(blist);c<BLength(blist);c++){
     if (ReadBit(blist,c)){
-      if ( Pass3ExecuteStatement(work,
-           (struct Statement *)gl_fetch(statements,c+1)) ) {
+      stat = GetExecutableStatement(def,c+1);
+      if ( Pass3ExecuteStatement(work,stat) ) {
         ClearBit(blist,c);
         *changed = 1;
       }
@@ -14979,15 +15580,12 @@ void Pass2ExecuteRelationStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
+  struct Statement *stat;
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   for(c=FirstNonZeroBit(blist);c<BLength(blist);c++){
     if (ReadBit(blist,c)){
-      if ( Pass2ExecuteStatement(work,
-           (struct Statement *)gl_fetch(statements,c+1)) ) {
+      stat = GetExecutableStatement(def,c+1);
+      if ( Pass2ExecuteStatement(work,stat) ) {
         //CONSOLE_DEBUG("Got error code here, clearing bit in blist, setting '*changed' to 1");
         ClearBit(blist,c);
         *changed = 1;
@@ -15009,17 +15607,13 @@ void Pass1ExecuteInstanceStatements(struct BitList *blist,
 ){
   unsigned long c;
   struct TypeDescription *def;
-  struct gl_list_t *statements;
-  CONST struct StatementList *stats;
   struct Statement *stat;
 
   def = InstanceTypeDesc(work);
-  stats = GetStatementList(def);
-  statements = GetList(stats);
   c=FirstNonZeroBit(blist);
   while(c<BLength(blist)) {
     if (ReadBit(blist,c)){
-      stat = (struct Statement *)gl_fetch(statements,c+1);
+      stat = GetExecutableStatement(def,c+1);
       if ( Pass1ExecuteStatement(work,&c,stat) ) {
         if (StatementType(stat) != SELECT ) {
           ClearBit(blist,c);
@@ -15767,16 +16361,12 @@ void Pass5SetLinkBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
       changed=0;
-      if (BLength(blist)) {
-        statements = GetList(GetStatementList(InstanceTypeDesc(inst)));
-      }
       for(c=0;c<BLength(blist);c++){
-        stat = (struct Statement *)gl_fetch(statements,c+1);
+        stat = GetExecutableStatement(InstanceTypeDesc(inst),c+1);
         st= StatementType(stat);
         if (st == SELECT) {
           if (SelectContainsLink(stat)) {
@@ -15837,16 +16427,12 @@ void Pass4SetWhenBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
       changed=0;
-      if (BLength(blist)) {
-        statements = GetList(GetStatementList(InstanceTypeDesc(inst)));
-      }
       for(c=0;c<BLength(blist);c++){
-        stat = (struct Statement *)gl_fetch(statements,c+1);
+        stat = GetExecutableStatement(InstanceTypeDesc(inst),c+1);
         st= StatementType(stat);
         if (st == SELECT) {
           if (SelectContainsWhen(stat)) {
@@ -15907,16 +16493,12 @@ void Pass3SetLogRelBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
       changed=0;
-      if (BLength(blist)) {
-        statements = GetList(GetStatementList(InstanceTypeDesc(inst)));
-      }
       for(c=0;c<BLength(blist);c++){
-        stat = (struct Statement *)gl_fetch(statements,c+1);
+        stat = GetExecutableStatement(InstanceTypeDesc(inst),c+1);
         st= StatementType(stat);
         if (st == SELECT) {
           if (SelectContainsLogRelations(stat)) {
@@ -16007,16 +16589,12 @@ void Pass2SetRelationBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
       changed=0;
-      if (BLength(blist)) {
-        statements = GetList(GetStatementList(InstanceTypeDesc(inst)));
-      }
       for(c=0;c<BLength(blist);c++){
-        stat = (struct Statement *)gl_fetch(statements,c+1);
+        stat = GetExecutableStatement(InstanceTypeDesc(inst),c+1);
         st= StatementType(stat);
         if (st == SELECT) {
           if (SelectContainsRelations(stat) ||
@@ -16075,6 +16653,7 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
                                        struct Instance *oldresult)
 {
   struct Instance *result;
+  struct Instance *arginst = NULL;
   struct for_table_t *SavedForTable;
   SavedForTable = GetEvaluationForTable();
   SetEvaluationForTable(CreateForTable());
@@ -16087,7 +16666,17 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
   if (def!=NULL) { /* usual case */
     result = ShortCutMakeUniversalInstance(def);
     if (result==NULL) {
-      result = CreateModelInstance(def); /*need to account for absorbed here.*/
+      result = CreateModelInstance(def);
+      if (result != NULL
+          && GetModelParameterCount(def) == 0
+          && StatementListLength(GetModelAbsorbedParameters(def)) != 0L) {
+        if (BuildInstanceFromAbsorbedParameters(def,&arginst) != MPIOK) {
+          DestroyParameterInst(result);
+          result = NULL;
+        } else {
+          ConfigureInstFromArgs(result,arginst);
+        }
+      }
       /* at present, creating parameterized sims illegal */
     }
   }else{
@@ -16131,6 +16720,9 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
         a review protocol in place post instantiation. */
     }
     ClearList();
+  }
+  if (arginst != NULL) {
+    DestroyParameterInst(arginst);
   }
   DatasetCacheClear();
   DestroyForTable(GetEvaluationForTable());
@@ -16473,6 +17065,10 @@ struct Instance *NewInstantiate(symchar *type, symchar *name, int intset,
   ClearIteration();
   result = CreateSimulationInstance(def,name);
   root = NewRealInstantiate(def,intset);
+  if (root == NULL) {
+    DestroyInstance(result,NULL);
+    return NULL;
+  }
   LinkToParentByPos(result,root,1);
   if (g_ExtVariablesTable!=NULL) {
     SetSimulationExtVars(result,g_ExtVariablesTable);

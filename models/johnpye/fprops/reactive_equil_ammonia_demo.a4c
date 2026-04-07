@@ -1,0 +1,121 @@
+REQUIRE "johnpye/fprops/reactive_equil.a4l";
+IMPORT "qrslv";
+PROVIDE "johnpye/fprops/reactive_equil_ammonia_demo.a4c";
+
+MODEL reactor_equil_ammonia_case;
+	components IS_A set OF symbol_constant;
+	components :== ['N2', 'H2', 'NH3'];
+
+	pkg IS_A reactive_package(components);
+	pkg.source :== 'helmholtz+ref0:';
+	pkg.algorithm :== 'auto_nullspace';
+
+	R IS_A reactor_equil(pkg);
+
+	T IS_A temperature;
+	p IS_A pressure;
+	T, R.inlet.T, R.outlet.T ARE_THE_SAME;
+	p, R.inlet.P ARE_THE_SAME;
+	y_NH3 ALIASES R.outlet.y['NH3'];
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+
+		FIX R.inlet.f['N2'];
+		FIX R.inlet.f['H2'];
+		FIX R.inlet.f['NH3'];
+		FIX R.DeltaP;
+
+		T := 573 {K};
+		p := 200 {atm};
+		R.inlet.f['N2'] := 0.5 {mol/s};
+		R.inlet.f['H2'] := 1.5 {mol/s};
+		R.inlet.f['NH3'] := 0 {mol/s};
+		R.outlet.f['N2'] := 0.12 {mol/s};
+		R.outlet.f['H2'] := 0.35 {mol/s};
+		R.outlet.f['NH3'] := 0.77 {mol/s};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD on_load;
+		RUN default_self;
+		FIX T;
+		FIX p;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+	END on_load;
+
+	METHOD self_test;
+		ASSERT y_NH3 > 0.62;
+		ASSERT y_NH3 < 0.63;
+	END self_test;
+END reactor_equil_ammonia_case;
+
+MODEL reactor_equil_ammonia_pressures;
+	pp IS_A set OF symbol_constant;
+	pp :== ['p1atm', 'p30atm', 'p100atm', 'p200atm'];
+
+	case[pp] IS_A reactor_equil_ammonia_case;
+	p_case[pp] IS_A pressure;
+	T IS_A temperature;
+
+	FOR i IN pp CREATE
+		T, case[i].T ARE_THE_SAME;
+		p_case[i], case[i].p ARE_THE_SAME;
+	END FOR;
+
+	y_NH3_1atm ALIASES case['p1atm'].y_NH3;
+	y_NH3_30atm ALIASES case['p30atm'].y_NH3;
+	y_NH3_100atm ALIASES case['p100atm'].y_NH3;
+	y_NH3_200atm ALIASES case['p200atm'].y_NH3;
+
+METHODS
+	METHOD default_self;
+		FIX T := 573 {K};
+		FOR i IN pp DO
+			RUN case[i].default_self;
+		END FOR;
+		FIX p_case[pp];
+		p_case['p1atm'] := 1 {atm};
+		p_case['p30atm'] := 30 {atm};
+		p_case['p100atm'] := 100 {atm};
+		p_case['p200atm'] := 200 {atm};
+	END default_self;
+
+	METHOD on_load;
+		RUN default_self;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+	END on_load;
+
+	METHOD self_test;
+		ASSERT y_NH3_1atm < y_NH3_30atm;
+		ASSERT y_NH3_30atm < y_NH3_100atm;
+		ASSERT y_NH3_100atm < y_NH3_200atm;
+	END self_test;
+END reactor_equil_ammonia_pressures;
+
+(* file-named model *)
+MODEL reactive_equil_ammonia_demo REFINES reactor_equil_ammonia_case;
+END reactive_equil_ammonia_demo;
+
+MODEL reactive_equil_ammonia_pressures_demo REFINES reactor_equil_ammonia_pressures;
+END reactive_equil_ammonia_pressures_demo;
+
+(* STUDY model *)
+MODEL reactive_equil_ammonia_pressures_study REFINES reactor_equil_ammonia_pressures;
+METHODS
+	METHOD on_load;
+		RUN reactor_equil_ammonia_pressures::default_self;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		STUDY
+			y_NH3_1atm,
+			y_NH3_30atm,
+			y_NH3_100atm,
+			y_NH3_200atm
+			VARY T FROM 473 {K} TO 1273 {K} STEPS 8
+			NOW
+			FILE "ammonia_reactive_equil_helmholtz_ref0.tsv";
+	END on_load;
+END reactive_equil_ammonia_pressures_study;

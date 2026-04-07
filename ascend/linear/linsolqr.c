@@ -89,6 +89,12 @@
 
 
 #define RBADEBUG 0
+
+#if LINSOLQR_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
 /*	turns on spew that will generate output files
 	comparable to and in the same location as for rankiba2
 	user specific hardcoded pathnames are involved.
@@ -364,7 +370,7 @@ void linsolqr_destroy(linsolqr_system_t sys){
      return;
    }
    if( NOTNULL(sys->coef) ) {
-     CONSOLE_DEBUG("linsolqr contains coef mtx which will NOT be destroyed");
+     MSG("linsolqr contains coef mtx which will NOT be destroyed");
    }
    if( NOTNULL(sys->inverse) )
       mtx_destroy(sys->inverse);
@@ -391,7 +397,7 @@ void linsolqr_set_region(linsolqr_system_t sys,mtx_region_t region){
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. coef mtx not set.");
      return;
    }
-   CONSOLE_DEBUG("Region rows=[%d,%d], cols=[%d,%d]",region.row.low,region.row.high,region.col.low,region.col.high);
+   MSG("Region rows=[%d,%d], cols=[%d,%d]",region.row.low,region.row.high,region.col.low,region.col.high);
    sys->reg = region;
 }
 

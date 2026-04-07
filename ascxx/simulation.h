@@ -72,6 +72,7 @@ class Simulation : public Instanc{
 private:
 	Instanc simroot;
 	slv_system_t sys;
+	struct Instance *buildroot;
 	bool is_built;
 	SingularityInfo *sing; /// will be used to store this iff singularity found
 	int activeblock;
@@ -99,6 +100,8 @@ public:
 	void checkDimensions();
 
 	void build();
+	void build(const Instanc &target);
+	void invalidateSystem();
 
 	// checks of solver lists/structure
 	enum StructuralStatus checkDoF() const;
@@ -116,6 +119,7 @@ public:
 	std::vector<Variable> getVariablesFarFromNominals(const double &bignum);
 	std::vector<Variable> getFixedVariables();
 	std::vector<Variable> getallVariables();
+	std::string getPantelidesReport() const;
 	Matrix getMatrix();
 
 	void write(const char *fname,const char *type=NULL) const;
@@ -139,6 +143,9 @@ public:
 	
 	void setSolverHooks(SolverHooks *H);
 	SolverHooks *getSolverHooks() const;
+	bool isSolveDirty() const;
+	bool isMethodRunning() const;
+	const std::string getSolveTargetName() const;
 };
 
 #endif

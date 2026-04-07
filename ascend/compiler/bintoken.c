@@ -485,9 +485,21 @@ void BinTokenClearTables(void)
 }
 
 /*
+ * when a compiled token share is duplicated, keep the table alive
+ * for the extra share.
+ */
+void BinTokenAddReference(int btable)
+{
+  if(btable < 1 || btable > g_bt_data.nextid
+    || g_bt_data.tables[btable].type == BT_error
+  ){
+    return;
+  }
+  g_bt_data.tables[btable].refcount++;
+}
+
+/*
  * when all the references expire, unload the library.
- * note there is no AddReference since all the references
- * are made 1 per share at load time.
  */
 void BinTokenDeleteReference(int btable)
 {

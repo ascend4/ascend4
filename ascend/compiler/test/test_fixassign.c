@@ -1,4 +1,6 @@
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/platform.h>
@@ -26,6 +28,64 @@
 # define MSG(ARGS...) ((void)0)
 #endif
 
+typedef struct{
+	int error_count;
+	int first_error_line;
+	char first_error_file[256];
+	char all_error_msgs[4096];
+} fixassign_error_capture_t;
+
+static fixassign_error_capture_t g_fixassign_error_capture;
+
+static void fixassign_error_capture_reset(void){
+	memset(&g_fixassign_error_capture,0,sizeof(g_fixassign_error_capture));
+}
+
+static int fixassign_error_capture_cb(ERROR_REPORTER_CALLBACK_ARGS){
+	char msg[512];
+	int wrote_default;
+	va_list args_copy;
+	size_t used;
+
+	va_copy(args_copy,args);
+	vsnprintf(msg,sizeof(msg),fmt,args_copy);
+	va_end(args_copy);
+
+	if(sev & ASC_ERR_ERR){
+		g_fixassign_error_capture.error_count++;
+		if(g_fixassign_error_capture.first_error_line == 0){
+			g_fixassign_error_capture.first_error_line = line;
+			if(filename){
+				snprintf(g_fixassign_error_capture.first_error_file
+					,sizeof(g_fixassign_error_capture.first_error_file)
+					,"%s",filename
+				);
+			}
+		}
+		used = strlen(g_fixassign_error_capture.all_error_msgs);
+		if(used + 2 < sizeof(g_fixassign_error_capture.all_error_msgs)){
+			if(used > 0){
+				snprintf(
+					g_fixassign_error_capture.all_error_msgs + used
+					,sizeof(g_fixassign_error_capture.all_error_msgs) - used
+					,"\n"
+				);
+				used = strlen(g_fixassign_error_capture.all_error_msgs);
+			}
+			snprintf(
+				g_fixassign_error_capture.all_error_msgs + used
+				,sizeof(g_fixassign_error_capture.all_error_msgs) - used
+				,"%s",msg
+			);
+		}
+	}
+
+	va_copy(args_copy,args);
+	wrote_default = error_reporter_default_callback(sev,filename,line,funcname,fmt,args_copy);
+	va_end(args_copy);
+	return wrote_default;
+}
+
 static struct Instance *load_model(const char *filename, const char *name, int assert_parse_ok, int *parsestatus){
 	struct module_t *m;
 
@@ -34,7 +94,7 @@ static struct Instance *load_model(const char *filename, const char *name, int a
 
 	/* load the file */
 	char path[PATH_MAX];
-	strcpy((char *)path,"test/compiler/");
+	strcpy((char *)path,"models/test/compiler/");
 	strcat((char *)path,filename);
 	int openmodulestatus;
 	m = Asc_OpenModule(path,&openmodulestatus);
@@ -113,6 +173,33 @@ static void test_test2(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_test3(void){
+	int parsestatus;
+	struct Instance *sim = load_model("fix_and_assign_dim_mismatch.a4c", "fix_and_assign_dim_mismatch", TRUE, &parsestatus);
+	struct Name *name;
+	enum Proc_enum pe;
+
+	CU_ASSERT(parsestatus == 0);
+	CU_ASSERT_FATAL(sim != NULL);
+
+	name = CreateIdName(AddSymbol("on_load"));
+	fixassign_error_capture_reset();
+	error_reporter_set_callback(&fixassign_error_capture_cb);
+	pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	error_reporter_set_callback(NULL);
+
+	CU_ASSERT(pe != Proc_all_ok);
+	CU_ASSERT(g_fixassign_error_capture.error_count > 0);
+	CU_ASSERT(g_fixassign_error_capture.first_error_line > 0);
+	CU_ASSERT(strstr(g_fixassign_error_capture.first_error_file,"fix_and_assign_dim_mismatch.a4c") != NULL);
+	CU_ASSERT(strstr(g_fixassign_error_capture.all_error_msgs,"Inconsistent units in assignment: x (IS_A energy) has dimensions [M*L^2/T^2]") != NULL);
+	CU_ASSERT(strstr(g_fixassign_error_capture.all_error_msgs,"RHS term has dimensions [TMP]") != NULL);
+	CU_ASSERT(strstr(g_fixassign_error_capture.all_error_msgs,"Dimensionally inconsistent assignment") == NULL);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -120,7 +207,7 @@ static void test_test2(void){
 
 #define TESTS(T) \
 	T(test1) \
-	T(test2)
+	T(test2) \
+	T(test3)
 
 REGISTER_TESTS_SIMPLE(compiler_fixassign, TESTS)
-

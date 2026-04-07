@@ -1,0 +1,48 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_reinit_discrete_sawtooth;
+	y, ydot        IS_A generic_real;
+	sample         IS_A generic_real;
+	period, dperiod IS_A generic_real;
+	t, t_last_event IS_A time;
+	switch         IS_A boolean_var;
+
+	drive: ydot = 1;
+	observe: sample = y;
+
+CONDITIONAL
+	tick: y >= period;
+END CONDITIONAL;
+
+	switch == SATISFIED(tick, 1e-8);
+
+WHEN(switch)
+	CASE TRUE:
+		REINIT(y, 0);
+		REINIT(period, pre(period) + dperiod);
+		REINIT(t_last_event, t);
+	CASE FALSE:
+		REINIT(y, pre(y));
+END WHEN;
+
+METHODS
+	METHOD on_load;
+		y.ode_type := 1; ydot.ode_type := 2;
+		y.ode_id := 1;   ydot.ode_id := 1;
+		t.ode_type := -1;
+		RUN values;
+	END on_load;
+
+	METHOD values;
+		FIX dperiod;
+		dperiod := 0.5;
+		y := 0;
+		ydot := 1;
+		sample := 0;
+		period := 1;
+		t := 0 {s};
+		t_last_event := -1 {s};
+		switch := FALSE;
+	END values;
+END ida_reinit_discrete_sawtooth;

@@ -178,6 +178,39 @@ void AscCheckDuplicateLoad(CONST char *path)
 #if defined(__WIN32__)
 # include <windows.h>
 
+static void Asc_Win32LoadError(const char *path){
+  DWORD err;
+  LPSTR msgbuf = NULL;
+
+  err = GetLastError();
+  if (FormatMessageA(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL,
+      err,
+      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+      (LPSTR)&msgbuf,
+      0,
+      NULL
+    ) && msgbuf != NULL
+  ) {
+    size_t len = strlen(msgbuf);
+    while (len > 0 && (msgbuf[len - 1] == '\r' || msgbuf[len - 1] == '\n')) {
+      msgbuf[--len] = '\0';
+    }
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,
+      "LoadLibrary failed for '%s' (GetLastError=%lu: %s)",
+      path, (unsigned long)err, msgbuf
+    );
+    LocalFree(msgbuf);
+    return;
+  }
+
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,
+    "LoadLibrary failed for '%s' (GetLastError=%lu)",
+    path, (unsigned long)err
+  );
+}
+
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
   HINSTANCE xlib;
   ExternalLibraryRegister_fptr_t install = NULL;
@@ -195,7 +228,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
 
   xlib = LoadLibrary(path);
   if (xlib == NULL) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"LoadLibrary failed\n'%s'",path);
+    Asc_Win32LoadError(path);
     return 1;
   }
 #if 0
@@ -605,6 +638,9 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 	char *path, *foundpath;
 	ospath_stat_t buf;
 	FILE *f;
+	int free_path;
+
+	free_path = 0;
 
 	fp1 = ospath_new_noclean(name);
 	if(fp1==NULL){
@@ -653,6 +689,8 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 		if(path==NULL){
 			/* CONSOLE_DEBUG("Library search path env var '%s' not found, using default path '%s'",envv,dpath); */
 			path=dpath;
+		}else{
+			free_path = 1;
 		}
 
 		/* CONSOLE_DEBUG("SEARCHPATH IS %s",path); */
@@ -661,14 +699,21 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 		if(NULL==ospath_searchpath_iterate(sp,&test_librarysearch,&ls)){
 			ospath_free(fp1);
 			ospath_searchpath_free(sp);
+			if(free_path){
+				ASC_FREE(path);
+			}
 			return NULL;
 		}
 
 		foundpath = ASC_NEW_ARRAY(char,strlen(ls.fullpath)+1);
 		strcpy(foundpath,ls.fullpath);
 		ospath_searchpath_free(sp);
+		if(free_path){
+			ASC_FREE(path);
+		}
 	}
 
 	ospath_free(fp1);
 	return foundpath;
 }
+

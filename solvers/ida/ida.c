@@ -54,8 +54,10 @@
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/panic.h>
 #include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/packages.h>
 
 #include <ascend/system/slv_client.h>
+#include <ascend/system/bndman.h>
 #include <ascend/system/relman.h>
 #include <ascend/system/block.h>
 #include <ascend/system/slv_stdcalls.h>
@@ -65,9 +67,23 @@
 #include <ascend/utilities/config.h>
 #include <ascend/integrator/integrator.h>
 
+#ifndef IDA_DEBUG
+# define IDA_DEBUG 0
+#endif
+#if !IDA_DEBUG
+# undef CONSOLE_DEBUG
+# define CONSOLE_DEBUG(...) ((void)0)
+#endif
+
+#if IDA_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 /* #define FEX_DEBUG */
-#define SOLVE_DEBUG
-#define STATS_DEBUG
+/* #define SOLVE_DEBUG */
+/* #define STATS_DEBUG */
 /* #define DESTROY_DEBUG */
 
 /*-------------------------------------------------------------
@@ -81,6 +97,7 @@
 */
 static IntegratorCreateFn integrator_ida_create;
 static IntegratorParamsDefaultFn integrator_ida_params_default;
+static IntegratorInitialiseFn integrator_ida_initialise;
 static IntegratorSolveFn integrator_ida_solve;
 static IntegratorFreeFn integrator_ida_free;
 
@@ -90,7 +107,7 @@ static IntegratorFreeFn integrator_ida_free;
  */
 static const IntegratorInternals integrator_ida_internals = {
 		integrator_ida_create, integrator_ida_params_default,
-		integrator_ida_analyse, integrator_ida_solve,
+		integrator_ida_analyse, integrator_ida_initialise, integrator_ida_solve,
 		integrator_ida_write_matrix, integrator_ida_debug, integrator_ida_free,
 		INTEG_IDA, "IDA" };
 
@@ -100,7 +117,7 @@ static const IntegratorInternals integrator_ida_internals = {
  to solving problems.
  */
 extern ASC_EXPORT int ida_register(void) {
-	CONSOLE_DEBUG("Registering IDA...");
+	MSG("Registering IDA...");
 	return integrator_register(&integrator_ida_internals);
 }
 
@@ -115,7 +132,9 @@ typedef void ( IntegratorVarVisitorFn)(IntegratorSystem *integ,
  static void integrator_visit_system_vars(IntegratorSystem *integ,IntegratorVarVisitorFn *visitor);
  static void integrator_dae_show_var(IntegratorSystem *integ, struct var_variable *var, const int *varindx); */
 
+#ifdef STATS_DEBUG
 static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
+#endif
 
 /*-------------------------------------------------------------
  SETUP/TEARDOWN ROUTINES
@@ -126,12 +145,23 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
  the time when IDA is assigned to a particular system as its integrator.
  */
 static void integrator_ida_create(IntegratorSystem *integ) {
-	CONSOLE_DEBUG("ALLOCATING IDA ENGINE DATA");
+	MSG("ALLOCATING IDA ENGINE DATA");
 	IntegratorIdaData *enginedata;
 	enginedata = ASC_NEW(IntegratorIdaData);
-	CONSOLE_DEBUG("enginedata = %p",enginedata);
+	MSG("enginedata = %p",enginedata);
 	enginedata->rellist = NULL;
+	enginedata->bndlist = NULL;
+	enginedata->nbnds = 0;
+	enginedata->guardroots = NULL;
+	enginedata->guardcontexts = NULL;
+	enginedata->nguardroots = 0;
+	enginedata->nroots = 0;
 	enginedata->safeeval = 0;
+	enginedata->warned_minstep_ignored = 0;
+	enginedata->event_times = NULL;
+	enginedata->event_times_cap = 0;
+	enginedata->event_times_count = 0;
+	enginedata->event_times_next = 0;
 	enginedata->vfilter.matchbits = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE
 			| VAR_FIXED;
 	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | 0;
@@ -143,6 +173,20 @@ static void integrator_ida_create(IntegratorSystem *integ) {
 	enginedata->flagfn = NULL;
 	enginedata->flagfntype = NULL;
 	enginedata->flagnamefn = NULL;
+#if SUNDIALS_VERSION_MAJOR >= 5
+	enginedata->linear_solver = NULL;
+	enginedata->dense_matrix = NULL;
+#endif
+#if SUNDIALS_VERSION_MAJOR >= 6
+	enginedata->sunctx = NULL;
+# if SUNDIALS_VERSION_MAJOR >= 7
+	if(SUNContext_Create(SUN_COMM_NULL, &enginedata->sunctx)){
+# else
+	if(SUNContext_Create(NULL, &enginedata->sunctx)){
+# endif
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to create SUNDIALS context for IDA");
+	}
+#endif
 
 	integ->enginedata = (void *) enginedata;
 
@@ -156,25 +200,71 @@ static void integrator_ida_create(IntegratorSystem *integ) {
  */
 static void integrator_ida_free(void *enginedata) {
 #ifdef DESTROY_DEBUG
-	CONSOLE_DEBUG("DESTROYING IDA engine data at %p",enginedata);
+	MSG("DESTROYING IDA engine data at %p",enginedata);
 #endif
 	IntegratorIdaData *d = (IntegratorIdaData *) enginedata;
 	asc_assert(d);
 	if (d->pfree) {
-		CONSOLE_DEBUG("DESTROYING preconditioner data using fn at %p",d->pfree);
+		MSG("DESTROYING preconditioner data using fn at %p",d->pfree);
 		/* free the preconditioner data, whatever it happens to be */
 		(d->pfree)(enginedata);
 	}
 
 	ASC_FREE(d->rellist);
+	if(d->guardroots != NULL){
+		ASC_FREE(d->guardroots);
+		d->guardroots = NULL;
+	}
+	if(d->guardcontexts != NULL){
+		ASC_FREE(d->guardcontexts);
+		d->guardcontexts = NULL;
+	}
+	if(d->event_times != NULL){
+		ASC_FREE(d->event_times);
+		d->event_times = NULL;
+	}
+
+#if SUNDIALS_VERSION_MAJOR >= 5
+	if(d->linear_solver != NULL){
+		SUNLinSolFree(d->linear_solver);
+		d->linear_solver = NULL;
+	}
+	if(d->dense_matrix != NULL){
+		SUNMatDestroy(d->dense_matrix);
+		d->dense_matrix = NULL;
+	}
+#endif
+#if SUNDIALS_VERSION_MAJOR >= 6
+	if(d->sunctx != NULL){
+		SUNContext_Free(&d->sunctx);
+	}
+#endif
 
 #ifdef DESTROY_DEBUG
-	CONSOLE_DEBUG("Now destroying the enginedata");
+	MSG("Now destroying the enginedata");
 #endif
 	ASC_FREE(d);
 #ifdef DESTROY_DEBUG
-	CONSOLE_DEBUG("enginedata freed");
+	MSG("enginedata freed");
 #endif
+}
+
+static int integrator_ida_initialise(IntegratorSystem *integ){
+	int qrslv_index;
+
+	if(!integrator_has_initial_relations(integ)){
+		return 0;
+	}
+	if(package_load("qrslv", NULL) != 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to load QRSlv for IDA initialization solve");
+		return 1;
+	}
+	qrslv_index = slv_lookup_client("QRSlv");
+	if(qrslv_index < 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv is unavailable for IDA initialization solve");
+		return 2;
+	}
+	return integrator_initialise_with_solver(integ, qrslv_index);
 }
 
 IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *integ) {
@@ -203,6 +293,8 @@ enum ida_parameters {
 	IDA_PARAM_GSMODIFIED,
 	IDA_PARAM_MAXNCF,
 	IDA_PARAM_PREC,
+	IDA_PARAM_ZENO_NCYCLES,
+	IDA_PARAM_ZENO_DURATION,
 	IDA_PARAMS_SIZE
 };
 
@@ -225,13 +317,13 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 	slv_destroy_parms(p);
 
 	if (p->parms == NULL) {
-		CONSOLE_DEBUG("params NULL");
+		MSG("params NULL");
 		p->parms = ASC_NEW_ARRAY(struct slv_parameter, IDA_PARAMS_SIZE);
 		if (p->parms == NULL)
 			return -1;
 		p->dynamic_parms = 1;
 	} else {
-		CONSOLE_DEBUG("params not NULL");
+		MSG("params not NULL");
 	}
 
 	/* reset the number of parameters to zero so that we can check it at the end */
@@ -339,13 +431,99 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 		,(SlvParameterInitChar) { {"prec"
 				,"Preconditioner",1
 				,"See IDA manual, section section 5.6.8."
-			},"NONE"}, (char *[]) {"NONE","DIAG",NULL}
+			},"NONE"}, (char *[]) {"NONE","JACOBI","DIAG",NULL}
+	);
+
+	slv_param_int(p,IDA_PARAM_ZENO_NCYCLES
+		,(SlvParameterInitInt) { {"zeno_ncycles"
+				,"Boundary events in window before stopping",2
+				,"Stop integration if at least this many boundary-triggered"
+				" reconfiguration events occur within 'zeno_duration'."
+			}, 20, 0, 1000000}
+	);
+
+	slv_param_real(p,IDA_PARAM_ZENO_DURATION
+		,(SlvParameterInitReal) { {"zeno_duration"
+				,"Event accumulation time window",2
+				,"Window in independent-variable units used with"
+				" 'zeno_ncycles' to detect rapidly accumulating boundary events."
+			}, 1e-4, 0.0, 1e20}
 	);
 
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
 
-	CONSOLE_DEBUG("Created %d params", p->num_parms);
+	MSG("Created %d params", p->num_parms);
 
+	return 0;
+}
+
+static int ida_prepare_event_window(IntegratorSystem *integ){
+	IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+	int ncycles = SLV_PARAM_INT(&(integ->params), IDA_PARAM_ZENO_NCYCLES);
+
+	if(ncycles <= 1){
+		if(enginedata->event_times != NULL){
+			ASC_FREE(enginedata->event_times);
+			enginedata->event_times = NULL;
+		}
+		enginedata->event_times_cap = 0;
+		enginedata->event_times_count = 0;
+		enginedata->event_times_next = 0;
+		return 0;
+	}
+
+	if(enginedata->event_times_cap != ncycles || enginedata->event_times == NULL){
+		if(enginedata->event_times != NULL){
+			ASC_FREE(enginedata->event_times);
+		}
+		enginedata->event_times = ASC_NEW_ARRAY(realtype, ncycles);
+		if(enginedata->event_times == NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Unable to allocate IDA event accumulation buffer");
+			enginedata->event_times_cap = 0;
+			return 1;
+		}
+		enginedata->event_times_cap = ncycles;
+	}
+
+	enginedata->event_times_count = 0;
+	enginedata->event_times_next = 0;
+	return 0;
+}
+
+static int ida_check_event_accumulation(IntegratorSystem *integ, realtype event_time){
+	IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+	int ncycles = SLV_PARAM_INT(&(integ->params), IDA_PARAM_ZENO_NCYCLES);
+	realtype duration = SLV_PARAM_REAL(&(integ->params), IDA_PARAM_ZENO_DURATION);
+	realtype oldest_time;
+
+	if(ncycles <= 1 || duration <= 0.0){
+		return 0;
+	}
+	if(enginedata->event_times == NULL || enginedata->event_times_cap != ncycles){
+		if(ida_prepare_event_window(integ) != 0){
+			return 1;
+		}
+	}
+
+	if(enginedata->event_times_count < enginedata->event_times_cap){
+		enginedata->event_times[enginedata->event_times_count++] = event_time;
+		enginedata->event_times_next = enginedata->event_times_count % enginedata->event_times_cap;
+		if(enginedata->event_times_count < enginedata->event_times_cap){
+			return 0;
+		}
+	}else{
+		enginedata->event_times[enginedata->event_times_next] = event_time;
+		enginedata->event_times_next = (enginedata->event_times_next + 1) % enginedata->event_times_cap;
+	}
+
+	oldest_time = enginedata->event_times[enginedata->event_times_next];
+	if(event_time - oldest_time <= duration){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,
+			"Event accumulation detected near t = %.8g: %d boundary events occurred within %.8g time units",
+			event_time, ncycles, duration);
+		return 1;
+	}
 	return 0;
 }
 
@@ -356,7 +534,6 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 int ida_load_rellist(IntegratorSystem *integ) {
 	IntegratorIdaData *enginedata;
 	struct rel_relation **rels;
-	char *relname;
 	int i, j, n_solverrels, n_active_rels;
 
 	enginedata = integrator_ida_enginedata(integ);
@@ -374,13 +551,13 @@ int ida_load_rellist(IntegratorSystem *integ) {
 			= ASC_NEW_ARRAY(struct rel_relation *, n_active_rels);
 
 #ifdef SOLVE_DEBUG
-	CONSOLE_DEBUG("rels matchbits:  0x%x",integrator_ida_rel.matchbits);
-	CONSOLE_DEBUG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
+	MSG("rels matchbits:  0x%x",integrator_ida_rel.matchbits);
+	MSG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
 
-	CONSOLE_DEBUG("Number of relations: %d",n_solverrels);
-	CONSOLE_DEBUG("Number of active relations: %d",n_active_rels);
-	CONSOLE_DEBUG("Number of dependent vars: %d",integ->n_y);
-	CONSOLE_DEBUG("Number of boundaries: %d",enginedata->nbnds);
+	MSG("Number of relations: %d",n_solverrels);
+	MSG("Number of active relations: %d",n_active_rels);
+	MSG("Number of dependent vars: %d",integ->n_y);
+	MSG("Number of boundaries: %d",enginedata->nbnds);
 #endif
 
 
@@ -389,7 +566,7 @@ int ida_load_rellist(IntegratorSystem *integ) {
 		if (rel_apply_filter(rels[i], &integrator_ida_rel)) {
 #ifdef SOLVE_DEBUG
 			relname = rel_make_name(integ->system, rels[i]);
-			CONSOLE_DEBUG("rel '%s': 0x%x", relname, rel_flags(rels[i]));
+			MSG("rel '%s': 0x%x", relname, rel_flags(rels[i]));
 			ASC_FREE(relname);
 #endif
 			enginedata->rellist[j++] = rels[i];
@@ -418,10 +595,10 @@ int ida_retrieve_IVs(IntegratorSystem *integ, realtype t0, N_Vector y0,
 
 #ifdef SOLVE_DEBUG
 	char *varname;
-	char diffname[30];
+	char diffname[100];
 	int i;
-	CONSOLE_DEBUG("RETRIEVING INITIAL VALUES:");
-	CONSOLE_DEBUG("t0 = %f",t0);
+	MSG("RETRIEVING INITIAL VALUES:");
+	MSG("t0 = %f",t0);
 #endif
 
 	integrator_get_y(integ, NV_DATA_S(y0));
@@ -438,12 +615,51 @@ int ida_retrieve_IVs(IntegratorSystem *integ, realtype t0, N_Vector y0,
 			varname = var_make_name(integ->system, integ->ydot[i]);
 			fprintf(stderr, "%15s=%10f\t\n", varname, NV_Ith_S(yp0,i));
 		} else {
-			snprintf(diffname,99,"diff(%s)",varname);
+			snprintf(diffname,sizeof(diffname),"diff(%s)",varname);
 			fprintf(stderr,"%15s=%10f\t\n",diffname,NV_Ith_S(yp0,i));
 		}
 		ASC_FREE(varname);
 	}
 #endif
+
+	return 0;
+}
+
+static int ida_refresh_bnd_cond_states(IntegratorSystem *integ, int **states, int *nstates){
+	IntegratorIdaData *enginedata;
+	int nbnds, i;
+
+	if(integ == NULL || states == NULL || nstates == NULL){
+		return 1;
+	}
+
+	enginedata = integrator_ida_enginedata(integ);
+	nbnds = enginedata != NULL ? enginedata->nbnds : 0;
+
+	if(nbnds <= 0){
+		if(*states != NULL){
+			ASC_FREE(*states);
+			*states = NULL;
+		}
+		*nstates = 0;
+		return 0;
+	}
+
+	if(*states == NULL || *nstates != nbnds){
+		if(*states != NULL){
+			ASC_FREE(*states);
+		}
+		*states = ASC_NEW_ARRAY_CLEAR(int, nbnds);
+		if(*states == NULL){
+			*nstates = 0;
+			return 1;
+		}
+		*nstates = nbnds;
+	}
+
+	for(i = 0; i < nbnds; ++i){
+		(*states)[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+	}
 
 	return 0;
 }
@@ -460,55 +676,44 @@ int ida_malloc(IntegratorSystem *integ, void *ida_mem, realtype t0,
 
 	/* relative error tolerance */
 	reltol = SLV_PARAM_REAL(&(integ->params),IDA_PARAM_RTOL);
-	CONSOLE_DEBUG("rtol = %8.2e",reltol);
+	MSG("rtol = %8.2e",reltol);
 
 
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+#if SUNDIALS_VERSION_MAJOR >= 5
 	flag = IDAInit(ida_mem, &integrator_ida_fex, t0, y0 ,yp0);
-#else
-	if (SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_ATOLVECT)) {
-		/* vector of absolute tolerances */
-		CONSOLE_DEBUG("USING VECTOR OF ATOL VALUES");
-		abstolvect = N_VNew_Serial(integ->n_y);
-		integrator_get_atol(integ, NV_DATA_S(abstolvect));
-
-		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SV,
-				reltol, abstolvect);
-
-		N_VDestroy_Serial(abstolvect);
-	} else {
-		/* scalar absolute tolerance (one value for all) */
-		abstol = SLV_PARAM_REAL(&(integ->params),IDA_PARAM_ATOL);
-		CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
-		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SS,
-				reltol, &abstol);
-	}
 #endif
 
 	if (flag == IDA_MEM_NULL) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 		return 2;
 	} else if (flag == IDA_MEM_FAIL) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDAMalloc)");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDAInit)");
 		return 3;
 	} else if (flag == IDA_ILL_INPUT) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid input to IDAMalloc");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid input to IDAInit");
 		return 4;
 	}
 
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-	CONSOLE_DEBUG("Assigning tolerances...");
+#if SUNDIALS_VERSION_MAJOR >= 5
+	MSG("Assigning tolerances...");
 	/* assign tolerances */
 	if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_ATOLVECT)) {
-		CONSOLE_DEBUG("using vector of atol values");
+		MSG("using vector of atol values");
+#if SUNDIALS_VERSION_MAJOR >= 6
+		{
+			IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+			abstolvect = N_VNew_Serial(integ->n_y, enginedata->sunctx);
+		}
+#else
 		abstolvect = N_VNew_Serial(integ->n_y);
+#endif
 		integrator_get_atol(integ,NV_DATA_S(abstolvect));
 		IDASVtolerances(ida_mem, reltol, abstolvect);
 		N_VDestroy_Serial(abstolvect);
 	} else {
 		/* scalar tolerances */
 		abstol = SLV_PARAM_REAL(&(integ->params),IDA_PARAM_ATOL);
-		CONSOLE_DEBUG("using scalar atol value = %8.2e",abstol);
+		MSG("using scalar atol value = %8.2e",abstol);
 		IDASStolerances(ida_mem, reltol, abstol);
 	}
 #endif
@@ -520,7 +725,7 @@ int ida_malloc(IntegratorSystem *integ, void *ida_mem, realtype t0,
 /*
  * Set parameter inputs for step size, the linear solver module and preconditioner
  */
-int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem) {
+int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0) {
 	int flag;
 	char *linsolver;
 	char *pname = NULL;
@@ -529,98 +734,104 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem) {
 
 	IntegratorIdaData *enginedata = integ->enginedata;
 
+#if SUNDIALS_VERSION_MAJOR >= 7
+	/* IDASetErrHandlerFn was removed in SUNDIALS 7; use default context-based handling. */
+#elif SUNDIALS_VERSION_MAJOR >= 5
 	IDASetErrHandlerFn(ida_mem, &integrator_ida_error, (void *) integ);
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+#endif
+#if SUNDIALS_VERSION_MAJOR >= 5
 	IDASetUserData(ida_mem, (void *)integ);
-#else
-	IDASetRdata(ida_mem, (void *) integ);
 #endif
 	IDASetMaxStep(ida_mem, integrator_get_maxstep(integ));
 	IDASetInitStep(ida_mem, integrator_get_stepzero(integ));
 	IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(integ));
-	if (integrator_get_minstep(integ) > 0) {
+	if (integrator_get_minstep(integ) > 0 && !enginedata->warned_minstep_ignored) {
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"IDA does not support minstep (ignored)\n");
+		enginedata->warned_minstep_ignored = 1;
 	}
 
-	CONSOLE_DEBUG("MAXNCF = %d",SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXNCF));
+	MSG("MAXNCF = %d",SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXNCF));
 	IDASetMaxConvFails(ida_mem, SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXNCF));
 
-	CONSOLE_DEBUG("MAXORD = %d",SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXORD));
+	MSG("MAXORD = %d",SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXORD));
 	IDASetMaxOrd(ida_mem, SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXORD));
 
 	/* there's no capability for setting *minimum* step size in IDA */
 
+	if (enginedata->pfree) {
+		(enginedata->pfree)(enginedata);
+	}
+#if SUNDIALS_VERSION_MAJOR >= 5
+	if (enginedata->linear_solver != NULL) {
+		SUNLinSolFree(enginedata->linear_solver);
+		enginedata->linear_solver = NULL;
+	}
+	if (enginedata->dense_matrix != NULL) {
+		SUNMatDestroy(enginedata->dense_matrix);
+		enginedata->dense_matrix = NULL;
+	}
+#endif
+
 	/* attach linear solver module, using the default value of maxl */
 	linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
-	CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER '%s'",linsolver);
+	MSG("ASSIGNING LINEAR SOLVER '%s'",linsolver);
 	if (strcmp(linsolver, "ASCEND") == 0) {
-		CONSOLE_DEBUG("ASCEND DIRECT SOLVER, size = %d",integ->n_y);
-		IDAASCEND(ida_mem, integ->n_y);
-		IDAASCENDSetJacFn(ida_mem, &integrator_ida_sjex, (void *) integ);
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING
+			,"The experimental ASCEND direct linear solver is unavailable with SUNDIALS %d; using DENSE instead"
+			,SUNDIALS_VERSION_MAJOR
+		);
+		linsolver = "DENSE";
+	}
 
-		enginedata->flagfntype = "IDAASCEND";
-		enginedata->flagfn = &IDAASCENDGetLastFlag;
-		enginedata->flagnamefn = &IDAASCENDGetReturnFlagName;
-
-	} else if (strcmp(linsolver, "DENSE") == 0) {
-		CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",integ->n_y);
-		flag = IDADense(ida_mem, integ->n_y);
-		switch (flag) {
-		case IDADENSE_SUCCESS:
-			break;
-		case IDADENSE_MEM_NULL:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
+	if (strcmp(linsolver, "DENSE") == 0) {
+		MSG("DENSE DIRECT SOLVER, size = %d",integ->n_y);
+#if SUNDIALS_VERSION_MAJOR >= 6
+		enginedata->dense_matrix = SUNDenseMatrix(integ->n_y, integ->n_y, enginedata->sunctx);
+		enginedata->linear_solver = SUNLinSol_Dense(y0, enginedata->dense_matrix, enginedata->sunctx);
+#else
+		enginedata->dense_matrix = SUNDenseMatrix(integ->n_y, integ->n_y);
+		enginedata->linear_solver = SUNLinSol_Dense(y0, enginedata->dense_matrix);
+#endif
+		if (enginedata->dense_matrix == NULL) {
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to allocate SUNMatrix for IDA");
 			return 5;
-		case IDADENSE_ILL_INPUT:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDADENSE is not compatible with current nvector module");
+		}
+		if (enginedata->linear_solver == NULL) {
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to allocate dense SUNLinearSolver for IDA");
 			return 5;
-		case IDADENSE_MEM_FAIL:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for IDADENSE");
-			return 5;
-		default:
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad return");
+		}
+		flag = IDASetLinearSolver(ida_mem, enginedata->linear_solver, enginedata->dense_matrix);
+		if (flag != IDALS_SUCCESS) {
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to attach dense linear solver to IDA");
 			return 5;
 		}
 
 		if (SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_AUTODIFF)) {
-			CONSOLE_DEBUG("USING AUTODIFF");
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-			flag = IDADlsSetDenseJacFn(ida_mem, &integrator_ida_djex);
-#else
-			flag = IDADenseSetJacFn(ida_mem, &integrator_ida_djex,
-					(void *) integ);
-#endif
-			switch (flag) {
-			case IDADENSE_SUCCESS:
-				break;
-			default:
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn");
+			MSG("USING AUTODIFF");
+			flag = IDASetJacFn(ida_mem, &integrator_ida_djex);
+			if (flag != IDALS_SUCCESS) {
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDASetJacFn");
 				return 6;
 			}
 		} else {
-			CONSOLE_DEBUG("USING NUMERICAL DIFF");
+			MSG("USING NUMERICAL DIFF");
 		}
 
 		enginedata->flagfntype = "IDADENSE";
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-		enginedata->flagfn = &IDADlsGetLastFlag;
-		enginedata->flagnamefn = &IDADlsGetReturnFlagName;
-#else
-		enginedata->flagfn = &IDADenseGetLastFlag;
-		enginedata->flagnamefn = &IDADenseGetReturnFlagName;
-#endif
+		enginedata->flagfn = &IDAGetLastLinFlag;
+		enginedata->flagnamefn = &IDAGetLinReturnFlagName;
 	} else {
 		/* remaining methods are all SPILS */
-		CONSOLE_DEBUG("IDA SPILS");
+		MSG("IDA SPILS");
 
 		maxl = SLV_PARAM_INT(&(integ->params),IDA_PARAM_MAXL);
-		CONSOLE_DEBUG("maxl = %d",maxl);
+		MSG("maxl = %d",maxl);
 
 		/* what preconditioner? */
 		pname = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_PREC);
 		if (strcmp(pname, "NONE") == 0) {
 			prec = NULL;
-		} else if (strcmp(pname, "JACOBI") == 0) {
+		} else if (strcmp(pname, "JACOBI") == 0 || strcmp(pname, "DIAG") == 0) {
 			prec = &prec_jacobi;
 		} else {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid preconditioner choice '%s'",pname);
@@ -629,14 +840,29 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem) {
 
 		/* which SPILS linear solver? */
 		if (strcmp(linsolver, "SPGMR") == 0) {
-			CONSOLE_DEBUG("IDA SPGMR");
-			flag = IDASpgmr(ida_mem, maxl); /* 0 means use the default max Krylov dimension of 5 */
+			MSG("IDA SPGMR");
+#if SUNDIALS_VERSION_MAJOR >= 6
+			enginedata->linear_solver = SUNLinSol_SPGMR(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl, enginedata->sunctx);
+#else
+			enginedata->linear_solver = SUNLinSol_SPGMR(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl);
+#endif
+			flag = enginedata->linear_solver == NULL ? IDALS_MEM_FAIL : IDASetLinearSolver(ida_mem, enginedata->linear_solver, NULL);
 		} else if (strcmp(linsolver, "SPBCG") == 0) {
-			CONSOLE_DEBUG("IDA SPBCG");
-			flag = IDASpbcg(ida_mem, maxl);
+			MSG("IDA SPBCG");
+#if SUNDIALS_VERSION_MAJOR >= 6
+			enginedata->linear_solver = SUNLinSol_SPBCGS(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl, enginedata->sunctx);
+#else
+			enginedata->linear_solver = SUNLinSol_SPBCGS(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl);
+#endif
+			flag = enginedata->linear_solver == NULL ? IDALS_MEM_FAIL : IDASetLinearSolver(ida_mem, enginedata->linear_solver, NULL);
 		} else if (strcmp(linsolver, "SPTFQMR") == 0) {
-			CONSOLE_DEBUG("IDA SPTFQMR");
-			flag = IDASptfqmr(ida_mem, maxl);
+			MSG("IDA SPTFQMR");
+#if SUNDIALS_VERSION_MAJOR >= 6
+			enginedata->linear_solver = SUNLinSol_SPTFQMR(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl, enginedata->sunctx);
+#else
+			enginedata->linear_solver = SUNLinSol_SPTFQMR(y0, prec ? SUN_PREC_LEFT : SUN_PREC_NONE, maxl);
+#endif
+			flag = enginedata->linear_solver == NULL ? IDALS_MEM_FAIL : IDASetLinearSolver(ida_mem, enginedata->linear_solver, NULL);
 		} else {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
 			return 8;
@@ -645,63 +871,49 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem) {
 		if (prec) {
 			/* assign the preconditioner to the linear solver */
 			(prec->pcreate)(integ);
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-			IDASpilsSetPreconditioner(ida_mem,prec->psetup,prec->psolve);
-#else
-			IDASpilsSetPreconditioner(ida_mem, prec->psetup, prec->psolve,
-					(void *) integ);
-#endif
-			CONSOLE_DEBUG("PRECONDITIONER = %s",pname);
+			IDASetPreconditioner(ida_mem,prec->psetup,prec->psolve);
+			MSG("PRECONDITIONER = %s",pname);
 		} else {
-			CONSOLE_DEBUG("No preconditioner");
+			MSG("No preconditioner");
 		}
 
 		enginedata->flagfntype = "IDASPILS";
-		enginedata->flagfn = &IDASpilsGetLastFlag;
-		enginedata->flagnamefn = &IDASpilsGetReturnFlagName;
-
-		if (flag == IDASPILS_MEM_NULL) {
+		enginedata->flagfn = &IDAGetLastLinFlag;
+		enginedata->flagnamefn = &IDAGetLinReturnFlagName;
+		if (flag == IDALS_MEM_NULL) {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 			return 9;
-		} else if (flag == IDASPILS_MEM_FAIL) {
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDASpgmr)");
+		} else if (flag == IDALS_MEM_FAIL) {
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate IDA linear solver");
 			return 9;
-		}/* else success */
+		}
 
 
 		/* assign the J*v function */
 		if (SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_AUTODIFF)) {
-			CONSOLE_DEBUG("USING AUTODIFF");
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-			flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex);
-#else
-			flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex,
-					(void *) integ);
-#endif
-			if (flag == IDASPILS_MEM_NULL) {
+			MSG("USING AUTODIFF");
+			flag = IDASetJacTimes(ida_mem, NULL, &integrator_ida_jvex);
+			if (flag < 0) {
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 				return 10;
-			} else if (flag == IDASPILS_LMEM_NULL) {
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
-				return 10;
-			}/* else success */
+			}
 		} else {
-			CONSOLE_DEBUG("USING NUMERICAL DIFF");
+			MSG("USING NUMERICAL DIFF");
 		}
 
 		if (strcmp(linsolver, "SPGMR") == 0) {
 			/* select Gram-Schmidt orthogonalisation */
 			if (SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_GSMODIFIED)) {
-				CONSOLE_DEBUG("USING MODIFIED GS");
-				flag = IDASpilsSetGSType(ida_mem, MODIFIED_GS);
-				if (flag != IDASPILS_SUCCESS) {
+				MSG("USING MODIFIED GS");
+				flag = SUNLinSol_SPGMRSetGSType(enginedata->linear_solver, SUN_MODIFIED_GS);
+				if (flag != SUNLS_SUCCESS) {
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
 					return 11;
 				}
 			} else {
-				CONSOLE_DEBUG("USING CLASSICAL GS");
-				flag = IDASpilsSetGSType(ida_mem, CLASSICAL_GS);
-				if (flag != IDASPILS_SUCCESS) {
+				MSG("USING CLASSICAL GS");
+				flag = SUNLinSol_SPGMRSetGSType(enginedata->linear_solver, SUN_CLASSICAL_GS);
+				if (flag != SUNLS_SUCCESS) {
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
 					return 11;
 				}
@@ -722,7 +934,8 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem) {
 
 int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 		realtype tout1, realtype t0, N_Vector y0, N_Vector yp0) {
-	int i, flag, flag1;
+	int i, flag = 0;
+	long int flag1;
 	int icopt; /* initial conditions strategy */
 	N_Vector id;
 
@@ -734,26 +947,30 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 
 	icopt = 0;
 	if (strcmp(SLV_PARAM_CHAR(&integ->params,IDA_PARAM_CALCIC), "Y") == 0) {
-		CONSOLE_DEBUG("Solving initial conditions using values of yddot");
+		MSG("Solving initial conditions using values of yddot");
 		icopt = IDA_Y_INIT;
 		asc_assert(icopt!=0);
 	} else if (strcmp(SLV_PARAM_CHAR(&integ->params,IDA_PARAM_CALCIC), "YA_YDP")
 			== 0) {
-		CONSOLE_DEBUG("Solving initial conditions using values of yd");
+		MSG("Solving initial conditions using values of yd");
 		icopt = IDA_YA_YDP_INIT;
 		asc_assert(icopt!=0);
+#if SUNDIALS_VERSION_MAJOR >= 6
+		id = N_VNew_Serial(integ->n_y, enginedata->sunctx);
+#else
 		id = N_VNew_Serial(integ->n_y);
+#endif
 		for (i = 0; i < integ->n_y; ++i) {
 			if (integ->ydot[i] == NULL) {
 				NV_Ith_S(id, i) = 0.0;
 #ifdef SOLVE_DEBUG
 				varname = var_make_name(integ->system, integ->y[i]);
-				CONSOLE_DEBUG("y[%d] = '%s' is pure algebraic",i,varname);
+				MSG("y[%d] = '%s' is pure algebraic",i,varname);
 				ASC_FREE(varname);
 #endif
 			} else {
 #ifdef SOLVE_DEBUG
-				CONSOLE_DEBUG("y[%d] is differential",i);
+				MSG("y[%d] is differential",i);
 #endif
 				NV_Ith_S(id, i) = 1.0;
 			}
@@ -769,31 +986,29 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 
 	if (icopt) {
 
-		CONSOLE_DEBUG("SOLVING INITIAL CONDITIONS IDACalcIC (tout1 = %f)", tout1);
+		MSG("SOLVING INITIAL CONDITIONS IDACalcIC (tout1 = %f)", tout1);
 
 #ifdef ASC_SIGNAL_TRAPS
 		/* catch SIGFPE if desired to */
 		if (enginedata->safeeval) {
-			CONSOLE_DEBUG("SETTING TO IGNORE SIGFPE...");
+			MSG("SETTING TO IGNORE SIGFPE...");
 			Asc_SignalHandlerPush(SIGFPE, SIG_DFL);
 		} else {
 # ifdef FEX_DEBUG
-			CONSOLE_DEBUG("SETTING TO CATCH SIGFPE...");
+			MSG("SETTING TO CATCH SIGFPE...");
 # endif
 			Asc_SignalHandlerPushDefault(SIGFPE);
 		}
 		if (setjmp(g_fpe_env) == 0) {
 #endif
 
-# if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=3
+# if SUNDIALS_VERSION_MAJOR >= 5
 			flag = IDACalcIC(ida_mem, icopt, tout1);/* new API from v2.3  */
-# else
-			flag = IDACalcIC(ida_mem, t0, y0, yp0, icopt, tout1);
 # endif
 			/* check flags and output status */
 			switch (flag) {
 			case IDA_SUCCESS:
-				CONSOLE_DEBUG("Initial conditions solved OK");
+				MSG("Initial conditions solved OK");
 				break;
 
 			case IDA_LSETUP_FAIL:
@@ -819,7 +1034,21 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve initial condition (IDACalcIC)");
 				return 12;
 			}
-#ifdef ASC_SIGNAL_TRAPS
+# if SUNDIALS_VERSION_MAJOR >= 5
+			flag = IDAGetConsistentIC(ida_mem, y0, yp0);
+			if(flag != IDA_SUCCESS){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to retrieve consistent initial conditions");
+				return 14;
+			}
+			integrator_set_y(integ, NV_DATA_S(y0));
+			integrator_set_ydot(integ, NV_DATA_S(yp0));
+			flag = IDAReInit(ida_mem, t0, y0, yp0);
+			if(flag != IDA_SUCCESS){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to reinitialise IDA with consistent initial conditions");
+				return 15;
+			}
+# endif
+	#ifdef ASC_SIGNAL_TRAPS
 		} else {
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Floating point error while solving initial conditions");
 			return 13;
@@ -828,9 +1057,9 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 		if (enginedata->safeeval) {
 			Asc_SignalHandlerPop(SIGFPE, SIG_DFL);
 		} else {
-			CONSOLE_DEBUG("pop...");
+			MSG("pop...");
 			Asc_SignalHandlerPopDefault(SIGFPE);
-			CONSOLE_DEBUG("...pop");
+			MSG("...pop");
 		}
 #endif
 	}/* icopt */
@@ -842,12 +1071,9 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 int ida_root_init(IntegratorSystem *integ, void *ida_mem) {
 	IntegratorIdaData *enginedata = integ->enginedata;
 
-	if (enginedata->nbnds) {
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-		IDARootInit(ida_mem, enginedata->nbnds, &integrator_ida_rootfn);
-#else
-		IDARootInit(ida_mem, enginedata->nbnds, &integrator_ida_rootfn,
-				(void *) integ);
+	if (enginedata->nroots) {
+#if SUNDIALS_VERSION_MAJOR >= 5
+		IDARootInit(ida_mem, enginedata->nroots, &integrator_ida_rootfn);
 #endif
 	}
 
@@ -867,16 +1093,14 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 	realtype t0;
 	N_Vector y0, yp0;
 
-	y0 	= ida_bnd_new_zero_NV(integ->n_y);
-	yp0 = ida_bnd_new_zero_NV(integ->n_y);
+	y0 	= ida_bnd_new_zero_NV(integ, integ->n_y);
+	yp0 = ida_bnd_new_zero_NV(integ, integ->n_y);
 
 	int i;
-	double val;
-	CONSOLE_DEBUG("Values of the derivatives present in the model");
+	MSG("Values of the derivatives present in the model");
 	for(i=0; i < integ->n_y; i++) {
 		if(integ->ydot[i]){
-			val = var_value(integ->ydot[i]);
-			CONSOLE_DEBUG("ydot[%d]= %g", i, val);
+			MSG("ydot[%d]= %g", i, var_value(integ->ydot[i]));
 		}
 	}
 
@@ -884,19 +1108,17 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 	ida_retrieve_IVs(integ, t0, y0, yp0);
 
 #ifdef IDA_BND_DEBUG
-	CONSOLE_DEBUG("Retrived IVs BEFORE IDACalcIC \n y0:");
+	MSG("Retrieved IVs before IDACalcIC: y0");
 	N_VPrint_Serial(y0);
-	CONSOLE_DEBUG(yp0);
+	MSG("Retrieved IVs before IDACalcIC: yp0");
 	N_VPrint_Serial(yp0);
-	CONSOLE_DEBUG("rah rah")
-
 #endif
 
 	/* allocate internal memory  */
 	ida_malloc(integ, ida_mem, t0, y0, yp0);
 
 	/* set optional inputs... */
-	ida_set_optional_inputs(integ, ida_mem);
+	ida_set_optional_inputs(integ, ida_mem, y0);
 
 	/* calculate initial conditions */
 	ida_setup_IC(integ, ida_mem, tout1, t0, y0, yp0);
@@ -923,8 +1145,8 @@ int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem,
 	realtype t0;
 	N_Vector y0, yp0;
 
-	y0 	= ida_bnd_new_zero_NV(integ->n_y);
-	yp0 = ida_bnd_new_zero_NV(integ->n_y);
+	y0 	= ida_bnd_new_zero_NV(integ, integ->n_y);
+	yp0 = ida_bnd_new_zero_NV(integ, integ->n_y);
 
 	t0 = integrator_get_t(integ);
 	ida_retrieve_IVs(integ, t0, y0, yp0);
@@ -936,8 +1158,12 @@ int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem,
 		ERROR_REPORTER_HERE(ASC_PROG_ERR, "Reinitialisation failed.");
 	}
 
+	ida_set_optional_inputs(integ, ida_mem, y0);
+
 	/* calculate initial conditions */
 	ida_setup_IC(integ, ida_mem, tout1, t0, y0, yp0);
+
+	ida_root_init(integ, ida_mem);
 
 	/* Clean up */
 	N_VDestroy_Serial(y0);
@@ -962,14 +1188,17 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	void *ida_mem;
 	int t_index;
 	realtype t0, tout, tret, tol = 0.0001;
-	N_Vector ypret, yret;
+	N_Vector ypret = NULL, yret = NULL;
 	IntegratorIdaData *enginedata;
-	int i, flag;
+	int i, flag = 0;
+	int statuscode = 0;
 
 	int *rootsfound;			/** < IDA rootfinder reports root index in here */
 	int *rootdir;				/** < Used to tell IDA to ignore doulve crossings */
+	int *crossed_to_state;		/** < Boundary truth states immediately after the crossing */
 	int *bnd_cond_states;		/** < Record of boundary states so that IDA can tell LRSlv
-									   how to evaluate a boundary crossing */
+										   how to evaluate a boundary crossing */
+	int n_bnd_cond_states;
 
 	int	need_to_reconfigure;	/** < Flag to indicate system rebuild after crossing */
 	int need_to_reinteg = 0;	/** < Flag for when crossings happen on or very close to timesteps */
@@ -979,13 +1208,17 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	char *relname;
 #endif
 
-	CONSOLE_DEBUG("STARTING IDA...");
+	MSG("STARTING IDA...");
 	/* Setup boundary list */
 	enginedata = integrator_ida_enginedata(integ);
-	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
-	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
+	bnd_cond_states = NULL;
+	n_bnd_cond_states = 0;
 	enginedata->safeeval = SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_SAFEEVAL);
-	CONSOLE_DEBUG("safeeval = %d",enginedata->safeeval);
+	MSG("safeeval = %d",enginedata->safeeval);
+	if(ida_prepare_event_window(integ) != 0){
+		statuscode = 1;
+		goto ida_cleanup;
+	}
 
 
 
@@ -996,26 +1229,34 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
 	if (enginedata->nbnds) {
-
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR<4
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING, "Warning: boundary detection is"
-				"unreliable with SUNDIALS pre version 2.4.0. Please update if you"
-				"wish to use IDA for conditional integration");
-#endif
-		bnd_cond_states = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
-
-		for (i = 0; i < enginedata->nbnds; i++) {
-			bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+		if(ida_refresh_bnd_cond_states(integ, &bnd_cond_states, &n_bnd_cond_states) != 0){
+			statuscode = 1;
+			goto ida_cleanup;
 		}
-		ida_setup_lrslv(integ);
+		statuscode = ida_setup_lrslv(integ);
+		if(statuscode != 0){
+			goto ida_cleanup;
+		}
 
+	}
+	if(ida_refresh_event_roots(integ) != 0){
+		statuscode = 1;
+		goto ida_cleanup;
+	}
+	if(ida_refresh_bnd_cond_states(integ, &bnd_cond_states, &n_bnd_cond_states) != 0){
+		statuscode = 1;
+		goto ida_cleanup;
 	}
 
 	/* store reference to list of relations (in enginedata) */
 		ida_load_rellist(integ);
 
 	/* create IDA object */
+#if SUNDIALS_VERSION_MAJOR >= 6
+	ida_mem = IDACreate(enginedata->sunctx);
+#else
 	ida_mem = IDACreate();
+#endif
 
 	/* Setup parameter inputs and initial conditions for IDA. */
 	tout = samplelist_get(integ->samples, start_index + 1);
@@ -1031,8 +1272,8 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	integrator_output_write_obs(integ);
 
 	/* specify where the returned values should be stored */
-	yret 	= ida_bnd_new_zero_NV(integ->n_y);
-	ypret 	= ida_bnd_new_zero_NV(integ->n_y);
+	yret 	= ida_bnd_new_zero_NV(integ, integ->n_y);
+	ypret 	= ida_bnd_new_zero_NV(integ, integ->n_y);
 
 	/* advance solution in time, return values as yret and derivatives as ypret */
 	integ->currentstep = 1;
@@ -1043,7 +1284,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 		asc_assert(tout > t0);
 
 #ifdef SOLVE_DEBUG
-		CONSOLE_DEBUG("Integrating from t0 = %f to t = %f", t0, tout);
+		MSG("Integrating from t0 = %f to t = %f", t0, tout);
 #endif
 
 
@@ -1059,7 +1300,8 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 		do {
 			if(need_to_reinteg) {
-				CONSOLE_DEBUG("Resuming integration from %f to %f", integrator_get_t(integ), tout);
+				MSG("Resuming integration from %f to %f", integrator_get_t(integ), tout);
+				ida_hybrid_trace(integ, "before_resumed_idasolve", integrator_get_t(integ));
 				integrator_output_write(integ);
 			}
 
@@ -1081,21 +1323,22 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 			Asc_SignalHandlerPopDefault(SIGINT);
 #endif
 
-			if (enginedata->nbnds) {
+			if (enginedata->nroots) {
 
 
 				if (flag == IDA_ROOT_RETURN) {
-					CONSOLE_DEBUG("IDA reports root found!");
+					MSG("IDA reports root found!");
 
 					/* Store the root index */
-					rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
-					rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
+					rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nroots);
+					rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nroots);
+					crossed_to_state = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds > 0 ? enginedata->nbnds : 1);
 
-					if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
-						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
-						return 14;
-					}
-
+						if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
+							ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
+							statuscode = 14;
+							goto root_cleanup;
+						}
 #ifdef SOLVE_DEBUG
 					for (i = 0; i < enginedata->nbnds; i++) {
 
@@ -1108,23 +1351,47 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						}
 					}
 #endif
-					need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
-							bnd_cond_states);
+					need_to_reconfigure = 0;
+					if(enginedata->nbnds){
+						need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
+								bnd_cond_states);
+					}
+					for(i = enginedata->nbnds; i < enginedata->nroots; ++i){
+						if(rootsfound[i] != 0){
+							need_to_reconfigure = 1;
+						}
+					}
 
 					if (need_to_reconfigure) {
-
-						if (ida_bnd_update_relist(integ) != 0) {
-							/* system not square, failure */
-							return 1;
+						if(ida_check_event_accumulation(integ, tret) != 0){
+							statuscode = 1;
+							goto root_cleanup;
 						}
-						CONSOLE_DEBUG("Boundaries were crossed; "
+						for(i = 0; i < enginedata->nbnds; ++i){
+							crossed_to_state[i] = bnd_cond_states[i];
+						}
+						MSG("Boundaries were crossed; "
 								"need to reinitialise solver...");
 						/* so, now we need to restart the integration. we will assume that
 						 everything changes: number of variables, etc, etc, etc. */
 
-						/* First output data exactly on the boundary */
-						 integrator_output_write(integ);
-						 integrator_output_write_obs(integ);
+						/* First write the left-limit state exactly at the event time. */
+						integrator_set_t(integ, (double)tret);
+						integrator_set_y(integ, NV_DATA_S(yret));
+						integrator_set_ydot(integ, NV_DATA_S(ypret));
+						integrator_output_write(integ);
+						integrator_output_write_obs(integ);
+						 ida_hybrid_trace(integ, "before_event_iterate", tret);
+
+							if (ida_bnd_event_iterate(integ, ida_mem, tout) != 0) {
+								statuscode = 1;
+								goto root_cleanup;
+							}
+						/* Then write the settled right-limit state at the same event time. */
+						integrator_set_t(integ, (double)tret);
+						integrator_output_write(integ);
+						integrator_output_write_obs(integ);
+						ida_hybrid_trace(integ, "after_event_iterate", integrator_get_t(integ));
 
 						/* Need to destroy and rebuild system */
 						//IDAFree(ida_mem);
@@ -1141,32 +1408,61 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						}
 
 						ida_reinit_integrator(integ, ida_mem, tout);
+						/*
+						 * Emit the post-reinitialisation consistent state at the same
+						 * event time. Default CLI output collapses this back to
+						 * endpoints, while '--microstates all' can expose it.
+						 */
+						integrator_output_write(integ);
+						integrator_output_write_obs(integ);
 						/* n_y may have changed */
 						N_VDestroy_Serial(yret);
 						N_VDestroy_Serial(ypret);
 
-						yret = N_VNew_Serial(integ->n_y);
-						ypret = N_VNew_Serial(integ->n_y);
+						yret = ida_bnd_new_zero_NV(integ, integ->n_y);
+						ypret = ida_bnd_new_zero_NV(integ, integ->n_y);
 
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-						/* set rootdir to -1*rootsfound to set IDA
-						 * to ignore double crossings */
+#if SUNDIALS_VERSION_MAJOR >= 5
+						/* If the post-event state is still on a boundary, suppress
+						 * the just-seen crossing direction to avoid an immediate
+						 * double hit. Only do this when the post-event state is
+						 * still on the new side of the crossed boundary; if REINIT
+						 * has moved the system to the opposite side we must allow
+						 * the next same-direction crossing. */
+						if(ida_refresh_bnd_cond_states(integ, &bnd_cond_states, &n_bnd_cond_states) != 0){
+							statuscode = 1;
+							goto root_cleanup;
+						}
 						for(i = 0; i < enginedata->nbnds; i++) {
-							rootdir[i] = -1*rootsfound[i];
+							if(rootsfound[i] != 0
+								&& bnd_cond_states[i] == crossed_to_state[i]){
+								rootdir[i] = rootsfound[i];
+							}else{
+								rootdir[i] = 0;
+							}
+						}
+						for(i = enginedata->nbnds; i < enginedata->nroots; ++i){
+							rootdir[i] = 0;
 						}
 
 						IDASetRootDirection(ida_mem, rootdir);
 #endif
 
 					} /* need to reconfigure */
-					ASC_FREE(rootsfound);
-					ASC_FREE(rootdir);
-				} /* IDA_ROOT_RETURN */
-			} /* nbnds */
+root_cleanup:
+						ASC_FREE(rootsfound);
+						ASC_FREE(rootdir);
+						ASC_FREE(crossed_to_state);
+						if(statuscode != 0){
+							goto ida_cleanup;
+						}
+					} /* IDA_ROOT_RETURN */
+				} /* nbnds */
 
 		} while (need_to_reinteg); /* end of solve time step */
 
 		if (!skipping_output) {
+			ida_hybrid_trace(integ, "before_final_output", tret);
 			/* pass the values of everything back to the compiler */
 			integrator_set_t(integ, (double) tret);
 			integrator_set_y(integ, NV_DATA_S(yret));
@@ -1185,8 +1481,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	}/* loop through next sample timestep */
 
-	/* -- close the IntegratorReporter */
-	integrator_output_close(integ);
+ida_cleanup:
+		/* -- close the IntegratorReporter */
+		integrator_output_close(integ);
 
 	/* get optional outputs */
 #ifdef STATS_DEBUG
@@ -1200,8 +1497,12 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 
 	/* free solution memory */
-	N_VDestroy_Serial(yret);
-	N_VDestroy_Serial(ypret);
+	if(yret != NULL){
+		N_VDestroy_Serial(yret);
+	}
+	if(ypret != NULL){
+		N_VDestroy_Serial(ypret);
+	}
 
 	/* free bnd states if appropriate */
 	if (enginedata->nbnds) {
@@ -1211,10 +1512,14 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	/* free solver memory */
 	IDAFree(&ida_mem);
 
-	if (flag < -500) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", tout);
-		return -flag;
-	}
+		if (statuscode != 0) {
+			return statuscode;
+		}
+
+		if (flag < -500) {
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", tout);
+			return -flag;
+		}
 
 	if (flag < 0) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Solving aborted while attempting t = %f", tout);
@@ -1235,32 +1540,14 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
  @return IDA_SUCCESS on success.
  */
+#ifdef STATS_DEBUG
 static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
-
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
-
-	int res;
-
-	/*
-	 There is an error in the documentation for this function in Sundials 2.2.
-	 According the the header file, the hinused stat is not provided.
-	 */
-	res = IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals,
-			&s->nlinsetups, &s->netfails, &s->qlast, &s->qcur, &s->hlast,
-			&s->hcur, &s->tcur);
-
-	/* get the missing statistic */
-	IDAGetActualInitStep(ida_mem, &s->hinused);
-
-	return res;
-#else
 
 	return IDAGetIntegratorStats(ida_mem, &s->nsteps, &s->nrevals, &s->nlinsetups
 			,&s->netfails, &s->qlast, &s->qcur, &s->hinused
 			,&s->hlast, &s->hcur, &s->tcur
 	);
-
-#endif
 }
+#endif
 
 /* vim: set ts=4: */

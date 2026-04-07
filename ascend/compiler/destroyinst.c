@@ -72,6 +72,7 @@
 #include "instance_types.h"
 #include "cmpfunc.h"
 #include "slvreq.h"
+#include "simstatus.h"
 
 
 static void DeleteIPtr(struct Instance *i){
@@ -80,6 +81,7 @@ static void DeleteIPtr(struct Instance *i){
   switch(i->t) {
   case SIM_INST:
 	slvreq_sim_destroy_hooks(i);
+	asc_simstatus_destroy(i);
     (*InterfacePtrDelete)(i,SIM_INST(i)->interface_ptr);
     SIM_INST(i)->interface_ptr = NULL;
     return;

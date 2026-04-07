@@ -1,0 +1,22 @@
+source,url,T_K,x_ethanol,x_water,gamma_ethanol,gamma_water
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.00,1.00,7.6261,1.0000
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.05,0.95,4.8328,1.0113
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.10,0.90,3.4330,1.0393
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.15,0.85,2.6427,1.0786
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.20,0.80,2.1569,1.1258
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.25,0.75,1.8390,1.1789
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.30,0.70,1.6208,1.2366
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.35,0.65,1.4657,1.2978
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.40,0.60,1.3523,1.3618
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.45,0.55,1.2677,1.4283
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.50,0.50,1.2036,1.4968
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.55,0.45,1.1544,1.5673
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.60,0.40,1.1163,1.6401
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.65,0.35,1.0865,1.7156
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.70,0.30,1.0630,1.7951
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.75,0.25,1.0444,1.8804
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.80,0.20,1.0297,1.9752
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.85,0.15,1.0179,2.0852
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.90,0.10,1.0088,2.2209
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,0.95,0.05,1.0025,2.4010
+DDBST Original UNIFAC,http://ddbonline.ddbst.com/UNIFACCalculation/UNIFACCalculationCGI.exe?component1=Ethanol&component2=Water&temperatures=298&calculate=Calculate,298.0,1.00,0.00,1.0000,2.6621

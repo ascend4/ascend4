@@ -140,10 +140,12 @@ class UnitsDialog:
 
 		##### CELSIUS TEMPERATURE WORKAROUND
 		if str(d) == "TMP":
-			units = Preferences().getPreferredUnitsOrigin(str(T.getName()))
-			if units == CelsiusUnits.get_celsius_sign():
-				self.current_units_name = CelsiusUnits.get_celsius_sign()
-			m.append(CelsiusUnits.get_units_row(self.current_units_name == CelsiusUnits.get_celsius_sign()))
+			units = CelsiusUnits.normalize_units_name(Preferences().getPreferredUnitsOrigin(str(T.getName())))
+			if units in CelsiusUnits.get_temperature_units():
+				self.current_units_name = CelsiusUnits.get_display_symbol(units)
+			for tunits in CelsiusUnits.get_temperature_units():
+				label = CelsiusUnits.get_display_symbol(tunits)
+				m.append(CelsiusUnits.get_units_row(self.current_units_name == label, tunits))
 		##### CELSIUS TEMPERATURE WORKAROUND
 
 		for u in self.units:
@@ -178,9 +180,10 @@ class UnitsDialog:
 
 		##### CELSIUS TEMPERATURE WORKAROUND
 		if str(T.getDimensions()) == "TMP":
-			if self.selected_units == CelsiusUnits.get_celsius_sign():
-				self.browser.prefs.setPreferredUnits(str(T.getName()), self.selected_units)
-				self.current_units_name = self.selected_units
+			selected_temp_units = CelsiusUnits.normalize_units_name(self.selected_units)
+			if selected_temp_units in CelsiusUnits.get_temperature_units():
+				self.browser.prefs.setPreferredUnits(str(T.getName()), selected_temp_units)
+				self.current_units_name = CelsiusUnits.get_display_symbol(selected_temp_units)
 				return
 			self.browser.prefs.setPreferredUnits(str(T.getName()), "")
 		##### CELSIUS TEMPERATURE WORKAROUND

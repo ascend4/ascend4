@@ -51,6 +51,7 @@
 #include <ascend/system/relman.h>
 #include <ascend/system/block.h>
 #include <ascend/solver/solver.h>
+#include <ascend/compiler/derivinst.h>
 
 #define CANOPTIMIZE FALSE
 /**< TRUE iff optimization code completed, meaning relman_diff fixed. */
@@ -281,6 +282,46 @@ static int check_system(qrslv_system_t sys){
   default:
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"System reused or never allocated.");
     return 1;
+  }
+}
+
+static int qrslv_var_is_effectively_fixed(struct var_variable *var){
+  struct Instance *inst;
+  if(var == NULL){
+    return 0;
+  }
+  inst = (struct Instance *)var_instance(var);
+  if(inst != NULL
+      && IsDerivativeInstance(inst)
+      && DerivativeInstanceUsesAlgebraicDefault(inst)){
+    return 1;
+  }
+  return var_fixed(var) ? 1 : 0;
+}
+
+static void qrslv_apply_derivative_default_flags(qrslv_system_t sys){
+  struct var_variable **vp;
+  if(sys == NULL || sys->vlist == NULL){
+    return;
+  }
+  for(vp = sys->vlist; *vp != NULL; ++vp){
+    struct var_variable *var = *vp;
+    struct Instance *inst;
+    if(var == NULL){
+      continue;
+    }
+    inst = (struct Instance *)var_instance(var);
+    if(inst != NULL
+        && IsDerivativeInstance(inst)
+        && DerivativeInstanceUsesAlgebraicDefault(inst)){
+      var_set_flagbit(var, VAR_FIXED, TRUE);
+      var_set_potentially_fixed(var, TRUE);
+    }else{
+      var_set_potentially_fixed(var, FALSE);
+      if(!var_fixed(var)){
+        var_set_flagbit(var, VAR_FIXED, FALSE);
+      }
+    }
   }
 }
 
@@ -2713,7 +2754,12 @@ static void find_next_unconverged_block( qrslv_system_t sys){
      debug_out_var_values(stderr,sys);
      debug_out_rel_residuals(stderr,sys);
 #endif
-   }while(!sys->s.converged && block_feasible(sys) && !OPTIMIZING(sys));
+     /*
+      * Always pass singleton blocks through qrslv_iterate so they get a
+      * direct-solve attempt instead of being skipped as merely "feasible".
+      */
+   }while(!sys->s.converged && block_feasible(sys) && !OPTIMIZING(sys)
+      && sys->s.block.current_size != 1);
 
    reorder_new_block(sys);
 }
@@ -3349,6 +3395,7 @@ static void structural_analysis(slv_system_t server, qrslv_system_t sys){
   rel_filter_t rfilter;
 
   /* The server has marked incidence flags already. */
+  qrslv_apply_derivative_default_flags(sys);
 
   /* count included equalities */
   rfilter.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
@@ -3537,7 +3584,7 @@ static int32 qrslv_dof_changed(qrslv_system_t sys){
 
   /* search for vars that were fixed and are now free */
   for( ind = sys->vused; ind < sys->vtot; ++ind ) {
-    if(!var_fixed(sys->vlist[ind]) && var_active(sys->vlist[ind]) ) {
+    if(!qrslv_var_is_effectively_fixed(sys->vlist[ind]) && var_active(sys->vlist[ind]) ) {
       ++result;
     }
   }
@@ -3549,7 +3596,7 @@ static int32 qrslv_dof_changed(qrslv_system_t sys){
   }
   /* search for vars that were free and are now fixed */
   for( ind = sys->vused -1; ind >= 0; --ind ) {
-    if(var_fixed(sys->vlist[ind]) ||  !var_active(sys->vlist[ind])) {
+    if(qrslv_var_is_effectively_fixed(sys->vlist[ind]) ||  !var_active(sys->vlist[ind])) {
       ++result;
     }
   }
@@ -3625,6 +3672,7 @@ static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
   }
 
   if(sys->presolved > 0) { /* system has been presolved before */
+    qrslv_apply_derivative_default_flags(sys);
     if(!qrslv_dof_changed(sys) /* no changes in fixed or included flags */
        && SLV_PARAM_BOOL(&(sys->p),PARTITION) == sys->J.old_partition) {
 #if DEBUG
@@ -3647,6 +3695,7 @@ static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
     for( ind = 0; ind < sys->vtot; ++ind ) {
       var_set_in_block(vp[ind],FALSE);
     }
+    qrslv_apply_derivative_default_flags(sys);
     rp=sys->rlist;
     for( ind = 0; ind < sys->rtot; ++ind ) {
       rel_set_in_block(rp[ind],FALSE);
@@ -3786,6 +3835,15 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
   }
 
   if(sys->s.block.current_block==-1) {
+    if(SLV_PARAM_BOOL(&(sys->p),RELNOMSCALE) == 1 /*|| (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0) ||
+       (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM+ITERATIVE") == 0)*/ ){
+      /*
+       * Relation satisfaction checks in find_next_unconverged_block depend on
+       * relation nominals when convopt == RELNOM_SCALE, so compute them before
+       * the first block-feasibility pass.
+       */
+      calc_relnoms(sys);
+    }
     find_next_unconverged_block(sys);
 	if(!sys->s.calc_ok){
 #if DEBUG
@@ -3794,10 +3852,6 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
       return 10;
 	}
     update_status(sys);
-    if(SLV_PARAM_BOOL(&(sys->p),RELNOMSCALE) == 1 /*|| (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM") == 0) ||
-       (strcmp(SLV_PARAM_CHAR(&(sys->p),SCALEOPT),"RELNOM+ITERATIVE") == 0)*/ ){
-      calc_relnoms(sys);
-    }
     return 0; /* not sure if this is an error? */
   }
   if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||

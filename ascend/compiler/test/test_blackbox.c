@@ -221,6 +221,10 @@ static void test_pass23(void){
 	load_solve_test("passarray","pass23");
 }
 
+static void test_pass24(void){
+	load_solve_test("passarray","pass24");
+}
+
 /**
    Test that blackbox cache is torn down properly after destroy.
 */
@@ -260,6 +264,7 @@ static void test_cache_teardown(void){
 	T(pass20) \
 	T(pass22) \
 	T(pass23) \
+	T(pass24) \
     T(cache_teardown)
 
 REGISTER_TESTS_SIMPLE(compiler_blackbox, TESTS)

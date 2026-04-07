@@ -20,6 +20,7 @@
 
 #define TESTS(T) \
 	T(basics) \
+	T(tables) \
 	T(dataset) \
 	T(relation) \
 	T(autodiff) \
@@ -28,6 +29,7 @@
 	T(fixfree) \
 	T(blackbox) \
 	T(fixassign) \
+	T(simstatus) \
 	T(dimen) \
 	T(fractions) \
 	T(units) \
@@ -49,6 +51,7 @@
 	T(instantiate_arr) \
 	T(instantiate_for) \
 	T(instantiate_when_select) \
+	T(instantiate_param_refine) \
 	T(instantiate_alias) \
 	T(instantiate_set_type_errors) \
 	T(instantiate_cond) \

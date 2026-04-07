@@ -1,0 +1,58 @@
+REQUIRE "johnpye/fprops/reactive_equil.a4l";
+
+MODEL reactor_equil_feoh_700c_demo;
+	components IS_A set OF symbol_constant;
+	components :== ['Fe_bcc', 'Wus_FeO', 'Wus_FeO1p5', 'hydrogen', 'water'];
+
+	pkg IS_A reactive_package(components);
+	pkg.source :== 'Fe_bcc=hidayat_2015;Wus_FeO=hidayat_2015;Wus_FeO1p5=hidayat_2015;hydrogen=reaktoro_clone_supcrt98;water=reaktoro_clone_supcrt98';
+	pkg.algorithm :== 'auto';
+
+	R IS_A reactor_equil(pkg);
+
+METHODS
+	METHOD default_self;
+		RUN R.default_self;
+
+		FIX R.inlet.T;
+		FIX R.inlet.P;
+		FIX R.inlet.f[components];
+		FIX R.outlet.T;
+		FIX R.DeltaP;
+
+		R.inlet.T := 973.15 {K};
+		R.inlet.P := 1 {bar};
+
+		R.inlet.f['Fe_bcc'] := 1 {mol/s};
+		R.inlet.f['Wus_FeO'] := 0.89420729859375 {mol/s};
+		R.inlet.f['Wus_FeO1p5'] := 0.10579270140625 {mol/s};
+		R.inlet.f['hydrogen'] := 1 {mol/s};
+		R.inlet.f['water'] := 0.006862442371808213 {mol/s};
+
+		R.outlet.T := 973.15 {K};
+		R.DeltaP := 0 {Pa};
+	END default_self;
+
+	METHOD self_test;
+		ASSERT R.outlet.f['Fe_bcc'] > 0.5 {mol/s};
+		ASSERT R.outlet.f['Wus_FeO'] > 0.5 {mol/s};
+		ASSERT R.outlet.f['Wus_FeO1p5'] > 0.05 {mol/s};
+		ASSERT abs(
+			ln(R.outlet.f['water'] / R.outlet.f['hydrogen']) / ln(10)
+			- (-2.1635212896)
+		) < 0.03;
+		ASSERT abs(
+			R.outlet.f['Wus_FeO1p5']
+			/ (R.outlet.f['Wus_FeO'] + R.outlet.f['Wus_FeO1p5'])
+			- 0.1057927014
+		) < 0.01;
+		ASSERT abs(R.Qdot) < 0.5 {kW};
+	END self_test;
+
+	METHOD on_load;
+		RUN default_self;
+	END on_load;
+END reactor_equil_feoh_700c_demo;
+
+MODEL reactive_equil_feoh_700c_demo REFINES reactor_equil_feoh_700c_demo;
+END reactive_equil_feoh_700c_demo;

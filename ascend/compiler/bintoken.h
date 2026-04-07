@@ -100,9 +100,13 @@ ASC_DLLSPEC int BinTokenSetOptionsDefault();
 ASC_DLLSPEC void BinTokenClearTables(void);
 
 /**
+ * Increments the binary-token table reference count for an additional share.
+ * This should be called when a compiled token relation share is duplicated.
+ */
+extern void BinTokenAddReference(int btable);
+
+/**
  * When all the references expire, we might unload the library.
- * Note there is no AddReference since all the references
- * are made 1 per share at load time.
  * This should be called each time a share that references
  * btable is destroyed, not each time a relation is destroyed.
  */

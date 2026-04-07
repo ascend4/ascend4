@@ -9,7 +9,7 @@ Import('libascend_env')
 srcs = Split("""
 
 	sensitivity.c ascFreeAllVars.c bisect.c kvalues.c
-	defaultall.c
+	defaultall.c initmode.c
 
 """)
 
@@ -20,4 +20,3 @@ for s in srcs:
 Return('objs')
 
 # vim: set syntax=python:
-

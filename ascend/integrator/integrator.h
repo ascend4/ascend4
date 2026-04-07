@@ -60,23 +60,20 @@
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/value_type.h>
 
 #include <ascend/linear/mtx.h>
 
 #include <ascend/system/slv_client.h>
 
 #include "samplelist.h"
+#include "pantelides.h"
 
 /*---------------------------*/
 
-// TODO FIXME do we need all integrator IDs to be declare in here, or is it 
-// OK to add them later at runtime...?
-
-#ifdef ASC_WITH_IDA
-# define IDA_OPTIONAL S I(IDA,integrator_ida_internals)
-#else
-# define IDA_OPTIONAL
-#endif
+// Integrator engines are discovered at runtime via package loading, so keep
+// the engine IDs stable regardless of which plugins were built.
+#define IDA_OPTIONAL S I(IDA,integrator_ida_internals)
 
 #ifdef ASC_WTH_DOPRI5
 # define DOPRI5_OPTIONAL S I(DOPRI5,integrator_dopri5_internals)
@@ -84,7 +81,7 @@
 # define DOPRI5_OPTIONAL
 #endif
 
-/* we add IDA to the list of integrators at build time, if it is selected */
+/* Integrator packages are loaded dynamically at runtime. */
 #define INTEG_LIST \
 	I(LSODE       ,integrator_lsode_internals) \
 	IDA_OPTIONAL \
@@ -142,6 +139,10 @@ typedef int IntegratorOutputWriteObsFn(struct IntegratorSystemStruct *);
 */
 typedef int IntegratorOutputCloseFn(struct IntegratorSystemStruct *);
 
+ASC_DLLSPEC int integrator_eval_direct_guard_root(const struct Expr *expr,
+	struct Instance *context, double *residual);
+ASC_DLLSPEC int integrator_direct_guard_rootable(const struct Expr *expr);
+
 /**
 	This struct allows arbitrary functions to be used for the reporting
 	of integrator progress.
@@ -185,6 +186,12 @@ typedef int IntegratorSolveFn(struct IntegratorSystemStruct *blsys
 	@return 0 on success.
 */
 
+typedef int IntegratorInitialiseFn(struct IntegratorSystemStruct *blsys);
+/**<
+	Optional engine-owned startup hook to solve any initialization problem
+	before time stepping begins.
+*/
+
 typedef int IntegratorWriteMatrixFn(const struct IntegratorSystemStruct *blsys, FILE *fp, const char *type);
 /**<
 	Write Matrix. This method allows the user to request output of 'a matrix'
@@ -216,6 +223,7 @@ typedef struct IntegratorInternalsStruct{
 	IntegratorCreateFn *createfn;
 	IntegratorParamsDefaultFn *paramsdefaultfn;
 	IntegratorAnalyseFn *analysefn;
+	IntegratorInitialiseFn *initialisefn;
 	IntegratorSolveFn *solvefn;
 	IntegratorWriteMatrixFn *writematrixfn; /* this is a general file-reporting mechanism actually */
 	IntegratorDebugFn *debugfn;
@@ -263,13 +271,16 @@ struct IntegratorSystemStruct{
   struct var_variable **y;    /**< array form of states */
   struct var_variable **ydot; /**< array form of derivatives */
   struct var_variable **obs;  /**< array form of observed variables */
+  struct Instance **observed_instances; /**< explicit typed observed instances */
   int *y_id;                  /**< array form of y/ydot user indices, for DAEs we use negatives here for derivative vars */
   int *obs_id;                /**< array form of obs user indices */
   int n_y;
   int n_ydot;
   int n_obs;
+  int n_observed_instances;
   int n_diffeqs;              /**< number of differential equations (used by idaanalyse) */
   int currentstep;            /**< current step number (also @see integrator_getnsamples) */
+  int initial_mode_prepared;  /**< one-shot INITIAL startup solve has been handled */
 
   /** @TODO move the following to the 'params' structure? Or maybe better not to? */
   int maxsubsteps;            /**< most steps between mesh poins */
@@ -320,6 +331,16 @@ ASC_DLLSPEC int integrator_debug(const IntegratorSystem *blsys, FILE *fp);
 /**<
 	Output debug info for the present integrator to file handle indicated.
 	What this will be depends on which integrator you are using.
+*/
+
+ASC_DLLSPEC int integrator_apply_reinits(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_apply_reinits_tracked(IntegratorSystem *blsys,
+	struct gl_list_t *applied_reinits);
+/**<
+	Apply active REINIT actions after event/WHEN reconfiguration and before
+	the engine performs any consistent restart calculations.
+
+	@return number of REINIT actions applied, or `-1` on error.
 */
 
 ASC_DLLSPEC void integrator_free(IntegratorSystem *blsys);
@@ -537,6 +558,34 @@ ASC_DLLSPEC struct var_variable *integrator_get_observed_var(IntegratorSystem *b
 	Returns the var_variable contained in the ith position in the observed variable list.
 */
 
+ASC_DLLSPEC int integrator_set_observed_instances(IntegratorSystem *blsys, struct Instance **instances, int n);
+/**<
+	Set an explicit typed observation list for the integrator.
+
+	If `instances` is NULL or `n <= 0`, any explicit list is cleared and the
+	legacy `obs_id`-derived observation list remains available.
+*/
+
+ASC_DLLSPEC int integrator_get_num_observed_instances(IntegratorSystem *blsys);
+/**<
+	Return the number of explicitly observed items, if present, otherwise the
+	number of legacy real-valued observed solver variables.
+*/
+
+ASC_DLLSPEC struct Instance *integrator_get_observed_instance(IntegratorSystem *blsys, const long i);
+/**<
+	Return the ith observed instance from the explicit observed list, or from
+	the legacy `obs_id`-derived observation list if no explicit list exists.
+*/
+
+ASC_DLLSPEC int integrator_get_observation_value(IntegratorSystem *blsys, const long i, struct value_t *value);
+/**<
+	Return the current value of the ith observed instance in typed form.
+
+	The caller owns the returned `value_t` contents and must eventually call
+	`DestroyValue` on it.
+*/
+
 ASC_DLLSPEC struct var_variable *integrator_get_independent_var(IntegratorSystem *blsys);
 /**<
 	Return a pointer to the variable identified as the independent variable.
@@ -580,6 +629,10 @@ ASC_DLLSPEC int integrator_output_write_obs(IntegratorSystem *blsys);
 	user notification or screen update, etc.
 */
 ASC_DLLSPEC int integrator_output_close(IntegratorSystem *blsys);
+
+ASC_DLLSPEC int integrator_has_initial_relations(IntegratorSystem *blsys);
+ASC_DLLSPEC int integrator_initialise_with_solver(IntegratorSystem *blsys, int solver_index);
+ASC_DLLSPEC int integrator_initialise_ode(IntegratorSystem *blsys);
 
 /*----------------------------------
 	DYNAMIC LIST OF INTEGRATORS

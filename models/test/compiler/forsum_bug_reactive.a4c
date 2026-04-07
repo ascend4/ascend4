@@ -1,0 +1,48 @@
+REQUIRE "johnpye/fprops/reactive_stoic.a4l";
+
+MODEL forsum_bug_reactive;
+	components IS_A set OF symbol_constant;
+	components :== ['H2','H2O'];
+	rxns IS_A set OF symbol_constant;
+	rxns :== ['r1','r2'];
+
+	pkg IS_A reactive_package(components);
+	pkg.source :== 'Moran and Shapiro';
+	pkg.algorithm :== 'ideal+ref0';
+
+	inlet IS_A reactive_stream(pkg);
+	outlet IS_A reactive_stream(pkg);
+	nu[components][rxns] IS_A factor;
+	xi[rxns] IS_A molar_rate;
+
+	FOR i IN components CREATE
+		eq[i]: outlet.f[i] = inlet.f[i] + SUM[nu[i][j] * xi[j] | j IN rxns];
+	END FOR;
+END forsum_bug_reactive;
+
+MODEL forsum_reaction_set(
+	components WILL_BE set OF symbol_constant;
+	rxns WILL_BE set OF symbol_constant;
+);
+	nu[components][rxns] IS_A factor;
+END forsum_reaction_set;
+
+MODEL forsum_bug_reactive_child;
+	components IS_A set OF symbol_constant;
+	components :== ['H2','H2O'];
+	rxns IS_A set OF symbol_constant;
+	rxns :== ['r1','r2'];
+
+	pkg IS_A reactive_package(components);
+	pkg.source :== 'Moran and Shapiro';
+	pkg.algorithm :== 'ideal+ref0';
+
+	inlet IS_A reactive_stream(pkg);
+	outlet IS_A reactive_stream(pkg);
+	S IS_A forsum_reaction_set(components, rxns);
+	xi[rxns] IS_A molar_rate;
+
+	FOR i IN components CREATE
+		eq[i]: outlet.f[i] = inlet.f[i] + SUM[S.nu[i][j] * xi[j] | j IN rxns];
+	END FOR;
+END forsum_bug_reactive_child;

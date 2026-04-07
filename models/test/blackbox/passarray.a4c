@@ -112,3 +112,49 @@ METHODS
 		(* won't both to test anything here just yet *)
 	END self_test;
 END pass23;
+
+MODEL pass24;
+	components IS_A set OF symbol_constant;
+	components :== ['A', 'B', 'C'];
+	coef IS_A real_constant;
+	coef :== 4.0;
+
+	x[components] IS_A generic_real;
+	y[components] IS_A generic_real;
+
+	bbox: bboxtest(
+		x[components] : INPUT;
+		y[components] : OUTPUT;
+		coef : DATA
+	);
+
+METHODS
+	METHOD default_self;
+		x['A'] := 1.0;
+		x['B'] := 2.0;
+		x['C'] := 3.0;
+		y['A'] := -1.0;
+		y['B'] := -2.0;
+		y['C'] := -3.0;
+	END default_self;
+
+	METHOD reset;
+		EXTERNAL asc_free_all_variables(SELF);
+		RUN specify;
+	END reset;
+
+	METHOD specify;
+		FIX x[components];
+		FREE y[components];
+	END specify;
+
+	METHOD default_all;
+		RUN default_self;
+	END default_all;
+
+	METHOD self_test;
+		ASSERT y['A'] = coef * x['A'];
+		ASSERT y['B'] = coef * x['B'];
+		ASSERT y['C'] = coef * x['C'];
+	END self_test;
+END pass24;

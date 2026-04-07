@@ -66,14 +66,22 @@
 #include "sets.h"
 #include "parentchild.h"
 #include "slvreq.h"
+#include "simstatus.h"
 #include "link.h"
 #include "relerr.h"
+#include "derivinst.h"
 
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
 
 //#define INIT_DEBUG
 //#define FIXFREE_DEBUG
+
+#ifdef INIT_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
 
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking
@@ -88,6 +96,154 @@ struct {
   unsigned long limit;
   unsigned long depth;
 } g_proc = {INITSTACKLIMIT,0L};
+
+static void AssignInitValue(struct Instance *, struct value_t, struct procFrame *);
+
+static struct Instance *InitMethodRoot(struct procFrame *fm)
+{
+  struct Instance *sim;
+  if(fm == NULL || fm->i == NULL){
+    return NULL;
+  }
+  sim = FindSimulationInstance(fm->i);
+  if(sim != NULL){
+    return GetSimulationRoot(sim);
+  }
+  return fm->i;
+}
+
+static struct gl_list_t *ResolveDerivativeBaseInstances(
+  struct procFrame *fm,
+  CONST struct Name *name,
+  rel_errorlist *err
+){
+  CONST struct Name *base;
+  if(fm == NULL || name == NULL || !NameIsDerivativeRef(name)){
+    return NULL;
+  }
+  base = DerivativeRefBaseName(name);
+  if(base == NULL){
+    return NULL;
+  }
+  return FindInstances(fm->i, (struct Name *)base, err);
+}
+
+static struct gl_list_t *ResolveDerivativeInstances(
+  struct procFrame *fm,
+  CONST struct Name *name
+){
+  rel_errorlist err = REL_ERRORLIST_EMPTY;
+  struct gl_list_t *bases;
+  struct gl_list_t *derivs = NULL;
+  struct Instance *root;
+  unsigned i, len;
+  bases = ResolveDerivativeBaseInstances(fm, name, &err);
+  if(bases == NULL){
+    goto cleanup;
+  }
+  root = InitMethodRoot(fm);
+  derivs = gl_create(gl_length(bases) > 0 ? gl_length(bases) : 1);
+  if(derivs == NULL){
+    goto cleanup;
+  }
+  len = gl_length(bases);
+  for(i = 1; i <= len; ++i){
+    struct Instance *base = (struct Instance *)gl_fetch(bases, i);
+    struct Instance *deriv;
+    if(base == NULL || InstanceKind(base) != REAL_ATOM_INST){
+      gl_destroy(derivs);
+      derivs = NULL;
+      goto cleanup;
+    }
+    if(DerivativeInstancesMarkPresent(root, base)){
+      gl_destroy(derivs);
+      derivs = NULL;
+      goto cleanup;
+    }
+    deriv = InstanceEnsureDerivative(base);
+    if(deriv == NULL){
+      gl_destroy(derivs);
+      derivs = NULL;
+      goto cleanup;
+    }
+    gl_append_ptr(derivs, deriv);
+  }
+cleanup:
+  gl_destroy(bases);
+  rel_errorlist_destroy_contents(&err);
+  return derivs;
+}
+
+static int RecordDerivativeFixFree(
+  struct procFrame *fm,
+  CONST struct Name *name,
+  int val
+){
+  struct gl_list_t *instances;
+  unsigned i, len;
+  symchar *fixed = AddSymbol("fixed");
+  instances = ResolveDerivativeInstances(fm, name);
+  if(instances == NULL){
+    fm->ErrNo = Proc_bad_name;
+    ProcWriteFixError(fm, name);
+    return 1;
+  }
+  len = gl_length(instances);
+  for(i = 1; i <= len; ++i){
+    struct Instance *inst = (struct Instance *)gl_fetch(instances, i);
+    struct Instance *fixedinst;
+    if(inst == NULL || InstanceKind(inst) != REAL_ATOM_INST){
+      gl_destroy(instances);
+      fm->ErrNo = Proc_illegal_type_use;
+      ProcWriteFixError(fm, name);
+      return 1;
+    }
+    fixedinst = ChildByChar(inst, fixed);
+    if(fixedinst == NULL || InstanceKind(fixedinst) != BOOLEAN_INST){
+      gl_destroy(instances);
+      fm->ErrNo = Proc_illegal_type_use;
+      ProcWriteFixError(fm, name);
+      return 1;
+    }
+    DerivativeInstanceNoteMutation(inst);
+    SetBooleanAtomValue(fixedinst, val, 0U);
+  }
+  gl_destroy(instances);
+  asc_simstatus_mark_dirty(fm->i);
+  return 0;
+}
+
+static int RecordDerivativeAssignment(
+  struct procFrame *fm,
+  CONST struct Name *name,
+  struct value_t value
+){
+  struct gl_list_t *instances;
+  unsigned i, len;
+  enum FrameControl oldflow;
+  instances = ResolveDerivativeInstances(fm, name);
+  if(instances == NULL){
+    fm->ErrNo = Proc_lhs_error;
+    fm->flow = FrameError;
+    ProcWriteAssignmentError(fm);
+    return 1;
+  }
+  len = gl_length(instances);
+  oldflow = fm->flow;
+  for(i = 1; i <= len; ++i){
+    struct Instance *inst = (struct Instance *)gl_fetch(instances, i);
+    DerivativeInstanceNoteMutation(inst);
+    AssignInitValue(inst, value, fm);
+    if(fm->flow == FrameError){
+      break;
+    }
+  }
+  if(fm->flow == oldflow){
+    asc_simstatus_mark_dirty(fm->i);
+  }
+  gl_destroy(instances);
+  return fm->flow == FrameError ? 1 : 0;
+}
 
 unsigned long GetProcStackLimit(void)
 {
@@ -273,6 +429,14 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 	vars = stat->v.fx.vars;
 	while(vars!=NULL){
 		name = NamePointer(vars);
+		if(NameIsDerivativeRef(name)){
+			if(RecordDerivativeFixFree(fm, name, val)){
+				fm->flow = FrameError;
+				return;
+			}
+			vars = NextVariableNode(vars);
+			continue;
+		}
 		temp = FindInstances(fm->i, name, &err);
 
 		if(temp==NULL){
@@ -311,6 +475,7 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 				CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a real atom type.");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
+				gl_destroy(temp);
 				return;
 			}
 			t = InstanceTypeDesc(i1);
@@ -318,6 +483,7 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 				CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a refined solver_var.");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
+				gl_destroy(temp);
 				return;
 			}
 			i2 = ChildByChar(i1,fixed);
@@ -325,12 +491,14 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 				CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var that doesn't have a 'fixed' child!");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
+				gl_destroy(temp);
 				return;
 			}
 			if(InstanceKind(i2)!=BOOLEAN_INST){
 				CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var whose 'fixed' child is not boolean!");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
+				gl_destroy(temp);
 				return;
 			}
 			SetBooleanAtomValue(i2,val,0);
@@ -341,6 +509,7 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 	/* CONSOLE_DEBUG("DONE WITH VARLIST"); */
 
 	/* return 'ok' */
+	asc_simstatus_mark_dirty(fm->i);
 	fm->ErrNo = Proc_all_ok;
 }
 
@@ -366,13 +535,46 @@ ExecuteInitSolver(struct procFrame *fm, struct Statement *stat){
 			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
 			case SLVREQ_SOLVER_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
 			case SLVREQ_UNKNOWN_SOLVER: fm->ErrNo = Proc_slvreq_unknown_solver; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
 		}
 		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
 		return;
 	}else{
 		fm->ErrNo = Proc_all_ok;
 	}
 	/*CONSOLE_DEBUG("Solver set to %s, OK",stat->v.solver.name);*/
+}
+
+static void
+ExecuteInitIntegrator(struct procFrame *fm, struct Statement *stat){
+	int res;
+	CONST char *integratorname = IntegratorStatName(stat);
+	assert(fm->i != NULL);
+	res = slvreq_set_integrator(fm->i, integratorname);
+	if(res){
+		switch(res){
+			case SLVREQ_NOT_IMPLEMENTED:
+				fm->ErrNo = Proc_slvreq_not_implemented;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_INTEGRATOR_HOOK_NOT_SET:
+				fm->ErrNo = Proc_slvreq_unhooked;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_UNKNOWN_INTEGRATOR:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Unknown integrator '%s'",integratorname);
+				break;
+			default:
+				fm->ErrNo = Proc_slvreq_error;
+				ProcWriteSlvReqError(fm);
+				break;
+		}
+		fm->flow = FrameError;
+		return;
+	}
+	fm->ErrNo = Proc_all_ok;
 }
 
 static void
@@ -439,15 +641,210 @@ ExecuteInitOption(struct procFrame *fm, struct Statement *stat){
 	}
 	if(fm->ErrNo != Proc_all_ok){
 		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
 	}
 	DestroyValue(&value);
 	return;
 }
 
+static int
+ResolveStudyInstance(struct procFrame *fm, struct Statement *stat, CONST struct Name *name,
+		const char *what, struct Instance **result)
+{
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+	struct gl_list_t *instances = FindInstances(fm->i, (struct Name *)name, &err);
+	const char *errstr = NULL;
+
+	if(instances==NULL){
+		errstr = "unknown error";
+		fm->ErrNo = Proc_bad_name;
+	}
+	switch(rel_errorlist_get_find_error(&err)){
+		case unmade_instance: errstr = "unmade instance"; fm->ErrNo = Proc_instance_not_found; break;
+		case undefined_instance: errstr = "undefined instance"; fm->ErrNo = Proc_name_not_found; break;
+		case impossible_instance: errstr = "impossible instance"; fm->ErrNo = Proc_illegal_name_use; break;
+		case correct_instance: break;
+	}
+	if(errstr){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid STUDY %s (%s)",what,errstr);
+		if(instances != NULL){
+			gl_destroy(instances);
+		}
+		fm->flow = FrameError;
+		return 1;
+	}
+	if(gl_length(instances) != 1){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY %s must resolve to exactly one instance",what);
+		gl_destroy(instances);
+		fm->ErrNo = Proc_bad_name;
+		fm->flow = FrameError;
+		return 1;
+	}
+	*result = (struct Instance *)gl_fetch(instances,1);
+	gl_destroy(instances);
+	return 0;
+}
+
+static int
+AppendObservedInstances(struct procFrame *fm, struct Statement *stat, CONST struct Name *name,
+		const char *stmtkind, const char *what, struct gl_list_t *result)
+{
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+	struct gl_list_t *instances = FindInstances(fm->i, (struct Name *)name, &err);
+	const char *errstr = NULL;
+	unsigned long i, len;
+
+	if(instances==NULL){
+		errstr = "unknown error";
+		fm->ErrNo = Proc_bad_name;
+	}
+	switch(rel_errorlist_get_find_error(&err)){
+		case unmade_instance: errstr = "unmade instance"; fm->ErrNo = Proc_instance_not_found; break;
+		case undefined_instance: errstr = "undefined instance"; fm->ErrNo = Proc_name_not_found; break;
+		case impossible_instance: errstr = "impossible instance"; fm->ErrNo = Proc_illegal_name_use; break;
+		case correct_instance: break;
+	}
+	if(errstr){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid %s %s (%s)",stmtkind,what,errstr);
+		if(instances != NULL){
+			gl_destroy(instances);
+		}
+		fm->flow = FrameError;
+		return 1;
+	}
+
+	len = gl_length(instances);
+	if(len < 1){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"%s %s must resolve to at least one instance",stmtkind,what);
+		gl_destroy(instances);
+		fm->ErrNo = Proc_bad_name;
+		fm->flow = FrameError;
+		return 1;
+	}
+
+	for(i = 1; i <= len; ++i){
+		struct Instance *inst = (struct Instance *)gl_fetch(instances,i);
+		switch(InstanceKind(inst)){
+			case REAL_INST:
+			case REAL_ATOM_INST:
+			case REAL_CONSTANT_INST:
+			case BOOLEAN_INST:
+			case BOOLEAN_ATOM_INST:
+			case BOOLEAN_CONSTANT_INST:
+			case INTEGER_INST:
+			case INTEGER_ATOM_INST:
+			case INTEGER_CONSTANT_INST:
+			case SYMBOL_INST:
+			case SYMBOL_ATOM_INST:
+			case SYMBOL_CONSTANT_INST:
+				gl_append_ptr(result, inst);
+				break;
+			default:
+				WriteStatementError(ASC_USER_ERROR,stat,1,"%s %s must resolve to scalar real, boolean, integer, or symbol instances",stmtkind,what);
+				gl_destroy(instances);
+				fm->ErrNo = Proc_illegal_type_use;
+				fm->flow = FrameError;
+				return 1;
+		}
+	}
+
+	gl_destroy(instances);
+	return 0;
+}
+
+static int
+EvaluateStudyRealExpr(struct procFrame *fm, struct Statement *stat, struct Expr *expr,
+		const char *what, const dim_type *expected, struct value_t *result)
+{
+	struct value_t value;
+	IVAL(value);
+	assert(GetEvaluationContext()==NULL);
+	SetEvaluationContext(fm->i);
+	value = EvaluateExpr(expr,NULL,InstanceEvaluateName);
+	SetEvaluationContext(NULL);
+
+	switch(ValueKind(value)){
+		case integer_value:
+			value = CreateRealValue((double)IntegerValue(value), Dimensionless(), IsConstantValue(value));
+			break;
+		case real_value:
+			break;
+		case error_value:
+			WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid STUDY %s expression",what);
+			fm->ErrNo = Proc_slvreq_error;
+			fm->flow = FrameError;
+			return 1;
+		default:
+			WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY %s expression must evaluate to a real value",what);
+			fm->ErrNo = Proc_slvreq_error;
+			fm->flow = FrameError;
+			DestroyValue(&value);
+			return 1;
+	}
+
+	if(expected != NULL && !IsWild(expected) && !SameDimen(expected,RealValueDimensions(value))){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY %s has incompatible dimensions",what);
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		DestroyValue(&value);
+		return 1;
+	}
+
+	*result = value;
+	return 0;
+}
+
 static void
 ExecuteInitSolve(struct procFrame *fm, struct Statement *stat){
 	int res;
-	res = slvreq_do_solve(fm->i);
+	struct Instance *sim = FindSimulationInstance(fm->i);
+	struct Instance *target = NULL;
+	if(sim == NULL){
+		WriteStatementError(ASC_PROG_ERR,stat,1,"Unable to locate simulation context for SOLVE");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		return;
+	}
+	target = GetSimulationRoot(sim);
+	if (SolveStatTarget(stat) != NULL) {
+		REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+		struct gl_list_t *instances = FindInstances(fm->i, SolveStatTarget(stat), &err);
+		const char *errstr = NULL;
+		if(instances==NULL){
+			errstr = "Unknown error";
+			fm->ErrNo = Proc_bad_name;
+		}
+		switch(rel_errorlist_get_find_error(&err)){
+			case unmade_instance: errstr = "unmade instance"; fm->ErrNo = Proc_instance_not_found; break;
+			case undefined_instance: errstr = "undefined instance"; fm->ErrNo = Proc_name_not_found; break;
+			case impossible_instance: errstr = "impossible instance"; fm->ErrNo = Proc_illegal_name_use; break;
+			case correct_instance: break;
+		}
+		if(errstr){
+			WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid SOLVE target (%s)",errstr);
+			fm->flow = FrameError;
+			if(instances != NULL){
+				gl_destroy(instances);
+			}
+			return;
+		}
+		if(gl_length(instances) != 1){
+			WriteStatementError(ASC_USER_ERROR,stat,1,"SOLVE target must resolve to exactly one instance");
+			gl_destroy(instances);
+			fm->ErrNo = Proc_bad_name;
+			fm->flow = FrameError;
+			return;
+		}
+		target = (struct Instance *)gl_fetch(instances,1);
+		gl_destroy(instances);
+		if(InstanceKind(target) != MODEL_INST){
+			WriteStatementError(ASC_USER_ERROR,stat,1,"SOLVE target must be a MODEL instance");
+			fm->ErrNo = Proc_illegal_type_use;
+			fm->flow = FrameError;
+			return;
+		}
+	}
+	res = slvreq_do_solve(target);
 	if(res){
 		switch(res){
 			case SLVREQ_NO_SOLVER_SELECTED: fm->ErrNo = Proc_slvreq_no_solver_selected; break;
@@ -456,6 +853,303 @@ ExecuteInitSolve(struct procFrame *fm, struct Statement *stat){
 			default: fm->ErrNo = Proc_slvreq_error; break;
 		}
 		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
+		return;
+	}
+	fm->ErrNo = Proc_all_ok;
+}
+
+static void
+ExecuteInitObserve(struct procFrame *fm, struct Statement *stat){
+	SlvReqObserveRequest req;
+	CONST struct VariableList *vars;
+	struct gl_list_t *observed = NULL;
+	unsigned long index = 0;
+	int res;
+
+	req.n_observed = 0;
+	req.observed = NULL;
+	req.name = (ObserveStatName(stat) != NULL) ? SCP(ObserveStatName(stat)) : NULL;
+	observed = gl_create(VariableListLength(ObserveStatObserved(stat)) > 0 ? VariableListLength(ObserveStatObserved(stat)) : 1);
+	if(observed == NULL){
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		goto cleanup;
+	}
+
+	for(vars = ObserveStatObserved(stat); vars != NULL; vars = NextVariableNode(vars)){
+		if(AppendObservedInstances(fm, stat, NamePointer(vars), "OBSERVE", "target", observed)){
+			goto cleanup;
+		}
+	}
+
+	req.n_observed = gl_length(observed);
+	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	for(index = 0; index < req.n_observed; ++index){
+		req.observed[index] = (struct Instance *)gl_fetch(observed, index + 1);
+	}
+
+	res = slvreq_do_observe(fm->i, &req);
+	if(res){
+		switch(res){
+			case SLVREQ_OBSERVE_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
+		}
+		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
+		goto cleanup;
+	}
+	fm->ErrNo = Proc_all_ok;
+
+cleanup:
+	if(observed != NULL){
+		gl_destroy(observed);
+	}
+	if(req.observed != NULL){
+		ASC_FREE(req.observed);
+	}
+}
+
+static void
+ExecuteInitStudy(struct procFrame *fm, struct Statement *stat){
+	SlvReqStudyRequest req;
+	CONST struct VariableList *vars;
+	struct gl_list_t *observed = NULL;
+	struct Instance *vary = NULL;
+	unsigned long index = 0;
+	int res;
+	const dim_type *varydim = NULL;
+
+	IVAL(req.lower);
+	IVAL(req.upper);
+	IVAL(req.value);
+	req.n_observed = 0;
+	req.observed = NULL;
+	req.vary = NULL;
+	req.steps = StudyStatSteps(stat);
+	req.mode = (enum SlvReqStudyMode)StudyStatMode(stat);
+	req.distribution = (enum SlvReqStudyDistribution)StudyStatDistribution(stat);
+	req.run_method = (StudyStatRunMethod(stat) != NULL) ? SCP(StudyStatRunMethod(stat)) : NULL;
+	req.now = StudyStatNow(stat);
+	req.filename = StudyStatFilename(stat);
+	observed = gl_create(VariableListLength(StudyStatObserved(stat)) > 0 ? VariableListLength(StudyStatObserved(stat)) : 1);
+	if(observed == NULL){
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		goto cleanup;
+	}
+
+	for(vars = StudyStatObserved(stat); vars != NULL; vars = NextVariableNode(vars)){
+		if(AppendObservedInstances(fm, stat, NamePointer(vars), "STUDY", "observed variable", observed)){
+			goto cleanup;
+		}
+	}
+
+	req.n_observed = gl_length(observed);
+	req.observed = ASC_NEW_ARRAY(struct Instance *, req.n_observed);
+	for(index = 0; index < req.n_observed; ++index){
+		req.observed[index] = (struct Instance *)gl_fetch(observed, index + 1);
+	}
+
+	if(StudyStatVary(stat) != NULL){
+		if(ResolveStudyInstance(fm, stat, StudyStatVary(stat), "vary variable", &vary)){
+			goto cleanup;
+		}
+		switch(InstanceKind(vary)){
+			case REAL_INST:
+			case REAL_ATOM_INST:
+				break;
+			default:
+				WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY vary variable must be mutable and real-valued");
+				fm->ErrNo = Proc_illegal_type_use;
+				fm->flow = FrameError;
+				goto cleanup;
+		}
+		req.vary = vary;
+		varydim = RealAtomDims(vary);
+
+		if(EvaluateStudyRealExpr(fm, stat, StudyStatLower(stat), "lower bound", varydim, &req.lower)){
+			goto cleanup;
+		}
+		if(EvaluateStudyRealExpr(fm, stat, StudyStatUpper(stat), "upper bound", varydim, &req.upper)){
+			goto cleanup;
+		}
+
+		switch(StudyStatMode(stat)){
+			case study_steps:
+				if(req.steps < 1){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY STEPS count must be at least 1");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				break;
+			case study_step:
+				if(EvaluateStudyRealExpr(fm, stat, StudyStatValue(stat), "step size", varydim, &req.value)){
+					goto cleanup;
+				}
+				if(RealValue(req.value) == 0.0){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY STEP size must be nonzero");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				if((RealValue(req.upper) > RealValue(req.lower) && RealValue(req.value) < 0.0)
+						|| (RealValue(req.upper) < RealValue(req.lower) && RealValue(req.value) > 0.0)){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY STEP size must move from lower bound toward upper bound");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				break;
+			case study_ratio:
+				if(EvaluateStudyRealExpr(fm, stat, StudyStatValue(stat), "step ratio", Dimensionless(), &req.value)){
+					goto cleanup;
+				}
+				if(RealValue(req.value) <= 0.0 || RealValue(req.value) == 1.0){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY RATIO must be positive and not equal to 1");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				if((RealValue(req.upper) > RealValue(req.lower) && RealValue(req.value) < 1.0)
+						|| (RealValue(req.upper) < RealValue(req.lower) && RealValue(req.value) > 1.0)){
+					WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY RATIO must move from lower bound toward upper bound");
+					fm->ErrNo = Proc_slvreq_error;
+					fm->flow = FrameError;
+					goto cleanup;
+				}
+				/* fall through */
+			case study_none:
+				break;
+		}
+
+		if((StudyStatMode(stat) == study_ratio)
+				|| (StudyStatMode(stat) == study_steps && StudyStatDistribution(stat) == study_dist_log)){
+			if(RealValue(req.lower) <= 0.0 || RealValue(req.upper) <= 0.0){
+				WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY LOG/RATIO bounds must be positive");
+				fm->ErrNo = Proc_slvreq_error;
+				fm->flow = FrameError;
+				goto cleanup;
+			}
+		}
+	}else if(req.run_method != NULL || req.now){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"STUDY RUN/NOW clauses require a VARY clause");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		goto cleanup;
+	}
+
+	res = slvreq_do_study(fm->i, &req);
+	if(res){
+		switch(res){
+			case SLVREQ_STUDY_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
+		}
+		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
+		goto cleanup;
+	}
+	fm->ErrNo = Proc_all_ok;
+
+cleanup:
+	if(observed != NULL){
+		gl_destroy(observed);
+	}
+	if(req.observed != NULL){
+		ASC_FREE(req.observed);
+	}
+	DestroyValue(&req.lower);
+	DestroyValue(&req.upper);
+	DestroyValue(&req.value);
+}
+
+static void
+ExecuteInitIntegrate(struct procFrame *fm, struct Statement *stat){
+	SlvReqIntegrateRequest req;
+	int res;
+
+	if(IntegrateStatSteps(stat) <= 0){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"INTEGRATE STEPS must be positive");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		return;
+	}
+
+	IVAL(req.start);
+	IVAL(req.stop);
+	req.steps = IntegrateStatSteps(stat);
+
+	if(EvaluateStudyRealExpr(fm, stat, IntegrateStatStart(stat), "start", NULL, &req.start)){
+		return;
+	}
+	if(EvaluateStudyRealExpr(fm, stat, IntegrateStatStop(stat), "stop", RealValueDimensions(req.start), &req.stop)){
+		DestroyValue(&req.start);
+		return;
+	}
+	if(RealValue(req.stop) < RealValue(req.start)){
+		WriteStatementError(ASC_USER_ERROR,stat,1,"INTEGRATE stop time must be greater than or equal to start time");
+		fm->ErrNo = Proc_slvreq_error;
+		fm->flow = FrameError;
+		DestroyValue(&req.start);
+		DestroyValue(&req.stop);
+		return;
+	}
+
+	res = slvreq_do_integrate(fm->i, &req);
+	if(res){
+		switch(res){
+			case SLVREQ_NOT_IMPLEMENTED:
+				fm->ErrNo = Proc_slvreq_not_implemented;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_INTEGRATE_HOOK_NOT_SET:
+				fm->ErrNo = Proc_slvreq_unhooked;
+				ProcWriteSlvReqError(fm);
+				break;
+			case SLVREQ_NO_INTEGRATOR_SELECTED:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"No integrator has been selected");
+				break;
+			case SLVREQ_INTEGRATE_INVALID_REQUEST:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid INTEGRATE request");
+				break;
+			case SLVREQ_INTEGRATE_FAIL:
+				fm->ErrNo = Proc_slvreq_error;
+				WriteStatementError(ASC_USER_ERROR,stat,1,"Integration failed");
+				break;
+			default:
+				fm->ErrNo = Proc_slvreq_error;
+				ProcWriteSlvReqError(fm);
+				break;
+		}
+		fm->flow = FrameError;
+		DestroyValue(&req.start);
+		DestroyValue(&req.stop);
+		return;
+	}
+
+	fm->ErrNo = Proc_all_ok;
+	DestroyValue(&req.start);
+	DestroyValue(&req.stop);
+}
+
+static void
+ExecuteInitDeleteSystem(struct procFrame *fm, struct Statement *stat){
+	int res;
+	(void)stat;
+	res = slvreq_delete_system(fm->i);
+	if(res){
+		switch(res){
+			case SLVREQ_DELETE_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			default: fm->ErrNo = Proc_slvreq_error; break;
+		}
+		ProcWriteSlvReqError(fm);
+		fm->flow = FrameError;
 		return;
 	}
 	fm->ErrNo = Proc_all_ok;
@@ -1445,6 +2139,49 @@ static void ExecuteInitSwitch(struct procFrame *fm, struct Statement *stat){
   return;
 }
 
+static char *AssignmentDimenLabel(struct procFrame *fm, struct Instance *i){
+  char *name, *label;
+  const char *typename;
+
+  name = NULL;
+  if(fm != NULL && fm->stat != NULL && StatementType(fm->stat) == ASGN){
+    name = WriteNameString(DefaultStatVar(fm->stat));
+  }
+  if(name == NULL && i != NULL){
+    name = WriteInstanceNameString(i, fm != NULL ? fm->i : NULL);
+  }
+  if(name == NULL){
+    return ASC_STRDUP("LHS");
+  }
+
+  typename = NULL;
+  if(i != NULL && InstanceTypeDesc(i) != NULL && GetName(InstanceTypeDesc(i)) != NULL){
+    typename = SCP(GetName(InstanceTypeDesc(i)));
+  }
+  if(typename == NULL){
+    return name;
+  }
+
+  label = ASC_NEW_ARRAY(char,strlen(name) + strlen(typename) + 11);
+  sprintf(label,"%s (IS_A %s)",name,typename);
+  ascfree(name);
+  return label;
+}
+
+static void WriteAssignmentDimenError(struct procFrame *fm, struct Instance *i, const dim_type *rhsdim){
+  char *lhslabel, *lhsdim, *rhsdimstr;
+  lhslabel = AssignmentDimenLabel(fm,i);
+  lhsdim = WriteDimensionBracketsString(RealAtomDims(i));
+  rhsdimstr = WriteDimensionBracketsString(rhsdim);
+  WriteStatementError(ASC_USER_ERROR,fm->stat,0,
+    "Inconsistent units in assignment: %s has dimensions %s, but RHS term has dimensions %s",
+    lhslabel,lhsdim,rhsdimstr
+  );
+  ascfree(rhsdimstr);
+  ascfree(lhsdim);
+  ascfree(lhslabel);
+}
+
 /* i is generally NOT fm->i, but in the scope of fm->i */
 static void AssignInitValue(struct Instance *i, struct value_t v
 	, struct procFrame *fm
@@ -1490,10 +2227,8 @@ static void AssignInitValue(struct Instance *i, struct value_t v
     case real_value:
       dim = CheckDimensionsMatch(RealValueDimensions(v),RealAtomDims(i));
       if(dim==NULL){
-        PrintDimenMessage("Inconsistent units in assignment"
-              ,"LHS",RealAtomDims(i)
-              ,"RHS",RealValueDimensions(v)
-        );
+        WriteAssignmentDimenError(fm,i,RealValueDimensions(v));
+        assignerr = 0;
         fm->ErrNo = Proc_nonconsistent_assignment;
         fm->flow = FrameError;
       }else{
@@ -1507,10 +2242,8 @@ static void AssignInitValue(struct Instance *i, struct value_t v
     case integer_value:
       dim = CheckDimensionsMatch(Dimensionless(),RealAtomDims(i));
       if(dim==NULL){
-        PrintDimenMessage("Inconsistent units in assignment"
-              ,"LHS",RealAtomDims(i)
-              ,"RHS",RealValueDimensions(v)
-        );
+        WriteAssignmentDimenError(fm,i,Dimensionless());
+        assignerr = 0;
         fm->ErrNo = Proc_nonconsistent_assignment;
         fm->flow = FrameError;
       }else{
@@ -1566,6 +2299,24 @@ static void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat){
   struct value_t value;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
+  if(NameIsDerivativeRef(DefaultStatVar(stat))){
+    assert(GetEvaluationContext()==NULL);
+    SetEvaluationContext(fm->i);
+    value = EvaluateExpr(DefaultStatRHS(stat),NULL,InstanceEvaluateName);
+    SetEvaluationContext(NULL);
+    if(ValueKind(value)==error_value){
+      fm->ErrNo = Proc_rhs_error;
+      fm->flow = FrameError;
+      ProcWriteAssignmentError(fm);
+    }else{
+      if(RecordDerivativeAssignment(fm, DefaultStatVar(stat), value)){
+        /* error flow/value reporting already handled */
+      }
+    }
+    DestroyValue(&value);
+    return;
+  }
+
   instances = FindInstances(fm->i,DefaultStatVar(stat),&err);
   if(instances != NULL){
     assert(GetEvaluationContext()==NULL);
@@ -1593,6 +2344,9 @@ static void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat){
     }
     DestroyValue(&value);
     gl_destroy(instances);
+    if(fm->flow != FrameError){
+      asc_simstatus_mark_dirty(fm->i);
+    }
   }else{
     /* error finding left hand side */
     fm->ErrNo = Proc_lhs_error;
@@ -1612,7 +2366,7 @@ static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 	instances = FindInsts(fm->i,LINKStatVlist(stat),&err);
 	key = LINKStatKey(stat);
 
-	CONSOLE_DEBUG("LINKStatVlist(stat) contains %lu",VariableListLength(LINKStatVlist(stat)));
+	MSG("LINKStatVlist(stat) contains %lu",VariableListLength(LINKStatVlist(stat)));
 	if(instances == NULL){
 		switch(rel_errorlist_get_find_error(&err)){
 		case impossible_instance:
@@ -1627,8 +2381,9 @@ static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 	if((instances != NULL) && (key != NULL)){
 		switch(InstanceKind(fm->i)){
 		case MODEL_INST:
-			CONSOLE_DEBUG("Adding procedural link");
+			MSG("Adding procedural link");
 			addLinkEntry(fm->i,key,instances,stat,0);
+			asc_simstatus_mark_dirty(fm->i);
 			break;
 		default:
 			STATEMENT_ERROR(stat, "LINK is not called by a model");
@@ -1654,6 +2409,7 @@ static void ExecuteInitUnlnk(struct procFrame *fm, struct Statement *stat){
 		case MODEL_INST:
 			printf("Procedural UNLINK...");
 			removeLinkEntry(fm->i,key,LINKStatVlist(stat));
+			asc_simstatus_mark_dirty(fm->i);
 			break;
 		default:
 			STATEMENT_ERROR(stat, "UNLINK is not called by a model");
@@ -1696,11 +2452,26 @@ static void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat){
   case SOLVER:
 	ExecuteInitSolver(fm,stat);
 	break;
+  case INTEGRATOR:
+	ExecuteInitIntegrator(fm,stat);
+	break;
   case OPTION:
 	ExecuteInitOption(fm,stat);
 	break;
   case SOLVE:
     ExecuteInitSolve(fm,stat);
+	break;
+  case INTEGRATE:
+	ExecuteInitIntegrate(fm,stat);
+	break;
+  case STUDY:
+    ExecuteInitStudy(fm,stat);
+    break;
+  case OBSERVE:
+    ExecuteInitObserve(fm,stat);
+    break;
+  case DELETESYSTEM:
+	ExecuteInitDeleteSystem(fm,stat);
 	break;
   case FLOW:
     ExecuteInitFlow(fm);
@@ -2041,6 +2812,7 @@ enum Proc_enum Initialize(struct Instance *context,
   assert(errfp != NULL);
   g_proc.depth = 0;
   Asc_SetMethodUserInterrupt(0);
+  asc_simstatus_method_enter(context);
   if(watchpoints == NULL){
     InitNormalTopProcFrame(&fm,context,cname,errfp,options);
     rval = NormalInitialize(&fm,name);
@@ -2049,6 +2821,7 @@ enum Proc_enum Initialize(struct Instance *context,
     CONSOLE_DEBUG("Running method with debug...");
     rval = DebugInitialize(context,name,cname,errfp,options,watchpoints,log,&fm);
   }
+  asc_simstatus_method_leave(context);
   return rval;
 }
 

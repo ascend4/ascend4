@@ -211,7 +211,7 @@ extern unsigned int ChildParametric(ChildListPtr cl, unsigned long n);
 
 extern CONST struct Statement *ChildStatement(ChildListPtr cl, unsigned long n);
 /**<
- *  Return child number n initial declaration statement.
+ *  Return child number n initial declaration statement, if available.
  *  Children are numbered 1..ChildListLen(cl).
  */
 

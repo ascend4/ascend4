@@ -1,5 +1,6 @@
 Import('env')
-import platform, subprocess,shutil, pathlib
+import platform
+import re
 
 # build the ASCEND IPOPT solver. we will do any configuration testing here now,
 # also, only if the solver is requested.
@@ -11,50 +12,290 @@ ipopt_test_text = """
 
 /* note that pkg-config sets the coin-or directory, so no need to prefix here */
 #include <IpStdCInterface.h>
-int main(){
+int main(void){
 	Number n;
 	IpoptProblem nlp = 0;
 	n = 1;
-	FreeIpoptProblem(nlp); // probably a crash if you run this
+	FreeIpoptProblem(nlp);
 	return 0;
 }
 """
 
+ipopt_hsl_test_text = r"""
+#include <stdio.h>
+#include <string.h>
+
+#include <HSLLoader.h>
+#include <IpStdCInterface.h>
+
+static Bool eval_f(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
+	(void)n;
+	(void)new_x;
+	(void)user_data;
+	*obj_value = (x[0] - 1.0) * (x[0] - 1.0) + (x[1] - 1.0) * (x[1] - 1.0);
+	return TRUE;
+}
+
+static Bool eval_grad_f(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
+	(void)n;
+	(void)new_x;
+	(void)user_data;
+	grad_f[0] = 2.0 * (x[0] - 1.0);
+	grad_f[1] = 2.0 * (x[1] - 1.0);
+	return TRUE;
+}
+
+static Bool eval_g(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPtr user_data){
+	(void)n;
+	(void)new_x;
+	(void)m;
+	(void)user_data;
+	g[0] = x[0] + x[1];
+	return TRUE;
+}
+
+static Bool eval_jac_g(Index n, Number *x, Bool new_x, Index m, Index nele_jac,
+	Index *iRow, Index *jCol, Number *values, UserDataPtr user_data){
+	(void)n;
+	(void)x;
+	(void)new_x;
+	(void)m;
+	(void)nele_jac;
+	(void)user_data;
+	if(values == NULL){
+		iRow[0] = 0; jCol[0] = 0;
+		iRow[1] = 0; jCol[1] = 1;
+	}else{
+		values[0] = 1.0;
+		values[1] = 1.0;
+	}
+	return TRUE;
+}
+
+static int status_ok(enum ApplicationReturnStatus status){
+	return status == Solve_Succeeded
+		|| status == Solved_To_Acceptable_Level
+		|| status == Feasible_Point_Found;
+}
+
+static int hsllib_supported(const char *hsllib){
+	Number x_L[2] = {0.0, 0.0};
+	Number x_U[2] = {2.0, 2.0};
+	Number g_L[1] = {1.0};
+	Number g_U[1] = {1.0};
+	IpoptProblem prob = CreateIpoptProblem(
+		2, x_L, x_U, 1, g_L, g_U, 2, 0, 0,
+		eval_f, eval_g, eval_grad_f, eval_jac_g, NULL
+	);
+	int ok = 0;
+	if(prob == NULL){
+		return 0;
+	}
+	ok = AddIpoptStrOption(prob, "hsllib", (char *)(hsllib ? hsllib : "libhsl.so")) ? 1 : 0;
+	FreeIpoptProblem(prob);
+	return ok;
+}
+
+static int try_solver(const char *solver, const char *hsllib, int use_hsllib){
+	Number x_L[2] = {0.0, 0.0};
+	Number x_U[2] = {2.0, 2.0};
+	Number g_L[1] = {1.0};
+	Number g_U[1] = {1.0};
+	Number x[2] = {0.2, 0.8};
+	Number obj = 0.0;
+	IpoptProblem prob = CreateIpoptProblem(
+		2, x_L, x_U, 1, g_L, g_U, 2, 0, 0,
+		eval_f, eval_g, eval_grad_f, eval_jac_g, NULL
+	);
+	enum ApplicationReturnStatus status;
+	if(prob == NULL){
+		return 0;
+	}
+	AddIpoptIntOption(prob, "print_level", 0);
+	AddIpoptStrOption(prob, "mu_strategy", "adaptive");
+	AddIpoptStrOption(prob, "hessian_approximation", "limited-memory");
+	if(!AddIpoptStrOption(prob, "linear_solver", (char *)solver)){
+		FreeIpoptProblem(prob);
+		return 0;
+	}
+	if(use_hsllib && hsllib != NULL && hsllib[0] != '\0'){
+		if(!AddIpoptStrOption(prob, "hsllib", (char *)hsllib)){
+			FreeIpoptProblem(prob);
+			return 0;
+		}
+	}
+	status = IpoptSolve(prob, x, NULL, &obj, NULL, NULL, NULL, NULL);
+	FreeIpoptProblem(prob);
+	return status_ok(status);
+}
+
+int main(void){
+	char msg[1024];
+	const char *lib = %(probe_target)s;
+	int load_rc;
+	int have_hsllib;
+	int use_hsllib;
+	int ma27_runtime;
+	int ma97_runtime;
+
+	have_hsllib = hsllib_supported(lib);
+	use_hsllib = have_hsllib && lib != NULL && lib[0] != '\0';
+	ma27_runtime = try_solver("ma27", lib, use_hsllib);
+	ma97_runtime = try_solver("ma97", lib, use_hsllib);
+
+	if(LSL_isHSLLoaded()){
+		LSL_unloadHSL();
+	}
+
+	memset(msg, 0, sizeof(msg));
+	load_rc = LSL_loadHSL(lib, msg, (int)sizeof(msg));
+
+	printf("probe_target=%%s\n", lib ? lib : "");
+	printf("hsllib_supported=%%d\n", have_hsllib);
+	printf("hsllib_used=%%d\n", use_hsllib);
+	printf("load_rc=%%d\n", load_rc);
+	printf("loaded=%%d\n", LSL_isHSLLoaded() ? 1 : 0);
+	printf("ma27_symbol=%%d\n", LSL_isMA27available() ? 1 : 0);
+	printf("ma97_symbol=%%d\n", LSL_isMA97available() ? 1 : 0);
+	printf("mc19=%%d\n", LSL_isMC19available() ? 1 : 0);
+	printf("ma27_runtime=%%d\n", ma27_runtime);
+	printf("ma97_runtime=%%d\n", ma97_runtime);
+	printf("message=%%s\n", msg);
+
+	if(LSL_isHSLLoaded()){
+		LSL_unloadHSL();
+	}
+	return 0;
+}
+"""
+
+def _c_string_literal(value):
+	if value is None:
+		return 'NULL'
+	return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"') + '"'
+
+def _parse_probe_output(output):
+	result = {}
+	if isinstance(output, bytes):
+		output = output.decode('utf-8', 'replace')
+	for line in (output or '').splitlines():
+		match = re.match(r'^([a-z0-9_]+)=(.*)$', line.strip())
+		if match:
+			result[match.group(1)] = match.group(2)
+	return result
+
+def CheckIPOPTHSL(context):
+	context.Message('Checking IPOPT HSL support (hsllib, MA27, MA97)... ')
+
+	probe_target = context.env.get('IPOPT_HSL_PROBE_TARGET')
+	if not probe_target:
+		context.env['IPOPT_HSL_LOADABLE'] = False
+		context.env['IPOPT_HSL_MA27_AVAILABLE'] = False
+		context.env['IPOPT_HSL_MA97_AVAILABLE'] = False
+		context.env['IPOPT_HSL_STATUS'] = context.env.get('IPOPT_HSL_REASON') or 'no HSL probe target'
+		context.Result("no (%s)" % context.env['IPOPT_HSL_STATUS'])
+		return False
+
+	is_ok, output = context.TryRun(
+		ipopt_hsl_test_text % {'probe_target': _c_string_literal(probe_target)},
+		".c"
+	)
+	if not is_ok:
+		context.env['IPOPT_HSL_LOADABLE'] = False
+		context.env['IPOPT_HSL_MA27_AVAILABLE'] = False
+		context.env['IPOPT_HSL_MA97_AVAILABLE'] = False
+		context.env['IPOPT_HSL_STATUS'] = 'runtime probe failed to compile or run'
+		context.Result("no (runtime probe failed)")
+		return False
+
+	parsed = _parse_probe_output(output)
+	loadable = parsed.get('load_rc') == '0' and parsed.get('loaded') == '1'
+	hsllib_supported = parsed.get('hsllib_supported') == '1'
+	ma27_symbol_available = parsed.get('ma27_symbol') == '1'
+	ma97_symbol_available = parsed.get('ma97_symbol') == '1'
+	ma27_available = parsed.get('ma27_runtime') == '1'
+	ma97_available = parsed.get('ma97_runtime') == '1'
+	mc19_available = parsed.get('mc19') == '1'
+	message = parsed.get('message') or ''
+
+	context.env['IPOPT_HSLIB_SUPPORTED'] = hsllib_supported
+	context.env['IPOPT_HSL_LOADABLE'] = loadable
+	context.env['IPOPT_HSL_MA27_SYMBOL_AVAILABLE'] = ma27_symbol_available
+	context.env['IPOPT_HSL_MA97_SYMBOL_AVAILABLE'] = ma97_symbol_available
+	context.env['IPOPT_HSL_MA27_AVAILABLE'] = ma27_available
+	context.env['IPOPT_HSL_MA97_AVAILABLE'] = ma97_available
+	if parsed.get('probe_target'):
+		context.env['IPOPT_HSL_PROBE_TARGET'] = parsed['probe_target']
+		context.env['IPOPT_HSL_LIBRARY'] = parsed['probe_target']
+
+	status = []
+	if context.env.get('IPOPT_HSL_LIBRARY'):
+		status.append('HSL %s' % context.env['IPOPT_HSL_LIBRARY'])
+	elif context.env.get('IPOPT_HSL_FOUND'):
+		status.append('HSL found')
+	else:
+		status.append('HSL not found')
+	status.append('hsllib yes' if hsllib_supported else 'hsllib no')
+	status.append('probe load ok' if loadable else 'probe load failed')
+	status.append('MA27 symbols yes' if ma27_symbol_available else 'MA27 symbols no')
+	status.append('MA97 symbols yes' if ma97_symbol_available else 'MA97 symbols no')
+	status.append('MA27 yes' if ma27_available else 'MA27 no')
+	status.append('MA97 yes' if ma97_available else 'MA97 no')
+	status.append('MC19 yes' if mc19_available else 'MC19 no')
+	if message and not loadable:
+		status.append('note: %s' % message)
+	context.env['IPOPT_HSL_STATUS'] = ', '.join(status)
+	context.Result(context.env['IPOPT_HSL_STATUS'])
+	return loadable
+
 def CheckIPOPT(context):
 	context.Message( 'Checking for IPOPT... ' )
-
-	# check that it exists according to pkgconfig
-	try:
-		cmd =[shutil.which("pkg-config"),"--libs","--cflags","ipopt"]
-		res = subprocess.run(cmd,stdout=subprocess.PIPE,check=True)
-		print("PKGCONFIG:",res.stdout)
-	except:
-		context.Result("no (pkg-config --exists)")
+	is_ok = context.env.ensure_ipopt()
+	if not is_ok:
+		context.Result("no (%s)" % (context.env.get('IPOPT_REASON') or 'not found'))
 		return False
-				
-	# get the settings from pkg-config
-	context.env.ParseConfig(str(pathlib.Path(shutil.which('pkg-config')))+' --cflags --libs ipopt')
 
-	# test that we can link against it
+	context.env.AppendUnique(CPPPATH=context.env.get('IPOPT_CPPPATH', []))
+	context.env.AppendUnique(LIBPATH=context.env.get('IPOPT_LIBPATH', []))
+	context.env.AppendUnique(LIBS=context.env.get('IPOPT_LIBS', []))
 	is_ok = context.TryLink(ipopt_test_text,".c")
 	if is_ok:
-		context.Result(is_ok)
+		context.Result(True)
 	else:
+		context.env['IPOPT_REASON'] = 'failed to link'
 		context.Result("no (failed to link)")
 	return is_ok
 
 if env.get('WITH_IPOPT'):
 	solver_env = env.Clone()
-	if env['IPOPT_PREFIX'] not in ['/usr']:
-		solver_env.AppendENVPath('PKG_CONFIG_PATH',env.subst("$IPOPT_PREFIX/lib/pkgconfig"))
 	
-	conf = solver_env.Configure(custom_tests={'CheckIPOPT':CheckIPOPT})
+	conf = solver_env.Configure(custom_tests={
+		'CheckIPOPT':CheckIPOPT,
+		'CheckIPOPTHSL':CheckIPOPTHSL,
+	})
 	if not conf.CheckIPOPT():
 		conf.env['WITH_IPOPT'] = False
+	else:
+		conf.CheckIPOPTHSL()
 	solver_env = conf.Finish()
 
 	# tell the top-level if our conf test failed
-	env.set_optional('ipopt',active=solver_env['WITH_IPOPT'],reason="not found");
+	env.set_optional('ipopt',active=solver_env['WITH_IPOPT'],reason=solver_env.get('IPOPT_REASON') or "not found");
+	for key in (
+		'IPOPT_HSL_FOUND',
+		'IPOPT_HSL_LIBRARY',
+		'IPOPT_HSL_PROBE_TARGET',
+		'IPOPT_HSL_REASON',
+		'IPOPT_HSLIB_SUPPORTED',
+		'IPOPT_HSL_LOADABLE',
+		'IPOPT_HSL_MA27_SYMBOL_AVAILABLE',
+		'IPOPT_HSL_MA97_SYMBOL_AVAILABLE',
+		'IPOPT_HSL_MA27_AVAILABLE',
+		'IPOPT_HSL_MA97_AVAILABLE',
+		'IPOPT_HSL_STATUS',
+	):
+		if key in solver_env:
+			env[key] = solver_env[key]
 	
 	if env['WITH_IPOPT']:
 		if platform.system()=="Windows":
@@ -62,13 +303,24 @@ if env.get('WITH_IPOPT'):
 				CFLAGS=["-static"]
 			)
 
+		if solver_env.get('IPOPT_CPPPATH'):
+			solver_env.AppendUnique(CPPPATH=solver_env['IPOPT_CPPPATH'])
+		if solver_env.get('IPOPT_LIBPATH'):
+			solver_env.AppendUnique(LIBPATH=solver_env['IPOPT_LIBPATH'])
+		if solver_env.get('IPOPT_LIBS'):
+			solver_env.AppendUnique(LIBS=solver_env['IPOPT_LIBS'])
+		if solver_env.get('IPOPT_HSLIB_SUPPORTED') and solver_env.get('IPOPT_HSL_LIBRARY'):
+			solver_env.AppendUnique(CPPDEFINES=['ASC_WITH_IPOPT_HSLIB'])
+			solver_env.AppendUnique(CPPDEFINES=[
+				('ASC_IPOPT_HSL_LIBRARY', '"%s"' % str(solver_env['IPOPT_HSL_LIBRARY']).replace('"', '\\"'))
+			])
+
 		solver_env.Append(LIBS=['ascend'],LIBPATH=['#'])
 
 		lib = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
 			,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 			,SHLIBPREFIX = env['EXTLIB_PREFIX']
 		)
-		print("solver:",lib)
 		
 		env.Depends(lib,env['libascend'])
 

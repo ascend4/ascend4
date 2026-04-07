@@ -144,6 +144,8 @@
 					<keyword>IF</keyword>
 					<keyword>IMPORT</keyword>
 					<keyword>IN</keyword>
+					<keyword>INDEPENDENT</keyword>
+					<keyword>INITIAL</keyword>
 					<keyword>INPUT</keyword>
 					<keyword>INTERSECTION</keyword>
 					<keyword>IS_A</keyword>
@@ -461,6 +463,7 @@
 					<keyword>cube</keyword>
 					<keyword>cbrt</keyword>
 					<keyword>abs</keyword>
+					<keyword>der</keyword>
 				</context>
             </include>
         </context>

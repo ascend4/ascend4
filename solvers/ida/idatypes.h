@@ -22,6 +22,7 @@
 #ifndef ASC_IDATYPES_H
 #define ASC_IDATYPES_H
 
+#include "ida.h"
 #include <ascend/integrator/integrator.h>
 
 /* forward dec needed for IntegratorIdaPrecFreeFn */
@@ -36,8 +37,8 @@ typedef void IntegratorIdaPrecFreeFn(struct IntegratorIdaDataStruct *enginedata)
 /**
  * Function type for error flag description look-up
  */
-typedef int IdaFlagFn(void *, int *);
-typedef char *IdaFlagNameFn(int);
+typedef int IdaFlagFn(void *, long int *);
+typedef char *IdaFlagNameFn(long int);
 
 /**
 	Struct containing any stuff that IDA needs that doesn't fit into the
@@ -50,17 +51,34 @@ typedef struct IntegratorIdaDataStruct{
 
 	struct bnd_boundary **bndlist;	 /**< NULL-terminated list of boundaries, for use in the root-finding  code */
 	int nbnds; /* number of boundaries */
+	struct when_reinit **guardroots; /**< active-case simple comparison guards used as extra IDA roots */
+	struct Instance **guardcontexts; /**< evaluation context for each active direct guard root */
+	int nguardroots; /* number of active direct guard roots */
+	int nroots; /* total number of root functions */
 
 	int safeeval;                    /**< whether to pass the 'safe' flag to relman_eval */
+	int warned_minstep_ignored;      /**< whether unsupported minstep has already been reported */
 	var_filter_t vfilter;
 	rel_filter_t rfilter;            /**< Used to filter relations from solver's rellist (@TODO needs work) */
 	void *precdata;                  /**< For use by the preconditioner */
 	IntegratorIdaPrecFreeFn *pfree;	 /**< Store instructions here on how to free precdata */
+	realtype *event_times;           /**< ring buffer of recent boundary-event times for simple Zeno detection */
+	int event_times_cap;             /**< allocated length of event_times */
+	int event_times_count;           /**< number of valid entries currently stored */
+	int event_times_next;            /**< next ring-buffer slot to overwrite */
 
 	/* Error flag look-up data */
 	IdaFlagFn *flagfn;
 	IdaFlagNameFn *flagnamefn;
 	const char *flagfntype;
+
+#if SUNDIALS_VERSION_MAJOR >= 6
+	SUNContext sunctx;
+#endif
+#if SUNDIALS_VERSION_MAJOR >= 5
+	SUNLinearSolver linear_solver;
+	SUNMatrix dense_matrix;
+#endif
 
 } IntegratorIdaData;
 
@@ -71,4 +89,3 @@ typedef struct IntegratorIdaDataStruct{
 IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *integ);
 
 #endif
-

@@ -73,6 +73,13 @@ ASC_DLLSPEC int slv_block_partition_real(slv_system_t sys, int uppertriangular);
 	@return 0 on success, 2 on out-of-memory, 1 on any other failure
 */
 
+ASC_DLLSPEC void slv_block_set_dof_messages_enabled(int enabled);
+/**<
+	Controls user-facing DOF/rank messages emitted during structural block
+	partitioning. This is intended for temporary suppression when a higher-level
+	initialization path will report a clearer user-facing diagnosis.
+ */
+
 
 ASC_DLLSPEC int slv_block_unify(slv_system_t sys);
 /**<

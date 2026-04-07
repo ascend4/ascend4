@@ -4,6 +4,7 @@ utilities_*
 
 solver_slv_common
 solver_slvreq
+solver_column
 solver_lrslv
 solver_qrslv
 solver_ipopt
@@ -35,3 +36,6 @@ compiler_dataset
 
 packages_defaultall
 integrator_lsode
+integrator_ida
+
+solver_fprops

@@ -58,6 +58,13 @@ ASC_DLLSPEC void WriteExpr(FILE *f, CONST struct Expr *e);
 	@NOTE The output is in POSTFIX format
 */
 
+ASC_DLLSPEC void WriteExprInfix(FILE *f, CONST struct Expr *e);
+/**<
+	Write the expression in a source-like infix form when possible.
+	If infix reconstruction is not supported for a token sequence,
+	the original postfix form is written instead.
+*/
+
 extern void WriteExprNode2Str(Asc_DString *dstring, CONST struct Expr *e);
 /**<	
 	Write a single expression node to a string with no leading
@@ -71,7 +78,13 @@ extern void WriteExpr2Str(Asc_DString *dstring, CONST struct Expr *e);
 	@NOTE The return is in POSTFIX format.
 */
 
+ASC_DLLSPEC void WriteExprInfix2Str(Asc_DString *dstring, CONST struct Expr *e);
+/**<
+	Write the expression to a string in a source-like infix form when possible.
+	If infix reconstruction is not supported for a token sequence,
+	the original postfix form is returned.
+*/
+
 /* @} */
 
 #endif /* ASC_EXPRIO_H */
-

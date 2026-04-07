@@ -115,8 +115,13 @@ enum stat_t {
   WHEN,         /**< WHEN statement */
   FNAME,        /**< Name of model or relation */
   SOLVER,       /**< SOLVER statement */
+  INTEGRATOR,   /**< INTEGRATOR statement */
   OPTION,       /**< OPTION statement */
   SOLVE,        /**< SOLVE statement */
+  INTEGRATE,    /**< INTEGRATE statement */
+  OBSERVE,      /**< OBSERVE statement */
+  STUDY,        /**< STUDY statement */
+  DELETESYSTEM, /**< DELETE SYSTEM statement */
   SELECT,       /**< SELECT statement */
   SWITCH,       /**< SWITCH statement */
   WHILE,        /**< WHILE statement */
@@ -126,6 +131,8 @@ enum stat_t {
   COND,         /**< CONDITIONAL statement */
   WBTS,         /**< WILL_BE_THE_SAME */
   WNBTS,        /**< WILL_NOT_BE_THE_SAME */
+  REINIT,       /**< REINIT statement */
+  SWITCHTO,     /**< SWITCH TO ... IF ... statement */
   TABLESTAT,    /**< TABLE statement */
   DATASETSTAT,  /**< DATASET statement */
   WILLBE        /**< WILL_BE */
@@ -152,6 +159,7 @@ enum stat_t {
 #define context_SWITCH   0x100 /**< statement is in SWITCH's statement list */
 #define context_WHILE    0x200 /**< statement is in WHILE's statement list */
 #define context_MODWHERE 0x400 /**< statement is in model where list */
+#define context_INITIAL  0x800 /**< statement is in an INITIAL section */
 
 /*
  * Certain statement types are more easily interpreted if we cache
@@ -239,12 +247,19 @@ struct StateSWITCH {
 };
 
 /** used for IS_A, IS_REFINED_TO, WILL_BE */
+enum StateISCheckKind {
+  ISCV_NONE = 0,
+  ISCV_WITH_VALUE = 1,
+  ISCV_DEFAULT = 2
+};
+
 struct StateIS {
   struct VariableList *vl;  /**< all, but WILL_BE may want len=1. */
   symchar *type;            /**< all */
   struct Set *typeargs;     /**< all, parameter list. may be NULL */
   symchar *settype;         /**< IS_A only */
-  struct Expr *checkvalue;  /**< WILL_BE only */
+  struct Expr *checkvalue;  /**< declaration-time default/check value */
+  unsigned char checkkind;  /**< distinguishes WITH_VALUE from DEFAULT */
   /* note that checkvalue!=NULL and typeargs!=NULL are mutually exclusive
    * because checkvalues go with constants which are never parameterized.
    */
@@ -288,6 +303,18 @@ struct StateARE {
 struct StateAssign {
   struct Name *nptr;
   struct Expr *rhs;
+};
+
+/** used for event-time state reinitialisation statements */
+struct StateReinit {
+  struct Name *nptr;
+  struct Expr *rhs;
+};
+
+/** used for event-time selector/mode transition statements */
+struct StateSwitchTo {
+  struct Expr *value;
+  struct Expr *guard;
 };
 
 /** used for general external methods */
@@ -403,12 +430,64 @@ struct StateOPTION{
   struct Expr *rhs;
  };
 
+/** used for SOLVE statement */
+struct StateSOLVE{
+  struct Name *target; /**< optional target model name */
+ };
+
+enum StudyMode {
+  study_none = 0,
+  study_steps,
+  study_step,
+  study_ratio
+};
+
+enum StudyDistribution {
+  study_dist_default = 0,
+  study_dist_linear,
+  study_dist_log
+};
+
+/** used for STUDY statement */
+struct StateSTUDY{
+  struct VariableList *obsvars;   /**< variables to observe */
+  struct Name *vary;              /**< optional variable to vary */
+  struct Expr *lower;             /**< optional lower bound */
+  struct Expr *upper;             /**< optional upper bound */
+  struct Expr *value;             /**< STEP/RATIO expression */
+  long steps;                     /**< STEPS count */
+  enum StudyMode mode;            /**< spacing mode */
+  enum StudyDistribution dist;    /**< optional distribution override */
+  symchar *run_method;            /**< optional method to run before each step */
+  unsigned int now;               /**< execute immediately if true */
+  char *filename;                 /**< optional output filename */
+ };
+
+/** used for INTEGRATOR statement */
+struct StateINTEGRATOR{
+  CONST char *name;              /**< requested integrator engine name */
+};
+
+/** used for INTEGRATE statement */
+struct StateINTEGRATE{
+  struct Expr *start;            /**< integration start time */
+  struct Expr *stop;             /**< integration stop time */
+  long steps;                    /**< number of reporting steps */
+};
+
+/** used for OBSERVE statement */
+struct StateOBSERVE{
+  struct VariableList *obsvars;   /**< variables to observe */
+  symchar *name;                  /**< optional observation set name */
+};
+
 /** used for TABLE statement (parse metadata in v0). */
 struct StateTABLE{
   struct Name *name;           /**< target array name */
   symchar *decl_type;          /**< inline TABLE declaration type (optional) */
   struct Set *decl_typeargs;   /**< inline TABLE type arguments (optional) */
   symchar *decl_set_type;      /**< inline TABLE set type for set-valued targets */
+  char *units;                 /**< table-level units string, without braces (optional) */
   struct Expr *default_expr;   /**< DEFAULT expression, if supplied */
   char *body;                  /**< canonical tokenized body text */
   unsigned long rows;          /**< parsed non-empty table rows */
@@ -483,6 +562,8 @@ union StateUnion {
   struct StateIS         i;
   struct StateARE        a;
   struct StateAssign     asgn;
+  struct StateReinit     reinit;
+  struct StateSwitchTo   switchto;
   struct StateRelation   rel;
   struct StateLogicalRel lrel;
   struct StateFOR        f;
@@ -501,7 +582,12 @@ union StateUnion {
   struct StateWhile      loop;
   struct StateFlow       flow;
   struct StateSOLVER     solver;
+  struct StateINTEGRATOR integrator;
   struct StateOPTION     option;
+  struct StateSOLVE      solve;
+  struct StateINTEGRATE  integrate;
+  struct StateOBSERVE    observe;
+  struct StateSTUDY      study;
   struct StateLINK	     lnk;
   struct StateTABLE      table;
   struct StateDATASET    dataset;

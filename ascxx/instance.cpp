@@ -8,6 +8,7 @@
 #include "set.h"
 #include "plot.h"
 #include "instanceinterfacedata.h"
+#include <ascend/compiler/simstatus.h>
 
 extern "C"{
 #include <ascend/general/platform.h>
@@ -35,6 +36,7 @@ extern "C"{
 #include <ascend/compiler/relation_io.h>
 #include <ascend/compiler/functype.h>
 #include <ascend/compiler/relation_util.h>
+#include <ascend/compiler/derivinst.h>
 #include <ascend/compiler/logrel_util.h>
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/when_io.h>
@@ -47,6 +49,29 @@ extern "C"{
 #include <sstream>
 
 using namespace std;
+
+static void
+ascxx_mark_instance_dirty(struct Instance *inst){
+	struct Instance *cursor;
+	if(inst == NULL){
+		return;
+	}
+	cursor = inst;
+	while(cursor != NULL){
+		if(IsDerivativeInstance(cursor)){
+			struct Instance *base = DerivativeInstanceBase(cursor);
+			if(base != NULL){
+				inst = base;
+				break;
+			}
+		}
+		if(NumberParents(cursor) < 1){
+			break;
+		}
+		cursor = InstanceParent(cursor, 1);
+	}
+	asc_simstatus_mark_dirty(inst);
+}
 
 struct UnitsOverridesDB *ascxx_get_units_overrides_db(void){
 	static struct UnitsOverridesDB *db = NULL;
@@ -112,6 +137,107 @@ saveDisplayUnitsOverrides(void){
 	return rc;
 }
 
+const std::string
+getDisplayUnitsOverridesPath(void){
+	char *path = UnitsOverridesDefaultPath();
+	string out;
+	if (path != NULL) {
+		out = path;
+		ASC_FREE(path);
+	}
+	return out;
+}
+
+static void
+ascxx_set_display_units_override(
+	const enum UnitsOverrideKind kind,
+	const std::string &scope,
+	const std::string &name,
+	const std::string &units
+){
+	struct UnitsOverridesDB *db = ascxx_get_units_overrides_db();
+	int rc;
+	if (db == NULL) {
+		throw runtime_error("display-units overrides DB unavailable");
+	}
+	rc = UnitsOverridesSet(
+		db,
+		kind,
+		scope.empty() ? NULL : scope.c_str(),
+		name.c_str(),
+		units.c_str()
+	);
+	if (rc != 0) {
+		stringstream ss;
+		ss << "set display-units override failed (rc=" << rc << ")";
+		throw runtime_error(ss.str());
+	}
+}
+
+static void
+ascxx_clear_display_units_override(
+	const enum UnitsOverrideKind kind,
+	const std::string &scope,
+	const std::string &name
+){
+	struct UnitsOverridesDB *db = ascxx_get_units_overrides_db();
+	int rc;
+	if (db == NULL) {
+		throw runtime_error("display-units overrides DB unavailable");
+	}
+	rc = UnitsOverridesUnset(
+		db,
+		kind,
+		scope.empty() ? NULL : scope.c_str(),
+		name.c_str()
+	);
+	if (rc != 0) {
+		stringstream ss;
+		ss << "clear display-units override failed (rc=" << rc << ")";
+		throw runtime_error(ss.str());
+	}
+}
+
+void
+setDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &units,
+	const std::string &scope
+){
+	ascxx_set_display_units_override(UNITS_OVERRIDE_TYPE,scope,type_name,units);
+}
+
+void
+clearDisplayUnitsTypeOverride(
+	const std::string &type_name,
+	const std::string &scope
+){
+	ascxx_clear_display_units_override(UNITS_OVERRIDE_TYPE,scope,type_name);
+}
+
+void
+setDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &units,
+	const std::string &scope
+){
+	if (scope.empty()) {
+		throw runtime_error("name overrides require a non-empty scope");
+	}
+	ascxx_set_display_units_override(UNITS_OVERRIDE_NAME,scope,name,units);
+}
+
+void
+clearDisplayUnitsNameOverride(
+	const std::string &name,
+	const std::string &scope
+){
+	if (scope.empty()) {
+		throw runtime_error("name overrides require a non-empty scope");
+	}
+	ascxx_clear_display_units_override(UNITS_OVERRIDE_NAME,scope,name);
+}
+
 /**
 	Create an instance of a type. @see Simulation for instantiation.
 */
@@ -167,7 +293,7 @@ Instanc::~Instanc(){
 	//cerr << "DESTROYING INSTANC OBJECT" << endl;
 }
 
-const SymChar &
+const SymChar
 Instanc::getName() const{
 	return name;
 }
@@ -210,17 +336,23 @@ Instanc::getKindStr() const{
 		case REAL_INST: ss << "Real"; break;
 		case INTEGER_INST: ss << "Integer"; break;
 		case BOOLEAN_INST: ss << "Boolean"; break;
-		case SYMBOL_INST: ss << "Symbol"; break;
+		case SYMBOL_INST:
+			ss << (isSelector() ? "Selector" : "Symbol");
+			break;
 		case SET_INST: ss << "Set"; break;
 		case REAL_ATOM_INST: ss << "Real atom"; break;
 		case INTEGER_ATOM_INST: ss << "Integer atom"; break;
 		case BOOLEAN_ATOM_INST: ss << "Boolean atom"; break;
-		case SYMBOL_ATOM_INST: ss << "Symbol atom"; break;
+		case SYMBOL_ATOM_INST:
+			ss << (isSelector() ? "Selector atom" : "Symbol atom");
+			break;
 		case SET_ATOM_INST: ss << "Set atom"; break;
 		case REAL_CONSTANT_INST: ss << "Real constant"; break;
 		case BOOLEAN_CONSTANT_INST: ss << "Boolean constant"; break;
 		case INTEGER_CONSTANT_INST: ss << "Integer constant"; break;
-		case SYMBOL_CONSTANT_INST: ss << "Symbol constant"; break;
+		case SYMBOL_CONSTANT_INST:
+			ss << (isSelector() ? "Selector constant" : "Symbol constant");
+			break;
 		case DUMMY_INST: ss << "Dummy"; break;
 		default:
 			throw runtime_error("Invalid instance type");
@@ -404,6 +536,11 @@ Instanc::isSymbol() const{
 }
 
 const bool
+Instanc::isSelector() const{
+	return isSymbol() && getType().isRefinedSelector();
+}
+
+const bool
 Instanc::isDefined() const{
 	if(!isAtom() && !isFund() && !isConst())throw runtime_error("Instanc::isDefined: not an atom/fund/const");
 	return AtomAssigned(i);
@@ -571,6 +708,15 @@ Instanc::getSymbolValue() const{
 	return SCP(GetSymbolAtomValue(i));
 }
 
+const SymChar
+Instanc::getSelectorValue() const{
+	if(!isSelector()){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not selector-valued",getName().toString());
+		return SymChar("ERROR");
+	}
+	return getSymbolValue();
+}
+
 void
 Instanc::setSymbolValue(const SymChar &sym){
 	stringstream ss;
@@ -582,8 +728,22 @@ Instanc::setSymbolValue(const SymChar &sym){
 		ss << "Constant '" << getName().toString() << "' has already been defined.";
 		throw runtime_error(ss.str());
 	}
+	if(isDefined() && getSymbolValue() == sym){
+		return;
+	}
 
 	SetSymbolAtomValue(i,sym.getInternalType());
+	ascxx_mark_instance_dirty(i);
+}
+
+void
+Instanc::setSelectorValue(const SymChar &sym){
+	stringstream ss;
+	if(!isSelector()){
+		ss << "Instance '" << getName().toString() << "' is not selector-valued.";
+		throw runtime_error(ss.str());
+	}
+	setSymbolValue(sym);
 }
 
 const string
@@ -740,6 +900,13 @@ Instanc::getChildren()
 
 		children.push_back(c);
 	}
+	unsigned long dynlen = InstanceDynamicChildCount(i);
+	for(unsigned long ci=1; ci<=dynlen; ++ci){
+		struct Instance *dyn = InstanceDynamicChild(i, ci);
+		symchar *dynname = InstanceDynamicChildName(i, ci);
+		if(dyn==NULL || dynname==NULL)continue;
+		children.push_back(Instanc(dyn, SymChar(SCP(dynname))));
+	}
 	return children;
 }
 
@@ -747,6 +914,9 @@ Instanc
 Instanc::getChild(const SymChar &name) const{
 	struct Instance *c = ChildByChar(i,name.getInternalType());
 	stringstream ss;
+	if(c==NULL){
+		c = InstanceDynamicChildByChar(i, name.getInternalType());
+	}
 	if(c==NULL){
 		ss << "Child '" << name << "'  not found in " << getName();
 		throw runtime_error(ss.str());
@@ -798,6 +968,7 @@ void
 Instanc::setFixed(const bool &val){
 	if(isFixed()==val)return;
 	//CONSOLE_DEBUG("Fixing solver_var at %p",i);
+	DerivativeInstanceNoteMutation(i);
 	getChild("fixed").setBoolValue(val);
 }
 
@@ -809,17 +980,31 @@ Instanc::setIncluded(const bool &val){
 
 void
 Instanc::setBoolValue(const bool &val, const unsigned &depth){
+	DerivativeInstanceNoteMutation(i);
+	if(isDefined() && getBoolValue() == val){
+		return;
+	}
 	SetBooleanAtomValue(i, val, depth);
+	ascxx_mark_instance_dirty(i);
 }
 
 void
 Instanc::setIntValue(const long &val, const unsigned &depth){
+	if(isDefined() && getIntValue() == val){
+		return;
+	}
 	SetIntegerAtomValue(i, val, depth);
+	ascxx_mark_instance_dirty(i);
 }
 
 void
 Instanc::setRealValue(const double &val, const unsigned &depth){
+	DerivativeInstanceNoteMutation(i);
+	if(isDefined() && getRealValue() == val){
+		return;
+	}
 	SetRealAtomValue(i,val, depth);
+	ascxx_mark_instance_dirty(i);
 	//ERROR_REPORTER_HERE(ASC_USER_NOTE,"Set %s to %f",getName().toString(),val);
 }
 
@@ -828,6 +1013,7 @@ Instanc::setRealValue(const double &val, const unsigned &depth){
 */
 void
 Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &depth){
+	DerivativeInstanceNoteMutation(i);
 
 	if(isConst()){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Can't change the value of a constant");
@@ -858,6 +1044,7 @@ Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &de
 	}
 
 	SetRealAtomValue(i,val,depth);
+	ascxx_mark_instance_dirty(i);
 }
 
 /**

@@ -112,7 +112,7 @@ double helmholtz_dudrho_T(FluidStateUnion vals, const FluidData *data, FpropsErr
 
 
 PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
-	PureFluid *P = FPROPS_NEW(PureFluid);
+	PureFluid *P = FPROPS_NEW_CLEAR(PureFluid);
 
 	if(E->type != FPROPS_HELMHOLTZ){
 		FPROPS_FREE(P);
@@ -122,8 +122,8 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 
 	MSG("Fluid '%s' with T_t = %f", E->name, E->data.helm->T_t);
 
-	P->data = FPROPS_NEW(FluidData);
-	P->data->corr.helm = FPROPS_NEW(HelmholtzRunData);
+	P->data = FPROPS_NEW_CLEAR(FluidData);
+	P->data->corr.helm = FPROPS_NEW_CLEAR(HelmholtzRunData);
 
 	/* metadata */
 	/* FIXME strings should be copied, not just referenced */
@@ -189,8 +189,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 		//return NULL;
 	}
 
-	// ref0 is not yet supported for this fluid type:
-	P->data->ref0 = (ReferenceState){FPROPS_REF_TPHG,{.tphg={298.15,0,NAN,NAN}}};
+	P->data->ref0 = I->ref0;
 
 	// fix up the reference point now...
 	if(ref == NULL){
@@ -1532,5 +1531,3 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzRunData *HD){
 }
 
 #endif
-
-

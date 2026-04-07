@@ -79,6 +79,12 @@ static const HelmholtzData helmholtz_data_nitrogen = {
 		323.15, 1.042637745E+0, 3.353055943E+5, 6.923064311E+3
 	}}}
 #endif
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = 0.0 /* N2(g) elemental reference convention */
+		, .s0 = (191.609e3 / NITROGEN_M) /* NIST WebBook, Sdeg(gas, 1 bar) */
+	}}}
 
 	, .omega = 0.039 /* acentric factor, from Reid, Prausnitz & Polling */
 	, .ideal = &ideal_data_nitrogen
@@ -193,6 +199,10 @@ static const ThermalConductivityData thcond_nitrogen = {
 	}}
 };
 
+static const ElementComp elements_nitrogen[] = {
+	{"N", 2}
+};
+
 
 const EosData eos_nitrogen = {
 	"nitrogen"
@@ -204,6 +214,8 @@ const EosData eos_nitrogen = {
 	,.data = {.helm = &helmholtz_data_nitrogen}
 	,.visc = &visc_nitrogen
 	,.thcond = &thcond_nitrogen
+	,.elements = elements_nitrogen
+	,.nelements = (int)(sizeof(elements_nitrogen) / sizeof(elements_nitrogen[0]))
 };
 
 #else

@@ -43,6 +43,12 @@ static HelmholtzData helmholtz_data_propane = {
 	, .rho_c = PROPANE_RHOC /* kg/m3 */
 	, .T_t = 85.525 /* K */
 	, .ref = {FPROPS_REF_IIR}
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-103850.0e3 / PROPANE_M) /* M&S G9e Table A-25, C3H8(g) */
+		, .s0 = (269.91e3 / PROPANE_M) /* M&S G9e Table A-25, C3H8(g) */
+	}}}
 	, .omega = 0.3071 /* acentric factor */
 	, .ideal = &ideal_data_propane
 	, .np = 11 /* power terms */
@@ -97,7 +103,7 @@ reference values from the paper... TODO, check these...
 
 Table 5. Calculated Values of Properties for Algorithm Verification
 T F p cV cp w
-K mol ·dm-3 MPa J · mol-1 ·K-1 J · mol-1 ·K-1 m· s-1
+K mol Â·dm-3 MPa J Â· mol-1 Â·K-1 J Â· mol-1 Â·K-1 mÂ· s-1
 200.0 14.0 2.3795138 61.078424 93.475362 1381.9552
 300.0 12.0 19.053797 73.972542 108.61529 958.40520
 300.0 0.4 0.84694991 69.021875 85.753997 221.88959

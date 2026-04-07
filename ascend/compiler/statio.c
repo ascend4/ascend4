@@ -247,6 +247,8 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl){
     case FOR: 	/* that this isn't handled further may be a bug */
     case ASGN:
     case CASGN:
+    case REINIT:
+    case SWITCHTO:
     case RUN:
     case IF:
     case WHEN:
@@ -319,15 +321,18 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
       if (GetStatTypeArgs(s) != NULL) {
         FPRINTF(f,"(");
         WriteSet(f,GetStatTypeArgs(s));
-        FPRINTF(f,");\n");
-      } else {
-        FPRINTF(f,";\n");
+        FPRINTF(f,")");
       }
     } else {
       /* no parameters to sets */
-      FPRINTF(f," IS_A %s OF %s;\n",
+      FPRINTF(f," IS_A %s OF %s",
               SCP(GetStatType(s)),SCP(GetStatSetType(s)));
     }
+    if (GetStatCheckValue(s)!=NULL ) {
+      FPRINTF(f, GetStatCheckKind(s)==ISCV_WITH_VALUE ? " WITH_VALUE " : " DEFAULT ");
+      WriteExpr(f,GetStatCheckValue(s));
+    }
+    FPRINTF(f,";\n");
     break;
   case WILLBE:
     WriteVariableList(f,GetStatVarList(s));
@@ -514,6 +519,9 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
         FPRINTF(f," OF %s",SCP(s->v.table.decl_set_type));
       }
     }
+    if (s->v.table.units != NULL) {
+      FPRINTF(f," UNITS {%s}",s->v.table.units);
+    }
     if (s->v.table.positional) {
       FPRINTF(f," POSITIONAL");
     }
@@ -592,18 +600,105 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
   case SOLVER:
   	FPRINTF(f,"SOLVER %s;\n",s->v.solver.name);
 	break;
+  case INTEGRATOR:
+	FPRINTF(f,"INTEGRATOR %s;\n",s->v.integrator.name);
+	break;
   case OPTION:
   	FPRINTF(f,"OPTION %s ",s->v.option.name);
 	WriteExpr(f,s->v.option.rhs);
 	FPRINTF(f,";\n");
 	break;
   case SOLVE:
-  	FPRINTF(f,"SOLVE;\n");
+  	FPRINTF(f,"SOLVE");
+	if (s->v.solve.target != NULL) {
+		FPRINTF(f," ");
+		WriteName(f,s->v.solve.target);
+	}
+	FPRINTF(f,";\n");
+	break;
+  case INTEGRATE:
+	FPRINTF(f,"INTEGRATE FROM ");
+	WriteExpr(f,s->v.integrate.start);
+	FPRINTF(f," TO ");
+	WriteExpr(f,s->v.integrate.stop);
+	FPRINTF(f," STEPS %ld;\n",s->v.integrate.steps);
+	break;
+  case OBSERVE:
+	FPRINTF(f,"OBSERVE ");
+	if (s->v.observe.obsvars != NULL) {
+		WriteVariableList(f,s->v.observe.obsvars);
+	}
+	if (s->v.observe.name != NULL) {
+		FPRINTF(f," AS %s",SCP(s->v.observe.name));
+	}
+	FPRINTF(f,";\n");
+	break;
+  case STUDY:
+	FPRINTF(f,"STUDY ");
+	if (s->v.study.obsvars != NULL) {
+		WriteVariableList(f,s->v.study.obsvars);
+	}
+	if (s->v.study.vary != NULL) {
+		FPRINTF(f," VARY ");
+		WriteName(f,s->v.study.vary);
+		FPRINTF(f," FROM ");
+		WriteExpr(f,s->v.study.lower);
+		FPRINTF(f," TO ");
+		WriteExpr(f,s->v.study.upper);
+		switch (s->v.study.mode) {
+		case study_steps:
+			FPRINTF(f," STEPS %ld",s->v.study.steps);
+			if (s->v.study.dist == study_dist_linear) {
+				FPRINTF(f," LINEAR");
+			} else if (s->v.study.dist == study_dist_log) {
+				FPRINTF(f," LOG");
+			}
+			break;
+		case study_step:
+			FPRINTF(f," STEP ");
+			WriteExpr(f,s->v.study.value);
+			break;
+		case study_ratio:
+			FPRINTF(f," RATIO ");
+			WriteExpr(f,s->v.study.value);
+			break;
+		case study_none:
+		default:
+			break;
+		}
+	}
+	if (s->v.study.run_method != NULL) {
+		FPRINTF(f," RUN %s",SCP(s->v.study.run_method));
+	}
+	if (s->v.study.now) {
+		FPRINTF(f," NOW");
+	}
+	if (s->v.study.filename != NULL) {
+		FPRINTF(f," FILE \"%s\"",s->v.study.filename);
+	}
+	FPRINTF(f,";\n");
+	break;
+  case DELETESYSTEM:
+	FPRINTF(f,"DELETE SYSTEM;\n");
 	break;
   case CALL:
     FPRINTF(f,"CALL %s(",SCP(CallStatId(s)));
     WriteSet(f,CallStatArgs(s));
     FPRINTF(f,");\n");
+    break;
+  case REINIT:
+    FPRINTF(f,"REINIT(");
+    WriteName(f,ReinitStatVar(s));
+    FPRINTF(f,", ");
+    WriteExpr(f,ReinitStatRHS(s));
+    FPRINTF(f,");\n");
+    break;
+  case SWITCHTO:
+    FPRINTF(f,"SWITCH TO ");
+    WriteExpr(f,SwitchToStatValue(s));
+    FPRINTF(f," IF ");
+    WriteExpr(f,SwitchToStatGuard(s));
+    FPRINTF(f,";\n");
     break;
   case ASSERT:
 	FPRINTF(f,"ASSERT ");
@@ -738,6 +833,114 @@ void WriteStatementSuppressed(FILE *f, CONST struct Statement *stat){
   }
 }
 
+static void WriteSourceContextLine(FILE *f, unsigned long line, CONST char *text, int len){
+  FPRINTF(f,"  %5lu | %.*s\n",line,len,text);
+}
+
+static int WriteModuleSourceLineFromString(FILE *f, CONST char *source, unsigned long line){
+  unsigned long current = 1;
+  unsigned long first = (line > 1) ? (line - 1) : line;
+  int wrote = 0;
+  CONST char *start, *end;
+
+  if (source == NULL || line == 0) {
+    return 0;
+  }
+
+  start = source;
+  while (*start != '\0') {
+    end = start;
+    while (*end != '\0' && *end != '\n') {
+      ++end;
+    }
+    if (current >= first && current <= line) {
+      if (!wrote) {
+        FPRINTF(f,"Source:\n");
+      }
+      WriteSourceContextLine(f,current,start,(int)(end - start));
+      wrote = 1;
+      if (current == line) {
+        break;
+      }
+    }
+    if (*end == '\0') {
+      break;
+    }
+    start = end + 1;
+    ++current;
+  }
+
+  return wrote;
+}
+
+static int WriteModuleSourceLineFromFile(FILE *f, CONST char *filename, unsigned long line){
+  FILE *src;
+  char buffer[512];
+  unsigned long current = 1;
+  unsigned long first = (line > 1) ? (line - 1) : line;
+  int wrote = 0;
+  int chunk_has_newline = 0;
+
+  if (filename == NULL || line == 0 || filename[0] == '\0') {
+    return 0;
+  }
+
+  src = fopen(filename,"r");
+  if (src == NULL) {
+    return 0;
+  }
+
+  while (fgets(buffer,sizeof(buffer),src) != NULL) {
+    chunk_has_newline = (strchr(buffer,'\n') != NULL);
+    if (current >= first && current <= line) {
+      if (!wrote) {
+        FPRINTF(f,"Source:\n");
+      }
+      if (chunk_has_newline) {
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+          --len;
+        }
+        WriteSourceContextLine(f,current,buffer,(int)len);
+      } else {
+        WriteSourceContextLine(f,current,buffer,(int)strlen(buffer));
+      }
+      wrote = 1;
+      if (current == line && chunk_has_newline) {
+        break;
+      }
+    }
+    if (chunk_has_newline) {
+      ++current;
+      if (wrote && current > line) {
+        break;
+      }
+    }
+  }
+  fclose(src);
+
+  if (wrote && !chunk_has_newline) {
+    PUTC('\n',f);
+  }
+  return wrote;
+}
+
+static int WriteStatementSourceLine(FILE *f, CONST struct Statement *stat){
+  CONST struct module_t *mod;
+  CONST char *source;
+
+  if (stat == NULL) {
+    return 0;
+  }
+
+  mod = StatementModule(stat);
+  source = Asc_ModuleString(mod);
+  if (source != NULL) {
+    return WriteModuleSourceLineFromString(f,source,StatementLineNum(stat));
+  }
+  return WriteModuleSourceLineFromFile(f,Asc_ModuleFileName(mod),StatementLineNum(stat));
+}
+
 void WriteStatementError(const error_severity_t sev
 		, const struct Statement *stat
 		, const int outputstatement
@@ -751,8 +954,11 @@ void WriteStatementError(const error_severity_t sev
 	vfprintf_error_reporter(ASCERR,fmt,args2);
 	va_end(args);
 	va_end(args2);
-	if(outputstatement){
+	if(stat != NULL){
 		FPRINTF(ASCERR,"\n");
+		(void)WriteStatementSourceLine(ASCERR,stat);
+	}
+	if(outputstatement){
 		WriteStatement(ASCERR,stat,4);
 	}
 	error_reporter_end_flush();
@@ -792,6 +998,7 @@ void WriteStatementErrorMessage(
 
   if(stat!=NULL){
     /* write some more detail */
+    (void)WriteStatementSourceLine(ASCERR,stat);
     g_show_statement_detail = ((noisy!=0) ? 1 : 0);
     WriteStatement(ASCERR,stat,2);
     g_show_statement_detail = 1;
@@ -893,6 +1100,11 @@ symchar *StatementTypeString(CONST struct Statement *s){
     g_statio_stattypenames[ASGN] = AddSymbol("Assignment");
     g_statio_stattypenames[CASGN] = AddSymbol("Constant assignment");
     g_statio_stattypenames[RUN] = AddSymbol("RUN");
+    g_statio_stattypenames[SOLVER] = AddSymbol("SOLVER");
+    g_statio_stattypenames[OPTION] = AddSymbol("OPTION");
+    g_statio_stattypenames[SOLVE] = AddSymbol("SOLVE");
+    g_statio_stattypenames[STUDY] = AddSymbol("STUDY");
+    g_statio_stattypenames[DELETESYSTEM] = AddSymbol("DELETE SYSTEM");
     g_statio_stattypenames[IF] = AddSymbol("IF");
     g_statio_stattypenames[WHEN] = GetBaseTypeName(when_type);
     g_statio_stattypenames[FNAME] = AddSymbol("FNAME");
@@ -907,6 +1119,8 @@ symchar *StatementTypeString(CONST struct Statement *s){
     g_statio_stattypenames[COND] = AddSymbol("CONDITIONAL");
     g_statio_stattypenames[WBTS] = AddSymbol("WILL_BE_THE_SAME");
     g_statio_stattypenames[WNBTS] = AddSymbol("WILL_NOT_BE_THE_SAME");
+    g_statio_stattypenames[REINIT] = AddSymbol("REINIT");
+    g_statio_stattypenames[SWITCHTO] = AddSymbol("SWITCHTO");
     g_statio_stattypenames[TABLESTAT] = AddSymbol("TABLE");
     g_statio_stattypenames[DATASETSTAT] = AddSymbol("DATASET");
     g_statio_stattypenames[WILLBE] = AddSymbol("WILL_BE");
@@ -940,6 +1154,8 @@ symchar *StatementTypeString(CONST struct Statement *s){
   case SWITCH:
   case EXT:
   case CALL:
+  case REINIT:
+  case SWITCHTO:
   case ASSERT:
   case REF:
   case COND:

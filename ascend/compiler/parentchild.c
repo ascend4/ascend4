@@ -50,6 +50,7 @@
 #include "dump.h"
 #include "prototype.h"
 #include "pending.h"
+#include "statement.h"
 #include "find.h"
 #include "logical_relation.h"
 #include "rel_blackbox.h"
@@ -920,6 +921,76 @@ CONST struct Statement *ChildDeclaration(CONST struct Instance *i,
   return ChildStatement(cl,n);
 }
 
+CONST struct Statement *InstanceDeclarationStatement(CONST struct Instance *inst,
+                                                     CONST struct Instance *parent_hint)
+{
+  struct Instance *parent;
+  struct Instance *declinst;
+  unsigned long ci;
+
+  if(inst == NULL){
+    return NULL;
+  }
+
+  declinst = (struct Instance *)inst;
+
+  parent = (struct Instance *)parent_hint;
+  if(parent == NULL){
+    if(NumberParents(declinst) == 0){
+      return NULL;
+    }
+    parent = InstanceParent(declinst,1);
+  }
+  if(parent == NULL){
+    return NULL;
+  }
+
+  while(IsArrayInstance(parent)){
+    declinst = parent;
+    if(NumberParents(declinst) == 0){
+      return NULL;
+    }
+    parent = InstanceParent(declinst,1);
+    if(parent == NULL){
+      return NULL;
+    }
+  }
+
+  ci = ChildIndex(parent,declinst);
+  if(ci == 0){
+    return NULL;
+  }
+  return ChildDeclaration(parent,ci);
+}
+
+int InstanceDeclarationLocation(CONST struct Instance *inst,
+                                CONST struct Instance *parent_hint,
+                                CONST char **filename,
+                                int *lineno)
+{
+  CONST struct Statement *s;
+
+  if(filename != NULL){
+    *filename = NULL;
+  }
+  if(lineno != NULL){
+    *lineno = 0;
+  }
+
+  s = InstanceDeclarationStatement(inst,parent_hint);
+  if(s == NULL){
+    return 0;
+  }
+
+  if(filename != NULL){
+    *filename = Asc_ModuleFileName(StatementModule(s));
+  }
+  if(lineno != NULL){
+    *lineno = StatementLineNum(s);
+  }
+  return 1;
+}
+
 unsigned long ChildSearch(CONST struct Instance *i,
 			  CONST struct InstanceName *name)
 {
@@ -1177,4 +1248,3 @@ void StoreChildPtr(struct Instance *i, unsigned long int n,
     ASC_PANIC("Invalid argument to StoreChildPtr.\n");
   }
 }
-

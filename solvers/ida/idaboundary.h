@@ -36,12 +36,28 @@ int some_dis_vars_changed(slv_system_t sys);
 /**
  * Setup LRSlv for use with IDA. Solve the problem at startup to check the analysis
  */
-void ida_setup_lrslv(IntegratorSystem *integ);
+int ida_setup_lrslv(IntegratorSystem *integ);
+
+/**
+ * Refresh the currently active IDA root list. This includes ordinary
+ * conditional boundaries and the currently active simple comparison guards
+ * from SWITCH TO statements.
+ */
+int ida_refresh_event_roots(IntegratorSystem *integ);
 
 /**
  * Throw out old values and reanalyse the system after a boundary crossing
  */
 int ida_bnd_reanalyse(IntegratorSystem *integ);
+
+/**
+ * Perform same-time event iteration after a boundary-triggered reconfiguration.
+ * Newly activated REINIT actions are applied at most once per event, with an
+ * IDA consistency solve and LRSlv settling pass between iterations.
+ *
+ * @return 0 on success
+ */
+int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1);
 
 /**
  * Update the relist, as equations may have been added/removed after a crossing
@@ -59,7 +75,7 @@ int ida_bnd_update_relist(IntegratorSystem *integ);
  * Create a new NVector, assign all data to 0
  * @param vec_length	number of data elements in the vector.
  */
-N_Vector ida_bnd_new_zero_NV(long int vec_length);
+N_Vector ida_bnd_new_zero_NV(IntegratorSystem *integ, long int vec_length);
 
 void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vector yp0);
 
@@ -77,5 +93,13 @@ void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vect
 */
 int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 		int *bnd_cond_states);
+
+/**
+ * Lightweight opt-in trace of hybrid event state for debugging and diagnostics.
+ * Enabled when the environment variable ASCEND_HYBRID_TRACE is set to a
+ * non-empty, non-zero value.
+ */
+int ida_hybrid_trace_enabled(void);
+void ida_hybrid_trace(IntegratorSystem *integ, const char *label, realtype t);
 
 #endif  /* ASC_IDA_H */

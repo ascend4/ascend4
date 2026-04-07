@@ -74,8 +74,8 @@ SatEvalFn incomp_sat;
 */
 
 PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
-	PureFluid *P = FPROPS_NEW(PureFluid);
-	P->data = FPROPS_NEW(FluidData);
+	PureFluid *P = FPROPS_NEW_CLEAR(PureFluid);
+	P->data = FPROPS_NEW_CLEAR(FluidData);
 #define D P->data
 #define I E->data.incomp
 
@@ -114,12 +114,19 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	D->rho_c = NAN;
 	D->omega = NAN;
 
-	IncompRunData *R = FPROPS_NEW(IncompRunData);
+	if(I->rho.np == 0 || I->rho.pt == NULL){
+		ERRMSG("Density data missing in the provided filedata");
+		FPROPS_FREE(P->data);
+		FPROPS_FREE(P);
+		return NULL;
+	}
+
+	IncompRunData *R = FPROPS_NEW_CLEAR(IncompRunData);
 	D->corr.incomp = R;
 
 	/* FIXME use a different approach for cp0 */
 #if 0
-	IdealData *J = FPROPS_NEW(IdealData);
+	IdealData *J = FPROPS_NEW_CLEAR(IdealData);
 	J->data.cp0 = I->cp0;
 	J->type = IDEAL_CP0;
 	D->cp0 = cp0_prepare(J, D->R, I->cp0.Tstar);
@@ -169,6 +176,19 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	//MSG("P->data->corr.incomp = %p",P->data->corr.incomp);
 
 	return P;
+}
+
+void incomp_destroy(PureFluid *P){
+	if(!P){
+		return;
+	}
+	if(P->data){
+		FPROPS_FREE(P->data->corr.incomp);
+		P->data->corr.incomp = NULL;
+		FPROPS_FREE(P->data);
+		P->data = NULL;
+	}
+	FPROPS_FREE(P);
 }
 
 

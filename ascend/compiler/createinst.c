@@ -95,12 +95,10 @@ struct Instance *CreateModelInstance(struct TypeDescription *type)
 {
   struct ModelInstance *result, *proto;
   unsigned long num_children;
-  CONST struct StatementList *stats;
   proto = MOD_INST(LookupPrototype(GetName(type)));
   if (proto==NULL) {
     CopyTypeDesc(type);
     num_children = ChildListLen(GetChildList(type));
-    stats = GetStatementList(type);
     result = MOD_INST(ascmalloc(
                 (unsigned)sizeof(struct ModelInstance)
                 + (unsigned)num_children * (unsigned)sizeof(struct Instance *)
@@ -120,7 +118,7 @@ struct Instance *CreateModelInstance(struct TypeDescription *type)
     result->padding = INT_MAX;
 #endif
 
-    result->executed = CreateFBList(gl_length(GetList(stats)));
+    result->executed = CreateFBList(GetExecutableStatementCount(type));
     ZeroNewChildrenEntries(MOD_CHILD(result,0),num_children);
     AssertMemory(result);
     if (GetUniversalFlag(type)) {
@@ -170,10 +168,12 @@ struct Instance *CreateSimulationInstance(struct TypeDescription *type,
 			      num_children* sizeof(struct Instance *)));
   result->t = SIM_INST;
   result->interface_ptr = NULL;
+  result->simstatus = NULL;
   result->desc = type;
   result->name = name;
   result->extvars = NULL;
-  result->slvreq_hooks = NULL;
+  result->slvreq_hooks = (SlvReqHooks)SLVREQ_HOOKS_EMPTY;
+  *SIM_CHILD(result,0) = NULL;
   return INST(result);
 }
 

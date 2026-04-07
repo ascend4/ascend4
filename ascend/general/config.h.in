@@ -116,6 +116,21 @@ typedef unsigned long long asc_intptr_t;
 @ASC_WITH_LZMA@
 
 /*
+	Whether the makemps solver module was built.
+*/
+@ASC_WITH_MAKEMPS@
+
+/*
+	Whether the IPOPT solver module was built.
+*/
+@ASC_WITH_IPOPT@
+
+/*
+	Whether the HiGHS solver module was built.
+*/
+@ASC_WITH_HIGHS@
+
+/*
 	Whether Graphviz support is enabled.
 */
 @WITH_GRAPHVIZ@
@@ -138,6 +153,11 @@ typedef unsigned long long asc_intptr_t;
 	Whether fnmatch() is available in <fnmatch.h>.
 */
 @HAVE_FNMATCH@
+
+/*
+	Whether getrusage() is available in <sys/resource.h>.
+*/
+@HAVE_GETRUSAGE@
 
 /* #define ASC_DLLDIRS "@DLLDIRS@" */
 

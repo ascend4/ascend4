@@ -1,17 +1,62 @@
 # -*- coding: utf8 -*-
 import extpy, sys
-from solverreporter import *
 from builtins import *
+import ascpy
 
 import sys, os, os.path
 from functools import reduce
 sys.path.append(os.path.expanduser("~/ascend/models/johnpye/fprops/python"))
 import fprops
 
-try:
-	from pylab import *
-except:
-	pass
+_PLOT_READY = False
+_PLOT_ERROR = None
+
+def _report_note(msg):
+	try:
+		browser = extpy.getbrowser()
+		if browser:
+			browser.reporter.reportNote(msg)
+			return
+	except Exception:
+		pass
+	try:
+		ascpy.getReporter().reportWarning(msg)
+	except Exception:
+		sys.stderr.write(msg + "\n")
+
+def _report_error(msg):
+	try:
+		browser = extpy.getbrowser()
+		if browser:
+			browser.reporter.reportError(msg)
+			return
+	except Exception:
+		pass
+	try:
+		ascpy.getReporter().reportError(msg)
+	except Exception:
+		sys.stderr.write(msg + "\n")
+
+def _ensure_plotting():
+	global _PLOT_READY, _PLOT_ERROR
+	if _PLOT_READY:
+		return True
+	try:
+		import loading
+		loading.load_matplotlib(throw=True)
+		import pylab
+		for name in (
+			"annotate", "axis", "figure", "ioff", "ion", "linspace",
+			"plot", "savefig", "show", "title", "xlabel", "ylabel"
+		):
+			globals()[name] = getattr(pylab, name)
+		_PLOT_READY = True
+		_PLOT_ERROR = None
+		return True
+	except Exception as e:
+		_PLOT_ERROR = e
+		_report_error("Plotting is unavailable: unable to load GTK/matplotlib (%s)." % str(e))
+		return False
 
 #--- for (T,s) plots ---
 
@@ -39,7 +84,7 @@ class TSPoint:
 		self.s = s
 
 def write(msg):
-	extpy.getbrowser().reporter.reportNote(msg)
+	_report_note(msg)
 
 def pconst(S1,S2,n):
 	"""Return a set of (T,s) points between two states, with pressure held constant."""
@@ -92,8 +137,8 @@ def plot_TH(SS,style='b-',Href = 0):
 
 def cycle_plot_rankine(self):
 	"""Plot T-s diagram for a simple Rankine cycle"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()
 	#hold(1)
@@ -110,15 +155,15 @@ def cycle_plot_rankine(self):
 	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/rankine.eps"))
 
 def cycle_plot_rankine_reheat(self):
 	"""Plot T-s diagram for a reheat Rankine cycle"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()
 	hold(1)
@@ -145,15 +190,15 @@ def cycle_plot_rankine_reheat(self):
 	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/rankine-reheat.eps"))
 
 def cycle_plot_rankine_regen2(self):
 	"""Plot T-s diagram for a regenerative Rankine cycle (bleed steam regen)"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()
 	#hold(1)
@@ -186,7 +231,7 @@ def cycle_plot_rankine_regen2(self):
 	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/regen2.eps"))
@@ -195,8 +240,8 @@ def cycle_plot_rankine_regen2(self):
 
 def cycle_plot_rankine_regen1(self):
 	"""Plot T-s diagram for a regenerative Rankine cycle"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()
 	#hold(1)
@@ -226,7 +271,7 @@ def cycle_plot_rankine_regen1(self):
 	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/regen1.eps"))
@@ -236,15 +281,15 @@ def cycle_plot_rankine_regen1(self):
 
 def heater_closed_plot(self):
 	"""Plot T-H diagram of heat transfer in a heater_closed model"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()
 	#hold(1)
 	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
 	HE = self.HE
 
-	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
+	_report_note("Fluid is %s" % D.name)
 
 	plot_TH(pconsth(HE.inlet_heat, HE.outlet_heat, 50),'r-',
 		Href = (float(HE.outlet_heat.h)*float(HE.outlet_heat.mdot))\
@@ -258,7 +303,7 @@ def heater_closed_plot(self):
 	ylabel(str(r"T / [°C]"))
 	xlabel("H / [MW]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/heater_closed.eps"))
@@ -267,8 +312,8 @@ def heater_closed_plot(self):
 
 def cycle_plot_ccgt(self):
 	"""Plot T-s diagram for combined-cycle gas turbine"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()
 
@@ -292,7 +337,7 @@ def cycle_plot_ccgt(self):
 	ylabel(str(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/ccgt.eps"))
@@ -304,8 +349,8 @@ def cycle_plot_ccgt(self):
 
 def cycle_plot_brayton_regen(self):
 	"""Plot T-s diagran for regenerative gas turbine"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()		
 
@@ -337,7 +382,7 @@ def cycle_plot_brayton_regen(self):
 	ylabel(str(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/brayton_regen.eps"))
@@ -345,8 +390,8 @@ def cycle_plot_brayton_regen(self):
 
 def cycle_plot_brayton_reheat_regen_intercool(self):
 	"""Plot T-s diagram for reheat-regenerative gas turbine"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()		
 	#hold(1)
@@ -394,15 +439,15 @@ def cycle_plot_brayton_reheat_regen_intercool(self):
 	ylabel(str(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 
 
 def cycle_plot_brayton_split(self):
 	"""Plot T-s diagran for split-regeneration gas turbine"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()		
 	#hold(1)
@@ -448,7 +493,7 @@ def cycle_plot_brayton_split(self):
 	ylabel(str(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 	savefig(os.path.expanduser("~/Desktop/brayton__split_regen.eps"))
@@ -460,15 +505,15 @@ def cycle_plot_brayton_split(self):
 
 def air_stream_heat_exchanger_plot(self):
 	"""Plot T-H diagram of heat transfer in a heater_closed model"""
-	import loading
-	loading.load_matplotlib(throw=True)
+	if not _ensure_plotting():
+		return
 	ioff()
 	figure()
 	#hold(1)
 	D = fprops.fluid(str(self.cd_cold.component.getSymbolValue()))
 
 	n = self.n.getIntValue()
-	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
+	_report_note("Fluid is %s" % D.name)
 
 	# hot side is the air, calculated in the model
 	plot_TH( [self.H[i] for i in range(1+int(n))],'r-',\
@@ -483,7 +528,7 @@ def air_stream_heat_exchanger_plot(self):
 	ylabel(str(r"T / [°C]"))
 	xlabel("H / [MW]")
 
-	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	_report_note("Plotting completed")
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/air_stream_heatex.eps"))

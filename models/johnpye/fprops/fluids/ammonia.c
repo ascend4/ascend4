@@ -51,11 +51,17 @@ static const HelmholtzData helmholtz_data_ammonia = {
 	, /* T_t */ 195.495
 
 	, {FPROPS_REF_TPFU}
+	, .ref0 = {FPROPS_REF_TPHS0, .data = {.tphs = {
+		.T0 = 298.15
+		, .p0 = 101325.0
+		, .h0 = (-46190.0e3 / AMMONIA_M) /* M&S G9e Table A-25, NH3(g) */
+		, .s0 = (192.33e3 / AMMONIA_M) /* M&S G9e Table A-25, NH3(g) */
+	}}}
 
-	, 0.250 /* acentric factor, from Reid, Prausnitz & Polling */
-	, &ideal_data_ammonia
-	, 21 /* np */
-	, (const HelmholtzPowTerm[]){
+	, .omega = 0.250 /* acentric factor, from Reid, Prausnitz & Polling */
+	, .ideal = &ideal_data_ammonia
+	, .np = 21 /* np */
+	, .pt = (const HelmholtzPowTerm[]){
 		/* a_i, t_i, d_i, l_i */
 		{0.4554431E-1,  -0.5  ,  2,  0}/* 1 */
 		,{0.7238548E+0,   0.5 ,   1, 0 }
@@ -79,8 +85,8 @@ static const HelmholtzData helmholtz_data_ammonia = {
 		,{0.2272635E-2 ,  15 ,   2,  3}/* 20 */
 		,{-0.5588655E-3,  30,    4,  3}
 	}
-	, 0, 0 /* no gaussian terms */
-	, 0, 0 /* no critical terms */
+	, .ng = 0, .gt = 0 /* no gaussian terms */
+	, .nc = 0, .ct = 0 /* no critical terms */
 };
 
 const EosData eos_ammonia = {
