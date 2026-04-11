@@ -2,6 +2,9 @@
 import os, argparse, pathlib, sys, platform, shutil, subprocess, tempfile
 
 DEBUG=0
+A4_COMPLETION_START = "# START added automatically by ~/ascend/a4 completion"
+A4_COMPLETION_END = "# END added automatically by ~/ascend/a4 completion"
+
 def MSG(*args):
 	if DEBUG:
 		print(*args)
@@ -146,6 +149,170 @@ def default_gprofng_output():
 	os.unlink(path)
 	return pathlib.Path(path)
 
+def norm_path(path_value):
+	return os.path.normcase(str(pathlib.Path(path_value).resolve()))
+
+def same_path(lhs, rhs):
+	return norm_path(lhs) == norm_path(rhs)
+
+def complete_models(sourceroot, filen, prefix):
+	helper = r'''
+import os, pathlib, platform, re, sys
+
+MODEL_RE = re.compile(r'^\s*MODEL\s+([A-Za-z_][A-Za-z_0-9]*)\b', re.MULTILINE)
+
+def norm_path(path_value):
+	return os.path.normcase(str(pathlib.Path(path_value).resolve()))
+
+def same_path(lhs, rhs):
+	return norm_path(lhs) == norm_path(rhs)
+
+def emit_regex_matches(filen, prefix):
+	seen = set()
+	text = filen.read_text(encoding='utf-8', errors='replace')
+	for name in MODEL_RE.findall(text):
+		if name in seen or not name.startswith(prefix):
+			continue
+		print(name)
+		seen.add(name)
+
+sourceroot = pathlib.Path(sys.argv[1])
+filen = pathlib.Path(sys.argv[2])
+prefix = sys.argv[3]
+sys.path[:0] = [
+	str(sourceroot / 'ascxx'),
+	str(sourceroot / 'pygtk'),
+	str(sourceroot / 'models' / 'johnpye' / 'fprops' / 'python'),
+]
+try:
+	if platform.system() == 'Windows':
+		os.add_dll_directory(str(sourceroot))
+	import ascpy
+
+	library = ascpy.Library()
+	library.load(str(filen))
+	seen = set()
+	for module in library.getModules():
+		module_filename = module.getFilename()
+		if not module_filename or not same_path(module_filename, filen):
+			continue
+		for model_type in library.getModuleTypes(module):
+			name = model_type.getName().toString()
+			if not model_type.isModel() or name in seen or not name.startswith(prefix):
+				continue
+			print(name)
+			seen.add(name)
+except Exception:
+	emit_regex_matches(filen, prefix)
+'''
+	proc = subprocess.run(
+		[PYTHON, '-c', helper, str(sourceroot), str(filen), prefix],
+		capture_output=True,
+		encoding='utf-8',
+	)
+	if proc.stdout:
+		sys.stdout.write(proc.stdout)
+
+def cutest_listing(sourceroot, args):
+	cmd = shebang(sourceroot / 'test' / 'test', args)
+	proc = subprocess.run(cmd, capture_output=True, check=True, encoding='utf-8')
+	items = []
+	for line in (proc.stdout + proc.stderr).splitlines():
+		if not line[:1].isspace():
+			continue
+		name = line.strip()
+		if not name or " " in name:
+			continue
+		items.append(name)
+	return items
+
+def complete_cutest(sourceroot, prefix):
+	suites = cutest_listing(sourceroot, ['-l'])
+	if '.' not in prefix:
+		for suite in suites:
+			if suite.startswith(prefix):
+				print(suite)
+		return
+
+	suite_prefix, test_prefix = prefix.split('.', 1)
+	matched_suites = [suite for suite in suites if suite.startswith(suite_prefix)]
+
+	if suite_prefix in suites:
+		selected_suite = suite_prefix
+	elif len(matched_suites) == 1:
+		selected_suite = matched_suites[0]
+	else:
+		selected_suite = None
+
+	if selected_suite is None:
+		if test_prefix == "":
+			for suite in matched_suites:
+				print(f"{suite}.")
+		return
+
+	for test in cutest_listing(sourceroot, ['-t', selected_suite]):
+		candidate = f"{selected_suite}.{test}"
+		if candidate.startswith(prefix):
+			print(candidate)
+
+def completion_block(completion_script):
+	completion_script = pathlib.Path(completion_script).resolve()
+	return "\n".join([
+		A4_COMPLETION_START,
+		f'if [ -f "{completion_script}" ]; then',
+		f'\t. "{completion_script}"',
+		'fi',
+		A4_COMPLETION_END,
+	]) + "\n"
+
+def install_bash_completion_profile(profile_path, completion_script):
+	profile_path = pathlib.Path(profile_path)
+	completion_script = pathlib.Path(completion_script).resolve()
+	block = completion_block(completion_script)
+	if profile_path.exists():
+		existing = profile_path.read_text(encoding='utf-8')
+	else:
+		existing = ""
+
+	lines = existing.splitlines()
+	kept = []
+	i = 0
+	while i < len(lines):
+		if lines[i] == A4_COMPLETION_START:
+			i += 1
+			while i < len(lines) and lines[i] != A4_COMPLETION_END:
+				i += 1
+			if i < len(lines):
+				i += 1
+			continue
+		kept.append(lines[i])
+		i += 1
+
+	base = "\n".join(kept).rstrip()
+	if base:
+		updated = base + "\n\n" + block
+	else:
+		updated = block
+
+	changed = updated != existing
+	if changed:
+		profile_path.write_text(updated, encoding='utf-8')
+	return changed, profile_path, completion_script
+
+def setup_bash_completion(sourceroot):
+	profile_path = get_effective_home() / '.bashrc'
+	completion_script = sourceroot / 'tools' / 'completion' / 'a4.bash'
+	changed, profile_path, completion_script = install_bash_completion_profile(profile_path, completion_script)
+
+	if changed:
+		print(f"Updated {profile_path}")
+	else:
+		print(f"No changes needed in {profile_path}")
+
+	print(f"Bash completion script: {completion_script}")
+	print("Current shell was not modified: './a4 completion' runs in a child process and cannot source into the parent bash.")
+	print(f"To enable it now in this shell, run: source \"{completion_script}\"")
+
 if __name__ == "__main__":
 	argv = list(sys.argv)
 	if (
@@ -236,6 +403,22 @@ if __name__ == "__main__":
 	p_cutest.set_defaults(action='cutest')
 	p_cutest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to test/test')
 
+	p_complete = s.add_parser('complete', help=argparse.SUPPRESS)
+	p_complete.set_defaults(action='complete')
+	s_complete = p_complete.add_subparsers(dest='complete_action', help=argparse.SUPPRESS)
+
+	p_complete_models = s_complete.add_parser('models', help=argparse.SUPPRESS)
+	p_complete_models.set_defaults(complete_action='models')
+	p_complete_models.add_argument('file', type=pathlib.Path, help=argparse.SUPPRESS)
+	p_complete_models.add_argument('prefix', nargs='?', default='', help=argparse.SUPPRESS)
+
+	p_complete_cutest = s_complete.add_parser('cutest', help=argparse.SUPPRESS)
+	p_complete_cutest.set_defaults(complete_action='cutest')
+	p_complete_cutest.add_argument('prefix', nargs='?', default='', help=argparse.SUPPRESS)
+
+	p_completion = s.add_parser('completion', help='Install Bash completion hook into ~/.bashrc')
+	p_completion.set_defaults(action='completion')
+
 	p_units = s.add_parser('units',help = 'Manage display-units overrides')
 	p_units.set_defaults(action='units')
 	p_units.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to rununits.py')
@@ -320,6 +503,21 @@ if __name__ == "__main__":
 	if not os.environ.get('ASCENDBTLIB'):
 		os.environ['ASCENDBTLIB'] = str(sourceroot)
 		MSG("CREATED ASCENDBTLIB=%s" % os.environ['ASCENDBTLIB'])
+
+	if hasattr(args, 'action') and args.action == 'complete':
+		if not getattr(args, 'complete_action', None):
+			p.error("missing completion target")
+		if args.complete_action == 'models':
+			complete_models(sourceroot, args.file, args.prefix)
+		elif args.complete_action == 'cutest':
+			complete_cutest(sourceroot, args.prefix)
+		else:
+			p.error("unsupported completion target")
+		sys.exit(0)
+
+	if hasattr(args, 'action') and args.action == 'completion':
+		setup_bash_completion(sourceroot)
+		sys.exit(0)
 
 	MSG("ARGS",args)
 		
