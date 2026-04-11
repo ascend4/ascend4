@@ -4,5 +4,6 @@
 #include "solution_data.h"
 
 const BinarySolutionPhaseDef *wustite_hidayat_phase(void);
+const BinarySolutionPhaseDef *wustite_feoxide_recon_phase(void);
 
 #endif /* FPROPS_WUSTITE_HIDAYAT_H */

@@ -303,6 +303,12 @@ def get_default_cunit_paths():
 	"""
 	Choose CUnit defaults that are valid paths on this host so PackageVariable
 	validation doesn't fail before optional-component probing.
+
+	Expected packaging model:
+	- MSYS2: use the packaged CUnit install and let the active environment or
+	  pkg-config metadata supply the real lookup paths.
+	- Rocky/Ubuntu local builds: default to $HOME/.local, where our fallback
+	  source build installs CUnit when a distro package is not used.
 	"""
 	candidates = []
 	home_local = exists_maybe_cygpath(pathlib.Path(get_effective_home()) / '.local')

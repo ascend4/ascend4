@@ -12,6 +12,54 @@ enum {
 	SPINEL_FE_MEMBER_COUNT = 5
 };
 
+typedef struct {
+	const char *phase_source;
+	double dg_ae_affine_a;
+	double dg_ae_affine_b;
+	int mag_variant;
+} SpinelFeParams;
+
+enum {
+	SPINEL_MAG_CURRENT = 0,
+	SPINEL_MAG_MMC1_TC_BETA_PLUS_EXCESS = 1,
+	SPINEL_MAG_MMC1_SELECTIVE_BEST = 2
+};
+
+static const SpinelFeParams spinel_params_degterov = {
+	"degterov_2001",
+	0.0,
+	0.0,
+	SPINEL_MAG_CURRENT
+};
+
+static const SpinelFeParams spinel_params_feoxide_recon = {
+	"feoxide_recon_baseline_2026",
+	0.0,
+	0.0,
+	SPINEL_MAG_CURRENT
+};
+
+static const SpinelFeParams spinel_params_bg_tuned = {
+	"fe_spinel_bg_tuned_2026",
+	-16984.331545915302,
+	18.769347422265838,
+	SPINEL_MAG_CURRENT
+};
+
+static const SpinelFeParams spinel_params_mmc1_guess = {
+	"fe_spinel_mmc1_guess_2026",
+	0.0,
+	0.0,
+	SPINEL_MAG_MMC1_TC_BETA_PLUS_EXCESS
+};
+
+static const SpinelFeParams spinel_params_hidayat_adj1 = {
+	"hidayat_adj1",
+	0.0,
+	0.0,
+	SPINEL_MAG_MMC1_SELECTIVE_BEST
+};
+
 static double spinel_R(void){
 	return 8.31446261815324;
 }
@@ -45,7 +93,7 @@ static double hillert_jarl_gmag(double T, double Tord, double beta, double p){
 	return f * spinel_R() * T * log(beta + 1.0);
 }
 
-static double spinel_g_ae(double T){
+static double spinel_g_ae_base(double T){
 	/*
 	 * Hidayat 2015 Table 1: the Fe3O4 endmember of spinel was adjusted
 	 * slightly relative to Degterov 2001 to reproduce the wustite-spinel
@@ -56,6 +104,14 @@ static double spinel_g_ae(double T){
 		- 0.008149197 * T * T
 		- 174.832 * T * log(T)
 		+ 1445276.0 / T;
+}
+
+static double spinel_g_ae(const SpinelFeParams *params, double T){
+	double g = spinel_g_ae_base(T);
+	if(params){
+		g += params->dg_ae_affine_a + params->dg_ae_affine_b * T;
+	}
+	return g;
 }
 
 static double spinel_i_ae(double T){
@@ -79,7 +135,71 @@ static double spinel_delta_eav(void){
 	return 0.0;
 }
 
-static int spinel_fe_degterov_g_only(const double *n_members, double T, double *g_out){
+static double spinel_gmag(const SpinelFeParams *params, double T,
+		double y_t_fe2, double y_t_fe3, double y_o_fe2, double y_o_fe3,
+		double y_o_va){
+	int mag_variant = params ? params->mag_variant : SPINEL_MAG_CURRENT;
+	if(mag_variant == SPINEL_MAG_MMC1_TC_BETA_PLUS_EXCESS){
+		double w_ae = y_t_fe2 * y_o_fe3;
+		double w_ea = y_t_fe3 * y_o_fe2;
+		double w_125 = y_t_fe2 * y_t_fe3 * y_o_va;
+		double w_134 = y_t_fe2 * y_o_fe2 * y_o_fe3;
+		double w_145 = y_t_fe2 * y_o_fe3 * y_o_va;
+		double w_234 = y_t_fe3 * y_o_fe2 * y_o_fe3;
+		double w_235 = y_t_fe3 * y_o_fe2 * y_o_va;
+		double tord = 848.0 * w_ae
+			+ 424.0 * w_ea
+			+ 141.33333 * w_125
+			+ 2544.0 * w_134
+			+ 848.0 * w_145
+			+ 2544.0 * w_234
+			- 5088.0 * w_235;
+		double beta = 44.54 * w_ae
+			+ 22.27 * w_ea
+			+ 7.4233333 * w_125
+			+ 133.62 * w_134
+			+ 44.54 * w_145
+			+ 133.62 * w_234
+			- 267.24 * w_235;
+		if(!(tord > 1e-12) || !(beta > 1e-12)){
+			return 0.0;
+		}
+		return hillert_jarl_gmag(T, tord, beta, 0.28);
+	}
+	if(mag_variant == SPINEL_MAG_MMC1_SELECTIVE_BEST){
+		double s_ea = 1.30;
+		double s_red = 0.95;
+		double w_ae = y_t_fe2 * y_o_fe3;
+		double w_ea = y_t_fe3 * y_o_fe2;
+		double w_125 = y_t_fe2 * y_t_fe3 * y_o_va;
+		double w_134 = y_t_fe2 * y_o_fe2 * y_o_fe3;
+		double w_145 = y_t_fe2 * y_o_fe3 * y_o_va;
+		double w_234 = y_t_fe3 * y_o_fe2 * y_o_fe3;
+		double w_235 = y_t_fe3 * y_o_fe2 * y_o_va;
+		double tord = 848.0 * w_ae
+			+ s_ea * 424.0 * w_ea
+			+ 141.33333 * w_125
+			+ 2544.0 * w_134
+			+ 848.0 * w_145
+			+ s_red * 2544.0 * w_234
+			- s_red * 5088.0 * w_235;
+		double beta = 44.54 * w_ae
+			+ s_ea * 22.27 * w_ea
+			+ 7.4233333 * w_125
+			+ 133.62 * w_134
+			+ 44.54 * w_145
+			+ s_red * 133.62 * w_234
+			- s_red * 267.24 * w_235;
+		if(!(tord > 1e-12) || !(beta > 1e-12)){
+			return 0.0;
+		}
+		return hillert_jarl_gmag(T, tord, beta, 0.28);
+	}
+	return hillert_jarl_gmag(T, 848.0, 44.54, 0.28);
+}
+
+static int spinel_fe_degterov_g_only_params(const SpinelFeParams *params,
+		const double *n_members, double T, double *g_out){
 	double nt, no, nphase;
 	double y_t_fe2, y_t_fe3, y_o_fe2, y_o_fe3, y_o_va;
 	double G_AE, G_EA, G_EE, G_AA, G_EV, G_AV;
@@ -100,7 +220,7 @@ static int spinel_fe_degterov_g_only(const double *n_members, double T, double *
 	y_o_fe3 = n_members[SPINEL_FE_OCT_FE3] / no;
 	y_o_va = n_members[SPINEL_FE_OCT_VA] / no;
 
-	G_AE = spinel_g_ae(T);
+	G_AE = spinel_g_ae(params, T);
 	G_EA = G_AE;
 	G_EE = G_AE + spinel_i_ae(T);
 	G_AA = G_AE - spinel_i_ae(T) + spinel_delta_ae();
@@ -121,18 +241,19 @@ static int spinel_fe_degterov_g_only(const double *n_members, double T, double *
 		+ 2.0 * (safe_ylogy(y_o_fe2) + safe_ylogy(y_o_fe3) + safe_ylogy(y_o_va))
 	);
 
-	Gmag = hillert_jarl_gmag(T, 848.0, 44.54, 0.28);
+	Gmag = spinel_gmag(params, T, y_t_fe2, y_t_fe3, y_o_fe2, y_o_fe3, y_o_va);
 
 	*g_out = nphase * (Gmix - T * Sconf + Gmag);
 	return isfinite(*g_out);
 }
 
-static int spinel_fe_degterov_eval(const double *n_members, double T, double p, double *g_out,
+static int spinel_fe_degterov_eval_params(const SpinelFeParams *params,
+		const double *n_members, double T, double p, double *g_out,
 		double *mu_out){
 	double g0;
 	size_t i;
 	(void)p;
-	if(!spinel_fe_degterov_g_only(n_members, T, &g0)){
+	if(!spinel_fe_degterov_g_only_params(params, n_members, T, &g0)){
 		return 0;
 	}
 	if(g_out){
@@ -146,17 +267,17 @@ static int spinel_fe_degterov_eval(const double *n_members, double T, double p, 
 			memcpy(nwork, n_members, sizeof(nwork));
 			if(nwork[i] > eps){
 				nwork[i] += eps;
-				if(!spinel_fe_degterov_g_only(nwork, T, &gp)){
+				if(!spinel_fe_degterov_g_only_params(params, nwork, T, &gp)){
 					return 0;
 				}
 				nwork[i] = n_members[i] - eps;
-				if(!spinel_fe_degterov_g_only(nwork, T, &gm)){
+				if(!spinel_fe_degterov_g_only_params(params, nwork, T, &gm)){
 					return 0;
 				}
 				mu_out[i] = (gp - gm) / (2.0 * eps);
 			}else{
 				nwork[i] += eps;
-				if(!spinel_fe_degterov_g_only(nwork, T, &gp)){
+				if(!spinel_fe_degterov_g_only_params(params, nwork, T, &gp)){
 					return 0;
 				}
 				mu_out[i] = (gp - g0) / eps;
@@ -167,6 +288,26 @@ static int spinel_fe_degterov_eval(const double *n_members, double T, double p, 
 		}
 	}
 	return 1;
+}
+
+static int spinel_fe_degterov_eval(const double *n_members, double T, double p, double *g_out,
+		double *mu_out){
+	return spinel_fe_degterov_eval_params(&spinel_params_degterov, n_members, T, p, g_out, mu_out);
+}
+
+static int spinel_fe_bg_tuned_eval(const double *n_members, double T, double p, double *g_out,
+		double *mu_out){
+	return spinel_fe_degterov_eval_params(&spinel_params_bg_tuned, n_members, T, p, g_out, mu_out);
+}
+
+static int spinel_fe_mmc1_guess_eval(const double *n_members, double T, double p, double *g_out,
+		double *mu_out){
+	return spinel_fe_degterov_eval_params(&spinel_params_mmc1_guess, n_members, T, p, g_out, mu_out);
+}
+
+static int spinel_fe_hidayat_adj1_eval(const double *n_members, double T, double p, double *g_out,
+		double *mu_out){
+	return spinel_fe_degterov_eval_params(&spinel_params_hidayat_adj1, n_members, T, p, g_out, mu_out);
 }
 
 static const char *elements_tet[] = {"Fe", "O"};
@@ -190,6 +331,91 @@ static const FeSpinelPhaseDef spinel_phase = {
 	&spinel_fe_degterov_eval
 };
 
+static int spinel_feoxide_recon_eval(const double *n_members, double T, double p, double *g_out,
+		double *mu_out){
+	return spinel_fe_degterov_eval_params(&spinel_params_feoxide_recon, n_members, T, p, g_out, mu_out);
+}
+
+static const FeSpinelPhaseDef spinel_phase_feoxide_recon = {
+	"spinel_fe",
+	"feoxide_recon_baseline_2026",
+	{
+		"Sp_Fe2_tet",
+		"Sp_Fe3_tet",
+		"Sp_Fe2_oct",
+		"Sp_Fe3_oct",
+		"Sp_Va_oct"
+	},
+	{2, 2, 1, 1, 0},
+	{elements_tet, elements_tet, elements_oct_fe, elements_oct_fe, NULL},
+	{stoich_tet, stoich_tet, stoich_oct_fe, stoich_oct_fe, NULL},
+	&spinel_feoxide_recon_eval
+};
+
+static const FeSpinelPhaseDef spinel_phase_bg_tuned = {
+	"spinel_fe",
+	"fe_spinel_bg_tuned_2026",
+	{
+		"Sp_Fe2_tet",
+		"Sp_Fe3_tet",
+		"Sp_Fe2_oct",
+		"Sp_Fe3_oct",
+		"Sp_Va_oct"
+	},
+	{2, 2, 1, 1, 0},
+	{elements_tet, elements_tet, elements_oct_fe, elements_oct_fe, NULL},
+	{stoich_tet, stoich_tet, stoich_oct_fe, stoich_oct_fe, NULL},
+	&spinel_fe_bg_tuned_eval
+};
+
+static const FeSpinelPhaseDef spinel_phase_mmc1_guess = {
+	"spinel_fe",
+	"fe_spinel_mmc1_guess_2026",
+	{
+		"Sp_Fe2_tet",
+		"Sp_Fe3_tet",
+		"Sp_Fe2_oct",
+		"Sp_Fe3_oct",
+		"Sp_Va_oct"
+	},
+	{2, 2, 1, 1, 0},
+	{elements_tet, elements_tet, elements_oct_fe, elements_oct_fe, NULL},
+	{stoich_tet, stoich_tet, stoich_oct_fe, stoich_oct_fe, NULL},
+	&spinel_fe_mmc1_guess_eval
+};
+
+static const FeSpinelPhaseDef spinel_phase_hidayat_adj1 = {
+	"spinel_fe",
+	"hidayat_adj1",
+	{
+		"Sp_Fe2_tet",
+		"Sp_Fe3_tet",
+		"Sp_Fe2_oct",
+		"Sp_Fe3_oct",
+		"Sp_Va_oct"
+	},
+	{2, 2, 1, 1, 0},
+	{elements_tet, elements_tet, elements_oct_fe, elements_oct_fe, NULL},
+	{stoich_tet, stoich_tet, stoich_oct_fe, stoich_oct_fe, NULL},
+	&spinel_fe_hidayat_adj1_eval
+};
+
 const FeSpinelPhaseDef *spinel_fe_degterov_phase(void){
 	return &spinel_phase;
+}
+
+const FeSpinelPhaseDef *spinel_feoxide_recon_phase(void){
+	return &spinel_phase_feoxide_recon;
+}
+
+const FeSpinelPhaseDef *spinel_fe_bg_tuned_phase(void){
+	return &spinel_phase_bg_tuned;
+}
+
+const FeSpinelPhaseDef *spinel_fe_mmc1_guess_phase(void){
+	return &spinel_phase_mmc1_guess;
+}
+
+const FeSpinelPhaseDef *spinel_fe_hidayat_adj1_phase(void){
+	return &spinel_phase_hidayat_adj1;
 }

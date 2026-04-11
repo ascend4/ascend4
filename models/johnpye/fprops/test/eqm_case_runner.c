@@ -13,10 +13,15 @@
    3) Run one case (JSON output):
         ./models/johnpye/fprops/test/eqm_case_runner wgs 1000 101325 \
           auto_nullspace "Moran and Shapiro"
+   4) Override elemental totals:
+        ./models/johnpye/fprops/test/eqm_case_runner feoc_fe_wustite 1000 100000 \
+          auto \
+          "Fe_bcc=hidayat_2015;Fe_fcc=hidayat_2015;Wus_FeO=hidayat_2015;Wus_FeO1p5=hidayat_2015;carbonmonoxide=reaktoro_clone_supcrt98;carbondioxide=reaktoro_clone_supcrt98" \
+          1,1,2.4
 */
 
-#define MAX_NS 8
-#define MAX_NE 4
+#define MAX_NS 16
+#define MAX_NE 5
 
 typedef struct EqmCase{
 	const char *name;
@@ -82,6 +87,60 @@ static const EqmCase CASES[] = {
 		{"N", "H"},
 		{1.0, 3.0},
 		{-1.0, -3.0, 2.0}
+	},
+	{
+		"feohsi_capture",
+		9,
+		{"Fe_bcc", "Fe_fcc", "Wus_FeO", "Wus_FeO1p5", "Fe3O4", "SiO2", "Fe2SiO4", "hydrogen", "water"},
+		4,
+		{"Fe", "O", "Si", "H"},
+		{2.0, 3.4, 0.4, 2.0},
+		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+	},
+	{
+		"feohsial_capture",
+		11,
+		{"Fe_bcc", "Fe_fcc", "Wus_FeO", "Wus_FeO1p5", "Fe3O4", "SiO2", "Fe2SiO4", "Al2O3", "FeAl2O4", "hydrogen", "water"},
+		5,
+		{"Fe", "O", "Si", "Al", "H"},
+		{2.0, 4.0, 0.3, 0.2, 2.0},
+		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+	},
+	{
+		"feohsial_pure_capture",
+		10,
+		{"Fe_bcc", "Fe_fcc", "Fe3O4", "Fe2O3", "SiO2", "Fe2SiO4", "Al2O3", "FeAl2O4", "hydrogen", "water"},
+		5,
+		{"Fe", "O", "Si", "Al", "H"},
+		{2.0, 4.2, 0.3, 0.2, 2.0},
+		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+	},
+	{
+		"feoch_clone_mixed",
+		8,
+		{"Fe_bcc", "Fe_fcc", "Fe3O4", "carbonmonoxide", "carbondioxide", "water", "hydrogen", "oxygen"},
+		4,
+		{"Fe", "C", "O", "H"},
+		{3.0, 1.0, 6.0, 2.0},
+		{0.0, 0.0, 0.0, 1.0, -1.0, 1.0, -1.0, 0.0}
+	},
+	{
+		"feoc_clone_redox",
+		5,
+		{"Fe_bcc", "Fe_fcc", "Fe3O4", "carbonmonoxide", "carbondioxide"},
+		3,
+		{"Fe", "C", "O"},
+		{3.0, 4.0, 8.0},
+		{0.0, 0.0, 0.0, 0.0, 0.0}
+	},
+	{
+		"feoc_fe_wustite",
+		6,
+		{"Fe_bcc", "Fe_fcc", "Wus_FeO", "Wus_FeO1p5", "carbonmonoxide", "carbondioxide"},
+		3,
+		{"Fe", "C", "O"},
+		{1.0, 1.0, 2.4},
+		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 	}
 };
 
@@ -107,6 +166,35 @@ static void print_case_list(void){
 	for(i = 0; i < NCASES; ++i){
 		printf("%s\n", CASES[i].name);
 	}
+}
+
+static int parse_csv_doubles(const char *text, double *out, int n){
+	const char *p = text;
+	char *endptr = NULL;
+	int i;
+	if(!text || !out || n <= 0){
+		return 0;
+	}
+	for(i = 0; i < n; ++i){
+		out[i] = strtod(p, &endptr);
+		if(endptr == p){
+			return 0;
+		}
+		if(i < n - 1){
+			if(*endptr != ','){
+				return 0;
+			}
+			p = endptr + 1;
+		}else{
+			while(*endptr == ' ' || *endptr == '\t' || *endptr == '\n' || *endptr == '\r'){
+				++endptr;
+			}
+			if(*endptr != '\0'){
+				return 0;
+			}
+		}
+	}
+	return 1;
 }
 
 static double log10K_from_n(const double *n, const double *nu, int ns, double P){
@@ -190,6 +278,8 @@ int main(int argc, char *argv[]){
 	const char *source = "Moran and Shapiro";
 	const char *names[MAX_NS] = {0};
 	const char *elements[MAX_NE] = {0};
+	double b_override[MAX_NE] = {0.0};
+	const double *b_use = NULL;
 	double T;
 	double P;
 	double n[MAX_NS] = {0.0};
@@ -198,12 +288,17 @@ int main(int argc, char *argv[]){
 	int i;
 
 	if(argc < 4){
-		fprintf(stderr, "USAGE: %s <case|list> <T[K]> <P[Pa]> [algorithm] [source]\n", argv[0]);
+		fprintf(stderr, "USAGE: %s <case|list> <T[K]> <P[Pa]> [algorithm] [source] [b1,b2,...]\n", argv[0]);
 		return 2;
 	}
 	if(0 == strcmp(argv[1], "list")){
 		print_case_list();
 		return 0;
+	}
+	C = find_case(argv[1]);
+	if(!C){
+		fprintf(stderr, "Unknown case '%s'\n", argv[1]);
+		return 2;
 	}
 	T = atof(argv[2]);
 	P = atof(argv[3]);
@@ -213,10 +308,14 @@ int main(int argc, char *argv[]){
 	if(argc >= 6){
 		source = argv[5];
 	}
-	C = find_case(argv[1]);
-	if(!C){
-		fprintf(stderr, "Unknown case '%s'\n", argv[1]);
-		return 2;
+	if(argc >= 7){
+		if(!parse_csv_doubles(argv[6], b_override, C->ne)){
+			fprintf(stderr, "Invalid elemental-total override '%s' for case '%s'\n", argv[6], C->name);
+			return 2;
+		}
+		b_use = b_override;
+	}else{
+		b_use = C->b;
 	}
 	if(!(T > 0.0) || !(P > 0.0)){
 		fprintf(stderr, "Invalid T/P\n");
@@ -229,8 +328,8 @@ int main(int argc, char *argv[]){
 		elements[i] = C->elements[i];
 	}
 
-	status = fprops_eqm_tpb((const char **)names, C->ns, (const char **)elements, C->ne, C->b,
-		source, T, P, algorithm, NULL, n, &H_total);
+	status = eqm_solve_elements((const char **)names, C->ns, (const char **)elements, C->ne, b_use,
+		source, T, P, algorithm, NULL, n);
 	print_json_result(C, T, P, source, algorithm, status, n, H_total);
 	return 0;
 }

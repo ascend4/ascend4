@@ -4,5 +4,6 @@
 #include "solution_data.h"
 
 const BinarySolutionPhaseDef *bcc_iron_hidayat_phase(void);
+const BinarySolutionPhaseDef *bcc_iron_feoxide_recon_phase(void);
 
 #endif /* FPROPS_BCC_IRON_HIDAYAT_H */
