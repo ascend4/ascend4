@@ -18,7 +18,7 @@ testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 #print "CUNIT_CPPPATH =",test_env.get("CUNIT_CPPPATH")
 
 test_env['WITH_IPOPT'] = 1 if test_env.ensure_ipopt() else 0
-test_env['WITH_NLOPT'] = 1 if test_env.ensure_nlopt() else 0
+test_env['WITH_NLOPT'] = 1 if test_env.get('HAVE_NLOPT') else 0
 
 if test_env['WITH_CUNIT']:
 	test_env.AppendUnique(

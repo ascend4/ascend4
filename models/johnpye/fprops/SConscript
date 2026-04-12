@@ -12,8 +12,6 @@ fprops_env = env.Clone()
 
 if not fprops_env.get('HAVE_IPOPT'):
 	fprops_env.ensure_ipopt()
-if not fprops_env.get('HAVE_NLOPT'):
-	fprops_env.ensure_nlopt()
 
 if fprops_env.get('HAVE_IPOPT'):
 	fprops_env.AppendUnique(CPPDEFINES=['HAVE_IPOPT'])
