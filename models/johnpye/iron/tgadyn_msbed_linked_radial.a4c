@@ -34,6 +34,7 @@ MODEL tga_reduction_bed_slice_radial_local(
 	d_int_eff IS_A distance;
 	dz_bed IS_A distance;
 	eps_bed IS_A positive_factor;
+	D_screen IS_A diffusivity;
 	D_eff_bed IS_A diffusivity;
 	D_part0 IS_A diffusivity;
 	Sh_particle IS_A positive_factor;
@@ -239,7 +240,9 @@ MODEL tga_reduction_bed_slice_radial_local(
 			N_H2_face[f] = c_tot * D_part_face[f] * (y_H2_shell[f + 1] - y_H2_shell[f]) / dr_face[f];
 	END FOR;
 	Nface_surface_eq:
-		N_H2_face[n_radial_segs] = c_tot * (Sh_particle * D_eff_bed / d_ext) * (y_H2 - y_H2_shell[n_radial_segs]);
+		(* External gas-film transfer should scale with the free-gas diffusivity reference,
+		   not the porous-bed effective diffusivity. *)
+		N_H2_face[n_radial_segs] = c_tot * (Sh_particle * D_screen / d_ext) * (y_H2 - y_H2_shell[n_radial_segs]);
 
 	Jshell1_balance:
 		A_face_density[1] * N_H2_face[1] = J_shell[1];
@@ -545,6 +548,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	d_int_eff, slice[1..n_bed_segs].d_int_eff ARE_THE_SAME;
 	dz_bed, slice[1..n_bed_segs].dz_bed ARE_THE_SAME;
 	eps_bed, slice[1..n_bed_segs].eps_bed ARE_THE_SAME;
+	D_screen, slice[1..n_bed_segs].D_screen ARE_THE_SAME;
 	D_eff_bed, slice[1..n_bed_segs].D_eff_bed ARE_THE_SAME;
 	D_part0, slice[1..n_bed_segs].D_part0 ARE_THE_SAME;
 	Sh_particle, slice[1..n_bed_segs].Sh_particle ARE_THE_SAME;
@@ -642,7 +646,10 @@ METHODS
 		R_overall.lower_bound := -1e-12 {s/m};
 		y_H2O_if.lower_bound := -1e-6;
 		y_H2_if.lower_bound := -1e-6;
+		d_int_multiplier.lower_bound := 1e-12;
+		d_int_multiplier.upper_bound := 1;
 		d_int_eff.lower_bound := 1e-12 {m};
+		d_int_eff.upper_bound := d_p;
 		D_part0.lower_bound := 1e-18 {m^2/s};
 		n_Fe2O3.lower_bound := -1e-9 {mol};
 		n_Fe3O4.lower_bound := -1e-12 {mol};
