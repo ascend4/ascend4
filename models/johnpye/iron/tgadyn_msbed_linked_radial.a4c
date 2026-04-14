@@ -30,9 +30,12 @@ MODEL tga_reduction_bed_slice_radial_local(
 	p IS_A pressure;
 	c_tot IS_A molar_density;
 	d_p IS_A distance;
+	d_ext ALIASES d_p;
+	d_int_eff IS_A distance;
 	dz_bed IS_A distance;
 	eps_bed IS_A positive_factor;
 	D_eff_bed IS_A diffusivity;
+	D_part0 IS_A diffusivity;
 	Sh_particle IS_A positive_factor;
 	a_open IS_A factor;
 	a_close IS_A factor;
@@ -81,7 +84,8 @@ MODEL tga_reduction_bed_slice_radial_local(
 	morph_factor_local ALIASES morph_factor;
 
 	close_temp_factor IS_A positive_factor;
-	R_p IS_A distance;
+	R_ext IS_A distance;
+	R_int IS_A distance;
 	r_face[0..n_radial_segs] IS_A distance;
 	r_mid[shells] IS_A distance;
 	dr_face[internal_faces] IS_A distance;
@@ -119,17 +123,17 @@ MODEL tga_reduction_bed_slice_radial_local(
 	xi3_eq:
 		xi3 = n_Fe / n0_Fe2O3_slice;
 
-	Rp_eq:
-		R_p = d_p / 2;
+	Rext_eq:
+		R_ext = d_ext / 2;
+	Rint_eq:
+		R_int = d_int_eff / 2;
 	rface0_eq:
 		r_face[0] = 0 {m};
 	FOR s IN shells CREATE
 		rface_eq[s]:
-			r_face[s] = R_p * ((((s / 1.0) / n_radial_segs)) ^ (1.0 / 3.0));
+			r_face[s] = R_int * ((((s / 1.0) / n_radial_segs)) ^ (1.0 / 3.0));
 		rmid_eq[s]:
 			r_mid[s] = 0.5 * (r_face[s - 1] + r_face[s]);
-		aface_density_eq[s]:
-			A_face_density[s] = 24 * (1 - eps_bed) * dz_bed * (r_face[s] ^ 2) / (d_p ^ 3);
 		shell_h2o_eq[s]:
 			y_H2O_shell[s] = 1 - y_Ar - y_H2_shell[s];
 		xi1_shell_eq[s]:
@@ -213,21 +217,29 @@ MODEL tga_reduction_bed_slice_radial_local(
 	END SELECT;
 	FOR s IN shells CREATE
 		Dpart_shell_eq[s]:
-			D_part_eff_shell[s] = D_eff_bed / morph_factor_shell[s];
+			D_part_eff_shell[s] = D_part0 / morph_factor_shell[s];
 	END FOR;
 	morph_factor_eq:
 		morph_factor = morph_factor_shell[n_radial_segs];
 
 	FOR f IN internal_faces CREATE
+		aface_density_internal_eq[f]:
+			A_face_density[f] = 24 * (1 - eps_bed) * dz_bed * (r_face[f] ^ 2) / (d_ext ^ 3);
+	END FOR;
+	aface_density_surface_eq:
+		A_face_density[n_radial_segs] = 24 * (1 - eps_bed) * dz_bed * (R_ext ^ 2) / (d_ext ^ 3);
+
+	FOR f IN internal_faces CREATE
 		drface_eq[f]:
 			dr_face[f] = r_mid[f + 1] - r_mid[f];
 		Dface_eq[f]:
-			D_part_face[f] = 0.5 * (D_part_eff_shell[f] + D_part_eff_shell[f + 1]);
+			D_part_face[f] = 2 * D_part_eff_shell[f] * D_part_eff_shell[f + 1]
+				/ (D_part_eff_shell[f] + D_part_eff_shell[f + 1]);
 		Nface_eq[f]:
 			N_H2_face[f] = c_tot * D_part_face[f] * (y_H2_shell[f + 1] - y_H2_shell[f]) / dr_face[f];
 	END FOR;
 	Nface_surface_eq:
-		N_H2_face[n_radial_segs] = c_tot * (Sh_particle * D_eff_bed / d_p) * (y_H2 - y_H2_shell[n_radial_segs]);
+		N_H2_face[n_radial_segs] = c_tot * (Sh_particle * D_eff_bed / d_ext) * (y_H2 - y_H2_shell[n_radial_segs]);
 
 	Jshell1_balance:
 		A_face_density[1] * N_H2_face[1] = J_shell[1];
@@ -278,6 +290,9 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 
 	A_crucible IS_A area;
 	d_p IS_A distance;
+	d_ext ALIASES d_p;
+	d_int_multiplier IS_A positive_factor;
+	d_int_eff IS_A distance;
 	L_freeboard IS_A distance;
 	L_freeboard_eff IS_A distance;
 	L_bl IS_A distance;
@@ -293,6 +308,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	tau_bed IS_A positive_factor;
 	k_fb_multiplier IS_A positive_factor;
 	k_bed_multiplier IS_A positive_factor;
+	k_part_multiplier IS_A positive_factor;
 	Sh_particle IS_A positive_factor;
 	a_open IS_A factor;
 	a_close IS_A factor;
@@ -326,6 +342,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	D_H2O_Ar_bed IS_A diffusivity;
 	D_H2_Ar_bed IS_A diffusivity;
 	D_eff_bed IS_A diffusivity;
+	D_part0 IS_A diffusivity;
 
 	R_bl IS_A transport_resistance;
 	R_fb IS_A transport_resistance;
@@ -416,6 +433,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		H_bed = m_sample / (rho_bulk_bed * A_crucible);
 	dzbed_eq:
 		dz_bed = H_bed / n_bed_segs;
+	dint_eq:
+		d_int_eff = d_int_multiplier * d_ext;
 
 	yh2_avg_eq:
 		y_H2_react = SUM[slice[z].y_H2_part | z IN [1..n_bed_segs]] / n_bed_segs;
@@ -434,6 +453,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		D_H2_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2_Ar;
 	Deffbed_eq:
 		D_eff_bed = k_bed_multiplier * (eps_bed / tau_bed) * D_screen;
+	Dpart0_eq:
+		D_part0 = k_part_multiplier * D_screen;
 	Lfb_eff_eq:
 		L_freeboard_eff = L_freeboard / k_fb_multiplier;
 
@@ -521,9 +542,11 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	p, slice[1..n_bed_segs].p ARE_THE_SAME;
 	c_tot, slice[1..n_bed_segs].c_tot ARE_THE_SAME;
 	d_p, slice[1..n_bed_segs].d_p ARE_THE_SAME;
+	d_int_eff, slice[1..n_bed_segs].d_int_eff ARE_THE_SAME;
 	dz_bed, slice[1..n_bed_segs].dz_bed ARE_THE_SAME;
 	eps_bed, slice[1..n_bed_segs].eps_bed ARE_THE_SAME;
 	D_eff_bed, slice[1..n_bed_segs].D_eff_bed ARE_THE_SAME;
+	D_part0, slice[1..n_bed_segs].D_part0 ARE_THE_SAME;
 	Sh_particle, slice[1..n_bed_segs].Sh_particle ARE_THE_SAME;
 	a_open, slice[1..n_bed_segs].a_open ARE_THE_SAME;
 	a_close, slice[1..n_bed_segs].a_close ARE_THE_SAME;
@@ -542,6 +565,7 @@ METHODS
 		FIX p := 1 {bar};
 		FIX A_crucible := 20 {mm^2};
 		FIX d_p := 175 {um};
+		FIX d_int_multiplier := 1.0;
 		FIX L_freeboard := 8.3 {mm};
 		FIX L_bl := 0 {mm};
 
@@ -553,6 +577,7 @@ METHODS
 		FIX tau_bed := 3.0;
 		FIX k_fb_multiplier := 0.27732238;
 		FIX k_bed_multiplier := 0.35665202;
+		FIX k_part_multiplier := 0.35665202 * 0.45 / 3.0;
 		FIX Sh_particle := 0.76583406;
 		FIX a_open := 0.81142394;
 		FIX a_close := 2.5472071;
@@ -617,6 +642,8 @@ METHODS
 		R_overall.lower_bound := -1e-12 {s/m};
 		y_H2O_if.lower_bound := -1e-6;
 		y_H2_if.lower_bound := -1e-6;
+		d_int_eff.lower_bound := 1e-12 {m};
+		D_part0.lower_bound := 1e-18 {m^2/s};
 		n_Fe2O3.lower_bound := -1e-9 {mol};
 		n_Fe3O4.lower_bound := -1e-12 {mol};
 		n_FeO.lower_bound := -1e-12 {mol};
@@ -810,8 +837,11 @@ controlled internal diffusion. The default wrapper uses five radial shells.
 }
 'fitting parameters' SELF {
 Active chemistry slots: etak0_1, etak0_2, etak0_3, E_a_1, E_a_2, E_a_3.
-Transport and shell morphology: k_fb_multiplier, k_bed_multiplier, eps_bed,
-tau_bed, Sh_particle, a_open, a_close, beta_T.
+Transport and shell morphology: k_fb_multiplier, k_bed_multiplier,
+k_part_multiplier, eps_bed, tau_bed, Sh_particle, d_int_multiplier, a_open,
+a_close, beta_T.
+`d_p` remains the measured external particle size, while `d_int_eff =
+d_int_multiplier * d_p` sets the internal radial diffusion length.
 } END NOTES;
 METHODS
 METHOD on_load;
