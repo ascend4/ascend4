@@ -41,6 +41,7 @@ MODEL tga_reduction_bed_slice_radial_local(
 	a_open IS_A factor;
 	a_close IS_A factor;
 	beta_T IS_A factor;
+	n_close IS_A positive_factor;
 
 	n0_Fe2O3_slice IS_A mole;
 	n0_per_area_slice IS_A mole_per_area;
@@ -74,6 +75,7 @@ MODEL tga_reduction_bed_slice_radial_local(
 
 	xi1_shell[shells] IS_A reduction_extent;
 	xi3_shell[shells] IS_A reduction_extent;
+	xi_close_shell[shells] IS_A reduction_extent;
 	y_H2_shell[shells] IS_A mole_fraction;
 	y_H2O_shell[shells] IS_A mole_fraction;
 	morph_factor_shell[shells] IS_A positive_factor;
@@ -141,6 +143,8 @@ MODEL tga_reduction_bed_slice_radial_local(
 			xi1_shell[s] = (1 - n_radial_segs * n_Fe2O3_shell[s] / n0_Fe2O3_slice) / 3;
 		xi3_shell_eq[s]:
 			xi3_shell[s] = n_radial_segs * n_Fe_shell[s] / n0_Fe2O3_slice;
+		xi_close_shell_eq[s]:
+			xi_close_shell[s] = ((xi3_shell[s] + 1e-8) ^ n_close - (1e-8 ^ n_close));
 		rf1_eq[s]:
 			rate_forward_1[s] = (n_radial_segs * n_Fe2O3_shell[s] / n0_Fe2O3_slice) * k_step[1] * p * y_H2_shell[s];
 		rr1_eq[s]:
@@ -208,7 +212,7 @@ MODEL tga_reduction_bed_slice_radial_local(
 	CASE 'coupled':
 		FOR s IN shells CREATE
 			morph_shell_eq[s]:
-				morph_factor_shell[s] = exp(-a_open * xi1_shell[s] + a_close * close_temp_factor * xi3_shell[s]);
+				morph_factor_shell[s] = exp(-a_open * xi1_shell[s] + a_close * close_temp_factor * xi_close_shell[s]);
 		END FOR;
 	CASE 'nomorph':
 		FOR s IN shells CREATE
@@ -318,6 +322,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	a_open.lower_bound := 0;
 	a_close.lower_bound := 0;
 	beta_T IS_A factor;
+	n_close IS_A positive_factor;
 
 	y_H2_bulk IS_A mole_fraction;
 	y_H2O_bulk IS_A mole_fraction;
@@ -555,6 +560,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	a_open, slice[1..n_bed_segs].a_open ARE_THE_SAME;
 	a_close, slice[1..n_bed_segs].a_close ARE_THE_SAME;
 	beta_T, slice[1..n_bed_segs].beta_T ARE_THE_SAME;
+	n_close, slice[1..n_bed_segs].n_close ARE_THE_SAME;
 	FOR r IN steps CREATE
 		k_step[r], slice[1..n_bed_segs].k_step[r] ARE_THE_SAME;
 		K_ratio_eq[r], slice[1..n_bed_segs].K_ratio_eq[r] ARE_THE_SAME;
@@ -570,6 +576,7 @@ METHODS
 		FIX A_crucible := 20 {mm^2};
 		FIX d_p := 175 {um};
 		FIX d_int_multiplier := 1.0;
+		d_int_eff := d_p;
 		FIX L_freeboard := 8.3 {mm};
 		FIX L_bl := 0 {mm};
 
@@ -586,10 +593,12 @@ METHODS
 		FIX a_open := 0.81142394;
 		FIX a_close := 2.5472071;
 		FIX beta_T := -0.19173506;
+		FIX n_close := 1.0;
 		IF morphology_model = 'nomorph' THEN
 			a_open := 0;
 			a_close := 0;
 			beta_T := 0;
+			n_close := 1;
 		END IF;
 
 		FIX y_H2_bulk := 0.8;
@@ -651,6 +660,8 @@ METHODS
 		d_int_eff.lower_bound := 1e-12 {m};
 		d_int_eff.upper_bound := d_p;
 		D_part0.lower_bound := 1e-18 {m^2/s};
+		n_close.lower_bound := 0.5;
+		n_close.upper_bound := 6;
 		n_Fe2O3.lower_bound := -1e-9 {mol};
 		n_Fe3O4.lower_bound := -1e-12 {mol};
 		n_FeO.lower_bound := -1e-12 {mol};
@@ -664,6 +675,7 @@ METHODS
 			slice[z].n_Fe.lower_bound := -1e-12 {mol};
 			slice[z].y_H2_shell[1..n_radial_segs].lower_bound := -1e-6;
 			slice[z].y_H2O_shell[1..n_radial_segs].lower_bound := -1e-6;
+			slice[z].xi_close_shell[1..n_radial_segs].lower_bound := -1e-9;
 			slice[z].n_Fe2O3_shell[1..n_radial_segs].lower_bound := -1e-9 {mol};
 			slice[z].n_Fe3O4_shell[1..n_radial_segs].lower_bound := -1e-12 {mol};
 			slice[z].n_FeO_shell[1..n_radial_segs].lower_bound := -1e-12 {mol};
@@ -846,7 +858,7 @@ controlled internal diffusion. The default wrapper uses five radial shells.
 Active chemistry slots: etak0_1, etak0_2, etak0_3, E_a_1, E_a_2, E_a_3.
 Transport and shell morphology: k_fb_multiplier, k_bed_multiplier,
 k_part_multiplier, eps_bed, tau_bed, Sh_particle, d_int_multiplier, a_open,
-a_close, beta_T.
+a_close, beta_T, n_close.
 `d_p` remains the measured external particle size, while `d_int_eff =
 d_int_multiplier * d_p` sets the internal radial diffusion length.
 } END NOTES;
