@@ -75,7 +75,7 @@ MODEL tga_reduction_bed_slice_radial_local(
 
 	xi1_shell[shells] IS_A reduction_extent;
 	xi3_shell[shells] IS_A reduction_extent;
-	xi_close_shell[shells] IS_A reduction_extent;
+	xi_close_shell[shells] IS_A factor;
 	y_H2_shell[shells] IS_A mole_fraction;
 	y_H2O_shell[shells] IS_A mole_fraction;
 	morph_factor_shell[shells] IS_A positive_factor;
@@ -576,7 +576,7 @@ METHODS
 		FIX A_crucible := 20 {mm^2};
 		FIX d_p := 175 {um};
 		FIX d_int_multiplier := 1.0;
-		d_int_eff := d_p;
+		d_int_eff := d_int_multiplier * d_p;
 		FIX L_freeboard := 8.3 {mm};
 		FIX L_bl := 0 {mm};
 
@@ -653,7 +653,10 @@ METHODS
 		R_bl.lower_bound := -1e-12 {s/m};
 		R_bed.lower_bound := -1e-12 {s/m};
 		R_overall.lower_bound := -1e-12 {s/m};
-		y_H2O_if.lower_bound := -1e-6;
+		y_H2O_bulk.lower_bound := -1e-3;
+		y_H2O_fb_top.lower_bound := -1e-3;
+		y_H2O_if.lower_bound := -1e-3;
+		y_H2O_react.lower_bound := -1e-3;
 		y_H2_if.lower_bound := -1e-6;
 		d_int_multiplier.lower_bound := 1e-12;
 		d_int_multiplier.upper_bound := 1;
@@ -663,24 +666,34 @@ METHODS
 		n_close.lower_bound := 0.5;
 		n_close.upper_bound := 6;
 		n_Fe2O3.lower_bound := -1e-9 {mol};
-		n_Fe3O4.lower_bound := -1e-12 {mol};
-		n_FeO.lower_bound := -1e-12 {mol};
+		n_Fe3O4.lower_bound := -1e-9 {mol};
+		n_FeO.lower_bound := -1e-9 {mol};
 		n_Fe.lower_bound := -1e-12 {mol};
 		oxygen_remaining.lower_bound := -1e-9 {mol};
 
 		FOR z IN [1..n_bed_segs] DO
-			slice[z].n_Fe2O3.lower_bound := -1e-9 {mol};
-			slice[z].n_Fe3O4.lower_bound := -1e-12 {mol};
-			slice[z].n_FeO.lower_bound := -1e-12 {mol};
+			y_H2O_zone[z].lower_bound := -1e-3;
+			y_H2O_part[z].lower_bound := -1e-3;
+			slice[z].y_H2O_centre.lower_bound := -1e-3;
+			slice[z].y_H2O_part.lower_bound := -1e-3;
+			slice[z].n_Fe2O3.lower_bound := -3e-9 {mol};
+			slice[z].n_Fe3O4.lower_bound := -3e-9 {mol};
+			slice[z].n_FeO.lower_bound := -3e-9 {mol};
 			slice[z].n_Fe.lower_bound := -1e-12 {mol};
 			slice[z].y_H2_shell[1..n_radial_segs].lower_bound := -1e-6;
-			slice[z].y_H2O_shell[1..n_radial_segs].lower_bound := -1e-6;
+			slice[z].y_H2O_shell[1..n_radial_segs].lower_bound := -1e-3;
 			slice[z].xi_close_shell[1..n_radial_segs].lower_bound := -1e-9;
-			slice[z].n_Fe2O3_shell[1..n_radial_segs].lower_bound := -1e-9 {mol};
-			slice[z].n_Fe3O4_shell[1..n_radial_segs].lower_bound := -1e-12 {mol};
-			slice[z].n_FeO_shell[1..n_radial_segs].lower_bound := -1e-12 {mol};
+			slice[z].n_Fe2O3_shell[1..n_radial_segs].lower_bound := -3e-9 {mol};
+			slice[z].n_Fe3O4_shell[1..n_radial_segs].lower_bound := -3e-9 {mol};
+			slice[z].n_FeO_shell[1..n_radial_segs].lower_bound := -3e-9 {mol};
 			slice[z].n_Fe_shell[1..n_radial_segs].lower_bound := -1e-12 {mol};
+			slice[z].D_part_eff_shell[1..n_radial_segs].lower_bound := -1e-18 {m^2/s};
+			slice[z].D_part_face[1..n_radial_segs - 1].lower_bound := -1e-18 {m^2/s};
 		END FOR;
+		FOR f IN [0..n_bed_segs - 1] DO
+			face[f].y_H2O.lower_bound := -1e-3;
+		END FOR;
+		bottom_port.y_H2O.lower_bound := -1e-3;
 
 		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
 		tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
@@ -715,6 +728,7 @@ METHODS
 	END algebraic_base;
 
 	METHOD dynamic_reset;
+		d_int_eff := d_int_multiplier * d_p;
 		FOR z IN [1..n_bed_segs] DO
 			slice[z].n_Fe2O3_shell[1..n_radial_segs] := m_sample_init / (MW_Fe2O3 * n_bed_segs * n_radial_segs);
 			slice[z].n_Fe3O4_shell[1..n_radial_segs] := 0 {mol};
