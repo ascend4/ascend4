@@ -1589,6 +1589,132 @@ METHOD on_load;
 END on_load;
 END tgadyn_ms_linked_configurable;
 
+MODEL tgadyn_msbed_linked_nomorph_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'lumped',
+		0,
+		'nomorph',
+		'three_step_wustite'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nomorph_configurable;
+
+MODEL tgadyn_msbed_linked_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'lumped',
+		0,
+		'coupled',
+		'two_step_direct'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_direct_configurable;
+
+MODEL tgadyn_msbed_linked_nomorph_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'lumped',
+		0,
+		'nomorph',
+		'two_step_direct'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nomorph_direct_configurable;
+
+MODEL tgadyn_msbed_linked_nofb_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		0,
+		'coupled',
+		'three_step_wustite'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_configurable;
+
+MODEL tgadyn_msbed_linked_nofb_nomorph_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		0,
+		'nomorph',
+		'three_step_wustite'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_nomorph_configurable;
+
+MODEL tgadyn_msbed_linked_nofb_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		0,
+		'coupled',
+		'two_step_direct'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_direct_configurable;
+
+MODEL tgadyn_msbed_linked_nofb_nomorph_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		0,
+		'nomorph',
+		'two_step_direct'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_nomorph_direct_configurable;
+
 (* Linked model ladder: no-diff -> no-bed -> lumped-bed -> discretised-bed. *)
 MODEL tgadyn_msbed_linked;
 	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'lumped', 0, 'coupled', 'three_step_wustite');
