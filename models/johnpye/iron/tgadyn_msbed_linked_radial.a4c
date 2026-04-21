@@ -890,9 +890,9 @@ METHODS
 			n_close.upper_bound := 6;
 		n_Fe2O3.lower_bound := -1e-9 {mol};
 		n_Fe3O4.lower_bound := -1e-9 {mol};
-		n_FeO.lower_bound := -1e-9 {mol};
-		n_Fe.lower_bound := -1e-12 {mol};
-		oxygen_remaining.lower_bound := -1e-9 {mol};
+			n_FeO.lower_bound := -1e-8 {mol};
+			n_Fe.lower_bound := -1e-12 {mol};
+			oxygen_remaining.lower_bound := -1e-8 {mol};
 
 		FOR z IN [1..n_bed_segs] DO
 			y_H2O_zone[z].lower_bound := -1e-3;
@@ -901,8 +901,8 @@ METHODS
 			slice[z].y_H2O_part.lower_bound := -1e-3;
 			slice[z].n_Fe2O3.lower_bound := -3e-9 {mol};
 			slice[z].n_Fe3O4.lower_bound := -3e-9 {mol};
-			slice[z].n_FeO.lower_bound := -3e-9 {mol};
-			slice[z].n_Fe.lower_bound := -1e-12 {mol};
+				slice[z].n_FeO.lower_bound := -3e-8 {mol};
+				slice[z].n_Fe.lower_bound := -1e-12 {mol};
 			slice[z].shell[1..n_radial_segs].y_H2.lower_bound := -1e-6;
 				slice[z].shell[1..n_radial_segs].y_H2O.lower_bound := -1e-3;
 				slice[z].shell[1..n_radial_segs].xi_close.lower_bound := -1e-9;
@@ -912,7 +912,7 @@ METHODS
 				slice[z].shell[1..n_radial_segs].phi_b.upper_bound := 1.05;
 				slice[z].shell[1..n_radial_segs].n_Fe2O3.lower_bound := -3e-9 {mol};
 				slice[z].shell[1..n_radial_segs].n_Fe3O4.lower_bound := -3e-9 {mol};
-				slice[z].shell[1..n_radial_segs].n_FeO.lower_bound := -3e-9 {mol};
+					slice[z].shell[1..n_radial_segs].n_FeO.lower_bound := -3e-8 {mol};
 			slice[z].shell[1..n_radial_segs].n_Fe.lower_bound := -1e-12 {mol};
 			slice[z].shell[1..n_radial_segs].D_part_eff.lower_bound := -1e-18 {m^2/s};
 			slice[z].link[1..n_radial_segs - 1].D_face.lower_bound := -1e-18 {m^2/s};
