@@ -64,7 +64,9 @@ MODEL tga_reduction_particle_shell_local(
 	k_block IS_A frequency;
 	E_dens IS_A molar_energy;
 	n0_Fe2O3_slice IS_A mole;
+	n0_Fe2O3_shell0 IS_A mole;
 	n0_per_area_slice IS_A mole_per_area;
+	n0_per_area_shell0 IS_A mole_per_area;
 	A_inner_density IS_A positive_factor;
 	A_outer_density IS_A positive_factor;
 
@@ -81,15 +83,14 @@ MODEL tga_reduction_particle_shell_local(
 	n_Fe3O4 IS_A mole;
 	n_FeO IS_A mole;
 	n_Fe IS_A mole;
-	xi1 IS_A reduction_extent;
-	xi3 IS_A reduction_extent;
-	xi_close IS_A factor;
-	eps_o IS_A fraction;
-	phi_b IS_A fraction;
-	X_Fe IS_A fraction;
-	eps_ratio IS_A positive_factor;
-	morph_factor IS_A positive_factor;
-	D_part_eff IS_A diffusivity;
+		xi1 IS_A reduction_extent;
+		xi3 IS_A reduction_extent;
+		xi_close IS_A factor;
+		eps_o IS_A fraction;
+		phi_b IS_A fraction;
+		eps_ratio IS_A positive_factor;
+		morph_factor IS_A positive_factor;
+		D_part_eff IS_A diffusivity;
 	J_shell IS_A molar_flux;
 	J_reaction_local ALIASES J_shell;
 
@@ -100,41 +101,39 @@ MODEL tga_reduction_particle_shell_local(
 	yar_eq:
 		y_Ar = 1 - y_H2 - y_H2O;
 	xi1_eq:
-		xi1 = (1 - n_radial_segs * n_Fe2O3 / n0_Fe2O3_slice) / 3;
+		xi1 = (1 - n_Fe2O3 / n0_Fe2O3_shell0) / 3;
 	xi3_eq:
-		xi3 = n_radial_segs * n_Fe / n0_Fe2O3_slice;
-	xi_close_eq:
-		xi_close = ((xi3 + 1e-8) ^ n_close - (1e-8 ^ n_close));
-	xfe_eq:
-		X_Fe = n_Fe / (2 * n0_Fe2O3_slice / n_radial_segs);
-	eps_ratio_eq:
-		eps_ratio = (eps_o + 1e-3) / (eps_o_init + 1e-3);
+		xi3 = n_Fe / n0_Fe2O3_shell0;
+		xi_close_eq:
+			xi_close = ((xi3 + 1e-8) ^ n_close - (1e-8 ^ n_close));
+		eps_ratio_eq:
+			eps_ratio = (eps_o + 1e-3) / (eps_o_init + 1e-3);
 	sigma_dens_eq:
 		sigma_dens = exp(-E_dens / (1 {GAS_C} * T));
 
 	rf1_eq:
-		rate_forward[1] = (n_radial_segs * n_Fe2O3 / n0_Fe2O3_slice) * k_step[1] * p * y_H2;
+		rate_forward[1] = (n_Fe2O3 / n0_Fe2O3_shell0) * k_step[1] * p * y_H2;
 	rr1_eq:
-		rate_reverse[1] = (n_radial_segs * n_Fe3O4 / n0_Fe2O3_slice) * k_step[1] * p * y_H2O / K_ratio_eq[1];
+		rate_reverse[1] = (n_Fe3O4 / n0_Fe2O3_shell0) * k_step[1] * p * y_H2O / K_ratio_eq[1];
 	rf2_eq:
-		rate_forward[2] = (n_radial_segs * n_Fe3O4 / n0_Fe2O3_slice) * k_step[2] * p * y_H2;
+		rate_forward[2] = (n_Fe3O4 / n0_Fe2O3_shell0) * k_step[2] * p * y_H2;
 	rr2_eq:
-		rate_reverse[2] = (n_radial_segs * n_FeO / n0_Fe2O3_slice) * k_step[2] * p * y_H2O / K_ratio_eq[2];
+		rate_reverse[2] = (n_FeO / n0_Fe2O3_shell0) * k_step[2] * p * y_H2O / K_ratio_eq[2];
 	rf3_eq:
-		rate_forward[3] = (n_radial_segs * n_FeO / n0_Fe2O3_slice) * k_step[3] * p * y_H2;
+		rate_forward[3] = (n_FeO / n0_Fe2O3_shell0) * k_step[3] * p * y_H2;
 	rr3_eq:
-		rate_reverse[3] = (n_radial_segs * n_Fe / n0_Fe2O3_slice) * k_step[3] * p * y_H2O / K_ratio_eq[3];
+		rate_reverse[3] = (n_Fe / n0_Fe2O3_shell0) * k_step[3] * p * y_H2O / K_ratio_eq[3];
 	rf4_eq:
-		rate_forward[4] = (n_radial_segs * n_Fe3O4 / n0_Fe2O3_slice) * k_step[4] * p * y_H2;
+		rate_forward[4] = (n_Fe3O4 / n0_Fe2O3_shell0) * k_step[4] * p * y_H2;
 	rr4_eq:
-		rate_reverse[4] = (n_radial_segs * n_Fe / n0_Fe2O3_slice) * k_step[4] * p * y_H2O / K_ratio_eq[4];
+		rate_reverse[4] = (n_Fe / n0_Fe2O3_shell0) * k_step[4] * p * y_H2O / K_ratio_eq[4];
 	rnet1_eq:
 		rate_net[1] = rate_forward[1] - rate_reverse[1];
 
 	SELECT (reaction_model)
 	CASE 'three_step_wustite':
 		Jshell_eq_three_step:
-			J_shell = (n0_per_area_slice / n_radial_segs) * (rate_net[1] + rate_net[2] + rate_net[3]);
+			J_shell = n0_per_area_shell0 * (rate_net[1] + rate_net[2] + rate_net[3]);
 		rnet2_eq_three_step:
 			rate_net[2] = rate_forward[2] - rate_reverse[2];
 		rnet3_eq_three_step:
@@ -142,16 +141,16 @@ MODEL tga_reduction_particle_shell_local(
 		rnet4_eq_three_step:
 			rate_net[4] = 0 {1/s};
 		nhe_ode_eq_three_step:
-			der(n_Fe2O3) = -3 * (n0_Fe2O3_slice / n_radial_segs) * rate_net[1];
+			der(n_Fe2O3) = -3 * n0_Fe2O3_shell0 * rate_net[1];
 		nmag_ode_eq_three_step:
-			der(n_Fe3O4) = (n0_Fe2O3_slice / n_radial_segs) * (2 * rate_net[1] - rate_net[2]);
+			der(n_Fe3O4) = n0_Fe2O3_shell0 * (2 * rate_net[1] - rate_net[2]);
 		nwu_ode_eq_three_step:
-			der(n_FeO) = (n0_Fe2O3_slice / n_radial_segs) * (3 * rate_net[2] - rate_net[3]);
+			der(n_FeO) = n0_Fe2O3_shell0 * (3 * rate_net[2] - rate_net[3]);
 		nfe_ode_eq_three_step:
-			der(n_Fe) = (n0_Fe2O3_slice / n_radial_segs) * rate_net[3];
+			der(n_Fe) = n0_Fe2O3_shell0 * rate_net[3];
 	CASE 'two_step_direct':
 		Jshell_eq_two_step:
-			J_shell = (n0_per_area_slice / n_radial_segs) * (rate_net[1] + rate_net[4]);
+			J_shell = n0_per_area_shell0 * (rate_net[1] + rate_net[4]);
 		rnet2_eq_two_step:
 			rate_net[2] = 0 {1/s};
 		rnet3_eq_two_step:
@@ -159,13 +158,13 @@ MODEL tga_reduction_particle_shell_local(
 		rnet4_eq_two_step:
 			rate_net[4] = rate_forward[4] - rate_reverse[4];
 		nhe_ode_eq_two_step:
-			der(n_Fe2O3) = -3 * (n0_Fe2O3_slice / n_radial_segs) * rate_net[1];
+			der(n_Fe2O3) = -3 * n0_Fe2O3_shell0 * rate_net[1];
 		nmag_ode_eq_two_step:
-			der(n_Fe3O4) = (n0_Fe2O3_slice / n_radial_segs) * (2 * rate_net[1] - rate_net[4] / 4);
+			der(n_Fe3O4) = n0_Fe2O3_shell0 * (2 * rate_net[1] - rate_net[4] / 4);
 		nwu_ode_eq_two_step:
 			der(n_FeO) = 0 {mol/s};
 		nfe_ode_eq_two_step:
-			der(n_Fe) = 3 * (n0_Fe2O3_slice / n_radial_segs) * rate_net[4] / 4;
+			der(n_Fe) = 3 * n0_Fe2O3_shell0 * rate_net[4] / 4;
 	END SELECT;
 
 	close_temp_factor_eq:
@@ -193,11 +192,11 @@ MODEL tga_reduction_particle_shell_local(
 					lam_open[1] * rate_net[1]
 					+ lam_open[4] * rate_net[4]
 				) * (1 - eps_o);
-		END SELECT;
-		phi_block_ode_eq:
-			der(phi_b) = k_block * sigma_dens * X_Fe * (1 - phi_b);
-		morph_shell_eq_porosity:
-			morph_factor = (1 + beta_block * phi_b) / (eps_ratio ^ 2);
+			END SELECT;
+			phi_block_ode_eq:
+				der(phi_b) = 0.5 * k_block * sigma_dens * xi3 * (1 - phi_b);
+			morph_shell_eq_porosity:
+				morph_factor = (1 + beta_block * phi_b) / (eps_ratio ^ 2);
 	CASE 'nomorph':
 		eps_o_nomorph_eq:
 			eps_o = eps_o_init;
@@ -437,7 +436,9 @@ MODEL tga_reduction_bed_slice_radial_local(
 			k_block, shell[s].k_block ARE_THE_SAME;
 			E_dens, shell[s].E_dens ARE_THE_SAME;
 			n0_Fe2O3_slice, shell[s].n0_Fe2O3_slice ARE_THE_SAME;
+			shell[s].n0_Fe2O3_shell0 = n0_Fe2O3_slice / n_radial_segs;
 			n0_per_area_slice, shell[s].n0_per_area_slice ARE_THE_SAME;
+			shell[s].n0_per_area_shell0 = n0_per_area_slice / n_radial_segs;
 		END FOR;
 		FOR r IN steps CREATE
 			lam_open[r], shell[1..n_radial_segs].lam_open[r] ARE_THE_SAME;
