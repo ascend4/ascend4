@@ -102,6 +102,22 @@ static const char *integrator_ida_dof_status_name(int status){
 	}
 }
 
+static int integrator_ida_get_dof_status(IntegratorSystem *integ, int *status, int *dof){
+	int local_status = 5;
+	int local_dof = 0;
+
+	if(!slvDOF_status(integ->system, &local_status, &local_dof)){
+		return 0;
+	}
+	if(status != NULL){
+		*status = local_status;
+	}
+	if(dof != NULL){
+		*dof = local_dof;
+	}
+	return 1;
+}
+
 static void integrator_ida_report_diagnostics(IntegratorSystem *integ){
 	int dof_status = 5;
 	int dof = 0;
@@ -114,7 +130,7 @@ static void integrator_ida_report_diagnostics(IntegratorSystem *integ){
 	int algebraic_rels;
 	int extra_active_vars;
 
-	if(!slvDOF_status(integ->system, &dof_status, &dof)){
+	if(!integrator_ida_get_dof_status(integ, &dof_status, &dof)){
 		dof_status = 5;
 		dof = 0;
 	}
@@ -147,7 +163,6 @@ static void integrator_ida_report_diagnostics(IntegratorSystem *integ){
 		integ->n_y, integ->n_ydot, algebraic_vars, integ->n_ydot, integ->n_diffeqs, algebraic_rels, extra_active_vars, total_bnds
 	);
 }
-
 static int integrator_ida_var_in_list(struct var_variable **list, int n, struct var_variable *var){
 	int i;
 	for(i = 0; i < n; ++i){
@@ -421,11 +436,38 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 	}
 
 	if(ny1 != nr){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,
-			"Model is not in a consistent first-order DAE form for IDA (variables=%d, differential relations=%d)."
-			" This may be a high-index DAE or constrained system; index reduction may be required."
-			, ny1, nr
-		);
+		int dof_status = 5;
+		int dof = 0;
+		int have_dof_status = integrator_ida_get_dof_status(integ, &dof_status, &dof);
+
+		if(have_dof_status && dof_status != 2){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,
+				"Model is not in a consistent first-order DAE form for IDA (variables=%d, differential relations=%d)."
+				" The active integration problem is %s."
+				" Check DOF/free-variable diagnostics first."
+				" If startup later fails, also check that INITIAL equations and FIX/FREE settings are square."
+				, ny1
+				, nr
+				, integrator_ida_dof_status_name(dof_status)
+			);
+			if(dof_status == 1 || dof_status == 4){
+				ERROR_REPORTER_NOLINE(ASC_USER_ERROR, "Active-problem DOF = %d", dof);
+			}
+		}else if(have_dof_status && dof_status == 2){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,
+				"Model is not in a consistent first-order DAE form for IDA (variables=%d, differential relations=%d)."
+				" The active integration problem appears square, so this is more likely a genuine high-index DAE"
+				" or constrained system. Investigate with Pantelides / index-reduction diagnostics."
+				, ny1, nr
+			);
+		}else{
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,
+				"Model is not in a consistent first-order DAE form for IDA (variables=%d, differential relations=%d)."
+				" Unable to classify squareness automatically."
+				" Check DOF/free-variable diagnostics first, then Pantelides / index-reduction diagnostics."
+				, ny1, nr
+			);
+		}
 		return 3;
 	}
 
@@ -942,7 +984,7 @@ int integrator_ida_block_check(IntegratorSystem *integ){
 	MSG("----------- got %d ok -------------",nv_ok);
 #endif
 
-	if(!slvDOF_status(integ->system, &res, &dof)){
+	if(!integrator_ida_get_dof_status(integ, &res, &dof)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to determine DOF status");
 		return -1;
 	}
