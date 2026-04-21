@@ -469,14 +469,16 @@ MODEL tga_reduction_bed_slice_radial_local(
 	morph_factor_eq:
 		morph_factor = morph_factor_shell[n_radial_segs];
 
-INITIAL
-	FOR s IN shells CREATE
-		nhe_initial[s]: n_Fe2O3_shell[s] = n0_Fe2O3_slice / n_radial_segs;
-		nmag_initial[s]: n_Fe3O4_shell[s] = 0 {mol};
-		nwu_initial[s]: n_FeO_shell[s] = 0 {mol};
-		nfe_initial[s]: n_Fe_shell[s] = 0 {mol};
-	END FOR;
-END tga_reduction_bed_slice_radial_local;
+	INITIAL
+		FOR s IN shells CREATE
+			nhe_initial[s]: n_Fe2O3_shell[s] = n0_Fe2O3_slice / n_radial_segs;
+			nmag_initial[s]: n_Fe3O4_shell[s] = 0 {mol};
+			nwu_initial[s]: n_FeO_shell[s] = 0 {mol};
+			nfe_initial[s]: n_Fe_shell[s] = 0 {mol};
+			epso_initial[s]: eps_o_shell[s] = eps_o_init;
+			phib_initial[s]: phi_b_shell[s] = 0;
+		END FOR;
+	END tga_reduction_bed_slice_radial_local;
 
 MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	n_bed_segs IS_A integer_constant;
@@ -765,7 +767,12 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	a_close, slice[1..n_bed_segs].a_close ARE_THE_SAME;
 	beta_T, slice[1..n_bed_segs].beta_T ARE_THE_SAME;
 	n_close, slice[1..n_bed_segs].n_close ARE_THE_SAME;
+	eps_o_init, slice[1..n_bed_segs].eps_o_init ARE_THE_SAME;
+	beta_block, slice[1..n_bed_segs].beta_block ARE_THE_SAME;
+	k_block, slice[1..n_bed_segs].k_block ARE_THE_SAME;
+	E_dens, slice[1..n_bed_segs].E_dens ARE_THE_SAME;
 	FOR r IN steps CREATE
+		lam_open[r], slice[1..n_bed_segs].lam_open[r] ARE_THE_SAME;
 		k_step[r], slice[1..n_bed_segs].k_step[r] ARE_THE_SAME;
 		K_ratio_eq[r], slice[1..n_bed_segs].K_ratio_eq[r] ARE_THE_SAME;
 	END FOR;
@@ -901,7 +908,7 @@ METHODS
 				slice[z].shell[1..n_radial_segs].eps_o.lower_bound := 1e-6;
 				slice[z].shell[1..n_radial_segs].eps_o.upper_bound := 1;
 				slice[z].shell[1..n_radial_segs].phi_b.lower_bound := -1e-9;
-				slice[z].shell[1..n_radial_segs].phi_b.upper_bound := 1;
+				slice[z].shell[1..n_radial_segs].phi_b.upper_bound := 1.05;
 				slice[z].shell[1..n_radial_segs].n_Fe2O3.lower_bound := -3e-9 {mol};
 				slice[z].shell[1..n_radial_segs].n_Fe3O4.lower_bound := -3e-9 {mol};
 				slice[z].shell[1..n_radial_segs].n_FeO.lower_bound := -3e-9 {mol};
