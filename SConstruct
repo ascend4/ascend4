@@ -303,6 +303,12 @@ def get_default_cunit_paths():
 	"""
 	Choose CUnit defaults that are valid paths on this host so PackageVariable
 	validation doesn't fail before optional-component probing.
+
+	Expected packaging model:
+	- MSYS2: use the packaged CUnit install and let the active environment or
+	  pkg-config metadata supply the real lookup paths.
+	- Rocky/Ubuntu local builds: default to $HOME/.local, where our fallback
+	  source build installs CUnit when a distro package is not used.
 	"""
 	candidates = []
 	home_local = exists_maybe_cygpath(pathlib.Path(get_effective_home()) / '.local')
@@ -1132,7 +1138,7 @@ def set_optional(env,comp,reason=None,active=None):
 
 AddMethod(Environment, set_optional, 'set_optional')
 
-for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','lzma','mmio','blas','signals','doc','doc_build','pcre','installer']:
+for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','lzma','mmio','blas','signals','doc','doc_build','pcre','installer','nlopt']:
 	env.set_optional(opt)
 
 if not env['WITH_DOC']:
@@ -2478,6 +2484,28 @@ if conf.env['WITH_LZMA']:
 		conf.env['LZMA_LIBS'] = AddedBuildFlags(lzma_saved['LIBS'],lzma_after['LIBS'])
 	RestoreBuildFlags(conf.env,lzma_saved)
 	conf.env.set_optional('lzma',active=lzma_ok,reason=lzma_reason)
+
+# NLOPT
+
+conf.env['NLOPT_CPPPATH'] = []
+conf.env['NLOPT_LIBPATH'] = []
+conf.env['NLOPT_LIBS'] = []
+nlopt_saved = SnapshotBuildFlags(conf.env)
+nlopt_ok = False
+nlopt_reason = "nlopt not found"
+if TryPkgConfigPackages(conf.env,['nlopt']):
+	if conf.CheckCHeader('nlopt.h'):
+		nlopt_ok = True
+	else:
+		nlopt_reason = "nlopt.h not found"
+nlopt_after = SnapshotBuildFlags(conf.env)
+if nlopt_ok:
+	conf.env['NLOPT_CPPPATH'] = AddedBuildFlags(nlopt_saved['CPPPATH'],nlopt_after['CPPPATH'])
+	conf.env['NLOPT_LIBPATH'] = AddedBuildFlags(nlopt_saved['LIBPATH'],nlopt_after['LIBPATH'])
+	conf.env['NLOPT_LIBS'] = AddedBuildFlags(nlopt_saved['LIBS'],nlopt_after['LIBS'])
+	conf.env['HAVE_NLOPT'] = True
+RestoreBuildFlags(conf.env,nlopt_saved)
+conf.env.set_optional('nlopt',active=nlopt_ok,reason=nlopt_reason)
 
 # LSODE needs Fortran; no fortran then no LSODE
 

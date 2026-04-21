@@ -200,6 +200,45 @@ static void test_test3(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_test4_hier(void){
+	int parsestatus;
+	struct Instance *sim = load_model("fix_and_assign1.a4c", "fix_and_assign1_hier", TRUE, &parsestatus);
+	CU_ASSERT(parsestatus == 0);
+	CU_ASSERT_FATAL(sim != NULL);
+
+	struct Instance *root = GetSimulationRoot(sim);
+	struct Instance *m = ChildByChar(root,AddSymbol("m"));
+	struct Instance *inst;
+	CU_ASSERT_FATAL(m != NULL);
+
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(root,name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe==Proc_all_ok);
+
+	inst = ChildByChar(m,AddSymbol("x"));
+	CU_ASSERT_FATAL(inst != NULL && InstanceKind(inst)==REAL_ATOM_INST);
+	CU_ASSERT(RealAtomValue(inst)==5.0);
+	struct Instance *fixed = ChildByChar(inst,AddSymbol("fixed"));
+	CU_ASSERT_FATAL(fixed != NULL);
+	CU_ASSERT(GetBooleanAtomValue(fixed));
+
+	inst = ChildByChar(m,AddSymbol("y"));
+	CU_ASSERT_FATAL(inst != NULL && InstanceKind(inst)==REAL_ATOM_INST);
+	CU_ASSERT(RealAtomValue(inst)==1.0);
+	fixed = ChildByChar(inst,AddSymbol("fixed"));
+	CU_ASSERT_FATAL(fixed != NULL);
+	CU_ASSERT(GetBooleanAtomValue(fixed));
+
+	inst = ChildByChar(m,AddSymbol("z"));
+	CU_ASSERT_FATAL(inst != NULL && InstanceKind(inst)==REAL_ATOM_INST);
+	fixed = ChildByChar(inst,AddSymbol("fixed"));
+	CU_ASSERT_FATAL(fixed != NULL);
+	CU_ASSERT(!GetBooleanAtomValue(fixed));
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -208,6 +247,7 @@ static void test_test3(void){
 #define TESTS(T) \
 	T(test1) \
 	T(test2) \
-	T(test3)
+	T(test3) \
+	T(test4_hier)
 
 REGISTER_TESTS_SIMPLE(compiler_fixassign, TESTS)

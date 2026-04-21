@@ -1,0 +1,2070 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "basemodel.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/fboard.a4c";
+REQUIRE "johnpye/iron/tga.a4c";
+REQUIRE "johnpye/iron/tgadyn_msbed_mod.a4c";
+
+(* Shared gas-state node for cell-centre or particle-surface compositions. *)
+MODEL tga_ms_gas_state;
+	y_H2 "hydrogen mole fraction in a shared gas state" IS_A mole_fraction;
+	y_H2O "steam mole fraction in a shared gas state" IS_A mole_fraction;
+END tga_ms_gas_state;
+
+(* Shared Maxwell-Stefan transport port. This carries only the independent gas
+   composition and flux variables so the same connector can later be reused in
+   both bed and freeboard assemblies. *)
+MODEL tga_ms_gas_port;
+	y_H2 "hydrogen mole fraction at the transport interface" IS_A mole_fraction;
+	y_H2O "steam mole fraction at the transport interface" IS_A mole_fraction;
+	N_H2 "hydrogen molar flux through the interface" IS_A molar_flux;
+	N_H2O "steam molar flux through the interface" IS_A molar_flux;
+END tga_ms_gas_port;
+
+MODEL tga_reduction_keq_fits;
+	steps "reduction reaction steps" IS_A set OF integer_constant;
+	steps :== [1..4];
+
+	A[steps] "constant term in ln(K)" IS_A factor;
+	B[steps] "inverse-temperature term in ln(K)" IS_A factor;
+	C[steps] "log-temperature term in ln(K)" IS_A factor;
+	D[steps] "linear-temperature term in ln(K)" IS_A factor;
+
+METHODS
+	METHOD values;
+		FIX A[1] := 275.5950899625076;
+		FIX A[2] := 54.79019894028178;
+		FIX A[3] := -31.58593152453788;
+		FIX A[4] := 30.51949661506154;
+		FIX B[1] := -26283.26419177231;
+		FIX B[2] := -10556.58318912153;
+		FIX B[3] := 660.7218135785515;
+		FIX B[4] := -5849.579888718082;
+		FIX C[1] := -37.2540654519026;
+		FIX C[2] := -6.951008925726938;
+		FIX C[3] := 4.668826943343771;
+		FIX C[4] := -3.746980537603341;
+		FIX D[1] := 0.01408952822924074;
+		FIX D[2] := 0.004147837907387222;
+		FIX D[3] := -0.00212400615445666;
+		FIX D[4] := 0.0006347698842184886;
+	END values;
+END tga_reduction_keq_fits;
+
+(* One inter-slice transport link. The equations here are copied in the same
+   centred-difference form used previously at the top level, so the
+   modularisation does not change the transport stencil. *)
+MODEL tga_ms_bed_link;
+	up "shared upstream gas state for this link" IS_A tga_ms_gas_state;
+	down "shared downstream gas state for this link" IS_A tga_ms_gas_state;
+	y_H2_up ALIASES up.y_H2;
+	y_H2O_up ALIASES up.y_H2O;
+	y_H2_down ALIASES down.y_H2;
+	y_H2O_down ALIASES down.y_H2O;
+
+	c_tot "total gas molar density across the link" IS_A molar_density;
+	delta "distance spanned by this transport link" IS_A distance;
+	D_H2O_H2_bed "bed Maxwell-Stefan diffusivity for H2O/H2" IS_A diffusivity;
+	D_H2O_Ar_bed "bed Maxwell-Stefan diffusivity for H2O/Ar" IS_A diffusivity;
+	D_H2_Ar_bed "bed Maxwell-Stefan diffusivity for H2/Ar" IS_A diffusivity;
+
+	face "shared interface state and flux for this link" IS_A tga_ms_gas_port;
+
+	y_Ar_face "argon mole fraction at the interface" IS_A mole_fraction;
+	N_Ar "argon molar flux at the interface" IS_A molar_flux;
+
+	face_h2_eq:
+		face.y_H2 = 0.5 * (y_H2_up + y_H2_down);
+	face_h2o_eq:
+		face.y_H2O = 0.5 * (y_H2O_up + y_H2O_down);
+	face_ar_eq:
+		y_Ar_face = 1 - face.y_H2 - face.y_H2O;
+	Nar_eq:
+		N_Ar = -face.N_H2 - face.N_H2O;
+
+	ms_h2:
+		-c_tot * (y_H2_down - y_H2_up) / delta
+		=
+		(face.y_H2O * face.N_H2 - face.y_H2 * face.N_H2O) / D_H2O_H2_bed
+		+ (y_Ar_face * face.N_H2 - face.y_H2 * N_Ar) / D_H2_Ar_bed;
+
+	ms_h2o:
+		-c_tot * (y_H2O_down - y_H2O_up) / delta
+		=
+		(face.y_H2 * face.N_H2O - face.y_H2O * face.N_H2) / D_H2O_H2_bed
+		+ (y_Ar_face * face.N_H2O - face.y_H2O * N_Ar) / D_H2O_Ar_bed;
+END tga_ms_bed_link;
+
+(* One dynamic reacting bed slice. The slice owns only local state, local
+   balances and local particle resistance. Neighbour coupling stays in
+   tga_ms_bed_link. *)
+MODEL tga_reduction_bed_slice_local(
+	reaction_model IS_A symbol_constant;
+) WHERE (
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
+);
+	steps "reduction reaction steps" IS_A set OF integer_constant;
+	steps :== [1..4];
+
+	top "upper transport interface of this slice" IS_A tga_ms_gas_port;
+	bot "lower transport interface of this slice" IS_A tga_ms_gas_port;
+
+	T "gas and solids temperature" IS_A temperature;
+	p "system pressure" IS_A pressure;
+	c_tot "total gas molar density" IS_A molar_density;
+	d_p "diameter of particles" IS_A distance;
+	D_eff_bed "effective pseudo-binary bed diffusivity" IS_A diffusivity;
+	Sh_particle "particle Sherwood-number-like transfer factor" IS_A positive_factor;
+	a_open "extent-driven opening coefficient" IS_A factor;
+	a_close "extent-driven closing coefficient" IS_A factor;
+	beta_T "temperature sensitivity of pore closing" IS_A factor;
+
+	n0_Fe2O3_slice "initial hematite inventory in this slice" IS_A mole;
+	n0_per_area_slice "initial hematite inventory per area in this slice" IS_A mole_per_area;
+
+	k_step[steps] "stepwise reversible kinetic coefficients" IS_A rate_per_pressure;
+	K_ratio_eq[steps] "equilibrium ratios for the reduction steps" IS_A positive_factor;
+
+	centre "shared slice-centre gas state" IS_A tga_ms_gas_state;
+	surface "shared particle-surface gas state" IS_A tga_ms_gas_state;
+	y_H2 "hydrogen mole fraction at the slice centre" ALIASES centre.y_H2;
+	y_H2O "steam mole fraction at the slice centre" ALIASES centre.y_H2O;
+	y_Ar "argon mole fraction at the slice centre" IS_A mole_fraction;
+	y_H2_part "hydrogen mole fraction at the particle surface" ALIASES surface.y_H2;
+	y_H2O_part "steam mole fraction at the particle surface" ALIASES surface.y_H2O;
+	y_Ar_part "argon mole fraction at the particle surface" IS_A mole_fraction;
+	y_H2_centre "exposed slice-centre hydrogen mole fraction" ALIASES centre.y_H2;
+	y_H2O_centre "exposed slice-centre steam mole fraction" ALIASES centre.y_H2O;
+	y_H2_surface "exposed particle-surface hydrogen mole fraction" ALIASES surface.y_H2;
+	y_H2O_surface "exposed particle-surface steam mole fraction" ALIASES surface.y_H2O;
+
+	n_Fe2O3 "hematite inventory in this slice" IS_A mole;
+	n_Fe3O4 "magnetite inventory in this slice" IS_A mole;
+	n_FeO "wustite inventory in this slice" IS_A mole;
+	n_Fe "iron inventory in this slice" IS_A mole;
+	xi1 "local Fe2O3 -> Fe3O4 extent used by the particle morphology model"
+		IS_A reduction_extent;
+	xi3 "local FeO -> Fe extent used by the particle morphology model"
+		IS_A reduction_extent;
+
+	drive[steps] "local kinetic driving force for each step" IS_A delta_pressure;
+	rate_forward[steps], rate_reverse[steps], rate_net[steps] IS_A extent_rate;
+	J_reaction "net reaction flux in this slice" IS_A molar_flux;
+
+	particle_res "particle-scale gas transport resistance model for this slice"
+		IS_A tga_particle_history_resistance;
+	R_part "particle-scale gas transport resistance in this slice" IS_A transport_resistance;
+	morph_factor "morphology correction factor in this slice" IS_A positive_factor;
+	morph_factor_local "exposed morphology correction factor for this slice"
+		ALIASES morph_factor;
+	J_reaction_local "exposed net reaction flux for this slice" ALIASES J_reaction;
+
+	yar_eq:
+		y_Ar = 1 - y_H2 - y_H2O;
+	yar_part_eq:
+		y_Ar_part = y_Ar;
+	part_sum_eq:
+		y_H2O_part = 1 - y_Ar_part - y_H2_part;
+
+	xi1_eq:
+		xi1 = (1 - n_Fe2O3 / n0_Fe2O3_slice) / 3;
+	xi3_eq:
+		xi3 = n_Fe / n0_Fe2O3_slice;
+
+	part_T_eq:
+		particle_res.T = T;
+	part_dp_eq:
+		particle_res.d_p = d_p;
+	part_Deff_eq:
+		particle_res.D_eff_bed = D_eff_bed;
+	part_Sh_eq:
+		particle_res.Sh_particle = Sh_particle;
+	part_open_eq:
+		particle_res.a_open = a_open;
+	part_close_eq:
+		particle_res.a_close = a_close;
+	part_beta_eq:
+		particle_res.beta_T = beta_T;
+	part_xi1_eq:
+		particle_res.xi1 = xi1;
+	part_xi3_eq:
+		particle_res.xi3 = xi3;
+	Rpart_eq:
+		R_part = particle_res.R_part;
+	morph_factor_eq:
+		morph_factor = particle_res.morph_factor;
+
+	h2_balance_eq:
+		top.N_H2 - bot.N_H2 = J_reaction;
+	h2o_balance_eq:
+		top.N_H2O - bot.N_H2O = -J_reaction;
+	Jpart_eq:
+		R_part * J_reaction = c_tot * (y_H2 - y_H2_part);
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		Jrxn_eq_three_step:
+			J_reaction = n0_per_area_slice * (rate_net[1] + rate_net[2] + rate_net[3]);
+
+		drive1_eq_three_step:
+			drive[1] = p * (y_H2_part - y_H2O_part / K_ratio_eq[1]);
+		drive2_eq_three_step:
+			drive[2] = p * (y_H2_part - y_H2O_part / K_ratio_eq[2]);
+		drive3_eq_three_step:
+			drive[3] = p * (y_H2_part - y_H2O_part / K_ratio_eq[3]);
+		drive4_eq_three_step:
+			drive[4] = 0 {bar};
+		rnet1_eq_three_step:
+			rate_net[1] = rate_forward[1] - rate_reverse[1];
+		rnet2_eq_three_step:
+			rate_net[2] = rate_forward[2] - rate_reverse[2];
+		rnet3_eq_three_step:
+			rate_net[3] = rate_forward[3] - rate_reverse[3];
+		rnet4_eq_three_step:
+			rate_net[4] = 0 {1/s};
+
+		rf1_eq_three_step:
+			rate_forward[1] = (n_Fe2O3 / n0_Fe2O3_slice) * k_step[1] * p * y_H2_part;
+		rr1_eq_three_step:
+			rate_reverse[1] = (n_Fe3O4 / n0_Fe2O3_slice) * k_step[1] * p * y_H2O_part / K_ratio_eq[1];
+		rf2_eq_three_step:
+			rate_forward[2] = (n_Fe3O4 / n0_Fe2O3_slice) * k_step[2] * p * y_H2_part;
+		rr2_eq_three_step:
+			rate_reverse[2] = (n_FeO / n0_Fe2O3_slice) * k_step[2] * p * y_H2O_part / K_ratio_eq[2];
+		rf3_eq_three_step:
+			rate_forward[3] = (n_FeO / n0_Fe2O3_slice) * k_step[3] * p * y_H2_part;
+		rr3_eq_three_step:
+			rate_reverse[3] = (n_Fe / n0_Fe2O3_slice) * k_step[3] * p * y_H2O_part / K_ratio_eq[3];
+		rf4_eq_three_step:
+			rate_forward[4] = 0 {1/s};
+		rr4_eq_three_step:
+			rate_reverse[4] = 0 {1/s};
+
+		nhe_ode_three_step:
+			der(n_Fe2O3) = -3 * n0_Fe2O3_slice * rate_net[1];
+		nmag_ode_three_step:
+			der(n_Fe3O4) = n0_Fe2O3_slice * (2 * rate_net[1] - rate_net[2]);
+		nwu_ode_three_step:
+			der(n_FeO) = n0_Fe2O3_slice * (3 * rate_net[2] - rate_net[3]);
+		nfe_ode_three_step:
+			der(n_Fe) = n0_Fe2O3_slice * rate_net[3];
+
+	CASE 'two_step_direct':
+		Jrxn_eq_two_step:
+			J_reaction = n0_per_area_slice * (rate_net[1] + rate_net[4]);
+
+		drive1_eq_two_step:
+			drive[1] = p * (y_H2_part - y_H2O_part / K_ratio_eq[1]);
+		drive2_eq_two_step:
+			drive[2] = 0 {bar};
+		drive3_eq_two_step:
+			drive[3] = 0 {bar};
+		drive4_eq_two_step:
+			drive[4] = p * (y_H2_part - y_H2O_part / K_ratio_eq[4]);
+		rnet1_eq_two_step:
+			rate_net[1] = rate_forward[1] - rate_reverse[1];
+		rnet2_eq_two_step:
+			rate_net[2] = 0 {1/s};
+		rnet3_eq_two_step:
+			rate_net[3] = 0 {1/s};
+		rnet4_eq_two_step:
+			rate_net[4] = rate_forward[4] - rate_reverse[4];
+
+		rf1_eq_two_step:
+			rate_forward[1] = (n_Fe2O3 / n0_Fe2O3_slice) * k_step[1] * p * y_H2_part;
+		rr1_eq_two_step:
+			rate_reverse[1] = (n_Fe3O4 / n0_Fe2O3_slice) * k_step[1] * p * y_H2O_part / K_ratio_eq[1];
+		rf2_eq_two_step:
+			rate_forward[2] = 0 {1/s};
+		rr2_eq_two_step:
+			rate_reverse[2] = 0 {1/s};
+		rf3_eq_two_step:
+			rate_forward[3] = 0 {1/s};
+		rr3_eq_two_step:
+			rate_reverse[3] = 0 {1/s};
+		rf4_eq_two_step:
+			rate_forward[4] = (n_Fe3O4 / n0_Fe2O3_slice) * k_step[4] * p * y_H2_part;
+		rr4_eq_two_step:
+			rate_reverse[4] = (n_Fe / n0_Fe2O3_slice) * k_step[4] * p * y_H2O_part / K_ratio_eq[4];
+
+		nhe_ode_two_step:
+			der(n_Fe2O3) = -3 * n0_Fe2O3_slice * rate_net[1];
+		nmag_ode_two_step:
+			der(n_Fe3O4) = n0_Fe2O3_slice * (2 * rate_net[1] - rate_net[4] / 4);
+		nwu_ode_two_step:
+			der(n_FeO) = 0 {mol/s};
+		nfe_ode_two_step:
+			der(n_Fe) = 3 * n0_Fe2O3_slice * rate_net[4] / 4;
+	END SELECT;
+
+INITIAL
+	nhe_initial: n_Fe2O3 = n0_Fe2O3_slice;
+	nmag_initial: n_Fe3O4 = 0 {mol};
+	nwu_initial: n_FeO = 0 {mol};
+	nfe_initial: n_Fe = 0 {mol};
+END tga_reduction_bed_slice_local;
+
+(* Lumped reacting bed with selectable linked boundary and freeboard closures.
+   This is the clean zero-bed-layer branch: no bed diffusion resistance is
+   modelled, while the same upper-boundary and freeboard structure can still be
+   switched on or off. *)
+MODEL tga_reduction_screen_dyn_lumpedbed_linked(
+	boundary_model IS_A symbol_constant;
+	freeboard_model IS_A symbol_constant;
+	n_fb_segs IS_A integer_constant;
+	bed_model IS_A symbol_constant;
+	reaction_model IS_A symbol_constant;
+) WHERE (
+	(boundary_model = 'direct') OR (boundary_model = 'film');
+	(freeboard_model = 'lumped') OR (freeboard_model = 'discretised');
+	(bed_model = 'none') OR (bed_model = 'lumped');
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
+);
+	steps "reduction reaction steps" IS_A set OF integer_constant;
+	steps :== [1..4];
+
+	t "integration time" IS_A time;
+	INDEPENDENT t;
+
+	A_crucible "crucible cross-sectional area" IS_A area;
+	L_freeboard "measured freeboard height above the bed" IS_A distance;
+	L_freeboard_eff "effective freeboard height used by the freeboard closure" IS_A distance;
+	L_bl "effective thickness of the upper gas-film transfer boundary" IS_A distance;
+	H_bed "current packed-bed height, retained for geometry bookkeeping" IS_A distance;
+	dz_fb "height of one freeboard slice" IS_A distance;
+
+	m_sample_init "initial sample mass" IS_A mass;
+	m_sample "current sample mass" IS_A mass;
+	rho_bulk_bed "bulk bed density used to infer bed height" IS_A mass_density;
+	m_sample.lower_bound := -1 {kg};
+
+	eps_bed "bed void fraction used by the lumped bed closure" IS_A positive_factor;
+	tau_bed "bed tortuosity factor used by the lumped bed closure" IS_A positive_factor;
+	k_fb_multiplier "freeboard transport multiplier" IS_A positive_factor;
+	k_bed_multiplier "bed diffusivity multiplier used by the lumped bed closure" IS_A positive_factor;
+
+	y_H2_bulk "bulk-gas hydrogen mole fraction above the freeboard" IS_A mole_fraction;
+	y_H2O_bulk "bulk-gas steam mole fraction above the freeboard" IS_A mole_fraction;
+	y_Ar_bulk "bulk-gas argon mole fraction above the freeboard" IS_A mole_fraction;
+	y_H2_fb_top "hydrogen mole fraction below the upper transfer boundary" IS_A mole_fraction;
+	y_H2O_fb_top "steam mole fraction below the upper transfer boundary" IS_A mole_fraction;
+	y_Ar_fb_top "argon mole fraction below the upper transfer boundary" IS_A mole_fraction;
+	y_H2_feed "hydrogen mole fraction at the top of the reacting bed or reacting zone" IS_A mole_fraction;
+	y_H2O_feed "steam mole fraction at the top of the reacting bed or reacting zone" IS_A mole_fraction;
+	y_Ar_feed "argon mole fraction at the top of the reacting bed or reacting zone" IS_A mole_fraction;
+	y_H2_react "reacting-gas hydrogen mole fraction" IS_A mole_fraction;
+	y_H2O_react "reacting-gas steam mole fraction" IS_A mole_fraction;
+	y_Ar_react "reacting-gas argon mole fraction" IS_A mole_fraction;
+
+	c_tot "total gas molar density" IS_A molar_density;
+	tr IS_A diffusion_h2o_h2_ar;
+	T ALIASES tr.T;
+	p ALIASES tr.p;
+	D_screen "screening diffusivity used for bulk transport closures" IS_A diffusivity;
+	D_eff_bed "effective pseudo-binary bed diffusivity for the lumped bed closure" IS_A diffusivity;
+
+	fb_node[0..n_fb_segs] "shared gas states along the discretised freeboard"
+		IS_A tga_ms_gas_state;
+	fb_face[1..n_fb_segs] "transport ports on the discretised freeboard faces"
+		IS_A tga_ms_gas_port;
+	fb_link[1..n_fb_segs] "freeboard Maxwell-Stefan transport links"
+		IS_A tga_ms_bed_link;
+
+	R_bl "upper-boundary transport resistance" IS_A transport_resistance;
+	R_fb "freeboard-side transport resistance" IS_A transport_resistance;
+	R_bed "lumped bed transport resistance" IS_A transport_resistance;
+	R_overall "overall freeboard-side transport resistance" IS_A transport_resistance;
+	J_transport "gas transport flux supplied to the reacting zone" IS_A molar_flux;
+
+	TS_bl "dimensionless upper-boundary transport screening factor" IS_A factor;
+	TS_freeboard "dimensionless freeboard transport screening factor" IS_A factor;
+	TS_bed "dimensionless bed transport screening factor, identically zero here" IS_A factor;
+	TS_overall "dimensionless overall transport screening factor" IS_A factor;
+
+	MW_Fe2O3 "molar mass of hematite" IS_A molar_mass;
+	MW_Fe3O4 "molar mass of magnetite" IS_A molar_mass;
+	MW_FeO "molar mass of wustite" IS_A molar_mass;
+	MW_Fe "molar mass of iron" IS_A molar_mass;
+	n0_Fe2O3 "initial amount of hematite in the sample" IS_A mole;
+	n0_per_area "initial hematite inventory per crucible area" IS_A mole_per_area;
+	xi[steps] "overall reaction extents" IS_A reduction_extent;
+
+	n_Fe2O3 "current total amount of hematite" IS_A mole;
+	n_Fe3O4 "current total amount of magnetite" IS_A mole;
+	n_FeO "current total amount of wustite" IS_A mole;
+	n_Fe "current total amount of metallic iron" IS_A mole;
+	oxygen_remaining "oxygen still bound in the solids" IS_A mole;
+	reduction_degree "overall reduction degree relative to fully reduced iron" IS_A factor;
+
+	eta[steps] IS_A positive_factor;
+	k0[steps] IS_A rate_per_pressure;
+	E_a[steps] IS_A molar_energy;
+	k_step[steps] IS_A rate_per_pressure;
+	k_step[steps].lower_bound := -1e6 {1/s/Pa};
+
+	K_fit "shared four-term equilibrium-ratio fits" IS_A tga_reduction_keq_fits;
+	K_ratio_eq[steps] IS_A positive_factor;
+
+	drive[steps] IS_A delta_pressure;
+	rate_forward[steps], rate_reverse[steps], rate_net[steps] IS_A extent_rate;
+	J_reaction "net reaction flux at the reacting zone" IS_A molar_flux;
+
+	ctot_eq:
+		c_tot = p / (1 {GAS_C} * T);
+	bulk_sum:
+		y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
+
+	n0_eq:
+		n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+	n0area_eq:
+		n0_per_area = n0_Fe2O3 / A_crucible;
+	xi1_eq:
+		xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
+	xi3_eq:
+		xi[3] = n_Fe / n0_Fe2O3;
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		xi2_eq_three_step:
+			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+		xi4_eq_three_step:
+			xi[4] = 0;
+	CASE 'two_step_direct':
+		xi2_eq_two_step:
+			xi[2] = 0;
+		xi4_eq_two_step:
+			xi[4] = 8 * xi[1] - 4 * n_Fe3O4 / n0_Fe2O3;
+	END SELECT;
+
+	msample_eq:
+		m_sample
+		=
+		n_Fe2O3 * MW_Fe2O3
+		+ n_Fe3O4 * MW_Fe3O4
+		+ n_FeO * MW_FeO
+		+ n_Fe * MW_Fe;
+	Hbed_eq:
+		H_bed = m_sample / (rho_bulk_bed * A_crucible);
+
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		oxygen_eq_three_step:
+			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+	CASE 'two_step_direct':
+		oxygen_eq_two_step:
+			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4;
+	END SELECT;
+	reduction_degree_eq:
+		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
+
+	Dscreen_eq:
+		D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
+	Deffbed_eq:
+		D_eff_bed = k_bed_multiplier * (eps_bed / tau_bed) * D_screen;
+	Lfb_eff_eq:
+		L_freeboard_eff = L_freeboard / k_fb_multiplier;
+
+	SELECT (boundary_model)
+	CASE 'direct':
+		bl_h2_eq_direct:
+			y_H2_fb_top = y_H2_bulk;
+		bl_h2o_eq_direct:
+			y_H2O_fb_top = y_H2O_bulk;
+		bl_ar_eq_direct:
+			y_Ar_fb_top = y_Ar_bulk;
+		Rbl_eq_direct:
+			R_bl = 0 {s/m};
+	CASE 'film':
+		bl_ar_eq_film:
+			y_Ar_fb_top = y_Ar_bulk;
+		bl_sum_eq_film:
+			y_H2O_fb_top = 1 - y_Ar_fb_top - y_H2_fb_top;
+		Rbl_eq_film:
+			R_bl = L_bl / D_screen;
+		Jbl_eq_film:
+			R_bl * J_transport = c_tot * (y_H2_bulk - y_H2_fb_top);
+	END SELECT;
+
+	SELECT (freeboard_model)
+	CASE 'lumped':
+		feed_ar_eq_lumped:
+			y_Ar_feed = y_Ar_fb_top;
+		feed_sum_eq_lumped:
+			y_H2O_feed = 1 - y_Ar_feed - y_H2_feed;
+		Rfb_eq_lumped:
+			R_fb = L_freeboard_eff / D_screen;
+		Jfb_eq_lumped:
+			R_fb * J_transport = c_tot * (y_H2_fb_top - y_H2_feed);
+
+	CASE 'discretised':
+		SELECT (n_fb_segs)
+		CASE 0:
+			feed_h2_eq_zero:
+				y_H2_feed = y_H2_fb_top;
+			feed_h2o_eq_zero:
+				y_H2O_feed = y_H2O_fb_top;
+			feed_ar_eq_zero:
+				y_Ar_feed = y_Ar_fb_top;
+			Rfb_eq_zero:
+				R_fb = 0 {s/m};
+		OTHERWISE:
+			dzfb_eq:
+				dz_fb = L_freeboard_eff / n_fb_segs;
+			c_tot, fb_link[1..n_fb_segs].c_tot ARE_THE_SAME;
+			dz_fb, fb_link[1..n_fb_segs].delta ARE_THE_SAME;
+			tr.D_H2O_H2, fb_link[1..n_fb_segs].D_H2O_H2_bed ARE_THE_SAME;
+			tr.D_H2O_Ar, fb_link[1..n_fb_segs].D_H2O_Ar_bed ARE_THE_SAME;
+			tr.D_H2_Ar, fb_link[1..n_fb_segs].D_H2_Ar_bed ARE_THE_SAME;
+			fb_top_h2_eq:
+				fb_node[0].y_H2 = y_H2_fb_top;
+			fb_top_h2o_eq:
+				fb_node[0].y_H2O = y_H2O_fb_top;
+			feed_h2_eq_disc:
+				fb_node[n_fb_segs].y_H2 = y_H2_feed;
+			feed_h2o_eq_disc:
+				fb_node[n_fb_segs].y_H2O = y_H2O_feed;
+			feed_ar_eq_disc:
+				y_Ar_feed = 1 - y_H2_feed - y_H2O_feed;
+
+			FOR f IN [1..n_fb_segs] CREATE
+				fb_link[f].up, fb_node[f - 1] ARE_THE_SAME;
+				fb_link[f].down, fb_node[f] ARE_THE_SAME;
+				fb_link[f].face, fb_face[f] ARE_THE_SAME;
+				fb_flux_h2_eq[f]:
+					fb_face[f].N_H2 = J_transport;
+				fb_flux_h2o_eq[f]:
+					fb_face[f].N_H2O = -J_transport;
+			END FOR;
+
+			Rfb_eq_disc:
+				R_fb * J_transport = c_tot * (y_H2_fb_top - y_H2_feed);
+		END SELECT;
+	END SELECT;
+
+	SELECT (bed_model)
+	CASE 'none':
+		react_h2_eq_none:
+			y_H2_react = y_H2_feed;
+		react_h2o_eq_none:
+			y_H2O_react = y_H2O_feed;
+		react_ar_eq_none:
+			y_Ar_react = y_Ar_feed;
+		Rbed_eq_none:
+			R_bed = 0 {s/m};
+	CASE 'lumped':
+		react_ar_eq_lumpedbed:
+			y_Ar_react = y_Ar_feed;
+		react_sum_eq_lumpedbed:
+			y_H2O_react = 1 - y_Ar_react - y_H2_react;
+		Rbed_eq_lumpedbed:
+			R_bed = H_bed / D_eff_bed;
+		Jbed_eq_lumpedbed:
+			R_bed * J_transport = c_tot * (y_H2_feed - y_H2_react);
+	END SELECT;
+
+	Roverall_eq:
+		R_overall = R_bl + R_fb + R_bed;
+	transport_match:
+		J_transport = J_reaction;
+
+	screen_bl_eq:
+		TS_bl = J_reaction * R_bl / (c_tot * y_H2_bulk);
+	screen_fb_eq:
+		TS_freeboard = J_reaction * R_fb / (c_tot * y_H2_bulk);
+	screen_bed_eq:
+		TS_bed = J_reaction * R_bed / (c_tot * y_H2_feed);
+	screen_overall_eq:
+		TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
+
+		FOR r IN steps CREATE
+			kstep_eq[r]:
+				k_step[r] = eta[r] * k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+			Keq_eq[r]:
+			K_ratio_eq[r] = exp(
+				K_fit.A[r]
+				+ K_fit.B[r] / (T / 1 {K})
+				+ K_fit.C[r] * ln(T / 1 {K})
+				+ K_fit.D[r] * (T / 1 {K})
+			);
+	END FOR;
+
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		FOR r IN [1..3] CREATE
+			drive_eq_three_step[r]:
+				drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
+			rnet_eq_three_step[r]:
+				rate_net[r] = rate_forward[r] - rate_reverse[r];
+		END FOR;
+		drive4_eq_three_step:
+			drive[4] = 0 {bar};
+		rnet4_eq_three_step:
+			rate_net[4] = 0 {1/s};
+
+		nhe_ode_three_step:
+			der(n_Fe2O3) = -3 * n0_Fe2O3 * rate_net[1];
+		nmag_ode_three_step:
+			der(n_Fe3O4) = n0_Fe2O3 * (2 * rate_net[1] - rate_net[2]);
+		nwu_ode_three_step:
+			der(n_FeO) = n0_Fe2O3 * (3 * rate_net[2] - rate_net[3]);
+		nfe_ode_three_step:
+			der(n_Fe) = n0_Fe2O3 * rate_net[3];
+
+		rf1_eq_three_step:
+			rate_forward[1] = (n_Fe2O3 / n0_Fe2O3) * k_step[1] * p * y_H2_react;
+		rr1_eq_three_step:
+			rate_reverse[1] = (n_Fe3O4 / n0_Fe2O3) * k_step[1] * p * y_H2O_react / K_ratio_eq[1];
+		rf2_eq_three_step:
+			rate_forward[2] = (n_Fe3O4 / n0_Fe2O3) * k_step[2] * p * y_H2_react;
+		rr2_eq_three_step:
+			rate_reverse[2] = (n_FeO / n0_Fe2O3) * k_step[2] * p * y_H2O_react / K_ratio_eq[2];
+		rf3_eq_three_step:
+			rate_forward[3] = (n_FeO / n0_Fe2O3) * k_step[3] * p * y_H2_react;
+		rr3_eq_three_step:
+			rate_reverse[3] = (n_Fe / n0_Fe2O3) * k_step[3] * p * y_H2O_react / K_ratio_eq[3];
+		rf4_eq_three_step:
+			rate_forward[4] = 0 {1/s};
+		rr4_eq_three_step:
+			rate_reverse[4] = 0 {1/s};
+
+		Jrxn_eq_three_step:
+			J_reaction = n0_per_area * (rate_net[1] + rate_net[2] + rate_net[3]);
+
+	CASE 'two_step_direct':
+		drive1_eq_two_step:
+			drive[1] = p * (y_H2_react - y_H2O_react / K_ratio_eq[1]);
+		drive2_eq_two_step:
+			drive[2] = 0 {bar};
+		drive3_eq_two_step:
+			drive[3] = 0 {bar};
+		drive4_eq_two_step:
+			drive[4] = p * (y_H2_react - y_H2O_react / K_ratio_eq[4]);
+		rnet1_eq_two_step:
+			rate_net[1] = rate_forward[1] - rate_reverse[1];
+		rnet2_eq_two_step:
+			rate_net[2] = 0 {1/s};
+		rnet3_eq_two_step:
+			rate_net[3] = 0 {1/s};
+		rnet4_eq_two_step:
+			rate_net[4] = rate_forward[4] - rate_reverse[4];
+
+		nhe_ode_two_step:
+			der(n_Fe2O3) = -3 * n0_Fe2O3 * rate_net[1];
+		nmag_ode_two_step:
+			der(n_Fe3O4) = n0_Fe2O3 * (2 * rate_net[1] - rate_net[4] / 4);
+		nwu_ode_two_step:
+			der(n_FeO) = 0 {mol/s};
+		nfe_ode_two_step:
+			der(n_Fe) = 3 * n0_Fe2O3 * rate_net[4] / 4;
+
+		rf1_eq_two_step:
+			rate_forward[1] = (n_Fe2O3 / n0_Fe2O3) * k_step[1] * p * y_H2_react;
+		rr1_eq_two_step:
+			rate_reverse[1] = (n_Fe3O4 / n0_Fe2O3) * k_step[1] * p * y_H2O_react / K_ratio_eq[1];
+		rf2_eq_two_step:
+			rate_forward[2] = 0 {1/s};
+		rr2_eq_two_step:
+			rate_reverse[2] = 0 {1/s};
+		rf3_eq_two_step:
+			rate_forward[3] = 0 {1/s};
+		rr3_eq_two_step:
+			rate_reverse[3] = 0 {1/s};
+		rf4_eq_two_step:
+			rate_forward[4] = (n_Fe3O4 / n0_Fe2O3) * k_step[4] * p * y_H2_react;
+		rr4_eq_two_step:
+			rate_reverse[4] = (n_Fe / n0_Fe2O3) * k_step[4] * p * y_H2O_react / K_ratio_eq[4];
+
+		Jrxn_eq_two_step:
+			J_reaction = n0_per_area * (rate_net[1] + rate_net[4]);
+	END SELECT;
+
+INITIAL
+	nhe_initial:
+		n_Fe2O3 = m_sample_init / MW_Fe2O3;
+	nmag_initial:
+		n_Fe3O4 = 0 {mol};
+	nwu_initial:
+		n_FeO = 0 {mol};
+	nfe_initial:
+		n_Fe = 0 {mol};
+
+METHODS
+	METHOD values;
+		FIX T := 1073.15 {K};
+		FIX p := 1 {bar};
+		FIX A_crucible := 20 {mm^2};
+		FIX L_freeboard := 8.3 {mm};
+		FIX L_bl := 0 {mm};
+
+		FIX m_sample_init := 100 {mg};
+		rho_bulk_bed := 1500 {kg/m^3};
+		H_bed := 2 {mm};
+
+		FIX eps_bed := 0.45;
+		FIX tau_bed := 3.0;
+		FIX k_fb_multiplier := 1.0;
+		FIX k_bed_multiplier := 2.0;
+
+		FIX y_H2_bulk := 0.8;
+		FIX y_H2O_bulk := 0.0;
+		y_Ar_bulk := 0.2;
+		y_H2_fb_top := 0.8;
+		y_H2O_fb_top := 0.0;
+		y_H2_feed := 0.75;
+		y_H2O_feed := 0.05;
+		y_Ar_feed := 0.2;
+		y_H2_react := 0.75;
+		y_H2O_react := 0.05;
+		y_Ar_react := 0.2;
+
+		IF freeboard_model = 'discretised' THEN
+			IF n_fb_segs > 0 THEN
+				FOR i IN [0..n_fb_segs] DO
+					fb_node[i].y_H2 := y_H2_fb_top - (y_H2_fb_top - y_H2_feed) * i / n_fb_segs;
+					fb_node[i].y_H2O := y_H2O_fb_top + (y_H2O_feed - y_H2O_fb_top) * i / n_fb_segs;
+				END FOR;
+				FOR f IN [1..n_fb_segs] DO
+					fb_face[f].y_H2 := 0.5 * (fb_node[f - 1].y_H2 + fb_node[f].y_H2);
+					fb_face[f].y_H2O := 0.5 * (fb_node[f - 1].y_H2O + fb_node[f].y_H2O);
+					fb_face[f].N_H2 := 0.58 {mol/m^2/s};
+					fb_face[f].N_H2O := -fb_face[f].N_H2;
+				END FOR;
+			END IF;
+		END IF;
+
+		FIX MW_Fe2O3 := 159.687 {g/g_mole};
+		FIX MW_Fe3O4 := 231.531 {g/g_mole};
+		FIX MW_FeO := 71.844 {g/g_mole};
+		FIX MW_Fe := 55.845 {g/g_mole};
+
+		FIX k0[1] := 3e-4 {1/s/Pa};
+		FIX k0[2] := 1.5e-4 {1/s/Pa};
+		FIX k0[3] := 7.5e-4 {1/s/Pa};
+		FIX k0[4] := 1.5e-4 {1/s/Pa};
+		FIX eta[1] := 1.0;
+		FIX eta[2] := 1.0;
+		FIX eta[3] := 1.0;
+		FIX eta[4] := 1.0;
+		FIX E_a[1] := 55 {kJ/mol};
+		FIX E_a[2] := 60 {kJ/mol};
+		FIX E_a[3] := 62 {kJ/mol};
+		FIX E_a[4] := 60 {kJ/mol};
+		RUN K_fit.values;
+
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
+		xi[4] := 0;
+
+		FIX t := 0 {s};
+	END values;
+
+	METHOD bound_self;
+		(* The no-bed / no-diff limits can fully deplete the solids quickly.
+		   Allow small negative trial-state chatter during IDA localisation so
+		   those topological limit cases run cleanly without introducing extra
+		   event logic here. *)
+		y_H2_feed.lower_bound := -1e-6;
+		y_H2O_feed.lower_bound := -1e-6;
+		y_H2_react.lower_bound := -1e-6;
+		y_H2O_react.lower_bound := -1e-6;
+		n_Fe2O3.lower_bound := -1 {mol};
+		n_Fe3O4.lower_bound := -1 {mol};
+		n_FeO.lower_bound := -1 {mol};
+		n_Fe.lower_bound := -1 {mol};
+		oxygen_remaining.lower_bound := -1 {mol};
+		L_bl.lower_bound := 0 {mm};
+		L_freeboard_eff.lower_bound := -1e-9 {mm};
+		R_fb.lower_bound := -1e-12 {s/m};
+		IF freeboard_model = 'discretised' THEN
+			fb_node[0..n_fb_segs].y_H2.lower_bound := -1e-9;
+			fb_node[0..n_fb_segs].y_H2O.lower_bound := -1e-9;
+			fb_face[1..n_fb_segs].y_H2.lower_bound := -1e-9;
+			fb_face[1..n_fb_segs].y_H2O.lower_bound := -1e-9;
+		END IF;
+
+		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_h2.T_star.lower_bound := -1e6;
+		tr.h2o_ar.T_star.lower_bound := -1e6;
+		tr.h2_ar.T_star.lower_bound := -1e6;
+		tr.h2o_h2.Omega_D.lower_bound := -1e6;
+		tr.h2o_ar.Omega_D.lower_bound := -1e6;
+		tr.h2_ar.Omega_D.lower_bound := -1e6;
+		tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+	END bound_self;
+
+	METHOD use_measured_bed_height;
+		FIX H_bed;
+		FREE rho_bulk_bed;
+	END use_measured_bed_height;
+
+	METHOD algebraic_base;
+		RUN reset;
+		RUN values;
+		RUN bound_self;
+		RUN use_measured_bed_height;
+	END algebraic_base;
+
+	METHOD dynamic_reset;
+		n_Fe2O3 := m_sample_init / MW_Fe2O3;
+		n_Fe3O4 := 0 {mol};
+		n_FeO := 0 {mol};
+		n_Fe := 0 {mol};
+		t := 0 {s};
+	END dynamic_reset;
+
+	METHOD observe_default;
+		OBSERVE reduction_degree, m_sample,
+			n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+			y_H2_react, y_H2O_react,
+			J_transport;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, m_sample,
+			n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+			y_H2_react, y_H2O_react,
+			J_transport;
+	END observe_cli_default;
+
+	METHOD on_load;
+		RUN algebraic_base;
+		RUN dynamic_reset;
+		FREE der(n_Fe2O3), der(n_Fe3O4), der(n_FeO), der(n_Fe);
+		RUN observe_default;
+		RUN observe_cli_default;
+	END on_load;
+END tga_reduction_screen_dyn_lumpedbed_linked;
+
+(* Experimental bed-only refactor using one shared transport connector and an
+   explicit inter-slice link model. The freeboard is kept lumped here so the
+   structural experiment focuses on the bed assembly. *)
+MODEL tga_reduction_screen_dyn_msbed_linked(
+	n_bed_segs IS_A integer_constant;
+	boundary_model IS_A symbol_constant;
+	freeboard_model IS_A symbol_constant;
+	n_fb_segs IS_A integer_constant;
+	morphology_model IS_A symbol_constant;
+	reaction_model IS_A symbol_constant;
+) WHERE (
+	(boundary_model = 'direct') OR (boundary_model = 'film');
+	(freeboard_model = 'lumped') OR (freeboard_model = 'discretised');
+	(morphology_model = 'coupled') OR (morphology_model = 'nomorph');
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
+);
+	steps "reduction reaction steps" IS_A set OF integer_constant;
+	steps :== [1..4];
+
+	t "integration time" IS_A time;
+	INDEPENDENT t;
+
+	A_crucible "crucible cross-sectional area" IS_A area;
+	d_p "diameter of particles" IS_A distance;
+	L_freeboard "measured freeboard height above the bed" IS_A distance;
+	L_freeboard_eff "effective freeboard height used by the discretised freeboard closure" IS_A distance;
+	L_bl "effective thickness of the upper gas-film transfer boundary" IS_A distance;
+	H_bed "current packed-bed height" IS_A distance;
+	dz_fb "height of one freeboard slice" IS_A distance;
+	dz_bed "height of one bed slice" IS_A distance;
+
+	m_sample_init "initial sample mass" IS_A mass;
+	m_sample "current sample mass" IS_A mass;
+	rho_bulk_bed "bulk bed density" IS_A mass_density;
+	m_sample.lower_bound := -1 {kg};
+
+	eps_bed "bed void fraction" IS_A positive_factor;
+	tau_bed "bed tortuosity factor" IS_A positive_factor;
+	k_fb_multiplier "freeboard transport multiplier" IS_A positive_factor;
+	k_bed_multiplier "bed diffusivity multiplier" IS_A positive_factor;
+	Sh_particle "particle Sherwood-number-like transfer factor" IS_A positive_factor;
+	a_open "extent-driven opening coefficient" IS_A factor;
+	a_close "extent-driven closing coefficient" IS_A factor;
+	a_open.lower_bound := 0;
+	a_close.lower_bound := 0;
+	beta_T "temperature sensitivity of pore closing" IS_A factor;
+
+	y_H2_bulk "bulk-gas hydrogen mole fraction above the freeboard" IS_A mole_fraction;
+	y_H2O_bulk "bulk-gas steam mole fraction above the freeboard" IS_A mole_fraction;
+	y_Ar_bulk "bulk-gas argon mole fraction above the freeboard" IS_A mole_fraction;
+	y_H2_fb_top "hydrogen mole fraction below the upper transfer boundary" IS_A mole_fraction;
+	y_H2O_fb_top "steam mole fraction below the upper transfer boundary" IS_A mole_fraction;
+	y_Ar_fb_top "argon mole fraction below the upper transfer boundary" IS_A mole_fraction;
+	y_H2_if "hydrogen mole fraction at the bed inlet interface" IS_A mole_fraction;
+	y_H2O_if "steam mole fraction at the bed inlet interface" IS_A mole_fraction;
+	y_Ar_if "argon mole fraction at the bed inlet interface" IS_A mole_fraction;
+	y_H2_react "bed-averaged reacting-gas hydrogen mole fraction" IS_A mole_fraction;
+	y_H2O_react "bed-averaged reacting-gas steam mole fraction" IS_A mole_fraction;
+	y_Ar_react "bed-averaged reacting-gas argon mole fraction" IS_A mole_fraction;
+
+	y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs] IS_A mole_fraction;
+	y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs] IS_A mole_fraction;
+	morph_factor[1..n_bed_segs] IS_A positive_factor;
+
+	c_tot "total gas molar density" IS_A molar_density;
+	tr IS_A diffusion_h2o_h2_ar;
+	T ALIASES tr.T;
+	p ALIASES tr.p;
+	D_screen "screening diffusivity used for bulk transport closures" IS_A diffusivity;
+	D_H2O_H2_bed "bed Maxwell-Stefan diffusivity for H2O/H2" IS_A diffusivity;
+	D_H2O_Ar_bed "bed Maxwell-Stefan diffusivity for H2O/Ar" IS_A diffusivity;
+	D_H2_Ar_bed "bed Maxwell-Stefan diffusivity for H2/Ar" IS_A diffusivity;
+	D_eff_bed "effective pseudo-binary bed diffusivity" IS_A diffusivity;
+
+	R_bl "upper-boundary transport resistance" IS_A transport_resistance;
+	R_fb "freeboard-side transport resistance" IS_A transport_resistance;
+	R_bed "bed-scale transport resistance" IS_A transport_resistance;
+	R_overall "overall freeboard-plus-bed transport resistance" IS_A transport_resistance;
+	J_transport "gas transport flux supplied to the bed" IS_A molar_flux;
+
+	TS_bl "dimensionless upper-boundary transport screening factor" IS_A factor;
+	TS_freeboard "dimensionless freeboard transport screening factor" IS_A factor;
+	TS_bed "dimensionless bed transport screening factor" IS_A factor;
+	TS_overall "dimensionless overall transport screening factor" IS_A factor;
+
+	MW_Fe2O3 "molar mass of hematite" IS_A molar_mass;
+	MW_Fe3O4 "molar mass of magnetite" IS_A molar_mass;
+	MW_FeO "molar mass of wustite" IS_A molar_mass;
+	MW_Fe "molar mass of iron" IS_A molar_mass;
+	n0_Fe2O3 "initial amount of hematite in the sample" IS_A mole;
+	n0_per_area "initial hematite inventory per crucible area" IS_A mole_per_area;
+
+	n_Fe2O3 "current total amount of hematite" IS_A mole;
+	n_Fe3O4 "current total amount of magnetite" IS_A mole;
+	n_FeO "current total amount of wustite" IS_A mole;
+	n_Fe "current total amount of metallic iron" IS_A mole;
+	oxygen_remaining "oxygen still bound in the solids" IS_A mole;
+	reduction_degree "overall reduction degree relative to fully reduced iron" IS_A factor;
+
+	xi[steps] "overall reaction extents" IS_A reduction_extent;
+	rate_net[steps] "bed-averaged net reaction rates" IS_A extent_rate;
+	k_step[steps] "temperature-dependent kinetic coefficients" IS_A rate_per_pressure;
+	K_ratio_eq[steps] "equilibrium ratios for the reduction steps" IS_A positive_factor;
+	etak0[steps] IS_A rate_per_pressure;
+	E_a[steps] IS_A molar_energy;
+	K_fit "shared four-term equilibrium-ratio fits" IS_A tga_reduction_keq_fits;
+
+	J_reaction "total reaction flux summed over the bed" IS_A molar_flux;
+	J_reaction_zone[1..n_bed_segs] IS_A molar_flux;
+
+	face[0..n_bed_segs - 1] "transport ports on the top and internal bed faces"
+		IS_A tga_ms_gas_port;
+	bottom_port "transport port at the impermeable bed base" IS_A tga_ms_gas_port;
+	link[0..n_bed_segs - 1] "top-face and inter-slice transport links"
+		IS_A tga_ms_bed_link;
+	fb_node[0..n_fb_segs] "shared gas states along the discretised freeboard"
+		IS_A tga_ms_gas_state;
+	fb_face[1..n_fb_segs] "transport ports on the discretised freeboard faces"
+		IS_A tga_ms_gas_port;
+	fb_link[1..n_fb_segs] "freeboard Maxwell-Stefan transport links"
+		IS_A tga_ms_bed_link;
+	slice[1..n_bed_segs] "local reacting bed slices"
+		IS_A tga_reduction_bed_slice_local(reaction_model);
+
+	ctot_eq:
+		c_tot = p / (1 {GAS_C} * T);
+	bulk_sum:
+		y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
+
+	n0_eq:
+		n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+	n0area_eq:
+		n0_per_area = n0_Fe2O3 / A_crucible;
+
+	nhe_total_eq:
+		n_Fe2O3 = SUM[slice[z].n_Fe2O3 | z IN [1..n_bed_segs]];
+	nmag_total_eq:
+		n_Fe3O4 = SUM[slice[z].n_Fe3O4 | z IN [1..n_bed_segs]];
+	nwu_total_eq:
+		n_FeO = SUM[slice[z].n_FeO | z IN [1..n_bed_segs]];
+	nfe_total_eq:
+		n_Fe = SUM[slice[z].n_Fe | z IN [1..n_bed_segs]];
+	reduction_degree_eq:
+		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
+
+	xi1_eq:
+		xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
+	xi3_eq:
+		xi[3] = n_Fe / n0_Fe2O3;
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		oxygen_eq_three_step:
+			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+		xi2_eq_three_step:
+			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+		xi4_eq_three_step:
+			xi[4] = 0;
+	CASE 'two_step_direct':
+		oxygen_eq_two_step:
+			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4;
+		xi2_eq_two_step:
+			xi[2] = 0;
+		xi4_eq_two_step:
+			xi[4] = 8 * xi[1] - 4 * n_Fe3O4 / n0_Fe2O3;
+	END SELECT;
+
+	msample_eq:
+		m_sample
+		=
+		n_Fe2O3 * MW_Fe2O3
+		+ n_Fe3O4 * MW_Fe3O4
+		+ n_FeO * MW_FeO
+		+ n_Fe * MW_Fe;
+	Hbed_eq:
+		H_bed = m_sample / (rho_bulk_bed * A_crucible);
+	dzbed_eq:
+		dz_bed = H_bed / n_bed_segs;
+
+	yh2_avg_eq:
+		y_H2_react = SUM[slice[z].y_H2_part | z IN [1..n_bed_segs]] / n_bed_segs;
+	yh2o_avg_eq:
+		y_H2O_react = SUM[slice[z].y_H2O_part | z IN [1..n_bed_segs]] / n_bed_segs;
+	yar_avg_eq:
+		y_Ar_react = SUM[slice[z].y_Ar_part | z IN [1..n_bed_segs]] / n_bed_segs;
+
+	Dscreen_eq:
+		D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
+	Dh2oh2bed_eq:
+		D_H2O_H2_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2O_H2;
+	Dh2oarbed_eq:
+		D_H2O_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2O_Ar;
+	Dh2arbed_eq:
+		D_H2_Ar_bed = k_bed_multiplier * (eps_bed / tau_bed) * tr.D_H2_Ar;
+	Deffbed_eq:
+		D_eff_bed = k_bed_multiplier * (eps_bed / tau_bed) * D_screen;
+	Lfb_eff_eq:
+		L_freeboard_eff = L_freeboard / k_fb_multiplier;
+
+	SELECT (boundary_model)
+	CASE 'direct':
+		bl_h2_eq_direct:
+			y_H2_fb_top = y_H2_bulk;
+		bl_h2o_eq_direct:
+			y_H2O_fb_top = y_H2O_bulk;
+		bl_ar_eq_direct:
+			y_Ar_fb_top = y_Ar_bulk;
+		Rbl_eq_direct:
+			R_bl = 0 {s/m};
+	CASE 'film':
+		bl_ar_eq_film:
+			y_Ar_fb_top = y_Ar_bulk;
+		bl_sum_eq_film:
+			y_H2O_fb_top = 1 - y_Ar_fb_top - y_H2_fb_top;
+		Rbl_eq_film:
+			R_bl = L_bl / D_screen;
+		Jbl_eq_film:
+			R_bl * J_transport = c_tot * (y_H2_bulk - y_H2_fb_top);
+	END SELECT;
+
+	Jtransport_eq:
+		J_transport = face[0].N_H2;
+
+	SELECT (freeboard_model)
+	CASE 'lumped':
+		if_ar_eq_lumped:
+			y_Ar_if = y_Ar_fb_top;
+		if_sum_eq_lumped:
+			y_H2O_if = 1 - y_Ar_if - y_H2_if;
+
+		Rfb_eq_lumped:
+			R_fb = L_freeboard_eff / D_screen;
+		Jfb_eq_lumped:
+			R_fb * J_transport = c_tot * (y_H2_fb_top - y_H2_if);
+
+	CASE 'discretised':
+		SELECT (n_fb_segs)
+		CASE 0:
+			if_h2_eq_zero:
+				y_H2_if = y_H2_fb_top;
+			if_h2o_eq_zero:
+				y_H2O_if = y_H2O_fb_top;
+			if_ar_eq_zero:
+				y_Ar_if = y_Ar_fb_top;
+			Rfb_eq_zero:
+				R_fb = 0 {s/m};
+		OTHERWISE:
+			dzfb_eq:
+				dz_fb = L_freeboard_eff / n_fb_segs;
+			c_tot, fb_link[1..n_fb_segs].c_tot ARE_THE_SAME;
+			dz_fb, fb_link[1..n_fb_segs].delta ARE_THE_SAME;
+			tr.D_H2O_H2, fb_link[1..n_fb_segs].D_H2O_H2_bed ARE_THE_SAME;
+			tr.D_H2O_Ar, fb_link[1..n_fb_segs].D_H2O_Ar_bed ARE_THE_SAME;
+			tr.D_H2_Ar, fb_link[1..n_fb_segs].D_H2_Ar_bed ARE_THE_SAME;
+
+			fb_top_h2_eq:
+				fb_node[0].y_H2 = y_H2_fb_top;
+			fb_top_h2o_eq:
+				fb_node[0].y_H2O = y_H2O_fb_top;
+			fb_if_h2_eq:
+				fb_node[n_fb_segs].y_H2 = y_H2_if;
+			fb_if_h2o_eq:
+				fb_node[n_fb_segs].y_H2O = y_H2O_if;
+			fb_if_ar_eq:
+				y_Ar_if = 1 - y_H2_if - y_H2O_if;
+
+			FOR f IN [1..n_fb_segs] CREATE
+				fb_link[f].up, fb_node[f - 1] ARE_THE_SAME;
+				fb_link[f].down, fb_node[f] ARE_THE_SAME;
+				fb_link[f].face, fb_face[f] ARE_THE_SAME;
+				fb_flux_h2_eq[f]:
+					fb_face[f].N_H2 = J_transport;
+				fb_flux_h2o_eq[f]:
+					fb_face[f].N_H2O = -J_transport;
+			END FOR;
+
+			Rfb_eq_disc:
+				R_fb * J_transport = c_tot * (y_H2_fb_top - y_H2_if);
+		END SELECT;
+	END SELECT;
+
+	Rbed_eq:
+		R_bed = H_bed / D_eff_bed;
+	Roverall_eq:
+		R_overall = R_bl + R_fb + R_bed;
+
+	screen_bl_eq:
+		TS_bl = J_reaction * R_bl / (c_tot * y_H2_bulk);
+	screen_fb_eq:
+		TS_freeboard = J_reaction * R_fb / (c_tot * y_H2_bulk);
+	screen_bed_eq:
+		TS_bed = J_reaction * R_bed / (c_tot * y_H2_if);
+	screen_overall_eq:
+		TS_overall = J_reaction * R_overall / (c_tot * y_H2_bulk);
+
+	top_link_delta_eq:
+		link[0].delta = 0.5 * dz_bed;
+	c_tot, link[0..n_bed_segs - 1].c_tot ARE_THE_SAME;
+	D_H2O_H2_bed, link[0..n_bed_segs - 1].D_H2O_H2_bed ARE_THE_SAME;
+	D_H2O_Ar_bed, link[0..n_bed_segs - 1].D_H2O_Ar_bed ARE_THE_SAME;
+	D_H2_Ar_bed, link[0..n_bed_segs - 1].D_H2_Ar_bed ARE_THE_SAME;
+	dz_bed, link[1..n_bed_segs - 1].delta ARE_THE_SAME;
+	link[0].up.y_H2, y_H2_if ARE_THE_SAME;
+	link[0].up.y_H2O, y_H2O_if ARE_THE_SAME;
+	link[0].down, slice[1].centre ARE_THE_SAME;
+	link[0].face, face[0] ARE_THE_SAME;
+	slice[1].top, face[0] ARE_THE_SAME;
+
+	FOR f IN [1..n_bed_segs - 1] CREATE
+		link[f].up, slice[f].centre ARE_THE_SAME;
+		link[f].down, slice[f + 1].centre ARE_THE_SAME;
+		link[f].face, face[f] ARE_THE_SAME;
+		slice[f].bot, face[f] ARE_THE_SAME;
+		slice[f + 1].top, face[f] ARE_THE_SAME;
+	END FOR;
+
+	bottom_h2_eq:
+		bottom_port.N_H2 = 0 {mol/m^2/s};
+	bottom_h2o_eq:
+		bottom_port.N_H2O = 0 {mol/m^2/s};
+	bottom_port.y_H2, slice[n_bed_segs].centre.y_H2 ARE_THE_SAME;
+	bottom_port.y_H2O, slice[n_bed_segs].centre.y_H2O ARE_THE_SAME;
+	slice[n_bed_segs].bot, bottom_port ARE_THE_SAME;
+
+	FOR r IN steps CREATE
+		kstep_eq[r]:
+			k_step[r] = etak0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+		Keq_eq[r]:
+			K_ratio_eq[r] = exp(
+				K_fit.A[r]
+				+ K_fit.B[r] / (T / 1 {K})
+				+ K_fit.C[r] * ln(T / 1 {K})
+				+ K_fit.D[r] * (T / 1 {K})
+			);
+		rnet_avg_eq[r]:
+			rate_net[r] = SUM[slice[z].rate_net[r] | z IN [1..n_bed_segs]] / n_bed_segs;
+	END FOR;
+
+	FOR z IN [1..n_bed_segs] CREATE
+		slice_n0_eq[z]:
+		slice[z].n0_Fe2O3_slice = n0_Fe2O3 / n_bed_segs;
+		slice_n0area_eq[z]:
+			slice[z].n0_per_area_slice = n0_per_area / n_bed_segs;
+		y_H2_zone[z], slice[z].y_H2_centre ARE_THE_SAME;
+		y_H2O_zone[z], slice[z].y_H2O_centre ARE_THE_SAME;
+		y_H2_part[z], slice[z].y_H2_surface ARE_THE_SAME;
+		y_H2O_part[z], slice[z].y_H2O_surface ARE_THE_SAME;
+		morph_factor[z], slice[z].morph_factor_local ARE_THE_SAME;
+		J_reaction_zone[z], slice[z].J_reaction_local ARE_THE_SAME;
+	END FOR;
+	T, slice[1..n_bed_segs].T ARE_THE_SAME;
+	p, slice[1..n_bed_segs].p ARE_THE_SAME;
+	c_tot, slice[1..n_bed_segs].c_tot ARE_THE_SAME;
+	d_p, slice[1..n_bed_segs].d_p ARE_THE_SAME;
+	D_eff_bed, slice[1..n_bed_segs].D_eff_bed ARE_THE_SAME;
+	Sh_particle, slice[1..n_bed_segs].Sh_particle ARE_THE_SAME;
+	a_open, slice[1..n_bed_segs].a_open ARE_THE_SAME;
+	a_close, slice[1..n_bed_segs].a_close ARE_THE_SAME;
+	beta_T, slice[1..n_bed_segs].beta_T ARE_THE_SAME;
+	FOR r IN steps CREATE
+		k_step[r], slice[1..n_bed_segs].k_step[r] ARE_THE_SAME;
+		K_ratio_eq[r], slice[1..n_bed_segs].K_ratio_eq[r] ARE_THE_SAME;
+	END FOR;
+
+	Jrxn_eq:
+		J_reaction = SUM[J_reaction_zone[z] | z IN [1..n_bed_segs]];
+
+METHODS
+	METHOD values;
+		FIX T := 1073.15 {K};
+		FIX p := 1 {bar};
+		FIX A_crucible := 20 {mm^2};
+		FIX d_p := 175 {um};
+		FIX L_freeboard := 8.3 {mm};
+		FIX L_bl := 0 {mm};
+
+		FIX m_sample_init := 100 {mg};
+		rho_bulk_bed := 1500 {kg/m^3};
+		H_bed := 2 {mm};
+
+		FIX eps_bed := 0.45;
+		FIX tau_bed := 3.0;
+		FIX k_fb_multiplier := 0.27732238;
+		FIX k_bed_multiplier := 0.35665202;
+		FIX Sh_particle := 0.76583406;
+		FIX a_open := 0.81142394;
+		FIX a_close := 2.5472071;
+		FIX beta_T := -0.19173506;
+		IF morphology_model = 'nomorph' THEN
+			a_open := 0;
+			a_close := 0;
+			beta_T := 0;
+		END IF;
+
+		FIX y_H2_bulk := 0.8;
+		FIX y_H2O_bulk := 0.0;
+		y_Ar_bulk := 0.2;
+		y_H2_fb_top := 0.8;
+		y_H2O_fb_top := 0.0;
+		y_H2_if := 0.75;
+		y_H2O_if := 0.05;
+		y_Ar_if := 0.2;
+		y_H2_zone[1..n_bed_segs] := 0.75;
+		y_H2O_zone[1..n_bed_segs] := 0.05;
+		y_H2_part[1..n_bed_segs] := 0.72;
+		y_H2O_part[1..n_bed_segs] := 0.08;
+
+		IF freeboard_model = 'discretised' THEN
+			IF n_fb_segs > 0 THEN
+				FOR i IN [0..n_fb_segs] DO
+					fb_node[i].y_H2 := y_H2_fb_top - (y_H2_fb_top - y_H2_if) * i / n_fb_segs;
+					fb_node[i].y_H2O := y_H2O_fb_top + (y_H2O_if - y_H2O_fb_top) * i / n_fb_segs;
+				END FOR;
+				FOR f IN [1..n_fb_segs] DO
+					fb_face[f].y_H2 := 0.5 * (fb_node[f - 1].y_H2 + fb_node[f].y_H2);
+					fb_face[f].y_H2O := 0.5 * (fb_node[f - 1].y_H2O + fb_node[f].y_H2O);
+					fb_face[f].N_H2 := 0.58 {mol/m^2/s};
+					fb_face[f].N_H2O := -fb_face[f].N_H2;
+				END FOR;
+			END IF;
+		END IF;
+
+		FIX MW_Fe2O3 := 159.687 {g/g_mole};
+		FIX MW_Fe3O4 := 231.531 {g/g_mole};
+		FIX MW_FeO := 71.844 {g/g_mole};
+		FIX MW_Fe := 55.845 {g/g_mole};
+
+		FIX etak0[1] := 0.0015754844 {1/s/Pa};
+		FIX etak0[2] := 0.00076929627 {1/s/Pa};
+		FIX etak0[3] := 0.00039695573 {1/s/Pa};
+		FIX etak0[4] := 0.00076929627 {1/s/Pa};
+
+		FIX E_a[1] := 68.270416 {kJ/mol};
+		FIX E_a[2] := 56.743108 {kJ/mol};
+		FIX E_a[3] := 58.431754 {kJ/mol};
+		FIX E_a[4] := 56.743108 {kJ/mol};
+		RUN K_fit.values;
+
+		xi[1] := 0;
+		xi[2] := 0;
+		xi[3] := 0;
+		xi[4] := 0;
+
+		FOR f IN [0..n_bed_segs - 1] DO
+			face[f].y_H2 := 0.75;
+			face[f].y_H2O := 0.05;
+			face[f].N_H2 := 0.58 {mol/m^2/s} * (n_bed_segs - f) / n_bed_segs;
+			face[f].N_H2O := -face[f].N_H2;
+		END FOR;
+		bottom_port.y_H2 := 0.75;
+		bottom_port.y_H2O := 0.05;
+		bottom_port.N_H2 := 0 {mol/m^2/s};
+		bottom_port.N_H2O := 0 {mol/m^2/s};
+
+		FIX t := 0 {s};
+	END values;
+
+	METHOD bound_self;
+		y_H2O_if.lower_bound := -1e-9;
+		L_bl.lower_bound := 0 {mm};
+		IF freeboard_model = 'discretised' THEN
+			fb_node[0..n_fb_segs].y_H2.lower_bound := -1e-9;
+			fb_node[0..n_fb_segs].y_H2O.lower_bound := -1e-9;
+			fb_face[1..n_fb_segs].y_H2.lower_bound := -1e-9;
+			fb_face[1..n_fb_segs].y_H2O.lower_bound := -1e-9;
+		END IF;
+		n_Fe2O3.lower_bound := -1e-9 {mol};
+		n_Fe3O4.lower_bound := -1e-12 {mol};
+		n_FeO.lower_bound := -1e-12 {mol};
+		n_Fe.lower_bound := -1e-12 {mol};
+		oxygen_remaining.lower_bound := -1e-9 {mol};
+
+		FOR z IN [1..n_bed_segs] DO
+			slice[z].n_Fe2O3.lower_bound := -1e-9 {mol};
+			slice[z].n_Fe3O4.lower_bound := -1e-12 {mol};
+			slice[z].n_FeO.lower_bound := -1e-12 {mol};
+			slice[z].n_Fe.lower_bound := -1e-12 {mol};
+		END FOR;
+
+		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2_ar.sigma_ij.lower_bound := -1 {m};
+		tr.h2o_h2.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2_ar.eps_over_k_ij.lower_bound := -1 {K};
+		tr.h2o_h2.T_star.lower_bound := -1e6;
+		tr.h2o_ar.T_star.lower_bound := -1e6;
+		tr.h2_ar.T_star.lower_bound := -1e6;
+		tr.h2o_h2.Omega_D.lower_bound := -1e6;
+		tr.h2o_ar.Omega_D.lower_bound := -1e6;
+		tr.h2_ar.Omega_D.lower_bound := -1e6;
+		tr.h2o_h2.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij.lower_bound := -1 {m^2/s};
+		tr.h2o_h2.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2o_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+		tr.h2_ar.D_ij_FSG.lower_bound := -1 {m^2/s};
+	END bound_self;
+
+	METHOD use_measured_bed_height;
+		FIX H_bed;
+		FREE rho_bulk_bed;
+	END use_measured_bed_height;
+
+	METHOD algebraic_base;
+		RUN reset;
+		RUN values;
+		RUN bound_self;
+		RUN use_measured_bed_height;
+	END algebraic_base;
+
+	METHOD dynamic_reset;
+		FOR z IN [1..n_bed_segs] DO
+			slice[z].n_Fe2O3 := m_sample_init / (MW_Fe2O3 * n_bed_segs);
+			slice[z].n_Fe3O4 := 0 {mol};
+			slice[z].n_FeO := 0 {mol};
+			slice[z].n_Fe := 0 {mol};
+		END FOR;
+		t := 0 {s};
+	END dynamic_reset;
+
+	METHOD observe_default;
+		OBSERVE reduction_degree, m_sample,
+			n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+			y_H2_react, y_H2O_react,
+			rate_net[1..4],
+			xi[1..4],
+			y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs],
+			y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
+			J_transport;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, m_sample,
+			n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+			y_H2_react, y_H2O_react,
+			y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs],
+			y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
+			J_transport;
+	END observe_cli_default;
+
+	METHOD on_load;
+		RUN algebraic_base;
+		RUN dynamic_reset;
+		FOR z IN [1..n_bed_segs] DO
+			FREE der(slice[z].n_Fe2O3), der(slice[z].n_Fe3O4), der(slice[z].n_FeO), der(slice[z].n_Fe);
+		END FOR;
+		RUN observe_default;
+		RUN observe_cli_default;
+	END on_load;
+END tga_reduction_screen_dyn_msbed_linked;
+
+(* Small dynamic wrapper around the linked declarative core. This mirrors the
+   stable msbed_mod wrapper arrangement so linked variants and diagnostics can
+   be exercised consistently from the top level. *)
+MODEL tgadyn_msbed_linked_configurable(
+	n_bed_segs IS_A integer_constant;
+	boundary_model IS_A symbol_constant;
+	freeboard_model IS_A symbol_constant;
+	n_fb_segs IS_A integer_constant;
+	morphology_model IS_A symbol_constant;
+	reaction_model IS_A symbol_constant;
+);
+	m IS_A tga_reduction_screen_dyn_msbed_linked(
+		n_bed_segs,
+		boundary_model,
+		freeboard_model,
+		n_fb_segs,
+		morphology_model,
+		reaction_model
+	);
+METHODS
+METHOD prepare_dynamic;
+	RUN m.algebraic_base;
+	RUN m.dynamic_reset;
+	FOR z IN [1..n_bed_segs] DO
+		FREE der(m.slice[z].n_Fe2O3), der(m.slice[z].n_Fe3O4), der(m.slice[z].n_FeO), der(m.slice[z].n_Fe);
+	END FOR;
+	RUN m.observe_default;
+	RUN m.observe_cli_default;
+END prepare_dynamic;
+METHOD integrate_default;
+	RUN prepare_dynamic;
+	FIX m.t;
+	INTEGRATOR IDA;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END integrate_default;
+METHOD integrate_diagnostics;
+	RUN prepare_dynamic;
+	FIX m.t;
+	INTEGRATOR IDA;
+	OPTION diagnostics TRUE;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END integrate_diagnostics;
+METHOD on_load;
+	RUN integrate_default;
+END on_load;
+END tgadyn_msbed_linked_configurable;
+
+MODEL tgadyn_ms_lumpedbed_linked_configurable(
+	boundary_model IS_A symbol_constant;
+	freeboard_model IS_A symbol_constant;
+	n_fb_segs IS_A integer_constant;
+	bed_model IS_A symbol_constant;
+	reaction_model IS_A symbol_constant;
+);
+	m IS_A tga_reduction_screen_dyn_lumpedbed_linked(
+		boundary_model,
+		freeboard_model,
+		n_fb_segs,
+		bed_model,
+		reaction_model
+	);
+METHODS
+METHOD prepare_dynamic;
+	RUN m.algebraic_base;
+	RUN m.dynamic_reset;
+	FREE der(m.n_Fe2O3), der(m.n_Fe3O4), der(m.n_FeO), der(m.n_Fe);
+	RUN m.observe_default;
+	RUN m.observe_cli_default;
+END prepare_dynamic;
+METHOD integrate_default;
+	RUN prepare_dynamic;
+	FIX m.t;
+	INTEGRATOR IDA;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END integrate_default;
+METHOD integrate_diagnostics;
+	RUN prepare_dynamic;
+	FIX m.t;
+	INTEGRATOR IDA;
+	OPTION diagnostics TRUE;
+	INTEGRATE FROM 0 {s} TO 600 {s} STEPS 200;
+END integrate_diagnostics;
+METHOD on_load;
+	RUN integrate_default;
+END on_load;
+END tgadyn_ms_lumpedbed_linked_configurable;
+
+(* Unified linked topology selector.
+   Topology is assembled from reusable boundary/freeboard/bed elements:
+   - boundary_model:
+     'direct' applies the bulk gas composition directly at the top node;
+     'film' inserts an upper gas-film resistance.
+   - freeboard_model:
+     'lumped' uses a single freeboard resistance;
+     'discretised' uses zero or more linked stagnant freeboard layers.
+   - bed_model:
+     'none' connects the freeboard outlet directly to the reacting gas state;
+     'lumped' inserts one lumped bed resistance;
+     'discretised' inserts the linked multi-slice bed network.
+   - morphology_model:
+     'coupled' enables extent/temperature-dependent particle morphology in the
+     discretised-bed branch;
+     'nomorph' freezes that particle-scale correction.
+   - reaction_model:
+     'three_step_wustite' keeps the traditional Fe2O3->Fe3O4->FeO->Fe ladder;
+     'two_step_direct' replaces the low-temperature Fe3O4->FeO->Fe route with
+     a direct reversible Fe3O4 <-> Fe branch using the Fe|spinel K(T) fit. *)
+MODEL tgadyn_ms_linked_configurable(
+	n_bed_segs IS_A integer_constant;
+	bed_model IS_A symbol_constant;
+	boundary_model IS_A symbol_constant;
+	freeboard_model IS_A symbol_constant;
+	n_fb_segs IS_A integer_constant;
+	morphology_model IS_A symbol_constant;
+	reaction_model IS_A symbol_constant;
+) WHERE (
+	(bed_model = 'none') OR (bed_model = 'lumped') OR (bed_model = 'discretised');
+	(boundary_model = 'direct') OR (boundary_model = 'film');
+	(freeboard_model = 'lumped') OR (freeboard_model = 'discretised');
+	(morphology_model = 'coupled') OR (morphology_model = 'nomorph');
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
+);
+NOTES
+'purpose' SELF {
+Unified linked TGA entry point. The transport topology is selected using
+bed_model, boundary_model and freeboard_model, while morphology_model controls
+the particle resistance correction and reaction_model chooses between the
+three-step wustite route and the low-temperature direct magnetite to iron route.
+}
+'fitting parameters' SELF {
+Typical fitting parameters are:
+- chemistry: k0_i and E_a_i for the active reaction steps, plus eta_i or
+  etak0_i depending on the selected branch;
+- freeboard and bed transport: k_fb_multiplier and k_bed_multiplier;
+- bed and particle transport where active: eps_bed, tau_bed, Sh_particle;
+- morphology-enabled discretised-bed branch only: a_open, a_close, beta_T.
+For the direct low-temperature models only steps 1 and 4 remain active, where
+step 4 is the direct Fe3O4 <-> Fe branch.
+}
+END NOTES;
+	SELECT (bed_model)
+	CASE 'discretised':
+		disc IS_A tgadyn_msbed_linked_configurable(
+			n_bed_segs,
+			boundary_model,
+			freeboard_model,
+			n_fb_segs,
+			morphology_model,
+			reaction_model
+		);
+	CASE 'lumped':
+		lumped IS_A tgadyn_ms_lumpedbed_linked_configurable(
+			boundary_model,
+			freeboard_model,
+			n_fb_segs,
+			'lumped',
+			reaction_model
+		);
+	CASE 'none':
+		nobed IS_A tgadyn_ms_lumpedbed_linked_configurable(
+			boundary_model,
+			freeboard_model,
+			n_fb_segs,
+			'none',
+			reaction_model
+		);
+	END SELECT;
+METHODS
+METHOD integrate_default;
+	SWITCH (bed_model)
+	CASE 'discretised':
+		RUN disc.integrate_default;
+	CASE 'lumped':
+		RUN lumped.integrate_default;
+	CASE 'none':
+		RUN nobed.integrate_default;
+	END SWITCH;
+END integrate_default;
+METHOD integrate_diagnostics;
+	SWITCH (bed_model)
+	CASE 'discretised':
+		RUN disc.integrate_diagnostics;
+	CASE 'lumped':
+		RUN lumped.integrate_diagnostics;
+	CASE 'none':
+		RUN nobed.integrate_diagnostics;
+	END SWITCH;
+END integrate_diagnostics;
+METHOD on_load;
+	RUN integrate_default;
+END on_load;
+END tgadyn_ms_linked_configurable;
+
+MODEL tgadyn_msbed_linked_nomorph_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'lumped',
+		0,
+		'nomorph',
+		'three_step_wustite'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nomorph_configurable;
+
+MODEL tgadyn_msbed_linked_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'lumped',
+		0,
+		'coupled',
+		'two_step_direct'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_direct_configurable;
+
+MODEL tgadyn_msbed_linked_nomorph_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'lumped',
+		0,
+		'nomorph',
+		'two_step_direct'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nomorph_direct_configurable;
+
+MODEL tgadyn_msbed_linked_nofb_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		0,
+		'coupled',
+		'three_step_wustite'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_configurable;
+
+MODEL tgadyn_msbed_linked_nofb_nomorph_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		0,
+		'nomorph',
+		'three_step_wustite'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_nomorph_configurable;
+
+MODEL tgadyn_msbed_linked_nofb_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		0,
+		'coupled',
+		'two_step_direct'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_direct_configurable;
+
+MODEL tgadyn_msbed_linked_nofb_nomorph_direct_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		0,
+		'nomorph',
+		'two_step_direct'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_nomorph_direct_configurable;
+
+(* Linked model ladder: no-diff -> no-bed -> lumped-bed -> discretised-bed. *)
+MODEL tgadyn_msbed_linked;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'lumped', 0, 'coupled', 'three_step_wustite');
+NOTES 'purpose' SELF {
+Discretised-bed linked model with lumped freeboard, no upper film resistance,
+coupled morphology, and the traditional three-step hematite to iron chemistry.
+Fit chemistry, bed transport, particle transfer, and morphology together here.
+}
+'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_2, etak0_3, E_a_1, E_a_2, E_a_3.
+Transport and morphology: k_fb_multiplier, k_bed_multiplier, eps_bed,
+tau_bed, Sh_particle, a_open, a_close, beta_T.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked;
+
+MODEL tgadyn_msbed_linked_nomorph;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'lumped', 0, 'nomorph', 'three_step_wustite');
+NOTES 'purpose' SELF {
+Discretised-bed linked model with lumped freeboard and no morphology coupling.
+This is the main comparison case for isolating the value of the morphology
+parameters a_open, a_close, and beta_T.
+}
+'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_2, etak0_3, E_a_1, E_a_2, E_a_3.
+Transport only: k_fb_multiplier, k_bed_multiplier, eps_bed, tau_bed,
+Sh_particle. Morphology parameters are disabled here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nomorph;
+
+MODEL tgadyn_msbed_linked_fbdisc;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 10, 'coupled', 'three_step_wustite');
+NOTES 'purpose' SELF {
+Discretised-bed, discretised-freeboard linked model. Use this when testing
+whether freeboard layering adds value beyond the lumped freeboard treatment.
+The active fitting set is the same as tgadyn_msbed_linked, with freeboard
+transport now resolved by linked freeboard layers.
+}
+'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_2, etak0_3, E_a_1, E_a_2, E_a_3.
+Transport and morphology: k_fb_multiplier, k_bed_multiplier, eps_bed,
+tau_bed, Sh_particle, a_open, a_close, beta_T.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_fbdisc;
+
+MODEL tgadyn_msbed_linked_fbdisc_nomorph;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 10, 'nomorph', 'three_step_wustite');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_2, etak0_3, E_a_1, E_a_2, E_a_3.
+Transport only: k_fb_multiplier, k_bed_multiplier, eps_bed, tau_bed,
+Sh_particle. Morphology parameters are disabled here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_fbdisc_nomorph;
+
+MODEL tgadyn_msbed_linked_film;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'film', 'lumped', 0, 'coupled', 'three_step_wustite');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_film;
+
+MODEL tgadyn_msbed_linked_fbdisc_film;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'film', 'discretised', 10, 'coupled', 'three_step_wustite');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_fbdisc_film;
+
+(* Degraded / comparison cases kept in the linked entry-point file so the full
+   model ladder can be exercised from one REQUIRE path. *)
+MODEL tgadyn_ms_linked_lumped_lumped;
+	m IS_A tgadyn_ms_linked_configurable(0, 'lumped', 'direct', 'lumped', 0, 'coupled', 'three_step_wustite');
+NOTES 'purpose' SELF {
+Single-resistance bed plus single-resistance freeboard comparison case. This is
+the natural next rung above the no-barrier model when introducing transport
+limitations without full bed discretisation.
+}
+'fitting parameters' SELF {
+Active chemistry slots: k0_1, k0_2, k0_3, E_a_1, E_a_2, E_a_3, eta_1, eta_2,
+eta_3. Transport: k_fb_multiplier and k_bed_multiplier.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_lumped_lumped;
+
+MODEL tgadyn_ms_linked_lumped_fbdisc;
+	m IS_A tgadyn_ms_linked_configurable(0, 'lumped', 'direct', 'discretised', 10, 'coupled', 'three_step_wustite');
+NOTES 'purpose' SELF {
+Lumped bed with discretised freeboard. Use this to isolate the value of
+freeboard layering while keeping the bed resistance in a single lumped element.
+}
+'fitting parameters' SELF {
+Active chemistry slots: k0_1, k0_2, k0_3, E_a_1, E_a_2, E_a_3, eta_1, eta_2,
+eta_3. Transport: k_fb_multiplier and k_bed_multiplier.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_lumped_fbdisc;
+
+MODEL tgadyn_ms_linked_nobed_lumped;
+	m IS_A tgadyn_ms_linked_configurable(0, 'none', 'direct', 'lumped', 0, 'coupled', 'three_step_wustite');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_nobed_lumped;
+
+MODEL tgadyn_ms_linked_nobed_fbdisc;
+	m IS_A tgadyn_ms_linked_configurable(0, 'none', 'direct', 'discretised', 10, 'coupled', 'three_step_wustite');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_nobed_fbdisc;
+
+MODEL tgadyn_ms_linked_nodiff;
+	m IS_A tgadyn_ms_linked_configurable(0, 'none', 'direct', 'discretised', 0, 'coupled', 'three_step_wustite');
+NOTES 'purpose' SELF {
+No film, no freeboard layers, and no bed resistance, but with the morphology
+correction still active at the particle scale. This is a useful intermediate
+limit when checking the impact of the morphology closure alone.
+}
+'fitting parameters' SELF {
+Active chemistry slots: k0_1, k0_2, k0_3, E_a_1, E_a_2, E_a_3, eta_1, eta_2,
+eta_3. No explicit bed or freeboard transport parameters are active here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_nodiff;
+
+(* Ideal no-barrier baseline: bulk gas is applied directly at the reacting
+   gas state, with no upper film, freeboard, bed, or morphology resistance. *)
+MODEL tgadyn_ms_linked_nobarrier;
+	m IS_A tgadyn_ms_linked_configurable(0, 'none', 'direct', 'discretised', 0, 'nomorph', 'three_step_wustite');
+NOTES 'purpose' SELF {
+Ideal no-barrier baseline. Bulk gas is applied directly at the reacting gas
+state, with no upper film, no freeboard resistance, no bed resistance, and no
+morphology correction. This is the cleanest intrinsic-kinetics baseline.
+}
+'fitting parameters' SELF {
+Active chemistry slots: k0_1, k0_2, k0_3, E_a_1, E_a_2, E_a_3, eta_1, eta_2,
+eta_3. No transport or morphology parameters are active here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_nobarrier;
+
+MODEL tgadyn_ms_linked_lumpedbed_lumpedfb;
+	m IS_A tgadyn_ms_linked_configurable(0, 'lumped', 'direct', 'lumped', 0, 'coupled', 'three_step_wustite');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_lumpedbed_lumpedfb;
+
+MODEL tgadyn_ms_linked_lumpedbed_fbdisc;
+	m IS_A tgadyn_ms_linked_configurable(0, 'lumped', 'direct', 'discretised', 10, 'coupled', 'three_step_wustite');
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_lumpedbed_fbdisc;
+
+MODEL tgadyn_msbed_linked_nofb;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 0, 'coupled', 'three_step_wustite');
+NOTES 'purpose' SELF {
+Discretised-bed linked model with zero freeboard layers. This is the clean
+no-freeboard limit of the discretised transport topology.
+}
+'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_2, etak0_3, E_a_1, E_a_2, E_a_3.
+Transport and morphology: k_bed_multiplier, eps_bed, tau_bed, Sh_particle,
+a_open, a_close, beta_T. Freeboard transport is absent here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb;
+
+MODEL tgadyn_msbed_linked_nofb_nomorph;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 0, 'nomorph', 'three_step_wustite');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_2, etak0_3, E_a_1, E_a_2, E_a_3.
+Transport only: k_bed_multiplier, eps_bed, tau_bed, Sh_particle.
+Morphology and freeboard parameters are inactive here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_nomorph;
+
+MODEL tgadyn_msbed_linked_nofb_direct;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 0, 'coupled', 'two_step_direct');
+NOTES 'purpose' SELF {
+Discretised-bed linked model with zero freeboard layers and the low-temperature
+direct magnetite-to-iron chemistry.
+}
+'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4.
+Transport and morphology: k_bed_multiplier, eps_bed, tau_bed, Sh_particle,
+a_open, a_close, beta_T. Freeboard transport is absent here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_direct;
+
+MODEL tgadyn_msbed_linked_nofb_nomorph_direct;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 0, 'nomorph', 'two_step_direct');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4.
+Transport only: k_bed_multiplier, eps_bed, tau_bed, Sh_particle.
+Morphology and freeboard parameters are inactive here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_nomorph_direct;
+
+(* Low-temperature direct-chemistry variants. These keep the transport
+   topology fixed and only swap the reaction network. *)
+MODEL tgadyn_ms_linked_nobarrier_direct;
+	m IS_A tgadyn_ms_linked_configurable(0, 'none', 'direct', 'discretised', 0, 'nomorph', 'two_step_direct');
+NOTES 'purpose' SELF {
+Ideal no-barrier baseline using the low-temperature direct chemistry route.
+}
+'fitting parameters' SELF {
+Active chemistry slots: k0_1, k0_4, E_a_1, E_a_4, eta_1, eta_4.
+No transport or morphology parameters are active here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_nobarrier_direct;
+
+MODEL tgadyn_ms_linked_lumped_lumped_direct;
+	m IS_A tgadyn_ms_linked_configurable(0, 'lumped', 'direct', 'lumped', 0, 'coupled', 'two_step_direct');
+NOTES 'purpose' SELF {
+Lumped bed plus lumped freeboard model using the low-temperature direct
+magnetite to iron chemistry branch. This is the direct-chemistry counterpart to
+tgadyn_ms_linked_lumped_lumped.
+}
+'fitting parameters' SELF {
+Active chemistry slots: k0_1, k0_4, E_a_1, E_a_4, eta_1, eta_4.
+Transport: k_fb_multiplier and k_bed_multiplier.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_lumped_lumped_direct;
+
+MODEL tgadyn_ms_linked_lumped_fbdisc_direct;
+	m IS_A tgadyn_ms_linked_configurable(0, 'lumped', 'direct', 'discretised', 10, 'coupled', 'two_step_direct');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: k0_1, k0_4, E_a_1, E_a_4, eta_1, eta_4.
+Transport: k_fb_multiplier and k_bed_multiplier.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_ms_linked_lumped_fbdisc_direct;
+
+MODEL tgadyn_msbed_linked_direct;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'lumped', 0, 'coupled', 'two_step_direct');
+NOTES 'purpose' SELF {
+Discretised-bed linked model using the low-temperature direct chemistry route.
+Use this for lower-temperature bed-limited runs where the direct magnetite to
+iron pathway is expected to replace the wustite-mediated ladder.
+}
+'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4.
+Transport and morphology: k_fb_multiplier, k_bed_multiplier, eps_bed,
+tau_bed, Sh_particle, a_open, a_close, beta_T.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_direct;
+
+MODEL tgadyn_msbed_linked_nomorph_direct;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'lumped', 0, 'nomorph', 'two_step_direct');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4.
+Transport only: k_fb_multiplier, k_bed_multiplier, eps_bed, tau_bed,
+Sh_particle. Morphology parameters are disabled here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nomorph_direct;
+
+MODEL tgadyn_msbed_linked_fbdisc_direct;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 10, 'coupled', 'two_step_direct');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4.
+Transport and morphology: k_fb_multiplier, k_bed_multiplier, eps_bed,
+tau_bed, Sh_particle, a_open, a_close, beta_T.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_fbdisc_direct;
+
+MODEL tgadyn_msbed_linked_fbdisc_nomorph_direct;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 10, 'nomorph', 'two_step_direct');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4.
+Transport only: k_fb_multiplier, k_bed_multiplier, eps_bed, tau_bed,
+Sh_particle. Morphology parameters are disabled here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_fbdisc_nomorph_direct;
+
+(* vim: sw=4:noet:ts=4
+*)

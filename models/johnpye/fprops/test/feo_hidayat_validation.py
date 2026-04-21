@@ -109,6 +109,13 @@ def g_fe3o4(T: float) -> float:
     return -1140237.0 + 1015.067 * T - 174.832 * T * math.log(T) - 0.008149196 * T * T + 1445276.0 / T
 
 
+def g_fe2o3(T: float) -> float:
+    g = -859683.1 + 828.0501 * T - 137.0089 * T * math.log(T) + 1453820.0 / T
+    if T > 2500.0:
+        g = -857356.9 + 823.7122 * T - 136.5437 * T * math.log(T)
+    return g + hillert_jarl_gmag(T, 955.667, 8.36667, 0.28)
+
+
 def spinel_g_ae(T: float) -> float:
     # Hidayat 2015 Table 1 adjusted the Fe3O4 spinel endmember slightly
     # relative to the earlier Degterov 2001 optimization.
@@ -311,38 +318,242 @@ def spinel_phase_g(T: float, a: float, b: float) -> tuple[float, float, float, f
     return g, n_fe, yo_fe3, yo_va
 
 
-def residual_wustite_spinel_degterov(T: float, x: float) -> tuple[float, float, float, float]:
-    mu_a = mu_a_wustite(T, x)
-    mu_b = mu_b_wustite(T, x)
-    lam_o = 2.0 * (mu_b - mu_a)
-    lam_fe = 3.0 * mu_a - 2.0 * mu_b
+def spinel_phase_g_mmc1_guess(T: float, a: float, b: float) -> tuple[float, float, float, float]:
+    c = (a + 5.0 - 4.0 * b) / 6.0
+    v = (1.0 - a - 2.0 * b) / 6.0
+    if not (0.0 <= a <= 1.0 and 0.0 <= b <= 1.0 and 0.0 <= c <= 1.0 and 0.0 <= v <= 1.0):
+        return math.nan, math.nan, math.nan, math.nan
 
+    g_ae = spinel_g_ae(T)
+    i_ae = spinel_i_ae(T)
+    v_e = spinel_v_e(T)
+    d_ae = spinel_delta_ae()
+
+    g_ea = g_ae
+    g_ee = g_ae + i_ae
+    g_aa = g_ae - i_ae + d_ae
+    g_ev = 5.0 / 7.0 * g_ae + v_e
+    g_av = 5.0 / 7.0 * g_ae + v_e - i_ae + d_ae
+
+    yt_fe2 = a
+    yt_fe3 = 1.0 - a
+    yo_fe2 = b
+    yo_fe3 = c
+    yo_va = v
+
+    def ylogy(y: float) -> float:
+        return 0.0 if y <= 0.0 else y * math.log(y)
+
+    gmix = (
+        yt_fe2 * yo_fe2 * g_aa
+        + yt_fe2 * yo_fe3 * g_ae
+        + yt_fe2 * yo_va * g_av
+        + yt_fe3 * yo_fe2 * g_ea
+        + yt_fe3 * yo_fe3 * g_ee
+        + yt_fe3 * yo_va * g_ev
+    )
+    sconf = -R * (
+        ylogy(yt_fe2)
+        + ylogy(yt_fe3)
+        + 2.0 * (ylogy(yo_fe2) + ylogy(yo_fe3) + ylogy(yo_va))
+    )
+
+    w_ae = yt_fe2 * yo_fe3
+    w_ea = yt_fe3 * yo_fe2
+    w_125 = yt_fe2 * yt_fe3 * yo_va
+    w_134 = yt_fe2 * yo_fe2 * yo_fe3
+    w_145 = yt_fe2 * yo_fe3 * yo_va
+    w_234 = yt_fe3 * yo_fe2 * yo_fe3
+    w_235 = yt_fe3 * yo_fe2 * yo_va
+    tord = (
+        848.0 * w_ae
+        + 424.0 * w_ea
+        + 141.33333 * w_125
+        + 2544.0 * w_134
+        + 848.0 * w_145
+        + 2544.0 * w_234
+        - 5088.0 * w_235
+    )
+    beta = (
+        44.54 * w_ae
+        + 22.27 * w_ea
+        + 7.4233333 * w_125
+        + 133.62 * w_134
+        + 44.54 * w_145
+        + 133.62 * w_234
+        - 267.24 * w_235
+    )
+    if tord > 1e-12 and beta > 1e-12:
+        gmag = hillert_jarl_gmag(T, tord, beta, 0.28)
+    else:
+        gmag = 0.0
+    g = gmix - T * sconf + gmag
+    n_fe = 1.0 + 2.0 * (yo_fe2 + yo_fe3)
+    n_o = 4.0
+    return g, n_fe, yo_fe3, yo_va
+
+
+def low_t_curie_taper(tc: float, t0_c: float = 350.0, t1_c: float = 700.0) -> float:
+    if tc <= t0_c:
+        return 1.0
+    if tc >= t1_c:
+        return 0.0
+    x = (tc - t0_c) / (t1_c - t0_c)
+    return 0.5 * (1.0 + math.cos(math.pi * x))
+
+
+def spinel_phase_g_mmc1_tapered_fit(T: float, a: float, b: float) -> tuple[float, float, float, float]:
+    """
+    Experimental low-temperature Gibbs correction on top of the mmc1-based
+    magnetic reconstruction.
+
+    This uses the branch-localized lambda-fit only as a target scale, but
+    applies the correction coherently at the spinel phase Gibbs level and
+    tapers it to zero above the Curie-region.
+    """
+    g, n_fe, yo_fe3, yo_va = spinel_phase_g_mmc1_guess(T, a, b)
+    if not math.isfinite(g):
+        return g, n_fe, yo_fe3, yo_va
+    tc = T - 273.15
+    dlam_kj_per_mol_o = 4.476095744721812 - 0.007137933743794555 * tc
+    dg_j_per_mol_spinel = 4.0 * 1000.0 * dlam_kj_per_mol_o * low_t_curie_taper(tc)
+    return g - dg_j_per_mol_spinel, n_fe, yo_fe3, yo_va
+
+
+def spinel_phase_g_mmc1_selective_best(T: float, a: float, b: float) -> tuple[float, float, float, float]:
+    """
+    Best current mmc1-style selective magnetic rebalance from the reduced-side
+    screening work.
+
+    This keeps the non-magnetic manifold untouched and only reweights the
+    magnetic contributions that were found to differentiate reduced spinel from
+    the oxidized spinel|hematite branch:
+
+    - EA endmember magnetic contribution scaled by 1.30
+    - reduced excess terms (234 / 235) scaled by 0.95
+    """
+    c = (a + 5.0 - 4.0 * b) / 6.0
+    v = (1.0 - a - 2.0 * b) / 6.0
+    if not (0.0 <= a <= 1.0 and 0.0 <= b <= 1.0 and 0.0 <= c <= 1.0 and 0.0 <= v <= 1.0):
+        return math.nan, math.nan, math.nan, math.nan
+
+    g_ae = spinel_g_ae(T)
+    i_ae = spinel_i_ae(T)
+    v_e = spinel_v_e(T)
+    d_ae = spinel_delta_ae()
+
+    g_ea = g_ae
+    g_ee = g_ae + i_ae
+    g_aa = g_ae - i_ae + d_ae
+    g_ev = 5.0 / 7.0 * g_ae + v_e
+    g_av = 5.0 / 7.0 * g_ae + v_e - i_ae + d_ae
+
+    yt_fe2 = a
+    yt_fe3 = 1.0 - a
+    yo_fe2 = b
+    yo_fe3 = c
+    yo_va = v
+
+    def ylogy(y: float) -> float:
+        return 0.0 if y <= 0.0 else y * math.log(y)
+
+    gmix = (
+        yt_fe2 * yo_fe2 * g_aa
+        + yt_fe2 * yo_fe3 * g_ae
+        + yt_fe2 * yo_va * g_av
+        + yt_fe3 * yo_fe2 * g_ea
+        + yt_fe3 * yo_fe3 * g_ee
+        + yt_fe3 * yo_va * g_ev
+    )
+    sconf = -R * (
+        ylogy(yt_fe2)
+        + ylogy(yt_fe3)
+        + 2.0 * (ylogy(yo_fe2) + ylogy(yo_fe3) + ylogy(yo_va))
+    )
+
+    s_ea = 1.30
+    s_red = 0.95
+    w_ae = yt_fe2 * yo_fe3
+    w_ea = yt_fe3 * yo_fe2
+    w_125 = yt_fe2 * yt_fe3 * yo_va
+    w_134 = yt_fe2 * yo_fe2 * yo_fe3
+    w_145 = yt_fe2 * yo_fe3 * yo_va
+    w_234 = yt_fe3 * yo_fe2 * yo_fe3
+    w_235 = yt_fe3 * yo_fe2 * yo_va
+    tord = (
+        848.0 * w_ae
+        + s_ea * 424.0 * w_ea
+        + 141.33333 * w_125
+        + 2544.0 * w_134
+        + 848.0 * w_145
+        + s_red * 2544.0 * w_234
+        - s_red * 5088.0 * w_235
+    )
+    beta = (
+        44.54 * w_ae
+        + s_ea * 22.27 * w_ea
+        + 7.4233333 * w_125
+        + 133.62 * w_134
+        + 44.54 * w_145
+        + s_red * 133.62 * w_234
+        - s_red * 267.24 * w_235
+    )
+    if tord > 1e-12 and beta > 1e-12:
+        gmag = hillert_jarl_gmag(T, tord, beta, 0.28)
+    else:
+        gmag = 0.0
+    g = gmix - T * sconf + gmag
+    n_fe = 1.0 + 2.0 * (yo_fe2 + yo_fe3)
+    return g, n_fe, yo_fe3, yo_va
+
+
+def minimize_spinel_grand_residual_with_phase_g(
+    T: float,
+    lam_fe: float,
+    lam_o: float,
+    phase_g_fn,
+    a_hint: float | None = None,
+    b_hint: float | None = None,
+) -> tuple[float, float, float, float]:
     best = math.inf
     best_a = 0.0
     best_b = 0.5
     best_v = 0.0
-    a_lo = 0.0
-    a_hi = 1.0
 
-    for _ in range(4):
+    if a_hint is None or b_hint is None or not math.isfinite(a_hint) or not math.isfinite(b_hint):
+        a_lo = 0.0
+        a_hi = 1.0
+        rounds = 4
         steps_a = 80
+        steps_b = 80
+        b_half = 0.15
+    else:
+        a_lo = max(0.0, a_hint - 0.12)
+        a_hi = min(1.0, a_hint + 0.12)
+        best_a = min(max(a_hint, 0.0), 1.0)
+        best_b = max(b_hint, 0.0)
+        rounds = 4
+        steps_a = 28
+        steps_b = 28
+        b_half = 0.08
+
+    for _ in range(rounds):
         span_a = a_hi - a_lo
         for ia in range(steps_a + 1):
             a = a_lo + span_a * ia / steps_a
             bmax = 0.5 * (1.0 - a)
             if bmax <= 0.0:
                 continue
-            if best_a == best_a and abs(a - best_a) < 0.2:
+            if math.isfinite(best_a) and abs(a - best_a) < max(0.06, 0.35 * span_a):
                 b_center = min(max(best_b, 0.0), bmax)
-                b_lo = max(0.0, b_center - 0.15)
-                b_hi = min(bmax, b_center + 0.15)
+                b_lo = max(0.0, b_center - b_half)
+                b_hi = min(bmax, b_center + b_half)
             else:
                 b_lo = 0.0
                 b_hi = bmax
-            steps_b = 80
             for ib in range(steps_b + 1):
                 b = b_lo + (b_hi - b_lo) * ib / steps_b
-                g, n_fe, _yo_fe3, yo_va = spinel_phase_g(T, a, b)
+                g, n_fe, _yo_fe3, yo_va = phase_g_fn(T, a, b)
                 if not math.isfinite(g):
                     continue
                 resid = g - lam_fe * n_fe - lam_o * 4.0
@@ -354,7 +565,78 @@ def residual_wustite_spinel_degterov(T: float, x: float) -> tuple[float, float, 
         da = max(0.01, 0.2 * span_a)
         a_lo = max(0.0, best_a - da)
         a_hi = min(1.0, best_a + da)
+        b_half = max(0.01, 0.45 * b_half)
     return best, best_a, best_b, best_v
+
+
+def minimize_spinel_grand_residual_degterov(
+    T: float,
+    lam_fe: float,
+    lam_o: float,
+    a_hint: float | None = None,
+    b_hint: float | None = None,
+) -> tuple[float, float, float, float]:
+    return minimize_spinel_grand_residual_with_phase_g(
+        T, lam_fe, lam_o, spinel_phase_g, a_hint=a_hint, b_hint=b_hint
+    )
+
+
+def residual_wustite_spinel_degterov(
+    T: float,
+    x: float,
+    a_hint: float | None = None,
+    b_hint: float | None = None,
+) -> tuple[float, float, float, float]:
+    mu_a = mu_a_wustite(T, x)
+    mu_b = mu_b_wustite(T, x)
+    lam_o = 2.0 * (mu_b - mu_a)
+    lam_fe = 3.0 * mu_a - 2.0 * mu_b
+    return minimize_spinel_grand_residual_degterov(T, lam_fe, lam_o, a_hint=a_hint, b_hint=b_hint)
+
+
+def residual_wustite_spinel_mmc1_guess(
+    T: float,
+    x: float,
+    a_hint: float | None = None,
+    b_hint: float | None = None,
+) -> tuple[float, float, float, float]:
+    mu_a = mu_a_wustite(T, x)
+    mu_b = mu_b_wustite(T, x)
+    lam_o = 2.0 * (mu_b - mu_a)
+    lam_fe = 3.0 * mu_a - 2.0 * mu_b
+    return minimize_spinel_grand_residual_with_phase_g(
+        T, lam_fe, lam_o, spinel_phase_g_mmc1_guess, a_hint=a_hint, b_hint=b_hint
+    )
+
+
+def residual_wustite_spinel_mmc1_tapered_fit(
+    T: float,
+    x: float,
+    a_hint: float | None = None,
+    b_hint: float | None = None,
+) -> tuple[float, float, float, float]:
+    mu_a = mu_a_wustite(T, x)
+    mu_b = mu_b_wustite(T, x)
+    lam_o = 2.0 * (mu_b - mu_a)
+    lam_fe = 3.0 * mu_a - 2.0 * mu_b
+    return minimize_spinel_grand_residual_with_phase_g(
+        T, lam_fe, lam_o, spinel_phase_g_mmc1_tapered_fit, a_hint=a_hint, b_hint=b_hint
+    )
+
+
+def residual_wustite_spinel_mmc1_selective_best(
+    T: float,
+    x: float,
+    a_hint: float | None = None,
+    b_hint: float | None = None,
+) -> tuple[float, float, float, float]:
+    mu_a = mu_a_wustite(T, x)
+    mu_b = mu_b_wustite(T, x)
+    lam_o = 2.0 * (mu_b - mu_a)
+    lam_fe = 3.0 * mu_a - 2.0 * mu_b
+    return minimize_spinel_grand_residual_with_phase_g(
+        T, lam_fe, lam_o, spinel_phase_g_mmc1_selective_best, a_hint=a_hint, b_hint=b_hint
+    )
 
 
 def minimize_abs_residual_at_T(T: float, fn, xmin: float = 1e-4, xmax: float = 0.95) -> tuple[float, float]:

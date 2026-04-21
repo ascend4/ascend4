@@ -19,8 +19,11 @@ static int source_match(const char *entry_source, const char *source){
 const BinarySolutionPhaseDef *solution_phase_lookup(const char *name, const char *source){
 	const BinarySolutionPhaseDef *phases[] = {
 		bcc_iron_hidayat_phase(),
+		bcc_iron_feoxide_recon_phase(),
 		fcc_iron_hidayat_phase(),
-		wustite_hidayat_phase()
+		fcc_iron_feoxide_recon_phase(),
+		wustite_hidayat_phase(),
+		wustite_feoxide_recon_phase()
 	};
 	size_t i;
 	if(!name){
@@ -39,8 +42,11 @@ int solution_phase_lookup_member(const char *name, const char *source,
 		const BinarySolutionPhaseDef **phase, unsigned *member_index){
 	const BinarySolutionPhaseDef *phases[] = {
 		bcc_iron_hidayat_phase(),
+		bcc_iron_feoxide_recon_phase(),
 		fcc_iron_hidayat_phase(),
-		wustite_hidayat_phase()
+		fcc_iron_feoxide_recon_phase(),
+		wustite_hidayat_phase(),
+		wustite_feoxide_recon_phase()
 	};
 	size_t i;
 	if(!name || !phase || !member_index){

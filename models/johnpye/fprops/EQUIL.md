@@ -781,7 +781,7 @@ Here each reaction constant satisfies $\ln K_j = -\Delta_r G_j^\circ/(RT)$, with
 
 Small $\Delta\log_{10}K_j$ and small composition differences indicate good agreement.
 
-### 12.1 Reaktoro-clone validation path (`Ni`/`NiO`/`H2`/`O2`/`H2O`)
+### 12.1 Reaktoro-clone validation path (`Ni`/`NiO`/`H2`/`O2`/`H2O`/`CO`/`CO2`)
 
 To separate implementation errors from source-data differences, `fprops` also includes a dedicated shomate source:
 
@@ -789,7 +789,8 @@ To separate implementation errors from source-data differences, `fprops` also in
 
 This source is fitted against Reaktoro/SUPCRT98 standard-state Gibbs data for:
 
-- `Ni`, `NiO`, `hydrogen`, `oxygen`, `water`.
+- `Ni`, `NiO`, `hydrogen`, `oxygen`, `water`,
+  `carbonmonoxide`, `carbondioxide`.
 
 The intent is not to define a new recommended thermodynamic database.
 The intent is implementation validation: if FPROPS and Reaktoro use nearly the same $\mu_i^\circ(T)$ inputs, equilibrium outputs should match closely.
@@ -821,6 +822,18 @@ Interpretation guide:
 Notes:
 
 - Auto source routing in `eqm` now prefers this shomate clone data when `source=reaktoro_clone_supcrt98` is requested, so clone gases are not silently replaced by unrelated default ideal-gas data.
+- `carbonmonoxide` and `carbondioxide` were added specifically to prevent
+  silent fallback to `RPP` in carbon-bearing equilibrium checks.
+- The current in-repo equilibrium regressions now cover:
+  - gas-only `CO2 <-> CO + 0.5 O2` and `CO + H2O <-> CO2 + H2` under
+    `reaktoro_clone_supcrt98`
+  - a first Fe-bearing carbon redox benchmark,
+    `Fe3O4 + CO/CO2 + Fe`, at `1000 K`
+- The current CO Baur-Glaessner / Spreitzer comparison harness is:
+  [feoc_baur_glaessner_compare.py](/home/john/ascend/models/johnpye/fprops/test/feoc_baur_glaessner_compare.py)
+- A larger mixed `Fe-O-C-H` equilibrium benchmark is still a follow-up item;
+  the current first-pass validation keeps Fe-bearing carbon on the cleaner
+  `Fe-O-C` side.
 - For production calculations, use your chosen physical database (for example OECD/NIST-consistent sets); keep `reaktoro_clone_supcrt98` as a verification harness.
 
 ### 13. Practical debug hook

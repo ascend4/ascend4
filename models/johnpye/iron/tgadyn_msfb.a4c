@@ -83,8 +83,10 @@ MODEL tga_reduction_screen_dyn_msfb(
 	k_step[steps] IS_A rate_per_pressure;
 	k_step[steps].lower_bound := -1e6 {1/s/Pa};
 
-	K_eq_lnA[steps] IS_A factor;
-	K_eq_lnB[steps] IS_A factor;
+	K_eq_fit_A[steps] IS_A factor;
+	K_eq_fit_B[steps] IS_A factor;
+	K_eq_fit_C[steps] IS_A factor;
+	K_eq_fit_D[steps] IS_A factor;
 	K_ratio_eq[steps] IS_A positive_factor;
 
 	drive[steps] IS_A delta_pressure;
@@ -159,8 +161,12 @@ MODEL tga_reduction_screen_dyn_msfb(
 		kstep_eq[r]:
 			k_step[r] = eta[r] * k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
 		Keq_eq[r]:
-			K_ratio_eq[r] = exp(K_eq_lnA[r]
-									- K_eq_lnB[r] / (T / 1 {K}));
+			K_ratio_eq[r] = exp(
+				K_eq_fit_A[r]
+				+ K_eq_fit_B[r] / (T / 1 {K})
+				+ K_eq_fit_C[r] * ln(T / 1 {K})
+				+ K_eq_fit_D[r] * (T / 1 {K})
+			);
 		drive_eq[r]:
 			drive[r] = p * (y_H2_react - y_H2O_react / K_ratio_eq[r]);
 		rnet_eq[r]:
@@ -241,12 +247,18 @@ METHODS
 		FIX E_a[2] := 60 {kJ/mol};
 		FIX E_a[3] := 62 {kJ/mol};
 
-		FIX K_eq_lnA[1] := 8.54050167864375;
-		FIX K_eq_lnA[2] := 8.447122204684765;
-		FIX K_eq_lnA[3] := 1.0604569618298618;
-		FIX K_eq_lnB[1] := 2552.121942697152;
-		FIX K_eq_lnB[2] := 8067.2733483476295;
-		FIX K_eq_lnB[3] := 1856.1489018164739;
+		FIX K_eq_fit_A[1] := 275.5950899625076;
+		FIX K_eq_fit_A[2] := 54.79019894028178;
+		FIX K_eq_fit_A[3] := -31.58593152453788;
+		FIX K_eq_fit_B[1] := -26283.26419177231;
+		FIX K_eq_fit_B[2] := -10556.58318912153;
+		FIX K_eq_fit_B[3] := 660.7218135785515;
+		FIX K_eq_fit_C[1] := -37.2540654519026;
+		FIX K_eq_fit_C[2] := -6.951008925726938;
+		FIX K_eq_fit_C[3] := 4.668826943343771;
+		FIX K_eq_fit_D[1] := 0.01408952822924074;
+		FIX K_eq_fit_D[2] := 0.004147837907387222;
+		FIX K_eq_fit_D[3] := -0.00212400615445666;
 
 		xi[1] := 0;
 		xi[2] := 0;

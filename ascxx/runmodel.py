@@ -414,6 +414,12 @@ def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, ou
 	sim.build()
 	integrator = ascpy.Integrator(sim)
 	integrator.setEngine(engine or DEFAULT_INTEGRATOR)
+	hooks = sim.getSolverHooks()
+	if hooks is not None:
+		try:
+			hooks.applyIntegratorConfig(integrator, sim)
+		except Exception:
+			pass
 	integrator.findIndependentVar()
 	indep = integrator.getIndependentVariable()
 	indep_inst = indep.getInstance()
@@ -576,7 +582,7 @@ if __name__ == "__main__":
 	p.add_argument("file", type=pathlib.Path, help="ASCEND model file to be opened")
 	p.add_argument("--model", "-m", help="Name of MODEL to instantiate (defaults to filename without extension)")
 	p.add_argument("-r", "--run-method", dest="runmethod", help="Run METHOD after 'on_load' and before the final action")
-	p.add_argument("-p", "--print", dest="printvars", action="extend", nargs="+", help="Variables to print (can be used multiple times). Implies --no-test.")
+	p.add_argument("-p", "--print", dest="printvars", action="append", nargs="+", help="Variables to print (can be used multiple times). Implies --no-test.")
 	p.add_argument("--no-test", "-n", action="store_false", help="Suppress running of 'self_test' method after solving")
 	p.add_argument("--integrate", "--int", "-i", action="store_true", help="Run via the integrator API instead of steady-state solve")
 	p.add_argument("--engine", "-e", help=f"Integrator engine to use (default when integrating: {DEFAULT_INTEGRATOR})")
@@ -595,12 +601,15 @@ if __name__ == "__main__":
 		help="Include extra same-time event output rows. Default: endpoints; bare --microstates means all.",
 	)
 	args = p.parse_args()
+	printvars = None
+	if args.printvars:
+		printvars = [name for group in args.printvars for name in group]
 
 	try:
 		run_ascend_model(
 			filen=args.file,
 			model=args.model,
-			printvars=args.printvars,
+			printvars=printvars,
 			test=args.no_test,
 			runmethod=args.runmethod,
 			integrate=_is_integrate_requested(args),

@@ -280,24 +280,6 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *integ) {
  PARAMETERS FOR IDA
  */
 
-enum ida_parameters {
-	IDA_PARAM_LINSOLVER,
-	IDA_PARAM_MAXL,
-	IDA_PARAM_MAXORD,
-	IDA_PARAM_AUTODIFF,
-	IDA_PARAM_CALCIC,
-	IDA_PARAM_SAFEEVAL,
-	IDA_PARAM_RTOL,
-	IDA_PARAM_ATOL,
-	IDA_PARAM_ATOLVECT,
-	IDA_PARAM_GSMODIFIED,
-	IDA_PARAM_MAXNCF,
-	IDA_PARAM_PREC,
-	IDA_PARAM_ZENO_NCYCLES,
-	IDA_PARAM_ZENO_DURATION,
-	IDA_PARAMS_SIZE
-};
-
 /**
  Here the full set of parameters is defined, along with upper/lower bounds,
  etc. The values are stuck into the integ->params structure.
@@ -448,6 +430,14 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 				,"Window in independent-variable units used with"
 				" 'zeno_ncycles' to detect rapidly accumulating boundary events."
 			}, 1e-4, 0.0, 1e20}
+	);
+
+	slv_param_bool(p,IDA_PARAM_DIAGNOSTICS
+		,(SlvParameterInitBool) { {"diagnostics"
+				,"Print IDA preflight diagnostics?",2
+				,"Emit a concise structural and DAE-partitioning report during"
+				" IDA analyse() before time integration begins."
+			}, FALSE}
 	);
 
 	asc_assert(p->num_parms == IDA_PARAMS_SIZE);
@@ -1183,12 +1173,49 @@ int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem,
  Tcl/Tk GUI. We would like to get rid of them eventually.
 
  @return 0 on success */
+static int ida_emit_interpolated_samples(IntegratorSystem *integ, void *ida_mem,
+		unsigned long start_index, unsigned long finish_index, int *t_index,
+		realtype tret, realtype tol, N_Vector yout, N_Vector ypout) {
+	int flag;
+
+	while(*t_index <= (int)finish_index){
+		realtype tsample = samplelist_get(integ->samples, *t_index);
+		if(tsample > tret + tol){
+			break;
+		}
+		flag = IDAGetDky(ida_mem, tsample, 0, yout);
+		if(flag != IDA_SUCCESS){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Failed to interpolate states at t = %f (IDAGetDky, order 0, err %d)",
+				tsample, flag);
+			return 16;
+		}
+		flag = IDAGetDky(ida_mem, tsample, 1, ypout);
+		if(flag != IDA_SUCCESS){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Failed to interpolate derivatives at t = %f (IDAGetDky, order 1, err %d)",
+				tsample, flag);
+			return 17;
+		}
+		ida_hybrid_trace(integ, "before_interpolated_output", tsample);
+		integrator_set_t(integ, (double)tsample);
+		integrator_set_y(integ, NV_DATA_S(yout));
+		integrator_set_ydot(integ, NV_DATA_S(ypout));
+		integ->currentstep = (*t_index - (int)start_index);
+		integrator_output_write(integ);
+		integrator_output_write_obs(integ);
+		++(*t_index);
+	}
+
+	return 0;
+}
+
 static int integrator_ida_solve(IntegratorSystem *integ,
 		unsigned long start_index, unsigned long finish_index) {
 	void *ida_mem;
 	int t_index;
-	realtype t0, tout, tret, tol = 0.0001;
-	N_Vector ypret = NULL, yret = NULL;
+	realtype t0, tout, tret, final_t, tol = 0.0001;
+	N_Vector ypret = NULL, yret = NULL, ypout = NULL, yout = NULL;
 	IntegratorIdaData *enginedata;
 	int i, flag = 0;
 	int statuscode = 0;
@@ -1202,7 +1229,6 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	int	need_to_reconfigure;	/** < Flag to indicate system rebuild after crossing */
 	int need_to_reinteg = 0;	/** < Flag for when crossings happen on or very close to timesteps */
-	int	skipping_output;		/** < Flag to skip output to reporter */
 
 #ifdef SOLVE_DEBUG
 	char *relname;
@@ -1260,7 +1286,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	/* Setup parameter inputs and initial conditions for IDA. */
 	tout = samplelist_get(integ->samples, start_index + 1);
+	final_t = samplelist_get(integ->samples, finish_index);
 	ida_prepare_integrator(integ, ida_mem, tout);
+	IDASetStopTime(ida_mem, final_t);
 
 
 
@@ -1274,10 +1302,12 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	/* specify where the returned values should be stored */
 	yret 	= ida_bnd_new_zero_NV(integ, integ->n_y);
 	ypret 	= ida_bnd_new_zero_NV(integ, integ->n_y);
+	yout 	= ida_bnd_new_zero_NV(integ, integ->n_y);
+	ypout 	= ida_bnd_new_zero_NV(integ, integ->n_y);
 
-	/* advance solution in time, return values as yret and derivatives as ypret */
+	/* advance solution in time; requested outputs are emitted by interpolation */
 	integ->currentstep = 1;
-	for (t_index = start_index + 1; t_index <= finish_index; ++t_index, ++integ->currentstep) {
+	for (t_index = start_index + 1; t_index <= (int)finish_index; ) {
 		tout = samplelist_get(integ->samples, t_index);
 		t0 = integrator_get_t(integ);
 
@@ -1307,14 +1337,13 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 			/* Control flags for boundary crossings */
 			need_to_reinteg = 0;
-			skipping_output = 0;
 
 #ifdef ASC_SIGNAL_TRAPS
 			Asc_SignalHandlerPushDefault(SIGINT);
 			if (setjmp(g_int_env) == 0) {
 #endif
 
-				flag = IDASolve(ida_mem, tout, &tret, yret, ypret, IDA_NORMAL);
+				flag = IDASolve(ida_mem, final_t, &tret, yret, ypret, IDA_ONE_STEP);
 #ifdef ASC_SIGNAL_TRAPS
 			} else {
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Caught interrupt");
@@ -1328,6 +1357,13 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 				if (flag == IDA_ROOT_RETURN) {
 					MSG("IDA reports root found!");
+
+					statuscode = ida_emit_interpolated_samples(
+						integ, ida_mem, start_index, finish_index, &t_index, tret, tol, yout, ypout
+					);
+					if(statuscode != 0){
+						goto ida_cleanup;
+					}
 
 					/* Store the root index */
 					rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nroots);
@@ -1397,17 +1433,8 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						//IDAFree(ida_mem);
 						//ida_mem = IDACreate();
 
-						/* Are we sufficiently far from tout to continue
-						 * integrating on this timestep? */
-						if (fabs(tret - tout) > tol) {
-							need_to_reinteg = 1;
-						} else {
-							/* Advance timestep, skip writing output once*/
-							tout = samplelist_get(integ->samples, t_index + 1);
-							skipping_output = 1;
-						}
-
 						ida_reinit_integrator(integ, ida_mem, tout);
+						IDASetStopTime(ida_mem, final_t);
 						/*
 						 * Emit the post-reinitialisation consistent state at the same
 						 * event time. Default CLI output collapses this back to
@@ -1418,9 +1445,13 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						/* n_y may have changed */
 						N_VDestroy_Serial(yret);
 						N_VDestroy_Serial(ypret);
+						N_VDestroy_Serial(yout);
+						N_VDestroy_Serial(ypout);
 
 						yret = ida_bnd_new_zero_NV(integ, integ->n_y);
 						ypret = ida_bnd_new_zero_NV(integ, integ->n_y);
+						yout = ida_bnd_new_zero_NV(integ, integ->n_y);
+						ypout = ida_bnd_new_zero_NV(integ, integ->n_y);
 
 #if SUNDIALS_VERSION_MAJOR >= 5
 						/* If the post-event state is still on a boundary, suppress
@@ -1448,6 +1479,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						IDASetRootDirection(ida_mem, rootdir);
 #endif
 
+						if (t_index <= (int)finish_index && integrator_get_t(integ) < final_t - tol) {
+							need_to_reinteg = 1;
+						}
+
 					} /* need to reconfigure */
 root_cleanup:
 						ASC_FREE(rootsfound);
@@ -1461,16 +1496,17 @@ root_cleanup:
 
 		} while (need_to_reinteg); /* end of solve time step */
 
-		if (!skipping_output) {
-			ida_hybrid_trace(integ, "before_final_output", tret);
-			/* pass the values of everything back to the compiler */
-			integrator_set_t(integ, (double) tret);
+		if (flag == IDA_SUCCESS || flag == IDA_TSTOP_RETURN) {
+			statuscode = ida_emit_interpolated_samples(
+				integ, ida_mem, start_index, finish_index, &t_index, tret, tol, yout, ypout
+			);
+			if(statuscode != 0){
+				goto ida_cleanup;
+			}
+			/* Restore current internal-step state after interpolated output. */
+			integrator_set_t(integ, (double)tret);
 			integrator_set_y(integ, NV_DATA_S(yret));
 			integrator_set_ydot(integ, NV_DATA_S(ypret));
-
-			/* -- store the current values of all the stuff */
-			integrator_output_write(integ);
-			integrator_output_write_obs(integ);
 		}
 
 		if (flag < 0) {
@@ -1502,6 +1538,12 @@ ida_cleanup:
 	}
 	if(ypret != NULL){
 		N_VDestroy_Serial(ypret);
+	}
+	if(yout != NULL){
+		N_VDestroy_Serial(yout);
+	}
+	if(ypout != NULL){
+		N_VDestroy_Serial(ypout);
 	}
 
 	/* free bnd states if appropriate */

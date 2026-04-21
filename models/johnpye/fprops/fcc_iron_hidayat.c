@@ -196,6 +196,20 @@ static const BinarySolutionPhaseDef fcc_iron_phase = {
 	&fcc_iron_model
 };
 
+static const BinarySolutionPhaseDef fcc_iron_phase_feoxide_recon = {
+	"fcc_iron",
+	"feoxide_recon_baseline_2026",
+	"Fcc_Fe",
+	"Fcc_O",
+	1, elements_fcc_fe, stoich_fcc_fe,
+	1, elements_fcc_o, stoich_fcc_o,
+	&fcc_iron_model
+};
+
 const BinarySolutionPhaseDef *fcc_iron_hidayat_phase(void){
 	return &fcc_iron_phase;
+}
+
+const BinarySolutionPhaseDef *fcc_iron_feoxide_recon_phase(void){
+	return &fcc_iron_phase_feoxide_recon;
 }

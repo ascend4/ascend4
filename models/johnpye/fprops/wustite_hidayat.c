@@ -125,6 +125,20 @@ static const BinarySolutionPhaseDef wustite_phase = {
 	&wustite_model
 };
 
+static const BinarySolutionPhaseDef wustite_phase_feoxide_recon = {
+	"wustite",
+	"feoxide_recon_baseline_2026",
+	"Wus_FeO",
+	"Wus_FeO1p5",
+	2, elements_feo, stoich_feo,
+	2, elements_feo15, stoich_feo15,
+	&wustite_model
+};
+
 const BinarySolutionPhaseDef *wustite_hidayat_phase(void){
 	return &wustite_phase;
+}
+
+const BinarySolutionPhaseDef *wustite_feoxide_recon_phase(void){
+	return &wustite_phase_feoxide_recon;
 }

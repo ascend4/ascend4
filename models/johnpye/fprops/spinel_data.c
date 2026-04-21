@@ -15,31 +15,51 @@ static int source_match(const char *entry_source, const char *source){
 }
 
 const FeSpinelPhaseDef *spinel_phase_lookup(const char *name, const char *source){
-	const FeSpinelPhaseDef *P = spinel_fe_degterov_phase();
+	const FeSpinelPhaseDef *phases[] = {
+		spinel_fe_degterov_phase(),
+		spinel_feoxide_recon_phase(),
+		spinel_fe_bg_tuned_phase(),
+		spinel_fe_mmc1_guess_phase(),
+		spinel_fe_hidayat_adj1_phase()
+	};
+	unsigned i;
 	if(!name){
 		return NULL;
 	}
-	if(0 == strcmp(P->name, name) && source_match("degterov_2001", source)){
-		return P;
+	for(i = 0; i < sizeof(phases) / sizeof(phases[0]); ++i){
+		const FeSpinelPhaseDef *P = phases[i];
+		if(0 == strcmp(P->name, name) && source_match(P->source, source)){
+			return P;
+		}
 	}
 	return NULL;
 }
 
 int spinel_phase_lookup_member(const char *name, const char *source,
 		const FeSpinelPhaseDef **phase, unsigned *member_index){
-	const FeSpinelPhaseDef *P = spinel_fe_degterov_phase();
+	const FeSpinelPhaseDef *phases[] = {
+		spinel_fe_degterov_phase(),
+		spinel_feoxide_recon_phase(),
+		spinel_fe_bg_tuned_phase(),
+		spinel_fe_mmc1_guess_phase(),
+		spinel_fe_hidayat_adj1_phase()
+	};
+	unsigned p;
 	unsigned i;
 	if(!name || !phase || !member_index){
 		return 0;
 	}
-	if(!source_match("degterov_2001", source)){
-		return 0;
-	}
-	for(i = 0; i < 5; ++i){
-		if(0 == strcmp(P->member_names[i], name)){
-			*phase = P;
-			*member_index = i;
-			return 1;
+	for(p = 0; p < sizeof(phases) / sizeof(phases[0]); ++p){
+		const FeSpinelPhaseDef *P = phases[p];
+		if(!source_match(P->source, source)){
+			continue;
+		}
+		for(i = 0; i < 5; ++i){
+			if(0 == strcmp(P->member_names[i], name)){
+				*phase = P;
+				*member_index = i;
+				return 1;
+			}
 		}
 	}
 	return 0;

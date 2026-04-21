@@ -79,7 +79,7 @@ Important clarification:
 The TGA screen currently uses:
 
 ```text
-K_ratio_eq[r] = exp(A[r] - B[r] / T[K])
+K_ratio_eq[r] = exp(A[r] + B[r] / T[K] + C[r] ln(T[K]) + D[r] T[K])
 ```
 
 over the fitted range:
@@ -104,9 +104,11 @@ Thermodynamic source:
 
 Fit used in `tga.a4c`:
 
-- `A1 = 8.54050167864375`
-- `B1 = 2552.121942697152`
-- maximum relative fit error over 600 C to 1200 C: about `12.0%`
+- `A1 = 275.5950899625076`
+- `B1 = -26283.26419177231`
+- `C1 = -37.2540654519026`
+- `D1 = 0.01408952822924074`
+- maximum relative fit error over 600 C to 1200 C: about `0.93%`
 
 ### Step 2: magnetite -> wustite
 
@@ -119,9 +121,11 @@ Equilibrium target source:
 
 Fit used in `tga.a4c`:
 
-- `A2 = 8.447122204684765`
-- `B2 = 8067.2733483476295`
-- maximum relative fit error over 600 C to 1200 C: about `5.3%`
+- `A2 = 54.79019894028178`
+- `B2 = -10556.58318912153`
+- `C2 = -6.951008925726938`
+- `D2 = 0.004147837907387222`
+- maximum relative fit error over 600 C to 1200 C: about `0.23%`
 
 Important caveat:
 
@@ -140,9 +144,11 @@ Equilibrium target source:
 
 Fit used in `tga.a4c`:
 
-- `A3 = 1.0604569618298618`
-- `B3 = 1856.1489018164739`
-- maximum relative fit error over 600 C to 1200 C: about `0.8%`
+- `A3 = -31.58593152453788`
+- `B3 = 660.7218135785515`
+- `C3 = 4.668826943343771`
+- `D3 = -0.00212400615445666`
+- maximum relative fit error over 600 C to 1200 C: about `0.25%`
 
 This is currently the most trustworthy of the three step-equilibrium
 targets.

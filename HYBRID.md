@@ -460,6 +460,32 @@ The IDA wrapper now has a lightweight opt-in event trace:
 This is still developer-oriented rather than polished user-facing output, but
 it is already useful for diagnosing event-iteration and reconfiguration bugs.
 
+### 5. Requested output times are now decoupled from ordinary IDA stop points
+
+The CLI integrator still returns:
+
+- every requested sample time from the user-provided output grid
+- plus any extra same-time points emitted by event handling / microstate output
+
+But the IDA driver no longer calls `IDASolve(..., tout, ..., IDA_NORMAL)` once
+per requested sample time during ordinary integration.
+
+Instead, the wrapper now:
+
+- drives IDA with `IDA_ONE_STEP`
+- uses a single final stop time for the integration horizon
+- emits requested sample points by interpolating the current IDA step with
+  `IDAGetDky`
+
+This keeps the user-visible output grid unchanged while reducing sensitivity to
+the choice of reporting interval. In particular, difficult stiff cases no
+longer have their solver path perturbed just because the user asked for more
+frequent plotting / TSV output.
+
+Event handling still reinitialises IDA when the hybrid structure changes, and
+those extra event outputs are still emitted explicitly. So the change is only
+to the ordinary between-event driving mode, not to the hybrid-event semantics.
+
 ## Current Polish Gaps
 
 - event/microstate output is now available through the CLI path, but `all`

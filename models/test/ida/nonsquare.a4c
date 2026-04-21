@@ -1,0 +1,15 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL ida_nonsquare;
+	x, dx, y, t IS_A solver_var;
+
+	diffeq: dx = y;
+METHODS
+	METHOD on_load;
+		INDEPENDENT t;
+		DER(dx, x);
+		t := 0;
+		x := 1;
+		y := 0;
+	END on_load;
+END ida_nonsquare;

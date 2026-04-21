@@ -18,13 +18,7 @@ testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 #print "CUNIT_CPPPATH =",test_env.get("CUNIT_CPPPATH")
 
 test_env['WITH_IPOPT'] = 1 if test_env.ensure_ipopt() else 0
-
-if not test_env.get('WITH_NLOPT'):
-	try:
-		test_env.ParseConfig('pkgconf nlopt --libs --cflags')
-		test_env['WITH_NLOPT'] = 1
-	except OSError:
-		test_env['WITH_NLOPT'] = 0
+test_env['WITH_NLOPT'] = 1 if test_env.get('HAVE_NLOPT') else 0
 
 if test_env['WITH_CUNIT']:
 	test_env.AppendUnique(
@@ -54,9 +48,10 @@ if test_env['WITH_CUNIT']:
 	if test_env.get('WITH_NLOPT'):
 		cutest_libs.append('nlopt')
 
-	test_env.Program('cutest', test_env['shobjs'] + tobjs
+	cutest_prog = test_env.Program('cutest', test_env['shobjs'] + tobjs
 		,LIBS = cutest_libs
 	)
+	test_env.Alias('cutest', cutest_prog)
 
 if test_env.get('WITH_IPOPT'):
 	test_env.AppendUnique(CPPPATH=['#'])
@@ -66,11 +61,9 @@ if test_env.get('WITH_IPOPT'):
 	test_env.AppendUnique(LIBS=test_env.get('IPOPT_LIBS', []))
 	if test_env.get('WITH_NLOPT'):
 		test_env.AppendUnique(CPPDEFINES=['HAVE_NLOPT'])
-	if test_env.get('WITH_NLOPT'):
-		try:
-			test_env.ParseConfig('pkgconf nlopt --libs --cflags')
-		except OSError:
-			pass
+		test_env.AppendUnique(CPPPATH=test_env.get('NLOPT_CPPPATH', []))
+		test_env.AppendUnique(LIBPATH=test_env.get('NLOPT_LIBPATH', []))
+		test_env.AppendUnique(LIBS=test_env.get('NLOPT_LIBS', []))
 	ipopt_solver_objs = []
 	if test_env.get('WITH_IPOPT') and not have_eqm_ipopt_obj:
 		ipopt_solver_objs.append(
@@ -86,30 +79,35 @@ if test_env.get('WITH_IPOPT'):
 	ipopt_libs = ['m'] + list(test_env.get('IPOPT_LIBS') or ['ipopt'])
 	if test_env.get('WITH_NLOPT'):
 		ipopt_libs.append('nlopt')
-	test_env.Program('ipopt_eqm', test_env['shobjs'] + ipopt_objs
+	ipopt_eqm_prog = test_env.Program('ipopt_eqm', test_env['shobjs'] + ipopt_objs
 		,LIBS = ipopt_libs
 	)
+	test_env.Alias('ipopt_eqm', ipopt_eqm_prog)
 	cmp_objs = ipopt_solver_objs + [
 		test_env.SharedObject('eqm_case_runner.c',OBJPREFIX='#/test/eqmcmp-test-')
 	]
-	test_env.Program('eqm_case_runner', test_env['shobjs'] + cmp_objs
+	eqm_case_runner_prog = test_env.Program('eqm_case_runner', test_env['shobjs'] + cmp_objs
 		,LIBS = ipopt_libs
 	)
+	test_env.Alias('eqm_case_runner', eqm_case_runner_prog)
 	nox_objs = ipopt_solver_objs + [
 		test_env.SharedObject('eqm_nox_runner.c',OBJPREFIX='#/test/eqmnox-test-')
 	]
-	test_env.Program('eqm_nox_runner', test_env['shobjs'] + nox_objs
+	eqm_nox_runner_prog = test_env.Program('eqm_nox_runner', test_env['shobjs'] + nox_objs
 		,LIBS = ipopt_libs
 	)
+	test_env.Alias('eqm_nox_runner', eqm_nox_runner_prog)
 	mu0_objs = ipopt_solver_objs + [
 		test_env.SharedObject('eqm_mu0_runner.c',OBJPREFIX='#/test/eqmmu0-test-')
 	]
-	test_env.Program('eqm_mu0_runner', test_env['shobjs'] + mu0_objs
+	eqm_mu0_runner_prog = test_env.Program('eqm_mu0_runner', test_env['shobjs'] + mu0_objs
 		,LIBS = ipopt_libs
 	)
+	test_env.Alias('eqm_mu0_runner', eqm_mu0_runner_prog)
 	pureprops_objs = ipopt_solver_objs + [
 		test_env.SharedObject('pureprops_compare.c',OBJPREFIX='#/test/pureprops-test-')
 	]
-	test_env.Program('pureprops_compare', test_env['shobjs'] + pureprops_objs
+	pureprops_compare_prog = test_env.Program('pureprops_compare', test_env['shobjs'] + pureprops_objs
 		,LIBS = ipopt_libs
 	)
+	test_env.Alias('pureprops_compare', pureprops_compare_prog)

@@ -1,0 +1,54 @@
+Baseline
+  obj=0.118199 rms_fs=0.079226 rms_ws=0.014826 rms_sh=0.024147
+
+/usr/lib/python3/dist-packages/optuna/samplers/_tpe/sampler.py:319: ExperimentalWarning: ``multivariate`` option is an experimental feature. The interface can change in the future.
+  warnings.warn(
+[I 2026-04-10 21:57:53,147] A new study created in RDB with name: feospinel_affine_300
+/home/john/ascend/models/johnpye/fprops/test/feospinel_correction_fit.py:359: ExperimentalWarning: fail_stale_trials is experimental (supported from v2.9.0). The interface can change in the future.
+  optuna.storages.fail_stale_trials(study)
+Optuna study: feospinel_affine_300
+Storage: sqlite:////home/john/ascend/models/johnpye/fprops/test/feospinel_correction_fit_optuna.db
+Parallel jobs: 2
+Requested trials: 300
+Heartbeat / grace [s]: 60 / 180
+
+/usr/lib/python3/dist-packages/optuna/study/_optimize.py:189: ExperimentalWarning: fail_stale_trials is experimental (supported from v2.9.0). The interface can change in the future.
+  optuna.storages.fail_stale_trials(study)
+[I 2026-04-10 21:58:53,575] Trial 0 finished with value: 1.543551968707325 and parameters: {'A': -2243.173483350256, 'B': 7.665221581415333}. Best is trial 0 with value: 1.543551968707325.
+/home/john/ascend/models/johnpye/fprops/test/feospinel_correction_fit.py:398: ExperimentalWarning: fail_stale_trials is experimental (supported from v2.9.0). The interface can change in the future.
+  optuna.storages.fail_stale_trials(study)
+trial=0 value=1.543552 A=-2243.173483 B=7.665222 C=0.000000 rms_fs=0.108981 rms_ws=0.164376 rms_sh=1.270195 best=1.543552
+[I 2026-04-10 21:58:54,130] Trial 1 finished with value: 1.562066932039117 and parameters: {'A': -23721.646741709414, 'B': 17.0249272954006}. Best is trial 0 with value: 1.543551968707325.
+trial=1 value=1.562067 A=-23721.646742 B=17.024927 C=0.000000 rms_fs=0.049989 rms_ws=0.241620 rms_sh=1.270458 best=1.543552
+[I 2026-04-10 21:59:53,536] Trial 2 finished with value: 1.506413699128895 and parameters: {'A': -10213.118092348848, 'B': 14.462347562988207}. Best is trial 2 with value: 1.506413699128895.
+trial=2 value=1.506414 A=-10213.118092 B=14.462348 C=0.000000 rms_fs=0.076851 rms_ws=0.113072 rms_sh=1.316491 best=1.506414
+[I 2026-04-10 21:59:55,101] Trial 3 finished with value: 1.0306093800771512 and parameters: {'A': -20083.330728098525, 'B': 17.69708183293436}. Best is trial 3 with value: 1.0306093800771512.
+trial=3 value=1.030609 A=-20083.330728 B=17.697082 C=0.000000 rms_fs=0.015752 rms_ws=0.121361 rms_sh=0.893496 best=1.030609
+[W 2026-04-10 22:00:47,487] Trial 4 failed with parameters: {'A': -10731.030273707987, 'B': -3.9438111404023584} because of the following error: The value nan is not acceptable.
+[W 2026-04-10 22:00:47,487] Trial 4 failed with value nan.
+[I 2026-04-10 22:00:52,476] Trial 5 finished with value: 2.2399232134620743 and parameters: {'A': -16077.065287823705, 'B': 6.31119965122382}. Best is trial 3 with value: 1.0306093800771512.
+trial=5 value=2.239923 A=-16077.065288 B=6.311200 C=0.000000 rms_fs=0.052448 rms_ws=0.340126 rms_sh=1.847350 best=1.030609
+Traceback (most recent call last):
+  File "/home/john/ascend/models/johnpye/fprops/test/feospinel_correction_fit.py", line 481, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/john/ascend/models/johnpye/fprops/test/feospinel_correction_fit.py", line 411, in main
+    study.optimize(objective, n_trials=args.trials, n_jobs=args.jobs, callbacks=[callback])
+  File "/usr/lib/python3/dist-packages/optuna/study/study.py", line 451, in optimize
+    _optimize(
+  File "/usr/lib/python3/dist-packages/optuna/study/_optimize.py", line 103, in _optimize
+    f.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/optuna/study/_optimize.py", line 174, in _optimize_sequential
+    callback(study, frozen_trial)
+  File "/home/john/ascend/models/johnpye/fprops/test/feospinel_correction_fit.py", line 400, in callback
+    f"trial={trial.number} value={trial.value:.6f} "
+                                 ^^^^^^^^^^^^^^^^^
+TypeError: unsupported format string passed to NoneType.__format__

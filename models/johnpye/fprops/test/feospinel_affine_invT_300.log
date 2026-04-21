@@ -1,0 +1,22 @@
+Baseline
+  obj=0.118199 rms_fs=0.079226 rms_ws=0.014826 rms_sh=0.024147
+
+/usr/lib/python3/dist-packages/optuna/samplers/_tpe/sampler.py:319: ExperimentalWarning: ``multivariate`` option is an experimental feature. The interface can change in the future.
+  warnings.warn(
+[I 2026-04-10 22:02:09,054] A new study created in RDB with name: feospinel_affine_invT_300
+/home/john/ascend/models/johnpye/fprops/test/feospinel_correction_fit.py:359: ExperimentalWarning: fail_stale_trials is experimental (supported from v2.9.0). The interface can change in the future.
+  optuna.storages.fail_stale_trials(study)
+Optuna study: feospinel_affine_invT_300
+Storage: sqlite:////home/john/ascend/models/johnpye/fprops/test/feospinel_correction_fit_optuna.db
+Parallel jobs: 2
+Requested trials: 300
+Heartbeat / grace [s]: 60 / 180
+
+/usr/lib/python3/dist-packages/optuna/study/_optimize.py:189: ExperimentalWarning: fail_stale_trials is experimental (supported from v2.9.0). The interface can change in the future.
+  optuna.storages.fail_stale_trials(study)
+[I 2026-04-10 22:03:10,147] Trial 1 finished with value: 2.9946784031380695 and parameters: {'A': -19562.22992809439, 'B': 10.09455250311435, 'C': -3554748.660035482}. Best is trial 1 with value: 2.9946784031380695.
+/home/john/ascend/models/johnpye/fprops/test/feospinel_correction_fit.py:408: ExperimentalWarning: fail_stale_trials is experimental (supported from v2.9.0). The interface can change in the future.
+  optuna.storages.fail_stale_trials(study)
+trial=1 state=COMPLETE value=2.994678 A=-19562.229928 B=10.094553 C=-3554748.660035 rms_fs=0.108184 rms_ws=0.420036 rms_sh=2.466458 best=2.015762
+[I 2026-04-10 22:03:10,202] Trial 0 finished with value: 2.0157618110679882 and parameters: {'A': -22400.491448081237, 'B': 17.352039566501233, 'C': -3637574.1731849224}. Best is trial 0 with value: 2.0157618110679882.
+trial=0 state=COMPLETE value=2.015762 A=-22400.491448 B=17.352040 C=-3637574.173185 rms_fs=0.085568 rms_ws=0.300832 rms_sh=1.629361 best=2.015762

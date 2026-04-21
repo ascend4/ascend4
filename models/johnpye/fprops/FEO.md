@@ -20,8 +20,49 @@ Current position:
 - Tier 2 `Fe-O` is implemented and usable
 - Tier 3 `Fe-O-H` is implemented and in good enough agreement with
   the corrected Spreitzer/Schenk $\mathrm{H_2}$ traces to proceed
-- the main remaining weakness is the $\mathrm{wustite|spinel}$ side of the
-  oxide ladder
+- Tier 4-style `Fe-O-C-H` boundary work is usable on the same basis
+- the main remaining weakness is the reduced spinel side, especially
+  the low-temperature $\mathrm{Fe|spinel}$ branch
+
+## 1.1 Condensed History
+
+The shortest honest summary of how we got here is:
+
+1. The early large errors were real implementation issues.
+   The most important one was a misread of the Hidayat wustite excess
+   term, which had been treated like a Redlich-Kister term when it was
+   not. Fixing that brought `Fe|wustite` close to Hidayat and BG.
+2. A later large error was a mixed-source gas-basis problem.
+   Using raw cloned Reaktoro gas data against the Hidayat Fe-O oxide
+   package made both H2 and CO reduction curves look much worse than
+   they should. Moving back to `helmholtz+ref0:` fixed most of that.
+3. The remaining defect is now localized.
+   The Hidayat oxide-side checks are broadly good, the gas-side
+   chemistry is broadly good, and the persistent residual is the
+   low-temperature reduced spinel behaviour.
+4. The first `mmc1.dat`-driven magnetic reconstruction (`mmc1_guess`)
+   improved the oxidized side but did not materially fix the reduced
+   spinel BG branches.
+5. A second pass, guided by the actual BG/Hidayat tradeoff rather than
+   by abstract magnetic similarity alone, produced the current
+   provisional variant `hidayat_adj1`.
+
+## 1.2 Current Gaps
+
+What still does not line up perfectly:
+
+- the low-temperature `Fe|spinel` BG branch is still not fully captured
+- `CO` and `H2` BG traces are not perfectly consistent with each other
+  on a common oxygen-potential basis
+- the exact FactSage/ChemSage `SUBLM` magnetic realization behind
+  `mmc1.dat` is still not fully reconstructed
+
+What is good enough for current use:
+
+- the oxide ladder is coherent enough to support further kinetic work
+- `hidayat_adj1` is the best available practical spinel source so far
+- the remaining mismatch is modest enough that it should no longer block
+  kinetic-model development
 
 ## 2. Recommended Working Position
 
@@ -31,16 +72,19 @@ Use the current Tier 3 model as the baseline for:
 - further Fe-O-H equilibrium studies
 - hydrogen reduction-boundary work centered on
   $\mathrm{Fe|wustite}$
+- current kinetic-model work using the provisional spinel source
+  `hidayat_adj1`
 
 Confidence level by boundary:
 
 - high: gas-side reference-state handling
 - high: $\mathrm{Fe|wustite}$
-- moderate: $\mathrm{Fe|spinel}$
-- moderate-to-lower: $\mathrm{wustite|spinel}$
+- moderate: $\mathrm{wustite|spinel}$
+- moderate: $\mathrm{Fe|spinel}$ with `hidayat_adj1`
 
-The main unresolved issue is no longer the gas side. It is the
-reduced spinel model.
+The main unresolved issue is no longer the gas side. It is still the
+reduced spinel model, but now at the level of refinement rather than a
+blocking defect.
 
 ## 3. Current Thermodynamic Model
 
@@ -290,7 +334,7 @@ The important Hidayat-side lesson was:
 ### 5.2 Tier 2 Fe-O validation: O'Neill (1988)
 
 The OCR copy used for this work is:
-[oneill-1988-ocr.pdf](/home/john/ascend/models/johnpye/fprops/test/oneill-1988-ocr.pdf)
+[oneill-1988-ocr.pdf](test/oneill-1988-ocr.pdf)
 
 The useful comparison is on the relative oxygen-potential basis
 
@@ -420,6 +464,626 @@ What is not yet implemented:
 - the full spinel treatment inherited by Hidayat from Ref. [8]
 - full consistency of the spinel CEF with the final Fe-O assessment
 
+Recent low-temperature `Fe|spinel` diagnostics clarify the nature of
+the remaining error:
+
+- on a gas basis aligned with the Fe-O ladder (`helmholtz+ref0:`),
+  both `H2/H2O` and `CO/CO2` show the same residual low-temperature
+  `Fe|spinel` slope error
+- refining the current reduced-spinel boundary search does not move
+  the result in any meaningful way, so this is not a search-resolution
+  artifact
+- replacing the reduced spinel with a stoichiometric `Fe|Fe3O4`
+  surrogate makes the low-temperature branch much worse
+- a small affine correction to the `Fe3O4` spinel endmember
+  `G_AE(T)` improves both gases, while a magnetic-only retune mainly
+  helps `CO/CO2`
+
+That strongly suggests the residual sits inside the reduced pure-Fe
+spinel thermodynamics themselves, not in gas reference states and not
+in the boundary-search machinery.
+
+One terminology note is important here. "Reduced pure-Fe spinel" does
+not mean vacancies are omitted, and it does not mean a stoichiometric
+`Fe3O4` surrogate. The current model explicitly uses the pure-Fe
+constituent space
+
+- `(Fe2+, Fe3+)[Fe2+, Fe3+, Va]2O4`
+
+with octahedral vacancies present. What is reduced/simplified is the
+way that assessed spinel thermodynamics are collapsed into the current
+FPROPS implementation:
+
+- one pure-Fe constituent set only
+- a small reduced set of endmember-derived energetic terms
+- one composition-independent magnetic contribution in place of the
+  richer magnetic structure present in `mmc1.dat`
+- finite-difference member chemical potentials in the production C
+  phase model
+
+So the remaining issue is not "we forgot vacancies". It is more likely
+the exact reduced/simple-spinel formulation around the low-temperature,
+Fe-rich side.
+
+This can now be checked directly against the supplementary assessed
+database export:
+
+- [feospinel_mmc1_manifold_compare.py](test/feospinel_mmc1_manifold_compare.py)
+
+That audit uses the actual charged spinel endmembers in
+[mmc1.dat](calcs/mmc1.dat)
+(`Fe3O4`, `Fe3O4[1-]`, `Fe3O4[1+]`, `Fe3O4[2-]`, `Fe1O4[5-]`,
+`Fe1O4[6-]`) and checks the current FPROPS reduced manifold against the
+charge-neutral slice of that exact `Fe-O-e(Spinel)` model.
+
+The result is that, on the neutral manifold:
+
+- the current `a,b -> c,v` reduction eliminates the phase-internal
+  electron component exactly
+- the Fe and O stoichiometry are reproduced exactly
+- the non-magnetic Gibbs surface matches the assessed `mmc1.dat`
+  endmember mixture to within only a few J/mol phase in the sampled
+  states
+
+So the remaining low-temperature `Fe|spinel` discrepancy is very
+unlikely to come from omitted vacancies, omitted charged endmembers,
+or a simple mass-vs-molar/charge-balance mistake in the spinel block.
+
+The remaining implementation gap can now be stated more concretely:
+
+| Topic | Degterov paper gives clearly | `mmc1.dat` / assessed database contains | current FPROPS uses |
+| --- | --- | --- | --- |
+| Spinel phase model | Reduced/simple-spinel CEF `(A,E)[A,E,V]2O4` | Same pure-Fe charged-constituent spinel block in `Fe-O-e(Spinel)` | Same reduced pure-Fe constituent space `(Fe2+,Fe3+)[Fe2+,Fe3+,Va]2O4` |
+| Non-magnetic endmember energetics | Table II `G_AE`, `I_AE`, `Delta_AE`, `V_E` | Explicit charged endmembers `Fe3O4`, `Fe3O4[1-]`, `Fe3O4[1+]`, `Fe3O4[2-]`, `Fe1O4[5-]`, `Fe1O4[6-]` | Same reduced mapping reconstructed from those terms |
+| Vacancies / charge balance | Present in the simple-spinel model, but not shown as database charged species | Explicit charged endmembers plus internal `e(Spinel)` bookkeeping | Vacancies included explicitly; charge-neutral manifold enforced analytically |
+| Hidayat modification | Replace the `Fe3O4` spinel endmember `g^0(T)`; keep other Ref. [8] spinel parameters | Hidayat-adjusted `Fe3O4` endmember in the supplied database export | Same Hidayat-adjusted `G_AE(T)` |
+| Generic magnetic formalism | Hillert-Jarl/Dinsdale-style equations and headline parameters | Endmember magnetic entries plus five explicit excess magnetic interactions in `Spinel` | One composition-independent Hillert-Jarl magnetic term |
+| Exact magnetic database evaluation path | Not fully exposed in executable detail | Encoded in `SUBLM` records and magnetic interaction entries | Approximated; exact `SUBLM` magnetic realization not yet reproduced |
+| Member chemical potentials | Conceptual CEF description only | Implicit in the database engine | Finite-difference derivatives in `spinel_fe_degterov.c` |
+
+So the paper description is not incomplete on the phase-model choice or
+the main energetic terms. The remaining gap is narrower: Degterov does
+not fully spell out the exact executable magnetic/database realization
+of the spinel phase, while the assessed `SUBLM` database block clearly
+contains more magnetic structure than the current reduced FPROPS
+implementation.
+
+The earlier literature also clarifies the inheritance chain:
+
+- Barry (1992) explains the charged-compound / electroneutrality
+  framework for simple spinels and shows how the reduced neutral
+  manifold is obtained from the full CEF description.
+- Sundman (1991) applies that framework to the Fe-O spinel and is
+  explicit that the magnetic contribution uses the same broad
+  Hillert-Jarl-style formalism as for bcc iron.
+- Sundman also notes a limitation that is directly relevant here:
+  the magnetic implementation treated the spinel phase with one
+  phase-level Bohr-magneton parameter and did not allow separate
+  magnetic moments for individual constituents. He states
+  explicitly that the heat capacity close to the magnetic transition
+  is not described accurately because of limitations in the magnetic
+  model.
+
+This is important context for the remaining `Fe|spinel` issue. It
+means the unresolved low-temperature branch mismatch may be partly
+inherited from the older spinel magnetic model family itself, not
+necessarily introduced by our present reduced pure-Fe implementation.
+
+To explore that remaining gap pragmatically, there is now a
+candidate-rule magnetic screen:
+
+- [feospinel_mmc1_magnetic_quickrank.py](test/feospinel_mmc1_magnetic_quickrank.py)
+
+This is not intended to prove the exact FactSage/ChemSage `SUBLM`
+algorithm. It simply compares a small family of plausible ways to
+combine the magnetic entries and excess magnetic interactions from
+`mmc1.dat`.
+
+The first useful result is already clear:
+
+- the most faithful simple reconstruction tested so far,
+  `mmc1_tc_beta_plus_excess`, is better than the current single-term
+  magnetic approximation on the oxide-side checkpoints
+  - `Fig. 11 spinel|Fe2O3` midpoint residual drops from about
+    `+0.0063` to `+0.0010`
+  - the `1459 C` hematite-side invariant moves from
+    `log10(pO2)=+0.0093` to `+0.0001`
+  - the `Fig. 10` midpoint composition residual also improves
+- however, that same candidate leaves the low-temperature reduced
+  `Fe|spinel` BG residuals essentially unchanged
+  - `H2` RMS remains about `0.0144`
+  - `CO` RMS remains about `0.0821`
+
+So a more faithful `mmc1.dat` magnetic combination rule can improve
+the oxidized-side consistency somewhat, but it has not yet explained
+the remaining reduced-side `Fe|spinel` mismatch. That suggests the
+low-temperature BG problem is not cured by a straightforward magnetic
+recombination alone.
+
+This best-guess `mmc1` magnetic reconstruction is now also wired into
+the production C registry as an explicit optional source:
+
+- `fe_spinel_mmc1_guess_2026`
+
+The corresponding smoke coverage is in
+[cutest_eqm.c](test/cutest_eqm.c).
+Regenerating the master BG plots with the same `mmc1` guess on both the
+`Fe|spinel` and `wustite|spinel` branches produces no material change
+relative to the current aligned-basis plots:
+
+- `H2 Fe|spinel` remains `RMS delta log10(H2O/H2) ~= 0.0743`
+- `CO Fe|spinel` remains `RMS delta log10(CO2/CO) ~= 0.1446`
+- `H2 wustite|spinel` remains `RMS delta log10(H2O/H2) ~= 0.0212`
+- `CO wustite|spinel` remains `RMS delta log10(CO2/CO) ~= 0.0326`
+
+So the optional source is useful as a concrete C-side reconstruction of
+our current best guess, but it is not yet a thermodynamic improvement in
+the low-temperature BG sense.
+
+Revisiting that `mmc1_guess` path with a sharper objective changed the
+picture a bit. Instead of adding a free global Gibbs correction, a new
+selective magnetic rebalance screen
+[feospinel_mmc1_selective_fit.py](test/feospinel_mmc1_selective_fit.py)
+was run against:
+
+- CO `Fe|spinel`
+- CO `wustite|spinel`
+- H2 `Fe|spinel`
+- H2 `wustite|spinel`
+- Hidayat Fig. 11 `spinel|Fe2O3`
+
+The best local refinement found a small but real improvement over
+`mmc1_guess` by slightly increasing the `EA` magnetic contribution while
+slightly reducing the reduced excess magnetic terms:
+
+- `s_ea = 1.30`
+- `s_red = 0.95`
+
+For that candidate:
+
+- `CO Fe|spinel`: `0.07367` vs current `0.07923`
+- `CO wustite|spinel`: `0.01409` vs `0.01483`
+- `H2 Fe|spinel`: `0.01226` vs `0.01444`
+- `H2 wustite|spinel`: `0.00781` vs `0.00949`
+- `spinel|Fe2O3`: `0.02299` vs `0.02415`
+
+The combined BG review for this Python/C-aligned variant is:
+
+- [bg_compare_all_h2_helmholtz_plus_ref0_hidayat_adj1.png](test/bg_compare_all_h2_helmholtz_plus_ref0_hidayat_adj1.png)
+- [bg_compare_all_co_helmholtz_plus_ref0_hidayat_adj1.png](test/bg_compare_all_co_helmholtz_plus_ref0_hidayat_adj1.png)
+
+So revisiting the `mmc1` magnetic balance does help, but only modestly.
+It is the first `mmc1`-style reconstruction path that improves the BG
+reduced-spinels branches without materially harming the hematite-side
+constraint. It still is not a complete fix.
+
+Useful current diagnostics are:
+
+- [feospinel_branch_diagnostic.py](test/feospinel_branch_diagnostic.py)
+- [feospinel_sensitivity.py](test/feospinel_sensitivity.py)
+- [feospinel_lambda_compare.py](test/feospinel_lambda_compare.py)
+- [feoh_feoc_bg_lambda_compare.py](test/feoh_feoc_bg_lambda_compare.py)
+
+That last script is useful because the usual BG `GOD` plots can make
+the `H2` and `CO` reduced-side errors look much more different than
+they really are. On a common oxygen-potential basis, the low-temperature
+`Fe|spinel` discrepancy is of the same order for both gases, with
+`CO/CO2` only somewhat worse. So the visually dramatic CO reduced-side
+misfit is not, by itself, strong evidence for a separate carbon-gas
+reference-state problem.
+
+The new cross-gas script is complementary. It removes FPROPS from the
+comparison entirely and asks whether the traced `H2` and `CO` BG curves
+imply the same oxygen potential for the same oxide boundary. On the
+current `helmholtz+ref0:` basis, they do not:
+
+- `Fe|wustite`: `RMS delta lambda_BG(CO - H2) ~= 0.383 kJ/mol O`
+- `wustite|spinel`: `RMS delta lambda_BG(CO - H2) ~= 0.348 kJ/mol O`
+- `Fe|spinel`: `RMS delta lambda_BG(CO - H2) ~= 0.843 kJ/mol O`
+
+So there is a real cross-gas / cross-trace inconsistency in the BG
+datasets or their interpretation, independent of the condensed-phase
+model. At the same time, the reduced `Fe|spinel` branch remains the
+largest common condensed-phase residual once both gases are put onto the
+same oxygen-potential basis.
+
+There is now also a provisional alternate spinel source in the core
+registry:
+
+- `fe_spinel_bg_tuned_2026`
+
+This keeps the reduced Fe-only Degterov/Hidayat model form but
+applies a small affine correction to the spinel `Fe3O4` endmember
+`G_AE(T)` for low-temperature BG alignment. It is intended as an
+explicitly provisional diagnostic source, not yet the new default.
+
+Against the low-temperature `Fe|spinel` BG traces on
+`helmholtz+ref0:`:
+
+- current source:
+  - `H2` RMS `delta log10 = 0.0144`
+  - `CO` RMS `delta log10 = 0.0821`
+- provisional tuned source:
+  - `H2` RMS `delta log10 = 0.0056`
+  - `CO` RMS `delta log10 = 0.0701`
+
+So the tuned source materially improves the low-temperature
+`Fe|spinel` branch, especially for `H2`, but should still be treated
+as provisional until its effect on the oxidized spinel side is
+checked more carefully.
+
+There is also now a branch-only diagnostic variant in the Python BG
+comparison harnesses:
+
+- `lambda_fit`
+
+This is intentionally **not** a thermodynamic source. It applies a
+direct affine correction to the reduced `Fe|spinel` oxygen potential on
+the common `lambda_O` basis,
+
+```text
+d(lambda_O) [kJ/mol O] = 4.4760957447 - 0.00713793374 T_C
+```
+
+with the fit taken jointly from the H2 and CO `Fe|spinel` BG traces
+after converting both to the common oxygen-potential scale. Because it
+modifies only the reduced `Fe|spinel` boundary helper, it leaves the
+oxidized Hidayat oxide-side checks untouched by construction.
+
+Against the low-temperature `Fe|spinel` BG traces on
+`helmholtz+ref0:`:
+
+- current reduced branch:
+  - `H2` RMS `delta GOD ~= 0.0743`
+  - `CO` RMS `delta GOD ~= 0.1446`
+- branch-only `lambda_fit` correction:
+  - `H2` RMS `delta GOD ~= 0.0058`
+  - `CO` RMS `delta GOD ~= 0.0190`
+
+Updated combined review plots for this branch-only diagnostic are:
+
+- [bg_compare_all_h2_helmholtz_plus_ref0_lambda_fit.png](test/bg_compare_all_h2_helmholtz_plus_ref0_lambda_fit.png)
+- [bg_compare_all_co_helmholtz_plus_ref0_lambda_fit.png](test/bg_compare_all_co_helmholtz_plus_ref0_lambda_fit.png)
+
+This is useful evidence that the dominant low-temperature residual can
+be localized to the reduced `Fe|spinel` branch itself. It should not be
+promoted to a production source as-is, because it does not arise from a
+single coherent Gibbs model for spinel.
+
+An improved follow-on experiment now exists as a Python-only comparison
+variant:
+
+- `mmc1_tapered_fit`
+
+This starts from the `mmc1_guess` magnetic reconstruction and applies a
+coherent **phase-level** low-temperature spinel Gibbs correction,
+tapered smoothly to zero by `700 C`. Unlike `lambda_fit`, this moves
+both `Fe|spinel` and `wustite|spinel`.
+
+Updated combined plots:
+
+- [bg_compare_all_h2_helmholtz_plus_ref0_mmc1_tapered_fit.png](test/bg_compare_all_h2_helmholtz_plus_ref0_mmc1_tapered_fit.png)
+- [bg_compare_all_co_helmholtz_plus_ref0_mmc1_tapered_fit.png](test/bg_compare_all_co_helmholtz_plus_ref0_mmc1_tapered_fit.png)
+
+On a coarse 50 C branch grid, the resulting RMS `delta GOD` values are:
+
+- current / `mmc1_guess`
+  - `H2 Fe|wustite ~= 0.00669`
+  - `H2 wustite|spinel ~= 0.00840`
+  - `H2 Fe|spinel ~= 0.01545`
+  - `CO Fe|wustite ~= 0.00483`
+  - `CO wustite|spinel ~= 0.01389`
+  - `CO Fe|spinel ~= 0.09464`
+- `mmc1_tapered_fit`
+  - `H2 Fe|wustite ~= 0.00669`
+  - `H2 wustite|spinel ~= 0.00740`
+  - `H2 Fe|spinel ~= 0.00436`
+  - `CO Fe|wustite ~= 0.00483`
+  - `CO wustite|spinel ~= 0.01302`
+  - `CO Fe|spinel ~= 0.02625`
+
+So this is the first coherent spinel-phase correction trial that
+improves the reduced `Fe|spinel` branch strongly without obviously
+damaging the upper `wustite|spinel` branch. It remains experimental and
+Python-only for now.
+
+A further diagnostic now makes the limitation of the current reduced
+model more concrete:
+
+- [feospinel_branch_state_compare.py](test/feospinel_branch_state_compare.py)
+
+On the current reduced-spinels model, the selected spinel states on the
+`Fe|spinel` and `wustite|spinel` branches are essentially identical in
+the critical `350-570 C` range. For example:
+
+- `560 C`
+  - `Fe|spinel`: `a ~= 0.11563`, `b ~= 0.44219`, `y_o(Fe3+) ~= 0.55781`
+  - `wustite|spinel`: `a ~= 0.11577`, `b ~= 0.44211`, `y_o(Fe3+) ~= 0.55789`
+- `570 C`
+  - `Fe|spinel`: `a ~= 0.11944`, `b ~= 0.44028`, `y_o(Fe3+) ~= 0.55972`
+  - `wustite|spinel`: `a ~= 0.11980`, `b ~= 0.44010`, `y_o(Fe3+) ~= 0.55990`
+
+So within the current reduced model, a smooth composition-dependent
+spinel Gibbs correction is expected to move both branches together near
+the three-way point. That explains why blunt endmember retunes can help
+the reduced `Fe|spinel` BG line while simultaneously worsening the
+`wustite|spinel` meeting point.
+
+That oxidized-side check is now clearer:
+
+- on `helmholtz+ref0:`, the current `wustite|spinel` branch is already
+  fairly close to the BG/Spreitzer traces
+  - `H2` RMS `delta log10 = 0.0181`
+  - `CO` RMS `delta log10 = 0.0326`
+- the low-temperature `Fe|spinel` affine correction is not a good
+  global repair
+  - it improves `Fe|spinel`
+  - but it substantially worsens `wustite|spinel`
+- simple vacancy-side one-parameter perturbations in the current
+  reduced model (`delta_EAV`, `V_E`) show almost no leverage on the
+  `wustite|spinel` mismatch
+- a small magnetic rescaling moves the oxidized branch only slightly
+
+So the remaining oxidized-side issue does not look like a missing
+single constant. It looks more like a limitation of the reduced
+Fe-only spinel model form itself.
+
+Useful current diagnostics are now:
+
+- [feospinel_wustite_sensitivity.py](test/feospinel_wustite_sensitivity.py)
+- [bg_compare_all_h2_helmholtz_plus_ref0.png](test/bg_compare_all_h2_helmholtz_plus_ref0.png)
+- [bg_compare_all_co_helmholtz_plus_ref0.png](test/bg_compare_all_co_helmholtz_plus_ref0.png)
+
+For practical workflow, the BG comparison scripts now use a
+continuation-style `wustite|spinel` trace rather than repeated cold
+starts, so refreshed combined H2/CO reviews are cheap enough to rerun
+while iterating on the condensed model.
+
+### 7.2 Pure-Fe spinel / hematite reconstruction audit
+
+The current reconstruction against Hidayat 2015 and Degterov 2001
+clarifies an important point:
+
+- for the pure-Fe simple-spinel parameter set itself, we have already
+  imported most of the explicit magnetite terms
+- the remaining issue is not obviously "one missing Degterov constant"
+- the more likely gap is the way the reduced simple-spinel treatment is
+  being used as a stand-in for the fuller Hidayat/FactSage spinel /
+  hematite description
+
+What Hidayat says:
+
+- magnetite is modeled as the CEF phase
+  `(Fe2+, Fe3+)[Fe2+, Fe3+, Va]2O4`
+- all other spinel parameters come from Ref. [8]
+- Ref. [8] is Degterov et al., *Metallurgical and Materials
+  Transactions B* 32B (2001)
+- spinel and hematite were then adjusted slightly, together, to make
+  them fully consistent with the new wustite and liquid descriptions
+
+What the current code already imports for the pure-Fe spinel side:
+
+- `G_AE(T)` from Hidayat's adjusted `Fe3O4` endmember
+- `I_AE(T)` from Degterov Table II
+- `Delta_AE` from Degterov Table II
+- `V_E(T)` from Degterov Table II
+- `Delta_EAV = 0`, consistent with the simple-spinel discussion in
+  Degterov for `(A,E)[A,E,V]2O4`
+- the unary Hillert-Jarl magnetic term with `T_C = 848 K`,
+  `beta = 44.54`, `p = 0.28`
+
+This means the reduced Fe-only magnetite model in
+[spinel_fe_degterov.c](spinel_fe_degterov.c)
+is not missing the obvious headline parameters from Hidayat Table 1 /
+Degterov Table II.
+
+We now also have the supplementary assessed database export:
+
+- [mmc1.dat](calcs/mmc1.dat)
+- [mmc1_feo_audit.py](calcs/mmc1_feo_audit.py)
+
+This is stronger than the paper summary because it contains the actual
+assessed phase blocks. The direct audit against `mmc1.dat` confirms:
+
+- the pure-Fe spinel constituent space is the same as the one we are
+  already using: `(Fe2+,Fe3+)[Fe2+,Fe3+,Va]2O4`
+- the energetic reduced-spinels mapping in
+  [spinel_fe_degterov.c](spinel_fe_degterov.c)
+  is recovered essentially exactly from the exported spinel endmembers
+- `G_AE(T)`, `I_AE(T)`, `Delta_AE`, and `V_E(T)` are therefore not the
+  missing headline terms
+- however, the spinel block in `mmc1.dat` carries endmember-specific
+  magnetic entries and five explicit excess magnetic interactions,
+  while the current reduced FPROPS spinel uses a single
+  composition-independent magnetic contribution
+
+A direct Python-side test of that idea now exists:
+
+- [feospinel_mmc1_magnetic_compare.py](test/feospinel_mmc1_magnetic_compare.py)
+
+Two first magnetic variants were tested:
+
+- direct endmember-weighted magnetic free energies from the `AE` and
+  `EA` entries in `mmc1.dat`
+- composition-dependent `T_C/beta` constructed from those same entries
+
+Neither fixes the remaining issue:
+
+- Hidayat Fig. 10 `spinel|Fe2O3` composition residual remains almost
+  unchanged (`~0.176` RMS mass-ratio error)
+- both variants noticeably worsen the already-good Hidayat Fig. 11
+  oxygen-potential boundaries
+
+So the remaining discrepancy is unlikely to be cured by a simple
+replacement of the current single magnetic term with a naive
+`mmc1.dat`-driven magnetic mixture. The next likely gap is therefore
+deeper in the exact magnetic interaction form used by the assessed
+spinel model rather than in the Gibbs-energy endmembers or the
+constituent space itself.
+
+What is still structurally simplified:
+
+- spinel is implemented only as the reduced pure-Fe simple-spinel slice
+- hematite is implemented as a separate stoichiometric unary Gibbs fit
+  in [gibbs_species.c](gibbs_species.c),
+  not as part of a fuller coordinated oxide-side assessment
+- we do not yet have a direct benchmark on the spinel / hematite side
+  comparable to the BG reduction checks
+
+The Hidayat target-point check is revealing. At the Table 2 solid-state
+invariant (`561 C`, `51.4 at% O`):
+
+- `Fe|wustite` residual: `+0.406 kJ/mol`
+- `wustite|spinel` residual with the reduced Degterov Fe-only spinel:
+  `-0.320 kJ/mol`
+- `wustite|magnetite` residual with stoichiometric `Fe3O4`:
+  `+17.841 kJ/mol`
+
+So:
+
+- the reduced Fe-only spinel is much better than the stoichiometric
+  `Fe3O4` surrogate
+- but the remaining branch-shape / convergence errors are still on the
+  spinel side
+
+On the aligned `CO/CO2` BG basis at `570 C`, the three branches sit at:
+
+- `Fe|wustite`: `GOD ~= 0.5047`
+- `wustite|spinel`: `GOD ~= 0.5243`
+- `Fe|spinel`: `GOD ~= 0.5089`
+- BG upper-branch target near the same temperature: `GOD ~= 0.4967`
+
+So the remaining three-way mismatch is real, but it is not coming
+equally from all three branches:
+
+- `wustite|spinel` is the largest contributor
+- `Fe|spinel` is the secondary contributor
+- `Fe|wustite` is already quite close
+
+The practical conclusion is:
+
+- the reduced Fe-only surrogate likely is part of the problem
+- but not because it omits non-Fe cations for these binary Fe-O checks
+- rather, because the fuller coordinated spinel / hematite treatment of
+  Hidayat has been reduced to a simpler magnetite-only slice plus a
+  separate hematite fit
+
+That is the right place to focus the next refinement.
+
+#### 7.2.1 Reconstruction matrix
+
+The next implementation pass should work term-by-term against the
+following matrix.
+
+| Item | Hidayat / Degterov basis | Current implementation | Status | Next action |
+| --- | --- | --- | --- | --- |
+| `Fe_bcc` Gibbs + magnetic | Hidayat Table 1 unary magnetic bcc iron | [gibbs_species.c](gibbs_species.c) `gibbs_fe_bcc` | implemented | keep |
+| `Fe_fcc` Gibbs + magnetic | Hidayat Table 1 unary magnetic fcc iron | [gibbs_species.c](gibbs_species.c) `gibbs_fe_fcc` | implemented | keep |
+| Wustite endmembers / excess term | Hidayat accepted Bragg-Williams wustite model | [wustite_hidayat.c](wustite_hidayat.c) | implemented | keep |
+| `Fe3O4` simple-spinel endmember `G_AE(T)` | Hidayat Table 1 adjusted from Degterov | [spinel_fe_degterov.c](spinel_fe_degterov.c) `spinel_g_ae_base` | implemented | keep as baseline |
+| `I_AE(T)` | Degterov Table II | [spinel_fe_degterov.c](spinel_fe_degterov.c) `spinel_i_ae` | implemented | verify numerically against Table II in code comments/tests |
+| `Delta_AE` | Degterov Table II | [spinel_fe_degterov.c](spinel_fe_degterov.c) `spinel_delta_ae` | implemented | verify numerically against Table II |
+| `V_E(T)` | Degterov Table II | [spinel_fe_degterov.c](spinel_fe_degterov.c) `spinel_v_e` | implemented | verify numerically against Table II |
+| `Delta_EAV` | Degterov simple-spinel discussion allows `0` for `(A,E)[A,E,V]2O4` | [spinel_fe_degterov.c](spinel_fe_degterov.c) `spinel_delta_eav` | implemented as reduced-model simplification | do not "fix" blindly; only revisit if fuller spinel form is implemented |
+| Spinel magnetic term | Degterov / Sundman Hillert-Jarl magnetic treatment for magnetite | [spinel_fe_degterov.c](spinel_fe_degterov.c) `hillert_jarl_gmag` with `848 / 44.54 / 0.28` | implemented | keep, cross-check against Degterov Table II |
+| Spinel CEF member set | Hidayat `(Fe2+,Fe3+)[Fe2+,Fe3+,Va]2O4` | reduced 5-member pure-Fe phase in [spinel_fe_degterov.c](spinel_fe_degterov.c) | implemented, but reduced/simple | likely retained for pure-Fe work; do not confuse with full multicomponent spinel |
+| Hematite unary Gibbs | Hidayat Table 1 adjusted unary `Fe2O3` | [gibbs_species.c](gibbs_species.c) `gibbs_fe2o3` | implemented | verify coefficients and magnetic constants against Hidayat |
+| Spinel / hematite coordinated consistency | Hidayat says spinel and hematite were adjusted together relative to Ref. [8] | split across [spinel_fe_degterov.c](spinel_fe_degterov.c) and [gibbs_species.c](gibbs_species.c) with no explicit coupled validation | not yet demonstrated | add oxide-side regression targets before any further tuning |
+| `spinel|Fe2O3` validation | Hidayat Fig. 10 / Fig. 11 consistency target | no direct regression in repo | missing | add benchmark next |
+| Pure-Fe oxide package source | coherent source family for Fe / wustite / spinel / hematite | mixed `hidayat_2015` + `degterov_2001` naming | partial | add explicit reconstruction source only after oxide-side regressions exist |
+
+The immediate implementation goal is therefore not "hunt more
+constants", but:
+
+1. lock down the term-by-term audit above
+2. add explicit oxide-side benchmarks for the current package
+3. only then introduce a reconstructed pure-Fe oxide source family
+   that can be compared cleanly against the present mixed source map
+
+There is now an explicit baseline selector for that comparison work:
+
+- `feoxide_recon_baseline_2026`
+
+At present this is intentionally only a coherent source-family alias
+for the current oxide-side implementation:
+
+- `Fe_bcc`, `Fe_fcc`, `Fe3O4`, `Fe2O3`
+- wustite
+- reduced Fe-only spinel
+
+So it is not yet a new thermodynamic model. Its purpose is to give the
+reconstruction work a clean package name that can be benchmarked and
+replaced incrementally.
+
+#### 7.2.2 Reconstruction checkpoints
+
+Before any source replacement, the following checkpoints should be
+available and passing under a dedicated oxide-side harness:
+
+- Hidayat Table 2 solid-state eutectoid:
+  `561 C`, `51.4 at% O`
+- Hidayat Table 2 `bcc/fcc/wustite` invariant:
+  `912 C`, `51.3 at% O`
+- oxide-side `wustite|spinel` residual at the `561 C` target point
+- gas-side three-branch meeting around `570 C`
+- direct `spinel|Fe2O3` and `wustite|spinel` benchmarks from Hidayat
+  Fig. 10 / Fig. 11
+
+The direct oxide-side helpers now in use are:
+
+- [feoxide_potential_boundaries.py](test/feoxide_potential_boundaries.py)
+- [feoxide_hidayat_compare.py](test/feoxide_hidayat_compare.py)
+
+The traced comparison data are:
+
+- [hidayat-2015-fig11-wust-spin.dat](test/hidayat-2015-fig11-wust-spin.dat)
+- [hidayat-2015-fig11-spin-Fe2O3.dat](test/hidayat-2015-fig11-spin-Fe2O3.dat)
+- [hidayat-2015-fig10-spin-Fe2O3.dat](test/hidayat-2015-fig10-spin-Fe2O3.dat)
+
+The first direct comparison is now clear:
+
+- Hidayat Fig. 11 `wustite|spinel` is already quite good:
+  RMS `delta log10(pO2) = 0.0215`
+- Hidayat Fig. 11 `spinel|Fe2O3` is also quite good:
+  RMS `delta log10(pO2) = 0.0206`
+- the corrected Hidayat Fig. 10 `spinel|Fe2O3` trace is broadly
+  consistent with Hidayat Table 2 on the same boundary
+
+In particular, the corrected trace gives approximately:
+
+- `1459 C`: `x ≈ 0.776`
+- `1552 C`: `x ≈ 0.795`
+
+while Hidayat Table 2 implies:
+
+- `1459 C`, `58.0 at% O` -> `x ≈ 0.781`
+- `1552 C`, `58.1 at% O` -> `x ≈ 0.791`
+
+So the earlier apparent inconsistency was caused by an incorrect
+`at% O -> mass ratio Fe2O3 / (FeO + Fe2O3)` conversion, not by the
+digitised curve itself.
+
+One practical note about Fig. 10 is worth making explicit: its x-axis is
+a bulk pseudo-binary composition coordinate, not a single-phase oxide
+stoichiometry. So `x = 0` corresponds to pure `FeO` bulk composition,
+and points left of the single-phase wustite field can still appear in
+`wustite + Fe` or liquid-plus-metal fields because the missing oxygen is
+carried by coexistence with metallic iron, not by an oxide poorer than
+`FeO`.
+
+The Hidayat Table 2 hematite-side invariant adds the same message in a
+cleaner single-point form:
+
+- `Magnetite + Gas (1 atm) -> Fe2O3` at `1459 C`
+- target `log10(pO2 / atm) = 0`
+- current model `log10(pO2 / atm) = +0.0093`
+- target spinel composition `58.0 at% O`
+- current model spinel composition `57.96 at% O`
+- corresponding composition error only `-0.039 at% O`
+
+So the present hematite-side package is already very close on both the
+oxygen-potential scale and the Table 2 invariant composition scale.
+
 ### 7.2 Invariant temperature placement
 
 Because the oxide-side boundary is still shifted, the common
@@ -434,7 +1098,7 @@ The comparison harness remains useful, but should be treated as a
 diagnostic script rather than the thermodynamic source of truth.
 
 The relevant file is:
-[feoh_baur_glaessner_compare.py](/home/john/ascend/models/johnpye/fprops/test/feoh_baur_glaessner_compare.py)
+[feoh_baur_glaessner_compare.py](test/feoh_baur_glaessner_compare.py)
 
 ## 8. Current Output Files
 
@@ -443,9 +1107,9 @@ The most useful current artifacts are:
 - corrected $\mathrm{H_2}$ comparison plot:
   [bg_compare_all_h2_helmholtz_plus_ref0.png](res/bg_compare_all_h2_helmholtz_plus_ref0.png)
 - Tier 3 boundary script:
-  [feoh_hydrogen_boundary.py](/home/john/ascend/models/johnpye/fprops/test/feoh_hydrogen_boundary.py)
+  [feoh_hydrogen_boundary.py](test/feoh_hydrogen_boundary.py)
 - Spreitzer comparison harness:
-  [feoh_baur_glaessner_compare.py](/home/john/ascend/models/johnpye/fprops/test/feoh_baur_glaessner_compare.py)
+  [feoh_baur_glaessner_compare.py](test/feoh_baur_glaessner_compare.py)
 
 ## 9. Recommended Next Work
 

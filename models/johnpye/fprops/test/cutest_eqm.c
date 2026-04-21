@@ -4,7 +4,12 @@
 #include "../flash_unifac.h"
 #include "../fluids.h"
 #include "../constcp_species.h"
+#include "../gibbs_species.h"
+#include "../shomate_data.h"
+#include "../shomate_species.h"
 #include "../solution.h"
+#include "../solution_data.h"
+#include "../spinel_data.h"
 #include "../wustite_hidayat.h"
 #include "../name_resolve.h"
 #include "../mixtures/unifac_data.h"
@@ -62,6 +67,95 @@ static double log10K_from_mu0(const char **names, const double *nu, int ns, cons
 	return -sum / (R * g_eqm.T * log(10.0));
 }
 
+static double qfm_oneill_1987_log10fo2_low_branch(double T){
+	const double R = 8.31446261815324;
+	double mu_o2;
+	if(!(T > 900.0) || !(T < 1042.0)){
+		return NAN;
+	}
+	mu_o2 = -587474.0 + 1584.427 * T - 203.3164 * T * log(T) + 0.09271 * T * T;
+	return mu_o2 / (R * T * log(10.0));
+}
+
+static double qfi_oneill_1987_log10fo2(double T){
+	const double R = 8.31446261815324;
+	double mu_o2;
+	if(!(T > 900.0) || !(T < 1420.0)){
+		return NAN;
+	}
+	if(T < 1042.0){
+		mu_o2 = -542941.0 - 33.182 * T + 22.446 * T * log(T);
+	}else if(T <= 1184.0){
+		mu_o2 = -562377.0 + 103.384 * T + 5.4771 * T * log(T);
+	}else{
+		mu_o2 = -602739.0 + 369.704 * T - 27.3443 * T * log(T);
+	}
+	return mu_o2 / (R * T * log(10.0));
+}
+
+static double stable_fe_mu0_hidayat(double T){
+	double mu_bcc = NAN;
+	double mu_fcc = NAN;
+	int has_bcc = eqm_mu0_source("Fe_bcc", "hidayat_2015", T, g_eqm.P0, &mu_bcc);
+	int has_fcc = eqm_mu0_source("Fe_fcc", "hidayat_2015", T, g_eqm.P0, &mu_fcc);
+	if(has_bcc && has_fcc){
+		return mu_bcc <= mu_fcc ? mu_bcc : mu_fcc;
+	}
+	if(has_bcc){
+		return mu_bcc;
+	}
+	if(has_fcc){
+		return mu_fcc;
+	}
+	return NAN;
+}
+
+static double qfm_log10fo2_from_mu0(double T){
+	const double R = 8.31446261815324;
+	double mu_fe3o4 = NAN;
+	double mu_sio2 = NAN;
+	double mu_fayalite = NAN;
+	double mu_o2 = NAN;
+	double mu_buffer;
+	if(!eqm_mu0_source("Fe3O4", "hidayat_2015", T, g_eqm.P0, &mu_fe3o4)){
+		return NAN;
+	}
+	if(!eqm_mu0_source("SiO2", "slag_pragmatic_2026", T, g_eqm.P0, &mu_sio2)){
+		return NAN;
+	}
+	if(!eqm_mu0_source("Fe2SiO4", "slag_pragmatic_2026", T, g_eqm.P0, &mu_fayalite)){
+		return NAN;
+	}
+	if(!eqm_mu0_source("oxygen", "reaktoro_clone_supcrt98", T, g_eqm.P0, &mu_o2)){
+		return NAN;
+	}
+	mu_buffer = 2.0 * mu_fe3o4 + 3.0 * mu_sio2 - 3.0 * mu_fayalite - mu_o2;
+	return mu_buffer / (R * T * log(10.0));
+}
+
+static double qfi_log10fo2_from_mu0(double T){
+	const double R = 8.31446261815324;
+	double mu_fe = stable_fe_mu0_hidayat(T);
+	double mu_sio2 = NAN;
+	double mu_fayalite = NAN;
+	double mu_o2 = NAN;
+	double mu_buffer;
+	if(!isfinite(mu_fe)){
+		return NAN;
+	}
+	if(!eqm_mu0_source("SiO2", "slag_pragmatic_2026", T, g_eqm.P0, &mu_sio2)){
+		return NAN;
+	}
+	if(!eqm_mu0_source("Fe2SiO4", "slag_pragmatic_2026", T, g_eqm.P0, &mu_fayalite)){
+		return NAN;
+	}
+	if(!eqm_mu0_source("oxygen", "helmholtz+ref0:", T, g_eqm.P0, &mu_o2)){
+		return NAN;
+	}
+	mu_buffer = mu_fayalite - mu_sio2 - 2.0 * mu_fe - mu_o2;
+	return mu_buffer / (R * T * log(10.0));
+}
+
 static double log10K_from_n(const double *n, const double *nu, int ns){
 	double ntot = 0.0;
 	double sum = 0.0;
@@ -95,12 +189,34 @@ static double log10K_from_n_source_phaseaware(const char **names, const double *
 		char source_buf[512];
 		const char *source_i = fprops_resolve_species_source(source, names[i], source_buf,
 			(unsigned)sizeof(source_buf));
-		const ConstCpSpecies *S = constcp_species_lookup(names[i], source_i);
-		int is_condensed;
-		if(!S){
-			S = constcp_species_lookup(names[i], NULL);
+		const BinarySolutionPhaseDef *phase = NULL;
+		const FeSpinelPhaseDef *spinel = NULL;
+		const GibbsSpecies *G = NULL;
+		const ConstCpSpecies *S = NULL;
+		const ShomateSpecies *Sh = NULL;
+		unsigned member_index = 0;
+		int is_condensed = 0;
+		if(solution_phase_lookup_member(names[i], source_i, &phase, &member_index)
+				|| solution_phase_lookup_member(names[i], NULL, &phase, &member_index)){
+			is_condensed = 1;
+		}else if(spinel_phase_lookup_member(names[i], source_i, &spinel, &member_index)
+				|| spinel_phase_lookup_member(names[i], NULL, &spinel, &member_index)){
+			is_condensed = 1;
+		}else{
+			G = gibbs_species_lookup(names[i], source_i);
+			if(!G){
+				G = gibbs_species_lookup(names[i], NULL);
+			}
+			S = constcp_species_lookup(names[i], source_i);
+			if(!S){
+				S = constcp_species_lookup(names[i], NULL);
+			}
+			Sh = shomate_species_lookup(names[i], source_i);
+			if(!Sh){
+				Sh = shomate_species_lookup(names[i], NULL);
+			}
+			is_condensed = (G || S || (Sh && Sh->phase != FPROPS_PHASE_GAS)) ? 1 : 0;
 		}
-		is_condensed = S ? 1 : 0;
 		if(!(n[i] > 0.0)){
 			return NAN;
 		}
@@ -115,12 +231,34 @@ static double log10K_from_n_source_phaseaware(const char **names, const double *
 		char source_buf[512];
 		const char *source_i = fprops_resolve_species_source(source, names[i], source_buf,
 			(unsigned)sizeof(source_buf));
-		const ConstCpSpecies *S = constcp_species_lookup(names[i], source_i);
-		int is_condensed;
-		if(!S){
-			S = constcp_species_lookup(names[i], NULL);
+		const BinarySolutionPhaseDef *phase = NULL;
+		const FeSpinelPhaseDef *spinel = NULL;
+		const GibbsSpecies *G = NULL;
+		const ConstCpSpecies *S = NULL;
+		const ShomateSpecies *Sh = NULL;
+		unsigned member_index = 0;
+		int is_condensed = 0;
+		if(solution_phase_lookup_member(names[i], source_i, &phase, &member_index)
+				|| solution_phase_lookup_member(names[i], NULL, &phase, &member_index)){
+			is_condensed = 1;
+		}else if(spinel_phase_lookup_member(names[i], source_i, &spinel, &member_index)
+				|| spinel_phase_lookup_member(names[i], NULL, &spinel, &member_index)){
+			is_condensed = 1;
+		}else{
+			G = gibbs_species_lookup(names[i], source_i);
+			if(!G){
+				G = gibbs_species_lookup(names[i], NULL);
+			}
+			S = constcp_species_lookup(names[i], source_i);
+			if(!S){
+				S = constcp_species_lookup(names[i], NULL);
+			}
+			Sh = shomate_species_lookup(names[i], source_i);
+			if(!Sh){
+				Sh = shomate_species_lookup(names[i], NULL);
+			}
+			is_condensed = (G || S || (Sh && Sh->phase != FPROPS_PHASE_GAS)) ? 1 : 0;
 		}
-		is_condensed = S ? 1 : 0;
 		if(!is_condensed){
 			double yi = n[i] / ntot_gas;
 			double ai = yi * g_eqm.P / g_eqm.P0;
@@ -243,6 +381,40 @@ static double stable_fe_g_expected(double T){
 	return g_bcc <= g_fcc ? g_bcc : g_fcc;
 }
 
+static double shomate_cp_species_test(const ShomateSpecies *S, double T){
+	FpropsError err = FPROPS_NO_ERROR;
+	unsigned i;
+	const ShomateRange *R = NULL;
+	if(!S || !S->ranges || S->nranges == 0){
+		return NAN;
+	}
+	for(i = 0; i < S->nranges; ++i){
+		if(shomate_range_contains(&S->ranges[i], T)){
+			R = &S->ranges[i];
+			break;
+		}
+	}
+	if(!R){
+		R = (T < S->ranges[0].T_min) ? &S->ranges[0] : &S->ranges[S->nranges - 1];
+	}
+	return shomate_cp_molar(R, T, &err);
+}
+
+static void assert_shomate_species_anchor(const ShomateSpecies *S, double h_ref, double s_ref){
+	FpropsError err = FPROPS_NO_ERROR;
+	double h = NAN;
+	double s = NAN;
+	CU_ASSERT_PTR_NOT_NULL_FATAL(S);
+	h = shomate_species_h_molar(S, S->T_ref, &err);
+	CU_ASSERT_EQUAL_FATAL(err, FPROPS_NO_ERROR);
+	s = shomate_species_s_molar(S, S->T_ref, &err);
+	CU_ASSERT_EQUAL_FATAL(err, FPROPS_NO_ERROR);
+	CU_ASSERT_TRUE(isfinite(h));
+	CU_ASSERT_TRUE(isfinite(s));
+	CU_ASSERT_TRUE(fabs(h - h_ref) <= 1e-9);
+	CU_ASSERT_TRUE(fabs(s - s_ref) <= 1e-9);
+}
+
 static double residual_stable_fe_wustite_expected(double T, double x){
 	double lam_fe = 0.0;
 	double lam_o = 0.0;
@@ -310,8 +482,29 @@ static void assert_reduced_solve_ok(const char **names, int ns, const char **ele
 	}
 }
 
+static void assert_reduced_solve_ok_source(const char **names, int ns, const char **elements, int ne,
+		const double *b, const char *source, double *n_out){
+	int i;
+	int status = eqm_solve_elements(names, ns, elements, ne, b, source,
+		g_eqm.T, g_eqm.P, "reduced", NULL, n_out);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	for(i = 0; i < ns; ++i){
+		CU_ASSERT_TRUE(isfinite(n_out[i]));
+		CU_ASSERT_TRUE(n_out[i] > 0.0);
+	}
+}
+
 static void assert_log10K_consistent(const char **names, const double *nu, int ns, const double *n){
 	double log10_mu0 = log10K_from_mu0(names, nu, ns, g_eqm.source);
+	double log10_eqm = log10K_from_n(n, nu, ns);
+	CU_ASSERT_TRUE_FATAL(isfinite(log10_mu0));
+	CU_ASSERT_TRUE_FATAL(isfinite(log10_eqm));
+	CU_ASSERT_TRUE(fabs(log10_eqm - log10_mu0) <= g_eqm.log10_tol);
+}
+
+static void assert_log10K_consistent_source(const char **names, const double *nu, int ns,
+		const char *source, const double *n){
+	double log10_mu0 = log10K_from_mu0(names, nu, ns, source);
 	double log10_eqm = log10K_from_n(n, nu, ns);
 	CU_ASSERT_TRUE_FATAL(isfinite(log10_mu0));
 	CU_ASSERT_TRUE_FATAL(isfinite(log10_eqm));
@@ -332,6 +525,136 @@ static void test_eqm_mu0_core_species(void){
 	}
 }
 
+static void test_eqm_slag_species_cp_reference_points(void){
+	const ShomateSpecies *sio2 = shomate_data_lookup("SiO2", "slag_pragmatic_2026");
+	const ShomateSpecies *al2o3 = shomate_data_lookup("Al2O3", "slag_pragmatic_2026");
+	const ShomateSpecies *fayalite = shomate_data_lookup("Fe2SiO4", "slag_pragmatic_2026");
+	const ShomateSpecies *hercynite = shomate_data_lookup("FeAl2O4", "slag_pragmatic_2026");
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(sio2);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(al2o3);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(fayalite);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(hercynite);
+
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(sio2, 298.0) - 44.57) <= 0.05);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(sio2, 1000.0) - 68.95) <= 0.05);
+
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(al2o3, 298.0) - 78.77) <= 0.05);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(al2o3, 1000.0) - 124.9) <= 0.1);
+
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(fayalite, 298.15) - 131.9) <= 0.1);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(fayalite, 1000.0) - 190.64) <= 0.05);
+
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(hercynite, 298.15) - 124.4) <= 0.1);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(hercynite, 1000.0) - 351.138) <= 0.1);
+}
+
+static void test_eqm_slag_species_reference_state_anchors(void){
+	const ShomateSpecies *sio2 = shomate_data_lookup("SiO2", "slag_pragmatic_2026");
+	const ShomateSpecies *al2o3 = shomate_data_lookup("Al2O3", "slag_pragmatic_2026");
+	const ShomateSpecies *fayalite = shomate_data_lookup("Fe2SiO4", "slag_pragmatic_2026");
+	const ShomateSpecies *hercynite = shomate_data_lookup("FeAl2O4", "slag_pragmatic_2026");
+
+	assert_shomate_species_anchor(sio2, -910856.8, 41.44);
+	assert_shomate_species_anchor(al2o3, -1675690.0, 50.92);
+	assert_shomate_species_anchor(fayalite, -1478170.0, 151.00);
+	assert_shomate_species_anchor(hercynite, -1947681.0, 115.362);
+}
+
+static void test_eqm_slag_species_mu0(void){
+	static const char *species[] = {"SiO2", "Al2O3", "Fe2SiO4", "FeAl2O4"};
+	size_t i;
+	for(i = 0; i < ARRAYLEN(species); ++i){
+		double mu0 = NAN;
+		CU_ASSERT_TRUE(eqm_mu0_source(species[i], "slag_pragmatic_2026", 1000.0, 1e5, &mu0) != 0);
+		CU_ASSERT_TRUE(isfinite(mu0));
+	}
+}
+
+static void test_eqm_feohsial_pure_capture_1000k(void){
+	static const char *names[] = {
+		"Fe_bcc", "Fe_fcc", "Fe3O4", "Fe2O3", "SiO2",
+		"Fe2SiO4", "Al2O3", "FeAl2O4", "hydrogen", "water"
+	};
+	static const char *elements[] = {"Fe", "O", "Si", "Al", "H"};
+	static const double b[] = {2.0, 4.2, 0.3, 0.2, 2.0};
+	static const char *source_map =
+		"Fe_bcc=hidayat_2015;Fe_fcc=hidayat_2015;Fe3O4=hidayat_2015;Fe2O3=hidayat_2015;"
+		"SiO2=slag_pragmatic_2026;Fe2SiO4=slag_pragmatic_2026;"
+		"Al2O3=slag_pragmatic_2026;FeAl2O4=slag_pragmatic_2026;"
+		"hydrogen=Moran and Shapiro;water=Moran and Shapiro";
+	double n[ARRAYLEN(names)];
+	double n_metal;
+	double n_locked_fe;
+	int i_fe_bcc = find_name(names, ARRAYLEN(names), "Fe_bcc");
+	int i_fe_fcc = find_name(names, ARRAYLEN(names), "Fe_fcc");
+	int i_fe3o4 = find_name(names, ARRAYLEN(names), "Fe3O4");
+	int i_fe2o3 = find_name(names, ARRAYLEN(names), "Fe2O3");
+	int i_sio2 = find_name(names, ARRAYLEN(names), "SiO2");
+	int i_fe2sio4 = find_name(names, ARRAYLEN(names), "Fe2SiO4");
+	int i_al2o3 = find_name(names, ARRAYLEN(names), "Al2O3");
+	int i_feal2o4 = find_name(names, ARRAYLEN(names), "FeAl2O4");
+	int i_h2 = find_name(names, ARRAYLEN(names), "hydrogen");
+	int i_h2o = find_name(names, ARRAYLEN(names), "water");
+	int status = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, source_map,
+		1000.0, g_eqm.P, "auto", NULL, n);
+
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+
+	n_metal = n[i_fe_bcc] + n[i_fe_fcc];
+	n_locked_fe = 2.0 * n[i_fe2sio4] + n[i_feal2o4];
+
+	CU_ASSERT_TRUE(n[i_fe2sio4] > 0.25);
+	CU_ASSERT_TRUE(n[i_fe2sio4] < 0.35);
+	CU_ASSERT_TRUE(n[i_feal2o4] > 0.08);
+	CU_ASSERT_TRUE(n[i_feal2o4] < 0.12);
+	CU_ASSERT_TRUE(n[i_fe3o4] > 0.35);
+	CU_ASSERT_TRUE(n[i_fe3o4] < 0.50);
+	CU_ASSERT_TRUE(n[i_h2o] > 0.80);
+	CU_ASSERT_TRUE(n[i_h2] < 0.20);
+	CU_ASSERT_TRUE(n[i_h2o] > n[i_h2]);
+	CU_ASSERT_TRUE(n[i_sio2] < 1e-6);
+	CU_ASSERT_TRUE(n[i_al2o3] < 1e-6);
+	CU_ASSERT_TRUE(n[i_fe2o3] < 1e-6);
+	CU_ASSERT_TRUE(n_metal < 1e-6);
+	CU_ASSERT_TRUE(n_locked_fe > 0.65);
+	CU_ASSERT_TRUE(n_locked_fe < 0.75);
+}
+
+static void test_eqm_qfm_buffer_log10fo2_1000k(void){
+	double log10fo2_model = qfm_log10fo2_from_mu0(1000.0);
+	double log10fo2_ref = qfm_oneill_1987_log10fo2_low_branch(1000.0);
+	double delta = log10fo2_model - log10fo2_ref;
+
+	CU_ASSERT_TRUE_FATAL(isfinite(log10fo2_model));
+	CU_ASSERT_TRUE_FATAL(isfinite(log10fo2_ref));
+	if(fabs(delta) > 1.2){
+		fprintf(stderr,
+			"QFM mismatch at 1000 K: model=%.6f ref=%.6f delta=%.6f log10 units\n",
+			log10fo2_model, log10fo2_ref, delta);
+	}
+	CU_ASSERT_TRUE(log10fo2_model < -16.0);
+	CU_ASSERT_TRUE(log10fo2_model > -19.0);
+	CU_ASSERT_TRUE(fabs(delta) <= 1.2);
+}
+
+static void test_eqm_qfi_buffer_log10fo2_1000k(void){
+	double log10fo2_model = qfi_log10fo2_from_mu0(1000.0);
+	double log10fo2_ref = qfi_oneill_1987_log10fo2(1000.0);
+	double delta = log10fo2_model - log10fo2_ref;
+
+	CU_ASSERT_TRUE_FATAL(isfinite(log10fo2_model));
+	CU_ASSERT_TRUE_FATAL(isfinite(log10fo2_ref));
+	if(fabs(delta) > 1.2){
+		fprintf(stderr,
+			"QFI mismatch at 1000 K: model=%.6f ref=%.6f delta=%.6f log10 units\n",
+			log10fo2_model, log10fo2_ref, delta);
+	}
+	CU_ASSERT_TRUE(log10fo2_model < -21.0);
+	CU_ASSERT_TRUE(log10fo2_model > -23.0);
+	CU_ASSERT_TRUE(fabs(delta) <= 0.2);
+}
+
 static void test_eqm_h2o_dissociation_reduced(void){
 	static const char *names[] = {"hydrogen", "oxygen", "water"};
 	static const char *elements[] = {"H", "O"};
@@ -350,6 +673,71 @@ static void test_eqm_wgs_reduced(void){
 	double n[ARRAYLEN(names)];
 	assert_reduced_solve_ok(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, n);
 	assert_log10K_consistent(names, nu, ARRAYLEN(names), n);
+}
+
+static void test_eqm_co2_dissociation_clone_reduced(void){
+	static const char *names[] = {"carbonmonoxide", "oxygen", "carbondioxide"};
+	static const char *elements[] = {"C", "O"};
+	static const double b[] = {1.0, 2.0};
+	static const double nu[] = {1.0, 0.5, -1.0};
+	double n[ARRAYLEN(names)];
+	const char *source = "reaktoro_clone_supcrt98";
+	assert_reduced_solve_ok_source(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, source, n);
+	assert_log10K_consistent_source(names, nu, ARRAYLEN(names), source, n);
+}
+
+static void test_eqm_wgs_clone_reduced(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const char *elements[] = {"C", "O", "H"};
+	static const double b[] = {1.0, 2.0, 2.0};
+	static const double nu[] = {1.0, 1.0, -1.0, -1.0};
+	double n[ARRAYLEN(names)];
+	const char *source = "reaktoro_clone_supcrt98";
+	assert_reduced_solve_ok_source(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, source, n);
+	assert_log10K_consistent_source(names, nu, ARRAYLEN(names), source, n);
+}
+
+static void test_eqm_feoc_clone_redox_1000k(void){
+	static const char *names[] = {
+		"Fe_bcc", "Fe_fcc", "Fe3O4", "carbonmonoxide", "carbondioxide"
+	};
+	static const char *elements[] = {"Fe", "C", "O"};
+	static const double b[] = {3.0, 4.0, 8.0};
+	static const double nu_redox[] = {3.0, 0.0, -1.0, -4.0, 4.0};
+	static const char *source_map =
+		"Fe_bcc=hidayat_2015;Fe_fcc=hidayat_2015;Fe3O4=hidayat_2015;"
+		"carbonmonoxide=reaktoro_clone_supcrt98;carbondioxide=reaktoro_clone_supcrt98";
+	double n[ARRAYLEN(names)] = {0.0};
+	int i_fe_bcc = find_name(names, ARRAYLEN(names), "Fe_bcc");
+	int i_fe_fcc = find_name(names, ARRAYLEN(names), "Fe_fcc");
+	int i_fe3o4 = find_name(names, ARRAYLEN(names), "Fe3O4");
+	int i_co = find_name(names, ARRAYLEN(names), "carbonmonoxide");
+	int i_co2 = find_name(names, ARRAYLEN(names), "carbondioxide");
+	int status = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, source_map,
+		1000.0, g_eqm.P, "auto", NULL, n);
+
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_TRUE(isfinite(n[i_fe_bcc]));
+	CU_ASSERT_TRUE(isfinite(n[i_fe_fcc]));
+	CU_ASSERT_TRUE(isfinite(n[i_fe3o4]));
+	CU_ASSERT_TRUE(isfinite(n[i_co]));
+	CU_ASSERT_TRUE(isfinite(n[i_co2]));
+	CU_ASSERT_TRUE(n[i_fe3o4] > 0.0);
+	CU_ASSERT_TRUE(n[i_fe3o4] > 0.90);
+	CU_ASSERT_TRUE(n[i_fe_bcc] + n[i_fe_fcc] > 0.05);
+	CU_ASSERT_TRUE(n[i_fe_bcc] > n[i_fe_fcc]);
+	CU_ASSERT_TRUE(n[i_co] > 0.0);
+	CU_ASSERT_TRUE(n[i_co2] > 0.0);
+	CU_ASSERT_TRUE(n[i_co] > n[i_co2]);
+	CU_ASSERT_TRUE(n[i_co] > 3.5);
+	CU_ASSERT_TRUE(n[i_co2] > 0.05);
+	{
+		double log10_mu0 = log10K_from_mu0(names, nu_redox, ARRAYLEN(names), source_map);
+		double log10_eqm = log10K_from_n_source_phaseaware(names, n, nu_redox, ARRAYLEN(names), source_map);
+		CU_ASSERT_TRUE_FATAL(isfinite(log10_mu0));
+		CU_ASSERT_TRUE_FATAL(isfinite(log10_eqm));
+		CU_ASSERT_TRUE(fabs(log10_eqm - log10_mu0) <= g_eqm.log10_tol);
+	}
 }
 
 static double hr_ammonia_log10_ka(double T){
@@ -1099,11 +1487,25 @@ static void test_eqm_explicit_unknown_source_falls_back_to_ideal(void){
 }
 
 static void test_eqm_reaktoro_clone_auto_routes_to_clone(void){
-	double mu_auto = 0.0;
-	double mu_shomate = 0.0;
-	CU_ASSERT_TRUE(eqm_mu0_source("hydrogen", "reaktoro_clone_supcrt98", g_eqm.T, g_eqm.P0, &mu_auto) != 0);
-	CU_ASSERT_TRUE(eqm_mu0_source("hydrogen", "shomate:reaktoro_clone_supcrt98", g_eqm.T, g_eqm.P0, &mu_shomate) != 0);
-	CU_ASSERT_TRUE(fabs(mu_auto - mu_shomate) <= 1e-9);
+	static const char *species[] = {"hydrogen", "oxygen", "water", "carbonmonoxide", "carbondioxide"};
+	size_t i;
+	for(i = 0; i < ARRAYLEN(species); ++i){
+		double mu_auto = 0.0;
+		double mu_shomate = 0.0;
+		CU_ASSERT_TRUE(eqm_mu0_source(species[i], "reaktoro_clone_supcrt98", g_eqm.T, g_eqm.P0, &mu_auto) != 0);
+		CU_ASSERT_TRUE(eqm_mu0_source(species[i], "shomate:reaktoro_clone_supcrt98", g_eqm.T, g_eqm.P0, &mu_shomate) != 0);
+		CU_ASSERT_TRUE(fabs(mu_auto - mu_shomate) <= 1e-9);
+	}
+	{
+		double mu_clone = 0.0;
+		double mu_rpp = 0.0;
+		CU_ASSERT_TRUE(eqm_mu0_source("carbonmonoxide", "reaktoro_clone_supcrt98", g_eqm.T, g_eqm.P0, &mu_clone) != 0);
+		CU_ASSERT_TRUE(eqm_mu0_source("carbonmonoxide", "ideal+ref0:RPP", g_eqm.T, g_eqm.P0, &mu_rpp) != 0);
+		CU_ASSERT_TRUE(fabs(mu_clone - mu_rpp) > 1000.0);
+		CU_ASSERT_TRUE(eqm_mu0_source("carbondioxide", "reaktoro_clone_supcrt98", g_eqm.T, g_eqm.P0, &mu_clone) != 0);
+		CU_ASSERT_TRUE(eqm_mu0_source("carbondioxide", "ideal+ref0:RPP", g_eqm.T, g_eqm.P0, &mu_rpp) != 0);
+		CU_ASSERT_TRUE(fabs(mu_clone - mu_rpp) > 1000.0);
+	}
 }
 
 static void test_eqm_hidayat_pragmatic_species_mu0(void){
@@ -1143,6 +1545,84 @@ static void test_eqm_degterov_spinel_fe3o4_smoke(void){
 	CU_ASSERT_TRUE(n[0] + n[1] > 0.0);
 	CU_ASSERT_TRUE(fabs(2.0 * (n[0] + n[1]) - n[2] - n[3] - n[4]) <= 1e-6);
 	CU_ASSERT_TRUE(fabs(6.0 * n[0] + 5.0 * n[1] - 2.0 * n[2] - 3.0 * n[3]) <= 1e-6);
+}
+
+static void test_eqm_bg_tuned_spinel_source_smoke(void){
+	const FeSpinelPhaseDef *Pcur = NULL;
+	const FeSpinelPhaseDef *Ptuned = NULL;
+	unsigned i_cur = 0, i_tuned = 0;
+	double n_members[5] = {0.1, 0.9, 0.2, 0.7, 0.1};
+	double g_cur = NAN, g_tuned = NAN;
+	CU_ASSERT_TRUE(spinel_phase_lookup_member("Sp_Fe2_tet", "degterov_2001", &Pcur, &i_cur) != 0);
+	CU_ASSERT_TRUE(spinel_phase_lookup_member("Sp_Fe2_tet", "fe_spinel_bg_tuned_2026", &Ptuned, &i_tuned) != 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Pcur);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Ptuned);
+	CU_ASSERT_TRUE(i_cur == 0);
+	CU_ASSERT_TRUE(i_tuned == 0);
+	CU_ASSERT_TRUE(spinel_phase_eval(Pcur, n_members, 623.15, g_eqm.P, &g_cur, NULL) != 0);
+	CU_ASSERT_TRUE(spinel_phase_eval(Ptuned, n_members, 623.15, g_eqm.P, &g_tuned, NULL) != 0);
+	CU_ASSERT_TRUE(isfinite(g_cur));
+	CU_ASSERT_TRUE(isfinite(g_tuned));
+	CU_ASSERT_TRUE(fabs(g_cur - g_tuned) > 1000.0);
+}
+
+static void test_eqm_mmc1_guess_spinel_source_smoke(void){
+	const FeSpinelPhaseDef *Pcur = NULL;
+	const FeSpinelPhaseDef *Pguess = NULL;
+	unsigned i_cur = 0, i_guess = 0;
+	double n_members[5] = {0.2, 0.8, 0.15, 0.75, 0.1};
+	double g_cur = NAN, g_guess = NAN;
+	CU_ASSERT_TRUE(spinel_phase_lookup_member("Sp_Fe2_tet", "degterov_2001", &Pcur, &i_cur) != 0);
+	CU_ASSERT_TRUE(spinel_phase_lookup_member("Sp_Fe2_tet", "fe_spinel_mmc1_guess_2026", &Pguess, &i_guess) != 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Pcur);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Pguess);
+	CU_ASSERT_TRUE(i_cur == 0);
+	CU_ASSERT_TRUE(i_guess == 0);
+	CU_ASSERT_TRUE(spinel_phase_eval(Pcur, n_members, 623.15, g_eqm.P, &g_cur, NULL) != 0);
+	CU_ASSERT_TRUE(spinel_phase_eval(Pguess, n_members, 623.15, g_eqm.P, &g_guess, NULL) != 0);
+	CU_ASSERT_TRUE(isfinite(g_cur));
+	CU_ASSERT_TRUE(isfinite(g_guess));
+	CU_ASSERT_TRUE(fabs(g_cur - g_guess) > 1.0);
+}
+
+static void test_eqm_hidayat_adj1_spinel_source_smoke(void){
+	const FeSpinelPhaseDef *Pguess = NULL;
+	const FeSpinelPhaseDef *Padj1 = NULL;
+	unsigned i_guess = 0, i_adj1 = 0;
+	double n_members[5] = {0.2, 0.8, 0.15, 0.75, 0.1};
+	double g_guess = NAN, g_adj1 = NAN;
+	CU_ASSERT_TRUE(spinel_phase_lookup_member("Sp_Fe2_tet", "fe_spinel_mmc1_guess_2026", &Pguess, &i_guess) != 0);
+	CU_ASSERT_TRUE(spinel_phase_lookup_member("Sp_Fe2_tet", "hidayat_adj1", &Padj1, &i_adj1) != 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Pguess);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Padj1);
+	CU_ASSERT_TRUE(i_guess == 0);
+	CU_ASSERT_TRUE(i_adj1 == 0);
+	CU_ASSERT_TRUE(spinel_phase_eval(Pguess, n_members, 623.15, g_eqm.P, &g_guess, NULL) != 0);
+	CU_ASSERT_TRUE(spinel_phase_eval(Padj1, n_members, 623.15, g_eqm.P, &g_adj1, NULL) != 0);
+	CU_ASSERT_TRUE(isfinite(g_guess));
+	CU_ASSERT_TRUE(isfinite(g_adj1));
+	CU_ASSERT_TRUE(fabs(g_guess - g_adj1) > 1.0);
+}
+
+static void test_eqm_feoxide_recon_source_smoke(void){
+	const FeSpinelPhaseDef *Pspin = NULL;
+	const BinarySolutionPhaseDef *Pwus = NULL;
+	unsigned i_spin = 0, i_wus = 0;
+	double mu = 0.0;
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe_bcc", "feoxide_recon_baseline_2026", 1000.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(isfinite(mu));
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe_fcc", "feoxide_recon_baseline_2026", 1400.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(isfinite(mu));
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe3O4", "feoxide_recon_baseline_2026", 1000.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(isfinite(mu));
+	CU_ASSERT_TRUE(eqm_mu0_source("Fe2O3", "feoxide_recon_baseline_2026", 1000.0, g_eqm.P0, &mu) != 0);
+	CU_ASSERT_TRUE(isfinite(mu));
+	CU_ASSERT_TRUE(solution_phase_lookup_member("Wus_FeO", "feoxide_recon_baseline_2026", &Pwus, &i_wus) != 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Pwus);
+	CU_ASSERT_TRUE(i_wus == 0);
+	CU_ASSERT_TRUE(spinel_phase_lookup_member("Sp_Fe2_tet", "feoxide_recon_baseline_2026", &Pspin, &i_spin) != 0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(Pspin);
+	CU_ASSERT_TRUE(i_spin == 0);
 }
 
 static void test_eqm_wustite_solution_fullspace_unique_balance(void){
@@ -1380,6 +1860,40 @@ CU_ErrorCode test_register_eqm(void){
 	if(NULL == CU_add_test(s, "wgs_reduced", test_eqm_wgs_reduced)){
 		return CUE_NOTEST;
 	}
+	if(NULL == CU_add_test(s, "co2_dissociation_clone_reduced",
+			test_eqm_co2_dissociation_clone_reduced)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "wgs_clone_reduced", test_eqm_wgs_clone_reduced)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "slag_species_cp_reference_points",
+			test_eqm_slag_species_cp_reference_points)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "slag_species_reference_state_anchors",
+			test_eqm_slag_species_reference_state_anchors)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "slag_species_mu0", test_eqm_slag_species_mu0)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "feohsial_pure_capture_1000k",
+			test_eqm_feohsial_pure_capture_1000k)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "qfm_buffer_log10fo2_1000k",
+			test_eqm_qfm_buffer_log10fo2_1000k)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "qfi_buffer_log10fo2_1000k",
+			test_eqm_qfi_buffer_log10fo2_1000k)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "feoc_clone_redox_1000k",
+			test_eqm_feoc_clone_redox_1000k)){
+		return CUE_NOTEST;
+	}
 	if(NULL == CU_add_test(s, "ammonia_synthesis_helmholtz_ref0_matches_hr_grid",
 			test_eqm_ammonia_synthesis_helmholtz_ref0_matches_hr_grid)){
 		return CUE_NOTEST;
@@ -1472,6 +1986,22 @@ CU_ErrorCode test_register_eqm(void){
 	}
 	if(NULL == CU_add_test(s, "degterov_spinel_fe3o4_smoke",
 			test_eqm_degterov_spinel_fe3o4_smoke)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "bg_tuned_spinel_source_smoke",
+			test_eqm_bg_tuned_spinel_source_smoke)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "mmc1_guess_spinel_source_smoke",
+			test_eqm_mmc1_guess_spinel_source_smoke)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "hidayat_adj1_spinel_source_smoke",
+			test_eqm_hidayat_adj1_spinel_source_smoke)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "feoxide_recon_source_smoke",
+			test_eqm_feoxide_recon_source_smoke)){
 		return CUE_NOTEST;
 	}
 	if(NULL == CU_add_test(s, "wustite_solution_fullspace_unique_balance",

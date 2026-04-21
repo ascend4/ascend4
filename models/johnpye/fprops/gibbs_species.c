@@ -163,8 +163,20 @@ static const GibbsSpecies species_fe_bcc = {
 	&gibbs_fe_bcc
 };
 
+static const GibbsSpecies species_fe_bcc_feoxide_recon = {
+	"Fe_bcc", "feoxide_recon_baseline_2026",
+	1, elements_fe, stoich_fe,
+	&gibbs_fe_bcc
+};
+
 static const GibbsSpecies species_fe_fcc = {
 	"Fe_fcc", "hidayat_2015",
+	1, elements_fe, stoich_fe,
+	&gibbs_fe_fcc
+};
+
+static const GibbsSpecies species_fe_fcc_feoxide_recon = {
+	"Fe_fcc", "feoxide_recon_baseline_2026",
 	1, elements_fe, stoich_fe,
 	&gibbs_fe_fcc
 };
@@ -175,20 +187,39 @@ static const GibbsSpecies species_fe3o4 = {
 	&gibbs_fe3o4
 };
 
+static const GibbsSpecies species_fe3o4_feoxide_recon = {
+	"Fe3O4", "feoxide_recon_baseline_2026",
+	2, elements_fe3o4, stoich_fe3o4,
+	&gibbs_fe3o4
+};
+
 static const GibbsSpecies species_fe2o3 = {
 	"Fe2O3", "hidayat_2015",
 	2, elements_fe2o3, stoich_fe2o3,
 	&gibbs_fe2o3
 };
 
+static const GibbsSpecies species_fe2o3_feoxide_recon = {
+	"Fe2O3", "feoxide_recon_baseline_2026",
+	2, elements_fe2o3, stoich_fe2o3,
+	&gibbs_fe2o3
+};
+
 static const GibbsSpeciesEntry entries[] = {
 	{"Fe_bcc", &species_fe_bcc},
+	{"Fe_bcc", &species_fe_bcc_feoxide_recon},
 	{"Fe(alpha)", &species_fe_bcc},
+	{"Fe(alpha)", &species_fe_bcc_feoxide_recon},
 	{"Fe(delta)", &species_fe_bcc},
+	{"Fe(delta)", &species_fe_bcc_feoxide_recon},
 	{"Fe_fcc", &species_fe_fcc},
+	{"Fe_fcc", &species_fe_fcc_feoxide_recon},
 	{"Fe(gamma)", &species_fe_fcc},
+	{"Fe(gamma)", &species_fe_fcc_feoxide_recon},
 	{"Fe3O4", &species_fe3o4},
-	{"Fe2O3", &species_fe2o3}
+	{"Fe3O4", &species_fe3o4_feoxide_recon},
+	{"Fe2O3", &species_fe2o3},
+	{"Fe2O3", &species_fe2o3_feoxide_recon}
 };
 
 const GibbsSpecies *gibbs_species_lookup(const char *name, const char *source){

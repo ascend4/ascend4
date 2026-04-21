@@ -11,3 +11,24 @@ METHOD on_load;
 	FIX x:=2;
 END on_load;
 END fix_and_assign1;
+
+MODEL fix_and_assign_leaf;
+	x,y,z IS_A solver_var;
+	x = y + z;
+END fix_and_assign_leaf;
+
+MODEL fix_and_assign1_hier_base;
+	m IS_A fix_and_assign_leaf;
+END fix_and_assign1_hier_base;
+
+MODEL fix_and_assign1_hier REFINES fix_and_assign1_hier_base;
+METHODS
+METHOD on_load;
+	FIX m.y;
+	m.y := 1;
+	FIX m.z := 4;
+	FIX m.x;
+	m.x := 5;
+	FREE m.z;
+END on_load;
+END fix_and_assign1_hier;

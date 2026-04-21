@@ -34,9 +34,20 @@ from feoh_hydrogen_boundary import (
     default_runner,
     gas_ratio_logs,
     normalize_gas_source,
+    oxygen_potential_at_fe_spinel_boundary_bg_tuned,
+    oxygen_potential_at_fe_spinel_boundary_lambda_fit,
+    oxygen_potential_at_fe_spinel_boundary_mmc1_guess,
+    oxygen_potential_at_fe_spinel_boundary_mmc1_selective_best,
+    oxygen_potential_at_fe_spinel_boundary_mmc1_tapered_fit,
     oxygen_potential_at_fe_spinel_boundary,
     oxygen_potential_at_fe_wustite_boundary,
+    oxygen_potential_at_wustite_spinel_boundary_state_mmc1_guess,
+    oxygen_potential_at_wustite_spinel_boundary_state_mmc1_tapered_fit,
     oxygen_potential_at_wustite_spinel_boundary,
+    trace_wustite_spinel_boundary_mmc1_guess,
+    trace_wustite_spinel_boundary_mmc1_selective_best,
+    trace_wustite_spinel_boundary_mmc1_tapered_fit,
+    trace_wustite_spinel_boundary,
     parse_temps_c,
     query_mu0,
 )
@@ -255,14 +266,65 @@ def log10_ratio_from_god(god: float) -> float:
     return math.log10(god / (1.0 - god))
 
 
-def boundary_fn(name: str):
+def boundary_fn(name: str, spinel_variant: str = "current"):
+    if spinel_variant == "mmc1_selective_best":
+        spinel_variant = "hidayat_adj1"
     if name == "fe-wustite":
         return oxygen_potential_at_fe_wustite_boundary
     if name == "wustite-spinel":
+        if spinel_variant == "mmc1_guess":
+            return None
+        if spinel_variant == "mmc1_tapered_fit":
+            return None
+        if spinel_variant == "hidayat_adj1":
+            return None
         return oxygen_potential_at_wustite_spinel_boundary
     if name == "fe-spinel":
+        if spinel_variant == "bg_tuned":
+            return oxygen_potential_at_fe_spinel_boundary_bg_tuned
+        if spinel_variant == "lambda_fit":
+            return oxygen_potential_at_fe_spinel_boundary_lambda_fit
+        if spinel_variant == "mmc1_guess":
+            return oxygen_potential_at_fe_spinel_boundary_mmc1_guess
+        if spinel_variant == "mmc1_tapered_fit":
+            return oxygen_potential_at_fe_spinel_boundary_mmc1_tapered_fit
+        if spinel_variant == "hidayat_adj1":
+            return oxygen_potential_at_fe_spinel_boundary_mmc1_selective_best
         return oxygen_potential_at_fe_spinel_boundary
     raise KeyError(name)
+
+
+def batch_model_god_at_temps(
+    boundary_name: str,
+    runner: Path,
+    gas_source: str,
+    temps_c: list[float],
+    spinel_variant: str = "current",
+) -> dict[float, tuple[float, float]]:
+    if spinel_variant == "mmc1_selective_best":
+        spinel_variant = "hidayat_adj1"
+    if boundary_name != "wustite-spinel":
+        return {
+            tc: cached_model_god_at_temp(boundary_name, str(runner), gas_source, tc, spinel_variant)
+            for tc in temps_c
+        }
+
+    temps_k = [tc + 273.15 for tc in temps_c]
+    if spinel_variant == "mmc1_guess":
+        states = trace_wustite_spinel_boundary_mmc1_guess(temps_k)
+    elif spinel_variant == "mmc1_tapered_fit":
+        states = trace_wustite_spinel_boundary_mmc1_tapered_fit(temps_k)
+    elif spinel_variant == "hidayat_adj1":
+        states = trace_wustite_spinel_boundary_mmc1_selective_best(temps_k)
+    else:
+        states = trace_wustite_spinel_boundary(temps_k)
+    out: dict[float, tuple[float, float]] = {}
+    for tc, (_x_best, lam_o, _a, _b, _v, _resid) in zip(temps_c, states):
+        tk = tc + 273.15
+        mu = query_mu0(runner, gas_source, tk, ["hydrogen", "water"])
+        log10_model, _ = gas_ratio_logs(mu["hydrogen"], mu["water"], lam_o, tk)
+        out[tc] = (god_from_log10_ratio(log10_model), log10_model)
+    return out
 
 
 def model_god_at_temp(
@@ -280,8 +342,9 @@ def model_god_at_temp(
 
 
 @lru_cache(maxsize=None)
-def cached_model_god_at_temp(boundary_name: str, runner_str: str, gas_source: str, tc: float) -> tuple[float, float]:
-    fn = boundary_fn(boundary_name)
+def cached_model_god_at_temp(boundary_name: str, runner_str: str, gas_source: str, tc: float,
+        spinel_variant: str = "current") -> tuple[float, float]:
+    fn = boundary_fn(boundary_name, spinel_variant)
     return model_god_at_temp(fn, Path(runner_str), gas_source, tc)
 
 
@@ -298,7 +361,7 @@ def frange(start: float, stop: float, step: float) -> list[float]:
     return vals
 
 
-def default_plot_file(spec: FitSpec, gas_source: str) -> Path:
+def default_plot_file(spec: FitSpec, gas_source: str, spinel_variant: str = "current") -> Path:
     stem = spec.name.lower().replace("|", "-").replace(" ", "_")
     gas = (
         gas_source.lower()
@@ -306,17 +369,19 @@ def default_plot_file(spec: FitSpec, gas_source: str) -> Path:
         .replace("+", "_plus_")
         .replace(":", "")
     )
-    return Path(__file__).resolve().parent / f"bg_compare_{stem}_{gas}.png"
+    suffix = "" if spinel_variant == "current" else f"_{spinel_variant}"
+    return Path(__file__).resolve().parent / f"bg_compare_{stem}_{gas}{suffix}.png"
 
 
-def default_all_plot_file(gas_source: str) -> Path:
+def default_all_plot_file(gas_source: str, spinel_variant: str = "current") -> Path:
     gas = (
         gas_source.lower()
         .replace(" ", "_")
         .replace("+", "_plus_")
         .replace(":", "")
     )
-    return Path(__file__).resolve().parent / f"bg_compare_all_h2_{gas}.png"
+    suffix = "" if spinel_variant == "current" else f"_{spinel_variant}"
+    return Path(__file__).resolve().parent / f"bg_compare_all_h2_{gas}{suffix}.png"
 
 
 def write_plot(
@@ -326,6 +391,7 @@ def write_plot(
     sample_temps_c: list[float],
     plot_file: Path,
     plot_model_step_c: float,
+    spinel_variant: str,
 ) -> None:
     style_key = spec.boundary if spec.boundary is not None else "fe-spinel"
     style = PLOT_STYLE[style_key]
@@ -346,23 +412,27 @@ def write_plot(
     model_temps = []
     model_gods = []
     if spec.boundary is not None:
-        fn = boundary_fn(spec.boundary)
         plot_tmin = spec.ymin_c
         plot_tmax = spec.ymax_c
         model_temps = frange(plot_tmin, plot_tmax, plot_model_step_c)
-        model_gods = [model_god_at_temp(fn, runner, gas_source, tc)[0] for tc in model_temps]
+        model_series = batch_model_god_at_temps(spec.boundary, runner, gas_source, model_temps, spinel_variant)
+        model_gods = [model_series[tc][0] for tc in model_temps]
 
     sample_fit_x = []
     sample_fit_y = []
     sample_model_x = []
     sample_model_y = []
+    sample_model_series = {}
+    if spec.boundary is not None:
+        valid_sample_temps = [tc for tc in sample_temps_c if spec.ymin_c <= tc <= spec.ymax_c]
+        sample_model_series = batch_model_god_at_temps(spec.boundary, runner, gas_source, valid_sample_temps, spinel_variant)
     for tc in sample_temps_c:
         fit_god = fit_god_at_temp(spec, tc)
         if fit_god is not None:
             sample_fit_x.append(fit_god)
             sample_fit_y.append(tc)
-        if spec.boundary is not None:
-            model_god, _ = model_god_at_temp(fn, runner, gas_source, tc)
+        if spec.boundary is not None and tc in sample_model_series:
+            model_god, _ = sample_model_series[tc]
             sample_model_x.append(model_god)
             sample_model_y.append(tc)
 
@@ -396,6 +466,7 @@ def write_all_plot(
     sample_temps_c: list[float],
     plot_file: Path,
     plot_model_step_c: float,
+    spinel_variant: str,
 ) -> None:
     fig, ax = plt.subplots(figsize=(7.6, 5.6), dpi=160)
 
@@ -424,22 +495,26 @@ def write_all_plot(
         model_gods = []
         if spec.boundary is not None:
             model_temps = frange(spec.ymin_c, spec.ymax_c, plot_model_step_c)
-            model_gods = [
-                cached_model_god_at_temp(spec.boundary, str(runner), gas_source, tc)[0]
-                for tc in model_temps
-            ]
+            model_series = batch_model_god_at_temps(spec.boundary, runner, gas_source, model_temps, spinel_variant)
+            model_gods = [model_series[tc][0] for tc in model_temps]
 
         sample_fit_x = []
         sample_fit_y = []
         sample_model_x = []
         sample_model_y = []
+        valid_sample_temps = [tc for tc in sample_temps_c if spec.boundary is not None and spec.ymin_c <= tc <= spec.ymax_c]
+        sample_model_series = (
+            batch_model_god_at_temps(spec.boundary, runner, gas_source, valid_sample_temps, spinel_variant)
+            if spec.boundary is not None
+            else {}
+        )
         for tc in sample_temps_c:
             fit_god = fit_god_at_temp(spec, tc)
             if fit_god is not None:
                 sample_fit_x.append(fit_god)
                 sample_fit_y.append(tc)
-            if spec.boundary is not None and spec.ymin_c <= tc <= spec.ymax_c:
-                model_god, _ = cached_model_god_at_temp(spec.boundary, str(runner), gas_source, tc)
+            if spec.boundary is not None and tc in sample_model_series:
+                model_god, _ = sample_model_series[tc]
                 sample_model_x.append(model_god)
                 sample_model_y.append(tc)
 
@@ -512,6 +587,12 @@ def main() -> int:
         default=10.0,
         help="Temperature step in Celsius for the model curve in the PNG.",
     )
+    ap.add_argument(
+        "--spinel-variant",
+        choices=("current", "bg_tuned", "lambda_fit", "mmc1_guess", "mmc1_tapered_fit", "hidayat_adj1", "mmc1_selective_best"),
+        default="current",
+        help="Fe|spinel branch variant to use in the comparison.",
+    )
     args = ap.parse_args()
     args.gas_source = normalize_gas_source(args.gas_source)
 
@@ -522,10 +603,11 @@ def main() -> int:
     temps_c = parse_temps_c(args.temps_c)
     if args.fit == "all-h2-current":
         specs = [FIT_SPECS["h2-fe-wustite"], FIT_SPECS["h2-wustite-spinel"], FIT_SPECS["h2-fe-spinel"]]
-        plot_file = args.plot_file if args.plot_file is not None else default_all_plot_file(args.gas_source)
-        write_all_plot(specs, args.runner, args.gas_source, temps_c, plot_file, args.plot_model_step_c)
+        plot_file = args.plot_file if args.plot_file is not None else default_all_plot_file(args.gas_source, args.spinel_variant)
+        write_all_plot(specs, args.runner, args.gas_source, temps_c, plot_file, args.plot_model_step_c, args.spinel_variant)
         print("Baur-Glaessner comparison: all current H2 fits")
         print(f"Gas source: {args.gas_source}")
+        print(f"Fe|spinel variant: {args.spinel_variant}")
         print(f"Wrote PNG plot to {plot_file}")
         print("Included curves:")
         for spec in specs:
@@ -533,14 +615,14 @@ def main() -> int:
         return 0
 
     spec = FIT_SPECS[args.fit]
-    fn = boundary_fn(spec.boundary)
-    plot_file = args.plot_file if args.plot_file is not None else default_plot_file(spec, args.gas_source)
+    plot_file = args.plot_file if args.plot_file is not None else default_plot_file(spec, args.gas_source, args.spinel_variant)
 
     print(f"Baur-Glaessner comparison: {spec.name}")
     print(spec.note)
     print(f"Fit x-range: {spec.xmin:.9f} to {spec.xmax:.9f}")
     print(f"Fit T-range: {spec.ymin_c:.3f} to {spec.ymax_c:.3f} C")
     print(f"Gas source: {args.gas_source}")
+    print(f"Fe|spinel variant: {args.spinel_variant}")
     print()
     print(
         f"{'T[C]':>6} {'GOD_fit':>12} {'GOD_model':>12} {'dGOD':>12} "
@@ -551,10 +633,11 @@ def main() -> int:
     ncomp = 0
     max_abs_dlog = 0.0
 
+    model_series = batch_model_god_at_temps(spec.boundary, args.runner, args.gas_source, temps_c, args.spinel_variant)
+
     for tc in temps_c:
-        tk = tc + 273.15
         fit_god = fit_god_at_temp(spec, tc)
-        model_god, log10_model = cached_model_god_at_temp(spec.boundary, str(args.runner), args.gas_source, tc)
+        model_god, log10_model = model_series[tc]
 
         if fit_god is None:
             print(
@@ -587,7 +670,7 @@ def main() -> int:
     print("- `GOD` is assumed here to mean p(H2O) / (p(H2) + p(H2O)).")
     print("- Large dlog10 indicates a substantial shift in the reduction boundary.")
     print("- This comparison is only as good as that GOD-axis interpretation.")
-    write_plot(spec, args.runner, args.gas_source, temps_c, plot_file, args.plot_model_step_c)
+    write_plot(spec, args.runner, args.gas_source, temps_c, plot_file, args.plot_model_step_c, args.spinel_variant)
     print(f"- Wrote PNG plot to {plot_file}")
     return 0
 

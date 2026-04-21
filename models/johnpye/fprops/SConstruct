@@ -3,9 +3,7 @@
 # this ASCEND external library against an existing copy of
 # ASCEND installed on your system.
 
-import os, platform, sys, shutil, pathlib
-sys.path.insert(0, str(pathlib.Path(str(Dir('#').abspath)).resolve().parents[2] / 'scons'))
-from optional_packages import add_optional_package_methods
+import os, platform, sys
     
 deft = "default"
 if platform.system()=="Windows":
@@ -50,6 +48,11 @@ vars.Add(
 )
 
 vars.Add(BoolVariable('WITH_ASCEND',"Attempt to include ASCEND support",1))
+vars.Add(
+	'NLOPT_PREFIX'
+	,'installation prefix for NLOPT'
+	,'/usr'
+)
 
 major = sys.version_info[0]
 minor = sys.version_info[1]
@@ -62,11 +65,10 @@ vars.Add(
 
 env = Environment(
 	toolpath=['#/scons']
-	,tools = [deft ,'swig','textfile','ipopt']
+	,tools = [deft ,'swig','textfile','ipopt','nlopt','cunit']
 	,ENV={"TERM":os.environ.get('TERM'), "PATH":os.environ.get('PATH'), "LD_LIBRARY_PATH":os.environ.get("LD_LIBRARY_PATH")}
 	,HOST_PREFIX=os.environ.get('HOST_PREFIX')
 )
-add_optional_package_methods(Environment)
 
 Help(vars.GenerateHelpText(env))
 vars.Update(env)
@@ -91,15 +93,8 @@ if conf.CheckFunc('cpow','#include <complex.h>'):
 
 env = conf.Finish()
 
-
-env['WITH_CUNIT'] = 0
-cunit_env = env.Clone()
-cunit_env['ENV']['PKG_CONFIG_PATH'] = env.subst("$CUNIT_PKGPATH")#"/home/john/.local/lib/pkgconfig" #env['CUNIT_PKGPATH']
-cunit_env.ParseConfig([shutil.which('pkg-config'),'cunit','--libs','--cflags'])
-env['CUNIT_CPPPATH'] = cunit_env['CPPPATH']
-env['CUNIT_LIBPATH'] = cunit_env['LIBPATH']
-if 'cunit' in cunit_env['LIBS']:
-	env['WITH_CUNIT']=True
+env.ensure_nlopt()
+env.ensure_cunit()
 
 env['EXTLIB_SUFFIX'] = "_ascend" + env.subst("$SHLIBSUFFIX")
 env['EXTLIB_PREFIX'] = env.subst("$SHLIBPREFIX")

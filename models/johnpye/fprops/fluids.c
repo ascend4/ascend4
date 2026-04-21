@@ -372,6 +372,28 @@ int fprops_build_element_matrix_source(const char **names, int ns, const char **
 			continue;
 		}
 		if(!E->elements || E->nelements <= 0){
+			const ConstCpSpecies *Ssrc = constcp_data_lookup(names[i], source_i);
+			const ShomateSpecies *Shsrc = shomate_data_lookup(names[i], source_i);
+			if(Ssrc && Ssrc->elements && Ssrc->stoich && Ssrc->nelem > 0){
+				for(k = 0; k < (int)Ssrc->nelem; ++k){
+					for(e = 0; e < ne; ++e){
+						if(0 == strcmp(Ssrc->elements[k], elements[e])){
+							A_out[e * ns + i] += Ssrc->stoich[k];
+						}
+					}
+				}
+				continue;
+			}
+			if(Shsrc && Shsrc->elements && Shsrc->stoich && Shsrc->nelem > 0){
+				for(k = 0; k < (int)Shsrc->nelem; ++k){
+					for(e = 0; e < ne; ++e){
+						if(0 == strcmp(Shsrc->elements[k], elements[e])){
+							A_out[e * ns + i] += Shsrc->stoich[k];
+						}
+					}
+				}
+				continue;
+			}
 			/* Elemental composition is source-independent: if a selected EOS
 			   lacks composition metadata, try RPP entry for the same species. */
 			const EosData *Erpp = fprops_eos(names[i], NULL, "RPP");
@@ -583,6 +605,26 @@ int fprops_collect_elements_source(const char **names, int ns, const char *sourc
 				continue;
 			}
 			if(!E->elements || E->nelements <= 0){
+				const ConstCpSpecies *Ssrc = constcp_data_lookup(names[i], source_i);
+				const ShomateSpecies *Shsrc = shomate_data_lookup(names[i], source_i);
+				if(Ssrc && Ssrc->elements && Ssrc->stoich && Ssrc->nelem > 0){
+					for(k = 0; k < (int)Ssrc->nelem; ++k){
+						if(!fprops_add_unique_element(&elements, &ne, &cap, Ssrc->elements[k])){
+							fprops_free_elements(&elements, &ne);
+							return 0;
+						}
+					}
+					continue;
+				}
+				if(Shsrc && Shsrc->elements && Shsrc->stoich && Shsrc->nelem > 0){
+					for(k = 0; k < (int)Shsrc->nelem; ++k){
+						if(!fprops_add_unique_element(&elements, &ne, &cap, Shsrc->elements[k])){
+							fprops_free_elements(&elements, &ne);
+							return 0;
+						}
+					}
+					continue;
+				}
 				const EosData *Erpp = fprops_eos(names[i], NULL, "RPP");
 				if(Erpp && Erpp->elements && Erpp->nelements > 0){
 					E = Erpp;
