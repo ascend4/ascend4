@@ -78,6 +78,8 @@ MODEL tga_reduction_particle_shell_local(
 	y_H2 ALIASES centre.y_H2;
 	y_H2O ALIASES centre.y_H2O;
 	y_Ar IS_A mole_fraction;
+	surface_exposure IS_A fraction;
+	surface_block_gain IS_A positive_factor;
 
 	n_Fe2O3 IS_A mole;
 	n_Fe3O4 IS_A mole;
@@ -110,6 +112,8 @@ MODEL tga_reduction_particle_shell_local(
 			eps_ratio = (eps_o + 1e-3) / (eps_o_init + 1e-3);
 	sigma_dens_eq:
 		sigma_dens = exp(-E_dens / (1 {GAS_C} * T));
+	surface_block_gain_eq:
+		surface_block_gain = 1 + 4 * (surface_exposure ^ 6);
 
 	rf1_eq:
 		rate_forward[1] = (n_Fe2O3 / n0_Fe2O3_shell0) * k_step[1] * p * y_H2;
@@ -185,18 +189,16 @@ MODEL tga_reduction_particle_shell_local(
 					lam_open[1] * rate_net[1]
 					+ lam_open[2] * rate_net[2]
 					+ lam_open[3] * rate_net[3]
-				) * (1 - eps_o)
-				- a_close * close_temp_factor * xi_close * eps_o;
+				) * (1 - eps_o);
 		CASE 'two_step_direct':
 			eps_open_ode_eq_two_step:
 				der(eps_o) = (
 					lam_open[1] * rate_net[1]
 					+ lam_open[4] * rate_net[4]
-				) * (1 - eps_o)
-				- a_close * close_temp_factor * xi_close * eps_o;
+				) * (1 - eps_o);
 			END SELECT;
 			phi_block_ode_eq:
-				der(phi_b) = 0.5 * k_block * sigma_dens * xi3 * (1 - phi_b);
+				der(phi_b) = 0.5 * k_block * sigma_dens * xi3 * (1 - phi_b) * surface_block_gain;
 			morph_shell_eq_porosity:
 				morph_factor = (1 + beta_block * phi_b) / (eps_ratio ^ 2);
 	CASE 'nomorph':
@@ -411,7 +413,8 @@ MODEL tga_reduction_bed_slice_radial_local(
 	END FOR;
 	FOR s IN shells CREATE
 		shell_outer_area_eq[s]:
-			shell[s].A_outer_density = A_face_density[s];
+		shell[s].A_outer_density = A_face_density[s];
+		shell[s].surface_exposure = r_mid[s] / R_ext;
 	END FOR;
 
 	shell[n_radial_segs].outer, surface_bc.face ARE_THE_SAME;
