@@ -185,13 +185,15 @@ MODEL tga_reduction_particle_shell_local(
 					lam_open[1] * rate_net[1]
 					+ lam_open[2] * rate_net[2]
 					+ lam_open[3] * rate_net[3]
-				) * (1 - eps_o);
+				) * (1 - eps_o)
+				- a_close * close_temp_factor * xi_close * eps_o;
 		CASE 'two_step_direct':
 			eps_open_ode_eq_two_step:
 				der(eps_o) = (
 					lam_open[1] * rate_net[1]
 					+ lam_open[4] * rate_net[4]
-				) * (1 - eps_o);
+				) * (1 - eps_o)
+				- a_close * close_temp_factor * xi_close * eps_o;
 			END SELECT;
 			phi_block_ode_eq:
 				der(phi_b) = 0.5 * k_block * sigma_dens * xi3 * (1 - phi_b);

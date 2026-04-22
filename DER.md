@@ -219,6 +219,31 @@ have not yet been exercised end-to-end.
 Derivative pseudo-instances now support METHOD-time metadata assignment
 through the transitional tree-style syntax:
 
+## INITIAL Limitations
+
+One practical parser/semantic limitation that matters for dynamic model design:
+
+- `INITIAL` sections only allow declarative equation-building statements
+- control-flow statements such as `IF ... THEN ... END IF` are not permitted there
+
+This came up directly while fixing the linked-radial iron models. Attempting to
+conditionally emit startup equations inside `INITIAL` caused ASCEND to reject
+the model with:
+
+- `Statement not allowed in context`
+- `Only equation-building declarative statements are allowed in INITIAL`
+
+Design implication:
+
+- if branch-dependent startup behaviour is needed, it cannot currently be
+  expressed by wrapping `INITIAL` equations in `IF`
+- instead, the model must usually be arranged so that the relevant equations are
+  always present, or the branching must be handled elsewhere in the model/method
+  structure
+
+This is worth keeping in mind when deciding whether a startup issue should be
+solved in `INITIAL` or via explicit ODE/algebraic structure in the model body.
+
 - `x.der.obs_id := 1`
 - `x.der.ode_id := 2`
 - `x.der.ode_type := 1`
