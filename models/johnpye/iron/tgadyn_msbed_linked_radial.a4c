@@ -171,10 +171,10 @@ MODEL tga_reduction_particle_shell_local(
 		close_temp_factor = exp(beta_T * ((T / 1 {K}) - 873.15) / 873.15);
 	SELECT (morphology_model)
 	CASE 'coupled':
-		eps_o_coupled_eq:
-			eps_o = eps_o_init;
-		phi_b_coupled_eq:
-			phi_b = 0;
+		eps_o_coupled_ode_eq:
+			der(eps_o) = 0 {1/s};
+		phi_b_coupled_ode_eq:
+			der(phi_b) = 0 {1/s};
 		morph_shell_eq:
 			morph_factor = exp(-a_open * xi1 + a_close * close_temp_factor * xi_close);
 	CASE 'porosity_blocked':
@@ -198,10 +198,10 @@ MODEL tga_reduction_particle_shell_local(
 			morph_shell_eq_porosity:
 				morph_factor = (1 + beta_block * phi_b) / (eps_ratio ^ 2);
 	CASE 'nomorph':
-		eps_o_nomorph_eq:
-			eps_o = eps_o_init;
-		phi_b_nomorph_eq:
-			phi_b = 0;
+		eps_o_nomorph_ode_eq:
+			der(eps_o) = 0 {1/s};
+		phi_b_nomorph_ode_eq:
+			der(phi_b) = 0 {1/s};
 		morph_shell_eq_nomorph:
 			morph_factor = 1;
 	END SELECT;
@@ -967,10 +967,8 @@ METHODS
 				der(slice[z].shell[1..n_radial_segs].n_Fe3O4),
 				der(slice[z].shell[1..n_radial_segs].n_FeO),
 				der(slice[z].shell[1..n_radial_segs].n_Fe);
-			IF morphology_model = 'porosity_blocked' THEN
-				FREE der(slice[z].shell[1..n_radial_segs].eps_o),
-					der(slice[z].shell[1..n_radial_segs].phi_b);
-			END IF;
+			FREE der(slice[z].shell[1..n_radial_segs].eps_o),
+				der(slice[z].shell[1..n_radial_segs].phi_b);
 		END FOR;
 		t := 0 {s};
 	END dynamic_reset;
@@ -1003,10 +1001,8 @@ METHODS
 				der(slice[z].shell[1..n_radial_segs].n_Fe3O4),
 				der(slice[z].shell[1..n_radial_segs].n_FeO),
 				der(slice[z].shell[1..n_radial_segs].n_Fe);
-			IF morphology_model = 'porosity_blocked' THEN
-				FREE der(slice[z].shell[1..n_radial_segs].eps_o),
-					der(slice[z].shell[1..n_radial_segs].phi_b);
-			END IF;
+			FREE der(slice[z].shell[1..n_radial_segs].eps_o),
+				der(slice[z].shell[1..n_radial_segs].phi_b);
 		END FOR;
 		RUN observe_default;
 		RUN observe_cli_default;
@@ -1038,10 +1034,8 @@ METHOD prepare_dynamic;
 			der(m.slice[z].shell[1..n_radial_segs].n_Fe3O4),
 			der(m.slice[z].shell[1..n_radial_segs].n_FeO),
 			der(m.slice[z].shell[1..n_radial_segs].n_Fe);
-		IF morphology_model = 'porosity_blocked' THEN
-			FREE der(m.slice[z].shell[1..n_radial_segs].eps_o),
-				der(m.slice[z].shell[1..n_radial_segs].phi_b);
-		END IF;
+		FREE der(m.slice[z].shell[1..n_radial_segs].eps_o),
+			der(m.slice[z].shell[1..n_radial_segs].phi_b);
 	END FOR;
 	RUN m.observe_default;
 	RUN m.observe_cli_default;
