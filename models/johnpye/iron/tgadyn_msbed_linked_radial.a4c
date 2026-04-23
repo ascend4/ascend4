@@ -594,6 +594,10 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 
 	J_reaction IS_A molar_flux;
 	J_reaction_zone[1..n_bed_segs] IS_A molar_flux;
+	n0_Fe2O3_zone[1..n_bed_segs] IS_A mole;
+	n_Fe3O4_zone[1..n_bed_segs] IS_A mole;
+	xi1_zone[1..n_bed_segs] IS_A reduction_extent;
+	xi3_zone[1..n_bed_segs] IS_A reduction_extent;
 
 	face[0..n_bed_segs - 1] IS_A tga_ms_gas_port;
 	bottom_port IS_A tga_ms_gas_port;
@@ -751,6 +755,10 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			slice[z].n0_Fe2O3_slice = n0_Fe2O3 / n_bed_segs;
 		slice_n0area_eq[z]:
 			slice[z].n0_per_area_slice = n0_per_area / n_bed_segs;
+		n0_Fe2O3_zone[z], slice[z].n0_Fe2O3_slice ARE_THE_SAME;
+		n_Fe3O4_zone[z], slice[z].n_Fe3O4 ARE_THE_SAME;
+		xi1_zone[z], slice[z].xi1 ARE_THE_SAME;
+		xi3_zone[z], slice[z].xi3 ARE_THE_SAME;
 		y_H2_zone[z], slice[z].y_H2_centre ARE_THE_SAME;
 		y_H2O_zone[z], slice[z].y_H2O_centre ARE_THE_SAME;
 		y_H2_part[z], slice[z].y_H2_surface ARE_THE_SAME;
@@ -997,6 +1005,21 @@ METHODS
 			y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
 			J_transport;
 	END observe_cli_default;
+
+	METHOD observe_cli_refined;
+		OBSERVE reduction_degree, m_sample,
+			n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+			rate_net[1..4],
+			xi[1..4],
+			n0_Fe2O3_zone[1], n0_Fe2O3_zone[n_bed_segs],
+			n_Fe3O4_zone[1], n_Fe3O4_zone[n_bed_segs],
+			xi1_zone[1], xi1_zone[n_bed_segs],
+			xi3_zone[1], xi3_zone[n_bed_segs],
+			y_H2_react, y_H2O_react,
+			y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs],
+			y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
+			J_transport;
+	END observe_cli_refined;
 
 	METHOD on_load;
 		RUN algebraic_base;
