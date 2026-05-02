@@ -953,22 +953,3 @@ After that:
 
 4. revisit higher derivatives when there is a concrete solver-facing use case
 5. continue refining explicit initialization-mode UX and diagnostics
-
-## Alias Limitation Note
-
-While wiring focused observation helpers for nested TGA models, we hit a
-compiler limitation worth recording:
-
-- descendant indexed references such as `core.slice[1].xi1` and
-  `core.slice[n_bed_segs].rate_net[3]` are usable in equations
-- but the same forms were rejected on the RHS of `ALIASES` in a wrapper model
-
-In practice this means:
-
-- wrapper-level observer hacks using `ALIASES` are brittle for deep indexed
-  descendants
-- native model-level observer methods are the cleaner approach when specific
-  internal variables must be exposed for post-processing
-
-This looks bug-like from a user perspective, even if it is currently intended
-compiler behavior.
