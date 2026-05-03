@@ -102,7 +102,8 @@ END tga_ms_bed_link;
 MODEL tga_reduction_bed_slice_local(
 	reaction_model IS_A symbol_constant;
 ) WHERE (
-	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct')
+	OR (reaction_model = 'two_first_order_parallel');
 );
 	steps "reduction reaction steps" IS_A set OF integer_constant;
 	steps :== [1..4];
@@ -119,6 +120,9 @@ MODEL tga_reduction_bed_slice_local(
 	a_open "extent-driven opening coefficient" IS_A factor;
 	a_close "extent-driven closing coefficient" IS_A factor;
 	beta_T "temperature sensitivity of pore closing" IS_A factor;
+	f_2fo "initial fraction assigned to the faster 2FO pseudo-population" IS_A factor;
+	f_2fo.lower_bound := 0;
+	f_2fo.upper_bound := 1;
 
 	n0_Fe2O3_slice "initial hematite inventory in this slice" IS_A mole;
 	n0_per_area_slice "initial hematite inventory per area in this slice" IS_A mole_per_area;
@@ -167,10 +171,23 @@ MODEL tga_reduction_bed_slice_local(
 	part_sum_eq:
 		y_H2O_part = 1 - y_Ar_part - y_H2_part;
 
-	xi1_eq:
-		xi1 = (1 - n_Fe2O3 / n0_Fe2O3_slice) / 3;
-	xi3_eq:
-		xi3 = n_Fe / n0_Fe2O3_slice;
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		xi1_eq_three_step:
+			xi1 = (1 - n_Fe2O3 / n0_Fe2O3_slice) / 3;
+		xi3_eq_three_step:
+			xi3 = n_Fe / n0_Fe2O3_slice;
+	CASE 'two_step_direct':
+		xi1_eq_two_step:
+			xi1 = (1 - n_Fe2O3 / n0_Fe2O3_slice) / 3;
+		xi3_eq_two_step:
+			xi3 = n_Fe / n0_Fe2O3_slice;
+	CASE 'two_first_order_parallel':
+		xi1_eq_2fo_parallel:
+			xi1 = (1 - (n_Fe2O3 + n_Fe3O4) / n0_Fe2O3_slice) / 3;
+		xi3_eq_2fo_parallel:
+			xi3 = n_Fe / n0_Fe2O3_slice;
+	END SELECT;
 
 	part_T_eq:
 		particle_res.T = T;
@@ -295,11 +312,58 @@ MODEL tga_reduction_bed_slice_local(
 			der(n_FeO) = 0 {mol/s};
 		nfe_ode_two_step:
 			der(n_Fe) = 3 * n0_Fe2O3_slice * rate_net[4] / 4;
+
+	CASE 'two_first_order_parallel':
+		Jrxn_eq_2fo_parallel:
+			J_reaction = 3 * n0_per_area_slice * (rate_net[1] + rate_net[4]);
+
+		drive1_eq_2fo_parallel:
+			drive[1] = p * y_H2_part;
+		drive2_eq_2fo_parallel:
+			drive[2] = 0 {bar};
+		drive3_eq_2fo_parallel:
+			drive[3] = 0 {bar};
+		drive4_eq_2fo_parallel:
+			drive[4] = p * y_H2_part;
+		rnet1_eq_2fo_parallel:
+			rate_net[1] = rate_forward[1];
+		rnet2_eq_2fo_parallel:
+			rate_net[2] = 0 {1/s};
+		rnet3_eq_2fo_parallel:
+			rate_net[3] = 0 {1/s};
+		rnet4_eq_2fo_parallel:
+			rate_net[4] = rate_forward[4];
+
+		rf1_eq_2fo_parallel:
+			rate_forward[1] = (n_Fe2O3 / n0_Fe2O3_slice) * k_step[1] * p * y_H2_part;
+		rr1_eq_2fo_parallel:
+			rate_reverse[1] = 0 {1/s};
+		rf2_eq_2fo_parallel:
+			rate_forward[2] = 0 {1/s};
+		rr2_eq_2fo_parallel:
+			rate_reverse[2] = 0 {1/s};
+		rf3_eq_2fo_parallel:
+			rate_forward[3] = 0 {1/s};
+		rr3_eq_2fo_parallel:
+			rate_reverse[3] = 0 {1/s};
+		rf4_eq_2fo_parallel:
+			rate_forward[4] = (n_Fe3O4 / n0_Fe2O3_slice) * k_step[4] * p * y_H2_part;
+		rr4_eq_2fo_parallel:
+			rate_reverse[4] = 0 {1/s};
+
+		nhe_ode_2fo_parallel:
+			der(n_Fe2O3) = -n0_Fe2O3_slice * rate_net[1];
+		nmag_ode_2fo_parallel:
+			der(n_Fe3O4) = -n0_Fe2O3_slice * rate_net[4];
+		nwu_ode_2fo_parallel:
+			der(n_FeO) = 0 {mol/s};
+		nfe_ode_2fo_parallel:
+			der(n_Fe) = n0_Fe2O3_slice * (rate_net[1] + rate_net[4]);
 	END SELECT;
 
 INITIAL
-	nhe_initial: n_Fe2O3 = n0_Fe2O3_slice;
-	nmag_initial: n_Fe3O4 = 0 {mol};
+	nhe_initial: n_Fe2O3 = f_2fo * n0_Fe2O3_slice;
+	nmag_initial: n_Fe3O4 = (1 - f_2fo) * n0_Fe2O3_slice;
 	nwu_initial: n_FeO = 0 {mol};
 	nfe_initial: n_Fe = 0 {mol};
 END tga_reduction_bed_slice_local;
@@ -318,7 +382,8 @@ MODEL tga_reduction_screen_dyn_lumpedbed_linked(
 	(boundary_model = 'direct') OR (boundary_model = 'film');
 	(freeboard_model = 'lumped') OR (freeboard_model = 'discretised');
 	(bed_model = 'none') OR (bed_model = 'lumped');
-	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct')
+	OR (reaction_model = 'two_first_order_parallel');
 );
 	steps "reduction reaction steps" IS_A set OF integer_constant;
 	steps :== [1..4];
@@ -399,6 +464,9 @@ MODEL tga_reduction_screen_dyn_lumpedbed_linked(
 	eta[steps] IS_A positive_factor;
 	k0[steps] IS_A rate_per_pressure;
 	E_a[steps] IS_A molar_energy;
+	f_2fo "initial fraction assigned to the faster 2FO pseudo-population" IS_A factor;
+	f_2fo.lower_bound := 0;
+	f_2fo.upper_bound := 1;
 	k_step[steps] IS_A rate_per_pressure;
 	k_step[steps].lower_bound := -1e6 {1/s/Pa};
 
@@ -418,30 +486,60 @@ MODEL tga_reduction_screen_dyn_lumpedbed_linked(
 		n0_Fe2O3 = m_sample_init / MW_Fe2O3;
 	n0area_eq:
 		n0_per_area = n0_Fe2O3 / A_crucible;
-	xi1_eq:
-		xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
-	xi3_eq:
-		xi[3] = n_Fe / n0_Fe2O3;
 	SELECT (reaction_model)
 	CASE 'three_step_wustite':
+		xi1_eq_three_step:
+			xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
 		xi2_eq_three_step:
 			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+		xi3_eq_three_step:
+			xi[3] = n_Fe / n0_Fe2O3;
 		xi4_eq_three_step:
 			xi[4] = 0;
 	CASE 'two_step_direct':
+		xi1_eq_two_step:
+			xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
 		xi2_eq_two_step:
 			xi[2] = 0;
+		xi3_eq_two_step:
+			xi[3] = n_Fe / n0_Fe2O3;
 		xi4_eq_two_step:
 			xi[4] = 8 * xi[1] - 4 * n_Fe3O4 / n0_Fe2O3;
+	CASE 'two_first_order_parallel':
+		xi1_eq_2fo_parallel:
+			xi[1] = (1 - (n_Fe2O3 + n_Fe3O4) / n0_Fe2O3) / 3;
+		xi2_eq_2fo_parallel:
+			xi[2] = 0;
+		xi3_eq_2fo_parallel:
+			xi[3] = n_Fe / n0_Fe2O3;
+		xi4_eq_2fo_parallel:
+			xi[4] = xi[1];
 	END SELECT;
 
-	msample_eq:
-		m_sample
-		=
-		n_Fe2O3 * MW_Fe2O3
-		+ n_Fe3O4 * MW_Fe3O4
-		+ n_FeO * MW_FeO
-		+ n_Fe * MW_Fe;
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		msample_eq_three_step:
+			m_sample
+			=
+			n_Fe2O3 * MW_Fe2O3
+			+ n_Fe3O4 * MW_Fe3O4
+			+ n_FeO * MW_FeO
+			+ n_Fe * MW_Fe;
+	CASE 'two_step_direct':
+		msample_eq_two_step:
+			m_sample
+			=
+			n_Fe2O3 * MW_Fe2O3
+			+ n_Fe3O4 * MW_Fe3O4
+			+ n_FeO * MW_FeO
+			+ n_Fe * MW_Fe;
+	CASE 'two_first_order_parallel':
+		msample_eq_2fo_parallel:
+			m_sample
+			=
+			(n_Fe2O3 + n_Fe3O4) * MW_Fe2O3
+			+ n_Fe * MW_Fe;
+	END SELECT;
 	Hbed_eq:
 		H_bed = m_sample / (rho_bulk_bed * A_crucible);
 
@@ -452,6 +550,9 @@ MODEL tga_reduction_screen_dyn_lumpedbed_linked(
 	CASE 'two_step_direct':
 		oxygen_eq_two_step:
 			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4;
+	CASE 'two_first_order_parallel':
+		oxygen_eq_2fo_parallel:
+			oxygen_remaining = 3 * (n_Fe2O3 + n_Fe3O4);
 	END SELECT;
 	reduction_degree_eq:
 		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
@@ -675,13 +776,60 @@ MODEL tga_reduction_screen_dyn_lumpedbed_linked(
 
 		Jrxn_eq_two_step:
 			J_reaction = n0_per_area * (rate_net[1] + rate_net[4]);
+
+	CASE 'two_first_order_parallel':
+		drive1_eq_2fo_parallel:
+			drive[1] = p * y_H2_react;
+		drive2_eq_2fo_parallel:
+			drive[2] = 0 {bar};
+		drive3_eq_2fo_parallel:
+			drive[3] = 0 {bar};
+		drive4_eq_2fo_parallel:
+			drive[4] = p * y_H2_react;
+		rnet1_eq_2fo_parallel:
+			rate_net[1] = rate_forward[1];
+		rnet2_eq_2fo_parallel:
+			rate_net[2] = 0 {1/s};
+		rnet3_eq_2fo_parallel:
+			rate_net[3] = 0 {1/s};
+		rnet4_eq_2fo_parallel:
+			rate_net[4] = rate_forward[4];
+
+		nhe_ode_2fo_parallel:
+			der(n_Fe2O3) = -n0_Fe2O3 * rate_net[1];
+		nmag_ode_2fo_parallel:
+			der(n_Fe3O4) = -n0_Fe2O3 * rate_net[4];
+		nwu_ode_2fo_parallel:
+			der(n_FeO) = 0 {mol/s};
+		nfe_ode_2fo_parallel:
+			der(n_Fe) = n0_Fe2O3 * (rate_net[1] + rate_net[4]);
+
+		rf1_eq_2fo_parallel:
+			rate_forward[1] = (n_Fe2O3 / n0_Fe2O3) * k_step[1] * p * y_H2_react;
+		rr1_eq_2fo_parallel:
+			rate_reverse[1] = 0 {1/s};
+		rf2_eq_2fo_parallel:
+			rate_forward[2] = 0 {1/s};
+		rr2_eq_2fo_parallel:
+			rate_reverse[2] = 0 {1/s};
+		rf3_eq_2fo_parallel:
+			rate_forward[3] = 0 {1/s};
+		rr3_eq_2fo_parallel:
+			rate_reverse[3] = 0 {1/s};
+		rf4_eq_2fo_parallel:
+			rate_forward[4] = (n_Fe3O4 / n0_Fe2O3) * k_step[4] * p * y_H2_react;
+		rr4_eq_2fo_parallel:
+			rate_reverse[4] = 0 {1/s};
+
+		Jrxn_eq_2fo_parallel:
+			J_reaction = 3 * n0_per_area * (rate_net[1] + rate_net[4]);
 	END SELECT;
 
 INITIAL
 	nhe_initial:
-		n_Fe2O3 = m_sample_init / MW_Fe2O3;
+		n_Fe2O3 = f_2fo * m_sample_init / MW_Fe2O3;
 	nmag_initial:
-		n_Fe3O4 = 0 {mol};
+		n_Fe3O4 = (1 - f_2fo) * m_sample_init / MW_Fe2O3;
 	nwu_initial:
 		n_FeO = 0 {mol};
 	nfe_initial:
@@ -748,6 +896,12 @@ METHODS
 		FIX E_a[2] := 60 {kJ/mol};
 		FIX E_a[3] := 62 {kJ/mol};
 		FIX E_a[4] := 60 {kJ/mol};
+		FIX f_2fo := 1.0;
+		IF reaction_model = 'two_first_order_parallel' THEN
+			k0[1] := 1.0e-5 {1/s/Pa};
+			k0[4] := 2.0e-6 {1/s/Pa};
+			f_2fo := 0.5;
+		END IF;
 		RUN K_fit.values;
 
 		xi[1] := 0;
@@ -815,8 +969,13 @@ METHODS
 	END algebraic_base;
 
 	METHOD dynamic_reset;
-		n_Fe2O3 := m_sample_init / MW_Fe2O3;
-		n_Fe3O4 := 0 {mol};
+		IF reaction_model = 'two_first_order_parallel' THEN
+			n_Fe2O3 := f_2fo * m_sample_init / MW_Fe2O3;
+			n_Fe3O4 := (1 - f_2fo) * m_sample_init / MW_Fe2O3;
+		ELSE
+			n_Fe2O3 := m_sample_init / MW_Fe2O3;
+			n_Fe3O4 := 0 {mol};
+		END IF;
 		n_FeO := 0 {mol};
 		n_Fe := 0 {mol};
 		t := 0 {s};
@@ -859,7 +1018,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 	(boundary_model = 'direct') OR (boundary_model = 'film');
 	(freeboard_model = 'lumped') OR (freeboard_model = 'discretised');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph');
-	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct')
+	OR (reaction_model = 'two_first_order_parallel');
 );
 	steps "reduction reaction steps" IS_A set OF integer_constant;
 	steps :== [1..4];
@@ -950,6 +1110,9 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 	K_ratio_eq[steps] "equilibrium ratios for the reduction steps" IS_A positive_factor;
 	etak0[steps] IS_A rate_per_pressure;
 	E_a[steps] IS_A molar_energy;
+	f_2fo "initial fraction assigned to the faster 2FO pseudo-population" IS_A factor;
+	f_2fo.lower_bound := 0;
+	f_2fo.upper_bound := 1;
 	K_fit "shared four-term equilibrium-ratio fits" IS_A tga_reduction_keq_fits;
 
 	J_reaction "total reaction flux summed over the bed" IS_A molar_flux;
@@ -990,34 +1153,66 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 	reduction_degree_eq:
 		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
 
-	xi1_eq:
-		xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
-	xi3_eq:
-		xi[3] = n_Fe / n0_Fe2O3;
 	SELECT (reaction_model)
 	CASE 'three_step_wustite':
 		oxygen_eq_three_step:
 			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+		xi1_eq_three_step:
+			xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
 		xi2_eq_three_step:
 			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+		xi3_eq_three_step:
+			xi[3] = n_Fe / n0_Fe2O3;
 		xi4_eq_three_step:
 			xi[4] = 0;
 	CASE 'two_step_direct':
 		oxygen_eq_two_step:
 			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4;
+		xi1_eq_two_step:
+			xi[1] = (1 - n_Fe2O3 / n0_Fe2O3) / 3;
 		xi2_eq_two_step:
 			xi[2] = 0;
+		xi3_eq_two_step:
+			xi[3] = n_Fe / n0_Fe2O3;
 		xi4_eq_two_step:
 			xi[4] = 8 * xi[1] - 4 * n_Fe3O4 / n0_Fe2O3;
+	CASE 'two_first_order_parallel':
+		oxygen_eq_2fo_parallel:
+			oxygen_remaining = 3 * (n_Fe2O3 + n_Fe3O4);
+		xi1_eq_2fo_parallel:
+			xi[1] = (1 - (n_Fe2O3 + n_Fe3O4) / n0_Fe2O3) / 3;
+		xi2_eq_2fo_parallel:
+			xi[2] = 0;
+		xi3_eq_2fo_parallel:
+			xi[3] = n_Fe / n0_Fe2O3;
+		xi4_eq_2fo_parallel:
+			xi[4] = xi[1];
 	END SELECT;
 
-	msample_eq:
-		m_sample
-		=
-		n_Fe2O3 * MW_Fe2O3
-		+ n_Fe3O4 * MW_Fe3O4
-		+ n_FeO * MW_FeO
-		+ n_Fe * MW_Fe;
+	SELECT (reaction_model)
+	CASE 'three_step_wustite':
+		msample_eq_three_step:
+			m_sample
+			=
+			n_Fe2O3 * MW_Fe2O3
+			+ n_Fe3O4 * MW_Fe3O4
+			+ n_FeO * MW_FeO
+			+ n_Fe * MW_Fe;
+	CASE 'two_step_direct':
+		msample_eq_two_step:
+			m_sample
+			=
+			n_Fe2O3 * MW_Fe2O3
+			+ n_Fe3O4 * MW_Fe3O4
+			+ n_FeO * MW_FeO
+			+ n_Fe * MW_Fe;
+	CASE 'two_first_order_parallel':
+		msample_eq_2fo_parallel:
+			m_sample
+			=
+			(n_Fe2O3 + n_Fe3O4) * MW_Fe2O3
+			+ n_Fe * MW_Fe;
+	END SELECT;
 	Hbed_eq:
 		H_bed = m_sample / (rho_bulk_bed * A_crucible);
 	dzbed_eq:
@@ -1203,6 +1398,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked(
 	a_open, slice[1..n_bed_segs].a_open ARE_THE_SAME;
 	a_close, slice[1..n_bed_segs].a_close ARE_THE_SAME;
 	beta_T, slice[1..n_bed_segs].beta_T ARE_THE_SAME;
+	f_2fo, slice[1..n_bed_segs].f_2fo ARE_THE_SAME;
 	FOR r IN steps CREATE
 		k_step[r], slice[1..n_bed_segs].k_step[r] ARE_THE_SAME;
 		K_ratio_eq[r], slice[1..n_bed_segs].K_ratio_eq[r] ARE_THE_SAME;
@@ -1280,6 +1476,13 @@ METHODS
 		FIX E_a[2] := 56.743108 {kJ/mol};
 		FIX E_a[3] := 58.431754 {kJ/mol};
 		FIX E_a[4] := 56.743108 {kJ/mol};
+		FIX f_2fo := 1.0;
+		IF reaction_model = 'two_first_order_parallel' THEN
+			Sh_particle := 1.0e6;
+			etak0[1] := 1.0e-5 {1/s/Pa};
+			etak0[4] := 2.0e-6 {1/s/Pa};
+			f_2fo := 0.5;
+		END IF;
 		RUN K_fit.values;
 
 		xi[1] := 0;
@@ -1302,7 +1505,16 @@ METHODS
 	END values;
 
 	METHOD bound_self;
-		y_H2O_if.lower_bound := -1e-9;
+		y_H2_if.lower_bound := -1e-6;
+		y_H2O_if.lower_bound := -1e-6;
+		y_H2_zone[1..n_bed_segs].lower_bound := -1e-6;
+		y_H2O_zone[1..n_bed_segs].lower_bound := -1e-6;
+		y_H2_part[1..n_bed_segs].lower_bound := -1e-6;
+		y_H2O_part[1..n_bed_segs].lower_bound := -1e-6;
+		face[0..n_bed_segs - 1].y_H2.lower_bound := -1e-6;
+		face[0..n_bed_segs - 1].y_H2O.lower_bound := -1e-6;
+		bottom_port.y_H2.lower_bound := -1e-6;
+		bottom_port.y_H2O.lower_bound := -1e-6;
 		L_bl.lower_bound := 0 {mm};
 		IF freeboard_model = 'discretised' THEN
 			fb_node[0..n_fb_segs].y_H2.lower_bound := -1e-9;
@@ -1311,16 +1523,16 @@ METHODS
 			fb_face[1..n_fb_segs].y_H2O.lower_bound := -1e-9;
 		END IF;
 		n_Fe2O3.lower_bound := -1e-9 {mol};
-		n_Fe3O4.lower_bound := -1e-12 {mol};
-		n_FeO.lower_bound := -1e-12 {mol};
-		n_Fe.lower_bound := -1e-12 {mol};
+		n_Fe3O4.lower_bound := -1e-9 {mol};
+		n_FeO.lower_bound := -1e-9 {mol};
+		n_Fe.lower_bound := -1e-9 {mol};
 		oxygen_remaining.lower_bound := -1e-9 {mol};
 
 		FOR z IN [1..n_bed_segs] DO
 			slice[z].n_Fe2O3.lower_bound := -1e-9 {mol};
-			slice[z].n_Fe3O4.lower_bound := -1e-12 {mol};
-			slice[z].n_FeO.lower_bound := -1e-12 {mol};
-			slice[z].n_Fe.lower_bound := -1e-12 {mol};
+			slice[z].n_Fe3O4.lower_bound := -1e-9 {mol};
+			slice[z].n_FeO.lower_bound := -1e-9 {mol};
+			slice[z].n_Fe.lower_bound := -1e-9 {mol};
 		END FOR;
 
 		tr.h2o_h2.sigma_ij.lower_bound := -1 {m};
@@ -1357,8 +1569,13 @@ METHODS
 
 	METHOD dynamic_reset;
 		FOR z IN [1..n_bed_segs] DO
-			slice[z].n_Fe2O3 := m_sample_init / (MW_Fe2O3 * n_bed_segs);
-			slice[z].n_Fe3O4 := 0 {mol};
+			IF reaction_model = 'two_first_order_parallel' THEN
+				slice[z].n_Fe2O3 := f_2fo * m_sample_init / (MW_Fe2O3 * n_bed_segs);
+				slice[z].n_Fe3O4 := (1 - f_2fo) * m_sample_init / (MW_Fe2O3 * n_bed_segs);
+			ELSE
+				slice[z].n_Fe2O3 := m_sample_init / (MW_Fe2O3 * n_bed_segs);
+				slice[z].n_Fe3O4 := 0 {mol};
+			END IF;
 			slice[z].n_FeO := 0 {mol};
 			slice[z].n_Fe := 0 {mol};
 		END FOR;
@@ -1502,7 +1719,9 @@ END tgadyn_ms_lumpedbed_linked_configurable;
    - reaction_model:
      'three_step_wustite' keeps the traditional Fe2O3->Fe3O4->FeO->Fe ladder;
      'two_step_direct' replaces the low-temperature Fe3O4->FeO->Fe route with
-     a direct reversible Fe3O4 <-> Fe branch using the Fe|spinel K(T) fit. *)
+     a direct reversible Fe3O4 <-> Fe branch using the Fe|spinel K(T) fit;
+     'two_first_order_parallel' uses two irreversible first-order pseudo-pools
+     for the full reduction. *)
 MODEL tgadyn_ms_linked_configurable(
 	n_bed_segs IS_A integer_constant;
 	bed_model IS_A symbol_constant;
@@ -1516,14 +1735,16 @@ MODEL tgadyn_ms_linked_configurable(
 	(boundary_model = 'direct') OR (boundary_model = 'film');
 	(freeboard_model = 'lumped') OR (freeboard_model = 'discretised');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph');
-	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct');
+	(reaction_model = 'three_step_wustite') OR (reaction_model = 'two_step_direct')
+	OR (reaction_model = 'two_first_order_parallel');
 );
 NOTES
 'purpose' SELF {
 Unified linked TGA entry point. The transport topology is selected using
 bed_model, boundary_model and freeboard_model, while morphology_model controls
 the particle resistance correction and reaction_model chooses between the
-three-step wustite route and the low-temperature direct magnetite to iron route.
+three-step wustite route, the low-temperature direct magnetite to iron route,
+and the two-first-order parallel pseudo-population model.
 }
 'fitting parameters' SELF {
 Typical fitting parameters are:
@@ -1534,6 +1755,8 @@ Typical fitting parameters are:
 - morphology-enabled discretised-bed branch only: a_open, a_close, beta_T.
 For the direct low-temperature models only steps 1 and 4 remain active, where
 step 4 is the direct Fe3O4 <-> Fe branch.
+For the 2FO parallel models, steps 1 and 4 are the two pseudo-population
+first-order rates and f_2fo sets the initial split between them.
 }
 END NOTES;
 	SELECT (bed_model)
@@ -1642,6 +1865,61 @@ METHOD on_load;
 	RUN m.on_load;
 END on_load;
 END tgadyn_msbed_linked_nomorph_direct_configurable;
+
+MODEL tgadyn_msbed_linked_2fo_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'lumped',
+		0,
+		'nomorph',
+		'two_first_order_parallel'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_2fo_configurable;
+
+MODEL tgadyn_msbed_linked_fbdisc_2fo_configurable(
+	n_bed_segs IS_A integer_constant;
+	n_fb_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		n_fb_segs,
+		'nomorph',
+		'two_first_order_parallel'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_fbdisc_2fo_configurable;
+
+MODEL tgadyn_msbed_linked_nofb_2fo_configurable(
+	n_bed_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_ms_linked_configurable(
+		n_bed_segs,
+		'discretised',
+		'direct',
+		'discretised',
+		0,
+		'nomorph',
+		'two_first_order_parallel'
+	);
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_2fo_configurable;
 
 MODEL tgadyn_msbed_linked_nofb_configurable(
 	n_bed_segs IS_A integer_constant;
@@ -1783,6 +2061,35 @@ METHOD on_load;
 	RUN m.on_load;
 END on_load;
 END tgadyn_msbed_linked_fbdisc_nomorph;
+
+MODEL tgadyn_msbed_linked_2fo;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'lumped', 0, 'nomorph', 'two_first_order_parallel');
+NOTES 'purpose' SELF {
+Discretised-bed linked model with lumped freeboard and two parallel
+first-order pseudo-populations at the particle scale. Particle morphology is
+disabled; the bed and freeboard transport topology is unchanged.
+}
+'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4, f_2fo.
+Transport: k_fb_multiplier, k_bed_multiplier, eps_bed, tau_bed, Sh_particle.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_2fo;
+
+MODEL tgadyn_msbed_linked_fbdisc_2fo;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 10, 'nomorph', 'two_first_order_parallel');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4, f_2fo.
+Transport: k_fb_multiplier, k_bed_multiplier, eps_bed, tau_bed, Sh_particle.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_fbdisc_2fo;
 
 MODEL tgadyn_msbed_linked_film;
 	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'film', 'lumped', 0, 'coupled', 'three_step_wustite');
@@ -1932,6 +2239,19 @@ METHOD on_load;
 	RUN m.on_load;
 END on_load;
 END tgadyn_msbed_linked_nofb_nomorph;
+
+MODEL tgadyn_msbed_linked_nofb_2fo;
+	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 0, 'nomorph', 'two_first_order_parallel');
+NOTES 'fitting parameters' SELF {
+Active chemistry slots: etak0_1, etak0_4, E_a_1, E_a_4, f_2fo.
+Transport only: k_bed_multiplier, eps_bed, tau_bed, Sh_particle.
+Freeboard transport and morphology parameters are inactive here.
+} END NOTES;
+METHODS
+METHOD on_load;
+	RUN m.on_load;
+END on_load;
+END tgadyn_msbed_linked_nofb_2fo;
 
 MODEL tgadyn_msbed_linked_nofb_direct;
 	m IS_A tgadyn_ms_linked_configurable(10, 'discretised', 'direct', 'discretised', 0, 'coupled', 'two_step_direct');
