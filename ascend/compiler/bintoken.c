@@ -70,6 +70,16 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 # define MSG(ARGS...) ((void)0)
 #endif
 
+static int BinTokenRejectsPrivileged(void){
+  if(!Asc_ProcessIsPrivileged()){
+    return 0;
+  }
+  ERROR_REPORTER_HERE(ASC_PROG_ERR
+    ,"Refusing to use binary token compilation while running with privileged or mismatched user/group IDs"
+  );
+  return 1;
+}
+
 #define C_INDENT 4
 #define C_WIDTH 70
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
@@ -212,6 +222,9 @@ static void bt_warn_missing_btprolog_header(void){
 
 #if 1
 int BinTokenSetOptionsDefault(){
+  if(BinTokenRejectsPrivileged()){
+    return 1;
+  }
 #ifdef WIN32
 # if defined(__MINGW32__) || defined(__MINGW64__) || defined(__MSYS__)
   const char *tmpdir = bt_tempdir();
@@ -997,6 +1010,9 @@ static
 enum bintoken_error BinTokenCompileC(char *buildcommand)
 {
   int status;
+  if(BinTokenRejectsPrivileged()){
+    return BTE_build;
+  }
   //ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Starting build, command:\n%s\n",buildcommand);
   status = system(buildcommand);
   if (status) {
@@ -1120,6 +1136,9 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
 #ifdef BINTOKEN_DEBUG
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"BinaryTokensCreate called with no options set: ignoring");
 #endif
+    return;
+  }
+  if (BinTokenRejectsPrivileged()) {
     return;
   }
 

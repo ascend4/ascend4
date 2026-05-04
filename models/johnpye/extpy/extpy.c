@@ -28,6 +28,7 @@
 
 #include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>
+#include <ascend/utilities/ascDynaLoad.h>
 #include <ascend/general/ospath.h>
 
 #include <ascend/compiler/importhandler.h>
@@ -418,6 +419,15 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	int ret = 1;
 
 	MSG("Importing Python script %s",name);
+
+	if(Asc_ProcessIsPrivileged()){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR
+			,"Refusing to run external Python script '%s' while running with privileged or mismatched user/group IDs"
+			,name == NULL ? "(null)" : name
+		);
+		ASC_FREE(name);
+		return 1;
+	}
 
 	if(Py_IsInitialized()){
 		MSG("Python was already initialised");
