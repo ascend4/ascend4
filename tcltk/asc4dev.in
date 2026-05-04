@@ -1,4 +1,8 @@
 #!/bin/sh
+if [ "$(id -u)" = "0" ] || [ "$(id -ru)" != "$(id -u)" ] || [ "$(id -g)" = "0" ] || [ "$(id -rg)" != "$(id -g)" ]; then
+	echo "ASCEND refuses to run with root or mismatched effective user/group IDs." >&2
+	exit 1
+fi
 export ASCENDDIST=@SOURCE_ROOT@
 export ASCENDTK=@SOURCE_ROOT@/tcltk/tk
 export LD_LIBRARY_PATH=$ASCENDDIST:$ASCENDDIST/tcltk/interface

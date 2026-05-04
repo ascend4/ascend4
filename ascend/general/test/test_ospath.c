@@ -697,6 +697,23 @@ static void test_mkstemp(void){
 	MEMUSED(0);
 }
 
+static void test_mkdtemp(void){
+	char path[PATH_MAX+1];
+	struct FilePath *fp;
+	ospath_stat_t st;
+
+	CU_TEST(0 == ospath_mkdtemp(path,sizeof(path),"asc_ospath_testdir_"));
+	fp = ospath_new(path);
+	CU_ASSERT_PTR_NOT_NULL(fp);
+	if(fp != NULL){
+		CU_TEST(0 == ospath_stat(fp,&st));
+		CU_TEST(S_ISDIR(st.st_mode));
+		ospath_free(fp);
+	}
+	rmdir(path);
+	MEMUSED(0);
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -719,6 +736,7 @@ static void test_mkstemp(void){
 	T(getbasefileext) \
 	T(getdir) \
 	T(expandenv) \
-	T(mkstemp)
+	T(mkstemp) \
+	T(mkdtemp)
 
 REGISTER_TESTS_SIMPLE(general_ospath, TESTS);

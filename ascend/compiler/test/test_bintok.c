@@ -1,6 +1,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef __WIN32__
+#include <dirent.h>
+#endif
 
 #include <ascend/general/env.h>
 #include <ascend/general/ospath.h>
@@ -46,6 +49,32 @@
 /*
 	Test solving a simple model with 'bintoken' support
 */
+#ifndef __WIN32__
+static int bintok_tempdir_count(void){
+	const char *tmpdir = getenv("TMPDIR");
+	const char *prefix = "ascend-bintoken-";
+	size_t prefixlen = strlen(prefix);
+	int count = 0;
+	DIR *dir;
+	struct dirent *entry;
+
+	if(tmpdir == NULL || tmpdir[0] == '\0'){
+		tmpdir = "/tmp";
+	}
+	dir = opendir(tmpdir);
+	if(dir == NULL){
+		return -1;
+	}
+	while((entry = readdir(dir)) != NULL){
+		if(strncmp(entry->d_name,prefix,prefixlen) == 0){
+			++count;
+		}
+	}
+	closedir(dir);
+	return count;
+}
+#endif
+
 static int bintok_supported(void){
 	static int cached = -1;
 	if(cached != -1){
@@ -62,6 +91,10 @@ static int bintok_supported(void){
 }
 
 static void test_bintok(char *filenamestem,int usebintok){
+#ifndef __WIN32__
+	int tempdirs_before;
+	int tempdirs_after;
+#endif
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
@@ -73,6 +106,11 @@ static void test_bintok(char *filenamestem,int usebintok){
 		Asc_CompilerDestroy();
 		return;
 	}
+
+#ifndef __WIN32__
+	tempdirs_before = bintok_tempdir_count();
+	CU_ASSERT(tempdirs_before >= 0);
+#endif
 
 	/* load and parse */
 	char path[PATH_MAX];
@@ -146,6 +184,14 @@ static void test_bintok(char *filenamestem,int usebintok){
 	solver_destroy_engines();
 	sim_destroy(siminst);
 	Asc_CompilerDestroy();
+
+#ifndef __WIN32__
+	tempdirs_after = bintok_tempdir_count();
+	CU_ASSERT(tempdirs_after >= 0);
+	if(tempdirs_before >= 0 && tempdirs_after >= 0){
+		CU_TEST(tempdirs_before == tempdirs_after);
+	}
+#endif
 }
 
 static void test_test1(){

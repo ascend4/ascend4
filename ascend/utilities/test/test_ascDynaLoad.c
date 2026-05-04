@@ -36,6 +36,14 @@ int error_reporter_callback_silent(ERROR_REPORTER_CALLBACK_ARGS){
 	return 0;
 }
 
+static void test_process_not_privileged(void){
+	if(Asc_ProcessIsPrivileged()){
+		CU_PASS("Skipping normal-credential check in a privileged test process.");
+		return;
+	}
+	CU_TEST(0 == Asc_ProcessIsPrivileged());
+}
+
 /*
  *  ascDynaLoad.[ch] has several different platform-dependent
  *  implementations.  This test function only tests the platform it
@@ -234,6 +242,7 @@ static void test_multi(void){
 /* Registration information */
 
 #define TESTS(T) \
+	T(process_not_privileged) \
 	T(single) \
 	T(multi)
 

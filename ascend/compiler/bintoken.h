@@ -58,6 +58,10 @@ enum bintoken_kind {
 	for the user to use a different compiler to that with which ASCEND itself
 	was built.
 
+	@warning This legacy interface executes @p buildcommand via the shell.
+	Use only in trusted developer contexts. Enabling binary tokens compiles
+	and loads native code into the ASCEND process.
+
 	@param srcname        path to file where source code should be written
 	@param objname        path to object file, if necessary (optional)
 	@param libname        path to shared library, for AscDynaLoad
@@ -90,6 +94,9 @@ ASC_DLLSPEC int BinTokenSetOptionsDefault();
 	should hopefully work on most standard systems. This approach
 	makes use of two env vars to help locate the btprolog.h and libascend.so
 	files during linking.
+
+	@warning Enabling binary tokens compiles generated C code and loads the
+	resulting native library into the ASCEND process.
 */
 
 /**

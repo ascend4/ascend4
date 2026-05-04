@@ -33,12 +33,15 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 #include "ospath.h"
 
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
+# include <direct.h>
+#endif
 #ifdef _MSC_VER
 # include <io.h>
-# include <sys/stat.h>
 #endif
 
 //#define OSPATH_DEBUG
@@ -93,7 +96,6 @@
 
 #if defined(__WIN32__) && !defined(__MINGW32__)
 # define STRCPY strcpy
-# define STRNCPY(dest,src,n) strncpy_s(dest,n,src,n)
 # define STRCAT strcat
 # define STRNCAT strncat
 # define STRTOK(STR,PAT,VAR) strtok_s(STR,PAT,&VAR)
@@ -103,7 +105,6 @@
 # define CHDIR chdir
 #elif defined(linux)
 # define STRCPY strcpy
-# define STRNCPY(dest,src,n) strncpy(dest,src,n)
 # define STRCAT strcat
 # define STRNCAT strncat
 # define STRTOK(STR,PAT,VAR) strtok_r(STR,PAT,&VAR)
@@ -113,7 +114,6 @@
 # define CHDIR chdir
 #else
 # define STRCPY strcpy
-# define STRNCPY(dest,src,n) strncpy(dest,src,n)
 # define STRCAT strcat
 # define STRNCAT strncat
 # define STRTOK(STR,PAT,VAR) strtok(STR,PAT)
@@ -123,7 +123,14 @@
 # define CHDIR chdir
 #endif
 
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
+# define MKDIR(PATH,MODE) _mkdir(PATH)
+#else
+# define MKDIR(PATH,MODE) mkdir(PATH,MODE)
+#endif
+
 /* PATH_MAX is in ospath.h */
+#define OSPATH_PATH_BUFLEN (PATH_MAX + 1)
 #define DRIVEMAX 2
 #define LISTMAX 256
 
@@ -142,6 +149,59 @@ struct FilePath{
 # define ASC_FREE free
 # define ASC_NEW(T) malloc(sizeof(T))
 # define ASC_NEW_ARRAY(T,N) malloc((N)*sizeof(T))
+#endif
+
+static void ospath_copy_string(char *dest, size_t destsize, const char *src){
+	if(destsize == 0){
+		return;
+	}
+	if(src == NULL){
+		dest[0] = '\0';
+		return;
+	}
+	snprintf(dest,destsize,"%s",src);
+}
+
+static void ospath_copy_n(char *dest, size_t destsize, const char *src, size_t n){
+	size_t ncopy;
+	if(destsize == 0){
+		return;
+	}
+	if(src == NULL){
+		dest[0] = '\0';
+		return;
+	}
+	ncopy = n < destsize - 1 ? n : destsize - 1;
+	memcpy(dest,src,ncopy);
+	dest[ncopy] = '\0';
+}
+
+static void ospath_append_string(char *dest, size_t destsize, const char *src){
+	size_t used;
+	if(destsize == 0){
+		return;
+	}
+	used = strlen(dest);
+	if(used >= destsize){
+		dest[destsize - 1] = '\0';
+		return;
+	}
+	ospath_copy_string(dest + used,destsize - used,src);
+}
+
+#ifdef WINPATHS
+static void ospath_append_n(char *dest, size_t destsize, const char *src, size_t n){
+	size_t used;
+	if(destsize == 0){
+		return;
+	}
+	used = strlen(dest);
+	if(used >= destsize){
+		dest[destsize - 1] = '\0';
+		return;
+	}
+	ospath_copy_n(dest + used,destsize - used,src,n);
+}
 #endif
 
 #define E(MSG) fprintf(stderr,"%s:%d: (%s) ERROR: %s\n",__FILE__,__LINE__,__FUNCTION__,MSG)
@@ -202,8 +262,7 @@ struct FilePath *ospath_new_noclean(const char *path){
 	struct FilePath *fp = ASC_NEW(struct FilePath);
 	P(fp);
 	X(path);
-	STRNCPY(fp->path,path,PATH_MAX);
-	assert(strcmp(fp->path,path)==0);
+	ospath_copy_string(fp->path,sizeof(fp->path),path);
 #ifdef WINPATHS
 	ospath_extractdriveletter(fp);
 #endif
@@ -280,14 +339,14 @@ void ospath_fixslash(char *path){
 	int endslash;
 	STRTOKVAR(nexttok);
 
-	strcpy(temp,path);temp[PATH_MAX]='\0';
+	ospath_copy_string(temp,sizeof(temp),path);
 
 
 	startslash = (strlen(temp) > 0 && temp[0] == PATH_WRONGSLASH_CHAR);
 	endslash = (strlen(temp) > 1 && temp[strlen(temp) - 1] == PATH_WRONGSLASH_CHAR);
 
 	/* reset fp->path as required. */
-	STRNCPY(path, (startslash ? PATH_SEPARATOR_STR : ""), PATH_MAX);
+	ospath_copy_string(path, OSPATH_PATH_BUFLEN, (startslash ? PATH_SEPARATOR_STR : ""));
 
 	for(p = STRTOK(temp, PATH_WRONGSLASH_STR,nexttok);
 			p!=NULL;
@@ -338,18 +397,8 @@ int ospath_chdir(struct FilePath *fp){
 	return res;
 }
 
-int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
+static const char *ospath_get_tmpdir(void){
 	const char *tmpdir;
-	const char *nameprefix;
-	const char *sep = "";
-	size_t dlen;
-	int n;
-
-	if (path == NULL || pathsz == 0) {
-		errno = EINVAL;
-		return -1;
-	}
-
 	tmpdir = GETENV("TMPDIR");
 #ifdef WINPATHS
 	if (tmpdir == NULL || *tmpdir == '\0') tmpdir = GETENV("TEMP");
@@ -362,7 +411,22 @@ int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
 		tmpdir = "/tmp";
 #endif
 	}
+	return tmpdir;
+}
 
+static int ospath_temp_template(char *path, size_t pathsz, const char *prefix){
+	const char *tmpdir;
+	const char *nameprefix;
+	const char *sep = "";
+	size_t dlen;
+	int n;
+
+	if (path == NULL || pathsz == 0) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	tmpdir = ospath_get_tmpdir();
 	nameprefix = (prefix != NULL && *prefix != '\0') ? prefix : "asc_";
 	dlen = strlen(tmpdir);
 	if (dlen > 0) {
@@ -371,10 +435,16 @@ int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
 			sep = PATH_SEPARATOR_STR;
 		}
 	}
-
 	n = snprintf(path,pathsz,"%s%s%sXXXXXX",tmpdir,sep,nameprefix);
 	if (n < 0 || (size_t)n >= pathsz) {
 		errno = ENAMETOOLONG;
+		return -1;
+	}
+	return 0;
+}
+
+int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
+	if(ospath_temp_template(path,pathsz,prefix) != 0){
 		return -1;
 	}
 
@@ -386,6 +456,63 @@ int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
 	return _open(path,_O_CREAT|_O_EXCL|_O_RDWR|_O_BINARY,_S_IREAD|_S_IWRITE);
 #else
 	return mkstemp(path);
+#endif
+}
+
+int ospath_mkdtemp(char *path, size_t pathsz, const char *prefix){
+
+#if defined(_MSC_VER)
+	for(int i = 0; i < 100; ++i){
+		if(ospath_temp_template(path,pathsz,prefix) != 0){
+			return -1;
+		}
+		if (_mktemp_s(path,pathsz) != 0) {
+			errno = EINVAL;
+			return -1;
+		}
+		if (MKDIR(path,0700) == 0) {
+			return 0;
+		}
+		if (errno != EEXIST) {
+			return -1;
+		}
+	}
+	errno = EEXIST;
+	return -1;
+#elif defined(__MINGW32__) || defined(__MINGW64__)
+	const char *tmpdir = ospath_get_tmpdir();
+	const char *nameprefix = (prefix != NULL && *prefix != '\0') ? prefix : "asc_";
+	const char *sep = "";
+	size_t dlen = strlen(tmpdir);
+	if (dlen > 0) {
+		char tail = tmpdir[dlen - 1];
+		if (tail != PATH_SEPARATOR_CHAR && tail != PATH_WRONGSLASH_CHAR) {
+			sep = PATH_SEPARATOR_STR;
+		}
+	}
+	for(int i = 0; i < 100; ++i){
+		int n = snprintf(path,pathsz,"%s%s%s%ld_%d",tmpdir,sep,nameprefix,(long)getpid(),i);
+		if (n < 0 || (size_t)n >= pathsz) {
+			errno = ENAMETOOLONG;
+			return -1;
+		}
+		if (MKDIR(path,0700) == 0) {
+			return 0;
+		}
+		if (errno != EEXIST) {
+			return -1;
+		}
+	}
+	errno = EEXIST;
+	return -1;
+#else
+	if(ospath_temp_template(path,pathsz,prefix) != 0){
+		return -1;
+	}
+	if (mkdtemp(path) == NULL) {
+		return -1;
+	}
+	return 0;
 #endif
 }
 
@@ -431,8 +558,7 @@ void ospath_extractdriveletter(struct FilePath *fp)
 	/* extract the drive the path resides on... */
 	if(strlen(fp->path) >= 2 && fp->path[1] == ':')
 	{
-		STRNCPY(fp->drive,fp->path,2);
-		fp->drive[2]='\0';
+		ospath_copy_n(fp->drive,sizeof(fp->drive),fp->path,2);
 		for(p=fp->path+2; *p!='\0'; ++p){
 			*(p-2)=*p;
 		}
@@ -568,11 +694,14 @@ char *ospath_str(const struct FilePath *fp){
 }
 
 void ospath_strncpy(struct FilePath *fp, char *dest, int destsize){
+	if(destsize <= 0){
+		return;
+	}
 #ifdef WINPATHS
-	STRNCPY(dest,fp->drive,destsize);
-	STRNCAT(dest,fp->path,destsize-strlen(dest));
+	ospath_copy_string(dest,(size_t)destsize,fp->drive);
+	ospath_append_string(dest,(size_t)destsize,fp->path);
 #else
-	STRNCPY(dest,fp->path,destsize);
+	ospath_copy_string(dest,(size_t)destsize,fp->path);
 #endif
 }
 
@@ -615,7 +744,7 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 #ifdef OSPATH_DEBUG
 	int len2;
 #endif
-	char sub[PATH_MAX];
+	char sub[OSPATH_PATH_BUFLEN];
 	struct FilePath *fp1, *fp2;
 
 #ifdef OSPATH_DEBUG
@@ -660,10 +789,9 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	if(*pos==PATH_SEPARATOR_CHAR){
 #ifdef WINPATHS
 		STRCPY(sub,fp->drive);
-		STRNCAT(sub,fp->path,len1);
+		ospath_append_n(sub,sizeof(sub),fp->path,(size_t)len1);
 #else
-		STRNCPY(sub,fp->path,len1);
-		sub[len1]='\0';
+		ospath_copy_n(sub,sizeof(sub),fp->path,(size_t)len1);
 #endif
 		X(sub);
 		if(strcmp(sub,"")==0){
@@ -788,8 +916,7 @@ char *ospath_getbasefilename(struct FilePath *fp){
 		temp = ASC_NEW_ARRAY(char, length1+1);
 
 		V(length1);
-		STRNCPY(temp, pos + 1, length1);
-		*(temp + length1)='\0';
+		ospath_copy_string(temp, length1 + 1, pos + 1);
 		return temp;
 	}else{
 		temp = ASC_NEW_ARRAY(char, length+1);
@@ -853,7 +980,7 @@ char *ospath_getfileext(struct FilePath *fp){
 		/* extract extension.*/
 		len1 = temp + strlen(temp) - pos + 1;
 		temp2 = ASC_NEW_ARRAY(char,len1);
-		STRNCPY(temp2, pos, len1);
+		ospath_copy_string(temp2, len1, pos);
 	}else{
 		/* no extension*/
 		temp2 = NULL;
@@ -928,23 +1055,16 @@ struct FilePath *ospath_root(struct FilePath *fp){
 
 struct FilePath *ospath_getdir(struct FilePath *fp){
 	char *pos;
-	char s[PATH_MAX];
-#ifdef WINPATHS
-	int e;
-#endif
-
+	char s[OSPATH_PATH_BUFLEN];
 	pos = strrchr(fp->path,PATH_SEPARATOR_CHAR);
 	if(pos==NULL){
 		return ospath_new_noclean("");
 	}
 #ifdef WINPATHS
-	strncpy(s,fp->drive,PATH_MAX);
-	e = strlen(s);
-	strncat(s,fp->path,pos - fp->path);
-	s[e+pos-fp->path]='\0';
+	ospath_copy_string(s,sizeof(s),fp->drive);
+	ospath_append_n(s,sizeof(s),fp->path,(size_t)(pos - fp->path));
 #else
-	strncpy(s,fp->path,pos - fp->path);
-	s[pos-fp->path]='\0';
+	ospath_copy_n(s,sizeof(s),fp->path,(size_t)(pos - fp->path));
 	/* CONSOLE_DEBUG("DIRECTORY: '%s'",s); */
 #endif
 	return ospath_new(s);
@@ -1112,7 +1232,7 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 	if (s1 >= (PATH_MAX - s0)) {
 		return NULL;
 	}
-	strncpy(temp2+s0, temp[1], PATH_MAX-s0);
+	ospath_append_string(temp2,sizeof(temp2),temp[1]);
 #if 1
 	V(strlen(temp2));
 	X(temp2);
@@ -1184,7 +1304,7 @@ void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 		M("ospath_append: result bigger than PATH_MAX truncated\n");
 		return;
 	}
-	strncpy(fp->path + s0, temp[1], PATH_MAX-s0);
+	ospath_append_string(fp->path,sizeof(fp->path),temp[1]);
 
 	X(fp->path);
 
@@ -1208,26 +1328,26 @@ void ospath_debug(struct FilePath *fp){
 }
 
 FILE *ospath_fopen(struct FilePath *fp, const char *mode){
-	char s[PATH_MAX];
+	char s[OSPATH_PATH_BUFLEN];
 	FILE *f;
 
 	if(!ospath_isvalid(fp)){
 		E("Invalid path");
 		return NULL;
 	}
-	ospath_strncpy(fp,s,PATH_MAX);
+	ospath_strncpy(fp,s,sizeof(s));
 	f = fopen(s,mode);
 	return f;
 }
 
 int ospath_stat(struct FilePath *fp,ospath_stat_t *buf){
-	char s[PATH_MAX];
+	char s[OSPATH_PATH_BUFLEN];
 
 	if(!ospath_isvalid(fp)){
 		E("Invalid path");
 		return -1;
 	}
-	ospath_strncpy(fp,s,PATH_MAX);
+	ospath_strncpy(fp,s,sizeof(s));
 	return STAT(s,buf);
 }
 
@@ -1258,7 +1378,7 @@ struct FilePath **ospath_searchpath_new(const char *path){
 
 	STRTOKVAR(nexttok);
 
-	strncpy(path1,path,SEARCHPATH_MAX);
+	ospath_copy_string(path1,sizeof(path1),path);
 
 	X(path1);
 	X(PATH_LISTSEP_STR);
