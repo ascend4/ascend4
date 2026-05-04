@@ -384,6 +384,7 @@ class CliSolverHooks:
 					output=None,
 					plot=False,
 					microstates="endpoints",
+					apply_model_integrator_config=True,
 				)
 				self._owner.integrated = True
 				return 0
@@ -421,10 +422,30 @@ def _configure_integrator_observed(sim, integrator):
 		integrator.addObservedInstance(inst)
 
 
-def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, output, plot, microstates):
+def _run_integration(
+	ascpy,
+	sim,
+	engine,
+	start,
+	duration,
+	steps,
+	units_token,
+	output,
+	plot,
+	microstates,
+	apply_model_integrator_config=False,
+):
 	sim.build()
 	integrator = ascpy.Integrator(sim)
 	integrator.setEngine(engine or DEFAULT_INTEGRATOR)
+	hooks = sim.getSolverHooks()
+	if hooks is not None and apply_model_integrator_config:
+		try:
+			res = hooks.applyIntegratorConfig(integrator, sim)
+		except Exception as e:
+			raise RuntimeError(f"Failed to apply in-model integrator options: {e}") from e
+		if res != 0:
+			raise RuntimeError(f"Failed to apply in-model integrator options (error code {res}).")
 	integrator.findIndependentVar()
 	indep = integrator.getIndependentVariable()
 	indep_inst = indep.getInstance()
@@ -553,6 +574,7 @@ def run_ascend_model(
 				output=output,
 				plot=plot,
 				microstates=microstates,
+				apply_model_integrator_config=cli_hooks.integrator_name is not None,
 			)
 		elif cli_hooks.did_integrate(M):
 			pass
