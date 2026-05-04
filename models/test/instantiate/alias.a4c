@@ -16,3 +16,61 @@ MODEL alias_fail_array_bad_index;
 	a[1..2] IS_A real;
 	b ALIASES a[1..2];
 END alias_fail_array_bad_index;
+
+MODEL alias_desc_leaf;
+	x IS_A real;
+	rate[1..3] IS_A real;
+END alias_desc_leaf;
+
+MODEL alias_desc_param_leaf(
+	m IS_A integer_constant;
+);
+	x IS_A real;
+	rate[1..m] IS_A real;
+END alias_desc_param_leaf;
+
+MODEL alias_desc_unparam_core(
+	n IS_A integer_constant;
+);
+	slice[1..n] IS_A alias_desc_leaf;
+END alias_desc_unparam_core;
+
+MODEL alias_desc_param_core(
+	n IS_A integer_constant;
+	m IS_A integer_constant;
+);
+	slice[1..n] IS_A alias_desc_param_leaf(m);
+END alias_desc_param_core;
+
+MODEL alias_ok_descendant_unparam;
+	core IS_A alias_desc_unparam_core(2);
+	first_x ALIASES core.slice[1].x;
+	last_rate ALIASES core.slice[2].rate[3];
+END alias_ok_descendant_unparam;
+
+MODEL alias_ok_descendant_param;
+	core IS_A alias_desc_param_core(2, 3);
+	first_x ALIASES core.slice[1].x;
+	last_rate ALIASES core.slice[2].rate[3];
+END alias_ok_descendant_param;
+
+MODEL alias_desc_param_nested_index_probe(
+	n IS_A integer_constant;
+	m IS_A integer_constant;
+);
+	core IS_A alias_desc_param_core(n, m);
+	first_x ALIASES core.slice[1].x;
+	last_rate ALIASES core.slice[n].rate[3];
+END alias_desc_param_nested_index_probe;
+
+MODEL alias_ok_descendant_param_nested_index;
+	inner IS_A alias_desc_param_nested_index_probe(2, 3);
+END alias_ok_descendant_param_nested_index;
+
+MODEL alias_ok_descendant_local_index;
+	n_local IS_A integer_constant;
+	n_local :== 2;
+	core IS_A alias_desc_param_core(n_local, 3);
+	first_x ALIASES core.slice[1].x;
+	last_rate ALIASES core.slice[n_local].rate[3];
+END alias_ok_descendant_local_index;

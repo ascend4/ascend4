@@ -84,10 +84,30 @@ static void test_alias_fail_array_bad_index(void){
 	instantiate_case("alias_fail_array_bad_index", 1);
 }
 
+static void test_alias_ok_descendant_unparam(void){
+	instantiate_case("alias_ok_descendant_unparam", 0);
+}
+
+static void test_alias_ok_descendant_param(void){
+	instantiate_case("alias_ok_descendant_param", 0);
+}
+
+static void test_alias_ok_descendant_param_nested_index(void){
+	instantiate_case("alias_ok_descendant_param_nested_index", 0);
+}
+
+static void test_alias_ok_descendant_local_index(void){
+	instantiate_case("alias_ok_descendant_local_index", 0);
+}
+
 #define TESTS(T) \
 	T(alias_ok_simple) \
 	T(alias_fail_unknown_child) \
 	T(alias_fail_for_unindexed) \
-	T(alias_fail_array_bad_index)
+	T(alias_fail_array_bad_index) \
+	T(alias_ok_descendant_unparam) \
+	T(alias_ok_descendant_param) \
+	T(alias_ok_descendant_param_nested_index) \
+	T(alias_ok_descendant_local_index)
 
 REGISTER_TESTS_SIMPLE(compiler_instantiate_alias, TESTS)
