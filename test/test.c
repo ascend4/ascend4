@@ -478,7 +478,7 @@ int main(int argc, char* argv[]){
 		"    --list-tests=SUITENAME, -tSUITENAME\n"
 	;
 
-	char c;
+	int c;
 	struct oplist ops = {0};
 	int op_error = 0;
 	while(-1 != (c = getopt_long (argc, argv, "-vsnr:e:t:l", long_options, &option_index))){

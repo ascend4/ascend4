@@ -1,5 +1,9 @@
 Import('env')
+import os
+import re
+import shlex
 import SCons.Util
+import subprocess
 
 sundials_version_major_required = 5
 sundials_version_minor_min = 0
@@ -68,6 +72,52 @@ def _default_sundials_libs(major):
 	libs.append('m')
 	return libs
 
+def _read_sundials_config(include_dirs):
+	for include_dir in _as_list(include_dirs):
+		config = os.path.join(include_dir, 'sundials', 'sundials_config.h')
+		if not os.path.exists(config):
+			continue
+		values = {}
+		with open(config, 'r') as f:
+			for line in f:
+				m = re.match(r'#define\s+(SUNDIALS_MPI_ENABLED)\s+(\d+)', line)
+				if m:
+					values[m.group(1)] = int(m.group(2))
+		return values
+	return {}
+
+def _parse_flag_words(words):
+	cpppath = []
+	libpath = []
+	libs = []
+	for word in words:
+		if word.startswith('-I') and len(word) > 2:
+			cpppath.append(word[2:])
+		elif word.startswith('-L') and len(word) > 2:
+			libpath.append(word[2:])
+		elif word.startswith('-l') and len(word) > 2:
+			libs.append(word[2:])
+	return cpppath, libpath, libs
+
+def _detect_mpi_flags():
+	try:
+		compile_out = subprocess.check_output(
+			['mpicc', '--showme:compile'], universal_newlines=True
+		).strip()
+		link_out = subprocess.check_output(
+			['mpicc', '--showme:link'], universal_newlines=True
+		).strip()
+	except Exception:
+		return None
+
+	cpppath, _, _ = _parse_flag_words(shlex.split(compile_out))
+	_, libpath, libs = _parse_flag_words(shlex.split(link_out))
+	return {
+		'cpppath': cpppath,
+		'libpath': libpath,
+		'libs': libs,
+	}
+
 def CheckSUNDIALSVersion(context):
 	context.Message('Checking for SUNDIALS... ')
 	is_ok, output = context.TryRun(sundials_version_text, '.c')
@@ -84,11 +134,25 @@ def CheckSUNDIALSVersion(context):
 	context.env['SUNDIALS_VERSION_MAJOR'] = major
 	context.env['SUNDIALS_VERSION_MINOR'] = minor
 	context.env['SUNDIALS_CPPPATH_EXTRA'] = []
+	context.env['SUNDIALS_MPI_CPPPATH'] = []
+	context.env['SUNDIALS_MPI_LIBPATH'] = []
+	context.env['SUNDIALS_MPI_LIBS'] = []
 	if major == 2 and minor == 2 and context.env.get('SUNDIALS_CPPPATH'):
 		extra_cpppath = ['%s/sundials' % p for p in _as_list(context.env.get('SUNDIALS_CPPPATH'))]
 		context.env.AppendUnique(
 			SUNDIALS_CPPPATH_EXTRA=extra_cpppath
 		)
+
+	config = _read_sundials_config(context.env.get('SUNDIALS_CPPPATH'))
+	context.env['SUNDIALS_MPI_ENABLED'] = int(bool(config.get('SUNDIALS_MPI_ENABLED', 0)))
+	if context.env['SUNDIALS_MPI_ENABLED']:
+		mpi_flags = _detect_mpi_flags()
+		if not mpi_flags:
+			context.Result('%s (MPI-enabled build but mpicc flags unavailable)' % output.strip())
+			return False
+		context.env.AppendUnique(SUNDIALS_MPI_CPPPATH=mpi_flags['cpppath'])
+		context.env.AppendUnique(SUNDIALS_MPI_LIBPATH=mpi_flags['libpath'])
+		context.env.AppendUnique(SUNDIALS_MPI_LIBS=mpi_flags['libs'])
 
 	if major < sundials_version_major_required or (
 		major == sundials_version_major_required and minor < sundials_version_minor_min
@@ -103,7 +167,10 @@ def CheckSUNDIALSVersion(context):
 def CheckIDA(context):
 	context.Message('Checking for IDA... ')
 	context.env.AppendUnique(CPPPATH=context.env.get('SUNDIALS_CPPPATH_EXTRA') or [])
+	context.env.AppendUnique(CPPPATH=context.env.get('SUNDIALS_MPI_CPPPATH') or [])
+	context.env.AppendUnique(LIBPATH=context.env.get('SUNDIALS_MPI_LIBPATH') or [])
 	context.env.AppendUnique(LIBS=context.env.get('SUNDIALS_LIBS') or [])
+	context.env.AppendUnique(LIBS=context.env.get('SUNDIALS_MPI_LIBS') or [])
 	is_ok = context.TryLink(ida_test_text, '.c')
 	context.Result(is_ok)
 	return is_ok
@@ -121,6 +188,12 @@ if env.get('WITH_IDA'):
 		solver_env.AppendUnique(LIBPATH=_as_list(env.get('SUNDIALS_LIBPATH')))
 	if env.get('SUNDIALS_LIBS'):
 		solver_env.AppendUnique(LIBS=_as_list(env.get('SUNDIALS_LIBS')))
+	if env.get('SUNDIALS_MPI_CPPPATH'):
+		solver_env.AppendUnique(CPPPATH=_as_list(env.get('SUNDIALS_MPI_CPPPATH')))
+	if env.get('SUNDIALS_MPI_LIBPATH'):
+		solver_env.AppendUnique(LIBPATH=_as_list(env.get('SUNDIALS_MPI_LIBPATH')))
+	if env.get('SUNDIALS_MPI_LIBS'):
+		solver_env.AppendUnique(LIBS=_as_list(env.get('SUNDIALS_MPI_LIBS')))
 
 	conf = solver_env.Configure(custom_tests={
 		'CheckSUNDIALSVersion': CheckSUNDIALSVersion,

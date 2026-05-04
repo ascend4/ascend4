@@ -85,6 +85,7 @@
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 1024
 #endif
+#define BROWSERPROC_NAME_BUFLEN (MAXIMUM_STRING_LENGTH + 8)
 #define MAXIMUM_INST_DEPTH 40
 /* #define MAXIMUM_ID_LENGTH 40 // defined in compiler/qlfdid.h now */
 
@@ -375,9 +376,10 @@ int Asc_BrowTransferCmd(ClientData cdata, Tcl_Interp *interp,
                     int argc, CONST84 char *argv[])
 {
   /* Format : \"transfer name\" */
-  char temp[MAXIMUM_ID_LENGTH];
+  char *temp;
   struct gl_list_t *search_list;
   int nok;
+  char *name;
 
   UNUSED_PARAMETER(cdata);
 
@@ -386,9 +388,16 @@ int Asc_BrowTransferCmd(ClientData cdata, Tcl_Interp *interp,
                   TCL_STATIC);
     return TCL_ERROR;
   }
-  search_list = Asc_BrowQlfdidSearch(QUIET(argv[1]),temp);
+  name = QUIET(argv[1]);
+  temp = ASC_STRDUP(name);
+  if (temp == NULL) {
+    Tcl_SetResult(interp, "insufficient memory in transfer", TCL_STATIC);
+    return TCL_ERROR;
+  }
+  search_list = Asc_BrowQlfdidSearch(name,temp);
   if ((g_search_inst==NULL) || (search_list==NULL)) {
     Tcl_AppendResult(interp,"Search instance not found\n",temp,(char *)NULL);
+    ascfree(temp);
     return TCL_ERROR;
   }
   nok = BrowTransfer(search_list);
@@ -397,6 +406,7 @@ int Asc_BrowTransferCmd(ClientData cdata, Tcl_Interp *interp,
                   TCL_STATIC);
   }
   Asc_SearchListDestroy(search_list);
+  ascfree(temp);
   return TCL_OK;
 }
 
@@ -1101,7 +1111,7 @@ int Asc_BrowInstQueryCmd(ClientData cdata, Tcl_Interp *interp,
     unsigned long dynch = InstanceDynamicChildCount(i);
     nch = NumberChildren(i);
     if (nch || dynch) {
-      tmps = Asc_MakeInitString(256);
+      tmps = Asc_MakeInitString(BROWSERPROC_NAME_BUFLEN);
       for(c=1;c<=nch;c++) {
         in = ChildName(i,c);
         switch(InstanceNameType(in)) {
@@ -1136,7 +1146,7 @@ int Asc_BrowInstQueryCmd(ClientData cdata, Tcl_Interp *interp,
   if (strncmp(argv[1],"parents",3)==0) {
     npa = NumberParents(i);
     if (npa) {
-      tmps = Asc_MakeInitString(256); /* fixme size assumed */
+      tmps = Asc_MakeInitString(BROWSERPROC_NAME_BUFLEN);
       for(c=1;c<=npa;c++) {
         p = InstanceParent(i,c);
         in = ParentsName(p,i);

@@ -63,6 +63,13 @@ ASC_DLLSPEC char *SearchArchiveLibraryPath(const char *name, char *dpath, const 
 	in dynamic loading of external solver DLLs.
 */
 
+ASC_DLLSPEC int Asc_ProcessIsPrivileged(void);
+/**<
+ *  Returns non-zero if this process is running with elevated or mismatched
+ *  Unix credentials. Such processes must not load or execute model-controlled
+ *  extension code.
+ */
+
 ASC_DLLSPEC int Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 /**<
  *  Loads a dynamic library and calls its initialization function.

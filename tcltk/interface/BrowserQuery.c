@@ -31,6 +31,7 @@
 #include <stdarg.h>
 #include <tcl.h>
 #include "config.h"
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
 #include <ascend/general/list.h>
@@ -78,6 +79,9 @@
 #include "BrowserProc.h"
 #include "UnitsProc.h"
 #include <ascend/packages/ascFreeAllVars.h>
+
+#define BROWSER_NAME_BUFLEN (MAXIMUM_STRING_LENGTH + 8)
+#define BROWSER_VALUE_BUFLEN (MAXIMUM_STRING_LENGTH + 256)
 
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 2048
@@ -710,7 +714,7 @@ static
 int BrowWriteInstSet(char *ftorv, CONST struct set_t *s)
 {
   unsigned long c,len;
-  int available = 0;
+  int truncated = 0;
   char *tmpstr, *mark;
   switch(SetKind(s)) {
   case empty_set:
@@ -718,26 +722,35 @@ int BrowWriteInstSet(char *ftorv, CONST struct set_t *s)
     return 0;              /* done processing, so return ok */
   case integer_set:
   case string_set:
-    mark = tmpstr = Asc_MakeInitString(256);
+    mark = tmpstr = Asc_MakeInitString(BROWSER_VALUE_BUFLEN);
     len = Cardinality(s);
     for(c=1;c<=len;c++) {
-      if (SetKind(s)==integer_set) {
-        sprintf(mark, (c<len) ? "%lu," : "%lu",FetchIntMember(s,c));
-      } else {
-        sprintf(mark, (c<len) ? "'%s'," : "'%s'", SCP(FetchStrMember(s,c)));
-      }
-      available = 256 - strlen(tmpstr);
-      if (available <= 80) {
+      size_t used = strlen(tmpstr);
+      size_t available = BROWSER_VALUE_BUFLEN - used;
+      int written;
+      if (available <= 1) {
+        truncated = 1;
         break;
       }
-      mark = &tmpstr[strlen(tmpstr)];
+      if (SetKind(s)==integer_set) {
+        written = snprintf(mark, available, (c<len) ? "%lu," : "%lu",
+                           FetchIntMember(s,c));
+      } else {
+        written = snprintf(mark, available, (c<len) ? "'%s'," : "'%s'",
+                           SCP(FetchStrMember(s,c)));
+      }
+      if (written < 0 || (size_t)written >= available) {
+        truncated = 1;
+        break;
+      }
+      mark += written;
     }
     break;
   default:
     FPRINTF(stderr,"Error in BrowWriteSet\n");
     return 1;              /* done processing, so return nok */
   }
-  if (c<len) {/* indicating that the loop exited early */
+  if (truncated || c<=len) {/* indicating that the loop exited early */
     sprintf(ftorv,"[%s...]",tmpstr); /* truncate if too long */
     ascfree(tmpstr);
     return 0;
@@ -894,9 +907,9 @@ int Asc_BrowWriteAtomChildren(Tcl_Interp *interp, CONST struct Instance *i)
     dynstart = 1;
     dynend = dynlen;
   }
-  fname = Asc_MakeInitString(256);               /* Make the strings */
-  ftorv = Asc_MakeInitString(256);
-  fdims = Asc_MakeInitString(80);
+  fname = Asc_MakeInitString(BROWSER_NAME_BUFLEN); /* Make the strings */
+  ftorv = Asc_MakeInitString(BROWSER_VALUE_BUFLEN);
+  fdims = Asc_MakeInitString(BROWSER_VALUE_BUFLEN);
   for(c=start;c<=end;c++) {
     if (ChildVisible(clist,c)==0 && domany) {
       continue;
@@ -1107,8 +1120,8 @@ int BrowWriteArrayChildren(Tcl_Interp *interp, CONST struct Instance *i)
   CONST struct TypeDescription *d;
   struct InstanceName rec;
   char *fname,*ftorv;
-  fname = Asc_MakeInitString(80);
-  ftorv = Asc_MakeInitString(1024);
+  fname = Asc_MakeInitString(BROWSER_NAME_BUFLEN);
+  ftorv = Asc_MakeInitString(BROWSER_VALUE_BUFLEN);
   len = NumberChildren(i);
   for(c=1;c<=len;c++) {      /* For type with TYPESHOW bit set to zero */
     child = InstanceChild(i,c);
@@ -1224,9 +1237,9 @@ void BrowListModelChildren(Tcl_Interp *interp, struct Instance *i, int atoms,
   unsigned int flag; /* if 1, attempt to show child */
 
 
-  fname = Asc_MakeInitString(80);
-  ftorv = Asc_MakeInitString(1024);
-  fdims = Asc_MakeInitString(80);
+  fname = Asc_MakeInitString(BROWSER_NAME_BUFLEN);
+  ftorv = Asc_MakeInitString(BROWSER_VALUE_BUFLEN);
+  fdims = Asc_MakeInitString(BROWSER_VALUE_BUFLEN);
   len = NumberChildren(i);
   if (len) {
     clist = GetChildList(InstanceTypeDesc(i));
