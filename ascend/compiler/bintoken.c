@@ -70,6 +70,13 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 # define MSG(ARGS...) ((void)0)
 #endif
 
+#if defined(_MSC_VER)
+# include <direct.h>
+# define BT_RMDIR _rmdir
+#else
+# define BT_RMDIR rmdir
+#endif
+
 static int BinTokenRejectsPrivileged(void){
   if(!Asc_ProcessIsPrivileged()){
     return 0;
@@ -78,6 +85,26 @@ static int BinTokenRejectsPrivileged(void){
     ,"Refusing to use binary token compilation while running with privileged or mismatched user/group IDs"
   );
   return 1;
+}
+
+static void BinTokenWarnDefaultEnabled(void){
+  static int warned = 0;
+  if(!warned){
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING
+      ,"Binary token compilation enabled: ASCEND will compile generated C code and load it as native code; use only in trusted runs."
+    );
+    warned = 1;
+  }
+}
+
+static void BinTokenWarnCustomBuildCommand(void){
+  static int warned = 0;
+  if(!warned){
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING
+      ,"Unsafe/developer binary token build command enabled: custom build commands are executed via the shell; use only with trusted inputs."
+    );
+    warned = 1;
+  }
 }
 
 #define C_INDENT 4
@@ -98,10 +125,12 @@ enum bintoken_error {
 struct bt_table {
   enum bintoken_kind type;
   char *name;
+  char *tmpdir;
   union TableUnion *tu;
   int btable; /* check id */
   int refcount; /* total number of relation shares with btable = our number */
   int size; /* may be larger than refcount. */
+  int housekeep;
 };
 
 /*
@@ -121,10 +150,11 @@ struct bt_data {
   char *objname;
   char *libname;
   char *buildcommand;
+  char *tmpdir;
   unsigned long maxrels; /* no more than this many C relations per file */
   int verbose; /* comments in generated code */
   int housekeep; /* if !=0, generated src files are deleted sometimes. */
-} g_bt_data = {NULL,0,0,NULL,0,"ERRARCHIVE",NULL,NULL,NULL,NULL,1,0,0};
+} g_bt_data = {NULL,0,0,NULL,0,"ERRARCHIVE",NULL,NULL,NULL,NULL,NULL,1,0,0};
 
 /**
  *  In the C++ interface, the arguments of BinTokenSetOptions need to be
@@ -170,23 +200,6 @@ void bt_debug_file_status(const char *label, const char *path){
 }
 #endif
 
-#ifdef WIN32
-static
-const char *bt_tempdir(void){
-#ifdef WIN32
-  const char *tmp = getenv("TEMP");
-  if(tmp && tmp[0]) return tmp;
-  tmp = getenv("TMP");
-  if(tmp && tmp[0]) return tmp;
-  return ".";
-#else
-  const char *tmp = getenv("TMPDIR");
-  if(tmp && tmp[0]) return tmp;
-  return "/tmp";
-#endif
-}
-#endif
-
 static void bt_warn_missing_btprolog_header(void){
   static int checked = 0;
   struct FilePath *fp;
@@ -220,162 +233,131 @@ static void bt_warn_missing_btprolog_header(void){
   ospath_free(fp);
 }
 
+static char *bt_path_in_dir(const char *dirname, const char *filename){
+  struct FilePath *dirfp = NULL;
+  struct FilePath *filefp = NULL;
+  struct FilePath *pathfp = NULL;
+  char *path = NULL;
+
+  if(dirname == NULL || filename == NULL){
+    return NULL;
+  }
+  dirfp = ospath_new(dirname);
+  filefp = ospath_new_from_posix(filename);
+  if(dirfp == NULL || filefp == NULL || !ospath_isvalid(dirfp) || !ospath_isvalid(filefp)){
+    goto cleanup;
+  }
+  pathfp = ospath_concat(dirfp,filefp);
+  if(pathfp == NULL || !ospath_isvalid(pathfp)){
+    goto cleanup;
+  }
+  path = ospath_str(pathfp);
+
+cleanup:
+  if(pathfp != NULL){
+    ospath_free(pathfp);
+  }
+  if(filefp != NULL){
+    ospath_free(filefp);
+  }
+  if(dirfp != NULL){
+    ospath_free(dirfp);
+  }
+  return path;
+}
+
+static void bt_remove_file(const char *path, const char *label){
+  if(path != NULL && strlen(path)){
+    MSG("Deleting bintok %s: %s",label,path);
+    if(0 != remove(path)){
+      MSG("delete failed (%s): %s",label,strerror(errno));
+    }
+  }
+}
+
+static void bt_remove_dir(const char *path){
+  if(path != NULL && strlen(path)){
+    MSG("Deleting bintok temp directory: %s",path);
+    if(0 != BT_RMDIR(path)){
+      MSG("delete failed (tmpdir): %s",strerror(errno));
+    }
+  }
+}
+
+static int bt_tmpdir_is_loaded(const char *path){
+  int i;
+  if(path == NULL || g_bt_data.tables == NULL){
+    return 0;
+  }
+  for(i = 1; i <= g_bt_data.nextid; ++i){
+    if(g_bt_data.tables[i].type != BT_error
+      && g_bt_data.tables[i].tmpdir != NULL
+      && strcmp(g_bt_data.tables[i].tmpdir,path) == 0
+    ){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static void bt_cleanup_unused_default_options(CONST char *newtmpdir){
+  if(g_bt_data.housekeep
+    && g_bt_data.tmpdir != NULL
+    && (newtmpdir == NULL || strcmp(g_bt_data.tmpdir,newtmpdir) != 0)
+    && !bt_tmpdir_is_loaded(g_bt_data.tmpdir)
+  ){
+    bt_remove_file(g_bt_data.srcname,"source");
+    bt_remove_file(g_bt_data.objname,"object");
+    bt_remove_file(g_bt_data.libname,"shared library");
+    bt_remove_dir(g_bt_data.tmpdir);
+  }
+}
+
+static int BinTokenSetOptionsInternal(CONST char *srcname,
+                       CONST char *objname,
+                       CONST char *libname,
+                       CONST char *buildcommand,
+                       CONST char *tmpdir,
+                       unsigned long maxrels,
+                       int verbose,
+                       int housekeep);
+
 #if 1
 int BinTokenSetOptionsDefault(){
   if(BinTokenRejectsPrivileged()){
     return 1;
   }
-#ifdef WIN32
-# if defined(__MINGW32__) || defined(__MINGW64__) || defined(__MSYS__)
-  const char *tmpdir = bt_tempdir();
-  struct FilePath *tmpfp = NULL;
-  struct FilePath *srcfp = NULL;
-  struct FilePath *libfp = NULL;
-  struct FilePath *srcnamefp = NULL;
-  struct FilePath *libnamefp = NULL;
-  char *srcn = NULL;
-  char *libn = NULL;
-  char *srcname = NULL;
-  char *libname = NULL;
-  char *buildcmd = NULL;
-  int needed;
-  int res = 1;
-  if(tmpdir == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"No temporary directory for bintokens");
-    goto cleanup_paths;
-  }
-  tmpfp = ospath_new(tmpdir);
-  if(tmpfp == NULL || !ospath_isvalid(tmpfp)){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid temp directory for bintokens");
-    goto cleanup_paths;
-  }
-
-  needed = snprintf(NULL,0,"ascend-btsrc-%d.c",getpid());
-  if(needed < 0){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed formatting bintoken source name");
-    goto cleanup_paths;
-  }
-  srcname = ASC_NEW_ARRAY(char,(size_t)needed + 1);
-  if(srcname == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Out of memory creating bintoken source name");
-    goto cleanup_paths;
-  }
-  snprintf(srcname,(size_t)needed + 1,"ascend-btsrc-%d.c",getpid());
-  srcnamefp = ospath_new_from_posix(srcname);
-  if(srcnamefp == NULL || !ospath_isvalid(srcnamefp)){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid bintoken source name");
-    goto cleanup_paths;
-  }
-  srcfp = ospath_concat(tmpfp,srcnamefp);
-  if(srcfp == NULL || !ospath_isvalid(srcfp)){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed constructing bintoken source path");
-    goto cleanup_paths;
-  }
-  srcn = ospath_str(srcfp);
-  if(srcn == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Out of memory creating bintoken source path");
-    goto cleanup_paths;
-  }
-
-  needed = snprintf(NULL,0,"ascend-btsrc-%d.dll",getpid());
-  if(needed < 0){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed formatting bintoken library name");
-    goto cleanup_paths;
-  }
-  libname = ASC_NEW_ARRAY(char,(size_t)needed + 1);
-  if(libname == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Out of memory creating bintoken library name");
-    goto cleanup_paths;
-  }
-  snprintf(libname,(size_t)needed + 1,"ascend-btsrc-%d.dll",getpid());
-  libnamefp = ospath_new_from_posix(libname);
-  if(libnamefp == NULL || !ospath_isvalid(libnamefp)){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid bintoken library name");
-    goto cleanup_paths;
-  }
-  libfp = ospath_concat(tmpfp,libnamefp);
-  if(libfp == NULL || !ospath_isvalid(libfp)){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed constructing bintoken library path");
-    goto cleanup_paths;
-  }
-  libn = ospath_str(libfp);
-  if(libn == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Out of memory creating bintoken library path");
-    goto cleanup_paths;
-  }
-
-#  define BINTOK_NOMAKEFILE
-  /* this approach calls GCC directly */
-#  ifdef BINTOK_NOMAKEFILE
-  env_import_default(ASC_ENV_BTINC,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTINC,0,1);
-  env_import_default(ASC_ENV_BTLIB,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTLIB,0,1);
-  bt_warn_missing_btprolog_header();
-
-  char buildtmpl[CMDMAX];
-  snprintf(buildtmpl,CMDMAX
-    ,"gcc -shared -Wl,--export-all-symbols -I$" ASC_ENV_BTINC " -o%s %s -L$" ASC_ENV_BTLIB " -lascend"
-    ,libn,srcn
-  );
-
-  char *s1 = Asc_GetEnv(ASC_ENV_BTLIB);
-  MSG("%s=%s",ASC_ENV_BTLIB,s1);
-  ASC_FREE(s1);
-#  else
-  /* makefile path not supported for Windows yet */
-  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented for Windows (makefile path)");
-  return 1;
-#  endif
-  buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
-  /* cleanup uses remove(3) now */
-#  ifdef BINTOKEN_DEBUG
-  res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,1/*verbose*/,0/*housekeep*/);
-#  else
-  res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,0/*verbose*/,1/*housekeep*/);
-#  endif
-  ASC_FREE(buildcmd);
-  buildcmd = NULL;
-cleanup_paths:
-  if(srcn != NULL){
-    ospath_free_str(srcn);
-  }
-  if(libn != NULL){
-    ospath_free_str(libn);
-  }
-  if(srcfp != NULL){
-    ospath_free(srcfp);
-  }
-  if(libfp != NULL){
-    ospath_free(libfp);
-  }
-  if(srcnamefp != NULL){
-    ospath_free(srcnamefp);
-  }
-  if(libnamefp != NULL){
-    ospath_free(libnamefp);
-  }
-  if(tmpfp != NULL){
-    ospath_free(tmpfp);
-  }
-  if(srcname != NULL){
-    ASC_FREE(srcname);
-  }
-  if(libname != NULL){
-    ASC_FREE(libname);
-  }
-  if(buildcmd != NULL){
-    ASC_FREE(buildcmd);
-  }
-  return res;
-# else
+  BinTokenWarnDefaultEnabled();
+#if defined(WIN32) && !(defined(__MINGW32__) || defined(__MINGW64__) || defined(__MSYS__))
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented for Windows");
   return 1;
-//# error "Not implemented"
-# endif
 #else
-  char srcn[PATH_MAX];
-  char libn[PATH_MAX];
-  snprintf(srcn,PATH_MAX,"/tmp/ascend-btsrc-%d.c",getpid());
-  snprintf(libn,PATH_MAX,"/tmp/ascend-btsrc-%d.so",getpid());
+  char tmpdir[PATH_MAX + 1];
+  char buildtmpl[CMDMAX];
+  char *srcn = NULL;
+  char *libn = NULL;
+  char *buildcmd = NULL;
+  int buildlen;
+  int res = 1;
+
+  if(ospath_mkdtemp(tmpdir,sizeof(tmpdir),"ascend-bintoken-") != 0){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR
+      ,"Unable to create private temporary directory for bintokens: %s"
+      ,strerror(errno)
+    );
+    return 1;
+  }
+
+  srcn = bt_path_in_dir(tmpdir,"btsrc.c");
+# ifdef WIN32
+  libn = bt_path_in_dir(tmpdir,"btsrc.dll");
+# else
+  libn = bt_path_in_dir(tmpdir,"btsrc.so");
+# endif
+  if(srcn == NULL || libn == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to construct bintoken temporary paths");
+    goto cleanup_paths;
+  }
 
 #define BINTOK_NOMAKEFILE
   /* this approach calls GCC directly */
@@ -384,11 +366,25 @@ cleanup_paths:
   env_import_default(ASC_ENV_BTLIB,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTLIB,0,1);
   bt_warn_missing_btprolog_header();
 
-  char buildtmpl[CMDMAX];
-  snprintf(buildtmpl,CMDMAX
-    ,"gcc -shared -fPIC -I$" ASC_ENV_BTINC " -o%s %s -L$" ASC_ENV_BTLIB " -lascend"
+# ifdef WIN32
+  buildlen = snprintf(buildtmpl,CMDMAX
+    ,"gcc -shared -Wl,--export-all-symbols "
+     "-I\"$" ASC_ENV_BTINC "\" -o \"%s\" \"%s\" "
+     "-L\"$" ASC_ENV_BTLIB "\" -lascend"
     ,libn,srcn
   );
+# else
+  buildlen = snprintf(buildtmpl,CMDMAX
+    ,"gcc -shared -fPIC "
+     "-I\"$" ASC_ENV_BTINC "\" -o \"%s\" \"%s\" "
+     "-L\"$" ASC_ENV_BTLIB "\" -lascend"
+    ,libn,srcn
+  );
+# endif
+  if(buildlen < 0 || buildlen >= CMDMAX){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bintoken build command is too long");
+    goto cleanup_paths;
+  }
 
   char *s1 = Asc_GetEnv(ASC_ENV_BTLIB);
   MSG("%s=%s",ASC_ENV_BTLIB,s1);
@@ -416,13 +412,28 @@ cleanup_paths:
     ,libn,srcn
   );
 #endif
-  char *buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
+  buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
+  if(buildcmd == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to build bintoken compile command");
+    goto cleanup_paths;
+  }
   /* cleanup uses remove(3) now */
 #ifdef BINTOKEN_DEBUG
-  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,1/*verbose*/,0/*housekeep*/);
+  res = BinTokenSetOptionsInternal(srcn,NULL,libn,buildcmd,tmpdir,1000,1/*verbose*/,0/*housekeep*/);
 #else
-  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,0/*verbose*/,1/*housekeep*/);
+  res = BinTokenSetOptionsInternal(srcn,NULL,libn,buildcmd,tmpdir,1000,0/*verbose*/,1/*housekeep*/);
 #endif
+
+cleanup_paths:
+  if(res != 0){
+    bt_remove_dir(tmpdir);
+  }
+  if(srcn != NULL){
+    ospath_free_str(srcn);
+  }
+  if(libn != NULL){
+    ospath_free_str(libn);
+  }
   ASC_FREE(buildcmd);
   return res;
 #endif
@@ -443,12 +454,31 @@ int BinTokenSetOptions(CONST char *srcname,
                        int verbose,
                        int housekeep)
 {
+  return BinTokenSetOptionsInternal(
+    srcname,objname,libname,buildcommand,NULL,maxrels,verbose,housekeep
+  );
+}
+
+static int BinTokenSetOptionsInternal(CONST char *srcname,
+                       CONST char *objname,
+                       CONST char *libname,
+                       CONST char *buildcommand,
+                       CONST char *tmpdir,
+                       unsigned long maxrels,
+                       int verbose,
+                       int housekeep)
+{
   /*MSG("...");*/
   int err = 0;
+  if(tmpdir == NULL && maxrels > 0 && buildcommand != NULL && strlen(buildcommand)){
+    BinTokenWarnCustomBuildCommand();
+  }
+  bt_cleanup_unused_default_options(tmpdir);
   err += bt_string_replace(srcname,&(g_bt_data.srcname));
   err += bt_string_replace(objname,&(g_bt_data.objname));
   err += bt_string_replace(libname,&(g_bt_data.libname));
   err += bt_string_replace(buildcommand,&(g_bt_data.buildcommand));
+  err += bt_string_replace(tmpdir,&(g_bt_data.tmpdir));
   g_bt_data.maxrels = maxrels;
   g_bt_data.verbose = verbose;
   g_bt_data.housekeep = housekeep;
@@ -471,14 +501,19 @@ int BinTokenCheckCapacity()
     g_bt_data.tables =
       ASC_NEW_ARRAY(struct bt_table,20);
     assert(g_bt_data.tables != NULL);
+    memset(g_bt_data.tables,0,20*sizeof(struct bt_table));
     g_bt_data.captables = 20;
     return 0;
   }
   if (g_bt_data.nextid >= g_bt_data.captables) {
+    int oldcap = g_bt_data.captables;
     g_bt_data.tables = (struct bt_table *)ascrealloc(g_bt_data.tables,
            2*sizeof(struct bt_table)*g_bt_data.captables);
     assert(g_bt_data.tables != NULL);
     g_bt_data.captables *= 2;
+    memset(g_bt_data.tables + oldcap,0,
+      (g_bt_data.captables - oldcap)*sizeof(struct bt_table)
+    );
   }
   return 0;
 }
@@ -529,13 +564,9 @@ void BinTokenDeleteReference(int btable)
     MSG("Unloading btable=%d: %s",btable,g_bt_data.tables[btable].name);
     Asc_DynamicUnLoad(g_bt_data.tables[btable].name);
 
-    if(g_bt_data.housekeep){
-      if(g_bt_data.libname && strlen(g_bt_data.libname)){
-          MSG("Deleting bintok shared library: %s",g_bt_data.libname);
-          if(0!=remove(g_bt_data.libname)){
-            MSG("delete failed: %s",strerror(errno));
-          }
-      }
+    if(g_bt_data.tables[btable].housekeep){
+      bt_remove_file(g_bt_data.tables[btable].name,"shared library");
+      bt_remove_dir(g_bt_data.tables[btable].tmpdir);
     }
 
 
@@ -544,6 +575,10 @@ void BinTokenDeleteReference(int btable)
 #endif /* havedlunload */
     ASC_FREE(g_bt_data.tables[btable].name);
     g_bt_data.tables[btable].name = NULL;
+    if(g_bt_data.tables[btable].tmpdir != NULL){
+      ASC_FREE(g_bt_data.tables[btable].tmpdir);
+      g_bt_data.tables[btable].tmpdir = NULL;
+    }
     g_bt_data.tables[btable].tu = NULL;
     g_bt_data.tables[btable].type = BT_error;
   }else{
@@ -1072,6 +1107,9 @@ enum bintoken_error BinTokenLoadC(struct gl_list_t *rellist,
   }
   g_bt_data.tables[g_bt_data.nextid].refcount = (int)len;
   g_bt_data.tables[g_bt_data.nextid].name = ASC_STRDUP(libname);
+  g_bt_data.tables[g_bt_data.nextid].tmpdir =
+    (g_bt_data.tmpdir != NULL ? ASC_STRDUP(g_bt_data.tmpdir) : NULL);
+  g_bt_data.tables[g_bt_data.nextid].housekeep = g_bt_data.housekeep;
   return BTE_ok;
 }
 
@@ -1176,16 +1214,8 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
       bt_debug_file_status("bintoken library after build",libname);
 #endif
       if(g_bt_data.housekeep){
-        /* trash src */
-        if(0!=remove(srcname)){
-          MSG("delete failed (src): %s",strerror(errno));
-        }
-        /* trash obj */
-        if(objname && strlen(objname)){
-          if(0!=remove(objname)){
-            MSG("delete failed (obj): %s",strerror(errno));
-          }
-        }
+        bt_remove_file(srcname,"source");
+        bt_remove_file(objname,"object");
       }
 
       status = BinTokenLoadC(rellist,libname,g_bt_data.regname);

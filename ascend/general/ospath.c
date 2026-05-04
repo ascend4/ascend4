@@ -33,12 +33,15 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 #include "ospath.h"
 
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
+# include <direct.h>
+#endif
 #ifdef _MSC_VER
 # include <io.h>
-# include <sys/stat.h>
 #endif
 
 //#define OSPATH_DEBUG
@@ -121,6 +124,12 @@
 # define GETCWD getcwd
 # define GETENV(VAR) getenv(VAR)
 # define CHDIR chdir
+#endif
+
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
+# define MKDIR(PATH,MODE) _mkdir(PATH)
+#else
+# define MKDIR(PATH,MODE) mkdir(PATH,MODE)
 #endif
 
 /* PATH_MAX is in ospath.h */
@@ -338,18 +347,8 @@ int ospath_chdir(struct FilePath *fp){
 	return res;
 }
 
-int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
+static const char *ospath_get_tmpdir(void){
 	const char *tmpdir;
-	const char *nameprefix;
-	const char *sep = "";
-	size_t dlen;
-	int n;
-
-	if (path == NULL || pathsz == 0) {
-		errno = EINVAL;
-		return -1;
-	}
-
 	tmpdir = GETENV("TMPDIR");
 #ifdef WINPATHS
 	if (tmpdir == NULL || *tmpdir == '\0') tmpdir = GETENV("TEMP");
@@ -362,7 +361,22 @@ int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
 		tmpdir = "/tmp";
 #endif
 	}
+	return tmpdir;
+}
 
+static int ospath_temp_template(char *path, size_t pathsz, const char *prefix){
+	const char *tmpdir;
+	const char *nameprefix;
+	const char *sep = "";
+	size_t dlen;
+	int n;
+
+	if (path == NULL || pathsz == 0) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	tmpdir = ospath_get_tmpdir();
 	nameprefix = (prefix != NULL && *prefix != '\0') ? prefix : "asc_";
 	dlen = strlen(tmpdir);
 	if (dlen > 0) {
@@ -371,10 +385,16 @@ int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
 			sep = PATH_SEPARATOR_STR;
 		}
 	}
-
 	n = snprintf(path,pathsz,"%s%s%sXXXXXX",tmpdir,sep,nameprefix);
 	if (n < 0 || (size_t)n >= pathsz) {
 		errno = ENAMETOOLONG;
+		return -1;
+	}
+	return 0;
+}
+
+int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
+	if(ospath_temp_template(path,pathsz,prefix) != 0){
 		return -1;
 	}
 
@@ -386,6 +406,63 @@ int ospath_mkstemp(char *path, size_t pathsz, const char *prefix){
 	return _open(path,_O_CREAT|_O_EXCL|_O_RDWR|_O_BINARY,_S_IREAD|_S_IWRITE);
 #else
 	return mkstemp(path);
+#endif
+}
+
+int ospath_mkdtemp(char *path, size_t pathsz, const char *prefix){
+
+#if defined(_MSC_VER)
+	for(int i = 0; i < 100; ++i){
+		if(ospath_temp_template(path,pathsz,prefix) != 0){
+			return -1;
+		}
+		if (_mktemp_s(path,pathsz) != 0) {
+			errno = EINVAL;
+			return -1;
+		}
+		if (MKDIR(path,0700) == 0) {
+			return 0;
+		}
+		if (errno != EEXIST) {
+			return -1;
+		}
+	}
+	errno = EEXIST;
+	return -1;
+#elif defined(__MINGW32__) || defined(__MINGW64__)
+	const char *tmpdir = ospath_get_tmpdir();
+	const char *nameprefix = (prefix != NULL && *prefix != '\0') ? prefix : "asc_";
+	const char *sep = "";
+	size_t dlen = strlen(tmpdir);
+	if (dlen > 0) {
+		char tail = tmpdir[dlen - 1];
+		if (tail != PATH_SEPARATOR_CHAR && tail != PATH_WRONGSLASH_CHAR) {
+			sep = PATH_SEPARATOR_STR;
+		}
+	}
+	for(int i = 0; i < 100; ++i){
+		int n = snprintf(path,pathsz,"%s%s%s%ld_%d",tmpdir,sep,nameprefix,(long)getpid(),i);
+		if (n < 0 || (size_t)n >= pathsz) {
+			errno = ENAMETOOLONG;
+			return -1;
+		}
+		if (MKDIR(path,0700) == 0) {
+			return 0;
+		}
+		if (errno != EEXIST) {
+			return -1;
+		}
+	}
+	errno = EEXIST;
+	return -1;
+#else
+	if(ospath_temp_template(path,pathsz,prefix) != 0){
+		return -1;
+	}
+	if (mkdtemp(path) == NULL) {
+		return -1;
+	}
+	return 0;
 #endif
 }
 
