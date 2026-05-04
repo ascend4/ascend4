@@ -87,7 +87,7 @@
 #include "ScriptProc.h"
 #include "Driver.h"
 
-#define QLFDID_LENGTH 1023
+#define QLFDID_LENGTH (MAXIMUM_STRING_LENGTH + 8)
 #define YORN(b) ((b) ? "YES" : "NO")
 #define ONEORZERO(b) ((b) ? "1" : "0")
 #define SNULL (char *)NULL
