@@ -48,6 +48,9 @@ extern "C"{
 #else
 # define MSG(...)
 #endif
+
+#define LOAD_ERROR_MSGLEN 4096
+
 Library::Library(const char *defaultpath){
 	static int have_init;
 	if(!have_init){
@@ -92,10 +95,10 @@ Library::load(const char *filename){
 	}
 
 	const char *msg = getLoadErrorMessage(status);
+	const char *displayname = filename != NULL ? filename : "";
 
-#define MSGLEN 4096
-	char msg1[MSGLEN];
-	snprintf(msg1,MSGLEN,msg,filename);
+	char msg1[LOAD_ERROR_MSGLEN];
+	snprintf(msg1,LOAD_ERROR_MSGLEN,msg,displayname);
 
 	if(status<0 || status>0){
 		throw std::runtime_error(msg1);
@@ -144,9 +147,10 @@ Library::loadString(const char *str, const char *nameprefix){
 	struct module_t *m = Asc_OpenStringModule(str, &status, nameprefix);
 
 	const char *msg = getLoadErrorMessage(status);
+	const char *displayname = nameprefix != NULL ? nameprefix : "";
 
-	char msg1[100];
-	sprintf(msg1,msg,nameprefix);
+	char msg1[LOAD_ERROR_MSGLEN];
+	snprintf(msg1,LOAD_ERROR_MSGLEN,msg,displayname);
 
 	if(status<0 || status>0){
 		throw std::runtime_error(msg1);

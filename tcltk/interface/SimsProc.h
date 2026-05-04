@@ -194,6 +194,8 @@ extern int Asc_SimBinTokenSetOptions(ClientData, Tcl_Interp*, int, CONST84 char*
 #define Asc_SimBinTokenSetOptionsHL "\
  *  Specifies full path names for source, object, and shared object files\n\
  *  to be used in the next compilation of binary token relations.\n\
+ *  WARNING: this enables native code generation/loading, and the build\n\
+ *  command is executed via the shell. Use only in trusted developer runs.\n\
  *  Names must be consistent and the name of the shared object must\n\
  *  be unique, e.g. where N is a number changing between instantiations:\n\
  *  /tmp/fooN.c /tmp/fooN.o /tmp/fooN.so <build command> 0 1 1000.\n\

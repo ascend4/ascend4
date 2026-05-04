@@ -445,12 +445,18 @@ static void gl_expand_list(struct gl_list_t *list){
 /* changes only the capacity of the list, and possibly data pointer */
 static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
 {
+  VOIDPTR *tmp;
   if (!addlen) return;
   addlen = MAX(MIN_INCREMENT,addlen); /* expand by at least 8 */
   list->capacity += addlen;
-  list->data = (VOIDPTR *)DATAREALLOC(list,addlen);
+  tmp = (VOIDPTR *)DATAREALLOC(list,addlen);
 
-  if (list->data==NULL)ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_expand_list_by: memory allocation failed\n");
+  if (tmp==NULL) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_expand_list_by: memory allocation failed\n");
+    list->capacity -= addlen;
+  } else {
+    list->data = tmp;
+  }
   asc_assert(list->data!=NULL);
 }
 

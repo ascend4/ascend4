@@ -12,6 +12,20 @@ def MSG(*args):
 		pass
 PYTHON=pathlib.Path(r'@PYTHON@')
 
+def process_is_privileged():
+	if not hasattr(os, 'getuid'):
+		return False
+	return (
+		os.getuid() == 0 or os.geteuid() == 0
+		or os.getgid() == 0 or os.getegid() == 0
+		or os.getuid() != os.geteuid()
+		or os.getgid() != os.getegid()
+	)
+
+def refuse_privileged_process():
+	if process_is_privileged():
+		sys.exit("ASCEND refuses to run with root or mismatched effective user/group IDs.")
+
 def get_effective_home():
 	home = os.environ.get('HOME')
 	if home:
@@ -314,6 +328,7 @@ def setup_bash_completion(sourceroot):
 	print(f"To enable it now in this shell, run: source \"{completion_script}\"")
 
 if __name__ == "__main__":
+	refuse_privileged_process()
 	argv = list(sys.argv)
 	if (
 		len(argv) >= 3

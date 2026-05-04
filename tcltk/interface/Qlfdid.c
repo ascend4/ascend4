@@ -30,6 +30,7 @@
 #include <tcl.h>
 #include <tk.h>
 #include "config.h"
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/compiler/qlfdid.h>
@@ -37,10 +38,11 @@
 int Asc_BrowQlfdidSearchCmd(ClientData cdata, Tcl_Interp *interp,
                         int argc, CONST84 char *argv[])
 {
-  char temp[MAXIMUM_ID_LENGTH];
+  char *temp;
   struct gl_list_t *search_list;
   struct SearchEntry *se;
   unsigned long len,c;
+  char *name;
 
   UNUSED_PARAMETER(cdata);
 
@@ -48,10 +50,17 @@ int Asc_BrowQlfdidSearchCmd(ClientData cdata, Tcl_Interp *interp,
     Tcl_SetResult(interp,"wrong # args : Usage is qlfdid \"name\"",TCL_STATIC);
     return TCL_ERROR;
   }
-  search_list = Asc_BrowQlfdidSearch(QUIET(argv[1]),temp);
+  name = QUIET(argv[1]);
+  temp = ASC_STRDUP(name);
+  if (temp == NULL) {
+    Tcl_SetResult(interp,"insufficient memory in qlfdid search",TCL_STATIC);
+    return TCL_ERROR;
+  }
+  search_list = Asc_BrowQlfdidSearch(name,temp);
   g_relative_inst = g_search_inst;
   if ((g_search_inst==NULL) || (search_list==NULL)) {
     Tcl_AppendResult(interp,"Orphaned ",temp,(char *)NULL);
+    ascfree(temp);
     return TCL_ERROR;
   } else {
     len = gl_length(search_list);
@@ -60,8 +69,8 @@ int Asc_BrowQlfdidSearchCmd(ClientData cdata, Tcl_Interp *interp,
       Tcl_AppendResult(interp,se->name," ",(char *)NULL);
     }
     Asc_SearchListDestroy(search_list);
+    ascfree(temp);
     return TCL_OK;
   }
 }
-
 

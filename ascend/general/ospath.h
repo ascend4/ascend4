@@ -310,6 +310,16 @@ ASC_DLLSPEC int ospath_chdir(struct FilePath *fp);
 */
 ASC_DLLSPEC int ospath_mkstemp(char *path, size_t pathsz, const char *prefix);
 
+/**
+	Create a private temporary directory in the system temp directory.
+
+	@param path Output buffer that receives the created directory path.
+	@param pathsz Size of @p path.
+	@param prefix Optional filename prefix; pass NULL for default.
+	@return 0 on success, or -1 on error.
+*/
+ASC_DLLSPEC int ospath_mkdtemp(char *path, size_t pathsz, const char *prefix);
+
 /*------------------------*/
 /* SEARCH PATH FUNCTIONS*/
 

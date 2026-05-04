@@ -40,6 +40,10 @@
 
 #include <ascend/utilities/config.h>
 
+#ifndef __WIN32__
+# include <unistd.h>
+#endif
+
 //#define DL_ALREADY_WARNING
 
 //#define DL_DEBUG
@@ -50,6 +54,27 @@
 #endif
 
 typedef int (*ExternalLibraryRegister_fptr_t)(void);
+
+int Asc_ProcessIsPrivileged(void){
+#ifndef __WIN32__
+  return getuid() == 0 || geteuid() == 0
+    || getgid() == 0 || getegid() == 0
+    || getuid() != geteuid() || getgid() != getegid();
+#else
+  return 0;
+#endif
+}
+
+static int Asc_DynamicLoadRejectsPrivileged(CONST char *path){
+  if(!Asc_ProcessIsPrivileged()){
+    return 0;
+  }
+  ERROR_REPORTER_HERE(ASC_PROG_ERR
+    ,"Refusing to load dynamic library '%s' while running with privileged or mismatched user/group IDs"
+    ,path == NULL ? "(null)" : path
+  );
+  return 1;
+}
 
 /*--------------------------------------
   GENERIC STUFF
@@ -215,6 +240,9 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
   HINSTANCE xlib;
   ExternalLibraryRegister_fptr_t install = NULL;
 
+  if (Asc_DynamicLoadRejectsPrivileged(path)) {
+    return 1;
+  }
   if (NULL == path) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed: Null path\n");
     return 1;
@@ -285,6 +313,9 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
   void *xlib;
   ExternalLibraryRegister_fptr_t install = NULL;
 
+  if (Asc_DynamicLoadRejectsPrivileged(path)) {
+    return 1;
+  }
   if (NULL == path) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed: null path");
     return 1;
@@ -352,6 +383,9 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   ExternalLibraryRegister_fptr_t install = NULL;
   int i;
 
+  if (Asc_DynamicLoadRejectsPrivileged(path)) {
+    return 1;
+  }
   if (NULL == path) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed: Null path");
     return 1;

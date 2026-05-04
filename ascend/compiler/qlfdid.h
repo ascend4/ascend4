@@ -99,8 +99,9 @@ ASC_DLLSPEC void Asc_SearchListDestroy(struct gl_list_t *search_list);
 
 ASC_DLLSPEC struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp);
 /**<
- *  Will accept two strings, both of which will be destroyed by the
- *  operation. Searches for an instance of the qualified name. Will
+ *  Will accept a qualified name and a writable scratch buffer. The scratch
+ *  buffer must be at least strlen(str)+1 bytes. Searches for an instance
+ *  of the qualified name. Will
  *  return of a list (of SearchEntries), with each list element being
  *  a pointer to a level in the instance tree of the qualified id and
  *  'g_search_inst' looking at the last part of the instance name.
@@ -140,4 +141,3 @@ ASC_DLLSPEC int Asc_QlfdidSearch3(CONST char *str, int relative);
 /* @} */
 
 #endif  /* ASC_QLFDID_H */
-
