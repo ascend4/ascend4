@@ -27,6 +27,15 @@ if fprops_env.get('HAVE_IPOPT'):
 			('ASC_IPOPT_HSL_LIBRARY', '"%s"' % str(fprops_env['IPOPT_HSL_LIBRARY']).replace('"', '\\"'))
 		])
 
+if fprops_env.get('HAVE_NLOPT'):
+	fprops_env.AppendUnique(CPPDEFINES=['HAVE_NLOPT'])
+	if fprops_env.get('NLOPT_CPPPATH'):
+		fprops_env.AppendUnique(CPPPATH=fprops_env['NLOPT_CPPPATH'])
+	if fprops_env.get('NLOPT_LIBPATH'):
+		fprops_env.AppendUnique(LIBPATH=fprops_env['NLOPT_LIBPATH'])
+	if fprops_env.get('NLOPT_LIBS'):
+		fprops_env.AppendUnique(LIBS=fprops_env['NLOPT_LIBS'])
+
 # automatically create fluids/fluids_list.h...
 fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 

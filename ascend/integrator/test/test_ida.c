@@ -174,6 +174,53 @@ static IntegratorReporter test_ida_reporter = {
 	test_ida_reporter_close
 };
 
+typedef struct IdaErrorCaptureStruct{
+	int error_count;
+	char all_error_msgs[4096];
+} IdaErrorCapture;
+
+static IdaErrorCapture g_ida_error_capture;
+
+static void ida_error_capture_reset(void){
+	memset(&g_ida_error_capture, 0, sizeof(g_ida_error_capture));
+}
+
+static int ida_error_capture_cb(ERROR_REPORTER_CALLBACK_ARGS){
+	char msg[512];
+	va_list args_copy;
+	int wrote_default;
+
+	va_copy(args_copy, args);
+	vsnprintf(msg, sizeof(msg), fmt, args_copy);
+	va_end(args_copy);
+
+	if(sev & ASC_ERR_ERR){
+		size_t used = strlen(g_ida_error_capture.all_error_msgs);
+		g_ida_error_capture.error_count++;
+		if(used + 2 < sizeof(g_ida_error_capture.all_error_msgs)){
+			if(used > 0){
+				snprintf(
+					g_ida_error_capture.all_error_msgs + used,
+					sizeof(g_ida_error_capture.all_error_msgs) - used,
+					"\n"
+				);
+				used = strlen(g_ida_error_capture.all_error_msgs);
+			}
+			snprintf(
+				g_ida_error_capture.all_error_msgs + used,
+				sizeof(g_ida_error_capture.all_error_msgs) - used,
+				"%s",
+				msg
+			);
+		}
+	}
+
+	va_copy(args_copy, args);
+	wrote_default = error_reporter_default_callback(sev, filename, line, funcname, fmt, args_copy);
+	va_end(args_copy);
+	return wrote_default;
+}
+
 static int ida_find_param(const slv_parameters_t *params, const char *name){
 	unsigned long i;
 	for(i = 0; i < params->num_parms; ++i){
@@ -1191,6 +1238,32 @@ static void test_high_index(){
 	ida_cleanup(&testsys);
 }
 
+static void test_nonsquare_reports_squareness_guidance(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/ida/nonsquare.a4c", "ida_nonsquare", 0, &testsys)){
+		return;
+	}
+
+	ida_error_capture_reset();
+	error_reporter_set_callback(&ida_error_capture_cb);
+	CU_ASSERT_NOT_EQUAL(integrator_analyse(testsys.integ), 0);
+	error_reporter_set_callback(NULL);
+
+	CU_ASSERT(g_ida_error_capture.error_count > 0);
+	CU_ASSERT_PTR_NOT_NULL(
+		strstr(g_ida_error_capture.all_error_msgs, "active integration problem is underspecified")
+	);
+	CU_ASSERT_PTR_NOT_NULL(
+		strstr(g_ida_error_capture.all_error_msgs, "DOF/free-variable diagnostics")
+	);
+	CU_ASSERT_PTR_NOT_NULL(
+		strstr(g_ida_error_capture.all_error_msgs, "Active-problem DOF =")
+	);
+
+	ida_cleanup(&testsys);
+}
+
 static void test_pantelides_pendulum_high_index(){
 	IdaTestSystem testsys;
 	char *report;
@@ -1454,6 +1527,7 @@ static void test_initial_alias_binding_bug(){
 	T(example_resting_rebound) \
 	T(example_overflowing_weir) \
 	T(example_lengthening_sawtooth) \
+	T(nonsquare_reports_squareness_guidance) \
 	T(high_index) \
 	T(pantelides_pendulum_high_index) \
 	T(pantelides_reactor_high_index) \
