@@ -5,6 +5,19 @@ import os, os.path, sys, platform
 
 restart = 0
 
+def process_is_privileged():
+	if not hasattr(os, 'getuid'):
+		return False
+	return (
+		os.getuid() == 0 or os.geteuid() == 0
+		or os.getgid() == 0 or os.getegid() == 0
+		or os.getuid() != os.geteuid()
+		or os.getgid() != os.getegid()
+	)
+
+if process_is_privileged():
+	sys.exit("ASCEND refuses to run with root or mismatched effective user/group IDs.")
+
 # This script launches ASCEND, after first ensuring that all necessary 
 # variables are present in the 'environment', and adding them and 
 # restarting the process if necessary. You can override values for these
@@ -39,7 +52,7 @@ if platform.system()=="Windows":
 	PYTHON=os.path.join(sys.prefix,"pythonw.exe")
 
 	import winreg as wreg
-	k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, "SOFTWARE\ASCEND")
+	k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\ASCEND")
 
 	# on Windows, we should be able to *assume* relative paths...
 

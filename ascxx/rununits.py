@@ -5,6 +5,19 @@ import pathlib
 import re
 import sys
 
+def _process_is_privileged():
+	if not hasattr(os, "getuid"):
+		return False
+	return (
+		os.getuid() == 0 or os.geteuid() == 0
+		or os.getgid() == 0 or os.getegid() == 0
+		or os.getuid() != os.geteuid()
+		or os.getgid() != os.getegid()
+	)
+
+if _process_is_privileged():
+	sys.exit("ASCEND refuses to run with root or mismatched effective user/group IDs.")
+
 
 _VAR_RE = re.compile(
 	r"^[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*(\.[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*)*$"
