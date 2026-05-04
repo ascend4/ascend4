@@ -20,6 +20,8 @@ jobs:
       HIGHS_VERSION: "v1.13.1"
       OMP_NUM_THREADS: "1"
       ASCEND_CI_HIGHS_SERIAL: "1"
+      ASCEND_CI_USER: "ascendci"
+      ASCEND_CI_HOME: "/home/ascendci"
 
     steps:
     - uses: actions/checkout@v4
@@ -41,76 +43,103 @@ jobs:
           blas-devel lapack-devel \
           pcre-devel zlib-devel xz-devel
 
+    - name: Create unprivileged build user
+      run: |
+        useradd -m -d "$ASCEND_CI_HOME" "$ASCEND_CI_USER"
+        chown -R "$ASCEND_CI_USER:$ASCEND_CI_USER" "$GITHUB_WORKSPACE"
+
     - name: Install SCons
       run: |
-        python3 -m pip install --user scons
+        runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" bash -lc '
+          python3 -m pip install --user scons
+        '
 
     - name: Build and install CUnit
       run: |
-        CUNIT_TARBALL="${CUNIT_RELEASE_BASENAME}.tar.gz"
-        CUNIT_URL="https://github.com/ascend4/cunit/releases/download/v${CUNIT_VERSION}/${CUNIT_TARBALL}"
-        curl -L --retry 3 -o "$CUNIT_TARBALL" "$CUNIT_URL"
-        tar -xzf "$CUNIT_TARBALL"
-        cd "$CUNIT_RELEASE_BASENAME"
-        touch README
-        ./bootstrap
-        ./configure --prefix="$HOME/.local" --enable-examples --enable-debug
-        make -j"$(nproc)"
-        make install
+        runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" CUNIT_VERSION="$CUNIT_VERSION" CUNIT_RELEASE_BASENAME="$CUNIT_RELEASE_BASENAME" bash -lc '
+          cd "$GITHUB_WORKSPACE"
+          CUNIT_TARBALL="${CUNIT_RELEASE_BASENAME}.tar.gz"
+          CUNIT_URL="https://github.com/ascend4/cunit/releases/download/v${CUNIT_VERSION}/${CUNIT_TARBALL}"
+          curl -L --retry 3 -o "$CUNIT_TARBALL" "$CUNIT_URL"
+          tar -xzf "$CUNIT_TARBALL"
+          cd "$CUNIT_RELEASE_BASENAME"
+          touch README
+          ./bootstrap
+          ./configure --prefix="$HOME/.local" --enable-examples --enable-debug
+          make -j"$(nproc)"
+          make install
+        '
 
     - name: Build and install SUNDIALS
       run: |
-        SUNDIALS_TARBALL="sundials-${SUNDIALS_VERSION}.tar.gz"
-        SUNDIALS_URL="https://github.com/LLNL/sundials/releases/download/v${SUNDIALS_VERSION}/${SUNDIALS_TARBALL}"
-        curl -L --retry 3 -o "$SUNDIALS_TARBALL" "$SUNDIALS_URL"
-        tar -xzf "$SUNDIALS_TARBALL"
-        cmake3 -S "sundials-${SUNDIALS_VERSION}" -B sundials-build \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
-          -DBUILD_SHARED_LIBS=ON \
-          -DBUILD_ARKODE=OFF \
-          -DBUILD_CVODE=OFF \
-          -DBUILD_CVODES=OFF \
-          -DBUILD_IDA=ON \
-          -DBUILD_IDAS=OFF \
-          -DBUILD_KINSOL=OFF \
-          -DBUILD_TESTING=OFF \
-          -DEXAMPLES_ENABLE_C=OFF \
-          -DEXAMPLES_ENABLE_CXX=OFF \
-          -DEXAMPLES_INSTALL=OFF
-        cmake3 --build sundials-build -j"$(nproc)"
-        cmake3 --install sundials-build
+        runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" SUNDIALS_VERSION="$SUNDIALS_VERSION" bash -lc '
+          cd "$GITHUB_WORKSPACE"
+          SUNDIALS_TARBALL="sundials-${SUNDIALS_VERSION}.tar.gz"
+          SUNDIALS_URL="https://github.com/LLNL/sundials/releases/download/v${SUNDIALS_VERSION}/${SUNDIALS_TARBALL}"
+          curl -L --retry 3 -o "$SUNDIALS_TARBALL" "$SUNDIALS_URL"
+          tar -xzf "$SUNDIALS_TARBALL"
+          cmake3 -S "sundials-${SUNDIALS_VERSION}" -B sundials-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
+            -DBUILD_SHARED_LIBS=ON \
+            -DBUILD_ARKODE=OFF \
+            -DBUILD_CVODE=OFF \
+            -DBUILD_CVODES=OFF \
+            -DBUILD_IDA=ON \
+            -DBUILD_IDAS=OFF \
+            -DBUILD_KINSOL=OFF \
+            -DBUILD_TESTING=OFF \
+            -DEXAMPLES_ENABLE_C=OFF \
+            -DEXAMPLES_ENABLE_CXX=OFF \
+            -DEXAMPLES_INSTALL=OFF
+          cmake3 --build sundials-build -j"$(nproc)"
+          cmake3 --install sundials-build
+        '
 
     - name: Build and install HiGHS
       run: |
-        git clone --branch "$HIGHS_VERSION" --depth 1 https://github.com/ERGO-Code/HiGHS.git highs
-        cmake3 -S highs -B highs/build \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
-          -DBUILD_SHARED_LIBS=ON
-        cmake3 --build highs/build -j"$(nproc)"
-        cmake3 --install highs/build
+        runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" HIGHS_VERSION="$HIGHS_VERSION" bash -lc '
+          cd "$GITHUB_WORKSPACE"
+          git clone --branch "$HIGHS_VERSION" --depth 1 https://github.com/ERGO-Code/HiGHS.git highs
+          cmake3 -S highs -B highs/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
+            -DBUILD_SHARED_LIBS=ON
+          cmake3 --build highs/build -j"$(nproc)"
+          cmake3 --install highs/build
+        '
 
     - name: Build ASCEND
       run: |
-        export PATH="$HOME/.local/bin:$PATH"
-        export PKG_CONFIG_PATH="$HOME/.local/lib/pkgconfig:$HOME/.local/lib64/pkgconfig:${PKG_CONFIG_PATH:-}"
-        export LD_LIBRARY_PATH="$HOME/.local/lib64:$HOME/.local/lib:${LD_LIBRARY_PATH:-}"
-        scons GCOV=1 MALLOC_DEBUG=1 \
-          CUNIT_PREFIX="$HOME/.local" \
-          SUNDIALS_PREFIX="$HOME/.local" \
-          HIGHS_PREFIX="$HOME/.local" \
-          ascend models solvers ascxx test a4
+        runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" bash -lc '
+          cd "$GITHUB_WORKSPACE"
+          export PATH="$HOME/.local/bin:$PATH"
+          export PKG_CONFIG_PATH="$HOME/.local/lib/pkgconfig:$HOME/.local/lib64/pkgconfig:${PKG_CONFIG_PATH:-}"
+          export LD_LIBRARY_PATH="$HOME/.local/lib64:$HOME/.local/lib:${LD_LIBRARY_PATH:-}"
+          scons GCOV=1 MALLOC_DEBUG=1 \
+            CUNIT_PREFIX="$HOME/.local" \
+            SUNDIALS_PREFIX="$HOME/.local" \
+            HIGHS_PREFIX="$HOME/.local" \
+            ascend models solvers ascxx test a4
+        '
 
     - name: ASCEND CUnit tests
       run: |
-        ./a4 cutest -r mallocdebug
+        runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" bash -lc '
+          cd "$GITHUB_WORKSPACE"
+          ./a4 cutest -r mallocdebug
+        '
 
     - name: FPROPS CUnit tests
       run: |
-        ./a4 script models/johnpye/fprops/test/cutest
+        runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" bash -lc '
+          cd "$GITHUB_WORKSPACE"
+          ./a4 script models/johnpye/fprops/test/cutest
+        '
 
     - name: ASCEND FPROPS external function test
       run: |
-        ./a4 run models/johnpye/fprops/rankine_fprops.a4c -m stream_state_test
-
+        runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" bash -lc '
+          cd "$GITHUB_WORKSPACE"
+          ./a4 run models/johnpye/fprops/rankine_fprops.a4c -m stream_state_test
+        '
