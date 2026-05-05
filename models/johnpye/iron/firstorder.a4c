@@ -1,0 +1,948 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+	Simple first-order shrinking-core check model.
+
+	Assumptions:
+	- spherical particle;
+	- surface-reaction-controlled shrinking core;
+	- first order in gaseous reductant, with constant bulk gas state folded into
+	  k_scm;
+	- no product-layer diffusion, film resistance, equilibrium, or heat effects.
+
+	The analytical solution before complete conversion is
+
+		r_core = 1 - k_scm * t
+		X = 1 - r_core^3
+
+	where r_core is the unreacted-core radius divided by the initial particle
+	radius.  The dynamic model integrates the core-radius ODE and compares the
+	result against that analytical expression.
+*)
+
+MODEL firstorder_shrinking_core;
+	t "time" IS_A time;
+	INDEPENDENT t;
+
+	T "isothermal particle temperature for fitted runs" IS_A temperature;
+	T_ref "reference temperature for Arrhenius rate" IS_A temperature;
+	k_ref "shrinking-core front speed divided by initial radius at T_ref" IS_A frequency;
+	E_a "activation energy" IS_A molar_energy;
+	k_scm "shrinking-core front speed divided by initial radius" IS_A frequency;
+	tau "complete-conversion time for the analytical solution" IS_A time;
+
+	r_core "dimensionless unreacted-core radius" IS_A fraction;
+	X "solid conversion" IS_A fraction;
+	reduction_degree "fit-driver observable; equal to X for this simple model" IS_A fraction;
+	r_core_exact "analytical dimensionless unreacted-core radius" IS_A factor;
+	X_exact "analytical solid conversion" IS_A factor;
+	X_error "dynamic conversion minus analytical conversion" IS_A factor;
+
+	arrhenius_eq:
+		k_scm = k_ref * exp(-E_a / (1 {GAS_C}) * (1 / T - 1 / T_ref));
+	core_ode:
+		der(r_core) = -k_scm;
+	conversion_eq:
+		X = 1 - r_core^3;
+	reduction_degree_eq:
+		reduction_degree = X;
+	tau_eq:
+		tau = 1 / k_scm;
+	exact_core_eq:
+		r_core_exact = 1 - k_scm * t;
+	exact_conversion_eq:
+		X_exact = 1 - r_core_exact^3;
+	error_eq:
+		X_error = X - X_exact;
+
+INITIAL
+	r_core_initial:
+		r_core = 1;
+
+METHODS
+	METHOD values;
+		FIX T := 873.15 {K};
+		FIX T_ref := 873.15 {K};
+		FIX k_ref := 1.0e-3 {1/s};
+		FIX E_a := 80 {kJ/mol};
+		k_scm := 1.0e-3 {1/s};
+		t := 0 {s};
+		r_core := 1;
+		X := 0;
+		reduction_degree := 0;
+		r_core_exact := 1;
+		X_exact := 0;
+		X_error := 0;
+	END values;
+
+	METHOD bound_self;
+		r_core.lower_bound := -1e-8;
+		r_core_exact.lower_bound := -1e-8;
+		X.lower_bound := -1e-8;
+		X.upper_bound := 1 + 1e-8;
+		reduction_degree.lower_bound := -1e-8;
+		reduction_degree.upper_bound := 1 + 1e-8;
+		X_exact.lower_bound := -1e-8;
+		X_exact.upper_bound := 1 + 1e-8;
+	END bound_self;
+
+	METHOD dynamic_reset;
+		t := 0 {s};
+		r_core := 1;
+		X := 0;
+		reduction_degree := 0;
+		r_core_exact := 1;
+		X_exact := 0;
+		X_error := 0;
+	END dynamic_reset;
+
+	METHOD prepare_dynamic;
+		RUN values;
+		RUN bound_self;
+		RUN dynamic_reset;
+		FIX t;
+		FREE der(r_core);
+		RUN observe_default;
+	END prepare_dynamic;
+
+	METHOD observe_default;
+		OBSERVE r_core, X, r_core_exact, X_exact, X_error, tau;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, X, k_scm, T;
+	END observe_cli_default;
+
+	METHOD use_measured_bed_height;
+	END use_measured_bed_height;
+
+	METHOD integrate_default;
+		RUN prepare_dynamic;
+		INTEGRATOR IDA;
+		OPTION rtol 1.0e-8;
+		INTEGRATE FROM 0 {s} TO 600 {s} STEPS 60;
+	END integrate_default;
+
+	METHOD on_load;
+		RUN prepare_dynamic;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(X_error) < 1.0e-7;
+	END self_test;
+END firstorder_shrinking_core;
+
+(* Short alias so `a4 run johnpye/iron/firstorder.a4c` works directly. *)
+MODEL firstorder REFINES firstorder_shrinking_core;
+NOTES 'fit.contract' SELF {
+version: 1
+parameters:
+- name: k_ref
+  target: k_ref
+  unit: 1/s
+  low: 1.0e-5
+  high: 1.0e-1
+  scale: log
+- name: E_a
+  target: E_a
+  unit: kJ/mol
+  low: 20.0
+  high: 180.0
+condition_inputs:
+- name: temperature
+  field: T_C
+  target: T
+  unit: K
+  transform: C_to_K
+setup_methods:
+- bound_self
+- dynamic_reset
+- observe_cli_default
+observe_method: observe_cli_default
+outputs:
+  time: t
+  reduction_degree: reduction_degree
+} END NOTES;
+END firstorder;
+
+(*
+	Diffusion-controlled spherical shrinking-core check model.
+
+	For product-layer diffusion control, the usual implicit analytical solution
+	before complete conversion is
+
+		1 - 3*r_core^2 + 2*r_core^3 = theta
+		theta = theta_initial + k_diff * t
+		X = 1 - r_core^3
+
+	with r_core = (1 - X)^(1/3).  The derivative dX/dt is singular at zero
+	conversion, so this model starts from a tiny positive theta_initial.
+*)
+
+MODEL firstorder_shrinking_core_diffusion;
+	t "time" IS_A time;
+	INDEPENDENT t;
+
+	T "isothermal particle temperature for fitted runs" IS_A temperature;
+	T_ref "reference temperature for Arrhenius rate" IS_A temperature;
+	k_ref "diffusion-controlled shrinking-core rate constant at T_ref" IS_A frequency;
+	E_a "activation energy" IS_A molar_energy;
+	k_diff "diffusion-controlled shrinking-core rate constant" IS_A frequency;
+	tau "complete-conversion time from theta=0" IS_A time;
+
+	theta_initial "small nonzero initial analytical diffusion progress" IS_A factor;
+	theta "integrated dimensionless diffusion progress" IS_A factor;
+	theta_exact "analytical dimensionless diffusion progress" IS_A factor;
+	theta_error "dynamic theta minus analytical theta" IS_A factor;
+
+	r_core "dimensionless unreacted-core radius" IS_A fraction;
+	X "solid conversion" IS_A fraction;
+	reduction_degree "fit-driver observable; equal to X for this simple model" IS_A fraction;
+	diffusion_function "1 - 3*r_core^2 + 2*r_core^3" IS_A factor;
+
+	arrhenius_eq:
+		k_diff = k_ref * exp(-E_a / (1 {GAS_C}) * (1 / T - 1 / T_ref));
+	core_ode:
+		der(r_core) = -k_diff / (6*r_core*(1 - r_core));
+	diffusion_function_eq:
+		diffusion_function = 1 - 3*r_core^2 + 2*r_core^3;
+	progress_eq:
+		theta = diffusion_function;
+	conversion_eq:
+		X = 1 - r_core^3;
+	reduction_degree_eq:
+		reduction_degree = X;
+	tau_eq:
+		tau = 1 / k_diff;
+	exact_progress_eq:
+		theta_exact = theta_initial + k_diff * t;
+	error_eq:
+		theta_error = theta - theta_exact;
+
+INITIAL
+	theta_initial_eq:
+		theta = theta_initial;
+
+METHODS
+	METHOD values;
+		FIX T := 873.15 {K};
+		FIX T_ref := 873.15 {K};
+		FIX k_ref := 1.0e-3 {1/s};
+		FIX E_a := 80 {kJ/mol};
+		k_diff := 1.0e-3 {1/s};
+		FIX theta_initial := 1.0e-6;
+		t := 0 {s};
+		theta := 1.0e-6;
+		theta_exact := 1.0e-6;
+		theta_error := 0;
+		r_core := 0.999422537521206;
+		X := 0.00173138724020039;
+		reduction_degree := 0.00173138724020039;
+		diffusion_function := 1.0e-6;
+	END values;
+
+	METHOD bound_self;
+		theta.lower_bound := 0;
+		theta.upper_bound := 1 + 1e-8;
+		theta_exact.lower_bound := 0;
+		theta_exact.upper_bound := 1 + 1e-8;
+		r_core.lower_bound := 1e-8;
+		r_core.upper_bound := 1;
+		X.lower_bound := -1e-8;
+		X.upper_bound := 1 + 1e-8;
+		reduction_degree.lower_bound := -1e-8;
+		reduction_degree.upper_bound := 1 + 1e-8;
+		diffusion_function.lower_bound := 0;
+		diffusion_function.upper_bound := 1 + 1e-8;
+	END bound_self;
+
+	METHOD dynamic_reset;
+		t := 0 {s};
+		theta := 1.0e-6;
+		theta_exact := 1.0e-6;
+		theta_error := 0;
+		r_core := 0.999422537521206;
+		X := 0.00173138724020039;
+		reduction_degree := 0.00173138724020039;
+		diffusion_function := 1.0e-6;
+	END dynamic_reset;
+
+	METHOD prepare_dynamic;
+		RUN values;
+		RUN bound_self;
+		RUN dynamic_reset;
+		FIX t;
+		FREE der(r_core);
+		r_core.ode_atol := 1.0e-10;
+		RUN observe_default;
+	END prepare_dynamic;
+
+	METHOD observe_default;
+		OBSERVE theta, theta_exact, theta_error, r_core, X, diffusion_function, tau;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, X, k_diff, T;
+	END observe_cli_default;
+
+	METHOD use_measured_bed_height;
+	END use_measured_bed_height;
+
+	METHOD integrate_default;
+		RUN prepare_dynamic;
+		INTEGRATOR IDA;
+		OPTION rtol 1.0e-8;
+		INTEGRATE FROM 0 {s} TO 600 {s} STEPS 60;
+	END integrate_default;
+
+	METHOD on_load;
+		RUN prepare_dynamic;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(theta_error) < 1.0e-7;
+	END self_test;
+END firstorder_shrinking_core_diffusion;
+
+MODEL firstorder_diffusion REFINES firstorder_shrinking_core_diffusion;
+NOTES 'fit.contract' SELF {
+version: 1
+parameters:
+- name: k_ref
+  target: k_ref
+  unit: 1/s
+  low: 1.0e-5
+  high: 1.0e-1
+  scale: log
+- name: E_a
+  target: E_a
+  unit: kJ/mol
+  low: 20.0
+  high: 220.0
+condition_inputs:
+- name: temperature
+  field: T_C
+  target: T
+  unit: K
+  transform: C_to_K
+setup_methods:
+- bound_self
+- dynamic_reset
+- observe_cli_default
+observe_method: observe_cli_default
+outputs:
+  time: t
+  reduction_degree: reduction_degree
+} END NOTES;
+END firstorder_diffusion;
+
+(*
+	Mixed external-film plus product-layer diffusion shrinking-core model.
+
+	This is the usual additive-resistance form for a spherical shrinking core
+	with a fixed external gas-film resistance and a product-layer diffusion
+	resistance that increases as the unreacted core shrinks:
+
+		t = X / k_film + (1 - 3*r_core^2 + 2*r_core^3) / k_diff
+		X = 1 - r_core^3
+
+	after subtracting the initial value.  k_film is the conversion-rate
+	constant for the film-only limit; k_diff is the rate constant for the
+	product-layer-diffusion-only limit.
+*)
+
+MODEL firstorder_shrinking_core_film_diffusion;
+	t "time" IS_A time;
+	INDEPENDENT t;
+
+	T "isothermal particle temperature for fitted runs" IS_A temperature;
+	T_ref "reference temperature for Arrhenius rates" IS_A temperature;
+	k_film_ref "external-film controlled conversion rate constant at T_ref" IS_A frequency;
+	E_a_film "external-film apparent activation energy" IS_A molar_energy;
+	k_diff_ref "product-layer diffusion controlled shrinking-core rate constant at T_ref" IS_A frequency;
+	E_a_diff "product-layer diffusion apparent activation energy" IS_A molar_energy;
+	k_film "external-film controlled conversion rate constant" IS_A frequency;
+	k_diff "product-layer diffusion controlled shrinking-core rate constant" IS_A frequency;
+
+	r_core "dimensionless unreacted-core radius" IS_A fraction;
+	X "solid conversion" IS_A fraction;
+	reduction_degree "fit-driver observable; equal to X for this simple model" IS_A fraction;
+	diffusion_function "1 - 3*r_core^2 + 2*r_core^3" IS_A factor;
+
+	X_initial "initial solid conversion" IS_A factor;
+	diffusion_initial "initial diffusion function" IS_A factor;
+	t_exact "analytical mixed-resistance elapsed time" IS_A time;
+	t_error "dynamic time minus analytical elapsed time" IS_A time;
+
+	film_arrhenius_eq:
+		k_film = k_film_ref * exp(-E_a_film / (1 {GAS_C}) * (1 / T - 1 / T_ref));
+	diffusion_arrhenius_eq:
+		k_diff = k_diff_ref * exp(-E_a_diff / (1 {GAS_C}) * (1 / T - 1 / T_ref));
+	core_ode:
+		der(r_core) = -1 / (3*r_core^2 / k_film + 6*r_core*(1 - r_core) / k_diff);
+	conversion_eq:
+		X = 1 - r_core^3;
+	reduction_degree_eq:
+		reduction_degree = X;
+	diffusion_function_eq:
+		diffusion_function = 1 - 3*r_core^2 + 2*r_core^3;
+	exact_time_eq:
+		t_exact = (X - X_initial) / k_film + (diffusion_function - diffusion_initial) / k_diff;
+	error_eq:
+		t_error = t - t_exact;
+
+INITIAL
+	r_core_initial:
+		r_core = 1;
+
+METHODS
+	METHOD values;
+		FIX T := 873.15 {K};
+		FIX T_ref := 873.15 {K};
+		FIX k_film_ref := 2.0e-3 {1/s};
+		FIX E_a_film := 40 {kJ/mol};
+		FIX k_diff_ref := 1.0e-3 {1/s};
+		FIX E_a_diff := 80 {kJ/mol};
+		k_film := 2.0e-3 {1/s};
+		k_diff := 1.0e-3 {1/s};
+		FIX X_initial := 0;
+		FIX diffusion_initial := 0;
+		t := 0 {s};
+		r_core := 1;
+		X := 0;
+		reduction_degree := 0;
+		diffusion_function := 0;
+		t_exact := 0 {s};
+		t_error := 0 {s};
+	END values;
+
+	METHOD bound_self;
+		r_core.lower_bound := 1e-8;
+		r_core.upper_bound := 1;
+		X.lower_bound := -1e-8;
+		X.upper_bound := 1 + 1e-8;
+		reduction_degree.lower_bound := -1e-8;
+		reduction_degree.upper_bound := 1 + 1e-8;
+		diffusion_function.lower_bound := 0;
+		diffusion_function.upper_bound := 1 + 1e-8;
+	END bound_self;
+
+	METHOD dynamic_reset;
+		t := 0 {s};
+		r_core := 1;
+		X := 0;
+		reduction_degree := 0;
+		diffusion_function := 0;
+		t_exact := 0 {s};
+		t_error := 0 {s};
+	END dynamic_reset;
+
+	METHOD prepare_dynamic;
+		RUN values;
+		RUN bound_self;
+		RUN dynamic_reset;
+		FIX t;
+		FREE der(r_core);
+		r_core.ode_atol := 1.0e-10;
+		RUN observe_default;
+	END prepare_dynamic;
+
+	METHOD observe_default;
+		OBSERVE r_core, X, diffusion_function, t_exact, t_error;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, X, k_film, k_diff, T;
+	END observe_cli_default;
+
+	METHOD use_measured_bed_height;
+	END use_measured_bed_height;
+
+	METHOD integrate_default;
+		RUN prepare_dynamic;
+		INTEGRATOR IDA;
+		OPTION rtol 1.0e-8;
+		INTEGRATE FROM 0 {s} TO 600 {s} STEPS 60;
+	END integrate_default;
+
+	METHOD on_load;
+		RUN prepare_dynamic;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(t_error) < 1.0e-2 {s};
+	END self_test;
+END firstorder_shrinking_core_film_diffusion;
+
+MODEL firstorder_film_diffusion REFINES firstorder_shrinking_core_film_diffusion;
+NOTES 'fit.contract' SELF {
+version: 1
+parameters:
+- name: k_film_ref
+  target: k_film_ref
+  unit: 1/s
+  low: 1.0e-5
+  high: 1.0e-1
+  scale: log
+- name: E_a_film
+  target: E_a_film
+  unit: kJ/mol
+  low: 5.0
+  high: 120.0
+- name: k_diff_ref
+  target: k_diff_ref
+  unit: 1/s
+  low: 1.0e-5
+  high: 1.0e-1
+  scale: log
+- name: E_a_diff
+  target: E_a_diff
+  unit: kJ/mol
+  low: 20.0
+  high: 220.0
+condition_inputs:
+- name: temperature
+  field: T_C
+  target: T
+  unit: K
+  transform: C_to_K
+setup_methods:
+- bound_self
+- dynamic_reset
+- observe_cli_default
+observe_method: observe_cli_default
+outputs:
+  time: t
+  reduction_degree: reduction_degree
+} END NOTES;
+END firstorder_film_diffusion;
+
+(*
+	Homogeneous first-order conversion model.
+
+	This is the non-shrinking-core baseline:
+
+		dX/dt = k_hom * (1 - X)
+		X = 1 - exp(-k_hom*t)
+*)
+
+MODEL firstorder_homogeneous_conversion;
+	t "time" IS_A time;
+	INDEPENDENT t;
+
+	T "isothermal particle temperature for fitted runs" IS_A temperature;
+	T_ref "reference temperature for Arrhenius rate" IS_A temperature;
+	k_ref "homogeneous first-order conversion rate constant at T_ref" IS_A frequency;
+	E_a "activation energy" IS_A molar_energy;
+	k_hom "homogeneous first-order conversion rate constant" IS_A frequency;
+	tau "time constant" IS_A time;
+
+	X "solid conversion" IS_A fraction;
+	reduction_degree "fit-driver observable; equal to X for this simple model" IS_A fraction;
+	X_exact "analytical solid conversion" IS_A factor;
+	X_error "dynamic conversion minus analytical conversion" IS_A factor;
+
+	arrhenius_eq:
+		k_hom = k_ref * exp(-E_a / (1 {GAS_C}) * (1 / T - 1 / T_ref));
+	conversion_ode:
+		der(X) = k_hom * (1 - X);
+	reduction_degree_eq:
+		reduction_degree = X;
+	tau_eq:
+		tau = 1 / k_hom;
+	exact_conversion_eq:
+		X_exact = 1 - exp(-k_hom * t);
+	error_eq:
+		X_error = X - X_exact;
+
+INITIAL
+	X_initial:
+		X = 0;
+
+METHODS
+	METHOD values;
+		FIX T := 873.15 {K};
+		FIX T_ref := 873.15 {K};
+		FIX k_ref := 1.0e-3 {1/s};
+		FIX E_a := 80 {kJ/mol};
+		k_hom := 1.0e-3 {1/s};
+		t := 0 {s};
+		X := 0;
+		reduction_degree := 0;
+		X_exact := 0;
+		X_error := 0;
+	END values;
+
+	METHOD bound_self;
+		X.lower_bound := -1e-8;
+		X.upper_bound := 1 + 1e-8;
+		reduction_degree.lower_bound := -1e-8;
+		reduction_degree.upper_bound := 1 + 1e-8;
+		X_exact.lower_bound := -1e-8;
+		X_exact.upper_bound := 1 + 1e-8;
+	END bound_self;
+
+	METHOD dynamic_reset;
+		t := 0 {s};
+		X := 0;
+		reduction_degree := 0;
+		X_exact := 0;
+		X_error := 0;
+	END dynamic_reset;
+
+	METHOD prepare_dynamic;
+		RUN values;
+		RUN bound_self;
+		RUN dynamic_reset;
+		FIX t;
+		FREE der(X);
+		X.ode_atol := 1.0e-10;
+		RUN observe_default;
+	END prepare_dynamic;
+
+	METHOD observe_default;
+		OBSERVE X, X_exact, X_error, tau;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, X, k_hom, T;
+	END observe_cli_default;
+
+	METHOD use_measured_bed_height;
+	END use_measured_bed_height;
+
+	METHOD integrate_default;
+		RUN prepare_dynamic;
+		INTEGRATOR IDA;
+		OPTION rtol 1.0e-8;
+		INTEGRATE FROM 0 {s} TO 600 {s} STEPS 60;
+	END integrate_default;
+
+	METHOD on_load;
+		RUN prepare_dynamic;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(X_error) < 1.0e-7;
+	END self_test;
+END firstorder_homogeneous_conversion;
+
+MODEL firstorder_homogeneous REFINES firstorder_homogeneous_conversion;
+NOTES 'fit.contract' SELF {
+version: 1
+parameters:
+- name: k_ref
+  target: k_ref
+  unit: 1/s
+  low: 1.0e-5
+  high: 1.0e-1
+  scale: log
+- name: E_a
+  target: E_a
+  unit: kJ/mol
+  low: 20.0
+  high: 180.0
+condition_inputs:
+- name: temperature
+  field: T_C
+  target: T
+  unit: K
+  transform: C_to_K
+setup_methods:
+- bound_self
+- dynamic_reset
+- observe_cli_default
+observe_method: observe_cli_default
+outputs:
+  time: t
+  reduction_degree: reduction_degree
+} END NOTES;
+END firstorder_homogeneous;
+
+(*
+	Avrami-Erofeev nucleation-and-growth model with exponent 2.
+
+		g = k_nuc * t
+		X = 1 - exp(-g^2)
+*)
+
+MODEL firstorder_nucleation_avrami2;
+	t "time" IS_A time;
+	INDEPENDENT t;
+
+	T "isothermal particle temperature for fitted runs" IS_A temperature;
+	T_ref "reference temperature for Arrhenius rate" IS_A temperature;
+	k_ref "Avrami progress rate constant at T_ref" IS_A frequency;
+	E_a "activation energy" IS_A molar_energy;
+	k_nuc "Avrami progress rate constant" IS_A frequency;
+	progress "dimensionless Avrami progress" IS_A factor;
+	X "solid conversion" IS_A fraction;
+	reduction_degree "fit-driver observable; equal to X for this simple model" IS_A fraction;
+	X_exact "analytical solid conversion" IS_A factor;
+	X_error "dynamic conversion minus analytical conversion" IS_A factor;
+
+	arrhenius_eq:
+		k_nuc = k_ref * exp(-E_a / (1 {GAS_C}) * (1 / T - 1 / T_ref));
+	progress_ode:
+		der(progress) = k_nuc;
+	conversion_eq:
+		X = 1 - exp(-progress * progress);
+	reduction_degree_eq:
+		reduction_degree = X;
+	exact_conversion_eq:
+		X_exact = 1 - exp(-(k_nuc * t) * (k_nuc * t));
+	error_eq:
+		X_error = X - X_exact;
+
+INITIAL
+	progress_initial:
+		progress = 0;
+
+METHODS
+	METHOD values;
+		FIX T := 873.15 {K};
+		FIX T_ref := 873.15 {K};
+		FIX k_ref := 1.0e-3 {1/s};
+		FIX E_a := 80 {kJ/mol};
+		k_nuc := 1.0e-3 {1/s};
+		t := 0 {s};
+		progress := 0;
+		X := 0;
+		reduction_degree := 0;
+		X_exact := 0;
+		X_error := 0;
+	END values;
+
+	METHOD bound_self;
+		progress.lower_bound := 0;
+		X.lower_bound := -1e-8;
+		X.upper_bound := 1 + 1e-8;
+		reduction_degree.lower_bound := -1e-8;
+		reduction_degree.upper_bound := 1 + 1e-8;
+		X_exact.lower_bound := -1e-8;
+		X_exact.upper_bound := 1 + 1e-8;
+	END bound_self;
+
+	METHOD dynamic_reset;
+		t := 0 {s};
+		progress := 0;
+		X := 0;
+		reduction_degree := 0;
+		X_exact := 0;
+		X_error := 0;
+	END dynamic_reset;
+
+	METHOD prepare_dynamic;
+		RUN values;
+		RUN bound_self;
+		RUN dynamic_reset;
+		FIX t;
+		FREE der(progress);
+		progress.ode_atol := 1.0e-10;
+		RUN observe_default;
+	END prepare_dynamic;
+
+	METHOD observe_default;
+		OBSERVE progress, X, X_exact, X_error;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, X, progress, k_nuc, T;
+	END observe_cli_default;
+
+	METHOD use_measured_bed_height;
+	END use_measured_bed_height;
+
+	METHOD integrate_default;
+		RUN prepare_dynamic;
+		INTEGRATOR IDA;
+		OPTION rtol 1.0e-8;
+		INTEGRATE FROM 0 {s} TO 600 {s} STEPS 60;
+	END integrate_default;
+
+	METHOD on_load;
+		RUN prepare_dynamic;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(X_error) < 1.0e-7;
+	END self_test;
+END firstorder_nucleation_avrami2;
+
+MODEL firstorder_nucleation2 REFINES firstorder_nucleation_avrami2;
+NOTES 'fit.contract' SELF {
+version: 1
+parameters:
+- name: k_ref
+  target: k_ref
+  unit: 1/s
+  low: 1.0e-5
+  high: 1.0e-1
+  scale: log
+- name: E_a
+  target: E_a
+  unit: kJ/mol
+  low: 20.0
+  high: 180.0
+condition_inputs:
+- name: temperature
+  field: T_C
+  target: T
+  unit: K
+  transform: C_to_K
+setup_methods:
+- bound_self
+- dynamic_reset
+- observe_cli_default
+observe_method: observe_cli_default
+outputs:
+  time: t
+  reduction_degree: reduction_degree
+} END NOTES;
+END firstorder_nucleation2;
+
+(*
+	Avrami-Erofeev nucleation-and-growth model with exponent 3.
+
+		g = k_nuc * t
+		X = 1 - exp(-g^3)
+*)
+
+MODEL firstorder_nucleation_avrami3;
+	t "time" IS_A time;
+	INDEPENDENT t;
+
+	T "isothermal particle temperature for fitted runs" IS_A temperature;
+	T_ref "reference temperature for Arrhenius rate" IS_A temperature;
+	k_ref "Avrami progress rate constant at T_ref" IS_A frequency;
+	E_a "activation energy" IS_A molar_energy;
+	k_nuc "Avrami progress rate constant" IS_A frequency;
+	progress "dimensionless Avrami progress" IS_A factor;
+	X "solid conversion" IS_A fraction;
+	reduction_degree "fit-driver observable; equal to X for this simple model" IS_A fraction;
+	X_exact "analytical solid conversion" IS_A factor;
+	X_error "dynamic conversion minus analytical conversion" IS_A factor;
+
+	arrhenius_eq:
+		k_nuc = k_ref * exp(-E_a / (1 {GAS_C}) * (1 / T - 1 / T_ref));
+	progress_ode:
+		der(progress) = k_nuc;
+	conversion_eq:
+		X = 1 - exp(-progress * progress * progress);
+	reduction_degree_eq:
+		reduction_degree = X;
+	exact_conversion_eq:
+		X_exact = 1 - exp(-(k_nuc * t) * (k_nuc * t) * (k_nuc * t));
+	error_eq:
+		X_error = X - X_exact;
+
+INITIAL
+	progress_initial:
+		progress = 0;
+
+METHODS
+	METHOD values;
+		FIX T := 873.15 {K};
+		FIX T_ref := 873.15 {K};
+		FIX k_ref := 1.0e-3 {1/s};
+		FIX E_a := 80 {kJ/mol};
+		k_nuc := 1.0e-3 {1/s};
+		t := 0 {s};
+		progress := 0;
+		X := 0;
+		reduction_degree := 0;
+		X_exact := 0;
+		X_error := 0;
+	END values;
+
+	METHOD bound_self;
+		progress.lower_bound := 0;
+		X.lower_bound := -1e-8;
+		X.upper_bound := 1 + 1e-8;
+		reduction_degree.lower_bound := -1e-8;
+		reduction_degree.upper_bound := 1 + 1e-8;
+		X_exact.lower_bound := -1e-8;
+		X_exact.upper_bound := 1 + 1e-8;
+	END bound_self;
+
+	METHOD dynamic_reset;
+		t := 0 {s};
+		progress := 0;
+		X := 0;
+		reduction_degree := 0;
+		X_exact := 0;
+		X_error := 0;
+	END dynamic_reset;
+
+	METHOD prepare_dynamic;
+		RUN values;
+		RUN bound_self;
+		RUN dynamic_reset;
+		FIX t;
+		FREE der(progress);
+		progress.ode_atol := 1.0e-10;
+		RUN observe_default;
+	END prepare_dynamic;
+
+	METHOD observe_default;
+		OBSERVE progress, X, X_exact, X_error;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, X, progress, k_nuc, T;
+	END observe_cli_default;
+
+	METHOD use_measured_bed_height;
+	END use_measured_bed_height;
+
+	METHOD integrate_default;
+		RUN prepare_dynamic;
+		INTEGRATOR IDA;
+		OPTION rtol 1.0e-8;
+		INTEGRATE FROM 0 {s} TO 600 {s} STEPS 60;
+	END integrate_default;
+
+	METHOD on_load;
+		RUN prepare_dynamic;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(X_error) < 1.0e-7;
+	END self_test;
+END firstorder_nucleation_avrami3;
+
+MODEL firstorder_nucleation3 REFINES firstorder_nucleation_avrami3;
+NOTES 'fit.contract' SELF {
+version: 1
+parameters:
+- name: k_ref
+  target: k_ref
+  unit: 1/s
+  low: 1.0e-5
+  high: 1.0e-1
+  scale: log
+- name: E_a
+  target: E_a
+  unit: kJ/mol
+  low: 20.0
+  high: 180.0
+condition_inputs:
+- name: temperature
+  field: T_C
+  target: T
+  unit: K
+  transform: C_to_K
+setup_methods:
+- bound_self
+- dynamic_reset
+- observe_cli_default
+observe_method: observe_cli_default
+outputs:
+  time: t
+  reduction_degree: reduction_degree
+} END NOTES;
+END firstorder_nucleation3;
+
+(* vim: sw=4:noet:ts=4
+*)
