@@ -16,6 +16,7 @@
 #include "solution.h"
 #include "eqm.h"
 #include "eqm_internal.h"
+#include "eqm_linalg.h"
 #include "name_resolve.h"
 
 #ifdef HAVE_IPOPT
@@ -436,7 +437,6 @@ static PureFluid *eqm_prepare_fluid_for_mu0(const EosData *E, const char *corrty
 static int eqm_fluid_state_from_pT(const PureFluid *F, double T, double P, FluidState2 *S_out);
 static int eqm_validate_solution_bounds(const char **names, int ns, int ne, const double *A,
 		const double *b, const char *source, double T, double P, const double *n_out);
-static int eqm_dense_solve(double *A, double *b, int n);
 void fprops_rxn_package_free(FpropsRxnPackage *pkg);
 
 static void eqm_sort_columns_by_target(const double *n_target, int ns, int *perm, int *inv_perm){
@@ -484,7 +484,7 @@ static int eqm_solve_particular_from_pivots(const double *A, const double *b, in
 			B[e * ne + j] = A[e * ns + pivots[j]];
 		}
 	}
-	if(!eqm_dense_solve(B, x, ne)){
+	if(!eqm_linalg_dense_solve(B, x, ne)){
 		goto cleanup;
 	}
 	for(int i = 0; i < ns; ++i){
@@ -2349,59 +2349,6 @@ double eqm_logsumexp(const double *logv, int n){
 	return maxv + log(sum);
 }
 
-static int eqm_dense_solve(double *A, double *b, int n){
-	const double piv_tol = 1e-14;
-	for(int k = 0; k < n; ++k){
-		int piv = k;
-		double maxabs = fabs(A[k * n + k]);
-		for(int i = k + 1; i < n; ++i){
-			double v = fabs(A[i * n + k]);
-			if(v > maxabs){
-				maxabs = v;
-				piv = i;
-			}
-		}
-		if(!(maxabs > piv_tol)){
-			return 0;
-		}
-		if(piv != k){
-			for(int j = k; j < n; ++j){
-				double tmp = A[k * n + j];
-				A[k * n + j] = A[piv * n + j];
-				A[piv * n + j] = tmp;
-			}
-			{
-				double tmp = b[k];
-				b[k] = b[piv];
-				b[piv] = tmp;
-			}
-		}
-		{
-			double diag = A[k * n + k];
-			for(int i = k + 1; i < n; ++i){
-				double f = A[i * n + k] / diag;
-				A[i * n + k] = 0.0;
-				for(int j = k + 1; j < n; ++j){
-					A[i * n + j] -= f * A[k * n + j];
-				}
-				b[i] -= f * b[k];
-			}
-		}
-	}
-	for(int i = n - 1; i >= 0; --i){
-		double s = b[i];
-		double diag = A[i * n + i];
-		if(!(fabs(diag) > piv_tol)){
-			return 0;
-		}
-		for(int j = i + 1; j < n; ++j){
-			s -= A[i * n + j] * b[j];
-		}
-		b[i] = s / diag;
-	}
-	return 1;
-}
-
 static void eqm_reduced_compute_n(const double *n0, const double *N, int ns, int r,
 		const double *z, double *n){
 	for(int i = 0; i < ns; ++i){
@@ -2508,7 +2455,7 @@ static int eqm_reduced_project_ls(const double *n0, const double *N, int ns, int
 			G[j * r + k] = g;
 		}
 	}
-	ok = eqm_dense_solve(G, rhs, r);
+	ok = eqm_linalg_dense_solve(G, rhs, r);
 	if(ok){
 		for(int j = 0; j < r; ++j){
 			z_out[j] = rhs[j];
@@ -3243,7 +3190,7 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 					}
 					Hsys[j * r + j] += lambda;
 				}
-				if(eqm_dense_solve(Hsys, rhs, r)){
+				if(eqm_linalg_dense_solve(Hsys, rhs, r)){
 					solved = 1;
 					for(int j = 0; j < r; ++j){
 						dz[j] = rhs[j];
@@ -3428,7 +3375,7 @@ static int eqm_reduced_eval_reduced_gradients(const double *mu, const double *A,
 				}
 				Msys[p * ne + p] += reg;
 			}
-			if(eqm_dense_solve(Msys, lambda, ne)){
+			if(eqm_linalg_dense_solve(Msys, lambda, ne)){
 				solved = 1;
 				break;
 			}
@@ -5625,7 +5572,7 @@ int fprops_rxn_eqm_sensitivities(const FpropsRxnPackage *pkg, const FpropsRxnTPN
 			rhs[i] = -dmu_dT;
 		}
 		memcpy(Kwork, K, sizeof(double) * (size_t)(m * m));
-		if(!eqm_dense_solve(Kwork, rhs, m)){
+		if(!eqm_linalg_dense_solve(Kwork, rhs, m)){
 			status = -13;
 			goto cleanup;
 		}
@@ -5640,7 +5587,7 @@ int fprops_rxn_eqm_sensitivities(const FpropsRxnPackage *pkg, const FpropsRxnTPN
 			rhs[i] = -(RT / state->P);
 		}
 		memcpy(Kwork, K, sizeof(double) * (size_t)(m * m));
-		if(!eqm_dense_solve(Kwork, rhs, m)){
+		if(!eqm_linalg_dense_solve(Kwork, rhs, m)){
 			status = -13;
 			goto cleanup;
 		}
@@ -5654,7 +5601,7 @@ int fprops_rxn_eqm_sensitivities(const FpropsRxnPackage *pkg, const FpropsRxnTPN
 			memset(rhs, 0, sizeof(double) * (size_t)m);
 			rhs[pkg->ns + e] = 1.0;
 			memcpy(Kwork, K, sizeof(double) * (size_t)(m * m));
-			if(!eqm_dense_solve(Kwork, rhs, m)){
+			if(!eqm_linalg_dense_solve(Kwork, rhs, m)){
 				status = -13;
 				goto cleanup;
 			}

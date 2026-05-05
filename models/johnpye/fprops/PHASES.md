@@ -585,41 +585,64 @@ Exit criteria for Phase 4a:
 
 ### Phase 4b: Multiplier-driven phase active set
 
-Deliverables:
+Status: first-pass implementation is in place. It is still being kept as
+a separate API from `fprops_eqm_phase_solve_auto(...)` while the remaining
+boundary checks and continuation behavior are exercised.
 
-- expose or reconstruct element KKT multipliers from the inner phase solve
-- add/drop whole phases based on entry residuals and phase amounts
-- warm-start inner solves after phase additions/removals
-- rank competing phase-entry candidates by normalized residual
-- add continuation where needed in temperature or feed severity
-- implement final validation:
+Implemented:
+
+- `fprops_eqm_phase_reconstruct_lambda(...)` reconstructs element KKT
+  multipliers from the active assemblage stationarity equations
+- `fprops_eqm_phase_validate_entry_residuals(...)` validates the final
+  assemblage using active stationarity and inactive phase-entry residuals
+- `fprops_eqm_phase_solve_active_set(...)` performs an add/drop active-set
+  loop over supplied phase packages
+- inner solves are warm-started from the previous expanded member amounts
+  after phase additions/removals
+- candidate phase additions are ranked by most negative phase-entry
+  residual
+- low-amount phases are dropped from the active set
+- failed add attempts can recover by removing one currently active phase,
+  allowing phase replacement cases such as `Fe + gas` to move to
+  `wustite + gas`
+- active-set results fail closed unless the final active mask passes:
   - element balance
   - active phase stationarity
   - inactive phase entry residuals
-  - internal composition bounds
+  - internal composition bounds from the fixed-active solve
 
-Tests:
+Tests implemented:
 
-- strongly reducing Fe-O-H continues to activate `Fe + gas` from a broad
-  package-level call
-- less reducing Fe-O-H cases activate wustite, spinel, and hematite as
-  expected from boundary logic
-- Fe-O-H and Fe-O-C checks include 500 C, 600 C, and 700 C ranges where
-  Fe/FeO, Fe/Fe3O4, and FeO/Fe3O4 behavior is sensitive
-- boundary-adjacent tests sample both sides of Fe|wustite and
+- strongly reducing Fe-O-H activates `Fe + gas` from a broad package-level
+  call
+- BG-positioned 600 C, 700 C, and 900 C Fe-O-H cases activate
+  `wustite + H2/H2O gas`
+- BG-positioned 900 C Fe-O-C case activates `wustite + CO/CO2 gas`
+- 700 C Fe-O-H validation rejects inactive Fe, spinel, and hematite by
+  entry residual validation
+- selected phase/eqm/fprops suites currently pass with the Phase 4b API
+  enabled
+
+Remaining Phase 4b close-out work:
+
+- add low-temperature BG truth checks around 500 C for the Fe/spinel
+  branch, choosing the correct spinel source/variant before locking the
+  assertion
+- add more boundary-near BG truth checks around Fe/FeO, Fe/Fe3O4, and
+  FeO/Fe3O4-sensitive regions
+- add additional Fe-O-C active-set checks using Fe, Fe oxides, CO, and
+  CO2 only, especially below 900 C once the relevant BG points are fixed
+  in the C test harness
+- sample boundary-adjacent cases on both sides of Fe|wustite and
   wustite|spinel fields
-- results are insensitive to small perturbations in the initial guess
-- results remain stable when inactive phases are present in the package
-- active-set trace shows meaningful phase additions/removals, entry
-  residuals, solve statuses, and final validation residuals
-
-Exit criteria:
-
-- Fe-O-H can be solved by specifying the package and element totals,
-  rather than by custom boundary scripts or manually selected active
-  assemblages
-- final validation confirms active stationarity and inactive phase-entry
-  residuals, not only lowest objective among enumerated subsets
+- test sensitivity to small perturbations in the active-set initial mask
+  and expanded member warm start
+- improve trace output with final stationarity RMS and per-phase entry
+  residuals
+- decide whether `fprops_eqm_phase_solve_auto(...)` should remain the
+  enumerating reference path, call active-set first, or expose both as
+  separate public strategies
+- add continuation where needed in temperature or feed severity
 
 ### Phase 5: Public API and examples
 

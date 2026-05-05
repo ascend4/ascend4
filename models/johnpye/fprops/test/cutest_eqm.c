@@ -610,6 +610,68 @@ static void test_eqm_phase_auto_fe_gas_reducing_case(void){
 	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], 0.03, 2e-5);
 }
 
+static void test_eqm_phase_active_set_fe_gas_reducing_case(void){
+	FpropsEqmPhaseModel phases[5];
+	const char *elements[] = {"Fe", "O", "H"};
+	double b[] = {2.0, 3.0, 200.0};
+	double phase_amounts[5];
+	double phase_y[5 * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_amounts[16];
+	int active[5];
+	int nmember = 0;
+	int status;
+
+	test_prepare_feoh_phase_package(phases);
+	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
+		elements, ARRAYLEN(elements), b, 1173.15, 101325.0, "auto", NULL,
+		phase_amounts, phase_y, active, member_amounts, &nmember);
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQUAL(nmember, 11);
+	CU_ASSERT_TRUE(active[0]);
+	CU_ASSERT_TRUE(active[4]);
+	CU_ASSERT_TRUE(!active[1]);
+	CU_ASSERT_TRUE(!active[2]);
+	CU_ASSERT_TRUE(!active[3]);
+	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[0], 2.0, 1e-6);
+	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[4], 100.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS], 0.97, 2e-5);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], 0.03, 2e-5);
+}
+
+static void test_eqm_phase_validate_fe_gas_reducing_case(void){
+	FpropsEqmPhaseModel phases[5];
+	const char *elements[] = {"Fe", "O", "H"};
+	double b[] = {2.0, 3.0, 200.0};
+	double phase_amounts[5];
+	double phase_y[5 * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_amounts[16];
+	double lambda[3] = {NAN, NAN, NAN};
+	double residuals[5] = {NAN, NAN, NAN, NAN, NAN};
+	double rms = NAN;
+	int active[5];
+	int nmember = 0;
+	int status;
+
+	test_prepare_feoh_phase_package(phases);
+	status = fprops_eqm_phase_solve_auto(phases, ARRAYLEN(phases), elements, ARRAYLEN(elements),
+		b, 1173.15, 101325.0, "auto", phase_amounts, phase_y, active, member_amounts,
+		&nmember);
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_reconstruct_lambda(phases, ARRAYLEN(phases),
+			elements, ARRAYLEN(elements), 1173.15, 101325.0, phase_amounts, phase_y,
+			active, lambda, &rms));
+	CU_ASSERT_TRUE(rms < 1e-8);
+	CU_ASSERT_TRUE(isfinite(lambda[0]) && isfinite(lambda[1]) && isfinite(lambda[2]));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_validate_entry_residuals(phases, ARRAYLEN(phases),
+			elements, ARRAYLEN(elements), 1173.15, 101325.0, phase_amounts, phase_y,
+			active, lambda, residuals));
+	CU_ASSERT_TRUE(fabs(residuals[0]) < 1e-8);
+	CU_ASSERT_TRUE(fabs(residuals[4]) < 1e-8);
+	CU_ASSERT_TRUE(residuals[1] > -5e-2);
+	CU_ASSERT_TRUE(residuals[2] > -5e-2);
+	CU_ASSERT_TRUE(residuals[3] > -5e-2);
+}
+
 static void test_eqm_phase_auto_fe_co_co2_gas_smoke(void){
 	FpropsEqmPhaseModel phases[2];
 	const char *elements[] = {"Fe", "O", "C"};
@@ -698,6 +760,66 @@ static void test_eqm_phase_auto_wustite_co_bg_900c_classification(void){
 	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], n_co2 / gas_total, 2e-4);
 }
 
+static void test_eqm_phase_active_set_wustite_co_bg_900c(void){
+	const double T = 1173.15;
+	const double P = 101325.0;
+	const double R = 8.31446261815324;
+	const double gas_total = 10.0;
+	double log10_ratio = 0.5 * (test_bg_fe_wustite_log10_co2_co_900c()
+		+ test_bg_wustite_spinel_log10_co2_co_900c());
+	double ratio = pow(10.0, log10_ratio);
+	double n_co2 = gas_total * ratio / (1.0 + ratio);
+	double n_co = gas_total - n_co2;
+	FpropsEqmPhaseModel phases[5];
+	double mu_co;
+	double mu_co2;
+	double lambda_o_thermo;
+	double lambda_fe;
+	double y_entry[1] = {NAN};
+	double elem_w[2];
+	double b[3];
+	const char *elements[] = {"Fe", "O", "C"};
+	double phase_amounts[5];
+	double phase_y[5 * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_amounts[16];
+	int active[5];
+	int nmember = 0;
+	int status;
+	int i_fe;
+	int i_o;
+
+	test_prepare_feoc_phase_package(phases);
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("carbonmonoxide", "Moran and Shapiro", T, g_eqm.P0, &mu_co));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("carbondioxide", "Moran and Shapiro", T, g_eqm.P0, &mu_co2));
+	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_co2 - mu_co);
+	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[1], T, P,
+			-lambda_o_thermo, &lambda_fe, y_entry));
+	(void)lambda_fe;
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[1], y_entry, elem_w));
+	i_fe = find_name(phases[1].elements, phases[1].nelem, "Fe");
+	i_o = find_name(phases[1].elements, phases[1].nelem, "O");
+	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
+	b[0] = elem_w[i_fe];
+	b[1] = elem_w[i_o] + n_co + 2.0 * n_co2;
+	b[2] = gas_total;
+
+	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
+		elements, ARRAYLEN(elements), b, T, P, "auto", NULL, phase_amounts, phase_y,
+		active, member_amounts, &nmember);
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQUAL(nmember, 11);
+	CU_ASSERT_TRUE(!active[0]);
+	CU_ASSERT_TRUE(active[1]);
+	CU_ASSERT_TRUE(!active[2]);
+	CU_ASSERT_TRUE(!active[3]);
+	CU_ASSERT_TRUE(active[4]);
+	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[1], 1.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[4], gas_total, 1e-4);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[1 * FPROPS_EQM_PHASE_MAX_VARS], y_entry[0], 4e-3);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS], n_co / gas_total, 2e-4);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], n_co2 / gas_total, 2e-4);
+}
+
 static void test_run_feoh_wustite_bg_classification(double tc, double log10_fe_wus,
 		double log10_wus_spin){
 	const double T = tc + 273.15;
@@ -759,6 +881,68 @@ static void test_run_feoh_wustite_bg_classification(double tc, double log10_fe_w
 	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], n_h2o / gas_total, 2e-4);
 }
 
+static void test_run_feoh_wustite_bg_active_set(double tc, double log10_fe_wus,
+		double log10_wus_spin){
+	const double T = tc + 273.15;
+	const double P = 101325.0;
+	const double R = 8.31446261815324;
+	const double gas_total = 10.0;
+	double log10_ratio = 0.5 * (log10_fe_wus + log10_wus_spin);
+	double ratio = pow(10.0, log10_ratio);
+	double n_h2o = gas_total * ratio / (1.0 + ratio);
+	double n_h2 = gas_total - n_h2o;
+	FpropsEqmPhaseModel phases[5];
+	double mu_h2;
+	double mu_h2o;
+	double lambda_o_thermo;
+	double lambda_fe;
+	double y_entry[1] = {NAN};
+	double elem_w[2];
+	double b[3];
+	const char *elements[] = {"Fe", "O", "H"};
+	double phase_amounts[5];
+	double phase_y[5 * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_amounts[16];
+	int active[5];
+	int nmember = 0;
+	int status;
+	int i_fe;
+	int i_o;
+
+	CU_ASSERT_TRUE(log10_fe_wus < log10_ratio);
+	CU_ASSERT_TRUE(log10_ratio < log10_wus_spin);
+	test_prepare_feoh_phase_package(phases);
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("hydrogen", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2o));
+	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_h2o - mu_h2);
+	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[1], T, P,
+			-lambda_o_thermo, &lambda_fe, y_entry));
+	(void)lambda_fe;
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[1], y_entry, elem_w));
+	i_fe = find_name(phases[1].elements, phases[1].nelem, "Fe");
+	i_o = find_name(phases[1].elements, phases[1].nelem, "O");
+	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
+	b[0] = elem_w[i_fe];
+	b[1] = elem_w[i_o] + n_h2o;
+	b[2] = 2.0 * gas_total;
+
+	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
+		elements, ARRAYLEN(elements), b, T, P, "auto", NULL, phase_amounts, phase_y,
+		active, member_amounts, &nmember);
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQUAL(nmember, 11);
+	CU_ASSERT_TRUE(!active[0]);
+	CU_ASSERT_TRUE(active[1]);
+	CU_ASSERT_TRUE(!active[2]);
+	CU_ASSERT_TRUE(!active[3]);
+	CU_ASSERT_TRUE(active[4]);
+	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[1], 1.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[4], gas_total, 1e-4);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[1 * FPROPS_EQM_PHASE_MAX_VARS], y_entry[0], 4e-3);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS], n_h2 / gas_total, 2e-4);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], n_h2o / gas_total, 2e-4);
+}
+
 static void test_eqm_phase_auto_wustite_bg_600c_classification(void){
 	test_run_feoh_wustite_bg_classification(600.0,
 		test_bg_fe_wustite_log10_h2o_h2_600c(),
@@ -771,8 +955,92 @@ static void test_eqm_phase_auto_wustite_bg_700c_classification(void){
 		test_bg_wustite_spinel_log10_h2o_h2_700c());
 }
 
+static void test_eqm_phase_active_set_wustite_bg_600c(void){
+	test_run_feoh_wustite_bg_active_set(600.0,
+		test_bg_fe_wustite_log10_h2o_h2_600c(),
+		test_bg_wustite_spinel_log10_h2o_h2_600c());
+}
+
+static void test_eqm_phase_active_set_wustite_bg_700c(void){
+	test_run_feoh_wustite_bg_active_set(700.0,
+		test_bg_fe_wustite_log10_h2o_h2_700c(),
+		test_bg_wustite_spinel_log10_h2o_h2_700c());
+}
+
+static void test_eqm_phase_validate_wustite_bg_700c(void){
+	const double tc = 700.0;
+	const double T = tc + 273.15;
+	const double P = 101325.0;
+	const double R = 8.31446261815324;
+	const double gas_total = 10.0;
+	double log10_ratio = 0.5 * (test_bg_fe_wustite_log10_h2o_h2_700c()
+		+ test_bg_wustite_spinel_log10_h2o_h2_700c());
+	double ratio = pow(10.0, log10_ratio);
+	double n_h2o = gas_total * ratio / (1.0 + ratio);
+	double n_h2 = gas_total - n_h2o;
+	FpropsEqmPhaseModel phases[5];
+	double mu_h2;
+	double mu_h2o;
+	double lambda_o_thermo;
+	double lambda_fe;
+	double y_entry[1] = {NAN};
+	double elem_w[2];
+	double b[3];
+	const char *elements[] = {"Fe", "O", "H"};
+	double phase_amounts[5];
+	double phase_y[5 * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_amounts[16];
+	double lambda[3] = {NAN, NAN, NAN};
+	double residuals[5] = {NAN, NAN, NAN, NAN, NAN};
+	double rms = NAN;
+	int active[5];
+	int nmember = 0;
+	int status;
+	int i_fe;
+	int i_o;
+
+	test_prepare_feoh_phase_package(phases);
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("hydrogen", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2o));
+	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_h2o - mu_h2);
+	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[1], T, P,
+			-lambda_o_thermo, &lambda_fe, y_entry));
+	(void)lambda_fe;
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[1], y_entry, elem_w));
+	i_fe = find_name(phases[1].elements, phases[1].nelem, "Fe");
+	i_o = find_name(phases[1].elements, phases[1].nelem, "O");
+	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
+	b[0] = elem_w[i_fe];
+	b[1] = elem_w[i_o] + n_h2o;
+	b[2] = 2.0 * gas_total;
+	(void)n_h2;
+
+	status = fprops_eqm_phase_solve_auto(phases, ARRAYLEN(phases), elements, ARRAYLEN(elements),
+		b, T, P, "auto", phase_amounts, phase_y, active, member_amounts, &nmember);
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_TRUE_FATAL(active[1]);
+	CU_ASSERT_TRUE_FATAL(active[4]);
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_reconstruct_lambda(phases, ARRAYLEN(phases),
+			elements, ARRAYLEN(elements), T, P, phase_amounts, phase_y, active, lambda, &rms));
+	CU_ASSERT_TRUE(rms < 1e-8);
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_validate_entry_residuals(phases, ARRAYLEN(phases),
+			elements, ARRAYLEN(elements), T, P, phase_amounts, phase_y, active, lambda,
+			residuals));
+	CU_ASSERT_TRUE(fabs(residuals[1]) < 2e-3);
+	CU_ASSERT_TRUE(fabs(residuals[4]) < 1e-8);
+	CU_ASSERT_TRUE(residuals[0] > -5e-2);
+	CU_ASSERT_TRUE(residuals[2] > -5e-2);
+	CU_ASSERT_TRUE(residuals[3] > -5e-2);
+}
+
 static void test_eqm_phase_auto_wustite_bg_900c_classification(void){
 	test_run_feoh_wustite_bg_classification(900.0,
+		test_bg_fe_wustite_log10_h2o_h2_900c(),
+		test_bg_wustite_spinel_log10_h2o_h2_900c());
+}
+
+static void test_eqm_phase_active_set_wustite_bg_900c(void){
+	test_run_feoh_wustite_bg_active_set(900.0,
 		test_bg_fe_wustite_log10_h2o_h2_900c(),
 		test_bg_wustite_spinel_log10_h2o_h2_900c());
 }
@@ -2513,260 +2781,214 @@ static void test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points
 	CU_ASSERT_EQUAL(pkg.kind, FPROPS_FLASH_PACKAGE_INVALID);
 }
 
-CU_ErrorCode test_register_eqm(void){
+#define EQM_CORE_TESTS(T) \
+	T(mu0_core_species) \
+	T(status_text_public_api) \
+	T(h2o_dissociation_reduced) \
+	T(wgs_reduced) \
+	T(co2_dissociation_clone_reduced) \
+	T(wgs_clone_reduced) \
+	T(slag_species_cp_reference_points) \
+	T(slag_species_reference_state_anchors) \
+	T(slag_species_mu0) \
+	T(feohsial_pure_capture_1000k) \
+	T(qfm_buffer_log10fo2_1000k) \
+	T(qfi_buffer_log10fo2_1000k) \
+	T(feoc_clone_redox_1000k) \
+	T(ammonia_synthesis_helmholtz_ref0_matches_hr_grid) \
+	T(wgs_permutation_invariance) \
+	T(multi_reaction_mixed_system) \
+	T(humid_air_nox_auto_reduced_lowt) \
+	T(fe_oxide_mu0_data) \
+	T(mu0_source_map_resolution) \
+	T(nio_h2_mixed_source_map_reduced) \
+	T(mu0_model_selectors) \
+	T(helmholtz_ref0_matches_ms_reaction_delta_g) \
+	T(nio_h2_shomate_selector_reduced) \
+	T(explicit_unknown_source_falls_back_to_ideal) \
+	T(reaktoro_clone_auto_routes_to_clone) \
+	T(hidayat_pragmatic_species_mu0) \
+	T(hidayat_magnetic_mu0_matches_formula) \
+	T(degterov_spinel_fe3o4_smoke) \
+	T(bg_tuned_spinel_source_smoke) \
+	T(mmc1_guess_spinel_source_smoke) \
+	T(hidayat_adj1_spinel_source_smoke) \
+	T(feoxide_recon_source_smoke) \
+	T(wustite_solution_fullspace_unique_balance) \
+	T(bcc_iron_solution_fullspace_unique_balance) \
+	T(wustite_solution_rejects_nullspace_only) \
+	T(feoh_reaktoro_clone_boundary_912C)
+
+#define PHASE_TESTS(T) \
+	T(registry_inspection_feoh) \
+	T(gibbs_and_elements_feoh) \
+	T(entry_fe_wustite_900c_anchor) \
+	T(entry_wustite_spinel_900c_anchor) \
+	T(fixed_linear_fe_gas_reducing_case) \
+	T(fixed_expanded_fe_gas_reducing_case) \
+	T(fixed_expanded_wustite_gas) \
+	T(fixed_expanded_spinel_gas) \
+	T(auto_fe_gas_reducing_case) \
+	T(active_set_fe_gas_reducing_case) \
+	T(validate_fe_gas_reducing_case) \
+	T(auto_fe_co_co2_gas_smoke) \
+	T(auto_wustite_co_bg_900c_classification) \
+	T(active_set_wustite_co_bg_900c) \
+	T(auto_wustite_bg_600c_classification) \
+	T(active_set_wustite_bg_600c) \
+	T(auto_wustite_bg_700c_classification) \
+	T(validate_wustite_bg_700c) \
+	T(active_set_wustite_bg_700c) \
+	T(auto_wustite_bg_900c_classification) \
+	T(active_set_wustite_bg_900c)
+
+#define FPROPS_EQM_TESTS(T) \
+	T(tpb_wgs_ms_table) \
+	T(tpy_wgs_normalization_and_match_tpb)
+
+#define MIX_H_TESTS(T) \
+	T(wgs_matches_tpb_and_scales) \
+	T(solution_phase_unsupported) \
+	T(fe2o3_h2_reduction_matches_standard_enthalpy)
+
+#define RXN_PACKAGE_TESTS(T) \
+	T(mix_h_supports_wustite_phase) \
+	T(mix_h_matches_legacy) \
+	T(ammonia_helmholtz_ref0_builds_and_solves) \
+	T(eqm_matches_legacy) \
+	T(eqm_tpy_matches_legacy) \
+	T(eqm_sensitivities_wgs)
+
+#define NAME_RESOLVE_TESTS(T) \
+	T(reactive_and_unifac_domains)
+
+#define UNIFAC_TESTS(T) \
+	T(native_source_data_lookup) \
+	T(runtime_prepare_and_gamma) \
+	T(liq_fugacity_matches_vlecalc_ethanol_water_bubble_points)
+
+#define FLASH_TESTS(T) \
+	T(prepare_unifac_and_tpz)
+
+#define ADD_EQM_CORE_TEST(NAME) \
+	if(NULL == CU_add_test(s, #NAME, test_eqm_##NAME)){ \
+		return CUE_NOTEST; \
+	}
+
+#define ADD_PHASE_TEST(NAME) \
+	if(NULL == CU_add_test(s, #NAME, test_eqm_phase_##NAME)){ \
+		return CUE_NOTEST; \
+	}
+
+#define ADD_FPROPS_EQM_TEST(NAME) \
+	if(NULL == CU_add_test(s, #NAME, test_fprops_eqm_##NAME)){ \
+		return CUE_NOTEST; \
+	}
+
+#define ADD_MIX_H_TEST(NAME) \
+	if(NULL == CU_add_test(s, #NAME, test_fprops_mix_h_tpn_##NAME)){ \
+		return CUE_NOTEST; \
+	}
+
+#define ADD_RXN_PACKAGE_TEST(NAME) \
+	if(NULL == CU_add_test(s, #NAME, test_fprops_rxn_package_##NAME)){ \
+		return CUE_NOTEST; \
+	}
+
+#define ADD_NAME_RESOLVE_TEST(NAME) \
+	if(NULL == CU_add_test(s, #NAME, test_name_resolve_##NAME)){ \
+		return CUE_NOTEST; \
+	}
+
+#define ADD_UNIFAC_TEST(NAME) \
+	if(NULL == CU_add_test(s, #NAME, test_unifac_##NAME)){ \
+		return CUE_NOTEST; \
+	}
+
+#define ADD_FLASH_TEST(NAME) \
+	if(NULL == CU_add_test(s, #NAME, test_flash_##NAME)){ \
+		return CUE_NOTEST; \
+	}
+
+static CU_ErrorCode test_register_eqm_core_suite(void){
 	CU_pSuite s = CU_add_suite("eqm", eqm_suite_init, eqm_suite_cleanup);
 	if(NULL == s){
 		return CUE_NOSUITE;
 	}
-	if(NULL == CU_add_test(s, "mu0_core_species", test_eqm_mu0_core_species)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "status_text_public_api", test_eqm_status_text_public_api)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_registry_inspection_feoh",
-			test_eqm_phase_registry_inspection_feoh)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_gibbs_and_elements_feoh",
-			test_eqm_phase_gibbs_and_elements_feoh)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_entry_fe_wustite_900c_anchor",
-			test_eqm_phase_entry_fe_wustite_900c_anchor)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_entry_wustite_spinel_900c_anchor",
-			test_eqm_phase_entry_wustite_spinel_900c_anchor)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_fixed_linear_fe_gas_reducing_case",
-			test_eqm_phase_fixed_linear_fe_gas_reducing_case)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_fixed_expanded_fe_gas_reducing_case",
-			test_eqm_phase_fixed_expanded_fe_gas_reducing_case)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_fixed_expanded_wustite_gas",
-			test_eqm_phase_fixed_expanded_wustite_gas)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_fixed_expanded_spinel_gas",
-			test_eqm_phase_fixed_expanded_spinel_gas)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_auto_fe_gas_reducing_case",
-			test_eqm_phase_auto_fe_gas_reducing_case)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_auto_fe_co_co2_gas_smoke",
-			test_eqm_phase_auto_fe_co_co2_gas_smoke)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_auto_wustite_co_bg_900c_classification",
-			test_eqm_phase_auto_wustite_co_bg_900c_classification)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_auto_wustite_bg_600c_classification",
-			test_eqm_phase_auto_wustite_bg_600c_classification)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_auto_wustite_bg_700c_classification",
-			test_eqm_phase_auto_wustite_bg_700c_classification)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "phase_auto_wustite_bg_900c_classification",
-			test_eqm_phase_auto_wustite_bg_900c_classification)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "h2o_dissociation_reduced", test_eqm_h2o_dissociation_reduced)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "wgs_reduced", test_eqm_wgs_reduced)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "co2_dissociation_clone_reduced",
-			test_eqm_co2_dissociation_clone_reduced)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "wgs_clone_reduced", test_eqm_wgs_clone_reduced)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "slag_species_cp_reference_points",
-			test_eqm_slag_species_cp_reference_points)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "slag_species_reference_state_anchors",
-			test_eqm_slag_species_reference_state_anchors)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "slag_species_mu0", test_eqm_slag_species_mu0)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "feohsial_pure_capture_1000k",
-			test_eqm_feohsial_pure_capture_1000k)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "qfm_buffer_log10fo2_1000k",
-			test_eqm_qfm_buffer_log10fo2_1000k)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "qfi_buffer_log10fo2_1000k",
-			test_eqm_qfi_buffer_log10fo2_1000k)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "feoc_clone_redox_1000k",
-			test_eqm_feoc_clone_redox_1000k)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "ammonia_synthesis_helmholtz_ref0_matches_hr_grid",
-			test_eqm_ammonia_synthesis_helmholtz_ref0_matches_hr_grid)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_eqm_tpb_wgs_ms_table", test_fprops_eqm_tpb_wgs_ms_table)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_eqm_tpy_wgs_normalization_and_match_tpb",
-			test_fprops_eqm_tpy_wgs_normalization_and_match_tpb)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_mix_h_tpn_wgs_matches_tpb_and_scales",
-			test_fprops_mix_h_tpn_wgs_matches_tpb_and_scales)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_mix_h_tpn_solution_phase_unsupported",
-			test_fprops_mix_h_tpn_solution_phase_unsupported)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_rxn_package_mix_h_supports_wustite_phase",
-			test_fprops_rxn_package_mix_h_supports_wustite_phase)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_rxn_package_mix_h_matches_legacy",
-			test_fprops_rxn_package_mix_h_matches_legacy)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy",
-			test_fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves",
-			test_fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_matches_legacy",
-			test_fprops_rxn_package_eqm_matches_legacy)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_tpy_matches_legacy",
-			test_fprops_rxn_package_eqm_tpy_matches_legacy)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fprops_rxn_package_eqm_sensitivities_wgs",
-			test_fprops_rxn_package_eqm_sensitivities_wgs)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "wgs_permutation_invariance", test_eqm_wgs_permutation_invariance)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "multi_reaction_mixed_system", test_eqm_multi_reaction_mixed_system)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "humid_air_nox_auto_reduced_lowt",
-			test_eqm_humid_air_nox_auto_reduced_lowt)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "fe_oxide_mu0_data", test_eqm_fe_oxide_mu0_data)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "mu0_source_map_resolution", test_eqm_mu0_source_map_resolution)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "nio_h2_mixed_source_map_reduced", test_eqm_nio_h2_mixed_source_map_reduced)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "mu0_model_selectors", test_eqm_mu0_model_selectors)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "helmholtz_ref0_matches_ms_reaction_delta_g",
-			test_eqm_helmholtz_ref0_matches_ms_reaction_delta_g)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "nio_h2_shomate_selector_reduced", test_eqm_nio_h2_shomate_selector_reduced)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "explicit_unknown_source_falls_back_to_ideal",
-			test_eqm_explicit_unknown_source_falls_back_to_ideal)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "reaktoro_clone_auto_routes_to_clone", test_eqm_reaktoro_clone_auto_routes_to_clone)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "hidayat_pragmatic_species_mu0", test_eqm_hidayat_pragmatic_species_mu0)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "hidayat_magnetic_mu0_matches_formula",
-			test_eqm_hidayat_magnetic_mu0_matches_formula)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "degterov_spinel_fe3o4_smoke",
-			test_eqm_degterov_spinel_fe3o4_smoke)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "bg_tuned_spinel_source_smoke",
-			test_eqm_bg_tuned_spinel_source_smoke)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "mmc1_guess_spinel_source_smoke",
-			test_eqm_mmc1_guess_spinel_source_smoke)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "hidayat_adj1_spinel_source_smoke",
-			test_eqm_hidayat_adj1_spinel_source_smoke)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "feoxide_recon_source_smoke",
-			test_eqm_feoxide_recon_source_smoke)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "wustite_solution_fullspace_unique_balance",
-			test_eqm_wustite_solution_fullspace_unique_balance)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "bcc_iron_solution_fullspace_unique_balance",
-			test_eqm_bcc_iron_solution_fullspace_unique_balance)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "wustite_solution_rejects_nullspace_only",
-			test_eqm_wustite_solution_rejects_nullspace_only)){
-		return CUE_NOTEST;
-	}
+	EQM_CORE_TESTS(ADD_EQM_CORE_TEST)
 	/* Temporarily skipped: unstable under current data/solver settings. */
 	(void)test_eqm_feo_pragmatic_low_oxygen_smoke_1400K;
-	if(NULL == CU_add_test(s, "feoh_reaktoro_clone_boundary_912C",
-				test_eqm_feoh_reaktoro_clone_boundary_912C)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "name_resolve_reactive_and_unifac_domains",
-			test_name_resolve_reactive_and_unifac_domains)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "unifac_native_source_data_lookup",
-			test_unifac_native_source_data_lookup)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "unifac_runtime_prepare_and_gamma",
-			test_unifac_runtime_prepare_and_gamma)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "flash_prepare_unifac_and_tpz",
-			test_flash_prepare_unifac_and_tpz)){
-		return CUE_NOTEST;
-	}
-	if(NULL == CU_add_test(s, "unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points",
-			test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points)){
-		return CUE_NOTEST;
-	}
 	return CUE_SUCCESS;
+}
+
+static CU_ErrorCode test_register_phase_suite(void){
+	CU_pSuite s = CU_add_suite("phase", eqm_suite_init, eqm_suite_cleanup);
+	if(NULL == s){
+		return CUE_NOSUITE;
+	}
+	PHASE_TESTS(ADD_PHASE_TEST)
+	return CUE_SUCCESS;
+}
+
+static CU_ErrorCode test_register_fprops_eqm_suite(void){
+	CU_pSuite s = CU_add_suite("fprops_eqm", eqm_suite_init, eqm_suite_cleanup);
+	if(NULL == s){
+		return CUE_NOSUITE;
+	}
+	FPROPS_EQM_TESTS(ADD_FPROPS_EQM_TEST)
+	return CUE_SUCCESS;
+}
+
+static CU_ErrorCode test_register_mix_h_suite(void){
+	CU_pSuite s = CU_add_suite("mix_h", eqm_suite_init, eqm_suite_cleanup);
+	if(NULL == s){
+		return CUE_NOSUITE;
+	}
+	MIX_H_TESTS(ADD_MIX_H_TEST)
+	return CUE_SUCCESS;
+}
+
+static CU_ErrorCode test_register_rxn_package_suite(void){
+	CU_pSuite s = CU_add_suite("rxn_package", eqm_suite_init, eqm_suite_cleanup);
+	if(NULL == s){
+		return CUE_NOSUITE;
+	}
+	RXN_PACKAGE_TESTS(ADD_RXN_PACKAGE_TEST)
+	return CUE_SUCCESS;
+}
+
+static CU_ErrorCode test_register_unifac_flash_suite(void){
+	CU_pSuite s = CU_add_suite("unifac_flash", eqm_suite_init, eqm_suite_cleanup);
+	if(NULL == s){
+		return CUE_NOSUITE;
+	}
+	NAME_RESOLVE_TESTS(ADD_NAME_RESOLVE_TEST)
+	UNIFAC_TESTS(ADD_UNIFAC_TEST)
+	FLASH_TESTS(ADD_FLASH_TEST)
+	return CUE_SUCCESS;
+}
+
+CU_ErrorCode test_register_eqm(void){
+	CU_ErrorCode result;
+	result = test_register_eqm_core_suite();
+	if(result != CUE_SUCCESS){
+		return result;
+	}
+	result = test_register_phase_suite();
+	if(result != CUE_SUCCESS){
+		return result;
+	}
+	result = test_register_fprops_eqm_suite();
+	if(result != CUE_SUCCESS){
+		return result;
+	}
+	result = test_register_mix_h_suite();
+	if(result != CUE_SUCCESS){
+		return result;
+	}
+	result = test_register_rxn_package_suite();
+	if(result != CUE_SUCCESS){
+		return result;
+	}
+	return test_register_unifac_flash_suite();
 }
