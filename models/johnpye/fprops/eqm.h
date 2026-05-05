@@ -52,6 +52,15 @@ typedef struct FpropsRxnResult{
 } FpropsRxnResult;
 
 /**
+ * Return a short human-readable description for an equilibrium status code.
+ *
+ * The codes are intentionally kept numeric for ABI compatibility with IPOPT
+ * and the existing FPROPS wrappers, but examples and diagnostics should use
+ * this function rather than carrying local status decoders.
+ */
+const char *fprops_eqm_status_text(int status);
+
+/**
  * Build a compiled reactive-package runtime object from a species basis
  * and source specification.
  *

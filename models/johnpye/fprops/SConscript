@@ -52,7 +52,7 @@ coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'peng
 	, 'bcc_iron_hidayat.c','fcc_iron_hidayat.c'
 	, 'spinel_data.c','spinel_fe_degterov.c'
 	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c', 'incomp.c'
-	, 'eqm.c', 'flash.c', 'flash_unifac.c', 'name_resolve.c', 'names/_name_registry.c'
+	, 'eqm.c', 'eqm_phase.c', 'flash.c', 'flash_unifac.c', 'name_resolve.c', 'names/_name_registry.c'
 	, 'mixtures/unifac_rundata.c'
 	, 'mixtures/_unifac_groups.c', 'mixtures/_unifac_components.c', 'mixtures/_unifac_lookup.c'
 ]
@@ -68,7 +68,12 @@ srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
 # this is (or is supposed to be) a shared library without ASCEND dependencies
-#fprops_env['libfprops'] = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
+lib_env = fprops_env.Clone()
+for flagvar in ('CCFLAGS', 'CFLAGS'):
+	if flagvar in lib_env:
+		lib_env[flagvar] = [f for f in lib_env[flagvar] if f != '-fvisibility=hidden']
+lib_shobjs = [lib_env.SharedObject(s, OBJPREFIX='#/models/johnpye/fprops/lib-') for s in srcs]
+fprops_env['libfprops'] = lib_env.SharedLibrary("fprops",lib_shobjs)
 
 if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 	asc_env = fprops_env.Clone()
@@ -91,8 +96,8 @@ if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
 
-	#asc_env.Depends(lib1,fprops_env['libfprops'])
-	#asc_env.Depends(lib2,fprops_env['libfprops'])
+	asc_env.Depends(lib1,fprops_env['libfprops'])
+	asc_env.Depends(lib2,fprops_env['libfprops'])
 
 	env['extfns'] += [lib1,lib2]
 

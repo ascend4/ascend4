@@ -37,6 +37,57 @@ double gas_R(void){
 	return 8.31446261815324;
 }
 
+const char *fprops_eqm_status_text(int status){
+	switch(status){
+	case 0:
+		return "solved";
+	case 1:
+		return "solved to acceptable level";
+	case 2:
+		return "infeasible problem detected";
+	case 3:
+		return "search direction became too small";
+	case 4:
+		return "diverging iterates";
+	case 5:
+		return "user requested stop";
+	case 6:
+		return "feasible point found";
+	case -1:
+		return "maximum iterations exceeded";
+	case -2:
+		return "restoration failed";
+	case -3:
+		return "error in step computation";
+	case -10:
+		return "not enough degrees of freedom";
+	case -11:
+		return "invalid input or problem definition";
+	case -12:
+		return "infeasible or unsupported equilibrium basis";
+	case -13:
+		return "solver failed or invalid numeric result";
+	case -14:
+		return "unsupported or missing enthalpy model";
+	case -15:
+		return "solution-phase enthalpy unsupported";
+	case -22:
+		return "equilibrium validation failed";
+	case -99:
+		return "solve not attempted";
+	case -100:
+		return "unrecoverable solver exception";
+	case -101:
+		return "non-IPOPT solver exception";
+	case -102:
+		return "insufficient memory";
+	case -199:
+		return "internal solver error";
+	default:
+		return "unknown equilibrium status";
+	}
+}
+
 /* Bound-KKT acceptance settings for boundary-active equilibrium solutions. */
 static const double EQM_BOUND_KKT_FREE_TOL = 2e-2;
 static const double EQM_BOUND_KKT_DUAL_TOL = 2e-2;

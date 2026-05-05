@@ -189,14 +189,20 @@ Gas and ordinary liquid mixtures are also solution phases in this sense.
 
 For an inactive phase, the solver should not evaluate activities at
 zero amount. Instead, it should perform a normalized phase-entry test.
-Given element potentials `lambda_e`, a phase wants to enter if:
+Given FPROPS KKT element multipliers `lambda_e`, using the existing
+stationarity convention `mu + A^T lambda - s = 0`, a phase wants to
+enter if:
 
 ```text
-min_y [ g_p(T, P, y) - sum_e lambda_e a_e(y) ] < 0
+min_y [ g_p(T, P, y) + sum_e lambda_e a_e(y) ] < 0
 ```
 
 within tolerance, where `a_e(y)` is the element content of one unit of
 phase at composition `y`.
+
+Some thermodynamics texts call `-lambda_e` the elemental chemical
+potential. FPROPS should keep the KKT sign convention internally and
+only convert signs at user/reporting boundaries where needed.
 
 For stoichiometric phases this is a direct scalar calculation. For
 solution phases it is a bounded composition minimization. This is the
@@ -274,6 +280,12 @@ struct FpropsEqmPhaseModel{
     FpropsEqmPhaseKind kind;
     int ncomp;
     int nvar;
+    int nelem;
+    const char *const *elements;
+    const char *basis;
+    const char *const *var_names;
+    const double *lower;
+    const double *upper;
 
     int (*elements)(const FpropsEqmPhaseModel *phase,
         const double *y, double *a_out);
@@ -299,6 +311,26 @@ pointers according to the phase kind. For example, a stoichiometric
 phase may provide a trivial `elements` callback and no internal
 composition variables, while a spinel phase provides site-constrained
 composition callbacks and a model-specific entry minimizer.
+
+The first implementation should use these basis conventions:
+
+- `g(T,P,y)` is the Gibbs energy of one natural phase unit. For
+  stoichiometric phases this is one species mole; for binary solution
+  phases it is one mole of solution members; for the reduced spinel
+  phase it is the same formula-unit/member basis already used by
+  `spinel_phase_eval`.
+- `elements(..., a_out)` writes element contents for that same natural
+  phase unit, in the phase model's declared element order.
+- Binary solution phases use `y[0]` as the fraction of member B, matching
+  the current `solution_binary_g_molar(M,T,P,x,...)` convention where
+  `x = n_b / (n_a + n_b)`.
+- Site-solution phases must report variable names, bounds, and any
+  equality constraints needed to interpret their internal coordinates.
+  The first spinel implementation may expose member/site coordinates
+  directly, but it must keep the charge and site-balance constraints
+  inspectable.
+- Entry residuals are normalized by `R T` in public diagnostics and
+  tests, even if internal minimizers also return dimensional J values.
 
 The first implementation can use simpler structs and function groups,
 but tests should be written around these capabilities.
@@ -376,12 +408,6 @@ Deliverables:
 
 - this document
 - a public or semi-public status decoder for equilibrium status codes
-- improved trace output for:
-  - algorithm dispatch
-  - phase/source resolution
-  - active set decisions
-  - validation failure reason
-- C-level logging/progress callback hooks for phase-aware solves
 - add a `libfprops.so` build target, separate from `libfprops_ascend.so`,
   suitable for standalone C examples
 
@@ -391,8 +417,6 @@ Tests:
 - status text is available from FPROPS rather than duplicated in each
   example program
 - a standalone C example can link against `libfprops.so` without ASCEND
-- logging callback tests can capture at least one phase-resolution event
-  and one solver-status event
 
 Exit criteria:
 
@@ -413,6 +437,12 @@ Deliverables:
   - list element names and element contents
   - evaluate `g(T,P,y)`
   - evaluate phase chemical potentials if available
+- improved trace output for:
+  - algorithm dispatch
+  - phase/source resolution
+  - active set decisions
+  - validation failure reason
+- C-level logging/progress callback hooks for phase-aware solves
 
 Tests:
 
@@ -421,6 +451,8 @@ Tests:
 - spinel registry reports site and charge constraints
 - H2/H2O gas source resolves to `helmholtz+ref0:`
 - `g(T,P,y)` finite-value tests at `900 C`
+- logging callback tests can capture at least one phase-resolution event
+  and one solver-status event once callback plumbing exists
 
 Exit criteria:
 
@@ -485,6 +517,9 @@ Tests:
   the wustite field
 - fixed active assemblage `spinel + gas` solves a feed/gas ratio inside
   the spinel field
+- fixed active assemblage tests for wustite and spinel must compare both
+  phase totals and internal composition variables against boundary/entry
+  expectations; the `Fe + gas` case is only the reducing-limit smoke test
 - element balance residuals are below tolerance
 - internal composition variables remain within valid domains
 
@@ -836,7 +871,8 @@ normal testing.
 4. Expose test-only inspection functions for phase resolution and
    phase `g(T,P,y)`.
 5. Port Fe-O-H boundary residual checks into C-level tests on a common
-   `lambda_O` basis.
+   FPROPS KKT `lambda_O` basis, using `g + A^T lambda` internally and
+   converting signs only for user-facing gas-ratio reports.
 6. Implement a fixed-active-assemblage solve for `Fe + H2/H2O` and prove
    the strongly reducing hematite-plus-hydrogen case.
 7. Add whole-phase entry tests for wustite and spinel.
