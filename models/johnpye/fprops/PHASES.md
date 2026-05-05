@@ -843,3 +843,48 @@ normal testing.
 8. Add an in-tree standalone C example that links against `libfprops.so`
    and mirrors the intended `feoh.c` user workflow.
 9. Only then add automatic phase activation/removal.
+
+## 11. Handoff Notes
+
+These notes capture the immediate context for a follow-on implementation
+session.
+
+- This document is new and should be committed or copied into any
+  long-running implementation workspace before work starts.
+- The current failing standalone repro is expected to move into
+  `~/ascend/models/johnpye/iron/feoh`. Its current out-of-tree form is
+  `~/feoh/feoh.c`.
+- The failing case is:
+  - feed: `1 mol Fe2O3 + 100 mol H2`
+  - `T = 1173.15 K`
+  - `P = 101325 Pa`
+  - gas source: `helmholtz+ref0:` for `hydrogen` and `water`
+  - current flat path: `eqm_solve_elements(..., algorithm="auto", ...)`
+  - observed status: `2` (`IPOPT infeasible problem detected`)
+- The expected physical result for that case is the deep reducing
+  `Fe + gas` assemblage:
+  - about `2 mol Fe`
+  - about `3 mol H2O`
+  - about `97 mol H2`
+  - negligible wustite, spinel, and hematite
+- Existing `900 C` Fe-O-H boundary anchors using `helmholtz+ref0:` gas
+  are:
+  - Fe|wustite: `log10(H2O/H2) = -0.225974`
+  - wustite|spinel: `log10(H2O/H2) = 0.665196`
+- FPROPS currently does not expose a public status-code decoder. The
+  standalone repro has a local decoder, but this should move into FPROPS
+  as part of Phase 0.
+- Important existing code paths to inspect first:
+  - `eqm_solve_elements`
+  - `eqm_augment_special_phase_constraints`
+  - `eqm_compute_solution_phases`
+  - `eqm_eval_obj_mu`
+  - reduced/active-set sections of `eqm.c`
+- A modest first implementation target is:
+  - add `libfprops.so`
+  - add a public status decoder
+  - add Fe-O-H phase registry/inspection support
+  - only then begin automatic phase activation
+- The function names and struct layouts sketched above are provisional.
+  They should guide the design, but the implementation should choose the
+  cleanest C API that fits the existing FPROPS style.
