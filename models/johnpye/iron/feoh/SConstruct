@@ -1,0 +1,22 @@
+from pathlib import Path
+env = Environment()
+
+FPROPS = Path('~/ascend/models/johnpye/fprops').expanduser()
+
+def fprops_objects():
+	objects = []
+	for pattern in ('*.os', 'fluids/*.os', 'mixtures/*.os', 'names/*.os'):
+		for path in FPROPS.glob(pattern):
+			if path.name.startswith('asc'):
+				continue
+			if path.name == 'test.os':
+				continue
+			objects.append(str(path))
+	return sorted(objects)
+
+env.Append(
+	CPPPATH=[str(FPROPS)]
+	,LIBS=['m', 'ipopt']
+)
+
+env.Program('feoh', ['feoh.c'] + fprops_objects())
