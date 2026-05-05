@@ -9,6 +9,7 @@
 
 #include <ctype.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -859,4 +860,154 @@ int fprops_eqm_phase_solve_fixed_linear(const FpropsEqmPhaseModel *phases, int n
 		}
 	}
 	return 0;
+}
+
+static int eqm_phase_append_source(char *buf, size_t nbuf, size_t *pos,
+		const char *member, const char *source){
+	int nw;
+	if(!buf || !pos || !member || !source){
+		return 0;
+	}
+	if(!source[0]){
+		return 1;
+	}
+	nw = snprintf(buf + *pos, nbuf - *pos, "%s%s=%s",
+		(*pos > 0) ? ";" : "", member, source);
+	if(nw < 0 || (size_t)nw >= nbuf - *pos){
+		return 0;
+	}
+	*pos += (size_t)nw;
+	return 1;
+}
+
+static int eqm_phase_expand_members(const FpropsEqmPhaseModel *phases, int nphase,
+		const char **names, char *source_map, size_t source_map_len, int *nmember_out){
+	int p;
+	int ns = 0;
+	size_t source_pos = 0;
+	if(!phases || nphase <= 0 || !names || !source_map || !nmember_out){
+		return 0;
+	}
+	source_map[0] = '\0';
+	for(p = 0; p < nphase; ++p){
+		int j;
+		if(phases[p].nmember <= 0 || phases[p].nmember > FPROPS_EQM_PHASE_MAX_MEMBERS){
+			return 0;
+		}
+		if(phases[p].kind != FPROPS_EQM_PHASE_STOICHIOMETRIC
+				&& phases[p].kind != FPROPS_EQM_PHASE_IDEAL_GAS
+				&& phases[p].kind != FPROPS_EQM_PHASE_BINARY_SOLUTION
+				&& phases[p].kind != FPROPS_EQM_PHASE_SITE_SOLUTION){
+			return 0;
+		}
+		for(j = 0; j < phases[p].nmember; ++j){
+			if(ns >= FPROPS_EQM_PHASE_MAX_MEMBERS * FPROPS_EQM_PHASE_MAX_MEMBERS){
+				return 0;
+			}
+			names[ns++] = phases[p].members[j];
+			if(!eqm_phase_append_source(source_map, source_map_len, &source_pos,
+					phases[p].members[j], phases[p].source)){
+				return 0;
+			}
+		}
+	}
+	*nmember_out = ns;
+	return 1;
+}
+
+static void eqm_phase_fill_outputs(const FpropsEqmPhaseModel *phases, int nphase,
+		const double *n_members, double *phase_amounts_out, double *phase_y_out,
+		double *member_amounts_out){
+	int off = 0;
+	int p;
+	for(p = 0; p < nphase; ++p){
+		int j;
+		double amount = 0.0;
+		if(phases[p].kind == FPROPS_EQM_PHASE_STOICHIOMETRIC){
+			amount = n_members[off];
+			if(phase_y_out){
+				for(j = 0; j < FPROPS_EQM_PHASE_MAX_VARS; ++j){
+					phase_y_out[p * FPROPS_EQM_PHASE_MAX_VARS + j] = NAN;
+				}
+			}
+			++off;
+		}else if(phases[p].kind == FPROPS_EQM_PHASE_IDEAL_GAS){
+			for(j = 0; j < phases[p].nmember; ++j){
+				amount += n_members[off + j];
+			}
+			if(phase_y_out){
+				for(j = 0; j < phases[p].nmember; ++j){
+					phase_y_out[p * FPROPS_EQM_PHASE_MAX_VARS + j] =
+						(amount > 0.0) ? n_members[off + j] / amount : NAN;
+				}
+				for(; j < FPROPS_EQM_PHASE_MAX_VARS; ++j){
+					phase_y_out[p * FPROPS_EQM_PHASE_MAX_VARS + j] = NAN;
+				}
+			}
+			off += phases[p].nmember;
+		}else if(phases[p].kind == FPROPS_EQM_PHASE_BINARY_SOLUTION){
+			double na = n_members[off];
+			double nb = n_members[off + 1];
+			amount = na + nb;
+			if(phase_y_out){
+				phase_y_out[p * FPROPS_EQM_PHASE_MAX_VARS] =
+					(amount > 0.0) ? nb / amount : NAN;
+				for(j = 1; j < FPROPS_EQM_PHASE_MAX_VARS; ++j){
+					phase_y_out[p * FPROPS_EQM_PHASE_MAX_VARS + j] = NAN;
+				}
+			}
+			off += 2;
+		}else if(phases[p].kind == FPROPS_EQM_PHASE_SITE_SOLUTION){
+			double nt = n_members[off] + n_members[off + 1];
+			double no = n_members[off + 2] + n_members[off + 3] + n_members[off + 4];
+			amount = nt;
+			if(phase_y_out){
+				phase_y_out[p * FPROPS_EQM_PHASE_MAX_VARS] =
+					(nt > 0.0) ? n_members[off] / nt : NAN;
+				phase_y_out[p * FPROPS_EQM_PHASE_MAX_VARS + 1] =
+					(no > 0.0) ? n_members[off + 2] / no : NAN;
+				for(j = 2; j < FPROPS_EQM_PHASE_MAX_VARS; ++j){
+					phase_y_out[p * FPROPS_EQM_PHASE_MAX_VARS + j] = NAN;
+				}
+			}
+			off += 5;
+		}
+		if(phase_amounts_out){
+			phase_amounts_out[p] = amount;
+		}
+	}
+	if(member_amounts_out){
+		int n = off;
+		for(p = 0; p < n; ++p){
+			member_amounts_out[p] = n_members[p];
+		}
+	}
+}
+
+int fprops_eqm_phase_solve_fixed_expanded(const FpropsEqmPhaseModel *phases, int nphase,
+		const char **elements, int ne, const double *b, double T, double P,
+		const char *algorithm, const double *member_init,
+		double *phase_amounts_out, double *phase_y_out, double *member_amounts_out,
+		int *nmember_out){
+	const char *names[FPROPS_EQM_PHASE_MAX_MEMBERS * FPROPS_EQM_PHASE_MAX_MEMBERS];
+	double n_out[FPROPS_EQM_PHASE_MAX_MEMBERS * FPROPS_EQM_PHASE_MAX_MEMBERS];
+	char source_map[4096];
+	int ns = 0;
+	int status;
+	if(!phases || nphase <= 0 || !elements || ne <= 0 || !b || !(T > 0.0) || !(P > 0.0)){
+		return -11;
+	}
+	if(!eqm_phase_expand_members(phases, nphase, names, source_map, sizeof(source_map), &ns)){
+		return -11;
+	}
+	status = eqm_solve_elements(names, ns, elements, ne, b, source_map, T, P,
+		algorithm ? algorithm : "auto", member_init, n_out);
+	if(status == 0 || status == 1 || status == 6){
+		eqm_phase_fill_outputs(phases, nphase, n_out, phase_amounts_out, phase_y_out,
+			member_amounts_out);
+		if(nmember_out){
+			*nmember_out = ns;
+		}
+	}
+	return status;
 }
