@@ -527,13 +527,70 @@ Exit criteria:
 
 - the inner solver is reliable when given the correct active phases
 
-### Phase 4: Phase-level active set
+### Phase 4: Phase-level active selection
+
+Phase 4 is split into two parts. Phase 4a provides an immediately useful
+package-level solve by trying whole-phase assemblages and ranking valid
+solutions. Phase 4b closes the original active-set design by using KKT
+multipliers and phase-entry residuals to add/drop phases directly.
+
+### Phase 4a: Whole-phase subset selection
+
+Status: implemented as the first automatic phase-selection layer.
+
+Implemented:
+
+- `fprops_eqm_phase_solve_auto(...)` accepts a supplied phase package,
+  element list, element totals, `T`, `P`, and algorithm choice
+- the implementation enumerates whole-phase subsets, expands each subset
+  to current member species, solves through the fixed-active bridge, and
+  maps successful results back to full-package phase amounts,
+  compositions, active flags, and expanded member amounts
+- successful subsets are validated for element balance and ranked by total
+  Gibbs energy
+- trace diagnostics are available through `FPROPS_EQM_PHASE_TRACE=1`
+- gas treatment is not hard-wired to H2/H2O; any supported ideal gas
+  member list can be supplied, such as H2/H2O or CO/CO2
+
+Tests implemented:
+
+- strongly reducing Fe-O-H package activates `Fe + H2/H2O gas` without
+  manually specifying the active assemblage
+- Fe-O-H BG-positioned wustite field checks at 600 C, 700 C, and 900 C
+- Fe-O-C BG-positioned wustite field check at 900 C using Fe, Fe oxides,
+  CO, and CO2 only; no free carbon or Fe3C phase is included
+- CO/CO2 gas smoke test verifies the phase API is not H2/H2O-specific
+- inactive phases can remain in the supplied package without being
+  returned active when a lower-G solution is found
+
+Limitations:
+
+- this is subset enumeration, not the final add/drop active-set loop
+- inactive phases are not yet validated by entry residuals at the final
+  solution because the inner solve does not yet expose or reconstruct
+  robust element KKT multipliers
+- warm-starting between candidate assemblages is not yet implemented
+- the trace reports candidate subset status and objective, not
+  multiplier-based add/drop decisions
+- 500 C Fe/spinel and Fe3O4-rich behavior remains an explicit Phase 4b
+  truth-check target
+
+Exit criteria for Phase 4a:
+
+- users can solve initial Fe-O-H and Fe-O-C package-level cases by
+  specifying phases and element totals, without manually selecting the
+  active assemblage
+- current BG-positioned checks confirm the selected whole phase is
+  plausible in the wustite field
+
+### Phase 4b: Multiplier-driven phase active set
 
 Deliverables:
 
+- expose or reconstruct element KKT multipliers from the inner phase solve
 - add/drop whole phases based on entry residuals and phase amounts
 - warm-start inner solves after phase additions/removals
-- rank competing phase-entry candidates
+- rank competing phase-entry candidates by normalized residual
 - add continuation where needed in temperature or feed severity
 - implement final validation:
   - element balance
@@ -543,19 +600,26 @@ Deliverables:
 
 Tests:
 
-- the strongly reducing `feoh.c` case solves from a broad initial guess
-  without manually specifying `Fe + gas`
-- less reducing Fe-O-H cases activate wustite/spinel/hematite as
+- strongly reducing Fe-O-H continues to activate `Fe + gas` from a broad
+  package-level call
+- less reducing Fe-O-H cases activate wustite, spinel, and hematite as
   expected from boundary logic
+- Fe-O-H and Fe-O-C checks include 500 C, 600 C, and 700 C ranges where
+  Fe/FeO, Fe/Fe3O4, and FeO/Fe3O4 behavior is sensitive
+- boundary-adjacent tests sample both sides of Fe|wustite and
+  wustite|spinel fields
 - results are insensitive to small perturbations in the initial guess
 - results remain stable when inactive phases are present in the package
-- active-set trace shows meaningful phase additions/removals
+- active-set trace shows meaningful phase additions/removals, entry
+  residuals, solve statuses, and final validation residuals
 
 Exit criteria:
 
 - Fe-O-H can be solved by specifying the package and element totals,
   rather than by custom boundary scripts or manually selected active
   assemblages
+- final validation confirms active stationarity and inactive phase-entry
+  residuals, not only lowest objective among enumerated subsets
 
 ### Phase 5: Public API and examples
 

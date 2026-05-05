@@ -59,4 +59,9 @@ int fprops_eqm_phase_solve_fixed_expanded(const FpropsEqmPhaseModel *phases, int
 		double *phase_amounts_out, double *phase_y_out, double *member_amounts_out,
 		int *nmember_out);
 
+int fprops_eqm_phase_solve_auto(const FpropsEqmPhaseModel *phases, int nphase,
+		const char **elements, int ne, const double *b, double T, double P,
+		const char *algorithm, double *phase_amounts_out, double *phase_y_out,
+		int *phase_active_out, double *member_amounts_out, int *nmember_out);
+
 #endif /* FPROPS_EQM_PHASE_H */
