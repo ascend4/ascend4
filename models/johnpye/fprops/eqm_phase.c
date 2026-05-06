@@ -1984,12 +1984,29 @@ active_set_have_solution:
 					if(trial == mask || !(trial & (1ULL << best_add))){
 						continue;
 					}
-						status = eqm_phase_solve_mask_full(phases, nphase, elements, ne, b, T, P,
-							algorithm, trial, add_seed, trial_amounts, trial_y, trial_active,
-							trial_members, &nmember_trial);
-						balance_ok = eqm_phase_status_ok(status)
-							&& eqm_phase_validate_full_balance(phases, nphase, elements, ne,
-								b, trial_amounts, trial_y);
+							status = eqm_phase_solve_mask_full(phases, nphase, elements, ne, b, T, P,
+								algorithm, trial, add_seed, trial_amounts, trial_y, trial_active,
+								trial_members, &nmember_trial);
+							balance_ok = eqm_phase_status_ok(status)
+								&& eqm_phase_validate_full_balance(phases, nphase, elements, ne,
+									b, trial_amounts, trial_y);
+							if(!balance_ok){
+								int seeded_status = status;
+								int seeded_balance = balance_ok;
+								nmember_trial = 0;
+								status = eqm_phase_solve_mask_full(phases, nphase, elements, ne,
+									b, T, P, algorithm, trial, NULL, trial_amounts, trial_y,
+									trial_active, trial_members, &nmember_trial);
+								balance_ok = eqm_phase_status_ok(status)
+									&& eqm_phase_validate_full_balance(phases, nphase, elements,
+										ne, b, trial_amounts, trial_y);
+								if(eqm_phase_trace_enabled() && balance_ok){
+									fprintf(stderr,
+										"FPROPS_EQM_PHASE_TRACE active_set iter=%d swap_retry_unseeded add=%d drop=%d mask=%llu seeded_status=%d seeded_balance=%d status=%d\n",
+										iter, best_add, q, (unsigned long long)trial,
+										seeded_status, seeded_balance, status);
+								}
+							}
 						if(balance_ok){
 							mask = trial;
 							for(int i = 0; i < total_members; ++i){
