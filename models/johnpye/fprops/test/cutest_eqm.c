@@ -19,9 +19,18 @@
 #include "../mixtures/unifac_rundata.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 #define ARRAYLEN(a) ((int)(sizeof(a) / sizeof((a)[0])))
+#define CU_ASSERT_EQM_STATUS_OK_FATAL(STATUS) do{ \
+		int _eqm_status = (STATUS); \
+		if(!fprops_eqm_status_ok(_eqm_status)){ \
+			fprintf(stderr, "unexpected equilibrium status %d (%s) at %s:%d\n", \
+				_eqm_status, fprops_eqm_status_text(_eqm_status), __FILE__, __LINE__); \
+		} \
+		CU_ASSERT_TRUE_FATAL(fprops_eqm_status_ok(_eqm_status)); \
+	}while(0)
 
 typedef struct EqmFixture{
 	const char *source;
@@ -548,7 +557,7 @@ static void test_eqm_phase_fixed_expanded_fe_gas_reducing_case(void){
 			"helmholtz+ref0:", &phases[1]));
 	status = fprops_eqm_phase_solve_fixed_expanded(phases, 2, elements, ARRAYLEN(elements),
 		b, 1173.15, 101325.0, "auto", init, phase_amounts, phase_y, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 3);
 	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[0], 2.0, 1e-7);
 	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[1], 100.0, 1e-7);
@@ -606,7 +615,7 @@ static void test_eqm_phase_fixed_expanded_wustite_gas(void){
 	init[3] = n_h2o;
 	status = fprops_eqm_phase_solve_fixed_expanded(phases, 2, elements, ARRAYLEN(elements),
 		b, T, P, "auto", init, phase_amounts, phase_y, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 4);
 	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[0], 1.0, 1e-6);
 	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[1], gas_total, 1e-5);
@@ -677,7 +686,7 @@ static void test_eqm_phase_fixed_expanded_spinel_gas(void){
 	init[6] = n_h2o;
 	status = fprops_eqm_phase_solve_fixed_expanded(phases, 2, elements, ARRAYLEN(elements),
 		b, T, P, "auto", init, phase_amounts, phase_y, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 7);
 	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[0], 1.0, 2e-5);
 	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[1], gas_total, 1e-4);
@@ -702,7 +711,7 @@ static void test_eqm_phase_auto_fe_gas_reducing_case(void){
 	status = fprops_eqm_phase_solve_auto(phases, ARRAYLEN(phases), elements, ARRAYLEN(elements),
 		b, 1173.15, 101325.0, "auto", phase_amounts, phase_y, active, member_amounts,
 		&nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(active[0]);
 	CU_ASSERT_TRUE(active[4]);
@@ -730,7 +739,7 @@ static void test_eqm_phase_active_set_fe_gas_reducing_case(void){
 	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
 		elements, ARRAYLEN(elements), b, 1173.15, 101325.0, "auto", NULL,
 		phase_amounts, phase_y, active, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(active[0]);
 	CU_ASSERT_TRUE(active[4]);
@@ -893,7 +902,7 @@ static void test_run_feoh_fe_spinel_bg_active_set(double tc, double log10_ratio)
 	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
 		elements, ARRAYLEN(elements), b, T, P, "auto", NULL, phase_amounts, phase_y,
 		active, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(active[0]);
 	CU_ASSERT_TRUE(!active[1]);
@@ -989,7 +998,7 @@ static void test_run_feoc_fe_spinel_bg_active_set(double tc, double log10_ratio)
 	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
 		elements, ARRAYLEN(elements), b, T, P, "auto", NULL, phase_amounts, phase_y,
 		active, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(active[0]);
 	CU_ASSERT_TRUE(!active[1]);
@@ -1097,7 +1106,7 @@ static void test_eqm_phase_validate_fe_gas_reducing_case(void){
 	status = fprops_eqm_phase_solve_auto(phases, ARRAYLEN(phases), elements, ARRAYLEN(elements),
 		b, 1173.15, 101325.0, "auto", phase_amounts, phase_y, active, member_amounts,
 		&nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_reconstruct_lambda(phases, ARRAYLEN(phases),
 			elements, ARRAYLEN(elements), 1173.15, 101325.0, phase_amounts, phase_y,
 			active, lambda, &rms));
@@ -1130,7 +1139,7 @@ static void test_eqm_phase_auto_fe_co_co2_gas_smoke(void){
 	status = fprops_eqm_phase_solve_auto(phases, ARRAYLEN(phases), elements, ARRAYLEN(elements),
 		b, 1173.15, 101325.0, "auto", phase_amounts, phase_y, active, member_amounts,
 		&nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 3);
 	CU_ASSERT_TRUE(active[0]);
 	CU_ASSERT_TRUE(active[1]);
@@ -1187,7 +1196,7 @@ static void test_eqm_phase_auto_wustite_co_bg_900c_classification(void){
 
 	status = fprops_eqm_phase_solve_auto(phases, ARRAYLEN(phases), elements, ARRAYLEN(elements),
 		b, T, P, "auto", phase_amounts, phase_y, active, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(!active[0]);
 	CU_ASSERT_TRUE(active[1]);
@@ -1247,7 +1256,7 @@ static void test_eqm_phase_active_set_wustite_co_bg_900c(void){
 	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
 		elements, ARRAYLEN(elements), b, T, P, "auto", NULL, phase_amounts, phase_y,
 		active, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(!active[0]);
 	CU_ASSERT_TRUE(active[1]);
@@ -1317,7 +1326,7 @@ static void test_run_feoc_wustite_bg_classification(double tc, double log10_fe_w
 			elements, ARRAYLEN(elements), b, T, P, "auto", phase_amounts, phase_y,
 			active, member_amounts, &nmember);
 	}
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(!active[0]);
 	CU_ASSERT_TRUE(active[1]);
@@ -1403,7 +1412,7 @@ static void test_run_feoh_wustite_bg_classification(double tc, double log10_fe_w
 
 	status = fprops_eqm_phase_solve_auto(phases, ARRAYLEN(phases), elements, ARRAYLEN(elements),
 		b, T, P, "auto", phase_amounts, phase_y, active, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(!active[0]);
 	CU_ASSERT_TRUE(active[1]);
@@ -1465,7 +1474,7 @@ static void test_run_feoh_wustite_bg_active_set_with_init(double tc, double log1
 	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
 		elements, ARRAYLEN(elements), b, T, P, "auto", phase_active_init,
 		phase_amounts, phase_y, active, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(!active[0]);
 	CU_ASSERT_TRUE(active[1]);
@@ -1585,7 +1594,7 @@ static void test_eqm_phase_validate_wustite_bg_700c(void){
 
 	status = fprops_eqm_phase_solve_auto(phases, ARRAYLEN(phases), elements, ARRAYLEN(elements),
 		b, T, P, "auto", phase_amounts, phase_y, active, member_amounts, &nmember);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_TRUE_FATAL(active[1]);
 	CU_ASSERT_TRUE_FATAL(active[4]);
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_reconstruct_lambda(phases, ARRAYLEN(phases),
@@ -2102,7 +2111,7 @@ static void test_eqm_feohsial_pure_capture_1000k(void){
 	int status = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, source_map,
 		1000.0, g_eqm.P, "auto", NULL, n);
 
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 
 	n_metal = n[i_fe_bcc] + n[i_fe_fcc];
 	n_locked_fe = 2.0 * n[i_fe2sio4] + n[i_feal2o4];
@@ -2219,7 +2228,7 @@ static void test_eqm_feoc_clone_redox_1000k(void){
 	int status = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b, source_map,
 		1000.0, g_eqm.P, "auto", NULL, n);
 
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_TRUE(isfinite(n[i_fe_bcc]));
 	CU_ASSERT_TRUE(isfinite(n[i_fe_fcc]));
 	CU_ASSERT_TRUE(isfinite(n[i_fe3o4]));
@@ -2305,7 +2314,7 @@ static void test_eqm_ammonia_synthesis_helmholtz_ref0_matches_hr_grid(void){
 			double nh3_pct_hr = hr_ammonia_nh3_percent(temps[it], pressures_atm[ip]);
 			int status = fprops_eqm_tpb(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b,
 				source, temps[it], P, "auto_nullspace", NULL, n, &H_total);
-			CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+			CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 			CU_ASSERT_TRUE(isfinite(H_total));
 			ntot = n[0] + n[1] + n[2];
 			CU_ASSERT_TRUE_FATAL(ntot > 0.0);
@@ -3044,7 +3053,7 @@ static void test_eqm_degterov_spinel_fe3o4_smoke(void){
 	double n[5];
 	int status = eqm_solve_elements(names, 5, elements, 2, b, "degterov_2001",
 		1000.0, g_eqm.P, "auto", NULL, n);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_TRUE(n[0] + n[1] > 0.0);
 	CU_ASSERT_TRUE(fabs(2.0 * (n[0] + n[1]) - n[2] - n[3] - n[4]) <= 1e-6);
 	CU_ASSERT_TRUE(fabs(6.0 * n[0] + 5.0 * n[1] - 2.0 * n[2] - 3.0 * n[3]) <= 1e-6);
@@ -3149,7 +3158,7 @@ static void test_eqm_bcc_iron_solution_fullspace_unique_balance(void){
 	double n[2];
 	int status = eqm_solve_elements(names, 2, elements, 2, b, "hidayat_2015",
 		1000.0, g_eqm.P, "auto", NULL, n);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	CU_ASSERT_TRUE(isfinite(n[0]));
 	CU_ASSERT_TRUE(isfinite(n[1]));
 	CU_ASSERT_TRUE(fabs(n[0] - 0.999) <= 1e-8);
@@ -3177,7 +3186,7 @@ static void test_eqm_feo_pragmatic_low_oxygen_smoke_1400K(void){
 	double n_wustite;
 	int status = eqm_solve_elements(names, 6, elements, 2, b, "hidayat_2015",
 		1400.0, g_eqm.P, "auto", NULL, n);
-	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 	n_metal = n[0] + n[1];
 	n_wustite = n[2] + n[3];
 	CU_ASSERT_TRUE(n_metal > 1e-2);
