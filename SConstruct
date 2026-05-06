@@ -652,6 +652,20 @@ vars.Add(PackageVariable("HSL_PREFIX"
 	,default_user_local
 ))
 
+#------- FPROPS IPOPT -------
+
+vars.Add(BoolVariable('WITH_FPROPS_IPOPT'
+	,"Build FPROPS equilibrium support with IPOPT; disabled by default because SLSQP/NLOPT is the preferred FPROPS solver"
+	, False
+))
+
+#------- NLOPT -------
+
+vars.Add(BoolVariable('WITH_NLOPT'
+	,"Set to False if you don't want to build FPROPS SLSQP/NLOPT support"
+	, True
+))
+
 #------- HIGHS -------
 
 vars.Add(PackageVariable("HIGHS_PREFIX"
@@ -1144,12 +1158,28 @@ for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufspar
 if not env['WITH_DOC']:
 	env.set_optional('doc_build',reason='documentation was disabled',active=False)
 
+def _explicit_bool_argument(name):
+	if name not in ARGUMENTS:
+		return None
+	value = str(ARGUMENTS[name]).strip().lower()
+	return value not in ('0', 'false', 'no', 'off', 'none')
+
 for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS':
-	env.set_optional(solv,active = solv in env['WITH_SOLVERS'], reason="Not selected (see option WITH_SOLVERS)")
+	name = 'WITH_%s' % solv
+	explicit = _explicit_bool_argument(name)
+	if explicit is None:
+		env.set_optional(solv,active = solv in env['WITH_SOLVERS'], reason="Not selected (see option WITH_SOLVERS)")
+	else:
+		if explicit and solv not in env['WITH_SOLVERS']:
+			env['WITH_SOLVERS'].append(solv)
+		if not explicit and solv in env['WITH_SOLVERS']:
+			env['WITH_SOLVERS'].remove(solv)
+		env.set_optional(solv,active = explicit, reason="%s=%d" % (name, 1 if explicit else 0))
 	
 
 print(f"DEBUG: WITH_CUNIT = {env['WITH_CUNIT']}")
 print(f"DEBUG: WITH_IPOPT = {env['WITH_IPOPT']}")
+print(f"DEBUG: WITH_FPROPS_IPOPT = {env['WITH_FPROPS_IPOPT']}")
 print(f"DEBUG: WITH_MAKEMPS = {env['WITH_MAKEMPS']}")
 
 with_latex2html = False
@@ -2493,7 +2523,9 @@ conf.env['NLOPT_LIBS'] = []
 nlopt_saved = SnapshotBuildFlags(conf.env)
 nlopt_ok = False
 nlopt_reason = "nlopt not found"
-if TryPkgConfigPackages(conf.env,['nlopt']):
+if not conf.env.get('WITH_NLOPT'):
+	nlopt_reason = "WITH_NLOPT=0"
+elif TryPkgConfigPackages(conf.env,['nlopt']):
 	if conf.CheckCHeader('nlopt.h'):
 		nlopt_ok = True
 	else:

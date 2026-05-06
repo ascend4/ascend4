@@ -10,7 +10,14 @@ import shutil
 
 fprops_env = env.Clone()
 
-if not fprops_env.get('HAVE_IPOPT'):
+with_fprops_ipopt = fprops_env.get('WITH_FPROPS_IPOPT', False)
+
+if not with_fprops_ipopt:
+	fprops_env['HAVE_IPOPT'] = False
+	fprops_env['IPOPT_CPPPATH'] = []
+	fprops_env['IPOPT_LIBPATH'] = []
+	fprops_env['IPOPT_LIBS'] = []
+elif not fprops_env.get('HAVE_IPOPT'):
 	fprops_env.ensure_ipopt()
 
 if fprops_env.get('HAVE_IPOPT'):
@@ -26,6 +33,12 @@ if fprops_env.get('HAVE_IPOPT'):
 		fprops_env.AppendUnique(CPPDEFINES=[
 			('ASC_IPOPT_HSL_LIBRARY', '"%s"' % str(fprops_env['IPOPT_HSL_LIBRARY']).replace('"', '\\"'))
 		])
+
+if not fprops_env.get('WITH_NLOPT', True):
+	fprops_env['HAVE_NLOPT'] = False
+	fprops_env['NLOPT_CPPPATH'] = []
+	fprops_env['NLOPT_LIBPATH'] = []
+	fprops_env['NLOPT_LIBS'] = []
 
 if fprops_env.get('HAVE_NLOPT'):
 	fprops_env.AppendUnique(CPPDEFINES=['HAVE_NLOPT'])

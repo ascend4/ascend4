@@ -48,6 +48,9 @@ vars.Add(
 )
 
 vars.Add(BoolVariable('WITH_ASCEND',"Attempt to include ASCEND support",1))
+vars.Add(BoolVariable('WITH_IPOPT',"Deprecated alias for WITH_FPROPS_IPOPT in standalone FPROPS builds",0))
+vars.Add(BoolVariable('WITH_FPROPS_IPOPT',"Build FPROPS with IPOPT support",0))
+vars.Add(BoolVariable('WITH_NLOPT',"Build FPROPS with NLOPT/SLSQP support",1))
 vars.Add(
 	'NLOPT_PREFIX'
 	,'installation prefix for NLOPT'
@@ -72,6 +75,8 @@ env = Environment(
 
 Help(vars.GenerateHelpText(env))
 vars.Update(env)
+if 'WITH_IPOPT' in ARGUMENTS and 'WITH_FPROPS_IPOPT' not in ARGUMENTS:
+	env['WITH_FPROPS_IPOPT'] = env['WITH_IPOPT']
 
 if env['WITH_ASCEND']:
 	if WhereIs('ascend-config'):
@@ -93,7 +98,10 @@ if conf.CheckFunc('cpow','#include <complex.h>'):
 
 env = conf.Finish()
 
-env.ensure_nlopt()
+if env['WITH_NLOPT']:
+	env.ensure_nlopt()
+else:
+	env['HAVE_NLOPT'] = False
 env.ensure_cunit()
 
 env['EXTLIB_SUFFIX'] = "_ascend" + env.subst("$SHLIBSUFFIX")

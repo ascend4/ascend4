@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <float.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <nlopt.h>
 
@@ -18,6 +20,17 @@ typedef struct EqmNConstraint{
 	EqmSlsqp *S;
 	int e;
 } EqmNConstraint;
+
+static int eqm_slsqp_trace_enabled(void){
+	static int inited = 0;
+	static int enabled = 0;
+	if(!inited){
+		const char *v = getenv("FPROPS_EQM_SLSQP_TRACE");
+		enabled = v && v[0] && strcmp(v, "0") != 0;
+		inited = 1;
+	}
+	return enabled;
+}
 
 static double eqm_gibbs_nlopt(unsigned n, const double *x, double *grad, void *data){
 	EqmSlsqp *S = (EqmSlsqp *)data;
@@ -225,6 +238,21 @@ int eqm_slsqp_solve_source_init(const char **names, int ns, int ne, const double
 			}
 			status = 0;
 		}else{
+			if(eqm_slsqp_trace_enabled()){
+				fprintf(stderr,
+					"FPROPS_EQM_SLSQP_TRACE res=%d minf=%.17g ns=%d ne=%d T=%.17g P=%.17g\n",
+					(int)res, minf, D->ns, D->ne, T, P);
+				for(int i = 0; i < D->ns; ++i){
+					double ni = x[i] * S.n_est[i];
+					fprintf(stderr,
+						"FPROPS_EQM_SLSQP_TRACE n[%d]=%.17g scale=%.17g x=%.17g name=%s\n",
+						i, ni, S.n_est[i], x[i], names[i] ? names[i] : "(null)");
+				}
+				for(int e = 0; e < D->ne; ++e){
+					double c = eqm_constr_nlopt((unsigned)D->ns, x, NULL, &cons[e]);
+					fprintf(stderr, "FPROPS_EQM_SLSQP_TRACE constraint[%d]=%.17g\n", e, c);
+				}
+			}
 			status = -1;
 		}
 	}

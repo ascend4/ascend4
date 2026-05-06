@@ -2285,7 +2285,7 @@ void eqm_fill_n_est(const double *A, const double *b, int ne, int ns,
 			for(int i = 0; i < ns; ++i){
 				n_est[i] = n_init[i];
 			}
-			return;
+			goto clamp;
 		}
 	}
 	{
@@ -2977,6 +2977,7 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 		double n_floor, double *n_out){
 	const double P0 = 1e5;
 	const double grad_tol = 1e-8;
+	const double max_iter_grad_tol = 5e-6;
 	const int max_iter = 2000;
 	const int trace = eqm_alg_trace_enabled();
 	double *mu0 = NULL;
@@ -3183,6 +3184,14 @@ static int eqm_reduced_solve_source_init_once(const char **names, int ns, int ne
 		if(trace && (iter < 5 || iter == max_iter - 1)){
 			fprintf(stderr, "FPROPS_EQM_REDUCED_TRACE iter=%d grad_inf=%.17g obj=%.17g\n",
 				iter, grad_inf, obj);
+		}
+		if(iter == max_iter - 1 && grad_inf < max_iter_grad_tol){
+			for(int i = 0; i < ns; ++i){
+				n_out[i] = n[i];
+			}
+			status = 0;
+			reason = "success-maxiter-gradtol";
+			goto cleanup;
 		}
 
 		{
@@ -4632,6 +4641,7 @@ static int eqm_alg_auto_reduced(const char *algorithm){
 	return eqm_alg_exact(algorithm, "auto_reduced");
 }
 
+#ifdef HAVE_IPOPT
 static int eqm_alg_use_nullspace(const char *algorithm){
 	if(eqm_alg_exact(algorithm, "auto_no_nullspace")
 			|| eqm_alg_exact(algorithm, "no_nullspace")
@@ -4655,6 +4665,7 @@ static int eqm_alg_nullspace_only(const char *algorithm){
 	return eqm_alg_exact(algorithm, "nullspace")
 		|| eqm_alg_exact(algorithm, "ipopt_nullspace");
 }
+#endif
 
 static const char *eqm_alg_fallback(const char *algorithm){
 	if(eqm_alg_exact(algorithm, "auto_nullspace")
@@ -5016,12 +5027,16 @@ int eqm_solve_elements(const char **names, int ns, const char **elements, int ne
 	double *b_use = NULL;
 	int ne_use = 0;
 	int status = -11;
+#ifdef HAVE_IPOPT
 	int has_solution_phases;
+#endif
 
 	if(!names || !elements || !b || !n_out || ns <= 0 || ne <= 0){
 		return -11;
 	}
+#ifdef HAVE_IPOPT
 	has_solution_phases = eqm_has_solution_phases(names, ns, source);
+#endif
 	A = (double *)calloc((size_t)(ne * ns), sizeof(double));
 	if(!A){
 		return -11;
