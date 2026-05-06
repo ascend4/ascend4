@@ -2063,6 +2063,19 @@ active_set_have_solution:
 				member_amounts_out[i] = full_members[i];
 			}
 		}
+	}else if(status != -11){
+		int fallback_status;
+		if(eqm_phase_trace_enabled()){
+			fprintf(stderr,
+				"FPROPS_EQM_PHASE_TRACE active_set fallback_to_enumeration status=%d (%s)\n",
+				status, fprops_eqm_status_text(status));
+		}
+		fallback_status = fprops_eqm_phase_solve_auto(phases, nphase, elements, ne, b, T, P,
+			algorithm, phase_amounts_out, phase_y_out, phase_active_out, member_amounts_out,
+			nmember_out);
+		if(eqm_phase_status_ok(fallback_status)){
+			return fallback_status;
+		}
 	}
 	if(nmember_out){
 		*nmember_out = total_members;

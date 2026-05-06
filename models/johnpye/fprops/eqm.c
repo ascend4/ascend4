@@ -78,6 +78,8 @@ const char *fprops_eqm_status_text(int status){
 		return "solution-phase enthalpy unsupported";
 	case -22:
 		return "equilibrium validation failed";
+	case -23:
+		return "phase active-set did not converge";
 	case -99:
 		return "solve not attempted";
 	case -100:
