@@ -1,10 +1,10 @@
 #include "flash_unifac.h"
+#include "common.h"
 
 #include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-#define FPROPS_R 8.31446261815324
 #define UNIFAC_MAX_GROUP 47
 #define UNIFAC_EPS 1e-30
 

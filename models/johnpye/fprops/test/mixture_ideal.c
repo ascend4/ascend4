@@ -206,7 +206,7 @@ static void test_wustite_solution_excess_term(void){
 	ASSERT(err == FPROPS_NO_ERROR);
 	g_expected = xa * g0a
 		+ x * g0b
-		+ 8.31446261815324 * T * (xa * log(xa) + x * log(x))
+		+ FPROPS_R * T * (xa * log(xa) + x * log(x))
 		+ xa * x * (q00 + q10 * xa);
 	ASSERT(fabs(g - g_expected) <= 1e-10 * (fabs(g_expected) + 1.0));
 }

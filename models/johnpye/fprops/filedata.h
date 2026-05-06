@@ -30,7 +30,7 @@ Runtime data is in rundata.h
 
 /*---------------------------COMMON-------------------------------*/
 
-#define R_UNIVERSAL 8314.4621
+#define R_UNIVERSAL FPROPS_R_UNIVERSAL
 
 typedef struct CriticalData_struct{
     double T;

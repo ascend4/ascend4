@@ -41,6 +41,11 @@ typedef enum FpropsError_enum{
 #define FPROPS_SAT 1
 #define FPROPS_ERROR -1
 
+/** Universal molar gas constant, J/mol/K. */
+#define FPROPS_R 8.31446261815324
+
+/** Universal gas constant on the legacy FPROPS fluid-data basis, J/kmol/K. */
+#define FPROPS_R_UNIVERSAL (1000.0 * FPROPS_R)
 
 #define FPROPS_NEW(TYPE) ((TYPE *)malloc(sizeof(TYPE)))
 

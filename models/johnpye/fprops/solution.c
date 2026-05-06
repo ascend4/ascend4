@@ -3,7 +3,7 @@
 #include <math.h>
 
 static double solution_gas_R(void){
-	return 8.31446261815324;
+	return FPROPS_R;
 }
 
 int solution_binary_validate_x(const BinarySolutionModel *M, double x, FpropsError *err){

@@ -189,20 +189,18 @@ Gas and ordinary liquid mixtures are also solution phases in this sense.
 
 For an inactive phase, the solver should not evaluate activities at
 zero amount. Instead, it should perform a normalized phase-entry test.
-Given FPROPS KKT element multipliers `lambda_e`, using the existing
-stationarity convention `mu + A^T lambda - s = 0`, a phase wants to
-enter if:
+Given thermodynamic element potentials `lambda_e`, using the stationarity
+convention `mu - A^T lambda - s = 0`, a phase wants to enter if:
 
 ```text
-min_y [ g_p(T, P, y) + sum_e lambda_e a_e(y) ] < 0
+min_y [ g_p(T, P, y) - sum_e lambda_e a_e(y) ] < 0
 ```
 
 within tolerance, where `a_e(y)` is the element content of one unit of
 phase at composition `y`.
 
-Some thermodynamics texts call `-lambda_e` the elemental chemical
-potential. FPROPS should keep the KKT sign convention internally and
-only convert signs at user/reporting boundaries where needed.
+The public phase API uses this thermodynamic sign convention: `lambda_e`
+is the chemical-potential contribution of one mole of element `e`.
 
 For stoichiometric phases this is a direct scalar calculation. For
 solution phases it is a bounded composition minimization. This is the
@@ -568,7 +566,7 @@ Limitations:
 - this is subset enumeration, not the final add/drop active-set loop
 - inactive phases are not yet validated by entry residuals at the final
   solution because the inner solve does not yet expose or reconstruct
-  robust element KKT multipliers
+  robust element potentials
 - warm-starting between candidate assemblages is not yet implemented
 - the trace reports candidate subset status and objective, not
   multiplier-based add/drop decisions
@@ -585,14 +583,15 @@ Exit criteria for Phase 4a:
 
 ### Phase 4b: Multiplier-driven phase active set
 
-Status: first-pass implementation is in place. It is still being kept as
-a separate API from `fprops_eqm_phase_solve_auto(...)` while the remaining
-boundary checks and continuation behavior are exercised.
+Status: first-pass implementation and BG truth-check coverage are in
+place. It is still kept as a separate API from
+`fprops_eqm_phase_solve_auto(...)`; the enumerating solver remains the
+small-package reference path while public strategy selection is decided.
 
 Implemented:
 
-- `fprops_eqm_phase_reconstruct_lambda(...)` reconstructs element KKT
-  multipliers from the active assemblage stationarity equations
+- `fprops_eqm_phase_reconstruct_lambda(...)` reconstructs thermodynamic
+  element potentials from the active assemblage stationarity equations
 - `fprops_eqm_phase_validate_entry_residuals(...)` validates the final
   assemblage using active stationarity and inactive phase-entry residuals
 - `fprops_eqm_phase_solve_active_set(...)` performs an add/drop active-set
@@ -601,10 +600,19 @@ Implemented:
   after phase additions/removals
 - candidate phase additions are ranked by most negative phase-entry
   residual
+- candidate solution phases are seeded from their entry-minimizing
+  composition when the active-set loop tries an add/swap move
 - low-amount phases are dropped from the active set
-- failed add attempts can recover by removing one currently active phase,
-  allowing phase replacement cases such as `Fe + gas` to move to
-  `wustite + gas`
+- failed add attempts can recover by removing one currently active phase;
+  solution-phase swaps can also replace one condensed solution phase with
+  another, while preserving stoichiometric solids and gas phases
+- locally valid active sets are checked for lower-G one-for-one condensed
+  replacements before they are accepted, which covers metastable
+  `Fe + spinel + gas` traps in the wustite field
+- warm-started solves that return nominal success but fail the balance
+  check are retried once without the member seed for the same active mask
+- trace output includes final stationarity RMS and per-phase entry
+  residuals when `FPROPS_EQM_PHASE_TRACE=1`
 - active-set results fail closed unless the final active mask passes:
   - element balance
   - active phase stationarity
@@ -617,28 +625,37 @@ Tests implemented:
   call
 - BG-positioned 600 C, 700 C, and 900 C Fe-O-H cases activate
   `wustite + H2/H2O gas`
-- BG-positioned 900 C Fe-O-C case activates `wustite + CO/CO2 gas`
+- BG-positioned 585 C, 700 C, and 900 C Fe-O-C cases activate
+  `wustite + CO/CO2 gas`
+- low-temperature BG Fe|spinel entry-residual checks at 400 C, 500 C,
+  540 C, and 560 C use the diagnostic `fe_spinel_bg_tuned_2026`
+  source
+- 400 C, 500 C, 540 C, and 560 C Fe-O-H active-set package solves validate
+  `Fe + spinel + H2/H2O gas` after replacing the initial wustite seed
+- 400 C, 500 C, 540 C, and 560 C Fe-O-C active-set package solves validate
+  `Fe + spinel + CO/CO2 gas`
+- a near-fork 585 C Fe-O-H package solve validates the wustite field on
+  the oxidized side of the Fe|spinel to Fe|wustite/wustite|spinel fork
+- near-fork 585 C and 700 C Fe-O-C package solves validate the wustite
+  field and agree with the enumerating `solve_auto` reference path
 - 700 C Fe-O-H validation rejects inactive Fe, spinel, and hematite by
   entry residual validation
+- 700 C Fe-O-H active-set validation is insensitive to the checked
+  `Fe + gas`, `wustite + gas`, and full-package initial masks
 - selected phase/eqm/fprops suites currently pass with the Phase 4b API
   enabled
 
 Remaining Phase 4b close-out work:
 
-- add low-temperature BG truth checks around 500 C for the Fe/spinel
-  branch, choosing the correct spinel source/variant before locking the
-  assertion
 - add more boundary-near BG truth checks around Fe/FeO, Fe/Fe3O4, and
-  FeO/Fe3O4-sensitive regions
+  FeO/Fe3O4-sensitive regions, especially cases closer than the current
+  560 C/585 C bracket
 - add additional Fe-O-C active-set checks using Fe, Fe oxides, CO, and
-  CO2 only, especially below 900 C once the relevant BG points are fixed
-  in the C test harness
+  CO2 only on both sides of the checked 585 C and 700 C wustite points
 - sample boundary-adjacent cases on both sides of Fe|wustite and
   wustite|spinel fields
-- test sensitivity to small perturbations in the active-set initial mask
-  and expanded member warm start
-- improve trace output with final stationarity RMS and per-phase entry
-  residuals
+- broaden sensitivity tests beyond the current initial-mask checks to
+  include deliberately perturbed expanded member warm starts
 - decide whether `fprops_eqm_phase_solve_auto(...)` should remain the
   enumerating reference path, call active-set first, or expose both as
   separate public strategies
@@ -646,37 +663,100 @@ Remaining Phase 4b close-out work:
 
 ### Phase 5: Public API and examples
 
+Status: first-pass C API and standalone example are in place.
+
 Deliverables:
 
-- add a documented phase-aware C API
-- add string and/or structured package builders
-- update or replace `~/feoh/feoh.c` with a concise FPROPS-only example
-- add an in-tree standalone example, or test target, that demonstrates
-  the same workflow as `~/feoh/feoh.c`
-- ensure `libfprops.so` exports the required phase-aware API symbols
-- add documentation explaining when to use:
+- documented phase-aware C API entry points are in `eqm_phase.h`
+- `fprops_eqm_status_ok(...)` centralizes the "usable result" policy for
+  raw solver status codes while preserving detailed status values for
+  diagnostics
+- `FPROPS_R` in `common.h` is the central molar gas constant used by
+  equilibrium, solution, Shomate, and example code; legacy `R_UNIVERSAL` is
+  derived from it on the existing J/kmol/K basis
+- `FpropsEqm` provides a problem object that owns the phase package, global
+  element ordering, feed totals, temperature, pressure, and solver strategy
+- `fprops_eqm_init(...)`, `fprops_eqm_add_phases(...)`,
+  `fprops_eqm_add_comps(...)`, and `fprops_eqm_solve_TP(...)` provide the
+  compact example-facing workflow
+- `fprops_eqm_add_comps(&eqm, "Fe2O3", 1, "H2", 100)` is a typed C99 macro
+  that expands to a `FpropsEqmComp[]` and counted
+  `fprops_eqm_add_comp_items(...)` call; it avoids raw varargs and does not
+  need a `NULL` sentinel
+- feed initialization accepts both direct element totals such as
+  `"Fe", 2, "O", 3, "H", 200` and formula/species inputs such as
+  `"Fe2O3", 1, "H2", 100`
+- solution-phase feed initialization is available through
+  `fprops_eqm_add_phase_feed(...)` for coordinates in the declared phase
+  order and `fprops_eqm_add_phase_feed_vars(...)` for named coordinates
+- known phase/species/member names are resolved through existing FPROPS
+  element-matrix metadata before falling back to the literal formula parser
+- phase names, coordinate names, and expanded member names are discoverable
+  through `fprops_eqm_phase_name(...)`,
+  `fprops_eqm_phase_coord_name(s)(...)`, and
+  `fprops_eqm_phase_member_name(s)(...)`
+- `fprops_eqm_phase_resolve_package(...)` remains as a small string-based
+  package builder for caller-owned `FpropsEqmPhaseModel` arrays
+- `fprops_eqm_phase_total_members(...)` lets callers size expanded member
+  output arrays
+- `fprops_eqm_phase_find_element(...)` provides a shared phase-model element
+  lookup helper so examples do not carry local name-search loops
+- `FpropsEqmPhaseResult` stores a backpointer to its source `FpropsEqm`, so
+  result accessors such as `fprops_eqm_phase_amount(...)`,
+  `fprops_eqm_phase_coord(...)`, and
+  `fprops_eqm_phase_member_amount(...)` do not require callers to pass the
+  problem object again; its public `status` is zero for usable results and
+  `solver_status` retains the raw solver detail for diagnostics
+- binary solution coordinates use model-derived names, for example
+  wustite exposes `x_FeO1p5` rather than the earlier placeholder
+  `x_member_b`
+- `fprops_eqm_phase_result_write(...)` provides a centralized text writer
+  for package-indexed phase composition output; other formats such as JSON
+  or YAML can be added behind the same `format` parameter
+- `examples/feoh.c` is the in-tree FPROPS-only replacement for the
+  previous out-of-tree `~/feoh/feoh.c` workflow
+- `examples/feoh` links against `libfprops.so` rather than compiling the
+  library objects into the example
+- `libfprops.so` exports the phase-aware API symbols used by the example
+- API documentation explains when to use:
   - flat `eqm_solve_elements`
   - phase-aware solver
   - boundary diagnostic scripts
 
 Tests:
 
-- standalone Fe-O-H example builds without ASCEND
-- standalone Fe-O-H example links against `libfprops.so`
+- standalone Fe-O-H example builds without ASCEND via
+  `scons -C models/johnpye/fprops WITH_ASCEND=0 examples/feoh`
+- standalone Fe-O-H example links against `libfprops.so` and has an
+  `$ORIGIN/..` runpath so it runs in-tree without `LD_LIBRARY_PATH`
 - example reports:
   - Fe amount
   - unreduced hematite
   - wustite amount/composition
   - spinel amount/site composition
   - H2/H2O gas amounts
-- example succeeds with `helmholtz+ref0:` gas
-- example handles at least one oxidizing, one intermediate, and one
-  reducing case
+- example succeeds with `helmholtz+ref0:` H2/H2O gas
+- example handles reducing, intermediate wustite, and oxidizing spinel
+  cases
+- CUnit coverage verifies the compact problem API, formula feed setup,
+  direct-element feed setup, resolved species/member feed setup, result
+  backpointer access, and phase/member discovery
 
 Exit criteria:
 
 - the original user-facing Fe-O-H request is satisfied with a small C
   example and no ASCEND dependency
+
+Remaining Phase 5 follow-up:
+
+- decide whether a heap-allocated `FpropsEqm` constructor/destructor pair is
+  needed in addition to the current caller-owned stack object API
+- add install rules for public phase headers/examples if FPROPS install
+  packaging is enabled later
+- add a scripted example-output regression if the build system grows a
+  standard run-test hook for examples
+- add JSON/YAML result writer formats if downstream tooling needs
+  machine-readable phase output
 
 ### Phase 6: Broader mixture and slag preparation
 
@@ -958,8 +1038,7 @@ normal testing.
 4. Expose test-only inspection functions for phase resolution and
    phase `g(T,P,y)`.
 5. Port Fe-O-H boundary residual checks into C-level tests on a common
-   FPROPS KKT `lambda_O` basis, using `g + A^T lambda` internally and
-   converting signs only for user-facing gas-ratio reports.
+   thermodynamic `lambda_O` basis, using `g - A^T lambda` internally.
 6. Implement a fixed-active-assemblage solve for `Fe + H2/H2O` and prove
    the strongly reducing hematite-plus-hydrogen case.
 7. Add whole-phase entry tests for wustite and spinel.

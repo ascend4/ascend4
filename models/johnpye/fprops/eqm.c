@@ -35,7 +35,11 @@
 #endif
 
 double gas_R(void){
-	return 8.31446261815324;
+	return FPROPS_R;
+}
+
+int fprops_eqm_status_ok(int status){
+	return status == 0 || status == 1 || status == 6;
 }
 
 const char *fprops_eqm_status_text(int status){

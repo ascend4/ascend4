@@ -55,7 +55,6 @@ static int find_name(const char *const *names, int n, const char *name){
 }
 
 static double log10K_from_mu0(const char **names, const double *nu, int ns, const char *source){
-	const double R = 8.31446261815324;
 	double sum = 0.0;
 	int i;
 	for(i = 0; i < ns; ++i){
@@ -65,21 +64,19 @@ static double log10K_from_mu0(const char **names, const double *nu, int ns, cons
 		}
 		sum += nu[i] * mu0;
 	}
-	return -sum / (R * g_eqm.T * log(10.0));
+	return -sum / (FPROPS_R * g_eqm.T * log(10.0));
 }
 
 static double qfm_oneill_1987_log10fo2_low_branch(double T){
-	const double R = 8.31446261815324;
 	double mu_o2;
 	if(!(T > 900.0) || !(T < 1042.0)){
 		return NAN;
 	}
 	mu_o2 = -587474.0 + 1584.427 * T - 203.3164 * T * log(T) + 0.09271 * T * T;
-	return mu_o2 / (R * T * log(10.0));
+	return mu_o2 / (FPROPS_R * T * log(10.0));
 }
 
 static double qfi_oneill_1987_log10fo2(double T){
-	const double R = 8.31446261815324;
 	double mu_o2;
 	if(!(T > 900.0) || !(T < 1420.0)){
 		return NAN;
@@ -91,7 +88,7 @@ static double qfi_oneill_1987_log10fo2(double T){
 	}else{
 		mu_o2 = -602739.0 + 369.704 * T - 27.3443 * T * log(T);
 	}
-	return mu_o2 / (R * T * log(10.0));
+	return mu_o2 / (FPROPS_R * T * log(10.0));
 }
 
 static double stable_fe_mu0_hidayat(double T){
@@ -112,6 +109,11 @@ static double stable_fe_mu0_hidayat(double T){
 }
 
 static void test_eqm_status_text_public_api(void){
+	CU_ASSERT_TRUE(fprops_eqm_status_ok(0));
+	CU_ASSERT_TRUE(fprops_eqm_status_ok(1));
+	CU_ASSERT_TRUE(fprops_eqm_status_ok(6));
+	CU_ASSERT_TRUE(!fprops_eqm_status_ok(2));
+	CU_ASSERT_DOUBLE_EQUAL(FPROPS_R, 8.31446261815324, 1e-15);
 	CU_ASSERT_STRING_EQUAL(fprops_eqm_status_text(0), "solved");
 	CU_ASSERT_STRING_EQUAL(fprops_eqm_status_text(1), "solved to acceptable level");
 	CU_ASSERT_STRING_EQUAL(fprops_eqm_status_text(2), "infeasible problem detected");
@@ -136,9 +138,9 @@ static void test_eqm_phase_registry_inspection_feoh(void){
 	CU_ASSERT_STRING_EQUAL(wustite.members[0], "Wus_FeO");
 	CU_ASSERT_STRING_EQUAL(wustite.members[1], "Wus_FeO1p5");
 	CU_ASSERT_EQUAL(wustite.nvar, 1);
-	CU_ASSERT_STRING_EQUAL(wustite.var_names[0], "x_member_b");
-	i_fe = find_name(wustite.elements, wustite.nelem, "Fe");
-	i_o = find_name(wustite.elements, wustite.nelem, "O");
+	CU_ASSERT_STRING_EQUAL(wustite.var_names[0], "x_FeO1p5");
+	i_fe = fprops_eqm_phase_find_element(&wustite, "Fe");
+	i_o = fprops_eqm_phase_find_element(&wustite, "O");
 	CU_ASSERT_TRUE(i_fe >= 0);
 	CU_ASSERT_TRUE(i_o >= 0);
 
@@ -157,8 +159,8 @@ static void test_eqm_phase_registry_inspection_feoh(void){
 	CU_ASSERT_EQUAL(gas.kind, FPROPS_EQM_PHASE_IDEAL_GAS);
 	CU_ASSERT_EQUAL(gas.nmember, 2);
 	CU_ASSERT_STRING_EQUAL(gas.source, "helmholtz+ref0:");
-	i_h = find_name(gas.elements, gas.nelem, "H");
-	i_o = find_name(gas.elements, gas.nelem, "O");
+	i_h = fprops_eqm_phase_find_element(&gas, "H");
+	i_o = fprops_eqm_phase_find_element(&gas, "O");
 	CU_ASSERT_TRUE(i_h >= 0);
 	CU_ASSERT_TRUE(i_o >= 0);
 
@@ -166,6 +168,25 @@ static void test_eqm_phase_registry_inspection_feoh(void){
 	CU_ASSERT_EQUAL(hematite.kind, FPROPS_EQM_PHASE_STOICHIOMETRIC);
 	CU_ASSERT_STRING_EQUAL(hematite.name, "Fe2O3");
 	CU_ASSERT_STRING_EQUAL(hematite.source, "hidayat_2015");
+}
+
+static void test_eqm_phase_package_resolver_feoh(void){
+	const char *specs[] = {
+		"Fe_bcc=hidayat_2015",
+		"wustite=hidayat_2015",
+		"spinel=degterov_2001",
+		"Fe2O3=hidayat_2015",
+		"gas:ideal(hydrogen,water)=helmholtz+ref0:"
+	};
+	FpropsEqmPhaseModel phases[5];
+	int nresolved = fprops_eqm_phase_resolve_package(specs, NULL, ARRAYLEN(specs), phases);
+	CU_ASSERT_EQUAL(nresolved, 5);
+	CU_ASSERT_STRING_EQUAL(phases[0].name, "Fe_bcc");
+	CU_ASSERT_STRING_EQUAL(phases[1].name, "wustite");
+	CU_ASSERT_STRING_EQUAL(phases[2].name, "spinel");
+	CU_ASSERT_STRING_EQUAL(phases[3].name, "Fe2O3");
+	CU_ASSERT_STRING_EQUAL(phases[4].name, "gas:ideal");
+	CU_ASSERT_EQUAL(fprops_eqm_phase_total_members(phases, ARRAYLEN(phases)), 11);
 }
 
 static void test_eqm_phase_gibbs_and_elements_feoh(void){
@@ -185,8 +206,8 @@ static void test_eqm_phase_gibbs_and_elements_feoh(void){
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_gibbs(&wustite, 1173.15, g_eqm.P, y_wus, &g));
 	CU_ASSERT_TRUE(isfinite(g));
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&wustite, y_wus, a));
-	i_fe = find_name(wustite.elements, wustite.nelem, "Fe");
-	i_o = find_name(wustite.elements, wustite.nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&wustite, "Fe");
+	i_o = fprops_eqm_phase_find_element(&wustite, "O");
 	CU_ASSERT_DOUBLE_EQUAL(a[i_fe], 1.0, 1e-12);
 	CU_ASSERT_DOUBLE_EQUAL(a[i_o], 1.05, 1e-12);
 
@@ -194,8 +215,8 @@ static void test_eqm_phase_gibbs_and_elements_feoh(void){
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_gibbs(&spinel, 1173.15, g_eqm.P, y_sp, &g));
 	CU_ASSERT_TRUE(isfinite(g));
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&spinel, y_sp, a));
-	i_fe = find_name(spinel.elements, spinel.nelem, "Fe");
-	i_o = find_name(spinel.elements, spinel.nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&spinel, "Fe");
+	i_o = fprops_eqm_phase_find_element(&spinel, "O");
 	CU_ASSERT_TRUE(a[i_fe] > 2.0 && a[i_fe] < 3.0);
 	CU_ASSERT_DOUBLE_EQUAL(a[i_o], 4.0, 1e-12);
 
@@ -204,8 +225,8 @@ static void test_eqm_phase_gibbs_and_elements_feoh(void){
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_gibbs(&gas, 1173.15, g_eqm.P, y_gas, &g));
 	CU_ASSERT_TRUE(isfinite(g));
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&gas, y_gas, a));
-	i_h = find_name(gas.elements, gas.nelem, "H");
-	i_o = find_name(gas.elements, gas.nelem, "O");
+	i_h = fprops_eqm_phase_find_element(&gas, "H");
+	i_o = fprops_eqm_phase_find_element(&gas, "O");
 	CU_ASSERT_DOUBLE_EQUAL(a[i_h], 2.0, 1e-12);
 	CU_ASSERT_DOUBLE_EQUAL(a[i_o], 0.03, 1e-12);
 }
@@ -213,7 +234,7 @@ static void test_eqm_phase_gibbs_and_elements_feoh(void){
 static void test_eqm_phase_entry_fe_wustite_900c_anchor(void){
 	const double T = 1173.15;
 	const double log10_h2o_h2 = -0.225974;
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	FpropsEqmPhaseModel wustite;
 	double mu_h2;
 	double mu_h2o;
@@ -229,14 +250,14 @@ static void test_eqm_phase_entry_fe_wustite_900c_anchor(void){
 	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2o));
 	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("Fe_bcc", "hidayat_2015", T, g_eqm.P0, &mu_fe));
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("wustite", "hidayat_2015", &wustite));
-	i_fe = find_name(wustite.elements, wustite.nelem, "Fe");
-	i_o = find_name(wustite.elements, wustite.nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&wustite, "Fe");
+	i_o = fprops_eqm_phase_find_element(&wustite, "O");
 	CU_ASSERT_TRUE_FATAL(i_fe >= 0);
 	CU_ASSERT_TRUE_FATAL(i_o >= 0);
 
 	lam_o_thermo = R * T * log(10.0) * log10_h2o_h2 + (mu_h2o - mu_h2);
-	lambda[i_fe] = -mu_fe;
-	lambda[i_o] = -lam_o_thermo;
+	lambda[i_fe] = mu_fe;
+	lambda[i_o] = lam_o_thermo;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_entry_residual(&wustite, T, g_eqm.P, lambda, &phi, y_min));
 	CU_ASSERT_TRUE(fabs(phi) < 2e-3);
 	CU_ASSERT_TRUE(y_min[0] > 0.0 && y_min[0] < 1.0);
@@ -245,7 +266,7 @@ static void test_eqm_phase_entry_fe_wustite_900c_anchor(void){
 static void test_eqm_phase_entry_wustite_spinel_900c_anchor(void){
 	const double T = 1173.15;
 	const double log10_h2o_h2 = 0.665196;
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	FpropsEqmPhaseModel wustite;
 	FpropsEqmPhaseModel spinel;
 	double mu_h2;
@@ -267,21 +288,21 @@ static void test_eqm_phase_entry_wustite_spinel_900c_anchor(void){
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("wustite", "hidayat_2015", &wustite));
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("spinel", "degterov_2001", &spinel));
 
-	i_fe_wus = find_name(wustite.elements, wustite.nelem, "Fe");
-	i_o_wus = find_name(wustite.elements, wustite.nelem, "O");
-	i_fe_sp = find_name(spinel.elements, spinel.nelem, "Fe");
-	i_o_sp = find_name(spinel.elements, spinel.nelem, "O");
+	i_fe_wus = fprops_eqm_phase_find_element(&wustite, "Fe");
+	i_o_wus = fprops_eqm_phase_find_element(&wustite, "O");
+	i_fe_sp = fprops_eqm_phase_find_element(&spinel, "Fe");
+	i_o_sp = fprops_eqm_phase_find_element(&spinel, "O");
 	CU_ASSERT_TRUE_FATAL(i_fe_wus >= 0 && i_o_wus >= 0);
 	CU_ASSERT_TRUE_FATAL(i_fe_sp >= 0 && i_o_sp >= 0);
 
 	lam_o_thermo = R * T * log(10.0) * log10_h2o_h2 + (mu_h2o - mu_h2);
 	lambda_wus[i_fe_wus] = 0.0;
-	lambda_wus[i_o_wus] = -lam_o_thermo;
+	lambda_wus[i_o_wus] = lam_o_thermo;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_entry_residual(&wustite, T, g_eqm.P,
 			lambda_wus, &phi_wus0, y_wus));
 
-	lambda_sp[i_fe_sp] = -phi_wus0 * R * T;
-	lambda_sp[i_o_sp] = -lam_o_thermo;
+	lambda_sp[i_fe_sp] = phi_wus0 * R * T;
+	lambda_sp[i_o_sp] = lam_o_thermo;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_entry_residual(&spinel, T, g_eqm.P,
 			lambda_sp, &phi_sp, y_sp));
 	CU_ASSERT_TRUE(fabs(phi_sp) < 5e-2);
@@ -312,15 +333,17 @@ static void test_eqm_phase_fixed_linear_fe_gas_reducing_case(void){
 }
 
 static int test_phase_find_lambda_fe_for_entry(const FpropsEqmPhaseModel *phase,
-		double T, double P, double lambda_o, double *lambda_fe_out, double *y_out){
+	double T, double P, double lambda_o, double *lambda_fe_out, double *y_out){
 	double lambda[2];
-	int i_fe = find_name(phase->elements, phase->nelem, "Fe");
-	int i_o = find_name(phase->elements, phase->nelem, "O");
+	int i_fe;
+	int i_o;
 	double lo = -1000000.0;
 	double hi = 1000000.0;
 	double r_lo;
 	double r_hi;
 	int k;
+	i_fe = fprops_eqm_phase_find_element(phase, "Fe");
+	i_o = fprops_eqm_phase_find_element(phase, "O");
 	if(i_fe < 0 || i_o < 0){
 		return 0;
 	}
@@ -399,6 +422,36 @@ static double test_bg_wustite_spinel_log10_h2o_h2_900c(void){
 		0.821795065664, 889.906116431, 0.837937983872, 909.781941876);
 }
 
+static double test_bg_fe_spinel_log10_h2o_h2_400c(void){
+	return test_interp_log10_god(400.0,
+		0.0789270759127, 388.298687389, 0.0934618420789, 409.099758867);
+}
+
+static double test_bg_fe_spinel_log10_h2o_h2_500c(void){
+	return test_interp_log10_god(500.0,
+		0.168845620361, 498.137780549, 0.185316158674, 515.570661982);
+}
+
+static double test_bg_fe_spinel_log10_h2o_h2_540c(void){
+	return test_interp_log10_god(540.0,
+		0.202668265865, 532.581218262, 0.219718975701, 549.656298345);
+}
+
+static double test_bg_fe_spinel_log10_h2o_h2_560c(void){
+	return test_interp_log10_god(560.0,
+		0.219718975701, 549.656298345, 0.235228173231, 564.783638887);
+}
+
+static double test_bg_fe_wustite_log10_h2o_h2_585c(void){
+	return test_interp_log10_god(585.0,
+		0.23456245187, 570.019013451, 0.245296282085, 592.590131422);
+}
+
+static double test_bg_wustite_spinel_log10_h2o_h2_585c(void){
+	return test_interp_log10_god(585.0,
+		0.26050174532, 580.54667932, 0.280873172483, 589.174170906);
+}
+
 static double test_bg_fe_wustite_log10_co2_co_900c(void){
 	return test_interp_log10_god(900.0,
 		0.325713425546, 895.827936348, 0.323145197153, 905.433994412);
@@ -409,10 +462,60 @@ static double test_bg_wustite_spinel_log10_co2_co_900c(void){
 		0.801832125876, 899.918173303, 0.804776213998, 906.836870797);
 }
 
+static double test_bg_fe_spinel_log10_co2_co_400c(void){
+	return test_interp_log10_god(400.0,
+		0.494836284157, 392.811816123, 0.494579997181, 402.638693675);
+}
+
+static double test_bg_fe_spinel_log10_co2_co_500c(void){
+	return test_interp_log10_god(500.0,
+		0.494745749857, 492.138725534, 0.494649216265, 503.271581932);
+}
+
+static double test_bg_fe_spinel_log10_co2_co_540c(void){
+	return test_interp_log10_god(540.0,
+		0.494542792551, 532.139625675, 0.494809631148, 540.945689211);
+}
+
+static double test_bg_fe_spinel_log10_co2_co_560c(void){
+	return test_interp_log10_god(560.0,
+		0.494486035475, 559.113203095, 0.494618004345, 569.754945703);
+}
+
+static double test_bg_fe_wustite_log10_co2_co_585c(void){
+	return test_interp_log10_god(585.0,
+		0.485399157248, 579.938513882, 0.481654756128, 585.359738343);
+}
+
+static double test_bg_wustite_spinel_log10_co2_co_585c(void){
+	return test_interp_log10_god(585.0,
+		0.515790749521, 583.171121861, 0.521979204398, 587.265811035);
+}
+
+static double test_bg_fe_wustite_log10_co2_co_700c(void){
+	return test_interp_log10_god(700.0,
+		0.411802246834, 697.117244772, 0.406437428396, 706.669129735);
+}
+
+static double test_bg_wustite_spinel_log10_co2_co_700c(void){
+	return test_interp_log10_god(700.0,
+		0.656823398384, 698.497432348, 0.661738081109, 703.658005109);
+}
+
 static void test_prepare_feoh_phase_package(FpropsEqmPhaseModel *phases){
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("Fe_bcc=hidayat_2015", NULL, &phases[0]));
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("wustite", "hidayat_2015", &phases[1]));
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("spinel", "degterov_2001", &phases[2]));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("Fe2O3=hidayat_2015", NULL, &phases[3]));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("gas:ideal(hydrogen,water)",
+			"helmholtz+ref0:", &phases[4]));
+}
+
+static void test_prepare_feoh_phase_package_spinel_source(FpropsEqmPhaseModel *phases,
+		const char *spinel_source){
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("Fe_bcc=hidayat_2015", NULL, &phases[0]));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("wustite", "hidayat_2015", &phases[1]));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("spinel", spinel_source, &phases[2]));
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("Fe2O3=hidayat_2015", NULL, &phases[3]));
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("gas:ideal(hydrogen,water)",
 			"helmholtz+ref0:", &phases[4]));
@@ -454,7 +557,7 @@ static void test_eqm_phase_fixed_expanded_fe_gas_reducing_case(void){
 static void test_eqm_phase_fixed_expanded_wustite_gas(void){
 	const double T = 1173.15;
 	const double P = 101325.0;
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	const double gas_total = 10.0;
 	const double log10_ratio = 0.0;
 	double ratio = pow(10.0, log10_ratio);
@@ -485,11 +588,11 @@ static void test_eqm_phase_fixed_expanded_wustite_gas(void){
 			"helmholtz+ref0:", &phases[1]));
 	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_h2o - mu_h2);
 	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[0], T, P,
-			-lambda_o_thermo, &lambda_fe, y_entry));
+			lambda_o_thermo, &lambda_fe, y_entry));
 	(void)lambda_fe;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[0], y_entry, elem_w));
-	i_fe = find_name(phases[0].elements, phases[0].nelem, "Fe");
-	i_o = find_name(phases[0].elements, phases[0].nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&phases[0], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[0], "O");
 	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
 
 	b[0] = elem_w[i_fe];
@@ -513,7 +616,7 @@ static void test_eqm_phase_fixed_expanded_wustite_gas(void){
 static void test_eqm_phase_fixed_expanded_spinel_gas(void){
 	const double T = 1173.15;
 	const double P = 101325.0;
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	const double gas_total = 10.0;
 	const double log10_ratio = -2.0;
 	double ratio = pow(10.0, log10_ratio);
@@ -548,11 +651,11 @@ static void test_eqm_phase_fixed_expanded_spinel_gas(void){
 			"helmholtz+ref0:", &phases[1]));
 	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_h2o - mu_h2);
 	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[0], T, P,
-			-lambda_o_thermo, &lambda_fe, y_entry));
+			lambda_o_thermo, &lambda_fe, y_entry));
 	(void)lambda_fe;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[0], y_entry, elem_sp));
-	i_fe = find_name(phases[0].elements, phases[0].nelem, "Fe");
-	i_o = find_name(phases[0].elements, phases[0].nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&phases[0], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[0], "O");
 	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
 
 	a = y_entry[0];
@@ -638,6 +741,342 @@ static void test_eqm_phase_active_set_fe_gas_reducing_case(void){
 	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], 0.03, 2e-5);
 }
 
+static void test_eqm_phase_active_set_result_status_wrapper(void){
+	FpropsEqmPhaseModel phases[5];
+	const char *elements[] = {"Fe", "O", "H"};
+	double b[] = {2.0, 3.0, 200.0};
+	FpropsEqmPhaseResult result;
+	int status;
+
+	test_prepare_feoh_phase_package(phases);
+	status = fprops_eqm_phase_solve_active_set_result(phases, ARRAYLEN(phases),
+		elements, ARRAYLEN(elements), b, 1173.15, 101325.0, "auto", NULL, &result);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_EQUAL(result.status, 0);
+	CU_ASSERT_TRUE(fprops_eqm_status_ok(result.solver_status));
+	CU_ASSERT_EQUAL(result.nphase, 5);
+	CU_ASSERT_EQUAL(result.nmember, 11);
+	CU_ASSERT_TRUE(result.phase_active[0]);
+	CU_ASSERT_TRUE(result.phase_active[4]);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_result_amount(&result, 0), 2.0, 1e-6);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_result_gas_member_amount(&phases[4], &result, 4, 0),
+		97.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_result_gas_member_amount(&phases[4], &result, 4, 1),
+		3.0, 1e-5);
+}
+
+static void test_eqm_phase_problem_api_fe_gas_reducing_case(void){
+	FpropsEqm eqm;
+	FpropsEqm eqm2;
+	FpropsEqmPhaseResult result;
+	const char *names[] = {"Fe2O3", "H2"};
+	const char *coord_names[2];
+	const char *member_names[5];
+	double member_amounts[2];
+	double amounts[] = {1.0, 100.0};
+	int status;
+
+	fprops_eqm_init(&eqm);
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_add_phase(&eqm, "Fe_bcc=hidayat_2015", NULL) >= 0);
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_add_phase(&eqm,
+		"gas:ideal(hydrogen,water)=helmholtz+ref0:", NULL) >= 0);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comp_list(&eqm, ARRAYLEN(names), names, amounts), 0);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "O"), 3.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "H"), 200.0, 1e-12);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_set_TP(&eqm, 1173.15, 101325.0), 0);
+
+	status = fprops_eqm_solve(&eqm, &result);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_EQUAL(result.status, 0);
+	CU_ASSERT_PTR_EQUAL(result.eqm, &eqm);
+	CU_ASSERT_TRUE(fprops_eqm_status_ok(result.solver_status));
+	CU_ASSERT_EQUAL(fprops_eqm_phase_count(&eqm), 2);
+	CU_ASSERT_STRING_EQUAL(fprops_eqm_phase_name(&eqm, 1), "gas:ideal");
+	CU_ASSERT_EQUAL(fprops_eqm_phase_member_count(&eqm, "gas:ideal"), 2);
+	CU_ASSERT_STRING_EQUAL(fprops_eqm_phase_member_name(&eqm, "gas:ideal", 0), "hydrogen");
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_amount(&result, "Fe_bcc"), 2.0, 1e-6);
+	CU_ASSERT_EQUAL(fprops_eqm_phase_member_names(&eqm, "gas:ideal", member_names), 2);
+	CU_ASSERT_STRING_EQUAL(member_names[1], "water");
+	CU_ASSERT_EQUAL(fprops_eqm_phase_member_amounts(&result, "gas:ideal", member_amounts), 2);
+	CU_ASSERT_DOUBLE_EQUAL(member_amounts[0], 97.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(member_amounts[1], 3.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_member_amount(&result, "gas:ideal", "hydrogen"),
+		97.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_member_amount(&result, "gas:ideal", "water"),
+		3.0, 1e-5);
+
+	fprops_eqm_clear_feed(&eqm);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comps(&eqm, "Fe", 2, "O", 3, "H", 200), 0);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "O"), 3.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "H"), 200.0, 1e-12);
+
+	fprops_eqm_clear_feed(&eqm);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comps(&eqm, "Fe2O3", 1, "H2", 100), 0);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "O"), 3.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "H"), 200.0, 1e-12);
+
+	fprops_eqm_clear_feed(&eqm);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comps(&eqm, "Fe2O3", 1, "hydrogen", 100), 0);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "O"), 3.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "H"), 200.0, 1e-12);
+
+	fprops_eqm_init(&eqm2);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_phases(&eqm2,
+		"wustite=hidayat_2015", "spinel=degterov_2001"), 0);
+	CU_ASSERT_EQUAL(fprops_eqm_phase_coord_count(&eqm2, "wustite"), 1);
+	CU_ASSERT_STRING_EQUAL(fprops_eqm_phase_coord_name(&eqm2, "wustite", 0), "x_FeO1p5");
+	CU_ASSERT_EQUAL(fprops_eqm_phase_coord_names(&eqm2, "spinel", coord_names), 2);
+	CU_ASSERT_STRING_EQUAL(coord_names[0], "y_tet_fe2");
+	CU_ASSERT_STRING_EQUAL(coord_names[1], "y_oct_fe2");
+	CU_ASSERT_EQUAL(fprops_eqm_phase_member_names(&eqm2, "wustite", member_names), 2);
+	CU_ASSERT_STRING_EQUAL(member_names[0], "Wus_FeO");
+	CU_ASSERT_STRING_EQUAL(member_names[1], "Wus_FeO1p5");
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_phase_feed(&eqm2, "wustite", 2.0, 0.25), 0);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm2, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm2, "O"), 2.25, 1e-12);
+	fprops_eqm_clear_feed(&eqm2);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_phase_feed_vars(&eqm2, "spinel", 1.0,
+		"y_oct_fe2", 0.20, "y_tet_fe2", 0.40), 0);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm2, "O"), 4.0, 1e-12);
+}
+
+static void test_run_feoh_fe_spinel_bg_active_set(double tc, double log10_ratio){
+	const double T = tc + 273.15;
+	const double P = 101325.0;
+	const double R = FPROPS_R;
+	const double gas_total = 2.0;
+	const double metal_amount = 2.0;
+	double ratio = pow(10.0, log10_ratio);
+	double n_h2o = gas_total * ratio / (1.0 + ratio);
+	double n_h2 = gas_total - n_h2o;
+	FpropsEqmPhaseModel phases[5];
+	double mu_h2;
+	double mu_h2o;
+	double mu_fe;
+	double lambda_o_thermo;
+	double lambda_fe;
+	double y_entry[2] = {NAN, NAN};
+	double elem_sp[2];
+	double b[3];
+	const char *elements[] = {"Fe", "O", "H"};
+	double phase_amounts[5];
+	double phase_y[5 * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_amounts[16];
+	int active[5];
+	int nmember = 0;
+	int status;
+	int i_fe;
+	int i_o;
+
+	test_prepare_feoh_phase_package_spinel_source(phases, "fe_spinel_bg_tuned_2026");
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("hydrogen", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2o));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("Fe_bcc", "hidayat_2015", T, g_eqm.P0, &mu_fe));
+	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_h2o - mu_h2);
+	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[2], T, P,
+			lambda_o_thermo, &lambda_fe, y_entry));
+	CU_ASSERT_DOUBLE_EQUAL(lambda_fe, mu_fe, 2e3);
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[2], y_entry, elem_sp));
+	i_fe = fprops_eqm_phase_find_element(&phases[2], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[2], "O");
+	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
+	b[0] = metal_amount + elem_sp[i_fe];
+	b[1] = elem_sp[i_o] + n_h2o;
+	b[2] = 2.0 * gas_total;
+
+	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
+		elements, ARRAYLEN(elements), b, T, P, "auto", NULL, phase_amounts, phase_y,
+		active, member_amounts, &nmember);
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQUAL(nmember, 11);
+	CU_ASSERT_TRUE(active[0]);
+	CU_ASSERT_TRUE(!active[1]);
+	CU_ASSERT_TRUE(active[2]);
+	CU_ASSERT_TRUE(!active[3]);
+	CU_ASSERT_TRUE(active[4]);
+	CU_ASSERT_TRUE(phase_amounts[0] > 0.0);
+	CU_ASSERT_TRUE(phase_amounts[2] > 0.0);
+	CU_ASSERT_TRUE(phase_amounts[4] > 0.0);
+	CU_ASSERT_TRUE(phase_y[2 * FPROPS_EQM_PHASE_MAX_VARS] >= 0.0);
+	CU_ASSERT_TRUE(phase_y[2 * FPROPS_EQM_PHASE_MAX_VARS] <= 1.0);
+	CU_ASSERT_TRUE(phase_y[2 * FPROPS_EQM_PHASE_MAX_VARS + 1] >= 0.0);
+	CU_ASSERT_TRUE(phase_y[2 * FPROPS_EQM_PHASE_MAX_VARS + 1] <= 0.5);
+	CU_ASSERT_TRUE(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS] > 0.0);
+	CU_ASSERT_TRUE(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1] > 0.0);
+	(void)metal_amount;
+	(void)n_h2;
+	(void)n_h2o;
+}
+
+static void test_eqm_phase_active_set_fe_spinel_bg_400c(void){
+	test_run_feoh_fe_spinel_bg_active_set(400.0,
+		test_bg_fe_spinel_log10_h2o_h2_400c());
+}
+
+static void test_eqm_phase_active_set_fe_spinel_bg_500c(void){
+	test_run_feoh_fe_spinel_bg_active_set(500.0,
+		test_bg_fe_spinel_log10_h2o_h2_500c());
+}
+
+static void test_eqm_phase_active_set_fe_spinel_bg_540c(void){
+	test_run_feoh_fe_spinel_bg_active_set(540.0,
+		test_bg_fe_spinel_log10_h2o_h2_540c());
+}
+
+static void test_eqm_phase_active_set_fe_spinel_bg_560c(void){
+	test_run_feoh_fe_spinel_bg_active_set(560.0,
+		test_bg_fe_spinel_log10_h2o_h2_560c());
+}
+
+static void test_run_feoc_fe_spinel_bg_active_set(double tc, double log10_ratio){
+	const double T = tc + 273.15;
+	const double P = 101325.0;
+	const double R = FPROPS_R;
+	const double gas_total = 2.0;
+	const double metal_amount = 2.0;
+	double ratio = pow(10.0, log10_ratio);
+	double n_co2 = gas_total * ratio / (1.0 + ratio);
+	double n_co = gas_total - n_co2;
+	FpropsEqmPhaseModel phases[5];
+	double mu_co;
+	double mu_co2;
+	double mu_fe;
+	double lambda_o_thermo;
+	double lambda_fe;
+	double y_entry[2] = {NAN, NAN};
+	double elem_sp[2];
+	double b[3];
+	const char *elements[] = {"Fe", "O", "C"};
+	double phase_amounts[5];
+	double phase_y[5 * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_amounts[16];
+	int active[5];
+	int nmember = 0;
+	int status;
+	int i_fe;
+	int i_o;
+
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("Fe_bcc=hidayat_2015", NULL, &phases[0]));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("wustite", "hidayat_2015", &phases[1]));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("spinel", "fe_spinel_bg_tuned_2026",
+			&phases[2]));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("Fe2O3=hidayat_2015", NULL, &phases[3]));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("gas:ideal(carbonmonoxide,carbondioxide)",
+			"Moran and Shapiro", &phases[4]));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("carbonmonoxide", "Moran and Shapiro", T, g_eqm.P0,
+			&mu_co));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("carbondioxide", "Moran and Shapiro", T, g_eqm.P0,
+			&mu_co2));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("Fe_bcc", "hidayat_2015", T, g_eqm.P0, &mu_fe));
+	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_co2 - mu_co);
+	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[2], T, P,
+			lambda_o_thermo, &lambda_fe, y_entry));
+	CU_ASSERT_DOUBLE_EQUAL(lambda_fe, mu_fe, 2e3);
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[2], y_entry, elem_sp));
+	i_fe = fprops_eqm_phase_find_element(&phases[2], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[2], "O");
+	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
+	b[0] = metal_amount + elem_sp[i_fe];
+	b[1] = elem_sp[i_o] + n_co + 2.0 * n_co2;
+	b[2] = gas_total;
+
+	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
+		elements, ARRAYLEN(elements), b, T, P, "auto", NULL, phase_amounts, phase_y,
+		active, member_amounts, &nmember);
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQUAL(nmember, 11);
+	CU_ASSERT_TRUE(active[0]);
+	CU_ASSERT_TRUE(!active[1]);
+	CU_ASSERT_TRUE(active[2]);
+	CU_ASSERT_TRUE(!active[3]);
+	CU_ASSERT_TRUE(active[4]);
+	CU_ASSERT_TRUE(phase_amounts[0] > 0.0);
+	CU_ASSERT_TRUE(phase_amounts[2] > 0.0);
+	CU_ASSERT_TRUE(phase_amounts[4] > 0.0);
+	CU_ASSERT_TRUE(phase_y[2 * FPROPS_EQM_PHASE_MAX_VARS] >= 0.0);
+	CU_ASSERT_TRUE(phase_y[2 * FPROPS_EQM_PHASE_MAX_VARS] <= 1.0);
+	CU_ASSERT_TRUE(phase_y[2 * FPROPS_EQM_PHASE_MAX_VARS + 1] >= 0.0);
+	CU_ASSERT_TRUE(phase_y[2 * FPROPS_EQM_PHASE_MAX_VARS + 1] <= 0.5);
+	CU_ASSERT_TRUE(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS] > 0.0);
+	CU_ASSERT_TRUE(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1] > 0.0);
+	(void)metal_amount;
+	(void)n_co;
+	(void)n_co2;
+}
+
+static void test_eqm_phase_active_set_fe_spinel_co_bg_400c(void){
+	test_run_feoc_fe_spinel_bg_active_set(400.0,
+		test_bg_fe_spinel_log10_co2_co_400c());
+}
+
+static void test_eqm_phase_active_set_fe_spinel_co_bg_500c(void){
+	test_run_feoc_fe_spinel_bg_active_set(500.0,
+		test_bg_fe_spinel_log10_co2_co_500c());
+}
+
+static void test_eqm_phase_active_set_fe_spinel_co_bg_540c(void){
+	test_run_feoc_fe_spinel_bg_active_set(540.0,
+		test_bg_fe_spinel_log10_co2_co_540c());
+}
+
+static void test_eqm_phase_active_set_fe_spinel_co_bg_560c(void){
+	test_run_feoc_fe_spinel_bg_active_set(560.0,
+		test_bg_fe_spinel_log10_co2_co_560c());
+}
+
+static void test_run_feoh_fe_spinel_bg_entry(double tc, double log10_ratio){
+	const double T = tc + 273.15;
+	const double P = 101325.0;
+	const double R = FPROPS_R;
+	FpropsEqmPhaseModel spinel;
+	double mu_h2;
+	double mu_h2o;
+	double mu_fe;
+	double lambda_o_thermo;
+	double lambda_fe;
+	double y_entry[2] = {NAN, NAN};
+
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_resolve("spinel",
+			"fe_spinel_bg_tuned_2026", &spinel));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("hydrogen", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2o));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("Fe_bcc", "hidayat_2015", T, g_eqm.P0, &mu_fe));
+	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_h2o - mu_h2);
+	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&spinel, T, P,
+			lambda_o_thermo, &lambda_fe, y_entry));
+	CU_ASSERT_DOUBLE_EQUAL(lambda_fe, mu_fe, 2e3);
+	CU_ASSERT_TRUE(isfinite(y_entry[0]));
+	CU_ASSERT_TRUE(isfinite(y_entry[1]));
+	CU_ASSERT_TRUE(y_entry[0] >= 0.0);
+	CU_ASSERT_TRUE(y_entry[0] <= 1.0);
+	CU_ASSERT_TRUE(y_entry[1] >= 0.0);
+	CU_ASSERT_TRUE(y_entry[1] <= 0.5);
+}
+
+static void test_eqm_phase_entry_fe_spinel_bg_400c(void){
+	test_run_feoh_fe_spinel_bg_entry(400.0,
+		test_bg_fe_spinel_log10_h2o_h2_400c());
+}
+
+static void test_eqm_phase_entry_fe_spinel_bg_500c(void){
+	test_run_feoh_fe_spinel_bg_entry(500.0,
+		test_bg_fe_spinel_log10_h2o_h2_500c());
+}
+
+static void test_eqm_phase_entry_fe_spinel_bg_540c(void){
+	test_run_feoh_fe_spinel_bg_entry(540.0,
+		test_bg_fe_spinel_log10_h2o_h2_540c());
+}
+
+static void test_eqm_phase_entry_fe_spinel_bg_560c(void){
+	test_run_feoh_fe_spinel_bg_entry(560.0,
+		test_bg_fe_spinel_log10_h2o_h2_560c());
+}
+
 static void test_eqm_phase_validate_fe_gas_reducing_case(void){
 	FpropsEqmPhaseModel phases[5];
 	const char *elements[] = {"Fe", "O", "H"};
@@ -702,7 +1141,7 @@ static void test_eqm_phase_auto_fe_co_co2_gas_smoke(void){
 static void test_eqm_phase_auto_wustite_co_bg_900c_classification(void){
 	const double T = 1173.15;
 	const double P = 101325.0;
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	const double gas_total = 10.0;
 	double log10_ratio = 0.5 * (test_bg_fe_wustite_log10_co2_co_900c()
 		+ test_bg_wustite_spinel_log10_co2_co_900c());
@@ -734,11 +1173,11 @@ static void test_eqm_phase_auto_wustite_co_bg_900c_classification(void){
 	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("carbondioxide", "Moran and Shapiro", T, g_eqm.P0, &mu_co2));
 	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_co2 - mu_co);
 	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[1], T, P,
-			-lambda_o_thermo, &lambda_fe, y_entry));
+			lambda_o_thermo, &lambda_fe, y_entry));
 	(void)lambda_fe;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[1], y_entry, elem_w));
-	i_fe = find_name(phases[1].elements, phases[1].nelem, "Fe");
-	i_o = find_name(phases[1].elements, phases[1].nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&phases[1], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[1], "O");
 	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
 	b[0] = elem_w[i_fe];
 	b[1] = elem_w[i_o] + n_co + 2.0 * n_co2;
@@ -763,7 +1202,7 @@ static void test_eqm_phase_auto_wustite_co_bg_900c_classification(void){
 static void test_eqm_phase_active_set_wustite_co_bg_900c(void){
 	const double T = 1173.15;
 	const double P = 101325.0;
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	const double gas_total = 10.0;
 	double log10_ratio = 0.5 * (test_bg_fe_wustite_log10_co2_co_900c()
 		+ test_bg_wustite_spinel_log10_co2_co_900c());
@@ -793,11 +1232,11 @@ static void test_eqm_phase_active_set_wustite_co_bg_900c(void){
 	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("carbondioxide", "Moran and Shapiro", T, g_eqm.P0, &mu_co2));
 	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_co2 - mu_co);
 	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[1], T, P,
-			-lambda_o_thermo, &lambda_fe, y_entry));
+			lambda_o_thermo, &lambda_fe, y_entry));
 	(void)lambda_fe;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[1], y_entry, elem_w));
-	i_fe = find_name(phases[1].elements, phases[1].nelem, "Fe");
-	i_o = find_name(phases[1].elements, phases[1].nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&phases[1], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[1], "O");
 	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
 	b[0] = elem_w[i_fe];
 	b[1] = elem_w[i_o] + n_co + 2.0 * n_co2;
@@ -820,11 +1259,106 @@ static void test_eqm_phase_active_set_wustite_co_bg_900c(void){
 	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], n_co2 / gas_total, 2e-4);
 }
 
+static void test_run_feoc_wustite_bg_classification(double tc, double log10_fe_wus,
+		double log10_wus_spin, int active_set){
+	const double T = tc + 273.15;
+	const double P = 101325.0;
+	const double R = FPROPS_R;
+	const double gas_total = 10.0;
+	double log10_ratio = 0.5 * (log10_fe_wus + log10_wus_spin);
+	double ratio = pow(10.0, log10_ratio);
+	double n_co2 = gas_total * ratio / (1.0 + ratio);
+	double n_co = gas_total - n_co2;
+	FpropsEqmPhaseModel phases[5];
+	double mu_co;
+	double mu_co2;
+	double lambda_o_thermo;
+	double lambda_fe;
+	double y_entry[1] = {NAN};
+	double elem_w[2];
+	double b[3];
+	const char *elements[] = {"Fe", "O", "C"};
+	double phase_amounts[5];
+	double phase_y[5 * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_amounts[16];
+	int active[5];
+	int nmember = 0;
+	int status;
+	int i_fe;
+	int i_o;
+
+	CU_ASSERT_TRUE(log10_fe_wus < log10_ratio);
+	CU_ASSERT_TRUE(log10_ratio < log10_wus_spin);
+	test_prepare_feoc_phase_package(phases);
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("carbonmonoxide", "Moran and Shapiro", T, g_eqm.P0,
+			&mu_co));
+	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("carbondioxide", "Moran and Shapiro", T, g_eqm.P0,
+			&mu_co2));
+	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_co2 - mu_co);
+	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[1], T, P,
+			lambda_o_thermo, &lambda_fe, y_entry));
+	(void)lambda_fe;
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[1], y_entry, elem_w));
+	i_fe = fprops_eqm_phase_find_element(&phases[1], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[1], "O");
+	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
+	b[0] = elem_w[i_fe];
+	b[1] = elem_w[i_o] + n_co + 2.0 * n_co2;
+	b[2] = gas_total;
+
+	if(active_set){
+		status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
+			elements, ARRAYLEN(elements), b, T, P, "auto", NULL, phase_amounts,
+			phase_y, active, member_amounts, &nmember);
+	}else{
+		status = fprops_eqm_phase_solve_auto(phases, ARRAYLEN(phases),
+			elements, ARRAYLEN(elements), b, T, P, "auto", phase_amounts, phase_y,
+			active, member_amounts, &nmember);
+	}
+	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
+	CU_ASSERT_EQUAL(nmember, 11);
+	CU_ASSERT_TRUE(!active[0]);
+	CU_ASSERT_TRUE(active[1]);
+	CU_ASSERT_TRUE(!active[2]);
+	CU_ASSERT_TRUE(!active[3]);
+	CU_ASSERT_TRUE(active[4]);
+	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[1], 1.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(phase_amounts[4], gas_total, 1e-4);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[1 * FPROPS_EQM_PHASE_MAX_VARS], y_entry[0], 4e-3);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS], n_co / gas_total, 2e-4);
+	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], n_co2 / gas_total,
+		2e-4);
+}
+
+static void test_eqm_phase_auto_wustite_co_bg_585c_classification(void){
+	test_run_feoc_wustite_bg_classification(585.0,
+		test_bg_fe_wustite_log10_co2_co_585c(),
+		test_bg_wustite_spinel_log10_co2_co_585c(), 0);
+}
+
+static void test_eqm_phase_active_set_wustite_co_bg_585c(void){
+	test_run_feoc_wustite_bg_classification(585.0,
+		test_bg_fe_wustite_log10_co2_co_585c(),
+		test_bg_wustite_spinel_log10_co2_co_585c(), 1);
+}
+
+static void test_eqm_phase_auto_wustite_co_bg_700c_classification(void){
+	test_run_feoc_wustite_bg_classification(700.0,
+		test_bg_fe_wustite_log10_co2_co_700c(),
+		test_bg_wustite_spinel_log10_co2_co_700c(), 0);
+}
+
+static void test_eqm_phase_active_set_wustite_co_bg_700c(void){
+	test_run_feoc_wustite_bg_classification(700.0,
+		test_bg_fe_wustite_log10_co2_co_700c(),
+		test_bg_wustite_spinel_log10_co2_co_700c(), 1);
+}
+
 static void test_run_feoh_wustite_bg_classification(double tc, double log10_fe_wus,
 		double log10_wus_spin){
 	const double T = tc + 273.15;
 	const double P = 101325.0;
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	const double gas_total = 10.0;
 	double log10_ratio = 0.5 * (log10_fe_wus + log10_wus_spin);
 	double ratio = pow(10.0, log10_ratio);
@@ -855,11 +1389,11 @@ static void test_run_feoh_wustite_bg_classification(double tc, double log10_fe_w
 	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2o));
 	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_h2o - mu_h2);
 	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[1], T, P,
-			-lambda_o_thermo, &lambda_fe, y_entry));
+			lambda_o_thermo, &lambda_fe, y_entry));
 	(void)lambda_fe;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[1], y_entry, elem_w));
-	i_fe = find_name(phases[1].elements, phases[1].nelem, "Fe");
-	i_o = find_name(phases[1].elements, phases[1].nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&phases[1], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[1], "O");
 	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
 	b[0] = elem_w[i_fe];
 	b[1] = elem_w[i_o] + n_h2o;
@@ -881,11 +1415,11 @@ static void test_run_feoh_wustite_bg_classification(double tc, double log10_fe_w
 	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], n_h2o / gas_total, 2e-4);
 }
 
-static void test_run_feoh_wustite_bg_active_set(double tc, double log10_fe_wus,
-		double log10_wus_spin){
+static void test_run_feoh_wustite_bg_active_set_with_init(double tc, double log10_fe_wus,
+		double log10_wus_spin, const int *phase_active_init){
 	const double T = tc + 273.15;
 	const double P = 101325.0;
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	const double gas_total = 10.0;
 	double log10_ratio = 0.5 * (log10_fe_wus + log10_wus_spin);
 	double ratio = pow(10.0, log10_ratio);
@@ -916,19 +1450,19 @@ static void test_run_feoh_wustite_bg_active_set(double tc, double log10_fe_wus,
 	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2o));
 	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_h2o - mu_h2);
 	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[1], T, P,
-			-lambda_o_thermo, &lambda_fe, y_entry));
+			lambda_o_thermo, &lambda_fe, y_entry));
 	(void)lambda_fe;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[1], y_entry, elem_w));
-	i_fe = find_name(phases[1].elements, phases[1].nelem, "Fe");
-	i_o = find_name(phases[1].elements, phases[1].nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&phases[1], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[1], "O");
 	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
 	b[0] = elem_w[i_fe];
 	b[1] = elem_w[i_o] + n_h2o;
 	b[2] = 2.0 * gas_total;
 
 	status = fprops_eqm_phase_solve_active_set(phases, ARRAYLEN(phases),
-		elements, ARRAYLEN(elements), b, T, P, "auto", NULL, phase_amounts, phase_y,
-		active, member_amounts, &nmember);
+		elements, ARRAYLEN(elements), b, T, P, "auto", phase_active_init,
+		phase_amounts, phase_y, active, member_amounts, &nmember);
 	CU_ASSERT_TRUE_FATAL(status == 0 || status == 1 || status == 6);
 	CU_ASSERT_EQUAL(nmember, 11);
 	CU_ASSERT_TRUE(!active[0]);
@@ -943,10 +1477,21 @@ static void test_run_feoh_wustite_bg_active_set(double tc, double log10_fe_wus,
 	CU_ASSERT_DOUBLE_EQUAL(phase_y[4 * FPROPS_EQM_PHASE_MAX_VARS + 1], n_h2o / gas_total, 2e-4);
 }
 
+static void test_run_feoh_wustite_bg_active_set(double tc, double log10_fe_wus,
+		double log10_wus_spin){
+	test_run_feoh_wustite_bg_active_set_with_init(tc, log10_fe_wus, log10_wus_spin, NULL);
+}
+
 static void test_eqm_phase_auto_wustite_bg_600c_classification(void){
 	test_run_feoh_wustite_bg_classification(600.0,
 		test_bg_fe_wustite_log10_h2o_h2_600c(),
 		test_bg_wustite_spinel_log10_h2o_h2_600c());
+}
+
+static void test_eqm_phase_auto_wustite_bg_585c_classification(void){
+	test_run_feoh_wustite_bg_classification(585.0,
+		test_bg_fe_wustite_log10_h2o_h2_585c(),
+		test_bg_wustite_spinel_log10_h2o_h2_585c());
 }
 
 static void test_eqm_phase_auto_wustite_bg_700c_classification(void){
@@ -961,17 +1506,38 @@ static void test_eqm_phase_active_set_wustite_bg_600c(void){
 		test_bg_wustite_spinel_log10_h2o_h2_600c());
 }
 
+static void test_eqm_phase_active_set_wustite_bg_585c(void){
+	test_run_feoh_wustite_bg_active_set(585.0,
+		test_bg_fe_wustite_log10_h2o_h2_585c(),
+		test_bg_wustite_spinel_log10_h2o_h2_585c());
+}
+
 static void test_eqm_phase_active_set_wustite_bg_700c(void){
 	test_run_feoh_wustite_bg_active_set(700.0,
 		test_bg_fe_wustite_log10_h2o_h2_700c(),
 		test_bg_wustite_spinel_log10_h2o_h2_700c());
 }
 
+static void test_eqm_phase_active_set_wustite_bg_700c_initial_masks(void){
+	const int fe_gas[5] = {1, 0, 0, 0, 1};
+	const int wus_gas[5] = {0, 1, 0, 0, 1};
+	const int broad[5] = {1, 1, 1, 1, 1};
+	test_run_feoh_wustite_bg_active_set_with_init(700.0,
+		test_bg_fe_wustite_log10_h2o_h2_700c(),
+		test_bg_wustite_spinel_log10_h2o_h2_700c(), fe_gas);
+	test_run_feoh_wustite_bg_active_set_with_init(700.0,
+		test_bg_fe_wustite_log10_h2o_h2_700c(),
+		test_bg_wustite_spinel_log10_h2o_h2_700c(), wus_gas);
+	test_run_feoh_wustite_bg_active_set_with_init(700.0,
+		test_bg_fe_wustite_log10_h2o_h2_700c(),
+		test_bg_wustite_spinel_log10_h2o_h2_700c(), broad);
+}
+
 static void test_eqm_phase_validate_wustite_bg_700c(void){
 	const double tc = 700.0;
 	const double T = tc + 273.15;
 	const double P = 101325.0;
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	const double gas_total = 10.0;
 	double log10_ratio = 0.5 * (test_bg_fe_wustite_log10_h2o_h2_700c()
 		+ test_bg_wustite_spinel_log10_h2o_h2_700c());
@@ -1004,11 +1570,11 @@ static void test_eqm_phase_validate_wustite_bg_700c(void){
 	CU_ASSERT_TRUE_FATAL(eqm_mu0_source("water", "helmholtz+ref0:", T, g_eqm.P0, &mu_h2o));
 	lambda_o_thermo = R * T * log(10.0) * log10_ratio + (mu_h2o - mu_h2);
 	CU_ASSERT_TRUE_FATAL(test_phase_find_lambda_fe_for_entry(&phases[1], T, P,
-			-lambda_o_thermo, &lambda_fe, y_entry));
+			lambda_o_thermo, &lambda_fe, y_entry));
 	(void)lambda_fe;
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_phase_elements(&phases[1], y_entry, elem_w));
-	i_fe = find_name(phases[1].elements, phases[1].nelem, "Fe");
-	i_o = find_name(phases[1].elements, phases[1].nelem, "O");
+	i_fe = fprops_eqm_phase_find_element(&phases[1], "Fe");
+	i_o = fprops_eqm_phase_find_element(&phases[1], "O");
 	CU_ASSERT_TRUE_FATAL(i_fe >= 0 && i_o >= 0);
 	b[0] = elem_w[i_fe];
 	b[1] = elem_w[i_o] + n_h2o;
@@ -1046,7 +1612,7 @@ static void test_eqm_phase_active_set_wustite_bg_900c(void){
 }
 
 static double qfm_log10fo2_from_mu0(double T){
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	double mu_fe3o4 = NAN;
 	double mu_sio2 = NAN;
 	double mu_fayalite = NAN;
@@ -1069,7 +1635,7 @@ static double qfm_log10fo2_from_mu0(double T){
 }
 
 static double qfi_log10fo2_from_mu0(double T){
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	double mu_fe = stable_fe_mu0_hidayat(T);
 	double mu_sio2 = NAN;
 	double mu_fayalite = NAN;
@@ -1211,7 +1777,7 @@ static double hillert_jarl_A_test(double p){
 }
 
 static double hillert_jarl_gmag_test(double T, double Tord, double beta, double p){
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	double tau = T / fabs(Tord);
 	double A = hillert_jarl_A_test(p);
 	double f;
@@ -1388,7 +1954,7 @@ static void test_eqm_feoh_reaktoro_clone_boundary_912C(void){
 	const char *source_map =
 		"Fe_bcc=hidayat_2015;Fe_fcc=hidayat_2015;Wus_FeO=hidayat_2015;Wus_FeO1p5=hidayat_2015;"
 		"hydrogen=reaktoro_clone_supcrt98;water=reaktoro_clone_supcrt98";
-	const double R = 8.31446261815324;
+	const double R = FPROPS_R;
 	const double T = 1185.15;
 	double x = minimize_abs_residual_x_expected(T, residual_stable_fe_wustite_expected);
 	double lam_fe = 0.0;
@@ -2821,6 +3387,7 @@ static void test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points
 
 #define PHASE_TESTS(T) \
 	T(registry_inspection_feoh) \
+	T(package_resolver_feoh) \
 	T(gibbs_and_elements_feoh) \
 	T(entry_fe_wustite_900c_anchor) \
 	T(entry_wustite_spinel_900c_anchor) \
@@ -2830,15 +3397,36 @@ static void test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points
 	T(fixed_expanded_spinel_gas) \
 	T(auto_fe_gas_reducing_case) \
 	T(active_set_fe_gas_reducing_case) \
+	T(active_set_result_status_wrapper) \
+	T(problem_api_fe_gas_reducing_case) \
+	T(entry_fe_spinel_bg_400c) \
+	T(entry_fe_spinel_bg_500c) \
+	T(entry_fe_spinel_bg_540c) \
+	T(entry_fe_spinel_bg_560c) \
+	T(active_set_fe_spinel_bg_400c) \
+	T(active_set_fe_spinel_bg_500c) \
+	T(active_set_fe_spinel_bg_540c) \
+	T(active_set_fe_spinel_bg_560c) \
+	T(active_set_fe_spinel_co_bg_400c) \
+	T(active_set_fe_spinel_co_bg_500c) \
+	T(active_set_fe_spinel_co_bg_540c) \
+	T(active_set_fe_spinel_co_bg_560c) \
 	T(validate_fe_gas_reducing_case) \
 	T(auto_fe_co_co2_gas_smoke) \
+	T(auto_wustite_co_bg_585c_classification) \
+	T(active_set_wustite_co_bg_585c) \
+	T(auto_wustite_co_bg_700c_classification) \
+	T(active_set_wustite_co_bg_700c) \
 	T(auto_wustite_co_bg_900c_classification) \
 	T(active_set_wustite_co_bg_900c) \
+	T(auto_wustite_bg_585c_classification) \
+	T(active_set_wustite_bg_585c) \
 	T(auto_wustite_bg_600c_classification) \
 	T(active_set_wustite_bg_600c) \
 	T(auto_wustite_bg_700c_classification) \
 	T(validate_wustite_bg_700c) \
 	T(active_set_wustite_bg_700c) \
+	T(active_set_wustite_bg_700c_initial_masks) \
 	T(auto_wustite_bg_900c_classification) \
 	T(active_set_wustite_bg_900c)
 

@@ -3,7 +3,7 @@
 #include <math.h>
 
 static double fcc_iron_R(void){
-	return 8.31446261815324;
+	return FPROPS_R;
 }
 
 static double hillert_jarl_A(double p){

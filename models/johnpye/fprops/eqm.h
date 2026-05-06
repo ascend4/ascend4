@@ -1,6 +1,8 @@
 #ifndef FPROPS_EQM_H
 #define FPROPS_EQM_H
 
+#include "common.h"
+
 /*
  * Public API for chemical-equilibrium calculations in FPROPS.
  *
@@ -59,6 +61,14 @@ typedef struct FpropsRxnResult{
  * this function rather than carrying local status decoders.
  */
 const char *fprops_eqm_status_text(int status);
+
+/**
+ * Return non-zero if an equilibrium status code represents a usable result.
+ *
+ * This keeps examples and callers from encoding solver-specific accepted
+ * positive statuses such as IPOPT's "acceptable level" or "feasible point".
+ */
+int fprops_eqm_status_ok(int status);
 
 /**
  * Build a compiled reactive-package runtime object from a species basis

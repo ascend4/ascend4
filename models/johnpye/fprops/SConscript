@@ -117,6 +117,14 @@ prog_env.Program("mix",['mix.c']+fprops_env['shobjs'])
 
 prog_env.Program("test_cubicroots",['cubicroots.c'] + fprops_env['shobjs'],OBJPREFIX="t_",CPPDEFINES=['-DTEST'])
 
+example_env = fprops_env.Clone()
+example_env.AppendUnique(LIBPATH=["."])
+example_env.AppendUnique(LIBS=["fprops", "m"])
+example_env.AppendUnique(LINKFLAGS=["-Wl,-rpath,'$$ORIGIN/..'"])
+feoh_example = example_env.Program("examples/feoh", ["examples/feoh.c"])
+example_env.Depends(feoh_example, fprops_env["libfprops"])
+example_env.Alias("feoh_example", feoh_example)
+
  #vim: set syntax=python:
 
 fprops_env.SConscript("test/SConscript",['fprops_env'])

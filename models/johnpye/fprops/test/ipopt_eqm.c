@@ -21,7 +21,7 @@ static double log10K_from_mu0(const char **names, const double *nu, int ns,
 		sum += nu[i] * mu0;
 	}
 	*ok = 1;
-	return -sum / (8.31446261815324 * T * log(10.0));
+	return -sum / (FPROPS_R * T * log(10.0));
 }
 
 static double log10K_from_n(const double *n, const double *nu, int ns, double P, double P0){

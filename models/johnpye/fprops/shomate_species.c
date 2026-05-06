@@ -125,7 +125,7 @@ double shomate_species_g_molar(const ShomateSpecies *S, double T, double p, Fpro
 	if(*err)return 0.0;
 	g = h - T * s;
 	if(S->phase == FPROPS_PHASE_GAS && S->p_ref > 0.0){
-		g += 8.31446261815324 * T * log(p / S->p_ref);
+		g += FPROPS_R * T * log(p / S->p_ref);
 	}else if(S->phase != FPROPS_PHASE_GAS && S->rho_ref > 0.0){
 		double molar_volume = (S->M * 1e-3) / S->rho_ref;
 		g += (p - S->p_ref) * molar_volume;

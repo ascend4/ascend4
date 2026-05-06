@@ -61,7 +61,7 @@ static const SpinelFeParams spinel_params_hidayat_adj1 = {
 };
 
 static double spinel_R(void){
-	return 8.31446261815324;
+	return FPROPS_R;
 }
 
 static double safe_ylogy(double y){

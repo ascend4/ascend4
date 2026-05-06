@@ -18,7 +18,7 @@ static const char *elements_fe2o3[] = {"Fe", "O"};
 static const double stoich_fe2o3[] = {2.0, 3.0};
 
 static double gibbs_species_R(void){
-	return 8.31446261815324;
+	return FPROPS_R;
 }
 
 static double hillert_jarl_A(double p){
