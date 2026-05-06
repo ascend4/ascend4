@@ -21,22 +21,28 @@ numerical explanation.
 The public equilibrium API is in
 [eqm.h](/home/john/ascend/models/johnpye/fprops/eqm.h):
 
-- `eqm_solve(...)`
-- `eqm_solve_elements(...)`
 - `eqm_mu0_source(...)`
+- `fprops_eqm_tpb(...)`
+- `fprops_eqm_tpy(...)`
+- `fprops_rxn_eqm_tpb(...)`
+- `fprops_rxn_eqm_tpy(...)`
 
-For most users, the two important calls are:
+For most users, the important calls are:
 
 1. `eqm_mu0_source(...)`
    Use this when you want standard chemical potentials $\mu_i^\circ(T, P^\circ)$ for chosen species and data sources.
 
-2. `eqm_solve_elements(...)`
+2. `fprops_eqm_tpb(...)`
    Use this when you want equilibrium composition from:
    - a species list
    - an element list
    - element totals `b`
    - a source/model specification
    - `T`, `P`
+
+3. `fprops_eqm_tpy(...)`
+   Use this when you want FPROPS to infer the element totals from an
+   inlet species-fraction vector.
 
 ### Typical usage pattern
 
@@ -46,12 +52,12 @@ At a high level:
 2. Choose the conserved elements.
 3. Set the elemental totals `b`.
 4. Choose a thermo source or source map.
-5. Call `eqm_solve_elements(...)`.
+5. Call `fprops_eqm_tpb(...)`.
 6. Read the equilibrium mole amounts `n_out`.
 
 ### Source selection syntax
 
-`eqm_mu0_source(...)` and `eqm_solve_elements(...)` accept:
+`eqm_mu0_source(...)` and the public equilibrium solvers accept:
 
 - a simple source name, for example:
   - `Moran and Shapiro`
@@ -175,7 +181,7 @@ Then solve:
 
 ```c
 double n_out[12];
-int status = eqm_solve_elements(
+int status = fprops_eqm_tpb(
     names, 12,
     elements, 3,
     b,
@@ -184,7 +190,8 @@ int status = eqm_solve_elements(
     101325.0,     /* P = 1 atm-ish */
     "auto",
     NULL,
-    n_out
+    n_out,
+    NULL
 );
 ```
 
@@ -375,8 +382,9 @@ $\boldsymbol{\mu}=[\mu_1,\dots,\mu_{n_s}]^T$.
 
 #### 2.1 How `mu0(T)` is obtained from FPROPS data
 
-In code, `eqm_compute_mu0` calls `eqm_mu0_ideal_source` for each species.
-That routine builds an ideal-fluid object and evaluates Gibbs energy at `(T, P0)` as follows:
+In code, `eqm_compute_mu0` calls an internal ideal-source helper for each
+species. That helper builds an ideal-fluid object and evaluates Gibbs
+energy at `(T, P0)` as follows:
 
 - compute ideal-gas density from `rho = P0/(R T)`,
 - evaluate mass-specific Gibbs energy `g(T, rho)` from the ideal-fluid model,
@@ -392,7 +400,9 @@ How the formation data enters:
 - during `ideal_prepare(..., FPROPS_REF_REF0)`, FPROPS converts to SI mass basis and sets the ideal reference constants so that ideal `h` and `g` at `(T_ref, p_ref)` match those targets (equivalently it uses `s_f = (h_f-g_f)/T_ref`).
 
 So the temperature dependence comes from the ideal `cp0` model, while the absolute level comes from the `ref0` formation reference.
-If a species has missing `ref0` formation terms, `eqm_mu0_ideal_source` falls back to other ideal-source paths, but those may not be formation-consistent across species.
+If a species has missing `ref0` formation terms, the internal ideal-source
+helper falls back to other ideal-source paths, but those may not be
+formation-consistent across species.
 
 ### 3. KKT conditions (equilibrium conditions)
 
@@ -861,7 +871,8 @@ This section maps the key equations in this note to the main implementation poin
 
 Equation: $\mu_i = \mu_i^\circ + RT\ln\left(\frac{y_i P}{P^\circ}\right)$.
 Code:
-- `eqm_compute_mu0` and `eqm_mu0_ideal_source` compute $\mu_i^\circ(T, P^\circ)$.
+- `eqm_compute_mu0` and its internal source-specific helpers compute
+  $\mu_i^\circ(T, P^\circ)$.
 - `eqm_reduced_eval_obj_mu` computes $y_i$, $\mu_i$, and $G = \sum_i n_i\mu_i$.
 
 #### 15.2 Feasible-set parameterization

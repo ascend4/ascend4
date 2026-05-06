@@ -29,7 +29,7 @@ Success for the first implementation means:
   manually listing all wustite and spinel endmembers as user-level
   components
 - the same example solves robustly in the strongly reducing case that
-  currently fails through the flat `eqm_solve_elements` path
+  previously failed through the raw flat species path
 - boundary and phase-presence results are consistent with the existing
   Fe-O-H / Baur-Glaessner regression scripts
 - the feature is available through the FPROPS C API and is covered by
@@ -538,7 +538,7 @@ Status: implemented as the first automatic phase-selection layer.
 
 Implemented:
 
-- `fprops_eqm_phase_solve_auto(...)` accepts a supplied phase package,
+- the internal enumerating solver accepts a supplied phase package,
   element list, element totals, `T`, `P`, and algorithm choice
 - the implementation enumerates whole-phase subsets, expands each subset
   to current member species, solves through the fixed-active bridge, and
@@ -584,18 +584,18 @@ Exit criteria for Phase 4a:
 ### Phase 4b: Multiplier-driven phase active set
 
 Status: first-pass implementation and BG truth-check coverage are in
-place. It is still kept as a separate API from
-`fprops_eqm_phase_solve_auto(...)`; the enumerating solver remains the
-small-package reference path while public strategy selection is decided.
+place. The active-set implementation is kept internal for now; the
+enumerating solver remains the small-package reference path while public
+strategy selection is decided.
 
 Implemented:
 
-- `fprops_eqm_phase_reconstruct_lambda(...)` reconstructs thermodynamic
-  element potentials from the active assemblage stationarity equations
-- `fprops_eqm_phase_validate_entry_residuals(...)` validates the final
-  assemblage using active stationarity and inactive phase-entry residuals
-- `fprops_eqm_phase_solve_active_set(...)` performs an add/drop active-set
-  loop over supplied phase packages
+- internal lambda reconstruction recovers thermodynamic element
+  potentials from the active assemblage stationarity equations
+- internal entry-residual validation checks the final assemblage using
+  active stationarity and inactive phase-entry residuals
+- the internal active-set solver performs an add/drop loop over supplied
+  phase packages
 - inner solves are warm-started from the previous expanded member amounts
   after phase additions/removals
 - candidate phase additions are ranked by most negative phase-entry
@@ -637,7 +637,7 @@ Tests implemented:
 - a near-fork 585 C Fe-O-H package solve validates the wustite field on
   the oxidized side of the Fe|spinel to Fe|wustite/wustite|spinel fork
 - near-fork 585 C and 700 C Fe-O-C package solves validate the wustite
-  field and agree with the enumerating `solve_auto` reference path
+  field and agree with the enumerating reference path
 - 700 C Fe-O-H validation rejects inactive Fe, spinel, and hematite by
   entry residual validation
 - 700 C Fe-O-H active-set validation is insensitive to the checked
@@ -656,9 +656,8 @@ Remaining Phase 4b close-out work:
   wustite|spinel fields
 - broaden sensitivity tests beyond the current initial-mask checks to
   include deliberately perturbed expanded member warm starts
-- decide whether `fprops_eqm_phase_solve_auto(...)` should remain the
-  enumerating reference path, call active-set first, or expose both as
-  separate public strategies
+- decide whether the enumerating reference path should remain internal,
+  call active-set first, or expose both as separate public strategies
 - add continuation where needed in temperature or feed severity
 
 ### Phase 5: Public API and examples
@@ -695,10 +694,14 @@ Deliverables:
   through `fprops_eqm_phase_name(...)`,
   `fprops_eqm_phase_coord_name(s)(...)`, and
   `fprops_eqm_phase_member_name(s)(...)`
-- `fprops_eqm_phase_resolve_package(...)` remains as a small string-based
-  package builder for caller-owned `FpropsEqmPhaseModel` arrays
-- `fprops_eqm_phase_total_members(...)` lets callers size expanded member
-  output arrays
+- low-level package resolver, active-set solver, fixed-package solver,
+  lambda reconstruction, and validation entry points have moved out of the
+  public header into `eqm_phase_internal.h`
+- raw flat equilibrium solvers and the ideal-only standard-potential helper
+  have moved out of the public header into `eqm_internal.h`; public callers
+  should use `fprops_eqm_tpb(...)`, `fprops_eqm_tpy(...)`,
+  `fprops_rxn_eqm_tpb(...)`, `fprops_rxn_eqm_tpy(...)`, or
+  `eqm_mu0_source(...)`
 - `fprops_eqm_phase_find_element(...)` provides a shared phase-model element
   lookup helper so examples do not carry local name-search loops
 - `FpropsEqmPhaseResult` stores a backpointer to its source `FpropsEqm`, so
@@ -710,7 +713,7 @@ Deliverables:
 - binary solution coordinates use model-derived names, for example
   wustite exposes `x_FeO1p5` rather than the earlier placeholder
   `x_member_b`
-- `fprops_eqm_phase_result_write(...)` provides a centralized text writer
+- `fprops_eqm_write(...)` provides a centralized text writer
   for package-indexed phase composition output; other formats such as JSON
   or YAML can be added behind the same `format` parameter
 - `examples/feoh.c` is the in-tree FPROPS-only replacement for the
@@ -718,10 +721,8 @@ Deliverables:
 - `examples/feoh` links against `libfprops.so` rather than compiling the
   library objects into the example
 - `libfprops.so` exports the phase-aware API symbols used by the example
-- API documentation explains when to use:
-  - flat `eqm_solve_elements`
-  - phase-aware solver
-  - boundary diagnostic scripts
+- API documentation explains when to use public flat/package solvers, the
+  phase-aware solver, and boundary diagnostic scripts
 
 Tests:
 
@@ -762,18 +763,29 @@ Remaining Phase 5 follow-up:
 
 Deliverables:
 
-- add generic ideal gas mixture support beyond H2/H2O
-- add generic ideal liquid or ideal solution constructor if needed
+- add generic ideal gas mixture support beyond H2/H2O and CO/CO2
+- adapt the existing UNIFAC liquid-mixture work into a phase-model
+  interface that supplies `g(T,P,y)`, composition variables, component or
+  element contents, phase member names, and property outputs
+- define how Helmholtz pure-fluid vapor/liquid phases fit beside ideal
+  gas mixtures and liquid solution phases
 - define the first slag/ore-capture phase interface requirements using
   `SLAG.md`
 - add Fe-O-Si-Al package construction tests
+- revisit early equilibrium examples such as water/alcohol mixtures and
+  Ni/O oxide cases using the public phase-aware API
 
 Tests:
 
 - ideal gas reaction equilibria remain consistent with existing gas-only
   regressions
-- ethanol/water or another simple nonreactive mixture can be represented
-  as phases without breaking current flash work
+- ethanol/water or another simple nonreactive UNIFAC liquid mixture can be
+  represented as a phase without breaking current flash work
+- a Helmholtz pure fluid can still use ordinary vapor/liquid flash paths,
+  while the phase-equilibrium layer can admit the same substance as
+  explicit vapor and/or liquid phases where useful
+- Ni/O or another early oxide-equilibrium example is expressed through
+  the updated public API and checked against its existing oracle
 - Fe-O-H-Si-Al package construction and source resolution pass
 - fayalite/hercynite admission tests are possible once their thermo
   basis is ready
@@ -941,12 +953,13 @@ is a second-order issue compared with oxide/gas phase selection.
 
 ### 7.9 Backwards compatibility
 
-The current flat APIs should remain available:
+The current flat public APIs should remain available:
 
 ```c
-eqm_solve(...)
-eqm_solve_elements(...)
 fprops_eqm_tpb(...)
+fprops_eqm_tpy(...)
+fprops_rxn_eqm_tpb(...)
+fprops_rxn_eqm_tpy(...)
 ```
 
 The new solver should initially be opt-in, for example through a new API
@@ -988,6 +1001,254 @@ The C API should therefore keep enough solver state to support future
 implicit KKT differentiation, but implementation of ASCEND derivative
 callbacks is deferred until the C solver itself is reliable.
 
+### 7.12 UNIFAC liquid phases
+
+UNIFAC is not automatically a "shoe-in", but it should fit the
+phase-aware design cleanly. The missing piece is not thermodynamics; the
+missing piece is an adapter that presents a UNIFAC liquid as an
+`FpropsEqmPhaseModel`-style phase:
+
+- phase amount `N_liq`
+- liquid composition variables, normally component mole fractions with
+  one dependent coordinate removed
+- a molar Gibbs energy `g_liq(T,P,x)` on a clear component basis
+- component/member names for result reporting
+- element contents inferred from component formulae
+- optional mixture enthalpy/volume/property callbacks
+- derivatives of `g_liq` with respect to composition where possible
+
+For nonreactive VLE, the existing flash code remains valuable and should
+not be forced through the chemical-equilibrium active-set solver. For
+reactive or strongly coupled multiphase problems, the phase-aware solver
+should be able to include a UNIFAC liquid phase together with vapor,
+solid, and other liquid phases. The first practical target is therefore a
+UNIFAC phase adapter plus regression tests, not a rewrite of the flash
+solver.
+
+Important issues:
+
+- standard-state consistency between vapor species and liquid activity
+  models must be explicit
+- component names and formulae must resolve through the same registry used
+  by reactive packages
+- UNIFAC data should stay in generated FPROPS C data, not be owned by
+  ASCEND instance trees
+- composition bounds and trace components need tolerances suited to
+  liquid activity models, not Fe-O-H oxide tolerances
+
+### 7.13 Helmholtz pure fluids and vapor/liquid phases
+
+The older Helmholtz work supports pure-fluid vapor/liquid properties and
+two-phase flash behavior. That remains useful for power cycles and should
+not be discarded. It is a different use case from general multiphase
+chemical equilibrium:
+
+- a pure-fluid flash usually solves for thermodynamic state and phase
+  split of one substance using a dedicated equation of state
+- the phase-aware equilibrium solver chooses among candidate chemical
+  phases and solution phases by minimizing total Gibbs energy subject to
+  conserved elements
+
+The sensible harmonization is to share phase-model concepts without
+forcing every power-cycle property call through the general active-set
+chemical solver. A Helmholtz-backed phase model should be able to expose:
+
+- `pure:helmholtz:vapor(name)` and `pure:helmholtz:liquid(name)` style
+  phase specifications, or an equivalent structured builder
+- branch-aware molar Gibbs energy and properties for the requested phase
+- a stable or metastable branch policy that is explicit in diagnostics
+- optional admission into a phase-equilibrium package when a user really
+  wants a pure vapor/liquid phase as part of a larger equilibrium problem
+
+The current `helmholtz+ref0:` ideal-gas equilibrium path should also be
+kept conceptually separate from "use the full Helmholtz EOS as a gas
+phase." In the current gas-equilibrium work, Helmholtz data are mainly a
+source for formation-consistent standard chemical potentials; the mixture
+phase is still an ideal gas mixture. A future real-fluid vapor phase would
+need a different phase model and fugacity/activity treatment.
+
+### 7.14 Fate of phase-agnostic flat solvers
+
+The raw flat solvers should remain internal for now, but they should not
+be the main public story. They still provide value:
+
+- fast, compact gas-only and simple species-basis equilibrium solves
+- regression continuity for the existing gas equilibrium tests
+- a fixed-active inner solve kernel used by phase-aware enumeration and
+  active-set paths
+- a simpler target for derivative work and ASCEND black-box experiments
+- a reference implementation for cases where every species amount is a
+  legitimate independent variable
+
+The public API should prefer `fprops_eqm_tpb(...)`, `fprops_eqm_tpy(...)`,
+package-backed solvers, and the phase-aware `FpropsEqm` workflow. The
+direct raw routines have already moved to `eqm_internal.h`; if future work
+proves that all useful callers go through package or phase APIs, the raw
+entry points can be further reduced or made file-local.
+
+### 7.15 String selectors versus enums
+
+C code is better at checking enums than short strings. The current string
+selectors are convenient at the outer API boundary, especially for command
+line tools, source maps, ASCEND strings, and examples. They are less
+attractive deep inside numerical code because typos are runtime errors and
+every solver path has to repeat selector parsing.
+
+Preferred direction:
+
+- public APIs may continue to accept strings such as `"auto"` for
+  ergonomic source/configuration entry
+- `FpropsEqm` should parse the string once into an internal enum field
+  such as `FPROPS_EQM_STRATEGY_AUTO`,
+  `FPROPS_EQM_STRATEGY_ACTIVE_SET`, or
+  `FPROPS_EQM_STRATEGY_ENUMERATE`
+- inner solvers should switch on enums, not strings
+- status/error codes should be named enum or macro constants, with
+  `fprops_eqm_status_text(...)` as the human-readable decoder
+- source names and species/phase names remain strings because they are
+  data identifiers, not control-flow switches
+
+This gives static checking and clearer internal control flow without
+making the user-facing API awkward.
+
+### 7.16 Revisit earlier examples
+
+The phase-aware API should be checked against earlier FPROPS equilibrium
+and mixture examples. Good candidates:
+
+- water/alcohol or ethanol/water mixtures, using existing UNIFAC flash
+  tests as the oracle
+- Ni/O or Ni/NiO/H2 equilibrium, which was one of the early mixed-source
+  Gibbs minimization examples
+- gas-only water-gas shift and ammonia examples, to ensure the phase-aware
+  work has not degraded the flat/package path
+- Fe-O-C and Fe-O-H cases already added for BG truth-checking
+
+The goal is not to route everything through the phase-aware solver
+immediately. The goal is to identify which examples are naturally
+flat-species, which are naturally phase-aware, and which need a mixture
+phase adapter before they can be represented cleanly.
+
+### 7.17 ASCEND exposure plan
+
+The efficient ASCEND path should be package-backed and stateful:
+
+- build or resolve a phase package once as `DATA`
+- pass `T`, `P`, and feed amounts or element totals as inputs
+- return selected phase amounts, phase composition coordinates, selected
+  member/component amounts, and optional mixture properties as outputs
+- expose concise status/diagnostic outputs so failed phase selection is
+  visible from ASCEND
+- cache the last successful solution for warm starts, but make cache
+  lifetime and reset behavior explicit
+
+The first ASCEND binding should probably expose a small fixed-shape
+package rather than a fully dynamic result table. ASCEND needs known
+variable dimensions at compile time. A useful initial blackbox would take
+one named package key and return a fixed list of outputs matching that
+package's known phases and coordinates.
+
+Derivative callbacks are the main blocker to robust ASCEND use. A
+non-derivative blackbox can be useful for exploratory single-point work,
+but equation-based flowsheets need consistent first derivatives.
+
+### 7.18 Derivative status and gaps
+
+Current derivative status:
+
+- gas-only/package equilibrium has some sensitivity support for simple
+  package cases without solution phases
+- the phase-aware active-set solver does not yet expose stable first
+  derivatives of phase amounts or phase coordinates with respect to `T`,
+  `P`, or feed totals
+- derivatives are discontinuous at true phase-entry/exit boundaries, so
+  ASCEND callbacks need a clear policy for active-set changes
+- finite differences remain useful for testing, but are not a sufficient
+  final derivative strategy for robust ASCEND blackboxes
+
+Near-term derivative targets:
+
+- analytic derivatives for ideal gas mixture phase `g(T,P,y)`
+- analytic or carefully verified derivatives for binary wustite
+- a finite-difference versus analytic derivative test harness for phase
+  `g`, entry residuals, and fixed-active KKT sensitivities
+- fixed-active implicit derivatives first; active-set switching can be
+  treated as piecewise smooth with diagnostics near boundaries
+- only after that, ASCEND derivative callbacks for a small fixed phase
+  package
+
+### 7.19 Lambda tutorial and thermodynamic meaning
+
+In this phase-equilibrium work, `lambda_e` means the thermodynamic
+potential of conserved element `e`. It has units of J/mol of element and
+answers this question:
+
+```text
+If I add a tiny amount of element e to the closed equilibrium problem at
+fixed T and P, how much does the minimum Gibbs energy change?
+```
+
+For a simple species-basis problem:
+
+```text
+minimize    G = sum_i n_i mu_i
+subject to  sum_i A[e,i] n_i = b[e]
+            n_i >= 0
+```
+
+`A[e,i]` is the number of atoms or moles of element `e` in one mole of
+species `i`. At equilibrium, any species that is present must have a
+chemical potential equal to the sum of the element potentials needed to
+make it:
+
+```text
+mu_i = sum_e A[e,i] lambda_e       for present species i
+```
+
+For a species that is absent, the same comparison becomes an entry test:
+
+```text
+mu_i - sum_e A[e,i] lambda_e >= 0
+```
+
+If the left-hand side were negative, one mole of that species would have
+less Gibbs energy than the corresponding elements as priced by `lambda`;
+forming it would lower total `G`, so the current assemblage could not be
+stable.
+
+For a whole phase `p`, one formula unit or mole of phase has element
+contents `a_e(y)` that may depend on internal composition `y`. The phase
+entry residual is:
+
+```text
+phi_p = min_y [ g_p(T,P,y) - sum_e lambda_e a_e(y) ] / (R T)
+```
+
+Interpretation:
+
+- `phi_p > 0`: the phase is not stable enough to enter, within tolerance
+- `phi_p = 0`: the phase is on its entry boundary
+- `phi_p < 0`: the phase can lower total Gibbs energy and should be added
+  or considered in an active-set move
+
+This is not just a convenience output. It is the thermodynamic test used
+to decide whether an inactive phase should enter the equilibrium
+assemblage.
+
+Sign convention note: older optimization derivations often write the
+Lagrangian with `+ lambda_math^T(A n - b)`, leading to
+`mu + A^T lambda_math = 0` for present species. The phase API uses the
+thermodynamic sign:
+
+```text
+lambda_thermo = -lambda_math
+mu - A^T lambda_thermo = 0
+```
+
+The thermodynamic sign is more intuitive here because `lambda_e` directly
+acts like an elemental chemical potential and because phase entry is then
+written as `g - A lambda`.
+
 ## 8. Validation Assets
 
 Existing files that should become regression oracles:
@@ -1009,84 +1270,72 @@ tests. Python scripts may remain useful as data-generation or comparison
 oracles, but the phase-aware solver should not depend on Python for
 normal testing.
 
-## 9. Open Questions
+## 9. Current Unfinished Business
 
-- What is the first stable C syntax for phase packages: strings,
-  structured C builders, or both?
-- Should the phase-aware solver live in `eqm_phase.c`, `eqmphase.c`, or
-  another new file name?
-- What tolerances should define phase entry/exit for condensed phases at
-  high temperature, and how should tolerances account for
-  low-concentration but high-importance components?
-- How should metallic Fe bcc/fcc be represented: two stoichiometric
-  phases, or a named iron phase that selects the stable allotrope?
-- How much of the current reduced active-set code can be directly reused
-  versus adapted conceptually?
-- Which derivatives are worth hand-coding first, and when would autodiff
-  or generated derivatives become justified?
-- What minimum solver-state record is needed now so that future ASCEND
-  derivative callbacks can be implemented without changing the C API?
+Phase 4b is functionally useful but not finished:
+
+- add denser boundary-near BG truth checks around the Fe/FeO,
+  Fe/Fe3O4, and FeO/Fe3O4 regions
+- add more Fe-O-C checks on both sides of the current 585 C and 700 C
+  wustite points
+- add deliberately perturbed warm-start tests, not only initial-mask
+  tests
+- decide whether public `auto` should call active-set first, enumeration
+  first, or expose explicit strategies
+- add continuation in temperature/feed severity where active-set
+  convergence is sensitive
+
+Phase 5 follow-up:
+
+- consider a heap-allocated `FpropsEqm` constructor/destructor pair for
+  callers that cannot comfortably stack-allocate the problem object
+- add install rules for public phase headers and examples if FPROPS
+  install packaging is enabled later
+- add scripted example-output regression once the build system has a
+  standard example run-test hook
+- add JSON/YAML result writers only when a concrete downstream consumer
+  needs them
+
+Phase 6 and beyond:
+
+- build a UNIFAC liquid phase adapter and prove it on an ethanol/water
+  style case
+- define branch-aware Helmholtz vapor/liquid phase specifications
+- revisit early equilibrium examples through the current public API
+- move internal strategy selection from repeated string tests to enums
+- design the first ASCEND phase-equilibrium blackbox around a fixed
+  package with known output shape
+- implement fixed-active first derivatives before promising robust
+  ASCEND derivative callbacks
 
 ## 10. Immediate Next Actions
 
-1. Add an FPROPS-owned equilibrium status decoder and use it in
-   examples/tests.
-2. Add a standalone `libfprops.so` build target, independent of
-   `libfprops_ascend.so`.
-3. Add a small phase-registry prototype for Fe-O-H:
-   `Fe_bcc`, `Fe_fcc`, `Fe2O3`, `wustite`, `spinel`, and H2/H2O gas.
-4. Expose test-only inspection functions for phase resolution and
-   phase `g(T,P,y)`.
-5. Port Fe-O-H boundary residual checks into C-level tests on a common
-   thermodynamic `lambda_O` basis, using `g - A^T lambda` internally.
-6. Implement a fixed-active-assemblage solve for `Fe + H2/H2O` and prove
-   the strongly reducing hematite-plus-hydrogen case.
-7. Add whole-phase entry tests for wustite and spinel.
-8. Add an in-tree standalone C example that links against `libfprops.so`
-   and mirrors the intended `feoh.c` user workflow.
-9. Only then add automatic phase activation/removal.
+1. Add enum-backed solver strategy storage inside `FpropsEqm`, while
+   preserving string parsing at the public boundary.
+2. Revisit early examples:
+   - gas-only WGS/ammonia through package APIs
+   - Ni/O or Ni/NiO/H2 through the updated public API
+   - ethanol/water or similar as the first UNIFAC phase-adapter target
+3. Add a first UNIFAC-liquid `FpropsEqmPhaseModel` adapter, initially for
+   nonreactive phase representation and result reporting.
+4. Sketch Helmholtz pure-fluid phase specs and decide which existing
+   flash functionality stays separate from the general phase solver.
+5. Add a fixed-active derivative test harness for ideal gas and wustite
+   phase models.
+6. Draft the first ASCEND blackbox signature for a fixed Fe-O-H phase
+   package before implementing callback code.
 
-## 11. Handoff Notes
+## 11. Current Working State
 
-These notes capture the immediate context for a follow-on implementation
-session.
-
-- This document is new and should be committed or copied into any
-  long-running implementation workspace before work starts.
-- The current failing standalone repro is expected to move into
-  `~/ascend/models/johnpye/iron/feoh`. Its current out-of-tree form is
-  `~/feoh/feoh.c`.
-- The failing case is:
-  - feed: `1 mol Fe2O3 + 100 mol H2`
-  - `T = 1173.15 K`
-  - `P = 101325 Pa`
-  - gas source: `helmholtz+ref0:` for `hydrogen` and `water`
-  - current flat path: `eqm_solve_elements(..., algorithm="auto", ...)`
-  - observed status: `2` (`IPOPT infeasible problem detected`)
-- The expected physical result for that case is the deep reducing
-  `Fe + gas` assemblage:
-  - about `2 mol Fe`
-  - about `3 mol H2O`
-  - about `97 mol H2`
-  - negligible wustite, spinel, and hematite
-- Existing `900 C` Fe-O-H boundary anchors using `helmholtz+ref0:` gas
-  are:
-  - Fe|wustite: `log10(H2O/H2) = -0.225974`
-  - wustite|spinel: `log10(H2O/H2) = 0.665196`
-- FPROPS currently does not expose a public status-code decoder. The
-  standalone repro has a local decoder, but this should move into FPROPS
-  as part of Phase 0.
-- Important existing code paths to inspect first:
-  - `eqm_solve_elements`
-  - `eqm_augment_special_phase_constraints`
-  - `eqm_compute_solution_phases`
-  - `eqm_eval_obj_mu`
-  - reduced/active-set sections of `eqm.c`
-- A modest first implementation target is:
-  - add `libfprops.so`
-  - add a public status decoder
-  - add Fe-O-H phase registry/inspection support
-  - only then begin automatic phase activation
-- The function names and struct layouts sketched above are provisional.
-  They should guide the design, but the implementation should choose the
-  cleanest C API that fits the existing FPROPS style.
+- The public phase-aware C API is available in `eqm_phase.h`.
+- Low-level phase solvers and lambda/entry diagnostics are internal in
+  `eqm_phase_internal.h`.
+- Raw flat solvers are internal in `eqm_internal.h`; public flat/package
+  callers should use `fprops_eqm_tpb(...)`, `fprops_eqm_tpy(...)`,
+  `fprops_rxn_eqm_tpb(...)`, or `fprops_rxn_eqm_tpy(...)`.
+- The standalone `examples/feoh.c` example builds without ASCEND and
+  demonstrates reducing Fe+gas, wustite+gas, and spinel+gas cases.
+- Current CUnit coverage includes Fe-O-H and Fe-O-C active-set checks in
+  the 400 C to 900 C range, including CO/CO2 gas cases.
+- Derivative support is still the largest gap before robust ASCEND
+  exposure.

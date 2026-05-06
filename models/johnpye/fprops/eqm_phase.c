@@ -1,6 +1,8 @@
 #include "eqm_phase.h"
 
 #include "eqm.h"
+#include "eqm_internal.h"
+#include "eqm_phase_internal.h"
 #include "fluids.h"
 #include "gibbs_species.h"
 #include "solution.h"
@@ -2084,14 +2086,14 @@ int fprops_eqm_phase_solve_active_set_result(const FpropsEqmPhaseModel *phases, 
 	return result->status;
 }
 
-double fprops_eqm_phase_result_amount(const FpropsEqmPhaseResult *result, int iphase){
+static double eqm_phase_result_amount_index(const FpropsEqmPhaseResult *result, int iphase){
 	if(!result || iphase < 0 || iphase >= result->nphase){
 		return NAN;
 	}
 	return result->phase_amounts[iphase];
 }
 
-double fprops_eqm_phase_result_y(const FpropsEqmPhaseResult *result, int iphase, int ivar){
+static double eqm_phase_result_y_index(const FpropsEqmPhaseResult *result, int iphase, int ivar){
 	if(!result || iphase < 0 || iphase >= result->nphase || ivar < 0
 			|| ivar >= FPROPS_EQM_PHASE_MAX_VARS){
 		return NAN;
@@ -2099,18 +2101,7 @@ double fprops_eqm_phase_result_y(const FpropsEqmPhaseResult *result, int iphase,
 	return result->phase_y[iphase * FPROPS_EQM_PHASE_MAX_VARS + ivar];
 }
 
-double fprops_eqm_phase_result_gas_member_amount(const FpropsEqmPhaseModel *phase,
-		const FpropsEqmPhaseResult *result, int iphase, int imember){
-	if(!phase || !result || iphase < 0 || iphase >= result->nphase
-			|| imember < 0 || imember >= phase->nmember
-			|| phase->kind != FPROPS_EQM_PHASE_IDEAL_GAS){
-		return NAN;
-	}
-	return result->phase_amounts[iphase]
-		* result->phase_y[iphase * FPROPS_EQM_PHASE_MAX_VARS + imember];
-}
-
-int fprops_eqm_phase_result_write(FILE *out, const FpropsEqmPhaseModel *phases,
+static int eqm_phase_result_write(FILE *out, const FpropsEqmPhaseModel *phases,
 		const FpropsEqmPhaseResult *result, const char *format){
 	FILE *f = out ? out : stdout;
 	if(!phases || !result){
@@ -2143,7 +2134,7 @@ int fprops_eqm_phase_result_write(FILE *out, const FpropsEqmPhaseModel *phases,
 			fprintf(f, " y=");
 			for(int j = 0; j < nvar; ++j){
 				fprintf(f, "%s%s=% .6e", j ? "," : "", phase->var_names[j],
-					fprops_eqm_phase_result_y(result, p, j));
+					eqm_phase_result_y_index(result, p, j));
 			}
 		}
 		if(nmember > 0 && result->nmember > 0){
@@ -2180,7 +2171,10 @@ static int eqm_problem_add_element_name(FpropsEqmProblem *problem, const char *n
 	return problem->nelem - 1;
 }
 
-void fprops_eqm_problem_init(FpropsEqmProblem *problem){
+static int eqm_problem_add_phase_amount(FpropsEqmProblem *problem, int iphase,
+		const double *y, double amount);
+
+static void eqm_problem_init(FpropsEqmProblem *problem){
 	if(!problem){
 		return;
 	}
@@ -2190,7 +2184,7 @@ void fprops_eqm_problem_init(FpropsEqmProblem *problem){
 	eqm_phase_copy(problem->algorithm, sizeof(problem->algorithm), "auto");
 }
 
-int fprops_eqm_problem_add_phase(FpropsEqmProblem *problem, const char *spec,
+static int eqm_problem_add_phase(FpropsEqmProblem *problem, const char *spec,
 		const char *source){
 	FpropsEqmPhaseModel *phase;
 	if(!problem || !spec || problem->nphase >= FPROPS_EQM_PHASE_MAX_PHASES){
@@ -2210,11 +2204,11 @@ int fprops_eqm_problem_add_phase(FpropsEqmProblem *problem, const char *spec,
 	return problem->nphase - 1;
 }
 
-int fprops_eqm_problem_phase_count(const FpropsEqmProblem *problem){
+static int eqm_problem_phase_count(const FpropsEqmProblem *problem){
 	return problem ? problem->nphase : 0;
 }
 
-const FpropsEqmPhaseModel *fprops_eqm_problem_phase(const FpropsEqmProblem *problem,
+static const FpropsEqmPhaseModel *eqm_problem_phase(const FpropsEqmProblem *problem,
 		int iphase){
 	if(!problem || iphase < 0 || iphase >= problem->nphase){
 		return NULL;
@@ -2222,7 +2216,7 @@ const FpropsEqmPhaseModel *fprops_eqm_problem_phase(const FpropsEqmProblem *prob
 	return &problem->phases[iphase];
 }
 
-int fprops_eqm_problem_find_phase(const FpropsEqmProblem *problem, const char *name){
+static int eqm_problem_find_phase(const FpropsEqmProblem *problem, const char *name){
 	if(!problem || !name){
 		return -1;
 	}
@@ -2237,7 +2231,7 @@ int fprops_eqm_problem_find_phase(const FpropsEqmProblem *problem, const char *n
 	return -1;
 }
 
-int fprops_eqm_problem_find_element(const FpropsEqmProblem *problem, const char *name){
+static int eqm_problem_find_element(const FpropsEqmProblem *problem, const char *name){
 	if(!problem || !name){
 		return -1;
 	}
@@ -2249,7 +2243,7 @@ int fprops_eqm_problem_find_element(const FpropsEqmProblem *problem, const char 
 	return -1;
 }
 
-int fprops_eqm_problem_set_TP(FpropsEqmProblem *problem, double T, double P){
+static int eqm_problem_set_TP(FpropsEqmProblem *problem, double T, double P){
 	if(!problem || !(T > 0.0) || !(P > 0.0) || !isfinite(T) || !isfinite(P)){
 		return -11;
 	}
@@ -2258,7 +2252,7 @@ int fprops_eqm_problem_set_TP(FpropsEqmProblem *problem, double T, double P){
 	return 0;
 }
 
-int fprops_eqm_problem_set_algorithm(FpropsEqmProblem *problem, const char *algorithm){
+static int eqm_problem_set_algorithm(FpropsEqmProblem *problem, const char *algorithm){
 	if(!problem){
 		return -11;
 	}
@@ -2267,7 +2261,7 @@ int fprops_eqm_problem_set_algorithm(FpropsEqmProblem *problem, const char *algo
 	return 0;
 }
 
-void fprops_eqm_problem_clear_feed(FpropsEqmProblem *problem){
+static void eqm_problem_clear_feed(FpropsEqmProblem *problem){
 	if(!problem){
 		return;
 	}
@@ -2276,7 +2270,7 @@ void fprops_eqm_problem_clear_feed(FpropsEqmProblem *problem){
 	}
 }
 
-int fprops_eqm_problem_add_element_amount(FpropsEqmProblem *problem,
+static int eqm_problem_add_element_amount(FpropsEqmProblem *problem,
 		const char *element, double amount){
 	int e;
 	if(!problem || !element || !isfinite(amount)){
@@ -2290,7 +2284,7 @@ int fprops_eqm_problem_add_element_amount(FpropsEqmProblem *problem,
 	return 0;
 }
 
-int fprops_eqm_problem_set_element_amount(FpropsEqmProblem *problem,
+static int eqm_problem_set_element_amount(FpropsEqmProblem *problem,
 		const char *element, double amount){
 	int e;
 	if(!problem || !element || !isfinite(amount)){
@@ -2315,7 +2309,7 @@ static int eqm_problem_add_named_amount(FpropsEqmProblem *problem,
 				&& ((phase->name && 0 == strcmp(phase->name, name))
 					|| (phase->nmember == 1 && phase->members[0]
 						&& 0 == strcmp(phase->members[0], name)))){
-			return fprops_eqm_problem_add_phase_amount(problem, p, NULL, amount);
+			return eqm_problem_add_phase_amount(problem, p, NULL, amount);
 		}
 		for(int j = 0; j < phase->nmember; ++j){
 			const char *member_name;
@@ -2370,7 +2364,7 @@ static int eqm_problem_parse_formula_token(const char **cursor, char *element,
 	return 1;
 }
 
-int fprops_eqm_problem_add_formula_amount(FpropsEqmProblem *problem,
+static int eqm_problem_add_formula_amount(FpropsEqmProblem *problem,
 		const char *formula, double amount){
 	const char *p = formula;
 	double parsed[FPROPS_EQM_PHASE_MAX_ELEMS];
@@ -2408,7 +2402,7 @@ int fprops_eqm_problem_add_formula_amount(FpropsEqmProblem *problem,
 		parsed[found] += count;
 	}
 	for(int e = 0; e < nparsed; ++e){
-		if(fprops_eqm_problem_add_element_amount(problem, parsed_elements[e],
+		if(eqm_problem_add_element_amount(problem, parsed_elements[e],
 				amount * parsed[e]) != 0){
 			return -12;
 		}
@@ -2416,7 +2410,7 @@ int fprops_eqm_problem_add_formula_amount(FpropsEqmProblem *problem,
 	return 0;
 }
 
-int fprops_eqm_problem_add_phase_amount(FpropsEqmProblem *problem, int iphase,
+static int eqm_problem_add_phase_amount(FpropsEqmProblem *problem, int iphase,
 		const double *y, double amount){
 	const FpropsEqmPhaseModel *phase;
 	double a[FPROPS_EQM_PHASE_MAX_ELEMS];
@@ -2429,7 +2423,7 @@ int fprops_eqm_problem_add_phase_amount(FpropsEqmProblem *problem, int iphase,
 		return -21;
 	}
 	for(int e = 0; e < phase->nelem; ++e){
-		if(fprops_eqm_problem_add_element_amount(problem, phase->elements[e],
+		if(eqm_problem_add_element_amount(problem, phase->elements[e],
 				amount * a[e]) != 0){
 			return -12;
 		}
@@ -2437,13 +2431,13 @@ int fprops_eqm_problem_add_phase_amount(FpropsEqmProblem *problem, int iphase,
 	return 0;
 }
 
-double fprops_eqm_problem_element_amount(const FpropsEqmProblem *problem,
+static double eqm_problem_element_amount(const FpropsEqmProblem *problem,
 		const char *element){
-	int e = fprops_eqm_problem_find_element(problem, element);
+	int e = eqm_problem_find_element(problem, element);
 	return e >= 0 ? problem->b[e] : NAN;
 }
 
-int fprops_eqm_problem_solve(const FpropsEqmProblem *problem,
+static int eqm_problem_solve(const FpropsEqmProblem *problem,
 		FpropsEqmPhaseResult *result){
 	int status;
 	if(!problem || !result || problem->nphase <= 0 || problem->nelem <= 0){
@@ -2456,56 +2450,12 @@ int fprops_eqm_problem_solve(const FpropsEqmProblem *problem,
 	return status;
 }
 
-double fprops_eqm_result_phase_amount(const FpropsEqmProblem *problem,
-		const FpropsEqmPhaseResult *result, const char *phase){
-	int p = fprops_eqm_problem_find_phase(problem, phase);
-	return p >= 0 ? fprops_eqm_phase_result_amount(result, p) : NAN;
-}
-
-double fprops_eqm_result_phase_y(const FpropsEqmProblem *problem,
-		const FpropsEqmPhaseResult *result, const char *phase, const char *var){
-	int p = fprops_eqm_problem_find_phase(problem, phase);
-	if(!problem || !result || p < 0 || !var){
-		return NAN;
-	}
-	for(int j = 0; j < problem->phases[p].nvar; ++j){
-		if(problem->phases[p].var_names[j]
-				&& 0 == strcmp(problem->phases[p].var_names[j], var)){
-			return fprops_eqm_phase_result_y(result, p, j);
-		}
-	}
-	return NAN;
-}
-
-double fprops_eqm_result_gas_member_amount(const FpropsEqmProblem *problem,
-		const FpropsEqmPhaseResult *result, const char *phase, const char *member){
-	int p = fprops_eqm_problem_find_phase(problem, phase);
-	if(!problem || !result || p < 0 || !member){
-		return NAN;
-	}
-	for(int j = 0; j < problem->phases[p].nmember; ++j){
-		if(problem->phases[p].members[j]
-				&& 0 == strcmp(problem->phases[p].members[j], member)){
-			return fprops_eqm_phase_result_gas_member_amount(&problem->phases[p], result, p, j);
-		}
-	}
-	return NAN;
-}
-
-int fprops_eqm_problem_result_write(FILE *out, const FpropsEqmProblem *problem,
-		const FpropsEqmPhaseResult *result, const char *format){
-	if(!problem){
-		return -11;
-	}
-	return fprops_eqm_phase_result_write(out, problem->phases, result, format);
-}
-
 void fprops_eqm_init(FpropsEqm *eqm){
-	fprops_eqm_problem_init(eqm);
+	eqm_problem_init(eqm);
 }
 
 int fprops_eqm_add_phase(FpropsEqm *eqm, const char *spec, const char *source){
-	return fprops_eqm_problem_add_phase(eqm, spec, source);
+	return eqm_problem_add_phase(eqm, spec, source);
 }
 
 int fprops_eqm_add_phase_list(FpropsEqm *eqm, int nphase, const char **specs){
@@ -2522,21 +2472,30 @@ int fprops_eqm_add_phase_list(FpropsEqm *eqm, int nphase, const char **specs){
 }
 
 int fprops_eqm_phase_count(const FpropsEqm *eqm){
-	return fprops_eqm_problem_phase_count(eqm);
+	return eqm_problem_phase_count(eqm);
 }
 
 const char *fprops_eqm_phase_name(const FpropsEqm *eqm, int iphase){
-	const FpropsEqmPhaseModel *phase = fprops_eqm_problem_phase(eqm, iphase);
+	const FpropsEqmPhaseModel *phase = eqm_problem_phase(eqm, iphase);
 	return phase ? phase->name : NULL;
+}
+
+int fprops_eqm_find_phase(const FpropsEqm *eqm, const char *phase){
+	return eqm_problem_find_phase(eqm, phase);
 }
 
 static const FpropsEqmPhaseModel *eqm_problem_find_phase_model(const FpropsEqm *eqm,
 		const char *phase, int *iphase_out){
-	int p = fprops_eqm_problem_find_phase(eqm, phase);
+	int p = eqm_problem_find_phase(eqm, phase);
 	if(iphase_out){
 		*iphase_out = p;
 	}
-	return p >= 0 ? fprops_eqm_problem_phase(eqm, p) : NULL;
+	return p >= 0 ? eqm_problem_phase(eqm, p) : NULL;
+}
+
+const FpropsEqmPhaseModel *fprops_eqm_phase_model(const FpropsEqm *eqm,
+		const char *phase){
+	return eqm_problem_find_phase_model(eqm, phase, NULL);
 }
 
 static int eqm_phase_find_coord(const FpropsEqmPhaseModel *phase, const char *coord){
@@ -2616,27 +2575,31 @@ int fprops_eqm_phase_member_names(const FpropsEqm *eqm, const char *phase,
 }
 
 int fprops_eqm_set_TP(FpropsEqm *eqm, double T, double P){
-	return fprops_eqm_problem_set_TP(eqm, T, P);
+	return eqm_problem_set_TP(eqm, T, P);
 }
 
 int fprops_eqm_set_algorithm(FpropsEqm *eqm, const char *algorithm){
-	return fprops_eqm_problem_set_algorithm(eqm, algorithm);
+	return eqm_problem_set_algorithm(eqm, algorithm);
 }
 
 void fprops_eqm_clear_feed(FpropsEqm *eqm){
-	fprops_eqm_problem_clear_feed(eqm);
+	eqm_problem_clear_feed(eqm);
 }
 
 int fprops_eqm_add_element(FpropsEqm *eqm, const char *element, double amount){
-	return fprops_eqm_problem_add_element_amount(eqm, element, amount);
+	return eqm_problem_add_element_amount(eqm, element, amount);
 }
 
 int fprops_eqm_set_element(FpropsEqm *eqm, const char *element, double amount){
-	return fprops_eqm_problem_set_element_amount(eqm, element, amount);
+	return eqm_problem_set_element_amount(eqm, element, amount);
+}
+
+double fprops_eqm_element_amount(const FpropsEqm *eqm, const char *element){
+	return eqm_problem_element_amount(eqm, element);
 }
 
 int fprops_eqm_add_formula(FpropsEqm *eqm, const char *formula, double amount){
-	return fprops_eqm_problem_add_formula_amount(eqm, formula, amount);
+	return eqm_problem_add_formula_amount(eqm, formula, amount);
 }
 
 int fprops_eqm_add_comp_list(FpropsEqm *eqm, int nitem, const char **names,
@@ -2673,15 +2636,15 @@ int fprops_eqm_add_phase_feed_values(FpropsEqm *eqm, const char *phase,
 	if(!eqm || !phase || !isfinite(amount) || ncoord < 0){
 		return -11;
 	}
-	p = fprops_eqm_problem_find_phase(eqm, phase);
-	model = p >= 0 ? fprops_eqm_problem_phase(eqm, p) : NULL;
+	p = eqm_problem_find_phase(eqm, phase);
+	model = p >= 0 ? eqm_problem_phase(eqm, p) : NULL;
 	if(!model){
 		return -21;
 	}
 	if(ncoord != model->nvar || (ncoord > 0 && !coords)){
 		return -11;
 	}
-	return fprops_eqm_problem_add_phase_amount(eqm, p, coords, amount);
+	return eqm_problem_add_phase_amount(eqm, p, coords, amount);
 }
 
 int fprops_eqm_add_phase_feed_var_items(FpropsEqm *eqm, const char *phase,
@@ -2693,8 +2656,8 @@ int fprops_eqm_add_phase_feed_var_items(FpropsEqm *eqm, const char *phase,
 	if(!eqm || !phase || !isfinite(amount) || nitem < 0 || (!items && nitem > 0)){
 		return -11;
 	}
-	p = fprops_eqm_problem_find_phase(eqm, phase);
-	model = p >= 0 ? fprops_eqm_problem_phase(eqm, p) : NULL;
+	p = eqm_problem_find_phase(eqm, phase);
+	model = p >= 0 ? eqm_problem_phase(eqm, p) : NULL;
 	if(!model){
 		return -21;
 	}
@@ -2718,11 +2681,11 @@ int fprops_eqm_add_phase_feed_var_items(FpropsEqm *eqm, const char *phase,
 			return -11;
 		}
 	}
-	return fprops_eqm_problem_add_phase_amount(eqm, p, coords, amount);
+	return eqm_problem_add_phase_amount(eqm, p, coords, amount);
 }
 
 int fprops_eqm_solve(const FpropsEqm *eqm, FpropsEqmPhaseResult *result){
-	return fprops_eqm_problem_solve(eqm, result);
+	return eqm_problem_solve(eqm, result);
 }
 
 int fprops_eqm_solve_TP(FpropsEqm *eqm, double T, double P,
@@ -2741,8 +2704,8 @@ static const FpropsEqm *eqm_result_problem(const FpropsEqmPhaseResult *result){
 double fprops_eqm_phase_amount(const FpropsEqmPhaseResult *result,
 		const char *phase){
 	const FpropsEqm *eqm = eqm_result_problem(result);
-	int p = fprops_eqm_problem_find_phase(eqm, phase);
-	return p >= 0 ? fprops_eqm_phase_result_amount(result, p) : NAN;
+	int p = eqm_problem_find_phase(eqm, phase);
+	return p >= 0 ? eqm_phase_result_amount_index(result, p) : NAN;
 }
 
 int fprops_eqm_phase_coord_values(const FpropsEqmPhaseResult *result,
@@ -2754,7 +2717,7 @@ int fprops_eqm_phase_coord_values(const FpropsEqmPhaseResult *result,
 		return -11;
 	}
 	for(int j = 0; j < model->nvar; ++j){
-		values[j] = fprops_eqm_phase_result_y(result, p, j);
+		values[j] = eqm_phase_result_y_index(result, p, j);
 	}
 	return model->nvar;
 }
@@ -2765,7 +2728,7 @@ double fprops_eqm_phase_coord(const FpropsEqmPhaseResult *result,
 	int p;
 	const FpropsEqmPhaseModel *model = eqm_problem_find_phase_model(eqm, phase, &p);
 	int j = eqm_phase_find_coord(model, coord);
-	return (result && p >= 0 && j >= 0) ? fprops_eqm_phase_result_y(result, p, j) : NAN;
+	return (result && p >= 0 && j >= 0) ? eqm_phase_result_y_index(result, p, j) : NAN;
 }
 
 int fprops_eqm_phase_member_amounts(const FpropsEqmPhaseResult *result,
@@ -2811,7 +2774,10 @@ double fprops_eqm_phase_member_fraction(const FpropsEqmPhaseResult *result,
 int fprops_eqm_write(FILE *out, const FpropsEqmPhaseResult *result,
 		const char *format){
 	const FpropsEqm *eqm = eqm_result_problem(result);
-	return fprops_eqm_problem_result_write(out, eqm, result, format);
+	if(!eqm){
+		return -11;
+	}
+	return eqm_phase_result_write(out, eqm->phases, result, format);
 }
 
 int fprops_eqm_phase_solve_auto(const FpropsEqmPhaseModel *phases, int nphase,

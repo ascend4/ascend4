@@ -8,14 +8,6 @@
 #define FPROPS_EQM_PHASE_MAX_ELEMS 8
 #define FPROPS_EQM_PHASE_MAX_VARS 8
 
-#if defined(__GNUC__) || defined(__clang__)
-# define FPROPS_EQM_NONNULL(...) __attribute__((nonnull(__VA_ARGS__)))
-# define FPROPS_EQM_SENTINEL __attribute__((sentinel))
-#else
-# define FPROPS_EQM_NONNULL(...)
-# define FPROPS_EQM_SENTINEL
-#endif
-
 typedef enum FpropsEqmPhaseKind{
 	FPROPS_EQM_PHASE_STOICHIOMETRIC = 0,
 	FPROPS_EQM_PHASE_IDEAL_GAS,
@@ -169,28 +161,6 @@ int fprops_eqm_phase_find_element(const FpropsEqmPhaseModel *phase, const char *
 int fprops_eqm_phase_resolve(const char *spec, const char *source,
 		FpropsEqmPhaseModel *phase);
 
-/**
- * Resolve a vector of phase specifications.
- *
- * `sources` may be NULL. If supplied, `sources[p]` is passed to
- * fprops_eqm_phase_resolve(...) for `specs[p]`.
- *
- * @return Number of resolved phases on success, or a negative status on
- *         failure.
- */
-int fprops_eqm_phase_resolve_package(const char **specs, const char **sources,
-		int nphase, FpropsEqmPhaseModel *phases);
-
-/**
- * Return the total number of expanded phase members used by a phase package.
- *
- * This is useful for sizing `member_amounts_out` arrays before calling
- * fprops_eqm_phase_solve_fixed_expanded(...),
- * fprops_eqm_phase_solve_auto(...), or
- * fprops_eqm_phase_solve_active_set(...).
- */
-int fprops_eqm_phase_total_members(const FpropsEqmPhaseModel *phases, int nphase);
-
 int fprops_eqm_phase_elements(const FpropsEqmPhaseModel *phase,
 		const double *y, double *a_out);
 
@@ -212,104 +182,6 @@ int fprops_eqm_phase_gibbs(const FpropsEqmPhaseModel *phase,
 int fprops_eqm_phase_entry_residual(const FpropsEqmPhaseModel *phase,
 		double T, double P, const double *lambda, double *phi_out, double *y_out);
 
-int fprops_eqm_phase_solve_fixed_linear(const FpropsEqmPhaseModel *phases, int nphase,
-		const char **elements, int ne, const double *b, double T, double P,
-		double *phase_amounts_out, double *member_amounts_out);
-
-int fprops_eqm_phase_solve_fixed_expanded(const FpropsEqmPhaseModel *phases, int nphase,
-		const char **elements, int ne, const double *b, double T, double P,
-		const char *algorithm, const double *member_init,
-		double *phase_amounts_out, double *phase_y_out, double *member_amounts_out,
-		int *nmember_out);
-
-int fprops_eqm_phase_solve_auto(const FpropsEqmPhaseModel *phases, int nphase,
-		const char **elements, int ne, const double *b, double T, double P,
-		const char *algorithm, double *phase_amounts_out, double *phase_y_out,
-		int *phase_active_out, double *member_amounts_out, int *nmember_out);
-
-int fprops_eqm_phase_solve_active_set(const FpropsEqmPhaseModel *phases, int nphase,
-		const char **elements, int ne, const double *b, double T, double P,
-		const char *algorithm, const int *phase_active_init,
-		double *phase_amounts_out, double *phase_y_out,
-		int *phase_active_out, double *member_amounts_out, int *nmember_out);
-
-/**
- * Solve with the active-set solver and store composition in a result object.
- *
- * On return, `result->status` is zero when the composition fields are usable.
- * `result->solver_status` keeps the raw solver code for diagnostics.
- */
-int fprops_eqm_phase_solve_active_set_result(const FpropsEqmPhaseModel *phases, int nphase,
-		const char **elements, int ne, const double *b, double T, double P,
-		const char *algorithm, const int *phase_active_init, FpropsEqmPhaseResult *result);
-
-double fprops_eqm_phase_result_amount(const FpropsEqmPhaseResult *result, int iphase);
-
-double fprops_eqm_phase_result_y(const FpropsEqmPhaseResult *result, int iphase, int ivar);
-
-double fprops_eqm_phase_result_gas_member_amount(const FpropsEqmPhaseModel *phase,
-		const FpropsEqmPhaseResult *result, int iphase, int imember);
-
-int fprops_eqm_phase_result_write(FILE *out, const FpropsEqmPhaseModel *phases,
-		const FpropsEqmPhaseResult *result, const char *format);
-
-/**
- * Initialize a reusable phase-equilibrium problem object.
- *
- * The problem owns the phase package, global element order, feed totals,
- * temperature, pressure, and solver algorithm. Callers add phases and feed
- * amounts by name, then solve into FpropsEqmPhaseResult.
- */
-void fprops_eqm_problem_init(FpropsEqmProblem *problem);
-
-int fprops_eqm_problem_add_phase(FpropsEqmProblem *problem, const char *spec,
-		const char *source);
-
-int fprops_eqm_problem_phase_count(const FpropsEqmProblem *problem);
-
-const FpropsEqmPhaseModel *fprops_eqm_problem_phase(const FpropsEqmProblem *problem,
-		int iphase);
-
-int fprops_eqm_problem_find_phase(const FpropsEqmProblem *problem, const char *name);
-
-int fprops_eqm_problem_find_element(const FpropsEqmProblem *problem, const char *name);
-
-int fprops_eqm_problem_set_TP(FpropsEqmProblem *problem, double T, double P);
-
-int fprops_eqm_problem_set_algorithm(FpropsEqmProblem *problem, const char *algorithm);
-
-void fprops_eqm_problem_clear_feed(FpropsEqmProblem *problem);
-
-int fprops_eqm_problem_add_element_amount(FpropsEqmProblem *problem,
-		const char *element, double amount);
-
-int fprops_eqm_problem_set_element_amount(FpropsEqmProblem *problem,
-		const char *element, double amount);
-
-int fprops_eqm_problem_add_formula_amount(FpropsEqmProblem *problem,
-		const char *formula, double amount);
-
-int fprops_eqm_problem_add_phase_amount(FpropsEqmProblem *problem, int iphase,
-		const double *y, double amount);
-
-double fprops_eqm_problem_element_amount(const FpropsEqmProblem *problem,
-		const char *element);
-
-int fprops_eqm_problem_solve(const FpropsEqmProblem *problem,
-		FpropsEqmPhaseResult *result);
-
-double fprops_eqm_result_phase_amount(const FpropsEqmProblem *problem,
-		const FpropsEqmPhaseResult *result, const char *phase);
-
-double fprops_eqm_result_phase_y(const FpropsEqmProblem *problem,
-		const FpropsEqmPhaseResult *result, const char *phase, const char *var);
-
-double fprops_eqm_result_gas_member_amount(const FpropsEqmProblem *problem,
-		const FpropsEqmPhaseResult *result, const char *phase, const char *member);
-
-int fprops_eqm_problem_result_write(FILE *out, const FpropsEqmProblem *problem,
-		const FpropsEqmPhaseResult *result, const char *format);
-
 void fprops_eqm_init(FpropsEqm *eqm);
 
 int fprops_eqm_add_phase(FpropsEqm *eqm, const char *spec, const char *source);
@@ -319,6 +191,11 @@ int fprops_eqm_add_phase_list(FpropsEqm *eqm, int nphase, const char **specs);
 int fprops_eqm_phase_count(const FpropsEqm *eqm);
 
 const char *fprops_eqm_phase_name(const FpropsEqm *eqm, int iphase);
+
+int fprops_eqm_find_phase(const FpropsEqm *eqm, const char *phase);
+
+const FpropsEqmPhaseModel *fprops_eqm_phase_model(const FpropsEqm *eqm,
+		const char *phase);
 
 int fprops_eqm_phase_coord_count(const FpropsEqm *eqm, const char *phase);
 
@@ -345,6 +222,8 @@ void fprops_eqm_clear_feed(FpropsEqm *eqm);
 int fprops_eqm_add_element(FpropsEqm *eqm, const char *element, double amount);
 
 int fprops_eqm_set_element(FpropsEqm *eqm, const char *element, double amount);
+
+double fprops_eqm_element_amount(const FpropsEqm *eqm, const char *element);
 
 int fprops_eqm_add_formula(FpropsEqm *eqm, const char *formula, double amount);
 
@@ -394,18 +273,5 @@ double fprops_eqm_phase_member_fraction(const FpropsEqmPhaseResult *result,
 
 int fprops_eqm_write(FILE *out, const FpropsEqmPhaseResult *result,
 		const char *format);
-
-/**
- * Reconstruct thermodynamic element potentials from active equilibrium phases.
- */
-int fprops_eqm_phase_reconstruct_lambda(const FpropsEqmPhaseModel *phases, int nphase,
-		const char **elements, int ne, double T, double P,
-		const double *phase_amounts, const double *phase_y, const int *phase_active,
-		double *lambda_out, double *stationarity_rms_out);
-
-int fprops_eqm_phase_validate_entry_residuals(const FpropsEqmPhaseModel *phases, int nphase,
-		const char **elements, int ne, double T, double P,
-		const double *phase_amounts, const double *phase_y, const int *phase_active,
-		double *lambda_out, double *entry_residuals_out);
 
 #endif /* FPROPS_EQM_PHASE_H */

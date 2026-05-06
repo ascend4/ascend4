@@ -628,7 +628,8 @@ Internally this black-box:
 
 1. converts package key to runtime package
 2. builds/uses `A_internal`
-3. calls `eqm_solve_elements(...)` or a package-aware extension
+3. calls the public element-total equilibrium wrapper or the
+   package-aware solver
 4. evaluates equilibrium enthalpy from the resulting equilibrium state
 5. maps outputs to stream basis
 

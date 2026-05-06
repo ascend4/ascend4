@@ -1,6 +1,8 @@
 #include "../test.h"
 #include "../eqm.h"
+#include "../eqm_internal.h"
 #include "../eqm_phase.h"
+#include "../eqm_phase_internal.h"
 #include "../flash.h"
 #include "../flash_unifac.h"
 #include "../fluids.h"
@@ -746,6 +748,7 @@ static void test_eqm_phase_active_set_result_status_wrapper(void){
 	const char *elements[] = {"Fe", "O", "H"};
 	double b[] = {2.0, 3.0, 200.0};
 	FpropsEqmPhaseResult result;
+	int gas_member_offset;
 	int status;
 
 	test_prepare_feoh_phase_package(phases);
@@ -756,13 +759,12 @@ static void test_eqm_phase_active_set_result_status_wrapper(void){
 	CU_ASSERT_TRUE(fprops_eqm_status_ok(result.solver_status));
 	CU_ASSERT_EQUAL(result.nphase, 5);
 	CU_ASSERT_EQUAL(result.nmember, 11);
+	gas_member_offset = result.nmember - phases[4].nmember;
 	CU_ASSERT_TRUE(result.phase_active[0]);
 	CU_ASSERT_TRUE(result.phase_active[4]);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_result_amount(&result, 0), 2.0, 1e-6);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_result_gas_member_amount(&phases[4], &result, 4, 0),
-		97.0, 1e-5);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_result_gas_member_amount(&phases[4], &result, 4, 1),
-		3.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(result.phase_amounts[0], 2.0, 1e-6);
+	CU_ASSERT_DOUBLE_EQUAL(result.member_amounts[gas_member_offset], 97.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(result.member_amounts[gas_member_offset + 1], 3.0, 1e-5);
 }
 
 static void test_eqm_phase_problem_api_fe_gas_reducing_case(void){
@@ -781,9 +783,9 @@ static void test_eqm_phase_problem_api_fe_gas_reducing_case(void){
 	CU_ASSERT_TRUE_FATAL(fprops_eqm_add_phase(&eqm,
 		"gas:ideal(hydrogen,water)=helmholtz+ref0:", NULL) >= 0);
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comp_list(&eqm, ARRAYLEN(names), names, amounts), 0);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "Fe"), 2.0, 1e-12);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "O"), 3.0, 1e-12);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "H"), 200.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "O"), 3.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "H"), 200.0, 1e-12);
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_set_TP(&eqm, 1173.15, 101325.0), 0);
 
 	status = fprops_eqm_solve(&eqm, &result);
@@ -808,21 +810,21 @@ static void test_eqm_phase_problem_api_fe_gas_reducing_case(void){
 
 	fprops_eqm_clear_feed(&eqm);
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comps(&eqm, "Fe", 2, "O", 3, "H", 200), 0);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "Fe"), 2.0, 1e-12);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "O"), 3.0, 1e-12);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "H"), 200.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "O"), 3.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "H"), 200.0, 1e-12);
 
 	fprops_eqm_clear_feed(&eqm);
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comps(&eqm, "Fe2O3", 1, "H2", 100), 0);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "Fe"), 2.0, 1e-12);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "O"), 3.0, 1e-12);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "H"), 200.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "O"), 3.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "H"), 200.0, 1e-12);
 
 	fprops_eqm_clear_feed(&eqm);
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comps(&eqm, "Fe2O3", 1, "hydrogen", 100), 0);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "Fe"), 2.0, 1e-12);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "O"), 3.0, 1e-12);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm, "H"), 200.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "O"), 3.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "H"), 200.0, 1e-12);
 
 	fprops_eqm_init(&eqm2);
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_phases(&eqm2,
@@ -836,12 +838,12 @@ static void test_eqm_phase_problem_api_fe_gas_reducing_case(void){
 	CU_ASSERT_STRING_EQUAL(member_names[0], "Wus_FeO");
 	CU_ASSERT_STRING_EQUAL(member_names[1], "Wus_FeO1p5");
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_phase_feed(&eqm2, "wustite", 2.0, 0.25), 0);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm2, "Fe"), 2.0, 1e-12);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm2, "O"), 2.25, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm2, "Fe"), 2.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm2, "O"), 2.25, 1e-12);
 	fprops_eqm_clear_feed(&eqm2);
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_phase_feed_vars(&eqm2, "spinel", 1.0,
 		"y_oct_fe2", 0.20, "y_tet_fe2", 0.40), 0);
-	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_problem_element_amount(&eqm2, "O"), 4.0, 1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm2, "O"), 4.0, 1e-12);
 }
 
 static void test_run_feoh_fe_spinel_bg_active_set(double tc, double log10_ratio){

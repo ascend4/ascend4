@@ -157,8 +157,8 @@ int main(void){
 		fprintf(stderr, "failed to add phase package\n");
 		return 1;
 	}
-	ph_wustite = fprops_eqm_problem_find_phase(&eqm, "wustite");
-	if(ph_wustite < 0 || fprops_eqm_problem_find_phase(&eqm, "spinel") < 0){
+	ph_wustite = fprops_eqm_find_phase(&eqm, "wustite");
+	if(ph_wustite < 0 || fprops_eqm_find_phase(&eqm, "spinel") < 0){
 		fprintf(stderr, "failed to find required solution phases\n");
 		return 1;
 	}
@@ -192,7 +192,7 @@ int main(void){
 
 	// Pick one mole of wustite at the chosen buffer composition and let the
 	// problem object convert that phase amount into global element totals.
-	if(!find_lambda_fe_for_entry(fprops_eqm_problem_phase(&eqm, ph_wustite), 973.15, 101325.0,
+	if(!find_lambda_fe_for_entry(fprops_eqm_phase_model(&eqm, "wustite"), 973.15, 101325.0,
 			lambda_o_thermo, &lambda_fe, y_wus)){
 		fprintf(stderr, "failed to evaluate wustite buffer composition\n");
 		return 1;

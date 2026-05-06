@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../eqm.h"
+#include "../eqm_internal.h"
 
 /* How to run:
    1) Build:

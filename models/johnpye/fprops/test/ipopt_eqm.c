@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../eqm.h"
+#include "../eqm_internal.h"
 #include "../eqm_ipopt.h"
 #ifdef HAVE_NLOPT
 #include "../eqm_slsqp.h"
