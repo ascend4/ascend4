@@ -1500,7 +1500,381 @@ static int eqm_phase_seed_full_members_from_y(const FpropsEqmPhaseModel *phases,
 		}
 		return 1;
 	}
+	if(phase->kind == FPROPS_EQM_PHASE_IDEAL_GAS){
+		if(!y){
+			return 0;
+		}
+		for(int j = 0; j < phase->nmember; ++j){
+			if(!(y[j] >= 0.0) || !isfinite(y[j])){
+				return 0;
+			}
+			member_seed[off + j] = amount * y[j];
+		}
+		return 1;
+	}
 	return 0;
+}
+
+static int eqm_phase_unit_members_from_seed(const FpropsEqmPhaseModel *phase,
+		const double *seed_members, double *unit_members, double *y_out){
+	if(!phase || !seed_members || !unit_members){
+		return 0;
+	}
+	for(int j = 0; j < FPROPS_EQM_PHASE_MAX_MEMBERS; ++j){
+		unit_members[j] = 0.0;
+	}
+	for(int j = 0; y_out && j < FPROPS_EQM_PHASE_MAX_VARS; ++j){
+		y_out[j] = NAN;
+	}
+	if(phase->kind == FPROPS_EQM_PHASE_STOICHIOMETRIC){
+		unit_members[0] = 1.0;
+		return 1;
+	}
+	if(phase->kind == FPROPS_EQM_PHASE_BINARY_SOLUTION){
+		const BinarySolutionPhaseDef *B = (const BinarySolutionPhaseDef *)phase->data;
+		double sum = seed_members[0] + seed_members[1];
+		double x;
+		if(!B || !B->model){
+			return 0;
+		}
+		x = (sum > 1e-30 && isfinite(sum)) ? seed_members[1] / sum
+			: 0.5 * (B->model->xmin + B->model->xmax);
+		if(x < B->model->xmin){
+			x = B->model->xmin;
+		}else if(x > B->model->xmax){
+			x = B->model->xmax;
+		}
+		unit_members[0] = 1.0 - x;
+		unit_members[1] = x;
+		if(y_out){
+			y_out[0] = x;
+		}
+		return 1;
+	}
+	if(phase->kind == FPROPS_EQM_PHASE_SITE_SOLUTION){
+		const double eps = 1e-4;
+		double nt = seed_members[0] + seed_members[1];
+		double no = seed_members[2] + seed_members[3] + seed_members[4];
+		double y[2];
+		y[0] = (nt > 1e-30 && isfinite(nt)) ? seed_members[0] / nt : 0.5;
+		y[1] = (no > 1e-30 && isfinite(no)) ? seed_members[2] / no : 0.25;
+		eqm_phase_spinel_project_y(&y[0], &y[1]);
+		if(y[0] < eps){
+			y[0] = eps;
+		}else if(y[0] > 1.0 - eps){
+			y[0] = 1.0 - eps;
+		}
+		if(y[1] < 0.5 * eps){
+			y[1] = 0.5 * eps;
+		}
+		if(y[0] + 2.0 * y[1] > 1.0 - 3.0 * eps){
+			y[1] = 0.5 * (1.0 - 3.0 * eps - y[0]);
+			if(y[1] < 0.5 * eps){
+				y[1] = 0.5 * eps;
+				y[0] = 1.0 - 3.0 * eps - 2.0 * y[1];
+			}
+		}
+		if(!eqm_phase_spinel_state(y, unit_members, NULL, NULL)){
+			return 0;
+		}
+		if(y_out){
+			y_out[0] = y[0];
+			y_out[1] = y[1];
+		}
+		return 1;
+	}
+	if(phase->kind == FPROPS_EQM_PHASE_IDEAL_GAS){
+		double sum = 0.0;
+		for(int j = 0; j < phase->nmember; ++j){
+			if(seed_members[j] > 0.0 && isfinite(seed_members[j])){
+				sum += seed_members[j];
+			}
+		}
+		for(int j = 0; j < phase->nmember; ++j){
+			double y = (sum > 0.0 && seed_members[j] > 0.0 && isfinite(seed_members[j]))
+				? seed_members[j] / sum : 1.0 / (double)phase->nmember;
+			unit_members[j] = y;
+			if(y_out){
+				y_out[j] = y;
+			}
+		}
+		return 1;
+	}
+	return 0;
+}
+
+static int eqm_phase_build_balanced_member_seed(const FpropsEqmPhaseModel *phases,
+		int nphase, const char **elements, int ne, const double *b,
+		unsigned long long mask, const double *composition_seed, double *balanced_seed){
+	enum {MAX_ACTIVE_PHASES = 20};
+	enum {MAX_SEED_VARS = MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS};
+	double unit_members[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+	double phase_y[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_VARS];
+	double C[FPROPS_EQM_PHASE_MAX_ELEMS * MAX_SEED_VARS];
+	double normal[FPROPS_EQM_PHASE_MAX_ELEMS * FPROPS_EQM_PHASE_MAX_ELEMS];
+	double rhs[FPROPS_EQM_PHASE_MAX_ELEMS];
+	double x0[MAX_SEED_VARS];
+	double x[MAX_SEED_VARS];
+	double weight[MAX_SEED_VARS];
+	int var_phase[MAX_SEED_VARS];
+	int var_member[MAX_SEED_VARS];
+	int phase_slot[MAX_ACTIVE_PHASES];
+	int nvar = 0;
+	int nslot = 0;
+	int total_members;
+	if(!phases || nphase <= 0 || nphase > MAX_ACTIVE_PHASES || !elements || ne <= 0
+			|| ne > FPROPS_EQM_PHASE_MAX_ELEMS || !b || !composition_seed
+			|| !balanced_seed || mask == 0){
+		return 0;
+	}
+	total_members = eqm_phase_total_members(phases, nphase);
+	if(total_members <= 0 || total_members > MAX_SEED_VARS){
+		return 0;
+	}
+	for(int i = 0; i < total_members; ++i){
+		balanced_seed[i] = composition_seed[i];
+	}
+	for(int p = 0; p < nphase; ++p){
+		int off;
+		double elems_local[FPROPS_EQM_PHASE_MAX_ELEMS];
+		const double *y;
+		if(!(mask & (1ULL << p))){
+			continue;
+		}
+		if(nslot >= MAX_ACTIVE_PHASES){
+			return 0;
+		}
+		phase_slot[p] = nslot;
+		off = eqm_phase_member_offset(phases, p);
+		y = phases[p].kind == FPROPS_EQM_PHASE_STOICHIOMETRIC
+			? NULL : phase_y + nslot * FPROPS_EQM_PHASE_MAX_VARS;
+		if(off < 0 || !eqm_phase_unit_members_from_seed(&phases[p],
+				composition_seed + off,
+				unit_members + nslot * FPROPS_EQM_PHASE_MAX_MEMBERS,
+				phase_y + nslot * FPROPS_EQM_PHASE_MAX_VARS)){
+			return 0;
+		}
+		if(phases[p].kind == FPROPS_EQM_PHASE_IDEAL_GAS){
+			double A[FPROPS_EQM_PHASE_MAX_ELEMS * FPROPS_EQM_PHASE_MAX_MEMBERS];
+			if(!fprops_build_element_matrix_source((const char **)phases[p].members,
+					phases[p].nmember, elements, ne, phases[p].source, A)){
+				return 0;
+			}
+			for(int j = 0; j < phases[p].nmember; ++j){
+				if(nvar >= MAX_SEED_VARS){
+					return 0;
+				}
+				for(int e = 0; e < ne; ++e){
+					C[e * MAX_SEED_VARS + nvar] = A[e * phases[p].nmember + j];
+				}
+				x0[nvar] = (composition_seed[off + j] > 1e-20
+						&& isfinite(composition_seed[off + j]))
+					? composition_seed[off + j]
+					: fmax(1e-6, unit_members[nslot * FPROPS_EQM_PHASE_MAX_MEMBERS + j]);
+				var_phase[nvar] = p;
+				var_member[nvar] = j;
+				++nvar;
+			}
+		}else{
+			double amount0 = composition_seed[off];
+			if(phases[p].kind == FPROPS_EQM_PHASE_BINARY_SOLUTION){
+				amount0 = composition_seed[off] + composition_seed[off + 1];
+			}else if(phases[p].kind == FPROPS_EQM_PHASE_SITE_SOLUTION){
+				amount0 = composition_seed[off] + composition_seed[off + 1];
+			}
+			if(nvar >= MAX_SEED_VARS || !fprops_eqm_phase_elements(&phases[p], y,
+					elems_local)){
+				return 0;
+			}
+			for(int e = 0; e < ne; ++e){
+				C[e * MAX_SEED_VARS + nvar] = 0.0;
+			}
+			for(int pe = 0; pe < phases[p].nelem; ++pe){
+				int ge = eqm_phase_global_element_index(elements, ne, phases[p].elements[pe]);
+				if(ge < 0){
+					return 0;
+				}
+				C[ge * MAX_SEED_VARS + nvar] += elems_local[pe];
+			}
+			x0[nvar] = (amount0 > 1e-20 && isfinite(amount0)) ? amount0 : 1.0;
+			var_phase[nvar] = p;
+			var_member[nvar] = -1;
+			++nvar;
+		}
+		++nslot;
+	}
+	if(nvar <= 0){
+		return 0;
+	}
+	for(int e = 0; e < ne; ++e){
+		double estimate = 0.0;
+		double scale = 1.0 / fmax(1.0, fabs(b[e]));
+		for(int q = 0; q < ne; ++q){
+			normal[e * ne + q] = 0.0;
+		}
+		for(int v = 0; v < nvar; ++v){
+			estimate += C[e * MAX_SEED_VARS + v] * x0[v];
+		}
+		rhs[e] = (b[e] - estimate) * scale;
+		for(int q = 0; q < ne; ++q){
+			double scale_q = 1.0 / fmax(1.0, fabs(b[q]));
+			for(int v = 0; v < nvar; ++v){
+				weight[v] = fmax(1e-8, fabs(x0[v]));
+				normal[e * ne + q] += scale * C[e * MAX_SEED_VARS + v]
+					* weight[v] * C[q * MAX_SEED_VARS + v] * scale_q;
+			}
+		}
+	}
+	if(!eqm_linalg_dense_solve(normal, rhs, ne)){
+		if(eqm_phase_trace_enabled()){
+			fprintf(stderr,
+				"FPROPS_EQM_PHASE_TRACE balanced_seed_failed mask=%llu reason=singular nvar=%d ne=%d\n",
+				(unsigned long long)mask, nvar, ne);
+		}
+		return 0;
+	}
+	for(int v = 0; v < nvar; ++v){
+		double dx = 0.0;
+		weight[v] = fmax(1e-8, fabs(x0[v]));
+		for(int e = 0; e < ne; ++e){
+			double scale = 1.0 / fmax(1.0, fabs(b[e]));
+			dx += weight[v] * C[e * MAX_SEED_VARS + v] * scale * rhs[e];
+		}
+		x[v] = x0[v] + dx;
+		if(!(x[v] > 1e-14) || !isfinite(x[v])){
+			if(eqm_phase_trace_enabled()){
+				fprintf(stderr,
+					"FPROPS_EQM_PHASE_TRACE balanced_seed_failed mask=%llu reason=amount phase=%d member=%d amount=%.17g prior=%.17g\n",
+					(unsigned long long)mask, var_phase[v], var_member[v], x[v], x0[v]);
+			}
+			return 0;
+		}
+	}
+	for(int e = 0; e < ne; ++e){
+		double sum = 0.0;
+		for(int v = 0; v < nvar; ++v){
+			sum += C[e * MAX_SEED_VARS + v] * x[v];
+		}
+		if(fabs(sum - b[e]) > 1e-7 * fmax(1.0, fabs(b[e]))){
+			if(eqm_phase_trace_enabled()){
+				fprintf(stderr,
+					"FPROPS_EQM_PHASE_TRACE balanced_seed_failed mask=%llu reason=balance element=%s sum=%.17g target=%.17g diff=%.17g\n",
+					(unsigned long long)mask, elements[e], sum, b[e], sum - b[e]);
+			}
+			return 0;
+		}
+	}
+	for(int v = 0; v < nvar; ++v){
+		int p = var_phase[v];
+		int off = eqm_phase_member_offset(phases, p);
+		int slot = phase_slot[p];
+		if(var_member[v] >= 0){
+			balanced_seed[off + var_member[v]] = x[v];
+			continue;
+		}
+		for(int j = 0; j < phases[p].nmember; ++j){
+			balanced_seed[off + j] =
+				x[v] * unit_members[slot * FPROPS_EQM_PHASE_MAX_MEMBERS + j];
+		}
+	}
+	return 1;
+}
+
+static int eqm_phase_build_fixed_composition_member_seed(const FpropsEqmPhaseModel *phases,
+		int nphase, const char **elements, int ne, const double *b,
+		unsigned long long mask, const double *composition_seed, double *balanced_seed){
+	enum {MAX_ACTIVE_PHASES = 20};
+	double unit_members[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+	double phase_y[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_VARS];
+	double phase_A[FPROPS_EQM_PHASE_MAX_ELEMS * MAX_ACTIVE_PHASES];
+	double normal[MAX_ACTIVE_PHASES * MAX_ACTIVE_PHASES];
+	double rhs[MAX_ACTIVE_PHASES];
+	double amounts[MAX_ACTIVE_PHASES];
+	int active_index[MAX_ACTIVE_PHASES];
+	int nactive = 0;
+	int total_members = eqm_phase_total_members(phases, nphase);
+	if(!phases || nphase <= 0 || nphase > MAX_ACTIVE_PHASES || !elements || ne <= 0
+			|| ne > FPROPS_EQM_PHASE_MAX_ELEMS || !b || !composition_seed
+			|| !balanced_seed || total_members <= 0){
+		return 0;
+	}
+	for(int p = 0; p < nphase; ++p){
+		if(mask & (1ULL << p)){
+			active_index[nactive++] = p;
+		}
+	}
+	if(nactive <= 0 || nactive > ne){
+		return 0;
+	}
+	for(int s = 0; s < nactive; ++s){
+		int p = active_index[s];
+		int off = eqm_phase_member_offset(phases, p);
+		double elems_local[FPROPS_EQM_PHASE_MAX_ELEMS];
+		const double *y = phases[p].kind == FPROPS_EQM_PHASE_STOICHIOMETRIC
+			? NULL : phase_y + s * FPROPS_EQM_PHASE_MAX_VARS;
+		if(off < 0 || !eqm_phase_unit_members_from_seed(&phases[p],
+				composition_seed + off,
+				unit_members + s * FPROPS_EQM_PHASE_MAX_MEMBERS,
+				phase_y + s * FPROPS_EQM_PHASE_MAX_VARS)
+				|| !fprops_eqm_phase_elements(&phases[p], y, elems_local)){
+			return 0;
+		}
+		for(int e = 0; e < ne; ++e){
+			phase_A[e * MAX_ACTIVE_PHASES + s] = 0.0;
+		}
+		for(int pe = 0; pe < phases[p].nelem; ++pe){
+			int ge = eqm_phase_global_element_index(elements, ne, phases[p].elements[pe]);
+			if(ge < 0){
+				return 0;
+			}
+			phase_A[ge * MAX_ACTIVE_PHASES + s] += elems_local[pe];
+		}
+	}
+	for(int i = 0; i < nactive; ++i){
+		rhs[i] = 0.0;
+		for(int j = 0; j < nactive; ++j){
+			normal[i * nactive + j] = 0.0;
+		}
+		for(int e = 0; e < ne; ++e){
+			double ai = phase_A[e * MAX_ACTIVE_PHASES + i];
+			double scale = 1.0 / fmax(1.0, fabs(b[e]));
+			rhs[i] += ai * b[e] * scale * scale;
+			for(int j = 0; j < nactive; ++j){
+				normal[i * nactive + j] += ai * phase_A[e * MAX_ACTIVE_PHASES + j]
+					* scale * scale;
+			}
+		}
+		amounts[i] = rhs[i];
+	}
+	if(!eqm_linalg_dense_solve(normal, amounts, nactive)){
+		return 0;
+	}
+	for(int s = 0; s < nactive; ++s){
+		if(!(amounts[s] > 1e-14) || !isfinite(amounts[s])){
+			return 0;
+		}
+	}
+	for(int e = 0; e < ne; ++e){
+		double sum = 0.0;
+		for(int s = 0; s < nactive; ++s){
+			sum += phase_A[e * MAX_ACTIVE_PHASES + s] * amounts[s];
+		}
+		if(fabs(sum - b[e]) > 1e-7 * fmax(1.0, fabs(b[e]))){
+			return 0;
+		}
+	}
+	for(int i = 0; i < total_members; ++i){
+		balanced_seed[i] = composition_seed[i];
+	}
+	for(int s = 0; s < nactive; ++s){
+		int p = active_index[s];
+		int off = eqm_phase_member_offset(phases, p);
+		for(int j = 0; j < phases[p].nmember; ++j){
+			balanced_seed[off + j] =
+				amounts[s] * unit_members[s * FPROPS_EQM_PHASE_MAX_MEMBERS + j];
+		}
+	}
+	return 1;
 }
 
 static void eqm_phase_copy_full_solution(int nphase, int total_members,
@@ -1517,6 +1891,309 @@ static void eqm_phase_copy_full_solution(int nphase, int total_members,
 	for(int i = 0; i < total_members; ++i){
 		dst_members[i] = src_members[i];
 	}
+}
+
+static int eqm_phase_full_from_member_seed(const FpropsEqmPhaseModel *phases, int nphase,
+		unsigned long long mask, const double *member_seed, double *full_amounts,
+		double *full_y, int *full_active, double *full_members){
+	int total_members = eqm_phase_total_members(phases, nphase);
+	if(!phases || nphase <= 0 || !member_seed || !full_amounts || !full_y
+			|| !full_active || !full_members || total_members <= 0){
+		return 0;
+	}
+	eqm_phase_zero_full_outputs(phases, nphase, full_amounts, full_y, full_active,
+		full_members);
+	for(int i = 0; i < total_members; ++i){
+		if(!isfinite(member_seed[i]) || member_seed[i] < 0.0){
+			return 0;
+		}
+		full_members[i] = member_seed[i];
+	}
+	for(int p = 0; p < nphase; ++p){
+		int off = eqm_phase_member_offset(phases, p);
+		if(!(mask & (1ULL << p))){
+			continue;
+		}
+		full_active[p] = 1;
+		if(phases[p].kind == FPROPS_EQM_PHASE_STOICHIOMETRIC){
+			full_amounts[p] = member_seed[off];
+		}else if(phases[p].kind == FPROPS_EQM_PHASE_IDEAL_GAS){
+			double amount = 0.0;
+			for(int j = 0; j < phases[p].nmember; ++j){
+				amount += member_seed[off + j];
+			}
+			if(!(amount > 0.0)){
+				return 0;
+			}
+			full_amounts[p] = amount;
+			for(int j = 0; j < phases[p].nmember; ++j){
+				full_y[p * FPROPS_EQM_PHASE_MAX_VARS + j] = member_seed[off + j] / amount;
+			}
+		}else if(phases[p].kind == FPROPS_EQM_PHASE_BINARY_SOLUTION){
+			double amount = member_seed[off] + member_seed[off + 1];
+			if(!(amount > 0.0)){
+				return 0;
+			}
+			full_amounts[p] = amount;
+			full_y[p * FPROPS_EQM_PHASE_MAX_VARS] = member_seed[off + 1] / amount;
+		}else if(phases[p].kind == FPROPS_EQM_PHASE_SITE_SOLUTION){
+			double nt = member_seed[off] + member_seed[off + 1];
+			double no = member_seed[off + 2] + member_seed[off + 3] + member_seed[off + 4];
+			if(!(nt > 0.0) || !(no > 0.0)){
+				return 0;
+			}
+			full_amounts[p] = nt;
+			full_y[p * FPROPS_EQM_PHASE_MAX_VARS] = member_seed[off] / nt;
+			full_y[p * FPROPS_EQM_PHASE_MAX_VARS + 1] = member_seed[off + 2] / no;
+		}else{
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int eqm_phase_refine_entry_member_seed(const FpropsEqmPhaseModel *phases,
+		int nphase, const char **elements, int ne, const double *b, double T, double P,
+		unsigned long long mask, double *member_seed){
+	enum {MAX_ACTIVE_PHASES = 20};
+	double phase_amounts[MAX_ACTIVE_PHASES];
+	double phase_y[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_work[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+	double rebalanced[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+	int active[MAX_ACTIVE_PHASES];
+	int changed = 0;
+	if(!phases || nphase <= 0 || nphase > MAX_ACTIVE_PHASES || !elements || ne <= 0
+			|| !b || !member_seed){
+		return 0;
+	}
+	for(int iter = 0; iter < 6; ++iter){
+		int changed_iter = 0;
+		if(!eqm_phase_full_from_member_seed(phases, nphase, mask, member_seed,
+				phase_amounts, phase_y, active, member_work)){
+			return changed;
+		}
+		for(int p = 0; p < nphase; ++p){
+			double lambda_global[FPROPS_EQM_PHASE_MAX_ELEMS];
+			double lambda_local[FPROPS_EQM_PHASE_MAX_ELEMS];
+			double y_min[FPROPS_EQM_PHASE_MAX_VARS];
+			double phi = NAN;
+			double rms = NAN;
+			int active_other[MAX_ACTIVE_PHASES];
+			if(!(mask & (1ULL << p)) || !eqm_phase_can_replace_candidate(&phases[p])){
+				continue;
+			}
+			for(int q = 0; q < nphase; ++q){
+				active_other[q] = active[q];
+			}
+			active_other[p] = 0;
+			if(!fprops_eqm_phase_reconstruct_lambda(phases, nphase, elements, ne, T, P,
+					phase_amounts, phase_y, active_other, lambda_global, &rms)){
+				continue;
+			}
+			if(!eqm_phase_local_lambda_from_global(&phases[p], elements, ne, lambda_global,
+					lambda_local)){
+				continue;
+			}
+			if(!fprops_eqm_phase_entry_residual(&phases[p], T, P, lambda_local, &phi,
+					y_min)){
+				continue;
+			}
+			{
+				const double *y_cur = phase_y + p * FPROPS_EQM_PHASE_MAX_VARS;
+				double dy = 0.0;
+				for(int j = 0; j < phases[p].nvar; ++j){
+					dy = fmax(dy, fabs(y_min[j] - y_cur[j]));
+				}
+				if(dy < 1e-10){
+					continue;
+				}
+			}
+			if(eqm_phase_seed_full_members_from_y(phases, p,
+					fmax(phase_amounts[p], 1e-6), y_min, member_seed)){
+				changed = 1;
+				changed_iter = 1;
+				if(eqm_phase_trace_enabled()){
+					fprintf(stderr,
+						"FPROPS_EQM_PHASE_TRACE active_set refine_seed iter=%d phase=%d phi=%.17g rms_without=%.17g y0=%.17g y1=%.17g\n",
+						iter, p, phi, rms, y_min[0], y_min[1]);
+				}
+			}
+		}
+		if(!changed_iter || !eqm_phase_build_balanced_member_seed(phases, nphase, elements,
+				ne, b, mask, member_seed, rebalanced)){
+			break;
+		}
+		{
+			int total_members = eqm_phase_total_members(phases, nphase);
+			for(int i = 0; i < total_members; ++i){
+				member_seed[i] = rebalanced[i];
+			}
+		}
+	}
+	return changed;
+}
+
+static int eqm_phase_refine_binary_gas_boundary_seed(const FpropsEqmPhaseModel *phases,
+		int nphase, const char **elements, int ne, const double *b, double T, double P,
+		unsigned long long mask, double *member_seed){
+	enum {MAX_ACTIVE_PHASES = 20};
+	double phase_amounts[MAX_ACTIVE_PHASES];
+	double phase_y[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_VARS];
+	double member_work[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+	double rebalanced[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+	double base_seed[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+	int active[MAX_ACTIVE_PHASES];
+	int total_members = eqm_phase_total_members(phases, nphase);
+	int changed = 0;
+	if(total_members <= 0){
+		return 0;
+	}
+	for(int i = 0; i < total_members; ++i){
+		base_seed[i] = member_seed[i];
+	}
+	if(!eqm_phase_full_from_member_seed(phases, nphase, mask, member_seed,
+			phase_amounts, phase_y, active, member_work)){
+		return 0;
+	}
+	for(int sol = 0; sol < nphase; ++sol){
+		for(int gas = 0; gas < nphase; ++gas){
+			double best_abs = HUGE_VAL;
+			double best_t = NAN;
+			double best_y[FPROPS_EQM_PHASE_MAX_VARS];
+			double prev_t = NAN;
+			double prev_phi = NAN;
+			int have_prev = 0;
+			if(sol == gas || !(mask & (1ULL << sol)) || !(mask & (1ULL << gas))){
+				continue;
+			}
+			if(!eqm_phase_can_replace_candidate(&phases[sol])
+					|| phases[gas].kind != FPROPS_EQM_PHASE_IDEAL_GAS
+					|| phases[gas].nmember != 2){
+				continue;
+			}
+			for(int k = 0; k <= 80; ++k){
+				double t = 1e-6 + (1.0 - 2e-6) * (double)k / 80.0;
+				double ygas[FPROPS_EQM_PHASE_MAX_VARS] = {1.0 - t, t};
+				double trial_amounts[MAX_ACTIVE_PHASES];
+				double trial_y[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_VARS];
+				double trial_members[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+				double lambda_global[FPROPS_EQM_PHASE_MAX_ELEMS];
+				double lambda_local[FPROPS_EQM_PHASE_MAX_ELEMS];
+				double y_min[FPROPS_EQM_PHASE_MAX_VARS];
+				double phi = NAN;
+				double rms = NAN;
+				int trial_active[MAX_ACTIVE_PHASES];
+				int active_other[MAX_ACTIVE_PHASES];
+				for(int i = 0; i < total_members; ++i){
+					member_seed[i] = base_seed[i];
+				}
+				if(!eqm_phase_seed_full_members_from_y(phases, gas,
+						fmax(phase_amounts[gas], 1e-6), ygas, member_seed)){
+					continue;
+				}
+				if(!eqm_phase_full_from_member_seed(phases, nphase, mask, member_seed,
+						trial_amounts, trial_y, trial_active, trial_members)){
+					continue;
+				}
+				for(int p = 0; p < nphase; ++p){
+					active_other[p] = trial_active[p];
+				}
+				active_other[sol] = 0;
+				if(!fprops_eqm_phase_reconstruct_lambda(phases, nphase, elements, ne, T,
+						P, trial_amounts, trial_y, active_other, lambda_global, &rms)
+						|| !eqm_phase_local_lambda_from_global(&phases[sol], elements, ne,
+							lambda_global, lambda_local)
+						|| !fprops_eqm_phase_entry_residual(&phases[sol], T, P,
+							lambda_local, &phi, y_min)){
+					continue;
+				}
+				if(fabs(phi) < best_abs){
+					best_abs = fabs(phi);
+					best_t = t;
+					for(int j = 0; j < FPROPS_EQM_PHASE_MAX_VARS; ++j){
+						best_y[j] = y_min[j];
+					}
+				}
+				if(have_prev && prev_phi * phi <= 0.0){
+					double lo = prev_t;
+					double hi = t;
+					double flo = prev_phi;
+					for(int it = 0; it < 30; ++it){
+						double mid = 0.5 * (lo + hi);
+						double ymid[FPROPS_EQM_PHASE_MAX_VARS] = {1.0 - mid, mid};
+						for(int i = 0; i < total_members; ++i){
+							member_seed[i] = base_seed[i];
+						}
+						if(!eqm_phase_seed_full_members_from_y(phases, gas,
+								fmax(phase_amounts[gas], 1e-6), ymid, member_seed)
+								|| !eqm_phase_full_from_member_seed(phases, nphase, mask,
+									member_seed, trial_amounts, trial_y, trial_active,
+									trial_members)){
+							break;
+						}
+						for(int p = 0; p < nphase; ++p){
+							active_other[p] = trial_active[p];
+						}
+						active_other[sol] = 0;
+						if(!fprops_eqm_phase_reconstruct_lambda(phases, nphase, elements,
+								ne, T, P, trial_amounts, trial_y, active_other,
+								lambda_global, &rms)
+								|| !eqm_phase_local_lambda_from_global(&phases[sol],
+									elements, ne, lambda_global, lambda_local)
+								|| !fprops_eqm_phase_entry_residual(&phases[sol], T, P,
+									lambda_local, &phi, y_min)){
+							break;
+						}
+						if(fabs(phi) < best_abs){
+							best_abs = fabs(phi);
+							best_t = mid;
+							for(int j = 0; j < FPROPS_EQM_PHASE_MAX_VARS; ++j){
+								best_y[j] = y_min[j];
+							}
+						}
+						if(flo * phi <= 0.0){
+							hi = mid;
+						}else{
+							lo = mid;
+							flo = phi;
+						}
+					}
+					break;
+				}
+				prev_t = t;
+				prev_phi = phi;
+				have_prev = 1;
+			}
+			if(isfinite(best_t) && best_abs < 5e-2){
+				double ygas[FPROPS_EQM_PHASE_MAX_VARS] = {1.0 - best_t, best_t};
+				for(int i = 0; i < total_members; ++i){
+					member_seed[i] = base_seed[i];
+				}
+				(void)eqm_phase_seed_full_members_from_y(phases, gas,
+					fmax(phase_amounts[gas], 1e-6), ygas, member_seed);
+				(void)eqm_phase_seed_full_members_from_y(phases, sol,
+					fmax(phase_amounts[sol], 1e-6), best_y, member_seed);
+				if(eqm_phase_build_fixed_composition_member_seed(phases, nphase, elements, ne,
+						b, mask, member_seed, rebalanced)){
+					int total_members = eqm_phase_total_members(phases, nphase);
+					for(int i = 0; i < total_members; ++i){
+						member_seed[i] = rebalanced[i];
+					}
+					changed = 1;
+					if(eqm_phase_trace_enabled()){
+						fprintf(stderr,
+							"FPROPS_EQM_PHASE_TRACE active_set binary_gas_boundary_seed sol=%d gas=%d phi_abs=%.17g gas_y1=%.17g y0=%.17g y1=%.17g\n",
+							sol, gas, best_abs, best_t, best_y[0], best_y[1]);
+					}
+					return 1;
+				}
+			}
+		}
+	}
+	for(int i = 0; i < total_members; ++i){
+		member_seed[i] = base_seed[i];
+	}
+	return changed;
 }
 
 static int eqm_phase_solve_mask_full(const FpropsEqmPhaseModel *phases, int nphase,
@@ -1876,6 +2553,58 @@ active_set_have_solution:
 							trial_active, trial_members, &nmember_trial);
 						if(!eqm_phase_status_ok(status)
 								|| !eqm_phase_validate_full_balance(phases, nphase, elements,
+									ne, b, trial_amounts, trial_y)){
+							double balanced_seed[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+							int seeded_status = status;
+							if(eqm_phase_build_balanced_member_seed(phases, nphase, elements, ne,
+									b, trial, add_seed, balanced_seed)){
+								(void)eqm_phase_refine_entry_member_seed(phases, nphase,
+									elements, ne, b, T, P, trial, balanced_seed);
+								(void)eqm_phase_refine_binary_gas_boundary_seed(phases, nphase,
+									elements, ne, b, T, P, trial, balanced_seed);
+								nmember_trial = 0;
+								status = eqm_phase_solve_mask_full(phases, nphase, elements, ne,
+									b, T, P, algorithm, trial, balanced_seed, trial_amounts,
+									trial_y, trial_active, trial_members, &nmember_trial);
+								if(eqm_phase_trace_enabled() && eqm_phase_status_ok(status)
+										&& eqm_phase_validate_full_balance(phases, nphase,
+											elements, ne, b, trial_amounts, trial_y)){
+									fprintf(stderr,
+										"FPROPS_EQM_PHASE_TRACE active_set iter=%d objective_swap_retry_balanced add=%d drop=%d mask=%llu seeded_status=%d status=%d\n",
+										iter, add, drop, (unsigned long long)trial,
+										seeded_status, status);
+								}
+								if(!eqm_phase_status_ok(status)
+										|| !eqm_phase_validate_full_balance(phases, nphase,
+											elements, ne, b, trial_amounts, trial_y)){
+									double lambda_check[FPROPS_EQM_PHASE_MAX_ELEMS];
+									double residual_check[MAX_ACTIVE_PHASES];
+									if(eqm_phase_full_from_member_seed(phases, nphase, trial,
+											balanced_seed, trial_amounts, trial_y, trial_active,
+											trial_members)
+											&& eqm_phase_validate_full_balance(phases, nphase,
+												elements, ne, b, trial_amounts, trial_y)
+											&& fprops_eqm_phase_validate_entry_residuals(phases,
+												nphase, elements, ne, T, P, trial_amounts,
+												trial_y, trial_active, lambda_check,
+												residual_check)){
+										status = 0;
+										if(eqm_phase_trace_enabled()){
+											fprintf(stderr,
+												"FPROPS_EQM_PHASE_TRACE active_set iter=%d objective_swap_retry_phase_validated add=%d drop=%d mask=%llu seeded_status=%d\n",
+												iter, add, drop, (unsigned long long)trial,
+												seeded_status);
+										}
+									}
+								}
+							}else if(eqm_phase_trace_enabled()){
+								fprintf(stderr,
+									"FPROPS_EQM_PHASE_TRACE active_set iter=%d objective_swap_retry_balanced_unavailable add=%d drop=%d mask=%llu seeded_status=%d\n",
+									iter, add, drop, (unsigned long long)trial, seeded_status);
+							}
+						}
+						if(!eqm_phase_status_ok(status)
+								|| !eqm_phase_validate_full_balance(phases, nphase, elements,
 									ne, b, trial_amounts, trial_y)
 								|| !eqm_phase_output_objective(phases, nphase, trial_amounts,
 									trial_y, T, P, &trial_g, &trial_active_count)){
@@ -1968,7 +2697,12 @@ active_set_have_solution:
 					(void)phi_check;
 					(void)eqm_phase_seed_full_members_from_y(phases, best_add, 1.0, y_add,
 						add_seed);
-				}
+					if(eqm_phase_trace_enabled()){
+						fprintf(stderr,
+							"FPROPS_EQM_PHASE_TRACE active_set add_seed phase=%d phi=%.17g y0=%.17g y1=%.17g\n",
+							best_add, phi_check, y_add[0], y_add[1]);
+					}
+					}
 					for(int q = 0; q < nphase; ++q){
 						double trial_amounts[MAX_ACTIVE_PHASES];
 						double trial_y[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_VARS];
@@ -1976,23 +2710,76 @@ active_set_have_solution:
 						int trial_active[MAX_ACTIVE_PHASES];
 						unsigned long long trial;
 						int balance_ok;
+						int seeded_status;
+						int seeded_balance;
 						int nmember_trial = 0;
 						if(!(mask & (1ULL << q)) || !eqm_phase_can_replace_candidate(&phases[q])){
 							continue;
-					}
-					trial = (mask | (1ULL << best_add)) & ~(1ULL << q);
-					if(trial == mask || !(trial & (1ULL << best_add))){
-						continue;
-					}
-							status = eqm_phase_solve_mask_full(phases, nphase, elements, ne, b, T, P,
-								algorithm, trial, add_seed, trial_amounts, trial_y, trial_active,
-								trial_members, &nmember_trial);
-							balance_ok = eqm_phase_status_ok(status)
-								&& eqm_phase_validate_full_balance(phases, nphase, elements, ne,
-									b, trial_amounts, trial_y);
+						}
+						trial = (mask | (1ULL << best_add)) & ~(1ULL << q);
+						if(trial == mask || !(trial & (1ULL << best_add))){
+							continue;
+						}
+						status = eqm_phase_solve_mask_full(phases, nphase, elements, ne, b, T, P,
+							algorithm, trial, add_seed, trial_amounts, trial_y, trial_active,
+							trial_members, &nmember_trial);
+						balance_ok = eqm_phase_status_ok(status)
+							&& eqm_phase_validate_full_balance(phases, nphase, elements, ne,
+								b, trial_amounts, trial_y);
+						seeded_status = status;
+						seeded_balance = balance_ok;
+						if(!balance_ok){
+							double balanced_seed[MAX_ACTIVE_PHASES * FPROPS_EQM_PHASE_MAX_MEMBERS];
+							if(eqm_phase_build_balanced_member_seed(phases, nphase, elements,
+									ne, b, trial, add_seed, balanced_seed)){
+								(void)eqm_phase_refine_entry_member_seed(phases, nphase,
+									elements, ne, b, T, P, trial, balanced_seed);
+								(void)eqm_phase_refine_binary_gas_boundary_seed(phases,
+									nphase, elements, ne, b, T, P, trial, balanced_seed);
+								nmember_trial = 0;
+								status = eqm_phase_solve_mask_full(phases, nphase, elements,
+									ne, b, T, P, algorithm, trial, balanced_seed,
+									trial_amounts, trial_y, trial_active, trial_members,
+									&nmember_trial);
+								balance_ok = eqm_phase_status_ok(status)
+									&& eqm_phase_validate_full_balance(phases, nphase,
+										elements, ne, b, trial_amounts, trial_y);
+								if(eqm_phase_trace_enabled()){
+									fprintf(stderr,
+										"FPROPS_EQM_PHASE_TRACE active_set iter=%d swap_retry_balanced add=%d drop=%d mask=%llu seeded_status=%d seeded_balance=%d status=%d balance=%d\n",
+										iter, best_add, q, (unsigned long long)trial,
+										seeded_status, seeded_balance, status, balance_ok);
+								}
+								if(!balance_ok){
+									double lambda_check[FPROPS_EQM_PHASE_MAX_ELEMS];
+									double residual_check[MAX_ACTIVE_PHASES];
+									if(eqm_phase_full_from_member_seed(phases, nphase, trial,
+											balanced_seed, trial_amounts, trial_y,
+											trial_active, trial_members)
+											&& eqm_phase_validate_full_balance(phases, nphase,
+												elements, ne, b, trial_amounts, trial_y)
+											&& fprops_eqm_phase_validate_entry_residuals(phases,
+												nphase, elements, ne, T, P, trial_amounts,
+												trial_y, trial_active, lambda_check,
+												residual_check)){
+										status = 0;
+										balance_ok = 1;
+										if(eqm_phase_trace_enabled()){
+											fprintf(stderr,
+												"FPROPS_EQM_PHASE_TRACE active_set iter=%d swap_retry_phase_validated add=%d drop=%d mask=%llu seeded_status=%d seeded_balance=%d\n",
+												iter, best_add, q, (unsigned long long)trial,
+												seeded_status, seeded_balance);
+										}
+									}
+								}
+							}else if(eqm_phase_trace_enabled()){
+								fprintf(stderr,
+									"FPROPS_EQM_PHASE_TRACE active_set iter=%d swap_retry_balanced_unavailable add=%d drop=%d mask=%llu seeded_status=%d seeded_balance=%d\n",
+									iter, best_add, q, (unsigned long long)trial,
+									seeded_status, seeded_balance);
+							}
+							}
 							if(!balance_ok){
-								int seeded_status = status;
-								int seeded_balance = balance_ok;
 								nmember_trial = 0;
 								status = eqm_phase_solve_mask_full(phases, nphase, elements, ne,
 									b, T, P, algorithm, trial, NULL, trial_amounts, trial_y,

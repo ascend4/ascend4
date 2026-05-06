@@ -55,6 +55,7 @@ test_readln.txt
 **/*.gcda
 **/*.bak
 **/*~
+**/.~*#
 models/johnpye/fprops/mix
 models/johnpye/fprops/test_cubicroots
 cscope.*
@@ -77,3 +78,5 @@ Highs.log
 models/johnpye/fprops/test/eqm_case_runner
 models/johnpye/fprops/test/eqm_mu0_runner
 models/johnpye/fprops/test/eqm_nox_runner
+models/johnpye/fprops/examples/feoh
+models/johnpye/fprops/*.odt
