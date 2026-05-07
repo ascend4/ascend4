@@ -39,6 +39,12 @@ static const double stoich_sio2[] = {1.0, 2.0};
 static const char *elements_al2o3[] = {"Al", "O"};
 static const double stoich_al2o3[] = {2.0, 3.0};
 
+static const char *elements_gibbsite[] = {"Al", "O", "H"};
+static const double stoich_gibbsite[] = {2.0, 6.0, 6.0};
+
+static const char *elements_boehmite[] = {"Al", "O", "H"};
+static const double stoich_boehmite[] = {2.0, 4.0, 2.0};
+
 static const char *elements_fe2sio4[] = {"Fe", "Si", "O"};
 static const double stoich_fe2sio4[] = {2.0, 1.0, 4.0};
 
@@ -430,6 +436,136 @@ static ShomateRange ranges_al2o3_slag[] = {
 	{298.0, 2327.0, 5, terms_al2o3_alpha_298_2327, 0}
 };
 
+/* ------------------------------------------------------------------------- */
+/* USGS Bulletin 1452 gamma alumina source                                    */
+/* ------------------------------------------------------------------------- */
+
+/*
+ * Robie, Hemingway, and Fisher, USGS Bulletin 1452, "Thermodynamic
+ * Properties of Minerals and Related Substances" lists gamma-Al2O3 as
+ * crystalline from 298.15 to 1800 K. The molar-volume field is blank in the
+ * report, so no condensed pressure correction is applied for this source.
+ */
+
+static ShomateTerm terms_gamma_al2o3_usgs_298_1800[] = {
+	TERM(1.5343e2, 0.0),
+	TERM(1.9681e-3, 1.0),
+	TERM(-9.0063e2, -0.5),
+	TERM(-2.0307e6, -2.0)
+};
+
+static ShomateRange ranges_gamma_al2o3_usgs[] = {
+	{298.15, 1800.0, 4, terms_gamma_al2o3_usgs_298_1800, 0}
+};
+
+static const ShomateSpecies species_gamma_al2o3_usgs = {
+	"gamma-Al2O3",
+	"usgs_bull_1452_1978",
+	101.962,
+	FPROPS_PHASE_SOLID,
+	298.15,
+	101325.0,
+	-1653517.0,
+	59.83,
+	0.0,
+	2,
+	elements_al2o3,
+	stoich_al2o3,
+	(unsigned)(sizeof(ranges_gamma_al2o3_usgs) / sizeof(ranges_gamma_al2o3_usgs[0])),
+	ranges_gamma_al2o3_usgs
+};
+
+/* ------------------------------------------------------------------------- */
+/* Serena et al. (2009) Al2O3-H2O source                                     */
+/* ------------------------------------------------------------------------- */
+
+/*
+ * Serena, Raso, Rodriguez, Caballero, and Leo (2009), Ceramics International
+ * 35, 3081-3090, assessed the Al2O3-H2O binary up to 30 MPa. The hydrate
+ * entries below use the optimized Cp(T), Delta_f H_298, and S_298 values in
+ * their Table 6. Basis is the double formula used by the paper:
+ *
+ *   gibbsite: Al2O3.3H2O = Al2H6O6
+ *   boehmite: Al2O3.H2O  = Al2H2O4
+ *
+ * Molar volumes in Serena Table 1 are reported on the Al(OH)3 / AlOOH basis,
+ * so the densities below double those volumes to stay on the same double
+ * formula basis as the thermodynamic functions.
+ */
+
+static ShomateTerm terms_gibbsite_serena_298_600[] = {
+	TERM(-37.714, 0.0),
+	TERM(0.91337, 1.0),
+	TERM(-5.8953e-4, 2.0),
+	TERM(6.7386e3, -2.0)
+};
+
+static ShomateRange ranges_gibbsite_serena[] = {
+	{298.15, 600.0, 4, terms_gibbsite_serena_298_600, 0}
+};
+
+static ShomateTerm terms_boehmite_serena_298_900[] = {
+	TERM(-24.038, 0.0),
+	TERM(0.56165, 1.0),
+	TERM(-4.2275e-4, 2.0),
+	TERM(2.0153e3, -2.0)
+};
+
+static ShomateRange ranges_boehmite_serena[] = {
+	{298.15, 900.0, 4, terms_boehmite_serena_298_900, 0}
+};
+
+static const ShomateSpecies species_gibbsite_serena = {
+	"gibbsite",
+	"serena_2009",
+	156.00708,
+	FPROPS_PHASE_SOLID,
+	298.15,
+	100000.0,
+	-2594300.0,
+	139.4,
+	2420.661765565485,
+	3,
+	elements_gibbsite,
+	stoich_gibbsite,
+	(unsigned)(sizeof(ranges_gibbsite_serena) / sizeof(ranges_gibbsite_serena[0])),
+	ranges_gibbsite_serena
+};
+
+static const ShomateSpecies species_boehmite_serena = {
+	"boehmite",
+	"serena_2009",
+	119.97768,
+	FPROPS_PHASE_SOLID,
+	298.15,
+	100000.0,
+	-1981100.0,
+	96.86,
+	3070.046281237297,
+	3,
+	elements_boehmite,
+	stoich_boehmite,
+	(unsigned)(sizeof(ranges_boehmite_serena) / sizeof(ranges_boehmite_serena[0])),
+	ranges_boehmite_serena
+};
+
+static const ShomateSpecies species_al2o3_serena = {
+	"Al2O3",
+	"serena_2009",
+	101.9613,
+	FPROPS_PHASE_SOLID,
+	298.15,
+	100000.0,
+	-1675690.0,
+	50.92,
+	3987.0,
+	2,
+	elements_al2o3,
+	stoich_al2o3,
+	(unsigned)(sizeof(ranges_al2o3_slag) / sizeof(ranges_al2o3_slag[0])),
+	ranges_al2o3_slag
+};
+
 static ShomateTerm terms_fe2sio4_298_400[] = {
 	TERM(71.65525773195883, 0.0),
 	TERM(0.2020618556701029, 1.0)
@@ -676,7 +812,25 @@ static const ShomateEntry entries[] = {
 	{"Fe2SiO4", &species_fe2sio4_slag},
 	{"fayalite", &species_fe2sio4_slag},
 	{"FeAl2O4", &species_feal2o4_slag},
-	{"hercynite", &species_feal2o4_slag}
+	{"hercynite", &species_feal2o4_slag},
+
+	/* USGS Bulletin 1452 gamma alumina */
+	{"gamma-Al2O3", &species_gamma_al2o3_usgs},
+	{"gamma_Al2O3", &species_gamma_al2o3_usgs},
+	{"gamma_alumina", &species_gamma_al2o3_usgs},
+	{"Al2O3_gamma", &species_gamma_al2o3_usgs},
+
+	/* Serena Al2O3-H2O source */
+	{"gibbsite", &species_gibbsite_serena},
+	{"Al2O3.3H2O", &species_gibbsite_serena},
+	{"Al2H6O6", &species_gibbsite_serena},
+	{"boehmite", &species_boehmite_serena},
+	{"Al2O3.H2O", &species_boehmite_serena},
+	{"Al2H2O4", &species_boehmite_serena},
+	{"Al2O3", &species_al2o3_serena},
+	{"corundum", &species_al2o3_serena},
+	{"alpha_Al2O3", &species_al2o3_serena},
+	{"alpha-Al2O3", &species_al2o3_serena}
 };
 
 static int entry_count(void){

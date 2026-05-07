@@ -1141,3 +1141,8 @@ Recommended priority:
    uncertainty.
 3. Return to full spinel refinement only when that oxide-side shift
    becomes the dominant limitation for the next task.
+4. Keep the gangue/slag-component path visible. The initial pure-component
+   targets are `Al2O3` and `SiO2`, followed later by `MgO` and `CaO`
+   (quicklime). The current alumina hydrate work in [ALUMINA.md](ALUMINA.md)
+   supplies useful `Al2O3` reference data, but it is not yet a liquid-slag
+   model.

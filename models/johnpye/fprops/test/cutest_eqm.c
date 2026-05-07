@@ -2211,6 +2211,66 @@ static void test_eqm_slag_species_mu0(void){
 	}
 }
 
+static void test_eqm_alumina_serena_species_cp_reference_points(void){
+	const ShomateSpecies *gibbsite = shomate_data_lookup("gibbsite", "serena_2009");
+	const ShomateSpecies *boehmite = shomate_data_lookup("boehmite", "serena_2009");
+	const ShomateSpecies *al2o3 = shomate_data_lookup("Al2O3", "serena_2009");
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(gibbsite);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(boehmite);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(al2o3);
+
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(gibbsite, 298.15) - 182.2777315) <= 1e-6);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(gibbsite, 400.0) - 233.3513163) <= 1e-6);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(gibbsite, 500.0) - 271.6154544) <= 1e-6);
+
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(boehmite, 298.15) - 105.8609241) <= 1e-6);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(boehmite, 400.0) - 132.9945956) <= 1e-6);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(boehmite, 500.0) - 151.1075612) <= 1e-6);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(boehmite, 700.0) - 161.9736129) <= 1e-6);
+
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(al2o3, 298.0) - 78.77) <= 0.05);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(al2o3, 1000.0) - 124.9) <= 0.1);
+}
+
+static void test_eqm_alumina_serena_species_reference_state_anchors(void){
+	const ShomateSpecies *gibbsite = shomate_data_lookup("gibbsite", "serena_2009");
+	const ShomateSpecies *boehmite = shomate_data_lookup("boehmite", "serena_2009");
+	const ShomateSpecies *al2o3 = shomate_data_lookup("Al2O3", "serena_2009");
+
+	assert_shomate_species_anchor(gibbsite, -2594300.0, 139.4);
+	assert_shomate_species_anchor(boehmite, -1981100.0, 96.86);
+	assert_shomate_species_anchor(al2o3, -1675690.0, 50.92);
+}
+
+static void test_eqm_alumina_serena_species_mu0(void){
+	static const char *species[] = {"gibbsite", "boehmite", "Al2O3"};
+	static const double temps[] = {350.0, 500.0};
+	size_t i, j;
+	for(i = 0; i < ARRAYLEN(species); ++i){
+		for(j = 0; j < ARRAYLEN(temps); ++j){
+			double mu0 = NAN;
+			CU_ASSERT_TRUE(eqm_mu0_source(species[i], "serena_2009", temps[j], 1e5, &mu0) != 0);
+			CU_ASSERT_TRUE(isfinite(mu0));
+		}
+	}
+}
+
+static void test_eqm_gamma_alumina_usgs_species(void){
+	const ShomateSpecies *gamma = shomate_data_lookup("gamma-Al2O3", "usgs_bull_1452_1978");
+	double mu0 = NAN;
+
+	assert_shomate_species_anchor(gamma, -1653517.0, 59.83);
+
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(gamma, 298.15) - 79.0136097) <= 1e-6);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(gamma, 400.0) - 96.4938650) <= 1e-6);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(gamma, 1000.0) - 124.8869787) <= 1e-6);
+	CU_ASSERT_TRUE(fabs(shomate_cp_species_test(gamma, 1800.0) - 135.1177681) <= 1e-6);
+
+	CU_ASSERT_TRUE(eqm_mu0_source("gamma-Al2O3", "usgs_bull_1452_1978", 1000.0, 1e5, &mu0) != 0);
+	CU_ASSERT_TRUE(isfinite(mu0));
+}
+
 static void test_eqm_feohsial_pure_capture_1000k(void){
 	static const char *names[] = {
 		"Fe_bcc", "Fe_fcc", "Fe3O4", "Fe2O3", "SiO2",
@@ -3554,6 +3614,10 @@ static void test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points
 	T(slag_species_cp_reference_points) \
 	T(slag_species_reference_state_anchors) \
 	T(slag_species_mu0) \
+	T(alumina_serena_species_cp_reference_points) \
+	T(alumina_serena_species_reference_state_anchors) \
+	T(alumina_serena_species_mu0) \
+	T(gamma_alumina_usgs_species) \
 	T(feohsial_pure_capture_1000k) \
 	T(qfm_buffer_log10fo2_1000k) \
 	T(qfi_buffer_log10fo2_1000k) \
