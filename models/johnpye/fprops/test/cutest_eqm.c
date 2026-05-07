@@ -460,14 +460,27 @@ static double test_bg_fe_spinel_log10_h2o_h2_560c(void){
 		0.219718975701, 549.656298345, 0.235228173231, 564.783638887);
 }
 
-static double test_bg_fe_wustite_log10_h2o_h2_585c(void){
-	return test_interp_log10_god(585.0,
+static double test_bg_fe_spinel_log10_h2o_h2_564c(void){
+	return test_interp_log10_god(564.0,
+		0.219718975701, 549.656298345, 0.235228173231, 564.783638887);
+}
+
+static double test_bg_fe_wustite_log10_h2o_h2_near_fork(double tc){
+	return test_interp_log10_god(tc,
 		0.23456245187, 570.019013451, 0.245296282085, 592.590131422);
 }
 
-static double test_bg_wustite_spinel_log10_h2o_h2_585c(void){
-	return test_interp_log10_god(585.0,
+static double test_bg_wustite_spinel_log10_h2o_h2_near_fork(double tc){
+	return test_interp_log10_god(tc,
 		0.26050174532, 580.54667932, 0.280873172483, 589.174170906);
+}
+
+static double test_bg_fe_wustite_log10_h2o_h2_585c(void){
+	return test_bg_fe_wustite_log10_h2o_h2_near_fork(585.0);
+}
+
+static double test_bg_wustite_spinel_log10_h2o_h2_585c(void){
+	return test_bg_wustite_spinel_log10_h2o_h2_near_fork(585.0);
 }
 
 static double test_bg_fe_wustite_log10_co2_co_900c(void){
@@ -500,14 +513,27 @@ static double test_bg_fe_spinel_log10_co2_co_560c(void){
 		0.494486035475, 559.113203095, 0.494618004345, 569.754945703);
 }
 
-static double test_bg_fe_wustite_log10_co2_co_585c(void){
-	return test_interp_log10_god(585.0,
+static double test_bg_fe_spinel_log10_co2_co_565c(void){
+	return test_interp_log10_god(565.0,
+		0.494486035475, 559.113203095, 0.494618004345, 569.754945703);
+}
+
+static double test_bg_fe_wustite_log10_co2_co_near_fork(double tc){
+	return test_interp_log10_god(tc,
 		0.485399157248, 579.938513882, 0.481654756128, 585.359738343);
 }
 
-static double test_bg_wustite_spinel_log10_co2_co_585c(void){
-	return test_interp_log10_god(585.0,
+static double test_bg_wustite_spinel_log10_co2_co_near_fork(double tc){
+	return test_interp_log10_god(tc,
 		0.515790749521, 583.171121861, 0.521979204398, 587.265811035);
+}
+
+static double test_bg_fe_wustite_log10_co2_co_585c(void){
+	return test_bg_fe_wustite_log10_co2_co_near_fork(585.0);
+}
+
+static double test_bg_wustite_spinel_log10_co2_co_585c(void){
+	return test_bg_wustite_spinel_log10_co2_co_near_fork(585.0);
 }
 
 static double test_bg_fe_wustite_log10_co2_co_700c(void){
@@ -982,6 +1008,11 @@ static void test_eqm_phase_active_set_fe_spinel_bg_560c(void){
 		test_bg_fe_spinel_log10_h2o_h2_560c());
 }
 
+static void test_eqm_phase_active_set_fe_spinel_bg_564c(void){
+	test_run_feoh_fe_spinel_bg_active_set(564.0,
+		test_bg_fe_spinel_log10_h2o_h2_564c());
+}
+
 static void test_run_feoc_fe_spinel_bg_active_set(double tc, double log10_ratio){
 	const double T = tc + 273.15;
 	const double P = 101325.0;
@@ -1078,6 +1109,11 @@ static void test_eqm_phase_active_set_fe_spinel_co_bg_560c(void){
 		test_bg_fe_spinel_log10_co2_co_560c());
 }
 
+static void test_eqm_phase_active_set_fe_spinel_co_bg_565c(void){
+	test_run_feoc_fe_spinel_bg_active_set(565.0,
+		test_bg_fe_spinel_log10_co2_co_565c());
+}
+
 static void test_run_feoh_fe_spinel_bg_entry(double tc, double log10_ratio){
 	const double T = tc + 273.15;
 	const double P = 101325.0;
@@ -1125,6 +1161,11 @@ static void test_eqm_phase_entry_fe_spinel_bg_540c(void){
 static void test_eqm_phase_entry_fe_spinel_bg_560c(void){
 	test_run_feoh_fe_spinel_bg_entry(560.0,
 		test_bg_fe_spinel_log10_h2o_h2_560c());
+}
+
+static void test_eqm_phase_entry_fe_spinel_bg_564c(void){
+	test_run_feoh_fe_spinel_bg_entry(564.0,
+		test_bg_fe_spinel_log10_h2o_h2_564c());
 }
 
 static void test_eqm_phase_validate_fe_gas_reducing_case(void){
@@ -1386,10 +1427,34 @@ static void test_eqm_phase_auto_wustite_co_bg_585c_classification(void){
 		test_bg_wustite_spinel_log10_co2_co_585c(), 0);
 }
 
+static void test_eqm_phase_auto_wustite_co_bg_584c_classification(void){
+	test_run_feoc_wustite_bg_classification(584.0,
+		test_bg_fe_wustite_log10_co2_co_near_fork(584.0),
+		test_bg_wustite_spinel_log10_co2_co_near_fork(584.0), 0);
+}
+
+static void test_eqm_phase_auto_wustite_co_bg_586c_classification(void){
+	test_run_feoc_wustite_bg_classification(586.0,
+		test_bg_fe_wustite_log10_co2_co_near_fork(586.0),
+		test_bg_wustite_spinel_log10_co2_co_near_fork(586.0), 0);
+}
+
 static void test_eqm_phase_active_set_wustite_co_bg_585c(void){
 	test_run_feoc_wustite_bg_classification(585.0,
 		test_bg_fe_wustite_log10_co2_co_585c(),
 		test_bg_wustite_spinel_log10_co2_co_585c(), 1);
+}
+
+static void test_eqm_phase_active_set_wustite_co_bg_584c(void){
+	test_run_feoc_wustite_bg_classification(584.0,
+		test_bg_fe_wustite_log10_co2_co_near_fork(584.0),
+		test_bg_wustite_spinel_log10_co2_co_near_fork(584.0), 1);
+}
+
+static void test_eqm_phase_active_set_wustite_co_bg_586c(void){
+	test_run_feoc_wustite_bg_classification(586.0,
+		test_bg_fe_wustite_log10_co2_co_near_fork(586.0),
+		test_bg_wustite_spinel_log10_co2_co_near_fork(586.0), 1);
 }
 
 static void test_eqm_phase_auto_wustite_co_bg_700c_classification(void){
@@ -1544,6 +1609,18 @@ static void test_eqm_phase_auto_wustite_bg_585c_classification(void){
 		test_bg_wustite_spinel_log10_h2o_h2_585c());
 }
 
+static void test_eqm_phase_auto_wustite_bg_584c_classification(void){
+	test_run_feoh_wustite_bg_classification(584.0,
+		test_bg_fe_wustite_log10_h2o_h2_near_fork(584.0),
+		test_bg_wustite_spinel_log10_h2o_h2_near_fork(584.0));
+}
+
+static void test_eqm_phase_auto_wustite_bg_586c_classification(void){
+	test_run_feoh_wustite_bg_classification(586.0,
+		test_bg_fe_wustite_log10_h2o_h2_near_fork(586.0),
+		test_bg_wustite_spinel_log10_h2o_h2_near_fork(586.0));
+}
+
 static void test_eqm_phase_auto_wustite_bg_700c_classification(void){
 	test_run_feoh_wustite_bg_classification(700.0,
 		test_bg_fe_wustite_log10_h2o_h2_700c(),
@@ -1560,6 +1637,18 @@ static void test_eqm_phase_active_set_wustite_bg_585c(void){
 	test_run_feoh_wustite_bg_active_set(585.0,
 		test_bg_fe_wustite_log10_h2o_h2_585c(),
 		test_bg_wustite_spinel_log10_h2o_h2_585c());
+}
+
+static void test_eqm_phase_active_set_wustite_bg_584c(void){
+	test_run_feoh_wustite_bg_active_set(584.0,
+		test_bg_fe_wustite_log10_h2o_h2_near_fork(584.0),
+		test_bg_wustite_spinel_log10_h2o_h2_near_fork(584.0));
+}
+
+static void test_eqm_phase_active_set_wustite_bg_586c(void){
+	test_run_feoh_wustite_bg_active_set(586.0,
+		test_bg_fe_wustite_log10_h2o_h2_near_fork(586.0),
+		test_bg_wustite_spinel_log10_h2o_h2_near_fork(586.0));
 }
 
 static void test_eqm_phase_active_set_wustite_bg_700c(void){
@@ -2264,6 +2353,24 @@ static void test_eqm_wgs_ipopt_selector_matches_scaled_n(void){
 		CU_ASSERT_TRUE(fabs(n_ipopt[i] - n_scaled[i]) < 1e-9);
 	}
 }
+
+static void test_eqm_wgs_ipopt_nullspace_matches_slsqp(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const char *elements[] = {"C", "O", "H"};
+	static const double b[] = {1.0, 2.0, 2.0};
+	double n_nullspace[ARRAYLEN(names)] = {0};
+	double n_slsqp[ARRAYLEN(names)] = {0};
+	int status_nullspace = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements),
+		b, g_eqm.source, g_eqm.T, g_eqm.P, "nullspace", NULL, n_nullspace);
+	int status_slsqp = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements),
+		b, g_eqm.source, g_eqm.T, g_eqm.P, "slsqp", NULL, n_slsqp);
+
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_status_ok(status_nullspace));
+	CU_ASSERT_EQUAL_FATAL(status_slsqp, 0);
+	for(int i = 0; i < ARRAYLEN(names); ++i){
+		CU_ASSERT_TRUE(fabs(n_nullspace[i] - n_slsqp[i]) < 2e-6);
+	}
+}
 #endif
 
 static void test_eqm_co2_dissociation_clone_reduced(void){
@@ -2386,13 +2493,13 @@ static void test_eqm_ammonia_synthesis_helmholtz_ref0_matches_hr_grid(void){
 		for(ip = 0; ip < ARRAYLEN(pressures_atm); ++ip){
 			double P = pressures_atm[ip] * 101325.0;
 			double n[ARRAYLEN(names)] = {0.0, 0.0, 0.0};
-			double H_total = NAN;
-			double ntot = 0.0;
-			double y_nh3;
-			double nh3_pct_eqm;
-			double nh3_pct_hr = hr_ammonia_nh3_percent(temps[it], pressures_atm[ip]);
-			int status = fprops_eqm_tpb(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b,
-				source, temps[it], P, "auto_nullspace", NULL, n, &H_total);
+				double H_total = NAN;
+				double ntot = 0.0;
+				double y_nh3;
+				double nh3_pct_eqm;
+				double nh3_pct_hr = hr_ammonia_nh3_percent(temps[it], pressures_atm[ip]);
+				int status = fprops_eqm_tpb(names, ARRAYLEN(names), elements, ARRAYLEN(elements), b,
+					source, temps[it], P, "auto", NULL, n, &H_total);
 			CU_ASSERT_EQM_STATUS_OK_FATAL(status);
 			CU_ASSERT_TRUE(isfinite(H_total));
 			ntot = n[0] + n[1] + n[2];
@@ -2648,7 +2755,7 @@ static void test_fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves(voi
 	out_pkg.G = NAN;
 	out_pkg.n_out = n_out;
 
-	status_pkg = fprops_rxn_eqm_tpb(pkg, &state, b, "auto_nullspace", NULL, &out_pkg);
+	status_pkg = fprops_rxn_eqm_tpb(pkg, &state, b, "auto", NULL, &out_pkg);
 
 	CU_ASSERT_TRUE(status_pkg == 0 || status_pkg == 1 || status_pkg == 6);
 	CU_ASSERT_TRUE_FATAL(isfinite(n_out[0]));
@@ -3493,24 +3600,35 @@ static void test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points
 	T(entry_fe_spinel_bg_500c) \
 	T(entry_fe_spinel_bg_540c) \
 	T(entry_fe_spinel_bg_560c) \
+	T(entry_fe_spinel_bg_564c) \
 	T(active_set_fe_spinel_bg_400c) \
 	T(active_set_fe_spinel_bg_500c) \
 	T(active_set_fe_spinel_bg_540c) \
 	T(active_set_fe_spinel_bg_560c) \
+	T(active_set_fe_spinel_bg_564c) \
 	T(active_set_fe_spinel_co_bg_400c) \
 	T(active_set_fe_spinel_co_bg_500c) \
 	T(active_set_fe_spinel_co_bg_540c) \
 	T(active_set_fe_spinel_co_bg_560c) \
+	T(active_set_fe_spinel_co_bg_565c) \
 	T(validate_fe_gas_reducing_case) \
 	T(auto_fe_co_co2_gas_smoke) \
+	T(auto_wustite_co_bg_584c_classification) \
 	T(auto_wustite_co_bg_585c_classification) \
+	T(auto_wustite_co_bg_586c_classification) \
+	T(active_set_wustite_co_bg_584c) \
 	T(active_set_wustite_co_bg_585c) \
+	T(active_set_wustite_co_bg_586c) \
 	T(auto_wustite_co_bg_700c_classification) \
 	T(active_set_wustite_co_bg_700c) \
 	T(auto_wustite_co_bg_900c_classification) \
 	T(active_set_wustite_co_bg_900c) \
+	T(auto_wustite_bg_584c_classification) \
 	T(auto_wustite_bg_585c_classification) \
+	T(auto_wustite_bg_586c_classification) \
+	T(active_set_wustite_bg_584c) \
 	T(active_set_wustite_bg_585c) \
+	T(active_set_wustite_bg_586c) \
 	T(auto_wustite_bg_600c_classification) \
 	T(active_set_wustite_bg_600c) \
 	T(auto_wustite_bg_700c_classification) \
@@ -3603,6 +3721,10 @@ static CU_ErrorCode test_register_eqm_core_suite(void){
 #if defined(HAVE_IPOPT)
 	if(NULL == CU_add_test(s, "wgs_ipopt_selector_matches_scaled_n",
 			test_eqm_wgs_ipopt_selector_matches_scaled_n)){
+		return CUE_NOTEST;
+	}
+	if(NULL == CU_add_test(s, "wgs_ipopt_nullspace_matches_slsqp",
+			test_eqm_wgs_ipopt_nullspace_matches_slsqp)){
 		return CUE_NOTEST;
 	}
 #endif
