@@ -120,6 +120,7 @@ static double stable_fe_mu0_hidayat(double T){
 }
 
 static void test_eqm_status_text_public_api(void){
+	FpropsEqmNlpSolver solver;
 	CU_ASSERT_TRUE(fprops_eqm_status_ok(0));
 	CU_ASSERT_TRUE(fprops_eqm_status_ok(1));
 	CU_ASSERT_TRUE(fprops_eqm_status_ok(6));
@@ -130,6 +131,12 @@ static void test_eqm_status_text_public_api(void){
 	CU_ASSERT_STRING_EQUAL(fprops_eqm_status_text(2), "infeasible problem detected");
 	CU_ASSERT_STRING_EQUAL(fprops_eqm_status_text(-22), "equilibrium validation failed");
 	CU_ASSERT_STRING_EQUAL(fprops_eqm_status_text(12345), "unknown equilibrium status");
+	CU_ASSERT_STRING_EQUAL(fprops_eqm_nlp_solver_name(FPROPS_EQM_NLP_DEFAULT), "auto");
+	CU_ASSERT_STRING_EQUAL(fprops_eqm_nlp_solver_name(FPROPS_EQM_NLP_SLSQP), "slsqp");
+	CU_ASSERT_STRING_EQUAL(fprops_eqm_nlp_solver_name(FPROPS_EQM_NLP_IPOPT), "ipopt");
+	CU_ASSERT_TRUE(fprops_eqm_nlp_solver_from_name("ipopt_scaled_n", &solver));
+	CU_ASSERT_EQUAL(solver, FPROPS_EQM_NLP_IPOPT_SCALED_N);
+	CU_ASSERT_TRUE(!fprops_eqm_nlp_solver_from_name("not_a_solver", &solver));
 }
 
 static void test_eqm_phase_registry_inspection_feoh(void){
@@ -796,6 +803,9 @@ static void test_eqm_phase_problem_api_fe_gas_reducing_case(void){
 	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "O"), 3.0, 1e-12);
 	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm, "H"), 200.0, 1e-12);
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_set_TP(&eqm, 1173.15, 101325.0), 0);
+	CU_ASSERT_EQUAL(fprops_eqm_nlp_solver(&eqm), FPROPS_EQM_NLP_DEFAULT);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_set_nlp_solver(&eqm, FPROPS_EQM_NLP_SLSQP), 0);
+	CU_ASSERT_EQUAL(fprops_eqm_nlp_solver(&eqm), FPROPS_EQM_NLP_SLSQP);
 
 	status = fprops_eqm_solve(&eqm, &result);
 	CU_ASSERT_EQUAL_FATAL(status, 0);
@@ -816,6 +826,8 @@ static void test_eqm_phase_problem_api_fe_gas_reducing_case(void){
 		97.0, 1e-5);
 	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_member_amount(&result, "gas:ideal", "water"),
 		3.0, 1e-5);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_set_nlp_solver_name(&eqm, "default"), 0);
+	CU_ASSERT_EQUAL(fprops_eqm_nlp_solver(&eqm), FPROPS_EQM_NLP_DEFAULT);
 
 	fprops_eqm_clear_feed(&eqm);
 	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comps(&eqm, "Fe", 2, "O", 3, "H", 200), 0);
@@ -854,6 +866,33 @@ static void test_eqm_phase_problem_api_fe_gas_reducing_case(void){
 		"y_oct_fe2", 0.20, "y_tet_fe2", 0.40), 0);
 	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_element_amount(&eqm2, "O"), 4.0, 1e-12);
 }
+
+#if defined(HAVE_IPOPT)
+static void test_eqm_phase_problem_api_ipopt_smoke(void){
+	FpropsEqm eqm;
+	FpropsEqmPhaseResult result;
+	int status;
+
+	fprops_eqm_init(&eqm);
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_add_phase(&eqm, "Fe_bcc=hidayat_2015", NULL) >= 0);
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_add_phase(&eqm,
+		"gas:ideal(hydrogen,water)=helmholtz+ref0:", NULL) >= 0);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_add_comps(&eqm, "Fe2O3", 1, "H2", 100), 0);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_set_TP(&eqm, 1173.15, 101325.0), 0);
+	CU_ASSERT_EQUAL_FATAL(fprops_eqm_set_nlp_solver(&eqm, FPROPS_EQM_NLP_IPOPT), 0);
+	CU_ASSERT_EQUAL(fprops_eqm_nlp_solver(&eqm), FPROPS_EQM_NLP_IPOPT);
+
+	status = fprops_eqm_solve(&eqm, &result);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	CU_ASSERT_EQUAL(result.status, 0);
+	CU_ASSERT_TRUE(fprops_eqm_status_ok(result.solver_status));
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_amount(&result, "Fe_bcc"), 2.0, 1e-6);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_member_amount(&result, "gas:ideal", "hydrogen"),
+		97.0, 1e-5);
+	CU_ASSERT_DOUBLE_EQUAL(fprops_eqm_phase_member_amount(&result, "gas:ideal", "water"),
+		3.0, 1e-5);
+}
+#endif
 
 static void test_run_feoh_fe_spinel_bg_active_set(double tc, double log10_ratio){
 	const double T = tc + 273.15;
@@ -2187,6 +2226,46 @@ static void test_eqm_wgs_reduced(void){
 	assert_log10K_consistent(names, nu, ARRAYLEN(names), n);
 }
 
+#if defined(HAVE_IPOPT) && defined(HAVE_NLOPT)
+static void test_eqm_wgs_ipopt_scaled_n_matches_slsqp(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const char *elements[] = {"C", "O", "H"};
+	static const double b[] = {1.0, 2.0, 2.0};
+	double n_ipopt[ARRAYLEN(names)] = {0};
+	double n_slsqp[ARRAYLEN(names)] = {0};
+	int status_ipopt = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements),
+		b, g_eqm.source, g_eqm.T, g_eqm.P, "ipopt_scaled_n", NULL, n_ipopt);
+	int status_slsqp = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements),
+		b, g_eqm.source, g_eqm.T, g_eqm.P, "slsqp", NULL, n_slsqp);
+
+	CU_ASSERT_TRUE_FATAL(status_ipopt == 0 || status_ipopt == 1 || status_ipopt == 6);
+	CU_ASSERT_TRUE_FATAL(status_slsqp == 0);
+	for(int i = 0; i < ARRAYLEN(names); ++i){
+		CU_ASSERT_TRUE(fabs(n_ipopt[i] - n_slsqp[i]) < 2e-6);
+	}
+}
+#endif
+
+#if defined(HAVE_IPOPT)
+static void test_eqm_wgs_ipopt_selector_matches_scaled_n(void){
+	static const char *names[] = {"carbonmonoxide", "water", "carbondioxide", "hydrogen"};
+	static const char *elements[] = {"C", "O", "H"};
+	static const double b[] = {1.0, 2.0, 2.0};
+	double n_ipopt[ARRAYLEN(names)] = {0};
+	double n_scaled[ARRAYLEN(names)] = {0};
+	int status_ipopt = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements),
+		b, g_eqm.source, g_eqm.T, g_eqm.P, "ipopt", NULL, n_ipopt);
+	int status_scaled = eqm_solve_elements(names, ARRAYLEN(names), elements, ARRAYLEN(elements),
+		b, g_eqm.source, g_eqm.T, g_eqm.P, "ipopt_scaled_n", NULL, n_scaled);
+
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_status_ok(status_ipopt));
+	CU_ASSERT_TRUE_FATAL(fprops_eqm_status_ok(status_scaled));
+	for(int i = 0; i < ARRAYLEN(names); ++i){
+		CU_ASSERT_TRUE(fabs(n_ipopt[i] - n_scaled[i]) < 1e-9);
+	}
+}
+#endif
+
 static void test_eqm_co2_dissociation_clone_reduced(void){
 	static const char *names[] = {"carbonmonoxide", "oxygen", "carbondioxide"};
 	static const char *elements[] = {"C", "O"};
@@ -3515,6 +3594,18 @@ static CU_ErrorCode test_register_eqm_core_suite(void){
 		return CUE_NOSUITE;
 	}
 	EQM_CORE_TESTS(ADD_EQM_CORE_TEST)
+#if defined(HAVE_IPOPT) && defined(HAVE_NLOPT)
+	if(NULL == CU_add_test(s, "wgs_ipopt_scaled_n_matches_slsqp",
+			test_eqm_wgs_ipopt_scaled_n_matches_slsqp)){
+		return CUE_NOTEST;
+	}
+#endif
+#if defined(HAVE_IPOPT)
+	if(NULL == CU_add_test(s, "wgs_ipopt_selector_matches_scaled_n",
+			test_eqm_wgs_ipopt_selector_matches_scaled_n)){
+		return CUE_NOTEST;
+	}
+#endif
 	/* Temporarily skipped: unstable under current data/solver settings. */
 	(void)test_eqm_feo_pragmatic_low_oxygen_smoke_1400K;
 	return CUE_SUCCESS;
@@ -3526,6 +3617,12 @@ static CU_ErrorCode test_register_phase_suite(void){
 		return CUE_NOSUITE;
 	}
 	PHASE_TESTS(ADD_PHASE_TEST)
+#if defined(HAVE_IPOPT)
+	if(NULL == CU_add_test(s, "problem_api_ipopt_smoke",
+			test_eqm_phase_problem_api_ipopt_smoke)){
+		return CUE_NOTEST;
+	}
+#endif
 	return CUE_SUCCESS;
 }
 

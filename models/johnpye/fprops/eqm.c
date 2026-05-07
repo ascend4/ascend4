@@ -42,6 +42,49 @@ int fprops_eqm_status_ok(int status){
 	return status == 0 || status == 1 || status == 6;
 }
 
+const char *fprops_eqm_nlp_solver_name(FpropsEqmNlpSolver solver){
+	switch(solver){
+	case FPROPS_EQM_NLP_DEFAULT:
+		return "auto";
+	case FPROPS_EQM_NLP_SLSQP:
+		return "slsqp";
+	case FPROPS_EQM_NLP_IPOPT:
+		return "ipopt";
+	case FPROPS_EQM_NLP_IPOPT_SCALED_N:
+		return "ipopt_scaled_n";
+	case FPROPS_EQM_NLP_IPOPT_LOGN:
+		return "ipopt_logn";
+	case FPROPS_EQM_NLP_IPOPT_N:
+		return "ipopt_n";
+	default:
+		return NULL;
+	}
+}
+
+int fprops_eqm_nlp_solver_from_name(const char *name, FpropsEqmNlpSolver *solver_out){
+	FpropsEqmNlpSolver solver;
+	if(!solver_out){
+		return 0;
+	}
+	if(!name || !name[0] || 0 == strcmp(name, "default") || 0 == strcmp(name, "auto")){
+		solver = FPROPS_EQM_NLP_DEFAULT;
+	}else if(0 == strcmp(name, "slsqp")){
+		solver = FPROPS_EQM_NLP_SLSQP;
+	}else if(0 == strcmp(name, "ipopt")){
+		solver = FPROPS_EQM_NLP_IPOPT;
+	}else if(0 == strcmp(name, "ipopt_scaled_n") || 0 == strcmp(name, "ipopt_scale_n")){
+		solver = FPROPS_EQM_NLP_IPOPT_SCALED_N;
+	}else if(0 == strcmp(name, "ipopt_logn")){
+		solver = FPROPS_EQM_NLP_IPOPT_LOGN;
+	}else if(0 == strcmp(name, "ipopt_n")){
+		solver = FPROPS_EQM_NLP_IPOPT_N;
+	}else{
+		return 0;
+	}
+	*solver_out = solver;
+	return 1;
+}
+
 const char *fprops_eqm_status_text(int status){
 	switch(status){
 	case 0:
@@ -4652,8 +4695,7 @@ static int eqm_alg_use_nullspace(const char *algorithm){
 	if(eqm_alg_prefix(algorithm, "ipopt")){
 		return 1;
 	}
-	if(eqm_alg_auto(algorithm)
-			|| eqm_alg_exact(algorithm, "auto_nullspace")
+	if(eqm_alg_exact(algorithm, "auto_nullspace")
 			|| eqm_alg_exact(algorithm, "nullspace")
 			|| eqm_alg_exact(algorithm, "ipopt_nullspace")){
 		return 1;
@@ -4871,12 +4913,24 @@ static int eqm_solution_valid(const char **names, int ns, int ne, const double *
 }
 
 #ifdef HAVE_IPOPT
-static int eqm_try_ipopt(const char **names, int ns, int ne, const double *A, const double *b,
+static int eqm_solve_ipopt_selected(const char **names, int ns, int ne, const double *A, const double *b,
 		const char *source, double T, double P, const char *algorithm, const double *n_init,
 		double *n_out){
 	int status;
 	if(algorithm && strstr(algorithm, "logn")){
 		status = eqm_ipopt_solve_logn_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
+		if(eqm_status_ok_ipopt(status)
+				&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
+			return status;
+		}
+		if(eqm_status_ok_ipopt(status)){
+			return -13;
+		}
+		return status;
+	}
+	if(algorithm && (strstr(algorithm, "scaled_n") || strstr(algorithm, "scale_n"))){
+		status = eqm_ipopt_solve_scaled_n_source_init(names, ns, ne, A, b, source, T, P,
+			n_init, n_out);
 		if(eqm_status_ok_ipopt(status)
 				&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 			return status;
@@ -4897,17 +4951,8 @@ static int eqm_try_ipopt(const char **names, int ns, int ne, const double *A, co
 		}
 		return status;
 	}
-	status = eqm_ipopt_solve_logn_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
-	if(eqm_status_ok_ipopt(status)
-			&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
-		return status;
-	}
-	status = eqm_ipopt_solve_n_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
-	if(eqm_status_ok_ipopt(status)
-			&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
-		return status;
-	}
-	status = eqm_ipopt_solve_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
+	status = eqm_ipopt_solve_scaled_n_source_init(names, ns, ne, A, b, source, T, P, n_init,
+		n_out);
 	if(eqm_status_ok_ipopt(status)
 			&& eqm_solution_valid(names, ns, ne, A, b, source, T, P, n_out)){
 		return status;
@@ -4976,12 +5021,6 @@ int eqm_solve(const char **names, int ns, int ne, const double *A, const double 
 		return status;
 	}
 	if(eqm_alg_auto(algorithm)){
-#ifdef HAVE_IPOPT
-		status = eqm_try_ipopt(names, ns, ne, A, b, source, T, P, NULL, n_init, n_out);
-		if(eqm_status_ok_ipopt(status)){
-			return status;
-		}
-#endif
 #ifdef HAVE_NLOPT
 		status = eqm_slsqp_solve_source_init(names, ns, ne, A, b, source, T, P, n_init, n_out);
 		if(eqm_status_ok_slsqp(status)
@@ -4991,12 +5030,20 @@ int eqm_solve(const char **names, int ns, int ne, const double *A, const double 
 		if(eqm_status_ok_slsqp(status)){
 			status = -13;
 		}
+		return status;
+#else
+#ifdef HAVE_IPOPT
+		status = eqm_solve_ipopt_selected(names, ns, ne, A, b, source, T, P, NULL, n_init, n_out);
+		if(eqm_status_ok_ipopt(status)){
+			return status;
+		}
 #endif
 		return status;
+#endif
 	}
 #ifdef HAVE_IPOPT
 	if(eqm_alg_prefix(algorithm, "ipopt")){
-		status = eqm_try_ipopt(names, ns, ne, A, b, source, T, P, algorithm, n_init, n_out);
+		status = eqm_solve_ipopt_selected(names, ns, ne, A, b, source, T, P, algorithm, n_init, n_out);
 		if(eqm_status_ok_ipopt(status)){
 			return status;
 		}

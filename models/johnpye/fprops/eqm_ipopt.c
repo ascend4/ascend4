@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
+#include <string.h>
 
 #include "IpStdCInterface.h"
 #include "fprops.h"
@@ -231,6 +232,44 @@ static Bool eval_f_n(Index n, Number *x, Bool new_x, Number *obj_value, UserData
 	return TRUE;
 }
 
+static Bool eval_f_scaled_n(Index n, Number *x, Bool new_x, Number *obj_value,
+		UserDataPtr user_data){
+	EqmN *D = (EqmN *)user_data;
+	double *nvec = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
+	double G = 0.0;
+	(void)n;
+	(void)new_x;
+
+	if(!nvec || !mu){
+		free(nvec);
+		free(mu);
+		*obj_value = HUGE_VAL;
+		return TRUE;
+	}
+	for(int i = 0; i < D->ns; ++i){
+		double ni = D->n_est[i] * x[i];
+		if(ni <= 0.0 || !isfinite(ni)){
+			free(nvec);
+			free(mu);
+			*obj_value = HUGE_VAL;
+			return TRUE;
+		}
+		nvec[i] = ni;
+	}
+	if(!eqm_eval_obj_mu(nvec, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, &G, mu, NULL)){
+		free(nvec);
+		free(mu);
+		*obj_value = HUGE_VAL;
+		return TRUE;
+	}
+	free(mu);
+	free(nvec);
+	*obj_value = D->obj_scale * (G / (gas_R() * D->T));
+	return TRUE;
+}
+
 static Bool eval_grad_f_logn(Index n, Number *x, Bool new_x, Number *grad_f, UserDataPtr user_data){
 	EqmLogN *D = (EqmLogN *)user_data;
 	double *n_i = (double *)calloc((size_t)D->ns, sizeof(double));
@@ -312,6 +351,51 @@ static Bool eval_grad_f_n(Index n, Number *x, Bool new_x, Number *grad_f, UserDa
 	return TRUE;
 }
 
+static Bool eval_grad_f_scaled_n(Index n, Number *x, Bool new_x, Number *grad_f,
+		UserDataPtr user_data){
+	EqmN *D = (EqmN *)user_data;
+	double *nvec = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
+	(void)n;
+	(void)new_x;
+
+	if(!nvec || !mu){
+		free(nvec);
+		free(mu);
+		for(int i = 0; i < D->ns; ++i){
+			grad_f[i] = 0.0;
+		}
+		return TRUE;
+	}
+	for(int i = 0; i < D->ns; ++i){
+		double ni = D->n_est[i] * x[i];
+		if(ni <= 0.0 || !isfinite(ni)){
+			free(nvec);
+			free(mu);
+			for(int j = 0; j < D->ns; ++j){
+				grad_f[j] = 0.0;
+			}
+			return TRUE;
+		}
+		nvec[i] = ni;
+	}
+	if(!eqm_eval_obj_mu(nvec, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+		free(nvec);
+		free(mu);
+		for(int i = 0; i < D->ns; ++i){
+			grad_f[i] = 0.0;
+		}
+		return TRUE;
+	}
+	for(int i = 0; i < D->ns; ++i){
+		grad_f[i] = D->obj_scale * (mu[i] / (gas_R() * D->T)) * D->n_est[i];
+	}
+	free(mu);
+	free(nvec);
+	return TRUE;
+}
+
 static Bool eval_g_logn(Index n, Number *x, Bool new_x, Index m, Number *g, UserDataPtr user_data){
 	EqmLogN *D = (EqmLogN *)user_data;
 	(void)n;
@@ -338,6 +422,23 @@ static Bool eval_g_n(Index n, Number *x, Bool new_x, Index m, Number *g, UserDat
 		double sum = 0.0;
 		for(int i = 0; i < D->ns; ++i){
 			sum += D->A[e * D->ns + i] * x[i];
+		}
+		g[e] = (sum - D->b[e]) * D->b_scale[e];
+	}
+	return TRUE;
+}
+
+static Bool eval_g_scaled_n(Index n, Number *x, Bool new_x, Index m, Number *g,
+		UserDataPtr user_data){
+	EqmN *D = (EqmN *)user_data;
+	(void)n;
+	(void)new_x;
+	(void)m;
+
+	for(int e = 0; e < D->ne; ++e){
+		double sum = 0.0;
+		for(int i = 0; i < D->ns; ++i){
+			sum += D->A[e * D->ns + i] * D->n_est[i] * x[i];
 		}
 		g[e] = (sum - D->b[e]) * D->b_scale[e];
 	}
@@ -403,6 +504,39 @@ static Bool eval_jac_g_n(Index n, Number *x, Bool new_x, Index m,
 		for(e = 0; e < D->ne; ++e){
 			for(i = 0; i < D->ns; ++i){
 				values[k] = D->A[e * D->ns + i] * D->b_scale[e];
+				++k;
+			}
+		}
+	}
+	return TRUE;
+}
+
+static Bool eval_jac_g_scaled_n(Index n, Number *x, Bool new_x, Index m,
+		Index nele_jac, Index *iRow, Index *jCol, Number *values,
+		UserDataPtr user_data){
+	EqmN *D = (EqmN *)user_data;
+	int e;
+	int i;
+	(void)n;
+	(void)x;
+	(void)new_x;
+	(void)m;
+	(void)nele_jac;
+
+	if(values == NULL){
+		Index k = 0;
+		for(e = 0; e < D->ne; ++e){
+			for(i = 0; i < D->ns; ++i){
+				iRow[k] = e;
+				jCol[k] = i;
+				++k;
+			}
+		}
+	}else{
+		Index k = 0;
+		for(e = 0; e < D->ne; ++e){
+			for(i = 0; i < D->ns; ++i){
+				values[k] = D->A[e * D->ns + i] * D->n_est[i] * D->b_scale[e];
 				++k;
 			}
 		}
@@ -495,6 +629,51 @@ static void eval_grad_L_n(const EqmN *D, const Number *xvars, Number obj_factor,
 	free(mu);
 }
 
+static void eval_grad_L_scaled_n(const EqmN *D, const Number *xvars, Number obj_factor,
+		const Number *lambda, double *grad){
+	double *nvec = (double *)calloc((size_t)D->ns, sizeof(double));
+	double *mu = (double *)calloc((size_t)D->ns, sizeof(double));
+
+	if(!nvec || !mu){
+		free(nvec);
+		free(mu);
+		for(int i = 0; i < D->ns; ++i){
+			grad[i] = 0.0;
+		}
+		return;
+	}
+	for(int i = 0; i < D->ns; ++i){
+		double ni = D->n_est[i] * xvars[i];
+		if(ni <= 0.0 || !isfinite(ni)){
+			free(nvec);
+			free(mu);
+			for(int j = 0; j < D->ns; ++j){
+				grad[j] = 0.0;
+			}
+			return;
+		}
+		nvec[i] = ni;
+	}
+	if(!eqm_eval_obj_mu(nvec, D->mu0, D->is_condensed, D->solution_phase_id,
+			D->binary_phases, D->nbinary_phases, D->ns, D->T, D->P, D->P0, NULL, mu, NULL)){
+		free(nvec);
+		free(mu);
+		for(int i = 0; i < D->ns; ++i){
+			grad[i] = 0.0;
+		}
+		return;
+	}
+	for(int i = 0; i < D->ns; ++i){
+		double val = obj_factor * D->obj_scale * (mu[i] / (gas_R() * D->T)) * D->n_est[i];
+		for(int e = 0; e < D->ne; ++e){
+			val += lambda[e] * D->A[e * D->ns + i] * D->n_est[i] * D->b_scale[e];
+		}
+		grad[i] = val;
+	}
+	free(mu);
+	free(nvec);
+}
+
 static Bool eval_h_logn(Index n, Number *x, Bool new_x, Number obj_factor,
 		Index m, Number *lambda, Bool new_lambda,
 		Index nele_hess, Index *iRow, Index *jCol, Number *values,
@@ -574,6 +753,61 @@ static Bool eval_h_n(Index n, Number *x, Bool new_x, Number obj_factor,
 			eval_grad_L_n(D, xwork, obj_factor, lambda, gradp);
 			xwork[j] = x[j] - eps;
 			eval_grad_L_n(D, xwork, obj_factor, lambda, gradm);
+			xwork[j] = x[j];
+			for(Index i = j; i < n; ++i){
+				values[k] = (gradp[i] - gradm[i]) / (2.0 * eps);
+				++k;
+			}
+		}
+		free(xwork);
+		free(gradm);
+		free(gradp);
+	}
+	return TRUE;
+}
+
+static Bool eval_h_scaled_n(Index n, Number *x, Bool new_x, Number obj_factor,
+		Index m, Number *lambda, Bool new_lambda,
+		Index nele_hess, Index *iRow, Index *jCol, Number *values,
+		UserDataPtr user_data){
+	EqmN *D = (EqmN *)user_data;
+	(void)new_x;
+	(void)new_lambda;
+	(void)m;
+	(void)nele_hess;
+
+	if(values == NULL){
+		Index k = 0;
+		for(Index j = 0; j < n; ++j){
+			for(Index i = j; i < n; ++i){
+				iRow[k] = i;
+				jCol[k] = j;
+				++k;
+			}
+		}
+	}else{
+		const double eps = 1e-6;
+		double *gradp = (double *)calloc((size_t)n, sizeof(double));
+		double *gradm = (double *)calloc((size_t)n, sizeof(double));
+		double *xwork = (double *)calloc((size_t)n, sizeof(double));
+		Index k = 0;
+		if(!gradp || !gradm || !xwork){
+			free(xwork);
+			free(gradm);
+			free(gradp);
+			for(Index i = 0; i < nele_hess; ++i){
+				values[i] = 0.0;
+			}
+			return TRUE;
+		}
+		for(Index i = 0; i < n; ++i){
+			xwork[i] = x[i];
+		}
+		for(Index j = 0; j < n; ++j){
+			xwork[j] = x[j] + eps;
+			eval_grad_L_scaled_n(D, xwork, obj_factor, lambda, gradp);
+			xwork[j] = x[j] - eps;
+			eval_grad_L_scaled_n(D, xwork, obj_factor, lambda, gradm);
 			xwork[j] = x[j];
 			for(Index i = j; i < n; ++i){
 				values[k] = (gradp[i] - gradm[i]) / (2.0 * eps);
@@ -3038,6 +3272,218 @@ int eqm_ipopt_solve_n_source_init(const char **names, int ns, int ne, const doub
 	free(g_U);
 	free(x);
 	return status;
+}
+
+int eqm_ipopt_solve_scaled_n_source_init(const char **names, int ns, int ne, const double *A,
+		const double *b, const char *source, double T, double P, const double *n_init,
+		double *n_out){
+	EqmN D;
+	const size_t ns_count = (size_t)ns;
+	const size_t ne_count = (size_t)ne;
+	double max_mu0 = 0.0;
+	Index n;
+	Index m;
+	Index nele_jac;
+	Index nele_hess;
+	Number *x_L = NULL;
+	Number *x_U = NULL;
+	Number *g_L = NULL;
+	Number *g_U = NULL;
+	Number *x = NULL;
+	IpoptProblem prob;
+	Number obj;
+	int status;
+	int i;
+
+	if(ns <= 0 || ne <= 0 || !names || !A || !b || !n_out){
+		return -11;
+	}
+
+	D.ns = ns;
+	D.ne = ne;
+	D.T = T;
+	D.P = P;
+	D.P0 = 1e5;
+	D.obj_scale = 1.0;
+	D.n_min = 1e-200;
+	D.A = A;
+	D.b = b;
+	D.solution_phase_id = NULL;
+	D.solution_member_index = NULL;
+	D.nbinary_phases = 0;
+	D.binary_phases = NULL;
+	D.mu0 = (double *)calloc((size_t)D.ns, sizeof(double));
+	D.is_condensed = (int *)calloc((size_t)D.ns, sizeof(int));
+	D.n_est = (double *)calloc((size_t)D.ns, sizeof(double));
+	eqm_apply_bscale_n(&D);
+	if(!D.mu0 || !D.is_condensed || !D.n_est || !D.b_scale){
+		free(D.mu0);
+		free(D.is_condensed);
+		free(D.n_est);
+		free(D.b_scale);
+		return -11;
+	}
+	if(!eqm_compute_mu0(names, D.ns, source, D.T, D.P0, D.mu0)
+			|| !eqm_compute_is_condensed(names, D.ns, source, D.is_condensed)){
+		free(D.mu0);
+		free(D.is_condensed);
+		free(D.n_est);
+		free(D.b_scale);
+		return -11;
+	}
+	if(!eqm_compute_solution_phases(names, D.ns, source, &D.solution_phase_id,
+			&D.solution_member_index, &D.binary_phases, &D.nbinary_phases)){
+		free(D.mu0);
+		free(D.is_condensed);
+		free(D.n_est);
+		free(D.b_scale);
+		return -11;
+	}
+	for(int j = 0; j < D.ns; ++j){
+		double v = fabs(D.mu0[j]);
+		if(v > max_mu0){
+			max_mu0 = v;
+		}
+	}
+	if(max_mu0 > 0.0){
+		double denom = max_mu0 / (gas_R() * T);
+		if(denom > 1.0){
+			D.obj_scale = 1.0 / denom;
+		}
+	}
+	eqm_fill_n_est(D.A, D.b, D.ne, D.ns, n_init, D.n_est);
+
+	n = D.ns;
+	m = D.ne;
+	nele_jac = (Index)(D.ne * D.ns);
+	nele_hess = (Index)(D.ns * (D.ns + 1) / 2);
+	x_L = (Number *)calloc(ns_count, sizeof(Number));
+	x_U = (Number *)calloc(ns_count, sizeof(Number));
+	g_L = (Number *)calloc(ne_count, sizeof(Number));
+	g_U = (Number *)calloc(ne_count, sizeof(Number));
+	x = (Number *)calloc(ns_count, sizeof(Number));
+	if(!x_L || !x_U || !g_L || !g_U || !x){
+		free(x_L);
+		free(x_U);
+		free(g_L);
+		free(g_U);
+		free(x);
+		free(D.mu0);
+		free(D.is_condensed);
+		eqm_free_solution_phases(&D.solution_phase_id, &D.solution_member_index, &D.binary_phases);
+		free(D.n_est);
+		free(D.b_scale);
+		return -12;
+	}
+
+	for(i = 0; i < D.ns; ++i){
+		x_L[i] = D.n_min / D.n_est[i];
+		x_U[i] = 1e20 / D.n_est[i];
+		x[i] = 1.0;
+	}
+	if(n_init){
+		for(i = 0; i < D.ns; ++i){
+			if(n_init[i] > D.n_min){
+				x[i] = n_init[i] / D.n_est[i];
+			}
+		}
+	}else{
+		double *n0 = (double *)calloc((size_t)D.ns, sizeof(double));
+		int ok_n0 = 1;
+		if(n0 && eqm_solve_particular(D.A, D.b, D.ne, D.ns, n0)){
+			for(i = 0; i < D.ns; ++i){
+				if(n0[i] <= D.n_min){
+					ok_n0 = 0;
+					break;
+				}
+			}
+			if(ok_n0){
+				for(i = 0; i < D.ns; ++i){
+					x[i] = n0[i] / D.n_est[i];
+				}
+			}
+		}
+		free(n0);
+	}
+	for(i = 0; i < D.ne; ++i){
+		g_L[i] = 0.0;
+		g_U[i] = 0.0;
+	}
+
+	prob = CreateIpoptProblem(
+		n, x_L, x_U,
+		m, g_L, g_U,
+		nele_jac, nele_hess, 0,
+		eval_f_scaled_n, eval_g_scaled_n, eval_grad_f_scaled_n, eval_jac_g_scaled_n,
+		eval_h_scaled_n
+	);
+	eqm_ipopt_apply_options(prob, D.T, "limited-memory", 0, 0);
+
+	status = IpoptSolve(prob, x, NULL, &obj, NULL, NULL, NULL, (UserDataPtr)&D);
+	for(i = 0; i < D.ns; ++i){
+		n_out[i] = D.n_est[i] * x[i];
+	}
+
+	FreeIpoptProblem(prob);
+	free(D.mu0);
+	free(D.is_condensed);
+	eqm_free_solution_phases(&D.solution_phase_id, &D.solution_member_index, &D.binary_phases);
+	free(D.n_est);
+	free(D.b_scale);
+	free(x_L);
+	free(x_U);
+	free(g_L);
+	free(g_U);
+	free(x);
+	return status;
+}
+
+int eqm_ipopt_solve_scaled_n_source(const char **names, int ns, int ne, const double *A,
+		const double *b, const char *source, double T, double P, double *n_out){
+	return eqm_ipopt_solve_scaled_n_source_init(names, ns, ne, A, b, source, T, P, NULL,
+		n_out);
+}
+
+int eqm_ipopt_solve_scaled_n(const char **names, int ns, int ne, const double *A,
+		const double *b, double T, double P, double *n_out){
+	return eqm_ipopt_solve_scaled_n_source(names, ns, ne, A, b, NULL, T, P, n_out);
+}
+
+int eqm_ipopt_solve_elements_scaled_n_source_init(const char **names, int ns,
+		const char **elements, int ne, const char *source, const double *b, double T,
+		double P, const double *n_init, double *n_out){
+	double *A = NULL;
+	int status;
+
+	if(!names || !elements || !b || !n_out || ns <= 0 || ne <= 0){
+		return -11;
+	}
+
+	A = (double *)calloc((size_t)(ne * ns), sizeof(double));
+	if(!A){
+		return -11;
+	}
+	if(!fprops_build_element_matrix_source(names, ns, elements, ne, source, A)){
+		free(A);
+		return -11;
+	}
+	status = eqm_ipopt_solve_scaled_n_source_init(names, ns, ne, A, b, source, T, P,
+		n_init, n_out);
+	free(A);
+	return status;
+}
+
+int eqm_ipopt_solve_elements_scaled_n_source(const char **names, int ns,
+		const char **elements, int ne, const char *source, const double *b, double T,
+		double P, double *n_out){
+	return eqm_ipopt_solve_elements_scaled_n_source_init(names, ns, elements, ne, source,
+		b, T, P, NULL, n_out);
+}
+
+int eqm_ipopt_solve_elements_scaled_n(const char **names, int ns, const char **elements,
+		int ne, const double *b, double T, double P, double *n_out){
+	return eqm_ipopt_solve_elements_scaled_n_source(names, ns, elements, ne, NULL, b, T, P,
+		n_out);
 }
 
 int eqm_ipopt_solve_n_source(const char **names, int ns, int ne, const double *A, const double *b,

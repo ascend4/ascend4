@@ -655,8 +655,8 @@ vars.Add(PackageVariable("HSL_PREFIX"
 #------- FPROPS IPOPT -------
 
 vars.Add(BoolVariable('WITH_FPROPS_IPOPT'
-	,"Build FPROPS equilibrium support with IPOPT; disabled by default because SLSQP/NLOPT is the preferred FPROPS solver"
-	, False
+	,"Build FPROPS equilibrium support with IPOPT when IPOPT is available"
+	, True
 ))
 
 #------- NLOPT -------

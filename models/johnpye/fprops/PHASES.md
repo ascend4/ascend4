@@ -644,6 +644,22 @@ Tests implemented:
   `Fe + gas`, `wustite + gas`, and full-package initial masks
 - selected phase/eqm/fprops suites currently pass with the Phase 4b API
   enabled
+- solver-performance benchmarking now strongly favors NLOPT/SLSQP over IPOPT
+  for the current phase-equilibrium workload; on the local development
+  machine, the phase suite was roughly 0.6 s with SLSQP versus roughly 180 s
+  with IPOPT-only, while selected boundary active-set cases were roughly
+  0.2 s with SLSQP versus roughly 63 s with IPOPT-only
+- the IPOPT full-space path has since been harmonised with the SLSQP
+  formulation: plain `ipopt` and explicit `ipopt_scaled_n` now use the scaled
+  amount variables, while `ipopt_logn` and `ipopt_n` remain explicit
+  alternatives. This removed the observed IPOPT robustness split in the
+  active-set phase cases, but did not close the performance gap. An
+  IPOPT-enabled phase-suite run passed 43/43 tests but still took about 185 s
+  CUnit elapsed time on the local machine.
+- the formerly failing SLSQP-only cases are fixed: the spinel expanded-member
+  case needed zero initial scales to be clamped in `eqm_fill_n_est`, and the
+  humid-air NOx reduced solve needed a validated near-stationary
+  max-iteration acceptance path
 
 Remaining Phase 4b close-out work:
 
@@ -675,6 +691,10 @@ Deliverables:
   derived from it on the existing J/kmol/K basis
 - `FpropsEqm` provides a problem object that owns the phase package, global
   element ordering, feed totals, temperature, pressure, and solver strategy
+- `FpropsEqmNlpSolver` plus `fprops_eqm_set_nlp_solver(...)` and
+  `fprops_eqm_set_nlp_solver_name(...)` provide runtime NLP backend selection;
+  the default `auto` behavior is SLSQP when NLOPT is available, and explicit
+  IPOPT selectors run only the requested IPOPT formulation
 - `fprops_eqm_init(...)`, `fprops_eqm_add_phases(...)`,
   `fprops_eqm_add_comps(...)`, and `fprops_eqm_solve_TP(...)` provide the
   compact example-facing workflow
@@ -730,6 +750,12 @@ Tests:
   `scons -C models/johnpye/fprops WITH_ASCEND=0 examples/feoh`
 - standalone Fe-O-H example links against `libfprops.so` and has an
   `$ORIGIN/..` runpath so it runs in-tree without `LD_LIBRARY_PATH`
+- default FPROPS builds now link IPOPT as well as NLOPT/SLSQP when both are
+  available, but plain `auto` still uses SLSQP; IPOPT can be disabled with
+  `WITH_FPROPS_IPOPT=0`
+- default CUnit registration includes a few guarded explicit-IPOPT smoke checks
+  when IPOPT is compiled in, without duplicating the whole phase suite through
+  IPOPT
 - example reports:
   - Fe amount
   - unreduced hematite
@@ -1307,6 +1333,8 @@ Phase 6 and beyond:
   package with known output shape
 - implement fixed-active first derivatives before promising robust
   ASCEND derivative callbacks
+- keep IPOPT as an opt-in diagnostic/cross-check path unless a future case
+  shows a clear reliability advantage over the much faster SLSQP/default path
 
 ## 10. Immediate Next Actions
 

@@ -601,16 +601,64 @@ That is why Newton steps in $\mathbf{z}$ are usually fast when $\mathbf{H}$ is w
 From `eqm_solve_elements`/`eqm_solve`, key algorithms are:
 
 - `ipopt*` (NLP in full coordinates)
-- `slsqp` (NLP fallback)
+- `slsqp` (default full-space NLP path through NLOPT/SLSQP)
 - `reduced` (nullspace reduced-space Newton)
 - `auto_reduced` (try reduced first, then fallback path)
 
 Pathway grouping:
 
 - Reduced-space pathway (primary): `reduced` (with optional 1D special solve, continuation, and active-set boundary handling).
-- Full-space pathway (secondary): `ipopt*` with `slsqp` fallback.
+- Full-space pathway (secondary): `slsqp` by default, with `ipopt*` available
+  as an explicit opt-in build path.
 
 For low-temperature boundary-heavy cases, `reduced` is now the primary robust path. In the ASCEND blackbox wrapper, direct unseeded callback evaluation is also intentionally kept on the reduced-only path; seeded/preloaded solver-path calls can still use `auto_reduced`.
+
+### 6.1 Current full-space solver policy
+
+After the May 2026 phase-equilibrium benchmark work, FPROPS now defaults to
+NLOPT/SLSQP for its full-space fallback solver. IPOPT remains useful as an
+independent cross-check and for targeted debugging, but it should not be the
+ordinary FPROPS build default while SLSQP continues to pass the same validation
+suite.
+
+Indicative local CUnit timings on the same development machine:
+
+- default/SLSQP-only FPROPS build: 171/171 tests passed, about 2.3 s wall time
+- IPOPT-only FPROPS build: 171/171 tests passed, about 186 s wall time
+- phase suite only: SLSQP was about 0.6 s, while IPOPT was about 180 s
+- selected boundary active-set cases: SLSQP was about 0.2 s, while IPOPT was
+  about 63 s
+
+The absolute numbers are machine- and build-dependent. The robust conclusion is
+that SLSQP is dramatically faster for the present FPROPS equilibrium tests, and
+the remaining SLSQP-only failures were fixed by:
+
+- clamping zero initial composition scales in `eqm_fill_n_est`, which matters
+  for site-solution members such as the spinel vacancy member
+- accepting a validated near-stationary reduced Newton result at `max_iter`
+  when the projected gradient is already small
+
+Build policy:
+
+- default top-level build: FPROPS links both NLOPT/SLSQP and IPOPT when both
+  libraries are available
+- opt out of FPROPS IPOPT support with `WITH_FPROPS_IPOPT=0`
+- build IPOPT-only comparison binaries with `WITH_FPROPS_IPOPT=1 WITH_NLOPT=0`
+- when both NLOPT and IPOPT are compiled, `auto` still selects SLSQP only;
+  request IPOPT explicitly with `ipopt`, `ipopt_scaled_n`, `ipopt_logn`, or
+  `ipopt_n`
+
+The IPOPT full-space path has also been harmonised with the SLSQP
+formulation. Plain `ipopt` and the explicit `ipopt_scaled_n` selector solve in scaled
+species/phase-member amount variables, using the same `eqm_fill_n_est`
+composition scale used by SLSQP; the older `ipopt_logn` and `ipopt_n`
+formulations remain available only when explicitly selected. This fixes the earlier
+Ovo/budgie robustness split for the troublesome active-set phase cases, but
+it does not remove IPOPT's large overhead for the current phase-suite
+workload: a May 2026 IPOPT-enabled phase-suite run passed 43/43 tests but
+still took about 185 s CUnit elapsed time on the local machine. That is why
+IPOPT remains an opt-in cross-check rather than the default equilibrium
+backend.
 
 ### 7. Reduced Newton method (interior part)
 
@@ -933,7 +981,7 @@ Logic:
 Code:
 - `eqm_solve` and `eqm_solve_elements`.
 
-## Appendix A. Full-space interior-point path (secondary)
+## Appendix A. Full-space interior-point path (opt-in secondary)
 
 The full-space IPOPT path keeps all `n_i` strictly positive and solves a barrier sequence:
 `min G(n) - tau * sum_i ln(n_i)` subject to `A n = b`, with `tau > 0` reduced toward zero.
@@ -942,4 +990,6 @@ Equivalent perturbed KKT form is:
 `mu + A^T lambda - s = 0`, `A n - b = 0`, and `n_i s_i = tau` with `n_i > 0`, `s_i > 0`.
 As `tau -> 0`, this tends to the original complementarity relation `n_i s_i = 0`.
 
-In current FPROPS equilibrium work, this full-space pathway is useful as fallback/cross-check, but reduced-space plus active-set handling has been more robust for low-temperature, boundary-dominated chemistry.
+In current FPROPS equilibrium work, this full-space pathway is useful as an
+explicit opt-in cross-check, but reduced-space plus active-set handling and the
+NLOPT/SLSQP full-space path are the normal build defaults.

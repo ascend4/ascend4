@@ -49,6 +49,22 @@ int eqm_ipopt_solve_elements_n_source(const char **names, int ns, const char **e
 int eqm_ipopt_solve_elements_n(const char **names, int ns, const char **elements, int ne,
 		const double *b, double T, double P, double *n_out);
 
+int eqm_ipopt_solve_scaled_n_source_init(const char **names, int ns, int ne, const double *A,
+		const double *b, const char *source, double T, double P, const double *n_init,
+		double *n_out);
+int eqm_ipopt_solve_scaled_n_source(const char **names, int ns, int ne, const double *A,
+		const double *b, const char *source, double T, double P, double *n_out);
+int eqm_ipopt_solve_scaled_n(const char **names, int ns, int ne, const double *A,
+		const double *b, double T, double P, double *n_out);
+int eqm_ipopt_solve_elements_scaled_n_source_init(const char **names, int ns,
+		const char **elements, int ne, const char *source, const double *b, double T,
+		double P, const double *n_init, double *n_out);
+int eqm_ipopt_solve_elements_scaled_n_source(const char **names, int ns,
+		const char **elements, int ne, const char *source, const double *b, double T,
+		double P, double *n_out);
+int eqm_ipopt_solve_elements_scaled_n(const char **names, int ns, const char **elements,
+		int ne, const double *b, double T, double P, double *n_out);
+
 int eqm_ipopt_nullspace_1d(const char **names, const char **elements, const char *source,
 		const double *b, double T, double P, double *n_out);
 

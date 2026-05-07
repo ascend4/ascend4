@@ -110,6 +110,11 @@ static int solve_eqm_api_ipopt(const char **names, int ns, const char **elements
 		const double *b, const char *source, double T, double P, const double *n_init,
 		double *n_out){
 	int status = eqm_solve_elements(names, ns, elements, ne, b, source, T, P,
+		"ipopt_scaled_n", n_init, n_out);
+	if(ipopt_status_ok(status)){
+		return status;
+	}
+	status = eqm_solve_elements(names, ns, elements, ne, b, source, T, P,
 		"ipopt_logn", n_init, n_out);
 	if(ipopt_status_ok(status)){
 		return status;

@@ -2999,6 +2999,7 @@ static void eqm_problem_init(FpropsEqmProblem *problem){
 	problem->T = 298.15;
 	problem->P = 101325.0;
 	eqm_phase_copy(problem->algorithm, sizeof(problem->algorithm), "auto");
+	problem->nlp_solver = FPROPS_EQM_NLP_DEFAULT;
 }
 
 static int eqm_problem_add_phase(FpropsEqmProblem *problem, const char *spec,
@@ -3076,6 +3077,26 @@ static int eqm_problem_set_algorithm(FpropsEqmProblem *problem, const char *algo
 	eqm_phase_copy(problem->algorithm, sizeof(problem->algorithm),
 		(algorithm && algorithm[0]) ? algorithm : "auto");
 	return 0;
+}
+
+static int eqm_problem_set_nlp_solver(FpropsEqmProblem *problem, FpropsEqmNlpSolver solver){
+	if(!problem || !fprops_eqm_nlp_solver_name(solver)){
+		return -11;
+	}
+	problem->nlp_solver = solver;
+	return 0;
+}
+
+static const char *eqm_problem_algorithm(const FpropsEqmProblem *problem){
+	const char *solver_algorithm;
+	if(!problem){
+		return "auto";
+	}
+	solver_algorithm = fprops_eqm_nlp_solver_name(problem->nlp_solver);
+	if(problem->nlp_solver != FPROPS_EQM_NLP_DEFAULT && solver_algorithm){
+		return solver_algorithm;
+	}
+	return problem->algorithm[0] ? problem->algorithm : "auto";
 }
 
 static void eqm_problem_clear_feed(FpropsEqmProblem *problem){
@@ -3262,7 +3283,7 @@ static int eqm_problem_solve(const FpropsEqmProblem *problem,
 	}
 	status = fprops_eqm_phase_solve_active_set_result(problem->phases, problem->nphase,
 		(const char **)problem->elements, problem->nelem, problem->b, problem->T, problem->P,
-		problem->algorithm[0] ? problem->algorithm : "auto", NULL, result);
+		eqm_problem_algorithm(problem), NULL, result);
 	result->eqm = problem;
 	return status;
 }
@@ -3397,6 +3418,22 @@ int fprops_eqm_set_TP(FpropsEqm *eqm, double T, double P){
 
 int fprops_eqm_set_algorithm(FpropsEqm *eqm, const char *algorithm){
 	return eqm_problem_set_algorithm(eqm, algorithm);
+}
+
+int fprops_eqm_set_nlp_solver(FpropsEqm *eqm, FpropsEqmNlpSolver solver){
+	return eqm_problem_set_nlp_solver(eqm, solver);
+}
+
+int fprops_eqm_set_nlp_solver_name(FpropsEqm *eqm, const char *solver){
+	FpropsEqmNlpSolver parsed;
+	if(!fprops_eqm_nlp_solver_from_name(solver, &parsed)){
+		return -11;
+	}
+	return fprops_eqm_set_nlp_solver(eqm, parsed);
+}
+
+FpropsEqmNlpSolver fprops_eqm_nlp_solver(const FpropsEqm *eqm){
+	return eqm ? eqm->nlp_solver : FPROPS_EQM_NLP_DEFAULT;
 }
 
 void fprops_eqm_clear_feed(FpropsEqm *eqm){

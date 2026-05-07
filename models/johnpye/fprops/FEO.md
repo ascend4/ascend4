@@ -86,6 +86,27 @@ The main unresolved issue is no longer the gas side. It is still the
 reduced spinel model, but now at the level of refinement rather than a
 blocking defect.
 
+Solver position:
+
+- the current Fe-O-H and Fe-O-C phase-equilibrium checks should normally be
+  run with the default NLOPT/SLSQP-backed FPROPS build
+- IPOPT may be linked in the default build, but it is treated as an explicit
+  cross-check for this work; plain `auto` still selects the NLOPT/SLSQP
+  equilibrium backend
+- local May 2026 timings showed the full CUnit suite passing in about 2.3 s
+  with SLSQP-only FPROPS, compared with about 186 s with IPOPT-only FPROPS;
+  the phase suite difference was even more pronounced, about 0.6 s versus
+  about 180 s
+- IPOPT now has a scaled full-space amount formulation, `ipopt_scaled_n`,
+  matching the SLSQP variable scaling. Plain `ipopt` now uses that scaled
+  formulation, while `ipopt_logn` and `ipopt_n` are explicit alternatives. This
+  improved robustness on the active-set phase cases, but an
+  IPOPT-enabled phase-suite check still took about 185 s CUnit elapsed time.
+- the two SLSQP-only failures found during this comparison were numerical/API
+  robustness issues, not evidence that IPOPT was intrinsically needed:
+  spinel needed zero initial expanded-member scales clamped, and the low-T NOx
+  reduced solve needed a validated near-stationary max-iteration acceptance
+
 ## 3. Current Thermodynamic Model
 
 ### 3.1 Gas species

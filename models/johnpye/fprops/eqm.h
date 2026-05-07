@@ -42,6 +42,15 @@ typedef struct FpropsRxnResult{
 	double *n_out;
 } FpropsRxnResult;
 
+typedef enum FpropsEqmNlpSolver{
+	FPROPS_EQM_NLP_DEFAULT = 0,
+	FPROPS_EQM_NLP_SLSQP,
+	FPROPS_EQM_NLP_IPOPT,
+	FPROPS_EQM_NLP_IPOPT_SCALED_N,
+	FPROPS_EQM_NLP_IPOPT_LOGN,
+	FPROPS_EQM_NLP_IPOPT_N
+} FpropsEqmNlpSolver;
+
 /**
  * Return a short human-readable description for an equilibrium status code.
  *
@@ -58,6 +67,22 @@ const char *fprops_eqm_status_text(int status);
  * positive statuses such as IPOPT's "acceptable level" or "feasible point".
  */
 int fprops_eqm_status_ok(int status);
+
+/**
+ * Return the algorithm-selector string corresponding to an NLP solver
+ * preference. `FPROPS_EQM_NLP_DEFAULT` maps to `"auto"`; the current default
+ * full-space NLP backend is SLSQP when NLOPT is available.
+ */
+const char *fprops_eqm_nlp_solver_name(FpropsEqmNlpSolver solver);
+
+/**
+ * Parse an NLP solver preference name.
+ *
+ * Accepted names include `default`, `auto`, `slsqp`, `ipopt`,
+ * `ipopt_scaled_n`, `ipopt_logn`, and `ipopt_n`. On success, stores the enum
+ * value in `solver_out` and returns non-zero.
+ */
+int fprops_eqm_nlp_solver_from_name(const char *name, FpropsEqmNlpSolver *solver_out);
 
 /**
  * Build a compiled reactive-package runtime object from a species basis

@@ -2,6 +2,7 @@
 #define FPROPS_EQM_PHASE_H
 
 #include <stdio.h>
+#include "eqm.h"
 
 #define FPROPS_EQM_PHASE_MAX_PHASES 20
 #define FPROPS_EQM_PHASE_MAX_MEMBERS 8
@@ -65,6 +66,7 @@ struct FpropsEqmProblem{
 	double T;
 	double P;
 	char algorithm[32];
+	FpropsEqmNlpSolver nlp_solver;
 };
 
 typedef struct FpropsEqmComp{
@@ -216,6 +218,12 @@ int fprops_eqm_phase_member_names(const FpropsEqm *eqm, const char *phase,
 int fprops_eqm_set_TP(FpropsEqm *eqm, double T, double P);
 
 int fprops_eqm_set_algorithm(FpropsEqm *eqm, const char *algorithm);
+
+int fprops_eqm_set_nlp_solver(FpropsEqm *eqm, FpropsEqmNlpSolver solver);
+
+int fprops_eqm_set_nlp_solver_name(FpropsEqm *eqm, const char *solver);
+
+FpropsEqmNlpSolver fprops_eqm_nlp_solver(const FpropsEqm *eqm);
 
 void fprops_eqm_clear_feed(FpropsEqm *eqm);
 
