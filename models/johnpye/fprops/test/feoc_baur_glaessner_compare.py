@@ -49,6 +49,7 @@ from feoh_hydrogen_boundary import (  # noqa: E402
     parse_temps_c,
     query_mu0,
 )
+from fprops_phase_boundary import phase_boundary_lambda_o  # noqa: E402
 
 R = 8.31446261815324
 
@@ -233,6 +234,38 @@ def cached_model_god_at_temp(boundary_name: str, runner_str: str, gas_source: st
     return model_god_at_temp(fn, Path(runner_str), gas_source, tc)
 
 
+def phase_api_god_at_temp(
+    boundary_name: str,
+    runner: Path,
+    gas_source: str,
+    tc: float,
+    spinel_variant: str = "current",
+) -> tuple[float, float] | None:
+    try:
+        tk = tc + 273.15
+        lam_o, _meta = phase_boundary_lambda_o(boundary_name, tk, spinel_variant)
+        mu = query_mu0(runner, gas_source, tk, ["carbonmonoxide", "carbondioxide"])
+        log10_model, _ = gas_ratio_logs(mu["carbonmonoxide"], mu["carbondioxide"], lam_o, tk)
+        return god_from_log10_ratio(log10_model), log10_model
+    except ValueError:
+        return None
+
+
+def batch_phase_api_god_at_temps(
+    boundary_name: str,
+    runner: Path,
+    gas_source: str,
+    temps_c: list[float],
+    spinel_variant: str = "current",
+) -> dict[float, tuple[float, float]]:
+    out: dict[float, tuple[float, float]] = {}
+    for tc in temps_c:
+        value = phase_api_god_at_temp(boundary_name, runner, gas_source, tc, spinel_variant)
+        if value is not None:
+            out[tc] = value
+    return out
+
+
 def frange(start: float, stop: float, step: float) -> list[float]:
     if step <= 0.0:
         raise ValueError("step must be positive")
@@ -274,13 +307,19 @@ def write_plot(
     model_temps = frange(spec.ymin_c, spec.ymax_c, plot_model_step_c)
     model_series = batch_model_god_at_temps(spec.boundary, runner, gas_source, model_temps, spinel_variant)
     model_gods = [model_series[tc][0] for tc in model_temps]
+    phase_api_series = batch_phase_api_god_at_temps(spec.boundary, runner, gas_source, model_temps, spinel_variant)
+    phase_api_temps = [tc for tc in model_temps if tc in phase_api_series]
+    phase_api_gods = [phase_api_series[tc][0] for tc in phase_api_temps]
 
     sample_fit_x = []
     sample_fit_y = []
     sample_model_x = []
     sample_model_y = []
+    sample_phase_api_x = []
+    sample_phase_api_y = []
     valid_sample_temps = [tc for tc in sample_temps_c if spec.ymin_c <= tc <= spec.ymax_c]
     sample_model_series = batch_model_god_at_temps(spec.boundary, runner, gas_source, valid_sample_temps, spinel_variant)
+    sample_phase_api_series = batch_phase_api_god_at_temps(spec.boundary, runner, gas_source, valid_sample_temps, spinel_variant)
     for tc in sample_temps_c:
         fit_god = fit_god_at_temp(spec, tc)
         if fit_god is not None:
@@ -290,18 +329,26 @@ def write_plot(
             model_god, _ = sample_model_series[tc]
             sample_model_x.append(model_god)
             sample_model_y.append(tc)
+        if tc in sample_phase_api_series:
+            phase_api_god, _ = sample_phase_api_series[tc]
+            sample_phase_api_x.append(phase_api_god)
+            sample_phase_api_y.append(tc)
 
     fig, ax = plt.subplots(figsize=(7.2, 5.4), dpi=160)
     ax.plot(fit_xs, fit_ys, color=style["color"], lw=2.2, ls="-", label="Spreitzer/BG points")
-    ax.plot(model_gods, model_temps, color=style["color"], lw=2.2, ls=":", label="FPROPS")
+    ax.plot(model_gods, model_temps, color=style["color"], lw=2.2, ls=":", label="Python diagnostic")
+    if phase_api_gods:
+        ax.plot(phase_api_gods, phase_api_temps, color=style["color"], lw=1.8, ls="--", label="FPROPS phase API")
     ax.scatter(sample_fit_x, sample_fit_y, color=style["color"], s=18, marker="o", zorder=3, label="BG sample points")
-    ax.scatter(sample_model_x, sample_model_y, color=style["color"], s=24, marker="x", zorder=3, label="FPROPS sample points")
+    ax.scatter(sample_model_x, sample_model_y, color=style["color"], s=24, marker="x", zorder=3, label="Python sample points")
+    if sample_phase_api_x:
+        ax.scatter(sample_phase_api_x, sample_phase_api_y, color=style["color"], s=26, marker="+", zorder=3, label="Phase API sample points")
 
     ax.set_title(f"{spec.name}: BG vs FPROPS")
     ax.set_xlabel("GOD = xCO2 / (xCO + xCO2)")
     ax.set_ylabel("Temperature (C)")
     ax.grid(True, color="#d9d9d9", lw=0.7)
-    ax.set_xlim(0.0, max(spec.xmax * 1.05, max(model_gods, default=0.0) * 1.05))
+    ax.set_xlim(0.0, max(spec.xmax * 1.05, max(model_gods, default=0.0) * 1.05, max(phase_api_gods, default=0.0) * 1.05))
     ax.set_ylim(spec.ymin_c - 20.0, spec.ymax_c + 20.0)
     ax.legend(loc="best", frameon=True)
     fig.tight_layout()
@@ -331,13 +378,19 @@ def write_all_plot(
         model_temps = frange(spec.ymin_c, spec.ymax_c, plot_model_step_c)
         model_series = batch_model_god_at_temps(spec.boundary, runner, gas_source, model_temps, spinel_variant)
         model_gods = [model_series[tc][0] for tc in model_temps]
+        phase_api_series = batch_phase_api_god_at_temps(spec.boundary, runner, gas_source, model_temps, spinel_variant)
+        phase_api_temps = [tc for tc in model_temps if tc in phase_api_series]
+        phase_api_gods = [phase_api_series[tc][0] for tc in phase_api_temps]
 
         sample_fit_x = []
         sample_fit_y = []
         sample_model_x = []
         sample_model_y = []
+        sample_phase_api_x = []
+        sample_phase_api_y = []
         valid_sample_temps = [tc for tc in sample_temps_c if spec.ymin_c <= tc <= spec.ymax_c]
         sample_model_series = batch_model_god_at_temps(spec.boundary, runner, gas_source, valid_sample_temps, spinel_variant)
+        sample_phase_api_series = batch_phase_api_god_at_temps(spec.boundary, runner, gas_source, valid_sample_temps, spinel_variant)
         for tc in sample_temps_c:
             fit_god = fit_god_at_temp(spec, tc)
             if fit_god is not None:
@@ -347,13 +400,21 @@ def write_all_plot(
                 model_god, _ = sample_model_series[tc]
                 sample_model_x.append(model_god)
                 sample_model_y.append(tc)
+            if tc in sample_phase_api_series:
+                phase_api_god, _ = sample_phase_api_series[tc]
+                sample_phase_api_x.append(phase_api_god)
+                sample_phase_api_y.append(tc)
 
         ax.plot(fit_xs, fit_ys, color=style["color"], lw=2.2, ls="-", label=f"BG {style['label']}")
-        ax.plot(model_gods, model_temps, color=style["color"], lw=2.2, ls=":", label=f"FPROPS {style['label']}")
+        ax.plot(model_gods, model_temps, color=style["color"], lw=2.2, ls=":", label=f"Python {style['label']}")
+        if phase_api_gods:
+            ax.plot(phase_api_gods, phase_api_temps, color=style["color"], lw=1.8, ls="--", label=f"Phase API {style['label']}")
         ax.scatter(sample_fit_x, sample_fit_y, color=style["color"], s=16, marker="o", zorder=3)
         ax.scatter(sample_model_x, sample_model_y, color=style["color"], s=22, marker="x", zorder=3)
+        if sample_phase_api_x:
+            ax.scatter(sample_phase_api_x, sample_phase_api_y, color=style["color"], s=24, marker="+", zorder=3)
 
-        xmax = max(xmax, spec.xmax, max(model_gods, default=0.0))
+        xmax = max(xmax, spec.xmax, max(model_gods, default=0.0), max(phase_api_gods, default=0.0))
 
     ax.set_title("CO Baur-Glaessner fits vs FPROPS")
     ax.set_xlabel("GOD = xCO2 / (xCO + xCO2)")
@@ -379,8 +440,8 @@ def main() -> int:
     ap.add_argument("--runner", type=Path, default=default_runner(), help="Path to eqm_mu0_runner.")
     ap.add_argument(
         "--gas-source",
-        default="reaktoro_clone_supcrt98",
-        help="Gas mu0 source for CO and CO2.",
+        default="helmholtz+ref0:",
+        help="Gas mu0 source for CO and CO2. The BG/Spreitzer comparison plots use the aligned helmholtz+ref0: basis by default.",
     )
     ap.add_argument(
         "--temps-c",
@@ -441,8 +502,8 @@ def main() -> int:
     print(f"Fe|spinel variant: {args.spinel_variant}")
     print()
     print(
-        f"{'T[C]':>6} {'GOD_fit':>12} {'GOD_model':>12} {'dGOD':>12} "
-        f"{'log10 fit':>12} {'log10 model':>12} {'dlog10':>12} {'status':>10}"
+        f"{'T[C]':>6} {'GOD_fit':>12} {'GOD_py':>12} {'GOD_phase':>12} "
+        f"{'log10 fit':>12} {'log10 py':>12} {'log10 phase':>12} {'phase-py':>12} {'status':>10}"
     )
 
     sum_sq = 0.0
@@ -450,27 +511,34 @@ def main() -> int:
     max_abs_dlog = 0.0
 
     model_series = batch_model_god_at_temps(spec.boundary, args.runner, args.gas_source, temps_c, args.spinel_variant)
+    phase_api_series = batch_phase_api_god_at_temps(spec.boundary, args.runner, args.gas_source, temps_c, args.spinel_variant)
 
     for tc in temps_c:
         fit_god = fit_god_at_temp(spec, tc)
         model_god, log10_model = model_series[tc]
+        phase_api = phase_api_series.get(tc)
 
         if fit_god is None:
+            phase_god = phase_api[0] if phase_api is not None else math.nan
+            phase_log = phase_api[1] if phase_api is not None else math.nan
+            phase_delta = phase_log - log10_model if phase_api is not None else math.nan
             print(
-                f"{tc:6.0f} {'-':>12} {model_god:12.6f} {'-':>12} "
-                f"{'-':>12} {log10_model:12.6f} {'-':>12} {'out-of-fit':>10}"
+                f"{tc:6.0f} {'-':>12} {model_god:12.6f} {phase_god:12.6f} "
+                f"{'-':>12} {log10_model:12.6f} {phase_log:12.6f} {phase_delta:12.6f} {'out-of-fit':>10}"
             )
             continue
 
         log10_fit = log10_ratio_from_god(fit_god)
-        dgod = model_god - fit_god
         dlog = log10_model - log10_fit
+        phase_god = phase_api[0] if phase_api is not None else math.nan
+        phase_log = phase_api[1] if phase_api is not None else math.nan
+        phase_delta = phase_log - log10_model if phase_api is not None else math.nan
         sum_sq += dlog * dlog
         ncomp += 1
         max_abs_dlog = max(max_abs_dlog, abs(dlog))
         print(
-            f"{tc:6.0f} {fit_god:12.6f} {model_god:12.6f} {dgod:12.6f} "
-            f"{log10_fit:12.6f} {log10_model:12.6f} {dlog:12.6f} {'ok':>10}"
+            f"{tc:6.0f} {fit_god:12.6f} {model_god:12.6f} {phase_god:12.6f} "
+            f"{log10_fit:12.6f} {log10_model:12.6f} {phase_log:12.6f} {phase_delta:12.6f} {'ok':>10}"
         )
 
     print()
@@ -485,6 +553,7 @@ def main() -> int:
     print("Interpretation")
     print("- `GOD` is taken as xCO2 / (xCO + xCO2), following Spreitzer.")
     print("- To stay consistent with the earlier H2/H2O BG work, the three CO branches are compared against the same Fe-O constructions: Fe|wustite, wustite|spinel, and Fe|spinel.")
+    print("- `Python diagnostic` is the pre-existing boundary calculation; `phase API` is the new C phase-module route.")
     print("- Large dlog10 indicates a substantial shift in the reduction boundary.")
     write_plot(spec, args.runner, args.gas_source, temps_c, plot_file, args.plot_model_step_c, args.spinel_variant)
     print(f"- Wrote PNG plot to {plot_file}")

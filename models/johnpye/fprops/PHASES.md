@@ -717,6 +717,10 @@ Deliverables:
 - low-level package resolver, active-set solver, fixed-package solver,
   lambda reconstruction, and validation entry points have moved out of the
   public header into `eqm_phase_internal.h`
+- first-pass Python/SWIG bindings expose the phase API as `fprops.Eqm` and
+  `fprops.EqmPhaseResult`, including phase setup, Python list/dict feed
+  helpers, solver selection, solve/try-solve, and name/amount/coordinate/member
+  result accessors
 - raw flat equilibrium solvers and the ideal-only standard-potential helper
   have moved out of the public header into `eqm_internal.h`; public callers
   should use `fprops_eqm_tpb(...)`, `fprops_eqm_tpy(...)`,
@@ -1315,6 +1319,9 @@ Phase 5 follow-up:
 
 - consider a heap-allocated `FpropsEqm` constructor/destructor pair for
   callers that cannot comfortably stack-allocate the problem object
+- use the new Python phase bindings to add FPROPS phase-module curves to the
+  existing Baur-Glaessner / Spreitzer comparison scripts, rather than
+  maintaining separate Python boundary solvers as the only plotting route
 - add install rules for public phase headers and examples if FPROPS
   install packaging is enabled later
 - add scripted example-output regression once the build system has a
@@ -1356,6 +1363,8 @@ Phase 6 and beyond:
 ## 11. Current Working State
 
 - The public phase-aware C API is available in `eqm_phase.h`.
+- The phase-aware API is also available to Python through the SWIG
+  `fprops.Eqm` and `fprops.EqmPhaseResult` classes.
 - Low-level phase solvers and lambda/entry diagnostics are internal in
   `eqm_phase_internal.h`.
 - Raw flat solvers are internal in `eqm_internal.h`; public flat/package
