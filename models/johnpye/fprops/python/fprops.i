@@ -95,6 +95,16 @@ static int fprops_py_set_status_error(const char *op, int status){
 	return 0;
 }
 
+static double fprops_py_mu0_source(const char *name, const char *source, double T, double P){
+	double mu0 = NAN;
+	if(!eqm_mu0_source(name, source, T, P, &mu0)){
+		PyErr_Format(PyExc_ValueError, "unable to evaluate mu0 for '%s' from source '%s'",
+			name ? name : "(null)", source ? source : "(null)");
+		return NAN;
+	}
+	return mu0;
+}
+
 static int fprops_py_eqm_add_phases(FpropsEqm *eqm, PyObject *specs){
 	PyObject *seq;
 	Py_ssize_t n;
@@ -354,6 +364,9 @@ int fprops_eqm_status_ok(int status);
 
 %rename(eqm_nlp_solver_name) fprops_eqm_nlp_solver_name;
 const char *fprops_eqm_nlp_solver_name(int solver);
+
+%rename(mu0_source) fprops_py_mu0_source;
+double fprops_py_mu0_source(const char *name, const char *source, double T, double P = 100000.0);
 
 %constant double FPROPS_R = 8.31446261815324;
 

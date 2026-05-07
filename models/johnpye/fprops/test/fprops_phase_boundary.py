@@ -100,6 +100,7 @@ def lambda_fe_for_phase(model, T: float, lambda_o: float) -> float:
     )
 
 
+@lru_cache(maxsize=None)
 def phase_boundary_lambda_o(boundary: str, T: float, spinel_variant: str = "current") -> tuple[float, dict[str, object]]:
     wustite = phase("wustite=hidayat_2015")
     spinel = phase(f"spinel={spinel_source(spinel_variant)}")

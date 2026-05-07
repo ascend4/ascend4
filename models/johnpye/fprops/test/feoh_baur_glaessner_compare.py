@@ -310,7 +310,8 @@ def batch_model_god_at_temps(
             for tc in temps_c
         }
 
-    temps_k = [tc + 273.15 for tc in temps_c]
+    trace_temps_c = wustite_spinel_trace_temps_c(temps_c)
+    temps_k = [tc + 273.15 for tc in trace_temps_c]
     if spinel_variant == "mmc1_guess":
         states = trace_wustite_spinel_boundary_mmc1_guess(temps_k)
     elif spinel_variant == "mmc1_tapered_fit":
@@ -319,12 +320,15 @@ def batch_model_god_at_temps(
         states = trace_wustite_spinel_boundary_mmc1_selective_best(temps_k)
     else:
         states = trace_wustite_spinel_boundary(temps_k)
-    out: dict[float, tuple[float, float]] = {}
-    for tc, (_x_best, lam_o, _a, _b, _v, _resid) in zip(temps_c, states):
+    traced: dict[float, tuple[float, float]] = {}
+    for tc, (_x_best, lam_o, _a, _b, _v, _resid) in zip(trace_temps_c, states):
         tk = tc + 273.15
         mu = query_mu0(runner, gas_source, tk, ["hydrogen", "water"])
         log10_model, _ = gas_ratio_logs(mu["hydrogen"], mu["water"], lam_o, tk)
-        out[tc] = (god_from_log10_ratio(log10_model), log10_model)
+        traced[tc] = (god_from_log10_ratio(log10_model), log10_model)
+    out: dict[float, tuple[float, float]] = {}
+    for tc in temps_c:
+        out[tc] = traced[tc]
     return out
 
 
@@ -347,6 +351,20 @@ def cached_model_god_at_temp(boundary_name: str, runner_str: str, gas_source: st
         spinel_variant: str = "current") -> tuple[float, float]:
     fn = boundary_fn(boundary_name, spinel_variant)
     return model_god_at_temp(fn, Path(runner_str), gas_source, tc)
+
+
+def wustite_spinel_trace_temps_c(temps_c: list[float], max_step_c: float = 10.0) -> list[float]:
+    if not temps_c:
+        return []
+    targets = sorted({round(tc, 12) for tc in temps_c})
+    start = min(targets[0], 570.0)
+    stop = targets[-1]
+    vals = set(targets)
+    t = start
+    while t <= stop + 1e-12:
+        vals.add(round(t, 12))
+        t += max_step_c
+    return sorted(vals)
 
 
 def phase_api_god_at_temp(
