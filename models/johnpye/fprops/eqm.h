@@ -29,12 +29,34 @@
 
 typedef struct FpropsRxnPackage_struct FpropsRxnPackage;
 
+/**
+ * Thermodynamic state plus optional species amounts for package routines.
+ *
+ * Public fields:
+ * - `T`: temperature in K.
+ * - `P`: pressure in Pa.
+ * - `n`: species mole amounts or molar flowrates, length equal to the
+ *   package species count. May be NULL for routines that only need T/P.
+ */
 typedef struct FpropsRxnTPN{
 	double T;
 	double P;
 	const double *n;
 } FpropsRxnTPN;
 
+/**
+ * Output container for package equilibrium routines.
+ *
+ * Public fields:
+ * - `status`: solver status code. Use fprops_eqm_status_ok(...) to decide
+ *   whether the equilibrium amounts are usable.
+ * - `H`: total enthalpy in J on the same extensive basis as the input state,
+ *   when requested/supported.
+ * - `G`: total Gibbs energy in J on the same extensive basis as the input
+ *   state, when available.
+ * - `n_out`: caller-owned output array for equilibrium species mole amounts,
+ *   length equal to the package species count.
+ */
 typedef struct FpropsRxnResult{
 	int status;
 	double H;
@@ -42,6 +64,13 @@ typedef struct FpropsRxnResult{
 	double *n_out;
 } FpropsRxnResult;
 
+/**
+ * NLP backend preference for equilibrium solves.
+ *
+ * `FPROPS_EQM_NLP_DEFAULT` means "auto"; for current phase-equilibrium work
+ * this selects NLOPT/SLSQP when it is available. Explicit IPOPT values request
+ * IPOPT only and do not fall back to SLSQP inside the same solve.
+ */
 typedef enum FpropsEqmNlpSolver{
 	FPROPS_EQM_NLP_DEFAULT = 0,
 	FPROPS_EQM_NLP_SLSQP,
@@ -57,6 +86,9 @@ typedef enum FpropsEqmNlpSolver{
  * The codes are intentionally kept numeric for ABI compatibility with IPOPT
  * and the existing FPROPS wrappers, but examples and diagnostics should use
  * this function rather than carrying local status decoders.
+ *
+ * @param status Equilibrium/solver status code.
+ * @return Static description string; never free.
  */
 const char *fprops_eqm_status_text(int status);
 
@@ -65,6 +97,9 @@ const char *fprops_eqm_status_text(int status);
  *
  * This keeps examples and callers from encoding solver-specific accepted
  * positive statuses such as IPOPT's "acceptable level" or "feasible point".
+ *
+ * @param status Equilibrium/solver status code.
+ * @return Non-zero when composition/property outputs are usable.
  */
 int fprops_eqm_status_ok(int status);
 
@@ -72,6 +107,9 @@ int fprops_eqm_status_ok(int status);
  * Return the algorithm-selector string corresponding to an NLP solver
  * preference. `FPROPS_EQM_NLP_DEFAULT` maps to `"auto"`; the current default
  * full-space NLP backend is SLSQP when NLOPT is available.
+ *
+ * @param solver NLP solver enum value.
+ * @return Static selector string; never free.
  */
 const char *fprops_eqm_nlp_solver_name(FpropsEqmNlpSolver solver);
 
@@ -81,6 +119,10 @@ const char *fprops_eqm_nlp_solver_name(FpropsEqmNlpSolver solver);
  * Accepted names include `default`, `auto`, `slsqp`, `ipopt`,
  * `ipopt_scaled_n`, `ipopt_logn`, and `ipopt_n`. On success, stores the enum
  * value in `solver_out` and returns non-zero.
+ *
+ * @param name Input selector string.
+ * @param solver_out Output enum value.
+ * @return Non-zero on success, zero on invalid name/input.
  */
 int fprops_eqm_nlp_solver_from_name(const char *name, FpropsEqmNlpSolver *solver_out);
 
@@ -101,16 +143,24 @@ FpropsRxnPackage *fprops_rxn_package_build(const char **names, int ns, const cha
 
 /**
  * Destroy a package created by fprops_rxn_package_build(...).
+ *
+ * @param pkg Package to free; NULL is accepted.
  */
 void fprops_rxn_package_free(FpropsRxnPackage *pkg);
 
 /**
  * Return the number of species in a compiled reactive package.
+ *
+ * @param pkg Compiled reactive package.
+ * @return Species count, or negative status on invalid input.
  */
 int fprops_rxn_package_num_species(const FpropsRxnPackage *pkg);
 
 /**
  * Return the number of conserved elements in a compiled reactive package.
+ *
+ * @param pkg Compiled reactive package.
+ * @return Element count, or negative status on invalid input.
  */
 int fprops_rxn_package_num_elements(const FpropsRxnPackage *pkg);
 
@@ -119,6 +169,9 @@ int fprops_rxn_package_num_elements(const FpropsRxnPackage *pkg);
  *
  * The returned pointer is owned by the package and remains valid until the
  * package is freed.
+ *
+ * @param pkg Compiled reactive package.
+ * @return Pointer to row-major element matrix, or NULL on invalid input.
  */
 const double *fprops_rxn_package_element_matrix(const FpropsRxnPackage *pkg);
 
