@@ -948,6 +948,32 @@ SQP algorithm behaviour is introduced.
     - compute candidate step and predicted reduction;
     - update diagnostics, but do not yet attempt a sophisticated line search.
 
+    Current first-iteration status:
+
+    - `A4SqpQp` now stores a reusable HiGHS-ready QP: column metadata, row
+      metadata, costs, bounds, sparse column-wise matrix, triangular Hessian,
+      primal/dual solution arrays, and HiGHS status fields.
+    - `a4sqp_qp_build_from_view` assembles an elastic QP from the scaled
+      `A4SqpView`.
+    - Step-variable bounds are built as scaled variable bounds relative to the
+      current scaled value.
+    - Relation row bounds are built as scaled relation bounds relative to the
+      current scaled residual.
+    - Every relation currently receives lower and upper elastic slack columns
+      with the default elastic penalty.
+    - The initial Hessian approximation is identity on step variables and zero
+      on elastic variables.
+    - Scaled objective gradients are now extracted from ASCEND objective
+      relations and used as step-variable linear costs.
+    - `slv_iterate` now builds and solves this QP with HiGHS, then runs a
+      minimal merit-decreasing line search and stores QP/line-search diagnostics
+      in the A4SQP solver client state.
+    - Repeated solve looping, basic convergence tests, and first-pass progress
+      reporting are now implemented.
+    - Predicted reduction, adaptive penalty updates, active-set/multiplier
+      diagnostics, and richer failure reporting remain next steps.
+    - Verified with `./a4 cutest solver_a4sqp`.
+
 12. Minimal elastic line-search solve.
 
     The first real solve loop should add:
@@ -959,6 +985,43 @@ SQP algorithm behaviour is introduced.
       and iteration limit;
     - user-facing final status explaining success, infeasibility, derivative
       failure, QP failure, line-search failure, or interruption.
+
+    Current line-search status:
+
+    - The merit function is `objective + rho * scaled-row-violation` when an
+      objective exists, and just scaled-row-violation for feasibility-only
+      systems.
+    - Trial steps are unpacked from scaled QP step variables back to physical
+      ASCEND variable values using variable scales.
+    - Each trial point rebuilds the A4SQP view through `slv_system_t`, so
+      residuals, objective value, gradients, Jacobian, and scaling are refreshed
+      at the trial point.
+    - Rejected trial points are overwritten from saved original variable values;
+      if the search fails, the original model state is restored and the view is
+      rebuilt.
+    - The first acceptance rule is deliberately simple: require strict merit
+      decrease under geometric backtracking. A true Armijo model using predicted
+      reduction should replace this once predicted-reduction accounting is in
+      place.
+    - `basic_view.a4c` now exercises a nonzero objective-gradient QP step,
+      backtracking acceptance, merit decrease, and updated objective value.
+    - Solver parameters now include `max_iter`, `max_backtrack`, `feas_tol`,
+      `step_tol`, `merit_tol`, and `elastic_penalty`, in addition to the earlier
+      safe-evaluation, scaling, verbosity, progress, and view-dump controls.
+    - `slv_solve` now loops over major SQP iterations until convergence,
+      iteration limit, QP failure, or line-search failure. Convergence currently
+      uses maximum scaled relation violation plus accepted physical step norm.
+    - Iteration diagnostics are stored in the A4SQP solver client state:
+      objective value, merit before/after, violation sum, maximum violation,
+      worst relation row, accepted step norm, accepted line-search alpha, and
+      line-search failure flag.
+    - Progress messages can be emitted through ASCEND progress callbacks and,
+      optionally, through the error reporter.
+    - The native CUnit test now includes a repeated `slv_solve` case for
+      `basic_view.a4c`, checking final solver status, iteration count,
+      feasibility, small-step convergence, and loose agreement with the known
+      analytic solution.
+    - Verified with `./a4 cutest solver_a4sqp`.
 
 Phase 1 should be considered complete when A4SQP can build and inspect the
 problem view for native ASCEND NLP examples, solve a few tiny smooth continuous

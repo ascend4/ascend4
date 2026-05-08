@@ -15,6 +15,10 @@ struct A4SqpView {
 	struct var_variable **vars;
 	struct rel_relation **rels;
 	struct rel_relation *obj;
+	int32 obj_direction;
+	real64 obj_value;
+	real64 *obj_gradient;
+	real64 *scaled_obj_gradient;
 	int32 *var_sindex;
 	real64 *var_value;
 	real64 *var_lower;
@@ -41,8 +45,10 @@ struct A4SqpView {
 	real64 *jac_value;
 	real64 *scaled_jac_value;
 	int32 calc_errors;
+	int32 obj_calc_errors;
 	int32 unsupported_rels;
 	int32 derivative_errors;
+	int32 obj_derivative_errors;
 };
 
 void a4sqp_view_init(struct A4SqpView *view);

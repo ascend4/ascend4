@@ -63,6 +63,16 @@ static int a4sqp_find_var_by_value(const struct A4SqpView *view, real64 value){
 	return -1;
 }
 
+static int a4sqp_find_var_by_value_tol(const struct A4SqpView *view, real64 value, real64 tol){
+	int32 i;
+	for(i = 0; i < view->n_var; ++i){
+		if(fabs(view->var_value[i] - value) < tol){
+			return i;
+		}
+	}
+	return -1;
+}
+
 static int a4sqp_find_rel_by_residual(
 	const struct A4SqpView *view,
 	enum rel_enum relop,
@@ -92,6 +102,16 @@ static real64 a4sqp_scaled_jac_value(const struct A4SqpView *view, int32 row, in
 	for(k = view->jac_row_start[row]; k < view->jac_row_start[row + 1]; ++k){
 		if(view->jac_col_sindex[k] == col_sindex){
 			return view->scaled_jac_value[k];
+		}
+	}
+	return 0.0;
+}
+
+static real64 a4sqp_qp_a_value(const struct A4SqpQp *qp, int32 row, int32 col){
+	int32 k;
+	for(k = qp->a_start[col]; k < qp->a_start[col + 1]; ++k){
+		if(qp->a_index[k] == row){
+			return qp->a_value[k];
 		}
 	}
 	return 0.0;
@@ -317,6 +337,12 @@ static void test_a4sqp_basic_view_presolve(void){
 	CU_ASSERT_DOUBLE_EQUAL(a4sqp_scaled_jac_value(view,gerow,view->var_sindex[xcol]),2.0 / sqrt(20.0),1e-9);
 	CU_ASSERT_DOUBLE_EQUAL(a4sqp_scaled_jac_value(view,gerow,view->var_sindex[ycol]),4.0 / sqrt(20.0),1e-9);
 
+	CU_ASSERT_DOUBLE_EQUAL(view->obj_value,4.0,1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(view->obj_gradient[xcol],0.0,1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(view->obj_gradient[ycol],4.0,1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(view->scaled_obj_gradient[xcol],0.0,1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(view->scaled_obj_gradient[ycol],16.0,1e-9);
+
 	slv_get_parameters(sys,&params);
 	scale_idx = find_param_index(&params,"scaleopt");
 	CU_ASSERT_FATAL(scale_idx != -1);
@@ -348,8 +374,156 @@ static void test_a4sqp_basic_view_presolve(void){
 	CU_ASSERT_DOUBLE_EQUAL(a4sqp_scaled_jac_value(view,eqrow,view->var_sindex[xcol]),1.0,1e-9);
 	CU_ASSERT_DOUBLE_EQUAL(a4sqp_scaled_jac_value(view,eqrow,view->var_sindex[ycol]),2.0,1e-9);
 
+	slv_set_char_parameter(&(SLV_PARAM_CHAR(&params,scale_idx)),"ROW_2NORM");
+	slv_set_parameters(sys,&params);
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	a4sys = (struct A4SqpSystem *)slv_get_client_token(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(a4sys);
+	view = &a4sys->view;
+	xcol = a4sqp_find_var_by_value(view,1.0);
+	ycol = a4sqp_find_var_by_value(view,2.0);
+	eqrow = a4sqp_find_rel_by_residual(view,e_rel_equal,0.0);
+	lerow = a4sqp_find_rel_by_residual(view,e_rel_lesseq,-5.0);
+	gerow = a4sqp_find_rel_by_residual(view,e_rel_greatereq,4.0);
+	CU_ASSERT_FATAL(xcol != -1);
+	CU_ASSERT_FATAL(ycol != -1);
+	CU_ASSERT_FATAL(eqrow != -1);
+	CU_ASSERT_FATAL(lerow != -1);
+	CU_ASSERT_FATAL(gerow != -1);
+
+	CU_ASSERT_FATAL(0 == slv_iterate(sys));
+	CU_ASSERT_EQUAL(a4sys->qp.num_step_col,2);
+	CU_ASSERT_EQUAL(a4sys->qp.num_elastic_pair,3);
+	CU_ASSERT_EQUAL(a4sys->qp.num_col,8);
+	CU_ASSERT_EQUAL(a4sys->qp.num_row,3);
+	CU_ASSERT_EQUAL(a4sys->qp.num_nz,12);
+	CU_ASSERT_EQUAL(a4sys->qp.q_num_nz,2);
+	CU_ASSERT_EQUAL(a4sys->qp.highs_status,0);
+	CU_ASSERT_EQUAL(a4sys->qp.highs_model_status,7);
+
+	CU_ASSERT_EQUAL(a4sys->qp.col_kind[xcol],A4SQP_QP_COL_STEP);
+	CU_ASSERT_EQUAL(a4sys->qp.col_kind[ycol],A4SQP_QP_COL_STEP);
+	CU_ASSERT_EQUAL(a4sys->qp.col_var_index[xcol],xcol);
+	CU_ASSERT_EQUAL(a4sys->qp.col_var_index[ycol],ycol);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.col_lower[xcol],-5.5,1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.col_upper[xcol],4.5,1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.col_lower[ycol],-3.0,1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.col_upper[ycol],2.0,1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.col_cost[xcol],0.0,1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.col_cost[ycol],16.0,1e-9);
+
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.row_lower[eqrow],0.0,1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.row_upper[eqrow],0.0,1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.row_lower[lerow],var_NO_LOWER_BOUND,0.0);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.row_upper[lerow],5.0 / sqrt(20.0),1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.row_lower[gerow],-4.0 / sqrt(20.0),1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.row_upper[gerow],var_NO_UPPER_BOUND,0.0);
+
+	CU_ASSERT_DOUBLE_EQUAL(a4sqp_qp_a_value(&a4sys->qp,eqrow,xcol),2.0 / sqrt(68.0),1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sqp_qp_a_value(&a4sys->qp,eqrow,ycol),8.0 / sqrt(68.0),1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sqp_qp_a_value(&a4sys->qp,lerow,xcol),2.0 / sqrt(20.0),1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sqp_qp_a_value(&a4sys->qp,lerow,ycol),-4.0 / sqrt(20.0),1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sqp_qp_a_value(&a4sys->qp,gerow,xcol),2.0 / sqrt(20.0),1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(a4sqp_qp_a_value(&a4sys->qp,gerow,ycol),4.0 / sqrt(20.0),1e-9);
+
+	CU_ASSERT_EQUAL(a4sys->qp.col_kind[view->n_var + 2 * eqrow],A4SQP_QP_COL_ELASTIC_LOWER);
+	CU_ASSERT_EQUAL(a4sys->qp.col_kind[view->n_var + 2 * eqrow + 1],A4SQP_QP_COL_ELASTIC_UPPER);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.col_cost[view->n_var + 2 * eqrow],A4SQP_QP_DEFAULT_ELASTIC_PENALTY,1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.col_cost[view->n_var + 2 * eqrow + 1],A4SQP_QP_DEFAULT_ELASTIC_PENALTY,1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(a4sqp_qp_a_value(&a4sys->qp,eqrow,view->n_var + 2 * eqrow),1.0,1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(a4sqp_qp_a_value(&a4sys->qp,eqrow,view->n_var + 2 * eqrow + 1),-1.0,1e-12);
+
+	CU_ASSERT(a4sys->qp.col_value[xcol] > 0.1);
+	CU_ASSERT(a4sys->qp.col_value[ycol] < -0.1);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.col_value[view->n_var + 2 * eqrow],0.0,1e-8);
+	CU_ASSERT_DOUBLE_EQUAL(a4sys->qp.row_value[eqrow],0.0,1e-8);
+
+	CU_ASSERT(a4sys->last_alpha > 0.0);
+	CU_ASSERT(a4sys->last_alpha <= 1.0);
+	CU_ASSERT(a4sys->last_step_norm > 0.0);
+	CU_ASSERT(a4sys->last_merit_after < a4sys->last_merit_before);
+	CU_ASSERT_EQUAL(a4sys->line_search_failed,0);
+	CU_ASSERT(a4sys->view.obj_value < 4.0);
+
 cleanup:
 	slv_clear_progress_callback();
+	if(sys != NULL){
+		system_destroy(sys);
+		system_free_reused_mem();
+	}
+	if(siminst != NULL){
+		sim_destroy(siminst);
+	}
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_a4sqp_basic_solve(void){
+	int status;
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t slvstatus;
+	struct Name *name = NULL;
+	enum Proc_enum pe;
+	struct A4SqpSystem *a4sys = NULL;
+	const struct A4SqpView *view = NULL;
+	int xcol;
+	int ycol;
+	int eqrow;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/a4sqp"));
+
+	solver_destroy_engines();
+	if(0 != package_load("a4sqp",NULL)){
+		CONSOLE_DEBUG("Skipping A4SQP test: solver package not available");
+		goto cleanup;
+	}
+
+	solver_index = slv_lookup_client("A4SQP");
+	CU_ASSERT_FATAL(solver_index != -1);
+
+	Asc_OpenModule("test/a4sqp/basic_view.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("a4sqp_basic_view")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("a4sqp_basic_view"), AddSymbol("sim_solve"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	name = CreateIdName(AddSymbol("on_load"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_solve", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+
+	slv_get_status(sys,&slvstatus);
+	CU_ASSERT(slvstatus.converged);
+	CU_ASSERT(!slvstatus.diverged);
+	CU_ASSERT(!slvstatus.iteration_limit_exceeded);
+	CU_ASSERT(slvstatus.iteration > 0);
+	CU_ASSERT(slvstatus.iteration <= 20);
+
+	a4sys = (struct A4SqpSystem *)slv_get_client_token(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(a4sys);
+	view = &a4sys->view;
+	xcol = a4sqp_find_var_by_value_tol(view,1.8,1e-3);
+	ycol = a4sqp_find_var_by_value_tol(view,1.6,1e-3);
+	eqrow = a4sqp_find_rel_by_residual(view,e_rel_equal,0.0);
+	CU_ASSERT_FATAL(xcol != -1);
+	CU_ASSERT_FATAL(ycol != -1);
+	CU_ASSERT_FATAL(eqrow != -1);
+	CU_ASSERT_DOUBLE_EQUAL(view->obj_value,3.2,1e-3);
+	CU_ASSERT_DOUBLE_EQUAL(view->rel_residual[eqrow],0.0,1e-7);
+	CU_ASSERT(a4sys->last_violation_max <= SLV_PARAM_REAL(&a4sys->params,A4SQP_PARAM_FEAS_TOL));
+	CU_ASSERT(a4sys->last_step_norm <= SLV_PARAM_REAL(&a4sys->params,A4SQP_PARAM_STEP_TOL));
+
+cleanup:
 	if(sys != NULL){
 		system_destroy(sys);
 		system_free_reused_mem();
@@ -364,6 +538,7 @@ cleanup:
 #define TESTS(T) \
 	T(a4sqp_register) \
 	T(a4sqp_qp_highs_spike) \
-	T(a4sqp_basic_view_presolve)
+	T(a4sqp_basic_view_presolve) \
+	T(a4sqp_basic_solve)
 
 REGISTER_TESTS_SIMPLE(solver_a4sqp, TESTS)

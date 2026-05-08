@@ -6,6 +6,8 @@
 
 #include "a4sqp_params.h"
 
+#include "a4sqp_qp_highs.h"
+
 #include <ascend/general/ascMalloc.h>
 
 int a4sqp_get_default_parameters(
@@ -73,6 +75,48 @@ int a4sqp_get_default_parameters(
 			"Dump problem view?",3,
 			"Emit a developer diagnostic dump of the constructed A4SQP problem view."
 		}, FALSE}
+	);
+
+	slv_param_int(parameters,A4SQP_PARAM_MAX_ITER,
+		(SlvParameterInitInt){{"max_iter",
+			"Maximum iterations",1,
+			"Maximum number of A4SQP major SQP iterations."
+		}, 20, 1, 10000}
+	);
+
+	slv_param_int(parameters,A4SQP_PARAM_MAX_BACKTRACK,
+		(SlvParameterInitInt){{"max_backtrack",
+			"Maximum backtracking steps",2,
+			"Maximum number of merit line-search backtracking steps per SQP iteration."
+		}, 20, 1, 100}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_FEAS_TOL,
+		(SlvParameterInitReal){{"feas_tol",
+			"Feasibility tolerance",1,
+			"Convergence tolerance for maximum scaled relation violation."
+		}, 1e-7, 1e-14, 1e3}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_STEP_TOL,
+		(SlvParameterInitReal){{"step_tol",
+			"Step tolerance",1,
+			"Convergence tolerance for physical accepted step norm."
+		}, 1e-4, 1e-14, 1e3}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_MERIT_TOL,
+		(SlvParameterInitReal){{"merit_tol",
+			"Merit tolerance",2,
+			"Minimum merit decrease regarded as meaningful by the line search."
+		}, 1e-10, 0.0, 1e3}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_ELASTIC_PENALTY,
+		(SlvParameterInitReal){{"elastic_penalty",
+			"Elastic penalty",1,
+			"Linear penalty used for lower and upper elastic QP slacks and the merit function."
+		}, A4SQP_QP_DEFAULT_ELASTIC_PENALTY, 1e-12, 1e12}
 	);
 
 	return 0;

@@ -91,6 +91,13 @@ static void a4sqp_scale_jacobian(struct A4SqpView *view){
 	}
 }
 
+static void a4sqp_scale_objective_gradient(struct A4SqpView *view){
+	int32 i;
+	for(i = 0; i < view->n_var; ++i){
+		view->scaled_obj_gradient[i] = view->obj_gradient[i] * view->var_scale[i];
+	}
+}
+
 int a4sqp_view_apply_scaling(struct A4SqpView *view, const char *mode){
 	int use_nominals;
 	const char *scaleopt;
@@ -103,5 +110,6 @@ int a4sqp_view_apply_scaling(struct A4SqpView *view, const char *mode){
 	a4sqp_init_var_scaling(view,use_nominals);
 	a4sqp_init_rel_scaling(view,scaleopt);
 	a4sqp_scale_jacobian(view);
+	a4sqp_scale_objective_gradient(view);
 	return 0;
 }

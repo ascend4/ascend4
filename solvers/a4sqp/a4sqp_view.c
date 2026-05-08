@@ -44,6 +44,10 @@ void a4sqp_view_init(struct A4SqpView *view){
 	view->vars = NULL;
 	view->rels = NULL;
 	view->obj = NULL;
+	view->obj_direction = 0;
+	view->obj_value = 0.0;
+	view->obj_gradient = NULL;
+	view->scaled_obj_gradient = NULL;
 	view->var_sindex = NULL;
 	view->var_value = NULL;
 	view->var_lower = NULL;
@@ -70,8 +74,10 @@ void a4sqp_view_init(struct A4SqpView *view){
 	view->jac_value = NULL;
 	view->scaled_jac_value = NULL;
 	view->calc_errors = 0;
+	view->obj_calc_errors = 0;
 	view->unsupported_rels = 0;
 	view->derivative_errors = 0;
+	view->obj_derivative_errors = 0;
 }
 
 void a4sqp_view_destroy(struct A4SqpView *view){
@@ -88,6 +94,8 @@ void a4sqp_view_destroy(struct A4SqpView *view){
 	ASC_FREE(view->scaled_var_value);
 	ASC_FREE(view->scaled_var_lower);
 	ASC_FREE(view->scaled_var_upper);
+	ASC_FREE(view->obj_gradient);
+	ASC_FREE(view->scaled_obj_gradient);
 	ASC_FREE(view->rel_sindex);
 	ASC_FREE(view->relop);
 	ASC_FREE(view->rel_residual);
@@ -116,11 +124,14 @@ static int a4sqp_view_alloc(struct A4SqpView *view){
 		view->scaled_var_value = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
 		view->scaled_var_lower = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
 		view->scaled_var_upper = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->obj_gradient = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->scaled_obj_gradient = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
 		if(view->var_sindex == NULL || view->var_value == NULL
 			|| view->var_lower == NULL || view->var_upper == NULL
 			|| view->var_nominal == NULL || view->var_fixed == NULL
 			|| view->var_scale == NULL || view->scaled_var_value == NULL
 			|| view->scaled_var_lower == NULL || view->scaled_var_upper == NULL
+			|| view->obj_gradient == NULL || view->scaled_obj_gradient == NULL
 		){
 			return 1;
 		}
@@ -171,6 +182,16 @@ static int a4sqp_map_rel_bounds(enum rel_enum relop, real64 *lower, real64 *uppe
 		*upper = 0.0;
 		return 1;
 	}
+}
+
+static int32 a4sqp_view_find_var_index(const struct A4SqpView *view, int32 sindex){
+	int32 i;
+	for(i = 0; i < view->n_var; ++i){
+		if(view->var_sindex[i] == sindex){
+			return i;
+		}
+	}
+	return -1;
 }
 
 static void a4sqp_view_capture_vars(struct A4SqpView *view){
@@ -274,6 +295,69 @@ static int a4sqp_view_capture_jacobian(struct A4SqpView *view, int safe){
 	return 0;
 }
 
+static int a4sqp_view_capture_objective(struct A4SqpView *view, int safe){
+	int32 i;
+	int32 count = 0;
+	int32 calc_ok = 0;
+	real64 obj_sign = 1.0;
+	real64 *derivs = NULL;
+	int32 *vars = NULL;
+	var_filter_t vfilter;
+
+	if(view->n_var > 0){
+		for(i = 0; i < view->n_var; ++i){
+			view->obj_gradient[i] = 0.0;
+			view->scaled_obj_gradient[i] = 0.0;
+		}
+	}
+	if(view->obj == NULL){
+		view->obj_direction = 0;
+		view->obj_value = 0.0;
+		return 0;
+	}
+
+	view->obj_direction = relman_obj_direction(view->obj);
+	if(view->obj_direction > 0){
+		obj_sign = -1.0;
+	}
+	view->obj_value = obj_sign * relman_eval(view->obj,&calc_ok,safe);
+	if(!calc_ok){
+		++view->obj_calc_errors;
+		return 0;
+	}
+
+	if(view->n_var <= 0){
+		return 0;
+	}
+
+	derivs = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
+	vars = ASC_NEW_ARRAY_OR_NULL(int32,view->n_var);
+	if(derivs == NULL || vars == NULL){
+		ASC_FREE(derivs);
+		ASC_FREE(vars);
+		return 1;
+	}
+	vfilter.matchbits = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED;
+	vfilter.matchvalue = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR;
+	if(relman_diff2(view->obj,&vfilter,derivs,vars,&count,safe)){
+		++view->obj_derivative_errors;
+		ASC_FREE(derivs);
+		ASC_FREE(vars);
+		return 0;
+	}
+
+	for(i = 0; i < count; ++i){
+		int32 col = a4sqp_view_find_var_index(view,vars[i]);
+		if(col >= 0){
+			view->obj_gradient[col] = obj_sign * derivs[i];
+		}
+	}
+
+	ASC_FREE(derivs);
+	ASC_FREE(vars);
+	return 0;
+}
+
 int a4sqp_view_build(struct A4SqpView *view, slv_system_t server, int safe, const char *scaleopt){
 	if(view == NULL || server == NULL){
 		return 1;
@@ -298,6 +382,10 @@ int a4sqp_view_build(struct A4SqpView *view, slv_system_t server, int safe, cons
 	a4sqp_view_capture_vars(view);
 	a4sqp_view_capture_rels(view,safe);
 	if(a4sqp_view_capture_jacobian(view,safe)){
+		a4sqp_view_destroy(view);
+		return 1;
+	}
+	if(a4sqp_view_capture_objective(view,safe)){
 		a4sqp_view_destroy(view);
 		return 1;
 	}
