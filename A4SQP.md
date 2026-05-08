@@ -812,10 +812,12 @@ SQP algorithm behaviour is introduced.
    solvers/a4sqp/a4sqp_scale.h
    solvers/a4sqp/a4sqp_diag.c         diagnostics and progress reporting
    solvers/a4sqp/a4sqp_diag.h
+   solvers/a4sqp/a4sqp_qp_highs.c     HiGHS QP backend experiments
+   solvers/a4sqp/a4sqp_qp_highs.h
    ```
 
-   HiGHS QP, BFGS, merit, and line-search files can wait until the problem view
-   is testable.
+   BFGS, merit, and line-search files can wait until the problem view and QP
+   backend are testable.
 
 3. Minimal solver lifecycle.
 
@@ -921,6 +923,19 @@ SQP algorithm behaviour is introduced.
 
     This should prove the QP backend interface before it is connected to
     nonlinear SQP iteration.
+
+    Current spike status:
+
+    - `a4sqp_qp_highs_spike` builds a tiny convex QP through the HiGHS C API.
+    - The fixture has one step variable, two elastic slack variables, sparse
+      column-wise row data, a triangular Hessian, variable bounds, row bounds,
+      and linear elastic penalties.
+    - The expected solution is deterministic: the step hits its upper bound and
+      the remaining row infeasibility is represented by a lower elastic slack.
+    - The CUnit test calls the exported function from the loaded A4SQP shared
+      module, so the test exercises the same dynamic module and HiGHS link path
+      that ASCEND will use.
+    - Verified with `./a4 cutest solver_a4sqp`.
 
 11. First SQP iteration.
 
