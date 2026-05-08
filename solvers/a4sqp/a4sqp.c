@@ -37,6 +37,9 @@ static void a4sqp_init_status(struct A4SqpSystem *sys){
 	sys->status.cpu_elapsed = 0.0;
 	sys->last_merit_before = 0.0;
 	sys->last_merit_after = 0.0;
+	sys->last_model_merit_after = 0.0;
+	sys->last_predicted_reduction = 0.0;
+	sys->last_linearized_violation = 0.0;
 	sys->last_violation_sum = 0.0;
 	sys->last_violation_max = 0.0;
 	sys->last_alpha = 0.0;
@@ -181,10 +184,11 @@ static void a4sqp_report_iteration(struct A4SqpSystem *sys){
 	snprintf(
 		message,
 		sizeof(message),
-		"iter=%ld obj=%g merit=%g viol_sum=%g viol_max=%g alpha=%g step=%g worst_rel=%ld",
+		"iter=%ld obj=%g merit=%g pred=%g viol_sum=%g viol_max=%g alpha=%g step=%g worst_rel=%ld",
 		(long)sys->status.iteration,
 		sys->view.obj != NULL ? sys->view.obj_value : 0.0,
 		sys->last_merit_after,
+		sys->last_predicted_reduction,
 		sys->last_violation_sum,
 		sys->last_violation_max,
 		sys->last_alpha,
@@ -249,10 +253,29 @@ static real64 a4sqp_view_violation(
 
 static real64 a4sqp_view_merit(const struct A4SqpView *view, real64 penalty){
 	real64 violation = a4sqp_view_violation(view,NULL,NULL);
-	if(view == NULL || view->obj == NULL){
-		return violation;
+	if(view == NULL){
+		return 0.0;
+	}
+	if(view->obj == NULL){
+		return penalty * violation;
 	}
 	return view->obj_value + penalty * violation;
+}
+
+static real64 a4sqp_qp_linearized_violation(const struct A4SqpQp *qp){
+	int32 c;
+	real64 violation = 0.0;
+	if(qp == NULL){
+		return 0.0;
+	}
+	for(c = 0; c < qp->num_col; ++c){
+		if(qp->col_kind[c] == A4SQP_QP_COL_ELASTIC_LOWER
+			|| qp->col_kind[c] == A4SQP_QP_COL_ELASTIC_UPPER
+		){
+			violation += qp->col_value[c];
+		}
+	}
+	return violation;
 }
 
 static void a4sqp_update_metrics(struct A4SqpSystem *sys){
@@ -303,6 +326,9 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 	real64 alpha = 1.0;
 	real64 penalty;
 	real64 merit_tol;
+	real64 armijo_coeff;
+	real64 merit_decrease;
+	real64 required_decrease;
 	real64 *old_values;
 	real64 *physical_step;
 	struct var_variable **vars;
@@ -323,8 +349,13 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 	max_backtrack = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_BACKTRACK);
 	penalty = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY);
 	merit_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_MERIT_TOL);
+	armijo_coeff = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ARMIJO_COEFF);
 	sys->last_merit_before = a4sqp_view_merit(&sys->view,penalty);
 	sys->last_merit_after = sys->last_merit_before;
+	sys->last_linearized_violation = a4sqp_qp_linearized_violation(&sys->qp);
+	sys->last_model_merit_after = (sys->view.obj != NULL ? sys->view.obj_value : 0.0)
+		+ sys->qp.objective_value;
+	sys->last_predicted_reduction = sys->last_merit_before - sys->last_model_merit_after;
 	sys->last_alpha = 0.0;
 	sys->last_step_norm = 0.0;
 	sys->line_search_failed = 0;
@@ -352,7 +383,16 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 		}
 		sys->last_merit_after = a4sqp_view_merit(&sys->view,penalty);
 		a4sqp_update_metrics(sys);
-		if(sys->last_merit_after < sys->last_merit_before - merit_tol){
+		merit_decrease = sys->last_merit_before - sys->last_merit_after;
+		if(sys->last_predicted_reduction > merit_tol){
+			required_decrease = armijo_coeff * alpha * sys->last_predicted_reduction;
+			if(required_decrease < merit_tol){
+				required_decrease = merit_tol;
+			}
+		}else{
+			required_decrease = merit_tol;
+		}
+		if(merit_decrease >= required_decrease){
 			sys->last_alpha = alpha;
 			sys->last_step_norm = step_norm;
 			accepted = 1;
@@ -467,9 +507,10 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 		sys->status.diverged = TRUE;
 		a4sqp_report_qp(sys);
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,
-			"A4SQP line search failed to find a merit-improving step (merit_before=%g, merit_after=%g, step=%g, viol_max=%g).",
+			"A4SQP line search failed to find a merit-improving step (merit_before=%g, merit_after=%g, predicted_reduction=%g, step=%g, viol_max=%g).",
 			sys->last_merit_before,
 			sys->last_merit_after,
+			sys->last_predicted_reduction,
 			sys->last_step_norm,
 			sys->last_violation_max
 		);

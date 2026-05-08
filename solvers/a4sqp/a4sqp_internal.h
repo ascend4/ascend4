@@ -21,6 +21,9 @@ struct A4SqpSystem {
 	struct A4SqpQp qp;
 	real64 last_merit_before;
 	real64 last_merit_after;
+	real64 last_model_merit_after;
+	real64 last_predicted_reduction;
+	real64 last_linearized_violation;
 	real64 last_violation_sum;
 	real64 last_violation_max;
 	real64 last_alpha;

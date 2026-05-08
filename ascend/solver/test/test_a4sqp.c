@@ -441,7 +441,13 @@ static void test_a4sqp_basic_view_presolve(void){
 	CU_ASSERT(a4sys->last_alpha > 0.0);
 	CU_ASSERT(a4sys->last_alpha <= 1.0);
 	CU_ASSERT(a4sys->last_step_norm > 0.0);
+	CU_ASSERT(a4sys->last_predicted_reduction > 0.0);
+	CU_ASSERT(a4sys->last_model_merit_after < a4sys->last_merit_before);
+	CU_ASSERT(a4sys->last_linearized_violation >= 0.0);
 	CU_ASSERT(a4sys->last_merit_after < a4sys->last_merit_before);
+	CU_ASSERT(a4sys->last_merit_before - a4sys->last_merit_after
+		>= SLV_PARAM_REAL(&a4sys->params,A4SQP_PARAM_ARMIJO_COEFF)
+			* a4sys->last_alpha * a4sys->last_predicted_reduction - 1e-9);
 	CU_ASSERT_EQUAL(a4sys->line_search_failed,0);
 	CU_ASSERT(a4sys->view.obj_value < 4.0);
 

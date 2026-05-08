@@ -989,7 +989,7 @@ SQP algorithm behaviour is introduced.
     Current line-search status:
 
     - The merit function is `objective + rho * scaled-row-violation` when an
-      objective exists, and just scaled-row-violation for feasibility-only
+      objective exists, and `rho * scaled-row-violation` for feasibility-only
       systems.
     - Trial steps are unpacked from scaled QP step variables back to physical
       ASCEND variable values using variable scales.
@@ -999,20 +999,28 @@ SQP algorithm behaviour is introduced.
     - Rejected trial points are overwritten from saved original variable values;
       if the search fails, the original model state is restored and the view is
       rebuilt.
-    - The first acceptance rule is deliberately simple: require strict merit
-      decrease under geometric backtracking. A true Armijo model using predicted
-      reduction should replace this once predicted-reduction accounting is in
-      place.
+    - The line search now computes a predicted merit reduction from the QP
+      model. The current model comparison is:
+      `current_objective + rho * current_violation` minus
+      `current_objective + QP_objective`, where `QP_objective` contains
+      `g'p + 1/2 p'Bp + rho * linearized_elastic_violation`.
+    - Step acceptance now uses an Armijo-style test:
+      actual merit decrease must be at least
+      `armijo_coeff * alpha * predicted_reduction`, with `merit_tol` as a
+      numerical floor. If the QP does not predict meaningful reduction, A4SQP
+      falls back to requiring a strict `merit_tol` decrease.
     - `basic_view.a4c` now exercises a nonzero objective-gradient QP step,
       backtracking acceptance, merit decrease, and updated objective value.
     - Solver parameters now include `max_iter`, `max_backtrack`, `feas_tol`,
-      `step_tol`, `merit_tol`, and `elastic_penalty`, in addition to the earlier
-      safe-evaluation, scaling, verbosity, progress, and view-dump controls.
+      `step_tol`, `merit_tol`, `armijo_coeff`, and `elastic_penalty`, in
+      addition to the earlier safe-evaluation, scaling, verbosity, progress,
+      and view-dump controls.
     - `slv_solve` now loops over major SQP iterations until convergence,
       iteration limit, QP failure, or line-search failure. Convergence currently
       uses maximum scaled relation violation plus accepted physical step norm.
     - Iteration diagnostics are stored in the A4SQP solver client state:
-      objective value, merit before/after, violation sum, maximum violation,
+      objective value, merit before/after, predicted reduction, model merit
+      after, linearized elastic violation, violation sum, maximum violation,
       worst relation row, accepted step norm, accepted line-search alpha, and
       line-search failure flag.
     - Progress messages can be emitted through ASCEND progress callbacks and,

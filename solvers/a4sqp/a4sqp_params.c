@@ -112,6 +112,13 @@ int a4sqp_get_default_parameters(
 		}, 1e-10, 0.0, 1e3}
 	);
 
+	slv_param_real(parameters,A4SQP_PARAM_ARMIJO_COEFF,
+		(SlvParameterInitReal){{"armijo_coeff",
+			"Armijo coefficient",2,
+			"Fraction of predicted merit reduction required by the line search."
+		}, 1e-4, 1e-12, 0.5}
+	);
+
 	slv_param_real(parameters,A4SQP_PARAM_ELASTIC_PENALTY,
 		(SlvParameterInitReal){{"elastic_penalty",
 			"Elastic penalty",1,
