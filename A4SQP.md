@@ -781,6 +781,177 @@ Suggested Phase 1 native test models:
 - deliberately unsupported discrete/logical/switching feature;
 - small scaling/nominal regression case.
 
+#### Phase 1 Coding Checklist
+
+Phase 1 should be implemented as a sequence of narrow, testable steps. The
+early steps should prove that A4SQP sees the same problem ASCEND sees before any
+SQP algorithm behaviour is introduced.
+
+1. Build-system skeleton.
+
+   - Add `solvers/a4sqp/SConscript`.
+   - Add the `a4sqp` solver directory to `solvers/SConscript`.
+   - Add `A4SQP` to the top-level `WITH_SOLVERS` list.
+   - Gate A4SQP on HiGHS availability, probably by requiring `WITH_HIGHS`.
+   - Add a stub solver registration so ASCEND can list/select A4SQP.
+
+2. Source skeleton.
+
+   Initial files should be small and deliberately separated by responsibility:
+
+   ```text
+   solvers/a4sqp/a4sqp.c              ASCEND solver registration and slv hooks
+   solvers/a4sqp/a4sqp.h              internal public declarations
+   solvers/a4sqp/a4sqp_params.c       solver parameters
+   solvers/a4sqp/a4sqp_params.h
+   solvers/a4sqp/a4sqp_ascend.c       slv_system_t adapter
+   solvers/a4sqp/a4sqp_ascend.h
+   solvers/a4sqp/a4sqp_view.c         problem-view allocation/validation
+   solvers/a4sqp/a4sqp_view.h
+   solvers/a4sqp/a4sqp_scale.c        QRSlv-style scaling
+   solvers/a4sqp/a4sqp_scale.h
+   solvers/a4sqp/a4sqp_diag.c         diagnostics and progress reporting
+   solvers/a4sqp/a4sqp_diag.h
+   ```
+
+   HiGHS QP, BFGS, merit, and line-search files can wait until the problem view
+   is testable.
+
+3. Minimal solver lifecycle.
+
+   - Implement create/destroy/update hooks with no optimisation algorithm yet.
+   - Implement parameter defaults, including safe calculation, scaling mode,
+     verbosity, and progress reporting.
+   - Implement `slv_presolve`/setup logic that builds the A4SQP problem view.
+   - Make `slv_iterate` perform one "view evaluation" pass at first: evaluate
+     residuals, objective, gradients/Jacobian, scaling, and diagnostics.
+   - Make `slv_solve` call the same internal path rather than introduce a
+     separate evaluation path.
+
+4. Problem-view data model.
+
+   Define an internal `A4SqpView` or `A4SqpProblemView` with:
+
+   - solver variable count and relation count;
+   - maps from A4SQP column/row index to ASCEND `sindex`;
+   - pointers back to `var_variable` and `rel_relation` where appropriate;
+   - variable values, lower bounds, upper bounds, nominals, and fixed flags;
+   - relation residuals, lower row bounds, upper row bounds, operators, and
+     included flags;
+   - objective relation/index and objective gradient;
+   - Jacobian sparsity and values;
+   - scaling vectors for variables and relations;
+   - diagnostic side tables for active bounds, elastic flags, worst residuals,
+     evaluation failures, and unsupported features.
+
+5. ASCEND relation-to-row-bound mapping.
+
+   The adapter should map current ASCEND binary relation operators into the
+   internal row-bound representation:
+
+   ```text
+   LHS =  RHS      r = LHS - RHS,    rel_l = 0,    rel_u = 0
+   LHS <= RHS      r = LHS - RHS,    rel_l = -inf, rel_u = 0
+   LHS >= RHS      r = LHS - RHS,    rel_l = 0,    rel_u = +inf
+   LHS <  RHS      r = LHS - RHS,    rel_l = -inf, rel_u = 0
+   LHS >  RHS      r = LHS - RHS,    rel_l = 0,    rel_u = +inf
+   ```
+
+   Strict inequalities should probably be accepted initially as their tolerant
+   non-strict equivalents, with a diagnostic note if needed. `<>` should be
+   rejected for Phase 1.
+
+6. Derivative and residual evaluation.
+
+   - Reuse relman routines for residual and Jacobian evaluation.
+   - Preserve ASCEND's residual meaning: `LHS - RHS` regardless of comparison.
+   - Store both raw residuals and scaled residuals.
+   - Capture derivative evaluation failures by row and variable where possible.
+   - Confirm Jacobian sparsity can be requested separately from numeric values.
+   - Add a debug dump option for dimensions, bounds, residuals, and Jacobian
+     nonzeros.
+
+7. QRSlv-style scaling.
+
+   - Implement `NONE`, variable nominal scaling, row two-norm relation scaling,
+     and relation nominal scaling first.
+   - Defer iterative/Fourer scaling until the basic scaling tests pass.
+   - Use safe fallbacks for zero, negative, or non-finite nominals.
+   - Report bad scaling through `ERROR_REPORTER_*` when user action may be
+     needed, and through `CONSOLE_DEBUG` for detailed developer traces.
+   - Test that scaled row bounds, residuals, and Jacobian entries are consistent
+     with the selected convention.
+
+8. Diagnostics and progress.
+
+   - Add a small A4SQP diagnostic/report helper rather than scattering
+     `ERROR_REPORTER_*` calls through all files.
+   - Use `ERROR_REPORTER_*` for user-facing diagnostics.
+   - Use `CONSOLE_DEBUG` for developer traces.
+   - Use `slv_report_progress("A4SQP", message)` for progress messages.
+   - Poll `slv_get_solver_interrupt()` in long loops.
+   - Record why setup failed: unsupported relation, missing objective, bad
+     derivative, non-finite residual, bad bounds, or unsupported discrete state.
+
+9. Native ASCEND tests.
+
+   Add tests under `ascend/solver/test/test_a4sqp.c` and models under
+   `models/test/a4sqp/`. Initial tests should assert construction and
+   evaluation, not optimisation success:
+
+   - variable/relation counts and row-bound mapping;
+   - objective and objective-gradient extraction;
+   - residual values for `=`, `<=`, and `>=`;
+   - Jacobian sparsity and numeric values on tiny models;
+   - variable and relation scaling;
+   - rejection of unsupported logical/discrete/switching cases;
+   - progress callback can receive at least one A4SQP progress message.
+
+10. Hand-built HiGHS QP spike.
+
+    After the problem view is testable, add the smallest possible HiGHS QP call
+    independent of the full SQP loop:
+
+    - one convex quadratic objective;
+    - variable bounds;
+    - one linear row;
+    - one elastic lower/upper slack pair;
+    - extraction of primal step, row multipliers, bound multipliers, and elastic
+      values where HiGHS exposes them.
+
+    This should prove the QP backend interface before it is connected to
+    nonlinear SQP iteration.
+
+11. First SQP iteration.
+
+    Only after the view and QP spike pass tests, implement one major SQP
+    iteration:
+
+    - assemble QP from current residuals and Jacobian;
+    - use identity or diagonal Hessian approximation initially;
+    - solve the QP with HiGHS;
+    - compute candidate step and predicted reduction;
+    - update diagnostics, but do not yet attempt a sophisticated line search.
+
+12. Minimal elastic line-search solve.
+
+    The first real solve loop should add:
+
+    - L1 merit function;
+    - Armijo-style backtracking line search;
+    - elastic penalty parameter and update rule;
+    - convergence checks for scaled feasibility, stationarity proxy, step size,
+      and iteration limit;
+    - user-facing final status explaining success, infeasibility, derivative
+      failure, QP failure, line-search failure, or interruption.
+
+Phase 1 should be considered complete when A4SQP can build and inspect the
+problem view for native ASCEND NLP examples, solve a few tiny smooth continuous
+examples, and provide useful diagnostics on deliberately unsupported or
+infeasible examples. Performance tuning, warm starts, decomposition, filter SQP,
+and standalone ABI work should remain out of scope until this baseline is
+stable.
+
 ### Phase 2: Robustness and Diagnostics
 
 Phase 2 should turn the Phase 1 prototype from "can solve selected examples"
