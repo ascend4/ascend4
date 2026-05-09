@@ -10,6 +10,7 @@ solver_qrslv
 solver_ipopt
 solver_makemps
 solver_highs
+solver_a4sqp
 
 linear_mtx
 linear_qrrank
