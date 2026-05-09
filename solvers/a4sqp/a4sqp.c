@@ -50,8 +50,91 @@ static void a4sqp_init_status(struct A4SqpSystem *sys){
 	sys->last_violation_max = 0.0;
 	sys->last_alpha = 0.0;
 	sys->last_step_norm = 0.0;
+	sys->trust_radius = 0.0;
+	sys->last_trust_ratio = 0.0;
 	sys->worst_violation_rel = -1;
 	sys->line_search_failed = 0;
+}
+
+static real64 a4sqp_trust_clamp(
+	const struct A4SqpSystem *sys,
+	real64 radius
+){
+	real64 radius_min;
+	real64 radius_max;
+	if(sys == NULL){
+		return radius;
+	}
+	radius_min = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_RADIUS_MIN);
+	radius_max = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_RADIUS_MAX);
+	if(!isfinite(radius_min) || radius_min <= 0.0){
+		radius_min = 1e-12;
+	}
+	if(!isfinite(radius_max) || radius_max < radius_min){
+		radius_max = radius_min;
+	}
+	if(!isfinite(radius) || radius < radius_min){
+		radius = radius_min;
+	}
+	if(radius > radius_max){
+		radius = radius_max;
+	}
+	return radius;
+}
+
+static void a4sqp_trust_reset(struct A4SqpSystem *sys){
+	if(sys == NULL){
+		return;
+	}
+	sys->trust_radius = a4sqp_trust_clamp(
+		sys,
+		SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_RADIUS_INIT)
+	);
+	sys->last_trust_ratio = 0.0;
+}
+
+static int a4sqp_trust_shrink(struct A4SqpSystem *sys){
+	real64 shrink;
+	real64 radius_min;
+	real64 new_radius;
+	if(sys == NULL){
+		return 0;
+	}
+	shrink = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_SHRINK);
+	radius_min = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_RADIUS_MIN);
+	if(!isfinite(shrink) || shrink <= 0.0 || shrink >= 1.0){
+		shrink = 0.25;
+	}
+	new_radius = a4sqp_trust_clamp(sys,sys->trust_radius * shrink);
+	if(new_radius >= sys->trust_radius){
+		return 0;
+	}
+	sys->trust_radius = new_radius;
+	return sys->trust_radius > radius_min * (1.0 + 1e-12);
+}
+
+static void a4sqp_trust_grow_if_good(
+	struct A4SqpSystem *sys,
+	real64 scaled_step_inf
+){
+	real64 good_ratio;
+	real64 grow;
+	if(sys == NULL){
+		return;
+	}
+	good_ratio = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_GOOD);
+	grow = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_GROW);
+	if(!isfinite(grow) || grow <= 1.0){
+		grow = 2.0;
+	}
+	if(
+		sys->last_alpha >= 0.999
+		&& sys->trust_radius > 0.0
+		&& scaled_step_inf >= 0.95 * sys->trust_radius
+		&& sys->last_trust_ratio >= good_ratio
+	){
+		sys->trust_radius = a4sqp_trust_clamp(sys,sys->trust_radius * grow);
+	}
 }
 
 static void a4sqp_step_hess_destroy(struct A4SqpSystem *sys){
@@ -407,11 +490,13 @@ static void a4sqp_report_iteration(struct A4SqpSystem *sys){
 	snprintf(
 		message,
 		sizeof(message),
-		"iter=%ld obj=%g merit=%g pred=%g viol_sum=%g viol_max=%g alpha=%g step=%g worst_rel=%ld",
+		"iter=%ld obj=%g merit=%g pred=%g rho=%g delta=%g viol_sum=%g viol_max=%g alpha=%g step=%g worst_rel=%ld",
 		(long)sys->status.iteration,
 		sys->view.obj != NULL ? sys->view.obj_value : 0.0,
 		sys->last_merit_after,
 		sys->last_predicted_reduction,
+		sys->last_trust_ratio,
+		sys->trust_radius,
 		sys->last_violation_sum,
 		sys->last_violation_max,
 		sys->last_alpha,
@@ -696,8 +781,12 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 	real64 penalty;
 	real64 merit_tol;
 	real64 armijo_coeff;
+	real64 step_tol;
+	real64 trust_accept;
 	real64 merit_decrease;
 	real64 required_decrease;
+	real64 trust_ratio;
+	real64 scaled_step_inf = 0.0;
 	real64 *old_values;
 	real64 *physical_step;
 	real64 *old_scaled_grad;
@@ -727,6 +816,8 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 	penalty = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY);
 	merit_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_MERIT_TOL);
 	armijo_coeff = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ARMIJO_COEFF);
+	step_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_STEP_TOL);
+	trust_accept = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_ACCEPT);
 	sys->last_merit_before = a4sqp_view_merit(&sys->view,penalty);
 	sys->last_merit_after = sys->last_merit_before;
 	sys->last_linearized_violation = a4sqp_qp_linearized_violation(&sys->qp);
@@ -735,19 +826,37 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 	sys->last_predicted_reduction = sys->last_merit_before - sys->last_model_merit_after;
 	sys->last_alpha = 0.0;
 	sys->last_step_norm = 0.0;
+	sys->last_trust_ratio = 0.0;
 	sys->line_search_failed = 0;
 
-		for(i = 0; i < sys->view.n_var; ++i){
-			old_values[i] = sys->view.var_value[i];
-			old_scaled_x[i] = sys->view.scaled_var_value[i];
-			old_scaled_grad[i] = sys->view.scaled_obj_gradient[i];
-			physical_step[i] = sys->view.var_scale[i] * sys->qp.col_value[i];
-			sys->last_step_norm += physical_step[i] * physical_step[i];
+	for(i = 0; i < sys->view.n_var; ++i){
+		real64 qstep = sys->qp.col_value[i];
+		old_values[i] = sys->view.var_value[i];
+		old_scaled_x[i] = sys->view.scaled_var_value[i];
+		old_scaled_grad[i] = sys->view.scaled_obj_gradient[i];
+		physical_step[i] = sys->view.var_scale[i] * qstep;
+		sys->last_step_norm += physical_step[i] * physical_step[i];
+		if(fabs(qstep) > scaled_step_inf){
+			scaled_step_inf = fabs(qstep);
 		}
+	}
 	sys->last_step_norm = sqrt(sys->last_step_norm);
+	if(sys->view.n_rel > 0 && sys->last_step_norm <= step_tol){
+		a4sqp_update_metrics(sys);
+		if(sys->last_violation_max <= SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL)){
+			sys->last_alpha = 0.0;
+			sys->last_trust_ratio = 1.0;
+			ASC_FREE(old_values);
+			ASC_FREE(physical_step);
+			ASC_FREE(old_scaled_grad);
+			ASC_FREE(old_scaled_x);
+			return 0;
+		}
+	}
 
 	if(fabs(sys->last_predicted_reduction) <= merit_tol){
 		sys->last_step_norm = 0.0;
+		sys->last_trust_ratio = 1.0;
 		a4sqp_update_metrics(sys);
 		ASC_FREE(old_values);
 		ASC_FREE(physical_step);
@@ -767,13 +876,19 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 		a4sqp_update_metrics(sys);
 		merit_decrease = sys->last_merit_before - sys->last_merit_after;
 		required_decrease = armijo_coeff * alpha * sys->last_predicted_reduction;
+		trust_ratio = 0.0;
 		if(required_decrease < 0.0){
 			required_decrease = 0.0;
 		}
-		if(merit_decrease >= required_decrease){
+		if(alpha * sys->last_predicted_reduction > merit_tol){
+			trust_ratio = merit_decrease / (alpha * sys->last_predicted_reduction);
+		}
+		if(merit_decrease >= required_decrease && trust_ratio >= trust_accept){
 			a4sqp_step_hess_update_objective_only(sys,old_scaled_x,old_scaled_grad);
 			sys->last_alpha = alpha;
 			sys->last_step_norm = step_norm;
+			sys->last_trust_ratio = trust_ratio;
+			a4sqp_trust_grow_if_good(sys,alpha * scaled_step_inf);
 			accepted = 1;
 			break;
 		}
@@ -820,6 +935,7 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to initialize the Hessian approximation.");
 		return 1;
 	}
+	a4sqp_trust_reset(sys);
 
 	if(sys->view.unsupported_rels > 0){
 		sys->status.ok = FALSE;
@@ -865,6 +981,8 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 
 static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 	struct A4SqpSystem *sys = (struct A4SqpSystem *)asys;
+	int trust_retries;
+	int trust_attempt;
 
 	MSG("Iterate...");
 
@@ -876,39 +994,109 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 			return 1;
 		}
 	}
-
+	trust_retries = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_TRUST_QP_RETRIES);
+	for(trust_attempt = 0; trust_attempt <= trust_retries; ++trust_attempt){
 		if(a4sqp_qp_build_from_view(
 			&sys->qp,
 			&sys->view,
 			sys->step_hess,
+			sys->view.n_rel > 0 ? sys->trust_radius : 0.0,
 			SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY),
 			SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL)
 		)){
-		sys->status.ok = FALSE;
-		sys->status.calc_ok = FALSE;
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to assemble the HiGHS QP subproblem.");
-		return 1;
-	}
-	if(a4sqp_qp_solve_highs(&sys->qp,&sys->params)){
+			sys->status.ok = FALSE;
+			sys->status.calc_ok = FALSE;
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to assemble the HiGHS QP subproblem.");
+			return 1;
+		}
+		if(a4sqp_qp_solve_highs(&sys->qp,&sys->params) == 0){
+			real64 feas_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
+			real64 merit_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_MERIT_TOL);
+			real64 penalty = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY);
+			if(sys->view.n_rel > 0){
+				real64 current_merit;
+				real64 null_qp_tol;
+				a4sqp_update_metrics(sys);
+				current_merit = a4sqp_view_merit(&sys->view,penalty);
+				null_qp_tol = 1e-8 * fmax(1.0,fabs(current_merit));
+				if(null_qp_tol < merit_tol){
+					null_qp_tol = merit_tol;
+				}
+				if(
+					sys->last_violation_max <= feas_tol
+					&& fabs(sys->qp.objective_value) <= null_qp_tol
+				){
+					sys->last_merit_before = current_merit;
+					sys->last_merit_after = current_merit;
+					sys->last_model_merit_after = current_merit;
+					sys->last_predicted_reduction = 0.0;
+					sys->last_alpha = 0.0;
+					sys->last_step_norm = 0.0;
+					sys->last_trust_ratio = 1.0;
+					break;
+				}
+			}
+			if(a4sqp_line_search(server,sys) == 0){
+				break;
+			}
+			if(sys->view.n_rel > 0){
+				real64 current_merit;
+				a4sqp_update_metrics(sys);
+				if(
+					sys->last_violation_max <= feas_tol
+					&& sys->last_linearized_violation <= feas_tol
+				){
+					current_merit = a4sqp_view_merit(&sys->view,penalty);
+					sys->last_merit_before = current_merit;
+					sys->last_merit_after = current_merit;
+					sys->last_model_merit_after = current_merit;
+					sys->last_predicted_reduction = 0.0;
+					sys->last_alpha = 0.0;
+					sys->last_step_norm = 0.0;
+					sys->last_trust_ratio = 1.0;
+					break;
+				}
+			}
+			if(trust_attempt < trust_retries && a4sqp_trust_shrink(sys)){
+				char message[256];
+				snprintf(
+					message,
+					sizeof(message),
+					"trust: shrinking radius after line-search failure to %g",
+					sys->trust_radius
+				);
+				a4sqp_report_progress(&sys->params,message);
+				continue;
+			}
+			sys->status.converged = FALSE;
+			sys->status.diverged = TRUE;
+			a4sqp_report_qp(sys);
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"A4SQP line search failed to find a merit-improving step (merit_before=%g, merit_after=%g, predicted_reduction=%g, rho=%g, step=%g, viol_max=%g).",
+				sys->last_merit_before,
+				sys->last_merit_after,
+				sys->last_predicted_reduction,
+				sys->last_trust_ratio,
+				sys->last_step_norm,
+				sys->last_violation_max
+			);
+			return 1;
+		}
+		if(trust_attempt < trust_retries && a4sqp_trust_shrink(sys)){
+			char message[256];
+			snprintf(
+				message,
+				sizeof(message),
+				"trust: shrinking radius after QP failure to %g",
+				sys->trust_radius
+			);
+			a4sqp_report_progress(&sys->params,message);
+			continue;
+		}
 		sys->status.converged = FALSE;
 		sys->status.diverged = TRUE;
 		a4sqp_report_qp(sys);
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP HiGHS QP subproblem did not solve to optimality.");
-		return 1;
-	}
-
-	if(a4sqp_line_search(server,sys)){
-		sys->status.converged = FALSE;
-		sys->status.diverged = TRUE;
-		a4sqp_report_qp(sys);
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,
-			"A4SQP line search failed to find a merit-improving step (merit_before=%g, merit_after=%g, predicted_reduction=%g, step=%g, viol_max=%g).",
-			sys->last_merit_before,
-			sys->last_merit_after,
-			sys->last_predicted_reduction,
-			sys->last_step_norm,
-			sys->last_violation_max
-		);
 		return 1;
 	}
 

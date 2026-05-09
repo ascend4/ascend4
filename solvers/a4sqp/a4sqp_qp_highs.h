@@ -65,6 +65,7 @@ int a4sqp_qp_build_from_view(
 	struct A4SqpQp *qp,
 	const struct A4SqpView *view,
 	const real64 *step_hess,
+	real64 trust_radius,
 	real64 elastic_penalty,
 	real64 feas_tol
 );

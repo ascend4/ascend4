@@ -217,6 +217,7 @@ static void test_a4sqp_basic_view_presolve(void){
 	int lerow;
 	int gerow;
 	int scale_idx;
+	int trust_radius_idx;
 	slv_parameters_t params;
 
 	memset(&progress,0,sizeof(progress));
@@ -345,7 +346,9 @@ static void test_a4sqp_basic_view_presolve(void){
 
 	slv_get_parameters(sys,&params);
 	scale_idx = find_param_index(&params,"scaleopt");
+	trust_radius_idx = find_param_index(&params,"trust_radius_init");
 	CU_ASSERT_FATAL(scale_idx != -1);
+	CU_ASSERT_FATAL(trust_radius_idx != -1);
 	slv_set_char_parameter(&(SLV_PARAM_CHAR(&params,scale_idx)),"NONE");
 	slv_set_parameters(sys,&params);
 	CU_ASSERT_FATAL(0 == slv_presolve(sys));
@@ -375,6 +378,7 @@ static void test_a4sqp_basic_view_presolve(void){
 	CU_ASSERT_DOUBLE_EQUAL(a4sqp_scaled_jac_value(view,eqrow,view->var_sindex[ycol]),2.0,1e-9);
 
 	slv_set_char_parameter(&(SLV_PARAM_CHAR(&params,scale_idx)),"ROW_2NORM");
+	SLV_PARAM_REAL(&params,trust_radius_idx) = 10.0;
 	slv_set_parameters(sys,&params);
 	CU_ASSERT_FATAL(0 == slv_presolve(sys));
 	a4sys = (struct A4SqpSystem *)slv_get_client_token(sys);

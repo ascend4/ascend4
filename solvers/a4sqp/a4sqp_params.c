@@ -126,5 +126,61 @@ int a4sqp_get_default_parameters(
 		}, A4SQP_QP_DEFAULT_ELASTIC_PENALTY, 1e-12, 1e12}
 	);
 
+	slv_param_real(parameters,A4SQP_PARAM_TRUST_RADIUS_INIT,
+		(SlvParameterInitReal){{"trust_radius_init",
+			"Initial trust radius",2,
+			"Initial scaled infinity-norm trust-region radius for the primal SQP step."
+		}, 1.0, 1e-12, 1e12}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_TRUST_RADIUS_MIN,
+		(SlvParameterInitReal){{"trust_radius_min",
+			"Minimum trust radius",2,
+			"Minimum scaled trust-region radius before A4SQP gives up shrinking the QP step."
+		}, 1e-6, 1e-12, 1e12}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_TRUST_RADIUS_MAX,
+		(SlvParameterInitReal){{"trust_radius_max",
+			"Maximum trust radius",2,
+			"Maximum scaled trust-region radius for the primal SQP step."
+		}, 100.0, 1e-12, 1e12}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_TRUST_SHRINK,
+		(SlvParameterInitReal){{"trust_shrink",
+			"Trust shrink factor",2,
+			"Factor applied to the trust radius after QP or agreement failure."
+		}, 0.25, 1e-6, 0.999999}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_TRUST_GROW,
+		(SlvParameterInitReal){{"trust_grow",
+			"Trust grow factor",2,
+			"Factor applied to the trust radius after a good boundary-active step."
+		}, 2.0, 1.000001, 1e6}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_TRUST_ACCEPT,
+		(SlvParameterInitReal){{"trust_accept",
+			"Trust acceptance ratio",2,
+			"Minimum actual-to-predicted merit reduction ratio required for line-search acceptance."
+		}, 0.1, -1e6, 1e6}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_TRUST_GOOD,
+		(SlvParameterInitReal){{"trust_good",
+			"Trust good ratio",2,
+			"Actual-to-predicted merit reduction ratio that triggers trust-region growth when the step is trust-active."
+		}, 0.75, -1e6, 1e6}
+	);
+
+	slv_param_int(parameters,A4SQP_PARAM_TRUST_QP_RETRIES,
+		(SlvParameterInitInt){{"trust_qp_retries",
+			"Trust-region retries",2,
+			"Maximum number of trust-radius reductions and QP rebuild retries per SQP iteration."
+		}, 5, 0, 100}
+	);
+
 	return 0;
 }

@@ -72,6 +72,21 @@ The current prototype has been exercised on small benchmark models under
   now present as an ASCEND benchmark model but not yet a passing A4SQP
   regression.
 
+More recent benchmark work has clarified the current boundary of the prototype:
+
+- `hs3.a4c`, `hs11.a4c`, and `hs21.a4c` are the current passing A4SQP
+  regressions and remain in the focused CUnit suite;
+- `rosenbr.a4c` is still numerically close to the solution but does not yet
+  satisfy the current objective-only termination logic, so it remains out of the
+  passing suite;
+- `lubrifc.a4c` is now present as a reduced benchmark translation using
+  `NN = 10`, not the full CUTEr default, and the current reduced model uses the
+  smoother complementarity relaxation `min sum(p_i r_i)` together with
+  `p_i >= 0`, `r_i >= 0`;
+- the current reduced `lubrifc.a4c` translation now converges with the current
+  trust-region prototype and has become a useful constrained robustness case
+  rather than a pure failure reproducer.
+
 Recent implementation lessons from these benchmarks:
 
 - Objective-only models are valid A4SQP cases and must not be treated as QP
@@ -90,6 +105,43 @@ Recent constrained-solver stabilization work:
   numerically pointless correction QPs;
 - the merit line search no longer suppresses small but still useful accepted
   steps before the convergence check has a chance to see the updated iterate.
+
+Recent HiGHS-facing stabilization work:
+
+- A4SQP now logs enough of the HiGHS QP lifecycle under `progress_log` to make
+  late subproblem failures diagnosable without recompiling additional tracing;
+- the HiGHS primal, dual, and KKT tolerances are now aligned more closely with
+  A4SQP's feasibility scale instead of relying on the much tighter HiGHS
+  defaults;
+- tiny step-bound displacements are now snapped to zero before the HiGHS call in
+  the same way as tiny row displacements, which reduces purely numerical bound
+  noise in near-active variables.
+
+Recent trust-region work:
+
+- A4SQP now has a scaled box trust region on the primal step variables for
+  constrained problems, implemented directly as additional QP column bounds;
+- the trust box is not applied to objective-only problems such as `hs3.a4c`,
+  because doing so distorted the previously working objective-only path without
+  helping the current failure cases;
+- the effective per-variable trust radius is expanded as needed to include any
+  hard bound-restoring step, so the trust box cannot make an already violated
+  variable bound infeasible inside the QP;
+- on QP failure or line-search rejection, A4SQP now shrinks the trust radius
+  and rebuilds the QP a bounded number of times before giving up;
+- when the current constrained iterate is already feasible and the QP reduces to
+  a numerically null correction, A4SQP now accepts a null step instead of
+  burning time on a sequence of smaller trust radii.
+
+Observed benchmark outcome from that work:
+
+- `hs11.a4c` and `hs21.a4c` still converge under the trust-region prototype;
+- the focused CUnit suite remains green for `hs3`, `hs11`, and `hs21`;
+- the reduced `lubrifc.a4c` case now progresses past the earlier late HiGHS QP
+  failure and converges to a feasible relaxed solution;
+- the trust-region prototype is therefore paying off on constrained cases, but
+  it is still intentionally scoped conservatively and is not yet a full filter
+  SQP globalization scheme.
 
 Still deferred:
 

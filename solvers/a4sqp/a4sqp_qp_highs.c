@@ -461,6 +461,7 @@ int a4sqp_qp_build_from_view(
 	struct A4SqpQp *qp,
 	const struct A4SqpView *view,
 	const real64 *step_hess,
+	real64 trust_radius,
 	real64 elastic_penalty,
 	real64 feas_tol
 ){
@@ -507,6 +508,21 @@ int a4sqp_qp_build_from_view(
 			real64 midpoint = 0.5 * (qp->col_lower[i] + qp->col_upper[i]);
 			qp->col_lower[i] = midpoint;
 			qp->col_upper[i] = midpoint;
+		}
+		if(trust_radius > 0.0 && isfinite(trust_radius)){
+			real64 local_radius = trust_radius;
+			if(!a4sqp_qp_is_lower_inf(qp->col_lower[i]) && qp->col_lower[i] > local_radius){
+				local_radius = qp->col_lower[i];
+			}
+			if(!a4sqp_qp_is_upper_inf(qp->col_upper[i]) && -qp->col_upper[i] > local_radius){
+				local_radius = -qp->col_upper[i];
+			}
+			if(a4sqp_qp_is_lower_inf(qp->col_lower[i]) || qp->col_lower[i] < -local_radius){
+				qp->col_lower[i] = -local_radius;
+			}
+			if(a4sqp_qp_is_upper_inf(qp->col_upper[i]) || qp->col_upper[i] > local_radius){
+				qp->col_upper[i] = local_radius;
+			}
 		}
 	}
 

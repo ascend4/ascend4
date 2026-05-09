@@ -31,6 +31,8 @@ struct A4SqpSystem {
 	real64 last_violation_max;
 	real64 last_alpha;
 	real64 last_step_norm;
+	real64 trust_radius;
+	real64 last_trust_ratio;
 	int32 worst_violation_rel;
 	int line_search_failed;
 };
