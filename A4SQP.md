@@ -37,6 +37,68 @@ The goal is not to reproduce SNOPT, WORHP, or Knitro immediately. The goal is a
 focused ASCEND prototype that can test whether active-set elastic SQP helps
 models that fail with the current solver set.
 
+## Current Prototype Status
+
+As of May 2026, the prototype has moved past the initial registration and QP
+spike stage:
+
+- A4SQP is implemented as an ASCEND solver client and can build a reusable
+  ASCEND-native problem view from `slv_system_t`.
+- HiGHS-backed convex QP subproblems are assembled and solved through the A4SQP
+  QP layer.
+- Elastic row variables are included in the QP model so local linearized
+  infeasibility does not immediately abort an iteration.
+- The prototype currently uses exact first derivatives from ASCEND together with
+  a positive-semidefinite step Hessian approximation.
+- The current Hessian model is a damped dense BFGS update on the primal step
+  block, initialized from scaled curvature information.
+- Globalization is an L1 merit-function line search with Armijo-style
+  backtracking.
+- The current iterate path supports repeated `presolve` plus `iterate` calls
+  from the ASCEND CLI and test harness.
+
+The current prototype has been exercised on small benchmark models under
+`models/test/a4sqp`, including:
+
+- `hs3.a4c`, an objective-only Hock-Schittkowski problem with a strongly scaled
+  shallow curvature direction, now solving successfully with the current
+  objective-only BFGS step Hessian;
+- `hs11.a4c`, a constrained Hock-Schittkowski problem with one nonlinear
+  inequality, now solving successfully with the current BFGS step Hessian and
+  linearized-row tolerance handling;
+- `hs21.a4c`, a linearly constrained quadratic Hock-Schittkowski problem, now
+  solving successfully as a compact constrained regression;
+- `rosenbr.a4c`, the classical two-variable Rosenbrock objective-only problem,
+  now present as an ASCEND benchmark model but not yet a passing A4SQP
+  regression.
+
+Recent implementation lessons from these benchmarks:
+
+- Objective-only models are valid A4SQP cases and must not be treated as QP
+  assembly failures when the relation count is zero.
+- Convergence for optimization problems must check stationarity, not just
+  feasibility.
+- Merit-function acceptance should be driven by predicted decrease, without
+  imposing an artificial absolute decrease floor on otherwise valid steps.
+- Triangular Hessian storage passed to HiGHS must be reconstructed carefully
+  when computing model-predicted objective values.
+
+Recent constrained-solver stabilization work:
+
+- QP row-displacement bounds that are already within A4SQP's scaled feasibility
+  tolerance are snapped to zero before the HiGHS call, which avoids late
+  numerically pointless correction QPs;
+- the merit line search no longer suppresses small but still useful accepted
+  steps before the convergence check has a chance to see the updated iterate.
+
+Still deferred:
+
+- exact Hessian support via ASCEND Hessian callbacks with PSD regularization for
+  HiGHS;
+- a reduced-memory Hessian option such as L-BFGS;
+- filter globalization;
+- richer warm-start state beyond the current prototype state.
+
 ## SQP Subproblem
 
 At iterate `x_k`, A4SQP forms a QP step `p` from a local model:

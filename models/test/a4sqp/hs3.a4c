@@ -1,0 +1,31 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL hs3;
+    x1, x2 IS_A solver_var;
+
+    MINIMIZE x2 + 1e-5*(x2 - x1)^2;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1) < 1e-2;
+	ASSERT abs(x2) < 1e-8;
+	ASSERT x2 >= -1e-8;
+	ASSERT x2 + 1e-5*(x2 - x1)^2 < 1e-8;
+END self_test;
+
+METHOD on_load;
+	x2.lower_bound := 0.0;
+	x1 := 10.0;
+	x2 := 1.0;
+	SOLVER A4SQP;
+	OPTION max_iter 100;
+END on_load;
+
+METHOD on_load_test;
+	x2.lower_bound := 0.0;
+	x1 := 10.0;
+	x2 := 1.0;
+END on_load_test;
+END hs3;

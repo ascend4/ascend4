@@ -6,6 +6,7 @@
 #define ASC_A4SQP_QP_HIGHS_H
 
 #include <ascend/general/platform.h>
+#include <ascend/system/slv_client.h>
 
 #include "a4sqp_view.h"
 
@@ -63,8 +64,10 @@ void a4sqp_qp_destroy(struct A4SqpQp *qp);
 int a4sqp_qp_build_from_view(
 	struct A4SqpQp *qp,
 	const struct A4SqpView *view,
-	real64 elastic_penalty
+	const real64 *step_hess,
+	real64 elastic_penalty,
+	real64 feas_tol
 );
-int a4sqp_qp_solve_highs(struct A4SqpQp *qp);
+int a4sqp_qp_solve_highs(struct A4SqpQp *qp, slv_parameters_t *params);
 
 #endif

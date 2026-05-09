@@ -23,6 +23,12 @@
 #include <ascend/system/var.h>
 #include <ascend/utilities/error.h>
 
+#ifdef A4SQP_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
 static void a4sqp_init_status(struct A4SqpSystem *sys){
 	if(sys == NULL){
 		return;
@@ -46,6 +52,216 @@ static void a4sqp_init_status(struct A4SqpSystem *sys){
 	sys->last_step_norm = 0.0;
 	sys->worst_violation_rel = -1;
 	sys->line_search_failed = 0;
+}
+
+static void a4sqp_step_hess_destroy(struct A4SqpSystem *sys){
+	if(sys == NULL){
+		return;
+	}
+	ASC_FREE(sys->step_hess);
+	sys->step_hess_n = 0;
+	sys->step_hess_updates = 0;
+}
+
+static int a4sqp_step_hess_reset_identity(struct A4SqpSystem *sys, real64 diag){
+	int32 i;
+	int32 n;
+	if(sys == NULL){
+		return 1;
+	}
+	n = sys->view.n_var;
+	if(n < 0){
+		return 1;
+	}
+	if(sys->step_hess_n != n || sys->step_hess == NULL){
+		a4sqp_step_hess_destroy(sys);
+		if(n > 0){
+			sys->step_hess = ASC_NEW_ARRAY_OR_NULL(real64,n * n);
+			if(sys->step_hess == NULL){
+				return 1;
+			}
+		}
+		sys->step_hess_n = n;
+	}
+	if(diag <= 0.0 || !isfinite(diag)){
+		diag = 1.0;
+	}
+	for(i = 0; i < n * n; ++i){
+		sys->step_hess[i] = 0.0;
+	}
+	for(i = 0; i < n; ++i){
+		sys->step_hess[i * n + i] = diag;
+	}
+	sys->step_hess_updates = 0;
+	return 0;
+}
+
+static int a4sqp_step_hess_sync(struct A4SqpSystem *sys){
+	if(sys == NULL){
+		return 1;
+	}
+	if(sys->step_hess_n == sys->view.n_var && (sys->view.n_var == 0 || sys->step_hess != NULL)){
+		return 0;
+	}
+	return a4sqp_step_hess_reset_identity(sys,1.0);
+}
+
+static void a4sqp_step_hess_mul(
+	const struct A4SqpSystem *sys,
+	const real64 *x,
+	real64 *y
+){
+	int32 i;
+	int32 j;
+	int32 n;
+	if(sys == NULL || x == NULL || y == NULL){
+		return;
+	}
+	n = sys->step_hess_n;
+	for(i = 0; i < n; ++i){
+		real64 sum = 0.0;
+		for(j = 0; j < n; ++j){
+			sum += sys->step_hess[i * n + j] * x[j];
+		}
+		y[i] = sum;
+	}
+}
+
+static void a4sqp_step_hess_update_objective_only(
+	struct A4SqpSystem *sys,
+	const real64 *old_scaled_x,
+	const real64 *old_scaled_grad
+){
+	int32 i;
+	int32 j;
+	int32 n;
+	real64 *s = NULL;
+	real64 *y = NULL;
+	real64 *bs = NULL;
+	real64 *r = NULL;
+	real64 sty = 0.0;
+	real64 yty = 0.0;
+	real64 stbs = 0.0;
+	real64 str = 0.0;
+	real64 theta = 1.0;
+	real64 gamma = 1.0;
+	const real64 eps = 1e-12;
+
+	if(
+		sys == NULL
+		|| sys->view.obj == NULL
+		|| sys->view.n_rel != 0
+		|| sys->view.n_var <= 0
+		|| old_scaled_x == NULL
+		|| old_scaled_grad == NULL
+	){
+		return;
+	}
+	n = sys->view.n_var;
+	if(a4sqp_step_hess_sync(sys)){
+		return;
+	}
+
+	s = ASC_NEW_ARRAY_OR_NULL(real64,n);
+	y = ASC_NEW_ARRAY_OR_NULL(real64,n);
+	bs = ASC_NEW_ARRAY_OR_NULL(real64,n);
+	r = ASC_NEW_ARRAY_OR_NULL(real64,n);
+	if(s == NULL || y == NULL || bs == NULL || r == NULL){
+		ASC_FREE(s);
+		ASC_FREE(y);
+		ASC_FREE(bs);
+		ASC_FREE(r);
+		return;
+	}
+
+	for(i = 0; i < n; ++i){
+		s[i] = sys->view.scaled_var_value[i] - old_scaled_x[i];
+		y[i] = sys->view.scaled_obj_gradient[i] - old_scaled_grad[i];
+		sty += s[i] * y[i];
+		yty += y[i] * y[i];
+	}
+	if(sty <= eps || yty <= eps){
+		goto cleanup;
+	}
+
+	if(sys->step_hess_updates == 0){
+		gamma = yty / sty;
+		if(!isfinite(gamma) || gamma < 1e-8){
+			gamma = 1e-8;
+		}else if(gamma > 1e8){
+			gamma = 1e8;
+		}
+		if(a4sqp_step_hess_reset_identity(sys,gamma)){
+			goto cleanup;
+		}
+	}
+
+	a4sqp_step_hess_mul(sys,s,bs);
+	for(i = 0; i < n; ++i){
+		stbs += s[i] * bs[i];
+	}
+	if(stbs <= eps){
+		goto cleanup;
+	}
+
+	if(sty < 0.2 * stbs){
+		theta = 0.8 * stbs / (stbs - sty);
+	}
+	for(i = 0; i < n; ++i){
+		r[i] = theta * y[i] + (1.0 - theta) * bs[i];
+		str += s[i] * r[i];
+	}
+	if(str <= eps){
+		goto cleanup;
+	}
+
+	for(i = 0; i < n; ++i){
+		for(j = 0; j < n; ++j){
+			sys->step_hess[i * n + j]
+				+= (r[i] * r[j]) / str
+				- (bs[i] * bs[j]) / stbs;
+		}
+	}
+	for(i = 0; i < n; ++i){
+		for(j = i + 1; j < n; ++j){
+			real64 sym = 0.5 * (sys->step_hess[i * n + j] + sys->step_hess[j * n + i]);
+			sys->step_hess[i * n + j] = sym;
+			sys->step_hess[j * n + i] = sym;
+		}
+		if(!isfinite(sys->step_hess[i * n + i]) || sys->step_hess[i * n + i] < 1e-8){
+			sys->step_hess[i * n + i] = 1e-8;
+		}
+	}
+	++sys->step_hess_updates;
+
+cleanup:
+	ASC_FREE(s);
+	ASC_FREE(y);
+	ASC_FREE(bs);
+	ASC_FREE(r);
+}
+
+static void a4sqp_spoof_block_status(struct A4SqpSystem *sys){
+	struct slv__block_status_structure *block;
+	int32 size;
+	if(sys == NULL){
+		return;
+	}
+	block = &sys->status.block;
+	size = sys->view.n_var > 0 ? sys->view.n_var : 0;
+	block->number_of = 1;
+	block->current_block = 0;
+	block->current_reordered_block = 0;
+	block->current_size = size;
+	block->previous_total_size = 0;
+	block->previous_total_size_vars = 0;
+	block->iteration = sys->status.iteration;
+	block->funcs = 0;
+	block->jacs = 0;
+	block->cpu_elapsed = sys->status.cpu_elapsed;
+	block->functime = 0.0;
+	block->jactime = 0.0;
+	block->residual = sys->last_violation_max;
 }
 
 static SlvClientToken a4sqp_create(slv_system_t server, int *statusindex){
@@ -74,6 +290,9 @@ static SlvClientToken a4sqp_create(slv_system_t server, int *statusindex){
 	if(statusindex != NULL){
 		*statusindex = 0;
 	}
+	
+	MSG("System created");
+
 	return (SlvClientToken)sys;
 }
 
@@ -87,8 +306,12 @@ static int a4sqp_destroy(slv_system_t server, SlvClientToken asys){
 
 	a4sqp_view_destroy(&sys->view);
 	a4sqp_qp_destroy(&sys->qp);
+	a4sqp_step_hess_destroy(sys);
 	slv_destroy_parms(&sys->params);
 	ascfree(sys);
+	
+	MSG("System destroyed");
+	
 	return 0;
 }
 
@@ -262,6 +485,140 @@ static real64 a4sqp_view_merit(const struct A4SqpView *view, real64 penalty){
 	return view->obj_value + penalty * violation;
 }
 
+static int32 a4sqp_view_var_col(const struct A4SqpView *view, int32 sindex){
+	int32 i;
+	if(view == NULL){
+		return -1;
+	}
+	for(i = 0; i < view->n_var; ++i){
+		if(view->var_sindex[i] == sindex){
+			return i;
+		}
+	}
+	return -1;
+}
+
+static real64 a4sqp_projected_gradient_inf(struct A4SqpSystem *sys, real64 active_tol){
+	const struct A4SqpView *view;
+	real64 *basis = NULL;
+	real64 *normal = NULL;
+	real64 *proj = NULL;
+	int32 basis_count = 0;
+	int32 n;
+	int32 i;
+	int32 row;
+	real64 proj_inf = 0.0;
+	const real64 eps = 1e-12;
+
+	if(sys == NULL || sys->view.obj == NULL){
+		return 0.0;
+	}
+	view = &sys->view;
+	n = view->n_var;
+	if(n <= 0){
+		return 0.0;
+	}
+
+	basis = ASC_NEW_ARRAY_CLEAR(real64,n * n);
+	normal = ASC_NEW_ARRAY_CLEAR(real64,n);
+	proj = ASC_NEW_ARRAY_CLEAR(real64,n);
+	if(basis == NULL || normal == NULL || proj == NULL){
+		ASC_FREE(basis);
+		ASC_FREE(normal);
+		ASC_FREE(proj);
+		return 0.0;
+	}
+
+	for(i = 0; i < n; ++i){
+		proj[i] = view->scaled_obj_gradient != NULL ? view->scaled_obj_gradient[i] : 0.0;
+	}
+
+	for(row = 0; row < view->n_rel; ++row){
+		int include = 0;
+		int32 k;
+		memset(normal,0,sizeof(real64) * n);
+		if(view->relop[row] == e_rel_equal){
+			include = 1;
+		}else{
+			if(
+				!a4sqp_is_lower_inf(view->scaled_rel_lower[row])
+				&& view->scaled_rel_residual[row] <= view->scaled_rel_lower[row] + active_tol
+			){
+				include = 1;
+			}
+			if(
+				!a4sqp_is_upper_inf(view->scaled_rel_upper[row])
+				&& view->scaled_rel_residual[row] >= view->scaled_rel_upper[row] - active_tol
+			){
+				include = 1;
+			}
+		}
+		if(!include){
+			continue;
+		}
+		for(k = view->jac_row_start[row]; k < view->jac_row_start[row + 1]; ++k){
+			int32 col = a4sqp_view_var_col(view,view->jac_col_sindex[k]);
+			if(col >= 0){
+				normal[col] = view->scaled_jac_value[k];
+			}
+		}
+		for(i = 0; i < basis_count; ++i){
+			int32 j;
+			real64 dot = 0.0;
+			for(j = 0; j < n; ++j){
+				dot += basis[i * n + j] * normal[j];
+			}
+			for(j = 0; j < n; ++j){
+				normal[j] -= dot * basis[i * n + j];
+			}
+		}
+		{
+			real64 norm2 = 0.0;
+			for(i = 0; i < n; ++i){
+				norm2 += normal[i] * normal[i];
+			}
+			if(norm2 > eps && basis_count < n){
+				real64 inv_norm = 1.0 / sqrt(norm2);
+				for(i = 0; i < n; ++i){
+					basis[basis_count * n + i] = normal[i] * inv_norm;
+				}
+				++basis_count;
+			}
+		}
+	}
+
+	for(i = 0; i < basis_count; ++i){
+		int32 j;
+		real64 dot = 0.0;
+		for(j = 0; j < n; ++j){
+			dot += basis[i * n + j] * proj[j];
+		}
+		for(j = 0; j < n; ++j){
+			proj[j] -= dot * basis[i * n + j];
+		}
+	}
+
+	for(i = 0; i < n; ++i){
+		real64 grad = proj[i];
+		real64 value = view->scaled_var_value[i];
+		real64 lower = view->scaled_var_lower[i];
+		real64 upper = view->scaled_var_upper[i];
+		int at_lower = !a4sqp_is_lower_inf(lower) && value <= lower + active_tol;
+		int at_upper = !a4sqp_is_upper_inf(upper) && value >= upper - active_tol;
+		if((at_lower && grad > 0.0) || (at_upper && grad < 0.0)){
+			grad = 0.0;
+		}
+		if(fabs(grad) > proj_inf){
+			proj_inf = fabs(grad);
+		}
+	}
+
+	ASC_FREE(basis);
+	ASC_FREE(normal);
+	ASC_FREE(proj);
+	return proj_inf;
+}
+
 static real64 a4sqp_qp_linearized_violation(const struct A4SqpQp *qp){
 	int32 c;
 	real64 violation = 0.0;
@@ -287,18 +644,30 @@ static void a4sqp_update_metrics(struct A4SqpSystem *sys){
 		&sys->last_violation_max,
 		&sys->worst_violation_rel
 	);
-	sys->status.block.residual = sys->last_violation_max;
+	a4sqp_spoof_block_status(sys);
 }
 
 static int a4sqp_has_converged(struct A4SqpSystem *sys){
 	real64 feas_tol;
+	real64 opt_tol;
 	real64 step_tol;
+	real64 proj_grad_inf = 0.0;
 	if(sys == NULL){
 		return 0;
 	}
 	feas_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
 	step_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_STEP_TOL);
+	opt_tol = (step_tol > feas_tol) ? step_tol : feas_tol;
 	a4sqp_update_metrics(sys);
+	if(sys->view.obj != NULL){
+		if(sys->view.n_rel == 0){
+			proj_grad_inf = a4sqp_projected_gradient_inf(sys,feas_tol);
+			return sys->last_violation_max <= feas_tol && proj_grad_inf <= feas_tol;
+		}
+		proj_grad_inf = a4sqp_projected_gradient_inf(sys,feas_tol);
+		return sys->last_violation_max <= feas_tol
+			&& (proj_grad_inf <= opt_tol || sys->last_step_norm <= step_tol);
+	}
 	return sys->last_violation_max <= feas_tol && sys->last_step_norm <= step_tol;
 }
 
@@ -331,7 +700,11 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 	real64 required_decrease;
 	real64 *old_values;
 	real64 *physical_step;
+	real64 *old_scaled_grad;
+	real64 *old_scaled_x;
 	struct var_variable **vars;
+
+	MSG("Line search...");
 
 	if(sys == NULL || sys->view.n_var <= 0){
 		return 1;
@@ -339,9 +712,13 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 
 	old_values = ASC_NEW_ARRAY_OR_NULL(real64,sys->view.n_var);
 	physical_step = ASC_NEW_ARRAY_OR_NULL(real64,sys->view.n_var);
-	if(old_values == NULL || physical_step == NULL){
+	old_scaled_grad = ASC_NEW_ARRAY_OR_NULL(real64,sys->view.n_var);
+	old_scaled_x = ASC_NEW_ARRAY_OR_NULL(real64,sys->view.n_var);
+	if(old_values == NULL || physical_step == NULL || old_scaled_grad == NULL || old_scaled_x == NULL){
 		ASC_FREE(old_values);
 		ASC_FREE(physical_step);
+		ASC_FREE(old_scaled_grad);
+		ASC_FREE(old_scaled_x);
 		return 1;
 	}
 
@@ -360,17 +737,22 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 	sys->last_step_norm = 0.0;
 	sys->line_search_failed = 0;
 
-	for(i = 0; i < sys->view.n_var; ++i){
-		old_values[i] = sys->view.var_value[i];
-		physical_step[i] = sys->view.var_scale[i] * sys->qp.col_value[i];
-		sys->last_step_norm += physical_step[i] * physical_step[i];
-	}
+		for(i = 0; i < sys->view.n_var; ++i){
+			old_values[i] = sys->view.var_value[i];
+			old_scaled_x[i] = sys->view.scaled_var_value[i];
+			old_scaled_grad[i] = sys->view.scaled_obj_gradient[i];
+			physical_step[i] = sys->view.var_scale[i] * sys->qp.col_value[i];
+			sys->last_step_norm += physical_step[i] * physical_step[i];
+		}
 	sys->last_step_norm = sqrt(sys->last_step_norm);
 
-	if(sys->last_step_norm <= SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_STEP_TOL)){
+	if(fabs(sys->last_predicted_reduction) <= merit_tol){
+		sys->last_step_norm = 0.0;
 		a4sqp_update_metrics(sys);
 		ASC_FREE(old_values);
 		ASC_FREE(physical_step);
+		ASC_FREE(old_scaled_grad);
+		ASC_FREE(old_scaled_x);
 		return 0;
 	}
 
@@ -384,15 +766,12 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 		sys->last_merit_after = a4sqp_view_merit(&sys->view,penalty);
 		a4sqp_update_metrics(sys);
 		merit_decrease = sys->last_merit_before - sys->last_merit_after;
-		if(sys->last_predicted_reduction > merit_tol){
-			required_decrease = armijo_coeff * alpha * sys->last_predicted_reduction;
-			if(required_decrease < merit_tol){
-				required_decrease = merit_tol;
-			}
-		}else{
-			required_decrease = merit_tol;
+		required_decrease = armijo_coeff * alpha * sys->last_predicted_reduction;
+		if(required_decrease < 0.0){
+			required_decrease = 0.0;
 		}
 		if(merit_decrease >= required_decrease){
+			a4sqp_step_hess_update_objective_only(sys,old_scaled_x,old_scaled_grad);
 			sys->last_alpha = alpha;
 			sys->last_step_norm = step_norm;
 			accepted = 1;
@@ -410,6 +789,8 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 
 	ASC_FREE(old_values);
 	ASC_FREE(physical_step);
+	ASC_FREE(old_scaled_grad);
+	ASC_FREE(old_scaled_x);
 	return accepted ? 0 : 1;
 }
 
@@ -423,11 +804,20 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 	sys->server = server;
 	a4sqp_init_status(sys);
 
+	MSG("Presolve...");
+
 	if(a4sqp_ascend_build_view(sys,server)){
 		sys->status.ok = FALSE;
 		sys->status.calc_ok = FALSE;
 		sys->status.ready_to_solve = FALSE;
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to build the ASCEND problem view.");
+		return 1;
+	}
+	if(a4sqp_step_hess_sync(sys)){
+		sys->status.ok = FALSE;
+		sys->status.calc_ok = FALSE;
+		sys->status.ready_to_solve = FALSE;
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to initialize the Hessian approximation.");
 		return 1;
 	}
 
@@ -469,11 +859,14 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 	sys->status.ready_to_solve = TRUE;
 	a4sqp_update_metrics(sys);
 	a4sqp_report_view(sys);
+	MSG("Presolve completed");
 	return 0;
 }
 
 static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 	struct A4SqpSystem *sys = (struct A4SqpSystem *)asys;
+
+	MSG("Iterate...");
 
 	if(sys == NULL){
 		return 1;
@@ -484,17 +877,19 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 		}
 	}
 
-	if(a4sqp_qp_build_from_view(
-		&sys->qp,
-		&sys->view,
-		SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY)
-	)){
+		if(a4sqp_qp_build_from_view(
+			&sys->qp,
+			&sys->view,
+			sys->step_hess,
+			SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY),
+			SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL)
+		)){
 		sys->status.ok = FALSE;
 		sys->status.calc_ok = FALSE;
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to assemble the HiGHS QP subproblem.");
 		return 1;
 	}
-	if(a4sqp_qp_solve_highs(&sys->qp)){
+	if(a4sqp_qp_solve_highs(&sys->qp,&sys->params)){
 		sys->status.converged = FALSE;
 		sys->status.diverged = TRUE;
 		a4sqp_report_qp(sys);
@@ -518,16 +913,33 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 	}
 
 	++sys->status.iteration;
-	sys->status.block.iteration = sys->status.iteration;
 	a4sqp_report_qp(sys);
 	a4sqp_report_iteration(sys);
 	a4sqp_report_view(sys);
+	if(a4sqp_has_converged(sys)){
+		sys->status.converged = TRUE;
+		sys->status.diverged = FALSE;
+		sys->status.iteration_limit_exceeded = FALSE;
+		sys->status.ready_to_solve = FALSE;
+	}else if(sys->status.iteration >= SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_ITER)){
+		sys->status.converged = FALSE;
+		sys->status.diverged = FALSE;
+		sys->status.iteration_limit_exceeded = TRUE;
+		sys->status.ready_to_solve = FALSE;
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,
+			"A4SQP reached the maximum iteration count before satisfying convergence tests."
+		);
+	}else{
+		sys->status.converged = FALSE;
+		sys->status.diverged = FALSE;
+		sys->status.iteration_limit_exceeded = FALSE;
+		sys->status.ready_to_solve = TRUE;
+	}
 	return 0;
 }
 
 static int a4sqp_solve(slv_system_t server, SlvClientToken asys){
 	struct A4SqpSystem *sys = (struct A4SqpSystem *)asys;
-	int max_iter;
 
 	if(sys == NULL){
 		return 1;
@@ -538,28 +950,12 @@ static int a4sqp_solve(slv_system_t server, SlvClientToken asys){
 		}
 	}
 
-	max_iter = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_ITER);
-	while(sys->status.iteration < max_iter){
+	while(sys->status.ready_to_solve){
 		if(a4sqp_iterate(server,asys)){
 			sys->status.ready_to_solve = FALSE;
 			return 1;
 		}
-		if(a4sqp_has_converged(sys)){
-			sys->status.converged = TRUE;
-			sys->status.diverged = FALSE;
-			sys->status.iteration_limit_exceeded = FALSE;
-			sys->status.ready_to_solve = FALSE;
-			return 0;
-		}
 	}
-
-	sys->status.converged = FALSE;
-	sys->status.diverged = FALSE;
-	sys->status.iteration_limit_exceeded = TRUE;
-	sys->status.ready_to_solve = FALSE;
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,
-		"A4SQP reached the maximum iteration count before satisfying convergence tests."
-	);
 	return 0;
 }
 

@@ -19,6 +19,9 @@ struct A4SqpSystem {
 	slv_status_t status;
 	struct A4SqpView view;
 	struct A4SqpQp qp;
+	int32 step_hess_n;
+	int step_hess_updates;
+	real64 *step_hess;
 	real64 last_merit_before;
 	real64 last_merit_after;
 	real64 last_model_merit_after;

@@ -6,10 +6,16 @@
 
 #include "a4sqp_qp_highs.h"
 
+#include "a4sqp_diag.h"
+#include "a4sqp_params.h"
+
+#include <limits.h>
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <ascend/general/ascMalloc.h>
+#include <ascend/solver/solver.h>
 #include <ascend/system/var.h>
 
 #ifdef __GNUC__
@@ -17,12 +23,220 @@
 #endif
 #include <interfaces/highs_c_api.h>
 
+#define A4SQP_HIGHS_PROGRESS_INTERVAL 5.0
+
+#include <ascend/utilities/error.h>
+#ifdef A4SQP_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
+
+struct A4SqpHighsProgress {
+	slv_parameters_t *params;
+	double next_report_time;
+	int report_count;
+};
+
+static int a4sqp_highs_total_iteration_count(const HighsCallbackDataOut *data_out){
+	long long total = 0;
+	if(data_out == NULL)return 0;
+	if(data_out->simplex_iteration_count > 0){
+		total += (long long)data_out->simplex_iteration_count;
+	}
+	if(data_out->ipm_iteration_count > 0){
+		total += (long long)data_out->ipm_iteration_count;
+	}
+	if(data_out->pdlp_iteration_count > 0){
+		total += (long long)data_out->pdlp_iteration_count;
+	}
+	if(total > INT_MAX)return INT_MAX;
+	if(total < 0)return 0;
+	return (int)total;
+}
+
+static void a4sqp_highs_report_callback(
+	struct A4SqpHighsProgress *progress,
+	int callback_type,
+	const HighsCallbackDataOut *data_out
+){
+	char message[256];
+	const char *tag = "highs";
+	double running_time = 0.0;
+	int iter;
+
+	if(progress == NULL || data_out == NULL){
+		return;
+	}
+	if(callback_type == kHighsCallbackLogging){
+		return;
+	}
+	switch(callback_type){
+		case kHighsCallbackSimplexInterrupt: tag = "highs_simplex"; break;
+		case kHighsCallbackIpmInterrupt: tag = "highs_ipm"; break;
+		case kHighsCallbackLogging: tag = "highs_log"; break;
+		default: break;
+	}
+	if(isfinite(data_out->running_time) && data_out->running_time >= 0.0){
+		running_time = data_out->running_time;
+	}
+	if(progress->report_count > 0 && running_time < progress->next_report_time){
+		return;
+	}
+	iter = a4sqp_highs_total_iteration_count(data_out);
+	if(isfinite(data_out->objective_function_value)){
+		snprintf(message,sizeof(message),
+			"qp_solve: tag=%s, t=%.3gs, iter=%d, obj=%.17g",
+			tag,running_time,iter,data_out->objective_function_value
+		);
+	}else{
+		snprintf(message,sizeof(message),
+			"qp_solve: tag=%s, t=%.3gs, iter=%d",
+			tag,running_time,iter
+		);
+	}
+	a4sqp_report_progress(progress->params,message);
+	progress->next_report_time = running_time + A4SQP_HIGHS_PROGRESS_INTERVAL;
+	++progress->report_count;
+}
+
+static void a4sqp_highs_callback(
+	int callback_type,
+	const char *message,
+	const HighsCallbackDataOut *data_out,
+	HighsCallbackDataIn *data_in,
+	void *user_data
+){
+	struct A4SqpHighsProgress *progress = (struct A4SqpHighsProgress *)user_data;
+	(void)message;
+	if(progress != NULL && data_out != NULL){
+		a4sqp_highs_report_callback(progress,callback_type,data_out);
+	}
+	if(data_in != NULL && slv_get_solver_interrupt()){
+		data_in->user_interrupt = 1;
+	}
+}
+
+static void a4sqp_highs_enable_callbacks(void *highs, struct A4SqpHighsProgress *progress){
+	HighsInt status;
+	int progress_enabled;
+	if(highs == NULL || progress == NULL){
+		return;
+	}
+	progress_enabled = (
+		progress->params == NULL
+		|| SLV_PARAM_BOOL(progress->params,A4SQP_PARAM_PROGRESS_CALLBACKS)
+		|| SLV_PARAM_BOOL(progress->params,A4SQP_PARAM_PROGRESS_LOG)
+	);
+	status = Highs_setCallback(highs,&a4sqp_highs_callback,(void *)progress);
+	if(status == kHighsStatusError){
+		a4sqp_report_progress(progress->params,"qp_solve: unable to install HiGHS callback");
+		return;
+	}
+	(void)Highs_startCallback(highs,kHighsCallbackSimplexInterrupt);
+	(void)Highs_startCallback(highs,kHighsCallbackIpmInterrupt);
+	if(progress_enabled){
+		(void)Highs_startCallback(highs,kHighsCallbackLogging);
+	}
+}
+
+static void a4sqp_qp_report_failure(struct A4SqpQp *qp, slv_parameters_t *params){
+	char message[256];
+	int32 col;
+	int32 row;
+	if(qp == NULL){
+		return;
+	}
+	snprintf(
+		message,
+		sizeof(message),
+		"qp_failure: cols=%ld rows=%ld nnz=%ld q_nnz=%ld status=%d model_status=%d",
+		(long)qp->num_col,
+		(long)qp->num_row,
+		(long)qp->num_nz,
+		(long)qp->q_num_nz,
+		qp->highs_status,
+		qp->highs_model_status
+	);
+	a4sqp_report_progress(params,message);
+	if(qp->num_col > 16 || qp->num_row > 16){
+		return;
+	}
+	for(col = 0; col < qp->num_col; ++col){
+		snprintf(
+			message,
+			sizeof(message),
+			"qp_failure: col[%ld] cost=%g lower=%g upper=%g kind=%u var=%ld rel=%ld",
+			(long)col,
+			qp->col_cost[col],
+			qp->col_lower[col],
+			qp->col_upper[col],
+			qp->col_kind != NULL ? (unsigned)qp->col_kind[col] : 0U,
+			(long)(qp->col_var_index != NULL ? qp->col_var_index[col] : -1),
+			(long)(qp->col_rel_index != NULL ? qp->col_rel_index[col] : -1)
+		);
+		a4sqp_report_progress(params,message);
+	}
+	for(row = 0; row < qp->num_row; ++row){
+		snprintf(
+			message,
+			sizeof(message),
+			"qp_failure: row[%ld] lower=%g upper=%g rel=%ld value=%g dual=%g",
+			(long)row,
+			qp->row_lower[row],
+			qp->row_upper[row],
+			(long)(qp->row_rel_index != NULL ? qp->row_rel_index[row] : -1),
+			qp->row_value != NULL ? qp->row_value[row] : 0.0,
+			qp->row_dual != NULL ? qp->row_dual[row] : 0.0
+		);
+		a4sqp_report_progress(params,message);
+	}
+	for(col = 0; col < qp->num_col; ++col){
+		int32 k;
+		for(k = qp->a_start[col]; k < qp->a_start[col + 1]; ++k){
+			snprintf(
+				message,
+				sizeof(message),
+				"qp_failure: a[%ld,%ld]=%g",
+				(long)qp->a_index[k],
+				(long)col,
+				qp->a_value[k]
+			);
+			a4sqp_report_progress(params,message);
+		}
+	}
+	for(col = 0; col < qp->num_step_col; ++col){
+		int32 k;
+		for(k = qp->q_start[col]; k < qp->q_start[col + 1]; ++k){
+			snprintf(
+				message,
+				sizeof(message),
+				"qp_failure: q[%ld,%ld]=%g",
+				(long)qp->q_index[k],
+				(long)col,
+				qp->q_value[k]
+			);
+			a4sqp_report_progress(params,message);
+		}
+	}
+}
+
 static int a4sqp_qp_is_lower_inf(real64 value){
 	return value <= var_NO_LOWER_BOUND / 10.0;
 }
 
 static int a4sqp_qp_is_upper_inf(real64 value){
 	return value >= var_NO_UPPER_BOUND / 10.0;
+}
+
+static real64 a4sqp_qp_snap_small_bound(real64 value, real64 tol){
+	if(!isfinite(value)){
+		return value;
+	}
+	if(tol > 0.0 && fabs(value) <= tol){
+		return 0.0;
+	}
+	return value;
 }
 
 static real64 a4sqp_qp_to_highs_bound(real64 value, real64 inf){
@@ -81,15 +295,20 @@ void a4sqp_qp_destroy(struct A4SqpQp *qp){
 }
 
 static int a4sqp_qp_alloc(struct A4SqpQp *qp){
+	int32 row_alloc;
+	if(qp == NULL){
+		return 1;
+	}
+	row_alloc = qp->num_row > 0 ? qp->num_row : 1;
 	qp->col_kind = ASC_NEW_ARRAY_OR_NULL(uint32,qp->num_col);
 	qp->col_var_index = ASC_NEW_ARRAY_OR_NULL(int32,qp->num_col);
 	qp->col_rel_index = ASC_NEW_ARRAY_OR_NULL(int32,qp->num_col);
-	qp->row_rel_index = ASC_NEW_ARRAY_OR_NULL(int32,qp->num_row);
+	qp->row_rel_index = ASC_NEW_ARRAY_OR_NULL(int32,row_alloc);
 	qp->col_cost = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_col);
 	qp->col_lower = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_col);
 	qp->col_upper = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_col);
-	qp->row_lower = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_row);
-	qp->row_upper = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_row);
+	qp->row_lower = ASC_NEW_ARRAY_OR_NULL(real64,row_alloc);
+	qp->row_upper = ASC_NEW_ARRAY_OR_NULL(real64,row_alloc);
 	qp->a_start = ASC_NEW_ARRAY_OR_NULL(int32,qp->num_col + 1);
 	qp->a_index = ASC_NEW_ARRAY_OR_NULL(int32,qp->num_nz > 0 ? qp->num_nz : 1);
 	qp->a_value = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_nz > 0 ? qp->num_nz : 1);
@@ -98,8 +317,8 @@ static int a4sqp_qp_alloc(struct A4SqpQp *qp){
 	qp->q_value = ASC_NEW_ARRAY_OR_NULL(real64,qp->q_num_nz > 0 ? qp->q_num_nz : 1);
 	qp->col_value = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_col);
 	qp->col_dual = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_col);
-	qp->row_value = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_row);
-	qp->row_dual = ASC_NEW_ARRAY_OR_NULL(real64,qp->num_row);
+	qp->row_value = ASC_NEW_ARRAY_OR_NULL(real64,row_alloc);
+	qp->row_dual = ASC_NEW_ARRAY_OR_NULL(real64,row_alloc);
 
 	if(qp->col_kind == NULL || qp->col_var_index == NULL || qp->col_rel_index == NULL
 		|| qp->row_rel_index == NULL || qp->col_cost == NULL || qp->col_lower == NULL
@@ -191,15 +410,48 @@ static int a4sqp_qp_fill_matrix(const struct A4SqpView *view, struct A4SqpQp *qp
 	return 0;
 }
 
-static void a4sqp_qp_fill_hessian(const struct A4SqpView *view, struct A4SqpQp *qp){
-	int32 c;
+static int32 a4sqp_qp_count_hessian_nz(const struct A4SqpView *view, const real64 *step_hess){
+	int32 col;
+	int32 row;
 	int32 nnz = 0;
-	for(c = 0; c < qp->num_col; ++c){
-		qp->q_start[c] = nnz;
-		if(c < view->n_var){
-			qp->q_index[nnz] = c;
-			qp->q_value[nnz] = 1.0;
-			++nnz;
+	if(view == NULL){
+		return 0;
+	}
+	for(col = 0; col < view->n_var; ++col){
+		for(row = col; row < view->n_var; ++row){
+			real64 value = step_hess != NULL
+				? step_hess[row * view->n_var + col]
+				: (row == col ? 1.0 : 0.0);
+			if(fabs(value) > 1e-14){
+				++nnz;
+			}
+		}
+	}
+	return nnz;
+}
+
+static void a4sqp_qp_fill_hessian(
+	const struct A4SqpView *view,
+	const real64 *step_hess,
+	struct A4SqpQp *qp
+){
+	int32 col;
+	int32 row;
+	int32 nnz = 0;
+	for(col = 0; col < qp->num_col; ++col){
+		qp->q_start[col] = nnz;
+		if(col < view->n_var){
+			for(row = col; row < view->n_var; ++row){
+				real64 value = step_hess != NULL
+					? step_hess[row * view->n_var + col]
+					: (row == col ? 1.0 : 0.0);
+				if(fabs(value) <= 1e-14){
+					continue;
+				}
+				qp->q_index[nnz] = row;
+				qp->q_value[nnz] = value;
+				++nnz;
+			}
 		}
 	}
 	qp->q_start[qp->num_col] = nnz;
@@ -208,7 +460,9 @@ static void a4sqp_qp_fill_hessian(const struct A4SqpView *view, struct A4SqpQp *
 int a4sqp_qp_build_from_view(
 	struct A4SqpQp *qp,
 	const struct A4SqpView *view,
-	real64 elastic_penalty
+	const real64 *step_hess,
+	real64 elastic_penalty,
+	real64 feas_tol
 ){
 	int32 i;
 	if(qp == NULL || view == NULL){
@@ -221,7 +475,7 @@ int a4sqp_qp_build_from_view(
 	qp->num_col = view->n_var + 2 * view->n_rel;
 	qp->num_row = view->n_rel;
 	qp->num_nz = view->jac_nnz + 2 * view->n_rel;
-	qp->q_num_nz = view->n_var;
+	qp->q_num_nz = a4sqp_qp_count_hessian_nz(view,step_hess);
 	if(a4sqp_qp_alloc(qp)){
 		a4sqp_qp_destroy(qp);
 		return 1;
@@ -238,6 +492,22 @@ int a4sqp_qp_build_from_view(
 		qp->col_upper[i] = a4sqp_qp_is_upper_inf(view->scaled_var_upper[i])
 			? var_NO_UPPER_BOUND
 			: view->scaled_var_upper[i] - view->scaled_var_value[i];
+		qp->col_lower[i] = a4sqp_qp_is_lower_inf(qp->col_lower[i])
+			? qp->col_lower[i]
+			: a4sqp_qp_snap_small_bound(qp->col_lower[i],feas_tol);
+		qp->col_upper[i] = a4sqp_qp_is_upper_inf(qp->col_upper[i])
+			? qp->col_upper[i]
+			: a4sqp_qp_snap_small_bound(qp->col_upper[i],feas_tol);
+		if(
+			!a4sqp_qp_is_lower_inf(qp->col_lower[i])
+			&& !a4sqp_qp_is_upper_inf(qp->col_upper[i])
+			&& qp->col_lower[i] > qp->col_upper[i]
+			&& qp->col_lower[i] - qp->col_upper[i] <= 2.0 * feas_tol
+		){
+			real64 midpoint = 0.5 * (qp->col_lower[i] + qp->col_upper[i]);
+			qp->col_lower[i] = midpoint;
+			qp->col_upper[i] = midpoint;
+		}
 	}
 
 	for(i = 0; i < view->n_rel; ++i){
@@ -250,6 +520,22 @@ int a4sqp_qp_build_from_view(
 		qp->row_upper[i] = a4sqp_qp_is_upper_inf(view->scaled_rel_upper[i])
 			? var_NO_UPPER_BOUND
 			: view->scaled_rel_upper[i] - view->scaled_rel_residual[i];
+		qp->row_lower[i] = a4sqp_qp_is_lower_inf(qp->row_lower[i])
+			? qp->row_lower[i]
+			: a4sqp_qp_snap_small_bound(qp->row_lower[i],feas_tol);
+		qp->row_upper[i] = a4sqp_qp_is_upper_inf(qp->row_upper[i])
+			? qp->row_upper[i]
+			: a4sqp_qp_snap_small_bound(qp->row_upper[i],feas_tol);
+		if(
+			!a4sqp_qp_is_lower_inf(qp->row_lower[i])
+			&& !a4sqp_qp_is_upper_inf(qp->row_upper[i])
+			&& qp->row_lower[i] > qp->row_upper[i]
+			&& qp->row_lower[i] - qp->row_upper[i] <= 2.0 * feas_tol
+		){
+			real64 midpoint = 0.5 * (qp->row_lower[i] + qp->row_upper[i]);
+			qp->row_lower[i] = midpoint;
+			qp->row_upper[i] = midpoint;
+		}
 
 		qp->col_kind[lower_col] = A4SQP_QP_COL_ELASTIC_LOWER;
 		qp->col_rel_index[lower_col] = i;
@@ -268,7 +554,7 @@ int a4sqp_qp_build_from_view(
 		a4sqp_qp_destroy(qp);
 		return 1;
 	}
-	a4sqp_qp_fill_hessian(view,qp);
+	a4sqp_qp_fill_hessian(view,step_hess,qp);
 	return 0;
 }
 
@@ -284,8 +570,9 @@ static HighsInt *a4sqp_qp_copy_int_array(const int32 *src, int32 len){
 	return dest;
 }
 
-int a4sqp_qp_solve_highs(struct A4SqpQp *qp){
+int a4sqp_qp_solve_highs(struct A4SqpQp *qp, slv_parameters_t *params){
 	void *highs;
+	struct A4SqpHighsProgress progress;
 	HighsInt status;
 	HighsInt model_status;
 	HighsInt *a_start;
@@ -297,6 +584,7 @@ int a4sqp_qp_solve_highs(struct A4SqpQp *qp){
 	real64 *row_lower;
 	real64 *row_upper;
 	real64 inf;
+	real64 qp_tol;
 	int32 i;
 
 	if(qp == NULL || qp->num_col <= 0 || qp->num_row < 0){
@@ -307,6 +595,10 @@ int a4sqp_qp_solve_highs(struct A4SqpQp *qp){
 	if(highs == NULL){
 		return 1;
 	}
+	progress.params = params;
+	progress.next_report_time = 0.0;
+	progress.report_count = 0;
+	a4sqp_highs_enable_callbacks(highs,&progress);
 	inf = Highs_getInfinity(highs);
 
 	a_start = a4sqp_qp_copy_int_array(qp->a_start,qp->num_col + 1);
@@ -340,7 +632,22 @@ int a4sqp_qp_solve_highs(struct A4SqpQp *qp){
 		row_upper[i] = a4sqp_qp_to_highs_bound(qp->row_upper[i],inf);
 	}
 
-	(void)Highs_setBoolOptionValue(highs,"output_flag",0);
+	MSG("Solving QP...");
+
+	(void)Highs_setBoolOptionValue(
+		highs,
+		"output_flag",
+		(params != NULL && SLV_PARAM_BOOL(params,A4SQP_PARAM_PROGRESS_LOG)) ? 1 : 0
+	);
+	qp_tol = params != NULL ? SLV_PARAM_REAL(params,A4SQP_PARAM_FEAS_TOL) : 1e-7;
+	if(qp_tol < 1e-4){
+		qp_tol = 1e-4;
+	}
+	(void)Highs_setDoubleOptionValue(highs,"kkt_tolerance",qp_tol);
+	(void)Highs_setDoubleOptionValue(highs,"primal_feasibility_tolerance",qp_tol);
+	(void)Highs_setDoubleOptionValue(highs,"dual_feasibility_tolerance",qp_tol);
+	(void)Highs_setDoubleOptionValue(highs,"optimality_tolerance",qp_tol);
+	(void)Highs_setIntOptionValue(highs,"user_bound_scale",8);
 	status = Highs_passModel(
 		highs,
 		(HighsInt)qp->num_col,
@@ -365,8 +672,12 @@ int a4sqp_qp_solve_highs(struct A4SqpQp *qp){
 		NULL
 	);
 	if(status != kHighsStatusError){
+		a4sqp_report_progress(params,"qp_solve: starting HiGHS");
 		status = Highs_run(highs);
+		a4sqp_report_progress(params,"qp_solve: HiGHS returned");
 	}
+
+	MSG("Getting QP status...");
 
 	model_status = Highs_getModelStatus(highs);
 	qp->highs_status = (int)status;
@@ -377,16 +688,24 @@ int a4sqp_qp_solve_highs(struct A4SqpQp *qp){
 			status = kHighsStatusError;
 			qp->highs_status = (int)status;
 		}else{
-			for(i = 0; i < qp->num_col; ++i){
-				qp->objective_value += qp->col_cost[i] * qp->col_value[i];
-			}
-			for(i = 0; i < qp->q_num_nz; ++i){
-				if(qp->q_index[i] >= 0 && qp->q_index[i] < qp->num_col){
-					int32 c = qp->q_index[i];
-					qp->objective_value += 0.5 * qp->q_value[i] * qp->col_value[c] * qp->col_value[c];
+				for(i = 0; i < qp->num_col; ++i){
+					qp->objective_value += qp->col_cost[i] * qp->col_value[i];
+				}
+				for(i = 0; i < qp->num_step_col; ++i){
+					int32 k;
+					for(k = qp->q_start[i]; k < qp->q_start[i + 1]; ++k){
+						int32 row = qp->q_index[k];
+						if(row >= 0 && row < qp->num_col){
+							real64 coeff = (row == i) ? 0.5 : 1.0;
+							qp->objective_value += coeff * qp->q_value[k] * qp->col_value[i] * qp->col_value[row];
+						}
+					}
 				}
 			}
-		}
+				}
+
+	if(status == kHighsStatusError || model_status != kHighsModelStatusOptimal){
+		a4sqp_qp_report_failure(qp,params);
 	}
 
 	ASC_FREE(a_start);
