@@ -16,6 +16,16 @@ MODEL hs11;
 			    x2 = 1.5246639294901
 			    f  = -8.49846422315467
 		}
+		'source' SELF {
+			W. Hock and K. Schittkowski, "Test examples for nonlinear
+			programming codes", Lecture Notes in Economics and
+			Mathematical Systems 187, Springer-Verlag, Heidelberg, 1981.
+			SIF input by Ph. L. Toint, October 1990.
+		}
+		'problem_origin' SELF {
+			This is a synthetic constrained nonlinear programming
+			benchmark rather than a model of a physical system.
+		}
 	END NOTES;
 
 	con1: x2 >= x1^2;

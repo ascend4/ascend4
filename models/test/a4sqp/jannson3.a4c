@@ -1,0 +1,137 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL jannson3;
+	n IS_A integer_constant;
+
+	x_left[1..n] IS_A solver_var;
+	x_right[1..n] IS_A solver_var;
+
+	x11 ALIASES x_left[1];
+	x12 ALIASES x_left[2];
+	x13 ALIASES x_left[3];
+	x21 ALIASES x_right[1];
+	x22 ALIASES x_right[2];
+	x23 ALIASES x_right[3];
+
+	n :== 3;
+
+	NOTES
+		'description' SELF {
+			Reduced JANNSON3 benchmark based on the CUTEr/SIF model.
+			This ASCEND translation uses the small parameter choice n = 3
+			instead of the large CUTEr default n = 10000.
+
+			Faithful SIF equivalent:
+			    minimize 0.5*(x_left[1]^2 - x_left[2])^2
+			           + (x_left[1] - 1)^2
+			           + sum((x_left[i] - 1)^2, i = 1..n)
+			           + sum((x_right[i] - 1)^2, i = 1..n)
+			    subject to
+			           sum(x_left[i], i = 1..n) + sum(x_right[i], i = 1..n) = 1
+			           sum(x_left[i]^2, i = 1..n) + sum(x_right[i]^2, i = 1..n) <= 0.75
+			           sum(x_left[i]*x_right[i], i = 1..n) <= 1/(5*n)
+			           -1 <= x_left[i], x_right[i] <= 1
+
+			The duplicated (x[1] - 1)^2 term is intentional and comes from
+			the separate SIF groups G0 and G(1).
+			The SIF file does not provide a start point. This reduced ASCEND
+			model therefore uses a simple feasible initializer.
+		}
+		'source' SELF {
+			C. Jannson, "Convex-concave extensions", BIT 40(2), 291-313, 2000.
+			SIF input by Nick Gould, September 2000.
+			Original source note: example 3 in the Jansson paper.
+		}
+		'problem_origin' SELF {
+			This is a synthetic large-scale nonlinear optimization benchmark
+			from work on convex-concave extensions. It is not derived from a
+			physical engineering system.
+		}
+	END NOTES;
+
+	obj: MINIMIZE
+		0.5*(x_left[1]^2 - x_left[2])^2
+		+ (x_left[1] - 1.0)^2
+		+ (x_left[1] - 1.0)^2
+		+ (x_left[2] - 1.0)^2
+		+ (x_left[3] - 1.0)^2
+		+ (x_right[1] - 1.0)^2
+		+ (x_right[2] - 1.0)^2
+		+ (x_right[3] - 1.0)^2;
+
+	sum_x:
+		x_left[1] + x_left[2] + x_left[3]
+		+ x_right[1] + x_right[2] + x_right[3] = 1.0;
+
+	radius:
+		x_left[1]^2 + x_left[2]^2 + x_left[3]^2
+		+ x_right[1]^2 + x_right[2]^2 + x_right[3]^2 <= 0.75;
+
+	coupling:
+		x_left[1]*x_right[1] + x_left[2]*x_right[2] + x_left[3]*x_right[3]
+		<= 1.0/15.0;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x11 - 0.5125855619329428) < 1e-4;
+	ASSERT abs(x12 - 0.14470036529791463) < 1e-4;
+	ASSERT abs(x13 - 0.08567856925078904) < 1e-4;
+	ASSERT abs(x21 - 0.08567838976041582) < 1e-4;
+	ASSERT abs(x22 - 0.08567854447129511) < 1e-4;
+	ASSERT abs(x23 - 0.0856785692866427) < 1e-4;
+	ASSERT abs(
+		0.5*(x11^2 - x12)^2
+		+ (x11 - 1.0)^2
+		+ (x11 - 1.0)^2
+		+ (x12 - 1.0)^2
+		+ (x13 - 1.0)^2
+		+ (x21 - 1.0)^2
+		+ (x22 - 1.0)^2
+		+ (x23 - 1.0)^2
+		- 4.5575853672988815
+	) < 1e-6;
+	ASSERT abs(x11 + x12 + x13 + x21 + x22 + x23 - 1.0) < 1e-8;
+	ASSERT x11^2 + x12^2 + x13^2 + x21^2 + x22^2 + x23^2 <= 0.75 + 1e-8;
+	ASSERT x11*x21 + x12*x22 + x13*x23 <= (1.0/15.0) + 1e-8;
+END self_test;
+
+METHOD bound_self;
+	FOR i IN [1..n] DO
+		x_left[i].lower_bound := -1.0;
+		x_left[i].upper_bound := 1.0;
+		x_right[i].lower_bound := -1.0;
+		x_right[i].upper_bound := 1.0;
+	END FOR;
+END bound_self;
+
+METHOD default_self;
+	x_left[1] := 0.5;
+	x_left[2] := 0.5;
+	x_left[3] := 0.0;
+	FOR i IN [1..n] DO
+		x_right[i] := 0.0;
+	END FOR;
+END default_self;
+
+METHOD use_ipopt;
+	SOLVER IPOPT;
+END use_ipopt;
+
+METHOD use_a4sqp;
+	SOLVER A4SQP;
+END use_a4sqp;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+	SOLVER A4SQP;
+	OPTION max_iter 200;
+END on_load;
+
+METHOD on_load_test;
+	RUN bound_self;
+	RUN default_self;
+END on_load_test;
+END jannson3;

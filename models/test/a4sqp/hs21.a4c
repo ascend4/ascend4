@@ -17,6 +17,16 @@ MODEL hs21;
 			    x2 = 0
 			    f  = -99.96
 		}
+		'source' SELF {
+			W. Hock and K. Schittkowski, "Test examples for nonlinear
+			programming codes", Lecture Notes in Economics and
+			Mathematical Systems 187, Springer-Verlag, Heidelberg, 1981.
+			SIF input by A.R. Conn, April 1990.
+		}
+		'problem_origin' SELF {
+			This is a synthetic linearly constrained quadratic benchmark,
+			not a physical engineering model.
+		}
 	END NOTES;
 
 	con1: 10*x1 - x2 - 10 >= 0;

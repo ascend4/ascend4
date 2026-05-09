@@ -339,7 +339,7 @@ static int a4sqp_view_capture_objective(struct A4SqpView *view, int safe){
 	}
 	vfilter.matchbits = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED;
 	vfilter.matchvalue = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR;
-	if(relman_diff2(view->obj,&vfilter,derivs,vars,&count,safe)){
+	if(relman_diff2_rev(view->obj,&vfilter,derivs,vars,&count,safe)){
 		++view->obj_derivative_errors;
 		ASC_FREE(derivs);
 		ASC_FREE(vars);

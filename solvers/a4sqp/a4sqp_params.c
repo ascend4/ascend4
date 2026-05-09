@@ -39,7 +39,7 @@ int a4sqp_get_default_parameters(
 		(SlvParameterInitBool){{"safeeval",
 			"Use safe evaluation?",1,
 			"Use ASCEND safe function evaluation routines."
-		}, TRUE}
+		}, FALSE}
 	);
 
 	slv_param_char(parameters,A4SQP_PARAM_SCALEOPT,

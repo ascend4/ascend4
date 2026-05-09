@@ -762,6 +762,199 @@ cleanup:
 	Asc_CompilerDestroy();
 }
 
+static void test_a4sqp_jannson3_solve(void){
+	int status;
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t slvstatus;
+	struct Name *name = NULL;
+	enum Proc_enum pe;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/a4sqp"));
+
+	solver_destroy_engines();
+	if(0 != package_load("a4sqp",NULL)){
+		CONSOLE_DEBUG("Skipping A4SQP test: solver package not available");
+		goto cleanup;
+	}
+
+	solver_index = slv_lookup_client("A4SQP");
+	CU_ASSERT_FATAL(solver_index != -1);
+
+	Asc_OpenModule("test/a4sqp/jannson3.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("jannson3")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("jannson3"), AddSymbol("sim_jannson3"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	name = CreateIdName(AddSymbol("on_load_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_jannson3", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+
+	slv_get_status(sys,&slvstatus);
+	CU_ASSERT(slvstatus.converged);
+	CU_ASSERT(!slvstatus.diverged);
+	CU_ASSERT(!slvstatus.iteration_limit_exceeded);
+	CU_ASSERT(slvstatus.iteration > 0);
+	CU_ASSERT(slvstatus.iteration <= 20);
+
+	name = CreateIdName(AddSymbol("self_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_jannson3", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+cleanup:
+	if(sys != NULL){
+		system_destroy(sys);
+		system_free_reused_mem();
+	}
+	if(siminst != NULL){
+		sim_destroy(siminst);
+	}
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_a4sqp_lubrifc_solve(void){
+	int status;
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t slvstatus;
+	struct Name *name = NULL;
+	enum Proc_enum pe;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/a4sqp"));
+
+	solver_destroy_engines();
+	if(0 != package_load("a4sqp",NULL)){
+		CONSOLE_DEBUG("Skipping A4SQP test: solver package not available");
+		goto cleanup;
+	}
+
+	solver_index = slv_lookup_client("A4SQP");
+	CU_ASSERT_FATAL(solver_index != -1);
+
+	Asc_OpenModule("test/a4sqp/lubrifc.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("lubrifc")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("lubrifc"), AddSymbol("sim_lubrifc"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	name = CreateIdName(AddSymbol("on_load_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_lubrifc", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+
+	slv_get_status(sys,&slvstatus);
+	CU_ASSERT(slvstatus.converged);
+	CU_ASSERT(!slvstatus.diverged);
+	CU_ASSERT(!slvstatus.iteration_limit_exceeded);
+	CU_ASSERT(slvstatus.iteration > 0);
+	CU_ASSERT(slvstatus.iteration <= 20);
+
+	name = CreateIdName(AddSymbol("self_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_lubrifc", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+cleanup:
+	if(sys != NULL){
+		system_destroy(sys);
+		system_free_reused_mem();
+	}
+	if(siminst != NULL){
+		sim_destroy(siminst);
+	}
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_a4sqp_cont6_qq_solve(void){
+	int status;
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t slvstatus;
+	slv_parameters_t params;
+	struct Name *name = NULL;
+	enum Proc_enum pe;
+	int max_iter_idx = -1;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/a4sqp"));
+
+	solver_destroy_engines();
+	if(0 != package_load("a4sqp",NULL)){
+		CONSOLE_DEBUG("Skipping A4SQP test: solver package not available");
+		goto cleanup;
+	}
+
+	solver_index = slv_lookup_client("A4SQP");
+	CU_ASSERT_FATAL(solver_index != -1);
+
+	Asc_OpenModule("test/a4sqp/cont6_qq.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("cont6_qq")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("cont6_qq"), AddSymbol("sim_cont6_qq"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	name = CreateIdName(AddSymbol("on_load_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_cont6_qq", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	slv_get_parameters(sys,&params);
+	max_iter_idx = find_param_index(&params,"max_iter");
+	CU_ASSERT_FATAL(max_iter_idx != -1);
+	SLV_PARAM_INT(&params,max_iter_idx) = 200;
+	slv_set_parameters(sys,&params);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+
+	slv_get_status(sys,&slvstatus);
+	CU_ASSERT(slvstatus.converged);
+	CU_ASSERT(!slvstatus.diverged);
+	CU_ASSERT(!slvstatus.iteration_limit_exceeded);
+	CU_ASSERT(slvstatus.iteration > 0);
+	CU_ASSERT(slvstatus.iteration <= 200);
+
+	name = CreateIdName(AddSymbol("self_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_cont6_qq", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+cleanup:
+	if(sys != NULL){
+		system_destroy(sys);
+		system_free_reused_mem();
+	}
+	if(siminst != NULL){
+		sim_destroy(siminst);
+	}
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
 #define TESTS(T) \
 	T(a4sqp_register) \
 	T(a4sqp_qp_highs_spike) \
@@ -769,6 +962,9 @@ cleanup:
 	T(a4sqp_basic_solve) \
 	T(a4sqp_objective_only_iterate_contract) \
 	T(a4sqp_hs11_solve) \
-	T(a4sqp_hs21_solve)
+	T(a4sqp_hs21_solve) \
+	T(a4sqp_jannson3_solve) \
+	T(a4sqp_lubrifc_solve) \
+	T(a4sqp_cont6_qq_solve)
 
 REGISTER_TESTS_SIMPLE(solver_a4sqp, TESTS)

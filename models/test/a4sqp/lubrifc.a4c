@@ -50,6 +50,35 @@ MODEL lubrifc;
 	inv_dx2 :== inv_dx*inv_dx;
 	lambda_over_dx :== lambda*inv_dx;
 
+	NOTES
+		'description' SELF {
+			Reduced ASCEND translation of the corrected LUBRIFC
+			benchmark. This model uses NN = 10, giving n = 50 pressure
+			intervals rather than the much larger CUTEr default.
+
+			The original SIF is a nonlinear complementarity problem for a
+			discretized Reynolds lubrication equation coupled to an
+			elastic film-thickness relation. The present ASCEND benchmark
+			uses the smoother relaxation
+			    minimize sum(p[i] * r[i])
+			together with p[i] >= 0 and r[i] >= 0.
+		}
+		'source' SELF {
+			M.M. Kostreva, "Elasto-hydrodynamic lubrification:
+			a non-linear complementarity problem",
+			International Journal for Numerical Methods in Fluids,
+			4:377-397, 1984.
+			Corrected CUTEr/SIF variant by Sven Leyffer, September 2000.
+			SIF input by Ph. Toint, June 1990.
+		}
+		'problem_origin' SELF {
+			This is a physical lubrication-contact problem. The unknown
+			pressure field in a thin lubricating film interacts with film
+			thickness and cavitation through a Reynolds-type equation and
+			complementarity conditions.
+		}
+	END NOTES;
+
 	obj: MINIMIZE SUM[p[i]*r[i] | i IN [1..n-1]];
 
 	load_balance:
@@ -82,6 +111,16 @@ MODEL lubrifc;
 	END FOR;
 
 METHODS
+METHOD self_test;
+	ASSERT abs(k - 0.060742765520110716) < 1e-4;
+	ASSERT SUM[p[i]*r[i] | i IN [1..n-1]] < 1e-8;
+	ASSERT abs(dx_over_pi*(2.0*SUM[p[i] | i IN [1..n-1]] + p[n]) - 1.0) < 1e-8;
+	FOR i IN [1..n-1] DO
+		ASSERT p[i] >= -1e-10;
+		ASSERT r[i] >= -1e-10;
+	END FOR;
+END self_test;
+
 METHOD init_constants;
 END init_constants;
 
@@ -121,7 +160,6 @@ METHOD on_load;
 	RUN default_self;
 	SOLVER A4SQP;
 	OPTION max_iter 200;
-	OPTION progress_log TRUE;
 END on_load;
 
 METHOD on_load_test;

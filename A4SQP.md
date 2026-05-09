@@ -68,14 +68,21 @@ The current prototype has been exercised on small benchmark models under
   linearized-row tolerance handling;
 - `hs21.a4c`, a linearly constrained quadratic Hock-Schittkowski problem, now
   solving successfully as a compact constrained regression;
+- `jannson3.a4c`, a reduced `n = 3` translation of the Jannson convex-concave
+  extension benchmark, now solving successfully with the current constrained
+  A4SQP path;
+- `cont6_qq.a4c`, a reduced semilinear control benchmark derived from the
+  CUTEr/SIF `CONT6-QQ` problem, now solving successfully with the current
+  constrained A4SQP path;
 - `rosenbr.a4c`, the classical two-variable Rosenbrock objective-only problem,
   now present as an ASCEND benchmark model but not yet a passing A4SQP
   regression.
 
 More recent benchmark work has clarified the current boundary of the prototype:
 
-- `hs3.a4c`, `hs11.a4c`, and `hs21.a4c` are the current passing A4SQP
-  regressions and remain in the focused CUnit suite;
+- `hs3.a4c`, `hs11.a4c`, `hs21.a4c`, `jannson3.a4c`, and the reduced
+  `lubrifc.a4c`, and the reduced `cont6_qq.a4c` are the current passing A4SQP
+  regressions in the focused CUnit suite;
 - `rosenbr.a4c` is still numerically close to the solution but does not yet
   satisfy the current objective-only termination logic, so it remains out of the
   passing suite;
@@ -97,6 +104,13 @@ Recent implementation lessons from these benchmarks:
   imposing an artificial absolute decrease floor on otherwise valid steps.
 - Triangular Hessian storage passed to HiGHS must be reconstructed carefully
   when computing model-predicted objective values.
+- A4SQP's objective derivative path must use ASCEND's reverse derivative call
+  in the same way as the constraint Jacobian path; otherwise some nonlinear
+  objective-only or mixed NLP cases produce invalid QP data.
+- Leaving `safeeval` enabled by default in A4SQP was stricter than IPOPT's
+  corresponding path and caused spurious presolve derivative failures on
+  `jannson3.a4c`; the default is now aligned with IPOPT's non-safe evaluation
+  path.
 
 Recent constrained-solver stabilization work:
 
@@ -136,7 +150,12 @@ Recent trust-region work:
 Observed benchmark outcome from that work:
 
 - `hs11.a4c` and `hs21.a4c` still converge under the trust-region prototype;
-- the focused CUnit suite remains green for `hs3`, `hs11`, and `hs21`;
+- `jannson3.a4c` now also converges as a reduced constrained regression under
+  the same trust-region prototype;
+- `cont6_qq.a4c` now also converges as a reduced PDE-constrained control
+  regression under the same trust-region prototype;
+- the focused CUnit suite remains green for `hs3`, `hs11`, `hs21`,
+  `jannson3`, the reduced `lubrifc`, and the reduced `cont6_qq`;
 - the reduced `lubrifc.a4c` case now progresses past the earlier late HiGHS QP
   failure and converges to a feasible relaxed solution;
 - the trust-region prototype is therefore paying off on constrained cases, but
