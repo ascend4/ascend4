@@ -638,6 +638,241 @@ cleanup:
 	Asc_CompilerDestroy();
 }
 
+static void test_a4sqp_hs3_exact_obj_hessian(void){
+	int status;
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t slvstatus;
+	slv_parameters_t params;
+	struct Name *name = NULL;
+	enum Proc_enum pe;
+	struct A4SqpSystem *a4sys = NULL;
+	int max_iter_idx = -1;
+	int hess_idx = -1;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/a4sqp"));
+
+	solver_destroy_engines();
+	if(0 != package_load("a4sqp",NULL)){
+		CONSOLE_DEBUG("Skipping A4SQP test: solver package not available");
+		goto cleanup;
+	}
+
+	solver_index = slv_lookup_client("A4SQP");
+	CU_ASSERT_FATAL(solver_index != -1);
+
+	Asc_OpenModule("test/a4sqp/hs3.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("hs3")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("hs3"), AddSymbol("sim_hs3_exact"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	name = CreateIdName(AddSymbol("on_load_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_hs3_exact", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	slv_get_parameters(sys,&params);
+	max_iter_idx = find_param_index(&params,"max_iter");
+	hess_idx = find_param_index(&params,"hessian");
+	CU_ASSERT_FATAL(max_iter_idx != -1);
+	CU_ASSERT_FATAL(hess_idx != -1);
+	SLV_PARAM_INT(&params,max_iter_idx) = 100;
+	slv_set_char_parameter(&(SLV_PARAM_CHAR(&params,hess_idx)),"EXACT_OBJ");
+	slv_set_parameters(sys,&params);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+
+	slv_get_status(sys,&slvstatus);
+	CU_ASSERT(slvstatus.converged);
+	CU_ASSERT(!slvstatus.diverged);
+	CU_ASSERT(!slvstatus.iteration_limit_exceeded);
+
+	a4sys = (struct A4SqpSystem *)slv_get_client_token(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(a4sys);
+	CU_ASSERT(a4sys->step_hess_exact);
+	CU_ASSERT_EQUAL(a4sys->view.n_rel,0);
+	CU_ASSERT(a4sys->view.obj_value <= 1e-8);
+
+	name = CreateIdName(AddSymbol("self_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_hs3_exact", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+cleanup:
+	if(sys != NULL){
+		system_destroy(sys);
+		system_free_reused_mem();
+	}
+	if(siminst != NULL){
+		sim_destroy(siminst);
+	}
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_a4sqp_rosenbr_exact_obj_hessian(void){
+	int status;
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t slvstatus;
+	slv_parameters_t params;
+	struct Name *name = NULL;
+	enum Proc_enum pe;
+	struct A4SqpSystem *a4sys = NULL;
+	int max_iter_idx = -1;
+	int hess_idx = -1;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/a4sqp"));
+
+	solver_destroy_engines();
+	if(0 != package_load("a4sqp",NULL)){
+		CONSOLE_DEBUG("Skipping A4SQP test: solver package not available");
+		goto cleanup;
+	}
+
+	solver_index = slv_lookup_client("A4SQP");
+	CU_ASSERT_FATAL(solver_index != -1);
+
+	Asc_OpenModule("test/a4sqp/rosenbr.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("rosenbr")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("rosenbr"), AddSymbol("sim_rosenbr_exact"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	name = CreateIdName(AddSymbol("on_load_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_rosenbr_exact", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	slv_get_parameters(sys,&params);
+	max_iter_idx = find_param_index(&params,"max_iter");
+	hess_idx = find_param_index(&params,"hessian");
+	CU_ASSERT_FATAL(max_iter_idx != -1);
+	CU_ASSERT_FATAL(hess_idx != -1);
+	SLV_PARAM_INT(&params,max_iter_idx) = 200;
+	slv_set_char_parameter(&(SLV_PARAM_CHAR(&params,hess_idx)),"EXACT_OBJ");
+	slv_set_parameters(sys,&params);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+
+	slv_get_status(sys,&slvstatus);
+	CU_ASSERT(slvstatus.converged);
+	CU_ASSERT(!slvstatus.diverged);
+	CU_ASSERT(!slvstatus.iteration_limit_exceeded);
+
+	a4sys = (struct A4SqpSystem *)slv_get_client_token(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(a4sys);
+	CU_ASSERT(a4sys->step_hess_exact);
+	CU_ASSERT_EQUAL(a4sys->view.n_rel,0);
+	CU_ASSERT(fabs(a4sys->view.var_value[0] - 1.0) < 1e-4);
+	CU_ASSERT(fabs(a4sys->view.var_value[1] - 1.0) < 1e-4);
+	CU_ASSERT(a4sys->view.obj_value < 1e-8);
+
+	name = CreateIdName(AddSymbol("self_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_rosenbr_exact", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+cleanup:
+	if(sys != NULL){
+		system_destroy(sys);
+		system_free_reused_mem();
+	}
+	if(siminst != NULL){
+		sim_destroy(siminst);
+	}
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_a4sqp_hs11_exact_lagrangian_hessian(void){
+	int status;
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t slvstatus;
+	slv_parameters_t params;
+	struct Name *name = NULL;
+	enum Proc_enum pe;
+	struct A4SqpSystem *a4sys = NULL;
+	int max_iter_idx = -1;
+	int hess_idx = -1;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/a4sqp"));
+
+	solver_destroy_engines();
+	if(0 != package_load("a4sqp",NULL)){
+		CONSOLE_DEBUG("Skipping A4SQP test: solver package not available");
+		goto cleanup;
+	}
+
+	solver_index = slv_lookup_client("A4SQP");
+	CU_ASSERT_FATAL(solver_index != -1);
+
+	Asc_OpenModule("test/a4sqp/hs11.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("hs11")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("hs11"), AddSymbol("sim_hs11_exactlag"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	name = CreateIdName(AddSymbol("on_load_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_hs11_exactlag", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	slv_get_parameters(sys,&params);
+	max_iter_idx = find_param_index(&params,"max_iter");
+	hess_idx = find_param_index(&params,"hessian");
+	CU_ASSERT_FATAL(max_iter_idx != -1);
+	CU_ASSERT_FATAL(hess_idx != -1);
+	SLV_PARAM_INT(&params,max_iter_idx) = 100;
+	slv_set_char_parameter(&(SLV_PARAM_CHAR(&params,hess_idx)),"EXACT_LAGRANGIAN");
+	slv_set_parameters(sys,&params);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+
+	slv_get_status(sys,&slvstatus);
+	CU_ASSERT(slvstatus.converged);
+	CU_ASSERT(!slvstatus.diverged);
+	CU_ASSERT(!slvstatus.iteration_limit_exceeded);
+
+	a4sys = (struct A4SqpSystem *)slv_get_client_token(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(a4sys);
+	CU_ASSERT(a4sys->step_hess_exact);
+	CU_ASSERT(a4sys->view.n_rel > 0);
+	CU_ASSERT(a4sys->view.obj_value < -8.4982);
+	CU_ASSERT(fabs(a4sys->view.rel_residual[0]) < 1e-6);
+	CU_ASSERT(fabs(a4sys->view.var_value[0] - 1.2347728250533) < 2e-3);
+	CU_ASSERT(fabs(a4sys->view.var_value[1] - 1.5246639294901) < 2e-3);
+
+cleanup:
+	if(sys != NULL){
+		system_destroy(sys);
+		system_free_reused_mem();
+	}
+	if(siminst != NULL){
+		sim_destroy(siminst);
+	}
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
 static void test_a4sqp_hs11_solve(void){
 	int status;
 	int solver_index = -1;
@@ -748,6 +983,74 @@ static void test_a4sqp_hs21_solve(void){
 
 	name = CreateIdName(AddSymbol("self_test"));
 	pe = Initialize(GetSimulationRoot(siminst),name,"sim_hs21", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+cleanup:
+	if(sys != NULL){
+		system_destroy(sys);
+		system_free_reused_mem();
+	}
+	if(siminst != NULL){
+		sim_destroy(siminst);
+	}
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_a4sqp_rosenmmx_solve(void){
+	int status;
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t slvstatus;
+	slv_parameters_t params;
+	struct Name *name = NULL;
+	enum Proc_enum pe;
+	int max_iter_idx = -1;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/a4sqp"));
+
+	solver_destroy_engines();
+	if(0 != package_load("a4sqp",NULL)){
+		CONSOLE_DEBUG("Skipping A4SQP test: solver package not available");
+		goto cleanup;
+	}
+
+	solver_index = slv_lookup_client("A4SQP");
+	CU_ASSERT_FATAL(solver_index != -1);
+
+	Asc_OpenModule("test/a4sqp/rosenmmx.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("rosenmmx")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("rosenmmx"), AddSymbol("sim_rosenmmx"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	name = CreateIdName(AddSymbol("on_load_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_rosenmmx", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe == Proc_all_ok);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	slv_get_parameters(sys,&params);
+	max_iter_idx = find_param_index(&params,"max_iter");
+	CU_ASSERT_FATAL(max_iter_idx != -1);
+	SLV_PARAM_INT(&params,max_iter_idx) = 200;
+	slv_set_parameters(sys,&params);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+
+	slv_get_status(sys,&slvstatus);
+	CU_ASSERT(slvstatus.converged);
+	CU_ASSERT(!slvstatus.diverged);
+	CU_ASSERT(!slvstatus.iteration_limit_exceeded);
+	CU_ASSERT(slvstatus.iteration > 0);
+
+	name = CreateIdName(AddSymbol("self_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim_rosenmmx", ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe == Proc_all_ok);
 
 cleanup:
@@ -961,8 +1264,12 @@ cleanup:
 	T(a4sqp_basic_view_presolve) \
 	T(a4sqp_basic_solve) \
 	T(a4sqp_objective_only_iterate_contract) \
+	T(a4sqp_hs3_exact_obj_hessian) \
+	T(a4sqp_rosenbr_exact_obj_hessian) \
+	T(a4sqp_hs11_exact_lagrangian_hessian) \
 	T(a4sqp_hs11_solve) \
 	T(a4sqp_hs21_solve) \
+	T(a4sqp_rosenmmx_solve) \
 	T(a4sqp_jannson3_solve) \
 	T(a4sqp_lubrifc_solve) \
 	T(a4sqp_cont6_qq_solve)

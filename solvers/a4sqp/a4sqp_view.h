@@ -19,6 +19,7 @@ struct A4SqpView {
 	real64 obj_value;
 	real64 *obj_gradient;
 	real64 *scaled_obj_gradient;
+	int32 *var_mindex;
 	int32 *var_sindex;
 	real64 *var_value;
 	real64 *var_lower;

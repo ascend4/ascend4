@@ -68,6 +68,8 @@ The current prototype has been exercised on small benchmark models under
   linearized-row tolerance handling;
 - `hs21.a4c`, a linearly constrained quadratic Hock-Schittkowski problem, now
   solving successfully as a compact constrained regression;
+- `rosenmmx.a4c`, Rosen's four-variable convex minmax benchmark in smooth
+  epigraph form, now solving successfully as a compact constrained regression;
 - `jannson3.a4c`, a reduced `n = 3` translation of the Jannson convex-concave
   extension benchmark, now solving successfully with the current constrained
   A4SQP path;
@@ -75,17 +77,15 @@ The current prototype has been exercised on small benchmark models under
   CUTEr/SIF `CONT6-QQ` problem, now solving successfully with the current
   constrained A4SQP path;
 - `rosenbr.a4c`, the classical two-variable Rosenbrock objective-only problem,
-  now present as an ASCEND benchmark model but not yet a passing A4SQP
-  regression.
+  now solving successfully as an explicit `EXACT_OBJ` regression.
 
 More recent benchmark work has clarified the current boundary of the prototype:
 
-- `hs3.a4c`, `hs11.a4c`, `hs21.a4c`, `jannson3.a4c`, and the reduced
-  `lubrifc.a4c`, and the reduced `cont6_qq.a4c` are the current passing A4SQP
-  regressions in the focused CUnit suite;
-- `rosenbr.a4c` is still numerically close to the solution but does not yet
-  satisfy the current objective-only termination logic, so it remains out of the
-  passing suite;
+- `hs3.a4c`, `hs11.a4c`, `hs21.a4c`, `rosenmmx.a4c`, `jannson3.a4c`, the
+  reduced `lubrifc.a4c`, and the reduced `cont6_qq.a4c` are current passing
+  A4SQP regressions in the focused CUnit suite;
+- `rosenbr.a4c` is also now in the passing suite, but specifically under the
+  explicit `EXACT_OBJ` Hessian mode rather than the default `BFGS` path;
 - `lubrifc.a4c` is now present as a reduced benchmark translation using
   `NN = 10`, not the full CUTEr default, and the current reduced model uses the
   smoother complementarity relaxation `min sum(p_i r_i)` together with
@@ -111,6 +111,33 @@ Recent implementation lessons from these benchmarks:
   corresponding path and caused spurious presolve derivative failures on
   `jannson3.a4c`; the default is now aligned with IPOPT's non-safe evaluation
   path.
+
+Recent second-order work:
+
+- A4SQP now has an experimental exact-Hessian assembly path that evaluates
+  per-relation second derivatives in local incidence order, maps them into the
+  current solver-variable order, and scales them into the same coordinates as
+  the QP step variables;
+- that path currently supports two explicit solver modes: `EXACT_OBJ` for
+  objective-only exact curvature, and `EXACT_LAGRANGIAN` for an experimental
+  constrained Lagrangian Hessian assembled using the current scaled QP row
+  duals as multiplier estimates;
+- when the ASCEND second-derivative callbacks provide no usable objective
+  curvature for an objective-only model, A4SQP now falls back to a
+  finite-difference Hessian of the exact objective gradient rather than
+  silently collapsing to a near-zero quadratic model;
+- because HiGHS requires a convex QP, the exact Hessian path is regularized to
+  a positive-semidefinite step model before the QP is assembled;
+- the default solver mode remains `BFGS` for now, because the exact objective
+  path is still experimental and the constrained exact-Lagrangian path is still
+  exploratory rather than benchmark-qualified;
+- the focused CUnit suite now includes explicit `EXACT_OBJ` regressions for
+  `hs3.a4c` and `rosenbr.a4c`, so the objective-only exact-Hessian path is
+  covered in CI without destabilizing the default solver behavior;
+- the focused CUnit suite also includes a constrained `EXACT_LAGRANGIAN`
+  regression on `hs11.a4c`; that path converges with acceptable objective and
+  feasibility, but it is not yet treated as interchangeable with the tighter
+  benchmark-qualified default/BFGS path.
 
 Recent constrained-solver stabilization work:
 
@@ -164,11 +191,18 @@ Observed benchmark outcome from that work:
 
 Still deferred:
 
-- exact Hessian support via ASCEND Hessian callbacks with PSD regularization for
-  HiGHS;
 - a reduced-memory Hessian option such as L-BFGS;
 - filter globalization;
 - richer warm-start state beyond the current prototype state.
+
+Still immature:
+
+- exact objective Hessians are now implemented only as an explicit experimental
+  mode, but they are now benchmark-qualified on `hs3.a4c` and `rosenbr.a4c`
+  rather than only on trivial objective-only cases;
+- exact constrained Lagrangian Hessians are implemented only as an
+  experimental mode using QP row duals as multiplier estimates, and are not yet
+  suitable as the default constrained step model.
 
 ## SQP Subproblem
 

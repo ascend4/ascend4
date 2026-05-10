@@ -48,6 +48,7 @@ void a4sqp_view_init(struct A4SqpView *view){
 	view->obj_value = 0.0;
 	view->obj_gradient = NULL;
 	view->scaled_obj_gradient = NULL;
+	view->var_mindex = NULL;
 	view->var_sindex = NULL;
 	view->var_value = NULL;
 	view->var_lower = NULL;
@@ -96,6 +97,7 @@ void a4sqp_view_destroy(struct A4SqpView *view){
 	ASC_FREE(view->scaled_var_upper);
 	ASC_FREE(view->obj_gradient);
 	ASC_FREE(view->scaled_obj_gradient);
+	ASC_FREE(view->var_mindex);
 	ASC_FREE(view->rel_sindex);
 	ASC_FREE(view->relop);
 	ASC_FREE(view->rel_residual);
@@ -114,6 +116,7 @@ void a4sqp_view_destroy(struct A4SqpView *view){
 
 static int a4sqp_view_alloc(struct A4SqpView *view){
 	if(view->n_var > 0){
+		view->var_mindex = ASC_NEW_ARRAY_OR_NULL(int32,view->n_var);
 		view->var_sindex = ASC_NEW_ARRAY_OR_NULL(int32,view->n_var);
 		view->var_value = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
 		view->var_lower = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
@@ -126,7 +129,7 @@ static int a4sqp_view_alloc(struct A4SqpView *view){
 		view->scaled_var_upper = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
 		view->obj_gradient = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
 		view->scaled_obj_gradient = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		if(view->var_sindex == NULL || view->var_value == NULL
+		if(view->var_mindex == NULL || view->var_sindex == NULL || view->var_value == NULL
 			|| view->var_lower == NULL || view->var_upper == NULL
 			|| view->var_nominal == NULL || view->var_fixed == NULL
 			|| view->var_scale == NULL || view->scaled_var_value == NULL
@@ -198,6 +201,7 @@ static void a4sqp_view_capture_vars(struct A4SqpView *view){
 	int32 i;
 	for(i = 0; i < view->n_var; ++i){
 		struct var_variable *var = view->vars[i];
+		view->var_mindex[i] = var_mindex(var);
 		view->var_sindex[i] = var_sindex(var);
 		view->var_value[i] = var_value(var);
 		view->var_lower[i] = var_lower_bound(var);

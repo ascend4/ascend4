@@ -49,6 +49,20 @@ int a4sqp_get_default_parameters(
 		}, "ROW_2NORM"}, (char *[]){"NONE","ROW_2NORM","RELNOM",NULL}
 	);
 
+	slv_param_char(parameters,A4SQP_PARAM_HESS_MODE,
+		(SlvParameterInitChar){{"hessian",
+			"Hessian model",1,
+			"Step Hessian model for the SQP QP: BFGS, EXACT_OBJ, EXACT_LAGRANGIAN, or AUTO."
+		}, "BFGS"}, (char *[]){"AUTO","BFGS","EXACT_OBJ","EXACT_LAGRANGIAN",NULL}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_HESS_REG,
+		(SlvParameterInitReal){{"hess_reg",
+			"Hessian regularization",2,
+			"Minimum diagonal margin enforced when regularizing the step Hessian to a convex QP model."
+		}, 1e-8, 0.0, 1e12}
+	);
+
 	slv_param_bool(parameters,A4SQP_PARAM_PROGRESS_CALLBACKS,
 		(SlvParameterInitBool){{"progress_callbacks",
 			"Enable progress callbacks?",2,

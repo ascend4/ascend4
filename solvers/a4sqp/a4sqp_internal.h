@@ -21,6 +21,7 @@ struct A4SqpSystem {
 	struct A4SqpQp qp;
 	int32 step_hess_n;
 	int step_hess_updates;
+	int step_hess_exact;
 	real64 *step_hess;
 	real64 last_merit_before;
 	real64 last_merit_after;

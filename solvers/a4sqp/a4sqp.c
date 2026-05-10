@@ -16,7 +16,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <ascend/compiler/relation_util.h>
+#include <ascend/compiler/safe.h>
 #include <ascend/general/ascMalloc.h>
+#include <ascend/general/ltmatrix.h>
 #include <ascend/general/mem.h>
 #include <ascend/system/slv_common.h>
 #include <ascend/system/slv_param.h>
@@ -28,6 +31,18 @@
 #else
 # define MSG(...)
 #endif
+
+enum A4SqpHessianMode {
+	A4SQP_HESS_BFGS = 0,
+	A4SQP_HESS_EXACT_OBJ,
+	A4SQP_HESS_EXACT_LAGRANGIAN,
+	A4SQP_HESS_AUTO
+};
+
+static int32 a4sqp_view_var_col(const struct A4SqpView *view, int32 sindex);
+static int32 a4sqp_view_var_col_from_var(const struct A4SqpView *view, const struct var_variable *var);
+static int a4sqp_eval_objective_gradient_current(const struct A4SqpSystem *sys, int safe, real64 *grad);
+static int a4sqp_step_hess_accumulate_objective_fd(struct A4SqpSystem *sys, real64 coeff, int safe, int *mapped, real64 *local_maxabs);
 
 static void a4sqp_init_status(struct A4SqpSystem *sys){
 	if(sys == NULL){
@@ -144,6 +159,7 @@ static void a4sqp_step_hess_destroy(struct A4SqpSystem *sys){
 	ASC_FREE(sys->step_hess);
 	sys->step_hess_n = 0;
 	sys->step_hess_updates = 0;
+	sys->step_hess_exact = 0;
 }
 
 static int a4sqp_step_hess_reset_identity(struct A4SqpSystem *sys, real64 diag){
@@ -176,6 +192,7 @@ static int a4sqp_step_hess_reset_identity(struct A4SqpSystem *sys, real64 diag){
 		sys->step_hess[i * n + i] = diag;
 	}
 	sys->step_hess_updates = 0;
+	sys->step_hess_exact = 0;
 	return 0;
 }
 
@@ -187,6 +204,524 @@ static int a4sqp_step_hess_sync(struct A4SqpSystem *sys){
 		return 0;
 	}
 	return a4sqp_step_hess_reset_identity(sys,1.0);
+}
+
+static enum A4SqpHessianMode a4sqp_step_hess_mode(const struct A4SqpSystem *sys){
+	const char *mode;
+	if(sys == NULL){
+		return A4SQP_HESS_AUTO;
+	}
+	mode = SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_HESS_MODE);
+	if(mode == NULL || strcmp(mode,"AUTO") == 0){
+		return A4SQP_HESS_AUTO;
+	}
+	if(strcmp(mode,"BFGS") == 0){
+		return A4SQP_HESS_BFGS;
+	}
+	if(strcmp(mode,"EXACT_OBJ") == 0){
+		return A4SQP_HESS_EXACT_OBJ;
+	}
+	if(strcmp(mode,"EXACT_LAGRANGIAN") == 0){
+		return A4SQP_HESS_EXACT_LAGRANGIAN;
+	}
+	return A4SQP_HESS_AUTO;
+}
+
+static int a4sqp_step_hess_mode_uses_exact(
+	const struct A4SqpSystem *sys,
+	int *include_constraints
+){
+	enum A4SqpHessianMode mode;
+	if(include_constraints != NULL){
+		*include_constraints = 0;
+	}
+	if(sys == NULL || sys->view.obj == NULL){
+		return 0;
+	}
+	mode = a4sqp_step_hess_mode(sys);
+	switch(mode){
+	case A4SQP_HESS_BFGS:
+		return 0;
+	case A4SQP_HESS_EXACT_OBJ:
+		return 1;
+	case A4SQP_HESS_EXACT_LAGRANGIAN:
+		if(include_constraints != NULL){
+			*include_constraints = 1;
+		}
+		return 1;
+	case A4SQP_HESS_AUTO:
+	default:
+		return sys->view.n_rel == 0 ? 1 : 0;
+	}
+}
+
+static int a4sqp_step_hess_clear(struct A4SqpSystem *sys){
+	int32 n;
+	if(a4sqp_step_hess_sync(sys)){
+		return 1;
+	}
+	n = sys->step_hess_n;
+	if(n > 0 && sys->step_hess != NULL){
+		memset(sys->step_hess,0,sizeof(real64) * n * n);
+	}
+	sys->step_hess_updates = 0;
+	sys->step_hess_exact = 0;
+	return 0;
+}
+
+static int a4sqp_step_hess_accumulate_relation(
+	struct A4SqpSystem *sys,
+	struct rel_relation *rel,
+	real64 coeff,
+	int safe
+){
+	const struct var_variable **incidence;
+	real64 *row2nd = NULL;
+	int32 len;
+	int32 i;
+	int32 j;
+	int32 n;
+	int status = 0;
+	int mapped = 0;
+	real64 local_maxabs = 0.0;
+	if(
+		sys == NULL
+		|| rel == NULL
+		|| sys->step_hess == NULL
+		|| sys->step_hess_n <= 0
+		|| !isfinite(coeff)
+		|| fabs(coeff) <= 1e-18
+	){
+		return 0;
+	}
+	n = sys->step_hess_n;
+	len = rel_n_incidences(rel);
+	if(len <= 0){
+		if(SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_PROGRESS_LOG)){
+			char message[160];
+			snprintf(message,sizeof(message),"hessian_relation: empty incidence len=%ld coeff=%g",(long)len,coeff);
+			a4sqp_report_progress(&sys->params,message);
+		}
+		return 0;
+	}
+	incidence = (const struct var_variable **)rel_incidence_list(rel);
+	if(incidence == NULL){
+		if(SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_PROGRESS_LOG)){
+			char message[160];
+			snprintf(message,sizeof(message),"hessian_relation: null incidence len=%ld coeff=%g",(long)len,coeff);
+			a4sqp_report_progress(&sys->params,message);
+		}
+		return 1;
+	}
+	row2nd = ASC_NEW_ARRAY_OR_NULL(real64,len);
+	if(row2nd == NULL){
+		return 1;
+	}
+
+	for(i = 0; i < len; ++i){
+		int32 row = a4sqp_view_var_col_from_var(&sys->view,(const struct var_variable *)incidence[i]);
+		real64 row_scale;
+		if(safe){
+			enum safe_err serr = RelationCalcSecondDerivSafe(rel_instance(rel),row2nd,(unsigned long)i);
+			if(serr != safe_ok){
+				safe_error_to_stderr(&serr);
+				status = 1;
+			}
+		}else{
+			status = RelationCalcSecondDeriv(rel_instance(rel),row2nd,(unsigned long)i);
+		}
+		if(status){
+			ASC_FREE(row2nd);
+			return 1;
+		}
+		if(row < 0 || row >= n){
+			continue;
+		}
+		row_scale = sys->view.var_scale[row];
+		for(j = 0; j <= i; ++j){
+			int32 col = a4sqp_view_var_col_from_var(&sys->view,(const struct var_variable *)incidence[j]);
+			real64 value;
+			real64 scaled_value;
+			real64 col_scale;
+			if(col < 0 || col >= n){
+				continue;
+			}
+			value = row2nd[j];
+			if(fabs(value) > local_maxabs){
+				local_maxabs = fabs(value);
+			}
+			if(!isfinite(value) || fabs(value) <= 1e-18){
+				continue;
+			}
+			col_scale = sys->view.var_scale[col];
+			scaled_value = coeff * value * row_scale * col_scale;
+			sys->step_hess[row * n + col] += scaled_value;
+			if(row != col){
+				sys->step_hess[col * n + row] += scaled_value;
+			}
+			++mapped;
+		}
+	}
+	if(SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_PROGRESS_LOG)){
+		char message[256];
+		snprintf(
+			message,
+			sizeof(message),
+			"hessian_relation: len=%ld mapped=%d local_maxabs=%g coeff=%g",
+			(long)len,
+			mapped,
+			local_maxabs,
+			coeff
+		);
+		a4sqp_report_progress(&sys->params,message);
+	}
+	if(mapped == 0 && local_maxabs == 0.0 && rel == sys->view.obj){
+		if(a4sqp_step_hess_accumulate_objective_fd(sys,coeff,safe,&mapped,&local_maxabs)){
+			ASC_FREE(row2nd);
+			return 1;
+		}
+		if(SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_PROGRESS_LOG)){
+			char message[256];
+			snprintf(
+				message,
+				sizeof(message),
+				"hessian_relation_fd: mapped=%d local_maxabs=%g coeff=%g",
+				mapped,
+				local_maxabs,
+				coeff
+			);
+			a4sqp_report_progress(&sys->params,message);
+		}
+	}
+
+	ASC_FREE(row2nd);
+	return 0;
+}
+
+static int a4sqp_eval_objective_gradient_current(const struct A4SqpSystem *sys, int safe, real64 *grad){
+	int32 i;
+	int32 count = 0;
+	int32 *vars = NULL;
+	real64 *derivs = NULL;
+	var_filter_t vfilter;
+	real64 sign = 1.0;
+	if(sys == NULL || grad == NULL || sys->view.obj == NULL){
+		return 1;
+	}
+	for(i = 0; i < sys->view.n_var; ++i){
+		grad[i] = 0.0;
+	}
+	if(sys->view.n_var <= 0){
+		return 0;
+	}
+	derivs = ASC_NEW_ARRAY_OR_NULL(real64,sys->view.n_var);
+	vars = ASC_NEW_ARRAY_OR_NULL(int32,sys->view.n_var);
+	if(derivs == NULL || vars == NULL){
+		ASC_FREE(derivs);
+		ASC_FREE(vars);
+		return 1;
+	}
+	if(sys->view.obj_direction > 0){
+		sign = -1.0;
+	}
+	vfilter.matchbits = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED;
+	vfilter.matchvalue = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR;
+	if(relman_diff2_rev(sys->view.obj,&vfilter,derivs,vars,&count,safe)){
+		ASC_FREE(derivs);
+		ASC_FREE(vars);
+		return 1;
+	}
+	for(i = 0; i < count; ++i){
+		int32 col = a4sqp_view_var_col(&sys->view,vars[i]);
+		if(col >= 0 && col < sys->view.n_var){
+			grad[col] = sign * derivs[i];
+		}
+	}
+	ASC_FREE(derivs);
+	ASC_FREE(vars);
+	return 0;
+}
+
+static int a4sqp_step_hess_accumulate_objective_fd(
+	struct A4SqpSystem *sys,
+	real64 coeff,
+	int safe,
+	int *mapped,
+	real64 *local_maxabs
+){
+	int32 i;
+	int32 j;
+	int32 n;
+	real64 *gplus = NULL;
+	real64 *gminus = NULL;
+	if(
+		sys == NULL
+		|| sys->view.obj == NULL
+		|| sys->view.n_var <= 0
+		|| sys->view.vars == NULL
+		|| sys->step_hess == NULL
+	){
+		return 1;
+	}
+	n = sys->view.n_var;
+	gplus = ASC_NEW_ARRAY_OR_NULL(real64,n);
+	gminus = ASC_NEW_ARRAY_OR_NULL(real64,n);
+	if(gplus == NULL || gminus == NULL){
+		ASC_FREE(gplus);
+		ASC_FREE(gminus);
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		real64 old_value = sys->view.var_value[i];
+		real64 base = fabs(old_value);
+		real64 step;
+		if(sys->view.var_scale != NULL && sys->view.var_scale[i] > base){
+			base = sys->view.var_scale[i];
+		}
+		if(base < 1.0){
+			base = 1.0;
+		}
+		step = 1e-6 * base;
+		var_set_value(sys->view.vars[i],old_value + step);
+		if(a4sqp_eval_objective_gradient_current(sys,safe,gplus)){
+			var_set_value(sys->view.vars[i],old_value);
+			ASC_FREE(gplus);
+			ASC_FREE(gminus);
+			return 1;
+		}
+		var_set_value(sys->view.vars[i],old_value - step);
+		if(a4sqp_eval_objective_gradient_current(sys,safe,gminus)){
+			var_set_value(sys->view.vars[i],old_value);
+			ASC_FREE(gplus);
+			ASC_FREE(gminus);
+			return 1;
+		}
+		var_set_value(sys->view.vars[i],old_value);
+		for(j = 0; j <= i; ++j){
+			real64 value = (gplus[j] - gminus[j]) / (2.0 * step);
+			real64 scaled_value = coeff * value * sys->view.var_scale[i] * sys->view.var_scale[j];
+			if(local_maxabs != NULL && fabs(value) > *local_maxabs){
+				*local_maxabs = fabs(value);
+			}
+			if(!isfinite(value) || fabs(value) <= 1e-18){
+				continue;
+			}
+			sys->step_hess[i * n + j] += scaled_value;
+			if(i != j){
+				sys->step_hess[j * n + i] += scaled_value;
+			}
+			if(mapped != NULL){
+				++(*mapped);
+			}
+		}
+	}
+	ASC_FREE(gplus);
+	ASC_FREE(gminus);
+	return 0;
+}
+
+static int a4sqp_step_hess_try_cholesky(
+	const real64 *hess,
+	int32 n,
+	real64 shift,
+	real64 pivot_floor
+){
+	real64 *l = NULL;
+	int32 i;
+	int32 j;
+	int32 k;
+	int ok = 0;
+	if(hess == NULL || n <= 0){
+		return 0;
+	}
+	if(!isfinite(shift) || shift < 0.0){
+		shift = 0.0;
+	}
+	if(!isfinite(pivot_floor) || pivot_floor <= 0.0){
+		pivot_floor = 1e-12;
+	}
+	l = ASC_NEW_ARRAY_CLEAR(real64,n * n);
+	if(l == NULL){
+		return 0;
+	}
+	for(i = 0; i < n; ++i){
+		for(j = 0; j <= i; ++j){
+			real64 sum = hess[i * n + j];
+			if(i == j){
+				sum += shift;
+			}
+			for(k = 0; k < j; ++k){
+				sum -= l[i * n + k] * l[j * n + k];
+			}
+			if(i == j){
+				if(!isfinite(sum) || sum < pivot_floor){
+					goto cleanup;
+				}
+				l[i * n + i] = sqrt(sum);
+			}else{
+				real64 ljj = l[j * n + j];
+				if(!isfinite(ljj) || ljj <= 0.0){
+					goto cleanup;
+				}
+				l[i * n + j] = sum / ljj;
+			}
+		}
+	}
+	ok = 1;
+
+cleanup:
+	ASC_FREE(l);
+	return ok;
+}
+
+static real64 a4sqp_step_hess_regularize_psd(struct A4SqpSystem *sys){
+	int32 i;
+	int32 j;
+	int32 n;
+	real64 min_diag;
+	real64 shift = 0.0;
+	real64 scale = 1.0;
+	int tries;
+	if(sys == NULL || sys->step_hess == NULL){
+		return 0.0;
+	}
+	n = sys->step_hess_n;
+	min_diag = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_HESS_REG);
+	if(!isfinite(min_diag) || min_diag < 0.0){
+		min_diag = 1e-8;
+	}
+	for(i = 0; i < n; ++i){
+		for(j = i + 1; j < n; ++j){
+			real64 a = sys->step_hess[i * n + j];
+			real64 b = sys->step_hess[j * n + i];
+			real64 sym;
+			if(!isfinite(a)){
+				a = 0.0;
+			}
+			if(!isfinite(b)){
+				b = 0.0;
+			}
+			sym = 0.5 * (a + b);
+			sys->step_hess[i * n + j] = sym;
+			sys->step_hess[j * n + i] = sym;
+		}
+		if(!isfinite(sys->step_hess[i * n + i])){
+			sys->step_hess[i * n + i] = 0.0;
+		}
+		if(fabs(sys->step_hess[i * n + i]) > scale){
+			scale = fabs(sys->step_hess[i * n + i]);
+		}
+	}
+	for(i = 0; i < n; ++i){
+		for(j = 0; j < n; ++j){
+			if(i == j){
+				continue;
+			}
+			if(!isfinite(sys->step_hess[i * n + j])){
+				sys->step_hess[i * n + j] = 0.0;
+				sys->step_hess[j * n + i] = 0.0;
+			}
+			if(fabs(sys->step_hess[i * n + j]) > scale){
+				scale = fabs(sys->step_hess[i * n + j]);
+			}
+		}
+	}
+	if(scale < 1.0){
+		scale = 1.0;
+	}
+	for(tries = 0; tries < 12; ++tries){
+		if(a4sqp_step_hess_try_cholesky(sys->step_hess,n,shift,min_diag)){
+			break;
+		}
+		if(shift <= 0.0){
+			shift = fmax(min_diag,1e-8 * scale);
+		}else{
+			shift *= 10.0;
+		}
+	}
+	if(shift > 0.0){
+		for(i = 0; i < n; ++i){
+			sys->step_hess[i * n + i] += shift;
+		}
+	}
+	for(i = 0; i < n; ++i){
+		if(sys->step_hess[i * n + i] < min_diag){
+			sys->step_hess[i * n + i] = min_diag;
+		}
+	}
+	return shift;
+}
+
+static int a4sqp_step_hess_build_exact(struct A4SqpSystem *sys){
+	int safe;
+	int include_constraints = 0;
+	int row;
+	int status = 0;
+	real64 obj_coeff = 1.0;
+	real64 reg_shift = 0.0;
+	if(sys == NULL || !a4sqp_step_hess_mode_uses_exact(sys,&include_constraints)){
+		return 1;
+	}
+	if(a4sqp_step_hess_clear(sys)){
+		return 1;
+	}
+	safe = SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_SAFE_CALC);
+	if(sys->view.obj_direction > 0){
+		obj_coeff = -1.0;
+	}
+	status = a4sqp_step_hess_accumulate_relation(sys,sys->view.obj,obj_coeff,safe);
+	if(status){
+		return 1;
+	}
+	if(include_constraints && sys->view.n_rel > 0){
+		for(row = 0; row < sys->view.n_rel; ++row){
+			real64 lambda = 0.0;
+			real64 coeff;
+			if(
+				sys->qp.row_dual == NULL
+				|| sys->qp.num_row != sys->view.n_rel
+			){
+				continue;
+			}
+			lambda = sys->qp.row_dual[row];
+			if(!isfinite(lambda) || fabs(lambda) <= 1e-18){
+				continue;
+			}
+			coeff = lambda * sys->view.rel_scale[row];
+			if(a4sqp_step_hess_accumulate_relation(sys,sys->view.rels[row],coeff,safe)){
+				return 1;
+			}
+		}
+	}
+	reg_shift = a4sqp_step_hess_regularize_psd(sys);
+	if(SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_PROGRESS_LOG)){
+		char message[256];
+		snprintf(
+			message,
+			sizeof(message),
+			"hessian: exact mode=%s constraints=%d reg_shift=%g",
+			SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_HESS_MODE),
+			include_constraints,
+			reg_shift
+		);
+		a4sqp_report_progress(&sys->params,message);
+	}
+	sys->step_hess_exact = 1;
+	return 0;
+}
+
+static int a4sqp_step_hess_prepare(struct A4SqpSystem *sys){
+	int include_constraints = 0;
+	if(sys == NULL){
+		return 1;
+	}
+	if(a4sqp_step_hess_mode_uses_exact(sys,&include_constraints)){
+		if(a4sqp_step_hess_build_exact(sys) == 0){
+			return 0;
+		}
+		return a4sqp_step_hess_reset_identity(sys,1.0);
+	}
+	return a4sqp_step_hess_sync(sys);
 }
 
 static void a4sqp_step_hess_mul(
@@ -244,6 +779,7 @@ static void a4sqp_step_hess_update_objective_only(
 	if(a4sqp_step_hess_sync(sys)){
 		return;
 	}
+	sys->step_hess_exact = 0;
 
 	s = ASC_NEW_ARRAY_OR_NULL(real64,n);
 	y = ASC_NEW_ARRAY_OR_NULL(real64,n);
@@ -583,6 +1119,28 @@ static int32 a4sqp_view_var_col(const struct A4SqpView *view, int32 sindex){
 	return -1;
 }
 
+static int32 a4sqp_view_var_col_from_var(const struct A4SqpView *view, const struct var_variable *var){
+	int32 i;
+	if(view == NULL || var == NULL){
+		return -1;
+	}
+	for(i = 0; i < view->n_var; ++i){
+		if(view->vars[i] == var){
+			return i;
+		}
+		if(var_instance(view->vars[i]) == var_instance(var)){
+			return i;
+		}
+		if(view->var_mindex != NULL && view->var_mindex[i] == var_mindex(var)){
+			return i;
+		}
+		if(view->var_sindex[i] == var_sindex(var)){
+			return i;
+		}
+	}
+	return -1;
+}
+
 static real64 a4sqp_projected_gradient_inf(struct A4SqpSystem *sys, real64 active_tol){
 	const struct A4SqpView *view;
 	real64 *basis = NULL;
@@ -884,7 +1442,9 @@ static int a4sqp_line_search(slv_system_t server, struct A4SqpSystem *sys){
 			trust_ratio = merit_decrease / (alpha * sys->last_predicted_reduction);
 		}
 		if(merit_decrease >= required_decrease && trust_ratio >= trust_accept){
-			a4sqp_step_hess_update_objective_only(sys,old_scaled_x,old_scaled_grad);
+			if(!sys->step_hess_exact){
+				a4sqp_step_hess_update_objective_only(sys,old_scaled_x,old_scaled_grad);
+			}
 			sys->last_alpha = alpha;
 			sys->last_step_norm = step_norm;
 			sys->last_trust_ratio = trust_ratio;
@@ -928,11 +1488,11 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to build the ASCEND problem view.");
 		return 1;
 	}
-	if(a4sqp_step_hess_sync(sys)){
+	if(a4sqp_step_hess_prepare(sys)){
 		sys->status.ok = FALSE;
 		sys->status.calc_ok = FALSE;
 		sys->status.ready_to_solve = FALSE;
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to initialize the Hessian approximation.");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to initialize the step Hessian model.");
 		return 1;
 	}
 	a4sqp_trust_reset(sys);
@@ -996,6 +1556,12 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 	}
 	trust_retries = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_TRUST_QP_RETRIES);
 	for(trust_attempt = 0; trust_attempt <= trust_retries; ++trust_attempt){
+		if(a4sqp_step_hess_prepare(sys)){
+			sys->status.ok = FALSE;
+			sys->status.calc_ok = FALSE;
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to prepare the step Hessian model.");
+			return 1;
+		}
 		if(a4sqp_qp_build_from_view(
 			&sys->qp,
 			&sys->view,
