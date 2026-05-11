@@ -13,7 +13,9 @@
 #include "a4sqp_scale.h"
 
 #include <math.h>
+#include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <ascend/compiler/relation_util.h>
@@ -21,6 +23,7 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/ltmatrix.h>
 #include <ascend/general/mem.h>
+#include <ascend/system/relman.h>
 #include <ascend/system/slv_common.h>
 #include <ascend/system/slv_param.h>
 #include <ascend/system/var.h>
@@ -39,10 +42,42 @@ enum A4SqpHessianMode {
 	A4SQP_HESS_AUTO
 };
 
+struct A4SqpHessTripletEntry {
+	int32 col;
+	int32 row;
+	real64 value;
+};
+
+struct A4SqpHessTriplet {
+	int32 n;
+	int32 nnz;
+	int32 cap;
+	struct A4SqpHessTripletEntry *entry;
+};
+
+enum A4SqpRowActivity {
+	A4SQP_ROW_INACTIVE = 0,
+	A4SQP_ROW_NEAR_ACTIVE,
+	A4SQP_ROW_ACTIVE,
+	A4SQP_ROW_EQUALITY
+};
+
 static int32 a4sqp_view_var_col(const struct A4SqpView *view, int32 sindex);
 static int32 a4sqp_view_var_col_from_var(const struct A4SqpView *view, const struct var_variable *var);
 static int a4sqp_eval_objective_gradient_current(const struct A4SqpSystem *sys, int safe, real64 *grad);
-static int a4sqp_step_hess_accumulate_objective_fd(struct A4SqpSystem *sys, real64 coeff, int safe, int *mapped, real64 *local_maxabs);
+static int a4sqp_step_hess_accumulate_objective_fd(struct A4SqpSystem *sys, struct A4SqpHessTriplet *triplet, real64 coeff, int safe, int *mapped, real64 *local_maxabs);
+static void a4sqp_step_hess_sparse_destroy(struct A4SqpSystem *sys);
+static void a4sqp_step_hess_spec(const struct A4SqpSystem *sys, struct A4SqpStepHessian *spec);
+static void a4sqp_lambda_est_destroy(struct A4SqpSystem *sys);
+static int a4sqp_lambda_est_sync(struct A4SqpSystem *sys);
+static void a4sqp_lambda_est_reset(struct A4SqpSystem *sys);
+static void a4sqp_lambda_est_update(struct A4SqpSystem *sys);
+static enum A4SqpRowActivity a4sqp_row_activity(
+	const struct A4SqpView *view,
+	int32 row,
+	real64 active_tol,
+	real64 near_tol
+);
 
 static void a4sqp_init_status(struct A4SqpSystem *sys){
 	if(sys == NULL){
@@ -69,6 +104,7 @@ static void a4sqp_init_status(struct A4SqpSystem *sys){
 	sys->last_trust_ratio = 0.0;
 	sys->worst_violation_rel = -1;
 	sys->line_search_failed = 0;
+	sys->last_elastic_max = 0.0;
 }
 
 static real64 a4sqp_trust_clamp(
@@ -157,9 +193,76 @@ static void a4sqp_step_hess_destroy(struct A4SqpSystem *sys){
 		return;
 	}
 	ASC_FREE(sys->step_hess);
+	sys->step_hess = NULL;
+	a4sqp_step_hess_sparse_destroy(sys);
 	sys->step_hess_n = 0;
 	sys->step_hess_updates = 0;
 	sys->step_hess_exact = 0;
+}
+
+static void a4sqp_lambda_est_destroy(struct A4SqpSystem *sys){
+	if(sys == NULL){
+		return;
+	}
+	ASC_FREE(sys->lambda_est);
+	sys->lambda_est = NULL;
+	sys->lambda_est_n = 0;
+	sys->lambda_est_ready = 0;
+	sys->lambda_est_good_count = 0;
+	sys->lambda_est_required_count = 0;
+	sys->last_elastic_max = 0.0;
+}
+
+static int a4sqp_lambda_est_sync(struct A4SqpSystem *sys){
+	int32 n;
+	if(sys == NULL){
+		return 1;
+	}
+	n = sys->view.n_rel;
+	if(sys->lambda_est_n == n && (n == 0 || sys->lambda_est != NULL)){
+		return 0;
+	}
+	a4sqp_lambda_est_destroy(sys);
+	if(n > 0){
+		sys->lambda_est = ASC_NEW_ARRAY_CLEAR(real64,n);
+		if(sys->lambda_est == NULL){
+			return 1;
+		}
+	}
+	sys->lambda_est_n = n;
+	sys->lambda_est_ready = 0;
+	sys->lambda_est_good_count = 0;
+	sys->lambda_est_required_count = 0;
+	sys->last_elastic_max = 0.0;
+	return 0;
+}
+
+static void a4sqp_lambda_est_reset(struct A4SqpSystem *sys){
+	int32 i;
+	if(a4sqp_lambda_est_sync(sys)){
+		return;
+	}
+	for(i = 0; i < sys->lambda_est_n; ++i){
+		sys->lambda_est[i] = 0.0;
+	}
+	sys->lambda_est_ready = 0;
+	sys->lambda_est_good_count = 0;
+	sys->lambda_est_required_count = 0;
+	sys->last_elastic_max = 0.0;
+}
+
+static void a4sqp_step_hess_sparse_destroy(struct A4SqpSystem *sys){
+	if(sys == NULL){
+		return;
+	}
+	ASC_FREE(sys->step_hess_sparse_start);
+	ASC_FREE(sys->step_hess_sparse_index);
+	ASC_FREE(sys->step_hess_sparse_value);
+	sys->step_hess_sparse_start = NULL;
+	sys->step_hess_sparse_index = NULL;
+	sys->step_hess_sparse_value = NULL;
+	sys->step_hess_sparse_n = 0;
+	sys->step_hess_sparse_nnz = 0;
 }
 
 static int a4sqp_step_hess_reset_identity(struct A4SqpSystem *sys, real64 diag){
@@ -185,6 +288,7 @@ static int a4sqp_step_hess_reset_identity(struct A4SqpSystem *sys, real64 diag){
 	if(diag <= 0.0 || !isfinite(diag)){
 		diag = 1.0;
 	}
+	a4sqp_step_hess_sparse_destroy(sys);
 	for(i = 0; i < n * n; ++i){
 		sys->step_hess[i] = 0.0;
 	}
@@ -251,7 +355,24 @@ static int a4sqp_step_hess_mode_uses_exact(
 		return 1;
 	case A4SQP_HESS_AUTO:
 	default:
-		return sys->view.n_rel == 0 ? 1 : 0;
+		if(sys->view.n_rel == 0){
+			return 1;
+		}
+		if(
+			sys->view.n_var <= 64
+			&& sys->view.n_rel <= 64
+			&& sys->lambda_est_ready
+			&& sys->lambda_est != NULL
+			&& sys->lambda_est_good_count >= sys->lambda_est_required_count
+			&& sys->last_elastic_max <= 10.0 * SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL)
+			&& !sys->line_search_failed
+		){
+			if(include_constraints != NULL){
+				*include_constraints = 1;
+			}
+			return 1;
+		}
+		return 0;
 	}
 }
 
@@ -264,13 +385,238 @@ static int a4sqp_step_hess_clear(struct A4SqpSystem *sys){
 	if(n > 0 && sys->step_hess != NULL){
 		memset(sys->step_hess,0,sizeof(real64) * n * n);
 	}
+	a4sqp_step_hess_sparse_destroy(sys);
 	sys->step_hess_updates = 0;
 	sys->step_hess_exact = 0;
 	return 0;
 }
 
+static void a4sqp_hess_triplet_init(struct A4SqpHessTriplet *triplet, int32 n){
+	if(triplet == NULL){
+		return;
+	}
+	triplet->n = n;
+	triplet->nnz = 0;
+	triplet->cap = 0;
+	triplet->entry = NULL;
+}
+
+static void a4sqp_hess_triplet_destroy(struct A4SqpHessTriplet *triplet){
+	if(triplet == NULL){
+		return;
+	}
+	ASC_FREE(triplet->entry);
+	triplet->n = 0;
+	triplet->nnz = 0;
+	triplet->cap = 0;
+}
+
+static int a4sqp_hess_triplet_reserve(struct A4SqpHessTriplet *triplet, int32 need){
+	struct A4SqpHessTripletEntry *entry;
+	int32 cap;
+	if(triplet == NULL){
+		return 1;
+	}
+	if(need <= triplet->cap){
+		return 0;
+	}
+	cap = triplet->cap > 0 ? triplet->cap : 16;
+	while(cap < need){
+		if(cap > INT_MAX / 2){
+			cap = need;
+			break;
+		}
+		cap *= 2;
+	}
+	entry = ASC_NEW_ARRAY_OR_NULL(struct A4SqpHessTripletEntry,cap);
+	if(entry == NULL){
+		return 1;
+	}
+	if(triplet->entry != NULL && triplet->nnz > 0){
+		memcpy(entry,triplet->entry,sizeof(*entry) * triplet->nnz);
+	}
+	ASC_FREE(triplet->entry);
+	triplet->entry = entry;
+	triplet->cap = cap;
+	return 0;
+}
+
+static int a4sqp_hess_triplet_append(
+	struct A4SqpHessTriplet *triplet,
+	int32 row,
+	int32 col,
+	real64 value
+){
+	struct A4SqpHessTripletEntry *entry;
+	if(
+		triplet == NULL
+		|| row < 0
+		|| col < 0
+		|| row >= triplet->n
+		|| col >= triplet->n
+		|| !isfinite(value)
+		|| fabs(value) <= 1e-18
+	){
+		return 0;
+	}
+	if(row < col){
+		int32 swap = row;
+		row = col;
+		col = swap;
+	}
+	if(a4sqp_hess_triplet_reserve(triplet,triplet->nnz + 1)){
+		return 1;
+	}
+	entry = &triplet->entry[triplet->nnz++];
+	entry->col = col;
+	entry->row = row;
+	entry->value = value;
+	return 0;
+}
+
+static int a4sqp_hess_triplet_cmp(const void *a, const void *b){
+	const struct A4SqpHessTripletEntry *ea = (const struct A4SqpHessTripletEntry *)a;
+	const struct A4SqpHessTripletEntry *eb = (const struct A4SqpHessTripletEntry *)b;
+	if(ea->col < eb->col)return -1;
+	if(ea->col > eb->col)return 1;
+	if(ea->row < eb->row)return -1;
+	if(ea->row > eb->row)return 1;
+	return 0;
+}
+
+static int a4sqp_step_hess_sparse_store_triplet(
+	struct A4SqpSystem *sys,
+	struct A4SqpHessTriplet *triplet
+){
+	int32 col;
+	int32 i;
+	int32 out_nnz = 0;
+	int32 nnz;
+	int32 *counts = NULL;
+	int32 *start = NULL;
+	int32 *index = NULL;
+	real64 *value = NULL;
+
+	if(sys == NULL || triplet == NULL){
+		return 1;
+	}
+	a4sqp_step_hess_sparse_destroy(sys);
+	sys->step_hess_sparse_n = triplet->n;
+	nnz = triplet->nnz;
+	if(nnz <= 0){
+		start = ASC_NEW_ARRAY_OR_NULL(int32,triplet->n + 1);
+		index = ASC_NEW_ARRAY_OR_NULL(int32,1);
+		value = ASC_NEW_ARRAY_OR_NULL(real64,1);
+		if(start == NULL || index == NULL || value == NULL){
+			ASC_FREE(start);
+			ASC_FREE(index);
+			ASC_FREE(value);
+			return 1;
+		}
+		for(col = 0; col <= triplet->n; ++col){
+			start[col] = 0;
+		}
+		sys->step_hess_sparse_start = start;
+		sys->step_hess_sparse_index = index;
+		sys->step_hess_sparse_value = value;
+		sys->step_hess_sparse_nnz = 0;
+		return 0;
+	}
+
+	qsort(triplet->entry,(size_t)nnz,sizeof(triplet->entry[0]),&a4sqp_hess_triplet_cmp);
+	for(i = 0; i < nnz; ++i){
+		if(fabs(triplet->entry[i].value) <= 1e-18){
+			continue;
+		}
+		if(
+			out_nnz > 0
+			&& triplet->entry[i].col == triplet->entry[out_nnz - 1].col
+			&& triplet->entry[i].row == triplet->entry[out_nnz - 1].row
+		){
+			triplet->entry[out_nnz - 1].value += triplet->entry[i].value;
+		}else{
+			triplet->entry[out_nnz++] = triplet->entry[i];
+		}
+	}
+	nnz = 0;
+	for(i = 0; i < out_nnz; ++i){
+		if(fabs(triplet->entry[i].value) > 1e-18){
+			triplet->entry[nnz++] = triplet->entry[i];
+		}
+	}
+	counts = ASC_NEW_ARRAY_CLEAR(int32,triplet->n);
+	start = ASC_NEW_ARRAY_OR_NULL(int32,triplet->n + 1);
+	index = ASC_NEW_ARRAY_OR_NULL(int32,nnz > 0 ? nnz : 1);
+	value = ASC_NEW_ARRAY_OR_NULL(real64,nnz > 0 ? nnz : 1);
+	if(counts == NULL || start == NULL || index == NULL || value == NULL){
+		ASC_FREE(counts);
+		ASC_FREE(start);
+		ASC_FREE(index);
+		ASC_FREE(value);
+		return 1;
+	}
+	for(i = 0; i < nnz; ++i){
+		++counts[triplet->entry[i].col];
+	}
+	start[0] = 0;
+	for(col = 0; col < triplet->n; ++col){
+		start[col + 1] = start[col] + counts[col];
+		counts[col] = start[col];
+	}
+	for(i = 0; i < nnz; ++i){
+		int32 pos = counts[triplet->entry[i].col]++;
+		index[pos] = triplet->entry[i].row;
+		value[pos] = triplet->entry[i].value;
+	}
+	ASC_FREE(counts);
+	sys->step_hess_sparse_start = start;
+	sys->step_hess_sparse_index = index;
+	sys->step_hess_sparse_value = value;
+	sys->step_hess_sparse_nnz = nnz;
+	return 0;
+}
+
+static int a4sqp_step_hess_dense_store_triplet(
+	struct A4SqpSystem *sys,
+	const struct A4SqpHessTriplet *triplet
+){
+	int32 i;
+	int32 n;
+	if(sys == NULL || triplet == NULL){
+		return 1;
+	}
+	n = triplet->n;
+	if(a4sqp_step_hess_sync(sys)){
+		return 1;
+	}
+	if(sys->step_hess_n != n || (n > 0 && sys->step_hess == NULL)){
+		return 1;
+	}
+	a4sqp_step_hess_sparse_destroy(sys);
+	if(n > 0){
+		memset(sys->step_hess,0,sizeof(real64) * n * n);
+	}
+	for(i = 0; i < triplet->nnz; ++i){
+		int32 col = triplet->entry[i].col;
+		int32 row = triplet->entry[i].row;
+		real64 value = triplet->entry[i].value;
+		if(
+			col < 0 || row < 0 || col >= n || row >= n
+			|| !isfinite(value) || fabs(value) <= 1e-18
+		){
+			continue;
+		}
+		sys->step_hess[row * n + col] += value;
+		if(row != col){
+			sys->step_hess[col * n + row] += value;
+		}
+	}
+	return 0;
+}
+
 static int a4sqp_step_hess_accumulate_relation(
 	struct A4SqpSystem *sys,
+	struct A4SqpHessTriplet *triplet,
 	struct rel_relation *rel,
 	real64 coeff,
 	int safe
@@ -286,15 +632,15 @@ static int a4sqp_step_hess_accumulate_relation(
 	real64 local_maxabs = 0.0;
 	if(
 		sys == NULL
+		|| triplet == NULL
 		|| rel == NULL
-		|| sys->step_hess == NULL
-		|| sys->step_hess_n <= 0
+		|| triplet->n <= 0
 		|| !isfinite(coeff)
 		|| fabs(coeff) <= 1e-18
 	){
 		return 0;
 	}
-	n = sys->step_hess_n;
+	n = triplet->n;
 	len = rel_n_incidences(rel);
 	if(len <= 0){
 		if(SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_PROGRESS_LOG)){
@@ -355,9 +701,9 @@ static int a4sqp_step_hess_accumulate_relation(
 			}
 			col_scale = sys->view.var_scale[col];
 			scaled_value = coeff * value * row_scale * col_scale;
-			sys->step_hess[row * n + col] += scaled_value;
-			if(row != col){
-				sys->step_hess[col * n + row] += scaled_value;
+			if(a4sqp_hess_triplet_append(triplet,row,col,scaled_value)){
+				ASC_FREE(row2nd);
+				return 1;
 			}
 			++mapped;
 		}
@@ -376,7 +722,7 @@ static int a4sqp_step_hess_accumulate_relation(
 		a4sqp_report_progress(&sys->params,message);
 	}
 	if(mapped == 0 && local_maxabs == 0.0 && rel == sys->view.obj){
-		if(a4sqp_step_hess_accumulate_objective_fd(sys,coeff,safe,&mapped,&local_maxabs)){
+		if(a4sqp_step_hess_accumulate_objective_fd(sys,triplet,coeff,safe,&mapped,&local_maxabs)){
 			ASC_FREE(row2nd);
 			return 1;
 		}
@@ -444,6 +790,7 @@ static int a4sqp_eval_objective_gradient_current(const struct A4SqpSystem *sys, 
 
 static int a4sqp_step_hess_accumulate_objective_fd(
 	struct A4SqpSystem *sys,
+	struct A4SqpHessTriplet *triplet,
 	real64 coeff,
 	int safe,
 	int *mapped,
@@ -456,10 +803,10 @@ static int a4sqp_step_hess_accumulate_objective_fd(
 	real64 *gminus = NULL;
 	if(
 		sys == NULL
+		|| triplet == NULL
 		|| sys->view.obj == NULL
 		|| sys->view.n_var <= 0
 		|| sys->view.vars == NULL
-		|| sys->step_hess == NULL
 	){
 		return 1;
 	}
@@ -506,9 +853,11 @@ static int a4sqp_step_hess_accumulate_objective_fd(
 			if(!isfinite(value) || fabs(value) <= 1e-18){
 				continue;
 			}
-			sys->step_hess[i * n + j] += scaled_value;
-			if(i != j){
-				sys->step_hess[j * n + i] += scaled_value;
+			if(a4sqp_hess_triplet_append(triplet,i,j,scaled_value)){
+				var_set_value(sys->view.vars[i],old_value);
+				ASC_FREE(gplus);
+				ASC_FREE(gminus);
+				return 1;
 			}
 			if(mapped != NULL){
 				++(*mapped);
@@ -652,6 +1001,154 @@ static real64 a4sqp_step_hess_regularize_psd(struct A4SqpSystem *sys){
 	return shift;
 }
 
+static int a4sqp_step_hess_sparse_add_diagonal_shift(struct A4SqpSystem *sys, real64 shift){
+	int32 col;
+	int32 old_pos;
+	int32 new_pos = 0;
+	int32 n;
+	int32 missing_diag = 0;
+	int32 *start = NULL;
+	int32 *index = NULL;
+	real64 *value = NULL;
+
+	if(sys == NULL){
+		return 1;
+	}
+	n = sys->step_hess_sparse_n;
+	if(n < 0 || sys->step_hess_sparse_start == NULL){
+		return 1;
+	}
+	for(col = 0; col < n; ++col){
+		int found = 0;
+		for(old_pos = sys->step_hess_sparse_start[col]; old_pos < sys->step_hess_sparse_start[col + 1]; ++old_pos){
+			if(sys->step_hess_sparse_index[old_pos] == col){
+				found = 1;
+				break;
+			}
+			if(sys->step_hess_sparse_index[old_pos] > col){
+				break;
+			}
+		}
+		if(!found){
+			++missing_diag;
+		}
+	}
+	start = ASC_NEW_ARRAY_OR_NULL(int32,n + 1);
+	index = ASC_NEW_ARRAY_OR_NULL(int32,sys->step_hess_sparse_nnz + missing_diag);
+	value = ASC_NEW_ARRAY_OR_NULL(real64,sys->step_hess_sparse_nnz + missing_diag);
+	if(start == NULL || index == NULL || value == NULL){
+		ASC_FREE(start);
+		ASC_FREE(index);
+		ASC_FREE(value);
+		return 1;
+	}
+	start[0] = 0;
+	for(col = 0; col < n; ++col){
+		int diag_done = 0;
+		start[col] = new_pos;
+		for(old_pos = sys->step_hess_sparse_start[col]; old_pos < sys->step_hess_sparse_start[col + 1]; ++old_pos){
+			int32 row = sys->step_hess_sparse_index[old_pos];
+			if(!diag_done && row > col){
+				index[new_pos] = col;
+				value[new_pos] = shift;
+				++new_pos;
+				diag_done = 1;
+			}
+			index[new_pos] = row;
+			value[new_pos] = sys->step_hess_sparse_value[old_pos];
+			if(row == col){
+				value[new_pos] += shift;
+				diag_done = 1;
+			}
+			++new_pos;
+		}
+		if(!diag_done){
+			index[new_pos] = col;
+			value[new_pos] = shift;
+			++new_pos;
+		}
+		start[col + 1] = new_pos;
+	}
+	ASC_FREE(sys->step_hess_sparse_start);
+	ASC_FREE(sys->step_hess_sparse_index);
+	ASC_FREE(sys->step_hess_sparse_value);
+	sys->step_hess_sparse_start = start;
+	sys->step_hess_sparse_index = index;
+	sys->step_hess_sparse_value = value;
+	sys->step_hess_sparse_nnz = new_pos;
+	return 0;
+}
+
+static real64 a4sqp_step_hess_sparse_regularize_psd(struct A4SqpSystem *sys){
+	int32 col;
+	int32 k;
+	int32 n;
+	real64 *diag = NULL;
+	real64 *offsum = NULL;
+	real64 min_diag;
+	real64 shift = 0.0;
+
+	if(
+		sys == NULL
+		|| sys->step_hess_sparse_n <= 0
+		|| sys->step_hess_sparse_start == NULL
+		|| sys->step_hess_sparse_index == NULL
+		|| sys->step_hess_sparse_value == NULL
+	){
+		return 0.0;
+	}
+	n = sys->step_hess_sparse_n;
+	min_diag = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_HESS_REG);
+	if(!isfinite(min_diag) || min_diag < 0.0){
+		min_diag = 1e-8;
+	}
+	diag = ASC_NEW_ARRAY_CLEAR(real64,n);
+	offsum = ASC_NEW_ARRAY_CLEAR(real64,n);
+	if(diag == NULL || offsum == NULL){
+		ASC_FREE(diag);
+		ASC_FREE(offsum);
+		return 0.0;
+	}
+	for(col = 0; col < n; ++col){
+		for(k = sys->step_hess_sparse_start[col]; k < sys->step_hess_sparse_start[col + 1]; ++k){
+			int32 row = sys->step_hess_sparse_index[k];
+			real64 v = sys->step_hess_sparse_value[k];
+			if(!isfinite(v)){
+				v = 0.0;
+				sys->step_hess_sparse_value[k] = 0.0;
+			}
+			if(row == col){
+				diag[col] += v;
+			}else{
+				real64 a = fabs(v);
+				offsum[col] += a;
+				if(row >= 0 && row < n){
+					offsum[row] += a;
+				}
+			}
+		}
+	}
+	for(col = 0; col < n; ++col){
+		real64 need = offsum[col] + min_diag - diag[col];
+		if(need > shift){
+			shift = need;
+		}
+	}
+	if(shift < 0.0 || !isfinite(shift)){
+		shift = 0.0;
+	}
+	if(shift > 0.0 || min_diag > 0.0){
+		if(a4sqp_step_hess_sparse_add_diagonal_shift(sys,shift > 0.0 ? shift : min_diag)){
+			shift = 0.0;
+		}else if(shift <= 0.0){
+			shift = min_diag;
+		}
+	}
+	ASC_FREE(diag);
+	ASC_FREE(offsum);
+	return shift;
+}
+
 static int a4sqp_step_hess_build_exact(struct A4SqpSystem *sys){
 	int safe;
 	int include_constraints = 0;
@@ -659,18 +1156,21 @@ static int a4sqp_step_hess_build_exact(struct A4SqpSystem *sys){
 	int status = 0;
 	real64 obj_coeff = 1.0;
 	real64 reg_shift = 0.0;
+	struct A4SqpHessTriplet triplet;
 	if(sys == NULL || !a4sqp_step_hess_mode_uses_exact(sys,&include_constraints)){
 		return 1;
 	}
 	if(a4sqp_step_hess_clear(sys)){
 		return 1;
 	}
+	a4sqp_hess_triplet_init(&triplet,sys->view.n_var);
 	safe = SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_SAFE_CALC);
 	if(sys->view.obj_direction > 0){
 		obj_coeff = -1.0;
 	}
-	status = a4sqp_step_hess_accumulate_relation(sys,sys->view.obj,obj_coeff,safe);
+	status = a4sqp_step_hess_accumulate_relation(sys,&triplet,sys->view.obj,obj_coeff,safe);
 	if(status){
+		a4sqp_hess_triplet_destroy(&triplet);
 		return 1;
 	}
 	if(include_constraints && sys->view.n_rel > 0){
@@ -678,31 +1178,47 @@ static int a4sqp_step_hess_build_exact(struct A4SqpSystem *sys){
 			real64 lambda = 0.0;
 			real64 coeff;
 			if(
-				sys->qp.row_dual == NULL
-				|| sys->qp.num_row != sys->view.n_rel
+				sys->lambda_est == NULL
+				|| sys->lambda_est_n != sys->view.n_rel
+				|| !sys->lambda_est_ready
 			){
 				continue;
 			}
-			lambda = sys->qp.row_dual[row];
+			lambda = sys->lambda_est[row];
 			if(!isfinite(lambda) || fabs(lambda) <= 1e-18){
 				continue;
 			}
-			coeff = lambda * sys->view.rel_scale[row];
-			if(a4sqp_step_hess_accumulate_relation(sys,sys->view.rels[row],coeff,safe)){
+			coeff = lambda;
+			if(a4sqp_step_hess_accumulate_relation(sys,&triplet,sys->view.rels[row],coeff,safe)){
+				a4sqp_hess_triplet_destroy(&triplet);
 				return 1;
 			}
 		}
 	}
-	reg_shift = a4sqp_step_hess_regularize_psd(sys);
+	if(include_constraints){
+		if(a4sqp_step_hess_sparse_store_triplet(sys,&triplet)){
+			a4sqp_hess_triplet_destroy(&triplet);
+			return 1;
+		}
+		reg_shift = a4sqp_step_hess_sparse_regularize_psd(sys);
+	}else{
+		if(a4sqp_step_hess_dense_store_triplet(sys,&triplet)){
+			a4sqp_hess_triplet_destroy(&triplet);
+			return 1;
+		}
+		reg_shift = a4sqp_step_hess_regularize_psd(sys);
+	}
+	a4sqp_hess_triplet_destroy(&triplet);
 	if(SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_PROGRESS_LOG)){
 		char message[256];
 		snprintf(
 			message,
 			sizeof(message),
-			"hessian: exact mode=%s constraints=%d reg_shift=%g",
+			"hessian: exact mode=%s constraints=%d reg_shift=%g sparse_nnz=%ld",
 			SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_HESS_MODE),
 			include_constraints,
-			reg_shift
+			reg_shift,
+			(long)(include_constraints ? sys->step_hess_sparse_nnz : 0)
 		);
 		a4sqp_report_progress(&sys->params,message);
 	}
@@ -722,6 +1238,32 @@ static int a4sqp_step_hess_prepare(struct A4SqpSystem *sys){
 		return a4sqp_step_hess_reset_identity(sys,1.0);
 	}
 	return a4sqp_step_hess_sync(sys);
+}
+
+static void a4sqp_step_hess_spec(const struct A4SqpSystem *sys, struct A4SqpStepHessian *spec){
+	if(spec == NULL){
+		return;
+	}
+	memset(spec,0,sizeof(*spec));
+	if(sys == NULL){
+		return;
+	}
+	spec->n = sys->view.n_var;
+	if(
+		sys->step_hess_exact
+		&& sys->step_hess_sparse_n == sys->view.n_var
+		&& sys->step_hess_sparse_start != NULL
+		&& sys->step_hess_sparse_index != NULL
+		&& sys->step_hess_sparse_value != NULL
+	){
+		spec->is_sparse = 1;
+		spec->nnz = sys->step_hess_sparse_nnz;
+		spec->start = sys->step_hess_sparse_start;
+		spec->index = sys->step_hess_sparse_index;
+		spec->value = sys->step_hess_sparse_value;
+		return;
+	}
+	spec->dense = sys->step_hess;
 }
 
 static void a4sqp_step_hess_mul(
@@ -926,6 +1468,7 @@ static int a4sqp_destroy(slv_system_t server, SlvClientToken asys){
 	a4sqp_view_destroy(&sys->view);
 	a4sqp_qp_destroy(&sys->qp);
 	a4sqp_step_hess_destroy(sys);
+	a4sqp_lambda_est_destroy(sys);
 	slv_destroy_parms(&sys->params);
 	ascfree(sys);
 	
@@ -1278,6 +1821,165 @@ static real64 a4sqp_qp_linearized_violation(const struct A4SqpQp *qp){
 	return violation;
 }
 
+static enum A4SqpRowActivity a4sqp_row_activity(
+	const struct A4SqpView *view,
+	int32 row,
+	real64 active_tol,
+	real64 near_tol
+){
+	real64 lower_gap = HUGE_VAL;
+	real64 upper_gap = HUGE_VAL;
+	if(view == NULL || row < 0 || row >= view->n_rel){
+		return A4SQP_ROW_INACTIVE;
+	}
+	if(view->relop[row] == e_rel_equal){
+		return A4SQP_ROW_EQUALITY;
+	}
+	if(
+		!a4sqp_is_lower_inf(view->scaled_rel_lower[row])
+		&& isfinite(view->scaled_rel_residual[row])
+	){
+		lower_gap = view->scaled_rel_residual[row] - view->scaled_rel_lower[row];
+	}
+	if(
+		!a4sqp_is_upper_inf(view->scaled_rel_upper[row])
+		&& isfinite(view->scaled_rel_residual[row])
+	){
+		upper_gap = view->scaled_rel_upper[row] - view->scaled_rel_residual[row];
+	}
+	if(lower_gap <= active_tol || upper_gap <= active_tol){
+		return A4SQP_ROW_ACTIVE;
+	}
+	if(lower_gap <= near_tol || upper_gap <= near_tol){
+		return A4SQP_ROW_NEAR_ACTIVE;
+	}
+	return A4SQP_ROW_INACTIVE;
+}
+
+static void a4sqp_lambda_est_update(struct A4SqpSystem *sys){
+	int32 row;
+	int32 good_count = 0;
+	int32 required_count = 0;
+	real64 elastic_max = 0.0;
+	real64 active_tol;
+	real64 near_tol;
+	real64 feas_tol;
+	real64 elastic_penalty;
+	if(
+		sys == NULL
+		|| sys->view.n_rel <= 0
+		|| a4sqp_lambda_est_sync(sys)
+		|| sys->qp.row_dual == NULL
+		|| sys->qp.col_value == NULL
+		|| sys->qp.num_row != sys->view.n_rel
+	){
+		return;
+	}
+	feas_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
+	active_tol = fmax(10.0 * feas_tol,1e-8);
+	near_tol = fmax(100.0 * feas_tol,10.0 * active_tol);
+	elastic_penalty = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY);
+	for(row = 0; row < sys->view.n_rel; ++row){
+		enum A4SqpRowActivity activity;
+		int32 lower_col = sys->view.n_var + 2 * row;
+		int32 upper_col = lower_col + 1;
+		real64 lower_elastic = 0.0;
+		real64 upper_elastic = 0.0;
+		real64 elastic = 0.0;
+		real64 raw_scaled = 0.0;
+		real64 sample = 0.0;
+		real64 estimate = 0.0;
+		int good = 1;
+		int required = 0;
+		activity = a4sqp_row_activity(&sys->view,row,active_tol,near_tol);
+		required = activity != A4SQP_ROW_INACTIVE;
+		if(required){
+			++required_count;
+		}
+		if(lower_col >= 0 && lower_col < sys->qp.num_col){
+			lower_elastic = fabs(sys->qp.col_value[lower_col]);
+		}
+		if(upper_col >= 0 && upper_col < sys->qp.num_col){
+			upper_elastic = fabs(sys->qp.col_value[upper_col]);
+		}
+		elastic = lower_elastic > upper_elastic ? lower_elastic : upper_elastic;
+		if(elastic > elastic_max){
+			elastic_max = elastic;
+		}
+		raw_scaled = sys->qp.row_dual[row];
+		if(!isfinite(raw_scaled)){
+			raw_scaled = 0.0;
+			good = 0;
+		}
+		sample = raw_scaled * sys->view.rel_scale[row];
+		if(!isfinite(sample)){
+			sample = 0.0;
+			good = 0;
+		}
+		if(elastic > 10.0 * feas_tol){
+			good = 0;
+		}
+		if(fabs(raw_scaled) >= 0.95 * elastic_penalty){
+			good = 0;
+		}
+		switch(activity){
+		case A4SQP_ROW_EQUALITY:
+			if(good){
+				estimate = sample;
+				if(sys->lambda_est_ready){
+					estimate = 0.75 * sys->lambda_est[row] + 0.25 * estimate;
+				}
+			}else{
+				estimate = sys->lambda_est_ready ? 0.90 * sys->lambda_est[row] : 0.0;
+			}
+			break;
+		case A4SQP_ROW_ACTIVE:
+			if(good){
+				estimate = sample;
+				if(sys->lambda_est_ready){
+					estimate = 0.65 * sys->lambda_est[row] + 0.35 * estimate;
+				}
+			}else{
+				estimate = sys->lambda_est_ready ? 0.80 * sys->lambda_est[row] : 0.0;
+			}
+			break;
+		case A4SQP_ROW_NEAR_ACTIVE:
+			if(good){
+				estimate = sample;
+				if(sys->lambda_est_ready){
+					estimate = 0.85 * sys->lambda_est[row] + 0.15 * estimate;
+				}
+			}else{
+				estimate = sys->lambda_est_ready ? 0.85 * sys->lambda_est[row] : 0.0;
+			}
+			break;
+		case A4SQP_ROW_INACTIVE:
+		default:
+			if(good && fabs(sample) <= near_tol){
+				estimate = sys->lambda_est_ready ? 0.20 * sys->lambda_est[row] + 0.10 * sample : sample;
+			}else{
+				estimate = sys->lambda_est_ready ? 0.20 * sys->lambda_est[row] : 0.0;
+			}
+			break;
+		}
+		if(required){
+			if(good){
+				++good_count;
+			}
+		}else if(fabs(estimate) <= near_tol){
+			++good_count;
+		}
+		if(!isfinite(estimate) || fabs(estimate) <= 1e-16){
+			estimate = 0.0;
+		}
+		sys->lambda_est[row] = estimate;
+	}
+	sys->last_elastic_max = elastic_max;
+	sys->lambda_est_ready = 1;
+	sys->lambda_est_good_count = good_count;
+	sys->lambda_est_required_count = required_count;
+}
+
 static void a4sqp_update_metrics(struct A4SqpSystem *sys){
 	if(sys == NULL){
 		return;
@@ -1496,6 +2198,7 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 		return 1;
 	}
 	a4sqp_trust_reset(sys);
+	a4sqp_lambda_est_reset(sys);
 
 	if(sys->view.unsupported_rels > 0){
 		sys->status.ok = FALSE;
@@ -1541,6 +2244,7 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 
 static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 	struct A4SqpSystem *sys = (struct A4SqpSystem *)asys;
+	struct A4SqpStepHessian step_hess;
 	int trust_retries;
 	int trust_attempt;
 
@@ -1562,10 +2266,11 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to prepare the step Hessian model.");
 			return 1;
 		}
+		a4sqp_step_hess_spec(sys,&step_hess);
 		if(a4sqp_qp_build_from_view(
 			&sys->qp,
 			&sys->view,
-			sys->step_hess,
+			&step_hess,
 			sys->view.n_rel > 0 ? sys->trust_radius : 0.0,
 			SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY),
 			SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL)
@@ -1576,6 +2281,7 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 			return 1;
 		}
 		if(a4sqp_qp_solve_highs(&sys->qp,&sys->params) == 0){
+			a4sqp_lambda_est_update(sys);
 			real64 feas_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
 			real64 merit_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_MERIT_TOL);
 			real64 penalty = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY);

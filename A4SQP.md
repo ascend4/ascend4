@@ -112,6 +112,70 @@ Recent implementation lessons from these benchmarks:
   `jannson3.a4c`; the default is now aligned with IPOPT's non-safe evaluation
   path.
 
+## CUTEst Survey Goal
+
+The next benchmarking step should be a broader CUTEst survey rather than more
+single-problem anecdotes.
+
+The goal is not simply to count solves. The goal is to identify the problem
+classes where A4SQP is a useful complement to IPOPT and where it still trails
+dense SLSQP-style methods.
+
+This matters because ASCEND already has evidence from the fprops equilibrium
+path that IPOPT can be a poor fit for some bound-heavy Gibbs-minimization
+problems, while the local NLOpt SLSQP path can be dramatically faster on small
+dense instances. A4SQP should therefore be judged less as "an open-source
+replacement for IPOPT" and more as "an ASCEND-native sparse SQP that should
+cover a different and practically useful part of the NLP landscape."
+
+The survey should therefore test the following hypotheses explicitly:
+
+- IPOPT should remain stronger on large sparse smooth problems that are
+  interior-point-friendly and not dominated by active bounds.
+- Dense SLSQP should remain stronger on small dense callback problems with
+  modest constraint counts and cheap per-iteration models.
+- A4SQP should aim to be strongest on smooth constrained problems with
+  meaningful active bounds or inequalities, awkward local infeasibility,
+  moderate sparsity, and sizes beyond what dense SLSQP handles comfortably.
+
+Recommended CUTEst problem buckets:
+
+- objective-only curved problems
+  - to test exact-objective curvature and termination quality;
+- compact constrained active-set problems
+  - to test multiplier stability and active-bound behavior;
+- badly scaled constrained problems
+  - to test scaling, elastic rows, and QP robustness;
+- medium sparse structured problems
+  - to test whether the sparse SQP architecture is earning its keep;
+- degenerate or nearly infeasible problems
+  - to test whether restoration/filter work is becoming urgent;
+- PDE/control-style or discretized structured problems
+  - to test the practical overlap with ASCEND engineering models.
+
+Each benchmark record should include at least:
+
+- problem name and CUTEst classification;
+- `n`, `m`, equality/inequality split, and bound fraction;
+- whether the problem is objective-only, equality-dominant, or bound-heavy;
+- rough scaling notes where obvious;
+- A4SQP status, time, major iterations, line-search failures, QP retries, and
+  any elastic activity at termination;
+- IPOPT status and time on the same decoded problem;
+- SLSQP status and time where a direct comparison is feasible;
+- a short note describing the likely reason for failure or slowness.
+
+For A4SQP design decisions, the important output of the survey is a clustering
+of failure modes:
+
+- problems where BFGS is enough;
+- problems where exact constrained curvature helps materially;
+- problems where filter/restoration is the missing piece;
+- problems where dense or small-problem overhead dominates and SLSQP is still
+  the better tool;
+- problems where the current HiGHS-backed convex-QP architecture is simply not
+  competitive.
+
 Recent second-order work:
 
 - A4SQP now has an experimental exact-Hessian assembly path that evaluates
@@ -120,14 +184,43 @@ Recent second-order work:
   the QP step variables;
 - that path currently supports two explicit solver modes: `EXACT_OBJ` for
   objective-only exact curvature, and `EXACT_LAGRANGIAN` for an experimental
-  constrained Lagrangian Hessian assembled using the current scaled QP row
-  duals as multiplier estimates;
+  constrained Lagrangian Hessian assembled from filtered QP multiplier
+  estimates rather than the raw current row duals;
 - when the ASCEND second-derivative callbacks provide no usable objective
   curvature for an objective-only model, A4SQP now falls back to a
   finite-difference Hessian of the exact objective gradient rather than
   silently collapsing to a near-zero quadratic model;
+- for constrained exact-Hessian modes, A4SQP now assembles the lower-triangular
+  Lagrangian Hessian directly into a sparse solver-variable structure and feeds
+  that sparse Hessian straight into the HiGHS QP builder rather than scanning a
+  dense `n x n` buffer;
+- constrained exact-Hessian assembly now keeps a smoothed multiplier estimate
+  across iterations, suppresses rows whose elastic activity or dual magnitude
+  says the current QP dual is not yet a clean NLP multiplier signal, and uses
+  that filtered multiplier state for the exact Lagrangian Hessian build;
+- the stored multiplier estimate is now kept in de-scaled NLP units rather than
+  raw scaled-QP-row units, so the constrained Hessian build and the
+  cross-iteration smoothing logic are operating on a consistent multiplier
+  meaning;
+- the multiplier smoothing policy is now row-class aware: equality rows,
+  active inequalities, near-active inequalities, and clearly inactive
+  inequalities are damped differently, with inactive rows driven explicitly
+  toward zero instead of being treated as if they carried the same multiplier
+  signal quality as active constraints;
+- the sparse constrained exact-Hessian path currently uses a conservative
+  diagonal-shift PSD regularization on that sparse lower-triangular structure,
+  while the objective-only exact mode keeps the denser regularization path that
+  is already benchmark-qualified on `hs3.a4c` and `rosenbr.a4c`;
 - because HiGHS requires a convex QP, the exact Hessian path is regularized to
   a positive-semidefinite step model before the QP is assembled;
+- `AUTO` can now promote small constrained problems onto the sparse
+  `EXACT_LAGRANGIAN` path once the multiplier estimate is populated and the
+  elastic activity has settled to a negligible level, while still falling back
+  to `BFGS` on noisier or larger constrained problems;
+- that `AUTO` promotion is still intentionally conservative: it is currently
+  limited to compact constrained problems with at most roughly `64` variables
+  and `64` relations, all current row multipliers classified as usable, and no
+  immediate line-search failure signal from the preceding SQP step;
 - the default solver mode remains `BFGS` for now, because the exact objective
   path is still experimental and the constrained exact-Lagrangian path is still
   exploratory rather than benchmark-qualified;
@@ -138,6 +231,17 @@ Recent second-order work:
   regression on `hs11.a4c`; that path converges with acceptable objective and
   feasibility, but it is not yet treated as interchangeable with the tighter
   benchmark-qualified default/BFGS path.
+- the focused CUnit suite also now checks that `AUTO` promotes `hs11.a4c` onto
+  the sparse constrained exact-Hessian path once those multiplier and elastic
+  gating conditions are satisfied;
+- the focused CUnit suite now also qualifies that same `AUTO` promotion on
+  `hs21.a4c` and the reduced `jannson3.a4c`, which moves the constrained
+  `AUTO` path beyond the single-constraint `hs11` case;
+- attempts to extend that green `AUTO` boundary immediately to
+  `rosenmmx.a4c` and the reduced PDE-control case `cont6_qq.a4c` were not
+  adopted into the passing suite yet: the former remained too slow to justify
+  focused-regression status, and the latter crossed the current cost boundary
+  for the exact constrained Hessian path.
 
 Recent constrained-solver stabilization work:
 

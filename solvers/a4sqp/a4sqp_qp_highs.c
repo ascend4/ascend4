@@ -410,17 +410,26 @@ static int a4sqp_qp_fill_matrix(const struct A4SqpView *view, struct A4SqpQp *qp
 	return 0;
 }
 
-static int32 a4sqp_qp_count_hessian_nz(const struct A4SqpView *view, const real64 *step_hess){
+static int32 a4sqp_qp_count_hessian_nz(const struct A4SqpView *view, const struct A4SqpStepHessian *step_hess){
 	int32 col;
 	int32 row;
 	int32 nnz = 0;
 	if(view == NULL){
 		return 0;
 	}
+	if(
+		step_hess != NULL
+		&& step_hess->is_sparse
+		&& step_hess->start != NULL
+		&& step_hess->index != NULL
+		&& step_hess->value != NULL
+	){
+		return step_hess->nnz;
+	}
 	for(col = 0; col < view->n_var; ++col){
 		for(row = col; row < view->n_var; ++row){
-			real64 value = step_hess != NULL
-				? step_hess[row * view->n_var + col]
+			real64 value = (step_hess != NULL && step_hess->dense != NULL)
+				? step_hess->dense[row * view->n_var + col]
 				: (row == col ? 1.0 : 0.0);
 			if(fabs(value) > 1e-14){
 				++nnz;
@@ -432,7 +441,7 @@ static int32 a4sqp_qp_count_hessian_nz(const struct A4SqpView *view, const real6
 
 static void a4sqp_qp_fill_hessian(
 	const struct A4SqpView *view,
-	const real64 *step_hess,
+	const struct A4SqpStepHessian *step_hess,
 	struct A4SqpQp *qp
 ){
 	int32 col;
@@ -441,16 +450,31 @@ static void a4sqp_qp_fill_hessian(
 	for(col = 0; col < qp->num_col; ++col){
 		qp->q_start[col] = nnz;
 		if(col < view->n_var){
-			for(row = col; row < view->n_var; ++row){
-				real64 value = step_hess != NULL
-					? step_hess[row * view->n_var + col]
-					: (row == col ? 1.0 : 0.0);
-				if(fabs(value) <= 1e-14){
-					continue;
+			if(
+				step_hess != NULL
+				&& step_hess->is_sparse
+				&& step_hess->start != NULL
+				&& step_hess->index != NULL
+				&& step_hess->value != NULL
+			){
+				int32 k;
+				for(k = step_hess->start[col]; k < step_hess->start[col + 1]; ++k){
+					qp->q_index[nnz] = step_hess->index[k];
+					qp->q_value[nnz] = step_hess->value[k];
+					++nnz;
 				}
-				qp->q_index[nnz] = row;
-				qp->q_value[nnz] = value;
-				++nnz;
+			}else{
+				for(row = col; row < view->n_var; ++row){
+					real64 value = (step_hess != NULL && step_hess->dense != NULL)
+						? step_hess->dense[row * view->n_var + col]
+						: (row == col ? 1.0 : 0.0);
+					if(fabs(value) <= 1e-14){
+						continue;
+					}
+					qp->q_index[nnz] = row;
+					qp->q_value[nnz] = value;
+					++nnz;
+				}
 			}
 		}
 	}
@@ -460,7 +484,7 @@ static void a4sqp_qp_fill_hessian(
 int a4sqp_qp_build_from_view(
 	struct A4SqpQp *qp,
 	const struct A4SqpView *view,
-	const real64 *step_hess,
+	const struct A4SqpStepHessian *step_hess,
 	real64 trust_radius,
 	real64 elastic_penalty,
 	real64 feas_tol

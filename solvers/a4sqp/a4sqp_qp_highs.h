@@ -16,6 +16,16 @@
 
 #define A4SQP_QP_DEFAULT_ELASTIC_PENALTY 100.0
 
+struct A4SqpStepHessian {
+	int32 n;
+	int is_sparse;
+	int32 nnz;
+	const real64 *dense;
+	const int32 *start;
+	const int32 *index;
+	const real64 *value;
+};
+
 struct A4SqpQp {
 	int32 num_step_col;
 	int32 num_elastic_pair;
@@ -64,7 +74,7 @@ void a4sqp_qp_destroy(struct A4SqpQp *qp);
 int a4sqp_qp_build_from_view(
 	struct A4SqpQp *qp,
 	const struct A4SqpView *view,
-	const real64 *step_hess,
+	const struct A4SqpStepHessian *step_hess,
 	real64 trust_radius,
 	real64 elastic_penalty,
 	real64 feas_tol
