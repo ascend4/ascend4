@@ -2,36 +2,41 @@
 
 ## Purpose
 
-A4SQP is a proposed SQP-based nonlinear solver for ASCEND. Its intended niche
+A4SQP is an SQP-based nonlinear solver prototype for ASCEND. Its intended niche
 is hard nonlinear algebraic and nonlinear programming problems where the
 existing local equation-solving path can stall because of active bounds, poor
 initialization, inconsistent local linearizations, or tight engineering
 specifications.
 
-The initial implementation target is an elastic line-search SQP method using
-HiGHS as the quadratic programming (QP) solver. A later phase may add filter SQP
-globalization.
+The implemented prototype is an elastic line-search SQP method using HiGHS as
+the quadratic programming (QP) solver. It now includes a constrained
+trust-region retry path and experimental exact-Hessian modes. A later phase may
+add filter SQP globalization.
 
 This note also records an architectural tension: A4SQP should eventually be
 usable outside ASCEND through an IPOPT-like C problem ABI, but an ASCEND-native
 solver client can both consume and return richer information through
 `slv_system_t`.
 
-## Initial Solver Shape
+## Implemented Solver Shape
 
-The first implementation should be conservative:
+The current implementation remains deliberately conservative, but the initial
+solver shape is now in place:
 
-- Implement A4SQP as a normal ASCEND solver client over `slv_system_t`.
-- Build the SQP problem from ASCEND solver variable and relation lists.
-- Use exact first derivatives from ASCEND relation derivative machinery.
-- Use HiGHS for convex QP subproblems.
-- Use a positive-semidefinite Hessian approximation, initially BFGS,
-  limited-memory BFGS, diagonal, or identity.
-- Add elastic variables to QP subproblems so local linearized infeasibility does
-  not immediately abort the solve.
-- Use an L1 merit-function line search for first-phase globalization.
-- Report diagnostics that identify active bounds, elastic rows, limiting
-  relations, and the point where progress stalled.
+- A4SQP is a normal ASCEND solver client over `slv_system_t`.
+- It builds the SQP problem from ASCEND solver variable and relation lists.
+- It uses exact first derivatives from ASCEND relation derivative machinery.
+- It calls HiGHS directly for convex QP subproblems.
+- It supports a default damped BFGS step Hessian, explicit `EXACT_OBJ` and
+  `EXACT_LAGRANGIAN` modes, and conservative `AUTO` promotion to sparse exact
+  constrained curvature on small settled problems.
+- It adds lower and upper elastic variables to QP subproblems so local
+  linearized infeasibility does not immediately abort an iteration.
+- It uses an L1 merit-function line search, with a scaled box trust region for
+  constrained problems and bounded trust-region/QP retries.
+- It reports progress, QP status, line-search metrics, elastic activity, trust
+  radius, and view diagnostics through ASCEND progress callbacks and optional
+  error-reporter notes.
 
 The goal is not to reproduce SNOPT, WORHP, or Knitro immediately. The goal is a
 focused ASCEND prototype that can test whether active-set elastic SQP helps
@@ -317,6 +322,7 @@ minimize    grad f(x_k)^T p + 1/2 p^T B_k p + rho * sum(elastic_slacks)
 
 subject to  r_L - e_L <= r(x_k) + J_r(x_k) p <= r_U + e_U
             x_L <= x_k + p <= x_U
+            ||p||_inf <= trust_radius       (constrained problems)
             e_L, e_U >= 0
 ```
 
@@ -324,9 +330,12 @@ For a pure feasibility solve, `f` may be zero or a residual merit objective. For
 an optimization solve, `f` is the ASCEND objective relation or objective
 variable.
 
-`B_k` should be positive semidefinite for HiGHS QP. Early implementations should
-therefore avoid unregularized exact Hessians. Exact Hessians can be added later,
-with regularization.
+`B_k` must be positive semidefinite for HiGHS QP. The default model is a damped
+BFGS approximation on the scaled primal step block. Experimental exact Hessian
+modes are regularized before being passed to HiGHS: objective-only exact
+curvature can be used with `EXACT_OBJ`, and constrained Lagrangian curvature can
+be used with `EXACT_LAGRANGIAN` or selected by `AUTO` when the multiplier and
+elastic-activity gates are satisfied.
 
 ## Why HiGHS
 
@@ -334,18 +343,24 @@ HiGHS is attractive because ASCEND already has a HiGHS integration for LP/MIP
 models and HiGHS provides the QP machinery needed by SQP. A4SQP should not try
 to implement an active-set QP solver itself.
 
-Required HiGHS-facing work:
+The HiGHS-facing layer is now implemented directly inside `solvers/a4sqp`:
 
-- Build QP Hessian, gradient, bounds, and sparse linear relation rows.
-- Add elastic columns and penalties.
-- Preserve row and column ordering across SQP iterations.
-- Investigate HiGHS support for warm-starting QP state or active sets.
-- Decide whether to extend the existing ASCEND HiGHS wrapper or call HiGHS
-  directly from A4SQP.
+- QP Hessian, gradient, bounds, sparse linear relation rows, and elastic columns
+  are assembled by `a4sqp_qp_build_from_view`.
+- Step columns map back to ASCEND solver variables; elastic column pairs map
+  back to relation rows.
+- QP primal and dual arrays, objective value, HiGHS status, and model status
+  are stored in `A4SqpQp`.
+- HiGHS callbacks are installed for progress and interrupt handling, with
+  optional QP lifecycle logging under `progress_log`.
+- HiGHS feasibility and KKT tolerances are aligned with A4SQP's feasibility
+  scale instead of relying on the tighter default QP tolerances.
+- HiGHS QP warm-start or basis reuse remains open; the current implementation
+  rebuilds each QP subproblem.
 
 ## ASCEND Integration
 
-A4SQP should initially be an ASCEND solver client, not only a generic external
+A4SQP is currently an ASCEND solver client, not only a generic external
 library. This matters in two directions:
 
 - `slv_system_t` exposes solver-analyzed problem structure that does not fit
@@ -432,7 +447,7 @@ points without changing the mathematical optimisation problem. They can also
 make the optimisation result sensitive to incidental model initialization or
 analysis choices.
 
-The proposed decomposition is:
+A useful decomposition is:
 
 ```text
 fixed inputs and fixed parameters
@@ -674,54 +689,62 @@ The existing LP/MIP matrix assembly is useful as a reference, but A4SQP cannot
 use it directly for the SQP subproblem because the SQP QP is rebuilt from a
 linearization at each iterate.
 
-### New Pieces Needed For HiGHS QP
+### Current HiGHS QP Layer
 
-A4SQP needs a new QP assembly layer. This layer should build a convex QP in
-HiGHS terms from the current SQP iterate:
+The A4SQP QP assembly layer builds a convex QP in HiGHS terms from the current
+SQP iterate:
 
 - step variables `p`, not just absolute model variables `x`;
-- optional elastic variables for lower and upper row violations;
+- lower and upper elastic variables for each relation row;
 - linearized relation matrix `J_r(x_k)`;
 - linearized row bounds `r_L - r(x_k)` and `r_U - r(x_k)`;
 - step bounds `x_L - x_k <= p <= x_U - x_k`;
 - QP linear objective `grad f(x_k)^T p`;
-- QP Hessian `B_k`, initially diagonal, BFGS, or limited-memory-derived;
+- QP Hessian `B_k`, from BFGS, exact objective curvature, or sparse exact
+  Lagrangian curvature depending on the `hessian` mode;
 - elastic penalties in the linear objective;
-- optional trust-region or maximum-step bounds;
+- scaled box trust-region bounds for constrained problems;
 - mapping from QP columns back to ASCEND variables and elastic rows;
 - mapping from QP rows back to ASCEND relations;
-- extraction of QP primal step, row duals, bound duals, and elastic values.
+- extraction of QP primal step, row duals, column duals, and elastic values.
 
-The QP layer also needs to handle solver mechanics:
+The QP layer also handles solver mechanics:
 
-- create and destroy a HiGHS model for each SQP iteration, or efficiently update
-  an existing model if the HiGHS API makes that worthwhile;
-- pass Hessian data to HiGHS in the format required by its QP interface;
-- ensure the Hessian supplied to HiGHS is positive semidefinite or regularized;
+- create and destroy a HiGHS model for each SQP iteration;
+- pass lower-triangular Hessian data to HiGHS in sparse column form;
+- regularize the Hessian to a convex QP model before assembly;
 - configure HiGHS for continuous convex QP, not LP/MIP;
 - capture QP statuses separately from outer SQP statuses;
-- decide whether and how HiGHS QP warm-start state can be reused.
+- report enough failing QP data for small subproblems to diagnose bad bounds,
+  bad rows, or poor Hessian/linearization state.
 
-### New Pieces Needed For SQP
+The main remaining HiGHS backend questions are performance and warm start:
+whether model updates or QP basis/active-set reuse can pay off after the SQP
+behaviour is more stable.
 
-The main A4SQP work is the SQP algorithm around the QP solver:
+### Current SQP Layer
+
+The current SQP algorithm around the QP solver includes:
 
 - SQP iteration driver;
-- convergence tests for feasibility, stationarity, complementarity, step size,
-  and objective/merit progress;
-- elastic penalty update strategy;
+- convergence tests for scaled feasibility, projected gradient/stationarity
+  proxy for optimization problems, step size, and iteration limits;
+- fixed global elastic penalty parameter;
 - L1 merit-function line search;
 - step acceptance and rollback into ASCEND variables;
-- BFGS or limited-memory BFGS update;
+- dense damped BFGS update for the default step Hessian;
+- explicit exact objective and constrained exact-Lagrangian Hessian modes;
 - Hessian regularization;
-- restoration or least-infeasible behavior when progress stalls;
-- warm-start storage and invalidation;
-- diagnostic accumulation for rows, variables, active bounds, elastic rows, and
-  failed QP subproblems.
+- trust-region shrink/grow logic for constrained QP retries;
+- diagnostic accumulation for rows, variables, active bounds, elastic rows,
+  trust ratio, line search, and failed QP subproblems.
 
-This algorithmic layer should not depend directly on `slv_system_t`. It should
-depend on the A4SQP problem view. The ASCEND client and future IPOPT-like C ABI
-should both be able to populate that view.
+The current implementation still lives mostly in `a4sqp.c`, with support code in
+the view, scaling, diagnostics, and QP backend modules. A future cleanup should
+split the SQP core, merit/line-search code, BFGS code, and exact Hessian support
+into smaller files once the algorithmic boundary is stable. Restoration,
+adaptive elastic penalties, richer warm starts, and a standalone ABI remain
+future work.
 
 ### Extra ASCEND-Specific Value
 
@@ -761,27 +784,13 @@ and does not obviously reuse QRSlv-style relation scaling. A4SQP should not
 assume that is sufficient, because the QP backend and elastic penalty logic will
 see the scaled or unscaled rows directly.
 
-The first implementation should follow QRSlv rather than inventing a new scaling
-vocabulary. QRSlv scales variables by nominal values and scales relation rows
-using either row two-norms, relation nominals, optional Fourer-style iterative
-scaling, or no scaling. A4SQP should expose a compatible subset first, then add
-extra SQP-specific interpretation only where needed.
+The current implementation follows QRSlv rather than inventing a new scaling
+vocabulary. The solver parameter `scaleopt` currently supports `NONE`,
+`ROW_2NORM`, and `RELNOM`, with `ROW_2NORM` as the default. Variable scales are
+derived from safe nominal values. Relation scales are derived from the selected
+mode, with safe fallbacks for zero, negative, or non-finite scales.
 
-The proposed first-stage policy:
-
-- store `var_scale` and `rel_scale` in `A4SqpMeta`;
-- default variable scale from safe `var_nominal`;
-- default relation scale according to the selected QRSlv-style mode: none,
-  Jacobian row two-norm, relation nominal via `rel_nominal`/`relman_scale`, and
-  later iterative scaling;
-- assemble the SQP/QP problem in scaled coordinates or apply equivalent scaling
-  consistently to bounds, residuals, Jacobian rows/columns, objective gradient,
-  and multipliers;
-- report diagnostics in both scaled and unscaled terms where useful;
-- add solver parameters using QRSlv-compatible names or values where practical,
-  so existing ASCEND users do not have to learn a second scaling language.
-
-The exact convention should be fixed early. A reasonable convention is:
+The implemented convention is:
 
 ```text
 x = S_x z
@@ -789,10 +798,18 @@ r_scaled(z) = S_r^{-1} r(S_x z)
 J_scaled = S_r^{-1} J S_x
 ```
 
-In this convention, the QP works with scaled step variables `p_z`. The ASCEND
-adapter packs/unpacks physical `x` values, while the A4SQP core sees scaled
-vectors. Multipliers must be converted back before reporting if they are exposed
-in unscaled ASCEND terms.
+The QP works with scaled step variables `p_z`. The ASCEND adapter packs and
+unpacks physical `x` values, while the A4SQP QP layer sees scaled variables,
+scaled bounds, scaled residuals, scaled Jacobian entries, and scaled objective
+gradients. QP row duals used as constrained-Hessian multiplier estimates are
+converted back to de-scaled NLP units before cross-iteration smoothing.
+
+Still-open scaling work:
+
+- iterative/Fourer-style scaling is not implemented;
+- diagnostics should expose scaled and unscaled infeasibility side by side;
+- badly scaled rows/columns should be reported explicitly;
+- regression tests should cover unit and nominal changes more systematically.
 
 Scaling should be tested independently using small problems where the same model
 is written with deliberately different units and nominal values.
@@ -1017,18 +1034,23 @@ understand when state was discarded.
 
 ### Phase 1: Elastic Line-Search SQP Prototype
 
-- Implement A4SQP as an ASCEND solver client.
-- Build a reusable A4SQP problem view from `slv_system_t`.
-- Restrict Phase 1 to smooth continuous optimisation: no discrete variables,
-  logical relations, conditional switching, or active model-structure changes.
-  Unsupported structures should be rejected with clear diagnostics.
-- Generate QP subproblems with elastic variables.
-- Call HiGHS for QP solves.
-- Use BFGS, L-BFGS, diagonal, or identity Hessian approximations.
-- Use an L1 merit-function line search.
-- Report active bounds, elastic relations, infeasibility, and progress.
-- Use native ASCEND `.a4c` test models first, so that the initial tests exercise
-  the real `slv_system_t` integration rather than a parallel standalone path.
+Phase 1 is now substantially complete for the ASCEND-native path:
+
+- A4SQP is an ASCEND solver client.
+- It builds an `A4SqpView` from `slv_system_t`.
+- It rejects unsupported relations and derivative/evaluation failures with
+  user-facing diagnostics.
+- It generates elastic HiGHS QP subproblems.
+- It implements an L1 merit line search, default BFGS step Hessian, exact
+  Hessian experimental modes, and a constrained trust-region retry loop.
+- It has native CUnit coverage through `solver_a4sqp` and test models under
+  `models/test/a4sqp`.
+- It reports progress, view diagnostics, QP status, line-search status, and
+  trust-region metrics.
+
+The remaining Phase 1 limitations are mostly scope decisions: smooth continuous
+NLPs only, no standalone ABI, no filter globalization, no L-BFGS, no automatic
+decomposition, and no mature warm-start invalidation.
 
 The first coding milestone should be narrower than "solve NLPs": construct,
 evaluate, scale, and validate an A4SQP problem view from `slv_system_t`. The
@@ -1054,9 +1076,10 @@ Suggested Phase 1 native test models:
 
 #### Phase 1 Coding Checklist
 
-Phase 1 should be implemented as a sequence of narrow, testable steps. The
-early steps should prove that A4SQP sees the same problem ASCEND sees before any
-SQP algorithm behaviour is introduced.
+The checklist below is retained as an implementation record. It describes the
+path taken from skeleton to current prototype rather than fresh work still to be
+done. The early steps were useful because they proved that A4SQP sees the same
+problem ASCEND sees before SQP algorithm behaviour is introduced.
 
 1. Build-system skeleton.
 
@@ -1119,8 +1142,8 @@ SQP algorithm behaviour is introduced.
 
 5. ASCEND relation-to-row-bound mapping.
 
-   The adapter should map current ASCEND binary relation operators into the
-   internal row-bound representation:
+   The adapter maps current ASCEND binary relation operators into the internal
+   row-bound representation:
 
    ```text
    LHS =  RHS      r = LHS - RHS,    rel_l = 0,    rel_u = 0
@@ -1130,9 +1153,9 @@ SQP algorithm behaviour is introduced.
    LHS >  RHS      r = LHS - RHS,    rel_l = 0,    rel_u = +inf
    ```
 
-   Strict inequalities should probably be accepted initially as their tolerant
-   non-strict equivalents, with a diagnostic note if needed. `<>` should be
-   rejected for Phase 1.
+   Strict inequalities are accepted as their tolerant non-strict equivalents.
+   Unsupported relation operators, including `<>`, are rejected during view
+   construction.
 
 6. Derivative and residual evaluation.
 
@@ -1210,14 +1233,15 @@ SQP algorithm behaviour is introduced.
 
 11. First SQP iteration.
 
-    Only after the view and QP spike pass tests, implement one major SQP
-    iteration:
+    After the view and QP spike passed tests, the first major SQP iteration was
+    added around the same QP assembly path:
 
     - assemble QP from current residuals and Jacobian;
-    - use identity or diagonal Hessian approximation initially;
+    - start with a simple positive-semidefinite Hessian model;
     - solve the QP with HiGHS;
     - compute candidate step and predicted reduction;
-    - update diagnostics, but do not yet attempt a sophisticated line search.
+    - update diagnostics before adding the richer line-search and trust-region
+      logic in the next milestone.
 
     Current first-iteration status:
 
@@ -1241,8 +1265,9 @@ SQP algorithm behaviour is introduced.
       in the A4SQP solver client state.
     - Repeated solve looping, basic convergence tests, and first-pass progress
       reporting are now implemented.
-    - Predicted reduction, adaptive penalty updates, active-set/multiplier
-      diagnostics, and richer failure reporting remain next steps.
+    - Predicted reduction, active-set/multiplier diagnostics, and richer
+      failure reporting are now partly implemented. Adaptive elastic penalty
+      updates remain future work.
     - Verified with `./a4 cutest solver_a4sqp`.
 
 12. Minimal elastic line-search solve.
@@ -1275,11 +1300,13 @@ SQP algorithm behaviour is introduced.
       `current_objective + rho * current_violation` minus
       `current_objective + QP_objective`, where `QP_objective` contains
       `g'p + 1/2 p'Bp + rho * linearized_elastic_violation`.
-    - Step acceptance now uses an Armijo-style test:
+    - Step acceptance now uses an Armijo-style test and a trust acceptance
+      ratio:
       actual merit decrease must be at least
-      `armijo_coeff * alpha * predicted_reduction`, with `merit_tol` as a
-      numerical floor. If the QP does not predict meaningful reduction, A4SQP
-      falls back to requiring a strict `merit_tol` decrease.
+      `armijo_coeff * alpha * predicted_reduction`, and the actual-to-predicted
+      ratio must satisfy `trust_accept` when meaningful. Numerically null
+      corrections at an already feasible constrained iterate can be accepted as
+      null steps.
     - `basic_view.a4c` now exercises a nonzero objective-gradient QP step,
       backtracking acceptance, merit decrease, and updated objective value.
     - Solver parameters now include `max_iter`, `max_backtrack`, `feas_tol`,
@@ -1287,8 +1314,9 @@ SQP algorithm behaviour is introduced.
       addition to the earlier safe-evaluation, scaling, verbosity, progress,
       and view-dump controls.
     - `slv_solve` now loops over major SQP iterations until convergence,
-      iteration limit, QP failure, or line-search failure. Convergence currently
-      uses maximum scaled relation violation plus accepted physical step norm.
+      iteration limit, QP failure, or line-search failure. Convergence uses
+      maximum scaled relation violation, a stationarity/projected-gradient
+      check for optimization problems, and accepted physical step norm.
     - Iteration diagnostics are stored in the A4SQP solver client state:
       objective value, merit before/after, predicted reduction, model merit
       after, linearized elastic violation, violation sum, maximum violation,
@@ -1302,12 +1330,12 @@ SQP algorithm behaviour is introduced.
       analytic solution.
     - Verified with `./a4 cutest solver_a4sqp`.
 
-Phase 1 should be considered complete when A4SQP can build and inspect the
-problem view for native ASCEND NLP examples, solve a few tiny smooth continuous
-examples, and provide useful diagnostics on deliberately unsupported or
-infeasible examples. Performance tuning, warm starts, decomposition, filter SQP,
-and standalone ABI work should remain out of scope until this baseline is
-stable.
+Phase 1 should now be treated as complete for the current ASCEND-native
+prototype: A4SQP can build and inspect the problem view for native ASCEND NLP
+examples, solve a focused suite of small smooth continuous examples, and provide
+basic diagnostics on setup, QP, and line-search failures. Performance tuning,
+warm starts, decomposition, filter SQP, and standalone ABI work remain Phase 2+
+scope.
 
 ### Phase 2: Robustness and Diagnostics
 
@@ -1318,13 +1346,15 @@ diagnosable, repeatable, and robust under realistic modelling conditions.
 
 #### Scaling
 
-Phase 2 should settle the scaling convention and make it visible in diagnostics:
+The basic scaling convention is now implemented. Phase 2 should make it more
+visible, more testable, and more robust:
 
-- implement variable and relation scaling using `var_nominal`, `rel_nominal`,
-  and/or `relman_scale`;
-- add parameters for scaling mode and update frequency;
-- apply scaling consistently to relation residuals, Jacobians, bounds, QP
-  Hessians, gradients, elastic penalties, and multipliers;
+- extend the current `NONE`, `ROW_2NORM`, and `RELNOM` modes only where a real
+  benchmark need appears;
+- decide whether scaling should be recomputed every trial point or stabilized
+  across iterations for better step consistency;
+- keep scaling consistent across relation residuals, Jacobians, bounds, QP
+  Hessians, gradients, elastic penalties, and multiplier estimates;
 - report scaled and unscaled infeasibility norms;
 - identify badly scaled variables, relations, and Jacobian columns/rows;
 - add regression tests where unit changes or nominal changes should not change
@@ -1483,8 +1513,7 @@ Current ASCEND model syntax does not appear to provide a direct way to write a
 single double-sided algebraic relation of the form `rel_l <= LHS - RHS <=
 rel_u`. The parser grammar represents a relation as `expr relop expr`, with
 `=`, `<`, `>`, `<=`, `>=`, and `<>` as the relation operators. Therefore the
-ASCEND-native adapter should initially map ordinary ASCEND relations into row
-bounds as follows:
+ASCEND-native adapter maps ordinary ASCEND relations into row bounds as follows:
 
 ```text
 LHS =  RHS      r(x) = LHS - RHS,    rel_l = 0,    rel_u = 0
@@ -1605,19 +1634,19 @@ Useful references:
 
 ## Open Questions
 
-- Should the first implementation solve pure feasibility problems directly, or
-  always formulate a residual/objective merit problem?
 - How much of the existing ASCEND IPOPT wrapper should be factored into a common
-  sparse NLP adapter?
-- Should A4SQP initially use the existing ASCEND HiGHS wrapper or call HiGHS
-  directly?
-- What is the smallest useful subset of optional ASCEND metadata?
+  sparse NLP adapter, now that A4SQP has its own ASCEND-native `A4SqpView`?
+- What is the smallest useful subset of optional ASCEND metadata beyond row and
+  column mappings, names, scales, residuals, and bounds?
 - Can HiGHS QP warm-start state be reused effectively between SQP iterations?
-- How should conditional model changes invalidate warm starts?
-- Should exact Hessian support be deferred until the BFGS-based method is
-  working?
+- How should `slv_resolve` and conditional model changes invalidate BFGS,
+  multiplier, trust-region, and future QP warm-start state?
 - What solver-state feedback should be stored in ASCEND flags versus kept in
   A4SQP-specific diagnostic structures?
+- Should elastic penalties remain global, or should A4SQP add adaptive
+  per-relation penalty updates after the diagnostic semantics settle?
+- Which CUTEst/S2MPJ problem classes should define the next benchmark boundary
+  for default BFGS, explicit exact Hessian modes, and `AUTO` promotion?
 - How should ASCEND identify decision variables, relevant relations, and
   presentation-only calculations for optimisation-oriented decomposition?
 - Should pre-optimisation blocks be solved automatically, or should A4SQP first
@@ -1625,37 +1654,28 @@ Useful references:
 - Should decomposition visualisation be built into A4SQP, or shared with the
   existing incidence matrix/graph tooling?
 
-## Proposed Source Layout
+## Current Source Layout
 
-Most A4SQP code should live under a new solver directory:
+The current A4SQP code lives under `solvers/a4sqp`:
 
 ```text
 solvers/a4sqp/
     SConscript
     a4sqp.c              ASCEND solver plugin entry point
     a4sqp.h              ASCEND-facing local declarations
+    a4sqp_internal.h     solver client state and SQP diagnostics
     a4sqp_params.c       solver parameter definitions
     a4sqp_params.h
-    a4sqp_status.c       ASCEND status and diagnostic reporting
-    a4sqp_status.h
     a4sqp_ascend.c       slv_system_t -> A4SqpProblemView adapter
     a4sqp_ascend.h
     a4sqp_view.c         shared problem-view utilities
     a4sqp_view.h
-    a4sqp_core.c         SQP iteration driver
-    a4sqp_core.h
+    a4sqp_scale.c        QRSlv-style scaling support
+    a4sqp_scale.h
     a4sqp_qp_highs.c     HiGHS QP backend
     a4sqp_qp_highs.h
-    a4sqp_bfgs.c         BFGS/L-BFGS approximation support
-    a4sqp_bfgs.h
-    a4sqp_merit.c        merit function and line search
-    a4sqp_merit.h
     a4sqp_diag.c         diagnostic accumulation and formatting
     a4sqp_diag.h
-    a4sqp_abi.c          future standalone C ABI
-    a4sqp_abi.h
-    examples/
-        standalone_*.c
 
 ascend/solver/test/
     test_a4sqp.c         ASCEND/CUnit solver tests
@@ -1664,30 +1684,44 @@ models/test/a4sqp/
     *.a4c                ASCEND test models for A4SQP
 ```
 
-The initial build can compile only the files needed for the ASCEND plugin and
-standalone unit tests. The standalone ABI files can start as a skeleton and be
-enabled once the core problem view is stable.
+The first implementation kept the SQP driver, merit/line-search logic, BFGS
+logic, exact Hessian assembly, multiplier smoothing, and trust-region logic in
+`a4sqp.c`. This is acceptable for the prototype, but the next cleanup should
+split those responsibilities once the algorithmic boundaries settle.
 
-Expected changes elsewhere:
+Likely future splits:
+
+```text
+    a4sqp_core.c         SQP iteration driver
+    a4sqp_core.h
+    a4sqp_bfgs.c         BFGS/L-BFGS approximation support
+    a4sqp_bfgs.h
+    a4sqp_hess.c         exact Hessian assembly and regularization
+    a4sqp_hess.h
+    a4sqp_merit.c        merit function and line search
+    a4sqp_merit.h
+    a4sqp_abi.c          future standalone C ABI
+    a4sqp_abi.h
+```
+
+Implemented integration changes elsewhere:
 
 ```text
 solvers/SConscript
-    Add 'a4sqp' to the solver subdirectory list, gated by HiGHS availability.
+    Includes 'a4sqp' in the solver subdirectory list.
 
 SConstruct
-    Add A4SQP to the WITH_SOLVERS ListVariable.
-    Add WITH_A4SQP handling in the optional-solver loop, probably requiring
-    WITH_HIGHS or the same HiGHS availability checks.
+    Includes A4SQP in WITH_SOLVERS and optional-solver handling.
 
 ascend/solver/test/
-    Add ASCEND-level solver registration, problem-view, and smoke tests.
+    Contains ASCEND-level solver registration, problem-view, solve, Hessian,
+    trust-region, and benchmark regression tests.
 
 models/test/a4sqp/
-    Add model-level solve cases, following the existing models/test/ipopt
-    convention.
+    Contains model-level solve cases and reduced benchmark translations.
 
 ascend/system/ or ascend/solver/
-    Add shared helpers only if they are genuinely useful to more than A4SQP.
+    No shared core helpers have been added yet.
 ```
 
 The default should be to keep new code in `solvers/a4sqp` until reuse pressure is
@@ -1706,9 +1740,15 @@ change.
 
 ## Problem View Skeleton
 
-A4SQP should use one internal problem representation for both ASCEND and
-standalone test problems. The ASCEND adapter and future C ABI should populate
-the same structure.
+A4SQP currently uses an ASCEND-native `struct A4SqpView` populated from
+`slv_system_t`. It stores variable and relation pointers, solver indices,
+physical and scaled values/bounds, objective data, Jacobian sparsity and values,
+scales, and evaluation-error counters.
+
+The future standalone ABI should still use one internal problem representation
+for both ASCEND and standalone callers, but the current `A4SqpView` is not yet a
+solver-neutral callback view. The skeleton below is therefore a future ABI/core
+shape, not the structure currently compiled in `a4sqp_view.h`.
 
 At a high level:
 
@@ -1945,8 +1985,8 @@ for GUI inspection after an unsuccessful solve.
 
 ## Standalone ABI Skeleton
 
-The standalone ABI should initially be a thin creator/solver/destroyer around
-`A4SqpProblemView`.
+When the standalone ABI is added, it should start as a thin
+creator/solver/destroyer around a solver-neutral successor to `A4SqpView`.
 
 ```c
 typedef struct A4SqpProblemStruct *A4SqpProblem;
@@ -2007,21 +2047,25 @@ Later additions:
 
 ## Implementation Staging
 
-Recommended staging:
+The original staging plan has been overtaken by the ASCEND-native prototype.
+The actual implemented order was:
 
-1. Define `A4SqpProblemView`, callbacks, metadata, result, and diagnostic
-   structures.
-2. Add standalone tests that validate bounds, sparsity, callback calls,
-   Jacobian values, and metadata identity.
-3. Spike a HiGHS QP solve from a hand-built QP with step variables and elastic
+1. Add the A4SQP build skeleton and ASCEND solver registration.
+2. Build an ASCEND-native problem view directly from `slv_system_t`.
+3. Add native CUnit tests for registration, view construction, row-bound
+   mapping, Jacobian values, scaling, and progress callbacks.
+4. Spike a HiGHS QP solve from a hand-built QP with step variables and elastic
    slacks.
-4. Implement a minimal standalone elastic SQP loop on small C test problems.
-5. Add a read-only ASCEND adapter that builds and dumps `A4SqpProblemView`
-   without solving.
-6. Compare the ASCEND adapter's dimensions, bounds, residuals, Jacobian
-   sparsity, and Jacobian values against the existing IPOPT path.
-7. Enable ASCEND solve calls through the same core.
-8. Add ASCEND diagnostics and visualisation.
+5. Connect the ASCEND problem view to an elastic HiGHS QP assembly layer.
+6. Add `slv_iterate` and `slv_solve` over the same SQP major-iteration path.
+7. Add L1 merit line search, BFGS step Hessian, convergence checks, progress
+   reporting, and failure diagnostics.
+8. Add exact objective and exact constrained Hessian experiments, sparse
+   Hessian passing, multiplier smoothing, `AUTO` promotion gates, and
+   constrained trust-region retries.
+9. Grow the native test suite around reduced benchmark `.a4c` cases.
 
-The staging principle is: standalone core first, ASCEND adapter early, one
-shared problem representation throughout.
+The revised staging principle is: keep the ASCEND-native path green while
+gradually separating solver-neutral pieces. A standalone ABI should wait until
+the problem-view boundary, result/diagnostic structures, and warm-start state are
+less volatile.
