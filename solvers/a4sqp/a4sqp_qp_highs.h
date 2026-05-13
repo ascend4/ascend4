@@ -5,9 +5,6 @@
 #ifndef ASC_A4SQP_QP_HIGHS_H
 #define ASC_A4SQP_QP_HIGHS_H
 
-#include <ascend/general/platform.h>
-#include <ascend/system/slv_client.h>
-
 #include "a4sqp_core_view.h"
 
 #define A4SQP_QP_COL_STEP 1
@@ -69,10 +66,10 @@ struct A4SqpQpSpikeResult {
 
 struct A4SqpView;
 
-ASC_EXPORT int a4sqp_qp_highs_spike(struct A4SqpQpSpikeResult *result);
+A4SQP_CORE_EXPORT int a4sqp_qp_highs_spike(struct A4SqpQpSpikeResult *result);
 
-void a4sqp_qp_init(struct A4SqpQp *qp);
-void a4sqp_qp_destroy(struct A4SqpQp *qp);
+A4SQP_CORE_EXPORT void a4sqp_qp_init(struct A4SqpQp *qp);
+A4SQP_CORE_EXPORT void a4sqp_qp_destroy(struct A4SqpQp *qp);
 int a4sqp_qp_build_from_core_view(
 	struct A4SqpQp *qp,
 	const struct A4SqpCoreView *view,
@@ -89,6 +86,6 @@ int a4sqp_qp_build_from_view(
 	real64 elastic_penalty,
 	real64 feas_tol
 );
-int a4sqp_qp_solve_highs(struct A4SqpQp *qp, slv_parameters_t *params);
+A4SQP_CORE_EXPORT int a4sqp_qp_solve_highs(struct A4SqpQp *qp, real64 qp_tol, int output_flag);
 
 #endif

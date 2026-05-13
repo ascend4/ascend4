@@ -6,8 +6,6 @@
 
 #include "a4sqp_hessian.h"
 
-#include <ascend/general/ascMalloc.h>
-
 #include <math.h>
 
 static int a4sqp_hessian_dense_try_cholesky(
@@ -30,7 +28,7 @@ static int a4sqp_hessian_dense_try_cholesky(
 	if(!isfinite(pivot_floor) || pivot_floor <= 0.0){
 		pivot_floor = 1e-12;
 	}
-	l = ASC_NEW_ARRAY_CLEAR(real64,(size_t)n * (size_t)n);
+	l = A4SQP_NEW_ARRAY_CLEAR(real64,(size_t)n * (size_t)n);
 	if(l == NULL){
 		return 0;
 	}
@@ -60,7 +58,7 @@ static int a4sqp_hessian_dense_try_cholesky(
 	ok = 1;
 
 cleanup:
-	ASC_FREE(l);
+	A4SQP_FREE(l);
 	return ok;
 }
 

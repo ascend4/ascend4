@@ -4,15 +4,15 @@
 
 #define ASC_BUILDING_INTERFACE
 
-#include "a4sqp.h"
+#include "asc_a4sqp.h"
 
-#include "a4sqp_ascend.h"
+#include "asc_a4sqp_adapter.h"
 #include "a4sqp_core.h"
-#include "a4sqp_diag.h"
+#include "asc_a4sqp_diag.h"
 #include "a4sqp_hessian.h"
-#include "a4sqp_internal.h"
+#include "asc_a4sqp_internal.h"
 #include "a4sqp_qp_highs.h"
-#include "a4sqp_scale.h"
+#include "asc_a4sqp_report.h"
 #include "a4sqp_trust.h"
 
 #include <math.h>
@@ -213,7 +213,7 @@ static int a4sqp_x_push_to_ascend(struct A4SqpSystem *sys, const real64 *x){
 		return 1;
 	}
 	for(i = 0; i < sys->view.n_var; ++i){
-		var_set_value(sys->view.vars[i],x[i]);
+		var_set_value((struct var_variable *)sys->view.vars[i],x[i]);
 	}
 	return 0;
 }
@@ -726,7 +726,7 @@ static int a4sqp_step_hess_accumulate_relation(
 		);
 		a4sqp_report_progress(&sys->params,message);
 	}
-	if(mapped == 0 && local_maxabs == 0.0 && rel == sys->view.obj){
+	if(mapped == 0 && local_maxabs == 0.0 && rel == (struct rel_relation *)sys->view.obj){
 		if(a4sqp_step_hess_accumulate_objective_fd(sys,triplet,coeff,safe,&mapped,&local_maxabs)){
 			ASC_FREE(row2nd);
 			return 1;
@@ -777,7 +777,7 @@ static int a4sqp_eval_objective_gradient_current(const struct A4SqpSystem *sys, 
 	}
 	vfilter.matchbits = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED;
 	vfilter.matchvalue = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR;
-	if(relman_diff2_rev(sys->view.obj,&vfilter,derivs,vars,&count,safe)){
+	if(relman_diff2_rev((struct rel_relation *)sys->view.obj,&vfilter,derivs,vars,&count,safe)){
 		ASC_FREE(derivs);
 		ASC_FREE(vars);
 		return 1;
@@ -834,21 +834,21 @@ static int a4sqp_step_hess_accumulate_objective_fd(
 			base = 1.0;
 		}
 		step = 1e-6 * base;
-		var_set_value(sys->view.vars[i],old_value + step);
+		var_set_value((struct var_variable *)sys->view.vars[i],old_value + step);
 		if(a4sqp_eval_objective_gradient_current(sys,safe,gplus)){
-			var_set_value(sys->view.vars[i],old_value);
+			var_set_value((struct var_variable *)sys->view.vars[i],old_value);
 			ASC_FREE(gplus);
 			ASC_FREE(gminus);
 			return 1;
 		}
-		var_set_value(sys->view.vars[i],old_value - step);
+		var_set_value((struct var_variable *)sys->view.vars[i],old_value - step);
 		if(a4sqp_eval_objective_gradient_current(sys,safe,gminus)){
-			var_set_value(sys->view.vars[i],old_value);
+			var_set_value((struct var_variable *)sys->view.vars[i],old_value);
 			ASC_FREE(gplus);
 			ASC_FREE(gminus);
 			return 1;
 		}
-		var_set_value(sys->view.vars[i],old_value);
+		var_set_value((struct var_variable *)sys->view.vars[i],old_value);
 		for(j = 0; j <= i; ++j){
 			real64 value = (gplus[j] - gminus[j]) / (2.0 * step);
 			real64 scaled_value = coeff * value * sys->view.var_scale[i] * sys->view.var_scale[j];
@@ -859,7 +859,7 @@ static int a4sqp_step_hess_accumulate_objective_fd(
 				continue;
 			}
 			if(a4sqp_hess_triplet_append(triplet,i,j,scaled_value)){
-				var_set_value(sys->view.vars[i],old_value);
+				var_set_value((struct var_variable *)sys->view.vars[i],old_value);
 				ASC_FREE(gplus);
 				ASC_FREE(gminus);
 				return 1;
@@ -1050,7 +1050,7 @@ static int a4sqp_step_hess_build_exact(struct A4SqpSystem *sys){
 	if(sys->view.obj_direction > 0){
 		obj_coeff = -1.0;
 	}
-	status = a4sqp_step_hess_accumulate_relation(sys,&triplet,sys->view.obj,obj_coeff,safe);
+	status = a4sqp_step_hess_accumulate_relation(sys,&triplet,(struct rel_relation *)sys->view.obj,obj_coeff,safe);
 	if(status){
 		a4sqp_hess_triplet_destroy(&triplet);
 		return 1;
@@ -1071,7 +1071,7 @@ static int a4sqp_step_hess_build_exact(struct A4SqpSystem *sys){
 				continue;
 			}
 			coeff = lambda;
-			if(a4sqp_step_hess_accumulate_relation(sys,&triplet,sys->view.rels[row],coeff,safe)){
+			if(a4sqp_step_hess_accumulate_relation(sys,&triplet,(struct rel_relation *)sys->view.rels[row],coeff,safe)){
 				a4sqp_hess_triplet_destroy(&triplet);
 				return 1;
 			}
@@ -1387,79 +1387,6 @@ static int a4sqp_get_status(slv_system_t server, SlvClientToken asys, slv_status
 	return 0;
 }
 
-static void a4sqp_report_view(struct A4SqpSystem *sys){
-	char message[256];
-	const char *scaleopt;
-
-	if(sys == NULL){
-		return;
-	}
-
-	scaleopt = a4sqp_scale_mode_name(SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_SCALEOPT));
-	snprintf(message,sizeof(message),
-		"view: vars=%ld, rels=%ld, jac_nnz=%ld, objective=%s, scaleopt=%s, calc_errors=%ld, derivative_errors=%ld, unsupported_rels=%ld",
-		(long)sys->view.n_var,
-		(long)sys->view.n_rel,
-		(long)sys->view.jac_nnz,
-		sys->view.obj != NULL ? "yes" : "no",
-		scaleopt,
-		(long)(sys->view.calc_errors + sys->view.obj_calc_errors),
-		(long)(sys->view.derivative_errors + sys->view.obj_derivative_errors),
-		(long)sys->view.unsupported_rels
-	);
-	a4sqp_report_progress(&sys->params,message);
-
-	if(SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_DUMP_VIEW)){
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%s",message);
-	}
-}
-
-static void a4sqp_report_qp(struct A4SqpSystem *sys){
-	char message[256];
-
-	if(sys == NULL){
-		return;
-	}
-	snprintf(
-		message,
-		sizeof(message),
-		"qp: cols=%ld rows=%ld nnz=%ld q_nnz=%ld status=%d model_status=%d objective=%g",
-		(long)sys->qp.num_col,
-		(long)sys->qp.num_row,
-		(long)sys->qp.num_nz,
-		(long)sys->qp.q_num_nz,
-		sys->qp.highs_status,
-		sys->qp.highs_model_status,
-		sys->qp.objective_value
-	);
-	a4sqp_report_progress(&sys->params,message);
-}
-
-static void a4sqp_report_iteration(struct A4SqpSystem *sys){
-	char message[256];
-
-	if(sys == NULL){
-		return;
-	}
-	snprintf(
-		message,
-		sizeof(message),
-		"iter=%ld obj=%g merit=%g pred=%g rho=%g delta=%g viol_sum=%g viol_max=%g alpha=%g step=%g worst_rel=%ld",
-		(long)sys->status.iteration,
-		sys->view.obj != NULL ? sys->view.obj_value : 0.0,
-		sys->last_merit_after,
-		sys->last_predicted_reduction,
-		sys->last_trust_ratio,
-		sys->trust_radius,
-		sys->last_violation_sum,
-		sys->last_violation_max,
-		sys->last_alpha,
-		sys->last_step_norm,
-		(long)sys->worst_violation_rel
-	);
-	a4sqp_report_progress(&sys->params,message);
-}
-
 static int32 a4sqp_view_var_col(const struct A4SqpView *view, int32 sindex){
 	int32 i;
 	if(view == NULL){
@@ -1479,10 +1406,10 @@ static int32 a4sqp_view_var_col_from_var(const struct A4SqpView *view, const str
 		return -1;
 	}
 	for(i = 0; i < view->n_var; ++i){
-		if(view->vars[i] == var){
+		if((struct var_variable *)view->vars[i] == var){
 			return i;
 		}
-		if(var_instance(view->vars[i]) == var_instance(var)){
+		if(var_instance((struct var_variable *)view->vars[i]) == var_instance(var)){
 			return i;
 		}
 		if(view->var_mindex != NULL && view->var_mindex[i] == var_mindex(var)){
@@ -1661,7 +1588,7 @@ struct A4SqpAscendLineSearchCtx {
 	struct A4SqpSystem *sys;
 };
 
-static int a4sqp_ascend_ls_evaluate(void *ctx, const real64 *x, struct A4SqpView *view){
+static int asc_a4sqp_ls_evaluate(void *ctx, const real64 *x, struct A4SqpView *view){
 	struct A4SqpAscendLineSearchCtx *ls = (struct A4SqpAscendLineSearchCtx *)ctx;
 	if(ls == NULL || ls->sys == NULL || x == NULL || view == NULL || view != &ls->sys->view){
 		return 1;
@@ -1669,14 +1596,14 @@ static int a4sqp_ascend_ls_evaluate(void *ctx, const real64 *x, struct A4SqpView
 	if(a4sqp_x_push_to_ascend(ls->sys,x)){
 		return 1;
 	}
-	if(a4sqp_ascend_build_view(ls->sys,ls->server)){
+	if(asc_a4sqp_build_view(ls->sys,ls->server)){
 		return 1;
 	}
 	a4sqp_update_metrics(ls->sys);
 	return 0;
 }
 
-static void a4sqp_ascend_ls_accepted(
+static void asc_a4sqp_ls_accepted(
 	void *ctx,
 	const real64 *old_scaled_x,
 	const real64 *old_scaled_grad
@@ -1717,7 +1644,7 @@ struct A4SqpAscendCoreStepCtx {
 	struct A4SqpSystem *sys;
 };
 
-static int a4sqp_ascend_core_prepare_hessian(void *vctx, struct A4SqpStepHessian *step_hess){
+static int asc_a4sqp_core_prepare_hessian(void *vctx, struct A4SqpStepHessian *step_hess){
 	struct A4SqpAscendCoreStepCtx *ctx = (struct A4SqpAscendCoreStepCtx *)vctx;
 	if(ctx == NULL || ctx->sys == NULL || step_hess == NULL){
 		return 1;
@@ -1729,15 +1656,19 @@ static int a4sqp_ascend_core_prepare_hessian(void *vctx, struct A4SqpStepHessian
 	return 0;
 }
 
-static int a4sqp_ascend_core_solve_qp(void *vctx, struct A4SqpQp *qp){
+static int asc_a4sqp_core_solve_qp(void *vctx, struct A4SqpQp *qp){
 	struct A4SqpAscendCoreStepCtx *ctx = (struct A4SqpAscendCoreStepCtx *)vctx;
 	if(ctx == NULL || ctx->sys == NULL){
 		return 1;
 	}
-	return a4sqp_qp_solve_highs(qp,&ctx->sys->params) == 0 ? 0 : 1;
+	return a4sqp_qp_solve_highs(
+		qp,
+		SLV_PARAM_REAL(&ctx->sys->params,A4SQP_PARAM_FEAS_TOL),
+		SLV_PARAM_BOOL(&ctx->sys->params,A4SQP_PARAM_PROGRESS_LOG)
+	) == 0 ? 0 : 1;
 }
 
-static void a4sqp_ascend_core_after_qp_solve(void *vctx, const struct A4SqpQp *qp){
+static void asc_a4sqp_core_after_qp_solve(void *vctx, const struct A4SqpQp *qp){
 	struct A4SqpAscendCoreStepCtx *ctx = (struct A4SqpAscendCoreStepCtx *)vctx;
 	(void)qp;
 	if(ctx == NULL || ctx->sys == NULL){
@@ -1746,7 +1677,7 @@ static void a4sqp_ascend_core_after_qp_solve(void *vctx, const struct A4SqpQp *q
 	a4sqp_lambda_est_update(ctx->sys);
 }
 
-static int a4sqp_ascend_core_shrink_trust(void *vctx, const char *reason){
+static int asc_a4sqp_core_shrink_trust(void *vctx, const char *reason){
 	struct A4SqpAscendCoreStepCtx *ctx = (struct A4SqpAscendCoreStepCtx *)vctx;
 	char message[256];
 	if(ctx == NULL || ctx->sys == NULL){
@@ -1796,7 +1727,7 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 		return 1;
 	}
 
-	if(a4sqp_ascend_build_view(sys,server)){
+	if(asc_a4sqp_build_view(sys,server)){
 		sys->status.ok = FALSE;
 		sys->status.calc_ok = FALSE;
 		sys->status.ready_to_solve = FALSE;
@@ -1827,7 +1758,7 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 			"A4SQP Phase 1 does not support %ld relation(s) in the selected solver list.",
 			(long)sys->view.unsupported_rels
 		);
-		a4sqp_report_view(sys);
+		asc_a4sqp_report_view(sys);
 		return 1;
 	}
 
@@ -1839,7 +1770,7 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 			"A4SQP encountered residual evaluation errors in %ld relation(s).",
 			(long)sys->view.calc_errors
 		);
-		a4sqp_report_view(sys);
+		asc_a4sqp_report_view(sys);
 		return 1;
 	}
 
@@ -1851,13 +1782,13 @@ static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 			"A4SQP encountered derivative evaluation errors in %ld relation(s).",
 			(long)sys->view.derivative_errors
 		);
-		a4sqp_report_view(sys);
+		asc_a4sqp_report_view(sys);
 		return 1;
 	}
 
 	sys->status.ready_to_solve = TRUE;
 	a4sqp_update_metrics(sys);
-	a4sqp_report_view(sys);
+	asc_a4sqp_report_view(sys);
 	MSG("Presolve completed");
 	return 0;
 }
@@ -1906,13 +1837,13 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 	line_options.armijo_coeff = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ARMIJO_COEFF);
 	line_options.trust_accept = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_ACCEPT);
 	line_options.elastic_penalty = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY);
-	line_ops.evaluate = a4sqp_ascend_ls_evaluate;
-	line_ops.accepted = a4sqp_ascend_ls_accepted;
+	line_ops.evaluate = asc_a4sqp_ls_evaluate;
+	line_ops.accepted = asc_a4sqp_ls_accepted;
 	sys->line_search_failed = 0;
-	step_ops.prepare_hessian = a4sqp_ascend_core_prepare_hessian;
-	step_ops.solve_qp = a4sqp_ascend_core_solve_qp;
-	step_ops.after_qp_solve = a4sqp_ascend_core_after_qp_solve;
-	step_ops.shrink_trust = a4sqp_ascend_core_shrink_trust;
+	step_ops.prepare_hessian = asc_a4sqp_core_prepare_hessian;
+	step_ops.solve_qp = asc_a4sqp_core_solve_qp;
+	step_ops.after_qp_solve = asc_a4sqp_core_after_qp_solve;
+	step_ops.shrink_trust = asc_a4sqp_core_shrink_trust;
 	step_status = a4sqp_core_solve_step(
 		&sys->view,
 		&sys->qp,
@@ -1945,7 +1876,7 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 	if(step_status == A4SQP_CORE_STEP_LINE_SEARCH_ERROR){
 		sys->status.converged = FALSE;
 		sys->status.diverged = TRUE;
-		a4sqp_report_qp(sys);
+		asc_a4sqp_report_qp(sys);
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,
 			"A4SQP line search failed to find a merit-improving step (merit_before=%g, merit_after=%g, predicted_reduction=%g, rho=%g, step=%g, viol_max=%g).",
 			sys->last_merit_before,
@@ -1960,15 +1891,15 @@ static int a4sqp_iterate(slv_system_t server, SlvClientToken asys){
 	if(step_status != A4SQP_CORE_STEP_ACCEPTED){
 		sys->status.converged = FALSE;
 		sys->status.diverged = TRUE;
-		a4sqp_report_qp(sys);
+		asc_a4sqp_report_qp(sys);
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP HiGHS QP subproblem did not solve to optimality.");
 		return 1;
 	}
 
 	++sys->status.iteration;
-	a4sqp_report_qp(sys);
-	a4sqp_report_iteration(sys);
-	a4sqp_report_view(sys);
+	asc_a4sqp_report_qp(sys);
+	asc_a4sqp_report_iteration(sys);
+	asc_a4sqp_report_view(sys);
 	if(a4sqp_has_converged(sys)){
 		sys->status.converged = TRUE;
 		sys->status.diverged = FALSE;
@@ -2022,7 +1953,7 @@ static void a4sqp_dumpinternals(slv_system_t server, SlvClientToken asys, int le
 	if(sys == NULL || level <= 0){
 		return;
 	}
-	a4sqp_report_view(sys);
+	asc_a4sqp_report_view(sys);
 }
 
 static const SlvFunctionsT a4sqp_internals = {

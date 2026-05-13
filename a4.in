@@ -281,7 +281,7 @@ if __name__ == "__main__":
 			get_effective_home() / '.local/lib',
 		]
 	configured_runtime_libdirs = [pathlib.Path(p) for p in @A4_RUNTIME_LIBDIRS@]
-	libdirs = [sourceroot] + local_libdirs + configured_runtime_libdirs
+	libdirs = [sourceroot] + solverdirs + local_libdirs + configured_runtime_libdirs
 	if add_at_start(LD_LIBRARY_PATH,libdirs):
 		restart.append(LD_LIBRARY_PATH)
 

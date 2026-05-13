@@ -4,10 +4,10 @@
 
 #define ASC_BUILDING_INTERFACE
 
-#include "a4sqp_diag.h"
+#include "asc_a4sqp_diag.h"
 
-#include "a4sqp.h"
-#include "a4sqp_params.h"
+#include "asc_a4sqp.h"
+#include "asc_a4sqp_params.h"
 
 #include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>

@@ -9,9 +9,6 @@
 #include <math.h>
 #include <string.h>
 
-#include <ascend/general/platform.h>
-#include <ascend/system/var.h>
-
 const char *a4sqp_scale_mode_name(const char *mode){
 	return mode != 0 ? mode : "ROW_2NORM";
 }
@@ -35,8 +32,8 @@ static void a4sqp_init_var_scaling(struct A4SqpView *view, int use_nominals){
 	for(i = 0; i < view->n_var; ++i){
 		view->var_scale[i] = use_nominals ? a4sqp_safe_scale(view->var_nominal[i]) : 1.0;
 		view->scaled_var_value[i] = view->var_value[i] / view->var_scale[i];
-		view->scaled_var_lower[i] = a4sqp_scale_bound(view->var_lower[i],1.0 / view->var_scale[i],var_NO_LOWER_BOUND);
-		view->scaled_var_upper[i] = a4sqp_scale_bound(view->var_upper[i],1.0 / view->var_scale[i],var_NO_UPPER_BOUND);
+		view->scaled_var_lower[i] = a4sqp_scale_bound(view->var_lower[i],1.0 / view->var_scale[i],A4SQP_NO_LOWER_BOUND);
+		view->scaled_var_upper[i] = a4sqp_scale_bound(view->var_upper[i],1.0 / view->var_scale[i],A4SQP_NO_UPPER_BOUND);
 	}
 }
 
@@ -48,7 +45,7 @@ static void a4sqp_init_rel_scaling(struct A4SqpView *view, const char *mode){
 	for(i = 0; i < view->n_rel; ++i){
 		real64 scale = 1.0;
 		if(use_relnom){
-			scale = 1.0 / a4sqp_safe_scale(rel_nominal(view->rels[i]));
+			scale = 1.0 / a4sqp_safe_scale(view->rel_nominal != NULL ? view->rel_nominal[i] : 1.0);
 		}else if(use_row_2norm){
 			int32 k;
 			real64 sum = 0.0;
@@ -64,8 +61,8 @@ static void a4sqp_init_rel_scaling(struct A4SqpView *view, const char *mode){
 		}
 		view->rel_scale[i] = scale;
 		view->scaled_rel_residual[i] = view->rel_residual[i] * scale;
-		view->scaled_rel_lower[i] = a4sqp_scale_bound(view->rel_lower[i],scale,var_NO_LOWER_BOUND);
-		view->scaled_rel_upper[i] = a4sqp_scale_bound(view->rel_upper[i],scale,var_NO_UPPER_BOUND);
+		view->scaled_rel_lower[i] = a4sqp_scale_bound(view->rel_lower[i],scale,A4SQP_NO_LOWER_BOUND);
+		view->scaled_rel_upper[i] = a4sqp_scale_bound(view->rel_upper[i],scale,A4SQP_NO_UPPER_BOUND);
 	}
 }
 

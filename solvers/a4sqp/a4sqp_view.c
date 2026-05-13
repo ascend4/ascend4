@@ -6,8 +6,6 @@
 
 #include "a4sqp_view.h"
 
-#include <ascend/general/ascMalloc.h>
-
 #include <string.h>
 
 void a4sqp_view_init(struct A4SqpView *view){
@@ -40,6 +38,7 @@ void a4sqp_view_init(struct A4SqpView *view){
 	view->rel_residual = NULL;
 	view->rel_lower = NULL;
 	view->rel_upper = NULL;
+	view->rel_nominal = NULL;
 	view->rel_scale = NULL;
 	view->scaled_rel_residual = NULL;
 	view->scaled_rel_lower = NULL;
@@ -62,34 +61,35 @@ void a4sqp_view_destroy(struct A4SqpView *view){
 	if(view == NULL){
 		return;
 	}
-	ASC_FREE(view->var_sindex);
-	ASC_FREE(view->var_value);
-	ASC_FREE(view->var_lower);
-	ASC_FREE(view->var_upper);
-	ASC_FREE(view->var_nominal);
-	ASC_FREE(view->var_fixed);
-	ASC_FREE(view->var_scale);
-	ASC_FREE(view->scaled_var_value);
-	ASC_FREE(view->scaled_var_lower);
-	ASC_FREE(view->scaled_var_upper);
-	ASC_FREE(view->obj_gradient);
-	ASC_FREE(view->scaled_obj_gradient);
-	ASC_FREE(view->var_mindex);
-	ASC_FREE(view->rel_sindex);
-	ASC_FREE(view->relop);
-	ASC_FREE(view->rel_kind);
-	ASC_FREE(view->rel_residual);
-	ASC_FREE(view->rel_lower);
-	ASC_FREE(view->rel_upper);
-	ASC_FREE(view->rel_scale);
-	ASC_FREE(view->scaled_rel_residual);
-	ASC_FREE(view->scaled_rel_lower);
-	ASC_FREE(view->scaled_rel_upper);
-	ASC_FREE(view->jac_row_start);
-	ASC_FREE(view->jac_col_index);
-	ASC_FREE(view->jac_col_sindex);
-	ASC_FREE(view->jac_value);
-	ASC_FREE(view->scaled_jac_value);
+	A4SQP_FREE(view->var_sindex);
+	A4SQP_FREE(view->var_value);
+	A4SQP_FREE(view->var_lower);
+	A4SQP_FREE(view->var_upper);
+	A4SQP_FREE(view->var_nominal);
+	A4SQP_FREE(view->var_fixed);
+	A4SQP_FREE(view->var_scale);
+	A4SQP_FREE(view->scaled_var_value);
+	A4SQP_FREE(view->scaled_var_lower);
+	A4SQP_FREE(view->scaled_var_upper);
+	A4SQP_FREE(view->obj_gradient);
+	A4SQP_FREE(view->scaled_obj_gradient);
+	A4SQP_FREE(view->var_mindex);
+	A4SQP_FREE(view->rel_sindex);
+	A4SQP_FREE(view->relop);
+	A4SQP_FREE(view->rel_kind);
+	A4SQP_FREE(view->rel_residual);
+	A4SQP_FREE(view->rel_lower);
+	A4SQP_FREE(view->rel_upper);
+	A4SQP_FREE(view->rel_nominal);
+	A4SQP_FREE(view->rel_scale);
+	A4SQP_FREE(view->scaled_rel_residual);
+	A4SQP_FREE(view->scaled_rel_lower);
+	A4SQP_FREE(view->scaled_rel_upper);
+	A4SQP_FREE(view->jac_row_start);
+	A4SQP_FREE(view->jac_col_index);
+	A4SQP_FREE(view->jac_col_sindex);
+	A4SQP_FREE(view->jac_value);
+	A4SQP_FREE(view->scaled_jac_value);
 	a4sqp_view_init(view);
 }
 

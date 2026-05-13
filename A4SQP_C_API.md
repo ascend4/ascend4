@@ -39,9 +39,9 @@ The implementation now has one shared SQP step engine with frontend adapters:
 
 ```text
 ASCEND solver client
-    -> ASCEND adapter: solvers/a4sqp/a4sqp.c, a4sqp_view.c
+    -> ASCEND adapter: solvers/a4sqp/asc_a4sqp.c, asc_a4sqp_view.c
         -> shared core: a4sqp_core.c, a4sqp_hessian.c, a4sqp_trust.c,
-                        a4sqp_qp_highs.c
+                        a4sqp_qp_highs.c, a4sqp_view.c
             -> HiGHS QP backend
 
 C API / CUTEst client
@@ -56,11 +56,11 @@ The core numerical view is `A4SqpCoreView` in
 the current NLP state: scaled variables, bounds, objective gradient, constraint
 residuals, constraint bounds, row kinds, and sparse Jacobian data.
 
-`A4SqpView` in `solvers/a4sqp/a4sqp_view.h` remains the richer ASCEND-facing
-view. It owns ASCEND metadata such as `var_variable`, `rel_relation`,
-source/model indices, relation operators, and objective relation pointers. Core
-code should not depend on those fields; ASCEND diagnostics and exact Hessian
-assembly still need them.
+`A4SqpView` in `solvers/a4sqp/a4sqp_view.h` is now a core-owned numeric
+container with optional opaque frontend handles. Its header does not expose
+ASCEND types. The ASCEND adapter may store `void *` handles for variables,
+relations, and the objective so it can map diagnostics and exact-Hessian work
+back to ASCEND objects, but core code must treat those handles as opaque.
 
 The public external API is `solvers/a4sqp/a4sqp_c.h`. Its implementation in
 `solvers/a4sqp/a4sqp_c.c` builds numeric `A4SqpView`/`A4SqpCoreView` data from
@@ -361,20 +361,20 @@ forcing ASCEND through the public C ABI. The next build-level boundary is:
 
 ```text
 liba4sqp.so
-    public symbols: IPOPT-like A4SQP C API only
-    hidden implementation: SQP core, QP builder, Hessian utilities, trust
-                           policy, scaling, numeric view storage
+    links to: libhighs, libm, libc
+    owns: IPOPT-like A4SQP C API, SQP core, QP builder, Hessian utilities,
+          trust policy, scaling, numeric view storage
 
 liba4sqp_ascend.so
     public symbols: ASCEND solver registration only
-    links to: liba4sqp.so and libascend.so
+    links to: liba4sqp.so, libascend.so, libm, libc
     owns: slv_system_t adapter, ASCEND diagnostics, ASCEND exact Hessian path
 ```
 
 This is not intended to route ASCEND through the public C API. It is intended
 to prevent duplicate solver engines. The ASCEND plugin should call shared
-hidden core routines from `liba4sqp.so`; external users should only see the C
-API functions declared in `a4sqp_c.h`.
+core routines from `liba4sqp.so`; external users should use the C API
+functions declared in `a4sqp_c.h`.
 
 Shared core logic lives in:
 
@@ -389,14 +389,14 @@ Shared core logic lives in:
   regularization.
 - `solvers/a4sqp/a4sqp_trust.c`: trust-radius initialization, shrink, and grow
   policy.
+- `solvers/a4sqp/a4sqp_view.c`: core-owned numeric view lifecycle.
+- `solvers/a4sqp/a4sqp_types.h`: core numeric types, bound sentinels, and
+  allocator macros.
 
-The ASCEND adapter remains in `solvers/a4sqp/a4sqp.c`,
-`solvers/a4sqp/a4sqp_ascend.c`, and the ASCEND-specific view-construction
-code. It is responsible for:
+The ASCEND adapter remains in `solvers/a4sqp/asc_a4sqp*.c` files. It is
+responsible for:
 
-- `struct var_variable **vars`
-- `struct rel_relation **rels`
-- `struct rel_relation *obj`
+- storing opaque handles to ASCEND variables, relations, and the objective
 - `var_mindex`, `var_sindex`, `rel_sindex`
 - relation operator enums from ASCEND
 - pushing the core-owned trial `x` vector into ASCEND variables for evaluation
@@ -553,8 +553,9 @@ Current implementation status:
   calculations, line search, and the SQP step retry loop.
 - `solvers/a4sqp/a4sqp_core_view.h` now defines a borrowed
   solver-neutral `A4SqpCoreView` slice for core numeric data. `A4SqpView`
-  preserves ASCEND solver indices, `relop`, variables, relations, and objective
-  metadata for diagnostics and ASCEND-specific Hessian assembly.
+  preserves numeric fields plus optional opaque frontend handles; ASCEND casts
+  those handles only inside adapter code for diagnostics and exact-Hessian
+  assembly.
 - Core merit/violation/stationarity helpers and QP assembly have
   `A4SqpCoreView` entry points, with `A4SqpView` wrappers kept for existing
   ASCEND call sites.
@@ -569,6 +570,12 @@ Current implementation status:
 - The remaining ASCEND-specific code is now adapter responsibility: view
   construction, `slv_system_t` state mutation, Hessian assembly from `relman`,
   progress reporting, diagnostics, and status mapping.
+- The build now produces a real library split: `liba4sqp.so` links to HiGHS and
+  not ASCEND; `liba4sqp_ascend.so` links to `liba4sqp.so` and ASCEND, and not
+  directly to HiGHS.
+- The temporary broad `-fvisibility=default` core build override has been
+  removed. Public C API symbols and the current internal core ABI used by the
+  ASCEND adapter are exported explicitly.
 - The C API currently has a CUnit smoke test for an objective-only callback
   problem in `ascend/solver/test/test_a4sqp.c`.
 - CUTEst package-style drivers now exist under `solvers/a4sqp/cutest` for

@@ -5,7 +5,7 @@
 #ifndef ASC_A4SQP_TRUST_H
 #define ASC_A4SQP_TRUST_H
 
-#include <ascend/general/platform.h>
+#include "a4sqp_types.h"
 
 struct A4SqpTrustOptions {
 	real64 radius_init;
@@ -17,9 +17,9 @@ struct A4SqpTrustOptions {
 };
 
 real64 a4sqp_trust_clamp_value(const struct A4SqpTrustOptions *opt, real64 radius);
-real64 a4sqp_trust_initial_radius(const struct A4SqpTrustOptions *opt);
-int a4sqp_trust_shrink_radius(real64 *radius, const struct A4SqpTrustOptions *opt);
-void a4sqp_trust_grow_if_good(
+A4SQP_CORE_EXPORT real64 a4sqp_trust_initial_radius(const struct A4SqpTrustOptions *opt);
+A4SQP_CORE_EXPORT int a4sqp_trust_shrink_radius(real64 *radius, const struct A4SqpTrustOptions *opt);
+A4SQP_CORE_EXPORT void a4sqp_trust_grow_if_good(
 	real64 *radius,
 	const struct A4SqpTrustOptions *opt,
 	real64 alpha,

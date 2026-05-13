@@ -8,18 +8,15 @@
 
 #include "a4sqp_view.h"
 
-#include <ascend/general/ascMalloc.h>
-#include <ascend/system/var.h>
-
 #include <math.h>
 #include <string.h>
 
 int a4sqp_core_is_lower_inf(real64 value){
-	return value <= var_NO_LOWER_BOUND / 10.0;
+	return value <= A4SQP_NO_LOWER_BOUND / 10.0;
 }
 
 int a4sqp_core_is_upper_inf(real64 value){
-	return value >= var_NO_UPPER_BOUND / 10.0;
+	return value >= A4SQP_NO_UPPER_BOUND / 10.0;
 }
 
 real64 a4sqp_core_violation(
@@ -121,13 +118,13 @@ real64 a4sqp_core_projected_gradient_inf_for_view(
 		return 0.0;
 	}
 
-	basis = ASC_NEW_ARRAY_CLEAR(real64,(size_t)n * (size_t)n);
-	normal = ASC_NEW_ARRAY_CLEAR(real64,n);
-	proj = ASC_NEW_ARRAY_CLEAR(real64,n);
+	basis = A4SQP_NEW_ARRAY_CLEAR(real64,(size_t)n * (size_t)n);
+	normal = A4SQP_NEW_ARRAY_CLEAR(real64,n);
+	proj = A4SQP_NEW_ARRAY_CLEAR(real64,n);
 	if(basis == NULL || normal == NULL || proj == NULL){
-		ASC_FREE(basis);
-		ASC_FREE(normal);
-		ASC_FREE(proj);
+		A4SQP_FREE(basis);
+		A4SQP_FREE(normal);
+		A4SQP_FREE(proj);
 		return 0.0;
 	}
 
@@ -216,9 +213,9 @@ real64 a4sqp_core_projected_gradient_inf_for_view(
 		}
 	}
 
-	ASC_FREE(basis);
-	ASC_FREE(normal);
-	ASC_FREE(proj);
+	A4SQP_FREE(basis);
+	A4SQP_FREE(normal);
+	A4SQP_FREE(proj);
 	return proj_inf;
 }
 
@@ -407,15 +404,15 @@ int a4sqp_core_line_search_vector(
 	a4sqp_view_get_core(view,&core);
 	core.has_objective = has_objective;
 	n = core.n_var;
-	old_x = ASC_NEW_ARRAY_OR_NULL(real64,n);
-	old_scaled_x = ASC_NEW_ARRAY_OR_NULL(real64,n);
-	old_scaled_grad = ASC_NEW_ARRAY_OR_NULL(real64,n);
-	physical_step = ASC_NEW_ARRAY_OR_NULL(real64,n);
+	old_x = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
+	old_scaled_x = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
+	old_scaled_grad = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
+	physical_step = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
 	if(old_x == NULL || old_scaled_x == NULL || old_scaled_grad == NULL || physical_step == NULL){
-		ASC_FREE(old_x);
-		ASC_FREE(old_scaled_x);
-		ASC_FREE(old_scaled_grad);
-		ASC_FREE(physical_step);
+		A4SQP_FREE(old_x);
+		A4SQP_FREE(old_scaled_x);
+		A4SQP_FREE(old_scaled_grad);
+		A4SQP_FREE(physical_step);
 		return 1;
 	}
 	for(i = 0; i < n; ++i){
@@ -503,10 +500,10 @@ int a4sqp_core_line_search_vector(
 	}
 
 cleanup:
-	ASC_FREE(old_x);
-	ASC_FREE(old_scaled_x);
-	ASC_FREE(old_scaled_grad);
-	ASC_FREE(physical_step);
+	A4SQP_FREE(old_x);
+	A4SQP_FREE(old_scaled_x);
+	A4SQP_FREE(old_scaled_grad);
+	A4SQP_FREE(physical_step);
 	return accepted ? 0 : 1;
 }
 

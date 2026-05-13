@@ -6,9 +6,9 @@
 
 #include "a4sqp_view.h"
 
+#include "asc_a4sqp_adapter.h"
 #include "a4sqp_scale.h"
 
-#include <ascend/general/ascMalloc.h>
 #include <ascend/system/relman.h>
 #include <ascend/system/rel.h>
 #include <ascend/system/slv_client.h>
@@ -38,19 +38,19 @@ static int32 a4sqp_count_rels(struct rel_relation **rels){
 
 static int a4sqp_view_alloc(struct A4SqpView *view){
 	if(view->n_var > 0){
-		view->var_mindex = ASC_NEW_ARRAY_OR_NULL(int32,view->n_var);
-		view->var_sindex = ASC_NEW_ARRAY_OR_NULL(int32,view->n_var);
-		view->var_value = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		view->var_lower = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		view->var_upper = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		view->var_nominal = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		view->var_fixed = ASC_NEW_ARRAY_OR_NULL(uint32,view->n_var);
-		view->var_scale = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		view->scaled_var_value = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		view->scaled_var_lower = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		view->scaled_var_upper = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		view->obj_gradient = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-		view->scaled_obj_gradient = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->var_mindex = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_var);
+		view->var_sindex = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_var);
+		view->var_value = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->var_lower = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->var_upper = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->var_nominal = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->var_fixed = A4SQP_NEW_ARRAY_OR_NULL(uint32,view->n_var);
+		view->var_scale = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->scaled_var_value = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->scaled_var_lower = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->scaled_var_upper = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->obj_gradient = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+		view->scaled_obj_gradient = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
 		if(view->var_mindex == NULL || view->var_sindex == NULL || view->var_value == NULL
 			|| view->var_lower == NULL || view->var_upper == NULL
 			|| view->var_nominal == NULL || view->var_fixed == NULL
@@ -63,20 +63,21 @@ static int a4sqp_view_alloc(struct A4SqpView *view){
 	}
 
 	if(view->n_rel > 0){
-		view->rel_sindex = ASC_NEW_ARRAY_OR_NULL(int32,view->n_rel);
-		view->relop = ASC_NEW_ARRAY_OR_NULL(enum rel_enum,view->n_rel);
-		view->rel_kind = ASC_NEW_ARRAY_OR_NULL(enum A4SqpRelKind,view->n_rel);
-		view->rel_residual = ASC_NEW_ARRAY_OR_NULL(real64,view->n_rel);
-		view->rel_lower = ASC_NEW_ARRAY_OR_NULL(real64,view->n_rel);
-		view->rel_upper = ASC_NEW_ARRAY_OR_NULL(real64,view->n_rel);
-		view->rel_scale = ASC_NEW_ARRAY_OR_NULL(real64,view->n_rel);
-		view->scaled_rel_residual = ASC_NEW_ARRAY_OR_NULL(real64,view->n_rel);
-		view->scaled_rel_lower = ASC_NEW_ARRAY_OR_NULL(real64,view->n_rel);
-		view->scaled_rel_upper = ASC_NEW_ARRAY_OR_NULL(real64,view->n_rel);
-		view->jac_row_start = ASC_NEW_ARRAY_OR_NULL(int32,view->n_rel + 1);
+		view->rel_sindex = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_rel);
+		view->relop = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_rel);
+		view->rel_kind = A4SQP_NEW_ARRAY_OR_NULL(enum A4SqpRelKind,view->n_rel);
+		view->rel_residual = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_rel);
+		view->rel_lower = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_rel);
+		view->rel_upper = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_rel);
+		view->rel_nominal = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_rel);
+		view->rel_scale = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_rel);
+		view->scaled_rel_residual = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_rel);
+		view->scaled_rel_lower = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_rel);
+		view->scaled_rel_upper = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_rel);
+		view->jac_row_start = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_rel + 1);
 		if(view->rel_sindex == NULL || view->relop == NULL || view->rel_kind == NULL
 			|| view->rel_residual == NULL || view->rel_lower == NULL
-			|| view->rel_upper == NULL || view->rel_scale == NULL
+			|| view->rel_upper == NULL || view->rel_nominal == NULL || view->rel_scale == NULL
 			|| view->scaled_rel_residual == NULL || view->scaled_rel_lower == NULL
 			|| view->scaled_rel_upper == NULL || view->jac_row_start == NULL
 		){
@@ -126,7 +127,7 @@ static int32 a4sqp_view_find_var_index(const struct A4SqpView *view, int32 sinde
 static void a4sqp_view_capture_vars(struct A4SqpView *view){
 	int32 i;
 	for(i = 0; i < view->n_var; ++i){
-		struct var_variable *var = view->vars[i];
+		struct var_variable *var = (struct var_variable *)view->vars[i];
 		view->var_mindex[i] = var_mindex(var);
 		view->var_sindex[i] = var_sindex(var);
 		view->var_value[i] = var_value(var);
@@ -141,15 +142,16 @@ static void a4sqp_view_capture_rels(struct A4SqpView *view, int safe){
 	int32 i;
 	for(i = 0; i < view->n_rel; ++i){
 		int32 calc_ok = 0;
-		struct rel_relation *rel = view->rels[i];
+		struct rel_relation *rel = (struct rel_relation *)view->rels[i];
 		view->rel_sindex[i] = rel_sindex(rel);
-		view->relop[i] = rel_relop(rel);
-		view->rel_kind[i] = view->relop[i] == e_rel_equal
+		view->relop[i] = (int32)rel_relop(rel);
+		view->rel_kind[i] = view->relop[i] == (int32)e_rel_equal
 			? A4SQP_REL_KIND_EQUALITY
 			: A4SQP_REL_KIND_INEQUALITY;
-		if(a4sqp_map_rel_bounds(view->relop[i],&view->rel_lower[i],&view->rel_upper[i])){
+		if(a4sqp_map_rel_bounds((enum rel_enum)view->relop[i],&view->rel_lower[i],&view->rel_upper[i])){
 			++view->unsupported_rels;
 		}
+		view->rel_nominal[i] = rel_nominal(rel);
 		view->rel_residual[i] = relman_eval(rel,&calc_ok,safe);
 		if(!calc_ok){
 			++view->calc_errors;
@@ -170,11 +172,11 @@ static int a4sqp_view_capture_jacobian(struct A4SqpView *view, int safe){
 		return 0;
 	}
 
-	row_derivs = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var > 0 ? view->n_var : 1);
-	row_vars = ASC_NEW_ARRAY_OR_NULL(int32,view->n_var > 0 ? view->n_var : 1);
+	row_derivs = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var > 0 ? view->n_var : 1);
+	row_vars = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_var > 0 ? view->n_var : 1);
 	if(row_derivs == NULL || row_vars == NULL){
-		ASC_FREE(row_derivs);
-		ASC_FREE(row_vars);
+		A4SQP_FREE(row_derivs);
+		A4SQP_FREE(row_vars);
 		return 1;
 	}
 
@@ -184,7 +186,8 @@ static int a4sqp_view_capture_jacobian(struct A4SqpView *view, int safe){
 
 	for(i = 0; i < view->n_rel; ++i){
 		int32 count = 0;
-		int err = relman_diff2_rev(view->rels[i],&vfilter,row_derivs,row_vars,&count,safe);
+		struct rel_relation *rel = (struct rel_relation *)view->rels[i];
+		int err = relman_diff2_rev(rel,&vfilter,row_derivs,row_vars,&count,safe);
 		if(err){
 			++view->derivative_errors;
 			count = 0;
@@ -198,15 +201,15 @@ static int a4sqp_view_capture_jacobian(struct A4SqpView *view, int safe){
 
 	view->jac_nnz = nnz;
 	if(nnz > 0){
-		view->jac_col_index = ASC_NEW_ARRAY_OR_NULL(int32,nnz);
-		view->jac_col_sindex = ASC_NEW_ARRAY_OR_NULL(int32,nnz);
-		view->jac_value = ASC_NEW_ARRAY_OR_NULL(real64,nnz);
-		view->scaled_jac_value = ASC_NEW_ARRAY_OR_NULL(real64,nnz);
+		view->jac_col_index = A4SQP_NEW_ARRAY_OR_NULL(int32,nnz);
+		view->jac_col_sindex = A4SQP_NEW_ARRAY_OR_NULL(int32,nnz);
+		view->jac_value = A4SQP_NEW_ARRAY_OR_NULL(real64,nnz);
+		view->scaled_jac_value = A4SQP_NEW_ARRAY_OR_NULL(real64,nnz);
 		if(view->jac_col_index == NULL || view->jac_col_sindex == NULL
 			|| view->jac_value == NULL || view->scaled_jac_value == NULL
 		){
-			ASC_FREE(row_derivs);
-			ASC_FREE(row_vars);
+			A4SQP_FREE(row_derivs);
+			A4SQP_FREE(row_vars);
 			return 1;
 		}
 
@@ -214,7 +217,8 @@ static int a4sqp_view_capture_jacobian(struct A4SqpView *view, int safe){
 		for(i = 0; i < view->n_rel; ++i){
 			int32 j;
 			int32 count = 0;
-			int err = relman_diff2_rev(view->rels[i],&vfilter,row_derivs,row_vars,&count,safe);
+			struct rel_relation *rel = (struct rel_relation *)view->rels[i];
+			int err = relman_diff2_rev(rel,&vfilter,row_derivs,row_vars,&count,safe);
 			if(err){
 				count = 0;
 			}
@@ -227,8 +231,8 @@ static int a4sqp_view_capture_jacobian(struct A4SqpView *view, int safe){
 		}
 	}
 
-	ASC_FREE(row_derivs);
-	ASC_FREE(row_vars);
+	A4SQP_FREE(row_derivs);
+	A4SQP_FREE(row_vars);
 	return 0;
 }
 
@@ -253,11 +257,11 @@ static int a4sqp_view_capture_objective(struct A4SqpView *view, int safe){
 		return 0;
 	}
 
-	view->obj_direction = relman_obj_direction(view->obj);
+	view->obj_direction = relman_obj_direction((struct rel_relation *)view->obj);
 	if(view->obj_direction > 0){
 		obj_sign = -1.0;
 	}
-	view->obj_value = obj_sign * relman_eval(view->obj,&calc_ok,safe);
+	view->obj_value = obj_sign * relman_eval((struct rel_relation *)view->obj,&calc_ok,safe);
 	if(!calc_ok){
 		++view->obj_calc_errors;
 		return 0;
@@ -267,19 +271,19 @@ static int a4sqp_view_capture_objective(struct A4SqpView *view, int safe){
 		return 0;
 	}
 
-	derivs = ASC_NEW_ARRAY_OR_NULL(real64,view->n_var);
-	vars = ASC_NEW_ARRAY_OR_NULL(int32,view->n_var);
+	derivs = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+	vars = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_var);
 	if(derivs == NULL || vars == NULL){
-		ASC_FREE(derivs);
-		ASC_FREE(vars);
+		A4SQP_FREE(derivs);
+		A4SQP_FREE(vars);
 		return 1;
 	}
 	vfilter.matchbits = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED;
 	vfilter.matchvalue = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR;
-	if(relman_diff2_rev(view->obj,&vfilter,derivs,vars,&count,safe)){
+	if(relman_diff2_rev((struct rel_relation *)view->obj,&vfilter,derivs,vars,&count,safe)){
 		++view->obj_derivative_errors;
-		ASC_FREE(derivs);
-		ASC_FREE(vars);
+		A4SQP_FREE(derivs);
+		A4SQP_FREE(vars);
 		return 0;
 	}
 
@@ -290,8 +294,8 @@ static int a4sqp_view_capture_objective(struct A4SqpView *view, int safe){
 		}
 	}
 
-	ASC_FREE(derivs);
-	ASC_FREE(vars);
+	A4SQP_FREE(derivs);
+	A4SQP_FREE(vars);
 	return 0;
 }
 
@@ -301,11 +305,11 @@ int a4sqp_view_build(struct A4SqpView *view, slv_system_t server, int safe, cons
 	}
 
 	a4sqp_view_destroy(view);
-	view->vars = slv_get_solvers_var_list(server);
-	view->rels = slv_get_solvers_rel_list(server);
-	view->obj = slv_get_obj_relation(server);
-	view->n_var = a4sqp_count_vars(view->vars);
-	view->n_rel = a4sqp_count_rels(view->rels);
+	view->vars = (void **)slv_get_solvers_var_list(server);
+	view->rels = (void **)slv_get_solvers_rel_list(server);
+	view->obj = (void *)slv_get_obj_relation(server);
+	view->n_var = a4sqp_count_vars((struct var_variable **)view->vars);
+	view->n_rel = a4sqp_count_rels((struct rel_relation **)view->rels);
 
 	if(view->vars == NULL || view->rels == NULL){
 		return 1;

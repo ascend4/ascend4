@@ -6,7 +6,7 @@
 #define ASC_A4SQP_INTERNAL_H
 
 #include "a4sqp_view.h"
-#include "a4sqp_params.h"
+#include "asc_a4sqp_params.h"
 #include "a4sqp_qp_highs.h"
 
 #include <ascend/system/slv_client.h>

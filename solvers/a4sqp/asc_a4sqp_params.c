@@ -4,7 +4,7 @@
 
 #define ASC_BUILDING_INTERFACE
 
-#include "a4sqp_params.h"
+#include "asc_a4sqp_params.h"
 
 #include "a4sqp_qp_highs.h"
 

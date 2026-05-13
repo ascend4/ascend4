@@ -4,11 +4,11 @@
 
 #define ASC_BUILDING_INTERFACE
 
-#include "a4sqp_ascend.h"
+#include "asc_a4sqp_adapter.h"
 
-#include "a4sqp_internal.h"
+#include "asc_a4sqp_internal.h"
 
-int a4sqp_ascend_build_view(struct A4SqpSystem *sys, slv_system_t server){
+int asc_a4sqp_build_view(struct A4SqpSystem *sys, slv_system_t server){
 	if(sys == NULL){
 		return 1;
 	}

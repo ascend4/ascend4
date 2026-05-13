@@ -5,7 +5,7 @@
 #ifndef ASC_A4SQP_CORE_VIEW_H
 #define ASC_A4SQP_CORE_VIEW_H
 
-#include <ascend/general/platform.h>
+#include "a4sqp_types.h"
 
 enum A4SqpRelKind {
 	A4SQP_REL_KIND_INEQUALITY = 0,

@@ -89,7 +89,7 @@ real64 a4sqp_core_violation(
 	real64 *max_violation,
 	int32 *worst_rel
 );
-real64 a4sqp_core_view_violation(
+A4SQP_CORE_EXPORT real64 a4sqp_core_view_violation(
 	const struct A4SqpView *view,
 	real64 *max_violation,
 	int32 *worst_rel
@@ -120,7 +120,7 @@ enum A4SqpRowActivity a4sqp_core_row_activity_for_view(
 	real64 active_tol,
 	real64 near_tol
 );
-enum A4SqpRowActivity a4sqp_core_row_activity(
+A4SQP_CORE_EXPORT enum A4SqpRowActivity a4sqp_core_row_activity(
 	const struct A4SqpView *view,
 	int32 row,
 	real64 active_tol,
@@ -133,7 +133,7 @@ int a4sqp_core_has_converged_for_view(
 	real64 *projected_gradient_inf,
 	int32 *worst_rel
 );
-int a4sqp_core_has_converged(
+A4SQP_CORE_EXPORT int a4sqp_core_has_converged(
 	const struct A4SqpView *view,
 	const struct A4SqpConvergencePolicy *policy,
 	real64 *max_violation,
@@ -150,7 +150,7 @@ int a4sqp_core_line_search_vector(
 	int has_objective,
 	struct A4SqpLineSearchResult *result
 );
-enum A4SqpCoreStepStatus a4sqp_core_solve_step(
+A4SQP_CORE_EXPORT enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 	struct A4SqpView *view,
 	struct A4SqpQp *qp,
 	real64 *trust_radius,

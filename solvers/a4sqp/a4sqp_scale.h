@@ -7,7 +7,7 @@
 
 #include "a4sqp_view.h"
 
-const char *a4sqp_scale_mode_name(const char *mode);
-int a4sqp_view_apply_scaling(struct A4SqpView *view, const char *mode);
+A4SQP_CORE_EXPORT const char *a4sqp_scale_mode_name(const char *mode);
+A4SQP_CORE_EXPORT int a4sqp_view_apply_scaling(struct A4SqpView *view, const char *mode);
 
 #endif

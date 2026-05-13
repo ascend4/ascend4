@@ -12,10 +12,6 @@
 #include "a4sqp_trust.h"
 #include "a4sqp_view.h"
 
-#include <ascend/general/ascMalloc.h>
-#include <ascend/system/rel.h>
-#include <ascend/system/var.h>
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,20 +145,20 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 
 static double a4sqp_c_map_bound(double value, double lower_inf, double upper_inf){
 	if(value <= lower_inf){
-		return var_NO_LOWER_BOUND;
+		return A4SQP_NO_LOWER_BOUND;
 	}
 	if(value >= upper_inf){
-		return var_NO_UPPER_BOUND;
+		return A4SQP_NO_UPPER_BOUND;
 	}
 	return value;
 }
 
 static int a4sqp_c_is_lower_inf(double value){
-	return value <= var_NO_LOWER_BOUND / 10.0;
+	return value <= A4SQP_NO_LOWER_BOUND / 10.0;
 }
 
 static int a4sqp_c_is_upper_inf(double value){
-	return value >= var_NO_UPPER_BOUND / 10.0;
+	return value >= A4SQP_NO_UPPER_BOUND / 10.0;
 }
 
 static double a4sqp_c_safe_scale(double value){
@@ -183,7 +179,7 @@ static int a4sqp_c_alloc_array(double **ptr, int n){
 	if(n <= 0){
 		return 0;
 	}
-	*ptr = ASC_NEW_ARRAY_OR_NULL(double,n);
+	*ptr = A4SQP_NEW_ARRAY_OR_NULL(double,n);
 	return *ptr == NULL ? 1 : 0;
 }
 
@@ -231,7 +227,7 @@ A4SqpProblem CreateA4SqpProblem(
 	if(eval_f != NULL && eval_grad_f == NULL){
 		return NULL;
 	}
-	p = ASC_NEW_CLEAR(struct A4SqpProblemInfo);
+	p = A4SQP_NEW_CLEAR(struct A4SqpProblemInfo);
 	if(p == NULL){
 		return NULL;
 	}
@@ -267,13 +263,13 @@ void FreeA4SqpProblem(A4SqpProblem problem){
 	if(p == NULL){
 		return;
 	}
-	ASC_FREE(p->x_l);
-	ASC_FREE(p->x_u);
-	ASC_FREE(p->g_l);
-	ASC_FREE(p->g_u);
-	ASC_FREE(p->x_scale);
-	ASC_FREE(p->g_scale);
-	ASC_FREE(p);
+	A4SQP_FREE(p->x_l);
+	A4SQP_FREE(p->x_u);
+	A4SQP_FREE(p->g_l);
+	A4SQP_FREE(p->g_u);
+	A4SQP_FREE(p->x_scale);
+	A4SQP_FREE(p->g_scale);
+	A4SQP_FREE(p);
 }
 
 A4SqpBool AddA4SqpStrOption(A4SqpProblem problem, char *keyword, char *val){
@@ -435,12 +431,12 @@ A4SqpBool SetA4SqpProblemScaling(
 		return A4SQP_FALSE;
 	}
 	p->obj_scaling = obj_scaling;
-	ASC_FREE(p->x_scale);
-	ASC_FREE(p->g_scale);
+	A4SQP_FREE(p->x_scale);
+	A4SQP_FREE(p->g_scale);
 	p->x_scale = NULL;
 	p->g_scale = NULL;
 	if(x_scaling != NULL && p->n > 0){
-		p->x_scale = ASC_NEW_ARRAY_OR_NULL(double,p->n);
+		p->x_scale = A4SQP_NEW_ARRAY_OR_NULL(double,p->n);
 		if(p->x_scale == NULL){
 			return A4SQP_FALSE;
 		}
@@ -449,7 +445,7 @@ A4SqpBool SetA4SqpProblemScaling(
 		}
 	}
 	if(g_scaling != NULL && p->m > 0){
-		p->g_scale = ASC_NEW_ARRAY_OR_NULL(double,p->m);
+		p->g_scale = A4SQP_NEW_ARRAY_OR_NULL(double,p->m);
 		if(p->g_scale == NULL){
 			return A4SQP_FALSE;
 		}
@@ -471,17 +467,17 @@ A4SqpBool SetA4SqpIntermediateCallback(A4SqpProblem problem, A4SqpIntermediateCB
 
 static int a4sqp_c_view_alloc(struct A4SqpView *view){
 	if(view->n_var > 0){
-		view->var_value = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
-		view->var_lower = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
-		view->var_upper = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
-		view->var_nominal = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
-		view->var_fixed = ASC_NEW_ARRAY_OR_NULL(uint32,view->n_var);
-		view->var_scale = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
-		view->scaled_var_value = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
-		view->scaled_var_lower = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
-		view->scaled_var_upper = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
-		view->obj_gradient = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
-		view->scaled_obj_gradient = ASC_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->var_value = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->var_lower = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->var_upper = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->var_nominal = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->var_fixed = A4SQP_NEW_ARRAY_OR_NULL(uint32,view->n_var);
+		view->var_scale = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->scaled_var_value = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->scaled_var_lower = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->scaled_var_upper = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->obj_gradient = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
+		view->scaled_obj_gradient = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_var);
 		if(view->var_value == NULL
 			|| view->var_lower == NULL || view->var_upper == NULL
 			|| view->var_nominal == NULL || view->var_fixed == NULL
@@ -493,18 +489,19 @@ static int a4sqp_c_view_alloc(struct A4SqpView *view){
 		}
 	}
 	if(view->n_rel > 0){
-		view->rel_kind = ASC_NEW_ARRAY_OR_NULL(enum A4SqpRelKind,view->n_rel);
-		view->rel_residual = ASC_NEW_ARRAY_OR_NULL(double,view->n_rel);
-		view->rel_lower = ASC_NEW_ARRAY_OR_NULL(double,view->n_rel);
-		view->rel_upper = ASC_NEW_ARRAY_OR_NULL(double,view->n_rel);
-		view->rel_scale = ASC_NEW_ARRAY_OR_NULL(double,view->n_rel);
-		view->scaled_rel_residual = ASC_NEW_ARRAY_OR_NULL(double,view->n_rel);
-		view->scaled_rel_lower = ASC_NEW_ARRAY_OR_NULL(double,view->n_rel);
-		view->scaled_rel_upper = ASC_NEW_ARRAY_OR_NULL(double,view->n_rel);
-		view->jac_row_start = ASC_NEW_ARRAY_OR_NULL(int32,view->n_rel + 1);
+		view->rel_kind = A4SQP_NEW_ARRAY_OR_NULL(enum A4SqpRelKind,view->n_rel);
+		view->rel_residual = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_rel);
+		view->rel_lower = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_rel);
+		view->rel_upper = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_rel);
+		view->rel_nominal = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_rel);
+		view->rel_scale = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_rel);
+		view->scaled_rel_residual = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_rel);
+		view->scaled_rel_lower = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_rel);
+		view->scaled_rel_upper = A4SQP_NEW_ARRAY_OR_NULL(double,view->n_rel);
+		view->jac_row_start = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_rel + 1);
 		if(view->rel_kind == NULL
 			|| view->rel_residual == NULL || view->rel_lower == NULL
-			|| view->rel_upper == NULL || view->rel_scale == NULL
+			|| view->rel_upper == NULL || view->rel_nominal == NULL || view->rel_scale == NULL
 			|| view->scaled_rel_residual == NULL || view->scaled_rel_lower == NULL
 			|| view->scaled_rel_upper == NULL || view->jac_row_start == NULL
 		){
@@ -541,8 +538,8 @@ static int a4sqp_c_build_view(struct A4SqpCSolve *solve, const double *x, int ne
 		view->var_fixed[i] = 0;
 		view->var_scale[i] = scale;
 		view->scaled_var_value[i] = x[i] / scale;
-		view->scaled_var_lower[i] = a4sqp_c_is_lower_inf(lower) ? var_NO_LOWER_BOUND : lower / scale;
-		view->scaled_var_upper[i] = a4sqp_c_is_upper_inf(upper) ? var_NO_UPPER_BOUND : upper / scale;
+		view->scaled_var_lower[i] = a4sqp_c_is_lower_inf(lower) ? A4SQP_NO_LOWER_BOUND : lower / scale;
+		view->scaled_var_upper[i] = a4sqp_c_is_upper_inf(upper) ? A4SQP_NO_UPPER_BOUND : upper / scale;
 		view->obj_gradient[i] = 0.0;
 		view->scaled_obj_gradient[i] = 0.0;
 	}
@@ -610,24 +607,25 @@ static int a4sqp_c_build_view(struct A4SqpCSolve *solve, const double *x, int ne
 			) ? A4SQP_REL_KIND_EQUALITY : A4SQP_REL_KIND_INEQUALITY;
 			view->rel_lower[i] = lower;
 			view->rel_upper[i] = upper;
+			view->rel_nominal[i] = 1.0;
 			view->rel_scale[i] = rscale;
 			view->scaled_rel_residual[i] = view->rel_residual[i] * rscale;
-			view->scaled_rel_lower[i] = a4sqp_c_is_lower_inf(lower) ? var_NO_LOWER_BOUND : lower * rscale;
-			view->scaled_rel_upper[i] = a4sqp_c_is_upper_inf(upper) ? var_NO_UPPER_BOUND : upper * rscale;
+			view->scaled_rel_lower[i] = a4sqp_c_is_lower_inf(lower) ? A4SQP_NO_LOWER_BOUND : lower * rscale;
+			view->scaled_rel_upper[i] = a4sqp_c_is_upper_inf(upper) ? A4SQP_NO_UPPER_BOUND : upper * rscale;
 		}
-		view->jac_col_index = ASC_NEW_ARRAY_OR_NULL(int32,p->nele_jac > 0 ? p->nele_jac : 1);
-		view->jac_value = ASC_NEW_ARRAY_OR_NULL(double,p->nele_jac > 0 ? p->nele_jac : 1);
-		view->scaled_jac_value = ASC_NEW_ARRAY_OR_NULL(double,p->nele_jac > 0 ? p->nele_jac : 1);
-		irow = ASC_NEW_ARRAY_OR_NULL(A4SqpIndex,p->nele_jac > 0 ? p->nele_jac : 1);
-		jcol = ASC_NEW_ARRAY_OR_NULL(A4SqpIndex,p->nele_jac > 0 ? p->nele_jac : 1);
-		jac = ASC_NEW_ARRAY_OR_NULL(double,p->nele_jac > 0 ? p->nele_jac : 1);
+		view->jac_col_index = A4SQP_NEW_ARRAY_OR_NULL(int32,p->nele_jac > 0 ? p->nele_jac : 1);
+		view->jac_value = A4SQP_NEW_ARRAY_OR_NULL(double,p->nele_jac > 0 ? p->nele_jac : 1);
+		view->scaled_jac_value = A4SQP_NEW_ARRAY_OR_NULL(double,p->nele_jac > 0 ? p->nele_jac : 1);
+		irow = A4SQP_NEW_ARRAY_OR_NULL(A4SqpIndex,p->nele_jac > 0 ? p->nele_jac : 1);
+		jcol = A4SQP_NEW_ARRAY_OR_NULL(A4SqpIndex,p->nele_jac > 0 ? p->nele_jac : 1);
+		jac = A4SQP_NEW_ARRAY_OR_NULL(double,p->nele_jac > 0 ? p->nele_jac : 1);
 		if(view->jac_col_index == NULL
 			|| view->jac_value == NULL || view->scaled_jac_value == NULL
 			|| irow == NULL || jcol == NULL || jac == NULL
 		){
-			ASC_FREE(irow);
-			ASC_FREE(jcol);
-			ASC_FREE(jac);
+			A4SQP_FREE(irow);
+			A4SQP_FREE(jcol);
+			A4SQP_FREE(jac);
 			return 1;
 		}
 		if(!p->eval_jac_g(p->n,(double *)x,new_x,p->m,p->nele_jac,irow,jcol,NULL,solve->user_data)
@@ -635,9 +633,9 @@ static int a4sqp_c_build_view(struct A4SqpCSolve *solve, const double *x, int ne
 		){
 			++view->derivative_errors;
 			solve->callback_error = 1;
-			ASC_FREE(irow);
-			ASC_FREE(jcol);
-			ASC_FREE(jac);
+			A4SQP_FREE(irow);
+			A4SQP_FREE(jcol);
+			A4SQP_FREE(jac);
 			return 0;
 		}
 		for(i = 0; i <= p->m; ++i){
@@ -653,11 +651,11 @@ static int a4sqp_c_build_view(struct A4SqpCSolve *solve, const double *x, int ne
 			view->jac_row_start[i + 1] += view->jac_row_start[i];
 		}
 		{
-			int32 *next = ASC_NEW_ARRAY_OR_NULL(int32,p->m > 0 ? p->m : 1);
+			int32 *next = A4SQP_NEW_ARRAY_OR_NULL(int32,p->m > 0 ? p->m : 1);
 			if(next == NULL){
-				ASC_FREE(irow);
-				ASC_FREE(jcol);
-				ASC_FREE(jac);
+				A4SQP_FREE(irow);
+				A4SQP_FREE(jcol);
+				A4SQP_FREE(jac);
 				return 1;
 			}
 			for(i = 0; i < p->m; ++i){
@@ -669,10 +667,10 @@ static int a4sqp_c_build_view(struct A4SqpCSolve *solve, const double *x, int ne
 			if(!isfinite(jac[k])){
 				++view->derivative_errors;
 				solve->callback_error = 1;
-				ASC_FREE(next);
-				ASC_FREE(irow);
-				ASC_FREE(jcol);
-				ASC_FREE(jac);
+				A4SQP_FREE(next);
+				A4SQP_FREE(irow);
+				A4SQP_FREE(jcol);
+				A4SQP_FREE(jac);
 				return 0;
 			}
 			if(row >= 0 && row < p->m && col >= 0 && col < p->n){
@@ -682,11 +680,11 @@ static int a4sqp_c_build_view(struct A4SqpCSolve *solve, const double *x, int ne
 					view->scaled_jac_value[pos] = view->rel_scale[row] * jac[k] * view->var_scale[col];
 				}
 			}
-			ASC_FREE(next);
+			A4SQP_FREE(next);
 		}
-		ASC_FREE(irow);
-		ASC_FREE(jcol);
-		ASC_FREE(jac);
+		A4SQP_FREE(irow);
+		A4SQP_FREE(jcol);
+		A4SQP_FREE(jac);
 	}
 	return 0;
 }
@@ -706,12 +704,12 @@ static double a4sqp_c_projected_gradient_inf(struct A4SqpCSolve *solve){
 static int a4sqp_c_hess_reset_identity(struct A4SqpCSolve *solve, double diag){
 	int i;
 	int n = solve->problem->n;
-	ASC_FREE(solve->hess);
+	A4SQP_FREE(solve->hess);
 	solve->hess = NULL;
 	solve->hess_n = 0;
 	solve->hess_updates = 0;
 	if(n > 0){
-		solve->hess = ASC_NEW_ARRAY_CLEAR(double,n * n);
+		solve->hess = A4SQP_NEW_ARRAY_CLEAR(double,n * n);
 		if(solve->hess == NULL){
 			return 1;
 		}
@@ -766,15 +764,15 @@ static int a4sqp_c_hess_update_exact(struct A4SqpCSolve *solve, const double *x)
 		}
 	}
 	memset(solve->hess,0,(size_t)n * (size_t)n * sizeof(*solve->hess));
-	irow = ASC_NEW_ARRAY_OR_NULL(A4SqpIndex,p->nele_hess);
-	jcol = ASC_NEW_ARRAY_OR_NULL(A4SqpIndex,p->nele_hess);
-	values = ASC_NEW_ARRAY_OR_NULL(double,p->nele_hess);
-	lambda = ASC_NEW_ARRAY_CLEAR(double,p->m > 0 ? p->m : 1);
+	irow = A4SQP_NEW_ARRAY_OR_NULL(A4SqpIndex,p->nele_hess);
+	jcol = A4SQP_NEW_ARRAY_OR_NULL(A4SqpIndex,p->nele_hess);
+	values = A4SQP_NEW_ARRAY_OR_NULL(double,p->nele_hess);
+	lambda = A4SQP_NEW_ARRAY_CLEAR(double,p->m > 0 ? p->m : 1);
 	if(irow == NULL || jcol == NULL || values == NULL || lambda == NULL){
-		ASC_FREE(irow);
-		ASC_FREE(jcol);
-		ASC_FREE(values);
-		ASC_FREE(lambda);
+		A4SQP_FREE(irow);
+		A4SQP_FREE(jcol);
+		A4SQP_FREE(values);
+		A4SQP_FREE(lambda);
 		return 1;
 	}
 	obj_factor = (solve->has_objective && !a4sqp_c_streq(p->opt.hessian,"EXACT_LAGRANGIAN")) ? p->obj_scaling : p->obj_scaling;
@@ -812,10 +810,10 @@ static int a4sqp_c_hess_update_exact(struct A4SqpCSolve *solve, const double *x)
 		values,
 		solve->user_data
 	)){
-		ASC_FREE(irow);
-		ASC_FREE(jcol);
-		ASC_FREE(values);
-		ASC_FREE(lambda);
+		A4SQP_FREE(irow);
+		A4SQP_FREE(jcol);
+		A4SQP_FREE(values);
+		A4SQP_FREE(lambda);
 		solve->callback_error = 1;
 		return 0;
 	}
@@ -838,10 +836,10 @@ static int a4sqp_c_hess_update_exact(struct A4SqpCSolve *solve, const double *x)
 	}
 	solve->last_hess_reg = a4sqp_c_hess_regularize_psd(solve);
 	p->stats.regularization_size = solve->last_hess_reg;
-	ASC_FREE(irow);
-	ASC_FREE(jcol);
-	ASC_FREE(values);
-	ASC_FREE(lambda);
+	A4SQP_FREE(irow);
+	A4SQP_FREE(jcol);
+	A4SQP_FREE(values);
+	A4SQP_FREE(lambda);
 	return 0;
 }
 
@@ -868,13 +866,13 @@ static void a4sqp_c_hess_bfgs_update(
 	if(n <= 0 || solve->hess == NULL || old_x == NULL || old_grad == NULL){
 		return;
 	}
-	s = ASC_NEW_ARRAY_OR_NULL(double,n);
-	y = ASC_NEW_ARRAY_OR_NULL(double,n);
-	bs = ASC_NEW_ARRAY_OR_NULL(double,n);
+	s = A4SQP_NEW_ARRAY_OR_NULL(double,n);
+	y = A4SQP_NEW_ARRAY_OR_NULL(double,n);
+	bs = A4SQP_NEW_ARRAY_OR_NULL(double,n);
 	if(s == NULL || y == NULL || bs == NULL){
-		ASC_FREE(s);
-		ASC_FREE(y);
-		ASC_FREE(bs);
+		A4SQP_FREE(s);
+		A4SQP_FREE(y);
+		A4SQP_FREE(bs);
 		return;
 	}
 	for(i = 0; i < n; ++i){
@@ -902,9 +900,9 @@ static void a4sqp_c_hess_bfgs_update(
 		}
 	}
 	if(sy <= 1e-14 || sbs <= 1e-14){
-		ASC_FREE(s);
-		ASC_FREE(y);
-		ASC_FREE(bs);
+		A4SQP_FREE(s);
+		A4SQP_FREE(y);
+		A4SQP_FREE(bs);
 		return;
 	}
 	for(i = 0; i < n; ++i){
@@ -915,9 +913,9 @@ static void a4sqp_c_hess_bfgs_update(
 	solve->last_hess_reg = a4sqp_c_hess_regularize_psd(solve);
 	solve->problem->stats.regularization_size = solve->last_hess_reg;
 	++solve->hess_updates;
-	ASC_FREE(s);
-	ASC_FREE(y);
-	ASC_FREE(bs);
+	A4SQP_FREE(s);
+	A4SQP_FREE(y);
+	A4SQP_FREE(bs);
 }
 
 struct A4SqpCLineSearchCtx {
@@ -1026,8 +1024,11 @@ static int a4sqp_c_core_prepare_hessian(void *vctx, struct A4SqpStepHessian *ste
 }
 
 static int a4sqp_c_core_solve_qp(void *vctx, struct A4SqpQp *qp){
-	(void)vctx;
-	return a4sqp_qp_solve_highs(qp,NULL) == 0 ? 0 : 1;
+	struct A4SqpCCoreStepCtx *ctx = (struct A4SqpCCoreStepCtx *)vctx;
+	if(ctx == NULL || ctx->solve == NULL || ctx->solve->problem == NULL){
+		return 1;
+	}
+	return a4sqp_qp_solve_highs(qp,ctx->solve->problem->opt.feas_tol,0) == 0 ? 0 : 1;
 }
 
 static void a4sqp_c_core_after_qp_solve(void *vctx, const struct A4SqpQp *qp){
@@ -1075,7 +1076,7 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		return A4SqpInsufficientMemory;
 	}
 	if(p->m > 0){
-		solve->lambda = ASC_NEW_ARRAY_CLEAR(double,p->m);
+		solve->lambda = A4SQP_NEW_ARRAY_CLEAR(double,p->m);
 		if(solve->lambda == NULL){
 			return A4SqpInsufficientMemory;
 		}
@@ -1241,8 +1242,8 @@ enum A4SqpApplicationReturnStatus A4SqpSolve(
 		(void)a4sqp_c_view_violation(&solve.view,&p->stats.max_constraint_violation);
 		p->stats.projected_gradient_inf = a4sqp_c_projected_gradient_inf(&solve);
 	}
-	ASC_FREE(solve.hess);
-	ASC_FREE(solve.lambda);
+	A4SQP_FREE(solve.hess);
+	A4SQP_FREE(solve.lambda);
 	a4sqp_qp_destroy(&solve.qp);
 	a4sqp_view_destroy(&solve.view);
 	return status;
