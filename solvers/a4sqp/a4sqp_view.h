@@ -9,6 +9,8 @@
 #include <ascend/system/rel.h>
 #include <ascend/system/slv_client.h>
 
+#include "a4sqp_core_view.h"
+
 struct A4SqpView {
 	int32 n_var;
 	int32 n_rel;
@@ -32,6 +34,7 @@ struct A4SqpView {
 	real64 *scaled_var_upper;
 	int32 *rel_sindex;
 	enum rel_enum *relop;
+	enum A4SqpRelKind *rel_kind;
 	real64 *rel_residual;
 	real64 *rel_lower;
 	real64 *rel_upper;
@@ -42,6 +45,7 @@ struct A4SqpView {
 	int32 jac_nnz;
 	int32 jac_max_row_nnz;
 	int32 *jac_row_start;
+	int32 *jac_col_index;
 	int32 *jac_col_sindex;
 	real64 *jac_value;
 	real64 *scaled_jac_value;
@@ -54,6 +58,7 @@ struct A4SqpView {
 
 void a4sqp_view_init(struct A4SqpView *view);
 void a4sqp_view_destroy(struct A4SqpView *view);
+void a4sqp_view_get_core(const struct A4SqpView *view, struct A4SqpCoreView *core);
 int a4sqp_view_build(struct A4SqpView *view, slv_system_t server, int safe, const char *scaleopt);
 
 #endif

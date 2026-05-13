@@ -8,7 +8,7 @@
 #include <ascend/general/platform.h>
 #include <ascend/system/slv_client.h>
 
-#include "a4sqp_view.h"
+#include "a4sqp_core_view.h"
 
 #define A4SQP_QP_COL_STEP 1
 #define A4SQP_QP_COL_ELASTIC_LOWER 2
@@ -67,10 +67,20 @@ struct A4SqpQpSpikeResult {
 	double row_dual[2];
 };
 
+struct A4SqpView;
+
 ASC_EXPORT int a4sqp_qp_highs_spike(struct A4SqpQpSpikeResult *result);
 
 void a4sqp_qp_init(struct A4SqpQp *qp);
 void a4sqp_qp_destroy(struct A4SqpQp *qp);
+int a4sqp_qp_build_from_core_view(
+	struct A4SqpQp *qp,
+	const struct A4SqpCoreView *view,
+	const struct A4SqpStepHessian *step_hess,
+	real64 trust_radius,
+	real64 elastic_penalty,
+	real64 feas_tol
+);
 int a4sqp_qp_build_from_view(
 	struct A4SqpQp *qp,
 	const struct A4SqpView *view,

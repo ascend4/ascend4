@@ -23,16 +23,6 @@ static real64 a4sqp_safe_scale(real64 value){
 	return value;
 }
 
-static int32 a4sqp_find_var_col(const struct A4SqpView *view, int32 sindex){
-	int32 i;
-	for(i = 0; i < view->n_var; ++i){
-		if(view->var_sindex[i] == sindex){
-			return i;
-		}
-	}
-	return -1;
-}
-
 static real64 a4sqp_scale_bound(real64 bound, real64 scale, real64 inf_bound){
 	if(bound == inf_bound){
 		return bound;
@@ -63,7 +53,7 @@ static void a4sqp_init_rel_scaling(struct A4SqpView *view, const char *mode){
 			int32 k;
 			real64 sum = 0.0;
 			for(k = view->jac_row_start[i]; k < view->jac_row_start[i + 1]; ++k){
-				int32 col = a4sqp_find_var_col(view,view->jac_col_sindex[k]);
+				int32 col = view->jac_col_index != NULL ? view->jac_col_index[k] : -1;
 				real64 value = view->jac_value[k];
 				if(col >= 0){
 					value *= view->var_scale[col];
@@ -84,7 +74,7 @@ static void a4sqp_scale_jacobian(struct A4SqpView *view){
 	for(row = 0; row < view->n_rel; ++row){
 		int32 k;
 		for(k = view->jac_row_start[row]; k < view->jac_row_start[row + 1]; ++k){
-			int32 col = a4sqp_find_var_col(view,view->jac_col_sindex[k]);
+			int32 col = view->jac_col_index != NULL ? view->jac_col_index[k] : -1;
 			real64 col_scale = col >= 0 ? view->var_scale[col] : 1.0;
 			view->scaled_jac_value[k] = view->rel_scale[row] * view->jac_value[k] * col_scale;
 		}

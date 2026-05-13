@@ -8,6 +8,7 @@
 
 #include "a4sqp_diag.h"
 #include "a4sqp_params.h"
+#include "a4sqp_view.h"
 
 #include <limits.h>
 #include <math.h>
@@ -249,16 +250,6 @@ static real64 a4sqp_qp_to_highs_bound(real64 value, real64 inf){
 	return value;
 }
 
-static int32 a4sqp_qp_find_var_index(const struct A4SqpView *view, int32 sindex){
-	int32 i;
-	for(i = 0; i < view->n_var; ++i){
-		if(view->var_sindex[i] == sindex){
-			return i;
-		}
-	}
-	return -1;
-}
-
 void a4sqp_qp_init(struct A4SqpQp *qp){
 	if(qp == NULL){
 		return;
@@ -352,7 +343,7 @@ static void a4sqp_qp_init_col_metadata(struct A4SqpQp *qp){
 	}
 }
 
-static int a4sqp_qp_fill_matrix(const struct A4SqpView *view, struct A4SqpQp *qp){
+static int a4sqp_qp_fill_matrix(const struct A4SqpCoreView *view, struct A4SqpQp *qp){
 	int32 r;
 	int32 k;
 	int32 c;
@@ -371,7 +362,7 @@ static int a4sqp_qp_fill_matrix(const struct A4SqpView *view, struct A4SqpQp *qp
 	}
 	for(r = 0; r < view->n_rel; ++r){
 		for(k = view->jac_row_start[r]; k < view->jac_row_start[r + 1]; ++k){
-			c = a4sqp_qp_find_var_index(view,view->jac_col_sindex[k]);
+			c = view->jac_col_index != NULL ? view->jac_col_index[k] : -1;
 			if(c >= 0){
 				++counts[c];
 			}
@@ -388,7 +379,7 @@ static int a4sqp_qp_fill_matrix(const struct A4SqpView *view, struct A4SqpQp *qp
 
 	for(r = 0; r < view->n_rel; ++r){
 		for(k = view->jac_row_start[r]; k < view->jac_row_start[r + 1]; ++k){
-			c = a4sqp_qp_find_var_index(view,view->jac_col_sindex[k]);
+			c = view->jac_col_index != NULL ? view->jac_col_index[k] : -1;
 			if(c >= 0){
 				int32 pos = next[c]++;
 				qp->a_index[pos] = r;
@@ -410,7 +401,7 @@ static int a4sqp_qp_fill_matrix(const struct A4SqpView *view, struct A4SqpQp *qp
 	return 0;
 }
 
-static int32 a4sqp_qp_count_hessian_nz(const struct A4SqpView *view, const struct A4SqpStepHessian *step_hess){
+static int32 a4sqp_qp_count_hessian_nz(const struct A4SqpCoreView *view, const struct A4SqpStepHessian *step_hess){
 	int32 col;
 	int32 row;
 	int32 nnz = 0;
@@ -440,7 +431,7 @@ static int32 a4sqp_qp_count_hessian_nz(const struct A4SqpView *view, const struc
 }
 
 static void a4sqp_qp_fill_hessian(
-	const struct A4SqpView *view,
+	const struct A4SqpCoreView *view,
 	const struct A4SqpStepHessian *step_hess,
 	struct A4SqpQp *qp
 ){
@@ -481,9 +472,9 @@ static void a4sqp_qp_fill_hessian(
 	qp->q_start[qp->num_col] = nnz;
 }
 
-int a4sqp_qp_build_from_view(
+int a4sqp_qp_build_from_core_view(
 	struct A4SqpQp *qp,
-	const struct A4SqpView *view,
+	const struct A4SqpCoreView *view,
 	const struct A4SqpStepHessian *step_hess,
 	real64 trust_radius,
 	real64 elastic_penalty,
@@ -596,6 +587,19 @@ int a4sqp_qp_build_from_view(
 	}
 	a4sqp_qp_fill_hessian(view,step_hess,qp);
 	return 0;
+}
+
+int a4sqp_qp_build_from_view(
+	struct A4SqpQp *qp,
+	const struct A4SqpView *view,
+	const struct A4SqpStepHessian *step_hess,
+	real64 trust_radius,
+	real64 elastic_penalty,
+	real64 feas_tol
+){
+	struct A4SqpCoreView core;
+	a4sqp_view_get_core(view,&core);
+	return a4sqp_qp_build_from_core_view(qp,&core,step_hess,trust_radius,elastic_penalty,feas_tol);
 }
 
 static HighsInt *a4sqp_qp_copy_int_array(const int32 *src, int32 len){

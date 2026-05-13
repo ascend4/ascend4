@@ -13,6 +13,7 @@ coverage.info
 *.a
 *.def
 *.exe
+*.odt
 .scon*
 a4
 tmp/

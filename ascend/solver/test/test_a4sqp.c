@@ -22,6 +22,7 @@
 #include <ascend/utilities/ascDynaLoad.h>
 
 #include <solvers/a4sqp/a4sqp_internal.h>
+#include <solvers/a4sqp/a4sqp_c.h>
 #include <solvers/a4sqp/a4sqp_qp_highs.h>
 
 #include <test/common.h>
@@ -128,6 +129,35 @@ static int find_param_index(const slv_parameters_t *pp, const char *name){
 }
 
 typedef int (*a4sqp_qp_highs_spike_fn)(struct A4SqpQpSpikeResult *);
+typedef A4SqpProblem (*a4sqp_create_problem_fn)(
+	A4SqpIndex,
+	A4SqpNumber *,
+	A4SqpNumber *,
+	A4SqpIndex,
+	A4SqpNumber *,
+	A4SqpNumber *,
+	A4SqpIndex,
+	A4SqpIndex,
+	A4SqpIndex,
+	A4SqpEvalFCB,
+	A4SqpEvalGCB,
+	A4SqpEvalGradFCB,
+	A4SqpEvalJacGCB,
+	A4SqpEvalHCB
+);
+typedef void (*a4sqp_free_problem_fn)(A4SqpProblem);
+typedef A4SqpBool (*a4sqp_add_int_option_fn)(A4SqpProblem, char *, A4SqpInt);
+typedef enum A4SqpApplicationReturnStatus (*a4sqp_solve_fn)(
+	A4SqpProblem,
+	A4SqpNumber *,
+	A4SqpNumber *,
+	A4SqpNumber *,
+	A4SqpNumber *,
+	A4SqpNumber *,
+	A4SqpNumber *,
+	A4SqpUserDataPtr
+);
+typedef A4SqpBool (*a4sqp_get_stats_fn)(A4SqpProblem, struct A4SqpSolveStats *);
 
 static a4sqp_qp_highs_spike_fn a4sqp_load_qp_spike(void){
 	const char *lib = "solvers/a4sqp/liba4sqp_ascend.so";
@@ -138,6 +168,105 @@ static a4sqp_qp_highs_spike_fn a4sqp_load_qp_spike(void){
 	}
 	fn = Asc_DynamicFunction(lib,"a4sqp_qp_highs_spike");
 	return (a4sqp_qp_highs_spike_fn)fn;
+}
+
+static A4SqpBool a4sqp_c_smoke_eval_f(
+	A4SqpIndex n,
+	A4SqpNumber *x,
+	A4SqpBool new_x,
+	A4SqpNumber *obj_value,
+	A4SqpUserDataPtr user_data
+){
+	(void)n;
+	(void)new_x;
+	(void)user_data;
+	*obj_value = (x[0] - 1.0) * (x[0] - 1.0);
+	return A4SQP_TRUE;
+}
+
+static A4SqpBool a4sqp_c_smoke_eval_grad_f(
+	A4SqpIndex n,
+	A4SqpNumber *x,
+	A4SqpBool new_x,
+	A4SqpNumber *grad_f,
+	A4SqpUserDataPtr user_data
+){
+	(void)n;
+	(void)new_x;
+	(void)user_data;
+	grad_f[0] = 2.0 * (x[0] - 1.0);
+	return A4SQP_TRUE;
+}
+
+static void test_a4sqp_c_api_objective_only(void){
+	const char *lib = "solvers/a4sqp/liba4sqp_ascend.so";
+	a4sqp_create_problem_fn create_problem;
+	a4sqp_free_problem_fn free_problem;
+	a4sqp_add_int_option_fn add_int_option;
+	a4sqp_solve_fn solve;
+	a4sqp_get_stats_fn get_stats;
+	A4SqpProblem problem = NULL;
+	A4SqpNumber x_l[1] = {-1e20};
+	A4SqpNumber x_u[1] = {1e20};
+	A4SqpNumber x[1] = {3.0};
+	A4SqpNumber obj = 0.0;
+	struct A4SqpSolveStats stats;
+	enum A4SqpApplicationReturnStatus status;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/a4sqp"));
+
+	solver_destroy_engines();
+	if(0 != package_load("a4sqp",NULL)){
+		CONSOLE_DEBUG("Skipping A4SQP C API test: solver package not available");
+		goto cleanup;
+	}
+
+	CU_ASSERT_FATAL(Asc_DynamicLoad(lib,NULL) == 0);
+	create_problem = (a4sqp_create_problem_fn)Asc_DynamicFunction(lib,"CreateA4SqpProblem");
+	free_problem = (a4sqp_free_problem_fn)Asc_DynamicFunction(lib,"FreeA4SqpProblem");
+	add_int_option = (a4sqp_add_int_option_fn)Asc_DynamicFunction(lib,"AddA4SqpIntOption");
+	solve = (a4sqp_solve_fn)Asc_DynamicFunction(lib,"A4SqpSolve");
+	get_stats = (a4sqp_get_stats_fn)Asc_DynamicFunction(lib,"GetA4SqpSolveStatistics");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(create_problem);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(free_problem);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(add_int_option);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(solve);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(get_stats);
+
+	problem = create_problem(
+		1,
+		x_l,
+		x_u,
+		0,
+		NULL,
+		NULL,
+		0,
+		0,
+		0,
+		a4sqp_c_smoke_eval_f,
+		NULL,
+		a4sqp_c_smoke_eval_grad_f,
+		NULL,
+		NULL
+	);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(problem);
+	CU_ASSERT(add_int_option(problem,"max_iter",20));
+	status = solve(problem,x,NULL,&obj,NULL,NULL,NULL,NULL);
+	CU_ASSERT_EQUAL(status,A4SqpSolveSucceeded);
+	CU_ASSERT_DOUBLE_EQUAL(x[0],1.0,1e-6);
+	CU_ASSERT_DOUBLE_EQUAL(obj,0.0,1e-10);
+	CU_ASSERT(get_stats(problem,&stats));
+	CU_ASSERT(stats.iterations <= 10);
+	CU_ASSERT(stats.projected_gradient_inf <= 1e-6);
+
+cleanup:
+	if(problem != NULL && free_problem != NULL){
+		free_problem(problem);
+	}
+	(void)Asc_DynamicUnLoad(lib);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
 }
 
 static void test_a4sqp_register(void){
@@ -1502,6 +1631,7 @@ cleanup:
 #define TESTS(T) \
 	T(a4sqp_register) \
 	T(a4sqp_qp_highs_spike) \
+	T(a4sqp_c_api_objective_only) \
 	T(a4sqp_basic_view_presolve) \
 	T(a4sqp_basic_solve) \
 	T(a4sqp_objective_only_iterate_contract) \

@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+"""Run A4SQP/IPOPTC CUTEst packages over a problem list and collect JSONL."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import pathlib
+import subprocess
+import sys
+from datetime import datetime, timezone
+
+
+def repo_root() -> pathlib.Path:
+    return pathlib.Path(__file__).resolve().parents[3]
+
+
+def load_problem_names(args: argparse.Namespace) -> list[str]:
+    names: list[str] = []
+    for item in args.problem:
+        names.append(item.strip())
+    if args.problem_file:
+        for line in pathlib.Path(args.problem_file).read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            names.append(line.split()[0])
+    return names
+
+
+def packages_for_solver(solver: str) -> list[str]:
+    if solver == "both":
+        return ["a4sqp", "ipoptc"]
+    return [solver]
+
+
+def run_one(problem: str, package: str, args: argparse.Namespace, env: dict[str, str]) -> dict[str, object]:
+    cmd = [
+        args.runcutest,
+        "-p",
+        package,
+        "-D",
+        problem,
+    ]
+    if args.rebuild:
+        cmd.append("-r")
+    if args.keep:
+        cmd.append("-k")
+    timed_out = False
+    try:
+        proc = subprocess.run(
+            cmd,
+            cwd=args.workdir,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+            timeout=args.timeout_sec,
+        )
+        stdout = proc.stdout
+        returncode: int | None = proc.returncode
+    except subprocess.TimeoutExpired as exc:
+        timed_out = True
+        stdout = exc.stdout or ""
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode(errors="replace")
+        stdout += f"\nRUNNER_TIMEOUT: exceeded {args.timeout_sec} seconds\n"
+        returncode = None
+    result: dict[str, object] | None = None
+    for line in stdout.splitlines():
+        line = line.strip()
+        if line.startswith("{") and line.endswith("}"):
+            try:
+                result = json.loads(line)
+            except json.JSONDecodeError:
+                pass
+    if result is None:
+        result = {
+            "solver": package.upper(),
+            "problem": problem,
+            "status": None,
+            "driver_error": "timeout" if timed_out else "no_json_result",
+        }
+    if timed_out:
+        result["driver_error"] = "timeout"
+        result["timeout_sec"] = args.timeout_sec
+    result["package"] = package
+    result["problem_requested"] = problem
+    result["driver_returncode"] = returncode
+    result["timestamp_utc"] = datetime.now(timezone.utc).isoformat()
+    if args.log_dir:
+        log_dir = pathlib.Path(args.log_dir)
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_path = log_dir / f"{problem}.{package}.log"
+        log_path.write_text(stdout)
+        result["log"] = str(log_path)
+    return result
+
+
+def main(argv: list[str]) -> int:
+    root = repo_root()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("problem", nargs="*", help="CUTEst problem names")
+    parser.add_argument("--problem-file", help="File containing problem names")
+    parser.add_argument("--solver", choices=["a4sqp", "ipoptc", "both"], default="a4sqp")
+    parser.add_argument("--out", default="cutest_a4sqp_ipoptc_results.jsonl")
+    parser.add_argument("--log-dir", default="cutest_a4sqp_ipoptc_logs")
+    parser.add_argument("--workdir", default="/tmp")
+    parser.add_argument("--cutest", default=os.environ.get("CUTEST", "/home/john/CUTEst"))
+    parser.add_argument("--sifdecode", default=os.environ.get("SIFDECODE", "/home/john/sifdecode"))
+    parser.add_argument("--archdefs", default=os.environ.get("ARCHDEFS", "/home/john/archdefs"))
+    parser.add_argument("--runcutest", default=os.environ.get("RUNCUTEST", "runcutest"))
+    parser.add_argument("--max-iter", type=int, default=200)
+    parser.add_argument("--tol", type=float, default=1e-7)
+    parser.add_argument("--elastic-penalty", type=float, default=100.0)
+    parser.add_argument("--a4sqp-hessian", default=os.environ.get("A4SQP_HESSIAN", "BFGS"))
+    parser.add_argument("--a4sqp-hess-reg", type=float, default=float(os.environ.get("A4SQP_HESS_REG", "1e-8")))
+    parser.add_argument("--ipopt-max-iter", type=int)
+    parser.add_argument("--ipopt-tol", type=float)
+    parser.add_argument("--ipopt-hessian", default="limited-memory")
+    parser.add_argument("--ipopt-print-level", type=int, default=0)
+    parser.add_argument("--rebuild", action="store_true")
+    parser.add_argument("--keep", action="store_true")
+    parser.add_argument("--timeout-sec", type=float, help="Per runcutest invocation timeout")
+    args = parser.parse_args(argv)
+
+    problems = load_problem_names(args)
+    if not problems:
+        parser.error("provide at least one problem or --problem-file")
+
+    install = root / "solvers" / "a4sqp" / "cutest" / "install_cutest_package.sh"
+    subprocess.run([str(install)], cwd=root, check=True)
+
+    env = os.environ.copy()
+    env["CUTEST"] = args.cutest
+    env["SIFDECODE"] = args.sifdecode
+    env["ARCHDEFS"] = args.archdefs
+    env["ASCEND_ROOT"] = str(root)
+    env["A4SQP_MAX_ITER"] = str(args.max_iter)
+    env["A4SQP_TOL"] = str(args.tol)
+    env["A4SQP_ELASTIC_PENALTY"] = str(args.elastic_penalty)
+    env["A4SQP_HESSIAN"] = args.a4sqp_hessian
+    env["A4SQP_HESS_REG"] = str(args.a4sqp_hess_reg)
+    env["IPOPTC_MAX_ITER"] = str(args.ipopt_max_iter if args.ipopt_max_iter is not None else args.max_iter)
+    env["IPOPTC_TOL"] = str(args.ipopt_tol if args.ipopt_tol is not None else args.tol)
+    env["IPOPTC_HESSIAN"] = args.ipopt_hessian
+    env["IPOPTC_PRINT_LEVEL"] = str(args.ipopt_print_level)
+    lib_paths = [
+        str(root / "solvers" / "a4sqp"),
+        str(root),
+        "/home/john/.local/lib",
+    ]
+    env["LD_LIBRARY_PATH"] = ":".join(lib_paths + [env.get("LD_LIBRARY_PATH", "")])
+
+    out_path = pathlib.Path(args.out)
+    with out_path.open("a", encoding="utf-8") as out:
+        for problem in problems:
+            for package in packages_for_solver(args.solver):
+                result = run_one(problem, package, args, env)
+                out.write(json.dumps(result, sort_keys=True) + "\n")
+                out.flush()
+                print(json.dumps(result, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

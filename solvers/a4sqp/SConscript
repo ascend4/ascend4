@@ -51,14 +51,19 @@ if env.get('WITH_A4SQP'):
 		else:
 			solver_env.Append(LIBS=['ascend'],LIBPATH=['#'])
 			lib = solver_env.SharedLibrary('a4sqp',[
-					'a4sqp.c',
-					'a4sqp_ascend.c',
-					'a4sqp_diag.c',
-					'a4sqp_params.c',
-					'a4sqp_qp_highs.c',
-					'a4sqp_scale.c',
-					'a4sqp_view.c'
-				],
+				'a4sqp.c',
+				'a4sqp_ascend.c',
+				'a4sqp_c.c',
+				'a4sqp_core.c',
+				'a4sqp_diag.c',
+				'a4sqp_hessian.c',
+				'a4sqp_params.c',
+				'a4sqp_qp_highs.c',
+				'a4sqp_scale.c',
+				'a4sqp_trust.c',
+				'a4sqp_view.c',
+				'a4sqp_view_ascend.c'
+			],
 				SHLIBSUFFIX = env['EXTLIB_SUFFIX'],
 				SHLIBPREFIX = env['EXTLIB_PREFIX']
 			)

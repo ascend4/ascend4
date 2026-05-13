@@ -18,6 +18,21 @@ usable outside ASCEND through an IPOPT-like C problem ABI, but an ASCEND-native
 solver client can both consume and return richer information through
 `slv_system_t`.
 
+## Presolve/Postsolve Pin
+
+There is a separate optimization-layer idea that should remain on the design
+list: A4SQP could eventually run an optimization presolve before the core solve
+and a postsolve after it. That layer might remove fixed variables, tighten or
+substitute simple bounds, detect redundant rows, rescale or reorder the active
+NLP, and then map the reduced solution back to the original ASCEND problem.
+
+That is distinct from the current CUTEst/core-API cleanup. The current refactor
+should only establish a clean core-owned NLP vector and an ASCEND adapter that
+pushes that vector into `solver_var` objects for evaluation, similar to IPOPT
+and IDA. Presolve/postsolve may later sit above that adapter/core boundary, but
+it should not be mixed into the CUTEst benchmark definition or used to explain
+current CUTEst performance.
+
 ## Implemented Solver Shape
 
 The current implementation remains deliberately conservative, but the initial
