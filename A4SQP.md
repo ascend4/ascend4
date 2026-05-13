@@ -44,7 +44,8 @@ Core code currently lives in:
 - `solvers/a4sqp/a4sqp_core.c`: shared SQP step, merit, line-search,
   convergence, stationarity, violation, and trust-retry logic.
 - `solvers/a4sqp/a4sqp_core_view.h`: solver-neutral borrowed numeric view.
-- `solvers/a4sqp/a4sqp_hessian.c`: Hessian utilities and PSD regularization.
+- `solvers/a4sqp/a4sqp_hessian.c`: dense Hessian model lifecycle, damped BFGS
+  update, matrix-vector products, and PSD regularization.
 - `solvers/a4sqp/a4sqp_qp_highs.c`: QP assembly and HiGHS solve glue.
 - `solvers/a4sqp/a4sqp_scale.c`: numeric scaling helpers.
 - `solvers/a4sqp/a4sqp_trust.c`: trust-region policy.
@@ -54,7 +55,7 @@ Core code currently lives in:
 
 The core solver is allowed to decide when solver status should change, when a
 step is accepted, when a QP retry is needed, when convergence is reached, and
-how Hessians are regularized before reaching HiGHS.
+how approximate Hessians are updated and regularized before reaching HiGHS.
 
 ### `liba4sqp_ascend.so`
 
@@ -95,7 +96,26 @@ The ASCEND adapter is allowed to:
 
 The ASCEND adapter should not implement solver policy. In particular, merit
 acceptance, line-search behavior, QP retry policy, convergence tests, elastic
-row logic, and Hessian PSD regularization belong in core code.
+row logic, BFGS update mechanics, and Hessian PSD regularization belong in core
+code.
+
+Exact Hessian assembly is still adapter-side because ASCEND exact Hessians are
+obtained from `relman` and therefore require ASCEND relation handles. That is
+data acquisition, not SQP policy. The resulting numeric Hessian is still
+regularized by shared core Hessian utilities before QP assembly.
+
+Acceptable convergence is also core policy. Both the C API and ASCEND adapter
+expose `acceptable_tol` and `acceptable_iter`, but the default is disabled
+(`acceptable_iter = 0`) so existing ASCEND model tests continue to require
+strict convergence unless the user explicitly opts into relaxed termination.
+
+Stationarity handling is moving toward KKT-residual based convergence. The
+shared core now computes a primal/dual/complementarity KKT residual, and the
+C API exposes an opt-in `kkt_convergence` option that requires this residual to
+be small before objective problems are reported as solved. The standalone C API
+and ASCEND adapter default this option off for compatibility while regressions
+are reviewed; the CUTEst runner defaults it on so benchmark pass counts are
+not inflated by constrained small-step exits with high stationarity residuals.
 
 ## Numeric View
 
@@ -142,6 +162,13 @@ It intentionally follows IPOPT's C callback shape:
 This API is the intended boundary for SIFDecode/CUTEst benchmarking and other
 non-ASCEND uses. It should stay free of ASCEND concepts.
 
+The C API supports IPOPT-like acceptable termination. Set
+`acceptable_iter > 0` and `acceptable_tol` to permit return status
+`A4SqpSolvedToAcceptableLevel` after consecutive relaxed convergence checks.
+This is useful for CUTEst triage because many current failures are near-solved
+iteration-limit exits, but it should be treated as an explicit benchmark
+profile rather than the default solver semantics.
+
 ## CUTEst / SIFDecode Bridge
 
 The CUTEst bridge should remain thin:
@@ -164,6 +191,13 @@ to the same result when solver options, scaling, bound conventions, initial
 guesses, and derivative data are harmonized. If the same problem behaves
 differently through the two frontends, that should be treated as an adapter or
 normalization bug until proven otherwise.
+
+The CUTEst runner exposes the acceptable-convergence profile through
+`--acceptable-iter`, `--acceptable-tol`, `A4SQP_ACCEPTABLE_ITER`, and
+`A4SQP_ACCEPTABLE_TOL`. Acceptable convergence remains disabled by default.
+The runner also exposes stationarity-strict convergence through
+`--kkt-convergence`, `--no-kkt-convergence`, and `A4SQP_KKT_CONVERGENCE`; this
+is enabled by default for CUTEst profiling.
 
 ## Current Solver Shape
 
@@ -209,6 +243,39 @@ Representative model-level checks are:
 ```
 
 Both currently solve with A4SQP.
+
+Recent CUTEst smoke status, using a fixed-size smooth NLP sample capped at
+`n <= 20`, `m <= 20`, 20 problems, BFGS, 200 iterations, and KKT convergence
+enabled:
+
+- strict profile: 4/20 returned clean success;
+- acceptable profile with `--acceptable-iter 5`: 11/20 returned clean success
+  or acceptable success;
+- 7/20 were near-solved maximum-iteration exits with KKT residual below
+  `1e-5` but above the strict tolerance;
+- 5/20 were maximum-iteration stationarity failures;
+- 2/20 were line-search failures;
+- 1/20 was infeasible/stalled;
+- 1/20 was a QP failure.
+
+The CUTEst runner now records an `outcome_class` field to separate failures by
+mechanism. With KKT convergence disabled, the same sample previously had 6/20
+solver-status successes, but 2 of those had high KKT residuals. Those cases are
+now reported as stationarity failures or near-solved exits in CUTEst profiling
+rather than clean successes.
+
+Two experimental globalization knobs exist for triage:
+
+- `filter_accept`: constrained filter-lite acceptance for merit-decreasing,
+  feasibility-improving steps that fail the predicted-reduction ratio;
+- `trust_unconstrained`: applies the existing trust-region bound and trust
+  retries to objective-only problems.
+
+Both are disabled by default. In the 20-problem sample neither improved pass
+count, and `filter_accept` made one stalled constrained case fail earlier. The
+evidence still points first at acceptable termination/stationarity handling and
+then a more deliberate restoration/SOC implementation, not enabling these
+experimental knobs globally.
 
 ## Presolve/Postsolve Pin
 

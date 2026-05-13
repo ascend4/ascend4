@@ -7,8 +7,10 @@ import argparse
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 
@@ -35,7 +37,53 @@ def packages_for_solver(solver: str) -> list[str]:
     return [solver]
 
 
-def run_one(problem: str, package: str, args: argparse.Namespace, env: dict[str, str]) -> dict[str, object]:
+def classify_result(result: dict[str, object], args: argparse.Namespace) -> str:
+    status = result.get("status")
+    if result.get("driver_error") == "timeout":
+        return "driver_timeout"
+    if result.get("driver_error"):
+        return "driver_error"
+    if status == 0:
+        kkt = result.get("kkt_error")
+        if kkt is not None and float(kkt) > max(args.acceptable_tol, args.tol):
+            return "strict_success_high_kkt"
+        return "strict_success"
+    if status == 1:
+        kkt = result.get("kkt_error")
+        if kkt is not None and float(kkt) > max(args.acceptable_tol, args.tol):
+            return "acceptable_success_high_kkt"
+        return "acceptable_success"
+    if status == -1:
+        maxvio = float(result.get("max_constraint_violation") or 0.0)
+        pg = float(result.get("projected_gradient_inf") or 0.0)
+        kkt = result.get("kkt_error")
+        kkt_value = float(kkt) if kkt is not None else None
+        near_tol = max(args.acceptable_tol, args.tol)
+        if kkt_value is not None and kkt_value <= near_tol:
+            return "max_iter_near_solved"
+        if kkt_value is None and maxvio <= near_tol and pg <= near_tol:
+            return "max_iter_near_solved"
+        if maxvio <= near_tol:
+            return "max_iter_stationarity"
+        return "max_iter_infeasible_or_stalled"
+    if status == -3:
+        if int(result.get("line_search_failures") or 0) > 0:
+            return "line_search_error"
+        if int(result.get("qp_failures") or 0) > 0:
+            return "qp_failure"
+        return "step_computation_error"
+    if status is None:
+        return "no_solver_status"
+    return "other_solver_failure"
+
+
+def run_one(
+    problem: str,
+    package: str,
+    args: argparse.Namespace,
+    env: dict[str, str],
+    job_index: int = 0,
+) -> dict[str, object]:
     cmd = [
         args.runcutest,
         "-p",
@@ -51,7 +99,7 @@ def run_one(problem: str, package: str, args: argparse.Namespace, env: dict[str,
     try:
         proc = subprocess.run(
             cmd,
-            cwd=args.workdir,
+            cwd=job_workdir(problem, package, args, job_index),
             env=env,
             text=True,
             stdout=subprocess.PIPE,
@@ -90,6 +138,7 @@ def run_one(problem: str, package: str, args: argparse.Namespace, env: dict[str,
     result["problem_requested"] = problem
     result["driver_returncode"] = returncode
     result["timestamp_utc"] = datetime.now(timezone.utc).isoformat()
+    result["outcome_class"] = classify_result(result, args)
     if args.log_dir:
         log_dir = pathlib.Path(args.log_dir)
         log_dir.mkdir(parents=True, exist_ok=True)
@@ -97,6 +146,64 @@ def run_one(problem: str, package: str, args: argparse.Namespace, env: dict[str,
         log_path.write_text(stdout)
         result["log"] = str(log_path)
     return result
+
+
+def safe_path_part(value: str) -> str:
+    return "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in value.strip())
+
+
+def job_workdir(problem: str, package: str, args: argparse.Namespace, job_index: int) -> str:
+    base = pathlib.Path(args.workdir)
+    if args.jobs <= 1:
+        base.mkdir(parents=True, exist_ok=True)
+        return str(base)
+    path = base / f"a4sqp_cutest_{job_index:04d}_{safe_path_part(problem)}_{safe_path_part(package)}"
+    path.mkdir(parents=True, exist_ok=True)
+    return str(path)
+
+
+def install_cutest_package(root: pathlib.Path, cutest_root: pathlib.Path, env: dict[str, str]) -> None:
+    install = root / "solvers" / "a4sqp" / "cutest" / "install_cutest_package.sh"
+    install_env = env.copy()
+    install_env["CUTEST"] = str(cutest_root)
+    subprocess.run([str(install)], cwd=root, env=install_env, check=True)
+
+
+def prepare_worker_envs(
+    args: argparse.Namespace,
+    root: pathlib.Path,
+    base_env: dict[str, str],
+) -> list[dict[str, str]]:
+    if args.jobs <= 1:
+        return [base_env]
+
+    source_cutest = pathlib.Path(args.cutest)
+    worker_parent = pathlib.Path(args.workdir) / "cutest_worker_roots"
+    if worker_parent.exists():
+        shutil.rmtree(worker_parent)
+    worker_parent.mkdir(parents=True, exist_ok=True)
+
+    worker_envs: list[dict[str, str]] = []
+    for worker_id in range(args.jobs):
+        worker_cutest = worker_parent / f"cutest_{worker_id:02d}"
+        shutil.copytree(source_cutest, worker_cutest, symlinks=True)
+        worker_env = base_env.copy()
+        worker_env["CUTEST"] = str(worker_cutest)
+        install_cutest_package(root, worker_cutest, worker_env)
+        worker_envs.append(worker_env)
+    return worker_envs
+
+
+def run_worker_jobs(
+    worker_id: int,
+    worker_jobs: list[tuple[int, str, str]],
+    args: argparse.Namespace,
+    env: dict[str, str],
+) -> dict[int, dict[str, object]]:
+    results: dict[int, dict[str, object]] = {}
+    for job_index, problem, package in worker_jobs:
+        results[job_index] = run_one(problem, package, args, env, job_index)
+    return results
 
 
 def main(argv: list[str]) -> int:
@@ -114,6 +221,18 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--runcutest", default=os.environ.get("RUNCUTEST", "runcutest"))
     parser.add_argument("--max-iter", type=int, default=200)
     parser.add_argument("--tol", type=float, default=1e-7)
+    parser.add_argument("--acceptable-iter", type=int, default=int(os.environ.get("A4SQP_ACCEPTABLE_ITER", "0")))
+    parser.add_argument("--acceptable-tol", type=float, default=float(os.environ.get("A4SQP_ACCEPTABLE_TOL", "1e-5")))
+    parser.add_argument("--filter-accept", action="store_true", default=os.environ.get("A4SQP_FILTER_ACCEPT", "0") not in ("", "0", "false", "False"))
+    parser.add_argument("--filter-margin", type=float, default=float(os.environ.get("A4SQP_FILTER_MARGIN", "1e-4")))
+    parser.add_argument("--trust-unconstrained", action="store_true", default=os.environ.get("A4SQP_TRUST_UNCONSTRAINED", "0") not in ("", "0", "false", "False"))
+    parser.add_argument("--restoration", action="store_true", default=os.environ.get("A4SQP_RESTORATION", "0") not in ("", "0", "false", "False"))
+    parser.add_argument("--restoration-trigger-iter", type=int, default=int(os.environ.get("A4SQP_RESTORATION_TRIGGER_ITER", "3")))
+    parser.add_argument("--restoration-improve", type=float, default=float(os.environ.get("A4SQP_RESTORATION_IMPROVE", "1e-3")))
+    parser.add_argument("--restoration-margin", type=float, default=float(os.environ.get("A4SQP_RESTORATION_MARGIN", "1e-4")))
+    parser.set_defaults(kkt_convergence=os.environ.get("A4SQP_KKT_CONVERGENCE", "1") not in ("", "0", "false", "False"))
+    parser.add_argument("--kkt-convergence", dest="kkt_convergence", action="store_true")
+    parser.add_argument("--no-kkt-convergence", dest="kkt_convergence", action="store_false")
     parser.add_argument("--elastic-penalty", type=float, default=100.0)
     parser.add_argument("--a4sqp-hessian", default=os.environ.get("A4SQP_HESSIAN", "BFGS"))
     parser.add_argument("--a4sqp-hess-reg", type=float, default=float(os.environ.get("A4SQP_HESS_REG", "1e-8")))
@@ -124,14 +243,12 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--rebuild", action="store_true")
     parser.add_argument("--keep", action="store_true")
     parser.add_argument("--timeout-sec", type=float, help="Per runcutest invocation timeout")
+    parser.add_argument("--jobs", type=int, default=1, help="Number of parallel runcutest worker processes")
     args = parser.parse_args(argv)
 
     problems = load_problem_names(args)
     if not problems:
         parser.error("provide at least one problem or --problem-file")
-
-    install = root / "solvers" / "a4sqp" / "cutest" / "install_cutest_package.sh"
-    subprocess.run([str(install)], cwd=root, check=True)
 
     env = os.environ.copy()
     env["CUTEST"] = args.cutest
@@ -140,6 +257,16 @@ def main(argv: list[str]) -> int:
     env["ASCEND_ROOT"] = str(root)
     env["A4SQP_MAX_ITER"] = str(args.max_iter)
     env["A4SQP_TOL"] = str(args.tol)
+    env["A4SQP_ACCEPTABLE_ITER"] = str(args.acceptable_iter)
+    env["A4SQP_ACCEPTABLE_TOL"] = str(args.acceptable_tol)
+    env["A4SQP_FILTER_ACCEPT"] = "1" if args.filter_accept else "0"
+    env["A4SQP_FILTER_MARGIN"] = str(args.filter_margin)
+    env["A4SQP_TRUST_UNCONSTRAINED"] = "1" if args.trust_unconstrained else "0"
+    env["A4SQP_RESTORATION"] = "1" if args.restoration else "0"
+    env["A4SQP_RESTORATION_TRIGGER_ITER"] = str(args.restoration_trigger_iter)
+    env["A4SQP_RESTORATION_IMPROVE"] = str(args.restoration_improve)
+    env["A4SQP_RESTORATION_MARGIN"] = str(args.restoration_margin)
+    env["A4SQP_KKT_CONVERGENCE"] = "1" if args.kkt_convergence else "0"
     env["A4SQP_ELASTIC_PENALTY"] = str(args.elastic_penalty)
     env["A4SQP_HESSIAN"] = args.a4sqp_hessian
     env["A4SQP_HESS_REG"] = str(args.a4sqp_hess_reg)
@@ -154,14 +281,62 @@ def main(argv: list[str]) -> int:
     ]
     env["LD_LIBRARY_PATH"] = ":".join(lib_paths + [env.get("LD_LIBRARY_PATH", "")])
 
+    install_cutest_package(root, pathlib.Path(args.cutest), env)
+    worker_envs = prepare_worker_envs(args, root, env)
+
+    jobs = [(problem, package) for problem in problems for package in packages_for_solver(args.solver)]
     out_path = pathlib.Path(args.out)
     with out_path.open("a", encoding="utf-8") as out:
-        for problem in problems:
-            for package in packages_for_solver(args.solver):
-                result = run_one(problem, package, args, env)
+        if args.jobs <= 1:
+            for job_index, (problem, package) in enumerate(jobs):
+                result = run_one(problem, package, args, env, job_index)
                 out.write(json.dumps(result, sort_keys=True) + "\n")
                 out.flush()
                 print(json.dumps(result, sort_keys=True))
+        else:
+            workdir_root = pathlib.Path(args.workdir)
+            workdir_root.mkdir(parents=True, exist_ok=True)
+            worker_jobs: list[list[tuple[int, str, str]]] = [[] for _ in range(args.jobs)]
+            for job_index, (problem, package) in enumerate(jobs):
+                worker_jobs[job_index % args.jobs].append((job_index, problem, package))
+
+            futures = {}
+            results: dict[int, dict[str, object]] = {}
+            with ThreadPoolExecutor(max_workers=args.jobs) as pool:
+                for worker_id, jobs_for_worker in enumerate(worker_jobs):
+                    future = pool.submit(
+                        run_worker_jobs,
+                        worker_id,
+                        jobs_for_worker,
+                        args,
+                        worker_envs[worker_id],
+                    )
+                    futures[future] = worker_id
+                for future in as_completed(futures):
+                    worker_id = futures[future]
+                    try:
+                        worker_results = future.result()
+                    except Exception as exc:  # pragma: no cover - defensive runner path
+                        worker_results = {}
+                        for job_index, problem, package in worker_jobs[worker_id]:
+                            result = {
+                                "solver": package.upper(),
+                                "problem": problem,
+                                "package": package,
+                                "problem_requested": problem,
+                                "status": None,
+                                "driver_error": f"runner_exception: {exc}",
+                                "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+                            }
+                            result["outcome_class"] = classify_result(result, args)
+                            worker_results[job_index] = result
+                    for job_index, result in sorted(worker_results.items()):
+                        results[job_index] = result
+                        print(json.dumps(result, sort_keys=True))
+            for job_index in range(len(jobs)):
+                result = results[job_index]
+                out.write(json.dumps(result, sort_keys=True) + "\n")
+            out.flush()
     return 0
 
 

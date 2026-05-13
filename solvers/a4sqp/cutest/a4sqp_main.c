@@ -542,8 +542,18 @@ int MAINENTRY(void){
 	AddA4SqpIntOption(problem,"max_backtrack",a4sqp_cutest_env_int("A4SQP_MAX_BACKTRACK",20));
 	AddA4SqpIntOption(problem,"trust_qp_retries",a4sqp_cutest_env_int("A4SQP_TRUST_QP_RETRIES",5));
 	AddA4SqpIntOption(problem,"print_level",a4sqp_cutest_env_int("A4SQP_PRINT_LEVEL",0));
+	AddA4SqpIntOption(problem,"acceptable_iter",a4sqp_cutest_env_int("A4SQP_ACCEPTABLE_ITER",0));
+	AddA4SqpIntOption(problem,"filter_accept",a4sqp_cutest_env_int("A4SQP_FILTER_ACCEPT",0));
+	AddA4SqpIntOption(problem,"trust_unconstrained",a4sqp_cutest_env_int("A4SQP_TRUST_UNCONSTRAINED",0));
+	AddA4SqpIntOption(problem,"kkt_convergence",a4sqp_cutest_env_int("A4SQP_KKT_CONVERGENCE",0));
+	AddA4SqpIntOption(problem,"restoration",a4sqp_cutest_env_int("A4SQP_RESTORATION",0));
+	AddA4SqpIntOption(problem,"restoration_trigger_iter",a4sqp_cutest_env_int("A4SQP_RESTORATION_TRIGGER_ITER",3));
 	AddA4SqpNumOption(problem,"tol",a4sqp_cutest_env_double("A4SQP_TOL",1e-7));
+	AddA4SqpNumOption(problem,"acceptable_tol",a4sqp_cutest_env_double("A4SQP_ACCEPTABLE_TOL",1e-5));
 	AddA4SqpNumOption(problem,"elastic_penalty",a4sqp_cutest_env_double("A4SQP_ELASTIC_PENALTY",100.0));
+	AddA4SqpNumOption(problem,"filter_margin",a4sqp_cutest_env_double("A4SQP_FILTER_MARGIN",1e-4));
+	AddA4SqpNumOption(problem,"restoration_improve",a4sqp_cutest_env_double("A4SQP_RESTORATION_IMPROVE",1e-3));
+	AddA4SqpNumOption(problem,"restoration_margin",a4sqp_cutest_env_double("A4SQP_RESTORATION_MARGIN",1e-4));
 	AddA4SqpNumOption(problem,"trust_radius_init",a4sqp_cutest_env_double("A4SQP_TRUST_RADIUS_INIT",1.0));
 	AddA4SqpNumOption(problem,"hess_reg",a4sqp_cutest_env_double("A4SQP_HESS_REG",1e-8));
 	AddA4SqpStrOption(problem,"hessian",(char *)a4sqp_cutest_env_string("A4SQP_HESSIAN","BFGS"));
@@ -590,6 +600,16 @@ int MAINENTRY(void){
 	printf("\"projected_gradient_inf\":");
 	a4sqp_cutest_json_number(stats.projected_gradient_inf);
 	printf(",");
+	printf("\"kkt_error\":");
+	a4sqp_cutest_json_number(stats.kkt_error);
+	printf(",");
+	printf("\"dual_infeasibility_inf\":");
+	a4sqp_cutest_json_number(stats.dual_infeasibility_inf);
+	printf(",");
+	printf("\"complementarity_inf\":");
+	a4sqp_cutest_json_number(stats.complementarity_inf);
+	printf(",");
+	printf("\"kkt_lambda_sign\":%d,",(int)stats.kkt_lambda_sign);
 	printf("\"iterations\":%d,\"qp_solves\":%d,\"qp_failures\":%d,\"line_search_failures\":%d,",
 		stats.iterations,
 		stats.qp_solves,

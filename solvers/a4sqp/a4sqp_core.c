@@ -230,6 +230,170 @@ real64 a4sqp_core_projected_gradient_inf(
 	return a4sqp_core_projected_gradient_inf_for_view(&core,active_tol);
 }
 
+static real64 a4sqp_core_bound_stationarity_residual(
+	real64 grad,
+	real64 value,
+	real64 lower,
+	real64 upper,
+	real64 active_tol
+){
+	int at_lower = !a4sqp_core_is_lower_inf(lower) && value <= lower + active_tol;
+	int at_upper = !a4sqp_core_is_upper_inf(upper) && value >= upper - active_tol;
+	if(at_lower && at_upper){
+		return 0.0;
+	}
+	if(at_lower){
+		return grad < 0.0 ? -grad : 0.0;
+	}
+	if(at_upper){
+		return grad > 0.0 ? grad : 0.0;
+	}
+	return fabs(grad);
+}
+
+static real64 a4sqp_core_kkt_dual_inf_for_sign(
+	const struct A4SqpCoreView *view,
+	const real64 *row_dual,
+	real64 active_tol,
+	real64 row_sign
+){
+	real64 *lag_grad = NULL;
+	real64 dual_inf = 0.0;
+	int32 i;
+	int32 row;
+	if(view == NULL || view->n_var <= 0){
+		return 0.0;
+	}
+	lag_grad = A4SQP_NEW_ARRAY_CLEAR(real64,view->n_var);
+	if(lag_grad == NULL){
+		return 0.0;
+	}
+	for(i = 0; i < view->n_var; ++i){
+		lag_grad[i] = (view->has_objective && view->scaled_obj_gradient != NULL)
+			? view->scaled_obj_gradient[i]
+			: 0.0;
+	}
+	if(row_dual != NULL && view->jac_row_start != NULL && view->jac_col_index != NULL && view->scaled_jac_value != NULL){
+		for(row = 0; row < view->n_rel; ++row){
+			int32 k;
+			real64 lambda = row_sign * row_dual[row];
+			if(!isfinite(lambda) || fabs(lambda) <= 0.0){
+				continue;
+			}
+			for(k = view->jac_row_start[row]; k < view->jac_row_start[row + 1]; ++k){
+				int32 col = view->jac_col_index[k];
+				if(col >= 0 && col < view->n_var){
+					lag_grad[col] += lambda * view->scaled_jac_value[k];
+				}
+			}
+		}
+	}
+	for(i = 0; i < view->n_var; ++i){
+		real64 residual = a4sqp_core_bound_stationarity_residual(
+			lag_grad[i],
+			view->scaled_var_value[i],
+			view->scaled_var_lower[i],
+			view->scaled_var_upper[i],
+			active_tol
+		);
+		if(residual > dual_inf){
+			dual_inf = residual;
+		}
+	}
+	A4SQP_FREE(lag_grad);
+	return dual_inf;
+}
+
+static real64 a4sqp_core_kkt_complementarity_inf(
+	const struct A4SqpCoreView *view,
+	const real64 *row_dual
+){
+	real64 comp_inf = 0.0;
+	int32 row;
+	if(view == NULL || row_dual == NULL){
+		return 0.0;
+	}
+	for(row = 0; row < view->n_rel; ++row){
+		real64 lambda = fabs(row_dual[row]);
+		real64 gap = HUGE_VAL;
+		real64 comp;
+		if(view->rel_kind != NULL && view->rel_kind[row] == A4SQP_REL_KIND_EQUALITY){
+			continue;
+		}
+		if(!a4sqp_core_is_lower_inf(view->scaled_rel_lower[row])){
+			real64 lower_gap = fabs(view->scaled_rel_residual[row] - view->scaled_rel_lower[row]);
+			if(lower_gap < gap){
+				gap = lower_gap;
+			}
+		}
+		if(!a4sqp_core_is_upper_inf(view->scaled_rel_upper[row])){
+			real64 upper_gap = fabs(view->scaled_rel_upper[row] - view->scaled_rel_residual[row]);
+			if(upper_gap < gap){
+				gap = upper_gap;
+			}
+		}
+		if(gap == HUGE_VAL || !isfinite(lambda)){
+			continue;
+		}
+		comp = lambda * gap;
+		if(comp > comp_inf){
+			comp_inf = comp;
+		}
+	}
+	return comp_inf;
+}
+
+real64 a4sqp_core_kkt_error_for_view(
+	const struct A4SqpCoreView *view,
+	const real64 *row_dual,
+	real64 active_tol,
+	struct A4SqpKktResidual *residual
+){
+	struct A4SqpKktResidual local;
+	real64 dual_pos;
+	real64 dual_neg;
+	if(residual == NULL){
+		residual = &local;
+	}
+	memset(residual,0,sizeof(*residual));
+	if(view == NULL){
+		return 0.0;
+	}
+	residual->primal_inf = 0.0;
+	a4sqp_core_violation(view,&residual->primal_inf,NULL);
+	dual_pos = a4sqp_core_kkt_dual_inf_for_sign(view,row_dual,active_tol,1.0);
+	dual_neg = a4sqp_core_kkt_dual_inf_for_sign(view,row_dual,active_tol,-1.0);
+	if(row_dual != NULL && dual_neg < dual_pos){
+		residual->dual_inf = dual_neg;
+		residual->lambda_sign = -1;
+	}else{
+		residual->dual_inf = dual_pos;
+		residual->lambda_sign = 1;
+	}
+	residual->complementarity_inf = a4sqp_core_kkt_complementarity_inf(view,row_dual);
+	residual->kkt_error = residual->primal_inf;
+	if(residual->dual_inf > residual->kkt_error){
+		residual->kkt_error = residual->dual_inf;
+	}
+	if(residual->complementarity_inf > residual->kkt_error){
+		residual->kkt_error = residual->complementarity_inf;
+	}
+	return residual->kkt_error;
+}
+
+real64 a4sqp_core_kkt_error(
+	const struct A4SqpView *view,
+	int has_objective,
+	const real64 *row_dual,
+	real64 active_tol,
+	struct A4SqpKktResidual *residual
+){
+	struct A4SqpCoreView core;
+	a4sqp_view_get_core(view,&core);
+	core.has_objective = has_objective;
+	return a4sqp_core_kkt_error_for_view(&core,row_dual,active_tol,residual);
+}
+
 real64 a4sqp_core_qp_elastic_sum(const struct A4SqpQp *qp){
 	int32 c;
 	real64 violation = 0.0;
@@ -262,6 +426,54 @@ real64 a4sqp_core_qp_elastic_max(const struct A4SqpQp *qp){
 		}
 	}
 	return maxv;
+}
+
+void a4sqp_core_restoration_state_init(struct A4SqpCoreRestorationState *state){
+	if(state == NULL){
+		return;
+	}
+	state->best_violation = HUGE_VAL;
+	state->stall_count = 0;
+	state->active = 0;
+	state->phase = A4SQP_CORE_PHASE_REGULAR;
+}
+
+static int a4sqp_core_restoration_choose(
+	const struct A4SqpCoreView *view,
+	const struct A4SqpCoreRestorationOptions *options,
+	real64 feas_tol,
+	struct A4SqpCoreRestorationState *state
+){
+	real64 max_violation = 0.0;
+	real64 exit_tol;
+	if(state == NULL){
+		return 0;
+	}
+	if(options == NULL || !options->enable || view == NULL || view->n_rel <= 0){
+		state->active = 0;
+		return 0;
+	}
+	(void)a4sqp_core_violation(view,&max_violation,NULL);
+	exit_tol = 10.0 * feas_tol;
+	if(feas_tol > 0.0 && feas_tol < 1.0){
+		exit_tol = fmax(exit_tol,sqrt(feas_tol));
+	}
+	if(max_violation <= exit_tol){
+		a4sqp_core_restoration_state_init(state);
+		return 0;
+	}
+	if(
+		!isfinite(state->best_violation)
+		|| max_violation <= (1.0 - options->improve) * state->best_violation
+	){
+		state->best_violation = max_violation;
+		state->stall_count = 0;
+		state->active = 0;
+		return 0;
+	}
+	++state->stall_count;
+	state->active = state->stall_count >= options->trigger_iter;
+	return state->active;
 }
 
 enum A4SqpRowActivity a4sqp_core_row_activity_for_view(
@@ -387,6 +599,8 @@ int a4sqp_core_line_search_vector(
 	real64 alpha = 1.0;
 	real64 step_norm2 = 0.0;
 	real64 scaled_step_inf = 0.0;
+	real64 violation_before = 0.0;
+	real64 max_violation_before = 0.0;
 	int32 i;
 	int trial;
 	int accepted = 0;
@@ -427,6 +641,7 @@ int a4sqp_core_line_search_vector(
 		}
 	}
 	result->merit_before = a4sqp_core_merit(&core,options->elastic_penalty);
+	violation_before = a4sqp_core_violation(&core,&max_violation_before,NULL);
 	result->model_merit_after = (core.has_objective ? core.obj_value : 0.0) + qp->objective_value;
 	result->predicted_reduction = result->merit_before - result->model_merit_after;
 	result->step_norm = sqrt(step_norm2);
@@ -455,6 +670,8 @@ int a4sqp_core_line_search_vector(
 		real64 required_decrease;
 		real64 trust_ratio = 0.0;
 		real64 trial_step_norm2 = 0.0;
+		real64 violation_after = 0.0;
+		real64 max_violation_after = 0.0;
 		++result->trials;
 		for(i = 0; i < n; ++i){
 			x[i] = old_x[i] + alpha * physical_step[i];
@@ -466,6 +683,7 @@ int a4sqp_core_line_search_vector(
 		a4sqp_view_get_core(view,&current);
 		current.has_objective = core.has_objective;
 		result->merit_after = a4sqp_core_merit(&current,options->elastic_penalty);
+		violation_after = a4sqp_core_violation(&current,&max_violation_after,NULL);
 		merit_decrease = result->merit_before - result->merit_after;
 		required_decrease = options->armijo_coeff * alpha * result->predicted_reduction;
 		if(required_decrease < 0.0){
@@ -474,13 +692,62 @@ int a4sqp_core_line_search_vector(
 		if(alpha * result->predicted_reduction > options->merit_tol){
 			trust_ratio = merit_decrease / (alpha * result->predicted_reduction);
 		}
+		if(
+			options->restoration
+			&& view->n_rel > 0
+			&& violation_before > options->feas_tol
+			&& (
+				violation_after <= (1.0 - options->restoration_margin) * violation_before
+				|| max_violation_after <= (1.0 - options->restoration_margin) * max_violation_before
+			)
+		){
+			for(i = 0; i < n; ++i){
+				real64 s = alpha * physical_step[i];
+				trial_step_norm2 += s * s;
+			}
+			if(ops->accepted != NULL){
+				ops->accepted(ctx,old_scaled_x,old_scaled_grad,options->restoration);
+			}
+			result->accepted = 1;
+			result->alpha = alpha;
+			result->step_norm = sqrt(trial_step_norm2);
+			result->trust_ratio = trust_ratio;
+			result->scaled_step_inf = alpha * scaled_step_inf;
+			accepted = 1;
+			break;
+		}
 		if(merit_decrease >= required_decrease && trust_ratio >= options->trust_accept){
 			for(i = 0; i < n; ++i){
 				real64 s = alpha * physical_step[i];
 				trial_step_norm2 += s * s;
 			}
 			if(ops->accepted != NULL){
-				ops->accepted(ctx,old_scaled_x,old_scaled_grad);
+				ops->accepted(ctx,old_scaled_x,old_scaled_grad,options->restoration);
+			}
+			result->accepted = 1;
+			result->alpha = alpha;
+			result->step_norm = sqrt(trial_step_norm2);
+			result->trust_ratio = trust_ratio;
+			result->scaled_step_inf = alpha * scaled_step_inf;
+			accepted = 1;
+			break;
+		}
+		if(
+			options->filter_accept
+			&& view->n_rel > 0
+			&& violation_before > options->feas_tol
+			&& merit_decrease > options->merit_tol
+			&& (
+				violation_after <= (1.0 - options->filter_margin) * violation_before
+				|| max_violation_after <= (1.0 - options->filter_margin) * max_violation_before
+			)
+		){
+			for(i = 0; i < n; ++i){
+				real64 s = alpha * physical_step[i];
+				trial_step_norm2 += s * s;
+			}
+			if(ops->accepted != NULL){
+				ops->accepted(ctx,old_scaled_x,old_scaled_grad,options->restoration);
 			}
 			result->accepted = 1;
 			result->alpha = alpha;
@@ -519,7 +786,7 @@ static int a4sqp_core_step_may_retry(
 	if(view == NULL || options == NULL || ops == NULL || attempt >= options->trust_qp_retries){
 		return 0;
 	}
-	if(view->n_rel <= 0 || ops->shrink_trust == NULL){
+	if((view->n_rel <= 0 && !options->trust_unconstrained) || ops->shrink_trust == NULL){
 		return 0;
 	}
 	if(ops->shrink_trust(ctx,reason)){
@@ -567,6 +834,10 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 	int attempt;
 	struct A4SqpStepHessian step_hess;
 	enum A4SqpCoreStepStatus last_error = A4SQP_CORE_STEP_QP_ERROR;
+	int effective_has_objective;
+	int restoration_active = 0;
+	struct A4SqpCoreView initial_view;
+	struct A4SqpLineSearchOptions effective_line_options;
 
 	if(stats != NULL){
 		memset(stats,0,sizeof(*stats));
@@ -579,6 +850,17 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 	if(ops->prepare_hessian == NULL || ops->solve_qp == NULL){
 		return A4SQP_CORE_STEP_QP_ERROR;
 	}
+	a4sqp_view_get_core(view,&initial_view);
+	restoration_active = a4sqp_core_restoration_choose(
+		&initial_view,
+		&options->restoration,
+		options->feas_tol,
+		options->restoration_state
+	);
+	effective_has_objective = has_objective && !restoration_active;
+	effective_line_options = *line_search_options;
+	effective_line_options.restoration = restoration_active;
+	effective_line_options.restoration_margin = options->restoration.margin;
 
 	memset(&step_hess,0,sizeof(step_hess));
 	if(ops->prepare_hessian(ctx,&step_hess)){
@@ -587,14 +869,18 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 
 	for(attempt = 0; attempt <= options->trust_qp_retries; ++attempt){
 		struct A4SqpCoreView core_view;
+		struct A4SqpQpBuildOptions qp_options;
 		a4sqp_view_get_core(view,&core_view);
-		if(a4sqp_qp_build_from_core_view(
+		memset(&qp_options,0,sizeof(qp_options));
+			qp_options.trust_radius = (core_view.n_rel > 0 || options->trust_unconstrained) ? *trust_radius : 0.0;
+			qp_options.elastic_penalty = options->elastic_penalty;
+			qp_options.feas_tol = options->feas_tol;
+			qp_options.objective_weight = restoration_active ? 0.0 : 1.0;
+		if(a4sqp_qp_build_from_core_view_options(
 			qp,
 			&core_view,
 			&step_hess,
-			core_view.n_rel > 0 ? *trust_radius : 0.0,
-			options->elastic_penalty,
-			options->feas_tol
+			&qp_options
 		)){
 			return A4SQP_CORE_STEP_QP_BUILD_ERROR;
 		}
@@ -611,7 +897,7 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 			if(view->n_rel > 0){
 				struct A4SqpCoreView current_view;
 				a4sqp_view_get_core(view,&current_view);
-				current_view.has_objective = has_objective;
+				current_view.has_objective = effective_has_objective;
 				current_merit = a4sqp_core_merit(&current_view,options->elastic_penalty);
 				(void)a4sqp_core_violation(&current_view,&max_violation,NULL);
 				null_qp_tol = 1e-8 * fmax(1.0,fabs(current_merit));
@@ -629,11 +915,11 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 			if(a4sqp_core_line_search_vector(
 				view,
 				qp,
-				line_search_options,
+				&effective_line_options,
 				line_search_ops,
 				ctx,
 				x,
-				has_objective,
+				effective_has_objective,
 				line_search_result
 			) == 0){
 				return A4SQP_CORE_STEP_ACCEPTED;
@@ -645,7 +931,7 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 			if(view->n_rel > 0){
 				struct A4SqpCoreView current_view;
 				a4sqp_view_get_core(view,&current_view);
-				current_view.has_objective = has_objective;
+				current_view.has_objective = effective_has_objective;
 				current_merit = a4sqp_core_merit(&current_view,options->elastic_penalty);
 				(void)a4sqp_core_violation(&current_view,&max_violation,NULL);
 				if(

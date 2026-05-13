@@ -147,6 +147,7 @@ typedef A4SqpProblem (*a4sqp_create_problem_fn)(
 );
 typedef void (*a4sqp_free_problem_fn)(A4SqpProblem);
 typedef A4SqpBool (*a4sqp_add_int_option_fn)(A4SqpProblem, char *, A4SqpInt);
+typedef A4SqpBool (*a4sqp_add_num_option_fn)(A4SqpProblem, char *, A4SqpNumber);
 typedef enum A4SqpApplicationReturnStatus (*a4sqp_solve_fn)(
 	A4SqpProblem,
 	A4SqpNumber *,
@@ -203,6 +204,7 @@ static void test_a4sqp_c_api_objective_only(void){
 	a4sqp_create_problem_fn create_problem;
 	a4sqp_free_problem_fn free_problem;
 	a4sqp_add_int_option_fn add_int_option;
+	a4sqp_add_num_option_fn add_num_option;
 	a4sqp_solve_fn solve;
 	a4sqp_get_stats_fn get_stats;
 	A4SqpProblem problem = NULL;
@@ -226,11 +228,13 @@ static void test_a4sqp_c_api_objective_only(void){
 	create_problem = (a4sqp_create_problem_fn)Asc_DynamicFunction(lib,"CreateA4SqpProblem");
 	free_problem = (a4sqp_free_problem_fn)Asc_DynamicFunction(lib,"FreeA4SqpProblem");
 	add_int_option = (a4sqp_add_int_option_fn)Asc_DynamicFunction(lib,"AddA4SqpIntOption");
+	add_num_option = (a4sqp_add_num_option_fn)Asc_DynamicFunction(lib,"AddA4SqpNumOption");
 	solve = (a4sqp_solve_fn)Asc_DynamicFunction(lib,"A4SqpSolve");
 	get_stats = (a4sqp_get_stats_fn)Asc_DynamicFunction(lib,"GetA4SqpSolveStatistics");
 	CU_ASSERT_PTR_NOT_NULL_FATAL(create_problem);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(free_problem);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(add_int_option);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(add_num_option);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(solve);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(get_stats);
 
@@ -252,6 +256,12 @@ static void test_a4sqp_c_api_objective_only(void){
 	);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(problem);
 	CU_ASSERT(add_int_option(problem,"max_iter",20));
+	CU_ASSERT(add_int_option(problem,"acceptable_iter",0));
+	CU_ASSERT(add_int_option(problem,"filter_accept",0));
+	CU_ASSERT(add_int_option(problem,"trust_unconstrained",0));
+	CU_ASSERT(add_int_option(problem,"kkt_convergence",0));
+	CU_ASSERT(add_num_option(problem,"acceptable_tol",1e-5));
+	CU_ASSERT(add_num_option(problem,"filter_margin",1e-4));
 	status = solve(problem,x,NULL,&obj,NULL,NULL,NULL,NULL);
 	CU_ASSERT_EQUAL(status,A4SqpSolveSucceeded);
 	CU_ASSERT_DOUBLE_EQUAL(x[0],1.0,1e-6);
@@ -259,6 +269,8 @@ static void test_a4sqp_c_api_objective_only(void){
 	CU_ASSERT(get_stats(problem,&stats));
 	CU_ASSERT(stats.iterations <= 10);
 	CU_ASSERT(stats.projected_gradient_inf <= 1e-6);
+	CU_ASSERT(stats.kkt_error <= 1e-6);
+	CU_ASSERT(stats.dual_infeasibility_inf <= 1e-6);
 
 cleanup:
 	if(problem != NULL && free_problem != NULL){
@@ -347,6 +359,12 @@ static void test_a4sqp_basic_view_presolve(void){
 	int gerow;
 	int scale_idx;
 	int trust_radius_idx;
+	int acceptable_tol_idx;
+	int acceptable_iter_idx;
+	int filter_accept_idx;
+	int filter_margin_idx;
+	int trust_unconstrained_idx;
+	int kkt_convergence_idx;
 	slv_parameters_t params;
 
 	memset(&progress,0,sizeof(progress));
@@ -476,8 +494,26 @@ static void test_a4sqp_basic_view_presolve(void){
 	slv_get_parameters(sys,&params);
 	scale_idx = find_param_index(&params,"scaleopt");
 	trust_radius_idx = find_param_index(&params,"trust_radius_init");
+	acceptable_tol_idx = find_param_index(&params,"acceptable_tol");
+	acceptable_iter_idx = find_param_index(&params,"acceptable_iter");
+	filter_accept_idx = find_param_index(&params,"filter_accept");
+	filter_margin_idx = find_param_index(&params,"filter_margin");
+	trust_unconstrained_idx = find_param_index(&params,"trust_unconstrained");
+	kkt_convergence_idx = find_param_index(&params,"kkt_convergence");
 	CU_ASSERT_FATAL(scale_idx != -1);
 	CU_ASSERT_FATAL(trust_radius_idx != -1);
+	CU_ASSERT_FATAL(acceptable_tol_idx != -1);
+	CU_ASSERT_FATAL(acceptable_iter_idx != -1);
+	CU_ASSERT_FATAL(filter_accept_idx != -1);
+	CU_ASSERT_FATAL(filter_margin_idx != -1);
+	CU_ASSERT_FATAL(trust_unconstrained_idx != -1);
+	CU_ASSERT_FATAL(kkt_convergence_idx != -1);
+	CU_ASSERT_DOUBLE_EQUAL(SLV_PARAM_REAL(&params,acceptable_tol_idx),1e-5,1e-14);
+	CU_ASSERT_EQUAL(SLV_PARAM_INT(&params,acceptable_iter_idx),0);
+	CU_ASSERT_EQUAL(SLV_PARAM_BOOL(&params,filter_accept_idx),0);
+	CU_ASSERT_DOUBLE_EQUAL(SLV_PARAM_REAL(&params,filter_margin_idx),1e-4,1e-14);
+	CU_ASSERT_EQUAL(SLV_PARAM_BOOL(&params,trust_unconstrained_idx),0);
+	CU_ASSERT_EQUAL(SLV_PARAM_BOOL(&params,kkt_convergence_idx),0);
 	slv_set_char_parameter(&(SLV_PARAM_CHAR(&params,scale_idx)),"NONE");
 	slv_set_parameters(sys,&params);
 	CU_ASSERT_FATAL(0 == slv_presolve(sys));

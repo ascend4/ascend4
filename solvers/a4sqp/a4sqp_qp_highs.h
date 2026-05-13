@@ -64,12 +64,25 @@ struct A4SqpQpSpikeResult {
 	double row_dual[2];
 };
 
+struct A4SqpQpBuildOptions {
+	real64 trust_radius;
+	real64 elastic_penalty;
+	real64 feas_tol;
+	real64 objective_weight;
+};
+
 struct A4SqpView;
 
 A4SQP_CORE_EXPORT int a4sqp_qp_highs_spike(struct A4SqpQpSpikeResult *result);
 
 A4SQP_CORE_EXPORT void a4sqp_qp_init(struct A4SqpQp *qp);
 A4SQP_CORE_EXPORT void a4sqp_qp_destroy(struct A4SqpQp *qp);
+int a4sqp_qp_build_from_core_view_options(
+	struct A4SqpQp *qp,
+	const struct A4SqpCoreView *view,
+	const struct A4SqpStepHessian *step_hess,
+	const struct A4SqpQpBuildOptions *options
+);
 int a4sqp_qp_build_from_core_view(
 	struct A4SqpQp *qp,
 	const struct A4SqpCoreView *view,

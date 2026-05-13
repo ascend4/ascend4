@@ -274,18 +274,24 @@ static void a4sqp_qp_fill_hessian(
 	qp->q_start[qp->num_col] = nnz;
 }
 
-int a4sqp_qp_build_from_core_view(
+int a4sqp_qp_build_from_core_view_options(
 	struct A4SqpQp *qp,
 	const struct A4SqpCoreView *view,
 	const struct A4SqpStepHessian *step_hess,
-	real64 trust_radius,
-	real64 elastic_penalty,
-	real64 feas_tol
+	const struct A4SqpQpBuildOptions *options
 ){
 	int32 i;
+	real64 trust_radius;
+	real64 elastic_penalty;
+	real64 feas_tol;
+	real64 objective_weight;
 	if(qp == NULL || view == NULL){
 		return 1;
 	}
+	trust_radius = options != NULL ? options->trust_radius : 0.0;
+	elastic_penalty = options != NULL ? options->elastic_penalty : A4SQP_QP_DEFAULT_ELASTIC_PENALTY;
+	feas_tol = options != NULL ? options->feas_tol : 0.0;
+	objective_weight = options != NULL ? options->objective_weight : 1.0;
 
 	a4sqp_qp_destroy(qp);
 	qp->num_step_col = view->n_var;
@@ -303,7 +309,7 @@ int a4sqp_qp_build_from_core_view(
 	for(i = 0; i < view->n_var; ++i){
 		qp->col_kind[i] = A4SQP_QP_COL_STEP;
 		qp->col_var_index[i] = i;
-		qp->col_cost[i] = view->scaled_obj_gradient != NULL ? view->scaled_obj_gradient[i] : 0.0;
+		qp->col_cost[i] = view->scaled_obj_gradient != NULL ? objective_weight * view->scaled_obj_gradient[i] : 0.0;
 		qp->col_lower[i] = a4sqp_qp_is_lower_inf(view->scaled_var_lower[i])
 			? A4SQP_NO_LOWER_BOUND
 			: view->scaled_var_lower[i] - view->scaled_var_value[i];
@@ -389,6 +395,23 @@ int a4sqp_qp_build_from_core_view(
 	}
 	a4sqp_qp_fill_hessian(view,step_hess,qp);
 	return 0;
+}
+
+int a4sqp_qp_build_from_core_view(
+	struct A4SqpQp *qp,
+	const struct A4SqpCoreView *view,
+	const struct A4SqpStepHessian *step_hess,
+	real64 trust_radius,
+	real64 elastic_penalty,
+	real64 feas_tol
+){
+	struct A4SqpQpBuildOptions options;
+	memset(&options,0,sizeof(options));
+	options.trust_radius = trust_radius;
+	options.elastic_penalty = elastic_penalty;
+	options.feas_tol = feas_tol;
+	options.objective_weight = 1.0;
+	return a4sqp_qp_build_from_core_view_options(qp,view,step_hess,&options);
 }
 
 int a4sqp_qp_build_from_view(

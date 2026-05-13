@@ -76,6 +76,17 @@ Useful environment/option overrides:
 
 - `--max-iter N` or `A4SQP_MAX_ITER=N`
 - `--tol VALUE` or `A4SQP_TOL=VALUE`
+- `--acceptable-iter N` or `A4SQP_ACCEPTABLE_ITER=N`
+- `--acceptable-tol VALUE` or `A4SQP_ACCEPTABLE_TOL=VALUE`
+- `--kkt-convergence`, `--no-kkt-convergence`, or
+  `A4SQP_KKT_CONVERGENCE=0|1`
+- `--filter-accept` or `A4SQP_FILTER_ACCEPT=1`
+- `--filter-margin VALUE` or `A4SQP_FILTER_MARGIN=VALUE`
+- `--trust-unconstrained` or `A4SQP_TRUST_UNCONSTRAINED=1`
+- `--restoration` or `A4SQP_RESTORATION=1`
+- `--restoration-trigger-iter N` or `A4SQP_RESTORATION_TRIGGER_ITER=N`
+- `--restoration-improve VALUE` or `A4SQP_RESTORATION_IMPROVE=VALUE`
+- `--restoration-margin VALUE` or `A4SQP_RESTORATION_MARGIN=VALUE`
 - `--elastic-penalty VALUE` or `A4SQP_ELASTIC_PENALTY=VALUE`
 - `--a4sqp-hessian BFGS|EXACT_OBJ|EXACT_LAGRANGIAN` or `A4SQP_HESSIAN=...`
 - `--a4sqp-hess-reg VALUE` or `A4SQP_HESS_REG=VALUE`
@@ -83,8 +94,43 @@ Useful environment/option overrides:
 - `--ipopt-tol VALUE` or `IPOPTC_TOL=VALUE`
 - `--ipopt-hessian limited-memory|exact` or `IPOPTC_HESSIAN=...`
 - `--solver a4sqp|ipoptc|both`
+- `--jobs N` runs independent problem/package jobs concurrently. For `N > 1`
+  the runner creates one private CUTEst tree per worker under `--workdir` so
+  concurrent `runcutest` invocations do not mutate the same
+  `objects/.../libcutest.a` archive.
 - `--timeout-sec SECONDS` records a timeout JSON entry and continues with the
   next solver/problem pair.
 
+Do not run multiple `runcutest` processes against the same writable CUTEst tree.
+CUTEst rebuilds package/tool archives as part of normal `runcutest` execution,
+and concurrent invocations can corrupt the shared archive. Use this runner's
+`--jobs` option instead; it isolates each worker's CUTEst object tree while
+still keeping each solver process single-threaded.
+
 The CUTEst driver can use the standalone C API's BFGS path or CUTEst exact
 Hessians. Exact Hessians are regularized to PSD before the QP model is built.
+
+Acceptable convergence is disabled by default. Use `--acceptable-iter 5` for an
+IPOPT-like relaxed profile that reports `A4SqpSolvedToAcceptableLevel` on
+near-solved cases without changing ASCEND's default behaviour.
+
+KKT-residual convergence is enabled by default in this runner, although the
+standalone C API default remains off for compatibility. Use
+`--no-kkt-convergence` to reproduce legacy small-step convergence behavior.
+
+On the current 20-problem fixed-size smoke sample, default KKT-residual
+convergence gives 4/20 clean strict successes. Adding `--acceptable-iter 5`
+raises that to 11/20 clean strict-or-acceptable successes without accepting the
+legacy high-stationarity cases.
+
+Each JSON result includes `outcome_class` for failure taxonomy. The
+`--filter-accept` and `--trust-unconstrained` profiles are experimental
+globalization probes; early 20-problem smoke testing did not improve pass count,
+so they are not recommended as defaults.
+
+A4SQP records KKT diagnostics in each JSON row: `kkt_error`,
+`dual_infeasibility_inf`, `complementarity_inf`, and `kkt_lambda_sign`. The
+taxonomy flags successful solver statuses with high KKT residual as
+`strict_success_high_kkt` or `acceptable_success_high_kkt`; with default
+KKT-residual convergence these should normally be reported as stationarity
+failures instead of successes.

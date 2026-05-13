@@ -5,6 +5,8 @@
 #ifndef ASC_A4SQP_INTERNAL_H
 #define ASC_A4SQP_INTERNAL_H
 
+#include "a4sqp_core.h"
+#include "a4sqp_hessian.h"
 #include "a4sqp_view.h"
 #include "asc_a4sqp_params.h"
 #include "a4sqp_qp_highs.h"
@@ -19,10 +21,10 @@ struct A4SqpSystem {
 	slv_status_t status;
 	struct A4SqpView view;
 	struct A4SqpQp qp;
+	struct A4SqpDenseHessian bfgs_hess;
 	real64 *x;
 	int32 x_n;
 	int32 step_hess_n;
-	int step_hess_updates;
 	int step_hess_exact;
 	real64 *step_hess;
 	int32 step_hess_sparse_n;
@@ -49,6 +51,9 @@ struct A4SqpSystem {
 	real64 last_trust_ratio;
 	int32 worst_violation_rel;
 	int line_search_failed;
+	int acceptable_count;
+	int solved_acceptable;
+	struct A4SqpCoreRestorationState restoration_state;
 };
 
 #endif

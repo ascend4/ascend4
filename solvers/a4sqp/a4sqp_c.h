@@ -140,6 +140,10 @@ struct A4SqpSolveStats {
 	A4SqpNumber objective;
 	A4SqpNumber max_constraint_violation;
 	A4SqpNumber projected_gradient_inf;
+	A4SqpNumber kkt_error;
+	A4SqpNumber dual_infeasibility_inf;
+	A4SqpNumber complementarity_inf;
+	A4SqpInt kkt_lambda_sign;
 	A4SqpNumber final_step_norm;
 	A4SqpNumber final_trust_radius;
 	A4SqpNumber final_elastic_max;

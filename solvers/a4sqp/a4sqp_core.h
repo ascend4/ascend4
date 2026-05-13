@@ -25,6 +25,14 @@ struct A4SqpConvergencePolicy {
 	int constrained_objective_allows_small_step;
 };
 
+struct A4SqpKktResidual {
+	real64 primal_inf;
+	real64 dual_inf;
+	real64 complementarity_inf;
+	real64 kkt_error;
+	int lambda_sign;
+};
+
 struct A4SqpLineSearchOptions {
 	int max_backtrack;
 	real64 merit_tol;
@@ -33,6 +41,30 @@ struct A4SqpLineSearchOptions {
 	real64 armijo_coeff;
 	real64 trust_accept;
 	real64 elastic_penalty;
+	int filter_accept;
+	real64 filter_margin;
+	int restoration;
+	real64 restoration_margin;
+};
+
+struct A4SqpCoreRestorationOptions {
+	int enable;
+	int trigger_iter;
+	real64 improve;
+	real64 margin;
+};
+
+enum A4SqpCorePhase {
+	A4SQP_CORE_PHASE_REGULAR = 0,
+	A4SQP_CORE_PHASE_RESTORATION,
+	A4SQP_CORE_PHASE_RESTORATION_EXIT
+};
+
+struct A4SqpCoreRestorationState {
+	real64 best_violation;
+	int stall_count;
+	int active;
+	enum A4SqpCorePhase phase;
 };
 
 struct A4SqpLineSearchResult {
@@ -50,7 +82,7 @@ struct A4SqpLineSearchResult {
 
 struct A4SqpVectorLineSearchOps {
 	int (*evaluate)(void *ctx, const real64 *x, struct A4SqpView *view);
-	void (*accepted)(void *ctx, const real64 *old_scaled_x, const real64 *old_scaled_grad);
+	void (*accepted)(void *ctx, const real64 *old_scaled_x, const real64 *old_scaled_grad, int restoration);
 };
 
 enum A4SqpCoreStepStatus {
@@ -63,9 +95,12 @@ enum A4SqpCoreStepStatus {
 
 struct A4SqpCoreStepOptions {
 	int trust_qp_retries;
+	int trust_unconstrained;
 	real64 elastic_penalty;
 	real64 feas_tol;
 	real64 merit_tol;
+	struct A4SqpCoreRestorationOptions restoration;
+	struct A4SqpCoreRestorationState *restoration_state;
 };
 
 struct A4SqpCoreStepStats {
@@ -73,6 +108,7 @@ struct A4SqpCoreStepStats {
 	int qp_failures;
 	int line_search_failures;
 	int trust_shrinks;
+	int restoration_exits;
 };
 
 struct A4SqpCoreStepOps {
@@ -112,8 +148,22 @@ real64 a4sqp_core_projected_gradient_inf(
 	int has_objective,
 	real64 active_tol
 );
+real64 a4sqp_core_kkt_error_for_view(
+	const struct A4SqpCoreView *view,
+	const real64 *row_dual,
+	real64 active_tol,
+	struct A4SqpKktResidual *residual
+);
+A4SQP_CORE_EXPORT real64 a4sqp_core_kkt_error(
+	const struct A4SqpView *view,
+	int has_objective,
+	const real64 *row_dual,
+	real64 active_tol,
+	struct A4SqpKktResidual *residual
+);
 real64 a4sqp_core_qp_elastic_sum(const struct A4SqpQp *qp);
 real64 a4sqp_core_qp_elastic_max(const struct A4SqpQp *qp);
+A4SQP_CORE_EXPORT void a4sqp_core_restoration_state_init(struct A4SqpCoreRestorationState *state);
 enum A4SqpRowActivity a4sqp_core_row_activity_for_view(
 	const struct A4SqpCoreView *view,
 	int32 row,

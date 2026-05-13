@@ -119,6 +119,27 @@ int a4sqp_get_default_parameters(
 		}, 1e-4, 1e-14, 1e3}
 	);
 
+	slv_param_real(parameters,A4SQP_PARAM_ACCEPTABLE_TOL,
+		(SlvParameterInitReal){{"acceptable_tol",
+			"Acceptable tolerance",1,
+			"Relaxed feasibility/stationarity tolerance for acceptable solves."
+		}, 1e-5, 1e-14, 1e3}
+	);
+
+	slv_param_int(parameters,A4SQP_PARAM_ACCEPTABLE_ITER,
+		(SlvParameterInitInt){{"acceptable_iter",
+			"Acceptable iterations",1,
+			"Number of consecutive acceptable iterations required before accepting a relaxed solve."
+		}, 0, 0, 10000}
+	);
+
+	slv_param_bool(parameters,A4SQP_PARAM_KKT_CONVERGENCE,
+		(SlvParameterInitBool){{"kkt_convergence",
+			"KKT convergence",2,
+			"Use the core KKT residual, rather than constrained small-step acceptance, for objective stationarity convergence."
+		}, 0}
+	);
+
 	slv_param_real(parameters,A4SQP_PARAM_MERIT_TOL,
 		(SlvParameterInitReal){{"merit_tol",
 			"Merit tolerance",2,
@@ -138,6 +159,20 @@ int a4sqp_get_default_parameters(
 			"Elastic penalty",1,
 			"Linear penalty used for lower and upper elastic QP slacks and the merit function."
 		}, A4SQP_QP_DEFAULT_ELASTIC_PENALTY, 1e-12, 1e12}
+	);
+
+	slv_param_bool(parameters,A4SQP_PARAM_FILTER_ACCEPT,
+		(SlvParameterInitBool){{"filter_accept",
+			"Filter-lite acceptance",2,
+			"Permit feasibility-improving constrained steps that reduce merit but fail the predicted-reduction ratio."
+		}, 0}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_FILTER_MARGIN,
+		(SlvParameterInitReal){{"filter_margin",
+			"Filter-lite margin",2,
+			"Required fractional constraint-violation reduction for filter-lite acceptance."
+		}, 1e-4, 0.0, 0.999999}
 	);
 
 	slv_param_real(parameters,A4SQP_PARAM_TRUST_RADIUS_INIT,
@@ -194,6 +229,41 @@ int a4sqp_get_default_parameters(
 			"Trust-region retries",2,
 			"Maximum number of trust-radius reductions and QP rebuild retries per SQP iteration."
 		}, 5, 0, 100}
+	);
+
+	slv_param_bool(parameters,A4SQP_PARAM_TRUST_UNCONSTRAINED,
+		(SlvParameterInitBool){{"trust_unconstrained",
+			"Trust unconstrained",2,
+			"Apply the scaled trust-region radius and trust retries to unconstrained objective-only problems."
+		}, 0}
+	);
+
+	slv_param_bool(parameters,A4SQP_PARAM_RESTORATION,
+		(SlvParameterInitBool){{"restoration",
+			"Restoration phase",2,
+			"Enable feasibility restoration steps after repeated lack of constraint-violation progress."
+		}, 0}
+	);
+
+	slv_param_int(parameters,A4SQP_PARAM_RESTORATION_TRIGGER_ITER,
+		(SlvParameterInitInt){{"restoration_trigger_iter",
+			"Restoration trigger",2,
+			"Number of consecutive non-improving infeasible iterations before restoration steps are requested."
+		}, 3, 0, 10000}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_RESTORATION_IMPROVE,
+		(SlvParameterInitReal){{"restoration_improve",
+			"Restoration progress",2,
+			"Required fractional maximum-violation improvement to reset the restoration stall counter."
+		}, 1e-3, 0.0, 0.999999}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_RESTORATION_MARGIN,
+		(SlvParameterInitReal){{"restoration_margin",
+			"Restoration acceptance",2,
+			"Required fractional constraint-violation reduction for restoration line-search acceptance."
+		}, 1e-4, 0.0, 0.999999}
 	);
 
 	return 0;

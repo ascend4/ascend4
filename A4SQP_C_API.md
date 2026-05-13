@@ -33,6 +33,38 @@ candidate `x` vector and retain frontend-specific metadata. ASCEND therefore
 does not need to be routed through the public C ABI, but the ASCEND and CUTEst
 paths no longer maintain separate line-search or step-acceptance algorithms.
 
+## Algorithm Boundary Rule
+
+All restoration, filtering, trust-region, merit-function, Hessian model,
+line-search, step-type, convergence, and globalization decisions belong inside
+`liba4sqp.so`.
+
+Adapter libraries must not decide that a solve is in "regular" versus
+"restoration" mode, must not trigger feasibility-restoration steps, and must
+not implement alternate filter or trust-region rules. This is essential: the
+same model sent through ASCEND or through SIFDecode/CUTEst must reach the same
+A4SQP algorithmic path when options and initial guesses are harmonised.
+
+The allowed adapter responsibilities are deliberately narrower:
+
+- Convert frontend model state into A4SQP numeric vectors, bounds, residuals,
+  Jacobian values, and Hessian callback data.
+- Evaluate the objective, residuals, derivatives, and Hessians at trial
+  vectors requested by the core.
+- Pass option values into the core without interpreting algorithmic state.
+- Map core status and diagnostics back to frontend names, relations, variables,
+  and progress-reporting mechanisms.
+
+`liba4sqp.so` must not read environment variables to alter solver behaviour.
+Environment variables are acceptable only as command-line/test-harness plumbing
+in executable adapters such as the CUTEst runner, where they must be translated
+immediately into ordinary solver options before calling the C API.
+
+For ASCEND specifically, `slv_iterate` is not a license to put SQP phase logic
+in `liba4sqp_ascend.so`. If A4SQP is fundamentally a solve-at-once optimizer,
+the ASCEND `slv_iterate` hook should remain a light wrapper around the
+core-owned solve/step state machine rather than becoming a second control loop.
+
 ## Current Implementation Snapshot
 
 The implementation now has one shared SQP step engine with frontend adapters:
@@ -274,8 +306,8 @@ The return-code numeric values intentionally mirror IPOPT's
 `ApplicationReturnStatus` where the meanings overlap. `struct
 A4SqpSolveStats` currently reports iterations, QP solves/failures, line-search
 failures, final objective, max constraint violation, projected-gradient proxy,
-final step norm, final trust radius, final elastic activity, and Hessian
-regularization size.
+KKT error, dual infeasibility, complementarity, final step norm, final trust
+radius, final elastic activity, and Hessian regularization size.
 
 ## IPOPT Compatibility Semantics
 
@@ -325,9 +357,32 @@ Native A4SQP option names:
 - `max_backtrack`: integer.
 - `feas_tol`: number.
 - `step_tol`: number.
+- `acceptable_tol`: number, default `1e-5`.
+- `acceptable_iter`: integer, default `0`; values greater than zero enable
+  IPOPT-like relaxed termination with return code
+  `A4SqpSolvedToAcceptableLevel`.
+- `kkt_convergence`: integer/bool, default `0`; when enabled for objective
+  problems, strict and acceptable convergence require the core KKT residual to
+  satisfy the active tolerance instead of allowing the older constrained
+  small-step shortcut to report success.
 - `merit_tol`: number.
 - `armijo_coeff`: number.
 - `elastic_penalty`: number.
+- `filter_accept`: integer/bool, default `0`; enables an experimental
+  constrained filter-lite line-search acceptance rule.
+- `filter_margin`: number, default `1e-4`; required fractional violation
+  reduction for `filter_accept`.
+- `trust_unconstrained`: integer/bool, default `0`; applies the existing
+  trust-region bound and trust retries to objective-only problems.
+- `restoration`: integer/bool, default `0`; enables the core-owned feasibility
+  restoration phase.
+- `restoration_trigger_iter`: integer, default `3`; number of consecutive
+  non-improving infeasible iterations before the core requests restoration
+  steps.
+- `restoration_improve`: number, default `1e-3`; fractional max-violation
+  improvement needed to reset the core restoration stall counter.
+- `restoration_margin`: number, default `1e-4`; fractional violation reduction
+  needed for restoration line-search acceptance.
 - `trust_radius_init`: number.
 - `trust_radius_min`: number.
 - `trust_radius_max`: number.
@@ -343,6 +398,8 @@ Compatibility aliases:
 
 - `tol` maps to a default bundle for feasibility and stationarity tolerances.
 - `constr_viol_tol` maps to `feas_tol`.
+- `acceptable_tol` and `acceptable_iter` follow IPOPT's relaxed convergence
+  option names directly.
 - `max_cpu_time` maps to a new elapsed-time limit.
 - `print_level` maps to `verbosity`.
 - `hessian_approximation=limited-memory` maps to `hessian=BFGS` initially.
@@ -362,8 +419,8 @@ forcing ASCEND through the public C ABI. The next build-level boundary is:
 ```text
 liba4sqp.so
     links to: libhighs, libm, libc
-    owns: IPOPT-like A4SQP C API, SQP core, QP builder, Hessian utilities,
-          trust policy, scaling, numeric view storage
+    owns: IPOPT-like A4SQP C API, SQP core, QP builder, Hessian model and
+          PSD regularization, trust policy, scaling, numeric view storage
 
 liba4sqp_ascend.so
     public symbols: ASCEND solver registration only
@@ -385,8 +442,8 @@ Shared core logic lives in:
   by core helpers.
 - `solvers/a4sqp/a4sqp_qp_highs.c`: QP assembly from `A4SqpCoreView` and HiGHS
   QP solve glue.
-- `solvers/a4sqp/a4sqp_hessian.c`: dense Hessian preparation and PSD
-  regularization.
+- `solvers/a4sqp/a4sqp_hessian.c`: dense Hessian model lifecycle, damped BFGS
+  update, matrix-vector products, and PSD regularization.
 - `solvers/a4sqp/a4sqp_trust.c`: trust-radius initialization, shrink, and grow
   policy.
 - `solvers/a4sqp/a4sqp_view.c`: core-owned numeric view lifecycle.
@@ -419,6 +476,37 @@ The C API adapter remains in `solvers/a4sqp/a4sqp_c.c`. It is responsible for:
 - maintaining the C solve's `x` array during trial points
 - mapping core results back to IPOPT-like return codes and solve statistics
 
+Approximate Hessian ownership is core-side. Both the C API and ASCEND adapter
+store their BFGS approximation as `struct A4SqpDenseHessian` and call
+`a4sqp_dense_hessian_bfgs_update`; neither adapter implements the BFGS formula
+or PSD repair. Exact Hessian assembly remains adapter-side because ASCEND
+exact Hessians come from `relman`, while callback/CUTEst exact Hessians come
+from IPOPT-like `eval_h` data.
+
+The C API now supports opt-in acceptable convergence. It uses the same shared
+core convergence check as strict convergence, but with `acceptable_tol` and a
+consecutive-iteration counter. Defaults are strict (`acceptable_iter = 0`) so
+ASCEND and CUTEst runs remain comparable unless the benchmark profile
+explicitly enables relaxed termination.
+
+The C API now also reports a core KKT residual and can use it for convergence
+when `kkt_convergence=1`. The residual combines scaled primal infeasibility, a
+bound-aware Lagrangian stationarity residual using QP row multipliers where
+available, and constraint complementarity. The diagnostic tries both
+row-multiplier signs and records the lower-residual sign in `kkt_lambda_sign`,
+because QP/front-end sign conventions can otherwise obscure the real
+stationarity size. The C API and ASCEND adapter default `kkt_convergence` off
+for compatibility; the CUTEst runner defaults it on for benchmark pass-rate
+reporting.
+
+The C API also exposes experimental globalization controls for CUTEst triage.
+`filter_accept` is constrained-only and can accept a merit-decreasing step when
+constraint violation improves enough even if the predicted-reduction ratio
+rejects it. `trust_unconstrained` applies the existing trust-region radius to
+objective-only QPs. `restoration` enables the core-owned feasibility
+restoration phase: the adapter only passes option values and the core decides
+when to enter or leave restoration mode. These controls are disabled by default.
+
 The CUTEst bridge under `solvers/a4sqp/cutest` is intentionally thin. It
 decodes SIF problems through CUTEst/SIFDecode, implements the C API callbacks,
 and records benchmark JSONL. It should not contain solver algorithm logic.
@@ -438,11 +526,13 @@ frontend or backend to perform work it does not own:
   gradient, and Jacobian at a candidate physical `x` vector, then refresh the
   numeric view.
 - `A4SqpVectorLineSearchOps.accepted`: optional accepted-step bookkeeping,
-  currently used for BFGS updates.
+  currently used to notify adapters that the core accepted a step so they can
+  pass the old/new gradient data to the core-owned BFGS model.
 - `A4SqpCoreStepOps.prepare_hessian`: prepare the step Hessian from the
   selected frontend/backend source.
 - `A4SqpCoreStepOps.solve_qp`: solve the assembled QP, currently with HiGHS.
-- `A4SqpCoreStepOps.after_qp_solve`: optional multiplier/filter bookkeeping.
+- `A4SqpCoreStepOps.after_qp_solve`: optional multiplier and diagnostic
+  bookkeeping.
 - `A4SqpCoreStepOps.shrink_trust`: update frontend-owned trust/status
   bookkeeping and report diagnostics.
 
@@ -450,16 +540,29 @@ The important rule is:
 
 - Solver policy belongs in core: merit tests, line-search acceptance, trust
   retry logic, convergence checks, QP elastic handling, feasible/null step
-  acceptance, and PSD Hessian regularization.
+  acceptance, BFGS update mechanics, and PSD Hessian regularization.
 - Data ownership belongs in adapters: how to evaluate a candidate vector,
   update ASCEND status, preserve model/source diagnostics, and handle
   frontend-specific Hessian sources.
+
+One ASCEND compatibility guard remains deliberately outside the core policy:
+the ASCEND adapter currently skips objective-only BFGS updates for constrained
+ASCEND models, matching the pre-split behaviour and preserving the existing
+ASCEND regression suite. The C API path updates the core BFGS model for
+constrained problems. Removing this guard should be treated as an explicit
+algorithm change, not as adapter cleanup.
 
 The recent C API parity fix follows this rule by moving feasible/null step
 acceptance into `a4sqp_core_solve_step` and making both ASCEND and C API use
 `a4sqp_core_line_search_vector`. The C API also guards the constrained
 small-step convergence policy so it cannot report success at iteration zero
 merely because the initial `last_step_norm` is zero.
+
+Acceptable convergence follows the same rule: core computes the convergence
+predicate, while adapters only store options, counters, and frontend status
+mapping. The ASCEND adapter reports acceptable termination as converged only
+when `acceptable_iter > 0`; otherwise existing model assertions continue to use
+strict termination.
 
 ## CUTEst/SIFDecode Bridge Plan
 
@@ -548,8 +651,9 @@ Current implementation status:
   and `solvers/a4sqp/a4sqp_c.c`.
 - The C API supports BFGS, exact objective Hessians, and exact Lagrangian
   Hessians via the IPOPT-like `eval_h` callback.
-- ASCEND and the C API both use shared core utilities for PSD Hessian
-  regularization, trust-radius policy, convergence checks, merit/violation
+- ASCEND and the C API both use the shared core dense Hessian model for BFGS
+  updates and PSD regularization, plus shared trust-radius policy,
+  convergence checks, merit/violation
   calculations, line search, and the SQP step retry loop.
 - `solvers/a4sqp/a4sqp_core_view.h` now defines a borrowed
   solver-neutral `A4SqpCoreView` slice for core numeric data. `A4SqpView`
@@ -585,6 +689,28 @@ Current implementation status:
 - `run_a4sqp_cutest.py` runs a problem list with `--solver a4sqp`, `--solver
   ipoptc`, or `--solver both`, collecting JSONL benchmark records plus raw
   per-problem logs.
+- The CUTEst A4SQP driver exposes acceptable convergence through
+  `A4SQP_ACCEPTABLE_ITER`/`A4SQP_ACCEPTABLE_TOL`, and the runner exposes the
+  same controls as `--acceptable-iter`/`--acceptable-tol`. Acceptable
+  convergence is disabled by default.
+- The CUTEst A4SQP driver exposes KKT-residual convergence through
+  `A4SQP_KKT_CONVERGENCE`, and the runner exposes the same control as
+  `--kkt-convergence`/`--no-kkt-convergence`. The C API default is off for
+  compatibility, but the runner default is on so status-success counts require
+  small stationarity residuals.
+- The CUTEst runner records `outcome_class` for failure taxonomy, including
+  `strict_success`, `strict_success_high_kkt`, `acceptable_success`,
+  `acceptable_success_high_kkt`, `max_iter_near_solved`,
+  `max_iter_stationarity`, `max_iter_infeasible_or_stalled`,
+  `line_search_error`, `qp_failure`, and driver-level errors.
+- The CUTEst A4SQP driver exposes experimental globalization controls through
+  `A4SQP_FILTER_ACCEPT`, `A4SQP_FILTER_MARGIN`,
+  `A4SQP_TRUST_UNCONSTRAINED`, `A4SQP_RESTORATION`,
+  `A4SQP_RESTORATION_TRIGGER_ITER`, `A4SQP_RESTORATION_IMPROVE`, and
+  `A4SQP_RESTORATION_MARGIN`; the runner exposes these as `--filter-accept`,
+  `--filter-margin`, `--trust-unconstrained`, `--restoration`,
+  `--restoration-trigger-iter`, `--restoration-improve`, and
+  `--restoration-margin`.
 - `make_cutest_problem_list.py` builds starter problem lists from
   `/home/john/MASTSIF/CLASSF.DB`, with filters for smoothness, derivative
   degree, and fixed-size `n`/`m` caps.
@@ -600,6 +726,21 @@ Current implementation status:
   `HS11` line-search failure without changing the core SQP algorithm.
 - The C API constrained small-step convergence shortcut is guarded so it cannot
   report success at iteration zero before any A4SQP step has been accepted.
+- On a 20-problem fixed-size smooth NLP sample (`n <= 20`, `m <= 20`, BFGS,
+  200 iterations), strict A4SQP with legacy small-step convergence returned
+  success on 6/20. Enabling `--acceptable-iter 5` returned success or
+  acceptable success on 12/20,
+  converting near-solved iteration-limit exits for `ALLINITU`, `BARD`, `BEALE`,
+  `BIGGS3`, `BIGGS5`, and `BOX2`.
+- On the same sample, `--filter-accept` and `--trust-unconstrained` did not
+  improve pass count, so they remain experimental rather than recommended
+  default profiles.
+- With KKT convergence enabled, the same strict sample had 4 clean status
+  successes, 7 near-solved maximum-iteration exits, 5 stationarity
+  maximum-iteration exits, 2 line-search failures, 1 infeasible/stalled
+  maximum-iteration exit, and 1 QP failure.
+- With both KKT convergence and `--acceptable-iter 5`, the same sample had
+  11/20 clean status successes: 4 strict successes and 7 acceptable successes.
 
 Phase 1: Header and standalone callback smoke tests.
 
@@ -667,16 +808,16 @@ maps.
 
 ## Main Risk
 
-The largest technical risk is that the current A4SQP algorithm code is not yet
-cleanly separated from ASCEND data structures. In particular, exact Hessian
-assembly, line search trial-point handling, scaling, progress, and diagnostics
-currently rely on ASCEND objects in several places.
+The largest technical risk is now exact-Hessian and diagnostic coupling rather
+than duplicate solver loops. The core SQP step, line search, QP assembly,
+trust retry, convergence checks, BFGS model, and PSD regularization are shared.
+Exact Hessian assembly, scaling choices, progress reporting, and diagnostics
+still have frontend-specific pieces.
 
 The C API must not regress solver-core behaviour that already exists in the
-ASCEND path. At minimum, standalone callback solves need the same PSD Hessian
-regularization policy as the ASCEND exact-Hessian path, and any later core
-extraction should share that implementation rather than maintaining divergent
-ASCEND and callback copies.
+ASCEND path. Standalone callback solves and ASCEND solves now share the dense
+BFGS/PSD implementation; future restoration, filtering, trust-region, or
+Hessian recovery work must extend `liba4sqp.so`, not adapter code.
 
 The mitigation is incremental extraction:
 
