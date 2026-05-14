@@ -61,6 +61,10 @@ static void a4sqp_init_status(struct A4SqpSystem *sys){
 	sys->last_linearized_violation = 0.0;
 	sys->last_violation_sum = 0.0;
 	sys->last_violation_max = 0.0;
+	sys->last_dual_infeasibility = 0.0;
+	sys->last_complementarity = 0.0;
+	sys->last_kkt_error = 0.0;
+	sys->last_regularization_size = 0.0;
 	sys->last_alpha = 0.0;
 	sys->last_step_norm = 0.0;
 	sys->trust_radius = 0.0;
@@ -571,7 +575,19 @@ static A4SqpBool asc_a4sqp_intermediate_cb(
 		? A4SQP_CORE_PHASE_RESTORATION
 		: A4SQP_CORE_PHASE_REGULAR;
 	ctx->sys->last_violation_max = inf_pr;
+	ctx->sys->last_dual_infeasibility = inf_du;
+	ctx->sys->last_complementarity = mu;
+	ctx->sys->last_kkt_error = inf_pr;
+	ctx->sys->bound_stats.stationarity_inf = inf_du;
+	ctx->sys->bound_stats.worst_index = -1;
+	if(ctx->sys->last_dual_infeasibility > ctx->sys->last_kkt_error){
+		ctx->sys->last_kkt_error = ctx->sys->last_dual_infeasibility;
+	}
+	if(ctx->sys->last_complementarity > ctx->sys->last_kkt_error){
+		ctx->sys->last_kkt_error = ctx->sys->last_complementarity;
+	}
 	ctx->sys->last_step_norm = d_norm;
+	ctx->sys->last_regularization_size = regularization_size;
 	ctx->sys->last_alpha = alpha_pr;
 	if(SLV_PARAM_BOOL(&ctx->sys->params,A4SQP_PARAM_PROGRESS_CALLBACKS)){
 		asc_a4sqp_report_iteration(ctx->sys);
@@ -640,8 +656,12 @@ static void asc_a4sqp_apply_solve_stats(
 	sys->restoration_exits = stats->restoration_exits;
 	sys->restoration_handoffs = stats->restoration_handoffs;
 	sys->last_violation_max = stats->max_constraint_violation;
+	sys->last_dual_infeasibility = stats->dual_infeasibility_inf;
+	sys->last_complementarity = stats->complementarity_inf;
+	sys->last_kkt_error = stats->kkt_error;
 	sys->last_step_norm = stats->final_step_norm;
 	sys->trust_radius = stats->final_trust_radius;
+	sys->last_regularization_size = stats->regularization_size;
 }
 
 static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){

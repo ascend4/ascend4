@@ -115,6 +115,8 @@ struct A4SqpCSolve {
 	struct A4SqpCoreMultiplierEstimate lambda_est;
 };
 
+static void a4sqp_c_refresh_stats(struct A4SqpCSolve *solve, int iterations);
+
 static int a4sqp_c_streq(const char *a, const char *b){
 	if(a == NULL || b == NULL){
 		return 0;
@@ -923,6 +925,200 @@ static int a4sqp_c_hess_reset_identity(struct A4SqpCSolve *solve, double diag){
 	return a4sqp_dense_hessian_reset_identity(&solve->hess,solve->problem->n,diag);
 }
 
+static int a4sqp_c_dense_cholesky_ok(const double *hess, int n, double pivot_floor){
+	double *l = NULL;
+	int i;
+	int j;
+	int k;
+	int ok = 0;
+	if(hess == NULL || n <= 0){
+		return 0;
+	}
+	if(!isfinite(pivot_floor) || pivot_floor <= 0.0){
+		pivot_floor = 1e-12;
+	}
+	l = A4SQP_NEW_ARRAY_CLEAR(double,(size_t)n * (size_t)n);
+	if(l == NULL){
+		return 0;
+	}
+	for(i = 0; i < n; ++i){
+		for(j = 0; j <= i; ++j){
+			double sum = hess[(size_t)i * (size_t)n + (size_t)j];
+			for(k = 0; k < j; ++k){
+				sum -= l[(size_t)i * (size_t)n + (size_t)k] * l[(size_t)j * (size_t)n + (size_t)k];
+			}
+			if(i == j){
+				if(!isfinite(sum) || sum < pivot_floor){
+					goto cleanup;
+				}
+				l[(size_t)i * (size_t)n + (size_t)i] = sqrt(sum);
+			}else{
+				double ljj = l[(size_t)j * (size_t)n + (size_t)j];
+				if(!isfinite(ljj) || ljj <= 0.0){
+					goto cleanup;
+				}
+				l[(size_t)i * (size_t)n + (size_t)j] = sum / ljj;
+			}
+		}
+	}
+	ok = 1;
+
+cleanup:
+	A4SQP_FREE(l);
+	return ok;
+}
+
+static int a4sqp_c_solve_dense_system(double *a, double *b, int n){
+	int i;
+	int j;
+	int k;
+	if(a == NULL || b == NULL || n < 0){
+		return 1;
+	}
+	for(k = 0; k < n; ++k){
+		int pivot = k;
+		double pivot_abs = fabs(a[(size_t)k * (size_t)n + (size_t)k]);
+		for(i = k + 1; i < n; ++i){
+			double candidate = fabs(a[(size_t)i * (size_t)n + (size_t)k]);
+			if(candidate > pivot_abs){
+				pivot = i;
+				pivot_abs = candidate;
+			}
+		}
+		if(pivot_abs <= 1e-18 || !isfinite(pivot_abs)){
+			return 1;
+		}
+		if(pivot != k){
+			for(j = k; j < n; ++j){
+				double tmp = a[(size_t)k * (size_t)n + (size_t)j];
+				a[(size_t)k * (size_t)n + (size_t)j] = a[(size_t)pivot * (size_t)n + (size_t)j];
+				a[(size_t)pivot * (size_t)n + (size_t)j] = tmp;
+			}
+			{
+				double tmp = b[k];
+				b[k] = b[pivot];
+				b[pivot] = tmp;
+			}
+		}
+		for(i = k + 1; i < n; ++i){
+			double factor = a[(size_t)i * (size_t)n + (size_t)k] / a[(size_t)k * (size_t)n + (size_t)k];
+			if(factor == 0.0){
+				continue;
+			}
+			a[(size_t)i * (size_t)n + (size_t)k] = 0.0;
+			for(j = k + 1; j < n; ++j){
+				a[(size_t)i * (size_t)n + (size_t)j] -= factor * a[(size_t)k * (size_t)n + (size_t)j];
+			}
+			b[i] -= factor * b[k];
+		}
+	}
+	for(i = n - 1; i >= 0; --i){
+		double sum = b[i];
+		for(j = i + 1; j < n; ++j){
+			sum -= a[(size_t)i * (size_t)n + (size_t)j] * b[j];
+		}
+		b[i] = sum / a[(size_t)i * (size_t)n + (size_t)i];
+		if(!isfinite(b[i])){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int a4sqp_c_hess_add_scaled_equality_normal_matrix(
+	const struct A4SqpView *view,
+	double scale,
+	double *target
+){
+	int row;
+	if(view == NULL || target == NULL || view->n_var <= 0 || view->n_rel <= 0 || !isfinite(scale) || scale == 0.0){
+		return 1;
+	}
+	for(row = 0; row < view->n_rel; ++row){
+		int k1;
+		if(view->rel_kind == NULL || view->rel_kind[row] != A4SQP_REL_KIND_EQUALITY){
+			continue;
+		}
+		for(k1 = view->jac_row_start[row]; k1 < view->jac_row_start[row + 1]; ++k1){
+			int k2;
+			int col1 = view->jac_col_index[k1];
+			double jac1 = view->scaled_jac_value[k1];
+			if(col1 < 0 || col1 >= view->n_var || !isfinite(jac1)){
+				continue;
+			}
+			for(k2 = view->jac_row_start[row]; k2 < view->jac_row_start[row + 1]; ++k2){
+				int col2 = view->jac_col_index[k2];
+				double jac2 = view->scaled_jac_value[k2];
+				if(col2 < 0 || col2 >= view->n_var || !isfinite(jac2)){
+					continue;
+				}
+				target[(size_t)col1 * (size_t)view->n_var + (size_t)col2] += scale * jac1 * jac2;
+			}
+		}
+	}
+	return 0;
+}
+
+static double a4sqp_c_hess_regularize_equality_normal(struct A4SqpCSolve *solve, double min_diag){
+	double *candidate = NULL;
+	double beta = 0.0;
+	double scale = 1.0;
+	int i;
+	int n;
+	int tries;
+	int has_equality = 0;
+	if(solve == NULL || solve->problem == NULL || solve->hess.dense == NULL){
+		return -1.0;
+	}
+	n = solve->problem->n;
+	if(n <= 0 || solve->problem->m <= 0 || solve->view.n_rel <= 0){
+		return -1.0;
+	}
+	for(i = 0; i < solve->view.n_rel; ++i){
+		if(solve->view.rel_kind != NULL && solve->view.rel_kind[i] == A4SQP_REL_KIND_EQUALITY){
+			has_equality = 1;
+			break;
+		}
+	}
+	if(!has_equality){
+		return -1.0;
+	}
+	if(!isfinite(min_diag) || min_diag < 0.0){
+		min_diag = 1e-8;
+	}
+	for(i = 0; i < n * n; ++i){
+		double value = solve->hess.dense[i];
+		if(!isfinite(value)){
+			value = 0.0;
+		}
+		if(fabs(value) > scale){
+			scale = fabs(value);
+		}
+	}
+	candidate = A4SQP_NEW_ARRAY_OR_NULL(double,(size_t)n * (size_t)n);
+	if(candidate == NULL){
+		return -1.0;
+	}
+	for(tries = 0; tries < 12; ++tries){
+		memcpy(candidate,solve->hess.dense,(size_t)n * (size_t)n * sizeof(*candidate));
+		if(beta > 0.0){
+			(void)a4sqp_c_hess_add_scaled_equality_normal_matrix(&solve->view,beta,candidate);
+		}
+		if(a4sqp_c_dense_cholesky_ok(candidate,n,min_diag)){
+			memcpy(solve->hess.dense,candidate,(size_t)n * (size_t)n * sizeof(*candidate));
+			A4SQP_FREE(candidate);
+			return beta;
+		}
+		if(beta <= 0.0){
+			beta = fmax(min_diag,1e-8 * scale);
+		}else{
+			beta *= 10.0;
+		}
+	}
+	A4SQP_FREE(candidate);
+	return -1.0;
+}
+
 static void a4sqp_c_project_x_to_bounds(struct A4SqpProblemInfo *p, double *x){
 	int i;
 	double bound_push;
@@ -948,10 +1144,16 @@ static void a4sqp_c_project_x_to_bounds(struct A4SqpProblemInfo *p, double *x){
 
 static double a4sqp_c_hess_regularize_psd(struct A4SqpCSolve *solve){
 	double min_diag;
+	double normal_reg;
 	if(solve == NULL){
 		return 0.0;
 	}
 	min_diag = solve->problem->opt.hess_reg;
+	normal_reg = a4sqp_c_hess_regularize_equality_normal(solve,min_diag);
+	if(normal_reg >= 0.0){
+		solve->hess.last_reg = normal_reg;
+		return normal_reg;
+	}
 	return a4sqp_dense_hessian_regularize_psd(&solve->hess,min_diag);
 }
 
@@ -1258,6 +1460,173 @@ static void a4sqp_c_record_line_search_result(
 	solve->last_step_norm = result->step_norm;
 	solve->last_trust_ratio = result->trust_ratio;
 	solve->last_ls_trials = result->trials;
+}
+
+static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double *x){
+	struct A4SqpProblemInfo *p;
+	struct A4SqpCoreView core;
+	double *old_x = NULL;
+	double *lag_grad = NULL;
+	double *system = NULL;
+	double *rhs = NULL;
+	int *eq_rows = NULL;
+	double old_kkt;
+	double old_vio;
+	double old_merit;
+	int n;
+	int meq = 0;
+	int row;
+	int i;
+	int dim;
+	int accepted = 0;
+	if(solve == NULL || solve->problem == NULL || x == NULL || !solve->has_objective){
+		return 0;
+	}
+	p = solve->problem;
+	n = p->n;
+	if(n <= 0 || p->m <= 0 || solve->lambda == NULL || solve->view.n_rel <= 0){
+		return 0;
+	}
+	if(p->stats.max_constraint_violation > p->opt.acceptable_tol){
+		return 0;
+	}
+	if(p->stats.kkt_error <= p->opt.feas_tol || p->stats.kkt_error <= 0.0 || !isfinite(p->stats.kkt_error)){
+		return 0;
+	}
+	if(solve->last_step_norm > fmax(10.0 * p->opt.step_tol,1e-8) && solve->last_alpha > 0.0){
+		return 0;
+	}
+	for(row = 0; row < solve->view.n_rel; ++row){
+		if(solve->view.rel_kind != NULL && solve->view.rel_kind[row] == A4SQP_REL_KIND_EQUALITY){
+			++meq;
+		}
+	}
+	if(meq <= 0){
+		return 0;
+	}
+	old_kkt = p->stats.kkt_error;
+	old_vio = p->stats.max_constraint_violation;
+	old_merit = a4sqp_core_view_merit(&solve->view,solve->has_objective,solve->elastic_penalty);
+	if(a4sqp_c_uses_exact_hessian(p)){
+		if(a4sqp_c_hess_update_exact(solve,x) || solve->callback_error){
+			solve->callback_error = 0;
+			return 0;
+		}
+	}
+	if(solve->hess.dense == NULL || solve->hess.n != n){
+		return 0;
+	}
+	old_x = A4SQP_NEW_ARRAY_OR_NULL(double,n);
+	lag_grad = A4SQP_NEW_ARRAY_CLEAR(double,n);
+	eq_rows = A4SQP_NEW_ARRAY_OR_NULL(int,meq);
+	dim = n + meq;
+	system = A4SQP_NEW_ARRAY_CLEAR(double,(size_t)dim * (size_t)dim);
+	rhs = A4SQP_NEW_ARRAY_CLEAR(double,dim);
+	if(old_x == NULL || lag_grad == NULL || eq_rows == NULL || system == NULL || rhs == NULL){
+		goto cleanup;
+	}
+	memcpy(old_x,x,(size_t)n * sizeof(*old_x));
+	a4sqp_view_get_core(&solve->view,&core);
+	core.has_objective = solve->has_objective;
+	if(a4sqp_core_lagrangian_gradient_for_view(
+		&core,
+		solve->lambda,
+		p->stats.kkt_lambda_sign != 0 ? (double)p->stats.kkt_lambda_sign : 1.0,
+		lag_grad
+	)){
+		goto cleanup;
+	}
+	meq = 0;
+	for(row = 0; row < solve->view.n_rel; ++row){
+		if(solve->view.rel_kind != NULL && solve->view.rel_kind[row] == A4SQP_REL_KIND_EQUALITY){
+			eq_rows[meq++] = row;
+		}
+	}
+	for(i = 0; i < n; ++i){
+		int j;
+		for(j = 0; j < n; ++j){
+			system[(size_t)i * (size_t)dim + (size_t)j] = solve->hess.dense[(size_t)i * (size_t)n + (size_t)j];
+		}
+		system[(size_t)i * (size_t)dim + (size_t)i] += p->opt.hess_reg > 0.0 ? p->opt.hess_reg : 1e-8;
+		rhs[i] = -lag_grad[i];
+	}
+	for(i = 0; i < meq; ++i){
+		int erow = eq_rows[i];
+		int k;
+		double target = solve->view.scaled_rel_lower[erow];
+		int sys_row = n + i;
+		rhs[sys_row] = -(solve->view.scaled_rel_residual[erow] - target);
+		for(k = solve->view.jac_row_start[erow]; k < solve->view.jac_row_start[erow + 1]; ++k){
+			int col = solve->view.jac_col_index[k];
+			double jac = solve->view.scaled_jac_value[k];
+			if(col < 0 || col >= n || !isfinite(jac)){
+				continue;
+			}
+			system[(size_t)col * (size_t)dim + (size_t)sys_row] = jac;
+			system[(size_t)sys_row * (size_t)dim + (size_t)col] = jac;
+		}
+	}
+	if(a4sqp_c_solve_dense_system(system,rhs,dim)){
+		goto cleanup;
+	}
+	{
+		double step_inf = 0.0;
+		double limit = solve->trust_radius > 0.0 ? solve->trust_radius : 1.0;
+		double step_scale = 1.0;
+		double alpha = 1.0;
+		for(i = 0; i < n; ++i){
+			if(fabs(rhs[i]) > step_inf){
+				step_inf = fabs(rhs[i]);
+			}
+		}
+		if(step_inf > limit && limit > 0.0){
+			step_scale = limit / step_inf;
+		}
+		for(; alpha >= 1.0 / 1024.0; alpha *= 0.5){
+			double new_maxvio = 0.0;
+			double new_merit;
+			double step_norm2 = 0.0;
+			for(i = 0; i < n; ++i){
+				double physical_step = alpha * step_scale * rhs[i] * solve->view.var_scale[i];
+				x[i] = old_x[i] + physical_step;
+				step_norm2 += physical_step * physical_step;
+			}
+			a4sqp_c_project_x_to_bounds(p,x);
+			if(a4sqp_c_build_view(solve,x,A4SQP_TRUE) || solve->callback_error){
+				solve->callback_error = 0;
+				memcpy(x,old_x,(size_t)n * sizeof(*x));
+				(void)a4sqp_c_build_view(solve,x,A4SQP_TRUE);
+				continue;
+			}
+			a4sqp_c_refresh_stats(solve,p->stats.iterations);
+			new_maxvio = p->stats.max_constraint_violation;
+			new_merit = a4sqp_core_view_merit(&solve->view,solve->has_objective,solve->elastic_penalty);
+			if(
+				new_maxvio <= fmax(p->opt.acceptable_tol,10.0 * old_vio)
+				&& p->stats.kkt_error < old_kkt
+				&& (p->stats.kkt_error <= 0.5 * old_kkt || new_merit <= old_merit + p->opt.acceptable_tol)
+			){
+				solve->last_alpha = alpha;
+				solve->last_step_norm = sqrt(step_norm2);
+				solve->last_trust_ratio = 1.0;
+				accepted = 1;
+				break;
+			}
+		}
+	}
+	if(!accepted){
+		memcpy(x,old_x,(size_t)n * sizeof(*x));
+		(void)a4sqp_c_build_view(solve,x,A4SQP_TRUE);
+		a4sqp_c_refresh_stats(solve,p->stats.iterations);
+	}
+
+cleanup:
+	A4SQP_FREE(old_x);
+	A4SQP_FREE(lag_grad);
+	A4SQP_FREE(eq_rows);
+	A4SQP_FREE(system);
+	A4SQP_FREE(rhs);
+	return accepted;
 }
 
 static int a4sqp_c_has_converged(struct A4SqpCSolve *solve){
@@ -1591,6 +1960,9 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		}
 		++solve->accepted_step_count;
 		a4sqp_c_refresh_stats(solve,iter + 1);
+		if(a4sqp_c_try_stationarity_correction(solve,x)){
+			a4sqp_c_refresh_stats(solve,iter + 1);
+		}
 		maxvio = p->stats.max_constraint_violation;
 		if(
 			solve->elastic_penalty_saturated
@@ -1611,8 +1983,8 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 				p->stats.iterations,
 				solve->view.obj_value,
 				p->stats.max_constraint_violation,
-				p->stats.projected_gradient_inf,
-				0.0,
+				p->stats.dual_infeasibility_inf,
+				p->stats.complementarity_inf,
 				solve->last_step_norm,
 				p->stats.regularization_size,
 				0.0,

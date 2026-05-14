@@ -28,6 +28,10 @@ struct A4SqpSystem {
 	real64 last_linearized_violation;
 	real64 last_violation_sum;
 	real64 last_violation_max;
+	real64 last_dual_infeasibility;
+	real64 last_complementarity;
+	real64 last_kkt_error;
+	real64 last_regularization_size;
 	real64 last_alpha;
 	real64 last_step_norm;
 	real64 trust_radius;

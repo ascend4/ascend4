@@ -1536,8 +1536,11 @@ static void test_a4sqp_alsotame_solve(void){
 	);
 }
 
-static void test_a4sqp_bt4_solve_skipped(void){
-	CU_SKIP("A4SQP BT4 is a focused CUTEst regression for nonconvex equality-constrained stationarity; current core does not converge reliably.");
+static void test_a4sqp_bt4_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/bt4.a4c","bt4","sim_bt4"),
+		0
+	);
 }
 
 static void test_a4sqp_rosenmmx_solve_skipped(void){
@@ -1571,7 +1574,7 @@ static void test_a4sqp_cont6_qq_solve_skipped(void){
 	T(a4sqp_bt2_solve) \
 	T(a4sqp_brownbs_solve) \
 	T(a4sqp_alsotame_solve) \
-	T(a4sqp_bt4_solve_skipped) \
+	T(a4sqp_bt4_solve) \
 	T(a4sqp_jannson3_solve) \
 	T(a4sqp_jannson3_auto_exact_lagrangian) \
 	T(a4sqp_rosenmmx_solve_skipped) \
