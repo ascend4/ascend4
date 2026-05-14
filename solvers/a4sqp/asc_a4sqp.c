@@ -73,6 +73,7 @@ static void a4sqp_init_status(struct A4SqpSystem *sys){
 	sys->line_search_failed = 0;
 	memset(&sys->bound_stats,0,sizeof(sys->bound_stats));
 	sys->bound_stats.worst_index = -1;
+	memset(&sys->rel_stats,0,sizeof(sys->rel_stats));
 	sys->acceptable_count = 0;
 	sys->solved_acceptable = 0;
 	a4sqp_core_restoration_state_init(&sys->restoration_state);
@@ -282,6 +283,12 @@ static void a4sqp_update_metrics(struct A4SqpSystem *sys){
 		kkt.lambda_sign != 0 ? (real64)kkt.lambda_sign : -1.0,
 		feas_tol,
 		&sys->bound_stats
+	);
+	(void)a4sqp_core_rel_stats(
+		&sys->view,
+		feas_tol,
+		fmax(10.0 * feas_tol,1e-8),
+		&sys->rel_stats
 	);
 	a4sqp_spoof_block_status(sys);
 }
@@ -589,6 +596,15 @@ static A4SqpBool asc_a4sqp_intermediate_cb(
 	ctx->sys->last_step_norm = d_norm;
 	ctx->sys->last_regularization_size = regularization_size;
 	ctx->sys->last_alpha = alpha_pr;
+	{
+		real64 feas_tol = SLV_PARAM_REAL(&ctx->sys->params,A4SQP_PARAM_FEAS_TOL);
+		(void)a4sqp_core_rel_stats(
+			&ctx->sys->view,
+			feas_tol,
+			fmax(10.0 * feas_tol,1e-8),
+			&ctx->sys->rel_stats
+		);
+	}
 	if(SLV_PARAM_BOOL(&ctx->sys->params,A4SQP_PARAM_PROGRESS_CALLBACKS)){
 		asc_a4sqp_report_iteration(ctx->sys);
 	}
@@ -662,6 +678,15 @@ static void asc_a4sqp_apply_solve_stats(
 	sys->last_step_norm = stats->final_step_norm;
 	sys->trust_radius = stats->final_trust_radius;
 	sys->last_regularization_size = stats->regularization_size;
+	{
+		real64 feas_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
+		(void)a4sqp_core_rel_stats(
+			&sys->view,
+			feas_tol,
+			fmax(10.0 * feas_tol,1e-8),
+			&sys->rel_stats
+		);
+	}
 }
 
 static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){

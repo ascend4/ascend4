@@ -58,6 +58,13 @@ struct A4SqpCoreBoundStats {
 	real64 worst_lagrangian_gradient;
 };
 
+struct A4SqpCoreRelStats {
+	int32 equality;
+	int32 active;
+	int32 near_active;
+	int32 inactive;
+};
+
 struct A4SqpLineSearchOptions {
 	int max_backtrack;
 	real64 merit_tol;
@@ -258,6 +265,18 @@ A4SQP_CORE_EXPORT int a4sqp_core_bound_stats(
 	real64 row_sign,
 	real64 active_tol,
 	struct A4SqpCoreBoundStats *stats
+);
+A4SQP_CORE_EXPORT int a4sqp_core_rel_stats_for_view(
+	const struct A4SqpCoreView *view,
+	real64 active_tol,
+	real64 near_tol,
+	struct A4SqpCoreRelStats *stats
+);
+A4SQP_CORE_EXPORT int a4sqp_core_rel_stats(
+	const struct A4SqpView *view,
+	real64 active_tol,
+	real64 near_tol,
+	struct A4SqpCoreRelStats *stats
 );
 real64 a4sqp_core_qp_elastic_sum(const struct A4SqpQp *qp);
 real64 a4sqp_core_qp_elastic_max(const struct A4SqpQp *qp);

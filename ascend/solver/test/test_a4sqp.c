@@ -1543,6 +1543,20 @@ static void test_a4sqp_bt4_solve(void){
 	);
 }
 
+static void test_a4sqp_avgasb_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/avgasb.a4c","avgasb","sim_avgasb"),
+		0
+	);
+}
+
+static void test_a4sqp_avgasa_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/avgasa.a4c","avgasa","sim_avgasa"),
+		0
+	);
+}
+
 static void test_a4sqp_rosenmmx_solve_skipped(void){
 	CU_SKIP("A4SQP rosenmmx model-run regression previously passed, but is not reliable enough for default CUnit.");
 }
@@ -1575,6 +1589,8 @@ static void test_a4sqp_cont6_qq_solve_skipped(void){
 	T(a4sqp_brownbs_solve) \
 	T(a4sqp_alsotame_solve) \
 	T(a4sqp_bt4_solve) \
+	T(a4sqp_avgasa_solve) \
+	T(a4sqp_avgasb_solve) \
 	T(a4sqp_jannson3_solve) \
 	T(a4sqp_jannson3_auto_exact_lagrangian) \
 	T(a4sqp_rosenmmx_solve_skipped) \

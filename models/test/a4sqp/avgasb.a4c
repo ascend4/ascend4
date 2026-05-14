@@ -1,0 +1,99 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL avgasb;
+	x[1..8] IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst AVGASB.
+			Known CUTEst/IPOPTC local solution from the current tracking run:
+			    x = [0.15679390, 0.84320606, 0.53140049, 0.46859943,
+			         0.54392289, 0.12486883, 0.74640189, 0.0]
+			    f = -4.48321936480296
+		}
+		'source' SELF {
+			S. Leyffer, SIF input for the AVGas mixed-integer test case,
+			May 1998. The CUTEst NLP benchmark treats integer variables
+			as continuous variables with bounds.
+		}
+		'problem_origin' SELF {
+			This convex quadratic problem with linear active constraints was
+			added to isolate active-set multiplier and stationarity handling.
+		}
+	END NOTES;
+
+	con1: 1.0 - x[1] - x[2] >= 0.0;
+	con2: 1.0 - x[3] - x[4] >= 0.0;
+	con3: 1.0 - x[5] - x[6] >= 0.0;
+	con4: 1.0 - x[7] - x[8] >= 0.0;
+	con5: 2.0 - x[1] - x[3] - x[5] - x[7] >= 0.0;
+	con6: 2.0 - x[2] - x[4] - x[6] - x[8] >= 0.0;
+	con7: 2.0*x[1] + x[3] - x[7] >= 0.0;
+	con8: 5.0*x[1] + 3.0*x[3] - 3.0*x[5] - x[7] >= 0.0;
+	con9: x[2] - x[4] - 3.0*x[6] - 5.0*x[8] >= 0.0;
+	con10: x[2] - 3.0*x[6] - 2.0*x[8] >= 0.0;
+
+	obj: MINIMIZE
+		- 2.0*x[2] - x[3] - 3.0*x[4] - 2.0*x[5]
+		- 4.0*x[6] - 3.0*x[7] - 5.0*x[8]
+		+ 2.0*x[1]^2 + 2.0*x[2]^2 + 2.0*x[3]^2 + 2.0*x[4]^2
+		+ 2.0*x[5]^2 + 2.0*x[6]^2 + 2.0*x[7]^2 + 2.0*x[8]^2
+		- x[1]*x[2] - x[2]*x[3] - x[3]*x[4] - x[4]*x[5]
+		- x[5]*x[6] - x[6]*x[7] - x[7]*x[8];
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x[1] - 0.156793897163) < 5e-5;
+	ASSERT abs(x[2] - 0.843206058196) < 5e-5;
+	ASSERT abs(x[3] - 0.531400489925) < 5e-5;
+	ASSERT abs(x[4] - 0.468599433829) < 5e-5;
+	ASSERT abs(x[5] - 0.543922886339) < 5e-5;
+	ASSERT abs(x[6] - 0.124868827096) < 5e-5;
+	ASSERT abs(x[7] - 0.746401890058) < 5e-5;
+	ASSERT abs(x[8]) < 5e-5;
+	ASSERT abs(
+		- 2.0*x[2] - x[3] - 3.0*x[4] - 2.0*x[5]
+		- 4.0*x[6] - 3.0*x[7] - 5.0*x[8]
+		+ 2.0*x[1]^2 + 2.0*x[2]^2 + 2.0*x[3]^2 + 2.0*x[4]^2
+		+ 2.0*x[5]^2 + 2.0*x[6]^2 + 2.0*x[7]^2 + 2.0*x[8]^2
+		- x[1]*x[2] - x[2]*x[3] - x[3]*x[4] - x[4]*x[5]
+		- x[5]*x[6] - x[6]*x[7] - x[7]*x[8]
+		+ 4.48321936480296
+	) < 5e-7;
+	ASSERT abs(1.0 - x[1] - x[2]) < 1e-6;
+	ASSERT abs(1.0 - x[3] - x[4]) < 1e-6;
+	ASSERT 1.0 - x[5] - x[6] > -1e-7;
+	ASSERT 1.0 - x[7] - x[8] > -1e-7;
+	ASSERT 2.0 - x[1] - x[3] - x[5] - x[7] > -1e-7;
+	ASSERT 2.0 - x[2] - x[4] - x[6] - x[8] > -1e-7;
+	ASSERT 2.0*x[1] + x[3] - x[7] > -1e-7;
+	ASSERT 5.0*x[1] + 3.0*x[3] - 3.0*x[5] - x[7] > -1e-7;
+	ASSERT x[2] - x[4] - 3.0*x[6] - 5.0*x[8] > -1e-7;
+	ASSERT x[2] - 3.0*x[6] - 2.0*x[8] > -1e-7;
+END self_test;
+
+METHOD on_load;
+	FOR i IN [1..8] DO
+		x[i] := 0.5;
+		x[i].lower_bound := 0.0;
+		x[i].upper_bound := 1.0;
+	END FOR;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION step_tol 1e-7;
+	OPTION scaleopt 'NONE';
+	OPTION hessian 'EXACT_LAGRANGIAN';
+END on_load;
+
+METHOD on_load_test;
+	FOR i IN [1..8] DO
+		x[i] := 0.5;
+		x[i].lower_bound := 0.0;
+		x[i].upper_bound := 1.0;
+	END FOR;
+END on_load_test;
+END avgasb;

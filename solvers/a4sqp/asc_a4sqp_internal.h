@@ -21,6 +21,7 @@ struct A4SqpSystem {
 		real64 *x;
 	int32 x_n;
 	struct A4SqpCoreBoundStats bound_stats;
+	struct A4SqpCoreRelStats rel_stats;
 	real64 last_merit_before;
 	real64 last_merit_after;
 	real64 last_model_merit_after;

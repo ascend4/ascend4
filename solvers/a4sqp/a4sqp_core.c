@@ -748,6 +748,7 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 	if(a4sqp_core_multiplier_estimate_sync(estimate,view->n_rel)){
 		return 1;
 	}
+	memset(estimate->lambda,0,(size_t)estimate->n * sizeof(*estimate->lambda));
 	active = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_rel);
 	free_var = A4SQP_NEW_ARRAY_OR_NULL(int,view->n_var);
 	if(active == NULL || free_var == NULL){
@@ -774,9 +775,12 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 		}
 	}
 	if(active_count <= 0){
+		estimate->ready = 1;
+		estimate->good_count = 0;
+		estimate->required_count = 0;
 		A4SQP_FREE(active);
 		A4SQP_FREE(free_var);
-		return 1;
+		return 0;
 	}
 	normal = A4SQP_NEW_ARRAY_CLEAR(real64,(size_t)active_count * (size_t)active_count);
 	rhs = A4SQP_NEW_ARRAY_CLEAR(real64,active_count);
@@ -920,6 +924,63 @@ int a4sqp_core_bound_stats(
 	a4sqp_view_get_core(view,&core);
 	core.has_objective = has_objective;
 	return a4sqp_core_bound_stats_for_view(&core,row_dual,row_sign,active_tol,stats);
+}
+
+int a4sqp_core_rel_stats_for_view(
+	const struct A4SqpCoreView *view,
+	real64 active_tol,
+	real64 near_tol,
+	struct A4SqpCoreRelStats *stats
+){
+	int32 row;
+	if(stats == NULL){
+		return 1;
+	}
+	memset(stats,0,sizeof(*stats));
+	if(view == NULL || view->n_rel <= 0){
+		return 0;
+	}
+	if(!isfinite(active_tol) || active_tol <= 0.0){
+		active_tol = 1e-7;
+	}
+	if(!isfinite(near_tol) || near_tol < active_tol){
+		near_tol = fmax(10.0 * active_tol,1e-8);
+	}
+	for(row = 0; row < view->n_rel; ++row){
+		switch(a4sqp_core_row_activity_for_view(view,row,active_tol,near_tol)){
+		case A4SQP_ROW_EQUALITY:
+			++stats->equality;
+			break;
+		case A4SQP_ROW_ACTIVE:
+			++stats->active;
+			break;
+		case A4SQP_ROW_NEAR_ACTIVE:
+			++stats->near_active;
+			break;
+		case A4SQP_ROW_INACTIVE:
+		default:
+			++stats->inactive;
+			break;
+		}
+	}
+	return 0;
+}
+
+int a4sqp_core_rel_stats(
+	const struct A4SqpView *view,
+	real64 active_tol,
+	real64 near_tol,
+	struct A4SqpCoreRelStats *stats
+){
+	struct A4SqpCoreView core;
+	if(view == NULL){
+		if(stats != NULL){
+			memset(stats,0,sizeof(*stats));
+		}
+		return 1;
+	}
+	a4sqp_view_get_core(view,&core);
+	return a4sqp_core_rel_stats_for_view(&core,active_tol,near_tol,stats);
 }
 
 real64 a4sqp_core_qp_elastic_sum(const struct A4SqpQp *qp){
