@@ -114,7 +114,7 @@ METHODS
 METHOD self_test;
 	ASSERT abs(k - 0.060742765520110716) < 1e-4;
 	ASSERT SUM[p[i]*r[i] | i IN [1..n-1]] < 1e-8;
-	ASSERT abs(dx_over_pi*(2.0*SUM[p[i] | i IN [1..n-1]] + p[n]) - 1.0) < 1e-8;
+	ASSERT SATISFIED(load_balance,1e-8);
 	FOR i IN [1..n-1] DO
 		ASSERT p[i] >= -1e-10;
 		ASSERT r[i] >= -1e-10;

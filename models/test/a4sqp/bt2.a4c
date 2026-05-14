@@ -40,7 +40,7 @@ METHOD self_test;
 		((x1 - 1.0)^2 + (x1 - x2)^2 + (x2 - x3)^4)
 		- 0.0325682004
 	) < 5e-7;
-	ASSERT abs(x1*(1.0 + x2^2) + x3^4 - 8.2426407) < 2e-6;
+	ASSERT SATISFIED(con1,2e-6);
 END self_test;
 
 METHOD on_load;

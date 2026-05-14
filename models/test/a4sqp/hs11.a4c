@@ -36,7 +36,7 @@ METHOD self_test;
 	ASSERT abs(x1 - 1.2347728250533) < 1.5e-4;
 	ASSERT abs(x2 - 1.5246639294901) < 3e-4;
 	ASSERT abs(((x1 - 5)^2 + x2^2 - 25) - (-8.49846422315467)) < 1e-6;
-	ASSERT x2 - x1^2 > -1e-7;
+	ASSERT SATISFIED(con1,1e-7);
 END self_test;
 
 METHOD on_load;

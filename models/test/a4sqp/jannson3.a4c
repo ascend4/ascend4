@@ -92,9 +92,9 @@ METHOD self_test;
 		+ (x23 - 1.0)^2
 		- 4.5575853672988815
 	) < 1e-6;
-	ASSERT abs(x11 + x12 + x13 + x21 + x22 + x23 - 1.0) < 1e-8;
-	ASSERT x11^2 + x12^2 + x13^2 + x21^2 + x22^2 + x23^2 <= 0.75 + 1e-8;
-	ASSERT x11*x21 + x12*x22 + x13*x23 <= (1.0/15.0) + 1e-8;
+	ASSERT SATISFIED(sum_x,1e-8);
+	ASSERT SATISFIED(radius,1e-8);
+	ASSERT SATISFIED(coupling,1e-8);
 END self_test;
 
 METHOD bound_self;

@@ -1,0 +1,85 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL lsnnodoc;
+	x1, x2, x3, x4, x5 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst LSNNODOC.
+			Known CUTEst/IPOPTC solution:
+			    x1 = 2
+			    x2 = 8
+			    x3 = 0
+			    x4 = 2
+			    x5 = 8
+			    f  = 8*exp(2) + 64
+		}
+		'source' SELF {
+			CUTEst problem LSNNODOC, SIF input by the CUTEst/SIF collection.
+			The generated SIFdecode data identifies this as ONR2-AY-5-4.
+		}
+		'problem_origin' SELF {
+			This small linearly constrained NLP reaches the correct active
+			bound solution and is a focused regression for active-bound
+			stationarity and equality multiplier recovery.
+		}
+	END NOTES;
+
+	con1: x1 + x2 = 10.0;
+	con2: -x1 - x3 + x4 = 0.0;
+	con3: -x2 + x3 + x5 = 0.0;
+	con4: -x4 - x5 = -10.0;
+	obj: MINIMIZE x2*exp(x1 + x3) + x3^2*x4^2 + (x3 - x5)^2;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1 - 2.0) < 1e-7;
+	ASSERT abs(x2 - 8.0) < 1e-7;
+	ASSERT abs(x3) < 1e-7;
+	ASSERT abs(x4 - 2.0) < 1e-7;
+	ASSERT abs(x5 - 8.0) < 1e-7;
+	ASSERT abs(
+		x2*exp(x1 + x3) + x3^2*x4^2 + (x3 - x5)^2
+		- (8.0*exp(2.0) + 64.0)
+	) < 1e-7;
+	ASSERT SATISFIED(con1,1e-9);
+	ASSERT SATISFIED(con2,1e-9);
+	ASSERT SATISFIED(con3,1e-9);
+	ASSERT SATISFIED(con4,1e-9);
+END self_test;
+
+METHOD on_load;
+	x1 := 4.0;
+	x2 := 6.0;
+	x3 := 2.0;
+	x4 := 6.0;
+	x5 := 4.0;
+	x1.lower_bound := 2.0;
+	x1.upper_bound := 4.0;
+	x2.lower_bound := 6.0;
+	x2.upper_bound := 8.0;
+	x3.lower_bound := 0.0;
+	x3.upper_bound := 5.0;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'EXACT_LAGRANGIAN';
+END on_load;
+
+METHOD on_load_test;
+	x1 := 4.0;
+	x2 := 6.0;
+	x3 := 2.0;
+	x4 := 6.0;
+	x5 := 4.0;
+	x1.lower_bound := 2.0;
+	x1.upper_bound := 4.0;
+	x2.lower_bound := 6.0;
+	x2.upper_bound := 8.0;
+	x3.lower_bound := 0.0;
+	x3.upper_bound := 5.0;
+END on_load_test;
+END lsnnodoc;

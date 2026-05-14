@@ -161,12 +161,9 @@ METHOD self_test;
 	ASSERT abs(f44 - 1.6) < 1e-8;
 	ASSERT abs(f77 - 1.5553226500429866) < 5e-4;
 
-	ASSERT abs(
-		4.0*u[4][4] - u[3][4] - u[4][3] - u[5][4] - u[4][5]
-		- h2*u[4][4]*(a[4][4] - f[4][4] - u[4][4])
-	) < 1e-5;
-	ASSERT abs(u[4][0] - u[4][1] + h*u[4][1]) < 1e-5;
-	ASSERT abs(u[4][n] - u[4][n1]) < 1e-5;
+	ASSERT SATISFIED(state[4][4],1e-5);
+	ASSERT SATISFIED(bc1[4],1e-5);
+	ASSERT SATISFIED(bc3[4],1e-5);
 
 	FOR j IN [0..n] DO
 		FOR i IN [0..n] DO

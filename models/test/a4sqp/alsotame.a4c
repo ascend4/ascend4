@@ -30,7 +30,7 @@ METHODS
 METHOD self_test;
 	ASSERT abs(x - 0.5) < 5e-5;
 	ASSERT abs(y - 1.5) < 5e-5;
-	ASSERT abs(sin((y - x - 1.0)*1{rad})) < 1e-7;
+	ASSERT SATISFIED(con1,1e-7);
 END self_test;
 
 METHOD on_load;
