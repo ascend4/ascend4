@@ -1,0 +1,60 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL bt8;
+	x1, x2, x3, x4, x5 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst BT8 / Boggs-Tolle problem 8.
+			Known CUTEst/A4SQP objective after guarded BFGS fallback:
+			    f = 1
+			The minimizer is not unique in x1, x2 and x4; x3 is driven to zero.
+		}
+		'source' SELF {
+			P. T. Boggs and J. W. Tolle, "A strategy for global convergence
+			in a sequential quadratic programming algorithm", SIAM Journal on
+			Numerical Analysis 26(3), 1989. SIF input by Ph. L. Toint,
+			June 1993.
+		}
+		'problem_origin' SELF {
+			This small nonconvex equality-constrained NLP exposed an
+			exact-Hessian infeasible stall in A4SQP. It is a regression for
+			the core exact-Hessian-to-BFGS fallback path.
+		}
+	END NOTES;
+
+	con1: x1 - 1.0 - x4^2 + x2^2 = 0;
+	con2: -1.0 + x1^2 + x2^2 - x5^2 = 0;
+	obj: MINIMIZE x1^2 + x2^2 + x3^2;
+
+METHODS
+METHOD self_test;
+	ASSERT abs((x1^2 + x2^2 + x3^2) - 1.0) < 1e-6;
+	ASSERT abs(x3) < 5e-5;
+	ASSERT abs(x1 - 1.0 - x4^2 + x2^2) < 1e-6;
+	ASSERT abs(-1.0 + x1^2 + x2^2 - x5^2) < 1e-6;
+END self_test;
+
+METHOD on_load;
+	x1 := 1.0;
+	x2 := 1.0;
+	x3 := 1.0;
+	x4 := 0.0;
+	x5 := 0.0;
+	SOLVER A4SQP;
+	OPTION max_iter 200;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'EXACT_LAGRANGIAN';
+END on_load;
+
+METHOD on_load_test;
+	x1 := 1.0;
+	x2 := 1.0;
+	x3 := 1.0;
+	x4 := 0.0;
+	x5 := 0.0;
+END on_load_test;
+END bt8;

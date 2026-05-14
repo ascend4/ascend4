@@ -561,6 +561,7 @@ int MAINENTRY(void){
 	AddA4SqpNumOption(problem,"restoration_reentry_factor",a4sqp_cutest_env_double("A4SQP_RESTORATION_REENTRY_FACTOR",1.0));
 	AddA4SqpNumOption(problem,"trust_radius_init",a4sqp_cutest_env_double("A4SQP_TRUST_RADIUS_INIT",1.0));
 	AddA4SqpNumOption(problem,"hess_reg",a4sqp_cutest_env_double("A4SQP_HESS_REG",1e-8));
+	AddA4SqpNumOption(problem,"hess_fallback_ratio",a4sqp_cutest_env_double("A4SQP_HESS_FALLBACK_RATIO",1.0));
 	AddA4SqpNumOption(problem,"bound_push",a4sqp_cutest_env_double("A4SQP_BOUND_PUSH",1e-8));
 	AddA4SqpNumOption(problem,"qp_time_limit",a4sqp_cutest_env_double("A4SQP_QP_TIME_LIMIT",0.0));
 	AddA4SqpIntOption(problem,"qp_iteration_limit",a4sqp_cutest_env_int("A4SQP_QP_ITERATION_LIMIT",0));

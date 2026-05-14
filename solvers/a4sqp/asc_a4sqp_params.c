@@ -63,6 +63,13 @@ int a4sqp_get_default_parameters(
 		}, 1e-8, 0.0, 1e12}
 	);
 
+	slv_param_real(parameters,A4SQP_PARAM_HESS_FALLBACK_RATIO,
+		(SlvParameterInitReal){{"hess_fallback_ratio",
+			"Exact Hessian fallback ratio",2,
+			"Use the BFGS fallback model for an exact-Hessian step when PSD regularization divided by the Hessian infinity norm exceeds this ratio; zero disables fallback."
+		}, 1.0, 0.0, 1e12}
+	);
+
 	slv_param_real(parameters,A4SQP_PARAM_BOUND_PUSH,
 		(SlvParameterInitReal){{"bound_push",
 			"Bound push",2,

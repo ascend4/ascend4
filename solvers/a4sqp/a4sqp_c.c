@@ -55,6 +55,7 @@ struct A4SqpCOptions {
 	double trust_tiny_alpha;
 	double trust_tiny_radius_factor;
 	double hess_reg;
+	double hess_fallback_ratio;
 	double bound_push;
 	double qp_time_limit;
 	int qp_iteration_limit;
@@ -93,6 +94,7 @@ struct A4SqpCSolve {
 	struct A4SqpView view;
 	struct A4SqpQp qp;
 	struct A4SqpDenseHessian hess;
+	struct A4SqpDenseHessian bfgs_hess;
 	double *lambda;
 	double trust_radius;
 	int has_objective;
@@ -111,6 +113,10 @@ struct A4SqpCSolve {
 	int elastic_penalty_saturated;
 	int accepted_step_count;
 	int acceptable_count;
+	double exact_hess_norm_inf;
+	double exact_hess_reg_ratio;
+	int using_bfgs_fallback;
+	int bfgs_fallback_count;
 	struct A4SqpCoreRestorationState restoration_state;
 	struct A4SqpCoreMultiplierEstimate lambda_est;
 };
@@ -178,6 +184,7 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->trust_tiny_alpha = 0.0;
 	opt->trust_tiny_radius_factor = 2.0;
 	opt->hess_reg = 1e-8;
+	opt->hess_fallback_ratio = 1.0;
 	opt->bound_push = 1e-8;
 	opt->qp_time_limit = 0.0;
 	opt->qp_iteration_limit = 0;
@@ -482,10 +489,17 @@ A4SqpBool AddA4SqpNumOption(A4SqpProblem problem, char *keyword, A4SqpNumber val
 		return A4SQP_TRUE;
 	}
 	if(a4sqp_c_streq(keyword,"hess_reg")){
-		if(val < 0.0){
+		if(val < 0.0 || !isfinite(val)){
 			return A4SQP_FALSE;
 		}
 		p->opt.hess_reg = val;
+		return A4SQP_TRUE;
+	}
+	if(a4sqp_c_streq(keyword,"hess_fallback_ratio")){
+		if(val < 0.0 || !isfinite(val)){
+			return A4SQP_FALSE;
+		}
+		p->opt.hess_fallback_ratio = val;
 		return A4SQP_TRUE;
 	}
 	if(a4sqp_c_streq(keyword,"bound_push")){
@@ -1142,6 +1156,29 @@ static void a4sqp_c_project_x_to_bounds(struct A4SqpProblemInfo *p, double *x){
 	}
 }
 
+static double a4sqp_c_hess_dense_inf_norm(const double *hess, int n){
+	double norm = 0.0;
+	int i;
+	int j;
+	if(hess == NULL || n <= 0){
+		return 0.0;
+	}
+	for(i = 0; i < n; ++i){
+		double row_sum = 0.0;
+		for(j = 0; j < n; ++j){
+			double value = hess[(size_t)i * (size_t)n + (size_t)j];
+			if(!isfinite(value)){
+				value = 0.0;
+			}
+			row_sum += fabs(value);
+		}
+		if(row_sum > norm){
+			norm = row_sum;
+		}
+	}
+	return norm;
+}
+
 static double a4sqp_c_hess_regularize_psd(struct A4SqpCSolve *solve){
 	double min_diag;
 	double normal_reg;
@@ -1385,12 +1422,40 @@ static int a4sqp_c_hess_update_exact(struct A4SqpCSolve *solve, const double *x)
 			solve->hess.dense[col * n + row] += value;
 		}
 	}
+	solve->exact_hess_norm_inf = a4sqp_c_hess_dense_inf_norm(solve->hess.dense,n);
 	p->stats.regularization_size = a4sqp_c_hess_regularize_psd(solve);
+	if(solve->exact_hess_norm_inf > 0.0 && isfinite(solve->exact_hess_norm_inf)){
+		solve->exact_hess_reg_ratio = solve->hess.last_reg / fmax(1.0,solve->exact_hess_norm_inf);
+	}else{
+		solve->exact_hess_reg_ratio = solve->hess.last_reg;
+	}
 	A4SQP_FREE(irow);
 	A4SQP_FREE(jcol);
 	A4SQP_FREE(values);
 	A4SQP_FREE(lambda);
 	return 0;
+}
+
+static void a4sqp_c_hess_bfgs_update_model(
+	struct A4SqpCSolve *solve,
+	struct A4SqpDenseHessian *model,
+	const double *old_x,
+	const double *old_grad
+){
+	if(solve == NULL || solve->problem == NULL || model == NULL){
+		return;
+	}
+	(void)a4sqp_dense_hessian_bfgs_update(
+		model,
+		solve->view.scaled_var_value,
+		solve->view.scaled_obj_gradient,
+		old_x,
+		old_grad,
+		solve->problem->opt.hess_reg
+	);
+	if(model == &solve->hess){
+		solve->problem->stats.regularization_size = solve->hess.last_reg;
+	}
 }
 
 static void a4sqp_c_hess_bfgs_update(
@@ -1401,15 +1466,7 @@ static void a4sqp_c_hess_bfgs_update(
 	if(solve == NULL || solve->problem == NULL){
 		return;
 	}
-	(void)a4sqp_dense_hessian_bfgs_update(
-		&solve->hess,
-		solve->view.scaled_var_value,
-		solve->view.scaled_obj_gradient,
-		old_x,
-		old_grad,
-		solve->problem->opt.hess_reg
-	);
-	solve->problem->stats.regularization_size = solve->hess.last_reg;
+	a4sqp_c_hess_bfgs_update_model(solve,&solve->hess,old_x,old_grad);
 }
 
 struct A4SqpCLineSearchCtx {
@@ -1438,10 +1495,14 @@ static void a4sqp_c_ls_accepted(
 	int restoration
 ){
 	struct A4SqpCLineSearchCtx *ls = (struct A4SqpCLineSearchCtx *)ctx;
-	if(ls == NULL || ls->solve == NULL || restoration || a4sqp_c_uses_exact_hessian(ls->solve->problem)){
+	if(ls == NULL || ls->solve == NULL || restoration){
 		return;
 	}
-	a4sqp_c_hess_bfgs_update(ls->solve,old_scaled_x,old_scaled_grad);
+	if(a4sqp_c_uses_exact_hessian(ls->solve->problem)){
+		a4sqp_c_hess_bfgs_update_model(ls->solve,&ls->solve->bfgs_hess,old_scaled_x,old_scaled_grad);
+	}else{
+		a4sqp_c_hess_bfgs_update(ls->solve,old_scaled_x,old_scaled_grad);
+	}
 }
 
 static void a4sqp_c_record_line_search_result(
@@ -1756,6 +1817,7 @@ struct A4SqpCCoreStepCtx {
 	struct A4SqpCSolve *solve;
 	double *x;
 	int hessian_memory_error;
+	int force_bfgs_fallback;
 };
 
 static int a4sqp_c_core_prepare_hessian(void *vctx, struct A4SqpStepHessian *step_hess){
@@ -1768,6 +1830,7 @@ static int a4sqp_c_core_prepare_hessian(void *vctx, struct A4SqpStepHessian *ste
 	solve = ctx->solve;
 	p = solve->problem;
 	memset(step_hess,0,sizeof(*step_hess));
+	solve->using_bfgs_fallback = 0;
 	if(a4sqp_c_hess_update_exact(solve,ctx->x)){
 		if(!solve->callback_error){
 			ctx->hessian_memory_error = 1;
@@ -1778,7 +1841,29 @@ static int a4sqp_c_core_prepare_hessian(void *vctx, struct A4SqpStepHessian *ste
 		return 1;
 	}
 	step_hess->n = p->n;
-	step_hess->dense = solve->hess.dense;
+	if(
+		a4sqp_c_uses_exact_hessian(p)
+		&& p->opt.hess_fallback_ratio > 0.0
+		&& solve->hess.last_reg > 0.0
+		&& solve->exact_hess_reg_ratio >= p->opt.hess_fallback_ratio
+		&& solve->bfgs_hess.dense != NULL
+		&& solve->bfgs_hess.n == p->n
+	){
+		solve->using_bfgs_fallback = 1;
+		++solve->bfgs_fallback_count;
+		step_hess->dense = solve->bfgs_hess.dense;
+	}else if(
+		ctx->force_bfgs_fallback
+		&& a4sqp_c_uses_exact_hessian(p)
+		&& solve->bfgs_hess.dense != NULL
+		&& solve->bfgs_hess.n == p->n
+	){
+		solve->using_bfgs_fallback = 1;
+		++solve->bfgs_fallback_count;
+		step_hess->dense = solve->bfgs_hess.dense;
+	}else{
+		step_hess->dense = solve->hess.dense;
+	}
 	return 0;
 }
 
@@ -1812,12 +1897,12 @@ static void a4sqp_c_core_after_qp_solve(void *vctx, const struct A4SqpQp *qp, in
 			solve->lambda[row] = (qp->row_dual != NULL && row < qp->num_row)
 				? qp->row_dual[row]
 				: 0.0;
-		}
-		options.feas_tol = p->opt.feas_tol;
-	options.elastic_penalty = solve->elastic_penalty;
-		options.row_dual_scale = solve->view.rel_scale;
-		(void)a4sqp_core_multiplier_estimate_update_view(
-			&solve->lambda_est,
+			}
+			options.feas_tol = p->opt.feas_tol;
+			options.elastic_penalty = solve->elastic_penalty;
+			options.row_dual_scale = solve->view.rel_scale;
+			(void)a4sqp_core_multiplier_estimate_update_view(
+				&solve->lambda_est,
 			&solve->view,
 			qp,
 			&options
@@ -1851,6 +1936,27 @@ static void a4sqp_c_refresh_stats(struct A4SqpCSolve *solve, int iterations){
 	a4sqp_c_update_kkt_stats(solve);
 }
 
+static void a4sqp_c_accumulate_core_step_stats(
+	struct A4SqpProblemInfo *p,
+	const struct A4SqpCoreStepStats *step_stats
+){
+	if(p == NULL || step_stats == NULL){
+		return;
+	}
+	p->stats.qp_solves += step_stats->qp_solves;
+	p->stats.qp_failures += step_stats->qp_failures;
+	p->stats.line_search_failures += step_stats->line_search_failures;
+	p->stats.algorithm_mode = step_stats->phase == A4SQP_CORE_PHASE_RESTORATION
+		? A4SqpRestorationPhaseMode
+		: A4SqpRegularMode;
+	p->stats.mode_switches += step_stats->phase_changed;
+	p->stats.regular_iterations += step_stats->regular_iterations;
+	p->stats.restoration_iterations += step_stats->restoration_iterations;
+	p->stats.restoration_entries += step_stats->restoration_entries;
+	p->stats.restoration_exits += step_stats->restoration_exits;
+	p->stats.restoration_handoffs += step_stats->restoration_handoffs;
+}
+
 static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *solve, double *x){
 	struct A4SqpProblemInfo *p = solve->problem;
 	struct A4SqpTrustOptions trust_opt;
@@ -1863,6 +1969,9 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		return A4SqpInvalidNumberDetected;
 	}
 	if(a4sqp_c_hess_reset_identity(solve,1.0)){
+		return A4SqpInsufficientMemory;
+	}
+	if(a4sqp_dense_hessian_reset_identity(&solve->bfgs_hess,p->n,1.0)){
 		return A4SqpInsufficientMemory;
 	}
 	solve->elastic_penalty = p->opt.elastic_penalty;
@@ -1899,15 +2008,15 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		memset(&line_result,0,sizeof(line_result));
 		step_ctx.solve = solve;
 		step_ctx.x = x;
-			line_ctx.solve = solve;
-			step_options.trust_qp_retries = p->opt.trust_qp_retries;
-			step_options.trust_unconstrained = p->opt.trust_unconstrained;
-			a4sqp_c_trust_options(&p->opt,&step_options.trust);
-			step_options.trust_tiny_alpha = p->opt.trust_tiny_alpha;
-			step_options.trust_tiny_radius_factor = p->opt.trust_tiny_radius_factor;
-			step_options.elastic_penalty = solve->elastic_penalty;
-			step_options.feas_tol = p->opt.feas_tol;
-			step_options.merit_tol = p->opt.merit_tol;
+		line_ctx.solve = solve;
+		step_options.trust_qp_retries = p->opt.trust_qp_retries;
+		step_options.trust_unconstrained = p->opt.trust_unconstrained;
+		a4sqp_c_trust_options(&p->opt,&step_options.trust);
+		step_options.trust_tiny_alpha = p->opt.trust_tiny_alpha;
+		step_options.trust_tiny_radius_factor = p->opt.trust_tiny_radius_factor;
+		step_options.elastic_penalty = solve->elastic_penalty;
+		step_options.feas_tol = p->opt.feas_tol;
+		step_options.merit_tol = p->opt.merit_tol;
 		step_options.restoration.enable = p->opt.restoration;
 		step_options.restoration.trigger_iter = p->opt.restoration_trigger_iter;
 		step_options.restoration.max_iter = p->opt.restoration_max_iter;
@@ -1927,10 +2036,10 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		line_options.filter_margin = p->opt.filter_margin;
 		line_ops.evaluate = a4sqp_c_ls_evaluate;
 		line_ops.accepted = a4sqp_c_ls_accepted;
-			step_ops.prepare_hessian = a4sqp_c_core_prepare_hessian;
-			step_ops.solve_qp = a4sqp_c_core_solve_qp;
-			step_ops.after_qp_solve = a4sqp_c_core_after_qp_solve;
-			step_status = a4sqp_core_solve_step(
+		step_ops.prepare_hessian = a4sqp_c_core_prepare_hessian;
+		step_ops.solve_qp = a4sqp_c_core_solve_qp;
+		step_ops.after_qp_solve = a4sqp_c_core_after_qp_solve;
+		step_status = a4sqp_core_solve_step(
 			&solve->view,
 			&solve->qp,
 			&solve->trust_radius,
@@ -1947,18 +2056,39 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		if(line_result.accepted || step_status == A4SQP_CORE_STEP_LINE_SEARCH_ERROR){
 			a4sqp_c_record_line_search_result(solve,&line_result);
 		}
-		p->stats.qp_solves += step_stats.qp_solves;
-		p->stats.qp_failures += step_stats.qp_failures;
-		p->stats.line_search_failures += step_stats.line_search_failures;
-		p->stats.algorithm_mode = step_stats.phase == A4SQP_CORE_PHASE_RESTORATION
-			? A4SqpRestorationPhaseMode
-			: A4SqpRegularMode;
-		p->stats.mode_switches += step_stats.phase_changed;
-		p->stats.regular_iterations += step_stats.regular_iterations;
-		p->stats.restoration_iterations += step_stats.restoration_iterations;
-		p->stats.restoration_entries += step_stats.restoration_entries;
-		p->stats.restoration_exits += step_stats.restoration_exits;
-		p->stats.restoration_handoffs += step_stats.restoration_handoffs;
+		a4sqp_c_accumulate_core_step_stats(p,&step_stats);
+		if(step_status != A4SQP_CORE_STEP_ACCEPTED){
+			if(
+				step_status == A4SQP_CORE_STEP_LINE_SEARCH_ERROR
+				&& a4sqp_c_uses_exact_hessian(p)
+				&& solve->bfgs_hess.dense != NULL
+				&& solve->bfgs_hess.n == p->n
+			){
+				(void)a4sqp_dense_hessian_reset_identity(&solve->bfgs_hess,p->n,1.0);
+				memset(&step_stats,0,sizeof(step_stats));
+				memset(&line_result,0,sizeof(line_result));
+				step_ctx.force_bfgs_fallback = 1;
+				step_ctx.hessian_memory_error = 0;
+				step_status = a4sqp_core_solve_step(
+					&solve->view,
+					&solve->qp,
+					&solve->trust_radius,
+					&step_options,
+					&step_ops,
+					&step_ctx,
+					&line_options,
+					&line_ops,
+					x,
+					solve->has_objective,
+					&line_result,
+					&step_stats
+				);
+				if(line_result.accepted || step_status == A4SQP_CORE_STEP_LINE_SEARCH_ERROR){
+					a4sqp_c_record_line_search_result(solve,&line_result);
+				}
+				a4sqp_c_accumulate_core_step_stats(p,&step_stats);
+			}
+		}
 		if(step_status != A4SQP_CORE_STEP_ACCEPTED){
 			a4sqp_c_refresh_stats(solve,iter + 1);
 			if(a4sqp_c_has_converged(solve)){
@@ -2022,6 +2152,52 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 	return A4SqpMaximumIterationsExceeded;
 }
 
+static void a4sqp_c_solve_state_init(
+	struct A4SqpCSolve *solve,
+	struct A4SqpProblemInfo *problem,
+	A4SqpUserDataPtr user_data
+){
+	memset(solve,0,sizeof(*solve));
+	solve->problem = problem;
+	solve->user_data = user_data;
+	solve->has_objective = problem != NULL && problem->eval_f != NULL;
+	a4sqp_dense_hessian_init(&solve->hess);
+	a4sqp_dense_hessian_init(&solve->bfgs_hess);
+	a4sqp_view_init(&solve->view);
+	a4sqp_qp_init(&solve->qp);
+	a4sqp_core_multiplier_estimate_init(&solve->lambda_est);
+}
+
+static void a4sqp_c_solve_state_destroy(struct A4SqpCSolve *solve){
+	if(solve == NULL){
+		return;
+	}
+	a4sqp_dense_hessian_destroy(&solve->hess);
+	a4sqp_dense_hessian_destroy(&solve->bfgs_hess);
+	A4SQP_FREE(solve->lambda);
+	solve->lambda = NULL;
+	a4sqp_core_multiplier_estimate_destroy(&solve->lambda_est);
+	a4sqp_qp_destroy(&solve->qp);
+	a4sqp_view_destroy(&solve->view);
+}
+
+static int a4sqp_c_should_restart_with_bfgs(
+	const struct A4SqpProblemInfo *p,
+	enum A4SqpApplicationReturnStatus status
+){
+	if(p == NULL || !a4sqp_c_uses_exact_hessian(p) || p->opt.hess_fallback_ratio <= 0.0){
+		return 0;
+	}
+	if(status == A4SqpErrorInStepComputation){
+		return 1;
+	}
+	if(status != A4SqpMaximumIterationsExceeded){
+		return 0;
+	}
+	return p->stats.kkt_error > p->opt.acceptable_tol
+		|| p->stats.max_constraint_violation > p->opt.acceptable_tol;
+}
+
 enum A4SqpApplicationReturnStatus A4SqpSolve(
 	A4SqpProblem problem,
 	A4SqpNumber *x,
@@ -2035,20 +2211,41 @@ enum A4SqpApplicationReturnStatus A4SqpSolve(
 	struct A4SqpProblemInfo *p = (struct A4SqpProblemInfo *)problem;
 	struct A4SqpCSolve solve;
 	enum A4SqpApplicationReturnStatus status;
+	A4SqpNumber *x_initial = NULL;
+	char original_hessian[32];
+	int exact_restart_allowed;
 	int i;
 	if(p == NULL || (p->n > 0 && x == NULL)){
 		return A4SqpInvalidProblemDefinition;
 	}
+	original_hessian[0] = '\0';
+	strcpy(original_hessian,p->opt.hessian);
+	exact_restart_allowed = a4sqp_c_uses_exact_hessian(p);
+	if(p->n > 0){
+		x_initial = A4SQP_NEW_ARRAY_OR_NULL(A4SqpNumber,p->n);
+		if(x_initial == NULL){
+			return A4SqpInsufficientMemory;
+		}
+		memcpy(x_initial,x,(size_t)p->n * sizeof(*x_initial));
+	}
 	memset(&p->stats,0,sizeof(p->stats));
-	memset(&solve,0,sizeof(solve));
-	solve.problem = p;
-	solve.user_data = user_data;
-	solve.has_objective = p->eval_f != NULL;
-	a4sqp_dense_hessian_init(&solve.hess);
-	a4sqp_view_init(&solve.view);
-	a4sqp_qp_init(&solve.qp);
-	a4sqp_core_multiplier_estimate_init(&solve.lambda_est);
+	a4sqp_c_solve_state_init(&solve,p,user_data);
 	status = a4sqp_c_solve_impl(&solve,x);
+	if(
+		exact_restart_allowed
+		&& a4sqp_c_should_restart_with_bfgs(p,status)
+		&& x_initial != NULL
+	){
+		a4sqp_c_solve_state_destroy(&solve);
+		memcpy(x,x_initial,(size_t)p->n * sizeof(*x));
+		memset(&p->stats,0,sizeof(p->stats));
+		strcpy(p->opt.hessian,"BFGS");
+		a4sqp_c_solve_state_init(&solve,p,user_data);
+		status = a4sqp_c_solve_impl(&solve,x);
+		strcpy(p->opt.hessian,original_hessian);
+	}else{
+		strcpy(p->opt.hessian,original_hessian);
+	}
 	if(g != NULL && p->m > 0 && solve.view.rel_residual != NULL){
 		for(i = 0; i < p->m; ++i){
 			g[i] = solve.view.rel_residual[i];
@@ -2082,11 +2279,8 @@ enum A4SqpApplicationReturnStatus A4SqpSolve(
 		p->stats.projected_gradient_inf = a4sqp_c_projected_gradient_inf(&solve);
 		a4sqp_c_update_kkt_stats(&solve);
 	}
-	a4sqp_dense_hessian_destroy(&solve.hess);
-	A4SQP_FREE(solve.lambda);
-	a4sqp_core_multiplier_estimate_destroy(&solve.lambda_est);
-	a4sqp_qp_destroy(&solve.qp);
-	a4sqp_view_destroy(&solve.view);
+	a4sqp_c_solve_state_destroy(&solve);
+	A4SQP_FREE(x_initial);
 	return status;
 }
 

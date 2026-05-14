@@ -77,3 +77,4 @@ Highs.log
 models/johnpye/fprops/test/eqm_case_runner
 models/johnpye/fprops/test/eqm_mu0_runner
 models/johnpye/fprops/test/eqm_nox_runner
+cutest_a4sqp_ipoptc_results.jsonl

@@ -16,7 +16,7 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | Acceptable tolerance | 1e-5 |
 | Parallel jobs | 6 |
 | Problem-set source | solvers/a4sqp/cutest/problem_sets/broad_stratified_89.tsv |
-| Notes | Current broad tracking run after inactive multiplier cleanup and AVGASA/AVGASB regressions. |
+| Notes | Current broad tracking run after exact-Hessian guarded BFGS fallback/restart. |
 
 ## Profile Summary
 
@@ -24,8 +24,8 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ipoptc_limited | ipoptc | limited-memory | n/a | n/a | 89 | 75 | 75/89 | 9 | 0 | 5 | 0 | acceptable_success:3; max_iter_infeasible_or_stalled:1; max_iter_near_solved:9; other_solver_failure:4; strict_success:72 |
 | a4sqp_bfgs_kkt_acc | a4sqp | BFGS | 1 | 5 | 89 | 45 | 45/89 | 0 | 0 | 38 | 6 | acceptable_success:14; driver_timeout:6; line_search_error:5; max_iter_infeasible_or_stalled:9; max_iter_stationarity:24; strict_success:31 |
-| a4sqp_exactobj_kkt_acc | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 49 | 49/89 | 0 | 0 | 32 | 8 | acceptable_success:15; driver_timeout:8; line_search_error:3; max_iter_infeasible_or_stalled:10; max_iter_stationarity:17; other_solver_failure:1; qp_failure:1; strict_success:34 |
-| a4sqp_exactlag_kkt_acc | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 62 | 62/89 | 0 | 0 | 19 | 8 | acceptable_success:14; driver_timeout:8; line_search_error:3; max_iter_infeasible_or_stalled:1; max_iter_stationarity:14; qp_failure:1; strict_success:48 |
+| a4sqp_exactobj_kkt_acc | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 54 | 54/89 | 0 | 0 | 25 | 10 | acceptable_success:15; driver_timeout:10; line_search_error:1; max_iter_infeasible_or_stalled:8; max_iter_stationarity:15; other_solver_failure:1; strict_success:39 |
+| a4sqp_exactlag_kkt_acc | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 65 | 65/89 | 0 | 0 | 16 | 8 | acceptable_success:14; driver_timeout:8; line_search_error:1; max_iter_infeasible_or_stalled:1; max_iter_stationarity:14; strict_success:51 |
 
 ## Problem Outcomes
 
@@ -34,7 +34,7 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | Problem | Class | n | m | ipoptc_limited | a4sqp_bfgs_kkt_acc | a4sqp_exactobj_kkt_acc | a4sqp_exactlag_kkt_acc |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 3PK | SBR2-MN-30-0 | 30 | 0 | 🟠3 | 🔴6 | 🟢1 | 🟢1 |
-| ACOPP14 | QOR2-AY-38-68 | 38 | 68 | 🟢1 | 🔴6 | 🔴11 | 🟢1 |
+| ACOPP14 | QOR2-AY-38-68 | 38 | 68 | 🟢1 | 🔴6 | 🔴11 | 🔴6 |
 | ACOPR14 | QOR2-AN-38-82 | 38 | 82 | 🔴14 | 🔴6 | 🔴11 | 🔴11 |
 | AIRCRFTB | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | AIRPORT | SQR2-MN-84-42 | 84 | 42 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
@@ -42,7 +42,7 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | ALLINIT | OBR2-AY-4-0 | 4 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
 | ALLINITA | OOR2-AY-4-4 | 4 | 4 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | ALLINITC | OOR2-AY-4-1 | 4 | 1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| ALLINITU | OUR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
+| ALLINITU | OUR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | ALSOTAME | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | ANTWERP | SLR2-RN-27-8 | 27 | 10 | 🟠3 | 🔴6 | 🔴6 | 🔴6 |
 | AVGASA | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
@@ -67,7 +67,7 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | BRANIN | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BRKMCC | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | BROWNBS | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
-| BROWNDEN | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🔴8 | 🔴8 |
+| BROWNDEN | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | BT1 | QQR2-AN-2-1 | 2 | 1 | 🟢1 | 🔴6 | 🔴6 | 🟢1 |
 | BT10 | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BT11 | OOR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
@@ -75,16 +75,16 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | BT13 | LQR2-AY-5-1 | 5 | 1 | 🟢2 | 🔴11 | 🔴11 | 🔴11 |
 | BT2 | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BT3 | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BT4 | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🔴7 | 🔴6 | 🟢1 |
+| BT4 | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | BT5 | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🔴6 | 🔴6 | 🟢1 |
 | BT6 | OOR2-AY-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BT7 | OQR2-AN-5-3 | 5 | 3 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
-| BT8 | QQR2-AN-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🔴7 | 🔴7 |
+| BT8 | QQR2-AN-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BT9 | LOR2-AN-4-2 | 4 | 2 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | BURKEHAN | QOR2-AN-1-1 | 1 | 1 | 🔴14 | 🔴8 | 🔴8 | 🔴8 |
-| BYRDSPHR | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🔴7 | 🟢1 |
+| BYRDSPHR | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | CAMEL6 | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| CANTILVR | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🔴11 | 🔴7 | 🟢1 |
+| CANTILVR | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🔴11 | 🔴11 | 🟢1 |
 | CB2 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | CB3 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | CERI651ALS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🔴6 | 🔴6 | 🔴6 |
@@ -95,18 +95,18 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | CHACONN1 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | CHACONN2 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | CONGIGMZ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| CRESC4 | OOR2-MY-6-8 | 6 | 8 | 🟢1 | 🔴11 | 🔴7 | 🔴11 |
+| CRESC4 | OOR2-MY-6-8 | 6 | 8 | 🟢1 | 🔴11 | 🔴11 | 🔴11 |
 | CRESC50 | OOR2-MY-6-100 | 6 | 100 | 🔴7 | 🔴11 | 🔴11 | 🔴11 |
 | DALLASS | ONR2-MN-46-31 | 46 | 31 | 🟠3 | 🔴6 | 🔴6 | 🔴6 |
 | DECONVB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢2 | 🟢1 | 🟢1 |
-| DECONVC | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🔴7 | 🔴6 | 🔴6 |
+| DECONVC | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🔴7 | 🔴7 | 🔴7 |
 | DECONVU | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢2 | 🟢1 | 🟢1 |
 | DEGENLPA | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
 | DEGENLPB | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
 | DEMYMALO | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DEVGLA1B | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | DEVGLA2B | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
-| DGOSPEC | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🔴8 | 🔴8 |
+| DGOSPEC | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DISC2 | LQR2-MY-29-23 | 29 | 23 | 🟢1 | 🔴7 | 🔴11 | 🔴11 |
 | DUAL1 | QLR2-MN-85-1 | 85 | 1 | 🟠3 | 🔴6 | 🟢2 | 🟢2 |
 | DUAL2 | QLR2-MN-96-1 | 96 | 1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
@@ -114,7 +114,7 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | EG1 | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
 | EGGCRATEB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | ELATVIDUB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| EQC | OLR2-MY-9-3 | 9 | 3 | 🟢2 | 🟢1 | 🔴9 | 🔴9 |
+| EQC | OLR2-MY-9-3 | 9 | 3 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
 | EXPFITA | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🔴11 | 🔴11 | 🔴11 |
 | EXTRASIM | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | LINSPANH | LNR2-MN-97-33 | 97 | 33 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
@@ -133,6 +133,5 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | 🔴6 | fail | max_iter_stationarity | iteration limit; stationarity residual too high |
 | 🔴7 | fail | max_iter_infeasible_or_stalled | iteration limit; infeasible or stalled |
 | 🔴8 | fail | line_search_error | line-search failure |
-| 🔴9 | fail | qp_failure | QP failure |
 | 🔴11 | error | driver_timeout | driver timeout |
 | 🔴14 | fail | other_solver_failure | other solver failure |

@@ -1543,6 +1543,13 @@ static void test_a4sqp_bt4_solve(void){
 	);
 }
 
+static void test_a4sqp_bt8_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/bt8.a4c","bt8","sim_bt8"),
+		0
+	);
+}
+
 static void test_a4sqp_avgasb_solve(void){
 	CU_ASSERT_EQUAL(
 		a4sqp_run_model_self_test("test/a4sqp/avgasb.a4c","avgasb","sim_avgasb"),
@@ -1553,6 +1560,20 @@ static void test_a4sqp_avgasb_solve(void){
 static void test_a4sqp_avgasa_solve(void){
 	CU_ASSERT_EQUAL(
 		a4sqp_run_model_self_test("test/a4sqp/avgasa.a4c","avgasa","sim_avgasa"),
+		0
+	);
+}
+
+static void test_a4sqp_dgospec_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/dgospec.a4c","dgospec","sim_dgospec"),
+		0
+	);
+}
+
+static void test_a4sqp_brownden_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/brownden.a4c","brownden","sim_brownden"),
 		0
 	);
 }
@@ -1589,8 +1610,11 @@ static void test_a4sqp_cont6_qq_solve_skipped(void){
 	T(a4sqp_brownbs_solve) \
 	T(a4sqp_alsotame_solve) \
 	T(a4sqp_bt4_solve) \
+	T(a4sqp_bt8_solve) \
 	T(a4sqp_avgasa_solve) \
 	T(a4sqp_avgasb_solve) \
+	T(a4sqp_dgospec_solve) \
+	T(a4sqp_brownden_solve) \
 	T(a4sqp_jannson3_solve) \
 	T(a4sqp_jannson3_auto_exact_lagrangian) \
 	T(a4sqp_rosenmmx_solve_skipped) \

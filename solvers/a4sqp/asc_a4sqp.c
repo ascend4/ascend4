@@ -649,6 +649,7 @@ static int asc_a4sqp_set_core_options(A4SqpProblem problem, struct A4SqpSystem *
 	AddA4SqpNumOption(problem,"trust_tiny_alpha",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_TINY_ALPHA));
 	AddA4SqpNumOption(problem,"trust_tiny_radius_factor",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_TINY_RADIUS_FACTOR));
 	AddA4SqpNumOption(problem,"hess_reg",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_HESS_REG));
+	AddA4SqpNumOption(problem,"hess_fallback_ratio",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_HESS_FALLBACK_RATIO));
 	AddA4SqpNumOption(problem,"bound_push",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_BOUND_PUSH));
 	AddA4SqpStrOption(problem,"hessian",SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_HESS_MODE));
 	return 0;
