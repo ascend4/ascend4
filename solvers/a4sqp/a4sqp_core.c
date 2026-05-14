@@ -714,6 +714,159 @@ static int a4sqp_core_solve_dense_system(real64 *a, real64 *b, int32 n){
 	return 0;
 }
 
+static real64 a4sqp_core_jac_value_for_row_col(
+	const struct A4SqpCoreView *view,
+	int32 row,
+	int32 col
+){
+	int32 k;
+	if(
+		view == NULL
+		|| row < 0
+		|| row >= view->n_rel
+		|| col < 0
+		|| col >= view->n_var
+		|| view->jac_row_start == NULL
+		|| view->jac_col_index == NULL
+		|| view->scaled_jac_value == NULL
+	){
+		return 0.0;
+	}
+	for(k = view->jac_row_start[row]; k < view->jac_row_start[row + 1]; ++k){
+		if(view->jac_col_index[k] == col && isfinite(view->scaled_jac_value[k])){
+			return view->scaled_jac_value[k];
+		}
+	}
+	return 0.0;
+}
+
+static int a4sqp_core_multiplier_estimate_solve_column_qr(
+	struct A4SqpCoreMultiplierEstimate *estimate,
+	const struct A4SqpCoreView *view,
+	const int32 *active,
+	int32 active_count,
+	const int *selected_var
+){
+	int32 selected_count = 0;
+	int32 *selected = NULL;
+	real64 *q = NULL;
+	real64 *r = NULL;
+	real64 *rhs = NULL;
+	real64 *y = NULL;
+	int32 i;
+	int32 j;
+	int32 arow;
+	int status = 1;
+	if(
+		estimate == NULL
+		|| estimate->lambda == NULL
+		|| view == NULL
+		|| active == NULL
+		|| selected_var == NULL
+		|| active_count <= 0
+		|| view->n_var <= 0
+		|| view->scaled_obj_gradient == NULL
+	){
+		return 1;
+	}
+	for(i = 0; i < view->n_var; ++i){
+		if(selected_var[i]){
+			++selected_count;
+		}
+	}
+	if(selected_count <= 0 || selected_count > active_count){
+		return 1;
+	}
+	selected = A4SQP_NEW_ARRAY_OR_NULL(int32,selected_count);
+	q = A4SQP_NEW_ARRAY_CLEAR(real64,(size_t)active_count * (size_t)selected_count);
+	r = A4SQP_NEW_ARRAY_CLEAR(real64,(size_t)selected_count * (size_t)selected_count);
+	rhs = A4SQP_NEW_ARRAY_OR_NULL(real64,selected_count);
+	y = A4SQP_NEW_ARRAY_OR_NULL(real64,selected_count);
+	if(selected == NULL || q == NULL || r == NULL || rhs == NULL || y == NULL){
+		goto cleanup;
+	}
+	selected_count = 0;
+	for(i = 0; i < view->n_var; ++i){
+		if(selected_var[i]){
+			selected[selected_count++] = i;
+		}
+	}
+	for(i = 0; i < selected_count; ++i){
+		rhs[i] = -view->scaled_obj_gradient[selected[i]];
+		for(arow = 0; arow < active_count; ++arow){
+			q[(size_t)arow * (size_t)selected_count + (size_t)i] =
+				a4sqp_core_jac_value_for_row_col(view,active[arow],selected[i]);
+		}
+	}
+	for(j = 0; j < selected_count; ++j){
+		real64 norm = 0.0;
+		int32 prev;
+		for(prev = 0; prev < j; ++prev){
+			real64 dot = 0.0;
+			for(arow = 0; arow < active_count; ++arow){
+				dot += q[(size_t)arow * (size_t)selected_count + (size_t)prev]
+					* q[(size_t)arow * (size_t)selected_count + (size_t)j];
+			}
+			r[(size_t)prev * (size_t)selected_count + (size_t)j] = dot;
+			for(arow = 0; arow < active_count; ++arow){
+				q[(size_t)arow * (size_t)selected_count + (size_t)j] -=
+					dot * q[(size_t)arow * (size_t)selected_count + (size_t)prev];
+			}
+		}
+		for(prev = 0; prev < j; ++prev){
+			real64 dot = 0.0;
+			for(arow = 0; arow < active_count; ++arow){
+				dot += q[(size_t)arow * (size_t)selected_count + (size_t)prev]
+					* q[(size_t)arow * (size_t)selected_count + (size_t)j];
+			}
+			r[(size_t)prev * (size_t)selected_count + (size_t)j] += dot;
+			for(arow = 0; arow < active_count; ++arow){
+				q[(size_t)arow * (size_t)selected_count + (size_t)j] -=
+					dot * q[(size_t)arow * (size_t)selected_count + (size_t)prev];
+			}
+		}
+		for(arow = 0; arow < active_count; ++arow){
+			real64 value = q[(size_t)arow * (size_t)selected_count + (size_t)j];
+			norm += value * value;
+		}
+		norm = sqrt(norm);
+		if(!isfinite(norm) || norm <= 1e-14){
+			goto cleanup;
+		}
+		r[(size_t)j * (size_t)selected_count + (size_t)j] = norm;
+		for(arow = 0; arow < active_count; ++arow){
+			q[(size_t)arow * (size_t)selected_count + (size_t)j] /= norm;
+		}
+	}
+	for(i = 0; i < selected_count; ++i){
+		real64 sum = rhs[i];
+		for(j = 0; j < i; ++j){
+			sum -= r[(size_t)j * (size_t)selected_count + (size_t)i] * y[j];
+		}
+		y[i] = sum / r[(size_t)i * (size_t)selected_count + (size_t)i];
+		if(!isfinite(y[i])){
+			goto cleanup;
+		}
+	}
+	memset(estimate->lambda,0,(size_t)estimate->n * sizeof(*estimate->lambda));
+	for(arow = 0; arow < active_count; ++arow){
+		real64 lambda = 0.0;
+		for(i = 0; i < selected_count; ++i){
+			lambda += q[(size_t)arow * (size_t)selected_count + (size_t)i] * y[i];
+		}
+		estimate->lambda[active[arow]] = lambda;
+	}
+	status = 0;
+
+cleanup:
+	A4SQP_FREE(selected);
+	A4SQP_FREE(q);
+	A4SQP_FREE(r);
+	A4SQP_FREE(rhs);
+	A4SQP_FREE(y);
+	return status;
+}
+
 int a4sqp_core_multiplier_estimate_recover_stationarity(
 	struct A4SqpCoreMultiplierEstimate *estimate,
 	const struct A4SqpCoreView *view,
@@ -723,12 +876,13 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 	int32 i;
 	int32 arow;
 	int32 active_count = 0;
-	int32 free_count = 0;
 	int32 *active = NULL;
-	int *free_var = NULL;
+	int *selected_var = NULL;
 	real64 *normal = NULL;
 	real64 *rhs = NULL;
+	real64 *lag_grad = NULL;
 	real64 near_tol;
+	int iter;
 	if(
 		estimate == NULL
 		|| view == NULL
@@ -750,10 +904,12 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 	}
 	memset(estimate->lambda,0,(size_t)estimate->n * sizeof(*estimate->lambda));
 	active = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_rel);
-	free_var = A4SQP_NEW_ARRAY_OR_NULL(int,view->n_var);
-	if(active == NULL || free_var == NULL){
+	selected_var = A4SQP_NEW_ARRAY_OR_NULL(int,view->n_var);
+	lag_grad = A4SQP_NEW_ARRAY_OR_NULL(real64,view->n_var);
+	if(active == NULL || selected_var == NULL || lag_grad == NULL){
 		A4SQP_FREE(active);
-		A4SQP_FREE(free_var);
+		A4SQP_FREE(selected_var);
+		A4SQP_FREE(lag_grad);
 		return 1;
 	}
 	for(i = 0; i < view->n_var; ++i){
@@ -762,10 +918,7 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 		real64 upper = view->scaled_var_upper != NULL ? view->scaled_var_upper[i] : A4SQP_NO_UPPER_BOUND;
 		int at_lower = !a4sqp_core_is_lower_inf(lower) && value <= lower + active_tol;
 		int at_upper = !a4sqp_core_is_upper_inf(upper) && value >= upper - active_tol;
-		free_var[i] = !(at_lower || at_upper);
-		if(free_var[i]){
-			++free_count;
-		}
+		selected_var[i] = !(at_lower || at_upper);
 	}
 	for(row = 0; row < view->n_rel; ++row){
 		enum A4SqpRowActivity activity;
@@ -779,74 +932,103 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 		estimate->good_count = 0;
 		estimate->required_count = 0;
 		A4SQP_FREE(active);
-		A4SQP_FREE(free_var);
+		A4SQP_FREE(selected_var);
+		A4SQP_FREE(lag_grad);
 		return 0;
 	}
 	normal = A4SQP_NEW_ARRAY_CLEAR(real64,(size_t)active_count * (size_t)active_count);
 	rhs = A4SQP_NEW_ARRAY_CLEAR(real64,active_count);
 	if(normal == NULL || rhs == NULL){
 		A4SQP_FREE(active);
-		A4SQP_FREE(free_var);
+		A4SQP_FREE(selected_var);
+		A4SQP_FREE(lag_grad);
 		A4SQP_FREE(normal);
 		A4SQP_FREE(rhs);
 		return 1;
 	}
-	for(arow = 0; arow < active_count; ++arow){
-		int32 r = active[arow];
-		int32 k;
-		for(k = view->jac_row_start[r]; k < view->jac_row_start[r + 1]; ++k){
-			int32 col = view->jac_col_index[k];
-			real64 jac = view->scaled_jac_value[k];
-			if(free_count > 0 && (col < 0 || col >= view->n_var || !free_var[col])){
-				continue;
-			}
-			if(col >= 0 && col < view->n_var && isfinite(jac)){
-				rhs[arow] -= jac * view->scaled_obj_gradient[col];
-			}
-		}
-	}
-	for(arow = 0; arow < active_count; ++arow){
-		int32 r1 = active[arow];
-		int32 brow;
-		for(brow = 0; brow < active_count; ++brow){
-			int32 r2 = active[brow];
-			int32 k1;
-			for(k1 = view->jac_row_start[r1]; k1 < view->jac_row_start[r1 + 1]; ++k1){
-				int32 k2;
-				int32 col1 = view->jac_col_index[k1];
-				real64 jac1 = view->scaled_jac_value[k1];
-				if(col1 < 0 || col1 >= view->n_var || !isfinite(jac1)){
-					continue;
+	for(iter = 0; iter <= view->n_var; ++iter){
+		int added = 0;
+		if(a4sqp_core_multiplier_estimate_solve_column_qr(estimate,view,active,active_count,selected_var)){
+			memset(normal,0,(size_t)active_count * (size_t)active_count * sizeof(*normal));
+			memset(rhs,0,(size_t)active_count * sizeof(*rhs));
+			for(arow = 0; arow < active_count; ++arow){
+				int32 r = active[arow];
+				int32 k;
+				for(k = view->jac_row_start[r]; k < view->jac_row_start[r + 1]; ++k){
+					int32 col = view->jac_col_index[k];
+					real64 jac = view->scaled_jac_value[k];
+					if(col < 0 || col >= view->n_var || !selected_var[col] || !isfinite(jac)){
+						continue;
+					}
+					rhs[arow] -= jac * view->scaled_obj_gradient[col];
 				}
-				if(free_count > 0 && !free_var[col1]){
-					continue;
-				}
-				for(k2 = view->jac_row_start[r2]; k2 < view->jac_row_start[r2 + 1]; ++k2){
-					if(view->jac_col_index[k2] == col1 && isfinite(view->scaled_jac_value[k2])){
-						normal[(size_t)arow * (size_t)active_count + (size_t)brow] += jac1 * view->scaled_jac_value[k2];
+			}
+			for(arow = 0; arow < active_count; ++arow){
+				int32 r1 = active[arow];
+				int32 brow;
+				for(brow = 0; brow < active_count; ++brow){
+					int32 r2 = active[brow];
+					int32 k1;
+					for(k1 = view->jac_row_start[r1]; k1 < view->jac_row_start[r1 + 1]; ++k1){
+						int32 k2;
+						int32 col1 = view->jac_col_index[k1];
+						real64 jac1 = view->scaled_jac_value[k1];
+						if(col1 < 0 || col1 >= view->n_var || !selected_var[col1] || !isfinite(jac1)){
+							continue;
+						}
+						for(k2 = view->jac_row_start[r2]; k2 < view->jac_row_start[r2 + 1]; ++k2){
+							if(view->jac_col_index[k2] == col1 && isfinite(view->scaled_jac_value[k2])){
+								normal[(size_t)arow * (size_t)active_count + (size_t)brow] += jac1 * view->scaled_jac_value[k2];
+							}
+						}
 					}
 				}
 			}
+			for(i = 0; i < active_count; ++i){
+				normal[(size_t)i * (size_t)active_count + (size_t)i] += 1e-14;
+			}
+			if(a4sqp_core_solve_dense_system(normal,rhs,active_count)){
+				A4SQP_FREE(active);
+				A4SQP_FREE(selected_var);
+				A4SQP_FREE(lag_grad);
+				A4SQP_FREE(normal);
+				A4SQP_FREE(rhs);
+				return 1;
+			}
+			memset(estimate->lambda,0,(size_t)estimate->n * sizeof(*estimate->lambda));
+			for(arow = 0; arow < active_count; ++arow){
+				estimate->lambda[active[arow]] = rhs[arow];
+			}
 		}
-	}
-	for(i = 0; i < active_count; ++i){
-		normal[(size_t)i * (size_t)active_count + (size_t)i] += 1e-14;
-	}
-	if(a4sqp_core_solve_dense_system(normal,rhs,active_count)){
-		A4SQP_FREE(active);
-		A4SQP_FREE(free_var);
-		A4SQP_FREE(normal);
-		A4SQP_FREE(rhs);
-		return 1;
-	}
-	for(arow = 0; arow < active_count; ++arow){
-		estimate->lambda[active[arow]] = rhs[arow];
+		if(a4sqp_core_lagrangian_gradient_for_view(view,estimate->lambda,1.0,lag_grad)){
+			break;
+		}
+		for(i = 0; i < view->n_var; ++i){
+			real64 value = view->scaled_var_value != NULL ? view->scaled_var_value[i] : 0.0;
+			real64 lower = view->scaled_var_lower != NULL ? view->scaled_var_lower[i] : A4SQP_NO_LOWER_BOUND;
+			real64 upper = view->scaled_var_upper != NULL ? view->scaled_var_upper[i] : A4SQP_NO_UPPER_BOUND;
+			real64 residual;
+			int at_lower = !a4sqp_core_is_lower_inf(lower) && value <= lower + active_tol;
+			int at_upper = !a4sqp_core_is_upper_inf(upper) && value >= upper - active_tol;
+			if(selected_var[i] || !(at_lower || at_upper)){
+				continue;
+			}
+			residual = a4sqp_core_bound_stationarity_residual(lag_grad[i],value,lower,upper,active_tol);
+			if(residual > active_tol){
+				selected_var[i] = 1;
+				added = 1;
+			}
+		}
+		if(!added){
+			break;
+		}
 	}
 	estimate->ready = 1;
 	estimate->good_count = active_count;
 	estimate->required_count = active_count;
 	A4SQP_FREE(active);
-	A4SQP_FREE(free_var);
+	A4SQP_FREE(selected_var);
+	A4SQP_FREE(lag_grad);
 	A4SQP_FREE(normal);
 	A4SQP_FREE(rhs);
 	return 0;
