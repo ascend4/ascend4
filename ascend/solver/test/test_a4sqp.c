@@ -13,6 +13,7 @@
 #include <ascend/compiler/packages.h>
 #include <ascend/compiler/parser.h>
 #include <ascend/compiler/simlist.h>
+#include <ascend/compiler/slvreq.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/solver/solver.h>
 #include <ascend/system/system.h>
@@ -118,12 +119,131 @@ static int find_param_index(const slv_parameters_t *pp, const char *name){
 	return -1;
 }
 
+struct A4SqpModelRunner {
+	struct Instance *siminst;
+	struct Instance *buildroot;
+	slv_system_t sys;
+	char solvername[64];
+};
+
+static int a4sqp_model_runner_set_solver(const char *solvername, void *user_data){
+	struct A4SqpModelRunner *runner = (struct A4SqpModelRunner *)user_data;
+	int solver_index;
+	if(runner == NULL || runner->siminst == NULL || solvername == NULL){
+		return SLVREQ_UNKNOWN_SOLVER;
+	}
+	solver_index = slv_lookup_client(solvername);
+	if(solver_index == -1){
+		return SLVREQ_UNKNOWN_SOLVER;
+	}
+	if(runner->sys == NULL){
+		runner->sys = system_build(GetSimulationRoot(runner->siminst));
+		runner->buildroot = GetSimulationRoot(runner->siminst);
+		if(runner->sys == NULL){
+			return SLVREQ_UNKNOWN_SOLVER;
+		}
+	}
+	snprintf(runner->solvername,sizeof(runner->solvername),"%s",solvername);
+	if(slv_select_solver(runner->sys,solver_index) == -1){
+		return SLVREQ_UNKNOWN_SOLVER;
+	}
+	return 0;
+}
+
+static int a4sqp_model_runner_set_option(const char *optionname, struct value_t *val, void *user_data){
+	struct A4SqpModelRunner *runner = (struct A4SqpModelRunner *)user_data;
+	slv_parameters_t params;
+	int idx;
+	if(runner == NULL || runner->sys == NULL){
+		return SLVREQ_OPTIONS_UNAVAILABLE;
+	}
+	if(optionname == NULL || val == NULL){
+		return SLVREQ_INVALID_OPTION_NAME;
+	}
+	slv_get_parameters(runner->sys,&params);
+	idx = find_param_index(&params,optionname);
+	if(idx < 0){
+		return SLVREQ_INVALID_OPTION_NAME;
+	}
+	switch(SLV_PARAM_TYPE(&params,idx)){
+	case int_parm:
+		if(ValueKind(*val) != integer_value){
+			return SLVREQ_WRONG_OPTION_VALUE_TYPE;
+		}
+		SLV_PARAM_INT(&params,idx) = IntegerValue(*val);
+		break;
+	case bool_parm:
+		if(ValueKind(*val) != boolean_value){
+			return SLVREQ_WRONG_OPTION_VALUE_TYPE;
+		}
+		SLV_PARAM_BOOL(&params,idx) = BooleanValue(*val);
+		break;
+	case real_parm:
+		if(ValueKind(*val) != real_value){
+			return SLVREQ_WRONG_OPTION_VALUE_TYPE;
+		}
+		SLV_PARAM_REAL(&params,idx) = RealValue(*val);
+		break;
+	case char_parm:
+		if(ValueKind(*val) != symbol_value){
+			return SLVREQ_WRONG_OPTION_VALUE_TYPE;
+		}
+		slv_set_char_parameter(&(SLV_PARAM_CHAR(&params,idx)),SCP(SymbolValue(*val)));
+		break;
+	}
+	slv_set_parameters(runner->sys,&params);
+	return 0;
+}
+
+static int a4sqp_model_runner_do_solve(struct Instance *instance, void *user_data){
+	struct A4SqpModelRunner *runner = (struct A4SqpModelRunner *)user_data;
+	int solver_index;
+	int res;
+	if(runner == NULL || runner->siminst == NULL){
+		return SLVREQ_NO_SOLVER_SELECTED;
+	}
+	if(instance == NULL){
+		instance = GetSimulationRoot(runner->siminst);
+	}
+	if(runner->sys != NULL && runner->buildroot != instance){
+		system_destroy(runner->sys);
+		runner->sys = NULL;
+		runner->buildroot = NULL;
+	}
+	if(runner->sys == NULL){
+		if(runner->solvername[0] == '\0'){
+			return SLVREQ_NO_SOLVER_SELECTED;
+		}
+		runner->sys = system_build(instance);
+		runner->buildroot = instance;
+		if(runner->sys == NULL){
+			return SLVREQ_PRESOLVE_FAIL;
+		}
+		solver_index = slv_lookup_client(runner->solvername);
+		if(solver_index == -1 || slv_select_solver(runner->sys,solver_index) == -1){
+			return SLVREQ_NO_SOLVER_SELECTED;
+		}
+	}
+	res = slv_solve(runner->sys);
+	return res == 0 ? 0 : SLVREQ_SOLVE_FAIL;
+}
+
+static int a4sqp_model_runner_delete_system(void *user_data){
+	struct A4SqpModelRunner *runner = (struct A4SqpModelRunner *)user_data;
+	if(runner != NULL && runner->sys != NULL){
+		system_destroy(runner->sys);
+		runner->sys = NULL;
+		runner->buildroot = NULL;
+	}
+	return 0;
+}
+
 static int a4sqp_run_model_self_test(const char *module, const char *model, const char *sim){
 	int status;
-	int solver_index = -1;
 	int result = 1;
 	struct Instance *siminst = NULL;
-	slv_system_t sys = NULL;
+	struct A4SqpModelRunner runner = {0};
+	SlvReqHooks hooks = SLVREQ_HOOKS_EMPTY;
 	slv_status_t slvstatus;
 	struct Name *name = NULL;
 	enum Proc_enum pe;
@@ -143,11 +263,6 @@ static int a4sqp_run_model_self_test(const char *module, const char *model, cons
 		goto cleanup;
 	}
 
-	solver_index = slv_lookup_client("A4SQP");
-	if(solver_index == -1){
-		goto cleanup;
-	}
-
 	Asc_OpenModule(module,&status);
 	if(status != 0 || 0 != zz_parse() || FindType(AddSymbol(model)) == NULL){
 		goto cleanup;
@@ -157,22 +272,33 @@ static int a4sqp_run_model_self_test(const char *module, const char *model, cons
 	if(siminst == NULL){
 		goto cleanup;
 	}
+	runner.siminst = siminst;
+	hooks.set_solver_fn = &a4sqp_model_runner_set_solver;
+	hooks.set_option_fn = &a4sqp_model_runner_set_option;
+	hooks.do_solve_fn = &a4sqp_model_runner_do_solve;
+	hooks.delete_system_fn = &a4sqp_model_runner_delete_system;
+	hooks.user_data = &runner;
+	if(slvreq_assign_hooks(siminst,&hooks) != 0){
+		goto cleanup;
+	}
 
-	name = CreateIdName(AddSymbol("on_load_test"));
+	name = CreateIdName(AddSymbol("on_load"));
 	pe = Initialize(GetSimulationRoot(siminst),name,sim, ASCERR, WP_STOPONERR, NULL, NULL);
 	if(pe != Proc_all_ok){
 		goto cleanup;
 	}
 
-	sys = system_build(GetSimulationRoot(siminst));
-	if(sys == NULL || slv_select_solver(sys,solver_index) == -1){
+	if(runner.sys == NULL){
 		goto cleanup;
 	}
-	if(0 != slv_solve(sys)){
-		goto cleanup;
+	slv_get_status(runner.sys,&slvstatus);
+	if(!slvstatus.converged){
+		if(0 != slv_solve(runner.sys)){
+			goto cleanup;
+		}
 	}
 
-	slv_get_status(sys,&slvstatus);
+	slv_get_status(runner.sys,&slvstatus);
 	if(!slvstatus.converged || slvstatus.diverged || slvstatus.iteration_limit_exceeded || slvstatus.iteration < 0){
 		goto cleanup;
 	}
@@ -186,8 +312,8 @@ static int a4sqp_run_model_self_test(const char *module, const char *model, cons
 	result = 0;
 
 cleanup:
-	if(sys != NULL){
-		system_destroy(sys);
+	if(runner.sys != NULL){
+		system_destroy(runner.sys);
 		system_free_reused_mem();
 	}
 	if(siminst != NULL){
@@ -1389,6 +1515,20 @@ static void test_a4sqp_cb3_solve(void){
 	);
 }
 
+static void test_a4sqp_bt2_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/bt2.a4c","bt2","sim_bt2"),
+		0
+	);
+}
+
+static void test_a4sqp_brownbs_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/brownbs.a4c","brownbs","sim_brownbs"),
+		0
+	);
+}
+
 static void test_a4sqp_rosenmmx_solve_skipped(void){
 	CU_SKIP("A4SQP rosenmmx model-run regression previously passed, but is not reliable enough for default CUnit.");
 }
@@ -1417,6 +1557,8 @@ static void test_a4sqp_cont6_qq_solve_skipped(void){
 	T(a4sqp_bqp1var_solve) \
 	T(a4sqp_bt10_solve) \
 	T(a4sqp_cb3_solve) \
+	T(a4sqp_bt2_solve) \
+	T(a4sqp_brownbs_solve) \
 	T(a4sqp_jannson3_solve) \
 	T(a4sqp_jannson3_auto_exact_lagrangian) \
 	T(a4sqp_rosenmmx_solve_skipped) \

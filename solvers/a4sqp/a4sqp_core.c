@@ -1269,10 +1269,6 @@ int a4sqp_core_line_search_vector(
 		}
 	}
 	if(fabs(result->predicted_reduction) <= options->merit_tol){
-		accepted = 1;
-		result->accepted = 1;
-		result->merit_after = result->merit_before;
-		result->trust_ratio = 1.0;
 		goto cleanup;
 	}
 	for(trial = 0; trial < options->max_backtrack; ++trial){
@@ -1389,12 +1385,13 @@ static int a4sqp_core_step_may_retry(
 	int attempt,
 	const struct A4SqpCoreStepOptions *options,
 	real64 *trust_radius,
-	struct A4SqpCoreStepStats *stats
+	struct A4SqpCoreStepStats *stats,
+	int force_unconstrained_trust
 ){
 	if(view == NULL || options == NULL || trust_radius == NULL || attempt >= options->trust_qp_retries){
 		return 0;
 	}
-	if(view->n_rel <= 0 && !options->trust_unconstrained){
+	if(view->n_rel <= 0 && !options->trust_unconstrained && !force_unconstrained_trust){
 		return 0;
 	}
 	if(!a4sqp_trust_shrink_radius(trust_radius,&options->trust)){
@@ -1448,6 +1445,7 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 	enum A4SqpCorePhase current_phase = A4SQP_CORE_PHASE_REGULAR;
 	struct A4SqpCoreView initial_view;
 	struct A4SqpLineSearchOptions effective_line_options;
+	int force_unconstrained_trust = 0;
 
 	if(stats != NULL){
 		memset(stats,0,sizeof(*stats));
@@ -1504,9 +1502,11 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 	for(attempt = 0; attempt <= options->trust_qp_retries; ++attempt){
 		struct A4SqpCoreView core_view;
 		struct A4SqpQpBuildOptions qp_options;
+		int use_trust_region;
 		a4sqp_view_get_core(view,&core_view);
+		use_trust_region = core_view.n_rel > 0 || options->trust_unconstrained || force_unconstrained_trust;
 		memset(&qp_options,0,sizeof(qp_options));
-		qp_options.trust_radius = (core_view.n_rel > 0 || options->trust_unconstrained) ? *trust_radius : 0.0;
+		qp_options.trust_radius = use_trust_region ? *trust_radius : 0.0;
 		qp_options.elastic_penalty = options->elastic_penalty;
 		qp_options.feas_tol = options->feas_tol;
 		qp_options.objective_weight = restoration_active ? 0.0 : 1.0;
@@ -1591,7 +1591,16 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 					return A4SQP_CORE_STEP_ACCEPTED;
 				}
 			}
-				if(a4sqp_core_step_may_retry(view,attempt,options,trust_radius,stats)){
+				if(
+					view->n_rel <= 0
+					&& !options->trust_unconstrained
+					&& !force_unconstrained_trust
+					&& effective_has_objective
+				){
+					force_unconstrained_trust = 1;
+					continue;
+				}
+				if(a4sqp_core_step_may_retry(view,attempt,options,trust_radius,stats,force_unconstrained_trust)){
 					continue;
 				}
 			return last_error;
@@ -1600,7 +1609,16 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 		if(stats != NULL){
 			++stats->qp_failures;
 		}
-			if(a4sqp_core_step_may_retry(view,attempt,options,trust_radius,stats)){
+			if(
+				view->n_rel <= 0
+				&& !options->trust_unconstrained
+				&& !force_unconstrained_trust
+				&& effective_has_objective
+			){
+				force_unconstrained_trust = 1;
+				continue;
+			}
+			if(a4sqp_core_step_may_retry(view,attempt,options,trust_radius,stats,force_unconstrained_trust)){
 				continue;
 			}
 		return last_error;

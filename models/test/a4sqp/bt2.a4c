@@ -1,0 +1,60 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL bt2;
+	x1, x2, x3 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst BT2 / Boggs-Tolle problem 2.
+			Known local solution from the CUTEst smoke profile:
+			    x1 = 1.10485902
+			    x2 = 1.19667420
+			    x3 = 1.53526226
+			    f  = 0.0325682004
+		}
+		'source' SELF {
+			P. T. Boggs and J. W. Tolle, "A strategy for global convergence
+			in a sequential quadratic programming algorithm", SIAM Journal on
+			Numerical Analysis 26(3), 1989. SIF input by Ph. L. Toint,
+			June 1993.
+		}
+		'problem_origin' SELF {
+			This is a synthetic nonlinear equality-constrained NLP.
+			A4SQP currently reaches a near-solved maximum-iteration exit on
+			the corresponding CUTEst problem, so this model is intended as a
+			focused regression for strict convergence and stationarity.
+		}
+	END NOTES;
+
+	con1: x1*(1.0 + x2^2) + x3^4 = 8.2426407;
+	obj: MINIMIZE (x1 - 1.0)^2 + (x1 - x2)^2 + (x2 - x3)^4;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1 - 1.10485902) < 5e-5;
+	ASSERT abs(x2 - 1.19667420) < 5e-5;
+	ASSERT abs(x3 - 1.53526226) < 5e-5;
+	ASSERT abs(
+		((x1 - 1.0)^2 + (x1 - x2)^2 + (x2 - x3)^4)
+		- 0.0325682004
+	) < 5e-7;
+	ASSERT abs(x1*(1.0 + x2^2) + x3^4 - 8.2426407) < 2e-6;
+END self_test;
+
+METHOD on_load;
+	x1 := 10.0;
+	x2 := 10.0;
+	x3 := 10.0;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+END on_load;
+
+METHOD on_load_test;
+	x1 := 10.0;
+	x2 := 10.0;
+	x3 := 10.0;
+END on_load_test;
+END bt2;

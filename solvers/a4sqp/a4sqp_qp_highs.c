@@ -439,6 +439,125 @@ static HighsInt *a4sqp_qp_copy_int_array(const int32 *src, int32 len){
 	return dest;
 }
 
+static int a4sqp_qp_try_unconstrained_newton(struct A4SqpQp *qp, real64 tol){
+	int32 n;
+	int32 i;
+	int32 j;
+	int32 k;
+	int has_finite_bound = 0;
+	real64 *h = NULL;
+	real64 *l = NULL;
+	real64 *y = NULL;
+	real64 *d = NULL;
+	real64 bound_tol;
+	real64 obj = 0.0;
+	if(qp == NULL || qp->num_row != 0 || qp->num_col != qp->num_step_col || qp->num_col <= 0){
+		return 1;
+	}
+	n = qp->num_step_col;
+	for(i = 0; i < n; ++i){
+		if(!a4sqp_qp_is_lower_inf(qp->col_lower[i]) || !a4sqp_qp_is_upper_inf(qp->col_upper[i])){
+			has_finite_bound = 1;
+			break;
+		}
+	}
+	if(!has_finite_bound || qp->q_num_nz <= 0){
+		return 1;
+	}
+	h = A4SQP_NEW_ARRAY_CLEAR(real64,(size_t)n * (size_t)n);
+	l = A4SQP_NEW_ARRAY_CLEAR(real64,(size_t)n * (size_t)n);
+	y = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
+	d = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
+	if(h == NULL || l == NULL || y == NULL || d == NULL){
+		goto fail;
+	}
+	for(i = 0; i < n; ++i){
+		for(k = qp->q_start[i]; k < qp->q_start[i + 1]; ++k){
+			int32 row = qp->q_index[k];
+			real64 value = qp->q_value[k];
+			if(row < 0 || row >= n || !isfinite(value)){
+				goto fail;
+			}
+			h[row * n + i] += value;
+			if(row != i){
+				h[i * n + row] += value;
+			}
+		}
+	}
+	for(i = 0; i < n; ++i){
+		for(j = 0; j <= i; ++j){
+			real64 sum = h[i * n + j];
+			int32 p;
+			for(p = 0; p < j; ++p){
+				sum -= l[i * n + p] * l[j * n + p];
+			}
+			if(i == j){
+				if(sum <= fmax(tol,1e-14) || !isfinite(sum)){
+					goto fail;
+				}
+				l[i * n + j] = sqrt(sum);
+			}else{
+				if(l[j * n + j] <= 0.0){
+					goto fail;
+				}
+				l[i * n + j] = sum / l[j * n + j];
+			}
+		}
+	}
+	for(i = 0; i < n; ++i){
+		real64 sum = -qp->col_cost[i];
+		for(j = 0; j < i; ++j){
+			sum -= l[i * n + j] * y[j];
+		}
+		y[i] = sum / l[i * n + i];
+		if(!isfinite(y[i])){
+			goto fail;
+		}
+	}
+	for(i = n - 1; i >= 0; --i){
+		real64 sum = y[i];
+		for(j = i + 1; j < n; ++j){
+			sum -= l[j * n + i] * d[j];
+		}
+		d[i] = sum / l[i * n + i];
+		if(!isfinite(d[i])){
+			goto fail;
+		}
+	}
+	bound_tol = fmax(1e-9,fmax(tol,0.0));
+	for(i = 0; i < n; ++i){
+		if(!a4sqp_qp_is_lower_inf(qp->col_lower[i]) && d[i] < qp->col_lower[i] - bound_tol){
+			goto fail;
+		}
+		if(!a4sqp_qp_is_upper_inf(qp->col_upper[i]) && d[i] > qp->col_upper[i] + bound_tol){
+			goto fail;
+		}
+	}
+	for(i = 0; i < qp->num_col; ++i){
+		qp->col_value[i] = 0.0;
+		qp->col_dual[i] = 0.0;
+	}
+	for(i = 0; i < n; ++i){
+		qp->col_value[i] = d[i];
+		obj += 0.5 * qp->col_cost[i] * d[i];
+	}
+	qp->objective_value = obj;
+	qp->highs_status = kHighsStatusOk;
+	qp->highs_model_status = kHighsModelStatusOptimal;
+	A4SQP_FREE(h);
+	A4SQP_FREE(l);
+	A4SQP_FREE(y);
+	A4SQP_FREE(d);
+	return 0;
+
+fail:
+	A4SQP_FREE(h);
+	A4SQP_FREE(l);
+	A4SQP_FREE(y);
+	A4SQP_FREE(d);
+	return 1;
+}
+
 int a4sqp_qp_solve_highs_options(
 	struct A4SqpQp *qp,
 	const struct A4SqpQpSolveOptions *options
@@ -464,6 +583,9 @@ int a4sqp_qp_solve_highs_options(
 	}
 	qp_tol = options != NULL ? options->tolerance : 0.0;
 	output_flag = options != NULL ? options->output_flag : 0;
+	if(a4sqp_qp_try_unconstrained_newton(qp,qp_tol) == 0){
+		return 0;
+	}
 
 	highs = Highs_create();
 	if(highs == NULL){
