@@ -29,7 +29,10 @@ def load_problem_names(args: argparse.Namespace) -> list[str]:
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-            names.append(line.split()[0])
+            name = line.split()[0]
+            if name.lower() == "problem":
+                continue
+            names.append(name)
     return names
 
 

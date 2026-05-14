@@ -16,16 +16,16 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | Acceptable tolerance | 1e-5 |
 | Parallel jobs | 6 |
 | Problem-set source | solvers/a4sqp/cutest/problem_sets/broad_stratified_89.tsv |
-| Notes | Current broad tracking run with process-group timeout enforcement and acceptable-on-step-failure handling. |
+| Notes | Current broad tracking run after unconstrained objective fallback and active-inequality stationarity updates. |
 
 ## Profile Summary
 
 | Profile | Solver | Hessian | KKT | Acceptable iter | Total | Pass | Pass rate | Near | Suspect | Fail | Error | Outcomes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ipoptc_limited | ipoptc | limited-memory | n/a | n/a | 89 | 75 | 75/89 | 9 | 0 | 5 | 0 | acceptable_success:3; max_iter_infeasible_or_stalled:1; max_iter_near_solved:9; other_solver_failure:4; strict_success:72 |
-| a4sqp_bfgs_kkt_acc | a4sqp | BFGS | 1 | 5 | 89 | 24 | 24/89 | 0 | 0 | 58 | 7 | acceptable_success:14; driver_timeout:7; line_search_error:23; max_iter_infeasible_or_stalled:8; max_iter_stationarity:27; strict_success:10 |
-| a4sqp_exactobj_kkt_acc | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 35 | 35/89 | 0 | 0 | 46 | 8 | acceptable_success:15; driver_timeout:8; line_search_error:7; max_iter_infeasible_or_stalled:10; max_iter_stationarity:27; other_solver_failure:1; qp_failure:1; strict_success:20 |
-| a4sqp_exactlag_kkt_acc | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 39 | 39/89 | 0 | 0 | 44 | 6 | acceptable_success:14; driver_timeout:6; line_search_error:7; max_iter_infeasible_or_stalled:4; max_iter_stationarity:32; qp_failure:1; strict_success:25 |
+| a4sqp_bfgs_kkt_acc | a4sqp | BFGS | 1 | 5 | 89 | 44 | 44/89 | 0 | 0 | 39 | 6 | acceptable_success:13; driver_timeout:6; line_search_error:5; max_iter_infeasible_or_stalled:9; max_iter_stationarity:25; strict_success:31 |
+| a4sqp_exactobj_kkt_acc | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 47 | 47/89 | 0 | 0 | 34 | 8 | acceptable_success:13; driver_timeout:8; line_search_error:3; max_iter_infeasible_or_stalled:10; max_iter_stationarity:19; other_solver_failure:1; qp_failure:1; strict_success:34 |
+| a4sqp_exactlag_kkt_acc | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 60 | 60/89 | 0 | 0 | 23 | 6 | acceptable_success:12; driver_timeout:6; line_search_error:3; max_iter_infeasible_or_stalled:2; max_iter_stationarity:17; qp_failure:1; strict_success:48 |
 
 ## Problem Outcomes
 
@@ -34,92 +34,92 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | Problem | Class | n | m | ipoptc_limited | a4sqp_bfgs_kkt_acc | a4sqp_exactobj_kkt_acc | a4sqp_exactlag_kkt_acc |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 3PK | SBR2-MN-30-0 | 30 | 0 | 🟠3 | 🔴6 | 🟢1 | 🟢1 |
-| ACOPP14 | QOR2-AY-38-68 | 38 | 68 | 🟢1 | 🔴6 | 🔴11 | 🔴11 |
+| ACOPP14 | QOR2-AY-38-68 | 38 | 68 | 🟢1 | 🔴6 | 🔴11 | 🟢1 |
 | ACOPR14 | QOR2-AN-38-82 | 38 | 82 | 🔴14 | 🔴6 | 🔴11 | 🔴6 |
-| AIRCRFTB | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🔴8 | 🟢2 | 🟢2 |
-| AIRPORT | SQR2-MN-84-42 | 84 | 42 | 🟢1 | 🔴7 | 🔴7 | 🔴6 |
-| AKIVA | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
+| AIRCRFTB | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| AIRPORT | SQR2-MN-84-42 | 84 | 42 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
+| AKIVA | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | ALLINIT | OBR2-AY-4-0 | 4 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
-| ALLINITA | OOR2-AY-4-4 | 4 | 4 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
-| ALLINITC | OOR2-AY-4-1 | 4 | 1 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
+| ALLINITA | OOR2-AY-4-4 | 4 | 4 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
+| ALLINITC | OOR2-AY-4-1 | 4 | 1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | ALLINITU | OUR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| ALSOTAME | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
+| ALSOTAME | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | ANTWERP | SLR2-RN-27-8 | 27 | 10 | 🟠3 | 🔴6 | 🔴6 | 🔴6 |
-| AVGASA | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| AVGASB | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
+| AVGASA | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
+| AVGASB | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
 | AVION2 | OLR2-RN-49-15 | 49 | 15 | 🟠3 | 🔴6 | 🔴6 | 🔴6 |
-| BA-L1LS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
+| BA-L1LS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🔴8 | 🟢2 | 🟢2 |
 | BA-L1SPLS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🔴8 | 🟢2 | 🟢2 |
-| BARD | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| BATCH | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🔴6 | 🔴11 | 🔴7 |
-| BEALE | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| BENNETT5LS | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🔴8 | 🔴8 | 🔴8 |
-| BIGGS3 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| BIGGS5 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| BIGGS6 | SUR2-AN-6-0 | 6 | 0 | 🟢1 | 🔴8 | 🟢2 | 🟢2 |
+| BARD | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BATCH | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🔴6 | 🔴11 | 🟢1 |
+| BEALE | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
+| BENNETT5LS | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟢1 | 🟢1 | 🟢1 |
+| BIGGS3 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BIGGS5 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BIGGS6 | SUR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
 | BIGGSC4 | QLR2-AN-4-7 | 4 | 7 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BOX2 | SXR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| BOX3 | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
+| BOX2 | SXR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BOX3 | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BOXBODLS | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BQP1VAR | QBR2-AN-1-0 | 1 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BQPGABIM | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
-| BQPGASIM | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
-| BRANIN | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| BRKMCC | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
+| BQPGABIM | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| BQPGASIM | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| BRANIN | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BRKMCC | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | BROWNBS | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
-| BROWNDEN | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
+| BROWNDEN | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🔴8 | 🔴8 |
 | BT1 | QQR2-AN-2-1 | 2 | 1 | 🟢1 | 🔴6 | 🔴6 | 🟢1 |
 | BT10 | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BT11 | OOR2-AY-5-3 | 5 | 3 | 🟢1 | 🔴6 | 🔴6 | 🟢1 |
+| BT11 | OOR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
 | BT12 | QQR2-AN-5-3 | 5 | 3 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | BT13 | LQR2-AY-5-1 | 5 | 1 | 🟢2 | 🔴11 | 🔴11 | 🔴11 |
-| BT2 | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
-| BT3 | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
-| BT4 | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🔴7 | 🔴6 | 🔴6 |
-| BT5 | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
-| BT6 | OOR2-AY-5-2 | 5 | 2 | 🟢1 | 🟢2 | 🔴6 | 🔴6 |
-| BT7 | OQR2-AN-5-3 | 5 | 3 | 🟢1 | 🔴7 | 🔴7 | 🔴6 |
+| BT2 | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BT3 | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BT4 | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🔴7 | 🔴6 | 🟢1 |
+| BT5 | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🔴6 | 🔴6 | 🟢1 |
+| BT6 | OOR2-AY-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BT7 | OQR2-AN-5-3 | 5 | 3 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | BT8 | QQR2-AN-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🔴7 | 🔴7 |
-| BT9 | LOR2-AN-4-2 | 4 | 2 | 🟢1 | 🔴11 | 🔴7 | 🟢1 |
+| BT9 | LOR2-AN-4-2 | 4 | 2 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | BURKEHAN | QOR2-AN-1-1 | 1 | 1 | 🔴14 | 🔴8 | 🔴8 | 🔴8 |
-| BYRDSPHR | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🔴6 | 🔴7 | 🟢1 |
-| CAMEL6 | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
-| CANTILVR | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🔴11 | 🔴7 | 🔴6 |
-| CB2 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🔴7 | 🔴7 | 🔴6 |
+| BYRDSPHR | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🔴7 | 🟢1 |
+| CAMEL6 | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| CANTILVR | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🔴11 | 🔴7 | 🟢1 |
+| CB2 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | CB3 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | CERI651ALS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🔴6 | 🔴6 | 🔴6 |
-| CERI651BLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🔴8 | 🔴6 | 🔴6 |
-| CERI651CLS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🔴8 | 🔴6 | 🔴6 |
-| CERI651DLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🔴8 | 🔴6 | 🔴6 |
-| CERI651ELS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🔴8 | 🔴6 | 🔴6 |
-| CHACONN1 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🔴7 | 🔴7 | 🔴6 |
+| CERI651BLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
+| CERI651CLS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🔴6 | 🔴6 | 🔴6 |
+| CERI651DLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
+| CERI651ELS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
+| CHACONN1 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | CHACONN2 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| CONGIGMZ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 | 🔴7 |
-| CRESC4 | OOR2-MY-6-8 | 6 | 8 | 🟢1 | 🔴11 | 🔴7 | 🔴6 |
+| CONGIGMZ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| CRESC4 | OOR2-MY-6-8 | 6 | 8 | 🟢1 | 🔴11 | 🔴7 | 🔴11 |
 | CRESC50 | OOR2-MY-6-100 | 6 | 100 | 🔴7 | 🔴11 | 🔴11 | 🔴11 |
 | DALLASS | ONR2-MN-46-31 | 46 | 31 | 🟠3 | 🔴6 | 🔴6 | 🔴6 |
-| DECONVB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🔴8 | 🟢2 | 🟢2 |
+| DECONVB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢2 | 🟢1 | 🟢1 |
 | DECONVC | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🔴7 | 🔴6 | 🔴6 |
-| DECONVU | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🔴8 | 🟢2 | 🟢2 |
+| DECONVU | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢2 | 🟢1 | 🟢1 |
 | DEGENLPA | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
 | DEGENLPB | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
 | DEMYMALO | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| DEVGLA1B | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
-| DEVGLA2B | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| DGOSPEC | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
+| DEVGLA1B | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| DEVGLA2B | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
+| DGOSPEC | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🔴8 | 🔴8 |
 | DISC2 | LQR2-MY-29-23 | 29 | 23 | 🟢1 | 🔴7 | 🔴11 | 🔴7 |
-| DUAL1 | QLR2-MN-85-1 | 85 | 1 | 🟠3 | 🔴6 | 🔴6 | 🔴6 |
-| DUAL2 | QLR2-MN-96-1 | 96 | 1 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
-| DUAL4 | QLR2-MN-75-1 | 75 | 1 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
-| EG1 | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
-| EGGCRATEB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🔴8 | 🟢2 | 🟢2 |
-| ELATVIDUB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| DUAL1 | QLR2-MN-85-1 | 85 | 1 | 🟠3 | 🔴6 | 🟢2 | 🟢2 |
+| DUAL2 | QLR2-MN-96-1 | 96 | 1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
+| DUAL4 | QLR2-MN-75-1 | 75 | 1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
+| EG1 | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
+| EGGCRATEB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| ELATVIDUB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | EQC | OLR2-MY-9-3 | 9 | 3 | 🟢2 | 🟢1 | 🔴9 | 🔴9 |
 | EXPFITA | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🔴11 | 🔴11 | 🔴11 |
-| EXTRASIM | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
+| EXTRASIM | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | LINSPANH | LNR2-MN-97-33 | 97 | 33 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
 | LSNNODOC | ONR2-AY-5-4 | 5 | 4 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
-| MINSURF | OXR2-MY-64-0 | 64 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| MINSURF | OXR2-MY-64-0 | 64 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | SPANHYD | ONR2-RN-97-33 | 97 | 33 | 🟢2 | 🔴6 | 🔴11 | 🔴11 |
 | WATER | ONR2-MN-31-10 | 31 | 10 | 🟢1 | 🔴11 | 🔴14 | 🔴11 |
 

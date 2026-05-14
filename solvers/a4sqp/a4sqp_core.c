@@ -768,11 +768,8 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 	}
 	for(row = 0; row < view->n_rel; ++row){
 		enum A4SqpRowActivity activity;
-		if(view->rel_kind == NULL || view->rel_kind[row] != A4SQP_REL_KIND_EQUALITY){
-			continue;
-		}
 		activity = a4sqp_core_row_activity_for_view(view,row,active_tol,near_tol);
-		if(activity == A4SQP_ROW_EQUALITY){
+		if(activity == A4SQP_ROW_EQUALITY || activity == A4SQP_ROW_ACTIVE){
 			active[active_count++] = row;
 		}
 	}
@@ -1216,6 +1213,61 @@ int a4sqp_core_has_converged(
 	return a4sqp_core_has_converged_for_view(&core,policy,max_violation,projected_gradient_inf,worst_rel);
 }
 
+static int a4sqp_core_make_unconstrained_gradient_step(
+	const struct A4SqpCoreView *core,
+	const struct A4SqpLineSearchOptions *options,
+	real64 *physical_step,
+	real64 *step_norm2,
+	real64 *scaled_step_inf,
+	struct A4SqpLineSearchResult *result
+){
+	real64 grad_inf = 0.0;
+	real64 pred = 0.0;
+	int32 i;
+	if(
+		core == NULL
+		|| options == NULL
+		|| physical_step == NULL
+		|| step_norm2 == NULL
+		|| scaled_step_inf == NULL
+		|| result == NULL
+		|| !core->has_objective
+		|| core->n_rel > 0
+		|| core->scaled_obj_gradient == NULL
+		|| core->var_scale == NULL
+	){
+		return 1;
+	}
+	for(i = 0; i < core->n_var; ++i){
+		real64 g = core->scaled_obj_gradient[i];
+		if(fabs(g) > grad_inf){
+			grad_inf = fabs(g);
+		}
+	}
+	if(grad_inf <= 0.0 || !isfinite(grad_inf)){
+		return 1;
+	}
+	*step_norm2 = 0.0;
+	*scaled_step_inf = 0.0;
+	for(i = 0; i < core->n_var; ++i){
+		real64 scaled_step = -core->scaled_obj_gradient[i] / fmax(1.0,grad_inf);
+		physical_step[i] = core->var_scale[i] * scaled_step;
+		pred += core->scaled_obj_gradient[i] * (-scaled_step);
+		*step_norm2 += physical_step[i] * physical_step[i];
+		if(fabs(scaled_step) > *scaled_step_inf){
+			*scaled_step_inf = fabs(scaled_step);
+		}
+	}
+	if(pred <= options->merit_tol || !isfinite(pred)){
+		return 1;
+	}
+	result->predicted_reduction = pred;
+	result->model_merit_after = result->merit_before - pred;
+	result->step_norm = sqrt(*step_norm2);
+	result->scaled_step_inf = *scaled_step_inf;
+	return 0;
+}
+
 int a4sqp_core_line_search_vector(
 	struct A4SqpView *view,
 	const struct A4SqpQp *qp,
@@ -1240,6 +1292,7 @@ int a4sqp_core_line_search_vector(
 	int32 i;
 	int trial;
 	int accepted = 0;
+	int using_fallback_direction = 0;
 	int n;
 	if(result == NULL){
 		return 1;
@@ -1294,8 +1347,21 @@ int a4sqp_core_line_search_vector(
 			goto cleanup;
 		}
 	}
+retry_line_search:
 	if(fabs(result->predicted_reduction) <= options->merit_tol){
-		goto cleanup;
+		if(!using_fallback_direction && !a4sqp_core_make_unconstrained_gradient_step(
+			&core,
+			options,
+			physical_step,
+			&step_norm2,
+			&scaled_step_inf,
+			result
+		)){
+			using_fallback_direction = 1;
+			alpha = 1.0;
+		}else{
+			goto cleanup;
+		}
 	}
 	for(trial = 0; trial < options->max_backtrack; ++trial){
 		real64 merit_decrease;
@@ -1392,6 +1458,24 @@ int a4sqp_core_line_search_vector(
 		alpha *= 0.5;
 	}
 	if(!accepted){
+		if(!using_fallback_direction){
+			for(i = 0; i < n; ++i){
+				x[i] = old_x[i];
+			}
+			(void)ops->evaluate(ctx,x,view);
+			if(!a4sqp_core_make_unconstrained_gradient_step(
+				&core,
+				options,
+				physical_step,
+				&step_norm2,
+				&scaled_step_inf,
+				result
+			)){
+				using_fallback_direction = 1;
+				alpha = 1.0;
+				goto retry_line_search;
+			}
+		}
 		for(i = 0; i < n; ++i){
 			x[i] = old_x[i];
 		}

@@ -152,7 +152,7 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->step_tol = 1e-7;
 	opt->acceptable_tol = 1e-5;
 	opt->acceptable_iter = 0;
-	opt->merit_tol = 1e-10;
+	opt->merit_tol = 1e-14;
 	opt->armijo_coeff = 1e-4;
 	opt->elastic_penalty = A4SQP_QP_DEFAULT_ELASTIC_PENALTY;
 	opt->elastic_penalty_growth = 10.0;
@@ -173,7 +173,7 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->trust_radius_max = 100.0;
 	opt->trust_shrink = 0.25;
 	opt->trust_grow = 2.0;
-	opt->trust_accept = 0.1;
+	opt->trust_accept = 0.0;
 	opt->trust_good = 0.75;
 	opt->trust_tiny_alpha = 0.0;
 	opt->trust_tiny_radius_factor = 2.0;
@@ -1474,7 +1474,7 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 	double old_vio;
 	double old_merit;
 	int n;
-	int meq = 0;
+	int nactive = 0;
 	int row;
 	int i;
 	int dim;
@@ -1496,12 +1496,20 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 	if(solve->last_step_norm > fmax(10.0 * p->opt.step_tol,1e-8) && solve->last_alpha > 0.0){
 		return 0;
 	}
+	a4sqp_view_get_core(&solve->view,&core);
+	core.has_objective = solve->has_objective;
 	for(row = 0; row < solve->view.n_rel; ++row){
-		if(solve->view.rel_kind != NULL && solve->view.rel_kind[row] == A4SQP_REL_KIND_EQUALITY){
-			++meq;
+		enum A4SqpRowActivity activity = a4sqp_core_row_activity_for_view(
+			&core,
+			row,
+			p->opt.acceptable_tol,
+			fmax(10.0 * p->opt.acceptable_tol,1e-8)
+		);
+		if(activity == A4SQP_ROW_EQUALITY || activity == A4SQP_ROW_ACTIVE){
+			++nactive;
 		}
 	}
-	if(meq <= 0){
+	if(nactive <= 0){
 		return 0;
 	}
 	old_kkt = p->stats.kkt_error;
@@ -1518,16 +1526,14 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 	}
 	old_x = A4SQP_NEW_ARRAY_OR_NULL(double,n);
 	lag_grad = A4SQP_NEW_ARRAY_CLEAR(double,n);
-	eq_rows = A4SQP_NEW_ARRAY_OR_NULL(int,meq);
-	dim = n + meq;
+	eq_rows = A4SQP_NEW_ARRAY_OR_NULL(int,nactive);
+	dim = n + nactive;
 	system = A4SQP_NEW_ARRAY_CLEAR(double,(size_t)dim * (size_t)dim);
 	rhs = A4SQP_NEW_ARRAY_CLEAR(double,dim);
 	if(old_x == NULL || lag_grad == NULL || eq_rows == NULL || system == NULL || rhs == NULL){
 		goto cleanup;
 	}
 	memcpy(old_x,x,(size_t)n * sizeof(*old_x));
-	a4sqp_view_get_core(&solve->view,&core);
-	core.has_objective = solve->has_objective;
 	if(a4sqp_core_lagrangian_gradient_for_view(
 		&core,
 		solve->lambda,
@@ -1536,10 +1542,16 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 	)){
 		goto cleanup;
 	}
-	meq = 0;
+	nactive = 0;
 	for(row = 0; row < solve->view.n_rel; ++row){
-		if(solve->view.rel_kind != NULL && solve->view.rel_kind[row] == A4SQP_REL_KIND_EQUALITY){
-			eq_rows[meq++] = row;
+		enum A4SqpRowActivity activity = a4sqp_core_row_activity_for_view(
+			&core,
+			row,
+			p->opt.acceptable_tol,
+			fmax(10.0 * p->opt.acceptable_tol,1e-8)
+		);
+		if(activity == A4SQP_ROW_EQUALITY || activity == A4SQP_ROW_ACTIVE){
+			eq_rows[nactive++] = row;
 		}
 	}
 	for(i = 0; i < n; ++i){
@@ -1550,10 +1562,15 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 		system[(size_t)i * (size_t)dim + (size_t)i] += p->opt.hess_reg > 0.0 ? p->opt.hess_reg : 1e-8;
 		rhs[i] = -lag_grad[i];
 	}
-	for(i = 0; i < meq; ++i){
+	for(i = 0; i < nactive; ++i){
 		int erow = eq_rows[i];
 		int k;
-		double target = solve->view.scaled_rel_lower[erow];
+		double lower = solve->view.scaled_rel_lower[erow];
+		double upper = solve->view.scaled_rel_upper[erow];
+		double residual = solve->view.scaled_rel_residual[erow];
+		double lower_gap = a4sqp_c_is_lower_inf(lower) ? HUGE_VAL : fabs(residual - lower);
+		double upper_gap = a4sqp_c_is_upper_inf(upper) ? HUGE_VAL : fabs(upper - residual);
+		double target = lower_gap <= upper_gap ? lower : upper;
 		int sys_row = n + i;
 		rhs[sys_row] = -(solve->view.scaled_rel_residual[erow] - target);
 		for(k = solve->view.jac_row_start[erow]; k < solve->view.jac_row_start[erow + 1]; ++k){

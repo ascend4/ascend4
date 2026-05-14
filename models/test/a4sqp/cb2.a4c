@@ -1,0 +1,64 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL cb2;
+	x1, x2, u IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst CB2.
+			Known CUTEst/IPOPTC local solution from the current tracking run:
+			    x1 = 1.13903766
+			    x2 = 0.89955993
+			    u  = 1.95222449386158
+			    f  = 1.95222449386158
+		}
+		'source' SELF {
+			R. Womersley and R. Fletcher, "An algorithm for composite
+			nonsmooth optimization problems", Journal of Optimization Theory
+			and Applications 48, 1986. SIF input by Ph. L. Toint,
+			April 1992.
+		}
+		'problem_origin' SELF {
+			This is a synthetic smooth epigraph reformulation of a nonsmooth
+			minimax benchmark. It was added to exercise active inequality
+			and multiplier/stationarity behavior.
+		}
+	END NOTES;
+
+	con1: u >= x1^2 + x2^4;
+	con2: u >= (2.0 - x1)^2 + (2.0 - x2)^2;
+	con3: u >= 2.0*exp(x2 - x1);
+	obj: MINIMIZE u;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1 - 1.13903766) < 5e-5;
+	ASSERT abs(x2 - 0.89955993) < 5e-5;
+	ASSERT abs(u - 1.95222449386158) < 5e-6;
+	ASSERT u - (x1^2 + x2^4) > -1e-7;
+	ASSERT u - ((2.0 - x1)^2 + (2.0 - x2)^2) > -1e-7;
+	ASSERT u - 2.0*exp(x2 - x1) > -1e-7;
+END self_test;
+
+METHOD on_load;
+	x1 := 2.0;
+	x2 := 2.0;
+	u := 1.0;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION step_tol 1e-7;
+	OPTION merit_tol 1e-14;
+	OPTION trust_accept 0.0;
+	OPTION hessian 'EXACT_LAGRANGIAN';
+END on_load;
+
+METHOD on_load_test;
+	x1 := 2.0;
+	x2 := 2.0;
+	u := 1.0;
+END on_load_test;
+END cb2;

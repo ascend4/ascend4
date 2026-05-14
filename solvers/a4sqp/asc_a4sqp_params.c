@@ -151,7 +151,7 @@ int a4sqp_get_default_parameters(
 		(SlvParameterInitReal){{"merit_tol",
 			"Merit tolerance",2,
 			"Minimum merit decrease regarded as meaningful by the line search."
-		}, 1e-10, 0.0, 1e3}
+		}, 1e-14, 0.0, 1e3}
 	);
 
 	slv_param_real(parameters,A4SQP_PARAM_ARMIJO_COEFF,
@@ -235,7 +235,7 @@ int a4sqp_get_default_parameters(
 		(SlvParameterInitReal){{"trust_accept",
 			"Trust acceptance ratio",2,
 			"Minimum actual-to-predicted merit reduction ratio required for line-search acceptance."
-		}, 0.1, -1e6, 1e6}
+		}, 0.0, -1e6, 1e6}
 	);
 
 		slv_param_real(parameters,A4SQP_PARAM_TRUST_GOOD,
