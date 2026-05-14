@@ -16,16 +16,16 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | Acceptable tolerance | 1e-5 |
 | Parallel jobs | 6 |
 | Problem-set source | solvers/a4sqp/cutest/problem_sets/broad_stratified_89.tsv |
-| Notes | Current broad tracking run after exact-Hessian guarded BFGS fallback/restart and active-bound multiplier recovery. |
+| Notes | Current broad tracking run after QR minimum-norm multiplier recovery for degenerate active sets. IPOPT limited-memory row reused from prior unchanged reference TSV. |
 
 ## Profile Summary
 
 | Profile | Solver | Hessian | KKT | Acceptable iter | Total | Pass | Pass rate | Near | Suspect | Fail | Error | Outcomes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ipoptc_limited | ipoptc | limited-memory | n/a | n/a | 89 | 75 | 75/89 | 9 | 0 | 5 | 0 | acceptable_success:3; max_iter_infeasible_or_stalled:1; max_iter_near_solved:9; other_solver_failure:4; strict_success:72 |
-| a4sqp_bfgs_kkt_acc | a4sqp | BFGS | 1 | 5 | 89 | 48 | 48/89 | 0 | 0 | 35 | 6 | acceptable_success:15; driver_timeout:6; line_search_error:5; max_iter_infeasible_or_stalled:9; max_iter_stationarity:21; strict_success:33 |
-| a4sqp_exactobj_kkt_acc | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 57 | 57/89 | 0 | 0 | 22 | 10 | acceptable_success:16; driver_timeout:10; line_search_error:1; max_iter_infeasible_or_stalled:8; max_iter_stationarity:12; other_solver_failure:1; strict_success:41 |
-| a4sqp_exactlag_kkt_acc | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 69 | 69/89 | 0 | 0 | 13 | 7 | acceptable_success:16; driver_timeout:7; line_search_error:1; max_iter_infeasible_or_stalled:2; max_iter_stationarity:10; strict_success:53 |
+| a4sqp_bfgs_kkt_acc | a4sqp | BFGS | 1 | 5 | 89 | 49 | 49/89 | 0 | 0 | 34 | 6 | acceptable_success:14; driver_timeout:6; line_search_error:5; max_iter_infeasible_or_stalled:9; max_iter_stationarity:20; strict_success:35 |
+| a4sqp_exactobj_kkt_acc | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 58 | 58/89 | 0 | 0 | 21 | 10 | acceptable_success:15; driver_timeout:10; line_search_error:1; max_iter_infeasible_or_stalled:8; max_iter_stationarity:11; other_solver_failure:1; strict_success:43 |
+| a4sqp_exactlag_kkt_acc | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 70 | 70/89 | 0 | 0 | 12 | 7 | acceptable_success:13; driver_timeout:7; line_search_error:1; max_iter_infeasible_or_stalled:2; max_iter_stationarity:9; strict_success:57 |
 
 ## Problem Outcomes
 
@@ -40,7 +40,7 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | AIRPORT | SQR2-MN-84-42 | 84 | 42 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | AKIVA | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | ALLINIT | OBR2-AY-4-0 | 4 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
-| ALLINITA | OOR2-AY-4-4 | 4 | 4 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
+| ALLINITA | OOR2-AY-4-4 | 4 | 4 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
 | ALLINITC | OOR2-AY-4-1 | 4 | 1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | ALLINITU | OUR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | ALSOTAME | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
@@ -51,7 +51,7 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | BA-L1LS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🔴8 | 🟢2 | 🟢2 |
 | BA-L1SPLS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🔴8 | 🟢2 | 🟢2 |
 | BARD | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BATCH | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🔴6 | 🔴11 | 🟢2 |
+| BATCH | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🔴6 | 🔴11 | 🟢1 |
 | BEALE | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
 | BENNETT5LS | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟢1 | 🟢1 | 🟢1 |
 | BIGGS3 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
@@ -101,8 +101,8 @@ Outcome cells use compact light+number codes. The key below the table maps codes
 | DECONVB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢2 | 🟢1 | 🟢1 |
 | DECONVC | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🔴7 | 🔴7 | 🔴7 |
 | DECONVU | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢2 | 🟢1 | 🟢1 |
-| DEGENLPA | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| DEGENLPB | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
+| DEGENLPA | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| DEGENLPB | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DEMYMALO | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DEVGLA1B | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | DEVGLA2B | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
