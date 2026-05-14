@@ -68,6 +68,7 @@ solvers/a4sqp/cutest/run_a4sqp_cutest.py \
   --solver both \
   --problem-file /tmp/cutest_nlp_small.txt \
   --out /tmp/a4sqp_ipoptc_small.jsonl \
+  --tsv-out /tmp/a4sqp_ipoptc_small.tsv \
   --log-dir /tmp/a4sqp_ipoptc_small_logs \
   --timeout-sec 30
 ```
@@ -136,3 +137,30 @@ taxonomy flags successful solver statuses with high KKT residual as
 `strict_success_high_kkt` or `acceptable_success_high_kkt`; with default
 KKT-residual convergence these should normally be reported as stationarity
 failures instead of successes.
+
+## Track Progress
+
+The checked-in progress ledger is `../CUTEST_PROGRESS.md`. Generate it from a
+per-problem TSV result file rather than editing it by hand:
+
+```sh
+solvers/a4sqp/cutest/generate_cutest_progress.py \
+  --input /tmp/a4sqp_broad_41_valid_20260513_182750/broad_41_problem_results.tsv \
+  --out solvers/a4sqp/CUTEST_PROGRESS.md \
+  --suite "CUTEst broad stratified 41-problem tracking subset" \
+  --problem-set solvers/a4sqp/cutest/problem_sets/broad_stratified_41.tsv \
+  --max-iter 200 \
+  --timeout-sec 30 \
+  --tol 1e-7 \
+  --acceptable-tol 1e-5 \
+  --jobs 6
+```
+
+When rerunning profiles, pass `--tsv-out` and `--profile-name` to
+`run_a4sqp_cutest.py`, then pass one or more generated TSV files to
+`generate_cutest_progress.py`.
+
+The progress report intentionally excludes volatile metrics such as iteration
+counts, solve times, objective values, and log paths. It records the benchmark
+contract, profile summary, and compact per-problem light+number status codes so
+`git diff` shows solver progress rather than run-to-run noise.

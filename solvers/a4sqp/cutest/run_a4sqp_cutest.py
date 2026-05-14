@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import os
 import pathlib
+import signal
 import shutil
 import subprocess
 import sys
@@ -95,25 +97,45 @@ def run_one(
         cmd.append("-r")
     if args.keep:
         cmd.append("-k")
+    def output_text(value: str | bytes | None) -> str:
+        if value is None:
+            return ""
+        if isinstance(value, bytes):
+            return value.decode(errors="replace")
+        return value
+
     timed_out = False
+    stdout = ""
+    returncode: int | None
+    proc: subprocess.Popen[str] | None = None
     try:
-        proc = subprocess.run(
+        proc = subprocess.Popen(
             cmd,
             cwd=job_workdir(problem, package, args, job_index),
             env=env,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            check=False,
-            timeout=args.timeout_sec,
+            start_new_session=True,
         )
-        stdout = proc.stdout
-        returncode: int | None = proc.returncode
+        stdout, _ = proc.communicate(timeout=args.timeout_sec)
+        returncode = proc.returncode
     except subprocess.TimeoutExpired as exc:
         timed_out = True
-        stdout = exc.stdout or ""
-        if isinstance(stdout, bytes):
-            stdout = stdout.decode(errors="replace")
+        if proc is not None:
+            try:
+                os.killpg(proc.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                tail, _ = proc.communicate(timeout=2)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                tail, _ = proc.communicate()
+            stdout = output_text(exc.stdout) + output_text(tail)
         stdout += f"\nRUNNER_TIMEOUT: exceeded {args.timeout_sec} seconds\n"
         returncode = None
     result: dict[str, object] | None = None
@@ -206,6 +228,94 @@ def run_worker_jobs(
     return results
 
 
+def result_profile(result: dict[str, object], args: argparse.Namespace) -> str:
+    if args.profile_name:
+        return args.profile_name
+    package = str(result.get("package") or "").lower()
+    if package == "ipoptc":
+        return f"ipoptc_{args.ipopt_hessian}"
+    if package == "a4sqp":
+        suffix = "kkt" if args.kkt_convergence else "legacy"
+        if args.acceptable_iter:
+            suffix += "_acc"
+        return f"a4sqp_{args.a4sqp_hessian.lower()}_{suffix}"
+    return package or "profile"
+
+
+def result_hessian(result: dict[str, object], args: argparse.Namespace) -> str:
+    package = str(result.get("package") or "").lower()
+    if package == "ipoptc":
+        return args.ipopt_hessian
+    if package == "a4sqp":
+        return args.a4sqp_hessian
+    return ""
+
+
+def write_tsv_results(results: list[dict[str, object]], args: argparse.Namespace) -> None:
+    if not args.tsv_out:
+        return
+    fields = [
+        "profile",
+        "solver",
+        "hessian",
+        "kkt_convergence",
+        "acceptable_iter",
+        "problem",
+        "classification",
+        "n",
+        "m",
+        "status",
+        "outcome_class",
+        "objective",
+        "max_constraint_violation",
+        "kkt_error",
+        "projected_gradient_inf",
+        "iterations",
+        "qp_solves",
+        "qp_failures",
+        "line_search_failures",
+        "solve_time",
+        "setup_time",
+        "driver_error",
+        "log",
+    ]
+    out_path = pathlib.Path(args.tsv_out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, delimiter="\t", fieldnames=fields)
+        writer.writeheader()
+        for result in results:
+            package = str(result.get("package") or "").lower()
+            is_a4sqp = package == "a4sqp"
+            writer.writerow(
+                {
+                    "profile": result_profile(result, args),
+                    "solver": package or result.get("solver", ""),
+                    "hessian": result_hessian(result, args),
+                    "kkt_convergence": int(args.kkt_convergence) if is_a4sqp else "n/a",
+                    "acceptable_iter": args.acceptable_iter if is_a4sqp else "n/a",
+                    "problem": result.get("problem") or result.get("problem_requested", ""),
+                    "classification": result.get("classification", ""),
+                    "n": result.get("n", ""),
+                    "m": result.get("m", ""),
+                    "status": result.get("status", ""),
+                    "outcome_class": result.get("outcome_class", ""),
+                    "objective": result.get("objective", ""),
+                    "max_constraint_violation": result.get("max_constraint_violation", ""),
+                    "kkt_error": result.get("kkt_error", ""),
+                    "projected_gradient_inf": result.get("projected_gradient_inf", ""),
+                    "iterations": result.get("iterations", ""),
+                    "qp_solves": result.get("qp_solves", ""),
+                    "qp_failures": result.get("qp_failures", ""),
+                    "line_search_failures": result.get("line_search_failures", ""),
+                    "solve_time": result.get("cutest_solve_time", ""),
+                    "setup_time": result.get("cutest_setup_time", ""),
+                    "driver_error": result.get("driver_error", ""),
+                    "log": result.get("log", ""),
+                }
+            )
+
+
 def main(argv: list[str]) -> int:
     root = repo_root()
     parser = argparse.ArgumentParser()
@@ -213,6 +323,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--problem-file", help="File containing problem names")
     parser.add_argument("--solver", choices=["a4sqp", "ipoptc", "both"], default="a4sqp")
     parser.add_argument("--out", default="cutest_a4sqp_ipoptc_results.jsonl")
+    parser.add_argument("--tsv-out", help="Optional per-problem TSV result file")
+    parser.add_argument("--profile-name", help="Stable profile name for TSV output")
     parser.add_argument("--log-dir", default="cutest_a4sqp_ipoptc_logs")
     parser.add_argument("--workdir", default="/tmp")
     parser.add_argument("--cutest", default=os.environ.get("CUTEST", "/home/john/CUTEst"))
@@ -302,10 +414,12 @@ def main(argv: list[str]) -> int:
 
     jobs = [(problem, package) for problem in problems for package in packages_for_solver(args.solver)]
     out_path = pathlib.Path(args.out)
+    ordered_results: list[dict[str, object]] = []
     with out_path.open("a", encoding="utf-8") as out:
         if args.jobs <= 1:
             for job_index, (problem, package) in enumerate(jobs):
                 result = run_one(problem, package, args, env, job_index)
+                ordered_results.append(result)
                 out.write(json.dumps(result, sort_keys=True) + "\n")
                 out.flush()
                 print(json.dumps(result, sort_keys=True))
@@ -351,8 +465,10 @@ def main(argv: list[str]) -> int:
                         print(json.dumps(result, sort_keys=True))
             for job_index in range(len(jobs)):
                 result = results[job_index]
+                ordered_results.append(result)
                 out.write(json.dumps(result, sort_keys=True) + "\n")
             out.flush()
+    write_tsv_results(ordered_results, args)
     return 0
 
 

@@ -1334,6 +1334,38 @@ static int a4sqp_c_acceptably_converged(struct A4SqpCSolve *solve){
 	return solve->acceptable_count >= solve->problem->opt.acceptable_iter;
 }
 
+static int a4sqp_c_acceptability_satisfied(struct A4SqpCSolve *solve){
+	double maxvio = 0.0;
+	double pg = 0.0;
+	struct A4SqpConvergencePolicy policy;
+	if(solve == NULL || solve->problem == NULL || solve->problem->opt.acceptable_iter <= 0){
+		return 0;
+	}
+	policy.feas_tol = solve->problem->opt.acceptable_tol;
+	policy.step_tol = solve->problem->opt.acceptable_tol;
+	policy.last_step_norm = solve->last_step_norm;
+	policy.has_objective = solve->has_objective;
+	policy.constrained_objective_allows_small_step = 1;
+	if(solve->problem->opt.kkt_convergence && solve->has_objective){
+		(void)a4sqp_c_view_violation(&solve->view,&maxvio);
+		pg = a4sqp_c_projected_gradient_inf(solve);
+		solve->problem->stats.max_constraint_violation = maxvio;
+		solve->problem->stats.projected_gradient_inf = pg;
+		a4sqp_c_update_kkt_stats(solve);
+		return maxvio <= policy.feas_tol && solve->problem->stats.kkt_error <= policy.feas_tol;
+	}
+	if(a4sqp_core_has_converged(&solve->view,&policy,&maxvio,&pg,NULL)){
+		solve->problem->stats.max_constraint_violation = maxvio;
+		solve->problem->stats.projected_gradient_inf = pg;
+		a4sqp_c_update_kkt_stats(solve);
+		return 1;
+	}
+	solve->problem->stats.max_constraint_violation = maxvio;
+	solve->problem->stats.projected_gradient_inf = pg;
+	a4sqp_c_update_kkt_stats(solve);
+	return 0;
+}
+
 struct A4SqpCCoreStepCtx {
 	struct A4SqpCSolve *solve;
 	double *x;
@@ -1415,6 +1447,22 @@ static void a4sqp_c_core_after_qp_solve(void *vctx, const struct A4SqpQp *qp, in
 			break;
 		}
 	}
+}
+
+static void a4sqp_c_refresh_stats(struct A4SqpCSolve *solve, int iterations){
+	double maxvio = 0.0;
+	if(solve == NULL || solve->problem == NULL){
+		return;
+	}
+	solve->problem->stats.iterations = iterations;
+	solve->problem->stats.objective = solve->view.obj_value;
+	solve->problem->stats.final_step_norm = solve->last_step_norm;
+	solve->problem->stats.final_trust_radius = solve->trust_radius;
+	solve->problem->stats.final_elastic_max = solve->last_elastic_max;
+	a4sqp_c_view_violation(&solve->view,&maxvio);
+	solve->problem->stats.max_constraint_violation = maxvio;
+	solve->problem->stats.projected_gradient_inf = a4sqp_c_projected_gradient_inf(solve);
+	a4sqp_c_update_kkt_stats(solve);
 }
 
 static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *solve, double *x){
@@ -1526,6 +1574,13 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		p->stats.restoration_exits += step_stats.restoration_exits;
 		p->stats.restoration_handoffs += step_stats.restoration_handoffs;
 		if(step_status != A4SQP_CORE_STEP_ACCEPTED){
+			a4sqp_c_refresh_stats(solve,iter + 1);
+			if(a4sqp_c_has_converged(solve)){
+				return A4SqpSolveSucceeded;
+			}
+			if(a4sqp_c_acceptability_satisfied(solve)){
+				return A4SqpSolvedToAcceptableLevel;
+			}
 			if(step_status == A4SQP_CORE_STEP_HESSIAN_ERROR && solve->callback_error){
 				return A4SqpInvalidNumberDetected;
 			}
@@ -1535,15 +1590,8 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 			return A4SqpErrorInStepComputation;
 		}
 		++solve->accepted_step_count;
-		p->stats.iterations = iter + 1;
-		p->stats.objective = solve->view.obj_value;
-		p->stats.final_step_norm = solve->last_step_norm;
-		p->stats.final_trust_radius = solve->trust_radius;
-		p->stats.final_elastic_max = solve->last_elastic_max;
-		a4sqp_c_view_violation(&solve->view,&maxvio);
-		p->stats.max_constraint_violation = maxvio;
-		p->stats.projected_gradient_inf = a4sqp_c_projected_gradient_inf(solve);
-		a4sqp_c_update_kkt_stats(solve);
+		a4sqp_c_refresh_stats(solve,iter + 1);
+		maxvio = p->stats.max_constraint_violation;
 		if(
 			solve->elastic_penalty_saturated
 			&& maxvio > p->opt.feas_tol

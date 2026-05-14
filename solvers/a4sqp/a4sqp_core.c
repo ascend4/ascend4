@@ -723,7 +723,9 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 	int32 i;
 	int32 arow;
 	int32 active_count = 0;
+	int32 free_count = 0;
 	int32 *active = NULL;
+	int *free_var = NULL;
 	real64 *normal = NULL;
 	real64 *rhs = NULL;
 	real64 near_tol;
@@ -747,8 +749,22 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 		return 1;
 	}
 	active = A4SQP_NEW_ARRAY_OR_NULL(int32,view->n_rel);
-	if(active == NULL){
+	free_var = A4SQP_NEW_ARRAY_OR_NULL(int,view->n_var);
+	if(active == NULL || free_var == NULL){
+		A4SQP_FREE(active);
+		A4SQP_FREE(free_var);
 		return 1;
+	}
+	for(i = 0; i < view->n_var; ++i){
+		real64 value = view->scaled_var_value != NULL ? view->scaled_var_value[i] : 0.0;
+		real64 lower = view->scaled_var_lower != NULL ? view->scaled_var_lower[i] : A4SQP_NO_LOWER_BOUND;
+		real64 upper = view->scaled_var_upper != NULL ? view->scaled_var_upper[i] : A4SQP_NO_UPPER_BOUND;
+		int at_lower = !a4sqp_core_is_lower_inf(lower) && value <= lower + active_tol;
+		int at_upper = !a4sqp_core_is_upper_inf(upper) && value >= upper - active_tol;
+		free_var[i] = !(at_lower || at_upper);
+		if(free_var[i]){
+			++free_count;
+		}
 	}
 	for(row = 0; row < view->n_rel; ++row){
 		enum A4SqpRowActivity activity;
@@ -762,12 +778,14 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 	}
 	if(active_count <= 0){
 		A4SQP_FREE(active);
+		A4SQP_FREE(free_var);
 		return 1;
 	}
 	normal = A4SQP_NEW_ARRAY_CLEAR(real64,(size_t)active_count * (size_t)active_count);
 	rhs = A4SQP_NEW_ARRAY_CLEAR(real64,active_count);
 	if(normal == NULL || rhs == NULL){
 		A4SQP_FREE(active);
+		A4SQP_FREE(free_var);
 		A4SQP_FREE(normal);
 		A4SQP_FREE(rhs);
 		return 1;
@@ -778,6 +796,9 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 		for(k = view->jac_row_start[r]; k < view->jac_row_start[r + 1]; ++k){
 			int32 col = view->jac_col_index[k];
 			real64 jac = view->scaled_jac_value[k];
+			if(free_count > 0 && (col < 0 || col >= view->n_var || !free_var[col])){
+				continue;
+			}
 			if(col >= 0 && col < view->n_var && isfinite(jac)){
 				rhs[arow] -= jac * view->scaled_obj_gradient[col];
 			}
@@ -796,6 +817,9 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 				if(col1 < 0 || col1 >= view->n_var || !isfinite(jac1)){
 					continue;
 				}
+				if(free_count > 0 && !free_var[col1]){
+					continue;
+				}
 				for(k2 = view->jac_row_start[r2]; k2 < view->jac_row_start[r2 + 1]; ++k2){
 					if(view->jac_col_index[k2] == col1 && isfinite(view->scaled_jac_value[k2])){
 						normal[(size_t)arow * (size_t)active_count + (size_t)brow] += jac1 * view->scaled_jac_value[k2];
@@ -809,6 +833,7 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 	}
 	if(a4sqp_core_solve_dense_system(normal,rhs,active_count)){
 		A4SQP_FREE(active);
+		A4SQP_FREE(free_var);
 		A4SQP_FREE(normal);
 		A4SQP_FREE(rhs);
 		return 1;
@@ -820,6 +845,7 @@ int a4sqp_core_multiplier_estimate_recover_stationarity(
 	estimate->good_count = active_count;
 	estimate->required_count = active_count;
 	A4SQP_FREE(active);
+	A4SQP_FREE(free_var);
 	A4SQP_FREE(normal);
 	A4SQP_FREE(rhs);
 	return 0;

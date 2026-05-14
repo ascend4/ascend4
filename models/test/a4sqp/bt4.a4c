@@ -1,0 +1,62 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL bt4;
+	x1, x2, x3 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst BT4 / Boggs-Tolle problem 4.
+			Known CUTEst/IPOPTC local solution from the current tracking run:
+			    x1 = 3.63195473
+			    x2 = 0.72673064
+			    x3 = -3.35868537
+			    f  = 3.289037737612875
+		}
+		'source' SELF {
+			P. T. Boggs and J. W. Tolle, "A strategy for global convergence
+			in a sequential quadratic programming algorithm", SIAM Journal on
+			Numerical Analysis 26(3), 1989. SIF input by Ph. L. Toint,
+			June 1993.
+		}
+		'problem_origin' SELF {
+			This is a small nonconvex equality-constrained NLP with
+			multiple stationary points. The current CUTEst run leaves A4SQP
+			near a different low-objective feasible point but with a poor
+			KKT residual, so this model is a focused regression for
+			stationarity and multiplier recovery.
+		}
+	END NOTES;
+
+	con1: x1^2 + x2^2 + x3^2 = 25.0;
+	con2: x1 + x2 + x3 = 1.0;
+	obj: MINIMIZE x1 - x2 + x2^3;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1 - 3.63195473) < 5e-5;
+	ASSERT abs(x2 - 0.72673064) < 5e-5;
+	ASSERT abs(x3 + 3.35868537) < 5e-5;
+	ASSERT abs((x1 - x2 + x2^3) - 3.289037737612875) < 5e-6;
+	ASSERT abs(x1^2 + x2^2 + x3^2 - 25.0) < 1e-6;
+	ASSERT abs(x1 + x2 + x3 - 1.0) < 1e-7;
+END self_test;
+
+METHOD on_load;
+	x1 := 3.1494;
+	x2 := 1.4523;
+	x3 := -3.6017;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'EXACT_LAGRANGIAN';
+END on_load;
+
+METHOD on_load_test;
+	x1 := 3.1494;
+	x2 := 1.4523;
+	x3 := -3.6017;
+END on_load_test;
+END bt4;
