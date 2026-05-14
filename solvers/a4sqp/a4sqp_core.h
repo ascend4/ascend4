@@ -7,6 +7,7 @@
 
 #include "a4sqp_qp_highs.h"
 #include "a4sqp_core_view.h"
+#include "a4sqp_trust.h"
 
 struct A4SqpView;
 
@@ -33,6 +34,30 @@ struct A4SqpKktResidual {
 	int lambda_sign;
 };
 
+struct A4SqpCoreMultiplierEstimate {
+	int32 n;
+	int ready;
+	int32 good_count;
+	int32 required_count;
+	real64 elastic_max;
+	real64 *lambda;
+};
+
+struct A4SqpCoreMultiplierOptions {
+	real64 feas_tol;
+	real64 elastic_penalty;
+	const real64 *row_dual_scale;
+};
+
+struct A4SqpCoreBoundStats {
+	int32 lower_active;
+	int32 upper_active;
+	int32 fixed_active;
+	int32 worst_index;
+	real64 stationarity_inf;
+	real64 worst_lagrangian_gradient;
+};
+
 struct A4SqpLineSearchOptions {
 	int max_backtrack;
 	real64 merit_tol;
@@ -50,8 +75,11 @@ struct A4SqpLineSearchOptions {
 struct A4SqpCoreRestorationOptions {
 	int enable;
 	int trigger_iter;
+	int max_iter;
 	real64 improve;
 	real64 margin;
+	real64 handoff_reduction;
+	real64 reentry_factor;
 };
 
 enum A4SqpCorePhase {
@@ -62,8 +90,12 @@ enum A4SqpCorePhase {
 
 struct A4SqpCoreRestorationState {
 	real64 best_violation;
+	real64 entry_violation;
 	int stall_count;
+	int restoration_iter;
 	int active;
+	int handoff;
+	int reentry_hysteresis;
 	enum A4SqpCorePhase phase;
 };
 
@@ -96,6 +128,9 @@ enum A4SqpCoreStepStatus {
 struct A4SqpCoreStepOptions {
 	int trust_qp_retries;
 	int trust_unconstrained;
+	struct A4SqpTrustOptions trust;
+	real64 trust_tiny_alpha;
+	real64 trust_tiny_radius_factor;
 	real64 elastic_penalty;
 	real64 feas_tol;
 	real64 merit_tol;
@@ -108,14 +143,19 @@ struct A4SqpCoreStepStats {
 	int qp_failures;
 	int line_search_failures;
 	int trust_shrinks;
+	enum A4SqpCorePhase phase;
+	int phase_changed;
+	int regular_iterations;
+	int restoration_iterations;
+	int restoration_entries;
 	int restoration_exits;
+	int restoration_handoffs;
 };
 
 struct A4SqpCoreStepOps {
 	int (*prepare_hessian)(void *ctx, struct A4SqpStepHessian *step_hess);
 	int (*solve_qp)(void *ctx, struct A4SqpQp *qp);
-	void (*after_qp_solve)(void *ctx, const struct A4SqpQp *qp);
-	int (*shrink_trust)(void *ctx, const char *reason);
+	void (*after_qp_solve)(void *ctx, const struct A4SqpQp *qp, int restoration);
 };
 
 int a4sqp_core_is_lower_inf(real64 value);
@@ -154,12 +194,70 @@ real64 a4sqp_core_kkt_error_for_view(
 	real64 active_tol,
 	struct A4SqpKktResidual *residual
 );
+A4SQP_CORE_EXPORT int a4sqp_core_lagrangian_gradient_for_view(
+	const struct A4SqpCoreView *view,
+	const real64 *row_dual,
+	real64 row_sign,
+	real64 *lag_grad
+);
+A4SQP_CORE_EXPORT int a4sqp_core_lagrangian_gradient(
+	const struct A4SqpView *view,
+	int has_objective,
+	const real64 *row_dual,
+	real64 row_sign,
+	real64 *lag_grad
+);
 A4SQP_CORE_EXPORT real64 a4sqp_core_kkt_error(
 	const struct A4SqpView *view,
 	int has_objective,
 	const real64 *row_dual,
 	real64 active_tol,
 	struct A4SqpKktResidual *residual
+);
+A4SQP_CORE_EXPORT void a4sqp_core_multiplier_estimate_init(
+	struct A4SqpCoreMultiplierEstimate *estimate
+);
+A4SQP_CORE_EXPORT void a4sqp_core_multiplier_estimate_destroy(
+	struct A4SqpCoreMultiplierEstimate *estimate
+);
+A4SQP_CORE_EXPORT int a4sqp_core_multiplier_estimate_sync(
+	struct A4SqpCoreMultiplierEstimate *estimate,
+	int32 n
+);
+A4SQP_CORE_EXPORT void a4sqp_core_multiplier_estimate_reset(
+	struct A4SqpCoreMultiplierEstimate *estimate
+);
+A4SQP_CORE_EXPORT int a4sqp_core_multiplier_estimate_update(
+	struct A4SqpCoreMultiplierEstimate *estimate,
+	const struct A4SqpCoreView *view,
+	const struct A4SqpQp *qp,
+	const struct A4SqpCoreMultiplierOptions *options
+);
+A4SQP_CORE_EXPORT int a4sqp_core_multiplier_estimate_update_view(
+	struct A4SqpCoreMultiplierEstimate *estimate,
+	const struct A4SqpView *view,
+	const struct A4SqpQp *qp,
+	const struct A4SqpCoreMultiplierOptions *options
+);
+A4SQP_CORE_EXPORT int a4sqp_core_multiplier_estimate_recover_stationarity(
+	struct A4SqpCoreMultiplierEstimate *estimate,
+	const struct A4SqpCoreView *view,
+	real64 active_tol
+);
+A4SQP_CORE_EXPORT int a4sqp_core_bound_stats_for_view(
+	const struct A4SqpCoreView *view,
+	const real64 *row_dual,
+	real64 row_sign,
+	real64 active_tol,
+	struct A4SqpCoreBoundStats *stats
+);
+A4SQP_CORE_EXPORT int a4sqp_core_bound_stats(
+	const struct A4SqpView *view,
+	int has_objective,
+	const real64 *row_dual,
+	real64 row_sign,
+	real64 active_tol,
+	struct A4SqpCoreBoundStats *stats
 );
 real64 a4sqp_core_qp_elastic_sum(const struct A4SqpQp *qp);
 real64 a4sqp_core_qp_elastic_max(const struct A4SqpQp *qp);

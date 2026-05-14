@@ -11,6 +11,7 @@ struct A4SqpView {
 	int32 n_var;
 	int32 n_rel;
 	void **vars;
+	int owns_vars;
 	void **rels;
 	void *obj;
 	int32 obj_direction;

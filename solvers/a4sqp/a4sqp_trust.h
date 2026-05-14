@@ -26,5 +26,14 @@ A4SQP_CORE_EXPORT void a4sqp_trust_grow_if_good(
 	real64 scaled_step_inf,
 	real64 trust_ratio
 );
+A4SQP_CORE_EXPORT int a4sqp_trust_update_after_accept(
+	real64 *radius,
+	const struct A4SqpTrustOptions *opt,
+	real64 alpha,
+	real64 scaled_step_inf,
+	real64 trust_ratio,
+	real64 tiny_alpha,
+	real64 tiny_radius_factor
+);
 
 #endif

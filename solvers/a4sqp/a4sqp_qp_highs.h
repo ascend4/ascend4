@@ -71,6 +71,13 @@ struct A4SqpQpBuildOptions {
 	real64 objective_weight;
 };
 
+struct A4SqpQpSolveOptions {
+	real64 tolerance;
+	int output_flag;
+	real64 time_limit;
+	int iteration_limit;
+};
+
 struct A4SqpView;
 
 A4SQP_CORE_EXPORT int a4sqp_qp_highs_spike(struct A4SqpQpSpikeResult *result);
@@ -100,5 +107,9 @@ int a4sqp_qp_build_from_view(
 	real64 feas_tol
 );
 A4SQP_CORE_EXPORT int a4sqp_qp_solve_highs(struct A4SqpQp *qp, real64 qp_tol, int output_flag);
+A4SQP_CORE_EXPORT int a4sqp_qp_solve_highs_options(
+	struct A4SqpQp *qp,
+	const struct A4SqpQpSolveOptions *options
+);
 
 #endif

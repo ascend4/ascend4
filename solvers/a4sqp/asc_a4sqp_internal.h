@@ -6,10 +6,8 @@
 #define ASC_A4SQP_INTERNAL_H
 
 #include "a4sqp_core.h"
-#include "a4sqp_hessian.h"
 #include "a4sqp_view.h"
 #include "asc_a4sqp_params.h"
-#include "a4sqp_qp_highs.h"
 
 #include <ascend/system/slv_client.h>
 #include <ascend/system/slv_common.h>
@@ -18,26 +16,11 @@ struct A4SqpSystem {
 	slv_system_t server;
 	slv_parameters_t params;
 	struct slv_parameter param_data[A4SQP_PARAM_COUNT];
-	slv_status_t status;
-	struct A4SqpView view;
-	struct A4SqpQp qp;
-	struct A4SqpDenseHessian bfgs_hess;
-	real64 *x;
+		slv_status_t status;
+		struct A4SqpView view;
+		real64 *x;
 	int32 x_n;
-	int32 step_hess_n;
-	int step_hess_exact;
-	real64 *step_hess;
-	int32 step_hess_sparse_n;
-	int32 step_hess_sparse_nnz;
-	int32 *step_hess_sparse_start;
-	int32 *step_hess_sparse_index;
-	real64 *step_hess_sparse_value;
-	int32 lambda_est_n;
-	int lambda_est_ready;
-	int32 lambda_est_good_count;
-	int32 lambda_est_required_count;
-	real64 *lambda_est;
-	real64 last_elastic_max;
+	struct A4SqpCoreBoundStats bound_stats;
 	real64 last_merit_before;
 	real64 last_merit_after;
 	real64 last_model_merit_after;
@@ -54,6 +37,13 @@ struct A4SqpSystem {
 	int acceptable_count;
 	int solved_acceptable;
 	struct A4SqpCoreRestorationState restoration_state;
+	enum A4SqpCorePhase last_phase;
+	int phase_switches;
+	int regular_iterations;
+	int restoration_iterations;
+	int restoration_entries;
+	int restoration_exits;
+	int restoration_handoffs;
 };
 
 #endif

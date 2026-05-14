@@ -439,7 +439,10 @@ static HighsInt *a4sqp_qp_copy_int_array(const int32 *src, int32 len){
 	return dest;
 }
 
-int a4sqp_qp_solve_highs(struct A4SqpQp *qp, real64 qp_tol, int output_flag){
+int a4sqp_qp_solve_highs_options(
+	struct A4SqpQp *qp,
+	const struct A4SqpQpSolveOptions *options
+){
 	void *highs;
 	HighsInt status;
 	HighsInt model_status;
@@ -452,11 +455,15 @@ int a4sqp_qp_solve_highs(struct A4SqpQp *qp, real64 qp_tol, int output_flag){
 	real64 *row_lower;
 	real64 *row_upper;
 	real64 inf;
+	real64 qp_tol;
+	int output_flag;
 	int32 i;
 
 	if(qp == NULL || qp->num_col <= 0 || qp->num_row < 0){
 		return 1;
 	}
+	qp_tol = options != NULL ? options->tolerance : 0.0;
+	output_flag = options != NULL ? options->output_flag : 0;
 
 	highs = Highs_create();
 	if(highs == NULL){
@@ -509,6 +516,13 @@ int a4sqp_qp_solve_highs(struct A4SqpQp *qp, real64 qp_tol, int output_flag){
 	(void)Highs_setDoubleOptionValue(highs,"primal_feasibility_tolerance",qp_tol);
 	(void)Highs_setDoubleOptionValue(highs,"dual_feasibility_tolerance",qp_tol);
 	(void)Highs_setDoubleOptionValue(highs,"optimality_tolerance",qp_tol);
+	if(options != NULL && options->time_limit > 0.0 && isfinite(options->time_limit)){
+		(void)Highs_setDoubleOptionValue(highs,"time_limit",options->time_limit);
+	}
+	if(options != NULL && options->iteration_limit > 0){
+		(void)Highs_setIntOptionValue(highs,"simplex_iteration_limit",options->iteration_limit);
+		(void)Highs_setIntOptionValue(highs,"ipm_iteration_limit",options->iteration_limit);
+	}
 	(void)Highs_setIntOptionValue(highs,"user_bound_scale",8);
 	status = Highs_passModel(
 		highs,
@@ -574,6 +588,14 @@ int a4sqp_qp_solve_highs(struct A4SqpQp *qp, real64 qp_tol, int output_flag){
 	A4SQP_FREE(row_upper);
 	Highs_destroy(highs);
 	return (status != kHighsStatusError && model_status == kHighsModelStatusOptimal) ? 0 : 1;
+}
+
+int a4sqp_qp_solve_highs(struct A4SqpQp *qp, real64 qp_tol, int output_flag){
+	struct A4SqpQpSolveOptions options;
+	memset(&options,0,sizeof(options));
+	options.tolerance = qp_tol;
+	options.output_flag = output_flag;
+	return a4sqp_qp_solve_highs_options(qp,&options);
 }
 
 int a4sqp_qp_highs_spike(struct A4SqpQpSpikeResult *result){

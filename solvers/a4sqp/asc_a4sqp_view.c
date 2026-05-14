@@ -25,6 +25,32 @@ static int32 a4sqp_count_vars(struct var_variable **vars){
 	return n;
 }
 
+static int a4sqp_view_capture_solver_vars(struct A4SqpView *view, struct var_variable **vars){
+	var_filter_t vfilter;
+	int32 total;
+	int32 i;
+	int32 n = 0;
+	if(view == NULL || vars == NULL){
+		return 1;
+	}
+	total = a4sqp_count_vars(vars);
+	view->vars = A4SQP_NEW_ARRAY_OR_NULL(void *,total + 1);
+	if(view->vars == NULL){
+		return 1;
+	}
+	view->owns_vars = 1;
+	vfilter.matchbits = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED;
+	vfilter.matchvalue = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR;
+	for(i = 0; i < total; ++i){
+		if(var_apply_filter(vars[i],&vfilter)){
+			view->vars[n++] = vars[i];
+		}
+	}
+	view->vars[n] = NULL;
+	view->n_var = n;
+	return 0;
+}
+
 static int32 a4sqp_count_rels(struct rel_relation **rels){
 	int32 n = 0;
 	if(rels == NULL){
@@ -180,11 +206,13 @@ static int a4sqp_view_capture_jacobian(struct A4SqpView *view, int safe){
 		return 1;
 	}
 
-	vfilter.matchbits = VAR_SVAR;
-	vfilter.matchvalue = VAR_SVAR;
+	vfilter.matchbits = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED;
+	vfilter.matchvalue = VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR;
 	view->jac_row_start[0] = 0;
 
 	for(i = 0; i < view->n_rel; ++i){
+		int32 mapped_count = 0;
+		int32 j;
 		int32 count = 0;
 		struct rel_relation *rel = (struct rel_relation *)view->rels[i];
 		int err = relman_diff2_rev(rel,&vfilter,row_derivs,row_vars,&count,safe);
@@ -192,10 +220,15 @@ static int a4sqp_view_capture_jacobian(struct A4SqpView *view, int safe){
 			++view->derivative_errors;
 			count = 0;
 		}
-		if(count > view->jac_max_row_nnz){
-			view->jac_max_row_nnz = count;
+		for(j = 0; j < count; ++j){
+			if(a4sqp_view_find_var_index(view,row_vars[j]) >= 0){
+				++mapped_count;
+			}
 		}
-		nnz += count;
+		if(mapped_count > view->jac_max_row_nnz){
+			view->jac_max_row_nnz = mapped_count;
+		}
+		nnz += mapped_count;
 		view->jac_row_start[i + 1] = nnz;
 	}
 
@@ -219,15 +252,19 @@ static int a4sqp_view_capture_jacobian(struct A4SqpView *view, int safe){
 			int32 count = 0;
 			struct rel_relation *rel = (struct rel_relation *)view->rels[i];
 			int err = relman_diff2_rev(rel,&vfilter,row_derivs,row_vars,&count,safe);
-			if(err){
-				count = 0;
-			}
-			for(j = 0; j < count; ++j){
-				view->jac_col_sindex[nnz] = row_vars[j];
-				view->jac_col_index[nnz] = a4sqp_view_find_var_index(view,row_vars[j]);
-				view->jac_value[nnz] = row_derivs[j];
-				++nnz;
-			}
+				if(err){
+					count = 0;
+				}
+				for(j = 0; j < count; ++j){
+					int32 col = a4sqp_view_find_var_index(view,row_vars[j]);
+					if(col < 0){
+						continue;
+					}
+					view->jac_col_sindex[nnz] = row_vars[j];
+					view->jac_col_index[nnz] = col;
+					view->jac_value[nnz] = row_derivs[j];
+					++nnz;
+				}
 		}
 	}
 
@@ -300,18 +337,22 @@ static int a4sqp_view_capture_objective(struct A4SqpView *view, int safe){
 }
 
 int a4sqp_view_build(struct A4SqpView *view, slv_system_t server, int safe, const char *scaleopt){
+	struct var_variable **vars;
 	if(view == NULL || server == NULL){
 		return 1;
 	}
 
 	a4sqp_view_destroy(view);
-	view->vars = (void **)slv_get_solvers_var_list(server);
+	vars = slv_get_solvers_var_list(server);
 	view->rels = (void **)slv_get_solvers_rel_list(server);
 	view->obj = (void *)slv_get_obj_relation(server);
-	view->n_var = a4sqp_count_vars((struct var_variable **)view->vars);
 	view->n_rel = a4sqp_count_rels((struct rel_relation **)view->rels);
 
-	if(view->vars == NULL || view->rels == NULL){
+	if(vars == NULL || view->rels == NULL){
+		return 1;
+	}
+	if(a4sqp_view_capture_solver_vars(view,vars)){
+		a4sqp_view_destroy(view);
 		return 1;
 	}
 

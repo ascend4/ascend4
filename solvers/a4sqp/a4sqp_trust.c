@@ -87,3 +87,39 @@ void a4sqp_trust_grow_if_good(
 		*radius = a4sqp_trust_clamp_value(opt,*radius * grow);
 	}
 }
+
+int a4sqp_trust_update_after_accept(
+	real64 *radius,
+	const struct A4SqpTrustOptions *opt,
+	real64 alpha,
+	real64 scaled_step_inf,
+	real64 trust_ratio,
+	real64 tiny_alpha,
+	real64 tiny_radius_factor
+){
+	real64 old_radius;
+	real64 target;
+	if(radius == NULL || opt == NULL || !isfinite(*radius) || *radius <= 0.0){
+		return 0;
+	}
+	old_radius = *radius;
+	if(
+		isfinite(tiny_alpha)
+		&& tiny_alpha > 0.0
+		&& alpha > 0.0
+		&& alpha <= tiny_alpha
+		&& isfinite(scaled_step_inf)
+		&& scaled_step_inf > 0.0
+	){
+		if(!isfinite(tiny_radius_factor) || tiny_radius_factor < 1.0){
+			tiny_radius_factor = 2.0;
+		}
+		target = scaled_step_inf * tiny_radius_factor;
+		if(target < *radius){
+			*radius = a4sqp_trust_clamp_value(opt,target);
+			return *radius < old_radius;
+		}
+	}
+	a4sqp_trust_grow_if_good(radius,opt,alpha,scaled_step_inf,trust_ratio);
+	return *radius != old_radius;
+}

@@ -66,8 +66,12 @@ METHOD on_load;
 	RUN bound_self;
 	RUN default_self;
 	SOLVER A4SQP;
-	OPTION max_iter 200;
-END on_load;
+		OPTION max_iter 200;
+		OPTION restoration TRUE;
+		OPTION restoration_trigger_iter 0;
+		OPTION restoration_handoff_reduction 0.5;
+		OPTION restoration_reentry_factor 100.0;
+	END on_load;
 
 METHOD on_load_test;
 	RUN bound_self;

@@ -137,6 +137,13 @@ struct A4SqpSolveStats {
 	A4SqpInt qp_solves;
 	A4SqpInt qp_failures;
 	A4SqpInt line_search_failures;
+	A4SqpInt algorithm_mode;
+	A4SqpInt mode_switches;
+	A4SqpInt regular_iterations;
+	A4SqpInt restoration_iterations;
+	A4SqpInt restoration_entries;
+	A4SqpInt restoration_exits;
+	A4SqpInt restoration_handoffs;
 	A4SqpNumber objective;
 	A4SqpNumber max_constraint_violation;
 	A4SqpNumber projected_gradient_inf;

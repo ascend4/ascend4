@@ -15,6 +15,7 @@ void a4sqp_view_init(struct A4SqpView *view){
 	view->n_var = 0;
 	view->n_rel = 0;
 	view->vars = NULL;
+	view->owns_vars = 0;
 	view->rels = NULL;
 	view->obj = NULL;
 	view->obj_direction = 0;
@@ -60,6 +61,9 @@ void a4sqp_view_init(struct A4SqpView *view){
 void a4sqp_view_destroy(struct A4SqpView *view){
 	if(view == NULL){
 		return;
+	}
+	if(view->owns_vars){
+		A4SQP_FREE(view->vars);
 	}
 	A4SQP_FREE(view->var_sindex);
 	A4SQP_FREE(view->var_value);

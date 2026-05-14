@@ -548,14 +548,22 @@ int MAINENTRY(void){
 	AddA4SqpIntOption(problem,"kkt_convergence",a4sqp_cutest_env_int("A4SQP_KKT_CONVERGENCE",0));
 	AddA4SqpIntOption(problem,"restoration",a4sqp_cutest_env_int("A4SQP_RESTORATION",0));
 	AddA4SqpIntOption(problem,"restoration_trigger_iter",a4sqp_cutest_env_int("A4SQP_RESTORATION_TRIGGER_ITER",3));
+	AddA4SqpIntOption(problem,"restoration_max_iter",a4sqp_cutest_env_int("A4SQP_RESTORATION_MAX_ITER",0));
 	AddA4SqpNumOption(problem,"tol",a4sqp_cutest_env_double("A4SQP_TOL",1e-7));
 	AddA4SqpNumOption(problem,"acceptable_tol",a4sqp_cutest_env_double("A4SQP_ACCEPTABLE_TOL",1e-5));
 	AddA4SqpNumOption(problem,"elastic_penalty",a4sqp_cutest_env_double("A4SQP_ELASTIC_PENALTY",100.0));
+	AddA4SqpNumOption(problem,"elastic_penalty_growth",a4sqp_cutest_env_double("A4SQP_ELASTIC_PENALTY_GROWTH",10.0));
+	AddA4SqpNumOption(problem,"elastic_penalty_max",a4sqp_cutest_env_double("A4SQP_ELASTIC_PENALTY_MAX",1e8));
 	AddA4SqpNumOption(problem,"filter_margin",a4sqp_cutest_env_double("A4SQP_FILTER_MARGIN",1e-4));
 	AddA4SqpNumOption(problem,"restoration_improve",a4sqp_cutest_env_double("A4SQP_RESTORATION_IMPROVE",1e-3));
 	AddA4SqpNumOption(problem,"restoration_margin",a4sqp_cutest_env_double("A4SQP_RESTORATION_MARGIN",1e-4));
+	AddA4SqpNumOption(problem,"restoration_handoff_reduction",a4sqp_cutest_env_double("A4SQP_RESTORATION_HANDOFF_REDUCTION",0.5));
+	AddA4SqpNumOption(problem,"restoration_reentry_factor",a4sqp_cutest_env_double("A4SQP_RESTORATION_REENTRY_FACTOR",1.0));
 	AddA4SqpNumOption(problem,"trust_radius_init",a4sqp_cutest_env_double("A4SQP_TRUST_RADIUS_INIT",1.0));
 	AddA4SqpNumOption(problem,"hess_reg",a4sqp_cutest_env_double("A4SQP_HESS_REG",1e-8));
+	AddA4SqpNumOption(problem,"bound_push",a4sqp_cutest_env_double("A4SQP_BOUND_PUSH",1e-8));
+	AddA4SqpNumOption(problem,"qp_time_limit",a4sqp_cutest_env_double("A4SQP_QP_TIME_LIMIT",0.0));
+	AddA4SqpIntOption(problem,"qp_iteration_limit",a4sqp_cutest_env_int("A4SQP_QP_ITERATION_LIMIT",0));
 	AddA4SqpStrOption(problem,"hessian",(char *)a4sqp_cutest_env_string("A4SQP_HESSIAN","BFGS"));
 	solve_status = A4SqpSolve(
 		problem,
@@ -615,6 +623,16 @@ int MAINENTRY(void){
 		stats.qp_solves,
 		stats.qp_failures,
 		stats.line_search_failures
+	);
+	printf(
+		"\"algorithm_mode\":%d,\"mode_switches\":%d,\"regular_iterations\":%d,\"restoration_iterations\":%d,\"restoration_entries\":%d,\"restoration_exits\":%d,\"restoration_handoffs\":%d,",
+		(int)stats.algorithm_mode,
+		(int)stats.mode_switches,
+		(int)stats.regular_iterations,
+		(int)stats.restoration_iterations,
+		(int)stats.restoration_entries,
+		(int)stats.restoration_exits,
+		(int)stats.restoration_handoffs
 	);
 	printf("\"final_step_norm\":");
 	a4sqp_cutest_json_number(stats.final_step_norm);

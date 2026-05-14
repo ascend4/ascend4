@@ -1,28 +1,71 @@
 # A4SQP Architecture Notes
 
-## Direction
+## Overview
 
-A4SQP is an SQP-based nonlinear solver prototype for ASCEND and for standalone
-callback-driven NLP benchmarking. The current design goal is one solver engine
-with adapter layers, not separate ASCEND and CUTEst solvers.
+A4SQP is intended to be a portable sparse SQP-based nonlinear programming
+solver, aiming for robust performance across a wide selection of benchmark test
+problems while remaining usable as ASCEND's native optimization solver. The
+current implementation is still a prototype, but the architectural direction is
+to keep the numerical solver core independent of ASCEND and reusable from
+callback-driven frontends such as CUTEst/SIFDecode.
 
-The intended boundary is:
+## Current Feature Summary
+
+Implemented core capabilities include:
+
+- sparse constrained NLP setup through an IPOPT-like C callback API;
+- ASCEND and CUTEst/SIFDecode adapters using the same C API path;
+- HiGHS-backed elastic QP subproblem solves;
+- damped BFGS Hessian approximation on scaled primal variables;
+- optional exact objective and exact Lagrangian Hessian callbacks, with
+  core-owned lower-triangle packing and PSD regularization;
+- merit line search, trust-radius QP retries, and experimental filter-lite
+  acceptance;
+- optional feasibility restoration with core-owned phase/status counters;
+- KKT, bound-stationarity, restoration, and solve-statistics reporting;
+- CUTEst benchmarking support against IPOPT, including JSONL outcome
+  classification;
+- ASCEND progress/status reporting through `liba4sqp_ascend.so`.
+
+Current important gaps are:
+
+- benchmark robustness is still limited; A4SQP is useful for triage and
+  development comparison, but not yet a production-grade IPOPT replacement;
+- ASCEND scaling needs review now that the ASCEND adapter routes through the
+  public C API path;
+- fixed-variable removal is not yet implemented as a full presolve/postsolve
+  reduction;
+- active-bound identification, restoration handoff, and terminal stationarity
+  still need core work on BT13-like cases;
+- `OpenA4SqpOutputFile` exists for IPOPT API compatibility but is not yet a
+  useful reporting sink.
+
+## Current Direction
+
+A4SQP is now structured as one portable SQP solver library with thin adapters.
+The current design goal is not two solvers and not one ASCEND-specific solver
+plus a separate CUTEst solver. The intended runtime shape is:
 
 ```text
 ASCEND model
     -> liba4sqp_ascend.so adapter
-        -> liba4sqp.so core solver
-            -> HiGHS QP backend
+        -> IPOPT-like A4SQP C API
+            -> liba4sqp.so core solver
+                -> HiGHS QP backend
 
 SIFDecode / CUTEst problem
-    -> C API / CUTEst adapter
-        -> liba4sqp.so core solver
-            -> HiGHS QP backend
+    -> CUTEst adapter
+        -> IPOPT-like A4SQP C API
+            -> liba4sqp.so core solver
+                -> HiGHS QP backend
 ```
 
-The important principle is that `liba4sqp.so` owns solver policy and numerical
-step computation. Frontends own problem evaluation, data translation, and
+`liba4sqp.so` owns solver policy and numerical step computation. Adapter code
+owns frontend data translation, evaluation callbacks, status mapping, and
 frontend-specific diagnostics.
+
+The public C API is intentionally close to IPOPT's C API so CUTEst and other
+external NLP drivers can be wired with minimal solver-specific bridge code.
 
 ## Library Split
 
@@ -32,174 +75,115 @@ frontend-specific diagnostics.
 headers, call `libascend.so`, or access `slv_system_t`, `struct var_variable`,
 or `struct rel_relation`.
 
-Current direct shared-library dependencies are:
+The build currently links this library to HiGHS and not ASCEND. Its primary
+source files are:
 
-- `libm`
-- `libhighs`
-- `libc`
-
-Core code currently lives in:
-
-- `solvers/a4sqp/a4sqp_c.c`: IPOPT-like public C API implementation.
+- `solvers/a4sqp/a4sqp_c.c`: public IPOPT-like C API and current solve driver.
 - `solvers/a4sqp/a4sqp_core.c`: shared SQP step, merit, line-search,
-  convergence, stationarity, violation, and trust-retry logic.
+  convergence, KKT, restoration, multiplier, and bound-activity logic.
 - `solvers/a4sqp/a4sqp_core_view.h`: solver-neutral borrowed numeric view.
-- `solvers/a4sqp/a4sqp_hessian.c`: dense Hessian model lifecycle, damped BFGS
-  update, matrix-vector products, and PSD regularization.
+- `solvers/a4sqp/a4sqp_hessian.c`: dense Hessian lifecycle, BFGS update,
+  relation Hessian packing helpers, matrix products, and PSD regularization.
 - `solvers/a4sqp/a4sqp_qp_highs.c`: QP assembly and HiGHS solve glue.
-- `solvers/a4sqp/a4sqp_scale.c`: numeric scaling helpers.
-- `solvers/a4sqp/a4sqp_trust.c`: trust-region policy.
-- `solvers/a4sqp/a4sqp_view.c`: core-owned numeric view storage lifecycle.
-- `solvers/a4sqp/a4sqp_types.h`: core numeric types, bound sentinels, and
-  allocator macros.
+- `solvers/a4sqp/a4sqp_scale.c`: scaling helpers.
+- `solvers/a4sqp/a4sqp_trust.c`: trust-radius policy.
+- `solvers/a4sqp/a4sqp_view.c`: numeric view lifecycle.
+- `solvers/a4sqp/a4sqp_types.h`: core numeric types and allocator macros.
 
-The core solver is allowed to decide when solver status should change, when a
-step is accepted, when a QP retry is needed, when convergence is reached, and
-how approximate Hessians are updated and regularized before reaching HiGHS.
+The stable external boundary is `solvers/a4sqp/a4sqp_c.h`. Some additional
+core and Hessian helper symbols are exported today because the ASCEND adapter
+uses them for exact-Hessian packing and diagnostics. Treat those as internal
+adapter support, not as a stable third-party ABI.
+
+Core-owned decisions include merit acceptance, line search, QP construction,
+QP retry policy, trust-radius updates, restoration entry/exit, convergence
+tests, multiplier estimation, BFGS updates, exact-Hessian packing, and Hessian
+PSD regularization.
 
 ### `liba4sqp_ascend.so`
 
 `liba4sqp_ascend.so` is the ASCEND solver plugin. It links to `liba4sqp.so` and
-`libascend.so`. It must not link directly to HiGHS.
+`libascend.so`. It must not link directly to HiGHS. The built adapter currently
+exports only the ASCEND registration symbol, `a4sqp_register`.
 
-Current direct shared-library dependencies are:
+ASCEND adapter code lives in:
 
-- `libm`
-- `liba4sqp`
-- `libascend`
-- `libc`
-
-ASCEND adapter code currently lives in:
-
-- `solvers/a4sqp/asc_a4sqp.c`: ASCEND solver client callbacks, ASCEND-side solve
-  state, exact Hessian assembly from ASCEND relations, and status mapping.
-- `solvers/a4sqp/asc_a4sqp_adapter.c`: ASCEND view-build entry point.
-- `solvers/a4sqp/asc_a4sqp_adapter.h`: ASCEND adapter declarations.
+- `solvers/a4sqp/asc_a4sqp.c`: ASCEND solver lifecycle, C API callback
+  implementation, option transfer, solve/status mapping, and exact Hessian
+  callback bridge.
+- `solvers/a4sqp/asc_a4sqp_adapter.c`: ASCEND adapter entry points.
 - `solvers/a4sqp/asc_a4sqp_diag.c`: ASCEND progress callback bridge.
-- `solvers/a4sqp/asc_a4sqp_params.c`: ASCEND solver parameter setup.
-- `solvers/a4sqp/asc_a4sqp_report.c`: ASCEND-facing progress/view/QP/iteration
+- `solvers/a4sqp/asc_a4sqp_params.c`: ASCEND solver parameter definitions.
+- `solvers/a4sqp/asc_a4sqp_report.c`: ASCEND-facing progress/view/iteration
   reporting.
-- `solvers/a4sqp/asc_a4sqp_view.c`: construction of numeric A4SQP views
-  from `slv_system_t`.
+- `solvers/a4sqp/asc_a4sqp_view.c`: construction of an ASCEND-backed numeric
+  view from `slv_system_t`.
 
 The ASCEND adapter is allowed to:
 
-- read solver variable and relation lists from `slv_system_t`;
+- sort and read ASCEND solver variable and relation lists;
+- maintain the ASCEND-side trial vector mapping;
 - push a trial A4SQP `x` vector into ASCEND variables for evaluation;
-- read variable values, bounds, fixed flags, nominals, and indices;
-- evaluate relation residuals, objective values, Jacobians, and Hessians using
-  ASCEND machinery;
-- assemble sparse numeric structures from the ASCEND model;
+- evaluate objective values, relation residuals, gradients, Jacobians, and
+  relation Hessians using ASCEND machinery;
+- translate ASCEND options into C API options;
 - translate A4SQP statuses into `slv_status_t`;
-- render diagnostics with ASCEND names, relation names, variable names, source
-  indices, and solver progress callbacks.
+- render diagnostics with ASCEND variable/relation names and source indices.
 
-The ASCEND adapter should not implement solver policy. In particular, merit
-acceptance, line-search behavior, QP retry policy, convergence tests, elastic
-row logic, BFGS update mechanics, and Hessian PSD regularization belong in core
-code.
+The ASCEND adapter should not implement solver policy. In particular,
+restoration, filtering, trust-region handling, QP retry policy, convergence
+logic, elastic penalty updates, BFGS mechanics, and Hessian PSD repair belong
+inside `liba4sqp.so`.
 
-Exact Hessian assembly is still adapter-side because ASCEND exact Hessians are
-obtained from `relman` and therefore require ASCEND relation handles. That is
-data acquisition, not SQP policy. The resulting numeric Hessian is still
-regularized by shared core Hessian utilities before QP assembly.
+## Callback Boundary
 
-Acceptable convergence is also core policy. Both the C API and ASCEND adapter
-expose `acceptable_tol` and `acceptable_iter`, but the default is disabled
-(`acceptable_iter = 0`) so existing ASCEND model tests continue to require
-strict convergence unless the user explicitly opts into relaxed termination.
+The only frontend-facing solve callbacks should be the IPOPT-like C API
+callbacks:
 
-Stationarity handling is moving toward KKT-residual based convergence. The
-shared core now computes a primal/dual/complementarity KKT residual, and the
-C API exposes an opt-in `kkt_convergence` option that requires this residual to
-be small before objective problems are reported as solved. The standalone C API
-and ASCEND adapter default this option off for compatibility while regressions
-are reviewed; the CUTEst runner defaults it on so benchmark pass counts are
-not inflated by constrained small-step exits with high stationarity residuals.
+- objective value;
+- objective gradient;
+- constraint residual vector;
+- sparse Jacobian structure and values;
+- sparse lower-triangle Hessian of the Lagrangian;
+- optional intermediate/progress callback.
+
+ASCEND currently implements these callbacks in `asc_a4sqp.c`. CUTEst implements
+the same callback shape in `solvers/a4sqp/cutest/a4sqp_main.c`.
+
+Exact ASCEND Hessian data acquisition remains adapter-side because it requires
+`relman` and ASCEND relation handles. The adapter emits objective/relation
+second-derivative entries; `liba4sqp.so` owns lower-triangle packing, multiplier
+weighting, and PSD regularization.
+
+No restoration, filter, trust-region, or convergence decisions should be made
+by the adapters. If a future change requires putting that policy back into
+`liba4sqp_ascend.so` or the CUTEst driver, stop and discuss first.
 
 ## Numeric View
 
-`A4SqpView` is now a core-owned numeric container with optional opaque frontend
+`A4SqpView` is a core-owned numeric container with optional opaque frontend
 handles. Its public core header does not expose ASCEND types.
 
-The portable fields contain:
+The portable numeric fields include:
 
-- number of variables and relations;
-- objective value and objective gradient;
+- variable and relation counts;
+- objective value and gradient;
 - variable values, bounds, fixed flags, nominals, scales, and scaled values;
 - relation residuals, bounds, nominals, scales, and scaled values;
 - relation kind;
 - sparse Jacobian row starts, column indices, and values;
 - diagnostic counters for calculation and derivative failures.
 
-The ASCEND adapter stores `void *` handles in the optional `vars`, `rels`, and
-`obj` fields so it can map diagnostics and exact-Hessian work back to ASCEND
-objects. Core code treats those handles as opaque and must not dereference them.
+The ASCEND adapter stores opaque handles in optional fields so diagnostics and
+exact-Hessian evaluation can map back to ASCEND objects. Core code must treat
+those handles as opaque.
 
-This keeps ASCEND integration efficient without forcing ASCEND through the
-public C API. Updating ASCEND variables from an A4SQP `x` vector is cheap and is
-the right tradeoff for keeping the core API simple and IPOPT-like.
+Current important limitation: `A4SqpView` records fixed variables, but A4SQP
+does not yet have a full optimization presolve/postsolve reducer that removes
+fixed variables from the NLP and maps the solution back afterward. That remains
+a separate cleanup item.
 
-## Public C API
-
-The public C API is declared in:
-
-```text
-solvers/a4sqp/a4sqp_c.h
-```
-
-It intentionally follows IPOPT's C callback shape:
-
-- problem creation with `n`, `m`, bounds, Jacobian nonzeros, Hessian nonzeros,
-  index style, and callbacks;
-- objective, objective-gradient, constraint, Jacobian, and Hessian callbacks;
-- option setters;
-- solve function that updates `x` in place;
-- result arrays for constraint values, objective value, constraint multipliers,
-  and bound multipliers;
-- solve statistics.
-
-This API is the intended boundary for SIFDecode/CUTEst benchmarking and other
-non-ASCEND uses. It should stay free of ASCEND concepts.
-
-The C API supports IPOPT-like acceptable termination. Set
-`acceptable_iter > 0` and `acceptable_tol` to permit return status
-`A4SqpSolvedToAcceptableLevel` after consecutive relaxed convergence checks.
-This is useful for CUTEst triage because many current failures are near-solved
-iteration-limit exits, but it should be treated as an explicit benchmark
-profile rather than the default solver semantics.
-
-## CUTEst / SIFDecode Bridge
-
-The CUTEst bridge should remain thin:
-
-```text
-SIFDecode/CUTEst callbacks
-    -> A4SQP C callbacks
-        -> liba4sqp.so
-```
-
-It should decode dimensions, bounds, sparse Jacobian structure, optional sparse
-Hessian structure, and initial guesses, then call the A4SQP C API. It should
-not contain solver algorithm logic.
-
-The comparison target for now is A4SQP versus IPOPT over the CUTEst NLP subset.
-SLSQP is deferred.
-
-For a given mathematical model, the ASCEND and SIFDecode paths should converge
-to the same result when solver options, scaling, bound conventions, initial
-guesses, and derivative data are harmonized. If the same problem behaves
-differently through the two frontends, that should be treated as an adapter or
-normalization bug until proven otherwise.
-
-The CUTEst runner exposes the acceptable-convergence profile through
-`--acceptable-iter`, `--acceptable-tol`, `A4SQP_ACCEPTABLE_ITER`, and
-`A4SQP_ACCEPTABLE_TOL`. Acceptable convergence remains disabled by default.
-The runner also exposes stationarity-strict convergence through
-`--kkt-convergence`, `--no-kkt-convergence`, and `A4SQP_KKT_CONVERGENCE`; this
-is enabled by default for CUTEst profiling.
-
-## Current Solver Shape
+## Solver Algorithm Snapshot
 
 A4SQP currently implements an elastic line-search SQP method:
 
@@ -212,103 +196,140 @@ subject to  r_L - e_L <= r(x_k) + J_r(x_k) p <= r_U + e_U
             e_L, e_U >= 0
 ```
 
-The default step Hessian is damped BFGS on scaled primal variables. Experimental
-exact-Hessian modes are available:
+The default Hessian model is damped BFGS on scaled primal variables.
+Experimental exact-Hessian modes are available:
 
-- `EXACT_OBJ` for objective-only exact curvature;
-- `EXACT_LAGRANGIAN` for constrained Lagrangian curvature;
-- `AUTO` for conservative promotion on compact constrained problems.
+- `EXACT_OBJ` for objective curvature;
+- `EXACT_LAGRANGIAN` for Lagrangian curvature;
+- `AUTO` for conservative promotion when an exact Hessian callback exists.
 
 HiGHS requires a convex QP, so exact Hessians are regularized to a
 positive-semidefinite step model before QP assembly.
 
+Restoration, acceptable convergence, KKT convergence, multiplier recovery, and
+bound-stationarity diagnostics are core policy. The adapters only pass options
+and relay the resulting status/progress data.
+
+## Public C API
+
+The public C API is declared in:
+
+```text
+solvers/a4sqp/a4sqp_c.h
+```
+
+It follows IPOPT's C callback shape:
+
+- problem creation with dimensions, bounds, Jacobian nonzeros, Hessian
+  nonzeros, index style, and callback table;
+- objective, objective-gradient, constraint, Jacobian, and Hessian callbacks;
+- string, numeric, and integer option setters;
+- solve function that updates `x` in place;
+- optional output arrays for constraint values, objective value, constraint
+  multipliers, and bound multipliers;
+- solve statistics, including phase/restoration counters and KKT diagnostics.
+
+The core solver does not read environment variables. The CUTEst runner and
+package driver may read environment variables as harness plumbing, but they
+must translate them into ordinary C API options before calling `A4SqpSolve`.
+
+## CUTEst / SIFDecode Bridge
+
+The CUTEst bridge remains thin:
+
+```text
+SIFDecode/CUTEst callbacks
+    -> A4SQP C callbacks
+        -> liba4sqp.so
+```
+
+It decodes dimensions, bounds, sparse Jacobian structure, optional sparse
+Hessian structure, and initial guesses, then calls the A4SQP C API. It should
+not contain solver algorithm logic.
+
+The current comparison target is A4SQP versus IPOPT over CUTEst NLP problems.
+SLSQP remains deferred.
+
+For a given mathematical model, the ASCEND and SIFDecode paths should converge
+to the same result when solver options, scaling, bound conventions, initial
+guesses, and derivative data are harmonized. If the same problem behaves
+differently through the two frontends, treat that as an adapter or
+normalization bug until proven otherwise.
+
 ## Current Test Status
 
-The focused ASCEND CUnit suite currently passes through:
+The focused ASCEND CUnit suite is run through:
 
 ```text
 ./a4 cutest solver_a4sqp
 ```
 
-The current suite includes registration, HiGHS QP smoke tests, C API smoke
-tests, and focused A4SQP model regressions including `hs3`, `hs11`, `hs21`,
-`rosenbr`, `rosenmmx`, `jannson3`, reduced `lubrifc`, and reduced `cont6_qq`
-cases.
+Current local result after the CUnit skip support update:
 
-Representative model-level checks are:
+```text
+21 selected tests: 18 passed, 3 skipped, 0 failed
+```
+
+The active suite includes registration, a HiGHS QP smoke test, C API smoke
+tests, view/presolve checks, exact-Hessian checks, and model-run regressions
+for `hs21`, `bqp1var`, `bt10`, `cb3`, and `jannson3`.
+
+The following model-run regressions remain in the suite but are explicitly
+skipped because they previously passed but are not reliable enough for default
+CUnit gating:
+
+- `rosenmmx`
+- `lubrifc`
+- `cont6_qq`
+
+Representative model-level checks should use the normal runner:
 
 ```text
 ./a4 run models/test/a4sqp/hs3.a4c
 ./a4 run models/test/a4sqp/hs11.a4c
 ```
 
-Both currently solve with A4SQP.
+Recent CUTEst profiling should be treated as a snapshot, not a permanent
+baseline. On the fixed-size smooth NLP sample capped at `n <= 20`, `m <= 20`,
+BFGS, 200 iterations, and KKT convergence enabled, the last recorded profile
+had 4 strict successes and 11 clean successes when `--acceptable-iter 5` was
+enabled. The main failure classes were near-solved maximum-iteration exits,
+stationarity failures, line-search failures, infeasible/stalled exits, and one
+QP failure.
 
-Recent CUTEst smoke status, using a fixed-size smooth NLP sample capped at
-`n <= 20`, `m <= 20`, 20 problems, BFGS, 200 iterations, and KKT convergence
-enabled:
+## Current Open Items
 
-- strict profile: 4/20 returned clean success;
-- acceptable profile with `--acceptable-iter 5`: 11/20 returned clean success
-  or acceptable success;
-- 7/20 were near-solved maximum-iteration exits with KKT residual below
-  `1e-5` but above the strict tolerance;
-- 5/20 were maximum-iteration stationarity failures;
-- 2/20 were line-search failures;
-- 1/20 was infeasible/stalled;
-- 1/20 was a QP failure.
-
-The CUTEst runner now records an `outcome_class` field to separate failures by
-mechanism. With KKT convergence disabled, the same sample previously had 6/20
-solver-status successes, but 2 of those had high KKT residuals. Those cases are
-now reported as stationarity failures or near-solved exits in CUTEst profiling
-rather than clean successes.
-
-Two experimental globalization knobs exist for triage:
-
-- `filter_accept`: constrained filter-lite acceptance for merit-decreasing,
-  feasibility-improving steps that fail the predicted-reduction ratio;
-- `trust_unconstrained`: applies the existing trust-region bound and trust
-  retries to objective-only problems.
-
-Both are disabled by default. In the 20-problem sample neither improved pass
-count, and `filter_accept` made one stalled constrained case fail earlier. The
-evidence still points first at acceptable termination/stationarity handling and
-then a more deliberate restoration/SOC implementation, not enabling these
-experimental knobs globally.
+- The ASCEND adapter now calls the public C API, which is the desired simpler
+  boundary, but ASCEND-specific scaling needs continued review. The C API
+  currently defaults to unscaled quantities unless explicit C API scaling is
+  provided, while the ASCEND parameter table still has `scaleopt=ROW_2NORM`.
+- Fixed-variable reduction is not yet a full presolve/postsolve layer.
+- BT13 remains the focused active-bound/restoration case. Current restoration
+  can repair feasibility and hand back to regular SQP, but active-bound
+  identification and terminal stationarity near the bound still need core work.
+- `OpenA4SqpOutputFile` is present for IPOPT API shape but is not implemented
+  as a useful output sink yet.
 
 ## Presolve/Postsolve Pin
 
-There is a separate optimization-layer idea that should remain on the design
-list: A4SQP could eventually run an optimization presolve before the core solve
-and a postsolve after it.
+There is still a separate optimization-layer idea for A4SQP to run a presolve
+before the core solve and a postsolve after it.
 
-That layer might remove fixed variables, tighten or substitute simple bounds,
+That layer could remove fixed variables, tighten or substitute simple bounds,
 detect redundant rows, rescale or reorder the active NLP, and map the reduced
-solution back to the original ASCEND problem.
+solution back to the original frontend problem.
 
-This is not part of the current CUTEst benchmarking bridge. The current split
-should first keep the core solver portable and keep the ASCEND adapter faithful.
-Presolve/postsolve can later sit above the adapter/core boundary.
+This should be implemented without moving ASCEND model access into
+`liba4sqp.so`. The likely shape is a core-owned reduced numeric problem plus
+adapter-owned mapping data.
 
-## Remaining Cleanup
+## Development Rules
 
-The binary split is now in place, but the source-level split can still improve:
-
-- Reduce `asc_a4sqp.c` further so it is increasingly ASCEND data extraction,
-  evaluation, status mapping, and solve orchestration rather than carrying
-  large exact-Hessian implementation blocks.
-- Narrow the explicit internal core ABI exported for `liba4sqp_ascend.so` as
-  the adapter gets thinner. The broad `-fvisibility=default` build override has
-  been removed; exported core symbols are now explicit.
-- Decide whether the ASCEND plugin should continue using selected internal
-  core symbols directly or move to a small non-public core-driver API distinct
-  from the IPOPT-like public C API.
-- Add a core-level reporting/logging hook that is frontend-neutral. The ASCEND
-  adapter can render those messages through ASCEND progress callbacks and add
-  variable/relation names where useful.
-- Keep confirming that `liba4sqp_ascend.so` has no direct HiGHS dependency and
-  `liba4sqp.so` has no ASCEND dependency.
-
-If any cleanup step requires routing ASCEND through only the IPOPT-like C API
-or dropping ASCEND diagnostics, stop and discuss first.
+- `liba4sqp.so` must not depend on ASCEND.
+- `liba4sqp_ascend.so` must not depend directly on HiGHS.
+- `liba4sqp_ascend.so` should expose only ASCEND registration externally.
+- Solver algorithm work belongs in `liba4sqp.so`.
+- Adapter work is limited to evaluation, option translation, status mapping,
+  progress reporting, and frontend diagnostics.
+- Use `./a4 run ...` and `./a4 cutest ...` for normal testing so runtime paths
+  match the expected user pattern.

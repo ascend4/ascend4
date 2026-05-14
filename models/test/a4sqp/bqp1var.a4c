@@ -1,0 +1,51 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL bqp1var;
+	x1 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst BQP1VAR.
+			Known solution:
+			    x1 = 0
+			    f  = 0
+		}
+		'source' SELF {
+			CUTEst / MASTSIF BQP1VAR, a one-variable box-constrained
+			quadratic. SIF input by N. I. M. Gould, March 1992.
+		}
+		'problem_origin' SELF {
+			This is a synthetic bound-constrained quadratic smoke test.
+			A4SQP solved the corresponding CUTEst problem as a strict
+			success in the 20-problem and broader NLP smoke runs, so this
+			model is intended as a stable regression for bound-active
+			objective-only convergence.
+		}
+	END NOTES;
+
+	obj: MINIMIZE x1 + x1^2;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1) < 1e-8;
+	ASSERT x1 >= -1e-10;
+	ASSERT x1 <= 0.5 + 1e-10;
+	ASSERT abs(x1 + x1^2) < 1e-8;
+END self_test;
+
+METHOD on_load;
+	x1.lower_bound := 0.0;
+	x1.upper_bound := 0.5;
+	x1 := 0.25;
+	SOLVER A4SQP;
+	OPTION max_iter 50;
+END on_load;
+
+METHOD on_load_test;
+	x1.lower_bound := 0.0;
+	x1.upper_bound := 0.5;
+	x1 := 0.25;
+END on_load_test;
+END bqp1var;

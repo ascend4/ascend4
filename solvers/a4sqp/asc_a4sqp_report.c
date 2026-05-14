@@ -16,6 +16,18 @@
 #include <ascend/system/slv_param.h>
 #include <ascend/utilities/error.h>
 
+static const char *asc_a4sqp_phase_name(enum A4SqpCorePhase phase){
+	switch(phase){
+	case A4SQP_CORE_PHASE_RESTORATION:
+		return "restoration";
+	case A4SQP_CORE_PHASE_RESTORATION_EXIT:
+		return "restoration_exit";
+	case A4SQP_CORE_PHASE_REGULAR:
+	default:
+		return "regular";
+	}
+}
+
 void asc_a4sqp_report_view(struct A4SqpSystem *sys){
 	char message[256];
 	const char *scaleopt;
@@ -52,20 +64,13 @@ void asc_a4sqp_report_qp(struct A4SqpSystem *sys){
 	snprintf(
 		message,
 		sizeof(message),
-		"qp: cols=%ld rows=%ld nnz=%ld q_nnz=%ld status=%d model_status=%d objective=%g",
-		(long)sys->qp.num_col,
-		(long)sys->qp.num_row,
-		(long)sys->qp.num_nz,
-		(long)sys->qp.q_num_nz,
-		sys->qp.highs_status,
-		sys->qp.highs_model_status,
-		sys->qp.objective_value
+		"qp: details owned by liba4sqp core"
 	);
 	a4sqp_report_progress(&sys->params,message);
 }
 
 void asc_a4sqp_report_iteration(struct A4SqpSystem *sys){
-	char message[256];
+	char message[768];
 
 	if(sys == NULL){
 		return;
@@ -73,8 +78,15 @@ void asc_a4sqp_report_iteration(struct A4SqpSystem *sys){
 	snprintf(
 		message,
 		sizeof(message),
-		"iter=%ld obj=%g merit=%g pred=%g rho=%g delta=%g viol_sum=%g viol_max=%g alpha=%g step=%g worst_rel=%ld",
+		"iter=%ld mode=%s mode_switches=%d regular_iter=%d restoration_iter=%d restoration_entries=%d restoration_exits=%d restoration_handoffs=%d obj=%g merit=%g pred=%g rho=%g delta=%g viol_sum=%g viol_max=%g alpha=%g step=%g worst_rel=%ld bound_lower=%ld bound_upper=%ld bound_fixed=%ld bound_stat=%g bound_worst=%ld",
 		(long)sys->status.iteration,
+		asc_a4sqp_phase_name(sys->last_phase),
+		sys->phase_switches,
+		sys->regular_iterations,
+		sys->restoration_iterations,
+		sys->restoration_entries,
+		sys->restoration_exits,
+		sys->restoration_handoffs,
 		sys->view.obj != NULL ? sys->view.obj_value : 0.0,
 		sys->last_merit_after,
 		sys->last_predicted_reduction,
@@ -84,7 +96,12 @@ void asc_a4sqp_report_iteration(struct A4SqpSystem *sys){
 		sys->last_violation_max,
 		sys->last_alpha,
 		sys->last_step_norm,
-		(long)sys->worst_violation_rel
+		(long)sys->worst_violation_rel,
+		(long)sys->bound_stats.lower_active,
+		(long)sys->bound_stats.upper_active,
+		(long)sys->bound_stats.fixed_active,
+		sys->bound_stats.stationarity_inf,
+		(long)sys->bound_stats.worst_index
 	);
 	a4sqp_report_progress(&sys->params,message);
 }

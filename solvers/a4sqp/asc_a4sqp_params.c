@@ -6,9 +6,9 @@
 
 #include "asc_a4sqp_params.h"
 
-#include "a4sqp_qp_highs.h"
-
 #include <ascend/general/ascMalloc.h>
+
+#define ASC_A4SQP_DEFAULT_ELASTIC_PENALTY 100.0
 
 int a4sqp_get_default_parameters(
 	slv_system_t server,
@@ -61,6 +61,13 @@ int a4sqp_get_default_parameters(
 			"Hessian regularization",2,
 			"Minimum diagonal margin enforced when regularizing the step Hessian to a convex QP model."
 		}, 1e-8, 0.0, 1e12}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_BOUND_PUSH,
+		(SlvParameterInitReal){{"bound_push",
+			"Bound push",2,
+			"Distance used when projecting an out-of-bounds initial value just inside finite variable bounds."
+		}, 1e-8, 0.0, 1e3}
 	);
 
 	slv_param_bool(parameters,A4SQP_PARAM_PROGRESS_CALLBACKS,
@@ -158,7 +165,21 @@ int a4sqp_get_default_parameters(
 		(SlvParameterInitReal){{"elastic_penalty",
 			"Elastic penalty",1,
 			"Linear penalty used for lower and upper elastic QP slacks and the merit function."
-		}, A4SQP_QP_DEFAULT_ELASTIC_PENALTY, 1e-12, 1e12}
+		}, ASC_A4SQP_DEFAULT_ELASTIC_PENALTY, 1e-12, 1e12}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_ELASTIC_PENALTY_GROWTH,
+		(SlvParameterInitReal){{"elastic_penalty_growth",
+			"Elastic penalty growth",2,
+			"Multiplier applied when the core detects saturated elastic-QP duals while infeasibility remains."
+		}, 1.0, 1.0, 1e6}
+	);
+
+	slv_param_real(parameters,A4SQP_PARAM_ELASTIC_PENALTY_MAX,
+		(SlvParameterInitReal){{"elastic_penalty_max",
+			"Maximum elastic penalty",2,
+			"Upper bound for automatic elastic/merit penalty increases."
+		}, 1e8, 1e-12, 1e16}
 	);
 
 	slv_param_bool(parameters,A4SQP_PARAM_FILTER_ACCEPT,
@@ -217,14 +238,28 @@ int a4sqp_get_default_parameters(
 		}, 0.1, -1e6, 1e6}
 	);
 
-	slv_param_real(parameters,A4SQP_PARAM_TRUST_GOOD,
-		(SlvParameterInitReal){{"trust_good",
-			"Trust good ratio",2,
-			"Actual-to-predicted merit reduction ratio that triggers trust-region growth when the step is trust-active."
-		}, 0.75, -1e6, 1e6}
-	);
+		slv_param_real(parameters,A4SQP_PARAM_TRUST_GOOD,
+			(SlvParameterInitReal){{"trust_good",
+				"Trust good ratio",2,
+				"Actual-to-predicted merit reduction ratio that triggers trust-region growth when the step is trust-active."
+			}, 0.75, -1e6, 1e6}
+		);
 
-	slv_param_int(parameters,A4SQP_PARAM_TRUST_QP_RETRIES,
+		slv_param_real(parameters,A4SQP_PARAM_TRUST_TINY_ALPHA,
+			(SlvParameterInitReal){{"trust_tiny_alpha",
+				"Tiny-alpha trust shrink",2,
+				"Accepted regular steps with alpha at or below this value shrink the trust radius toward the accepted step size; zero disables this update."
+			}, 0.0, 0.0, 1.0}
+		);
+
+		slv_param_real(parameters,A4SQP_PARAM_TRUST_TINY_RADIUS_FACTOR,
+			(SlvParameterInitReal){{"trust_tiny_radius_factor",
+				"Tiny-alpha trust factor",2,
+				"Multiplier on accepted scaled step size used as the new trust-radius target after a tiny-alpha accepted step."
+			}, 2.0, 1.0, 100.0}
+		);
+
+		slv_param_int(parameters,A4SQP_PARAM_TRUST_QP_RETRIES,
 		(SlvParameterInitInt){{"trust_qp_retries",
 			"Trust-region retries",2,
 			"Maximum number of trust-radius reductions and QP rebuild retries per SQP iteration."
@@ -252,6 +287,13 @@ int a4sqp_get_default_parameters(
 		}, 3, 0, 10000}
 	);
 
+	slv_param_int(parameters,A4SQP_PARAM_RESTORATION_MAX_ITER,
+		(SlvParameterInitInt){{"restoration_max_iter",
+			"Restoration handoff",2,
+			"Maximum consecutive restoration iterations before handing back to the regular SQP objective model; zero disables the cap."
+		}, 0, 0, 10000}
+	);
+
 	slv_param_real(parameters,A4SQP_PARAM_RESTORATION_IMPROVE,
 		(SlvParameterInitReal){{"restoration_improve",
 			"Restoration progress",2,
@@ -266,5 +308,19 @@ int a4sqp_get_default_parameters(
 		}, 1e-4, 0.0, 0.999999}
 	);
 
-	return 0;
-}
+		slv_param_real(parameters,A4SQP_PARAM_RESTORATION_HANDOFF_REDUCTION,
+			(SlvParameterInitReal){{"restoration_handoff_reduction",
+				"Restoration handoff reduction",2,
+				"Fractional constraint-violation reduction from restoration entry required before trying the regular SQP objective model again; zero disables improvement-based handoff."
+			}, 0.5, 0.0, 0.999999}
+		);
+
+		slv_param_real(parameters,A4SQP_PARAM_RESTORATION_REENTRY_FACTOR,
+			(SlvParameterInitReal){{"restoration_reentry_factor",
+				"Restoration re-entry factor",2,
+				"Multiplier on the restoration exit tolerance before immediate restoration re-entry is allowed after a handoff."
+			}, 1.0, 1.0, 1e6}
+		);
+
+		return 0;
+	}

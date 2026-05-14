@@ -87,6 +87,8 @@ Useful environment/option overrides:
 - `--restoration-trigger-iter N` or `A4SQP_RESTORATION_TRIGGER_ITER=N`
 - `--restoration-improve VALUE` or `A4SQP_RESTORATION_IMPROVE=VALUE`
 - `--restoration-margin VALUE` or `A4SQP_RESTORATION_MARGIN=VALUE`
+- `--restoration-handoff-reduction VALUE` or `A4SQP_RESTORATION_HANDOFF_REDUCTION=VALUE`
+- `--restoration-reentry-factor VALUE` or `A4SQP_RESTORATION_REENTRY_FACTOR=VALUE`
 - `--elastic-penalty VALUE` or `A4SQP_ELASTIC_PENALTY=VALUE`
 - `--a4sqp-hessian BFGS|EXACT_OBJ|EXACT_LAGRANGIAN` or `A4SQP_HESSIAN=...`
 - `--a4sqp-hess-reg VALUE` or `A4SQP_HESS_REG=VALUE`

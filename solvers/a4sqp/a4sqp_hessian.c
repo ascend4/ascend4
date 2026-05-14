@@ -10,6 +10,119 @@
 #include <stddef.h>
 #include <string.h>
 
+struct A4SqpHessianDenseBuild {
+	int32 n;
+	real64 coeff;
+	real64 *dense;
+};
+
+int32 a4sqp_hessian_lower_triangle_nnz(int32 n){
+	if(n <= 0){
+		return 0;
+	}
+	return n * (n + 1) / 2;
+}
+
+int a4sqp_hessian_lower_triangle_structure(
+	int32 n,
+	int32 *irow,
+	int32 *jcol
+){
+	int32 row;
+	int32 col;
+	int32 pos = 0;
+	if(n < 0){
+		return 1;
+	}
+	if(n > 0 && (irow == NULL || jcol == NULL)){
+		return 1;
+	}
+	for(col = 0; col < n; ++col){
+		for(row = col; row < n; ++row){
+			irow[pos] = row;
+			jcol[pos] = col;
+			++pos;
+		}
+	}
+	return 0;
+}
+
+static int a4sqp_hessian_dense_build_entry(void *ctx, int32 row, int32 col, real64 value){
+	struct A4SqpHessianDenseBuild *build = (struct A4SqpHessianDenseBuild *)ctx;
+	real64 weighted;
+	if(
+		build == NULL
+		|| build->dense == NULL
+		|| row < 0
+		|| col < 0
+		|| row >= build->n
+		|| col >= build->n
+		|| !isfinite(value)
+	){
+		return 0;
+	}
+	weighted = build->coeff * value;
+	if(!isfinite(weighted) || fabs(weighted) <= 1e-18){
+		return 0;
+	}
+	build->dense[row * build->n + col] += weighted;
+	if(row != col){
+		build->dense[col * build->n + row] += weighted;
+	}
+	return 0;
+}
+
+int a4sqp_hessian_build_dense_lower_from_relations(
+	int32 n,
+	int32 m,
+	real64 obj_factor,
+	const real64 *lambda,
+	A4SqpRelationHessianEvalFn eval_relation_hessian,
+	void *ctx,
+	real64 *values
+){
+	struct A4SqpHessianDenseBuild build;
+	real64 *dense = NULL;
+	int32 row;
+	int32 col;
+	int32 pos = 0;
+	int32 rel;
+	int status = 0;
+	if(n < 0 || m < 0 || eval_relation_hessian == NULL || (n > 0 && values == NULL)){
+		return 1;
+	}
+	dense = A4SQP_NEW_ARRAY_CLEAR(real64,n > 0 ? (size_t)n * (size_t)n : 1);
+	if(dense == NULL){
+		return 1;
+	}
+	build.n = n;
+	build.dense = dense;
+	if(isfinite(obj_factor) && fabs(obj_factor) > 1e-18){
+		build.coeff = obj_factor;
+		status = eval_relation_hessian(ctx,-1,&build,a4sqp_hessian_dense_build_entry);
+	}
+	if(!status && lambda != NULL){
+		for(rel = 0; rel < m; ++rel){
+			if(isfinite(lambda[rel]) && fabs(lambda[rel]) > 1e-18){
+				build.coeff = lambda[rel];
+				status = eval_relation_hessian(ctx,rel,&build,a4sqp_hessian_dense_build_entry);
+				if(status){
+					break;
+				}
+			}
+		}
+	}
+	if(!status){
+		for(col = 0; col < n; ++col){
+			for(row = col; row < n; ++row){
+				values[pos++] = dense[row * n + col];
+			}
+		}
+	}
+	A4SQP_FREE(dense);
+	return status;
+}
+
 static int a4sqp_hessian_dense_try_cholesky(
 	const real64 *hess,
 	int32 n,
