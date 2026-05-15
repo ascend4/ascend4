@@ -1,0 +1,61 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL bt5;
+	x1, x2, x3 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst BT5 / Boggs-Tolle problem 5.
+			Known CUTEst/IPOPTC local solution from the current tracking run:
+			    x1 = 3.51211979
+			    x2 = 0.21698806
+			    x3 = 3.55217268
+			    f  = 961.7151721300557
+		}
+		'source' SELF {
+			P. T. Boggs and J. W. Tolle, "A strategy for global convergence
+			in a sequential quadratic programming algorithm", SIAM Journal on
+			Numerical Analysis 26(3), 1989. SIF input by Ph. L. Toint,
+			June 1993.
+		}
+		'problem_origin' SELF {
+			This small equality-constrained NLP tracks one of the cases that
+			regressed in the current CUTEst exact-Lagrangian profile.
+		}
+	END NOTES;
+
+	con1: x1^2 + x2^2 + x3^2 = 25.0;
+	con2: 8.0*x1 + 14.0*x2 + 7.0*x3 = 56.0;
+	obj: MINIMIZE 1000.0 - x1^2 - 2.0*x2^2 - x3^2 - x1*x2 - x1*x3;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1 - 3.51211979) < 5e-5;
+	ASSERT abs(x2 - 0.21698806) < 5e-5;
+	ASSERT abs(x3 - 3.55217268) < 5e-5;
+	ASSERT abs((1000.0 - x1^2 - 2.0*x2^2 - x3^2 - x1*x2 - x1*x3) - 961.7151721300557) < 5e-6;
+	ASSERT SATISFIED(con1,1e-6);
+	ASSERT SATISFIED(con2,1e-7);
+END self_test;
+
+METHOD on_load;
+	x1 := 2.0;
+	x2 := 2.0;
+	x3 := 2.0;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'EXACT_LAGRANGIAN';
+	OPTION restoration TRUE;
+	OPTION scaleopt 'NONE';
+END on_load;
+
+METHOD on_load_test;
+	x1 := 2.0;
+	x2 := 2.0;
+	x3 := 2.0;
+END on_load_test;
+END bt5;
