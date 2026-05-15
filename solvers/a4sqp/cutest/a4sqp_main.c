@@ -755,6 +755,7 @@ int MAINENTRY(void){
 	AddA4SqpNumOption(problem,"qp_time_limit",a4sqp_cutest_env_double("A4SQP_QP_TIME_LIMIT",0.0));
 	AddA4SqpIntOption(problem,"qp_iteration_limit",a4sqp_cutest_env_int("A4SQP_QP_ITERATION_LIMIT",0));
 	AddA4SqpStrOption(problem,"hessian",(char *)a4sqp_cutest_env_string("A4SQP_HESSIAN","BFGS"));
+	AddA4SqpStrOption(problem,"scaleopt",(char *)a4sqp_cutest_env_string("A4SQP_SCALEOPT","ROW_2NORM"));
 	solve_status = A4SqpSolve(
 		problem,
 		(double *)x,

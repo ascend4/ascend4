@@ -1232,10 +1232,7 @@ static int a4sqp_core_restoration_choose(
 		return 0;
 	}
 	(void)a4sqp_core_violation(view,&max_violation,NULL);
-	exit_tol = 10.0 * feas_tol;
-	if(feas_tol > 0.0 && feas_tol < 1.0){
-		exit_tol = fmax(exit_tol,sqrt(feas_tol));
-	}
+	exit_tol = feas_tol;
 	handoff_reduction = options->handoff_reduction;
 	if(!isfinite(handoff_reduction) || handoff_reduction < 0.0 || handoff_reduction >= 1.0){
 		handoff_reduction = 0.0;
@@ -1775,6 +1772,296 @@ static void a4sqp_core_step_record_zero_accept(
 	result->scaled_step_inf = 0.0;
 }
 
+static real64 a4sqp_core_signed_row_violation(const struct A4SqpCoreView *view, int32 row){
+	real64 residual;
+	real64 lower;
+	real64 upper;
+	if(view == NULL || row < 0 || row >= view->n_rel || view->scaled_rel_residual == NULL){
+		return 0.0;
+	}
+	residual = view->scaled_rel_residual[row];
+	lower = view->scaled_rel_lower[row];
+	upper = view->scaled_rel_upper[row];
+	if(!isfinite(residual)){
+		return 0.0;
+	}
+	if(view->rel_kind != NULL && view->rel_kind[row] == A4SQP_REL_KIND_EQUALITY){
+		real64 target = 0.0;
+		if(!a4sqp_core_is_lower_inf(lower) && !a4sqp_core_is_upper_inf(upper)){
+			target = 0.5 * (lower + upper);
+		}else if(!a4sqp_core_is_lower_inf(lower)){
+			target = lower;
+		}else if(!a4sqp_core_is_upper_inf(upper)){
+			target = upper;
+		}
+		return residual - target;
+	}
+	if(!a4sqp_core_is_lower_inf(lower) && residual < lower){
+		return residual - lower;
+	}
+	if(!a4sqp_core_is_upper_inf(upper) && residual > upper){
+		return residual - upper;
+	}
+	return 0.0;
+}
+
+static real64 a4sqp_core_violation_squares(
+	const struct A4SqpCoreView *view,
+	real64 *max_abs_violation
+){
+	int32 row;
+	real64 merit = 0.0;
+	real64 vmax = 0.0;
+	if(view == NULL){
+		if(max_abs_violation != NULL){
+			*max_abs_violation = 0.0;
+		}
+		return 0.0;
+	}
+	for(row = 0; row < view->n_rel; ++row){
+		real64 signed_violation = a4sqp_core_signed_row_violation(view,row);
+		real64 abs_violation = fabs(signed_violation);
+		merit += 0.5 * signed_violation * signed_violation;
+		if(abs_violation > vmax){
+			vmax = abs_violation;
+		}
+	}
+	if(max_abs_violation != NULL){
+		*max_abs_violation = vmax;
+	}
+	return merit;
+}
+
+static int a4sqp_core_nonlinear_restoration_step(
+	struct A4SqpView *view,
+	const struct A4SqpLineSearchOptions *line_options,
+	const struct A4SqpVectorLineSearchOps *line_ops,
+	void *ctx,
+	real64 *x,
+	real64 trust_radius,
+	struct A4SqpLineSearchResult *result
+){
+	struct A4SqpCoreView core;
+	struct A4SqpCoreView trial_core;
+	real64 *start_x = NULL;
+	real64 *base_x = NULL;
+	real64 *start_scaled_x = NULL;
+	real64 *start_scaled_grad = NULL;
+	real64 *scaled_step = NULL;
+	real64 *physical_step = NULL;
+	real64 phi_start;
+	real64 max_start;
+	real64 phi_current;
+	real64 max_current;
+	real64 phi_final;
+	real64 max_final;
+	real64 last_alpha = 0.0;
+	real64 net_step_norm2 = 0.0;
+	real64 net_scaled_step_inf = 0.0;
+	int total_trials = 0;
+	int accepted = 0;
+	int32 i;
+	const int max_inner = 5;
+
+	if(result == NULL){
+		return 1;
+	}
+	if(
+		view == NULL
+		|| line_options == NULL
+		|| line_ops == NULL
+		|| line_ops->evaluate == NULL
+		|| x == NULL
+	){
+		return 1;
+	}
+	a4sqp_view_get_core(view,&core);
+	if(core.n_var <= 0 || core.n_rel <= 0 || core.jac_row_start == NULL || core.jac_col_index == NULL || core.scaled_jac_value == NULL){
+		return 1;
+	}
+	phi_start = a4sqp_core_violation_squares(&core,&max_start);
+	if(phi_start <= 0.0 || max_start <= line_options->feas_tol || !isfinite(phi_start)){
+		return 1;
+	}
+	start_x = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	base_x = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	start_scaled_x = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	start_scaled_grad = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	scaled_step = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	physical_step = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	if(start_x == NULL || base_x == NULL || start_scaled_x == NULL || start_scaled_grad == NULL || scaled_step == NULL || physical_step == NULL){
+		goto cleanup;
+	}
+	for(i = 0; i < core.n_var; ++i){
+		start_x[i] = x[i];
+		base_x[i] = x[i];
+		start_scaled_x[i] = core.scaled_var_value != NULL ? core.scaled_var_value[i] : 0.0;
+		start_scaled_grad[i] = core.scaled_obj_gradient != NULL ? core.scaled_obj_gradient[i] : 0.0;
+	}
+	phi_current = phi_start;
+	max_current = max_start;
+
+	for(i = 0; i < max_inner; ++i){
+		real64 grad_inf = 0.0;
+		real64 scaled_step_inf = 0.0;
+		real64 radius;
+		int32 row;
+		int inner_accepted = 0;
+		int32 j;
+
+		if(max_current <= line_options->feas_tol){
+			break;
+		}
+		a4sqp_view_get_core(view,&core);
+		if(core.n_var <= 0 || core.n_rel <= 0 || core.jac_row_start == NULL || core.jac_col_index == NULL || core.scaled_jac_value == NULL){
+			break;
+		}
+		memset(scaled_step,0,(size_t)core.n_var * sizeof(real64));
+		for(row = 0; row < core.n_rel; ++row){
+			real64 signed_violation = a4sqp_core_signed_row_violation(&core,row);
+			real64 row_norm2 = 0.0;
+			real64 row_scale;
+			int32 k;
+			if(signed_violation == 0.0 || !isfinite(signed_violation)){
+				continue;
+			}
+			for(k = core.jac_row_start[row]; k < core.jac_row_start[row + 1]; ++k){
+				int32 col = core.jac_col_index[k];
+				if(col >= 0 && col < core.n_var && isfinite(core.scaled_jac_value[k])){
+					row_norm2 += core.scaled_jac_value[k] * core.scaled_jac_value[k];
+				}
+			}
+			if(row_norm2 <= 1e-24 || !isfinite(row_norm2)){
+				continue;
+			}
+			row_scale = -signed_violation / row_norm2;
+			for(k = core.jac_row_start[row]; k < core.jac_row_start[row + 1]; ++k){
+				int32 col = core.jac_col_index[k];
+				if(col >= 0 && col < core.n_var && isfinite(core.scaled_jac_value[k])){
+					scaled_step[col] += row_scale * core.scaled_jac_value[k];
+				}
+			}
+		}
+		for(j = 0; j < core.n_var; ++j){
+			real64 value = fabs(scaled_step[j]);
+			if(value > grad_inf){
+				grad_inf = value;
+			}
+		}
+		if(grad_inf <= 0.0 || !isfinite(grad_inf)){
+			break;
+		}
+		radius = (trust_radius > 0.0 && isfinite(trust_radius)) ? trust_radius : 1.0;
+		if(grad_inf > radius){
+			real64 scale = radius / grad_inf;
+			for(j = 0; j < core.n_var; ++j){
+				scaled_step[j] *= scale;
+			}
+		}
+		for(j = 0; j < core.n_var; ++j){
+			real64 step = scaled_step[j];
+			real64 value = core.scaled_var_value != NULL ? core.scaled_var_value[j] : 0.0;
+			real64 lower = core.scaled_var_lower != NULL ? core.scaled_var_lower[j] : A4SQP_NO_LOWER_BOUND;
+			real64 upper = core.scaled_var_upper != NULL ? core.scaled_var_upper[j] : A4SQP_NO_UPPER_BOUND;
+			if(!a4sqp_core_is_lower_inf(lower) && value + step < lower){
+				step = lower - value;
+			}
+			if(!a4sqp_core_is_upper_inf(upper) && value + step > upper){
+				step = upper - value;
+			}
+			scaled_step[j] = step;
+			physical_step[j] = (core.var_scale != NULL ? core.var_scale[j] : 1.0) * step;
+			if(fabs(step) > scaled_step_inf){
+				scaled_step_inf = fabs(step);
+			}
+		}
+		if(scaled_step_inf <= 0.0){
+			break;
+		}
+		for(j = 0; j < line_options->max_backtrack; ++j){
+			real64 alpha = ldexp(1.0,-j);
+			real64 phi_after;
+			real64 max_after;
+			int32 k;
+			for(k = 0; k < core.n_var; ++k){
+				x[k] = base_x[k] + alpha * physical_step[k];
+			}
+			++total_trials;
+			if(line_ops->evaluate(ctx,x,view)){
+				continue;
+			}
+			a4sqp_view_get_core(view,&trial_core);
+			phi_after = a4sqp_core_violation_squares(&trial_core,&max_after);
+			if(
+				isfinite(phi_after)
+				&& (
+					phi_after <= (1.0 - line_options->restoration_margin) * phi_current
+					|| max_after <= (1.0 - line_options->restoration_margin) * max_current
+				)
+			){
+				int32 k2;
+				for(k2 = 0; k2 < core.n_var; ++k2){
+					base_x[k2] = x[k2];
+				}
+				phi_current = phi_after;
+				max_current = max_after;
+				last_alpha = alpha;
+				inner_accepted = 1;
+				accepted = 1;
+				break;
+			}
+		}
+		if(!inner_accepted){
+			for(j = 0; j < core.n_var; ++j){
+				x[j] = base_x[j];
+			}
+			(void)line_ops->evaluate(ctx,x,view);
+			break;
+		}
+	}
+
+cleanup:
+	if(!accepted && start_x != NULL){
+		for(i = 0; i < core.n_var; ++i){
+			x[i] = start_x[i];
+		}
+		(void)line_ops->evaluate(ctx,x,view);
+	}else if(accepted){
+		for(i = 0; i < core.n_var; ++i){
+			real64 step = x[i] - start_x[i];
+			real64 scaled_step_value = core.var_scale != NULL && core.var_scale[i] != 0.0 ? step / core.var_scale[i] : step;
+			net_step_norm2 += step * step;
+			if(fabs(scaled_step_value) > net_scaled_step_inf){
+				net_scaled_step_inf = fabs(scaled_step_value);
+			}
+		}
+		a4sqp_view_get_core(view,&trial_core);
+		phi_final = a4sqp_core_violation_squares(&trial_core,&max_final);
+		(void)max_final;
+		if(line_ops->accepted != NULL){
+			line_ops->accepted(ctx,start_scaled_x,start_scaled_grad,1);
+		}
+		memset(result,0,sizeof(*result));
+		result->accepted = 1;
+		result->trials = total_trials;
+		result->merit_before = phi_start;
+		result->merit_after = phi_final;
+		result->model_merit_after = phi_final;
+		result->predicted_reduction = phi_start;
+		result->alpha = last_alpha;
+		result->step_norm = sqrt(net_step_norm2);
+		result->trust_ratio = phi_start > 0.0 ? (phi_start - phi_final) / phi_start : 0.0;
+		result->scaled_step_inf = net_scaled_step_inf;
+	}
+	A4SQP_FREE(start_x);
+	A4SQP_FREE(base_x);
+	A4SQP_FREE(start_scaled_x);
+	A4SQP_FREE(start_scaled_grad);
+	A4SQP_FREE(scaled_step);
+	A4SQP_FREE(physical_step);
+	return accepted ? 0 : 1;
+}
+
 enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 	struct A4SqpView *view,
 	struct A4SqpQp *qp,
@@ -1909,6 +2196,27 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 					effective_has_objective,
 					line_search_result
 				) == 0){
+					if(
+						restoration_active
+						&& line_search_result != NULL
+						&& line_search_result->accepted
+						&& line_search_result->alpha > 0.0
+						&& line_search_result->alpha <= 1.0 / 1024.0
+					){
+						struct A4SqpLineSearchResult nonlinear_result;
+						memset(&nonlinear_result,0,sizeof(nonlinear_result));
+						if(a4sqp_core_nonlinear_restoration_step(
+							view,
+							&effective_line_options,
+							line_search_ops,
+							ctx,
+							x,
+							*trust_radius,
+							&nonlinear_result
+						) == 0){
+							*line_search_result = nonlinear_result;
+						}
+					}
 					if(
 						line_search_result != NULL
 						&& line_search_result->accepted

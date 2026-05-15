@@ -67,7 +67,7 @@ METHOD on_load;
 		OPTION restoration TRUE;
 		OPTION restoration_trigger_iter 0;
 		OPTION restoration_handoff_reduction 0.5;
-		OPTION restoration_reentry_factor 100.0;
+		OPTION restoration_reentry_factor 1.0;
 	END on_load;
 
 METHOD on_load_test;

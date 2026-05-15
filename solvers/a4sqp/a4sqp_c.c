@@ -9,6 +9,7 @@
 #include "a4sqp_core.h"
 #include "a4sqp_hessian.h"
 #include "a4sqp_qp_highs.h"
+#include "a4sqp_scale.h"
 #include "a4sqp_trust.h"
 #include "a4sqp_view.h"
 
@@ -356,6 +357,14 @@ A4SqpBool AddA4SqpStrOption(A4SqpProblem problem, char *keyword, char *val){
 	if(a4sqp_c_streq(keyword,"scaleopt")){
 		if(a4sqp_c_streq(val,"NONE")){
 			strcpy(p->opt.scaleopt,"NONE");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"ROW_2NORM")){
+			strcpy(p->opt.scaleopt,"ROW_2NORM");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"RELNOM")){
+			strcpy(p->opt.scaleopt,"RELNOM");
 			return A4SQP_TRUE;
 		}
 		return A4SQP_FALSE;
@@ -865,6 +874,9 @@ static int a4sqp_c_build_view(struct A4SqpCSolve *solve, const double *x, int ne
 		A4SQP_FREE(irow);
 		A4SQP_FREE(jcol);
 		A4SQP_FREE(jac);
+	}
+	if(!a4sqp_c_streq(p->opt.scaleopt,"NONE") && a4sqp_view_apply_scaling(view,p->opt.scaleopt)){
+		return 1;
 	}
 	return 0;
 }

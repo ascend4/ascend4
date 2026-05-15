@@ -334,9 +334,9 @@ QP failure.
 ## Current Open Items
 
 - The ASCEND adapter now calls the public C API, which is the desired simpler
-  boundary, but ASCEND-specific scaling needs continued review. The C API
-  currently defaults to unscaled quantities unless explicit C API scaling is
-  provided, while the ASCEND parameter table still has `scaleopt=ROW_2NORM`.
+  boundary, but scaling parity still needs continued review. The C API now
+  accepts `scaleopt=NONE`, `ROW_2NORM`, and `RELNOM`; the bare C API default is
+  still `NONE`, while ASCEND and the CUTEst driver default to `ROW_2NORM`.
 - Fixed-variable reduction is not yet a full presolve/postsolve layer.
 - BT13 remains the focused active-bound/restoration case. Current restoration
   can repair feasibility and hand back to regular SQP, but active-bound

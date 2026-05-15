@@ -287,8 +287,9 @@ String options:
   `BFGS`.
 - `hessian_approximation`: IPOPT alias; `limited-memory` maps to `BFGS`, and
   `exact` maps to `EXACT_LAGRANGIAN` when an `eval_h` callback exists.
-- `scaleopt`: currently only `NONE` is accepted by the C API. The C API default
-  is `NONE`; use `SetA4SqpProblemScaling` for explicit C API scaling.
+- `scaleopt`: `NONE`, `ROW_2NORM`, or `RELNOM`. The C API default is `NONE`;
+  the CUTEst driver currently defaults this option to `ROW_2NORM` to match the
+  ASCEND solver default unless overridden.
 
 Numeric options:
 
@@ -401,11 +402,11 @@ The ASCEND adapter still has richer diagnostics than a plain external C
 client. It can render ASCEND variable names, relation names, source indices,
 solver status, and progress callback output.
 
-Current ASCEND defaults differ from the C API in some places. Notably,
-`asc_a4sqp_params.c` still defines `scaleopt=ROW_2NORM`, while the current C
-API accepts only `scaleopt=NONE` and otherwise relies on
-`SetA4SqpProblemScaling`. This needs review because the ASCEND adapter now
-passes raw callback values through the C API solve path.
+Current ASCEND defaults differ from the bare C API in some places. Notably,
+`asc_a4sqp_params.c` defines `scaleopt=ROW_2NORM`, while the C API object
+default remains `scaleopt=NONE` for IPOPT-like external callers. The CUTEst
+driver sets `ROW_2NORM` explicitly by default so benchmark runs use the same
+row-scaling mode as ASCEND unless overridden.
 
 The ASCEND default for `elastic_penalty_growth` is `1.0` to avoid changing
 legacy model behaviour by default. The C API and CUTEst path default to `10.0`
@@ -506,8 +507,9 @@ successes with `--acceptable-iter 5`.
 
 ## Current Open Items
 
-- Review and fix the ASCEND scaling path now that the adapter calls the public
-  C API. The C API currently defaults to `scaleopt=NONE`.
+- Continue reviewing scaling parity between ASCEND, CUTEst, and direct C API
+  callers. The C API now supports `NONE`, `ROW_2NORM`, and `RELNOM`, but default
+  variable nominal choices can still differ between front ends.
 - Add a real fixed-variable presolve/postsolve reducer rather than only
   recording fixed flags in `A4SqpView`.
 - Continue BT13-style active-bound and restoration work inside `liba4sqp.so`,
