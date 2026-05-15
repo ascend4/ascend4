@@ -289,7 +289,9 @@ String options:
   `exact` maps to `EXACT_LAGRANGIAN` when an `eval_h` callback exists.
 - `scaleopt`: `NONE`, `ROW_2NORM`, or `RELNOM`. The C API default is `NONE`;
   the CUTEst driver currently defaults this option to `ROW_2NORM` to match the
-  ASCEND solver default unless overridden.
+  ASCEND solver default unless overridden. `ROW_2NORM` caps the scale at `1.0`,
+  so it scales down large rows but does not amplify rows whose Jacobian norm is
+  small near a degenerate solution.
 
 Numeric options:
 
@@ -406,7 +408,8 @@ Current ASCEND defaults differ from the bare C API in some places. Notably,
 `asc_a4sqp_params.c` defines `scaleopt=ROW_2NORM`, while the C API object
 default remains `scaleopt=NONE` for IPOPT-like external callers. The CUTEst
 driver sets `ROW_2NORM` explicitly by default so benchmark runs use the same
-row-scaling mode as ASCEND unless overridden.
+row-scaling mode as ASCEND unless overridden. This row scaling is capped to
+avoid amplifying nearly singular active rows.
 
 The ASCEND default for `elastic_penalty_growth` is `1.0` to avoid changing
 legacy model behaviour by default. The C API and CUTEst path default to `10.0`
@@ -508,11 +511,11 @@ successes with `--acceptable-iter 5`.
 ## Current Open Items
 
 - Continue reviewing scaling parity between ASCEND, CUTEst, and direct C API
-  callers. The C API now supports `NONE`, `ROW_2NORM`, and `RELNOM`, but default
-  variable nominal choices can still differ between front ends.
+  callers. The C API now supports `NONE`, capped `ROW_2NORM`, and `RELNOM`, but
+  default variable nominal choices can still differ between front ends.
 - Add a real fixed-variable presolve/postsolve reducer rather than only
   recording fixed flags in `A4SqpView`.
-- Continue BT13-style active-bound and restoration work inside `liba4sqp.so`,
-  not in the adapters.
+- Continue active-bound and restoration improvements inside `liba4sqp.so`, not
+  in the adapters; BT13 is now a regression case for that path.
 - Implement useful output-file support only if needed; for now the progress
   callback and runner logs are the supported reporting paths.

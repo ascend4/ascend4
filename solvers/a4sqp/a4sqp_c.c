@@ -1566,8 +1566,14 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 	if(p->stats.kkt_error <= p->opt.feas_tol || p->stats.kkt_error <= 0.0 || !isfinite(p->stats.kkt_error)){
 		return 0;
 	}
-	if(solve->last_step_norm > fmax(10.0 * p->opt.step_tol,1e-8) && solve->last_alpha > 0.0){
-		return 0;
+	if(solve->last_alpha > 0.0){
+		double stationarity_step_trigger = fmax(10.0 * p->opt.step_tol,1e-8);
+		if(p->opt.acceptable_tol > 0.0 && p->opt.acceptable_tol < 1.0){
+			stationarity_step_trigger = fmax(stationarity_step_trigger,sqrt(p->opt.acceptable_tol));
+		}
+		if(solve->last_step_norm > stationarity_step_trigger){
+			return 0;
+		}
 	}
 	a4sqp_view_get_core(&solve->view,&core);
 	core.has_objective = solve->has_objective;
@@ -1716,6 +1722,169 @@ cleanup:
 	A4SQP_FREE(eq_rows);
 	A4SQP_FREE(system);
 	A4SQP_FREE(rhs);
+	return accepted;
+}
+
+static int a4sqp_c_try_active_bound_restoration(
+	struct A4SqpCSolve *solve,
+	double *x,
+	const struct A4SqpLineSearchOptions *base_line_options,
+	const struct A4SqpVectorLineSearchOps *line_ops,
+	void *line_ctx
+){
+	struct A4SqpProblemInfo *p;
+	struct A4SqpLineSearchOptions line_options;
+	struct A4SqpLineSearchResult result;
+	double *old_x = NULL;
+	double old_obj;
+	double old_kkt;
+	double old_vio;
+	double best_score = 0.0;
+	int best_col = -1;
+	double best_target = 0.0;
+	int i;
+	int accepted = 0;
+	if(
+		solve == NULL
+		|| solve->problem == NULL
+		|| x == NULL
+		|| base_line_options == NULL
+		|| line_ops == NULL
+		|| line_ops->evaluate == NULL
+		|| !solve->has_objective
+	){
+		return 0;
+	}
+	p = solve->problem;
+	if(
+		!p->opt.restoration
+		|| !p->opt.kkt_convergence
+		|| p->n <= 0
+		|| p->m <= 0
+		|| p->stats.max_constraint_violation > p->opt.acceptable_tol
+		|| p->stats.kkt_error <= p->opt.acceptable_tol
+		|| solve->view.obj_gradient == NULL
+	){
+		return 0;
+	}
+	for(i = 0; i < p->n; ++i){
+		double value = x[i];
+		double grad = solve->view.obj_gradient[i];
+		double lower = a4sqp_c_map_bound(p->x_l[i],p->opt.lower_inf,p->opt.upper_inf);
+		double upper = a4sqp_c_map_bound(p->x_u[i],p->opt.lower_inf,p->opt.upper_inf);
+		double score = 0.0;
+		double target = value;
+		if(!isfinite(value) || !isfinite(grad)){
+			continue;
+		}
+		if(!a4sqp_c_is_lower_inf(lower) && value > lower + p->opt.acceptable_tol && grad > p->opt.feas_tol){
+			score = grad * (value - lower);
+			target = lower;
+		}
+		if(!a4sqp_c_is_upper_inf(upper) && value < upper - p->opt.acceptable_tol && grad < -p->opt.feas_tol){
+			double upper_score = (-grad) * (upper - value);
+			if(upper_score > score){
+				score = upper_score;
+				target = upper;
+			}
+		}
+		if(score > best_score){
+			best_score = score;
+			best_col = i;
+			best_target = target;
+		}
+	}
+	if(best_col < 0 || best_score <= p->opt.acceptable_tol || !isfinite(best_score)){
+		return 0;
+	}
+	if(p->opt.verbosity > 0){
+		fprintf(stderr,
+			"A4SQP active-bound probe: col=%d value=%.17g target=%.17g score=%.17g obj=%.17g kkt=%.17g vio=%.17g\n",
+			best_col,
+			x[best_col],
+			best_target,
+			best_score,
+			solve->view.obj_value,
+			p->stats.kkt_error,
+			p->stats.max_constraint_violation
+		);
+	}
+	old_x = A4SQP_NEW_ARRAY_OR_NULL(double,p->n);
+	if(old_x == NULL){
+		return 0;
+	}
+	memcpy(old_x,x,(size_t)p->n * sizeof(*old_x));
+	old_obj = solve->view.obj_value;
+	old_kkt = p->stats.kkt_error;
+	old_vio = p->stats.max_constraint_violation;
+	x[best_col] = best_target;
+	if(a4sqp_c_build_view(solve,x,A4SQP_TRUE) || solve->callback_error){
+		solve->callback_error = 0;
+		goto cleanup;
+	}
+	line_options = *base_line_options;
+	line_options.restoration = 1;
+	line_options.restoration_margin = p->opt.restoration_margin;
+	memset(&result,0,sizeof(result));
+	for(i = 0; i < 200; ++i){
+		if(a4sqp_core_nonlinear_restoration_step(
+			&solve->view,
+			&line_options,
+			line_ops,
+			line_ctx,
+			x,
+			solve->trust_radius,
+			&result
+		)){
+			break;
+		}
+		a4sqp_c_refresh_stats(solve,p->stats.iterations);
+		if(p->stats.max_constraint_violation <= p->opt.acceptable_tol){
+			break;
+		}
+	}
+	a4sqp_c_refresh_stats(solve,p->stats.iterations);
+	if(
+		isfinite(p->stats.max_constraint_violation)
+		&& result.accepted
+		&& p->stats.max_constraint_violation <= fmax(
+			p->opt.acceptable_tol,
+			fmin(10.0,sqrt(best_score))
+		)
+			&& solve->view.obj_value <= old_obj - fmax(p->opt.acceptable_tol,1e-12)
+			&& (
+				p->stats.max_constraint_violation <= p->opt.acceptable_tol
+				||
+				p->stats.kkt_error < old_kkt
+				|| solve->view.obj_value <= old_obj - 0.1 * best_score
+				|| p->stats.max_constraint_violation <= old_vio
+		)
+	){
+		solve->last_alpha = result.alpha;
+		solve->last_step_norm = result.step_norm;
+		solve->last_trust_ratio = result.trust_ratio;
+		solve->last_ls_trials = result.trials;
+		accepted = 1;
+	}
+	if(p->opt.verbosity > 0){
+		fprintf(stderr,
+			"A4SQP active-bound probe: %s obj=%.17g kkt=%.17g vio=%.17g step=%.17g trials=%d\n",
+			accepted ? "accepted" : "rejected",
+			solve->view.obj_value,
+			p->stats.kkt_error,
+			p->stats.max_constraint_violation,
+			result.step_norm,
+			result.trials
+		);
+	}
+
+cleanup:
+	if(!accepted){
+		memcpy(x,old_x,(size_t)p->n * sizeof(*x));
+		(void)a4sqp_c_build_view(solve,x,A4SQP_TRUE);
+		a4sqp_c_refresh_stats(solve,p->stats.iterations);
+	}
+	A4SQP_FREE(old_x);
 	return accepted;
 }
 
@@ -2120,6 +2289,9 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		++solve->accepted_step_count;
 		a4sqp_c_refresh_stats(solve,iter + 1);
 		if(a4sqp_c_try_stationarity_correction(solve,x)){
+			a4sqp_c_refresh_stats(solve,iter + 1);
+		}
+		if(a4sqp_c_try_active_bound_restoration(solve,x,&line_options,&line_ops,&line_ctx)){
 			a4sqp_c_refresh_stats(solve,iter + 1);
 		}
 		maxvio = p->stats.max_constraint_violation;

@@ -362,6 +362,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--elastic-penalty-max", type=float, default=float(os.environ.get("A4SQP_ELASTIC_PENALTY_MAX", "1e8")))
     parser.add_argument("--a4sqp-hessian", default=os.environ.get("A4SQP_HESSIAN", "BFGS"))
     parser.add_argument("--a4sqp-scaleopt", default=os.environ.get("A4SQP_SCALEOPT", "ROW_2NORM"))
+    parser.add_argument("--a4sqp-x-scale", type=float, default=float(os.environ.get("A4SQP_X_SCALE", "0")))
     parser.add_argument("--try-lsq", default=os.environ.get("A4SQP_TRY_LSQ", "LM"))
     parser.add_argument("--a4sqp-hess-reg", type=float, default=float(os.environ.get("A4SQP_HESS_REG", "1e-8")))
     parser.add_argument("--a4sqp-bound-push", type=float, default=float(os.environ.get("A4SQP_BOUND_PUSH", "1e-8")))
@@ -406,6 +407,7 @@ def main(argv: list[str]) -> int:
     env["A4SQP_ELASTIC_PENALTY_MAX"] = str(args.elastic_penalty_max)
     env["A4SQP_HESSIAN"] = args.a4sqp_hessian
     env["A4SQP_SCALEOPT"] = args.a4sqp_scaleopt
+    env["A4SQP_X_SCALE"] = str(args.a4sqp_x_scale)
     env["A4SQP_TRY_LSQ"] = args.try_lsq
     env["A4SQP_HESS_REG"] = str(args.a4sqp_hess_reg)
     env["A4SQP_BOUND_PUSH"] = str(args.a4sqp_bound_push)

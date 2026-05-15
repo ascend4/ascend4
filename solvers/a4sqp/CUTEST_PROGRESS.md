@@ -16,7 +16,7 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | Acceptable tolerance | 1e-5 |
 | Parallel jobs | 6 |
 | Problem-set source | solvers/a4sqp/cutest/problem_sets/broad_stratified_89.tsv |
-| Notes | Current broad tracking rerun with CUTEst A4SQP try_lsq default set to LM. Compatible unconstrained sum-of-squares problems use the experimental objective-group LSQ path; incompatible cases fall back to ordinary NLP/SQP. Matrix columns compare IPOPT limited-memory and exact Hessian against A4SQP BFGS, exact objective Hessian, and exact Lagrangian Hessian. |
+| Notes | Current broad tracking rerun with CUTEst A4SQP try_lsq default set to LM. Compatible unconstrained sum-of-squares problems use the experimental objective-group LSQ path; incompatible cases fall back to ordinary NLP/SQP. Matrix columns compare IPOPT limited-memory and exact Hessian against A4SQP BFGS, exact objective Hessian, and exact Lagrangian Hessian. BT13 cells have been refreshed after capped ROW_2NORM scaling and active-bound restoration work. |
 
 ## Profile Summary
 
@@ -24,9 +24,9 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ipoptc_limited | ipoptc | limited-memory | n/a | n/a | 89 | 75 | 75/89 | 9 | 0 | 5 | 0 | acceptable_success:3; max_iter_infeasible_or_stalled:1; max_iter_near_solved:9; other_solver_failure:4; strict_success:72 |
 | ipoptc_exact | ipoptc | exact | n/a | n/a | 89 | 81 | 81/89 | 6 | 0 | 2 | 0 | acceptable_success:2; max_iter_near_solved:6; other_solver_failure:2; strict_success:79 |
-| a4sqp_bfgs_kkt_acc | a4sqp | BFGS | 1 | 5 | 89 | 53 | 53/89 | 0 | 6 | 24 | 6 | acceptable_success:11; driver_timeout:6; line_search_error:2; max_iter_infeasible_or_stalled:9; max_iter_stationarity:13; strict_success:42; strict_success_high_kkt:6 |
-| a4sqp_obj | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 58 | 58/89 | 0 | 6 | 15 | 10 | acceptable_success:11; driver_timeout:10; line_search_error:1; max_iter_infeasible_or_stalled:8; max_iter_stationarity:5; other_solver_failure:1; strict_success:47; strict_success_high_kkt:6 |
-| a4sqp_lagr | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 70 | 70/89 | 0 | 6 | 6 | 7 | acceptable_success:9; driver_timeout:7; line_search_error:1; max_iter_infeasible_or_stalled:2; max_iter_stationarity:3; strict_success:61; strict_success_high_kkt:6 |
+| a4sqp_bfgs_kkt_acc | a4sqp | BFGS | 1 | 5 | 89 | 54 | 54/89 | 0 | 6 | 24 | 5 | acceptable_success:12; driver_timeout:5; line_search_error:2; max_iter_infeasible_or_stalled:9; max_iter_stationarity:13; strict_success:42; strict_success_high_kkt:6 |
+| a4sqp_obj | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 59 | 59/89 | 0 | 6 | 15 | 9 | acceptable_success:12; driver_timeout:9; line_search_error:1; max_iter_infeasible_or_stalled:8; max_iter_stationarity:5; other_solver_failure:1; strict_success:47; strict_success_high_kkt:6 |
+| a4sqp_lagr | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 71 | 71/89 | 0 | 6 | 6 | 6 | acceptable_success:10; driver_timeout:6; line_search_error:1; max_iter_infeasible_or_stalled:2; max_iter_stationarity:3; strict_success:61; strict_success_high_kkt:6 |
 
 ## Problem Outcomes
 
@@ -77,7 +77,7 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | BT10 | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BT11 | OOR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
 | BT12 | QQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
-| BT13 | LQR2-AY-5-1 | 5 | 1 | 🟢2 | 🟢1 | 🔴11 | 🔴11 | 🔴11 |
+| BT13 | LQR2-AY-5-1 | 5 | 1 | 🟢2 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | BT2 | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BT3 | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BT4 | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |

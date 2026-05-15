@@ -115,6 +115,9 @@ void a4sqp_view_get_core(const struct A4SqpView *view, struct A4SqpCoreView *cor
 	core->scaled_var_upper = view->scaled_var_upper;
 	core->scaled_obj_gradient = view->scaled_obj_gradient;
 	core->rel_kind = view->rel_kind;
+	core->rel_residual = view->rel_residual;
+	core->rel_lower = view->rel_lower;
+	core->rel_upper = view->rel_upper;
 	core->scaled_rel_residual = view->scaled_rel_residual;
 	core->scaled_rel_lower = view->scaled_rel_lower;
 	core->scaled_rel_upper = view->scaled_rel_upper;

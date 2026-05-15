@@ -337,10 +337,13 @@ QP failure.
   boundary, but scaling parity still needs continued review. The C API now
   accepts `scaleopt=NONE`, `ROW_2NORM`, and `RELNOM`; the bare C API default is
   still `NONE`, while ASCEND and the CUTEst driver default to `ROW_2NORM`.
+  `ROW_2NORM` only scales down oversized rows; it does not amplify rows with
+  small Jacobian norms, because that makes degenerate constraints singular near
+  solutions such as BT13.
 - Fixed-variable reduction is not yet a full presolve/postsolve layer.
-- BT13 remains the focused active-bound/restoration case. Current restoration
-  can repair feasibility and hand back to regular SQP, but active-bound
-  identification and terminal stationarity near the bound still need core work.
+- BT13 is the focused active-bound/restoration regression case. The core now
+  has an active-bound restoration probe and capped row scaling, and the CUTEst
+  BT13 run reaches strict KKT success under the BFGS/KKT profile.
 - `OpenA4SqpOutputFile` is present for IPOPT API shape but is not implemented
   as a useful output sink yet.
 

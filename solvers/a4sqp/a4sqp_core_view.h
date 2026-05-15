@@ -23,6 +23,9 @@ struct A4SqpCoreView {
 	const real64 *scaled_var_upper;
 	const real64 *scaled_obj_gradient;
 	const enum A4SqpRelKind *rel_kind;
+	const real64 *rel_residual;
+	const real64 *rel_lower;
+	const real64 *rel_upper;
 	const real64 *scaled_rel_residual;
 	const real64 *scaled_rel_lower;
 	const real64 *scaled_rel_upper;

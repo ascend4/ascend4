@@ -57,7 +57,14 @@ static void a4sqp_init_rel_scaling(struct A4SqpView *view, const char *mode){
 				}
 				sum += value * value;
 			}
-			scale = sum > 0.0 ? 1.0 / sqrt(sum) : 1.0;
+			/*
+			 * Row scaling is intended to reduce oversized rows, not amplify
+			 * constraints whose Jacobian norm becomes small at a degenerate
+			 * solution. Scaling up those rows makes the feasibility test
+			 * singular, as in BT13 where the active equality gradient vanishes
+			 * at the optimum.
+			 */
+			scale = sum > 1.0 ? 1.0 / sqrt(sum) : 1.0;
 		}
 		view->rel_scale[i] = scale;
 		view->scaled_rel_residual[i] = view->rel_residual[i] * scale;

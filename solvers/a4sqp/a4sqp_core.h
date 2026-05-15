@@ -317,6 +317,15 @@ int a4sqp_core_line_search_vector(
 	int has_objective,
 	struct A4SqpLineSearchResult *result
 );
+A4SQP_CORE_EXPORT int a4sqp_core_nonlinear_restoration_step(
+	struct A4SqpView *view,
+	const struct A4SqpLineSearchOptions *line_options,
+	const struct A4SqpVectorLineSearchOps *line_ops,
+	void *ctx,
+	real64 *x,
+	real64 trust_radius,
+	struct A4SqpLineSearchResult *result
+);
 A4SQP_CORE_EXPORT enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 	struct A4SqpView *view,
 	struct A4SqpQp *qp,

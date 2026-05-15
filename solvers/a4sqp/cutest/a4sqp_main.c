@@ -727,6 +727,28 @@ int MAINENTRY(void){
 		fprintf(stderr,"A4SQP-CUTEst: CreateA4SqpProblem failed\n");
 		return 3;
 	}
+	{
+		double uniform_x_scale = a4sqp_cutest_env_double("A4SQP_X_SCALE",0.0);
+		if(uniform_x_scale > 0.0 && isfinite(uniform_x_scale)){
+			double *x_scale = (double *)malloc(sizeof(double) * (size_t)ctx.n);
+			int i;
+			if(x_scale == NULL){
+				fprintf(stderr,"A4SQP-CUTEst: x scaling allocation failure\n");
+				FreeA4SqpProblem(problem);
+				return 3;
+			}
+			for(i = 0; i < ctx.n; ++i){
+				x_scale[i] = uniform_x_scale;
+			}
+			if(!SetA4SqpProblemScaling(problem,1.0,x_scale,NULL)){
+				fprintf(stderr,"A4SQP-CUTEst: SetA4SqpProblemScaling failed\n");
+				free(x_scale);
+				FreeA4SqpProblem(problem);
+				return 3;
+			}
+			free(x_scale);
+		}
+	}
 	AddA4SqpIntOption(problem,"max_iter",a4sqp_cutest_env_int("A4SQP_MAX_ITER",200));
 	AddA4SqpIntOption(problem,"max_backtrack",a4sqp_cutest_env_int("A4SQP_MAX_BACKTRACK",20));
 	AddA4SqpIntOption(problem,"trust_qp_retries",a4sqp_cutest_env_int("A4SQP_TRUST_QP_RETRIES",5));

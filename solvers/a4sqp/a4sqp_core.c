@@ -1805,7 +1805,40 @@ static real64 a4sqp_core_signed_row_violation(const struct A4SqpCoreView *view, 
 	return 0.0;
 }
 
-static real64 a4sqp_core_violation_squares(
+static real64 a4sqp_core_signed_row_violation_unscaled(const struct A4SqpCoreView *view, int32 row){
+	real64 residual;
+	real64 lower;
+	real64 upper;
+	if(view == NULL || row < 0 || row >= view->n_rel || view->rel_residual == NULL){
+		return 0.0;
+	}
+	residual = view->rel_residual[row];
+	lower = view->rel_lower[row];
+	upper = view->rel_upper[row];
+	if(!isfinite(residual)){
+		return 0.0;
+	}
+	if(view->rel_kind != NULL && view->rel_kind[row] == A4SQP_REL_KIND_EQUALITY){
+		real64 target = 0.0;
+		if(!a4sqp_core_is_lower_inf(lower) && !a4sqp_core_is_upper_inf(upper)){
+			target = 0.5 * (lower + upper);
+		}else if(!a4sqp_core_is_lower_inf(lower)){
+			target = lower;
+		}else if(!a4sqp_core_is_upper_inf(upper)){
+			target = upper;
+		}
+		return residual - target;
+	}
+	if(!a4sqp_core_is_lower_inf(lower) && residual < lower){
+		return residual - lower;
+	}
+	if(!a4sqp_core_is_upper_inf(upper) && residual > upper){
+		return residual - upper;
+	}
+	return 0.0;
+}
+
+static real64 a4sqp_core_violation_squares_unscaled(
 	const struct A4SqpCoreView *view,
 	real64 *max_abs_violation
 ){
@@ -1819,7 +1852,7 @@ static real64 a4sqp_core_violation_squares(
 		return 0.0;
 	}
 	for(row = 0; row < view->n_rel; ++row){
-		real64 signed_violation = a4sqp_core_signed_row_violation(view,row);
+		real64 signed_violation = a4sqp_core_signed_row_violation_unscaled(view,row);
 		real64 abs_violation = fabs(signed_violation);
 		merit += 0.5 * signed_violation * signed_violation;
 		if(abs_violation > vmax){
@@ -1832,7 +1865,7 @@ static real64 a4sqp_core_violation_squares(
 	return merit;
 }
 
-static int a4sqp_core_nonlinear_restoration_step(
+int a4sqp_core_nonlinear_restoration_step(
 	struct A4SqpView *view,
 	const struct A4SqpLineSearchOptions *line_options,
 	const struct A4SqpVectorLineSearchOps *line_ops,
@@ -1879,8 +1912,8 @@ static int a4sqp_core_nonlinear_restoration_step(
 	if(core.n_var <= 0 || core.n_rel <= 0 || core.jac_row_start == NULL || core.jac_col_index == NULL || core.scaled_jac_value == NULL){
 		return 1;
 	}
-	phi_start = a4sqp_core_violation_squares(&core,&max_start);
-	if(phi_start <= 0.0 || max_start <= line_options->feas_tol || !isfinite(phi_start)){
+	phi_start = a4sqp_core_violation_squares_unscaled(&core,&max_start);
+	if(phi_start <= 0.0 || !isfinite(phi_start)){
 		return 1;
 	}
 	start_x = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
@@ -1991,7 +2024,7 @@ static int a4sqp_core_nonlinear_restoration_step(
 				continue;
 			}
 			a4sqp_view_get_core(view,&trial_core);
-			phi_after = a4sqp_core_violation_squares(&trial_core,&max_after);
+			phi_after = a4sqp_core_violation_squares_unscaled(&trial_core,&max_after);
 			if(
 				isfinite(phi_after)
 				&& (
@@ -2036,7 +2069,7 @@ cleanup:
 			}
 		}
 		a4sqp_view_get_core(view,&trial_core);
-		phi_final = a4sqp_core_violation_squares(&trial_core,&max_final);
+		phi_final = a4sqp_core_violation_squares_unscaled(&trial_core,&max_final);
 		(void)max_final;
 		if(line_ops->accepted != NULL){
 			line_ops->accepted(ctx,start_scaled_x,start_scaled_grad,1);
