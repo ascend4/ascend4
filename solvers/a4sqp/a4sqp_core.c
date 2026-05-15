@@ -1218,6 +1218,9 @@ static real64 a4sqp_core_restoration_entry_tol(real64 feas_tol){
 	if(!isfinite(feas_tol) || feas_tol <= 0.0){
 		return 0.0;
 	}
+	if(feas_tol < 1.0){
+		return fmax(10.0 * feas_tol,sqrt(feas_tol));
+	}
 	return 10.0 * feas_tol;
 }
 
@@ -1241,24 +1244,6 @@ static int a4sqp_core_restoration_view_has_finite_var_bound(const struct A4SqpCo
 	return 0;
 }
 
-static void a4sqp_core_restoration_force_entry(
-	struct A4SqpCoreRestorationState *state,
-	real64 max_violation
-){
-	if(state == NULL){
-		return;
-	}
-	state->best_violation = max_violation;
-	state->entry_violation = max_violation;
-	state->stall_count = 0;
-	state->restoration_iter = 1;
-	++state->entry_count;
-	state->active = 1;
-	state->handoff = 0;
-	state->reentry_hysteresis = 0;
-	state->phase = A4SQP_CORE_PHASE_RESTORATION;
-}
-
 static int a4sqp_core_restoration_choose(
 	const struct A4SqpCoreView *view,
 	const struct A4SqpCoreRestorationOptions *options,
@@ -1272,6 +1257,7 @@ static int a4sqp_core_restoration_choose(
 	real64 improve;
 	real64 entry_tol;
 	int trigger_iter;
+	int immediate_trigger;
 	int was_restoring;
 	if(state == NULL){
 		return 0;
@@ -1294,8 +1280,9 @@ static int a4sqp_core_restoration_choose(
 	if(!isfinite(improve) || improve < 0.0 || improve >= 1.0){
 		improve = 1e-3;
 	}
+	immediate_trigger = options->trigger_iter <= 0;
 	trigger_iter = options->trigger_iter;
-	if(trigger_iter <= 0){
+	if(immediate_trigger){
 		trigger_iter = 3;
 	}
 	/*
@@ -1404,6 +1391,18 @@ static int a4sqp_core_restoration_choose(
 		state->reentry_hysteresis = 0;
 		state->phase = A4SQP_CORE_PHASE_REGULAR;
 		return 0;
+	}
+	if(immediate_trigger){
+		state->stall_count = 0;
+		state->restoration_iter = 1;
+		++state->entry_count;
+		state->entry_violation = max_violation;
+		state->best_violation = max_violation;
+		state->active = 1;
+		state->handoff = 0;
+		state->reentry_hysteresis = 0;
+		state->phase = A4SQP_CORE_PHASE_RESTORATION;
+		return 1;
 	}
 	if(
 		!isfinite(state->best_violation)
@@ -2203,7 +2202,6 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 	struct A4SqpCoreView initial_view;
 	struct A4SqpLineSearchOptions effective_line_options;
 	int force_unconstrained_trust = 0;
-	int regular_failure_restoration_tried = 0;
 
 	if(stats != NULL){
 		memset(stats,0,sizeof(*stats));
@@ -2382,28 +2380,6 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 				if(a4sqp_core_step_may_retry(view,attempt,options,trust_radius,stats,force_unconstrained_trust)){
 					continue;
 				}
-			if(
-				!restoration_active
-				&& !regular_failure_restoration_tried
-				&& options->restoration.enable
-				&& view->n_rel > 0
-				&& a4sqp_core_restoration_materially_infeasible(max_violation,options->feas_tol)
-			){
-				regular_failure_restoration_tried = 1;
-				restoration_active = 1;
-				effective_has_objective = 0;
-				effective_line_options.restoration = 1;
-				effective_line_options.restoration_margin = options->restoration.margin;
-				a4sqp_core_restoration_force_entry(options->restoration_state,max_violation);
-				if(stats != NULL){
-					stats->phase = A4SQP_CORE_PHASE_RESTORATION;
-					stats->phase_changed = 1;
-					++stats->restoration_iterations;
-					++stats->restoration_entries;
-				}
-				attempt = -1;
-				continue;
-			}
 			return last_error;
 		}
 		last_error = A4SQP_CORE_STEP_QP_ERROR;
