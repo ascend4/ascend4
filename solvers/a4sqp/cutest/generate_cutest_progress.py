@@ -169,6 +169,11 @@ def outcome_light_code(outcome: str) -> str:
     return f"{light}{code}"
 
 
+def outcome_cell(row: dict[str, str]) -> str:
+    suffix = "L" if row.get("used_lsq") == "1" else ""
+    return f"{outcome_light_code(row.get('outcome_class', ''))}{suffix}"
+
+
 def outcome_key_rows(rows: list[dict[str, str]]) -> list[list[object]]:
     used = {row.get("outcome_class", "") for row in rows if row.get("outcome_class", "")}
     ordered = [
@@ -211,8 +216,7 @@ def problem_matrix(
             if row is None:
                 values.append("")
                 continue
-            outcome = row.get("outcome_class", "")
-            values.append(outcome_light_code(outcome))
+            values.append(outcome_cell(row))
         matrix.append(values)
     return matrix
 
@@ -279,6 +283,8 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
         "## Problem Outcomes",
         "",
         "Outcome cells use compact light+number codes. The key below the table maps codes to outcome classes.",
+        "",
+        "Cells with an `L` suffix used the experimental least-squares solve path for that profile.",
         "",
         "Matrix profile headers are shortened to solver/Hessian labels; full profile settings are listed in the summary table.",
         "",

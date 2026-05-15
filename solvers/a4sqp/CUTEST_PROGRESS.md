@@ -32,11 +32,13 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 
 Outcome cells use compact light+number codes. The key below the table maps codes to outcome classes.
 
+Cells with an `L` suffix used the experimental least-squares solve path for that profile.
+
 Matrix profile headers are shortened to solver/Hessian labels; full profile settings are listed in the summary table.
 
 | Problem | Class | n | m | IPOPT L-BFGS | IPOPT Exact | A4SQP BFGS | A4SQP Obj | A4SQP Lagr |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 3PK | SBR2-MN-30-0 | 30 | 0 | 🟠3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| 3PK | SBR2-MN-30-0 | 30 | 0 | 🟠3 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | ACOPP14 | QOR2-AY-38-68 | 38 | 68 | 🟢1 | 🟢1 | 🔴6 | 🔴11 | 🟢1 |
 | ACOPR14 | QOR2-AN-38-82 | 38 | 82 | 🔴14 | 🟢1 | 🔴6 | 🔴11 | 🔴11 |
 | AIRCRFTB | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
@@ -51,25 +53,25 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | AVGASA | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | AVGASB | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
 | AVION2 | OLR2-RN-49-15 | 49 | 15 | 🟠3 | 🟠3 | 🔴6 | 🔴6 | 🔴6 |
-| BA-L1LS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🟠4 | 🟠4 | 🟠4 |
-| BA-L1SPLS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🟠4 | 🟠4 | 🟠4 |
-| BARD | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BA-L1LS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🟠4L | 🟠4L | 🟠4L |
+| BA-L1SPLS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🟠4L | 🟠4L | 🟠4L |
+| BARD | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | BATCH | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🟢1 | 🔴6 | 🔴11 | 🟢1 |
-| BEALE | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BEALE | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | BENNETT5LS | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢1 | 🟢1 |
-| BIGGS3 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BIGGS3 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | BIGGS5 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BIGGS6 | SUR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BIGGS6 | SUR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | BIGGSC4 | QLR2-AN-4-7 | 4 | 7 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BOX2 | SXR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BOX3 | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BOXBODLS | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BOX2 | SXR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| BOX3 | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| BOXBODLS | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | BQP1VAR | QBR2-AN-1-0 | 1 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BQPGABIM | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | BQPGASIM | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | BRANIN | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BRKMCC | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| BROWNBS | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| BROWNBS | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | BROWNDEN | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | BT1 | QQR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🔴6 | 🔴6 | 🟢1 |
 | BT10 | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
@@ -90,11 +92,11 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | CANTILVR | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🟢1 |
 | CB2 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | CB3 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| CERI651ALS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🟠3 | 🟠4 | 🟠4 | 🟠4 |
-| CERI651BLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🟠4 | 🟠4 | 🟠4 |
-| CERI651CLS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| CERI651DLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| CERI651ELS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠4 | 🟠4 | 🟠4 |
+| CERI651ALS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🟠3 | 🟠4L | 🟠4L | 🟠4L |
+| CERI651BLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🟠4L | 🟠4L | 🟠4L |
+| CERI651CLS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| CERI651DLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| CERI651ELS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠4L | 🟠4L | 🟠4L |
 | CHACONN1 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | CHACONN2 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | CONGIGMZ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
@@ -103,20 +105,20 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | DALLASS | ONR2-MN-46-31 | 46 | 31 | 🟠3 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
 | DECONVB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟠3 | 🟢2 | 🟢1 | 🟢1 |
 | DECONVC | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🟢1 | 🔴7 | 🔴7 | 🔴7 |
-| DECONVU | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| DECONVU | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | DEGENLPA | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DEGENLPB | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DEMYMALO | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| DEVGLA1B | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| DEVGLA2B | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🟠4 | 🟠4 | 🟠4 |
+| DEVGLA1B | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| DEVGLA2B | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🟠4L | 🟠4L | 🟠4L |
 | DGOSPEC | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DISC2 | LQR2-MY-29-23 | 29 | 23 | 🟢1 | 🟢1 | 🔴7 | 🔴11 | 🔴7 |
 | DUAL1 | QLR2-MN-85-1 | 85 | 1 | 🟠3 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
 | DUAL2 | QLR2-MN-96-1 | 96 | 1 | 🟢1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
 | DUAL4 | QLR2-MN-75-1 | 75 | 1 | 🟢1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
 | EG1 | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
-| EGGCRATEB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| ELATVIDUB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| EGGCRATEB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| ELATVIDUB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | EQC | OLR2-MY-9-3 | 9 | 3 | 🟢2 | 🔴14 | 🟢1 | 🟢1 | 🟢1 |
 | EXPFITA | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 |
 | EXTRASIM | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
