@@ -769,7 +769,7 @@ int MAINENTRY(void){
 	AddA4SqpNumOption(problem,"restoration_improve",a4sqp_cutest_env_double("A4SQP_RESTORATION_IMPROVE",1e-3));
 	AddA4SqpNumOption(problem,"restoration_margin",a4sqp_cutest_env_double("A4SQP_RESTORATION_MARGIN",1e-4));
 	AddA4SqpNumOption(problem,"restoration_handoff_reduction",a4sqp_cutest_env_double("A4SQP_RESTORATION_HANDOFF_REDUCTION",0.5));
-	AddA4SqpNumOption(problem,"restoration_reentry_factor",a4sqp_cutest_env_double("A4SQP_RESTORATION_REENTRY_FACTOR",1.0));
+	AddA4SqpNumOption(problem,"restoration_reentry_factor",a4sqp_cutest_env_double("A4SQP_RESTORATION_REENTRY_FACTOR",2.0));
 	AddA4SqpNumOption(problem,"trust_radius_init",a4sqp_cutest_env_double("A4SQP_TRUST_RADIUS_INIT",1.0));
 	AddA4SqpNumOption(problem,"hess_reg",a4sqp_cutest_env_double("A4SQP_HESS_REG",1e-8));
 	AddA4SqpNumOption(problem,"hess_fallback_ratio",a4sqp_cutest_env_double("A4SQP_HESS_FALLBACK_RATIO",1.0));

@@ -297,7 +297,7 @@ int a4sqp_get_default_parameters(
 	slv_param_int(parameters,A4SQP_PARAM_RESTORATION_TRIGGER_ITER,
 		(SlvParameterInitInt){{"restoration_trigger_iter",
 			"Restoration trigger",2,
-			"Number of consecutive non-improving infeasible iterations before restoration steps are requested."
+			"Number of consecutive materially infeasible non-improving iterations before restoration steps are requested; zero uses the conservative default."
 		}, 3, 0, 10000}
 	);
 
@@ -332,8 +332,8 @@ int a4sqp_get_default_parameters(
 		slv_param_real(parameters,A4SQP_PARAM_RESTORATION_REENTRY_FACTOR,
 			(SlvParameterInitReal){{"restoration_reentry_factor",
 				"Restoration re-entry factor",2,
-				"Multiplier on the restoration exit tolerance before immediate restoration re-entry is allowed after a handoff."
-			}, 1.0, 1.0, 1e6}
+				"Multiplier on the last restoration handoff violation before further restoration re-entry is allowed after repeated handoffs."
+			}, 2.0, 1.0, 1e6}
 		);
 
 		return 0;

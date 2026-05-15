@@ -174,7 +174,7 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->restoration_improve = 1e-3;
 	opt->restoration_margin = 1e-4;
 	opt->restoration_handoff_reduction = 0.5;
-	opt->restoration_reentry_factor = 1.0;
+	opt->restoration_reentry_factor = 2.0;
 	opt->trust_radius_init = 1.0;
 	opt->trust_radius_min = 1e-6;
 	opt->trust_radius_max = 100.0;
@@ -893,9 +893,8 @@ static double a4sqp_c_projected_gradient_inf(struct A4SqpCSolve *solve){
 	);
 }
 
-static void a4sqp_c_recover_stationarity_multipliers(struct A4SqpCSolve *solve){
+static const double *a4sqp_c_stationarity_multipliers(struct A4SqpCSolve *solve){
 	struct A4SqpCoreView core;
-	int row;
 	if(
 		solve == NULL
 		|| solve->problem == NULL
@@ -903,13 +902,13 @@ static void a4sqp_c_recover_stationarity_multipliers(struct A4SqpCSolve *solve){
 		|| solve->problem->m <= 0
 		|| solve->lambda == NULL
 	){
-		return;
+		return solve != NULL ? solve->lambda : NULL;
 	}
 	if(
 		!solve->problem->opt.kkt_convergence
 		&& !a4sqp_c_streq(solve->problem->opt.hessian,"EXACT_LAGRANGIAN")
 	){
-		return;
+		return solve->lambda;
 	}
 	a4sqp_view_get_core(&solve->view,&core);
 	core.has_objective = solve->has_objective;
@@ -918,26 +917,29 @@ static void a4sqp_c_recover_stationarity_multipliers(struct A4SqpCSolve *solve){
 		&core,
 		solve->problem->opt.feas_tol
 	)){
-		return;
+		return solve->lambda;
 	}
 	if(solve->lambda_est.lambda == NULL || solve->lambda_est.n != solve->problem->m){
-		return;
+		return solve->lambda;
 	}
-	for(row = 0; row < solve->problem->m; ++row){
-		solve->lambda[row] = solve->lambda_est.lambda[row];
-	}
+	return solve->lambda_est.lambda;
 }
 
 static void a4sqp_c_update_kkt_stats(struct A4SqpCSolve *solve){
 	struct A4SqpKktResidual residual;
+	const double *stat_lambda;
 	if(solve == NULL || solve->problem == NULL){
 		return;
 	}
-	a4sqp_c_recover_stationarity_multipliers(solve);
+	/* KKT reporting may use recovered stationarity multipliers, but those
+	 * estimates must not overwrite the QP row duals used by subsequent Hessian
+	 * construction.
+	 */
+	stat_lambda = a4sqp_c_stationarity_multipliers(solve);
 	a4sqp_core_kkt_error(
 		&solve->view,
 		solve->has_objective,
-		solve->lambda,
+		stat_lambda,
 		solve->problem->opt.feas_tol,
 		&residual
 	);
@@ -1357,17 +1359,12 @@ static int a4sqp_c_hess_update_exact(struct A4SqpCSolve *solve, const double *x)
 		obj_factor = (solve->has_objective && !a4sqp_c_streq(p->opt.hessian,"EXACT_LAGRANGIAN")) ? p->obj_scaling : p->obj_scaling;
 	if(a4sqp_c_streq(p->opt.hessian,"EXACT_LAGRANGIAN")){
 		for(k = 0; k < p->m; ++k){
-			if(
-				solve->lambda_est.ready
-				&& solve->lambda_est.lambda != NULL
-				&& solve->lambda_est.n == p->m
-			){
-				lambda[k] = solve->lambda_est.lambda[k];
-			}else{
-				double row_dual = solve->lambda != NULL ? solve->lambda[k] : 0.0;
-				double rel_scale = solve->view.rel_scale != NULL ? solve->view.rel_scale[k] : 1.0;
-				lambda[k] = row_dual * rel_scale;
-			}
+			double row_dual = solve->lambda != NULL ? solve->lambda[k] : 0.0;
+			double rel_scale = solve->view.rel_scale != NULL ? solve->view.rel_scale[k] : 1.0;
+			/* CUTEst/IPOPT-style eval_h uses the opposite constraint multiplier
+			 * sign to the HiGHS row-dual convention used internally here.
+			 */
+			lambda[k] = -row_dual * rel_scale;
 		}
 	}
 	if(!p->eval_h(

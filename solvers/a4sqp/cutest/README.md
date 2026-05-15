@@ -86,10 +86,12 @@ Useful environment/option overrides:
 - `--trust-unconstrained` or `A4SQP_TRUST_UNCONSTRAINED=1`
 - `--restoration` or `A4SQP_RESTORATION=1`
 - `--restoration-trigger-iter N` or `A4SQP_RESTORATION_TRIGGER_ITER=N`
+  (`N <= 0` uses the conservative default trigger count, currently 3)
 - `--restoration-improve VALUE` or `A4SQP_RESTORATION_IMPROVE=VALUE`
 - `--restoration-margin VALUE` or `A4SQP_RESTORATION_MARGIN=VALUE`
 - `--restoration-handoff-reduction VALUE` or `A4SQP_RESTORATION_HANDOFF_REDUCTION=VALUE`
 - `--restoration-reentry-factor VALUE` or `A4SQP_RESTORATION_REENTRY_FACTOR=VALUE`
+  (default `2.0`)
 - `--elastic-penalty VALUE` or `A4SQP_ELASTIC_PENALTY=VALUE`
 - `--a4sqp-hessian BFGS|EXACT_OBJ|EXACT_LAGRANGIAN` or `A4SQP_HESSIAN=...`
 - `--try-lsq OFF|GAUSS|LM` or `A4SQP_TRY_LSQ=...` controls the experimental

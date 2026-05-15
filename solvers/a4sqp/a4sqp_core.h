@@ -100,6 +100,7 @@ struct A4SqpCoreRestorationState {
 	real64 entry_violation;
 	int stall_count;
 	int restoration_iter;
+	int entry_count;
 	int active;
 	int handoff;
 	int reentry_hysteresis;

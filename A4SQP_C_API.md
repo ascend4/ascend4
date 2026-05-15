@@ -312,8 +312,8 @@ Numeric options:
 - `restoration_margin`: restoration line-search acceptance margin.
 - `restoration_handoff_reduction`: violation reduction from restoration entry
   that triggers handoff back to regular SQP.
-- `restoration_reentry_factor`: hysteresis factor before immediate restoration
-  re-entry is allowed.
+- `restoration_reentry_factor`: hysteresis factor, default `2`, before
+  restoration re-entry is allowed after repeated restoration handoffs.
 - `trust_radius_init`, `trust_radius_min`, `trust_radius_max`: trust-radius
   bounds.
 - `trust_shrink`, `trust_grow`, `trust_accept`, `trust_good`: trust policy
@@ -338,9 +338,14 @@ Integer options:
 - `trust_unconstrained`: applies trust-region bounds to objective-only QPs.
 - `kkt_convergence`: requires KKT residual convergence for objective problems.
 - `restoration`: enables core-owned feasibility restoration.
-- `restoration_trigger_iter`: consecutive non-improving infeasible iterations
-  before restoration; `0` means immediate restoration when outside the
-  restoration exit tolerance.
+- `restoration_trigger_iter`: consecutive materially infeasible
+  non-improving iterations before restoration. The default conservative
+  trigger is `3`; non-positive values are treated as that default. Core
+  restoration also requires the maximum constraint violation to be materially
+  above the feasibility tolerance, so near-feasible stationarity work stays on
+  the regular SQP path. For unbounded constrained problems the core delays
+  automatic restoration entry to avoid pre-empting regular SQP stationarity
+  progress.
 - `restoration_max_iter`: optional consecutive restoration-iteration cap;
   `0` disables it.
 - `qp_iteration_limit`: optional per-QP HiGHS iteration limit; `0` disables it.

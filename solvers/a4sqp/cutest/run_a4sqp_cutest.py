@@ -353,7 +353,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--restoration-improve", type=float, default=float(os.environ.get("A4SQP_RESTORATION_IMPROVE", "1e-3")))
     parser.add_argument("--restoration-margin", type=float, default=float(os.environ.get("A4SQP_RESTORATION_MARGIN", "1e-4")))
     parser.add_argument("--restoration-handoff-reduction", type=float, default=float(os.environ.get("A4SQP_RESTORATION_HANDOFF_REDUCTION", "0.5")))
-    parser.add_argument("--restoration-reentry-factor", type=float, default=float(os.environ.get("A4SQP_RESTORATION_REENTRY_FACTOR", "1.0")))
+    parser.add_argument("--restoration-reentry-factor", type=float, default=float(os.environ.get("A4SQP_RESTORATION_REENTRY_FACTOR", "2.0")))
     parser.set_defaults(kkt_convergence=os.environ.get("A4SQP_KKT_CONVERGENCE", "1") not in ("", "0", "false", "False"))
     parser.add_argument("--kkt-convergence", dest="kkt_convergence", action="store_true")
     parser.add_argument("--no-kkt-convergence", dest="kkt_convergence", action="store_false")

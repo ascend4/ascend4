@@ -1207,10 +1207,56 @@ void a4sqp_core_restoration_state_init(struct A4SqpCoreRestorationState *state){
 	state->entry_violation = HUGE_VAL;
 	state->stall_count = 0;
 	state->restoration_iter = 0;
+	state->entry_count = 0;
 	state->active = 0;
 	state->handoff = 0;
 	state->reentry_hysteresis = 0;
 	state->phase = A4SQP_CORE_PHASE_REGULAR;
+}
+
+static real64 a4sqp_core_restoration_entry_tol(real64 feas_tol){
+	if(!isfinite(feas_tol) || feas_tol <= 0.0){
+		return 0.0;
+	}
+	return 10.0 * feas_tol;
+}
+
+static int a4sqp_core_restoration_materially_infeasible(real64 max_violation, real64 feas_tol){
+	return isfinite(max_violation) && max_violation > a4sqp_core_restoration_entry_tol(feas_tol);
+}
+
+static int a4sqp_core_restoration_view_has_finite_var_bound(const struct A4SqpCoreView *view){
+	int32 i;
+	if(view == NULL){
+		return 0;
+	}
+	for(i = 0; i < view->n_var; ++i){
+		if(
+			(view->scaled_var_lower != NULL && !a4sqp_core_is_lower_inf(view->scaled_var_lower[i]))
+			|| (view->scaled_var_upper != NULL && !a4sqp_core_is_upper_inf(view->scaled_var_upper[i]))
+		){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static void a4sqp_core_restoration_force_entry(
+	struct A4SqpCoreRestorationState *state,
+	real64 max_violation
+){
+	if(state == NULL){
+		return;
+	}
+	state->best_violation = max_violation;
+	state->entry_violation = max_violation;
+	state->stall_count = 0;
+	state->restoration_iter = 1;
+	++state->entry_count;
+	state->active = 1;
+	state->handoff = 0;
+	state->reentry_hysteresis = 0;
+	state->phase = A4SQP_CORE_PHASE_RESTORATION;
 }
 
 static int a4sqp_core_restoration_choose(
@@ -1223,6 +1269,9 @@ static int a4sqp_core_restoration_choose(
 	real64 exit_tol;
 	real64 handoff_reduction;
 	real64 reentry_factor;
+	real64 improve;
+	real64 entry_tol;
+	int trigger_iter;
 	int was_restoring;
 	if(state == NULL){
 		return 0;
@@ -1241,6 +1290,23 @@ static int a4sqp_core_restoration_choose(
 	if(!isfinite(reentry_factor) || reentry_factor < 1.0){
 		reentry_factor = 1.0;
 	}
+	improve = options->improve;
+	if(!isfinite(improve) || improve < 0.0 || improve >= 1.0){
+		improve = 1e-3;
+	}
+	trigger_iter = options->trigger_iter;
+	if(trigger_iter <= 0){
+		trigger_iter = 3;
+	}
+	/*
+	 * Unbounded equality-dominated problems often need regular SQP stationarity
+	 * work more than feasibility-only restoration. Delay restoration there, while
+	 * still allowing faster rescue on bound-constrained or line-search-failed cases.
+	 */
+	if(!a4sqp_core_restoration_view_has_finite_var_bound(view) && trigger_iter < 10){
+		trigger_iter = 10;
+	}
+	entry_tol = a4sqp_core_restoration_entry_tol(exit_tol);
 	was_restoring = state->phase == A4SQP_CORE_PHASE_RESTORATION || state->active;
 	if(max_violation <= exit_tol){
 		if(was_restoring){
@@ -1261,18 +1327,45 @@ static int a4sqp_core_restoration_choose(
 		state->best_violation = max_violation;
 		state->entry_violation = HUGE_VAL;
 		state->stall_count = 0;
+		state->restoration_iter = 0;
+		state->active = 0;
+		state->handoff = 0;
+		state->reentry_hysteresis = 1;
+		state->phase = A4SQP_CORE_PHASE_REGULAR;
+		return 0;
+	}
+	/* Allow one re-entry for problems that need a short restoration sequence,
+	 * then require material worsening before further restoration cycles.
+	 */
+	if(state->reentry_hysteresis && state->entry_count >= 2){
+		real64 reentry_tol = entry_tol;
+		if(isfinite(state->best_violation) && state->best_violation > 0.0){
+			real64 best_reentry_tol = reentry_factor * state->best_violation;
+			if(best_reentry_tol > reentry_tol){
+				reentry_tol = best_reentry_tol;
+			}
+		}
+		if(max_violation <= reentry_tol){
+			if(!isfinite(state->best_violation) || max_violation < state->best_violation){
+				state->best_violation = max_violation;
+			}
+			state->entry_violation = HUGE_VAL;
+			state->stall_count = 0;
 			state->restoration_iter = 0;
 			state->active = 0;
 			state->handoff = 0;
-			state->reentry_hysteresis = 1;
 			state->phase = A4SQP_CORE_PHASE_REGULAR;
 			return 0;
+		}
+		state->reentry_hysteresis = 0;
+	}else if(state->reentry_hysteresis){
+		state->reentry_hysteresis = 0;
 	}
 	if(was_restoring){
 		++state->restoration_iter;
 		if(
 			!isfinite(state->best_violation)
-			|| max_violation <= (1.0 - options->improve) * state->best_violation
+			|| max_violation <= (1.0 - improve) * state->best_violation
 		){
 			state->best_violation = max_violation;
 			state->stall_count = 0;
@@ -1301,30 +1394,20 @@ static int a4sqp_core_restoration_choose(
 		state->phase = A4SQP_CORE_PHASE_RESTORATION;
 		return 1;
 	}
-	if(options->trigger_iter <= 0){
-		if(state->reentry_hysteresis && max_violation <= reentry_factor * exit_tol){
-			state->stall_count = 0;
-			state->restoration_iter = 0;
-			state->entry_violation = HUGE_VAL;
-			state->best_violation = max_violation;
-			state->active = 0;
-			state->handoff = 0;
-			state->phase = A4SQP_CORE_PHASE_REGULAR;
-			return 0;
-		}
-		state->stall_count = 0;
-		state->restoration_iter = 1;
-		state->entry_violation = max_violation;
+	if(!a4sqp_core_restoration_materially_infeasible(max_violation,exit_tol)){
 		state->best_violation = max_violation;
-		state->active = 1;
+		state->entry_violation = HUGE_VAL;
+		state->stall_count = 0;
+		state->restoration_iter = 0;
+		state->active = 0;
 		state->handoff = 0;
 		state->reentry_hysteresis = 0;
-		state->phase = A4SQP_CORE_PHASE_RESTORATION;
-		return 1;
+		state->phase = A4SQP_CORE_PHASE_REGULAR;
+		return 0;
 	}
 	if(
 		!isfinite(state->best_violation)
-		|| max_violation <= (1.0 - options->improve) * state->best_violation
+		|| max_violation <= (1.0 - improve) * state->best_violation
 	){
 		state->best_violation = max_violation;
 		state->entry_violation = HUGE_VAL;
@@ -1337,9 +1420,10 @@ static int a4sqp_core_restoration_choose(
 		return 0;
 	}
 	++state->stall_count;
-	state->active = state->stall_count >= options->trigger_iter;
+	state->active = state->stall_count >= trigger_iter;
 	if(state->active){
 		state->restoration_iter = 1;
+		++state->entry_count;
 		state->entry_violation = max_violation;
 		state->best_violation = max_violation;
 		state->reentry_hysteresis = 0;
@@ -2119,6 +2203,7 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 	struct A4SqpCoreView initial_view;
 	struct A4SqpLineSearchOptions effective_line_options;
 	int force_unconstrained_trust = 0;
+	int regular_failure_restoration_tried = 0;
 
 	if(stats != NULL){
 		memset(stats,0,sizeof(*stats));
@@ -2297,6 +2382,28 @@ enum A4SqpCoreStepStatus a4sqp_core_solve_step(
 				if(a4sqp_core_step_may_retry(view,attempt,options,trust_radius,stats,force_unconstrained_trust)){
 					continue;
 				}
+			if(
+				!restoration_active
+				&& !regular_failure_restoration_tried
+				&& options->restoration.enable
+				&& view->n_rel > 0
+				&& a4sqp_core_restoration_materially_infeasible(max_violation,options->feas_tol)
+			){
+				regular_failure_restoration_tried = 1;
+				restoration_active = 1;
+				effective_has_objective = 0;
+				effective_line_options.restoration = 1;
+				effective_line_options.restoration_margin = options->restoration.margin;
+				a4sqp_core_restoration_force_entry(options->restoration_state,max_violation);
+				if(stats != NULL){
+					stats->phase = A4SQP_CORE_PHASE_RESTORATION;
+					stats->phase_changed = 1;
+					++stats->restoration_iterations;
+					++stats->restoration_entries;
+				}
+				attempt = -1;
+				continue;
+			}
 			return last_error;
 		}
 		last_error = A4SQP_CORE_STEP_QP_ERROR;
