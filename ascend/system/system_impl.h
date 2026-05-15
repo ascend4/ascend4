@@ -198,6 +198,9 @@ struct system_structure {
 	/**< derivative chains, if present (NULL if not present) */
 	struct SolverDiffVarCollectionStruct *diffvars; 
 
+	/**< optional least-squares objective view, built only when requested */
+	struct system_lsq_view *lsq_view;
+
 	/* ----- the data that follows is for internal consumption only.--------- */
 
 	/** external relations */

@@ -56,6 +56,13 @@ int a4sqp_get_default_parameters(
 		}, "BFGS"}, (char *[]){"AUTO","BFGS","EXACT_OBJ","EXACT_LAGRANGIAN",NULL}
 	);
 
+	slv_param_char(parameters,A4SQP_PARAM_TRY_LSQ,
+		(SlvParameterInitChar){{"try_lsq",
+			"Try least squares",1,
+			"Attempt the dedicated least-squares path for recognised unconstrained sum-of-squares objectives: OFF, GAUSS, or LM."
+		}, "LM"}, (char *[]){"OFF","GAUSS","LM",NULL}
+	);
+
 	slv_param_real(parameters,A4SQP_PARAM_HESS_REG,
 		(SlvParameterInitReal){{"hess_reg",
 			"Hessian regularization",2,

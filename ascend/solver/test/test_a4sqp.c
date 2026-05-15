@@ -561,6 +561,7 @@ static void test_a4sqp_basic_view_presolve(void){
 	int filter_margin_idx;
 	int trust_unconstrained_idx;
 	int kkt_convergence_idx;
+	int try_lsq_idx;
 	slv_parameters_t params;
 
 	memset(&progress,0,sizeof(progress));
@@ -696,6 +697,7 @@ static void test_a4sqp_basic_view_presolve(void){
 	filter_margin_idx = find_param_index(&params,"filter_margin");
 	trust_unconstrained_idx = find_param_index(&params,"trust_unconstrained");
 	kkt_convergence_idx = find_param_index(&params,"kkt_convergence");
+	try_lsq_idx = find_param_index(&params,"try_lsq");
 	CU_ASSERT_FATAL(scale_idx != -1);
 	CU_ASSERT_FATAL(trust_radius_idx != -1);
 	CU_ASSERT_FATAL(acceptable_tol_idx != -1);
@@ -704,12 +706,14 @@ static void test_a4sqp_basic_view_presolve(void){
 	CU_ASSERT_FATAL(filter_margin_idx != -1);
 	CU_ASSERT_FATAL(trust_unconstrained_idx != -1);
 	CU_ASSERT_FATAL(kkt_convergence_idx != -1);
+	CU_ASSERT_FATAL(try_lsq_idx != -1);
 	CU_ASSERT_DOUBLE_EQUAL(SLV_PARAM_REAL(&params,acceptable_tol_idx),1e-5,1e-14);
 	CU_ASSERT_EQUAL(SLV_PARAM_INT(&params,acceptable_iter_idx),0);
 	CU_ASSERT_EQUAL(SLV_PARAM_BOOL(&params,filter_accept_idx),0);
 	CU_ASSERT_DOUBLE_EQUAL(SLV_PARAM_REAL(&params,filter_margin_idx),1e-4,1e-14);
 	CU_ASSERT_EQUAL(SLV_PARAM_BOOL(&params,trust_unconstrained_idx),0);
 	CU_ASSERT_EQUAL(SLV_PARAM_BOOL(&params,kkt_convergence_idx),0);
+	CU_ASSERT_STRING_EQUAL(SLV_PARAM_CHAR(&params,try_lsq_idx),"LM");
 	slv_set_char_parameter(&(SLV_PARAM_CHAR(&params,scale_idx)),"NONE");
 	slv_set_parameters(sys,&params);
 	CU_ASSERT_FATAL(0 == slv_presolve(sys));
@@ -1501,6 +1505,13 @@ static void test_a4sqp_bqp1var_solve(void){
 	);
 }
 
+static void test_a4sqp_lsq_basic_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/lsq_basic.a4c","lsq_basic","sim_lsq_basic"),
+		0
+	);
+}
+
 static void test_a4sqp_bt10_solve(void){
 	CU_ASSERT_EQUAL(
 		a4sqp_run_model_self_test("test/a4sqp/bt10.a4c","bt10","sim_bt10"),
@@ -1618,6 +1629,7 @@ static void test_a4sqp_cont6_qq_solve_skipped(void){
 	T(a4sqp_hs21_solve) \
 	T(a4sqp_hs21_auto_exact_lagrangian) \
 	T(a4sqp_bqp1var_solve) \
+	T(a4sqp_lsq_basic_solve) \
 	T(a4sqp_bt10_solve) \
 	T(a4sqp_cb3_solve) \
 	T(a4sqp_bt2_solve) \

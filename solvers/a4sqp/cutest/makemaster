@@ -8,6 +8,9 @@ ASCEND_ROOT ?= /home/john/ascend
 EXTRAINCLUDES += -I$(ASCEND_ROOT)
 
 include $(CUTEST)/src/makedefs/definitions
+
+$(PACKAGE) = $(OBJ)/$(package)_main.o $(OBJ)/a4sqp_cutest_lsq.o
+
 include $(CUTEST)/src/makedefs/instructions
 
 run_test:

@@ -19,6 +19,21 @@ extern "C" {
 #include "cutest.h"
 #include "cutest_routines.h"
 #include "solvers/a4sqp/a4sqp_c.h"
+#include "solvers/a4sqp/a4sqp_lsq.h"
+
+void a4sqp_cutest_lsq_dim(int n, int *nres, int *max_row_nnz, int *status);
+void a4sqp_cutest_lsq_weights(int nres, double *weights, int *status);
+void a4sqp_cutest_lsq_residuals(int n, const double *x, int nres, double *residuals, int *status);
+void a4sqp_cutest_lsq_jacobian_row(
+	int n,
+	const double *x,
+	int row,
+	int capacity,
+	int *columns,
+	double *values,
+	int *nnz,
+	int *status
+);
 
 struct A4SqpCutestContext {
 	integer n;
@@ -34,7 +49,19 @@ struct A4SqpCutestContext {
 	rp_ *lambda_work;
 	integer *hess_row;
 	integer *hess_col;
+	int lsq_nres;
+	int lsq_max_row_nnz;
+	int lsq_probe_status;
+	double *lsq_weights;
 };
+
+static A4SqpBool a4sqp_cutest_eval_f(
+	A4SqpIndex n,
+	A4SqpNumber *x,
+	A4SqpBool new_x,
+	A4SqpNumber *obj_value,
+	A4SqpUserDataPtr user_data
+);
 
 static void a4sqp_cutest_json_string(const char *s){
 	const unsigned char *p = (const unsigned char *)(s != NULL ? s : "");
@@ -95,6 +122,155 @@ static const char *a4sqp_cutest_env_string(const char *name, const char *fallbac
 		return fallback;
 	}
 	return value;
+}
+
+static int a4sqp_cutest_lsq_eval_residuals(void *userdata, const real64 *x, real64 *residuals){
+	struct A4SqpCutestContext *ctx = (struct A4SqpCutestContext *)userdata;
+	int status = 0;
+	if(ctx == NULL || x == NULL || residuals == NULL || ctx->lsq_nres <= 0){
+		return 1;
+	}
+	memcpy(ctx->hess_x_work,x,(size_t)ctx->n * sizeof(*x));
+	a4sqp_cutest_lsq_residuals((int)ctx->n,(const double *)x,ctx->lsq_nres,(double *)residuals,&status);
+	return status == 0 ? 0 : 1;
+}
+
+static int a4sqp_cutest_lsq_eval_jacobian_row(
+	void *userdata,
+	int32 row,
+	int32 capacity,
+	int32 *columns,
+	real64 *values,
+	int32 *nnz
+){
+	struct A4SqpCutestContext *ctx = (struct A4SqpCutestContext *)userdata;
+	int status = 0;
+	int nnz_local = 0;
+	if(ctx == NULL || row < 0 || row >= ctx->lsq_nres || capacity < ctx->lsq_max_row_nnz
+		|| columns == NULL || values == NULL || nnz == NULL
+	){
+		return 1;
+	}
+	a4sqp_cutest_lsq_jacobian_row(
+		(int)ctx->n,
+		(const double *)ctx->hess_x_work,
+		(int)row,
+		(int)capacity,
+		(int *)columns,
+		(double *)values,
+		&nnz_local,
+		&status
+	);
+	if(status != 0){
+		return 1;
+	}
+	*nnz = (int32)nnz_local;
+	return 0;
+}
+
+static int a4sqp_cutest_try_lsq(
+	struct A4SqpCutestContext *ctx,
+	rp_ *x,
+	rp_ *x_l,
+	rp_ *x_u,
+	const char *classification,
+	rp_ *obj,
+	struct A4SqpSolveStats *stats,
+	enum A4SqpApplicationReturnStatus *solve_status
+){
+	const char *mode_name = a4sqp_cutest_env_string("A4SQP_TRY_LSQ","OFF");
+	int probe_status = 0;
+	struct A4SqpLsqProblem problem;
+	struct A4SqpLsqOptions options;
+	struct A4SqpLsqStats lsq_stats;
+	enum A4SqpLsqStatus lsq_status;
+	rp_ *x_backup = NULL;
+
+	if(ctx == NULL || x == NULL || x_l == NULL || x_u == NULL || stats == NULL || solve_status == NULL){
+		return -1;
+	}
+	if(mode_name == NULL || strcmp(mode_name,"OFF") == 0 || strcmp(mode_name,"0") == 0){
+		return -1;
+	}
+	if(ctx->constrained || ctx->noobj){
+		return -1;
+	}
+	if(classification == NULL || classification[0] != 'S'){
+		ctx->lsq_probe_status = -2;
+		return -1;
+	}
+	a4sqp_cutest_lsq_dim((int)ctx->n,&ctx->lsq_nres,&ctx->lsq_max_row_nnz,&probe_status);
+	ctx->lsq_probe_status = probe_status;
+	if(probe_status != 0 || ctx->lsq_nres <= 0){
+		return -1;
+	}
+	MALLOC(x_backup,ctx->n,rp_);
+	MALLOC(ctx->lsq_weights,ctx->lsq_nres,double);
+	if(x_backup == NULL || ctx->lsq_weights == NULL){
+		FREE(x_backup);
+		FREE(ctx->lsq_weights);
+		ctx->lsq_weights = NULL;
+		return 1;
+	}
+	memcpy(x_backup,x,(size_t)ctx->n * sizeof(*x_backup));
+	a4sqp_cutest_lsq_weights(ctx->lsq_nres,ctx->lsq_weights,&probe_status);
+	if(probe_status != 0){
+		memcpy(x,x_backup,(size_t)ctx->n * sizeof(*x));
+		FREE(x_backup);
+		FREE(ctx->lsq_weights);
+		ctx->lsq_weights = NULL;
+		return -1;
+	}
+
+	memset(&problem,0,sizeof(problem));
+	problem.n_var = (int32)ctx->n;
+	problem.n_res = (int32)ctx->lsq_nres;
+	problem.weights = ctx->lsq_weights;
+	problem.x_lower = (const real64 *)x_l;
+	problem.x_upper = (const real64 *)x_u;
+	problem.userdata = ctx;
+	problem.eval_residuals = a4sqp_cutest_lsq_eval_residuals;
+	problem.eval_jacobian_row = a4sqp_cutest_lsq_eval_jacobian_row;
+
+	memset(&options,0,sizeof(options));
+	options.mode = strcmp(mode_name,"GAUSS") == 0 ? A4SQP_LSQ_MODE_GAUSS : A4SQP_LSQ_MODE_LM;
+	options.max_iter = a4sqp_cutest_env_int("A4SQP_MAX_ITER",200);
+	options.max_backtrack = a4sqp_cutest_env_int("A4SQP_MAX_BACKTRACK",20);
+	options.grad_tol = a4sqp_cutest_env_double("A4SQP_TOL",1e-7);
+	options.step_tol = a4sqp_cutest_env_double("A4SQP_STEP_TOL",1e-8);
+
+	memset(&lsq_stats,0,sizeof(lsq_stats));
+	memcpy(ctx->hess_x_work,x,(size_t)ctx->n * sizeof(*x));
+	lsq_status = a4sqp_lsq_solve(&problem,&options,(real64 *)x,&lsq_stats);
+	memcpy(ctx->hess_x_work,x,(size_t)ctx->n * sizeof(*x));
+	memset(stats,0,sizeof(*stats));
+	stats->iterations = lsq_stats.iterations;
+	stats->projected_gradient_inf = lsq_stats.grad_inf;
+	stats->kkt_error = lsq_stats.grad_inf;
+	stats->dual_infeasibility_inf = lsq_stats.grad_inf;
+	stats->final_step_norm = lsq_stats.step_norm;
+	stats->regularization_size = lsq_stats.lambda;
+	if(obj != NULL){
+		A4SqpNumber obj_value = 0.0;
+		if(a4sqp_cutest_eval_f((A4SqpIndex)ctx->n,(A4SqpNumber *)x,A4SQP_TRUE,&obj_value,ctx)){
+			*obj = (rp_)obj_value;
+		}else{
+			*obj = (rp_)lsq_stats.objective;
+		}
+	}
+	if(lsq_status == A4SQP_LSQ_SOLVED){
+		*solve_status = A4SqpSolveSucceeded;
+		FREE(x_backup);
+		return 0;
+	}
+	memcpy(x,x_backup,(size_t)ctx->n * sizeof(*x));
+	FREE(x_backup);
+	fprintf(stderr,
+		"A4SQP-CUTEst: least-squares attempt using %s did not converge (status=%d); falling back to SQP.\n",
+		mode_name,
+		(int)lsq_status
+	);
+	return -1;
 }
 
 static A4SqpBool a4sqp_cutest_eval_f(
@@ -399,9 +575,11 @@ int MAINENTRY(void){
 	enum A4SqpApplicationReturnStatus solve_status;
 	int finite_lower = 0;
 	int finite_upper = 0;
+	int used_lsq = 0;
 	int i;
 
 	memset(&ctx,0,sizeof(ctx));
+	ctx.lsq_probe_status = -1;
 	FORTRAN_open(&funit,fname,&ierr);
 	if(ierr != 0){
 		fprintf(stderr,"A4SQP-CUTEst: failed to open OUTSDIF.d\n");
@@ -518,6 +696,17 @@ int MAINENTRY(void){
 			++finite_upper;
 		}
 	}
+	{
+		int lsq_attempt = a4sqp_cutest_try_lsq(&ctx,x,x_l,x_u,classification,&obj,&stats,&solve_status);
+		if(lsq_attempt == 0){
+			used_lsq = 1;
+			goto report;
+		}
+		if(lsq_attempt > 0){
+			fprintf(stderr,"A4SQP-CUTEst: least-squares setup failed\n");
+			return 3;
+		}
+	}
 	problem = CreateA4SqpProblem(
 		(A4SqpIndex)ctx.n,
 		(double *)x_l,
@@ -577,6 +766,7 @@ int MAINENTRY(void){
 		&ctx
 	);
 	GetA4SqpSolveStatistics(problem,&stats);
+report:
 	if(ctx.constrained){
 		CUTEST_creport(&status,calls,cpu);
 		CUTEST_cterminate(&status);
@@ -600,6 +790,11 @@ int MAINENTRY(void){
 	);
 	printf("\"finite_var_lower\":%d,\"finite_var_upper\":%d,",finite_lower,finite_upper);
 	printf("\"jac_nnz\":%d,\"hess_nnz\":%d,",(int)ctx.nele_jac,(int)ctx.nele_hess);
+	printf("\"used_lsq\":%d,\"lsq_residuals\":%d,\"lsq_probe_status\":%d,",
+		used_lsq,
+		ctx.lsq_nres,
+		ctx.lsq_probe_status
+	);
 	printf("\"status\":%d,\"objective\":",(int)solve_status);
 	a4sqp_cutest_json_number((double)obj);
 	printf(",");
@@ -652,7 +847,9 @@ int MAINENTRY(void){
 	);
 	printf("\"cutest_setup_time\":%.17g,\"cutest_solve_time\":%.17g", (double)cpu[0], (double)cpu[1]);
 	printf("}\n");
-	FreeA4SqpProblem(problem);
+	if(problem != NULL){
+		FreeA4SqpProblem(problem);
+	}
 	FREE(x);
 	FREE(x_l);
 	FREE(x_u);
@@ -669,6 +866,7 @@ int MAINENTRY(void){
 	FREE(ctx.lambda_work);
 	FREE(ctx.hess_row);
 	FREE(ctx.hess_col);
+	FREE(ctx.lsq_weights);
 	FREE(pname);
 	FREE(classification);
 	return (int)solve_status;

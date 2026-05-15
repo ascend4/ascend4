@@ -92,6 +92,10 @@ Useful environment/option overrides:
 - `--restoration-reentry-factor VALUE` or `A4SQP_RESTORATION_REENTRY_FACTOR=VALUE`
 - `--elastic-penalty VALUE` or `A4SQP_ELASTIC_PENALTY=VALUE`
 - `--a4sqp-hessian BFGS|EXACT_OBJ|EXACT_LAGRANGIAN` or `A4SQP_HESSIAN=...`
+- `--try-lsq OFF|GAUSS|LM` or `A4SQP_TRY_LSQ=...` controls the experimental
+  CUTEst objective-group least-squares path. The runner default is `LM`, but
+  only compatible unconstrained sum-of-squares problems use it; other problems
+  fall back to the ordinary NLP/SQP path.
 - `--a4sqp-hess-reg VALUE` or `A4SQP_HESS_REG=VALUE`
 - `--ipopt-max-iter N` or `IPOPTC_MAX_ITER=N`
 - `--ipopt-tol VALUE` or `IPOPTC_TOL=VALUE`
@@ -112,6 +116,17 @@ still keeping each solver process single-threaded.
 
 The CUTEst driver can use the standalone C API's BFGS path or CUTEst exact
 Hessians. Exact Hessians are regularized to PSD before the QP model is built.
+
+The experimental CUTEst least-squares path is isolated in
+`a4sqp_cutest_lsq.F90`. It is not part of `liba4sqp.so` or
+`liba4sqp_ascend.so`; it is compiled only as a CUTEst package-side object. The
+shim reaches into CUTEst's internal `CUTEST_data_global` and
+`CUTEST_work_global(1)` structures after setup, verifies that objective groups
+are square/L2 groups with positive scale, and exposes the pre-square group
+arguments as residuals to A4SQP's existing LSQ core. If the probe fails, the
+driver falls back to the ordinary NLP C API path. The driver fail-fast checks
+`try_lsq`, unconstrained/no-objective status, and the CUTEst classification
+letter before calling the internal group shim.
 
 Acceptable convergence is disabled by default. Use `--acceptable-iter 5` for an
 IPOPT-like relaxed profile that reports `A4SqpSolvedToAcceptableLevel` on

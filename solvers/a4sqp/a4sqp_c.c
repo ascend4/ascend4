@@ -165,7 +165,7 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->elastic_penalty_max = 1e8;
 	opt->filter_accept = 0;
 	opt->filter_margin = 1e-4;
-	opt->trust_unconstrained = 0;
+	opt->trust_unconstrained = 1;
 	opt->kkt_convergence = 0;
 	opt->restoration = 0;
 	opt->restoration_trigger_iter = 3;

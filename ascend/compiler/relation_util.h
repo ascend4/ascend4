@@ -208,6 +208,64 @@ ASC_DLLSPEC enum Expr_enum RelationTermTypeF(CONST struct relation_term *term);
 	function directly - use RelationTermType() instead.
 */
 
+enum RelationLeastSquaresStatus {
+	rel_lsq_ok = 0,
+	rel_lsq_null_relation,
+	rel_lsq_not_minimize,
+	rel_lsq_not_token_relation,
+	rel_lsq_empty_objective,
+	rel_lsq_not_sum_of_squares,
+	rel_lsq_nonpositive_weight,
+	rel_lsq_variable_weight
+};
+
+struct RelationLeastSquaresAnalysis {
+	int is_least_squares;
+	enum RelationLeastSquaresStatus status;
+	unsigned long residual_count;
+	unsigned long weighted_count;
+	const char *reason;
+};
+
+typedef int (*RelationLeastSquaresResidualFn)(
+	CONST struct relation_term *residual_term,
+	double weight,
+	void *userdata
+);
+
+ASC_DLLSPEC int RelationAnalyzeLeastSquaresObjective(
+	CONST struct relation *rel,
+	struct RelationLeastSquaresAnalysis *analysis
+);
+/**<
+ *  Syntactically analyse a token MINIMIZE relation for least-squares form.
+ *
+ *  This is an opt-in structural check: it is not run during normal
+ *  instantiation or system build. Solvers or tests may call it when they want
+ *  to detect objectives of the form SUM(w_i*r_i(x)^2) with positive numeric
+ *  weights. The residual expressions are not modified or stored.
+ *
+ *  Returns nonzero if the objective conforms to the currently recognised
+ *  least-squares pattern, otherwise zero. Detailed status is written to
+ *  analysis when non-NULL.
+ */
+
+ASC_DLLSPEC int RelationAnalyzeLeastSquaresObjectiveWithResiduals(
+	CONST struct relation *rel,
+	struct RelationLeastSquaresAnalysis *analysis,
+	RelationLeastSquaresResidualFn residual_fn,
+	void *userdata
+);
+/**<
+ *  Variant of RelationAnalyzeLeastSquaresObjective() that optionally emits
+ *  each recognised residual expression and positive scalar objective weight.
+ *
+ *  The emitted relation_term pointers are borrowed subtrees owned by rel.
+ *  They remain valid only while the parent relation token tree is alive and
+ *  unchanged. If residual_fn is NULL, this behaves like
+ *  RelationAnalyzeLeastSquaresObjective().
+ */
+
 ASC_DLLSPEC unsigned long TermVarNumber(CONST struct relation_term *term);
 /**<
 	@return the index into the relations variable list.
@@ -238,6 +296,34 @@ ASC_DLLSPEC CONST dim_type *TermDimensions(CONST struct relation_term *term);
 ASC_DLLSPEC CONST struct Func *TermFunc(CONST struct relation_term *term);
 /**<
  *  Return the function pointer of a function operator.
+ */
+
+ASC_DLLSPEC enum safe_err RelationEvaluateTermSafe(
+	CONST struct relation *rel,
+	CONST struct relation_term *term,
+	double *value
+);
+/**<
+ *  Safely evaluate a borrowed relation-term subtree in the context of its
+ *  parent relation. Variable terms are resolved through rel's variable list.
+ *
+ *  Returns safe_ok on success. This is intended for opt-in structural views
+ *  such as least-squares residual subexpressions; it does not evaluate a full
+ *  relation residual unless term is the full relation side.
+ */
+
+ASC_DLLSPEC enum safe_err RelationEvaluateTermGradientSafe(
+	CONST struct relation *rel,
+	CONST struct relation_term *term,
+	double *value,
+	double *gradient,
+	unsigned long gradient_len
+);
+/**<
+ *  Safely evaluate a borrowed relation-term subtree and its gradient in the
+ *  parent relation's variable numbering. gradient[0] corresponds to
+ *  RelationVariable(rel,1), and gradient_len must be at least
+ *  NumberVariables(rel).
  */
 
 ASC_DLLSPEC unsigned long RelationDepth(CONST struct relation *rel);

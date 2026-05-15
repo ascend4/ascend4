@@ -166,6 +166,30 @@ typedef A4SqpBool (*A4SqpIntermediateCB)(
 There are no frontend callbacks for "request restoration", "shrink trust
 region", "reset BFGS", or "accept step". Those are core solver decisions.
 
+## Least-Squares Path
+
+A4SQP now has an experimental core least-squares loop in `liba4sqp.so`
+(`solvers/a4sqp/a4sqp_lsq.c`). It is not yet part of the IPOPT-like public C API.
+The current integration is ASCEND-specific and opt-in through the solver
+parameter:
+
+```text
+OPTION try_lsq 'OFF';    disable the LSQ path
+OPTION try_lsq 'GAUSS';  Gauss-Newton
+OPTION try_lsq 'LM';     Levenberg-Marquardt damping, default
+```
+
+When enabled, `liba4sqp_ascend.so` asks the ASCEND system layer to classify and
+build a least-squares residual view from the objective expression. The dedicated
+path is used only for recognised unconstrained sum-of-squares objectives; other
+models fall back to the ordinary SQP C API path.
+
+The adapter does not implement the LSQ algorithm. It only recognises ASCEND
+expression structure, evaluates residual expressions and residual-Jacobian rows
+at trial `x` values, and maps ASCEND variables to A4SQP vector columns. Step
+acceptance, damping, bound projection, convergence tests, and fallback status
+are core-owned.
+
 ## Lifecycle
 
 Problem construction:

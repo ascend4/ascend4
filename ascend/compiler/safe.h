@@ -125,6 +125,7 @@ extern double safe_arccosh_D0(double x, enum safe_err *safe);
 extern double safe_arctanh_D0(double x, enum safe_err *safe);
 #ifdef HAVE_ERF
 extern double safe_erf_D0(double x, enum safe_err *safe);
+extern double safe_erfc_scaled_D0(double x, enum safe_err *safe);
 #endif /* HAVE_ERF */
 extern double safe_exp_D0(double x, enum safe_err *safe);
 extern double safe_ln_D0(double x, enum safe_err *safe);
@@ -157,6 +158,7 @@ extern double safe_arctan_D1(double x, enum safe_err *safe);
 extern double safe_arctanh_D1(double x, enum safe_err *safe);
 #ifdef HAVE_ERF
 extern double safe_erf_D1(double x, enum safe_err *safe);
+extern double safe_erfc_scaled_D1(double x, enum safe_err *safe);
 #endif /* HAVE_ERF */
 extern double safe_exp_D1(double x, enum safe_err *safe);
 extern double safe_ln_D1(double x, enum safe_err *safe);
@@ -191,6 +193,7 @@ extern double safe_arctan_D2(double x, enum safe_err *safe);
 extern double safe_arctanh_D2(double x, enum safe_err *safe);
 #ifdef HAVE_ERF
 extern double safe_erf_D2(double x, enum safe_err *safe);
+extern double safe_erfc_scaled_D2(double x, enum safe_err *safe);
 #endif /* HAVE_ERF */
 extern double safe_exp_D2(double x, enum safe_err *safe);
 extern double safe_ln_D2(double x, enum safe_err *safe);
@@ -305,4 +308,3 @@ safe_pow_Dn(double x, double y, int nwrt0, int nwrt1, enum safe_err *safe);
 /* @} */
 
 #endif  /* ASC_SAFE_H */
-

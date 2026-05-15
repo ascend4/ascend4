@@ -122,6 +122,37 @@ def profile_summary(rows: list[dict[str, str]], profile_order: list[str]) -> lis
     return summary_rows
 
 
+def profile_label(rows: list[dict[str, str]], profile: str) -> str:
+    """Return a compact label for the wide problem-outcome matrix.
+
+    The detailed profile name remains in the summary table.  The matrix is
+    intended for quick visual comparison, so keep these labels short enough
+    that the table remains readable in a terminal or browser Markdown view.
+    """
+    items = [row for row in rows if row.get("_profile") == profile]
+    solver = first_nonempty(items, "solver").lower()
+    hessian = first_nonempty(items, "hessian")
+    hessian_upper = hessian.upper()
+
+    if solver in {"ipopt", "ipoptc"}:
+        if hessian == "limited-memory":
+            return "IPOPT L-BFGS"
+        if hessian == "exact":
+            return "IPOPT Exact"
+        return f"IPOPT {hessian or profile}"
+
+    if solver == "a4sqp":
+        if hessian_upper == "BFGS":
+            return "A4SQP BFGS"
+        if hessian_upper == "EXACT_OBJ":
+            return "A4SQP Obj"
+        if hessian_upper == "EXACT_LAGRANGIAN":
+            return "A4SQP Lagr"
+        return f"A4SQP {hessian or profile}"
+
+    return profile
+
+
 def first_nonempty(rows: list[dict[str, str]], key: str) -> str:
     for row in rows:
         if row.get(key):
@@ -228,7 +259,7 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
         "Error",
         "Outcomes",
     ]
-    matrix_headers = ["Problem", "Class", "n", "m", *profile_order]
+    matrix_headers = ["Problem", "Class", "n", "m", *[profile_label(rows, profile) for profile in profile_order]]
 
     parts = [
         "# A4SQP CUTEst Progress",
@@ -248,6 +279,8 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
         "## Problem Outcomes",
         "",
         "Outcome cells use compact light+number codes. The key below the table maps codes to outcome classes.",
+        "",
+        "Matrix profile headers are shortened to solver/Hessian labels; full profile settings are listed in the summary table.",
         "",
         markdown_table(matrix_headers, problem_matrix(rows, profile_order, problem_order)),
         "",

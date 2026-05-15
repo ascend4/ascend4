@@ -22,6 +22,9 @@ Implemented core capabilities include:
 - merit line search, trust-radius QP retries, and experimental filter-lite
   acceptance;
 - optional feasibility restoration with core-owned phase/status counters;
+- opt-in least-squares recognition from ASCEND objective expressions, with a
+  core-owned Gauss-Newton/Levenberg-Marquardt solve path for unconstrained
+  recognised sum-of-squares objectives;
 - KKT, bound-stationarity, restoration, and solve-statistics reporting;
 - CUTEst benchmarking support against IPOPT, including JSONL outcome
   classification;
@@ -84,6 +87,8 @@ source files are:
 - `solvers/a4sqp/a4sqp_core_view.h`: solver-neutral borrowed numeric view.
 - `solvers/a4sqp/a4sqp_hessian.c`: dense Hessian lifecycle, BFGS update,
   relation Hessian packing helpers, matrix products, and PSD regularization.
+- `solvers/a4sqp/a4sqp_lsq.c`: core Gauss-Newton/Levenberg-Marquardt
+  least-squares solve loop driven by residual/Jacobian callbacks.
 - `solvers/a4sqp/a4sqp_qp_highs.c`: QP assembly and HiGHS solve glue.
 - `solvers/a4sqp/a4sqp_scale.c`: scaling helpers.
 - `solvers/a4sqp/a4sqp_trust.c`: trust-radius policy.
@@ -126,6 +131,8 @@ The ASCEND adapter is allowed to:
 - push a trial A4SQP `x` vector into ASCEND variables for evaluation;
 - evaluate objective values, relation residuals, gradients, Jacobians, and
   relation Hessians using ASCEND machinery;
+- optionally analyse an ASCEND objective expression for least-squares form and
+  pass residual/Jacobian callback evaluations to the core LSQ solve path;
 - translate ASCEND options into C API options;
 - translate A4SQP statuses into `slv_status_t`;
 - render diagnostics with ASCEND variable/relation names and source indices.
@@ -183,6 +190,24 @@ does not yet have a full optimization presolve/postsolve reducer that removes
 fixed variables from the NLP and maps the solution back afterward. That remains
 a separate cleanup item.
 
+## ASCEND Expression Evaluation Note
+
+ASCEND token relations currently carry both postfix token arrays and infix tree
+roots. The postfix arrays are the preferred execution representation for
+whole-relation residual and derivative evaluation. The infix tree roots are a
+structural view into the same token storage, useful for expression analysis,
+printing, simplification, inversion/search logic, and the current
+least-squares residual extraction work.
+
+The current ASCEND least-squares analyser uses infix residual subtrees because
+they are convenient stable references to extracted residual expressions. A
+future cleanup should push value and derivative evaluation down to a single
+expression-level subsystem that can evaluate either whole postfix expressions
+or partial postfix subexpressions from the same routines. In that design, LSQ
+recognition could tag residuals by postfix side/root token, and residual values,
+gradients, and higher derivatives would all come from shared expression
+evaluation code rather than LSQ-specific recursive evaluators.
+
 ## Solver Algorithm Snapshot
 
 A4SQP currently implements an elastic line-search SQP method:
@@ -209,6 +234,15 @@ positive-semidefinite step model before QP assembly.
 Restoration, acceptable convergence, KKT convergence, multiplier recovery, and
 bound-stationarity diagnostics are core policy. The adapters only pass options
 and relay the resulting status/progress data.
+
+An ASCEND-only experimental parameter, `try_lsq`, can be set to `OFF`, `GAUSS`,
+or `LM`. The default is `LM`. When set to `GAUSS` or `LM`, the ASCEND adapter
+asks the system layer to recognise an unconstrained sum-of-squares objective and
+build a residual-expression view. If that succeeds, `liba4sqp.so` runs the
+core least-squares loop using adapter-supplied residual/Jacobian callbacks. If
+recognition is not applicable, the ordinary SQP path is used. The least-squares
+step policy remains core-owned; the adapter only performs expression analysis,
+value updates for callback evaluation, and status/progress translation.
 
 ## Public C API
 

@@ -11,6 +11,7 @@
 #include "a4sqp_core.h"
 #include "asc_a4sqp_diag.h"
 #include "a4sqp_hessian.h"
+#include "a4sqp_lsq.h"
 #include "asc_a4sqp_internal.h"
 #include "asc_a4sqp_report.h"
 
@@ -26,6 +27,7 @@
 #include <ascend/general/ltmatrix.h>
 #include <ascend/general/mem.h>
 #include <ascend/system/relman.h>
+#include <ascend/system/lsq.h>
 #include <ascend/system/slv_common.h>
 #include <ascend/system/slv_param.h>
 #include <ascend/system/slv_stdcalls.h>
@@ -690,6 +692,221 @@ static void asc_a4sqp_apply_solve_stats(
 	}
 }
 
+struct A4SqpAscendLsqCtx {
+	slv_system_t server;
+	struct A4SqpSystem *sys;
+	const struct system_lsq_view *lsq;
+};
+
+static int asc_a4sqp_lsq_col_from_sindex(const struct A4SqpView *view, int sindex){
+	int32 i;
+	if(view == NULL || view->var_sindex == NULL){
+		return -1;
+	}
+	for(i = 0; i < view->n_var; ++i){
+		if(view->var_sindex[i] == sindex){
+			return i;
+		}
+	}
+	return -1;
+}
+
+static int asc_a4sqp_lsq_eval_residuals(void *userdata, const real64 *x, real64 *residuals){
+	struct A4SqpAscendLsqCtx *ctx = (struct A4SqpAscendLsqCtx *)userdata;
+	int32 i;
+	if(ctx == NULL || ctx->sys == NULL || residuals == NULL){
+		return 1;
+	}
+	if(x == NULL || ctx->sys->view.vars == NULL || ctx->sys->view.n_var != ctx->sys->x_n){
+		return 1;
+	}
+	for(i = 0; i < ctx->sys->view.n_var; ++i){
+		var_set_value((struct var_variable *)ctx->sys->view.vars[i],x[i]);
+	}
+	return system_lsq_eval_residuals(ctx->server,residuals);
+}
+
+static int asc_a4sqp_lsq_eval_jacobian_row(
+	void *userdata,
+	int32 row,
+	int32 capacity,
+	int32 *columns,
+	real64 *values,
+	int32 *nnz
+){
+	struct A4SqpAscendLsqCtx *ctx = (struct A4SqpAscendLsqCtx *)userdata;
+	int *sindex_columns = NULL;
+	unsigned long row_nnz = 0;
+	unsigned long i;
+	if(ctx == NULL || ctx->sys == NULL || nnz == NULL || capacity < 0){
+		return 1;
+	}
+	*nnz = 0;
+	if(capacity > 0){
+		sindex_columns = ASC_NEW_ARRAY_OR_NULL(int,capacity);
+		if(sindex_columns == NULL){
+			return 1;
+		}
+	}
+	if(system_lsq_eval_jacobian_row(
+		ctx->server,
+		(unsigned long)row,
+		sindex_columns,
+		values,
+		(unsigned long)capacity,
+		&row_nnz
+	)){
+		ASC_FREE(sindex_columns);
+		return 1;
+	}
+	if(row_nnz > (unsigned long)capacity){
+		ASC_FREE(sindex_columns);
+		return 1;
+	}
+	for(i = 0; i < row_nnz; ++i){
+		int col = asc_a4sqp_lsq_col_from_sindex(&ctx->sys->view,sindex_columns[i]);
+		if(col < 0){
+			ASC_FREE(sindex_columns);
+			return 1;
+		}
+		columns[i] = col;
+	}
+	*nnz = (int32)row_nnz;
+	ASC_FREE(sindex_columns);
+	return 0;
+}
+
+static int asc_a4sqp_lsq_progress(void *userdata, const struct A4SqpLsqIteration *iteration){
+	struct A4SqpAscendLsqCtx *ctx = (struct A4SqpAscendLsqCtx *)userdata;
+	char message[256];
+	if(ctx == NULL || ctx->sys == NULL || iteration == NULL){
+		return 1;
+	}
+	ctx->sys->status.iteration = iteration->iter;
+	ctx->sys->last_phase = A4SQP_CORE_PHASE_REGULAR;
+	ctx->sys->last_merit_after = iteration->objective;
+	ctx->sys->last_kkt_error = iteration->grad_inf;
+	ctx->sys->last_dual_infeasibility = iteration->grad_inf;
+	ctx->sys->last_step_norm = iteration->step_norm;
+	ctx->sys->last_regularization_size = iteration->lambda;
+	ctx->sys->last_alpha = iteration->alpha;
+	snprintf(
+		message,
+		sizeof(message),
+		"lsq_iter=%ld obj=%g grad=%g lambda=%g alpha=%g step=%g accepted=%d",
+		(long)iteration->iter,
+		iteration->objective,
+		iteration->grad_inf,
+		iteration->lambda,
+		iteration->alpha,
+		iteration->step_norm,
+		iteration->accepted
+	);
+	a4sqp_report_progress(&ctx->sys->params,message);
+	return 0;
+}
+
+static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys){
+	const char *mode_name;
+	struct RelationLeastSquaresAnalysis analysis;
+	const struct system_lsq_view *lsq;
+	struct A4SqpAscendLsqCtx ctx;
+	struct A4SqpLsqProblem problem;
+	struct A4SqpLsqOptions options;
+	struct A4SqpLsqStats stats;
+	real64 *weights = NULL;
+	enum A4SqpLsqStatus status;
+	unsigned long i;
+
+	if(sys == NULL || server == NULL){
+		return -1;
+	}
+	mode_name = SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_TRY_LSQ);
+	if(mode_name == NULL || strcmp(mode_name,"OFF") == 0){
+		return -1;
+	}
+	if(sys->view.obj == NULL || sys->view.n_rel != 0){
+		return -1;
+	}
+	if(!system_analyse_lsq_objective(server,SYSTEM_LSQ_ANALYSE_BUILD_VIEW,&analysis)){
+		return -1;
+	}
+	lsq = system_get_lsq_view(server);
+	if(lsq == NULL || lsq->nresiduals == 0){
+		return -1;
+	}
+	weights = ASC_NEW_ARRAY_OR_NULL(real64,lsq->nresiduals);
+	if(weights == NULL){
+		return 1;
+	}
+	for(i = 0; i < lsq->nresiduals; ++i){
+		weights[i] = lsq->residuals[i].weight;
+	}
+
+	memset(&ctx,0,sizeof(ctx));
+	ctx.server = server;
+	ctx.sys = sys;
+	ctx.lsq = lsq;
+
+	memset(&problem,0,sizeof(problem));
+	problem.n_var = sys->view.n_var;
+	problem.n_res = (int32)lsq->nresiduals;
+	problem.weights = weights;
+	problem.x_lower = sys->view.var_lower;
+	problem.x_upper = sys->view.var_upper;
+	problem.userdata = &ctx;
+	problem.eval_residuals = asc_a4sqp_lsq_eval_residuals;
+	problem.eval_jacobian_row = asc_a4sqp_lsq_eval_jacobian_row;
+	problem.progress = SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_PROGRESS_CALLBACKS)
+		? asc_a4sqp_lsq_progress
+		: NULL;
+
+	memset(&options,0,sizeof(options));
+	options.mode = strcmp(mode_name,"LM") == 0 ? A4SQP_LSQ_MODE_LM : A4SQP_LSQ_MODE_GAUSS;
+	options.max_iter = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_ITER);
+	options.max_backtrack = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_BACKTRACK);
+	options.grad_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
+	options.step_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_STEP_TOL);
+
+	memset(&stats,0,sizeof(stats));
+	status = a4sqp_lsq_solve(&problem,&options,sys->x,&stats);
+	ASC_FREE(weights);
+	if(a4sqp_x_push_to_ascend(sys,sys->x) || asc_a4sqp_build_view(sys,server)){
+		sys->status.ok = FALSE;
+		sys->status.calc_ok = FALSE;
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to sync the final least-squares iterate back to ASCEND.");
+		return 1;
+	}
+	a4sqp_update_metrics(sys);
+	sys->status.iteration = stats.iterations;
+	sys->last_merit_after = stats.objective;
+	sys->last_kkt_error = stats.grad_inf;
+	sys->last_dual_infeasibility = stats.grad_inf;
+	sys->last_step_norm = stats.step_norm;
+	sys->last_regularization_size = stats.lambda;
+	if(status == A4SQP_LSQ_SOLVED){
+		sys->status.converged = TRUE;
+		sys->status.diverged = FALSE;
+		sys->status.iteration_limit_exceeded = FALSE;
+		sys->status.ready_to_solve = FALSE;
+		asc_a4sqp_report_view(sys);
+		return 0;
+	}
+	if(status == A4SQP_LSQ_MAX_ITER || status == A4SQP_LSQ_LINEAR_ERROR){
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,
+			"A4SQP least-squares attempt using %s did not converge; falling back to SQP.",
+			mode_name
+		);
+		return -1;
+	}
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,
+		"A4SQP least-squares attempt using %s failed with status %d; falling back to SQP.",
+		mode_name,
+		(int)status
+	);
+	return -1;
+}
+
 static int a4sqp_presolve(slv_system_t server, SlvClientToken asys){
 	struct A4SqpSystem *sys = (struct A4SqpSystem *)asys;
 	int32 sorted_rels = 0;
@@ -790,6 +1007,17 @@ static int a4sqp_solve(slv_system_t server, SlvClientToken asys){
 	memset(&stats,0,sizeof(stats));
 	ctx.server = server;
 	ctx.sys = sys;
+
+	{
+		int lsq_status = asc_a4sqp_try_lsq_solve(server,sys);
+		if(lsq_status == 0){
+			return 0;
+		}
+		if(lsq_status > 0){
+			return 1;
+		}
+	}
+
 	hess_nnz = sys->view.obj != NULL ? a4sqp_hessian_lower_triangle_nnz(sys->view.n_var) : 0;
 	if(sys->view.n_rel > 0){
 		g = ASC_NEW_ARRAY_OR_NULL(real64,sys->view.n_rel);

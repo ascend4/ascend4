@@ -7,6 +7,7 @@ cutest_root=${CUTEST:-/home/john/CUTEst}
 
 mkdir -p "${cutest_root}/src/a4sqp" "${cutest_root}/src/ipoptc" "${cutest_root}/packages/defaults"
 ln -sf "${script_dir}/a4sqp_main.c" "${cutest_root}/src/a4sqp/a4sqp_main.c"
+ln -sf "${script_dir}/a4sqp_cutest_lsq.F90" "${cutest_root}/src/a4sqp/a4sqp_cutest_lsq.F90"
 ln -sf "${script_dir}/makemaster" "${cutest_root}/src/a4sqp/makemaster"
 cp "${script_dir}/package_default_a4sqp" "${cutest_root}/packages/defaults/a4sqp"
 chmod +x "${cutest_root}/packages/defaults/a4sqp"
@@ -18,6 +19,7 @@ chmod +x "${cutest_root}/packages/defaults/ipoptc"
 cat <<EOF
 Installed CUTEst A4SQP/IPOPTC package hooks:
   ${cutest_root}/src/a4sqp/a4sqp_main.c -> ${script_dir}/a4sqp_main.c
+  ${cutest_root}/src/a4sqp/a4sqp_cutest_lsq.F90 -> ${script_dir}/a4sqp_cutest_lsq.F90
   ${cutest_root}/src/a4sqp/makemaster -> ${script_dir}/makemaster
   ${cutest_root}/packages/defaults/a4sqp
   ${cutest_root}/src/ipoptc/ipoptc_main.c -> ${script_dir}/ipoptc_main.c

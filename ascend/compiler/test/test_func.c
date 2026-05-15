@@ -113,6 +113,22 @@ static void test_test1(void){
 	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,1),-1/log(10),EPS);
 	CU_ASSERT(0==CmpDimen(FuncDimens(f),Dimensionless()));
 
+#ifdef HAVE_ERF
+	f = LookupFunc("erfc_scaled");
+	CU_ASSERT(NULL != f);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,0),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,0),-F_ERF_COEF,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,0),2,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,1),0.427583576155807,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,1),-0.273212014783899,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,1),0.308743122743817,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,30),0.018795888861417,1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,30),-0.000625835410507,1e-12);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,30),4.165309239468e-05,1e-12);
+	CU_ASSERT(0==CmpDimen(FuncDimens(f),Dimensionless()));
+	CU_ASSERT(F_ERFC_SCALED==FuncId(f));
+#endif
+
 	// trig
 
 	f = LookupFunc("sin");
@@ -357,4 +373,3 @@ static void test_test1(void){
 	T(test1)
 
 REGISTER_TESTS_SIMPLE(compiler_func, TESTS)
-
