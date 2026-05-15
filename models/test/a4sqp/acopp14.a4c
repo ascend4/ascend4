@@ -580,9 +580,9 @@ METHOD on_load;
 	OPTION max_iter 300;
 	OPTION kkt_convergence TRUE;
 	OPTION acceptable_iter 5;
-	OPTION hessian 'EXACT_LAGRANGIAN';
+	OPTION hessian 'BFGS';
 	OPTION restoration TRUE;
-	OPTION scaleopt 'ROW_2NORM';
+	OPTION scaleopt 'NONE';
 END on_load;
 
 METHOD on_load_test;

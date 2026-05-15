@@ -43,6 +43,57 @@ Current important gaps are:
 - `OpenA4SqpOutputFile` exists for IPOPT API compatibility but is not yet a
   useful reporting sink.
 
+## CUTEst Regression Notes
+
+The current confirmed rebuilt result for the broad 89-problem CUTEst tracking
+set is 66/89 genuine A4SQP exact-Lagrangian passes plus 6 suspect high-KKT
+least-squares exits. This was measured on 2026-05-16 after restoring the solver
+sources to the `99928f2b` state and forcing regenerated CUTEst problem/package
+objects.
+
+Important correction: `99928f2b` and nearby commits carried reports claiming
+69/89, 70/89, or 71/89, but those counts have not reproduced under clean
+`--rebuild` CUTEst runs. Treat those older markdown counts as suspect until
+proven otherwise with complete rebuilt TSV output.
+
+Recent failed experiment:
+
+- An apparent improvement to ACOPP14, BATCH, CANTILVR, and related cases was
+  seen while changing restoration behaviour and exact-Lagrangian Hessian
+  multiplier handling.
+- A full rebuilt CUTEst rerun did not reproduce the apparent win. The rebuilt
+  result fell to 65/89 genuine A4SQP exact-Lagrangian passes, with ACOPP14,
+  BATCH, CANTILVR, BT13, and several related cases still failing.
+- Restoring the source to the `99928f2b` 69/89 checkpoint and rerunning the
+  full matrix with clean rebuilt CUTEst objects gave 66/89, not 69/89. The
+  three old report passes not reproduced were BROWNDEN, BT13, and BT5.
+- A focused clean rebuild of `11920c19` reproduced BT5 passing, but BROWNDEN
+  still failed and BT13 timed out. That older state also lost BT1, BT7, and
+  BT12, so its useful behaviour is a real trade-off rather than a net recovery.
+- A narrow immediate-restoration-trigger fix is retained for the ASCEND CUnit
+  `a4sqp_bt13_restoration_trigger_zero` test. CUTEst uses the normal default
+  restoration trigger, so this does not explain the 66/89 versus 69/89
+  discrepancy; a focused rebuilt CUTEst check of BROWNDEN, BT13, and BT5
+  remained failing with that fix applied.
+- The most damaging change was feeding the exact-Lagrangian Hessian callback
+  from recovered stationarity multipliers, with fallback to unsigned scaled
+  row duals. The current 66/89 baseline uses the signed HiGHS row-dual convention
+  expected by the CUTEst/IPOPT-style Hessian callback path.
+- Changing restoration trigger semantics also affected the result set and
+  should not be reintroduced as default behaviour without a full rebuilt
+  matrix run.
+- The apparent ACOPP14/BATCH/CANTILVR gains remain a useful lead, but should
+  be reintroduced only behind explicit core solver options and validated with
+  `CUTEST_REBUILD=1` or the default rebuilt CUTEst runner path.
+
+Potential future switches for controlled experiments:
+
+- exact-Lagrangian multiplier source: signed QP row duals versus recovered NLP
+  stationarity multipliers;
+- active-bound or bound-target restoration probe enabled/disabled;
+- restoration trigger policy: immediate, stall-count gated, or infeasibility
+  magnitude gated.
+
 ## Current Direction
 
 A4SQP is now structured as one portable SQP solver library with thin adapters.

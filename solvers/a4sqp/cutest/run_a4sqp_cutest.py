@@ -372,7 +372,19 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--ipopt-tol", type=float)
     parser.add_argument("--ipopt-hessian", default="limited-memory")
     parser.add_argument("--ipopt-print-level", type=int, default=0)
-    parser.add_argument("--rebuild", action="store_true")
+    parser.add_argument(
+        "--rebuild",
+        dest="rebuild",
+        action="store_true",
+        default=os.environ.get("CUTEST_REBUILD", "1") not in ("", "0", "false", "False"),
+        help="Force runcutest to rebuild generated problem and package objects (default: on).",
+    )
+    parser.add_argument(
+        "--no-rebuild",
+        dest="rebuild",
+        action="store_false",
+        help="Allow runcutest to reuse existing generated objects.",
+    )
     parser.add_argument("--keep", action="store_true")
     parser.add_argument("--timeout-sec", type=float, help="Per runcutest invocation timeout")
     parser.add_argument("--jobs", type=int, default=1, help="Number of parallel runcutest worker processes")
