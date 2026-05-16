@@ -40,6 +40,7 @@ struct A4SqpCOptions {
 	int trust_unconstrained;
 	int kkt_convergence;
 	int restoration;
+	int active_bound_restoration;
 	int restoration_trigger_iter;
 	int restoration_max_iter;
 	double restoration_improve;
@@ -63,6 +64,7 @@ struct A4SqpCOptions {
 	double lower_inf;
 	double upper_inf;
 	char hessian[32];
+	char exact_lagrangian_multipliers[32];
 	char scaleopt[32];
 };
 
@@ -169,6 +171,7 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->trust_unconstrained = 1;
 	opt->kkt_convergence = 0;
 	opt->restoration = 0;
+	opt->active_bound_restoration = 1;
 	opt->restoration_trigger_iter = 3;
 	opt->restoration_max_iter = 0;
 	opt->restoration_improve = 1e-3;
@@ -192,6 +195,7 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->lower_inf = A4SQP_C_DEFAULT_LOWER_INF;
 	opt->upper_inf = A4SQP_C_DEFAULT_UPPER_INF;
 	strcpy(opt->hessian,"BFGS");
+	strcpy(opt->exact_lagrangian_multipliers,"ROW_DUAL_SIGNED");
 	strcpy(opt->scaleopt,"NONE");
 }
 
@@ -365,6 +369,21 @@ A4SqpBool AddA4SqpStrOption(A4SqpProblem problem, char *keyword, char *val){
 		}
 		if(a4sqp_c_streq(val,"RELNOM")){
 			strcpy(p->opt.scaleopt,"RELNOM");
+			return A4SQP_TRUE;
+		}
+		return A4SQP_FALSE;
+	}
+	if(a4sqp_c_streq(keyword,"exact_lagrangian_multipliers")){
+		if(a4sqp_c_streq(val,"ROW_DUAL_SIGNED") || a4sqp_c_streq(val,"SIGNED_ROW_DUAL")){
+			strcpy(p->opt.exact_lagrangian_multipliers,"ROW_DUAL_SIGNED");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"ROW_DUAL") || a4sqp_c_streq(val,"UNSIGNED_ROW_DUAL")){
+			strcpy(p->opt.exact_lagrangian_multipliers,"ROW_DUAL");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"RECOVERED")){
+			strcpy(p->opt.exact_lagrangian_multipliers,"RECOVERED");
 			return A4SQP_TRUE;
 		}
 		return A4SQP_FALSE;
@@ -571,6 +590,10 @@ A4SqpBool AddA4SqpIntOption(A4SqpProblem problem, char *keyword, A4SqpInt val){
 	}
 	if(a4sqp_c_streq(keyword,"restoration")){
 		p->opt.restoration = val != 0;
+		return A4SQP_TRUE;
+	}
+	if(a4sqp_c_streq(keyword,"active_bound_restoration")){
+		p->opt.active_bound_restoration = val != 0;
 		return A4SQP_TRUE;
 	}
 	if(a4sqp_c_streq(keyword,"restoration_trigger_iter")){
@@ -1361,10 +1384,21 @@ static int a4sqp_c_hess_update_exact(struct A4SqpCSolve *solve, const double *x)
 		for(k = 0; k < p->m; ++k){
 			double row_dual = solve->lambda != NULL ? solve->lambda[k] : 0.0;
 			double rel_scale = solve->view.rel_scale != NULL ? solve->view.rel_scale[k] : 1.0;
-			/* CUTEst/IPOPT-style eval_h uses the opposite constraint multiplier
-			 * sign to the HiGHS row-dual convention used internally here.
-			 */
-			lambda[k] = -row_dual * rel_scale;
+			if(
+				a4sqp_c_streq(p->opt.exact_lagrangian_multipliers,"RECOVERED")
+				&& solve->lambda_est.ready
+				&& solve->lambda_est.lambda != NULL
+				&& solve->lambda_est.n == p->m
+			){
+				lambda[k] = solve->lambda_est.lambda[k];
+			}else if(a4sqp_c_streq(p->opt.exact_lagrangian_multipliers,"ROW_DUAL")){
+				lambda[k] = row_dual * rel_scale;
+			}else{
+				/* CUTEst/IPOPT-style eval_h uses the opposite constraint multiplier
+				 * sign to the HiGHS row-dual convention used internally here.
+				 */
+				lambda[k] = -row_dual * rel_scale;
+			}
 		}
 	}
 	if(!p->eval_h(
@@ -2288,7 +2322,7 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		if(a4sqp_c_try_stationarity_correction(solve,x)){
 			a4sqp_c_refresh_stats(solve,iter + 1);
 		}
-		if(a4sqp_c_try_active_bound_restoration(solve,x,&line_options,&line_ops,&line_ctx)){
+		if(p->opt.active_bound_restoration && a4sqp_c_try_active_bound_restoration(solve,x,&line_options,&line_ops,&line_ctx)){
 			a4sqp_c_refresh_stats(solve,iter + 1);
 		}
 		maxvio = p->stats.max_constraint_violation;

@@ -170,13 +170,13 @@ region", "reset BFGS", or "accept step". Those are core solver decisions.
 
 A4SQP now has an experimental core least-squares loop in `liba4sqp.so`
 (`solvers/a4sqp/a4sqp_lsq.c`). It is not yet part of the IPOPT-like public C API.
-The current integration is ASCEND-specific and opt-in through the solver
-parameter:
+The ASCEND integration is opt-in through the solver parameter:
 
 ```text
 OPTION try_lsq 'OFF';    disable the LSQ path
 OPTION try_lsq 'GAUSS';  Gauss-Newton
 OPTION try_lsq 'LM';     Levenberg-Marquardt damping, default
+OPTION lsq_max_iter 0;    reuse max_iter for the LSQ pre-solve budget
 ```
 
 When enabled, `liba4sqp_ascend.so` asks the ASCEND system layer to classify and
@@ -189,6 +189,14 @@ expression structure, evaluates residual expressions and residual-Jacobian rows
 at trial `x` values, and maps ASCEND variables to A4SQP vector columns. Step
 acceptance, damping, bound projection, convergence tests, and fallback status
 are core-owned.
+
+The CUTEst profiling driver has a separate least-squares recogniser for SIF
+objective groups and exposes LSQ experiment switches:
+`--lsq-max-iter N` and `--lsq-fallback-start original|improved`. These are
+adapter-level controls around the experimental LSQ pre-solve handoff, not new
+callbacks into the core SQP step machinery. They exist to make cases such as
+BROWNDEN reproducible without relying on stale builds or implicit adapter
+side-effects.
 
 ## Lifecycle
 

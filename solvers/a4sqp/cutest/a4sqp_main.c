@@ -52,6 +52,9 @@ struct A4SqpCutestContext {
 	int lsq_nres;
 	int lsq_max_row_nnz;
 	int lsq_probe_status;
+	int lsq_status;
+	int lsq_handoff_improved;
+	struct A4SqpLsqStats lsq_stats;
 	double *lsq_weights;
 };
 
@@ -179,7 +182,9 @@ static int a4sqp_cutest_try_lsq(
 	enum A4SqpApplicationReturnStatus *solve_status
 ){
 	const char *mode_name = a4sqp_cutest_env_string("A4SQP_TRY_LSQ","OFF");
+	const char *fallback_start = a4sqp_cutest_env_string("A4SQP_LSQ_FALLBACK_START","ORIGINAL");
 	int probe_status = 0;
+	int keep_improved = 0;
 	struct A4SqpLsqProblem problem;
 	struct A4SqpLsqOptions options;
 	struct A4SqpLsqStats lsq_stats;
@@ -234,7 +239,10 @@ static int a4sqp_cutest_try_lsq(
 
 	memset(&options,0,sizeof(options));
 	options.mode = strcmp(mode_name,"GAUSS") == 0 ? A4SQP_LSQ_MODE_GAUSS : A4SQP_LSQ_MODE_LM;
-	options.max_iter = a4sqp_cutest_env_int("A4SQP_MAX_ITER",200);
+	options.max_iter = a4sqp_cutest_env_int(
+		"A4SQP_LSQ_MAX_ITER",
+		a4sqp_cutest_env_int("A4SQP_MAX_ITER",200)
+	);
 	options.max_backtrack = a4sqp_cutest_env_int("A4SQP_MAX_BACKTRACK",20);
 	options.grad_tol = a4sqp_cutest_env_double("A4SQP_TOL",1e-7);
 	options.step_tol = a4sqp_cutest_env_double("A4SQP_STEP_TOL",1e-8);
@@ -242,6 +250,8 @@ static int a4sqp_cutest_try_lsq(
 	memset(&lsq_stats,0,sizeof(lsq_stats));
 	memcpy(ctx->hess_x_work,x,(size_t)ctx->n * sizeof(*x));
 	lsq_status = a4sqp_lsq_solve(&problem,&options,(real64 *)x,&lsq_stats);
+	ctx->lsq_status = (int)lsq_status;
+	ctx->lsq_stats = lsq_stats;
 	memcpy(ctx->hess_x_work,x,(size_t)ctx->n * sizeof(*x));
 	memset(stats,0,sizeof(*stats));
 	stats->iterations = lsq_stats.iterations;
@@ -263,12 +273,32 @@ static int a4sqp_cutest_try_lsq(
 		FREE(x_backup);
 		return 0;
 	}
-	memcpy(x,x_backup,(size_t)ctx->n * sizeof(*x));
+	keep_improved = (lsq_status == A4SQP_LSQ_MAX_ITER || lsq_status == A4SQP_LSQ_LINEAR_ERROR)
+		&& fallback_start != NULL
+		&& (
+			strcmp(fallback_start,"IMPROVED") == 0
+			|| strcmp(fallback_start,"improved") == 0
+			|| strcmp(fallback_start,"1") == 0
+		);
+	if(!keep_improved){
+		memcpy(x,x_backup,(size_t)ctx->n * sizeof(*x));
+		memcpy(ctx->hess_x_work,x,(size_t)ctx->n * sizeof(*x));
+	}else{
+		ctx->lsq_handoff_improved = 1;
+	}
 	FREE(x_backup);
 	fprintf(stderr,
-		"A4SQP-CUTEst: least-squares attempt using %s did not converge (status=%d); falling back to SQP.\n",
+		"A4SQP-CUTEst: least-squares attempt using %s did not converge "
+		"(status=%d, iter=%d, obj=%.17g, grad=%.17g, step=%.17g, lambda=%.17g); "
+		"falling back to SQP from %s point.\n",
 		mode_name,
-		(int)lsq_status
+		(int)lsq_status,
+		lsq_stats.iterations,
+		(double)lsq_stats.objective,
+		(double)lsq_stats.grad_inf,
+		(double)lsq_stats.step_norm,
+		(double)lsq_stats.lambda,
+		keep_improved ? "improved" : "original"
 	);
 	return -1;
 }
@@ -580,6 +610,7 @@ int MAINENTRY(void){
 
 	memset(&ctx,0,sizeof(ctx));
 	ctx.lsq_probe_status = -1;
+	ctx.lsq_status = -1;
 	FORTRAN_open(&funit,fname,&ierr);
 	if(ierr != 0){
 		fprintf(stderr,"A4SQP-CUTEst: failed to open OUTSDIF.d\n");
@@ -758,6 +789,7 @@ int MAINENTRY(void){
 	AddA4SqpIntOption(problem,"trust_unconstrained",a4sqp_cutest_env_int("A4SQP_TRUST_UNCONSTRAINED",0));
 	AddA4SqpIntOption(problem,"kkt_convergence",a4sqp_cutest_env_int("A4SQP_KKT_CONVERGENCE",0));
 	AddA4SqpIntOption(problem,"restoration",a4sqp_cutest_env_int("A4SQP_RESTORATION",0));
+	AddA4SqpIntOption(problem,"active_bound_restoration",a4sqp_cutest_env_int("A4SQP_ACTIVE_BOUND_RESTORATION",1));
 	AddA4SqpIntOption(problem,"restoration_trigger_iter",a4sqp_cutest_env_int("A4SQP_RESTORATION_TRIGGER_ITER",3));
 	AddA4SqpIntOption(problem,"restoration_max_iter",a4sqp_cutest_env_int("A4SQP_RESTORATION_MAX_ITER",0));
 	AddA4SqpNumOption(problem,"tol",a4sqp_cutest_env_double("A4SQP_TOL",1e-7));
@@ -777,6 +809,7 @@ int MAINENTRY(void){
 	AddA4SqpNumOption(problem,"qp_time_limit",a4sqp_cutest_env_double("A4SQP_QP_TIME_LIMIT",0.0));
 	AddA4SqpIntOption(problem,"qp_iteration_limit",a4sqp_cutest_env_int("A4SQP_QP_ITERATION_LIMIT",0));
 	AddA4SqpStrOption(problem,"hessian",(char *)a4sqp_cutest_env_string("A4SQP_HESSIAN","BFGS"));
+	AddA4SqpStrOption(problem,"exact_lagrangian_multipliers",(char *)a4sqp_cutest_env_string("A4SQP_EXACT_LAGRANGIAN_MULTIPLIERS","ROW_DUAL_SIGNED"));
 	AddA4SqpStrOption(problem,"scaleopt",(char *)a4sqp_cutest_env_string("A4SQP_SCALEOPT","ROW_2NORM"));
 	solve_status = A4SqpSolve(
 		problem,
@@ -818,6 +851,16 @@ report:
 		ctx.lsq_nres,
 		ctx.lsq_probe_status
 	);
+	printf("\"lsq_status\":%d,\"lsq_handoff_improved\":%d,",ctx.lsq_status,ctx.lsq_handoff_improved);
+	printf("\"lsq_iterations\":%d,\"lsq_objective\":",ctx.lsq_stats.iterations);
+	a4sqp_cutest_json_number((double)ctx.lsq_stats.objective);
+	printf(",\"lsq_grad_inf\":");
+	a4sqp_cutest_json_number((double)ctx.lsq_stats.grad_inf);
+	printf(",\"lsq_step_norm\":");
+	a4sqp_cutest_json_number((double)ctx.lsq_stats.step_norm);
+	printf(",\"lsq_lambda\":");
+	a4sqp_cutest_json_number((double)ctx.lsq_stats.lambda);
+	printf(",");
 	printf("\"status\":%d,\"objective\":",(int)solve_status);
 	a4sqp_cutest_json_number((double)obj);
 	printf(",");

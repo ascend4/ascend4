@@ -46,10 +46,11 @@ Current important gaps are:
 ## CUTEst Regression Notes
 
 The current confirmed rebuilt result for the broad 89-problem CUTEst tracking
-set is 66/89 genuine A4SQP exact-Lagrangian passes plus 6 suspect high-KKT
-least-squares exits. This was measured on 2026-05-16 after restoring the solver
-sources to the `99928f2b` state and forcing regenerated CUTEst problem/package
-objects.
+set is 68/89 genuine A4SQP exact-Lagrangian passes using the experimental LSQ
+handoff profile (`--try-lsq LM --lsq-fallback-start improved
+--lsq-max-iter 1000`). This was measured on 2026-05-16 with regenerated CUTEst
+problem/package objects. The previous signed-row-dual baseline without this
+handoff profile was 66/89 plus 6 suspect high-KKT LS exits.
 
 Important correction: `99928f2b` and nearby commits carried reports claiming
 69/89, 70/89, or 71/89, but those counts have not reproduced under clean
@@ -77,14 +78,36 @@ Recent failed experiment:
   remained failing with that fix applied.
 - The most damaging change was feeding the exact-Lagrangian Hessian callback
   from recovered stationarity multipliers, with fallback to unsigned scaled
-  row duals. The current 66/89 baseline uses the signed HiGHS row-dual convention
-  expected by the CUTEst/IPOPT-style Hessian callback path.
+  row duals. The rebuilt signed-row-dual baseline uses the signed HiGHS row-dual
+  convention expected by the CUTEst/IPOPT-style Hessian callback path.
 - Changing restoration trigger semantics also affected the result set and
   should not be reintroduced as default behaviour without a full rebuilt
   matrix run.
 - The apparent ACOPP14/BATCH/CANTILVR gains remain a useful lead, but should
   be reintroduced only behind explicit core solver options and validated with
   `CUTEST_REBUILD=1` or the default rebuilt CUTEst runner path.
+
+Focused follow-up on BROWNDEN and ACOPP14, 2026-05-16:
+
+- BROWNDEN is a confirmed least-squares handoff case. The ASCEND-translated
+  model passed because a non-converged LSQ pre-solve left its improved iterate
+  in place before SQP fallback. The CUTEst adapter had been restoring the
+  original point and therefore lost that benefit.
+- The CUTEst runner now exposes `--lsq-fallback-start original|improved` and
+  `--lsq-max-iter N` so this behaviour is explicit and reproducible. With a
+  clean rebuilt CUTEst run, `BROWNDEN` solves strictly using
+  `--try-lsq LM --lsq-fallback-start improved --lsq-max-iter 1000`
+  (`kkt_error ~= 1.2e-8` after 7 SQP iterations following the LSQ handoff).
+- ACOPP14 remains unsolved. BFGS or recovered exact-Lagrangian multipliers avoid
+  driver timeouts and produce deterministic max-iteration failures. Disabling
+  active-bound restoration improves the 800-iteration BFGS result from
+  `kkt_error ~= 937` to `kkt_error ~= 0.287` with acceptable feasibility, but
+  longer 3000-iteration runs stall at the same stationarity level. Immediate
+  restoration entry can reduce KKT to about `0.093` at 800 iterations but leaves
+  feasibility outside the current threshold and worsens on longer runs.
+- These ACOPP14 results suggest the remaining issue is not stale runner state
+  or parameter plumbing. It is a core stationarity/active-bound/multiplier
+  quality problem near a feasible point.
 
 Potential future switches for controlled experiments:
 
@@ -93,6 +116,9 @@ Potential future switches for controlled experiments:
 - active-bound or bound-target restoration probe enabled/disabled;
 - restoration trigger policy: immediate, stall-count gated, or infeasibility
   magnitude gated.
+- LSQ-to-SQP handoff policy: restore original point versus continue from the
+  best LSQ iterate when the LSQ pre-solve improves the point but does not meet
+  its own convergence test.
 
 ## Current Direction
 

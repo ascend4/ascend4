@@ -625,6 +625,7 @@ static int asc_a4sqp_set_core_options(A4SqpProblem problem, struct A4SqpSystem *
 	AddA4SqpIntOption(problem,"trust_unconstrained",SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_TRUST_UNCONSTRAINED));
 	AddA4SqpIntOption(problem,"kkt_convergence",SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_KKT_CONVERGENCE));
 	AddA4SqpIntOption(problem,"restoration",SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_RESTORATION));
+	AddA4SqpIntOption(problem,"active_bound_restoration",SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_ACTIVE_BOUND_RESTORATION));
 	AddA4SqpIntOption(problem,"restoration_trigger_iter",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_RESTORATION_TRIGGER_ITER));
 	AddA4SqpIntOption(problem,"restoration_max_iter",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_RESTORATION_MAX_ITER));
 	AddA4SqpIntOption(problem,"print_level",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_VERBOSITY));
@@ -654,6 +655,7 @@ static int asc_a4sqp_set_core_options(A4SqpProblem problem, struct A4SqpSystem *
 	AddA4SqpNumOption(problem,"hess_fallback_ratio",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_HESS_FALLBACK_RATIO));
 	AddA4SqpNumOption(problem,"bound_push",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_BOUND_PUSH));
 	AddA4SqpStrOption(problem,"hessian",SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_HESS_MODE));
+	AddA4SqpStrOption(problem,"exact_lagrangian_multipliers",SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_EXACT_LAGRANGIAN_MULTIPLIERS));
 	return 0;
 }
 
@@ -863,7 +865,10 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 
 	memset(&options,0,sizeof(options));
 	options.mode = strcmp(mode_name,"LM") == 0 ? A4SQP_LSQ_MODE_LM : A4SQP_LSQ_MODE_GAUSS;
-	options.max_iter = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_ITER);
+	options.max_iter = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_LSQ_MAX_ITER);
+	if(options.max_iter <= 0){
+		options.max_iter = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_ITER);
+	}
 	options.max_backtrack = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_BACKTRACK);
 	options.grad_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
 	options.step_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_STEP_TOL);

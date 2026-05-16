@@ -16,7 +16,7 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | Acceptable tolerance | 1e-5 |
 | Parallel jobs | 6 |
 | Problem-set source | solvers/a4sqp/cutest/problem_sets/broad_stratified_89.tsv |
-| Notes | Full rebuilt CUTEst rerun on 2026-05-16 after restoring solver sources to the 99928f2b 69/89 checkpoint for default CUTEst settings. The old 69/89 report did not reproduce under clean rebuild; confirmed exact-Lagrangian result is 66/89 plus 6 suspect high-KKT LS exits. A later immediate-trigger fix was retained for CUnit but does not affect this default-trigger CUTEst matrix. |
+| Notes | Full rebuilt CUTEst rerun on 2026-05-16. A4SQP profiles use LSQ pre-solve handoff experiments (--try-lsq LM --lsq-fallback-start improved --lsq-max-iter 1000) with max_iter 200 for the SQP phase; this adds BROWNDEN to the exact-Hessian passing set without losing any previously checked-in genuine A4SQP passes. |
 
 ## Profile Summary
 
@@ -24,9 +24,9 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ipoptc_limited | ipoptc | limited-memory | n/a | n/a | 89 | 75 | 75/89 | 9 | 0 | 5 | 0 | acceptable_success:3; max_iter_infeasible_or_stalled:1; max_iter_near_solved:9; other_solver_failure:4; strict_success:72 |
 | ipoptc_exact | ipoptc | exact | n/a | n/a | 89 | 81 | 81/89 | 6 | 0 | 2 | 0 | acceptable_success:2; max_iter_near_solved:6; other_solver_failure:2; strict_success:79 |
-| a4sqp_bfgs_kkt_acc | a4sqp | BFGS | 1 | 5 | 89 | 53 | 53/89 | 0 | 6 | 23 | 7 | acceptable_success:8; driver_timeout:7; line_search_error:7; max_iter_infeasible_or_stalled:7; max_iter_stationarity:9; strict_success:45; strict_success_high_kkt:6 |
-| a4sqp_obj | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 59 | 59/89 | 0 | 6 | 14 | 10 | acceptable_success:10; driver_timeout:10; line_search_error:5; max_iter_infeasible_or_stalled:5; max_iter_stationarity:3; other_solver_failure:1; strict_success:49; strict_success_high_kkt:6 |
-| a4sqp_lagr | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 66 | 66/89 | 0 | 6 | 8 | 9 | acceptable_success:8; driver_timeout:9; line_search_error:5; max_iter_stationarity:3; strict_success:58; strict_success_high_kkt:6 |
+| a4sqp_bfgs_kkt_acc | a4sqp | BFGS | 1 | 5 | 89 | 55 | 55/89 | 0 | 0 | 27 | 7 | acceptable_success:13; driver_timeout:7; line_search_error:11; max_iter_infeasible_or_stalled:7; max_iter_stationarity:9; strict_success:42 |
+| a4sqp_obj | a4sqp | EXACT_OBJ | 1 | 5 | 89 | 61 | 61/89 | 0 | 0 | 19 | 9 | acceptable_success:13; driver_timeout:9; line_search_error:9; max_iter_infeasible_or_stalled:5; max_iter_stationarity:4; other_solver_failure:1; strict_success:48 |
+| a4sqp_lagr | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 89 | 68 | 68/89 | 0 | 0 | 12 | 9 | acceptable_success:11; driver_timeout:9; line_search_error:9; max_iter_stationarity:3; strict_success:57 |
 
 ## Problem Outcomes
 
@@ -52,13 +52,13 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | ANTWERP | SLR2-RN-27-8 | 27 | 10 | 🟠3 | 🟢2 | 🔴6 | 🔴6 | 🔴6 |
 | AVGASA | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | AVGASB | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
-| AVION2 | OLR2-RN-49-15 | 49 | 15 | 🟠3 | 🟠3 | 🔴6 | 🔴11 | 🔴6 |
-| BA-L1LS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🟠4L | 🟠4L | 🟠4L |
-| BA-L1SPLS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🟠4L | 🟠4L | 🟠4L |
+| AVION2 | OLR2-RN-49-15 | 49 | 15 | 🟠3 | 🟠3 | 🔴6 | 🔴6 | 🔴6 |
+| BA-L1LS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
+| BA-L1SPLS | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
 | BARD | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | BATCH | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 |
 | BEALE | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| BENNETT5LS | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟠3 | 🔴8 | 🟢1 | 🟢1 |
+| BENNETT5LS | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟠3 | 🟢2 | 🟢2 | 🟢2 |
 | BIGGS3 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | BIGGS5 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BIGGS6 | SUR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
@@ -71,8 +71,8 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | BQPGASIM | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
 | BRANIN | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BRKMCC | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| BROWNBS | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| BROWNDEN | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
+| BROWNBS | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
+| BROWNDEN | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🔴8 | 🟢1 | 🟢1 |
 | BT1 | QQR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🔴6 | 🔴6 | 🟢1 |
 | BT10 | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | BT11 | OOR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
@@ -92,25 +92,25 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | CANTILVR | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
 | CB2 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🟢1 |
 | CB3 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| CERI651ALS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🟠3 | 🟠4L | 🟠4L | 🟠4L |
-| CERI651BLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🟠4L | 🟠4L | 🟠4L |
+| CERI651ALS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🟠3 | 🔴8 | 🔴8 | 🔴8 |
+| CERI651BLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🔴8 | 🔴8 | 🔴8 |
 | CERI651CLS | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | CERI651DLS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| CERI651ELS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠4L | 🟠4L | 🟠4L |
+| CERI651ELS | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
 | CHACONN1 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🟢1 |
 | CHACONN2 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | CONGIGMZ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | CRESC4 | OOR2-MY-6-8 | 6 | 8 | 🟢1 | 🟠3 | 🔴8 | 🔴8 | 🔴8 |
 | CRESC50 | OOR2-MY-6-100 | 6 | 100 | 🔴7 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
 | DALLASS | ONR2-MN-46-31 | 46 | 31 | 🟠3 | 🟢1 | 🔴11 | 🔴11 | 🔴11 |
-| DECONVB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟠3 | 🔴8 | 🟢2 | 🟢2 |
+| DECONVB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟠3 | 🟢2 | 🟢1 | 🟢1 |
 | DECONVC | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🟢1 | 🔴6 | 🔴6 | 🔴6 |
 | DECONVU | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | DEGENLPA | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DEGENLPB | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DEMYMALO | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| DEVGLA1B | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| DEVGLA2B | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🟠4L | 🟠4L | 🟠4L |
+| DEVGLA1B | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
+| DEVGLA2B | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 |
 | DGOSPEC | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | DISC2 | LQR2-MY-29-23 | 29 | 23 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 |
 | DUAL1 | QLR2-MN-85-1 | 85 | 1 | 🟠3 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
@@ -118,7 +118,7 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | DUAL4 | QLR2-MN-75-1 | 75 | 1 | 🟢1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 |
 | EG1 | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
 | EGGCRATEB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| ELATVIDUB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| ELATVIDUB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
 | EQC | OLR2-MY-9-3 | 9 | 3 | 🟢2 | 🔴14 | 🟢1 | 🟢1 | 🟢1 |
 | EXPFITA | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | EXTRASIM | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
@@ -135,7 +135,6 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | 🟢1 | pass | strict_success | strict success |
 | 🟢2 | pass | acceptable_success | acceptable success |
 | 🟠3 | near | max_iter_near_solved | near solved at iteration limit |
-| 🟠4 | suspect | strict_success_high_kkt | strict success but high KKT residual |
 | 🔴6 | fail | max_iter_stationarity | iteration limit; stationarity residual too high |
 | 🔴7 | fail | max_iter_infeasible_or_stalled | iteration limit; infeasible or stalled |
 | 🔴8 | fail | line_search_error | line-search failure |

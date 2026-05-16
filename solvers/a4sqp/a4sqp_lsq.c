@@ -351,7 +351,10 @@ enum A4SqpLsqStatus a4sqp_lsq_solve(
 			step_norm = a4sqp_lsq_norm2(n,step);
 			if(step_norm <= opt.step_tol){
 				a4sqp_lsq_fill_stats(stats,iter,obj,grad_inf,step_norm,local_lambda,accepted_steps);
-				goto solved;
+				if(grad_inf <= opt.grad_tol){
+					goto solved;
+				}
+				goto stalled;
 			}
 			for(i = 0; i < n; ++i){
 				real64 lower = problem->x_lower != NULL ? problem->x_lower[i] : A4SQP_NO_LOWER_BOUND;
@@ -459,6 +462,19 @@ eval_error:
 	A4SQP_FREE(columns);
 	A4SQP_FREE(values);
 	return A4SQP_LSQ_EVAL_ERROR;
+
+stalled:
+	A4SQP_FREE(r);
+	A4SQP_FREE(r_trial);
+	A4SQP_FREE(normal);
+	A4SQP_FREE(damped);
+	A4SQP_FREE(gradient);
+	A4SQP_FREE(rhs);
+	A4SQP_FREE(step);
+	A4SQP_FREE(x_trial);
+	A4SQP_FREE(columns);
+	A4SQP_FREE(values);
+	return A4SQP_LSQ_MAX_ITER;
 
 linear_error:
 	A4SQP_FREE(r);

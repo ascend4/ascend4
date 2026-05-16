@@ -56,11 +56,25 @@ int a4sqp_get_default_parameters(
 		}, "BFGS"}, (char *[]){"AUTO","BFGS","EXACT_OBJ","EXACT_LAGRANGIAN",NULL}
 	);
 
+	slv_param_char(parameters,A4SQP_PARAM_EXACT_LAGRANGIAN_MULTIPLIERS,
+		(SlvParameterInitChar){{"exact_lagrangian_multipliers",
+			"Exact Hessian multipliers",3,
+			"Multiplier source for exact Lagrangian Hessian callbacks: ROW_DUAL_SIGNED, ROW_DUAL, or RECOVERED."
+		}, "ROW_DUAL_SIGNED"}, (char *[]){"ROW_DUAL_SIGNED","ROW_DUAL","RECOVERED",NULL}
+	);
+
 	slv_param_char(parameters,A4SQP_PARAM_TRY_LSQ,
 		(SlvParameterInitChar){{"try_lsq",
 			"Try least squares",1,
 			"Attempt the dedicated least-squares path for recognised unconstrained sum-of-squares objectives: OFF, GAUSS, or LM."
 		}, "LM"}, (char *[]){"OFF","GAUSS","LM",NULL}
+	);
+
+	slv_param_int(parameters,A4SQP_PARAM_LSQ_MAX_ITER,
+		(SlvParameterInitInt){{"lsq_max_iter",
+			"LSQ maximum iterations",1,
+			"Maximum iterations for the least-squares pre-solve; zero reuses max_iter."
+		}, 0, 0, 1000000}
 	);
 
 	slv_param_real(parameters,A4SQP_PARAM_HESS_REG,
@@ -292,6 +306,13 @@ int a4sqp_get_default_parameters(
 			"Restoration phase",2,
 			"Enable feasibility restoration steps after repeated lack of constraint-violation progress."
 		}, 0}
+	);
+
+	slv_param_bool(parameters,A4SQP_PARAM_ACTIVE_BOUND_RESTORATION,
+		(SlvParameterInitBool){{"active_bound_restoration",
+			"Active-bound restoration probe",3,
+			"Enable the experimental core probe that moves a stationarity-blocking variable to a bound before a short restoration attempt."
+		}, TRUE}
 	);
 
 	slv_param_int(parameters,A4SQP_PARAM_RESTORATION_TRIGGER_ITER,
