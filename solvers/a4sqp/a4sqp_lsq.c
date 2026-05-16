@@ -318,7 +318,7 @@ enum A4SqpLsqStatus a4sqp_lsq_solve(
 			goto eval_error;
 		}
 		grad_inf = a4sqp_lsq_inf_norm(n,gradient);
-		if(grad_inf <= opt.grad_tol){
+		if(grad_inf <= opt.grad_tol || obj <= 0.5 * opt.grad_tol * opt.grad_tol){
 			a4sqp_lsq_fill_stats(stats,iter,obj,grad_inf,step_norm,lambda,accepted_steps);
 			goto solved;
 		}

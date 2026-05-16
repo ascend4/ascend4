@@ -614,48 +614,45 @@ static A4SqpBool asc_a4sqp_intermediate_cb(
 }
 
 static int asc_a4sqp_set_core_options(A4SqpProblem problem, struct A4SqpSystem *sys){
+	A4SqpIndex i;
+	A4SqpIndex count;
 	if(problem == NULL || sys == NULL){
 		return 1;
 	}
-	AddA4SqpIntOption(problem,"max_iter",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_ITER));
-	AddA4SqpIntOption(problem,"max_backtrack",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_BACKTRACK));
-	AddA4SqpIntOption(problem,"acceptable_iter",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_ACCEPTABLE_ITER));
-	AddA4SqpIntOption(problem,"trust_qp_retries",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_TRUST_QP_RETRIES));
-	AddA4SqpIntOption(problem,"filter_accept",SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_FILTER_ACCEPT));
-	AddA4SqpIntOption(problem,"trust_unconstrained",SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_TRUST_UNCONSTRAINED));
-	AddA4SqpIntOption(problem,"kkt_convergence",SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_KKT_CONVERGENCE));
-	AddA4SqpIntOption(problem,"restoration",SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_RESTORATION));
-	AddA4SqpIntOption(problem,"active_bound_restoration",SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_ACTIVE_BOUND_RESTORATION));
-	AddA4SqpIntOption(problem,"restoration_trigger_iter",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_RESTORATION_TRIGGER_ITER));
-	AddA4SqpIntOption(problem,"restoration_max_iter",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_RESTORATION_MAX_ITER));
-	AddA4SqpIntOption(problem,"print_level",SLV_PARAM_INT(&sys->params,A4SQP_PARAM_VERBOSITY));
-	AddA4SqpNumOption(problem,"tol",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL));
-	AddA4SqpNumOption(problem,"step_tol",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_STEP_TOL));
-	AddA4SqpNumOption(problem,"acceptable_tol",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ACCEPTABLE_TOL));
-	AddA4SqpNumOption(problem,"merit_tol",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_MERIT_TOL));
-	AddA4SqpNumOption(problem,"armijo_coeff",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ARMIJO_COEFF));
-	AddA4SqpNumOption(problem,"elastic_penalty",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY));
-	AddA4SqpNumOption(problem,"elastic_penalty_growth",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY_GROWTH));
-	AddA4SqpNumOption(problem,"elastic_penalty_max",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ELASTIC_PENALTY_MAX));
-	AddA4SqpNumOption(problem,"filter_margin",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FILTER_MARGIN));
-	AddA4SqpNumOption(problem,"restoration_improve",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_RESTORATION_IMPROVE));
-	AddA4SqpNumOption(problem,"restoration_margin",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_RESTORATION_MARGIN));
-	AddA4SqpNumOption(problem,"restoration_handoff_reduction",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_RESTORATION_HANDOFF_REDUCTION));
-	AddA4SqpNumOption(problem,"restoration_reentry_factor",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_RESTORATION_REENTRY_FACTOR));
-	AddA4SqpNumOption(problem,"trust_radius_init",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_RADIUS_INIT));
-	AddA4SqpNumOption(problem,"trust_radius_min",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_RADIUS_MIN));
-	AddA4SqpNumOption(problem,"trust_radius_max",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_RADIUS_MAX));
-	AddA4SqpNumOption(problem,"trust_shrink",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_SHRINK));
-	AddA4SqpNumOption(problem,"trust_grow",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_GROW));
-	AddA4SqpNumOption(problem,"trust_accept",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_ACCEPT));
-	AddA4SqpNumOption(problem,"trust_good",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_GOOD));
-	AddA4SqpNumOption(problem,"trust_tiny_alpha",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_TINY_ALPHA));
-	AddA4SqpNumOption(problem,"trust_tiny_radius_factor",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_TRUST_TINY_RADIUS_FACTOR));
-	AddA4SqpNumOption(problem,"hess_reg",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_HESS_REG));
-	AddA4SqpNumOption(problem,"hess_fallback_ratio",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_HESS_FALLBACK_RATIO));
-	AddA4SqpNumOption(problem,"bound_push",SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_BOUND_PUSH));
-	AddA4SqpStrOption(problem,"hessian",SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_HESS_MODE));
-	AddA4SqpStrOption(problem,"exact_lagrangian_multipliers",SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_EXACT_LAGRANGIAN_MULTIPLIERS));
+	count = GetA4SqpOptionCount();
+	if(A4SQP_PARAM_CORE_BASE + count != A4SQP_PARAM_COUNT){
+		return 1;
+	}
+	for(i = 0; i < count; ++i){
+		struct A4SqpOptionInfo info;
+		int pindex = A4SQP_PARAM_CORE_BASE + i;
+		A4SqpBool ok = A4SQP_FALSE;
+		if(!GetA4SqpOptionInfo(i,&info)){
+			return 1;
+		}
+		if(!info.problem_option){
+			continue;
+		}
+		switch(info.type){
+		case A4SqpOptionInteger:
+			ok = AddA4SqpIntOption(problem,(char *)info.keyword,SLV_PARAM_INT(&sys->params,pindex));
+			break;
+		case A4SqpOptionBool:
+			ok = AddA4SqpIntOption(problem,(char *)info.keyword,SLV_PARAM_BOOL(&sys->params,pindex));
+			break;
+		case A4SqpOptionNumber:
+			ok = AddA4SqpNumOption(problem,(char *)info.keyword,SLV_PARAM_REAL(&sys->params,pindex));
+			break;
+		case A4SqpOptionString:
+			ok = AddA4SqpStrOption(problem,(char *)info.keyword,SLV_PARAM_CHAR(&sys->params,pindex));
+			break;
+		default:
+			return 1;
+		}
+		if(!ok){
+			return 1;
+		}
+	}
 	return 0;
 }
 

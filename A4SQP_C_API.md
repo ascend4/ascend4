@@ -64,12 +64,22 @@ The exported public C API symbols are:
 - `OpenA4SqpOutputFile`
 - `SetA4SqpProblemScaling`
 - `SetA4SqpIntermediateCallback`
+- `GetA4SqpOptionCount`
+- `GetA4SqpOptionInfo`
+- `GetA4SqpOptionInfoByName`
 - `A4SqpSolve`
 - `GetA4SqpSolveStatistics`
 
 `OpenA4SqpOutputFile` currently exists for IPOPT API shape but returns
 `A4SQP_FALSE`; progress should currently be obtained through the intermediate
 callback, ASCEND progress reporting, or the CUTEst runner logs.
+
+The `GetA4SqpOption*` functions expose core solver option metadata: keyword,
+label, description, type, numeric bounds, string choices, default value, and
+whether the option is applied directly to `A4SqpProblem`. ASCEND uses this
+metadata to construct `slv_parameter` entries, and the CUTEst driver uses it to
+translate `A4SQP_*` environment variables into ordinary C API options. Adapter
+layers should not duplicate core numerical option definitions.
 
 The public scalar and opaque types are:
 
@@ -295,11 +305,19 @@ String options:
   `BFGS`.
 - `hessian_approximation`: IPOPT alias; `limited-memory` maps to `BFGS`, and
   `exact` maps to `EXACT_LAGRANGIAN` when an `eval_h` callback exists.
-- `scaleopt`: `NONE`, `ROW_2NORM`, or `RELNOM`. The C API default is `NONE`;
-  the CUTEst driver currently defaults this option to `ROW_2NORM` to match the
-  ASCEND solver default unless overridden. `ROW_2NORM` caps the scale at `1.0`,
-  so it scales down large rows but does not amplify rows whose Jacobian norm is
-  small near a degenerate solution.
+- `scaleopt`: `AUTO`, `NONE`, `ROW_2NORM`, capped row-norm variants
+  `ROW_2NORM_T2`, `ROW_2NORM_T5`, `ROW_2NORM_T10`, `ROW_2NORM_T100`, floor
+  variants `ROW_2NORM_F1E-2`, `ROW_2NORM_F1E-4`, or `RELNOM`. Core C API
+  metadata and ASCEND default to `ROW_2NORM`; the CUTEst runner defaults to
+  `AUTO` for the tracking matrix. `AUTO` tries `ROW_2NORM_T5` first and retries
+  strict `ROW_2NORM` from the original point after an unsuccessful solve when
+  the C API owns scaling. `ROW_2NORM` caps the scaled row norm at `1.0`, so it
+  scales down large rows but does not amplify rows whose Jacobian norm is small
+  near a degenerate solution.
+  An explicit `x_scale` supplied through `SetA4SqpProblemScaling` can still be
+  combined with automatic row scaling; an explicit `g_scale` is authoritative
+  and disables automatic row scaling to avoid double-scaling adapter-built
+  views.
 
 Numeric options:
 
@@ -417,16 +435,10 @@ The ASCEND adapter still has richer diagnostics than a plain external C
 client. It can render ASCEND variable names, relation names, source indices,
 solver status, and progress callback output.
 
-Current ASCEND defaults differ from the bare C API in some places. Notably,
-`asc_a4sqp_params.c` defines `scaleopt=ROW_2NORM`, while the C API object
-default remains `scaleopt=NONE` for IPOPT-like external callers. The CUTEst
-driver sets `ROW_2NORM` explicitly by default so benchmark runs use the same
-row-scaling mode as ASCEND unless overridden. This row scaling is capped to
-avoid amplifying nearly singular active rows.
-
-The ASCEND default for `elastic_penalty_growth` is `1.0` to avoid changing
-legacy model behaviour by default. The C API and CUTEst path default to `10.0`
-unless overridden.
+Core A4SQP option defaults are defined in `liba4sqp.so` option metadata and
+are consumed by the ASCEND and CUTEst adapters. ASCEND-specific adapter toggles
+such as safe evaluation and progress logging remain in `liba4sqp_ascend.so`,
+but numerical solver options should not be redefined there.
 
 ## CUTEst/SIFDecode Bridge
 
@@ -509,7 +521,7 @@ Use the normal runner paths:
 Current focused CUnit status:
 
 ```text
-21 selected tests: 18 passed, 3 skipped, 0 failed
+33 selected tests: 30 passed, 3 skipped, 0 failed
 ```
 
 The skipped CUnit cases are `rosenmmx`, `lubrifc`, and `cont6_qq`. They remain
@@ -524,8 +536,9 @@ successes with `--acceptable-iter 5`.
 ## Current Open Items
 
 - Continue reviewing scaling parity between ASCEND, CUTEst, and direct C API
-  callers. The C API now supports `NONE`, capped `ROW_2NORM`, and `RELNOM`, but
-  default variable nominal choices can still differ between front ends.
+  callers. The C API now supports `AUTO`, `NONE`, capped/floored `ROW_2NORM`,
+  and `RELNOM`, but default variable nominal choices can still differ between
+  front ends.
 - Add a real fixed-variable presolve/postsolve reducer rather than only
   recording fixed flags in `A4SqpView`.
 - Continue active-bound and restoration improvements inside `liba4sqp.so`, not

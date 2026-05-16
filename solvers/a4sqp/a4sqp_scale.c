@@ -39,8 +39,37 @@ static void a4sqp_init_var_scaling(struct A4SqpView *view, int use_nominals){
 
 static void a4sqp_init_rel_scaling(struct A4SqpView *view, const char *mode){
 	int32 i;
-	int use_relnom = (strcmp(a4sqp_scale_mode_name(mode),"RELNOM") == 0);
-	int use_row_2norm = (strcmp(a4sqp_scale_mode_name(mode),"ROW_2NORM") == 0);
+	const char *scaleopt = a4sqp_scale_mode_name(mode);
+	int use_relnom = (strcmp(scaleopt,"RELNOM") == 0);
+	int use_row_2norm = (
+		strcmp(scaleopt,"ROW_2NORM") == 0
+		|| strcmp(scaleopt,"AUTO") == 0
+		|| strcmp(scaleopt,"ROW_2NORM_T2") == 0
+		|| strcmp(scaleopt,"ROW_2NORM_T5") == 0
+		|| strcmp(scaleopt,"ROW_2NORM_T10") == 0
+		|| strcmp(scaleopt,"ROW_2NORM_T100") == 0
+		|| strcmp(scaleopt,"ROW_2NORM_F1E-2") == 0
+		|| strcmp(scaleopt,"ROW_2NORM_F1E-4") == 0
+	);
+	real64 row_target = 1.0;
+	real64 row_floor = 0.0;
+
+	if(strcmp(scaleopt,"AUTO") == 0){
+		row_target = 5.0;
+	}else if(strcmp(scaleopt,"ROW_2NORM_T2") == 0){
+		row_target = 2.0;
+	}else if(strcmp(scaleopt,"ROW_2NORM_T5") == 0){
+		row_target = 5.0;
+	}else if(strcmp(scaleopt,"ROW_2NORM_T10") == 0){
+		row_target = 10.0;
+	}else if(strcmp(scaleopt,"ROW_2NORM_T100") == 0){
+		row_target = 100.0;
+	}
+	if(strcmp(scaleopt,"ROW_2NORM_F1E-2") == 0){
+		row_floor = 1e-2;
+	}else if(strcmp(scaleopt,"ROW_2NORM_F1E-4") == 0){
+		row_floor = 1e-4;
+	}
 
 	for(i = 0; i < view->n_rel; ++i){
 		real64 scale = 1.0;
@@ -64,7 +93,12 @@ static void a4sqp_init_rel_scaling(struct A4SqpView *view, const char *mode){
 			 * singular, as in BT13 where the active equality gradient vanishes
 			 * at the optimum.
 			 */
-			scale = sum > 1.0 ? 1.0 / sqrt(sum) : 1.0;
+			if(sum > row_target * row_target){
+				scale = row_target / sqrt(sum);
+			}
+			if(row_floor > 0.0 && scale < row_floor){
+				scale = row_floor;
+			}
 		}
 		view->rel_scale[i] = scale;
 		view->scaled_rel_residual[i] = view->rel_residual[i] * scale;

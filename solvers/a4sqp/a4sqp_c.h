@@ -104,6 +104,27 @@ typedef A4SqpBool (*A4SqpIntermediateCB)(
 	A4SqpUserDataPtr user_data
 );
 
+enum A4SqpOptionType {
+	A4SqpOptionNumber = 0,
+	A4SqpOptionInteger = 1,
+	A4SqpOptionBool = 2,
+	A4SqpOptionString = 3
+};
+
+struct A4SqpOptionInfo {
+	const char *keyword;
+	const char *label;
+	const char *description;
+	A4SqpInt display;
+	enum A4SqpOptionType type;
+	A4SqpNumber default_number;
+	A4SqpNumber lower;
+	A4SqpNumber upper;
+	const char *default_string;
+	const char *const *choices;
+	A4SqpBool problem_option;
+};
+
 enum A4SqpApplicationReturnStatus {
 	A4SqpSolveSucceeded = 0,
 	A4SqpSolvedToAcceptableLevel = 1,
@@ -151,6 +172,12 @@ struct A4SqpSolveStats {
 	A4SqpNumber dual_infeasibility_inf;
 	A4SqpNumber complementarity_inf;
 	A4SqpInt kkt_lambda_sign;
+	A4SqpInt bound_lower_active;
+	A4SqpInt bound_upper_active;
+	A4SqpInt bound_fixed_active;
+	A4SqpInt bound_worst_index;
+	A4SqpNumber bound_stationarity_inf;
+	A4SqpNumber bound_worst_lagrangian_gradient;
 	A4SqpNumber final_step_norm;
 	A4SqpNumber final_trust_radius;
 	A4SqpNumber final_elastic_max;
@@ -190,6 +217,9 @@ A4SQP_EXPORT(A4SqpBool) SetA4SqpIntermediateCallback(
 	A4SqpProblem problem,
 	A4SqpIntermediateCB intermediate_cb
 );
+A4SQP_EXPORT(A4SqpIndex) GetA4SqpOptionCount(void);
+A4SQP_EXPORT(A4SqpBool) GetA4SqpOptionInfo(A4SqpIndex index, struct A4SqpOptionInfo *info);
+A4SQP_EXPORT(A4SqpBool) GetA4SqpOptionInfoByName(char *keyword, struct A4SqpOptionInfo *info);
 
 A4SQP_EXPORT(enum A4SqpApplicationReturnStatus) A4SqpSolve(
 	A4SqpProblem problem,

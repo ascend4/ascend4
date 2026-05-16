@@ -46,11 +46,12 @@ Current important gaps are:
 ## CUTEst Regression Notes
 
 The current confirmed rebuilt result for the broad 89-problem CUTEst tracking
-set is 68/89 genuine A4SQP exact-Lagrangian passes using the experimental LSQ
-handoff profile (`--try-lsq LM --lsq-fallback-start improved
---lsq-max-iter 1000`). This was measured on 2026-05-16 with regenerated CUTEst
-problem/package objects. The previous signed-row-dual baseline without this
-handoff profile was 66/89 plus 6 suspect high-KKT LS exits.
+set is 66/89 genuine A4SQP exact-Lagrangian passes, plus one suspect
+high-KKT LSQ exit not counted as a pass, using the experimental LSQ handoff
+profile (`--try-lsq LM --lsq-fallback-start improved --lsq-max-iter 1000`).
+This was measured on 2026-05-16 with regenerated CUTEst problem/package
+objects after the core option metadata cleanup, explicit-scaling precedence
+fix, and LSQ tiny-residual termination.
 
 Important correction: `99928f2b` and nearby commits carried reports claiming
 69/89, 70/89, or 71/89, but those counts have not reproduced under clean
@@ -94,10 +95,11 @@ Focused follow-up on BROWNDEN and ACOPP14, 2026-05-16:
   in place before SQP fallback. The CUTEst adapter had been restoring the
   original point and therefore lost that benefit.
 - The CUTEst runner now exposes `--lsq-fallback-start original|improved` and
-  `--lsq-max-iter N` so this behaviour is explicit and reproducible. With a
-  clean rebuilt CUTEst run, `BROWNDEN` solves strictly using
-  `--try-lsq LM --lsq-fallback-start improved --lsq-max-iter 1000`
-  (`kkt_error ~= 1.2e-8` after 7 SQP iterations following the LSQ handoff).
+  `--lsq-max-iter N` so this behaviour is explicit and reproducible. Earlier
+  rebuilt tests showed a strict `BROWNDEN` solve with this handoff, but the
+  latest A4SQP-only rebuilt matrix no longer reproduces it after the option
+  metadata/scaling cleanup. Treat `BROWNDEN` as unresolved until this trade-off
+  is isolated again.
 - ACOPP14 remains unsolved. BFGS or recovered exact-Lagrangian multipliers avoid
   driver timeouts and produce deterministic max-iteration failures. Disabling
   active-bound restoration improves the 800-iteration BFGS result from
@@ -108,6 +110,48 @@ Focused follow-up on BROWNDEN and ACOPP14, 2026-05-16:
 - These ACOPP14 results suggest the remaining issue is not stale runner state
   or parameter plumbing. It is a core stationarity/active-bound/multiplier
   quality problem near a feasible point.
+
+ACOPP14 follow-up, 2026-05-16:
+
+- CUTEst JSON/TSV reporting now includes final bound activity and bound/free
+  stationarity diagnostics (`bound_lower_active`, `bound_upper_active`,
+  `bound_stationarity_inf`, `bound_worst_index`,
+  `bound_worst_lagrangian_gradient`). This showed the late ACOPP14 residual is
+  dominated by stationarity in the reduced space, not by infeasibility.
+- Active-bound restoration is now skipped at already-feasible KKT-convergence
+  points. On ACOPP14 this avoids the earlier costly rejected probes and gives
+  the same deterministic feasible stall (`kkt_error ~= 0.287`) as explicitly
+  disabling active-bound restoration.
+- The stationarity correction now uses the same recovered stationarity
+  multipliers as KKT reporting, rather than raw QP row duals. This did not
+  solve ACOPP14, but it removes an inconsistency in the core polish step.
+- Two opt-in experiments were added but left disabled by default:
+  `active_bound_release` and `reduced_gradient_polish`. The reduced-gradient
+  polish moved ACOPP14 closer to IPOPT's objective and reduced KKT from about
+  `0.287` to `0.208`, but then stalled even at 3000 iterations and was too
+  expensive to enable by default.
+
+CUTEst scaling follow-up, 2026-05-16:
+
+- After the core option metadata cleanup, the default rebuilt matrix with
+  `scaleopt=ROW_2NORM` gives 66/89 genuine exact-Lagrangian passes plus one
+  suspect high-KKT LSQ exit.
+- A full rebuilt `scaleopt=NONE` experiment recovered exact-Lagrangian passes
+  for BT4, DEGENLPA, BATCH, BT5, and CANTILVR, but lost BT1, BT12, EXPFITA,
+  and other cases. The net exact-Lagrangian count fell to 65/89, so
+  `ROW_2NORM` remains the tracked default for now.
+- Less aggressive row scaling was tested by capping row norms at 2, 5, 10, and
+  100 instead of 1. The best simple profile was `ROW_2NORM_T5`: it raised the
+  exact-Lagrangian matrix to 69/89, gaining BROWNDEN, BT4, BT5, and DEGENLPA,
+  but losing BT1.
+- The C API now has `scaleopt=AUTO` for internally scaled solves. It tries
+  `ROW_2NORM_T5` first and, if that solve exits unsuccessfully, retries from
+  the original point with strict `ROW_2NORM`. On the 89-problem CUTEst matrix
+  this gives 55/89 BFGS, 62/89 exact-objective, and 70/89 exact-Lagrangian
+  genuine passes. This restart is currently only meaningful when the C API owns
+  scaling; ASCEND still supplies explicit adapter-built scales.
+- This is a real solver sensitivity, not just an adapter issue. Scaling should
+  remain a controlled profile dimension when investigating specific failures.
 
 Potential future switches for controlled experiments:
 
@@ -367,6 +411,48 @@ guesses, and derivative data are harmonized. If the same problem behaves
 differently through the two frontends, treat that as an adapter or
 normalization bug until proven otherwise.
 
+## Testing Workflows
+
+A4SQP currently has three distinct test paths. They are deliberately separate,
+because they catch different classes of regressions:
+
+1. Direct ASCEND model runs for focused debugging:
+
+```text
+./a4 run models/test/a4sqp/FILE.a4c --progress
+```
+
+Use this when investigating one translated problem, checking solver progress
+messages, or comparing ASCEND-side behaviour with a CUTEst case. The
+`--progress` output is the best way to inspect phase changes, KKT residuals,
+bound activity, restoration counters, and line-search behaviour from the normal
+user-facing runner.
+
+2. ASCEND CUnit regression suite:
+
+```text
+./a4 cutest solver_a4sqp
+```
+
+This is ASCEND's CUnit harness; despite the name, it is unrelated to the
+CUTEst benchmark corpus. Use this as the normal gate before broader profiling.
+Do not use `./a4 cutest -t solver_a4sqp` as a pass/fail check: `-t` lists test
+names only and does not run the suite.
+
+3. CUTEst/SIFDecode benchmark matrix:
+
+```text
+solvers/a4sqp/cutest/run_a4sqp_cutest.py ...
+solvers/a4sqp/cutest/generate_cutest_progress.py ...
+```
+
+This path exercises the external SIFDecode/CUTEst adapter and writes TSV/JSONL
+results that are summarized into `solvers/a4sqp/CUTEST_PROGRESS.md`. Use it for
+benchmark pass-rate tracking and IPOPT comparison. Full matrix results should
+be generated from rebuilt CUTEst objects, preferably through the runner's
+default rebuild mode, because stale `runcutest` package objects have produced
+misleading historical pass counts.
+
 ## Current Test Status
 
 The focused ASCEND CUnit suite is run through:
@@ -375,15 +461,17 @@ The focused ASCEND CUnit suite is run through:
 ./a4 cutest solver_a4sqp
 ```
 
-Current local result after the CUnit skip support update:
+Current local result after the core option metadata cleanup:
 
 ```text
-21 selected tests: 18 passed, 3 skipped, 0 failed
+33 selected tests: 30 passed, 3 skipped, 0 failed
 ```
 
 The active suite includes registration, a HiGHS QP smoke test, C API smoke
 tests, view/presolve checks, exact-Hessian checks, and model-run regressions
-for `hs21`, `bqp1var`, `bt10`, `cb3`, and `jannson3`.
+for translated ASCEND problems including `hs21`, `bqp1var`, `bt10`, `cb3`,
+`bt2`, `brownbs`, `alsotame`, `bt4`, `bt8`, `avgasa`, `avgasb`, `dgospec`,
+`brownden`, `lsnnodoc`, `degenlpb`, and `jannson3`.
 
 The following model-run regressions remain in the suite but are explicitly
 skipped because they previously passed but are not reliable enough for default
@@ -412,15 +500,16 @@ QP failure.
 
 - The ASCEND adapter now calls the public C API, which is the desired simpler
   boundary, but scaling parity still needs continued review. The C API now
-  accepts `scaleopt=NONE`, `ROW_2NORM`, and `RELNOM`; the bare C API default is
-  still `NONE`, while ASCEND and the CUTEst driver default to `ROW_2NORM`.
+  accepts `scaleopt=AUTO`, `NONE`, `ROW_2NORM`, capped `ROW_2NORM_T*`,
+  floored `ROW_2NORM_F*`, and `RELNOM`. Core metadata and ASCEND still default
+  to `ROW_2NORM`; the CUTEst runner defaults to `AUTO` for the tracking matrix.
   `ROW_2NORM` only scales down oversized rows; it does not amplify rows with
   small Jacobian norms, because that makes degenerate constraints singular near
   solutions such as BT13.
 - Fixed-variable reduction is not yet a full presolve/postsolve layer.
 - BT13 is the focused active-bound/restoration regression case. The core now
-  has an active-bound restoration probe and capped row scaling, and the CUTEst
-  BT13 run reaches strict KKT success under the BFGS/KKT profile.
+  has an active-bound restoration probe and capped row scaling, but the current
+  rebuilt CUTEst matrix still fails BT13 in all tracked A4SQP profiles.
 - `OpenA4SqpOutputFile` is present for IPOPT API shape but is not implemented
   as a useful output sink yet.
 

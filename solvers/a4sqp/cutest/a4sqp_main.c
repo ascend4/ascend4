@@ -127,6 +127,135 @@ static const char *a4sqp_cutest_env_string(const char *name, const char *fallbac
 	return value;
 }
 
+static int a4sqp_cutest_option_env_name(const char *keyword, char *buffer, size_t capacity){
+	static const char prefix[] = "A4SQP_";
+	size_t i;
+	size_t pos = 0;
+	if(keyword == NULL || buffer == NULL || capacity == 0){
+		return 1;
+	}
+	for(i = 0; prefix[i] != '\0'; ++i){
+		if(pos + 1 >= capacity){
+			return 1;
+		}
+		buffer[pos++] = prefix[i];
+	}
+	for(i = 0; keyword[i] != '\0'; ++i){
+		char ch = keyword[i];
+		if(pos + 1 >= capacity){
+			return 1;
+		}
+		if(ch >= 'a' && ch <= 'z'){
+			ch = (char)(ch - 'a' + 'A');
+		}
+		buffer[pos++] = ch;
+	}
+	buffer[pos] = '\0';
+	return 0;
+}
+
+static const char *a4sqp_cutest_env_for_option(const struct A4SqpOptionInfo *info, char *buffer, size_t capacity){
+	const char *value;
+	if(info == NULL || a4sqp_cutest_option_env_name(info->keyword,buffer,capacity)){
+		return NULL;
+	}
+	value = getenv(buffer);
+	if(value != NULL && *value != '\0'){
+		return value;
+	}
+	/* Compatibility aliases used by older A4SQP CUTEst scripts. */
+	if(strcmp(info->keyword,"feas_tol") == 0 || strcmp(info->keyword,"step_tol") == 0){
+		value = getenv("A4SQP_TOL");
+		if(value != NULL && *value != '\0'){
+			return value;
+		}
+	}
+	if(strcmp(info->keyword,"verbosity") == 0){
+		value = getenv("A4SQP_PRINT_LEVEL");
+		if(value != NULL && *value != '\0'){
+			return value;
+		}
+	}
+	return NULL;
+}
+
+static int a4sqp_cutest_parse_env_int(const char *value, int fallback){
+	char *end = NULL;
+	long parsed;
+	if(value == NULL || *value == '\0'){
+		return fallback;
+	}
+	parsed = strtol(value,&end,10);
+	if(end == value){
+		return fallback;
+	}
+	return (int)parsed;
+}
+
+static double a4sqp_cutest_parse_env_double(const char *value, double fallback){
+	char *end = NULL;
+	double parsed;
+	if(value == NULL || *value == '\0'){
+		return fallback;
+	}
+	parsed = strtod(value,&end);
+	if(end == value || !isfinite(parsed)){
+		return fallback;
+	}
+	return parsed;
+}
+
+static A4SqpBool a4sqp_cutest_apply_core_options(A4SqpProblem problem){
+	A4SqpIndex i;
+	A4SqpIndex count;
+	if(problem == NULL){
+		return A4SQP_FALSE;
+	}
+	count = GetA4SqpOptionCount();
+	for(i = 0; i < count; ++i){
+		struct A4SqpOptionInfo info;
+		char env_name[128];
+		const char *env_value;
+		A4SqpBool ok = A4SQP_FALSE;
+		if(!GetA4SqpOptionInfo(i,&info)){
+			return A4SQP_FALSE;
+		}
+		if(!info.problem_option){
+			continue;
+		}
+		env_value = a4sqp_cutest_env_for_option(&info,env_name,sizeof(env_name));
+		switch(info.type){
+		case A4SqpOptionInteger:
+			ok = AddA4SqpIntOption(problem,(char *)info.keyword,
+				a4sqp_cutest_parse_env_int(env_value,(int)info.default_number)
+			);
+			break;
+		case A4SqpOptionBool:
+			ok = AddA4SqpIntOption(problem,(char *)info.keyword,
+				a4sqp_cutest_parse_env_int(env_value,info.default_number != 0.0)
+			);
+			break;
+		case A4SqpOptionNumber:
+			ok = AddA4SqpNumOption(problem,(char *)info.keyword,
+				a4sqp_cutest_parse_env_double(env_value,info.default_number)
+			);
+			break;
+		case A4SqpOptionString:
+			ok = AddA4SqpStrOption(problem,(char *)info.keyword,
+				(char *)(env_value != NULL ? env_value : info.default_string)
+			);
+			break;
+		default:
+			return A4SQP_FALSE;
+		}
+		if(!ok){
+			fprintf(stderr,"A4SQP-CUTEst: invalid A4SQP option '%s'\n",info.keyword);
+			return A4SQP_FALSE;
+		}
+	}
+	return A4SQP_TRUE;
+}
+
 static int a4sqp_cutest_lsq_eval_residuals(void *userdata, const real64 *x, real64 *residuals){
 	struct A4SqpCutestContext *ctx = (struct A4SqpCutestContext *)userdata;
 	int status = 0;
@@ -780,37 +909,10 @@ int MAINENTRY(void){
 			free(x_scale);
 		}
 	}
-	AddA4SqpIntOption(problem,"max_iter",a4sqp_cutest_env_int("A4SQP_MAX_ITER",200));
-	AddA4SqpIntOption(problem,"max_backtrack",a4sqp_cutest_env_int("A4SQP_MAX_BACKTRACK",20));
-	AddA4SqpIntOption(problem,"trust_qp_retries",a4sqp_cutest_env_int("A4SQP_TRUST_QP_RETRIES",5));
-	AddA4SqpIntOption(problem,"print_level",a4sqp_cutest_env_int("A4SQP_PRINT_LEVEL",0));
-	AddA4SqpIntOption(problem,"acceptable_iter",a4sqp_cutest_env_int("A4SQP_ACCEPTABLE_ITER",0));
-	AddA4SqpIntOption(problem,"filter_accept",a4sqp_cutest_env_int("A4SQP_FILTER_ACCEPT",0));
-	AddA4SqpIntOption(problem,"trust_unconstrained",a4sqp_cutest_env_int("A4SQP_TRUST_UNCONSTRAINED",0));
-	AddA4SqpIntOption(problem,"kkt_convergence",a4sqp_cutest_env_int("A4SQP_KKT_CONVERGENCE",0));
-	AddA4SqpIntOption(problem,"restoration",a4sqp_cutest_env_int("A4SQP_RESTORATION",0));
-	AddA4SqpIntOption(problem,"active_bound_restoration",a4sqp_cutest_env_int("A4SQP_ACTIVE_BOUND_RESTORATION",1));
-	AddA4SqpIntOption(problem,"restoration_trigger_iter",a4sqp_cutest_env_int("A4SQP_RESTORATION_TRIGGER_ITER",3));
-	AddA4SqpIntOption(problem,"restoration_max_iter",a4sqp_cutest_env_int("A4SQP_RESTORATION_MAX_ITER",0));
-	AddA4SqpNumOption(problem,"tol",a4sqp_cutest_env_double("A4SQP_TOL",1e-7));
-	AddA4SqpNumOption(problem,"acceptable_tol",a4sqp_cutest_env_double("A4SQP_ACCEPTABLE_TOL",1e-5));
-	AddA4SqpNumOption(problem,"elastic_penalty",a4sqp_cutest_env_double("A4SQP_ELASTIC_PENALTY",100.0));
-	AddA4SqpNumOption(problem,"elastic_penalty_growth",a4sqp_cutest_env_double("A4SQP_ELASTIC_PENALTY_GROWTH",10.0));
-	AddA4SqpNumOption(problem,"elastic_penalty_max",a4sqp_cutest_env_double("A4SQP_ELASTIC_PENALTY_MAX",1e8));
-	AddA4SqpNumOption(problem,"filter_margin",a4sqp_cutest_env_double("A4SQP_FILTER_MARGIN",1e-4));
-	AddA4SqpNumOption(problem,"restoration_improve",a4sqp_cutest_env_double("A4SQP_RESTORATION_IMPROVE",1e-3));
-	AddA4SqpNumOption(problem,"restoration_margin",a4sqp_cutest_env_double("A4SQP_RESTORATION_MARGIN",1e-4));
-	AddA4SqpNumOption(problem,"restoration_handoff_reduction",a4sqp_cutest_env_double("A4SQP_RESTORATION_HANDOFF_REDUCTION",0.5));
-	AddA4SqpNumOption(problem,"restoration_reentry_factor",a4sqp_cutest_env_double("A4SQP_RESTORATION_REENTRY_FACTOR",2.0));
-	AddA4SqpNumOption(problem,"trust_radius_init",a4sqp_cutest_env_double("A4SQP_TRUST_RADIUS_INIT",1.0));
-	AddA4SqpNumOption(problem,"hess_reg",a4sqp_cutest_env_double("A4SQP_HESS_REG",1e-8));
-	AddA4SqpNumOption(problem,"hess_fallback_ratio",a4sqp_cutest_env_double("A4SQP_HESS_FALLBACK_RATIO",1.0));
-	AddA4SqpNumOption(problem,"bound_push",a4sqp_cutest_env_double("A4SQP_BOUND_PUSH",1e-8));
-	AddA4SqpNumOption(problem,"qp_time_limit",a4sqp_cutest_env_double("A4SQP_QP_TIME_LIMIT",0.0));
-	AddA4SqpIntOption(problem,"qp_iteration_limit",a4sqp_cutest_env_int("A4SQP_QP_ITERATION_LIMIT",0));
-	AddA4SqpStrOption(problem,"hessian",(char *)a4sqp_cutest_env_string("A4SQP_HESSIAN","BFGS"));
-	AddA4SqpStrOption(problem,"exact_lagrangian_multipliers",(char *)a4sqp_cutest_env_string("A4SQP_EXACT_LAGRANGIAN_MULTIPLIERS","ROW_DUAL_SIGNED"));
-	AddA4SqpStrOption(problem,"scaleopt",(char *)a4sqp_cutest_env_string("A4SQP_SCALEOPT","ROW_2NORM"));
+	if(!a4sqp_cutest_apply_core_options(problem)){
+		FreeA4SqpProblem(problem);
+		return 3;
+	}
 	solve_status = A4SqpSolve(
 		problem,
 		(double *)x,
@@ -880,6 +982,18 @@ report:
 	a4sqp_cutest_json_number(stats.complementarity_inf);
 	printf(",");
 	printf("\"kkt_lambda_sign\":%d,",(int)stats.kkt_lambda_sign);
+	printf("\"bound_lower_active\":%d,\"bound_upper_active\":%d,\"bound_fixed_active\":%d,\"bound_worst_index\":%d,",
+		(int)stats.bound_lower_active,
+		(int)stats.bound_upper_active,
+		(int)stats.bound_fixed_active,
+		(int)stats.bound_worst_index
+	);
+	printf("\"bound_stationarity_inf\":");
+	a4sqp_cutest_json_number(stats.bound_stationarity_inf);
+	printf(",");
+	printf("\"bound_worst_lagrangian_gradient\":");
+	a4sqp_cutest_json_number(stats.bound_worst_lagrangian_gradient);
+	printf(",");
 	printf("\"iterations\":%d,\"qp_solves\":%d,\"qp_failures\":%d,\"line_search_failures\":%d,",
 		stats.iterations,
 		stats.qp_solves,

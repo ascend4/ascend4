@@ -281,6 +281,12 @@ def write_tsv_results(results: list[dict[str, object]], args: argparse.Namespace
         "max_constraint_violation",
         "kkt_error",
         "projected_gradient_inf",
+        "bound_lower_active",
+        "bound_upper_active",
+        "bound_fixed_active",
+        "bound_stationarity_inf",
+        "bound_worst_index",
+        "bound_worst_lagrangian_gradient",
         "iterations",
         "qp_solves",
         "qp_failures",
@@ -323,6 +329,12 @@ def write_tsv_results(results: list[dict[str, object]], args: argparse.Namespace
                     "max_constraint_violation": result.get("max_constraint_violation", ""),
                     "kkt_error": result.get("kkt_error", ""),
                     "projected_gradient_inf": result.get("projected_gradient_inf", ""),
+                    "bound_lower_active": result.get("bound_lower_active", ""),
+                    "bound_upper_active": result.get("bound_upper_active", ""),
+                    "bound_fixed_active": result.get("bound_fixed_active", ""),
+                    "bound_stationarity_inf": result.get("bound_stationarity_inf", ""),
+                    "bound_worst_index": result.get("bound_worst_index", ""),
+                    "bound_worst_lagrangian_gradient": result.get("bound_worst_lagrangian_gradient", ""),
                     "iterations": result.get("iterations", ""),
                     "qp_solves": result.get("qp_solves", ""),
                     "qp_failures": result.get("qp_failures", ""),
@@ -360,6 +372,10 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--restoration", action="store_true", default=os.environ.get("A4SQP_RESTORATION", "0") not in ("", "0", "false", "False"))
     parser.add_argument("--active-bound-restoration", action="store_true", default=os.environ.get("A4SQP_ACTIVE_BOUND_RESTORATION", "1") not in ("", "0", "false", "False"))
     parser.add_argument("--no-active-bound-restoration", dest="active_bound_restoration", action="store_false")
+    parser.add_argument("--active-bound-release", action="store_true", default=os.environ.get("A4SQP_ACTIVE_BOUND_RELEASE", "0") not in ("", "0", "false", "False"))
+    parser.add_argument("--no-active-bound-release", dest="active_bound_release", action="store_false")
+    parser.add_argument("--reduced-gradient-polish", action="store_true", default=os.environ.get("A4SQP_REDUCED_GRADIENT_POLISH", "0") not in ("", "0", "false", "False"))
+    parser.add_argument("--no-reduced-gradient-polish", dest="reduced_gradient_polish", action="store_false")
     parser.add_argument("--restoration-trigger-iter", type=int, default=int(os.environ.get("A4SQP_RESTORATION_TRIGGER_ITER", "3")))
     parser.add_argument("--restoration-max-iter", type=int, default=int(os.environ.get("A4SQP_RESTORATION_MAX_ITER", "0")))
     parser.add_argument("--restoration-improve", type=float, default=float(os.environ.get("A4SQP_RESTORATION_IMPROVE", "1e-3")))
@@ -374,7 +390,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--elastic-penalty-max", type=float, default=float(os.environ.get("A4SQP_ELASTIC_PENALTY_MAX", "1e8")))
     parser.add_argument("--a4sqp-hessian", default=os.environ.get("A4SQP_HESSIAN", "BFGS"))
     parser.add_argument("--a4sqp-exact-lagrangian-multipliers", default=os.environ.get("A4SQP_EXACT_LAGRANGIAN_MULTIPLIERS", "ROW_DUAL_SIGNED"))
-    parser.add_argument("--a4sqp-scaleopt", default=os.environ.get("A4SQP_SCALEOPT", "ROW_2NORM"))
+    parser.add_argument("--a4sqp-scaleopt", default=os.environ.get("A4SQP_SCALEOPT", "AUTO"))
     parser.add_argument("--a4sqp-x-scale", type=float, default=float(os.environ.get("A4SQP_X_SCALE", "0")))
     parser.add_argument("--try-lsq", default=os.environ.get("A4SQP_TRY_LSQ", "LM"))
     parser.add_argument(
@@ -440,6 +456,8 @@ def main(argv: list[str]) -> int:
     env["A4SQP_RESTORATION_REENTRY_FACTOR"] = str(args.restoration_reentry_factor)
     env["A4SQP_KKT_CONVERGENCE"] = "1" if args.kkt_convergence else "0"
     env["A4SQP_ACTIVE_BOUND_RESTORATION"] = "1" if args.active_bound_restoration else "0"
+    env["A4SQP_ACTIVE_BOUND_RELEASE"] = "1" if args.active_bound_release else "0"
+    env["A4SQP_REDUCED_GRADIENT_POLISH"] = "1" if args.reduced_gradient_polish else "0"
     env["A4SQP_ELASTIC_PENALTY"] = str(args.elastic_penalty)
     env["A4SQP_ELASTIC_PENALTY_GROWTH"] = str(args.elastic_penalty_growth)
     env["A4SQP_ELASTIC_PENALTY_MAX"] = str(args.elastic_penalty_max)

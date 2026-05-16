@@ -41,6 +41,8 @@ struct A4SqpCOptions {
 	int kkt_convergence;
 	int restoration;
 	int active_bound_restoration;
+	int active_bound_release;
+	int reduced_gradient_polish;
 	int restoration_trigger_iter;
 	int restoration_max_iter;
 	double restoration_improve;
@@ -90,6 +92,167 @@ struct A4SqpProblemInfo {
 	struct A4SqpCOptions opt;
 	struct A4SqpSolveStats stats;
 };
+
+#define A4SQP_OPT_INT(NAME,LABEL,PAGE,DESC,DEFAULT,LOW,HIGH,PROBLEM) \
+	{NAME,LABEL,DESC,PAGE,A4SqpOptionInteger,(A4SqpNumber)(DEFAULT),(A4SqpNumber)(LOW),(A4SqpNumber)(HIGH),NULL,NULL,PROBLEM}
+#define A4SQP_OPT_BOOL(NAME,LABEL,PAGE,DESC,DEFAULT,PROBLEM) \
+	{NAME,LABEL,DESC,PAGE,A4SqpOptionBool,(A4SqpNumber)(DEFAULT),0.0,1.0,NULL,NULL,PROBLEM}
+#define A4SQP_OPT_NUM(NAME,LABEL,PAGE,DESC,DEFAULT,LOW,HIGH,PROBLEM) \
+	{NAME,LABEL,DESC,PAGE,A4SqpOptionNumber,(A4SqpNumber)(DEFAULT),(A4SqpNumber)(LOW),(A4SqpNumber)(HIGH),NULL,NULL,PROBLEM}
+#define A4SQP_OPT_STR(NAME,LABEL,PAGE,DESC,DEFAULT,CHOICES,PROBLEM) \
+	{NAME,LABEL,DESC,PAGE,A4SqpOptionString,0.0,0.0,0.0,DEFAULT,CHOICES,PROBLEM}
+
+static const struct A4SqpOptionInfo a4sqp_c_option_info[] = {
+	A4SQP_OPT_STR("scaleopt","Scaling option",1,
+		"Scaling option for the A4SQP problem view.",
+		"ROW_2NORM",((const char *const[]){"AUTO","NONE","ROW_2NORM","ROW_2NORM_T2","ROW_2NORM_T5","ROW_2NORM_T10","ROW_2NORM_T100","ROW_2NORM_F1E-2","ROW_2NORM_F1E-4","RELNOM",NULL}),A4SQP_TRUE),
+	A4SQP_OPT_STR("hessian","Hessian model",1,
+		"Step Hessian model for the SQP QP: BFGS, EXACT_OBJ, EXACT_LAGRANGIAN, or AUTO.",
+		"BFGS",((const char *const[]){"AUTO","BFGS","EXACT_OBJ","EXACT_LAGRANGIAN",NULL}),A4SQP_TRUE),
+	A4SQP_OPT_STR("exact_lagrangian_multipliers","Exact Hessian multipliers",3,
+		"Multiplier source for exact Lagrangian Hessian callbacks: ROW_DUAL_SIGNED, ROW_DUAL, or RECOVERED.",
+		"ROW_DUAL_SIGNED",((const char *const[]){"ROW_DUAL_SIGNED","ROW_DUAL","RECOVERED",NULL}),A4SQP_TRUE),
+	A4SQP_OPT_STR("try_lsq","Try least squares",1,
+		"Attempt the dedicated least-squares path for recognised unconstrained sum-of-squares objectives: OFF, GAUSS, or LM.",
+		"LM",((const char *const[]){"OFF","GAUSS","LM",NULL}),A4SQP_FALSE),
+	A4SQP_OPT_INT("lsq_max_iter","LSQ maximum iterations",1,
+		"Maximum iterations for the least-squares pre-solve; zero reuses max_iter.",
+		0,0,1000000,A4SQP_FALSE),
+	A4SQP_OPT_NUM("hess_reg","Hessian regularization",2,
+		"Minimum diagonal margin enforced when regularizing the step Hessian to a convex QP model.",
+		1e-8,0.0,1e12,A4SQP_TRUE),
+	A4SQP_OPT_NUM("hess_fallback_ratio","Exact Hessian fallback ratio",2,
+		"Use the BFGS fallback model for an exact-Hessian step when PSD regularization divided by the Hessian infinity norm exceeds this ratio; zero disables fallback.",
+		1.0,0.0,1e12,A4SQP_TRUE),
+	A4SQP_OPT_NUM("bound_push","Bound push",2,
+		"Distance used when projecting an out-of-bounds initial value just inside finite variable bounds.",
+		1e-8,0.0,1e3,A4SQP_TRUE),
+	A4SQP_OPT_INT("verbosity","Verbosity",2,
+		"A4SQP diagnostic verbosity level.",
+		0,0,5,A4SQP_TRUE),
+	A4SQP_OPT_INT("max_iter","Maximum iterations",1,
+		"Maximum number of A4SQP major SQP iterations.",
+		200,1,1000000,A4SQP_TRUE),
+	A4SQP_OPT_INT("max_backtrack","Maximum backtracking steps",2,
+		"Maximum number of merit line-search backtracking steps per SQP iteration.",
+		20,1,100,A4SQP_TRUE),
+	A4SQP_OPT_NUM("feas_tol","Feasibility tolerance",1,
+		"Convergence tolerance for maximum scaled relation violation.",
+		1e-7,1e-14,1e3,A4SQP_TRUE),
+	A4SQP_OPT_NUM("step_tol","Step tolerance",1,
+		"Convergence tolerance for physical accepted step norm.",
+		1e-7,1e-14,1e3,A4SQP_TRUE),
+	A4SQP_OPT_NUM("acceptable_tol","Acceptable tolerance",1,
+		"Relaxed feasibility/stationarity tolerance for acceptable solves.",
+		1e-5,1e-14,1e3,A4SQP_TRUE),
+	A4SQP_OPT_INT("acceptable_iter","Acceptable iterations",1,
+		"Number of consecutive acceptable iterations required before accepting a relaxed solve.",
+		0,0,10000,A4SQP_TRUE),
+	A4SQP_OPT_BOOL("kkt_convergence","KKT convergence",2,
+		"Use the core KKT residual, rather than constrained small-step acceptance, for objective stationarity convergence.",
+		0,A4SQP_TRUE),
+	A4SQP_OPT_NUM("merit_tol","Merit tolerance",2,
+		"Minimum merit decrease regarded as meaningful by the line search.",
+		1e-14,0.0,1e3,A4SQP_TRUE),
+	A4SQP_OPT_NUM("armijo_coeff","Armijo coefficient",2,
+		"Fraction of predicted merit reduction required by the line search.",
+		1e-4,1e-12,0.5,A4SQP_TRUE),
+	A4SQP_OPT_NUM("elastic_penalty","Elastic penalty",1,
+		"Linear penalty used for lower and upper elastic QP slacks and the merit function.",
+		100.0,1e-12,1e12,A4SQP_TRUE),
+	A4SQP_OPT_NUM("elastic_penalty_growth","Elastic penalty growth",2,
+		"Multiplier applied when the core detects saturated elastic-QP duals while infeasibility remains.",
+		10.0,1.0,1e6,A4SQP_TRUE),
+	A4SQP_OPT_NUM("elastic_penalty_max","Maximum elastic penalty",2,
+		"Upper bound for automatic elastic/merit penalty increases.",
+		1e8,1e-12,1e16,A4SQP_TRUE),
+	A4SQP_OPT_BOOL("filter_accept","Filter-lite acceptance",2,
+		"Permit feasibility-improving constrained steps that reduce merit but fail the predicted-reduction ratio.",
+		0,A4SQP_TRUE),
+	A4SQP_OPT_NUM("filter_margin","Filter-lite margin",2,
+		"Required fractional constraint-violation reduction for filter-lite acceptance.",
+		1e-4,0.0,0.999999,A4SQP_TRUE),
+	A4SQP_OPT_NUM("trust_radius_init","Initial trust radius",2,
+		"Initial scaled infinity-norm trust-region radius for the primal SQP step.",
+		1.0,1e-12,1e12,A4SQP_TRUE),
+	A4SQP_OPT_NUM("trust_radius_min","Minimum trust radius",2,
+		"Minimum scaled trust-region radius before A4SQP gives up shrinking the QP step.",
+		1e-6,1e-12,1e12,A4SQP_TRUE),
+	A4SQP_OPT_NUM("trust_radius_max","Maximum trust radius",2,
+		"Maximum scaled trust-region radius for the primal SQP step.",
+		100.0,1e-12,1e12,A4SQP_TRUE),
+	A4SQP_OPT_NUM("trust_shrink","Trust shrink factor",2,
+		"Factor applied to the trust radius after QP or agreement failure.",
+		0.25,1e-6,0.999999,A4SQP_TRUE),
+	A4SQP_OPT_NUM("trust_grow","Trust grow factor",2,
+		"Factor applied to the trust radius after a good boundary-active step.",
+		2.0,1.000001,1e6,A4SQP_TRUE),
+	A4SQP_OPT_NUM("trust_accept","Trust acceptance ratio",2,
+		"Minimum actual-to-predicted merit reduction ratio required for line-search acceptance.",
+		0.0,-1e6,1e6,A4SQP_TRUE),
+	A4SQP_OPT_NUM("trust_good","Trust good ratio",2,
+		"Actual-to-predicted merit reduction ratio that triggers trust-region growth when the step is trust-active.",
+		0.75,-1e6,1e6,A4SQP_TRUE),
+	A4SQP_OPT_NUM("trust_tiny_alpha","Tiny-alpha trust shrink",2,
+		"Accepted regular steps with alpha at or below this value shrink the trust radius toward the accepted step size; zero disables this update.",
+		0.0,0.0,1.0,A4SQP_TRUE),
+	A4SQP_OPT_NUM("trust_tiny_radius_factor","Tiny-alpha trust factor",2,
+		"Multiplier on accepted scaled step size used as the new trust-radius target after a tiny-alpha accepted step.",
+		2.0,1.0,100.0,A4SQP_TRUE),
+	A4SQP_OPT_INT("trust_qp_retries","Trust-region retries",2,
+		"Maximum number of trust-radius reductions and QP rebuild retries per SQP iteration.",
+		5,0,100,A4SQP_TRUE),
+	A4SQP_OPT_BOOL("trust_unconstrained","Trust unconstrained",2,
+		"Apply the scaled trust-region radius and trust retries to unconstrained objective-only problems.",
+		0,A4SQP_TRUE),
+	A4SQP_OPT_BOOL("restoration","Restoration phase",2,
+		"Enable feasibility restoration steps after repeated lack of constraint-violation progress.",
+		0,A4SQP_TRUE),
+	A4SQP_OPT_BOOL("active_bound_restoration","Active-bound restoration probe",3,
+		"Enable the experimental core probe that moves a stationarity-blocking variable to a bound before a short restoration attempt.",
+		1,A4SQP_TRUE),
+	A4SQP_OPT_BOOL("active_bound_release","Active-bound release probe",3,
+		"Enable the experimental core probe that releases a stationarity-blocking active bound before a short restoration attempt.",
+		0,A4SQP_TRUE),
+	A4SQP_OPT_BOOL("reduced_gradient_polish","Reduced-gradient polish",3,
+		"Enable an experimental feasible-point reduced-gradient polish followed by restoration.",
+		0,A4SQP_TRUE),
+	A4SQP_OPT_INT("restoration_trigger_iter","Restoration trigger",2,
+		"Number of consecutive materially infeasible non-improving iterations before restoration steps are requested; zero uses the conservative default.",
+		3,0,10000,A4SQP_TRUE),
+	A4SQP_OPT_INT("restoration_max_iter","Restoration handoff",2,
+		"Maximum consecutive restoration iterations before handing back to the regular SQP objective model; zero disables the cap.",
+		0,0,10000,A4SQP_TRUE),
+	A4SQP_OPT_NUM("restoration_improve","Restoration progress",2,
+		"Required fractional maximum-violation improvement to reset the restoration stall counter.",
+		1e-3,0.0,0.999999,A4SQP_TRUE),
+	A4SQP_OPT_NUM("restoration_margin","Restoration acceptance",2,
+		"Required fractional constraint-violation reduction for restoration line-search acceptance.",
+		1e-4,0.0,0.999999,A4SQP_TRUE),
+	A4SQP_OPT_NUM("restoration_handoff_reduction","Restoration handoff reduction",2,
+		"Fractional constraint-violation reduction from restoration entry required before trying the regular SQP objective model again; zero disables improvement-based handoff.",
+		0.5,0.0,0.999999,A4SQP_TRUE),
+	A4SQP_OPT_NUM("restoration_reentry_factor","Restoration re-entry factor",2,
+		"Multiplier on the last restoration handoff violation before further restoration re-entry is allowed after repeated handoffs.",
+		2.0,1.0,1e6,A4SQP_TRUE),
+	A4SQP_OPT_NUM("qp_time_limit","QP time limit",3,
+		"Per-QP HiGHS time limit in seconds; zero leaves HiGHS unbounded.",
+		0.0,0.0,1e12,A4SQP_TRUE),
+	A4SQP_OPT_INT("qp_iteration_limit","QP iteration limit",3,
+		"Per-QP HiGHS iteration limit; zero leaves HiGHS unbounded.",
+		0,0,100000000,A4SQP_TRUE),
+	A4SQP_OPT_NUM("nlp_lower_bound_inf","NLP lower infinity",3,
+		"Values less than or equal to this are treated as absent lower bounds.",
+		A4SQP_C_DEFAULT_LOWER_INF,-1e300,0.0,A4SQP_TRUE),
+	A4SQP_OPT_NUM("nlp_upper_bound_inf","NLP upper infinity",3,
+		"Values greater than or equal to this are treated as absent upper bounds.",
+		A4SQP_C_DEFAULT_UPPER_INF,0.0,1e300,A4SQP_TRUE)
+};
+
+#undef A4SQP_OPT_INT
+#undef A4SQP_OPT_BOOL
+#undef A4SQP_OPT_NUM
+#undef A4SQP_OPT_STR
 
 struct A4SqpCSolve {
 	A4SqpProblem problem;
@@ -168,10 +331,12 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->elastic_penalty_max = 1e8;
 	opt->filter_accept = 0;
 	opt->filter_margin = 1e-4;
-	opt->trust_unconstrained = 1;
+	opt->trust_unconstrained = 0;
 	opt->kkt_convergence = 0;
 	opt->restoration = 0;
 	opt->active_bound_restoration = 1;
+	opt->active_bound_release = 0;
+	opt->reduced_gradient_polish = 0;
 	opt->restoration_trigger_iter = 3;
 	opt->restoration_max_iter = 0;
 	opt->restoration_improve = 1e-3;
@@ -196,7 +361,7 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->upper_inf = A4SQP_C_DEFAULT_UPPER_INF;
 	strcpy(opt->hessian,"BFGS");
 	strcpy(opt->exact_lagrangian_multipliers,"ROW_DUAL_SIGNED");
-	strcpy(opt->scaleopt,"NONE");
+	strcpy(opt->scaleopt,"ROW_2NORM");
 }
 
 static double a4sqp_c_map_bound(double value, double lower_inf, double upper_inf){
@@ -359,16 +524,28 @@ A4SqpBool AddA4SqpStrOption(A4SqpProblem problem, char *keyword, char *val){
 		return A4SQP_FALSE;
 	}
 	if(a4sqp_c_streq(keyword,"scaleopt")){
+		if(a4sqp_c_streq(val,"AUTO")){
+			strcpy(p->opt.scaleopt,"AUTO");
+			return A4SQP_TRUE;
+		}
 		if(a4sqp_c_streq(val,"NONE")){
 			strcpy(p->opt.scaleopt,"NONE");
 			return A4SQP_TRUE;
 		}
-		if(a4sqp_c_streq(val,"ROW_2NORM")){
-			strcpy(p->opt.scaleopt,"ROW_2NORM");
-			return A4SQP_TRUE;
-		}
 		if(a4sqp_c_streq(val,"RELNOM")){
 			strcpy(p->opt.scaleopt,"RELNOM");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"ROW_2NORM")
+			|| a4sqp_c_streq(val,"ROW_2NORM_T2")
+			|| a4sqp_c_streq(val,"ROW_2NORM_T5")
+			|| a4sqp_c_streq(val,"ROW_2NORM_T10")
+			|| a4sqp_c_streq(val,"ROW_2NORM_T100")
+			|| a4sqp_c_streq(val,"ROW_2NORM_F1E-2")
+			|| a4sqp_c_streq(val,"ROW_2NORM_F1E-4")
+		){
+			strncpy(p->opt.scaleopt,val,sizeof(p->opt.scaleopt) - 1);
+			p->opt.scaleopt[sizeof(p->opt.scaleopt) - 1] = '\0';
 			return A4SQP_TRUE;
 		}
 		return A4SQP_FALSE;
@@ -596,6 +773,14 @@ A4SqpBool AddA4SqpIntOption(A4SqpProblem problem, char *keyword, A4SqpInt val){
 		p->opt.active_bound_restoration = val != 0;
 		return A4SQP_TRUE;
 	}
+	if(a4sqp_c_streq(keyword,"active_bound_release")){
+		p->opt.active_bound_release = val != 0;
+		return A4SQP_TRUE;
+	}
+	if(a4sqp_c_streq(keyword,"reduced_gradient_polish")){
+		p->opt.reduced_gradient_polish = val != 0;
+		return A4SQP_TRUE;
+	}
 	if(a4sqp_c_streq(keyword,"restoration_trigger_iter")){
 		if(val < 0){
 			return A4SQP_FALSE;
@@ -675,6 +860,32 @@ A4SqpBool SetA4SqpIntermediateCallback(A4SqpProblem problem, A4SqpIntermediateCB
 	}
 	p->intermediate_cb = intermediate_cb;
 	return A4SQP_TRUE;
+}
+
+A4SqpIndex GetA4SqpOptionCount(void){
+	return (A4SqpIndex)(sizeof(a4sqp_c_option_info) / sizeof(a4sqp_c_option_info[0]));
+}
+
+A4SqpBool GetA4SqpOptionInfo(A4SqpIndex index, struct A4SqpOptionInfo *info){
+	if(index < 0 || index >= GetA4SqpOptionCount() || info == NULL){
+		return A4SQP_FALSE;
+	}
+	*info = a4sqp_c_option_info[index];
+	return A4SQP_TRUE;
+}
+
+A4SqpBool GetA4SqpOptionInfoByName(char *keyword, struct A4SqpOptionInfo *info){
+	A4SqpIndex i;
+	if(keyword == NULL || info == NULL){
+		return A4SQP_FALSE;
+	}
+	for(i = 0; i < GetA4SqpOptionCount(); ++i){
+		if(a4sqp_c_streq(keyword,a4sqp_c_option_info[i].keyword)){
+			*info = a4sqp_c_option_info[i];
+			return A4SQP_TRUE;
+		}
+	}
+	return A4SQP_FALSE;
 }
 
 static int a4sqp_c_view_alloc(struct A4SqpView *view){
@@ -873,22 +1084,22 @@ static int a4sqp_c_build_view(struct A4SqpCSolve *solve, const double *x, int ne
 			for(i = 0; i < p->m; ++i){
 				next[i] = view->jac_row_start[i];
 			}
-		for(k = 0; k < p->nele_jac; ++k){
-			int row = irow[k] - (p->index_style == 1 ? 1 : 0);
-			int col = jcol[k] - (p->index_style == 1 ? 1 : 0);
-			if(!isfinite(jac[k])){
-				++view->derivative_errors;
-				solve->callback_error = 1;
-				A4SQP_FREE(next);
-				A4SQP_FREE(irow);
-				A4SQP_FREE(jcol);
-				A4SQP_FREE(jac);
-				return 0;
-			}
-			if(row >= 0 && row < p->m && col >= 0 && col < p->n){
-				int pos = next[row]++;
-				view->jac_col_index[pos] = col;
-				view->jac_value[pos] = jac[k];
+			for(k = 0; k < p->nele_jac; ++k){
+				int row = irow[k] - (p->index_style == 1 ? 1 : 0);
+				int col = jcol[k] - (p->index_style == 1 ? 1 : 0);
+				if(!isfinite(jac[k])){
+					++view->derivative_errors;
+					solve->callback_error = 1;
+					A4SQP_FREE(next);
+					A4SQP_FREE(irow);
+					A4SQP_FREE(jcol);
+					A4SQP_FREE(jac);
+					return 0;
+				}
+				if(row >= 0 && row < p->m && col >= 0 && col < p->n){
+					int pos = next[row]++;
+					view->jac_col_index[pos] = col;
+					view->jac_value[pos] = jac[k];
 					view->scaled_jac_value[pos] = view->rel_scale[row] * jac[k] * view->var_scale[col];
 				}
 			}
@@ -898,7 +1109,17 @@ static int a4sqp_c_build_view(struct A4SqpCSolve *solve, const double *x, int ne
 		A4SQP_FREE(jcol);
 		A4SQP_FREE(jac);
 	}
-	if(!a4sqp_c_streq(p->opt.scaleopt,"NONE") && a4sqp_view_apply_scaling(view,p->opt.scaleopt)){
+	/* Explicit row scaling is authoritative. Explicit variable scaling can
+	 * still be combined with automatic row scaling, because the row 2-norm is
+	 * computed after the variable scale has been applied. ASCEND supplies both
+	 * variable and row presolve scales through SetA4SqpProblemScaling, so this
+	 * condition avoids double-scaling the ASCEND problem view.
+	 */
+	if(
+		p->g_scale == NULL
+		&& !a4sqp_c_streq(p->opt.scaleopt,"NONE")
+		&& a4sqp_view_apply_scaling(view,p->opt.scaleopt)
+	){
 		return 1;
 	}
 	return 0;
@@ -950,6 +1171,7 @@ static const double *a4sqp_c_stationarity_multipliers(struct A4SqpCSolve *solve)
 
 static void a4sqp_c_update_kkt_stats(struct A4SqpCSolve *solve){
 	struct A4SqpKktResidual residual;
+	struct A4SqpCoreBoundStats bound_stats;
 	const double *stat_lambda;
 	if(solve == NULL || solve->problem == NULL){
 		return;
@@ -970,6 +1192,21 @@ static void a4sqp_c_update_kkt_stats(struct A4SqpCSolve *solve){
 	solve->problem->stats.dual_infeasibility_inf = residual.dual_inf;
 	solve->problem->stats.complementarity_inf = residual.complementarity_inf;
 	solve->problem->stats.kkt_lambda_sign = residual.lambda_sign;
+	if(!a4sqp_core_bound_stats(
+		&solve->view,
+		solve->has_objective,
+		stat_lambda,
+		residual.lambda_sign != 0 ? (double)residual.lambda_sign : 1.0,
+		solve->problem->opt.feas_tol,
+		&bound_stats
+	)){
+		solve->problem->stats.bound_lower_active = bound_stats.lower_active;
+		solve->problem->stats.bound_upper_active = bound_stats.upper_active;
+		solve->problem->stats.bound_fixed_active = bound_stats.fixed_active;
+		solve->problem->stats.bound_worst_index = bound_stats.worst_index;
+		solve->problem->stats.bound_stationarity_inf = bound_stats.stationarity_inf;
+		solve->problem->stats.bound_worst_lagrangian_gradient = bound_stats.worst_lagrangian_gradient;
+	}
 }
 
 static int a4sqp_c_hess_reset_identity(struct A4SqpCSolve *solve, double diag){
@@ -1577,6 +1814,7 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 	double old_kkt;
 	double old_vio;
 	double old_merit;
+	const double *stat_lambda;
 	int n;
 	int nactive = 0;
 	int row;
@@ -1625,6 +1863,7 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 	old_kkt = p->stats.kkt_error;
 	old_vio = p->stats.max_constraint_violation;
 	old_merit = a4sqp_core_view_merit(&solve->view,solve->has_objective,solve->elastic_penalty);
+	stat_lambda = a4sqp_c_stationarity_multipliers(solve);
 	if(a4sqp_c_uses_exact_hessian(p)){
 		if(a4sqp_c_hess_update_exact(solve,x) || solve->callback_error){
 			solve->callback_error = 0;
@@ -1646,7 +1885,7 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 	memcpy(old_x,x,(size_t)n * sizeof(*old_x));
 	if(a4sqp_core_lagrangian_gradient_for_view(
 		&core,
-		solve->lambda,
+		stat_lambda,
 		p->stats.kkt_lambda_sign != 0 ? (double)p->stats.kkt_lambda_sign : 1.0,
 		lag_grad
 	)){
@@ -1756,6 +1995,215 @@ cleanup:
 	return accepted;
 }
 
+static int a4sqp_c_try_reduced_gradient_polish(
+	struct A4SqpCSolve *solve,
+	double *x,
+	const struct A4SqpLineSearchOptions *base_line_options,
+	const struct A4SqpVectorLineSearchOps *line_ops,
+	void *line_ctx
+){
+	struct A4SqpProblemInfo *p;
+	struct A4SqpCoreView core;
+	struct A4SqpLineSearchOptions line_options;
+	struct A4SqpLineSearchResult result;
+	const double *stat_lambda;
+	double *old_x = NULL;
+	double *grad = NULL;
+	double *proj = NULL;
+	double *basis = NULL;
+	double *normal = NULL;
+	double old_kkt;
+	double old_vio;
+	double max_step = 0.0;
+	int basis_count = 0;
+	int n;
+	int i;
+	int row;
+	int accepted = 0;
+	if(
+		solve == NULL
+		|| solve->problem == NULL
+		|| x == NULL
+		|| base_line_options == NULL
+		|| line_ops == NULL
+		|| line_ops->evaluate == NULL
+		|| !solve->has_objective
+	){
+		return 0;
+	}
+	p = solve->problem;
+	n = p->n;
+	if(
+		!p->opt.restoration
+		|| !p->opt.kkt_convergence
+		|| !p->opt.reduced_gradient_polish
+		|| n <= 0
+		|| p->m <= 0
+		|| p->stats.max_constraint_violation > p->opt.acceptable_tol
+		|| p->stats.kkt_error <= p->opt.acceptable_tol
+		|| solve->last_step_norm > fmax(sqrt(p->opt.acceptable_tol),10.0 * p->opt.step_tol)
+	){
+		return 0;
+	}
+	a4sqp_view_get_core(&solve->view,&core);
+	core.has_objective = solve->has_objective;
+	stat_lambda = a4sqp_c_stationarity_multipliers(solve);
+	old_x = A4SQP_NEW_ARRAY_OR_NULL(double,n);
+	grad = A4SQP_NEW_ARRAY_CLEAR(double,n);
+	proj = A4SQP_NEW_ARRAY_CLEAR(double,n);
+	basis = A4SQP_NEW_ARRAY_CLEAR(double,(size_t)n * (size_t)n);
+	normal = A4SQP_NEW_ARRAY_CLEAR(double,n);
+	if(old_x == NULL || grad == NULL || proj == NULL || basis == NULL || normal == NULL){
+		goto cleanup;
+	}
+	memcpy(old_x,x,(size_t)n * sizeof(*old_x));
+	if(a4sqp_core_lagrangian_gradient_for_view(
+		&core,
+		stat_lambda,
+		p->stats.kkt_lambda_sign != 0 ? (double)p->stats.kkt_lambda_sign : 1.0,
+		grad
+	)){
+		goto cleanup;
+	}
+	for(i = 0; i < n; ++i){
+		double value = core.scaled_var_value[i];
+		double lower = core.scaled_var_lower[i];
+		double upper = core.scaled_var_upper[i];
+		int at_lower = !a4sqp_c_is_lower_inf(lower) && value <= lower + p->opt.acceptable_tol;
+		int at_upper = !a4sqp_c_is_upper_inf(upper) && value >= upper - p->opt.acceptable_tol;
+		proj[i] = grad[i];
+		if((at_lower || at_upper) && basis_count < n){
+			basis[(size_t)basis_count * (size_t)n + (size_t)i] = 1.0;
+			++basis_count;
+		}
+	}
+	for(row = 0; row < core.n_rel; ++row){
+		enum A4SqpRowActivity activity = a4sqp_core_row_activity_for_view(
+			&core,
+			row,
+			p->opt.acceptable_tol,
+			fmax(10.0 * p->opt.acceptable_tol,1e-8)
+		);
+		int k;
+		if(activity != A4SQP_ROW_EQUALITY && activity != A4SQP_ROW_ACTIVE){
+			continue;
+		}
+		memset(normal,0,(size_t)n * sizeof(*normal));
+		for(k = core.jac_row_start[row]; k < core.jac_row_start[row + 1]; ++k){
+			int col = core.jac_col_index[k];
+			if(col >= 0 && col < n){
+				normal[col] = core.scaled_jac_value[k];
+			}
+		}
+		for(i = 0; i < basis_count; ++i){
+			int j;
+			double dot = 0.0;
+			for(j = 0; j < n; ++j){
+				dot += basis[(size_t)i * (size_t)n + (size_t)j] * normal[j];
+			}
+			for(j = 0; j < n; ++j){
+				normal[j] -= dot * basis[(size_t)i * (size_t)n + (size_t)j];
+			}
+		}
+		{
+			double norm2 = 0.0;
+			int j;
+			for(j = 0; j < n; ++j){
+				norm2 += normal[j] * normal[j];
+			}
+			if(norm2 > 1e-20 && basis_count < n){
+				double inv_norm = 1.0 / sqrt(norm2);
+				for(j = 0; j < n; ++j){
+					basis[(size_t)basis_count * (size_t)n + (size_t)j] = normal[j] * inv_norm;
+				}
+				++basis_count;
+			}
+		}
+	}
+	for(i = 0; i < basis_count; ++i){
+		int j;
+		double dot = 0.0;
+		for(j = 0; j < n; ++j){
+			dot += basis[(size_t)i * (size_t)n + (size_t)j] * proj[j];
+		}
+		for(j = 0; j < n; ++j){
+			proj[j] -= dot * basis[(size_t)i * (size_t)n + (size_t)j];
+		}
+	}
+	for(i = 0; i < n; ++i){
+		double physical = fabs(proj[i] * (solve->view.var_scale != NULL ? solve->view.var_scale[i] : 1.0));
+		if(physical > max_step){
+			max_step = physical;
+		}
+	}
+	if(max_step <= p->opt.acceptable_tol || !isfinite(max_step)){
+		goto cleanup;
+	}
+	old_kkt = p->stats.kkt_error;
+	old_vio = p->stats.max_constraint_violation;
+	line_options = *base_line_options;
+	line_options.restoration = 1;
+	line_options.restoration_margin = p->opt.restoration_margin;
+	for(i = 0; i < 12 && !accepted; ++i){
+		double alpha = fmin(0.25,solve->trust_radius > 0.0 ? solve->trust_radius : 0.25) / max_step;
+		int j;
+		int iter;
+		alpha /= pow(2.0,(double)i);
+		memcpy(x,old_x,(size_t)n * sizeof(*x));
+		for(j = 0; j < n; ++j){
+			double scale = solve->view.var_scale != NULL ? solve->view.var_scale[j] : 1.0;
+			x[j] -= alpha * proj[j] * scale;
+		}
+		a4sqp_c_project_x_to_bounds(p,x);
+		if(a4sqp_c_build_view(solve,x,A4SQP_TRUE) || solve->callback_error){
+			solve->callback_error = 0;
+			continue;
+		}
+		memset(&result,0,sizeof(result));
+		for(iter = 0; iter < 20; ++iter){
+			if(a4sqp_core_nonlinear_restoration_step(
+				&solve->view,
+				&line_options,
+				line_ops,
+				line_ctx,
+				x,
+				solve->trust_radius,
+				&result
+			)){
+				break;
+			}
+			a4sqp_c_refresh_stats(solve,p->stats.iterations);
+			if(p->stats.max_constraint_violation <= p->opt.acceptable_tol){
+				break;
+			}
+		}
+		a4sqp_c_refresh_stats(solve,p->stats.iterations);
+		if(
+			p->stats.max_constraint_violation <= fmax(p->opt.acceptable_tol,old_vio)
+			&& p->stats.kkt_error < old_kkt - fmax(p->opt.feas_tol,1e-12)
+		){
+			solve->last_alpha = alpha;
+			solve->last_step_norm = result.step_norm;
+			solve->last_trust_ratio = result.trust_ratio;
+			solve->last_ls_trials = result.trials;
+			accepted = 1;
+		}
+	}
+	if(!accepted){
+		memcpy(x,old_x,(size_t)n * sizeof(*x));
+		(void)a4sqp_c_build_view(solve,x,A4SQP_TRUE);
+		a4sqp_c_refresh_stats(solve,p->stats.iterations);
+	}
+
+cleanup:
+	A4SQP_FREE(old_x);
+	A4SQP_FREE(grad);
+	A4SQP_FREE(proj);
+	A4SQP_FREE(basis);
+	A4SQP_FREE(normal);
+	return accepted;
+}
+
 static int a4sqp_c_try_active_bound_restoration(
 	struct A4SqpCSolve *solve,
 	double *x,
@@ -1771,6 +2219,7 @@ static int a4sqp_c_try_active_bound_restoration(
 	double old_kkt;
 	double old_vio;
 	double best_score = 0.0;
+	int require_kkt_improvement;
 	int best_col = -1;
 	double best_target = 0.0;
 	int i;
@@ -1796,6 +2245,9 @@ static int a4sqp_c_try_active_bound_restoration(
 		|| p->stats.kkt_error <= p->opt.acceptable_tol
 		|| solve->view.obj_gradient == NULL
 	){
+		return 0;
+	}
+	if(p->opt.kkt_convergence && p->stats.max_constraint_violation <= p->opt.acceptable_tol){
 		return 0;
 	}
 	for(i = 0; i < p->n; ++i){
@@ -1848,6 +2300,7 @@ static int a4sqp_c_try_active_bound_restoration(
 	old_obj = solve->view.obj_value;
 	old_kkt = p->stats.kkt_error;
 	old_vio = p->stats.max_constraint_violation;
+	require_kkt_improvement = p->opt.kkt_convergence && old_vio <= p->opt.acceptable_tol;
 	x[best_col] = best_target;
 	if(a4sqp_c_build_view(solve,x,A4SQP_TRUE) || solve->callback_error){
 		solve->callback_error = 0;
@@ -1878,6 +2331,7 @@ static int a4sqp_c_try_active_bound_restoration(
 	if(
 		isfinite(p->stats.max_constraint_violation)
 		&& result.accepted
+		&& (!require_kkt_improvement || p->stats.kkt_error < old_kkt)
 		&& p->stats.max_constraint_violation <= fmax(
 			p->opt.acceptable_tol,
 			fmin(10.0,sqrt(best_score))
@@ -1914,6 +2368,183 @@ cleanup:
 		memcpy(x,old_x,(size_t)p->n * sizeof(*x));
 		(void)a4sqp_c_build_view(solve,x,A4SQP_TRUE);
 		a4sqp_c_refresh_stats(solve,p->stats.iterations);
+	}
+	A4SQP_FREE(old_x);
+	return accepted;
+}
+
+static int a4sqp_c_try_active_bound_release(
+	struct A4SqpCSolve *solve,
+	double *x,
+	const struct A4SqpLineSearchOptions *base_line_options,
+	const struct A4SqpVectorLineSearchOps *line_ops,
+	void *line_ctx
+){
+	struct A4SqpProblemInfo *p;
+	struct A4SqpLineSearchOptions line_options;
+	struct A4SqpLineSearchResult result;
+	double *old_x = NULL;
+	double old_kkt;
+	double old_vio;
+	double lower;
+	double upper;
+	double value;
+	double grad;
+	double direction = 0.0;
+	double range;
+	double base_step;
+	int col;
+	int trial;
+	int accepted = 0;
+	if(
+		solve == NULL
+		|| solve->problem == NULL
+		|| x == NULL
+		|| base_line_options == NULL
+		|| line_ops == NULL
+		|| line_ops->evaluate == NULL
+		|| !solve->has_objective
+	){
+		return 0;
+	}
+	p = solve->problem;
+	if(
+		!p->opt.restoration
+		|| !p->opt.kkt_convergence
+		|| !p->opt.active_bound_release
+		|| p->n <= 0
+		|| p->m <= 0
+		|| p->stats.max_constraint_violation > p->opt.acceptable_tol
+		|| p->stats.kkt_error <= p->opt.acceptable_tol
+		|| p->stats.bound_stationarity_inf <= p->opt.acceptable_tol
+	){
+		return 0;
+	}
+	col = p->stats.bound_worst_index;
+	if(col < 0 || col >= p->n){
+		return 0;
+	}
+	value = x[col];
+	grad = p->stats.bound_worst_lagrangian_gradient;
+	lower = a4sqp_c_map_bound(p->x_l[col],p->opt.lower_inf,p->opt.upper_inf);
+	upper = a4sqp_c_map_bound(p->x_u[col],p->opt.lower_inf,p->opt.upper_inf);
+	if(!isfinite(value) || !isfinite(grad)){
+		return 0;
+	}
+	if(!a4sqp_c_is_lower_inf(lower) && value <= lower + p->opt.feas_tol && grad < -p->opt.acceptable_tol){
+		direction = 1.0;
+	}else if(!a4sqp_c_is_upper_inf(upper) && value >= upper - p->opt.feas_tol && grad > p->opt.acceptable_tol){
+		direction = -1.0;
+	}else{
+		if(p->opt.verbosity > 0){
+			fprintf(stderr,
+				"A4SQP active-bound release: skipped col=%d value=%.17g lower=%.17g upper=%.17g grad=%.17g stationarity=%.17g\n",
+				col,
+				value,
+				lower,
+				upper,
+				grad,
+				p->stats.bound_stationarity_inf
+			);
+		}
+		return 0;
+	}
+	range = (!a4sqp_c_is_lower_inf(lower) && !a4sqp_c_is_upper_inf(upper) && upper > lower)
+		? upper - lower
+		: 0.0;
+	base_step = range > 0.0 ? 0.05 * range : 0.05;
+	if(solve->trust_radius > 0.0 && solve->view.var_scale != NULL && solve->view.var_scale[col] > 0.0){
+		double trust_step = 0.25 * solve->trust_radius * solve->view.var_scale[col];
+		if(trust_step > 0.0 && trust_step < base_step){
+			base_step = trust_step;
+		}
+	}
+	if(!isfinite(base_step) || base_step <= 0.0){
+		return 0;
+	}
+	if(p->opt.verbosity > 0){
+		fprintf(stderr,
+			"A4SQP active-bound release: col=%d value=%.17g grad=%.17g direction=%.0f kkt=%.17g vio=%.17g\n",
+			col,
+			value,
+			grad,
+			direction,
+			p->stats.kkt_error,
+			p->stats.max_constraint_violation
+		);
+	}
+	old_x = A4SQP_NEW_ARRAY_OR_NULL(double,p->n);
+	if(old_x == NULL){
+		return 0;
+	}
+	memcpy(old_x,x,(size_t)p->n * sizeof(*old_x));
+	old_kkt = p->stats.kkt_error;
+	old_vio = p->stats.max_constraint_violation;
+	line_options = *base_line_options;
+	line_options.restoration = 1;
+	line_options.restoration_margin = p->opt.restoration_margin;
+	for(trial = 0; trial < 8 && !accepted; ++trial){
+		double step = base_step / pow(2.0,(double)trial);
+		double target = old_x[col] + direction * step;
+		int iter;
+		if(!a4sqp_c_is_lower_inf(lower) && target < lower + p->opt.bound_push){
+			target = lower + p->opt.bound_push;
+		}
+		if(!a4sqp_c_is_upper_inf(upper) && target > upper - p->opt.bound_push){
+			target = upper - p->opt.bound_push;
+		}
+		if(target == old_x[col] || !isfinite(target)){
+			continue;
+		}
+		memcpy(x,old_x,(size_t)p->n * sizeof(*x));
+		x[col] = target;
+		if(a4sqp_c_build_view(solve,x,A4SQP_TRUE) || solve->callback_error){
+			solve->callback_error = 0;
+			continue;
+		}
+		memset(&result,0,sizeof(result));
+		for(iter = 0; iter < 30; ++iter){
+			if(a4sqp_core_nonlinear_restoration_step(
+				&solve->view,
+				&line_options,
+				line_ops,
+				line_ctx,
+				x,
+				solve->trust_radius,
+				&result
+			)){
+				break;
+			}
+			a4sqp_c_refresh_stats(solve,p->stats.iterations);
+			if(p->stats.max_constraint_violation <= p->opt.acceptable_tol){
+				break;
+			}
+		}
+		a4sqp_c_refresh_stats(solve,p->stats.iterations);
+		if(
+			result.accepted
+			&& p->stats.max_constraint_violation <= fmax(p->opt.acceptable_tol,old_vio)
+			&& p->stats.kkt_error < old_kkt - fmax(p->opt.feas_tol,1e-12)
+		){
+			solve->last_alpha = result.alpha;
+			solve->last_step_norm = fabs(x[col] - old_x[col]);
+			solve->last_trust_ratio = result.trust_ratio;
+			solve->last_ls_trials = result.trials;
+			accepted = 1;
+		}
+	}
+	if(!accepted){
+		memcpy(x,old_x,(size_t)p->n * sizeof(*x));
+		(void)a4sqp_c_build_view(solve,x,A4SQP_TRUE);
+		a4sqp_c_refresh_stats(solve,p->stats.iterations);
+	}
+	if(p->opt.verbosity > 0){
+		fprintf(stderr,
+			"A4SQP active-bound release: %s kkt=%.17g vio=%.17g\n",
+			accepted ? "accepted" : "rejected",
+			p->stats.kkt_error,
+			p->stats.max_constraint_violation
+		);
 	}
 	A4SQP_FREE(old_x);
 	return accepted;
@@ -2322,6 +2953,12 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		if(a4sqp_c_try_stationarity_correction(solve,x)){
 			a4sqp_c_refresh_stats(solve,iter + 1);
 		}
+		if(a4sqp_c_try_reduced_gradient_polish(solve,x,&line_options,&line_ops,&line_ctx)){
+			a4sqp_c_refresh_stats(solve,iter + 1);
+		}
+		if(a4sqp_c_try_active_bound_release(solve,x,&line_options,&line_ops,&line_ctx)){
+			a4sqp_c_refresh_stats(solve,iter + 1);
+		}
 		if(p->opt.active_bound_restoration && a4sqp_c_try_active_bound_restoration(solve,x,&line_options,&line_ops,&line_ctx)){
 			a4sqp_c_refresh_stats(solve,iter + 1);
 		}
@@ -2413,6 +3050,21 @@ static int a4sqp_c_should_restart_with_bfgs(
 		|| p->stats.max_constraint_violation > p->opt.acceptable_tol;
 }
 
+static int a4sqp_c_should_restart_with_strict_row_scaling(
+	const struct A4SqpProblemInfo *p,
+	const char *original_scaleopt,
+	enum A4SqpApplicationReturnStatus status
+){
+	if(p == NULL || original_scaleopt == NULL || !a4sqp_c_streq(original_scaleopt,"AUTO")){
+		return 0;
+	}
+	if(p->x_scale != NULL || p->g_scale != NULL){
+		return 0;
+	}
+	return status != A4SqpSolveSucceeded
+		&& status != A4SqpSolvedToAcceptableLevel;
+}
+
 enum A4SqpApplicationReturnStatus A4SqpSolve(
 	A4SqpProblem problem,
 	A4SqpNumber *x,
@@ -2428,13 +3080,16 @@ enum A4SqpApplicationReturnStatus A4SqpSolve(
 	enum A4SqpApplicationReturnStatus status;
 	A4SqpNumber *x_initial = NULL;
 	char original_hessian[32];
+	char original_scaleopt[32];
 	int exact_restart_allowed;
 	int i;
 	if(p == NULL || (p->n > 0 && x == NULL)){
 		return A4SqpInvalidProblemDefinition;
 	}
 	original_hessian[0] = '\0';
+	original_scaleopt[0] = '\0';
 	strcpy(original_hessian,p->opt.hessian);
+	strcpy(original_scaleopt,p->opt.scaleopt);
 	exact_restart_allowed = a4sqp_c_uses_exact_hessian(p);
 	if(p->n > 0){
 		x_initial = A4SQP_NEW_ARRAY_OR_NULL(A4SqpNumber,p->n);
@@ -2444,8 +3099,23 @@ enum A4SqpApplicationReturnStatus A4SqpSolve(
 		memcpy(x_initial,x,(size_t)p->n * sizeof(*x_initial));
 	}
 	memset(&p->stats,0,sizeof(p->stats));
+	if(a4sqp_c_streq(original_scaleopt,"AUTO")){
+		strcpy(p->opt.scaleopt,"ROW_2NORM_T5");
+	}
 	a4sqp_c_solve_state_init(&solve,p,user_data);
 	status = a4sqp_c_solve_impl(&solve,x);
+	if(
+		a4sqp_c_should_restart_with_strict_row_scaling(p,original_scaleopt,status)
+		&& x_initial != NULL
+	){
+		a4sqp_c_solve_state_destroy(&solve);
+		memcpy(x,x_initial,(size_t)p->n * sizeof(*x));
+		memset(&p->stats,0,sizeof(p->stats));
+		strcpy(p->opt.hessian,original_hessian);
+		strcpy(p->opt.scaleopt,"ROW_2NORM");
+		a4sqp_c_solve_state_init(&solve,p,user_data);
+		status = a4sqp_c_solve_impl(&solve,x);
+	}
 	if(
 		exact_restart_allowed
 		&& a4sqp_c_should_restart_with_bfgs(p,status)
@@ -2461,6 +3131,7 @@ enum A4SqpApplicationReturnStatus A4SqpSolve(
 	}else{
 		strcpy(p->opt.hessian,original_hessian);
 	}
+	strcpy(p->opt.scaleopt,original_scaleopt);
 	if(g != NULL && p->m > 0 && solve.view.rel_residual != NULL){
 		for(i = 0; i < p->m; ++i){
 			g[i] = solve.view.rel_residual[i];
