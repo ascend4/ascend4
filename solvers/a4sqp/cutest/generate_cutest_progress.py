@@ -32,6 +32,7 @@ OUTCOME_CODES: dict[str, tuple[str, str, str]] = {
     "other_solver_failure": ("14", "🔴", "other solver failure"),
 }
 UNKNOWN_OUTCOME = ("?", "🔴", "unclassified outcome")
+MASTSIF_BASE_URL = "https://github.com/optimizers/mastsif-mirror/blob/master"
 
 
 def repo_root() -> pathlib.Path:
@@ -49,6 +50,29 @@ def read_rows(path: pathlib.Path) -> list[dict[str, str]]:
     if not any("outcome_class" in row for row in rows):
         raise ValueError(f"{path} does not look like a CUTEst problem-results TSV")
     return rows
+
+
+def read_problem_metadata(path_text: str) -> dict[str, dict[str, str]]:
+    if not path_text:
+        return {}
+    path = pathlib.Path(path_text)
+    if not path.exists():
+        return {}
+    metadata: dict[str, dict[str, str]] = {}
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle, delimiter="\t")
+        if not reader.fieldnames or "problem" not in reader.fieldnames:
+            return metadata
+        for row in reader:
+            problem = (row.get("problem") or "").strip()
+            if not problem:
+                continue
+            metadata[problem] = {
+                "classification": (row.get("classification") or "").strip(),
+                "n": (row.get("n") or "").strip(),
+                "m": (row.get("m") or "").strip(),
+            }
+    return metadata
 
 
 def row_profile(row: dict[str, str], fallback: str) -> str:
@@ -78,6 +102,10 @@ def outcome_bucket(outcome: str) -> str:
 def markdown_cell(value: object) -> str:
     text = str(value)
     return text.replace("|", "\\|").replace("\n", " ").strip()
+
+
+def markdown_link(label: str, target: str) -> str:
+    return f"[{markdown_cell(label)}]({target})"
 
 
 def markdown_table(headers: list[str], rows: list[list[object]]) -> str:
@@ -174,6 +202,26 @@ def outcome_cell(row: dict[str, str]) -> str:
     return f"{outcome_light_code(row.get('outcome_class', ''))}{suffix}"
 
 
+def local_a4c_map() -> dict[str, pathlib.Path]:
+    root = repo_root()
+    model_dir = root / "models" / "test" / "a4sqp"
+    models: dict[str, pathlib.Path] = {}
+    if not model_dir.exists():
+        return models
+    for path in model_dir.glob("*.a4c"):
+        models[path.stem.upper()] = path
+    return models
+
+
+def problem_label(problem: str, a4c_models: dict[str, pathlib.Path]) -> str:
+    sif_link = markdown_link(problem, f"{MASTSIF_BASE_URL}/{problem}.SIF")
+    a4c_path = a4c_models.get(problem.upper())
+    if a4c_path is None:
+        return sif_link
+    rel_path = a4c_path.relative_to(repo_root())
+    return f"{sif_link} {markdown_link('(a4c)', str(rel_path))}"
+
+
 def outcome_key_rows(rows: list[dict[str, str]]) -> list[list[object]]:
     used = {row.get("outcome_class", "") for row in rows if row.get("outcome_class", "")}
     ordered = [
@@ -192,7 +240,10 @@ def outcome_key_rows(rows: list[dict[str, str]]) -> list[list[object]]:
 
 
 def problem_matrix(
-    rows: list[dict[str, str]], profile_order: list[str], problem_order: list[str]
+    rows: list[dict[str, str]],
+    profile_order: list[str],
+    problem_order: list[str],
+    problem_metadata: dict[str, dict[str, str]],
 ) -> list[list[object]]:
     by_problem_profile: dict[tuple[str, str], dict[str, str]] = {}
     problem_meta: OrderedDict[str, dict[str, str]] = OrderedDict()
@@ -200,13 +251,18 @@ def problem_matrix(
         problem = row_problem(row)
         profile = row["_profile"]
         by_problem_profile[(problem, profile)] = row
-        problem_meta.setdefault(problem, row)
+        meta = problem_meta.setdefault(problem, {})
+        for key in ("classification", "n", "m"):
+            if not meta.get(key) and row.get(key):
+                meta[key] = row[key]
+
+    a4c_models = local_a4c_map()
 
     matrix: list[list[object]] = []
     for problem in problem_order:
-        meta = problem_meta[problem]
+        meta = {**problem_metadata.get(problem, {}), **problem_meta.get(problem, {})}
         values: list[object] = [
-            problem,
+            problem_label(problem, a4c_models),
             meta.get("classification", ""),
             meta.get("n", ""),
             meta.get("m", ""),
@@ -233,6 +289,8 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
             profile_order.append(row["_profile"])
         if problem not in problem_order:
             problem_order.append(problem)
+
+    problem_metadata = read_problem_metadata(args.problem_set)
 
     contract_rows = [
         ["Suite", args.suite],
@@ -288,7 +346,7 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
         "",
         "Matrix profile headers are shortened to solver/Hessian labels; full profile settings are listed in the summary table.",
         "",
-        markdown_table(matrix_headers, problem_matrix(rows, profile_order, problem_order)),
+        markdown_table(matrix_headers, problem_matrix(rows, profile_order, problem_order, problem_metadata)),
         "",
         "## Outcome Key",
         "",

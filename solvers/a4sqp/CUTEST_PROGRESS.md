@@ -36,95 +36,95 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 
 | Problem | Class | n | m | A4SQP BFGS | A4SQP Obj | A4SQP Lagr |
 | --- | --- | --- | --- | --- | --- | --- |
-| 3PK | SBR2-MN-30-0 | 30 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| ACOPP14 |  |  |  | 🔴11 | 🔴11 | 🔴11 |
-| ACOPR14 | QOR2-AN-38-82 | 38 | 82 | 🔴6 | 🔴11 | 🔴11 |
-| AIRCRFTB | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 |
-| AIRPORT | SQR2-MN-84-42 | 84 | 42 | 🔴7 | 🔴7 | 🟢1 |
-| AKIVA | OUR2-AN-2-0 | 2 | 0 | 🟢2 | 🟢2 | 🟢2 |
-| ALLINIT | OBR2-AY-4-0 | 4 | 0 | 🔴8 | 🟢1 | 🟢1 |
-| ALLINITA | OOR2-AY-4-4 | 4 | 4 | 🟢2 | 🟢2 | 🟢1 |
-| ALLINITC | OOR2-AY-4-1 | 4 | 1 | 🟢2 | 🟢2 | 🟢2 |
-| ALLINITU | OUR2-AY-4-0 | 4 | 0 | 🟢2 | 🟢1 | 🟢1 |
-| ALSOTAME | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 |
-| ANTWERP | SLR2-RN-27-8 | 27 | 10 | 🔴6 | 🔴6 | 🔴6 |
-| AVGASA | QLR2-AN-8-10 | 8 | 10 | 🟢2 | 🟢2 | 🟢2 |
-| AVGASB | QLR2-AN-8-10 | 8 | 10 | 🔴6 | 🟢2 | 🟢2 |
-| AVION2 | OLR2-RN-49-15 | 49 | 15 | 🔴6 | 🔴6 | 🔴6 |
-| BA-L1LS | SUR2-MN-57-0 | 57 | 0 | 🟠4L | 🟠4L | 🟠4L |
-| BA-L1SPLS | SUR2-MN-57-0 | 57 | 0 | 🔴8 | 🟢2 | 🟢2 |
-| BARD | SUR2-AN-3-0 | 3 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| BATCH |  |  |  | 🔴11 | 🔴11 | 🔴11 |
-| BEALE | SUR2-AN-2-0 | 2 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| BENNETT5LS | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 |
-| BIGGS3 | SXR2-AN-6-0 | 6 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| BIGGS5 | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 |
-| BIGGS6 | SUR2-AN-6-0 | 6 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| BIGGSC4 | QLR2-AN-4-7 | 4 | 7 | 🟢1 | 🟢1 | 🟢1 |
-| BOX2 | SXR2-AN-3-0 | 3 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| BOX3 | SUR2-AN-3-0 | 3 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| BOXBODLS | SUR2-MN-2-0 | 2 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| BQP1VAR | QBR2-AN-1-0 | 1 | 0 | 🟢1 | 🟢1 | 🟢1 |
-| BQPGABIM | QBR2-AN-50-0 | 50 | 0 | 🟢2 | 🟢1 | 🟢1 |
-| BQPGASIM | QBR2-AN-50-0 | 50 | 0 | 🟢2 | 🟢1 | 🟢1 |
-| BRANIN | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 |
-| BRKMCC | OUR2-AN-2-0 | 2 | 0 | 🟢2 | 🟢1 | 🟢1 |
-| BROWNBS | SUR2-AN-2-0 | 2 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| BROWNDEN | SUR2-AN-4-0 | 4 | 0 | 🟢2 | 🟢2 | 🟢2 |
-| BT1 | QQR2-AN-2-1 | 2 | 1 | 🔴6 | 🔴6 | 🟢1 |
-| BT10 | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 |
-| BT11 | OOR2-AY-5-3 | 5 | 3 | 🟢2 | 🟢2 | 🟢1 |
-| BT12 | QQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 |
-| BT13 |  |  |  | 🔴11 | 🔴11 | 🔴11 |
-| BT2 | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢1 | 🟢1 |
-| BT3 | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 |
-| BT4 | QQR2-AN-3-2 | 3 | 2 | 🔴7 | 🔴7 | 🟢1 |
-| BT5 |  |  |  | 🔴11 | 🔴11 | 🟢1 |
-| BT6 | OOR2-AY-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 |
-| BT7 | OQR2-AN-5-3 | 5 | 3 | 🔴7 | 🔴7 | 🟢1 |
-| BT8 | QQR2-AN-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 |
-| BT9 |  |  |  | 🔴11 | 🔴11 | 🟢1 |
-| BURKEHAN | QOR2-AN-1-1 | 1 | 1 | 🔴8 | 🔴8 | 🔴8 |
-| BYRDSPHR | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 |
-| CAMEL6 | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 |
-| CANTILVR | LOR2-MN-5-1 | 5 | 1 | 🔴8 | 🔴8 | 🔴8 |
-| CB2 | LOR2-AN-3-3 | 3 | 3 | 🔴7 | 🔴7 | 🟢1 |
-| CB3 | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 |
-| CERI651ALS | SUR2-MN-7-0 | 7 | 0 | 🔴6 | 🔴6 | 🔴6 |
-| CERI651BLS | SUR2-MN-7-0 | 7 | 0 | 🔴6 | 🔴6 | 🔴6 |
-| CERI651CLS | SUR2-MN-7-0 | 7 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| CERI651DLS | SUR2-MN-7-0 | 7 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| CERI651ELS | SUR2-MN-7-0 | 7 | 0 | 🔴6 | 🔴6 | 🔴6 |
-| CHACONN1 | LOR2-AY-3-3 | 3 | 3 | 🔴7 | 🔴7 | 🟢1 |
-| CHACONN2 | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 |
-| CONGIGMZ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 |
-| CRESC4 | OOR2-MY-6-8 | 6 | 8 | 🔴8 | 🔴8 | 🔴8 |
-| CRESC50 | OOR2-MY-6-100 | 6 | 100 | 🔴8 | 🔴8 | 🔴8 |
-| DALLASS | ONR2-MN-46-31 | 46 | 31 | 🔴6 | 🔴6 | 🔴6 |
-| DECONVB | SBR2-MN-61-0 | 63 | 0 | 🟢2 | 🟢1 | 🟢1 |
-| DECONVC | SQR2-MN-61-1 | 63 | 1 | 🔴6 | 🔴6 | 🔴6 |
-| DECONVU | SXR2-MN-61-0 | 63 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| DEGENLPA | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 |
-| DEGENLPB | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 |
-| DEMYMALO | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 |
-| DEVGLA1B | SBR2-MN-4-0 | 4 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| DEVGLA2B | SBR2-MN-5-0 | 5 | 0 | 🔴8 | 🟢1 | 🟢1 |
-| DGOSPEC | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 |
-| DISC2 |  |  |  | 🔴11 | 🔴11 | 🔴11 |
-| DUAL1 | QLR2-MN-85-1 | 85 | 1 | 🔴6 | 🟢2 | 🟢2 |
-| DUAL2 | QLR2-MN-96-1 | 96 | 1 | 🔴6 | 🟢2 | 🟢2 |
-| DUAL4 | QLR2-MN-75-1 | 75 | 1 | 🔴6 | 🟢2 | 🟢2 |
-| EG1 | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢2 | 🟢2 |
-| EGGCRATEB | SBR2-MN-4-0 | 2 | 0 | 🟢1L | 🟢1L | 🟢1L |
-| ELATVIDUB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 |
-| EQC | OLR2-MY-9-3 | 9 | 3 | 🟢1 | 🟢1 | 🟢1 |
-| EXPFITA | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🟢1 | 🟢1 |
-| EXTRASIM | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 |
-| LINSPANH | LNR2-MN-97-33 | 97 | 33 | 🟢1 | 🟢1 | 🟢1 |
-| LSNNODOC | ONR2-AY-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 |
-| MINSURF | OXR2-MY-64-0 | 64 | 0 | 🟢1 | 🟢1 | 🟢1 |
-| SPANHYD | ONR2-RN-97-33 | 97 | 33 | 🔴6 | 🔴11 | 🔴11 |
-| WATER |  |  |  | 🔴11 | 🔴14 | 🔴11 |
+| [3PK](https://github.com/optimizers/mastsif-mirror/blob/master/3PK.SIF) | SBR2-MN-30-0 | 30 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [ACOPP14](https://github.com/optimizers/mastsif-mirror/blob/master/ACOPP14.SIF) [(a4c)](models/test/a4sqp/acopp14.a4c) | QOR2-AY-38-68 | 38 | 68 | 🔴11 | 🔴11 | 🔴11 |
+| [ACOPR14](https://github.com/optimizers/mastsif-mirror/blob/master/ACOPR14.SIF) | QOR2-AN-38-82 | 38 | 82 | 🔴6 | 🔴11 | 🔴11 |
+| [AIRCRFTB](https://github.com/optimizers/mastsif-mirror/blob/master/AIRCRFTB.SIF) | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 |
+| [AIRPORT](https://github.com/optimizers/mastsif-mirror/blob/master/AIRPORT.SIF) | SQR2-MN-84-42 | 84 | 42 | 🔴7 | 🔴7 | 🟢1 |
+| [AKIVA](https://github.com/optimizers/mastsif-mirror/blob/master/AKIVA.SIF) [(a4c)](models/test/a4sqp/akiva.a4c) | OUR2-AN-2-0 | 2 | 0 | 🟢2 | 🟢2 | 🟢2 |
+| [ALLINIT](https://github.com/optimizers/mastsif-mirror/blob/master/ALLINIT.SIF) | OBR2-AY-4-0 | 4 | 0 | 🔴8 | 🟢1 | 🟢1 |
+| [ALLINITA](https://github.com/optimizers/mastsif-mirror/blob/master/ALLINITA.SIF) | OOR2-AY-4-4 | 4 | 4 | 🟢2 | 🟢2 | 🟢1 |
+| [ALLINITC](https://github.com/optimizers/mastsif-mirror/blob/master/ALLINITC.SIF) | OOR2-AY-4-1 | 4 | 1 | 🟢2 | 🟢2 | 🟢2 |
+| [ALLINITU](https://github.com/optimizers/mastsif-mirror/blob/master/ALLINITU.SIF) | OUR2-AY-4-0 | 4 | 0 | 🟢2 | 🟢1 | 🟢1 |
+| [ALSOTAME](https://github.com/optimizers/mastsif-mirror/blob/master/ALSOTAME.SIF) [(a4c)](models/test/a4sqp/alsotame.a4c) | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 |
+| [ANTWERP](https://github.com/optimizers/mastsif-mirror/blob/master/ANTWERP.SIF) | SLR2-RN-27-8 | 27 | 10 | 🔴6 | 🔴6 | 🔴6 |
+| [AVGASA](https://github.com/optimizers/mastsif-mirror/blob/master/AVGASA.SIF) [(a4c)](models/test/a4sqp/avgasa.a4c) | QLR2-AN-8-10 | 8 | 10 | 🟢2 | 🟢2 | 🟢2 |
+| [AVGASB](https://github.com/optimizers/mastsif-mirror/blob/master/AVGASB.SIF) [(a4c)](models/test/a4sqp/avgasb.a4c) | QLR2-AN-8-10 | 8 | 10 | 🔴6 | 🟢2 | 🟢2 |
+| [AVION2](https://github.com/optimizers/mastsif-mirror/blob/master/AVION2.SIF) | OLR2-RN-49-15 | 49 | 15 | 🔴6 | 🔴6 | 🔴6 |
+| [BA-L1LS](https://github.com/optimizers/mastsif-mirror/blob/master/BA-L1LS.SIF) | SUR2-MN-57-0 | 57 | 0 | 🟠4L | 🟠4L | 🟠4L |
+| [BA-L1SPLS](https://github.com/optimizers/mastsif-mirror/blob/master/BA-L1SPLS.SIF) | SUR2-MN-57-0 | 57 | 0 | 🔴8 | 🟢2 | 🟢2 |
+| [BARD](https://github.com/optimizers/mastsif-mirror/blob/master/BARD.SIF) | SUR2-AN-3-0 | 3 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [BATCH](https://github.com/optimizers/mastsif-mirror/blob/master/BATCH.SIF) | OOR2-AN-46-73 | 46 | 73 | 🔴11 | 🔴11 | 🔴11 |
+| [BEALE](https://github.com/optimizers/mastsif-mirror/blob/master/BEALE.SIF) | SUR2-AN-2-0 | 2 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [BENNETT5LS](https://github.com/optimizers/mastsif-mirror/blob/master/BENNETT5LS.SIF) | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 |
+| [BIGGS3](https://github.com/optimizers/mastsif-mirror/blob/master/BIGGS3.SIF) | SXR2-AN-6-0 | 6 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [BIGGS5](https://github.com/optimizers/mastsif-mirror/blob/master/BIGGS5.SIF) | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 |
+| [BIGGS6](https://github.com/optimizers/mastsif-mirror/blob/master/BIGGS6.SIF) | SUR2-AN-6-0 | 6 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [BIGGSC4](https://github.com/optimizers/mastsif-mirror/blob/master/BIGGSC4.SIF) | QLR2-AN-4-7 | 4 | 7 | 🟢1 | 🟢1 | 🟢1 |
+| [BOX2](https://github.com/optimizers/mastsif-mirror/blob/master/BOX2.SIF) | SXR2-AN-3-0 | 3 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [BOX3](https://github.com/optimizers/mastsif-mirror/blob/master/BOX3.SIF) | SUR2-AN-3-0 | 3 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [BOXBODLS](https://github.com/optimizers/mastsif-mirror/blob/master/BOXBODLS.SIF) | SUR2-MN-2-0 | 2 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [BQP1VAR](https://github.com/optimizers/mastsif-mirror/blob/master/BQP1VAR.SIF) [(a4c)](models/test/a4sqp/bqp1var.a4c) | QBR2-AN-1-0 | 1 | 0 | 🟢1 | 🟢1 | 🟢1 |
+| [BQPGABIM](https://github.com/optimizers/mastsif-mirror/blob/master/BQPGABIM.SIF) | QBR2-AN-50-0 | 50 | 0 | 🟢2 | 🟢1 | 🟢1 |
+| [BQPGASIM](https://github.com/optimizers/mastsif-mirror/blob/master/BQPGASIM.SIF) | QBR2-AN-50-0 | 50 | 0 | 🟢2 | 🟢1 | 🟢1 |
+| [BRANIN](https://github.com/optimizers/mastsif-mirror/blob/master/BRANIN.SIF) | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 |
+| [BRKMCC](https://github.com/optimizers/mastsif-mirror/blob/master/BRKMCC.SIF) | OUR2-AN-2-0 | 2 | 0 | 🟢2 | 🟢1 | 🟢1 |
+| [BROWNBS](https://github.com/optimizers/mastsif-mirror/blob/master/BROWNBS.SIF) [(a4c)](models/test/a4sqp/brownbs.a4c) | SUR2-AN-2-0 | 2 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [BROWNDEN](https://github.com/optimizers/mastsif-mirror/blob/master/BROWNDEN.SIF) [(a4c)](models/test/a4sqp/brownden.a4c) | SUR2-AN-4-0 | 4 | 0 | 🟢2 | 🟢2 | 🟢2 |
+| [BT1](https://github.com/optimizers/mastsif-mirror/blob/master/BT1.SIF) | QQR2-AN-2-1 | 2 | 1 | 🔴6 | 🔴6 | 🟢1 |
+| [BT10](https://github.com/optimizers/mastsif-mirror/blob/master/BT10.SIF) [(a4c)](models/test/a4sqp/bt10.a4c) | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 |
+| [BT11](https://github.com/optimizers/mastsif-mirror/blob/master/BT11.SIF) | OOR2-AY-5-3 | 5 | 3 | 🟢2 | 🟢2 | 🟢1 |
+| [BT12](https://github.com/optimizers/mastsif-mirror/blob/master/BT12.SIF) | QQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 |
+| [BT13](https://github.com/optimizers/mastsif-mirror/blob/master/BT13.SIF) [(a4c)](models/test/a4sqp/bt13.a4c) | LQR2-AY-5-1 | 5 | 1 | 🔴11 | 🔴11 | 🔴11 |
+| [BT2](https://github.com/optimizers/mastsif-mirror/blob/master/BT2.SIF) [(a4c)](models/test/a4sqp/bt2.a4c) | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢1 | 🟢1 |
+| [BT3](https://github.com/optimizers/mastsif-mirror/blob/master/BT3.SIF) | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 |
+| [BT4](https://github.com/optimizers/mastsif-mirror/blob/master/BT4.SIF) [(a4c)](models/test/a4sqp/bt4.a4c) | QQR2-AN-3-2 | 3 | 2 | 🔴7 | 🔴7 | 🟢1 |
+| [BT5](https://github.com/optimizers/mastsif-mirror/blob/master/BT5.SIF) [(a4c)](models/test/a4sqp/bt5.a4c) | QQR2-AN-3-2 | 3 | 2 | 🔴11 | 🔴11 | 🟢1 |
+| [BT6](https://github.com/optimizers/mastsif-mirror/blob/master/BT6.SIF) | OOR2-AY-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 |
+| [BT7](https://github.com/optimizers/mastsif-mirror/blob/master/BT7.SIF) | OQR2-AN-5-3 | 5 | 3 | 🔴7 | 🔴7 | 🟢1 |
+| [BT8](https://github.com/optimizers/mastsif-mirror/blob/master/BT8.SIF) [(a4c)](models/test/a4sqp/bt8.a4c) | QQR2-AN-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 |
+| [BT9](https://github.com/optimizers/mastsif-mirror/blob/master/BT9.SIF) | LOR2-AN-4-2 | 4 | 2 | 🔴11 | 🔴11 | 🟢1 |
+| [BURKEHAN](https://github.com/optimizers/mastsif-mirror/blob/master/BURKEHAN.SIF) | QOR2-AN-1-1 | 1 | 1 | 🔴8 | 🔴8 | 🔴8 |
+| [BYRDSPHR](https://github.com/optimizers/mastsif-mirror/blob/master/BYRDSPHR.SIF) | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 |
+| [CAMEL6](https://github.com/optimizers/mastsif-mirror/blob/master/CAMEL6.SIF) | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 |
+| [CANTILVR](https://github.com/optimizers/mastsif-mirror/blob/master/CANTILVR.SIF) [(a4c)](models/test/a4sqp/cantilvr.a4c) | LOR2-MN-5-1 | 5 | 1 | 🔴8 | 🔴8 | 🔴8 |
+| [CB2](https://github.com/optimizers/mastsif-mirror/blob/master/CB2.SIF) [(a4c)](models/test/a4sqp/cb2.a4c) | LOR2-AN-3-3 | 3 | 3 | 🔴7 | 🔴7 | 🟢1 |
+| [CB3](https://github.com/optimizers/mastsif-mirror/blob/master/CB3.SIF) [(a4c)](models/test/a4sqp/cb3.a4c) | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 |
+| [CERI651ALS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651ALS.SIF) [(a4c)](models/test/a4sqp/ceri651als.a4c) | SUR2-MN-7-0 | 7 | 0 | 🔴6 | 🔴6 | 🔴6 |
+| [CERI651BLS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651BLS.SIF) | SUR2-MN-7-0 | 7 | 0 | 🔴6 | 🔴6 | 🔴6 |
+| [CERI651CLS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651CLS.SIF) | SUR2-MN-7-0 | 7 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [CERI651DLS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651DLS.SIF) | SUR2-MN-7-0 | 7 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [CERI651ELS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651ELS.SIF) | SUR2-MN-7-0 | 7 | 0 | 🔴6 | 🔴6 | 🔴6 |
+| [CHACONN1](https://github.com/optimizers/mastsif-mirror/blob/master/CHACONN1.SIF) | LOR2-AY-3-3 | 3 | 3 | 🔴7 | 🔴7 | 🟢1 |
+| [CHACONN2](https://github.com/optimizers/mastsif-mirror/blob/master/CHACONN2.SIF) | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 |
+| [CONGIGMZ](https://github.com/optimizers/mastsif-mirror/blob/master/CONGIGMZ.SIF) | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 |
+| [CRESC4](https://github.com/optimizers/mastsif-mirror/blob/master/CRESC4.SIF) | OOR2-MY-6-8 | 6 | 8 | 🔴8 | 🔴8 | 🔴8 |
+| [CRESC50](https://github.com/optimizers/mastsif-mirror/blob/master/CRESC50.SIF) | OOR2-MY-6-100 | 6 | 100 | 🔴8 | 🔴8 | 🔴8 |
+| [DALLASS](https://github.com/optimizers/mastsif-mirror/blob/master/DALLASS.SIF) | ONR2-MN-46-31 | 46 | 31 | 🔴6 | 🔴6 | 🔴6 |
+| [DECONVB](https://github.com/optimizers/mastsif-mirror/blob/master/DECONVB.SIF) | SBR2-MN-61-0 | 63 | 0 | 🟢2 | 🟢1 | 🟢1 |
+| [DECONVC](https://github.com/optimizers/mastsif-mirror/blob/master/DECONVC.SIF) | SQR2-MN-61-1 | 63 | 1 | 🔴6 | 🔴6 | 🔴6 |
+| [DECONVU](https://github.com/optimizers/mastsif-mirror/blob/master/DECONVU.SIF) | SXR2-MN-61-0 | 63 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [DEGENLPA](https://github.com/optimizers/mastsif-mirror/blob/master/DEGENLPA.SIF) | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 |
+| [DEGENLPB](https://github.com/optimizers/mastsif-mirror/blob/master/DEGENLPB.SIF) [(a4c)](models/test/a4sqp/degenlpb.a4c) | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 |
+| [DEMYMALO](https://github.com/optimizers/mastsif-mirror/blob/master/DEMYMALO.SIF) | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 |
+| [DEVGLA1B](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA1B.SIF) | SBR2-MN-4-0 | 4 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [DEVGLA2B](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA2B.SIF) | SBR2-MN-5-0 | 5 | 0 | 🔴8 | 🟢1 | 🟢1 |
+| [DGOSPEC](https://github.com/optimizers/mastsif-mirror/blob/master/DGOSPEC.SIF) [(a4c)](models/test/a4sqp/dgospec.a4c) | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 |
+| [DISC2](https://github.com/optimizers/mastsif-mirror/blob/master/DISC2.SIF) | LQR2-MY-29-23 | 29 | 23 | 🔴11 | 🔴11 | 🔴11 |
+| [DUAL1](https://github.com/optimizers/mastsif-mirror/blob/master/DUAL1.SIF) | QLR2-MN-85-1 | 85 | 1 | 🔴6 | 🟢2 | 🟢2 |
+| [DUAL2](https://github.com/optimizers/mastsif-mirror/blob/master/DUAL2.SIF) | QLR2-MN-96-1 | 96 | 1 | 🔴6 | 🟢2 | 🟢2 |
+| [DUAL4](https://github.com/optimizers/mastsif-mirror/blob/master/DUAL4.SIF) | QLR2-MN-75-1 | 75 | 1 | 🔴6 | 🟢2 | 🟢2 |
+| [EG1](https://github.com/optimizers/mastsif-mirror/blob/master/EG1.SIF) | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢2 | 🟢2 |
+| [EGGCRATEB](https://github.com/optimizers/mastsif-mirror/blob/master/EGGCRATEB.SIF) | SBR2-MN-4-0 | 2 | 0 | 🟢1L | 🟢1L | 🟢1L |
+| [ELATVIDUB](https://github.com/optimizers/mastsif-mirror/blob/master/ELATVIDUB.SIF) | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 |
+| [EQC](https://github.com/optimizers/mastsif-mirror/blob/master/EQC.SIF) | OLR2-MY-9-3 | 9 | 3 | 🟢1 | 🟢1 | 🟢1 |
+| [EXPFITA](https://github.com/optimizers/mastsif-mirror/blob/master/EXPFITA.SIF) | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🟢1 | 🟢1 |
+| [EXTRASIM](https://github.com/optimizers/mastsif-mirror/blob/master/EXTRASIM.SIF) | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 |
+| [LINSPANH](https://github.com/optimizers/mastsif-mirror/blob/master/LINSPANH.SIF) | LNR2-MN-97-33 | 97 | 33 | 🟢1 | 🟢1 | 🟢1 |
+| [LSNNODOC](https://github.com/optimizers/mastsif-mirror/blob/master/LSNNODOC.SIF) [(a4c)](models/test/a4sqp/lsnnodoc.a4c) | ONR2-AY-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 |
+| [MINSURF](https://github.com/optimizers/mastsif-mirror/blob/master/MINSURF.SIF) | OXR2-MY-64-0 | 64 | 0 | 🟢1 | 🟢1 | 🟢1 |
+| [SPANHYD](https://github.com/optimizers/mastsif-mirror/blob/master/SPANHYD.SIF) | ONR2-RN-97-33 | 97 | 33 | 🔴6 | 🔴11 | 🔴11 |
+| [WATER](https://github.com/optimizers/mastsif-mirror/blob/master/WATER.SIF) | ONR2-MN-31-10 | 31 | 10 | 🔴11 | 🔴14 | 🔴11 |
 
 ## Outcome Key
 
