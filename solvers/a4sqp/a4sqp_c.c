@@ -272,6 +272,7 @@ struct A4SqpCSolve {
 	double last_predicted_reduction;
 	double last_linearized_violation;
 	double last_step_norm;
+	double last_scaled_step_inf;
 	double last_alpha;
 	double last_trust_ratio;
 	double last_elastic_max;
@@ -1799,6 +1800,7 @@ static void a4sqp_c_record_line_search_result(
 	solve->last_linearized_violation = a4sqp_core_qp_elastic_sum(&solve->qp);
 	solve->last_alpha = result->alpha;
 	solve->last_step_norm = result->step_norm;
+	solve->last_scaled_step_inf = result->scaled_step_inf;
 	solve->last_trust_ratio = result->trust_ratio;
 	solve->last_ls_trials = result->trials;
 }
@@ -1840,7 +1842,7 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 		if(p->opt.acceptable_tol > 0.0 && p->opt.acceptable_tol < 1.0){
 			stationarity_step_trigger = fmax(stationarity_step_trigger,sqrt(p->opt.acceptable_tol));
 		}
-		if(solve->last_step_norm > stationarity_step_trigger){
+		if(solve->last_scaled_step_inf > stationarity_step_trigger){
 			return 0;
 		}
 	}
@@ -1952,10 +1954,15 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 			double new_maxvio = 0.0;
 			double new_merit;
 			double step_norm2 = 0.0;
+			double scaled_step_inf = 0.0;
 			for(i = 0; i < n; ++i){
-				double physical_step = alpha * step_scale * rhs[i] * solve->view.var_scale[i];
+				double scaled_step = alpha * step_scale * rhs[i];
+				double physical_step = scaled_step * solve->view.var_scale[i];
 				x[i] = old_x[i] + physical_step;
 				step_norm2 += physical_step * physical_step;
+				if(fabs(scaled_step) > scaled_step_inf){
+					scaled_step_inf = fabs(scaled_step);
+				}
 			}
 			a4sqp_c_project_x_to_bounds(p,x);
 			if(a4sqp_c_build_view(solve,x,A4SQP_TRUE) || solve->callback_error){
@@ -1974,6 +1981,7 @@ static int a4sqp_c_try_stationarity_correction(struct A4SqpCSolve *solve, double
 			){
 				solve->last_alpha = alpha;
 				solve->last_step_norm = sqrt(step_norm2);
+				solve->last_scaled_step_inf = scaled_step_inf;
 				solve->last_trust_ratio = 1.0;
 				accepted = 1;
 				break;
@@ -2041,7 +2049,7 @@ static int a4sqp_c_try_reduced_gradient_polish(
 		|| p->m <= 0
 		|| p->stats.max_constraint_violation > p->opt.acceptable_tol
 		|| p->stats.kkt_error <= p->opt.acceptable_tol
-		|| solve->last_step_norm > fmax(sqrt(p->opt.acceptable_tol),10.0 * p->opt.step_tol)
+		|| solve->last_scaled_step_inf > fmax(sqrt(p->opt.acceptable_tol),10.0 * p->opt.step_tol)
 	){
 		return 0;
 	}
@@ -2184,6 +2192,7 @@ static int a4sqp_c_try_reduced_gradient_polish(
 		){
 			solve->last_alpha = alpha;
 			solve->last_step_norm = result.step_norm;
+			solve->last_scaled_step_inf = result.scaled_step_inf;
 			solve->last_trust_ratio = result.trust_ratio;
 			solve->last_ls_trials = result.trials;
 			accepted = 1;
@@ -2347,6 +2356,7 @@ static int a4sqp_c_try_active_bound_restoration(
 	){
 		solve->last_alpha = result.alpha;
 		solve->last_step_norm = result.step_norm;
+		solve->last_scaled_step_inf = result.scaled_step_inf;
 		solve->last_trust_ratio = result.trust_ratio;
 		solve->last_ls_trials = result.trials;
 		accepted = 1;
@@ -2528,6 +2538,9 @@ static int a4sqp_c_try_active_bound_release(
 		){
 			solve->last_alpha = result.alpha;
 			solve->last_step_norm = fabs(x[col] - old_x[col]);
+			solve->last_scaled_step_inf = solve->view.var_scale != NULL && solve->view.var_scale[col] > 0.0
+				? solve->last_step_norm / solve->view.var_scale[col]
+				: solve->last_step_norm;
 			solve->last_trust_ratio = result.trust_ratio;
 			solve->last_ls_trials = result.trials;
 			accepted = 1;

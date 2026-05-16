@@ -34,6 +34,25 @@ OUTCOME_CODES: dict[str, tuple[str, str, str]] = {
 UNKNOWN_OUTCOME = ("?", "🔴", "unclassified outcome")
 MASTSIF_BASE_URL = "https://github.com/optimizers/mastsif-mirror/blob/master"
 
+OBJECTIVE_CLASS_LABELS = {
+    "C": "constant objective",
+    "L": "linear objective",
+    "Q": "quadratic objective",
+    "S": "sum-of-squares objective",
+    "O": "other objective",
+}
+CONSTRAINT_CLASS_LABELS = {
+    "U": "unconstrained",
+    "X": "fixed variables only",
+    "B": "bound constraints only",
+    "N": "network constraints",
+    "L": "linear constraints",
+    "Q": "quadratic constraints",
+    "O": "other constraints",
+}
+OBJECTIVE_CLASS_ORDER = {"S": 0, "O": 1, "Q": 2, "L": 3, "C": 4}
+CONSTRAINT_CLASS_ORDER = {"U": 0, "X": 1, "B": 2, "L": 3, "Q": 4, "N": 5, "O": 6}
+
 
 def repo_root() -> pathlib.Path:
     return pathlib.Path(__file__).resolve().parents[3]
@@ -222,6 +241,40 @@ def problem_label(problem: str, a4c_models: dict[str, pathlib.Path]) -> str:
     return f"{sif_link} {markdown_link('(a4c)', str(rel_path))}"
 
 
+def problem_category(classification: str) -> str:
+    if len(classification) < 2:
+        return "??"
+    return classification[:2].upper()
+
+
+def category_description(category: str) -> str:
+    if len(category) < 2:
+        return "unknown"
+    objective = OBJECTIVE_CLASS_LABELS.get(category[0], f"{category[0]} objective")
+    constraints = CONSTRAINT_CLASS_LABELS.get(category[1], f"{category[1]} constraints")
+    return f"{objective}; {constraints}"
+
+
+def category_sort_key(problem: str, classification: str) -> tuple[int, int, str, str]:
+    category = problem_category(classification)
+    objective = category[0] if len(category) >= 1 else "?"
+    constraints = category[1] if len(category) >= 2 else "?"
+    return (
+        CONSTRAINT_CLASS_ORDER.get(constraints, 99),
+        OBJECTIVE_CLASS_ORDER.get(objective, 99),
+        category,
+        problem,
+    )
+
+
+def problem_lookup_metadata(
+    problem: str,
+    problem_metadata: dict[str, dict[str, str]],
+    problem_meta: dict[str, dict[str, str]],
+) -> dict[str, str]:
+    return {**problem_metadata.get(problem, {}), **problem_meta.get(problem, {})}
+
+
 def outcome_key_rows(rows: list[dict[str, str]]) -> list[list[object]]:
     used = {row.get("outcome_class", "") for row in rows if row.get("outcome_class", "")}
     ordered = [
@@ -260,9 +313,11 @@ def problem_matrix(
 
     matrix: list[list[object]] = []
     for problem in problem_order:
-        meta = {**problem_metadata.get(problem, {}), **problem_meta.get(problem, {})}
+        meta = problem_lookup_metadata(problem, problem_metadata, problem_meta)
+        category = problem_category(meta.get("classification", ""))
         values: list[object] = [
             problem_label(problem, a4c_models),
+            category,
             meta.get("classification", ""),
             meta.get("n", ""),
             meta.get("m", ""),
@@ -275,6 +330,47 @@ def problem_matrix(
             values.append(outcome_cell(row))
         matrix.append(values)
     return matrix
+
+
+def row_passed(row: dict[str, str]) -> bool:
+    return row.get("outcome_class", "") in PASS_OUTCOMES
+
+
+def category_summary(
+    rows: list[dict[str, str]],
+    profile_order: list[str],
+    problem_order: list[str],
+    problem_metadata: dict[str, dict[str, str]],
+) -> list[list[object]]:
+    by_problem_profile: dict[tuple[str, str], dict[str, str]] = {}
+    problem_meta: OrderedDict[str, dict[str, str]] = OrderedDict()
+    for row in rows:
+        problem = row_problem(row)
+        profile = row["_profile"]
+        by_problem_profile[(problem, profile)] = row
+        meta = problem_meta.setdefault(problem, {})
+        for key in ("classification", "n", "m"):
+            if not meta.get(key) and row.get(key):
+                meta[key] = row[key]
+
+    categories: OrderedDict[str, list[str]] = OrderedDict()
+    for problem in problem_order:
+        meta = problem_lookup_metadata(problem, problem_metadata, problem_meta)
+        categories.setdefault(problem_category(meta.get("classification", "")), []).append(problem)
+
+    summary: list[list[object]] = []
+    for category, problems in categories.items():
+        values: list[object] = [category, category_description(category), len(problems)]
+        for profile in profile_order:
+            profile_rows = [
+                by_problem_profile[(problem, profile)]
+                for problem in problems
+                if (problem, profile) in by_problem_profile
+            ]
+            passed = sum(1 for row in profile_rows if row_passed(row))
+            values.append(f"{passed}/{len(profile_rows)}" if profile_rows else "")
+        summary.append(values)
+    return summary
 
 
 def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
@@ -291,6 +387,20 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
             problem_order.append(problem)
 
     problem_metadata = read_problem_metadata(args.problem_set)
+    if args.problem_order == "category":
+        problem_meta: OrderedDict[str, dict[str, str]] = OrderedDict()
+        for row in rows:
+            problem = row_problem(row)
+            meta = problem_meta.setdefault(problem, {})
+            for key in ("classification", "n", "m"):
+                if not meta.get(key) and row.get(key):
+                    meta[key] = row[key]
+        problem_order.sort(
+            key=lambda problem: category_sort_key(
+                problem,
+                problem_lookup_metadata(problem, problem_metadata, problem_meta).get("classification", ""),
+            )
+        )
 
     contract_rows = [
         ["Suite", args.suite],
@@ -321,7 +431,8 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
         "Error",
         "Outcomes",
     ]
-    matrix_headers = ["Problem", "Class", "n", "m", *[profile_label(rows, profile) for profile in profile_order]]
+    matrix_profile_headers = [profile_label(rows, profile) for profile in profile_order]
+    matrix_headers = ["Problem", "Cat", "Class", "n", "m", *matrix_profile_headers]
 
     parts = [
         "# A4SQP CUTEst Progress",
@@ -337,6 +448,15 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
         "## Profile Summary",
         "",
         markdown_table(summary_headers, profile_summary(rows, profile_order)),
+        "",
+        "## Category Summary",
+        "",
+        "CUTEst categories are derived from the first two classification letters: objective type followed by constraint type.",
+        "",
+        markdown_table(
+            ["Cat", "Meaning", "Problems", *matrix_profile_headers],
+            category_summary(rows, profile_order, problem_order, problem_metadata),
+        ),
         "",
         "## Problem Outcomes",
         "",
@@ -378,6 +498,12 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--jobs", default="6")
     parser.add_argument("--notes", default="")
     parser.add_argument("--default-profile", default="profile")
+    parser.add_argument(
+        "--problem-order",
+        choices=("category", "input"),
+        default="category",
+        help="Order the problem-outcome matrix by CUTEst category or original input order",
+    )
     args = parser.parse_args(argv)
 
     rows: list[dict[str, str]] = []

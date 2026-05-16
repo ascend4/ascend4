@@ -130,6 +130,21 @@ ACOPP14 follow-up, 2026-05-16:
   polish moved ACOPP14 closer to IPOPT's objective and reduced KKT from about
   `0.287` to `0.208`, but then stalled even at 3000 iterations and was too
   expensive to enable by default.
+- The ASCEND-translated dimensional ACOPP14 model exposed a scale-consistency
+  issue in the C API solve driver: terminal stationarity-polish triggers were
+  comparing physical step norms against scaled-model tolerances. The driver now
+  retains both the physical step norm for reporting and the scaled step infinity
+  norm for internal stationarity/polish gating. This does not solve ACOPP14; it
+  only makes opt-in polish logic behave consistently for dimensional models.
+- A bounded `./a4 run ... --progress` sweep on the dimensional ACOPP14 model
+  still converges to a feasible high-objective/high-stationarity branch with
+  BFGS and `ROW_2NORM` scaling. Exact-Hessian ASCEND variants did not reach the
+  first progress callback within short timeouts, so exact Hessians are not yet a
+  practical route for this model through the ASCEND adapter.
+- Enabling `reduced_gradient_polish` and `active_bound_release` after the
+  scaled-step fix reduced the late KKT residual only slowly and left the solve on
+  the same high-objective branch. These options should remain opt-in until they
+  show a reproducible CUTEst matrix improvement.
 
 CUTEst scaling follow-up, 2026-05-16:
 

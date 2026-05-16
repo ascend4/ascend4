@@ -157,25 +157,36 @@ failures instead of successes.
 
 ## Track Progress
 
-The checked-in progress ledger is `../CUTEST_PROGRESS.md`. Generate it from a
-per-problem TSV result file rather than editing it by hand:
+The checked-in 89-problem progress ledger is `../CUTEST_PROGRESS.md`. Do not
+edit it by hand; regenerate it with the wrapper so ASCEND, `liba4sqp.so`, the
+CUTEst package hooks, and the generated CUTEst problem/package objects are all
+fresh:
 
 ```sh
-solvers/a4sqp/cutest/generate_cutest_progress.py \
-  --input /tmp/a4sqp_broad_41_valid_20260513_182750/broad_41_problem_results.tsv \
-  --out solvers/a4sqp/CUTEST_PROGRESS.md \
-  --suite "CUTEst broad stratified 41-problem tracking subset" \
-  --problem-set solvers/a4sqp/cutest/problem_sets/broad_stratified_41.tsv \
-  --max-iter 200 \
-  --timeout-sec 30 \
-  --tol 1e-7 \
-  --acceptable-tol 1e-5 \
-  --jobs 6
+solvers/a4sqp/cutest/update_cutest_progress.py \
+  --problem-set solvers/a4sqp/cutest/problem_sets/broad_stratified_89.tsv \
+  --out solvers/a4sqp/CUTEST_PROGRESS.md
 ```
 
-When rerunning profiles, pass `--tsv-out` and `--profile-name` to
-`run_a4sqp_cutest.py`, then pass one or more generated TSV files to
-`generate_cutest_progress.py`.
+By default this runs `scons -j6`, forces CUTEst `runcutest -r` rebuilds, runs the
+three standard A4SQP profiles (`BFGS`, `EXACT_OBJ`, `EXACT_LAGRANGIAN`) with
+`scaleopt=AUTO`, `--acceptable-iter 5`, `--restoration`, six parallel workers,
+and then calls `generate_cutest_progress.py`.
+
+The original `broad_stratified_89.tsv` problem set is kept as the stable
+baseline. The expanded `broad_stratified_160.tsv` set is a superset used for
+broader exploration; generate a separate report for it rather than replacing the
+89-problem ledger:
+
+```sh
+solvers/a4sqp/cutest/update_cutest_progress.py \
+  --problem-set solvers/a4sqp/cutest/problem_sets/broad_stratified_160.tsv \
+  --out /tmp/CUTEST_PROGRESS_160.md
+```
+
+To include previously generated IPOPT TSVs without rerunning IPOPT, pass
+`--input-tsv path/to/ipopt.tsv` one or more times. To rerun IPOPT profiles as
+well, add `--include-ipopt`.
 
 The progress report intentionally excludes volatile metrics such as iteration
 counts, solve times, objective values, and log paths. It records the benchmark
