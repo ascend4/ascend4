@@ -45,6 +45,7 @@ struct A4SqpCOptions {
 	int active_bound_restoration;
 	int active_bound_release;
 	int reduced_gradient_polish;
+	char reduced_gradient_polish_mode[32];
 	int restoration_trigger_iter;
 	int restoration_max_iter;
 	double restoration_improve;
@@ -225,6 +226,9 @@ static const struct A4SqpOptionInfo a4sqp_c_option_info[] = {
 	A4SQP_OPT_BOOL("reduced_gradient_polish","Reduced-gradient polish",3,
 		"Enable an experimental feasible-point reduced-gradient polish followed by restoration.",
 		0,A4SQP_TRUE),
+	A4SQP_OPT_STR("reduced_gradient_polish_mode","Reduced-gradient polish mode",3,
+		"Reduced-gradient polish control: OFF disables it, FALLBACK runs it only after feasible stationarity stalls, ON enables the current opt-in behavior.",
+		"OFF",((const char *const[]){"OFF","FALLBACK","ON",NULL}),A4SQP_TRUE),
 	A4SQP_OPT_INT("restoration_trigger_iter","Restoration trigger",2,
 		"Number of consecutive materially infeasible non-improving iterations before restoration steps are requested; zero uses the conservative default.",
 		3,0,10000,A4SQP_TRUE),
@@ -348,6 +352,7 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->active_bound_restoration = 1;
 	opt->active_bound_release = 0;
 	opt->reduced_gradient_polish = 0;
+	strcpy(opt->reduced_gradient_polish_mode,"OFF");
 	opt->restoration_trigger_iter = 3;
 	opt->restoration_max_iter = 0;
 	opt->restoration_improve = 1e-3;
@@ -576,6 +581,24 @@ A4SqpBool AddA4SqpStrOption(A4SqpProblem problem, char *keyword, char *val){
 		}
 		return A4SQP_FALSE;
 	}
+	if(a4sqp_c_streq(keyword,"reduced_gradient_polish_mode")){
+		if(a4sqp_c_streq(val,"OFF") || a4sqp_c_streq(val,"FALSE") || a4sqp_c_streq(val,"0")){
+			strcpy(p->opt.reduced_gradient_polish_mode,"OFF");
+			p->opt.reduced_gradient_polish = 0;
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"FALLBACK") || a4sqp_c_streq(val,"AUTO")){
+			strcpy(p->opt.reduced_gradient_polish_mode,"FALLBACK");
+			p->opt.reduced_gradient_polish = 2;
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"ON") || a4sqp_c_streq(val,"TRUE") || a4sqp_c_streq(val,"1")){
+			strcpy(p->opt.reduced_gradient_polish_mode,"ON");
+			p->opt.reduced_gradient_polish = 1;
+			return A4SQP_TRUE;
+		}
+		return A4SQP_FALSE;
+	}
 	return A4SQP_FALSE;
 }
 
@@ -800,7 +823,8 @@ A4SqpBool AddA4SqpIntOption(A4SqpProblem problem, char *keyword, A4SqpInt val){
 		return A4SQP_TRUE;
 	}
 	if(a4sqp_c_streq(keyword,"reduced_gradient_polish")){
-		p->opt.reduced_gradient_polish = val != 0;
+		p->opt.reduced_gradient_polish = val != 0 ? 1 : 0;
+		strcpy(p->opt.reduced_gradient_polish_mode,val != 0 ? "ON" : "OFF");
 		return A4SQP_TRUE;
 	}
 	if(a4sqp_c_streq(keyword,"restoration_trigger_iter")){

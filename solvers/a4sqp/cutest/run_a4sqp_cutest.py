@@ -378,6 +378,12 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--no-active-bound-release", dest="active_bound_release", action="store_false")
     parser.add_argument("--reduced-gradient-polish", action="store_true", default=os.environ.get("A4SQP_REDUCED_GRADIENT_POLISH", "0") not in ("", "0", "false", "False"))
     parser.add_argument("--no-reduced-gradient-polish", dest="reduced_gradient_polish", action="store_false")
+    parser.add_argument(
+        "--reduced-gradient-polish-mode",
+        choices=["OFF", "FALLBACK", "ON"],
+        default=os.environ.get("A4SQP_REDUCED_GRADIENT_POLISH_MODE", ""),
+        help="Explicit reduced-gradient polish mode; overrides the legacy boolean flag when set.",
+    )
     parser.add_argument("--restoration-trigger-iter", type=int, default=int(os.environ.get("A4SQP_RESTORATION_TRIGGER_ITER", "3")))
     parser.add_argument("--restoration-max-iter", type=int, default=int(os.environ.get("A4SQP_RESTORATION_MAX_ITER", "0")))
     parser.add_argument("--restoration-improve", type=float, default=float(os.environ.get("A4SQP_RESTORATION_IMPROVE", "1e-3")))
@@ -462,6 +468,8 @@ def main(argv: list[str]) -> int:
     env["A4SQP_ACTIVE_BOUND_RESTORATION"] = "1" if args.active_bound_restoration else "0"
     env["A4SQP_ACTIVE_BOUND_RELEASE"] = "1" if args.active_bound_release else "0"
     env["A4SQP_REDUCED_GRADIENT_POLISH"] = "1" if args.reduced_gradient_polish else "0"
+    if args.reduced_gradient_polish_mode:
+        env["A4SQP_REDUCED_GRADIENT_POLISH_MODE"] = args.reduced_gradient_polish_mode
     env["A4SQP_ELASTIC_PENALTY"] = str(args.elastic_penalty)
     env["A4SQP_ELASTIC_PENALTY_GROWTH"] = str(args.elastic_penalty_growth)
     env["A4SQP_ELASTIC_PENALTY_MAX"] = str(args.elastic_penalty_max)

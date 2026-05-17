@@ -74,6 +74,22 @@ static void slsqp_json_number(double value){
 	}
 }
 
+static void slsqp_print_x_if_requested(const char *env_name, integer n, const double *x){
+	const char *value = getenv(env_name);
+	integer i;
+	if(value == NULL || *value == '\0' || strcmp(value,"0") == 0 || x == NULL){
+		return;
+	}
+	printf(",\"final_x\":[");
+	for(i = 0; i < n; ++i){
+		if(i > 0){
+			putchar(',');
+		}
+		slsqp_json_number(x[i]);
+	}
+	putchar(']');
+}
+
 static int slsqp_env_int(const char *name, int fallback){
 	const char *value = getenv(name);
 	char *end = NULL;
@@ -554,6 +570,7 @@ int MAINENTRY(void){
 	printf("\"cutest_setup_time\":%.17g,\"cutest_solve_time\":%.17g,",(double)cpu[0],(double)cpu[1]);
 	printf("\"callback_error\":");
 	slsqp_json_string(ctx.callback_error != NULL ? ctx.callback_error : "");
+	slsqp_print_x_if_requested("SLSQP_DUMP_X",ctx.n,(const double *)x);
 	printf("}\n");
 
 	nlopt_destroy(ctx.opt);
