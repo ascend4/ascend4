@@ -41,7 +41,8 @@ OUTCOME_CODES: dict[str, tuple[str, str, str]] = {
     "other_solver_status": ("21", "🔴", "other NLopt/SLSQP status"),
 }
 UNKNOWN_OUTCOME = ("?", "🔴", "unclassified outcome")
-MASTSIF_BASE_URL = "https://github.com/optimizers/mastsif-mirror/blob/master"
+MASTSIF_GITHUB_MIRROR_URL = "https://github.com/optimizers/mastsif-mirror/blob/master"
+MASTSIF_BITBUCKET_URL = "https://bitbucket.org/optrove/sif/src/HEAD"
 MASTSIF_DIR = pathlib.Path(os.environ.get("MASTSIF", "/home/john/MASTSIF"))
 
 OBJECTIVE_CLASS_LABELS = {
@@ -277,7 +278,12 @@ def mastsif_source_links() -> dict[str, str]:
 
 
 def problem_sif_url(problem: str, sif_links: dict[str, str]) -> str:
-    return sif_links.get(problem.upper(), f"{MASTSIF_BASE_URL}/{problem}.SIF")
+    problem_key = problem.upper()
+    if problem_key in sif_links:
+        return sif_links[problem_key]
+    if (MASTSIF_DIR / f"{problem}.SIF").exists():
+        return f"{MASTSIF_BITBUCKET_URL}/{problem}.SIF"
+    return f"{MASTSIF_GITHUB_MIRROR_URL}/{problem}.SIF"
 
 
 def problem_label(problem: str, a4c_models: dict[str, pathlib.Path], sif_links: dict[str, str]) -> str:

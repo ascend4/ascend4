@@ -132,17 +132,17 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | [MINSURF](https://bitbucket.org/optrove/sif/src/HEAD/MINSURF.SIF) | OX | OXR2-MY-64-0 | 64 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | [3PK](https://bitbucket.org/optrove/sif/src/HEAD/3PK.SIF) | SB | SBR2-MN-30-0 | 30 | 0 | 🟠3 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
 | [DECONVB](https://bitbucket.org/optrove/sif/src/HEAD/DECONVB.SIF) | SB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| [DEVGLA1B](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA1B.SIF) | SB | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DEVGLA2B](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA2B.SIF) | SB | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🟢1 | 🟢1 |
-| [EGGCRATEB](https://github.com/optimizers/mastsif-mirror/blob/master/EGGCRATEB.SIF) | SB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [ELATVIDUB](https://github.com/optimizers/mastsif-mirror/blob/master/ELATVIDUB.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [EXP2B](https://github.com/optimizers/mastsif-mirror/blob/master/EXP2B.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DEVGLA1B](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA1B.SIF) | SB | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DEVGLA2B](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA2B.SIF) | SB | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🟢1 | 🟢1 |
+| [EGGCRATEB](https://bitbucket.org/optrove/sif/src/HEAD/EGGCRATEB.SIF) | SB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [ELATVIDUB](https://bitbucket.org/optrove/sif/src/HEAD/ELATVIDUB.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [EXP2B](https://bitbucket.org/optrove/sif/src/HEAD/EXP2B.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | [FBRAIN2LS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAIN2LS.SIF) | SB | SBR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴12 | 🔴12 | 🔴12 |
 | [FBRAINLS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAINLS.SIF) | SB | SBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
 | [ALLINIT](https://bitbucket.org/optrove/sif/src/HEAD/ALLINIT.SIF) | OB | OBR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🔴9 | 🟢1 | 🟢1 |
-| [BRANIN](https://github.com/optimizers/mastsif-mirror/blob/master/BRANIN.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BRANIN](https://bitbucket.org/optrove/sif/src/HEAD/BRANIN.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | [CAMEL6](https://bitbucket.org/optrove/sif/src/HEAD/CAMEL6.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DGOSPEC](https://github.com/optimizers/mastsif-mirror/blob/master/DGOSPEC.SIF) [(a4c)](models/test/a4sqp/dgospec.a4c) | OB | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1 | 🟢1 | 🟢1 |
+| [DGOSPEC](https://bitbucket.org/optrove/sif/src/HEAD/DGOSPEC.SIF) [(a4c)](models/test/a4sqp/dgospec.a4c) | OB | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1 | 🟢1 | 🟢1 |
 | [EG1](https://bitbucket.org/optrove/sif/src/HEAD/EG1.SIF) | OB | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
 | [BQP1VAR](https://bitbucket.org/optrove/sif/src/HEAD/BQP1VAR.SIF) [(a4c)](models/test/a4sqp/bqp1var.a4c) | QB | QBR2-AN-1-0 | 1 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | [BQPGABIM](https://bitbucket.org/optrove/sif/src/HEAD/BQPGABIM.SIF) | QB | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢1 | 🟢1 |
