@@ -40,7 +40,7 @@ jobs:
           python3 python3-devel python3-pip python3-packaging python3-numpy python3-pyyaml \
           tcl-devel tk-devel \
           graphviz graphviz-devel \
-          blas-devel lapack-devel nlopt-devel \
+          blas-devel lapack-devel \
           pcre-devel zlib-devel xz-devel
 
     - name: Create unprivileged build user
@@ -65,7 +65,7 @@ jobs:
           cd "$CUNIT_RELEASE_BASENAME"
           touch README
           ./bootstrap
-          ./configure --prefix="$HOME/.local" --enable-examples --enable-debug
+          ./configure --prefix="$HOME/.local" --enable-debug
           make -j"$(nproc)"
           make install
         '

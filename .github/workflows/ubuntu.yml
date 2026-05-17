@@ -39,7 +39,7 @@ jobs:
         tar -xzf "$CUNIT_TARBALL"
         cd "$CUNIT_RELEASE_BASENAME"
         ./bootstrap
-        ./configure --prefix=$HOME/.local --enable-examples --enable-debug
+        ./configure --prefix=$HOME/.local --enable-debug
         make -j"$(nproc)"
         make install
 

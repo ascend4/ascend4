@@ -64,17 +64,14 @@ if env.get('WITH_A4SQP'):
 			])
 
 			ascend_env.Append(LIBS=['a4sqp','ascend'],LIBPATH=['#/solvers/a4sqp','#'])
-			lib = ascend_env.SharedLibrary('a4sqp',[
+			lib = ascend_env.SharedLibrary('a4sqp_ascend',[
 				'asc_a4sqp.c',
 				'asc_a4sqp_adapter.c',
 				'asc_a4sqp_diag.c',
 				'asc_a4sqp_params.c',
 				'asc_a4sqp_report.c',
 				'asc_a4sqp_view.c'
-			],
-				SHLIBSUFFIX = env['EXTLIB_SUFFIX'],
-				SHLIBPREFIX = env['EXTLIB_PREFIX']
-			)
+			])
 			env.Depends(lib,[core,env['libascend']])
 			env['extfns'] += [lib]
 			if env.get('CAN_INSTALL'):
