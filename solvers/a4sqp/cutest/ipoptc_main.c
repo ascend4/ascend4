@@ -56,6 +56,103 @@ static void ipoptc_json_string(const char *s){
 	putchar('"');
 }
 
+static void ipoptc_json_number(double value){
+	if(isfinite(value)){
+		printf("%.17g",value);
+	}else{
+		printf("null");
+	}
+}
+
+static double ipoptc_inf_norm(integer n, const rp_ *v){
+	double result = 0.0;
+	integer i;
+	if(v == NULL){
+		return NAN;
+	}
+	for(i = 0; i < n; ++i){
+		double a = fabs((double)v[i]);
+		if(a > result){
+			result = a;
+		}
+	}
+	return result;
+}
+
+static double ipoptc_bound_projected_grad_inf(
+	integer n,
+	const rp_ *x,
+	const rp_ *x_l,
+	const rp_ *x_u,
+	const rp_ *grad
+){
+	double result = 0.0;
+	integer i;
+	const double active_tol = 1e-8;
+	if(x == NULL || grad == NULL){
+		return NAN;
+	}
+	for(i = 0; i < n; ++i){
+		double g = (double)grad[i];
+		double lower = x_l != NULL ? (double)x_l[i] : -INFINITY;
+		double upper = x_u != NULL ? (double)x_u[i] : INFINITY;
+		int at_lower = isfinite(lower) && (double)x[i] <= lower + active_tol;
+		int at_upper = isfinite(upper) && (double)x[i] >= upper - active_tol;
+		if((at_lower && g > 0.0) || (at_upper && g < 0.0)){
+			g = 0.0;
+		}
+		if(fabs(g) > result){
+			result = fabs(g);
+		}
+	}
+	return result;
+}
+
+static int ipoptc_final_objective_gradient(
+	struct IpoptCutestContext *ctx,
+	const rp_ *x,
+	rp_ *obj,
+	rp_ *grad_out
+){
+	integer status = 0;
+	logical grad = TRUE_;
+	rp_ f = 0.0;
+	if(ctx == NULL || x == NULL || obj == NULL || grad_out == NULL){
+		return 1;
+	}
+	if(ctx->noobj){
+		memset(grad_out,0,(size_t)ctx->n * sizeof(*grad_out));
+		*obj = 0.0;
+		return 0;
+	}
+	if(ctx->constrained){
+		CUTEST_cofg(&status,&ctx->n,x,&f,grad_out,&grad);
+	}else{
+		CUTEST_uofg(&status,&ctx->n,x,&f,grad_out,&grad);
+	}
+	if(status != 0){
+		return 1;
+	}
+	*obj = f;
+	return 0;
+}
+
+static void ipoptc_print_x_if_requested(const char *env_name, integer n, const rp_ *x){
+	integer i;
+	const char *dump = getenv(env_name);
+	if(dump == NULL || *dump == '\0' || strcmp(dump,"0") == 0){
+		return;
+	}
+	printf(",\"final_x\":[");
+	for(i = 0; i < n; ++i){
+		if(i > 0){
+			printf(",");
+		}
+		ipoptc_json_number((double)x[i]);
+	}
+	printf("]");
+}
+
 static int ipoptc_env_int(const char *name, int fallback){
 	const char *value = getenv(name);
 	char *end = NULL;
@@ -396,6 +493,10 @@ int MAINENTRY(void){
 	int finite_lower = 0;
 	int finite_upper = 0;
 	double maxvio = 0.0;
+	rp_ final_obj_check = 0.0;
+	rp_ *final_grad = NULL;
+	double final_objective_gradient_inf = NAN;
+	double final_objective_projected_gradient_inf = NAN;
 
 	memset(&ctx,0,sizeof(ctx));
 	FORTRAN_open(&funit,fname,&ierr);
@@ -571,6 +672,12 @@ int MAINENTRY(void){
 			}
 		}
 	}
+	final_grad = (rp_ *)malloc(sizeof(*final_grad) * (size_t)ctx.n);
+	if(final_grad != NULL && !ipoptc_final_objective_gradient(&ctx,x,&final_obj_check,final_grad)){
+		final_objective_gradient_inf = ipoptc_inf_norm(ctx.n,final_grad);
+		final_objective_projected_gradient_inf =
+			ipoptc_bound_projected_grad_inf(ctx.n,x,x_l,x_u,final_grad);
+	}
 	if(ctx.constrained){
 		CUTEST_creport(&status,calls,cpu);
 		CUTEST_cterminate(&status);
@@ -595,6 +702,13 @@ int MAINENTRY(void){
 	printf("\"finite_var_lower\":%d,\"finite_var_upper\":%d,",finite_lower,finite_upper);
 	printf("\"jac_nnz\":%d,\"hess_nnz\":%d,",(int)ctx.nele_jac,(int)ctx.nele_hess);
 	printf("\"status\":%d,\"objective\":%.17g,",(int)solve_status,(double)obj);
+	printf("\"final_objective_check\":");
+	ipoptc_json_number((double)final_obj_check);
+	printf(",\"objective_gradient_inf\":");
+	ipoptc_json_number(final_objective_gradient_inf);
+	printf(",\"objective_projected_gradient_inf\":");
+	ipoptc_json_number(final_objective_projected_gradient_inf);
+	printf(",");
 	printf("\"max_constraint_violation\":%.17g,",maxvio);
 	printf("\"projected_gradient_inf\":null,");
 	printf("\"iterations\":null,\"qp_solves\":null,\"qp_failures\":null,\"line_search_failures\":null,");
@@ -606,6 +720,7 @@ int MAINENTRY(void){
 		(double)calls[5]
 	);
 	printf("\"cutest_setup_time\":%.17g,\"cutest_solve_time\":%.17g", (double)cpu[0], (double)cpu[1]);
+	ipoptc_print_x_if_requested("IPOPTC_DUMP_X",ctx.n,x);
 	printf("}\n");
 	FreeIpoptProblem(problem);
 	FREE(x);
@@ -619,6 +734,7 @@ int MAINENTRY(void){
 	FREE(mult_x_u);
 	FREE(equatn);
 	FREE(linear);
+	FREE(final_grad);
 	FREE(ctx.c_work);
 	FREE(ctx.g_work);
 	FREE(ctx.jac_work);

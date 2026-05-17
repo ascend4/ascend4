@@ -257,6 +257,73 @@ static double slsqp_max_violation(
 	return maxv;
 }
 
+static void slsqp_final_gradient_residuals(
+	struct SlsqpCutestContext *ctx,
+	const double *x,
+	const double *x_l,
+	const double *x_u,
+	double *objective_gradient_inf,
+	double *projected_gradient_inf
+){
+	double *grad = NULL;
+	rp_ f = 0.0;
+	integer status = 0;
+	logical need_grad = TRUE_;
+	integer i;
+	double obj_inf = 0.0;
+	double proj_inf = 0.0;
+	if(objective_gradient_inf != NULL){
+		*objective_gradient_inf = HUGE_VAL;
+	}
+	if(projected_gradient_inf != NULL){
+		*projected_gradient_inf = HUGE_VAL;
+	}
+	if(ctx == NULL || x == NULL || ctx->noobj){
+		if(objective_gradient_inf != NULL){
+			*objective_gradient_inf = 0.0;
+		}
+		if(projected_gradient_inf != NULL){
+			*projected_gradient_inf = 0.0;
+		}
+		return;
+	}
+	grad = (double *)malloc(sizeof(double) * (size_t)ctx->n);
+	if(grad == NULL){
+		return;
+	}
+	if(ctx->constrained){
+		CUTEST_cofg(&status,&ctx->n,(const rp_ *)x,&f,(rp_ *)grad,&need_grad);
+	}else{
+		CUTEST_uofg(&status,&ctx->n,(const rp_ *)x,&f,(rp_ *)grad,&need_grad);
+	}
+	if(status != 0){
+		free(grad);
+		return;
+	}
+	for(i = 0; i < ctx->n; ++i){
+		double g = grad[i];
+		double pg = g;
+		obj_inf = fmax(obj_inf,fabs(g));
+		if(x_l[i] > -1e19 && fabs(x[i] - x_l[i]) <= 1e-8){
+			pg = fmin(0.0,g);
+		}
+		if(x_u[i] < 1e19 && fabs(x[i] - x_u[i]) <= 1e-8){
+			pg = fmax(0.0,pg);
+		}
+		if(x_l[i] > -1e19 && x_u[i] < 1e19 && fabs(x_u[i] - x_l[i]) <= 1e-12){
+			pg = 0.0;
+		}
+		proj_inf = fmax(proj_inf,fabs(pg));
+	}
+	free(grad);
+	if(objective_gradient_inf != NULL){
+		*objective_gradient_inf = obj_inf;
+	}
+	if(projected_gradient_inf != NULL){
+		*projected_gradient_inf = proj_inf;
+	}
+}
+
 int MAINENTRY(void){
 	char *fname = "OUTSDIF.d";
 	integer funit = 42;
@@ -288,6 +355,8 @@ int MAINENTRY(void){
 	nlopt_result result;
 	double obj = 0.0;
 	double maxv = 0.0;
+	double objective_gradient_inf = HUGE_VAL;
+	double projected_gradient_inf = HUGE_VAL;
 	double constraint_tol = slsqp_env_double("SLSQP_CONSTRAINT_TOL",1e-8);
 	int finite_lower = 0;
 	int finite_upper = 0;
@@ -439,6 +508,14 @@ int MAINENTRY(void){
 	}
 	result = nlopt_optimize(ctx.opt,(double *)x,&obj);
 	maxv = slsqp_max_violation(&ctx,(const double *)x,(const double *)x_l,(const double *)x_u);
+	slsqp_final_gradient_residuals(
+		&ctx,
+		(const double *)x,
+		(const double *)x_l,
+		(const double *)x_u,
+		&objective_gradient_inf,
+		&projected_gradient_inf
+	);
 	if(ctx.constrained){
 		CUTEST_creport(&status,calls,cpu);
 		CUTEST_cterminate(&status);
@@ -463,6 +540,10 @@ int MAINENTRY(void){
 	slsqp_json_number(obj);
 	printf(",\"max_constraint_violation\":");
 	slsqp_json_number(maxv);
+	printf(",\"objective_gradient_inf\":");
+	slsqp_json_number(objective_gradient_inf);
+	printf(",\"projected_gradient_inf\":");
+	slsqp_json_number(projected_gradient_inf);
 	printf(",\"iterations\":%d,",nlopt_get_numevals(ctx.opt));
 	printf("\"obj_evals\":%d,\"grad_evals\":%d,\"con_evals\":%d,\"jac_evals\":%d,",
 		ctx.obj_evals,ctx.grad_evals,ctx.con_evals,ctx.jac_evals

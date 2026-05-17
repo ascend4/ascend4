@@ -97,6 +97,8 @@ def slsqp_profile_run_command(
         str(args.max_iter),
         "--constraint-tol",
         str(args.tol),
+        "--gradient-tol",
+        str(args.acceptable_tol),
         "--timeout-sec",
         str(args.timeout_sec),
         "--jobs",

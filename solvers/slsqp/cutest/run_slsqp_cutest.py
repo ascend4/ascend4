@@ -41,7 +41,7 @@ def repo_root() -> pathlib.Path:
     return pathlib.Path(__file__).resolve().parents[3]
 
 
-def classify(row, timeout=False, returncode=0):
+def classify(row, timeout=False, returncode=0, gradient_tol=1e-5):
     if timeout:
         return "driver_timeout"
     if returncode != 0 and not row:
@@ -53,7 +53,17 @@ def classify(row, timeout=False, returncode=0):
         maxv = float(row.get("max_constraint_violation", "nan"))
     except Exception:
         maxv = float("nan")
+    try:
+        m = int(str(row.get("m", "0")).strip() or "0")
+    except Exception:
+        m = 0
+    try:
+        pg = float(row.get("projected_gradient_inf", "nan"))
+    except Exception:
+        pg = float("nan")
     if status in PASS_STATUSES and maxv <= 1e-6:
+        if m == 0 and pg == pg and pg > gradient_tol:
+            return "success_high_gradient"
         return "strict_success"
     if status == "MAXEVAL_REACHED":
         return "max_iter"
@@ -182,7 +192,12 @@ def run_one(problem: str, args, env: dict[str, str], job_index: int = 0) -> dict
     if timed_out:
         row["driver_error"] = "timeout"
         row["timeout_sec"] = args.timeout_sec
-    row["outcome_class"] = classify(row, timeout=timed_out, returncode=returncode or 0)
+    row["outcome_class"] = classify(
+        row,
+        timeout=timed_out,
+        returncode=returncode or 0,
+        gradient_tol=args.gradient_tol,
+    )
     return row
 
 
@@ -213,6 +228,7 @@ def write_tsv_results(rows: list[dict[str, object]], args) -> None:
         "used_lsq",
         "objective",
         "max_constraint_violation",
+        "objective_gradient_inf",
         "kkt_error",
         "projected_gradient_inf",
         "iterations",
@@ -259,6 +275,7 @@ def main(argv=None):
     parser.add_argument("--ascend-root", default=str(repo_root()))
     parser.add_argument("--max-iter", type=int, default=200)
     parser.add_argument("--constraint-tol", type=float, default=1e-8)
+    parser.add_argument("--gradient-tol", type=float, default=1e-5)
     parser.add_argument("--jobs", type=int, default=1, help="Number of parallel isolated CUTEst workers")
     args = parser.parse_args(argv)
 
@@ -323,7 +340,7 @@ def main(argv=None):
                                 "driver_error": f"runner_exception: {exc}",
                                 "timestamp_utc": datetime.now(timezone.utc).isoformat(),
                             }
-                            row["outcome_class"] = classify(row, returncode=1)
+                            row["outcome_class"] = classify(row, returncode=1, gradient_tol=args.gradient_tol)
                             worker_results[job_index] = row
                     for job_index, row in sorted(worker_results.items()):
                         results[job_index] = row

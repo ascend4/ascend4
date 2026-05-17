@@ -45,6 +45,18 @@ static real64 a4sqp_lsq_inf_norm(int32 n, const real64 *x){
 	return v;
 }
 
+static real64 a4sqp_lsq_stall_step_tol(int32 n, const real64 *x, real64 requested_tol){
+	real64 scale = 1.0 + a4sqp_lsq_norm2(n,x);
+	real64 floor_tol = 1e-12 * scale;
+	if(floor_tol < 1e-14){
+		floor_tol = 1e-14;
+	}
+	if(requested_tol > 0.0 && requested_tol < floor_tol){
+		return requested_tol;
+	}
+	return floor_tol;
+}
+
 static real64 a4sqp_lsq_objective(
 	const struct A4SqpLsqProblem *problem,
 	const real64 *residuals
@@ -349,11 +361,12 @@ enum A4SqpLsqStatus a4sqp_lsq_solve(
 				continue;
 			}
 			step_norm = a4sqp_lsq_norm2(n,step);
-			if(step_norm <= opt.step_tol){
+			if(step_norm <= opt.step_tol && grad_inf <= opt.grad_tol){
 				a4sqp_lsq_fill_stats(stats,iter,obj,grad_inf,step_norm,local_lambda,accepted_steps);
-				if(grad_inf <= opt.grad_tol){
-					goto solved;
-				}
+				goto solved;
+			}
+			if(step_norm <= a4sqp_lsq_stall_step_tol(n,x,opt.step_tol)){
+				a4sqp_lsq_fill_stats(stats,iter,obj,grad_inf,step_norm,local_lambda,accepted_steps);
 				goto stalled;
 			}
 			for(i = 0; i < n; ++i){

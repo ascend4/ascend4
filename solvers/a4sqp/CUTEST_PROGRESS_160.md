@@ -16,7 +16,7 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | Acceptable tolerance | 1e-5 |
 | Parallel jobs | 6 |
 | Problem-set source | solvers/a4sqp/cutest/problem_sets/broad_stratified_160.tsv |
-| Notes | Generated from rebuilt SLSQP TSV plus existing rebuilt IPOPT/A4SQP profile TSVs. |
+| Notes | A4SQP profiles rerun from fresh scons build after least-squares stall fix; IPOPT profiles reuse latest available rebuilt TSVs; SLSQP profile reuses gradient-flagged TSV. |
 
 ## Profile Summary
 
@@ -24,38 +24,38 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ipoptc_limited | ipoptc | limited-memory | n/a | n/a | 160 | 130 | 130/160 | 19 | 0 | 8 | 3 | acceptable_success:6; driver_timeout:3; max_iter_infeasible_or_stalled:2; max_iter_near_solved:19; other_solver_failure:6; strict_success:124 |
 | ipoptc_exact | ipoptc | exact | n/a | n/a | 160 | 138 | 138/160 | 9 | 0 | 5 | 8 | acceptable_success:3; driver_timeout:8; max_iter_infeasible_or_stalled:3; max_iter_near_solved:9; other_solver_failure:2; strict_success:135 |
-| A4SQP_BFGS_AUTO | a4sqp | BFGS | 1 | 5 | 160 | 92 | 92/160 | 0 | 1 | 39 | 28 | acceptable_success:17; driver_timeout:28; line_search_error:15; max_iter_infeasible_or_stalled:4; max_iter_stationarity:20; strict_success:75; strict_success_high_kkt:1 |
-| A4SQP_EXACT_OBJ_AUTO | a4sqp | EXACT_OBJ | 1 | 5 | 160 | 103 | 103/160 | 0 | 1 | 27 | 29 | acceptable_success:17; driver_timeout:29; line_search_error:10; max_iter_infeasible_or_stalled:5; max_iter_stationarity:11; other_solver_failure:1; strict_success:86; strict_success_high_kkt:1 |
-| A4SQP_EXACT_LAGRANGIAN_AUTO | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 160 | 111 | 111/160 | 0 | 1 | 22 | 26 | acceptable_success:13; driver_timeout:26; line_search_error:11; max_iter_stationarity:11; strict_success:98; strict_success_high_kkt:1 |
-| SLSQP_NLOPT | slsqp | n/a | n/a | n/a | 160 | 119 | 119/160 | 0 | 0 | 38 | 3 | driver_timeout:3; max_iter:23; other_solver_status:7; roundoff_limited:6; solver_failure:2; strict_success:119 |
+| SLSQP_NLOPT | slsqp | n/a | n/a | n/a | 160 | 96 | 96/160 | 0 | 23 | 39 | 2 | driver_timeout:2; max_iter:24; other_solver_status:7; roundoff_limited:6; solver_failure:2; strict_success:96; success_high_gradient:23 |
+| A4SQP_BFGS_AUTO | a4sqp | BFGS | 1 | 5 | 160 | 95 | 95/160 | 0 | 1 | 35 | 29 | acceptable_success:16; driver_timeout:29; line_search_error:12; max_iter_infeasible_or_stalled:4; max_iter_stationarity:19; strict_success:79; strict_success_high_kkt:1 |
+| A4SQP_EXACT_OBJ_AUTO | a4sqp | EXACT_OBJ | 1 | 5 | 160 | 105 | 105/160 | 0 | 1 | 25 | 29 | acceptable_success:16; driver_timeout:29; line_search_error:8; max_iter_infeasible_or_stalled:5; max_iter_stationarity:11; other_solver_failure:1; strict_success:89; strict_success_high_kkt:1 |
+| A4SQP_EXACT_LAGRANGIAN_AUTO | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | 160 | 113 | 113/160 | 0 | 1 | 20 | 26 | acceptable_success:12; driver_timeout:26; line_search_error:9; max_iter_stationarity:11; strict_success:101; strict_success_high_kkt:1 |
 
 ## Category Summary
 
 CUTEst categories are derived from the first two classification letters: objective type followed by constraint type.
 
-| Cat | Meaning | Problems | IPOPT L-BFGS | IPOPT Exact | A4SQP BFGS | A4SQP Obj | A4SQP Lagr | SLSQP |
+| Cat | Meaning | Problems | IPOPT L-BFGS | IPOPT Exact | SLSQP | A4SQP BFGS | A4SQP Obj | A4SQP Lagr |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SU | sum-of-squares objective; unconstrained | 51 | 34/51 | 39/51 | 32/51 | 34/51 | 34/51 | 36/51 |
-| OU | other objective; unconstrained | 6 | 6/6 | 5/6 | 5/6 | 5/6 | 5/6 | 5/6 |
-| SX | sum-of-squares objective; fixed variables only | 5 | 4/5 | 5/5 | 5/5 | 5/5 | 5/5 | 4/5 |
+| SU | sum-of-squares objective; unconstrained | 51 | 34/51 | 39/51 | 21/51 | 35/51 | 36/51 | 36/51 |
+| OU | other objective; unconstrained | 6 | 6/6 | 5/6 | 2/6 | 5/6 | 5/6 | 5/6 |
+| SX | sum-of-squares objective; fixed variables only | 5 | 4/5 | 5/5 | 4/5 | 5/5 | 5/5 | 5/5 |
 | OX | other objective; fixed variables only | 1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 |
-| SB | sum-of-squares objective; bound constraints only | 9 | 7/9 | 8/9 | 7/9 | 8/9 | 8/9 | 9/9 |
-| OB | other objective; bound constraints only | 5 | 5/5 | 5/5 | 4/5 | 5/5 | 5/5 | 5/5 |
-| QB | quadratic objective; bound constraints only | 3 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| SB | sum-of-squares objective; bound constraints only | 9 | 7/9 | 8/9 | 6/9 | 7/9 | 8/9 | 8/9 |
+| OB | other objective; bound constraints only | 5 | 5/5 | 5/5 | 4/5 | 4/5 | 5/5 | 5/5 |
+| QB | quadratic objective; bound constraints only | 3 | 3/3 | 3/3 | 2/3 | 3/3 | 3/3 | 3/3 |
 | SL | sum-of-squares objective; linear constraints | 3 | 2/3 | 3/3 | 2/3 | 2/3 | 2/3 | 2/3 |
-| OL | other objective; linear constraints | 4 | 3/4 | 2/4 | 3/4 | 3/4 | 3/4 | 2/4 |
-| QL | quadratic objective; linear constraints | 12 | 11/12 | 12/12 | 4/12 | 10/12 | 10/12 | 6/12 |
+| OL | other objective; linear constraints | 4 | 3/4 | 2/4 | 2/4 | 3/4 | 3/4 | 3/4 |
+| QL | quadratic objective; linear constraints | 12 | 11/12 | 12/12 | 6/12 | 4/12 | 10/12 | 10/12 |
 | LL | linear objective; linear constraints | 4 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 |
-| SQ | sum-of-squares objective; quadratic constraints | 2 | 1/2 | 2/2 | 0/2 | 0/2 | 1/2 | 1/2 |
-| OQ | other objective; quadratic constraints | 1 | 1/1 | 1/1 | 0/1 | 0/1 | 1/1 | 1/1 |
-| QQ | quadratic objective; quadratic constraints | 6 | 6/6 | 6/6 | 3/6 | 2/6 | 6/6 | 5/6 |
-| LQ | linear objective; quadratic constraints | 7 | 7/7 | 6/7 | 4/7 | 3/7 | 4/7 | 4/7 |
-| ON | other objective; network constraints | 5 | 4/5 | 5/5 | 1/5 | 1/5 | 1/5 | 3/5 |
+| SQ | sum-of-squares objective; quadratic constraints | 2 | 1/2 | 2/2 | 1/2 | 0/2 | 0/2 | 1/2 |
+| OQ | other objective; quadratic constraints | 1 | 1/1 | 1/1 | 1/1 | 0/1 | 0/1 | 1/1 |
+| QQ | quadratic objective; quadratic constraints | 6 | 6/6 | 6/6 | 5/6 | 3/6 | 2/6 | 6/6 |
+| LQ | linear objective; quadratic constraints | 7 | 7/7 | 6/7 | 4/7 | 4/7 | 3/7 | 4/7 |
+| ON | other objective; network constraints | 5 | 4/5 | 5/5 | 3/5 | 1/5 | 1/5 | 1/5 |
 | LN | linear objective; network constraints | 1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 |
-| SO | sum-of-squares objective; other constraints | 1 | 1/1 | 1/1 | 0/1 | 1/1 | 0/1 | 0/1 |
-| OO | other objective; other constraints | 10 | 8/10 | 8/10 | 6/10 | 6/10 | 6/10 | 7/10 |
-| QO | quadratic objective; other constraints | 10 | 7/10 | 8/10 | 1/10 | 2/10 | 2/10 | 7/10 |
-| LO | linear objective; other constraints | 14 | 14/14 | 13/14 | 6/14 | 7/14 | 9/14 | 13/14 |
+| SO | sum-of-squares objective; other constraints | 1 | 1/1 | 1/1 | 0/1 | 0/1 | 1/1 | 0/1 |
+| OO | other objective; other constraints | 10 | 8/10 | 8/10 | 7/10 | 6/10 | 6/10 | 6/10 |
+| QO | quadratic objective; other constraints | 10 | 7/10 | 8/10 | 7/10 | 1/10 | 2/10 | 2/10 |
+| LO | linear objective; other constraints | 14 | 14/14 | 13/14 | 13/14 | 6/14 | 7/14 | 9/14 |
 
 ## Problem Outcomes
 
@@ -65,168 +65,168 @@ Cells with an `L` suffix used the experimental least-squares solve path for that
 
 Matrix profile headers are shortened to solver/Hessian labels; full profile settings are listed in the summary table.
 
-| Problem | Cat | Class | n | m | IPOPT L-BFGS | IPOPT Exact | A4SQP BFGS | A4SQP Obj | A4SQP Lagr | SLSQP |
+| Problem | Cat | Class | n | m | IPOPT L-BFGS | IPOPT Exact | SLSQP | A4SQP BFGS | A4SQP Obj | A4SQP Lagr |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [BA-L1LS](https://github.com/optimizers/mastsif-mirror/blob/master/BA-L1LS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🟠4L | 🟠4L | 🟠4L | 🔴15 |
-| [BA-L1SPLS](https://github.com/optimizers/mastsif-mirror/blob/master/BA-L1SPLS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴8 | 🟢2 | 🟢2 | 🔴15 |
-| [BARD](https://github.com/optimizers/mastsif-mirror/blob/master/BARD.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [BEALE](https://github.com/optimizers/mastsif-mirror/blob/master/BEALE.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [BENNETT5LS](https://github.com/optimizers/mastsif-mirror/blob/master/BENNETT5LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BIGGS6](https://github.com/optimizers/mastsif-mirror/blob/master/BIGGS6.SIF) | SU | SUR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [BOX3](https://github.com/optimizers/mastsif-mirror/blob/master/BOX3.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [BOXBODLS](https://github.com/optimizers/mastsif-mirror/blob/master/BOXBODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [BROWNBS](https://github.com/optimizers/mastsif-mirror/blob/master/BROWNBS.SIF) [(a4c)](models/test/a4sqp/brownbs.a4c) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [BROWNDEN](https://github.com/optimizers/mastsif-mirror/blob/master/BROWNDEN.SIF) [(a4c)](models/test/a4sqp/brownden.a4c) | SU | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
-| [CERI651ALS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651ALS.SIF) [(a4c)](models/test/a4sqp/ceri651als.a4c) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🟠3 | 🔴6 | 🔴6 | 🔴6 | 🟢1 |
-| [CERI651BLS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651BLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🔴6 | 🔴6 | 🔴6 | 🟢1 |
-| [CERI651CLS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651CLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴14 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [CERI651DLS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651DLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [CERI651ELS](https://github.com/optimizers/mastsif-mirror/blob/master/CERI651ELS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🔴6 | 🔴6 | 🔴6 | 🟢1 |
-| [CHWIRUT1LS](https://github.com/optimizers/mastsif-mirror/blob/master/CHWIRUT1LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 | 🟢1 |
-| [CHWIRUT2LS](https://github.com/optimizers/mastsif-mirror/blob/master/CHWIRUT2LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 | 🟢1 |
-| [CLUSTERLS](https://github.com/optimizers/mastsif-mirror/blob/master/CLUSTERLS.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [COATING](https://github.com/optimizers/mastsif-mirror/blob/master/COATING.SIF) | SU | SUR2-MN-134-0 | 134 | 0 | 🟠3 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🔴15 |
-| [COOLHANSLS](https://github.com/optimizers/mastsif-mirror/blob/master/COOLHANSLS.SIF) | SU | SUR2-RN-9-0 | 9 | 0 | 🟠3 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🔴15 |
-| [CUBE](https://github.com/optimizers/mastsif-mirror/blob/master/CUBE.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DANIWOODLS](https://github.com/optimizers/mastsif-mirror/blob/master/DANIWOODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DANWOODLS](https://github.com/optimizers/mastsif-mirror/blob/master/DANWOODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DENSCHNB](https://github.com/optimizers/mastsif-mirror/blob/master/DENSCHNB.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DENSCHNC](https://github.com/optimizers/mastsif-mirror/blob/master/DENSCHNC.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DENSCHND](https://github.com/optimizers/mastsif-mirror/blob/master/DENSCHND.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢2 | 🟢2 | 🟢1L | 🟢1L | 🟢1L | 🔴15 |
-| [DENSCHNE](https://github.com/optimizers/mastsif-mirror/blob/master/DENSCHNE.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DENSCHNF](https://github.com/optimizers/mastsif-mirror/blob/master/DENSCHNF.SIF) | SU | SUR2-AY-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DEVGLA1](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA1.SIF) | SU | SUR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DEVGLA2](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA2.SIF) | SU | SUR2-MN-5-0 | 5 | 0 | 🟠3 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🔴15 |
-| [DIAMON2DLS](https://github.com/optimizers/mastsif-mirror/blob/master/DIAMON2DLS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴15 |
-| [DIAMON3DLS](https://github.com/optimizers/mastsif-mirror/blob/master/DIAMON3DLS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴11 |
-| [DMN15102LS](https://github.com/optimizers/mastsif-mirror/blob/master/DMN15102LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴15 |
-| [DMN15103LS](https://github.com/optimizers/mastsif-mirror/blob/master/DMN15103LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🟠3 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴15 |
-| [DMN15332LS](https://github.com/optimizers/mastsif-mirror/blob/master/DMN15332LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴15 |
-| [DMN15333LS](https://github.com/optimizers/mastsif-mirror/blob/master/DMN15333LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴11 |
-| [DMN37142LS](https://github.com/optimizers/mastsif-mirror/blob/master/DMN37142LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴15 |
-| [DMN37143LS](https://github.com/optimizers/mastsif-mirror/blob/master/DMN37143LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴11 | 🔴11 |
-| [ECKERLE4LS](https://github.com/optimizers/mastsif-mirror/blob/master/ECKERLE4LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [EGGCRATE](https://github.com/optimizers/mastsif-mirror/blob/master/EGGCRATE.SIF) | SU | SUR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [ELATVIDU](https://github.com/optimizers/mastsif-mirror/blob/master/ELATVIDU.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
-| [ENGVAL2](https://github.com/optimizers/mastsif-mirror/blob/master/ENGVAL2.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [ENSOLS](https://github.com/optimizers/mastsif-mirror/blob/master/ENSOLS.SIF) | SU | SUR2-MN-9-0 | 9 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
-| [EXP2](https://github.com/optimizers/mastsif-mirror/blob/master/EXP2.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [EXPFIT](https://github.com/optimizers/mastsif-mirror/blob/master/EXPFIT.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [FBRAIN3LS](https://github.com/optimizers/mastsif-mirror/blob/master/FBRAIN3LS.SIF) | SU | SUR2-AN-6-0 | 6 | 0 | 🟠3 | 🟠3 | 🔴11 | 🔴11 | 🔴11 | 🔴15 |
-| [GAUSS1LS](https://github.com/optimizers/mastsif-mirror/blob/master/GAUSS1LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟠3 | 🟢1 | 🔴8 | 🟢1 | 🟢1 | 🟢1 |
-| [GAUSS2LS](https://github.com/optimizers/mastsif-mirror/blob/master/GAUSS2LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🔴14 | 🟢1 | 🔴8 | 🔴8 | 🔴8 | 🟢1 |
-| [GAUSS3LS](https://github.com/optimizers/mastsif-mirror/blob/master/GAUSS3LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 | 🟢1 |
-| [GAUSSIAN](https://github.com/optimizers/mastsif-mirror/blob/master/GAUSSIAN.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [GBRAINLS](https://github.com/optimizers/mastsif-mirror/blob/master/GBRAINLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [AKIVA](https://github.com/optimizers/mastsif-mirror/blob/master/AKIVA.SIF) [(a4c)](models/test/a4sqp/akiva.a4c) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
-| [ALLINITU](https://github.com/optimizers/mastsif-mirror/blob/master/ALLINITU.SIF) | OU | OUR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
-| [BRKMCC](https://github.com/optimizers/mastsif-mirror/blob/master/BRKMCC.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
-| [CLIFF](https://github.com/optimizers/mastsif-mirror/blob/master/CLIFF.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DENSCHNA](https://github.com/optimizers/mastsif-mirror/blob/master/DENSCHNA.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
-| [DJTL](https://github.com/optimizers/mastsif-mirror/blob/master/DJTL.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟠3 | 🔴6 | 🔴6 | 🔴6 | 🔴15 |
-| [AIRCRFTB](https://github.com/optimizers/mastsif-mirror/blob/master/AIRCRFTB.SIF) | SX | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BIGGS3](https://github.com/optimizers/mastsif-mirror/blob/master/BIGGS3.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [BIGGS5](https://github.com/optimizers/mastsif-mirror/blob/master/BIGGS5.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BOX2](https://github.com/optimizers/mastsif-mirror/blob/master/BOX2.SIF) | SX | SXR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DECONVU](https://github.com/optimizers/mastsif-mirror/blob/master/DECONVU.SIF) | SX | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🔴15 |
-| [MINSURF](https://github.com/optimizers/mastsif-mirror/blob/master/MINSURF.SIF) | OX | OXR2-MY-64-0 | 64 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [3PK](https://github.com/optimizers/mastsif-mirror/blob/master/3PK.SIF) | SB | SBR2-MN-30-0 | 30 | 0 | 🟠3 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DECONVB](https://github.com/optimizers/mastsif-mirror/blob/master/DECONVB.SIF) | SB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟠3 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
-| [DEVGLA1B](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA1B.SIF) | SB | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DEVGLA2B](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA2B.SIF) | SB | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🔴8 | 🟢1 | 🟢1 | 🟢1 |
-| [EGGCRATEB](https://github.com/optimizers/mastsif-mirror/blob/master/EGGCRATEB.SIF) | SB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [ELATVIDUB](https://github.com/optimizers/mastsif-mirror/blob/master/ELATVIDUB.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [EXP2B](https://github.com/optimizers/mastsif-mirror/blob/master/EXP2B.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [FBRAIN2LS](https://github.com/optimizers/mastsif-mirror/blob/master/FBRAIN2LS.SIF) | SB | SBR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🟢1 |
-| [FBRAINLS](https://github.com/optimizers/mastsif-mirror/blob/master/FBRAINLS.SIF) | SB | SBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [ALLINIT](https://github.com/optimizers/mastsif-mirror/blob/master/ALLINIT.SIF) | OB | OBR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🔴8 | 🟢1 | 🟢1 | 🟢1 |
+| [BA-L1LS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1LS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟠4L | 🟠4L | 🟠4L |
+| [BA-L1SPLS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1SPLS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
+| [BARD](https://bitbucket.org/optrove/sif/src/HEAD/BARD.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [BEALE](https://bitbucket.org/optrove/sif/src/HEAD/BEALE.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [BENNETT5LS](https://bitbucket.org/optrove/sif/src/HEAD/BENNETT5LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BIGGS6](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS6.SIF) | SU | SUR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [BOX3](https://bitbucket.org/optrove/sif/src/HEAD/BOX3.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [BOXBODLS](https://bitbucket.org/optrove/sif/src/HEAD/BOXBODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [BROWNBS](https://bitbucket.org/optrove/sif/src/HEAD/BROWNBS.SIF) [(a4c)](models/test/a4sqp/brownbs.a4c) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
+| [BROWNDEN](https://bitbucket.org/optrove/sif/src/HEAD/BROWNDEN.SIF) [(a4c)](models/test/a4sqp/brownden.a4c) | SU | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 |
+| [CERI651ALS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651ALS.SIF) [(a4c)](models/test/a4sqp/ceri651als.a4c) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴15 | 🟠3 | 🟠6 | 🔴7 | 🔴7 | 🔴7 |
+| [CERI651BLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651BLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🟠6 | 🔴7 | 🔴7 | 🔴7 |
+| [CERI651CLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651CLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴15 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
+| [CERI651DLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651DLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
+| [CERI651ELS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651ELS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴7 | 🔴7 | 🔴7 |
+| [CHWIRUT1LS](https://bitbucket.org/optrove/sif/src/HEAD/CHWIRUT1LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🔴9 | 🔴9 |
+| [CHWIRUT2LS](https://bitbucket.org/optrove/sif/src/HEAD/CHWIRUT2LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
+| [CLUSTERLS](https://bitbucket.org/optrove/sif/src/HEAD/CLUSTERLS.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [COATING](https://bitbucket.org/optrove/sif/src/HEAD/COATING.SIF) | SU | SUR2-MN-134-0 | 134 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
+| [COOLHANSLS](https://bitbucket.org/optrove/sif/src/HEAD/COOLHANSLS.SIF) | SU | SUR2-RN-9-0 | 9 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
+| [CUBE](https://bitbucket.org/optrove/sif/src/HEAD/CUBE.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DANIWOODLS](https://bitbucket.org/optrove/sif/src/HEAD/DANIWOODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DANWOODLS](https://bitbucket.org/optrove/sif/src/HEAD/DANWOODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DENSCHNB](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNB.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DENSCHNC](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNC.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DENSCHND](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHND.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢2 | 🟢2 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
+| [DENSCHNE](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNE.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DENSCHNF](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNF.SIF) | SU | SUR2-AY-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DEVGLA1](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA1.SIF) | SU | SUR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DEVGLA2](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA2.SIF) | SU | SUR2-MN-5-0 | 5 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
+| [DIAMON2DLS](https://bitbucket.org/optrove/sif/src/HEAD/DIAMON2DLS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
+| [DIAMON3DLS](https://bitbucket.org/optrove/sif/src/HEAD/DIAMON3DLS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN15102LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15102LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN15103LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15103LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN15332LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15332LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN15333LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15333LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN37142LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN37142LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN37143LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN37143LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
+| [ECKERLE4LS](https://bitbucket.org/optrove/sif/src/HEAD/ECKERLE4LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [EGGCRATE](https://bitbucket.org/optrove/sif/src/HEAD/EGGCRATE.SIF) | SU | SUR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
+| [ELATVIDU](https://bitbucket.org/optrove/sif/src/HEAD/ELATVIDU.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
+| [ENGVAL2](https://bitbucket.org/optrove/sif/src/HEAD/ENGVAL2.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [ENSOLS](https://bitbucket.org/optrove/sif/src/HEAD/ENSOLS.SIF) | SU | SUR2-MN-9-0 | 9 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 |
+| [EXP2](https://bitbucket.org/optrove/sif/src/HEAD/EXP2.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [EXPFIT](https://bitbucket.org/optrove/sif/src/HEAD/EXPFIT.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [FBRAIN3LS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAIN3LS.SIF) | SU | SUR2-AN-6-0 | 6 | 0 | 🟠3 | 🟠3 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
+| [GAUSS1LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS1LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟠3 | 🟢1 | 🟠6 | 🔴9 | 🟢1 | 🟢1 |
+| [GAUSS2LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS2LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🔴15 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
+| [GAUSS3LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS3LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🔴9 | 🔴9 |
+| [GAUSSIAN](https://bitbucket.org/optrove/sif/src/HEAD/GAUSSIAN.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [GBRAINLS](https://bitbucket.org/optrove/sif/src/HEAD/GBRAINLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [AKIVA](https://bitbucket.org/optrove/sif/src/HEAD/AKIVA.SIF) [(a4c)](models/test/a4sqp/akiva.a4c) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 |
+| [ALLINITU](https://bitbucket.org/optrove/sif/src/HEAD/ALLINITU.SIF) | OU | OUR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢1 | 🟢1 |
+| [BRKMCC](https://bitbucket.org/optrove/sif/src/HEAD/BRKMCC.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| [CLIFF](https://bitbucket.org/optrove/sif/src/HEAD/CLIFF.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢2 | 🟢1 | 🟠6 | 🟢1 | 🟢1 | 🟢1 |
+| [DENSCHNA](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNA.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| [DJTL](https://bitbucket.org/optrove/sif/src/HEAD/DJTL.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟠3 | 🔴16 | 🔴7 | 🔴7 | 🔴7 |
+| [AIRCRFTB](https://bitbucket.org/optrove/sif/src/HEAD/AIRCRFTB.SIF) | SX | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BIGGS3](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS3.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [BIGGS5](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS5.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BOX2](https://bitbucket.org/optrove/sif/src/HEAD/BOX2.SIF) | SX | SXR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DECONVU](https://bitbucket.org/optrove/sif/src/HEAD/DECONVU.SIF) | SX | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
+| [MINSURF](https://bitbucket.org/optrove/sif/src/HEAD/MINSURF.SIF) | OX | OXR2-MY-64-0 | 64 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [3PK](https://bitbucket.org/optrove/sif/src/HEAD/3PK.SIF) | SB | SBR2-MN-30-0 | 30 | 0 | 🟠3 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
+| [DECONVB](https://bitbucket.org/optrove/sif/src/HEAD/DECONVB.SIF) | SB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| [DEVGLA1B](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA1B.SIF) | SB | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [DEVGLA2B](https://github.com/optimizers/mastsif-mirror/blob/master/DEVGLA2B.SIF) | SB | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🟢1 | 🟢1 |
+| [EGGCRATEB](https://github.com/optimizers/mastsif-mirror/blob/master/EGGCRATEB.SIF) | SB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [ELATVIDUB](https://github.com/optimizers/mastsif-mirror/blob/master/ELATVIDUB.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [EXP2B](https://github.com/optimizers/mastsif-mirror/blob/master/EXP2B.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [FBRAIN2LS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAIN2LS.SIF) | SB | SBR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴12 | 🔴12 | 🔴12 |
+| [FBRAINLS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAINLS.SIF) | SB | SBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
+| [ALLINIT](https://bitbucket.org/optrove/sif/src/HEAD/ALLINIT.SIF) | OB | OBR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🔴9 | 🟢1 | 🟢1 |
 | [BRANIN](https://github.com/optimizers/mastsif-mirror/blob/master/BRANIN.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [CAMEL6](https://github.com/optimizers/mastsif-mirror/blob/master/CAMEL6.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DGOSPEC](https://github.com/optimizers/mastsif-mirror/blob/master/DGOSPEC.SIF) [(a4c)](models/test/a4sqp/dgospec.a4c) | OB | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [EG1](https://github.com/optimizers/mastsif-mirror/blob/master/EG1.SIF) | OB | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
-| [BQP1VAR](https://github.com/optimizers/mastsif-mirror/blob/master/BQP1VAR.SIF) [(a4c)](models/test/a4sqp/bqp1var.a4c) | QB | QBR2-AN-1-0 | 1 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BQPGABIM](https://github.com/optimizers/mastsif-mirror/blob/master/BQPGABIM.SIF) | QB | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
-| [BQPGASIM](https://github.com/optimizers/mastsif-mirror/blob/master/BQPGASIM.SIF) | QB | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
-| [ANTWERP](https://github.com/optimizers/mastsif-mirror/blob/master/ANTWERP.SIF) | SL | SLR2-RN-27-8 | 27 | 10 | 🟠3 | 🟢2 | 🔴6 | 🔴6 | 🔴6 | 🔴19 |
-| [BT3](https://github.com/optimizers/mastsif-mirror/blob/master/BT3.SIF) | SL | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [FCCU](https://github.com/optimizers/mastsif-mirror/blob/master/FCCU.SIF) | SL | SLR2-MN-19-8 | 19 | 8 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
-| [AVION2](https://github.com/optimizers/mastsif-mirror/blob/master/AVION2.SIF) | OL | OLR2-RN-49-15 | 49 | 15 | 🟠3 | 🟠3 | 🔴6 | 🔴6 | 🔴6 | 🔴20 |
-| [EQC](https://github.com/optimizers/mastsif-mirror/blob/master/EQC.SIF) | OL | OLR2-MY-9-3 | 9 | 3 | 🟢2 | 🔴14 | 🟢1 | 🟢1 | 🟢1 | 🔴19 |
-| [EXPFITA](https://github.com/optimizers/mastsif-mirror/blob/master/EXPFITA.SIF) | OL | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [EXPFITB](https://github.com/optimizers/mastsif-mirror/blob/master/EXPFITB.SIF) | OL | OLR2-AN-5-102 | 5 | 102 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [AVGASA](https://github.com/optimizers/mastsif-mirror/blob/master/AVGASA.SIF) [(a4c)](models/test/a4sqp/avgasa.a4c) | QL | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
-| [AVGASB](https://github.com/optimizers/mastsif-mirror/blob/master/AVGASB.SIF) [(a4c)](models/test/a4sqp/avgasb.a4c) | QL | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 | 🟢1 |
-| [BIGGSC4](https://github.com/optimizers/mastsif-mirror/blob/master/BIGGSC4.SIF) | QL | QLR2-AN-4-7 | 4 | 7 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DUAL1](https://github.com/optimizers/mastsif-mirror/blob/master/DUAL1.SIF) | QL | QLR2-MN-85-1 | 85 | 1 | 🟠3 | 🟢1 | 🔴6 | 🟢2 | 🟢2 | 🔴15 |
-| [DUAL2](https://github.com/optimizers/mastsif-mirror/blob/master/DUAL2.SIF) | QL | QLR2-MN-96-1 | 96 | 1 | 🟢1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 | 🔴15 |
-| [DUAL3](https://github.com/optimizers/mastsif-mirror/blob/master/DUAL3.SIF) | QL | QLR2-MN-111-1 | 111 | 1 | 🟢1 | 🟢1 | 🔴6 | 🔴6 | 🔴6 | 🔴15 |
-| [DUAL4](https://github.com/optimizers/mastsif-mirror/blob/master/DUAL4.SIF) | QL | QLR2-MN-75-1 | 75 | 1 | 🟢1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 | 🔴15 |
-| [DUALC1](https://github.com/optimizers/mastsif-mirror/blob/master/DUALC1.SIF) | QL | QLR2-MN-9-215 | 9 | 215 | 🟢1 | 🟢1 | 🔴6 | 🟢2 | 🟢2 | 🔴17 |
-| [DUALC2](https://github.com/optimizers/mastsif-mirror/blob/master/DUALC2.SIF) | QL | QLR2-MN-7-229 | 7 | 229 | 🟢1 | 🟢1 | 🔴6 | 🔴6 | 🔴6 | 🔴17 |
-| [DUALC5](https://github.com/optimizers/mastsif-mirror/blob/master/DUALC5.SIF) | QL | QLR2-MN-8-278 | 8 | 278 | 🟢1 | 🟢1 | 🔴11 | 🟢2 | 🟢2 | 🟢1 |
-| [GENHS28](https://github.com/optimizers/mastsif-mirror/blob/master/GENHS28.SIF) | QL | QLR2-AY-10-8 | 10 | 8 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [GMNCASE1](https://github.com/optimizers/mastsif-mirror/blob/master/GMNCASE1.SIF) | QL | QLR2-AN-175-300 | 175 | 300 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
-| [DEGENLPA](https://github.com/optimizers/mastsif-mirror/blob/master/DEGENLPA.SIF) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DEGENLPB](https://github.com/optimizers/mastsif-mirror/blob/master/DEGENLPB.SIF) [(a4c)](models/test/a4sqp/degenlpb.a4c) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [EXTRASIM](https://github.com/optimizers/mastsif-mirror/blob/master/EXTRASIM.SIF) | LL | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [GOFFIN](https://github.com/optimizers/mastsif-mirror/blob/master/GOFFIN.SIF) | LL | LLR2-AN-51-50 | 51 | 50 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [AIRPORT](https://github.com/optimizers/mastsif-mirror/blob/master/AIRPORT.SIF) | SQ | SQR2-MN-84-42 | 84 | 42 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🟢1 | 🔴15 |
-| [DECONVC](https://github.com/optimizers/mastsif-mirror/blob/master/DECONVC.SIF) | SQ | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🟢1 | 🔴6 | 🔴6 | 🔴6 | 🟢1 |
-| [BT7](https://github.com/optimizers/mastsif-mirror/blob/master/BT7.SIF) | OQ | OQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🟢1 | 🟢1 |
-| [BT1](https://github.com/optimizers/mastsif-mirror/blob/master/BT1.SIF) | QQ | QQR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🔴6 | 🔴6 | 🟢1 | 🔴15 |
-| [BT12](https://github.com/optimizers/mastsif-mirror/blob/master/BT12.SIF) | QQ | QQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴11 | 🟢1 | 🟢1 |
-| [BT2](https://github.com/optimizers/mastsif-mirror/blob/master/BT2.SIF) [(a4c)](models/test/a4sqp/bt2.a4c) | QQ | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BT4](https://github.com/optimizers/mastsif-mirror/blob/master/BT4.SIF) [(a4c)](models/test/a4sqp/bt4.a4c) | QQ | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🟢1 | 🟢1 |
-| [BT5](https://github.com/optimizers/mastsif-mirror/blob/master/BT5.SIF) [(a4c)](models/test/a4sqp/bt5.a4c) | QQ | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🟢1 | 🟢1 |
-| [BT8](https://github.com/optimizers/mastsif-mirror/blob/master/BT8.SIF) [(a4c)](models/test/a4sqp/bt8.a4c) | QQ | QQR2-AN-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BT13](https://github.com/optimizers/mastsif-mirror/blob/master/BT13.SIF) [(a4c)](models/test/a4sqp/bt13.a4c) | LQ | LQR2-AY-5-1 | 5 | 1 | 🟢2 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🔴20 |
-| [BYRDSPHR](https://github.com/optimizers/mastsif-mirror/blob/master/BYRDSPHR.SIF) | LQ | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴20 |
-| [CONGIGMZ](https://github.com/optimizers/mastsif-mirror/blob/master/CONGIGMZ.SIF) | LQ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 | 🔴11 | 🟢1 | 🟢1 |
-| [DEMYMALO](https://github.com/optimizers/mastsif-mirror/blob/master/DEMYMALO.SIF) | LQ | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DISC2](https://github.com/optimizers/mastsif-mirror/blob/master/DISC2.SIF) | LQ | LQR2-MY-29-23 | 29 | 23 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🟢1 |
-| [DISCS](https://github.com/optimizers/mastsif-mirror/blob/master/DISCS.SIF) | LQ | LQR2-MY-36-66 | 36 | 66 | 🟢1 | 🔴7 | 🔴11 | 🔴11 | 🔴11 | 🔴17 |
-| [GIGOMEZ1](https://github.com/optimizers/mastsif-mirror/blob/master/GIGOMEZ1.SIF) | LQ | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DALLASM](https://github.com/optimizers/mastsif-mirror/blob/master/DALLASM.SIF) | ON | ONR2-MN-196-151 | 196 | 151 | 🟢2 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🔴20 |
-| [DALLASS](https://github.com/optimizers/mastsif-mirror/blob/master/DALLASS.SIF) | ON | ONR2-MN-46-31 | 46 | 31 | 🟠3 | 🟢1 | 🔴6 | 🔴6 | 🔴6 | 🟢1 |
-| [LSNNODOC](https://github.com/optimizers/mastsif-mirror/blob/master/LSNNODOC.SIF) [(a4c)](models/test/a4sqp/lsnnodoc.a4c) | ON | ONR2-AY-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴17 |
-| [SPANHYD](https://github.com/optimizers/mastsif-mirror/blob/master/SPANHYD.SIF) | ON | ONR2-RN-97-33 | 97 | 33 | 🟢2 | 🟢2 | 🔴6 | 🔴11 | 🔴11 | 🟢1 |
-| [WATER](https://github.com/optimizers/mastsif-mirror/blob/master/WATER.SIF) | ON | ONR2-MN-31-10 | 31 | 10 | 🟢1 | 🟢1 | 🔴11 | 🔴14 | 🔴11 | 🟢1 |
-| [LINSPANH](https://github.com/optimizers/mastsif-mirror/blob/master/LINSPANH.SIF) | LN | LNR2-MN-97-33 | 97 | 33 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DIXCHLNG](https://github.com/optimizers/mastsif-mirror/blob/master/DIXCHLNG.SIF) | SO | SOR2-AN-10-5 | 10 | 5 | 🟢1 | 🟢1 | 🔴8 | 🟢2 | 🔴8 | 🔴15 |
-| [ALLINITA](https://github.com/optimizers/mastsif-mirror/blob/master/ALLINITA.SIF) | OO | OOR2-AY-4-4 | 4 | 4 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 | 🟢1 |
-| [ALLINITC](https://github.com/optimizers/mastsif-mirror/blob/master/ALLINITC.SIF) | OO | OOR2-AY-4-1 | 4 | 1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
-| [ALSOTAME](https://github.com/optimizers/mastsif-mirror/blob/master/ALSOTAME.SIF) [(a4c)](models/test/a4sqp/alsotame.a4c) | OO | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BATCH](https://github.com/optimizers/mastsif-mirror/blob/master/BATCH.SIF) | OO | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🔴17 |
-| [BT11](https://github.com/optimizers/mastsif-mirror/blob/master/BT11.SIF) | OO | OOR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 | 🟢1 |
-| [BT6](https://github.com/optimizers/mastsif-mirror/blob/master/BT6.SIF) | OO | OOR2-AY-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [CRESC100](https://github.com/optimizers/mastsif-mirror/blob/master/CRESC100.SIF) | OO | OOR2-MY-6-200 | 6 | 200 | 🔴7 | 🟠3 | 🔴8 | 🔴8 | 🔴8 | 🔴15 |
-| [CRESC4](https://github.com/optimizers/mastsif-mirror/blob/master/CRESC4.SIF) | OO | OOR2-MY-6-8 | 6 | 8 | 🟢1 | 🟠3 | 🔴8 | 🔴8 | 🔴8 | 🟢1 |
-| [CRESC50](https://github.com/optimizers/mastsif-mirror/blob/master/CRESC50.SIF) | OO | OOR2-MY-6-100 | 6 | 100 | 🔴7 | 🟢1 | 🔴8 | 🔴8 | 🔴8 | 🔴20 |
-| [DIPIGRI](https://github.com/optimizers/mastsif-mirror/blob/master/DIPIGRI.SIF) | OO | OOR2-AN-7-4 | 7 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| [ACOPP14](https://github.com/optimizers/mastsif-mirror/blob/master/ACOPP14.SIF) [(a4c)](models/test/a4sqp/acopp14.a4c) | QO | QOR2-AY-38-68 | 38 | 68 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🟢1 |
-| [ACOPP30](https://github.com/optimizers/mastsif-mirror/blob/master/ACOPP30.SIF) | QO | QOR2-AY-72-142 | 72 | 142 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🟢1 |
-| [ACOPP57](https://github.com/optimizers/mastsif-mirror/blob/master/ACOPP57.SIF) | QO | QOR2-AY-128-274 | 128 | 274 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🟢1 |
-| [ACOPR14](https://github.com/optimizers/mastsif-mirror/blob/master/ACOPR14.SIF) | QO | QOR2-AN-38-82 | 38 | 82 | 🔴14 | 🟢1 | 🔴6 | 🔴11 | 🔴11 | 🟢1 |
-| [ACOPR30](https://github.com/optimizers/mastsif-mirror/blob/master/ACOPR30.SIF) | QO | QOR2-AN-72-172 | 72 | 172 | 🔴14 | 🔴7 | 🔴11 | 🔴11 | 🔴11 | 🟢1 |
-| [BURKEHAN](https://github.com/optimizers/mastsif-mirror/blob/master/BURKEHAN.SIF) | QO | QOR2-AN-1-1 | 1 | 1 | 🔴14 | 🔴14 | 🔴8 | 🔴8 | 🔴8 | 🔴20 |
-| [DEMBO7](https://github.com/optimizers/mastsif-mirror/blob/master/DEMBO7.SIF) | QO | QOR2-MN-16-20 | 16 | 20 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🟢1 |
-| [DNIEPER](https://github.com/optimizers/mastsif-mirror/blob/master/DNIEPER.SIF) | QO | QOR2-MN-61-24 | 61 | 24 | 🟢1 | 🟢1 | 🔴6 | 🟢1 | 🟢1 | 🟢1 |
-| [FLETCHER](https://github.com/optimizers/mastsif-mirror/blob/master/FLETCHER.SIF) | QO | QOR2-AN-4-4 | 4 | 4 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 | 🔴17 |
-| [FLT](https://github.com/optimizers/mastsif-mirror/blob/master/FLT.SIF) | QO | QOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🔴20 |
-| [BT10](https://github.com/optimizers/mastsif-mirror/blob/master/BT10.SIF) [(a4c)](models/test/a4sqp/bt10.a4c) | LO | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BT9](https://github.com/optimizers/mastsif-mirror/blob/master/BT9.SIF) | LO | LOR2-AN-4-2 | 4 | 2 | 🟢1 | 🟢1 | 🔴11 | 🔴7 | 🟢1 | 🟢1 |
-| [CANTILVR](https://github.com/optimizers/mastsif-mirror/blob/master/CANTILVR.SIF) [(a4c)](models/test/a4sqp/cantilvr.a4c) | LO | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🔴8 | 🟢1 |
-| [CB2](https://github.com/optimizers/mastsif-mirror/blob/master/CB2.SIF) [(a4c)](models/test/a4sqp/cb2.a4c) | LO | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🟢1 | 🟢1 |
-| [CB3](https://github.com/optimizers/mastsif-mirror/blob/master/CB3.SIF) [(a4c)](models/test/a4sqp/cb3.a4c) | LO | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [CHACONN1](https://github.com/optimizers/mastsif-mirror/blob/master/CHACONN1.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🟢1 | 🟢1 |
-| [CHACONN2](https://github.com/optimizers/mastsif-mirror/blob/master/CHACONN2.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [CSFI1](https://github.com/optimizers/mastsif-mirror/blob/master/CSFI1.SIF) | LO | LOR2-RN-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🔴6 | 🟢1 | 🔴6 | 🟢1 |
-| [CSFI2](https://github.com/optimizers/mastsif-mirror/blob/master/CSFI2.SIF) | LO | LOR2-RN-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [ELATTAR](https://github.com/optimizers/mastsif-mirror/blob/master/ELATTAR.SIF) | LO | LOR2-AN-7-102 | 7 | 102 | 🟢1 | 🔴7 | 🔴11 | 🟢1 | 🔴11 | 🟢1 |
-| [ERRINBAR](https://github.com/optimizers/mastsif-mirror/blob/master/ERRINBAR.SIF) [(a4c)](models/test/a4sqp/errinbar.a4c) | LO | LOR2-MY-18-9 | 18 | 9 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🔴11 | 🔴15 |
-| [FEEDLOC](https://github.com/optimizers/mastsif-mirror/blob/master/FEEDLOC.SIF) | LO | LOR2-AN-90-259 | 90 | 259 | 🟢1 | 🟢1 | 🟢1 | 🔴11 | 🔴11 | 🟢1 |
-| [GIGOMEZ2](https://github.com/optimizers/mastsif-mirror/blob/master/GIGOMEZ2.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🟢1 | 🟢1 |
-| [GIGOMEZ3](https://github.com/optimizers/mastsif-mirror/blob/master/GIGOMEZ3.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [CAMEL6](https://bitbucket.org/optrove/sif/src/HEAD/CAMEL6.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DGOSPEC](https://github.com/optimizers/mastsif-mirror/blob/master/DGOSPEC.SIF) [(a4c)](models/test/a4sqp/dgospec.a4c) | OB | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1 | 🟢1 | 🟢1 |
+| [EG1](https://bitbucket.org/optrove/sif/src/HEAD/EG1.SIF) | OB | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
+| [BQP1VAR](https://bitbucket.org/optrove/sif/src/HEAD/BQP1VAR.SIF) [(a4c)](models/test/a4sqp/bqp1var.a4c) | QB | QBR2-AN-1-0 | 1 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BQPGABIM](https://bitbucket.org/optrove/sif/src/HEAD/BQPGABIM.SIF) | QB | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢1 | 🟢1 |
+| [BQPGASIM](https://bitbucket.org/optrove/sif/src/HEAD/BQPGASIM.SIF) | QB | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| [ANTWERP](https://bitbucket.org/optrove/sif/src/HEAD/ANTWERP.SIF) | SL | SLR2-RN-27-8 | 27 | 10 | 🟠3 | 🟢2 | 🔴20 | 🔴7 | 🔴7 | 🔴7 |
+| [BT3](https://bitbucket.org/optrove/sif/src/HEAD/BT3.SIF) | SL | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [FCCU](https://bitbucket.org/optrove/sif/src/HEAD/FCCU.SIF) | SL | SLR2-MN-19-8 | 19 | 8 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| [AVION2](https://bitbucket.org/optrove/sif/src/HEAD/AVION2.SIF) | OL | OLR2-RN-49-15 | 49 | 15 | 🟠3 | 🟠3 | 🔴21 | 🔴7 | 🔴7 | 🔴7 |
+| [EQC](https://bitbucket.org/optrove/sif/src/HEAD/EQC.SIF) | OL | OLR2-MY-9-3 | 9 | 3 | 🟢2 | 🔴15 | 🔴20 | 🟢1 | 🟢1 | 🟢1 |
+| [EXPFITA](https://bitbucket.org/optrove/sif/src/HEAD/EXPFITA.SIF) | OL | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [EXPFITB](https://bitbucket.org/optrove/sif/src/HEAD/EXPFITB.SIF) | OL | OLR2-AN-5-102 | 5 | 102 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [AVGASA](https://bitbucket.org/optrove/sif/src/HEAD/AVGASA.SIF) [(a4c)](models/test/a4sqp/avgasa.a4c) | QL | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
+| [AVGASB](https://bitbucket.org/optrove/sif/src/HEAD/AVGASB.SIF) [(a4c)](models/test/a4sqp/avgasb.a4c) | QL | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🟢1 | 🔴7 | 🟢2 | 🟢2 |
+| [BIGGSC4](https://bitbucket.org/optrove/sif/src/HEAD/BIGGSC4.SIF) | QL | QLR2-AN-4-7 | 4 | 7 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DUAL1](https://bitbucket.org/optrove/sif/src/HEAD/DUAL1.SIF) | QL | QLR2-MN-85-1 | 85 | 1 | 🟠3 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 |
+| [DUAL2](https://bitbucket.org/optrove/sif/src/HEAD/DUAL2.SIF) | QL | QLR2-MN-96-1 | 96 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 |
+| [DUAL3](https://bitbucket.org/optrove/sif/src/HEAD/DUAL3.SIF) | QL | QLR2-MN-111-1 | 111 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🔴7 | 🔴7 |
+| [DUAL4](https://bitbucket.org/optrove/sif/src/HEAD/DUAL4.SIF) | QL | QLR2-MN-75-1 | 75 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 |
+| [DUALC1](https://bitbucket.org/optrove/sif/src/HEAD/DUALC1.SIF) | QL | QLR2-MN-9-215 | 9 | 215 | 🟢1 | 🟢1 | 🔴18 | 🔴12 | 🟢2 | 🟢2 |
+| [DUALC2](https://bitbucket.org/optrove/sif/src/HEAD/DUALC2.SIF) | QL | QLR2-MN-7-229 | 7 | 229 | 🟢1 | 🟢1 | 🔴18 | 🔴7 | 🔴7 | 🔴7 |
+| [DUALC5](https://bitbucket.org/optrove/sif/src/HEAD/DUALC5.SIF) | QL | QLR2-MN-8-278 | 8 | 278 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢2 | 🟢2 |
+| [GENHS28](https://bitbucket.org/optrove/sif/src/HEAD/GENHS28.SIF) | QL | QLR2-AY-10-8 | 10 | 8 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [GMNCASE1](https://bitbucket.org/optrove/sif/src/HEAD/GMNCASE1.SIF) | QL | QLR2-AN-175-300 | 175 | 300 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
+| [DEGENLPA](https://bitbucket.org/optrove/sif/src/HEAD/DEGENLPA.SIF) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DEGENLPB](https://bitbucket.org/optrove/sif/src/HEAD/DEGENLPB.SIF) [(a4c)](models/test/a4sqp/degenlpb.a4c) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [EXTRASIM](https://bitbucket.org/optrove/sif/src/HEAD/EXTRASIM.SIF) | LL | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [GOFFIN](https://bitbucket.org/optrove/sif/src/HEAD/GOFFIN.SIF) | LL | LLR2-AN-51-50 | 51 | 50 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [AIRPORT](https://bitbucket.org/optrove/sif/src/HEAD/AIRPORT.SIF) | SQ | SQR2-MN-84-42 | 84 | 42 | 🟢1 | 🟢1 | 🔴16 | 🔴8 | 🔴8 | 🟢1 |
+| [DECONVC](https://bitbucket.org/optrove/sif/src/HEAD/DECONVC.SIF) | SQ | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🔴7 |
+| [BT7](https://bitbucket.org/optrove/sif/src/HEAD/BT7.SIF) | OQ | OQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🟢1 |
+| [BT1](https://bitbucket.org/optrove/sif/src/HEAD/BT1.SIF) | QQ | QQR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🔴7 | 🟢1 |
+| [BT12](https://bitbucket.org/optrove/sif/src/HEAD/BT12.SIF) | QQ | QQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢1 |
+| [BT2](https://bitbucket.org/optrove/sif/src/HEAD/BT2.SIF) [(a4c)](models/test/a4sqp/bt2.a4c) | QQ | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BT4](https://bitbucket.org/optrove/sif/src/HEAD/BT4.SIF) [(a4c)](models/test/a4sqp/bt4.a4c) | QQ | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🟢1 |
+| [BT5](https://bitbucket.org/optrove/sif/src/HEAD/BT5.SIF) [(a4c)](models/test/a4sqp/bt5.a4c) | QQ | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🟢1 |
+| [BT8](https://bitbucket.org/optrove/sif/src/HEAD/BT8.SIF) [(a4c)](models/test/a4sqp/bt8.a4c) | QQ | QQR2-AN-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BT13](https://bitbucket.org/optrove/sif/src/HEAD/BT13.SIF) [(a4c)](models/test/a4sqp/bt13.a4c) | LQ | LQR2-AY-5-1 | 5 | 1 | 🟢2 | 🟢1 | 🔴21 | 🔴12 | 🔴12 | 🔴12 |
+| [BYRDSPHR](https://bitbucket.org/optrove/sif/src/HEAD/BYRDSPHR.SIF) | LQ | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🔴21 | 🟢1 | 🟢1 | 🟢1 |
+| [CONGIGMZ](https://bitbucket.org/optrove/sif/src/HEAD/CONGIGMZ.SIF) | LQ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢1 |
+| [DEMYMALO](https://bitbucket.org/optrove/sif/src/HEAD/DEMYMALO.SIF) | LQ | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DISC2](https://bitbucket.org/optrove/sif/src/HEAD/DISC2.SIF) | LQ | LQR2-MY-29-23 | 29 | 23 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
+| [DISCS](https://bitbucket.org/optrove/sif/src/HEAD/DISCS.SIF) | LQ | LQR2-MY-36-66 | 36 | 66 | 🟢1 | 🔴8 | 🔴18 | 🔴12 | 🔴12 | 🔴12 |
+| [GIGOMEZ1](https://bitbucket.org/optrove/sif/src/HEAD/GIGOMEZ1.SIF) | LQ | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DALLASM](https://bitbucket.org/optrove/sif/src/HEAD/DALLASM.SIF) | ON | ONR2-MN-196-151 | 196 | 151 | 🟢2 | 🟢1 | 🔴21 | 🔴12 | 🔴12 | 🔴12 |
+| [DALLASS](https://bitbucket.org/optrove/sif/src/HEAD/DALLASS.SIF) | ON | ONR2-MN-46-31 | 46 | 31 | 🟠3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🔴7 |
+| [LSNNODOC](https://bitbucket.org/optrove/sif/src/HEAD/LSNNODOC.SIF) [(a4c)](models/test/a4sqp/lsnnodoc.a4c) | ON | ONR2-AY-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🔴18 | 🟢1 | 🟢1 | 🟢1 |
+| [SPANHYD](https://bitbucket.org/optrove/sif/src/HEAD/SPANHYD.SIF) | ON | ONR2-RN-97-33 | 97 | 33 | 🟢2 | 🟢2 | 🟢1 | 🔴7 | 🔴12 | 🔴12 |
+| [WATER](https://bitbucket.org/optrove/sif/src/HEAD/WATER.SIF) | ON | ONR2-MN-31-10 | 31 | 10 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴15 | 🔴12 |
+| [LINSPANH](https://bitbucket.org/optrove/sif/src/HEAD/LINSPANH.SIF) | LN | LNR2-MN-97-33 | 97 | 33 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DIXCHLNG](https://bitbucket.org/optrove/sif/src/HEAD/DIXCHLNG.SIF) | SO | SOR2-AN-10-5 | 10 | 5 | 🟢1 | 🟢1 | 🔴16 | 🔴9 | 🟢2 | 🔴9 |
+| [ALLINITA](https://bitbucket.org/optrove/sif/src/HEAD/ALLINITA.SIF) | OO | OOR2-AY-4-4 | 4 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
+| [ALLINITC](https://bitbucket.org/optrove/sif/src/HEAD/ALLINITC.SIF) | OO | OOR2-AY-4-1 | 4 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
+| [ALSOTAME](https://bitbucket.org/optrove/sif/src/HEAD/ALSOTAME.SIF) [(a4c)](models/test/a4sqp/alsotame.a4c) | OO | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BATCH](https://bitbucket.org/optrove/sif/src/HEAD/BATCH.SIF) | OO | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🟢1 | 🔴18 | 🔴12 | 🔴12 | 🔴12 |
+| [BT11](https://bitbucket.org/optrove/sif/src/HEAD/BT11.SIF) | OO | OOR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
+| [BT6](https://bitbucket.org/optrove/sif/src/HEAD/BT6.SIF) | OO | OOR2-AY-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [CRESC100](https://bitbucket.org/optrove/sif/src/HEAD/CRESC100.SIF) | OO | OOR2-MY-6-200 | 6 | 200 | 🔴8 | 🟠3 | 🔴16 | 🔴9 | 🔴9 | 🔴9 |
+| [CRESC4](https://bitbucket.org/optrove/sif/src/HEAD/CRESC4.SIF) | OO | OOR2-MY-6-8 | 6 | 8 | 🟢1 | 🟠3 | 🟢1 | 🔴9 | 🔴9 | 🔴9 |
+| [CRESC50](https://bitbucket.org/optrove/sif/src/HEAD/CRESC50.SIF) | OO | OOR2-MY-6-100 | 6 | 100 | 🔴8 | 🟢1 | 🔴21 | 🔴9 | 🔴9 | 🔴9 |
+| [DIPIGRI](https://bitbucket.org/optrove/sif/src/HEAD/DIPIGRI.SIF) | OO | OOR2-AN-7-4 | 7 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 |
+| [ACOPP14](https://bitbucket.org/optrove/sif/src/HEAD/ACOPP14.SIF) [(a4c)](models/test/a4sqp/acopp14.a4c) | QO | QOR2-AY-38-68 | 38 | 68 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
+| [ACOPP30](https://bitbucket.org/optrove/sif/src/HEAD/ACOPP30.SIF) | QO | QOR2-AY-72-142 | 72 | 142 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
+| [ACOPP57](https://bitbucket.org/optrove/sif/src/HEAD/ACOPP57.SIF) | QO | QOR2-AY-128-274 | 128 | 274 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
+| [ACOPR14](https://bitbucket.org/optrove/sif/src/HEAD/ACOPR14.SIF) | QO | QOR2-AN-38-82 | 38 | 82 | 🔴15 | 🟢1 | 🟢1 | 🔴7 | 🔴12 | 🔴12 |
+| [ACOPR30](https://bitbucket.org/optrove/sif/src/HEAD/ACOPR30.SIF) | QO | QOR2-AN-72-172 | 72 | 172 | 🔴15 | 🔴8 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
+| [BURKEHAN](https://bitbucket.org/optrove/sif/src/HEAD/BURKEHAN.SIF) | QO | QOR2-AN-1-1 | 1 | 1 | 🔴15 | 🔴15 | 🔴21 | 🔴9 | 🔴9 | 🔴9 |
+| [DEMBO7](https://bitbucket.org/optrove/sif/src/HEAD/DEMBO7.SIF) | QO | QOR2-MN-16-20 | 16 | 20 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
+| [DNIEPER](https://bitbucket.org/optrove/sif/src/HEAD/DNIEPER.SIF) | QO | QOR2-MN-61-24 | 61 | 24 | 🟢1 | 🟢1 | 🟢1 | 🔴7 | 🟢1 | 🟢1 |
+| [FLETCHER](https://bitbucket.org/optrove/sif/src/HEAD/FLETCHER.SIF) | QO | QOR2-AN-4-4 | 4 | 4 | 🟢1 | 🟢1 | 🔴18 | 🔴9 | 🔴9 | 🔴9 |
+| [FLT](https://bitbucket.org/optrove/sif/src/HEAD/FLT.SIF) | QO | QOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🔴21 | 🟢2 | 🟢1 | 🟢1 |
+| [BT10](https://bitbucket.org/optrove/sif/src/HEAD/BT10.SIF) [(a4c)](models/test/a4sqp/bt10.a4c) | LO | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BT9](https://bitbucket.org/optrove/sif/src/HEAD/BT9.SIF) | LO | LOR2-AN-4-2 | 4 | 2 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴8 | 🟢1 |
+| [CANTILVR](https://bitbucket.org/optrove/sif/src/HEAD/CANTILVR.SIF) [(a4c)](models/test/a4sqp/cantilvr.a4c) | LO | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🟢1 | 🟢1 | 🔴9 | 🔴9 | 🔴9 |
+| [CB2](https://bitbucket.org/optrove/sif/src/HEAD/CB2.SIF) [(a4c)](models/test/a4sqp/cb2.a4c) | LO | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🟢1 |
+| [CB3](https://bitbucket.org/optrove/sif/src/HEAD/CB3.SIF) [(a4c)](models/test/a4sqp/cb3.a4c) | LO | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [CHACONN1](https://bitbucket.org/optrove/sif/src/HEAD/CHACONN1.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🟢1 |
+| [CHACONN2](https://bitbucket.org/optrove/sif/src/HEAD/CHACONN2.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [CSFI1](https://bitbucket.org/optrove/sif/src/HEAD/CSFI1.SIF) | LO | LOR2-RN-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 | 🔴7 | 🟢1 | 🔴7 |
+| [CSFI2](https://bitbucket.org/optrove/sif/src/HEAD/CSFI2.SIF) | LO | LOR2-RN-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [ELATTAR](https://bitbucket.org/optrove/sif/src/HEAD/ELATTAR.SIF) | LO | LOR2-AN-7-102 | 7 | 102 | 🟢1 | 🔴8 | 🟢1 | 🔴12 | 🟢1 | 🔴12 |
+| [ERRINBAR](https://bitbucket.org/optrove/sif/src/HEAD/ERRINBAR.SIF) [(a4c)](models/test/a4sqp/errinbar.a4c) | LO | LOR2-MY-18-9 | 18 | 9 | 🟢1 | 🟢1 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
+| [FEEDLOC](https://bitbucket.org/optrove/sif/src/HEAD/FEEDLOC.SIF) | LO | LOR2-AN-90-259 | 90 | 259 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 |
+| [GIGOMEZ2](https://bitbucket.org/optrove/sif/src/HEAD/GIGOMEZ2.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🟢1 |
+| [GIGOMEZ3](https://bitbucket.org/optrove/sif/src/HEAD/GIGOMEZ3.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 
 ## Outcome Key
 
@@ -236,12 +236,13 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | 🟢2 | pass | acceptable_success | acceptable success |
 | 🟠3 | near | max_iter_near_solved | near solved at iteration limit |
 | 🟠4 | suspect | strict_success_high_kkt | strict success but high KKT residual |
-| 🔴6 | fail | max_iter_stationarity | iteration limit; stationarity residual too high |
-| 🔴7 | fail | max_iter_infeasible_or_stalled | iteration limit; infeasible or stalled |
-| 🔴8 | fail | line_search_error | line-search failure |
-| 🔴11 | error | driver_timeout | driver timeout |
-| 🔴14 | fail | other_solver_failure | other solver failure |
-| 🔴15 | fail | max_iter | NLopt/SLSQP maximum evaluations reached |
-| 🔴17 | fail | roundoff_limited | NLopt/SLSQP roundoff limited |
-| 🔴19 | fail | solver_failure | NLopt/SLSQP solver failure |
-| 🔴20 | fail | other_solver_status | other NLopt/SLSQP status |
+| 🟠6 | suspect | success_high_gradient | solver reported success but projected gradient is high |
+| 🔴7 | fail | max_iter_stationarity | iteration limit; stationarity residual too high |
+| 🔴8 | fail | max_iter_infeasible_or_stalled | iteration limit; infeasible or stalled |
+| 🔴9 | fail | line_search_error | line-search failure |
+| 🔴12 | error | driver_timeout | driver timeout |
+| 🔴15 | fail | other_solver_failure | other solver failure |
+| 🔴16 | fail | max_iter | NLopt/SLSQP maximum evaluations reached |
+| 🔴18 | fail | roundoff_limited | NLopt/SLSQP roundoff limited |
+| 🔴20 | fail | solver_failure | NLopt/SLSQP solver failure |
+| 🔴21 | fail | other_solver_status | other NLopt/SLSQP status |

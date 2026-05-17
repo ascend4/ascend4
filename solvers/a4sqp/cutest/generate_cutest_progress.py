@@ -5,13 +5,15 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import pathlib
+import re
 import sys
 from collections import Counter, OrderedDict, defaultdict
 
 
 PASS_OUTCOMES = {"strict_success", "acceptable_success"}
-SUSPECT_OUTCOMES = {"strict_success_high_kkt", "acceptable_success_high_kkt"}
+SUSPECT_OUTCOMES = {"strict_success_high_kkt", "acceptable_success_high_kkt", "success_high_gradient"}
 NEAR_OUTCOMES = {"max_iter_near_solved"}
 ERROR_OUTCOMES = {"driver_timeout", "driver_error", "no_solver_status"}
 
@@ -21,24 +23,26 @@ OUTCOME_CODES: dict[str, tuple[str, str, str]] = {
     "max_iter_near_solved": ("3", "🟠", "near solved at iteration limit"),
     "strict_success_high_kkt": ("4", "🟠", "strict success but high KKT residual"),
     "acceptable_success_high_kkt": ("5", "🟠", "acceptable success but high KKT residual"),
-    "max_iter_stationarity": ("6", "🔴", "iteration limit; stationarity residual too high"),
-    "max_iter_infeasible_or_stalled": ("7", "🔴", "iteration limit; infeasible or stalled"),
-    "line_search_error": ("8", "🔴", "line-search failure"),
-    "qp_failure": ("9", "🔴", "QP failure"),
-    "step_computation_error": ("10", "🔴", "step computation failure"),
-    "driver_timeout": ("11", "🔴", "driver timeout"),
-    "driver_error": ("12", "🔴", "driver error"),
-    "no_solver_status": ("13", "🔴", "missing solver status"),
-    "other_solver_failure": ("14", "🔴", "other solver failure"),
-    "max_iter": ("15", "🔴", "NLopt/SLSQP maximum evaluations reached"),
-    "max_time": ("16", "🔴", "NLopt/SLSQP maximum time reached"),
-    "roundoff_limited": ("17", "🔴", "NLopt/SLSQP roundoff limited"),
-    "forced_stop": ("18", "🔴", "NLopt/SLSQP forced stop"),
-    "solver_failure": ("19", "🔴", "NLopt/SLSQP solver failure"),
-    "other_solver_status": ("20", "🔴", "other NLopt/SLSQP status"),
+    "success_high_gradient": ("6", "🟠", "solver reported success but projected gradient is high"),
+    "max_iter_stationarity": ("7", "🔴", "iteration limit; stationarity residual too high"),
+    "max_iter_infeasible_or_stalled": ("8", "🔴", "iteration limit; infeasible or stalled"),
+    "line_search_error": ("9", "🔴", "line-search failure"),
+    "qp_failure": ("10", "🔴", "QP failure"),
+    "step_computation_error": ("11", "🔴", "step computation failure"),
+    "driver_timeout": ("12", "🔴", "driver timeout"),
+    "driver_error": ("13", "🔴", "driver error"),
+    "no_solver_status": ("14", "🔴", "missing solver status"),
+    "other_solver_failure": ("15", "🔴", "other solver failure"),
+    "max_iter": ("16", "🔴", "NLopt/SLSQP maximum evaluations reached"),
+    "max_time": ("17", "🔴", "NLopt/SLSQP maximum time reached"),
+    "roundoff_limited": ("18", "🔴", "NLopt/SLSQP roundoff limited"),
+    "forced_stop": ("19", "🔴", "NLopt/SLSQP forced stop"),
+    "solver_failure": ("20", "🔴", "NLopt/SLSQP solver failure"),
+    "other_solver_status": ("21", "🔴", "other NLopt/SLSQP status"),
 }
 UNKNOWN_OUTCOME = ("?", "🔴", "unclassified outcome")
 MASTSIF_BASE_URL = "https://github.com/optimizers/mastsif-mirror/blob/master"
+MASTSIF_DIR = pathlib.Path(os.environ.get("MASTSIF", "/home/john/MASTSIF"))
 
 OBJECTIVE_CLASS_LABELS = {
     "C": "constant objective",
@@ -131,6 +135,13 @@ def markdown_cell(value: object) -> str:
 
 def markdown_link(label: str, target: str) -> str:
     return f"[{markdown_cell(label)}]({target})"
+
+
+def source_view_url(url: str) -> str:
+    """Prefer browser-friendly source URLs over direct raw download URLs."""
+    if "bitbucket.org/optrove/sif/raw/HEAD/" in url:
+        return url.replace("/raw/HEAD/", "/src/HEAD/")
+    return url
 
 
 def markdown_table(headers: list[str], rows: list[list[object]]) -> str:
@@ -241,8 +252,36 @@ def local_a4c_map() -> dict[str, pathlib.Path]:
     return models
 
 
-def problem_label(problem: str, a4c_models: dict[str, pathlib.Path]) -> str:
-    sif_link = markdown_link(problem, f"{MASTSIF_BASE_URL}/{problem}.SIF")
+def mastsif_source_links() -> dict[str, str]:
+    """Read the local MASTSIF index and map problem names to source URLs.
+
+    The local MASTSIF checkout is the file source used by SIFDecode/CUTEst.
+    Some locally available problems are newer than the GitHub mastsif-mirror
+    snapshot, so blindly linking to that mirror creates dead links.  The
+    MASTSIF index records the upstream `optrove/sif` URL for each SIF file;
+    use that when available and fall back to the GitHub mirror only when the
+    local index is absent.
+    """
+    index = MASTSIF_DIR / "mastsif.html"
+    links: dict[str, str] = {}
+    if not index.exists():
+        return links
+    pattern = re.compile(
+        r"<b>\s*([^<\s]+)\s*</b>.*?href=\"([^\"]+\.SIF)\"",
+        re.IGNORECASE | re.DOTALL,
+    )
+    text = index.read_text(encoding="utf-8", errors="replace")
+    for problem, url in pattern.findall(text):
+        links[problem.upper()] = source_view_url(url)
+    return links
+
+
+def problem_sif_url(problem: str, sif_links: dict[str, str]) -> str:
+    return sif_links.get(problem.upper(), f"{MASTSIF_BASE_URL}/{problem}.SIF")
+
+
+def problem_label(problem: str, a4c_models: dict[str, pathlib.Path], sif_links: dict[str, str]) -> str:
+    sif_link = markdown_link(problem, problem_sif_url(problem, sif_links))
     a4c_path = a4c_models.get(problem.upper())
     if a4c_path is None:
         return sif_link
@@ -319,13 +358,14 @@ def problem_matrix(
                 meta[key] = row[key]
 
     a4c_models = local_a4c_map()
+    sif_links = mastsif_source_links()
 
     matrix: list[list[object]] = []
     for problem in problem_order:
         meta = problem_lookup_metadata(problem, problem_metadata, problem_meta)
         category = problem_category(meta.get("classification", ""))
         values: list[object] = [
-            problem_label(problem, a4c_models),
+            problem_label(problem, a4c_models, sif_links),
             category,
             meta.get("classification", ""),
             meta.get("n", ""),
