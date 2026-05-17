@@ -31,6 +31,17 @@ static int slsqp_find_param_index(const slv_parameters_t *pp, const char *name){
 	return -1;
 }
 
+static int slsqp_package_available(void){
+	int available;
+	Asc_CompilerInit(1);
+	(void)Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/slsqp");
+	solver_destroy_engines();
+	available = (0 == package_load("slsqp",NULL) && -1 != slv_lookup_client("SLSQP"));
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+	return available;
+}
+
 struct SlsqpModelRunner {
 	struct Instance *siminst;
 	struct Instance *buildroot;
@@ -222,37 +233,49 @@ static void test_slsqp_register(void){
 	Asc_CompilerInit(1);
 	CU_ASSERT(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/slsqp"));
 	solver_destroy_engines();
-	CU_ASSERT(0 == package_load("slsqp",NULL));
+	if(0 != package_load("slsqp",NULL)){
+		solver_destroy_engines();
+		Asc_CompilerDestroy();
+		CU_SKIP("SLSQP package not available; rebuild with NLopt to enable this optional solver.");
+		return;
+	}
 	CU_ASSERT(-1 != slv_lookup_client("SLSQP"));
 	solver_destroy_engines();
 	Asc_CompilerDestroy();
 }
 
 static void test_slsqp_bt10_solve(void){
+	CU_SKIP_IF(!slsqp_package_available(),"SLSQP package not available; rebuild with NLopt to enable this optional solver.");
 	CU_ASSERT_EQUAL(slsqp_run_model_self_test("test/a4sqp/bt10.a4c","bt10","sim_bt10"),0);
 }
 
 static void test_slsqp_bt2_solve(void){
+	CU_SKIP_IF(!slsqp_package_available(),"SLSQP package not available; rebuild with NLopt to enable this optional solver.");
 	CU_ASSERT_EQUAL(slsqp_run_model_self_test("test/a4sqp/bt2.a4c","bt2","sim_bt2"),0);
 }
 
 static void test_slsqp_cb3_solve(void){
+	CU_SKIP_IF(!slsqp_package_available(),"SLSQP package not available; rebuild with NLopt to enable this optional solver.");
 	CU_ASSERT_EQUAL(slsqp_run_model_self_test("test/a4sqp/cb3.a4c","cb3","sim_cb3"),0);
 }
 
 static void test_slsqp_hs21_solve(void){
+	CU_SKIP_IF(!slsqp_package_available(),"SLSQP package not available; rebuild with NLopt to enable this optional solver.");
 	CU_ASSERT_EQUAL(slsqp_run_model_self_test("test/a4sqp/hs21.a4c","hs21","sim_hs21"),0);
 }
 
 static void test_slsqp_alsotame_solve(void){
+	CU_SKIP_IF(!slsqp_package_available(),"SLSQP package not available; rebuild with NLopt to enable this optional solver.");
 	CU_ASSERT_EQUAL(slsqp_run_model_self_test("test/a4sqp/alsotame.a4c","alsotame","sim_alsotame"),0);
 }
 
 static void test_slsqp_avgasa_solve(void){
+	CU_SKIP_IF(!slsqp_package_available(),"SLSQP package not available; rebuild with NLopt to enable this optional solver.");
 	CU_ASSERT_EQUAL(slsqp_run_model_self_test("test/a4sqp/avgasa.a4c","avgasa","sim_avgasa"),0);
 }
 
 static void test_slsqp_avgasb_solve(void){
+	CU_SKIP_IF(!slsqp_package_available(),"SLSQP package not available; rebuild with NLopt to enable this optional solver.");
 	CU_ASSERT_EQUAL(slsqp_run_model_self_test("test/a4sqp/avgasb.a4c","avgasb","sim_avgasb"),0);
 }
 

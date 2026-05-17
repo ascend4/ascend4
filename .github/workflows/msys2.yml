@@ -46,6 +46,7 @@ jobs:
           mingw-w64-${{matrix.env}}-gdb
           mingw-w64-${{matrix.env}}-pkg-config
           mingw-w64-${{matrix.env}}-highs
+          mingw-w64-${{matrix.env}}-nlopt
           mingw-w64-${{matrix.env}}-python
           mingw-w64-${{matrix.env}}-python-pip
           mingw-w64-${{matrix.env}}-python-wheel
