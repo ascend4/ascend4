@@ -2319,6 +2319,20 @@ static int a4sqp_c_try_terminal_reduced_gradient_polish(struct A4SqpCSolve *solv
 	return accepted;
 }
 
+static int a4sqp_c_should_try_fallback_reduced_gradient_polish(struct A4SqpCSolve *solve){
+	struct A4SqpProblemInfo *p = solve != NULL ? solve->problem : NULL;
+	if(p == NULL || p->opt.reduced_gradient_polish != 2){
+		return 0;
+	}
+	if(p->stats.reduced_gradient_polish_attempts >= 32){
+		return 0;
+	}
+	if(a4sqp_c_has_converged(solve) || a4sqp_c_acceptability_satisfied(solve)){
+		return 0;
+	}
+	return p->stats.line_search_failures > 0 || p->stats.qp_failures > 0;
+}
+
 static int a4sqp_c_try_active_bound_restoration(
 	struct A4SqpCSolve *solve,
 	double *x,
@@ -3085,6 +3099,9 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 			a4sqp_c_refresh_stats(solve,iter + 1);
 		}
 		if(p->opt.reduced_gradient_polish == 1 && a4sqp_c_try_reduced_gradient_polish(solve,x,&line_options,&line_ops,&line_ctx)){
+			a4sqp_c_refresh_stats(solve,iter + 1);
+		}
+		if(a4sqp_c_should_try_fallback_reduced_gradient_polish(solve) && a4sqp_c_try_reduced_gradient_polish(solve,x,&line_options,&line_ops,&line_ctx)){
 			a4sqp_c_refresh_stats(solve,iter + 1);
 		}
 		if(a4sqp_c_try_active_bound_release(solve,x,&line_options,&line_ops,&line_ctx)){

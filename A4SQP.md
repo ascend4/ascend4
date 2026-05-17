@@ -145,11 +145,15 @@ ACOPP14 follow-up, 2026-05-16:
   scaled-step fix reduced the late KKT residual only slowly and left the solve on
   the same high-objective branch. These options should remain opt-in until they
   show a reproducible CUTEst matrix improvement.
-- `reduced_gradient_polish_mode=FALLBACK` is an opt-in terminal globalization
-  probe. The core only attempts it when restoration and KKT convergence are
-  enabled, an objective exists, constraints exist, the current point is already
-  feasible to `acceptable_tol`, the KKT residual is still above
-  `acceptable_tol`, and the last scaled step is small
+- `reduced_gradient_polish_mode=FALLBACK` is an opt-in stressed-solve
+  globalization probe. It is deliberately not the same as `ON`, which probes
+  after every accepted small feasible step. In `FALLBACK` mode the core probes
+  only after the solve has already accumulated line-search or QP failures, or at
+  terminal failure handling, and caps probes at 32 per solve. The underlying
+  probe still requires restoration and KKT convergence to be enabled, an
+  objective and constraints to exist, the current point to be feasible to
+  `acceptable_tol`, the KKT residual to remain above `acceptable_tol`, and the
+  last scaled step to be small
   (`last_scaled_step_inf <= max(sqrt(acceptable_tol), 10*step_tol)`). It forms a
   reduced-gradient direction by projecting the Lagrangian gradient against
   active bounds and active/equality constraint normals, takes a bounded
