@@ -75,6 +75,8 @@ struct A4SqpLineSearchOptions {
 	real64 elastic_penalty;
 	int filter_accept;
 	real64 filter_margin;
+	int second_order_correction;
+	int soc_max_iter;
 	int restoration;
 	real64 restoration_margin;
 };

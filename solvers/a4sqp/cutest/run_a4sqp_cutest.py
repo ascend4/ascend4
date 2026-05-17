@@ -368,6 +368,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--acceptable-tol", type=float, default=float(os.environ.get("A4SQP_ACCEPTABLE_TOL", "1e-5")))
     parser.add_argument("--filter-accept", action="store_true", default=os.environ.get("A4SQP_FILTER_ACCEPT", "0") not in ("", "0", "false", "False"))
     parser.add_argument("--filter-margin", type=float, default=float(os.environ.get("A4SQP_FILTER_MARGIN", "1e-4")))
+    parser.add_argument("--second-order-correction", action="store_true", default=os.environ.get("A4SQP_SECOND_ORDER_CORRECTION", "0") not in ("", "0", "false", "False"))
+    parser.add_argument("--soc-max-iter", type=int, default=int(os.environ.get("A4SQP_SOC_MAX_ITER", "2")))
     parser.add_argument("--trust-unconstrained", action="store_true", default=os.environ.get("A4SQP_TRUST_UNCONSTRAINED", "0") not in ("", "0", "false", "False"))
     parser.add_argument("--restoration", action="store_true", default=os.environ.get("A4SQP_RESTORATION", "0") not in ("", "0", "false", "False"))
     parser.add_argument("--active-bound-restoration", action="store_true", default=os.environ.get("A4SQP_ACTIVE_BOUND_RESTORATION", "1") not in ("", "0", "false", "False"))
@@ -446,6 +448,8 @@ def main(argv: list[str]) -> int:
     env["A4SQP_ACCEPTABLE_TOL"] = str(args.acceptable_tol)
     env["A4SQP_FILTER_ACCEPT"] = "1" if args.filter_accept else "0"
     env["A4SQP_FILTER_MARGIN"] = str(args.filter_margin)
+    env["A4SQP_SECOND_ORDER_CORRECTION"] = "1" if args.second_order_correction else "0"
+    env["A4SQP_SOC_MAX_ITER"] = str(args.soc_max_iter)
     env["A4SQP_TRUST_UNCONSTRAINED"] = "1" if args.trust_unconstrained else "0"
     env["A4SQP_RESTORATION"] = "1" if args.restoration else "0"
     env["A4SQP_RESTORATION_TRIGGER_ITER"] = str(args.restoration_trigger_iter)

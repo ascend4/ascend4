@@ -37,6 +37,8 @@ struct A4SqpCOptions {
 	double elastic_penalty_max;
 	int filter_accept;
 	double filter_margin;
+	int second_order_correction;
+	int soc_max_iter;
 	int trust_unconstrained;
 	int kkt_convergence;
 	int restoration;
@@ -172,6 +174,12 @@ static const struct A4SqpOptionInfo a4sqp_c_option_info[] = {
 	A4SQP_OPT_NUM("filter_margin","Filter-lite margin",2,
 		"Required fractional constraint-violation reduction for filter-lite acceptance.",
 		1e-4,0.0,0.999999,A4SQP_TRUE),
+	A4SQP_OPT_BOOL("second_order_correction","Second-order correction",3,
+		"Try an opt-in feasibility correction on regular SQP trial steps before further backtracking.",
+		0,A4SQP_TRUE),
+	A4SQP_OPT_INT("soc_max_iter","SOC maximum corrections",3,
+		"Maximum feasibility-correction sweeps applied to a regular SQP trial step when second_order_correction is enabled.",
+		2,0,20,A4SQP_TRUE),
 	A4SQP_OPT_NUM("trust_radius_init","Initial trust radius",2,
 		"Initial scaled infinity-norm trust-region radius for the primal SQP step.",
 		1.0,1e-12,1e12,A4SQP_TRUE),
@@ -332,6 +340,8 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	opt->elastic_penalty_max = 1e8;
 	opt->filter_accept = 0;
 	opt->filter_margin = 1e-4;
+	opt->second_order_correction = 0;
+	opt->soc_max_iter = 2;
 	opt->trust_unconstrained = 0;
 	opt->kkt_convergence = 0;
 	opt->restoration = 0;
@@ -756,6 +766,17 @@ A4SqpBool AddA4SqpIntOption(A4SqpProblem problem, char *keyword, A4SqpInt val){
 	}
 	if(a4sqp_c_streq(keyword,"filter_accept")){
 		p->opt.filter_accept = val != 0;
+		return A4SQP_TRUE;
+	}
+	if(a4sqp_c_streq(keyword,"second_order_correction")){
+		p->opt.second_order_correction = val != 0;
+		return A4SQP_TRUE;
+	}
+	if(a4sqp_c_streq(keyword,"soc_max_iter")){
+		if(val < 0){
+			return A4SQP_FALSE;
+		}
+		p->opt.soc_max_iter = val;
 		return A4SQP_TRUE;
 	}
 	if(a4sqp_c_streq(keyword,"trust_unconstrained")){
@@ -2890,6 +2911,8 @@ static enum A4SqpApplicationReturnStatus a4sqp_c_solve_impl(struct A4SqpCSolve *
 		line_options.elastic_penalty = solve->elastic_penalty;
 		line_options.filter_accept = p->opt.filter_accept;
 		line_options.filter_margin = p->opt.filter_margin;
+		line_options.second_order_correction = p->opt.second_order_correction;
+		line_options.soc_max_iter = p->opt.soc_max_iter;
 		line_ops.evaluate = a4sqp_c_ls_evaluate;
 		line_ops.accepted = a4sqp_c_ls_accepted;
 		step_ops.prepare_hessian = a4sqp_c_core_prepare_hessian;

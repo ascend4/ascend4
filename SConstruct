@@ -444,10 +444,10 @@ vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default includes the open"
 		+" solvers normally available in a developer build. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS',"A4SQP",'MAKEMPS']
+	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS',"A4SQP","SLSQP",'MAKEMPS']
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","A4SQP","RADAU5"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","A4SQP","SLSQP","RADAU5"
 	 ]
 ))
 
@@ -1144,7 +1144,7 @@ def _explicit_bool_argument(name):
 	value = str(ARGUMENTS[name]).strip().lower()
 	return value not in ('0', 'false', 'no', 'off', 'none')
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP':
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP':
 	name = 'WITH_%s' % solv
 	explicit = _explicit_bool_argument(name)
 	if explicit is None:

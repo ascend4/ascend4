@@ -1606,6 +1606,25 @@ static int a4sqp_core_make_unconstrained_gradient_step(
 	return 0;
 }
 
+static void a4sqp_core_line_search_record_accept(
+	const struct A4SqpCoreView *core,
+	const real64 *old_x,
+	const real64 *x,
+	real64 alpha,
+	real64 trust_ratio,
+	struct A4SqpLineSearchResult *result
+);
+
+static int a4sqp_core_try_second_order_correction(
+	struct A4SqpView *view,
+	const struct A4SqpLineSearchOptions *options,
+	const struct A4SqpVectorLineSearchOps *ops,
+	void *ctx,
+	real64 *x,
+	const real64 *linearization_scaled_jac_value,
+	real64 radius_hint
+);
+
 int a4sqp_core_line_search_vector(
 	struct A4SqpView *view,
 	const struct A4SqpQp *qp,
@@ -1621,6 +1640,7 @@ int a4sqp_core_line_search_vector(
 	real64 *old_x = NULL;
 	real64 *old_scaled_x = NULL;
 	real64 *old_scaled_grad = NULL;
+	real64 *old_scaled_jac = NULL;
 	real64 *physical_step = NULL;
 	real64 alpha = 1.0;
 	real64 step_norm2 = 0.0;
@@ -1648,13 +1668,22 @@ int a4sqp_core_line_search_vector(
 	old_x = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
 	old_scaled_x = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
 	old_scaled_grad = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
+	if(options->second_order_correction && core.jac_nnz > 0 && core.scaled_jac_value != NULL){
+		old_scaled_jac = A4SQP_NEW_ARRAY_OR_NULL(real64,core.jac_nnz);
+	}
 	physical_step = A4SQP_NEW_ARRAY_OR_NULL(real64,n);
-	if(old_x == NULL || old_scaled_x == NULL || old_scaled_grad == NULL || physical_step == NULL){
+	if(old_x == NULL || old_scaled_x == NULL || old_scaled_grad == NULL || physical_step == NULL
+		|| (options->second_order_correction && core.jac_nnz > 0 && core.scaled_jac_value != NULL && old_scaled_jac == NULL)
+	){
 		A4SQP_FREE(old_x);
 		A4SQP_FREE(old_scaled_x);
 		A4SQP_FREE(old_scaled_grad);
+		A4SQP_FREE(old_scaled_jac);
 		A4SQP_FREE(physical_step);
 		return 1;
+	}
+	if(old_scaled_jac != NULL){
+		memcpy(old_scaled_jac,core.scaled_jac_value,(size_t)core.jac_nnz * sizeof(*old_scaled_jac));
 	}
 	for(i = 0; i < n; ++i){
 		real64 qstep = qp->col_value[i];
@@ -1793,6 +1822,57 @@ retry_line_search:
 			accepted = 1;
 			break;
 		}
+		if(
+			options->second_order_correction
+			&& !options->restoration
+			&& view->n_rel > 0
+			&& max_violation_before <= fmax(1e4 * options->feas_tol,1e-3)
+			&& a4sqp_core_try_second_order_correction(
+				view,
+				options,
+				ops,
+				ctx,
+				x,
+				old_scaled_jac,
+				fmax(1.0,alpha * scaled_step_inf)
+			) == 0
+		){
+			a4sqp_view_get_core(view,&current);
+			current.has_objective = core.has_objective;
+			result->merit_after = a4sqp_core_merit(&current,options->elastic_penalty);
+			violation_after = a4sqp_core_violation(&current,&max_violation_after,NULL);
+			merit_decrease = result->merit_before - result->merit_after;
+			required_decrease = options->armijo_coeff * alpha * result->predicted_reduction;
+			if(required_decrease < 0.0){
+				required_decrease = 0.0;
+			}
+			trust_ratio = 0.0;
+			if(alpha * result->predicted_reduction > options->merit_tol){
+				trust_ratio = merit_decrease / (alpha * result->predicted_reduction);
+			}
+			if(
+				(merit_decrease >= required_decrease && trust_ratio >= options->trust_accept)
+				|| (
+					options->filter_accept
+					&& violation_after <= fmax(options->feas_tol,(1.0 + options->filter_margin) * violation_before)
+					&& merit_decrease > options->merit_tol
+				)
+			){
+				if(ops->accepted != NULL){
+					ops->accepted(ctx,old_scaled_x,old_scaled_grad,options->restoration);
+				}
+				a4sqp_core_line_search_record_accept(
+					&core,
+					old_x,
+					x,
+					alpha,
+					trust_ratio,
+					result
+				);
+				accepted = 1;
+				break;
+			}
+		}
 		alpha *= 0.5;
 	}
 	if(!accepted){
@@ -1824,6 +1904,7 @@ cleanup:
 	A4SQP_FREE(old_x);
 	A4SQP_FREE(old_scaled_x);
 	A4SQP_FREE(old_scaled_grad);
+	A4SQP_FREE(old_scaled_jac);
 	A4SQP_FREE(physical_step);
 	return accepted ? 0 : 1;
 }
@@ -1868,6 +1949,36 @@ static void a4sqp_core_step_record_zero_accept(
 	result->step_norm = 0.0;
 	result->trust_ratio = 1.0;
 	result->scaled_step_inf = 0.0;
+}
+
+static void a4sqp_core_line_search_record_accept(
+	const struct A4SqpCoreView *core,
+	const real64 *old_x,
+	const real64 *x,
+	real64 alpha,
+	real64 trust_ratio,
+	struct A4SqpLineSearchResult *result
+){
+	real64 step_norm2 = 0.0;
+	real64 scaled_step_inf = 0.0;
+	int32 i;
+	if(core == NULL || old_x == NULL || x == NULL || result == NULL){
+		return;
+	}
+	for(i = 0; i < core->n_var; ++i){
+		real64 step = x[i] - old_x[i];
+		real64 scale = core->var_scale != NULL ? core->var_scale[i] : 1.0;
+		real64 scaled_step = scale != 0.0 ? step / scale : step;
+		step_norm2 += step * step;
+		if(fabs(scaled_step) > scaled_step_inf){
+			scaled_step_inf = fabs(scaled_step);
+		}
+	}
+	result->accepted = 1;
+	result->alpha = alpha;
+	result->step_norm = sqrt(step_norm2);
+	result->trust_ratio = trust_ratio;
+	result->scaled_step_inf = scaled_step_inf;
 }
 
 static real64 a4sqp_core_signed_row_violation(const struct A4SqpCoreView *view, int32 row){
@@ -1963,6 +2074,363 @@ static real64 a4sqp_core_violation_squares_unscaled(
 	return merit;
 }
 
+static real64 a4sqp_core_sparse_row_dot(
+	const struct A4SqpCoreView *view,
+	int32 row_a,
+	int32 row_b
+){
+	int32 ia;
+	real64 dot = 0.0;
+	if(
+		view == NULL
+		|| row_a < 0
+		|| row_b < 0
+		|| row_a >= view->n_rel
+		|| row_b >= view->n_rel
+		|| view->jac_row_start == NULL
+		|| view->jac_col_index == NULL
+		|| view->scaled_jac_value == NULL
+	){
+		return 0.0;
+	}
+	for(ia = view->jac_row_start[row_a]; ia < view->jac_row_start[row_a + 1]; ++ia){
+		int32 ib;
+		int32 ca = view->jac_col_index[ia];
+		for(ib = view->jac_row_start[row_b]; ib < view->jac_row_start[row_b + 1]; ++ib){
+			int32 cb = view->jac_col_index[ib];
+			if(ca != cb){
+				continue;
+			}
+			{
+			real64 va = view->scaled_jac_value[ia];
+			real64 vb = view->scaled_jac_value[ib];
+			if(isfinite(va) && isfinite(vb)){
+				dot += va * vb;
+			}
+			}
+		}
+	}
+	return dot;
+}
+
+static int a4sqp_core_solve_spd_cholesky(real64 *a, real64 *b, int32 n){
+	int32 i;
+	int32 j;
+	if(a == NULL || b == NULL || n <= 0){
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		for(j = 0; j <= i; ++j){
+			real64 sum = a[(size_t)i * (size_t)n + (size_t)j];
+			int32 k;
+			for(k = 0; k < j; ++k){
+				sum -= a[(size_t)i * (size_t)n + (size_t)k] * a[(size_t)j * (size_t)n + (size_t)k];
+			}
+			if(i == j){
+				if(sum <= 0.0 || !isfinite(sum)){
+					return 1;
+				}
+				a[(size_t)i * (size_t)n + (size_t)j] = sqrt(sum);
+			}else{
+				real64 diag = a[(size_t)j * (size_t)n + (size_t)j];
+				if(diag == 0.0 || !isfinite(diag)){
+					return 1;
+				}
+				a[(size_t)i * (size_t)n + (size_t)j] = sum / diag;
+			}
+		}
+		for(j = i + 1; j < n; ++j){
+			a[(size_t)i * (size_t)n + (size_t)j] = 0.0;
+		}
+	}
+	for(i = 0; i < n; ++i){
+		real64 sum = b[i];
+		for(j = 0; j < i; ++j){
+			sum -= a[(size_t)i * (size_t)n + (size_t)j] * b[j];
+		}
+		b[i] = sum / a[(size_t)i * (size_t)n + (size_t)i];
+	}
+	for(i = n - 1; i >= 0; --i){
+		real64 sum = b[i];
+		for(j = i + 1; j < n; ++j){
+			sum -= a[(size_t)j * (size_t)n + (size_t)i] * b[j];
+		}
+		b[i] = sum / a[(size_t)i * (size_t)n + (size_t)i];
+	}
+	return 0;
+}
+
+static int a4sqp_core_least_norm_feasibility_correction(
+	const struct A4SqpCoreView *core,
+	real64 radius,
+	real64 *scaled_step
+){
+	int32 *rows = NULL;
+	real64 *rhs0 = NULL;
+	real64 *rhs = NULL;
+	real64 *gram0 = NULL;
+	real64 *gram = NULL;
+	int32 row_count = 0;
+	real64 trace = 0.0;
+	real64 reg_base;
+	real64 step_inf = 0.0;
+	int attempt;
+	int32 row;
+	int32 i;
+
+	if(
+		core == NULL
+		|| scaled_step == NULL
+		|| core->n_var <= 0
+		|| core->n_rel <= 0
+		|| core->jac_row_start == NULL
+		|| core->jac_col_index == NULL
+		|| core->scaled_jac_value == NULL
+	){
+		return 1;
+	}
+	rows = A4SQP_NEW_ARRAY_OR_NULL(int32,core->n_rel);
+	rhs0 = A4SQP_NEW_ARRAY_OR_NULL(real64,core->n_rel);
+	rhs = A4SQP_NEW_ARRAY_OR_NULL(real64,core->n_rel);
+	if(rows == NULL || rhs0 == NULL || rhs == NULL){
+		goto fail;
+	}
+	for(row = 0; row < core->n_rel; ++row){
+		real64 signed_violation = a4sqp_core_signed_row_violation(core,row);
+		real64 row_norm2;
+		if(fabs(signed_violation) <= 0.0 || !isfinite(signed_violation)){
+			continue;
+		}
+		row_norm2 = a4sqp_core_sparse_row_dot(core,row,row);
+		if(row_norm2 <= 1e-24 || !isfinite(row_norm2)){
+			continue;
+		}
+		rows[row_count] = row;
+		rhs0[row_count] = -signed_violation;
+		trace += row_norm2;
+		++row_count;
+	}
+	if(row_count <= 0){
+		goto fail;
+	}
+	gram0 = A4SQP_NEW_ARRAY_OR_NULL(real64,(size_t)row_count * (size_t)row_count);
+	gram = A4SQP_NEW_ARRAY_OR_NULL(real64,(size_t)row_count * (size_t)row_count);
+	if(gram0 == NULL || gram == NULL){
+		goto fail;
+	}
+	for(i = 0; i < row_count; ++i){
+		int32 j;
+		for(j = 0; j <= i; ++j){
+			real64 dot = a4sqp_core_sparse_row_dot(core,rows[i],rows[j]);
+			gram0[(size_t)i * (size_t)row_count + (size_t)j] = dot;
+			gram0[(size_t)j * (size_t)row_count + (size_t)i] = dot;
+		}
+	}
+	reg_base = fmax(1e-12,1e-10 * fmax(1.0,trace / (real64)row_count));
+	for(attempt = 0; attempt < 6; ++attempt){
+		real64 reg = reg_base * pow(100.0,(real64)attempt);
+		memcpy(gram,gram0,(size_t)row_count * (size_t)row_count * sizeof(*gram));
+		memcpy(rhs,rhs0,(size_t)row_count * sizeof(*rhs));
+		for(i = 0; i < row_count; ++i){
+			gram[(size_t)i * (size_t)row_count + (size_t)i] += reg;
+		}
+		if(!a4sqp_core_solve_spd_cholesky(gram,rhs,row_count)){
+			break;
+		}
+	}
+	if(attempt >= 6){
+		goto fail;
+	}
+	memset(scaled_step,0,(size_t)core->n_var * sizeof(*scaled_step));
+	for(i = 0; i < row_count; ++i){
+		int32 k;
+		row = rows[i];
+		for(k = core->jac_row_start[row]; k < core->jac_row_start[row + 1]; ++k){
+			int32 col = core->jac_col_index[k];
+			real64 value = core->scaled_jac_value[k];
+			if(col >= 0 && col < core->n_var && isfinite(value)){
+				scaled_step[col] += value * rhs[i];
+			}
+		}
+	}
+	for(i = 0; i < core->n_var; ++i){
+		real64 value = fabs(scaled_step[i]);
+		if(value > step_inf){
+			step_inf = value;
+		}
+	}
+	if(step_inf <= 0.0 || !isfinite(step_inf)){
+		goto fail;
+	}
+	if(isfinite(radius) && radius > 0.0 && step_inf > radius){
+		real64 scale = radius / step_inf;
+		for(i = 0; i < core->n_var; ++i){
+			scaled_step[i] *= scale;
+		}
+	}
+	A4SQP_FREE(rows);
+	A4SQP_FREE(rhs0);
+	A4SQP_FREE(rhs);
+	A4SQP_FREE(gram0);
+	A4SQP_FREE(gram);
+	return 0;
+
+fail:
+	A4SQP_FREE(rows);
+	A4SQP_FREE(rhs0);
+	A4SQP_FREE(rhs);
+	A4SQP_FREE(gram0);
+	A4SQP_FREE(gram);
+	return 1;
+}
+
+static int a4sqp_core_try_second_order_correction(
+	struct A4SqpView *view,
+	const struct A4SqpLineSearchOptions *options,
+	const struct A4SqpVectorLineSearchOps *ops,
+	void *ctx,
+	real64 *x,
+	const real64 *linearization_scaled_jac_value,
+	real64 radius_hint
+){
+	struct A4SqpCoreView core;
+	struct A4SqpCoreView trial_core;
+	real64 *trial_x = NULL;
+	real64 *base_x = NULL;
+	real64 *scaled_step = NULL;
+	real64 *physical_step = NULL;
+	real64 phi_current;
+	real64 max_current;
+	int max_inner;
+	int accepted = 0;
+	int32 i;
+
+	if(
+		view == NULL
+		|| options == NULL
+		|| ops == NULL
+		|| ops->evaluate == NULL
+		|| x == NULL
+	){
+		return 1;
+	}
+	a4sqp_view_get_core(view,&core);
+	if(core.n_var <= 0 || core.n_rel <= 0 || core.jac_row_start == NULL || core.jac_col_index == NULL || core.scaled_jac_value == NULL){
+		return 1;
+	}
+	phi_current = a4sqp_core_violation_squares_unscaled(&core,&max_current);
+	if(phi_current <= 0.0 || max_current <= options->feas_tol || !isfinite(phi_current)){
+		return 1;
+	}
+	trial_x = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	base_x = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	scaled_step = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	physical_step = A4SQP_NEW_ARRAY_OR_NULL(real64,core.n_var);
+	if(trial_x == NULL || base_x == NULL || scaled_step == NULL || physical_step == NULL){
+		goto cleanup;
+	}
+	for(i = 0; i < core.n_var; ++i){
+		trial_x[i] = x[i];
+		base_x[i] = x[i];
+	}
+	max_inner = options->soc_max_iter > 0 ? options->soc_max_iter : 2;
+
+	for(i = 0; i < max_inner; ++i){
+		real64 step_inf = 0.0;
+		real64 radius = (isfinite(radius_hint) && radius_hint > 0.0) ? radius_hint : 1.0;
+		int inner_accepted = 0;
+		int32 col;
+		int bt;
+		a4sqp_view_get_core(view,&core);
+		if(core.n_var <= 0 || core.n_rel <= 0 || core.jac_row_start == NULL || core.jac_col_index == NULL || core.scaled_jac_value == NULL){
+			break;
+		}
+		if(linearization_scaled_jac_value != NULL){
+			core.scaled_jac_value = linearization_scaled_jac_value;
+		}
+		if(a4sqp_core_least_norm_feasibility_correction(&core,radius,scaled_step)){
+			break;
+		}
+		for(col = 0; col < core.n_var; ++col){
+			real64 value = fabs(scaled_step[col]);
+			if(value > step_inf){
+				step_inf = value;
+			}
+		}
+		if(step_inf <= 0.0 || !isfinite(step_inf)){
+			break;
+		}
+		step_inf = 0.0;
+		for(col = 0; col < core.n_var; ++col){
+			real64 step = scaled_step[col];
+			real64 value = core.scaled_var_value != NULL ? core.scaled_var_value[col] : 0.0;
+			real64 lower = core.scaled_var_lower != NULL ? core.scaled_var_lower[col] : A4SQP_NO_LOWER_BOUND;
+			real64 upper = core.scaled_var_upper != NULL ? core.scaled_var_upper[col] : A4SQP_NO_UPPER_BOUND;
+			if(!a4sqp_core_is_lower_inf(lower) && value + step < lower){
+				step = lower - value;
+			}
+			if(!a4sqp_core_is_upper_inf(upper) && value + step > upper){
+				step = upper - value;
+			}
+			scaled_step[col] = step;
+			physical_step[col] = (core.var_scale != NULL ? core.var_scale[col] : 1.0) * step;
+			if(fabs(step) > step_inf){
+				step_inf = fabs(step);
+			}
+		}
+		if(step_inf <= 0.0){
+			break;
+		}
+		for(bt = 0; bt < options->max_backtrack; ++bt){
+			real64 alpha = ldexp(1.0,-bt);
+			real64 phi_after;
+			real64 max_after;
+			int32 j;
+			for(j = 0; j < core.n_var; ++j){
+				x[j] = base_x[j] + alpha * physical_step[j];
+			}
+			if(ops->evaluate(ctx,x,view)){
+				continue;
+			}
+			a4sqp_view_get_core(view,&trial_core);
+			phi_after = a4sqp_core_violation_squares_unscaled(&trial_core,&max_after);
+			if(
+				isfinite(phi_after)
+				&& (
+					max_after <= options->feas_tol
+					|| phi_after <= (1.0 - options->restoration_margin) * phi_current
+					|| max_after <= (1.0 - options->restoration_margin) * max_current
+				)
+			){
+				for(j = 0; j < core.n_var; ++j){
+					base_x[j] = x[j];
+				}
+				phi_current = phi_after;
+				max_current = max_after;
+				inner_accepted = 1;
+				accepted = 1;
+				break;
+			}
+		}
+		if(!inner_accepted || max_current <= options->feas_tol){
+			break;
+		}
+	}
+
+cleanup:
+	if(!accepted && trial_x != NULL){
+		for(i = 0; i < core.n_var; ++i){
+			x[i] = trial_x[i];
+		}
+		(void)ops->evaluate(ctx,x,view);
+	}
+	A4SQP_FREE(trial_x);
+	A4SQP_FREE(base_x);
+	A4SQP_FREE(scaled_step);
+	A4SQP_FREE(physical_step);
+	return accepted ? 0 : 1;
+}
+
 int a4sqp_core_nonlinear_restoration_step(
 	struct A4SqpView *view,
 	const struct A4SqpLineSearchOptions *line_options,
@@ -2036,7 +2504,6 @@ int a4sqp_core_nonlinear_restoration_step(
 		real64 grad_inf = 0.0;
 		real64 scaled_step_inf = 0.0;
 		real64 radius;
-		int32 row;
 		int inner_accepted = 0;
 		int32 j;
 
@@ -2047,31 +2514,9 @@ int a4sqp_core_nonlinear_restoration_step(
 		if(core.n_var <= 0 || core.n_rel <= 0 || core.jac_row_start == NULL || core.jac_col_index == NULL || core.scaled_jac_value == NULL){
 			break;
 		}
-		memset(scaled_step,0,(size_t)core.n_var * sizeof(real64));
-		for(row = 0; row < core.n_rel; ++row){
-			real64 signed_violation = a4sqp_core_signed_row_violation(&core,row);
-			real64 row_norm2 = 0.0;
-			real64 row_scale;
-			int32 k;
-			if(signed_violation == 0.0 || !isfinite(signed_violation)){
-				continue;
-			}
-			for(k = core.jac_row_start[row]; k < core.jac_row_start[row + 1]; ++k){
-				int32 col = core.jac_col_index[k];
-				if(col >= 0 && col < core.n_var && isfinite(core.scaled_jac_value[k])){
-					row_norm2 += core.scaled_jac_value[k] * core.scaled_jac_value[k];
-				}
-			}
-			if(row_norm2 <= 1e-24 || !isfinite(row_norm2)){
-				continue;
-			}
-			row_scale = -signed_violation / row_norm2;
-			for(k = core.jac_row_start[row]; k < core.jac_row_start[row + 1]; ++k){
-				int32 col = core.jac_col_index[k];
-				if(col >= 0 && col < core.n_var && isfinite(core.scaled_jac_value[k])){
-					scaled_step[col] += row_scale * core.scaled_jac_value[k];
-				}
-			}
+		radius = (trust_radius > 0.0 && isfinite(trust_radius)) ? trust_radius : 1.0;
+		if(a4sqp_core_least_norm_feasibility_correction(&core,radius,scaled_step)){
+			break;
 		}
 		for(j = 0; j < core.n_var; ++j){
 			real64 value = fabs(scaled_step[j]);
@@ -2081,13 +2526,6 @@ int a4sqp_core_nonlinear_restoration_step(
 		}
 		if(grad_inf <= 0.0 || !isfinite(grad_inf)){
 			break;
-		}
-		radius = (trust_radius > 0.0 && isfinite(trust_radius)) ? trust_radius : 1.0;
-		if(grad_inf > radius){
-			real64 scale = radius / grad_inf;
-			for(j = 0; j < core.n_var; ++j){
-				scaled_step[j] *= scale;
-			}
 		}
 		for(j = 0; j < core.n_var; ++j){
 			real64 step = scaled_step[j];

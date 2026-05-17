@@ -27,6 +27,7 @@
 	T(makemps) \
 	T(highs) \
 	T(a4sqp) \
+	T(slsqp) \
 	T(qrslv) \
 	T(fprops) \
 	T(lrslv) \
