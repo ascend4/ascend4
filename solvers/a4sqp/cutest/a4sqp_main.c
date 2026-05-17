@@ -1124,7 +1124,12 @@ report:
 	a4sqp_cutest_json_number(stats.final_elastic_max);
 	printf(",\"regularization_size\":");
 	a4sqp_cutest_json_number(stats.regularization_size);
-	printf(",");
+	printf(
+		",\"reduced_gradient_polish_mode\":%d,\"reduced_gradient_polish_attempts\":%d,\"reduced_gradient_polish_accepts\":%d,",
+		(int)stats.reduced_gradient_polish_mode,
+		(int)stats.reduced_gradient_polish_attempts,
+		(int)stats.reduced_gradient_polish_accepts
+	);
 	printf("\"cutest_calls_obj\":%.17g,\"cutest_calls_objgrad\":%.17g,\"cutest_calls_con\":%.17g,\"cutest_calls_congrad\":%.17g,",
 		(double)calls[0],
 		(double)calls[1],

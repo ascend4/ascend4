@@ -174,6 +174,7 @@ def profile_summary(rows: list[dict[str, str]], profile_order: list[str]) -> lis
                 first_nonempty(items, "hessian"),
                 first_nonempty(items, "kkt_convergence"),
                 first_nonempty(items, "acceptable_iter"),
+                profile_polish_mode_label(items),
                 total,
                 pass_count,
                 f"{pass_count}/{total}" if total else "0/0",
@@ -232,13 +233,36 @@ def format_outcomes(outcomes: Counter[str]) -> str:
     return "; ".join(f"{key}:{outcomes[key]}" for key in sorted(outcomes) if key)
 
 
+def polish_mode_label(value: str) -> str:
+    return {
+        "0": "OFF",
+        "1": "ON",
+        "2": "FALLBACK",
+    }.get(value, value)
+
+
+def profile_polish_mode_label(rows: list[dict[str, str]]) -> str:
+    modes = {row.get("reduced_gradient_polish_mode", "") for row in rows}
+    if "2" in modes:
+        return "FALLBACK"
+    if "1" in modes:
+        return "ON"
+    if "0" in modes:
+        return "OFF"
+    return first_nonempty(rows, "reduced_gradient_polish_mode")
+
+
 def outcome_light_code(outcome: str) -> str:
     code, light, _description = OUTCOME_CODES.get(outcome, UNKNOWN_OUTCOME)
     return f"{light}{code}"
 
 
 def outcome_cell(row: dict[str, str]) -> str:
-    suffix = "L" if row.get("used_lsq") == "1" else ""
+    suffix = ""
+    if row.get("used_lsq") == "1":
+        suffix += "L"
+    if int(row.get("reduced_gradient_polish_accepts") or 0) > 0:
+        suffix += "P"
     return f"{outcome_light_code(row.get('outcome_class', ''))}{suffix}"
 
 
@@ -477,6 +501,7 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
         "Hessian",
         "KKT",
         "Acceptable iter",
+        "RG polish",
         "Total",
         "Pass",
         "Pass rate",
@@ -517,8 +542,10 @@ def build_report(args: argparse.Namespace, rows: list[dict[str, str]]) -> str:
         "",
         "Outcome cells use compact light+number codes. The key below the table maps codes to outcome classes.",
         "",
-        "Cells with an `L` suffix used the experimental least-squares solve path for that profile.",
-        "",
+		"Cells with an `L` suffix used the experimental least-squares solve path for that profile.",
+		"",
+		"Cells with a `P` suffix accepted at least one reduced-gradient polish fallback step.",
+		"",
         "Matrix profile headers are shortened to solver/Hessian labels; full profile settings are listed in the summary table.",
         "",
         markdown_table(matrix_headers, problem_matrix(rows, profile_order, problem_order, problem_metadata)),

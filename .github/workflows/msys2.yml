@@ -13,7 +13,7 @@ jobs:
     env:
       OMP_NUM_THREADS: "1"
       ASCEND_CI_HIGHS_SERIAL: "1"
-      CUNIT_VERSION: "2.2.4"
+      CUNIT_VERSION: "2.3.0"
       CUNIT_PKGREL: "6"
 
     defaults:

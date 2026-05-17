@@ -145,6 +145,19 @@ ACOPP14 follow-up, 2026-05-16:
   scaled-step fix reduced the late KKT residual only slowly and left the solve on
   the same high-objective branch. These options should remain opt-in until they
   show a reproducible CUTEst matrix improvement.
+- `reduced_gradient_polish_mode=FALLBACK` is an opt-in terminal globalization
+  probe. The core only attempts it when restoration and KKT convergence are
+  enabled, an objective exists, constraints exist, the current point is already
+  feasible to `acceptable_tol`, the KKT residual is still above
+  `acceptable_tol`, and the last scaled step is small
+  (`last_scaled_step_inf <= max(sqrt(acceptable_tol), 10*step_tol)`). It forms a
+  reduced-gradient direction by projecting the Lagrangian gradient against
+  active bounds and active/equality constraint normals, takes a bounded
+  objective-improving step, and then runs a short nonlinear restoration. The
+  step is accepted only if feasibility is not worsened beyond the previous
+  violation/`acceptable_tol` envelope and KKT improves by at least
+  `max(feas_tol, 1e-12)`. CUTEst JSON/TSV reporting records the configured mode,
+  attempted fallback count, and accepted fallback count.
 
 CUTEst scaling follow-up, 2026-05-16:
 

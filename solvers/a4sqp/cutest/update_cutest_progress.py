@@ -130,6 +130,12 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--include-slsqp", action="store_true", help="Also rerun the NLopt/SLSQP CUTEst profile.")
     parser.add_argument("--no-a4sqp", dest="a4sqp", action="store_false", help="Do not rerun the three standard A4SQP profiles.")
     parser.set_defaults(a4sqp=True)
+    parser.add_argument(
+        "--a4sqp-reduced-gradient-polish-mode",
+        choices=["OFF", "FALLBACK", "ON"],
+        default="OFF",
+        help="Pass an explicit reduced-gradient polish mode to all generated A4SQP profiles.",
+    )
     parser.add_argument("--build", dest="build", action="store_true", default=True)
     parser.add_argument("--no-build", dest="build", action="store_false")
     parser.add_argument("--rebuild", dest="rebuild", action="store_true", default=True, help="Force CUTEst/runcutest rebuilds for each problem/package.")
@@ -176,22 +182,28 @@ def main(argv: list[str]) -> int:
             ("EXACT_OBJ", "A4SQP_EXACT_OBJ_AUTO"),
             ("EXACT_LAGRANGIAN", "A4SQP_EXACT_LAGRANGIAN_AUTO"),
         ]:
+            a4sqp_args = [
+                "--solver",
+                "a4sqp",
+                "--a4sqp-hessian",
+                hessian,
+                "--a4sqp-scaleopt",
+                "AUTO",
+                "--acceptable-iter",
+                str(args.acceptable_iter),
+                "--restoration",
+            ]
+            if args.a4sqp_reduced_gradient_polish_mode != "OFF":
+                a4sqp_args.extend([
+                    "--reduced-gradient-polish-mode",
+                    args.a4sqp_reduced_gradient_polish_mode,
+                ])
             profile_commands.append(profile_run_command(
                 runner,
                 args,
                 run_dir,
                 profile,
-                [
-                    "--solver",
-                    "a4sqp",
-                    "--a4sqp-hessian",
-                    hessian,
-                    "--a4sqp-scaleopt",
-                    "AUTO",
-                    "--acceptable-iter",
-                    str(args.acceptable_iter),
-                    "--restoration",
-                ],
+                a4sqp_args,
             ))
     if args.include_slsqp:
         profile_commands.append(slsqp_profile_run_command(

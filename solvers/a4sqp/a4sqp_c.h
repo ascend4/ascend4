@@ -182,6 +182,9 @@ struct A4SqpSolveStats {
 	A4SqpNumber final_trust_radius;
 	A4SqpNumber final_elastic_max;
 	A4SqpNumber regularization_size;
+	A4SqpInt reduced_gradient_polish_mode;
+	A4SqpInt reduced_gradient_polish_attempts;
+	A4SqpInt reduced_gradient_polish_accepts;
 };
 
 A4SQP_EXPORT(A4SqpProblem) CreateA4SqpProblem(

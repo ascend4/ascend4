@@ -1587,6 +1587,12 @@ def CheckLexDestroy(context):
 
 cunit_test_text = """
 #include <CUnit/CUnit.h>
+#ifndef CU_SKIP
+#error "CUnit 2.3.0 or newer is required for CU_SKIP"
+#endif
+#ifndef CU_SKIP_IF
+#error "CUnit 2.3.0 or newer is required for CU_SKIP_IF"
+#endif
 int maxi(int i1, int i2){
 	return (i1 > i2) ? i1 : i2;
 }
