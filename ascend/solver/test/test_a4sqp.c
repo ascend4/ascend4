@@ -21,12 +21,15 @@
 #include <ascend/system/slv_param.h>
 #include <ascend/system/var.h>
 #include <ascend/utilities/ascDynaLoad.h>
+#include <ascend/utilities/config.h>
 
 #include <solvers/a4sqp/asc_a4sqp_internal.h>
 #include <solvers/a4sqp/a4sqp_c.h>
 #include <solvers/a4sqp/a4sqp_qp_highs.h>
 
 #include <test/common.h>
+
+#define A4SQP_CORE_LIBRARY ASC_SHLIBPREFIX "a4sqp" ASC_SHLIBSUFFIX
 
 struct a4sqp_progress_capture {
 	char buffer[1024];
@@ -357,7 +360,7 @@ typedef enum A4SqpApplicationReturnStatus (*a4sqp_solve_fn)(
 typedef A4SqpBool (*a4sqp_get_stats_fn)(A4SqpProblem, struct A4SqpSolveStats *);
 
 static a4sqp_qp_highs_spike_fn a4sqp_load_qp_spike(void){
-	const char *lib = "liba4sqp.so";
+	const char *lib = A4SQP_CORE_LIBRARY;
 	DynamicF fn;
 
 	if(Asc_DynamicLoad(lib,NULL) != 0){
@@ -396,7 +399,7 @@ static A4SqpBool a4sqp_c_smoke_eval_grad_f(
 }
 
 static void test_a4sqp_c_api_objective_only(void){
-	const char *lib = "liba4sqp.so";
+	const char *lib = A4SQP_CORE_LIBRARY;
 	a4sqp_create_problem_fn create_problem;
 	a4sqp_free_problem_fn free_problem;
 	a4sqp_add_int_option_fn add_int_option;
@@ -532,7 +535,7 @@ static void test_a4sqp_qp_highs_spike(void){
 	CU_ASSERT_DOUBLE_EQUAL(result.objective_value,7.53125,1e-8);
 
 cleanup:
-	(void)Asc_DynamicUnLoad("liba4sqp.so");
+	(void)Asc_DynamicUnLoad(A4SQP_CORE_LIBRARY);
 	solver_destroy_engines();
 	Asc_CompilerDestroy();
 }
