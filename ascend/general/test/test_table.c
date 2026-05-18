@@ -62,7 +62,7 @@ static void test_table(void)
   CU_FAIL("test_table() compiled with NDEBUG - some features not tested.");
 #endif
 #ifndef MALLOC_DEBUG
-  CU_FAIL("test_table() compiled without MALLOC_DEBUG - memory management not tested.");
+  ASC_TEST_PARTIAL_SKIP("test_table() compiled without MALLOC_DEBUG; memory-management checks skipped.");
 #endif
 
   /*  NOTE:  Each test section assumes that

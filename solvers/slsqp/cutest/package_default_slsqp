@@ -1,0 +1,12 @@
+#!/bin/bash
+# CUTEst package definition for the NLopt SLSQP driver.
+
+export PACKAGE=slsqp
+export PACKDIR=slsqp
+export PACK_PRECISION="double"
+export PACKOBJS=""
+
+ASCEND_ROOT="${ASCEND_ROOT:-/home/john/ascend}"
+
+export PACKLIBS="-L${ASCEND_ROOT} -lnlopt -lascend -lm"
+export SPECS=""

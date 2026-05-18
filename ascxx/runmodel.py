@@ -107,6 +107,58 @@ def _print_simstatus(sim, integrated=False):
 		pass
 	print("STATUS: " + ", ".join(parts))
 
+
+class CliSolverReporter:
+	def __init__(self, ascpy, sim=None, stream=None):
+		class _Reporter(ascpy.SolverReporter):
+			def __init__(self, owner):
+				self._owner = owner
+				ascpy.SolverReporter.__init__(self)
+
+			def report(self, status):
+				return self._owner.report(status)
+
+			def finalise(self, status):
+				self._owner.finalise(status)
+
+			def reportProgress(self, solver_name, message):
+				self._owner.report_progress(solver_name, message)
+
+		self.ascpy = ascpy
+		self.sim = sim
+		self.stream = stream if stream is not None else sys.stdout
+		self.reporter = _Reporter(self)
+
+	def set_sim(self, sim):
+		self.sim = sim
+
+	def report(self, status):
+		try:
+			iter_num = status.getIterationNum()
+		except Exception:
+			iter_num = None
+		try:
+			label = _status_label(status)
+		except Exception:
+			label = "unknown"
+		parts = [f"solver_status={label}"]
+		if iter_num is not None:
+			parts.append(f"iter={iter_num}")
+		print("SOLVER_STATUS: " + ", ".join(parts), file=self.stream)
+		return 0
+
+	def finalise(self, status):
+		try:
+			label = _status_label(status)
+		except Exception:
+			label = "unknown"
+		print(f"SOLVER_FINAL: solver_status={label}", file=self.stream)
+
+	def report_progress(self, solver_name, message):
+		prefix = f"SOLVER_PROGRESS: solver={solver_name}" if solver_name else "SOLVER_PROGRESS:"
+		print(f"{prefix}, {message}", file=self.stream)
+
+
 def _same_time(a, b):
 	scale = max(1.0, abs(a), abs(b))
 	return abs(a - b) <= 1e-12 * scale
@@ -269,7 +321,7 @@ def _plot_rows(report):
 
 
 class CliIntegratorReporter:
-	def __init__(self, ascpy, sim, integrator):
+	def __init__(self, ascpy, sim, integrator, progress=False, stream=None):
 		class _Reporter(ascpy.IntegratorReporterCxx):
 			def __init__(self, owner, wrapped):
 				self._owner = owner
@@ -284,7 +336,12 @@ class CliIntegratorReporter:
 					return 0
 
 			def updateStatus(self):
-				return 1
+				try:
+					self._owner._report_progress()
+					return 1
+				except Exception as e:
+					sys.stderr.write(f"runmodel.py: integrator updateStatus failed: {e}\n")
+					return 0
 
 			def recordObservedValues(self):
 				try:
@@ -295,14 +352,45 @@ class CliIntegratorReporter:
 					return 0
 
 			def closeOutput(self):
+				self._owner._report_final()
 				return 0
 
 		self.ascpy = ascpy
 		self.sim = sim
 		self.integrator = integrator
+		self.progress = progress
+		self.stream = stream if stream is not None else sys.stdout
 		self.columns = []
 		self.rows = []
 		self.reporter = _Reporter(self, integrator)
+
+	def _report_progress(self):
+		if not self.progress:
+			return
+		parts = [f"engine={self.integrator.getName()}"]
+		try:
+			parts.append(f"step={self.integrator.getCurrentStep()}/{self.integrator.getNumSteps()}")
+		except Exception:
+			pass
+		try:
+			parts.append(f"t={self.integrator.getCurrentTime():.17g}")
+		except Exception:
+			pass
+		print("INTEGRATOR_PROGRESS: " + ", ".join(parts), file=self.stream)
+
+	def _report_final(self):
+		if not self.progress:
+			return
+		parts = [f"engine={self.integrator.getName()}"]
+		try:
+			parts.append(f"step={self.integrator.getCurrentStep()}/{self.integrator.getNumSteps()}")
+		except Exception:
+			pass
+		try:
+			parts.append(f"t={self.integrator.getCurrentTime():.17g}")
+		except Exception:
+			pass
+		print("INTEGRATOR_FINAL: " + ", ".join(parts), file=self.stream)
 
 	def _capture_columns(self):
 		if self.columns:
@@ -349,11 +437,14 @@ class CliIntegratorReporter:
 
 
 class CliSolverHooks:
-	def __init__(self, ascpy, suppress_integrate=False):
+	def __init__(self, ascpy, suppress_integrate=False, reporter=None, progress=False):
 		class _Hooks(ascpy.SolverHooks):
 			def __init__(self, owner):
 				self._owner = owner
-				ascpy.SolverHooks.__init__(self)
+				if owner.reporter is not None:
+					ascpy.SolverHooks.__init__(self, owner.reporter.reporter)
+				else:
+					ascpy.SolverHooks.__init__(self)
 
 			def setIntegrator(self, integratorname, sim):
 				res = ascpy.SolverHooks.setIntegrator(self, integratorname, sim)
@@ -387,12 +478,15 @@ class CliSolverHooks:
 					output=None,
 					plot=False,
 					microstates="endpoints",
+					progress=self._owner.progress,
 				)
 				self._owner.integrated = True
 				return 0
 
 		self.ascpy = ascpy
 		self.suppress_integrate = suppress_integrate
+		self.reporter = reporter
+		self.progress = progress
 		self.integrator_name = None
 		self.integrate_request = None
 		self.integrated = False
@@ -424,7 +518,7 @@ def _configure_integrator_observed(sim, integrator):
 		integrator.addObservedInstance(inst)
 
 
-def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, output, plot, microstates):
+def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, output, plot, microstates, progress=False):
 	sim.build()
 	integrator = ascpy.Integrator(sim)
 	integrator.setEngine(engine or DEFAULT_INTEGRATOR)
@@ -454,7 +548,7 @@ def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, ou
 
 	integrator.setLinearTimesteps(units, start_value, start_value + duration_value, steps_value)
 	_configure_integrator_observed(sim, integrator)
-	reporter = CliIntegratorReporter(ascpy, sim, integrator)
+	reporter = CliIntegratorReporter(ascpy, sim, integrator, progress=progress)
 	integrator.setReporter(reporter.reporter)
 	integrator.analyse()
 
@@ -471,10 +565,10 @@ def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, ou
 		for col in report["columns"]
 	)
 	table_rows = [[row["time"]] + row["values"] for row in report["rows"]]
-	_print_table(headers, table_rows)
-
 	if output is not None:
 		_write_tsv(output, headers, table_rows)
+	else:
+		_print_table(headers, table_rows)
 
 	if plot:
 		_plot_rows(report)
@@ -498,6 +592,8 @@ def run_ascend_model(
 	output=None,
 	plot=False,
 	microstates="endpoints",
+	progress=False,
+	solver_progress=False,
 ):
 	"""
 	Run an ASCEND model from the command line.
@@ -512,8 +608,12 @@ def run_ascend_model(
 		os.add_dll_directory(pathlib.Path(__file__).parent.parent)
 	import ascpy
 	old_hooks = ascpy.SolverHooksManager.Instance().getHooks()
-	cli_hooks = CliSolverHooks(ascpy, suppress_integrate=integrate)
+	progress = bool(progress or solver_progress)
+	solver_reporter = CliSolverReporter(ascpy) if progress else None
+	cli_hooks = CliSolverHooks(ascpy, suppress_integrate=integrate, reporter=solver_reporter, progress=progress)
 	ascpy.SolverHooksManager.Instance().setHooks(cli_hooks.hooks)
+	if solver_reporter is not None:
+		ascpy.setSolverProgressReporter(solver_reporter.reporter)
 
 	try:
 		L = ascpy.Library()
@@ -533,6 +633,8 @@ def run_ascend_model(
 			sys.exit(2)
 
 		M = T.getSimulation("sim", True)
+		if solver_reporter is not None:
+			solver_reporter.set_sim(M)
 		if runmethod is not None:
 			M.run(_find_method(T, runmethod))
 
@@ -562,6 +664,7 @@ def run_ascend_model(
 				output=output,
 				plot=plot,
 				microstates=microstates,
+				progress=progress,
 			)
 		elif cli_hooks.did_integrate(M):
 			pass
@@ -570,7 +673,10 @@ def run_ascend_model(
 				solver = M.getSolver()
 			except RuntimeError:
 				solver = ascpy.Solver("QRSlv")
-			M.solve(solver, ascpy.SolverReporter())
+			if solver_reporter is not None:
+				M.solve(solver, solver_reporter.reporter)
+			else:
+				M.solve(solver, ascpy.SolverReporter())
 
 		if printvars is not None:
 			test = False
@@ -588,6 +694,11 @@ def run_ascend_model(
 
 		_print_simstatus(M, integrated=integrate or cli_hooks.did_integrate(M))
 	finally:
+		if solver_reporter is not None:
+			try:
+				ascpy.setSolverProgressReporter(None)
+			except Exception:
+				pass
 		ascpy.SolverHooksManager.Instance().setHooks(old_hooks)
 
 
@@ -606,6 +717,7 @@ if __name__ == "__main__":
 	p.add_argument("--units", "-u", help="Units token for integration bounds, eg 's' or 'h'")
 	p.add_argument("--output", "-o", type=pathlib.Path, help="Write integration results as TSV to this file")
 	p.add_argument("--plot", action="store_true", help="Plot observed real-valued variables against the independent variable after integration")
+	p.add_argument("--progress", action="store_true", help="Print solver/integrator progress messages during runs")
 	p.add_argument(
 		"--microstates",
 		nargs="?",
@@ -635,6 +747,7 @@ if __name__ == "__main__":
 			output=args.output,
 			plot=args.plot,
 			microstates=args.microstates,
+			progress=args.progress,
 		)
 		sys.exit(0)
 	except Exception as e:

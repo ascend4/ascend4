@@ -402,6 +402,7 @@ if __name__ == "__main__":
 	p_run.add_argument('-r', '--run-method', dest='runmethod', help="Run METHOD after 'on_load' and before the final solve");
 	p_run.add_argument('-p', '--print', dest='printvars', action='extend', nargs='+', help='Variables to print (can be used multiple times). Implies --no-test.')
 	p_run.add_argument('--no-test','-n', action='store_true', help="Suppress running of 'self_test' method after solving");
+	p_run.add_argument('--progress', action='store_true', help="Print solver/integrator progress messages during runs")
 
 	p_int = s.add_parser('int',help = 'Alias for `run --integrate`')
 	p_int.set_defaults(action='run', integrate=True)
@@ -499,7 +500,7 @@ if __name__ == "__main__":
 			get_effective_home() / '.local/lib',
 		]
 	configured_runtime_libdirs = [pathlib.Path(p) for p in @A4_RUNTIME_LIBDIRS@]
-	libdirs = [sourceroot] + local_libdirs + configured_runtime_libdirs
+	libdirs = [sourceroot] + solverdirs + local_libdirs + configured_runtime_libdirs
 	if add_at_start(LD_LIBRARY_PATH,libdirs):
 		restart.append(LD_LIBRARY_PATH)
 
@@ -615,6 +616,8 @@ if __name__ == "__main__":
 			cmd += ["--print"] + args.printvars
 		if hasattr(args,'no_test') and args.no_test:
 			cmd += ["--no-test"]
+		if hasattr(args,'progress') and args.progress:
+			cmd += ["--progress"]
 	elif args.action == 'q':
 		# for the convenience of the developer -- hack this for your temporary needs
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', sourceroot/'models'/'johnpye'/'extpy'/'extpytest.a4c']

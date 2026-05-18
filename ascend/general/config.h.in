@@ -131,6 +131,16 @@ typedef unsigned long long asc_intptr_t;
 @ASC_HAVE_HIGHS@
 
 /*
+	Whether the A4SQP solver module is available in this build.
+*/
+@ASC_HAVE_A4SQP@
+
+/*
+	Whether the SLSQP solver module is available in this build.
+*/
+@ASC_HAVE_SLSQP@
+
+/*
 	Whether Graphviz support is enabled.
 */
 @ASC_HAVE_GRAPHVIZ@

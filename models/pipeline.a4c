@@ -34,8 +34,8 @@ PROVIDE "pipeline.a4c";
 	Simulation: Continuous and Mixed Integer Approaches. Comp. Chem. Eng.
 	Vol. 16, 949-961, 1992
 
-	Note that you will need CONOPT installed on your system in order to solve
-	this problem.
+	Note that you will need CONOPT or IPOPT installed on your system in order
+	to solve this problem.
 
 	Model by Vicente Rico-Ramirez, April 10, 1998
 *)

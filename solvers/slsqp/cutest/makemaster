@@ -1,0 +1,17 @@
+# Main body of the installation makefile for the CUTEst SLSQP interface.
+
+include $(CUTEST)/src/makedefs/defaults
+
+PACKAGE = SLSQP
+package = slsqp
+
+include $(CUTEST)/src/makedefs/definitions
+
+$(PACKAGE) = $(OBJ)/$(package)_main.o
+
+include $(CUTEST)/src/makedefs/instructions
+
+run_test:
+	echo "No standalone CUTEst SLSQP test program. Use runcutest -p slsqp -D PROBLEM."
+
+include $(CUTEST)/src/makedefs/compile

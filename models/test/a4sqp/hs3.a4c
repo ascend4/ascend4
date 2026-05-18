@@ -1,0 +1,54 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL hs3;
+    x1, x2 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			Hock-Schittkowski problem 3.
+			SIF equivalent:
+			    minimize x2 + 1e-5*(x2 - x1)^2
+			    subject to x2 >= 0
+			Known solution:
+			    x1 = 0
+			    x2 = 0
+			    f  = 0
+		}
+		'source' SELF {
+			W. Hock and K. Schittkowski, "Test examples for nonlinear
+			programming codes", Lecture Notes in Economics and
+			Mathematical Systems 187, Springer-Verlag, Heidelberg, 1981.
+			SIF input by A.R. Conn, March 1990.
+		}
+		'problem_origin' SELF {
+			This is a synthetic nonlinear programming benchmark with no
+			specific physical engineering origin.
+		}
+	END NOTES;
+
+    MINIMIZE x2 + 1e-5*(x2 - x1)^2;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1) < 1e-2;
+	ASSERT abs(x2) < 1e-8;
+	ASSERT x2 >= -1e-8;
+	ASSERT x2 + 1e-5*(x2 - x1)^2 < 1e-8;
+END self_test;
+
+METHOD on_load;
+	x2.lower_bound := 0.0;
+	x1 := 10.0;
+	x2 := 1.0;
+	SOLVER A4SQP;
+	OPTION max_iter 100;
+END on_load;
+
+METHOD on_load_test;
+	x2.lower_bound := 0.0;
+	x1 := 10.0;
+	x2 := 1.0;
+END on_load_test;
+END hs3;

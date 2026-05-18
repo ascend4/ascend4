@@ -1,0 +1,98 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL akiva;
+	b1, b2 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst AKIVA.
+			Known CUTEst/IPOPTC local solution from the current tracking run:
+			    b1 = -0.05310983
+			    b2 = -0.23757544
+			    f  = 6.16604221241775
+		}
+		'source' SELF {
+			M. Bierlaire, "HieLoW: estimation of hierarchical logit models",
+			Technical report 94/23, Transportation Research Group,
+			Department of Mathematics, FUNDP, University of Namur, 1994.
+			SIF input automatically produced by HieLoW.
+		}
+		'problem_origin' SELF {
+			This compact unconstrained likelihood benchmark was added to
+			isolate globalization behavior without constraint or multiplier
+			effects.
+		}
+	END NOTES;
+
+	obj: MINIMIZE
+		ln(exp(4.4*b1) + exp(52.9*b1 + b2)) - 4.4*b1
+		+ ln(exp(28.5*b1) + exp(4.1*b1 + b2)) - 28.5*b1
+		+ ln(exp(86.9*b1) + exp(4.1*b1 + b2)) - (4.1*b1 + b2)
+		+ ln(exp(31.6*b1) + exp(56.2*b1 + b2)) - 31.6*b1
+		+ ln(exp(20.2*b1) + exp(51.8*b1 + b2)) - 20.2*b1
+		+ ln(exp(91.2*b1) + exp(0.2*b1 + b2)) - (0.2*b1 + b2)
+		+ ln(exp(79.7*b1) + exp(27.6*b1 + b2)) - (27.6*b1 + b2)
+		+ ln(exp(2.2*b1) + exp(89.9*b1 + b2)) - 2.2*b1
+		+ ln(exp(24.5*b1) + exp(41.5*b1 + b2)) - 24.5*b1
+		+ ln(exp(43.5*b1) + exp(95.0*b1 + b2)) - 43.5*b1
+		+ ln(exp(8.4*b1) + exp(99.1*b1 + b2)) - 8.4*b1
+		+ ln(exp(84.0*b1) + exp(18.5*b1 + b2)) - (18.5*b1 + b2)
+		+ ln(exp(38.0*b1) + exp(82.0*b1 + b2)) - (82.0*b1 + b2)
+		+ ln(exp(1.6*b1) + exp(8.6*b1 + b2)) - 1.6*b1
+		+ ln(exp(74.1*b1) + exp(22.5*b1 + b2)) - (22.5*b1 + b2)
+		+ ln(exp(83.8*b1) + exp(51.4*b1 + b2)) - (51.4*b1 + b2)
+		+ ln(exp(19.2*b1) + exp(81.0*b1 + b2)) - 19.2*b1
+		+ ln(exp(85.0*b1) + exp(51.0*b1 + b2)) - (51.0*b1 + b2)
+		+ ln(exp(90.1*b1) + exp(62.2*b1 + b2)) - (62.2*b1 + b2)
+		+ ln(exp(22.2*b1) + exp(95.1*b1 + b2)) - 22.2*b1
+		+ ln(exp(91.5*b1) + exp(41.6*b1 + b2)) - (41.6*b1 + b2);
+
+METHODS
+METHOD self_test;
+	ASSERT abs(b1 + 0.05310983) < 5e-5;
+	ASSERT abs(b2 + 0.23757544) < 5e-5;
+	ASSERT abs(
+		ln(exp(4.4*b1) + exp(52.9*b1 + b2)) - 4.4*b1
+		+ ln(exp(28.5*b1) + exp(4.1*b1 + b2)) - 28.5*b1
+		+ ln(exp(86.9*b1) + exp(4.1*b1 + b2)) - (4.1*b1 + b2)
+		+ ln(exp(31.6*b1) + exp(56.2*b1 + b2)) - 31.6*b1
+		+ ln(exp(20.2*b1) + exp(51.8*b1 + b2)) - 20.2*b1
+		+ ln(exp(91.2*b1) + exp(0.2*b1 + b2)) - (0.2*b1 + b2)
+		+ ln(exp(79.7*b1) + exp(27.6*b1 + b2)) - (27.6*b1 + b2)
+		+ ln(exp(2.2*b1) + exp(89.9*b1 + b2)) - 2.2*b1
+		+ ln(exp(24.5*b1) + exp(41.5*b1 + b2)) - 24.5*b1
+		+ ln(exp(43.5*b1) + exp(95.0*b1 + b2)) - 43.5*b1
+		+ ln(exp(8.4*b1) + exp(99.1*b1 + b2)) - 8.4*b1
+		+ ln(exp(84.0*b1) + exp(18.5*b1 + b2)) - (18.5*b1 + b2)
+		+ ln(exp(38.0*b1) + exp(82.0*b1 + b2)) - (82.0*b1 + b2)
+		+ ln(exp(1.6*b1) + exp(8.6*b1 + b2)) - 1.6*b1
+		+ ln(exp(74.1*b1) + exp(22.5*b1 + b2)) - (22.5*b1 + b2)
+		+ ln(exp(83.8*b1) + exp(51.4*b1 + b2)) - (51.4*b1 + b2)
+		+ ln(exp(19.2*b1) + exp(81.0*b1 + b2)) - 19.2*b1
+		+ ln(exp(85.0*b1) + exp(51.0*b1 + b2)) - (51.0*b1 + b2)
+		+ ln(exp(90.1*b1) + exp(62.2*b1 + b2)) - (62.2*b1 + b2)
+		+ ln(exp(22.2*b1) + exp(95.1*b1 + b2)) - 22.2*b1
+		+ ln(exp(91.5*b1) + exp(41.6*b1 + b2)) - (41.6*b1 + b2)
+		- 6.16604221241775
+	) < 5e-7;
+END self_test;
+
+METHOD on_load;
+	b1 := 0.0;
+	b2 := 0.0;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION step_tol 1e-7;
+	OPTION merit_tol 1e-14;
+	OPTION hessian 'EXACT_LAGRANGIAN';
+END on_load;
+
+METHOD on_load_test;
+	b1 := 0.0;
+	b2 := 0.0;
+END on_load_test;
+END akiva;

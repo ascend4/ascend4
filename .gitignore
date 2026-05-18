@@ -14,6 +14,7 @@ coverage.info
 *.def
 *.exe
 *.swp
+*.odt
 .scon*
 a4
 tmp/
@@ -71,12 +72,12 @@ models/johnpye/datareader/CA_Daggett_Barstow.bin
 models/johnpye/datareader/daggett_ca_34.865371_-116.783023_psmv3_60_tmy.csv
 Highs.log
 .lcov/
-
-
 **/.claude/settings.local.json
 .aider*
 models/johnpye/fprops/test/eqm_case_runner
 models/johnpye/fprops/test/eqm_mu0_runner
 models/johnpye/fprops/test/eqm_nox_runner
+cutest_a4sqp_ipoptc_results.jsonl
+cutest_a4sqp_ipoptc_logs/
 models/johnpye/fprops/examples/feoh
 models/johnpye/fprops/*.odt

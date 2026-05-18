@@ -240,6 +240,13 @@ else: # LINUX, unix we hope
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_dlpath= default_conopt_libpath + ":/usr/local/lib"
 	default_conopt_lib="consub3"
+	local_conopt_prefix = os.path.expanduser("~/.local")
+	if (
+		os.path.exists(os.path.join(local_conopt_prefix,"include","conopt.h"))
+		and os.path.exists(os.path.join(local_conopt_prefix,"lib","libconopt.so"))
+	):
+		default_conopt_prefix = local_conopt_prefix
+		default_conopt_lib = "conopt"
 
 	need_libm = True
 	if not os.path.isdir(default_tcl):
@@ -447,13 +454,13 @@ vars.Add(
 
 # Which solvers will we allow?
 vars.Add(ListVariable('WITH_SOLVERS'
-	,"List of the solvers you want to build. The default is the minimum that"	
-		+" works. The option 'LSOD' is provided for backwards compatibility"
+	,"List of the solvers you want to build. The default includes the open"
+		+" solvers normally available in a developer build. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS','MAKEMPS']
+	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS',"A4SQP","SLSQP",'MAKEMPS']
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","RADAU5"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","A4SQP","SLSQP","RADAU5"
 	 ]
 ))
 
@@ -1164,7 +1171,7 @@ def _explicit_bool_argument(name):
 	value = str(ARGUMENTS[name]).strip().lower()
 	return value not in ('0', 'false', 'no', 'off', 'none')
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS':
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP':
 	name = 'WITH_%s' % solv
 	explicit = _explicit_bool_argument(name)
 	if explicit is None:
@@ -1175,7 +1182,6 @@ for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS':
 		if not explicit and solv in env['WITH_SOLVERS']:
 			env['WITH_SOLVERS'].remove(solv)
 		env.set_optional(solv,active = explicit, reason="%s=%d" % (name, 1 if explicit else 0))
-	
 
 print(f"DEBUG: WITH_CUNIT = {env['WITH_CUNIT']}")
 print(f"DEBUG: WITH_IPOPT = {env['WITH_IPOPT']}")
@@ -1609,6 +1615,12 @@ def CheckLexDestroy(context):
 
 cunit_test_text = """
 #include <CUnit/CUnit.h>
+#ifndef CU_SKIP
+#error "CUnit 2.3.0 or newer is required for CU_SKIP"
+#endif
+#ifndef CU_SKIP_IF
+#error "CUnit 2.3.0 or newer is required for CU_SKIP_IF"
+#endif
 int maxi(int i1, int i2){
 	return (i1 > i2) ? i1 : i2;
 }
@@ -2702,14 +2714,17 @@ if env.get('WITH_DOC'):
 
 # bool options...
 for k,v in {
-			'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
-			,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
-			,'ASC_WITH_MMIO':env['WITH_MMIO']
-			,'ASC_WITH_ZLIB':env['WITH_ZLIB']
-			,'ASC_WITH_LZMA':env['WITH_LZMA']
-			,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
-			,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
-			,'ASC_WITH_PCRE':env['WITH_PCRE']
+				'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
+				,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
+				,'ASC_WITH_MMIO':env['WITH_MMIO']
+				,'ASC_WITH_ZLIB':env['WITH_ZLIB']
+				,'ASC_WITH_LZMA':env['WITH_LZMA']
+				,'ASC_WITH_MAKEMPS':env['WITH_MAKEMPS']
+				,'ASC_WITH_IPOPT':env['WITH_IPOPT']
+				,'ASC_WITH_HIGHS':env['WITH_HIGHS']
+				,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
+				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
+				,'ASC_WITH_PCRE':env['WITH_PCRE']
 			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
 			,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 			,'HAVE_GCCVISIBILITY':env.get('HAVE_GCCVISIBILITY')
@@ -2901,6 +2916,8 @@ for k,v in {
 	'ASC_HAVE_MAKEMPS': env['OPTIONALS'].get('makemps', (False, None))[0],
 	'ASC_HAVE_IPOPT': env['OPTIONALS'].get('ipopt', (False, None))[0],
 	'ASC_HAVE_HIGHS': env['OPTIONALS'].get('highs', (False, None))[0],
+	'ASC_HAVE_A4SQP': env['OPTIONALS'].get('a4sqp', (False, None))[0],
+	'ASC_HAVE_SLSQP': env['OPTIONALS'].get('slsqp', (False, None))[0],
 }.items():
 	subst_dict['@%s@' %(k,)] = "#define %s 1" %(k,) if v else "// %s is not set." %(k,)
 

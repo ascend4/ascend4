@@ -1,0 +1,50 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL rosenbr;
+	x1, x2 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			Two-variable Rosenbrock "banana valley" problem.
+			SIF equivalent:
+			    minimize (1 - x1)^2 + 100*(x2 - x1^2)^2
+			Known solution:
+			    x1 = 1
+			    x2 = 1
+			    f  = 0
+		}
+		'source' SELF {
+			J.J. More', B.S. Garbow and K.E. Hillstrom,
+			"Testing unconstrained optimization software",
+			ACM Transactions on Mathematical Software, 7(1), 17-41, 1981.
+			SIF input by Ph. Toint, December 1989, corrected July 1993.
+		}
+		'problem_origin' SELF {
+			This is a synthetic unconstrained optimization test function,
+			not a physical model.
+		}
+	END NOTES;
+
+	obj: MINIMIZE (1 - x1)^2 + 100*(x2 - x1^2)^2;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1 - 1.0) < 1e-4;
+	ASSERT abs(x2 - 1.0) < 1e-4;
+	ASSERT abs(((1 - x1)^2 + 100*(x2 - x1^2)^2)) < 1e-8;
+END self_test;
+
+METHOD on_load;
+	x1 := -1.2;
+	x2 := 1.0;
+	SOLVER A4SQP;
+	OPTION max_iter 500;
+END on_load;
+
+METHOD on_load_test;
+	x1 := -1.2;
+	x2 := 1.0;
+END on_load_test;
+END rosenbr;

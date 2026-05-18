@@ -152,6 +152,15 @@ Current CLI behavior for dynamic models is:
 - `./a4 int model.a4c ...`
   - shorthand alias for `./a4 run --integrate ...`
 
+CLI output channels are intentionally separate:
+
+- without `--output`, integration result rows are printed as a CLI table.
+- `--output FILE` writes integration result rows as TSV instead of printing
+  the result table.
+- `--progress` prints additional run-progress messages to the terminal.
+- When both are supplied, the TSV output is still written and progress is also
+  shown on the CLI; progress output is not a replacement for result output.
+
 ## Why `OBSERVE` Is Procedural
 
 Observation lists need to be usable:
@@ -205,6 +214,8 @@ Implemented now:
   Python integration path
 - CLI integration reporting now supports `--microstates none|endpoints|all`
   and optional plotting with event rows shown as distinct markers
+- `./a4 run --progress` prints solver progress for steady solves and
+  integrator progress for dynamic runs, independently of `--output FILE`
 
 Current limitations:
 

@@ -423,6 +423,7 @@ static int SimplifyTermBuf_Func(struct relation_term *arg,
       }
 #ifdef HAVE_ERF
     case F_ERF:
+    case F_ERFC_SCALED:
 #endif
     case F_SINH:
     case F_ARCSINH:
@@ -578,6 +579,9 @@ static int SimplifyTermBuf_Func(struct relation_term *arg,
     case F_TANH:
 #ifdef HAVE_ERG
 	case F_ERF:
+#endif
+#ifdef HAVE_ERF
+	case F_ERFC_SCALED:
 #endif
       if (IsWild(TermDimensions(arg)) ||
           SameDimen(TermDimensions(arg),Dimensionless())) {

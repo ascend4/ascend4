@@ -13,7 +13,7 @@ jobs:
     env:
       OMP_NUM_THREADS: "1"
       ASCEND_CI_HIGHS_SERIAL: "1"
-      CUNIT_VERSION: "2.2.4"
+      CUNIT_VERSION: "2.3.0"
       CUNIT_PKGREL: "6"
 
     defaults:
@@ -46,6 +46,7 @@ jobs:
           mingw-w64-${{matrix.env}}-gdb
           mingw-w64-${{matrix.env}}-pkg-config
           mingw-w64-${{matrix.env}}-highs
+          mingw-w64-${{matrix.env}}-nlopt
           mingw-w64-${{matrix.env}}-python
           mingw-w64-${{matrix.env}}-python-pip
           mingw-w64-${{matrix.env}}-python-wheel

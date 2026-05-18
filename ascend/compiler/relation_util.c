@@ -29,6 +29,7 @@
 #include <math.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "relation_util.h"
 
@@ -136,6 +137,30 @@ static void append_soln( struct ds_soln_list *sl, double soln);
 static struct relation *RelationTmpTokenCopy(CONST struct relation *src);
 static int RelationTmpCopySide(union RelationTermUnion *old,unsigned long len,union RelationTermUnion *arr);
 static struct relation *RelationCreateTmp(unsigned long lhslen, unsigned long rhslen, enum Expr_enum relop);
+
+struct rel_lsq_state {
+	struct RelationLeastSquaresAnalysis *out;
+	RelationLeastSquaresResidualFn residual_fn;
+	void *userdata;
+};
+
+static void rel_lsq_set_status(struct rel_lsq_state *state, enum RelationLeastSquaresStatus status, const char *reason);
+static int rel_lsq_analyse_sum(CONST struct relation_term *term, int sign, struct rel_lsq_state *state);
+static int rel_lsq_analyse_term(CONST struct relation_term *term, int sign, struct rel_lsq_state *state);
+static int rel_lsq_term_is_square(CONST struct relation_term *term);
+static CONST struct relation_term *rel_lsq_square_residual(CONST struct relation_term *term);
+static int rel_lsq_term_is_numeric_constant(CONST struct relation_term *term, double *value);
+static int rel_lsq_term_is_positive_constant(CONST struct relation_term *term, double *value);
+static int rel_lsq_term_is_zero_constant(CONST struct relation_term *term);
+static void rel_eval_zero_gradient(double *gradient, unsigned long nvar);
+static int rel_eval_gradient_any_nonzero(const double *gradient, unsigned long nvar);
+static enum safe_err rel_eval_term_safe(
+	CONST struct relation *rel,
+	CONST struct relation_term *term,
+	double *value,
+	double *gradient,
+	unsigned long nvar
+);
 
 /* the following appear only to be used locally, so I've made them static  -- JP */
 
@@ -287,6 +312,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
             case F_LOG10:
 #ifdef HAVE_ERF
             case F_ERF:
+            case F_ERFC_SCALED:
 #endif /* HAVE_ERF */
             case F_SINH:
             case F_COSH:
@@ -1888,6 +1914,486 @@ struct relation_term *RelationINF_Lhs(CONST struct relation *rel){
 
 struct relation_term *RelationINF_Rhs(CONST struct relation *rel){
   return RTOKEN(rel).rhs_term;
+}
+
+static enum safe_err rel_eval_term_safe(
+	CONST struct relation *rel,
+	CONST struct relation_term *term,
+	double *value,
+	double *gradient,
+	unsigned long nvar
+){
+	enum safe_err status;
+	double left;
+	double right;
+	double term_value;
+	double scale;
+	double *grad_left = NULL;
+	double *grad_right = NULL;
+	unsigned long i;
+	unsigned long varnum;
+	int want_gradient;
+
+	if(rel == NULL || term == NULL || value == NULL){
+		return safe_problem;
+	}
+	want_gradient = gradient != NULL;
+	if(want_gradient){
+		rel_eval_zero_gradient(gradient, nvar);
+	}
+
+	switch(RelationTermType(term)){
+	case e_zero:
+		*value = 0.0;
+		return safe_ok;
+	case e_real:
+		*value = TermReal(term);
+		return safe_ok;
+	case e_int:
+		*value = (double)TermInteger(term);
+		return safe_ok;
+	case e_var:
+	case e_der:
+		*value = TermVariable(rel, term);
+		if(want_gradient){
+			varnum = TermVarNumber(term);
+			if(varnum < 1 || varnum > nvar){
+				return safe_problem;
+			}
+			gradient[varnum - 1] = 1.0;
+		}
+		return safe_ok;
+	default:
+		break;
+	}
+
+	if(want_gradient && nvar > 0){
+		grad_left = ASC_NEW_ARRAY_CLEAR(double, nvar);
+		grad_right = ASC_NEW_ARRAY_CLEAR(double, nvar);
+		if(grad_left == NULL || grad_right == NULL){
+			if(grad_left != NULL) ASC_FREE(grad_left);
+			if(grad_right != NULL) ASC_FREE(grad_right);
+			return safe_problem;
+		}
+	}
+
+	status = safe_ok;
+	switch(RelationTermType(term)){
+	case e_plus:
+		status = rel_eval_term_safe(rel, TermBinLeft(term), &left, grad_left, nvar);
+		if(status != safe_ok) break;
+		status = rel_eval_term_safe(rel, TermBinRight(term), &right, grad_right, nvar);
+		if(status != safe_ok) break;
+		*value = safe_add_D0(left, right, &status);
+		if(status == safe_ok && want_gradient){
+			for(i = 0; i < nvar; ++i) gradient[i] = grad_left[i] + grad_right[i];
+		}
+		break;
+	case e_minus:
+		status = rel_eval_term_safe(rel, TermBinLeft(term), &left, grad_left, nvar);
+		if(status != safe_ok) break;
+		status = rel_eval_term_safe(rel, TermBinRight(term), &right, grad_right, nvar);
+		if(status != safe_ok) break;
+		*value = safe_sub_D0(left, right, &status);
+		if(status == safe_ok && want_gradient){
+			for(i = 0; i < nvar; ++i) gradient[i] = grad_left[i] - grad_right[i];
+		}
+		break;
+	case e_times:
+		status = rel_eval_term_safe(rel, TermBinLeft(term), &left, grad_left, nvar);
+		if(status != safe_ok) break;
+		status = rel_eval_term_safe(rel, TermBinRight(term), &right, grad_right, nvar);
+		if(status != safe_ok) break;
+		*value = safe_mul_D0(left, right, &status);
+		if(status == safe_ok && want_gradient){
+			for(i = 0; i < nvar; ++i) gradient[i] = grad_left[i] * right + grad_right[i] * left;
+		}
+		break;
+	case e_divide:
+		status = rel_eval_term_safe(rel, TermBinLeft(term), &left, grad_left, nvar);
+		if(status != safe_ok) break;
+		status = rel_eval_term_safe(rel, TermBinRight(term), &right, grad_right, nvar);
+		if(status != safe_ok) break;
+		*value = safe_div_D0(left, right, &status);
+		if(status == safe_ok && want_gradient){
+			if(right == 0.0){
+				status = safe_div_by_zero;
+				break;
+			}
+			for(i = 0; i < nvar; ++i){
+				gradient[i] = (grad_left[i] * right - left * grad_right[i]) / (right * right);
+			}
+		}
+		break;
+	case e_power:
+		status = rel_eval_term_safe(rel, TermBinLeft(term), &left, grad_left, nvar);
+		if(status != safe_ok) break;
+		status = rel_eval_term_safe(rel, TermBinRight(term), &right, grad_right, nvar);
+		if(status != safe_ok) break;
+		term_value = safe_pow_D0(left, right, &status);
+		*value = term_value;
+		if(status == safe_ok && want_gradient){
+			if(rel_eval_gradient_any_nonzero(grad_right, nvar)){
+				if(left <= 0.0){
+					status = safe_complex_result;
+					break;
+				}
+				for(i = 0; i < nvar; ++i){
+					gradient[i] += term_value * grad_right[i] * log(left);
+				}
+			}
+			if(left == 0.0 && right < 1.0 && rel_eval_gradient_any_nonzero(grad_left, nvar)){
+				status = safe_div_by_zero;
+				break;
+			}
+			if(left != 0.0 || right > 1.0){
+				scale = right * pow(left, right - 1.0);
+				for(i = 0; i < nvar; ++i){
+					gradient[i] += scale * grad_left[i];
+				}
+			}
+		}
+		break;
+	case e_ipower:
+		status = rel_eval_term_safe(rel, TermBinLeft(term), &left, grad_left, nvar);
+		if(status != safe_ok) break;
+		status = rel_eval_term_safe(rel, TermBinRight(term), &right, grad_right, nvar);
+		if(status != safe_ok) break;
+		*value = safe_ipow_D0(left, (int)right, &status);
+		if(status == safe_ok && want_gradient){
+			if((int)right != 0){
+				scale = (double)((int)right) * asc_ipow(left, (int)right - 1);
+				for(i = 0; i < nvar; ++i){
+					gradient[i] = scale * grad_left[i];
+				}
+			}
+			if(rel_eval_gradient_any_nonzero(grad_right, nvar)){
+				status = safe_problem;
+			}
+		}
+		break;
+	case e_uminus:
+		status = rel_eval_term_safe(rel, TermUniLeft(term), &left, grad_left, nvar);
+		if(status != safe_ok) break;
+		*value = -left;
+		if(want_gradient){
+			for(i = 0; i < nvar; ++i){
+				gradient[i] = -grad_left[i];
+			}
+		}
+		break;
+	case e_func:
+		status = rel_eval_term_safe(rel, TermFuncLeft(term), &left, grad_left, nvar);
+		if(status != safe_ok) break;
+		*value = FuncEvalSafe(TermFunc(term), left, &status);
+		if(status == safe_ok && want_gradient){
+			scale = FuncDerivSafe(TermFunc(term), left, &status);
+			if(status == safe_ok){
+				for(i = 0; i < nvar; ++i){
+					gradient[i] = scale * grad_left[i];
+				}
+			}
+		}
+		break;
+	default:
+		status = safe_problem;
+		break;
+	}
+
+	if(grad_left != NULL) ASC_FREE(grad_left);
+	if(grad_right != NULL) ASC_FREE(grad_right);
+	return status;
+}
+
+enum safe_err RelationEvaluateTermSafe(
+	CONST struct relation *rel,
+	CONST struct relation_term *term,
+	double *value
+){
+	return rel_eval_term_safe(rel, term, value, NULL, 0);
+}
+
+static void rel_eval_zero_gradient(double *gradient, unsigned long nvar){
+	unsigned long i;
+	for(i = 0; i < nvar; ++i){
+		gradient[i] = 0.0;
+	}
+}
+
+static int rel_eval_gradient_any_nonzero(const double *gradient, unsigned long nvar){
+	unsigned long i;
+	for(i = 0; i < nvar; ++i){
+		if(gradient[i] != 0.0){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+enum safe_err RelationEvaluateTermGradientSafe(
+	CONST struct relation *rel,
+	CONST struct relation_term *term,
+	double *value,
+	double *gradient,
+	unsigned long gradient_len
+){
+	unsigned long nvar;
+	if(rel == NULL || term == NULL || value == NULL || gradient == NULL){
+		return safe_problem;
+	}
+	nvar = NumberVariables(rel);
+	if(gradient_len < nvar){
+		return safe_problem;
+	}
+	return rel_eval_term_safe(rel, term, value, gradient, nvar);
+}
+
+static void rel_lsq_set_status(struct rel_lsq_state *state, enum RelationLeastSquaresStatus status, const char *reason){
+	if(state == NULL || state->out == NULL){
+		return;
+	}
+	if(state->out->status == rel_lsq_ok && status != rel_lsq_ok){
+		state->out->status = status;
+		state->out->reason = reason;
+	}
+}
+
+static int rel_lsq_term_is_zero_constant(CONST struct relation_term *term){
+	if(term == NULL){
+		return 0;
+	}
+	switch(RelationTermType(term)){
+	case e_zero:
+		return 1;
+	case e_int:
+		return I_TERM(term)->ivalue == 0;
+	case e_real:
+		return R_TERM(term)->value == 0.0;
+	default:
+		return 0;
+	}
+}
+
+static int rel_lsq_term_is_numeric_constant(CONST struct relation_term *term, double *value){
+	double v;
+	if(term == NULL){
+		return 0;
+	}
+	switch(RelationTermType(term)){
+	case e_int:
+		v = (double)I_TERM(term)->ivalue;
+		break;
+	case e_real:
+		v = R_TERM(term)->value;
+		break;
+	default:
+		return 0;
+	}
+	if(value != NULL){
+		*value = v;
+	}
+	return 1;
+}
+
+static int rel_lsq_term_is_positive_constant(CONST struct relation_term *term, double *value){
+	double v;
+	if(!rel_lsq_term_is_numeric_constant(term, &v)){
+		return 0;
+	}
+	if(value != NULL){
+		*value = v;
+	}
+	return v > 0.0;
+}
+
+static int rel_lsq_term_is_square(CONST struct relation_term *term){
+	return rel_lsq_square_residual(term) != NULL;
+}
+
+static CONST struct relation_term *rel_lsq_square_residual(CONST struct relation_term *term){
+	CONST struct relation_term *right;
+
+	if(term == NULL){
+		return NULL;
+	}
+	switch(RelationTermType(term)){
+	case e_ipower:
+		right = B_TERM(term)->right;
+		if(right != NULL
+			&& RelationTermType(right) == e_int
+			&& I_TERM(right)->ivalue == 2){
+			return B_TERM(term)->left;
+		}
+		return NULL;
+	case e_power:
+		right = B_TERM(term)->right;
+		if(right == NULL){
+			return NULL;
+		}
+		if(RelationTermType(right) == e_int){
+			return I_TERM(right)->ivalue == 2 ? B_TERM(term)->left : NULL;
+		}
+		if(RelationTermType(right) == e_real){
+			return R_TERM(right)->value == 2.0 ? B_TERM(term)->left : NULL;
+		}
+		return NULL;
+	default:
+		return NULL;
+	}
+}
+
+static int rel_lsq_emit_residual(struct rel_lsq_state *state, CONST struct relation_term *residual, double weight){
+	if(state->residual_fn == NULL){
+		return 1;
+	}
+	return state->residual_fn(residual, weight, state->userdata) == 0;
+}
+
+static int rel_lsq_analyse_term(CONST struct relation_term *term, int sign, struct rel_lsq_state *state){
+	CONST struct relation_term *left;
+	CONST struct relation_term *right;
+	double weight;
+	int left_square;
+	int right_square;
+	CONST struct relation_term *residual;
+
+	if(term == NULL){
+		rel_lsq_set_status(state, rel_lsq_not_sum_of_squares, "empty term");
+		return 0;
+	}
+	if(rel_lsq_term_is_zero_constant(term)){
+		return 1;
+	}
+	if(sign < 0){
+		rel_lsq_set_status(state, rel_lsq_nonpositive_weight, "subtracted square term");
+		return 0;
+	}
+	residual = rel_lsq_square_residual(term);
+	if(residual != NULL){
+		state->out->residual_count++;
+		return rel_lsq_emit_residual(state, residual, 1.0);
+	}
+
+	switch(RelationTermType(term)){
+	case e_times:
+		left = B_TERM(term)->left;
+		right = B_TERM(term)->right;
+		left_square = rel_lsq_term_is_square(left);
+		right_square = rel_lsq_term_is_square(right);
+		if(left_square && rel_lsq_term_is_positive_constant(right, &weight)){
+			state->out->residual_count++;
+			state->out->weighted_count++;
+			return rel_lsq_emit_residual(state, rel_lsq_square_residual(left), weight);
+		}
+		if(right_square && rel_lsq_term_is_positive_constant(left, &weight)){
+			state->out->residual_count++;
+			state->out->weighted_count++;
+			return rel_lsq_emit_residual(state, rel_lsq_square_residual(right), weight);
+		}
+		if((left_square && rel_lsq_term_is_numeric_constant(right, &weight))
+			|| (right_square && rel_lsq_term_is_numeric_constant(left, &weight))){
+			rel_lsq_set_status(state, rel_lsq_nonpositive_weight, "square term has nonpositive weight");
+			return 0;
+		}
+		if(left_square || right_square){
+			rel_lsq_set_status(state, rel_lsq_variable_weight, "square term has non-constant weight");
+		}else{
+			rel_lsq_set_status(state, rel_lsq_not_sum_of_squares, "product is not weighted square");
+		}
+		return 0;
+	case e_divide:
+		left = B_TERM(term)->left;
+		right = B_TERM(term)->right;
+		if(rel_lsq_term_is_square(left) && rel_lsq_term_is_positive_constant(right, &weight)){
+			state->out->residual_count++;
+			state->out->weighted_count++;
+			return rel_lsq_emit_residual(state, rel_lsq_square_residual(left), 1.0 / weight);
+		}
+		if(rel_lsq_term_is_square(left) && rel_lsq_term_is_numeric_constant(right, &weight)){
+			rel_lsq_set_status(state, rel_lsq_nonpositive_weight, "square term has nonpositive divisor");
+			return 0;
+		}
+		if(rel_lsq_term_is_square(left)){
+			rel_lsq_set_status(state, rel_lsq_variable_weight, "square term has non-constant divisor");
+		}else{
+			rel_lsq_set_status(state, rel_lsq_not_sum_of_squares, "quotient is not weighted square");
+		}
+		return 0;
+	case e_uminus:
+		rel_lsq_set_status(state, rel_lsq_nonpositive_weight, "negated square term");
+		return 0;
+	default:
+		rel_lsq_set_status(state, rel_lsq_not_sum_of_squares, "term is not a square");
+		return 0;
+	}
+}
+
+static int rel_lsq_analyse_sum(CONST struct relation_term *term, int sign, struct rel_lsq_state *state){
+	if(term == NULL){
+		rel_lsq_set_status(state, rel_lsq_empty_objective, "empty objective");
+		return 0;
+	}
+	switch(RelationTermType(term)){
+	case e_plus:
+		return rel_lsq_analyse_sum(B_TERM(term)->left, sign, state)
+			&& rel_lsq_analyse_sum(B_TERM(term)->right, sign, state);
+	case e_minus:
+		return rel_lsq_analyse_sum(B_TERM(term)->left, sign, state)
+			&& rel_lsq_analyse_sum(B_TERM(term)->right, -sign, state);
+	default:
+		return rel_lsq_analyse_term(term, sign, state);
+	}
+}
+
+int RelationAnalyzeLeastSquaresObjectiveWithResiduals(
+	CONST struct relation *rel,
+	struct RelationLeastSquaresAnalysis *analysis,
+	RelationLeastSquaresResidualFn residual_fn,
+	void *userdata
+){
+	struct RelationLeastSquaresAnalysis local;
+	struct rel_lsq_state state;
+	CONST struct relation_term *lhs;
+
+	if(analysis == NULL){
+		analysis = &local;
+	}
+	memset(analysis, 0, sizeof(*analysis));
+	analysis->status = rel_lsq_ok;
+	analysis->reason = "least-squares objective";
+
+	if(rel == NULL){
+		analysis->status = rel_lsq_null_relation;
+		analysis->reason = "null relation";
+		return 0;
+	}
+	if(RelationRelop(rel) != e_minimize){
+		analysis->status = rel_lsq_not_minimize;
+		analysis->reason = "relation is not a MINIMIZE objective";
+		return 0;
+	}
+
+	lhs = Infix_LhsSide(rel);
+	if(lhs == NULL){
+		analysis->status = rel_lsq_not_token_relation;
+		analysis->reason = "objective has no token infix tree";
+		return 0;
+	}
+
+	state.out = analysis;
+	state.residual_fn = residual_fn;
+	state.userdata = userdata;
+	analysis->is_least_squares = rel_lsq_analyse_sum(lhs, 1, &state)
+		&& analysis->residual_count > 0;
+	if(!analysis->is_least_squares && analysis->status == rel_lsq_ok){
+		analysis->status = rel_lsq_not_sum_of_squares;
+		analysis->reason = "objective has no square residual terms";
+	}
+	return analysis->is_least_squares;
+}
+
+int RelationAnalyzeLeastSquaresObjective(CONST struct relation *rel, struct RelationLeastSquaresAnalysis *analysis){
+	return RelationAnalyzeLeastSquaresObjectiveWithResiduals(rel, analysis, NULL, NULL);
 }
 
 struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel)

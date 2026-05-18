@@ -425,6 +425,50 @@ int list_tests(const char *suitename0){
 	return CUE_NO_SUITENAME;
 }
 
+static void list_failed_tests(void){
+	CU_pFailureRecord failure = CU_get_failure_list();
+	unsigned int i = 1;
+
+	if(failure == NULL){
+		fprintf(stdout,"\nNo failures.\n");
+		return;
+	}
+
+	fprintf(stdout,"\n--------------- Test Run Failures -------------------------\n");
+	fprintf(stdout,"   src_file:line# : (suite:test) : failure_condition\n");
+	for(; failure != NULL; failure = failure->pNext, ++i){
+		const char *file = failure->strFileName != NULL ? failure->strFileName : "";
+		const char *suite = (failure->pSuite != NULL && failure->pSuite->pName != NULL) ? failure->pSuite->pName : "";
+		const char *test = (failure->pTest != NULL && failure->pTest->pName != NULL) ? failure->pTest->pName : "";
+		const char *condition = failure->strCondition != NULL ? failure->strCondition : "";
+		fprintf(stdout,"\n%u. %s:%u : (%s : %s) : %s",i,file,failure->uiLineNumber,suite,test,condition);
+	}
+	fprintf(stdout,"\n-----------------------------------------------------------\n");
+	fprintf(stdout,"Total Number of Failures : %-u\n",i - 1);
+}
+
+static void list_skipped_tests(void){
+	CU_pSkipRecord skip = CU_get_skip_list();
+	unsigned int i = 1;
+
+	if(skip == NULL){
+		fprintf(stdout,"\nNo skipped tests.\n");
+		return;
+	}
+
+	fprintf(stdout,"\n--------------- Test Run Skips ----------------------------\n");
+	fprintf(stdout,"   src_file:line# : (suite:test) : skip_reason\n");
+	for(; skip != NULL; skip = skip->pNext, ++i){
+		const char *file = skip->strFileName != NULL ? skip->strFileName : "";
+		const char *suite = (skip->pSuite != NULL && skip->pSuite->pName != NULL) ? skip->pSuite->pName : "";
+		const char *test = (skip->pTest != NULL && skip->pTest->pName != NULL) ? skip->pTest->pName : "";
+		const char *reason = skip->strReason != NULL ? skip->strReason : "";
+		fprintf(stdout,"\n%u. %s:%u : (%s : %s) : %s",i,file,skip->uiLineNumber,suite,test,reason);
+	}
+	fprintf(stdout,"\n-----------------------------------------------------------\n");
+	fprintf(stdout,"Total Number of Skips : %-u\n",i - 1);
+}
+
 char ASC_TEST_PATH[PATH_MAX];
 
 /**
@@ -436,6 +480,9 @@ int main(int argc, char* argv[]){
 	CU_ErrorCode result = 0;
 	char suitename[1000];
 	char list = 0;
+	int list_failures = 0;
+	int list_skipped = 0;
+	int ran_tests = 0;
 
 #ifdef __WIN32__
 	SetErrorMode(SEM_NOGPFAULTERRORBOX);
@@ -456,8 +503,10 @@ int main(int argc, char* argv[]){
 		{"run",        required_argument, 0, 'r'},
 		{"help",       no_argument,       0, '?'},
 		{"usage",      no_argument,       0, '?'},
-		{"list-suites",no_argument,       0, 'l'},
-		{"list-tests", required_argument, 0, 't'},
+		{"list-suites", no_argument,      0, 'l'},
+		{"list-tests",  required_argument,0, 't'},
+		{"list-failures",no_argument,     0, 0},
+		{"list-skipped",no_argument,      0, 0},
 		{0, 0, 0, 0}
 	};
 
@@ -476,6 +525,8 @@ int main(int argc, char* argv[]){
 		"    --help\n"
 		"    --list-suites, -l\n"
 		"    --list-tests=SUITENAME, -tSUITENAME\n"
+		"    --list-failures show failure records after the run\n"
+		"    --list-skipped  show skipped-test records after the run\n"
 	;
 
 	int c;
@@ -483,63 +534,74 @@ int main(int argc, char* argv[]){
 	int op_error = 0;
 	while(-1 != (c = getopt_long (argc, argv, "-vsnr:e:t:l", long_options, &option_index))){
 		switch(c){
-			case 'v': mode = CU_BRM_VERBOSE; g_capture_enabled = 0; break;
-			case 's': mode = CU_BRM_SILENT; break;
-			case 'n': mode = CU_BRM_NORMAL; break;
-			case 'r':
-				oplist_append(&ops, OP_FILE, optarg);
+		case 'v':
+			mode = CU_BRM_VERBOSE;
+			g_capture_enabled = 0;
+			break;
+		case 's':
+			mode = CU_BRM_SILENT;
+			break;
+		case 'n':
+			mode = CU_BRM_NORMAL;
+			break;
+		case 'r':
+			oplist_append(&ops, OP_FILE, optarg);
+			break;
+		case 'e':
+			if(optarg[0] == '-'){
+				fprintf(stderr, "Invalid excluded test name '%s'\n", optarg);
+				op_error = 1;
 				break;
-			case 'e':
-				if(optarg[0] == '-'){
-					fprintf(stderr, "Invalid excluded test name '%s'\n", optarg);
-					op_error = 1;
-					break;
+			}
+			oplist_append(&ops, OP_REMOVE, optarg);
+			break;
+		case 0:
+			if(strcmp(long_options[option_index].name, "on-error") == 0){
+				if(0==strcmp(optarg,"fail")){
+					fprintf(stderr,"on error FAIL\n");
+					error_action = CUEA_FAIL;
+				}else if(0==strcmp(optarg,"abort")){
+					fprintf(stderr,"on error ABORT\n");
+					error_action = CUEA_ABORT;
+				}else if(0==strcmp(optarg,"ignore")){
+					error_action = CUEA_IGNORE;
+				}else{
+					fprintf(stderr,"Invalid argument for --on-error option!\n");
+					result = 1;
+					goto cleanup;
 				}
-				oplist_append(&ops, OP_REMOVE, optarg);
+			}else if(strcmp(long_options[option_index].name, "list-failures") == 0){
+				list_failures = 1;
+			}else if(strcmp(long_options[option_index].name, "list-skipped") == 0){
+				list_skipped = 1;
+			}
+			break;
+		case 'l':
+			list = 1;
+			suitename[0] = '\0';
+			break;
+		case 't':
+			list = 1;
+			strncpy(suitename, optarg, 999);
+			break;
+		case 1:
+			if(optarg[0] == '-'){
+				fprintf(stderr, "Invalid test name '%s'\n", optarg);
+				op_error = 1;
 				break;
-			case 0:
-				if(strcmp(long_options[option_index].name, "on-error") == 0){
-					if(0==strcmp(optarg,"fail")){
-						fprintf(stderr,"on error FAIL\n");
-						error_action = CUEA_FAIL;
-					}else if(0==strcmp(optarg,"abort")){
-						fprintf(stderr,"on error ABORT\n");
-						error_action = CUEA_ABORT;
-					}else if(0==strcmp(optarg,"ignore")){
-						error_action = CUEA_IGNORE;
-					}else{
-						fprintf(stderr,"Invalid argument for --on-error option!\n");
-						result = 1;
-						goto cleanup;
-					}
-				}
-				break;
-			case 'l':
-				list = 1;
-				suitename[0] = '\0';
-				break;
-			case 't':
-				list = 1;
-				strncpy(suitename, optarg, 999);
-				break;
-			case 1:
-				if(optarg[0] == '-'){
-					fprintf(stderr, "Invalid test name '%s'\n", optarg);
-					op_error = 1;
-					break;
-				}
-				oplist_append(&ops, OP_ADD, optarg);
-				break;
-			case '?':
-			case 'h':
-				fprintf(stderr,usage,argv[0]);
-				result = 1;
-				goto cleanup;
-			default:
-				fprintf(stderr,"Unknown option -- '%c'", c);
-				fprintf(stderr,usage,argv[0]);
-				result = 2;
-				goto cleanup;
+			}
+			oplist_append(&ops, OP_ADD, optarg);
+			break;
+		case '?':
+		case 'h':
+			fprintf(stderr,usage,argv[0]);
+			result = 1;
+			goto cleanup;
+		default:
+			fprintf(stderr,"Unknown option -- '%c'", c);
+			fprintf(stderr,usage,argv[0]);
+			result = 2;
+			goto cleanup;
 		}
 	}
 
@@ -590,6 +652,7 @@ int main(int argc, char* argv[]){
 		}else{
 			result = CU_basic_run_selected_tests(0, NULL);
 		}
+		ran_tests = 1;
 cleanup_ops:
 		strlist_free(&expanded);
 	}else{
@@ -602,6 +665,13 @@ cleanup_ops:
 			goto cleanup;
 		}
 		result = CU_basic_run_tests();
+		ran_tests = 1;
+	}
+	if(ran_tests && list_failures){
+		list_failed_tests();
+	}
+	if(ran_tests && list_skipped){
+		list_skipped_tests();
 	}
 
 cleanup:

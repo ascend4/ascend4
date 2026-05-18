@@ -70,6 +70,7 @@ enum Func_enum {
    F_SQR, F_SQRT,
 #ifdef HAVE_ERF
    F_ERF,
+   F_ERFC_SCALED,
 #endif
    F_LNM, F_SINH, F_COSH, F_TANH,
    F_ARCSINH, F_ARCCOSH, F_ARCTANH,
@@ -108,4 +109,3 @@ struct Func {
 /* @} */
 
 #endif   /* ASC_FUNCTYPE_H */
-

@@ -276,9 +276,12 @@ ASC_DLLSPEC double datan2(double x);
 #ifdef HAVE_ERF
 ASC_DLLSPEC double derf(double x);
 ASC_DLLSPEC double derf2(double x);
+ASC_DLLSPEC double erfc_scaled(double x);
+ASC_DLLSPEC double derfc_scaled(double x);
+ASC_DLLSPEC double derfc_scaled2(double x);
 #endif /* HAVE_ERF */
 /**<
-	First and second derivatives of erf()
+	Scaled complementary error function exp(x^2)*erfc(x) and derivatives.
 */
 
 ASC_DLLSPEC CONST char *FuncName(CONST struct Func *f);

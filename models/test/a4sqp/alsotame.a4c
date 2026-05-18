@@ -1,0 +1,57 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL alsotame;
+	x, y IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst ALSOTAME.
+			Known CUTEst/IPOPTC objective from the current tracking run:
+			    f = 0.08208499864004787
+		}
+		'source' SELF {
+			A. R. Conn, N. Gould and Ph. L. Toint, "The LANCELOT
+			User's Manual", Department of Mathematics, FUNDP, 1991.
+			SIF input by Ph. L. Toint, January 1991.
+		}
+		'problem_origin' SELF {
+			This is a small equality-constrained benchmark with an
+			active upper bound at the local solution. It is retained as
+			a focused regression for active-bound stationarity.
+		}
+	END NOTES;
+
+	con1: sin((y - x - 1.0)*1{rad}) = 0.0;
+	obj: MINIMIZE exp(x - 2.0*y);
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x - 0.5) < 5e-5;
+	ASSERT abs(y - 1.5) < 5e-5;
+	ASSERT SATISFIED(con1,1e-7);
+END self_test;
+
+METHOD on_load;
+	x.lower_bound := -2.0;
+	x.upper_bound := 2.0;
+	y.lower_bound := -1.5;
+	y.upper_bound := 1.5;
+	x := 0.0;
+	y := 0.0;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+END on_load;
+
+METHOD on_load_test;
+	x.lower_bound := -2.0;
+	x.upper_bound := 2.0;
+	y.lower_bound := -1.5;
+	y.upper_bound := 1.5;
+	x := 0.0;
+	y := 0.0;
+END on_load_test;
+END alsotame;

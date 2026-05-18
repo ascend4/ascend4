@@ -159,6 +159,18 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 		self.browser = browser
 		self.solve_interrupt = False
 		SolverHooksPython.__init__(self)
+	def setSolver(self, solvername, sim):
+		res = SolverHooksPython.setSolver(self, solvername, sim)
+		if res == 0:
+			try:
+				self.browser.set_solver(sim.getSolver().getName())
+				_mi = self.browser.solver_engine_menu_dict.get(self.browser.solver.getName())
+				if _mi is not None and not _mi.get_active():
+					_mi.set_active(True)
+				self.browser.update_simulation_statusbar()
+			except Exception as e:
+				print("PYTHON ERROR:", str(e))
+		return res
 	def doSolve(self,inst,sim):
 		try:
 			self._build_for_target(sim, inst)

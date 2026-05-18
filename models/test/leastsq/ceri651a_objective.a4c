@@ -1,0 +1,56 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ceri651a_objective;
+	rows IS_A set OF integer_constant;
+	fields IS_A set OF symbol_constant;
+	data[rows][fields] IS_A real_constant;
+
+	c, ell, a, b, inten, sigma, center IS_A solver_var;
+
+	rows :== [9077..9081];
+	fields :== ['x','y','e'];
+
+	NOTES
+		'description' SELF {
+			Compact CERI651A-shaped least-squares objective for structural
+			objective analysis tests. The full optimisation problem is kept
+			under test/a4sqp for solver experiments.
+		}
+	END NOTES;
+
+	TABLE data[rows,fields];
+		: x y e
+		9077: 36850.625 0 1
+		9078: 36858 1.96083316 1.41421356
+		9079: 36865.375 2.94124974 1.73205081
+		9080: 36872.75 0.98041658 1
+		9081: 36880.125 5.88249948 2.44948974
+	END TABLE;
+
+	obj: MINIMIZE SUM[
+		(
+			(
+				c + ell*data[k]['x']
+				+ inten*a*b/(2.0*(a + b))
+					* exp(-0.5*((data[k]['x'] - center)/sigma)^2)
+					* (
+						erfc_scaled(0.7071067811865475*(a*sigma + (data[k]['x'] - center)/sigma))
+						+ erfc_scaled(0.7071067811865475*(b*sigma + (data[k]['x'] - center)/sigma))
+					)
+				- data[k]['y']
+			) / data[k]['e']
+		)^2
+		| k IN rows
+	];
+METHODS
+METHOD on_load;
+	c := 0.0;
+	ell := 0.0;
+	a := 1.0;
+	b := 0.05;
+	inten := 26061.4;
+	sigma := 38.7105;
+	center := 37027.1;
+END on_load;
+END ceri651a_objective;

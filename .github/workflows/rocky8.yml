@@ -14,8 +14,8 @@ jobs:
       image: rockylinux/rockylinux:8.10
 
     env:
-      CUNIT_VERSION: "2.2.4"
-      CUNIT_RELEASE_BASENAME: "cunit-2.2-4"
+      CUNIT_VERSION: "2.3.0"
+      CUNIT_RELEASE_BASENAME: "cunit-2.3-0"
       SUNDIALS_VERSION: "7.6.0"
       HIGHS_VERSION: "v1.13.1"
       OMP_NUM_THREADS: "1"
@@ -65,7 +65,7 @@ jobs:
           cd "$CUNIT_RELEASE_BASENAME"
           touch README
           ./bootstrap
-          ./configure --prefix="$HOME/.local" --enable-examples --enable-debug
+          ./configure --prefix="$HOME/.local" --enable-debug
           make -j"$(nproc)"
           make install
         '

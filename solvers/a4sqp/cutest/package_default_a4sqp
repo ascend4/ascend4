@@ -1,0 +1,14 @@
+#!/bin/bash
+# CUTEst package definition for the ASCEND A4SQP C API driver.
+
+export PACKAGE=a4sqp
+export PACKDIR=a4sqp
+export PACK_PRECISION="double"
+export PACKOBJS="a4sqp_cutest_lsq.o"
+
+ASCEND_ROOT="${ASCEND_ROOT:-/home/john/ascend}"
+HIGHS_PREFIX="${HIGHS_PREFIX:-/home/john/.local}"
+
+export EXTRAINCLUDES="${EXTRAINCLUDES} -I${ASCEND_ROOT}"
+export PACKLIBS="-L${ASCEND_ROOT}/solvers/a4sqp -L${ASCEND_ROOT} -L${HIGHS_PREFIX}/lib -la4sqp -lascend -lm"
+export SPECS=""
