@@ -149,7 +149,7 @@ struct slv9_system_structure {
 #endif
 };
 
-#ifdef ASC_WITH_IPOPT
+#ifdef ASC_CMSLV_WITH_IPOPT
 int32 slv9_bnd_iterate_ipopt(slv9_system_t sys, int32 num_opt_vars,
   int32 num_opt_eqns, int32 num_vars, real64 *obj_val);
 #endif

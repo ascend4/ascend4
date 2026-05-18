@@ -167,8 +167,12 @@ static void test_der_equation_direct_ok(void){
 	struct Instance *siminst = NULL;
 	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_equation_direct_ok",&siminst);
 	assert_diffvars_shape(sys,1,1,2);
-	assert_ida_relation_count(sys,1);
-	assert_included_equality_relation_count(sys,1);
+	/*
+	 * `dy_dt = der(y)` is a modelling equation, not hidden derivative-chain
+	 * metadata. It remains in the solver relation list alongside `dyn`.
+	 */
+	assert_ida_relation_count(sys,2);
+	assert_included_equality_relation_count(sys,2);
 	destroy_loaded_system(sys,siminst);
 }
 
@@ -192,8 +196,8 @@ static void test_der_equation_nested_ok(void){
 	struct Instance *siminst = NULL;
 	slv_system_t sys = build_system_for_model("test/ida/alias_der_wLINK.a4c","der_equation_nested_ok",&siminst);
 	assert_diffvars_shape(sys,1,1,2);
-	assert_ida_relation_count(sys,1);
-	assert_included_equality_relation_count(sys,1);
+	assert_ida_relation_count(sys,2);
+	assert_included_equality_relation_count(sys,2);
 	destroy_loaded_system(sys,siminst);
 }
 

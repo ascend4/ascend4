@@ -3,7 +3,7 @@
 
 #include <ascend/utilities/config.h>
 
-#ifdef ASC_WITH_IPOPT
+#ifdef ASC_CMSLV_WITH_IPOPT
 
 #include <IpStdCInterface.h>
 

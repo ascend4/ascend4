@@ -3142,7 +3142,7 @@ int32 slv9_ensure_optimizer_loaded(const char *name){
     return 0;
 #endif
   }else if(strcmp(name,"IPOPT") == 0) {
-#ifndef ASC_WITH_IPOPT
+#ifndef ASC_CMSLV_WITH_IPOPT
     return 0;
 #endif
   }else{
@@ -3175,7 +3175,7 @@ int32 slv9_optimizer_available(const char *name){
 #endif
   }
   if(strcmp(name,"IPOPT") == 0) {
-#ifdef ASC_WITH_IPOPT
+#ifdef ASC_CMSLV_WITH_IPOPT
     return slv9_ensure_optimizer_loaded("IPOPT");
 #else
     return 0;
@@ -3217,7 +3217,7 @@ int32 slv9_bnd_iterate(slv9_system_t sys, int32 num_opt_vars,
 #endif
   }
   if(strcmp(OPTSOLVER_OPTION,"IPOPT") == 0) {
-#ifdef ASC_WITH_IPOPT
+#ifdef ASC_CMSLV_WITH_IPOPT
     return slv9_bnd_iterate_ipopt(sys,num_opt_vars,num_opt_eqns,num_vars,obj_val);
 #else
     slv9_report_unavailable_optimizer(OPTSOLVER_OPTION);

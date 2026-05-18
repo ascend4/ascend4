@@ -6,6 +6,14 @@
 
 #define ASC_TESTING
 
+/*
+ * Record that a feature-specific portion of a test was skipped while allowing
+ * the rest of the test body to keep running. Use this for secondary checks,
+ * not for prerequisites that make the whole test invalid.
+ */
+#define ASC_TEST_PARTIAL_SKIP(REASON) \
+	CU_skipImplementation(__LINE__, __FILE__, (REASON))
+
 #define DEFINE_SUITE_SIMPLE(NAME) \
 	int res = 0; \
 	CU_pSuite s = CU_add_suite(#NAME,NULL,NULL); \

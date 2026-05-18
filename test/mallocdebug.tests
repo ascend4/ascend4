@@ -2,6 +2,8 @@ general_*
 
 utilities_*
 
+system_*
+
 solver_slv_common
 solver_slvreq
 solver_column
@@ -13,9 +15,7 @@ solver_highs
 solver_a4sqp
 solver_slsqp
 
-linear_mtx
-linear_qrrank
-linear_linsolqr_api
+linear_*
 
 compiler_basics
 compiler_func
