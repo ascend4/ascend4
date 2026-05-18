@@ -14,6 +14,8 @@ solver_makemps
 solver_highs
 solver_a4sqp
 solver_slsqp
+solver_conopt
+solver_cmslv
 
 linear_*
 

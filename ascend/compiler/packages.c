@@ -37,6 +37,7 @@
 
 #include <math.h>
 #include <ctype.h>  /* was compiler/actype.h */
+#include <string.h>
 
 #include <ascend/general/platform.h>
 #include <ascend/utilities/config.h> /* NEW */
@@ -160,6 +161,7 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 	struct FilePath *fp1;
 	int result;
 	struct ImportHandler *handler=NULL;
+	const char *cleanupfunc = NULL;
 	static const char *default_solvers_path = NULL;
 	static const char *default_library_path = NULL;
 	if(!default_solvers_path){
@@ -214,8 +216,12 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 	CONSOLE_DEBUG("About to import external library...");
 #endif
 
+	if(0 == strcmp(partialpath,"conopt")){
+		cleanupfunc = "conopt_cleanup";
+	}
+
 	/* run the import handlers' importfn to do the actual loading, registration etc. */
-	result = importhandler_import(handler,fp1,initfunc,NULL,partialpath);
+	result = importhandler_import(handler,fp1,initfunc,cleanupfunc,partialpath);
 	if(result){
 #ifdef PACKAGES_DEBUG
 		CONSOLE_DEBUG("Error %d when importing external library of type '%s'",result,handler->name);
