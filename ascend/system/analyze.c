@@ -214,12 +214,14 @@ static int dynamic_registry_add(struct problem_t *p_data, struct Instance *inst,
       return 0;
     }
     if((entry->deriv == -1 && odeid != 0) || (entry->odeid != 0 && deriv == -1)){
+      char *instname = WriteInstanceNameString(inst, p_data->root);
       ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
       FPRINTF(ASCERR,
         "Variable '%s' cannot be both independent and part of a derivative chain",
-        WriteInstanceNameString(inst, p_data->root)
+        instname
       );
       error_reporter_end_flush();
+      ascfree(instname);
       return 1;
     }
     /* Ambiguous link resolution, most notably in some array-alias cases.
@@ -400,10 +402,12 @@ static struct Instance *dynamic_create_hidden_derivative(struct problem_t *p_dat
     return NULL;
   }
   if(base_entry != NULL && base_entry->deriv == -1){
+    char *basename = WriteInstanceNameString(base, p_data->root);
     ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
     FPRINTF(ASCERR,"Variable '%s' cannot be both independent and a differential state",
-      WriteInstanceNameString(base, p_data->root));
+      basename);
     error_reporter_end_flush();
+    ascfree(basename);
     return NULL;
   }
 
@@ -415,10 +419,12 @@ static struct Instance *dynamic_create_hidden_derivative(struct problem_t *p_dat
     base_entry = dynamic_registry_lookup(p_data, base);
   }else{
     if(base_entry->deriv != 1 || base_entry->odeid == 0){
+      char *basename = WriteInstanceNameString(base, p_data->root);
       ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"Unsupported implicit derivative materialisation for variable '%s'",
-        WriteInstanceNameString(base, p_data->root));
+        basename);
       error_reporter_end_flush();
+      ascfree(basename);
       return NULL;
     }
     odeid = base_entry->odeid;
