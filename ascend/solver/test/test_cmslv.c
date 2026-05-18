@@ -128,10 +128,15 @@ static int cmslv_set_char_param(slv_system_t sys, const char *name, const char *
 }
 
 static int cmslv_load_required_package(const char *package){
+	char message[160];
 	if(0 == package_load(package,NULL)){
 		return 0;
 	}
-	CU_FAIL_FATAL("CMSlv test prerequisite solver package is not available.");
+	snprintf(
+		message,sizeof(message)
+		,"CMSlv test prerequisite solver package '%s' is not available.",package
+	);
+	CU_FAIL_FATAL(message);
 	return 1;
 }
 
@@ -179,7 +184,22 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv:solvers/lrslv:solvers/conopt:solvers/cmslv:solvers/ipopt");
+	Asc_PutEnv(ASC_ENV_SOLVERS
+		"=solvers/qrslv" OSPATH_DIV
+		"solvers/lrslv" OSPATH_DIV
+		"solvers/conopt" OSPATH_DIV
+		"solvers/cmslv" OSPATH_DIV
+		"solvers/ipopt"
+	);
+
+	if(cmslv_load_required_package("lrslv")
+		|| cmslv_load_required_package("qrslv")
+		|| cmslv_load_required_package("cmslv")
+		|| cmslv_load_optional_optimizer(optsolver)
+	){
+		Asc_CompilerDestroy();
+		return;
+	}
 
 	/* load the file */
 	char path[PATH_MAX];
@@ -214,15 +234,6 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 
 	/* assign solver */
 	const char *solvername = "CMSlv";
-	if(cmslv_load_required_package("lrslv")
-		|| cmslv_load_required_package("qrslv")
-		|| cmslv_load_required_package("cmslv")
-		|| cmslv_load_optional_optimizer(optsolver)
-	){
-		sim_destroy(siminst);
-		Asc_CompilerDestroy();
-		return;
-	}
 	int index = slv_lookup_client(solvername);
 	if(index == -1){
 		sim_destroy(siminst);
