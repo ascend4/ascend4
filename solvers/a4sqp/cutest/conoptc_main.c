@@ -54,6 +54,8 @@ struct ConoptcContext {
 	const rp_ *x_l;
 	const rp_ *x_u;
 	rp_ *x_final;
+	rp_ *x_margin;
+	rp_ *y_margin;
 	int modsta;
 	int solsta;
 	int iterations;
@@ -124,6 +126,21 @@ static double conoptc_inf_norm(integer n, const rp_ *v){
 	}
 	for(i = 0; i < n; ++i){
 		double a = fabs((double)v[i]);
+		if(a > result){
+			result = a;
+		}
+	}
+	return result;
+}
+
+static double conoptc_abs_inf_norm_int_count(int n, const double *v){
+	double result = 0.0;
+	int i;
+	if(v == NULL){
+		return NAN;
+	}
+	for(i = 0; i < n; ++i){
+		double a = fabs(v[i]);
 		if(a > result){
 			result = a;
 		}
@@ -506,12 +523,16 @@ static int COI_CALLCONV conoptc_solution(
 	(void)xbas;
 	(void)xsta;
 	(void)yval;
-	(void)ymar;
 	(void)ybas;
 	(void)ysta;
-	(void)numcon;
 	if(ctx != NULL && ctx->x_final != NULL && xval != NULL && numvar == ctx->n){
 		memcpy(ctx->x_final,xval,(size_t)ctx->n * sizeof(*ctx->x_final));
+	}
+	if(ctx != NULL && ctx->x_margin != NULL && xmar != NULL && numvar == ctx->n){
+		memcpy(ctx->x_margin,xmar,(size_t)ctx->n * sizeof(*ctx->x_margin));
+	}
+	if(ctx != NULL && ctx->y_margin != NULL && ymar != NULL && numcon == ctx->m_conopt){
+		memcpy(ctx->y_margin,ymar,(size_t)ctx->m_conopt * sizeof(*ctx->y_margin));
 	}
 	return 0;
 }
@@ -560,12 +581,45 @@ static int COI_CALLCONV conoptc_option(
 	char *name,
 	void *usrmem
 ){
-	(void)ncall;
-	(void)rval;
-	(void)ival;
+	struct ConoptcOption {
+		const char *name;
+		double value;
+		int active;
+	};
+	struct ConoptcOption options[] = {
+		{"RTNWMA", conoptc_env_double("CONOPTC_FEAS_TOL",NAN), 0},
+		{"RTREDG", conoptc_env_double("CONOPTC_OPT_TOL",NAN), 0},
+		{"RTOBJR", conoptc_env_double("CONOPTC_OBJ_TOL",NAN), 0},
+	};
+	int count = 0;
+	int i;
 	(void)lval;
-	(void)name;
 	(void)usrmem;
+	for(i = 0; i < (int)(sizeof(options) / sizeof(options[0])); ++i){
+		options[i].active = isfinite(options[i].value) && options[i].value >= 0.0;
+		if(options[i].active){
+			++count;
+		}
+	}
+	if(ncall <= 0 || ncall > count || name == NULL || rval == NULL || ival == NULL){
+		if(name != NULL){
+			name[0] = '\0';
+		}
+		return 0;
+	}
+	count = 0;
+	for(i = 0; i < (int)(sizeof(options) / sizeof(options[0])); ++i){
+		if(options[i].active){
+			++count;
+			if(count == ncall){
+				strcpy(name,options[i].name);
+				*rval = options[i].value;
+				*ival = 0;
+				return 0;
+			}
+		}
+	}
+	name[0] = '\0';
 	return 0;
 }
 
@@ -606,6 +660,9 @@ int MAINENTRY(void){
 	rp_ *final_grad = NULL;
 	double final_objective_gradient_inf = NAN;
 	double final_objective_projected_gradient_inf = NAN;
+	double projected_gradient_inf = NAN;
+	double conopt_x_margin_inf = NAN;
+	double conopt_y_margin_inf = NAN;
 	int conopt_status = -1;
 	int retcode = 0;
 	int driver_status = 0;
@@ -701,11 +758,15 @@ int MAINENTRY(void){
 	}
 	MALLOC(ctx.rows,ctx.m_conopt,struct ConoptcRow);
 	MALLOC(ctx.x_final,ctx.n,rp_);
-	if(ctx.rows == NULL || ctx.x_final == NULL){
+	MALLOC(ctx.x_margin,ctx.n,rp_);
+	MALLOC(ctx.y_margin,ctx.m_conopt,rp_);
+	if(ctx.rows == NULL || ctx.x_final == NULL || ctx.x_margin == NULL || ctx.y_margin == NULL){
 		fprintf(stderr,"CONOPTC-CUTEst: row allocation failure\n");
 		return 2;
 	}
 	memcpy(ctx.x_final,x,(size_t)ctx.n * sizeof(*ctx.x_final));
+	memset(ctx.x_margin,0,(size_t)ctx.n * sizeof(*ctx.x_margin));
+	memset(ctx.y_margin,0,(size_t)ctx.m_conopt * sizeof(*ctx.y_margin));
 	ctx.x_initial = x;
 	ctx.x_l = x_l;
 	ctx.x_u = x_u;
@@ -785,6 +846,8 @@ int MAINENTRY(void){
 	COIDEF_ErrMsg(conopt,conoptc_errmsg);
 	COIDEF_Option(conopt,conoptc_option);
 	conopt_status = COI_Solve(conopt);
+	conopt_x_margin_inf = conoptc_abs_inf_norm_int_count((int)ctx.n,(const double *)ctx.x_margin);
+	conopt_y_margin_inf = conoptc_abs_inf_norm_int_count((int)ctx.m_conopt,(const double *)ctx.y_margin);
 	if(ctx.constrained && g != NULL){
 		logical jtrans = FALSE_;
 		logical grad = FALSE_;
@@ -811,6 +874,9 @@ int MAINENTRY(void){
 		final_objective_gradient_inf = conoptc_inf_norm(ctx.n,final_grad);
 		final_objective_projected_gradient_inf =
 			conoptc_bound_projected_grad_inf(ctx.n,ctx.x_final,x_l,x_u,final_grad);
+		if(!ctx.constrained){
+			projected_gradient_inf = final_objective_projected_gradient_inf;
+		}
 	}
 	driver_status = (ctx.solsta == 1 && (ctx.modsta == 1 || ctx.modsta == 2)) ? 0 :
 		(ctx.solsta == 2 || ctx.solsta == 3 ? -1 : -3);
@@ -854,7 +920,14 @@ int MAINENTRY(void){
 	conoptc_json_number(final_objective_projected_gradient_inf);
 	printf(",");
 	printf("\"max_constraint_violation\":%.17g,",maxvio);
-	printf("\"projected_gradient_inf\":null,");
+	printf("\"projected_gradient_inf\":");
+	conoptc_json_number(projected_gradient_inf);
+	printf(",");
+	printf("\"conopt_x_margin_inf\":");
+	conoptc_json_number(conopt_x_margin_inf);
+	printf(",\"conopt_y_margin_inf\":");
+	conoptc_json_number(conopt_y_margin_inf);
+	printf(",");
 	printf("\"iterations\":%d,\"qp_solves\":null,\"qp_failures\":null,\"line_search_failures\":null,",
 		ctx.iterations
 	);
@@ -891,6 +964,8 @@ int MAINENTRY(void){
 	FREE(ctx.jac_fun);
 	FREE(ctx.rows);
 	FREE(ctx.x_final);
+	FREE(ctx.x_margin);
+	FREE(ctx.y_margin);
 	FREE(pname);
 	FREE(classification);
 	return driver_status;

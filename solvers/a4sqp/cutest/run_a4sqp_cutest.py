@@ -46,6 +46,15 @@ def packages_for_solver(solver: str) -> list[str]:
 
 def classify_result(result: dict[str, object], args: argparse.Namespace) -> str:
     status = result.get("status")
+    def finite_float(value: object) -> float | None:
+        if value is None or value == "":
+            return None
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            return None
+        return parsed if parsed == parsed else None
+
     if result.get("driver_error") == "timeout":
         return "driver_timeout"
     if result.get("driver_error"):
@@ -54,6 +63,10 @@ def classify_result(result: dict[str, object], args: argparse.Namespace) -> str:
         kkt = result.get("kkt_error")
         if kkt is not None and float(kkt) > max(args.acceptable_tol, args.tol):
             return "strict_success_high_kkt"
+        pg = finite_float(result.get("projected_gradient_inf"))
+        m = int(result.get("m") or 0)
+        if kkt is None and m == 0 and pg is not None and pg > max(args.acceptable_tol, args.tol):
+            return "success_high_gradient"
         return "strict_success"
     if status == 1:
         kkt = result.get("kkt_error")
@@ -62,13 +75,12 @@ def classify_result(result: dict[str, object], args: argparse.Namespace) -> str:
         return "acceptable_success"
     if status == -1:
         maxvio = float(result.get("max_constraint_violation") or 0.0)
-        pg = float(result.get("projected_gradient_inf") or 0.0)
-        kkt = result.get("kkt_error")
-        kkt_value = float(kkt) if kkt is not None else None
+        pg = finite_float(result.get("projected_gradient_inf"))
+        kkt_value = finite_float(result.get("kkt_error"))
         near_tol = max(args.acceptable_tol, args.tol)
         if kkt_value is not None and kkt_value <= near_tol:
             return "max_iter_near_solved"
-        if kkt_value is None and maxvio <= near_tol and pg <= near_tol:
+        if kkt_value is None and pg is not None and maxvio <= near_tol and pg <= near_tol:
             return "max_iter_near_solved"
         if maxvio <= near_tol:
             return "max_iter_stationarity"
@@ -504,6 +516,9 @@ def main(argv: list[str]) -> int:
     env["IPOPTC_PRINT_LEVEL"] = str(args.ipopt_print_level)
     env["CONOPTC_MAX_ITER"] = str(args.conopt_max_iter if args.conopt_max_iter is not None else args.max_iter)
     env["CONOPTC_PRINT_LEVEL"] = str(args.conopt_print_level)
+    env["CONOPTC_FEAS_TOL"] = str(args.tol)
+    env["CONOPTC_OPT_TOL"] = str(args.tol)
+    env["CONOPTC_OBJ_TOL"] = str(args.tol)
     lib_paths = [
         str(root / "solvers" / "a4sqp"),
         str(root),

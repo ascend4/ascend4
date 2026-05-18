@@ -107,6 +107,8 @@ Useful environment/option overrides:
 - `--ipopt-tol VALUE` or `IPOPTC_TOL=VALUE`
 - `--ipopt-hessian limited-memory|exact` or `IPOPTC_HESSIAN=...`
 - `--conopt-max-iter N` or `CONOPTC_MAX_ITER=N`
+- `--tol VALUE` is also passed to CONOPT as `CONOPTC_FEAS_TOL`,
+  `CONOPTC_OPT_TOL`, and `CONOPTC_OBJ_TOL`
 - `--solver a4sqp|ipoptc|conoptc|both|all`
 - `--jobs N` runs independent problem/package jobs concurrently. For `N > 1`
   the runner creates one private CUTEst tree per worker under `--workdir` so
@@ -198,3 +200,9 @@ The progress report intentionally excludes volatile metrics such as iteration
 counts, solve times, objective values, and log paths. It records the benchmark
 contract, profile summary, and compact per-problem light+number status codes so
 `git diff` shows solver progress rather than run-to-run noise.
+
+CONOPT reports `projected_gradient_inf` only for unconstrained and bound-only
+problems, where the CUTEst objective gradient can be projected against variable
+bounds directly. For constrained problems the driver records CONOPT marginal
+norms as diagnostics, but does not treat them as a common KKT residual until the
+CONOPT row/column marginal sign convention is validated against CUTEst.
