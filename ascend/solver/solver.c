@@ -270,6 +270,12 @@ static const struct StaticSolverRegistration slv_reg[]={
 #ifdef ASC_WITH_HIGHS
 	,{"highs"}
 #endif
+#ifdef ASC_WITH_A4SQP
+	,{"a4sqp"}
+#endif
+#ifdef ASC_WITH_SLSQP
+	,{"slsqp"}
+#endif
 #if 0
 	,{"conopt"}
 	,{"lrslv"}

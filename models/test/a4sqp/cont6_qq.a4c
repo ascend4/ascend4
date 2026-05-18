@@ -1,0 +1,227 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL cont6_qq;
+	n IS_A integer_constant;
+	n1 IS_A integer_constant;
+
+	ub IS_A factor_constant;
+	r IS_A factor_constant;
+	d IS_A factor_constant;
+	pi IS_A factor_constant;
+	two_pi IS_A factor_constant;
+	h IS_A factor_constant;
+	h2 IS_A factor_constant;
+	a[1..n1][1..n1] IS_A factor_constant;
+
+	u[0..n][0..n] IS_A solver_var;
+	f[1..n1][1..n1] IS_A solver_var;
+
+	u11 ALIASES u[1][1];
+	u44 ALIASES u[4][4];
+	u77 ALIASES u[7][7];
+	f11 ALIASES f[1][1];
+	f44 ALIASES f[4][4];
+	f77 ALIASES f[7][7];
+
+	n :== 8;
+	n1 :== n - 1;
+
+	ub :== 6.09;
+	r :== 1.4;
+	d :== 1.6;
+	pi :== 3.141592653589793;
+	two_pi :== 2.0*pi;
+	h :== 1.0/n;
+	h2 :== h*h;
+	a[1][1] :== 7.3920685613182426;
+	a[2][1] :== 7.7803612880645128;
+	a[3][1] :== 8.1611387090178500;
+	a[4][1] :== 8.5307337294603585;
+	a[5][1] :== 8.8855869473039899;
+	a[6][1] :== 9.2222809320784087;
+	a[7][1] :== 9.5375731366545828;
+
+	a[1][2] :== 7.7803612880645128;
+	a[2][2] :== 8.5307337294603585;
+	a[3][2] :== 9.2222809320784087;
+	a[4][2] :== 9.8284271247461898;
+	a[5][2] :== 10.3258784492101814;
+	a[6][2] :== 10.6955181300451478;
+	a[7][2] :== 10.9231411216129217;
+
+	a[1][3] :== 8.1611387090178500;
+	a[2][3] :== 9.2222809320784087;
+	a[3][3] :== 10.0920418134509475;
+	a[4][3] :== 10.6955181300451478;
+	a[5][3] :== 10.9807389066887868;
+	a[6][3] :== 10.9231411216129217;
+	a[7][3] :== 10.5276850573934198;
+
+	a[1][4] :== 8.5307337294603585;
+	a[2][4] :== 9.8284271247461898;
+	a[3][4] :== 10.6955181300451478;
+	a[4][4] :== 11.0000000000000000;
+	a[5][4] :== 10.6955181300451478;
+	a[6][4] :== 9.8284271247461898;
+	a[7][4] :== 8.5307337294603602;
+
+	a[1][5] :== 8.8855869473039899;
+	a[2][5] :== 10.3258784492101814;
+	a[3][5] :== 10.9807389066887868;
+	a[4][5] :== 10.6955181300451478;
+	a[5][5] :== 9.5375731366545828;
+	a[6][5] :== 7.7803612880645145;
+	a[7][5] :== 5.8388612909821518;
+
+	a[1][6] :== 9.2222809320784087;
+	a[2][6] :== 10.6955181300451478;
+	a[3][6] :== 10.9231411216129217;
+	a[4][6] :== 9.8284271247461898;
+	a[5][6] :== 7.7803612880645145;
+	a[6][6] :== 5.4692662705396415;
+	a[7][6] :== 3.6741215507898191;
+
+	a[1][7] :== 9.5375731366545828;
+	a[2][7] :== 10.9231411216129217;
+	a[3][7] :== 10.5276850573934198;
+	a[4][7] :== 8.5307337294603602;
+	a[5][7] :== 5.8388612909821518;
+	a[6][7] :== 3.6741215507898191;
+	a[7][7] :== 3.0192610933112123;
+
+	NOTES
+		'description' SELF {
+			Reduced ASCEND translation of the CUTEr/SIF benchmark
+			CONT6-QQ. The original SIF uses n = 100 by default; this
+			benchmark uses n = 8 so that it remains practical as an A4SQP
+			regression.
+
+			Faithful reduced-grid equivalent:
+			    minimize h^2 * sum f[i,j] * (f[i,j] - 0.8*u[i,j])
+			    subject to a semilinear five-point finite-difference
+			    state equation on the interior grid, together with the
+			    four boundary condition families from the SIF.
+		}
+		'source' SELF {
+			K. Schittkowski, "Numerical solution of a time-optimal
+			parabolic boundary-value control problem",
+			Journal of Optimization Theory and Applications, 27,
+			271-290, 1979.
+			H. Goldberg and F. Troeltzsch, "On a Lagrange-Newton method
+			for a nonlinear parabolic boundary control problem",
+			Optimization Methods and Software, 8, 225-247, 1998.
+			H.D. Mittelmann, "Verification of Second-Order Sufficient
+			Optimality Conditions for Semilinear Elliptic and Parabolic
+			Control Problems", 2000.
+			SIF input by Nick Gould, September 2000.
+		}
+		'problem_origin' SELF {
+			This is a PDE-constrained optimal control benchmark. The
+			state variable u is a discretized semilinear diffusion or
+			reaction field, and f is the distributed control acting on
+			the interior of the spatial grid.
+		}
+	END NOTES;
+
+	obj: MINIMIZE
+		h2 * SUM[
+			SUM[f[i][j] * (f[i][j] - 0.8*u[i][j]) | i IN [1..n1]]
+			| j IN [1..n1]
+		];
+
+	FOR j IN [1..n1] CREATE
+		FOR i IN [1..n1] CREATE
+			state[i][j]:
+				4.0*u[i][j]
+				- u[i-1][j] - u[i][j-1] - u[i+1][j] - u[i][j+1]
+				- h2 * u[i][j] * (
+					a[i][j] - f[i][j] - u[i][j]
+				) = 0.0;
+		END FOR;
+	END FOR;
+
+	FOR i IN [1..n1] CREATE
+		bc1[i]: u[i][0] - u[i][1] + h*u[i][1] = 0.0;
+		bc3[i]: u[i][n] - u[i][n1] = 0.0;
+	END FOR;
+
+	FOR j IN [1..n1] CREATE
+		bc2[j]: u[0][j] - u[1][j] + h*u[1][j] = 0.0;
+		bc4[j]: u[n][j] - u[n1][j] = 0.0;
+	END FOR;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(u11 - 3.88147505956822) < 5e-3;
+	ASSERT abs(u44 - 6.020206826828245) < 5e-3;
+	ASSERT abs(u77 - 5.24993966597119) < 5e-3;
+	ASSERT abs(f11 - 1.4) < 1e-8;
+	ASSERT abs(f44 - 1.6) < 1e-8;
+	ASSERT abs(f77 - 1.5553226500429866) < 5e-4;
+
+	ASSERT SATISFIED(state[4][4],1e-5);
+	ASSERT SATISFIED(bc1[4],1e-5);
+	ASSERT SATISFIED(bc3[4],1e-5);
+
+	FOR j IN [0..n] DO
+		FOR i IN [0..n] DO
+			ASSERT u[i][j] <= ub + 1e-8;
+		END FOR;
+	END FOR;
+	FOR j IN [1..n1] DO
+		FOR i IN [1..n1] DO
+			ASSERT f[i][j] >= r - 1e-8;
+			ASSERT f[i][j] <= d + 1e-8;
+		END FOR;
+	END FOR;
+END self_test;
+
+METHOD bound_self;
+	FOR j IN [0..n] DO
+		FOR i IN [0..n] DO
+			u[i][j].upper_bound := ub;
+		END FOR;
+	END FOR;
+	FOR j IN [1..n1] DO
+		FOR i IN [1..n1] DO
+			f[i][j].lower_bound := r;
+			f[i][j].upper_bound := d;
+		END FOR;
+	END FOR;
+END bound_self;
+
+METHOD default_self;
+	FOR j IN [0..n] DO
+		FOR i IN [0..n] DO
+			u[i][j] := 6.0;
+		END FOR;
+	END FOR;
+	FOR j IN [1..n1] DO
+		FOR i IN [1..n1] DO
+			f[i][j] := 1.5;
+		END FOR;
+	END FOR;
+END default_self;
+
+METHOD use_ipopt;
+	SOLVER IPOPT;
+END use_ipopt;
+
+METHOD use_a4sqp;
+	SOLVER A4SQP;
+END use_a4sqp;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+	SOLVER A4SQP;
+	OPTION max_iter 200;
+END on_load;
+
+METHOD on_load_test;
+	RUN bound_self;
+	RUN default_self;
+END on_load_test;
+END cont6_qq;

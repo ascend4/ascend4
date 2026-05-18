@@ -1,0 +1,247 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL errinbar;
+	u[1..8], x[1..10] IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst ERRINBAR.
+			Known CUTEst/IPOPTC local solution from the current tracking run:
+			    f = 28.045255461536108
+		}
+		'source' SELF {
+			Ph. Toint, "an error in specifying the problem TENBARS1",
+			October 1990. SIF input by Ph. Toint, October 1990.
+		}
+		'problem_origin' SELF {
+			This 18-variable problem has a linear objective, eight nonlinear
+			equality constraints, and one linear inequality. In the current
+			CUTEst tracking run IPOPT solves it, while all A4SQP Hessian
+			profiles hit the 30 s driver timeout.
+		}
+	END NOTES;
+
+	(* Nonlinear equality groups C1..C8. *)
+	c1: x[1]*u[1]
+		+ x[6]*(u[1] - u[5])
+		+ 0.3535533905932738*x[3]*(u[1] + u[2])
+		+ 0.3535533905932738*x[7]*(u[1] + u[8] - u[2] - u[7]) = 0.0;
+	c2: x[3]*(u[1] + u[2])
+		+ x[5]*(u[2] - u[4])
+		+ 0.3535533905932738*x[7]*(u[1] + u[8] - u[2] - u[7]) = 0.0;
+	c3: 0.3535533905932738*x[2]*(u[3] - u[4])
+		+ 0.3535533905932738*x[4]*u[3]
+		+ 0.3535533905932738*x[8]*(u[3] + u[4] - u[5] - u[6])
+		+ x[9]*(u[3] - u[7]) = 0.0;
+	c4: 0.3535533905932738*x[2]*(u[3] - u[4])
+		+ 0.3535533905932738*x[8]*(u[3] + u[4] - u[5] - u[6])
+		+ x[5]*(u[2] - u[4]) + 589.884 = 0.0;
+	c5: 0.3535533905932738*x[8]*(u[3] + u[4] - u[5] - u[6])
+		+ x[6]*(u[1] - u[5]) = 0.0;
+	c6: 0.3535533905932738*x[8]*(u[3] + u[4] - u[5] - u[6])
+		+ x[10]*(u[6] - u[8]) = 0.0;
+	c7: 0.3535533905932738*x[7]*(u[1] + u[8] - u[2] - u[7])
+		+ x[9]*(u[3] - u[7]) = 0.0;
+	c8: 0.3535533905932738*x[7]*(u[1] + u[8] - u[2] - u[7])
+		+ x[10]*(u[6] - u[8]) + 589.884 = 0.0;
+
+	str: u[2] - u[4] + 22.86 <= 0.0;
+
+	obj: MINIMIZE
+		2.53106*x[1]
+		+ 3.579459379218183*x[2]
+		+ 3.579459379218183*x[3]
+		+ 2.53106*x[4]
+		+ 2.53106*x[5]
+		+ 2.53106*x[6]
+		+ 3.579459379218183*x[7]
+		+ 3.579459379218183*x[8]
+		+ 2.53106*x[9]
+		+ 2.53106*x[10];
+
+METHODS
+METHOD self_test;
+	ASSERT abs(
+		2.53106*x[1]
+		+ 3.579459379218183*x[2]
+		+ 3.579459379218183*x[3]
+		+ 2.53106*x[4]
+		+ 2.53106*x[5]
+		+ 2.53106*x[6]
+		+ 3.579459379218183*x[7]
+		+ 3.579459379218183*x[8]
+		+ 2.53106*x[9]
+		+ 2.53106*x[10]
+		- 28.045255461536108
+	) < 5e-5;
+	ASSERT SATISFIED(c1,1e-7);
+	ASSERT SATISFIED(c2,1e-7);
+	ASSERT SATISFIED(c3,1e-7);
+	ASSERT SATISFIED(c4,1e-7);
+	ASSERT SATISFIED(c5,1e-7);
+	ASSERT SATISFIED(c6,1e-7);
+	ASSERT SATISFIED(c7,1e-7);
+	ASSERT SATISFIED(c8,1e-7);
+	ASSERT SATISFIED(str,1e-7);
+END self_test;
+
+METHOD on_load;
+	FOR i IN [1..8] DO
+		u[i] := 0.0;
+	END FOR;
+	FOR i IN [1..10] DO
+		x[i] := 0.0;
+		x[i].lower_bound := 0.645;
+	END FOR;
+	FOR i IN [2, 4, 6, 8] DO
+		u[i].lower_bound := -50.8;
+	END FOR;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'EXACT_LAGRANGIAN';
+	OPTION restoration TRUE;
+	OPTION scaleopt 'AUTO';
+END on_load;
+
+METHOD on_load_test;
+	FOR i IN [1..8] DO
+		u[i] := 0.0;
+	END FOR;
+	FOR i IN [1..10] DO
+		x[i] := 0.0;
+		x[i].lower_bound := 0.645;
+	END FOR;
+	FOR i IN [2, 4, 6, 8] DO
+		u[i].lower_bound := -50.8;
+	END FOR;
+END on_load_test;
+
+METHOD use_bfgs;
+	SOLVER A4SQP;
+	OPTION hessian 'BFGS';
+END use_bfgs;
+
+METHOD use_exact_obj;
+	SOLVER A4SQP;
+	OPTION hessian 'EXACT_OBJ';
+END use_exact_obj;
+
+METHOD use_scale_none;
+	SOLVER A4SQP;
+	OPTION scaleopt 'NONE';
+END use_scale_none;
+
+METHOD use_bfgs_scale_none;
+	SOLVER A4SQP;
+	OPTION hessian 'BFGS';
+	OPTION scaleopt 'NONE';
+END use_bfgs_scale_none;
+
+METHOD use_exact_obj_big_trust;
+	SOLVER A4SQP;
+	OPTION hessian 'EXACT_OBJ';
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+END use_exact_obj_big_trust;
+
+METHOD use_big_trust;
+	SOLVER A4SQP;
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+END use_big_trust;
+
+METHOD use_bfgs_big_trust;
+	SOLVER A4SQP;
+	OPTION hessian 'BFGS';
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+END use_bfgs_big_trust;
+
+METHOD use_big_trust_tiny_alpha;
+	SOLVER A4SQP;
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+	OPTION trust_tiny_alpha 0.01;
+	OPTION trust_tiny_radius_factor 2.0;
+END use_big_trust_tiny_alpha;
+
+METHOD use_exact_obj_big_trust_tiny_alpha;
+	SOLVER A4SQP;
+	OPTION hessian 'EXACT_OBJ';
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+	OPTION trust_tiny_alpha 0.01;
+	OPTION trust_tiny_radius_factor 2.0;
+END use_exact_obj_big_trust_tiny_alpha;
+
+METHOD use_release;
+	SOLVER A4SQP;
+	OPTION active_bound_release TRUE;
+END use_release;
+
+METHOD use_big_trust_release;
+	SOLVER A4SQP;
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+	OPTION active_bound_release TRUE;
+END use_big_trust_release;
+
+METHOD use_big_trust_polish;
+	SOLVER A4SQP;
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+	OPTION reduced_gradient_polish TRUE;
+END use_big_trust_polish;
+
+METHOD use_big_trust_filter;
+	SOLVER A4SQP;
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+	OPTION filter_accept TRUE;
+END use_big_trust_filter;
+
+METHOD use_soc;
+	SOLVER A4SQP;
+	OPTION second_order_correction TRUE;
+END use_soc;
+
+METHOD use_big_trust_soc;
+	SOLVER A4SQP;
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+	OPTION second_order_correction TRUE;
+	OPTION soc_max_iter 3;
+END use_big_trust_soc;
+
+METHOD use_big_trust_soc_filter;
+	SOLVER A4SQP;
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+	OPTION second_order_correction TRUE;
+	OPTION soc_max_iter 3;
+	OPTION filter_accept TRUE;
+END use_big_trust_soc_filter;
+
+METHOD use_big_trust_strict;
+	SOLVER A4SQP;
+	OPTION trust_radius_init 100.0;
+	OPTION trust_radius_max 10000.0;
+	OPTION trust_accept 0.1;
+	OPTION trust_tiny_alpha 0.01;
+	OPTION trust_tiny_radius_factor 2.0;
+END use_big_trust_strict;
+
+METHOD use_exact_obj_strict;
+	SOLVER A4SQP;
+	OPTION hessian 'EXACT_OBJ';
+	OPTION trust_radius_init 10.0;
+	OPTION trust_radius_max 1000.0;
+	OPTION trust_accept 0.1;
+	OPTION trust_tiny_alpha 0.01;
+	OPTION trust_tiny_radius_factor 2.0;
+END use_exact_obj_strict;
+END errinbar;

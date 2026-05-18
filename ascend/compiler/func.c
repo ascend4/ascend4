@@ -271,6 +271,84 @@ double derf2(double d)
 {
   return -ldexp(d*exp(-(d*d))/sqrt(M_PI),2);
 }
+
+static double erfc_scaled_asymp(double x)
+{
+  double xsq = x*x;
+  double term = 1.0;
+  double sum = 1.0;
+  int k;
+  for(k=1; k<=8; ++k){
+    term *= -(2.0*k - 1.0)/(2.0*xsq);
+    sum += term;
+  }
+  return sum/(sqrt(M_PI)*x);
+}
+
+static double erfc_scaled_asymp_deriv(double x)
+{
+  double inv = 1.0/x;
+  double inv2 = inv*inv;
+  double coeff = 1.0;
+  double power = inv2;
+  double sum = -power;
+  int k;
+  for(k=1; k<=8; ++k){
+    coeff *= -(2.0*k - 1.0)/2.0;
+    power *= inv2;
+    sum += coeff * -(2.0*k + 1.0) * power;
+  }
+  return sum/sqrt(M_PI);
+}
+
+static double erfc_scaled_asymp_deriv2(double x)
+{
+  double inv = 1.0/x;
+  double inv2 = inv*inv;
+  double coeff = 1.0;
+  double power = inv2*inv;
+  double sum = 2.0*power;
+  int k;
+  for(k=1; k<=8; ++k){
+    coeff *= -(2.0*k - 1.0)/2.0;
+    power *= inv2;
+    sum += coeff * (2.0*k + 1.0) * (2.0*k + 2.0) * power;
+  }
+  return sum/sqrt(M_PI);
+}
+
+double erfc_scaled(double d)
+{
+  if(d >= 26.0){
+    return erfc_scaled_asymp(d);
+  }
+  if(d <= -26.0){
+    return HUGE_VAL;
+  }
+  return exp(d*d)*erfc(d);
+}
+
+double derfc_scaled(double d)
+{
+  if(d >= 26.0){
+    return erfc_scaled_asymp_deriv(d);
+  }
+  if(d <= -26.0){
+    return HUGE_VAL;
+  }
+  return 2.0*d*erfc_scaled(d) - F_ERF_COEF;
+}
+
+double derfc_scaled2(double d)
+{
+  if(d >= 26.0){
+    return erfc_scaled_asymp_deriv2(d);
+  }
+  if(d <= -26.0){
+    return HUGE_VAL;
+  }
+  return 2.0*erfc_scaled(d) + 2.0*d*derfc_scaled(d);
+}
 #endif /* HAVE_ERF */
 
 double dtanh(double d){
@@ -561,6 +639,21 @@ struct Func g_erf_f = {
   safe_erf_D1,
   safe_erf_D2,
 };
+
+struct Func g_erfc_scaled_f = {
+  "erfc_scaled",
+  "erfc_scaled",
+  "ErfcScaled",
+  "derfc_scaled",
+  "derfc_scaled2",
+  F_ERFC_SCALED,
+  erfc_scaled,
+  derfc_scaled,
+  derfc_scaled2,
+  safe_erfc_scaled_D0,
+  safe_erfc_scaled_D1,
+  safe_erfc_scaled_D2,
+};
 #endif /* HAVE_ERF */
 
 struct Func g_sinh_f = {
@@ -698,6 +791,7 @@ struct Func *g_func_list[]={
   &g_arctan_f,
 #ifdef HAVE_ERF
   &g_erf_f,
+  &g_erfc_scaled_f,
 #endif /* HAVE_ERF */
   &g_lnm_f,
   &g_sinh_f,
@@ -766,6 +860,7 @@ CONST dim_type *FuncDimens(CONST struct Func *f){
     case F_EXP:
 #ifdef HAVE_ERF
     case F_ERF:
+    case F_ERFC_SCALED:
 #endif /* HAVE_ERF */
     case F_LNM:
     case F_ARCSIN:
@@ -817,4 +912,3 @@ double FuncDeriv2(CONST struct Func *f, double d){
 double FuncDeriv2Safe(CONST struct Func *f, double d,enum safe_err *not_safe){
   return (*(f->safederiv2))(d,not_safe);
 }
-

@@ -1,0 +1,196 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL ceri651als;
+	rows IS_A set OF integer_constant;
+	fields IS_A set OF symbol_constant;
+	data[rows][fields] IS_A real_constant;
+
+	c, ell, a, b, inten, sigma, center IS_A solver_var;
+
+	rows :== [9077..9137];
+	fields :== ['x','y','e'];
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst CERI651ALS.
+			This is currently an exploratory A4SQP target, not a locked
+			regression; IPOPT also fails this case in the current CUTEst run.
+		}
+		'source' SELF {
+			ISIS CERI651A data fitting problem from Mantid data, SIF input
+			by Nick Gould and Tyrone Rees, Mar 2016; least-squares SIF by
+			Nick Gould, Jan 2020.
+		}
+		'problem_origin' SELF {
+			The problem stresses unconstrained nonlinear least-squares
+			globalisation, scaling, and Hessian handling.
+		}
+	END NOTES;
+
+	TABLE data[rows,fields];
+		: x y e
+		9077: 36850.625 0 1
+		9078: 36858 1.96083316 1.41421356
+		9079: 36865.375 2.94124974 1.73205081
+		9080: 36872.75 0.98041658 1
+		9081: 36880.125 5.88249948 2.44948974
+		9082: 36887.5 1.96083316 1.41421356
+		9083: 36894.875 3.92166632 2
+		9084: 36902.25 3.92166632 2
+		9085: 36909.625 3.92166632 2
+		9086: 36917 4.9020829 2.23606798
+		9087: 36924.375 2.94124974 1.73205081
+		9088: 36931.75 14.7062487 3.87298335
+		9089: 36939.125 15.68666528 4
+		9090: 36946.5 21.56916476 4.69041576
+		9091: 36953.875 41.17749637 6.4807407
+		9092: 36961.26563 64.70749429 8.1240384
+		9093: 36968.67188 108.8262404 0.53565375
+		9094: 36976.07813 132.3562383 1.61895004
+		9095: 36983.48438 173.5337347 3.3041347
+		9096: 36990.89063 186.2791502 3.78404875
+		9097: 36998.29688 224.5153969 5.13274595
+		9098: 37005.70313 269.6145596 6.58312395
+		9099: 37013.10938 256.869144 6.18641406
+		9100: 37020.51563 268.634143 6.55294536
+		9101: 37027.92188 293.1445575 7.29161647
+		9102: 37035.32813 277.4578922 6.82260384
+		9103: 37042.73438 211.7699813 4.69693846
+		9104: 37050.14063 210.7895647 4.6628783
+		9105: 37057.54688 176.4749844 3.41640786
+		9106: 37064.95313 151.9645699 2.4498996
+		9107: 37072.35938 126.4737388 1.35781669
+		9108: 37079.76563 80.39415957 9.05538514
+		9109: 37087.17188 95.10040828 9.8488578
+		9110: 37094.57813 71.57041035 8.54400375
+		9111: 37101.98438 65.68791087 8.18535277
+		9112: 37109.39063 37.25583005 6.164414
+		9113: 37116.8125 40.19707979 6.40312424
+		9114: 37124.25 25.49083108 5.09901951
+		9115: 37131.6875 22.54958134 4.79583152
+		9116: 37139.125 26.47124766 5.19615242
+		9117: 37146.5625 19.6083316 4.47213595
+		9118: 37154 20.58874818 4.58257569
+		9119: 37161.4375 14.7062487 3.87298335
+		9120: 37168.875 11.76499896 3.46410162
+		9121: 37176.3125 6.86291606 2.64575131
+		9122: 37183.75 4.9020829 2.23606798
+		9123: 37191.1875 1.96083316 1.41421356
+		9124: 37198.625 6.86291606 2.64575131
+		9125: 37206.0625 8.82374922 3
+		9126: 37213.5 0.98041658 1
+		9127: 37220.9375 1.96083316 1.41421356
+		9128: 37228.375 3.92166632 2
+		9129: 37235.8125 5.88249948 2.44948974
+		9130: 37243.25 7.84333264 2.82842712
+		9131: 37250.6875 3.92166632 2
+		9132: 37258.125 3.92166632 2
+		9133: 37265.5625 3.92166632 2
+		9134: 37273.01563 2.94124974 1.73205081
+		9135: 37280.48438 0.98041658 1
+		9136: 37287.95313 0.98041658 1
+		9137: 37295.42188 2.94124974 1.73205081
+	END TABLE;
+
+	obj: MINIMIZE SUM[
+		(
+			(
+				c + ell*data[k]['x']
+				+ inten*a*b/(2.0*(a + b))
+					* exp(-0.5*((data[k]['x'] - center)/sigma)^2)
+					* (
+						erfc_scaled(0.7071067811865475*(a*sigma + (data[k]['x'] - center)/sigma))
+						+ erfc_scaled(0.7071067811865475*(b*sigma + (data[k]['x'] - center)/sigma))
+					)
+				- data[k]['y']
+			) / data[k]['e']
+		)^2
+		| k IN rows
+	];
+
+METHODS
+METHOD on_load;
+	c := 0.0;
+	ell := 0.0;
+	a := 1.0;
+	b := 0.05;
+	inten := 26061.4;
+	sigma := 38.7105;
+	center := 37027.1;
+	c.nominal := 100.0;
+	ell.nominal := 0.01;
+	a.nominal := 1.0;
+	b.nominal := 0.1;
+	inten.nominal := 26000.0;
+	sigma.nominal := 40.0;
+	center.nominal := 37000.0;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'BFGS';
+END on_load;
+
+METHOD use_cutest_like;
+	SOLVER A4SQP;
+	OPTION scaleopt 'NONE';
+	OPTION hessian 'EXACT_LAGRANGIAN';
+	OPTION try_lsq 'OFF';
+END use_cutest_like;
+
+METHOD use_lsq_lm;
+	SOLVER A4SQP;
+	OPTION max_iter 300;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'BFGS';
+	OPTION try_lsq 'LM';
+END use_lsq_lm;
+
+METHOD use_scaled_bfgs;
+	SOLVER A4SQP;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'BFGS';
+END use_scaled_bfgs;
+
+METHOD use_scaled_bfgs_short;
+	SOLVER A4SQP;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'BFGS';
+	OPTION max_iter 100;
+END use_scaled_bfgs_short;
+
+METHOD use_scaled_bfgs_trust;
+	SOLVER A4SQP;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'BFGS';
+	OPTION trust_unconstrained TRUE;
+	OPTION trust_radius_init 1.0;
+	OPTION trust_radius_max 100.0;
+	OPTION max_iter 300;
+END use_scaled_bfgs_trust;
+
+METHOD use_scaled_exact_obj;
+	SOLVER A4SQP;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'EXACT_OBJ';
+END use_scaled_exact_obj;
+
+METHOD use_scaled_exact_lagrangian;
+	SOLVER A4SQP;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'EXACT_LAGRANGIAN';
+END use_scaled_exact_lagrangian;
+
+METHOD on_load_test;
+	c := 0.0;
+	ell := 0.0;
+	a := 1.0;
+	b := 0.05;
+	inten := 26061.4;
+	sigma := 38.7105;
+	center := 37027.1;
+END on_load_test;
+END ceri651als;

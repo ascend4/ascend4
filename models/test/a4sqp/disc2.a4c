@@ -1,0 +1,205 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL disc2;
+	nnodes IS_A integer_constant;
+	nlines IS_A integer_constant;
+	nnodes :== 11;
+	nlines :== 6;
+
+	u[1..nnodes], v[1..nnodes] IS_A solver_var;
+	alpha[1..nlines], eps IS_A solver_var;
+	xdata[1..nnodes], ydata[1..nnodes] IS_A real_constant;
+
+	xdata[1] :== 0.0;
+	xdata[2] :== 8.0;
+	xdata[3] :== 12.0;
+	xdata[4] :== 8.0;
+	xdata[5] :== 0.0;
+	xdata[6] :== 4.0;
+	xdata[7] :== 8.0;
+	xdata[8] :== 8.0;
+	xdata[9] :== 4.0;
+	xdata[10] :== 2.0;
+	xdata[11] :== 2.0;
+
+	ydata[1] :== 10.0;
+	ydata[2] :== 10.0;
+	ydata[3] :== 5.0;
+	ydata[4] :== 0.0;
+	ydata[5] :== 0.0;
+	ydata[6] :== 8.0;
+	ydata[7] :== 7.0;
+	ydata[8] :== 3.0;
+	ydata[9] :== 1.0;
+	ydata[10] :== 3.0;
+	ydata[11] :== 6.0;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst DISC2.
+			This model is included as a focused case where IPOPT and SLSQP
+			solve the CUTEst instance and A4SQP needs globalization probes
+			such as SOC plus reduced-gradient fallback polish.
+		}
+		'source' SELF {
+			Minimum disc-radius polygon benchmark from W. Pulleyblank,
+			private communication, 1991. SIF input by A.R. Conn,
+			November 1991.
+		}
+		'problem_origin' SELF {
+			Linear objective with quadratic equality/inequality constraints.
+			The unused alpha[6] variable is retained to match the SIF variable
+			count and bounds.
+		}
+	END NOTES;
+
+	FOR i IN [1..5] CREATE
+		boundary[i]:
+			(u[i] - xdata[i])^2 + (v[i] - ydata[i])^2 - eps^2 = 0.0;
+	END FOR;
+
+	FOR i IN [6..nnodes] CREATE
+		interior[i]:
+			(u[i] - xdata[i])^2 + (v[i] - ydata[i])^2 - eps^2 <= 0.0;
+	END FOR;
+
+	lineu1: u[6] - u[1] - alpha[1]*(u[2] - u[1]) = 0.0;
+	linev1: v[6] - v[1] - alpha[1]*(v[2] - v[1]) = 0.0;
+	lineu2: u[7] - u[2] - alpha[2]*(u[3] - u[2]) = 0.0;
+	linev2: v[7] - v[2] - alpha[2]*(v[3] - v[2]) = 0.0;
+	lineu3: u[8] - u[3] - alpha[3]*(u[4] - u[3]) = 0.0;
+	linev3: v[8] - v[3] - alpha[3]*(v[4] - v[3]) = 0.0;
+	lineu4: u[9] - u[4] - alpha[4]*(u[5] - u[4]) = 0.0;
+	linev4: v[9] - v[4] - alpha[4]*(v[5] - v[4]) = 0.0;
+	lineu5: u[10] - u[5] - alpha[5]*(u[1] - u[5]) = 0.0;
+	linev5: v[10] - v[5] - alpha[5]*(v[1] - v[5]) = 0.0;
+	lineu6: u[11] - u[5] - alpha[5]*(u[1] - u[5]) = 0.0;
+	linev6: v[11] - v[5] - alpha[5]*(v[1] - v[5]) = 0.0;
+
+	obj: MINIMIZE eps;
+
+METHODS
+METHOD init;
+	FOR i IN [1..nnodes] DO
+		u[i] := 5.0;
+		v[i] := 5.0;
+		u[i].nominal := 10.0;
+		v[i].nominal := 10.0;
+	END FOR;
+	FOR i IN [1..nlines] DO
+		alpha[i] := 0.0;
+		alpha[i].lower_bound := 0.0;
+		alpha[i].upper_bound := 1.0;
+		alpha[i].nominal := 1.0;
+	END FOR;
+	eps := 0.5;
+	eps.lower_bound := 0.0;
+	eps.upper_bound := 3.0;
+	eps.nominal := 1.0;
+END init;
+
+METHOD self_test;
+	ASSERT eps >= -1e-8;
+	ASSERT eps <= 3.0 + 1e-8;
+	ASSERT abs(eps - 1.5625) < 5e-5;
+	FOR i IN [1..5] DO
+		ASSERT SATISFIED(boundary[i],1e-6);
+	END FOR;
+	FOR i IN [6..nnodes] DO
+		ASSERT SATISFIED(interior[i],1e-6);
+	END FOR;
+	ASSERT SATISFIED(lineu1,1e-6);
+	ASSERT SATISFIED(linev1,1e-6);
+	ASSERT SATISFIED(lineu2,1e-6);
+	ASSERT SATISFIED(linev2,1e-6);
+	ASSERT SATISFIED(lineu3,1e-6);
+	ASSERT SATISFIED(linev3,1e-6);
+	ASSERT SATISFIED(lineu4,1e-6);
+	ASSERT SATISFIED(linev4,1e-6);
+	ASSERT SATISFIED(lineu5,1e-6);
+	ASSERT SATISFIED(linev5,1e-6);
+	ASSERT SATISFIED(lineu6,1e-6);
+	ASSERT SATISFIED(linev6,1e-6);
+END self_test;
+
+METHOD a4sqp;
+	RUN init;
+	SOLVER A4SQP;
+	OPTION max_iter 200;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'EXACT_LAGRANGIAN';
+	OPTION restoration TRUE;
+	OPTION qp_time_limit 2.0;
+END a4sqp;
+
+METHOD a4sqp_probe;
+	RUN init;
+	SOLVER A4SQP;
+	OPTION max_iter 30;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'EXACT_LAGRANGIAN';
+	OPTION restoration TRUE;
+	OPTION qp_time_limit 2.0;
+END a4sqp_probe;
+
+METHOD a4sqp_bfgs;
+	RUN init;
+	SOLVER A4SQP;
+	OPTION max_iter 120;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'BFGS';
+	OPTION restoration TRUE;
+	OPTION qp_time_limit 2.0;
+END a4sqp_bfgs;
+
+METHOD a4sqp_obj;
+	RUN init;
+	SOLVER A4SQP;
+	OPTION max_iter 120;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'EXACT_OBJ';
+	OPTION restoration TRUE;
+	OPTION qp_time_limit 2.0;
+END a4sqp_obj;
+
+METHOD a4sqp_soc;
+	RUN init;
+	SOLVER A4SQP;
+	OPTION max_iter 250;
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION hessian 'BFGS';
+	OPTION restoration TRUE;
+	OPTION second_order_correction TRUE;
+	OPTION soc_max_iter 4;
+	OPTION active_bound_release TRUE;
+	OPTION reduced_gradient_polish_mode 'FALLBACK';
+	OPTION qp_time_limit 2.0;
+END a4sqp_soc;
+
+METHOD ipopt;
+	RUN init;
+	SOLVER IPOPT;
+END ipopt;
+
+METHOD slsqp;
+	RUN init;
+	SOLVER SLSQP;
+	OPTION max_iter 1000;
+	OPTION constraint_tol 1e-8;
+END slsqp;
+
+METHOD on_load;
+	RUN a4sqp;
+END on_load;
+
+METHOD on_load_test;
+	RUN init;
+END on_load_test;
+END disc2;

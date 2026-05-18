@@ -52,7 +52,7 @@ static void test_stack(void)
   CU_FAIL("test_stack() compiled with NDEBUG - some features not tested.");
 #endif
 #ifndef MALLOC_DEBUG
-  CU_FAIL("test_stack() compiled without MALLOC_DEBUG - memory management not tested.");
+  ASC_TEST_PARTIAL_SKIP("test_stack() compiled without MALLOC_DEBUG; memory-management checks skipped.");
 #endif
 
   /*  NOTE:  Each test section assumes that

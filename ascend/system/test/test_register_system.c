@@ -20,7 +20,8 @@
 
 #define TESTS(T) \
 	T(link) \
-	T(der)
+	T(der) \
+	T(leastsq)
 
 #define PROTO_TEST(NAME) PROTO(system,NAME)
 TESTS(PROTO_TEST)

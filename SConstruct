@@ -240,6 +240,13 @@ else: # LINUX, unix we hope
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_dlpath= default_conopt_libpath + ":/usr/local/lib"
 	default_conopt_lib="consub3"
+	local_conopt_prefix = os.path.expanduser("~/.local")
+	if (
+		os.path.exists(os.path.join(local_conopt_prefix,"include","conopt.h"))
+		and os.path.exists(os.path.join(local_conopt_prefix,"lib","libconopt.so"))
+	):
+		default_conopt_prefix = local_conopt_prefix
+		default_conopt_lib = "conopt"
 
 	need_libm = True
 	if not os.path.isdir(default_tcl):
@@ -441,13 +448,13 @@ vars.Add(
 
 # Which solvers will we allow?
 vars.Add(ListVariable('WITH_SOLVERS'
-	,"List of the solvers you want to build. The default is the minimum that"	
-		+" works. The option 'LSOD' is provided for backwards compatibility"
+	,"List of the solvers you want to build. The default includes the open"
+		+" solvers normally available in a developer build. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS','MAKEMPS']
+	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS',"A4SQP","SLSQP",'MAKEMPS']
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","RADAU5"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","A4SQP","SLSQP","RADAU5"
 	 ]
 ))
 
@@ -1138,9 +1145,23 @@ for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufspar
 if not env['WITH_DOC']:
 	env.set_optional('doc_build',reason='documentation was disabled',active=False)
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS':
-	env.set_optional(solv,active = solv in env['WITH_SOLVERS'], reason="Not selected (see option WITH_SOLVERS)")
-	
+def _explicit_bool_argument(name):
+	if name not in ARGUMENTS:
+		return None
+	value = str(ARGUMENTS[name]).strip().lower()
+	return value not in ('0', 'false', 'no', 'off', 'none')
+
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP':
+	name = 'WITH_%s' % solv
+	explicit = _explicit_bool_argument(name)
+	if explicit is None:
+		env.set_optional(solv,active = solv in env['WITH_SOLVERS'], reason="Not selected (see option WITH_SOLVERS)")
+	else:
+		if explicit and solv not in env['WITH_SOLVERS']:
+			env['WITH_SOLVERS'].append(solv)
+		if not explicit and solv in env['WITH_SOLVERS']:
+			env['WITH_SOLVERS'].remove(solv)
+		env.set_optional(solv,active = explicit, reason="%s=%d" % (name, 1 if explicit else 0))
 
 print(f"DEBUG: WITH_CUNIT = {env['WITH_CUNIT']}")
 print(f"DEBUG: WITH_IPOPT = {env['WITH_IPOPT']}")
@@ -1573,6 +1594,12 @@ def CheckLexDestroy(context):
 
 cunit_test_text = """
 #include <CUnit/CUnit.h>
+#ifndef CU_SKIP
+#error "CUnit 2.3.0 or newer is required for CU_SKIP"
+#endif
+#ifndef CU_SKIP_IF
+#error "CUnit 2.3.0 or newer is required for CU_SKIP_IF"
+#endif
 int maxi(int i1, int i2){
 	return (i1 > i2) ? i1 : i2;
 }
@@ -2672,6 +2699,8 @@ for k,v in {
 				,'ASC_WITH_MAKEMPS':env['WITH_MAKEMPS']
 				,'ASC_WITH_IPOPT':env['WITH_IPOPT']
 				,'ASC_WITH_HIGHS':env['WITH_HIGHS']
+				,'ASC_WITH_A4SQP':env['WITH_A4SQP']
+				,'ASC_WITH_SLSQP':env['WITH_SLSQP']
 				,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
 				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
 				,'ASC_WITH_PCRE':env['WITH_PCRE']

@@ -1,0 +1,52 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+MODEL hs11;
+	x1, x2 IS_A solver_var;
+
+	NOTES
+		'description' SELF {
+			Hock-Schittkowski problem 11.
+			SIF equivalent:
+			    minimize (x1 - 5)^2 + x2^2 - 25
+			    subject to x2 >= x1^2
+			Known solution:
+			    x1 = 1.2347728250533
+			    x2 = 1.5246639294901
+			    f  = -8.49846422315467
+		}
+		'source' SELF {
+			W. Hock and K. Schittkowski, "Test examples for nonlinear
+			programming codes", Lecture Notes in Economics and
+			Mathematical Systems 187, Springer-Verlag, Heidelberg, 1981.
+			SIF input by Ph. L. Toint, October 1990.
+		}
+		'problem_origin' SELF {
+			This is a synthetic constrained nonlinear programming
+			benchmark rather than a model of a physical system.
+		}
+	END NOTES;
+
+	con1: x2 >= x1^2;
+	obj: MINIMIZE (x1 - 5)^2 + x2^2 - 25;
+
+METHODS
+METHOD self_test;
+	ASSERT abs(x1 - 1.2347728250533) < 1.5e-4;
+	ASSERT abs(x2 - 1.5246639294901) < 3e-4;
+	ASSERT abs(((x1 - 5)^2 + x2^2 - 25) - (-8.49846422315467)) < 1e-6;
+	ASSERT SATISFIED(con1,1e-7);
+END self_test;
+
+METHOD on_load;
+	x1 := 4.9;
+	x2 := 0.1;
+	SOLVER A4SQP;
+END on_load;
+
+METHOD on_load_test;
+	x1 := 4.9;
+	x2 := 0.1;
+END on_load_test;
+END hs11;

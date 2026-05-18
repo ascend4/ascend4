@@ -1394,6 +1394,7 @@ struct value_t ApplyFunction(struct value_t value, CONST struct Func *f)
         case F_EXP:
 #ifdef HAVE_ERF
 		case F_ERF:
+		case F_ERFC_SCALED:
 #endif
         case F_LNM:
         case F_SIN:
@@ -1443,4 +1444,3 @@ struct value_t ApplyFunction(struct value_t value, CONST struct Func *f)
     return TypeConflict();
   } /* end value type */
 }
-

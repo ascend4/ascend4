@@ -1,0 +1,9 @@
+#!/bin/bash
+# CUTEst package definition for an IPOPT C API comparison driver.
+
+export PACKAGE=ipoptc
+export PACKDIR=ipoptc
+export PACK_PRECISION="double"
+export PACKOBJS=""
+export PACKLIBS="-lipopt -lblas -llapack -lm -ldl -lstdc++"
+export SPECS=""

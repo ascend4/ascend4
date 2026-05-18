@@ -13,6 +13,7 @@ coverage.info
 *.a
 *.def
 *.exe
+*.odt
 .scon*
 a4
 tmp/
@@ -70,9 +71,11 @@ models/johnpye/datareader/daggett_ca_34.865371_-116.783023_psmv3_60_tmy.csv
 Highs.log
 .lcov/
 
-
+**/.~lock.*#
 **/.claude/settings.local.json
 .aider*
 models/johnpye/fprops/test/eqm_case_runner
 models/johnpye/fprops/test/eqm_mu0_runner
 models/johnpye/fprops/test/eqm_nox_runner
+cutest_a4sqp_ipoptc_results.jsonl
+cutest_a4sqp_ipoptc_logs/

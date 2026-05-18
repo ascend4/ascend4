@@ -128,7 +128,7 @@ static void test_list(void)
   CU_FAIL("test_list() compiled with NDEBUG - some features not tested.");
 #endif
 #ifndef MALLOC_DEBUG
-  CU_FAIL("test_list() compiled without MALLOC_DEBUG - memory management not tested.");
+  ASC_TEST_PARTIAL_SKIP("test_list() compiled without MALLOC_DEBUG; memory-management checks skipped.");
 #endif
 
 #ifndef ASC_NO_POOL

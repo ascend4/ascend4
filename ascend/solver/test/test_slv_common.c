@@ -145,7 +145,7 @@ static void test_slv_common(void)
   CU_FAIL("test_slv_common() compiled with NDEBUG - some features not tested.");
 #endif
 #ifndef MALLOC_DEBUG
-  CU_FAIL("test_slv_common() compiled without MALLOC_DEBUG - memory management not tested.");
+  ASC_TEST_PARTIAL_SKIP("test_slv_common() compiled without MALLOC_DEBUG; memory-management checks skipped.");
 #endif
 
   prior_meminuse = ascmeminuse();

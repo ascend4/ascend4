@@ -448,6 +448,20 @@ double safe_erf_D0(double x,enum safe_err *safe)
   (void)safe;
   return( erf(x) );
 }
+
+double safe_erfc_scaled_D0(double x,enum safe_err *safe)
+{
+  double y = erfc_scaled(x);
+  if(!asc_finite(y)) {
+    double bogus = BIGNUM;
+    if( safe_print_errors ) {
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"erfc_scaled_D0: overflow at %g: returning %g.",x,bogus);
+    }
+    *safe = safe_overflow;
+    return bogus;
+  }
+  return y;
+}
 #endif /* HAVE_ERF */
 
 double safe_exp_D0(double x,enum safe_err *safe)
@@ -607,6 +621,11 @@ double safe_erf_D1(double x,enum safe_err *safe)
 {
    return( safe_ERF_COEF * safe_exp_D0(-safe_sqr_D0(x,safe),safe) );
 }
+
+double safe_erfc_scaled_D1(double x,enum safe_err *safe)
+{
+  return derfc_scaled(x);
+}
 #endif /* HAVE_ERF */
 
 double safe_exp_D1(double x,enum safe_err *safe)
@@ -764,6 +783,11 @@ double safe_erf_D2(double x,enum safe_err *safe)
 {
    return( -ldexp(safe_ERF_COEF *
 		  safe_mul_D0(x,safe_exp_D0(-safe_sqr_D0(x,safe),safe),safe),1) );
+}
+
+double safe_erfc_scaled_D2(double x,enum safe_err *safe)
+{
+  return derfc_scaled2(x);
 }
 #endif /* HAVE_ERF */
 

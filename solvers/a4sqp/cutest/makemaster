@@ -1,0 +1,19 @@
+# Main body of the installation makefile for the CUTEst A4SQP interface.
+
+include $(CUTEST)/src/makedefs/defaults
+
+PACKAGE = A4SQP
+package = a4sqp
+ASCEND_ROOT ?= /home/john/ascend
+EXTRAINCLUDES += -I$(ASCEND_ROOT)
+
+include $(CUTEST)/src/makedefs/definitions
+
+$(PACKAGE) = $(OBJ)/$(package)_main.o $(OBJ)/a4sqp_cutest_lsq.o
+
+include $(CUTEST)/src/makedefs/instructions
+
+run_test:
+	echo "No standalone CUTEst A4SQP test program. Use runcutest -p a4sqp -D PROBLEM."
+
+include $(CUTEST)/src/makedefs/compile

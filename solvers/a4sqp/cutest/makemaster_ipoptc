@@ -1,0 +1,16 @@
+# Main body of the installation makefile for the CUTEst IPOPT C API interface.
+
+include $(CUTEST)/src/makedefs/defaults
+
+PACKAGE = IPOPTC
+package = ipoptc
+ASCEND_ROOT ?= /home/john/ascend
+EXTRAINCLUDES += -I/usr/include/coin
+
+include $(CUTEST)/src/makedefs/definitions
+include $(CUTEST)/src/makedefs/instructions
+
+run_test:
+	echo "No standalone CUTEst IPOPTC test program. Use runcutest -p ipoptc -D PROBLEM."
+
+include $(CUTEST)/src/makedefs/compile

@@ -43,6 +43,7 @@
 #include <ascend/system/bndman.h>
 #include <ascend/system/analyze.h>
 #include <ascend/system/system_impl.h>
+#include <ascend/system/lsq.h>
 
 /* #define EMPTY_DEBUG */
 
@@ -235,7 +236,7 @@ int slv_destroy(slv_system_t sys)
       }
     }
   }
-if (ret) {
+  if (ret) {
 	ERROR_REPORTER_HERE(ASC_PROG_FATAL,"slv_destroy: slv_system_t 0x%p not freed.",sys);
   } else {
 
@@ -251,6 +252,7 @@ if (ret) {
 		sys->hidden_instances = NULL;
 	}
 
+	system_clear_lsq_view(sys);
 	SLV_FREE_BUFS(SLV_FREE_BUF, SLV_FREE_BUF_GLOBAL)
 
 	DEFINE_SET_INCIDENCES(SLV_FREE_INCIDENCE,SLV_FREE_INCIDENCE)

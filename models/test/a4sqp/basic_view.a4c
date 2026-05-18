@@ -1,0 +1,30 @@
+REQUIRE "system.a4l";
+
+MODEL a4sqp_basic_view;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	z IS_A solver_var;
+
+	eq1: x + 2*y + z = 8;
+	le1: x - y <= 4;
+	ge1: x + y >= -1;
+
+	obj: MINIMIZE (x - 1)^2 + y^2;
+
+METHODS
+
+METHOD on_load;
+	x := 1;
+	y := 2;
+	z := 3;
+	FREE x,y;
+	FIX z;
+	x.lower_bound := -10;
+	x.upper_bound := 10;
+	y.lower_bound := -10;
+	y.upper_bound := 10;
+	x.nominal := 2;
+	y.nominal := 4;
+END on_load;
+
+END a4sqp_basic_view;

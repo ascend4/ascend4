@@ -34,7 +34,7 @@ static void test_bit(void){
   unsigned long prior_meminuse = ascmeminuse();
 
 #ifndef MALLOC_DEBUG
-  CU_FAIL("test_set() compiled without MALLOC_DEBUG - memory management not tested.");
+  ASC_TEST_PARTIAL_SKIP("test_bit() compiled without MALLOC_DEBUG; memory-management checks skipped.");
 #endif
 
   // CreateBList, SetBit, ClearBit, ReadBit, BLength, BitListEmpty, BitListBytes

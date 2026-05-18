@@ -896,6 +896,11 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.enable_on_file_open()
 			# call the low-level 'load' command...
 			self.library.load(filename)
+			if hasattr(self, "solver_engine"):
+				_current_solver = self.solver.getName() if hasattr(self, "solver") else None
+				self.update_solver_list()
+				if _current_solver in self.solver_engine_menu_dict:
+					self.solver_engine_menu_dict[_current_solver].set_active(True)
 			self.update_recent_files(filename)
 		except RuntimeError as e:
 			self.statusbar.pop(_context)

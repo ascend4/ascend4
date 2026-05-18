@@ -37,7 +37,7 @@ static void test_set(void)
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
 
 #ifndef MALLOC_DEBUG
-  CU_FAIL("test_set() compiled without MALLOC_DEBUG - memory management not tested.");
+  ASC_TEST_PARTIAL_SKIP("test_set() compiled without MALLOC_DEBUG; memory-management checks skipped.");
 #endif
 
   /* test set_size() */

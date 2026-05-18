@@ -36,7 +36,22 @@ if _cunit_libpath:
 
 conf = test_env.Configure()
 if not conf.CheckDeclaration('CU_set_test_output_capture', '#include <CUnit/TestRun.h>\n'):
-	print("ERROR: CUnit is missing CU_set_test_output_capture; install the patched CUnit.")
+	print("ERROR: CUnit is missing CU_set_test_output_capture; install CUnit 2.3.0 or newer.")
+	Exit(1)
+if not conf.CheckDeclaration('CU_get_skip_list', '#include <CUnit/TestRun.h>\n'):
+	print("ERROR: CUnit is missing CU_get_skip_list; install CUnit 2.3.0 or newer.")
+	Exit(1)
+if not conf.TryCompile("""
+#include <CUnit/CUnit.h>
+#ifndef CU_SKIP
+#error "CUnit 2.3.0 or newer is required for CU_SKIP"
+#endif
+#ifndef CU_SKIP_IF
+#error "CUnit 2.3.0 or newer is required for CU_SKIP_IF"
+#endif
+int main(void){ return 0; }
+""", ".c"):
+	print("ERROR: CUnit is missing CU_SKIP/CU_SKIP_IF; install CUnit 2.3.0 or newer.")
 	Exit(1)
 test_env = conf.Finish()
 

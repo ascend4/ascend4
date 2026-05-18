@@ -1,0 +1,84 @@
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+
+(*
+	CUTEst KISSING2, translated from sif/KISSING2.SIF.
+
+	This is the m = 25, n = 4 instance. The objective is
+
+	    sum[i,k] p[i][k]^2 - m*n
+
+	subject to all ordered pairwise distance constraints
+
+	    sum[k] (p[i][k] - p[j][k])^2 >= 4
+
+	for i <> j, the radial constraints
+
+	    sum[k] p[i][k]^2 >= 4
+
+	for i = j,
+	and the normalization constraints p[i][j] = 0 for 2 <= i <= j <= n.
+*)
+MODEL kissing2;
+	m IS_A integer_constant;
+	n IS_A integer_constant;
+	m :== 25;
+	n :== 4;
+
+	p[1..m][1..n] IS_A solver_var;
+
+	obj: MINIMIZE SUM[SUM[p[i][k]*p[i][k] | k IN [1..n]] | i IN [1..m]] - m*n;
+
+	FOR i IN [1..m] CREATE
+		c_self[i]: SUM[p[i][k]*p[i][k] | k IN [1..n]] >= 4;
+	END FOR;
+
+	FOR i IN [2..m] CREATE
+		FOR j IN [1..i - 1] CREATE
+			c_pair_lo[i][j]: SUM[(p[i][k] - p[j][k])*(p[i][k] - p[j][k]) | k IN [1..n]] >= 4;
+		END FOR;
+	END FOR;
+
+	FOR i IN [1..m - 1] CREATE
+		FOR j IN [i + 1..m] CREATE
+			c_pair_hi[i][j]: SUM[(p[i][k] - p[j][k])*(p[i][k] - p[j][k]) | k IN [1..n]] >= 4;
+		END FOR;
+	END FOR;
+
+METHODS
+METHOD default_self;
+	FOR i IN [1..m] DO
+		p[i][1] := 2*cos(2{PI*rad}*i/m);
+		p[i][2] := 2*sin(2{PI*rad}*i/m);
+		p[i][3] := 2*sin(2{PI*rad}*i/m);
+		p[i][4] := 2*cos(2{PI*rad}*i/m);
+	END FOR;
+END default_self;
+
+METHOD bound_self;
+	FOR i IN [1..m] DO
+		FOR k IN [1..n] DO
+			p[i][k].lower_bound := -100;
+			p[i][k].upper_bound := 100;
+			p[i][k].nominal := 1;
+		END FOR;
+	END FOR;
+END bound_self;
+
+METHOD specify;
+	FREE p[1..m][1..n];
+	FIX p[2][2], p[2][3], p[2][4];
+	FIX p[3][3], p[3][4];
+	FIX p[4][4];
+END specify;
+
+METHOD on_load;
+	RUN default_self;
+	RUN bound_self;
+	RUN specify;
+	SOLVER A4SQP;
+	OPTION max_iter 100;
+	OPTION progress_log TRUE;
+	SOLVE;
+END on_load;
+END kissing2;
