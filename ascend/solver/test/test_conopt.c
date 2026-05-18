@@ -55,7 +55,7 @@ static void test_conopt(const char *filenamestem){
 	/* set the needed environment variables so that models, solvers can be found */
 	snprintf(env1,2*PATH_MAX,ASC_ENV_LIBRARY "=%s","models");
 	CU_TEST(0 == Asc_PutEnv(env1));
-	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/conopt" OSPATH_DIV "solvers/qrslv" OSPATH_DIV "solver/cmslv"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/conopt" OSPATH_DIV "solvers/qrslv" OSPATH_DIV "solvers/cmslv"));
 	/* read back and display the ASCENDLIBRARY setting */
 	char *lib = Asc_GetEnv(ASC_ENV_LIBRARY);
 	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_LIBRARY,lib);
@@ -64,13 +64,13 @@ static void test_conopt(const char *filenamestem){
 	/* load the CONOPT solver, presumably from the ASCENDSOLVERS path */
 	if(0 != package_load("conopt",NULL)){
 		Asc_CompilerDestroy();
-		CONSOLE_DEBUG("Skipping CONOPT test: solver not available");
+		CU_SKIP("CONOPT solver package is not available at runtime.");
 		return;
 	}
 	solver_index = slv_lookup_client("CONOPT");
 	if(solver_index==-1){
 		Asc_CompilerDestroy();
-		CONSOLE_DEBUG("Skipping CONOPT test: solver not registered");
+		CU_FAIL("CONOPT solver package loaded but did not register solver 'CONOPT'.");
 		return;
 	}
 
@@ -150,7 +150,7 @@ static void test_conopt(const char *filenamestem){
 /*===========================================================================*/
 /* Registration information */
 
-#define TESTS1(T) \
+#define ACTIVE_CONOPT_TESTS(T) \
 	T(test11) \
 	T(test12) \
 	T(test13) \
@@ -164,10 +164,10 @@ self_test method. */
 #define T(N) static void test_##N(void){\
 		test_conopt(#N);\
 	}
-TESTS1(T)
+ACTIVE_CONOPT_TESTS(T)
 #undef T
 
 #define TESTS(T) \
-	TESTS1(T)
+	ACTIVE_CONOPT_TESTS(T)
 
 REGISTER_TESTS_SIMPLE(solver_conopt, TESTS)

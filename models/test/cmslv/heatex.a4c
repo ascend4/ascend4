@@ -296,7 +296,30 @@ METHODS
 	END on_load;
 
 	METHOD self_test;
-		(* nothing tested here as yet *)
+		ASSERT abs(Tc[1] - 303.390645634 {K}) < 5e-6 {K};
+		ASSERT abs(Tc[2] - 304.159963995 {K}) < 5e-6 {K};
+		ASSERT abs(Tc[3] - 308.331483057 {K}) < 5e-6 {K};
+		ASSERT abs(Th[0] - 320.362884500 {K}) < 5e-6 {K};
+		ASSERT abs(Th[1] - 320.938080148 {K}) < 5e-6 {K};
+		ASSERT abs(Th[2] - 322.894233232 {K}) < 5e-6 {K};
+		ASSERT abs(phi[0] - 0.0383097445127) < 5e-10;
+		ASSERT abs(phi[1]) < 1e-8;
+		ASSERT abs(phi[2]) < 1e-8;
+		ASSERT abs(phi[3]) < 1e-8;
+		ASSERT abs(eta[1] - 0.388843607356) < 5e-9;
+		ASSERT abs(eta[2] - 0.5) < 5e-9;
+		ASSERT abs(dQ[0] - 384389.285382 {BTU/hour}) < 5e-3 {BTU/hour};
+		ASSERT abs(dQ[1] - 239493.001419 {BTU/hour}) < 5e-3 {BTU/hour};
+		ASSERT abs(dQ[2] - 255691.301508 {BTU/hour}) < 5e-3 {BTU/hour};
+		ASSERT abs(dQ[3] - 341233.253166 {BTU/hour}) < 5e-3 {BTU/hour};
+		ASSERT abs(Hc[1] - 109.856918554 {BTU/lb_mole}) < 5e-6 {BTU/lb_mole};
+		ASSERT abs(Hc[2] - 134.782833440 {BTU/lb_mole}) < 5e-6 {BTU/lb_mole};
+		ASSERT abs(Hc[3] - 269.940051040 {BTU/lb_mole}) < 5e-6 {BTU/lb_mole};
+		ASSERT abs(Hh[0] - 657.683667717 {BTU/lb_mole}) < 5e-5 {BTU/lb_mole};
+		ASSERT abs(Hh[1] - 1142.86894565 {BTU/lb_mole}) < 5e-5 {BTU/lb_mole};
+		ASSERT abs(Hh[2] - 1252.95474726 {BTU/lb_mole}) < 5e-5 {BTU/lb_mole};
+		ASSERT bolphaq[1] == TRUE;
+		ASSERT bolphaq[2] == FALSE;
 	END self_test;
 
 END heatex;

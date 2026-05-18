@@ -33,7 +33,7 @@ MODEL test12;
 	
 	cons12_1: x1 + x2 + x3 - 1 = 0;
 
-	objective12: MAXIMIZE -32.174 * (255 * ln((x1+x2+x3+.03)/(.09*x1+x2+x3+.03)) + 280 * ln((x2+x3+.03)/(.07*x2+x3+.03)) + 290 * ln((x3+.03)/(.13*x3+.03)));
+	objective12: MINIMIZE -32.174 * (255 * ln((x1+x2+x3+.03)/(.09*x1+x2+x3+.03)) + 280 * ln((x2+x3+.03)/(.07*x2+x3+.03)) + 290 * ln((x3+.03)/(.13*x3+.03)));
 METHODS
 
 METHOD self_test;
@@ -66,4 +66,3 @@ METHOD on_load;
 END on_load;
 
 END test12;
-

@@ -5,6 +5,7 @@
 #include <ascend/solver/solver.h>
 #include <ascend/linear/mtx.h>
 
+#include <ascend/solver/conoptconfig.h>
 #ifdef ASC_WITH_CONOPT
 # include <ascend/solver/conopt_dl.h>
 #endif

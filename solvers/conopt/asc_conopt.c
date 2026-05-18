@@ -31,6 +31,7 @@
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/mem.h>
 #include <ascend/general/list.h>
+#include <string.h>
 
 #include <ascend/linear/mtx_vector.h>
 
@@ -448,6 +449,54 @@ static boolean calc_objective( conopt_system_t sys){
   asc_assert(sys->obj!=NULL);
   sys->objective = (sys->obj ? relman_eval(sys->obj,&calc_ok,SAFE_CALC) : 0.0);
   return calc_ok;
+}
+
+static struct var_variable *conopt_var_from_mtx_col(conopt_system_t sys, int32 col){
+  int32 orgcol;
+  if(sys == NULL || sys->J.mtx == NULL || col < sys->J.reg.col.low || col > sys->J.reg.col.high){
+    return NULL;
+  }
+  orgcol = mtx_col_to_org(sys->J.mtx,col);
+  if(orgcol < 0 || orgcol >= sys->vtot){
+    return NULL;
+  }
+  return sys->vlist[orgcol];
+}
+
+static struct rel_relation *conopt_rel_from_mtx_row(conopt_system_t sys, int32 row){
+  int32 orgrow;
+  if(sys == NULL || sys->J.mtx == NULL || row < sys->J.reg.row.low || row > sys->J.reg.row.high){
+    return NULL;
+  }
+  orgrow = mtx_row_to_org(sys->J.mtx,row);
+  if(orgrow < 0 || orgrow >= sys->rtot){
+    return NULL;
+  }
+  return sys->rlist[orgrow];
+}
+
+static int32 conopt_col_from_var_sindex(conopt_system_t sys, int32 sindex){
+  int32 col;
+  if(sys == NULL || sys->J.mtx == NULL){
+    return -1;
+  }
+  for(col = sys->J.reg.col.low; col <= sys->J.reg.col.high; ++col){
+    struct var_variable *var = conopt_var_from_mtx_col(sys,col);
+    if(var != NULL && var_sindex(var) == sindex){
+      return col - sys->J.reg.col.low;
+    }
+  }
+  return -1;
+}
+
+static real64 conopt_limit_jacobian_value(conopt_system_t sys, real64 value){
+  if(fabs(value) > RTMAXJ) {
+    if(value > 0) {
+      return RTMAXJ - 1;
+    }
+    return -RTMAXJ + 1;
+  }
+  return value;
 }
 
 /**
@@ -1532,11 +1581,11 @@ static void destroy_matrices( conopt_system_t sys){
 }
 
 static void destroy_vectors( conopt_system_t sys){
-   destroy_array(sys->nominals.vec);
-   destroy_array(sys->weights.vec);
-   destroy_array(sys->relnoms.vec);
-   destroy_array(sys->variables.vec);
-   destroy_array(sys->residuals.vec);
+	   destroy_array(sys->nominals.vec);
+	   destroy_array(sys->weights.vec);
+	   destroy_array(sys->relnoms.vec);
+	   destroy_array(sys->variables.vec);
+	   destroy_array(sys->residuals.vec);
 }
 
 
@@ -1658,7 +1707,7 @@ static void structural_analysis(slv_system_t server, conopt_system_t sys){
   if (sys->obj != NULL) sys->J.reg.row.high--;
   sys->J.reg.col.high = sys->con.n - 1;
 
-  if(slv_check_bounds(SERVER,sys->vused,-1,"fixed ")){
+  if(sys->vused < sys->vtot && slv_check_bounds(SERVER,sys->vused,-1,"fixed ")){
     sys->s.inconsistent = 1;
   }
 
@@ -1847,6 +1896,18 @@ static void update_cost(conopt_system_t sys)
 	@param nz      number of jacobian elements
 	@param usrmem  user memory defined by conopt
 */
+#ifdef ASC_CONOPT_API4
+static int COI_CALL conopt_readmatrix(
+		double lower[], double curr[], double upper[]
+		, int vsta[], int type[], double rhs[]
+		, int esta[], int colsta[], int rowno[]
+		, double value[], int nlflag[], int n_value, int m_value, int nz_value
+		, void *usrmem
+){
+  int *n = &n_value;
+  int *m = &m_value;
+  int *nz = &nz_value;
+#else
 static int COI_CALL conopt_readmatrix(
 		double *lower, double *curr, double *upper
 		, int *vsta,  int *type, double *rhs
@@ -1854,11 +1915,10 @@ static int COI_CALL conopt_readmatrix(
 		, double *value, int *nlflag, int *n, int *m, int *nz
 		, double *usrmem
 ){
-  int32 col,row,count,count_old,len,c,r,offset, obj_count;
+#endif
+  int32 col,row,count,len,c,offset, row_offset, obj_count;
   real64 nominal, up, low;
   struct var_variable *var;
-  const struct rel_relation **rlist=NULL;
-  static rel_filter_t rfilter;
   static var_filter_t vfilter;
   real64 *derivatives;
   int32 *variables;
@@ -1871,9 +1931,6 @@ static int COI_CALL conopt_readmatrix(
   (void)vsta;  (void)rhs;   (void)esta;  (void)n;
 
   sys = (conopt_system_t)usrmem;
-  rfilter.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
-  rfilter.matchvalue =(REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
-
   vfilter.matchbits = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED);
   vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
 
@@ -1881,9 +1938,11 @@ static int COI_CALL conopt_readmatrix(
   calc_residuals(sys);
   scale_system(sys);
 
-  for (offset = col = sys->J.reg.col.low;
-       col <= sys->J.reg.col.high; col++) {
-    var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
+  offset = sys->J.reg.col.low;
+  row_offset = sys->J.reg.row.low;
+  for (col = sys->J.reg.col.low; col <= sys->J.reg.col.high; col++) {
+    var = conopt_var_from_mtx_col(sys,col);
+    asc_assert(var != NULL);
     nominal = sys->nominals.vec[col];
     low = var_lower_bound(var)/nominal;
     up = var_upper_bound(var)/nominal;
@@ -1907,6 +1966,8 @@ static int COI_CALL conopt_readmatrix(
   /* set relation types: all equalities except for last one */
   for (row = 0; row < *m; row++) {
     type[row] = 0;
+    rhs[row] = 0.0;
+    esta[row] = 1;
   }
   if (sys->obj != NULL) {
     type[*m - 1] = 3; /* objective function */
@@ -1918,7 +1979,7 @@ static int COI_CALL conopt_readmatrix(
     variables = ASC_NEW_ARRAY(int32,len);
     derivatives = ASC_NEW_ARRAY(real64,len);
 
-    relman_diff2(
+    relman_diff2_rev(
         sys->obj,&vfilter,derivatives,variables
 	    , &(obj_count),SAFE_CALC
     );
@@ -1928,74 +1989,40 @@ static int COI_CALL conopt_readmatrix(
     variables = NULL;
   }
 
-  count = count_old = 0;
+  count = 0;
 
-  colsta[0] = 0;
+  for(col = sys->J.reg.col.low; col <= sys->J.reg.col.high; col++){
+    int32 conopt_col = col - offset;
+    colsta[conopt_col] = count;
 
-  for(offset = col = sys->J.reg.col.low
-      ; col <= sys->J.reg.col.high
-      ; col++
-  ){
     coord.col = col;
-    var = sys->vlist[col];
-#if CONDBG
-    if (!var_apply_filter(var,&vfilter) ) {
-      MSG("var doesn't pass filter");
+    coord.row = mtx_FIRST;
+    while(
+      value[count] = mtx_next_in_col(sys->J.mtx,&coord,&(sys->J.reg.row)),
+      coord.row != mtx_LAST
+    ){
+      rowno[count] = coord.row - row_offset;
+      value[count] = conopt_limit_jacobian_value(sys,value[count]);
+      nlflag[count] = 1;
+	      ++count;
     }
-#endif /* CONDBG */
-    len = var_n_incidences(var);
-    rlist = var_incidence_list(var);
-    count_old = count;
-    for (c=0; c < len; c++) {
-      /* assuming obj on list... check this */
-      if (rel_apply_filter(rlist[c],&rfilter)) {
-		coord.row = rel_sindex(rlist[c]);
-		rowno[count] = (rel_sindex(rlist[c]) - offset);
-		value[count] = mtx_value(sys->J.mtx,&coord);
-		nlflag[count] = 1;               /* fix this later */
-		if(rlist[c] == sys->obj) {
-#if CONDBG
-		  MSG("found objective in unexpected location");
-#endif /* CONDBG */
-		}
-        if (fabs(value[count]) > RTMAXJ) {
-#if CONDBG
-		  MSG("Large Jacobian value being set to RTMAXJ");
-#endif /* CONDBG */
-		  if (value[count] > 0) {
-			value[count] = RTMAXJ-1;
-		  } else {
-			value[count] = -RTMAXJ+1;
-		  }
-	    }
-		count++;
+
+    if(sys->obj != NULL && variables != NULL && derivatives != NULL){
+      for(c = 0; c < obj_count; ++c){
+        if(conopt_col_from_var_sindex(sys,variables[c]) == conopt_col){
+          rowno[count] = *m - 1;
+          value[count] = derivatives[c] * sys->nominals.vec[col];
+          value[count] = conopt_limit_jacobian_value(sys,value[count]);
+          nlflag[count] = 1;
+	          ++count;
+        }
       }
-      if(rlist[c] == sys->obj) {
-		for (r = 0; r < obj_count; r++) {
-		  // if (sys->obj != NULL) variables/derivatives is populated
-		  if ( variables && derivatives && variables[r] == var_sindex(var) ) {
-		    rowno[count] = *m - 1;
-		    value[count] = derivatives[r];
-		    nlflag[count] = 1;               /* fix this later */
-		    if (fabs(value[count]) > RTMAXJ) {
-		      if (value[count] > 0) {
-			value[count] = RTMAXJ-1;
-		      } else {
-			value[count] = -RTMAXJ+1;
-		      }
-		    }
-		    count++;
-		  }
-		}
-      }
-    }
-    if (count_old != count) {
-	  /* MSG("COLSTA[%d] = %d",col-offset,count_old); */
-      colsta[col - offset] = count_old;
     }
   }
-  /* MSG("COLSTA[%d] = %d",*n,*nz + 1); */
-  colsta[*n] = *nz;
+  colsta[*n] = count;
+  if(count != *nz){
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"CONOPT matrix fill count %d did not match declared NZ %d.",count,*nz);
+  }
   if (sys->obj != NULL) {
     ascfree(variables);
     ascfree(derivatives);
@@ -2141,12 +2168,29 @@ static void conopt_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
 	@param n      number of variables
 	@param usrmem user memory
 */
+#ifdef ASC_CONOPT_API4
+static int COI_CALL conopt_fdeval(
+		const double x[], double *g, double jac[]
+		, int rowno_value, const int jcnm[], int mode_value, int ignerr
+		, int *errcnt, int n_value, int nj_value, int thread
+		, void *usrmem
+){
+  int newpt_value = 1;
+  int *rowno = &rowno_value;
+  int *mode = &mode_value;
+  int *newpt = &newpt_value;
+  int *n = &n_value;
+  int *nj = &nj_value;
+  (void)ignerr;
+  (void)thread;
+#else
 static int COI_CALL conopt_fdeval(
 		double *x, double *g, double *jac
 		, int *rowno, int *jcnm, int *mode, int *ignerr
 		, int *errcnt, int *newpt, int *n, int *nj
 		, double *usrmem
 ){
+#endif
   int32 offset, col, row, len, c;
   real64 nominal, value;
   struct var_variable *var;
@@ -2158,7 +2202,10 @@ static int COI_CALL conopt_fdeval(
   int status;
 
   /* stop gcc whining about unused parameter */
-  (void)jcnm;  (void)n;   (void)nj;
+#ifndef ASC_CONOPT_API4
+  (void)jcnm;  (void)nj;
+#endif
+  (void)n;
 
   MSG("EVALUATION STARTING (row=%d, n=%d, nj=%d)",*rowno,*n,*nj);
 
@@ -2167,8 +2214,9 @@ static int COI_CALL conopt_fdeval(
 	/* MSG("NEW POINT"); */
 	/* a new point */
     for (offset = col = sys->J.reg.col.low;
-	 col <= sys->J.reg.col.high; col++) {
-      var = sys->vlist[col];
+		 col <= sys->J.reg.col.high; col++) {
+      var = conopt_var_from_mtx_col(sys,col);
+      asc_assert(var != NULL);
       nominal = sys->nominals.vec[col];
       value = x[col-offset] * nominal;
       var_set_value(var, value);
@@ -2181,76 +2229,101 @@ static int COI_CALL conopt_fdeval(
   if (*mode == 1 || *mode == 3) {
 	MSG("FUNCTION VALUES");
     offset =  sys->J.reg.row.low;
-    row = *rowno + offset;
-	MSG("ROWNO = %d, OFFSET = %d: ROW = ROW = %d",*rowno, offset, row);
-    if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
+	    row = *rowno + offset;
+		MSG("ROWNO = %d, OFFSET = %d: ROW = ROW = %d",*rowno, offset, row);
+	    if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
       if(calc_objective(sys)){
 		*g = sys->objective;
       }else{
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculation of objective.");
       }
     }else{
-	  rel = sys->rlist[row];
-	  asc_assert(rel!=NULL);
-	  *g = relman_eval(rel,&calc_ok,SAFE_CALC)
-	  * sys->weights.vec[row];
+		  rel = conopt_rel_from_mtx_row(sys,row);
+		  asc_assert(rel!=NULL);
+		  *g = relman_eval(rel,&calc_ok,SAFE_CALC)
+		  * sys->weights.vec[row];
 	  if (!calc_ok) {
         MSG("EVALUATION ERROR IN RELMAN_EVAL");
 		(*errcnt)++;
 	  }
     }
   }
-  if (*mode == 2 || *mode == 3) {
-	MSG("JACOBIAN VALUES");
+	  if (*mode == 2 || *mode == 3) {
+			MSG("JACOBIAN VALUES");
     len = sys->con.maxrow;
     variables = ASC_NEW_ARRAY(int32,len);
     derivatives = ASC_NEW_ARRAY(real64,len);
     vfilter.matchbits = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED);
     vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
 
-    offset =  sys->J.reg.row.low;
-    row = *rowno + offset;
-    if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
-      rel = sys->obj;
-	  asc_assert(rel!=NULL);
-      status = relman_diff2(rel,&vfilter,derivatives,variables,
-		   &(len),SAFE_CALC);
-      for (c = 0; c < len; c++) {
-		jac[variables[c]] = derivatives[c] *  sys->nominals.vec[variables[c]];
-		MSG("Jacobian for row %d, var %d = %f",*rowno,variables[c],jac[variables[c]]);
-      }
-      if(status){
-		MSG("ERROR IN JACOBIAN EVALUATION (OBJECTIVE) (%d)",status);
-		(*errcnt)++;
-      }
-    }else{
-      MSG("NOT LAST ROW");
-      rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
-	  asc_assert(rel!=NULL);
-      status = relman_diff2(rel,&vfilter,derivatives,variables,
-		   &(len),SAFE_CALC);
-      for (c = 0; c < len; c++) {
-		jac[variables[c]] = derivatives[c]
-		  * sys->weights.vec[row] *  sys->nominals.vec[variables[c]];
-		MSG("Jacobian for row %d, var %d = %f",mtx_row_to_org(sys->J.mtx,row),variables[c],jac[variables[c]]);
-      }
-      if(status){
-		MSG("ERROR IN JACOBIAN EVALUATION (%d)",status);
-		(*errcnt)++;
-      }
+	    offset =  sys->J.reg.row.low;
+	    row = *rowno + offset;
+		    if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
+	      rel = sys->obj;
+		  asc_assert(rel!=NULL);
+	      status = relman_diff2_rev(rel,&vfilter,derivatives,variables,
+			   &(len),SAFE_CALC);
+#ifdef ASC_CONOPT_API4
+	      for(c = 0; c < *nj; ++c){
+			if(jcnm[c] >= 0 && jcnm[c] < *n){
+				jac[jcnm[c]] = 0.0;
+			}
+	      }
+#endif
+	      for (c = 0; c < len; c++) {
+				int32 conopt_col = conopt_col_from_var_sindex(sys,variables[c]);
+				if(conopt_col < 0){
+				continue;
+			}
+#ifdef ASC_CONOPT_API4
+			jac[conopt_col] = derivatives[c] * sys->nominals.vec[conopt_col + sys->J.reg.col.low];
+			jac[conopt_col] = conopt_limit_jacobian_value(sys,jac[conopt_col]);
+#else
+			jac[conopt_col] = derivatives[c] * sys->nominals.vec[conopt_col + sys->J.reg.col.low];
+			jac[conopt_col] = conopt_limit_jacobian_value(sys,jac[conopt_col]);
+#endif
+			MSG("Jacobian for row %d, var %d = %f",*rowno,variables[c],derivatives[c]);
+	      }
+	      if(status && !SAFE_CALC){
+			MSG("ERROR IN JACOBIAN EVALUATION (OBJECTIVE) (%d)",status);
+			(*errcnt)++;
+	      }
+	    }else{
+	      MSG("NOT LAST ROW");
+	      rel = conopt_rel_from_mtx_row(sys,row);
+		  asc_assert(rel!=NULL);
+	      status = relman_diff2_rev(rel,&vfilter,derivatives,variables,
+			   &(len),SAFE_CALC);
+#ifdef ASC_CONOPT_API4
+	      for(c = 0; c < *nj; ++c){
+			if(jcnm[c] >= 0 && jcnm[c] < *n){
+				jac[jcnm[c]] = 0.0;
+			}
+	      }
+#endif
+	      for (c = 0; c < len; c++) {
+				int32 conopt_col = conopt_col_from_var_sindex(sys,variables[c]);
+				if(conopt_col < 0){
+				continue;
+			}
+#ifdef ASC_CONOPT_API4
+			jac[conopt_col] = derivatives[c]
+			  * sys->weights.vec[row] * sys->nominals.vec[conopt_col + sys->J.reg.col.low];
+			jac[conopt_col] = conopt_limit_jacobian_value(sys,jac[conopt_col]);
+#else
+			jac[conopt_col] = derivatives[c]
+			  * sys->weights.vec[row] * sys->nominals.vec[conopt_col + sys->J.reg.col.low];
+			jac[conopt_col] = conopt_limit_jacobian_value(sys,jac[conopt_col]);
+#endif
+			MSG("Jacobian for row %d, var %d = %f",mtx_row_to_org(sys->J.mtx,row),variables[c],derivatives[c]);
+	      }
+	      if(status && !SAFE_CALC){
+			MSG("ERROR IN JACOBIAN EVALUATION (%d)",status);
+			(*errcnt)++;
+	      }
     }
-    for (c = 0; c < len; c++) {
-      if(fabs(jac[variables[c]]) > RTMAXJ) {
-		MSG("large jac element");
-        if (jac[variables[c]] < 0) {
-          jac[variables[c]] = -RTMAXJ+1;
-		} else {
-          jac[variables[c]] = RTMAXJ-1;
-		}
-      }
-    }
-    ascfree(variables);
-    ascfree(derivatives);
+	    ascfree(variables);
+	    ascfree(derivatives);
   }
   return 0;
 }
@@ -2266,10 +2339,25 @@ static int COI_CALL conopt_fdeval(
 	@param objval objective value
 	@param usrmem user memory
 */
+#ifdef ASC_CONOPT_API4
+static int COI_CALL conopt_status(
+		int modsta_value, int solsta_value, int iter_value
+		, double objval_value, void *usrmem
+){
+  int32 modsta32 = modsta_value;
+  int32 solsta32 = solsta_value;
+  int32 iter32 = iter_value;
+  real64 objval64 = objval_value;
+  int32 *modsta = &modsta32;
+  int32 *solsta = &solsta32;
+  int32 *iter = &iter32;
+  real64 *objval = &objval64;
+#else
 static int COI_CALL conopt_status(
 		int32 *modsta, int32 *solsta, int32 *iter
 		, real64 *objval, real64 *usrmem
 ){
+#endif
   conopt_system_t sys;
   sys = (conopt_system_t)usrmem;
 
@@ -2279,7 +2367,11 @@ static int COI_CALL conopt_status(
   sys->con.iter = *iter;
   sys->con.obj = sys->objective = *objval;
 
+#ifdef ASC_CONOPT_API4
+  asc_conopt_status(*modsta,*solsta,*iter,*objval,usrmem);
+#else
   asc_conopt_status(modsta,solsta,iter,objval,usrmem);
+#endif
 
   return 0;
 }
@@ -2301,11 +2393,21 @@ static int COI_CALL conopt_status(
 	@param m      - number of constraints
 	@param usrmem - user memory
 */
+#ifdef ASC_CONOPT_API4
+static int COI_CALL conopt_solution(
+		const double xval[], const double xmar[], const int xbas[], const int xsta[],
+		const double yval[], const double ymar[], const int ybas[], const int ysta[],
+		int n_value, int m_value, void *usrmem
+){
+  int *n = &n_value;
+  int *m = &m_value;
+#else
 static int COI_CALL conopt_solution(
 		double *xval, double *xmar, int *xbas, int *xsta,
 		double *yval, double *ymar, int *ybas, int * ysta,
 		int *n, int *m, double *usrmem
 ){
+#endif
   int32 offset, col, c;
   real64 nominal, value;
   struct var_variable *var;
@@ -2432,6 +2534,20 @@ $endif
 	@param lval   - the value to be assigned to name if the cells contains a log value
 	@param usrmem - user memory
 */
+#ifdef ASC_CONOPT_API4
+static int COI_CALL conopt_option(
+		int NCALL_value, double *rval, int *ival, int *logical
+	    , char *name, void *usrmem
+){
+  (void)NCALL_value;
+  (void)rval;
+  (void)ival;
+  (void)logical;
+  (void)usrmem;
+  name[0] = '\0';
+  return 0;
+}
+#else
 static int COI_CALL conopt_option(
 		int *NCALL, double *rval, int *ival, int *logical
 	    , double *usrmem, char *name, int lenname
@@ -2485,28 +2601,42 @@ static int COI_CALL conopt_option(
   return 0;
 }
 
+#endif
+
+#ifdef ASC_CONOPT_API4
+int COI_CALL conopt_errmsg( int ROWNO_value, int COLNO_value, int POSNO_value
+		, const char* MSG, void* USRMEM
+){
+	int MSGLEN_value = strlen(MSG);
+	int *ROWNO = &ROWNO_value;
+	int *COLNO = &COLNO_value;
+	int *POSNO = &POSNO_value;
+	int *MSGLEN = &MSGLEN_value;
+	(void)POSNO;
+#else
 int COI_CALL conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 		, double* USRMEM, char* MSG, int LENMSG
 ){
+#endif
 	conopt_system_t sys;
 	char *relname=NULL, *varname=NULL;
-	struct var_variable **vp;
-	struct rel_relation **rp;
+	struct var_variable *var = NULL;
+	struct rel_relation *rel = NULL;
 
 	sys = (conopt_system_t)USRMEM;
 
 
 	if(*COLNO!=-1){
-		vp=slv_get_solvers_var_list(SERVER);
-		vp = vp + (*COLNO + sys->J.reg.col.low);
-		asc_assert(*vp!=NULL);
-		varname= var_make_name(SERVER,*vp);
+		var = conopt_var_from_mtx_col(sys,*COLNO + sys->J.reg.col.low);
+		asc_assert(var!=NULL);
+		varname= var_make_name(SERVER,var);
 	}
 	if(*ROWNO!=-1){
-		rp=slv_get_solvers_rel_list(SERVER);
-		rp = rp + (*ROWNO + sys->J.reg.row.low);
-		if(*rp!=NULL){
-			relname = rel_make_name(SERVER,*rp);
+		if(*ROWNO != sys->con.m - 1 || sys->obj == NULL){
+			rel = conopt_rel_from_mtx_row(sys,*ROWNO + sys->J.reg.row.low);
+		}
+		if(rel!=NULL){
+			relname = rel_make_name(SERVER,rel);
 		}
 	}
 
@@ -2538,7 +2668,11 @@ static void slv_conopt_iterate(conopt_system_t sys){
 	We pass the pointer to sys as 'usrmem'.
 	Cast back to slv9_system_t to access the information required
   */
+#ifdef ASC_CONOPT_API4
+  COIDEF_UsrMem(sys->con.cntvect, sys);
+#else
   COIDEF_UsrMem(sys->con.cntvect, (double *)sys);
+#endif
 
   sys->con.opt_count = 0; /* reset count on conopt_coiopt calls */
   sys->con.progress_count = 0; /* reset count on coiprg calls */
@@ -2597,7 +2731,12 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
   int32 cap, ind;
   int32 matrix_creation_needed = 1;
   conopt_system_t sys;
-  int *cntvect, temp;
+#ifdef ASC_CONOPT_API4
+  coiHandle_t cntvect = NULL;
+#else
+  int *cntvect;
+#endif
+  int temp;
 
   MSG("PRESOLVE");
 
@@ -2661,20 +2800,44 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
       sys->con.m++; /* treat objective as a row */
     }
 
+#ifdef ASC_CONOPT_API4
+	if(COI_Create(&cntvect)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to initialise CONOPT model handle.");
+		return -4;
+	}
+#else
 	cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
 	COIDEF_Ini(cntvect);
+#endif
 	sys->con.cntvect = cntvect;
 	MSG("NUMBER OF CONSTRAINTS = %d",sys->con.m);
+#ifdef ASC_CONOPT_API4
+	COIDEF_NumVar(cntvect, sys->con.n);
+	COIDEF_NumCon(cntvect, sys->con.m);
+#else
 	COIDEF_NumVar(cntvect, &(sys->con.n));
 	COIDEF_NumCon(cntvect, &(sys->con.m));
+#endif
 	sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
+#ifdef ASC_CONOPT_API4
+	COIDEF_NumNZ(cntvect, sys->con.nz);
+	COIDEF_NumNlNz(cntvect, sys->con.nz);
+#else
 	COIDEF_NumNZ(cntvect, &(sys->con.nz));
 	COIDEF_NumNlNz(cntvect, &(sys->con.nz));
+#endif
 
 	sys->con.base = 0;
+#ifndef ASC_CONOPT_API4
 	COIDEF_Base(cntvect,&(sys->con.base));
+#endif
+#ifdef ASC_CONOPT_API4
+    COIDEF_ErrLim(cntvect, DOMLIM);
+    COIDEF_ItLim(cntvect, ITER_LIMIT);
+#else
     COIDEF_ErrLim(cntvect, &(DOMLIM));
     COIDEF_ItLim(cntvect, &(ITER_LIMIT));
+#endif
 
     if(sys->obj!=NULL){
 		sys->con.optdir = relman_obj_direction(sys->obj);
@@ -2684,11 +2847,20 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
 		sys->con.optdir = 0;
 		sys->con.objcon = 0;
 	}
+#ifdef ASC_CONOPT_API4
+    COIDEF_OptDir(cntvect, sys->con.optdir);
+	COIDEF_ObjCon(cntvect, sys->con.objcon);
+#else
     COIDEF_OptDir(cntvect, &(sys->con.optdir));
 	COIDEF_ObjCon(cntvect, &(sys->con.objcon));
+#endif
 
 	temp = 0;
+#ifdef ASC_CONOPT_API4
+	COIDEF_StdOut(cntvect, temp);
+#else
 	COIDEF_StdOut(cntvect, &temp);
+#endif
 
 	COIDEF_ReadMatrix(cntvect, &conopt_readmatrix);
 	COIDEF_FDEval(cntvect, &conopt_fdeval);
@@ -2699,8 +2871,12 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
 	COIDEF_ErrMsg(cntvect, &conopt_errmsg);
 	COIDEF_Progress(cntvect, &asc_conopt_progress);
 
-	int debugfv = 1;
+	int debugfv = 0;
+#ifdef ASC_CONOPT_API4
+	COIDEF_DebugFV(cntvect, debugfv);
+#else
 	COIDEF_DebugFV(cntvect, &debugfv);
+#endif
 
 #if 0 /* these are the parameters we need to pass to CONOPT */
   ipsz[F2C(4)] = 0;             /* FIX THESE AT A LATER DATE!!!!  */
@@ -2909,6 +3085,14 @@ static int32 conopt_destroy(slv_system_t server, SlvClientToken asys){
   if(sys->con.work != NULL){
     ASC_FREE(sys->con.work);
     sys->con.work = NULL;
+  }
+  if(sys->con.cntvect != NULL){
+#ifdef ASC_CONOPT_API4
+	COI_Free(&(sys->con.cntvect));
+#else
+	ASC_FREE(sys->con.cntvect);
+	sys->con.cntvect = NULL;
+#endif
   }
   ascfree( (POINTER)asys );
   return 0;
