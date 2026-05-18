@@ -1,7 +1,11 @@
 Import('env')
 
-if 'CMSLV' in env['WITH_SOLVERS'] and 'CONOPT' in env['WITH_SOLVERS']:
+with_conopt = 'CONOPT' in env['WITH_SOLVERS']
+with_ipopt = bool(env.get('WITH_IPOPT')) and env.ensure_ipopt()
+
+if 'CMSLV' in env['WITH_SOLVERS']:
 	solver_env = env.Clone()
+	srcs = ["cmslv.c"]
 
 	solver_env.AppendUnique(
 		LIBS = ['ascend']
@@ -15,7 +19,13 @@ if 'CMSLV' in env['WITH_SOLVERS'] and 'CONOPT' in env['WITH_SOLVERS']:
 			, LIBPATH=env['CONOPT_LIBPATH']
 		)
 
-	lib = solver_env.SharedLibrary("cmslv",["cmslv.c"]
+	if with_ipopt:
+		srcs.append("cmslv_ipopt.c")
+		solver_env.AppendUnique(CPPPATH=env.get('IPOPT_CPPPATH', []))
+		solver_env.AppendUnique(LIBPATH=env.get('IPOPT_LIBPATH', []))
+		solver_env.AppendUnique(LIBS=env.get('IPOPT_LIBS', []))
+
+	lib = solver_env.SharedLibrary("cmslv",srcs
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
@@ -28,4 +38,3 @@ if 'CMSLV' in env['WITH_SOLVERS'] and 'CONOPT' in env['WITH_SOLVERS']:
 		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),lib)
 
 # vim: set syntax=python:
-

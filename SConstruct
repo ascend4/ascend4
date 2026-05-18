@@ -240,6 +240,13 @@ else: # LINUX, unix we hope
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_dlpath= default_conopt_libpath + ":/usr/local/lib"
 	default_conopt_lib="consub3"
+	local_conopt_prefix = os.path.expanduser("~/.local")
+	if (
+		os.path.exists(os.path.join(local_conopt_prefix,"include","conopt.h"))
+		and os.path.exists(os.path.join(local_conopt_prefix,"lib","libconopt.so"))
+	):
+		default_conopt_prefix = local_conopt_prefix
+		default_conopt_lib = "conopt"
 
 	need_libm = True
 	if not os.path.isdir(default_tcl):

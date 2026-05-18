@@ -23,6 +23,9 @@
 */
 
 #include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <ascend/utilities/config.h>
 #include <ascend/general/platform.h>
@@ -43,16 +46,13 @@
 #include <ascend/system/cond_config.h>
 #include <ascend/solver/solver.h>
 #include <ascend/solver/slvDOF.h>
+#include <ascend/compiler/packages.h>
 
 #include <ascend/solver/solver.h>
 
-typedef struct slv9_system_structure *slv9_system_t;
-
-#define SOLVER_CMSLV 9
+#include "cmslv.h"
 
 ASC_DLLSPEC SolverRegisterFn cmslv_register;
-
-#include <ascend/solver/conopt_dl.h>
 
 //#define CMSLV_DEBUG
 #ifdef CMSLV_DEBUG
@@ -81,45 +81,6 @@ ASC_DLLSPEC SolverRegisterFn cmslv_register;
  */
 #define SLV9(s) ((slv9_system_t)(s))
 #define SERVER (sys->slv)
-#define slv9_PA_SIZE 26 /* MUST INCREMENT WHEN ADDING PARAMETERS */
-#define LOGSOLVER_OPTION_PTR (sys->parm_array[0])
-#define LOGSOLVER_OPTION  ((*(char **)LOGSOLVER_OPTION_PTR))
-#define NONLISOLVER_OPTION_PTR (sys->parm_array[1])
-#define NONLISOLVER_OPTION  ((*(char **)NONLISOLVER_OPTION_PTR))
-#define OPTSOLVER_OPTION_PTR (sys->parm_array[2])
-#define OPTSOLVER_OPTION  ((*(char **)OPTSOLVER_OPTION_PTR))
-#define TIME_LIMIT_PTR (sys->parm_array[3])
-#define TIME_LIMIT     ((*(int32 *)TIME_LIMIT_PTR))
-#define ITER_LIMIT_PTR (sys->parm_array[4])
-#define ITER_LIMIT     ((*(int32 *)ITER_LIMIT_PTR))
-#define ITER_BIS_LIMIT_PTR (sys->parm_array[5])
-#define ITER_BIS_LIMIT  ((*(int32 *)ITER_BIS_LIMIT_PTR))
-#define TOO_SMALL_PTR (sys->parm_array[6])
-#define TOO_SMALL     ((*(real64 *)TOO_SMALL_PTR))
-#define LINEAR_SEARCH_FACTOR_PTR (sys->parm_array[7])
-#define LINEAR_SEARCH_FACTOR  ((*(real64 *)LINEAR_SEARCH_FACTOR_PTR))
-#define SHOW_MORE_IMPT_PTR (sys->parm_array[8])
-#define SHOW_MORE_IMPT     ((*(int32 *)SHOW_MORE_IMPT_PTR))
-#define SHOW_LESS_IMPT_PTR (sys->parm_array[9])
-#define SHOW_LESS_IMPT     ((*(int32 *)SHOW_LESS_IMPT_PTR))
-#define AUTO_RESOLVE_PTR (sys->parm_array[10])
-#define AUTO_RESOLVE     ((*(int32 *)AUTO_RESOLVE_PTR))
-#define UNDEFINED_PTR (sys->parm_array[11])
-#define UNDEFINED  ((*(real64 *)UNDEFINED_PTR))
-#define DOMLIM_PTR (sys->parm_array[12])
-#define DOMLIM     ((*(int32 *)DOMLIM_PTR))
-#define OPT_ITER_LIMIT_PTR (sys->parm_array[13])
-#define OPT_ITER_LIMIT     ((*(int32 *)OPT_ITER_LIMIT_PTR))
-#define INFINITY_PTR (sys->parm_array[14])
-#define ASC_INFINITY  ((*(real64 *)INFINITY_PTR))
-#define OBJ_TOL_PTR (sys->parm_array[15])
-#define OBJ_TOL  ((*(real64 *)OBJ_TOL_PTR))
-#define RTMAXJ_PTR (sys->parm_array[16])
-#define RTMAXJ     ((*(real64 *)RTMAXJ_PTR))
-#define RHO_PTR (sys->parm_array[17])
-#define RHO     ((*(real64 *)RHO_PTR))
-
-
 /*
  * Client tokens of the different solvers: Conditional, Optimizer,
  * Nonlinear, Logical. We will switch from one client token to
@@ -143,6 +104,28 @@ int32 solver_index[NUMBER_OF_CLIENTS];
  */
 static int32 g_optimizing = 0;
 
+static
+void slv9_report_progress(slv9_system_t sys, const char *fmt, ...){
+  char message[512];
+  va_list args;
+
+  if(sys == NULL || fmt == NULL) {
+    return;
+  }
+
+  va_start(args,fmt);
+  vsnprintf(message,sizeof(message),fmt,args);
+  va_end(args);
+  message[sizeof(message)-1] = '\0';
+
+  if(PROGRESS_LOG) {
+    ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"(CMSlv progress) %s",message);
+  }
+  if(PROGRESS_CALLBACKS) {
+    (void)slv_report_progress("CMSlv",message);
+  }
+}
+
 #if USE_CONSISTENCY
 /*
  * number of subregion visited during the solution of the conditional
@@ -151,129 +134,6 @@ static int32 g_optimizing = 0;
 static int32 g_subregions_visited;
 
 #endif /* USE_CONSISTENCY */
-
-
-/* auxiliar structures */
-struct boolean_values {
-  int32            *pre_val;    /* previous values of dis_discrete */
-  int32            *cur_val;    /* current values of dis_discrete  */
-};
-
-struct matching_cases {
-  int32            *case_list;      /* list of cases */
-  int32            ncases;          /* number of cases */
-  int32            diff_subregion;  /* subregion ? */
-};
-
-struct real_values {
-  real64           *pre_values;     /* previous values of var_variables */
-  real64           *cur_values;     /* current values of var_variables */
-};
-
-struct opt_vector {
-  real64 *element;                  /* elements in colum of matrix */
-};
-
-struct opt_matrix {
-  struct opt_vector *cols;          /* columns in matrix */
-};
-
-struct subregionID {
-  unsigned long    ID_number;
-  int32            *bool_values;
-};
-
-struct ds_subregion_list {
-   int32 length,capacity;
-   struct subregionID *sub_stack;
-};
-
-struct ds_subregions_visited {
-   int32 length,capacity;
-   unsigned long *visited;
-};
-
-/*
- * This solver's data structure (CMSlv)
- */
-struct slv9_system_structure {
-
-  /*
-   *  Problem definition
-   */
-  slv_system_t   	 slv;           /* slv_system_t back-link */
-
-  struct rel_relation    *obj;          /* Objective function: NULL = none */
-  struct var_variable    **vlist;       /* Variable list (NULL terminated) */
-  struct rel_relation    **rlist;       /* Relation list (NULL terminated) */
-  struct dis_discrete    **dvlist;      /* Dis vars list (NULL terminated) */
-  struct logrel_relation **lrlist;      /* Logrels list(NULL terminated)*/
-  struct bnd_boundary    **blist;       /* Variable list (NULL terminated) */
-  struct var_variable    **mvlist;
-  struct dis_discrete    **mdvlist;     /* We will not touch the masters list,
-					 * but they can provide very useful
-					 * information to the conditional
-					 * solver since the master index does
-					 * not change.
-                                         */
-
-  /*
-   * for optimization at boundaries
-   */
-  struct opt_matrix      *coeff_matrix; /* Matrix for optimization problem */
-  struct opt_vector      *opt_var_values; /* Values of vars in opt problem */
-  int32                  subregions;    /* number of subregions at cur bnd */
-  mtx_matrix_t           lin_mtx;       /* Matrix to define the linear system
-					 * for calculation of the lagrange
-					 * multipliers
-					 */
-  /*
-   * For search consistency analysis
-   */
-   struct ds_subregion_list subregion_list;
-                                        /*
-					 * Information about the subregions
-					 * visited during the solution of the
-					 * conditional model
-					 */
-   struct ds_subregions_visited subregions_visited;
-                                        /*
-					 * ID number of the subregions
-					 * visited
-					 */
-   int32            *bool_mindex;       /* master indices of boolean vars in
-					 * the problem associated with WHENs
-					 */
-   int32 need_consistency_analysis;    /* Is the consistency analysis needed */
-
-
-  /*
-   *  Solver information
-   */
-  int32                  integrity;     /* Has the system been created ? */
-  int32                  presolved;     /* Has the system been presolved ? */
-  slv_parameters_t       p;             /* Parameters */
-  slv_status_t           s;             /* Status (as of iteration end) */
-  int32                  cap;           /* Order of matrix/vectors */
-  int32                  rank;          /* Symbolic rank of problem */
-  int32                  vused;         /* Free and incident variables */
-  int32                  vtot;          /* length of varlist */
-  int32                  mvtot;         /* length of master varlist */
-  int32                  rused;         /* Included relations */
-  int32                  rtot;          /* length of rellist */
-  real64                 clock;         /* CPU time */
-  int32                  nliter;        /* iterations in nonlinear solver */
-
-  void *parm_array[slv9_PA_SIZE];     /* array of pointers to param values */
-  struct slv_parameter pa[slv9_PA_SIZE]; /* &pa[0] => sys->p.parms */
-
-#ifdef ASC_WITH_CONOPT
-  /*
-   *  Data for optimizer at boundaries (CONOPT)
-   */
-  struct conopt_data con;
-#endif
-};
 
 
 /*
@@ -2389,6 +2249,11 @@ real64 return_to_first_boundary(slv_system_t server,
   destroy_array(bval.pre_val);
   destroy_array(incidences);
 
+  slv9_report_progress(sys,
+    "event=boundary_return_done, iter=%d, count=%d, factor=%.17g, bisect_iter=%d",
+    sys->s.iteration, numbndf, factor, iter
+  );
+
   return factor;
 }
 
@@ -3068,7 +2933,7 @@ int COI_CALL slv9_conopt_option(
   return 0;
 }
 
-#if 0 /* see slv_conopt_iterate */
+#if 0 /* see slv9_bnd_iterate_conopt */
 /*
  * COIPSZ communicates the model size and structure to CONOPT
  * COIPSZ(nintgr, ipsz, nreal, rpsz, usrmem)
@@ -3143,7 +3008,22 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 	@see conopt.h
 */
 static
-void slv_conopt_iterate(slv9_system_t sys){
+int32 slv9_bnd_iterate_conopt(slv9_system_t sys, int32 num_opt_vars,
+		int32 num_opt_eqns, int32 num_vars, real64 *obj_val
+){
+  sys->con.n = num_opt_vars;
+  sys->con.m = num_opt_eqns + 1;  /*including objective function */
+  sys->con.objcon = num_opt_eqns; /* last row is the objective fn */
+  sys->con.nz = (num_opt_eqns * sys->subregions) + 2 * num_vars;
+  /* sys->con.nlnz = sys->con.nz - (num_opt_eqns - 1); */
+  sys->con.nlnz = num_opt_vars - sys->subregions;
+  sys->con.base = 0; /* C calling convention */
+  sys->con.optdir = -1; /* minimisation */
+
+  MSG("%d vars, %d rows",sys->con.n,sys->con.m);
+  MSG("objective constraint: %d",sys->con.objcon);
+  MSG("nonzeros: %d",sys->con.nz);
+  MSG("nonlinear nonzeros: %d",sys->con.nlnz);
 
   if(sys->con.cntvect == NULL){
 	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
@@ -3226,11 +3106,129 @@ void slv_conopt_iterate(slv9_system_t sys){
    * boundary
    */
   sys->con.optimized = 1;
+  if(obj_val != NULL) {
+    *obj_val = sys->con.obj;
+  }
+  return 1;
 }
 
 #endif /* ASC_WITH_CONOPT  */
 
 /*-------------------end of conopt callbacks----------------------------------*/
+
+static
+const char *slv9_optimizer_package(const char *name){
+  if(name == NULL) {
+    return NULL;
+  }
+  if(strcmp(name,"CONOPT") == 0) {
+    return "conopt";
+  }
+  if(strcmp(name,"IPOPT") == 0) {
+    return "ipopt";
+  }
+  return NULL;
+}
+
+static
+int32 slv9_ensure_optimizer_loaded(const char *name){
+  const char *package;
+
+  if(name == NULL) {
+    return 0;
+  }
+  if(strcmp(name,"CONOPT") == 0) {
+#ifndef ASC_WITH_CONOPT
+    return 0;
+#endif
+  }else if(strcmp(name,"IPOPT") == 0) {
+#ifndef ASC_WITH_IPOPT
+    return 0;
+#endif
+  }else{
+    return 0;
+  }
+
+  if(solver_engine_named(name) != NULL) {
+    return 1;
+  }
+  package = slv9_optimizer_package(name);
+  if(package == NULL) {
+    return 0;
+  }
+  if(package_load(package,NULL)) {
+    return 0;
+  }
+  return solver_engine_named(name) != NULL;
+}
+
+static
+int32 slv9_optimizer_available(const char *name){
+  if(name == NULL) {
+    return 0;
+  }
+  if(strcmp(name,"CONOPT") == 0) {
+#ifdef ASC_WITH_CONOPT
+    return slv9_ensure_optimizer_loaded("CONOPT");
+#else
+    return 0;
+#endif
+  }
+  if(strcmp(name,"IPOPT") == 0) {
+#ifdef ASC_WITH_IPOPT
+    return slv9_ensure_optimizer_loaded("IPOPT");
+#else
+    return 0;
+#endif
+  }
+  return 0;
+}
+
+static
+void slv9_report_unavailable_optimizer(const char *name){
+  if(name == NULL) {
+    name = "";
+  }
+  ERROR_REPORTER_HERE(ASC_USER_ERROR,
+    "CMSlv selected optimization solver '%s' is not available.",name
+  );
+  if(strcmp(name,"CONOPT") != 0 && slv9_optimizer_available("CONOPT")) {
+    ERROR_REPORTER_HERE(ASC_USER_NOTE,
+      "CONOPT is available; select optsolvers=CONOPT to use it with CMSlv."
+    );
+  }
+  if(strcmp(name,"IPOPT") != 0 && slv9_optimizer_available("IPOPT")) {
+    ERROR_REPORTER_HERE(ASC_USER_NOTE,
+      "IPOPT is available; select optsolvers=IPOPT to use it with CMSlv."
+    );
+  }
+}
+
+static
+int32 slv9_bnd_iterate(slv9_system_t sys, int32 num_opt_vars,
+		int32 num_opt_eqns, int32 num_vars, real64 *obj_val
+){
+  if(strcmp(OPTSOLVER_OPTION,"CONOPT") == 0) {
+#ifdef ASC_WITH_CONOPT
+    return slv9_bnd_iterate_conopt(sys,num_opt_vars,num_opt_eqns,num_vars,obj_val);
+#else
+    slv9_report_unavailable_optimizer(OPTSOLVER_OPTION);
+    return 0;
+#endif
+  }
+  if(strcmp(OPTSOLVER_OPTION,"IPOPT") == 0) {
+#ifdef ASC_WITH_IPOPT
+    return slv9_bnd_iterate_ipopt(sys,num_opt_vars,num_opt_eqns,num_vars,obj_val);
+#else
+    slv9_report_unavailable_optimizer(OPTSOLVER_OPTION);
+    return 0;
+#endif
+  }
+  ERROR_REPORTER_HERE(ASC_USER_ERROR,
+    "CMSlv selected optimization solver '%s' is not recognised.",OPTSOLVER_OPTION
+  );
+  return 0;
+}
 
 
 /*
@@ -4325,34 +4323,25 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   sys->opt_var_values = &opt_var_values;
   sys->subregions = (*n_subregions);
 
-#ifdef ASC_WITH_CONOPT
-  /* CONOPT parameters */
-  sys->con.n = num_opt_vars;
-  sys->con.m = num_opt_eqns + 1;  /*including objective function */
-  sys->con.objcon = num_opt_eqns; /* last row is the objective fn */
-  sys->con.nz = (num_opt_eqns * sys->subregions) + 2 * num_vars;
-  /* sys->con.nlnz = sys->con.nz - (num_opt_eqns - 1); */
-  sys->con.nlnz = num_opt_vars - sys->subregions;
-  sys->con.base = 0; /* C calling convention */
-  sys->con.optdir = -1; /* minimisation */
-
-  MSG("%d vars, %d rows",sys->con.n,sys->con.m);
-  MSG("objective constraint: %d",sys->con.objcon);
-  MSG("nonzeros: %d",sys->con.nz);
-  MSG("nonlinear nonzeros: %d",sys->con.nlnz);
-
-  /* Perform optimisation using CONOPT */
-  slv_conopt_iterate(sys);
-  obj_val = sys->con.obj;
+  slv9_report_progress(sys,
+    "event=boundary_opt_start, iter=%d, solver=%s, n_subregions=%d, vars=%d, eqns=%d",
+    sys->s.iteration, OPTSOLVER_OPTION, *n_subregions, num_opt_vars, num_opt_eqns
+  );
+  if(!slv9_bnd_iterate(sys,num_opt_vars,num_opt_eqns,num_vars,&obj_val)) {
+    return_value = 0;
+    goto restore;
+  }
+  slv9_report_progress(sys,
+    "event=boundary_opt_done, iter=%d, solver=%s, obj=%.17g",
+    sys->s.iteration, OPTSOLVER_OPTION, obj_val
+  );
 
 #if DEBUG
   FPRINTF(ASCERR," objective function = %f \n",obj_val);
 #endif /* DEBUG */
 
-#endif /* ASC_WITH_CONOPT */
-
   /*
-   * Analyze and apply CONOPT step
+   * Analyze and apply optimization step
    */
 
   if(fabs(obj_val) > OBJ_TOL) {
@@ -4470,6 +4459,7 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
     return_value = 0;
   }
 
+restore:
   /*
    * Returning to initial configuration
    */
@@ -4651,7 +4641,8 @@ int32 slv9_get_default_parameters(slv_system_t server,
     "QRSlv"
   };
   static char *optimization_names[] = {
-    "CONOPT"
+    "CONOPT",
+    "IPOPT"
   };
 
   if(server != NULL && asys != NULL) {
@@ -4744,6 +4735,18 @@ int32 slv9_get_default_parameters(slv_system_t server,
 	       "autoresolve", "auto-resolve", "auto-resolve",
 	       U_p_bool(val,1),U_p_bool(lo,0),U_p_bool(hi,1), 2);
   SLV_BPARM_MACRO(AUTO_RESOLVE_PTR,parameters);
+
+  slv_define_parm(parameters, bool_parm,
+	       "progress_callbacks", "enable progress callbacks",
+               "enable progress callbacks",
+	       U_p_bool(val,1),U_p_bool(lo,0),U_p_bool(hi,1), 2);
+  SLV_BPARM_MACRO(PROGRESS_CALLBACKS_PTR,parameters);
+
+  slv_define_parm(parameters, bool_parm,
+	       "progress_log", "log progress to console",
+               "log progress to console",
+	       U_p_bool(val,0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
+  SLV_BPARM_MACRO(PROGRESS_LOG_PTR,parameters);
 
   slv_define_parm(parameters, real_parm,
 	       "rho", "penalty parameter for optimization",
@@ -4840,15 +4843,13 @@ int32 slv9_get_default_parameters(slv_system_t server,
 	Create the tokens for the nonlinear solver and the logical solver.
 	The token of the conditional solver will be assigned until the
 	end slv9_create, which calls this function. Regarding the optimizer,
-	we use CONOPT in two different ways.  We are using only calls
-	for solving optmization at aboundary, but we can also use a token
-	created by slv8.c if the problem is itself an optimization problem.
-	The vars and rels for the optimization problem at the boundary do
-	not correspond to the vars of the slv, and therefore we have to
-	create the data and calculate the gradients and residuals on the
-	fly. In order to check for the existence of CONOPT, we look
-	for the registration number of slv8.c.  Here we are assuming that
-	slv8 was registred only if CONOPT is available.
+	we use the selected NLP solver in two different ways. We use a
+	CMSlv-specific boundary adapter for optimization at a boundary, but
+	we can also use a standard solver token if the model itself is an
+	optimization problem. The vars and rels for the optimization problem
+	at the boundary do not correspond to the vars of the slv, and
+	therefore we have to create the data and calculate the gradients and
+	residuals on the fly.
 
 	This function will return 0 if successful. If some of the solvers
 	required by the nonlinear, logical or optimization steps are not
@@ -4877,13 +4878,17 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 	}
 	num_nl_reg = S->number;
 
-	S = solver_engine_named(OPTSOLVER_OPTION);
-	if(!S){
-		FPRINTF(ASCERR,"Solver %s not available\n",OPTSOLVER_OPTION);
+	if(!slv9_ensure_optimizer_loaded(OPTSOLVER_OPTION)) {
+		slv9_report_unavailable_optimizer(OPTSOLVER_OPTION);
 		return 1;
 	}
-	MSG("CONOPT found with name '%s'",S->name);
-	MSG("CONOPT found with number '%d'",S->number);
+	S = solver_engine_named(OPTSOLVER_OPTION);
+	if(!S){
+		slv9_report_unavailable_optimizer(OPTSOLVER_OPTION);
+		return 1;
+	}
+	MSG("Optimization solver found with name '%s'",S->name);
+	MSG("Optimization solver found with number '%d'",S->number);
 	num_opt_reg = S->number;
 
 	/* this is us! */
@@ -4921,10 +4926,10 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 	token[NONLINEAR_SOLVER] = slv_get_client_token(server);
 	solver_index[NONLINEAR_SOLVER] = slv_get_selected_solver(server);
 
-	MSG("SETTING UP CONOPT (%d)",num_opt_reg);
+	MSG("SETTING UP OPTIMIZER %s (%d)",OPTSOLVER_OPTION,num_opt_reg);
 	newsolver = slv_switch_solver(server,num_opt_reg);
 	if (newsolver == -1) {
-		FPRINTF(ASCERR,"Solver conopt was not registered\n");
+		FPRINTF(ASCERR,"Solver %s was not registered\n",OPTSOLVER_OPTION);
 		return 1;
 	}
 	token[OPTIMIZATION_SOLVER] = slv_get_client_token(server);
@@ -4955,10 +4960,12 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 		so that CONOPT is able to determine optimality if we are
 		already at the solution.
 	*/
-	MSG("setting CONOPT.iterationlimit");
-	param = "iterationlimit";
-	u.i = 20;
-	set_param_in_solver(server,OPTIMIZATION_SOLVER,int_parm,param,&u);
+	if(strcmp(OPTSOLVER_OPTION,"CONOPT") == 0) {
+		MSG("setting CONOPT.iterationlimit");
+		param = "iterationlimit";
+		u.i = 20;
+		set_param_in_solver(server,OPTIMIZATION_SOLVER,int_parm,param,&u);
+	}
 
 	/*
 		Maximum number of subsequent iterations in nonlinear solver.
@@ -5047,13 +5054,6 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   slv_check_var_initialization(server);
   slv_check_dvar_initialization(server);
   slv_bnd_initialization(server);
-
-  if(get_solvers_tokens(sys,server)) {
-    ascfree(sys);
-    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Solver(s) required by CMSlv were not registered. System cannot be created.");
-    *statusindex = -1;
-    return NULL;
-  }
 
   *statusindex = 0;
   token[CONDITIONAL_SOLVER] = (SlvClientToken)sys;
@@ -5239,6 +5239,13 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list and objective never set.");
     return 2;
   }
+  if(!sys->solvers_ready && get_solvers_tokens(sys,server)) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Solver(s) required by CMSlv were not available for selected options."
+    );
+    return 3;
+  }
+  sys->solvers_ready = 1;
 
   cap = slv_get_num_solvers_rels(server);
   sys->cap = slv_get_num_solvers_vars(server);
@@ -5292,6 +5299,10 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   sys->s.block.iteration = 0;
 
   update_status(sys);
+  slv9_report_progress(sys,
+    "event=presolve, optimizing=%d, vars=%d, rels=%d",
+    g_optimizing, sys->vtot, sys->rtot
+  );
   iteration_ends(sys);
 
   return 0;
@@ -5381,6 +5392,10 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
     slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
     store_real_pre_values(server,&(rvalues));
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Solving Optimization Problem at boundary...\n");
+    slv9_report_progress(sys,
+      "event=boundary_at_zero, iter=%d, n_subregions=%d, cur_subregion=%d",
+      sys->s.iteration, n_subregions, cur_subregion
+    );
     if(optimize_at_boundary(server,asys,&(n_subregions),
                             subregions,&(cur_subregion),disvars,&(rvalues))){
       store_real_cur_values(server,&(rvalues));
@@ -5390,6 +5405,10 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
 			     | VAR_SVAR | VAR_FIXED);
         vfilter.matchvalue = (VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR);
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Boundary(ies) crossed. Returning to boundary first crossed...\n");
+        slv9_report_progress(sys,
+          "event=boundary_return_start, iter=%d",
+          sys->s.iteration
+        );
         factor = return_to_first_boundary(server,asys,&rvalues,&vfilter);
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
@@ -5404,6 +5423,10 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       sys->s.converged  = TRUE;
       sys->s.ready_to_solve = FALSE;
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No progress can be achieved: solution at current boundary.");
+      slv9_report_progress(sys,
+        "event=stop_at_boundary, iter=%d",
+        sys->s.iteration
+      );
       slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
       slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
     }
@@ -5436,6 +5459,10 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       reanalyze_solver_lists(server);
       update_relations_residuals(server);
       system_was_reanalyzed = 1;
+      slv9_report_progress(sys,
+        "event=reconfigure, iter=%d",
+        sys->s.iteration
+      );
     }
 
     /*
@@ -5452,6 +5479,10 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       (sys->nliter)++;
       if(sys->nliter == 1  || system_was_reanalyzed ==1) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with Optimizer...");
+        slv9_report_progress(sys,
+          "event=optimizer_start, iter=%d, solver=%s",
+          sys->s.iteration, OPTSOLVER_OPTION
+        );
         slv_presolve(server);
         slv_get_status(server,&status);
         update_real_status(&(sys->s),&status,0);
@@ -5489,6 +5520,10 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       (sys->nliter)++;
       if(sys->nliter == 1  || system_was_reanalyzed ==1) {
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Iterating with nonlinear solver...\n");
+        slv9_report_progress(sys,
+          "event=nl_start, iter=%d, solver=%s",
+          sys->s.iteration, NONLISOLVER_OPTION
+        );
         slv_presolve(server);
         slv_get_status(server,&status);
         update_struct_info(sys,&status);
@@ -5541,6 +5576,14 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
 			     | VAR_SVAR | VAR_FIXED);
         vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
         ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Boundary(ies) crossed. Returning to boundary first crossed...\n");
+        slv9_report_progress(sys,
+          "event=boundary_crossed, iter=%d",
+          sys->s.iteration
+        );
+        slv9_report_progress(sys,
+          "event=boundary_return_start, iter=%d",
+          sys->s.iteration
+        );
         factor = return_to_first_boundary(server,asys,&rvalues,&vfilter);
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
@@ -5624,7 +5667,10 @@ mtx_matrix_t slv9_get_matrix(slv_system_t server, SlvClientToken sys){
  * Destroy the client tokens of the different solvers
  */
 static
-void destroy_solvers_tokens(slv_system_t  server){
+void destroy_solvers_tokens(slv_system_t server, slv9_system_t sys){
+  if(sys == NULL || !sys->solvers_ready) {
+    return;
+  }
   slv_set_client_token(server,token[LOGICAL_SOLVER]);
   slv_set_solver_index(server,solver_index[LOGICAL_SOLVER]);
   slv_destroy_client(server);
@@ -5636,6 +5682,7 @@ void destroy_solvers_tokens(slv_system_t  server){
   slv_destroy_client(server);
   slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
   slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
+  sys->solvers_ready = 0;
 }
 
 static
@@ -5644,7 +5691,7 @@ int slv9_destroy(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   if(check_system(sys)) return 1;
   destroy_subregion_information(asys);
-  destroy_solvers_tokens(server);
+  destroy_solvers_tokens(server,sys);
   slv_destroy_parms(&(sys->p));
   sys->integrity = DESTROYED;
   if(sys->s.u.nlp.cost) ascfree(sys->s.u.nlp.cost);
@@ -5674,10 +5721,6 @@ static const SlvFunctionsT slv9_internals = {
 
 int cmslv_register(void){
 	MSG("Registering CMSlv");
-	if(!solver_engine_named("CONOPT")){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT must be registered before CMSlv");
-		return 1;
-	}
 	if(!solver_engine_named("LRSlv")){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv must be registered before CMSlv");
 		return 1;
