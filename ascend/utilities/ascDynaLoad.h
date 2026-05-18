@@ -120,6 +120,16 @@ ASC_DLLSPEC int Asc_DynamicUnLoad(CONST char *path);
  *          specific hell.
  */
 
+ASC_DLLSPEC int Asc_DynamicUnLoadPath(CONST char *path);
+/**<
+ *  Unload all dynamic library records matching a specific path.
+ *  Intended for owners that have recorded package/library paths and need
+ *  idempotent cleanup of duplicate loads for that same package.
+ *
+ *  @return number of unloaded records, -3 for NULL path, or a platform unload
+ *          error value if an unload failed.
+ */
+
 #define Asc_DynamicSymbol(a,b) Asc_DynamicVariable((a),(b))
 /**< For backward compatibility to old name of Asc_DynamicVariable() */
 

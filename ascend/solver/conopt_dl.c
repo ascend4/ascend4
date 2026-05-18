@@ -36,6 +36,7 @@
 
 #ifndef ASC_LINKED_CONOPT
 # include <ctype.h>
+# include <string.h>
 # include <ascend/general/ascMalloc.h>
 # include <ascend/utilities/ascDynaLoad.h>
 
@@ -79,6 +80,8 @@ typedef struct{
 # undef FN_PTR_DECL
 
 conopt_fptrs_t conopt_fptrs;
+static int conopt_loaded = 0;
+static char *conopt_libpath = NULL;
 
 
 /*
@@ -103,14 +106,13 @@ int asc_conopt_load(){
 # ifdef ASC_LINKED_CONOPT
 #  error "We don't use this if we've got linked CONOPT!"
 # endif
-	static int loaded=0;
 	char *libpath;
 	int status;
 	char fnsymbol[400], *c;
 	const char *libname=ASC_CONOPT_LIB;
 	const char *envvar;
 
-	if(loaded) {
+	if(conopt_loaded) {
 		return 0; /* already loaded */
 	}
 
@@ -173,14 +175,33 @@ int asc_conopt_load(){
 # undef FNDECOR
 # undef FNCASE
 
-	ASC_FREE(libpath);
-
 	if(status!=0){
+		Asc_DynamicUnLoad(libpath);
+		ASC_FREE(libpath);
+		memset(&conopt_fptrs,0,sizeof(conopt_fptrs));
 		return 1; /* failed to resolve all symbols */
 	}
 
-    loaded = 1;
+	conopt_libpath = libpath;
+	conopt_loaded = 1;
 	return 0;
+}
+
+int asc_conopt_unload(){
+	int status = 0;
+
+	if(!conopt_loaded){
+		return 0;
+	}
+
+	memset(&conopt_fptrs,0,sizeof(conopt_fptrs));
+	if(conopt_libpath != NULL){
+		status = Asc_DynamicUnLoad(conopt_libpath);
+		ASC_FREE(conopt_libpath);
+		conopt_libpath = NULL;
+	}
+	conopt_loaded = 0;
+	return status;
 }
 
 #endif

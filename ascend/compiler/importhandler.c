@@ -243,6 +243,9 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 		}
 	}
 #endif
+	if(result){
+		(void)Asc_DynamicUnLoadPath(path);
+	}
 	ASC_FREE(path);
 	return result;
 }
@@ -264,39 +267,18 @@ int importhandler_extlib_unload(const struct FilePath *fp,const char *cleanupfun
 	}
 	MSG("Unloading extlib with path '%s'",path);
 
-#if 0
-	DynamicF cleanupfn;
-	char *cleanupfunc1 = NULL;
-	char *stem;
-	char auto_initfunc[PATH_MAX];
-	if(cleanupfunc==NULL){
-		fp1 = ospath_new(partialpath);
-		stem = ospath_getbasefilename(fp1);
-		strncpy(auto_initfunc,stem,PATH_MAX);
-		ospath_free(fp1);
-		ASC_FREE(stem);
-
-		strncat(auto_initfunc,"_cleanup",PATH_MAX-strlen(auto_initfunc));
-		cleanupfunc1 = auto_initfunc;
-	}else{
-		cleanupfunc1 = cleanupfunc;
+	if(cleanupfunc != NULL){
+		DynamicF cleanupfn;
+		cleanupfn = Asc_DynamicFunction(path,cleanupfunc);
+		if(cleanupfn){
+			cleanupfn();
+		}
 	}
 
-	if(cleanupfunc1){
-		cleanupfn = Asc_DynamicFunction(path,cleanupfunc1);
-		if(cleanupfn){
-			
-    if (install == NULL) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"While attempting to run '%s' in '%s': %s",initFun, path, (char *)dlerror());
-      dlclose(xlib);
-      return 1;
-    }
-  }
-#else
-	MSG("cleanupfunc not implemented");
-#endif
-
-	result = Asc_DynamicUnLoad(path);
+	result = Asc_DynamicUnLoadPath(path);
+	if(result >= 0){
+		result = 0;
+	}
 	ASC_FREE(path);
 	return result;
 }

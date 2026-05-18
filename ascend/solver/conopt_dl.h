@@ -73,6 +73,7 @@
 */
 
 ASC_DLLSPEC int asc_conopt_load();
+ASC_DLLSPEC int asc_conopt_unload();
 
 # define CONOPT_DISABLE_FN_DECLS
 # include "conopt.h"
@@ -245,4 +246,3 @@ ASC_DLLSPEC int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT, int* LEN_R
 /* @} */
 
 #endif /* ASC_CONOPT_H */
-
