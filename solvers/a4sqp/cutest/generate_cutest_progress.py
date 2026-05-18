@@ -219,6 +219,9 @@ def profile_label(rows: list[dict[str, str]], profile: str) -> str:
     if solver == "slsqp":
         return "SLSQP"
 
+    if solver in {"conopt", "conoptc"}:
+        return "CONOPT"
+
     return profile
 
 

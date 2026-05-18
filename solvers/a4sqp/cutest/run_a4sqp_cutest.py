@@ -39,6 +39,8 @@ def load_problem_names(args: argparse.Namespace) -> list[str]:
 def packages_for_solver(solver: str) -> list[str]:
     if solver == "both":
         return ["a4sqp", "ipoptc"]
+    if solver == "all":
+        return ["a4sqp", "ipoptc", "conoptc"]
     return [solver]
 
 
@@ -237,6 +239,8 @@ def result_profile(result: dict[str, object], args: argparse.Namespace) -> str:
     package = str(result.get("package") or "").lower()
     if package == "ipoptc":
         return f"ipoptc_{args.ipopt_hessian}"
+    if package == "conoptc":
+        return "CONOPT"
     if package == "a4sqp":
         suffix = "kkt" if args.kkt_convergence else "legacy"
         if args.acceptable_iter:
@@ -249,6 +253,8 @@ def result_hessian(result: dict[str, object], args: argparse.Namespace) -> str:
     package = str(result.get("package") or "").lower()
     if package == "ipoptc":
         return args.ipopt_hessian
+    if package == "conoptc":
+        return ""
     if package == "a4sqp":
         return args.a4sqp_hessian
     return ""
@@ -358,7 +364,7 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("problem", nargs="*", help="CUTEst problem names")
     parser.add_argument("--problem-file", help="File containing problem names")
-    parser.add_argument("--solver", choices=["a4sqp", "ipoptc", "both"], default="a4sqp")
+    parser.add_argument("--solver", choices=["a4sqp", "ipoptc", "conoptc", "both", "all"], default="a4sqp")
     parser.add_argument("--out", default="cutest_a4sqp_ipoptc_results.jsonl")
     parser.add_argument("--tsv-out", help="Optional per-problem TSV result file")
     parser.add_argument("--profile-name", help="Stable profile name for TSV output")
@@ -427,6 +433,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--ipopt-tol", type=float)
     parser.add_argument("--ipopt-hessian", default="limited-memory")
     parser.add_argument("--ipopt-print-level", type=int, default=0)
+    parser.add_argument("--conopt-max-iter", type=int)
+    parser.add_argument("--conopt-print-level", type=int, default=0)
     parser.add_argument(
         "--rebuild",
         dest="rebuild",
@@ -494,6 +502,8 @@ def main(argv: list[str]) -> int:
     env["IPOPTC_TOL"] = str(args.ipopt_tol if args.ipopt_tol is not None else args.tol)
     env["IPOPTC_HESSIAN"] = args.ipopt_hessian
     env["IPOPTC_PRINT_LEVEL"] = str(args.ipopt_print_level)
+    env["CONOPTC_MAX_ITER"] = str(args.conopt_max_iter if args.conopt_max_iter is not None else args.max_iter)
+    env["CONOPTC_PRINT_LEVEL"] = str(args.conopt_print_level)
     lib_paths = [
         str(root / "solvers" / "a4sqp"),
         str(root),

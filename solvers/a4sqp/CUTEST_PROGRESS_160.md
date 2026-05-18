@@ -11,12 +11,12 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | Suite | CUTEst broad stratified 160 tracking subset |
 | Problem count | 160 |
 | Max iterations | 200 |
-| Per-problem timeout | 30.0 |
+| Per-problem timeout | 30 |
 | Tolerance | 1e-7 |
 | Acceptable tolerance | 1e-5 |
 | Parallel jobs | 6 |
 | Problem-set source | /home/john/ascend/solvers/a4sqp/cutest/problem_sets/broad_stratified_160.tsv |
-| Notes | A4SQP profiles rerun from fresh scons build with stress-gated reduced_gradient_polish_mode=FALLBACK; IPOPT and SLSQP profiles reuse latest available rebuilt comparison TSVs. |
+| Notes | A4SQP profiles reused from fresh scons build with stress-gated reduced_gradient_polish_mode=FALLBACK; IPOPT and SLSQP profiles reuse latest available rebuilt comparison TSVs; CONOPT profile generated with the CONOPT C API CUTEst package. |
 
 ## Profile Summary
 
@@ -28,34 +28,35 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | A4SQP_BFGS_AUTO | a4sqp | BFGS | 1 | 5 | FALLBACK | 160 | 95 | 95/160 | 0 | 1 | 36 | 28 | acceptable_success:16; driver_timeout:28; line_search_error:12; max_iter_infeasible_or_stalled:4; max_iter_stationarity:20; strict_success:79; strict_success_high_kkt:1 |
 | A4SQP_EXACT_OBJ_AUTO | a4sqp | EXACT_OBJ | 1 | 5 | FALLBACK | 160 | 105 | 105/160 | 0 | 1 | 25 | 29 | acceptable_success:16; driver_timeout:29; line_search_error:8; max_iter_infeasible_or_stalled:5; max_iter_stationarity:11; other_solver_failure:1; strict_success:89; strict_success_high_kkt:1 |
 | A4SQP_EXACT_LAGRANGIAN_AUTO | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | FALLBACK | 160 | 113 | 113/160 | 0 | 1 | 20 | 26 | acceptable_success:12; driver_timeout:26; line_search_error:9; max_iter_stationarity:11; strict_success:101; strict_success_high_kkt:1 |
+| CONOPT | conoptc |  | n/a | n/a |  | 160 | 99 | 99/160 | 13 | 0 | 40 | 8 | driver_timeout:8; max_iter_infeasible_or_stalled:13; max_iter_near_solved:13; step_computation_error:27; strict_success:99 |
 
 ## Category Summary
 
 CUTEst categories are derived from the first two classification letters: objective type followed by constraint type.
 
-| Cat | Meaning | Problems | IPOPT L-BFGS | IPOPT Exact | SLSQP | A4SQP BFGS | A4SQP Obj | A4SQP Lagr |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SU | sum-of-squares objective; unconstrained | 51 | 34/51 | 39/51 | 21/51 | 35/51 | 36/51 | 36/51 |
-| OU | other objective; unconstrained | 6 | 6/6 | 5/6 | 2/6 | 5/6 | 5/6 | 5/6 |
-| SX | sum-of-squares objective; fixed variables only | 5 | 4/5 | 5/5 | 4/5 | 5/5 | 5/5 | 5/5 |
-| OX | other objective; fixed variables only | 1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 |
-| SB | sum-of-squares objective; bound constraints only | 9 | 7/9 | 8/9 | 6/9 | 7/9 | 8/9 | 8/9 |
-| OB | other objective; bound constraints only | 5 | 5/5 | 5/5 | 4/5 | 4/5 | 5/5 | 5/5 |
-| QB | quadratic objective; bound constraints only | 3 | 3/3 | 3/3 | 2/3 | 3/3 | 3/3 | 3/3 |
-| SL | sum-of-squares objective; linear constraints | 3 | 2/3 | 3/3 | 2/3 | 2/3 | 2/3 | 2/3 |
-| OL | other objective; linear constraints | 4 | 3/4 | 2/4 | 2/4 | 3/4 | 3/4 | 3/4 |
-| QL | quadratic objective; linear constraints | 12 | 11/12 | 12/12 | 6/12 | 4/12 | 10/12 | 10/12 |
-| LL | linear objective; linear constraints | 4 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 |
-| SQ | sum-of-squares objective; quadratic constraints | 2 | 1/2 | 2/2 | 1/2 | 0/2 | 0/2 | 1/2 |
-| OQ | other objective; quadratic constraints | 1 | 1/1 | 1/1 | 1/1 | 0/1 | 0/1 | 1/1 |
-| QQ | quadratic objective; quadratic constraints | 6 | 6/6 | 6/6 | 5/6 | 3/6 | 2/6 | 6/6 |
-| LQ | linear objective; quadratic constraints | 7 | 7/7 | 6/7 | 4/7 | 4/7 | 3/7 | 4/7 |
-| ON | other objective; network constraints | 5 | 4/5 | 5/5 | 3/5 | 1/5 | 1/5 | 1/5 |
-| LN | linear objective; network constraints | 1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 |
-| SO | sum-of-squares objective; other constraints | 1 | 1/1 | 1/1 | 0/1 | 0/1 | 1/1 | 0/1 |
-| OO | other objective; other constraints | 10 | 8/10 | 8/10 | 7/10 | 6/10 | 6/10 | 6/10 |
-| QO | quadratic objective; other constraints | 10 | 7/10 | 8/10 | 7/10 | 1/10 | 2/10 | 2/10 |
-| LO | linear objective; other constraints | 14 | 14/14 | 13/14 | 13/14 | 6/14 | 7/14 | 9/14 |
+| Cat | Meaning | Problems | IPOPT L-BFGS | IPOPT Exact | SLSQP | A4SQP BFGS | A4SQP Obj | A4SQP Lagr | CONOPT |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SU | sum-of-squares objective; unconstrained | 51 | 34/51 | 39/51 | 21/51 | 35/51 | 36/51 | 36/51 | 37/51 |
+| OU | other objective; unconstrained | 6 | 6/6 | 5/6 | 2/6 | 5/6 | 5/6 | 5/6 | 5/6 |
+| SX | sum-of-squares objective; fixed variables only | 5 | 4/5 | 5/5 | 4/5 | 5/5 | 5/5 | 5/5 | 4/5 |
+| OX | other objective; fixed variables only | 1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 |
+| SB | sum-of-squares objective; bound constraints only | 9 | 7/9 | 8/9 | 6/9 | 7/9 | 8/9 | 8/9 | 9/9 |
+| OB | other objective; bound constraints only | 5 | 5/5 | 5/5 | 4/5 | 4/5 | 5/5 | 5/5 | 5/5 |
+| QB | quadratic objective; bound constraints only | 3 | 3/3 | 3/3 | 2/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| SL | sum-of-squares objective; linear constraints | 3 | 2/3 | 3/3 | 2/3 | 2/3 | 2/3 | 2/3 | 0/3 |
+| OL | other objective; linear constraints | 4 | 3/4 | 2/4 | 2/4 | 3/4 | 3/4 | 3/4 | 1/4 |
+| QL | quadratic objective; linear constraints | 12 | 11/12 | 12/12 | 6/12 | 4/12 | 10/12 | 10/12 | 7/12 |
+| LL | linear objective; linear constraints | 4 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 | 2/4 |
+| SQ | sum-of-squares objective; quadratic constraints | 2 | 1/2 | 2/2 | 1/2 | 0/2 | 0/2 | 1/2 | 0/2 |
+| OQ | other objective; quadratic constraints | 1 | 1/1 | 1/1 | 1/1 | 0/1 | 0/1 | 1/1 | 0/1 |
+| QQ | quadratic objective; quadratic constraints | 6 | 6/6 | 6/6 | 5/6 | 3/6 | 2/6 | 6/6 | 5/6 |
+| LQ | linear objective; quadratic constraints | 7 | 7/7 | 6/7 | 4/7 | 4/7 | 3/7 | 4/7 | 5/7 |
+| ON | other objective; network constraints | 5 | 4/5 | 5/5 | 3/5 | 1/5 | 1/5 | 1/5 | 1/5 |
+| LN | linear objective; network constraints | 1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 |
+| SO | sum-of-squares objective; other constraints | 1 | 1/1 | 1/1 | 0/1 | 0/1 | 1/1 | 0/1 | 1/1 |
+| OO | other objective; other constraints | 10 | 8/10 | 8/10 | 7/10 | 6/10 | 6/10 | 6/10 | 3/10 |
+| QO | quadratic objective; other constraints | 10 | 7/10 | 8/10 | 7/10 | 1/10 | 2/10 | 2/10 | 0/10 |
+| LO | linear objective; other constraints | 14 | 14/14 | 13/14 | 13/14 | 6/14 | 7/14 | 9/14 | 9/14 |
 
 ## Problem Outcomes
 
@@ -67,168 +68,168 @@ Cells with a `P` suffix accepted at least one reduced-gradient polish fallback s
 
 Matrix profile headers are shortened to solver/Hessian labels; full profile settings are listed in the summary table.
 
-| Problem | Cat | Class | n | m | IPOPT L-BFGS | IPOPT Exact | SLSQP | A4SQP BFGS | A4SQP Obj | A4SQP Lagr |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [BA-L1LS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1LS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟠4L | 🟠4L | 🟠4L |
-| [BA-L1SPLS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1SPLS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
-| [BARD](https://bitbucket.org/optrove/sif/src/HEAD/BARD.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [BEALE](https://bitbucket.org/optrove/sif/src/HEAD/BEALE.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [BENNETT5LS](https://bitbucket.org/optrove/sif/src/HEAD/BENNETT5LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BIGGS6](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS6.SIF) | SU | SUR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [BOX3](https://bitbucket.org/optrove/sif/src/HEAD/BOX3.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [BOXBODLS](https://bitbucket.org/optrove/sif/src/HEAD/BOXBODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [BROWNBS](https://bitbucket.org/optrove/sif/src/HEAD/BROWNBS.SIF) [(a4c)](models/test/a4sqp/brownbs.a4c) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
-| [BROWNDEN](https://bitbucket.org/optrove/sif/src/HEAD/BROWNDEN.SIF) [(a4c)](models/test/a4sqp/brownden.a4c) | SU | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 |
-| [CERI651ALS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651ALS.SIF) [(a4c)](models/test/a4sqp/ceri651als.a4c) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴15 | 🟠3 | 🟠6 | 🔴7 | 🔴7 | 🔴7 |
-| [CERI651BLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651BLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🟠6 | 🔴7 | 🔴7 | 🔴7 |
-| [CERI651CLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651CLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴15 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
-| [CERI651DLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651DLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
-| [CERI651ELS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651ELS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴7 | 🔴7 | 🔴7 |
-| [CHWIRUT1LS](https://bitbucket.org/optrove/sif/src/HEAD/CHWIRUT1LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🔴9 | 🔴9 |
-| [CHWIRUT2LS](https://bitbucket.org/optrove/sif/src/HEAD/CHWIRUT2LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
-| [CLUSTERLS](https://bitbucket.org/optrove/sif/src/HEAD/CLUSTERLS.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [COATING](https://bitbucket.org/optrove/sif/src/HEAD/COATING.SIF) | SU | SUR2-MN-134-0 | 134 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
-| [COOLHANSLS](https://bitbucket.org/optrove/sif/src/HEAD/COOLHANSLS.SIF) | SU | SUR2-RN-9-0 | 9 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
-| [CUBE](https://bitbucket.org/optrove/sif/src/HEAD/CUBE.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DANIWOODLS](https://bitbucket.org/optrove/sif/src/HEAD/DANIWOODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DANWOODLS](https://bitbucket.org/optrove/sif/src/HEAD/DANWOODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DENSCHNB](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNB.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DENSCHNC](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNC.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DENSCHND](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHND.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢2 | 🟢2 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
-| [DENSCHNE](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNE.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DENSCHNF](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNF.SIF) | SU | SUR2-AY-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DEVGLA1](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA1.SIF) | SU | SUR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DEVGLA2](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA2.SIF) | SU | SUR2-MN-5-0 | 5 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
-| [DIAMON2DLS](https://bitbucket.org/optrove/sif/src/HEAD/DIAMON2DLS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
-| [DIAMON3DLS](https://bitbucket.org/optrove/sif/src/HEAD/DIAMON3DLS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
-| [DMN15102LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15102LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
-| [DMN15103LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15103LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
-| [DMN15332LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15332LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
-| [DMN15333LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15333LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
-| [DMN37142LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN37142LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
-| [DMN37143LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN37143LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
-| [ECKERLE4LS](https://bitbucket.org/optrove/sif/src/HEAD/ECKERLE4LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [EGGCRATE](https://bitbucket.org/optrove/sif/src/HEAD/EGGCRATE.SIF) | SU | SUR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
-| [ELATVIDU](https://bitbucket.org/optrove/sif/src/HEAD/ELATVIDU.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
-| [ENGVAL2](https://bitbucket.org/optrove/sif/src/HEAD/ENGVAL2.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [ENSOLS](https://bitbucket.org/optrove/sif/src/HEAD/ENSOLS.SIF) | SU | SUR2-MN-9-0 | 9 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 |
-| [EXP2](https://bitbucket.org/optrove/sif/src/HEAD/EXP2.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [EXPFIT](https://bitbucket.org/optrove/sif/src/HEAD/EXPFIT.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [FBRAIN3LS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAIN3LS.SIF) | SU | SUR2-AN-6-0 | 6 | 0 | 🟠3 | 🟠3 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
-| [GAUSS1LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS1LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟠3 | 🟢1 | 🟠6 | 🔴9 | 🟢1 | 🟢1 |
-| [GAUSS2LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS2LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🔴15 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
-| [GAUSS3LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS3LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🔴9 | 🔴9 |
-| [GAUSSIAN](https://bitbucket.org/optrove/sif/src/HEAD/GAUSSIAN.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [GBRAINLS](https://bitbucket.org/optrove/sif/src/HEAD/GBRAINLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [AKIVA](https://bitbucket.org/optrove/sif/src/HEAD/AKIVA.SIF) [(a4c)](models/test/a4sqp/akiva.a4c) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 |
-| [ALLINITU](https://bitbucket.org/optrove/sif/src/HEAD/ALLINITU.SIF) | OU | OUR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢1 | 🟢1 |
-| [BRKMCC](https://bitbucket.org/optrove/sif/src/HEAD/BRKMCC.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| [CLIFF](https://bitbucket.org/optrove/sif/src/HEAD/CLIFF.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢2 | 🟢1 | 🟠6 | 🟢1 | 🟢1 | 🟢1 |
-| [DENSCHNA](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNA.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| [DJTL](https://bitbucket.org/optrove/sif/src/HEAD/DJTL.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟠3 | 🔴16 | 🔴7 | 🔴7 | 🔴7 |
-| [AIRCRFTB](https://bitbucket.org/optrove/sif/src/HEAD/AIRCRFTB.SIF) | SX | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BIGGS3](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS3.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [BIGGS5](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS5.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BOX2](https://bitbucket.org/optrove/sif/src/HEAD/BOX2.SIF) | SX | SXR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DECONVU](https://bitbucket.org/optrove/sif/src/HEAD/DECONVU.SIF) | SX | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L |
-| [MINSURF](https://bitbucket.org/optrove/sif/src/HEAD/MINSURF.SIF) | OX | OXR2-MY-64-0 | 64 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [3PK](https://bitbucket.org/optrove/sif/src/HEAD/3PK.SIF) | SB | SBR2-MN-30-0 | 30 | 0 | 🟠3 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L |
-| [DECONVB](https://bitbucket.org/optrove/sif/src/HEAD/DECONVB.SIF) | SB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| [DEVGLA1B](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA1B.SIF) | SB | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [DEVGLA2B](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA2B.SIF) | SB | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🟢1 | 🟢1 |
-| [EGGCRATEB](https://bitbucket.org/optrove/sif/src/HEAD/EGGCRATEB.SIF) | SB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [ELATVIDUB](https://bitbucket.org/optrove/sif/src/HEAD/ELATVIDUB.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [EXP2B](https://bitbucket.org/optrove/sif/src/HEAD/EXP2B.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [FBRAIN2LS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAIN2LS.SIF) | SB | SBR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴12 | 🔴12 | 🔴12 |
-| [FBRAINLS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAINLS.SIF) | SB | SBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L |
-| [ALLINIT](https://bitbucket.org/optrove/sif/src/HEAD/ALLINIT.SIF) | OB | OBR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🔴9 | 🟢1 | 🟢1 |
-| [BRANIN](https://bitbucket.org/optrove/sif/src/HEAD/BRANIN.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [CAMEL6](https://bitbucket.org/optrove/sif/src/HEAD/CAMEL6.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DGOSPEC](https://bitbucket.org/optrove/sif/src/HEAD/DGOSPEC.SIF) [(a4c)](models/test/a4sqp/dgospec.a4c) | OB | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1 | 🟢1 | 🟢1 |
-| [EG1](https://bitbucket.org/optrove/sif/src/HEAD/EG1.SIF) | OB | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 |
-| [BQP1VAR](https://bitbucket.org/optrove/sif/src/HEAD/BQP1VAR.SIF) [(a4c)](models/test/a4sqp/bqp1var.a4c) | QB | QBR2-AN-1-0 | 1 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BQPGABIM](https://bitbucket.org/optrove/sif/src/HEAD/BQPGABIM.SIF) | QB | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢1 | 🟢1 |
-| [BQPGASIM](https://bitbucket.org/optrove/sif/src/HEAD/BQPGASIM.SIF) | QB | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| [ANTWERP](https://bitbucket.org/optrove/sif/src/HEAD/ANTWERP.SIF) | SL | SLR2-RN-27-8 | 27 | 10 | 🟠3 | 🟢2 | 🔴20 | 🔴7 | 🔴7 | 🔴7 |
-| [BT3](https://bitbucket.org/optrove/sif/src/HEAD/BT3.SIF) | SL | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [FCCU](https://bitbucket.org/optrove/sif/src/HEAD/FCCU.SIF) | SL | SLR2-MN-19-8 | 19 | 8 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| [AVION2](https://bitbucket.org/optrove/sif/src/HEAD/AVION2.SIF) | OL | OLR2-RN-49-15 | 49 | 15 | 🟠3 | 🟠3 | 🔴21 | 🔴7 | 🔴7 | 🔴7 |
-| [EQC](https://bitbucket.org/optrove/sif/src/HEAD/EQC.SIF) | OL | OLR2-MY-9-3 | 9 | 3 | 🟢2 | 🔴15 | 🔴20 | 🟢1 | 🟢1 | 🟢1 |
-| [EXPFITA](https://bitbucket.org/optrove/sif/src/HEAD/EXPFITA.SIF) | OL | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [EXPFITB](https://bitbucket.org/optrove/sif/src/HEAD/EXPFITB.SIF) | OL | OLR2-AN-5-102 | 5 | 102 | 🟢1 | 🟢1 | 🟢1 | 🟢1P | 🟢1 | 🟢1 |
-| [AVGASA](https://bitbucket.org/optrove/sif/src/HEAD/AVGASA.SIF) [(a4c)](models/test/a4sqp/avgasa.a4c) | QL | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| [AVGASB](https://bitbucket.org/optrove/sif/src/HEAD/AVGASB.SIF) [(a4c)](models/test/a4sqp/avgasb.a4c) | QL | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🟢1 | 🔴7 | 🟢2 | 🟢2 |
-| [BIGGSC4](https://bitbucket.org/optrove/sif/src/HEAD/BIGGSC4.SIF) | QL | QLR2-AN-4-7 | 4 | 7 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DUAL1](https://bitbucket.org/optrove/sif/src/HEAD/DUAL1.SIF) | QL | QLR2-MN-85-1 | 85 | 1 | 🟠3 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 |
-| [DUAL2](https://bitbucket.org/optrove/sif/src/HEAD/DUAL2.SIF) | QL | QLR2-MN-96-1 | 96 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 |
-| [DUAL3](https://bitbucket.org/optrove/sif/src/HEAD/DUAL3.SIF) | QL | QLR2-MN-111-1 | 111 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🔴7 | 🔴7 |
-| [DUAL4](https://bitbucket.org/optrove/sif/src/HEAD/DUAL4.SIF) | QL | QLR2-MN-75-1 | 75 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 |
-| [DUALC1](https://bitbucket.org/optrove/sif/src/HEAD/DUALC1.SIF) | QL | QLR2-MN-9-215 | 9 | 215 | 🟢1 | 🟢1 | 🔴18 | 🔴7 | 🟢2 | 🟢2 |
-| [DUALC2](https://bitbucket.org/optrove/sif/src/HEAD/DUALC2.SIF) | QL | QLR2-MN-7-229 | 7 | 229 | 🟢1 | 🟢1 | 🔴18 | 🔴7 | 🔴7 | 🔴7 |
-| [DUALC5](https://bitbucket.org/optrove/sif/src/HEAD/DUALC5.SIF) | QL | QLR2-MN-8-278 | 8 | 278 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢2 | 🟢2 |
-| [GENHS28](https://bitbucket.org/optrove/sif/src/HEAD/GENHS28.SIF) | QL | QLR2-AY-10-8 | 10 | 8 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [GMNCASE1](https://bitbucket.org/optrove/sif/src/HEAD/GMNCASE1.SIF) | QL | QLR2-AN-175-300 | 175 | 300 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 |
-| [DEGENLPA](https://bitbucket.org/optrove/sif/src/HEAD/DEGENLPA.SIF) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DEGENLPB](https://bitbucket.org/optrove/sif/src/HEAD/DEGENLPB.SIF) [(a4c)](models/test/a4sqp/degenlpb.a4c) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [EXTRASIM](https://bitbucket.org/optrove/sif/src/HEAD/EXTRASIM.SIF) | LL | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [GOFFIN](https://bitbucket.org/optrove/sif/src/HEAD/GOFFIN.SIF) | LL | LLR2-AN-51-50 | 51 | 50 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [AIRPORT](https://bitbucket.org/optrove/sif/src/HEAD/AIRPORT.SIF) | SQ | SQR2-MN-84-42 | 84 | 42 | 🟢1 | 🟢1 | 🔴16 | 🔴8 | 🔴8 | 🟢1 |
-| [DECONVC](https://bitbucket.org/optrove/sif/src/HEAD/DECONVC.SIF) | SQ | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🔴7 |
-| [BT7](https://bitbucket.org/optrove/sif/src/HEAD/BT7.SIF) | OQ | OQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🟢1 |
-| [BT1](https://bitbucket.org/optrove/sif/src/HEAD/BT1.SIF) | QQ | QQR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7P | 🔴7P | 🟢1 |
-| [BT12](https://bitbucket.org/optrove/sif/src/HEAD/BT12.SIF) | QQ | QQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢1 |
-| [BT2](https://bitbucket.org/optrove/sif/src/HEAD/BT2.SIF) [(a4c)](models/test/a4sqp/bt2.a4c) | QQ | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1P |
-| [BT4](https://bitbucket.org/optrove/sif/src/HEAD/BT4.SIF) [(a4c)](models/test/a4sqp/bt4.a4c) | QQ | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🟢1 |
-| [BT5](https://bitbucket.org/optrove/sif/src/HEAD/BT5.SIF) [(a4c)](models/test/a4sqp/bt5.a4c) | QQ | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🟢1 |
-| [BT8](https://bitbucket.org/optrove/sif/src/HEAD/BT8.SIF) [(a4c)](models/test/a4sqp/bt8.a4c) | QQ | QQR2-AN-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BT13](https://bitbucket.org/optrove/sif/src/HEAD/BT13.SIF) [(a4c)](models/test/a4sqp/bt13.a4c) | LQ | LQR2-AY-5-1 | 5 | 1 | 🟢2 | 🟢1 | 🔴21 | 🔴12 | 🔴12 | 🔴12 |
-| [BYRDSPHR](https://bitbucket.org/optrove/sif/src/HEAD/BYRDSPHR.SIF) | LQ | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🔴21 | 🟢1 | 🟢1 | 🟢1 |
-| [CONGIGMZ](https://bitbucket.org/optrove/sif/src/HEAD/CONGIGMZ.SIF) | LQ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢1P |
-| [DEMYMALO](https://bitbucket.org/optrove/sif/src/HEAD/DEMYMALO.SIF) | LQ | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DISC2](https://bitbucket.org/optrove/sif/src/HEAD/DISC2.SIF) [(a4c)](models/test/a4sqp/disc2.a4c) | LQ | LQR2-MY-29-23 | 29 | 23 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
-| [DISCS](https://bitbucket.org/optrove/sif/src/HEAD/DISCS.SIF) | LQ | LQR2-MY-36-66 | 36 | 66 | 🟢1 | 🔴8 | 🔴18 | 🔴12 | 🔴12 | 🔴12 |
-| [GIGOMEZ1](https://bitbucket.org/optrove/sif/src/HEAD/GIGOMEZ1.SIF) | LQ | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DALLASM](https://bitbucket.org/optrove/sif/src/HEAD/DALLASM.SIF) | ON | ONR2-MN-196-151 | 196 | 151 | 🟢2 | 🟢1 | 🔴21 | 🔴12 | 🔴12 | 🔴12 |
-| [DALLASS](https://bitbucket.org/optrove/sif/src/HEAD/DALLASS.SIF) | ON | ONR2-MN-46-31 | 46 | 31 | 🟠3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🔴7 |
-| [LSNNODOC](https://bitbucket.org/optrove/sif/src/HEAD/LSNNODOC.SIF) [(a4c)](models/test/a4sqp/lsnnodoc.a4c) | ON | ONR2-AY-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🔴18 | 🟢1 | 🟢1 | 🟢1 |
-| [SPANHYD](https://bitbucket.org/optrove/sif/src/HEAD/SPANHYD.SIF) | ON | ONR2-RN-97-33 | 97 | 33 | 🟢2 | 🟢2 | 🟢1 | 🔴7 | 🔴12 | 🔴12 |
-| [WATER](https://bitbucket.org/optrove/sif/src/HEAD/WATER.SIF) | ON | ONR2-MN-31-10 | 31 | 10 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴15 | 🔴12 |
-| [LINSPANH](https://bitbucket.org/optrove/sif/src/HEAD/LINSPANH.SIF) | LN | LNR2-MN-97-33 | 97 | 33 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [DIXCHLNG](https://bitbucket.org/optrove/sif/src/HEAD/DIXCHLNG.SIF) | SO | SOR2-AN-10-5 | 10 | 5 | 🟢1 | 🟢1 | 🔴16 | 🔴9 | 🟢2P | 🔴9 |
-| [ALLINITA](https://bitbucket.org/optrove/sif/src/HEAD/ALLINITA.SIF) | OO | OOR2-AY-4-4 | 4 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
-| [ALLINITC](https://bitbucket.org/optrove/sif/src/HEAD/ALLINITC.SIF) | OO | OOR2-AY-4-1 | 4 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 |
-| [ALSOTAME](https://bitbucket.org/optrove/sif/src/HEAD/ALSOTAME.SIF) [(a4c)](models/test/a4sqp/alsotame.a4c) | OO | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BATCH](https://bitbucket.org/optrove/sif/src/HEAD/BATCH.SIF) | OO | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🟢1 | 🔴18 | 🔴12 | 🔴12 | 🔴12 |
-| [BT11](https://bitbucket.org/optrove/sif/src/HEAD/BT11.SIF) | OO | OOR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
-| [BT6](https://bitbucket.org/optrove/sif/src/HEAD/BT6.SIF) | OO | OOR2-AY-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [CRESC100](https://bitbucket.org/optrove/sif/src/HEAD/CRESC100.SIF) | OO | OOR2-MY-6-200 | 6 | 200 | 🔴8 | 🟠3 | 🔴16 | 🔴9 | 🔴9 | 🔴9 |
-| [CRESC4](https://bitbucket.org/optrove/sif/src/HEAD/CRESC4.SIF) | OO | OOR2-MY-6-8 | 6 | 8 | 🟢1 | 🟠3 | 🟢1 | 🔴9 | 🔴9 | 🔴9 |
-| [CRESC50](https://bitbucket.org/optrove/sif/src/HEAD/CRESC50.SIF) | OO | OOR2-MY-6-100 | 6 | 100 | 🔴8 | 🟢1 | 🔴21 | 🔴9 | 🔴9 | 🔴9 |
-| [DIPIGRI](https://bitbucket.org/optrove/sif/src/HEAD/DIPIGRI.SIF) | OO | OOR2-AN-7-4 | 7 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 |
-| [ACOPP14](https://bitbucket.org/optrove/sif/src/HEAD/ACOPP14.SIF) [(a4c)](models/test/a4sqp/acopp14.a4c) | QO | QOR2-AY-38-68 | 38 | 68 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
-| [ACOPP30](https://bitbucket.org/optrove/sif/src/HEAD/ACOPP30.SIF) | QO | QOR2-AY-72-142 | 72 | 142 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
-| [ACOPP57](https://bitbucket.org/optrove/sif/src/HEAD/ACOPP57.SIF) | QO | QOR2-AY-128-274 | 128 | 274 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
-| [ACOPR14](https://bitbucket.org/optrove/sif/src/HEAD/ACOPR14.SIF) | QO | QOR2-AN-38-82 | 38 | 82 | 🔴15 | 🟢1 | 🟢1 | 🔴7 | 🔴12 | 🔴12 |
-| [ACOPR30](https://bitbucket.org/optrove/sif/src/HEAD/ACOPR30.SIF) | QO | QOR2-AN-72-172 | 72 | 172 | 🔴15 | 🔴8 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
-| [BURKEHAN](https://bitbucket.org/optrove/sif/src/HEAD/BURKEHAN.SIF) | QO | QOR2-AN-1-1 | 1 | 1 | 🔴15 | 🔴15 | 🔴21 | 🔴9 | 🔴9 | 🔴9 |
-| [DEMBO7](https://bitbucket.org/optrove/sif/src/HEAD/DEMBO7.SIF) | QO | QOR2-MN-16-20 | 16 | 20 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 |
-| [DNIEPER](https://bitbucket.org/optrove/sif/src/HEAD/DNIEPER.SIF) | QO | QOR2-MN-61-24 | 61 | 24 | 🟢1 | 🟢1 | 🟢1 | 🔴7 | 🟢1 | 🟢1 |
-| [FLETCHER](https://bitbucket.org/optrove/sif/src/HEAD/FLETCHER.SIF) | QO | QOR2-AN-4-4 | 4 | 4 | 🟢1 | 🟢1 | 🔴18 | 🔴9 | 🔴9 | 🔴9 |
-| [FLT](https://bitbucket.org/optrove/sif/src/HEAD/FLT.SIF) | QO | QOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🔴21 | 🟢2 | 🟢1 | 🟢1 |
-| [BT10](https://bitbucket.org/optrove/sif/src/HEAD/BT10.SIF) [(a4c)](models/test/a4sqp/bt10.a4c) | LO | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BT9](https://bitbucket.org/optrove/sif/src/HEAD/BT9.SIF) | LO | LOR2-AN-4-2 | 4 | 2 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴8 | 🟢1 |
-| [CANTILVR](https://bitbucket.org/optrove/sif/src/HEAD/CANTILVR.SIF) [(a4c)](models/test/a4sqp/cantilvr.a4c) | LO | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🟢1 | 🟢1 | 🔴9 | 🔴9 | 🔴9 |
-| [CB2](https://bitbucket.org/optrove/sif/src/HEAD/CB2.SIF) [(a4c)](models/test/a4sqp/cb2.a4c) | LO | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🟢1 |
-| [CB3](https://bitbucket.org/optrove/sif/src/HEAD/CB3.SIF) [(a4c)](models/test/a4sqp/cb3.a4c) | LO | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [CHACONN1](https://bitbucket.org/optrove/sif/src/HEAD/CHACONN1.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🟢1 |
-| [CHACONN2](https://bitbucket.org/optrove/sif/src/HEAD/CHACONN2.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [CSFI1](https://bitbucket.org/optrove/sif/src/HEAD/CSFI1.SIF) | LO | LOR2-RN-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 | 🔴7 | 🟢1 | 🔴7 |
-| [CSFI2](https://bitbucket.org/optrove/sif/src/HEAD/CSFI2.SIF) | LO | LOR2-RN-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [ELATTAR](https://bitbucket.org/optrove/sif/src/HEAD/ELATTAR.SIF) | LO | LOR2-AN-7-102 | 7 | 102 | 🟢1 | 🔴8 | 🟢1 | 🔴12 | 🟢1 | 🔴12 |
-| [ERRINBAR](https://bitbucket.org/optrove/sif/src/HEAD/ERRINBAR.SIF) [(a4c)](models/test/a4sqp/errinbar.a4c) | LO | LOR2-MY-18-9 | 18 | 9 | 🟢1 | 🟢1 | 🔴16 | 🔴12 | 🔴12 | 🔴12 |
-| [FEEDLOC](https://bitbucket.org/optrove/sif/src/HEAD/FEEDLOC.SIF) | LO | LOR2-AN-90-259 | 90 | 259 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 |
-| [GIGOMEZ2](https://bitbucket.org/optrove/sif/src/HEAD/GIGOMEZ2.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🟢1 |
-| [GIGOMEZ3](https://bitbucket.org/optrove/sif/src/HEAD/GIGOMEZ3.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| Problem | Cat | Class | n | m | IPOPT L-BFGS | IPOPT Exact | SLSQP | A4SQP BFGS | A4SQP Obj | A4SQP Lagr | CONOPT |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [BA-L1LS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1LS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟠4L | 🟠4L | 🟠4L | 🟢1 |
+| [BA-L1SPLS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1SPLS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BARD](https://bitbucket.org/optrove/sif/src/HEAD/BARD.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BEALE](https://bitbucket.org/optrove/sif/src/HEAD/BEALE.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BENNETT5LS](https://bitbucket.org/optrove/sif/src/HEAD/BENNETT5LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BIGGS6](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS6.SIF) | SU | SUR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BOX3](https://bitbucket.org/optrove/sif/src/HEAD/BOX3.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BOXBODLS](https://bitbucket.org/optrove/sif/src/HEAD/BOXBODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BROWNBS](https://bitbucket.org/optrove/sif/src/HEAD/BROWNBS.SIF) [(a4c)](models/test/a4sqp/brownbs.a4c) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BROWNDEN](https://bitbucket.org/optrove/sif/src/HEAD/BROWNDEN.SIF) [(a4c)](models/test/a4sqp/brownden.a4c) | SU | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
+| [CERI651ALS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651ALS.SIF) [(a4c)](models/test/a4sqp/ceri651als.a4c) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴15 | 🟠3 | 🟠6 | 🔴7 | 🔴7 | 🔴7 | 🟠3 |
+| [CERI651BLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651BLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🟠6 | 🔴7 | 🔴7 | 🔴7 | 🟠3 |
+| [CERI651CLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651CLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴15 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟠3 |
+| [CERI651DLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651DLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟠3 |
+| [CERI651ELS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651ELS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴7 | 🔴7 | 🔴7 | 🟠3 |
+| [CHWIRUT1LS](https://bitbucket.org/optrove/sif/src/HEAD/CHWIRUT1LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🔴9 | 🔴9 | 🟢1 |
+| [CHWIRUT2LS](https://bitbucket.org/optrove/sif/src/HEAD/CHWIRUT2LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [CLUSTERLS](https://bitbucket.org/optrove/sif/src/HEAD/CLUSTERLS.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [COATING](https://bitbucket.org/optrove/sif/src/HEAD/COATING.SIF) | SU | SUR2-MN-134-0 | 134 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [COOLHANSLS](https://bitbucket.org/optrove/sif/src/HEAD/COOLHANSLS.SIF) | SU | SUR2-RN-9-0 | 9 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [CUBE](https://bitbucket.org/optrove/sif/src/HEAD/CUBE.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DANIWOODLS](https://bitbucket.org/optrove/sif/src/HEAD/DANIWOODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DANWOODLS](https://bitbucket.org/optrove/sif/src/HEAD/DANWOODLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DENSCHNB](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNB.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DENSCHNC](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNC.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DENSCHND](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHND.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢2 | 🟢2 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DENSCHNE](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNE.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DENSCHNF](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNF.SIF) | SU | SUR2-AY-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DEVGLA1](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA1.SIF) | SU | SUR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DEVGLA2](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA2.SIF) | SU | SUR2-MN-5-0 | 5 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DIAMON2DLS](https://bitbucket.org/optrove/sif/src/HEAD/DIAMON2DLS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DIAMON3DLS](https://bitbucket.org/optrove/sif/src/HEAD/DIAMON3DLS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN15102LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15102LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN15103LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15103LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN15332LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15332LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN15333LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15333LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN37142LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN37142LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DMN37143LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN37143LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [ECKERLE4LS](https://bitbucket.org/optrove/sif/src/HEAD/ECKERLE4LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [EGGCRATE](https://bitbucket.org/optrove/sif/src/HEAD/EGGCRATE.SIF) | SU | SUR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [ELATVIDU](https://bitbucket.org/optrove/sif/src/HEAD/ELATVIDU.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [ENGVAL2](https://bitbucket.org/optrove/sif/src/HEAD/ENGVAL2.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [ENSOLS](https://bitbucket.org/optrove/sif/src/HEAD/ENSOLS.SIF) | SU | SUR2-MN-9-0 | 9 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
+| [EXP2](https://bitbucket.org/optrove/sif/src/HEAD/EXP2.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [EXPFIT](https://bitbucket.org/optrove/sif/src/HEAD/EXPFIT.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [FBRAIN3LS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAIN3LS.SIF) | SU | SUR2-AN-6-0 | 6 | 0 | 🟠3 | 🟠3 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🟠3 |
+| [GAUSS1LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS1LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟠3 | 🟢1 | 🟠6 | 🔴9 | 🟢1 | 🟢1 | 🟢1 |
+| [GAUSS2LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS2LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🔴15 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [GAUSS3LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS3LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🔴9 | 🔴9 | 🟢1 |
+| [GAUSSIAN](https://bitbucket.org/optrove/sif/src/HEAD/GAUSSIAN.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [GBRAINLS](https://bitbucket.org/optrove/sif/src/HEAD/GBRAINLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [AKIVA](https://bitbucket.org/optrove/sif/src/HEAD/AKIVA.SIF) [(a4c)](models/test/a4sqp/akiva.a4c) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
+| [ALLINITU](https://bitbucket.org/optrove/sif/src/HEAD/ALLINITU.SIF) | OU | OUR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
+| [BRKMCC](https://bitbucket.org/optrove/sif/src/HEAD/BRKMCC.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
+| [CLIFF](https://bitbucket.org/optrove/sif/src/HEAD/CLIFF.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢2 | 🟢1 | 🟠6 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DENSCHNA](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNA.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
+| [DJTL](https://bitbucket.org/optrove/sif/src/HEAD/DJTL.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟠3 | 🔴16 | 🔴7 | 🔴7 | 🔴7 | 🟠3 |
+| [AIRCRFTB](https://bitbucket.org/optrove/sif/src/HEAD/AIRCRFTB.SIF) | SX | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BIGGS3](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS3.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BIGGS5](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS5.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BOX2](https://bitbucket.org/optrove/sif/src/HEAD/BOX2.SIF) | SX | SXR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DECONVU](https://bitbucket.org/optrove/sif/src/HEAD/DECONVU.SIF) | SX | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🔴11 |
+| [MINSURF](https://bitbucket.org/optrove/sif/src/HEAD/MINSURF.SIF) | OX | OXR2-MY-64-0 | 64 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [3PK](https://bitbucket.org/optrove/sif/src/HEAD/3PK.SIF) | SB | SBR2-MN-30-0 | 30 | 0 | 🟠3 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DECONVB](https://bitbucket.org/optrove/sif/src/HEAD/DECONVB.SIF) | SB | SBR2-MN-61-0 | 63 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
+| [DEVGLA1B](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA1B.SIF) | SB | SBR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [DEVGLA2B](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA2B.SIF) | SB | SBR2-MN-5-0 | 5 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🟢1 | 🟢1 | 🟢1 |
+| [EGGCRATEB](https://bitbucket.org/optrove/sif/src/HEAD/EGGCRATEB.SIF) | SB | SBR2-MN-4-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [ELATVIDUB](https://bitbucket.org/optrove/sif/src/HEAD/ELATVIDUB.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [EXP2B](https://bitbucket.org/optrove/sif/src/HEAD/EXP2B.SIF) | SB | SBR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [FBRAIN2LS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAIN2LS.SIF) | SB | SBR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴12 | 🔴12 | 🔴12 | 🟢1 |
+| [FBRAINLS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAINLS.SIF) | SB | SBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [ALLINIT](https://bitbucket.org/optrove/sif/src/HEAD/ALLINIT.SIF) | OB | OBR2-AY-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🔴9 | 🟢1 | 🟢1 | 🟢1 |
+| [BRANIN](https://bitbucket.org/optrove/sif/src/HEAD/BRANIN.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [CAMEL6](https://bitbucket.org/optrove/sif/src/HEAD/CAMEL6.SIF) | OB | OBR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DGOSPEC](https://bitbucket.org/optrove/sif/src/HEAD/DGOSPEC.SIF) [(a4c)](models/test/a4sqp/dgospec.a4c) | OB | OBR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [EG1](https://bitbucket.org/optrove/sif/src/HEAD/EG1.SIF) | OB | OBR2-AY-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 |
+| [BQP1VAR](https://bitbucket.org/optrove/sif/src/HEAD/BQP1VAR.SIF) [(a4c)](models/test/a4sqp/bqp1var.a4c) | QB | QBR2-AN-1-0 | 1 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BQPGABIM](https://bitbucket.org/optrove/sif/src/HEAD/BQPGABIM.SIF) | QB | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
+| [BQPGASIM](https://bitbucket.org/optrove/sif/src/HEAD/BQPGASIM.SIF) | QB | QBR2-AN-50-0 | 50 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
+| [ANTWERP](https://bitbucket.org/optrove/sif/src/HEAD/ANTWERP.SIF) | SL | SLR2-RN-27-8 | 27 | 10 | 🟠3 | 🟢2 | 🔴20 | 🔴7 | 🔴7 | 🔴7 | 🔴11 |
+| [BT3](https://bitbucket.org/optrove/sif/src/HEAD/BT3.SIF) | SL | SLR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴11 |
+| [FCCU](https://bitbucket.org/optrove/sif/src/HEAD/FCCU.SIF) | SL | SLR2-MN-19-8 | 19 | 8 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🔴8 |
+| [AVION2](https://bitbucket.org/optrove/sif/src/HEAD/AVION2.SIF) | OL | OLR2-RN-49-15 | 49 | 15 | 🟠3 | 🟠3 | 🔴21 | 🔴7 | 🔴7 | 🔴7 | 🔴8 |
+| [EQC](https://bitbucket.org/optrove/sif/src/HEAD/EQC.SIF) | OL | OLR2-MY-9-3 | 9 | 3 | 🟢2 | 🔴15 | 🔴20 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [EXPFITA](https://bitbucket.org/optrove/sif/src/HEAD/EXPFITA.SIF) | OL | OLR2-AN-5-22 | 5 | 22 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟠3 |
+| [EXPFITB](https://bitbucket.org/optrove/sif/src/HEAD/EXPFITB.SIF) | OL | OLR2-AN-5-102 | 5 | 102 | 🟢1 | 🟢1 | 🟢1 | 🟢1P | 🟢1 | 🟢1 | 🟠3 |
+| [AVGASA](https://bitbucket.org/optrove/sif/src/HEAD/AVGASA.SIF) [(a4c)](models/test/a4sqp/avgasa.a4c) | QL | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 | 🟠3 |
+| [AVGASB](https://bitbucket.org/optrove/sif/src/HEAD/AVGASB.SIF) [(a4c)](models/test/a4sqp/avgasb.a4c) | QL | QLR2-AN-8-10 | 8 | 10 | 🟢1 | 🟢1 | 🟢1 | 🔴7 | 🟢2 | 🟢2 | 🟠3 |
+| [BIGGSC4](https://bitbucket.org/optrove/sif/src/HEAD/BIGGSC4.SIF) | QL | QLR2-AN-4-7 | 4 | 7 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟠3 |
+| [DUAL1](https://bitbucket.org/optrove/sif/src/HEAD/DUAL1.SIF) | QL | QLR2-MN-85-1 | 85 | 1 | 🟠3 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 | 🟢1 |
+| [DUAL2](https://bitbucket.org/optrove/sif/src/HEAD/DUAL2.SIF) | QL | QLR2-MN-96-1 | 96 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 | 🟢1 |
+| [DUAL3](https://bitbucket.org/optrove/sif/src/HEAD/DUAL3.SIF) | QL | QLR2-MN-111-1 | 111 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🔴7 | 🔴7 | 🟢1 |
+| [DUAL4](https://bitbucket.org/optrove/sif/src/HEAD/DUAL4.SIF) | QL | QLR2-MN-75-1 | 75 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 | 🟢1 |
+| [DUALC1](https://bitbucket.org/optrove/sif/src/HEAD/DUALC1.SIF) | QL | QLR2-MN-9-215 | 9 | 215 | 🟢1 | 🟢1 | 🔴18 | 🔴7 | 🟢2 | 🟢2 | 🟢1 |
+| [DUALC2](https://bitbucket.org/optrove/sif/src/HEAD/DUALC2.SIF) | QL | QLR2-MN-7-229 | 7 | 229 | 🟢1 | 🟢1 | 🔴18 | 🔴7 | 🔴7 | 🔴7 | 🟢1 |
+| [DUALC5](https://bitbucket.org/optrove/sif/src/HEAD/DUALC5.SIF) | QL | QLR2-MN-8-278 | 8 | 278 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢2 | 🟢2 | 🟢1 |
+| [GENHS28](https://bitbucket.org/optrove/sif/src/HEAD/GENHS28.SIF) | QL | QLR2-AY-10-8 | 10 | 8 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴8 |
+| [GMNCASE1](https://bitbucket.org/optrove/sif/src/HEAD/GMNCASE1.SIF) | QL | QLR2-AN-175-300 | 175 | 300 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🔴11 |
+| [DEGENLPA](https://bitbucket.org/optrove/sif/src/HEAD/DEGENLPA.SIF) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴11 |
+| [DEGENLPB](https://bitbucket.org/optrove/sif/src/HEAD/DEGENLPB.SIF) [(a4c)](models/test/a4sqp/degenlpb.a4c) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴11 |
+| [EXTRASIM](https://bitbucket.org/optrove/sif/src/HEAD/EXTRASIM.SIF) | LL | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [GOFFIN](https://bitbucket.org/optrove/sif/src/HEAD/GOFFIN.SIF) | LL | LLR2-AN-51-50 | 51 | 50 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [AIRPORT](https://bitbucket.org/optrove/sif/src/HEAD/AIRPORT.SIF) | SQ | SQR2-MN-84-42 | 84 | 42 | 🟢1 | 🟢1 | 🔴16 | 🔴8 | 🔴8 | 🟢1 | 🔴11 |
+| [DECONVC](https://bitbucket.org/optrove/sif/src/HEAD/DECONVC.SIF) | SQ | SQR2-MN-61-1 | 63 | 1 | 🟠3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🔴7 | 🔴11 |
+| [BT7](https://bitbucket.org/optrove/sif/src/HEAD/BT7.SIF) | OQ | OQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🟢1 | 🔴11 |
+| [BT1](https://bitbucket.org/optrove/sif/src/HEAD/BT1.SIF) | QQ | QQR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7P | 🔴7P | 🟢1 | 🟢1 |
+| [BT12](https://bitbucket.org/optrove/sif/src/HEAD/BT12.SIF) | QQ | QQR2-AN-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢1 | 🔴11 |
+| [BT2](https://bitbucket.org/optrove/sif/src/HEAD/BT2.SIF) [(a4c)](models/test/a4sqp/bt2.a4c) | QQ | QQR2-AY-3-1 | 3 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1P | 🟢1 |
+| [BT4](https://bitbucket.org/optrove/sif/src/HEAD/BT4.SIF) [(a4c)](models/test/a4sqp/bt4.a4c) | QQ | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🟢1 | 🟢1 |
+| [BT5](https://bitbucket.org/optrove/sif/src/HEAD/BT5.SIF) [(a4c)](models/test/a4sqp/bt5.a4c) | QQ | QQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🟢1 | 🟢1 |
+| [BT8](https://bitbucket.org/optrove/sif/src/HEAD/BT8.SIF) [(a4c)](models/test/a4sqp/bt8.a4c) | QQ | QQR2-AN-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BT13](https://bitbucket.org/optrove/sif/src/HEAD/BT13.SIF) [(a4c)](models/test/a4sqp/bt13.a4c) | LQ | LQR2-AY-5-1 | 5 | 1 | 🟢2 | 🟢1 | 🔴21 | 🔴12 | 🔴12 | 🔴12 | 🟢1 |
+| [BYRDSPHR](https://bitbucket.org/optrove/sif/src/HEAD/BYRDSPHR.SIF) | LQ | LQR2-AN-3-2 | 3 | 2 | 🟢1 | 🟢1 | 🔴21 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [CONGIGMZ](https://bitbucket.org/optrove/sif/src/HEAD/CONGIGMZ.SIF) | LQ | LQR2-AN-3-5 | 3 | 5 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢1P | 🟢1 |
+| [DEMYMALO](https://bitbucket.org/optrove/sif/src/HEAD/DEMYMALO.SIF) | LQ | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DISC2](https://bitbucket.org/optrove/sif/src/HEAD/DISC2.SIF) [(a4c)](models/test/a4sqp/disc2.a4c) | LQ | LQR2-MY-29-23 | 29 | 23 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 | 🔴11 |
+| [DISCS](https://bitbucket.org/optrove/sif/src/HEAD/DISCS.SIF) | LQ | LQR2-MY-36-66 | 36 | 66 | 🟢1 | 🔴8 | 🔴18 | 🔴12 | 🔴12 | 🔴12 | 🔴8 |
+| [GIGOMEZ1](https://bitbucket.org/optrove/sif/src/HEAD/GIGOMEZ1.SIF) | LQ | LQR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DALLASM](https://bitbucket.org/optrove/sif/src/HEAD/DALLASM.SIF) | ON | ONR2-MN-196-151 | 196 | 151 | 🟢2 | 🟢1 | 🔴21 | 🔴12 | 🔴12 | 🔴12 | 🔴11 |
+| [DALLASS](https://bitbucket.org/optrove/sif/src/HEAD/DALLASS.SIF) | ON | ONR2-MN-46-31 | 46 | 31 | 🟠3 | 🟢1 | 🟢1 | 🔴7 | 🔴7 | 🔴7 | 🔴8 |
+| [LSNNODOC](https://bitbucket.org/optrove/sif/src/HEAD/LSNNODOC.SIF) [(a4c)](models/test/a4sqp/lsnnodoc.a4c) | ON | ONR2-AY-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🔴18 | 🟢1 | 🟢1 | 🟢1 | 🔴11 |
+| [SPANHYD](https://bitbucket.org/optrove/sif/src/HEAD/SPANHYD.SIF) | ON | ONR2-RN-97-33 | 97 | 33 | 🟢2 | 🟢2 | 🟢1 | 🔴7 | 🔴12 | 🔴12 | 🟢1 |
+| [WATER](https://bitbucket.org/optrove/sif/src/HEAD/WATER.SIF) | ON | ONR2-MN-31-10 | 31 | 10 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴15 | 🔴12 | 🔴8 |
+| [LINSPANH](https://bitbucket.org/optrove/sif/src/HEAD/LINSPANH.SIF) | LN | LNR2-MN-97-33 | 97 | 33 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [DIXCHLNG](https://bitbucket.org/optrove/sif/src/HEAD/DIXCHLNG.SIF) | SO | SOR2-AN-10-5 | 10 | 5 | 🟢1 | 🟢1 | 🔴16 | 🔴9 | 🟢2P | 🔴9 | 🟢1 |
+| [ALLINITA](https://bitbucket.org/optrove/sif/src/HEAD/ALLINITA.SIF) | OO | OOR2-AY-4-4 | 4 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 | 🟢1 |
+| [ALLINITC](https://bitbucket.org/optrove/sif/src/HEAD/ALLINITC.SIF) | OO | OOR2-AY-4-1 | 4 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
+| [ALSOTAME](https://bitbucket.org/optrove/sif/src/HEAD/ALSOTAME.SIF) [(a4c)](models/test/a4sqp/alsotame.a4c) | OO | OOR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BATCH](https://bitbucket.org/optrove/sif/src/HEAD/BATCH.SIF) | OO | OOR2-AN-46-73 | 48 | 73 | 🟢1 | 🟢1 | 🔴18 | 🔴12 | 🔴12 | 🔴12 | 🔴8 |
+| [BT11](https://bitbucket.org/optrove/sif/src/HEAD/BT11.SIF) | OO | OOR2-AY-5-3 | 5 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢2 | 🟢1 | 🔴8 |
+| [BT6](https://bitbucket.org/optrove/sif/src/HEAD/BT6.SIF) | OO | OOR2-AY-5-2 | 5 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴11 |
+| [CRESC100](https://bitbucket.org/optrove/sif/src/HEAD/CRESC100.SIF) | OO | OOR2-MY-6-200 | 6 | 200 | 🔴8 | 🟠3 | 🔴16 | 🔴9 | 🔴9 | 🔴9 | 🔴11 |
+| [CRESC4](https://bitbucket.org/optrove/sif/src/HEAD/CRESC4.SIF) | OO | OOR2-MY-6-8 | 6 | 8 | 🟢1 | 🟠3 | 🟢1 | 🔴9 | 🔴9 | 🔴9 | 🟠3 |
+| [CRESC50](https://bitbucket.org/optrove/sif/src/HEAD/CRESC50.SIF) | OO | OOR2-MY-6-100 | 6 | 100 | 🔴8 | 🟢1 | 🔴21 | 🔴9 | 🔴9 | 🔴9 | 🔴11 |
+| [DIPIGRI](https://bitbucket.org/optrove/sif/src/HEAD/DIPIGRI.SIF) | OO | OOR2-AN-7-4 | 7 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🔴11 |
+| [ACOPP14](https://bitbucket.org/optrove/sif/src/HEAD/ACOPP14.SIF) [(a4c)](models/test/a4sqp/acopp14.a4c) | QO | QOR2-AY-38-68 | 38 | 68 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 | 🔴11 |
+| [ACOPP30](https://bitbucket.org/optrove/sif/src/HEAD/ACOPP30.SIF) | QO | QOR2-AY-72-142 | 72 | 142 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 | 🔴11 |
+| [ACOPP57](https://bitbucket.org/optrove/sif/src/HEAD/ACOPP57.SIF) | QO | QOR2-AY-128-274 | 128 | 274 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 | 🔴11 |
+| [ACOPR14](https://bitbucket.org/optrove/sif/src/HEAD/ACOPR14.SIF) | QO | QOR2-AN-38-82 | 38 | 82 | 🔴15 | 🟢1 | 🟢1 | 🔴7 | 🔴12 | 🔴12 | 🔴8 |
+| [ACOPR30](https://bitbucket.org/optrove/sif/src/HEAD/ACOPR30.SIF) | QO | QOR2-AN-72-172 | 72 | 172 | 🔴15 | 🔴8 | 🟢1 | 🔴12 | 🔴12 | 🔴12 | 🔴11 |
+| [BURKEHAN](https://bitbucket.org/optrove/sif/src/HEAD/BURKEHAN.SIF) | QO | QOR2-AN-1-1 | 1 | 1 | 🔴15 | 🔴15 | 🔴21 | 🔴9 | 🔴9 | 🔴9 | 🔴11 |
+| [DEMBO7](https://bitbucket.org/optrove/sif/src/HEAD/DEMBO7.SIF) | QO | QOR2-MN-16-20 | 16 | 20 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴12 | 🔴8 |
+| [DNIEPER](https://bitbucket.org/optrove/sif/src/HEAD/DNIEPER.SIF) | QO | QOR2-MN-61-24 | 61 | 24 | 🟢1 | 🟢1 | 🟢1 | 🔴7 | 🟢1 | 🟢1 | 🔴8 |
+| [FLETCHER](https://bitbucket.org/optrove/sif/src/HEAD/FLETCHER.SIF) | QO | QOR2-AN-4-4 | 4 | 4 | 🟢1 | 🟢1 | 🔴18 | 🔴9 | 🔴9 | 🔴9 | 🔴11 |
+| [FLT](https://bitbucket.org/optrove/sif/src/HEAD/FLT.SIF) | QO | QOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🔴21 | 🟢2 | 🟢1 | 🟢1 | 🔴11 |
+| [BT10](https://bitbucket.org/optrove/sif/src/HEAD/BT10.SIF) [(a4c)](models/test/a4sqp/bt10.a4c) | LO | LOR2-AN-2-2 | 2 | 2 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [BT9](https://bitbucket.org/optrove/sif/src/HEAD/BT9.SIF) | LO | LOR2-AN-4-2 | 4 | 2 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴8 | 🟢1 | 🔴11 |
+| [CANTILVR](https://bitbucket.org/optrove/sif/src/HEAD/CANTILVR.SIF) [(a4c)](models/test/a4sqp/cantilvr.a4c) | LO | LOR2-MN-5-1 | 5 | 1 | 🟢1 | 🟢1 | 🟢1 | 🔴9 | 🔴9 | 🔴9 | 🟢1 |
+| [CB2](https://bitbucket.org/optrove/sif/src/HEAD/CB2.SIF) [(a4c)](models/test/a4sqp/cb2.a4c) | LO | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🟢1 | 🟢1 |
+| [CB3](https://bitbucket.org/optrove/sif/src/HEAD/CB3.SIF) [(a4c)](models/test/a4sqp/cb3.a4c) | LO | LOR2-AN-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [CHACONN1](https://bitbucket.org/optrove/sif/src/HEAD/CHACONN1.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🟢1 | 🟢1 |
+| [CHACONN2](https://bitbucket.org/optrove/sif/src/HEAD/CHACONN2.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
+| [CSFI1](https://bitbucket.org/optrove/sif/src/HEAD/CSFI1.SIF) | LO | LOR2-RN-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 | 🔴7 | 🟢1 | 🔴7 | 🔴11 |
+| [CSFI2](https://bitbucket.org/optrove/sif/src/HEAD/CSFI2.SIF) | LO | LOR2-RN-5-4 | 5 | 4 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴8 |
+| [ELATTAR](https://bitbucket.org/optrove/sif/src/HEAD/ELATTAR.SIF) | LO | LOR2-AN-7-102 | 7 | 102 | 🟢1 | 🔴8 | 🟢1 | 🔴12 | 🟢1 | 🔴12 | 🟢1 |
+| [ERRINBAR](https://bitbucket.org/optrove/sif/src/HEAD/ERRINBAR.SIF) [(a4c)](models/test/a4sqp/errinbar.a4c) | LO | LOR2-MY-18-9 | 18 | 9 | 🟢1 | 🟢1 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴8 |
+| [FEEDLOC](https://bitbucket.org/optrove/sif/src/HEAD/FEEDLOC.SIF) | LO | LOR2-AN-90-259 | 90 | 259 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🔴12 | 🔴11 |
+| [GIGOMEZ2](https://bitbucket.org/optrove/sif/src/HEAD/GIGOMEZ2.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🔴8 | 🔴8 | 🟢1 | 🟢1 |
+| [GIGOMEZ3](https://bitbucket.org/optrove/sif/src/HEAD/GIGOMEZ3.SIF) | LO | LOR2-AY-3-3 | 3 | 3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 
 ## Outcome Key
 
@@ -242,6 +243,7 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | 🔴7 | fail | max_iter_stationarity | iteration limit; stationarity residual too high |
 | 🔴8 | fail | max_iter_infeasible_or_stalled | iteration limit; infeasible or stalled |
 | 🔴9 | fail | line_search_error | line-search failure |
+| 🔴11 | fail | step_computation_error | step computation failure |
 | 🔴12 | error | driver_timeout | driver timeout |
 | 🔴15 | fail | other_solver_failure | other solver failure |
 | 🔴16 | fail | max_iter | NLopt/SLSQP maximum evaluations reached |

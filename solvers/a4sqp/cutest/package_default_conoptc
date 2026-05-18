@@ -1,0 +1,9 @@
+#!/bin/bash
+# CUTEst package definition for a CONOPT C API comparison driver.
+
+export PACKAGE=conoptc
+export PACKDIR=conoptc
+export PACK_PRECISION="double"
+export PACKOBJS=""
+export PACKLIBS="-L${CONOPT_PREFIX:-/home/john/.local}/lib -lconopt -lm -ldl"
+export SPECS=""

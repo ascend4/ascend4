@@ -1,8 +1,8 @@
-# A4SQP/IPOPTC CUTEst Drivers
+# A4SQP/IPOPTC/CONOPT CUTEst Drivers
 
 This directory contains CUTEst package drivers for the A4SQP IPOPT-like C API
-and for IPOPT's installed `IpStdCInterface.h`. They are intentionally outside
-normal ASCEND builds.
+for IPOPT's installed `IpStdCInterface.h`, and for CONOPT's installed C API.
+They are intentionally outside normal ASCEND builds.
 
 The local stock CUTEst `ipopt` package uses the older Fortran IPOPT interface
 and segfaulted in smoke testing. The `ipoptc` package here uses the same C
@@ -23,6 +23,9 @@ This creates:
 - `$CUTEST/src/ipoptc/ipoptc_main.c` as a symlink to the IPOPT C driver.
 - `$CUTEST/src/ipoptc/makemaster` as a symlink to the IPOPT C make hook.
 - `$CUTEST/packages/defaults/ipoptc` as the runcutest package definition.
+- `$CUTEST/src/conoptc/conoptc_main.c` as a symlink to the CONOPT C driver.
+- `$CUTEST/src/conoptc/makemaster` as a symlink to the CONOPT C make hook.
+- `$CUTEST/packages/defaults/conoptc` as the runcutest package definition.
 
 ## Run One Problem
 
@@ -35,6 +38,7 @@ export LD_LIBRARY_PATH=/home/john/ascend/solvers/a4sqp:/home/john/ascend:/home/j
 
 runcutest -p a4sqp -D HS11
 runcutest -p ipoptc -D HS11
+runcutest -p conoptc -D HS11
 ```
 
 Each driver prints one JSON result line containing dimensions, classification,
@@ -102,7 +106,8 @@ Useful environment/option overrides:
 - `--ipopt-max-iter N` or `IPOPTC_MAX_ITER=N`
 - `--ipopt-tol VALUE` or `IPOPTC_TOL=VALUE`
 - `--ipopt-hessian limited-memory|exact` or `IPOPTC_HESSIAN=...`
-- `--solver a4sqp|ipoptc|both`
+- `--conopt-max-iter N` or `CONOPTC_MAX_ITER=N`
+- `--solver a4sqp|ipoptc|conoptc|both|all`
 - `--jobs N` runs independent problem/package jobs concurrently. For `N > 1`
   the runner creates one private CUTEst tree per worker under `--workdir` so
   concurrent `runcutest` invocations do not mutate the same
@@ -184,9 +189,10 @@ solvers/a4sqp/cutest/update_cutest_progress.py \
   --out /tmp/CUTEST_PROGRESS_160.md
 ```
 
-To include previously generated IPOPT TSVs without rerunning IPOPT, pass
-`--input-tsv path/to/ipopt.tsv` one or more times. To rerun IPOPT profiles as
-well, add `--include-ipopt`.
+To include previously generated IPOPT or CONOPT TSVs without rerunning them,
+pass `--input-tsv path/to/results.tsv` one or more times. To rerun IPOPT
+profiles as well, add `--include-ipopt`; to rerun CONOPT, add
+`--include-conopt`.
 
 The progress report intentionally excludes volatile metrics such as iteration
 counts, solve times, objective values, and log paths. It records the benchmark

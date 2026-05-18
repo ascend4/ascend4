@@ -127,6 +127,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--build-jobs", type=int, default=6)
     parser.add_argument("--input-tsv", action="append", default=[], help="Existing TSV to include before newly generated profiles; repeatable.")
     parser.add_argument("--include-ipopt", action="store_true", help="Also rerun IPOPT C API limited-memory and exact-Hessian profiles.")
+    parser.add_argument("--include-conopt", action="store_true", help="Also rerun the CONOPT C API CUTEst profile.")
     parser.add_argument("--include-slsqp", action="store_true", help="Also rerun the NLopt/SLSQP CUTEst profile.")
     parser.add_argument("--no-a4sqp", dest="a4sqp", action="store_false", help="Do not rerun the three standard A4SQP profiles.")
     parser.set_defaults(a4sqp=True)
@@ -175,6 +176,14 @@ def main(argv: list[str]) -> int:
             run_dir,
             "ipoptc_exact",
             ["--solver", "ipoptc", "--ipopt-hessian", "exact"],
+        ))
+    if args.include_conopt:
+        profile_commands.append(profile_run_command(
+            runner,
+            args,
+            run_dir,
+            "CONOPT",
+            ["--solver", "conoptc"],
         ))
     if args.a4sqp:
         for hessian, profile in [

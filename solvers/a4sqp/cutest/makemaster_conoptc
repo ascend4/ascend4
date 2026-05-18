@@ -1,0 +1,16 @@
+# Main body of the installation makefile for the CUTEst CONOPT C API interface.
+
+include $(CUTEST)/src/makedefs/defaults
+
+PACKAGE = CONOPTC
+package = conoptc
+CONOPT_PREFIX ?= /home/john/.local
+EXTRAINCLUDES += -I$(CONOPT_PREFIX)/include
+
+include $(CUTEST)/src/makedefs/definitions
+include $(CUTEST)/src/makedefs/instructions
+
+run_test:
+	echo "No standalone CUTEst CONOPTC test program. Use runcutest -p conoptc -D PROBLEM."
+
+include $(CUTEST)/src/makedefs/compile
