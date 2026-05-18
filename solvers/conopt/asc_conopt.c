@@ -2943,3 +2943,10 @@ int conopt_register(void){
 	return solver_register(&conopt_internals);
 }
 
+#ifndef ASC_LINKED_CONOPT
+ASC_EXPORT void conopt_cleanup(void){
+	if(asc_conopt_unload()){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Failed to unload CONOPT");
+	}
+}
+#endif

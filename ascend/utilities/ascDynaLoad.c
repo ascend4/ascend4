@@ -277,6 +277,8 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
   }
   if (0 != AscAddRecord(xlib,path)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to record library (%s)\n",path);
+    (void)FreeLibrary(xlib);
+    return 1;
   }
   return (install == NULL) ? 0 : (*install)();
 }
@@ -350,6 +352,8 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
 
   if (0 != AscAddRecord(xlib,path)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to record library (%s)",path);
+    (void)dlclose(xlib);
+    return 1;
   }
   return (install == NULL) ? 0 : (*install)();
 }
@@ -418,6 +422,8 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   }
   if (0 != AscAddRecord(xlib,path)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to record library (%s)",path);
+    (void)shl_unload(xlib);
+    return 1;
   }
   return (install == NULL) ? 0 : (*install)();
 }
@@ -465,6 +471,27 @@ int Asc_DynamicUnLoad(CONST char *path)
   MSG("dlclose of %s",path);
   retval = UNLOAD(DLL_CAST dlreturn);
   return (retval == UNLOAD_SUCCESS) ? 0 : retval;
+}
+
+int Asc_DynamicUnLoadPath(CONST char *path)
+{
+  void *dlreturn;
+  int retval, status = 0, count = 0;
+
+  if (NULL == path) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR, "Failed: Null path");
+    return -3;
+  }
+
+  while((dlreturn = AscDeleteRecord(path)) != NULL) {
+    MSG("Asc_DynamicUnLoadPath: forgetting & unloading %s", path);
+    retval = UNLOAD(DLL_CAST dlreturn);
+    if(retval != UNLOAD_SUCCESS) {
+      status = retval ? retval : 1;
+    }
+    ++count;
+  }
+  return status ? status : count;
 }
 
 /**-----------------------------------------------
