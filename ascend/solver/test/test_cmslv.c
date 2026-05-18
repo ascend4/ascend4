@@ -127,6 +127,49 @@ static int cmslv_set_char_param(slv_system_t sys, const char *name, const char *
 	return 0;
 }
 
+static int cmslv_load_required_package(const char *package){
+	char message[160];
+	if(0 == package_load(package,NULL)){
+		return 0;
+	}
+	snprintf(
+		message,sizeof(message)
+		,"CMSlv test prerequisite solver package '%s' is not available.",package
+	);
+	CU_FAIL_FATAL(message);
+	return 1;
+}
+
+static int cmslv_load_optional_optimizer(const char *optsolver){
+	const char *package;
+	char message[160];
+
+	if(optsolver == NULL){
+		return 0;
+	}
+	if(strcmp(optsolver,"CONOPT") == 0){
+		package = "conopt";
+	}else if(strcmp(optsolver,"IPOPT") == 0){
+		package = "ipopt";
+	}else{
+		return 0;
+	}
+	if(0 == package_load(package,NULL)){
+		return 0;
+	}
+	snprintf(
+		message,sizeof(message)
+		,"CMSlv %s optimizer package is not available at runtime.",optsolver
+	);
+	ASC_TEST_PARTIAL_SKIP(message);
+	return 1;
+}
+
+static int cmslv_optional_optimizer_selected(const char *optsolver){
+	return optsolver != NULL
+		&& (strcmp(optsolver,"CONOPT") == 0 || strcmp(optsolver,"IPOPT") == 0);
+}
+
 /*
 	Test solving a simple CMSlv model
 */
@@ -141,7 +184,22 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv:solvers/lrslv:solvers/conopt:solvers/cmslv:solvers/ipopt");
+	Asc_PutEnv(ASC_ENV_SOLVERS
+		"=solvers/qrslv" OSPATH_DIV
+		"solvers/lrslv" OSPATH_DIV
+		"solvers/conopt" OSPATH_DIV
+		"solvers/cmslv" OSPATH_DIV
+		"solvers/ipopt"
+	);
+
+	if(cmslv_load_required_package("lrslv")
+		|| cmslv_load_required_package("qrslv")
+		|| cmslv_load_required_package("cmslv")
+		|| cmslv_load_optional_optimizer(optsolver)
+	){
+		Asc_CompilerDestroy();
+		return;
+	}
 
 	/* load the file */
 	char path[PATH_MAX];
@@ -176,22 +234,11 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 
 	/* assign solver */
 	const char *solvername = "CMSlv";
-	if(0!=package_load("lrslv",NULL)
-		|| 0!=package_load("qrslv",NULL)
-		|| 0!=package_load("cmslv",NULL)
-		|| (optsolver != NULL && strcmp(optsolver,"CONOPT") == 0 && 0!=package_load("conopt",NULL))
-		|| (optsolver != NULL && strcmp(optsolver,"IPOPT") == 0 && 0!=package_load("ipopt",NULL))
-	){
-		sim_destroy(siminst);
-		Asc_CompilerDestroy();
-		CONSOLE_DEBUG("Skipping CMSlv test: required solvers not available for %s",optsolver);
-		return;
-	}
 	int index = slv_lookup_client(solvername);
 	if(index == -1){
 		sim_destroy(siminst);
 		Asc_CompilerDestroy();
-		CONSOLE_DEBUG("Skipping CMSlv test: solver not registered");
+		CU_FAIL("CMSlv solver package loaded but did not register solver 'CMSlv'.");
 		return;
 	}
 
@@ -204,7 +251,24 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 		CU_ASSERT_FATAL(0 == cmslv_set_char_param(sys,"optsolvers",optsolver));
 	}
 
-	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	{
+		int presolve_status = slv_presolve(sys);
+		if(presolve_status != 0 && cmslv_optional_optimizer_selected(optsolver)){
+			char message[180];
+			snprintf(
+				message,sizeof(message)
+				,"CMSlv %s optimizer path is not available for this build/runtime.",optsolver
+			);
+			ASC_TEST_PARTIAL_SKIP(message);
+			if(sys)system_destroy(sys);
+			system_free_reused_mem();
+			solver_destroy_engines();
+			sim_destroy(siminst);
+			Asc_CompilerDestroy();
+			return;
+		}
+		CU_ASSERT_FATAL(0 == presolve_status);
+	}
 
 	slv_status_t status;
 	slv_get_status(sys, &status);
@@ -252,12 +316,18 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 	T(pipeline)\
 	T(heatex)\
 	T(reinitignore)\
-	T(heatex_ipopt)
+	T(linmassbal_ipopt)\
+	T(pipeline_ipopt)\
+	T(heatex_ipopt)\
+	T(reinitignore_ipopt)
 
-static void test_linmassbal(void){ test_cmslv("linmassbal","CONOPT",0); }
-static void test_pipeline(void){ test_cmslv("pipeline","CONOPT",0); }
+static void test_linmassbal(void){ test_cmslv("linmassbal","CONOPT",1); }
+static void test_pipeline(void){ test_cmslv("pipeline","CONOPT",1); }
 static void test_heatex(void){ test_cmslv("heatex","CONOPT",1); }
 static void test_reinitignore(void){ test_cmslv("reinitignore","CONOPT",0); }
+static void test_linmassbal_ipopt(void){ test_cmslv("linmassbal","IPOPT",1); }
+static void test_pipeline_ipopt(void){ test_cmslv("pipeline","IPOPT",1); }
 static void test_heatex_ipopt(void){ test_cmslv("heatex","IPOPT",1); }
+static void test_reinitignore_ipopt(void){ test_cmslv("reinitignore","IPOPT",0); }
 
 REGISTER_TESTS_SIMPLE(solver_cmslv, TESTS);

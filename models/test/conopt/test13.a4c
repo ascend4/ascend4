@@ -35,7 +35,7 @@ MODEL test13;
 	cons13_2: 4*x1 - x3^2 -11 =0;
 	
 
-	objective13: MAXIMIZE 4*x1^2+2*x2^2+2*x3^2-33*x1+16*x2-24*x3;
+	objective13: MINIMIZE 4*x1^2+2*x2^2+2*x3^2-33*x1+16*x2-24*x3;
 METHODS
 
 METHOD self_test;
@@ -50,9 +50,9 @@ METHOD bound_self;
 END bound_self;
 
 METHOD default_self;
-	x1 := 0;
-	x2 := 0;
-	x3 := 0;
+	x1 := 5;
+	x2 := -2;
+	x3 := 3;
 END default_self;
 
 METHOD on_load;
@@ -61,4 +61,3 @@ METHOD on_load;
 END on_load;
 
 END test13;
-

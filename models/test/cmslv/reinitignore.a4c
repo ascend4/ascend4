@@ -3,6 +3,7 @@ REQUIRE "atoms.a4l";
 MODEL reinitignore;
 
 	x IS_A factor;
+	memory IS_A factor;
 	bol IS_A boolean_var;
 
 CONDITIONAL
@@ -17,7 +18,7 @@ END CONDITIONAL;
 WHEN (bol)
 	CASE TRUE:
 		USE pos;
-		REINIT(x, pre(x));
+		REINIT(memory, pre(memory));
 	CASE FALSE:
 		USE neg;
 END WHEN;
@@ -29,10 +30,13 @@ METHODS
 
 	METHOD values;
 		x := 1;
+		memory := 0;
 		bol := SATISFIED(cond, 1e-8);
 	END values;
 
 	METHOD self_test;
 		ASSERT abs(x - 1) < 1e-12;
+		ASSERT abs(memory) < 1e-12;
+		ASSERT bol == TRUE;
 	END self_test;
 END reinitignore;

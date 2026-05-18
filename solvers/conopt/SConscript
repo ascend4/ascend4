@@ -11,6 +11,8 @@ if 'CONOPT' in env['WITH_SOLVERS']:
 		LIBS = ['ascend']
 		, LIBPATH = ['#']
 	)
+	if env.get('CONOPT_CPPPATH'):
+		solver_env.AppendUnique(CPPPATH = env['CONOPT_CPPPATH'])
 
 	if env.get('CONOPT_LINKED'):
 		solver_env.AppendUnique(
@@ -31,4 +33,3 @@ if 'CONOPT' in env['WITH_SOLVERS']:
 		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),lib)
 
 # vim: set syntax=python:
-

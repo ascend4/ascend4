@@ -347,7 +347,32 @@ METHODS
 	END on_load;
 	
 	METHOD self_test;
-		(* no tests yet *)
+		ASSERT abs(F[1] - 47.5 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[2] - 19.8549299238 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[3] - 57.7544873371 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[4] - 23.3587410868 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[5] - 36.5245769721 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[6] - 34.9446766658 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[7] - 31.7678878780 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[8] - 39.7098598476 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[9] - 15.6503565282 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[10] - 1.58839439390 {lb_mole/hour}) < 5e-8 {lb_mole/hour};
+		ASSERT abs(F[11] - 14.0619621343 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[12] - 12.5553233342 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[13] - 50.2212933366 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT abs(F[14] - 40.1770346693 {lb_mole/hour}) < 5e-7 {lb_mole/hour};
+		ASSERT U[1].bol1 == TRUE;
+		ASSERT U[1].bol2 == FALSE;
+		ASSERT U[2].bol1 == TRUE;
+		ASSERT U[2].bol2 == FALSE;
+		ASSERT U[3].bol1 == TRUE;
+		ASSERT U[3].bol2 == FALSE;
+		ASSERT U[4].bol1 == FALSE;
+		ASSERT U[4].bol2 == FALSE;
+		ASSERT U[5].bol1 == FALSE;
+		ASSERT U[5].bol2 == FALSE;
+		ASSERT U2[6].bol1 == FALSE;
+		ASSERT U2[6].bol2 == FALSE;
 	END self_test;
 
 END linmassbal;

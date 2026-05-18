@@ -1827,11 +1827,20 @@ conopt_test_text = """
 #include <conopt.h>
 #include <stdlib.h>
 int main(){
+#if defined(CONOPT_VERSION_MAJOR) && CONOPT_VERSION_MAJOR >= 4
+	coiHandle_t h = NULL;
+	int e = COI_Create(&h);
+	if(!e){
+		e = COI_Free(&h);
+	}
+	return e;
+#else
 	int s, *v, e;
 	s = COIDEF_Size();
 	v = (int *)malloc(s*sizeof(int));
 	e = COIDEF_Ini(v);
 	return e;
+#endif
 }
 """
 
@@ -2823,6 +2832,8 @@ if env.get('LZMA_LIBPATH'):
 	libascend_env.AppendUnique(LIBPATH=env['LZMA_LIBPATH'])
 if env.get('LZMA_LIBS'):
 	libascend_env.AppendUnique(LIBS=env['LZMA_LIBS'])
+if 'CONOPT' in env['WITH_SOLVERS'] and env.get('CONOPT_CPPPATH'):
+	libascend_env.AppendUnique(CPPPATH=env['CONOPT_CPPPATH'])
 
 dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear','bintokens']
 

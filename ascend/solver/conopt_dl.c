@@ -26,6 +26,7 @@
 #include <ascend/utilities/error.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/general/env.h>
+#include <string.h>
 #include "conopt_dl.h"
 
 #ifndef ASC_WITH_CONOPT
@@ -36,7 +37,6 @@
 
 #ifndef ASC_LINKED_CONOPT
 # include <ctype.h>
-# include <string.h>
 # include <ascend/general/ascMalloc.h>
 # include <ascend/utilities/ascDynaLoad.h>
 
@@ -111,6 +111,9 @@ int asc_conopt_load(){
 	char fnsymbol[400], *c;
 	const char *libname=ASC_CONOPT_LIB;
 	const char *envvar;
+# ifdef ASC_CONOPT_API4
+	(void)c;
+# endif
 
 	if(conopt_loaded) {
 		return 0; /* already loaded */
@@ -144,21 +147,27 @@ int asc_conopt_load(){
 		return 1; /* failed to load */
 	}
 
-# if defined(FNAME_UCASE_NODECOR) || defined(FNAME_UCASE_DECOR) || defined(FNAME_UCASE_PREDECOR)
+# ifdef ASC_CONOPT_API4
+#  define FN_PTR_GET(T,A,V,L) \
+	sprintf(fnsymbol,"%s",#T); \
+	conopt_fptrs.T##_ptr = (T##_fn_t *)Asc_DynamicFunction(libpath,fnsymbol); \
+	if(conopt_fptrs.T##_ptr==NULL)status+=1;
+# else
+#  if defined(FNAME_UCASE_NODECOR) || defined(FNAME_UCASE_DECOR) || defined(FNAME_UCASE_PREDECOR)
 #  define FNCASE(C) C=toupper(C)
-# elif defined(FNAME_LCASE_NODECOR) || defined(FNAME_LCASE_DECOR)
+#  elif defined(FNAME_LCASE_NODECOR) || defined(FNAME_LCASE_DECOR)
 #  define FNCASE(C) C=tolower(C)
-# else
+#  else
 #  error "CONOPT case rule not defined"
-# endif
+#  endif
 
-# if defined(FNAME_UCASE_DECOR) || defined(FNAME_LCASE_DECOR)
+#  if defined(FNAME_UCASE_DECOR) || defined(FNAME_LCASE_DECOR)
 #  define FNDECOR(S,L) strcat(S,"_")
-# elif defined(FNAME_UCASE_PREDECOR) /* on windows, precede with _ and append @L (integer value of L) */
+#  elif defined(FNAME_UCASE_PREDECOR) /* on windows, precede with _ and append @L (integer value of L) */
 #  define FNDECOR(S,L) strcat(S,L);for(c=S+strlen(S)+1;c>S;--c){*c=*(c-1);} *S='_';
-# else
+#  else
 #  define FNDECOR(S,L) (void)0
-# endif
+#  endif
 
 # define FN_PTR_GET(T,A,V,L) \
 	sprintf(fnsymbol,"%s",#T); \
@@ -168,12 +177,15 @@ int asc_conopt_load(){
 	FNDECOR(fnsymbol,L); \
 	conopt_fptrs.T##_ptr = (T##_fn_t *)Asc_DynamicFunction(libpath,fnsymbol); \
 	if(conopt_fptrs.T##_ptr==NULL)status+=1;
+# endif
 
 	CONOPT_FNS(FN_PTR_GET,SPACE)
 
 # undef FN_PTR_GET
+# ifndef ASC_CONOPT_API4
 # undef FNDECOR
 # undef FNCASE
+# endif
 
 	if(status!=0){
 		Asc_DynamicUnLoad(libpath);
@@ -219,6 +231,134 @@ int asc_conopt_unload(){
 
 #define MAXLINE 133  /* maximum line length plus an extra character
                         for the null terminator                       */
+
+#ifdef ASC_CONOPT_API4
+
+int COI_CALL asc_conopt_progress( int LEN_INT, const int INT[]
+		, int LEN_RL, const double RL[], const double X[], void* USRMEM
+){
+	(void)LEN_INT;
+	(void)LEN_RL;
+	(void)X;
+	(void)USRMEM;
+	MSG("Iteration %d, phase %d: %d infeasible, %d non-optimal; objective = %e"
+		, INT[0], INT[1], INT[2], INT[3], RL[1]
+	);
+	return 0;
+}
+
+int COI_CALL asc_conopt_message( int SMSG, int DMSG, int NMSG
+		, char* MSGV[], void* USRMEM
+){
+	int i;
+	(void)DMSG;
+	(void)USRMEM;
+	for(i = 0; i < SMSG; ++i){
+		MSG("%s", MSGV[i]);
+	}
+	for(i = 0; i < NMSG; ++i){
+		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"(CONOPT) %s", MSGV[i]);
+	}
+	return 0;
+}
+
+int COI_CALL asc_conopt_errmsg( int ROWNO, int COLNO, int POSNO
+		, const char* MSG, void* USRMEM
+){
+	(void)POSNO;
+	(void)USRMEM;
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+	if ( ROWNO == -1 ) {
+		FPRINTF(ASCERR,"Variable %d : ",COLNO);
+	}else if ( COLNO == -1 ) {
+		FPRINTF(ASCERR,"Equation %d : ",ROWNO);
+	}else{
+		FPRINTF(ASCERR,"Variable %d appearing in Equation %d : ",COLNO, ROWNO);
+	}
+	FPRINTF(ASCERR,"%s\n", MSG);
+	error_reporter_end_flush();
+	return 0;
+}
+
+int COI_CALL asc_conopt_status(int MODSTA, int SOLSTA
+		, int ITER, double OBJVAL, void* USRMEM
+){
+	int *modsta = &MODSTA;
+	int *solsta = &SOLSTA;
+	int *iter = &ITER;
+	double *objval = &OBJVAL;
+	(void)iter;
+	(void)objval;
+	(void)USRMEM;
+
+	MSG("CONOPT has finished Optimizing");
+	MSG("Model status    = %8d", *modsta);
+	MSG("Solver status   = %8d", *solsta);
+	MSG("Iteration count = %8d", *iter);
+	MSG("Objective value = %10f", *objval);
+
+	const char *modstatxt;
+	error_severity_t t = ASC_USER_SUCCESS;
+	switch(*modsta){
+		case 1: modstatxt = "optimal"; break;
+		case 2: modstatxt = "locally optimal"; break;
+		case 3: t = ASC_USER_ERROR; modstatxt = "unbounded"; break;
+		case 4: t = ASC_USER_ERROR; modstatxt = "infeasible"; break;
+		case 5: modstatxt = "locally infeasible"; break;
+		case 6: modstatxt = "intermediate infeasible"; break;
+		case 7: modstatxt = "intermediate non-optimal"; break;
+		case 12: modstatxt = "unknown type of error"; break;
+		case 13: modstatxt = "error no solution"; break;
+		case 15: modstatxt = "solved unique"; break;
+		case 16: modstatxt = "solved"; break;
+		case 17: modstatxt = "solved singular"; break;
+		default: t = ASC_PROG_ERR; modstatxt = "UNKNOWN MODSTA";
+	}
+	const char *solstatxt;
+	switch(*solsta){
+		case 1: solstatxt = "normal completion"; break;
+		case 2: t = ASC_USER_NOTE; solstatxt = "iteration interrupted"; break;
+		case 3: t = ASC_PROG_NOTE; solstatxt = "time limit exceeded"; break;
+		case 4: t = ASC_PROG_ERR; solstatxt = "failed (terminated by solver)"; break;
+		case 5: t = ASC_PROG_ERR; solstatxt = "Error evaluation limit"; break;
+		case 8: t = ASC_USER_NOTE; solstatxt = "User interrupt"; break;
+		case 9: t = ASC_PROG_ERR; solstatxt = "Error: setup failure"; break;
+		case 10:t = ASC_PROG_ERR; solstatxt = "Error: solver failure"; break;
+		case 11:t = ASC_PROG_ERR; solstatxt = "Error: internal solver error"; break;
+		case 15:t = ASC_PROG_ERR; solstatxt = "Terminated by Quick Mode"; break;
+		default: t = ASC_PROG_ERR; solstatxt = "UNKNOWN SOLSTA";
+	}
+
+	MSG("CONOPT %s (%d): %s (%d)", solstatxt, *solsta, modstatxt, *modsta);
+	ERROR_REPORTER_NOLINE(t,"CONOPT %s: %s", solstatxt, modstatxt);
+
+	return 0;
+}
+
+int COI_CALL asc_conopt_solution( const double XVAL[], const double XMAR[]
+		, const int XBAS[], const int XSTA[], const double YVAL[], const double YMAR[]
+		, const int YBAS[], const int YSTA[], int N, int M, void* USRMEM
+){
+	int i;
+	const char *status[4] = {"Lower","Upper","Basic","Super"};
+	FILE *fd = stderr;
+	(void)XSTA;
+	(void)YVAL;
+	(void)YMAR;
+	(void)YSTA;
+	(void)USRMEM;
+
+	fprintf(fd,"\n Variable   Solution value    Reduced cost    Status\n\n");
+	for ( i=0; i<N; i++ )
+		fprintf(fd,"%6d%18f%18f%10s\n", i, XVAL[i], XMAR[i], status[XBAS[i]] );
+	fprintf(fd,"\n Constrnt   Activity level    Marginal cost   Status\n\n");
+	for ( i=0; i<M; i++ )
+		fprintf(fd,"%6d%18f%18f%10s\n", i, YVAL[i], YMAR[i], status[YBAS[i]] );
+
+	return 0;
+}
+
+#else
 
 int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT
 		, int* LEN_RL, double* RL, double* X, double* USRMEM
@@ -354,5 +494,7 @@ int COI_CALL asc_conopt_solution( double* XVAL, double* XMAR, int* XBAS
 
    return 0;
 }
+
+#endif
 
 #endif /* ASC_WITH_CONOPT */

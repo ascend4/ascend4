@@ -2430,6 +2430,18 @@ static void update_relations_residuals(slv_system_t server)
  * usrmem- user memory defined by conopt
  */
 static
+#ifdef ASC_CONOPT_API4
+int COI_CALL slv9_conopt_readmatrix(
+		double lower[], double curr[], double upper[]
+		, int vsta[],  int type[], double rhs[]
+		, int esta[],  int colsta[], int rowno[]
+		, double value[], int nlflag[], int n_value, int m_value, int nz_value
+		, void *usrmem
+){
+  int *n = &n_value;
+  int *m = &m_value;
+  int *nz = &nz_value;
+#else
 int COI_CALL slv9_conopt_readmatrix(
 		double *lower, double *curr, double *upper
 		, int *vsta,  int *type, double *rhs
@@ -2437,6 +2449,7 @@ int COI_CALL slv9_conopt_readmatrix(
 		, double *value, int *nlflag, int *n, int *m, int *nz
 		, double *usrmem
 ){
+#endif
   slv9_system_t sys;
   struct var_variable *var;
   struct var_variable **varlist;
@@ -2452,9 +2465,6 @@ int COI_CALL slv9_conopt_readmatrix(
       VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR | VAR_FIXED
      ,VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR | 0
   };
-
-  UNUSED_PARAMETER(vsta);
-  UNUSED_PARAMETER(esta);
 
   sys = (slv9_system_t)usrmem;
   n_subregions = sys->subregions;
@@ -2502,6 +2512,7 @@ int COI_CALL slv9_conopt_readmatrix(
       }
 
       curr[count] = 0.5 * nominal;
+      vsta[count] = 1;
       count++;
     }
   }
@@ -2510,6 +2521,7 @@ int COI_CALL slv9_conopt_readmatrix(
       lower[c] = 0.0;
       upper[c] = 1.0;
       curr[c] =  1.0;
+      vsta[c] = 1;
   }
 
   /*MSG("ALL BOUNDS:");
@@ -2527,6 +2539,7 @@ int COI_CALL slv9_conopt_readmatrix(
    */
   for (c = 0; c < (*m); c++) {
     type[c] = 0;
+    esta[c] = 1;
   }
   type[(*m)-1] = 3;
 
@@ -2696,21 +2709,38 @@ static void slv9_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
  *
  */
 static
+#ifdef ASC_CONOPT_API4
+int COI_CALL slv9_conopt_fdeval(
+		const double x[], double *g, double jac[]
+		, int rowno_value, const int jcnm[], int mode_value, int ignerr
+		, int *errcnt, int n_value, int nj_value, int thread
+		, void *usrmem
+){
+  int *rowno = &rowno_value;
+  int *mode = &mode_value;
+  int *n = &n_value;
+  int *nj = &nj_value;
+  (void)ignerr;
+  (void)thread;
+#else
 int COI_CALL slv9_conopt_fdeval(
 		double *x, double *g, double *jac
 		, int *rowno, int *jcnm, int *mode, int *ignerr
 		, int *errcnt, int *newpt, int *n, int *nj
 		, double *usrmem
 ){
+#endif
   slv9_system_t sys;
   int32 num_vars, v;
   real64 obj, deriv;
 
+#ifndef ASC_CONOPT_API4
   UNUSED_PARAMETER(jcnm);
-  UNUSED_PARAMETER(errcnt);
   UNUSED_PARAMETER(newpt);
+  UNUSED_PARAMETER(ignerr);
+#endif
+  UNUSED_PARAMETER(errcnt);
   UNUSED_PARAMETER(n);
-  UNUSED_PARAMETER(nj);
 
   sys = (slv9_system_t)usrmem;
   num_vars = sys->con.n - sys->subregions;
@@ -2735,6 +2765,13 @@ int COI_CALL slv9_conopt_fdeval(
 
   if(*mode == 2 || *mode == 3) {
     if(*rowno == sys->con.m - 1){
+#ifdef ASC_CONOPT_API4
+      for (v=0; v<*nj; v++) {
+        if(jcnm[v] >= 0 && jcnm[v] < *n) {
+          jac[jcnm[v]] = 0.0;
+        }
+      }
+#endif
       for (v=0; v<num_vars; v++) {
         deriv = 2.0 * x[v];
         if(deriv > RTMAXJ ) {
@@ -2768,17 +2805,30 @@ int COI_CALL slv9_conopt_fdeval(
  * usrmem - user memory
  */
 static
+#ifdef ASC_CONOPT_API4
+int COI_CALL slv9_conopt_status(int modsta, int solsta, int iter
+		, double objval, void *usrmem
+){
+#else
 int COI_CALL slv9_conopt_status(int *modsta, int *solsta, int *iter
 		, double *objval, double *usrmem
 ){
+#endif
   slv9_system_t sys;
 
   sys = (slv9_system_t)usrmem;
 
+#ifdef ASC_CONOPT_API4
+  sys->con.modsta = modsta;
+  sys->con.solsta = solsta;
+  sys->con.iter = iter;
+  sys->con.obj = objval;
+#else
   sys->con.modsta = *modsta;
   sys->con.solsta = *solsta;
   sys->con.iter = *iter;
   sys->con.obj = *objval;
+#endif
 
   return 0;
 }
@@ -2786,34 +2836,71 @@ int COI_CALL slv9_conopt_status(int *modsta, int *solsta, int *iter
 /**
 	CONOPT error message reporting
 */
+#ifdef ASC_CONOPT_API4
+int COI_CALL slv9_conopt_errmsg( int ROWNO, int COLNO, int POSNO
+		, const char* MSG, void* USRMEM
+){
+#else
 int COI_CALL slv9_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 		, double* USRMEM, char* MSG, int LENMSG
 ){
+#endif
 	slv9_system_t sys;
 	char *varname=NULL;
 	struct var_variable **vp;
+	int rowno;
+	int colno;
 
 	sys = (slv9_system_t)USRMEM;
+	(void)POSNO;
+#ifndef ASC_CONOPT_API4
+	(void)LENMSG;
+#endif
 
+	rowno =
+#ifdef ASC_CONOPT_API4
+		ROWNO;
+#else
+		*ROWNO;
+#endif
+	colno =
+#ifdef ASC_CONOPT_API4
+		COLNO;
+#else
+		*COLNO;
+#endif
 
-	if(*COLNO!=-1){
+	if(colno >= 0 && colno < sys->mvtot){
 		vp=sys->mvlist;
-		vp = vp + *COLNO;
+		vp = vp + colno;
 		assert(*vp!=NULL);
 		varname= var_make_name(SERVER,*vp);
 	}
 
 	ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
-	if(*ROWNO == -1){
-	    FPRINTF(ASCERR,"Variable %d (Maybe it's '%s'): ",*COLNO,varname);
-		ASC_FREE(varname);
-	}else if(*COLNO == -1 ){
-	    FPRINTF(ASCERR,"Relation %d: ",*ROWNO);
+	if(rowno == -1){
+	    FPRINTF(ASCERR,"Variable %d",colno);
+	    if(varname != NULL) {
+	      FPRINTF(ASCERR," (Maybe it's '%s')",varname);
+	    }
+	    FPRINTF(ASCERR,": ");
+	}else if(colno == -1 ){
+	    FPRINTF(ASCERR,"Relation %d: ",rowno);
 	}else{
-	    FPRINTF(ASCERR,"Variable %d (Maybe it's '%s') appearing in relation %d: ",*COLNO,varname,*ROWNO);
+	    FPRINTF(ASCERR,"Variable %d",colno);
+	    if(varname != NULL) {
+	      FPRINTF(ASCERR," (Maybe it's '%s')",varname);
+	    }
+	    FPRINTF(ASCERR," appearing in relation %d: ",rowno);
+	}
+#ifdef ASC_CONOPT_API4
+	FPRINTF(ASCERR,"%s", MSG);
+#else
+	FPRINTF(ASCERR,"%*s", *MSGLEN, MSG);
+#endif
+	if(varname != NULL) {
 		ASC_FREE(varname);
 	}
-	FPRINTF(ASCERR,"%*s", *MSGLEN, MSG);
 	error_reporter_end_flush();
 	return 0;
 }
@@ -2837,10 +2924,20 @@ int COI_CALL slv9_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
  * usrmem - user memory
  */
 static
+#ifdef ASC_CONOPT_API4
+int COI_CALL slv9_conopt_solution(const double xval[], const double xmar[]
+		, const int xbas[], const int xsta[], const double yval[]
+		, const double ymar[], const int ybas[], const int ysta[]
+		, int n_value, int m_value, void *usrmem
+){
+  int *n = &n_value;
+  int *m = &m_value;
+#else
 int COI_CALL slv9_conopt_solution(double *xval, double *xmar, int *xbas, int *xsta,
 		double *yval, double *ymar, int *ybas, int * ysta,
 		int *n, int *m, double *usrmem
 ){
+#endif
   slv9_system_t sys;
   struct opt_vector *opt_var_values;
   int32 c;
@@ -2897,14 +2994,30 @@ static void slv9_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
  * usrmem - user memory
  */
 static
+#ifdef ASC_CONOPT_API4
+int COI_CALL slv9_conopt_option(
+		int NCALL, double *rval, int *ival, int *logical
+	    , char *name, void *usrmem
+){
+#else
 int COI_CALL slv9_conopt_option(
 		int *NCALL, double *rval, int *ival, int *logical
 	    , double *usrmem, char *name, int lenname
 ){
+#endif
   slv9_system_t sys;
   sys = (slv9_system_t)usrmem;
 
+  UNUSED_PARAMETER(NCALL);
   UNUSED_PARAMETER(logical);
+#ifdef ASC_CONOPT_API4
+  UNUSED_PARAMETER(sys);
+  UNUSED_PARAMETER(rval);
+  UNUSED_PARAMETER(ival);
+  name[0] = '\0';
+  return 0;
+#else
+  UNUSED_PARAMETER(lenname);
 
   name = memset(name,' ',8);
   while (sys->con.opt_count < slv9_PA_SIZE) {
@@ -2931,6 +3044,7 @@ int COI_CALL slv9_conopt_option(
   /* sending blank to quit iterative calling */
   name = memset(name,' ',8);
   return 0;
+#endif
 }
 
 #if 0 /* see slv9_bnd_iterate_conopt */
@@ -3011,6 +3125,10 @@ static
 int32 slv9_bnd_iterate_conopt(slv9_system_t sys, int32 num_opt_vars,
 		int32 num_opt_eqns, int32 num_vars, real64 *obj_val
 ){
+  int solve_status;
+  int stdout_flag = 0;
+  int debugfv = 0;
+
   sys->con.n = num_opt_vars;
   sys->con.m = num_opt_eqns + 1;  /*including objective function */
   sys->con.objcon = num_opt_eqns; /* last row is the objective fn */
@@ -3025,16 +3143,40 @@ int32 slv9_bnd_iterate_conopt(slv9_system_t sys, int32 num_opt_vars,
   MSG("nonzeros: %d",sys->con.nz);
   MSG("nonlinear nonzeros: %d",sys->con.nlnz);
 
+#ifdef ASC_CONOPT_API4
+  if(sys->con.cntvect != NULL){
+    COI_Free(&(sys->con.cntvect));
+  }
+  if(COI_Create(&(sys->con.cntvect))){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"CMSlv CONOPT boundary problem creation failed.");
+    return 0;
+  }
+#else
   if(sys->con.cntvect == NULL){
 	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
   }
 
   COIDEF_Ini(sys->con.cntvect);
+#endif
 
   /*
 	We pass pointer to sys as usrmem data.
 	Cast back to slv9_system_t to access the information required
   */
+#ifdef ASC_CONOPT_API4
+  COIDEF_UsrMem(sys->con.cntvect,(void *)sys);
+
+  COIDEF_NumVar(sys->con.cntvect, sys->con.n);
+  COIDEF_NumCon(sys->con.cntvect, sys->con.m); /* include the obj fn */
+  COIDEF_NumNZ(sys->con.cntvect, sys->con.nz);
+  COIDEF_NumNlNz(sys->con.cntvect, sys->con.nlnz);
+  COIDEF_OptDir(sys->con.cntvect, sys->con.optdir);
+  COIDEF_ObjCon(sys->con.cntvect, sys->con.objcon); /* objective will be last row */
+  COIDEF_ErrLim(sys->con.cntvect, DOMLIM);
+  COIDEF_ItLim(sys->con.cntvect, OPT_ITER_LIMIT);
+  COIDEF_StdOut(sys->con.cntvect, stdout_flag);
+  COIDEF_DebugFV(sys->con.cntvect, debugfv);
+#else
   COIDEF_UsrMem(sys->con.cntvect,(double *)sys);
 
   COIDEF_NumVar(sys->con.cntvect, &(sys->con.n));
@@ -3047,6 +3189,9 @@ int32 slv9_bnd_iterate_conopt(slv9_system_t sys, int32 num_opt_vars,
   COIDEF_Base(sys->con.cntvect, &(sys->con.base));
   COIDEF_ErrLim(sys->con.cntvect, &(DOMLIM));
   COIDEF_ItLim(sys->con.cntvect, &(OPT_ITER_LIMIT));
+  COIDEF_StdOut(sys->con.cntvect, &stdout_flag);
+  COIDEF_DebugFV(sys->con.cntvect, &debugfv);
+#endif
 
   COIDEF_ReadMatrix(sys->con.cntvect, &slv9_conopt_readmatrix);
   COIDEF_FDEval(sys->con.cntvect, &slv9_conopt_fdeval);
@@ -3097,15 +3242,32 @@ int32 slv9_bnd_iterate_conopt(slv9_system_t sys, int32 num_opt_vars,
    */
   sys->con.kept = 0;
 
-  COI_Solve(sys->con.cntvect);
+  sys->con.modsta = 0;
+  sys->con.solsta = 0;
+  sys->con.iter = 0;
+  sys->con.obj = 0.0;
+
+  solve_status = COI_Solve(sys->con.cntvect);
   /* conopt_start(&(sys->con.kept), usrmem, &(sys->con.lwork),
 	       sys->con.work, &(sys->con.maxusd), &(sys->con.curusd)); */
 
-  /*
-   * We assume that we get convergence in optimization problem at
-   * boundary
-   */
-  sys->con.optimized = 1;
+  sys->con.optimized =
+    solve_status == 0
+    && sys->con.solsta == 1
+    && (
+      sys->con.modsta == 1
+      || sys->con.modsta == 2
+      || sys->con.modsta == 15
+      || sys->con.modsta == 16
+      || sys->con.modsta == 17
+    );
+  if(!sys->con.optimized) {
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,
+      "CMSlv CONOPT boundary solve failed: solve_status=%d, solsta=%d, modsta=%d.",
+      solve_status,sys->con.solsta,sys->con.modsta
+    );
+    return 0;
+  }
   if(obj_val != NULL) {
     *obj_val = sys->con.obj;
   }
@@ -5695,6 +5857,16 @@ int slv9_destroy(slv_system_t server, SlvClientToken asys){
   slv_destroy_parms(&(sys->p));
   sys->integrity = DESTROYED;
   if(sys->s.u.nlp.cost) ascfree(sys->s.u.nlp.cost);
+#ifdef ASC_WITH_CONOPT
+  if(sys->con.cntvect != NULL) {
+# ifdef ASC_CONOPT_API4
+    COI_Free(&(sys->con.cntvect));
+# else
+    ASC_FREE(sys->con.cntvect);
+    sys->con.cntvect = NULL;
+# endif
+  }
+#endif
   ascfree( (POINTER)asys );
   return 0;
 }
