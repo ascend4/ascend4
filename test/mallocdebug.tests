@@ -11,6 +11,7 @@ solver_ipopt
 solver_makemps
 solver_highs
 solver_a4sqp
+solver_slsqp
 
 linear_mtx
 linear_qrrank
