@@ -21,6 +21,10 @@ solver_env = libascend_env.Clone()
 solver_env['SUBST_DICT'] = {
 	'@ASC_WITH_CONOPT@':str(int('CONOPT' in libascend_env['WITH_SOLVERS']))
 	,'@ASC_LINKED_CONOPT@':str(int(libascend_env['CONOPT_LINKED']))
+	,'@ASC_BUNDLED_CONOPT4@':str(int(
+		'CONOPT' in libascend_env['WITH_SOLVERS']
+		and not libascend_env.get('CONOPT_LINKED')
+	))
 	,'@ASC_CONOPT_LIB@': '"%s"' % libascend_env.get('CONOPT_LIB')
 	,'@ASC_CONOPT_ENVVAR@': '"%s"' % libascend_env.get('CONOPT_ENVVAR')
 	,'@ASC_CONOPT_DLPATH@': '"%s"' % c_escape(libascend_env.subst("$CONOPT_DLPATH"))
@@ -60,4 +64,3 @@ if libascend_env.get('CAN_INSTALL'):
 Return('objs')
 
 # vim: set syntax=python:
-
