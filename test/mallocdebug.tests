@@ -4,18 +4,22 @@ utilities_*
 
 system_*
 
-solver_slv_common
-solver_slvreq
-solver_column
-solver_lrslv
-solver_qrslv
-solver_ipopt
-solver_makemps
-solver_highs
 solver_a4sqp
-solver_slsqp
-solver_conopt
 solver_cmslv
+solver_column
+solver_conopt
+solver_decomp
+solver_fprops
+solver_highs
+solver_ipopt
+solver_list
+solver_lrslv
+solver_makemps
+solver_qrslv
+solver_slsqp
+solver_slv_common
+solver_slvdof
+solver_slvreq
 
 linear_*
 
