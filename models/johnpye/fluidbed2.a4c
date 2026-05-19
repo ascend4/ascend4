@@ -9,7 +9,7 @@ REQUIRE "johnpye/fprops/thermophys.a4c";
 	in Ind. Eng. Chem. Res. 29 (1990) 1226-1234.
 
 	This model deliberately treats the operating superficial velocity u as an
-	independent variable. U_mf and eps_mf may be supplied from an external
+	independent variable. u_mf and eps_mf may be supplied from an external
 	minimum-fluidisation calculation.
 *)
 
@@ -21,6 +21,7 @@ MODEL fluidbed2_base;
 	T, fluid.T ARE_THE_SAME;
 	p, fluid.p ARE_THE_SAME;
 
+	(* bed geometry: a vertical cylinder *)
 	chamber IS_A solid_cylinder;
 	bed_mf "bed at minimum fluidisation" IS_A solid_cylinder;
 	bed "expanded bubbling bed" IS_A solid_cylinder;
@@ -32,23 +33,24 @@ MODEL fluidbed2_base;
 	eps_mf "bed void fraction at minimum fluidisation" IS_A factor;
 	eps "overall bubbling-bed void fraction" IS_A factor;
 
-	(* Eq. 1, written as a solids inventory balance. *)
-	m_p = rho_p * bed_mf.V * (1 - eps_mf);
-	m_p = rho_p * bed.V * (1 - eps);
+	(* Eq. 1, reframed *)
+	m_p = rho_p * bed_mf.V * (1 - eps_mf); (* at min. fluidisation *)
+	m_p = rho_p * bed.V * (1 - eps); (* at operating condition *)
 
-	U_mf "superficial velocity at minimum fluidisation" IS_A speed;
+	u_mf "superficial velocity at minimum fluidisation" IS_A speed;
 	u "operating superficial gas velocity" IS_A speed;
-	u_over_U_mf "operating velocity multiplier on U_mf" IS_A factor;
-	u = u_over_U_mf * U_mf;
+	u_ratio_mf "operating velocity multiplier on u_mf" IS_A factor;
+	u_ratio_mf = u / u_mf;
 
 	mdot_mf "mass flow rate at minimum fluidisation" IS_A mass_rate;
 	mdot "operating mass flow rate" IS_A mass_rate;
-	mdot_mf = fluid.rho * chamber.end.A * U_mf;
+	mdot_mf = fluid.rho * chamber.end.A * u_mf;
 	mdot = fluid.rho * chamber.end.A * u;
 
+	(* not sure if we need this *)
 	Re_mf "particle Reynolds number at minimum fluidisation" IS_A factor;
 	Re "particle Reynolds number at operating velocity" IS_A factor;
-	Re_mf = d_p * U_mf * fluid.rho / fluid.mu;
+	Re_mf = d_p * u_mf * fluid.rho / fluid.mu;
 	Re = d_p * u * fluid.rho / fluid.mu;
 
 	d_b "mean bubble diameter" IS_A distance;
@@ -59,38 +61,25 @@ MODEL fluidbed2_base;
 	u_b_geldart_b "Werther-Hilligardt/Kunii Geldart B bubble velocity" IS_A speed;
 
 	(* Eq. 3. *)
-	u_br =
-		0.711 {m/s}
-		* (1{EARTH_G} * d_b / (1 {m^2/s^2}))^0.5;
+	u_br = 0.711 * (1{EARTH_G} * d_b)^0.5;
 
-	(* Eq. 4. *)
-	u_b_dh = u - U_mf + u_br;
+	(* Eq. 4. (note 'u_o' replaced with 'u') *)
+	u_b_dh = u - u_mf + u_br;
 
 	(* Eqs. 5 and 6. Bed diameter is used numerically in metres, as in the
 	   published correlations. The selected u_b closure is supplied by a
 	   refining model below. *)
 	u_b_geldart_a =
-		1.55
-		* (
-			(u - U_mf)
-			+ 14.1 {m/s} * ((d_b + 0.005 {m}) / 1 {m})
-		  )
-		* (chamber.d / 1 {m})^0.32
-		+ u_br;
+	    1.55 * ((u - u_mf)
+	      + 14.1 {1/s} * (d_b + 0.005 {m})) * (chamber.d / 1 {m})^0.32 + u_br;
 
 	u_b_geldart_b =
-		1.6
-		* (
-			(u - U_mf)
-			+ 1.13 {m/s} * (d_b / 1 {m})^0.5
-		  )
-		* (chamber.d / 1 {m})^1.35
-		+ u_br;
+	    1.6 * ((u - u_mf) + 1.13{m/s}*(d_b / 1 {m})^0.5) * (chamber.d / 1 {m})^1.35 + u_br;
 
 	u_emf "interstitial emulsion velocity at minimum fluidisation" IS_A speed;
-	u_emf = U_mf / eps_mf;
+	u_emf = u_mf / eps_mf;
 
-	bubble_regime_ratio "u_b / (U_mf/eps_mf)" IS_A factor;
+	bubble_regime_ratio "u_b / (u_mf/eps_mf)" IS_A factor;
 	bubble_regime_ratio = u_b / u_emf;
 
 	delta "selected fraction of bed occupied by bubbles" IS_A factor;
@@ -100,9 +89,9 @@ MODEL fluidbed2_base;
 	delta_vigorous "eq. 10 vigorous bubbling approximation" IS_A factor;
 
 	(* Eq. 7 and the two limiting forms used in and after Eq. 8. *)
-	delta_slow = (u - U_mf) / (u_b + 2 * U_mf);
-	delta_intermediate_low = (u - U_mf) / (u_b + U_mf);
-	delta_fast = (u - U_mf) / u_b;
+	delta_slow = (u - u_mf) / (u_b + 2 * u_mf); (* if u_b < u_mf/eps_mf *)
+	delta_intermediate_low = (u - u_mf) / (u_b + u_mf); (* when u_b approx u_mf/eps_mf *)
+	delta_fast = (u - u_mf) / u_b; (* when u_b approx 5 * u_mf/eps_mf *)
 	delta_vigorous = u / u_b;
 
 	(* Eq. 2. *)
@@ -123,7 +112,7 @@ MODEL fluidbed2_base;
 	gamma_c =
 		(1 - eps_mf)
 		* (
-			3 / (u_br * eps_mf / U_mf - 1)
+			3 / (u_br * eps_mf / u_mf - 1)
 			+ f_wake
 		  );
 
@@ -133,7 +122,7 @@ MODEL fluidbed2_base;
 
 	(* Eq. 16. *)
 	K_bc =
-		4.5 * U_mf / d_b
+		4.5 * u_mf / d_b
 		+ 5.85 {1/s}
 		  * (D_AB / 1 {m^2/s})^0.5
 		  * (1{EARTH_G} / 1 {m/s^2})^0.25
@@ -149,7 +138,7 @@ METHODS
 		RUN fluid.default;
 
 		u.lower_bound := 0 {m/s};
-		U_mf.lower_bound := 0 {m/s};
+		u_mf.lower_bound := 0 {m/s};
 		u_b.lower_bound := 0 {m/s};
 		u_b_dh.lower_bound := 0 {m/s};
 		u_b_geldart_a.lower_bound := 0 {m/s};
@@ -359,8 +348,8 @@ METHODS
 		FIX rho_p := 2500 {kg/m^3};
 		FIX eps_m := 0.5;
 		FIX eps_mf := 0.55;
-		FIX U_mf := 6 {mm/s};
-		FIX u_over_U_mf := 0.10 {m/s} / (6 {mm/s});
+		FIX u_mf := 6 {mm/s};
+		FIX u_ratio_mf := 0.10 {m/s} / (6 {mm/s});
 		FIX d_b := 40 {mm};
 		FIX f_wake := 0.6;
 		FIX D_AB := 0.2 {cm^2/s};
@@ -394,7 +383,7 @@ METHODS
 			K_r_tau_fig5[4], C_Ao_over_C_Ai_fig5_obs[4], C_Ao_over_C_Ai_fig5[4], fig5_error[4],
 			K_r_tau_fig5[5], C_Ao_over_C_Ai_fig5_obs[5], C_Ao_over_C_Ai_fig5[5], fig5_error[5],
 			fig5_rms_error,
-			u, U_mf, u_b, delta, eps,
+			u, u_mf, u_b, delta, eps,
 			L_m, eps_m, bed_mf.L, L_f, solids_height, tau, d_b,
 			K_bc, K_ce, gamma_b, gamma_c, gamma_e;
 	END on_load;
@@ -421,8 +410,8 @@ METHODS
 		FIX d_p := 500 {um};
 		FIX rho_p := 3500 {kg/m^3};
 		FIX eps_mf := 0.55;
-		FIX U_mf := 6 {mm/s};
-		FIX u_over_U_mf := 50;
+		FIX u_mf := 6 {mm/s};
+		FIX u_ratio_mf := 50;
 		FIX d_b := 40 {mm};
 		FIX f_wake := 0.6;
 		FIX D_AB := 0.2 {cm^2/s};
@@ -431,7 +420,7 @@ METHODS
 		OPTION convopt 'RELNOM_SCALE';
 
 		STUDY
-			u, U_mf, u_over_U_mf,
+			u, u_mf, u_ratio_mf,
 			u_b, u_b_dh, u_b_geldart_a, u_b_geldart_b,
 			u_emf, bubble_regime_ratio,
 			delta, delta_slow, delta_intermediate_low, delta_fast, delta_vigorous,
@@ -445,7 +434,7 @@ METHODS
 			(*
 				Worked example values reported by Kunii and Levenspiel for a
 				fine-particle vigorously bubbling bed:
-					U_mf = 0.006 m/s, u = 0.3 m/s, eps_mf = 0.55,
+					u_mf = 0.006 m/s, u = 0.3 m/s, eps_mf = 0.55,
 					d_b = 0.04 m, D_AB = 2e-5 m2/s.
 			*)
 			ASSERT abs(u_br - 0.445 {m/s}) < 0.001 {m/s};
