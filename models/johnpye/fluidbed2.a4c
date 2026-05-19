@@ -60,7 +60,7 @@ MODEL fluidbed2_base;
 	u_b_geldart_a "Werther-Hilligardt/Kunii Geldart A bubble velocity" IS_A speed;
 	u_b_geldart_b "Werther-Hilligardt/Kunii Geldart B bubble velocity" IS_A speed;
 
-	(* Eq. 3. *)
+	(* Eq. 3. Davidson-Harrison bubble rise vel. *)
 	u_br = 0.711 * (1{EARTH_G} * d_b)^0.5;
 
 	(* Eq. 4. (note 'u_o' replaced with 'u') *)
@@ -94,7 +94,7 @@ MODEL fluidbed2_base;
 	delta_fast = (u - u_mf) / u_b; (* when u_b approx 5 * u_mf/eps_mf *)
 	delta_vigorous = u / u_b;
 
-	(* Eq. 2. *)
+	(* Eq. 2: operating bed expansion assumes emulsion is at min. fluidisation *)
 	1 - eps = (1 - delta) * (1 - eps_mf);
 
 	gamma_b "solid volume in bubbles per bubble volume" IS_A factor;
