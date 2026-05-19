@@ -33,6 +33,8 @@ system. Please try re-installing ASCEND to rectify the problem.""")
 global _messages
 _messages = []
 
+_DEBUG_STARTUP = bool(os.environ.get("ASCEND_DEBUG_STARTUP"))
+
 def get_messages():
 	return _messages
 
@@ -92,11 +94,14 @@ class LoadingWindow(Gtk.Window):
 			self.label.set_text(status)
 			while Gtk.events_pending():
 				Gtk.main_iteration()
+		if msg:
+			_messages.append(msg)
+		if not _DEBUG_STARTUP:
+			return
 		try:
 			sys.stderr.write(f"\rCLR:                                                 \r")
 			if msg:
 				sys.stderr.write(f"MSG: {msg}\n")
-				_messages.append(msg)
 			sys.stderr.write(f"\rSTA: {status}\n")
 			sys.stderr.flush()
 		except IOError:

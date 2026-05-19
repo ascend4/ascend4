@@ -4,6 +4,11 @@
 import os, os.path, sys, platform
 
 restart = 0
+DEBUG_STARTUP = bool(os.environ.get("ASCEND_DEBUG_STARTUP"))
+
+def debug_print(*args):
+	if DEBUG_STARTUP:
+		print(*args)
 
 def process_is_privileged():
 	if not hasattr(os, 'getuid'):
@@ -81,7 +86,7 @@ elif platform.system()=="Darwin":
 	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 
 	INSTALL_PYGTK = path_absolute("PyGTK.bundle/python")
-	print(("Adding %s to python path" % INSTALL_PYGTK))
+	debug_print(("Adding %s to python path" % INSTALL_PYGTK))
 	sys.path.insert(0,INSTALL_PYGTK)
 
 else:
@@ -138,7 +143,7 @@ if not os.environ.get('ASC_GDB'):
 			os.environ['XDG_DATA_DIRS']="../PyGTK.bundle/share"
 
 			bundle_res = os.path.normpath(path_absolute("../"))
-			print(("BUNDLE_RES =", bundle_res))
+			debug_print(("BUNDLE_RES =", bundle_res))
 			bundle_etc = os.path.join(bundle_res,"etc")
 			os.environ['GTK_DATA_PREFIX'] = bundle_res
 			os.environ['GTK_EXE_PREFIX'] = bundle_res
@@ -180,54 +185,54 @@ if not os.environ.get('ASC_GDB'):
 
 	# don't need to restart process on Windows as env vars update immediately
 	if restart and platform.system()!="Windows":
-		print("Restarting with corrected environment...")
+		debug_print("Restarting with corrected environment...")
 		if os.environ.get(LDPATHVAR):
-			print(("   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR))))
+			debug_print(("   %s = %s" % (LDPATHVAR,os.environ.get(LDPATHVAR))))
 		if os.environ.get('ASCENDLIBRARY'):
-			print(("   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')))
+			debug_print(("   ASCENDLIBRARY = %s" % os.environ.get('ASCENDLIBRARY')))
 		if os.environ.get('ASCENDSOLVERS'):
-			print(("   ASCENDSOLVERS = %s" % os.environ.get('ASCENDSOLVERS')))
+			debug_print(("   ASCENDSOLVERS = %s" % os.environ.get('ASCENDSOLVERS')))
 		script = os.path.join(sys.path[0],"ascend")
-		print(("PYTHON =",PYTHON))
-		print(("script =",script))
+		debug_print(("PYTHON =",PYTHON))
+		debug_print(("script =",script))
 		os.execve(PYTHON,[script] + sys.argv, os.environ)
 
-print("Running with...")
-print(("   %s = %s" % (LDPATHVAR, os.environ.get(LDPATHVAR))))
-print(("   sys.path = %s" % sys.path))
-print(("   argv = %s" % sys.argv))
+debug_print("Running with...")
+debug_print(("   %s = %s" % (LDPATHVAR, os.environ.get(LDPATHVAR))))
+debug_print(("   sys.path = %s" % sys.path))
+debug_print(("   argv = %s" % sys.argv))
 for e in os.environ:
-	print(("   %s = %s" % (e, os.environ[e])))
+	debug_print(("   %s = %s" % (e, os.environ[e])))
 
 if os.environ.get('ASCENDLIBRARY'):
 	ASCENDLIBRARY = os.environ.get('ASCENDLIBRARY')
-	print(("   ASCENDLIBRARY = %s" % ASCENDLIBRARY))
+	debug_print(("   ASCENDLIBRARY = %s" % ASCENDLIBRARY))
 
 if os.environ.get('ASCENDSOLVERS'):
 	ASCENDSOLVERS = os.environ.get('ASCENDSOLVERS')
-	print(("   ASCENDSOLVERS = %s" % ASCENDLIBRARY))
+	debug_print(("   ASCENDSOLVERS = %s" % ASCENDLIBRARY))
 
-print(("sys.path[0] = %s" % sys.path[0]))
+debug_print(("sys.path[0] = %s" % sys.path[0]))
 
 if not ASCEND_PYTHON in sys.path:
-	print(("Adding ASCEND_PYTHON=%s to python path" % ASCEND_PYTHON))
+	debug_print(("Adding ASCEND_PYTHON=%s to python path" % ASCEND_PYTHON))
 	sys.path.append(ASCEND_PYTHON)
 
 if os.environ.get('OSTYPE')=='cygwin':
-	print("CYGWIN...")
+	debug_print("CYGWIN...")
 elif os.environ.get('OSTYPE')=='msys':
-	print("MSYS...")
+	debug_print("MSYS...")
 
 if os.environ.get('ASC_GDB'):
 	args = sys.argv
 	args.pop(0)
 	cmd = ["gdb","--args","python",os.path.join(ASCEND_PYTHON,"gtkbrowser.py")]+args
-	print(cmd)
+	debug_print(cmd)
 	os.execv("/usr/bin/gdb",cmd)
 else:
 	import ascpy
 	olddir = os.getcwd()
-	print(("CWD =",olddir))
+	debug_print(("CWD =",olddir))
 	os.chdir(INSTALL_ASCDATA)
 	from gtkbrowser import *
 	os.chdir(olddir)

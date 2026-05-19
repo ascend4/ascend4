@@ -12,7 +12,6 @@ SLVREQ_STUDY_NONE = 0
 
 class SolverHooksPython(ascpy.SolverHooks):
 	def __init__(self):
-		loading.print_status("","Loaded python solver hooks")
 		ascpy.SolverHooks.__init__(self,None)
 		self._solver_name = {}
 		self._solver_options = {}
@@ -104,7 +103,6 @@ class SolverHooksPython(ascpy.SolverHooks):
 		if solvername.lower() == "highs":
 			# Avoid GUI crashes from high-frequency progress callbacks.
 			self._set_solver_param(sim, "progress_callbacks", False)
-		print("PYTHON: SOLVER is now %s" % sim.getSolver().getName())	
 		return 0
 	def setOption(self,optionname,val,sim):
 		try:
@@ -121,7 +119,6 @@ class SolverHooksPython(ascpy.SolverHooks):
 						stored = self._snapshot_parameter(P)
 						self._get_option_store(sim)[optionname] = stored
 						self._default_solver_options[optionname] = stored
-						print("PYTHON: SET",optionname,"to",repr(val))
 						return 0
 					except Exception as e:
 						print("PYTHON ERROR: ",str(e))
@@ -137,14 +134,12 @@ class SolverHooksPython(ascpy.SolverHooks):
 			if solvername is not None:
 				sim.setSolver(ascpy.Solver(solvername))
 			self._apply_stored_options(sim)
-			print("PYTHON: SOLVING",sim.getName(),"WITH",sim.getSolver().getName())
 			sim.solve(sim.getSolver(),ascpy.SolverReporter())
 		except Exception as e:
 			print("PYTHON ERROR:",str(e))
 			return 3
 		return 0
 	def doStudy(self,request,sim):
-		print("PYTHON: STUDY is not implemented for this solver hook")
 		return SLVREQ_NOT_IMPLEMENTED
 	def deleteSystem(self, sim):
 		try:
@@ -186,7 +181,6 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 			print("PYTHON ERROR:",str(e))
 			return 4
 
-		print("PYTHON: SOLVING",sim.getName(),"WITH",sim.getSolver().getName())
 		thread = threading.Thread(target=self.do_solve_thread, args=(sim, reporter))
 		thread.daemon = True
 		thread.start()

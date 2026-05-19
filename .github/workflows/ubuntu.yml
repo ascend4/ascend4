@@ -11,8 +11,8 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     env:
-      CUNIT_VERSION: "2.3.0"
-      CUNIT_RELEASE_BASENAME: "cunit-2.3-0"
+      CUNIT_VERSION: "2.3.2"
+      CUNIT_RELEASE_BASENAME: "cunit-2.3-2"
       CONOPT_VERSION: "4.39.0"
       CONOPT_ZIP_URL: "https://d37drm4t2jghv5.cloudfront.net/conopt/4.39.0/conopt-4_39_0-linux-x86_64.zip"
       HIGHS_VERSION: v1.13.1

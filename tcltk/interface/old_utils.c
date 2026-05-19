@@ -268,6 +268,7 @@ static void apply_term_dimensions(CONST struct relation *rel,
     case F_LOG10:
 #ifdef HAVE_ERF
 	case F_ERF:
+	case F_ERFC_SCALED:
 #endif
     case F_SINH:
     case F_COSH:

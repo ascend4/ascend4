@@ -414,13 +414,11 @@ class Browser:
 		self.recent_file_list.show()
 		self.recent_files.set_submenu(self.recent_file_list)
 
-		loading.print_status("here...") #,"GLADE_FILE = %s" % self.glade_file)
 		
 		_max_num = int(self.prefs.getStringPref("recentfiles","max","-1"))
 		if _max_num == -1:
 			self.prefs.setStringPref("recentfiles","max","10")
 
-		loading.print_status("here1...") #,"GLADE_FILE = %s" % self.glade_file)
 
 		_cur_num = int(self.prefs.getStringPref("recentfiles","cur","-1"))
 		if _cur_num >= 0:
@@ -433,19 +431,15 @@ class Browser:
 		else:
 			self.recent_file_list.set_state(Gtk.StateType.INSENSITIVE)
 
-		loading.print_status("here2...") #,"GLADE_FILE = %s" % self.glade_file)
 
 		_pref_solver = self.prefs.getStringPref("Solver","engine","QRSlv")
 
-		loading.print_status("here3...") #,"GLADE_FILE = %s" % self.glade_file)
-		loading.print_status(f"preferred solver: {_pref_solver}") #,"GLADE_FILE = %s" % self.glade_file)
 
 		if _pref_solver not in self.solver_engine_menu_dict and len(self.solver_engine_menu_dict):
 			_pref_solver = next(iter(self.solver_engine_menu_dict))
 			loading.print_status(f"preferred solver not available, using: {_pref_solver}")
 
 		_mi = self.solver_engine_menu_dict.get(_pref_solver)
-		loading.print_status(f"active item: {_mi}")
 		if _mi:
 			_mi.set_active(True)
 
@@ -794,13 +788,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			
 	def set_solver(self,solvername):
 		""" this sets the active solver in the GUI, which is the default applied to newly instantiated models """
-		print(f"\nsetting solver to {solvername}")
 		self.solver = ascpy.Solver(solvername)
-		print(f"\ngot solver {solvername}")
 		self.prefs.setStringPref("Solver","engine",solvername)
-		print(f"\nset pref to {solvername}")
 		self.reporter.reportNote("Set solver engine to '%s'" % solvername)
-		print(f"\nreported output re {solvername}")
 
 #   --------------------------------------------
 # 	MAJOR GUI COMMANDS
