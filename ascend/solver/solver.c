@@ -276,10 +276,14 @@ static const struct StaticSolverRegistration slv_reg[]={
 #ifdef ASC_WITH_SLSQP
 	,{"slsqp"}
 #endif
+#ifdef ASC_WITH_LRSLV
+	,{"lrslv"}
+#endif
+#ifdef ASC_WITH_CMSLV
+	,{"cmslv"}
+#endif
 #if 0
 	,{"conopt"}
-	,{"lrslv"}
-	,{"cmslv"}
 #endif
 	,{NULL}
 /* 	{0,"SLV",&slv0_register} */

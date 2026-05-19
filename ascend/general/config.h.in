@@ -141,6 +141,16 @@ typedef unsigned long long asc_intptr_t;
 @ASC_WITH_SLSQP@
 
 /*
+	Whether the LRSlv solver module was built.
+*/
+@ASC_WITH_LRSLV@
+
+/*
+	Whether the CMSlv solver module was built.
+*/
+@ASC_WITH_CMSLV@
+
+/*
 	Whether Graphviz support is enabled.
 */
 @WITH_GRAPHVIZ@

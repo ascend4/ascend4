@@ -1099,6 +1099,9 @@ if 'LSOD' in env['WITH_SOLVERS']:
 		env['WITH_SOLVERS'].append('LSODE')
 	env['WITH_SOLVERS'].remove('LSOD')
 
+if 'CMSLV' in env['WITH_SOLVERS'] and 'LRSLV' not in env['WITH_SOLVERS']:
+	env['WITH_SOLVERS'].append('LRSLV')
+
 vars.Save('options.cache',env)
 
 Help(vars.GenerateHelpText(env))
@@ -1151,7 +1154,7 @@ def _explicit_bool_argument(name):
 	value = str(ARGUMENTS[name]).strip().lower()
 	return value not in ('0', 'false', 'no', 'off', 'none')
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP':
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP','LRSLV','CMSLV':
 	name = 'WITH_%s' % solv
 	explicit = _explicit_bool_argument(name)
 	if explicit is None:
@@ -2710,6 +2713,8 @@ for k,v in {
 				,'ASC_WITH_HIGHS':env['WITH_HIGHS']
 				,'ASC_WITH_A4SQP':env['WITH_A4SQP']
 				,'ASC_WITH_SLSQP':env['WITH_SLSQP']
+				,'ASC_WITH_LRSLV':env['WITH_LRSLV']
+				,'ASC_WITH_CMSLV':env['WITH_CMSLV']
 				,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
 				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
 				,'ASC_WITH_PCRE':env['WITH_PCRE']
