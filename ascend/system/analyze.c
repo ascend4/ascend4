@@ -3008,6 +3008,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
+    if(solver_int(vip->i)) flags |= VAR_INTEGER;
+    if(solver_binary(vip->i)) flags |= VAR_BINARY;
+    if(solver_semi(vip->i)) flags |= VAR_SEMICONT;
     if(vip->u.v.deriv > 1) flags |= VAR_DERIV; /* so that we can do relman_diffs with just the ydot vars */
 
     var_set_flags(var,flags);
@@ -3034,6 +3037,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.in_block)  flags |= VAR_INBLOCK;
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
     if(vip->u.v.solvervar) flags |= VAR_SVAR; /* shouldn't this be here? */
+    if(solver_int(vip->i)) flags |= VAR_INTEGER;
+    if(solver_binary(vip->i)) flags |= VAR_BINARY;
+    if(solver_semi(vip->i)) flags |= VAR_SEMICONT;
     var_set_flags(var,flags);
     p_data->masterpl[v] = var;
     p_data->solverpl[v] = var;
@@ -3058,6 +3064,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
     if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
+    if(solver_int(vip->i)) flags |= VAR_INTEGER;
+    if(solver_binary(vip->i)) flags |= VAR_BINARY;
+    if(solver_semi(vip->i)) flags |= VAR_SEMICONT;
 	/* CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var); */
     /* others may be appropriate (PVAR) */
     var_set_flags(var,flags);

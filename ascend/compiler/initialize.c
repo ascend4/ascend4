@@ -471,16 +471,20 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 			}
 			ascfree(instname);
 #endif
-			if(InstanceKind(i1)!=REAL_ATOM_INST){
-				CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a real atom type.");
-				fm->ErrNo = Proc_illegal_type_use;
-				ProcWriteFixError(fm,name);
-				gl_destroy(temp);
-				return;
-			}
-			t = InstanceTypeDesc(i1);
-			if(!MoreRefined(t,st)){
-				CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a refined solver_var.");
+			if(InstanceKind(i1)==REAL_ATOM_INST){
+				t = InstanceTypeDesc(i1);
+				if(!MoreRefined(t,st)){
+					CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a refined solver_var.");
+					fm->ErrNo = Proc_illegal_type_use;
+					ProcWriteFixError(fm,name);
+					gl_destroy(temp);
+					return;
+				}
+			}else if(InstanceKind(i1)!=BOOLEAN_ATOM_INST
+					&& InstanceKind(i1)!=INTEGER_ATOM_INST
+					&& InstanceKind(i1)!=SYMBOL_ATOM_INST
+			){
+				CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not an atom type with a fixed child.");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
 				gl_destroy(temp);

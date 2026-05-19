@@ -29,6 +29,7 @@
 	T(a4sqp) \
 	T(slsqp) \
 	T(qrslv) \
+	T(decomp) \
 	T(fprops) \
 	T(lrslv) \
 	T(list) \

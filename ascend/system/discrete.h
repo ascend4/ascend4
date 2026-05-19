@@ -112,7 +112,7 @@ extern struct dis_discrete *dis_create(SlvBackendToken instance,
  * @see dis_set_instanceF()
  */
 
-extern SlvBackendToken dis_instanceF(const struct dis_discrete *dis);
+ASC_DLLSPEC SlvBackendToken dis_instanceF(const struct dis_discrete *dis);
 /**<
  * Implementation function for dis_instance() (debug mode).
  * Do not call this function directly - use dis_instance() instead.
@@ -517,4 +517,3 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
 /* @} */
 
 #endif /* ASC_DISCRETE_H */
-

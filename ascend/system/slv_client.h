@@ -665,7 +665,7 @@ ASC_DLLSPEC struct rel_relation**slv_get_solvers_rel_list(slv_system_t sys);
 	@ref solverslists
 */
 
-extern struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys);
+ASC_DLLSPEC struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys);
 /**<
 	Returns the (NULL-terminated) list of solver conditional relations.
 	@ref solverslists
@@ -683,7 +683,7 @@ ASC_DLLSPEC struct logrel_relation **slv_get_solvers_logrel_list(slv_system_t sy
 	@ref solverslists
 */
 
-extern struct logrel_relation **slv_get_solvers_condlogrel_list(slv_system_t sys);
+ASC_DLLSPEC struct logrel_relation **slv_get_solvers_condlogrel_list(slv_system_t sys);
 /**<
 	Returns the (NULL-terminated) list of solver conditional relations.
 	@ref solverslists
@@ -788,7 +788,7 @@ ASC_DLLSPEC int32 slv_get_num_solvers_rels(slv_system_t sys);
 	@ref solverslists
 */
 
-extern int32 slv_get_num_solvers_condrels(slv_system_t sys);
+ASC_DLLSPEC int32 slv_get_num_solvers_condrels(slv_system_t sys);
 /**< Returns the length of the solver conditional relations list.
 	The length does NOT include the terminating NULL.
 	@ref solverslists
@@ -804,7 +804,7 @@ ASC_DLLSPEC int32 slv_get_num_solvers_logrels(slv_system_t sys);
 	The length does NOT include the terminating NULL.
 	@ref solverslists*/
 
-extern int32 slv_get_num_solvers_condlogrels(slv_system_t sys);
+ASC_DLLSPEC int32 slv_get_num_solvers_condlogrels(slv_system_t sys);
 /**< Returns the length of the solver conditional relations list.
 	The length does NOT include the terminating NULL.
 	@ref solverslists
@@ -1100,4 +1100,3 @@ const void *slv_get_diffvars(slv_system_t sys);
 /* @} */
 
 #endif  /* ASC_SLV_CLIENT_H */
-

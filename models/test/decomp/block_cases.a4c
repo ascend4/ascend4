@@ -1,0 +1,140 @@
+REQUIRE "system.a4l";
+
+MODEL real_chain;
+	x, y IS_A generic_real;
+	r1: x = 1;
+	r2: y = x + 1;
+METHODS
+	METHOD on_load;
+		x := 0;
+		y := 0;
+	END on_load;
+END real_chain;
+
+MODEL boundary_when;
+	x, y IS_A generic_real;
+	b IS_A boolean_var;
+
+	CONDITIONAL
+		c: x >= 0;
+	END CONDITIONAL;
+
+	l: b == SATISFIED(c, 1e-8);
+	r1: x = 1;
+	pos: y = x + 1;
+	neg: y = x - 1;
+
+	WHEN (b)
+	CASE TRUE:
+		USE pos;
+	CASE FALSE:
+		USE neg;
+	END WHEN;
+METHODS
+	METHOD on_load;
+		x := 1;
+		y := 2;
+		b := SATISFIED(c, 1e-8);
+	END on_load;
+END boundary_when;
+
+MODEL fixed_selector_when;
+	y IS_A generic_real;
+	b IS_A boolean_var;
+	pos: y = 1;
+	neg: y = 2;
+
+	WHEN (b)
+	CASE TRUE:
+		USE pos;
+	CASE FALSE:
+		USE neg;
+	END WHEN;
+METHODS
+	METHOD on_load;
+		FIX b := TRUE;
+		y := 1;
+	END on_load;
+END fixed_selector_when;
+
+MODEL integer_selector_when;
+	y IS_A generic_real;
+	mode IS_A integer;
+	one: y = 1;
+	two: y = 2;
+
+	WHEN (mode)
+	CASE 1:
+		USE one;
+	CASE 2:
+		USE two;
+	END WHEN;
+METHODS
+	METHOD on_load;
+		mode := 1;
+		y := 1;
+	END on_load;
+END integer_selector_when;
+
+MODEL solver_int_relation;
+	i IS_A solver_int;
+	z IS_A generic_real;
+	r: i + z = 2;
+METHODS
+	METHOD on_load;
+		i := 1;
+		z := 1;
+	END on_load;
+END solver_int_relation;
+
+MODEL conditional_logrel;
+	y IS_A generic_real;
+	a, b IS_A boolean_var;
+
+	CONDITIONAL
+		l: a == b;
+	END CONDITIONAL;
+	r: y = 1;
+METHODS
+	METHOD on_load;
+		y := 1;
+		a := TRUE;
+		b := TRUE;
+	END on_load;
+END conditional_logrel;
+
+MODEL conditional_relation;
+	x, y IS_A generic_real;
+
+	CONDITIONAL
+		c: x = y;
+	END CONDITIONAL;
+	r: y = 1;
+METHODS
+	METHOD on_load;
+		x := 1;
+		y := 1;
+	END on_load;
+END conditional_relation;
+
+MODEL when_logrel;
+	y IS_A generic_real;
+	a, b, c IS_A boolean_var;
+	ltrue: b == c;
+	lfalse: b != c;
+	r: y = 1;
+
+	WHEN (a)
+	CASE TRUE:
+		USE ltrue;
+	CASE FALSE:
+		USE lfalse;
+	END WHEN;
+METHODS
+	METHOD on_load;
+		y := 1;
+		a := TRUE;
+		b := TRUE;
+		c := TRUE;
+	END on_load;
+END when_logrel;

@@ -244,6 +244,97 @@ activation.
 
 - Keep the existing global path as a fallback until decomposition is mature.
 
+## Current Implementation Status
+
+Initial shared-system support now lives in `ascend/system/decomp.[ch]`. It is
+not yet wired into CMSlv solve control. The pass deliberately reuses the same
+`mtx` symbolic assignment and `mtx_region_t` block representation used by
+QRSlv's block partitioning, but it does not reorder the live solver lists. It
+returns a separate `slv_decomp_partition_t` containing:
+
+- real relation rows;
+- conditional relation rows;
+- logical relation rows;
+- conditional logical relation rows;
+- continuous solver-variable columns;
+- discrete-variable columns;
+- block regions and row/column permutations;
+- recorded structural nonzeros for tests and diagnostics.
+
+The first pass adds conservative mixed dependencies for:
+
+- ordinary real relation to continuous variable incidence;
+- logical relation to discrete variable incidence;
+- `SATISFIED(...)` boundary edges from boundary real variables to consuming
+  logical relations;
+- logical-boundary edges where a boundary is itself a logrelation;
+- `WHEN` selector edges from discrete selectors to case-local relations and
+  logrelations.
+
+Discrete selector handling is intentionally broader than LRSlv's logical block
+partitioning. `slv_log_block_partition` remains boolean/logrelation-oriented,
+while `slv_decomp_partition` includes boolean, integer, and symbol discrete
+variables when they are used as activation selectors. Fixed boolean selectors
+are not treated as coupling edges, which is the first step toward SELECT-like
+collapse. Integer and symbol selectors are retained even when they are not
+logical-solver unknowns.
+
+These mixed blocks are analysis/scheduling blocks, not solver execution blocks.
+A mixed block may contain real variables, discrete variables, real relations,
+and logrelations when a boundary or selector prevents independent ordering.
+Before dispatch to a concrete solver, CMSlv should project the mixed block into
+typed subviews:
+
+- real-only relation/variable subblocks for QRSlv or CMSlv numeric work;
+- logical-only logrelation/boolean subblocks for LRSlv-style propagation;
+- future integer/MIP slices for integer solver variables.
+
+The mixed block is therefore the dependency boundary: it says the typed pieces
+inside the block cannot be scheduled independently without negotiating the
+activation or boundary dependency. This also preserves QRSlv's requirement that
+its block list contain only real variables and real relations.
+
+`analyze_make_solvers_lists` now also marks `VAR_INTEGER`, `VAR_BINARY`, and
+`VAR_SEMICONT` on solver variables. This is useful for decomposition consumers
+that need to distinguish continuous NLP variables from MIP-style solver vars
+without re-querying compiler types.
+
+The METHOD syntax `FIX b := TRUE` now works for discrete atoms with a boolean
+`fixed` child, not just refined `solver_var` real atoms. This removes the need
+to use the older direct `b.fixed := TRUE` form in decomposition fixtures and
+future conditional-model tests.
+
+Systematic CUnit coverage has been added in `ascend/solver/test/test_decomp.c`
+with fixtures in `models/test/decomp/block_cases.a4c`. The covered cases are:
+
+1. pure real chain decomposition compared with QRSlv block count;
+2. real boundary to logical relation dependency through `SATISFIED`;
+3. boolean `WHEN` selector activation edges;
+4. fixed boolean selector not creating a coupling edge;
+5. integer `WHEN` selector activation edges;
+6. solver integer variables participating in ordinary real relations;
+7. conditional relation and conditional logrelation row classification;
+8. logrelations used inside `WHEN` cases;
+9. public row/column kind helpers and null-input handling.
+
+A focused GCOV run on the new files currently reports:
+
+- `ascend/system/decomp.c`: 91.69% line coverage;
+- `ascend/solver/test/test_decomp.c`: 95.93% line coverage.
+
+The remaining uncovered `decomp.c` lines are mostly defensive allocation/error
+paths, fallback overcoupling paths for unmatched `WHEN` ownership, and the
+logical-boundary branch. The last two are real follow-up targets when the
+analysis layer exposes tighter case-local ownership and when we add a fixture
+for logrelation boundaries.
+
+The current conservative fallback for `REL_INWHEN`/`LOGREL_INWHEN` rows may add
+selector edges from all solver `WHEN`s if exact case-local object matching is
+not available. This is structurally safe but may overcouple models with multiple
+independent integer/symbol `WHEN`s. Before CMSlv uses the pass for performance
+decisions, this should be tightened by exposing or normalising the case-local
+relation/logrelation ownership data during analysis.
+
 ## Testing Plan
 
 1. Fixed selector:
@@ -280,6 +371,10 @@ activation.
 - Should conditional decomposition be a CMSlv-only pass, or should the mixed
   incidence graph live in the shared solver system layer?
 
+  Initial answer: the mixed graph now lives in the shared system layer. This
+  should also make it available to A4SQP-style pre/post solve analysis without
+  importing CMSlv internals.
+
 - How should inactive `WHEN` case equations be represented during block
   analysis so that inactive branches do not create false continuous
   dependencies?
@@ -290,6 +385,10 @@ activation.
 - How much of QRSlv partitioning can be reused once `WHEN` activation has been
   resolved for a block?
 
+  Initial answer: the matrix assignment and block-region machinery can be
+  reused directly. Live solver-list reordering should wait until CMSlv has a
+  block-local execution path, because the mixed graph has more row/column kinds
+  than QRSlv's real-only lists.
+
 - What user-facing diagnostics are needed to make decomposition decisions
   understandable?
-
