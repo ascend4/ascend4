@@ -6,6 +6,7 @@ from gi.repository import Gtk
 try:
 	import matplotlib		
 	from matplotlib.colors import LinearSegmentedColormap
+	from matplotlib.patches import Patch
 	import pylab
 
 except:
@@ -17,40 +18,43 @@ class IncidenceMatrixWindow:
 		self.im = im # IncidenceMatrix object
 		self.lastcol = None;
 		self.lastrow = None;
+		self.mode = "real"
 
 		loading.load_matplotlib(throw=True)
 
 	def run(self):
-		# convert incidence map to numpy	 type:
+		_id = None
+		try:
+			_id = self.im.getDecompIncidenceData()
+			self.mode = "decomp"
+			rows = self.im.getDecompNumRows()
+			cols = self.im.getDecompNumCols()
+			title = "Mixed Incidence / Decomposition Matrix"
+			xlabel = "Vars / dvars"
+			ylabel = "Rels / logrels"
+			legend = self._decomp_legend()
+			n = 10
+			colors = self._decomp_colors()
+		except RuntimeError:
+			_id = self.im.getIncidenceData()
+			self.mode = "real"
+			rows = self.im.getNumRows()
+			cols = self.im.getNumCols()
+			title = "Incidence Matrix"
+			xlabel = "Variables"
+			ylabel = "Relations"
+			legend = self._real_legend()
+			n = 4
+			colors = self._real_colors()
 
-		# Warning dialog message box
-
-#		_d = Gtk.MessageDialog(None,Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,Gtk.MessageType.ERROR,Gtk.ButtonsType.CLOSE,"Plotting functions are not available unless you have 'matplotlib' installed.\n\nSee http://matplotlib.sf.net/\n\nFailed to load matplotlib" )
-#		_d.run()
-#		_d.destroy()
-#		return
-##########################################
-		_id = self.im.getIncidenceData();
-
-		self.data = pylab.zeros((self.im.getNumRows(), self.im.getNumCols(), ))
+		self.data = pylab.zeros((rows, cols, ))
 		for i in _id:
 			self.data[i.row, i.col] = int(i.type)
-
-		del(_id)
-
-		colors = {
-			0: (1.,1.,1.)   # IM_NULL
-			,1: (0.,1.,0.)  # IM_ACTIVE_FIXED
-			,2: (0.,0.,0.3) # IM_ACTIVE_FREE
-			,3: (1.,0.5,0.)  # IM_DORMANT_FIXED
-			,4: (1.,0.,0.)  # IM_DORMANT_FREE
-		}
 
 		red = []
 		green = []
 		blue = []	
-		n = 4
-		for k,v in colors.items():
+		for k,v in sorted(colors.items()):
 			red.append((float(k)/n, v[0], v[0]))
 			green.append((float(k)/n, v[1], v[1]))
 			blue.append((float(k)/n, v[2], v[2]))
@@ -63,15 +67,61 @@ class IncidenceMatrixWindow:
 		f = pylab.figure()
 		ax = f.add_subplot(111)
 		ax.imshow(self.data, cmap=_im_cmap, interpolation='nearest',vmin=0, vmax=n) 
-#		# integer 'type' values become reals 0..1, which are then coloured
-#		# according to cmapdata
-		pylab.title("Incidence Matrix")
-		pylab.xlabel("Variables")
-		pylab.ylabel("Relations")
-#		#pylab.connect('motion_notify_event',self.on_sparsity_motion_notify)
+		pylab.title(title)
+		pylab.xlabel(xlabel)
+		pylab.ylabel(ylabel)
+		if legend:
+			ax.legend(
+				handles=legend,
+				loc='upper left',
+				bbox_to_anchor=(1.02, 1.0),
+				borderaxespad=0.,
+				fontsize='small'
+			)
+			f.subplots_adjust(right=0.74)
 		ax.format_coord = self.incidence_get_coord_str
 		pylab.ion()
 		pylab.show()
+
+	def _real_colors(self):
+		return {
+			0: (1.,1.,1.)   # IM_NULL
+			,1: (0.,1.,0.)  # IM_ACTIVE_FIXED
+			,2: (0.,0.,0.3) # IM_ACTIVE_FREE
+			,3: (1.,0.5,0.)  # IM_DORMANT_FIXED
+			,4: (1.,0.,0.)  # IM_DORMANT_FREE
+		}
+
+	def _decomp_colors(self):
+		return {
+			0: (1.,1.,1.)   # IM_NULL
+			,1: (1.,1.,1.)
+			,2: (1.,1.,1.)
+			,3: (1.,1.,1.)
+			,4: (1.,1.,1.)
+			,5: (0.10,0.20,0.72) # IM_DECOMP_REAL
+			,6: (0.55,0.20,0.75) # IM_DECOMP_INTEGER
+			,7: (0.90,0.45,0.05) # IM_DECOMP_SELECTOR
+			,8: (0.10,0.55,0.35) # IM_DECOMP_LOGICAL
+			,9: (0.85,0.15,0.15) # IM_DECOMP_BOUNDARY
+			,10: (0.35,0.35,0.35) # IM_DECOMP_MIXED
+		}
+
+	def _real_legend(self):
+		return [
+			Patch(facecolor=(0.,1.,0.), label="active fixed"),
+			Patch(facecolor=(0.,0.,0.3), label="active free"),
+			Patch(facecolor=(1.,0.5,0.), label="dormant fixed"),
+			Patch(facecolor=(1.,0.,0.), label="dormant free"),
+		]
+
+	def _decomp_legend(self):
+		colors = self._decomp_colors()
+		types = [5, 6, 7, 8, 9, 10]
+		return [
+			Patch(facecolor=colors[t], label=label)
+			for t,label in zip(types, self.im.getDecompPointLegend())
+		]
 
 	def incidence_get_coord_str(self,x,y):
 		
@@ -87,17 +137,35 @@ class IncidenceMatrixWindow:
 					if self.lastrow == _row and self.lastcol == _col:
 						return self.lastmsg
 
-				_var = self.im.getVariable(_col);
-				_rel = self.im.getRelation(_row);
-				_blk = self.im.getBlockRow(_row);
+				if self.mode == "decomp":
+					_var = self.im.getDecompColLabel(_col)
+					_rel = self.im.getDecompRowLabel(_row)
+					_vkind = self.im.getDecompColKind(_col)
+					_rkind = self.im.getDecompRowKind(_row)
+					_blk = self._decomp_block_for_row(_row)
+				else:
+					_var = self.im.getVariable(_col);
+					_rel = self.im.getRelation(_row);
+					_vkind = "variable"
+					_rkind = "relation"
+					_blk = self.im.getBlockRow(_row);
 			except IndexError:
+				return "[out of range]"
+			except RuntimeError:
 				return "[out of range]"
 
 			#print("row = %d, col = %d" % (_row,_col))
 
 			self.lastrow = _row;
 			self.lastcol = _col; 
-			self.lastmsg = "rel '%s', var '%s': block %d" %(_rel,_var,_blk)
+			self.lastmsg = "%s '%s', %s '%s': block %d" %(
+				_rkind,_rel,_vkind,_var,_blk
+			)
 			#print(self.lastmsg)
 			return self.lastmsg
 
+	def _decomp_block_for_row(self,row):
+		for b in self.im.getDecompBlockSummaries():
+			if b.row_low <= row <= b.row_high:
+				return b.block
+		return -1
