@@ -33,7 +33,7 @@ class IncidenceMatrixWindow:
 			xlabel = "Vars / dvars"
 			ylabel = "Rels / logrels"
 			legend = self._decomp_legend()
-			n = 10
+			n = 3
 			colors = self._decomp_colors()
 		except RuntimeError:
 			_id = self.im.getIncidenceData()
@@ -48,8 +48,14 @@ class IncidenceMatrixWindow:
 			colors = self._real_colors()
 
 		self.data = pylab.zeros((rows, cols, ))
-		for i in _id:
-			self.data[i.row, i.col] = int(i.type)
+		if self.mode == "decomp":
+			self.blockdata = self._decomp_block_data(rows, cols)
+			for i in _id:
+				self.data[i.row, i.col] = self._decomp_plot_type(int(i.type))
+		else:
+			self.blockdata = None
+			for i in _id:
+				self.data[i.row, i.col] = int(i.type)
 
 		red = []
 		green = []
@@ -66,7 +72,22 @@ class IncidenceMatrixWindow:
 		pylab.ioff()
 		f = pylab.figure()
 		ax = f.add_subplot(111)
-		ax.imshow(self.data, cmap=_im_cmap, interpolation='nearest',vmin=0, vmax=n) 
+		if self.blockdata is not None:
+			ax.imshow(
+				self.blockdata, cmap=_im_cmap, interpolation='nearest',
+				vmin=0, vmax=n
+			)
+			_im_cmap.set_bad((1.,1.,1.,0.))
+			plotdata = pylab.ma.masked_where(self.data == 0, self.data)
+			ax.imshow(
+				plotdata, cmap=_im_cmap, interpolation='nearest',
+				vmin=0, vmax=n
+			)
+		else:
+			ax.imshow(
+				self.data, cmap=_im_cmap, interpolation='nearest',
+				vmin=0, vmax=n
+			)
 		pylab.title(title)
 		pylab.xlabel(xlabel)
 		pylab.ylabel(ylabel)
@@ -95,16 +116,9 @@ class IncidenceMatrixWindow:
 	def _decomp_colors(self):
 		return {
 			0: (1.,1.,1.)   # IM_NULL
-			,1: (1.,1.,1.)
-			,2: (1.,1.,1.)
-			,3: (1.,1.,1.)
-			,4: (1.,1.,1.)
-			,5: (0.10,0.20,0.72) # IM_DECOMP_REAL
-			,6: (0.55,0.20,0.75) # IM_DECOMP_INTEGER
-			,7: (0.90,0.45,0.05) # IM_DECOMP_SELECTOR
-			,8: (0.10,0.55,0.35) # IM_DECOMP_LOGICAL
-			,9: (0.85,0.15,0.15) # IM_DECOMP_BOUNDARY
-			,10: (0.35,0.35,0.35) # IM_DECOMP_MIXED
+			,1: (0.92,0.92,0.92) # block background
+			,2: (0.,0.,0.)       # rel/var incidence
+			,3: (0.,0.34,1.)     # logrel/dvar incidence
 		}
 
 	def _real_legend(self):
@@ -117,11 +131,27 @@ class IncidenceMatrixWindow:
 
 	def _decomp_legend(self):
 		colors = self._decomp_colors()
-		types = [5, 6, 7, 8, 9, 10]
 		return [
-			Patch(facecolor=colors[t], label=label)
-			for t,label in zip(types, self.im.getDecompPointLegend())
+			Patch(facecolor=colors[1], label="block"),
+			Patch(facecolor=colors[2], label="rel/var"),
+			Patch(facecolor=colors[3], label="logrel/dvar"),
 		]
+
+	def _decomp_plot_type(self,pointtype):
+		if pointtype in (5, 6):
+			return 2
+		if pointtype in (7, 8, 9, 10):
+			return 3
+		return 0
+
+	def _decomp_block_data(self,rows,cols):
+		data = pylab.zeros((rows, cols, ))
+		for b in self.im.getDecompBlockSummaries():
+			data[
+				b.row_low:b.row_high + 1,
+				b.col_low:b.col_high + 1
+			] = 1
+		return data
 
 	def incidence_get_coord_str(self,x,y):
 		
