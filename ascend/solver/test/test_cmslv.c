@@ -127,6 +127,19 @@ static int cmslv_set_char_param(slv_system_t sys, const char *name, const char *
 	return 0;
 }
 
+static int cmslv_set_bool_param(slv_system_t sys, const char *name, int value){
+	slv_parameters_t params;
+	int idx;
+	slv_get_parameters(sys,&params);
+	idx = cmslv_find_param_index(&params,name);
+	if(idx < 0 || SLV_PARAM_TYPE(&params,idx) != bool_parm){
+		return 1;
+	}
+	SLV_PARAM_BOOL(&params,idx) = value ? 1 : 0;
+	slv_set_parameters(sys,&params);
+	return 0;
+}
+
 static int cmslv_load_required_package(const char *package){
 	char message[160];
 	if(0 == package_load(package,NULL)){
@@ -173,8 +186,8 @@ static int cmslv_optional_optimizer_selected(const char *optsolver){
 /*
 	Test solving a simple CMSlv model
 */
-static void test_cmslv(const char *filenamestem, const char *optsolver,
-		int expect_boundary_progress
+static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
+		int expect_boundary_progress, int cmslv2
 ){
 
 	struct module_t *m;
@@ -250,6 +263,9 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 	if(optsolver != NULL){
 		CU_ASSERT_FATAL(0 == cmslv_set_char_param(sys,"optsolvers",optsolver));
 	}
+	if(cmslv2){
+		CU_ASSERT_FATAL(0 == cmslv_set_bool_param(sys,"cmslv2",1));
+	}
 
 	{
 		int presolve_status = slv_presolve(sys);
@@ -283,6 +299,19 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 	CU_ASSERT(status.ok);
 	if(expect_boundary_progress){
 		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"solver=CMSlv"));
+		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"event=decomp_assess"));
+		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"event=decomp_partition"));
+		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"event=cmslv2_plan"));
+		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"qrslv_blocks="));
+		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"lrslv_blocks="));
+		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"active_recommended="));
+		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"structural_safe="));
+		if(cmslv2){
+			CU_ASSERT_PTR_NOT_NULL(strstr(progress,"cmslv2=1"));
+			CU_ASSERT_PTR_NOT_NULL(strstr(progress,"partition=1"));
+			CU_ASSERT_PTR_NOT_NULL(strstr(progress,"event=nl_presolved"));
+		}
+		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"phase=reconfigure"));
 		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"event=boundary_crossed"));
 		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"event=boundary_return_done"));
 		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"event=boundary_opt_start"));
@@ -308,6 +337,12 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 	Asc_CompilerDestroy();
 }
 
+static void test_cmslv(const char *filenamestem, const char *optsolver,
+		int expect_boundary_progress
+){
+	test_cmslv_mode(filenamestem,optsolver,expect_boundary_progress,0);
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -319,7 +354,8 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 	T(linmassbal_ipopt)\
 	T(pipeline_ipopt)\
 	T(heatex_ipopt)\
-	T(reinitignore_ipopt)
+	T(reinitignore_ipopt)\
+	T(linmassbal_cmslv2)
 
 static void test_linmassbal(void){ test_cmslv("linmassbal","CONOPT",1); }
 static void test_pipeline(void){ test_cmslv("pipeline","CONOPT",1); }
@@ -329,5 +365,8 @@ static void test_linmassbal_ipopt(void){ test_cmslv("linmassbal","IPOPT",1); }
 static void test_pipeline_ipopt(void){ test_cmslv("pipeline","IPOPT",1); }
 static void test_heatex_ipopt(void){ test_cmslv("heatex","IPOPT",1); }
 static void test_reinitignore_ipopt(void){ test_cmslv("reinitignore","IPOPT",0); }
+static void test_linmassbal_cmslv2(void){
+	test_cmslv_mode("linmassbal","CONOPT",1,1);
+}
 
 REGISTER_TESTS_SIMPLE(solver_cmslv, TESTS);

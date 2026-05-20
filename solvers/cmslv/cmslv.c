@@ -44,6 +44,7 @@
 #include <ascend/system/bndman.h>
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/cond_config.h>
+#include <ascend/system/decomp.h>
 #include <ascend/solver/solver.h>
 #include <ascend/solver/slvDOF.h>
 #include <ascend/compiler/packages.h>
@@ -4783,6 +4784,351 @@ void update_real_status(slv_status_t *main, slv_status_t *slave, int32 niter){
     main->block.previous_total_size = slave->block.previous_total_size;
 }
 
+struct slv9_decomp_block_stats {
+  int32 rows;
+  int32 cols;
+  int32 relrows;
+  int32 logrows;
+  int32 vars;
+  int32 intvars;
+  int32 dvars;
+  int32 boundary_edges;
+  int32 selector_edges;
+};
+
+struct slv9_decomp_summary {
+  int32 pure_real;
+  int32 pure_integer;
+  int32 pure_logical;
+  int32 selector_coupled;
+  int32 boundary_mixed;
+  int32 mixed;
+  int32 empty;
+  int32 max_rows;
+  int32 max_cols;
+};
+
+struct slv9_cmslv2_plan_summary {
+  int32 structural_blocks;
+  int32 active_blocks;
+  int32 qrslv_blocks;
+  int32 lrslv_blocks;
+  int32 enum_blocks;
+  int32 boundary_blocks;
+  int32 integer_blocks;
+  int32 fallback_blocks;
+  int32 skipped_blocks;
+  int32 max_qrslv_rows;
+  int32 max_qrslv_cols;
+};
+
+static
+void slv9_decomp_block_stats_init(struct slv9_decomp_block_stats *bs){
+  memset(bs,0,sizeof(*bs));
+}
+
+static
+void slv9_decomp_summary_init(struct slv9_decomp_summary *sum){
+  memset(sum,0,sizeof(*sum));
+}
+
+static
+void slv9_cmslv2_plan_summary_init(struct slv9_cmslv2_plan_summary *plan){
+  memset(plan,0,sizeof(*plan));
+}
+
+static
+int32 slv9_decomp_index_in_range(int32 value, const mtx_range_t *range){
+  return range != NULL && value >= range->low && value <= range->high;
+}
+
+static
+void slv9_decomp_assess_block(slv_system_t server,
+    const slv_decomp_partition_t *decomp, int32 block,
+    struct slv9_decomp_block_stats *bs
+){
+  int32 r, c, nz, local;
+  mtx_region_t region;
+
+  slv9_decomp_block_stats_init(bs);
+  if(decomp == NULL || block < 0 || block >= decomp->nblocks) {
+    return;
+  }
+  region = decomp->blocks[block];
+  bs->rows = region.row.high >= region.row.low
+    ? region.row.high - region.row.low + 1 : 0;
+  bs->cols = region.col.high >= region.col.low
+    ? region.col.high - region.col.low + 1 : 0;
+
+  for(r = region.row.low; r <= region.row.high; ++r) {
+    slv_decomp_row_kind_t kind =
+      slv_decomp_row_kind(decomp,decomp->row_org[r],&local);
+    switch(kind) {
+    case slv_decomp_row_rel:
+    case slv_decomp_row_condrel:
+      bs->relrows++;
+      break;
+    case slv_decomp_row_logrel:
+    case slv_decomp_row_condlogrel:
+      bs->logrows++;
+      break;
+    default:
+      break;
+    }
+  }
+
+  for(c = region.col.low; c <= region.col.high; ++c) {
+    slv_decomp_col_kind_t kind =
+      slv_decomp_col_kind(decomp,decomp->col_org[c],&local);
+    switch(kind) {
+    case slv_decomp_col_var:{
+      struct var_variable **vars = slv_get_solvers_var_list(server);
+      uint32 flags = var_flags(vars[local]);
+      bs->vars++;
+      if(flags & (VAR_INTEGER | VAR_BINARY | VAR_SEMICONT)) {
+        bs->intvars++;
+      }
+      break;
+    }
+    case slv_decomp_col_dvar:
+      bs->dvars++;
+      break;
+    default:
+      break;
+    }
+  }
+
+  for(nz = 0; nz < decomp->nnz; ++nz) {
+    int32 orgrow = decomp->nz_rows[nz];
+    int32 orgcol = decomp->nz_cols[nz];
+    int32 currow, curcol;
+    slv_decomp_row_kind_t rowkind;
+    slv_decomp_col_kind_t colkind;
+    currow = orgrow >= 0 && orgrow < decomp->n_rows
+      ? decomp->row_cur[orgrow] : -1;
+    if(!slv9_decomp_index_in_range(currow,&region.row)) {
+      continue;
+    }
+    curcol = orgcol >= 0 && orgcol < decomp->n_cols
+      ? decomp->col_cur[orgcol] : -1;
+    if(!slv9_decomp_index_in_range(curcol,&region.col)) {
+      continue;
+    }
+    rowkind = slv_decomp_row_kind(decomp,orgrow,&local);
+    colkind = slv_decomp_col_kind(decomp,orgcol,&local);
+    if((rowkind == slv_decomp_row_logrel
+        || rowkind == slv_decomp_row_condlogrel)
+        && colkind == slv_decomp_col_var) {
+      bs->boundary_edges++;
+    }
+    if((rowkind == slv_decomp_row_rel
+        || rowkind == slv_decomp_row_condrel)
+        && colkind == slv_decomp_col_dvar) {
+      bs->selector_edges++;
+    }
+  }
+}
+
+static
+void slv9_decomp_tally_block(const struct slv9_decomp_block_stats *bs,
+    struct slv9_decomp_summary *sum
+){
+  if(bs->rows > sum->max_rows) sum->max_rows = bs->rows;
+  if(bs->cols > sum->max_cols) sum->max_cols = bs->cols;
+  if(bs->rows == 0 || bs->cols == 0) {
+    sum->empty++;
+  }else if(bs->relrows > 0 && bs->logrows == 0 && bs->vars > 0
+      && bs->dvars == 0) {
+    if(bs->intvars > 0) {
+      sum->pure_integer++;
+    }else{
+      sum->pure_real++;
+    }
+  }else if(bs->logrows > 0 && bs->relrows == 0 && bs->dvars > 0
+      && bs->vars == 0) {
+    sum->pure_logical++;
+  }else if(bs->relrows > 0 && bs->logrows == 0 && bs->vars > 0
+      && bs->dvars > 0 && bs->selector_edges > 0
+      && bs->boundary_edges == 0) {
+    sum->selector_coupled++;
+  }else if(bs->boundary_edges > 0 || (bs->relrows > 0 && bs->logrows > 0)) {
+    sum->boundary_mixed++;
+  }else{
+    sum->mixed++;
+  }
+}
+
+static
+void slv9_decomp_summarize(slv_system_t server,
+    const slv_decomp_partition_t *decomp, struct slv9_decomp_summary *sum
+){
+  int32 b;
+  struct slv9_decomp_block_stats bs;
+  slv9_decomp_summary_init(sum);
+  if(decomp == NULL) {
+    return;
+  }
+  for(b = 0; b < decomp->nblocks; ++b) {
+    slv9_decomp_assess_block(server,decomp,b,&bs);
+    slv9_decomp_tally_block(&bs,sum);
+  }
+}
+
+static
+void slv9_cmslv2_plan_from_decomp(slv_system_t server,
+    const slv_decomp_partition_t *structural,
+    const slv_decomp_partition_t *active,
+    struct slv9_cmslv2_plan_summary *plan
+){
+  int32 b;
+  struct slv9_decomp_block_stats bs;
+
+  slv9_cmslv2_plan_summary_init(plan);
+  if(structural != NULL) {
+    plan->structural_blocks = structural->nblocks;
+    for(b = 0; b < structural->nblocks; ++b) {
+      slv9_decomp_assess_block(server,structural,b,&bs);
+      if(bs.rows == 0 || bs.cols == 0) {
+        plan->skipped_blocks++;
+      }else if(bs.relrows > 0 && bs.logrows == 0 && bs.vars > 0
+          && bs.dvars > 0 && bs.selector_edges > 0
+          && bs.boundary_edges == 0) {
+        plan->enum_blocks++;
+      }else if(bs.boundary_edges > 0
+          || (bs.relrows > 0 && bs.logrows > 0)) {
+        plan->boundary_blocks++;
+      }else if(bs.intvars > 0) {
+        plan->integer_blocks++;
+      }else if(!((bs.relrows > 0 && bs.logrows == 0 && bs.vars > 0
+            && bs.dvars == 0)
+          || (bs.logrows > 0 && bs.relrows == 0 && bs.dvars > 0
+            && bs.vars == 0))) {
+        plan->fallback_blocks++;
+      }
+    }
+  }
+
+  if(active != NULL) {
+    plan->active_blocks = active->nblocks;
+    for(b = 0; b < active->nblocks; ++b) {
+      slv9_decomp_assess_block(server,active,b,&bs);
+      if(bs.rows == 0 || bs.cols == 0) {
+        plan->skipped_blocks++;
+      }else if(bs.relrows > 0 && bs.logrows == 0 && bs.vars > 0
+          && bs.dvars == 0 && bs.intvars == 0) {
+        plan->qrslv_blocks++;
+        if(bs.rows > plan->max_qrslv_rows) plan->max_qrslv_rows = bs.rows;
+        if(bs.cols > plan->max_qrslv_cols) plan->max_qrslv_cols = bs.cols;
+      }else if(bs.logrows > 0 && bs.relrows == 0 && bs.dvars > 0
+          && bs.vars == 0) {
+        plan->lrslv_blocks++;
+      }
+    }
+  }
+}
+
+static
+void slv9_report_decomp_assessment(slv9_system_t sys, const char *event){
+  slv_decomp_partition_t structural, active;
+  struct slv9_decomp_summary as;
+  int structural_status, active_status;
+
+  if(sys == NULL || sys->slv == NULL) {
+    return;
+  }
+  slv_decomp_init(&structural);
+  slv_decomp_init(&active);
+  structural_status = slv_decomp_partition(sys->slv,&structural);
+  active_status = slv_decomp_partition_active(sys->slv,&active);
+  if(structural_status || active_status) {
+    slv9_report_progress(sys,
+      "event=decomp_assess phase=%s status=failed structural_status=%d active_status=%d",
+      event != NULL ? event : "unknown", structural_status, active_status
+    );
+    slv_decomp_destroy(&structural);
+    slv_decomp_destroy(&active);
+    return;
+  }
+
+  slv9_decomp_summarize(sys->slv,&active,&as);
+  slv9_report_progress(sys,
+    "event=decomp_assess phase=%s structural_blocks=%d active_blocks=%d structural_nnz=%d active_nnz=%d pure_real=%d pure_integer=%d pure_logical=%d selector=%d boundary_mixed=%d mixed=%d empty=%d max_active_rows=%d max_active_cols=%d",
+    event != NULL ? event : "unknown",
+    structural.nblocks, active.nblocks, structural.nnz, active.nnz,
+    as.pure_real, as.pure_integer, as.pure_logical, as.selector_coupled,
+    as.boundary_mixed, as.mixed, as.empty, as.max_rows, as.max_cols
+  );
+  slv_decomp_destroy(&structural);
+  slv_decomp_destroy(&active);
+}
+
+static
+int32 slv9_decomp_summary_partitionable(const struct slv9_decomp_summary *summary){
+  return summary != NULL
+    && summary->pure_real > 0
+    && summary->pure_integer == 0
+    && summary->selector_coupled == 0
+    && summary->boundary_mixed == 0
+    && summary->mixed == 0;
+}
+
+static
+void slv9_apply_decomp_partition_policy(slv9_system_t sys, const char *phase){
+  slv_decomp_partition_t structural, active;
+  struct slv9_decomp_summary ss, as;
+  struct slv9_cmslv2_plan_summary plan;
+  int32 structural_status, active_status;
+  int32 active_recommended, structural_safe, recommend_partition;
+
+  if(sys == NULL || sys->slv == NULL || !sys->solvers_ready) {
+    return;
+  }
+  slv_decomp_init(&structural);
+  slv_decomp_init(&active);
+  structural_status = slv_decomp_partition(sys->slv,&structural);
+  active_status = slv_decomp_partition_active(sys->slv,&active);
+  if(structural_status || active_status) {
+    slv9_report_progress(sys,
+      "event=decomp_partition phase=%s partition=0 recommended=0 status=failed structural_status=%d active_status=%d",
+      phase != NULL ? phase : "unknown", structural_status, active_status
+    );
+    slv_decomp_destroy(&structural);
+    slv_decomp_destroy(&active);
+    return;
+  }
+
+  slv9_decomp_summarize(sys->slv,&structural,&ss);
+  slv9_decomp_summarize(sys->slv,&active,&as);
+  slv9_cmslv2_plan_from_decomp(sys->slv,&structural,&active,&plan);
+  active_recommended = slv9_decomp_summary_partitionable(&as);
+  structural_safe = slv9_decomp_summary_partitionable(&ss);
+  recommend_partition = active_recommended && structural_safe;
+
+  /* Do not mutate QRSlv parameters here; CMSlv disables partitioning during
+   * setup, and changing nested solver parameters at iteration time disrupts
+   * conditional examples such as linmassbal. */
+  slv9_report_progress(sys,
+    "event=decomp_partition phase=%s partition=%d cmslv2=%d recommended=%d active_recommended=%d structural_safe=%d structural_blocks=%d active_blocks=%d structural_nnz=%d active_nnz=%d pure_real=%d pure_integer=%d pure_logical=%d selector=%d boundary_mixed=%d mixed=%d",
+    phase != NULL ? phase : "unknown",
+    CMSLV2_BLOCKSOLVE ? 1 : 0, CMSLV2_BLOCKSOLVE ? 1 : 0,
+    recommend_partition, active_recommended, structural_safe,
+    structural.nblocks, active.nblocks, structural.nnz, active.nnz,
+    as.pure_real, as.pure_integer, as.pure_logical,
+    as.selector_coupled, as.boundary_mixed, as.mixed
+  );
+  slv9_report_progress(sys,
+    "event=cmslv2_plan phase=%s structural_blocks=%d active_blocks=%d qrslv_blocks=%d lrslv_blocks=%d enum_blocks=%d boundary_blocks=%d integer_blocks=%d fallback_blocks=%d skipped_blocks=%d max_qrslv_rows=%d max_qrslv_cols=%d driver=%s",
+    phase != NULL ? phase : "unknown",
+    plan.structural_blocks, plan.active_blocks,
+    plan.qrslv_blocks, plan.lrslv_blocks, plan.enum_blocks,
+    plan.boundary_blocks, plan.integer_blocks, plan.fallback_blocks,
+    plan.skipped_blocks, plan.max_qrslv_rows, plan.max_qrslv_cols,
+    CMSLV2_BLOCKSOLVE ? "cmslv2" : "legacy"
+  );
+  slv_decomp_destroy(&structural);
+  slv_decomp_destroy(&active);
+}
+
 /*------------------------------------------------------------------------------
   PARAMETER ASSIGNMENT
 */
@@ -4909,6 +5255,12 @@ int32 slv9_get_default_parameters(slv_system_t server,
                "log progress to console",
 	       U_p_bool(val,0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
   SLV_BPARM_MACRO(PROGRESS_LOG_PTR,parameters);
+
+  slv_define_parm(parameters, bool_parm,
+	       "cmslv2", "experimental block-local solve",
+               "experimental block-local solve",
+	       U_p_bool(val,0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
+  SLV_BPARM_MACRO(CMSLV2_BLOCKSOLVE_PTR,parameters);
 
   slv_define_parm(parameters, real_parm,
 	       "rho", "penalty parameter for optimization",
@@ -5102,13 +5454,14 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 		PARTITION is a boolean parameter of the nonlinear solver
 		QRSlv. This parameter tells the solver whether it should block
 		partition or not.
-		As long as we do not have a special subroutine to partition
-		conditional models, this option should be disabled while using
-		the conditional solver CMSlv
+		Legacy CMSlv keeps this disabled. The experimental cmslv2 mode
+		enables QRSlv's native real-block partitioning from initial
+		subsidiary-solver setup; changing this flag later in the nested
+		solve path is unsafe.
 	*/
 	MSG("setting QRSlv.partition");
 	param = "partition";
-	u.b = 0;
+	u.b = CMSLV2_BLOCKSOLVE ? 1 : 0;
 	set_param_in_solver(server,NONLINEAR_SOLVER,bool_parm,param,&u);
 
 
@@ -5465,6 +5818,7 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
     "event=presolve, optimizing=%d, vars=%d, rels=%d",
     g_optimizing, sys->vtot, sys->rtot
   );
+  slv9_report_decomp_assessment(sys,"presolve");
   iteration_ends(sys);
 
   return 0;
@@ -5625,6 +5979,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         "event=reconfigure, iter=%d",
         sys->s.iteration
       );
+      slv9_report_decomp_assessment(sys,"reconfigure");
     }
 
     /*
@@ -5686,8 +6041,15 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
           "event=nl_start, iter=%d, solver=%s",
           sys->s.iteration, NONLISOLVER_OPTION
         );
+        slv9_apply_decomp_partition_policy(sys,"nl_presolve");
         slv_presolve(server);
         slv_get_status(server,&status);
+        slv9_report_progress(sys,
+          "event=nl_presolved phase=nl_presolve partition=%d blocks=%d current_block=%d current_size=%d",
+          CMSLV2_BLOCKSOLVE ? 1 : 0,
+          status.block.number_of, status.block.current_block,
+          status.block.current_size
+        );
         update_struct_info(sys,&status);
         update_real_status(&(sys->s),&status,sys->nliter);
         if(sys->s.u.nlp.cost) {
@@ -5704,6 +6066,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       slv_get_status(server,&status);
       update_struct_info(sys,&status);
       if(status.converged) {
+        slv9_apply_decomp_partition_policy(sys,"nl_represolve");
         slv_presolve(server);
         update_real_status(&(sys->s),&status,0);
         if(sys->s.u.nlp.cost) {

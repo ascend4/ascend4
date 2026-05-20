@@ -53,6 +53,8 @@ typedef struct slv_decomp_partition {
 	int32 *nz_cols;
 	int32 *row_org;
 	int32 *col_org;
+	int32 *row_cur;
+	int32 *col_cur;
 } slv_decomp_partition_t;
 
 ASC_DLLSPEC void slv_decomp_init(slv_decomp_partition_t *decomp);
@@ -67,6 +69,20 @@ ASC_DLLSPEC int slv_decomp_partition(slv_system_t sys,
 	conditional logical relations. Columns are solver variables followed by
 	solver discrete variables. Boundary dependencies from SATISFIED terms and
 	WHEN selector dependencies are added conservatively.
+
+	@return 0 on success, 2 on out-of-memory, 1 on other failure.
+*/
+
+ASC_DLLSPEC int slv_decomp_partition_active(slv_system_t sys,
+		slv_decomp_partition_t *decomp);
+/**<
+	Builds a mixed BLT partition for the current active conditional branch.
+
+	This partition uses only rows whose `included` and `active` flags are both
+	true. It does not add WHEN selector-to-row activation edges, because those
+	edges have already been consumed when the active CASE rows were selected.
+	It is intended as the re-analysis view used after selectors or boundaries
+	have resolved part of the conditional structure.
 
 	@return 0 on success, 2 on out-of-memory, 1 on other failure.
 */

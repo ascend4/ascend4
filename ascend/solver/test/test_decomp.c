@@ -224,6 +224,33 @@ static void test_boundary_and_when_edges(void){
 	decomp_fixture_destroy(&fx);
 }
 
+static void test_active_partition_prunes_when_rows(void){
+	struct decomp_fixture fx;
+	slv_decomp_partition_t active;
+	int posrow, negrow, xcol, ycol, bcol;
+
+	decomp_load_model("boundary_when",&fx);
+	slv_decomp_init(&active);
+	CU_ASSERT_EQUAL_FATAL(slv_decomp_partition_active(fx.sys,&active),0);
+
+	posrow = decomp_rel_org_row(&fx,"pos");
+	negrow = decomp_rel_org_row(&fx,"neg");
+	xcol = decomp_var_org_col(&fx,"x");
+	ycol = decomp_var_org_col(&fx,"y");
+	bcol = decomp_dvar_org_col(&fx,"b");
+
+	CU_ASSERT_TRUE(decomp_has_edge(&fx.decomp,posrow,bcol));
+	CU_ASSERT_FALSE(decomp_has_edge(&active,posrow,bcol));
+	CU_ASSERT_TRUE(decomp_has_edge(&active,posrow,xcol));
+	CU_ASSERT_TRUE(decomp_has_edge(&active,posrow,ycol));
+	CU_ASSERT_FALSE(decomp_has_edge(&active,negrow,bcol));
+	CU_ASSERT_FALSE(decomp_has_edge(&active,negrow,xcol));
+	CU_ASSERT_FALSE(decomp_has_edge(&active,negrow,ycol));
+
+	slv_decomp_destroy(&active);
+	decomp_fixture_destroy(&fx);
+}
+
 static void test_fixed_selector_is_not_coupling_edge(void){
 	struct decomp_fixture fx;
 	int posrow, bcol;
@@ -266,7 +293,7 @@ static void test_solver_int_relation_column(void){
 
 static void test_public_kind_helpers(void){
 	struct decomp_fixture fx;
-	int local;
+	int i, local;
 	int rrow, logrow, xcol, bcol;
 
 	decomp_load_model("boundary_when",&fx);
@@ -299,6 +326,12 @@ static void test_public_kind_helpers(void){
 		slv_decomp_col_invalid);
 	CU_ASSERT_EQUAL(slv_decomp_col_kind(NULL,xcol,&local),
 		slv_decomp_col_invalid);
+	for(i = 0; i < fx.decomp.n_rows; ++i){
+		CU_ASSERT_EQUAL(fx.decomp.row_cur[fx.decomp.row_org[i]],i);
+	}
+	for(i = 0; i < fx.decomp.n_cols; ++i){
+		CU_ASSERT_EQUAL(fx.decomp.col_cur[fx.decomp.col_org[i]],i);
+	}
 
 	decomp_fixture_destroy(&fx);
 }
@@ -344,7 +377,9 @@ static void test_null_inputs(void){
 	slv_decomp_destroy(NULL);
 	slv_decomp_init(&decomp);
 	CU_ASSERT_EQUAL(slv_decomp_partition(NULL,&decomp),1);
+	CU_ASSERT_EQUAL(slv_decomp_partition_active(NULL,&decomp),1);
 	CU_ASSERT_EQUAL(slv_decomp_partition((slv_system_t)NULL,NULL),1);
+	CU_ASSERT_EQUAL(slv_decomp_partition_active((slv_system_t)NULL,NULL),1);
 	slv_decomp_destroy(&decomp);
 }
 
@@ -354,6 +389,7 @@ static void test_null_inputs(void){
 #define TESTS(T) \
 	T(real_matches_qrslv_blocks) \
 	T(boundary_and_when_edges) \
+	T(active_partition_prunes_when_rows) \
 	T(fixed_selector_is_not_coupling_edge) \
 	T(integer_when_selector) \
 	T(solver_int_relation_column) \

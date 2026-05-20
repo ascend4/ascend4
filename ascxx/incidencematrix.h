@@ -90,9 +90,13 @@ private:
 	slv_decomp_partition_t decomp;
 	bool is_built;
 	bool decomp_built;
+	bool decomp_active;
 
 	void buildPlotData();
-	void buildDecompPlotData();
+	void buildDecompPlotData(bool active=false);
+	void ensureDecompPlotData(bool active=false);
+	const std::string getDecompBlockReportCurrent(const int &block);
+	const std::string getDecompReportCurrent();
 public:
 	explicit IncidenceMatrix(Simulation &sim);
 	IncidenceMatrix(const IncidenceMatrix &old);
@@ -120,6 +124,10 @@ public:
 	const std::string getDecompRowKind(const int &row);
 	const std::string getDecompColKind(const int &col);
 	const std::vector<std::string> getDecompPointLegend() const;
+	const std::string getDecompBlockReport(const int &block);
+	const std::string getDecompReport();
+	const std::vector<IncidencePoint> &getActiveDecompIncidenceData();
+	const std::string getActiveDecompReport();
 };
 
 #endif // ASCXX_INCIDENCEMATRIX_H

@@ -37,6 +37,12 @@ static void decomp_clear_owned(slv_decomp_partition_t *decomp){
 	if(decomp->col_org != NULL){
 		ascfree(decomp->col_org);
 	}
+	if(decomp->row_cur != NULL){
+		ascfree(decomp->row_cur);
+	}
+	if(decomp->col_cur != NULL){
+		ascfree(decomp->col_cur);
+	}
 	if(decomp->nz_rows != NULL){
 		ascfree(decomp->nz_rows);
 	}
@@ -66,6 +72,8 @@ void slv_decomp_init(slv_decomp_partition_t *decomp){
 	decomp->nz_cols = NULL;
 	decomp->row_org = NULL;
 	decomp->col_org = NULL;
+	decomp->row_cur = NULL;
+	decomp->col_cur = NULL;
 }
 
 void slv_decomp_destroy(slv_decomp_partition_t *decomp){
@@ -376,14 +384,36 @@ static int decomp_add_when_edges_for_object(
 	return added;
 }
 
-static int decomp_rel_row_active(const struct rel_relation *rel){
+typedef enum decomp_partition_mode {
+	DECOMP_CONSERVATIVE,
+	DECOMP_ACTIVE
+} decomp_partition_mode_t;
+
+static int decomp_rel_row_current(const struct rel_relation *rel,
+		decomp_partition_mode_t mode
+){
+	if(rel == NULL || !rel_included((struct rel_relation *)rel)
+			|| !rel_equality((struct rel_relation *)rel)){
+		return 0;
+	}
+	if(mode == DECOMP_ACTIVE){
+		return rel_active((struct rel_relation *)rel);
+	}
 	return rel != NULL && rel_included((struct rel_relation *)rel)
 		&& (rel_active((struct rel_relation *)rel)
 			|| rel_in_when((struct rel_relation *)rel))
 		&& rel_equality((struct rel_relation *)rel);
 }
 
-static int decomp_logrel_row_active(const struct logrel_relation *logrel){
+static int decomp_logrel_row_current(const struct logrel_relation *logrel,
+		decomp_partition_mode_t mode
+){
+	if(logrel == NULL || !logrel_included((struct logrel_relation *)logrel)){
+		return 0;
+	}
+	if(mode == DECOMP_ACTIVE){
+		return logrel_active((struct logrel_relation *)logrel);
+	}
 	return logrel != NULL && logrel_included((struct logrel_relation *)logrel)
 		&& (logrel_active((struct logrel_relation *)logrel)
 			|| logrel_in_when((struct logrel_relation *)logrel));
@@ -408,8 +438,13 @@ static int decomp_copy_blocks_and_perms(
 		if(decomp->row_org == NULL){
 			return 2;
 		}
+		decomp->row_cur = ASC_NEW_ARRAY(int32,decomp->n_rows);
+		if(decomp->row_cur == NULL){
+			return 2;
+		}
 		for(i = 0; i < decomp->n_rows; ++i){
 			decomp->row_org[i] = mtx_row_to_org(mtx,i);
+			decomp->row_cur[i] = mtx_org_to_row(mtx,i);
 		}
 	}
 	if(decomp->n_cols > 0){
@@ -417,14 +452,21 @@ static int decomp_copy_blocks_and_perms(
 		if(decomp->col_org == NULL){
 			return 2;
 		}
+		decomp->col_cur = ASC_NEW_ARRAY(int32,decomp->n_cols);
+		if(decomp->col_cur == NULL){
+			return 2;
+		}
 		for(i = 0; i < decomp->n_cols; ++i){
 			decomp->col_org[i] = mtx_col_to_org(mtx,i);
+			decomp->col_cur[i] = mtx_org_to_col(mtx,i);
 		}
 	}
 	return 0;
 }
 
-int slv_decomp_partition(slv_system_t sys, slv_decomp_partition_t *decomp){
+static int decomp_partition_mode(slv_system_t sys, slv_decomp_partition_t *decomp,
+		decomp_partition_mode_t mode
+){
 	mtx_matrix_t mtx;
 	int32 row, i, order;
 	int ret;
@@ -462,39 +504,47 @@ int slv_decomp_partition(slv_system_t sys, slv_decomp_partition_t *decomp){
 
 	row = 0;
 	for(i = 0; i < decomp->n_rels; ++i, ++row){
-		if(!decomp_add_when_edges_for_object(sys,mtx,rels[i],0,decomp,row)
-				&& rel_in_when(rels[i])){
-			decomp_add_all_when_selectors(sys,mtx,decomp,row);
+		if(mode == DECOMP_CONSERVATIVE){
+			if(!decomp_add_when_edges_for_object(sys,mtx,rels[i],0,decomp,row)
+					&& rel_in_when(rels[i])){
+				decomp_add_all_when_selectors(sys,mtx,decomp,row);
+			}
 		}
-		if(decomp_rel_row_active(rels[i])){
+		if(decomp_rel_row_current(rels[i],mode)){
 			decomp_add_rel_incidences(sys,mtx,rels[i],decomp,row);
 		}
 	}
 	for(i = 0; i < decomp->n_condrels; ++i, ++row){
-		if(!decomp_add_when_edges_for_object(sys,mtx,condrels[i],0,decomp,row)
-				&& rel_in_when(condrels[i])){
-			decomp_add_all_when_selectors(sys,mtx,decomp,row);
+		if(mode == DECOMP_CONSERVATIVE){
+			if(!decomp_add_when_edges_for_object(sys,mtx,condrels[i],0,decomp,row)
+					&& rel_in_when(condrels[i])){
+				decomp_add_all_when_selectors(sys,mtx,decomp,row);
+			}
 		}
-		if(decomp_rel_row_active(condrels[i])){
+		if(decomp_rel_row_current(condrels[i],mode)){
 			decomp_add_rel_incidences(sys,mtx,condrels[i],decomp,row);
 		}
 	}
 	for(i = 0; i < decomp->n_logrels; ++i, ++row){
-		if(!decomp_add_when_edges_for_object(sys,mtx,logrels[i],1,decomp,row)
-				&& logrel_in_when(logrels[i])){
-			decomp_add_all_when_selectors(sys,mtx,decomp,row);
+		if(mode == DECOMP_CONSERVATIVE){
+			if(!decomp_add_when_edges_for_object(sys,mtx,logrels[i],1,decomp,row)
+					&& logrel_in_when(logrels[i])){
+				decomp_add_all_when_selectors(sys,mtx,decomp,row);
+			}
 		}
-		if(decomp_logrel_row_active(logrels[i])){
+		if(decomp_logrel_row_current(logrels[i],mode)){
 			decomp_add_logrel_dvars(sys,mtx,logrels[i],decomp,row);
 			decomp_add_boundary_for_logrel(sys,mtx,logrels[i],decomp,row);
 		}
 	}
 	for(i = 0; i < decomp->n_condlogrels; ++i, ++row){
-		if(!decomp_add_when_edges_for_object(sys,mtx,condlogrels[i],1,decomp,row)
-				&& logrel_in_when(condlogrels[i])){
-			decomp_add_all_when_selectors(sys,mtx,decomp,row);
+		if(mode == DECOMP_CONSERVATIVE){
+			if(!decomp_add_when_edges_for_object(sys,mtx,condlogrels[i],1,decomp,row)
+					&& logrel_in_when(condlogrels[i])){
+				decomp_add_all_when_selectors(sys,mtx,decomp,row);
+			}
 		}
-		if(decomp_logrel_row_active(condlogrels[i])){
+		if(decomp_logrel_row_current(condlogrels[i],mode)){
 			decomp_add_logrel_dvars(sys,mtx,condlogrels[i],decomp,row);
 			decomp_add_boundary_for_logrel(sys,mtx,condlogrels[i],decomp,row);
 		}
@@ -503,6 +553,14 @@ int slv_decomp_partition(slv_system_t sys, slv_decomp_partition_t *decomp){
 	mtx_output_assign(mtx,decomp->n_rows,decomp->n_cols);
 	decomp->rank = mtx_symbolic_rank(mtx);
 	if(decomp->rank == 0){
+		if(mode == DECOMP_ACTIVE){
+			ret = decomp_copy_blocks_and_perms(mtx,decomp);
+			mtx_destroy(mtx);
+			if(ret != 0){
+				decomp_clear_owned(decomp);
+			}
+			return ret;
+		}
 		mtx_destroy(mtx);
 		return 1;
 	}
@@ -513,6 +571,14 @@ int slv_decomp_partition(slv_system_t sys, slv_decomp_partition_t *decomp){
 		decomp_clear_owned(decomp);
 	}
 	return ret;
+}
+
+int slv_decomp_partition(slv_system_t sys, slv_decomp_partition_t *decomp){
+	return decomp_partition_mode(sys,decomp,DECOMP_CONSERVATIVE);
+}
+
+int slv_decomp_partition_active(slv_system_t sys, slv_decomp_partition_t *decomp){
+	return decomp_partition_mode(sys,decomp,DECOMP_ACTIVE);
 }
 
 slv_decomp_row_kind_t slv_decomp_row_kind(

@@ -14,7 +14,7 @@ typedef struct slv9_system_structure *slv9_system_t;
 
 #define SOLVER_CMSLV 9
 
-#define slv9_PA_SIZE 28 /* MUST INCREMENT WHEN ADDING PARAMETERS */
+#define slv9_PA_SIZE 29 /* MUST INCREMENT WHEN ADDING PARAMETERS */
 #define LOGSOLVER_OPTION_PTR (sys->parm_array[0])
 #define LOGSOLVER_OPTION  ((*(char **)LOGSOLVER_OPTION_PTR))
 #define NONLISOLVER_OPTION_PTR (sys->parm_array[1])
@@ -55,6 +55,8 @@ typedef struct slv9_system_structure *slv9_system_t;
 #define PROGRESS_CALLBACKS ((*(int32 *)PROGRESS_CALLBACKS_PTR))
 #define PROGRESS_LOG_PTR (sys->parm_array[19])
 #define PROGRESS_LOG ((*(int32 *)PROGRESS_LOG_PTR))
+#define CMSLV2_BLOCKSOLVE_PTR (sys->parm_array[20])
+#define CMSLV2_BLOCKSOLVE ((*(int32 *)CMSLV2_BLOCKSOLVE_PTR))
 
 #ifndef CONOPT_BOUNDLIMIT
 # define CONOPT_BOUNDLIMIT 3.1e9

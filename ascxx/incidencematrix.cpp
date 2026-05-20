@@ -10,6 +10,8 @@ using namespace std;
 
 extern "C"{
 #include <ascend/general/ascMalloc.h>
+#include <ascend/compiler/logrel_io.h>
+#include <ascend/system/relman.h>
 #include <ascend/linear/mtx.h>
 #include <ascend/system/decomp.h>
 #include <ascend/system/discrete.h>
@@ -52,12 +54,14 @@ IncidenceMatrix::IncidenceMatrix(Simulation &sim) : sim(sim){
 	// constructor
 	is_built = FALSE;
 	decomp_built = FALSE;
+	decomp_active = FALSE;
 	slv_decomp_init(&decomp);
 }
 
 IncidenceMatrix::IncidenceMatrix(const IncidenceMatrix &old) : sim(old.sim){
 	is_built = FALSE;
 	decomp_built = FALSE;
+	decomp_active = FALSE;
 	slv_decomp_init(&decomp);
 }
 
@@ -173,6 +177,61 @@ static string decomp_dvar_name(slv_system_t sys, struct dis_discrete *dvar){
 	return s;
 }
 
+static string decomp_rel_text(slv_system_t sys, struct rel_relation *rel){
+	char *s = relman_make_string_infix(sys,rel);
+	if(s==NULL)return "?";
+	string text = s;
+	ascfree(s);
+	return text;
+}
+
+static string decomp_logrel_text(struct Instance *root, struct logrel_relation *logrel){
+	char *s = WriteLogRelToString(
+		(struct Instance *)logrel_instance(logrel),
+		root
+	);
+	if(s==NULL)return "?";
+	string text = s;
+	ascfree(s);
+	return text;
+}
+
+static string decomp_row_kind_text(slv_decomp_row_kind_t kind){
+	switch(kind){
+	case slv_decomp_row_rel: return "relation";
+	case slv_decomp_row_condrel: return "conditional relation";
+	case slv_decomp_row_logrel: return "logical relation";
+	case slv_decomp_row_condlogrel: return "conditional logical relation";
+	default: return "unknown";
+	}
+}
+
+static string decomp_col_kind_text(slv_system_t sys,
+		slv_decomp_col_kind_t kind, int local
+){
+	switch(kind){
+	case slv_decomp_col_var:{
+		struct var_variable **vars = slv_get_solvers_var_list(sys);
+		uint32 flags = var_flags(vars[local]);
+		if(flags & VAR_BINARY) return "binary solver variable";
+		if(flags & VAR_INTEGER) return "integer solver variable";
+		if(flags & VAR_SEMICONT) return "semicontinuous solver variable";
+		return "real solver variable";
+	}
+	case slv_decomp_col_dvar:{
+		struct dis_discrete **dvars = slv_get_solvers_dvar_list(sys);
+		switch(dis_kind(dvars[local])){
+		case e_dis_boolean_t: return "boolean discrete variable";
+		case e_dis_integer_t: return "integer discrete variable";
+		case e_dis_symbol_t: return "symbol discrete variable";
+		default: return "discrete variable";
+		}
+	}
+	default:
+		return "unknown";
+	}
+}
+
 static IncidencePointType decomp_point_type(
 		slv_system_t sys, const slv_decomp_partition_t &decomp,
 		int orgrow, int orgcol
@@ -203,9 +262,12 @@ static IncidencePointType decomp_point_type(
 }
 
 void
-IncidenceMatrix::buildDecompPlotData(){
+IncidenceMatrix::buildDecompPlotData(bool active){
 	slv_system_t sys = sim.getSystem();
-	if(slv_decomp_partition(sys,&decomp)){
+	int status = active
+		? slv_decomp_partition_active(sys,&decomp)
+		: slv_decomp_partition(sys,&decomp);
+	if(status){
 		throw runtime_error("IncidenceMatrix::buildDecompPlotData error calculating mixed decomposition");
 	}
 
@@ -297,13 +359,25 @@ IncidenceMatrix::buildDecompPlotData(){
 	}
 
 	decomp_built = TRUE;
+	decomp_active = active;
+}
+
+void
+IncidenceMatrix::ensureDecompPlotData(bool active){
+	if(!decomp_built || decomp_active != active){
+		buildDecompPlotData(active);
+	}
 }
 
 const vector<IncidencePoint> &
 IncidenceMatrix::getDecompIncidenceData(){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
+	return decomp_data;
+}
+
+const vector<IncidencePoint> &
+IncidenceMatrix::getActiveDecompIncidenceData(){
+	ensureDecompPlotData(true);
 	return decomp_data;
 }
 
@@ -429,33 +503,25 @@ IncidenceMatrix::getNumBlocks(){
 
 const int
 IncidenceMatrix::getDecompNumRows(){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
 	return decomp.n_rows;
 }
 
 const int
 IncidenceMatrix::getDecompNumCols(){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
 	return decomp.n_cols;
 }
 
 const int
 IncidenceMatrix::getDecompNumBlocks(){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
 	return decomp.nblocks;
 }
 
 const vector<int>
 IncidenceMatrix::getDecompBlockLocation(const int &block){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
 	if(block < 0 || block >= decomp.nblocks){
 		throw range_error("Invalid decomposition block number");
 	}
@@ -469,17 +535,13 @@ IncidenceMatrix::getDecompBlockLocation(const int &block){
 
 const vector<DecompBlockSummary> &
 IncidenceMatrix::getDecompBlockSummaries(){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
 	return decomp_blocks;
 }
 
 const string
 IncidenceMatrix::getDecompRowLabel(const int &row){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
 	if(row < 0 || row >= decomp.n_rows)throw range_error("Row out of range");
 	int local;
 	int orgrow = decomp.row_org[row];
@@ -499,9 +561,7 @@ IncidenceMatrix::getDecompRowLabel(const int &row){
 
 const string
 IncidenceMatrix::getDecompColLabel(const int &col){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
 	if(col < 0 || col >= decomp.n_cols)throw range_error("Column out of range");
 	int local;
 	int orgcol = decomp.col_org[col];
@@ -517,48 +577,24 @@ IncidenceMatrix::getDecompColLabel(const int &col){
 
 const string
 IncidenceMatrix::getDecompRowKind(const int &row){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
 	if(row < 0 || row >= decomp.n_rows)throw range_error("Row out of range");
 	int local;
-	switch(slv_decomp_row_kind(&decomp,decomp.row_org[row],&local)){
-	case slv_decomp_row_rel: return "relation";
-	case slv_decomp_row_condrel: return "conditional relation";
-	case slv_decomp_row_logrel: return "logical relation";
-	case slv_decomp_row_condlogrel: return "conditional logical relation";
-	default: return "unknown";
-	}
+	return decomp_row_kind_text(
+		slv_decomp_row_kind(&decomp,decomp.row_org[row],&local)
+	);
 }
 
 const string
 IncidenceMatrix::getDecompColKind(const int &col){
-	if(!decomp_built){
-		buildDecompPlotData();
-	}
+	ensureDecompPlotData(false);
 	if(col < 0 || col >= decomp.n_cols)throw range_error("Column out of range");
 	int local;
-	switch(slv_decomp_col_kind(&decomp,decomp.col_org[col],&local)){
-	case slv_decomp_col_var:{
-		struct var_variable **vars = slv_get_solvers_var_list(sim.getSystem());
-		uint32 flags = var_flags(vars[local]);
-		if(flags & VAR_BINARY) return "binary solver variable";
-		if(flags & VAR_INTEGER) return "integer solver variable";
-		if(flags & VAR_SEMICONT) return "semicontinuous solver variable";
-		return "real solver variable";
-	}
-	case slv_decomp_col_dvar:{
-		struct dis_discrete **dvars = slv_get_solvers_dvar_list(sim.getSystem());
-		switch(dis_kind(dvars[local])){
-		case e_dis_boolean_t: return "boolean discrete variable";
-		case e_dis_integer_t: return "integer discrete variable";
-		case e_dis_symbol_t: return "symbol discrete variable";
-		default: return "discrete variable";
-		}
-	}
-	default:
-		return "unknown";
-	}
+	return decomp_col_kind_text(
+		sim.getSystem(),
+		slv_decomp_col_kind(&decomp,decomp.col_org[col],&local),
+		local
+	);
 }
 
 const vector<string>
@@ -571,4 +607,174 @@ IncidenceMatrix::getDecompPointLegend() const{
 	legend.push_back("boundary");
 	legend.push_back("mixed");
 	return legend;
+}
+
+const string
+IncidenceMatrix::getDecompBlockReportCurrent(const int &block){
+	if(block < 0 || block >= decomp.nblocks){
+		throw range_error("Invalid decomposition block number");
+	}
+
+	slv_system_t sys = sim.getSystem();
+	struct Instance *root = sim.getModel().getInternalType();
+	const DecompBlockSummary &bs = decomp_blocks[block];
+	ostringstream ss;
+
+	ss << bs.label << "\n";
+	ss << "  Rows " << bs.row_low << ".." << bs.row_high
+		<< ", cols " << bs.col_low << ".." << bs.col_high << "\n";
+
+	ss << "  Rows:\n";
+	for(int r=bs.row_low; r <= bs.row_high; ++r){
+		int local;
+		int orgrow = decomp.row_org[r];
+		slv_decomp_row_kind_t kind = slv_decomp_row_kind(&decomp,orgrow,&local);
+		ss << "    [" << r << "] " << decomp_row_kind_text(kind) << " ";
+		switch(kind){
+		case slv_decomp_row_rel:
+			ss << decomp_rel_name(sys,slv_get_solvers_rel_list(sys)[local]) << ": ";
+			ss << decomp_rel_text(sys,slv_get_solvers_rel_list(sys)[local]);
+			break;
+		case slv_decomp_row_condrel:
+			ss << decomp_rel_name(sys,slv_get_solvers_condrel_list(sys)[local]) << ": ";
+			ss << decomp_rel_text(sys,slv_get_solvers_condrel_list(sys)[local]);
+			break;
+		case slv_decomp_row_logrel:
+			ss << decomp_logrel_name(sys,slv_get_solvers_logrel_list(sys)[local]) << ": ";
+			ss << decomp_logrel_text(root,slv_get_solvers_logrel_list(sys)[local]);
+			break;
+		case slv_decomp_row_condlogrel:
+			ss << decomp_logrel_name(sys,slv_get_solvers_condlogrel_list(sys)[local]) << ": ";
+			ss << decomp_logrel_text(root,slv_get_solvers_condlogrel_list(sys)[local]);
+			break;
+		default:
+			ss << "?";
+			break;
+		}
+		ss << "\n";
+	}
+
+	ss << "  Columns:\n";
+	for(int c=bs.col_low; c <= bs.col_high; ++c){
+		int local;
+		int orgcol = decomp.col_org[c];
+		slv_decomp_col_kind_t kind = slv_decomp_col_kind(&decomp,orgcol,&local);
+		ss << "    [" << c << "] " << decomp_col_kind_text(sys,kind,local)
+			<< " ";
+		switch(kind){
+		case slv_decomp_col_var:{
+			struct var_variable *var = slv_get_solvers_var_list(sys)[local];
+			ss << decomp_var_name(sys,var);
+			ss << " = " << var_value(var)
+				<< (var_fixed(var) ? " (fixed)" : " (free)");
+			break;
+		}
+		case slv_decomp_col_dvar:{
+			struct dis_discrete *dvar = slv_get_solvers_dvar_list(sys)[local];
+			ss << decomp_dvar_name(sys,dvar);
+			ss << " = " << dis_value(dvar)
+				<< (dis_fixed(dvar) ? " (fixed)" : " (free)");
+			break;
+		}
+		default:
+			break;
+		}
+		ss << "\n";
+	}
+
+	return ss.str();
+}
+
+const string
+IncidenceMatrix::getDecompReportCurrent(){
+	ostringstream ss;
+	vector<int> row_covered(decomp.n_rows,0);
+	vector<int> col_covered(decomp.n_cols,0);
+	ss << (decomp_active ? "Active decomposition: " : "Decomposition: ")
+		<< decomp.nblocks << " blocks, "
+		<< decomp.n_rows << " rows, " << decomp.n_cols << " columns, "
+		<< decomp.nnz << " incidences\n";
+	for(int b=0; b < decomp.nblocks; ++b){
+		const DecompBlockSummary &bs = decomp_blocks[b];
+		for(int r=bs.row_low; r <= bs.row_high; ++r){
+			row_covered[r] = 1;
+		}
+		for(int c=bs.col_low; c <= bs.col_high; ++c){
+			col_covered[c] = 1;
+		}
+		if(b > 0) ss << "\n";
+		ss << getDecompBlockReportCurrent(b);
+	}
+	if((int)row_covered.size() > decomp.rank){
+		ss << "\nRows outside diagonal blocks:\n";
+		for(int r=0; r < decomp.n_rows; ++r){
+			if(!row_covered[r]){
+				int local;
+				int orgrow = decomp.row_org[r];
+				slv_decomp_row_kind_t kind = slv_decomp_row_kind(&decomp,orgrow,&local);
+				ss << "  [" << r << "] " << decomp_row_kind_text(kind) << " ";
+				switch(kind){
+				case slv_decomp_row_rel:
+					ss << decomp_rel_name(sim.getSystem(),slv_get_solvers_rel_list(sim.getSystem())[local]);
+					break;
+				case slv_decomp_row_condrel:
+					ss << decomp_rel_name(sim.getSystem(),slv_get_solvers_condrel_list(sim.getSystem())[local]);
+					break;
+				case slv_decomp_row_logrel:
+					ss << decomp_logrel_name(sim.getSystem(),slv_get_solvers_logrel_list(sim.getSystem())[local]);
+					break;
+				case slv_decomp_row_condlogrel:
+					ss << decomp_logrel_name(sim.getSystem(),slv_get_solvers_condlogrel_list(sim.getSystem())[local]);
+					break;
+				default:
+					ss << "?";
+					break;
+				}
+				ss << "\n";
+			}
+		}
+	}
+	if((int)col_covered.size() > decomp.rank){
+		ss << "\nColumns outside diagonal blocks:\n";
+		for(int c=0; c < decomp.n_cols; ++c){
+			if(!col_covered[c]){
+				int local;
+				int orgcol = decomp.col_org[c];
+				slv_decomp_col_kind_t kind = slv_decomp_col_kind(&decomp,orgcol,&local);
+				ss << "  [" << c << "] " << decomp_col_kind_text(sim.getSystem(),kind,local)
+					<< " ";
+				switch(kind){
+				case slv_decomp_col_var:
+					ss << decomp_var_name(sim.getSystem(),slv_get_solvers_var_list(sim.getSystem())[local]);
+					break;
+				case slv_decomp_col_dvar:
+					ss << decomp_dvar_name(sim.getSystem(),slv_get_solvers_dvar_list(sim.getSystem())[local]);
+					break;
+				default:
+					ss << "?";
+					break;
+				}
+				ss << "\n";
+			}
+		}
+	}
+	return ss.str();
+}
+
+const string
+IncidenceMatrix::getDecompBlockReport(const int &block){
+	ensureDecompPlotData(false);
+	return getDecompBlockReportCurrent(block);
+}
+
+const string
+IncidenceMatrix::getDecompReport(){
+	ensureDecompPlotData(false);
+	return getDecompReportCurrent();
+}
+
+const string
+IncidenceMatrix::getActiveDecompReport(){
+	ensureDecompPlotData(true);
+	return getDecompReportCurrent();
 }
