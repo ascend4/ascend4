@@ -189,6 +189,125 @@ static int decomp_has_edge(
 	return 0;
 }
 
+static int decomp_block_for_current_index(const slv_decomp_partition_t *decomp,
+		int cur, int is_row
+){
+	int32 b;
+	if(decomp == NULL || cur < 0){
+		return -1;
+	}
+	for(b = 0; b < decomp->nblocks; ++b){
+		const mtx_region_t *region = &(decomp->blocks[b]);
+		const mtx_range_t *range = is_row ? &(region->row) : &(region->col);
+		if(cur >= range->low && cur <= range->high){
+			return b;
+		}
+	}
+	return -1;
+}
+
+static int decomp_block_for_org_row(const slv_decomp_partition_t *decomp,
+		int orgrow
+){
+	if(decomp == NULL || orgrow < 0 || orgrow >= decomp->n_rows){
+		return -1;
+	}
+	return decomp_block_for_current_index(decomp,decomp->row_cur[orgrow],1);
+}
+
+static int decomp_block_for_org_col(const slv_decomp_partition_t *decomp,
+		int orgcol
+){
+	if(decomp == NULL || orgcol < 0 || orgcol >= decomp->n_cols){
+		return -1;
+	}
+	return decomp_block_for_current_index(decomp,decomp->col_cur[orgcol],0);
+}
+
+static int decomp_block_has_kind(const slv_decomp_partition_t *decomp,
+		int block, slv_decomp_row_kind_t rowkind,
+		slv_decomp_col_kind_t colkind
+){
+	int32 nz, local;
+	mtx_region_t region;
+	if(decomp == NULL || block < 0 || block >= decomp->nblocks){
+		return 0;
+	}
+	region = decomp->blocks[block];
+	for(nz = 0; nz < decomp->nnz; ++nz){
+		int32 orgrow = decomp->nz_rows[nz];
+		int32 orgcol = decomp->nz_cols[nz];
+		int32 currow = decomp->row_cur[orgrow];
+		int32 curcol = decomp->col_cur[orgcol];
+		if(currow < region.row.low || currow > region.row.high
+				|| curcol < region.col.low || curcol > region.col.high){
+			continue;
+		}
+		if(slv_decomp_row_kind(decomp,orgrow,&local) == rowkind
+				&& slv_decomp_col_kind(decomp,orgcol,&local) == colkind){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int decomp_block_is_boundary_mixed(
+		const slv_decomp_partition_t *decomp, int block
+){
+	int32 r, c, nz, local;
+	int relrows = 0, logrows = 0, vars = 0, dvars = 0, boundary_edges = 0;
+	mtx_region_t region;
+	if(decomp == NULL || block < 0 || block >= decomp->nblocks){
+		return 0;
+	}
+	region = decomp->blocks[block];
+	for(r = region.row.low; r <= region.row.high; ++r){
+		switch(slv_decomp_row_kind(decomp,decomp->row_org[r],&local)){
+		case slv_decomp_row_rel:
+		case slv_decomp_row_condrel:
+			relrows++;
+			break;
+		case slv_decomp_row_logrel:
+		case slv_decomp_row_condlogrel:
+			logrows++;
+			break;
+		default:
+			break;
+		}
+	}
+	for(c = region.col.low; c <= region.col.high; ++c){
+		switch(slv_decomp_col_kind(decomp,decomp->col_org[c],&local)){
+		case slv_decomp_col_var:
+			vars++;
+			break;
+		case slv_decomp_col_dvar:
+			dvars++;
+			break;
+		default:
+			break;
+		}
+	}
+	for(nz = 0; nz < decomp->nnz; ++nz){
+		int32 orgrow = decomp->nz_rows[nz];
+		int32 orgcol = decomp->nz_cols[nz];
+		int32 currow = decomp->row_cur[orgrow];
+		int32 curcol = decomp->col_cur[orgcol];
+		if(currow < region.row.low || currow > region.row.high
+				|| curcol < region.col.low || curcol > region.col.high){
+			continue;
+		}
+		if((slv_decomp_row_kind(decomp,orgrow,&local) == slv_decomp_row_logrel
+					|| slv_decomp_row_kind(decomp,orgrow,&local)
+						== slv_decomp_row_condlogrel)
+				&& slv_decomp_col_kind(decomp,orgcol,&local)
+					== slv_decomp_col_var){
+			boundary_edges++;
+		}
+	}
+	return relrows > 0 && logrows > 0 && vars > 0 && dvars > 0
+		&& boundary_edges > 0;
+}
+
 static void test_real_matches_qrslv_blocks(void){
 	struct decomp_fixture fx;
 	const mtx_block_t *realblocks;
@@ -221,6 +340,45 @@ static void test_boundary_and_when_edges(void){
 
 	posrow = decomp_rel_org_row(&fx,"pos");
 	CU_ASSERT_TRUE(decomp_has_edge(&fx.decomp,posrow,bcol));
+	decomp_fixture_destroy(&fx);
+}
+
+static void test_boundary_mixed_cycle_block(void){
+	struct decomp_fixture fx;
+	int logrow, posrow, xcol, bcol;
+	int block, b, boundary_blocks = 0;
+
+	decomp_load_model("boundary_mixed_cycle",&fx);
+
+	logrow = decomp_logrel_org_row(&fx,"l");
+	posrow = decomp_rel_org_row(&fx,"pos");
+	xcol = decomp_var_org_col(&fx,"x");
+	bcol = decomp_dvar_org_col(&fx,"b");
+
+	CU_ASSERT_TRUE(decomp_has_edge(&fx.decomp,logrow,xcol));
+	CU_ASSERT_TRUE(decomp_has_edge(&fx.decomp,logrow,bcol));
+	CU_ASSERT_TRUE(decomp_has_edge(&fx.decomp,posrow,xcol));
+	CU_ASSERT_TRUE(decomp_has_edge(&fx.decomp,posrow,bcol));
+
+	block = decomp_block_for_org_row(&fx.decomp,logrow);
+	CU_ASSERT(block >= 0);
+	CU_ASSERT_EQUAL(block,decomp_block_for_org_row(&fx.decomp,posrow));
+	CU_ASSERT_EQUAL(block,decomp_block_for_org_col(&fx.decomp,xcol));
+	CU_ASSERT_EQUAL(block,decomp_block_for_org_col(&fx.decomp,bcol));
+	CU_ASSERT_TRUE(decomp_block_has_kind(
+		&fx.decomp,block,slv_decomp_row_logrel,slv_decomp_col_var
+	));
+	CU_ASSERT_TRUE(decomp_block_has_kind(
+		&fx.decomp,block,slv_decomp_row_rel,slv_decomp_col_dvar
+	));
+	CU_ASSERT_TRUE(decomp_block_is_boundary_mixed(&fx.decomp,block));
+	for(b = 0; b < fx.decomp.nblocks; ++b){
+		if(decomp_block_is_boundary_mixed(&fx.decomp,b)){
+			boundary_blocks++;
+		}
+	}
+	CU_ASSERT_EQUAL(boundary_blocks,1);
+
 	decomp_fixture_destroy(&fx);
 }
 
@@ -389,6 +547,7 @@ static void test_null_inputs(void){
 #define TESTS(T) \
 	T(real_matches_qrslv_blocks) \
 	T(boundary_and_when_edges) \
+	T(boundary_mixed_cycle_block) \
 	T(active_partition_prunes_when_rows) \
 	T(fixed_selector_is_not_coupling_edge) \
 	T(integer_when_selector) \

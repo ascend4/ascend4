@@ -53,31 +53,220 @@ implementation provides:
   analysis has selected active cases;
 - CMSlv progress/reporting that classifies active execution blocks and
   conservative mixed envelopes into intended CMSlv2 sub-solver responsibilities;
-- an opt-in `cmslv2` parameter that enables QRSlv's native real block
-  partitioning at subsidiary-solver setup time.
+- an opt-in `cmslv2` parameter that lets CMSlv exercise this planning path
+  without changing legacy CMSlv behavior by default;
+- a QRSlv `external_blocks` option that lets QRSlv trust an already-installed
+  solver block list instead of running its own block partitioner.
 
-Current executable behavior is still partial:
+Current executable behavior is partial but no longer just diagnostic:
 
-- active pure-real blocks can be handed to QRSlv via QRSlv's existing
-  partitioning machinery when `cmslv2=TRUE`;
-- active pure-logical blocks are identified, but are still solved by CMSlv's
-  existing global LRSlv phase rather than by a block-local LRSlv dispatcher;
-- selector-coupled, boundary/logical/real, integer, and unresolved mixed
-  envelopes are classified for CMSlv2 planning, but still fall through the
-  original CMSlv control flow.
+- active pure-real execution blocks are delegated to QRSlv only when they are
+  due at the current conservative structural-block cursor. CMSlv2 installs the
+  consecutive due pure-real block run into the live solver rel/var arrays,
+  temporarily scopes row/column active flags to that run, disables QRSlv's own
+  `partition` mode, and enables QRSlv's `external_blocks` mode. QRSlv is
+  therefore used as a numeric block solver while the mixed block planning still
+  comes from `slv_decomp_partition*`;
+- selector-coupled structural envelopes run through a first flat selector
+  handoff routine that confirms the currently active `WHEN` cases, rebuilds the
+  active decomposition, and reports the resulting QRSlv/LRSlv/unresolved
+  subblocks;
+- boundary/logical/real envelopes have an explicit CMSlv2 handoff routine that
+  records delegation to the existing full CMSlv boundary traversal. In addition,
+  the scheduler now has a first due-block boundary dispatcher,
+  `event=cmslv2_boundary_local`, that recognises a due boundary-mixed
+  structural block, temporarily scopes rel/condrel/logrel/condlogrel and
+  var/dvar active flags to that block, rebuilds the scoped active view, and
+  reports the local rows/columns/subblocks it would expose. The dispatcher now
+  also calls the existing boundary discovery and boundary optimization/return
+  routines while the scoped view is installed, reported as
+  `event=cmslv2_boundary_local_traverse`; when that local traversal succeeds,
+  it captures the accepted real values, discrete values, and boundary flags,
+  restores the temporary scope, then replays the accepted result into the full
+  system and runs the normal conditional reanalysis so active/inactive row
+  outcomes are propagated by existing solver-list logic. CMSlv2 now also invokes
+  this policy from the `boundary_at_zero` path, so a model that starts on a due
+  boundary-mixed envelope can exercise the same local accept machinery before
+  the legacy full-boundary fallback continues. That `boundary_at_zero` use
+  suppresses QRSlv external-block installation, because the caller is not about
+  to transfer control to QRSlv; it may still consume newly exposed LRSlv blocks;
+- the mixed-block scheduler policy now has one explicit transition rule:
+  commit the block solver result, certify that the mixed block is solved, then
+  advance the structural cursor and rebuild the structural/active view from the
+  live `slv_system_t`. This active-structure reanalysis is only needed after
+  mixed blocks that can change row active/inactive state; pure QRSlv/LRSlv
+  blocks do not pay that decomposition cost just for advancing the cursor.
+  QRSlv handoff is also an explicit caller policy: either install a due
+  pure-real run for an immediate QRSlv call, or suppress QRSlv scope changes
+  when the current legacy CMSlv path is not about to invoke QRSlv;
+- when QRSlv handoff is suppressed by the caller, the scheduler can now consume
+  newly exposed due pure-real structural runs locally using the same save,
+  install, solve, restore discipline as the selector-local QR helper. This is
+  reported as `event=cmslv2_qrslv_local`. It is deliberately not yet used to
+  skip the legacy boundary fallback unless the boundary envelope also passes
+  `event=cmslv2_boundary_local_validate`;
+- boundary-local acceptance now has two levels. `accepted` means a scoped
+  candidate was captured and can be tested against the live system.
+  `local_complete` means the current boundary envelope passed the first
+  conservative completion certificate: active real rows in the envelope satisfy
+  residual tolerance after propagation, and the active decomposition inside the
+  envelope has no unresolved subblocks. Only `local_complete=1` advances the
+  structural cursor or bypasses legacy `boundary_at_zero` fallback. An accepted
+  but uncertified candidate is reverted before the legacy fallback continues;
+- active pure-logical structural runs can now be grouped and delegated to LRSlv
+  with `external_blocks=TRUE`, using an installed logical block list in the same
+  spirit as the QRSlv pure-real handoff;
+- integer, symbol-selector, and unresolved mixed envelopes are still classified
+  only, then handled by the original CMSlv control flow.
 
-The next direction is to replace the global CMSlv loop with a CMSlv2
-planner/dispatcher loop that consumes the mixed decomposition directly:
+This is not yet a fully block-dispatching CMSlv2. The missing core is a
+planner/dispatcher loop that consumes the conservative structural blocks as the
+primary solve schedule:
 
 1. process conservative structural blocks as scheduling envelopes;
-2. reanalyse the active execution view on entry to each envelope;
-3. dispatch active pure-real subblocks to QRSlv;
-4. dispatch active pure-logical subblocks to LRSlv or a block-local logical
-   propagation hook;
-5. run selector enumeration plus re-analysis for selector-coupled envelopes;
-6. run CMSlv boundary traversal for boundary/logical/real envelopes;
-7. fall back to legacy full CMSlv only for unresolved large mixed or integer
-   cases.
+2. reanalyse the active execution view when entering each envelope;
+3. when the cursor reaches one or more consecutive conservative pure-real
+   structural blocks, install only that due run into the live solver rel/var
+   lists and dispatch it to QRSlv with `external_blocks=TRUE`;
+4. dispatch consecutive due active pure-logical subblocks to LRSlv with an
+   explicit logical row/column scope;
+5. for selector-coupled envelopes, branch only over unresolved selector groups,
+   rebuild the active view after each candidate, solve the resulting real/logical
+   subblocks, and verify consistency;
+6. for boundary/logical/real envelopes, restrict CMSlv boundary traversal to the
+   affected boundaries, dvars, active real rows, and invalidated downstream
+   blocks where that locality is provable;
+7. invalidate and reanalyse downstream regions when a solved boundary changes a
+   row-active flag;
+8. fall back to legacy full CMSlv only for unresolved large mixed, integer, or
+   non-local boundary cases.
+
+## Implementation Review
+
+What we have now:
+
+- shared mixed structural and active decompositions in `ascend/system/decomp`;
+- ASCXX reporting and incidence-matrix visualisation support for structural and
+  active block views;
+- CMSlv progress events for decomposition assessment and CMSlv2 planning;
+- opt-in `cmslv2` mode that keeps legacy CMSlv unchanged by default;
+- QRSlv `external_blocks=TRUE`, covered by `solver_qrslv.external_blocks`,
+  which proves QRSlv can solve with a preinstalled block list when its own
+  `partition` parameter is false;
+- QRSlv single-block scoping, covered by
+  `solver_qrslv.external_single_block_scope`, which proves that a one-block
+  installed list can make QRSlv treat that block as the current full real
+  problem;
+- CMSlv2 structural-cursor scheduling for QRSlv: consecutive due conservative
+  pure-real structural blocks are installed for QRSlv, while mixed blocks stop
+  the QRSlv handoff and are reported as `action=defer_subsolver`;
+- a flat selector-envelope diagnostic sweep, reported as `event=cmslv2_enum`
+  only when `progress_log=TRUE`. Normal CMSlv2 execution now uses the
+  cursor-aware selector consumer directly, because the all-envelope sweep was
+  repeatedly rebuilding active partitions without affecting the scheduler's
+  actual block decisions;
+- a first cursor-aware selector-envelope consumer, reported as
+  `event=cmslv2_selector_consume`, that advances the structural cursor when the
+  current selector envelope is already resolved by current selector values and
+  active re-analysis leaves no unresolved subblocks;
+- a full-CMSlv boundary handoff routine. Normal progress callbacks now report a
+  lightweight `event=cmslv2_boundary_summary diagnostic=0` marker; the heavier
+  per-boundary-envelope decomposition summary is retained for
+  `progress_log=TRUE`;
+- LRSlv `external_blocks=TRUE`, covered by `solver_lrslv.external_blocks`,
+  which proves LRSlv can solve an installed logical block list without running
+  its own logical block partitioner;
+- CMSlv2 structural-cursor scheduling for LRSlv: consecutive due conservative
+  pure-logical structural blocks are installed for LRSlv and reported as
+  `event=cmslv2_lrslv_handoff`;
+- CUnit coverage for mixed decomposition fixtures and for the `linmassbal`
+  CMSlv2 progress path;
+- CMSlv2 CUnit variants for the original CMSlv model set:
+  `linmassbal_cmslv2`, `pipeline_cmslv2`, `heatex_cmslv2`, and
+  `reinitignore_cmslv2`. All four currently pass their legacy `self_test`
+  methods with `cmslv2=TRUE`. The `heatex` discrepancy exposed an important
+  selector-search bug: CMSlv2 was accepting the current selector mask before
+  the boundary/logical truth implied by the candidate solve had been refreshed.
+  Selector candidate validation now updates boundaries, solves logical
+  relations, and rejects candidates whose resolved selector mask differs from
+  the assumed mask;
+- a profiling pass over the original CMSlv regression models. With 3 warmups
+  and 20 measured repeats, timing only `M.solve(...)`, CMSlv2 is still slower
+  than legacy CMSlv on these small examples, but diagnostic gating reduced the
+  overhead substantially. Current medians are approximately: `linmassbal`
+  11.4 ms legacy vs 26.6 ms CMSlv2, `pipeline` 98.4 ms vs 192.9 ms, `heatex`
+  11.7 ms vs 49.1 ms, and `reinitignore` 2.3 ms vs 3.1 ms. The earlier
+  prototype medians were roughly 47.2 ms, 495.2 ms, 84.8 ms, and 3.9 ms for
+  CMSlv2 respectively, so most of the easy win came from removing redundant
+  diagnostic repartitioning. Transition and boundary-local scoped active
+  partition details are also now `progress_log=TRUE` diagnostics rather than
+  normal scheduler work. CMSlv2 is not yet an acceleration path for these small
+  models; the expected payoff still depends on larger decomposable systems and
+  stronger local mixed-block completion;
+- a deterministic CMSlv2 scheduler fixture in
+  `models/test/cmslv/cmslv2_scheduler.a4c`, covered by
+  `solver_cmslv.cmslv2_scheduler`, that asserts the observed scheduler sequence:
+  selector branch search, QRSlv pure-real handoff, legacy boundary traversal,
+  another selector branch search, grouped LRSlv pure-logical handoff, then
+  scheduler fallback after all structural blocks have been consumed.
+- a deterministic structural boundary-mixed fixture,
+  `boundary_mixed_cycle` in `models/test/decomp/block_cases.a4c`, covered by
+  `solver_decomp.boundary_mixed_cycle_block`. It creates the local cycle
+  `b = SATISFIED(x = q)`, `WHEN(b) USE x + y = 2`, plus `q = y`, and asserts
+  that the conservative block contains real rows, a logrel row, real columns,
+  a dvar column, a boundary edge, and a selector edge.
+- a CMSlv2 boundary-local fixture,
+  `models/test/cmslv/cmslv2_boundary_local.a4c`, covered by
+  `solver_cmslv.cmslv2_boundary_local`, that starts at a due boundary-mixed
+  envelope and asserts `event=cmslv2_boundary_local_commit action=accepted`
+  followed by `event=cmslv2_block_solved solved=0` and
+  `event=cmslv2_boundary_local_commit action=reverted`, proving that an
+  uncertified mixed-block candidate does not advance the cursor to downstream
+  LRSlv/QRSlv work.
+- a positive CMSlv2 boundary-local fixture,
+  `models/test/cmslv/cmslv2_boundary_local_complete.a4c`, covered by
+  `solver_cmslv.cmslv2_boundary_local_complete`, that starts at a due
+  boundary-mixed envelope whose active real/logical rows are already
+  satisfiable locally. It asserts `event=cmslv2_block_solved solved=1`,
+  `event=cmslv2_transition solver=boundary`, cursor advancement, a downstream
+  LRSlv handoff, a downstream local QRSlv run, and final
+  `event=cmslv2_scheduler action=local_complete`.
+
+What is still missing:
+
+- block subsolvers that can advance the structural cursor through unresolved
+  selector cases and boundary envelopes. Boundary envelopes are now detected,
+  scoped locally, traversed through the existing CMSlv boundary routines, and
+  locally certified when the completion predicate passes. Uncertified
+  candidates are reverted and left for legacy fallback; richer fallback reasons
+  for non-local boundary envelopes still need to be made explicit;
+- true selector enumeration/search for unresolved selector groups, including
+  multiple admissible cases and failure/backtracking policy;
+- a stronger success contract for boundary-local solves. The scheduler now
+  reports explicit boundary-local defer reasons (`scope_failed`,
+  `not_at_boundary`, `optimize_failed`, `capture_failed`,
+  `not_local_complete`) and validates local completion with current-envelope
+  residual and unresolved-active-subblock checks. The positive fixture proves
+  the current contract can advance through downstream LRSlv/QRSlv work; the
+  negative fixture still reports `reason=residual_not_satisfied` and rolls
+  back to legacy fallback;
+- a result contract for each block solver: solved variables/dvars, activated or
+  pruned rows, invalidated downstream blocks, residual status, and fallback
+  reason;
+- a freshness contract for each block solver: before returning success or
+  asking CMSlv2 to certify completion, it must ensure the residual values for
+  its active real rows and the satisfied flags for its active logical rows are
+  current in the live `slv_system_t`;
+- integer/symbol discrete subsolver support;
+- systematic tests that prove block-local dispatch solves the same models as
+  legacy CMSlv while solving smaller active subproblems.
+
+`event=...` names in this document are progress-message labels emitted through
+CMSlv's existing progress callback. They are test and diagnostic markers, not a
+separate event system or a state-machine transition. Similarly, "handoff
+routine" means a thin CMSlv2 control point that identifies the block kind and
+delegates to existing solver machinery; it is not yet a block-local solver in
+the stronger sense.
 
 ## Current Limitation
 
@@ -216,14 +405,17 @@ meaning the conservative conditional envelope is also free of selector,
 boundary, integer, and mixed blocks. `recommended` is true only when both are
 true.
 
-The direct QRSlv `partition=1` handoff is disabled in legacy CMSlv and enabled
-only by the opt-in `cmslv2` parameter. Two experiments matter:
+The direct QRSlv `partition=1` handoff remains disabled in CMSlv, including
+CMSlv2. Three experiments now matter:
 
 - mutating QRSlv's `partition` parameter at CMSlv iteration time disrupted
   `linmassbal.a4c`;
-- enabling QRSlv partitioning at subsidiary-solver setup is stable for
-  `linmassbal.a4c` and is covered by `linmassbal_cmslv2`, but the earlier
-  global experiment broke the `pipeline` CMSlv self-test.
+- enabling QRSlv partitioning at subsidiary-solver setup was stable for
+  `linmassbal.a4c` in an earlier experiment, but the global approach is no
+  longer used because it broke the `pipeline` CMSlv self-test;
+- QRSlv `external_blocks=TRUE` with `partition=FALSE` is covered by
+  `solver_qrslv.external_blocks` and proves that QRSlv can consume a block list
+  installed before QRSlv presolve.
 
 The likely reason is solver-control granularity. QRSlv partition mode advances
 one real block at a time, then CMSlv immediately performs global boundary
@@ -238,14 +430,21 @@ structural view collapses into active execution block kinds. This is the
 intended staging point for a future `cmslv2` execution path that dispatches
 active subblocks while preserving the legacy CMSlv fallback.
 
-An opt-in experimental `cmslv2` parameter now enables QRSlv's native real-block
-partitioning at subsidiary-solver setup time. This is deliberately not the
-legacy default and it is not the final CMSlv-owned envelope scheduler, but it
-provides a concrete executable milestone: `linmassbal.a4c` solves with
-`partition=1` and QRSlv reports four real blocks, while the ordinary CMSlv suite
-continues to run with `partition=0`. The `pipeline.a4c` experiment remains the
-warning case showing why this mode must stay opt-in until CMSlv controls the
-conditional envelope around each numeric block.
+The opt-in `cmslv2` parameter now uses this narrower QRSlv path. Before QRSlv
+presolve, CMSlv2 builds the active mixed decomposition, verifies that all active
+real rows and columns are covered by installable pure-real blocks, reorders the
+live solver rel/var arrays so those blocks occupy the front of QRSlv's view,
+installs the block list with `slv_set_solvers_blocks`, and invokes QRSlv with
+`partition=FALSE` and `external_blocks=TRUE`.
+
+This lets CMSlv2 own the mixed planning and row-active propagation while
+reusing QRSlv's matrix setup, per-block reordering, and Newton iteration
+machinery for real numeric blocks. The current implementation uses a structural
+cursor and will not jump over a mixed envelope to solve downstream real blocks.
+For `linmassbal`, the first due structural block is still mixed, so CMSlv2
+reports `event=cmslv2_scheduler action=defer_subsolver` and falls back to the
+existing mixed/boundary path. Once a mixed subsolver advances the cursor, the
+same QRSlv handoff can solve the following run of one or more pure-real blocks.
 
 The CMSlv2 planning event is now the explicit consumer of the mixed
 decomposition. It reports:
@@ -260,12 +459,93 @@ decomposition. It reports:
 - `integer_blocks` and `fallback_blocks`: unresolved cases that currently need
   a future integer/discrete subsolver or the legacy full CMSlv path.
 
-This is the architecture we want, but only the QRSlv handoff is executable in
-the current `cmslv2` switch. Pure logical blocks are still solved by CMSlv's
-existing global LRSlv call, and selector/boundary/fallback envelopes are still
-handled by the original CMSlv control flow. The next implementation step is to
-replace those global phases with a CMSlv2 loop over these planned block
-responsibilities.
+The current `cmslv2` switch has three executable pieces. First,
+`solver_decomp`/`slv_decomp_partition_active` classifies active real-only
+execution blocks and CMSlv2 installs those blocks for QRSlv using
+`external_blocks=TRUE`. This is no longer QRSlv rediscovering real-only blocks
+globally; QRSlv consumes the block list chosen by CMSlv2. Second,
+selector-coupled structural envelopes run through both a flat reporting pass
+and a cursor-aware consumer. The reporting pass collects the dvars in each
+selector envelope, uses the existing conditional case-matching helpers to
+confirm the active case set for current selector values, rebuilds the full
+active solver lists with `reanalyze_solver_lists`, rebuilds the active mixed
+decomposition, and reports how the envelope collapses into QRSlv/LRSlv or
+unresolved active subblocks through `event=cmslv2_enum`. The consumer applies
+the reduction only at the current structural cursor. It now performs a bounded
+boolean branch search (`event=cmslv2_selector_search`): current selector values
+are tried first, then alternative boolean assignments are enumerated, each
+candidate rebuilds the active solver lists and active decomposition, and the
+first assignment that reduces the current structural envelope to resolved
+active pure-real/pure-logical subblocks is passed through the local dispatch
+path before it is committed. For reduced pure-real subblocks, CMSlv2 installs
+only those subblocks for QRSlv using `external_blocks=TRUE`, runs QRSlv, then
+restores the solver row/column order so rejected branches do not invalidate the
+saved structural decomposition. The progress event is
+`event=cmslv2_selector_qrslv`. Reduced pure-logical subblocks now follow the
+same pattern with LRSlv: CMSlv2 installs only the local logrel/dvar blocks,
+sets LRSlv `external_blocks=TRUE`, runs LRSlv, and restores logical solver
+ordering and active flags afterwards. The progress event is
+`event=cmslv2_selector_lrslv`. Non-boolean selectors and large selector groups
+still defer to fallback handling.
+
+The CMSlv2 scheduler can also consume consecutive due pure-logical structural
+blocks before returning to the next block type. It groups that run, dispatches
+it to LRSlv as one local request (`event=cmslv2_lrslv_handoff`), re-analyses
+active rows and columns, then resumes scheduling QRSlv, selector, boundary, or
+fallback work from the updated structural cursor.
+
+The scheduler implementation deliberately treats reanalysis as central
+bookkeeping rather than as part of the preceding block solver. A successful
+block-local solver is responsible for committing values, dvar truth values,
+boundary flags, and active/inactive row outcomes into the live `slv_system_t`.
+After that commit, CMSlv2 rebuilds the conservative and active partitions and
+then consumes any newly due LRSlv blocks before considering QRSlv handoff. In
+call paths where QRSlv scope installation is suppressed because the caller is
+not about to invoke QRSlv, CMSlv2 can now run due pure-real structural runs
+locally and restore solver row/column order afterwards. This keeps the rule
+simple: the next block is interpreted only through the current system state and
+current structural cursor, not through special knowledge of whether the
+previous block was selector-resolved or boundary-local.
+
+Boundary-local completion is now deliberately distinct from boundary-local
+candidate capture. A captured candidate can be useful evidence for the
+boundary-local subsolver, but it is not by itself a proof that the boundary
+episode is complete. After replaying the candidate into the full system, CMSlv2
+evaluates active real rows in the current structural envelope and rebuilds the
+active decomposition for that envelope. If any active real residual is above
+tolerance or an unresolved active subblock remains, the candidate is reported as
+`local_complete=0`, the pre-probe live state is restored, and the legacy CMSlv
+boundary path is retained.
+
+The completion predicate is intentionally a certification check, not a hidden
+solver pass. It updates boundaries and evaluates active real residuals directly,
+but it treats logical satisfaction flags as solver-maintained state. The block
+solver contract is therefore that a successful block solve has already refreshed
+the residual/satisfaction state for the active rows it owns before CMSlv2 asks
+whether the block is currently solved.
+
+Boundary/logical/real envelopes now have an explicit CMSlv2 handoff routine as
+well.
+When the legacy solver reaches either the "at boundary" optimization path or
+the "boundary crossed" return path, CMSlv2 identifies the boundary-mixed
+structural envelopes and reports a handoff with
+`mode=full_cmslv_boundary`. The actual sub-solver is still the existing full
+CMSlv boundary machinery: `at_a_boundary`, `optimize_at_boundary`,
+`return_to_first_boundary`, boundary updates, and active-list re-analysis.
+
+This is still not a complete mixed-block subsolver. The selector search now
+validates reduced pure-real subblocks with QRSlv and reduced pure-logical
+subblocks with LRSlv before accepting the branch. Nested boundary cycles are
+not solved recursively. Boundary-local dispatch now scopes the existing CMSlv
+boundary traversal to the current structural envelope, can commit an accepted
+local result, and can immediately consume downstream LRSlv and QRSlv runs.
+Fallback policy is still conservative: scope failure, no detected local
+boundary, failed local optimization, failed result capture, non-converged local
+QRSlv, residual failure in the current boundary envelope, unresolved active
+subblocks, and any non-local boundary ambiguity continue through the legacy
+full-boundary path. The next implementation step is to broaden the completion
+certificate beyond active real residuals, especially around logrel/boundary
+truth consistency and non-local boundary-effect detection.
 
 ## Mock CMSlv Outer Loop
 
@@ -677,16 +957,16 @@ relation/logrelation ownership data during analysis.
   resolved for a block?
 
   Initial answer: the matrix assignment and block-region machinery can be
-  reused directly. Directly switching on QRSlv's live `partition` parameter
-  inside CMSlv is not safe yet for conditional models, even when the active
-  mixed decomposition looks pure-real plus pure-logical. `linmassbal.a4c` and
-  `pipeline.a4c` both currently report `active_recommended=1` and
-  `structural_safe=0`: current active rows can be split into real/logical blocks,
-  but the conservative envelope still contains conditional structure. Live
-  solver-list reordering should therefore wait until CMSlv has a block-local
-  execution path, because the mixed graph has more row/column kinds than QRSlv's
-  real-only lists and CMSlv needs to preserve row-active propagation around each
-  handoff.
+  reused directly. QRSlv now has `external_blocks=TRUE`, which skips QRSlv's own
+  structural partitioning and trusts the installed solver block list. Directly
+  switching on QRSlv's live `partition` parameter inside CMSlv is still not safe
+  enough for conditional models, even when the active mixed decomposition looks
+  pure-real plus pure-logical. `linmassbal.a4c` and `pipeline.a4c` both
+  currently report `active_recommended=1` and `structural_safe=0`: current active
+  rows can be split into real/logical blocks, but the conservative envelope still
+  contains conditional structure. CMSlv2 should therefore install only the
+  active pure-real region that it is about to solve, set `external_blocks=TRUE`,
+  and let CMSlv retain ownership of row-active propagation around the handoff.
 
 - What user-facing diagnostics are needed to make decomposition decisions
   understandable?

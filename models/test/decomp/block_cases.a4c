@@ -38,6 +38,32 @@ METHODS
 	END on_load;
 END boundary_when;
 
+MODEL boundary_mixed_cycle;
+	x, y, q IS_A generic_real;
+	b IS_A boolean_var;
+
+	CONDITIONAL
+		c: x = q;
+	END CONDITIONAL;
+
+	l: b == SATISFIED(c, 1e-8);
+	pos: x + y = 2;
+	anchor: q = y;
+
+	WHEN (b)
+	CASE TRUE:
+		USE pos;
+	CASE FALSE:
+	END WHEN;
+METHODS
+	METHOD on_load;
+		x := 1;
+		y := 1;
+		q := 1;
+		b := SATISFIED(c, 1e-8);
+	END on_load;
+END boundary_mixed_cycle;
+
 MODEL fixed_selector_when;
 	y IS_A generic_real;
 	b IS_A boolean_var;

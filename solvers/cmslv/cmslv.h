@@ -143,6 +143,14 @@ struct slv9_system_structure {
   int32 rtot;
   real64 clock;
   int32 nliter;
+  int32 cmslv2_next_structural_block;
+  int32 cmslv2_last_structural_blocks;
+  int32 cmslv2_pending_after_qrslv;
+  int32 cmslv2_scope_active;
+  int32 cmslv2_scope_nrels;
+  int32 cmslv2_scope_nvars;
+  unsigned char *cmslv2_rel_active_save;
+  unsigned char *cmslv2_var_active_save;
 
   void *parm_array[slv9_PA_SIZE];
   struct slv_parameter pa[slv9_PA_SIZE];

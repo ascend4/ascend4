@@ -241,13 +241,13 @@ extern int bnd_apply_filter(const struct bnd_boundary *bnd,
  *  Returns 0 if either bnd or filter is NULL.
  */
 
-extern unsigned int bnd_flags(struct bnd_boundary *bnd);
+ASC_DLLSPEC unsigned int bnd_flags(struct bnd_boundary *bnd);
 /**<
  *  Returns the flags field of the boundary.
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern void bnd_set_flags(struct bnd_boundary *bnd, uint32 flags);
+ASC_DLLSPEC void bnd_set_flags(struct bnd_boundary *bnd, uint32 flags);
 /**<
  *  Sets the entire flag field to the value of flags given.
  *  bnd may not be NULL (checked by asc_assertion).
@@ -337,4 +337,3 @@ ASC_DLLSPEC int32 bnd_status_pre(struct bnd_boundary *bnd);
 /* @} */
 
 #endif /* ASC_BND_H */
-

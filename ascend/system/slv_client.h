@@ -481,7 +481,7 @@ ASC_DLLSPEC const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t sys);
 	be NULL.
 */
 
-extern void slv_set_solvers_blocks(slv_system_t sys,
+ASC_DLLSPEC void slv_set_solvers_blocks(slv_system_t sys,
                                    int32 len,
                                    mtx_region_t *data);
 /**<
@@ -490,7 +490,7 @@ extern void slv_set_solvers_blocks(slv_system_t sys,
 
 	@see slv_set_solvers_log_blocks()
 */
-extern void slv_set_solvers_log_blocks(slv_system_t sys,
+ASC_DLLSPEC void slv_set_solvers_log_blocks(slv_system_t sys,
                                        int32 len,
                                        mtx_region_t *data);
 /**<

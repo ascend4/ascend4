@@ -72,6 +72,7 @@ enum QRSLV_PARAMS{
 	,SHOW_MORE_IMPT
 	,RHO
 	,PARTITION
+	,EXTERNAL_BLOCKS
 	,SHOW_LESS_IMPT
 	,AUTO_RESOLVE
 	,TIME_LIMIT
@@ -180,6 +181,7 @@ struct jacobian_data {
   boolean                accurate;       /* ? Recalculate matrix */
   boolean                singular;       /* ? Can matrix be inverted */
   boolean                old_partition;  /* old value of partition flag */
+  boolean                old_external_blocks; /* old value of external block flag */
 };
 
 struct hessian_data {
@@ -2876,7 +2878,7 @@ int32 qrslv_get_default_parameters(slv_system_t server, SlvClientToken asys
   }
 
   parameters->num_parms = 0;
-  asc_assert(qrslv_PA_SIZE==44);
+  asc_assert(qrslv_PA_SIZE==45);
   /* begin defining parameters */
 
   slv_param_bool(parameters,IGNORE_BOUNDS
@@ -2905,6 +2907,14 @@ int32 qrslv_get_default_parameters(slv_system_t server, SlvClientToken asys
   		,"partitioning enabled",2
   		,"partitioning enabled"
   	}, 1}
+  );
+
+  slv_param_bool(parameters,EXTERNAL_BLOCKS
+	,(SlvParameterInitBool){{"external_blocks"
+		,"use preinstalled block list",2
+		,"Trust the current solver block list instead of running QRSlv's"
+		" structural block partitioner"
+	}, 0}
   );
 
   slv_param_bool(parameters,SHOW_LESS_IMPT
@@ -3227,6 +3237,7 @@ static SlvClientToken qrslv_create(slv_system_t server, int *statusindex)
   sys->p.output.more_important = stdout;
   sys->p.output.less_important = stdout;
   sys->J.old_partition = TRUE;
+  sys->J.old_external_blocks = FALSE;
   sys->p.whose = (*statusindex);
 
   sys->s.kind = SLV_STATUS_NLP;
@@ -3393,6 +3404,7 @@ static linsolqr_system_t qrslv_get_linsolqr_sys(slv_system_t server,
 static void structural_analysis(slv_system_t server, qrslv_system_t sys){
   var_filter_t vfilter;
   rel_filter_t rfilter;
+  const mtx_block_t *blocks;
 
   /* The server has marked incidence flags already. */
   qrslv_apply_derivative_default_flags(sys);
@@ -3410,16 +3422,56 @@ static void structural_analysis(slv_system_t server, qrslv_system_t sys){
   /* Symbolic analysis */
   sys->rtot = slv_get_num_solvers_rels(server);
   sys->vtot = slv_get_num_solvers_vars(server);
-  if(sys->rtot) {
+  if(SLV_PARAM_BOOL(&(sys->p),EXTERNAL_BLOCKS)) {
+    blocks = slv_get_solvers_blocks(server);
+    sys->J.dofdata = slv_get_dofdata(server);
+    if(blocks == NULL || blocks->nblocks <= 0 || blocks->block == NULL) {
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
+        "QRSlv external_blocks=TRUE but no solver block list is installed."
+      );
+      sys->s.inconsistent = TRUE;
+      sys->rank = 0;
+    }else{
+      int32 b;
+      int32 rank = 0;
+      for(b = 0; b < blocks->nblocks; ++b) {
+        int32 rows = blocks->block[b].row.high - blocks->block[b].row.low + 1;
+        int32 cols = blocks->block[b].col.high - blocks->block[b].col.low + 1;
+        if(rows <= 0 || cols <= 0
+            || blocks->block[b].row.low < 0
+            || blocks->block[b].col.low < 0
+            || blocks->block[b].row.high >= sys->rtot
+            || blocks->block[b].col.high >= sys->vtot) {
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,
+            "QRSlv external block %d has invalid dimensions.", b
+          );
+          sys->s.inconsistent = TRUE;
+          continue;
+        }
+        rank += MIN(rows,cols);
+      }
+      if(sys->J.dofdata != NULL) {
+        sys->J.dofdata->structural_rank = rank;
+        sys->J.dofdata->n_rows = sys->rused;
+        sys->J.dofdata->n_cols = sys->vused;
+        sys->J.dofdata->reorder.partition = 1;
+      }
+      sys->rank = rank;
+    }
+  }else if(sys->rtot) {
     slv_block_partition(server);
+    sys->J.dofdata = slv_get_dofdata(server);
+    sys->rank = sys->J.dofdata->structural_rank;
+    sys->ZBZ.order = sys->obj ? (sys->vused - sys->rank) : 0;
+    if(!(SLV_PARAM_BOOL(&(sys->p),PARTITION)) || OPTIMIZING(sys) ) {
+      /* maybe we should reorder blocks here? maybe not */
+      slv_block_unify(server);
+    }
+  }else{
+    sys->J.dofdata = slv_get_dofdata(server);
+    sys->rank = 0;
   }
-  sys->J.dofdata = slv_get_dofdata(server);
-  sys->rank = sys->J.dofdata->structural_rank;
   sys->ZBZ.order = sys->obj ? (sys->vused - sys->rank) : 0;
-  if(!(SLV_PARAM_BOOL(&(sys->p),PARTITION)) || OPTIMIZING(sys) ) {
-    /* maybe we should reorder blocks here? maybe not */
-    slv_block_unify(server);
-  }
 
   if(slv_check_bounds(SERVER,0,-1,"fixed ")){
     sys->s.inconsistent = 1;
@@ -3674,7 +3726,9 @@ static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
   if(sys->presolved > 0) { /* system has been presolved before */
     qrslv_apply_derivative_default_flags(sys);
     if(!qrslv_dof_changed(sys) /* no changes in fixed or included flags */
-       && SLV_PARAM_BOOL(&(sys->p),PARTITION) == sys->J.old_partition) {
+       && SLV_PARAM_BOOL(&(sys->p),PARTITION) == sys->J.old_partition
+       && SLV_PARAM_BOOL(&(sys->p),EXTERNAL_BLOCKS)
+          == sys->J.old_external_blocks) {
 #if DEBUG
       FPRINTF(stderr,"YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION\n");
 #endif
@@ -3704,6 +3758,7 @@ static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
 
     sys->presolved = 1; /* full presolve recognized here */
     sys->J.old_partition = SLV_PARAM_BOOL(&(sys->p),PARTITION);
+    sys->J.old_external_blocks = SLV_PARAM_BOOL(&(sys->p),EXTERNAL_BLOCKS);
     destroy_matrices(sys);
     destroy_vectors(sys);
     create_matrices(server,sys);
