@@ -1,7 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 import os.path
-from plotutils import group_series, group_ylabel, COLOR_CYCLE
+from plotutils import group_series, group_ylabel, plot_grouped_time_series
 
 from study import *
 from unitsdialog import *
@@ -38,7 +38,7 @@ class ClickableTreeColumn(Gtk.TreeViewColumn):
 		#button.clicked()
 		
 	def on_click(self,widget,*args):
-		print("RECEIVED EVENT")
+		pass
 
 class ObserverColumn:
 	"""
@@ -353,11 +353,17 @@ class ObserverTab:
 			if y is None:
 				y=[self.cols[1]]
 
+		def _resolve_column(col):
+			if isinstance(col, int) and col in self.cols:
+				return self.cols[col]
+			return col
+
 		# if column indices are provided instead of columns, convert them
-		if x.__class__ is int and x>=0 and x<len(self.cols):
-			x=self.cols[x]
-		if y.__class__ is int and y>=0 and y<len(self.cols):
-			y=[self.cols[y]]
+		x = _resolve_column(x)
+		if isinstance(y, int):
+			y = [_resolve_column(y)]
+		else:
+			y = [_resolve_column(ycol) for ycol in y]
 		if not x.is_plottable():
 			raise Exception("Selected X axis '%s' is not plottable" % x.title)
 		for ycol in y:
@@ -367,6 +373,7 @@ class ObserverTab:
 		start = None
 		_p = self.browser.prefs
 		_ignore = _p.getBoolPref("PlotDialog", "ignore_error_points", True)
+		row_stop = len(self.rows) - 1 if self.alive and self.activeiter is not None else len(self.rows)
 		r = {}
 		# FIXME this is not nicely written; we need to collapse the follow if/else
 		# cases into a single bit of code.
@@ -391,10 +398,10 @@ class ObserverTab:
 			if start == None:
 				self.browser.reporter.reportError("Can't plot, could not get enough points.")
 				return
-			A = pylab.zeros((len(self.rows)-1-start,len(y)+1),'f')
+			A = pylab.zeros((row_stop-start,len(y)+1),'f')
 			i = 0
 			j = start
-			while j <len(self.rows)-1:
+			while j < row_stop:
 				pr = self.rows[j].get_plot_values(self)
 				A[i,0]=pr[x.index]
 				for k in range(len(y)):
@@ -407,7 +414,7 @@ class ObserverTab:
 			k = 0
 			l = 0
 			# count the error-free rows (FIXME: why aren't we just checking the 'tainted' property??)
-			for i in range(len(self.rows)-1):
+			for i in range(row_stop):
 				if self.rows[i].tainted is False:
 					try:
 						r = self.rows[i].get_values(self)
@@ -428,7 +435,7 @@ class ObserverTab:
 				self.browser.reporter.reportError("Can't plot, could not get enough points.")
 				return
 			A = pylab.zeros((j,len(y)+1),'f')
-			while start<len(self.rows)-1:
+			while start < row_stop:
 				if self.rows[start].tainted is True:
 					start+=1
 					continue
@@ -439,7 +446,6 @@ class ObserverTab:
 				k+=1
 				start+=1
 
-		fig = pylab.figure()
 		def _series_units(col):
 			try:
 				return col.display_unit_name()
@@ -465,35 +471,35 @@ class ObserverTab:
 			[(yi, ycol) for yi, ycol in enumerate(y)],
 			lambda entry: _series_group_key(entry[1])
 		)
-		n_groups = len(group_order)
 		single_series = len(y) == 1
-		sharex = None
-		for gi, gkey in enumerate(group_order):
-			if gi == 0:
-				ax = pylab.subplot(n_groups,1,gi+1)
-				sharex = ax
-			else:
-				ax = pylab.subplot(n_groups,1,gi+1,sharex=sharex)
-
+		plot_groups = []
+		for gkey in group_order:
 			group_entries = grouped[gkey]
 			group_cols = [c for _, c in group_entries]
-			for yi, ycol in group_entries:
-				color = COLOR_CYCLE[yi % len(COLOR_CYCLE)]
-				ax.plot(A[:,0],A[:,yi+1],'-'+color+'o',label=ycol.title)
-
-			if gi + 1 != n_groups:
-				pylab.setp(ax.get_xticklabels(),visible=False)
-			else:
-				ax.set_xlabel(x.title)
-
 			if single_series and len(group_cols) == 1:
-				ax.set_ylabel(group_cols[0].title,labelpad=20)
+				ylabel = group_cols[0].title
 			else:
-				ax.set_ylabel(group_ylabel(group_cols, _series_units, lambda c: c.title),labelpad=20)
-				leg = ax.legend(loc='upper left')
-				if leg is not None:
-					leg.get_frame().set_alpha(0.3)
-				_legend_draggable(leg)
+				ylabel = group_ylabel(group_cols, _series_units, lambda c: c.title)
+			plot_groups.append({
+				"ylabel": ylabel,
+				"series": [
+					{
+						"label": ycol.title,
+						"values": A[:, yi+1],
+						"color_index": yi,
+					}
+					for yi, ycol in group_entries
+				],
+			})
+
+		plot_grouped_time_series(
+			pylab,
+			A[:,0],
+			plot_groups,
+			x.title,
+			marker="o",
+			make_legend_draggable=_legend_draggable,
+		)
 
 		# FIXME why can't I drag the legend?
 
@@ -583,7 +589,6 @@ class ObserverTab:
 		_s = []
 		_s.append('\t'.join([_v.title for _k,_v in self.cols.items()]))
 		#_cf = [_v.units.getConversion() for _k,_v in self.cols.iteritems()]
-		print("COPYING %d ROWS" % len(self.rows))
 		#print "CONVERSIONS:",_cf
 		for _r in self.rows:
 			_s.append("\t".join(["%s" % _v for _k, _v in _r.get_values(self).items()]))

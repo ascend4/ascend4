@@ -99,7 +99,6 @@ class IntegratorWindow:
 			self.engineselect.set_sensitive(False)
 
 		# get the current time value as the beginentry...
-		print("SEARCHING FOR TIME VAR...")
 		try:
 			_u = self.browser.get_instance_display_units(self.indepvar.getInstance())
 			#_t = self.integrator.getCurrentTime();
@@ -141,27 +140,18 @@ class IntegratorWindow:
 
 	def on_engineselect_changed(self,widget,*args):
 		index = widget.get_active()
-		print("Setting engine to %d" % index)
-		print("Engines are",self.engines)
-		print("Selection is %s" % self.engines[index])
 		self.integrator.setEngine(self.engines[index])
 
 	def on_moreparametersbutton_clicked(self,*args):
-		print("ZO YOU WANT MORE PAHAMETERS EH!")
 		try:
 			_name = self.integrator.getName()
-			print("NAME = %s" % _name)
 			_params = self.integrator.getParameters()
 		except RuntimeError as e:
 			self.browser.reporter.reportError(str(e))
 			return
-		print("CREATING SOLVERPARAMETERSWINDOW")
 		_paramswin = SolverParametersWindow(self.browser,_params,_name)
-		print("RUNNING SOLVERPARAMETERSWINDOW")
 		if _paramswin.run() == Gtk.ResponseType.OK:
-			print("GOT OK RESPONSE")
 			self.integrator.setParameters(_params)
-			print("PARAMETERS UPDATED")
 
 	def run(self):
 		if self.indepvar == None:

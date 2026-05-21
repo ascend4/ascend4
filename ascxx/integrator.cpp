@@ -1,6 +1,11 @@
 #include "integrator.h"
 #include "integratorreporter.h"
 #include "solverparameters.h"
+extern "C"{
+#include <ascend/system/rel.h>
+#include <ascend/system/slv_client.h>
+#include <ascend/system/var.h>
+}
 #include <stdexcept>
 #include <sstream>
 #include <cmath>
@@ -187,6 +192,56 @@ Integrator::solve(){
 		stringstream ss;
 		ss << "Failed integration (integrator_solve returned " << res << ")";
 		throw runtime_error(ss.str());
+	}
+}
+
+void
+Integrator::processVarStatus(){
+	if(blsys == NULL || blsys->system == NULL){
+		return;
+	}
+
+	if(simulation.sys != blsys->system){
+		if(simulation.sing){
+			delete simulation.sing;
+			simulation.sing = NULL;
+		}
+		simulation.sys = blsys->system;
+		simulation.buildroot = blsys->instance;
+		simulation.is_built = true;
+		simulation.activeblock = 0;
+	}
+
+	var_variable **vlist = slv_get_solvers_var_list(blsys->system);
+	int nvars = slv_get_num_solvers_vars(blsys->system);
+	for(int c = 0; c < nvars; ++c){
+		var_variable *v = vlist[c];
+		if(v == NULL){
+			continue;
+		}
+		Instanc i((Instance *)var_instance(v));
+		InstanceStatus s = ASCXX_INST_STATUS_UNKNOWN;
+		if(i.isFixed()){
+			s = ASCXX_VAR_FIXED;
+		}else if(var_incident(v) && var_active(v)){
+			s = ASCXX_VAR_SOLVED;
+		}
+		i.setStatus(s);
+	}
+
+	rel_relation **rlist = slv_get_solvers_rel_list(blsys->system);
+	int nrels = slv_get_num_solvers_rels(blsys->system);
+	for(int j = 0; j < nrels; ++j){
+		rel_relation *r = rlist[j];
+		if(r == NULL){
+			continue;
+		}
+		Instanc i((Instance *)rel_instance(r));
+		InstanceStatus s = ASCXX_INST_STATUS_UNKNOWN;
+		if(rel_in_when(r) && !rel_active(r)){
+			s = ASCXX_REL_INACTIVE;
+		}
+		i.setStatus(s);
 	}
 }
 
