@@ -770,23 +770,24 @@ int slv_spk1_reorder_block(slv_system_t sys,int bnum,int transpose)
   vf.matchbits =(VAR_INCIDENT |VAR_SVAR | VAR_FIXED |VAR_INBLOCK | VAR_ACTIVE);
   vf.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_INBLOCK | VAR_ACTIVE);
 
-  mtx = mtx_create();
-  mtx_set_order(mtx,MAX(rlen,vlen));
   b = slv_get_solvers_blocks(sys);
   assert(b!=NULL);
   if (bnum <0 || bnum >= b->nblocks || b->block == NULL) return 1;
   reg = b->block[bnum];
-  for (c=reg.col.low; c<=reg.col.high; c++) {
-    var_set_in_block(vp[c],1);
-  }
-  for (c=reg.row.low; c<=reg.row.high; c++) {
-    rel_set_in_block(rp[c],1);
-  }
   if (reg.row.low != reg.col.low || reg.row.high != reg.col.high) {
     return 1; /* must be square */
     /* could also enforce minsize 3x3, but someone my call with a
      * partitionable region, so don't want to.
      */
+  }
+
+  mtx = mtx_create();
+  mtx_set_order(mtx,MAX(rlen,vlen));
+  for (c=reg.col.low; c<=reg.col.high; c++) {
+    var_set_in_block(vp[c],1);
+  }
+  for (c=reg.row.low; c<=reg.row.high; c++) {
+    rel_set_in_block(rp[c],1);
   }
 
   if (slv_make_incidence_mtx(sys,mtx,&vf,&rf)) {

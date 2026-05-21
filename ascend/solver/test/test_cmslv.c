@@ -630,11 +630,80 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 }
 
 static void test_cmslv(const char *filenamestem, const char *optsolver,
-		int expect_boundary_progress
-){
+			int expect_boundary_progress
+	){
 	test_cmslv_mode(filenamestem,optsolver,
 		expect_boundary_progress ? CMSLV_PROGRESS_BOUNDARY : CMSLV_PROGRESS_NONE
 	);
+}
+
+static void test_qrslv_fallback_real_chain(void){
+	struct module_t *m;
+	struct Instance *siminst = NULL;
+	struct Instance *root;
+	struct Instance *x_inst;
+	struct Instance *y_inst;
+	struct Name *name;
+	enum Proc_enum pe;
+	slv_system_t sys = NULL;
+	int status;
+	int cmslv_index;
+	slv_status_t solver_status;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(
+		ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV
+		"solvers/lrslv" OSPATH_DIV "solvers/cmslv"
+	));
+
+	CU_ASSERT_FATAL(0 == package_load("qrslv",NULL));
+	CU_ASSERT_FATAL(0 == package_load("lrslv",NULL));
+	CU_ASSERT_FATAL(0 == package_load("cmslv",NULL));
+	cmslv_index = slv_lookup_client("CMSlv");
+	CU_ASSERT_FATAL(cmslv_index != -1);
+
+	m = Asc_OpenModule("test/decomp/block_cases.a4c",&status);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(m);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("real_chain")) != NULL);
+
+	siminst = SimsCreateInstance(
+		AddSymbol("real_chain"), AddSymbol("sim1"), e_normal, NULL
+	);
+	CU_ASSERT_FATAL(siminst != NULL);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+
+	name = CreateIdName(AddSymbol("on_load"));
+	pe = Initialize(root,name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL);
+	CU_ASSERT_FATAL(pe == Proc_all_ok);
+
+	sys = system_build(root);
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,cmslv_index));
+	CU_ASSERT_FATAL(0 == cmslv_set_char_param(sys,"convopt","RELNOM_SCALE"));
+
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	slv_get_status(sys,&solver_status);
+	CU_ASSERT_FATAL(solver_status.ready_to_solve);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+	slv_get_status(sys,&solver_status);
+	CU_ASSERT(solver_status.ok);
+	CU_ASSERT(solver_status.converged);
+	CU_ASSERT_EQUAL(solver_status.block.number_of,2);
+
+	x_inst = ChildByChar(root, AddSymbol("x"));
+	y_inst = ChildByChar(root, AddSymbol("y"));
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(x_inst), 1.0, 1e-8);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(y_inst), 2.0, 1e-8);
+
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+	solver_destroy_engines();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
 }
 
 /*===========================================================================*/
@@ -655,7 +724,8 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 	T(reinitignore_cmslv2)\
 	T(cmslv2_scheduler)\
 	T(cmslv2_boundary_local)\
-	T(cmslv2_boundary_local_complete)
+	T(cmslv2_boundary_local_complete)\
+	T(qrslv_fallback_real_chain)
 
 static void test_linmassbal(void){ test_cmslv("linmassbal","CONOPT",1); }
 static void test_pipeline(void){ test_cmslv("pipeline","CONOPT",1); }
