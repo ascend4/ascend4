@@ -451,9 +451,9 @@ vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default includes the open"
 		+" solvers normally available in a developer build. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS',"A4SQP","SLSQP",'MAKEMPS']
+	,["QRSLV","CMSLV","CMSLV2","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS',"A4SQP","SLSQP",'MAKEMPS']
 	,['QRSLV','MPS','SLV','OPTSQP'
-		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
+		,'NGSLV','CMSLV','CMSLV2','LRSLV','MINOS','CONOPT'
 		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","A4SQP","SLSQP","RADAU5"
 	 ]
 ))
@@ -1101,6 +1101,11 @@ if 'LSOD' in env['WITH_SOLVERS']:
 
 if 'CMSLV' in env['WITH_SOLVERS'] and 'LRSLV' not in env['WITH_SOLVERS']:
 	env['WITH_SOLVERS'].append('LRSLV')
+if 'CMSLV2' in env['WITH_SOLVERS']:
+	if 'LRSLV' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('LRSLV')
+	if 'QRSLV' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('QRSLV')
 
 vars.Save('options.cache',env)
 
@@ -1154,7 +1159,7 @@ def _explicit_bool_argument(name):
 	value = str(ARGUMENTS[name]).strip().lower()
 	return value not in ('0', 'false', 'no', 'off', 'none')
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP','LRSLV','CMSLV':
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP','LRSLV','CMSLV','CMSLV2':
 	name = 'WITH_%s' % solv
 	explicit = _explicit_bool_argument(name)
 	if explicit is None:
@@ -2715,7 +2720,8 @@ for k,v in {
 				,'ASC_WITH_SLSQP':env['WITH_SLSQP']
 				,'ASC_WITH_LRSLV':env['WITH_LRSLV']
 				,'ASC_WITH_CMSLV':env['WITH_CMSLV']
-				,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
+				,'ASC_WITH_CMSLV2':env['WITH_CMSLV2']
+				,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
 				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
 				,'ASC_WITH_PCRE':env['WITH_PCRE']
 			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']

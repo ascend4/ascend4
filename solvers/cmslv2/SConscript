@@ -3,7 +3,7 @@ Import('env')
 with_conopt = 'CONOPT' in env['WITH_SOLVERS']
 with_ipopt = bool(env.get('WITH_IPOPT')) and env.ensure_ipopt()
 
-if 'CMSLV' in env['WITH_SOLVERS']:
+if 'CMSLV2' in env['WITH_SOLVERS']:
 	solver_env = env.Clone()
 	srcs = ["cmslv2.c"]
 
