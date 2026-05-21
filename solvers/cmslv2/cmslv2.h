@@ -1,5 +1,5 @@
-#ifndef ASC_CMSLV_INTERNAL_H
-#define ASC_CMSLV_INTERNAL_H
+#ifndef ASC_CMSLV2_INTERNAL_H
+#define ASC_CMSLV2_INTERNAL_H
 
 #include <ascend/general/platform.h>
 #include <ascend/solver/solver.h>
@@ -12,9 +12,9 @@
 
 typedef struct slv9_system_structure *slv9_system_t;
 
-#define SOLVER_CMSLV 9
+#define SOLVER_CMSLV2 34
 
-#define slv9_PA_SIZE 28 /* MUST INCREMENT WHEN ADDING PARAMETERS */
+#define slv9_PA_SIZE 30 /* MUST INCREMENT WHEN ADDING PARAMETERS */
 #define LOGSOLVER_OPTION_PTR (sys->parm_array[0])
 #define LOGSOLVER_OPTION  ((*(char **)LOGSOLVER_OPTION_PTR))
 #define NONLISOLVER_OPTION_PTR (sys->parm_array[1])
@@ -55,6 +55,10 @@ typedef struct slv9_system_structure *slv9_system_t;
 #define PROGRESS_CALLBACKS ((*(int32 *)PROGRESS_CALLBACKS_PTR))
 #define PROGRESS_LOG_PTR (sys->parm_array[19])
 #define PROGRESS_LOG ((*(int32 *)PROGRESS_LOG_PTR))
+#define CMSLV2_BLOCKSOLVE_PTR (sys->parm_array[20])
+#define CMSLV2_BLOCKSOLVE ((*(int32 *)CMSLV2_BLOCKSOLVE_PTR))
+#define QRSLV_CONVOPT_PTR (sys->parm_array[21])
+#define QRSLV_CONVOPT ((*(char **)QRSLV_CONVOPT_PTR))
 
 #ifndef CONOPT_BOUNDLIMIT
 # define CONOPT_BOUNDLIMIT 3.1e9
@@ -130,6 +134,7 @@ struct slv9_system_structure {
   int32 integrity;
   int32 presolved;
   int32 solvers_ready;
+  int32 qrslv_fallback;
   slv_parameters_t p;
   slv_status_t s;
   int32 cap;
@@ -141,6 +146,14 @@ struct slv9_system_structure {
   int32 rtot;
   real64 clock;
   int32 nliter;
+  int32 cmslv2_next_structural_block;
+  int32 cmslv2_last_structural_blocks;
+  int32 cmslv2_pending_after_qrslv;
+  int32 cmslv2_scope_active;
+  int32 cmslv2_scope_nrels;
+  int32 cmslv2_scope_nvars;
+  unsigned char *cmslv2_rel_active_save;
+  unsigned char *cmslv2_var_active_save;
 
   void *parm_array[slv9_PA_SIZE];
   struct slv_parameter pa[slv9_PA_SIZE];

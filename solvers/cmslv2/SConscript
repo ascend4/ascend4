@@ -1,0 +1,48 @@
+Import('env')
+
+with_conopt = 'CONOPT' in env['WITH_SOLVERS']
+with_ipopt = bool(env.get('WITH_IPOPT')) and env.ensure_ipopt()
+
+if 'CMSLV' in env['WITH_SOLVERS']:
+	solver_env = env.Clone()
+	srcs = ["cmslv2.c"]
+
+	solver_env.AppendUnique(
+		LIBS = ['ascend']
+		, LIBPATH = ['#']
+	)
+
+	if solver_env.get('CONOPT_LINKED'):
+		solver_env.AppendUnique(
+			CPPPATH=env['CONOPT_CPPPATH']
+			, LIBS=env['CONOPT_LIB']
+			, LIBPATH=env['CONOPT_LIBPATH']
+		)
+	elif with_conopt and env.get('CONOPT_CPPPATH'):
+		solver_env.AppendUnique(CPPPATH=env['CONOPT_CPPPATH'])
+
+	if with_ipopt:
+		srcs.append("cmslv2_ipopt.c")
+		solver_env.AppendUnique(CPPDEFINES=['ASC_CMSLV_WITH_IPOPT'])
+		solver_env.AppendUnique(CPPPATH=env.get('IPOPT_CPPPATH', []))
+		solver_env.AppendUnique(LIBPATH=env.get('IPOPT_LIBPATH', []))
+		solver_env.AppendUnique(LIBS=env.get('IPOPT_LIBS', []))
+		if env.get('IPOPT_HSLIB_SUPPORTED') and env.get('IPOPT_HSL_LIBRARY'):
+			solver_env.AppendUnique(CPPDEFINES=['ASC_WITH_IPOPT_HSLIB'])
+			solver_env.AppendUnique(CPPDEFINES=[
+				('ASC_IPOPT_HSL_LIBRARY', '"%s"' % str(env['IPOPT_HSL_LIBRARY']).replace('"', '\\"'))
+			])
+
+	lib = solver_env.SharedLibrary("cmslv2",srcs
+		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+		,SHLIBPREFIX = env['EXTLIB_PREFIX']
+	)
+
+	env.Depends(lib,env['libascend'])
+
+	env['extfns'] += [lib]
+
+	if env.get('CAN_INSTALL'):
+		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS")),lib)
+
+# vim: set syntax=python:

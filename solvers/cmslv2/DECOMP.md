@@ -51,10 +51,11 @@ implementation provides:
 - `slv_decomp_partition_active`: the current execution view, using only rows
   whose `included` and `active` flags are both true after current conditional
   analysis has selected active cases;
-- CMSlv progress/reporting that classifies active execution blocks and
+- CMSlv2 progress/reporting that classifies active execution blocks and
   conservative mixed envelopes into intended CMSlv2 sub-solver responsibilities;
-- an opt-in `cmslv2` parameter that lets CMSlv exercise this planning path
-  without changing legacy CMSlv behavior by default;
+- CMSlv2 now lives as a separate loadable solver in `solvers/cmslv2`. Legacy
+  CMSlv has been restored to the pre-decomposition path, with the IPOPT and
+  CONOPT regression tests remaining in `solver_cmslv`;
 - a QRSlv `external_blocks` option that lets QRSlv trust an already-installed
   solver block list instead of running its own block partitioner.
 
@@ -148,8 +149,9 @@ What we have now:
 - shared mixed structural and active decompositions in `ascend/system/decomp`;
 - ASCXX reporting and incidence-matrix visualisation support for structural and
   active block views;
-- CMSlv progress events for decomposition assessment and CMSlv2 planning;
-- opt-in `cmslv2` mode that keeps legacy CMSlv unchanged by default;
+- CMSlv2 progress events for decomposition assessment and CMSlv2 planning;
+- a separate `CMSlv2` solver package, so legacy `CMSlv` can continue to cover
+  the IPOPT/CONOPT paths without carrying the block-decomposition scheduler;
 - QRSlv `external_blocks=TRUE`, covered by `solver_qrslv.external_blocks`,
   which proves QRSlv can solve with a preinstalled block list when its own
   `partition` parameter is false;
@@ -205,7 +207,7 @@ What we have now:
   stronger local mixed-block completion;
 - a deterministic CMSlv2 scheduler fixture in
   `models/test/cmslv/cmslv2_scheduler.a4c`, covered by
-  `solver_cmslv.cmslv2_scheduler`, that asserts the observed scheduler sequence:
+  `solver_cmslv2.cmslv2_scheduler`, that asserts the observed scheduler sequence:
   selector branch search, QRSlv pure-real handoff, legacy boundary traversal,
   another selector branch search, grouped LRSlv pure-logical handoff, then
   scheduler fallback after all structural blocks have been consumed.
@@ -217,7 +219,7 @@ What we have now:
   a dvar column, a boundary edge, and a selector edge.
 - a CMSlv2 boundary-local fixture,
   `models/test/cmslv/cmslv2_boundary_local.a4c`, covered by
-  `solver_cmslv.cmslv2_boundary_local`, that starts at a due boundary-mixed
+  `solver_cmslv2.cmslv2_boundary_local`, that starts at a due boundary-mixed
   envelope and asserts `event=cmslv2_boundary_local_commit action=accepted`
   followed by `event=cmslv2_block_solved solved=0` and
   `event=cmslv2_boundary_local_commit action=reverted`, proving that an
@@ -225,7 +227,7 @@ What we have now:
   LRSlv/QRSlv work.
 - a positive CMSlv2 boundary-local fixture,
   `models/test/cmslv/cmslv2_boundary_local_complete.a4c`, covered by
-  `solver_cmslv.cmslv2_boundary_local_complete`, that starts at a due
+  `solver_cmslv2.cmslv2_boundary_local_complete`, that starts at a due
   boundary-mixed envelope whose active real/logical rows are already
   satisfiable locally. It asserts `event=cmslv2_block_solved solved=1`,
   `event=cmslv2_transition solver=boundary`, cursor advancement, a downstream
@@ -427,13 +429,13 @@ then hand only safe real subblocks to the numeric solver. The assessment uses
 the current `slv_system_t`, including the relation/logrelation `active` flags
 propagated by existing conditional analysis, and reports how the conservative
 structural view collapses into active execution block kinds. This is the
-intended staging point for a future `cmslv2` execution path that dispatches
-active subblocks while preserving the legacy CMSlv fallback.
+intended staging point for the `CMSlv2` execution path that dispatches active
+subblocks while preserving the legacy CMSlv fallback.
 
-The opt-in `cmslv2` parameter now uses this narrower QRSlv path. Before QRSlv
-presolve, CMSlv2 builds the active mixed decomposition, verifies that all active
-real rows and columns are covered by installable pure-real blocks, reorders the
-live solver rel/var arrays so those blocks occupy the front of QRSlv's view,
+CMSlv2 now uses this narrower QRSlv path directly. Before QRSlv presolve,
+CMSlv2 builds the active mixed decomposition, verifies that all active real rows
+and columns are covered by installable pure-real blocks, reorders the live
+solver rel/var arrays so those blocks occupy the front of QRSlv's view,
 installs the block list with `slv_set_solvers_blocks`, and invokes QRSlv with
 `partition=FALSE` and `external_blocks=TRUE`.
 
@@ -709,10 +711,10 @@ activation.
 ## Current Implementation Status
 
 Initial shared-system support now lives in `ascend/system/decomp.[ch]`. It is
-now wired into CMSlv as reporting and as a conservative partition-policy
+now consumed by CMSlv2 as reporting and as a conservative partition-policy
 assessment. The pass deliberately reuses the same `mtx` symbolic assignment and
 `mtx_region_t` block representation used by QRSlv's block partitioning, but it
-does not reorder the live solver lists. It returns a separate
+does not reorder the live solver lists itself. It returns a separate
 `slv_decomp_partition_t` containing:
 
 - real relation rows;
