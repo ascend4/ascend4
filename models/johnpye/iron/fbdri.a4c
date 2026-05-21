@@ -1,6 +1,7 @@
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/fboard.a4c";
 REQUIRE "johnpye/iron/tga.a4c";
 
 (*
@@ -64,6 +65,7 @@ MODEL fbdri_batch;
 	gamma_e "solid volume in emulsion per bubble volume" IS_A factor;
 	f_wake "wake volume per bubble volume" IS_A factor;
 	D_AB "H2/H2O molecular diffusivity used in K&L exchange coefficients" IS_A diffusivity;
+	tr IS_A diffusion_h2o_h2_ar;
 	K_bc "bubble-cloud gas interchange coefficient" IS_A frequency;
 	K_ce "cloud-emulsion gas interchange coefficient" IS_A frequency;
 
@@ -111,6 +113,9 @@ MODEL fbdri_batch;
 
 	(* Ideal-gas and feed conversion. *)
 	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+	trT_eq: tr.T = T;
+	trp_eq: tr.p = p;
+	Dab_eq: D_AB = tr.D_H2O_H2;
 	feed_eq: F_feed = Vdot_feed_stp * p_stp / (1 {GAS_C} * T_stp);
 	area_eq: A_bed = 0.25 {PI} * d_t^2;
 	u_eq: u = F_feed / (c_tot * A_bed);
@@ -264,7 +269,10 @@ METHODS
 		FIX u_mf := 6 {mm/s};
 		FIX d_b := 8 {mm};
 		FIX f_wake := 0.05;
-		FIX D_AB := 1.0e-4 {m^2/s};
+		D_AB := 7 {cm^2/s};
+		tr.D_H2O_H2 := 7 {cm^2/s};
+		tr.D_H2O_Ar := 2 {cm^2/s};
+		tr.D_H2_Ar := 7 {cm^2/s};
 		FIX solid_exchange_multiplier := 1.0;
 
 		FIX MW_Fe2O3 := 159.687 {g/g_mole};
