@@ -194,6 +194,8 @@ MODEL fluidbed2_base;
 	(* Eq. 12. *)
 	delta * (gamma_b + gamma_c + gamma_e) = 1 - eps;
 
+	(* DISTRIBUTION OF PARTICLES IN BUBBLE/CLOUD/EMULSION *)
+	
 	(* Eq. 14. *)
 	gamma_b = 0.005;
 
@@ -205,6 +207,8 @@ MODEL fluidbed2_base;
 			+ f_wake
 		  );
 
+	(* VOLUMETRIC GAS INTERCHANGE RATE BETWEEN REGIONS *)
+	
 	D_AB "molecular diffusivity of gas species A in B" IS_A diffusivity;
 	K_bc "bubble-cloud gas interchange coefficient" IS_A frequency;
 	K_ce "cloud-emulsion gas interchange coefficient" IS_A frequency;
