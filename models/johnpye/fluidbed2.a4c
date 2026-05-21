@@ -2,7 +2,7 @@ REQUIRE "johnpye/shapes.a4c";
 REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "johnpye/airprops2.a4c";
 REQUIRE "johnpye/fprops/thermophys.a4c";
-IMPORT "cmslv";
+IMPORT "cmslv2";
 
 (*
 	Kunii and Levenspiel dense bubbling-bed hydrodynamics, through the
@@ -384,9 +384,8 @@ METHODS
 		N_be_A := 1e-5 {mol/s};
 		N_rxn_A := 1e-5 {mol/s};
 
-		SOLVER CMSlv;
+		SOLVER CMSlv2;
 		OPTION optsolvers 'IPOPT';
-		OPTION cmslv2 TRUE;
 
 		STUDY
 			u, u_mf, u_ratio_mf, u_b, delta, eps,
@@ -617,9 +616,8 @@ METHODS
 		K_r_tau_fig5[5] := 59.8509607017;
 		C_Ao_over_C_Ai_fig5_obs[5] := 0.0166001430097;
 
-		SOLVER CMSlv;
+		SOLVER CMSlv2;
 		OPTION optsolvers 'IPOPT';
-		OPTION cmslv2 TRUE;
 
 		STUDY
 			K_r_tau_f, K_r, K_f, eta_bed,
@@ -701,9 +699,8 @@ METHODS
 		C_Ao_over_C_Ai := 0.059;
 		X_A := 0.941;
 
-		SOLVER CMSlv;
+		SOLVER CMSlv2;
 		OPTION optsolvers 'IPOPT';
-		OPTION cmslv2 TRUE;
 
 		STUDY
 			K_r, K_f, eta_bed, C_Ao_over_C_Ai, X_A,
@@ -773,9 +770,8 @@ METHODS
 		delta_fast_or_vigorous := 0.406;
 		delta := 0.406;
 
-		SOLVER CMSlv;
+		SOLVER CMSlv2;
 		OPTION optsolvers 'IPOPT';
-		OPTION cmslv2 TRUE;
 
 		STUDY
 			u, u_mf, u_ratio_mf,
