@@ -9657,6 +9657,7 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   sys->nliter = 0;
   sys->s.cpu_elapsed = 0.0;
   sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
+  sys->s.over_defined = sys->s.under_defined = sys->s.struct_singular = FALSE;
   sys->s.block.previous_total_size = 0;
   sys->s.block.current_block = -1;
   sys->s.block.current_size = 0;
@@ -9699,6 +9700,7 @@ int slv9_resolve(slv_system_t server, SlvClientToken asys){
   sys->s.iteration = 0;
   sys->s.cpu_elapsed = 0.0;
   sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
+  sys->s.over_defined = sys->s.under_defined = sys->s.struct_singular = FALSE;
   sys->s.block.previous_total_size = 0;
   slv9_cmslv2_restore_qrslv_scope(sys);
   sys->cmslv2_next_structural_block = 0;
