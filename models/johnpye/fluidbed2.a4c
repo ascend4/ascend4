@@ -6,8 +6,9 @@ IMPORT "cmslv";
 
 (*
 	Kunii and Levenspiel dense bubbling-bed hydrodynamics, through the
-	bubble/cloud and cloud/emulsion interchange coefficients of eqs 16 and 17
-	in Ind. Eng. Chem. Res. 29 (1990) 1226-1234.
+	bubble/cloud and cloud/emulsion interchange coefficients of eqs 16 and 17,
+	plus the intermediate-particle bubble/emulsion coefficient of eq. 30, in
+	Ind. Eng. Chem. Res. 29 (1990) 1226-1234.
 
 	This model deliberately treats the operating superficial velocity u as an
 	independent variable. u_mf and eps_mf may be supplied from an external
@@ -212,6 +213,7 @@ MODEL fluidbed2_base;
 	D_AB "molecular diffusivity of gas species A in B" IS_A diffusivity;
 	K_bc "bubble-cloud gas interchange coefficient" IS_A frequency;
 	K_ce "cloud-emulsion gas interchange coefficient" IS_A frequency;
+	K_be "bubble-emulsion gas interchange coefficient for intermediate beds" IS_A frequency;
 
 	(* Eq. 16. *)
 	K_bc =
@@ -225,6 +227,11 @@ MODEL fluidbed2_base;
 	K_ce =
 		6.77 {1/s}
 		* (D_AB * eps_mf * u_br / d_b^3 / 1 {1/s^2})^0.5;
+
+	(* Eq. 30. Intermediate-particle / Geldart B approximation: overlapping
+	   clouds are folded into the emulsion, leaving one bubble-emulsion
+	   interchange coefficient. *)
+	K_be = 4.5 * u_mf / d_b;
 
 METHODS
 	METHOD default;
@@ -254,6 +261,7 @@ METHODS
 		delta_vigorous.lower_bound := 0;
 		f_wake.lower_bound := 0;
 		D_AB.lower_bound := 0 {m^2/s};
+		K_be.lower_bound := 0 {1/s};
 
 		eps := 0.7;
 		u_b_correlation := 0.5 {m/s};
@@ -273,8 +281,120 @@ METHODS
 		delta_vigorous := 0.4;
 		gamma_c := 0.3;
 		gamma_e := 0.3;
+		K_be := 1 {1/s};
 	END default;
 END fluidbed2_base;
+
+MODEL fb_reactor_intermediate_lumped REFINES fluidbed2_base;
+	fluid IS_REFINED_TO air_fluid;
+
+	(*
+		Minimal steady two-region bubble/emulsion test for the K&L
+		intermediate-particle picture. Clouds are not a separate reacting
+		region; their gas/solids are folded into the emulsion.
+	*)
+	c_tot "ideal-gas molar density" IS_A molar_density;
+	F_bubble "molar flow through bubble phase" IS_A molar_rate;
+	F_emulsion "molar flow through emulsion phase" IS_A molar_rate;
+	V_bubble "bubble volume in bed" IS_A volume;
+	y_A_in, y_A_b, y_A_e IS_A mole_fraction;
+	N_be_A "A transfer from bubble to emulsion" IS_A delta_molar_rate;
+	N_rxn_A "A consumed by emulsion reaction" IS_A delta_molar_rate;
+	K_r "first-order emulsion reaction rate constant" IS_A frequency;
+
+	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+	Fb_eq: F_bubble = c_tot * chamber.end.A * (u - u_mf);
+	Fe_eq: F_emulsion = c_tot * chamber.end.A * u_mf;
+	Vb_eq: V_bubble = delta * bed.V;
+	Nbe_eq: N_be_A = V_bubble * K_be * c_tot * (y_A_b - y_A_e);
+	Nrxn_eq: N_rxn_A = K_r * bed.V * (1 - eps) * c_tot * y_A_e;
+	bubble_balance: F_bubble * (y_A_in - y_A_b) - N_be_A = 0 {mol/s};
+	emulsion_balance: F_emulsion * (y_A_in - y_A_e) + N_be_A - N_rxn_A = 0 {mol/s};
+
+METHODS
+	METHOD default;
+		RUN fluidbed2_base::default;
+		c_tot.lower_bound := 0 {mol/m^3};
+		F_bubble.lower_bound := 0 {mol/s};
+		F_emulsion.lower_bound := 0 {mol/s};
+		V_bubble.lower_bound := 0 {m^3};
+		y_A_in.lower_bound := 0;
+		y_A_in.upper_bound := 1;
+		y_A_b.lower_bound := 0;
+		y_A_b.upper_bound := 1;
+		y_A_e.lower_bound := 0;
+		y_A_e.upper_bound := 1;
+		K_r.lower_bound := 0 {1/s};
+
+		c_tot := 10 {mol/m^3};
+		F_bubble := 1e-3 {mol/s};
+		F_emulsion := 1e-4 {mol/s};
+		V_bubble := 1e-4 {m^3};
+		y_A_in := 1;
+		y_A_b := 0.95;
+		y_A_e := 0.80;
+		N_be_A := 1e-4 {mol/s};
+		N_rxn_A := 1e-4 {mol/s};
+		K_r := 1 {1/s};
+	END default;
+
+	METHOD on_load;
+		RUN default;
+
+		FIX chamber.d := 30 {mm};
+		FIX chamber.L := 500 {mm};
+		FIX bed_mf.L := 70 {mm};
+		FIX T := 800 {K} + 273.15 {K};
+		FIX p := 1 {atm};
+		FIX d_p := 250 {um};
+		FIX rho_p := 4000 {kg/m^3};
+		FIX eps_mf := 0.55;
+		FIX u_mf := 6 {mm/s};
+		FIX u_ratio_mf := 70;
+		FIX u_ratio_vigorous_min := 10;
+		FIX d_b := 8 {mm};
+		FIX f_wake := 0.05;
+		FIX D_AB := 2.4e-3 {m^2/s};
+		FIX y_A_in := 1.0;
+		FIX K_r := 1 {1/s};
+
+		u := 0.42 {m/s};
+		u_br := 0.20 {m/s};
+		u_b_dh := 0.61 {m/s};
+		u_b_geldart_a := 0.80 {m/s};
+		u_b_geldart_b := 0.25 {m/s};
+		u_b_correlation := 0.25 {m/s};
+		u_b := 0.61 {m/s};
+		u_emf := 0.011 {m/s};
+		bubble_regime_ratio := 56;
+		rho_geldart_ab_boundary := 0.7 {g/cm^3};
+		u_b_use_geldart_a := FALSE;
+		u_b_use_correlation := FALSE;
+		delta_use_slow := FALSE;
+		delta_use_intermediate_or_slow := FALSE;
+		delta_use_vigorous := TRUE;
+		delta_vigorous := 0.69;
+		delta_fast := 0.68;
+		delta_fast_or_vigorous := 0.69;
+		delta := 0.69;
+		eps := 0.86;
+		K_be := 3.4 {1/s};
+		y_A_b := 0.9;
+		y_A_e := 0.5;
+		N_be_A := 1e-5 {mol/s};
+		N_rxn_A := 1e-5 {mol/s};
+
+		SOLVER CMSlv;
+		OPTION optsolvers 'IPOPT';
+		OPTION cmslv2 TRUE;
+
+		STUDY
+			u, u_mf, u_ratio_mf, u_b, delta, eps,
+			K_be, K_bc, K_ce,
+			F_bubble, F_emulsion, V_bubble,
+			y_A_in, y_A_b, y_A_e, N_be_A, N_rxn_A;
+	END on_load;
+END fb_reactor_intermediate_lumped;
 
 MODEL fb_reactor_fine REFINES fluidbed2_base;
 	fluid IS_REFINED_TO air_fluid;
