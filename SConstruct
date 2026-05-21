@@ -1119,6 +1119,9 @@ if 'LSOD' in env['WITH_SOLVERS']:
 		env['WITH_SOLVERS'].append('LSODE')
 	env['WITH_SOLVERS'].remove('LSOD')
 
+if 'CMSLV' in env['WITH_SOLVERS'] and 'LRSLV' not in env['WITH_SOLVERS']:
+	env['WITH_SOLVERS'].append('LRSLV')
+
 vars.Save('options.cache',env)
 
 Help(vars.GenerateHelpText(env))
@@ -1171,7 +1174,7 @@ def _explicit_bool_argument(name):
 	value = str(ARGUMENTS[name]).strip().lower()
 	return value not in ('0', 'false', 'no', 'off', 'none')
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP':
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP','LRSLV','CMSLV':
 	name = 'WITH_%s' % solv
 	explicit = _explicit_bool_argument(name)
 	if explicit is None:
@@ -1848,11 +1851,20 @@ conopt_test_text = """
 #include <conopt.h>
 #include <stdlib.h>
 int main(){
+#if defined(CONOPT_VERSION_MAJOR) && CONOPT_VERSION_MAJOR >= 4
+	coiHandle_t h = NULL;
+	int e = COI_Create(&h);
+	if(!e){
+		e = COI_Free(&h);
+	}
+	return e;
+#else
 	int s, *v, e;
 	s = COIDEF_Size();
 	v = (int *)malloc(s*sizeof(int));
 	e = COIDEF_Ini(v);
 	return e;
+#endif
 }
 """
 
@@ -2722,6 +2734,10 @@ for k,v in {
 				,'ASC_WITH_MAKEMPS':env['WITH_MAKEMPS']
 				,'ASC_WITH_IPOPT':env['WITH_IPOPT']
 				,'ASC_WITH_HIGHS':env['WITH_HIGHS']
+				,'ASC_WITH_A4SQP':env['WITH_A4SQP']
+				,'ASC_WITH_SLSQP':env['WITH_SLSQP']
+				,'ASC_WITH_LRSLV':env['WITH_LRSLV']
+				,'ASC_WITH_CMSLV':env['WITH_CMSLV']
 				,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
 				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
 				,'ASC_WITH_PCRE':env['WITH_PCRE']
@@ -2844,6 +2860,8 @@ if env.get('LZMA_LIBPATH'):
 	libascend_env.AppendUnique(LIBPATH=env['LZMA_LIBPATH'])
 if env.get('LZMA_LIBS'):
 	libascend_env.AppendUnique(LIBS=env['LZMA_LIBS'])
+if 'CONOPT' in env['WITH_SOLVERS'] and env.get('CONOPT_CPPPATH'):
+	libascend_env.AppendUnique(CPPPATH=env['CONOPT_CPPPATH'])
 
 dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear','bintokens']
 

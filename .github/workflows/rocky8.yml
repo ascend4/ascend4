@@ -16,6 +16,8 @@ jobs:
     env:
       CUNIT_VERSION: "2.3.2"
       CUNIT_RELEASE_BASENAME: "cunit-2.3-2"
+      CONOPT_VERSION: "4.39.0"
+      CONOPT_ZIP_URL: "https://d37drm4t2jghv5.cloudfront.net/conopt/4.39.0/conopt-4_39_0-linux-x86_64.zip"
       SUNDIALS_VERSION: "7.6.0"
       HIGHS_VERSION: "v1.13.1"
       OMP_NUM_THREADS: "1"
@@ -35,7 +37,7 @@ jobs:
           gcc gcc-c++ gcc-gfortran \
           make flex bison swig \
           autoconf automake libtool m4 \
-          git curl patch which diffutils findutils tar gzip xz \
+          git curl patch which diffutils findutils tar gzip xz unzip \
           cmake3 pkgconf-pkg-config \
           python3 python3-devel python3-pip python3-packaging python3-numpy python3-pyyaml \
           tcl-devel tk-devel \
@@ -68,6 +70,22 @@ jobs:
           ./configure --prefix="$HOME/.local" --enable-debug
           make -j"$(nproc)"
           make install
+        '
+
+    - name: Download and install CONOPT
+      run: |
+        runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" CONOPT_ZIP_URL="$CONOPT_ZIP_URL" bash -lc '
+          cd "$GITHUB_WORKSPACE"
+          tmpdir="$(mktemp -d)"
+          trap '\''rm -rf "$tmpdir"'\'' EXIT
+          curl -fsSL --retry 3 -o "$tmpdir/conopt.zip" "$CONOPT_ZIP_URL"
+          unzip -q "$tmpdir/conopt.zip" -d "$tmpdir"
+          mkdir -p "$HOME/.local"
+          cp -a "$tmpdir/conopt-linux-x86_64/." "$HOME/.local/"
+          test -f "$HOME/.local/include/conopt.h"
+          test -f "$HOME/.local/lib/libconopt.so"
+          test -L "$HOME/.local/lib/libconopt.so"
+          ls -l "$HOME/.local/lib/libconopt.so"
         '
 
     - name: Build and install SUNDIALS
@@ -118,6 +136,7 @@ jobs:
           export LD_LIBRARY_PATH="$HOME/.local/lib64:$HOME/.local/lib:${LD_LIBRARY_PATH:-}"
           scons GCOV=1 MALLOC_DEBUG=1 \
             CUNIT_PREFIX="$HOME/.local" \
+            CONOPT_PREFIX="$HOME/.local" \
             SUNDIALS_PREFIX="$HOME/.local" \
             HIGHS_PREFIX="$HOME/.local" \
             ascend models solvers ascxx test a4
@@ -127,6 +146,8 @@ jobs:
       run: |
         runuser -u "$ASCEND_CI_USER" -- env HOME="$ASCEND_CI_HOME" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" bash -lc '
           cd "$GITHUB_WORKSPACE"
+          export LD_LIBRARY_PATH="$HOME/.local/lib64:$HOME/.local/lib:${LD_LIBRARY_PATH:-}"
+          export CONOPT_PATH="$HOME/.local/lib"
           ./a4 cutest -r mallocdebug
         '
 

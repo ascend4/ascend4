@@ -15,6 +15,8 @@ jobs:
       ASCEND_CI_HIGHS_SERIAL: "1"
       CUNIT_VERSION: "2.3.2"
       CUNIT_PKGREL: "6"
+      CONOPT_VERSION: "4.39.0"
+      CONOPT_ZIP_URL: "https://d37drm4t2jghv5.cloudfront.net/conopt/4.39.0/conopt-4_39_0-win-x86_64.zip"
 
     defaults:
       run:
@@ -35,7 +37,7 @@ jobs:
         update: true
         cache: true
         install: >-
-          git swig make flex bison
+          git swig make flex bison unzip
           autoconf automake libtool m4
           mingw-w64-${{matrix.env}}-toolchain
           mingw-w64-${{matrix.env}}-gsl
@@ -71,15 +73,37 @@ jobs:
         pacman -U --noconfirm "$PKG_FILE"
         pacman -Q "mingw-w64-${{ matrix.env }}-cunit"
 
+    - name: Download and install CONOPT
+      run: |
+        tmpdir="$(mktemp -d)"
+        trap 'rm -rf "$tmpdir"' EXIT
+        curl -fsSL --retry 3 -o "$tmpdir/conopt.zip" "$CONOPT_ZIP_URL"
+        unzip -q "$tmpdir/conopt.zip" -d "$tmpdir"
+        mkdir -p "$HOME/.local"
+        cp -a "$tmpdir/conopt-win-x86_64/." "$HOME/.local/"
+        test -f "$HOME/.local/include/conopt.h"
+        test -f "$HOME/.local/lib/conopt4.dll"
+        ls -l "$HOME/.local/lib/conopt4.dll"
+
     - uses: actions/checkout@v4
 
     - name: Build ASCEND
       run: |
         CUNIT_PREFIX="${MSYSTEM_PREFIX:-/${{ matrix.sys }}}"
-        scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX="$CUNIT_PREFIX" ascend solvers models test a4
+        CONOPT_PREFIX="$HOME/.local"
+        scons GCOV=1 MALLOC_DEBUG=1 \
+          CUNIT_PREFIX="$CUNIT_PREFIX" \
+          CONOPT_PREFIX="$CONOPT_PREFIX" \
+          CONOPT_CPPPATH="$CONOPT_PREFIX/include" \
+          CONOPT_LIBPATH="$CONOPT_PREFIX/lib" \
+          CONOPT_DLPATH="$CONOPT_PREFIX/lib" \
+          CONOPT_LIB=conopt4 \
+          ascend solvers models test a4
 
     - name: Test ASCEND
       run: |
+        export PATH="$HOME/.local/lib:$PATH"
+        export CONOPT_PATH="$HOME/.local/lib"
         ./a4 cutest -r mallocdebug
 
     - name: Generate coverage report

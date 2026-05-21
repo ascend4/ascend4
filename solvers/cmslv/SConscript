@@ -18,6 +18,8 @@ if 'CMSLV' in env['WITH_SOLVERS']:
 			, LIBS=env['CONOPT_LIB']
 			, LIBPATH=env['CONOPT_LIBPATH']
 		)
+	elif with_conopt and env.get('CONOPT_CPPPATH'):
+		solver_env.AppendUnique(CPPPATH=env['CONOPT_CPPPATH'])
 
 	if with_ipopt:
 		srcs.append("cmslv_ipopt.c")

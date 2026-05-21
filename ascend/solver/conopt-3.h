@@ -2,7 +2,7 @@
 #define ARKI_CONOPT_H
 
 /*****************************************************************************/
-/*  File: conopt.h                                                           */
+/*  File: conopt-3.h                                                         */
 /*  Version 3.13Y                                                            */
 /*                                                                           */
 /*  Copyright (C) 1995-2011 by ARKI Consulting & Development A/S             */
@@ -15,7 +15,7 @@
 /*****************************************************************************/
 
 /** @FILE
-CONOPT optimisation solver API definition.
+Legacy CONOPT 3 optimisation solver API definition.
 
 NOTE: Arne Drud has given the ASCEND project permission to include this header file
 in our source-code distribution, as it allows us to build code that links

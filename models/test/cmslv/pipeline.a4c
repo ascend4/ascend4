@@ -355,7 +355,25 @@ METHODS
 	END on_load;
 
 	METHOD self_test;
-		(* no tests yet *)
+		ASSERT abs(P[1] - 0.453505729 {m}) < 5e-8 {m};
+		ASSERT abs(P[7] - 0.503950878 {m}) < 5e-8 {m};
+		ASSERT abs(P[11] - 0.301607465 {m}) < 5e-8 {m};
+		ASSERT abs(P[17]) < 5e-8 {m};
+		ASSERT abs(P[20] - 0.254439013 {m}) < 5e-8 {m};
+		ASSERT abs(P[22] - 0.351638438 {m}) < 5e-8 {m};
+		ASSERT abs(Q[1]) < 5e-4 {gpm};
+		ASSERT abs(Q[8] - 765.803245 {gpm}) < 5e-5 {gpm};
+		ASSERT abs(Q[15]) < 5e-8 {gpm};
+		ASSERT abs(Q[19] - 465.200654 {gpm}) < 5e-5 {gpm};
+		ASSERT abs(Q[23] - 206.394792 {gpm}) < 5e-5 {gpm};
+		ASSERT abs(Q[32] - 2.74811268 {gpm}) < 5e-7 {gpm};
+		ASSERT abs(Q[34]) < 5e-8 {gpm};
+		ASSERT abs(Q[38] - 312.285518 {gpm}) < 5e-5 {gpm};
+		ASSERT Pipe[8].bol == TRUE;
+		ASSERT Pipe[19].bol == TRUE;
+		ASSERT Pipe[23].bol == TRUE;
+		ASSERT Pipe[32].bol == TRUE;
+		ASSERT Pipe[38].bol == TRUE;
 	END self_test;
 
 END pipeline;

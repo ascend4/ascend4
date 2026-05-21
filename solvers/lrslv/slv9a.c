@@ -51,7 +51,7 @@ ASC_DLLSPEC SolverRegisterFn lrslv_register;
 
 #define SLV9A(s) ((slv9a_system_t)(s))
 #define SERVER (sys->slv)
-#define slv9a_PA_SIZE 7 /* MUST INCREMENT WHEN ADDING PARAMETERS */
+#define slv9a_PA_SIZE 8 /* MUST INCREMENT WHEN ADDING PARAMETERS */
 #define SHOW_MORE_IMPT_PTR (sys->parm_array[0])
 #define SHOW_MORE_IMPT     ((*(int32 *)SHOW_MORE_IMPT_PTR))
 #define SHOW_LESS_IMPT_PTR (sys->parm_array[1])
@@ -66,6 +66,8 @@ ASC_DLLSPEC SolverRegisterFn lrslv_register;
 #define PERTURB_BOUNDARY     ((*(int32 *)PERTURB_BOUNDARY_PTR))
 #define WITH_IDA_PTR		(sys->parm_array[6])
 #define WITH_IDA			((*(int32 *)WITH_IDA_PTR))
+#define EXTERNAL_BLOCKS_PTR (sys->parm_array[7])
+#define EXTERNAL_BLOCKS     ((*(int32 *)EXTERNAL_BLOCKS_PTR))
 
 /*
  * auxiliar structures
@@ -106,6 +108,7 @@ struct slv9a_system_structure {
   int32                  rused;        /* Included relations */
   int32                  rtot;         /* length of rellist */
   double                 clock;        /* CPU time */
+  boolean                old_external_blocks; /* old external_blocks flag */
 
   void *parm_array[slv9a_PA_SIZE];
   struct slv_parameter pa[slv9a_PA_SIZE];
@@ -543,6 +546,12 @@ static int32 slv9a_get_default_parameters(slv_system_t server,
                "LRSlv called by IDA",
 	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), -1);
   SLV_BPARM_MACRO(WITH_IDA_PTR,parameters);
+
+  slv_define_parm(parameters, bool_parm,
+	       "external_blocks", "use caller-provided logical blocks",
+               "use caller-provided logical blocks",
+	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), -1);
+  SLV_BPARM_MACRO(EXTERNAL_BLOCKS_PTR,parameters);
   return 1;
 }
 
@@ -670,6 +679,8 @@ static void structural_analysis(slv_system_t server, slv9a_system_t sys)
 {
   dis_filter_t dvfilter;
   logrel_filter_t lrfilter;
+  const mtx_block_t *blocks;
+  int32 b;
 
   /*
    * The server has marked incidence flags already.
@@ -687,15 +698,34 @@ static void structural_analysis(slv_system_t server, slv9a_system_t sys)
   /* Symbolic analysis */
   sys->rtot = slv_get_num_solvers_logrels(server);
   sys->vtot = slv_get_num_solvers_dvars(server);
-  if (sys->rtot) {
+  if (EXTERNAL_BLOCKS) {
+    blocks = slv_get_solvers_log_blocks(server);
+    sys->rank = 0;
+    if(blocks != NULL) {
+      for(b = 0; b < blocks->nblocks; ++b) {
+        int32 rows = blocks->block[b].row.high - blocks->block[b].row.low + 1;
+        int32 cols = blocks->block[b].col.high - blocks->block[b].col.low + 1;
+        sys->rank += MIN(rows,cols);
+      }
+    }
+  } else if (sys->rtot) {
     if (slv_log_block_partition(server)) {
       FPRINTF(ASCERR,
              "Structural Analysis:Error in slv_log_block_partition\n");
       return;
     }
+    sys->S.dofdata = slv_get_log_dofdata(server);
+    sys->rank = sys->S.dofdata->structural_rank;
   }
   sys->S.dofdata = slv_get_log_dofdata(server);
-  sys->rank = sys->S.dofdata->structural_rank;
+  sys->S.dofdata->structural_rank = sys->rank;
+  sys->S.dofdata->n_rows = sys->rused;
+  sys->S.dofdata->n_cols = sys->vused;
+  sys->S.dofdata->n_fixed = sys->vtot - sys->vused;
+  sys->S.dofdata->n_unincluded = sys->rtot - sys->rused;
+  sys->S.dofdata->reorder.partition = EXTERNAL_BLOCKS ? 0 : 1;
+  sys->S.dofdata->reorder.basis_selection = 0;
+  sys->S.dofdata->reorder.block_reordering = 0;
 
   /* Initialize Status */
   sys->s.over_defined = (sys->rused > sys->vused);
@@ -796,7 +826,9 @@ static int slv9a_presolve(slv_system_t server, SlvClientToken asys){
   }
 
   if(sys->presolved > 0) { /* system has been presolved before */
-    if(!slv9a_dof_changed(sys) ) { /* no changes in fixed or included flags */
+    if(!slv9a_dof_changed(sys)
+        && sys->old_external_blocks == EXTERNAL_BLOCKS) {
+      /* no changes in fixed, included, or external block policy */
 #if DEBUG
       FPRINTF(ASCERR,"Avoiding matrix destruction/creation\n");
 #endif /* DEBUG */
@@ -825,6 +857,7 @@ static int slv9a_presolve(slv_system_t server, SlvClientToken asys){
     destroy_matrices(sys);
     create_matrices(server,sys);
     sys->s.block.current_reordered_block = -2;
+    sys->old_external_blocks = EXTERNAL_BLOCKS;
   }
 
   /* Reset status */

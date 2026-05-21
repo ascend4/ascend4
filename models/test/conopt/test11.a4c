@@ -34,7 +34,7 @@ MODEL test11;
 	cons11_1: 8*x1 + 14*x2 + 7*x3 - 56 = 0;
 	cons11_2: x1^2 + x2^2 + x3^2 -25 =0;
 
-	objective11: MAXIMIZE 1000 - x1^2 -2*x2^2 - x3^2 - x1*x2 - x1*x3;
+	objective11: MINIMIZE 1000 - x1^2 -2*x2^2 - x3^2 - x1*x2 - x1*x3;
 METHODS
 
 METHOD self_test;
@@ -62,4 +62,3 @@ METHOD on_load;
 END on_load;
 
 END test11;
-

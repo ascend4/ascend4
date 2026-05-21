@@ -15,11 +15,12 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
-	Header file that in turn includes <conopt.h>.
+	Header file that in turn includes the CONOPT API header.
 
-	This file exists in order to pass the correct FNAME_* parameter to
-	<conopt.h> and to permit wrapping of conopt routines for use in
-	a dlopened implementation.
+	This file exists in order to permit wrapping of conopt routines for use
+	in a dlopened implementation. Bundled ABI declaration headers are retained
+	so ASCEND can build CONOPT runtime-loading support without a CONOPT
+	development install.
 *//*
 	By John Pye
 	Based on conopt.h by Vicente Rico Ramirez (created 05/97)
@@ -62,12 +63,31 @@
 # define FNAME_LCASE_DECOR
 #endif
 
-#ifdef ASC_LINKED_CONOPT
-/*----------------------------------------
-  LINKED CONOPT
-*/
-# include "conopt.h"
+#ifdef ASC_CONOPT_LEGACY3
+# include "conopt-3.h"
+#elif defined(ASC_BUNDLED_CONOPT4)
+# include "conopt-4.h"
 #else
+# include <conopt.h>
+#endif
+
+#ifndef COI_CALL
+# ifdef COI_CALLCONV
+#  define COI_CALL COI_CALLCONV
+# else
+#  define COI_CALL
+# endif
+#endif
+
+#if defined(CONOPT_VERSION_MAJOR) && CONOPT_VERSION_MAJOR >= 4
+# define ASC_CONOPT_API4 1
+#endif
+
+#ifdef ASC_CONOPT_API4
+# define COIDEF_NumNZ COIDEF_NumNz
+#endif
+
+#ifndef ASC_LINKED_CONOPT
 /*----------------------------------------
   DLOPENED CONOPT
 */
@@ -75,14 +95,37 @@
 ASC_DLLSPEC int asc_conopt_load();
 ASC_DLLSPEC int asc_conopt_unload();
 
-# define CONOPT_DISABLE_FN_DECLS
-# include "conopt.h"
 /*
 	This is a list of the functions that we're going to be using from CONOPT.
 	Using this list, we can automate the process of reading the function
 	pointers from the DLL
 */
 
+# ifdef ASC_CONOPT_API4
+# define CONOPT_FNS(D,X) \
+	D( COI_Create       , (coiHandle_t *cntvect), (cntvect), "") X \
+	D( COI_Free         , (coiHandle_t *cntvect), (cntvect), "") X \
+	D( COI_Solve        , (coiHandle_t cntvect), (cntvect), "") X \
+	D( COIDEF_NumVar    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_NumCon    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_NumNz     , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_NumNlNz   , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_OptDir    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_ObjCon    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_ItLim     , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_ErrLim    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_StdOut    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_DebugFV   , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_ReadMatrix, (coiHandle_t cntvect, COI_READMATRIX_t f), (cntvect,f), "") X \
+	D( COIDEF_FDEval    , (coiHandle_t cntvect, COI_FDEVAL_t f), (cntvect,f), "") X \
+	D( COIDEF_Status    , (coiHandle_t cntvect, COI_STATUS_t f), (cntvect,f), "") X \
+	D( COIDEF_Solution  , (coiHandle_t cntvect, COI_SOLUTION_t f), (cntvect,f), "") X \
+	D( COIDEF_Message   , (coiHandle_t cntvect, COI_MESSAGE_t f), (cntvect,f), "") X \
+	D( COIDEF_ErrMsg    , (coiHandle_t cntvect, COI_ERRMSG_t f), (cntvect,f), "") X \
+	D( COIDEF_Progress  , (coiHandle_t cntvect, COI_PROGRESS_t f), (cntvect,f), "") X \
+	D( COIDEF_Option    , (coiHandle_t cntvect, COI_OPTION_t f), (cntvect,f), "") X \
+	D( COIDEF_UsrMem    , (coiHandle_t cntvect, void *v), (cntvect,v), "")
+# else
 # define INTINT (int*cntvect,int*v)
 # define INTINT1 (cntvect,v)
 # define INTDOUBLE (int*cntvect,double*v)
@@ -151,6 +194,7 @@ ASC_DLLSPEC int asc_conopt_unload();
 	D( COI_Solve        , (int*cntvect) , (cntvect)                      ,"@4") X \
 	D( COI_MemEst       , (int*cntvect,double*v,double*v2),(cntvect,v,v2),"@12")X \
 	D( COI_Version      , (float*v, char*c, int i), (v,c,i)              ,"@12")
+# endif
 
 /*
 	Declare local functions to hook into the DLL
@@ -164,15 +208,17 @@ CONOPT_FNS(FN_PTR_HDR,SPACE)
 # undef FN_PTR_HDR
 # undef SPACE
 
-# undef INTINT
-# undef INTINT1
-# undef INTDOUBLE
-# undef INTDOUBLE1
+# ifndef ASC_CONOPT_API4
+#  undef INTINT
+#  undef INTINT1
+#  undef INTDOUBLE
+#  undef INTDOUBLE1
+# endif
 
 #endif
 
 /* either static or dlopened, this macro should now be defined */
-#ifndef COIDEF_Size
+#if !defined(ASC_CONOPT_API4) && !defined(COIDEF_Size)
 # error "Where is COIDEF_Size?"
 #endif
 
@@ -181,7 +227,11 @@ CONOPT_FNS(FN_PTR_HDR,SPACE)
 	Do we still need this?
 */
 struct conopt_data {
+#ifdef ASC_CONOPT_API4
+  coiHandle_t cntvect; /* CONOPT's model handle */
+#else
   int *cntvect; /* CONOPT's 'control vector' */
+#endif
 
   int n;                  /**< Number of columns. */
   int m;                  /**< Number of rows. */
@@ -222,6 +272,31 @@ typedef struct conopt_function_pointers *conopt_pointers;
 
 /* the symbols are exported because they are used in teh solvers, which are dlopened. */
 
+#ifdef ASC_CONOPT_API4
+
+ASC_DLLSPEC int COI_CALL asc_conopt_message( int SMSG, int DMSG, int NMSG
+		, char* MSGV[], void* USRMEM
+);
+
+ASC_DLLSPEC int COI_CALL asc_conopt_errmsg( int ROWNO, int COLNO, int POSNO
+		, const char* MSG, void* USRMEM
+);
+
+ASC_DLLSPEC int COI_CALL asc_conopt_status(int MODSTA, int SOLSTA
+		, int ITER, double OBJVAL, void* USRMEM
+);
+
+ASC_DLLSPEC int COI_CALL asc_conopt_solution( const double XVAL[], const double XMAR[]
+		, const int XBAS[], const int XSTA[], const double YVAL[], const double YMAR[]
+		, const int YBAS[], const int YSTA[], int N, int M, void* USRMEM
+);
+
+ASC_DLLSPEC int COI_CALL asc_conopt_progress( int LEN_INT, const int INT[]
+		, int LEN_RL, const double RL[], const double X[], void* USRMEM
+);
+
+#else
+
 ASC_DLLSPEC int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
 		,double* USRMEM, char* MSGV, int MSGLEN
 );
@@ -242,6 +317,8 @@ ASC_DLLSPEC int COI_CALL asc_conopt_solution( double* XVAL, double* XMAR, int* X
 ASC_DLLSPEC int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT, int* LEN_RL
 		, double* RL, double* X, double* USRMEM
 );
+
+#endif
 
 /* @} */
 

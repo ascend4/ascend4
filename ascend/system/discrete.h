@@ -112,7 +112,7 @@ extern struct dis_discrete *dis_create(SlvBackendToken instance,
  * @see dis_set_instanceF()
  */
 
-extern SlvBackendToken dis_instanceF(const struct dis_discrete *dis);
+ASC_DLLSPEC SlvBackendToken dis_instanceF(const struct dis_discrete *dis);
 /**<
  * Implementation function for dis_instance() (debug mode).
  * Do not call this function directly - use dis_instance() instead.
@@ -263,12 +263,12 @@ extern void dis_set_mindexF(struct dis_discrete *dis, int32 mindex);
  *  @see dis_set_sindexF()
  */
 
-extern int32 dis_sindexF(const struct dis_discrete *dis);
+ASC_DLLSPEC int32 dis_sindexF(const struct dis_discrete *dis);
 /**<
  *  Implementation function for dis_sindex() (debug mode).
  *  Do not call this function directly - use dis_sindex() instead.
  */
-extern void dis_set_sindexF(struct dis_discrete *dis, int32 sindex);
+ASC_DLLSPEC void dis_set_sindexF(struct dis_discrete *dis, int32 sindex);
 /**<
  *  Implementation function for dis_set_sindex() (debug mode).
  *  Do not call this function directly - use dis_set_sindex() instead.
@@ -517,4 +517,3 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
 /* @} */
 
 #endif /* ASC_DISCRETE_H */
-
