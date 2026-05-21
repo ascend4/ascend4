@@ -4915,11 +4915,9 @@ static int ExecuteLNK(struct Instance *inst, struct Statement *statement){
 		switch (def_inst->t) {
 		case model_type:
 			if(statement->v.lnk.key_type == 2) {/* in case the LINK entry has the 'ignore' key */
-				CONSOLE_DEBUG("Ignore declarative link");
 				ignoreDeclLinkEntry(inst,key,LINKStatVlist(statement));
 				gl_destroy(instances);
 			}else{
-				CONSOLE_DEBUG("Adding declarative link");
 				addLinkEntry(inst,key,instances,statement,1);
 			}
 			return 1;

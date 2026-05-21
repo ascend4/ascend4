@@ -4,6 +4,7 @@ from gi.repository import GObject
 import loading
 from preferences import *
 from observer import *
+from plotutils import COLOR_CYCLE, add_series_legend, finish_time_series_layout, group_series, group_ylabel, style_time_axis
 
 try:
 	import matplotlib.pyplot as plt
@@ -38,6 +39,7 @@ def _observed_values(integrator):
 class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def __init__(self,browser,integrator):
 		self.browser=browser
+		self.integrator_ref=integrator
 		ascpy.IntegratorReporterCxx.__init__(self,integrator)
 		self.autoplot_results = True
 		
@@ -51,6 +53,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.progress=self.browser.builder.get_object("integratorprogress")
 		self.solve_status = 1
 		self.cancelrequested = False
+		self.integration_succeeded = False
 		self.observed_rows = []
 
 	def _get_observed_instances(self):
@@ -62,7 +65,9 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def solve_thread(self):
 		try:
 			self.getIntegrator().solve()
+			self.integration_succeeded = True
 		except RuntimeError as e:
+			self.integration_succeeded = False
 			GObject.idle_add(self.report_error, e)
 
 		GObject.idle_add(self.close_output)
@@ -85,8 +90,13 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 
 	def finish(self):
 		self.window.destroy()
-		self.browser.sim.processVarStatus()
+		if self.integration_succeeded:
+			try:
+				self.getIntegrator().processVarStatus()
+			except Exception as e:
+				sys.stderr.write("\n\n\nIntegratorReporter.finish: status update error: %s: %s\n\n\n" % (e.__class__,str(e)))
 		self.browser.modelview.refreshtree()
+		self.browser.update_simulation_statusbar()
 		return False
 
 	def run(self):
@@ -146,14 +156,22 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 				_obs.do_add_row([_time] + [_v for _v in _vals])
 			self.browser.maintabs.set_current_page(_tab)
 			if self.autoplot_results and self.browser.prefs.getBoolPref("Integrator", "autoplotresults", True):
-				_plottable = [idx for idx, col in _obs.cols.items() if col.is_plottable()]
-				if len(_plottable) >= 2:
-					_obs.plot(x=_plottable[0], y=[_plottable[-1]])
+				GObject.idle_add(self.autoplot_observer, _obs)
 		except Exception as e:
 			sys.stderr.write("\n\n\nIntegratorReporter.close_output: error: %s: %s\n\n\n" % (e.__class__,str(e)))
 			self.solve_status = 1
 
 		self.cancelrequested = True
+		return False
+
+	def autoplot_observer(self, obs):
+		try:
+			_plottable = [idx for idx, col in obs.cols.items() if col.is_plottable()]
+			if len(_plottable) >= 2:
+				obs.plot(x=_plottable[0], y=_plottable[1:])
+		except Exception as e:
+			sys.stderr.write("\n\n\nIntegratorReporter.autoplot_observer: error: %s: %s\n\n\n" % (e.__class__,str(e)))
+			self.solve_status = 1
 		return False
 
 	def closeOutput(self):
@@ -191,6 +209,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 # no need to move solving to background task because there is no way to interrupt it
 class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 	def __init__(self,integrator,filep):
+		self.integrator_ref=integrator
 		self.filep=filep
 		self.numsteps=0
 		self.indepname="t"
@@ -248,23 +267,71 @@ class IntegratorReporterPlot(IntegratorReporterPython):
 		self.start = start
 		self.stop = stop
 		self.x = []
-		self.y = []
+		self.live_series = []
+		self.live_groups = []
+		self.live_axes = []
 		self.figure = None
-		self.ax = None
-		self.lines = None
+		self.lines = []
 		loading.load_matplotlib(alert=True)
 		IntegratorReporterPython.__init__(self, browser, integrator)
 		self.autoplot_results = False
 
 	def init_output(self):
 		IntegratorReporterPython.init_output(self)
-		# set up plot
-		self.figure, self.ax = plt.subplots()
-		self.lines, = self.ax.plot([], [], 'o')
-		# autoscale on unknown axis and known lims on the other
-		self.ax.set_xlim(self.start, self.stop)
-		self.ax.set_autoscaley_on(True)
-		self.ax.grid()
+
+		for index, inst in enumerate(self._get_observed_instances()):
+			if not inst.isReal():
+				continue
+			col = ObserverColumn(inst, index + 1, browser=self.browser)
+			self.live_series.append({
+				"index": index,
+				"column": col,
+				"values": [],
+				"line": None,
+			})
+
+		if len(self.live_series) == 0:
+			raise RuntimeError("Plot reporter requires at least one real-valued observed instance")
+
+		grouped, group_order = group_series(
+			self.live_series,
+			lambda series: series["column"].display_unit_name()
+		)
+		for group in group_order:
+			entries = grouped[group]
+			self.live_groups.append({
+				"series": entries,
+				"ylabel": group_ylabel(
+					entries,
+					lambda series: series["column"].display_unit_name(),
+					lambda series: series["column"].title,
+				),
+			})
+
+		self.figure, axes = plt.subplots(
+			len(self.live_groups),
+			1,
+			squeeze=False,
+			sharex=True,
+			figsize=(10.5, max(4.2, 1.75 * len(self.live_groups))),
+		)
+		self.live_axes = [ax[0] for ax in axes]
+		has_outside_legend = any(len(group["series"]) > 1 for group in self.live_groups)
+		for ax_index, (ax, group) in enumerate(zip(self.live_axes, self.live_groups)):
+			ax.set_xlim(self.start, self.stop)
+			ax.set_autoscaley_on(True)
+			ax.set_ylabel(group["ylabel"], labelpad=20)
+			style_time_axis(ax)
+			for series_index, series in enumerate(group["series"]):
+				color = COLOR_CYCLE[series_index % len(COLOR_CYCLE)]
+				line, = ax.plot([], [], "-", color=color, linewidth=1.6, label=series["column"].name)
+				series["line"] = line
+				self.lines.append(line)
+			leg = add_series_legend(ax, len(group["series"]))
+			if ax_index + 1 != len(self.live_axes):
+				plt.setp(ax.get_xticklabels(), visible=False)
+		self.live_axes[-1].set_xlabel("t")
+		finish_time_series_layout(self.figure, self.live_axes, has_outside_legend)
 		plt.ion()
 		plt.show()
 
@@ -284,11 +351,13 @@ class IntegratorReporterPlot(IntegratorReporterPython):
 
 	def update_status(self):
 		try:
-			self.lines.set_xdata(self.x)
-			self.lines.set_ydata(self.y)
-			# need both of these in order to rescale
-			self.ax.relim()
-			self.ax.autoscale_view()
+			for series in self.live_series:
+				series["line"].set_xdata(self.x)
+				series["line"].set_ydata(series["values"])
+			for ax in self.live_axes:
+				# need both of these in order to rescale
+				ax.relim()
+				ax.autoscale_view()
 			# we need to draw *and* flush
 			self.figure.canvas.draw()
 			self.figure.canvas.flush_events()
@@ -301,11 +370,10 @@ class IntegratorReporterPlot(IntegratorReporterPython):
 	def recordObservedValues(self):
 		try:
 			i = self.getIntegrator()
-			obs = [v for v in self._get_current_observed_values() if isinstance(v, (int, float)) and not isinstance(v, bool)]
+			obs = self._get_current_observed_values()
 			self.x.append(i.getCurrentTime())
-			if len(obs) == 0:
-				raise RuntimeError("Plot reporter requires at least one real-valued observed instance")
-			self.y.append(obs[0])
+			for series in self.live_series:
+				series["values"].append(obs[series["index"]])
 		except Exception as e:
 			print("ERROR record %s" % str(e))
 			self.solve_status = 0
