@@ -4,6 +4,7 @@
 #include <ascend/general/platform.h>
 #include <ascend/solver/solver.h>
 #include <ascend/linear/mtx.h>
+#include <ascend/system/decomp.h>
 
 #include <ascend/solver/conoptconfig.h>
 #ifdef ASC_WITH_CONOPT
@@ -149,6 +150,8 @@ struct slv9_system_structure {
   int32 cmslv2_next_structural_block;
   int32 cmslv2_last_structural_blocks;
   int32 cmslv2_pending_after_qrslv;
+  slv_decomp_partition_t cmslv2_structural;
+  int32 cmslv2_structural_valid;
   int32 cmslv2_scope_active;
   int32 cmslv2_scope_nrels;
   int32 cmslv2_scope_nvars;
