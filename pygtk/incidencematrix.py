@@ -159,6 +159,10 @@ class IncidenceMatrixWindow:
 			_row = int(y+0.5)
 
 			try:
+				if (_row < 0 or _col < 0
+						or _row >= self.data.shape[0]
+						or _col >= self.data.shape[1]):
+					return "[out of range]"
 				if self.data[_row, _col] == 0:
 					#print "nothing here"
 					return ""

@@ -65,7 +65,8 @@ enum cmslv_progress_expect {
 	CMSLV_PROGRESS_GENERAL_CMSLV2,
 	CMSLV_PROGRESS_SCHEDULER_CMSLV2,
 	CMSLV_PROGRESS_BOUNDARY_LOCAL_CMSLV2,
-	CMSLV_PROGRESS_BOUNDARY_LOCAL_COMPLETE_CMSLV2
+	CMSLV_PROGRESS_BOUNDARY_LOCAL_COMPLETE_CMSLV2,
+	CMSLV_PROGRESS_FLUIDBED_SWITCH_CMSLV2
 };
 
 static void cmslv_progress_begin(char *buffer, size_t cap){
@@ -277,7 +278,8 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 		|| progress_expect == CMSLV_PROGRESS_GENERAL_CMSLV2
 		|| progress_expect == CMSLV_PROGRESS_SCHEDULER_CMSLV2
 		|| progress_expect == CMSLV_PROGRESS_BOUNDARY_LOCAL_CMSLV2
-		|| progress_expect == CMSLV_PROGRESS_BOUNDARY_LOCAL_COMPLETE_CMSLV2;
+		|| progress_expect == CMSLV_PROGRESS_BOUNDARY_LOCAL_COMPLETE_CMSLV2
+		|| progress_expect == CMSLV_PROGRESS_FLUIDBED_SWITCH_CMSLV2;
 	int expect_boundary_progress = progress_expect == CMSLV_PROGRESS_BOUNDARY
 		|| progress_expect == CMSLV_PROGRESS_LINMASSBAL_CMSLV2;
 
@@ -329,7 +331,11 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 	/** Call on_load */
 	struct Name *name = CreateIdName(AddSymbol("on_load"));
 	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
+	if(progress_expect == CMSLV_PROGRESS_FLUIDBED_SWITCH_CMSLV2){
+		CU_ASSERT(pe == Proc_all_ok || pe == Proc_slvreq_unhooked);
+	}else{
+		CU_ASSERT(pe==Proc_all_ok);
+	}
 
 	/* assign solver */
 	const char *solvername = "CMSlv";
@@ -385,7 +391,8 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 	CU_ASSERT(status.ok);
 	if(expect_boundary_progress
 			|| progress_expect == CMSLV_PROGRESS_SCHEDULER_CMSLV2
-			|| progress_expect == CMSLV_PROGRESS_BOUNDARY_LOCAL_CMSLV2){
+			|| progress_expect == CMSLV_PROGRESS_BOUNDARY_LOCAL_CMSLV2
+			|| progress_expect == CMSLV_PROGRESS_FLUIDBED_SWITCH_CMSLV2){
 		CU_ASSERT_PTR_NOT_NULL(strstr(progress,"solver=CMSlv"));
 		if(expect_boundary_progress){
 			CU_ASSERT_PTR_NOT_NULL(strstr(progress,"event=decomp_assess"));
@@ -440,6 +447,17 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 					"n_subregions",2
 				));
 			}
+		}else if(progress_expect == CMSLV_PROGRESS_FLUIDBED_SWITCH_CMSLV2){
+			CU_ASSERT_PTR_NOT_NULL(strstr(progress,"cmslv2=1"));
+			CU_ASSERT_PTR_NOT_NULL(strstr(progress,"driver=cmslv2"));
+			CU_ASSERT_PTR_NOT_NULL(strstr(progress,"event=cmslv2_qrslv_solve"));
+			CU_ASSERT_PTR_NOT_NULL(strstr(progress,"mode=fallback"));
+			CU_ASSERT(cmslv_progress_event_field_at_least(
+				progress,"event=cmslv2_plan","qrslv_blocks",8
+			));
+			CU_ASSERT(cmslv_progress_event_field_at_least(
+				progress,"event=cmslv2_plan","lrslv_blocks",4
+			));
 		}else if(progress_expect == CMSLV_PROGRESS_SCHEDULER_CMSLV2){
 			const char *scheduler_sequence[] = {
 				"event=cmslv2_selector_consume phase=post_logic block=0",
@@ -612,7 +630,8 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 	system_free_reused_mem();
 
 	if(progress_expect != CMSLV_PROGRESS_BOUNDARY_LOCAL_CMSLV2
-			&& progress_expect != CMSLV_PROGRESS_BOUNDARY_LOCAL_COMPLETE_CMSLV2){
+			&& progress_expect != CMSLV_PROGRESS_BOUNDARY_LOCAL_COMPLETE_CMSLV2
+			&& progress_expect != CMSLV_PROGRESS_FLUIDBED_SWITCH_CMSLV2){
 		/* run 'self_test' method */
 		CONSOLE_DEBUG("Running self-tests");
 		name = CreateIdName(AddSymbol("self_test"));
@@ -725,6 +744,7 @@ static void test_qrslv_fallback_real_chain(void){
 	T(cmslv2_scheduler)\
 	T(cmslv2_boundary_local)\
 	T(cmslv2_boundary_local_complete)\
+	T(cmslv2_fluidbed_switch_crash)\
 	T(qrslv_fallback_real_chain)
 
 static void test_linmassbal(void){ test_cmslv("linmassbal","CONOPT",1); }
@@ -759,6 +779,12 @@ static void test_cmslv2_boundary_local_complete(void){
 	test_cmslv_mode(
 		"cmslv2_boundary_local_complete","CONOPT",
 		CMSLV_PROGRESS_BOUNDARY_LOCAL_COMPLETE_CMSLV2
+	);
+}
+static void test_cmslv2_fluidbed_switch_crash(void){
+	test_cmslv_mode(
+		"cmslv2_fluidbed_switch_crash","IPOPT",
+		CMSLV_PROGRESS_FLUIDBED_SWITCH_CMSLV2
 	);
 }
 

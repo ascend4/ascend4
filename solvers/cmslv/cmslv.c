@@ -4773,20 +4773,19 @@ void update_struct_info( slv9_system_t sys, slv_status_t *status){
  */
 static
 void update_real_status(slv_status_t *main, slv_status_t *slave, int32 niter){
-    slv_status_nlp_t *main_nlp = slv_status_nlp_rw(main);
-    const slv_status_nlp_t *slave_nlp = slv_status_nlp(slave);
-    if(main_nlp == NULL || slave_nlp == NULL){
-      return;
-    }
-    main->block.number_of = slave->block.number_of;
-    main_nlp->costsize = 1+slave->block.number_of;
-    main->block.residual = slave->block.residual;
-    main->block.current_size = slave->block.current_size;
-    main->block.current_block = slave->block.current_block;
-    if(niter ==1 ) {
-      main->block.iteration =  slave->block.iteration;
-    }
-    main->block.previous_total_size = slave->block.previous_total_size;
+  slv_status_nlp_t *main_nlp = slv_status_nlp_rw(main);
+  const slv_status_nlp_t *slave_nlp = slv_status_nlp(slave);
+  if(main_nlp == NULL || slave_nlp == NULL){
+    return;
+  }
+  main->block.number_of = slave->block.number_of;
+  main->block.residual = slave->block.residual;
+  main->block.current_size = slave->block.current_size;
+  main->block.current_block = slave->block.current_block;
+  if(niter ==1 ) {
+    main->block.iteration =  slave->block.iteration;
+  }
+  main->block.previous_total_size = slave->block.previous_total_size;
 }
 
 struct slv9_decomp_block_stats {
@@ -9441,6 +9440,9 @@ static
 void reset_cost(struct slv_block_cost *cost,int32 costsize){
   int32 ci;
 
+  if(cost == NULL || costsize <= 0) {
+    return;
+  }
   for( ci = 0; ci < costsize; ++ci ) {
     cost[ci].size = 0;
     cost[ci].iterations = 0;
@@ -9451,6 +9453,52 @@ void reset_cost(struct slv_block_cost *cost,int32 costsize){
     cost[ci].time = 0;
     cost[ci].resid = 0;
   }
+}
+
+static
+int32 slv9_ensure_cost_capacity(slv_status_t *status, int32 mincostsize){
+  slv_status_nlp_t *nlp = slv_status_nlp_rw(status);
+  struct slv_block_cost *new_cost;
+  int32 old_costsize;
+
+  if(nlp == NULL) {
+    return 0;
+  }
+  if(mincostsize <= 0) {
+    mincostsize = 1;
+  }
+  if(nlp->cost != NULL && nlp->costsize >= mincostsize) {
+    return 1;
+  }
+  old_costsize = nlp->costsize;
+  new_cost = create_zero_array(mincostsize,struct slv_block_cost);
+  if(new_cost == NULL) {
+    return 0;
+  }
+  if(nlp->cost != NULL && old_costsize > 0) {
+    mem_copy_cast(nlp->cost,new_cost,
+      MIN(old_costsize,mincostsize)*sizeof(struct slv_block_cost)
+    );
+    destroy_array(nlp->cost);
+  }
+  nlp->cost = new_cost;
+  nlp->costsize = mincostsize;
+  return 1;
+}
+
+static
+void slv9_reset_cost_array(slv_status_t *status, int32 costsize){
+  slv_status_nlp_t *nlp = slv_status_nlp_rw(status);
+  if(nlp == NULL) {
+    return;
+  }
+  if(nlp->cost != NULL) {
+    destroy_array(nlp->cost);
+    nlp->cost = NULL;
+  }
+  nlp->costsize = costsize;
+  nlp->cost = create_zero_array(nlp->costsize,struct slv_block_cost);
+  reset_cost(nlp->cost,nlp->costsize);
 }
 
 /*
@@ -9465,11 +9513,14 @@ void reset_cost(struct slv_block_cost *cost,int32 costsize){
  */
 static
 void update_cost(struct slv_block_cost *cost, slv_status_t *status,
-		int32 current_block, int32 previous_block
+		int32 current_block, int32 previous_block, int32 costsize
 ){
   const struct slv_block_cost *status_cost = slv_status_cost(status);
   int32 status_costsize = slv_status_costsize(status);
-  if(current_block >=0) {
+  if(cost == NULL || costsize <= 0) {
+    return;
+  }
+  if(current_block >= 0 && current_block < costsize) {
     cost[current_block].size = status->block.current_size;
     cost[current_block].iterations	= status->block.iteration;
     cost[current_block].funcs = status->block.funcs;
@@ -9479,6 +9530,7 @@ void update_cost(struct slv_block_cost *cost, slv_status_t *status,
     cost[current_block].time = status->block.cpu_elapsed;
     cost[current_block].resid = status->block.residual;
     if(previous_block != -1 && previous_block != current_block
+        && previous_block >= 0 && previous_block < costsize
         && status_cost != NULL && previous_block < status_costsize) {
       cost[previous_block].size	= status_cost[previous_block].size;
       cost[previous_block].iterations=status_cost[previous_block].iterations;
@@ -9866,24 +9918,14 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         slv_presolve(server);
         slv_get_status(server,&status);
         update_real_status(&(sys->s),&status,0);
-        if(sys->s.u.nlp.cost) {
-          destroy_array(sys->s.u.nlp.cost);
-        }
-        sys->s.u.nlp.cost =
-	          create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);
-        reset_cost(sys->s.u.nlp.cost,sys->s.u.nlp.costsize);
+        slv9_reset_cost_array(&(sys->s),1 + status.block.number_of);
       }else{
         slv_get_status(server,&status);
         update_struct_info(sys,&status);
         if(status.converged) {
           slv_presolve(server);
           update_real_status(&(sys->s),&status,0);
-          if(sys->s.u.nlp.cost) {
-            destroy_array(sys->s.u.nlp.cost);
-          }
-          sys->s.u.nlp.cost =
-	            create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);
-          reset_cost(sys->s.u.nlp.cost,sys->s.u.nlp.costsize);
+          slv9_reset_cost_array(&(sys->s),1 + status.block.number_of);
         }else{
           if(!status.ready_to_solve) {
             slv_resolve(server);
@@ -9916,12 +9958,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         );
         update_struct_info(sys,&status);
         update_real_status(&(sys->s),&status,sys->nliter);
-        if(sys->s.u.nlp.cost) {
-          destroy_array(sys->s.u.nlp.cost);
-        }
-        sys->s.u.nlp.cost =
-	            create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);
-        reset_cost(sys->s.u.nlp.cost,sys->s.u.nlp.costsize);
+        slv9_reset_cost_array(&(sys->s),1 + status.block.number_of);
 #if TEST_CONSISTENCY
         ID_and_storage_subregion_information(server,asys);
         MSG("New region, iteration = %d\n",sys->s.block.iteration);
@@ -9934,12 +9971,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
           slv9_apply_decomp_partition_policy(sys,"nl_represolve");
         slv_presolve(server);
         update_real_status(&(sys->s),&status,0);
-        if(sys->s.u.nlp.cost) {
-          destroy_array(sys->s.u.nlp.cost);
-        }
-        sys->s.u.nlp.cost =
-	            create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);
-        reset_cost(sys->s.u.nlp.cost,sys->s.u.nlp.costsize);
+        slv9_reset_cost_array(&(sys->s),1 + status.block.number_of);
       }
     }
     /*
@@ -9971,8 +10003,13 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       sys->s.converged = FALSE;
       sys->s.ready_to_solve = TRUE;
     }
+    slv9_ensure_cost_capacity(
+      &(sys->s),
+      1 + MAX(sys->s.block.current_block,previous_block)
+    );
     update_cost(sys->s.u.nlp.cost,&status,
-                sys->s.block.current_block,previous_block);
+                sys->s.block.current_block,previous_block,
+                sys->s.u.nlp.costsize);
     if(!sys->s.converged || some_boundaries_crossed(server,asys) ) {
       sys->s.converged = FALSE;
       sys->s.ready_to_solve = !sys->s.converged;

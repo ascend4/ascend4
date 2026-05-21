@@ -145,7 +145,70 @@ IncidenceMatrix::getIncidenceData(){
 	return data;
 }
 
+static struct rel_relation *decomp_solver_rel(slv_system_t sys, int local){
+	struct rel_relation **rels;
+	if(sys == NULL || local < 0
+			|| local >= slv_get_num_solvers_rels(sys)){
+		return NULL;
+	}
+	rels = slv_get_solvers_rel_list(sys);
+	return rels == NULL ? NULL : rels[local];
+}
+
+static struct rel_relation *decomp_solver_condrel(slv_system_t sys, int local){
+	struct rel_relation **rels;
+	if(sys == NULL || local < 0
+			|| local >= slv_get_num_solvers_condrels(sys)){
+		return NULL;
+	}
+	rels = slv_get_solvers_condrel_list(sys);
+	return rels == NULL ? NULL : rels[local];
+}
+
+static struct logrel_relation *decomp_solver_logrel(slv_system_t sys, int local){
+	struct logrel_relation **logrels;
+	if(sys == NULL || local < 0
+			|| local >= slv_get_num_solvers_logrels(sys)){
+		return NULL;
+	}
+	logrels = slv_get_solvers_logrel_list(sys);
+	return logrels == NULL ? NULL : logrels[local];
+}
+
+static struct logrel_relation *decomp_solver_condlogrel(slv_system_t sys,
+		int local
+){
+	struct logrel_relation **logrels;
+	if(sys == NULL || local < 0
+			|| local >= slv_get_num_solvers_condlogrels(sys)){
+		return NULL;
+	}
+	logrels = slv_get_solvers_condlogrel_list(sys);
+	return logrels == NULL ? NULL : logrels[local];
+}
+
+static struct var_variable *decomp_solver_var(slv_system_t sys, int local){
+	struct var_variable **vars;
+	if(sys == NULL || local < 0
+			|| local >= slv_get_num_solvers_vars(sys)){
+		return NULL;
+	}
+	vars = slv_get_solvers_var_list(sys);
+	return vars == NULL ? NULL : vars[local];
+}
+
+static struct dis_discrete *decomp_solver_dvar(slv_system_t sys, int local){
+	struct dis_discrete **dvars;
+	if(sys == NULL || local < 0
+			|| local >= slv_get_num_solvers_dvars(sys)){
+		return NULL;
+	}
+	dvars = slv_get_solvers_dvar_list(sys);
+	return dvars == NULL ? NULL : dvars[local];
+}
+
 static string decomp_rel_name(slv_system_t sys, struct rel_relation *rel){
+	if(sys == NULL || rel == NULL)return "?";
 	char *n = rel_make_name(sys,rel);
 	if(n==NULL)return "?";
 	string s = n;
@@ -154,6 +217,7 @@ static string decomp_rel_name(slv_system_t sys, struct rel_relation *rel){
 }
 
 static string decomp_logrel_name(slv_system_t sys, struct logrel_relation *logrel){
+	if(sys == NULL || logrel == NULL)return "?";
 	char *n = logrel_make_name(sys,logrel);
 	if(n==NULL)return "?";
 	string s = n;
@@ -162,6 +226,7 @@ static string decomp_logrel_name(slv_system_t sys, struct logrel_relation *logre
 }
 
 static string decomp_var_name(slv_system_t sys, struct var_variable *var){
+	if(sys == NULL || var == NULL)return "?";
 	char *n = var_make_name(sys,var);
 	if(n==NULL)return "?";
 	string s = n;
@@ -170,6 +235,7 @@ static string decomp_var_name(slv_system_t sys, struct var_variable *var){
 }
 
 static string decomp_dvar_name(slv_system_t sys, struct dis_discrete *dvar){
+	if(sys == NULL || dvar == NULL)return "?";
 	char *n = dis_make_name(sys,dvar);
 	if(n==NULL)return "?";
 	string s = n;
@@ -178,6 +244,7 @@ static string decomp_dvar_name(slv_system_t sys, struct dis_discrete *dvar){
 }
 
 static string decomp_rel_text(slv_system_t sys, struct rel_relation *rel){
+	if(sys == NULL || rel == NULL)return "?";
 	char *s = relman_make_string_infix(sys,rel);
 	if(s==NULL)return "?";
 	string text = s;
@@ -186,6 +253,7 @@ static string decomp_rel_text(slv_system_t sys, struct rel_relation *rel){
 }
 
 static string decomp_logrel_text(struct Instance *root, struct logrel_relation *logrel){
+	if(logrel == NULL)return "?";
 	char *s = WriteLogRelToString(
 		(struct Instance *)logrel_instance(logrel),
 		root
@@ -211,16 +279,18 @@ static string decomp_col_kind_text(slv_system_t sys,
 ){
 	switch(kind){
 	case slv_decomp_col_var:{
-		struct var_variable **vars = slv_get_solvers_var_list(sys);
-		uint32 flags = var_flags(vars[local]);
+		struct var_variable *var = decomp_solver_var(sys,local);
+		if(var == NULL) return "solver variable";
+		uint32 flags = var_flags(var);
 		if(flags & VAR_BINARY) return "binary solver variable";
 		if(flags & VAR_INTEGER) return "integer solver variable";
 		if(flags & VAR_SEMICONT) return "semicontinuous solver variable";
 		return "real solver variable";
 	}
 	case slv_decomp_col_dvar:{
-		struct dis_discrete **dvars = slv_get_solvers_dvar_list(sys);
-		switch(dis_kind(dvars[local])){
+		struct dis_discrete *dvar = decomp_solver_dvar(sys,local);
+		if(dvar == NULL) return "discrete variable";
+		switch(dis_kind(dvar)){
 		case e_dis_boolean_t: return "boolean discrete variable";
 		case e_dis_integer_t: return "integer discrete variable";
 		case e_dis_symbol_t: return "symbol discrete variable";
@@ -240,8 +310,8 @@ static IncidencePointType decomp_point_type(
 	slv_decomp_row_kind_t rowkind = slv_decomp_row_kind(&decomp,orgrow,&local);
 	slv_decomp_col_kind_t colkind = slv_decomp_col_kind(&decomp,orgcol,&local);
 	if(colkind == slv_decomp_col_var){
-		struct var_variable **vars = slv_get_solvers_var_list(sys);
-		uint32 flags = var_flags(vars[local]);
+		struct var_variable *var = decomp_solver_var(sys,local);
+		uint32 flags = var == NULL ? 0 : var_flags(var);
 		if(rowkind == slv_decomp_row_logrel
 				|| rowkind == slv_decomp_row_condlogrel){
 			return IM_DECOMP_BOUNDARY;
@@ -317,8 +387,8 @@ IncidenceMatrix::buildDecompPlotData(bool active){
 			int local;
 			switch(slv_decomp_col_kind(&decomp,decomp.col_org[c],&local)){
 			case slv_decomp_col_var:{
-				struct var_variable **vars = slv_get_solvers_var_list(sys);
-				uint32 flags = var_flags(vars[local]);
+				struct var_variable *var = decomp_solver_var(sys,local);
+				uint32 flags = var == NULL ? 0 : var_flags(var);
 				bs.vars++;
 				if(flags & VAR_INTEGER) bs.intvars++;
 				if(flags & VAR_BINARY) bs.binvars++;
@@ -326,8 +396,9 @@ IncidenceMatrix::buildDecompPlotData(bool active){
 				break;
 			}
 			case slv_decomp_col_dvar:{
-				struct dis_discrete **dvars = slv_get_solvers_dvar_list(sys);
-				enum discrete_kind kind = dis_kind(dvars[local]);
+				struct dis_discrete *dvar = decomp_solver_dvar(sys,local);
+				enum discrete_kind kind = dvar == NULL
+					? e_dis_error_t : dis_kind(dvar);
 				bs.dvars++;
 				if(kind == e_dis_boolean_t) bs.booldvars++;
 				else if(kind == e_dis_integer_t) bs.intdvars++;
@@ -547,13 +618,17 @@ IncidenceMatrix::getDecompRowLabel(const int &row){
 	int orgrow = decomp.row_org[row];
 	switch(slv_decomp_row_kind(&decomp,orgrow,&local)){
 	case slv_decomp_row_rel:
-		return decomp_rel_name(sim.getSystem(),slv_get_solvers_rel_list(sim.getSystem())[local]);
+		return decomp_rel_name(sim.getSystem(),
+			decomp_solver_rel(sim.getSystem(),local));
 	case slv_decomp_row_condrel:
-		return decomp_rel_name(sim.getSystem(),slv_get_solvers_condrel_list(sim.getSystem())[local]);
+		return decomp_rel_name(sim.getSystem(),
+			decomp_solver_condrel(sim.getSystem(),local));
 	case slv_decomp_row_logrel:
-		return decomp_logrel_name(sim.getSystem(),slv_get_solvers_logrel_list(sim.getSystem())[local]);
+		return decomp_logrel_name(sim.getSystem(),
+			decomp_solver_logrel(sim.getSystem(),local));
 	case slv_decomp_row_condlogrel:
-		return decomp_logrel_name(sim.getSystem(),slv_get_solvers_condlogrel_list(sim.getSystem())[local]);
+		return decomp_logrel_name(sim.getSystem(),
+			decomp_solver_condlogrel(sim.getSystem(),local));
 	default:
 		return "?";
 	}
@@ -567,9 +642,11 @@ IncidenceMatrix::getDecompColLabel(const int &col){
 	int orgcol = decomp.col_org[col];
 	switch(slv_decomp_col_kind(&decomp,orgcol,&local)){
 	case slv_decomp_col_var:
-		return decomp_var_name(sim.getSystem(),slv_get_solvers_var_list(sim.getSystem())[local]);
+		return decomp_var_name(sim.getSystem(),
+			decomp_solver_var(sim.getSystem(),local));
 	case slv_decomp_col_dvar:
-		return decomp_dvar_name(sim.getSystem(),slv_get_solvers_dvar_list(sim.getSystem())[local]);
+		return decomp_dvar_name(sim.getSystem(),
+			decomp_solver_dvar(sim.getSystem(),local));
 	default:
 		return "?";
 	}
@@ -632,20 +709,20 @@ IncidenceMatrix::getDecompBlockReportCurrent(const int &block){
 		ss << "    [" << r << "] " << decomp_row_kind_text(kind) << " ";
 		switch(kind){
 		case slv_decomp_row_rel:
-			ss << decomp_rel_name(sys,slv_get_solvers_rel_list(sys)[local]) << ": ";
-			ss << decomp_rel_text(sys,slv_get_solvers_rel_list(sys)[local]);
+			ss << decomp_rel_name(sys,decomp_solver_rel(sys,local)) << ": ";
+			ss << decomp_rel_text(sys,decomp_solver_rel(sys,local));
 			break;
 		case slv_decomp_row_condrel:
-			ss << decomp_rel_name(sys,slv_get_solvers_condrel_list(sys)[local]) << ": ";
-			ss << decomp_rel_text(sys,slv_get_solvers_condrel_list(sys)[local]);
+			ss << decomp_rel_name(sys,decomp_solver_condrel(sys,local)) << ": ";
+			ss << decomp_rel_text(sys,decomp_solver_condrel(sys,local));
 			break;
 		case slv_decomp_row_logrel:
-			ss << decomp_logrel_name(sys,slv_get_solvers_logrel_list(sys)[local]) << ": ";
-			ss << decomp_logrel_text(root,slv_get_solvers_logrel_list(sys)[local]);
+			ss << decomp_logrel_name(sys,decomp_solver_logrel(sys,local)) << ": ";
+			ss << decomp_logrel_text(root,decomp_solver_logrel(sys,local));
 			break;
 		case slv_decomp_row_condlogrel:
-			ss << decomp_logrel_name(sys,slv_get_solvers_condlogrel_list(sys)[local]) << ": ";
-			ss << decomp_logrel_text(root,slv_get_solvers_condlogrel_list(sys)[local]);
+			ss << decomp_logrel_name(sys,decomp_solver_condlogrel(sys,local)) << ": ";
+			ss << decomp_logrel_text(root,decomp_solver_condlogrel(sys,local));
 			break;
 		default:
 			ss << "?";
@@ -663,17 +740,21 @@ IncidenceMatrix::getDecompBlockReportCurrent(const int &block){
 			<< " ";
 		switch(kind){
 		case slv_decomp_col_var:{
-			struct var_variable *var = slv_get_solvers_var_list(sys)[local];
+			struct var_variable *var = decomp_solver_var(sys,local);
 			ss << decomp_var_name(sys,var);
-			ss << " = " << var_value(var)
-				<< (var_fixed(var) ? " (fixed)" : " (free)");
+			if(var != NULL){
+				ss << " = " << var_value(var)
+					<< (var_fixed(var) ? " (fixed)" : " (free)");
+			}
 			break;
 		}
 		case slv_decomp_col_dvar:{
-			struct dis_discrete *dvar = slv_get_solvers_dvar_list(sys)[local];
+			struct dis_discrete *dvar = decomp_solver_dvar(sys,local);
 			ss << decomp_dvar_name(sys,dvar);
-			ss << " = " << dis_value(dvar)
-				<< (dis_fixed(dvar) ? " (fixed)" : " (free)");
+			if(dvar != NULL){
+				ss << " = " << dis_value(dvar)
+					<< (dis_fixed(dvar) ? " (fixed)" : " (free)");
+			}
 			break;
 		}
 		default:
@@ -715,16 +796,20 @@ IncidenceMatrix::getDecompReportCurrent(){
 				ss << "  [" << r << "] " << decomp_row_kind_text(kind) << " ";
 				switch(kind){
 				case slv_decomp_row_rel:
-					ss << decomp_rel_name(sim.getSystem(),slv_get_solvers_rel_list(sim.getSystem())[local]);
+					ss << decomp_rel_name(sim.getSystem(),
+						decomp_solver_rel(sim.getSystem(),local));
 					break;
 				case slv_decomp_row_condrel:
-					ss << decomp_rel_name(sim.getSystem(),slv_get_solvers_condrel_list(sim.getSystem())[local]);
+					ss << decomp_rel_name(sim.getSystem(),
+						decomp_solver_condrel(sim.getSystem(),local));
 					break;
 				case slv_decomp_row_logrel:
-					ss << decomp_logrel_name(sim.getSystem(),slv_get_solvers_logrel_list(sim.getSystem())[local]);
+					ss << decomp_logrel_name(sim.getSystem(),
+						decomp_solver_logrel(sim.getSystem(),local));
 					break;
 				case slv_decomp_row_condlogrel:
-					ss << decomp_logrel_name(sim.getSystem(),slv_get_solvers_condlogrel_list(sim.getSystem())[local]);
+					ss << decomp_logrel_name(sim.getSystem(),
+						decomp_solver_condlogrel(sim.getSystem(),local));
 					break;
 				default:
 					ss << "?";
@@ -745,10 +830,12 @@ IncidenceMatrix::getDecompReportCurrent(){
 					<< " ";
 				switch(kind){
 				case slv_decomp_col_var:
-					ss << decomp_var_name(sim.getSystem(),slv_get_solvers_var_list(sim.getSystem())[local]);
+					ss << decomp_var_name(sim.getSystem(),
+						decomp_solver_var(sim.getSystem(),local));
 					break;
 				case slv_decomp_col_dvar:
-					ss << decomp_dvar_name(sim.getSystem(),slv_get_solvers_dvar_list(sim.getSystem())[local]);
+					ss << decomp_dvar_name(sim.getSystem(),
+						decomp_solver_dvar(sim.getSystem(),local));
 					break;
 				default:
 					ss << "?";
