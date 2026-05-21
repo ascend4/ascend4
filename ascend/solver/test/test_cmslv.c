@@ -745,6 +745,7 @@ static void test_qrslv_fallback_real_chain(void){
 	T(cmslv2_boundary_local)\
 	T(cmslv2_boundary_local_complete)\
 	T(cmslv2_fluidbed_switch_crash)\
+	T(cmslv2_resolve_converged_noop)\
 	T(qrslv_fallback_real_chain)
 
 static void test_linmassbal(void){ test_cmslv("linmassbal","CONOPT",1); }
@@ -786,6 +787,105 @@ static void test_cmslv2_fluidbed_switch_crash(void){
 		"cmslv2_fluidbed_switch_crash","IPOPT",
 		CMSLV_PROGRESS_FLUIDBED_SWITCH_CMSLV2
 	);
+}
+
+static void test_cmslv2_resolve_converged_noop(void){
+	struct module_t *m;
+	struct Instance *siminst = NULL;
+	struct Instance *root;
+	struct Name *name;
+	enum Proc_enum pe;
+	slv_system_t sys = NULL;
+	int status;
+	int cmslv_index;
+	slv_status_t solver_status;
+	int first_iteration;
+	int first_block_iteration;
+	int first_current_block;
+	char progress[4096];
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(
+		ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV
+		"solvers/lrslv" OSPATH_DIV "solvers/cmslv" OSPATH_DIV
+		"solvers/ipopt"
+	));
+
+	if(cmslv_load_required_package("qrslv")
+		|| cmslv_load_required_package("lrslv")
+		|| cmslv_load_required_package("cmslv")
+		|| cmslv_load_optional_optimizer("IPOPT")
+	){
+		Asc_CompilerDestroy();
+		return;
+	}
+	cmslv_index = slv_lookup_client("CMSlv");
+	CU_ASSERT_FATAL(cmslv_index != -1);
+
+	m = Asc_OpenModule(
+		"models/test/cmslv/cmslv2_fluidbed_switch_crash.a4c",&status
+	);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(m);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(
+		FindType(AddSymbol("cmslv2_fluidbed_switch_crash")) != NULL
+	);
+
+	siminst = SimsCreateInstance(
+		AddSymbol("cmslv2_fluidbed_switch_crash"), AddSymbol("sim1"),
+		e_normal, NULL
+	);
+	CU_ASSERT_FATAL(siminst != NULL);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_FATAL(root != NULL);
+
+	name = CreateIdName(AddSymbol("on_load"));
+	pe = Initialize(root,name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL);
+	CU_ASSERT_FATAL(pe == Proc_all_ok || pe == Proc_slvreq_unhooked);
+
+	sys = system_build(root);
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,cmslv_index));
+	CU_ASSERT_FATAL(0 == cmslv_set_char_param(sys,"optsolvers","IPOPT"));
+	CU_ASSERT_FATAL(0 == cmslv_set_bool_param(sys,"cmslv2",1));
+
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	slv_get_status(sys,&solver_status);
+	CU_ASSERT_FATAL(solver_status.ok);
+	CU_ASSERT_FATAL(solver_status.ready_to_solve);
+
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+	slv_get_status(sys,&solver_status);
+	CU_ASSERT_FATAL(solver_status.ok);
+	CU_ASSERT_FATAL(solver_status.converged);
+	CU_ASSERT_FATAL(!solver_status.ready_to_solve);
+
+	first_iteration = solver_status.iteration;
+	first_block_iteration = solver_status.block.iteration;
+	first_current_block = solver_status.block.current_block;
+
+	cmslv_progress_begin(progress,sizeof(progress));
+	slv_set_progress_callback(cmslv_capture_progress_callback,NULL);
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+	slv_clear_progress_callback();
+	cmslv_progress_end();
+
+	slv_get_status(sys,&solver_status);
+	CU_ASSERT(solver_status.ok);
+	CU_ASSERT(solver_status.converged);
+	CU_ASSERT(!solver_status.ready_to_solve);
+	CU_ASSERT_EQUAL(solver_status.iteration,first_iteration);
+	CU_ASSERT_EQUAL(solver_status.block.iteration,first_block_iteration);
+	CU_ASSERT_EQUAL(solver_status.block.current_block,first_current_block);
+	CU_ASSERT_STRING_EQUAL(progress,"");
+
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+	solver_destroy_engines();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
 }
 
 REGISTER_TESTS_SIMPLE(solver_cmslv, TESTS);
