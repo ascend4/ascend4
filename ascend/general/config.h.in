@@ -151,6 +151,11 @@ typedef unsigned long long asc_intptr_t;
 @ASC_WITH_CMSLV@
 
 /*
+	Whether the CMSlv2 solver module was built.
+*/
+@ASC_WITH_CMSLV2@
+
+/*
 	Whether Graphviz support is enabled.
 */
 @WITH_GRAPHVIZ@
