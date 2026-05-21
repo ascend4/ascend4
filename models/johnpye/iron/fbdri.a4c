@@ -25,6 +25,17 @@ MODEL fbdri_batch;
 	steps "reduction reaction steps" IS_A set OF integer_constant;
 	steps :== [1..3];
 
+	geldart_modes "Geldart A/B bubble-correlation selector states" IS_A set OF symbol_constant;
+	ub_modes "bubble-velocity selector states" IS_A set OF symbol_constant;
+	delta_modes "bubble-fraction selector states" IS_A set OF symbol_constant;
+	geldart_modes :== ['geldart_a','geldart_b'];
+	ub_modes :== ['dh','correlation'];
+	delta_modes :== ['slow','intermediate','fast','vigorous'];
+
+	geldart_mode IS_A selector OF geldart_modes DEFAULT 'geldart_b';
+	ub_mode IS_A selector OF ub_modes DEFAULT 'dh';
+	delta_mode IS_A selector OF delta_modes DEFAULT 'vigorous';
+
 	t "time" IS_A time;
 	INDEPENDENT t;
 
@@ -38,6 +49,8 @@ MODEL fbdri_batch;
 	F_feed "gas feed molar rate" IS_A molar_rate;
 	F_bubble "molar flow assigned to bubble throughflow" IS_A molar_rate;
 	F_emulsion "molar flow assigned to emulsion minimum-fluidisation throughflow" IS_A molar_rate;
+	rho_g "gas density at bed conditions" IS_A mass_density;
+	MW_H2, MW_H2O, MW_inert, MW_gas IS_A molar_mass;
 
 	d_t "reactor internal diameter" IS_A distance;
 	A_bed "reactor cross-sectional area" IS_A area;
@@ -57,9 +70,21 @@ MODEL fbdri_batch;
 
 	d_b "mean bubble diameter" IS_A distance;
 	u_br "isolated bubble rise velocity" IS_A speed;
-	u_b "bubble rise velocity" IS_A speed;
+	u_b "selected bubble rise velocity" IS_A speed;
+	u_b_dh "Davidson-Harrison bubble rise velocity" IS_A speed;
+	u_b_geldart_a "Werther-Hilligardt/Kunii Geldart A bubble velocity" IS_A speed;
+	u_b_geldart_b "Werther-Hilligardt/Kunii Geldart B bubble velocity" IS_A speed;
+	u_b_correlation "selected Geldart bubble rise velocity correlation" IS_A speed;
 	u_emf "interstitial emulsion velocity at minimum fluidisation" IS_A speed;
+	bubble_regime_ratio "u_b / (u_mf/eps_mf)" IS_A factor;
+	rho_geldart_ab_boundary "Geldart A/B boundary value of rho_p - rho_g" IS_A mass_density;
 	delta "bubble fraction" IS_A factor;
+	delta_slow "eq. 7 slow-bubble fraction" IS_A factor;
+	delta_intermediate_low "eq. 8 lower intermediate fraction" IS_A factor;
+	delta_intermediate "eq. 8 interpolation between lower and upper intermediate limits" IS_A factor;
+	delta_fast "eq. 9 fast-bubble fraction" IS_A factor;
+	delta_vigorous "eq. 10 vigorous-bubbling approximation" IS_A factor;
+	u_ratio_vigorous_min "u/u_mf threshold for applying eq. 10 approximation" IS_A factor;
 	gamma_b "solid volume in bubbles per bubble volume" IS_A factor;
 	gamma_c "solid volume in cloud/wake per bubble volume" IS_A factor;
 	gamma_e "solid volume in emulsion per bubble volume" IS_A factor;
@@ -68,6 +93,11 @@ MODEL fbdri_batch;
 	tr IS_A diffusion_h2o_h2_ar;
 	K_bc "bubble-cloud gas interchange coefficient" IS_A frequency;
 	K_ce "cloud-emulsion gas interchange coefficient" IS_A frequency;
+	u_b_use_geldart_a "select Geldart A bubble rise velocity correlation" IS_A boolean_var;
+	u_b_use_correlation "selected bubble correlation is no slower than eq. 4" IS_A boolean_var;
+	delta_use_slow "select eq. 7 slow-bubble fraction" IS_A boolean_var;
+	delta_use_intermediate_or_slow "select eq. 7 or eq. 8 bubble fraction" IS_A boolean_var;
+	delta_use_vigorous "select eq. 10 instead of eq. 9 in the fast-bubble regime" IS_A boolean_var;
 
 	m_sample_init, m_sample IS_A mass;
 	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
@@ -113,6 +143,8 @@ MODEL fbdri_batch;
 
 	(* Ideal-gas and feed conversion. *)
 	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+	MWgas_eq: MW_gas = y_H2_in * MW_H2 + y_H2O_in * MW_H2O + y_inert_in * MW_inert;
+	rhog_eq: rho_g = c_tot * MW_gas;
 	trT_eq: tr.T = T;
 	trp_eq: tr.p = p;
 	Dab_eq: D_AB = tr.D_H2O_H2;
@@ -121,12 +153,95 @@ MODEL fbdri_batch;
 	u_eq: u = F_feed / (c_tot * A_bed);
 	u_ratio_eq: u_ratio_mf = u / u_mf;
 
-	(* Simple K&L hydrodynamic closure using a supplied mean bubble diameter. *)
+	(* K&L hydrodynamic closure using a supplied effective mean bubble diameter.
+	   Their 1990 reactor paper treats d_b as the key bed-contacting input; the
+	   worked example assumes a limiting fine-particle value rather than deriving
+	   d_b inside the reactor model. *)
 	bed_mf_height_eq: L_mf = m_sample / (rho_bulk_bed * A_bed);
 	ubr_eq: u_br = 0.711 * (1 {EARTH_G} * d_b)^0.5;
-	ub_eq: u_b = u - u_mf + u_br;
+	ubdh_eq: u_b_dh = u - u_mf + u_br;
+	ubgeldarta_eq:
+		u_b_geldart_a =
+			1.55
+			* ((u - u_mf) + 14.1 {1/s} * (d_b + 0.005 {m}))
+			* (d_t / 1 {m})^0.32
+			+ u_br;
+	ubgeldartb_eq:
+		u_b_geldart_b =
+			1.6
+			* ((u - u_mf) + 1.13 {m/s} * (d_b / 1 {m})^0.5)
+			* (d_t / 1 {m})^1.35
+			+ u_br;
+	geldart_boundary_eq:
+		rho_geldart_ab_boundary =
+			22.3219 {g/cm^3} * (d_p / 1 {um})^(-0.668506);
+
+	CONDITIONAL
+		geldart_a_selected: rho_p - rho_g < rho_geldart_ab_boundary;
+		u_b_correlation_at_least_dh: u_b_correlation >= u_b_dh;
+		delta_slow_selected: bubble_regime_ratio < 1;
+		delta_intermediate_or_slow_selected: bubble_regime_ratio < 5;
+		delta_vigorous_selected: u_ratio_mf >= u_ratio_vigorous_min;
+	END CONDITIONAL;
+
+	u_b_use_geldart_a == SATISFIED(geldart_a_selected, 1e-3 {kg/m^3});
+	u_b_use_correlation == SATISFIED(u_b_correlation_at_least_dh, 1e-6 {m/s});
+	delta_use_slow == SATISFIED(delta_slow_selected, 1e-6);
+	delta_use_intermediate_or_slow == SATISFIED(delta_intermediate_or_slow_selected, 1e-6);
+	delta_use_vigorous == SATISFIED(delta_vigorous_selected, 1e-6);
+
+	WHEN(geldart_mode)
+		CASE 'geldart_a':
+			u_b_corr_active_a: u_b_correlation = u_b_geldart_a;
+			SWITCH TO 'geldart_b' IF NOT u_b_use_geldart_a;
+		CASE 'geldart_b':
+			u_b_corr_active_b: u_b_correlation = u_b_geldart_b;
+			SWITCH TO 'geldart_a' IF u_b_use_geldart_a;
+	END WHEN;
+
+	WHEN(ub_mode)
+		CASE 'dh':
+			u_b_active_dh: u_b = u_b_dh;
+			SWITCH TO 'correlation' IF u_b_use_correlation;
+		CASE 'correlation':
+			u_b_active_correlation: u_b = u_b_correlation;
+			SWITCH TO 'dh' IF NOT u_b_use_correlation;
+	END WHEN;
+
 	uemf_eq: u_emf = u_mf / eps_mf;
-	delta_eq: delta = u / u_b;
+	bubble_regime_ratio_eq: bubble_regime_ratio = u_b / u_emf;
+	delta_slow_eq: delta_slow = (u - u_mf) / (u_b + 2 * u_mf);
+	delta_intermediate_low_eq: delta_intermediate_low = (u - u_mf) / (u_b + u_mf);
+	delta_fast_eq: delta_fast = (u - u_mf) / u_b;
+	delta_intermediate_eq:
+		delta_intermediate =
+			delta_intermediate_low
+			+ (bubble_regime_ratio - 1) / 4 * (delta_fast - delta_intermediate_low);
+	delta_vigorous_eq: delta_vigorous = u / u_b;
+
+	WHEN(delta_mode)
+		CASE 'slow':
+			delta_active_slow: delta = delta_slow;
+			SWITCH TO 'intermediate' IF NOT delta_use_slow AND delta_use_intermediate_or_slow;
+			SWITCH TO 'fast' IF NOT delta_use_intermediate_or_slow AND NOT delta_use_vigorous;
+			SWITCH TO 'vigorous' IF NOT delta_use_intermediate_or_slow AND delta_use_vigorous;
+		CASE 'intermediate':
+			delta_active_intermediate: delta = delta_intermediate;
+			SWITCH TO 'slow' IF delta_use_slow;
+			SWITCH TO 'fast' IF NOT delta_use_intermediate_or_slow AND NOT delta_use_vigorous;
+			SWITCH TO 'vigorous' IF NOT delta_use_intermediate_or_slow AND delta_use_vigorous;
+		CASE 'fast':
+			delta_active_fast: delta = delta_fast;
+			SWITCH TO 'slow' IF delta_use_slow;
+			SWITCH TO 'intermediate' IF NOT delta_use_slow AND delta_use_intermediate_or_slow;
+			SWITCH TO 'vigorous' IF NOT delta_use_intermediate_or_slow AND delta_use_vigorous;
+		CASE 'vigorous':
+			delta_active_vigorous: delta = delta_vigorous;
+			SWITCH TO 'slow' IF delta_use_slow;
+			SWITCH TO 'intermediate' IF NOT delta_use_slow AND delta_use_intermediate_or_slow;
+			SWITCH TO 'fast' IF NOT delta_use_intermediate_or_slow AND NOT delta_use_vigorous;
+	END WHEN;
+
 	expansion_eq: 1 - eps = (1 - delta) * (1 - eps_mf);
 	bed_height_eq: L_f = L_mf * (1 - eps_mf) / (1 - eps);
 	vbed_eq: V_bed = A_bed * L_f;
@@ -259,6 +374,9 @@ METHODS
 		FIX Vdot_feed_stp := 2 {L/min};
 		FIX y_H2_in := 1.0;
 		FIX y_H2O_in := 0.0;
+		FIX MW_H2 := 2.01588 {g/g_mole};
+		FIX MW_H2O := 18.01528 {g/g_mole};
+		FIX MW_inert := 28.0134 {g/g_mole};
 
 		FIX d_t := 20 {mm};
 		FIX m_sample_init := 30 {g};
@@ -268,6 +386,7 @@ METHODS
 		FIX eps_mf := 0.55;
 		FIX u_mf := 6 {mm/s};
 		FIX d_b := 8 {mm};
+		FIX u_ratio_vigorous_min := 10;
 		FIX f_wake := 0.05;
 		D_AB := 7 {cm^2/s};
 		tr.D_H2O_H2 := 7 {cm^2/s};
@@ -317,8 +436,24 @@ METHODS
 		V_bubble := 8e-6 {m^3};
 		u_br := 0.28 {m/s};
 		u_b := 0.52 {m/s};
+		u_b_dh := 0.52 {m/s};
+		u_b_geldart_a := 0.8 {m/s};
+		u_b_geldart_b := 0.3 {m/s};
+		u_b_correlation := 0.3 {m/s};
 		u_emf := 0.11 {m/s};
+		bubble_regime_ratio := 5;
+		rho_geldart_ab_boundary := 1 {g/cm^3};
 		delta := 0.5;
+		delta_slow := 0.4;
+		delta_intermediate_low := 0.4;
+		delta_intermediate := 0.4;
+		delta_fast := 0.4;
+		delta_vigorous := 0.5;
+		u_b_use_geldart_a := FALSE;
+		u_b_use_correlation := FALSE;
+		delta_use_slow := FALSE;
+		delta_use_intermediate_or_slow := FALSE;
+		delta_use_vigorous := TRUE;
 		gamma_b := 0.005;
 		gamma_c := 0.10;
 		gamma_e := 0.12;
@@ -457,6 +592,7 @@ METHODS
 
 	METHOD observe_cli_default;
 		OBSERVE reduction_degree, m_sample,
+			geldart_mode, ub_mode, delta_mode,
 			y_H2_b, y_H2_c, y_H2_e,
 			y_H2O_b, y_H2O_c, y_H2O_e,
 			N_rxn_H2_total, N_rxn_H2_c, N_rxn_H2_e,
