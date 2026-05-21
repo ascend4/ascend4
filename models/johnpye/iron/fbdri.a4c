@@ -1,0 +1,484 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/iron/tga.a4c";
+
+(*
+	First-pass dynamic batch fluidised-bed direct-reduction model.
+
+	Scope:
+	- batch solids, no particle inlet/outlet;
+	- one shared, well-mixed particle state for the whole bed;
+	- quasi-steady bubble/cloud/emulsion gas compositions;
+	- K&L-style bubble/cloud and cloud/emulsion gas exchange;
+	- three Fe-O-H reduction steps and equilibrium-ratio fits from tgadyn.
+
+	The shared particle state is intentional. Cloud solids are treated as being
+	rapidly renewed from the emulsion by bubble passage, so cloud and emulsion
+	reaction rates are evaluated at different gas compositions but act on the
+	same bulk solid composition. The diagnostic solid_exchange_rate_min = u_b/L_f
+	is the lower-bound cloud renewal scale implied by bubble transit.
+*)
+
+MODEL fbdri_batch;
+	steps "reduction reaction steps" IS_A set OF integer_constant;
+	steps :== [1..3];
+
+	t "time" IS_A time;
+	INDEPENDENT t;
+
+	(* Reactor, gas feed, and bed operating conditions. *)
+	T IS_A temperature;
+	p IS_A pressure;
+	p_stp IS_A pressure;
+	T_stp IS_A temperature;
+	c_tot "ideal-gas molar density at bed conditions" IS_A molar_density;
+	Vdot_feed_stp "volumetric feed rate at STP" IS_A volume_rate;
+	F_feed "gas feed molar rate" IS_A molar_rate;
+	F_bubble "molar flow assigned to bubble throughflow" IS_A molar_rate;
+	F_emulsion "molar flow assigned to emulsion minimum-fluidisation throughflow" IS_A molar_rate;
+
+	d_t "reactor internal diameter" IS_A distance;
+	A_bed "reactor cross-sectional area" IS_A area;
+	L_mf "bed height at minimum fluidisation" IS_A distance;
+	L_f "expanded bubbling-bed height" IS_A distance;
+	V_bed "expanded bed volume" IS_A volume;
+	V_bubble "bubble volume in the bed" IS_A volume;
+
+	u "superficial gas velocity at bed T,p" IS_A speed;
+	u_mf "minimum fluidisation superficial velocity" IS_A speed;
+	u_ratio_mf "operating velocity multiplier on u_mf" IS_A factor;
+	eps_mf "bed voidage at minimum fluidisation" IS_A factor;
+	eps "overall bubbling-bed voidage" IS_A factor;
+	d_p "particle diameter" IS_A distance;
+	rho_p "particle density" IS_A mass_density;
+	rho_bulk_bed "bulk bed density at minimum fluidisation" IS_A mass_density;
+
+	d_b "mean bubble diameter" IS_A distance;
+	u_br "isolated bubble rise velocity" IS_A speed;
+	u_b "bubble rise velocity" IS_A speed;
+	u_emf "interstitial emulsion velocity at minimum fluidisation" IS_A speed;
+	delta "bubble fraction" IS_A factor;
+	gamma_b "solid volume in bubbles per bubble volume" IS_A factor;
+	gamma_c "solid volume in cloud/wake per bubble volume" IS_A factor;
+	gamma_e "solid volume in emulsion per bubble volume" IS_A factor;
+	f_wake "wake volume per bubble volume" IS_A factor;
+	D_AB "H2/H2O molecular diffusivity used in K&L exchange coefficients" IS_A diffusivity;
+	K_bc "bubble-cloud gas interchange coefficient" IS_A frequency;
+	K_ce "cloud-emulsion gas interchange coefficient" IS_A frequency;
+
+	m_sample_init, m_sample IS_A mass;
+	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe IS_A molar_mass;
+	n0_Fe2O3 IS_A mole;
+	n_Fe2O3, n_Fe3O4, n_FeO, n_Fe IS_A mole;
+	oxygen_remaining IS_A mole;
+	reduction_degree IS_A factor;
+
+	(* Gas compositions in feed and three regions. *)
+	y_H2_in, y_H2O_in IS_A mole_fraction;
+	y_H2_b, y_H2O_b IS_A mole_fraction;
+	y_H2_c, y_H2O_c IS_A mole_fraction;
+	y_H2_e, y_H2O_e IS_A mole_fraction;
+	y_inert_in, y_inert_b, y_inert_c, y_inert_e IS_A mole_fraction;
+
+	(* Species exchange rates, positive from upstream region to downstream region. *)
+	N_bc_H2, N_ce_H2 IS_A delta_molar_rate;
+	N_bc_H2O, N_ce_H2O IS_A delta_molar_rate;
+	N_rxn_H2_c, N_rxn_H2_e IS_A delta_molar_rate;
+	N_rxn_H2_total IS_A delta_molar_rate;
+
+	(* Shared solid state, evaluated at cloud and emulsion gas compositions. *)
+	eta[steps] IS_A positive_factor;
+	k0[steps] IS_A rate_per_pressure;
+	E_a[steps] IS_A molar_energy;
+	k_step[steps] IS_A rate_per_pressure;
+	K_eq_fit_A[steps] IS_A factor;
+	K_eq_fit_B[steps] IS_A factor;
+	K_eq_fit_C[steps] IS_A factor;
+	K_eq_fit_D[steps] IS_A factor;
+	K_ratio_eq[steps] IS_A positive_factor;
+	drive_c[steps], drive_e[steps] IS_A delta_pressure;
+	rate_forward_c[steps], rate_reverse_c[steps], rate_net_c[steps] IS_A extent_rate;
+	rate_forward_e[steps], rate_reverse_e[steps], rate_net_e[steps] IS_A extent_rate;
+	rate_net[steps] "cloud/emulsion weighted net extent rate" IS_A extent_rate;
+
+	solid_share_c "fraction of active solids exposed to cloud gas" IS_A factor;
+	solid_share_e "fraction of active solids exposed to emulsion gas" IS_A factor;
+	m_s_cloud, m_s_emulsion IS_A mass;
+	solid_exchange_multiplier IS_A positive_factor;
+	solid_exchange_rate_min "lower-bound cloud renewal rate, u_b/L_f" IS_A frequency;
+	solid_exchange_rate "diagnostic cloud/emulsion solid renewal rate" IS_A frequency;
+
+	(* Ideal-gas and feed conversion. *)
+	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+	feed_eq: F_feed = Vdot_feed_stp * p_stp / (1 {GAS_C} * T_stp);
+	area_eq: A_bed = 0.25 {PI} * d_t^2;
+	u_eq: u = F_feed / (c_tot * A_bed);
+	u_ratio_eq: u_ratio_mf = u / u_mf;
+
+	(* Simple K&L hydrodynamic closure using a supplied mean bubble diameter. *)
+	bed_mf_height_eq: L_mf = m_sample / (rho_bulk_bed * A_bed);
+	ubr_eq: u_br = 0.711 * (1 {EARTH_G} * d_b)^0.5;
+	ub_eq: u_b = u - u_mf + u_br;
+	uemf_eq: u_emf = u_mf / eps_mf;
+	delta_eq: delta = u / u_b;
+	expansion_eq: 1 - eps = (1 - delta) * (1 - eps_mf);
+	bed_height_eq: L_f = L_mf * (1 - eps_mf) / (1 - eps);
+	vbed_eq: V_bed = A_bed * L_f;
+	vbubble_eq: V_bubble = delta * V_bed;
+
+	gammab_eq: gamma_b = 0.005;
+	gammac_eq:
+		gamma_c =
+			(1 - eps_mf)
+			* (
+				3 / (u_br * eps_mf / u_mf - 1)
+				+ f_wake
+			  );
+	gamma_total_eq: delta * (gamma_b + gamma_c + gamma_e) = 1 - eps;
+	sharec_eq: solid_share_c = gamma_c / (gamma_c + gamma_e);
+	sharee_eq: solid_share_e = gamma_e / (gamma_c + gamma_e);
+	mscloud_eq: m_s_cloud = rho_p * V_bubble * gamma_c;
+	msemulsion_eq: m_s_emulsion = rho_p * V_bubble * gamma_e;
+	solid_exchange_min_eq: solid_exchange_rate_min = u_b / L_f;
+	solid_exchange_eq: solid_exchange_rate = solid_exchange_multiplier * solid_exchange_rate_min;
+
+	Kbc_eq:
+		K_bc =
+			4.5 * u_mf / d_b
+			+ 5.85 {1/s}
+			  * (D_AB / 1 {m^2/s})^0.5
+			  * (1 {EARTH_G} / 1 {m/s^2})^0.25
+			  / (d_b / 1 {m})^1.25;
+	Kce_eq:
+		K_ce =
+			6.77 {1/s}
+			* (D_AB * eps_mf * u_br / d_b^3 / 1 {1/s^2})^0.5;
+
+	(* Gas throughflow split: emulsion carries u_mf, excess gas enters bubbles. *)
+	Fbubble_eq: F_bubble = c_tot * A_bed * (u - u_mf);
+	Femulsion_eq: F_emulsion = c_tot * A_bed * u_mf;
+
+	NbcH2_eq: N_bc_H2 = V_bubble * K_bc * c_tot * (y_H2_b - y_H2_c);
+	NceH2_eq: N_ce_H2 = V_bubble * K_ce * c_tot * (y_H2_c - y_H2_e);
+	NbcH2O_eq: N_bc_H2O = V_bubble * K_bc * c_tot * (y_H2O_b - y_H2O_c);
+	NceH2O_eq: N_ce_H2O = V_bubble * K_ce * c_tot * (y_H2O_c - y_H2O_e);
+
+	(* Quasi-steady gas balances for H2 and H2O. *)
+	bubble_h2_eq: F_bubble * (y_H2_in - y_H2_b) - N_bc_H2 = 0 {mol/s};
+	cloud_h2_eq: N_bc_H2 - N_ce_H2 - N_rxn_H2_c = 0 {mol/s};
+	emulsion_h2_eq: F_emulsion * (y_H2_in - y_H2_e) + N_ce_H2 - N_rxn_H2_e = 0 {mol/s};
+
+	bubble_h2o_eq: F_bubble * (y_H2O_in - y_H2O_b) - N_bc_H2O = 0 {mol/s};
+	cloud_h2o_eq: N_bc_H2O - N_ce_H2O + N_rxn_H2_c = 0 {mol/s};
+	emulsion_h2o_eq: F_emulsion * (y_H2O_in - y_H2O_e) + N_ce_H2O + N_rxn_H2_e = 0 {mol/s};
+
+	yinert_in_eq: y_inert_in = 1 - y_H2_in - y_H2O_in;
+	yinert_b_eq: y_inert_b = 1 - y_H2_b - y_H2O_b;
+	yinert_c_eq: y_inert_c = 1 - y_H2_c - y_H2O_c;
+	yinert_e_eq: y_inert_e = 1 - y_H2_e - y_H2O_e;
+
+	(* Solid inventory and reduction degree. *)
+	n0_eq: n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+	msample_eq:
+		m_sample
+		=
+		n_Fe2O3 * MW_Fe2O3
+		+ n_Fe3O4 * MW_Fe3O4
+		+ n_FeO * MW_FeO
+		+ n_Fe * MW_Fe;
+	oxygen_eq: oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+	reduction_degree_eq:
+		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
+
+	FOR r IN steps CREATE
+		kstep_eq[r]:
+			k_step[r] = eta[r] * k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+		Keq_eq[r]:
+			K_ratio_eq[r] = exp(
+				K_eq_fit_A[r]
+				+ K_eq_fit_B[r] / (T / 1 {K})
+				+ K_eq_fit_C[r] * ln(T / 1 {K})
+				+ K_eq_fit_D[r] * (T / 1 {K})
+			);
+		drivec_eq[r]:
+			drive_c[r] = p * (y_H2_c - y_H2O_c / K_ratio_eq[r]);
+		drivee_eq[r]:
+			drive_e[r] = p * (y_H2_e - y_H2O_e / K_ratio_eq[r]);
+		rnetc_eq[r]:
+			rate_net_c[r] = rate_forward_c[r] - rate_reverse_c[r];
+		rnete_eq[r]:
+			rate_net_e[r] = rate_forward_e[r] - rate_reverse_e[r];
+		rnet_eq[r]:
+			rate_net[r] = solid_share_c * rate_net_c[r] + solid_share_e * rate_net_e[r];
+	END FOR;
+
+	rf1c_eq: rate_forward_c[1] = (n_Fe2O3 / n0_Fe2O3) * k_step[1] * p * y_H2_c;
+	rr1c_eq: rate_reverse_c[1] = (n_Fe3O4 / n0_Fe2O3) * k_step[1] * p * y_H2O_c / K_ratio_eq[1];
+	rf2c_eq: rate_forward_c[2] = (n_Fe3O4 / n0_Fe2O3) * k_step[2] * p * y_H2_c;
+	rr2c_eq: rate_reverse_c[2] = (n_FeO / n0_Fe2O3) * k_step[2] * p * y_H2O_c / K_ratio_eq[2];
+	rf3c_eq: rate_forward_c[3] = (n_FeO / n0_Fe2O3) * k_step[3] * p * y_H2_c;
+	rr3c_eq: rate_reverse_c[3] = (n_Fe / n0_Fe2O3) * k_step[3] * p * y_H2O_c / K_ratio_eq[3];
+
+	rf1e_eq: rate_forward_e[1] = (n_Fe2O3 / n0_Fe2O3) * k_step[1] * p * y_H2_e;
+	rr1e_eq: rate_reverse_e[1] = (n_Fe3O4 / n0_Fe2O3) * k_step[1] * p * y_H2O_e / K_ratio_eq[1];
+	rf2e_eq: rate_forward_e[2] = (n_Fe3O4 / n0_Fe2O3) * k_step[2] * p * y_H2_e;
+	rr2e_eq: rate_reverse_e[2] = (n_FeO / n0_Fe2O3) * k_step[2] * p * y_H2O_e / K_ratio_eq[2];
+	rf3e_eq: rate_forward_e[3] = (n_FeO / n0_Fe2O3) * k_step[3] * p * y_H2_e;
+	rr3e_eq: rate_reverse_e[3] = (n_Fe / n0_Fe2O3) * k_step[3] * p * y_H2O_e / K_ratio_eq[3];
+
+	Nrxnc_eq:
+		N_rxn_H2_c = n0_Fe2O3 * solid_share_c * (rate_net_c[1] + rate_net_c[2] + rate_net_c[3]);
+	Nrxne_eq:
+		N_rxn_H2_e = n0_Fe2O3 * solid_share_e * (rate_net_e[1] + rate_net_e[2] + rate_net_e[3]);
+	Nrxntotal_eq:
+		N_rxn_H2_total = N_rxn_H2_c + N_rxn_H2_e;
+
+	nhe_ode: der(n_Fe2O3) = -3 * n0_Fe2O3 * rate_net[1];
+	nmag_ode: der(n_Fe3O4) = n0_Fe2O3 * (2 * rate_net[1] - rate_net[2]);
+	nwu_ode: der(n_FeO) = n0_Fe2O3 * (3 * rate_net[2] - rate_net[3]);
+	nfe_ode: der(n_Fe) = n0_Fe2O3 * rate_net[3];
+
+INITIAL
+	nhe_initial: n_Fe2O3 = m_sample_init / MW_Fe2O3;
+	nmag_initial: n_Fe3O4 = 0 {mol};
+	nwu_initial: n_FeO = 0 {mol};
+	nfe_initial: n_Fe = 0 {mol};
+
+METHODS
+	METHOD values;
+		FIX T := 800 {K} + 273.15 {K};
+		FIX p := 1 {atm};
+		FIX p_stp := 1 {atm};
+		FIX T_stp := 298.15 {K};
+		FIX Vdot_feed_stp := 2 {L/min};
+		FIX y_H2_in := 1.0;
+		FIX y_H2O_in := 0.0;
+
+		FIX d_t := 20 {mm};
+		FIX m_sample_init := 30 {g};
+		FIX d_p := 250 {um};
+		FIX rho_p := 4000 {kg/m^3};
+		FIX rho_bulk_bed := 1800 {kg/m^3};
+		FIX eps_mf := 0.55;
+		FIX u_mf := 6 {mm/s};
+		FIX d_b := 8 {mm};
+		FIX f_wake := 0.05;
+		FIX D_AB := 1.0e-4 {m^2/s};
+		FIX solid_exchange_multiplier := 1.0;
+
+		FIX MW_Fe2O3 := 159.687 {g/g_mole};
+		FIX MW_Fe3O4 := 231.531 {g/g_mole};
+		FIX MW_FeO := 71.844 {g/g_mole};
+		FIX MW_Fe := 55.845 {g/g_mole};
+
+		FIX k0[1] := 3e-4 {1/s/Pa};
+		FIX k0[2] := 1.5e-4 {1/s/Pa};
+		FIX k0[3] := 7.5e-4 {1/s/Pa};
+		FIX eta[1] := 1.0;
+		FIX eta[2] := 1.0;
+		FIX eta[3] := 1.0;
+		FIX E_a[1] := 55 {kJ/mol};
+		FIX E_a[2] := 60 {kJ/mol};
+		FIX E_a[3] := 62 {kJ/mol};
+
+		FIX K_eq_fit_A[1] := 275.5950899625076;
+		FIX K_eq_fit_A[2] := 54.79019894028178;
+		FIX K_eq_fit_A[3] := -31.58593152453788;
+		FIX K_eq_fit_B[1] := -26283.26419177231;
+		FIX K_eq_fit_B[2] := -10556.58318912153;
+		FIX K_eq_fit_B[3] := 660.7218135785515;
+		FIX K_eq_fit_C[1] := -37.2540654519026;
+		FIX K_eq_fit_C[2] := -6.951008925726938;
+		FIX K_eq_fit_C[3] := 4.668826943343771;
+		FIX K_eq_fit_D[1] := 0.01408952822924074;
+		FIX K_eq_fit_D[2] := 0.004147837907387222;
+		FIX K_eq_fit_D[3] := -0.00212400615445666;
+
+		c_tot := 10 {mol/m^3};
+		F_feed := 1e-3 {mol/s};
+		F_bubble := 8e-4 {mol/s};
+		F_emulsion := 2e-4 {mol/s};
+		A_bed := 300 {mm^2};
+		u := 0.3 {m/s};
+		u_ratio_mf := 5;
+		L_mf := 50 {mm};
+		L_f := 80 {mm};
+		eps := 0.75;
+		V_bed := 2e-5 {m^3};
+		V_bubble := 8e-6 {m^3};
+		u_br := 0.28 {m/s};
+		u_b := 0.52 {m/s};
+		u_emf := 0.11 {m/s};
+		delta := 0.5;
+		gamma_b := 0.005;
+		gamma_c := 0.10;
+		gamma_e := 0.12;
+		K_bc := 20 {1/s};
+		K_ce := 10 {1/s};
+		solid_share_c := 0.5;
+		solid_share_e := 0.5;
+		m_s_cloud := 1 {g};
+		m_s_emulsion := 20 {g};
+		solid_exchange_rate_min := 5 {1/s};
+		solid_exchange_rate := 5 {1/s};
+
+		y_H2_b := 0.95;
+		y_H2_c := 0.90;
+		y_H2_e := 0.85;
+		y_H2O_b := 0.05;
+		y_H2O_c := 0.10;
+		y_H2O_e := 0.15;
+		y_inert_in := 0;
+		y_inert_b := 0;
+		y_inert_c := 0;
+		y_inert_e := 0;
+		N_bc_H2 := 1e-4 {mol/s};
+		N_ce_H2 := 1e-4 {mol/s};
+		N_bc_H2O := -1e-4 {mol/s};
+		N_ce_H2O := -1e-4 {mol/s};
+		N_rxn_H2_c := 1e-5 {mol/s};
+		N_rxn_H2_e := 1e-5 {mol/s};
+		N_rxn_H2_total := 2e-5 {mol/s};
+
+		n_Fe2O3 := m_sample_init / MW_Fe2O3;
+		n_Fe3O4 := 0 {mol};
+		n_FeO := 0 {mol};
+		n_Fe := 0 {mol};
+		m_sample := m_sample_init;
+		oxygen_remaining := 3 * n_Fe2O3;
+		reduction_degree := 0;
+		FOR r IN steps DO
+			k_step[r] := 1e-5 {1/s/Pa};
+			K_ratio_eq[r] := 1;
+			drive_c[r] := 1 {kPa};
+			drive_e[r] := 1 {kPa};
+			rate_forward_c[r] := 1e-4 {1/s};
+			rate_reverse_c[r] := 0 {1/s};
+			rate_net_c[r] := 1e-4 {1/s};
+			rate_forward_e[r] := 1e-4 {1/s};
+			rate_reverse_e[r] := 0 {1/s};
+			rate_net_e[r] := 1e-4 {1/s};
+			rate_net[r] := 1e-4 {1/s};
+		END FOR;
+
+		FIX t := 0 {s};
+	END values;
+
+	METHOD bound_self;
+		n_Fe2O3.lower_bound := -1e-6 {mol};
+		n_Fe3O4.lower_bound := -1e-6 {mol};
+		n_FeO.lower_bound := -1e-6 {mol};
+		n_Fe.lower_bound := -1e-6 {mol};
+		m_sample.lower_bound := 0 {kg};
+		oxygen_remaining.lower_bound := -1e-9 {mol};
+		reduction_degree.lower_bound := -1e-8;
+		reduction_degree.upper_bound := 1 + 1e-8;
+
+		F_bubble.lower_bound := 1e-12 {mol/s};
+		F_emulsion.lower_bound := 1e-12 {mol/s};
+		u.lower_bound := 1e-6 {m/s};
+		u_mf.lower_bound := 1e-6 {m/s};
+		u_b.lower_bound := 1e-6 {m/s};
+		delta.lower_bound := 1e-6;
+		delta.upper_bound := 0.99;
+		eps.lower_bound := 0.01;
+		eps.upper_bound := 0.99;
+		gamma_c.lower_bound := 0;
+		gamma_e.lower_bound := 0;
+		y_H2_b.lower_bound := -1e-6;
+		y_H2_c.lower_bound := -1e-6;
+		y_H2_e.lower_bound := -1e-6;
+		y_H2O_b.lower_bound := -1e-6;
+		y_H2O_c.lower_bound := -1e-6;
+		y_H2O_e.lower_bound := -1e-6;
+		y_inert_b.lower_bound := -1e-6;
+		y_inert_c.lower_bound := -1e-6;
+		y_inert_e.lower_bound := -1e-6;
+	END bound_self;
+
+	METHOD dynamic_reset;
+		t := 0 {s};
+		n_Fe2O3 := m_sample_init / MW_Fe2O3;
+		n_Fe3O4 := 0 {mol};
+		n_FeO := 0 {mol};
+		n_Fe := 0 {mol};
+	END dynamic_reset;
+
+	METHOD lane_50g_30mm;
+		d_t := 30 {mm};
+		m_sample_init := 50 {g};
+		Vdot_feed_stp := 5 {L/min};
+		d_p := 175 {um};
+		RUN dynamic_reset;
+	END lane_50g_30mm;
+
+	METHOD lane_100g_30mm;
+		d_t := 30 {mm};
+		m_sample_init := 100 {g};
+		Vdot_feed_stp := 10 {L/min};
+		d_p := 375 {um};
+		RUN dynamic_reset;
+	END lane_100g_30mm;
+
+	METHOD case_30g_20mm;
+		d_t := 20 {mm};
+		m_sample_init := 30 {g};
+		Vdot_feed_stp := 2 {L/min};
+		d_p := 250 {um};
+		RUN dynamic_reset;
+	END case_30g_20mm;
+
+	METHOD observe_default;
+		reduction_degree.obs_id := 1;
+		m_sample.obs_id := 2;
+		y_H2_b.obs_id := 3;
+		y_H2_c.obs_id := 4;
+		y_H2_e.obs_id := 5;
+		y_H2O_b.obs_id := 6;
+		y_H2O_c.obs_id := 7;
+		y_H2O_e.obs_id := 8;
+		N_rxn_H2_total.obs_id := 9;
+		N_rxn_H2_c.obs_id := 10;
+		N_rxn_H2_e.obs_id := 11;
+		solid_exchange_rate.obs_id := 12;
+		delta.obs_id := 13;
+		K_bc.obs_id := 14;
+		K_ce.obs_id := 15;
+	END observe_default;
+
+	METHOD observe_cli_default;
+		OBSERVE reduction_degree, m_sample,
+			y_H2_b, y_H2_c, y_H2_e,
+			y_H2O_b, y_H2O_c, y_H2O_e,
+			N_rxn_H2_total, N_rxn_H2_c, N_rxn_H2_e,
+			delta, K_bc, K_ce, solid_exchange_rate;
+	END observe_cli_default;
+
+	METHOD prepare_dynamic;
+		RUN values;
+		RUN bound_self;
+		RUN dynamic_reset;
+		FIX t;
+		FREE der(n_Fe2O3), der(n_Fe3O4), der(n_FeO), der(n_Fe);
+		RUN observe_default;
+		RUN observe_cli_default;
+	END prepare_dynamic;
+
+	METHOD integrate_default;
+		RUN prepare_dynamic;
+		INTEGRATOR IDA;
+		OPTION rtol 1e-6;
+		INTEGRATE FROM 0 {s} TO 1200 {s} STEPS 120;
+	END integrate_default;
+
+	METHOD on_load;
+		RUN prepare_dynamic;
+	END on_load;
+END fbdri_batch;
+
+MODEL fbdri REFINES fbdri_batch;
+END fbdri;
+
+(* vim: sw=4:noet:ts=4
+*)
