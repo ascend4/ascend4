@@ -12,6 +12,9 @@ IMPORT "cmslv";
 	This model deliberately treats the operating superficial velocity u as an
 	independent variable. u_mf and eps_mf may be supplied from an external
 	minimum-fluidisation calculation.
+
+	Geldart A/B region boundary is fitted from Fig 9, Ch. 3 of Kunii &
+	Levenspiel "Fluidisation Engineering" (2nd Ed), Butterworth-Heinemann, 1991.
 *)
 
 MODEL fluidbed2_base;
@@ -508,6 +511,101 @@ METHODS
 			K_bc, K_ce, gamma_b, gamma_c, gamma_e;
 	END on_load;
 END fb_reactor_fine;
+
+MODEL fb_reactor_dense_example REFINES fb_reactor_fine;
+METHODS
+	METHOD on_load;
+		RUN default;
+
+		(*
+			Dense-bed part of the reactor example at the end of the paper:
+			u0 = 0.3 m/s, u_mf = 0.006 m/s, d_b = 0.04 m,
+			D_AB = 2e-5 m2/s, L_f = 1.1 m, K_r = 10 1/s.
+			The subsequent freeboard conversion is not included here.
+		*)
+		FIX chamber.d := 0.26 {m};
+		FIX chamber.L := 2.3 {m};
+		FIX L_f := 1.1 {m};
+		FIX T := 298.15 {K};
+		FIX p := 1 {atm};
+		FIX d_p := 68 {um};
+		FIX rho_p := 2500 {kg/m^3};
+		FIX eps_m := 0.5;
+		FIX eps_mf := 0.55;
+		FIX u_mf := 6 {mm/s};
+		FIX u_ratio_mf := 50;
+		FIX u_ratio_vigorous_min := 10;
+		FIX d_b := 40 {mm};
+		FIX f_wake := 0.6;
+		FIX D_AB := 2e-5 {m^2/s};
+
+		RUN specify_rate_constant;
+		K_r := 10 {1/s};
+		FOR j IN fig5_points DO
+			FIX K_r_tau_fig5[j];
+			FIX C_Ao_over_C_Ai_fig5_obs[j];
+			K_r_tau_fig5[j] := 1;
+			C_Ao_over_C_Ai_fig5_obs[j] := 0.5;
+		END FOR;
+
+		u := 0.30 {m/s};
+		u_br := 0.445 {m/s};
+		u_b_dh := 0.739 {m/s};
+		u_b_geldart_a := 1.38 {m/s};
+		u_b_geldart_b := 0.58 {m/s};
+		u_b_correlation := 0.58 {m/s};
+		u_b := 0.739 {m/s};
+		u_emf := 0.011 {m/s};
+		bubble_regime_ratio := 68;
+		rho_geldart_ab_boundary := 1.33 {g/cm^3};
+		u_b_use_geldart_a := FALSE;
+		u_b_use_correlation := FALSE;
+		delta_use_slow := FALSE;
+		delta_use_intermediate_or_slow := FALSE;
+		delta_use_vigorous := TRUE;
+		delta_vigorous := 0.406;
+		delta_fast := 0.398;
+		delta_fast_or_vigorous := 0.406;
+		delta := 0.406;
+		eps := 0.733;
+		gamma_c := 0.304;
+		gamma_e := 0.349;
+		K_bc := 3.26 {1/s};
+		K_ce := 1.873 {1/s};
+		K_f := 1.898 {1/s};
+		eta_bed := 0.288;
+		C_Ao_over_C_Ai := 0.059;
+		X_A := 0.941;
+
+		SOLVER CMSlv;
+		OPTION optsolvers 'IPOPT';
+		OPTION cmslv2 TRUE;
+
+		STUDY
+			K_r, K_f, eta_bed, C_Ao_over_C_Ai, X_A,
+			u, u_mf, u_b, delta, eps, L_f,
+			K_bc, K_ce, gamma_b, gamma_c, gamma_e,
+			rho_geldart_ab_boundary, u_b_use_geldart_a, u_b_use_correlation;
+	END on_load;
+
+	METHOD self_test;
+		(*
+			The paper reports K_f = 0.706 1/s and eta_bed = 0.107 for this
+			example. Direct evaluation of printed eq. 24, including the
+			gamma_c*K_r cloud reaction term shown in the worked substitution,
+			gives the values asserted below. The paper's K_f is recovered only
+			if that printed gamma_c*K_r term is omitted.
+		*)
+		ASSERT abs(u_b - 0.739 {m/s}) < 0.001 {m/s};
+		ASSERT abs(delta - 0.406) < 0.001;
+		ASSERT abs(eps - 0.733) < 0.001;
+		ASSERT abs(K_bc - 3.26 {1/s}) < 0.01 {1/s};
+		ASSERT abs(K_ce - 1.873 {1/s}) < 0.002 {1/s};
+		ASSERT abs(K_f - 1.8975 {1/s}) < 0.002 {1/s};
+		ASSERT abs(C_Ao_over_C_Ai - 0.05934) < 0.0001;
+		ASSERT abs(eta_bed - 0.2882) < 0.0002;
+	END self_test;
+END fb_reactor_dense_example;
 
 MODEL fluidbed2 REFINES fluidbed2_base;
 	fluid IS_REFINED_TO air_fluid;
