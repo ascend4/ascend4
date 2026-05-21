@@ -1366,7 +1366,7 @@ void set_param_in_solver(slv_system_t server, int32 solver,
           break;
         case char_parm:
           if(strcmp(param,p.parms[len].name) == 0) {
-            p.parms[len].info.c.value = value->c;
+            slv_set_char_parameter(&(p.parms[len].info.c.value),value->c);
           }
           break;
         case int_parm:
@@ -8761,10 +8761,14 @@ int32 slv9_get_default_parameters(slv_system_t server,
   static char *nonlinear_names[] = {
     "QRSlv"
   };
-  static char *optimization_names[] = {
-    "CONOPT",
-    "IPOPT"
-  };
+	  static char *optimization_names[] = {
+	    "CONOPT",
+	    "IPOPT"
+	  };
+	  static char *qrslv_convopt_names[] = {
+	    "ABSOLUTE",
+	    "RELNOM_SCALE"
+	  };
 
   if(server != NULL && asys != NULL) {
     sys = SLV9(asys);
@@ -8869,16 +8873,23 @@ int32 slv9_get_default_parameters(slv_system_t server,
 	       U_p_bool(val,0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
   SLV_BPARM_MACRO(PROGRESS_LOG_PTR,parameters);
 
-  slv_define_parm(parameters, bool_parm,
-	       "cmslv2", "experimental block-local solve",
-               "experimental block-local solve",
-	       U_p_bool(val,0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
-  SLV_BPARM_MACRO(CMSLV2_BLOCKSOLVE_PTR,parameters);
+	  slv_define_parm(parameters, bool_parm,
+		       "cmslv2", "experimental block-local solve",
+	               "experimental block-local solve",
+		       U_p_bool(val,0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
+	  SLV_BPARM_MACRO(CMSLV2_BLOCKSOLVE_PTR,parameters);
 
-  slv_define_parm(parameters, real_parm,
-	       "rho", "penalty parameter for optimization",
-	       "penalty parameter",
-	       U_p_real(val,1),U_p_real(lo, 0),U_p_real(hi,10e100), 3);
+	  slv_define_parm(parameters, char_parm,
+		       "convopt", "QRSlv convergence test", "QRSlv convergence test",
+		       U_p_string(val,"ABSOLUTE"),
+		       U_p_strings(lo,qrslv_convopt_names),
+		       U_p_int(hi,sizeof(qrslv_convopt_names)/sizeof(char *)),1);
+	  SLV_CPARM_MACRO(QRSLV_CONVOPT_PTR,parameters);
+
+	  slv_define_parm(parameters, real_parm,
+		       "rho", "penalty parameter for optimization",
+		       "penalty parameter",
+		       U_p_real(val,1),U_p_real(lo, 0),U_p_real(hi,10e100), 3);
   SLV_RPARM_MACRO(RHO_PTR,parameters);
 
   slv_define_parm(parameters, real_parm,
@@ -8985,10 +8996,10 @@ int32 slv9_get_default_parameters(slv_system_t server,
 */
 static
 int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
-	int32 newsolver;
-	int32 num_log_reg, num_nl_reg, num_opt_reg, num_cond_reg;
-	char *param;
-	union param_value u;
+		int32 newsolver;
+			int32 num_log_reg, num_nl_reg, num_opt_reg = -1, num_cond_reg;
+		char *param;
+		union param_value u;
 
 	const SlvFunctionsT *S;
 	S = solver_engine_named(LOGSOLVER_OPTION);
@@ -9005,18 +9016,20 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 	}
 	num_nl_reg = S->number;
 
-	if(!slv9_ensure_optimizer_loaded(OPTSOLVER_OPTION)) {
-		slv9_report_unavailable_optimizer(OPTSOLVER_OPTION);
-		return 1;
+	if(sys == NULL || !sys->qrslv_fallback) {
+		if(!slv9_ensure_optimizer_loaded(OPTSOLVER_OPTION)) {
+			slv9_report_unavailable_optimizer(OPTSOLVER_OPTION);
+			return 1;
+		}
+		S = solver_engine_named(OPTSOLVER_OPTION);
+		if(!S){
+			slv9_report_unavailable_optimizer(OPTSOLVER_OPTION);
+			return 1;
+		}
+		MSG("Optimization solver found with name '%s'",S->name);
+		MSG("Optimization solver found with number '%d'",S->number);
+		num_opt_reg = S->number;
 	}
-	S = solver_engine_named(OPTSOLVER_OPTION);
-	if(!S){
-		slv9_report_unavailable_optimizer(OPTSOLVER_OPTION);
-		return 1;
-	}
-	MSG("Optimization solver found with name '%s'",S->name);
-	MSG("Optimization solver found with number '%d'",S->number);
-	num_opt_reg = S->number;
 
 	/* this is us! */
 	S = solver_engine_named("CMSlv");
@@ -9030,12 +9043,37 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 		Create solver tokens
 	*/
 
-	MSG("SETTING UP SUB-SOLVERS");
+		MSG("SETTING UP SUB-SOLVERS");
 
-	MSG("SETTING UP CMSLV");
-	solver_index[CONDITIONAL_SOLVER] = num_cond_reg;
+		MSG("SETTING UP CMSLV");
+		solver_index[CONDITIONAL_SOLVER] = num_cond_reg;
 
-	MSG("SETTING UP LRSLV");
+		if(sys != NULL && sys->qrslv_fallback) {
+			token[LOGICAL_SOLVER] = NULL;
+			token[OPTIMIZATION_SOLVER] = NULL;
+			solver_index[LOGICAL_SOLVER] = -1;
+			solver_index[OPTIMIZATION_SOLVER] = -1;
+
+			MSG("SETTING UP QRSLV FALLBACK");
+			newsolver = slv_switch_solver(server,num_nl_reg);
+			if (newsolver == -1) {
+				FPRINTF(ASCERR,"Solver qrslv was not registered\n");
+				return 1;
+			}
+			token[NONLINEAR_SOLVER] = slv_get_client_token(server);
+			solver_index[NONLINEAR_SOLVER] = slv_get_selected_solver(server);
+			u.i = ITER_LIMIT;
+			set_param_in_solver(server,NONLINEAR_SOLVER,int_parm,"iterationlimit",&u);
+			u.i = TIME_LIMIT;
+			set_param_in_solver(server,NONLINEAR_SOLVER,int_parm,"timelimit",&u);
+			u.c = QRSLV_CONVOPT;
+			set_param_in_solver(server,NONLINEAR_SOLVER,char_parm,"convopt",&u);
+			slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
+			slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
+			return 0;
+		}
+
+		MSG("SETTING UP LRSLV");
 	newsolver = slv_switch_solver(server,num_log_reg);
 	if (newsolver == -1) {
 		FPRINTF(ASCERR,"Solver lrslv was not registered\n");
@@ -9132,8 +9170,13 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   slv9_get_default_parameters(server,(SlvClientToken)sys,&(sys->p));
   sys->integrity = OK;
   sys->presolved = 0;
-  sys->need_consistency_analysis = slv_need_consistency(server);
-  sys->nliter = 0;
+	  sys->need_consistency_analysis = slv_need_consistency(server);
+	  sys->qrslv_fallback =
+	    !sys->need_consistency_analysis
+	    && slv_get_num_solvers_logrels(server) == 0
+	    && slv_get_num_solvers_bnds(server) == 0
+	    && slv_get_num_solvers_dvars(server) == 0;
+	  sys->nliter = 0;
   sys->p.output.more_important = stdout;
   sys->p.output.less_important = stdout;
   sys->p.whose = (*statusindex);
@@ -9167,24 +9210,24 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
     *statusindex = -1;
     return NULL;
   }
-  if(sys->dvlist == NULL) {
-    ascfree(sys);
-    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no discrete variables.\n");
-    *statusindex = -2;
-    return NULL;
-  }
-  if(sys->lrlist == NULL) {
-    ascfree(sys);
-    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no logrelations.\n");
-    *statusindex = -1;
-    return NULL;
-  }
-  if(sys->blist == NULL) {
-    ascfree(sys);
-    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no boundaries.\n");
-    *statusindex = -2;
-    return NULL;
-  }
+	  if(!sys->qrslv_fallback && sys->dvlist == NULL) {
+	    ascfree(sys);
+	    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no discrete variables.\n");
+	    *statusindex = -2;
+	    return NULL;
+	  }
+	  if(!sys->qrslv_fallback && sys->lrlist == NULL) {
+	    ascfree(sys);
+	    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no logrelations.\n");
+	    *statusindex = -1;
+	    return NULL;
+	  }
+	  if(!sys->qrslv_fallback && sys->blist == NULL) {
+	    ascfree(sys);
+	    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CMSlv called with no boundaries.\n");
+	    *statusindex = -2;
+	    return NULL;
+	  }
   slv_check_var_initialization(server);
   slv_check_dvar_initialization(server);
   slv_bnd_initialization(server);
@@ -9199,14 +9242,25 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
 static
 int slv9_eligible_solver(slv_system_t server){
   const char *msg;
+  int32 nlogrels, nbnds, ndvars;
   if(!slv_get_num_solvers_rels(server)){
-	msg = "No relations were found";
-  }else if(!slv_get_num_solvers_logrels(server)){
-	msg = "Model must contain at least one logical relation";
-  }else if(!slv_get_num_solvers_bnds(server)){
-	msg = "Model must contain at least one boundary";
+		msg = "No relations were found";
   }else{
-    return TRUE;
+    nlogrels = slv_get_num_solvers_logrels(server);
+    nbnds = slv_get_num_solvers_bnds(server);
+    ndvars = slv_get_num_solvers_dvars(server);
+    if(nlogrels == 0 && nbnds == 0 && ndvars == 0) {
+      return TRUE;
+    }
+    if(!nlogrels) {
+		msg = "Model must contain at least one logical relation";
+    }else if(!nbnds) {
+		msg = "Model must contain at least one boundary";
+    }else if(!ndvars) {
+		msg = "Model must contain at least one discrete variable";
+    }else{
+	    return TRUE;
+    }
   }
 
   ERROR_REPORTER_HERE(ASC_USER_ERROR
@@ -9247,6 +9301,124 @@ int slv9_get_status(slv_system_t server, SlvClientToken asys,
 	if(check_system(sys)) return 1;
 	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 	return 0;
+}
+
+static
+void slv9_copy_subsolver_status(slv9_system_t sys, const slv_status_t *status){
+  if(sys != NULL && status != NULL) {
+    struct slv_block_cost *old_cost = slv_status_cost_rw(&(sys->s));
+    const struct slv_block_cost *status_cost = slv_status_cost(status);
+    int32 status_costsize = slv_status_costsize(status);
+    struct slv_block_cost *new_cost = NULL;
+
+    if(status_cost != NULL && status_costsize > 0) {
+      new_cost = create_array(status_costsize,struct slv_block_cost);
+      mem_copy_cast(status_cost,new_cost,
+        status_costsize*sizeof(struct slv_block_cost));
+    }
+    if(old_cost != NULL && old_cost != status_cost) {
+      destroy_array(old_cost);
+    }
+    mem_copy_cast(status,&(sys->s),sizeof(slv_status_t));
+    if(slv_status_nlp_rw(&(sys->s)) != NULL) {
+      sys->s.u.nlp.cost = new_cost;
+      sys->s.u.nlp.costsize = status_costsize;
+    }else if(new_cost != NULL) {
+      destroy_array(new_cost);
+    }
+  }
+}
+
+static
+int slv9_qrslv_fallback_presolve(slv_system_t server, slv9_system_t sys){
+  slv_status_t status;
+  int res;
+
+  if(server == NULL || sys == NULL || token[NONLINEAR_SOLVER] == NULL) {
+    return 1;
+  }
+  slv_set_client_token(server,token[NONLINEAR_SOLVER]);
+  slv_set_solver_index(server,solver_index[NONLINEAR_SOLVER]);
+  res = slv_presolve(server);
+  slv_get_status(server,&status);
+  slv9_copy_subsolver_status(sys,&status);
+  slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
+  slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
+  slv9_report_progress(sys,
+    "event=cmslv_qrslv_fallback action=presolve status=%d ready=%d converged=%d ok=%d blocks=%d",
+    res, status.ready_to_solve, status.converged, status.ok,
+    status.block.number_of
+  );
+  return res;
+}
+
+static
+int slv9_qrslv_fallback_resolve(slv_system_t server, slv9_system_t sys){
+  slv_status_t status;
+  int res;
+
+  if(server == NULL || sys == NULL || token[NONLINEAR_SOLVER] == NULL) {
+    return 1;
+  }
+  slv_set_client_token(server,token[NONLINEAR_SOLVER]);
+  slv_set_solver_index(server,solver_index[NONLINEAR_SOLVER]);
+  res = slv_resolve(server);
+  slv_get_status(server,&status);
+  slv9_copy_subsolver_status(sys,&status);
+  slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
+  slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
+  slv9_report_progress(sys,
+    "event=cmslv_qrslv_fallback action=resolve status=%d ready=%d converged=%d ok=%d blocks=%d",
+    res, status.ready_to_solve, status.converged, status.ok,
+    status.block.number_of
+  );
+  return res;
+}
+
+static
+int slv9_qrslv_fallback_iterate(slv_system_t server, slv9_system_t sys){
+  slv_status_t status;
+  int res;
+
+  if(server == NULL || sys == NULL || token[NONLINEAR_SOLVER] == NULL) {
+    return 1;
+  }
+  slv_set_client_token(server,token[NONLINEAR_SOLVER]);
+  slv_set_solver_index(server,solver_index[NONLINEAR_SOLVER]);
+  res = slv_iterate(server);
+  slv_get_status(server,&status);
+  slv9_copy_subsolver_status(sys,&status);
+  slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
+  slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
+  slv9_report_progress(sys,
+    "event=cmslv_qrslv_fallback action=iterate status=%d ready=%d converged=%d ok=%d current_block=%d",
+    res, status.ready_to_solve, status.converged, status.ok,
+    status.block.current_block
+  );
+  return res;
+}
+
+static
+int slv9_qrslv_fallback_solve(slv_system_t server, slv9_system_t sys){
+  slv_status_t status;
+  int res;
+
+  if(server == NULL || sys == NULL || token[NONLINEAR_SOLVER] == NULL) {
+    return 1;
+  }
+  slv_set_client_token(server,token[NONLINEAR_SOLVER]);
+  slv_set_solver_index(server,solver_index[NONLINEAR_SOLVER]);
+  res = slv_solve(server);
+  slv_get_status(server,&status);
+  slv9_copy_subsolver_status(sys,&status);
+  slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
+  slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
+  slv9_report_progress(sys,
+    "event=cmslv_qrslv_fallback action=solve status=%d ready=%d converged=%d ok=%d blocks=%d",
+    res, status.ready_to_solve, status.converged, status.ok,
+    status.block.number_of
+  );
+  return res;
 }
 
 static
@@ -9373,15 +9545,18 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list and objective never set.");
     return 2;
   }
-  if(!sys->solvers_ready && get_solvers_tokens(sys,server)) {
-    ERROR_REPORTER_HERE(ASC_USER_ERROR,
-      "Solver(s) required by CMSlv were not available for selected options."
-    );
-    return 3;
-  }
-  sys->solvers_ready = 1;
+	  if(!sys->solvers_ready && get_solvers_tokens(sys,server)) {
+	    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+	      "Solver(s) required by CMSlv were not available for selected options."
+	    );
+	    return 3;
+	  }
+	  sys->solvers_ready = 1;
+	  if(sys->qrslv_fallback) {
+	    return slv9_qrslv_fallback_presolve(server,sys);
+	  }
 
-  cap = slv_get_num_solvers_rels(server);
+	  cap = slv_get_num_solvers_rels(server);
   sys->cap = slv_get_num_solvers_vars(server);
   sys->cap = MAX(sys->cap,cap);
 
@@ -9453,11 +9628,13 @@ int slv9_resolve(slv_system_t server, SlvClientToken asys){
   struct rel_relation **rp;
   slv9_system_t sys;
 
-  sys = SLV9(asys);
-  (void) server;
-  check_system(sys);
+	  sys = SLV9(asys);
+		  check_system(sys);
+		  if(sys->qrslv_fallback) {
+		    return slv9_qrslv_fallback_resolve(server,sys);
+		  }
 
-  for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
+	  for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
     var_set_in_block(*vp,FALSE);
   }
   for( rp = sys->rlist ; *rp != NULL ; ++rp ) {
@@ -9505,13 +9682,16 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
   int32 *test= NULL;
 #endif /* TEST_CONSISTENCY */
 
-  sys = SLV9(asys);
+	  sys = SLV9(asys);
 
-  if(server == NULL || sys==NULL) return 1;
-  if(check_system(SLV9(sys))) return 2;
-  if(!sys->s.ready_to_solve ) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
-    return 3;
+	  if(server == NULL || sys==NULL) return 1;
+	  if(check_system(SLV9(sys))) return 2;
+	  if(sys->qrslv_fallback) {
+	    return slv9_qrslv_fallback_iterate(server,sys);
+	  }
+	  if(!sys->s.ready_to_solve ) {
+	    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
+	    return 3;
   }
 
   unsuccessful = FALSE;
@@ -9880,11 +10060,14 @@ static int slv9_solve(slv_system_t server, SlvClientToken asys){
   slv9_system_t sys;
   int err = 0;
 
-  sys = SLV9(asys);
-  if(server == NULL || sys==NULL)return 1;
-  if(check_system(sys))return 2;
+	  sys = SLV9(asys);
+	  if(server == NULL || sys==NULL)return 1;
+	  if(check_system(sys))return 2;
+	  if(sys->qrslv_fallback) {
+	    return slv9_qrslv_fallback_solve(server,sys);
+	  }
 
-  while(sys->s.ready_to_solve)err = err | slv9_iterate(server,sys);
+	  while(sys->s.ready_to_solve)err = err | slv9_iterate(server,sys);
 
   return err;
 }
@@ -9903,20 +10086,27 @@ mtx_matrix_t slv9_get_matrix(slv_system_t server, SlvClientToken sys){
  */
 static
 void destroy_solvers_tokens(slv_system_t server, slv9_system_t sys){
-  if(sys == NULL || !sys->solvers_ready) {
-    return;
-  }
-  slv_set_client_token(server,token[LOGICAL_SOLVER]);
-  slv_set_solver_index(server,solver_index[LOGICAL_SOLVER]);
-  slv_destroy_client(server);
-  slv_set_client_token(server,token[NONLINEAR_SOLVER]);
-  slv_set_solver_index(server,solver_index[NONLINEAR_SOLVER]);
-  slv_destroy_client(server);
-  slv_set_client_token(server,token[OPTIMIZATION_SOLVER]);
-  slv_set_solver_index(server,solver_index[OPTIMIZATION_SOLVER]);
-  slv_destroy_client(server);
-  slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
-  slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
+	  if(sys == NULL || !sys->solvers_ready) {
+	    return;
+	  }
+	  if(token[LOGICAL_SOLVER] != NULL && solver_index[LOGICAL_SOLVER] >= 0) {
+	    slv_set_client_token(server,token[LOGICAL_SOLVER]);
+	    slv_set_solver_index(server,solver_index[LOGICAL_SOLVER]);
+	    slv_destroy_client(server);
+	  }
+	  if(token[NONLINEAR_SOLVER] != NULL && solver_index[NONLINEAR_SOLVER] >= 0) {
+	    slv_set_client_token(server,token[NONLINEAR_SOLVER]);
+	    slv_set_solver_index(server,solver_index[NONLINEAR_SOLVER]);
+	    slv_destroy_client(server);
+	  }
+	  if(token[OPTIMIZATION_SOLVER] != NULL
+	      && solver_index[OPTIMIZATION_SOLVER] >= 0) {
+	    slv_set_client_token(server,token[OPTIMIZATION_SOLVER]);
+	    slv_set_solver_index(server,solver_index[OPTIMIZATION_SOLVER]);
+	    slv_destroy_client(server);
+	  }
+	  slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
+	  slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
   sys->solvers_ready = 0;
 }
 
