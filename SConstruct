@@ -452,16 +452,41 @@ vars.Add(
 	,default_python_pkg_embed
 )
 
+SOLVER_ENGINE_NAMES = [
+	'QRSlv',
+	'CONOPT',
+	'IPOPT',
+	'MakeMPS',
+	'HiGHS',
+	'A4SQP',
+	'SLSQP',
+	'LRSlv',
+	'CMSlv',
+	'CMSlv2',
+]
+SOLVER_INTEGRATOR_NAMES = [
+	'LSODE',
+	'IDA',
+	'DOPRI5',
+	'RADAU5',
+]
+SOLVER_NAMES = SOLVER_ENGINE_NAMES + SOLVER_INTEGRATOR_NAMES
+WITH_SOLVER_TOKENS = [s.upper() for s in SOLVER_NAMES]
+SOLVER_SUBDIRS = [s.lower() for s in SOLVER_NAMES]
+NON_DEFAULT_SOLVER_TOKENS = set([
+	'RADAU5',
+])
+DEFAULT_WITH_SOLVERS = [
+	token for token in WITH_SOLVER_TOKENS
+	if token not in NON_DEFAULT_SOLVER_TOKENS
+]
+
 # Which solvers will we allow?
 vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default includes the open"
-		+" solvers normally available in a developer build. The option 'LSOD' is provided for backwards compatibility"
-		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS',"A4SQP","SLSQP",'MAKEMPS']
-	,['QRSLV','MPS','SLV','OPTSQP'
-		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","A4SQP","SLSQP","RADAU5"
-	 ]
+		+" solvers normally available in a developer build."
+	,DEFAULT_WITH_SOLVERS
+	,WITH_SOLVER_TOKENS
 ))
 
 # Where will the local copy of the help files be kept?
@@ -1114,13 +1139,13 @@ for l in ['SUNDIALS','IPOPT']:
 	if env.get(var) and not isinstance(env[var],list):
 		env[var] = env[var].split(",")
 
-if 'LSOD' in env['WITH_SOLVERS']:
-	if 'LSODE' not in env['WITH_SOLVERS']:
-		env['WITH_SOLVERS'].append('LSODE')
-	env['WITH_SOLVERS'].remove('LSOD')
-
 if 'CMSLV' in env['WITH_SOLVERS'] and 'LRSLV' not in env['WITH_SOLVERS']:
 	env['WITH_SOLVERS'].append('LRSLV')
+if 'CMSLV2' in env['WITH_SOLVERS']:
+	if 'LRSLV' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('LRSLV')
+	if 'QRSLV' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('QRSLV')
 
 vars.Save('options.cache',env)
 
@@ -1174,7 +1199,7 @@ def _explicit_bool_argument(name):
 	value = str(ARGUMENTS[name]).strip().lower()
 	return value not in ('0', 'false', 'no', 'off', 'none')
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP','LRSLV','CMSLV':
+for solv in WITH_SOLVER_TOKENS:
 	name = 'WITH_%s' % solv
 	explicit = _explicit_bool_argument(name)
 	if explicit is None:
@@ -2717,6 +2742,8 @@ def _a4_runtime_libdirs(env):
 	return repr(out)
 
 subst_dict['@A4_RUNTIME_LIBDIRS@'] = _a4_runtime_libdirs(env)
+subst_dict['@ASC_SOLVER_IMPORTS@'] = ""
+subst_dict['@ASC_SOLVER_NAMES@'] = ""
 
 
 
@@ -2738,6 +2765,7 @@ for k,v in {
 				,'ASC_WITH_SLSQP':env['WITH_SLSQP']
 				,'ASC_WITH_LRSLV':env['WITH_LRSLV']
 				,'ASC_WITH_CMSLV':env['WITH_CMSLV']
+				,'ASC_WITH_CMSLV2':env['WITH_CMSLV2']
 				,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
 				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
 				,'ASC_WITH_PCRE':env['WITH_PCRE']
@@ -2860,7 +2888,7 @@ if env.get('LZMA_LIBPATH'):
 	libascend_env.AppendUnique(LIBPATH=env['LZMA_LIBPATH'])
 if env.get('LZMA_LIBS'):
 	libascend_env.AppendUnique(LIBS=env['LZMA_LIBS'])
-if 'CONOPT' in env['WITH_SOLVERS'] and env.get('CONOPT_CPPPATH'):
+if env.get('WITH_CONOPT') and env.get('CONOPT_CPPPATH'):
 	libascend_env.AppendUnique(CPPPATH=env['CONOPT_CPPPATH'])
 
 dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear','bintokens']
@@ -2927,17 +2955,40 @@ env.Alias('libascend',libtargets)
 
 env['extfns']=[]
 env['BUILDING_ASCEND'] = 1
+env['SOLVER_SUBDIRS'] = SOLVER_SUBDIRS
 
 env.SConscript(['solvers/SConscript'],'env')
 
-for k,v in {
-	'ASC_HAVE_MAKEMPS': env['OPTIONALS'].get('makemps', (False, None))[0],
-	'ASC_HAVE_IPOPT': env['OPTIONALS'].get('ipopt', (False, None))[0],
-	'ASC_HAVE_HIGHS': env['OPTIONALS'].get('highs', (False, None))[0],
-	'ASC_HAVE_A4SQP': env['OPTIONALS'].get('a4sqp', (False, None))[0],
-	'ASC_HAVE_SLSQP': env['OPTIONALS'].get('slsqp', (False, None))[0],
+def solver_was_built(name):
+	token = name.upper()
+	if not env.get('WITH_%s' % token, False):
+		return False
+	optional = env['OPTIONALS'].get(name.lower())
+	if optional is not None:
+		return bool(optional[0])
+	return True
+
+selected_solver_names = [
+	name for name in SOLVER_ENGINE_NAMES
+	if solver_was_built(name)
+]
+solver_imports = ",".join(
+	name.lower() for name in selected_solver_names
+)
+solver_names = ",".join(selected_solver_names)
+for subst_env in (env, libascend_env):
+	subst_env['SUBST_DICT']['@ASC_SOLVER_IMPORTS@'] = solver_imports
+	subst_env['SUBST_DICT']['@ASC_SOLVER_NAMES@'] = solver_names
+subst_dict['@ASC_SOLVER_IMPORTS@'] = solver_imports
+subst_dict['@ASC_SOLVER_NAMES@'] = solver_names
+for macro, solver_name in {
+	'ASC_HAVE_MAKEMPS': 'MakeMPS',
+	'ASC_HAVE_IPOPT': 'IPOPT',
+	'ASC_HAVE_HIGHS': 'HiGHS',
+	'ASC_HAVE_A4SQP': 'A4SQP',
+	'ASC_HAVE_SLSQP': 'SLSQP',
 }.items():
-	subst_dict['@%s@' %(k,)] = "#define %s 1" %(k,) if v else "// %s is not set." %(k,)
+	subst_dict['@%s@' % macro] = "#define %s 1" % macro if solver_was_built(solver_name) else "// %s is not set." % macro
 
 env['SUBST_DICT'].update(subst_dict)
 env.Substfile(target='ascend/general/config.h', source='ascend/general/config.h.in')

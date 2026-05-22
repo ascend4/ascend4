@@ -40,7 +40,6 @@
 }
 
 %ignore registerSolver;
-%ignore registerStandardSolvers;
 %include "solver.h"
 
 %include "simulation.h"

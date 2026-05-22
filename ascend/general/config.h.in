@@ -151,6 +151,25 @@ typedef unsigned long long asc_intptr_t;
 @ASC_WITH_CMSLV@
 
 /*
+	Whether the CMSlv2 solver module was built.
+*/
+@ASC_WITH_CMSLV2@
+
+/*
+	Comma-separated package import names for solver engines selected by the
+	build configuration. This is used for runtime registration; the registered
+	solver display names still come from the solver modules themselves.
+*/
+#define ASC_SOLVER_IMPORTS "@ASC_SOLVER_IMPORTS@"
+
+/*
+	Comma-separated stylised solver names from the build configuration. This is
+	metadata only; using a solver still requires loading and registering its
+	package.
+*/
+#define ASC_SOLVER_NAMES "@ASC_SOLVER_NAMES@"
+
+/*
 	Whether Graphviz support is enabled.
 */
 @ASC_HAVE_GRAPHVIZ@
