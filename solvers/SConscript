@@ -1,9 +1,6 @@
 Import('env')
 
-subdirs = [
-	'qrslv','conopt','cmslv','lrslv','lsode','ida','ipopt','dopri5','makemps','highs','a4sqp','slsqp','radau5'
-]
-#'tron',
+subdirs = env.get('SOLVER_SUBDIRS', [])
 
 for d in subdirs:
 	env.SConscript(d+'/SConscript',['env']);
