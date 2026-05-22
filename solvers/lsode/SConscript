@@ -1,6 +1,6 @@
 Import('env')
 
-if 'LSODE' in env.get('WITH_SOLVERS'):
+if env.get('WITH_LSODE'):
 
 	solver_env = env.Clone()
 
