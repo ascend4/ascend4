@@ -457,9 +457,9 @@ vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default includes the open"
 		+" solvers normally available in a developer build. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS',"A4SQP","SLSQP",'MAKEMPS']
+	,["QRSLV","CMSLV","CMSLV2","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5",'HIGHS',"A4SQP","SLSQP",'MAKEMPS']
 	,['QRSLV','MPS','SLV','OPTSQP'
-		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
+		,'NGSLV','CMSLV','CMSLV2','LRSLV','MINOS','CONOPT'
 		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","A4SQP","SLSQP","RADAU5"
 	 ]
 ))
@@ -1121,6 +1121,11 @@ if 'LSOD' in env['WITH_SOLVERS']:
 
 if 'CMSLV' in env['WITH_SOLVERS'] and 'LRSLV' not in env['WITH_SOLVERS']:
 	env['WITH_SOLVERS'].append('LRSLV')
+if 'CMSLV2' in env['WITH_SOLVERS']:
+	if 'LRSLV' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('LRSLV')
+	if 'QRSLV' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('QRSLV')
 
 vars.Save('options.cache',env)
 
@@ -1174,7 +1179,7 @@ def _explicit_bool_argument(name):
 	value = str(ARGUMENTS[name]).strip().lower()
 	return value not in ('0', 'false', 'no', 'off', 'none')
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP','LRSLV','CMSLV':
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS','A4SQP','SLSQP','LRSLV','CMSLV','CMSLV2':
 	name = 'WITH_%s' % solv
 	explicit = _explicit_bool_argument(name)
 	if explicit is None:
@@ -2726,35 +2731,36 @@ if env.get('WITH_DOC'):
 
 # bool options...
 for k,v in {
-				'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
-				,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
-				,'ASC_WITH_MMIO':env['WITH_MMIO']
-				,'ASC_WITH_ZLIB':env['WITH_ZLIB']
-				,'ASC_WITH_LZMA':env['WITH_LZMA']
-				,'ASC_WITH_MAKEMPS':env['WITH_MAKEMPS']
-				,'ASC_WITH_IPOPT':env['WITH_IPOPT']
-				,'ASC_WITH_HIGHS':env['WITH_HIGHS']
-				,'ASC_WITH_A4SQP':env['WITH_A4SQP']
-				,'ASC_WITH_SLSQP':env['WITH_SLSQP']
-				,'ASC_WITH_LRSLV':env['WITH_LRSLV']
-				,'ASC_WITH_CMSLV':env['WITH_CMSLV']
-				,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
-				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
-				,'ASC_WITH_PCRE':env['WITH_PCRE']
-			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
-			,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
-			,'HAVE_GCCVISIBILITY':env.get('HAVE_GCCVISIBILITY')
-			,'HAVE_C99FPE':env.get('HAVE_C99FPE')
-			,'HAVE_IEEE':env.get('HAVE_IEEE')
-			,'HAVE_ERF':env.get('HAVE_ERF')
-			,'HAVE_FNMATCH':env.get('HAVE_FNMATCH')
-			,'HAVE_GETRUSAGE':env.get('HAVE_GETRUSAGE')
-			,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
-			,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
-			,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY',0)
-			,'HAVE_SNPRINTF':env.get('HAVE_SNPRINTF')
-			,'HAVE__SNPRINTF':env.get('HAVE__SNPRINTF')
-		}.items():
+	'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
+	,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
+	,'ASC_WITH_MMIO':env['WITH_MMIO']
+	,'ASC_WITH_ZLIB':env['WITH_ZLIB']
+	,'ASC_WITH_LZMA':env['WITH_LZMA']
+	,'ASC_WITH_MAKEMPS':env['WITH_MAKEMPS']
+	,'ASC_WITH_IPOPT':env['WITH_IPOPT']
+	,'ASC_WITH_HIGHS':env['WITH_HIGHS']
+	,'ASC_WITH_A4SQP':env['WITH_A4SQP']
+	,'ASC_WITH_SLSQP':env['WITH_SLSQP']
+	,'ASC_WITH_LRSLV':env['WITH_LRSLV']
+	,'ASC_WITH_CMSLV':env['WITH_CMSLV']
+	,'ASC_WITH_CMSLV2':env['WITH_CMSLV2']
+	,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
+	,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
+	,'ASC_WITH_PCRE':env['WITH_PCRE']
+	,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
+	,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
+	,'HAVE_GCCVISIBILITY':env.get('HAVE_GCCVISIBILITY')
+	,'HAVE_C99FPE':env.get('HAVE_C99FPE')
+	,'HAVE_IEEE':env.get('HAVE_IEEE')
+	,'HAVE_ERF':env.get('HAVE_ERF')
+	,'HAVE_FNMATCH':env.get('HAVE_FNMATCH')
+	,'HAVE_GETRUSAGE':env.get('HAVE_GETRUSAGE')
+	,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
+	,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
+	,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY',0)
+	,'HAVE_SNPRINTF':env.get('HAVE_SNPRINTF')
+	,'HAVE__SNPRINTF':env.get('HAVE__SNPRINTF')
+	}.items():
 		
 #	if v: subst_dict["/\\* #\\s*define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
 	if v:
