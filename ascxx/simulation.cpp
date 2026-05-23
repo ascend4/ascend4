@@ -575,8 +575,12 @@ Simulation::setSolver(Solver &solver){
 	/* CONSOLE_DEBUG("Setting solver on sim %p, root inst %p",this,this->simroot.getInternalType()); */
 
 	try{
-		// build the system (if not built already)
-		build();
+		/* If a targeted SOLVE has already built a submodel system, keep that
+		 * buildroot and select the solver on it. Building here unconditionally
+		 * widens SOLVE child back to the simulation root. */
+		if(!sys){
+			build();
+		}
 	}catch(runtime_error &e){
 		stringstream ss;
 		ss << "Couldn't prepare system for solving:";
