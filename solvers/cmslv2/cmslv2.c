@@ -4853,6 +4853,31 @@ struct slv9_cmslv2_block_solved_report {
   const char *reason;
 };
 
+enum slv9_cmslv2_work_kind {
+  SLV9_CMSLV2_WORK_END = 0,
+  SLV9_CMSLV2_WORK_EMPTY,
+  SLV9_CMSLV2_WORK_QRSLV,
+  SLV9_CMSLV2_WORK_LRSLV,
+  SLV9_CMSLV2_WORK_SELECTOR,
+  SLV9_CMSLV2_WORK_BOUNDARY,
+  SLV9_CMSLV2_WORK_INTEGER,
+  SLV9_CMSLV2_WORK_MIXED
+};
+
+enum slv9_cmslv2_query_mode {
+  SLV9_CMSLV2_QUERY_BLOCK = 0,
+  SLV9_CMSLV2_QUERY_SEQUENCE = 1,
+  SLV9_CMSLV2_QUERY_SKIP_EMPTY = 2
+};
+
+struct slv9_cmslv2_work_unit {
+  enum slv9_cmslv2_work_kind kind;
+  int32 start;
+  int32 end;
+  struct slv9_decomp_block_stats stats;
+  struct slv9_cmslv2_selector_summary summary;
+};
+
 struct slv9_cmslv2_boundary_scope {
   unsigned char *rel_active_save;
   unsigned char *condrel_active_save;
@@ -4929,6 +4954,39 @@ void slv9_cmslv2_block_solved_report_init(
     memset(report,0,sizeof(*report));
     report->reason = "unknown";
   }
+}
+
+static
+void slv9_cmslv2_work_unit_init(struct slv9_cmslv2_work_unit *work){
+  if(work != NULL) {
+    memset(work,0,sizeof(*work));
+    work->kind = SLV9_CMSLV2_WORK_END;
+    work->start = -1;
+    work->end = -1;
+  }
+}
+
+static
+const char *slv9_cmslv2_work_kind_name(enum slv9_cmslv2_work_kind kind){
+  switch(kind) {
+  case SLV9_CMSLV2_WORK_END:
+    return "end";
+  case SLV9_CMSLV2_WORK_EMPTY:
+    return "empty";
+  case SLV9_CMSLV2_WORK_QRSLV:
+    return "qrslv";
+  case SLV9_CMSLV2_WORK_LRSLV:
+    return "lrslv";
+  case SLV9_CMSLV2_WORK_SELECTOR:
+    return "selector";
+  case SLV9_CMSLV2_WORK_BOUNDARY:
+    return "boundary";
+  case SLV9_CMSLV2_WORK_INTEGER:
+    return "integer";
+  case SLV9_CMSLV2_WORK_MIXED:
+    return "mixed";
+  }
+  return "unknown";
 }
 
 static
@@ -5344,6 +5402,14 @@ static int32 slv9_cmslv2_validate_boundary_envelope(slv9_system_t sys,
     const slv_decomp_partition_t *structural, int32 structural_block,
     const char *phase, real64 *max_residual, const char **reason
 );
+static int32 slv9_cmslv2_get_structural_partition(slv9_system_t sys,
+    const char *phase, const slv_decomp_partition_t **structural
+);
+static void slv9_cmslv2_clear_structural_cache(slv9_system_t sys);
+static int32 slv9_cmslv2_get_scheduler_structural(slv9_system_t sys,
+    const char *phase, int32 fresh, slv_decomp_partition_t *storage,
+    const slv_decomp_partition_t **structural
+);
 
 static
 int32 slv9_cmslv2_block_qrslv_installable(
@@ -5492,13 +5558,131 @@ int32 slv9_cmslv2_structural_block_lrslv_ready(slv_system_t server,
 }
 
 static
+enum slv9_cmslv2_work_kind slv9_cmslv2_classify_structural_block(
+    slv_system_t server, const slv_decomp_partition_t *structural,
+    int32 structural_block, const slv_decomp_partition_t *active,
+    struct slv9_decomp_block_stats *stats,
+    struct slv9_cmslv2_selector_summary *summary
+){
+  struct slv9_decomp_block_stats local_stats;
+  struct slv9_cmslv2_selector_summary local_summary;
+
+  if(stats == NULL) {
+    stats = &local_stats;
+  }
+  if(summary == NULL) {
+    summary = &local_summary;
+  }
+  slv9_decomp_block_stats_init(stats);
+  slv9_cmslv2_selector_summary_init(summary);
+  if(server == NULL || structural == NULL || active == NULL
+      || structural_block < 0 || structural_block >= structural->nblocks) {
+    return SLV9_CMSLV2_WORK_END;
+  }
+
+  slv9_decomp_assess_block(server,structural,structural_block,stats);
+  if(stats->rows == 0 || stats->cols == 0) {
+    return SLV9_CMSLV2_WORK_EMPTY;
+  }
+  if(slv9_cmslv2_structural_block_qrslv_ready(
+      server,structural,structural_block,active,summary
+  )) {
+    return SLV9_CMSLV2_WORK_QRSLV;
+  }
+  if(slv9_cmslv2_structural_block_lrslv_ready(
+      server,structural,structural_block,active,summary
+  )) {
+    return SLV9_CMSLV2_WORK_LRSLV;
+  }
+  slv9_cmslv2_tally_active_subblocks(
+    server,structural,structural_block,active,summary
+  );
+  if(slv9_decomp_block_is_selector_envelope(stats)) {
+    return SLV9_CMSLV2_WORK_SELECTOR;
+  }
+  if(slv9_decomp_block_is_boundary_envelope(stats)) {
+    return SLV9_CMSLV2_WORK_BOUNDARY;
+  }
+  if(stats->intvars > 0 && stats->dvars == 0 && stats->logrows == 0) {
+    return SLV9_CMSLV2_WORK_INTEGER;
+  }
+  return SLV9_CMSLV2_WORK_MIXED;
+}
+
+static
+int32 slv9_cmslv2_scheduler_query(slv9_system_t sys,
+    const slv_decomp_partition_t *structural,
+    const slv_decomp_partition_t *active,
+    int32 mode, struct slv9_cmslv2_work_unit *work
+){
+  enum slv9_cmslv2_work_kind kind;
+  int32 cursor;
+
+  if(work != NULL) {
+    slv9_cmslv2_work_unit_init(work);
+  }
+  if(sys == NULL || sys->slv == NULL || structural == NULL || active == NULL
+      || work == NULL || structural->nblocks <= 0) {
+    return 0;
+  }
+  cursor = sys->cmslv2_next_structural_block;
+  if(cursor < 0 || cursor >= structural->nblocks) {
+    return 0;
+  }
+
+  for(; cursor < structural->nblocks; ++cursor) {
+    kind = slv9_cmslv2_classify_structural_block(
+      sys->slv,structural,cursor,active,&work->stats,&work->summary
+    );
+    if(kind == SLV9_CMSLV2_WORK_EMPTY
+        && (mode & SLV9_CMSLV2_QUERY_SKIP_EMPTY)) {
+      continue;
+    }
+    work->kind = kind;
+    work->start = cursor;
+    work->end = cursor;
+    break;
+  }
+  if(work->start < 0) {
+    return 0;
+  }
+
+  if((mode & SLV9_CMSLV2_QUERY_SEQUENCE)
+      && (work->kind == SLV9_CMSLV2_WORK_QRSLV
+        || work->kind == SLV9_CMSLV2_WORK_LRSLV)) {
+    struct slv9_decomp_block_stats next_stats;
+    struct slv9_cmslv2_selector_summary next_summary;
+    for(cursor = work->start + 1; cursor < structural->nblocks; ++cursor) {
+      kind = slv9_cmslv2_classify_structural_block(
+        sys->slv,structural,cursor,active,&next_stats,&next_summary
+      );
+      if(kind != work->kind) {
+        break;
+      }
+      work->end = cursor;
+      work->summary.active_subblocks += next_summary.active_subblocks;
+      work->summary.qrslv_subblocks += next_summary.qrslv_subblocks;
+      work->summary.lrslv_subblocks += next_summary.lrslv_subblocks;
+      work->summary.unresolved_subblocks += next_summary.unresolved_subblocks;
+      if(next_summary.max_qrslv_rows > work->summary.max_qrslv_rows) {
+        work->summary.max_qrslv_rows = next_summary.max_qrslv_rows;
+      }
+      if(next_summary.max_qrslv_cols > work->summary.max_qrslv_cols) {
+        work->summary.max_qrslv_cols = next_summary.max_qrslv_cols;
+      }
+    }
+  }
+  return 1;
+}
+
+static
 int32 slv9_cmslv2_consume_due_lrslv_blocks(slv9_system_t sys,
     const slv_decomp_partition_t *structural,
     const slv_decomp_partition_t *active, const char *phase,
     int32 *run_start_out, int32 *run_end_out
 ){
-  int32 cursor, run_start, run_end;
-  struct slv9_cmslv2_selector_summary local_sum;
+  struct slv9_cmslv2_work_unit work;
+  int32 run_start, run_end;
   int32 solved;
 
   if(run_start_out != NULL) *run_start_out = -1;
@@ -5507,44 +5691,19 @@ int32 slv9_cmslv2_consume_due_lrslv_blocks(slv9_system_t sys,
       || structural->nblocks <= 0 || active->nblocks <= 0) {
     return 0;
   }
-  cursor = sys->cmslv2_next_structural_block;
-  if(cursor < 0 || cursor >= structural->nblocks) {
-    return 0;
-  }
 
-  run_start = -1;
-  run_end = -1;
-  for(; cursor < structural->nblocks; ++cursor) {
-    struct slv9_decomp_block_stats sbs;
-    slv9_decomp_assess_block(sys->slv,structural,cursor,&sbs);
-    if(sbs.rows == 0 || sbs.cols == 0) {
-      slv9_report_progress(sys,
-        "event=cmslv2_scheduler phase=%s structural_block=%d action=skip_empty",
-        phase != NULL ? phase : "unknown", cursor
-      );
-      continue;
-    }
-    if(slv9_cmslv2_structural_block_lrslv_ready(
-        sys->slv,structural,cursor,active,&local_sum
-    )) {
-      run_start = cursor;
-      run_end = cursor;
-      break;
-    }
-    break;
-  }
-  if(run_start < 0) {
-    sys->cmslv2_next_structural_block = cursor;
+  if(!slv9_cmslv2_scheduler_query(
+      sys,structural,active,
+      SLV9_CMSLV2_QUERY_SEQUENCE | SLV9_CMSLV2_QUERY_SKIP_EMPTY,&work
+  )) {
     return 0;
   }
-  for(cursor = run_start + 1; cursor < structural->nblocks; ++cursor) {
-    if(!slv9_cmslv2_structural_block_lrslv_ready(
-        sys->slv,structural,cursor,active,&local_sum
-    )) {
-      break;
-    }
-    run_end = cursor;
+  if(work.kind != SLV9_CMSLV2_WORK_LRSLV) {
+    sys->cmslv2_next_structural_block = work.start;
+    return 0;
   }
+  run_start = work.start;
+  run_end = work.end;
 
   solved = slv9_cmslv2_solve_lrslv_structural_run(
     sys,structural,run_start,run_end,active,phase,
@@ -5584,8 +5743,8 @@ int32 slv9_cmslv2_install_due_qrslv_blocks(slv9_system_t sys,
   int32 selected_rows, selected_cols;
   int32 b, r, c, local, nblocks;
   int32 rowpos, colpos;
-  int32 cursor, run_start, run_end;
-  struct slv9_cmslv2_selector_summary local_sum;
+  int32 run_start, run_end;
+  struct slv9_cmslv2_work_unit work;
 
   if(installed_rows != NULL) *installed_rows = 0;
   if(installed_cols != NULL) *installed_cols = 0;
@@ -5601,56 +5760,25 @@ int32 slv9_cmslv2_install_due_qrslv_blocks(slv9_system_t sys,
 
   slv9_cmslv2_restore_qrslv_scope(sys);
 
-  cursor = sys->cmslv2_next_structural_block;
-  if(cursor < 0 || cursor >= structural->nblocks) {
+  if(!slv9_cmslv2_scheduler_query(
+      sys,structural,active,
+      SLV9_CMSLV2_QUERY_SEQUENCE | SLV9_CMSLV2_QUERY_SKIP_EMPTY,&work
+  )) {
     return 0;
   }
-  run_start = -1;
-  run_end = -1;
-  for(; cursor < structural->nblocks; ++cursor) {
-    struct slv9_decomp_block_stats sbs;
-    slv9_decomp_assess_block(server,structural,cursor,&sbs);
-    if(sbs.rows == 0 || sbs.cols == 0) {
-      slv9_report_progress(sys,
-        "event=cmslv2_scheduler phase=%s structural_block=%d action=skip_empty qrslv_subblocks=0 lrslv_subblocks=0 unresolved_subblocks=0",
-        phase != NULL ? phase : "unknown", cursor
-      );
-      continue;
-    }
-    if(slv9_decomp_block_is_pure_logical(&sbs)) {
-      slv9_report_progress(sys,
-        "event=cmslv2_scheduler phase=%s structural_block=%d action=defer_lrslv qrslv_subblocks=0 lrslv_subblocks=1 unresolved_subblocks=0",
-        phase != NULL ? phase : "unknown", cursor
-      );
-      break;
-    }
-    if(slv9_cmslv2_structural_block_qrslv_ready(
-        server,structural,cursor,active,&local_sum
-    )) {
-      run_start = cursor;
-      run_end = cursor;
-      break;
-    }
+  if(work.kind != SLV9_CMSLV2_WORK_QRSLV) {
     slv9_report_progress(sys,
-      "event=cmslv2_scheduler phase=%s structural_block=%d action=defer_subsolver qrslv_subblocks=%d lrslv_subblocks=%d unresolved_subblocks=%d",
-      phase != NULL ? phase : "unknown", cursor,
-      local_sum.qrslv_subblocks, local_sum.lrslv_subblocks,
-      local_sum.unresolved_subblocks
+      "event=cmslv2_scheduler phase=%s structural_block=%d work=%s action=defer_subsolver qrslv_subblocks=%d lrslv_subblocks=%d unresolved_subblocks=%d",
+      phase != NULL ? phase : "unknown", work.start,
+      slv9_cmslv2_work_kind_name(work.kind),
+      work.summary.qrslv_subblocks, work.summary.lrslv_subblocks,
+      work.summary.unresolved_subblocks
     );
-    break;
-  }
-  if(run_start < 0) {
-    sys->cmslv2_next_structural_block = cursor;
+    sys->cmslv2_next_structural_block = work.start;
     return 0;
   }
-  for(cursor = run_start + 1; cursor < structural->nblocks; ++cursor) {
-    if(!slv9_cmslv2_structural_block_qrslv_ready(
-        server,structural,cursor,active,&local_sum
-    )) {
-      break;
-    }
-    run_end = cursor;
-  }
+  run_start = work.start;
+  run_end = work.end;
 
   nrels = slv_get_num_solvers_rels(server);
   nvars = slv_get_num_solvers_vars(server);
@@ -6215,6 +6343,7 @@ void slv9_cmslv2_boundary_result_apply(slv9_system_t sys,
    * scoped active bits directly back into the full system.
    */
   reanalyze_solver_lists(sys->slv);
+  slv9_cmslv2_clear_structural_cache(sys);
   update_boundaries(sys->slv,(SlvClientToken)sys);
   slv9_cmslv2_restore_boundary_flags(sys->slv,&result->bnd_flags);
   update_relations_residuals(sys->slv);
@@ -7714,13 +7843,16 @@ void slv9_cmslv2_run_selector_envelopes(slv9_system_t sys, const char *phase){
 
 static
 int32 slv9_cmslv2_consume_selector_cursor(slv9_system_t sys, const char *phase){
-  slv_decomp_partition_t structural, active;
+  const slv_decomp_partition_t *structural = NULL;
+  slv_decomp_partition_t structural_storage;
+  slv_decomp_partition_t active;
   struct slv9_cmslv2_selector_summary local;
   struct slv9_decomp_block_stats bs;
   struct gl_list_t *disvars = NULL;
   unsigned long accepted_mask = 0, current_mask = 0;
   int32 ncases = 0, tried = 0, search_status = 0;
   int32 status, b, consumed = 0;
+  int32 fresh_structural = 1;
 
   if(sys == NULL || sys->slv == NULL || !CMSLV2_BLOCKSOLVE) {
     return 0;
@@ -7730,19 +7862,22 @@ int32 slv9_cmslv2_consume_selector_cursor(slv9_system_t sys, const char *phase){
     b = 0;
   }
 
-  slv_decomp_init(&structural);
+  slv_decomp_init(&structural_storage);
   slv_decomp_init(&active);
-  status = slv_decomp_partition(sys->slv,&structural);
+  status = slv9_cmslv2_get_scheduler_structural(
+    sys,phase,fresh_structural,&structural_storage,&structural
+  );
   if(status) {
     slv9_report_progress(sys,
       "event=cmslv2_selector_consume phase=%s status=failed structural_status=%d",
       phase != NULL ? phase : "unknown", status
     );
-    slv_decomp_destroy(&structural);
+    slv_decomp_destroy(&active);
+    slv_decomp_destroy(&structural_storage);
     return 0;
   }
-  while(b < structural.nblocks) {
-    slv9_decomp_assess_block(sys->slv,&structural,b,&bs);
+  while(b < structural->nblocks) {
+    slv9_decomp_assess_block(sys->slv,structural,b,&bs);
     if(bs.rows == 0 || bs.cols == 0
         || slv9_decomp_block_is_pure_logical(&bs)) {
       slv9_report_progress(sys,
@@ -7755,8 +7890,9 @@ int32 slv9_cmslv2_consume_selector_cursor(slv9_system_t sys, const char *phase){
     break;
   }
   sys->cmslv2_next_structural_block = b;
-  if(b >= structural.nblocks) {
-    slv_decomp_destroy(&structural);
+  if(b >= structural->nblocks) {
+    slv_decomp_destroy(&active);
+    slv_decomp_destroy(&structural_storage);
     return 0;
   }
 
@@ -7765,19 +7901,21 @@ int32 slv9_cmslv2_consume_selector_cursor(slv9_system_t sys, const char *phase){
       "event=cmslv2_selector_consume phase=%s block=%d action=not_selector",
       phase != NULL ? phase : "unknown", b
     );
-    slv_decomp_destroy(&structural);
+    slv_decomp_destroy(&active);
+    slv_decomp_destroy(&structural_storage);
     return 0;
   }
 
   disvars = gl_create((unsigned long)(bs.dvars > 0 ? bs.dvars : 1));
   if(disvars == NULL) {
-    slv_decomp_destroy(&structural);
+    slv_decomp_destroy(&active);
+    slv_decomp_destroy(&structural_storage);
     return 0;
   }
-  slv9_cmslv2_collect_selector_dvars(sys->slv,&structural,b,disvars);
+  slv9_cmslv2_collect_selector_dvars(sys->slv,structural,b,disvars);
   current_mask = slv9_cmslv2_selector_current_mask(disvars);
   consumed = slv9_cmslv2_selector_branch_search(
-    sys,&structural,b,&active,disvars,&local,&ncases,&accepted_mask,
+    sys,structural,b,&active,disvars,&local,&ncases,&accepted_mask,
     phase,&tried,&search_status
   );
   slv9_report_progress(sys,
@@ -7789,7 +7927,7 @@ int32 slv9_cmslv2_consume_selector_cursor(slv9_system_t sys, const char *phase){
   if(consumed) {
     struct slv9_cmslv2_block_solved_report solved_report;
     int32 solved = slv9_cmslv2_check_block_currently_solved(
-      sys,&structural,b,phase,&solved_report
+      sys,structural,b,phase,&solved_report
     );
     if(solved) {
       slv9_cmslv2_transition_after_solved_block(
@@ -7824,7 +7962,7 @@ int32 slv9_cmslv2_consume_selector_cursor(slv9_system_t sys, const char *phase){
 
   gl_destroy(disvars);
   slv_decomp_destroy(&active);
-  slv_decomp_destroy(&structural);
+  slv_decomp_destroy(&structural_storage);
   return consumed;
 }
 
@@ -8229,6 +8367,7 @@ int32 slv9_cmslv2_probe_due_boundary_block(slv9_system_t sys,
   slv_decomp_partition_t scoped_active;
   struct slv9_decomp_block_stats bs;
   struct slv9_cmslv2_selector_summary local;
+  struct slv9_cmslv2_work_unit work;
   struct slv9_cmslv2_boundary_scope scope;
   struct slv9_cmslv2_boundary_result result;
   real64 *orig_real_values = NULL;
@@ -8242,22 +8381,23 @@ int32 slv9_cmslv2_probe_due_boundary_block(slv9_system_t sys,
       || structural->nblocks <= 0) {
     return 0;
   }
-  cursor = sys->cmslv2_next_structural_block;
-  if(cursor < 0 || cursor >= structural->nblocks) {
+  if(!slv9_cmslv2_scheduler_query(
+      sys,structural,active,
+      SLV9_CMSLV2_QUERY_BLOCK | SLV9_CMSLV2_QUERY_SKIP_EMPTY,&work
+  )) {
     return 0;
   }
-  slv9_decomp_assess_block(sys->slv,structural,cursor,&bs);
-  if(bs.rows == 0 || bs.cols == 0
-      || !slv9_decomp_block_is_boundary_envelope(&bs)) {
+  if(work.kind != SLV9_CMSLV2_WORK_BOUNDARY) {
+    sys->cmslv2_next_structural_block = work.start;
     return 0;
   }
+  cursor = work.start;
+  bs = work.stats;
 
   slv9_cmslv2_selector_summary_init(&local);
+  local = work.summary;
   slv9_cmslv2_boundary_result_init(&result);
   slv9_cmslv2_boundary_flags_init(&orig_bnd_flags);
-  slv9_cmslv2_tally_active_subblocks(
-    sys->slv,structural,cursor,active,&local
-  );
   slv9_cmslv2_boundary_scope_init(&scope);
   slv_decomp_init(&scoped_active);
   if(!slv9_cmslv2_install_boundary_scope(
@@ -8465,6 +8605,9 @@ void slv9_report_decomp_assessment(slv9_system_t sys, const char *event){
   if(sys == NULL || sys->slv == NULL) {
     return;
   }
+  if(!PROGRESS_LOG && !PROGRESS_CALLBACKS) {
+    return;
+  }
   slv_decomp_init(&structural);
   slv_decomp_init(&active);
   structural_status = slv_decomp_partition(sys->slv,&structural);
@@ -8530,29 +8673,99 @@ enum slv9_cmslv2_qr_policy {
 };
 
 static
-int32 slv9_cmslv2_rebuild_partitions(slv9_system_t sys,
-    const char *phase, slv_decomp_partition_t *structural,
-    slv_decomp_partition_t *active
-){
-  int32 structural_status, active_status;
+void slv9_cmslv2_clear_structural_cache(slv9_system_t sys){
+  if(sys == NULL) {
+    return;
+  }
+  slv_decomp_destroy(&(sys->cmslv2_structural));
+  slv_decomp_init(&(sys->cmslv2_structural));
+  sys->cmslv2_structural_valid = 0;
+}
 
-  if(sys == NULL || sys->slv == NULL
-      || structural == NULL || active == NULL) {
+static
+int32 slv9_cmslv2_get_structural_partition(slv9_system_t sys,
+    const char *phase, const slv_decomp_partition_t **structural
+){
+  int32 structural_status;
+
+  if(structural != NULL) {
+    *structural = NULL;
+  }
+  if(sys == NULL || sys->slv == NULL || structural == NULL) {
+    return 1;
+  }
+  if(!sys->cmslv2_structural_valid) {
+    slv_decomp_destroy(&(sys->cmslv2_structural));
+    slv_decomp_init(&(sys->cmslv2_structural));
+    structural_status =
+      slv_decomp_partition_connected(sys->slv,&(sys->cmslv2_structural));
+    if(structural_status) {
+      slv9_set_qrslv_external_mode(sys->slv,0);
+      slv9_report_progress(sys,
+        "event=decomp_partition phase=%s partition=structural status=failed structural_status=%d",
+        phase != NULL ? phase : "unknown", structural_status
+      );
+      return 1;
+    }
+    sys->cmslv2_structural_valid = 1;
+  }
+  *structural = &(sys->cmslv2_structural);
+  return 0;
+}
+
+static
+int32 slv9_cmslv2_get_scheduler_structural(slv9_system_t sys,
+    const char *phase, int32 fresh, slv_decomp_partition_t *storage,
+    const slv_decomp_partition_t **structural
+){
+  int32 structural_status;
+
+  if(structural != NULL) {
+    *structural = NULL;
+  }
+  if(sys == NULL || sys->slv == NULL || structural == NULL) {
+    return 1;
+  }
+  if(!fresh) {
+    return slv9_cmslv2_get_structural_partition(sys,phase,structural);
+  }
+  if(storage == NULL) {
+    return 1;
+  }
+  slv_decomp_destroy(storage);
+  slv_decomp_init(storage);
+  structural_status = slv_decomp_partition(sys->slv,storage);
+  if(structural_status) {
+    slv9_set_qrslv_external_mode(sys->slv,0);
+    slv9_report_progress(sys,
+      "event=decomp_partition phase=%s partition=structural status=failed structural_status=%d",
+      phase != NULL ? phase : "unknown", structural_status
+    );
+    return 1;
+  }
+  *structural = storage;
+  return 0;
+}
+
+static
+int32 slv9_cmslv2_rebuild_active_partition(slv9_system_t sys,
+    const char *phase, slv_decomp_partition_t *active
+){
+  int32 active_status;
+
+  if(sys == NULL || sys->slv == NULL || active == NULL) {
     return 1;
   }
 
-  slv_decomp_destroy(structural);
   slv_decomp_destroy(active);
-  slv_decomp_init(structural);
   slv_decomp_init(active);
 
-  structural_status = slv_decomp_partition(sys->slv,structural);
   active_status = slv_decomp_partition_active(sys->slv,active);
-  if(structural_status || active_status) {
+  if(active_status) {
     slv9_set_qrslv_external_mode(sys->slv,0);
     slv9_report_progress(sys,
-      "event=decomp_partition phase=%s partition=0 recommended=0 status=failed structural_status=%d active_status=%d",
-      phase != NULL ? phase : "unknown", structural_status, active_status
+      "event=decomp_partition phase=%s partition=active status=failed active_status=%d",
+      phase != NULL ? phase : "unknown", active_status
     );
     return 1;
   }
@@ -8561,7 +8774,7 @@ int32 slv9_cmslv2_rebuild_partitions(slv9_system_t sys,
 
 static
 int32 slv9_cmslv2_consume_lrslv_runs(slv9_system_t sys,
-    const char *phase, slv_decomp_partition_t *structural,
+    const char *phase, const slv_decomp_partition_t *structural,
     slv_decomp_partition_t *active, int32 *lrslv_runs
 ){
   int32 lr_start = -1, lr_end = -1;
@@ -8575,9 +8788,7 @@ int32 slv9_cmslv2_consume_lrslv_runs(slv9_system_t sys,
     if(lrslv_runs != NULL) {
       (*lrslv_runs)++;
     }
-    if(slv9_cmslv2_rebuild_partitions(
-        sys,phase,structural,active
-    )) {
+    if(slv9_cmslv2_rebuild_active_partition(sys,phase,active)) {
       return 1;
     }
     lr_start = -1;
@@ -8588,7 +8799,7 @@ int32 slv9_cmslv2_consume_lrslv_runs(slv9_system_t sys,
 
 static
 int32 slv9_cmslv2_consume_local_qrslv_runs(slv9_system_t sys,
-    const char *phase, slv_decomp_partition_t *structural,
+    const char *phase, const slv_decomp_partition_t *structural,
     slv_decomp_partition_t *active, int32 *qrslv_runs, int32 *lrslv_runs
 ){
   while(slv9_cmslv2_solve_due_qrslv_run(
@@ -8596,11 +8807,6 @@ int32 slv9_cmslv2_consume_local_qrslv_runs(slv9_system_t sys,
   )) {
     if(qrslv_runs != NULL) {
       (*qrslv_runs)++;
-    }
-    if(slv9_cmslv2_rebuild_partitions(
-        sys,phase,structural,active
-    )) {
-      return 1;
     }
     if(slv9_cmslv2_consume_lrslv_runs(
         sys,phase,structural,active,lrslv_runs
@@ -8615,7 +8821,9 @@ static
 int32 slv9_apply_decomp_partition_policy_ex(slv9_system_t sys,
     const char *phase, enum slv9_cmslv2_qr_policy qr_policy
 ){
-  slv_decomp_partition_t structural, active;
+  const slv_decomp_partition_t *structural = NULL;
+  slv_decomp_partition_t structural_storage;
+  slv_decomp_partition_t active;
   struct slv9_decomp_summary ss, as;
   struct slv9_cmslv2_plan_summary plan;
   int32 active_recommended, structural_safe, recommend_partition;
@@ -8624,48 +8832,63 @@ int32 slv9_apply_decomp_partition_policy_ex(slv9_system_t sys,
   int32 lrslv_runs = 0;
   int32 local_qrslv_runs = 0;
   int32 boundary_status = 0;
+  int32 want_progress = 0;
+  int32 fresh_structural = 1;
 
   if(sys == NULL || sys->slv == NULL || !sys->solvers_ready) {
     return 0;
   }
-  slv_decomp_init(&structural);
+  want_progress = PROGRESS_LOG || PROGRESS_CALLBACKS;
+  if(!want_progress
+      && phase != NULL
+      && (strcmp(phase,"nl_presolve") == 0
+        || strcmp(phase,"nl_represolve") == 0)) {
+    fresh_structural = 0;
+  }else{
+    fresh_structural = 1;
+  }
+  slv_decomp_init(&structural_storage);
   slv_decomp_init(&active);
-  if(slv9_cmslv2_rebuild_partitions(sys,phase,&structural,&active)) {
-    slv_decomp_destroy(&structural);
+  if(slv9_cmslv2_get_scheduler_structural(
+        sys,phase,fresh_structural,&structural_storage,&structural
+      )
+      || slv9_cmslv2_rebuild_active_partition(sys,phase,&active)) {
+    slv_decomp_destroy(&structural_storage);
     slv_decomp_destroy(&active);
     return 0;
   }
 
   if(CMSLV2_BLOCKSOLVE) {
     if(slv9_cmslv2_consume_lrslv_runs(
-        sys,phase,&structural,&active,&lrslv_runs
+        sys,phase,structural,&active,&lrslv_runs
     )) {
-      slv_decomp_destroy(&structural);
+      slv_decomp_destroy(&structural_storage);
       slv_decomp_destroy(&active);
       return 0;
     }
     boundary_status =
-      slv9_cmslv2_probe_due_boundary_block(sys,&structural,&active,phase);
+      slv9_cmslv2_probe_due_boundary_block(sys,structural,&active,phase);
     if(boundary_status >= 2) {
-      if(slv9_cmslv2_rebuild_partitions(
-          sys,phase,&structural,&active
-      )) {
-        slv_decomp_destroy(&structural);
+      if(slv9_cmslv2_get_scheduler_structural(
+            sys,phase,fresh_structural,&structural_storage,&structural
+          )
+          || slv9_cmslv2_rebuild_active_partition(sys,phase,&active)) {
+        slv_decomp_destroy(&structural_storage);
         slv_decomp_destroy(&active);
         return 0;
       }
       if(slv9_cmslv2_consume_lrslv_runs(
-          sys,phase,&structural,&active,&lrslv_runs
+          sys,phase,structural,&active,&lrslv_runs
       )) {
-        slv_decomp_destroy(&structural);
+        slv_decomp_destroy(&structural_storage);
         slv_decomp_destroy(&active);
         return 0;
       }
       if(qr_policy == SLV9_CMSLV2_QR_SUPPRESS) {
         if(slv9_cmslv2_consume_local_qrslv_runs(
-            sys,phase,&structural,&active,&local_qrslv_runs,&lrslv_runs
+            sys,phase,structural,&active,&local_qrslv_runs,&lrslv_runs
         )) {
-          slv_decomp_destroy(&structural);
+          slv_decomp_destroy(&structural_storage);
           slv_decomp_destroy(&active);
           return 0;
         }
@@ -8673,18 +8896,25 @@ int32 slv9_apply_decomp_partition_policy_ex(slv9_system_t sys,
     }
   }
 
-  slv9_decomp_summarize(sys->slv,&structural,&ss);
-  slv9_decomp_summarize(sys->slv,&active,&as);
-  slv9_cmslv2_plan_from_decomp(sys->slv,&structural,&active,&plan);
-  active_recommended = slv9_decomp_summary_partitionable(&as);
-  structural_safe = slv9_decomp_summary_partitionable(&ss);
+  memset(&ss,0,sizeof(ss));
+  memset(&as,0,sizeof(as));
+  slv9_cmslv2_plan_summary_init(&plan);
+  active_recommended = 1;
+  structural_safe = 1;
+  if(want_progress) {
+    slv9_decomp_summarize(sys->slv,structural,&ss);
+    slv9_decomp_summarize(sys->slv,&active,&as);
+    slv9_cmslv2_plan_from_decomp(sys->slv,structural,&active,&plan);
+    active_recommended = slv9_decomp_summary_partitionable(&as);
+    structural_safe = slv9_decomp_summary_partitionable(&ss);
+  }
   recommend_partition = active_recommended && structural_safe;
 
   if(CMSLV2_BLOCKSOLVE
       && qr_policy == SLV9_CMSLV2_QR_INSTALL_FOR_CALLER
-      && active_recommended) {
+      && (want_progress ? active_recommended : 1)) {
     installed_blocks = slv9_cmslv2_install_due_qrslv_blocks(
-      sys,&structural,&active,phase,&installed_rows,&installed_cols,
+      sys,structural,&active,phase,&installed_rows,&installed_cols,
       &structural_start,&structural_end
     );
   }
@@ -8695,7 +8925,7 @@ int32 slv9_apply_decomp_partition_policy_ex(slv9_system_t sys,
     phase != NULL ? phase : "unknown",
     installed_blocks > 0 ? 1 : 0, CMSLV2_BLOCKSOLVE ? 1 : 0,
     recommend_partition, active_recommended, structural_safe,
-    structural.nblocks, active.nblocks, structural.nnz, active.nnz,
+    structural->nblocks, active.nblocks, structural->nnz, active.nnz,
     as.pure_real, as.pure_integer, as.pure_logical,
     as.selector_coupled, as.boundary_mixed, as.mixed
   );
@@ -8723,13 +8953,13 @@ int32 slv9_apply_decomp_partition_policy_ex(slv9_system_t sys,
   if(CMSLV2_BLOCKSOLVE
       && qr_policy == SLV9_CMSLV2_QR_SUPPRESS
       && boundary_status == 3
-      && structural.nblocks > 0
-      && sys->cmslv2_next_structural_block >= structural.nblocks) {
-    slv_decomp_destroy(&structural);
+      && structural->nblocks > 0
+      && sys->cmslv2_next_structural_block >= structural->nblocks) {
+    slv_decomp_destroy(&structural_storage);
     slv_decomp_destroy(&active);
     return -1;
   }
-  slv_decomp_destroy(&structural);
+  slv_decomp_destroy(&structural_storage);
   slv_decomp_destroy(&active);
   return installed_blocks;
 }
@@ -9169,6 +9399,8 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   slv9_get_default_parameters(server,(SlvClientToken)sys,&(sys->p));
   sys->integrity = OK;
   sys->presolved = 0;
+  slv_decomp_init(&(sys->cmslv2_structural));
+  sys->cmslv2_structural_valid = 0;
 	  sys->need_consistency_analysis = slv_need_consistency(server);
 	  sys->qrslv_fallback =
 	    !sys->need_consistency_analysis
@@ -9649,6 +9881,7 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
 
   sys->s.block.current_reordered_block = -2;
   slv9_cmslv2_restore_qrslv_scope(sys);
+  slv9_cmslv2_clear_structural_cache(sys);
   sys->cmslv2_next_structural_block = 0;
   sys->cmslv2_last_structural_blocks = 0;
   sys->cmslv2_pending_after_qrslv = 0;
@@ -9703,6 +9936,7 @@ int slv9_resolve(slv_system_t server, SlvClientToken asys){
   sys->s.over_defined = sys->s.under_defined = sys->s.struct_singular = FALSE;
   sys->s.block.previous_total_size = 0;
   slv9_cmslv2_restore_qrslv_scope(sys);
+  slv9_cmslv2_clear_structural_cache(sys);
   sys->cmslv2_next_structural_block = 0;
   sys->cmslv2_last_structural_blocks = 0;
   sys->cmslv2_pending_after_qrslv = 0;
@@ -9818,6 +10052,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       );
       store_real_cur_values(server,&(rvalues));
       update_boundaries(server,asys);
+      slv9_cmslv2_clear_structural_cache(sys);
       if(some_boundaries_crossed(server,asys)) {
         vfilter.matchbits = (VAR_ACTIVE_AT_BND | VAR_INCIDENT
 			     | VAR_SVAR | VAR_FIXED);
@@ -9848,6 +10083,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       destroy_array(rvalues.pre_values);
       sys->s.converged  = TRUE;
       sys->s.ready_to_solve = FALSE;
+      slv9_cmslv2_clear_structural_cache(sys);
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No progress can be achieved: solution at current boundary.");
       slv9_report_progress(sys,
         "event=stop_at_boundary, iter=%d",
@@ -9886,6 +10122,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       sys->cmslv2_next_structural_block = 0;
       sys->cmslv2_pending_after_qrslv = 0;
       reanalyze_solver_lists(server);
+      slv9_cmslv2_clear_structural_cache(sys);
       update_relations_residuals(server);
       system_was_reanalyzed = 1;
       slv9_report_progress(sys,
@@ -10036,6 +10273,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
         update_relations_residuals(server);
+        slv9_cmslv2_clear_structural_cache(sys);
         sys->cmslv2_next_structural_block = 0;
         sys->cmslv2_pending_after_qrslv = 0;
         slv9_cmslv2_report_boundary_handoff(
@@ -10155,6 +10393,7 @@ int slv9_destroy(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   if(check_system(sys)) return 1;
   slv9_cmslv2_restore_qrslv_scope(sys);
+  slv9_cmslv2_clear_structural_cache(sys);
   destroy_subregion_information(asys);
   destroy_solvers_tokens(server,sys);
   slv_destroy_parms(&(sys->p));
@@ -10194,14 +10433,24 @@ static const SlvFunctionsT slv9_internals = {
 	,slv9_dump_internals
 };
 
-int cmslv2_register(void){
-	MSG("Registering CMSlv2");
-	if(!solver_engine_named("LRSlv")){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv must be registered before CMSlv2");
+static int cmslv2_ensure_solver_registered(const char *name, const char *package){
+	if(solver_engine_named(name)){
 		return 1;
 	}
-	if(!solver_engine_named("QRSlv")){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv must be registered before CMSlv2");
+	if(package_load(package,NULL)){
+		return 0;
+	}
+	return solver_engine_named(name) != NULL;
+}
+
+int cmslv2_register(void){
+	MSG("Registering CMSlv2");
+	if(!cmslv2_ensure_solver_registered("LRSlv","lrslv")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv must be loadable before CMSlv2");
+		return 1;
+	}
+	if(!cmslv2_ensure_solver_registered("QRSlv","qrslv")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv must be loadable before CMSlv2");
 		return 1;
 	}
 	return solver_register(&slv9_internals);

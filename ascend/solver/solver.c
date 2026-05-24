@@ -248,52 +248,7 @@ int solver_register(const SlvFunctionsT *solver){
   SOLVER REGISTRATION
 */
 
-/* rewrote this stuff to get rid of all the #ifdefs -- JP */
-
-struct StaticSolverRegistration{
-	const char *importname;
-};
-
-/*
-	The names here are only used to provide information in the case where
-	solver registration fails. The definitive solver names are in the slv*.c
-	files.
-*/
-static const struct StaticSolverRegistration slv_reg[]={
-	{"qrslv"}
-#ifdef ASC_HAVE_IPOPT
-		,{"ipopt"}
-#endif
-#ifdef ASC_HAVE_MAKEMPS
-		,{"makemps"}
-#endif
-#ifdef ASC_HAVE_HIGHS
-		,{"highs"}
-#endif
-#ifdef ASC_HAVE_A4SQP
-	,{"a4sqp"}
-#endif
-#ifdef ASC_HAVE_SLSQP
-	,{"slsqp"}
-#endif
-#ifdef ASC_WITH_LRSLV
-	,{"lrslv"}
-#endif
-#ifdef ASC_WITH_CMSLV
-	,{"cmslv"}
-#endif
-#if 0
-	,{"conopt"}
-#endif
-	,{NULL}
-/* 	{0,"SLV",&slv0_register} */
-/*	,{0,"MINOS",&slv1_register} */
-/*	,{0,"CSLV",&slv4_register} */
-/*	,{0,"LSSLV",&slv5_register} */
-/*	,{0,"MPS",&slv6_register} */
-/*	,{0,"NGSLV",&slv7_register} */
-/* 	,{0,"OPTSQP",&slv2_register} */
-};
+/* Old in-tree solvers retained for source compatibility only. */
 
 #if 0
 /* this code can automate calls to AddDllDirectory in Windows. however, for now, we found it wasn't needed (surprisingly) */
@@ -368,17 +323,23 @@ int SlvRegisterStandardClients(void){
 #endif
 
 	MSG("REGISTERING STANDARD SOLVER ENGINES");
-	for(i=0; slv_reg[i].importname!=NULL;++i){
-		MSG("Registering '%s'",slv_reg[i].importname);
-		error = package_load(slv_reg[i].importname,NULL);
-		if(error){
-			ERROR_REPORTER_HERE(ASC_PROG_NOTE
-				,"Unable to register solver '%s' (error %d).\n"
-				,slv_reg[i].importname,error
-			);
-		}else{
-			/* CONSOLE_DEBUG("Solver '%s' registered OK",slv_reg[i].importname); */
-			nclients++;
+	{
+		char imports[] = ASC_SOLVER_IMPORTS;
+		char *importname;
+		for(importname = strtok(imports,", \t"), i = 0;
+				importname != NULL;
+				importname = strtok(NULL,", \t"), ++i){
+			MSG("Registering '%s'",importname);
+			error = package_load(importname,NULL);
+			if(error){
+				ERROR_REPORTER_HERE(ASC_PROG_NOTE
+					,"Unable to register solver '%s' (error %d).\n"
+					,importname,error
+				);
+			}else{
+				/* CONSOLE_DEBUG("Solver '%s' registered OK",importname); */
+				nclients++;
+			}
 		}
 	}
   return nclients;
