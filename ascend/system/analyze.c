@@ -2553,6 +2553,12 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   for (c=1;c<=len;c++) {
     cur_sol_case = when_case_create(NULL);
     cur_case = (struct Case *)(gl_fetch(scratch,c));
+    when_case_set_condition(cur_sol_case,GetCaseCondition(cur_case));
+    when_case_set_applies(cur_sol_case,GetCaseApplies(cur_case));
+    when_case_set_source(cur_sol_case,
+                         GetCaseModule(cur_case),
+                         GetCaseLineNum(cur_case));
+    when_case_set_case_number(cur_sol_case,c);
     ValueList = GetCaseValues(cur_case);
     if(selector_target != NULL){
       ValidateSelectorCaseValues(context,selector_target,ValueList);

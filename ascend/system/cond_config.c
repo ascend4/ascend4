@@ -33,11 +33,17 @@
 
 #include <ascend/linear/mtx.h>
 
+#include <ascend/compiler/evaluate.h>
+#include <ascend/compiler/find.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/value_type.h>
+
 #include "slv_server.h"
 #include "system.h"
 #include "analyze.h"
 
 #define USEDCODE 0
+#define IPTR(i) ((struct Instance *)(i))
 
 /* #define PREANALYSIS_DEBUG */
 /* #define WHEN_DEBUG */
@@ -209,6 +215,129 @@ static void apply_case(struct when_case *cur_case){
   }
 }
 
+static int evaluate_lowered_region_predicate(
+    struct w_when *when, const struct Expr *predicate, int *truth
+){
+  struct Instance *context;
+  struct value_t value;
+
+  if(when == NULL || predicate == NULL || truth == NULL) {
+    return 1;
+  }
+
+  context = InstanceParent(IPTR(when_instance(when)),1);
+  if(context == NULL) {
+    context = IPTR(when_instance(when));
+  }
+
+  SetEvaluationContext(context);
+  value = EvaluateExpr(predicate,NULL,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+
+  if(ValueKind(value) != boolean_value) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "Lowered WHEN region predicate did not evaluate to a boolean value");
+    DestroyValue(&value);
+    return 1;
+  }
+
+  *truth = BooleanValue(value) ? TRUE : FALSE;
+  DestroyValue(&value);
+  return 0;
+}
+
+static int apply_lowered_region_case(struct when_case *cur_case);
+
+static int configure_lowered_classifier_when(struct w_when *when)
+{
+  struct gl_list_t *cases;
+  struct when_case *cur_case;
+  const struct Expr *predicate;
+  int truth;
+  int c, clen;
+
+  if(when == NULL) {
+    return 1;
+  }
+
+  if(!when_has_classifier_predicates(when)) {
+    analyze_when(when);
+    return 0;
+  }
+
+  cases = when_cases_list(when);
+  clen = gl_length(cases);
+  for(c = 1; c <= clen; ++c) {
+    cur_case = (struct when_case *)(gl_fetch(cases,c));
+    predicate = when_case_region_predicate(cur_case);
+    if(predicate == NULL) {
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,
+        "WHEN classifier case has no lowered steady-state region predicate");
+      return 1;
+    }
+    if(evaluate_lowered_region_predicate(when,predicate,&truth)) {
+      return 1;
+    }
+    if(truth) {
+      if(apply_lowered_region_case(cur_case)) {
+        return 1;
+      }
+      when_case_set_active(cur_case,TRUE);
+      return 0;
+    }
+  }
+
+  ERROR_REPORTER_HERE(ASC_USER_ERROR,
+    "No lowered WHEN classifier region predicate evaluated to TRUE");
+  return 1;
+}
+
+static int apply_lowered_region_case(struct when_case *cur_case)
+{
+  struct gl_list_t *rels;
+  struct gl_list_t *logrels;
+  struct gl_list_t *whens;
+  struct rel_relation *rel;
+  struct logrel_relation *lrel;
+  struct w_when *when;
+  int i,n;
+
+  if(cur_case == NULL) {
+    return 1;
+  }
+
+  rels = when_case_rels_list(cur_case);
+  if(rels != NULL) {
+    n = gl_length(rels);
+    for(i = 1; i <= n; ++i) {
+      rel = (struct rel_relation *)(gl_fetch(rels,i));
+      rel_set_active(rel,TRUE);
+    }
+  }
+
+  logrels = when_case_logrels_list(cur_case);
+  if(logrels != NULL) {
+    n = gl_length(logrels);
+    for(i = 1; i <= n; ++i) {
+      lrel = (struct logrel_relation *)(gl_fetch(logrels,i));
+      logrel_set_active(lrel,TRUE);
+    }
+  }
+
+  whens = when_case_whens_list(cur_case);
+  if(whens != NULL) {
+    n = gl_length(whens);
+    for(i = 1; i <= n; ++i) {
+      when = (struct w_when *)(gl_fetch(whens,i));
+      if(configure_lowered_classifier_when(when)) {
+        return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
 /*
  * Compare current values of the conditional variables with
  * the set of values in a CASE, and try to find is such
@@ -226,6 +355,12 @@ static int32 analyze_case(struct when_case *cur_case,
   int32 values[MAX_VAR_IN_LIST];
   int32 *value;
   int32 *case_values,dindex;
+
+  if(when_case_has_classifier_predicate(cur_case)){
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "CASE IF/APPLIES IF in a WHEN requires classifier lowering before conditional analysis");
+    return 0;
+  }
 
   value = &(values[0]);
   case_values = when_case_values_list(cur_case);
@@ -264,6 +399,10 @@ void analyze_when(struct w_when *when){
 #ifdef WHEN_DEBUG
   char *whenname;
 #endif
+
+  if(when_has_classifier_predicates(when)){
+    return;
+  }
 
   dvars = when_dvars_list(when);
   cases = when_cases_list(when);
@@ -379,6 +518,12 @@ static int32 simplified_analyze_case(struct when_case *cur_case,
   int32 *value;
   int32 *case_values,dindex;
 
+  if(when_case_has_classifier_predicate(cur_case)){
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "CASE IF/APPLIES IF in a WHEN requires classifier lowering before conditional analysis");
+    return 0;
+  }
+
   value = &(values[0]);
   case_values = when_case_values_list(cur_case);
   for(dindex =0; dindex<MAX_VAR_IN_LIST; dindex++) {
@@ -415,6 +560,10 @@ static void simplified_analyze_when(struct w_when *when)
   int32 case_match;
   int32 *value;
   int32 *case_values;
+
+  if(when_has_classifier_predicates(when)){
+    return;
+  }
 
   dvars = when_dvars_list(when);
   cases = when_cases_list(when);
@@ -1899,6 +2048,74 @@ void reanalyze_solver_lists(slv_system_t sys)
   set_active_vars_in_active_rels(solverrl);
   set_active_vars_in_active_rels(solverol);
   set_active_disvars_in_active_logrels(solverll);
+}
+
+int reanalyze_solver_lists_with_lowered_whens(slv_system_t sys)
+{
+  struct rel_relation **solverrl;
+  struct rel_relation **solverol;
+  struct logrel_relation **solverll;
+  struct var_variable **solvervl;
+  struct dis_discrete **solverdl;
+  struct dis_discrete **dislist;
+  struct w_when **whenlist;
+  struct w_when *when;
+  struct dis_discrete *dvar;
+  struct gl_list_t *symbol_list;
+  int32 c;
+
+  if(sys == NULL) {
+    return 1;
+  }
+
+  solverrl = slv_get_solvers_rel_list(sys);
+  solverol = slv_get_solvers_obj_list(sys);
+  solverll = slv_get_solvers_logrel_list(sys);
+  solvervl = slv_get_solvers_var_list(sys);
+  solverdl = slv_get_solvers_dvar_list(sys);
+  whenlist = slv_get_solvers_when_list(sys);
+  dislist =  slv_get_master_dvar_list(sys);
+  symbol_list = slv_get_symbol_list(sys);
+
+  if(whenlist == NULL) {
+    return 0;
+  }
+
+  SET_WHENDEBUG(sys)
+
+  set_inactive_vars_in_list(solvervl);
+  set_inactive_disvars_in_list(solverdl);
+  set_active_rels_in_list(solverrl);
+  set_active_logrels_in_list(solverll);
+
+  for(c = 0; dislist != NULL && dislist[c] != NULL; ++c) {
+    dvar = dislist[c];
+    dis_set_value_from_inst(dvar,symbol_list);
+  }
+
+  for(c = 0; whenlist[c] != NULL; ++c) {
+    when = whenlist[c];
+    if(!when_inwhen(when)) {
+      set_rels_status_in_when(when,FALSE);
+    }
+  }
+
+  set_active_rels_as_invariant(solverrl);
+
+  for(c = 0; whenlist[c] != NULL; ++c) {
+    when = whenlist[c];
+    if(!when_inwhen(when)) {
+      if(configure_lowered_classifier_when(when)) {
+        return 1;
+      }
+    }
+  }
+
+  set_active_vars_in_active_rels(solverrl);
+  set_active_vars_in_active_rels(solverol);
+  set_active_disvars_in_active_logrels(solverll);
+
+  return 0;
 }
 
 

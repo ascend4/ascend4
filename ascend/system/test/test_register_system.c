@@ -20,6 +20,7 @@
 
 #define TESTS(T) \
 	T(link) \
+	T(conditional) \
 	T(der) \
 	T(leastsq)
 

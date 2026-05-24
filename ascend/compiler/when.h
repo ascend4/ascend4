@@ -44,6 +44,22 @@ extern struct WhenList *CreateWhen(struct Set *set, struct StatementList *sl);
  *  If set = NULL, this indicates an OTHERWISE case.
  */
 
+extern struct WhenList *CreateWhenIf(struct Set *set, struct Expr *condition,
+                                     struct StatementList *sl);
+/**<
+ *  Create a when node with an optional CASE ... IF condition.
+ *  If set = NULL, this indicates an OTHERWISE case.
+ */
+
+extern struct WhenList *CreateWhenIfApplies(struct Set *set,
+                                            struct Expr *condition,
+                                            struct Expr *applies,
+                                            struct StatementList *sl);
+/**<
+ *  Create a when node with optional CASE ... IF and APPLIES IF predicates.
+ *  If set = NULL, this indicates an OTHERWISE case.
+ */
+
 extern struct WhenList *ReverseWhenCases(struct WhenList *w);
 /**< 
  *  Reverse this list.
@@ -92,6 +108,56 @@ extern struct Set *WhenSetListF(struct WhenList *w);
  */
 
 #ifdef NDEBUG
+#define WhenCaseCondition(w) ((w)->condition)
+#else
+#define WhenCaseCondition(w) WhenCaseConditionF(w)
+#endif
+/**<
+ *  Return the optional CASE ... IF condition.
+ *  @param w struct WhenList*, the when list to query.
+ *  @return The condition expression, or NULL when no CASE IF condition exists.
+ *  @see WhenCaseConditionF()
+ */
+extern struct Expr *WhenCaseConditionF(struct WhenList *w);
+/**<
+ *  Implementation function for WhenCaseCondition() (debug mode).
+ *  Do not call this function directly - use WhenCaseCondition() instead.
+ */
+
+#ifdef NDEBUG
+#define WhenCaseApplies(w) ((w)->applies)
+#else
+#define WhenCaseApplies(w) WhenCaseAppliesF(w)
+#endif
+/**<
+ *  Return the optional APPLIES IF predicate.
+ *  @param w struct WhenList*, the when list to query.
+ *  @return The predicate expression, or NULL when no APPLIES IF exists.
+ *  @see WhenCaseAppliesF()
+ */
+extern struct Expr *WhenCaseAppliesF(struct WhenList *w);
+/**<
+ *  Implementation function for WhenCaseApplies() (debug mode).
+ *  Do not call this function directly - use WhenCaseApplies() instead.
+ */
+
+#ifdef NDEBUG
+#define WhenCaseModule(w) ((w)->mod)
+#else
+#define WhenCaseModule(w) WhenCaseModuleF(w)
+#endif
+/**< Return the module where the WHEN case was parsed. */
+extern struct module_t *WhenCaseModuleF(struct WhenList *w);
+
+#ifdef NDEBUG
+#define WhenCaseLineNum(w) ((w)->linenum)
+#else
+#define WhenCaseLineNum(w) WhenCaseLineNumF(w)
+#endif
+/**< Return the line number where the WHEN case was parsed. */
+extern unsigned long WhenCaseLineNumF(struct WhenList *w);
+
+#ifdef NDEBUG
 #define WhenStatementList(w) ((w)->slist)
 #else
 #define WhenStatementList(w) WhenStatementListF(w)
@@ -131,4 +197,3 @@ extern struct WhenList *CopyWhenList(struct WhenList *w);
 /* @} */
 
 #endif  /* ASC_WHEN_H */
-

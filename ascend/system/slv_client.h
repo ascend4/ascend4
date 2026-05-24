@@ -731,7 +731,7 @@ extern struct logrel_relation **slv_get_master_condlogrel_list(slv_system_t sys)
 	@ref masterlists
 */
 
-extern struct w_when **slv_get_master_when_list(slv_system_t sys);
+ASC_DLLSPEC struct w_when **slv_get_master_when_list(slv_system_t sys);
 /**<
 	Returns the (NULL-terminated) list of master whens.
 	@ref masterlists
@@ -751,6 +751,27 @@ extern struct gl_list_t *slv_get_symbol_list(slv_system_t sys);
 
 ASC_DLLSPEC int32 slv_need_consistency(slv_system_t sys);
 /**< Gets the int need_consistency associated with the system. */
+
+ASC_DLLSPEC int32 slv_has_classifier_whens(slv_system_t sys);
+/**<
+	Returns nonzero if the system contains WHEN cases with CASE IF or
+	APPLIES IF metadata in the solver-side presentation.
+*/
+
+ASC_DLLSPEC int32 slv_classifier_regions_lowered(slv_system_t sys,
+                                                 enum when_region_request request);
+/**<
+	Returns nonzero if classifier WHEN regions have been lowered for the
+	requested solver-side interpretation.
+*/
+
+ASC_DLLSPEC int slv_lower_classifier_whens(slv_system_t sys,
+                                           enum when_region_request request);
+/**<
+	Derives solver-side region predicates for every classifier WHEN in the
+	system. This mutates only the slv_system_t presentation, not the compiler
+	instance tree.
+*/
 
 ASC_DLLSPEC int32 slv_get_num_solvers_vars(slv_system_t sys);
 /**< Returns the length of the solver variable list.

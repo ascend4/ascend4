@@ -774,7 +774,7 @@ static unsigned char g_decl_checkkind = ISCV_NONE;
   YACC TOKENS
 */
 
-%token ADD_TOK ALIASES_TOK AND_TOK ANY_TOK AREALIKE_TOK ARETHESAME_TOK ARRAY_TOK ASSERT_TOK ATOM_TOK
+%token ADD_TOK ALIASES_TOK AND_TOK ANY_TOK APPLIES_TOK AREALIKE_TOK ARETHESAME_TOK ARRAY_TOK ASSERT_TOK ATOM_TOK
 %token BEQ_TOK BNE_TOK BREAK_TOK
 %token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
 %token CONTINUE_TOK CREATE_TOK
@@ -833,7 +833,7 @@ static unsigned char g_decl_checkkind = ISCV_NONE;
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
 %type <nptr> data_args fname name dataset_target fvarref /* optional_scope */
-%type <eptr> relation expr relop logrelop optional_with_value
+%type <eptr> relation expr relop logrelop optional_with_value optional_when_case_if optional_when_case_applies
 %type <sptr> set setexprlist optional_set_values
 %type <lptr> fvarlist input_args output_args varlist method_fvarlist method_varlist
 
@@ -3089,21 +3089,41 @@ whenlist:
     ;
 
 whenlistf:
-    CASE_TOK set ':' fstatements
+    CASE_TOK set optional_when_case_if optional_when_case_applies ':' fstatements
 	{
-	  $$ = CreateWhen($2,$4);
+	  $$ = CreateWhenIfApplies($2,$3,$4,$6);
 	}
     | OTHERWISE_TOK ':' fstatements
 	{
 	  $$ = CreateWhen(NULL,$3);
 	}
-    | whenlistf CASE_TOK set ':' fstatements
+    | whenlistf CASE_TOK set optional_when_case_if optional_when_case_applies ':' fstatements
 	{
-	  $$ = LinkWhenCases(CreateWhen($3,$5),$1);
+	  $$ = LinkWhenCases(CreateWhenIfApplies($3,$4,$5,$7),$1);
 	}
     | whenlistf OTHERWISE_TOK ':' fstatements
 	{
 	  $$ = LinkWhenCases(CreateWhen(NULL,$4),$1);
+	}
+    ;
+
+optional_when_case_if:
+	{
+	  $$ = NULL;
+	}
+    | IF_TOK expr
+	{
+	  $$ = $2;
+	}
+    ;
+
+optional_when_case_applies:
+	{
+	  $$ = NULL;
+	}
+    | APPLIES_TOK IF_TOK expr
+	{
+	  $$ = $3;
 	}
     ;
 
@@ -3546,6 +3566,10 @@ setexprlist:
 	{
 	  $$ = CreateSingleSet($1);
 	}
+    | '*'
+	{
+	  $$ = CreateSingleSet(CreateAnyExpr());
+	}
     | expr DOTDOT_TOK expr
 	{
 	  $$ = CreateRangeSet($1,$3);
@@ -3553,6 +3577,11 @@ setexprlist:
     | setexprlist ',' expr
 	{
 	  $$ = CreateSingleSet($3);
+	  LinkSets($$,$1);
+	}
+    | setexprlist ',' '*'
+	{
+	  $$ = CreateSingleSet(CreateAnyExpr());
 	  LinkSets($$,$1);
 	}
     | setexprlist ',' expr DOTDOT_TOK expr
@@ -4149,6 +4178,8 @@ static CONST char *
 TokenAsString(unsigned long token)
 {
   switch( token ) {
+  case APPLIES_TOK:
+    return "APPLIES";
   case ATOM_TOK:
     return "ATOM";
   case CONDITIONAL_TOK:

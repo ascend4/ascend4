@@ -1,0 +1,171 @@
+REQUIRE "atoms.a4l";
+IMPORT "qrslv";
+
+MODEL slvreq_square_child;
+	x, y IS_A solver_var;
+	y = 2 * x + 1;
+END slvreq_square_child;
+
+MODEL slvreq_boundary_plain;
+	child IS_A slvreq_square_child;
+	root_free IS_A solver_var;
+METHODS
+METHOD on_load;
+	FIX child.x;
+	child.x := 3;
+	root_free := 10;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE child;
+	ASSERT child.y == 7;
+END on_load;
+END slvreq_boundary_plain;
+
+MODEL slvreq_boundary_alias;
+	child IS_A slvreq_square_child;
+	root_free ALIASES child.y;
+	root_other IS_A solver_var;
+METHODS
+METHOD on_load;
+	FIX child.x;
+	child.x := 4;
+	root_other := 10;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE child;
+	ASSERT root_free == 9;
+END on_load;
+END slvreq_boundary_alias;
+
+MODEL slvreq_boundary_cross_relation;
+	child IS_A slvreq_square_child;
+	root_free IS_A solver_var;
+	cross: root_free = child.y;
+METHODS
+METHOD on_load;
+	FIX child.x;
+	child.x := 5;
+	root_free := 11;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE child;
+	ASSERT child.y == 11;
+END on_load;
+END slvreq_boundary_cross_relation;
+
+MODEL slvreq_when_child;
+	x, y IS_A solver_var;
+	b IS_A start_false;
+	pos: y = x + 1;
+	neg: y = x - 1;
+
+	WHEN (b)
+	CASE TRUE:
+		USE pos;
+	OTHERWISE:
+		USE neg;
+	END WHEN;
+END slvreq_when_child;
+
+MODEL slvreq_boundary_child_when;
+	child IS_A slvreq_when_child;
+	root_free IS_A solver_var;
+METHODS
+METHOD on_load;
+	FIX child.x;
+	child.x := 6;
+	child.b := TRUE;
+	root_free := 10;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE child;
+	ASSERT child.y == 7;
+END on_load;
+END slvreq_boundary_child_when;
+
+MODEL slvreq_plain_rel_child;
+	x, y IS_A solver_var;
+	pos: y = x + 1;
+	neg: y = x - 1;
+END slvreq_plain_rel_child;
+
+MODEL slvreq_boundary_parent_when_controls_child;
+	child IS_A slvreq_plain_rel_child;
+	b IS_A start_false;
+	root_free IS_A solver_var;
+
+	WHEN (b)
+	CASE TRUE:
+		USE child.pos;
+	OTHERWISE:
+		USE child.neg;
+	END WHEN;
+METHODS
+METHOD on_load;
+	FIX child.x;
+	child.x := 8;
+	b := TRUE;
+	root_free := 10;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE child;
+	ASSERT child.y == 9;
+END on_load;
+END slvreq_boundary_parent_when_controls_child;
+
+MODEL slvreq_boundary_unrelated_parent_when;
+	child IS_A slvreq_square_child;
+	b IS_A start_false;
+	root_x, root_y IS_A solver_var;
+	pos: root_y = root_x + 1;
+	neg: root_y = root_x - 1;
+
+	WHEN (b)
+	CASE TRUE:
+		USE pos;
+	OTHERWISE:
+		USE neg;
+	END WHEN;
+METHODS
+METHOD on_load;
+	FIX child.x;
+	child.x := 10;
+	FIX root_x;
+	root_x := 0;
+	root_y := 0;
+	b := TRUE;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE child;
+	ASSERT child.y == 21;
+END on_load;
+END slvreq_boundary_unrelated_parent_when;
+
+MODEL slvreq_boundary_unrelated_parent_when_delete_before;
+	child IS_A slvreq_square_child;
+	b IS_A start_false;
+	root_x, root_y IS_A solver_var;
+	pos: root_y = root_x + 1;
+	neg: root_y = root_x - 1;
+
+	WHEN (b)
+	CASE TRUE:
+		USE pos;
+	OTHERWISE:
+		USE neg;
+	END WHEN;
+METHODS
+METHOD on_load;
+	FIX child.x;
+	child.x := 10;
+	FIX root_x;
+	root_x := 0;
+	root_y := 0;
+	b := TRUE;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	DELETE SYSTEM;
+	SOLVE child;
+	ASSERT child.y == 21;
+END on_load;
+END slvreq_boundary_unrelated_parent_when_delete_before;

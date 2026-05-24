@@ -201,6 +201,17 @@ ASC_DLLSPEC void reanalyze_solver_lists(slv_system_t sys);
  * flag ACTIVE for variables and relations in the solvers lists.
  */
 
+ASC_DLLSPEC int reanalyze_solver_lists_with_lowered_whens(slv_system_t sys);
+/**<
+ * Reanalyze the solver lists using lowered classifier predicates for
+ * CASE IF/APPLIES IF WHENs. The lowered predicates are evaluated against
+ * the current instance-tree values and the first true case is activated.
+ * Ordinary WHENs are handled with the existing selector-dispatch analysis.
+ *
+ * Returns 0 on success and nonzero if a lowered classifier predicate cannot
+ * be evaluated or no case applies.
+ */
+
 ASC_DLLSPEC int32 system_reanalyze(slv_system_t sys);
 /**<
 	For conditional modeling. If a whenvarlist has been changed
@@ -266,4 +277,3 @@ extern int32 build_disvar_solver_from_master(struct dis_discrete **masterdl,
 /* @} */
 
 #endif /*  ASC_COND_CONFIG_H */
-

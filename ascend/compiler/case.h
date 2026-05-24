@@ -45,9 +45,13 @@
 struct Case {
     struct Set *ValueList;  /**< List of Values for the Conditions
                                  NULL if OTHERWISE  */
+    struct Expr *condition; /**< Optional CASE ... IF classifier guard */
+    struct Expr *applies;   /**< Optional APPLIES IF region predicate */
     struct gl_list_t *ref;  /**< References to RelationInstance
                                  ModelInstance or WhenInstance */
     struct gl_list_t *reinit; /**< REINIT action statements attached to the case */
+    struct module_t *mod;   /**< module where the source CASE was parsed */
+    unsigned long linenum;  /**< line number where the source CASE was parsed */
     unsigned active;        /**<  1:active   0:inactive  */
 };
 
@@ -65,6 +69,30 @@ extern struct Case *CreateCase(struct Set *v1, struct gl_list_t *refinst);
 extern struct Set *GetCaseValuesF(struct Case *cs);
 /**<
  *  Return the List of Values of a Case.  Implementation of GetCaseValues().
+ */
+
+#ifdef NDEBUG
+#define GetCaseCondition(c) ((c)->condition)
+#else
+#define GetCaseCondition(c) GetCaseConditionF(c)
+#endif
+/**< Return the optional CASE ... IF classifier guard of a Case. */
+extern struct Expr *GetCaseConditionF(struct Case *cs);
+/**<
+ *  Return the optional CASE ... IF classifier guard.
+ *  Implementation of GetCaseCondition().
+ */
+
+#ifdef NDEBUG
+#define GetCaseApplies(c) ((c)->applies)
+#else
+#define GetCaseApplies(c) GetCaseAppliesF(c)
+#endif
+/**< Return the optional APPLIES IF region predicate of a Case. */
+extern struct Expr *GetCaseAppliesF(struct Case *cs);
+/**<
+ *  Return the optional APPLIES IF region predicate.
+ *  Implementation of GetCaseApplies().
  */
 
 #ifdef NDEBUG
@@ -106,6 +134,16 @@ extern struct Case *SetCaseValues(struct Case *cs, struct Set *set);
  *  Set the List of Values of a Case.
  */
 
+extern struct Case *SetCaseCondition(struct Case *cs, struct Expr *condition);
+/**<
+ *  Set the optional CASE ... IF classifier guard of a Case.
+ */
+
+extern struct Case *SetCaseApplies(struct Case *cs, struct Expr *applies);
+/**<
+ *  Set the optional APPLIES IF region predicate of a Case.
+ */
+
 extern struct Case *SetCaseReferences(struct Case *cs, struct gl_list_t *refinst);
 /**<
  *  Set the List of References of a Case.
@@ -114,6 +152,29 @@ extern struct Case *SetCaseReferences(struct Case *cs, struct gl_list_t *refinst
 extern struct Case *SetCaseReinitStatements(struct Case *cs, struct gl_list_t *reinit);
 /**<
  *  Set the list of REINIT statements of a Case.
+ */
+
+#ifdef NDEBUG
+#define GetCaseModule(c) ((c)->mod)
+#else
+#define GetCaseModule(c) GetCaseModuleF(c)
+#endif
+/**< Return the module where the source CASE was parsed. */
+extern struct module_t *GetCaseModuleF(struct Case *cs);
+
+#ifdef NDEBUG
+#define GetCaseLineNum(c) ((c)->linenum)
+#else
+#define GetCaseLineNum(c) GetCaseLineNumF(c)
+#endif
+/**< Return the line number where the source CASE was parsed. */
+extern unsigned long GetCaseLineNumF(struct Case *cs);
+
+extern struct Case *SetCaseSource(struct Case *cs,
+                                  struct module_t *mod,
+                                  unsigned long linenum);
+/**<
+ *  Set the source location of a Case.
  */
 
 extern struct Case *SetCaseStatus(struct Case *cs, int status);

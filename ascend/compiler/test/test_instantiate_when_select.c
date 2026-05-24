@@ -80,6 +80,38 @@ static void test_when_ok_unselected_cases(void){
 	instantiate_case("when_ok_unselected_cases", 0);
 }
 
+static void test_when_ok_any_case(void){
+	instantiate_case("when_ok_any_case", 0);
+}
+
+static void test_when_ok_star_case(void){
+	instantiate_case("when_ok_star_case", 0);
+}
+
+static void test_when_ok_leading_star_case(void){
+	instantiate_case("when_ok_leading_star_case", 0);
+}
+
+static void test_when_ok_wildcard_collision_first_wins(void){
+	instantiate_case("when_ok_wildcard_collision_first_wins", 0);
+}
+
+static void test_when_case_if_parses(void){
+	instantiate_case("when_case_if_parses", 0);
+}
+
+static void test_when_case_if_full_boolean_parses(void){
+	instantiate_case("when_case_if_full_boolean_parses", 0);
+}
+
+static void test_when_applies_if_parses(void){
+	instantiate_case("when_applies_if_parses", 0);
+}
+
+static void test_when_case_if_applies_if_rejected(void){
+	instantiate_case("when_case_if_applies_if_rejected", 1);
+}
+
 static void test_select_ok_unselected_cases(void){
 	instantiate_case("select_ok_unselected_cases", 0);
 }
@@ -90,6 +122,14 @@ static void test_when_ok_no_match(void){
 
 #define TESTS(T) \
 	T(when_ok_unselected_cases) \
+	T(when_ok_any_case) \
+	T(when_ok_star_case) \
+	T(when_ok_leading_star_case) \
+	T(when_ok_wildcard_collision_first_wins) \
+	T(when_case_if_parses) \
+	T(when_case_if_full_boolean_parses) \
+	T(when_applies_if_parses) \
+	T(when_case_if_applies_if_rejected) \
 	T(select_ok_unselected_cases) \
 	T(when_ok_no_match)
 

@@ -34,6 +34,7 @@
 #include "symtab.h"
 #include "functype.h"
 #include "expr_types.h"
+#include "exprs.h"
 #include "childinfo.h"
 #include "child.h"
 #include "type_desc.h"
@@ -655,6 +656,9 @@ static void BuildWhenCasesList(CONST struct Instance *src,
   for (c=1;c<=len;c++) {
     src_case = (struct Case *)gl_fetch(src_caselist,c);
     dest_case = CreateCase(GetCaseValues(src_case),NULL);
+    SetCaseCondition(dest_case,CopyExprList(GetCaseCondition(src_case)));
+    SetCaseApplies(dest_case,CopyExprList(GetCaseApplies(src_case)));
+    SetCaseSource(dest_case,GetCaseModule(src_case),GetCaseLineNum(src_case));
     srcref_list = GetCaseReferences(src_case);
     destref_list = BuildWhenCasesRefList(dest,srcref_list,dest_list);
     SetCaseReferences(dest_case,destref_list);

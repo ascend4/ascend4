@@ -37,6 +37,8 @@
 #include "exprs.h"
 #include "slist.h"
 #include "vlist.h"
+#include "module.h"
+#include "scanner.h"
 #include "when.h"
 
 #define WMALLOC(x) x = ASC_NEW(struct WhenList)
@@ -56,10 +58,27 @@ int SetNodeIsTrue(struct Set *s)
 
 struct WhenList *CreateWhen(struct Set *set, struct StatementList *sl)
 {
+  return CreateWhenIf(set,NULL,sl);
+}
+
+struct WhenList *CreateWhenIf(struct Set *set, struct Expr *condition,
+                              struct StatementList *sl)
+{
+  return CreateWhenIfApplies(set,condition,NULL,sl);
+}
+
+struct WhenList *CreateWhenIfApplies(struct Set *set, struct Expr *condition,
+                                     struct Expr *applies,
+                                     struct StatementList *sl)
+{
   struct WhenList *result;
   WMALLOC(result);
   result->slist = sl;
-  result->values =set;
+  result->values = set;
+  result->condition = condition;
+  result->applies = applies;
+  result->mod = Asc_CurrentModule();
+  result->linenum = LineNum();
   result->next = NULL;
   return result;
 }
@@ -98,6 +117,29 @@ struct Set *WhenSetListF(struct WhenList *w)
   return w->values;
 }
 
+struct Expr *WhenCaseConditionF(struct WhenList *w)
+{
+  assert(w!=NULL);
+  return w->condition;
+}
+
+struct Expr *WhenCaseAppliesF(struct WhenList *w)
+{
+  assert(w!=NULL);
+  return w->applies;
+}
+
+struct module_t *WhenCaseModuleF(struct WhenList *w)
+{
+  assert(w!=NULL);
+  return w->mod;
+}
+
+unsigned long WhenCaseLineNumF(struct WhenList *w)
+{
+  assert(w!=NULL);
+  return w->linenum;
+}
 
 struct StatementList *WhenStatementListF(struct WhenList *w)
 {
@@ -117,6 +159,12 @@ void DestroyWhenNode(struct WhenList *w)
       else {
         DestroySetListByReference(w->values);
       }
+    }
+    if (w->condition) {
+      DestroyExprList(w->condition);
+    }
+    if (w->applies) {
+      DestroyExprList(w->applies);
     }
     DestroyStatementList(w->slist);
     w->next = NULL;
@@ -141,7 +189,11 @@ struct WhenList *CopyWhenNode(struct WhenList *w)
   WMALLOC(result);
   if (w->values) result->values = CopySetByReference(w->values);
   else result->values = w->values;
+  result->condition = CopyExprList(w->condition);
+  result->applies = CopyExprList(w->applies);
   result->slist = CopyListToModify(w->slist);
+  result->mod = w->mod;
+  result->linenum = w->linenum;
   result->next = NULL;
   return result;
 }
@@ -160,9 +212,6 @@ struct WhenList *CopyWhenList(struct WhenList *w)
   }
   return head;
 }
-
-
-
 
 
 

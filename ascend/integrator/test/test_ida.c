@@ -1072,6 +1072,28 @@ static void test_when_symbol_initial_case(){
 	ida_cleanup(&testsys);
 }
 
+static void test_when_case_if_rejected_for_ida(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/ida/when_nonboolean_probe.a4c", "ida_when_case_if_rejected", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT(0 != integrator_analyse(testsys.integ));
+	ida_cleanup(&testsys);
+}
+
+static void test_when_applies_if_rejected_for_ida(){
+	IdaTestSystem testsys;
+
+	if(ida_test_load("test/ida/when_nonboolean_probe.a4c", "ida_when_applies_if_rejected", 1, &testsys)){
+		return;
+	}
+
+	CU_ASSERT(0 != integrator_analyse(testsys.integ));
+	ida_cleanup(&testsys);
+}
+
 static void test_example_ideal_rebound(){
 	IdaTestSystem testsys;
 	struct Instance *root, *iy, *iv, *it, *itlast;
@@ -1522,6 +1544,8 @@ static void test_initial_alias_binding_bug(){
 	T(switchto_selector_structure_change_detected) \
 	T(when_integer_initial_case) \
 	T(when_symbol_initial_case) \
+	T(when_case_if_rejected_for_ida) \
+	T(when_applies_if_rejected_for_ida) \
 	T(example_ideal_rebound) \
 	T(example_ideal_rebound_zeno_stop) \
 	T(example_resting_rebound) \

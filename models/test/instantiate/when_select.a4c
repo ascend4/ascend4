@@ -19,6 +19,116 @@ MODEL when_ok_unselected_cases;
 	END WHEN;
 END when_ok_unselected_cases;
 
+MODEL when_ok_any_case;
+	b1, b2 IS_A boolean_constant;
+	b1 :== TRUE;
+	b2 :== FALSE;
+	x IS_A solver_var;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (b1,b2)
+		CASE TRUE,ANY:
+			USE r1;
+		CASE FALSE,ANY:
+			USE r2;
+	END WHEN;
+END when_ok_any_case;
+
+MODEL when_ok_star_case;
+	b1, b2 IS_A boolean_constant;
+	b1 :== TRUE;
+	b2 :== FALSE;
+	x IS_A solver_var;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (b1,b2)
+		CASE TRUE,*:
+			USE r1;
+		CASE FALSE,*:
+			USE r2;
+	END WHEN;
+END when_ok_star_case;
+
+MODEL when_ok_leading_star_case;
+	b1, b2 IS_A boolean_constant;
+	b1 :== TRUE;
+	b2 :== FALSE;
+	x IS_A solver_var;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (b1,b2)
+		CASE *,FALSE:
+			USE r1;
+		CASE *,TRUE:
+			USE r2;
+	END WHEN;
+END when_ok_leading_star_case;
+
+MODEL when_ok_wildcard_collision_first_wins;
+	b1, b2 IS_A boolean_constant;
+	b1 :== TRUE;
+	b2 :== FALSE;
+	x IS_A solver_var;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (b1,b2)
+		CASE *,FALSE:
+			USE r1;
+		CASE TRUE,FALSE:
+			USE r2;
+	END WHEN;
+END when_ok_wildcard_collision_first_wins;
+
+MODEL when_case_if_parses;
+	mode IS_A symbol_constant;
+	mode :== 'slow';
+	x IS_A solver_var;
+	r1: x = 1;
+	WHEN (mode)
+		CASE 'slow' IF TRUE:
+			USE r1;
+	END WHEN;
+END when_case_if_parses;
+
+MODEL when_case_if_full_boolean_parses;
+	mode IS_A symbol_constant;
+	mode :== 'mid';
+	a, x, y IS_A solver_var;
+	c1, c2 IS_A boolean_constant;
+	c1 :== TRUE;
+	c2 :== FALSE;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (mode)
+		CASE 'mid' IF a < 5 AND (c2 OR c1) AND y > x:
+			USE r1;
+		OTHERWISE:
+			USE r2;
+	END WHEN;
+END when_case_if_full_boolean_parses;
+
+MODEL when_applies_if_parses;
+	mode IS_A symbol_constant;
+	mode :== 'slow';
+	x IS_A solver_var;
+	r1: x = 1;
+	WHEN (mode)
+		CASE 'slow' APPLIES IF TRUE:
+			USE r1;
+	END WHEN;
+END when_applies_if_parses;
+
+MODEL when_case_if_applies_if_rejected;
+	mode IS_A symbol_constant;
+	mode :== 'slow';
+	x IS_A solver_var;
+	r1: x = 1;
+	WHEN (mode)
+		CASE 'slow' IF TRUE APPLIES IF TRUE:
+			USE r1;
+	END WHEN;
+END when_case_if_applies_if_rejected;
+
 MODEL select_ok_unselected_cases;
 	i IS_A integer_constant;
 	i :== 1;

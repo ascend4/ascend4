@@ -228,6 +228,8 @@ struct system_structure {
 
 	int32 nmodels;
 	int32 need_consistency; /**< consistency analysis required for conditional model ? */
+	int32 when_regions_lowered_steady; /**< CASE IF/APPLIES IF lowered for steady conditional solving */
+	int32 when_regions_lowered_dynamic; /**< CASE IF/APPLIES IF lowered for dynamic classifier tracking */
 	real64 objvargrad; /**< maximize -1 minimize 1 noobjvar 0 */
 };
 

@@ -490,6 +490,58 @@ static void test_singleton_sticky_resolve(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_nested_when_static_outer_true_inner_false(void){
+	load_solve_test_qrslv(
+		"models","test/qrslv/nested_when_static.a4c",
+		"nested_when_static_outer_true_inner_false",1
+	);
+}
+
+static void test_nested_when_static_outer_false_inner_true(void){
+	load_solve_test_qrslv(
+		"models","test/qrslv/nested_when_static.a4c",
+		"nested_when_static_outer_false_inner_true",1
+	);
+}
+
+static void test_when_case_if_rejected(void){
+	int status;
+	int qrslv_index;
+	struct Instance *siminst;
+	slv_system_t sys;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv"));
+
+	package_load("qrslv",NULL);
+	qrslv_index = slv_lookup_client("QRSlv");
+	CU_ASSERT_FATAL(qrslv_index != -1);
+
+	Asc_OpenModule("test/instantiate/when_select.a4c",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("when_case_if_parses")) != NULL);
+
+	siminst = SimsCreateInstance(
+		AddSymbol("when_case_if_parses"), AddSymbol("sim1"), e_normal, NULL
+	);
+	CU_ASSERT_FATAL(siminst != NULL);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_EQUAL(slv_has_classifier_whens(sys),1);
+
+	CU_ASSERT_FATAL(slv_select_solver(sys,qrslv_index));
+	CU_ASSERT_NOT_EQUAL(slv_presolve(sys),0);
+
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+	solver_destroy_engines();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -501,7 +553,10 @@ static void test_singleton_sticky_resolve(void){
 	X T(fixedbug564_repeat) \
 	T(external_blocks) \
 	T(external_single_block_scope) \
-	X T(singleton_sticky_resolve)
+	X T(singleton_sticky_resolve) \
+	X T(nested_when_static_outer_true_inner_false) \
+	X T(nested_when_static_outer_false_inner_true) \
+	X T(when_case_if_rejected)
 
 #define X
 #define TESTS(T) TESTS1(T,X)

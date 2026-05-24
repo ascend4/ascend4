@@ -9821,6 +9821,18 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   iteration_begins(sys);
   check_system(sys);
+  if(slv_has_classifier_whens(server)) {
+    if(slv_lower_classifier_whens(server,WHEN_REGION_STEADY)) {
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,
+        "CMSlv2 could not lower CASE IF/APPLIES IF classifier regions");
+      return 1;
+    }
+    if(reanalyze_solver_lists_with_lowered_whens(server)) {
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,
+        "CMSlv2 could not configure the active region from lowered classifier predicates");
+      return 1;
+    }
+  }
   if(sys->vlist == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was never set.");
     return 1;

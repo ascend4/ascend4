@@ -59,6 +59,11 @@ static int ida_collect_active_guardroots_in_when(struct w_when *when, struct gl_
 		if(solver_case == NULL || !(solver_case->flags & WHEN_CASE_ACTIVE)){
 			continue;
 		}
+		if(when_case_has_classifier_predicate(solver_case)){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,
+				"IDA event-root refresh does not yet support CASE IF/APPLIES IF in WHEN");
+			return 1;
+		}
 
 		reinit_list = solver_case->reinits;
 		if(reinit_list != NULL){

@@ -32,6 +32,7 @@
 
 #include "functype.h"
 #include "expr_types.h"
+#include "exprs.h"
 #include "sets.h"
 #include "case.h"
 #include "statement.h"
@@ -46,8 +47,12 @@ struct Case *CreateCase(struct Set *vl, struct gl_list_t *refinst){
   struct Case *result = ASC_NEW(struct Case);
   assert(result!=NULL);
   result->ValueList = vl;
+  result->condition = NULL;
+  result->applies = NULL;
   result->ref = refinst;
   result->reinit = NULL;
+  result->mod = NULL;
+  result->linenum = 0;
   result->active = 0;
   return result;
 }
@@ -58,6 +63,15 @@ struct Set *GetCaseValuesF(struct Case *c){
   return c->ValueList;
 }
 
+struct Expr *GetCaseConditionF(struct Case *c){
+  assert(c);
+  return c->condition;
+}
+
+struct Expr *GetCaseAppliesF(struct Case *c){
+  assert(c);
+  return c->applies;
+}
 
 struct gl_list_t *GetCaseReferencesF(struct Case *c){
   assert(c);
@@ -69,6 +83,16 @@ struct gl_list_t *GetCaseReinitStatementsF(struct Case *c){
   return c->reinit;
 }
 
+struct module_t *GetCaseModuleF(struct Case *c){
+  assert(c);
+  return c->mod;
+}
+
+unsigned long GetCaseLineNumF(struct Case *c){
+  assert(c);
+  return c->linenum;
+}
+
 
 int GetCaseStatusF(struct Case *c){
   assert(c);
@@ -78,6 +102,18 @@ int GetCaseStatusF(struct Case *c){
 struct Case *SetCaseValues(struct Case *c, struct Set *vl){
   assert(c);
   c->ValueList = vl;
+  return c;
+}
+
+struct Case *SetCaseCondition(struct Case *c, struct Expr *condition){
+  assert(c);
+  c->condition = condition;
+  return c;
+}
+
+struct Case *SetCaseApplies(struct Case *c, struct Expr *applies){
+  assert(c);
+  c->applies = applies;
   return c;
 }
 
@@ -93,6 +129,14 @@ struct Case *SetCaseReinitStatements(struct Case *c, struct gl_list_t *reinit){
   return c;
 }
 
+struct Case *SetCaseSource(struct Case *c,
+                           struct module_t *mod,
+                           unsigned long linenum){
+  assert(c);
+  c->mod = mod;
+  c->linenum = linenum;
+  return c;
+}
 
 struct Case *SetCaseStatus(struct Case *c, int setact){
   assert(c);
@@ -127,6 +171,14 @@ void DestroyCase(struct Case *c){
         DestroySetListByReference(set);
       }
     }
+    if(c->condition != NULL){
+      DestroyExprList(c->condition);
+      c->condition = NULL;
+    }
+    if(c->applies != NULL){
+      DestroyExprList(c->applies);
+      c->applies = NULL;
+    }
     gl_destroy(c->ref);
     if(c->reinit != NULL){
       unsigned long i, len = gl_length(c->reinit);
@@ -150,7 +202,11 @@ struct Case *CopyCase(struct Case *c){
   struct Case *result = ASC_NEW(struct Case);
   if (c->ValueList) result->ValueList = CopySetByReference(c->ValueList);
   else result->ValueList = c->ValueList;
+  result->condition = CopyExprList(c->condition);
+  result->applies = CopyExprList(c->applies);
   result->ref = gl_copy(c->ref);
+  result->mod = c->mod;
+  result->linenum = c->linenum;
   if(c->reinit != NULL){
     unsigned long i, len = gl_length(c->reinit);
     result->reinit = gl_create(len);

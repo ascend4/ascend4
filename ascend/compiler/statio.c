@@ -149,6 +149,14 @@ void WriteWhenNode(FILE *f,struct WhenList *w, int i){
   if (set!=NULL){
     FPRINTF(f,"CASE ");
     WriteSet(f,set);
+    if (WhenCaseCondition(w)!=NULL) {
+      FPRINTF(f," IF ");
+      WriteExpr(f,WhenCaseCondition(w));
+    }
+    if (WhenCaseApplies(w)!=NULL) {
+      FPRINTF(f," APPLIES IF ");
+      WriteExpr(f,WhenCaseApplies(w));
+    }
   }
   else FPRINTF(f,"OTHERWISE");
   FPRINTF(f," :\n");

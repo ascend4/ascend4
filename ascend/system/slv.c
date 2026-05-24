@@ -755,6 +755,85 @@ int32 slv_need_consistency(slv_system_t sys)
   return sys->need_consistency;
 }
 
+int32 slv_has_classifier_whens(slv_system_t sys)
+{
+  struct w_when **whens;
+  int32 nwhens, w;
+
+  if (sys==NULL) {
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_has_classifier_whens called with NULL system.");
+    return 0;
+  }
+
+  whens = slv_get_master_when_list(sys);
+  nwhens = slv_get_num_master_whens(sys);
+  if (whens == NULL) {
+    return 0;
+  }
+
+  for (w = 0; w < nwhens; ++w) {
+    if (when_has_classifier_predicates(whens[w])) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int32 slv_classifier_regions_lowered(slv_system_t sys,
+    enum when_region_request request)
+{
+  if (sys==NULL) {
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_classifier_regions_lowered called with NULL system.");
+    return 0;
+  }
+
+  switch (request) {
+  case WHEN_REGION_STEADY:
+    return sys->when_regions_lowered_steady;
+  case WHEN_REGION_DYNAMIC_CLASSIFIER:
+    return sys->when_regions_lowered_dynamic;
+  default:
+    return 0;
+  }
+}
+
+int slv_lower_classifier_whens(slv_system_t sys, enum when_region_request request)
+{
+  struct w_when **whens;
+  int32 nwhens, w;
+
+  if (sys==NULL) {
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_lower_classifier_whens called with NULL system.");
+    return 1;
+  }
+
+  whens = slv_get_master_when_list(sys);
+  nwhens = slv_get_num_master_whens(sys);
+  if (whens == NULL) {
+    return 0;
+  }
+
+  for (w = 0; w < nwhens; ++w) {
+    if (!when_inwhen(whens[w])) {
+      if (when_lower_classifier_regions(whens[w],request)) {
+        return 1;
+      }
+    }
+  }
+
+  switch (request) {
+  case WHEN_REGION_STEADY:
+    sys->when_regions_lowered_steady = 1;
+    break;
+  case WHEN_REGION_DYNAMIC_CLASSIFIER:
+    sys->when_regions_lowered_dynamic = 1;
+    break;
+  default:
+    return 1;
+  }
+  return 0;
+}
+
 /*----------------------------------------------------------------
 	Macros to define
 
