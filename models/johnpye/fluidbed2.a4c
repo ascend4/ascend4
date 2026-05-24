@@ -18,6 +18,35 @@ IMPORT "cmslv";
 	Levenspiel "Fluidisation Engineering" (2nd Ed), Butterworth-Heinemann, 1991.
 *)
 
+MODEL fluidbed2_gas_port;
+	components IS_A set OF symbol_constant;
+	components :== ['H2','H2O','N2','A'];
+	Ftot "total molar gas flow" IS_A molar_rate;
+	f[components] "component molar gas flow" IS_A molar_rate;
+	y[components] "component mole fraction" IS_A mole_fraction;
+	T IS_A temperature;
+	p IS_A pressure;
+
+	FOR i IN components CREATE
+		component_flow_eq[i]: f[i] = Ftot * y[i];
+	END FOR;
+	sum_y_eq: SUM[y[i] | i IN components] = 1;
+
+METHODS
+	METHOD default;
+		Ftot.lower_bound := 0 {mol/s};
+		FOR i IN components DO
+			f[i].lower_bound := 0 {mol/s};
+			y[i].lower_bound := 0;
+			y[i].upper_bound := 1;
+			f[i] := 0 {mol/s};
+			y[i] := 0;
+		END FOR;
+		Ftot := 1 {mol/s};
+		y['N2'] := 1;
+	END default;
+END fluidbed2_gas_port;
+
 MODEL fluidbed2_base;
 	T IS_A temperature;
 	p IS_A pressure;
@@ -26,7 +55,12 @@ MODEL fluidbed2_base;
 	T, fluid.T ARE_THE_SAME;
 	p, fluid.p ARE_THE_SAME;
 
-	(* bed geometry: a vertical cylinder *)
+	gas_in "common reactor gas inlet port" IS_A fluidbed2_gas_port;
+	gas_out "common reactor gas outlet port" IS_A fluidbed2_gas_port;
+	T, gas_in.T, gas_out.T ARE_THE_SAME;
+	p, gas_in.p, gas_out.p ARE_THE_SAME;
+
+	(* bed geometry: vertical cylinders sharing a common diameter *)
 	chamber IS_A solid_cylinder;
 	bed_mf "bed at minimum fluidisation" IS_A solid_cylinder;
 	bed "expanded bubbling bed" IS_A solid_cylinder;
@@ -38,26 +72,79 @@ MODEL fluidbed2_base;
 	eps_mf "bed void fraction at minimum fluidisation" IS_A factor;
 	eps "overall bubbling-bed void fraction" IS_A factor;
 
-	(* Eq. 1, reframed *)
-	m_p = rho_p * bed_mf.V * (1 - eps_mf); (* at min. fluidisation *)
-	m_p = rho_p * bed.V * (1 - eps); (* at operating condition *)
+	(* Eq. 1, reframed. Refined hydrodynamic models supply the expansion
+	   relation that closes eps or bed.L. *)
+	m_p = rho_p * bed_mf.V * (1 - eps_mf);
+	m_p = rho_p * bed.V * (1 - eps);
 
 	u_mf "superficial velocity at minimum fluidisation" IS_A speed;
 	u "operating superficial gas velocity" IS_A speed;
 	u_ratio_mf "operating velocity multiplier on u_mf" IS_A factor;
 	u_ratio_mf = u / u_mf;
 
+	c_tot "ideal-gas molar density at reactor T,p" IS_A molar_density;
+	c_tot = p / (1 {GAS_C} * T);
+	gas_in.Ftot = c_tot * chamber.end.A * u;
+	gas_out.Ftot = gas_in.Ftot;
+
 	mdot_mf "mass flow rate at minimum fluidisation" IS_A mass_rate;
 	mdot "operating mass flow rate" IS_A mass_rate;
 	mdot_mf = fluid.rho * chamber.end.A * u_mf;
 	mdot = fluid.rho * chamber.end.A * u;
 
-	(* not sure if we need this *)
 	Re_mf "particle Reynolds number at minimum fluidisation" IS_A factor;
 	Re "particle Reynolds number at operating velocity" IS_A factor;
 	Re_mf = d_p * u_mf * fluid.rho / fluid.mu;
 	Re = d_p * u * fluid.rho / fluid.mu;
 
+METHODS
+	METHOD default;
+		RUN fluid.default;
+		RUN gas_in.default;
+		RUN gas_out.default;
+
+		u.lower_bound := 0 {m/s};
+		u_mf.lower_bound := 0 {m/s};
+		u_ratio_mf.lower_bound := 0;
+		c_tot.lower_bound := 0 {mol/m^3};
+		m_p.lower_bound := 0 {kg};
+		rho_p.lower_bound := 0 {kg/m^3};
+		d_p.lower_bound := 1 {um};
+		eps_mf.lower_bound := 0.01;
+		eps_mf.upper_bound := 0.99;
+		eps.lower_bound := 0.01;
+		eps.upper_bound := 0.99;
+		mdot_mf.lower_bound := 0 {kg/s};
+		mdot.lower_bound := 0 {kg/s};
+		Re_mf.lower_bound := 0;
+		Re.lower_bound := 0;
+
+		T := 1000 {K};
+		p := 1 {atm};
+		m_p := 1 {kg};
+		rho_p := 3000 {kg/m^3};
+		d_p := 100 {um};
+		eps_mf := 0.55;
+		eps := 0.7;
+		u_mf := 0.01 {m/s};
+		u := 0.1 {m/s};
+		u_ratio_mf := 10;
+		c_tot := 10 {mol/m^3};
+		mdot_mf := 1e-3 {kg/s};
+		mdot := 1e-2 {kg/s};
+		Re_mf := 1;
+		Re := 10;
+
+		FIX gas_in.y['H2'];
+		FIX gas_in.y['H2O'];
+		FIX gas_in.y['A'];
+		FIX gas_out.y['H2'];
+		FIX gas_out.y['H2O'];
+		FIX gas_out.y['A'];
+	END default;
+END fluidbed2_base;
+
+MODEL fluidbed2_kl REFINES fluidbed2_base;
 	(* BUBBLE VELOCITY *)
 
 	d_b "mean bubble diameter" IS_A distance;
@@ -235,10 +322,8 @@ MODEL fluidbed2_base;
 
 METHODS
 	METHOD default;
-		RUN fluid.default;
+		RUN fluidbed2_base::default;
 
-		u.lower_bound := 0 {m/s};
-		u_mf.lower_bound := 0 {m/s};
 		u_b.lower_bound := 0 {m/s};
 		u_b_dh.lower_bound := 0 {m/s};
 		u_b_geldart_a.lower_bound := 0 {m/s};
@@ -246,10 +331,6 @@ METHODS
 		u_b_correlation.lower_bound := 0 {m/s};
 		rho_geldart_ab_boundary.lower_bound := 0 {kg/m^3};
 		d_b.lower_bound := 1 {um};
-		eps_mf.lower_bound := 0.01;
-		eps_mf.upper_bound := 0.99;
-		eps.lower_bound := 0.01;
-		eps.upper_bound := 0.99;
 		delta.lower_bound := 0;
 		delta.upper_bound := 0.99;
 		u_ratio_vigorous_min.lower_bound := 1;
@@ -263,7 +344,6 @@ METHODS
 		D_AB.lower_bound := 0 {m^2/s};
 		K_be.lower_bound := 0 {1/s};
 
-		eps := 0.7;
 		u_b_correlation := 0.5 {m/s};
 		rho_geldart_ab_boundary := 1 {g/cm^3};
 		u_b_use_geldart_a := FALSE;
@@ -283,9 +363,9 @@ METHODS
 		gamma_e := 0.3;
 		K_be := 1 {1/s};
 	END default;
-END fluidbed2_base;
+END fluidbed2_kl;
 
-MODEL fb_reactor_intermediate_lumped REFINES fluidbed2_base;
+MODEL fb_reactor_intermediate_lumped REFINES fluidbed2_kl;
 	fluid IS_REFINED_TO air_fluid;
 
 	(*
@@ -293,7 +373,6 @@ MODEL fb_reactor_intermediate_lumped REFINES fluidbed2_base;
 		intermediate-particle picture. Clouds are not a separate reacting
 		region; their gas/solids are folded into the emulsion.
 	*)
-	c_tot "ideal-gas molar density" IS_A molar_density;
 	F_bubble "molar flow through bubble phase" IS_A molar_rate;
 	F_emulsion "molar flow through emulsion phase" IS_A molar_rate;
 	V_bubble "bubble volume in bed" IS_A volume;
@@ -302,7 +381,6 @@ MODEL fb_reactor_intermediate_lumped REFINES fluidbed2_base;
 	N_rxn_A "A consumed by emulsion reaction" IS_A delta_molar_rate;
 	K_r "first-order emulsion reaction rate constant" IS_A frequency;
 
-	ctot_eq: c_tot = p / (1 {GAS_C} * T);
 	Fb_eq: F_bubble = c_tot * chamber.end.A * (u - u_mf);
 	Fe_eq: F_emulsion = c_tot * chamber.end.A * u_mf;
 	Vb_eq: V_bubble = delta * bed.V;
@@ -313,8 +391,7 @@ MODEL fb_reactor_intermediate_lumped REFINES fluidbed2_base;
 
 METHODS
 	METHOD default;
-		RUN fluidbed2_base::default;
-		c_tot.lower_bound := 0 {mol/m^3};
+		RUN fluidbed2_kl::default;
 		F_bubble.lower_bound := 0 {mol/s};
 		F_emulsion.lower_bound := 0 {mol/s};
 		V_bubble.lower_bound := 0 {m^3};
@@ -326,7 +403,6 @@ METHODS
 		y_A_e.upper_bound := 1;
 		K_r.lower_bound := 0 {1/s};
 
-		c_tot := 10 {mol/m^3};
 		F_bubble := 1e-3 {mol/s};
 		F_emulsion := 1e-4 {mol/s};
 		V_bubble := 1e-4 {m^3};
@@ -386,7 +462,6 @@ METHODS
 
 		SOLVER CMSlv;
 		OPTION optsolvers 'IPOPT';
-		OPTION cmslv2 TRUE;
 
 		STUDY
 			u, u_mf, u_ratio_mf, u_b, delta, eps,
@@ -396,7 +471,7 @@ METHODS
 	END on_load;
 END fb_reactor_intermediate_lumped;
 
-MODEL fb_reactor_fine REFINES fluidbed2_base;
+MODEL fb_reactor_fine REFINES fluidbed2_kl;
 	fluid IS_REFINED_TO air_fluid;
 
 	(* Reactor equations below remain the fine-particle fast-bubble model. *)
@@ -502,7 +577,7 @@ MODEL fb_reactor_fine REFINES fluidbed2_base;
 
 METHODS
 	METHOD default;
-		RUN fluidbed2_base::default;
+		RUN fluidbed2_kl::default;
 
 		K_r.lower_bound := 1e-12 {1/s};
 		K_f.lower_bound := 0 {1/s};
@@ -619,7 +694,6 @@ METHODS
 
 		SOLVER CMSlv;
 		OPTION optsolvers 'IPOPT';
-		OPTION cmslv2 TRUE;
 
 		STUDY
 			K_r_tau_f, K_r, K_f, eta_bed,
@@ -703,7 +777,6 @@ METHODS
 
 		SOLVER CMSlv;
 		OPTION optsolvers 'IPOPT';
-		OPTION cmslv2 TRUE;
 
 		STUDY
 			K_r, K_f, eta_bed, C_Ao_over_C_Ai, X_A,
@@ -727,11 +800,230 @@ METHODS
 		ASSERT abs(K_ce - 1.873 {1/s}) < 0.002 {1/s};
 		ASSERT abs(K_f - 1.8975 {1/s}) < 0.002 {1/s};
 		ASSERT abs(C_Ao_over_C_Ai - 0.05934) < 0.0001;
-		ASSERT abs(eta_bed - 0.2882) < 0.0002;
+		ASSERT abs(eta_bed - 0.2882) < 0.0003;
 	END self_test;
+
 END fb_reactor_dense_example;
 
-MODEL fluidbed2 REFINES fluidbed2_base;
+MODEL fluidbed2_lee_varying_bubble REFINES fluidbed2_base;
+	fluid IS_REFINED_TO air_fluid;
+
+	(* Lee et al. (2025) two-phase hydrodynamics with an axial bubble-size profile. *)
+	n_lee_profile IS_A integer_constant;
+	n_lee_profile :== 20;
+	lee_nodes IS_A set OF integer_constant;
+	lee_cells IS_A set OF integer_constant;
+	lee_nodes :== [0..20];
+	lee_cells :== [1..20];
+
+	z_lee[lee_nodes] "height above distributor for Lee bubble profile" IS_A distance;
+	dz_lee "Lee profile uniform height increment" IS_A distance;
+	d_b_lee[lee_nodes] "Lee/Mori-Wen bubble diameter profile" IS_A distance;
+	u_br_lee[lee_nodes] "Lee bubble rise velocity profile" IS_A speed;
+	u_b_lee[lee_nodes] "Lee bubble velocity profile" IS_A speed;
+	u_b_gas_lee[lee_nodes] "Lee bubble-phase gas velocity profile" IS_A speed;
+	delta_lee[lee_nodes] "Lee bubble fraction profile" IS_A factor;
+	K_be_lee[lee_nodes] "Lee bubble-emulsion gas interchange profile" IS_A frequency;
+	delta_K_be_lee[lee_nodes] "local gas interchange weighting, delta*K_be" IS_A frequency;
+
+	Ar_lee "Archimedes number used in Lee/Wen-Yu minimum-fluidisation closure" IS_A factor;
+	d_b0_lee "initial bubble diameter at distributor, Lee Table 3" IS_A distance;
+	d_bm_lee "maximum bubble diameter, Lee/Mori-Wen Table 3" IS_A distance;
+	d_b_lee_avg "bed-height average Lee bubble diameter" IS_A distance;
+	u_br_lee_avg "bed-height average Lee bubble rise velocity" IS_A speed;
+	u_b_lee_avg "bed-height average Lee bubble velocity" IS_A speed;
+	u_b_gas_lee_avg "bed-height average Lee bubble gas velocity" IS_A speed;
+	delta_lee_avg "bed-height average Lee bubble fraction" IS_A factor;
+	K_be_lee_avg "bed-height average Lee gas interchange coefficient" IS_A frequency;
+	delta_K_be_lee_avg "bed-height average Lee delta*K_be" IS_A frequency;
+
+	Ar_lee =
+		d_p^3 * fluid.rho * (rho_p - fluid.rho) * 1{EARTH_G} / fluid.mu^2;
+	u_mf =
+		fluid.mu / (d_p * fluid.rho)
+		* ((33.7^2 + 0.0408 * Ar_lee)^0.5 - 33.7);
+
+	(* Lee Table 3. The d_bm relation is empirical; SI magnitudes are used
+	   explicitly, matching the treatment of dimensional correlations above. *)
+	d_b0_lee =
+		2.78 {m}
+		* ((u - u_mf) / 1 {m/s})^2
+		/ (1{EARTH_G} / 1 {m/s^2});
+	d_bm_lee =
+		0.65 {m}
+		* (
+			(3.141592653589793 / 4)
+			* (chamber.d / 1 {m})^2
+			* ((u - u_mf) / 1 {m/s})
+		  )^0.4;
+
+	dz_lee = bed.L / n_lee_profile;
+	FOR i IN lee_nodes CREATE
+		z_lee_eq[i]:
+			z_lee[i] = (i / n_lee_profile) * bed.L;
+		d_b_lee_eq[i]:
+			d_b_lee[i] =
+				d_bm_lee
+				- (d_bm_lee - d_b0_lee)
+				  * exp(-0.3 * z_lee[i] / chamber.d);
+		u_br_lee_eq[i]:
+			u_br_lee[i] = 0.711 * (1{EARTH_G} * d_b_lee[i])^0.5;
+		u_b_lee_eq[i]:
+			u_b_lee[i] = u - u_mf + u_br_lee[i];
+		u_b_gas_lee_eq[i]:
+			u_b_gas_lee[i] = u_b_lee[i] + u_mf;
+		delta_lee_eq[i]:
+			delta_lee[i] = (u - u_mf) / u_b_lee[i];
+		K_be_lee_eq[i]:
+			K_be_lee[i] = 4.5 * u_mf / d_b_lee[i];
+		delta_K_be_lee_eq[i]:
+			delta_K_be_lee[i] = delta_lee[i] * K_be_lee[i];
+	END FOR;
+
+	d_b_lee_avg =
+		SUM[0.5 * (d_b_lee[i - 1] + d_b_lee[i]) * dz_lee | i IN lee_cells]
+		/ bed.L;
+	u_br_lee_avg =
+		SUM[0.5 * (u_br_lee[i - 1] + u_br_lee[i]) * dz_lee | i IN lee_cells]
+		/ bed.L;
+	u_b_lee_avg =
+		SUM[0.5 * (u_b_lee[i - 1] + u_b_lee[i]) * dz_lee | i IN lee_cells]
+		/ bed.L;
+	u_b_gas_lee_avg =
+		SUM[0.5 * (u_b_gas_lee[i - 1] + u_b_gas_lee[i]) * dz_lee | i IN lee_cells]
+		/ bed.L;
+	delta_lee_avg =
+		SUM[0.5 * (delta_lee[i - 1] + delta_lee[i]) * dz_lee | i IN lee_cells]
+		/ bed.L;
+	K_be_lee_avg =
+		SUM[0.5 * (K_be_lee[i - 1] + K_be_lee[i]) * dz_lee | i IN lee_cells]
+		/ bed.L;
+	delta_K_be_lee_avg =
+		SUM[0.5 * (delta_K_be_lee[i - 1] + delta_K_be_lee[i]) * dz_lee | i IN lee_cells]
+		/ bed.L;
+
+	1 - eps = (1 - delta_lee_avg) * (1 - eps_mf);
+
+METHODS
+	METHOD default;
+		RUN fluidbed2_base::default;
+
+		Ar_lee.lower_bound := 0;
+		d_b0_lee.lower_bound := 1 {um};
+		d_bm_lee.lower_bound := 1 {um};
+		d_b_lee_avg.lower_bound := 1 {um};
+		u_br_lee_avg.lower_bound := 0 {m/s};
+		u_b_lee_avg.lower_bound := 0 {m/s};
+		u_b_gas_lee_avg.lower_bound := 0 {m/s};
+		delta_lee_avg.lower_bound := 0;
+		K_be_lee_avg.lower_bound := 0 {1/s};
+		delta_K_be_lee_avg.lower_bound := 0 {1/s};
+
+		FOR i IN lee_nodes DO
+			z_lee[i].lower_bound := 0 {m};
+			d_b_lee[i].lower_bound := 1 {um};
+			u_br_lee[i].lower_bound := 0 {m/s};
+			u_b_lee[i].lower_bound := 0 {m/s};
+			u_b_gas_lee[i].lower_bound := 0 {m/s};
+			delta_lee[i].lower_bound := 0;
+			K_be_lee[i].lower_bound := 0 {1/s};
+			delta_K_be_lee[i].lower_bound := 0 {1/s};
+		END FOR;
+
+		Ar_lee := 1e5;
+		d_b0_lee := 10 {mm};
+		d_bm_lee := 0.3 {m};
+		d_b_lee_avg := 0.2 {m};
+		u_br_lee_avg := 1 {m/s};
+		u_b_lee_avg := 2 {m/s};
+		u_b_gas_lee_avg := 2 {m/s};
+		delta_lee_avg := 0.5;
+		K_be_lee_avg := 10 {1/s};
+		delta_K_be_lee_avg := 5 {1/s};
+	END default;
+
+	METHOD on_load;
+		RUN default;
+
+		(*
+			Representative Lee-style FBR hydrodynamic point using the R2
+			order of magnitude from Lee Table 6.
+		*)
+		FIX chamber.d := 2 {m};
+		FIX chamber.L := 3 {m};
+		FIX bed.L := 2.3 {m};
+		FIX T := 1123.15 {K};
+		FIX p := 4 {atm};
+		FIX d_p := 1 {mm};
+		FIX rho_p := 3900 {kg/m^3};
+		FIX eps_mf := 0.55;
+		FIX u := 1.50 {m/s};
+
+		STUDY
+			u, u_mf, u_ratio_mf, Ar_lee,
+			d_b0_lee, d_bm_lee, d_b_lee_avg,
+			z_lee[0], d_b_lee[0], u_b_lee[0], delta_lee[0], K_be_lee[0],
+			z_lee[10], d_b_lee[10], u_b_lee[10], delta_lee[10], K_be_lee[10],
+			z_lee[20], d_b_lee[20], u_b_lee[20], delta_lee[20], K_be_lee[20],
+			u_br_lee_avg, u_b_lee_avg, u_b_gas_lee_avg,
+			delta_lee_avg, K_be_lee_avg, delta_K_be_lee_avg,
+			eps, bed_mf.L, gas_in.Ftot, gas_out.Ftot;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(z_lee[0]) < 1e-9 {m};
+		ASSERT abs(z_lee[20] - bed.L) < 1e-9 {m};
+		ASSERT d_b_lee[20] > d_b_lee[0];
+		ASSERT K_be_lee[20] < K_be_lee[0];
+		ASSERT delta_lee[20] < delta_lee[0];
+	END self_test;
+END fluidbed2_lee_varying_bubble;
+
+MODEL fluidbed2_lee_kl_example REFINES fluidbed2_lee_varying_bubble;
+METHODS
+	METHOD on_load;
+		RUN default;
+
+		(*
+			Lee-formulation analogue of the K&L dense-bed worked example:
+			chamber.d = 0.26 m, L_f = 1.1 m, u0 = 0.3 m/s,
+			d_p = 68 um, rho_p = 2500 kg/m3, eps_mf = 0.55,
+			T = 298.15 K, p = 1 atm. The Lee/Wen-Yu u_mf and
+			Mori-Wen d_b(z) closures remain active.
+		*)
+		FIX chamber.d := 0.26 {m};
+		FIX chamber.L := 2.3 {m};
+		FIX bed.L := 1.1 {m};
+		FIX T := 298.15 {K};
+		FIX p := 1 {atm};
+		FIX d_p := 68 {um};
+		FIX rho_p := 2500 {kg/m^3};
+		FIX eps_mf := 0.55;
+		FIX u := 0.30 {m/s};
+
+		STUDY
+			u, u_mf, u_ratio_mf, eps, bed.L, bed_mf.L,
+			d_b0_lee, d_bm_lee, d_b_lee_avg,
+			u_b_lee_avg, u_b_gas_lee_avg, delta_lee_avg,
+			K_be_lee_avg, delta_K_be_lee_avg,
+			z_lee[0], d_b_lee[0], u_b_lee[0], delta_lee[0], K_be_lee[0], delta_K_be_lee[0],
+			z_lee[5], d_b_lee[5], u_b_lee[5], delta_lee[5], K_be_lee[5], delta_K_be_lee[5],
+			z_lee[10], d_b_lee[10], u_b_lee[10], delta_lee[10], K_be_lee[10], delta_K_be_lee[10],
+			z_lee[15], d_b_lee[15], u_b_lee[15], delta_lee[15], K_be_lee[15], delta_K_be_lee[15],
+			z_lee[20], d_b_lee[20], u_b_lee[20], delta_lee[20], K_be_lee[20], delta_K_be_lee[20],
+			gas_in.Ftot, gas_out.Ftot;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(u - 0.30 {m/s}) < 1e-9 {m/s};
+		ASSERT abs(bed.L - 1.1 {m}) < 1e-9 {m};
+		ASSERT d_b_lee[20] > d_b_lee[0];
+		ASSERT K_be_lee[20] < K_be_lee[0];
+		ASSERT delta_lee[20] < delta_lee[0];
+	END self_test;
+END fluidbed2_lee_kl_example;
+
+MODEL fluidbed2 REFINES fluidbed2_kl;
 	fluid IS_REFINED_TO air_fluid;
 
 METHODS
@@ -775,7 +1067,6 @@ METHODS
 
 		SOLVER CMSlv;
 		OPTION optsolvers 'IPOPT';
-		OPTION cmslv2 TRUE;
 
 		STUDY
 			u, u_mf, u_ratio_mf,

@@ -416,7 +416,7 @@ METHODS
 		FIX rho_bulk_bed := 1800 {kg/m^3};
 		FIX eps_mf := 0.55;
 		FIX u_mf := 6 {mm/s};
-		FIX d_b := 8 {mm};
+		FIX d_b := 4 {mm};
 		FIX u_ratio_vigorous_min := 10;
 		FIX f_wake := 0.05;
 		D_AB := 7 {cm^2/s};
@@ -626,10 +626,10 @@ METHODS
 	METHOD observe_cli_default;
 		OBSERVE reduction_degree, m_sample,
 			geldart_mode, ub_mode, delta_mode, contact_mode,
-			y_H2_b, y_H2_c, y_H2_e,
-			y_H2O_b, y_H2O_c, y_H2O_e,
+			y_H2_b, y_H2_e,
+			y_H2O_b, y_H2O_e,
 			N_rxn_H2_total, N_rxn_H2_c, N_rxn_H2_e,
-			delta, K_bc, K_ce, K_be, solid_exchange_rate;
+			delta, n_Fe2O3, n_Fe3O4, n_FeO, n_Fe;
 	END observe_cli_default;
 
 	METHOD prepare_dynamic;
