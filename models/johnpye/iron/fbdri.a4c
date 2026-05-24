@@ -143,9 +143,15 @@ MODEL fbdri_batch;
 	rate_net_raw[steps] "cloud/emulsion weighted net extent rate before progress resistance" IS_A extent_rate;
 	rd_resistance[steps] "progress-dependent resistance coefficient for each step" IS_A factor;
 	rd_resistance_factor[steps] "progress-dependent rate divisor" IS_A positive_factor;
+	phase_buffered_step3_blend "0 = inventory mass-action step 3; 1 = shared-interface reversible FeO/Fe step 3" IS_A factor;
+	phase_buffered_smoothing "legacy smoothing parameter; unused by shared-interface step 3" IS_A pressure;
+	phase_buffered_reverse_gate_3 "Fe phase-presence gate for shared-interface reverse FeO/Fe reaction" IS_A factor;
+	rate_forward_phase_buffered_c_3, rate_reverse_phase_buffered_c_3 IS_A extent_rate;
+	rate_forward_phase_buffered_e_3, rate_reverse_phase_buffered_e_3 IS_A extent_rate;
+	rate_net_phase_buffered_c_3, rate_net_phase_buffered_e_3 IS_A extent_rate;
 	solid_activity_order "exponent for softened bulk-inventory activity; 1 restores first-order inventory dependence" IS_A positive_factor;
 	solid_activity_floor "small regularisation for softened inventory activity" IS_A positive_factor;
-	a_Fe2O3, a_Fe3O4, a_FeO, a_Fe IS_A positive_factor;
+	a_Fe2O3, a_Fe3O4, a_FeO, a_Fe IS_A factor;
 
 	solid_share_c "fraction of active solids exposed to cloud gas" IS_A factor;
 	solid_share_e "fraction of active solids exposed to emulsion gas" IS_A factor;
@@ -406,12 +412,6 @@ MODEL fbdri_batch;
 			drive_c[r] = p * (y_H2_c - y_H2O_c / K_ratio_eq[r]);
 		drivee_eq[r]:
 			drive_e[r] = p * (y_H2_e - y_H2O_e / K_ratio_eq[r]);
-		rnetc_eq[r]:
-			rate_net_c[r] = rate_forward_c[r] - rate_reverse_c[r];
-		rnete_eq[r]:
-			rate_net_e[r] = rate_forward_e[r] - rate_reverse_e[r];
-		rnetraw_eq[r]:
-			rate_net_raw[r] = solid_share_c * rate_net_c[r] + solid_share_e * rate_net_e[r];
 		rdresistance_eq[r]:
 			rd_resistance_factor[r] = 1 + rd_resistance[r] * reduction_degree;
 		rnet_eq[r]:
@@ -431,6 +431,42 @@ MODEL fbdri_batch;
 	rr2e_eq: rate_reverse_e[2] = a_FeO * k_step[2] * p * y_H2O_e / K_ratio_eq[2];
 	rf3e_eq: rate_forward_e[3] = a_FeO * k_step[3] * p * y_H2_e;
 	rr3e_eq: rate_reverse_e[3] = a_Fe * k_step[3] * p * y_H2O_e / K_ratio_eq[3];
+	rnetc1_eq: rate_net_c[1] = rate_forward_c[1] - rate_reverse_c[1];
+	rnetc2_eq: rate_net_c[2] = rate_forward_c[2] - rate_reverse_c[2];
+	rnete1_eq: rate_net_e[1] = rate_forward_e[1] - rate_reverse_e[1];
+	rnete2_eq: rate_net_e[2] = rate_forward_e[2] - rate_reverse_e[2];
+	rphasegate3_eq:
+		phase_buffered_reverse_gate_3 = a_Fe / (a_Fe + solid_activity_floor);
+	rfphasec3_eq:
+		rate_forward_phase_buffered_c_3 = a_FeO * k_step[3] * p * y_H2_c;
+	rrphasec3_eq:
+		rate_reverse_phase_buffered_c_3 =
+			a_FeO * phase_buffered_reverse_gate_3 * k_step[3] * p * y_H2O_c / K_ratio_eq[3];
+	rfphasee3_eq:
+		rate_forward_phase_buffered_e_3 = a_FeO * k_step[3] * p * y_H2_e;
+	rrphasee3_eq:
+		rate_reverse_phase_buffered_e_3 =
+			a_FeO * phase_buffered_reverse_gate_3 * k_step[3] * p * y_H2O_e / K_ratio_eq[3];
+	rnetphasec3_eq:
+		rate_net_phase_buffered_c_3 =
+			rate_forward_phase_buffered_c_3 - rate_reverse_phase_buffered_c_3;
+	rnetphasee3_eq:
+		rate_net_phase_buffered_e_3 =
+			rate_forward_phase_buffered_e_3 - rate_reverse_phase_buffered_e_3;
+	rnetc3_eq:
+		rate_net_c[3] =
+			(1 - phase_buffered_step3_blend) * (rate_forward_c[3] - rate_reverse_c[3])
+			+ phase_buffered_step3_blend * rate_net_phase_buffered_c_3;
+	rnete3_eq:
+		rate_net_e[3] =
+			(1 - phase_buffered_step3_blend) * (rate_forward_e[3] - rate_reverse_e[3])
+			+ phase_buffered_step3_blend * rate_net_phase_buffered_e_3;
+	rnetraw1_eq:
+		rate_net_raw[1] = solid_share_c * rate_net_c[1] + solid_share_e * rate_net_e[1];
+	rnetraw2_eq:
+		rate_net_raw[2] = solid_share_c * rate_net_c[2] + solid_share_e * rate_net_e[2];
+	rnetraw3_eq:
+		rate_net_raw[3] = solid_share_c * rate_net_c[3] + solid_share_e * rate_net_e[3];
 
 	Nrxnc_eq:
 		N_rxn_H2_c = n0_Fe2O3 * solid_share_c * (rate_net_c[1] + rate_net_c[2] + rate_net_c[3]);
@@ -492,6 +528,8 @@ METHODS
 		FIX eta[3] := 1.0;
 		FIX solid_activity_order := 1.0;
 		FIX solid_activity_floor := 0.01;
+		FIX phase_buffered_step3_blend := 0.0;
+		FIX phase_buffered_smoothing := 1e-6 {Pa};
 		FIX rd_resistance[1] := 0.0;
 		FIX rd_resistance[2] := 0.0;
 		FIX rd_resistance[3] := 0.0;
@@ -597,6 +635,13 @@ METHODS
 			rd_resistance_factor[r] := 1;
 			rate_net[r] := 1e-4 {1/s};
 		END FOR;
+		phase_buffered_reverse_gate_3 := 0;
+		rate_forward_phase_buffered_c_3 := 1e-4 {1/s};
+		rate_reverse_phase_buffered_c_3 := 0 {1/s};
+		rate_forward_phase_buffered_e_3 := 1e-4 {1/s};
+		rate_reverse_phase_buffered_e_3 := 0 {1/s};
+		rate_net_phase_buffered_c_3 := 0 {1/s};
+		rate_net_phase_buffered_e_3 := 0 {1/s};
 
 		FIX t := 0 {s};
 	END values;
@@ -623,6 +668,13 @@ METHODS
 		gamma_c.lower_bound := 0;
 		gamma_e.lower_bound := 0;
 		K_be.lower_bound := 0 {1/s};
+		phase_buffered_step3_blend.lower_bound := 0;
+		phase_buffered_step3_blend.upper_bound := 1;
+		phase_buffered_smoothing.lower_bound := 1e-9 {Pa};
+		a_Fe2O3.lower_bound := -1e-6;
+		a_Fe3O4.lower_bound := -1e-6;
+		a_FeO.lower_bound := -1e-6;
+		a_Fe.lower_bound := -1e-6;
 		y_H2_b.lower_bound := -1e-6;
 		y_H2_c.lower_bound := -1e-6;
 		y_H2_e.lower_bound := -1e-6;
@@ -641,6 +693,10 @@ METHODS
 		n_FeO := 0 {mol};
 		n_Fe := 0 {mol};
 	END dynamic_reset;
+
+	METHOD free_dynamic;
+		FREE der(n_Fe2O3), der(n_Fe3O4), der(n_FeO), der(n_Fe);
+	END free_dynamic;
 
 	METHOD lane_50g_30mm;
 		d_t := 30 {mm};
@@ -698,7 +754,7 @@ METHODS
 		RUN bound_self;
 		RUN dynamic_reset;
 		FIX t;
-		FREE der(n_Fe2O3), der(n_Fe3O4), der(n_FeO), der(n_Fe);
+		RUN free_dynamic;
 		RUN observe_default;
 		RUN observe_cli_default;
 	END prepare_dynamic;
