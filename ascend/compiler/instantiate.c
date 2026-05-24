@@ -12733,6 +12733,7 @@ struct Case *RealExecuteWhenStatements(struct Instance *inst,
 
   set = WhenSetList(w1);
   cur_case = CreateCase(CopySetByReference(set),NULL);
+  SetCaseOtherwiseLabel(cur_case,WhenCaseOtherwiseLabel(w1));
   SetCaseCondition(cur_case,CopyExprList(WhenCaseCondition(w1)));
   SetCaseApplies(cur_case,CopyExprList(WhenCaseApplies(w1)));
   SetCaseSource(cur_case,WhenCaseModule(w1),WhenCaseLineNum(w1));

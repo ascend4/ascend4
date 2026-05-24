@@ -797,6 +797,7 @@ struct expr_fragment {
   const struct Expr *source_end;
   struct Expr *head;
   struct Expr *tail;
+  struct classifier_artifact *generated_boundary;
 };
 
 static void classifier_artifact_free(struct classifier_artifact *artifact)
@@ -1696,9 +1697,15 @@ static int classifier_create_logrel_artifact(slv_system_t sys,
   return 0;
 }
 
+static struct Expr *classifier_satisfied_expr_tol(symchar *name,
+    double tolerance, CONST dim_type *dims)
+{
+  return CreateSatisfiedExpr(CreateSystemIdName(name),tolerance,dims);
+}
+
 static struct Expr *classifier_satisfied_expr(symchar *name)
 {
-  return CreateSatisfiedExpr(CreateSystemIdName(name),0.0,Dimensionless());
+  return classifier_satisfied_expr_tol(name,0.0,Dimensionless());
 }
 
 static int classifier_materialize_guard(slv_system_t sys,
@@ -1747,11 +1754,48 @@ static int classifier_materialize_guard(slv_system_t sys,
       }
       break;
     case e_boolean:
-    case e_satisfied:
       fragment.head = copy_expr_range(expr,expr);
       fragment.tail = fragment.head;
       if (fragment.head == NULL
           || expr_fragment_push(stack,stack_size,&sp,fragment)) {
+        goto cleanup;
+      }
+      break;
+    case e_satisfied:
+      if (SatisfiedExprName(expr) != NULL) {
+        fragment.head = copy_expr_range(expr,expr);
+        fragment.tail = fragment.head;
+        if (fragment.head == NULL
+            || expr_fragment_push(stack,stack_size,&sp,fragment)) {
+          goto cleanup;
+        }
+        break;
+      }
+      if (expr_fragment_pop(stack,&sp,&right)) {
+        goto cleanup;
+      }
+      if (right.generated_boundary == NULL
+          || right.generated_boundary->bnd == NULL
+          || bnd_kind(right.generated_boundary->bnd) != e_bnd_rel) {
+        expr_fragment_destroy(&right);
+        goto cleanup;
+      }
+      bnd_set_tolerance(
+        right.generated_boundary->bnd,SatisfiedExprRValue(expr)
+      );
+      if (right.head != NULL && ExprType(right.head) == e_satisfied
+          && NextExpr(right.head) == NULL) {
+        DestroyExprList(right.head);
+        right.head = classifier_satisfied_expr_tol(
+          right.generated_boundary->name,SatisfiedExprRValue(expr),
+          SatisfiedExprRDimensions(expr)
+        );
+        right.tail = right.head;
+        if (right.head == NULL) {
+          goto cleanup;
+        }
+      }
+      if (expr_fragment_push(stack,stack_size,&sp,right)) {
         goto cleanup;
       }
       break;
@@ -1807,14 +1851,16 @@ static int classifier_materialize_guard(slv_system_t sys,
       fragment.tail = fragment.head;
       {
         struct Expr *rel_expr = copy_expr_range(left.source_start,expr);
+        struct classifier_artifact *rel_artifact = NULL;
         if (rel_expr == NULL
             || classifier_create_relation_artifact(sys,context,rel_expr,name,
-                NULL)) {
+                &rel_artifact)) {
           if (rel_expr != NULL) {
             DestroyExprList(rel_expr);
           }
           goto cleanup;
         }
+        fragment.generated_boundary = rel_artifact;
         DestroyExprList(rel_expr);
       }
       if (expr_fragment_push(stack,stack_size,&sp,fragment)) {
@@ -1956,20 +2002,58 @@ static int slv_materialize_classifier_whens(slv_system_t sys,
 
   for (w = 0; w < nwhens; ++w) {
     int32 nguards, g;
+    unsigned long c, clen;
+    struct gl_list_t *cases;
+    int saw_applies;
     struct classifier_name_resolver resolver;
 
-    if (when_inwhen(whens[w])
-        || when_case_if_guard_count(whens[w],&nguards)) {
+    if (when_inwhen(whens[w])) {
       continue;
     }
     resolver.sys = sys;
-    for (g = 0; g < nguards; ++g) {
-      const struct Expr *guard = when_case_if_guard(whens[w],g);
-      if (guard != NULL) {
-        if (classifier_materialize_guard(sys,whens[w],guard,g,&resolver)) {
+
+    if (!when_case_if_guard_count(whens[w],&nguards)) {
+      for (g = 0; g < nguards; ++g) {
+        const struct Expr *guard = when_case_if_guard(whens[w],g);
+        if (guard != NULL) {
+          if (classifier_materialize_guard(sys,whens[w],guard,g,&resolver)) {
+            slv_destroy_classifier_artifacts(sys);
+            return 1;
+          }
+        }
+      }
+      continue;
+    }
+
+    /*
+     * APPLIES IF predicates are already complete region predicates, but they
+     * can still contain natural real boundaries. Materialize them here so
+     * compact SATISFIED(real_relation,tol) syntax gets the same generated
+     * relation/boundary treatment as CASE IF guards.
+     */
+    cases = when_cases_list(whens[w]);
+    clen = cases != NULL ? gl_length(cases) : 0;
+    saw_applies = 0;
+    for (c = 1; c <= clen; ++c) {
+      const struct when_case *wc =
+        (const struct when_case *)gl_fetch(cases,c);
+      const struct Expr *applies = when_case_applies(wc);
+      saw_applies = saw_applies || applies != NULL;
+    }
+    if (saw_applies) {
+      for (c = 1, g = 0; c <= clen; ++c) {
+        const struct when_case *wc =
+          (const struct when_case *)gl_fetch(cases,c);
+        const struct Expr *applies = when_case_applies(wc);
+        if (applies == NULL) {
           slv_destroy_classifier_artifacts(sys);
           return 1;
         }
+        if (classifier_materialize_guard(sys,whens[w],applies,g,&resolver)) {
+          slv_destroy_classifier_artifacts(sys);
+          return 1;
+        }
+        ++g;
       }
     }
   }

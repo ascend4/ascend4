@@ -32,6 +32,7 @@
 #ifndef ASC_WHEN_H
 #define ASC_WHEN_H
 
+#include "compiler.h"
 #include "stattypes.h"
 
 /**	@addtogroup compiler_stmt Compiler Statements
@@ -58,6 +59,12 @@ extern struct WhenList *CreateWhenIfApplies(struct Set *set,
 /**<
  *  Create a when node with optional CASE ... IF and APPLIES IF predicates.
  *  If set = NULL, this indicates an OTHERWISE case.
+ */
+
+extern struct WhenList *CreateWhenOtherwise(symchar *label,
+                                            struct StatementList *sl);
+/**<
+ *  Create an OTHERWISE when node with an optional user-visible label.
  */
 
 extern struct WhenList *ReverseWhenCases(struct WhenList *w);
@@ -139,6 +146,18 @@ extern struct Expr *WhenCaseAppliesF(struct WhenList *w);
 /**<
  *  Implementation function for WhenCaseApplies() (debug mode).
  *  Do not call this function directly - use WhenCaseApplies() instead.
+ */
+
+#ifdef NDEBUG
+#define WhenCaseOtherwiseLabel(w) ((w)->otherwise_label)
+#else
+#define WhenCaseOtherwiseLabel(w) WhenCaseOtherwiseLabelF(w)
+#endif
+/**< Return the optional label attached to an OTHERWISE case. */
+extern symchar *WhenCaseOtherwiseLabelF(struct WhenList *w);
+/**<
+ *  Implementation function for WhenCaseOtherwiseLabel() (debug mode).
+ *  Do not call this function directly - use WhenCaseOtherwiseLabel() instead.
  */
 
 #ifdef NDEBUG

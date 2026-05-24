@@ -167,6 +167,45 @@ is the right form when region predicates are not naturally a priority cascade,
 or when a steady-state admissibility region needs to be stated independently
 from any dynamic transition logic.
 
+## Inline SATISFIED Tolerances
+
+Existing CMSlv/CMSlv2 models can attach a numerical tolerance to a named
+conditional relation:
+
+```ascend
+CONDITIONAL
+    boundary: a < 5;
+END CONDITIONAL;
+
+use_boundary == SATISFIED(boundary, 1e-6);
+```
+
+The compact classifier syntax must preserve that capability without forcing the
+user to name every primitive boundary by hand. The supported classifier form is
+therefore:
+
+```ascend
+WHEN(region)
+    CASE 'slow' IF SATISFIED(a < 5, 1e-6):
+        USE slow_eq;
+
+    CASE 'fast' APPLIES IF SATISFIED(a >= 5, 1e-6):
+        USE fast_eq;
+END WHEN;
+```
+
+This is supported only inside classifier predicates, namely `CASE ... IF` and
+`APPLIES IF`; the parser rejects the inline form elsewhere. The inline argument
+is a single primitive real relation `expr relop expr`; compound logic should be
+written by composing primitive terms:
+
+```ascend
+CASE 'mid' IF SATISFIED(a >= 1, 1e-6) AND SATISFIED(a < 5, 1e-6):
+```
+
+Named `SATISFIED(boundary_name, tolerance)` remains unchanged and can still be
+used anywhere the existing language permits it.
+
 ## Dynamic Transition Syntax
 
 `SWITCH TO ... IF ...` remains the dynamic state-machine mechanism:
@@ -226,6 +265,60 @@ The following rules keep the semantics tractable:
    - Without `OTHERWISE`, uncovered regions must be diagnosed clearly.
    - A future syntax could explicitly permit "no active case", but it should
      not be the default.
+
+## Overlap And Closure Policy
+
+`CASE ... IF ...` and `APPLIES IF` need different diagnostics because they have
+different semantics.
+
+For `CASE ... IF ...`, overlap is allowed by construction. It is a priority
+cascade:
+
+```text
+R1 = g1
+R2 = NOT g1 AND g2
+R3 = NOT g1 AND NOT g2 AND g3
+...
+```
+
+If `g1` and `g2` are both true, case 1 wins and case 2 is not ambiguous. The
+lowered regions are mutually exclusive because each later case includes the
+negation of all earlier guards. An `OTHERWISE` case gives closure. Without
+`OTHERWISE`, the uncovered region is:
+
+```text
+NOT g1 AND NOT g2 AND ... AND NOT gn
+```
+
+That uncovered region should eventually be diagnosable. For arbitrary
+continuous predicates we cannot generally prove emptiness cheaply, so phase 1
+should report only syntactic and finite-Boolean cases we can prove. Later
+phases can use interval reasoning, symbolic simplification, or SAT/SMT-style
+checks where available.
+
+For `APPLIES IF`, overlap is not ordered. The predicates are intended to be
+region definitions, so simultaneous truth of two cases is a real ambiguity
+unless the solver path explicitly supports multi-active disjunctions. The
+policy should be:
+
+- zero true predicates: uncovered/no active region;
+- one true predicate: selected region;
+- more than one true predicate: overlap/conflict;
+- syntactically duplicate predicates are immediate conflicts;
+- `APPLIES IF TRUE` on more than one case is an immediate conflict;
+- absence of an `OTHERWISE` or equivalent exhaustive proof is a possible
+  closure warning, not automatically a hard error for arbitrary nonlinear
+  predicates.
+
+This policy matches existing CMSlv/CMSlv2 capability: continuous variables in
+predicates are acceptable, but the solver may need boundary/branch machinery to
+find a consistent region. The compiler-level diagnostic should not reject valid
+conditional models merely because it cannot prove continuous-region closure.
+
+Current implementation status: steady classifier lowering rejects missing
+`APPLIES IF` clauses, syntactically duplicate `APPLIES IF` predicates, and
+multiple `APPLIES IF TRUE` cases. General nonlinear overlap/closure analysis is
+still future work.
 
 ## Solver Interpretations
 
@@ -295,6 +388,28 @@ configuration dispatch, but still experimental for general CMSlv/CMSlv2
 conditional-region solving until dedicated tests and structural analysis are
 added.
 
+For `CASE ... IF` steady lowering, current implementation work materialises
+guard artifacts into solver-side conditional relation, logrelation, and
+boundary lists. A decomposition regression now checks that a generated logical
+guard row has an edge to the natural continuous boundary variable. That is the
+minimum wiring CMSlv2 needs before it can reason about a continuous guard as a
+boundary rather than only as a counted generated object.
+
+CMSlv2 now also checks whether classifier-aware reanalysis changes the active
+equation rows after a nonlinear solve. If an upstream equation moves a
+continuous guard variable across a `CASE IF` boundary, CMSlv2 marks the solve
+as not yet converged and takes another pass with the newly active branch. The
+regression model `models/test/cmslv/cmslv2_case_if_reanalysis.a4c` records this
+case.
+
+Inline `SATISFIED(real_relation, tolerance)` now keeps guard truth and generated
+boundary status aligned for the compact tolerance case: the generated boundary
+stores the tolerance, and direct expression evaluation applies the same
+residual rules as existing named `SATISFIED(boundary, tolerance)`. Raw
+comparisons such as `CASE ... IF a < 5` remain exact comparisons, as before;
+users who need a deadband/tolerance should write the inline `SATISFIED(...)`
+form or name the boundary explicitly.
+
 Status on branch `unified-when`: fixed-selector nested `WHEN` dispatch now has
 dedicated CUnit coverage:
 
@@ -330,6 +445,51 @@ from any source case:
 
 This inference is appropriate for memoryless mode tracking. It is not
 appropriate for hysteresis, latching, timers, counters, or reset-based models.
+
+For a `CASE ... IF` cascade with guards `g1..gn`, the dynamic classifier
+regions are the same priority regions used by CMSlv2:
+
+```text
+R1 = g1
+R2 = NOT g1 AND g2
+...
+Rotherwise = NOT g1 AND ... AND NOT gn
+```
+
+IDA dynamic lowering should not create hidden `SWITCH TO` statements in the
+instance tree. It should build a solver-side transition graph:
+
+```text
+DynamicClassifierGraph:
+    nodes = cases
+    region predicate per node
+    primitive guard boundaries / event roots
+    candidate target cases
+    optional adjacency information
+```
+
+The first conservative transition policy is all-to-all among memoryless
+classifier regions: after any root event, re-evaluate the ordered regions and
+select the first true target. A tighter policy can derive adjacency from the
+primitive boundary atoms in the guards:
+
+- two regions are adjacent if their predicates can differ by crossing one
+  primitive boundary while the remaining primitive truth assignments stay
+  compatible;
+- for finite Boolean guard tuples, BDD/Karnaugh-style simplification can make
+  this exact;
+- for continuous nonlinear predicates, adjacency checks should initially be
+  conservative and may over-approximate transitions;
+- impossible or unreachable transitions can become warnings once structural
+  signatures and predicate reasoning are stronger.
+
+Dynamic inference must be rejected or explicitly downgraded when the region
+logic is not memoryless. Clear error cases include `REINIT`, `pre`, timers,
+counters, elapsed-time tests, explicit `SWITCH TO` mixed with inferred
+transitions, and other constructs whose truth depends on history rather than
+the current continuous/discrete state. An explicit future `ACCEPT IF` or
+`APPLIES IF` clause could provide a direct region invariant and avoid some
+reverse-engineering.
 
 ### MINLP/GDP
 
@@ -1180,9 +1340,9 @@ calling the lower-level `slv_lower_classifier_whens` and
 the `slv_system_t` API surface while leaving the compiler instance tree
 unchanged.
 
-The current implementation also has a first generated-artifact pass for steady
-`CASE IF` guards. During `slv_prepare_classifier_whens(sys,
-WHEN_REGION_STEADY)`, the system layer can:
+The current implementation also has a generated-artifact pass for steady
+`CASE IF` guards and `APPLIES IF` predicates. During
+`slv_prepare_classifier_whens(sys, WHEN_REGION_STEADY)`, the system layer can:
 
 1. walk classifier `WHEN`s and their compact guard artifacts
 2. create parentless generated `REL_INST`s for real boundaries
@@ -1198,6 +1358,14 @@ tree. They are destroyed with the solver system. This proves the direct
 generated-boundary route without exposing hidden compiler names as model
 children.
 
+Inline `SATISFIED(real_relation, tolerance)` is handled in this materialisation
+pass. The parser records it as a classifier-only marker after the primitive
+real relation. The system layer then generates the hidden conditional relation,
+creates the corresponding boundary object, and copies the tolerance onto that
+boundary. Focused CUnit coverage now checks that both `CASE IF` and
+`APPLIES IF` forms produce the expected generated real boundary with the user
+tolerance preserved.
+
 CMSlv2 still obtains its active equation set via the existing lowered-region
 predicate reanalysis path, but the generated guard artifacts are now also
 installed into the ordinary solver-side system lists. Generated real comparison
@@ -1206,6 +1374,52 @@ are appended as logrelations, and all generated guard boundaries are appended as
 boundaries. This lets CMSlv2 creation, presolve, decomposition, and boundary
 inspection see the natural guard boundaries without exposing generated objects
 in the visible instance tree.
+
+A full `pipeline.a4c` migration is an important regression target and is not
+yet passing with the current CASE IF implementation. A component-level
+`arc_w_no_valve` migration passes, but the full 38-pipe network exposes the
+remaining difference between:
+
+```ascend
+CONDITIONAL
+    cond: Q >= 0 {gpm};
+END CONDITIONAL;
+bol == SATISFIED(cond, 1e-8 {gpm});
+
+WHEN (bol)
+CASE TRUE:
+    USE forward;
+CASE FALSE:
+    USE reverse;
+END WHEN;
+```
+
+and the new classifier form:
+
+```ascend
+WHEN (bol)
+CASE TRUE IF SATISFIED(Q >= 0 {gpm}, 1e-8 {gpm}):
+    USE forward;
+OTHERWISE:
+    USE reverse;
+END WHEN;
+```
+
+The latter currently gives CMSlv2 enough information to classify active
+regions and see generated guard boundaries, but not enough to reproduce the old
+`bol == SATISFIED(...)` boundary-coupled branch search in the full pipeline
+problem. This should be treated as a core equivalence gap, not just as a test
+model cleanup.
+
+The pipeline experiment also reinforces that `OTHERWISE` should have an
+optional user-visible label in the unified syntax. `OTHERWISE` is the exact
+priority-cascade complement of all earlier `CASE IF` guards, so replacing it
+with an explicit final guard can change tolerance semantics. But an unlabelled
+fallback is awkward for diagnostics, selector reporting, branch-search state,
+and any future mapping back to old `WHEN(bool,...)` selectors. The design
+syntax already sketches `OTHERWISE ['name']`; the parser and system structures
+still need to implement that label if we want fallback cases to be first-class
+regions.
 
 The current materialisation-plan API records this explicitly:
 
@@ -1216,11 +1430,10 @@ hidden_logrel_instances = one per generated guard definition
 requires_generated_artifacts = true for nontrivial generated guards
 ```
 
-The implementation currently still uses the older `requires_named_instances`
-field name in places. That name is becoming misleading: the direct-reference
-route needs generated compiler artifacts, but it does not require those
-artifacts to be name-resolvable through the user-visible instance tree. A later
-cleanup should rename or reinterpret this field before the API settles.
+The implementation now uses the `requires_generated_artifacts` field name. That
+name is deliberately broader than the earlier spike wording: the direct route
+needs generated compiler/system artifacts, but it does not require those
+artifacts to be name-resolvable through the user-visible instance tree.
 
 Cleanup should follow ownership. Generated artifacts created during
 `slv_prepare_classifier_whens` should be owned by `slv_system_t`, not by

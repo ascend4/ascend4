@@ -37,6 +37,8 @@
 #ifndef ASC_CASE_H
 #define ASC_CASE_H
 
+#include "compiler.h"
+
 /**	@addtogroup compiler_stmt Compiler Statements
 	@{
 */
@@ -45,6 +47,7 @@
 struct Case {
     struct Set *ValueList;  /**< List of Values for the Conditions
                                  NULL if OTHERWISE  */
+    symchar *otherwise_label; /**< Optional user-visible label for OTHERWISE */
     struct Expr *condition; /**< Optional CASE ... IF classifier guard */
     struct Expr *applies;   /**< Optional APPLIES IF region predicate */
     struct gl_list_t *ref;  /**< References to RelationInstance
@@ -69,6 +72,18 @@ extern struct Case *CreateCase(struct Set *v1, struct gl_list_t *refinst);
 extern struct Set *GetCaseValuesF(struct Case *cs);
 /**<
  *  Return the List of Values of a Case.  Implementation of GetCaseValues().
+ */
+
+#ifdef NDEBUG
+#define GetCaseOtherwiseLabel(c) ((c)->otherwise_label)
+#else
+#define GetCaseOtherwiseLabel(c) GetCaseOtherwiseLabelF(c)
+#endif
+/**< Return the optional label attached to an OTHERWISE case. */
+extern symchar *GetCaseOtherwiseLabelF(struct Case *cs);
+/**<
+ *  Return the optional label attached to an OTHERWISE case.
+ *  Implementation of GetCaseOtherwiseLabel().
  */
 
 #ifdef NDEBUG
@@ -132,6 +147,11 @@ extern int GetCaseStatusF(struct Case *cs);
 extern struct Case *SetCaseValues(struct Case *cs, struct Set *set);
 /**<
  *  Set the List of Values of a Case.
+ */
+
+extern struct Case *SetCaseOtherwiseLabel(struct Case *cs, symchar *label);
+/**<
+ *  Set the optional label attached to an OTHERWISE case.
  */
 
 extern struct Case *SetCaseCondition(struct Case *cs, struct Expr *condition);

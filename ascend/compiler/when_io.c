@@ -55,7 +55,12 @@ void WriteCase(FILE *f, struct Case *cur_case, CONST struct Instance *ref)
     FPRINTF(f,"CASE ");
     WriteSet(f,values);
   }
-  else FPRINTF(f,"OTHERWISE");
+  else {
+    FPRINTF(f,"OTHERWISE");
+    if(GetCaseOtherwiseLabel(cur_case)!=NULL) {
+      FPRINTF(f," '%s'",SCP(GetCaseOtherwiseLabel(cur_case)));
+    }
+  }
   FPRINTF(f," :\n");
 
   reflist = GetCaseReferences(cur_case);
@@ -140,7 +145,14 @@ void WriteCaseDS(Asc_DString *dsPtr, struct Case *cur_case,
     Asc_DStringAppend(dsPtr,"CASE ",5);
     WriteSet2Str(dsPtr,values);
   }
-  else Asc_DStringAppend(dsPtr,"OTHERWISE",9);
+  else {
+    Asc_DStringAppend(dsPtr,"OTHERWISE",9);
+    if(GetCaseOtherwiseLabel(cur_case)!=NULL) {
+      Asc_DStringAppend(dsPtr," '",2);
+      Asc_DStringAppend(dsPtr,SCP(GetCaseOtherwiseLabel(cur_case)),-1);
+      Asc_DStringAppend(dsPtr,"'",1);
+    }
+  }
   Asc_DStringAppend(dsPtr," : ",2);
   Asc_DStringAppend(dsPtr,"\n",-1);
 
@@ -236,7 +248,6 @@ char *WriteWhenString(CONST struct Instance *wheninst,
   return result;
 
 }
-
 
 
 

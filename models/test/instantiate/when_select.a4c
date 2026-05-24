@@ -107,6 +107,20 @@ MODEL when_case_if_full_boolean_parses;
 	END WHEN;
 END when_case_if_full_boolean_parses;
 
+MODEL when_case_if_labelled_otherwise_parses;
+	mode IS_A symbol_constant;
+	mode :== 'mid';
+	a, x IS_A solver_var;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (mode)
+		CASE 'mid' IF a < 5:
+			USE r1;
+		OTHERWISE 'high':
+			USE r2;
+	END WHEN;
+END when_case_if_labelled_otherwise_parses;
+
 MODEL when_case_if_boolean_eq_parses;
 	mode IS_A symbol_constant;
 	mode :== 'mid';
@@ -123,6 +137,20 @@ MODEL when_case_if_boolean_eq_parses;
 	END WHEN;
 END when_case_if_boolean_eq_parses;
 
+MODEL when_case_if_inline_satisfied_parses;
+	mode IS_A symbol_constant;
+	mode :== 'mid';
+	a, x IS_A solver_var;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (mode)
+		CASE 'mid' IF SATISFIED(a < 5, 1e-6):
+			USE r1;
+		OTHERWISE:
+			USE r2;
+	END WHEN;
+END when_case_if_inline_satisfied_parses;
+
 MODEL when_applies_if_parses;
 	mode IS_A symbol_constant;
 	mode :== 'slow';
@@ -133,6 +161,31 @@ MODEL when_applies_if_parses;
 			USE r1;
 	END WHEN;
 END when_applies_if_parses;
+
+MODEL when_applies_if_inline_satisfied_parses;
+	mode IS_A symbol_constant;
+	mode :== 'mid';
+	a, x IS_A solver_var;
+	r1: x = 1;
+	WHEN (mode)
+		CASE 'mid' APPLIES IF SATISFIED(a < 5, 1e-6):
+			USE r1;
+	END WHEN;
+END when_applies_if_inline_satisfied_parses;
+
+MODEL when_applies_if_multiple_true_rejected;
+	mode IS_A symbol_constant;
+	mode :== 'a';
+	x IS_A solver_var;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (mode)
+		CASE 'a' APPLIES IF TRUE:
+			USE r1;
+		CASE 'b' APPLIES IF TRUE:
+			USE r2;
+	END WHEN;
+END when_applies_if_multiple_true_rejected;
 
 MODEL when_case_if_applies_if_rejected;
 	mode IS_A symbol_constant;

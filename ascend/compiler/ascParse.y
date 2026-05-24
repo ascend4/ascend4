@@ -143,6 +143,11 @@ static symchar *g_end_identifier = NULL;
  *  symbol table returned by the scanner.
  */
 
+static int g_classifier_predicate_depth = 0;
+/* Inline SATISFIED(real_relation,tol) is only supported while parsing
+ * classifier predicates attached to WHEN cases.
+ */
+
 static struct StatementList *g_model_parameters=NULL;
 /* this is the statementlist of the parameterized type
  */
@@ -831,6 +836,7 @@ static unsigned char g_decl_checkkind = ISCV_NONE;
 %type <frac_value> fraction fractail
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
 %type <dquote_ptr> optional_notes
+%type <sym_ptr> optional_when_otherwise_label
 %type <braced_ptr> optional_bracedtext
 %type <nptr> data_args fname name dataset_target fvarref /* optional_scope */
 %type <eptr> relation expr relop logrelop optional_with_value optional_when_case_if optional_when_case_applies
@@ -3093,17 +3099,27 @@ whenlistf:
 	{
 	  $$ = CreateWhenIfApplies($2,$3,$4,$6);
 	}
-    | OTHERWISE_TOK ':' fstatements
+    | OTHERWISE_TOK optional_when_otherwise_label ':' fstatements
 	{
-	  $$ = CreateWhen(NULL,$3);
+	  $$ = CreateWhenOtherwise($2,$4);
 	}
     | whenlistf CASE_TOK set optional_when_case_if optional_when_case_applies ':' fstatements
 	{
 	  $$ = LinkWhenCases(CreateWhenIfApplies($3,$4,$5,$7),$1);
 	}
-    | whenlistf OTHERWISE_TOK ':' fstatements
+    | whenlistf OTHERWISE_TOK optional_when_otherwise_label ':' fstatements
 	{
-	  $$ = LinkWhenCases(CreateWhen(NULL,$4),$1);
+	  $$ = LinkWhenCases(CreateWhenOtherwise($3,$5),$1);
+	}
+    ;
+
+optional_when_otherwise_label:
+	{
+	  $$ = NULL;
+	}
+    | SYMBOL_TOK
+	{
+	  $$ = $1;
 	}
     ;
 
@@ -3111,9 +3127,10 @@ optional_when_case_if:
 	{
 	  $$ = NULL;
 	}
-    | IF_TOK expr
+    | IF_TOK { ++g_classifier_predicate_depth; } expr
 	{
-	  $$ = $2;
+	  --g_classifier_predicate_depth;
+	  $$ = $3;
 	}
     ;
 
@@ -3121,9 +3138,10 @@ optional_when_case_applies:
 	{
 	  $$ = NULL;
 	}
-    | APPLIES_TOK IF_TOK expr
+    | APPLIES_TOK IF_TOK { ++g_classifier_predicate_depth; } expr
 	{
-	  $$ = $3;
+	  --g_classifier_predicate_depth;
+	  $$ = $4;
 	}
     ;
 
@@ -3867,6 +3885,19 @@ expr:
     | '-' expr %prec UMINUS_TOK
 	{
 	  $$ = JoinExprLists($2,CreateOpExpr(e_uminus));
+	}
+    | SATISFIED_TOK '(' expr relop expr ',' realnumber ')'
+	{
+	  if(!g_classifier_predicate_depth) {
+	    zz_error("SATISFIED(real relation, tolerance) is only supported in CASE IF and APPLIES IF predicates");
+	    DestroyExprList($3);
+	    DestroyExprList($4);
+	    DestroyExprList($5);
+	    YYERROR;
+	  }
+	  $5 = JoinExprLists($5,$4);
+	  $$ = JoinExprLists($3,$5);
+	  $$ = JoinExprLists($$,CreateSatisfiedExpr(NULL,$7,g_dim_ptr));
 	}
     | SATISFIED_TOK '(' fname ',' realnumber ')'
 	{

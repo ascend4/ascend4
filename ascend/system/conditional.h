@@ -28,6 +28,7 @@
 
 #include <ascend/general/platform.h>
 #include <ascend/general/list.h>
+#include <ascend/compiler/compiler.h>
 
 #include "slv_types.h"
 
@@ -270,6 +271,7 @@ struct when_case {
   int32 values[MAX_VAR_IN_LIST];  /**< values of conditional variables */
   const struct Expr *condition;    /**< optional CASE ... IF classifier guard */
   const struct Expr *applies;      /**< optional APPLIES IF region predicate */
+  symchar *otherwise_label;        /**< optional label for OTHERWISE cases */
   struct Expr *region;             /**< solver-side lowered region predicate */
   int32 region_source;             /**< enum when_region_source */
   struct module_t *source_module;   /**< source module for user diagnostics */
@@ -313,7 +315,7 @@ struct when_guard_materialization {
   int32 hidden_boolean_instances; /**< generated Boolean atom instances needed by instance-backed lowering */
   int32 hidden_relation_instances; /**< generated relation instances needed for real boundaries */
   int32 hidden_logrel_instances;   /**< generated logrelation instances needed for guard definitions */
-  int32 requires_named_instances;  /**< nonzero when generated objects must be name-addressable */
+  int32 requires_generated_artifacts; /**< nonzero when generated solver-side artifacts are needed */
 };
 
 struct when_guard_artifact {
@@ -372,6 +374,13 @@ ASC_DLLSPEC const struct Expr *when_case_applies(const struct when_case *wc);
 ASC_DLLSPEC void when_case_set_applies(struct when_case *wc, const struct Expr *applies);
 /**<
  *  Sets the optional APPLIES IF region predicate of the given case.
+ */
+
+ASC_DLLSPEC symchar *when_case_otherwise_label(const struct when_case *wc);
+/**< Retrieves the optional label attached to an OTHERWISE case. */
+ASC_DLLSPEC void when_case_set_otherwise_label(struct when_case *wc, symchar *label);
+/**<
+ *  Sets the optional label attached to an OTHERWISE case.
  */
 
 ASC_DLLSPEC int when_case_has_classifier_predicate(const struct when_case *wc);

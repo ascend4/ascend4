@@ -351,7 +351,7 @@ extern int zz_debug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 744 "ascend/compiler/ascParse.y"
+#line 749 "ascend/compiler/ascParse.y"
 
   double real_value;
   long   int_value;

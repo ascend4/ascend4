@@ -47,6 +47,7 @@ struct Case *CreateCase(struct Set *vl, struct gl_list_t *refinst){
   struct Case *result = ASC_NEW(struct Case);
   assert(result!=NULL);
   result->ValueList = vl;
+  result->otherwise_label = NULL;
   result->condition = NULL;
   result->applies = NULL;
   result->ref = refinst;
@@ -61,6 +62,11 @@ struct Case *CreateCase(struct Set *vl, struct gl_list_t *refinst){
 struct Set *GetCaseValuesF(struct Case *c){
   assert(c);
   return c->ValueList;
+}
+
+symchar *GetCaseOtherwiseLabelF(struct Case *c){
+  assert(c);
+  return c->otherwise_label;
 }
 
 struct Expr *GetCaseConditionF(struct Case *c){
@@ -102,6 +108,12 @@ int GetCaseStatusF(struct Case *c){
 struct Case *SetCaseValues(struct Case *c, struct Set *vl){
   assert(c);
   c->ValueList = vl;
+  return c;
+}
+
+struct Case *SetCaseOtherwiseLabel(struct Case *c, symchar *label){
+  assert(c);
+  c->otherwise_label = label;
   return c;
 }
 
@@ -202,6 +214,7 @@ struct Case *CopyCase(struct Case *c){
   struct Case *result = ASC_NEW(struct Case);
   if (c->ValueList) result->ValueList = CopySetByReference(c->ValueList);
   else result->ValueList = c->ValueList;
+  result->otherwise_label = c->otherwise_label;
   result->condition = CopyExprList(c->condition);
   result->applies = CopyExprList(c->applies);
   result->ref = gl_copy(c->ref);

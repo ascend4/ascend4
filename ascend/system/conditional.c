@@ -241,6 +241,7 @@ const struct when_case g_case_defaults = {
    {0},			/* values */
    NULL,		/* condition */
    NULL,		/* applies */
+   NULL,                /* otherwise label */
    NULL,		/* lowered region */
    WHEN_REGION_NONE,	/* lowered region source */
    NULL,		/* source module */
@@ -392,6 +393,16 @@ void when_case_set_applies(struct when_case *wc, const struct Expr *applies){
    wc->applies = applies;
 }
 
+symchar *when_case_otherwise_label(const struct when_case *wc){
+   assert(wc);
+   return wc->otherwise_label;
+}
+
+void when_case_set_otherwise_label(struct when_case *wc, symchar *label){
+   assert(wc);
+   wc->otherwise_label = label;
+}
+
 int when_case_has_classifier_predicate(const struct when_case *wc){
    assert(wc);
    return wc->condition != NULL || wc->applies != NULL;
@@ -522,7 +533,8 @@ static int when_lower_nested_classifier_regions(struct when_case *wc,
 static int when_lower_applies_regions(struct w_when *when,
       enum when_region_request request){
    struct gl_list_t *cases;
-   unsigned long c, clen;
+   unsigned long c, d, clen;
+   int true_count = 0;
 
    cases = when_cases_list(when);
    clen = cases != NULL ? gl_length(cases) : 0;
@@ -533,6 +545,23 @@ static int when_lower_applies_regions(struct w_when *when,
          FPRINTF(stderr,
             "APPLIES IF classifier lowering requires every case to provide APPLIES IF\n");
          return 1;
+      }
+      if(ExprType(applies) == e_boolean && ExprBValue(applies)) {
+         ++true_count;
+         if(true_count > 1) {
+            FPRINTF(stderr,
+               "APPLIES IF classifier lowering found multiple APPLIES IF TRUE cases\n");
+            return 1;
+         }
+      }
+      for(d = 1; d < c; ++d){
+         struct when_case *other = (struct when_case *)gl_fetch(cases,d);
+         const struct Expr *other_applies = when_case_applies(other);
+         if(other_applies != NULL && !CompareExprs(applies,other_applies)) {
+            FPRINTF(stderr,
+               "APPLIES IF classifier lowering found duplicate region predicates\n");
+            return 1;
+         }
       }
       when_case_set_region_predicate(
          wc,CopyExprList(applies),WHEN_REGION_APPLIES
@@ -781,7 +810,7 @@ static void when_guard_materialization_init(
       plan->hidden_boolean_instances = 0;
       plan->hidden_relation_instances = 0;
       plan->hidden_logrel_instances = 0;
-      plan->requires_named_instances = 0;
+      plan->requires_generated_artifacts = 0;
    }
 }
 
@@ -1142,15 +1171,15 @@ int when_case_if_materialization_plan(const struct w_when *when,
     * Instance-backed CMSlv/CMSlv2 lowering needs one generated Boolean for
     * each CASE IF guard, one conditional relation for each real comparison,
     * and one logical relation defining each generated Boolean. The generated
-    * relations must be name-addressable because SATISFIED(...) terms resolve
-    * relations by name in the compiler expression path.
+    * generated artifacts are installed into the solver-side system view, not
+    * into the user-visible instance tree.
     */
    plan->hidden_boolean_instances =
       plan->guard_booleans - plan->reusable_named_guards;
    plan->hidden_relation_instances = plan->real_boundaries;
    plan->hidden_logrel_instances =
       plan->guard_booleans - plan->reusable_named_guards;
-   plan->requires_named_instances =
+   plan->requires_generated_artifacts =
       (plan->hidden_boolean_instances
        || plan->hidden_relation_instances
        || plan->hidden_logrel_instances) ? 1 : 0;

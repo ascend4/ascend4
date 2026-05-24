@@ -75,11 +75,19 @@ struct WhenList *CreateWhenIfApplies(struct Set *set, struct Expr *condition,
   WMALLOC(result);
   result->slist = sl;
   result->values = set;
+  result->otherwise_label = NULL;
   result->condition = condition;
   result->applies = applies;
   result->mod = Asc_CurrentModule();
   result->linenum = LineNum();
   result->next = NULL;
+  return result;
+}
+
+struct WhenList *CreateWhenOtherwise(symchar *label, struct StatementList *sl)
+{
+  struct WhenList *result = CreateWhen(NULL,sl);
+  result->otherwise_label = label;
   return result;
 }
 
@@ -127,6 +135,12 @@ struct Expr *WhenCaseAppliesF(struct WhenList *w)
 {
   assert(w!=NULL);
   return w->applies;
+}
+
+symchar *WhenCaseOtherwiseLabelF(struct WhenList *w)
+{
+  assert(w!=NULL);
+  return w->otherwise_label;
 }
 
 struct module_t *WhenCaseModuleF(struct WhenList *w)
@@ -189,6 +203,7 @@ struct WhenList *CopyWhenNode(struct WhenList *w)
   WMALLOC(result);
   if (w->values) result->values = CopySetByReference(w->values);
   else result->values = w->values;
+  result->otherwise_label = w->otherwise_label;
   result->condition = CopyExprList(w->condition);
   result->applies = CopyExprList(w->applies);
   result->slist = CopyListToModify(w->slist);
@@ -212,8 +227,6 @@ struct WhenList *CopyWhenList(struct WhenList *w)
   }
   return head;
 }
-
-
 
 
 

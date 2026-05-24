@@ -60,6 +60,7 @@ static struct cmslv_progress_capture g_cmslv_progress = {NULL,0,0};
 
 enum cmslv_progress_expect {
 	CMSLV_PROGRESS_NONE,
+	CMSLV_PROGRESS_BASIC_CMSLV2,
 	CMSLV_PROGRESS_BOUNDARY,
 	CMSLV_PROGRESS_LINMASSBAL_CMSLV2,
 	CMSLV_PROGRESS_GENERAL_CMSLV2,
@@ -276,6 +277,7 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 	char progress[65536];
 	int cmslv2 = progress_expect == CMSLV_PROGRESS_LINMASSBAL_CMSLV2
 		|| progress_expect == CMSLV_PROGRESS_GENERAL_CMSLV2
+		|| progress_expect == CMSLV_PROGRESS_BASIC_CMSLV2
 		|| progress_expect == CMSLV_PROGRESS_SCHEDULER_CMSLV2
 		|| progress_expect == CMSLV_PROGRESS_BOUNDARY_LOCAL_CMSLV2
 		|| progress_expect == CMSLV_PROGRESS_BOUNDARY_LOCAL_COMPLETE_CMSLV2
@@ -662,8 +664,13 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 	T(cmslv2_boundary_local_complete)\
 	T(cmslv2_fluidbed_switch_crash)\
 	T(cmslv2_nested_when_static)\
+	T(reinitignore_case_if)\
+	T(linmassbal_unit_case_if)\
+	T(pipeline_arc_case_if)\
 	T(cmslv2_case_if_steady)\
 	T(cmslv2_case_if_continuous)\
+	T(cmslv2_case_if_satisfied_tolerance)\
+	T(cmslv2_case_if_reanalysis)\
 	T(cmslv2_resolve_converged_noop)
 
 static void test_linmassbal_cmslv2(void){
@@ -703,12 +710,34 @@ static void test_cmslv2_nested_when_static(void){
 	test_cmslv_mode("nested_when_static",NULL,CMSLV_PROGRESS_NONE);
 }
 
+static void test_reinitignore_case_if(void){
+	test_cmslv_mode("reinitignore_case_if",NULL,CMSLV_PROGRESS_BASIC_CMSLV2);
+}
+
+static void test_linmassbal_unit_case_if(void){
+	test_cmslv_mode("linmassbal_unit_case_if",NULL,CMSLV_PROGRESS_BASIC_CMSLV2);
+}
+
+static void test_pipeline_arc_case_if(void){
+	test_cmslv_mode("pipeline_arc_case_if",NULL,CMSLV_PROGRESS_BASIC_CMSLV2);
+}
+
 static void test_cmslv2_case_if_steady(void){
 	test_cmslv_mode("cmslv2_case_if_steady",NULL,CMSLV_PROGRESS_NONE);
 }
 
 static void test_cmslv2_case_if_continuous(void){
-	test_cmslv_mode("cmslv2_case_if_continuous",NULL,CMSLV_PROGRESS_NONE);
+	test_cmslv_mode("cmslv2_case_if_continuous",NULL,CMSLV_PROGRESS_BASIC_CMSLV2);
+}
+
+static void test_cmslv2_case_if_satisfied_tolerance(void){
+	test_cmslv_mode(
+		"cmslv2_case_if_satisfied_tolerance",NULL,CMSLV_PROGRESS_BASIC_CMSLV2
+	);
+}
+
+static void test_cmslv2_case_if_reanalysis(void){
+	test_cmslv_mode("cmslv2_case_if_reanalysis",NULL,CMSLV_PROGRESS_BASIC_CMSLV2);
 }
 
 static void test_cmslv2_resolve_converged_noop(void){

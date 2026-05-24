@@ -45,6 +45,7 @@
 #ifndef ASC_STATTYPES_H
 #define ASC_STATTYPES_H
 
+#include "compiler.h"
 #include "expr_types.h"
 
 /**	@addtogroup compiler_stmt Compiler Statements
@@ -180,6 +181,7 @@ enum stat_t {
 struct WhenList {
   struct WhenList *next;        /**< next in list */
   struct Set *values;           /**< matching values of the case */
+  symchar *otherwise_label;      /**< optional label for OTHERWISE cases */
   struct Expr *condition;        /**< optional CASE ... IF classifier guard */
   struct Expr *applies;          /**< optional APPLIES IF region predicate */
   struct StatementList *slist;  /**< statements to be executed */

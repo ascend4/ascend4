@@ -2555,6 +2555,8 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     cur_case = (struct Case *)(gl_fetch(scratch,c));
     when_case_set_condition(cur_sol_case,GetCaseCondition(cur_case));
     when_case_set_applies(cur_sol_case,GetCaseApplies(cur_case));
+    when_case_set_otherwise_label(cur_sol_case,
+                                  GetCaseOtherwiseLabel(cur_case));
     when_case_set_source(cur_sol_case,
                          GetCaseModule(cur_case),
                          GetCaseLineNum(cur_case));

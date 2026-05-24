@@ -497,6 +497,10 @@ static struct Instance *ResolveSatisfiedInstance(
   struct Instance *inst;
 
   inst = NULL;
+  if (SatisfiedExprName(start) == NULL) {
+    rel_errorlist_set_lrcode(err,incorrect_logstructure);
+    return NULL;
+  }
   if (resolver != NULL) {
     inst = (*resolver)(SatisfiedExprName(start), userdata);
   }
@@ -1391,6 +1395,9 @@ static int CheckLogExpr(CONST struct Instance *ref,
     case e_boolean:
       break;			/* automatically okay! */
     case e_satisfied:
+      if(SatisfiedExprName(start) == NULL) {
+         return 0;
+      }
       if(!CheckExprSatisfied(ref,SatisfiedExprName(start))) {
          return 0 ;
       }

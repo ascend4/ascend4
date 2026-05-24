@@ -164,3 +164,25 @@ METHODS
 		c := TRUE;
 	END on_load;
 END when_logrel;
+
+MODEL case_if_guard_boundary;
+	x, y IS_A generic_real;
+	mode IS_A symbol_constant;
+	mode :== 'selected';
+
+	rx: x = 2;
+	low: y = 10;
+	high: y = 20;
+
+	WHEN (mode)
+	CASE 'selected' IF x < 5:
+		USE low;
+	OTHERWISE:
+		USE high;
+	END WHEN;
+METHODS
+	METHOD on_load;
+		x := 0;
+		y := 0;
+	END on_load;
+END case_if_guard_boundary;
