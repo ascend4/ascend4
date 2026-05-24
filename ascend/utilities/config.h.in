@@ -123,32 +123,6 @@
 # define ASC_SOLVERS_REL_DIST "@ASC_SOLVERS_REL_DIST@"
 #endif
 
-/*-----------------------------------------------------------------------
-  TRON
-*/
-
-/*
-	This is the name of the TRON .so or DLL. On Windows
-	it's called 'copopt3' but on linux it seems to be called
-	'consub3.so'.
-*/
-#define ASC_TRON_LIB "@ASC_TRON_LIB@"
-
-/*
-	This is the name of the optional environment variable which will
-	be used for the value of the searchpath for the TRON DLL/SO.
-*/
-#define ASC_TRON_ENVVAR "@ASC_TRON_ENVVAR@"
-
-/*
-	This is the default *fallback* searchpath that will be used when hunting
-	for TRON at runtime
-
-	Searchpath for TRON DLL/SO. This is in platform-specific
-	form (paths with ';' separator in Windows, ':' separator on Linux).
-*/
-#define ASC_TRON_DLPATH "@ASC_TRON_DLPATH@"
-
 /*-------------------------------------------------------------------------
   LSODE
 */

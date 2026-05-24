@@ -49,6 +49,7 @@ typedef struct slv_decomp_partition {
 	int32 n_vars;
 	int32 n_dvars;
 	int32 nnz;
+	int32 nz_cap;
 	int32 *nz_rows;
 	int32 *nz_cols;
 	int32 *row_org;
@@ -83,6 +84,19 @@ ASC_DLLSPEC int slv_decomp_partition_active(slv_system_t sys,
 	edges have already been consumed when the active CASE rows were selected.
 	It is intended as the re-analysis view used after selectors or boundaries
 	have resolved part of the conditional structure.
+
+	@return 0 on success, 2 on out-of-memory, 1 on other failure.
+*/
+
+ASC_DLLSPEC int slv_decomp_partition_connected(slv_system_t sys,
+		slv_decomp_partition_t *decomp);
+/**<
+	Builds conservative connected mixed incidence envelopes without running the
+	full BLT/matching partitioner.
+
+	This is intended for solver scheduling paths that only need the next coarse
+	mixed envelope. User-facing diagnostics should continue to use
+	`slv_decomp_partition` when the full block landscape is desired.
 
 	@return 0 on success, 2 on out-of-memory, 1 on other failure.
 */

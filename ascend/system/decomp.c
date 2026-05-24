@@ -68,6 +68,7 @@ void slv_decomp_init(slv_decomp_partition_t *decomp){
 	decomp->n_vars = 0;
 	decomp->n_dvars = 0;
 	decomp->nnz = 0;
+	decomp->nz_cap = 0;
 	decomp->nz_rows = NULL;
 	decomp->nz_cols = NULL;
 	decomp->row_org = NULL;
@@ -171,21 +172,28 @@ static int decomp_dvar_selector_usable(const struct dis_discrete *dvar){
 
 static void decomp_record_org(slv_decomp_partition_t *decomp, int32 row, int32 col){
 	int32 *new_rows, *new_cols;
-	int32 next;
+	int32 next, new_cap;
 	if(decomp == NULL || row < 0 || col < 0){
 		return;
 	}
 	next = decomp->nnz + 1;
-	new_rows = ASC_REALLOC(decomp->nz_rows,sizeof(int32) * next);
-	if(new_rows == NULL){
-		return;
+	if(next > decomp->nz_cap){
+		new_cap = decomp->nz_cap > 0 ? decomp->nz_cap * 2 : 64;
+		while(new_cap < next){
+			new_cap *= 2;
+		}
+		new_rows = ASC_REALLOC(decomp->nz_rows,sizeof(int32) * new_cap);
+		if(new_rows == NULL){
+			return;
+		}
+		decomp->nz_rows = new_rows;
+		new_cols = ASC_REALLOC(decomp->nz_cols,sizeof(int32) * new_cap);
+		if(new_cols == NULL){
+			return;
+		}
+		decomp->nz_cols = new_cols;
+		decomp->nz_cap = new_cap;
 	}
-	decomp->nz_rows = new_rows;
-	new_cols = ASC_REALLOC(decomp->nz_cols,sizeof(int32) * next);
-	if(new_cols == NULL){
-		return;
-	}
-	decomp->nz_cols = new_cols;
 	decomp->nz_rows[decomp->nnz] = row;
 	decomp->nz_cols[decomp->nnz] = col;
 	decomp->nnz = next;
@@ -198,9 +206,11 @@ static void decomp_add_org(mtx_matrix_t mtx, slv_decomp_partition_t *decomp,
 	if(row < 0 || col < 0){
 		return;
 	}
-	nz.row = row;
-	nz.col = col;
-	mtx_fill_org_value(mtx,&nz,1.0);
+	if(mtx != NULL){
+		nz.row = row;
+		nz.col = col;
+		mtx_fill_org_value(mtx,&nz,1.0);
+	}
 	decomp_record_org(decomp,row,col);
 }
 
@@ -573,12 +583,333 @@ static int decomp_partition_mode(slv_system_t sys, slv_decomp_partition_t *decom
 	return ret;
 }
 
+static int decomp_collect_edges(slv_system_t sys, slv_decomp_partition_t *decomp,
+		decomp_partition_mode_t mode
+){
+	int32 row, i;
+	struct rel_relation **rels, **condrels;
+	struct logrel_relation **logrels, **condlogrels;
+
+	if(sys == NULL || decomp == NULL){
+		return 1;
+	}
+	decomp_clear_owned(decomp);
+	decomp->n_rels = slv_get_num_solvers_rels(sys);
+	decomp->n_condrels = slv_get_num_solvers_condrels(sys);
+	decomp->n_logrels = slv_get_num_solvers_logrels(sys);
+	decomp->n_condlogrels = slv_get_num_solvers_condlogrels(sys);
+	decomp->n_vars = slv_get_num_solvers_vars(sys);
+	decomp->n_dvars = slv_get_num_solvers_dvars(sys);
+	decomp->n_rows = decomp->n_rels + decomp->n_condrels
+		+ decomp->n_logrels + decomp->n_condlogrels;
+	decomp->n_cols = decomp->n_vars + decomp->n_dvars;
+	if(decomp->n_rows == 0 || decomp->n_cols == 0){
+		return 1;
+	}
+
+	rels = slv_get_solvers_rel_list(sys);
+	condrels = slv_get_solvers_condrel_list(sys);
+	logrels = slv_get_solvers_logrel_list(sys);
+	condlogrels = slv_get_solvers_condlogrel_list(sys);
+
+	row = 0;
+	for(i = 0; i < decomp->n_rels; ++i, ++row){
+		if(mode == DECOMP_CONSERVATIVE){
+			if(!decomp_add_when_edges_for_object(sys,NULL,rels[i],0,decomp,row)
+					&& rel_in_when(rels[i])){
+				decomp_add_all_when_selectors(sys,NULL,decomp,row);
+			}
+		}
+		if(decomp_rel_row_current(rels[i],mode)){
+			decomp_add_rel_incidences(sys,NULL,rels[i],decomp,row);
+		}
+	}
+	for(i = 0; i < decomp->n_condrels; ++i, ++row){
+		if(mode == DECOMP_CONSERVATIVE){
+			if(!decomp_add_when_edges_for_object(sys,NULL,condrels[i],0,decomp,row)
+					&& rel_in_when(condrels[i])){
+				decomp_add_all_when_selectors(sys,NULL,decomp,row);
+			}
+		}
+		if(decomp_rel_row_current(condrels[i],mode)){
+			decomp_add_rel_incidences(sys,NULL,condrels[i],decomp,row);
+		}
+	}
+	for(i = 0; i < decomp->n_logrels; ++i, ++row){
+		if(mode == DECOMP_CONSERVATIVE){
+			if(!decomp_add_when_edges_for_object(sys,NULL,logrels[i],1,decomp,row)
+					&& logrel_in_when(logrels[i])){
+				decomp_add_all_when_selectors(sys,NULL,decomp,row);
+			}
+		}
+		if(decomp_logrel_row_current(logrels[i],mode)){
+			decomp_add_logrel_dvars(sys,NULL,logrels[i],decomp,row);
+			decomp_add_boundary_for_logrel(sys,NULL,logrels[i],decomp,row);
+		}
+	}
+	for(i = 0; i < decomp->n_condlogrels; ++i, ++row){
+		if(mode == DECOMP_CONSERVATIVE){
+			if(!decomp_add_when_edges_for_object(sys,NULL,condlogrels[i],1,decomp,row)
+					&& logrel_in_when(condlogrels[i])){
+				decomp_add_all_when_selectors(sys,NULL,decomp,row);
+			}
+		}
+		if(decomp_logrel_row_current(condlogrels[i],mode)){
+			decomp_add_logrel_dvars(sys,NULL,condlogrels[i],decomp,row);
+			decomp_add_boundary_for_logrel(sys,NULL,condlogrels[i],decomp,row);
+		}
+	}
+	return 0;
+}
+
+static void decomp_free_connected_work(int32 *row_comp, int32 *col_comp,
+		int32 *queue, int32 *row_degree, int32 *col_degree,
+		int32 *row_start, int32 *col_start, int32 *row_edges,
+		int32 *col_edges, int32 *row_pos, int32 *col_pos
+){
+	if(row_comp != NULL) ascfree(row_comp);
+	if(col_comp != NULL) ascfree(col_comp);
+	if(queue != NULL) ascfree(queue);
+	if(row_degree != NULL) ascfree(row_degree);
+	if(col_degree != NULL) ascfree(col_degree);
+	if(row_start != NULL) ascfree(row_start);
+	if(col_start != NULL) ascfree(col_start);
+	if(row_edges != NULL) ascfree(row_edges);
+	if(col_edges != NULL) ascfree(col_edges);
+	if(row_pos != NULL) ascfree(row_pos);
+	if(col_pos != NULL) ascfree(col_pos);
+}
+
+static int decomp_connected_from_edges(slv_decomp_partition_t *decomp){
+	int32 *row_comp = NULL, *col_comp = NULL, *row_count = NULL;
+	int32 *col_count = NULL, *row_offset = NULL, *col_offset = NULL;
+	int32 *row_pos = NULL, *col_pos = NULL, *queue = NULL;
+	int32 *row_degree = NULL, *col_degree = NULL;
+	int32 *row_start = NULL, *col_start = NULL;
+	int32 *row_edges = NULL, *col_edges = NULL;
+	mtx_region_t *new_blocks = NULL;
+	int32 *new_row_org = NULL, *new_col_org = NULL;
+	int32 *new_row_cur = NULL, *new_col_cur = NULL;
+	int32 r, c, nz, comp, i, cur, valid_nnz;
+	int32 qhead, qtail, nblocks, nrows_used, ncols_used;
+
+	if(decomp == NULL){
+		return 1;
+	}
+
+	row_comp = ASC_NEW_ARRAY(int32,decomp->n_rows);
+	col_comp = ASC_NEW_ARRAY(int32,decomp->n_cols);
+	queue = ASC_NEW_ARRAY(int32,decomp->n_rows + decomp->n_cols);
+	row_degree = ASC_NEW_ARRAY_CLEAR(int32,decomp->n_rows);
+	col_degree = ASC_NEW_ARRAY_CLEAR(int32,decomp->n_cols);
+	row_start = ASC_NEW_ARRAY(int32,decomp->n_rows + 1);
+	col_start = ASC_NEW_ARRAY(int32,decomp->n_cols + 1);
+	if(row_comp == NULL || col_comp == NULL || queue == NULL
+			|| row_degree == NULL || col_degree == NULL
+			|| row_start == NULL || col_start == NULL){
+		decomp_free_connected_work(row_comp,col_comp,queue,row_degree,
+			col_degree,row_start,col_start,NULL,NULL,NULL,NULL);
+		return 2;
+	}
+	for(r = 0; r < decomp->n_rows; ++r) row_comp[r] = -1;
+	for(c = 0; c < decomp->n_cols; ++c) col_comp[c] = -1;
+
+	valid_nnz = 0;
+	for(nz = 0; nz < decomp->nnz; ++nz){
+		r = decomp->nz_rows[nz];
+		c = decomp->nz_cols[nz];
+		if(r >= 0 && r < decomp->n_rows && c >= 0 && c < decomp->n_cols){
+			row_degree[r]++;
+			col_degree[c]++;
+			valid_nnz++;
+		}
+	}
+	row_start[0] = 0;
+	for(r = 0; r < decomp->n_rows; ++r){
+		row_start[r + 1] = row_start[r] + row_degree[r];
+	}
+	col_start[0] = 0;
+	for(c = 0; c < decomp->n_cols; ++c){
+		col_start[c + 1] = col_start[c] + col_degree[c];
+	}
+	row_edges = valid_nnz > 0 ? ASC_NEW_ARRAY(int32,valid_nnz) : NULL;
+	col_edges = valid_nnz > 0 ? ASC_NEW_ARRAY(int32,valid_nnz) : NULL;
+	row_pos = ASC_NEW_ARRAY(int32,decomp->n_rows);
+	col_pos = ASC_NEW_ARRAY(int32,decomp->n_cols);
+	if((valid_nnz > 0 && (row_edges == NULL || col_edges == NULL))
+			|| row_pos == NULL || col_pos == NULL){
+		decomp_free_connected_work(row_comp,col_comp,queue,row_degree,
+			col_degree,row_start,col_start,row_edges,col_edges,row_pos,col_pos);
+		return 2;
+	}
+	for(r = 0; r < decomp->n_rows; ++r) row_pos[r] = row_start[r];
+	for(c = 0; c < decomp->n_cols; ++c) col_pos[c] = col_start[c];
+	for(nz = 0; nz < decomp->nnz; ++nz){
+		r = decomp->nz_rows[nz];
+		c = decomp->nz_cols[nz];
+		if(r >= 0 && r < decomp->n_rows && c >= 0 && c < decomp->n_cols){
+			row_edges[row_pos[r]++] = c;
+			col_edges[col_pos[c]++] = r;
+		}
+	}
+
+	comp = 0;
+	for(i = 0; i < decomp->nnz; ++i){
+		int32 seed = decomp->nz_rows[i];
+		if(seed < 0 || seed >= decomp->n_rows || row_comp[seed] >= 0){
+			continue;
+		}
+		qhead = 0;
+		qtail = 0;
+		row_comp[seed] = comp;
+		queue[qtail++] = seed;
+		while(qhead < qtail){
+			cur = queue[qhead++];
+			if(cur >= 0){
+				r = cur;
+				for(nz = row_start[r]; nz < row_start[r + 1]; ++nz){
+					c = row_edges[nz];
+					if(col_comp[c] < 0){
+						col_comp[c] = comp;
+						queue[qtail++] = -1 - c;
+					}
+				}
+			}else{
+				c = -1 - cur;
+				for(nz = col_start[c]; nz < col_start[c + 1]; ++nz){
+					r = col_edges[nz];
+					if(row_comp[r] < 0){
+						row_comp[r] = comp;
+						queue[qtail++] = r;
+					}
+				}
+			}
+		}
+		comp++;
+	}
+	decomp_free_connected_work(NULL,NULL,NULL,row_degree,col_degree,
+		row_start,col_start,row_edges,col_edges,row_pos,col_pos);
+	row_degree = col_degree = row_start = col_start = NULL;
+	row_edges = col_edges = row_pos = col_pos = NULL;
+
+	nblocks = comp;
+	row_count = ASC_NEW_ARRAY_CLEAR(int32,nblocks);
+	col_count = ASC_NEW_ARRAY_CLEAR(int32,nblocks);
+	row_offset = ASC_NEW_ARRAY(int32,nblocks + 1);
+	col_offset = ASC_NEW_ARRAY(int32,nblocks + 1);
+	row_pos = ASC_NEW_ARRAY(int32,nblocks);
+	col_pos = ASC_NEW_ARRAY(int32,nblocks);
+	if((nblocks > 0 && (row_count == NULL || col_count == NULL
+			|| row_pos == NULL || col_pos == NULL))
+			|| row_offset == NULL || col_offset == NULL){
+		decomp_free_connected_work(row_comp,col_comp,queue,NULL,NULL,
+			NULL,NULL,NULL,NULL,row_pos,col_pos);
+		if(row_count != NULL) ascfree(row_count);
+		if(col_count != NULL) ascfree(col_count);
+		if(row_offset != NULL) ascfree(row_offset);
+		if(col_offset != NULL) ascfree(col_offset);
+		return 2;
+	}
+	for(r = 0; r < decomp->n_rows; ++r){
+		if(row_comp[r] >= 0) row_count[row_comp[r]]++;
+	}
+	for(c = 0; c < decomp->n_cols; ++c){
+		if(col_comp[c] >= 0) col_count[col_comp[c]]++;
+	}
+
+	row_offset[0] = 0;
+	col_offset[0] = 0;
+	for(i = 0; i < nblocks; ++i){
+		row_offset[i + 1] = row_offset[i] + row_count[i];
+		col_offset[i + 1] = col_offset[i] + col_count[i];
+		row_pos[i] = row_offset[i];
+		col_pos[i] = col_offset[i];
+	}
+	nrows_used = row_offset[nblocks];
+	ncols_used = col_offset[nblocks];
+	new_blocks = nblocks > 0 ? ASC_NEW_ARRAY(mtx_region_t,nblocks) : NULL;
+	new_row_org = nrows_used > 0 ? ASC_NEW_ARRAY(int32,nrows_used) : NULL;
+	new_col_org = ncols_used > 0 ? ASC_NEW_ARRAY(int32,ncols_used) : NULL;
+	new_row_cur = ASC_NEW_ARRAY(int32,decomp->n_rows);
+	new_col_cur = ASC_NEW_ARRAY(int32,decomp->n_cols);
+	if((nblocks > 0 && new_blocks == NULL)
+			|| (nrows_used > 0 && new_row_org == NULL)
+			|| (ncols_used > 0 && new_col_org == NULL)
+			|| new_row_cur == NULL || new_col_cur == NULL){
+		decomp_free_connected_work(row_comp,col_comp,queue,NULL,NULL,
+			NULL,NULL,NULL,NULL,row_pos,col_pos);
+		if(row_count != NULL) ascfree(row_count);
+		if(col_count != NULL) ascfree(col_count);
+		if(row_offset != NULL) ascfree(row_offset);
+		if(col_offset != NULL) ascfree(col_offset);
+		if(new_blocks != NULL) ascfree(new_blocks);
+		if(new_row_org != NULL) ascfree(new_row_org);
+		if(new_col_org != NULL) ascfree(new_col_org);
+		if(new_row_cur != NULL) ascfree(new_row_cur);
+		if(new_col_cur != NULL) ascfree(new_col_cur);
+		return 2;
+	}
+
+	if(decomp->blocks != NULL) ascfree(decomp->blocks);
+	if(decomp->row_org != NULL) ascfree(decomp->row_org);
+	if(decomp->col_org != NULL) ascfree(decomp->col_org);
+	if(decomp->row_cur != NULL) ascfree(decomp->row_cur);
+	if(decomp->col_cur != NULL) ascfree(decomp->col_cur);
+	decomp->blocks = new_blocks;
+	decomp->row_org = new_row_org;
+	decomp->col_org = new_col_org;
+	decomp->row_cur = new_row_cur;
+	decomp->col_cur = new_col_cur;
+
+	for(r = 0; r < decomp->n_rows; ++r) new_row_cur[r] = -1;
+	for(c = 0; c < decomp->n_cols; ++c) new_col_cur[c] = -1;
+	for(i = 0; i < nblocks; ++i){
+		decomp->blocks[i].row.low = row_offset[i];
+		decomp->blocks[i].row.high = row_offset[i + 1] - 1;
+		decomp->blocks[i].col.low = col_offset[i];
+		decomp->blocks[i].col.high = col_offset[i + 1] - 1;
+	}
+	for(r = 0; r < decomp->n_rows; ++r){
+		if(row_comp[r] >= 0){
+			int32 pos = row_pos[row_comp[r]]++;
+			decomp->row_org[pos] = r;
+			new_row_cur[r] = pos;
+		}
+	}
+	for(c = 0; c < decomp->n_cols; ++c){
+		if(col_comp[c] >= 0){
+			int32 pos = col_pos[col_comp[c]]++;
+			decomp->col_org[pos] = c;
+			new_col_cur[c] = pos;
+		}
+	}
+
+	decomp->nblocks = nblocks;
+	decomp->rank = MIN(nrows_used,ncols_used);
+	decomp_free_connected_work(row_comp,col_comp,queue,NULL,NULL,
+		NULL,NULL,NULL,NULL,row_pos,col_pos);
+	ascfree(row_count);
+	ascfree(col_count);
+	ascfree(row_offset);
+	ascfree(col_offset);
+	return 0;
+}
+
 int slv_decomp_partition(slv_system_t sys, slv_decomp_partition_t *decomp){
 	return decomp_partition_mode(sys,decomp,DECOMP_CONSERVATIVE);
 }
 
 int slv_decomp_partition_active(slv_system_t sys, slv_decomp_partition_t *decomp){
 	return decomp_partition_mode(sys,decomp,DECOMP_ACTIVE);
+}
+
+int slv_decomp_partition_connected(slv_system_t sys, slv_decomp_partition_t *decomp){
+	int status;
+	status = decomp_collect_edges(sys,decomp,DECOMP_CONSERVATIVE);
+	if(status){
+		return status;
+	}
+	return decomp_connected_from_edges(decomp);
 }
 
 slv_decomp_row_kind_t slv_decomp_row_kind(
