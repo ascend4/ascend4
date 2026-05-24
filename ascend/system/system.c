@@ -496,6 +496,7 @@ void system_destroy(slv_system_t sys){
 
 	symbollist=slv_get_symbol_list(sys);
 	if(symbollist != NULL)DestroySymbolValuesList(symbollist);
+	slv_destroy_classifier_artifacts(sys);
 
 	slv_set_solvers_blocks(sys,0,NULL);
 	slv_set_solvers_log_blocks(sys,0,NULL);	/* free blocks lists */

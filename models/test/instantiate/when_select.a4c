@@ -107,6 +107,22 @@ MODEL when_case_if_full_boolean_parses;
 	END WHEN;
 END when_case_if_full_boolean_parses;
 
+MODEL when_case_if_boolean_eq_parses;
+	mode IS_A symbol_constant;
+	mode :== 'mid';
+	a, x IS_A solver_var;
+	c1 IS_A boolean_constant;
+	c1 :== TRUE;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (mode)
+		CASE 'mid' IF c1 == TRUE AND a < 5:
+			USE r1;
+		OTHERWISE:
+			USE r2;
+	END WHEN;
+END when_case_if_boolean_eq_parses;
+
 MODEL when_applies_if_parses;
 	mode IS_A symbol_constant;
 	mode :== 'slow';

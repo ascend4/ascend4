@@ -4,16 +4,22 @@
 #include <string.h>
 
 #include <ascend/compiler/ascCompiler.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/child.h>
 #include <ascend/compiler/exprs.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/module.h>
 #include <ascend/compiler/name.h>
+#include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/parser.h>
 #include <ascend/compiler/simlist.h>
 #include <ascend/compiler/symtab.h>
 
 #include <ascend/system/conditional.h>
+#include <ascend/system/bnd.h>
+#include <ascend/system/logrel.h>
+#include <ascend/system/rel.h>
 #include <ascend/system/system.h>
 #include <ascend/system/slv_client.h>
 
@@ -402,6 +408,49 @@ static void test_system_build_and_lower_case_if(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_system_prepare_case_if_steady(void){
+	struct module_t *m;
+	struct Instance *siminst;
+	slv_system_t sys;
+	struct w_when **whens;
+	struct when_case *wc;
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/instantiate/when_select.a4c",&status);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(m);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("when_case_if_parses")) != NULL);
+
+	siminst = SimsCreateInstance(
+		AddSymbol("when_case_if_parses"), AddSymbol("sim1"), e_normal, NULL
+	);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(siminst);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(sys);
+	CU_ASSERT_EQUAL(slv_prepare_classifier_whens(sys,WHEN_REGION_STEADY),0);
+	CU_ASSERT_EQUAL(
+		slv_classifier_regions_lowered(sys,WHEN_REGION_STEADY),1
+	);
+	CU_ASSERT_EQUAL(slv_prepare_classifier_whens(sys,WHEN_REGION_STEADY),0);
+
+	whens = slv_get_master_when_list(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(whens);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(whens[0]);
+	wc = (struct when_case *)gl_fetch(when_cases_list(whens[0]),1);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(wc);
+	CU_ASSERT(wc->flags & WHEN_CASE_ACTIVE);
+
+	system_destroy(sys);
+	system_free_reused_mem();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
 static void test_system_build_case_if_materialization_plan(void){
 	struct module_t *m;
 	struct Instance *siminst;
@@ -465,6 +514,128 @@ static void test_system_build_case_if_materialization_plan(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_system_prepare_case_if_generated_artifacts(void){
+	struct module_t *m;
+	struct Instance *siminst;
+	struct Instance *root;
+	slv_system_t sys;
+	int status;
+	int32 ncondrels, nlogrels, nbnds;
+	struct rel_relation *rel0, *rel1;
+	struct logrel_relation *logrel0;
+	struct bnd_boundary *bnd0, *bnd1;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/instantiate/when_select.a4c",&status);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(m);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(
+		FindType(AddSymbol("when_case_if_full_boolean_parses")) != NULL
+	);
+
+	siminst = SimsCreateInstance(
+		AddSymbol("when_case_if_full_boolean_parses"),
+		AddSymbol("sim1"), e_normal, NULL
+	);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(siminst);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(root);
+	SetRealAtomValue(ChildByChar(root,AddSymbol("a")),2.0,0U);
+	SetRealAtomValue(ChildByChar(root,AddSymbol("x")),1.0,0U);
+	SetRealAtomValue(ChildByChar(root,AddSymbol("y")),3.0,0U);
+
+	sys = system_build(root);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(sys);
+	ncondrels = slv_get_num_solvers_condrels(sys);
+	nlogrels = slv_get_num_solvers_logrels(sys);
+	nbnds = slv_get_num_solvers_bnds(sys);
+	status = slv_prepare_classifier_whens(sys,WHEN_REGION_STEADY);
+	CU_ASSERT_EQUAL_FATAL(status,0);
+	CU_ASSERT_EQUAL(slv_get_num_classifier_rels(sys),2);
+	CU_ASSERT_EQUAL(slv_get_num_classifier_logrels(sys),1);
+	CU_ASSERT_EQUAL(slv_get_num_classifier_bnds(sys),3);
+	CU_ASSERT_EQUAL(slv_get_num_solvers_condrels(sys),ncondrels + 2);
+	CU_ASSERT_EQUAL(slv_get_num_solvers_logrels(sys),nlogrels + 1);
+	CU_ASSERT_EQUAL(slv_get_num_solvers_bnds(sys),nbnds + 3);
+
+	rel0 = slv_get_classifier_rel(sys,0);
+	rel1 = slv_get_classifier_rel(sys,1);
+	logrel0 = slv_get_classifier_logrel(sys,0);
+	bnd0 = slv_get_classifier_bnd(sys,0);
+	bnd1 = slv_get_classifier_bnd(sys,1);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(rel0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(rel1);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(logrel0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(bnd0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(bnd1);
+	CU_ASSERT_EQUAL(rel_n_incidences(rel0) + rel_n_incidences(rel1),3);
+	CU_ASSERT_EQUAL(logrel0->n_incidences,0);
+	CU_ASSERT_PTR_NOT_NULL(bnd0->logrels);
+	CU_ASSERT_PTR_NOT_NULL(bnd1->logrels);
+	CU_ASSERT_EQUAL(gl_length(bnd0->logrels),1);
+	CU_ASSERT_EQUAL(gl_length(bnd1->logrels),1);
+
+	system_destroy(sys);
+	system_free_reused_mem();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
+static void test_system_prepare_case_if_boolean_eq_artifacts(void){
+	struct module_t *m;
+	struct Instance *siminst;
+	struct Instance *root;
+	slv_system_t sys;
+	int status;
+	int32 ncondrels, nlogrels, nbnds;
+	struct rel_relation *rel0;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/instantiate/when_select.a4c",&status);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(m);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(
+		FindType(AddSymbol("when_case_if_boolean_eq_parses")) != NULL
+	);
+
+	siminst = SimsCreateInstance(
+		AddSymbol("when_case_if_boolean_eq_parses"),
+		AddSymbol("sim1"), e_normal, NULL
+	);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(siminst);
+	root = GetSimulationRoot(siminst);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(root);
+	SetRealAtomValue(ChildByChar(root,AddSymbol("a")),2.0,0U);
+
+	sys = system_build(root);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(sys);
+	ncondrels = slv_get_num_solvers_condrels(sys);
+	nlogrels = slv_get_num_solvers_logrels(sys);
+	nbnds = slv_get_num_solvers_bnds(sys);
+	status = slv_prepare_classifier_whens(sys,WHEN_REGION_STEADY);
+	CU_ASSERT_EQUAL_FATAL(status,0);
+	CU_ASSERT_EQUAL(slv_get_num_classifier_rels(sys),1);
+	CU_ASSERT_EQUAL(slv_get_num_classifier_logrels(sys),2);
+	CU_ASSERT_EQUAL(slv_get_num_classifier_bnds(sys),3);
+	CU_ASSERT_EQUAL(slv_get_num_solvers_condrels(sys),ncondrels + 1);
+	CU_ASSERT_EQUAL(slv_get_num_solvers_logrels(sys),nlogrels + 2);
+	CU_ASSERT_EQUAL(slv_get_num_solvers_bnds(sys),nbnds + 3);
+	rel0 = slv_get_classifier_rel(sys,0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(rel0);
+	CU_ASSERT_EQUAL(rel_n_incidences(rel0),1);
+
+	system_destroy(sys);
+	system_free_reused_mem();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
 #define TESTS(T) \
 	T(case_if_lowering) \
 	T(applies_if_lowering) \
@@ -473,6 +644,9 @@ static void test_system_build_case_if_materialization_plan(void){
 	T(case_if_materialization_reuses_named_guards) \
 	T(case_if_guard_artifacts) \
 	T(system_build_and_lower_case_if) \
-	T(system_build_case_if_materialization_plan)
+	T(system_prepare_case_if_steady) \
+	T(system_build_case_if_materialization_plan) \
+	T(system_prepare_case_if_generated_artifacts) \
+	T(system_prepare_case_if_boolean_eq_artifacts)
 
 REGISTER_TESTS_SIMPLE(system_conditional, TESTS)

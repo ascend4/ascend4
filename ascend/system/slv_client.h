@@ -773,6 +773,59 @@ ASC_DLLSPEC int slv_lower_classifier_whens(slv_system_t sys,
 	instance tree.
 */
 
+ASC_DLLSPEC int slv_prepare_classifier_whens(slv_system_t sys,
+                                             enum when_region_request request);
+/**<
+	Prepares the solver-side presentation of classifier WHENs for the
+	requested interpretation.
+
+	This is the preferred solver API for CASE IF/APPLIES IF classifier
+	regions. It hides the lower-level conditional modelling machinery from
+	solvers while leaving the compiler instance tree unchanged. For steady
+	conditional solving, generated guard artifacts are installed into the
+	solver-side conditional relation, logrelation, and boundary lists so
+	existing CMSlv-style boundary logic can see them.
+*/
+
+ASC_DLLSPEC int32 slv_get_num_classifier_rels(slv_system_t sys);
+/**<
+	Returns the number of generated classifier guard real relations currently
+	owned by the solver system.
+*/
+
+ASC_DLLSPEC int32 slv_get_num_classifier_logrels(slv_system_t sys);
+/**<
+	Returns the number of generated classifier guard logical relations
+	currently owned by the solver system.
+*/
+
+ASC_DLLSPEC int32 slv_get_num_classifier_bnds(slv_system_t sys);
+/**<
+	Returns the number of generated classifier guard boundaries currently
+	owned by the solver system.
+*/
+
+ASC_DLLSPEC struct rel_relation *slv_get_classifier_rel(slv_system_t sys,
+                                                        int32 index);
+/**<
+	Returns a generated classifier guard real relation by zero-based index,
+	or NULL if the index is out of range.
+*/
+
+ASC_DLLSPEC struct logrel_relation *slv_get_classifier_logrel(slv_system_t sys,
+                                                              int32 index);
+/**<
+	Returns a generated classifier guard logical relation by zero-based
+	index, or NULL if the index is out of range.
+*/
+
+ASC_DLLSPEC struct bnd_boundary *slv_get_classifier_bnd(slv_system_t sys,
+                                                        int32 index);
+/**<
+	Returns a generated classifier guard boundary by zero-based index, or
+	NULL if the index is out of range.
+*/
+
 ASC_DLLSPEC int32 slv_get_num_solvers_vars(slv_system_t sys);
 /**< Returns the length of the solver variable list.
 	The length does NOT include the terminating NULL.

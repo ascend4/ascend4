@@ -663,6 +663,7 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 	T(cmslv2_fluidbed_switch_crash)\
 	T(cmslv2_nested_when_static)\
 	T(cmslv2_case_if_steady)\
+	T(cmslv2_case_if_continuous)\
 	T(cmslv2_resolve_converged_noop)
 
 static void test_linmassbal_cmslv2(void){
@@ -704,6 +705,10 @@ static void test_cmslv2_nested_when_static(void){
 
 static void test_cmslv2_case_if_steady(void){
 	test_cmslv_mode("cmslv2_case_if_steady",NULL,CMSLV_PROGRESS_NONE);
+}
+
+static void test_cmslv2_case_if_continuous(void){
+	test_cmslv_mode("cmslv2_case_if_continuous",NULL,CMSLV_PROGRESS_NONE);
 }
 
 static void test_cmslv2_resolve_converged_noop(void){

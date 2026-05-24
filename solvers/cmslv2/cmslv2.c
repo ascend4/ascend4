@@ -9397,12 +9397,20 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   sys->p.parms = sys->pa;
   sys->p.dynamic_parms = 0;
   slv9_get_default_parameters(server,(SlvClientToken)sys,&(sys->p));
-  sys->integrity = OK;
-  sys->presolved = 0;
-  slv_decomp_init(&(sys->cmslv2_structural));
-  sys->cmslv2_structural_valid = 0;
-	  sys->need_consistency_analysis = slv_need_consistency(server);
-	  sys->qrslv_fallback =
+	  sys->integrity = OK;
+	  sys->presolved = 0;
+	  slv_decomp_init(&(sys->cmslv2_structural));
+	  sys->cmslv2_structural_valid = 0;
+	  if(slv_has_classifier_whens(server)
+	      && slv_prepare_classifier_whens(server,WHEN_REGION_STEADY)) {
+	    ascfree(sys);
+	    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+	      "CMSlv2 could not prepare CASE IF/APPLIES IF classifier regions");
+	    *statusindex = -2;
+	    return NULL;
+	  }
+		  sys->need_consistency_analysis = slv_need_consistency(server);
+		  sys->qrslv_fallback =
 	    !sys->need_consistency_analysis
 	    && slv_get_num_solvers_logrels(server) == 0
 	    && slv_get_num_solvers_bnds(server) == 0
@@ -9821,18 +9829,16 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   iteration_begins(sys);
   check_system(sys);
-  if(slv_has_classifier_whens(server)) {
-    if(slv_lower_classifier_whens(server,WHEN_REGION_STEADY)) {
-      ERROR_REPORTER_HERE(ASC_USER_ERROR,
-        "CMSlv2 could not lower CASE IF/APPLIES IF classifier regions");
-      return 1;
-    }
-    if(reanalyze_solver_lists_with_lowered_whens(server)) {
-      ERROR_REPORTER_HERE(ASC_USER_ERROR,
-        "CMSlv2 could not configure the active region from lowered classifier predicates");
-      return 1;
-    }
-  }
+	if(slv_has_classifier_whens(server)) {
+	  if(slv_prepare_classifier_whens(server,WHEN_REGION_STEADY)) {
+	    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+	      "CMSlv2 could not prepare CASE IF/APPLIES IF classifier regions");
+	    return 1;
+	  }
+	  sys->lrlist = slv_get_solvers_logrel_list(server);
+	  sys->blist = slv_get_solvers_bnd_list(server);
+	  slv_bnd_initialization(server);
+	}
   if(sys->vlist == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was never set.");
     return 1;

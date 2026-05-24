@@ -1,0 +1,29 @@
+REQUIRE "system.a4l";
+
+MODEL cmslv2_case_if_continuous;
+	x IS_A solver_var;
+	y IS_A solver_var;
+	mode IS_A symbol_constant;
+	mode :== 'selected';
+
+	r_x: x = 2;
+	r_low: y = 10;
+	r_high: y = 20;
+
+	WHEN (mode)
+	CASE 'selected' IF x < 5:
+		USE r_low;
+	OTHERWISE:
+		USE r_high;
+	END WHEN;
+METHODS
+	METHOD on_load;
+		x := 0;
+		y := 0;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(x - 2) < 1e-8;
+		ASSERT abs(y - 10) < 1e-8;
+	END self_test;
+END cmslv2_case_if_continuous;

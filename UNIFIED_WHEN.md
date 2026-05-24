@@ -904,21 +904,24 @@ slv_classifier_regions_lowered(sys, WHEN_REGION_STEADY);
 `WHEN`s, leaving their alternatives inactive until a solver consumes the
 lowered region view.
 
-CMSlv2 now has the first steady-state consumption path. During presolve it:
+CMSlv2 now has the first steady-state consumption path. During solver creation
+and presolve it:
 
 - requests `WHEN_REGION_STEADY` lowering for classifier `WHEN`s
+- materialises generated guard relations/logrelations/boundaries for nontrivial
+  guards
+- installs those generated objects into the solver-side conditional-relation,
+  logrelation, and boundary lists
 - reanalyzes active equations using the lowered predicates
 - evaluates those predicates against the current instance-tree values
 - activates the first true lowered region, including nested `WHEN`s
 - hands the resulting active system to its existing QRSlv/LRSlv machinery
 
-This is intentionally a first, static steady-region path. It validates that the
-lowered presentation can select equations for CMSlv2, but it is not yet a full
-mixed complementarity/MINLP-style search over free algebraic region
-predicates. A predicate such as `x < 1` is evaluated from the current value of
-`x` at reanalysis time; future CMSlv2 work must decide how to make such
-predicates part of the branch/search/boundary machinery when `x` is a solved
-unknown.
+This is still not a full mixed complementarity/MINLP-style search over free
+algebraic region predicates, but it is no longer only a static equation
+selector. Generated guard objects now appear in the ordinary solver-side system
+presentation, so CMSlv2 can see the natural real boundaries and logical guard
+rows through the same lists it already uses for CMSlv-style boundary handling.
 
 QRSlv and CMSlv still reject direct classifier models at solver setup unless a
 solver has already explicitly consumed the lowered steady presentation. IDA
@@ -1105,14 +1108,136 @@ objects need stable internal names in a hidden instance scope, or the solver
 side needs a virtual logical-expression representation that can point directly
 to generated boundary objects without going back through `Name` resolution.
 
+A spike experiment confirmed the first half of that statement. An unparented
+generated `REL_INST` can be created with `CreateRelationInstance`, populated
+with `CreateTokenRelation`, marked conditional, evaluated with
+`RelationCalcResidual`, and wrapped in a `bnd_boundary`. It remains parentless
+while still resolving visible variables such as `a` from the real model scope.
+This means generated real comparison boundaries do not inherently need to be
+visible children in the user-facing instance tree.
+
+The unresolved part is the generated logical guard. `CreateLogicalRelation`
+still constructs `SATISFIED(...)` terms by resolving a `Name` through
+`FindInstances`. The relevant direct term constructor is internal to
+`logrelation.c`, and the stored SATISFIED target list is built during that name
+resolution path. Therefore a complete unparented implementation still needs one
+of these:
+
+- a compiler API that constructs logrelation terms from direct instance/object
+  references, bypassing `SATISFIED(name)` lookup
+- a hidden generated namespace whose entries are not presented as ordinary
+  model children but are still name-resolvable by the compiler/logrelation path
+- a solver-side virtual guard/logrel representation that consumes generated
+  boundary objects directly
+
+A follow-up spike tested the first option. `CreateLogicalRelation` can be
+factored internally so that normal user syntax still resolves
+`SATISFIED(name)` through `FindInstances`, while generated guard construction
+may provide a resolver callback that maps a SATISFIED name token to a direct
+compiler instance pointer. With that hook, a parentless generated `LREL_INST`
+can contain `SATISFIED("__generated_boundary") == c1`, where the SATISFIED term
+points directly at a parentless generated `REL_INST` for `a < 5`. Existing
+`LogRelCalcResidual` then evaluates the generated logrelation correctly as `a`
+crosses the boundary.
+
+This makes the direct-reference compiler/logrelation route substantially more
+credible than a solver-only virtual guard route. It also avoids the most
+awkward part of a hidden namespace: generated artifacts do not need to be
+name-resolvable in the visible instance tree. They can be generated compiler
+instances connected by direct pointers.
+
+The API boundary should be stricter than the spike. Solvers should not call
+raw compiler constructors such as `CreateRelationInstance`,
+`CreateTokenRelation`, `CreateLogicalRelationWithSatisfiedResolver`,
+`SetInstanceRelation`, or `SetInstanceLogRel`. Those calls have ownership,
+incidence, and destruction obligations that belong in the compiler/system
+bridge, not in individual solvers.
+
+The spike-only CUnit tests that directly called those constructors should not
+be the long-term test shape. The system-layer preparation API now exists as
+`slv_prepare_classifier_whens(sys, request)`, and tests should target that API
+and verify the prepared conditional view rather than exposing raw compiler
+construction calls to the test binary.
+
+The preferred production shape is a system-layer preparation call, for example:
+
+```c
+int slv_prepare_classifier_whens(slv_system_t sys,
+                                 enum when_region_request request);
+```
+
+with uses such as:
+
+```text
+WHEN_REGION_STEADY              -> CMSlv/CMSlv2 conditional solve view
+WHEN_REGION_DYNAMIC_CLASSIFIER  -> IDA event/transition view
+future initial-condition use    -> possible future initial-condition solve view
+```
+
+CMSlv2 now calls this preparation hook during presolve instead of directly
+calling the lower-level `slv_lower_classifier_whens` and
+`reanalyze_solver_lists_with_lowered_whens` sequence. This keeps the solver on
+the `slv_system_t` API surface while leaving the compiler instance tree
+unchanged.
+
+The current implementation also has a first generated-artifact pass for steady
+`CASE IF` guards. During `slv_prepare_classifier_whens(sys,
+WHEN_REGION_STEADY)`, the system layer can:
+
+1. walk classifier `WHEN`s and their compact guard artifacts
+2. create parentless generated `REL_INST`s for real boundaries
+3. create parentless generated `LREL_INST`s for compound guards, using the
+   direct SATISFIED resolver internally
+4. create corresponding sidecar `rel_relation`, `logrel_relation`, and
+   `bnd_boundary` objects
+5. record all generated compiler instances and sidecar objects under
+   `slv_system_t` ownership
+
+These objects are deliberately not inserted into the user-visible instance
+tree. They are destroyed with the solver system. This proves the direct
+generated-boundary route without exposing hidden compiler names as model
+children.
+
+CMSlv2 still obtains its active equation set via the existing lowered-region
+predicate reanalysis path, but the generated guard artifacts are now also
+installed into the ordinary solver-side system lists. Generated real comparison
+relations are appended as conditional relations, generated logical guard rows
+are appended as logrelations, and all generated guard boundaries are appended as
+boundaries. This lets CMSlv2 creation, presolve, decomposition, and boundary
+inspection see the natural guard boundaries without exposing generated objects
+in the visible instance tree.
+
 The current materialisation-plan API records this explicitly:
 
 ```text
 hidden_boolean_instances = one per CASE IF guard
 hidden_relation_instances = one per real comparison boundary
 hidden_logrel_instances = one per generated guard definition
-requires_named_instances = true for the instance-backed route
+requires_generated_artifacts = true for nontrivial generated guards
 ```
+
+The implementation currently still uses the older `requires_named_instances`
+field name in places. That name is becoming misleading: the direct-reference
+route needs generated compiler artifacts, but it does not require those
+artifacts to be name-resolvable through the user-visible instance tree. A later
+cleanup should rename or reinterpret this field before the API settles.
+
+Cleanup should follow ownership. Generated artifacts created during
+`slv_prepare_classifier_whens` should be owned by `slv_system_t`, not by
+the solver. `system_destroy` should call an internal generated-artifact cleanup
+routine before the system is freed. A conservative destruction order is:
+
+1. destroy/free generated system wrappers if they are sidecar-owned
+2. destroy generated `LREL_INST`s so SATISFIED references are removed first
+3. destroy generated `REL_INST`s so incidence links to visible variables are
+   removed
+4. destroy generated Boolean instances, if generated Booleans are used
+5. destroy provenance records and artifact descriptors
+
+If generated wrappers are inserted into normal system master lists, they should
+be owned and freed by the normal list cleanup, not also by the generated
+artifact sidecar. The important rule is single ownership for each allocated
+object.
 
 Generated artifacts must also preserve source provenance. Users should not see
 diagnostics for anonymous objects such as:

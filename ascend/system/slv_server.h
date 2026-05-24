@@ -180,6 +180,11 @@ extern void slv_set_hidden_instance_list(slv_system_t sys, struct gl_list_t *sv)
 	These are destroyed with the system.
 */
 
+extern void slv_destroy_classifier_artifacts(slv_system_t sys);
+/**<
+	Destroy generated classifier WHEN guard artifacts owned by a solver system.
+*/
+
 extern void slv_set_var_buf(slv_system_t sys, struct var_variable *vbuf);
 /**<
 	Set the array variables of for the system.
