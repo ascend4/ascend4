@@ -228,6 +228,8 @@ extern void when_set_flagbit(struct w_when *when,
  */
 #define WHEN_VISITED            0x4
 /**< Required for conditional analysis, for avoiding to reanalyze a WHEN */
+#define WHEN_CLASSIFIER_GUARD_DVARS 0x10
+/**< Classifier WHEN has generated Boolean guard dvars for solver analysis. */
 #define WHEN_CHANGES_STRUCTURE  0x8
 /**<
  *  Required for conditional analysis. Tells if the sutructure of

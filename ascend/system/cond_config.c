@@ -246,9 +246,19 @@ static int evaluate_lowered_region_predicate(
   return 0;
 }
 
-static int apply_lowered_region_case(struct when_case *cur_case);
+enum classifier_config_mode {
+  CLASSIFIER_CONFIG_PREDICATE,
+  CLASSIFIER_CONFIG_GUARD_VALUES
+};
 
-static int configure_lowered_classifier_when(struct w_when *when)
+static int configure_classifier_when_from_guard_values(slv_system_t sys,
+    struct w_when *when);
+
+static int apply_lowered_region_case(slv_system_t sys, struct w_when *parent_when,
+    struct when_case *cur_case, enum classifier_config_mode mode);
+
+static int configure_lowered_classifier_when(slv_system_t sys,
+    struct w_when *when)
 {
   struct gl_list_t *cases;
   struct when_case *cur_case;
@@ -279,7 +289,9 @@ static int configure_lowered_classifier_when(struct w_when *when)
       return 1;
     }
     if(truth) {
-      if(apply_lowered_region_case(cur_case)) {
+      if(apply_lowered_region_case(
+          sys,when,cur_case,CLASSIFIER_CONFIG_PREDICATE
+      )) {
         return 1;
       }
       when_case_set_active(cur_case,TRUE);
@@ -292,7 +304,8 @@ static int configure_lowered_classifier_when(struct w_when *when)
   return 1;
 }
 
-static int apply_lowered_region_case(struct when_case *cur_case)
+static int apply_lowered_region_case(slv_system_t sys, struct w_when *parent_when,
+    struct when_case *cur_case, enum classifier_config_mode mode)
 {
   struct gl_list_t *rels;
   struct gl_list_t *logrels;
@@ -303,6 +316,10 @@ static int apply_lowered_region_case(struct when_case *cur_case)
   int i,n;
 
   if(cur_case == NULL) {
+    return 1;
+  }
+
+  if(slv_sync_classifier_guard_values_for_case(sys,parent_when,cur_case)) {
     return 1;
   }
 
@@ -329,13 +346,106 @@ static int apply_lowered_region_case(struct when_case *cur_case)
     n = gl_length(whens);
     for(i = 1; i <= n; ++i) {
       when = (struct w_when *)(gl_fetch(whens,i));
-      if(configure_lowered_classifier_when(when)) {
+      if(mode == CLASSIFIER_CONFIG_GUARD_VALUES
+          && when_has_classifier_predicates(when)
+          && when_flagbit(when,WHEN_CLASSIFIER_GUARD_DVARS)) {
+        if(configure_classifier_when_from_guard_values(sys,when)) {
+          return 1;
+        }
+      } else if(configure_lowered_classifier_when(sys,when)) {
         return 1;
       }
     }
   }
 
   return 0;
+}
+
+static int classifier_case_matches_current_guard_values(struct when_case *cur_case,
+    struct gl_list_t *dvars)
+{
+  int32 *values;
+  int32 d, dlen;
+
+  if(cur_case == NULL || dvars == NULL) {
+    return 0;
+  }
+  values = when_case_values_list(cur_case);
+  if(values == NULL || values[0] == -1) {
+    return 0;
+  }
+  dlen = gl_length(dvars);
+  for(d = 1; d <= dlen; ++d) {
+    struct dis_discrete *dvar =
+      (struct dis_discrete *)(gl_fetch(dvars,d));
+    if(dvar == NULL) {
+      return 0;
+    }
+    if(values[d - 1] != -2 && values[d - 1] != dis_value(dvar)) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+static int configure_classifier_when_from_guard_values(slv_system_t sys,
+    struct w_when *when)
+{
+  struct gl_list_t *cases;
+  struct gl_list_t *dvars;
+  struct when_case *otherwise_case = NULL;
+  int c, clen;
+
+  if(when == NULL) {
+    return 1;
+  }
+  if(!when_has_classifier_predicates(when)) {
+    analyze_when(when);
+    return 0;
+  }
+  if(!when_flagbit(when,WHEN_CLASSIFIER_GUARD_DVARS)) {
+    return configure_lowered_classifier_when(sys,when);
+  }
+
+  cases = when_cases_list(when);
+  dvars = when_dvars_list(when);
+  if(cases == NULL || dvars == NULL || gl_length(dvars) == 0) {
+    return 1;
+  }
+
+  clen = gl_length(cases);
+  for(c = 1; c <= clen; ++c) {
+    struct when_case *cur_case =
+      (struct when_case *)(gl_fetch(cases,c));
+    int32 *values = cur_case != NULL ? when_case_values_list(cur_case) : NULL;
+    if(values != NULL && values[0] == -1) {
+      otherwise_case = cur_case;
+      continue;
+    }
+    if(classifier_case_matches_current_guard_values(cur_case,dvars)) {
+      if(apply_lowered_region_case(
+          sys,when,cur_case,CLASSIFIER_CONFIG_GUARD_VALUES
+      )) {
+        return 1;
+      }
+      when_case_set_active(cur_case,TRUE);
+      return 0;
+    }
+  }
+
+  if(otherwise_case != NULL) {
+    if(apply_lowered_region_case(
+        sys,when,otherwise_case,CLASSIFIER_CONFIG_GUARD_VALUES
+    )) {
+      return 1;
+    }
+    when_case_set_active(otherwise_case,TRUE);
+    return 0;
+  }
+
+  ERROR_REPORTER_HERE(ASC_USER_ERROR,
+    "No CASE IF guard Boolean tuple matched the current WHEN classifier state");
+  return 1;
 }
 
 /*
@@ -355,12 +465,6 @@ static int32 analyze_case(struct when_case *cur_case,
   int32 values[MAX_VAR_IN_LIST];
   int32 *value;
   int32 *case_values,dindex;
-
-  if(when_case_has_classifier_predicate(cur_case)){
-    ERROR_REPORTER_HERE(ASC_USER_ERROR,
-      "CASE IF/APPLIES IF in a WHEN requires classifier lowering before conditional analysis");
-    return 0;
-  }
 
   value = &(values[0]);
   case_values = when_case_values_list(cur_case);
@@ -518,12 +622,6 @@ static int32 simplified_analyze_case(struct when_case *cur_case,
   int32 *value;
   int32 *case_values,dindex;
 
-  if(when_case_has_classifier_predicate(cur_case)){
-    ERROR_REPORTER_HERE(ASC_USER_ERROR,
-      "CASE IF/APPLIES IF in a WHEN requires classifier lowering before conditional analysis");
-    return 0;
-  }
-
   value = &(values[0]);
   case_values = when_case_values_list(cur_case);
   for(dindex =0; dindex<MAX_VAR_IN_LIST; dindex++) {
@@ -561,11 +659,13 @@ static void simplified_analyze_when(struct w_when *when)
   int32 *value;
   int32 *case_values;
 
-  if(when_has_classifier_predicates(when)){
-    return;
-  }
-
   dvars = when_dvars_list(when);
+  if(when_has_classifier_predicates(when)){
+    if(!when_flagbit(when,WHEN_CLASSIFIER_GUARD_DVARS)
+       || dvars == NULL || gl_length(dvars) == 0){
+      return;
+    }
+  }
   cases = when_cases_list(when);
   clen = gl_length(cases);
   case_match =0;
@@ -2105,7 +2205,75 @@ int reanalyze_solver_lists_with_lowered_whens(slv_system_t sys)
   for(c = 0; whenlist[c] != NULL; ++c) {
     when = whenlist[c];
     if(!when_inwhen(when)) {
-      if(configure_lowered_classifier_when(when)) {
+      if(configure_lowered_classifier_when(sys,when)) {
+        return 1;
+      }
+    }
+  }
+
+  set_active_vars_in_active_rels(solverrl);
+  set_active_vars_in_active_rels(solverol);
+  set_active_disvars_in_active_logrels(solverll);
+
+  return 0;
+}
+
+int reanalyze_solver_lists_with_classifier_guard_values(slv_system_t sys)
+{
+  struct rel_relation **solverrl;
+  struct rel_relation **solverol;
+  struct logrel_relation **solverll;
+  struct var_variable **solvervl;
+  struct dis_discrete **solverdl;
+  struct dis_discrete **dislist;
+  struct w_when **whenlist;
+  struct w_when *when;
+  struct dis_discrete *dvar;
+  struct gl_list_t *symbol_list;
+  int32 c;
+
+  if(sys == NULL) {
+    return 1;
+  }
+
+  solverrl = slv_get_solvers_rel_list(sys);
+  solverol = slv_get_solvers_obj_list(sys);
+  solverll = slv_get_solvers_logrel_list(sys);
+  solvervl = slv_get_solvers_var_list(sys);
+  solverdl = slv_get_solvers_dvar_list(sys);
+  whenlist = slv_get_solvers_when_list(sys);
+  dislist =  slv_get_master_dvar_list(sys);
+  symbol_list = slv_get_symbol_list(sys);
+
+  if(whenlist == NULL) {
+    return 0;
+  }
+
+  SET_WHENDEBUG(sys)
+
+  set_inactive_vars_in_list(solvervl);
+  set_inactive_disvars_in_list(solverdl);
+  set_active_rels_in_list(solverrl);
+  set_active_logrels_in_list(solverll);
+
+  for(c = 0; dislist != NULL && dislist[c] != NULL; ++c) {
+    dvar = dislist[c];
+    dis_set_value_from_inst(dvar,symbol_list);
+  }
+
+  for(c = 0; whenlist[c] != NULL; ++c) {
+    when = whenlist[c];
+    if(!when_inwhen(when)) {
+      set_rels_status_in_when(when,FALSE);
+    }
+  }
+
+  set_active_rels_as_invariant(solverrl);
+
+  for(c = 0; whenlist[c] != NULL; ++c) {
+    when = whenlist[c];
+    if(!when_inwhen(when)) {
+      if(configure_classifier_when_from_guard_values(sys,when)) {
         return 1;
       }
     }

@@ -3,15 +3,16 @@ REQUIRE "atoms.a4l";
 MODEL pipeline_arc_case_if;
 	k IS_A factor_constant;
 	Q, H IS_A factor;
-	mode IS_A symbol_constant;
-	mode :== 'arc';
+	regions IS_A set OF symbol_constant;
+	regions :== ['forward', 'reverse'];
+	mode IS_A selector OF regions DEFAULT 'forward';
 	k :== 2;
 
 	forward: H = k * sqr(Q);
 	reverse: H = -k * sqr(Q);
 
 	WHEN (mode)
-	CASE 'arc' IF SATISFIED(Q >= 0, 1e-8):
+	CASE 'forward' IF SATISFIED(Q >= 0, 1e-8):
 		USE forward;
 	OTHERWISE 'reverse':
 		USE reverse;

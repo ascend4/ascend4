@@ -925,6 +925,10 @@ static void when_guard_artifact_scan_expr(const struct Expr *expr,
       case e_zero:
       case e_int:
       case e_real:
+      case e_sum:
+      case e_prod:
+      case e_card:
+      case e_choice:
          if(when_guard_scan_push(stack,stack_size + 1,&sp,
                WHEN_GUARD_EXPR_REAL)){
             ++(artifact->unsupported_dynamic_terms);

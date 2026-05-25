@@ -1,0 +1,809 @@
+REQUIRE "johnpye/shapes.a4c";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/airprops2.a4c";
+REQUIRE "johnpye/fprops/thermophys.a4c";
+IMPORT "cmslv";
+
+(*
+	Kunii and Levenspiel dense bubbling-bed hydrodynamics, through the
+	bubble/cloud and cloud/emulsion interchange coefficients of eqs 16 and 17,
+	plus the intermediate-particle bubble/emulsion coefficient of eq. 30, in
+	Ind. Eng. Chem. Res. 29 (1990) 1226-1234.
+
+	This model deliberately treats the operating superficial velocity u as an
+	independent variable. u_mf and eps_mf may be supplied from an external
+	minimum-fluidisation calculation.
+
+	Geldart A/B region boundary is fitted from Fig 9, Ch. 3 of Kunii &
+	Levenspiel "Fluidisation Engineering" (2nd Ed), Butterworth-Heinemann, 1991.
+*)
+
+MODEL fluidbed2_base;
+	T IS_A temperature;
+	p IS_A pressure;
+
+	fluid IS_A thermophysical_fluid_base;
+	T, fluid.T ARE_THE_SAME;
+	p, fluid.p ARE_THE_SAME;
+
+	(* bed geometry: a vertical cylinder *)
+	chamber IS_A solid_cylinder;
+	bed_mf "bed at minimum fluidisation" IS_A solid_cylinder;
+	bed "expanded bubbling bed" IS_A solid_cylinder;
+	chamber.d, bed_mf.d, bed.d ARE_THE_SAME;
+
+	m_p "mass of particles" IS_A mass;
+	rho_p "particle density" IS_A mass_density;
+	d_p "particle diameter" IS_A distance;
+	eps_mf "bed void fraction at minimum fluidisation" IS_A factor;
+	eps "overall bubbling-bed void fraction" IS_A factor;
+
+	(* Eq. 1, reframed *)
+	m_p = rho_p * bed_mf.V * (1 - eps_mf); (* at min. fluidisation *)
+	m_p = rho_p * bed.V * (1 - eps); (* at operating condition *)
+
+	u_mf "superficial velocity at minimum fluidisation" IS_A speed;
+	u "operating superficial gas velocity" IS_A speed;
+	u_ratio_mf "operating velocity multiplier on u_mf" IS_A factor;
+	u_ratio_mf = u / u_mf;
+
+	mdot_mf "mass flow rate at minimum fluidisation" IS_A mass_rate;
+	mdot "operating mass flow rate" IS_A mass_rate;
+	mdot_mf = fluid.rho * chamber.end.A * u_mf;
+	mdot = fluid.rho * chamber.end.A * u;
+
+	(* not sure if we need this *)
+	Re_mf "particle Reynolds number at minimum fluidisation" IS_A factor;
+	Re "particle Reynolds number at operating velocity" IS_A factor;
+	Re_mf = d_p * u_mf * fluid.rho / fluid.mu;
+	Re = d_p * u * fluid.rho / fluid.mu;
+
+	(* BUBBLE VELOCITY *)
+
+	d_b "mean bubble diameter" IS_A distance;
+	u_br "rise velocity of an isolated bubble relative to emulsion" IS_A speed;
+	u_b "selected bubble rise velocity" IS_A speed;
+	u_b_dh "Davidson-Harrison bubble rise velocity" IS_A speed;
+	u_b_geldart_a "Werther-Hilligardt/Kunii Geldart A bubble velocity" IS_A speed;
+	u_b_geldart_b "Werther-Hilligardt/Kunii Geldart B bubble velocity" IS_A speed;
+	u_b_correlation "selected Geldart bubble rise velocity correlation before eq. 4 lower bound" IS_A speed;
+	rho_geldart_ab_boundary "Geldart A/B boundary value of rho_p - rho_g" IS_A mass_density;
+
+	(* Eq. 3. Davidson-Harrison bubble rise vel. *)
+	u_br = 0.711 * (1{EARTH_G} * d_b)^0.5;
+
+	(* Eq. 4. (note 'u_o' replaced with 'u') *)
+	u_b_dh = u - u_mf + u_br;
+
+	(* Eqs. 5 and 6. Bed diameter is used numerically in metres, as in the
+	   published correlations. The selected u_b closure is chosen below by
+	   conditional model logic. *)
+	u_b_geldart_a =
+	    1.55 * ((u - u_mf)
+	      + 14.1 {1/s} * (d_b + 0.005 {m})) * (chamber.d / 1 {m})^0.32 + u_br;
+
+	u_b_geldart_b =
+	    1.6 * ((u - u_mf) + 1.13{m/s}*(d_b / 1 {m})^0.5) * (chamber.d / 1 {m})^1.35 + u_br;
+
+	(* Curve fit to the Geldart A/B boundary from the regime map:
+	   rho_p - rho_g = 22.3219 g/cm3 * (d_p / 1 um)^-0.668506. *)
+	rho_geldart_ab_boundary =
+		22.3219 {g/cm^3} * (d_p / 1 {um})^(-0.668506);
+
+	CONDITIONAL
+		geldart_a_selected: rho_p - fluid.rho < rho_geldart_ab_boundary;
+		u_b_correlation_at_least_dh: u_b_correlation >= u_b_dh;
+	END CONDITIONAL;
+
+	u_b_use_geldart_a "select Geldart A bubble rise velocity correlation" IS_A boolean_var;
+	u_b_use_correlation "selected bubble correlation is no slower than eq. 4" IS_A boolean_var;
+
+	u_b_use_geldart_a == SATISFIED(geldart_a_selected, 1e-3 {kg/m^3});
+	u_b_use_correlation == SATISFIED(u_b_correlation_at_least_dh, 1e-6 {m/s});
+
+	u_b_corr_eq_geldart_a: u_b_correlation = u_b_geldart_a;
+	u_b_corr_eq_geldart_b: u_b_correlation = u_b_geldart_b;
+
+	WHEN(u_b_use_geldart_a)
+		CASE TRUE:
+			USE u_b_corr_eq_geldart_a;
+		CASE FALSE:
+			USE u_b_corr_eq_geldart_b;
+	END WHEN;
+
+	u_b_eq_dh: u_b = u_b_dh;
+	u_b_eq_correlation: u_b = u_b_correlation;
+
+	WHEN(u_b_use_correlation)
+		CASE TRUE:
+			USE u_b_eq_correlation;
+		CASE FALSE:
+			USE u_b_eq_dh;
+	END WHEN;
+
+	u_emf "interstitial emulsion velocity at minimum fluidisation" IS_A speed;
+	u_emf = u_mf / eps_mf;
+
+	bubble_regime_ratio "u_b / (u_mf/eps_mf)" IS_A factor;
+	bubble_regime_ratio = u_b / u_emf;
+
+	(* BUBBLE VOLUME FRACTION -- AND BED EXPANSION *)
+	
+	delta "selected fraction of bed occupied by bubbles" IS_A factor;
+	delta_slow "eq. 7 slow-bubble fraction" IS_A factor;
+	delta_intermediate_low "eq. 8 lower intermediate fraction" IS_A factor;
+	delta_intermediate "eq. 8 interpolation between lower and upper intermediate limits" IS_A factor;
+	delta_fast "eq. 9 fast-bubble fraction" IS_A factor;
+	delta_fast_or_vigorous "fast-bubble fraction after vigorous-bubbling approximation" IS_A factor;
+	delta_vigorous "eq. 10 vigorous bubbling approximation" IS_A factor;
+	u_ratio_vigorous_min "u/u_mf threshold for applying eq. 10 approximation" IS_A factor;
+	delta_use_slow "select eq. 7 slow-bubble fraction" IS_A boolean_var;
+	delta_use_intermediate_or_slow "select eq. 7 or eq. 8 bubble fraction" IS_A boolean_var;
+	delta_use_vigorous "select eq. 10 instead of eq. 9 in the fast-bubble regime" IS_A boolean_var;
+
+	(* Eq. 7 and the two limiting forms used in and after Eq. 8. *)
+	delta_slow = (u - u_mf) / (u_b + 2 * u_mf); (* if u_b < u_mf/eps_mf *)
+	delta_intermediate_low = (u - u_mf) / (u_b + u_mf); (* when u_b approx u_mf/eps_mf *)
+	delta_fast = (u - u_mf) / u_b; (* when u_b approx 5 * u_mf/eps_mf *)
+	delta_intermediate =
+		delta_intermediate_low
+		+ (bubble_regime_ratio - 1) / 4 * (delta_fast - delta_intermediate_low);
+	delta_vigorous = u / u_b;
+
+	(* The paper gives eq. 10 for u >> u_mf; keep that threshold explicit. *)
+	CONDITIONAL
+		delta_slow_selected: bubble_regime_ratio < 1;
+		delta_intermediate_or_slow_selected: bubble_regime_ratio < 5;
+		delta_vigorous_selected: u_ratio_mf >= u_ratio_vigorous_min;
+	END CONDITIONAL;
+
+	delta_use_slow == SATISFIED(delta_slow_selected, 1e-6);
+	delta_use_intermediate_or_slow == SATISFIED(delta_intermediate_or_slow_selected, 1e-6);
+	delta_use_vigorous == SATISFIED(delta_vigorous_selected, 1e-6);
+
+	delta_eq_slow: delta = delta_slow;
+	delta_eq_intermediate: delta = delta_intermediate;
+	delta_eq_fast_or_vigorous: delta = delta_fast_or_vigorous;
+	delta_fast_or_vigorous_eq_fast: delta_fast_or_vigorous = delta_fast;
+	delta_fast_or_vigorous_eq_vigorous: delta_fast_or_vigorous = delta_vigorous;
+
+	WHEN(delta_use_vigorous)
+		CASE TRUE:
+			USE delta_fast_or_vigorous_eq_vigorous;
+		CASE FALSE:
+			USE delta_fast_or_vigorous_eq_fast;
+	END WHEN;
+
+	WHEN(delta_use_slow, delta_use_intermediate_or_slow)
+		CASE TRUE,TRUE:
+			USE delta_eq_slow;
+		CASE FALSE,TRUE:
+			USE delta_eq_intermediate;
+		CASE FALSE,FALSE:
+			USE delta_eq_fast_or_vigorous;
+		OTHERWISE:
+	END WHEN;
+
+	(* Eq. 2: operating bed expansion assumes emulsion is at min. fluidisation *)
+	1 - eps = (1 - delta) * (1 - eps_mf);
+
+	gamma_b "solid volume in bubbles per bubble volume" IS_A factor;
+	gamma_c "solid volume in cloud/wake per bubble volume" IS_A factor;
+	gamma_e "solid volume in emulsion per bubble volume" IS_A factor;
+	f_wake "wake volume per bubble volume" IS_A factor;
+
+	(* Eq. 12. *)
+	delta * (gamma_b + gamma_c + gamma_e) = 1 - eps;
+
+	(* DISTRIBUTION OF PARTICLES IN BUBBLE/CLOUD/EMULSION *)
+	
+	(* Eq. 14. *)
+	gamma_b = 0.005;
+
+	(* Eq. 15, with the wake included in the cloud region. *)
+	gamma_c =
+		(1 - eps_mf)
+		* (
+			3 / (u_br * eps_mf / u_mf - 1)
+			+ f_wake
+		  );
+
+	(* VOLUMETRIC GAS INTERCHANGE RATE BETWEEN REGIONS *)
+	
+	D_AB "molecular diffusivity of gas species A in B" IS_A diffusivity;
+	K_bc "bubble-cloud gas interchange coefficient" IS_A frequency;
+	K_ce "cloud-emulsion gas interchange coefficient" IS_A frequency;
+	K_be "bubble-emulsion gas interchange coefficient for intermediate beds" IS_A frequency;
+
+	(* Eq. 16. *)
+	K_bc =
+		4.5 * u_mf / d_b
+		+ 5.85 {1/s}
+		  * (D_AB / 1 {m^2/s})^0.5
+		  * (1{EARTH_G} / 1 {m/s^2})^0.25
+		  / (d_b / 1 {m})^1.25;
+
+	(* Eq. 17. *)
+	K_ce =
+		6.77 {1/s}
+		* (D_AB * eps_mf * u_br / d_b^3 / 1 {1/s^2})^0.5;
+
+	(* Eq. 30. Intermediate-particle / Geldart B approximation: overlapping
+	   clouds are folded into the emulsion, leaving one bubble-emulsion
+	   interchange coefficient. *)
+	K_be = 4.5 * u_mf / d_b;
+
+METHODS
+	METHOD default;
+		RUN fluid.default;
+
+		u.lower_bound := 0 {m/s};
+		u_mf.lower_bound := 0 {m/s};
+		u_b.lower_bound := 0 {m/s};
+		u_b_dh.lower_bound := 0 {m/s};
+		u_b_geldart_a.lower_bound := 0 {m/s};
+		u_b_geldart_b.lower_bound := 0 {m/s};
+		u_b_correlation.lower_bound := 0 {m/s};
+		rho_geldart_ab_boundary.lower_bound := 0 {kg/m^3};
+		d_b.lower_bound := 1 {um};
+		eps_mf.lower_bound := 0.01;
+		eps_mf.upper_bound := 0.99;
+		eps.lower_bound := 0.01;
+		eps.upper_bound := 0.99;
+		delta.lower_bound := 0;
+		delta.upper_bound := 0.99;
+		u_ratio_vigorous_min.lower_bound := 1;
+		delta_slow.lower_bound := -1;
+		delta_intermediate_low.lower_bound := -1;
+		delta_intermediate.lower_bound := -1;
+		delta_fast.lower_bound := -1;
+		delta_fast_or_vigorous.lower_bound := -1;
+		delta_vigorous.lower_bound := 0;
+		f_wake.lower_bound := 0;
+		D_AB.lower_bound := 0 {m^2/s};
+		K_be.lower_bound := 0 {1/s};
+
+		eps := 0.7;
+		u_b_correlation := 0.5 {m/s};
+		rho_geldart_ab_boundary := 1 {g/cm^3};
+		u_b_use_geldart_a := FALSE;
+		u_b_use_correlation := TRUE;
+		delta := 0.4;
+		u_ratio_vigorous_min := 10;
+		delta_use_slow := FALSE;
+		delta_use_intermediate_or_slow := FALSE;
+		delta_use_vigorous := TRUE;
+		delta_slow := 0.4;
+		delta_intermediate_low := 0.4;
+		delta_intermediate := 0.4;
+		delta_fast := 0.4;
+		delta_fast_or_vigorous := 0.4;
+		delta_vigorous := 0.4;
+		gamma_c := 0.3;
+		gamma_e := 0.3;
+		K_be := 1 {1/s};
+	END default;
+END fluidbed2_base;
+
+MODEL fb_reactor_intermediate_lumped REFINES fluidbed2_base;
+	fluid IS_REFINED_TO air_fluid;
+
+	(*
+		Minimal steady two-region bubble/emulsion test for the K&L
+		intermediate-particle picture. Clouds are not a separate reacting
+		region; their gas/solids are folded into the emulsion.
+	*)
+	c_tot "ideal-gas molar density" IS_A molar_density;
+	F_bubble "molar flow through bubble phase" IS_A molar_rate;
+	F_emulsion "molar flow through emulsion phase" IS_A molar_rate;
+	V_bubble "bubble volume in bed" IS_A volume;
+	y_A_in, y_A_b, y_A_e IS_A mole_fraction;
+	N_be_A "A transfer from bubble to emulsion" IS_A delta_molar_rate;
+	N_rxn_A "A consumed by emulsion reaction" IS_A delta_molar_rate;
+	K_r "first-order emulsion reaction rate constant" IS_A frequency;
+
+	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+	Fb_eq: F_bubble = c_tot * chamber.end.A * (u - u_mf);
+	Fe_eq: F_emulsion = c_tot * chamber.end.A * u_mf;
+	Vb_eq: V_bubble = delta * bed.V;
+	Nbe_eq: N_be_A = V_bubble * K_be * c_tot * (y_A_b - y_A_e);
+	Nrxn_eq: N_rxn_A = K_r * bed.V * (1 - eps) * c_tot * y_A_e;
+	bubble_balance: F_bubble * (y_A_in - y_A_b) - N_be_A = 0 {mol/s};
+	emulsion_balance: F_emulsion * (y_A_in - y_A_e) + N_be_A - N_rxn_A = 0 {mol/s};
+
+METHODS
+	METHOD default;
+		RUN fluidbed2_base::default;
+		c_tot.lower_bound := 0 {mol/m^3};
+		F_bubble.lower_bound := 0 {mol/s};
+		F_emulsion.lower_bound := 0 {mol/s};
+		V_bubble.lower_bound := 0 {m^3};
+		y_A_in.lower_bound := 0;
+		y_A_in.upper_bound := 1;
+		y_A_b.lower_bound := 0;
+		y_A_b.upper_bound := 1;
+		y_A_e.lower_bound := 0;
+		y_A_e.upper_bound := 1;
+		K_r.lower_bound := 0 {1/s};
+
+		c_tot := 10 {mol/m^3};
+		F_bubble := 1e-3 {mol/s};
+		F_emulsion := 1e-4 {mol/s};
+		V_bubble := 1e-4 {m^3};
+		y_A_in := 1;
+		y_A_b := 0.95;
+		y_A_e := 0.80;
+		N_be_A := 1e-4 {mol/s};
+		N_rxn_A := 1e-4 {mol/s};
+		K_r := 1 {1/s};
+	END default;
+
+	METHOD on_load;
+		RUN default;
+
+		FIX chamber.d := 30 {mm};
+		FIX chamber.L := 500 {mm};
+		FIX bed_mf.L := 70 {mm};
+		FIX T := 800 {K} + 273.15 {K};
+		FIX p := 1 {atm};
+		FIX d_p := 250 {um};
+		FIX rho_p := 4000 {kg/m^3};
+		FIX eps_mf := 0.55;
+		FIX u_mf := 6 {mm/s};
+		FIX u_ratio_mf := 70;
+		FIX u_ratio_vigorous_min := 10;
+		FIX d_b := 8 {mm};
+		FIX f_wake := 0.05;
+		FIX D_AB := 2.4e-3 {m^2/s};
+		FIX y_A_in := 1.0;
+		FIX K_r := 1 {1/s};
+
+		u := 0.42 {m/s};
+		u_br := 0.20 {m/s};
+		u_b_dh := 0.61 {m/s};
+		u_b_geldart_a := 0.80 {m/s};
+		u_b_geldart_b := 0.25 {m/s};
+		u_b_correlation := 0.25 {m/s};
+		u_b := 0.61 {m/s};
+		u_emf := 0.011 {m/s};
+		bubble_regime_ratio := 56;
+		rho_geldart_ab_boundary := 0.7 {g/cm^3};
+		u_b_use_geldart_a := FALSE;
+		u_b_use_correlation := FALSE;
+		delta_use_slow := FALSE;
+		delta_use_intermediate_or_slow := FALSE;
+		delta_use_vigorous := TRUE;
+		delta_vigorous := 0.69;
+		delta_fast := 0.68;
+		delta_fast_or_vigorous := 0.69;
+		delta := 0.69;
+		eps := 0.86;
+		K_be := 3.4 {1/s};
+		y_A_b := 0.9;
+		y_A_e := 0.5;
+		N_be_A := 1e-5 {mol/s};
+		N_rxn_A := 1e-5 {mol/s};
+
+		SOLVER CMSlv;
+		OPTION optsolvers 'IPOPT';
+		OPTION cmslv2 TRUE;
+
+		STUDY
+			u, u_mf, u_ratio_mf, u_b, delta, eps,
+			K_be, K_bc, K_ce,
+			F_bubble, F_emulsion, V_bubble,
+			y_A_in, y_A_b, y_A_e, N_be_A, N_rxn_A;
+	END on_load;
+END fb_reactor_intermediate_lumped;
+
+MODEL fb_reactor_fine REFINES fluidbed2_base;
+	fluid IS_REFINED_TO air_fluid;
+
+	(* Reactor equations below remain the fine-particle fast-bubble model. *)
+	L_m "fixed/packed bed height used in Fig. 5 captions" IS_A distance;
+	eps_m "fixed/packed bed void fraction" IS_A factor;
+	L_f "expanded bubbling-bed height from solids conservation" IS_A distance;
+	solids_height "bed solids volume per cross-sectional area" IS_A distance;
+	K_r "first-order catalytic reaction rate constant" IS_A frequency;
+	K_f "effective fluidised-bed reaction rate constant" IS_A frequency;
+
+	tau "reactor ability measure, L_i (1 - eps_i) / u0" IS_A time;
+	K_r_tau_f "Fig. 5 abscissa, K_r L_i (1 - eps_i) / u0" IS_A factor;
+
+	C_Ao_over_C_Ai "unconverted reactant fraction leaving dense bed" IS_A factor;
+	X_A "dense-bed fractional conversion" IS_A fraction;
+	eta_bed "dense-bed contacting efficiency, eq. 26" IS_A factor;
+
+	fig5_points IS_A set OF integer_constant;
+	fig5_points :== [1..5];
+	K_r_tau_fig5[fig5_points] "digitised Fig. 5 abscissa values" IS_A factor;
+	C_Ao_over_C_Ai_fig5_obs[fig5_points] "digitised Fig. 5 ordinate values" IS_A factor;
+	K_r_fig5[fig5_points] IS_A frequency;
+	K_f_fig5[fig5_points] IS_A frequency;
+	C_Ao_over_C_Ai_fig5[fig5_points] "modelled Fig. 5 ordinate values" IS_A factor;
+	X_A_fig5[fig5_points] IS_A fraction;
+	eta_bed_fig5[fig5_points] IS_A factor;
+	fig5_error[fig5_points] "model minus digitised Fig. 5 ordinate" IS_A factor;
+	fig5_relative_error[fig5_points] IS_A factor;
+	fig5_rms_error "RMS absolute error for selected Fig. 5 points" IS_A factor;
+
+	(* Eq. 24. K_bc and K_ce are based on bubble volume. *)
+	K_f =
+		gamma_b * K_r
+		+
+		1 / (
+			1 / K_bc
+			+
+			1 / (
+				gamma_c * K_r
+				+
+				1 / (
+					1 / K_ce
+					+
+					1 / (gamma_e * K_r)
+				)
+			)
+		);
+
+	(* Eq. 22. Solids conservation makes L_i(1-eps_i) invariant for
+	   i = m, mf, or f, provided the same cross-sectional area is used. *)
+	solids_height = L_m * (1 - eps_m);
+	solids_height = bed_mf.L * (1 - eps_mf);
+	solids_height = L_f * (1 - eps);
+	tau = solids_height / u;
+	K_r_tau_f = K_r * tau;
+
+	(* Eq. 23b. The equivalent form is
+	   C_Ao/C_Ai = exp(-K_f * K_r_tau_f / (K_r * (1 - eps))). *)
+	C_Ao_over_C_Ai = exp(-K_f * delta * L_f / u);
+	X_A = 1 - C_Ao_over_C_Ai;
+
+	(* Eq. 26. *)
+	eta_bed = K_f * delta / (K_r * (1 - eps));
+
+	FOR j IN fig5_points CREATE
+		Krtau_fig5_eq[j]:
+			K_r_tau_fig5[j] = K_r_fig5[j] * tau;
+
+		Kf_fig5_eq[j]:
+			K_f_fig5[j]
+			=
+			gamma_b * K_r_fig5[j]
+			+
+			1 / (
+				1 / K_bc
+				+
+				1 / (
+					gamma_c * K_r_fig5[j]
+					+
+					1 / (
+						1 / K_ce
+						+
+						1 / (gamma_e * K_r_fig5[j])
+					)
+				)
+			);
+
+		CA_fig5_eq[j]:
+			C_Ao_over_C_Ai_fig5[j] = exp(-K_f_fig5[j] * delta * L_f / u);
+		XA_fig5_eq[j]:
+			X_A_fig5[j] = 1 - C_Ao_over_C_Ai_fig5[j];
+		eta_fig5_eq[j]:
+			eta_bed_fig5[j] = K_f_fig5[j] * delta / (K_r_fig5[j] * (1 - eps));
+		fig5_err_eq[j]:
+			fig5_error[j] = C_Ao_over_C_Ai_fig5[j] - C_Ao_over_C_Ai_fig5_obs[j];
+		fig5_relerr_eq[j]:
+			fig5_relative_error[j] = fig5_error[j] / C_Ao_over_C_Ai_fig5_obs[j];
+	END FOR;
+	fig5_rms_error_eq:
+		fig5_rms_error = (
+			SUM[fig5_error[j]^2 | j IN fig5_points] / 5
+		)^0.5;
+
+METHODS
+	METHOD default;
+		RUN fluidbed2_base::default;
+
+		K_r.lower_bound := 1e-12 {1/s};
+		K_f.lower_bound := 0 {1/s};
+		K_r_tau_f.lower_bound := 0;
+		C_Ao_over_C_Ai.lower_bound := 0;
+		C_Ao_over_C_Ai.upper_bound := 1;
+			eta_bed.lower_bound := 0;
+			L_m.lower_bound := 0 {m};
+			L_f.lower_bound := 0 {m};
+			eps_m.lower_bound := 0.01;
+			eps_m.upper_bound := 0.99;
+
+			K_r := 1 {1/s};
+			K_f := 0.1 {1/s};
+			K_r_tau_f := 1;
+		C_Ao_over_C_Ai := 0.5;
+			X_A := 0.5;
+			eta_bed := 0.1;
+			tau := 1 {s};
+			solids_height := 0.1 {m};
+
+			FOR j IN fig5_points DO
+				K_r_tau_fig5[j].lower_bound := 0;
+				C_Ao_over_C_Ai_fig5_obs[j].lower_bound := 0;
+				C_Ao_over_C_Ai_fig5_obs[j].upper_bound := 1;
+				K_r_fig5[j].lower_bound := 1e-12 {1/s};
+				K_f_fig5[j].lower_bound := 0 {1/s};
+				C_Ao_over_C_Ai_fig5[j].lower_bound := 0;
+				C_Ao_over_C_Ai_fig5[j].upper_bound := 1;
+				eta_bed_fig5[j].lower_bound := 0;
+				K_r_tau_fig5[j] := 1;
+				C_Ao_over_C_Ai_fig5_obs[j] := 0.5;
+				K_r_fig5[j] := 1 {1/s};
+				K_f_fig5[j] := 0.1 {1/s};
+				C_Ao_over_C_Ai_fig5[j] := 0.5;
+				X_A_fig5[j] := 0.5;
+				eta_bed_fig5[j] := 0.1;
+				fig5_error[j] := 0;
+				fig5_relative_error[j] := 0;
+			END FOR;
+			fig5_rms_error := 0.01;
+		END default;
+
+	METHOD specify_rate_constant;
+		FIX K_r;
+		FREE K_r_tau_f;
+	END specify_rate_constant;
+
+	METHOD specify_fig5_abscissa;
+		FREE K_r;
+		FIX K_r_tau_f;
+	END specify_fig5_abscissa;
+
+	METHOD on_load;
+		RUN default;
+
+		(*
+			One Fig. 5-style calculated-line point:
+			u_mf = 0.006 m/s, L_m = 0.7 m, d_b = 0.04 m,
+			u0 = 0.10 m/s, with K_r tau fixed at 10.
+		*)
+		FIX chamber.d := 60 {mm};
+		FIX chamber.L := 1.2 {m};
+		FIX L_m := 0.7 {m};
+		FIX T := 298.15 {K};
+		FIX p := 1 {atm};
+		FIX d_p := 68 {um};
+		FIX rho_p := 2500 {kg/m^3};
+		FIX eps_m := 0.5;
+		FIX eps_mf := 0.55;
+		FIX u_mf := 6 {mm/s};
+		FIX u_ratio_mf := 0.10 {m/s} / (6 {mm/s});
+		FIX u_ratio_vigorous_min := 10;
+		FIX d_b := 40 {mm};
+		FIX f_wake := 0.6;
+		FIX D_AB := 0.2 {cm^2/s};
+
+		u := 0.10 {m/s};
+		u_br := 0.445 {m/s};
+		u_b_dh := 0.539 {m/s};
+		u_b_geldart_a := 0.9 {m/s};
+		u_b_geldart_b := 0.456 {m/s};
+		u_b_correlation := 0.456 {m/s};
+		u_b := 0.539 {m/s};
+		u_emf := 0.011 {m/s};
+		bubble_regime_ratio := 49;
+		rho_geldart_ab_boundary := 1.33 {g/cm^3};
+		u_b_use_geldart_a := FALSE;
+		u_b_use_correlation := FALSE;
+		delta_use_slow := FALSE;
+		delta_use_intermediate_or_slow := FALSE;
+		delta_use_vigorous := TRUE;
+		delta_vigorous := 0.185;
+		delta_fast := 0.174;
+		delta_fast_or_vigorous := 0.185;
+		delta := 0.185;
+
+		RUN specify_fig5_abscissa;
+		K_r_tau_f := 10;
+		FOR j IN fig5_points DO
+			FIX K_r_tau_fig5[j];
+			FIX C_Ao_over_C_Ai_fig5_obs[j];
+		END FOR;
+		K_r_tau_fig5[1] := 1.80691382138;
+		C_Ao_over_C_Ai_fig5_obs[1] := 0.373343798692;
+		K_r_tau_fig5[2] := 5.28536621978;
+		C_Ao_over_C_Ai_fig5_obs[2] := 0.172592540925;
+		K_r_tau_fig5[3] := 10.0195711305;
+		C_Ao_over_C_Ai_fig5_obs[3] := 0.0980938058606;
+		K_r_tau_fig5[4] := 23.5311833715;
+		C_Ao_over_C_Ai_fig5_obs[4] := 0.0461625986973;
+		K_r_tau_fig5[5] := 59.8509607017;
+		C_Ao_over_C_Ai_fig5_obs[5] := 0.0166001430097;
+
+		SOLVER CMSlv;
+		OPTION optsolvers 'IPOPT';
+		OPTION cmslv2 TRUE;
+
+		STUDY
+			K_r_tau_f, K_r, K_f, eta_bed,
+			C_Ao_over_C_Ai, X_A,
+			K_r_tau_fig5[1], C_Ao_over_C_Ai_fig5_obs[1], C_Ao_over_C_Ai_fig5[1], fig5_error[1],
+			K_r_tau_fig5[2], C_Ao_over_C_Ai_fig5_obs[2], C_Ao_over_C_Ai_fig5[2], fig5_error[2],
+			K_r_tau_fig5[3], C_Ao_over_C_Ai_fig5_obs[3], C_Ao_over_C_Ai_fig5[3], fig5_error[3],
+			K_r_tau_fig5[4], C_Ao_over_C_Ai_fig5_obs[4], C_Ao_over_C_Ai_fig5[4], fig5_error[4],
+			K_r_tau_fig5[5], C_Ao_over_C_Ai_fig5_obs[5], C_Ao_over_C_Ai_fig5[5], fig5_error[5],
+			fig5_rms_error,
+			u, u_mf, rho_geldart_ab_boundary, u_b_use_geldart_a, u_b, u_ratio_vigorous_min, delta, eps,
+			L_m, eps_m, bed_mf.L, L_f, solids_height, tau, d_b,
+			K_bc, K_ce, gamma_b, gamma_c, gamma_e;
+	END on_load;
+END fb_reactor_fine;
+
+MODEL fb_reactor_dense_example REFINES fb_reactor_fine;
+METHODS
+	METHOD on_load;
+		RUN default;
+
+		(*
+			Dense-bed part of the reactor example at the end of the paper:
+			u0 = 0.3 m/s, u_mf = 0.006 m/s, d_b = 0.04 m,
+			D_AB = 2e-5 m2/s, L_f = 1.1 m, K_r = 10 1/s.
+			The subsequent freeboard conversion is not included here.
+		*)
+		FIX chamber.d := 0.26 {m};
+		FIX chamber.L := 2.3 {m};
+		FIX L_f := 1.1 {m};
+		FIX T := 298.15 {K};
+		FIX p := 1 {atm};
+		FIX d_p := 68 {um};
+		FIX rho_p := 2500 {kg/m^3};
+		FIX eps_m := 0.5;
+		FIX eps_mf := 0.55;
+		FIX u_mf := 6 {mm/s};
+		FIX u_ratio_mf := 50;
+		FIX u_ratio_vigorous_min := 10;
+		FIX d_b := 40 {mm};
+		FIX f_wake := 0.6;
+		FIX D_AB := 2e-5 {m^2/s};
+
+		RUN specify_rate_constant;
+		K_r := 10 {1/s};
+		FOR j IN fig5_points DO
+			FIX K_r_tau_fig5[j];
+			FIX C_Ao_over_C_Ai_fig5_obs[j];
+			K_r_tau_fig5[j] := 1;
+			C_Ao_over_C_Ai_fig5_obs[j] := 0.5;
+		END FOR;
+
+		u := 0.30 {m/s};
+		u_br := 0.445 {m/s};
+		u_b_dh := 0.739 {m/s};
+		u_b_geldart_a := 1.38 {m/s};
+		u_b_geldart_b := 0.58 {m/s};
+		u_b_correlation := 0.58 {m/s};
+		u_b := 0.739 {m/s};
+		u_emf := 0.011 {m/s};
+		bubble_regime_ratio := 68;
+		rho_geldart_ab_boundary := 1.33 {g/cm^3};
+		u_b_use_geldart_a := FALSE;
+		u_b_use_correlation := FALSE;
+		delta_use_slow := FALSE;
+		delta_use_intermediate_or_slow := FALSE;
+		delta_use_vigorous := TRUE;
+		delta_vigorous := 0.406;
+		delta_fast := 0.398;
+		delta_fast_or_vigorous := 0.406;
+		delta := 0.406;
+		eps := 0.733;
+		gamma_c := 0.304;
+		gamma_e := 0.349;
+		K_bc := 3.26 {1/s};
+		K_ce := 1.873 {1/s};
+		K_f := 1.898 {1/s};
+		eta_bed := 0.288;
+		C_Ao_over_C_Ai := 0.059;
+		X_A := 0.941;
+
+		SOLVER CMSlv;
+		OPTION optsolvers 'IPOPT';
+		OPTION cmslv2 TRUE;
+
+		STUDY
+			K_r, K_f, eta_bed, C_Ao_over_C_Ai, X_A,
+			u, u_mf, u_b, delta, eps, L_f,
+			K_bc, K_ce, gamma_b, gamma_c, gamma_e,
+			rho_geldart_ab_boundary, u_b_use_geldart_a, u_b_use_correlation;
+	END on_load;
+
+	METHOD self_test;
+		(*
+			The paper reports K_f = 0.706 1/s and eta_bed = 0.107 for this
+			example. Direct evaluation of printed eq. 24, including the
+			gamma_c*K_r cloud reaction term shown in the worked substitution,
+			gives the values asserted below. The paper's K_f is recovered only
+			if that printed gamma_c*K_r term is omitted.
+		*)
+		ASSERT abs(u_b - 0.739 {m/s}) < 0.001 {m/s};
+		ASSERT abs(delta - 0.406) < 0.001;
+		ASSERT abs(eps - 0.733) < 0.001;
+		ASSERT abs(K_bc - 3.26 {1/s}) < 0.01 {1/s};
+		ASSERT abs(K_ce - 1.873 {1/s}) < 0.002 {1/s};
+		ASSERT abs(K_f - 1.8975 {1/s}) < 0.002 {1/s};
+		ASSERT abs(C_Ao_over_C_Ai - 0.05934) < 0.0001;
+		ASSERT abs(eta_bed - 0.2882) < 0.0002;
+	END self_test;
+END fb_reactor_dense_example;
+
+MODEL fluidbed2 REFINES fluidbed2_base;
+	fluid IS_REFINED_TO air_fluid;
+
+METHODS
+	METHOD on_load;
+		RUN default;
+
+		FIX chamber.d := 68 {mm};
+		FIX chamber.L := 500 {mm};
+		FIX bed_mf.L := 100 {mm};
+		FIX T := 400 {K} + 273.15 {K};
+		FIX p := 1 {atm};
+		FIX d_p := 500 {um};
+		FIX rho_p := 3500 {kg/m^3};
+		FIX eps_mf := 0.55;
+		FIX u_mf := 6 {mm/s};
+		FIX u_ratio_mf := 50;
+		FIX u_ratio_vigorous_min := 10;
+		FIX d_b := 40 {mm};
+		FIX f_wake := 0.6;
+		FIX D_AB := 0.2 {cm^2/s};
+
+		u := 0.30 {m/s};
+		u_br := 0.445 {m/s};
+		u_b_dh := 0.739 {m/s};
+		u_b_geldart_a := 1.0 {m/s};
+		u_b_geldart_b := 0.467 {m/s};
+		u_b_correlation := 0.467 {m/s};
+		u_b := 0.739 {m/s};
+		u_emf := 0.011 {m/s};
+		bubble_regime_ratio := 68;
+		rho_geldart_ab_boundary := 0.35 {g/cm^3};
+		u_b_use_geldart_a := FALSE;
+		u_b_use_correlation := FALSE;
+		delta_use_slow := FALSE;
+		delta_use_intermediate_or_slow := FALSE;
+		delta_use_vigorous := TRUE;
+		delta_vigorous := 0.406;
+		delta_fast := 0.398;
+		delta_fast_or_vigorous := 0.406;
+		delta := 0.406;
+
+		SOLVER CMSlv;
+		OPTION optsolvers 'IPOPT';
+		OPTION cmslv2 TRUE;
+
+		STUDY
+			u, u_mf, u_ratio_mf,
+			rho_geldart_ab_boundary, u_b_use_geldart_a, u_b_use_correlation,
+			u_b, u_b_correlation, u_b_dh, u_b_geldart_a, u_b_geldart_b,
+			u_emf, bubble_regime_ratio,
+			u_ratio_vigorous_min, delta_use_slow, delta_use_intermediate_or_slow, delta_use_vigorous,
+			delta, delta_slow, delta_intermediate_low, delta_intermediate,
+			delta_fast, delta_fast_or_vigorous, delta_vigorous,
+			eps, bed_mf.L, bed.L,
+			gamma_b, gamma_c, gamma_e,
+			D_AB, K_bc, K_ce,
+			mdot_mf, mdot, Re_mf, Re;
+		END on_load;
+
+		METHOD self_test;
+			(*
+				Worked example values reported by Kunii and Levenspiel for a
+				fine-particle vigorously bubbling bed:
+					u_mf = 0.006 m/s, u = 0.3 m/s, eps_mf = 0.55,
+					d_b = 0.04 m, D_AB = 2e-5 m2/s.
+			*)
+			ASSERT abs(u_br - 0.445 {m/s}) < 0.001 {m/s};
+			ASSERT abs(u_b - 0.739 {m/s}) < 0.001 {m/s};
+			ASSERT abs(delta - 0.406) < 0.001;
+			ASSERT abs(gamma_c - 0.304) < 0.001;
+			ASSERT abs(gamma_e - 0.349) < 0.002;
+			ASSERT abs(K_bc - 3.26 {1/s}) < 0.01 {1/s};
+			ASSERT abs(K_ce - 1.873 {1/s}) < 0.002 {1/s};
+		END self_test;
+	END fluidbed2;

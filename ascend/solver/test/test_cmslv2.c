@@ -85,6 +85,32 @@ static void cmslv_progress_end(void){
 	g_cmslv_progress.len = 0;
 }
 
+static void cmslv_progress_dump_if_requested(const char *modelname,
+		const char *progress
+){
+	const char *target = getenv("ASCEND_DEBUG_CMSLV2_TEST_PROGRESS");
+	FILE *fp = NULL;
+
+	if(target == NULL || target[0] == '\0' || progress == NULL){
+		return;
+	}
+	if(!strcmp(target,"stdout")){
+		fp = stdout;
+	}else if(!strcmp(target,"1") || !strcmp(target,"stderr")){
+		fp = stderr;
+	}else{
+		fp = fopen(target,"a");
+	}
+	if(fp == NULL){
+		return;
+	}
+	fprintf(fp,"\nCMSlv2 test progress model=%s\n%s\nEND CMSlv2 test progress\n",
+		modelname != NULL ? modelname : "<unknown>",progress);
+	if(fp != stdout && fp != stderr){
+		fclose(fp);
+	}
+}
+
 static int cmslv_capture_progress_callback(
 	const char *solver_name, const char *message, void *user_data
 ){
@@ -390,6 +416,7 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 	slv_solve(sys);
 	slv_clear_progress_callback();
 	cmslv_progress_end();
+	cmslv_progress_dump_if_requested(filenamestem,progress);
 	slv_get_status(sys, &status);
 	CU_ASSERT(status.ok);
 	if(expect_boundary_progress
@@ -666,7 +693,10 @@ static void test_cmslv_mode(const char *filenamestem, const char *optsolver,
 	T(cmslv2_nested_when_static)\
 	T(reinitignore_case_if)\
 	T(linmassbal_unit_case_if)\
+	T(linmassbal_case_if)\
 	T(pipeline_arc_case_if)\
+	T(pipeline_case_if)\
+	T(heatex_case_if)\
 	T(cmslv2_case_if_steady)\
 	T(cmslv2_case_if_continuous)\
 	T(cmslv2_case_if_satisfied_tolerance)\
@@ -718,8 +748,20 @@ static void test_linmassbal_unit_case_if(void){
 	test_cmslv_mode("linmassbal_unit_case_if",NULL,CMSLV_PROGRESS_BASIC_CMSLV2);
 }
 
+static void test_linmassbal_case_if(void){
+	test_cmslv_mode("linmassbal_case_if","CONOPT",CMSLV_PROGRESS_GENERAL_CMSLV2);
+}
+
 static void test_pipeline_arc_case_if(void){
 	test_cmslv_mode("pipeline_arc_case_if",NULL,CMSLV_PROGRESS_BASIC_CMSLV2);
+}
+
+static void test_pipeline_case_if(void){
+	test_cmslv_mode("pipeline_case_if","CONOPT",CMSLV_PROGRESS_GENERAL_CMSLV2);
+}
+
+static void test_heatex_case_if(void){
+	test_cmslv_mode("heatex_case_if","CONOPT",CMSLV_PROGRESS_GENERAL_CMSLV2);
 }
 
 static void test_cmslv2_case_if_steady(void){

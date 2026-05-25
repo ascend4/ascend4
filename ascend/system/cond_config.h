@@ -212,6 +212,18 @@ ASC_DLLSPEC int reanalyze_solver_lists_with_lowered_whens(slv_system_t sys);
  * be evaluated or no case applies.
  */
 
+ASC_DLLSPEC int reanalyze_solver_lists_with_classifier_guard_values(
+    slv_system_t sys
+);
+/**<
+ * Reanalyze the solver lists using the current values of generated/reused
+ * classifier guard dvars for CASE IF/APPLIES IF WHENs that have guard dvars.
+ * Classifier WHENs without guard dvars are evaluated from their lowered
+ * predicates, and ordinary WHENs use the existing selector-dispatch analysis.
+ *
+ * Returns 0 on success and nonzero if no active presentation can be built.
+ */
+
 ASC_DLLSPEC int32 system_reanalyze(slv_system_t sys);
 /**<
 	For conditional modeling. If a whenvarlist has been changed

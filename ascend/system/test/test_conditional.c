@@ -1,4 +1,5 @@
 #include <ascend/general/list.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascEnvVar.h>
 
 #include <string.h>
@@ -821,6 +822,227 @@ static void test_system_prepare_applies_if_multiple_true_rejected(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_system_prepare_case_if_boolean_encoding(void){
+	struct module_t *m;
+	struct Instance *siminst;
+	slv_system_t sys;
+	int status;
+	struct slv_classifier_when_encoding *encoding;
+	int32 v_slow[2] = {1,0};
+	int32 v_slow_collision[2] = {1,1};
+	int32 v_intermediate[2] = {0,1};
+	int32 v_fast[2] = {0,0};
+	int32 v_short[1] = {1};
+	int32 v_bad[2] = {1,2};
+	int32 matched_case = -1;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/cmslv/linmassbal_unit_case_if.a4c",&status);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(m);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("linmassbal_unit_case_if")) != NULL);
+
+	siminst = SimsCreateInstance(
+		AddSymbol("linmassbal_unit_case_if"),
+		AddSymbol("sim1"), e_normal, NULL
+	);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(siminst);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(sys);
+	status = slv_prepare_classifier_whens(sys,WHEN_REGION_STEADY);
+	CU_ASSERT_EQUAL_FATAL(status,0);
+
+	CU_ASSERT_EQUAL(slv_get_num_classifier_when_encodings(sys),1);
+	encoding = slv_get_classifier_when_encoding(sys,0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(encoding);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(encoding->when);
+	CU_ASSERT_EQUAL(encoding->nguards,2);
+	CU_ASSERT_EQUAL(encoding->ncases,3);
+
+	CU_ASSERT_PTR_NOT_NULL(encoding->cases[0].wc);
+	CU_ASSERT_EQUAL(encoding->cases[0].nvalues,2);
+	CU_ASSERT_EQUAL(encoding->cases[0].values[0],1);
+	CU_ASSERT_EQUAL(encoding->cases[0].values[1],-2);
+
+	CU_ASSERT_PTR_NOT_NULL(encoding->cases[1].wc);
+	CU_ASSERT_EQUAL(encoding->cases[1].nvalues,2);
+	CU_ASSERT_EQUAL(encoding->cases[1].values[0],0);
+	CU_ASSERT_EQUAL(encoding->cases[1].values[1],1);
+
+	CU_ASSERT_PTR_NOT_NULL(encoding->cases[2].wc);
+	CU_ASSERT_EQUAL(encoding->cases[2].nvalues,2);
+	CU_ASSERT_EQUAL(encoding->cases[2].values[0],0);
+	CU_ASSERT_EQUAL(encoding->cases[2].values[1],0);
+
+	CU_ASSERT_EQUAL(slv_classifier_encoding_match_case(
+		encoding,v_slow,2
+	),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_match_case(
+		encoding,v_slow_collision,2
+	),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_match_case(
+		encoding,v_intermediate,2
+	),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_match_case(
+		encoding,v_fast,2
+	),2);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_match_case(
+		encoding,v_short,1
+	),-1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_match_case(
+		encoding,v_bad,2
+	),-1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_match_case(
+		NULL,v_slow,2
+	),-1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_match_case(
+		encoding,NULL,2
+	),-1);
+
+	CU_ASSERT_EQUAL(slv_reanalyze_with_classifier_encoding_values(
+		sys,encoding,v_slow,2,&matched_case
+	),1);
+	CU_ASSERT_EQUAL(matched_case,-1);
+
+	CU_ASSERT_EQUAL(slv_reanalyze_with_classifier_encoding_values(
+		sys,encoding,v_fast,2,&matched_case
+	),1);
+	CU_ASSERT_EQUAL(matched_case,-1);
+
+	matched_case = 99;
+	CU_ASSERT_EQUAL(slv_reanalyze_with_classifier_encoding_values(
+		sys,encoding,v_bad,2,&matched_case
+	),1);
+	CU_ASSERT_EQUAL(matched_case,-1);
+
+	CU_ASSERT_PTR_NULL(slv_get_classifier_when_encoding(sys,1));
+
+	system_destroy(sys);
+	system_free_reused_mem();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
+static void test_system_prepare_case_if_guard_logic(void){
+	struct module_t *m;
+	struct Instance *siminst;
+	slv_system_t sys;
+	int status;
+	struct slv_classifier_when_encoding *nested;
+	struct slv_classifier_when_encoding *interval;
+	struct slv_classifier_when_encoding *named_interval;
+	int32 nested_slow[2] = {1,1};
+	int32 nested_impossible[2] = {1,0};
+	int32 interval_low[2] = {1,0};
+	int32 interval_high[2] = {0,1};
+	int32 interval_middle[2] = {0,0};
+	int32 interval_impossible[2] = {1,1};
+	int32 matched_case = -1;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/cmslv/when_case_if_guard_logic.a4c",&status);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(m);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("when_case_if_guard_logic")) != NULL);
+
+	siminst = SimsCreateInstance(
+		AddSymbol("when_case_if_guard_logic"),
+		AddSymbol("sim1"), e_normal, NULL
+	);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(siminst);
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(sys);
+	status = slv_prepare_classifier_whens(sys,WHEN_REGION_STEADY);
+	CU_ASSERT_EQUAL_FATAL(status,0);
+
+	CU_ASSERT_EQUAL(slv_get_num_classifier_when_encodings(sys),3);
+	nested = slv_get_classifier_when_encoding(sys,0);
+	interval = slv_get_classifier_when_encoding(sys,1);
+	named_interval = slv_get_classifier_when_encoding(sys,2);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(nested);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(interval);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(named_interval);
+	CU_ASSERT_EQUAL(nested->nguards,2);
+	CU_ASSERT_EQUAL(interval->nguards,2);
+	CU_ASSERT_EQUAL(named_interval->nguards,2);
+
+	CU_ASSERT_EQUAL(slv_classifier_encoding_guard_implies(nested,0,1),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_guard_implies(nested,1,0),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_guards_mutex(nested,0,1),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		nested,nested_slow,2
+	),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		nested,nested_impossible,2
+	),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_match_case(
+		nested,nested_impossible,2
+	),0);
+	CU_ASSERT_EQUAL(slv_reanalyze_with_classifier_encoding_values(
+		sys,nested,nested_impossible,2,&matched_case
+	),1);
+	CU_ASSERT_EQUAL(matched_case,-1);
+	CU_ASSERT_EQUAL(slv_reanalyze_with_classifier_encoding_values(
+		sys,nested,nested_slow,2,&matched_case
+	),0);
+	CU_ASSERT_EQUAL(matched_case,0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_current_case(nested),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_current_tuple_admissible(nested),1);
+
+	CU_ASSERT_EQUAL(slv_classifier_encoding_guard_implies(interval,0,1),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_guard_implies(interval,1,0),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_guards_mutex(interval,0,1),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		interval,interval_low,2
+	),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		interval,interval_high,2
+	),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		interval,interval_middle,2
+	),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		interval,interval_impossible,2
+	),0);
+
+	CU_ASSERT_EQUAL(slv_classifier_encoding_guard_implies(named_interval,0,1),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_guard_implies(named_interval,1,0),0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_guards_mutex(named_interval,0,1),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		named_interval,interval_low,2
+	),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		named_interval,interval_high,2
+	),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		named_interval,interval_middle,2
+	),1);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_tuple_admissible(
+		named_interval,interval_impossible,2
+	),0);
+	CU_ASSERT_EQUAL(slv_reanalyze_with_classifier_encoding_values(
+		sys,named_interval,interval_low,2,&matched_case
+	),0);
+	CU_ASSERT_EQUAL(matched_case,0);
+	CU_ASSERT_EQUAL(slv_classifier_encoding_current_case(named_interval),0);
+	CU_ASSERT_EQUAL(
+		slv_classifier_encoding_current_tuple_admissible(named_interval),1
+	);
+
+	system_destroy(sys);
+	system_free_reused_mem();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
 #define TESTS(T) \
 	T(case_if_lowering) \
 	T(applies_if_lowering) \
@@ -836,6 +1058,8 @@ static void test_system_prepare_applies_if_multiple_true_rejected(void){
 	T(system_prepare_case_if_boolean_eq_artifacts) \
 	T(system_prepare_case_if_inline_satisfied_tolerance) \
 	T(system_prepare_applies_if_inline_satisfied_tolerance) \
-	T(system_prepare_applies_if_multiple_true_rejected)
+	T(system_prepare_applies_if_multiple_true_rejected) \
+	T(system_prepare_case_if_boolean_encoding) \
+	T(system_prepare_case_if_guard_logic)
 
 REGISTER_TESTS_SIMPLE(system_conditional, TESTS)

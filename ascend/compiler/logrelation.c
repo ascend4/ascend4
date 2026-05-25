@@ -571,25 +571,28 @@ static int ConvertLogExpr(CONST struct Expr *start,
           return 0;
         }
       }else{
-        instances = FindInstances(ref,ExprName(start),err);
-        if (instances!=NULL){
-          if (gl_length(instances)==1){
-            inst = (struct Instance *)gl_fetch(instances,1);
-            gl_destroy(instances);
-            if ((term = CreateLogTermFromInst(inst,lrel,err))!=NULL){
-              AppendLogTermBuf(term);
+        inst = resolver != NULL ? (*resolver)(ExprName(start),userdata) : NULL;
+        if (inst == NULL) {
+          instances = FindInstances(ref,ExprName(start),err);
+          if (instances!=NULL){
+            if (gl_length(instances)==1){
+              inst = (struct Instance *)gl_fetch(instances,1);
+              gl_destroy(instances);
             }else{
+              rel_errorlist_set_lrcode(err,incorrect_logstructure);
+              gl_destroy(instances);
               DestroyLogTermList();
               return 0;
             }
           }else{
-            rel_errorlist_set_lrcode(err,incorrect_logstructure);
-            gl_destroy(instances);
+            rel_errorlist_set_lrcode(err,find_logerror);
             DestroyLogTermList();
             return 0;
           }
+        }
+        if ((term = CreateLogTermFromInst(inst,lrel,err))!=NULL){
+          AppendLogTermBuf(term);
         }else{
-          rel_errorlist_set_lrcode(err,find_logerror);
           DestroyLogTermList();
           return 0;
         }

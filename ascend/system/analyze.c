@@ -2186,7 +2186,8 @@ static int AnalyzeSelectorExprInDomain(CONST struct Expr *expr,
 
 static void ValidateSelectorCaseValues(struct Instance *context,
                                        struct Instance *selector,
-                                       struct Set *values)
+                                       struct Set *values,
+                                       symchar *otherwise_label)
 {
   CONST struct set_t *domain;
   struct Set *s;
@@ -2196,8 +2197,11 @@ static void ValidateSelectorCaseValues(struct Instance *context,
     return;
   }
   if (values == NULL) {
+    if (otherwise_label != NULL && StrMember(otherwise_label,domain)) {
+      return;
+    }
     ERROR_REPORTER_HERE(ASC_USER_ERROR,
-      "Selector WHEN cases must enumerate explicit selector states; OTHERWISE is not supported");
+      "Selector WHEN OTHERWISE cases must provide a label from the selector domain");
     return;
   }
 
@@ -2554,6 +2558,7 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     cur_sol_case = when_case_create(NULL);
     cur_case = (struct Case *)(gl_fetch(scratch,c));
     when_case_set_condition(cur_sol_case,GetCaseCondition(cur_case));
+    ProcessSwitchGuardDiscreteDeps(context,GetCaseCondition(cur_case));
     when_case_set_applies(cur_sol_case,GetCaseApplies(cur_case));
     when_case_set_otherwise_label(cur_sol_case,
                                   GetCaseOtherwiseLabel(cur_case));
@@ -2563,7 +2568,9 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     when_case_set_case_number(cur_sol_case,c);
     ValueList = GetCaseValues(cur_case);
     if(selector_target != NULL){
-      ValidateSelectorCaseValues(context,selector_target,ValueList);
+      ValidateSelectorCaseValues(
+        context,selector_target,ValueList,GetCaseOtherwiseLabel(cur_case)
+      );
     }
     value = &(cur_sol_case->values[0]);
     if(g_symbol_values_list == NULL) {

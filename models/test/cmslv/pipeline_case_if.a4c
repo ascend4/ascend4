@@ -39,11 +39,11 @@ PROVIDE "pipeline_case_if.a4c";
 
 	Model by Vicente Rico-Ramirez, April 10, 1998
 
-	This is a work-in-progress CASE IF migration of pipeline.a4c. It is not
-	registered in the CMSlv2 CUnit suite yet: the current CASE IF/APPLIES IF
-	lowering can classify active regions, but is not yet fully equivalent to
-	the old bol == SATISFIED(cond,tol) boundary coupling needed by the full
-	38-pipe branch-search problem.
+	This is a work-in-progress CASE IF migration of pipeline.a4c. It is
+	registered in the CMSlv2 CUnit suite as a failing regression while the
+	CASE IF/APPLIES IF lowering is brought to full equivalence with the old
+	bol == SATISFIED(cond,tol) boundary coupling needed by the full 38-pipe
+	branch-search problem.
 *)
 
 (*---------------------------

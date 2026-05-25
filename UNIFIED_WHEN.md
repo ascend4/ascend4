@@ -403,12 +403,17 @@ regression model `models/test/cmslv/cmslv2_case_if_reanalysis.a4c` records this
 case.
 
 Inline `SATISFIED(real_relation, tolerance)` now keeps guard truth and generated
-boundary status aligned for the compact tolerance case: the generated boundary
-stores the tolerance, and direct expression evaluation applies the same
-residual rules as existing named `SATISFIED(boundary, tolerance)`. Raw
+boundary status aligned for the compact tolerance case, with one legacy
+compatibility detail: generated CMSlv/CMSlv2 boundary objects keep the existing
+`bnd_create` default tolerance (`1e-8`) as a floor. This matches old
+`CONDITIONAL` boundary-search behaviour, where named `SATISFIED(cond,tol)`
+logical truth may carry the parsed tolerance but the boundary-side zero test
+has historically used the default unless the boundary tolerance is looser. Raw
 comparisons such as `CASE ... IF a < 5` remain exact comparisons, as before;
 users who need a deadband/tolerance should write the inline `SATISFIED(...)`
-form or name the boundary explicitly.
+form or name the boundary explicitly. A tolerance smaller than the legacy
+boundary default should not yet be assumed to tighten CMSlv/CMSlv2 boundary
+return behaviour.
 
 Status on branch `unified-when`: fixed-selector nested `WHEN` dispatch now has
 dedicated CUnit coverage:
@@ -491,6 +496,28 @@ the current continuous/discrete state. An explicit future `ACCEPT IF` or
 `APPLIES IF` clause could provide a direct region invariant and avoid some
 reverse-engineering.
 
+The `fboard2` branch `models/johnpye/iron/fbdri.a4c` model is a useful bridge
+example. It is a dynamic model using named region selectors such as
+`geldart_mode`, `ub_mode`, `delta_mode`, and `contact_mode`, with explicit
+`SWITCH TO` transitions. For the bubble-regime state machine, the transition
+guards are based on Boolean predicates equivalent to:
+
+```text
+slow         = delta_use_slow
+intermediate = NOT delta_use_slow AND delta_use_intermediate_or_slow
+fast         = NOT delta_use_intermediate_or_slow AND NOT delta_use_vigorous
+vigorous     = NOT delta_use_intermediate_or_slow AND delta_use_vigorous
+```
+
+That shape could lower naturally to steady `APPLIES IF` predicates if the
+model is memoryless. The same reverse-engineering should be rejected once
+hysteresis, timers, `pre`, `REINIT`, counters, or other history-dependent
+constructs are present. This reinforces the design direction: explicit
+`APPLIES IF` is the cleanest steady interpretation, while explicit `SWITCH TO`
+is the dynamic transition interpretation. Some models can provide enough
+information to infer one from the other, but that should be treated as a
+checked transformation rather than an assumed equivalence.
+
 ### MINLP/GDP
 
 For future MINLP/GDP lowering, the important information is:
@@ -566,6 +593,132 @@ predicates into don't-care patterns.
 
 The proposed `WHEN(selector) CASE ... IF ...` form is the named-region
 equivalent of this transformation.
+
+### Existing multi-Boolean WHEN patterns
+
+A survey of current `WHEN(bool,...)` models shows several distinct patterns
+that matter for `CASE IF` lowering.
+
+Some production-style examples are nested-threshold classifiers where one
+Boolean logically implies another:
+
+- `models/rachford.a4c` uses `G <= 0` and `G <= 1`, with cases `TRUE,TRUE`,
+  `FALSE,TRUE`, and `FALSE,FALSE`. The missing `TRUE,FALSE` tuple is
+  impossible if the two inequalities are interpreted normally.
+- `models/test/cmslv/cmslv2_fluidbed_switch_crash.a4c` and
+  `models/test/cmslv/fluidbed2_fboard2.a4c` use `bubble_regime_ratio < 1` and
+  `bubble_regime_ratio < 5`, with the same nested-threshold shape.
+
+Other examples are interval classifiers:
+
+- `models/linmassbal.a4c` uses `Fmain <= B[1]` and `Fmain >= B[2]` to express
+  low, middle, and high regions. The tuple `TRUE,TRUE` is impossible only when
+  the data imply `B[1] < B[2]`. That implication may be a fixed-parameter fact
+  rather than something visible from the two predicates alone.
+
+Other examples are genuinely independent Boolean tables:
+
+- `models/johnpye/tubebank.a4c` uses `sameside` and `greater1` and enumerates
+  all four truth combinations.
+- `models/johnpye/testcmslv.a4c` uses an `OTHERWISE` branch for the remaining
+  combinations. The intended admissibility cannot be inferred from the two
+  guard expressions alone.
+
+This matters because the old explicit Boolean-tuple form carries admissibility
+information. If a tuple is not listed and there is no matching `OTHERWISE`, the
+old conditional analysis can produce "no case matched". CMSlv/CMSlv2 can then
+avoid treating that Boolean assignment as a valid branch. Wildcards and
+priority-cascade lowering must preserve that information or deliberately
+replace it with an explicit policy.
+
+Limited mutual-exclusion analysis is still worthwhile:
+
+- nested scalar inequalities on the same expression can prove implications such
+  as `x < 1 => x < 5`;
+- opposite interval bounds can sometimes prove impossible intersections such as
+  `x <= a AND x >= b`, provided `a < b` is known and dimensionally comparable;
+- finite Boolean tuple tables can be checked exactly.
+
+But this analysis should be diagnostic/optimising machinery, not the semantic
+foundation. General predicates may be nonlinear, parameter-dependent, unitful,
+or based on domain knowledge outside the local syntax. The reliable foundation
+is still explicit region information: either existing Boolean tuples,
+`APPLIES IF` predicates, or generated priority regions whose uncovered and
+overlapping areas are reported clearly.
+
+Initial implementation spike: the solver-side classifier encoding now carries
+conservative pairwise guard metadata:
+
+```text
+guard i => guard j
+guard i AND guard j impossible
+concrete guard tuple admissible / rejected by known pairwise facts
+```
+
+The first recogniser deliberately handles only simple scalar bounds of the
+form:
+
+```text
+x < c
+x <= c
+x > c
+x >= c
+SATISFIED(x relop c, tol)
+c relop x
+```
+
+with the same named expression `x` and dimensionally comparable thresholds.
+The threshold can be a literal or a named real value that resolves to exactly
+one assigned constant/fixed real instance in the `WHEN` context. It can
+therefore detect:
+
+```text
+x < 1  => x < 5
+x <= 1 incompatible with x >= 5
+x <= B[1] incompatible with x >= B[2] when B[1], B[2] are fixed/constant and B[1] < B[2]
+```
+
+It does not yet prove implications through algebraically equivalent
+expressions, nonlinear predicates, compound Boolean expressions, or unfixed
+threshold variables. This is intentional for the spike: the metadata is useful
+for pruning impossible branch candidates and for diagnostics, while the
+semantics still come from the lowered classifier regions.
+
+The lowered-view debug output should expose this in user terms, not as an
+internal theorem-prover trace. Useful messages are:
+
+```text
+guard_logic=0=>1
+guard_logic=0!1
+expanded_tuples admissible=1 rejected_by_guard_logic=1 rejected_examples=[TRUE,FALSE]
+```
+
+Those messages mean:
+
+- `0=>1`: whenever guard 0 is true, guard 1 must also be true;
+- `0!1`: guards 0 and 1 cannot both be true;
+- `rejected_by_guard_logic`: a wildcard or broad case pattern expanded to a
+  concrete tuple that the proven guard facts rule out.
+
+These should initially be diagnostics and branch-search pruning hints, not
+hard model errors. They become user errors only if the user's explicit model
+requires an impossible tuple as the only way to activate a required case, or if
+an `APPLIES IF` block has no admissible region left after proven exclusions.
+Unproved compatibility should be reported as "not proved" or left silent; it
+must not be reported as feasible.
+
+The first operational use of this metadata is concrete tuple selection. When a
+solver asks to force an encoded case whose pattern contains wildcards, the
+system layer now selects the first concrete guard tuple for that case that is
+not rejected by proved guard logic. For example:
+
+```text
+CASE slow pattern [TRUE,*] with 0=>1     -> use [TRUE,TRUE]
+CASE low  pattern [TRUE,*] with 0!1      -> use [TRUE,FALSE]
+```
+
+Direct requests to force a concrete tuple that is rejected by proved guard
+logic now fail before reanalysis.
 
 ## Related Literature and Concepts
 
@@ -1345,12 +1498,13 @@ The current implementation also has a generated-artifact pass for steady
 `slv_prepare_classifier_whens(sys, WHEN_REGION_STEADY)`, the system layer can:
 
 1. walk classifier `WHEN`s and their compact guard artifacts
-2. create parentless generated `REL_INST`s for real boundaries
-3. create parentless generated `LREL_INST`s for compound guards, using the
+2. build an owned Boolean-tuple encoding for each pure `CASE IF` cascade
+3. create parentless generated `REL_INST`s for real boundaries
+4. create parentless generated `LREL_INST`s for compound guards, using the
    direct SATISFIED resolver internally
-4. create corresponding sidecar `rel_relation`, `logrel_relation`, and
+5. create corresponding sidecar `rel_relation`, `logrel_relation`, and
    `bnd_boundary` objects
-5. record all generated compiler instances and sidecar objects under
+6. record all generated compiler instances and sidecar objects under
    `slv_system_t` ownership
 
 These objects are deliberately not inserted into the user-visible instance
@@ -1358,13 +1512,71 @@ tree. They are destroyed with the solver system. This proves the direct
 generated-boundary route without exposing hidden compiler names as model
 children.
 
+Status on branch `unified-when`: the Boolean-tuple encoding is now an explicit
+`slv_system_t` presentation. `slv_prepare_classifier_whens` records each pure
+`CASE IF` cascade as a compact set of natural guard slots plus per-case
+patterns, exposed through:
+
+```c
+slv_get_num_classifier_when_encodings(sys);
+slv_get_classifier_when_encoding(sys, index);
+slv_classifier_encoding_match_case(encoding, values, nvalues);
+slv_classifier_encoding_guard_implies(encoding, i, j);
+slv_classifier_encoding_guards_mutex(encoding, i, j);
+slv_classifier_encoding_tuple_admissible(encoding, values, nvalues);
+slv_classifier_encoding_uses_discrete(encoding, dvar);
+slv_classifier_encoding_case_active(encoding, case_index);
+slv_reanalyze_with_classifier_encoding_values(sys, encoding, values, nvalues,
+                                              &case_index);
+```
+
+The regression `system_prepare_case_if_boolean_encoding` checks the important
+three-region `linmassbal_unit_case_if` shape:
+
+```text
+CASE low IF Fmain <= B1      -> TRUE, *
+CASE high IF Fmain >= B2     -> FALSE, TRUE
+OTHERWISE middle            -> FALSE, FALSE
+```
+
+The tuple matcher is deliberately ordered: wildcard slots mean either Boolean
+value, and earlier cases win. It rejects malformed candidate tuples whose
+entries are not Boolean. This gives CMSlv2 a compact list of meaningful branch
+alternatives without expanding all `2^n` guard combinations.
+
+The solver-facing presentation is tuple-based, not case-index based. The system
+layer exposes:
+
+```c
+reanalyze_solver_lists_with_lowered_whens(sys);
+reanalyze_solver_lists_with_classifier_guard_values(sys);
+```
+
+`reanalyze_solver_lists_with_lowered_whens` evaluates the lowered predicates
+against current instance values. `reanalyze_solver_lists_with_classifier_guard_values`
+uses the current generated/reused Boolean guard dvars for classifier `WHEN`s
+that have a guard tuple. Both rebuild only the solver-system active
+presentation and leave the compiler instance tree unchanged.
+
+`slv_reanalyze_with_classifier_encoding_values` is only valid for encodings
+that actually have generated or reused Boolean guard dvars. Constant-selector
+classifier `WHEN`s can still expose their lowered tuple metadata for debugging,
+but they are reconfigured from predicates, not by forcing a tuple.
+
+CMSlv2 should not enumerate symbolic classifier source cases directly. That
+experiment could choose a case whose Boolean guard tuple was not the one later
+resolved by boundary/logrel updates, producing mixed presentations. The branch
+search path is therefore restricted to Boolean selector/guard dvars. Non-Boolean
+selector envelopes now defer until they have been lowered to solver-facing
+Boolean guard variables.
+
 Inline `SATISFIED(real_relation, tolerance)` is handled in this materialisation
 pass. The parser records it as a classifier-only marker after the primitive
 real relation. The system layer then generates the hidden conditional relation,
-creates the corresponding boundary object, and copies the tolerance onto that
-boundary. Focused CUnit coverage now checks that both `CASE IF` and
-`APPLIES IF` forms produce the expected generated real boundary with the user
-tolerance preserved.
+creates the corresponding boundary object, and applies the tolerance subject to
+the CMSlv/CMSlv2 legacy boundary floor described above. Focused CUnit coverage
+checks that both `CASE IF` and `APPLIES IF` forms produce generated real
+boundaries with compact tolerance syntax preserved in the guard expression.
 
 CMSlv2 still obtains its active equation set via the existing lowered-region
 predicate reanalysis path, but the generated guard artifacts are now also
@@ -1375,10 +1587,10 @@ boundaries. This lets CMSlv2 creation, presolve, decomposition, and boundary
 inspection see the natural guard boundaries without exposing generated objects
 in the visible instance tree.
 
-A full `pipeline.a4c` migration is an important regression target and is not
-yet passing with the current CASE IF implementation. A component-level
-`arc_w_no_valve` migration passes, but the full 38-pipe network exposes the
-remaining difference between:
+A full `pipeline.a4c` migration is now a passing regression target for CMSlv2.
+The full 38-pipe network was useful because it exposed two distinct
+equivalence gaps between old `CONDITIONAL`/`WHEN(bool)` modelling and the new
+classifier form:
 
 ```ascend
 CONDITIONAL
@@ -1405,11 +1617,34 @@ OTHERWISE:
 END WHEN;
 ```
 
-The latter currently gives CMSlv2 enough information to classify active
-regions and see generated guard boundaries, but not enough to reproduce the old
-`bol == SATISFIED(...)` boundary-coupled branch search in the full pipeline
-problem. This should be treated as a core equivalence gap, not just as a test
-model cleanup.
+The first gap was boundary-side reanalysis. After `return_to_first_boundary`,
+old CMSlv/CMSlv2 branch search follows the boundary object's chosen side. A
+fresh evaluation of the lowered predicate at the exact boundary can flip the
+classifier guard because `SATISFIED(...)` is true inside tolerance. CMSlv2 now
+uses a boundary-aware system-layer path after boundary return:
+
+```c
+slv_sync_classifier_guards_from_boundaries(sys);
+slv_reanalyze_classifier_whens_from_guard_values(sys);
+```
+
+This syncs generated/reused guard Boolean selectors from generated boundary
+statuses, then rebuilds the active solver presentation from those guard values
+instead of re-evaluating the classifier predicates at the boundary.
+
+The second gap was tolerance. Old named `CONDITIONAL` boundaries in the
+pipeline test use the legacy boundary default `1e-8`, while the new inline
+guard initially copied the fully unit-converted tolerance (`1e-8 gpm` becomes
+about `6.309e-13` in SI units) onto the generated boundary. That made boundary
+return much tighter than the old model and changed the later traversal. The
+generated boundary tolerance now keeps the legacy default as a floor, restoring
+the old pipeline boundary-search behaviour while still allowing explicitly
+larger tolerances to loosen a generated boundary.
+
+The regression `solver_cmslv2.pipeline_case_if` checks the migrated full
+pipeline model against the same thesis/reference pressure assertions as
+`solver_cmslv2.pipeline_cmslv2`. Focused runs also check
+`linmassbal_case_if` and `heatex_case_if` with the same CMSlv2 path.
 
 The pipeline experiment also reinforces that `OTHERWISE` should have an
 optional user-visible label in the unified syntax. `OTHERWISE` is the exact
@@ -1417,9 +1652,88 @@ priority-cascade complement of all earlier `CASE IF` guards, so replacing it
 with an explicit final guard can change tolerance semantics. But an unlabelled
 fallback is awkward for diagnostics, selector reporting, branch-search state,
 and any future mapping back to old `WHEN(bool,...)` selectors. The design
-syntax already sketches `OTHERWISE ['name']`; the parser and system structures
-still need to implement that label if we want fallback cases to be first-class
-regions.
+syntax already sketches `OTHERWISE ['name']`, and the implementation now
+stores that label in the compiler, instantiated case, and solver-side
+`when_case` structures. Selector-domain validation accepts a labelled
+`OTHERWISE` when the label belongs to the selector domain. This lets a compact
+priority classifier still expose every region as a named selector state, for
+example:
+
+```ascend
+regions :== ['forward', 'reverse'];
+region IS_A selector OF regions DEFAULT 'forward';
+
+WHEN (region)
+CASE 'forward' IF SATISFIED(Q >= 0 {gpm}, 1e-8 {gpm}):
+    USE forward;
+OTHERWISE 'reverse':
+    USE reverse;
+END WHEN;
+```
+
+The focused `pipeline_arc_case_if` regression now uses this idiom. The larger
+`pipeline_case_if` model has been updated as a work-in-progress example, but
+is currently registered as a failing CMSlv2 regression while the full
+boundary-search equivalence is being restored.
+
+The `heatex_case_if` migration is a smaller whole-model equivalence check
+against an older CMSlv example with two independent conditional boundaries.
+It initially exposed a useful materialisation gap: classifier guard scanning
+must treat unexpanded aggregate real terms such as `SUM[...]`, `PROD[...]`,
+`CARD[...]`, and `CHOICE[...]` as real-valued expression leaves while copying
+the full inline `SATISFIED(real_relation,tol)` boundary into the generated
+hidden relation. With that support, the direct Boolean-selector translation:
+
+```ascend
+WHEN (bolphaq[1])
+CASE TRUE IF SATISFIED(SUM[x[0][i] | i IN components] + phi[0] >= 1.0, 1e-08):
+    USE sum0;
+    USE sum1;
+OTHERWISE:
+    USE frac0;
+    USE p12;
+END WHEN;
+```
+
+passes the same CMSlv2 self-test values as the original
+`CONDITIONAL`/`bolphaq == SATISFIED(cond,tol)` formulation. Its lowered view
+has two classifier encodings and six generated artifacts: two real boundary
+relations, two generated Boolean guard selectors, and two coupling logrelations.
+The final guard vector is `[TRUE]`, `[FALSE]`, matching the old
+`bolphaq[1] == TRUE`, `bolphaq[2] == FALSE` solution.
+
+Another related but parked language gap is direct selector comparison in
+solver-facing Boolean predicates. Conceptually, if a region can be selected,
+then it should be testable:
+
+```ascend
+region == 'cold'
+```
+
+This already fits compile-time/type-style expression evaluation and
+`WHEN(region) CASE 'cold'` selection, but current solver-facing logical
+relations and `CONDITIONAL` boundaries reject symbol instances. The likely
+future rule is that selector comparisons are discrete/logical predicates, not
+continuous boundaries. A selector comparison probably should not be used to
+define the same `WHEN(region)` that owns the selector, but it may be useful in
+later `WHEN`s or in cross-region predicates. Until this is implemented, the
+portable fallback is to reuse the Boolean/continuous expression that defines
+the corresponding `CASE IF` region.
+
+This also exposes a separate implementation gap. CMSlv2's existing
+selector-envelope branch search is still Boolean-oriented: it can flip Boolean
+conditional variables and map bit patterns to active cases, but it does not
+yet branch directly over typed symbolic selector values. The new syntax can
+present named regions cleanly, and the generated guard artifacts expose the
+natural continuous boundaries, but full equivalence with old
+`bol == SATISFIED(...)` CMSlv models still needs one of:
+
+- an extension of selector branch search to symbolic/integer selectors using
+  case labels/domain values instead of Boolean masks;
+- generated internal Boolean/logrel coupling that makes the symbolic-region
+  classifier appear to CMSlv2 like the old `WHEN(bool,...)` formulation;
+- a more general conditional-search layer that reasons over the lowered region
+  predicates directly.
 
 The current materialisation-plan API records this explicitly:
 
@@ -1578,6 +1892,188 @@ Use region predicates and active equation sets to generate a disjunctive or
 mixed-integer formulation.
 
 This should come after the region semantics and diagnostics are stable.
+
+## Pipeline CASE IF Status
+
+The full `models/test/cmslv/pipeline_case_if.a4c` migration is a useful
+stress test because it requires the old CMSlv boundary workflow, not just
+static active-case classification.
+
+The current natural spelling:
+
+```ascend
+WHEN(region)
+  CASE 'forward' IF SATISFIED(Q >= 0 {gpm}, 1e-8 {gpm}):
+    USE eq1;
+  OTHERWISE 'reverse':
+    USE eq2;
+END WHEN;
+```
+
+does not yet solve equivalently to `pipeline.a4c`, but the current
+implementation is now closer to the old CMSlv shape. Each `CASE IF` classifier
+can be lowered to a generated Boolean guard selector, and each generated guard
+is coupled to its corresponding `SATISFIED`/boundary predicate through
+generated logical relations. This gives CMSlv2 a solver-facing presentation
+similar to:
+
+```ascend
+bol == SATISFIED(cond, tol);
+WHEN (bol)
+  CASE TRUE: ...
+  CASE FALSE: ...
+END WHEN;
+```
+
+The old boundary algorithm perturbs `SATISFIED(...)`, solves logical
+relations, and detects changed Boolean dvars that are marked as participating
+in `WHEN`s. A symbol selector such as `region == 'forward'` is not enough for
+that algorithm, and a Boolean used only as `CASE ... IF bol` is also not enough
+unless it is part of the generated region-selector encoding.
+
+The implementation now has the main pieces needed for this presentation:
+
+- lower each `CASE IF` classifier to a natural/minimal Boolean selector
+  encoding for CMSlv/CMSlv2;
+- couple each generated Boolean to the corresponding `SATISFIED` boundary via
+  generated logrelations, matching the old `bol == SATISFIED(cond,tol)` shape;
+- use those generated Booleans as the solver-facing `WHEN` selector variables,
+  while preserving the user-facing typed `region` selector and case labels for
+  diagnostics and GUI presentation;
+- keep pure discrete `CASE IF bool_expr` predicates from generating extra
+  logrelations such as `bool_expr == TRUE` unless they are part of a real
+  boundary-coupling expression;
+
+The remaining `pipeline_case_if` regression appears after CMSlv2 has entered
+the boundary-optimization workflow. The model solves and then fails the
+`P[7]` thesis-value assertion in its `self_test` method. This suggests that the
+next issue is no longer basic classifier materialisation, but either the
+specific boundary-side choice, the update/synchronisation of visible selector
+values, or an interaction between generated artifacts and CMSlv2's boundary
+optimization sequence.
+
+For diagnosis, the system layer now provides:
+
+```c
+int slv_write_classifier_lowered_view(slv_system_t sys, FILE *fp);
+int slv_write_classifier_summary_view(slv_system_t sys, FILE *fp);
+```
+
+and environment-triggered dumps:
+
+```sh
+ASCEND_DEBUG_CLASSIFIER_WHEN=/tmp/ascend_classifier_pipeline_case_if.txt \
+  ./a4 cutest solver_cmslv2.pipeline_case_if --list-failures
+
+ASCEND_DEBUG_CMSLV2_CLASSIFIER_SUMMARY=/tmp/ascend_cmslv2_classifier_pipeline_case_if.summary \
+  ./a4 cutest solver_cmslv2.pipeline_case_if --list-failures
+```
+
+The full dump reports classifier WHENs, source cases and line numbers, lowered
+guard tuple patterns, active cases, generated guard Boolean values, generated
+relations/logrelations, and boundary status/tolerances/residuals. The compact
+CMSlv2 summary records the same state at each CMSlv2 classifier reanalysis and
+solve checkpoint, using labelled case names and one-line guard vectors. The
+current pipeline dump has 38 classifier encodings and 114 generated artifacts:
+one real boundary relation, one generated guard Boolean, and one coupling
+logrelation per pipe segment.
+
+The compact trace is already useful for the full pipeline migration. It shows
+that the final `pipeline_case_if` point is internally consistent in the lowered
+representation, but it is the wrong branch pattern relative to the old
+`pipeline.a4c` regression: Pipe 32 is closed (`encoding[31]=FALSE`) and its
+generated `H >= 0` boundary residual is negative. The solve also finishes with
+CMSlv2 `converged=0`, so the remaining work is not a missing label or missing
+guard artifact; it is in branch-search/boundary optimisation equivalence for
+the generated guards.
+
+CMSlv2 classifier candidates use the ordinary Boolean selector path. After
+boundary and logical updates, generated guard Boolean values must still match
+the assumed Boolean tuple; otherwise the candidate is rejected. The removed
+case-index classifier search is intentionally not part of the design, because
+it allowed a symbolic source case to be accepted independently of the lowered
+Boolean guard tuple.
+
+The `linmassbal_case_if` migration exposed the same issue in a much smaller
+model. A direct translation of the old two-boundary units:
+
+```ascend
+WHEN (bol1, bol2)
+CASE TRUE,FALSE IF SATISFIED(Fmain <= B[1], tol):
+    ...
+CASE FALSE,TRUE IF SATISFIED(Fmain >= B[2], tol):
+    ...
+OTHERWISE:
+    ...
+END WHEN;
+```
+
+now lowers cleanly and passes the old CMSlv2 regression values. This is an
+important equivalence check because it exercises a coupled network of six
+three-region units, not just a single isolated classifier.
+
+Several details were needed to make this equivalence hold:
+
+- when a `CASE IF` classifier is already written over Boolean selectors in the
+  old shape, the lowering reuses those visible selectors instead of creating
+  hidden Boolean guards. The generated coupling logrelations therefore have
+  the old form `bol == SATISFIED(boundary,tol)`;
+- reused Boolean selectors must be marked incident, otherwise logical block
+  partitioning can conclude that there is no useful logical inference work;
+- the encoding must preserve the explicit Boolean rows
+  `[TRUE,FALSE]`, `[FALSE,TRUE]`, `[FALSE,FALSE]`, not the looser priority
+  cascade rows `[TRUE,*]`, `[FALSE,TRUE]`, `[FALSE,FALSE]`;
+- wildcard synchronisation must concretise wildcard cases to an admissible
+  tuple, otherwise stale Boolean values can briefly present impossible tuples;
+- CMSlv2's Boolean selector search now prunes concrete tuples rejected by the
+  classifier guard logic, such as the impossible interval tuple
+  `[TRUE,TRUE]` for `Fmain <= B[1]` and `Fmain >= B[2]`.
+
+The final bug was more subtle and is directly relevant to full CMSlv2
+integration. After a nonlinear step, CMSlv2 calls `update_boundaries`, which
+sets boundary `pre`/`cur` status and records whether a boundary crossed. The
+new classifier path then reanalyses active cases when generated/reused guard
+Booleans change. A second unconditional `update_boundaries` during that
+classifier reanalysis was resetting `pre_status` to `cur_status` and clearing
+the crossed bit before the ordinary CMSlv boundary-return code could see it.
+The old model did not pass through this classifier reanalysis path, so it
+returned to the crossed boundary correctly.
+
+CMSlv2 now preserves the first `some_boundaries_crossed` result through
+classifier active-case reanalysis. If a boundary has already crossed, the
+classifier reanalysis no longer performs the extra boundary update that would
+erase the event. With that change, `linmassbal_case_if` follows the same
+boundary-return/optimization path as `linmassbal`.
+
+The focused passing tests are now:
+
+```text
+system_conditional.system_prepare_case_if_guard_logic
+system_conditional.system_prepare_case_if_boolean_encoding
+solver_cmslv2.linmassbal_cmslv2
+solver_cmslv2.linmassbal_case_if
+solver_cmslv2.heatex_case_if
+solver_cmslv2.pipeline_arc_case_if
+```
+
+The full `pipeline_case_if` regression still fails, but its failure has moved:
+it now crosses generated classifier boundaries and enters boundary
+optimization repeatedly. The remaining issue is a larger coupled-network
+convergence/search problem, not the earlier lost-boundary-crossing bug.
+
+Still unresolved:
+
+- decide whether and when solved generated Boolean values should update the
+  visible selector value, so `self_test` and GUI state inspection report
+  labelled regions consistently.
+- decide how much of CMSlv2's selector-envelope search should be generalized
+  beyond one local Boolean envelope, because the full pipeline has many
+  classifier encodings coupled through one network.
+- decide whether `CASE IF` without an `OTHERWISE` should be fully supported,
+  or should receive an early diagnostic when no complete fallback region is
+  provided. An experiment with explicit `CASE FALSE,FALSE` replacing
+  `OTHERWISE` in `linmassbal_case_if` currently exposes a separate robustness
+  issue rather than a clean solver failure.
 
 ## Open Questions
 

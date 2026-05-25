@@ -185,6 +185,18 @@ extern void slv_destroy_classifier_artifacts(slv_system_t sys);
 	Destroy generated classifier WHEN guard artifacts owned by a solver system.
 */
 
+struct w_when;
+struct when_case;
+
+extern int slv_sync_classifier_guard_values_for_case(
+	slv_system_t sys, struct w_when *when, struct when_case *wc
+);
+/**<
+	Synchronise generated classifier guard Boolean atom values for the
+	specified solver-side WHEN case. This is an internal system-layer helper
+	used after CASE IF predicates select a region directly.
+*/
+
 extern void slv_set_var_buf(slv_system_t sys, struct var_variable *vbuf);
 /**<
 	Set the array variables of for the system.

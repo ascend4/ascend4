@@ -276,6 +276,7 @@
 
 #include <ascend/utilities/config.h>
 #include <ascend/general/platform.h>
+#include <stdio.h>
 
 #include <ascend/linear/mtx.h>
 #include <ascend/linear/linsolqr.h>
@@ -787,6 +788,152 @@ ASC_DLLSPEC int slv_prepare_classifier_whens(slv_system_t sys,
 	existing CMSlv-style boundary logic can see them.
 */
 
+struct slv_classifier_case_encoding {
+	struct when_case *wc;      /**< source solver-side case */
+	const char *label;         /**< source case label, if available */
+	int32 nvalues;             /**< number of guard Boolean slots */
+	int32 values[MAX_VAR_IN_LIST]; /**< TRUE/FALSE/ANY tuple for this case */
+};
+
+struct slv_classifier_when_encoding {
+	struct w_when *when;       /**< source solver-side classifier WHEN */
+	int32 nguards;             /**< number of natural guard Boolean slots */
+	int32 ncases;              /**< number of encoded cases */
+	struct slv_classifier_case_encoding *cases; /**< case encodings */
+	int32 *guard_implications; /**< nguards*nguards matrix, TRUE means i=>j */
+	int32 *guard_mutexes;      /**< nguards*nguards matrix, TRUE means i AND j impossible */
+	struct dis_discrete **guard_dvars; /**< generated/reused guard Boolean selectors */
+	struct bnd_boundary **guard_boundaries; /**< generated simple real boundaries, if any */
+};
+
+ASC_DLLSPEC int32 slv_get_num_classifier_when_encodings(slv_system_t sys);
+/**<
+	Returns the number of generated CASE IF Boolean encodings currently
+	owned by the solver system.
+*/
+
+ASC_DLLSPEC struct slv_classifier_when_encoding *
+slv_get_classifier_when_encoding(slv_system_t sys, int32 index);
+/**<
+	Returns a generated CASE IF Boolean encoding by zero-based index, or
+	NULL if the index is out of range.
+*/
+
+ASC_DLLSPEC int32 slv_classifier_encoding_match_case(
+	const struct slv_classifier_when_encoding *encoding,
+	const int32 *values, int32 nvalues
+);
+/**<
+	Returns the zero-based case index selected by a generated CASE IF
+	Boolean encoding for the supplied guard Boolean tuple, or -1 if no case
+	matches. Wildcard values in the generated case encoding match either
+	TRUE or FALSE, and earlier cases take priority over later cases.
+*/
+
+ASC_DLLSPEC int32 slv_classifier_encoding_uses_discrete(
+	const struct slv_classifier_when_encoding *encoding,
+	struct dis_discrete *dvar
+);
+/**<
+	Returns nonzero if the classifier WHEN represented by `encoding` is
+	controlled by the supplied discrete selector variable.
+*/
+
+ASC_DLLSPEC int32 slv_classifier_encoding_case_active(
+	const struct slv_classifier_when_encoding *encoding, int32 case_index
+);
+/**<
+	Returns nonzero if the encoded zero-based case index is currently active
+	in the solver-system presentation.
+*/
+
+ASC_DLLSPEC int32 slv_classifier_encoding_current_case(
+	const struct slv_classifier_when_encoding *encoding
+);
+/**<
+	Returns the zero-based case selected by the current generated guard
+	Boolean values for `encoding`, or -1 if the current tuple matches no case.
+	Wildcard values in the generated case encoding are interpreted with the
+	same first-match semantics used by slv_classifier_encoding_match_case().
+*/
+
+ASC_DLLSPEC int32 slv_classifier_encoding_guard_implies(
+	const struct slv_classifier_when_encoding *encoding,
+	int32 guard_index, int32 implied_guard_index
+);
+/**<
+	Returns nonzero if the generated guard analysis has proved that
+	`guard_index == TRUE` implies `implied_guard_index == TRUE`.
+
+	This is a conservative metadata query. A zero result means "not proved",
+	not necessarily false.
+*/
+
+ASC_DLLSPEC int32 slv_classifier_encoding_guards_mutex(
+	const struct slv_classifier_when_encoding *encoding,
+	int32 guard_index, int32 other_guard_index
+);
+/**<
+	Returns nonzero if the generated guard analysis has proved that the two
+	guards cannot both be TRUE.
+
+	This is a conservative metadata query. A zero result means "not proved",
+	not necessarily compatible.
+*/
+
+ASC_DLLSPEC int32 slv_classifier_encoding_tuple_admissible(
+	const struct slv_classifier_when_encoding *encoding,
+	const int32 *values, int32 nvalues
+);
+/**<
+	Returns nonzero if the concrete TRUE/FALSE guard tuple is not rejected by
+	the currently proved implication/mutual-exclusion metadata. This does not
+	prove full nonlinear feasibility; it only filters combinations that the
+	simple guard analysis can rule out.
+*/
+
+ASC_DLLSPEC int32 slv_classifier_encoding_current_tuple_admissible(
+	const struct slv_classifier_when_encoding *encoding
+);
+/**<
+	Returns nonzero if the current generated guard Boolean values for
+	`encoding` are accepted by the currently proved implication/mutual-
+	exclusion metadata.
+*/
+
+ASC_DLLSPEC int slv_reanalyze_with_classifier_encoding_values(
+	slv_system_t sys, const struct slv_classifier_when_encoding *encoding,
+	const int32 *values, int32 nvalues, int32 *case_index
+);
+/**<
+	Reanalyzes the solver-system active presentation from the supplied guard
+	Boolean tuple for the CASE IF classifier WHEN represented by `encoding`.
+	If `case_index` is not NULL, it receives the zero-based selected case index.
+
+	Returns 0 on success and nonzero if the tuple does not match a case or the
+	active solver presentation cannot be rebuilt.
+*/
+
+ASC_DLLSPEC int slv_sync_classifier_guards_from_boundaries(slv_system_t sys);
+/**<
+	Synchronizes generated CASE IF guard Boolean selectors from their generated
+	simple real boundary statuses. This is intended after CMSlv-style boundary
+	return logic has already chosen the side of a boundary. Guards without a
+	direct generated real boundary are left unchanged.
+
+	Returns 0 on success and nonzero if classifier metadata is inconsistent.
+*/
+
+ASC_DLLSPEC int slv_reanalyze_classifier_whens_from_guard_values(
+	slv_system_t sys
+);
+/**<
+	Reanalyzes the solver-system active presentation using the current guard
+	Boolean selector values for CASE IF classifier WHENs. Unlike lowered
+	predicate reanalysis, this does not re-evaluate SATISFIED(real,tol)
+	predicates at a boundary, so it preserves boundary-search side choices.
+*/
+
 ASC_DLLSPEC int32 slv_get_num_classifier_rels(slv_system_t sys);
 /**<
 	Returns the number of generated classifier guard real relations currently
@@ -824,6 +971,21 @@ ASC_DLLSPEC struct bnd_boundary *slv_get_classifier_bnd(slv_system_t sys,
 /**<
 	Returns a generated classifier guard boundary by zero-based index, or
 	NULL if the index is out of range.
+*/
+
+ASC_DLLSPEC int slv_write_classifier_lowered_view(slv_system_t sys, FILE *fp);
+/**<
+	Writes a diagnostic view of classifier WHEN lowering to fp. The view
+	reports source cases, lowered Boolean tuple encodings, generated guard
+	discretes, and generated boundary artifacts. It is read-only with respect
+	to the solver system.
+*/
+
+ASC_DLLSPEC int slv_write_classifier_summary_view(slv_system_t sys, FILE *fp);
+/**<
+	Writes a compact diagnostic view of classifier WHEN lowering to fp. The
+	view reports one-line guard vectors, active encoded cases, and generated
+	boundary statuses for tracking solver-time branch evolution.
 */
 
 ASC_DLLSPEC int32 slv_get_num_solvers_vars(slv_system_t sys);
