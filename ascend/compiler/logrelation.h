@@ -125,6 +125,31 @@ extern struct logrelation *CreateLogicalRelation(struct Instance *reference,
  *  @param ferr       Location to store find error code.
  */
 
+typedef struct Instance *(*LogRelSatisfiedResolverFn)(
+	CONST struct Name *name,
+	void *userdata
+);
+/**<
+ *  Optional hook for generated logical relations whose SATISFIED terms refer
+ *  to generated relation/logrelation instances that are not name-resolvable
+ *  through the visible instance tree. Return NULL to fall back to normal
+ *  SATISFIED(name) lookup.
+ */
+
+extern struct logrelation *CreateLogicalRelationWithSatisfiedResolver(
+	struct Instance *reference,
+	struct Instance *lrelinst,
+	CONST struct Expr *ex,
+	rel_errorlist *err,
+	LogRelSatisfiedResolverFn resolver,
+	void *userdata
+);
+/**<
+ *  Create a logical relation like CreateLogicalRelation, but allow SATISFIED
+ *  terms to resolve to direct compiler instance pointers before attempting
+ *  ordinary name lookup. Intended for generated internal guard artifacts.
+ */
+
 extern void DestroyLogRelation(struct logrelation *lrel, struct Instance *lrelinst);
 /**<
  *  Deallocate a logical relation.  This will notify all the boolean instances
@@ -188,4 +213,3 @@ extern struct logrelation
 /* @} */
 
 #endif /* ASC_LOGRELATION_H */
-

@@ -1,0 +1,30 @@
+REQUIRE "atoms.a4l";
+
+MODEL pipeline_arc_case_if;
+	k IS_A factor_constant;
+	Q, H IS_A factor;
+	regions IS_A set OF symbol_constant;
+	regions :== ['forward', 'reverse'];
+	mode IS_A selector OF regions DEFAULT 'forward';
+	k :== 2;
+
+	forward: H = k * sqr(Q);
+	reverse: H = -k * sqr(Q);
+
+	WHEN (mode)
+	CASE 'forward' IF SATISFIED(Q >= 0, 1e-8):
+		USE forward;
+	OTHERWISE 'reverse':
+		USE reverse;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		FIX Q := 3;
+		H := 0;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(H - 18) < 1e-8;
+	END self_test;
+END pipeline_arc_case_if;

@@ -216,6 +216,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"ALIASES"		{ return ALIASES_TOK		; }
 <INITIAL>"AND"			{ return AND_TOK			; }
 <INITIAL>"ANY"			{ return ANY_TOK			; }
+<INITIAL>"APPLIES"		{ return APPLIES_TOK		; }
 <INITIAL>"ARE_ALIKE"    { return AREALIKE_TOK		; }
 <INITIAL>"ARE_THE_SAME" { return ARETHESAME_TOK   ; }
 <INITIAL>"ARRAY"		{ return ARRAY_TOK		; }

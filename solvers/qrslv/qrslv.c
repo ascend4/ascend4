@@ -3710,6 +3710,12 @@ static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
   sys = QRSLV(asys);
   iteration_begins(sys);
   check_system(sys);
+  if(slv_has_classifier_whens(server)
+      && !slv_classifier_regions_lowered(server,WHEN_REGION_STEADY)) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "QRSlv does not support CASE IF/APPLIES IF in WHEN; a solver must explicitly consume lowered classifier regions");
+    return 1;
+  }
   if(sys->vlist == NULL ) {
     ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
     FPRINTF(stderr,"Variable list was never set.");

@@ -213,6 +213,8 @@ struct system_structure {
 	struct var_variable *objvar; /**< selected for optimization from list */
 	struct gl_list_t *symbollist; /**< list of symbol values struct used to assign an integer value to a symbol value */
 	struct gl_list_t *hidden_instances; /**< hidden backend-only instances created during dynamic analysis */
+	struct gl_list_t *classifier_artifacts; /**< generated CASE IF guard artifacts owned by this system */
+	struct gl_list_t *classifier_encodings; /**< generated CASE IF guard Boolean encodings owned by this system */
 	struct {
 		struct var_variable **incidence; /**< all relation incidence list memory */
 		struct rel_relation **varincidence; /**< all variable incidence list memory */
@@ -228,6 +230,9 @@ struct system_structure {
 
 	int32 nmodels;
 	int32 need_consistency; /**< consistency analysis required for conditional model ? */
+	int32 when_regions_lowered_steady; /**< CASE IF/APPLIES IF lowered for steady conditional solving */
+	int32 when_regions_lowered_dynamic; /**< CASE IF/APPLIES IF lowered for dynamic classifier tracking */
+	int32 classifier_artifacts_installed; /**< generated classifier guard artifacts installed in solver-side lists */
 	real64 objvargrad; /**< maximize -1 minimize 1 noobjvar 0 */
 };
 

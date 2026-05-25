@@ -2491,6 +2491,11 @@ int integrator_apply_reinits_tracked(IntegratorSystem *sys, struct gl_list_t *ap
 			struct when_case *solver_case = (struct when_case *)gl_fetch(solver_cases, c);
 			if(solver_case != NULL && when_case_active(solver_case)){
 				struct gl_list_t *reinit_list = when_case_reinits_list(solver_case);
+				if(when_case_has_classifier_predicate(solver_case)){
+					ERROR_REPORTER_HERE(ASC_USER_ERROR,
+						"Integrator REINIT handling does not yet support CASE IF/APPLIES IF in WHEN");
+					return -1;
+				}
 				if(integrator_apply_case_reinits(sys, context,
 						reinit_list, &snapshot, applied_reinits, &applied) != 0){
 					integrator_pre_snapshot_destroy(&snapshot);

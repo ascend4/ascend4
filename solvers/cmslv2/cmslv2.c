@@ -25,6 +25,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <ascend/utilities/config.h>
@@ -42,6 +43,8 @@
 #include <ascend/system/relman.h>
 #include <ascend/system/logrelman.h>
 #include <ascend/system/bndman.h>
+#include <ascend/system/bnd.h>
+#include <ascend/system/discrete.h>
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/cond_config.h>
 #include <ascend/system/decomp.h>
@@ -129,6 +132,267 @@ void slv9_report_progress(slv9_system_t sys, const char *fmt, ...){
   if(PROGRESS_CALLBACKS) {
     (void)slv_report_progress("CMSlv2",message);
   }
+}
+
+static int slv9_classifier_snapshot_seq = 0;
+
+static
+FILE *slv9_open_classifier_snapshot_target(const char *target,
+    const char *envname)
+{
+  FILE *fp = ASCERR;
+
+  if(!strcmp(target,"stdout")) {
+    fp = stdout;
+  }else if(strcmp(target,"1") && strcmp(target,"stderr")) {
+    fp = fopen(target,"a");
+    if(fp == NULL) {
+      FPRINTF(ASCERR,
+        "Unable to open %s target '%s'; writing to stderr instead.\n",
+        envname,target);
+      fp = ASCERR;
+    }
+  }
+  return fp;
+}
+
+static
+void slv9_close_classifier_snapshot_target(FILE *fp)
+{
+  if(fp != ASCERR && fp != stdout) {
+    fclose(fp);
+  }
+}
+
+static
+FILE *slv9_open_boundary_detail_file(void)
+{
+  const char *target = getenv("ASCEND_DEBUG_CMSLV2_BOUNDARY_DETAIL");
+  FILE *fp;
+
+  if(target == NULL || target[0] == '\0') {
+    return NULL;
+  }
+  if(!strcmp(target,"stdout")) {
+    return stdout;
+  }
+  if(!strcmp(target,"1") || !strcmp(target,"stderr")) {
+    return ASCERR;
+  }
+  fp = fopen(target,"a");
+  return fp;
+}
+
+static
+void slv9_close_boundary_detail_file(FILE *fp)
+{
+  if(fp != NULL && fp != stdout && fp != ASCERR) {
+    fclose(fp);
+  }
+}
+
+static
+void slv9_write_boundary_detail_bnd(slv_system_t server, FILE *fp,
+    const char *prefix, int32 index, struct bnd_boundary *bnd)
+{
+  char *name;
+
+  if(fp == NULL || bnd == NULL) {
+    return;
+  }
+  name = bnd_make_name(server,bnd);
+  FPRINTF(fp,
+    "%s index=%d name=%s kind=%d cur=%d pre=%d zero=%d crossed=%d in_logrel=%d tol=%g flags=0x%x\n",
+    prefix != NULL ? prefix : "boundary",
+    index,
+    name != NULL ? name : "<unknown>",
+    bnd_kind(bnd),
+    bnd_cur_status(bnd) ? 1 : 0,
+    bnd_pre_status(bnd) ? 1 : 0,
+    bnd_at_zero(bnd) ? 1 : 0,
+    bnd_crossed(bnd) ? 1 : 0,
+    bnd_in_logrel(bnd) ? 1 : 0,
+    bnd_tolerance(bnd),
+    bnd_flags(bnd)
+  );
+  if(name != NULL) {
+    ascfree(name);
+  }
+}
+
+static
+void slv9_write_boundary_detail_dvar(slv_system_t server, FILE *fp,
+    const char *prefix, int32 index, struct dis_discrete *dvar)
+{
+  if(fp == NULL || dvar == NULL) {
+    return;
+  }
+  {
+    char *name = dis_make_name(server,dvar);
+    FPRINTF(fp,"%s index=%d name=%s",prefix != NULL ? prefix : "dvar",
+      index,name != NULL ? name : "<unknown>");
+    if(name != NULL) {
+      ascfree(name);
+    }
+  }
+  FPRINTF(fp,
+    " value=%d previous=%d\n",
+    dis_value(dvar),dis_previous_value(dvar)
+  );
+}
+
+static
+void slv9_write_boundary_detail_cases(FILE *fp, const char *prefix,
+    int32 case_index, const int32 *case_list, int32 ncases)
+{
+  int32 i;
+
+  if(fp == NULL) {
+    return;
+  }
+  FPRINTF(fp,"%s index=%d ncases=%d cases=[",
+    prefix != NULL ? prefix : "case_list",case_index,ncases);
+  for(i = 0; i < ncases; ++i) {
+    FPRINTF(fp,"%s%d",i > 0 ? "," : "",case_list != NULL ? case_list[i] : -1);
+  }
+  FPRINTF(fp,"]\n");
+}
+
+static
+void slv9_write_classifier_snapshot_header(slv9_system_t sys, FILE *fp,
+    int seq, const char *phase, const char *action)
+{
+  FPRINTF(fp,
+    "\nCMSLV2 classifier snapshot seq=%d phase=%s action=%s iter=%d nliter=%d ready=%d converged=%d calc_ok=%d current_block=%d current_size=%d\n",
+    seq,
+    phase != NULL ? phase : "<none>",
+    action != NULL ? action : "<none>",
+    sys->s.iteration, sys->nliter,
+    sys->s.ready_to_solve ? 1 : 0,
+    sys->s.converged ? 1 : 0,
+    sys->s.calc_ok ? 1 : 0,
+    sys->s.block.current_block,
+    sys->s.block.current_size);
+}
+
+static
+void slv9_write_classifier_snapshot(slv9_system_t sys,
+    const char *phase, const char *action)
+{
+  const char *full_target;
+  const char *summary_target;
+  FILE *fp;
+  int seq;
+
+  full_target = getenv("ASCEND_DEBUG_CMSLV2_CLASSIFIER_WHEN");
+  summary_target = getenv("ASCEND_DEBUG_CMSLV2_CLASSIFIER_SUMMARY");
+  if((full_target == NULL || full_target[0] == '\0')
+      && (summary_target == NULL || summary_target[0] == '\0')) {
+    return;
+  }
+  if(sys == NULL || sys->slv == NULL || !slv_has_classifier_whens(sys->slv)) {
+    return;
+  }
+
+  seq = slv9_classifier_snapshot_seq++;
+
+  if(full_target != NULL && full_target[0] != '\0') {
+    fp = slv9_open_classifier_snapshot_target(
+      full_target,"ASCEND_DEBUG_CMSLV2_CLASSIFIER_WHEN"
+    );
+    slv9_write_classifier_snapshot_header(sys,fp,seq,phase,action);
+    (void)slv_write_classifier_lowered_view(sys->slv,fp);
+    slv9_close_classifier_snapshot_target(fp);
+  }
+
+  if(summary_target != NULL && summary_target[0] != '\0') {
+    fp = slv9_open_classifier_snapshot_target(
+      summary_target,"ASCEND_DEBUG_CMSLV2_CLASSIFIER_SUMMARY"
+    );
+    slv9_write_classifier_snapshot_header(sys,fp,seq,phase,action);
+    (void)slv_write_classifier_summary_view(sys->slv,fp);
+    slv9_close_classifier_snapshot_target(fp);
+  }
+}
+
+static
+int32 slv9_reanalyze_solver_lists_changed(slv9_system_t sys,
+    int32 *active_changed){
+  struct rel_relation **rels;
+  struct logrel_relation **logrels;
+  unsigned char *rel_active_save = NULL;
+  unsigned char *logrel_active_save = NULL;
+  int32 r, nrels, l, nlogrels;
+  int32 changed = 0;
+
+  if(active_changed != NULL) {
+    *active_changed = 0;
+  }
+  if(sys == NULL || sys->slv == NULL) {
+    return 1;
+  }
+  if(slv_has_classifier_whens(sys->slv)) {
+    rels = slv_get_solvers_rel_list(sys->slv);
+    logrels = slv_get_solvers_logrel_list(sys->slv);
+    nrels = slv_get_num_solvers_rels(sys->slv);
+    nlogrels = slv_get_num_solvers_logrels(sys->slv);
+    if(nrels > 0) {
+      rel_active_save = ASC_NEW_ARRAY(unsigned char,nrels);
+      if(rel_active_save == NULL) {
+        return 1;
+      }
+      for(r = 0; r < nrels; ++r) {
+        rel_active_save[r] = rel_active(rels[r]) ? 1 : 0;
+      }
+    }
+    if(nlogrels > 0) {
+      logrel_active_save = ASC_NEW_ARRAY(unsigned char,nlogrels);
+      if(logrel_active_save == NULL) {
+        if(rel_active_save != NULL) ascfree(rel_active_save);
+        return 1;
+      }
+      for(l = 0; l < nlogrels; ++l) {
+        logrel_active_save[l] = logrel_active(logrels[l]) ? 1 : 0;
+      }
+    }
+    if(slv_prepare_classifier_whens(sys->slv,WHEN_REGION_STEADY)) {
+      if(rel_active_save != NULL) ascfree(rel_active_save);
+      if(logrel_active_save != NULL) ascfree(logrel_active_save);
+      return 1;
+    }
+    rels = slv_get_solvers_rel_list(sys->slv);
+    logrels = slv_get_solvers_logrel_list(sys->slv);
+    if(nrels != slv_get_num_solvers_rels(sys->slv)
+        || nlogrels != slv_get_num_solvers_logrels(sys->slv)) {
+      changed = 1;
+    }
+    for(r = 0; !changed && r < nrels; ++r) {
+      if(rel_active_save[r] != (rel_active(rels[r]) ? 1 : 0)) {
+        changed = 1;
+      }
+    }
+    for(l = 0; !changed && l < nlogrels; ++l) {
+      if(logrel_active_save[l] != (logrel_active(logrels[l]) ? 1 : 0)) {
+        changed = 1;
+      }
+    }
+    if(rel_active_save != NULL) ascfree(rel_active_save);
+    if(logrel_active_save != NULL) ascfree(logrel_active_save);
+    if(active_changed != NULL) {
+      *active_changed = changed;
+    }
+    slv9_write_classifier_snapshot(
+      sys, "reanalyze_classifier", changed ? "active_changed" : "unchanged"
+    );
+    return 0;
+  }
+  reanalyze_solver_lists(sys->slv);
+  return 0;
+}
+
+static
+int32 slv9_reanalyze_solver_lists(slv9_system_t sys){
+  return slv9_reanalyze_solver_lists_changed(sys,NULL);
 }
 
 #if USE_CONSISTENCY
@@ -1817,6 +2081,7 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
   int32 pos_cases, comb;
   char *param;
   union param_value u;
+  FILE *detail_fp;
 
   sys = SLV9(asys);
   check_system(sys);
@@ -1837,6 +2102,13 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
     return 0;
   }
 
+  detail_fp = slv9_open_boundary_detail_file();
+  if(detail_fp != NULL) {
+    FPRINTF(detail_fp,
+      "\nCMSlv2 boundary detail stage=at_a_boundary_start iter=%d nliter=%d\n",
+      sys->s.iteration,sys->nliter);
+  }
+
   bp = sys->blist;
   numbnds = slv_get_num_solvers_bnds(server);
   bfilter.matchbits = (BND_AT_ZERO);
@@ -1851,6 +2123,9 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
 #if SHOW_BOUNDARY_ANALYSIS_DETAILS
     FPRINTF(ASCERR,"boundary at zero = %d\n",b);
 #endif /* SHOW_BOUNDARY_ANALYSIS_DETAILS */
+      slv9_write_boundary_detail_bnd(
+        server,detail_fp,"boundary_at_zero",b,cur_bnd
+      );
       bndatzero[ind] = b;
       ind++;
     }
@@ -1903,6 +2178,11 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
 
   if(numdvf == 0) {
     FPRINTF(ASCERR,"Not really at a boundary\n");
+    if(detail_fp != NULL) {
+      FPRINTF(detail_fp,"modified_dvars=0 result=not_really_at_boundary\n");
+      slv9_close_boundary_detail_file(detail_fp);
+      detail_fp = NULL;
+    }
     for (d=0; d<numdvs; d++) {
       cur_dis = dv[d];
       dis_set_boolean_value(cur_dis,bval.cur_val[d]);
@@ -1921,6 +2201,15 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
     if(dis_val_modified(cur_dis)) {
       dvarmodified[ind] = d;
       gl_append_ptr(disvars,cur_dis);
+      slv9_write_boundary_detail_dvar(
+        server,detail_fp,"modified_dvar",d,cur_dis
+      );
+      if(detail_fp != NULL) {
+        FPRINTF(detail_fp,
+          "modified_dvar_saved index=%d cur=%d pre=%d\n",
+          d,bval.cur_val[d],bval.pre_val[d]
+        );
+      }
       dis_set_val_modified(cur_dis,FALSE);
       ind++;
     }
@@ -1961,6 +2250,11 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
 
   if((*n_subregions)==0) {
     FPRINTF(ASCERR,"ERROR: at least one subregion must be found\n");
+    if(detail_fp != NULL) {
+      FPRINTF(detail_fp,"subregions=0 result=error\n");
+      slv9_close_boundary_detail_file(detail_fp);
+      detail_fp = NULL;
+    }
     for (d=0; d<numdvs; d++) {
       cur_dis = dv[d];
       dis_set_boolean_value(cur_dis,bval.cur_val[d]);
@@ -1978,6 +2272,11 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
 
   if((*n_subregions)==1) {
     FPRINTF(ASCERR,"Not really at a boundary\n");
+    if(detail_fp != NULL) {
+      FPRINTF(detail_fp,"subregions=1 result=not_really_at_boundary\n");
+      slv9_close_boundary_detail_file(detail_fp);
+      detail_fp = NULL;
+    }
     for (d=0; d<numdvs; d++) {
       cur_dis = dv[d];
       dis_set_boolean_value(cur_dis,bval.cur_val[d]);
@@ -2004,6 +2303,11 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
         (*subregions)[(*n_subregions)].ncases = cases[comb].ncases;
         cases[comb].ncases = 0;
         (*subregions)[(*n_subregions)].diff_subregion = 1;
+        slv9_write_boundary_detail_cases(
+          detail_fp,"subregion",(*n_subregions),
+          (*subregions)[(*n_subregions)].case_list,
+          (*subregions)[(*n_subregions)].ncases
+        );
         (*n_subregions)++;
       }
     }
@@ -2045,6 +2349,13 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
       if(compare_case((*subregions)[comb].case_list,cur_cases,cur_ncases)) {
         (*cur_subregion) = comb;
         assign_cur_sub = 1;
+        if(detail_fp != NULL) {
+          FPRINTF(detail_fp,"current_subregion=%d cur_ncases=%d\n",
+            *cur_subregion,cur_ncases);
+          slv9_write_boundary_detail_cases(
+            detail_fp,"current_cases",0,cur_cases,cur_ncases
+          );
+        }
         break;
       }
     }
@@ -2052,12 +2363,23 @@ int32 at_a_boundary(slv_system_t server, SlvClientToken asys,
 
   if(!assign_cur_sub) {
     FPRINTF(ASCERR,"PANIC: original configuration not found\n");
+    if(detail_fp != NULL) {
+      FPRINTF(detail_fp,"current_subregion=<not found> cur_ncases=%d\n",
+        cur_ncases);
+      slv9_write_boundary_detail_cases(
+        detail_fp,"current_cases",0,cur_cases,cur_ncases
+      );
+    }
   }
 
   destroy_array(cur_cases);
   destroy_array(dvarmodified);
   destroy_array(bval.cur_val);
   destroy_array(bval.pre_val);
+  if(detail_fp != NULL) {
+    FPRINTF(detail_fp,"END CMSlv2 boundary detail\n");
+    slv9_close_boundary_detail_file(detail_fp);
+  }
   return 1;
 }
 
@@ -5718,7 +6040,7 @@ int32 slv9_cmslv2_consume_due_lrslv_blocks(slv9_system_t sys,
     sys->cmslv2_next_structural_block = run_end + 1;
     sys->cmslv2_pending_after_qrslv =
       sys->cmslv2_next_structural_block < structural->nblocks;
-    reanalyze_solver_lists(sys->slv);
+    slv9_reanalyze_solver_lists(sys);
     update_relations_residuals(sys->slv);
     if(run_start_out != NULL) *run_start_out = run_start;
     if(run_end_out != NULL) *run_end_out = run_end;
@@ -6342,7 +6664,7 @@ void slv9_cmslv2_boundary_result_apply(slv9_system_t sys,
    * values through the existing WHEN/logical analysis, rather than copying
    * scoped active bits directly back into the full system.
    */
-  reanalyze_solver_lists(sys->slv);
+  slv9_reanalyze_solver_lists(sys);
   slv9_cmslv2_clear_structural_cache(sys);
   update_boundaries(sys->slv,(SlvClientToken)sys);
   slv9_cmslv2_restore_boundary_flags(sys->slv,&result->bnd_flags);
@@ -6567,7 +6889,7 @@ void slv9_cmslv2_transition_after_solved_block(slv9_system_t sys,
   sys->cmslv2_next_structural_block = next_block;
   sys->cmslv2_pending_after_qrslv = 0;
 
-  reanalyze_solver_lists(sys->slv);
+  slv9_reanalyze_solver_lists(sys);
   update_boundaries(sys->slv,(SlvClientToken)sys);
   update_relations_residuals(sys->slv);
 
@@ -7320,6 +7642,65 @@ void slv9_cmslv2_collect_selector_dvars(slv_system_t server,
 }
 
 static
+int32 slv9_cmslv2_classifier_encoding_uses_dvars(
+    const struct slv_classifier_when_encoding *encoding,
+    struct gl_list_t *disvars
+){
+  unsigned long d, dlen;
+
+  if(encoding == NULL || disvars == NULL) {
+    return 0;
+  }
+  dlen = gl_length(disvars);
+  for(d = 1; d <= dlen; ++d) {
+    if(slv_classifier_encoding_uses_discrete(
+        encoding,(struct dis_discrete *)gl_fetch(disvars,d)
+    )) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static
+int32 slv9_cmslv2_classifier_encoding_has_guard_dvars(
+    const struct slv_classifier_when_encoding *encoding
+){
+  int32 g;
+
+  if(encoding == NULL || encoding->nguards <= 0
+      || encoding->guard_dvars == NULL) {
+    return 0;
+  }
+  for(g = 0; g < encoding->nguards; ++g) {
+    if(encoding->guard_dvars[g] == NULL) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+static
+void slv9_cmslv2_collect_classifier_encodings(slv_system_t server,
+    struct gl_list_t *disvars, struct gl_list_t *encodings
+){
+  int32 i, nencodings;
+
+  if(server == NULL || disvars == NULL || encodings == NULL) {
+    return;
+  }
+  nencodings = slv_get_num_classifier_when_encodings(server);
+  for(i = 0; i < nencodings; ++i) {
+    struct slv_classifier_when_encoding *encoding =
+      slv_get_classifier_when_encoding(server,i);
+    if(slv9_cmslv2_classifier_encoding_has_guard_dvars(encoding)
+        && slv9_cmslv2_classifier_encoding_uses_dvars(encoding,disvars)) {
+      slv9_gl_append_unique_ptr(encodings,encoding);
+    }
+  }
+}
+
+static
 int32 slv9_cmslv2_selector_dvars_are_boolean(struct gl_list_t *disvars){
   unsigned long i, len;
 
@@ -7435,7 +7816,7 @@ int32 slv9_cmslv2_selector_eval_candidate(slv9_system_t sys,
   }
   assumed_mask = slv9_cmslv2_selector_current_mask(disvars);
 
-  reanalyze_solver_lists(sys->slv);
+  slv9_reanalyze_solver_lists(sys);
   update_relations_residuals(sys->slv);
   slv_decomp_destroy(active);
   slv_decomp_init(active);
@@ -7486,7 +7867,6 @@ int32 slv9_cmslv2_selector_eval_candidate(slv9_system_t sys,
   return 0;
 }
 
-static
 int32 slv9_cmslv2_selector_branch_search(slv9_system_t sys,
     const slv_decomp_partition_t *structural, int32 structural_block,
     slv_decomp_partition_t *active, struct gl_list_t *disvars,
@@ -7498,6 +7878,8 @@ int32 slv9_cmslv2_selector_branch_search(slv9_system_t sys,
   int32 *orig_values = NULL, *orig_previous = NULL;
   real64 *orig_real_values = NULL;
   int32 *orig_dis_values = NULL, *orig_dis_previous = NULL;
+  struct gl_list_t *classifier_encodings = NULL;
+  const struct slv_classifier_when_encoding *classifier_encoding = NULL;
   int32 orig_real_count = 0;
   int32 orig_dis_count = 0;
   int32 ok = 0, ncases = 0, active_status = 0;
@@ -7534,6 +7916,20 @@ int32 slv9_cmslv2_selector_branch_search(slv9_system_t sys,
   if(len > CMSLV2_SELECTOR_SEARCH_MAX_DVARS) {
     if(status_code != NULL) *status_code = -4;
     return 0;
+  }
+
+  classifier_encodings = gl_create(1);
+  if(classifier_encodings != NULL) {
+    slv9_cmslv2_collect_classifier_encodings(
+      sys->slv,disvars,classifier_encodings
+    );
+    if(gl_length(classifier_encodings) == 1) {
+      classifier_encoding =
+        (const struct slv_classifier_when_encoding *)gl_fetch(
+          classifier_encodings,1
+        );
+    }
+    gl_destroy(classifier_encodings);
   }
 
   orig_values = ASC_NEW_ARRAY(int32,len);
@@ -7588,10 +7984,20 @@ int32 slv9_cmslv2_selector_branch_search(slv9_system_t sys,
     if(mask >= combinations) {
       continue;
     }
+    slv9_cmslv2_selector_set_mask(disvars,mask);
+    if(classifier_encoding != NULL
+        && !slv_classifier_encoding_current_tuple_admissible(
+          classifier_encoding
+        )) {
+      slv9_report_progress(sys,
+        "event=cmslv2_selector_classifier_admissibility phase=%s block=%d action=skip mask=%lu",
+        phase != NULL ? phase : "unknown", structural_block, mask
+      );
+      continue;
+    }
     if(tried != NULL) {
       (*tried)++;
     }
-    slv9_cmslv2_selector_set_mask(disvars,mask);
     slv9_cmslv2_selector_summary_init(&local);
     ok = slv9_cmslv2_selector_eval_candidate(
       sys,structural,structural_block,active,&local,disvars,
@@ -7636,7 +8042,7 @@ int32 slv9_cmslv2_selector_branch_search(slv9_system_t sys,
   slv9_cmslv2_selector_restore_values(
     disvars,orig_values,orig_previous
   );
-  reanalyze_solver_lists(sys->slv);
+  slv9_reanalyze_solver_lists(sys);
   update_relations_residuals(sys->slv);
   if(status_code != NULL) {
     *status_code = active_status != 0 ? active_status : -6;
@@ -7780,7 +8186,7 @@ void slv9_cmslv2_run_selector_envelopes(slv9_system_t sys, const char *phase){
        * as proof of selector resolution, then rebuild the complete active view
        * before measuring the subblocks that QRSlv/LRSlv can consume.
        */
-      reanalyze_solver_lists(sys->slv);
+      slv9_reanalyze_solver_lists(sys);
       update_relations_residuals(sys->slv);
 
       slv_decomp_destroy(&active);
@@ -8471,7 +8877,7 @@ int32 slv9_cmslv2_probe_due_boundary_block(slv9_system_t sys,
       if(orig_bnd_flags.flags != NULL) {
         slv9_cmslv2_restore_boundary_flags(sys->slv,&orig_bnd_flags);
       }
-      reanalyze_solver_lists(sys->slv);
+      slv9_reanalyze_solver_lists(sys);
       update_boundaries(sys->slv,(SlvClientToken)sys);
       update_relations_residuals(sys->slv);
       slv9_report_progress(sys,
@@ -9397,12 +9803,20 @@ SlvClientToken slv9_create(slv_system_t server, int *statusindex){
   sys->p.parms = sys->pa;
   sys->p.dynamic_parms = 0;
   slv9_get_default_parameters(server,(SlvClientToken)sys,&(sys->p));
-  sys->integrity = OK;
-  sys->presolved = 0;
-  slv_decomp_init(&(sys->cmslv2_structural));
-  sys->cmslv2_structural_valid = 0;
-	  sys->need_consistency_analysis = slv_need_consistency(server);
-	  sys->qrslv_fallback =
+	  sys->integrity = OK;
+	  sys->presolved = 0;
+	  slv_decomp_init(&(sys->cmslv2_structural));
+	  sys->cmslv2_structural_valid = 0;
+	  if(slv_has_classifier_whens(server)
+	      && slv_prepare_classifier_whens(server,WHEN_REGION_STEADY)) {
+	    ascfree(sys);
+	    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+	      "CMSlv2 could not prepare CASE IF/APPLIES IF classifier regions");
+	    *statusindex = -2;
+	    return NULL;
+	  }
+		  sys->need_consistency_analysis = slv_need_consistency(server);
+		  sys->qrslv_fallback =
 	    !sys->need_consistency_analysis
 	    && slv_get_num_solvers_logrels(server) == 0
 	    && slv_get_num_solvers_bnds(server) == 0
@@ -9821,6 +10235,16 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   iteration_begins(sys);
   check_system(sys);
+	if(slv_has_classifier_whens(server)) {
+	  if(slv_prepare_classifier_whens(server,WHEN_REGION_STEADY)) {
+	    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+	      "CMSlv2 could not prepare CASE IF/APPLIES IF classifier regions");
+	    return 1;
+	  }
+	  sys->lrlist = slv_get_solvers_logrel_list(server);
+	  sys->blist = slv_get_solvers_bnd_list(server);
+	  slv_bnd_initialization(server);
+	}
   if(sys->vlist == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was never set.");
     return 1;
@@ -9966,6 +10390,8 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
   int32 cmslv2_external_blocks;
   boolean unsuccessful;
   int32 system_was_reanalyzed;
+  int32 classifier_active_changed;
+  int32 boundary_crossed_after_update;
 #if TEST_CONSISTENCY
   int32 *test= NULL;
 #endif /* TEST_CONSISTENCY */
@@ -9984,6 +10410,8 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
 
   unsuccessful = FALSE;
   cmslv2_external_blocks = 0;
+  classifier_active_changed = 0;
+  boundary_crossed_after_update = 0;
   iteration_begins(sys);
   system_was_reanalyzed = 0;
   disvars = gl_create(1L);
@@ -10044,6 +10472,9 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       sys,"boundary_at_zero","optimize_start",
       n_subregions,cur_subregion,disvars
     );
+    slv9_write_classifier_snapshot(
+      sys, "boundary_at_zero", "optimize_start"
+    );
     if(optimize_at_boundary(server,asys,&(n_subregions),
                             subregions,&(cur_subregion),disvars,&(rvalues))){
       slv9_cmslv2_report_boundary_handoff(
@@ -10052,6 +10483,9 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       );
       store_real_cur_values(server,&(rvalues));
       update_boundaries(server,asys);
+      slv9_write_classifier_snapshot(
+        sys, "boundary_at_zero", "after_optimize_update_boundaries"
+      );
       slv9_cmslv2_clear_structural_cache(sys);
       if(some_boundaries_crossed(server,asys)) {
         vfilter.matchbits = (VAR_ACTIVE_AT_BND | VAR_INCIDENT
@@ -10070,6 +10504,9 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
         update_relations_residuals(server);
+        slv9_write_classifier_snapshot(
+          sys, "boundary_at_zero", "after_return_to_first_boundary"
+        );
         slv9_cmslv2_report_boundary_handoff(
           sys,"boundary_at_zero","return_done",
           n_subregions,cur_subregion,disvars
@@ -10121,7 +10558,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
       slv9_cmslv2_restore_qrslv_scope(sys);
       sys->cmslv2_next_structural_block = 0;
       sys->cmslv2_pending_after_qrslv = 0;
-      reanalyze_solver_lists(server);
+      slv9_reanalyze_solver_lists(sys);
       slv9_cmslv2_clear_structural_cache(sys);
       update_relations_residuals(server);
       system_was_reanalyzed = 1;
@@ -10231,6 +10668,37 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
     }
     store_real_cur_values(server,&(rvalues));
     update_boundaries(server,asys);
+    boundary_crossed_after_update = some_boundaries_crossed(server,asys);
+    slv9_write_classifier_snapshot(
+      sys, "nonlinear_step", "after_update_boundaries"
+    );
+    if(slv_has_classifier_whens(server) && !boundary_crossed_after_update) {
+      if(slv9_reanalyze_solver_lists_changed(
+          sys,&classifier_active_changed
+      )) {
+        sys->s.calc_ok = FALSE;
+        sys->s.ready_to_solve = FALSE;
+        destroy_array(rvalues.cur_values);
+        destroy_array(rvalues.pre_values);
+        slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
+        slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
+        gl_destroy(disvars);
+        disvars = NULL;
+        iteration_ends(sys);
+        return 5;
+      }
+      if(classifier_active_changed) {
+        slv9_cmslv2_clear_structural_cache(sys);
+        if(!boundary_crossed_after_update) {
+          update_boundaries(server,asys);
+          boundary_crossed_after_update = some_boundaries_crossed(server,asys);
+        }
+        update_relations_residuals(server);
+        slv9_write_classifier_snapshot(
+          sys, "nonlinear_step", "after_classifier_active_change"
+        );
+      }
+    }
     slv_get_status(server,&status);
     sys->s.converged  = status.converged;
     /*
@@ -10238,6 +10706,10 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
     */
     update_struct_info(sys,&status);
     update_real_status(&(sys->s),&status,0);
+    if(classifier_active_changed) {
+      sys->s.converged = FALSE;
+      sys->s.ready_to_solve = TRUE;
+    }
     if(cmslv2_external_blocks > 0 && sys->cmslv2_pending_after_qrslv) {
       sys->s.converged = FALSE;
       sys->s.ready_to_solve = TRUE;
@@ -10249,10 +10721,11 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
     update_cost(sys->s.u.nlp.cost,&status,
                 sys->s.block.current_block,previous_block,
                 sys->s.u.nlp.costsize);
-    if(!sys->s.converged || some_boundaries_crossed(server,asys) ) {
+    if(!sys->s.converged || boundary_crossed_after_update
+        || some_boundaries_crossed(server,asys) ) {
       sys->s.converged = FALSE;
       sys->s.ready_to_solve = !sys->s.converged;
-      if(some_boundaries_crossed(server,asys)) {
+      if(boundary_crossed_after_update || some_boundaries_crossed(server,asys)) {
         vfilter.matchbits = (VAR_ACTIVE | VAR_INCIDENT
 			     | VAR_SVAR | VAR_FIXED);
         vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
@@ -10272,7 +10745,27 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         factor = return_to_first_boundary(server,asys,&rvalues,&vfilter);
         update_real_var_values(server,&rvalues,&vfilter,factor);
         update_boundaries(server,asys);
+        if(slv_has_classifier_whens(server)) {
+          if(slv_sync_classifier_guards_from_boundaries(server)
+              || slv_reanalyze_classifier_whens_from_guard_values(server)) {
+            sys->s.calc_ok = FALSE;
+            sys->s.ready_to_solve = FALSE;
+            destroy_array(rvalues.cur_values);
+            destroy_array(rvalues.pre_values);
+            slv_set_client_token(server,token[CONDITIONAL_SOLVER]);
+            slv_set_solver_index(server,solver_index[CONDITIONAL_SOLVER]);
+            gl_destroy(disvars);
+            disvars = NULL;
+            iteration_ends(sys);
+            return 5;
+          }
+        }else{
+          slv9_reanalyze_solver_lists(sys);
+        }
         update_relations_residuals(server);
+        slv9_write_classifier_snapshot(
+          sys, "boundary_crossed", "after_return_reanalysis"
+        );
         slv9_cmslv2_clear_structural_cache(sys);
         sys->cmslv2_next_structural_block = 0;
         sys->cmslv2_pending_after_qrslv = 0;
@@ -10345,6 +10838,8 @@ static int slv9_solve(slv_system_t server, SlvClientToken asys){
 	  }
 
 	  while(sys->s.ready_to_solve)err = err | slv9_iterate(server,sys);
+
+  slv9_write_classifier_snapshot(sys,"solve","done");
 
   return err;
 }

@@ -11285,6 +11285,8 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
   unsigned long numset;
   int vl[MAX_VAR_IN_LIST],*p1;
   int casel[MAX_VAR_IN_LIST],*p2;
+  int has_case_if = 0;
+  int has_applies_if = 0;
   wname = WhenStatName(statement);
   if (wname!=NULL) {
     if (!CheckWhenName(inst,wname)) {
@@ -11309,6 +11311,20 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
   }
   w1 = WhenStatCases(statement);
   while (w1!=NULL){
+      if (WhenCaseCondition(w1)!=NULL) {
+        has_case_if = 1;
+      }
+      if (WhenCaseApplies(w1)!=NULL) {
+        has_applies_if = 1;
+      }
+      if (has_case_if && has_applies_if) {
+        FPRINTF(ASCERR,"CASE IF and APPLIES IF cannot be mixed in the same WHEN\n");
+        FPRINTF(ASCERR,"In ");
+        WriteInstanceName(ASCERR,inst,NULL);
+        STATEMENT_ERROR(statement,
+          " the following statement will not be executed: \n");
+        return 0;
+      }
       s = WhenSetList(w1);
       if (s!=NULL) {
           numset = SetLength(s);
@@ -12717,6 +12733,10 @@ struct Case *RealExecuteWhenStatements(struct Instance *inst,
 
   set = WhenSetList(w1);
   cur_case = CreateCase(CopySetByReference(set),NULL);
+  SetCaseOtherwiseLabel(cur_case,WhenCaseOtherwiseLabel(w1));
+  SetCaseCondition(cur_case,CopyExprList(WhenCaseCondition(w1)));
+  SetCaseApplies(cur_case,CopyExprList(WhenCaseApplies(w1)));
+  SetCaseSource(cur_case,WhenCaseModule(w1),WhenCaseLineNum(w1));
   sl = WhenStatementList(w1);
   ExecuteWhenStatements(inst,sl);
   MakeWhenCaseReferences(inst,child,sl,listref);
