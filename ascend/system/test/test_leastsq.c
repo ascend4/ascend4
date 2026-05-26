@@ -226,6 +226,10 @@ static void test_ceri651a_shape(void){
 	leastsq_expect("test/leastsq/ceri651a_objective.a4c", "ceri651a_objective", 1, rel_lsq_ok, 5, 0, NULL, NULL);
 }
 
+static void test_lorentz_dataset_nested(void){
+	leastsq_expect("test/leastsq/lorentz_dataset.a4c", "lorentz_dataset_nested", 1, rel_lsq_ok, 2, 0, NULL, NULL);
+}
+
 #define TESTS(T) \
 	T(basic) \
 	T(weighted) \
@@ -235,6 +239,7 @@ static void test_ceri651a_shape(void){
 	T(variable_weight) \
 	T(linear_extra_term) \
 	T(cross_product) \
-	T(ceri651a_shape)
+	T(ceri651a_shape) \
+	T(lorentz_dataset_nested)
 
 REGISTER_TESTS_SIMPLE(system_leastsq, TESTS)
