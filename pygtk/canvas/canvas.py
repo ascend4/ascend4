@@ -3,7 +3,7 @@
 
 
 import os, sys
-import gtk
+from gtkcompat import gtk
 
 os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 
@@ -25,7 +25,8 @@ sys.path.append("..")
 sys.path.append("../../ascxx")
 
 if sys.platform.startswith("win"):
-    # Fetchs gtk2 path from registry
+	# Fetches the legacy Gtk2 path from registry. This branch is retained only
+	# for old Windows setups; Gtk3 installations should normally be on PATH.
 	import winreg
 	import msvcrt
 	try:
@@ -40,11 +41,10 @@ if sys.platform.startswith("win"):
 		sys.exit(1)
 	else:
 		gtkdir = winreg.QueryValueEx(k, "Path")
-        import os
-        # we must make sure the gtk2 path is the first thing in the path
-        # otherwise, we can get errors if the system finds other libs with
-        # the same name in the path...
-        os.environ['PATH'] = "%s/lib;%s/bin;" % (gtkdir[0], gtkdir[0]) + os.environ['PATH']
+		# we must make sure the gtk2 path is the first thing in the path
+		# otherwise, we can get errors if the system finds other libs with
+		# the same name in the path...
+		os.environ['PATH'] = "%s/lib;%s/bin;" % (gtkdir[0], gtkdir[0]) + os.environ['PATH']
 	
 class Application(object):
 	

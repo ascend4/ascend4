@@ -1,10 +1,7 @@
 import gaphas
-from gaphas.tool import Tool
-import pygtk
 import math
 
-pygtk.require('2.0')
-import gtk
+from gtkcompat import gtk
 import blockinstance
 import blockproperties
 import canvasproperties
@@ -13,7 +10,7 @@ from blockitem import CustomBlockItem_turbine
 
 import ascpy
 
-class ContextMenuTool(Tool):
+class ContextMenuTool:
 	"""
 	Context menu for blocks and connectors on the canvas, intended to be
 	the main mouse-based way by which interaction with blocks occurs (blocks
@@ -22,7 +19,7 @@ class ContextMenuTool(Tool):
 	hook into the appropriate code in the Application layer.
 	"""
 	def __init__(self,view=None):
-		super(ContextMenuTool, self).__init__(view)
+		self.view = view
 
 	def on_button_press(self, event):
 		context = self.view.tool

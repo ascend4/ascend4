@@ -1,5 +1,6 @@
 
 from gaphas.item import Line
+from gaphas.connections import Connections
 from blockinstance import LineInstance
 
 class BlockLine(Line):
@@ -11,8 +12,8 @@ class BlockLine(Line):
 	The `ConnectorInstance` will be manipulated by the `BlockConnectorTool`.
 	"""
 
-	def __init__(self):
-		super(BlockLine, self).__init__()
+	def __init__(self, connections=None):
+		super(BlockLine, self).__init__(connections or Connections())
 		self.lineinstance = LineInstance()
 	
 	def get_connected_ports(self):

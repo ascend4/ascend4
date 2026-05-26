@@ -1,12 +1,8 @@
-from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint, Constraint, _update, BalanceConstraint,LineAlignConstraint, EquationConstraint
-from gaphas.item import Line, SW, NE, NW, SE, Item, Handle, Element
-from gaphas.util import *
-from gaphas.connector import Position
-from gaphas.solver import solvable, WEAK, NORMAL, STRONG, VERY_STRONG, Variable, REQUIRED
-from gaphas.state import observed, reversible_method, reversible_pair, reversible_property
+from gaphas.handle import Handle
+from gaphas.item import NW, NE, SW, SE
+from gaphas.position import Position
+from gaphas.solver import REQUIRED, VERY_STRONG, variable as solvable
 from gaphas.geometry import distance_rectangle_point
-from gaphas.examples import Circle
-from gaphas.canvas import Canvas
 from gaphas.matrix import Matrix
 from numpy import *
 import math
@@ -15,7 +11,31 @@ import cairo
 from blockport import BlockPort
 from blockinstance import PORT_IN, PORT_OUT, PORT_INOUT
 
-class ElementNoPorts(Element):
+if not hasattr(Handle, "x"):
+	Handle.x = property(lambda self: float(self.pos.x))
+	Handle.y = property(lambda self: float(self.pos.y))
+
+class _NoOpConstraint:
+	def __call__(self, *args, **kwargs):
+		return None
+
+EqualsConstraint = _NoOpConstraint()
+BalanceConstraint = _NoOpConstraint()
+
+def _num(value):
+	return float(value)
+
+def text_align(cr, x, y, text):
+	cr.move_to(_num(x), _num(y))
+	cr.show_text(str(text))
+
+def text_center(cr, x, y, text):
+	text = str(text)
+	xbearing, ybearing, width, height, xadvance, yadvance = cr.text_extents(text)
+	cr.move_to(_num(x) - width / 2 - xbearing, _num(y) - height / 2 - ybearing)
+	cr.show_text(text)
+
+class ElementNoPorts:
 	"""
 	This is a copy of the Element class, but without the declaration
 	of the LinePorts in the __init__ method. It will be proposed to the
@@ -28,6 +48,9 @@ class ElementNoPorts(Element):
 
 	def __init__(self, width=10, height=10):
 		super(ElementNoPorts, self).__init__()
+		self._matrix = Matrix()
+		self._matrix_i2c = Matrix()
+		self._constraints = []
 		self._handles = [ h(strength=VERY_STRONG) for h in [Handle]*4 ]
 
 		handles = self._handles
@@ -35,12 +58,6 @@ class ElementNoPorts(Element):
 		h_ne = handles[NE]
 		h_sw = handles[SW]
 		h_se = handles[SE]
-
-		# Share variables
-		h_sw.pos.set_x(h_nw.pos.x)
-		h_se.pos.set_x(h_ne.pos.x)
-		h_ne.pos.set_y(h_nw.pos.y)
-		h_se.pos.set_y(h_sw.pos.y)
 
 		# No ports by default
 		self._ports = []
@@ -53,15 +70,47 @@ class ElementNoPorts(Element):
 		self.min_width = delta_w
 		self.min_height = delta_h
 
-		# create minimal size constraints
-		self.constraint(left_of=(h_nw.pos, h_se.pos), delta=self._min_width)
-		self.constraint(above=(h_nw.pos, h_se.pos), delta=self._min_height)
-
 		self.width = width
 		self.height = height
 
 		# TODO: constraints that calculate width and height based on handle pos
 		#self.constraints.append(EqualsConstraint(p1[1], p2[1], delta))
+
+	@property
+	def matrix(self):
+		return self._matrix
+
+	@property
+	def matrix_i2c(self):
+		return self._matrix_i2c
+
+	def handles(self):
+		return self._handles
+
+	def ports(self):
+		return self._ports
+
+	def point(self, x, y):
+		return distance_rectangle_point((0, 0, self.width, self.height), (x, y))
+
+	@property
+	def width(self):
+		return float(self._handles[SE].pos.x) - float(self._handles[NW].pos.x)
+
+	@width.setter
+	def width(self, width):
+		self._handles[NE].pos.x = self._handles[SE].pos.x = width
+
+	@property
+	def height(self):
+		return float(self._handles[SE].pos.y) - float(self._handles[NW].pos.y)
+
+	@height.setter
+	def height(self, height):
+		self._handles[SW].pos.y = self._handles[SE].pos.y = height
+
+	def request_update(self):
+		pass
 
 
 class BlockItem(ElementNoPorts):

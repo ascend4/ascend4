@@ -1,12 +1,11 @@
 from gaphas import Canvas
-from gaphas.item import Line
 import re
 from blockitem import DefaultBlockItem, GraphicalBlockItem
 from blockline import BlockLine
 from blockstream import BlockStream
 from functools import reduce
 
-UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");
+UNITS_RE = re.compile(r"([-+]?(\d+(\.\d*)?|\d*\.\d+)([eE][-+]?\d+)?)\s*(.*)");
 
 saved_model = None
 
@@ -27,7 +26,9 @@ class BlockCanvas(Canvas):
 		constraint solver kicks in.
 		"""
 		# request solving of external constraints associated with dirty items
-		request_resolve = self._solver.request_resolve
+		request_resolve = getattr(self.solver, "request_resolve", None)
+		if request_resolve is None:
+			return self.connections.solve()
 		for item in items:
 			if hasattr(item,'ports'):
 				for p in item._ports:
@@ -36,6 +37,19 @@ class BlockCanvas(Canvas):
 						request_resolve(p.point.y)
 
 		super(BlockCanvas,self).update_constraints(items)
+
+	def update_now(self):
+		self.connections.solve()
+		for view in getattr(self, "_registered_views", ()):
+			view.request_update(self.get_all_items())
+
+	def _obtain_cairo_context(self):
+		import cairo
+		surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 0, 0)
+		return cairo.Context(surface)
+
+	def get_connection(self, handle):
+		return self.connections.get_connection(handle)
 
 	def reattach_ascend(self, ascwrap, notesdb):
 		"""

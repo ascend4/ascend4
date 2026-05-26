@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 import math
+import inspect
 
 if __name__ == '__main__':
 	print("ERROR: ASCEND Canvas should now be invoked using the file 'canvas.py' instead of 'blocklist.py'.")
 	exit(1)
 
-import gtk
 import os, os.path, glob
 import cairo
 import ascpy
+from gtkcompat import gtk
 
 class BlockIconView(gtk.IconView):
 	"""
@@ -20,6 +21,7 @@ class BlockIconView(gtk.IconView):
 	 that is not yet implemented.
 	 """
 	def __init__(self,blocks=None,app=None):
+		gtk.IconView.__init__(self)
 		self.model = gtk.ListStore(str, gtk.gdk.Pixbuf)
 		self.app = app
 		self.otank = {}
@@ -33,7 +35,6 @@ class BlockIconView(gtk.IconView):
 		except Exception as e:
 			pass
 
-		gtk.IconView.__init__(self)
 		self.set_model(self.model)
 		self.set_text_column(0)
 		self.set_pixbuf_column(1)
@@ -54,51 +55,46 @@ class BlockIconView(gtk.IconView):
 	def item_activated(self,iconview, path):
 		self.app.set_placement_tool(self.otank[path])
 
-
-from gaphas import GtkView, View
-from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain, DEBUG_TOOL_CHAIN
-#from gaphas.tool import LineSegmentTool
-from gaphas.tool import Tool, ItemTool, RubberbandTool
+from gaphas.view import GtkView
+from gaphas.tool import hover_tool, item_tool, placement_tool, rubberband_tool, scroll_tools, zoom_tools
+from gaphas.tool.rubberband import RubberbandState
 from gaphas.painter import ItemPainter
-from blockconnecttool import BlockConnectTool
 from blockline import BlockLine
 from blockitem import DefaultBlockItem,CustomBlockItem_turbine,CustomBlockItem_pump,GraphicalBlockItem
-from contextmenutool import ContextMenuTool
-from connectortool import ConnectorTool
 from blockcanvas import BlockCanvas
-#from panzoom import ZoomTool
-#from panzoom import PanTool
-from gaphas.tool import PanTool, ZoomTool
 from blockinstance import BlockInstance
 from solverreporterforcanvas import PopupSolverReporter
 import canvasproperties
 import blockproperties
 import undo
-from undo import UndoMonitorTool
 import errorreporter
 import gaphas.view
 import pickle as pickle
-import gaphas.picklers
 import obrowser
 import urllib.request, urllib.parse, urllib.error, help
 from preferences import Preferences
 
-def BlockToolChain():
+def _gaphas_tool(factory, view, *args):
+	params = list(inspect.signature(factory).parameters)
+	if params and params[0] == "view":
+		return factory(view, *args)
+	return factory(*args)
+
+def add_default_tools(view):
+	"""Register the stock Gaphas 3 event controllers.
+
+	The old canvas used a ToolChain with custom PyGTK tools.  Gaphas 3 exposes
+	Gtk.EventController factories instead.  Block placement is added on demand
+	in ``set_placement_tool``; block-connection and context-menu tools still
+	need a dedicated port.
 	"""
-	 ToolChain for working with BlockCanvas, including several custom Tools.
-	 """
-	chain = ToolChain()
-	chain.append(UndoMonitorTool())
-	chain.append(HoverTool())
-	chain.append(BlockConnectTool()) # for connect/disconnect of lines
-	chain.append(ConnectorTool()) # for creating new lines by drag from Port
-	chain.append(ContextMenuTool()) # right-click
-	#	chain.append(LineSegmentTool()) # for moving line 'elbows'
-	chain.append(ItemTool())
-	chain.append(PanTool())
-	chain.append(ZoomTool())
-	chain.append(RubberbandTool())
-	return chain
+	view.add_controller(
+		_gaphas_tool(hover_tool, view),
+		_gaphas_tool(item_tool, view),
+		_gaphas_tool(rubberband_tool, view, RubberbandState()),
+		*_gaphas_tool(scroll_tools, view),
+		*_gaphas_tool(zoom_tools, view),
+	)
 
 class mainWindow(gtk.Window):
 
@@ -151,6 +147,8 @@ class mainWindow(gtk.Window):
 		  the icon palette.
 		  TODO: separate the icon palette into a separate method.
 		  """
+		# the main window
+		gtk.Window.__init__(self)
 		self.ascwrap= library
 		self.errorvars = []
 		self.errorblocks = []
@@ -160,8 +158,6 @@ class mainWindow(gtk.Window):
 		# the Gaphas canvas
 		canvas = BlockCanvas()
 
-		# the main window
-		gtk.Window.__init__(self)
 		self.iconok = self.render_icon(gtk.STOCK_YES,gtk.ICON_SIZE_MENU)
 		self.iconinfo = self.render_icon(gtk.STOCK_DIALOG_INFO,gtk.ICON_SIZE_MENU)
 		self.iconwarning = self.render_icon(gtk.STOCK_DIALOG_WARNING,gtk.ICON_SIZE_MENU)
@@ -277,10 +273,12 @@ class mainWindow(gtk.Window):
 		# the 'view' widget implemented by Gaphas
 		#gaphas.view.DEBUG_DRAW_BOUNDING_BOX = True
 		self.view = GtkView()
-		self.view.tool =  BlockToolChain()
+		self._placement_controller = None
+		add_default_tools(self.view)
 
 		# table containing scrollbars and main canvas
 		t = gtk.Table(2,2)
+		self.view.model = canvas
 		self.view.canvas = canvas
 		self.view.zoom(1)
 		self.view.set_size_request(600, 450)
@@ -345,8 +343,11 @@ class mainWindow(gtk.Window):
 				self.view.canvas.add(bi)
 				return bi
 			return wrapper
-		self.view.unselect_all()
-		self.view.tool.grab(PlacementTool(self.view,my_block_factory(), HandleTool(), 2))
+		if self._placement_controller is not None:
+			self.view.remove_controller(self._placement_controller)
+		self.view.selection.unselect_all()
+		self._placement_controller = _gaphas_tool(placement_tool, self.view, my_block_factory(), 2)
+		self.view.add_controller(self._placement_controller)
 		self.status.push(0,"Selected '%s'..." % blocktype.type.getName())
 
 	def set_connector_tool(self,foobar):
@@ -361,15 +362,19 @@ class mainWindow(gtk.Window):
 				self.view.canvas.add(l)
 				return l
 			return wrapper
-		self.view.tool.grab(PlacementTool(self.view,my_line_factory(), HandleTool(), 1))
+		if self._placement_controller is not None:
+			self.view.remove_controller(self._placement_controller)
+		self._placement_controller = _gaphas_tool(placement_tool, self.view, my_line_factory(), 1)
+		self.view.add_controller(self._placement_controller)
 
 	@undo.block_observed
 	def delblock(self, widget = None):
 		'''Both individual and multiple selected items are deleted by the logic of following routine'''
 
-		if self.view.selected_items:
-			while(len(self.view.selected_items)!=0):
-				self.view.canvas.remove(self.view._selected_items.pop())
+		selected_items = list(self.view.selection.selected_items)
+		if selected_items:
+			for item in selected_items:
+				self.view.canvas.remove(item)
 				self.status.push(0,"Item deleted.")
 				self.view.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#FFF'))
 
@@ -408,7 +413,7 @@ class mainWindow(gtk.Window):
 			self.filesave(widget)
 			return
 		else:
-			f = file(self.view.canvas.filename,"w")
+			f = open(self.view.canvas.filename,"wb")
 		try:
 			pickle.dump(self.view.canvas,f)
 			self.status.push(0,"Canvasmodel saved...")
@@ -428,7 +433,7 @@ class mainWindow(gtk.Window):
 		"""
 		  Restore a saved canvas in 'pickle' format. Currently not in use as loading now handled by self.fileopen().
 		  """
-		f = file("./test.a4b","r")
+		f = open("./test.a4b","rb")
 		try:
 			self.view.canvas = pickle.load(f)
 			if self.view.canvas.model_library is not None:
@@ -491,14 +496,15 @@ class mainWindow(gtk.Window):
 		dialog.show()
 		response = dialog.run()
 
-		svgview = View(self.view.canvas)
-		svgview.painter = ItemPainter()
+		svgview = GtkView(self.view.canvas)
+		svgview.painter = ItemPainter(svgview.selection)
+		items = list(self.view.canvas.get_all_items())
 
 		# Update bounding boxes with a temporaly CairoContext
 		# (used for stuff like calculating font metrics)
 		tmpsurface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 0, 0)
 		tmpcr = cairo.Context(tmpsurface)
-		svgview.update_bounding_box(tmpcr)
+		svgview.update_bounding_box(items)
 		tmpcr.show_page()
 		tmpsurface.flush()
 
@@ -516,8 +522,8 @@ class mainWindow(gtk.Window):
 			w, h = svgview.bounding_box.width, svgview.bounding_box.height
 			surface = cairo.SVGSurface(fn , w, h)
 			cr = cairo.Context(surface)
-			svgview.matrix.translate(-svgview.bounding_box.x, -svgview.bounding_box.y)
-			svgview.paint(cr)
+			cr.translate(-svgview.bounding_box.x, -svgview.bounding_box.y)
+			svgview.painter.paint(items, cr)
 			cr.show_page()
 			surface.flush()
 			surface.finish()
@@ -527,14 +533,15 @@ class mainWindow(gtk.Window):
 
 
 	def export_svg(self,widget):
-		svgview = View(self.view.canvas)
-		svgview.painter = ItemPainter()
+		svgview = GtkView(self.view.canvas)
+		svgview.painter = ItemPainter(svgview.selection)
+		items = list(self.view.canvas.get_all_items())
 
 		# Update bounding boxes with a temporaly CairoContext
 		# (used for stuff like calculating font metrics)
 		tmpsurface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 0, 0)
 		tmpcr = cairo.Context(tmpsurface)
-		svgview.update_bounding_box(tmpcr)
+		svgview.update_bounding_box(items)
 		tmpcr.show_page()
 		tmpsurface.flush()
 
@@ -542,8 +549,8 @@ class mainWindow(gtk.Window):
 		w, h = svgview.bounding_box.width, svgview.bounding_box.height
 		surface = cairo.SVGSurface(fn , w, h)
 		cr = cairo.Context(surface)
-		svgview.matrix.translate(-svgview.bounding_box.x, -svgview.bounding_box.y)
-		svgview.paint(cr)
+		cr.translate(-svgview.bounding_box.x, -svgview.bounding_box.y)
+		svgview.painter.paint(items, cr)
 		cr.show_page()
 		surface.flush()
 		surface.finish()
@@ -696,7 +703,7 @@ class mainWindow(gtk.Window):
 
 	def load_canvas_file(self,filename):
 		#TODO: Separate
-		f = file(filename,"r")
+		f = open(filename,"rb")
 		try:
 			self.view.canvas = pickle.load(f)
 			if self.view.canvas.model_library is not None:
@@ -733,7 +740,7 @@ class mainWindow(gtk.Window):
 			if '.a4b' not in name:
 				name += '.a4b'
 			if f == None and f != name:
-				f = open(name, 'w')
+				f = open(name, 'wb')
 			try:
 				pickle.dump(self.view.canvas,f)
 				self.reporter.reportNote(" File ' %s ' saved successfully." % name )
@@ -766,8 +773,8 @@ class mainWindow(gtk.Window):
 
 
 	def bp(self, widget = None):
-		if self.view.focused_item:
-			blockproperties.BlockProperties(self, self.view.focused_item).run()
+		if self.view.selection.focused_item:
+			blockproperties.BlockProperties(self, self.view.selection.focused_item).run()
 		else:
 			m = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, "No Block was selected! Please select a Block to view its properties.")
 			m.run()

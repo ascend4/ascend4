@@ -1,4 +1,5 @@
-import pango, ascpy, gtk
+import ascpy
+from gtkcompat import gtk, pango
 		
 class ErrorReporter():
 	

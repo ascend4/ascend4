@@ -1,8 +1,6 @@
-import pygtk
 import re
 
-pygtk.require('2.0')
-import gtk
+from gtkcompat import gtk
 import ascpy
 import os.path
 import cairo
@@ -124,9 +122,9 @@ class BlockType():
 		properties = self.gr
 		if len(properties) == 0:
 			return None
-		fo = file("%s.svg"%self.name,'w')
+		filename = "%s.svg"%self.name
 		## Prepare a destination surface -> out to an SVG file!
-		surface = cairo.SVGSurface (fo,width,height)
+		surface = cairo.SVGSurface (filename,width,height)
 		c = cairo.Context (surface)
 		for m in properties:
 			c.move_to(float(m[0][0])*width*0.1,float(m[0][1])*height*0.1)
@@ -134,7 +132,7 @@ class BlockType():
 				c.line_to(float(mm[0])*width*0.1,float(mm[1])*height*0.1)
 		c.stroke()
 		surface.finish()
-		return fo.name
+		return filename
 
 	def __getstate__(self):
 		state = self.__dict__.copy()
