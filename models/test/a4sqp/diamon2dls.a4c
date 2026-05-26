@@ -157,6 +157,16 @@ METHOD use_a4sqp_lsq_solution_start;
 	RUN use_a4sqp_lsq;
 END use_a4sqp_lsq_solution_start;
 
+METHOD use_a4sqp_lsq_scaled_stationarity_solution_start;
+	RUN use_a4sqp_lsq_solution_start;
+	OPTION lsq_scaled_stationarity TRUE;
+END use_a4sqp_lsq_scaled_stationarity_solution_start;
+
+METHOD use_a4sqp_lsq_dense_qr_solution_start;
+	RUN use_a4sqp_lsq_solution_start;
+	OPTION lsq_linear_solver 'DENSE_QR';
+END use_a4sqp_lsq_dense_qr_solution_start;
+
 METHOD use_a4sqp_lm_long_solution_start;
 	RUN set_solution_start;
 	RUN free_peak_parameters;

@@ -121,6 +121,12 @@ static const struct A4SqpOptionInfo a4sqp_c_option_info[] = {
 	A4SQP_OPT_INT("lsq_max_iter","LSQ maximum iterations",1,
 		"Maximum iterations for the least-squares pre-solve; zero reuses max_iter.",
 		0,0,1000000,A4SQP_FALSE),
+	A4SQP_OPT_BOOL("lsq_scaled_stationarity","LSQ scaled stationarity",1,
+		"Use diagonal J'J scaling when testing least-squares stationarity.",
+		0,A4SQP_FALSE),
+	A4SQP_OPT_STR("lsq_linear_solver","LSQ linear solver",1,
+		"Linear solver for least-squares trial steps: NORMAL or DENSE_QR.",
+		"NORMAL",((const char *const[]){"NORMAL","DENSE_QR",NULL}),A4SQP_FALSE),
 	A4SQP_OPT_NUM("hess_reg","Hessian regularization",2,
 		"Minimum diagonal margin enforced when regularizing the step Hessian to a convex QP model.",
 		1e-8,0.0,1e12,A4SQP_TRUE),
@@ -2898,16 +2904,24 @@ static void a4sqp_c_core_after_qp_solve(void *vctx, const struct A4SqpQp *qp, in
 
 static void a4sqp_c_refresh_stats(struct A4SqpCSolve *solve, int iterations){
 	double maxvio = 0.0;
+	double violations = 0.0;
 	if(solve == NULL || solve->problem == NULL){
 		return;
 	}
 	solve->problem->stats.iterations = iterations;
 	solve->problem->stats.objective = solve->view.obj_value;
+	solve->problem->stats.merit_after = solve->last_merit_after;
+	solve->problem->stats.model_merit_after = solve->last_model_merit_after;
+	solve->problem->stats.predicted_reduction = solve->last_predicted_reduction;
+	solve->problem->stats.alpha = solve->last_alpha;
+	solve->problem->stats.trust_ratio = solve->last_trust_ratio;
+	solve->problem->stats.linearized_violation = solve->last_linearized_violation;
 	solve->problem->stats.final_step_norm = solve->last_step_norm;
 	solve->problem->stats.final_trust_radius = solve->trust_radius;
 	solve->problem->stats.final_elastic_max = solve->last_elastic_max;
 	solve->problem->stats.reduced_gradient_polish_mode = solve->problem->opt.reduced_gradient_polish;
-	a4sqp_c_view_violation(&solve->view,&maxvio);
+	violations = a4sqp_c_view_violation(&solve->view,&maxvio);
+	solve->problem->stats.max_constraint_violation_sum = violations;
 	solve->problem->stats.max_constraint_violation = maxvio;
 	solve->problem->stats.projected_gradient_inf = a4sqp_c_projected_gradient_inf(solve);
 	a4sqp_c_update_kkt_stats(solve);
@@ -3313,12 +3327,20 @@ enum A4SqpApplicationReturnStatus A4SqpSolve(
 		}
 	}
 	if(solve.view.n_var >= 0){
+		double maxvio = 0.0;
 		p->stats.objective = solve.has_objective ? solve.view.obj_value : 0.0;
+		p->stats.merit_after = solve.last_merit_after;
+		p->stats.model_merit_after = solve.last_model_merit_after;
+		p->stats.predicted_reduction = solve.last_predicted_reduction;
+		p->stats.alpha = solve.last_alpha;
+		p->stats.trust_ratio = solve.last_trust_ratio;
+		p->stats.linearized_violation = solve.last_linearized_violation;
 		p->stats.final_step_norm = solve.last_step_norm;
 		p->stats.final_trust_radius = solve.trust_radius;
 		p->stats.final_elastic_max = solve.last_elastic_max;
 		p->stats.regularization_size = solve.hess.last_reg;
-		(void)a4sqp_c_view_violation(&solve.view,&p->stats.max_constraint_violation);
+		p->stats.max_constraint_violation_sum = a4sqp_c_view_violation(&solve.view,&maxvio);
+		p->stats.max_constraint_violation = maxvio;
 		p->stats.projected_gradient_inf = a4sqp_c_projected_gradient_inf(&solve);
 		a4sqp_c_update_kkt_stats(&solve);
 	}

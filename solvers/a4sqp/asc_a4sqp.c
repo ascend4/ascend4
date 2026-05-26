@@ -44,6 +44,10 @@ static int32 a4sqp_view_var_col_from_var(const struct A4SqpView *view, const str
 static void a4sqp_x_destroy(struct A4SqpSystem *sys);
 static int a4sqp_x_sync_from_view(struct A4SqpSystem *sys);
 static int a4sqp_x_push_to_ascend(struct A4SqpSystem *sys, const real64 *x);
+static void asc_a4sqp_apply_solve_stats(
+	struct A4SqpSystem *sys,
+	const struct A4SqpSolveStats *stats
+);
 static void a4sqp_init_status(struct A4SqpSystem *sys){
 	if(sys == NULL){
 		return;
@@ -298,6 +302,7 @@ static void a4sqp_update_metrics(struct A4SqpSystem *sys){
 struct A4SqpAscendProblemCtx {
 	slv_system_t server;
 	struct A4SqpSystem *sys;
+	A4SqpProblem problem;
 };
 
 static int asc_a4sqp_view_matches_x(const struct A4SqpSystem *sys, A4SqpIndex n, const A4SqpNumber *x){
@@ -570,7 +575,6 @@ static A4SqpBool asc_a4sqp_intermediate_cb(
 	A4SqpUserDataPtr user_data
 ){
 	struct A4SqpAscendProblemCtx *ctx = (struct A4SqpAscendProblemCtx *)user_data;
-	(void)obj_value;
 	(void)inf_du;
 	(void)mu;
 	(void)regularization_size;
@@ -598,6 +602,16 @@ static A4SqpBool asc_a4sqp_intermediate_cb(
 	ctx->sys->last_step_norm = d_norm;
 	ctx->sys->last_regularization_size = regularization_size;
 	ctx->sys->last_alpha = alpha_pr;
+	if(isfinite(obj_value)){
+		ctx->sys->view.obj_value = obj_value;
+	}
+	if(ctx->problem != NULL){
+		struct A4SqpSolveStats stats;
+		memset(&stats,0,sizeof(stats));
+		if(GetA4SqpSolveStatistics(ctx->problem,&stats)){
+			asc_a4sqp_apply_solve_stats(ctx->sys,&stats);
+		}
+	}
 	{
 		real64 feas_tol = SLV_PARAM_REAL(&ctx->sys->params,A4SQP_PARAM_FEAS_TOL);
 		(void)a4sqp_core_rel_stats(
@@ -673,6 +687,13 @@ static void asc_a4sqp_apply_solve_stats(
 	sys->restoration_entries = stats->restoration_entries;
 	sys->restoration_exits = stats->restoration_exits;
 	sys->restoration_handoffs = stats->restoration_handoffs;
+	sys->last_merit_after = stats->merit_after;
+	sys->last_model_merit_after = stats->model_merit_after;
+	sys->last_predicted_reduction = stats->predicted_reduction;
+	sys->last_linearized_violation = stats->linearized_violation;
+	sys->last_alpha = stats->alpha;
+	sys->last_trust_ratio = stats->trust_ratio;
+	sys->last_violation_sum = stats->max_constraint_violation_sum;
 	sys->last_violation_max = stats->max_constraint_violation;
 	sys->last_dual_infeasibility = stats->dual_infeasibility_inf;
 	sys->last_complementarity = stats->complementarity_inf;
@@ -869,6 +890,10 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	options.max_backtrack = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_BACKTRACK);
 	options.grad_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
 	options.step_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_STEP_TOL);
+	options.scaled_stationarity = SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_LSQ_SCALED_STATIONARITY);
+	options.linear_solver = strcmp(SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_LSQ_LINEAR_SOLVER),"DENSE_QR") == 0
+		? A4SQP_LSQ_LINEAR_DENSE_QR
+		: A4SQP_LSQ_LINEAR_NORMAL;
 
 	memset(&stats,0,sizeof(stats));
 	status = a4sqp_lsq_solve(&problem,&options,sys->x,&stats);
@@ -1052,6 +1077,7 @@ static int a4sqp_solve(slv_system_t server, SlvClientToken asys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"A4SQP failed to create the core C API problem.");
 		return 1;
 	}
+	ctx.problem = problem;
 	asc_a4sqp_set_core_options(problem,sys);
 	SetA4SqpProblemScaling(problem,1.0,sys->view.var_scale,sys->view.rel_scale);
 	SetA4SqpIntermediateCallback(problem,asc_a4sqp_intermediate_cb);

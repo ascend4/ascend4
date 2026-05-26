@@ -15,6 +15,11 @@ enum A4SqpLsqMode {
 	A4SQP_LSQ_MODE_LM
 };
 
+enum A4SqpLsqLinearSolver {
+	A4SQP_LSQ_LINEAR_NORMAL = 0,
+	A4SQP_LSQ_LINEAR_DENSE_QR = 1
+};
+
 enum A4SqpLsqStatus {
 	A4SQP_LSQ_SOLVED = 0,
 	A4SQP_LSQ_MAX_ITER = 1,
@@ -25,8 +30,10 @@ enum A4SqpLsqStatus {
 
 struct A4SqpLsqOptions {
 	enum A4SqpLsqMode mode;
+	enum A4SqpLsqLinearSolver linear_solver;
 	int max_iter;
 	int max_backtrack;
+	int scaled_stationarity;
 	real64 grad_tol;
 	real64 step_tol;
 	real64 lambda_init;
