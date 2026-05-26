@@ -19,6 +19,12 @@ class BlockCanvas(Canvas):
 		self.saved_data = None
 		self.filename = None
 		self.user_code = ''
+
+	def add(self, item, parent=None, index=None):
+		super(BlockCanvas, self).add(item, parent, index)
+		setup_constraints = getattr(item, "setup_canvas_constraints", None)
+		if setup_constraints is not None:
+			setup_constraints(self.connections)
 	
 	def update_constraints(self, items):
 		"""
@@ -36,12 +42,26 @@ class BlockCanvas(Canvas):
 						request_resolve(p.point.x)
 						request_resolve(p.point.y)
 
-		super(BlockCanvas,self).update_constraints(items)
-
-	def update_now(self):
 		self.connections.solve()
-		for view in getattr(self, "_registered_views", ()):
-			view.request_update(self.get_all_items())
+
+	def update_now(self, dirty_items=None):
+		"""
+		Perform a Gaphas model update.
+
+		Gaphas 3 calls this method with the set of dirty items from GtkView.
+		Legacy canvas code also calls it without arguments after loading a
+		canvas, so keep that path as a full-canvas update.
+		"""
+		if dirty_items is None:
+			dirty_items = tuple(self.get_all_items())
+		super(BlockCanvas,self).update_now(dirty_items)
+		normalized_items = []
+		for item in dirty_items:
+			normalize_origin = getattr(item, "normalize_origin", None)
+			if normalize_origin is not None and normalize_origin():
+				normalized_items.append(item)
+		if normalized_items:
+			super(BlockCanvas,self).update_now(normalized_items)
 
 	def _obtain_cairo_context(self):
 		import cairo

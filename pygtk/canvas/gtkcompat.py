@@ -73,6 +73,11 @@ gdk = gtk.gdk
 gobject = GObject
 pango = Pango
 
+if not hasattr(pango, "WEIGHT_NORMAL"):
+	pango.WEIGHT_NORMAL = Pango.Weight.NORMAL
+if not hasattr(pango, "WEIGHT_BOLD"):
+	pango.WEIGHT_BOLD = Pango.Weight.BOLD
+
 
 def _stock(name: str, fallback: str) -> str:
 	return getattr(Gtk, name, fallback)
@@ -106,6 +111,7 @@ for _name, _value in {
 	"STOCK_ZOOM_OUT": _stock("STOCK_ZOOM_OUT", "zoom-out"),
 	"STOCK_ZOOM_FIT": _stock("STOCK_ZOOM_FIT", "zoom-fit-best"),
 	"ICON_SIZE_MENU": Gtk.IconSize.MENU,
+	"ICON_SIZE_SMALL_TOOLBAR": Gtk.IconSize.SMALL_TOOLBAR,
 	"RESPONSE_ACCEPT": Gtk.ResponseType.ACCEPT,
 	"RESPONSE_APPLY": Gtk.ResponseType.APPLY,
 	"RESPONSE_CANCEL": Gtk.ResponseType.CANCEL,
@@ -127,12 +133,31 @@ for _name, _value in {
 	"POS_TOP": Gtk.PositionType.TOP,
 	"SHADOW_ETCHED_IN": Gtk.ShadowType.ETCHED_IN,
 	"STATE_NORMAL": Gtk.StateType.NORMAL,
+	"TOOLBAR_BOTH": Gtk.ToolbarStyle.BOTH,
+	"TOOLBAR_BOTH_HORIZ": Gtk.ToolbarStyle.BOTH_HORIZ,
+	"TOOLBAR_ICONS": Gtk.ToolbarStyle.ICONS,
+	"TOOLBAR_TEXT": Gtk.ToolbarStyle.TEXT,
 }.items():
 	setattr(gtk, _name, _value)
 
 
 if not hasattr(Gtk.Dialog, "vbox"):
 	Gtk.Dialog.vbox = property(lambda self: self.get_content_area())
+
+_gtk_box_pack_start = Gtk.Box.pack_start
+_gtk_box_pack_end = Gtk.Box.pack_end
+
+
+def _box_pack_start(self, child, expand=True, fill=True, padding=0):
+	return _gtk_box_pack_start(self, child, expand, fill, padding)
+
+
+def _box_pack_end(self, child, expand=True, fill=True, padding=0):
+	return _gtk_box_pack_end(self, child, expand, fill, padding)
+
+
+Gtk.Box.pack_start = _box_pack_start
+Gtk.Box.pack_end = _box_pack_end
 
 if not hasattr(Gtk.Widget, "modify_bg"):
 	def _modify_bg(self, _state, _color):

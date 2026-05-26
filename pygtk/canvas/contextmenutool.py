@@ -38,7 +38,6 @@ class ContextMenuTool:
 		window = context.view.parent.parent.parent.parent.parent
 		menurename.connect("activate",self.rename,context.view.hovered_item,window)
 		menu.add(menurename)
-		menudefault.set_sensitive(False)
 		'''menublockstreams.set_sensitive(False)'''
 
 		menudelete = gtk.MenuItem("_Delete",True)
@@ -113,11 +112,11 @@ class ContextMenuTool:
 			'''menublockstreams.set_sensitive(False)'''
 
 
-		if not hasattr(context.view.hovered_item,'blockinstance'):
+		if context.view.hovered_item and not hasattr(context.view.hovered_item,'blockinstance'):
 			menurename.set_sensitive(False)
 			#menuinfo.set_sensitive(False)
 
-		if context.view.hovered_item:
+		if context.view.hovered_item and hasattr(context.view.hovered_item,'blockinstance'):
 			if not context.view.hovered_item.blockinstance.instance:
 				menublockinstance.set_sensitive(False)
 

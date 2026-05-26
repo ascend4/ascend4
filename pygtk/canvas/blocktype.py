@@ -5,6 +5,8 @@ import ascpy
 import os.path
 import cairo
 
+CANVAS_DIR = os.path.abspath(os.path.dirname(__file__))
+
 class BlockType():
 	"""
 	All data associated with the MODEL type that is represented by a block.
@@ -123,6 +125,11 @@ class BlockType():
 		if len(properties) == 0:
 			return None
 		filename = "%s.svg"%self.name
+		if os.path.exists(filename):
+			return filename
+		filename = os.path.join(CANVAS_DIR, filename)
+		if os.path.exists(filename):
+			return filename
 		## Prepare a destination surface -> out to an SVG file!
 		surface = cairo.SVGSurface (filename,width,height)
 		c = cairo.Context (surface)

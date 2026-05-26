@@ -92,6 +92,6 @@ class ErrorReporter():
 	def error_callback(self,sev,filename,line,msg):
 		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
 		path = self.errorstore.get_path(pos)
-		col = self.errorview.get_column(3)
+		col = self.errorview.get_column(2)
 		self.errorview.scroll_to_cell(path,col)		
 		return 0;
