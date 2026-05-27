@@ -102,6 +102,9 @@ Useful environment/option overrides:
   CUTEst objective-group least-squares path. The runner default is `LM`, but
   only compatible unconstrained sum-of-squares problems use it; other problems
   fall back to the ordinary NLP/SQP path.
+- `--lsq-linear-solver DENSE_QR|NORMAL` or `A4SQP_LSQ_LINEAR_SOLVER=...`
+  controls the LSQ trial-step linear solve. The default is `DENSE_QR`; use
+  `NORMAL` to force normal equations.
 - `--a4sqp-hess-reg VALUE` or `A4SQP_HESS_REG=VALUE`
 - `--ipopt-max-iter N` or `IPOPTC_MAX_ITER=N`
 - `--ipopt-tol VALUE` or `IPOPTC_TOL=VALUE`

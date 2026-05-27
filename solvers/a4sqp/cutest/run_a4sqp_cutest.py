@@ -442,7 +442,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument(
         "--lsq-linear-solver",
         choices=["NORMAL", "DENSE_QR"],
-        default=os.environ.get("A4SQP_LSQ_LINEAR_SOLVER", "NORMAL"),
+        default=os.environ.get("A4SQP_LSQ_LINEAR_SOLVER", "DENSE_QR"),
         help="Linear solver for recognised least-squares pre-solves.",
     )
     parser.add_argument("--a4sqp-hess-reg", type=float, default=float(os.environ.get("A4SQP_HESS_REG", "1e-8")))

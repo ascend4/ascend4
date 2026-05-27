@@ -140,7 +140,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument(
         "--a4sqp-lsq-linear-solver",
         choices=["NORMAL", "DENSE_QR"],
-        default="NORMAL",
+        default="DENSE_QR",
         help="Pass the requested LSQ linear solver to all generated A4SQP profiles.",
     )
     parser.add_argument("--build", dest="build", action="store_true", default=True)

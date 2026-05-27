@@ -891,9 +891,9 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	options.grad_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
 	options.step_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_STEP_TOL);
 	options.scaled_stationarity = SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_LSQ_SCALED_STATIONARITY);
-	options.linear_solver = strcmp(SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_LSQ_LINEAR_SOLVER),"DENSE_QR") == 0
-		? A4SQP_LSQ_LINEAR_DENSE_QR
-		: A4SQP_LSQ_LINEAR_NORMAL;
+	options.linear_solver = strcmp(SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_LSQ_LINEAR_SOLVER),"NORMAL") == 0
+		? A4SQP_LSQ_LINEAR_NORMAL
+		: A4SQP_LSQ_LINEAR_DENSE_QR;
 
 	memset(&stats,0,sizeof(stats));
 	status = a4sqp_lsq_solve(&problem,&options,sys->x,&stats);

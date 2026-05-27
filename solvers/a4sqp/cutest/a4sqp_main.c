@@ -401,7 +401,7 @@ static int a4sqp_cutest_try_lsq(
 ){
 	const char *mode_name = a4sqp_cutest_env_string("A4SQP_TRY_LSQ","OFF");
 	const char *fallback_start = a4sqp_cutest_env_string("A4SQP_LSQ_FALLBACK_START","ORIGINAL");
-	const char *linear_solver_name = a4sqp_cutest_env_string("A4SQP_LSQ_LINEAR_SOLVER","NORMAL");
+	const char *linear_solver_name = a4sqp_cutest_env_string("A4SQP_LSQ_LINEAR_SOLVER","DENSE_QR");
 	int probe_status = 0;
 	int keep_improved = 0;
 	struct A4SqpLsqProblem problem;
@@ -466,9 +466,9 @@ static int a4sqp_cutest_try_lsq(
 	options.grad_tol = a4sqp_cutest_env_double("A4SQP_TOL",1e-7);
 	options.step_tol = a4sqp_cutest_env_double("A4SQP_STEP_TOL",1e-8);
 	options.linear_solver =
-		linear_solver_name != NULL && strcmp(linear_solver_name,"DENSE_QR") == 0
-		? A4SQP_LSQ_LINEAR_DENSE_QR
-		: A4SQP_LSQ_LINEAR_NORMAL;
+		linear_solver_name != NULL && strcmp(linear_solver_name,"NORMAL") == 0
+		? A4SQP_LSQ_LINEAR_NORMAL
+		: A4SQP_LSQ_LINEAR_DENSE_QR;
 
 	memset(&lsq_stats,0,sizeof(lsq_stats));
 	memcpy(ctx->hess_x_work,x,(size_t)ctx->n * sizeof(*x));
@@ -515,7 +515,7 @@ static int a4sqp_cutest_try_lsq(
 		"(status=%d, iter=%d, obj=%.17g, grad=%.17g, step=%.17g, lambda=%.17g); "
 		"falling back to SQP from %s point.\n",
 		mode_name,
-		linear_solver_name != NULL ? linear_solver_name : "NORMAL",
+		linear_solver_name != NULL ? linear_solver_name : "DENSE_QR",
 		(int)lsq_status,
 		lsq_stats.iterations,
 		(double)lsq_stats.objective,

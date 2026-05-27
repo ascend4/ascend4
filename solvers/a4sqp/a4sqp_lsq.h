@@ -16,8 +16,9 @@ enum A4SqpLsqMode {
 };
 
 enum A4SqpLsqLinearSolver {
-	A4SQP_LSQ_LINEAR_NORMAL = 0,
-	A4SQP_LSQ_LINEAR_DENSE_QR = 1
+	A4SQP_LSQ_LINEAR_DEFAULT = 0,
+	A4SQP_LSQ_LINEAR_NORMAL = 1,
+	A4SQP_LSQ_LINEAR_DENSE_QR = 2
 };
 
 enum A4SqpLsqStatus {

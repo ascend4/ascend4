@@ -470,8 +470,11 @@ static void a4sqp_lsq_defaults(struct A4SqpLsqOptions *dst, const struct A4SqpLs
 	if(src != NULL){
 		*dst = *src;
 	}
-	if(dst->linear_solver != A4SQP_LSQ_LINEAR_DENSE_QR){
-		dst->linear_solver = A4SQP_LSQ_LINEAR_NORMAL;
+	if(
+		dst->linear_solver != A4SQP_LSQ_LINEAR_NORMAL
+		&& dst->linear_solver != A4SQP_LSQ_LINEAR_DENSE_QR
+	){
+		dst->linear_solver = A4SQP_LSQ_LINEAR_DENSE_QR;
 	}
 	if(dst->max_iter <= 0){
 		dst->max_iter = 50;
