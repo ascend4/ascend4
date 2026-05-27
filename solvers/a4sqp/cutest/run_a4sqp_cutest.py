@@ -431,12 +431,12 @@ def main(argv: list[str]) -> int:
         "--lsq-max-iter",
         type=int,
         default=int(os.environ.get("A4SQP_LSQ_MAX_ITER", "0")),
-        help="Maximum iterations for the LS pre-solve; 0 uses --max-iter.",
+        help="Maximum iterations for the LS pre-solve; 0 uses the CUTEst driver adaptive default.",
     )
     parser.add_argument(
         "--lsq-fallback-start",
         choices=["original", "improved"],
-        default=os.environ.get("A4SQP_LSQ_FALLBACK_START", "original").lower(),
+        default=os.environ.get("A4SQP_LSQ_FALLBACK_START", "improved").lower(),
         help="Starting point for SQP after a non-converged LS pre-solve.",
     )
     parser.add_argument(
@@ -512,7 +512,10 @@ def main(argv: list[str]) -> int:
     env["A4SQP_SCALEOPT"] = args.a4sqp_scaleopt
     env["A4SQP_X_SCALE"] = str(args.a4sqp_x_scale)
     env["A4SQP_TRY_LSQ"] = args.try_lsq
-    env["A4SQP_LSQ_MAX_ITER"] = str(args.lsq_max_iter if args.lsq_max_iter > 0 else args.max_iter)
+    if args.lsq_max_iter > 0:
+        env["A4SQP_LSQ_MAX_ITER"] = str(args.lsq_max_iter)
+    else:
+        env.pop("A4SQP_LSQ_MAX_ITER", None)
     env["A4SQP_LSQ_FALLBACK_START"] = args.lsq_fallback_start.upper()
     env["A4SQP_LSQ_LINEAR_SOLVER"] = args.lsq_linear_solver
     env["A4SQP_HESS_REG"] = str(args.a4sqp_hess_reg)
