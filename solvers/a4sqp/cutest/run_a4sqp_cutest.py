@@ -288,6 +288,7 @@ def write_tsv_results(results: list[dict[str, object]], args: argparse.Namespace
         "status",
         "outcome_class",
         "used_lsq",
+        "lsq_linear_solver",
         "lsq_residuals",
         "lsq_probe_status",
         "lsq_status",
@@ -339,6 +340,7 @@ def write_tsv_results(results: list[dict[str, object]], args: argparse.Namespace
                     "status": result.get("status", ""),
                     "outcome_class": result.get("outcome_class", ""),
                     "used_lsq": result.get("used_lsq", ""),
+                    "lsq_linear_solver": args.lsq_linear_solver if is_a4sqp else "",
                     "lsq_residuals": result.get("lsq_residuals", ""),
                     "lsq_probe_status": result.get("lsq_probe_status", ""),
                     "lsq_status": result.get("lsq_status", ""),
@@ -437,6 +439,12 @@ def main(argv: list[str]) -> int:
         default=os.environ.get("A4SQP_LSQ_FALLBACK_START", "original").lower(),
         help="Starting point for SQP after a non-converged LS pre-solve.",
     )
+    parser.add_argument(
+        "--lsq-linear-solver",
+        choices=["NORMAL", "DENSE_QR"],
+        default=os.environ.get("A4SQP_LSQ_LINEAR_SOLVER", "NORMAL"),
+        help="Linear solver for recognised least-squares pre-solves.",
+    )
     parser.add_argument("--a4sqp-hess-reg", type=float, default=float(os.environ.get("A4SQP_HESS_REG", "1e-8")))
     parser.add_argument("--a4sqp-bound-push", type=float, default=float(os.environ.get("A4SQP_BOUND_PUSH", "1e-8")))
     parser.add_argument("--a4sqp-qp-time-limit", type=float, default=float(os.environ.get("A4SQP_QP_TIME_LIMIT", "0")))
@@ -506,6 +514,7 @@ def main(argv: list[str]) -> int:
     env["A4SQP_TRY_LSQ"] = args.try_lsq
     env["A4SQP_LSQ_MAX_ITER"] = str(args.lsq_max_iter if args.lsq_max_iter > 0 else args.max_iter)
     env["A4SQP_LSQ_FALLBACK_START"] = args.lsq_fallback_start.upper()
+    env["A4SQP_LSQ_LINEAR_SOLVER"] = args.lsq_linear_solver
     env["A4SQP_HESS_REG"] = str(args.a4sqp_hess_reg)
     env["A4SQP_BOUND_PUSH"] = str(args.a4sqp_bound_push)
     env["A4SQP_QP_TIME_LIMIT"] = str(args.a4sqp_qp_time_limit)

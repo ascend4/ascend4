@@ -137,6 +137,12 @@ def main(argv: list[str]) -> int:
         default="OFF",
         help="Pass an explicit reduced-gradient polish mode to all generated A4SQP profiles.",
     )
+    parser.add_argument(
+        "--a4sqp-lsq-linear-solver",
+        choices=["NORMAL", "DENSE_QR"],
+        default="NORMAL",
+        help="Pass the requested LSQ linear solver to all generated A4SQP profiles.",
+    )
     parser.add_argument("--build", dest="build", action="store_true", default=True)
     parser.add_argument("--no-build", dest="build", action="store_false")
     parser.add_argument("--rebuild", dest="rebuild", action="store_true", default=True, help="Force CUTEst/runcutest rebuilds for each problem/package.")
@@ -200,6 +206,8 @@ def main(argv: list[str]) -> int:
                 "AUTO",
                 "--acceptable-iter",
                 str(args.acceptable_iter),
+                "--lsq-linear-solver",
+                args.a4sqp_lsq_linear_solver,
                 "--restoration",
             ]
             if args.a4sqp_reduced_gradient_polish_mode != "OFF":

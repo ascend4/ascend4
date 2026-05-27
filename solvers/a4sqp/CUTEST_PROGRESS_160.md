@@ -16,19 +16,19 @@ This report intentionally excludes iteration counts, timings, objectives, and lo
 | Acceptable tolerance | 1e-5 |
 | Parallel jobs | 6 |
 | Problem-set source | /home/john/ascend/solvers/a4sqp/cutest/problem_sets/broad_stratified_160.tsv |
-| Notes | A4SQP profiles reused from fresh scons build with stress-gated reduced_gradient_polish_mode=FALLBACK; IPOPT and SLSQP profiles reuse latest available rebuilt comparison TSVs; CONOPT profile generated with the CONOPT C API CUTEst package using matched max-iteration and tolerance inputs. |
+| Notes | A4SQP profiles regenerated from fresh local sources with recognised LSQ problems using lsq_linear_solver=DENSE_QR and reduced_gradient_polish_mode=FALLBACK; IPOPT, SLSQP, and CONOPT profiles reuse latest available rebuilt comparison TSVs. |
 
 ## Profile Summary
 
-| Profile | Solver | Hessian | KKT | Acceptable iter | RG polish | Total | Pass | Pass rate | Near | Suspect | Fail | Error | Outcomes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ipoptc_limited | ipoptc | limited-memory | n/a | n/a |  | 160 | 130 | 130/160 | 19 | 0 | 8 | 3 | acceptable_success:6; driver_timeout:3; max_iter_infeasible_or_stalled:2; max_iter_near_solved:19; other_solver_failure:6; strict_success:124 |
-| ipoptc_exact | ipoptc | exact | n/a | n/a |  | 160 | 138 | 138/160 | 9 | 0 | 5 | 8 | acceptable_success:3; driver_timeout:8; max_iter_infeasible_or_stalled:3; max_iter_near_solved:9; other_solver_failure:2; strict_success:135 |
-| SLSQP_NLOPT | slsqp | n/a | n/a | n/a |  | 160 | 96 | 96/160 | 0 | 23 | 39 | 2 | driver_timeout:2; max_iter:24; other_solver_status:7; roundoff_limited:6; solver_failure:2; strict_success:96; success_high_gradient:23 |
-| A4SQP_BFGS_AUTO | a4sqp | BFGS | 1 | 5 | FALLBACK | 160 | 95 | 95/160 | 0 | 1 | 36 | 28 | acceptable_success:16; driver_timeout:28; line_search_error:12; max_iter_infeasible_or_stalled:4; max_iter_stationarity:20; strict_success:79; strict_success_high_kkt:1 |
-| A4SQP_EXACT_OBJ_AUTO | a4sqp | EXACT_OBJ | 1 | 5 | FALLBACK | 160 | 105 | 105/160 | 0 | 1 | 25 | 29 | acceptable_success:16; driver_timeout:29; line_search_error:8; max_iter_infeasible_or_stalled:5; max_iter_stationarity:11; other_solver_failure:1; strict_success:89; strict_success_high_kkt:1 |
-| A4SQP_EXACT_LAGRANGIAN_AUTO | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | FALLBACK | 160 | 113 | 113/160 | 0 | 1 | 20 | 26 | acceptable_success:12; driver_timeout:26; line_search_error:9; max_iter_stationarity:11; strict_success:101; strict_success_high_kkt:1 |
-| CONOPT | conoptc |  | n/a | n/a |  | 160 | 99 | 99/160 | 0 | 0 | 53 | 8 | driver_timeout:8; max_iter_infeasible_or_stalled:13; max_iter_stationarity:13; step_computation_error:27; strict_success:99 |
+| Profile | Solver | Hessian | KKT | Acceptable iter | LSQ linear | RG polish | Total | Pass | Pass rate | Near | Suspect | Fail | Error | Outcomes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ipoptc_limited | ipoptc | limited-memory | n/a | n/a |  |  | 160 | 130 | 130/160 | 19 | 0 | 8 | 3 | acceptable_success:6; driver_timeout:3; max_iter_infeasible_or_stalled:2; max_iter_near_solved:19; other_solver_failure:6; strict_success:124 |
+| ipoptc_exact | ipoptc | exact | n/a | n/a |  |  | 160 | 138 | 138/160 | 9 | 0 | 5 | 8 | acceptable_success:3; driver_timeout:8; max_iter_infeasible_or_stalled:3; max_iter_near_solved:9; other_solver_failure:2; strict_success:135 |
+| SLSQP_NLOPT | slsqp | n/a | n/a | n/a |  |  | 160 | 96 | 96/160 | 0 | 23 | 39 | 2 | driver_timeout:2; max_iter:24; other_solver_status:7; roundoff_limited:6; solver_failure:2; strict_success:96; success_high_gradient:23 |
+| A4SQP_BFGS_AUTO | a4sqp | BFGS | 1 | 5 | DENSE_QR | FALLBACK | 160 | 96 | 96/160 | 0 | 1 | 33 | 30 | acceptable_success:15; driver_timeout:30; line_search_error:12; max_iter_infeasible_or_stalled:4; max_iter_stationarity:17; strict_success:81; strict_success_high_kkt:1 |
+| A4SQP_EXACT_OBJ_AUTO | a4sqp | EXACT_OBJ | 1 | 5 | DENSE_QR | FALLBACK | 160 | 107 | 107/160 | 0 | 1 | 23 | 29 | acceptable_success:16; driver_timeout:29; line_search_error:8; max_iter_infeasible_or_stalled:5; max_iter_stationarity:9; other_solver_failure:1; strict_success:91; strict_success_high_kkt:1 |
+| A4SQP_EXACT_LAGRANGIAN_AUTO | a4sqp | EXACT_LAGRANGIAN | 1 | 5 | DENSE_QR | FALLBACK | 160 | 115 | 115/160 | 0 | 1 | 18 | 26 | acceptable_success:12; driver_timeout:26; line_search_error:9; max_iter_stationarity:9; strict_success:103; strict_success_high_kkt:1 |
+| CONOPT | conoptc |  | n/a | n/a |  |  | 160 | 99 | 99/160 | 0 | 0 | 53 | 8 | driver_timeout:8; max_iter_infeasible_or_stalled:13; max_iter_stationarity:13; step_computation_error:27; strict_success:99 |
 
 ## Category Summary
 
@@ -36,7 +36,7 @@ CUTEst categories are derived from the first two classification letters: objecti
 
 | Cat | Meaning | Problems | IPOPT L-BFGS | IPOPT Exact | SLSQP | A4SQP BFGS | A4SQP Obj | A4SQP Lagr | CONOPT |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SU | sum-of-squares objective; unconstrained | 51 | 34/51 | 39/51 | 21/51 | 35/51 | 36/51 | 36/51 | 37/51 |
+| SU | sum-of-squares objective; unconstrained | 51 | 34/51 | 39/51 | 21/51 | 37/51 | 38/51 | 38/51 | 37/51 |
 | OU | other objective; unconstrained | 6 | 6/6 | 5/6 | 2/6 | 5/6 | 5/6 | 5/6 | 5/6 |
 | SX | sum-of-squares objective; fixed variables only | 5 | 4/5 | 5/5 | 4/5 | 5/5 | 5/5 | 5/5 | 4/5 |
 | OX | other objective; fixed variables only | 1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 |
@@ -45,7 +45,7 @@ CUTEst categories are derived from the first two classification letters: objecti
 | QB | quadratic objective; bound constraints only | 3 | 3/3 | 3/3 | 2/3 | 3/3 | 3/3 | 3/3 | 3/3 |
 | SL | sum-of-squares objective; linear constraints | 3 | 2/3 | 3/3 | 2/3 | 2/3 | 2/3 | 2/3 | 0/3 |
 | OL | other objective; linear constraints | 4 | 3/4 | 2/4 | 2/4 | 3/4 | 3/4 | 3/4 | 1/4 |
-| QL | quadratic objective; linear constraints | 12 | 11/12 | 12/12 | 6/12 | 4/12 | 10/12 | 10/12 | 7/12 |
+| QL | quadratic objective; linear constraints | 12 | 11/12 | 12/12 | 6/12 | 3/12 | 10/12 | 10/12 | 7/12 |
 | LL | linear objective; linear constraints | 4 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 | 2/4 |
 | SQ | sum-of-squares objective; quadratic constraints | 2 | 1/2 | 2/2 | 1/2 | 0/2 | 0/2 | 1/2 | 0/2 |
 | OQ | other objective; quadratic constraints | 1 | 1/1 | 1/1 | 1/1 | 0/1 | 0/1 | 1/1 | 0/1 |
@@ -70,8 +70,8 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 
 | Problem | Cat | Class | n | m | IPOPT L-BFGS | IPOPT Exact | SLSQP | A4SQP BFGS | A4SQP Obj | A4SQP Lagr | CONOPT |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [BA-L1LS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1LS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟠4L | 🟠4L | 🟠4L | 🟢1 |
-| [BA-L1SPLS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1SPLS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BA-L1LS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1LS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BA-L1SPLS](https://bitbucket.org/optrove/sif/src/HEAD/BA-L1SPLS.SIF) | SU | SUR2-MN-57-0 | 57 | 0 | 🟢1 | 🟢1 | 🔴16 | 🟠4L | 🟠4L | 🟠4L | 🟢1 |
 | [BARD](https://bitbucket.org/optrove/sif/src/HEAD/BARD.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [BEALE](https://bitbucket.org/optrove/sif/src/HEAD/BEALE.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [BENNETT5LS](https://bitbucket.org/optrove/sif/src/HEAD/BENNETT5LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟠3 | 🟠3 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
@@ -81,10 +81,10 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | [BROWNBS](https://bitbucket.org/optrove/sif/src/HEAD/BROWNBS.SIF) [(a4c)](models/test/a4sqp/brownbs.a4c) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [BROWNDEN](https://bitbucket.org/optrove/sif/src/HEAD/BROWNDEN.SIF) [(a4c)](models/test/a4sqp/brownden.a4c) | SU | SUR2-AN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
 | [CERI651ALS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651ALS.SIF) [(a4c)](models/test/a4sqp/ceri651als.a4c) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴15 | 🟠3 | 🟠6 | 🔴7 | 🔴7 | 🔴7 | 🔴7 |
-| [CERI651BLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651BLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🟠6 | 🔴7 | 🔴7 | 🔴7 | 🔴7 |
+| [CERI651BLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651BLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟠3 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🔴7 |
 | [CERI651CLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651CLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🔴15 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🔴7 |
 | [CERI651DLS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651DLS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🔴7 |
-| [CERI651ELS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651ELS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴7 | 🔴7 | 🔴7 | 🔴7 |
+| [CERI651ELS](https://bitbucket.org/optrove/sif/src/HEAD/CERI651ELS.SIF) | SU | SUR2-MN-7-0 | 7 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🔴7 |
 | [CHWIRUT1LS](https://bitbucket.org/optrove/sif/src/HEAD/CHWIRUT1LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🔴9 | 🔴9 | 🟢1 |
 | [CHWIRUT2LS](https://bitbucket.org/optrove/sif/src/HEAD/CHWIRUT2LS.SIF) | SU | SUR2-MN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [CLUSTERLS](https://bitbucket.org/optrove/sif/src/HEAD/CLUSTERLS.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
@@ -100,7 +100,7 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | [DENSCHNF](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNF.SIF) | SU | SUR2-AY-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [DEVGLA1](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA1.SIF) | SU | SUR2-MN-4-0 | 4 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [DEVGLA2](https://bitbucket.org/optrove/sif/src/HEAD/DEVGLA2.SIF) | SU | SUR2-MN-5-0 | 5 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [DIAMON2DLS](https://bitbucket.org/optrove/sif/src/HEAD/DIAMON2DLS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
+| [DIAMON2DLS](https://bitbucket.org/optrove/sif/src/HEAD/DIAMON2DLS.SIF) [(a4c)](models/test/a4sqp/diamon2dls.a4c) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
 | [DIAMON3DLS](https://bitbucket.org/optrove/sif/src/HEAD/DIAMON3DLS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
 | [DMN15102LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15102LS.SIF) | SU | SUR2-MN-66-0 | 66 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
 | [DMN15103LS](https://bitbucket.org/optrove/sif/src/HEAD/DMN15103LS.SIF) | SU | SUR2-MN-99-0 | 99 | 0 | 🟠3 | 🔴12 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴12 |
@@ -117,8 +117,8 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | [EXPFIT](https://bitbucket.org/optrove/sif/src/HEAD/EXPFIT.SIF) | SU | SUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [FBRAIN3LS](https://bitbucket.org/optrove/sif/src/HEAD/FBRAIN3LS.SIF) | SU | SUR2-AN-6-0 | 6 | 0 | 🟠3 | 🟠3 | 🔴16 | 🔴12 | 🔴12 | 🔴12 | 🔴7 |
 | [GAUSS1LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS1LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟠3 | 🟢1 | 🟠6 | 🔴9 | 🟢1 | 🟢1 | 🟢1 |
-| [GAUSS2LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS2LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🔴15 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
-| [GAUSS3LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS3LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟠6 | 🔴9 | 🔴9 | 🔴9 | 🟢1 |
+| [GAUSS2LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS2LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🔴15 | 🟢1 | 🟠6 | 🔴9 | 🔴9 | 🔴9 | 🟢1 |
+| [GAUSS3LS](https://bitbucket.org/optrove/sif/src/HEAD/GAUSS3LS.SIF) | SU | SUR2-MN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [GAUSSIAN](https://bitbucket.org/optrove/sif/src/HEAD/GAUSSIAN.SIF) | SU | SUR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [GBRAINLS](https://bitbucket.org/optrove/sif/src/HEAD/GBRAINLS.SIF) | SU | SUR2-MN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [AKIVA](https://bitbucket.org/optrove/sif/src/HEAD/AKIVA.SIF) [(a4c)](models/test/a4sqp/akiva.a4c) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟠6 | 🟢2 | 🟢2 | 🟢2 | 🟢1 |
@@ -128,7 +128,7 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | [DENSCHNA](https://bitbucket.org/optrove/sif/src/HEAD/DENSCHNA.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🟢1 |
 | [DJTL](https://bitbucket.org/optrove/sif/src/HEAD/DJTL.SIF) | OU | OUR2-AN-2-0 | 2 | 0 | 🟢1 | 🟠3 | 🔴16 | 🔴7 | 🔴7 | 🔴7 | 🔴7 |
 | [AIRCRFTB](https://bitbucket.org/optrove/sif/src/HEAD/AIRCRFTB.SIF) | SX | SXR2-RN-8-0 | 8 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
-| [BIGGS3](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS3.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
+| [BIGGS3](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS3.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | [BIGGS5](https://bitbucket.org/optrove/sif/src/HEAD/BIGGS5.SIF) | SX | SXR2-AN-6-0 | 6 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
 | [BOX2](https://bitbucket.org/optrove/sif/src/HEAD/BOX2.SIF) | SX | SXR2-AN-3-0 | 3 | 0 | 🟢1 | 🟢1 | 🟢1 | 🟢1L | 🟢1L | 🟢1L | 🟢1 |
 | [DECONVU](https://bitbucket.org/optrove/sif/src/HEAD/DECONVU.SIF) | SX | SXR2-MN-61-0 | 63 | 0 | 🟠3 | 🟢1 | 🔴16 | 🟢1L | 🟢1L | 🟢1L | 🔴11 |
@@ -164,11 +164,11 @@ Matrix profile headers are shortened to solver/Hessian labels; full profile sett
 | [DUAL2](https://bitbucket.org/optrove/sif/src/HEAD/DUAL2.SIF) | QL | QLR2-MN-96-1 | 96 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 | 🟢1 |
 | [DUAL3](https://bitbucket.org/optrove/sif/src/HEAD/DUAL3.SIF) | QL | QLR2-MN-111-1 | 111 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🔴7 | 🔴7 | 🟢1 |
 | [DUAL4](https://bitbucket.org/optrove/sif/src/HEAD/DUAL4.SIF) | QL | QLR2-MN-75-1 | 75 | 1 | 🟢1 | 🟢1 | 🔴16 | 🔴7 | 🟢2 | 🟢2 | 🟢1 |
-| [DUALC1](https://bitbucket.org/optrove/sif/src/HEAD/DUALC1.SIF) | QL | QLR2-MN-9-215 | 9 | 215 | 🟢1 | 🟢1 | 🔴18 | 🔴7 | 🟢2 | 🟢2 | 🟢1 |
+| [DUALC1](https://bitbucket.org/optrove/sif/src/HEAD/DUALC1.SIF) | QL | QLR2-MN-9-215 | 9 | 215 | 🟢1 | 🟢1 | 🔴18 | 🔴12 | 🟢2 | 🟢2 | 🟢1 |
 | [DUALC2](https://bitbucket.org/optrove/sif/src/HEAD/DUALC2.SIF) | QL | QLR2-MN-7-229 | 7 | 229 | 🟢1 | 🟢1 | 🔴18 | 🔴7 | 🔴7 | 🔴7 | 🟢1 |
 | [DUALC5](https://bitbucket.org/optrove/sif/src/HEAD/DUALC5.SIF) | QL | QLR2-MN-8-278 | 8 | 278 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢2 | 🟢2 | 🟢1 |
 | [GENHS28](https://bitbucket.org/optrove/sif/src/HEAD/GENHS28.SIF) | QL | QLR2-AY-10-8 | 10 | 8 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴8 |
-| [GMNCASE1](https://bitbucket.org/optrove/sif/src/HEAD/GMNCASE1.SIF) | QL | QLR2-AN-175-300 | 175 | 300 | 🟢1 | 🟢1 | 🟢1 | 🟢2 | 🟢1 | 🟢1 | 🔴11 |
+| [GMNCASE1](https://bitbucket.org/optrove/sif/src/HEAD/GMNCASE1.SIF) | QL | QLR2-AN-175-300 | 175 | 300 | 🟢1 | 🟢1 | 🟢1 | 🔴12 | 🟢1 | 🟢1 | 🔴11 |
 | [DEGENLPA](https://bitbucket.org/optrove/sif/src/HEAD/DEGENLPA.SIF) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴11 |
 | [DEGENLPB](https://bitbucket.org/optrove/sif/src/HEAD/DEGENLPB.SIF) [(a4c)](models/test/a4sqp/degenlpb.a4c) | LL | LLR2-AN-20-15 | 20 | 15 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🔴11 |
 | [EXTRASIM](https://bitbucket.org/optrove/sif/src/HEAD/EXTRASIM.SIF) | LL | LLR2-AN-2-1 | 2 | 1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 | 🟢1 |
