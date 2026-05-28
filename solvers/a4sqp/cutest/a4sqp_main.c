@@ -587,6 +587,9 @@ static int a4sqp_cutest_try_lsq(
 		: a4sqp_cutest_lsq_default_max_iter(ctx,sqp_max_iter);
 	options.max_backtrack = a4sqp_cutest_env_int("A4SQP_MAX_BACKTRACK",20);
 	options.grad_tol = a4sqp_cutest_env_double("A4SQP_TOL",1e-7);
+	options.acceptable_tol = a4sqp_cutest_env_int("A4SQP_ACCEPTABLE_ITER",0) > 0
+		? a4sqp_cutest_env_double("A4SQP_ACCEPTABLE_TOL",1e-5)
+		: 0.0;
 	options.step_tol = a4sqp_cutest_env_double("A4SQP_STEP_TOL",1e-8);
 	options.linear_solver =
 		linear_solver_name != NULL && strcmp(linear_solver_name,"NORMAL") == 0

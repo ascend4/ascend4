@@ -44,6 +44,7 @@ struct A4SqpLsqOptions {
 	int scaled_stationarity;
 	enum A4SqpLsqDampingUpdate damping_update;
 	real64 grad_tol;
+	real64 acceptable_tol;
 	real64 step_tol;
 	real64 lambda_init;
 	real64 lambda_min;

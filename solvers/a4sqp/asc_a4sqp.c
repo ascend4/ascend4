@@ -716,6 +716,8 @@ struct A4SqpAscendLsqCtx {
 	slv_system_t server;
 	struct A4SqpSystem *sys;
 	const struct system_lsq_view *lsq;
+	const int *projected_sindex;
+	unsigned long nprojected;
 };
 
 static int asc_a4sqp_lsq_col_from_sindex(const struct A4SqpView *view, int sindex){
@@ -731,13 +733,78 @@ static int asc_a4sqp_lsq_col_from_sindex(const struct A4SqpView *view, int sinde
 	return -1;
 }
 
-static int asc_a4sqp_lsq_projected_index(const struct system_lsq_view *lsq, int sindex){
+static int asc_a4sqp_lsq_projected_index(const int *projected_sindex, unsigned long nprojected, int sindex){
 	unsigned long i;
-	if(lsq == NULL || lsq->projected_sindex == NULL){
+	if(projected_sindex == NULL){
 		return -1;
 	}
-	for(i = 0; i < lsq->nprojected; ++i){
-		if(lsq->projected_sindex[i] == sindex){
+	for(i = 0; i < nprojected; ++i){
+		if(projected_sindex[i] == sindex){
+			return (int)i;
+		}
+	}
+	return -1;
+}
+
+static int asc_a4sqp_lsq_is_bounded_col(const struct A4SqpSystem *sys, int col){
+	real64 lower;
+	real64 upper;
+	int no_lower;
+	int no_upper;
+	if(sys == NULL || col < 0 || col >= sys->view.n_var){
+		return 1;
+	}
+	lower = sys->view.var_lower != NULL ? sys->view.var_lower[col] : A4SQP_NO_LOWER_BOUND;
+	upper = sys->view.var_upper != NULL ? sys->view.var_upper[col] : A4SQP_NO_UPPER_BOUND;
+	no_lower = lower <= A4SQP_NO_LOWER_BOUND / 10.0 || lower <= -1e19;
+	no_upper = upper >= A4SQP_NO_UPPER_BOUND / 10.0 || upper >= 1e19;
+	return !no_lower || !no_upper;
+}
+
+static void asc_a4sqp_lsq_report_bounded_variable(
+	struct A4SqpSystem *sys,
+	const char *mode_name,
+	int col,
+	const char *action
+){
+	char message[512];
+	char *name = NULL;
+	real64 lower;
+	real64 upper;
+	if(sys == NULL){
+		return;
+	}
+	lower = (col >= 0 && col < sys->view.n_var && sys->view.var_lower != NULL)
+		? sys->view.var_lower[col]
+		: A4SQP_NO_LOWER_BOUND;
+	upper = (col >= 0 && col < sys->view.n_var && sys->view.var_upper != NULL)
+		? sys->view.var_upper[col]
+		: A4SQP_NO_UPPER_BOUND;
+	if(col >= 0 && col < sys->view.n_var && sys->server != NULL && sys->view.vars != NULL && sys->view.vars[col] != NULL){
+		name = var_make_name(sys->server,(struct var_variable *)sys->view.vars[col]);
+	}
+	snprintf(
+		message,
+		sizeof(message),
+		"lsq=skipped reason=bounded_variable try_lsq=%s action=%s col=%ld variable=%s lower=%.17g upper=%.17g",
+		mode_name != NULL ? mode_name : "?",
+		action != NULL ? action : "?",
+		(long)col,
+		name != NULL ? name : "?",
+		lower,
+		upper
+	);
+	a4sqp_report_progress(&sys->params,message);
+	ASC_FREE(name);
+}
+
+static int asc_a4sqp_lsq_first_bounded_col(const struct A4SqpSystem *sys){
+	int32 i;
+	if(sys == NULL){
+		return -1;
+	}
+	for(i = 0; i < sys->view.n_var; ++i){
+		if(asc_a4sqp_lsq_is_bounded_col(sys,i)){
 			return (int)i;
 		}
 	}
@@ -823,7 +890,7 @@ static int asc_a4sqp_lsq_eval_affine_model(
 	int32 i;
 	if(ctx == NULL || ctx->sys == NULL || ctx->lsq == NULL || x == NULL
 		|| offset == NULL || linear_jac_rowmajor == NULL
-		|| n_linear <= 0 || (unsigned long)n_linear != ctx->lsq->nprojected){
+		|| n_linear <= 0 || (unsigned long)n_linear != ctx->nprojected){
 		return 1;
 	}
 	if(ctx->sys->view.vars == NULL || ctx->sys->view.n_var != ctx->sys->x_n){
@@ -833,7 +900,7 @@ static int asc_a4sqp_lsq_eval_affine_model(
 		var_set_value((struct var_variable *)ctx->sys->view.vars[i],x[i]);
 	}
 	for(i = 0; i < n_linear; ++i){
-		int col = asc_a4sqp_lsq_col_from_sindex(&ctx->sys->view,ctx->lsq->projected_sindex[i]);
+		int col = asc_a4sqp_lsq_col_from_sindex(&ctx->sys->view,ctx->projected_sindex[i]);
 		if(col < 0){
 			return 1;
 		}
@@ -867,7 +934,7 @@ static int asc_a4sqp_lsq_eval_affine_model(
 			return 1;
 		}
 		for(k = 0; k < nnz; ++k){
-			int projected = asc_a4sqp_lsq_projected_index(ctx->lsq,sindex_columns[k]);
+			int projected = asc_a4sqp_lsq_projected_index(ctx->projected_sindex,ctx->nprojected,sindex_columns[k]);
 			if(projected >= 0){
 				linear_jac_rowmajor[(size_t)row * (size_t)n_linear + (size_t)projected] =
 					values[k];
@@ -921,6 +988,7 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	struct A4SqpLsqStats stats;
 	real64 *weights = NULL;
 	int32 *projection_cols = NULL;
+	int *projection_sindex = NULL;
 	enum A4SqpLsqStatus status;
 	unsigned flags = SYSTEM_LSQ_ANALYSE_BUILD_VIEW;
 	unsigned long i;
@@ -946,6 +1014,13 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	if(lsq == NULL || lsq->nresiduals == 0){
 		return -1;
 	}
+	{
+		int bounded_col = asc_a4sqp_lsq_first_bounded_col(sys);
+		if(bounded_col >= 0){
+			asc_a4sqp_lsq_report_bounded_variable(sys,mode_name,bounded_col,"fallback_sqp");
+			return -1;
+		}
+	}
 	if(projection_name != NULL && strcmp(projection_name,"ON") == 0 && lsq->nprojected == 0){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,
 			"A4SQP least-squares variable projection requested but no jointly affine variable block was detected."
@@ -967,9 +1042,13 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 
 	memset(&projection,0,sizeof(projection));
 	if(lsq->nprojected > 0){
+		unsigned long nusable_projected = 0;
 		projection_cols = ASC_NEW_ARRAY_OR_NULL(int32,lsq->nprojected);
-		if(projection_cols == NULL){
+		projection_sindex = ASC_NEW_ARRAY_OR_NULL(int,lsq->nprojected);
+		if(projection_cols == NULL || projection_sindex == NULL){
 			ASC_FREE(weights);
+			ASC_FREE(projection_cols);
+			ASC_FREE(projection_sindex);
 			return 1;
 		}
 		for(i = 0; i < lsq->nprojected; ++i){
@@ -977,14 +1056,33 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 			if(col < 0){
 				ASC_FREE(weights);
 				ASC_FREE(projection_cols);
+				ASC_FREE(projection_sindex);
 				return 1;
 			}
-			projection_cols[i] = (int32)col;
+			if(asc_a4sqp_lsq_is_bounded_col(sys,col)){
+				asc_a4sqp_lsq_report_bounded_variable(sys,mode_name,col,"fallback_sqp");
+				ASC_FREE(weights);
+				ASC_FREE(projection_cols);
+				ASC_FREE(projection_sindex);
+				return -1;
+			}
+			projection_cols[nusable_projected] = (int32)col;
+			projection_sindex[nusable_projected] = lsq->projected_sindex[i];
+			nusable_projected++;
 		}
-		projection.n_linear = (int32)lsq->nprojected;
-		projection.linear_cols = projection_cols;
-		projection.eval_affine_model = asc_a4sqp_lsq_eval_affine_model;
+		if(nusable_projected == 0){
+			ASC_FREE(projection_cols);
+			ASC_FREE(projection_sindex);
+			projection_cols = NULL;
+			projection_sindex = NULL;
+		}else{
+			projection.n_linear = (int32)nusable_projected;
+			projection.linear_cols = projection_cols;
+			projection.eval_affine_model = asc_a4sqp_lsq_eval_affine_model;
+		}
 	}
+	ctx.projected_sindex = projection_sindex;
+	ctx.nprojected = (unsigned long)projection.n_linear;
 
 	memset(&problem,0,sizeof(problem));
 	problem.n_var = sys->view.n_var;
@@ -1008,6 +1106,9 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	}
 	options.max_backtrack = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_MAX_BACKTRACK);
 	options.grad_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_FEAS_TOL);
+	options.acceptable_tol = SLV_PARAM_INT(&sys->params,A4SQP_PARAM_ACCEPTABLE_ITER) > 0
+		? SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_ACCEPTABLE_TOL)
+		: 0.0;
 	options.step_tol = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_STEP_TOL);
 	options.scaled_stationarity = SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_LSQ_SCALED_STATIONARITY);
 	options.linear_solver = strcmp(SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_LSQ_LINEAR_SOLVER),"NORMAL") == 0
@@ -1028,6 +1129,24 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	status = a4sqp_lsq_solve(&problem,&options,sys->x,&stats);
 	ASC_FREE(weights);
 	ASC_FREE(projection_cols);
+	ASC_FREE(projection_sindex);
+	if(status == A4SQP_LSQ_SOLVED
+		&& options.acceptable_tol > options.grad_tol
+		&& stats.grad_inf > options.grad_tol
+		&& stats.grad_inf <= options.acceptable_tol
+	){
+		char message[256];
+		snprintf(
+			message,
+			sizeof(message),
+			"lsq_status=acceptable_stalled grad=%g strict_tol=%g acceptable_tol=%g step=%g",
+			stats.grad_inf,
+			options.grad_tol,
+			options.acceptable_tol,
+			stats.step_norm
+		);
+		a4sqp_report_progress(&sys->params,message);
+	}
 	if(a4sqp_x_push_to_ascend(sys,sys->x) || asc_a4sqp_build_view(sys,server)){
 		sys->status.ok = FALSE;
 		sys->status.calc_ok = FALSE;
