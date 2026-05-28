@@ -230,6 +230,120 @@ SUBROUTINE a4sqp_cutest_lsq_jacobian_row( n, x, row_c, capacity_c, columns,    &
   status = 4
 END SUBROUTINE a4sqp_cutest_lsq_jacobian_row
 
+SUBROUTINE a4sqp_cutest_lsq_jacobian_dense( n, x, nres, ld_c, jac, status ) BIND( C )
+! C-facing dense residual-Jacobian accessor.
+!
+! Builds every LSQ residual row after a single ELFUN_r derivative sweep. The
+! C side passes a row-major nres-by-n buffer; Fortran sees this as jac(n,nres).
+  USE, INTRINSIC :: ISO_C_BINDING, ONLY : C_INT, C_DOUBLE
+  USE CUTEST_KINDS_precision
+  USE CUTEST_precision
+  IMPLICIT NONE
+
+  INTEGER( C_INT ), INTENT( IN ), VALUE :: n
+  REAL( C_DOUBLE ), INTENT( IN ) :: x( n )
+  INTEGER( C_INT ), INTENT( IN ), VALUE :: nres
+  INTEGER( C_INT ), INTENT( IN ), VALUE :: ld_c
+  REAL( C_DOUBLE ), INTENT( OUT ) :: jac( ld_c, nres )
+  INTEGER( C_INT ), INTENT( OUT ) :: status
+
+  INTEGER( KIND = ip_ ) :: i, ii, ig, iel, ifstat, ig1, istrgv, iendgv
+  INTEGER( KIND = ip_ ) :: k, l, ll, nvarel, nelow, nelup, nin, j
+  INTEGER( KIND = ip_ ) :: row
+  REAL( KIND = rp_ ) :: scalee
+  LOGICAL :: a4sqp_cutest_lsq_is_objective_group
+
+  EXTERNAL :: ELFUN_r
+  EXTERNAL :: RANGE_r
+
+  status = 0
+  IF ( n <= 0 .OR. nres <= 0 .OR. ld_c < n ) THEN
+    status = 4
+    RETURN
+  END IF
+
+  jac( 1 : ld_c, 1 : nres ) = 0.0_C_DOUBLE
+
+  DO i = 1, MAX( CUTEST_data_global%nel, CUTEST_data_global%ng )
+    CUTEST_work_global( 1 )%ICALCF( i ) = i
+  END DO
+
+  CALL ELFUN_r( CUTEST_work_global( 1 )%FUVALS, x, CUTEST_data_global%EPVALU,  &
+                CUTEST_data_global%nel, CUTEST_data_global%ITYPEE,             &
+                CUTEST_data_global%ISTAEV, CUTEST_data_global%IELVAR,          &
+                CUTEST_data_global%INTVAR, CUTEST_data_global%ISTADH,          &
+                CUTEST_data_global%ISTEP, CUTEST_work_global( 1 )%ICALCF,      &
+                CUTEST_data_global%ltypee, CUTEST_data_global%lstaev,          &
+                CUTEST_data_global%lelvar, CUTEST_data_global%lntvar,          &
+                CUTEST_data_global%lstadh, CUTEST_data_global%lstep,           &
+                CUTEST_data_global%lcalcf, CUTEST_data_global%lfuval,          &
+                CUTEST_data_global%lvscal, CUTEST_data_global%lepvlu,          &
+                2, ifstat )
+  IF ( ifstat /= 0 ) THEN
+    status = 3
+    RETURN
+  END IF
+
+  row = 0
+  DO ig = 1, CUTEST_data_global%ng
+    IF ( .NOT. a4sqp_cutest_lsq_is_objective_group( ig ) ) CYCLE
+    row = row + 1
+    IF ( row > nres ) THEN
+      status = 4
+      RETURN
+    END IF
+
+    ig1 = ig + 1
+    istrgv = CUTEST_data_global%ISTAGV( ig )
+    iendgv = CUTEST_data_global%ISTAGV( ig1 ) - 1
+    nelow = CUTEST_data_global%ISTADG( ig )
+    nelup = CUTEST_data_global%ISTADG( ig1 ) - 1
+
+    CUTEST_work_global( 1 )%W_ws( CUTEST_data_global%ISVGRP( istrgv : iendgv ) ) = 0.0_rp_
+
+    DO ii = nelow, nelup
+      iel = CUTEST_data_global%IELING( ii )
+      k = CUTEST_data_global%INTVAR( iel )
+      l = CUTEST_data_global%ISTAEV( iel )
+      nvarel = CUTEST_data_global%ISTAEV( iel + 1 ) - l
+      scalee = CUTEST_data_global%ESCALE( ii )
+      IF ( CUTEST_data_global%INTREP( iel ) ) THEN
+        nin = CUTEST_data_global%INTVAR( iel + 1 ) - k
+        CALL RANGE_r( iel, .TRUE., CUTEST_work_global( 1 )%FUVALS( k ),        &
+                      CUTEST_work_global( 1 )%W_el, nvarel, nin,               &
+                      CUTEST_data_global%ITYPEE( iel ), nin, nvarel )
+        DO i = 1, nvarel
+          j = CUTEST_data_global%IELVAR( l )
+          CUTEST_work_global( 1 )%W_ws( j ) = CUTEST_work_global( 1 )%W_ws( j ) + &
+                                             scalee * CUTEST_work_global( 1 )%W_el( i )
+          l = l + 1
+        END DO
+      ELSE
+        DO i = 1, nvarel
+          j = CUTEST_data_global%IELVAR( l )
+          CUTEST_work_global( 1 )%W_ws( j ) = CUTEST_work_global( 1 )%W_ws( j ) + &
+                                             scalee * CUTEST_work_global( 1 )%FUVALS( k )
+          k = k + 1
+          l = l + 1
+        END DO
+      END IF
+    END DO
+
+    DO k = CUTEST_data_global%ISTADA( ig ), CUTEST_data_global%ISTADA( ig1 ) - 1
+      j = CUTEST_data_global%ICNA( k )
+      CUTEST_work_global( 1 )%W_ws( j ) = CUTEST_work_global( 1 )%W_ws( j ) +  &
+                                         CUTEST_data_global%A( k )
+    END DO
+
+    DO i = istrgv, iendgv
+      ll = CUTEST_data_global%ISVGRP( i )
+      IF ( ll <= n ) jac( ll, row ) = REAL( CUTEST_work_global( 1 )%W_ws( ll ), C_DOUBLE )
+    END DO
+  END DO
+
+  IF ( row /= nres ) status = 4
+END SUBROUTINE a4sqp_cutest_lsq_jacobian_dense
+
 LOGICAL FUNCTION a4sqp_cutest_lsq_is_objective_group( ig )
 ! Internal objective-group predicate.
 !
