@@ -86,6 +86,10 @@ void system_clear_lsq_view(slv_system_t sys){
 		ASC_FREE(sys->lsq_view->residuals);
 		sys->lsq_view->residuals = NULL;
 	}
+	if(sys->lsq_view->projected_sindex != NULL){
+		ASC_FREE(sys->lsq_view->projected_sindex);
+		sys->lsq_view->projected_sindex = NULL;
+	}
 	ASC_FREE(sys->lsq_view);
 	sys->lsq_view = NULL;
 }
@@ -218,6 +222,91 @@ int system_lsq_eval_jacobian_row(
 	return 0;
 }
 
+static int system_lsq_build_projection(slv_system_t sys, struct system_lsq_view *view){
+	const struct relation *rel;
+	unsigned long nvar;
+	unsigned long i;
+	unsigned long row;
+	unsigned long count = 0;
+	unsigned char *candidate = NULL;
+	unsigned char *single = NULL;
+
+	if(sys == NULL || view == NULL || view->objective == NULL || view->nresiduals == 0){
+		return 0;
+	}
+	rel = system_lsq_compiler_relation(view->objective);
+	if(rel == NULL){
+		return 0;
+	}
+	nvar = NumberVariables(rel);
+	if(nvar == 0){
+		return 0;
+	}
+	candidate = ASC_NEW_ARRAY_CLEAR(unsigned char,nvar + 1);
+	single = ASC_NEW_ARRAY_CLEAR(unsigned char,nvar + 1);
+	if(candidate == NULL || single == NULL){
+		ASC_FREE(candidate);
+		ASC_FREE(single);
+		return 0;
+	}
+	for(i = 1; i <= nvar; ++i){
+		struct Instance *inst = RelationVariable(rel,i);
+		struct var_variable *var = system_lsq_find_solver_var(sys,inst);
+		int affine = 1;
+		if(var == NULL || var_sindex(var) < 0){
+			continue;
+		}
+		memset(single,0,nvar + 1);
+		single[i] = 1;
+		for(row = 0; row < view->nresiduals; ++row){
+			if(!RelationTermIsAffineInVariables(view->residuals[row].residual_term,single,nvar + 1)){
+				affine = 0;
+				break;
+			}
+		}
+		if(affine){
+			candidate[i] = 1;
+			count++;
+		}
+	}
+	if(count == 0 || count >= nvar){
+		ASC_FREE(candidate);
+		ASC_FREE(single);
+		return 0;
+	}
+	for(row = 0; row < view->nresiduals; ++row){
+		if(!RelationTermIsAffineInVariables(view->residuals[row].residual_term,candidate,nvar + 1)){
+			ASC_FREE(candidate);
+			ASC_FREE(single);
+			return 0;
+		}
+	}
+	view->projected_sindex = ASC_NEW_ARRAY_OR_NULL(int,count);
+	if(view->projected_sindex == NULL){
+		ASC_FREE(candidate);
+		ASC_FREE(single);
+		return 0;
+	}
+	view->nprojected = 0;
+	for(i = 1; i <= nvar; ++i){
+		if(candidate[i]){
+			struct var_variable *var = system_lsq_find_solver_var(sys,RelationVariable(rel,i));
+			if(var == NULL || var_sindex(var) < 0){
+				ASC_FREE(view->projected_sindex);
+				view->projected_sindex = NULL;
+				view->nprojected = 0;
+				ASC_FREE(candidate);
+				ASC_FREE(single);
+				return 0;
+			}
+			view->projected_sindex[view->nprojected++] = var_sindex(var);
+		}
+	}
+	ASC_FREE(candidate);
+	ASC_FREE(single);
+	return view->nprojected > 0;
+}
+
 int system_analyse_lsq_objective(slv_system_t sys, unsigned flags, struct RelationLeastSquaresAnalysis *analysis){
 	struct RelationLeastSquaresAnalysis local;
 	struct rel_relation *obj;
@@ -268,6 +357,9 @@ int system_analyse_lsq_objective(slv_system_t sys, unsigned flags, struct Relati
 		return 0;
 	}
 
+	if(flags & SYSTEM_LSQ_ANALYSE_BUILD_PROJECTION){
+		system_lsq_build_projection(sys,view);
+	}
 	view->valid = 1;
 	sys->lsq_view = view;
 	*analysis = view->analysis;

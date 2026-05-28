@@ -266,6 +266,18 @@ ASC_DLLSPEC int RelationAnalyzeLeastSquaresObjectiveWithResiduals(
  *  RelationAnalyzeLeastSquaresObjective().
  */
 
+ASC_DLLSPEC int RelationTermIsAffineInVariables(
+	CONST struct relation_term *term,
+	CONST unsigned char *var_mask,
+	unsigned long mask_len
+);
+/**<
+ *  Return nonzero when term is structurally affine in the selected relation
+ *  variables. var_mask uses one-based relation variable numbering: bit i
+ *  corresponds to RelationVariable(rel,i), and mask_len must be at least the
+ *  largest selected index plus one.
+ */
+
 ASC_DLLSPEC unsigned long TermVarNumber(CONST struct relation_term *term);
 /**<
 	@return the index into the relations variable list.

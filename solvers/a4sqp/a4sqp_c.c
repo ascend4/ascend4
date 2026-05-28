@@ -71,6 +71,9 @@ struct A4SqpCOptions {
 	char hessian[32];
 	char exact_lagrangian_multipliers[32];
 	char scaleopt[32];
+	char lsq_variable_projection[32];
+	char lsq_damping_update[32];
+	double lsq_lambda_init;
 };
 
 struct A4SqpProblemInfo {
@@ -127,6 +130,15 @@ static const struct A4SqpOptionInfo a4sqp_c_option_info[] = {
 	A4SQP_OPT_STR("lsq_linear_solver","LSQ linear solver",1,
 		"Linear solver for least-squares trial steps: DENSE_QR or NORMAL.",
 		"DENSE_QR",((const char *const[]){"DENSE_QR","NORMAL",NULL}),A4SQP_FALSE),
+	A4SQP_OPT_STR("lsq_variable_projection","LSQ variable projection",1,
+		"Eliminate structurally linear variables from recognised unconstrained least-squares objectives: OFF, AUTO, or ON.",
+		"OFF",((const char *const[]){"OFF","AUTO","ON",NULL}),A4SQP_FALSE),
+	A4SQP_OPT_STR("lsq_damping_update","LSQ damping update",1,
+		"Levenberg-Marquardt damping update rule for the least-squares path: NIELSEN, MINPACK, BOLD, or TRUST.",
+		"NIELSEN",((const char *const[]){"NIELSEN","MINPACK","BOLD","TRUST",NULL}),A4SQP_FALSE),
+	A4SQP_OPT_NUM("lsq_lambda_init","LSQ initial damping",1,
+		"Initial Levenberg-Marquardt damping for the least-squares path; zero uses the built-in default.",
+		0.0,0.0,1e12,A4SQP_FALSE),
 	A4SQP_OPT_NUM("hess_reg","Hessian regularization",2,
 		"Minimum diagonal margin enforced when regularizing the step Hessian to a convex QP model.",
 		1e-8,0.0,1e12,A4SQP_TRUE),
@@ -386,6 +398,9 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	strcpy(opt->hessian,"BFGS");
 	strcpy(opt->exact_lagrangian_multipliers,"ROW_DUAL_SIGNED");
 	strcpy(opt->scaleopt,"ROW_2NORM");
+	strcpy(opt->lsq_variable_projection,"OFF");
+	strcpy(opt->lsq_damping_update,"NIELSEN");
+	opt->lsq_lambda_init = 0.0;
 }
 
 static double a4sqp_c_map_bound(double value, double lower_inf, double upper_inf){
@@ -589,6 +604,40 @@ A4SqpBool AddA4SqpStrOption(A4SqpProblem problem, char *keyword, char *val){
 		}
 		return A4SQP_FALSE;
 	}
+	if(a4sqp_c_streq(keyword,"lsq_variable_projection")){
+		if(a4sqp_c_streq(val,"OFF") || a4sqp_c_streq(val,"FALSE") || a4sqp_c_streq(val,"0")){
+			strcpy(p->opt.lsq_variable_projection,"OFF");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"AUTO")){
+			strcpy(p->opt.lsq_variable_projection,"AUTO");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"ON") || a4sqp_c_streq(val,"TRUE") || a4sqp_c_streq(val,"1")){
+			strcpy(p->opt.lsq_variable_projection,"ON");
+			return A4SQP_TRUE;
+		}
+		return A4SQP_FALSE;
+	}
+	if(a4sqp_c_streq(keyword,"lsq_damping_update")){
+		if(a4sqp_c_streq(val,"NIELSEN")){
+			strcpy(p->opt.lsq_damping_update,"NIELSEN");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"MINPACK")){
+			strcpy(p->opt.lsq_damping_update,"MINPACK");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"BOLD")){
+			strcpy(p->opt.lsq_damping_update,"BOLD");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"TRUST")){
+			strcpy(p->opt.lsq_damping_update,"TRUST");
+			return A4SQP_TRUE;
+		}
+		return A4SQP_FALSE;
+	}
 	if(a4sqp_c_streq(keyword,"reduced_gradient_polish_mode")){
 		if(a4sqp_c_streq(val,"OFF") || a4sqp_c_streq(val,"FALSE") || a4sqp_c_streq(val,"0")){
 			strcpy(p->opt.reduced_gradient_polish_mode,"OFF");
@@ -754,6 +803,13 @@ A4SqpBool AddA4SqpNumOption(A4SqpProblem problem, char *keyword, A4SqpNumber val
 			return A4SQP_FALSE;
 		}
 		p->opt.bound_push = val;
+		return A4SQP_TRUE;
+	}
+	if(a4sqp_c_streq(keyword,"lsq_lambda_init")){
+		if(val < 0.0 || !isfinite(val)){
+			return A4SQP_FALSE;
+		}
+		p->opt.lsq_lambda_init = val;
 		return A4SQP_TRUE;
 	}
 	if(a4sqp_c_streq(keyword,"qp_time_limit")){

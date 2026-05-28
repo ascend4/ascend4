@@ -731,6 +731,19 @@ static int asc_a4sqp_lsq_col_from_sindex(const struct A4SqpView *view, int sinde
 	return -1;
 }
 
+static int asc_a4sqp_lsq_projected_index(const struct system_lsq_view *lsq, int sindex){
+	unsigned long i;
+	if(lsq == NULL || lsq->projected_sindex == NULL){
+		return -1;
+	}
+	for(i = 0; i < lsq->nprojected; ++i){
+		if(lsq->projected_sindex[i] == sindex){
+			return (int)i;
+		}
+	}
+	return -1;
+}
+
 static int asc_a4sqp_lsq_eval_residuals(void *userdata, const real64 *x, real64 *residuals){
 	struct A4SqpAscendLsqCtx *ctx = (struct A4SqpAscendLsqCtx *)userdata;
 	int32 i;
@@ -796,6 +809,76 @@ static int asc_a4sqp_lsq_eval_jacobian_row(
 	return 0;
 }
 
+static int asc_a4sqp_lsq_eval_affine_model(
+	void *userdata,
+	const real64 *x,
+	int32 n_linear,
+	real64 *offset,
+	real64 *linear_jac_rowmajor
+){
+	struct A4SqpAscendLsqCtx *ctx = (struct A4SqpAscendLsqCtx *)userdata;
+	int *sindex_columns = NULL;
+	real64 *values = NULL;
+	unsigned long row;
+	int32 i;
+	if(ctx == NULL || ctx->sys == NULL || ctx->lsq == NULL || x == NULL
+		|| offset == NULL || linear_jac_rowmajor == NULL
+		|| n_linear <= 0 || (unsigned long)n_linear != ctx->lsq->nprojected){
+		return 1;
+	}
+	if(ctx->sys->view.vars == NULL || ctx->sys->view.n_var != ctx->sys->x_n){
+		return 1;
+	}
+	for(i = 0; i < ctx->sys->view.n_var; ++i){
+		var_set_value((struct var_variable *)ctx->sys->view.vars[i],x[i]);
+	}
+	for(i = 0; i < n_linear; ++i){
+		int col = asc_a4sqp_lsq_col_from_sindex(&ctx->sys->view,ctx->lsq->projected_sindex[i]);
+		if(col < 0){
+			return 1;
+		}
+		var_set_value((struct var_variable *)ctx->sys->view.vars[col],0.0);
+	}
+	if(system_lsq_eval_residuals(ctx->server,offset)){
+		return 1;
+	}
+	memset(linear_jac_rowmajor,0,
+		sizeof(real64) * (size_t)ctx->lsq->nresiduals * (size_t)n_linear);
+	sindex_columns = ASC_NEW_ARRAY_OR_NULL(int,ctx->sys->view.n_var);
+	values = ASC_NEW_ARRAY_OR_NULL(real64,ctx->sys->view.n_var);
+	if(sindex_columns == NULL || values == NULL){
+		ASC_FREE(sindex_columns);
+		ASC_FREE(values);
+		return 1;
+	}
+	for(row = 0; row < ctx->lsq->nresiduals; ++row){
+		unsigned long nnz = 0;
+		unsigned long k;
+		if(system_lsq_eval_jacobian_row(
+			ctx->server,
+			row,
+			sindex_columns,
+			values,
+			(unsigned long)ctx->sys->view.n_var,
+			&nnz
+		)){
+			ASC_FREE(sindex_columns);
+			ASC_FREE(values);
+			return 1;
+		}
+		for(k = 0; k < nnz; ++k){
+			int projected = asc_a4sqp_lsq_projected_index(ctx->lsq,sindex_columns[k]);
+			if(projected >= 0){
+				linear_jac_rowmajor[(size_t)row * (size_t)n_linear + (size_t)projected] =
+					values[k];
+			}
+		}
+	}
+	ASC_FREE(sindex_columns);
+	ASC_FREE(values);
+	return 0;
+}
+
 static int asc_a4sqp_lsq_progress(void *userdata, const struct A4SqpLsqIteration *iteration){
 	struct A4SqpAscendLsqCtx *ctx = (struct A4SqpAscendLsqCtx *)userdata;
 	char message[256];
@@ -828,14 +911,18 @@ static int asc_a4sqp_lsq_progress(void *userdata, const struct A4SqpLsqIteration
 
 static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys){
 	const char *mode_name;
+	const char *projection_name;
 	struct RelationLeastSquaresAnalysis analysis;
 	const struct system_lsq_view *lsq;
 	struct A4SqpAscendLsqCtx ctx;
 	struct A4SqpLsqProblem problem;
+	struct A4SqpLsqProjection projection;
 	struct A4SqpLsqOptions options;
 	struct A4SqpLsqStats stats;
 	real64 *weights = NULL;
+	int32 *projection_cols = NULL;
 	enum A4SqpLsqStatus status;
+	unsigned flags = SYSTEM_LSQ_ANALYSE_BUILD_VIEW;
 	unsigned long i;
 
 	if(sys == NULL || server == NULL){
@@ -845,14 +932,24 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	if(mode_name == NULL || strcmp(mode_name,"OFF") == 0){
 		return -1;
 	}
+	projection_name = SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_LSQ_VARIABLE_PROJECTION);
+	if(projection_name != NULL && strcmp(projection_name,"OFF") != 0){
+		flags |= SYSTEM_LSQ_ANALYSE_BUILD_PROJECTION;
+	}
 	if(sys->view.obj == NULL || sys->view.n_rel != 0){
 		return -1;
 	}
-	if(!system_analyse_lsq_objective(server,SYSTEM_LSQ_ANALYSE_BUILD_VIEW,&analysis)){
+	if(!system_analyse_lsq_objective(server,flags,&analysis)){
 		return -1;
 	}
 	lsq = system_get_lsq_view(server);
 	if(lsq == NULL || lsq->nresiduals == 0){
+		return -1;
+	}
+	if(projection_name != NULL && strcmp(projection_name,"ON") == 0 && lsq->nprojected == 0){
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,
+			"A4SQP least-squares variable projection requested but no jointly affine variable block was detected."
+		);
 		return -1;
 	}
 	weights = ASC_NEW_ARRAY_OR_NULL(real64,lsq->nresiduals);
@@ -868,6 +965,27 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	ctx.sys = sys;
 	ctx.lsq = lsq;
 
+	memset(&projection,0,sizeof(projection));
+	if(lsq->nprojected > 0){
+		projection_cols = ASC_NEW_ARRAY_OR_NULL(int32,lsq->nprojected);
+		if(projection_cols == NULL){
+			ASC_FREE(weights);
+			return 1;
+		}
+		for(i = 0; i < lsq->nprojected; ++i){
+			int col = asc_a4sqp_lsq_col_from_sindex(&sys->view,lsq->projected_sindex[i]);
+			if(col < 0){
+				ASC_FREE(weights);
+				ASC_FREE(projection_cols);
+				return 1;
+			}
+			projection_cols[i] = (int32)col;
+		}
+		projection.n_linear = (int32)lsq->nprojected;
+		projection.linear_cols = projection_cols;
+		projection.eval_affine_model = asc_a4sqp_lsq_eval_affine_model;
+	}
+
 	memset(&problem,0,sizeof(problem));
 	problem.n_var = sys->view.n_var;
 	problem.n_res = (int32)lsq->nresiduals;
@@ -880,6 +998,7 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	problem.progress = SLV_PARAM_BOOL(&sys->params,A4SQP_PARAM_PROGRESS_CALLBACKS)
 		? asc_a4sqp_lsq_progress
 		: NULL;
+	problem.projection = projection.n_linear > 0 ? &projection : NULL;
 
 	memset(&options,0,sizeof(options));
 	options.mode = strcmp(mode_name,"LM") == 0 ? A4SQP_LSQ_MODE_LM : A4SQP_LSQ_MODE_GAUSS;
@@ -894,10 +1013,21 @@ static int asc_a4sqp_try_lsq_solve(slv_system_t server, struct A4SqpSystem *sys)
 	options.linear_solver = strcmp(SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_LSQ_LINEAR_SOLVER),"NORMAL") == 0
 		? A4SQP_LSQ_LINEAR_NORMAL
 		: A4SQP_LSQ_LINEAR_DENSE_QR;
+	if(strcmp(SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_LSQ_DAMPING_UPDATE),"MINPACK") == 0){
+		options.damping_update = A4SQP_LSQ_DAMPING_MINPACK;
+	}else if(strcmp(SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_LSQ_DAMPING_UPDATE),"BOLD") == 0){
+		options.damping_update = A4SQP_LSQ_DAMPING_BOLD;
+	}else if(strcmp(SLV_PARAM_CHAR(&sys->params,A4SQP_PARAM_LSQ_DAMPING_UPDATE),"TRUST") == 0){
+		options.damping_update = A4SQP_LSQ_DAMPING_TRUST;
+	}else{
+		options.damping_update = A4SQP_LSQ_DAMPING_NIELSEN;
+	}
+	options.lambda_init = SLV_PARAM_REAL(&sys->params,A4SQP_PARAM_LSQ_LAMBDA_INIT);
 
 	memset(&stats,0,sizeof(stats));
 	status = a4sqp_lsq_solve(&problem,&options,sys->x,&stats);
 	ASC_FREE(weights);
+	ASC_FREE(projection_cols);
 	if(a4sqp_x_push_to_ascend(sys,sys->x) || asc_a4sqp_build_view(sys,server)){
 		sys->status.ok = FALSE;
 		sys->status.calc_ok = FALSE;

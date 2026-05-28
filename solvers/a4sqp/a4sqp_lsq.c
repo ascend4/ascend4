@@ -419,6 +419,486 @@ static int a4sqp_lsq_solve_dense_qr(
 	return 0;
 }
 
+static int a4sqp_lsq_solve_scaled_lm_step(
+	const struct A4SqpLsqProblem *problem,
+	enum A4SqpLsqLinearSolver solver,
+	int32 n,
+	const real64 *normal,
+	const real64 *rhs,
+	const real64 *scale,
+	real64 lambda,
+	real64 *damped,
+	real64 *qr_matrix,
+	real64 *qr_rhs,
+	real64 *step
+){
+	int32 i;
+	if(problem == NULL || normal == NULL || rhs == NULL || scale == NULL || step == NULL){
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		step[i] = 0.0;
+	}
+	if(solver == A4SQP_LSQ_LINEAR_DENSE_QR){
+		int32 qr_rows = problem->n_res + (lambda > 0.0 ? n : 0);
+		if(qr_matrix == NULL || qr_rhs == NULL){
+			return 1;
+		}
+		memset(qr_matrix + (size_t)problem->n_res * (size_t)n,0,sizeof(real64) * (size_t)n * (size_t)n);
+		memset(qr_rhs + problem->n_res,0,sizeof(real64) * (size_t)n);
+		if(lambda > 0.0){
+			real64 sqrt_lambda = sqrt(lambda);
+			if(!isfinite(sqrt_lambda)){
+				return 1;
+			}
+			for(i = 0; i < n; ++i){
+				qr_matrix[(size_t)(problem->n_res + i) * (size_t)n + (size_t)i] = sqrt_lambda;
+			}
+		}
+		return a4sqp_lsq_solve_dense_qr(qr_rows,n,qr_matrix,qr_rhs,step);
+	}
+	if(damped == NULL){
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		int32 j;
+		for(j = 0; j < n; ++j){
+			damped[i * n + j] = normal[i * n + j] / (scale[i] * scale[j]);
+		}
+		if(lambda > 0.0){
+			damped[i * n + i] += lambda;
+		}
+	}
+	return a4sqp_lsq_solve_dense(n,damped,rhs,step);
+}
+
+static int a4sqp_lsq_find_trust_lm_step(
+	const struct A4SqpLsqProblem *problem,
+	enum A4SqpLsqLinearSolver solver,
+	int32 n,
+	const real64 *normal,
+	const real64 *rhs,
+	const real64 *scale,
+	real64 radius,
+	real64 lambda_hint,
+	real64 lambda_min,
+	real64 lambda_max,
+	real64 *damped,
+	real64 *qr_matrix,
+	real64 *qr_rhs,
+	real64 *step,
+	real64 *lambda,
+	real64 *scaled_step_norm
+){
+	real64 hi;
+	real64 lo = 0.0;
+	enum A4SqpLsqLinearSolver trust_solver = solver == A4SQP_LSQ_LINEAR_DENSE_QR
+		? A4SQP_LSQ_LINEAR_NORMAL
+		: solver;
+	int solve_failed;
+	int iter;
+	if(lambda == NULL || scaled_step_norm == NULL || radius <= 0.0 || !isfinite(radius)){
+		return 1;
+	}
+	solve_failed = a4sqp_lsq_solve_scaled_lm_step(
+		problem,trust_solver,n,normal,rhs,scale,0.0,damped,qr_matrix,qr_rhs,step
+	);
+	if(!solve_failed){
+		*scaled_step_norm = a4sqp_lsq_norm2(n,step);
+		if(*scaled_step_norm <= radius){
+			if(trust_solver != solver){
+				solve_failed = a4sqp_lsq_solve_scaled_lm_step(
+					problem,solver,n,normal,rhs,scale,0.0,damped,qr_matrix,qr_rhs,step
+				);
+				if(solve_failed){
+					goto damped_step;
+				}
+				*scaled_step_norm = a4sqp_lsq_norm2(n,step);
+			}
+			*lambda = 0.0;
+			return 0;
+		}
+	}
+damped_step:
+	hi = lambda_hint > lambda_min ? lambda_hint : 1.0;
+	if(hi < lambda_min){
+		hi = lambda_min;
+	}
+	while(hi <= lambda_max){
+		if(!a4sqp_lsq_solve_scaled_lm_step(
+			problem,trust_solver,n,normal,rhs,scale,hi,damped,qr_matrix,qr_rhs,step
+		)){
+			*scaled_step_norm = a4sqp_lsq_norm2(n,step);
+			if(isfinite(*scaled_step_norm) && *scaled_step_norm <= radius){
+				break;
+			}
+		}
+		lo = hi;
+		if(hi > lambda_max / 4.0){
+			hi = lambda_max;
+		}else{
+			hi *= 4.0;
+		}
+		if(hi == lo){
+			return 1;
+		}
+	}
+	if(hi > lambda_max){
+		return 1;
+	}
+	for(iter = 0; iter < 20; ++iter){
+		real64 mid = lo > 0.0 ? sqrt(lo * hi) : 0.5 * hi;
+		if(mid <= lo || mid >= hi){
+			break;
+		}
+		if(a4sqp_lsq_solve_scaled_lm_step(
+			problem,trust_solver,n,normal,rhs,scale,mid,damped,qr_matrix,qr_rhs,step
+		)){
+			lo = mid;
+			continue;
+		}
+		*scaled_step_norm = a4sqp_lsq_norm2(n,step);
+		if(!isfinite(*scaled_step_norm) || *scaled_step_norm > radius){
+			lo = mid;
+		}else{
+			hi = mid;
+		}
+	}
+	if(trust_solver != solver){
+		real64 best_lambda = hi;
+		real64 best_norm;
+		real64 lower_lambda = 0.0;
+		int refine;
+		if(a4sqp_lsq_solve_scaled_lm_step(
+			problem,solver,n,normal,rhs,scale,best_lambda,damped,qr_matrix,qr_rhs,step
+		)){
+			return 1;
+		}
+		best_norm = a4sqp_lsq_norm2(n,step);
+		for(refine = 0; refine < 8 && best_lambda > lambda_min; ++refine){
+			real64 candidate = best_lambda * 0.1;
+			real64 candidate_norm;
+			if(candidate < lambda_min){
+				candidate = lambda_min;
+			}
+			if(best_norm >= 0.5 * radius || candidate == best_lambda){
+				break;
+			}
+			if(a4sqp_lsq_solve_scaled_lm_step(
+				problem,solver,n,normal,rhs,scale,candidate,damped,qr_matrix,qr_rhs,step
+			)){
+				break;
+			}
+			candidate_norm = a4sqp_lsq_norm2(n,step);
+			if(!isfinite(candidate_norm)){
+				break;
+			}
+			if(candidate_norm > radius){
+				lower_lambda = candidate;
+				break;
+			}
+			best_lambda = candidate;
+			best_norm = candidate_norm;
+		}
+		if(lower_lambda > 0.0){
+			real64 upper_lambda = best_lambda;
+			for(refine = 0; refine < 8; ++refine){
+				real64 candidate = sqrt(lower_lambda * upper_lambda);
+				real64 candidate_norm;
+				if(candidate <= lower_lambda || candidate >= upper_lambda){
+					break;
+				}
+				if(a4sqp_lsq_solve_scaled_lm_step(
+					problem,solver,n,normal,rhs,scale,candidate,damped,qr_matrix,qr_rhs,step
+				)){
+					lower_lambda = candidate;
+					continue;
+				}
+				candidate_norm = a4sqp_lsq_norm2(n,step);
+				if(!isfinite(candidate_norm) || candidate_norm > radius){
+					lower_lambda = candidate;
+				}else{
+					upper_lambda = candidate;
+					best_lambda = candidate;
+					best_norm = candidate_norm;
+				}
+			}
+			if(a4sqp_lsq_solve_scaled_lm_step(
+				problem,solver,n,normal,rhs,scale,best_lambda,damped,qr_matrix,qr_rhs,step
+			)){
+				return 1;
+			}
+		}
+		hi = best_lambda;
+		*scaled_step_norm = best_norm;
+	}else if(a4sqp_lsq_solve_scaled_lm_step(
+		problem,solver,n,normal,rhs,scale,hi,damped,qr_matrix,qr_rhs,step
+	)){
+		return 1;
+	}else{
+		*scaled_step_norm = a4sqp_lsq_norm2(n,step);
+	}
+	if(!isfinite(*scaled_step_norm)){
+		return 1;
+	}
+	*lambda = hi;
+	return 0;
+}
+
+struct A4SqpLsqProjectionCtx {
+	const struct A4SqpLsqProblem *full;
+	int32 n_free;
+	int32 n_linear;
+	int32 *free_cols;
+	int32 *full_to_free;
+	real64 *full_x;
+	real64 *z_cache;
+	real64 *offset;
+	real64 *linear_matrix;
+	real64 *weighted_matrix;
+	real64 *weighted_rhs;
+	real64 *linear_col_scale;
+	real64 *linear_values;
+	real64 *residuals;
+	real64 *free_jacobian;
+	real64 *projection_coeff;
+	int32 *jac_columns;
+	real64 *jac_values;
+	int cache_valid;
+};
+
+static int a4sqp_lsq_is_no_lower(real64 value){
+	return value <= A4SQP_NO_LOWER_BOUND / 10.0 || value <= -1e19;
+}
+
+static int a4sqp_lsq_is_no_upper(real64 value){
+	return value >= A4SQP_NO_UPPER_BOUND / 10.0 || value >= 1e19;
+}
+
+static int a4sqp_lsq_projection_cache_matches(
+	const struct A4SqpLsqProjectionCtx *ctx,
+	const real64 *z
+){
+	int32 i;
+	if(ctx == NULL || z == NULL || !ctx->cache_valid || ctx->z_cache == NULL){
+		return 0;
+	}
+	for(i = 0; i < ctx->n_free; ++i){
+		if(ctx->z_cache[i] != z[i]){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int a4sqp_lsq_projection_ensure(
+	struct A4SqpLsqProjectionCtx *ctx,
+	const real64 *z
+){
+	const struct A4SqpLsqProblem *full;
+	const struct A4SqpLsqProjection *projection;
+	int32 i;
+	int32 j;
+	int32 row;
+	if(ctx == NULL || z == NULL || ctx->full == NULL){
+		return 1;
+	}
+	if(a4sqp_lsq_projection_cache_matches(ctx,z)){
+		return 0;
+	}
+	full = ctx->full;
+	projection = full->projection;
+	if(projection == NULL || projection->eval_affine_model == NULL
+		|| ctx->n_linear <= 0 || ctx->n_free < 0){
+		return 1;
+	}
+	for(i = 0; i < ctx->n_free; ++i){
+		ctx->full_x[ctx->free_cols[i]] = z[i];
+	}
+	if(projection->eval_affine_model(
+		full->userdata,
+		ctx->full_x,
+		ctx->n_linear,
+		ctx->offset,
+		ctx->linear_matrix
+	)){
+		ctx->cache_valid = 0;
+		return 1;
+	}
+	memset(ctx->weighted_matrix,0,
+		sizeof(real64) * (size_t)full->n_res * (size_t)ctx->n_linear);
+	memset(ctx->weighted_rhs,0,sizeof(real64) * (size_t)full->n_res);
+	for(row = 0; row < full->n_res; ++row){
+		real64 weight = a4sqp_lsq_weight(full,row);
+		real64 sqrt_weight;
+		if(weight < 0.0 || !isfinite(weight)){
+			ctx->cache_valid = 0;
+			return 1;
+		}
+		sqrt_weight = sqrt(weight);
+		ctx->weighted_rhs[row] = -sqrt_weight * ctx->offset[row];
+		for(i = 0; i < ctx->n_linear; ++i){
+			ctx->weighted_matrix[(size_t)row * (size_t)ctx->n_linear + (size_t)i] =
+				sqrt_weight * ctx->linear_matrix[(size_t)row * (size_t)ctx->n_linear + (size_t)i];
+		}
+	}
+	for(i = 0; i < ctx->n_linear; ++i){
+		real64 norm2 = 0.0;
+		for(row = 0; row < full->n_res; ++row){
+			real64 value = ctx->weighted_matrix[(size_t)row * (size_t)ctx->n_linear + (size_t)i];
+			norm2 += value * value;
+		}
+		ctx->linear_col_scale[i] = sqrt(norm2);
+		if(!isfinite(ctx->linear_col_scale[i]) || ctx->linear_col_scale[i] <= 0.0){
+			ctx->linear_col_scale[i] = 1.0;
+		}
+		for(row = 0; row < full->n_res; ++row){
+			ctx->weighted_matrix[(size_t)row * (size_t)ctx->n_linear + (size_t)i] /=
+				ctx->linear_col_scale[i];
+		}
+	}
+	if(a4sqp_lsq_solve_dense_qr(
+		full->n_res,
+		ctx->n_linear,
+		ctx->weighted_matrix,
+		ctx->weighted_rhs,
+		ctx->linear_values
+	)){
+		ctx->cache_valid = 0;
+		return 1;
+	}
+	for(i = 0; i < ctx->n_linear; ++i){
+		ctx->full_x[projection->linear_cols[i]] = ctx->linear_values[i] / ctx->linear_col_scale[i];
+	}
+	if(full->eval_residuals(full->userdata,ctx->full_x,ctx->residuals)){
+		ctx->cache_valid = 0;
+		return 1;
+	}
+	memset(ctx->free_jacobian,0,
+		sizeof(real64) * (size_t)full->n_res * (size_t)ctx->n_free);
+	for(row = 0; row < full->n_res; ++row){
+		int32 nnz = 0;
+		if(full->eval_jacobian_row(
+			full->userdata,
+			row,
+			full->n_var,
+			ctx->jac_columns,
+			ctx->jac_values,
+			&nnz
+		)){
+			ctx->cache_valid = 0;
+			return 1;
+		}
+		if(nnz < 0 || nnz > full->n_var){
+			ctx->cache_valid = 0;
+			return 1;
+		}
+		for(i = 0; i < nnz; ++i){
+			int32 full_col = ctx->jac_columns[i];
+			int32 free_col;
+			if(full_col < 0 || full_col >= full->n_var){
+				ctx->cache_valid = 0;
+				return 1;
+			}
+			free_col = ctx->full_to_free[full_col];
+			if(free_col >= 0){
+				ctx->free_jacobian[(size_t)row * (size_t)ctx->n_free + (size_t)free_col] =
+					ctx->jac_values[i];
+			}
+		}
+	}
+	for(i = 0; i < ctx->n_free; ++i){
+		for(row = 0; row < full->n_res; ++row){
+			real64 weight = a4sqp_lsq_weight(full,row);
+			if(weight < 0.0 || !isfinite(weight)){
+				ctx->cache_valid = 0;
+				return 1;
+			}
+			ctx->weighted_rhs[row] = sqrt(weight)
+				* ctx->free_jacobian[(size_t)row * (size_t)ctx->n_free + (size_t)i];
+		}
+		if(a4sqp_lsq_solve_dense_qr(
+			full->n_res,
+			ctx->n_linear,
+			ctx->weighted_matrix,
+			ctx->weighted_rhs,
+			ctx->projection_coeff + (size_t)i * (size_t)ctx->n_linear
+		)){
+			ctx->cache_valid = 0;
+			return 1;
+		}
+		for(j = 0; j < ctx->n_linear; ++j){
+			ctx->projection_coeff[(size_t)i * (size_t)ctx->n_linear + (size_t)j] /=
+				ctx->linear_col_scale[j];
+		}
+	}
+	for(row = 0; row < full->n_res; ++row){
+		int32 free_col;
+		for(free_col = 0; free_col < ctx->n_free; ++free_col){
+			real64 correction = 0.0;
+			for(i = 0; i < ctx->n_linear; ++i){
+				correction += ctx->linear_matrix[(size_t)row * (size_t)ctx->n_linear + (size_t)i]
+					* ctx->projection_coeff[(size_t)free_col * (size_t)ctx->n_linear + (size_t)i];
+			}
+			ctx->free_jacobian[(size_t)row * (size_t)ctx->n_free + (size_t)free_col] -= correction;
+		}
+	}
+	memcpy(ctx->z_cache,z,sizeof(real64) * (size_t)ctx->n_free);
+	ctx->cache_valid = 1;
+	return 0;
+}
+
+static int a4sqp_lsq_projected_eval_residuals(void *userdata, const real64 *z, real64 *residuals){
+	struct A4SqpLsqProjectionCtx *ctx = (struct A4SqpLsqProjectionCtx *)userdata;
+	if(ctx == NULL || residuals == NULL || a4sqp_lsq_projection_ensure(ctx,z)){
+		return 1;
+	}
+	memcpy(residuals,ctx->residuals,sizeof(real64) * (size_t)ctx->full->n_res);
+	return 0;
+}
+
+static int a4sqp_lsq_projected_eval_jacobian_row(
+	void *userdata,
+	int32 row,
+	int32 capacity,
+	int32 *columns,
+	real64 *values,
+	int32 *nnz
+){
+	struct A4SqpLsqProjectionCtx *ctx = (struct A4SqpLsqProjectionCtx *)userdata;
+	int32 count = 0;
+	int32 i;
+	if(ctx == NULL || ctx->full == NULL || nnz == NULL || capacity < 0){
+		return 1;
+	}
+	*nnz = 0;
+	if(!ctx->cache_valid || row < 0 || row >= ctx->full->n_res){
+		return 1;
+	}
+	for(i = 0; i < ctx->n_free; ++i){
+		real64 value = ctx->free_jacobian[(size_t)row * (size_t)ctx->n_free + (size_t)i];
+		if(value == 0.0){
+			continue;
+		}
+		if(count >= capacity){
+			return 1;
+		}
+		columns[count] = i;
+		values[count] = value;
+		count++;
+	}
+	*nnz = count;
+	return 0;
+}
+
+static int a4sqp_lsq_projected_progress(void *userdata, const struct A4SqpLsqIteration *iteration){
+	struct A4SqpLsqProjectionCtx *ctx = (struct A4SqpLsqProjectionCtx *)userdata;
+	if(ctx == NULL || ctx->full == NULL || ctx->full->progress == NULL){
+		return 0;
+	}
+	return ctx->full->progress(ctx->full->userdata,iteration);
+}
+
 static int a4sqp_lsq_build_qr_system(
 	const struct A4SqpLsqProblem *problem,
 	const real64 *residuals,
@@ -482,6 +962,14 @@ static void a4sqp_lsq_defaults(struct A4SqpLsqOptions *dst, const struct A4SqpLs
 	if(dst->max_backtrack <= 0){
 		dst->max_backtrack = 20;
 	}
+	if(
+		dst->damping_update != A4SQP_LSQ_DAMPING_NIELSEN
+		&& dst->damping_update != A4SQP_LSQ_DAMPING_MINPACK
+		&& dst->damping_update != A4SQP_LSQ_DAMPING_BOLD
+		&& dst->damping_update != A4SQP_LSQ_DAMPING_TRUST
+	){
+		dst->damping_update = A4SQP_LSQ_DAMPING_NIELSEN;
+	}
 	if(dst->grad_tol <= 0.0){
 		dst->grad_tol = 1e-7;
 	}
@@ -519,7 +1007,7 @@ static void a4sqp_lsq_fill_stats(
 	stats->accepted_steps = accepted_steps;
 }
 
-enum A4SqpLsqStatus a4sqp_lsq_solve(
+static enum A4SqpLsqStatus a4sqp_lsq_solve_direct(
 	const struct A4SqpLsqProblem *problem,
 	const struct A4SqpLsqOptions *options,
 	real64 *x,
@@ -543,6 +1031,7 @@ enum A4SqpLsqStatus a4sqp_lsq_solve(
 	real64 grad_inf;
 	real64 step_norm = 0.0;
 	real64 lambda;
+	real64 trust_radius = 0.1;
 	int accepted_steps = 0;
 	int iter;
 	int32 i;
@@ -608,6 +1097,7 @@ enum A4SqpLsqStatus a4sqp_lsq_solve(
 		int trial;
 		real64 alpha = 1.0;
 		real64 local_lambda = lambda;
+		real64 scaled_step_norm = 0.0;
 		enum A4SqpLsqStatus fail_status = A4SQP_LSQ_LINEAR_ERROR;
 
 		if(a4sqp_lsq_build_normal_equations(problem,r,normal,gradient,columns,values)){
@@ -642,42 +1132,49 @@ enum A4SqpLsqStatus a4sqp_lsq_solve(
 		for(trial = 0; trial < opt.max_backtrack; ++trial){
 			/* Solve the LM system in diagonally scaled coordinates; this is
 			 * equivalent to damping by diag(J'J) but better conditioned. */
-			for(i = 0; i < n; ++i){
-				step[i] = 0.0;
-			}
-			for(i = 0; i < n; ++i){
-				int32 j;
-				for(j = 0; j < n; ++j){
-					damped[i * n + j] = normal[i * n + j] / (scale[i] * scale[j]);
-				}
-				if(local_lambda > 0.0){
-					damped[i * n + i] += local_lambda;
-				}
-			}
-			if(opt.linear_solver == A4SQP_LSQ_LINEAR_DENSE_QR){
-				int32 qr_rows = problem->n_res + (local_lambda > 0.0 ? n : 0);
-				memset(qr_matrix + (size_t)problem->n_res * (size_t)n,0,sizeof(real64) * (size_t)n * (size_t)n);
-				memset(qr_rhs + problem->n_res,0,sizeof(real64) * (size_t)n);
-				if(local_lambda > 0.0){
-					real64 sqrt_lambda = sqrt(local_lambda);
-					if(!isfinite(sqrt_lambda)){
-						fail_status = A4SQP_LSQ_LINEAR_ERROR;
-						break;
-					}
-					for(i = 0; i < n; ++i){
-						qr_matrix[(size_t)(problem->n_res + i) * (size_t)n + (size_t)i] = sqrt_lambda;
-					}
-				}
-				if(a4sqp_lsq_solve_dense_qr(qr_rows,n,qr_matrix,qr_rhs,step)){
+			if(opt.mode == A4SQP_LSQ_MODE_LM
+				&& opt.damping_update == A4SQP_LSQ_DAMPING_TRUST
+			){
+				if(a4sqp_lsq_find_trust_lm_step(
+					problem,
+					opt.linear_solver,
+					n,
+					normal,
+					rhs,
+					scale,
+					trust_radius,
+					local_lambda,
+					opt.lambda_min,
+					opt.lambda_max,
+					damped,
+					qr_matrix,
+					qr_rhs,
+					step,
+					&local_lambda,
+					&scaled_step_norm
+				)){
 					fail_status = A4SQP_LSQ_LINEAR_ERROR;
 				}else{
 					fail_status = A4SQP_LSQ_SOLVED;
 				}
 			}else{
-				if(a4sqp_lsq_solve_dense(n,damped,rhs,step)){
+				if(a4sqp_lsq_solve_scaled_lm_step(
+					problem,
+					opt.linear_solver,
+					n,
+					normal,
+					rhs,
+					scale,
+					local_lambda,
+					damped,
+					qr_matrix,
+					qr_rhs,
+					step
+				)){
 					fail_status = A4SQP_LSQ_LINEAR_ERROR;
 				}else{
 					fail_status = A4SQP_LSQ_SOLVED;
+					scaled_step_norm = a4sqp_lsq_norm2(n,step);
 				}
 			}
 			if(fail_status == A4SQP_LSQ_LINEAR_ERROR){
@@ -735,17 +1232,48 @@ enum A4SqpLsqStatus a4sqp_lsq_solve(
 					accepted = 1;
 					accepted_steps++;
 					if(opt.mode == A4SQP_LSQ_MODE_LM){
-						/* Nielsen-style damping update from model agreement. */
-						if(predicted_reduction > 0.0 && isfinite(rho) && rho > 0.0){
-							real64 factor = 1.0 - pow(2.0 * rho - 1.0, 3.0);
-							if(factor < 1.0 / 3.0){
-								factor = 1.0 / 3.0;
-							}else if(factor > 3.0){
-								factor = 3.0;
+						if(opt.damping_update == A4SQP_LSQ_DAMPING_TRUST){
+							lambda = local_lambda;
+							if(rho < 0.25){
+								trust_radius = 0.25 * scaled_step_norm;
+								if(trust_radius < 1e-12){
+									trust_radius = 1e-12;
+								}
+							}else if(rho > 0.75){
+								real64 grown_radius = 2.0 * scaled_step_norm;
+								if(grown_radius > trust_radius){
+									trust_radius = grown_radius;
+								}
 							}
-							lambda = fmax(opt.lambda_min,local_lambda * factor);
+						}else if(opt.damping_update == A4SQP_LSQ_DAMPING_MINPACK){
+							if(rho > 0.75){
+								lambda = fmax(opt.lambda_min,local_lambda * 0.5);
+							}else if(rho < 0.25){
+								lambda = fmin(opt.lambda_max,local_lambda * 2.0);
+							}else{
+								lambda = local_lambda;
+							}
+						}else if(opt.damping_update == A4SQP_LSQ_DAMPING_BOLD){
+							if(rho > 0.75){
+								lambda = fmax(opt.lambda_min,local_lambda * 0.1);
+							}else if(rho > 0.25){
+								lambda = fmax(opt.lambda_min,local_lambda * 0.5);
+							}else{
+								lambda = fmin(opt.lambda_max,local_lambda * 2.0);
+							}
 						}else{
-							lambda = fmax(opt.lambda_min,local_lambda * 0.3);
+							/* Nielsen-style damping update from model agreement. */
+							if(predicted_reduction > 0.0 && isfinite(rho) && rho > 0.0){
+								real64 factor = 1.0 - pow(2.0 * rho - 1.0, 3.0);
+								if(factor < 1.0 / 3.0){
+									factor = 1.0 / 3.0;
+								}else if(factor > 3.0){
+									factor = 3.0;
+								}
+								lambda = fmax(opt.lambda_min,local_lambda * factor);
+							}else{
+								lambda = fmax(opt.lambda_min,local_lambda * 0.3);
+							}
 						}
 					}else{
 						lambda = local_lambda;
@@ -768,13 +1296,21 @@ enum A4SqpLsqStatus a4sqp_lsq_solve(
 				}
 			}
 			if(opt.mode == A4SQP_LSQ_MODE_LM){
-				local_lambda *= 10.0;
-				if(local_lambda <= 0.0){
-					local_lambda = opt.lambda_min;
-				}
-				if(local_lambda > opt.lambda_max){
-					fail_status = A4SQP_LSQ_LINEAR_ERROR;
-					break;
+				if(opt.damping_update == A4SQP_LSQ_DAMPING_TRUST){
+					trust_radius *= 0.25;
+					if(trust_radius <= 1e-12){
+						fail_status = A4SQP_LSQ_LINEAR_ERROR;
+						break;
+					}
+				}else{
+					local_lambda *= 10.0;
+					if(local_lambda <= 0.0){
+						local_lambda = opt.lambda_min;
+					}
+					if(local_lambda > opt.lambda_max){
+						fail_status = A4SQP_LSQ_LINEAR_ERROR;
+						break;
+					}
 				}
 			}else{
 				alpha *= 0.5;
@@ -877,4 +1413,174 @@ linear_error:
 	A4SQP_FREE(columns);
 	A4SQP_FREE(values);
 	return A4SQP_LSQ_LINEAR_ERROR;
+}
+
+static enum A4SqpLsqStatus a4sqp_lsq_solve_projected(
+	const struct A4SqpLsqProblem *problem,
+	const struct A4SqpLsqOptions *options,
+	real64 *x,
+	struct A4SqpLsqStats *stats
+){
+	const struct A4SqpLsqProjection *projection;
+	struct A4SqpLsqProjectionCtx ctx;
+	struct A4SqpLsqProblem reduced;
+	real64 *z = NULL;
+	real64 *z_lower = NULL;
+	real64 *z_upper = NULL;
+	int32 *is_linear = NULL;
+	enum A4SqpLsqStatus status;
+	int32 i;
+	int32 j;
+	int32 n_free = 0;
+
+	if(problem == NULL || problem->projection == NULL || x == NULL){
+		return A4SQP_LSQ_INVALID_PROBLEM;
+	}
+	projection = problem->projection;
+	if(projection->n_linear <= 0 || projection->linear_cols == NULL
+		|| projection->eval_affine_model == NULL
+		|| projection->n_linear >= problem->n_var
+		|| problem->n_res < projection->n_linear){
+		return A4SQP_LSQ_INVALID_PROBLEM;
+	}
+
+	memset(&ctx,0,sizeof(ctx));
+	memset(&reduced,0,sizeof(reduced));
+
+	is_linear = A4SQP_NEW_ARRAY(int32,problem->n_var);
+	ctx.full_to_free = A4SQP_NEW_ARRAY(int32,problem->n_var);
+	if(is_linear == NULL || ctx.full_to_free == NULL){
+		status = A4SQP_LSQ_EVAL_ERROR;
+		goto cleanup;
+	}
+	for(i = 0; i < problem->n_var; ++i){
+		is_linear[i] = 0;
+		ctx.full_to_free[i] = -1;
+	}
+	for(i = 0; i < projection->n_linear; ++i){
+		int32 col = projection->linear_cols[i];
+		if(col < 0 || col >= problem->n_var || is_linear[col]){
+			status = A4SQP_LSQ_INVALID_PROBLEM;
+			goto cleanup;
+		}
+		if(problem->x_lower != NULL && !a4sqp_lsq_is_no_lower(problem->x_lower[col])){
+			status = A4SQP_LSQ_INVALID_PROBLEM;
+			goto cleanup;
+		}
+		if(problem->x_upper != NULL && !a4sqp_lsq_is_no_upper(problem->x_upper[col])){
+			status = A4SQP_LSQ_INVALID_PROBLEM;
+			goto cleanup;
+		}
+		is_linear[col] = 1;
+	}
+	for(i = 0; i < problem->n_var; ++i){
+		if(!is_linear[i]){
+			n_free++;
+		}
+	}
+	if(n_free <= 0){
+		status = A4SQP_LSQ_INVALID_PROBLEM;
+		goto cleanup;
+	}
+
+	ctx.free_cols = A4SQP_NEW_ARRAY(int32,n_free);
+	z = A4SQP_NEW_ARRAY(real64,n_free);
+	z_lower = A4SQP_NEW_ARRAY(real64,n_free);
+	z_upper = A4SQP_NEW_ARRAY(real64,n_free);
+	ctx.full_x = A4SQP_NEW_ARRAY(real64,problem->n_var);
+	ctx.z_cache = A4SQP_NEW_ARRAY(real64,n_free);
+	ctx.offset = A4SQP_NEW_ARRAY(real64,problem->n_res);
+	ctx.linear_matrix = A4SQP_NEW_ARRAY(real64,(size_t)problem->n_res * (size_t)projection->n_linear);
+	ctx.weighted_matrix = A4SQP_NEW_ARRAY(real64,(size_t)problem->n_res * (size_t)projection->n_linear);
+	ctx.weighted_rhs = A4SQP_NEW_ARRAY(real64,problem->n_res);
+	ctx.linear_col_scale = A4SQP_NEW_ARRAY(real64,projection->n_linear);
+	ctx.linear_values = A4SQP_NEW_ARRAY(real64,projection->n_linear);
+	ctx.residuals = A4SQP_NEW_ARRAY(real64,problem->n_res);
+	ctx.free_jacobian = A4SQP_NEW_ARRAY(real64,(size_t)problem->n_res * (size_t)n_free);
+	ctx.projection_coeff = A4SQP_NEW_ARRAY(real64,(size_t)n_free * (size_t)projection->n_linear);
+	ctx.jac_columns = A4SQP_NEW_ARRAY(int32,problem->n_var);
+	ctx.jac_values = A4SQP_NEW_ARRAY(real64,problem->n_var);
+	if(ctx.free_cols == NULL || z == NULL || z_lower == NULL || z_upper == NULL
+		|| ctx.full_x == NULL || ctx.z_cache == NULL || ctx.offset == NULL
+		|| ctx.linear_matrix == NULL || ctx.weighted_matrix == NULL
+		|| ctx.weighted_rhs == NULL || ctx.linear_col_scale == NULL
+		|| ctx.linear_values == NULL || ctx.residuals == NULL
+		|| ctx.free_jacobian == NULL || ctx.projection_coeff == NULL
+		|| ctx.jac_columns == NULL || ctx.jac_values == NULL){
+		status = A4SQP_LSQ_EVAL_ERROR;
+		goto cleanup;
+	}
+
+	memcpy(ctx.full_x,x,sizeof(real64) * (size_t)problem->n_var);
+	j = 0;
+	for(i = 0; i < problem->n_var; ++i){
+		if(is_linear[i]){
+			continue;
+		}
+		ctx.free_cols[j] = i;
+		ctx.full_to_free[i] = j;
+		z[j] = x[i];
+		z_lower[j] = problem->x_lower != NULL ? problem->x_lower[i] : A4SQP_NO_LOWER_BOUND;
+		z_upper[j] = problem->x_upper != NULL ? problem->x_upper[i] : A4SQP_NO_UPPER_BOUND;
+		j++;
+	}
+
+	ctx.full = problem;
+	ctx.n_free = n_free;
+	ctx.n_linear = projection->n_linear;
+	ctx.cache_valid = 0;
+
+	reduced.n_var = n_free;
+	reduced.n_res = problem->n_res;
+	reduced.weights = problem->weights;
+	reduced.x_lower = z_lower;
+	reduced.x_upper = z_upper;
+	reduced.userdata = &ctx;
+	reduced.eval_residuals = a4sqp_lsq_projected_eval_residuals;
+	reduced.eval_jacobian_row = a4sqp_lsq_projected_eval_jacobian_row;
+	reduced.progress = problem->progress != NULL ? a4sqp_lsq_projected_progress : NULL;
+	reduced.projection = NULL;
+
+	status = a4sqp_lsq_solve_direct(&reduced,options,z,stats);
+	if(a4sqp_lsq_projection_ensure(&ctx,z)){
+		if(status == A4SQP_LSQ_SOLVED || status == A4SQP_LSQ_MAX_ITER){
+			status = A4SQP_LSQ_EVAL_ERROR;
+		}
+	}else{
+		memcpy(x,ctx.full_x,sizeof(real64) * (size_t)problem->n_var);
+	}
+
+cleanup:
+	A4SQP_FREE(is_linear);
+	A4SQP_FREE(ctx.full_to_free);
+	A4SQP_FREE(ctx.free_cols);
+	A4SQP_FREE(z);
+	A4SQP_FREE(z_lower);
+	A4SQP_FREE(z_upper);
+	A4SQP_FREE(ctx.full_x);
+	A4SQP_FREE(ctx.z_cache);
+	A4SQP_FREE(ctx.offset);
+	A4SQP_FREE(ctx.linear_matrix);
+	A4SQP_FREE(ctx.weighted_matrix);
+	A4SQP_FREE(ctx.weighted_rhs);
+	A4SQP_FREE(ctx.linear_col_scale);
+	A4SQP_FREE(ctx.linear_values);
+	A4SQP_FREE(ctx.residuals);
+	A4SQP_FREE(ctx.free_jacobian);
+	A4SQP_FREE(ctx.projection_coeff);
+	A4SQP_FREE(ctx.jac_columns);
+	A4SQP_FREE(ctx.jac_values);
+	return status;
+}
+
+enum A4SqpLsqStatus a4sqp_lsq_solve(
+	const struct A4SqpLsqProblem *problem,
+	const struct A4SqpLsqOptions *options,
+	real64 *x,
+	struct A4SqpLsqStats *stats
+){
+	if(problem != NULL && problem->projection != NULL && problem->projection->n_linear > 0){
+		return a4sqp_lsq_solve_projected(problem,options,x,stats);
+	}
+	return a4sqp_lsq_solve_direct(problem,options,x,stats);
 }

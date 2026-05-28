@@ -222,6 +222,33 @@ static void test_cross_product(void){
 	leastsq_expect("test/leastsq/patterns.a4c", "lsq_cross_product", 0, rel_lsq_not_sum_of_squares, 0, 0, NULL, NULL);
 }
 
+static void test_variable_projection(void){
+	struct Instance *sim = NULL;
+	slv_system_t sys;
+	struct RelationLeastSquaresAnalysis analysis;
+	const struct system_lsq_view *view;
+	unsigned long i;
+
+	sys = leastsq_build_system_for_model("test/leastsq/patterns.a4c", "lsq_variable_projection", &sim);
+	CU_ASSERT_EQUAL(
+		system_analyse_lsq_objective(
+			sys,
+			SYSTEM_LSQ_ANALYSE_BUILD_VIEW | SYSTEM_LSQ_ANALYSE_BUILD_PROJECTION,
+			&analysis
+		),
+		1
+	);
+	view = system_get_lsq_view(sys);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(view);
+	CU_ASSERT_EQUAL(view->nresiduals, 3);
+	CU_ASSERT_EQUAL(view->nprojected, 2);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(view->projected_sindex);
+	for(i = 0; i < view->nprojected; ++i){
+		CU_ASSERT(view->projected_sindex[i] >= 0);
+	}
+	leastsq_destroy_system(sys, sim);
+}
+
 static void test_ceri651a_shape(void){
 	leastsq_expect("test/leastsq/ceri651a_objective.a4c", "ceri651a_objective", 1, rel_lsq_ok, 5, 0, NULL, NULL);
 }
@@ -239,6 +266,7 @@ static void test_lorentz_dataset_nested(void){
 	T(variable_weight) \
 	T(linear_extra_term) \
 	T(cross_product) \
+	T(variable_projection) \
 	T(ceri651a_shape) \
 	T(lorentz_dataset_nested)
 
