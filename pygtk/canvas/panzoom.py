@@ -1,9 +1,10 @@
 # Pan and Zoom tools for Gaphas by John Pye, 4 Nov 2008.
 
-import gtk
-import gtk.gdk as gdk
+from gtkcompat import gdk, gtk
 
-from gaphas.tool import Tool
+class Tool:
+	def __init__(self, view=None):
+		self.view = view
 
 ZOOM_MASK = gdk.CONTROL_MASK | gdk.SHIFT_MASK | gdk.MOD1_MASK
 ZOOM_VALUE =gdk.CONTROL_MASK

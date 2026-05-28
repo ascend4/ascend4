@@ -1,13 +1,10 @@
-from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint, Constraint, _update, BalanceConstraint,LineAlignConstraint, EquationConstraint
-from gaphas.item import Line, SW, NE, NW, SE, Item, Handle, Element
-from gaphas.util import *
-from gaphas.connector import Position
-from gaphas.solver import solvable, WEAK, NORMAL, STRONG, VERY_STRONG, Variable, REQUIRED
-from gaphas.state import observed, reversible_method, reversible_pair, reversible_property
+from gaphas.handle import Handle
+from gaphas.item import NW, NE, SW, SE
+from gaphas.position import Position
+from gaphas.solver import REQUIRED, VERY_STRONG, variable as solvable
 from gaphas.geometry import distance_rectangle_point
-from gaphas.examples import Circle
-from gaphas.canvas import Canvas
 from gaphas.matrix import Matrix
+from gaphas.constraint import constraint
 from numpy import *
 import math
 import cairo
@@ -15,7 +12,94 @@ import cairo
 from blockport import BlockPort
 from blockinstance import PORT_IN, PORT_OUT, PORT_INOUT
 
-class ElementNoPorts(Element):
+if not hasattr(Handle, "x"):
+	Handle.x = property(lambda self: float(self.pos.x))
+	Handle.y = property(lambda self: float(self.pos.y))
+
+class _NoOpConstraint:
+	def __call__(self, *args, **kwargs):
+		return None
+
+EqualsConstraint = _NoOpConstraint()
+BalanceConstraint = _NoOpConstraint()
+
+def _num(value):
+	return float(value)
+
+def text_align(cr, x, y, text):
+	cr.move_to(_num(x), _num(y))
+	cr.show_text(str(text))
+
+def text_left(cr, x, y, text):
+	text = str(text)
+	xbearing, ybearing, width, height, xadvance, yadvance = cr.text_extents(text)
+	cr.move_to(_num(x) - xbearing, _num(y) - height / 2 - ybearing)
+	cr.show_text(text)
+
+def text_right(cr, x, y, text):
+	text = str(text)
+	xbearing, ybearing, width, height, xadvance, yadvance = cr.text_extents(text)
+	cr.move_to(_num(x) - width - xbearing, _num(y) - height / 2 - ybearing)
+	cr.show_text(text)
+
+def text_center(cr, x, y, text):
+	text = str(text)
+	xbearing, ybearing, width, height, xadvance, yadvance = cr.text_extents(text)
+	cr.move_to(_num(x) - width / 2 - xbearing, _num(y) - height / 2 - ybearing)
+	cr.show_text(text)
+
+def port_color(port, pale=False):
+	if port.portinstance.io == PORT_IN:
+		color = (1.0, 0.05, 0.0)
+	elif port.portinstance.io == PORT_OUT:
+		color = (0.0, 0.65, 0.25)
+	elif port.portinstance.io == PORT_INOUT:
+		color = (0.1, 0.35, 1.0)
+	else:
+		color = (0.0, 0.0, 0.0)
+	if pale:
+		return tuple(1.0 - (1.0 - channel) * 0.35 for channel in color)
+	return color
+
+def draw_port_marker(cr, port, size, pale=False):
+	r, g, b = port_color(port, pale=pale)
+	cr.arc(port.point.x, port.point.y, size, 0, 2 * math.pi)
+	cr.set_source_rgba(r, g, b, 0.55 if pale else 0.9)
+	cr.fill_preserve()
+	if pale:
+		r, g, b = port_color(port)
+		cr.set_source_rgba(r, g, b, 0.45)
+	else:
+		cr.set_source_rgb(max(r * 0.45, 0), max(g * 0.45, 0), max(b * 0.45, 0))
+	cr.stroke()
+
+def port_text_color(port):
+	if port.portinstance.io == PORT_IN:
+		return (1.0, 0.05, 0.0)
+	if port.portinstance.io == PORT_OUT:
+		return (0.0, 0.65, 0.25)
+	if port.portinstance.io == PORT_INOUT:
+		return (0.1, 0.35, 1.0)
+	return (0.0, 0.0, 0.0)
+
+def draw_port_label(cr, item, port):
+	name = str(port.get_portname())
+	x = float(port.point.x)
+	y = float(port.point.y)
+	width = max(float(item.width), 1.0)
+	height = max(float(item.height), 1.0)
+	r, g, b = port_text_color(port)
+	cr.set_source_rgb(r, g, b)
+	if y <= 1.0:
+		text_center(cr, x, y - 11, name)
+	elif y >= height - 1.0:
+		text_center(cr, x, y + 11, name)
+	elif x <= width / 2:
+		text_right(cr, x - 8, y, name)
+	else:
+		text_left(cr, x + 8, y, name)
+
+class ElementNoPorts:
 	"""
 	This is a copy of the Element class, but without the declaration
 	of the LinePorts in the __init__ method. It will be proposed to the
@@ -28,6 +112,10 @@ class ElementNoPorts(Element):
 
 	def __init__(self, width=10, height=10):
 		super(ElementNoPorts, self).__init__()
+		self._matrix = Matrix()
+		self._matrix_i2c = Matrix()
+		self._constraints = []
+		self._canvas_constraints = []
 		self._handles = [ h(strength=VERY_STRONG) for h in [Handle]*4 ]
 
 		handles = self._handles
@@ -35,12 +123,6 @@ class ElementNoPorts(Element):
 		h_ne = handles[NE]
 		h_sw = handles[SW]
 		h_se = handles[SE]
-
-		# Share variables
-		h_sw.pos.set_x(h_nw.pos.x)
-		h_se.pos.set_x(h_ne.pos.x)
-		h_ne.pos.set_y(h_nw.pos.y)
-		h_se.pos.set_y(h_sw.pos.y)
 
 		# No ports by default
 		self._ports = []
@@ -53,15 +135,90 @@ class ElementNoPorts(Element):
 		self.min_width = delta_w
 		self.min_height = delta_h
 
-		# create minimal size constraints
-		self.constraint(left_of=(h_nw.pos, h_se.pos), delta=self._min_width)
-		self.constraint(above=(h_nw.pos, h_se.pos), delta=self._min_height)
-
 		self.width = width
 		self.height = height
 
 		# TODO: constraints that calculate width and height based on handle pos
 		#self.constraints.append(EqualsConstraint(p1[1], p2[1], delta))
+
+	@property
+	def matrix(self):
+		return self._matrix
+
+	@property
+	def matrix_i2c(self):
+		return self._matrix_i2c
+
+	def handles(self):
+		return self._handles
+
+	def ports(self):
+		return self._ports
+
+	def point(self, x, y):
+		return distance_rectangle_point((0, 0, self.width, self.height), (x, y))
+
+	@property
+	def width(self):
+		return float(self._handles[SE].pos.x) - float(self._handles[NW].pos.x)
+
+	@width.setter
+	def width(self, width):
+		self._handles[NE].pos.x = self._handles[SE].pos.x = width
+
+	@property
+	def height(self):
+		return float(self._handles[SE].pos.y) - float(self._handles[NW].pos.y)
+
+	@height.setter
+	def height(self, height):
+		self._handles[SW].pos.y = self._handles[SE].pos.y = height
+
+	def request_update(self):
+		pass
+
+	def setup_canvas_constraints(self, connections):
+		if self._canvas_constraints:
+			return
+		handles = self._handles
+		h_nw = handles[NW]
+		h_ne = handles[NE]
+		h_sw = handles[SW]
+		h_se = handles[SE]
+		add = connections.add_constraint
+		self._canvas_constraints = [
+			add(self, constraint(horizontal=(h_nw.pos, h_ne.pos))),
+			add(self, constraint(horizontal=(h_sw.pos, h_se.pos))),
+			add(self, constraint(vertical=(h_nw.pos, h_sw.pos))),
+			add(self, constraint(vertical=(h_ne.pos, h_se.pos))),
+			add(self, constraint(left_of=(h_nw.pos, h_se.pos), delta=self.min_width)),
+			add(self, constraint(above=(h_nw.pos, h_se.pos), delta=self.min_height)),
+		]
+		h_se.pos.x.dirty()
+		h_se.pos.y.dirty()
+
+	def normalize_origin(self):
+		"""
+		Keep block-local coordinates anchored at (0, 0).
+
+		Gaphas allows any corner handle to move. The canvas block drawing code,
+		especially graphical blocks, assumes the item contents start at local
+		(0, 0), so move the item matrix by the NW offset and reset handles to a
+		zero-origin rectangle after constraint solving.
+		"""
+		h = self._handles
+		x0 = float(h[NW].pos.x)
+		y0 = float(h[NW].pos.y)
+		if abs(x0) < 1e-9 and abs(y0) < 1e-9:
+			return False
+		width = max(float(h[SE].pos.x) - x0, float(self.min_width))
+		height = max(float(h[SE].pos.y) - y0, float(self.min_height))
+		self.matrix.translate(x0, y0)
+		h[NW].pos = (0, 0)
+		h[NE].pos = (width, 0)
+		h[SE].pos = (width, height)
+		h[SW].pos = (0, height)
+		return True
 
 
 class BlockItem(ElementNoPorts):
@@ -92,12 +249,36 @@ class BlockItem(ElementNoPorts):
 		self.height = self.h[SE].pos.y - self.h[NW].pos.y
 		self.normx = self.wide*0.1
 		self.normy = self.height*0.1
-		if not (len(self.port_in)==0 and len(self.port_out)==0):
-			for w in self._ports:
-				if(w.get_portinstance().io == PORT_IN):
-					w.point._set_pos(Position(((float(self.port_in[w.portinstance.name][0]) * self.normx),(float(self.port_in[w.portinstance.name][1]) * self.normy))))
-				else:
-					w.point._set_pos(Position(((float(self.port_out[w.portinstance.name][0]) * self.normx),(float(self.port_out[w.portinstance.name][1]) * self.normy))))
+		for w in self._ports:
+			if w.get_portinstance().io == PORT_IN and w.portinstance.name in self.port_in:
+				w.point.pos = (
+					float(self.port_in[w.portinstance.name][0]) * self.normx,
+					float(self.port_in[w.portinstance.name][1]) * self.normy,
+				)
+			elif w.get_portinstance().io == PORT_OUT and w.portinstance.name in self.port_out:
+				w.point.pos = (
+					float(self.port_out[w.portinstance.name][0]) * self.normx,
+					float(self.port_out[w.portinstance.name][1]) * self.normy,
+				)
+			else:
+				w.point.pos = self.default_port_position(w)
+
+	def default_port_position(self, port):
+		io = port.get_portinstance().io
+		same_side_ports = [
+			p for p in self._ports
+			if p.get_portinstance().io == io
+		]
+		try:
+			index = same_side_ports.index(port)
+		except ValueError:
+			index = int(port.get_portlabel())
+		y = self.height * (index + 1) / (len(same_side_ports) + 1)
+		if io == PORT_IN:
+			return (0, y)
+		if io == PORT_OUT:
+			return (self.width, y)
+		return (self.width / 2, y)
 
 	#Here combination of translate(x,y),rotate(angle),translate(-x,-y) is used to perform
 	#rotation and flip about centre(x,y)
@@ -129,34 +310,40 @@ class BlockItem(ElementNoPorts):
 
 		  Connected ports will be coloured red, other ports will be pale blue.
 		  """
-		from blockconnecttool import SET_CONNECTION_FLAG
+		from blockconnecttool import ACTIVE_SOURCE_PORT, HOVERED_ITEM, HOVERED_PORT, SET_CONNECTION_FLAG, ports_can_connect
 
 		self.up1()
 		c = context.cairo
-		phalfsize = 3
+		phalfsize = 4
+		hovered_item = HOVERED_ITEM[0] is self
+		hovered_port = HOVERED_PORT[0]
+		active_source_port = ACTIVE_SOURCE_PORT[0]
 		if SET_CONNECTION_FLAG[0]:
 			for p in self._ports:
 				if hasattr(p,"point") and checkportscanconnect(p.portinstance, SET_CONNECTION_FLAG[1]):
-					c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
-					c.set_source_rgba(0.9,0.9,0.9, 0.8)
-					c.fill_preserve()
-					c.set_source_rgb(0,0,1) # blue when connect able
-					c.stroke()
+					draw_port_marker(c, p, phalfsize)
 
 				elif hasattr(p,"point") and not checkportscanconnect(p.portinstance, SET_CONNECTION_FLAG[1]):
-					c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
+					c.arc(p.point.x, p.point.y, phalfsize, 0, 2 * math.pi)
 					c.set_source_rgba(0,0,0, 0.8)
 					c.fill_preserve()
 					c.set_source_rgb(0,0,0) # black when not connect able
 					c.stroke()
-		else:
+		elif active_source_port is not None:
+			for p in self._ports:
+				if (
+					hasattr(p, "point")
+					and p is not active_source_port
+					and ports_can_connect(active_source_port, p)
+				):
+					targeted = p is hovered_port
+					size = phalfsize + 2 if targeted else phalfsize
+					draw_port_marker(c, p, size, pale=not targeted)
+		elif hovered_item:
 			for p in self._ports:
 				if hasattr(p,"point"):
-					c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
-					c.set_source_rgba(0,0,0, 0.8)
-					c.fill_preserve()
-					c.set_source_rgb(0,0,0)
-					c.stroke()
+					size = phalfsize + 1 if p is hovered_port else phalfsize
+					draw_port_marker(c, p, size)
 
 	#port-labels will be displayed when mouse is hovered over the item's context
 	#port-labels are numbers initially, but will be name of variables concerned with it later
@@ -164,20 +351,7 @@ class BlockItem(ElementNoPorts):
 
 		if context.focused:
 			for w in self._ports:
-				if(w.portinstance.io is PORT_IN):
-					if(w.point.y/self.normy==0):
-						text_align(c,w.point.x,w.point.y-10,str(w.get_portname()))
-					elif (w.point.y/self.normy==10):
-						text_align(c,w.point.x,w.point.y+10,str(w.get_portname()))
-					else:
-						text_align(c,w.point.x-3.5*len(str(w.get_portname())),w.point.y,str(w.get_portname()))
-				else:
-					if(w.point.y/self.normy==0):
-						text_align(c,w.point.x,w.point.y-10,str(w.get_portname()))
-					elif (w.point.y/self.normy==10):
-						text_align(c,w.point.x,w.point.y+10,str(w.get_portname()))
-					else:
-						text_align(c,w.point.x+3.5*len(str(w.get_portname())),w.point.y,str(w.get_portname()))
+				draw_port_label(c, self, w)
 
 		c.set_source_rgb(0,0,0)
 		text_center(c,self.h[SE].pos.x/2,self.h[SE].y/0.9,self.blockinstance.name)
