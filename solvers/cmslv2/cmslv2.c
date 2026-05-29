@@ -10433,14 +10433,24 @@ static const SlvFunctionsT slv9_internals = {
 	,slv9_dump_internals
 };
 
-int cmslv2_register(void){
-	MSG("Registering CMSlv2");
-	if(!solver_engine_named("LRSlv")){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv must be registered before CMSlv2");
+static int cmslv2_ensure_solver_registered(const char *name, const char *package){
+	if(solver_engine_named(name)){
 		return 1;
 	}
-	if(!solver_engine_named("QRSlv")){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv must be registered before CMSlv2");
+	if(package_load(package,NULL)){
+		return 0;
+	}
+	return solver_engine_named(name) != NULL;
+}
+
+int cmslv2_register(void){
+	MSG("Registering CMSlv2");
+	if(!cmslv2_ensure_solver_registered("LRSlv","lrslv")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv must be loadable before CMSlv2");
+		return 1;
+	}
+	if(!cmslv2_ensure_solver_registered("QRSlv","qrslv")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv must be loadable before CMSlv2");
 		return 1;
 	}
 	return solver_register(&slv9_internals);

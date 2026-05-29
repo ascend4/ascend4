@@ -5,7 +5,8 @@ REQUIRE "johnpye/fboard.a4c";
 REQUIRE "johnpye/iron/tga.a4c";
 
 (*
-	First-pass dynamic batch fluidised-bed direct-reduction model.
+	First-pass dynamic batch fluidised-bed direct-reduction model using
+	redox-pair-capacity kinetics.
 
 	Scope:
 	- batch solids, no particle inlet/outlet;
@@ -14,7 +15,10 @@ REQUIRE "johnpye/iron/tga.a4c";
 	  contacting selected by the hydrodynamic regime;
 	- K&L-style gas exchange, using bubble/emulsion exchange for the default
 	  intermediate/Geldart B mode;
-	- three Fe-O-H reduction steps and equilibrium-ratio fits from tgadyn.
+	- three Fe-O-H reduction steps and equilibrium-ratio fits from tgadyn;
+	- reversible redox-pair-capacity rates, where each step is scaled by
+	  the total Fe capacity in the adjacent oxidised/reduced pair and the
+	  gas composition sets the equilibrium driving force.
 
 	The shared particle state is intentional. In the default two-region mode,
 	cloud variables are folded into the emulsion and reaction is evaluated at
@@ -24,7 +28,7 @@ REQUIRE "johnpye/iron/tga.a4c";
 	u_b/L_f is the lower-bound cloud renewal scale implied by bubble transit.
 *)
 
-MODEL fbdri_batch;
+MODEL fbdri_redoxpair_batch;
 	steps "reduction reaction steps" IS_A set OF integer_constant;
 	steps :== [1..3];
 
@@ -100,6 +104,8 @@ MODEL fbdri_batch;
 	K_bc "bubble-cloud gas interchange coefficient" IS_A frequency;
 	K_ce "cloud-emulsion gas interchange coefficient" IS_A frequency;
 	K_be "bubble-emulsion gas interchange coefficient for intermediate beds" IS_A frequency;
+	K_be_multiplier "tunable multiplier on bubble-emulsion gas interchange" IS_A positive_factor;
+	emulsion_flow_multiplier "tunable multiplier on minimum-fluidisation emulsion throughflow" IS_A positive_factor;
 	u_b_use_geldart_a "select Geldart A bubble rise velocity correlation" IS_A boolean_var;
 	u_b_use_correlation "selected bubble correlation is no slower than eq. 4" IS_A boolean_var;
 	delta_use_slow "select eq. 7 slow-bubble fraction" IS_A boolean_var;
@@ -143,15 +149,12 @@ MODEL fbdri_batch;
 	rate_net_raw[steps] "cloud/emulsion weighted net extent rate before progress resistance" IS_A extent_rate;
 	rd_resistance[steps] "progress-dependent resistance coefficient for each step" IS_A factor;
 	rd_resistance_factor[steps] "progress-dependent rate divisor" IS_A positive_factor;
-	phase_buffered_step3_blend "0 = inventory mass-action step 3; 1 = shared-interface reversible FeO/Fe step 3" IS_A factor;
-	phase_buffered_smoothing "legacy smoothing parameter; unused by shared-interface step 3" IS_A pressure;
-	phase_buffered_reverse_gate_3 "Fe phase-presence gate for shared-interface reverse FeO/Fe reaction" IS_A factor;
-	rate_forward_phase_buffered_c_3, rate_reverse_phase_buffered_c_3 IS_A extent_rate;
-	rate_forward_phase_buffered_e_3, rate_reverse_phase_buffered_e_3 IS_A extent_rate;
-	rate_net_phase_buffered_c_3, rate_net_phase_buffered_e_3 IS_A extent_rate;
 	solid_activity_order "exponent for softened bulk-inventory activity; 1 restores first-order inventory dependence" IS_A positive_factor;
 	solid_activity_floor "small regularisation for softened inventory activity" IS_A positive_factor;
 	a_Fe2O3, a_Fe3O4, a_FeO, a_Fe IS_A factor;
+	redox_pair_capacity[steps] "normalised Fe capacity in each adjacent redox pair" IS_A factor;
+	redox_forward_gate[steps] "smooth source-presence gate for reduction direction" IS_A factor;
+	redox_reverse_gate[steps] "smooth source-presence gate for oxidation direction" IS_A factor;
 
 	solid_share_c "fraction of active solids exposed to cloud gas" IS_A factor;
 	solid_share_e "fraction of active solids exposed to emulsion gas" IS_A factor;
@@ -285,11 +288,12 @@ MODEL fbdri_batch;
 			6.77 {1/s}
 			* (D_AB * eps_mf * u_br / d_b^3 / 1 {1/s^2})^0.5;
 	Kbe_eq:
-		K_be = 4.5 * u_mf / d_b;
+		K_be = K_be_multiplier * 4.5 * u_mf / d_b;
 
-	(* Gas throughflow split: emulsion carries u_mf, excess gas enters bubbles. *)
-	Fbubble_eq: F_bubble = c_tot * A_bed * (u - u_mf);
-	Femulsion_eq: F_emulsion = c_tot * A_bed * u_mf;
+	(* Gas throughflow split: emulsion carries a tunable multiple of u_mf,
+	   while total gas throughflow remains equal to the feed. *)
+	Femulsion_eq: F_emulsion = emulsion_flow_multiplier * c_tot * A_bed * u_mf;
+	Fbubble_eq: F_bubble = F_feed - F_emulsion;
 
 	WHEN(contact_mode)
 		CASE 'three_region':
@@ -418,49 +422,37 @@ MODEL fbdri_batch;
 			rate_net[r] = rate_net_raw[r] / rd_resistance_factor[r];
 	END FOR;
 
-	rf1c_eq: rate_forward_c[1] = a_Fe2O3 * k_step[1] * p * y_H2_c;
-	rr1c_eq: rate_reverse_c[1] = a_Fe3O4 * k_step[1] * p * y_H2O_c / K_ratio_eq[1];
-	rf2c_eq: rate_forward_c[2] = a_Fe3O4 * k_step[2] * p * y_H2_c;
-	rr2c_eq: rate_reverse_c[2] = a_FeO * k_step[2] * p * y_H2O_c / K_ratio_eq[2];
-	rf3c_eq: rate_forward_c[3] = a_FeO * k_step[3] * p * y_H2_c;
-	rr3c_eq: rate_reverse_c[3] = a_Fe * k_step[3] * p * y_H2O_c / K_ratio_eq[3];
+	redoxcapacity1_eq:
+		redox_pair_capacity[1] = (2 * n_Fe2O3 + 3 * n_Fe3O4) / (2 * n0_Fe2O3);
+	redoxcapacity2_eq:
+		redox_pair_capacity[2] = (3 * n_Fe3O4 + n_FeO) / (2 * n0_Fe2O3);
+	redoxcapacity3_eq:
+		redox_pair_capacity[3] = (n_FeO + n_Fe) / (2 * n0_Fe2O3);
+	redoxfgate1_eq: redox_forward_gate[1] = a_Fe2O3 / (a_Fe2O3 + solid_activity_floor);
+	redoxrgate1_eq: redox_reverse_gate[1] = a_Fe3O4 / (a_Fe3O4 + solid_activity_floor);
+	redoxfgate2_eq: redox_forward_gate[2] = a_Fe3O4 / (a_Fe3O4 + solid_activity_floor);
+	redoxrgate2_eq: redox_reverse_gate[2] = a_FeO / (a_FeO + solid_activity_floor);
+	redoxfgate3_eq: redox_forward_gate[3] = a_FeO / (a_FeO + solid_activity_floor);
+	redoxrgate3_eq: redox_reverse_gate[3] = a_Fe / (a_Fe + solid_activity_floor);
 
-	rf1e_eq: rate_forward_e[1] = a_Fe2O3 * k_step[1] * p * y_H2_e;
-	rr1e_eq: rate_reverse_e[1] = a_Fe3O4 * k_step[1] * p * y_H2O_e / K_ratio_eq[1];
-	rf2e_eq: rate_forward_e[2] = a_Fe3O4 * k_step[2] * p * y_H2_e;
-	rr2e_eq: rate_reverse_e[2] = a_FeO * k_step[2] * p * y_H2O_e / K_ratio_eq[2];
-	rf3e_eq: rate_forward_e[3] = a_FeO * k_step[3] * p * y_H2_e;
-	rr3e_eq: rate_reverse_e[3] = a_Fe * k_step[3] * p * y_H2O_e / K_ratio_eq[3];
-	rnetc1_eq: rate_net_c[1] = rate_forward_c[1] - rate_reverse_c[1];
-	rnetc2_eq: rate_net_c[2] = rate_forward_c[2] - rate_reverse_c[2];
-	rnete1_eq: rate_net_e[1] = rate_forward_e[1] - rate_reverse_e[1];
-	rnete2_eq: rate_net_e[2] = rate_forward_e[2] - rate_reverse_e[2];
-	rphasegate3_eq:
-		phase_buffered_reverse_gate_3 = a_Fe / (a_Fe + solid_activity_floor);
-	rfphasec3_eq:
-		rate_forward_phase_buffered_c_3 = a_FeO * k_step[3] * p * y_H2_c;
-	rrphasec3_eq:
-		rate_reverse_phase_buffered_c_3 =
-			a_FeO * phase_buffered_reverse_gate_3 * k_step[3] * p * y_H2O_c / K_ratio_eq[3];
-	rfphasee3_eq:
-		rate_forward_phase_buffered_e_3 = a_FeO * k_step[3] * p * y_H2_e;
-	rrphasee3_eq:
-		rate_reverse_phase_buffered_e_3 =
-			a_FeO * phase_buffered_reverse_gate_3 * k_step[3] * p * y_H2O_e / K_ratio_eq[3];
-	rnetphasec3_eq:
-		rate_net_phase_buffered_c_3 =
-			rate_forward_phase_buffered_c_3 - rate_reverse_phase_buffered_c_3;
-	rnetphasee3_eq:
-		rate_net_phase_buffered_e_3 =
-			rate_forward_phase_buffered_e_3 - rate_reverse_phase_buffered_e_3;
-	rnetc3_eq:
-		rate_net_c[3] =
-			(1 - phase_buffered_step3_blend) * (rate_forward_c[3] - rate_reverse_c[3])
-			+ phase_buffered_step3_blend * rate_net_phase_buffered_c_3;
-	rnete3_eq:
-		rate_net_e[3] =
-			(1 - phase_buffered_step3_blend) * (rate_forward_e[3] - rate_reverse_e[3])
-			+ phase_buffered_step3_blend * rate_net_phase_buffered_e_3;
+	FOR r IN steps CREATE
+		rfcap_eq[r]:
+			rate_forward_c[r] =
+				redox_pair_capacity[r] * redox_forward_gate[r] * k_step[r] * p * y_H2_c;
+		rrcap_eq[r]:
+			rate_reverse_c[r] =
+				redox_pair_capacity[r] * redox_reverse_gate[r] * k_step[r] * p * y_H2O_c / K_ratio_eq[r];
+		rfecap_eq[r]:
+			rate_forward_e[r] =
+				redox_pair_capacity[r] * redox_forward_gate[r] * k_step[r] * p * y_H2_e;
+		rrecap_eq[r]:
+			rate_reverse_e[r] =
+				redox_pair_capacity[r] * redox_reverse_gate[r] * k_step[r] * p * y_H2O_e / K_ratio_eq[r];
+		rnetc_eq[r]:
+			rate_net_c[r] = rate_forward_c[r] - rate_reverse_c[r];
+		rnete_eq[r]:
+			rate_net_e[r] = rate_forward_e[r] - rate_reverse_e[r];
+	END FOR;
 	rnetraw1_eq:
 		rate_net_raw[1] = solid_share_c * rate_net_c[1] + solid_share_e * rate_net_e[1];
 	rnetraw2_eq:
@@ -514,6 +506,8 @@ METHODS
 		tr.D_H2O_Ar := 2 {cm^2/s};
 		tr.D_H2_Ar := 7 {cm^2/s};
 		FIX solid_exchange_multiplier := 1.0;
+		FIX K_be_multiplier := 1.0;
+		FIX emulsion_flow_multiplier := 1.0;
 
 		FIX MW_Fe2O3 := 159.687 {g/g_mole};
 		FIX MW_Fe3O4 := 231.531 {g/g_mole};
@@ -528,8 +522,6 @@ METHODS
 		FIX eta[3] := 1.0;
 		FIX solid_activity_order := 1.0;
 		FIX solid_activity_floor := 0.01;
-		FIX phase_buffered_step3_blend := 0.0;
-		FIX phase_buffered_smoothing := 1e-6 {Pa};
 		FIX rd_resistance[1] := 0.0;
 		FIX rd_resistance[2] := 0.0;
 		FIX rd_resistance[3] := 0.0;
@@ -635,13 +627,15 @@ METHODS
 			rd_resistance_factor[r] := 1;
 			rate_net[r] := 1e-4 {1/s};
 		END FOR;
-		phase_buffered_reverse_gate_3 := 0;
-		rate_forward_phase_buffered_c_3 := 1e-4 {1/s};
-		rate_reverse_phase_buffered_c_3 := 0 {1/s};
-		rate_forward_phase_buffered_e_3 := 1e-4 {1/s};
-		rate_reverse_phase_buffered_e_3 := 0 {1/s};
-		rate_net_phase_buffered_c_3 := 0 {1/s};
-		rate_net_phase_buffered_e_3 := 0 {1/s};
+		redox_pair_capacity[1] := 1;
+		redox_pair_capacity[2] := 0;
+		redox_pair_capacity[3] := 0;
+		redox_forward_gate[1] := 1;
+		redox_forward_gate[2] := 0;
+		redox_forward_gate[3] := 0;
+		redox_reverse_gate[1] := 0;
+		redox_reverse_gate[2] := 0;
+		redox_reverse_gate[3] := 0;
 
 		FIX t := 0 {s};
 	END values;
@@ -668,13 +662,15 @@ METHODS
 		gamma_c.lower_bound := 0;
 		gamma_e.lower_bound := 0;
 		K_be.lower_bound := 0 {1/s};
-		phase_buffered_step3_blend.lower_bound := 0;
-		phase_buffered_step3_blend.upper_bound := 1;
-		phase_buffered_smoothing.lower_bound := 1e-9 {Pa};
+		K_be_multiplier.lower_bound := 1e-6;
+		emulsion_flow_multiplier.lower_bound := 1e-6;
 		a_Fe2O3.lower_bound := -1e-6;
 		a_Fe3O4.lower_bound := -1e-6;
 		a_FeO.lower_bound := -1e-6;
 		a_Fe.lower_bound := -1e-6;
+		redox_pair_capacity[steps].lower_bound := -1e-6;
+		redox_forward_gate[steps].lower_bound := -1e-6;
+		redox_reverse_gate[steps].lower_bound := -1e-6;
 		y_H2_b.lower_bound := -1e-6;
 		y_H2_c.lower_bound := -1e-6;
 		y_H2_e.lower_bound := -1e-6;
@@ -769,10 +765,10 @@ METHODS
 	METHOD on_load;
 		RUN prepare_dynamic;
 	END on_load;
-END fbdri_batch;
+END fbdri_redoxpair_batch;
 
-MODEL fbdri REFINES fbdri_batch;
-END fbdri;
+MODEL fbdri_redoxpair REFINES fbdri_redoxpair_batch;
+END fbdri_redoxpair;
 
 (* vim: sw=4:noet:ts=4
 *)
