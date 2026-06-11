@@ -64,6 +64,7 @@ public:
 
 	void setLinearTimesteps(UnitsM units, double start, double end, unsigned long num);
 	void setLogTimesteps(UnitsM units, double start, double end, unsigned long num);
+	void setTimesteps(UnitsM units, const std::vector<double> &values);
 	void clearObservedInstances();
 	void addObservedInstance(const Instanc &inst);
 	long getNumObservedItems();

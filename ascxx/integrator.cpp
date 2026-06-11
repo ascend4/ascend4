@@ -346,6 +346,25 @@ Integrator::setLogTimesteps(UnitsM units, double start, double end, unsigned lon
 	integrator_set_samples(blsys,samplelist);
 }
 
+void
+Integrator::setTimesteps(UnitsM units, const vector<double> &values){
+	if(values.size() < 2){
+		throw runtime_error("At least two timestep values are required");
+	}
+	if(samplelist!=NULL){
+		ASC_FREE(samplelist);
+	}
+	const dim_type *d = units.getDimensions().getInternalType();
+	samplelist = samplelist_new(values.size(), d);
+	for(unsigned long i=0;i<values.size();++i){
+		if(i > 0 && values[i] <= values[i - 1]){
+			throw runtime_error("Timestep values must be strictly increasing");
+		}
+		samplelist_set(samplelist,i,values[i]);
+	}
+	integrator_set_samples(blsys,samplelist);
+}
+
 vector<double>
 Integrator::getCurrentObservations(){
 	double *d = ASC_NEW_ARRAY(double,getNumObservedVars());
