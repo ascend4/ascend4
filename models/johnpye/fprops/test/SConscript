@@ -112,6 +112,13 @@ if test_env.get('WITH_IPOPT'):
 		,LIBS = ipopt_libs
 	)
 	test_env.Alias('eqm_mu0_runner', eqm_mu0_runner_prog)
+	spinel_entry_objs = ipopt_solver_objs + [
+		test_env.SharedObject('eqm_spinel_entry_runner.c',OBJPREFIX='#/test/eqmspin-test-')
+	]
+	eqm_spinel_entry_runner_prog = test_env.Program('eqm_spinel_entry_runner', test_env['shobjs'] + spinel_entry_objs
+		,LIBS = ipopt_libs
+	)
+	test_env.Alias('eqm_spinel_entry_runner', eqm_spinel_entry_runner_prog)
 	pureprops_objs = ipopt_solver_objs + [
 		test_env.SharedObject('pureprops_compare.c',OBJPREFIX='#/test/pureprops-test-')
 	]

@@ -80,7 +80,7 @@ static double log10K_from_mu0(const char **names, const double *nu, int ns, cons
 
 static double qfm_oneill_1987_log10fo2_low_branch(double T){
 	double mu_o2;
-	if(!(T > 900.0) || !(T < 1042.0)){
+	if(!(T > 900.0) || !(T < 1420.0)){
 		return NAN;
 	}
 	mu_o2 = -587474.0 + 1584.427 * T - 203.3164 * T * log(T) + 0.09271 * T * T;

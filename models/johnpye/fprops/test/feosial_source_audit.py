@@ -49,6 +49,11 @@ GAS_SOURCES = [
     "ideal+ref0:RPP",
 ]
 
+FAYALITE_SOURCES = [
+    ("slag_pragmatic_2026", "Robie/Benisek"),
+    ("hidayat_2017_feo_fe2o3_sio2", "Hidayat 2017"),
+]
+
 GAS_REACTIONS = [
     {
         "title": "H2 + 0.5 O2 -> H2O",
@@ -107,7 +112,7 @@ def log10_from_mu_o2(mu_o2: float, tk: float) -> float:
 
 
 def qfm_oneill_1987_log10fo2(tk: float) -> float:
-    if not (900.0 < tk < 1042.0):
+    if not (900.0 < tk < 1420.0):
         return math.nan
     mu_o2 = -587474.0 + 1584.427 * tk - 203.3164 * tk * math.log(tk) + 0.09271 * tk * tk
     return log10_from_mu_o2(mu_o2, tk)
@@ -125,13 +130,13 @@ def qfi_oneill_1987_log10fo2(tk: float) -> float:
     return log10_from_mu_o2(mu_o2, tk)
 
 
-def qfm_log10fo2(runner: Path, tk: float, o2_source: str) -> float:
+def qfm_log10fo2(runner: Path, tk: float, o2_source: str, fayalite_source: str) -> float:
     mu = query_mu0(
         runner,
         (
             "Fe3O4=hidayat_2015;"
             "SiO2=slag_pragmatic_2026;"
-            "Fe2SiO4=slag_pragmatic_2026;"
+            f"Fe2SiO4={fayalite_source};"
             f"oxygen={o2_source}"
         ),
         tk,
@@ -141,14 +146,14 @@ def qfm_log10fo2(runner: Path, tk: float, o2_source: str) -> float:
     return log10_from_mu_o2(mu_buffer, tk)
 
 
-def qfi_log10fo2(runner: Path, tk: float, o2_source: str) -> tuple[float, str]:
+def qfi_log10fo2(runner: Path, tk: float, o2_source: str, fayalite_source: str) -> tuple[float, str]:
     mu = query_mu0(
         runner,
         (
             "Fe_bcc=hidayat_2015;"
             "Fe_fcc=hidayat_2015;"
             "SiO2=slag_pragmatic_2026;"
-            "Fe2SiO4=slag_pragmatic_2026;"
+            f"Fe2SiO4={fayalite_source};"
             f"oxygen={o2_source}"
         ),
         tk,
@@ -173,22 +178,24 @@ def reaction_dg_log10k(mu: dict[str, float], species: list[str], nu: list[float]
 def print_qfm_table(runner: Path, tk: float) -> None:
     ref = qfm_oneill_1987_log10fo2(tk)
     print(f"QFM audit at T = {tk:.2f} K")
-    print(f"{'O2 source':<24} {'log10 fO2':>13} {'ref':>13} {'delta':>13}")
-    for src in QFM_O2_SOURCES:
-        value = qfm_log10fo2(runner, tk, src)
-        delta = value - ref if math.isfinite(ref) else math.nan
-        print(f"{src:<24} {value:13.6f} {ref:13.6f} {delta:13.6f}")
+    print(f"{'fayalite':<15} {'O2 source':<24} {'log10 fO2':>13} {'ref':>13} {'delta':>13}")
+    for fayalite_source, fayalite_label in FAYALITE_SOURCES:
+        for src in QFM_O2_SOURCES:
+            value = qfm_log10fo2(runner, tk, src, fayalite_source)
+            delta = value - ref if math.isfinite(ref) else math.nan
+            print(f"{fayalite_label:<15} {src:<24} {value:13.6f} {ref:13.6f} {delta:13.6f}")
     print()
 
 
 def print_qfi_table(runner: Path, tk: float) -> None:
     ref = qfi_oneill_1987_log10fo2(tk)
     print(f"QFI audit at T = {tk:.2f} K")
-    print(f"{'O2 source':<24} {'Fe':<8} {'log10 fO2':>13} {'ref':>13} {'delta':>13}")
-    for src in QFI_O2_SOURCES:
-        value, phase = qfi_log10fo2(runner, tk, src)
-        delta = value - ref if math.isfinite(ref) else math.nan
-        print(f"{src:<24} {phase:<8} {value:13.6f} {ref:13.6f} {delta:13.6f}")
+    print(f"{'fayalite':<15} {'O2 source':<24} {'Fe':<8} {'log10 fO2':>13} {'ref':>13} {'delta':>13}")
+    for fayalite_source, fayalite_label in FAYALITE_SOURCES:
+        for src in QFI_O2_SOURCES:
+            value, phase = qfi_log10fo2(runner, tk, src, fayalite_source)
+            delta = value - ref if math.isfinite(ref) else math.nan
+            print(f"{fayalite_label:<15} {src:<24} {phase:<8} {value:13.6f} {ref:13.6f} {delta:13.6f}")
     print()
 
 
@@ -223,7 +230,7 @@ def main() -> int:
 
     temps_k = parse_temps(args.temps_k)
     print("Fe-O-Si-Al source audit")
-    print("Condensed basis: Fe oxides/metal from hidayat_2015, quartz/fayalite from slag_pragmatic_2026")
+    print("Condensed basis: Fe oxides/metal from hidayat_2015, quartz from slag_pragmatic_2026; fayalite varied")
     print()
 
     for tk in temps_k:

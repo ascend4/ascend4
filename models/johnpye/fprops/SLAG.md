@@ -271,7 +271,7 @@ Current extracted values:
   - `Cp(1400 K) = 203.02 J/mol/K`
   - `Cp(2000 K) = 219.43 J/mol/K`
 - Benisek high-temperature `Cp(T)` fit in `J/mol/K`:
-  - `Cp = -584.388 + 129440 T^-1 - 3.84956e7 T^-2 + 4.10143e9 T^-3`
+  - `Cp = -584.388 + 129440 T^-1 - 3.84956e7 T^-2 + 4.10143e9 T^-3 + 98.4368 ln(T)`
 
 Assessment:
 
@@ -280,6 +280,105 @@ Assessment:
 - Robie 1982 provides the missing low-temperature / `298.15 K` anchor
 - combining Robie 1982 with Benisek 2012 is now sufficient for a first
   pragmatic fayalite implementation
+
+### 5B.3A Hidayat et al. 2017 Fe-O-Si / FactSage-style fayalite
+
+Hidayat et al. (2017), *Experimental Study and Thermodynamic
+Re-optimization of the FeO-Fe2O3-SiO2 System*, is directly relevant to
+our next Fe-O-Si phase-boundary checks. It is a FactSage/CRCT-style
+CALPHAD re-optimization of the FeO-Fe2O3-SiO2 subsystem, building on Jak
+et al. (2007) and related oxide database work.
+
+Useful points extracted from the paper:
+
+- quartz, tridymite and cristobalite are taken from Eriksson and Pelton
+  (1993)
+- hematite is taken from Hidayat et al. (2015)
+- fayalite is optimized against low-temperature heat capacity / entropy,
+  formation enthalpy, high-temperature heat-content data, and oxygen
+  partial-pressure data
+- Hidayat's optimized fayalite standard state is:
+  - `Delta_f H°298 = -1478.482 kJ/mol`
+  - `S°298 = 150.294 J/mol/K`
+  - valid range `298-1478 K`
+  - `Cp = 248.9 - 1923.8 T^-0.5 - 139104009 T^-3 J/mol/K`
+- this source has now been added as an alternate `Fe2SiO4` source named
+  `hidayat_2017_feo_fe2o3_sio2`, without replacing the Robie/Benisek
+  source
+- Jak et al. (2007) Table 1 confirms the `T^-3` coefficient is of order
+  `1.391e8`; using `139.106` would overpredict room-temperature Cp
+
+Current audit result, using Hidayat fayalite but still using the current
+NIST/JANAF quartz entry:
+
+- QFI improves slightly relative to O'Neill (1987), from about
+  `-0.10..-0.13` log10 fO2 units to about `-0.03` over
+  `1000-1300 K`
+- QFM does not improve; the best current oxygen source remains about
+  `-1.23`, `-1.06`, `-0.78` log10 fO2 units low at `1000`, `1100`,
+  and `1300 K`
+- this means fayalite alone is not the main QFM discrepancy; the next
+  consistency work should look at the quartz polymorph data, magnetite /
+  spinel basis, and O2 reference basis used by the Hidayat/Factsage
+  assessment
+
+Most useful Hidayat curves / tables to digitise or code as targets:
+
+- Fig. 15: `log10[P(O2), atm]` versus `1000/T` for the key three-phase
+  equilibria, especially fayalite-silica-iron, fayalite-spinel-iron,
+  fayalite-spinel-silica, and slag-bearing equivalents
+- Fig. 15 `Fe2SiO4 + SiO2 + Fe` has now been digitised as
+  `test/hidayat-2017-fig15-fe2sio4-sio2-fe.dat`; over
+  `1000/T = 0.686684841066..0.864238087993`, the line is
+  `log10(P(O2)/1 atm) = 7.78776 - 29.8308*(1000 K/T)` with
+  about `0.0066` log-unit RMS digitisation residual
+- Fig. 15 blue `Fe2SiO4 + Spinel + SiO2` boundary has now been
+  digitised as `test/hidayat-2017-fig15-fe2sio4-spinel-sio2.dat`;
+  adjacent fields indicate `Tridymite` through the last first-series point
+  at `1000/T ~= 0.8775` (`T ~= 1139.6 K`) and `Quartz`
+  above that. The full line is well represented by
+  `log10(P(O2)/1 atm) = 8.1539 - 24.5305*(1000 K/T)` over
+  `1000/T = 0.705422652233..0.960228724777`, with about `0.0085`
+  log-unit RMS digitisation residual. The printed figure label appears
+  misplaced or misleading if it says `Fe2SiO4 + Spinel + Fe`.
+
+Current Fig. 15 comparison plot:
+
+![Hidayat 2017 Fig. 15 Fe-O-Si comparison](res/hidayat-2017-fig15-feosial-compare.png)
+
+Latest diagnostic results using the digitised Fig. 15 lines:
+
+- QFI with Hidayat/Jak fayalite, current `SiO2`, and `oxygen=helmholtz+ref0:`
+  matches the red `Fe2SiO4 + SiO2 + Fe` line with about `0.024` log-unit
+  RMS residual against the digitised points.
+- QFM-style `Fe2SiO4 + Spinel + SiO2` using spinel phase-entry residuals
+  with `spinel=hidayat_adj1`, Hidayat/Jak fayalite, current `SiO2`, and
+  `oxygen=helmholtz+ref0:` matches the blue line with about `0.063`
+  log-unit RMS residual against the digitised points.
+- The earlier pure-`Fe3O4` proxy was much worse: about `0.94` log-unit RMS
+  with `oxygen=reaktoro_clone_supcrt98`, or about `1.75` log-unit RMS with
+  `oxygen=helmholtz+ref0:`. The spinel site-solution treatment is therefore
+  essential for this boundary.
+- This result still uses the current `SiO2=slag_pragmatic_2026` entry rather
+  than an explicit Eriksson/Pelton quartz-tridymite-cristobalite basis, so the
+  next source-alignment improvement remains the silica polymorph treatment.
+- Fig. 5: FeO-SiO2 pseudo-binary at iron saturation
+- Fig. 16: liquidus projection / univariant lines for the FeO-Fe2O3-SiO2
+  system
+- Table 4: invariant-point temperatures and slag compositions; these can
+  be coded directly without digitising
+
+Priority references from Hidayat to obtain next:
+
+- Jak et al. (2007), because Hidayat says fayalite heat capacity was
+  adopted from that previous optimization
+- Eriksson and Pelton (1993), for the silica polymorph standard states
+  used in the FactSage/CRCT family
+- Hidayat et al. (2015), for consistency of the Fe-O / hematite basis
+- Decterov et al. spinel model references used by Hidayat, before trying
+  to make QFM match a full FactSage-style basis
+- older experimental phase-boundary sources can wait until we know which
+  Hidayat figures we want to reproduce numerically
 
 ### 5B.4 `FeAl2O4` (`hercynite`)
 
@@ -442,6 +541,8 @@ side:
 - for `QFI`, `oxygen=helmholtz+ref0:` is currently the better
   mixed-source match, which is consistent with that benchmark sitting on
   the reduced iron side rather than the magnetite side
+- the audit can now vary fayalite between `slag_pragmatic_2026`
+  (Robie/Benisek) and `hidayat_2017_feo_fe2o3_sio2`
 
 This is still only a first-pass validation anchor, because it mixes
 species from different source families, but it is strong enough to catch
@@ -491,12 +592,15 @@ focus on the real ore question:
 
 Recommended next work after the current species implementation:
 
-1. add one first mixed `Fe-O-H-Si-Al` equilibrium regression case
-2. exercise gangue-bearing source maps and package construction
-3. compare equilibrium outputs with a simple ore-like element feed
-4. only then add reaction-level `ΔG` regression checks, once the `FeO`
+1. download Jak et al. (2007), Eriksson and Pelton (1993), and
+   Hidayat et al. (2015) if available
+2. digitise Hidayat Fig. 15 first; code Table 4 invariant points directly
+3. add one first mixed `Fe-O-H-Si-Al` equilibrium regression case
+4. exercise gangue-bearing source maps and package construction
+5. compare equilibrium outputs with a simple ore-like element feed
+6. only then add reaction-level `ΔG` regression checks, once the `FeO`
    reference basis used in those checks is no longer placeholder-only
-5. compare the predicted Fe lock-up against the TGA flattening
+7. compare the predicted Fe lock-up against the TGA flattening
    interpretation
 
 ## 10. Working Position
