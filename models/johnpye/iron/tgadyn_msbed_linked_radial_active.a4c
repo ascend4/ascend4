@@ -43,10 +43,13 @@ MODEL tga_reduction_particle_shell_local(
 ) WHERE (
 	(reaction_model = 'three_step_wustite')
 		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
 		OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph')
 		OR (morphology_model = 'porosity_blocked')
-		OR (morphology_model = 'porosity_sites');
+		OR (morphology_model = 'porosity_sites')
+		OR (morphology_model = 'porosity_interface')
+		OR (morphology_model = 'porosity_interface_omig');
 );
 	steps IS_A set OF integer_constant;
 	steps :== [1..4];
@@ -81,6 +84,9 @@ MODEL tga_reduction_particle_shell_local(
 	site_init IS_A factor;
 	site_floor IS_A factor;
 	site_open_gain IS_A positive_factor;
+	oxygen_mig_lambda IS_A factor;
+	oxygen_mig_width IS_A positive_factor;
+	oxygen_mig_exp IS_A positive_factor;
 	n0_Fe2O3_slice IS_A mole;
 	n0_Fe2O3_shell0 IS_A mole;
 	n0_per_area_slice IS_A mole_per_area;
@@ -129,6 +135,9 @@ MODEL tga_reduction_particle_shell_local(
 	wustite_fe_factor IS_A positive_factor;
 	wustite_step2_h2_factor IS_A factor;
 	oxygen_remaining_shell IS_A mole;
+	oxygen_access_frac IS_A factor;
+	oxygen_access_pos IS_A positive_factor;
+	oxygen_migration_factor IS_A positive_factor;
 	reduction_degree_shell IS_A factor;
 	rd_cap_gap IS_A factor;
 	rd_cap_gap_pos IS_A positive_factor;
@@ -136,6 +145,7 @@ MODEL tga_reduction_particle_shell_local(
 	rd_late_factor IS_A positive_factor;
 	s_rxn IS_A fraction;
 	site_factor IS_A factor;
+	iron_interface_factor IS_A factor;
 	site_open_drive IS_A extent_rate;
 
 	yar_eq:
@@ -170,6 +180,18 @@ MODEL tga_reduction_particle_shell_local(
 		wustite_step2_h2_factor = 4 - 3 / wustite_fe_factor;
 	oxygen_shell_eq:
 		oxygen_remaining_shell = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+	oxygen_access_frac_eq:
+		oxygen_access_frac = oxygen_remaining_shell / (3 * n0_Fe2O3_shell0);
+	oxygen_access_pos_eq:
+		oxygen_access_pos = 0.5 * (oxygen_access_frac + sqrt(oxygen_access_frac * oxygen_access_frac + 1e-12));
+	oxygen_migration_factor_eq:
+		oxygen_migration_factor =
+			1 / (
+				1
+				+ oxygen_mig_lambda
+				* s_rxn
+				* ((oxygen_mig_width / (oxygen_access_pos + oxygen_mig_width)) ^ oxygen_mig_exp)
+			);
 	rd_shell_eq:
 		reduction_degree_shell = (3 * n0_Fe2O3_shell0 - oxygen_remaining_shell) / (3 * n0_Fe2O3_shell0);
 	rd_cap_gap_eq:
@@ -336,6 +358,51 @@ MODEL tga_reduction_particle_shell_local(
 		CASE FALSE:
 			USE rfbase4_eq_depleted;
 		END WHEN;
+	CASE 'three_step_wustite_active_nord':
+		rfbase1_eq_active_nord:
+			rate_forward_base[1] =
+				redox_pair_capacity[1] * redox_forward_gate[1] * k_step[1] * p * y_H2;
+		rfbase1_eq_depleted_nord:
+			rate_forward_base[1] = 0 {1/s};
+		WHEN(he_forward_available)
+		CASE TRUE:
+			USE rfbase1_eq_active_nord;
+		CASE FALSE:
+			USE rfbase1_eq_depleted_nord;
+		END WHEN;
+		rfbase2_eq_active_nord:
+			rate_forward_base[2] =
+				redox_pair_capacity[2] * redox_forward_gate[2] * k_step[2] * p * y_H2;
+		rfbase2_eq_depleted_nord:
+			rate_forward_base[2] = 0 {1/s};
+		WHEN(mag_forward_available)
+		CASE TRUE:
+			USE rfbase2_eq_active_nord;
+		CASE FALSE:
+			USE rfbase2_eq_depleted_nord;
+		END WHEN;
+		rfbase3_eq_active_nord:
+			rate_forward_base[3] =
+				redox_pair_capacity[3] * redox_forward_gate[3] * k_step[3] * p * y_H2;
+		rfbase3_eq_depleted_nord:
+			rate_forward_base[3] = 0 {1/s};
+		WHEN(wu_forward_available)
+		CASE TRUE:
+			USE rfbase3_eq_active_nord;
+		CASE FALSE:
+			USE rfbase3_eq_depleted_nord;
+		END WHEN;
+		rfbase4_eq_active_nord:
+			rate_forward_base[4] =
+				redox_pair_capacity[4] * redox_forward_gate[4] * k_step[4] * p * y_H2;
+		rfbase4_eq_depleted_nord:
+			rate_forward_base[4] = 0 {1/s};
+		WHEN(mag_forward_available)
+		CASE TRUE:
+			USE rfbase4_eq_active_nord;
+		CASE FALSE:
+			USE rfbase4_eq_depleted_nord;
+		END WHEN;
 	CASE 'two_step_direct':
 		rfbase1_eq_two_step:
 			rate_forward_base[1] =
@@ -361,19 +428,31 @@ MODEL tga_reduction_particle_shell_local(
 		rate_reverse[2] =
 			redox_pair_capacity[2] * redox_reverse_gate[2] * k_step[2] * p * y_H2O / K_ratio_eq[2];
 	rf3_eq:
-		rate_forward[3] = rate_forward_base[3];
+		rate_forward[3] = iron_interface_factor * rate_forward_base[3];
 	rr3_eq:
 		rate_reverse[3] =
 			redox_pair_capacity[3] * redox_reverse_gate[3] * k_step[3] * p * y_H2O / K_ratio_eq[3];
 	rf4_eq:
-		rate_forward[4] = rate_forward_base[4];
+		rate_forward[4] = iron_interface_factor * rate_forward_base[4];
 	rr4_eq:
 		rate_reverse[4] =
 			redox_pair_capacity[4] * redox_reverse_gate[4] * k_step[4] * p * y_H2O / K_ratio_eq[4];
 	rnetraw1_eq:
 		rate_net_raw[1] = rate_forward[1] - rate_reverse[1];
-	rnet1_eq:
-		rate_net[1] = rd_capacity_factor * rate_forward[1] - rate_reverse[1];
+	SELECT (reaction_model)
+	CASE 'three_step_wustite_active_nord':
+		rnet1_eq_nord:
+			rate_net[1] = rate_forward[1] - rate_reverse[1];
+	CASE 'three_step_wustite':
+		rnet1_eq_three_step:
+			rate_net[1] = rd_capacity_factor * rate_forward[1] - rate_reverse[1];
+	CASE 'three_step_wustite_active':
+		rnet1_eq_three_step_active:
+			rate_net[1] = rd_capacity_factor * rate_forward[1] - rate_reverse[1];
+	CASE 'two_step_direct':
+		rnet1_eq_two_step:
+			rate_net[1] = rd_capacity_factor * rate_forward[1] - rate_reverse[1];
+	END SELECT;
 
 	SELECT (reaction_model)
 	CASE 'three_step_wustite':
@@ -422,6 +501,29 @@ MODEL tga_reduction_particle_shell_local(
 			der(n_FeO) = n0_Fe2O3_shell0 * ((3 / wustite_fe_factor) * rate_net[2] - rate_net[3]);
 		nfe_ode_eq_three_step_active:
 			der(n_Fe) = n0_Fe2O3_shell0 * wustite_fe_factor * rate_net[3];
+	CASE 'three_step_wustite_active_nord':
+		Jshell_eq_three_step_active_nord:
+			J_shell = n0_per_area_shell0 * (rate_net[1] + wustite_step2_h2_factor * rate_net[2] + rate_net[3]);
+		rnetraw2_eq_three_step_active_nord:
+			rate_net_raw[2] = rate_forward[2] - rate_reverse[2];
+		rnetraw3_eq_three_step_active_nord:
+			rate_net_raw[3] = rate_forward[3] - rate_reverse[3];
+		rnetraw4_eq_three_step_active_nord:
+			rate_net_raw[4] = 0 {1/s};
+		rnet2_eq_three_step_active_nord:
+			rate_net[2] = rate_forward[2] - rate_reverse[2];
+		rnet3_eq_three_step_active_nord:
+			rate_net[3] = rate_forward[3] - rate_reverse[3];
+		rnet4_eq_three_step_active_nord:
+			rate_net[4] = 0 {1/s};
+		nhe_ode_eq_three_step_active_nord:
+			der(n_Fe2O3) = -3 * n0_Fe2O3_shell0 * rate_net[1];
+		nmag_ode_eq_three_step_active_nord:
+			der(n_Fe3O4) = n0_Fe2O3_shell0 * (2 * rate_net[1] - rate_net[2]);
+		nwu_ode_eq_three_step_active_nord:
+			der(n_FeO) = n0_Fe2O3_shell0 * ((3 / wustite_fe_factor) * rate_net[2] - rate_net[3]);
+		nfe_ode_eq_three_step_active_nord:
+			der(n_Fe) = n0_Fe2O3_shell0 * wustite_fe_factor * rate_net[3];
 	CASE 'two_step_direct':
 		Jshell_eq_two_step:
 			J_shell = n0_per_area_shell0 * (rate_net[1] + rate_net[4]);
@@ -453,6 +555,8 @@ MODEL tga_reduction_particle_shell_local(
 	CASE 'coupled':
 		site_factor_eq_coupled:
 			site_factor = 1;
+		iron_interface_factor_eq_coupled:
+			iron_interface_factor = 1;
 		site_drive_eq_coupled:
 			site_open_drive = 0 {1/s};
 		site_ode_eq_coupled:
@@ -466,6 +570,8 @@ MODEL tga_reduction_particle_shell_local(
 	CASE 'porosity_blocked':
 		site_factor_eq_porosity_blocked:
 			site_factor = 1;
+		iron_interface_factor_eq_porosity_blocked:
+			iron_interface_factor = 1;
 		site_drive_eq_porosity_blocked:
 			site_open_drive = 0 {1/s};
 		site_ode_eq_porosity_blocked:
@@ -485,6 +591,13 @@ MODEL tga_reduction_particle_shell_local(
 						+ lam_open[2] * rate_net[2]
 						+ lam_open[3] * rate_net[3]
 					) * (1 - eps_o);
+		CASE 'three_step_wustite_active_nord':
+			eps_open_ode_eq_three_step_active_nord:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
 		CASE 'two_step_direct':
 			eps_open_ode_eq_two_step:
 				der(eps_o) = (
@@ -499,6 +612,8 @@ MODEL tga_reduction_particle_shell_local(
 	CASE 'porosity_sites':
 		site_factor_eq_porosity_sites:
 			site_factor = site_floor + (1 - site_floor) * s_rxn;
+		iron_interface_factor_eq_porosity_sites:
+			iron_interface_factor = 1;
 		site_drive_eq_porosity_sites:
 			site_open_drive = rate_forward_base[1] + rate_forward_base[2];
 		site_ode_eq_porosity_sites:
@@ -518,6 +633,13 @@ MODEL tga_reduction_particle_shell_local(
 						+ lam_open[2] * rate_net[2]
 						+ lam_open[3] * rate_net[3]
 					) * (1 - eps_o);
+		CASE 'three_step_wustite_active_nord':
+			eps_open_ode_eq_three_step_active_nord_sites:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
 		CASE 'two_step_direct':
 			eps_open_ode_eq_two_step_sites:
 				der(eps_o) = (
@@ -529,9 +651,109 @@ MODEL tga_reduction_particle_shell_local(
 			der(phi_b) = 0.5 * k_block * sigma_dens * xi3 * (1 - phi_b) * surface_block_gain;
 		morph_shell_eq_porosity_sites:
 			morph_factor = 1 / (D_floor_frac + (1 - D_floor_frac) * conn_factor);
+	CASE 'porosity_interface':
+		site_factor_eq_porosity_interface:
+			site_factor = 1;
+		iron_interface_factor_eq_porosity_interface:
+			iron_interface_factor = site_floor + (1 - site_floor) * (1 - s_rxn);
+		site_drive_eq_porosity_interface:
+			site_open_drive = rate_forward_base[1] + rate_forward_base[2];
+		site_ode_eq_porosity_interface:
+			der(s_rxn) =
+				k_block
+				* sigma_dens
+				* xi3
+				* (y_H2 / (y_H2 + y_H2O + 1e-6))
+				* (1 - s_rxn)
+				- site_open_gain * site_open_drive * s_rxn;
+		SELECT (reaction_model)
+		CASE 'three_step_wustite':
+			eps_open_ode_eq_three_step_interface:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
+		CASE 'three_step_wustite_active':
+			eps_open_ode_eq_three_step_active_interface:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
+		CASE 'three_step_wustite_active_nord':
+			eps_open_ode_eq_three_step_active_nord_interface:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
+		CASE 'two_step_direct':
+			eps_open_ode_eq_two_step_interface:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[4] * rate_net[4]
+					) * (1 - eps_o);
+		END SELECT;
+		phi_block_ode_eq_interface:
+			der(phi_b) = 0.5 * k_block * sigma_dens * xi3 * (1 - phi_b) * surface_block_gain;
+		morph_shell_eq_porosity_interface:
+			morph_factor = (1 + beta_block * s_rxn) / (D_floor_frac + (1 - D_floor_frac) * conn_factor);
+	CASE 'porosity_interface_omig':
+		site_factor_eq_porosity_interface_omig:
+			site_factor = 1;
+		iron_interface_factor_eq_porosity_interface_omig:
+			iron_interface_factor =
+				(site_floor + (1 - site_floor) * (1 - s_rxn))
+				* oxygen_migration_factor;
+		site_drive_eq_porosity_interface_omig:
+			site_open_drive = rate_forward_base[1] + rate_forward_base[2];
+		site_ode_eq_porosity_interface_omig:
+			der(s_rxn) =
+				k_block
+				* sigma_dens
+				* xi3
+				* (y_H2 / (y_H2 + y_H2O + 1e-6))
+				* (1 - s_rxn)
+				- site_open_gain * site_open_drive * s_rxn;
+		SELECT (reaction_model)
+		CASE 'three_step_wustite':
+			eps_open_ode_eq_three_step_interface_omig:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
+		CASE 'three_step_wustite_active':
+			eps_open_ode_eq_three_step_active_interface_omig:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
+		CASE 'three_step_wustite_active_nord':
+			eps_open_ode_eq_three_step_active_nord_interface_omig:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
+		CASE 'two_step_direct':
+			eps_open_ode_eq_two_step_interface_omig:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[4] * rate_net[4]
+					) * (1 - eps_o);
+		END SELECT;
+		phi_block_ode_eq_interface_omig:
+			der(phi_b) = 0.5 * k_block * sigma_dens * xi3 * (1 - phi_b) * surface_block_gain;
+		morph_shell_eq_porosity_interface_omig:
+			morph_factor = (1 + beta_block * s_rxn) / (D_floor_frac + (1 - D_floor_frac) * conn_factor);
 	CASE 'nomorph':
 		site_factor_eq_nomorph:
 			site_factor = 1;
+		iron_interface_factor_eq_nomorph:
+			iron_interface_factor = 1;
 		site_drive_eq_nomorph:
 			site_open_drive = 0 {1/s};
 		site_ode_eq_nomorph:
@@ -576,10 +798,13 @@ MODEL tga_reduction_bed_slice_radial_local(
 ) WHERE (
 	(reaction_model = 'three_step_wustite')
 		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
 		OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph')
 		OR (morphology_model = 'porosity_blocked')
-		OR (morphology_model = 'porosity_sites');
+		OR (morphology_model = 'porosity_sites')
+		OR (morphology_model = 'porosity_interface')
+		OR (morphology_model = 'porosity_interface_omig');
 );
 	steps IS_A set OF integer_constant;
 	steps :== [1..4];
@@ -628,6 +853,9 @@ MODEL tga_reduction_bed_slice_radial_local(
 	site_init IS_A factor;
 	site_floor IS_A factor;
 	site_open_gain IS_A positive_factor;
+	oxygen_mig_lambda IS_A factor;
+	oxygen_mig_width IS_A positive_factor;
+	oxygen_mig_exp IS_A positive_factor;
 	lam_open[steps] IS_A positive_factor;
 
 	n0_Fe2O3_slice IS_A mole;
@@ -809,6 +1037,9 @@ MODEL tga_reduction_bed_slice_radial_local(
 		site_init, shell[s].site_init ARE_THE_SAME;
 		site_floor, shell[s].site_floor ARE_THE_SAME;
 		site_open_gain, shell[s].site_open_gain ARE_THE_SAME;
+		oxygen_mig_lambda, shell[s].oxygen_mig_lambda ARE_THE_SAME;
+		oxygen_mig_width, shell[s].oxygen_mig_width ARE_THE_SAME;
+		oxygen_mig_exp, shell[s].oxygen_mig_exp ARE_THE_SAME;
 		n0_Fe2O3_slice, shell[s].n0_Fe2O3_slice ARE_THE_SAME;
 		shell[s].n0_Fe2O3_shell0 = n0_Fe2O3_slice / n_radial_segs;
 		n0_per_area_slice, shell[s].n0_per_area_slice ARE_THE_SAME;
@@ -864,10 +1095,13 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 ) WHERE (
 	(reaction_model = 'three_step_wustite')
 		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
 		OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph')
 		OR (morphology_model = 'porosity_blocked')
-		OR (morphology_model = 'porosity_sites');
+		OR (morphology_model = 'porosity_sites')
+		OR (morphology_model = 'porosity_interface')
+		OR (morphology_model = 'porosity_interface_omig');
 );
 	steps IS_A set OF integer_constant;
 	steps :== [1..4];
@@ -922,6 +1156,9 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	site_init IS_A factor;
 	site_floor IS_A factor;
 	site_open_gain IS_A positive_factor;
+	oxygen_mig_lambda IS_A factor;
+	oxygen_mig_width IS_A positive_factor;
+	oxygen_mig_exp IS_A positive_factor;
 	RD_turn IS_A positive_factor;
 	lam_open[steps] IS_A positive_factor;
 
@@ -1042,16 +1279,23 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
 		xi4_eq_three_step:
 			xi[4] = 0;
-	CASE 'three_step_wustite_active':
-		oxygen_eq_three_step_active:
-			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
-		xi2_eq_three_step_active:
-			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
-		xi4_eq_three_step_active:
-			xi[4] = 0;
-	CASE 'two_step_direct':
-		oxygen_eq_two_step:
-			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4;
+		CASE 'three_step_wustite_active':
+			oxygen_eq_three_step_active:
+				oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+			xi2_eq_three_step_active:
+				xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+			xi4_eq_three_step_active:
+				xi[4] = 0;
+		CASE 'three_step_wustite_active_nord':
+			oxygen_eq_three_step_active_nord:
+				oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+			xi2_eq_three_step_active_nord:
+				xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+			xi4_eq_three_step_active_nord:
+				xi[4] = 0;
+		CASE 'two_step_direct':
+			oxygen_eq_two_step:
+				oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4;
 		xi2_eq_two_step:
 			xi[2] = 0;
 		xi4_eq_two_step:
@@ -1214,6 +1458,9 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	site_init, slice[1..n_bed_segs].site_init ARE_THE_SAME;
 	site_floor, slice[1..n_bed_segs].site_floor ARE_THE_SAME;
 	site_open_gain, slice[1..n_bed_segs].site_open_gain ARE_THE_SAME;
+	oxygen_mig_lambda, slice[1..n_bed_segs].oxygen_mig_lambda ARE_THE_SAME;
+	oxygen_mig_width, slice[1..n_bed_segs].oxygen_mig_width ARE_THE_SAME;
+	oxygen_mig_exp, slice[1..n_bed_segs].oxygen_mig_exp ARE_THE_SAME;
 	FOR r IN steps CREATE
 		lam_open[r], slice[1..n_bed_segs].lam_open[r] ARE_THE_SAME;
 		k_step[r], slice[1..n_bed_segs].k_step[r] ARE_THE_SAME;
@@ -1268,6 +1515,9 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		FIX site_init := 1.0;
 		FIX site_floor := 1.0;
 		FIX site_open_gain := 1.0;
+		FIX oxygen_mig_lambda := 0.0;
+		FIX oxygen_mig_width := 0.08;
+		FIX oxygen_mig_exp := 1.5;
 		FIX lam_open[1] := 0.4;
 		FIX lam_open[2] := 0.6;
 		FIX lam_open[3] := 0.8;
@@ -1338,8 +1588,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		y_H2_bulk_initial.lower_bound := -1e-6;
 		y_H2O_bulk_initial.lower_bound := -1e-3;
 		feed_tau.lower_bound := 1e-6 {s};
-		feed_alpha.lower_bound := -1e-6;
-		feed_alpha.upper_bound := 1.000001;
+		feed_alpha.lower_bound := -0.01;
+		feed_alpha.upper_bound := 1.01;
 		y_H2O_fb_top.lower_bound := -1e-3;
 		y_H2O_if.lower_bound := -1e-3;
 		y_H2O_react.lower_bound := -1e-3;
@@ -1383,6 +1633,11 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		site_floor.upper_bound := 1.0;
 		site_open_gain.lower_bound := 1e-6;
 		site_open_gain.upper_bound := 1e6;
+		oxygen_mig_lambda.lower_bound := 0.0;
+		oxygen_mig_width.lower_bound := 1e-4;
+		oxygen_mig_width.upper_bound := 1.0;
+		oxygen_mig_exp.lower_bound := 0.2;
+		oxygen_mig_exp.upper_bound := 8.0;
 		E_dens.lower_bound := 1 {kJ/mol};
 		n_close.lower_bound := 0.5;
 		n_close.upper_bound := 6;
@@ -1410,13 +1665,14 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			slice[z].xi3_shell[1..n_radial_segs].lower_bound := -1e-4;
 			slice[z].shell[1..n_radial_segs].y_H2.lower_bound := -1e-6;
 			slice[z].shell[1..n_radial_segs].y_H2O.lower_bound := -1e-3;
-			slice[z].shell[1..n_radial_segs].xi_close.lower_bound := -1e-9;
+			slice[z].shell[1..n_radial_segs].xi_close.lower_bound := -1e-6;
 			slice[z].shell[1..n_radial_segs].eps_o.lower_bound := 1e-6;
 			slice[z].shell[1..n_radial_segs].eps_o.upper_bound := 1;
 			slice[z].shell[1..n_radial_segs].phi_b.lower_bound := -1e-9;
 			slice[z].shell[1..n_radial_segs].phi_b.upper_bound := 1.05;
-			slice[z].shell[1..n_radial_segs].s_rxn.lower_bound := -1e-6;
-			slice[z].shell[1..n_radial_segs].s_rxn.upper_bound := 1.000001;
+			slice[z].shell[1..n_radial_segs].s_rxn.lower_bound := -0.02;
+			slice[z].shell[1..n_radial_segs].s_rxn.upper_bound := 1.02;
+			slice[z].shell[1..n_radial_segs].oxygen_remaining_shell.lower_bound := -1e-3 {mol};
 			slice[z].shell[1..n_radial_segs].n_Fe2O3.lower_bound := -1e-3 {mol};
 			slice[z].shell[1..n_radial_segs].n_Fe3O4.lower_bound := -1e-3 {mol};
 			slice[z].shell[1..n_radial_segs].n_FeO.lower_bound := -1e-3 {mol};
@@ -1556,10 +1812,13 @@ MODEL tgadyn_msbed_linked_radial_family(
 ) WHERE (
 	(reaction_model = 'three_step_wustite')
 		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
 		OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph')
 		OR (morphology_model = 'porosity_blocked')
-		OR (morphology_model = 'porosity_sites');
+		OR (morphology_model = 'porosity_sites')
+		OR (morphology_model = 'porosity_interface')
+		OR (morphology_model = 'porosity_interface_omig');
 );
 	m IS_A tga_reduction_screen_dyn_msbed_linked_radial(
 	n_bed_segs,
@@ -1644,6 +1903,50 @@ MODEL tgadyn_msbed_linked_radial_porosity_active_configurable(
 		RUN m.prepare_dynamic;
 	END on_load;
 END tgadyn_msbed_linked_radial_porosity_active_configurable;
+
+MODEL tgadyn_msbed_linked_radial_porosity_active_nord_configurable(
+	n_bed_segs IS_A integer_constant;
+	n_radial_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'three_step_wustite_active_nord', 'porosity_blocked');
+METHODS
+	METHOD on_load;
+		RUN m.prepare_dynamic;
+	END on_load;
+END tgadyn_msbed_linked_radial_porosity_active_nord_configurable;
+
+MODEL tgadyn_msbed_linked_radial_porosity_sites_active_nord_configurable(
+	n_bed_segs IS_A integer_constant;
+	n_radial_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'three_step_wustite_active_nord', 'porosity_sites');
+METHODS
+	METHOD on_load;
+		RUN m.prepare_dynamic;
+	END on_load;
+END tgadyn_msbed_linked_radial_porosity_sites_active_nord_configurable;
+
+MODEL tgadyn_msbed_linked_radial_porosity_interface_active_nord_configurable(
+	n_bed_segs IS_A integer_constant;
+	n_radial_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'three_step_wustite_active_nord', 'porosity_interface');
+METHODS
+	METHOD on_load;
+		RUN m.prepare_dynamic;
+	END on_load;
+END tgadyn_msbed_linked_radial_porosity_interface_active_nord_configurable;
+
+MODEL tgadyn_msbed_linked_radial_porosity_interface_omig_active_nord_configurable(
+	n_bed_segs IS_A integer_constant;
+	n_radial_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'three_step_wustite_active_nord', 'porosity_interface_omig');
+METHODS
+	METHOD on_load;
+		RUN m.prepare_dynamic;
+	END on_load;
+END tgadyn_msbed_linked_radial_porosity_interface_omig_active_nord_configurable;
 
 MODEL tgadyn_msbed_linked_radial_nomorph_configurable(
 	n_bed_segs IS_A integer_constant;
