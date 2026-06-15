@@ -554,7 +554,54 @@ offsets together with a small gas-reaction audit. This makes it easier
 to separate "oxygen / gas basis" issues from "condensed fayalite / iron
 oxide basis" issues.
 
-### 8.2 Next verification layer
+### 8.2 First `Fe-O-H-Si` ore-feed sweep
+
+A first closed-system sweep has now been run with the corrected ore assay
+basis:
+
+- basis: `100 g` ore assaying `60 wt% Fe`, with that Fe represented as
+  `85.8 g Fe2O3` inventory and the balance as `14.2 g SiO2`
+- gas reservoir: `100 mol` total initial `H2 + H2O`
+- `GOD = H2O / (H2 + H2O)`
+- phase set: Fe metal, wustite, spinel, hematite, `SiO2`, fayalite, and
+  ideal `H2/H2O` gas
+- fayalite source: `hidayat_2017_feo_fe2o3_sio2`
+
+This basis is silica-limited: if every mole of silica becomes fayalite,
+the maximum Fe tied up in fayalite is about `0.44` of total Fe.  The
+resulting reduced-side transition is still the `QFI` switch:
+`Fe + SiO2 + H2O <-> Fe2SiO4 + H2`.  The nearest sampled
+onset/saturation points are:
+
+| T / C | feed GOD | equilibrium GOD | log10(pO2/1 bar) | QFI fit | Fe in fayalite | Fe metal |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 500 | 0.020 | 0.0314 | -30.669 | -30.796 | 0.440 | 0.560 |
+| 600 | 0.045 | 0.0574 | -26.306 | -26.377 | 0.350 | 0.650 |
+| 700 | 0.080 | 0.0914 | -22.828 | -22.866 | 0.440 | 0.560 |
+| 800 | 0.120 | 0.1314 | -19.993 | -20.010 | 0.440 | 0.560 |
+| 900 | 0.160 | 0.1714 | -17.658 | -17.640 | 0.440 | 0.560 |
+| 1000 | 0.205 | 0.2164 | -15.665 | -15.643 | 0.440 | 0.560 |
+
+![Fe-O-H-Si DRI sweep](res/feohsi_dri_sweep_60Fe_assay.png)
+
+The solid-only phase mass fractions, excluding the large gas reservoir,
+are plotted below for `600 C` and `800 C` as a function of feed GOD:
+
+![Fe-O-H-Si solid mass fractions at 600 C and 800 C](res/feohsi_dri_mass_stack_600C_800C.png)
+
+The corrected result is more physically useful than the earlier
+silica-rich trial: fayalite formation is capped by the available silica,
+and above the `QFI` threshold the remaining Fe stays as metal until more
+oxidising conditions are reached.  At still higher GOD, the remaining Fe
+moves into wustite or spinel depending on temperature and oxygen
+potential.
+
+Caveats: this is an equilibrium calculation with a large but finite gas
+reservoir, no kinetic limitation, no liquid slag phase, and no alumina /
+hercynite branch.  It should be read as a first Fe lock-up check, not as
+a finished DRI process model.
+
+### 8.3 Next verification layer
 
 The next code-level checks should exercise equilibrium package
 behaviour, not just unary species functions:
@@ -572,7 +619,7 @@ until the `FeO` basis used in those checks is upgraded from the current
 placeholder condensed model. Otherwise the test would be numerically
 consistent but physically weak.
 
-### 8.3 Validation layer against ore behaviour
+### 8.4 Validation layer against ore behaviour
 
 Once the package-level verification is in place, validation should
 focus on the real ore question:
@@ -597,7 +644,7 @@ Recommended next work after the current species implementation:
 2. digitise Hidayat Fig. 15 first; code Table 4 invariant points directly
 3. add one first mixed `Fe-O-H-Si-Al` equilibrium regression case
 4. exercise gangue-bearing source maps and package construction
-5. compare equilibrium outputs with a simple ore-like element feed
+5. refine the simple ore-like element-feed sweep and add a regression case
 6. only then add reaction-level `ΔG` regression checks, once the `FeO`
    reference basis used in those checks is no longer placeholder-only
 7. compare the predicted Fe lock-up against the TGA flattening
