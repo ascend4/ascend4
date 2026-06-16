@@ -989,12 +989,18 @@ MODEL tga_radial_shell_link;
 	delta IS_A distance;
 	D_up IS_A diffusivity;
 	D_down IS_A diffusivity;
+	D_up_pos IS_A diffusivity;
+	D_down_pos IS_A diffusivity;
 	D_face IS_A diffusivity;
 
 	face IS_A tga_radial_flux_port;
 
+	Dup_pos_eq:
+		D_up_pos = 0.5 * (D_up + sqrt(D_up * D_up + 1e-36 {m^4/s^2}));
+	Ddown_pos_eq:
+		D_down_pos = 0.5 * (D_down + sqrt(D_down * D_down + 1e-36 {m^4/s^2}));
 	Dface_eq:
-		D_face = 2 * D_up * D_down / (D_up + D_down);
+		D_face = 2 * D_up_pos * D_down_pos / (D_up_pos + D_down_pos + 1e-30 {m^2/s});
 	Nface_eq:
 		face.N_H2 = c_tot * D_face * (down.y_H2 - up.y_H2) / delta;
 	Nface_h2o_eq:
@@ -2012,8 +2018,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			slice[z].shell[1..n_radial_segs].n_Fe.lower_bound := -1e-3 {mol};
 			slice[z].shell[1..n_radial_segs].n_Fe2SiO4.lower_bound := -1e-3 {mol};
 			slice[z].shell[1..n_radial_segs].n_SiO2_active.lower_bound := -1e-3 {mol};
-			slice[z].shell[1..n_radial_segs].n_Fe2SiO4_pos.lower_bound := -1e-18 {mol};
-			slice[z].shell[1..n_radial_segs].n_SiO2_active_pos.lower_bound := -1e-18 {mol};
+			slice[z].shell[1..n_radial_segs].n_Fe2SiO4_pos.lower_bound := -1e-12 {mol};
+			slice[z].shell[1..n_radial_segs].n_SiO2_active_pos.lower_bound := -1e-12 {mol};
 			slice[z].shell[1..n_radial_segs].n0_SiO2_active_shell0.lower_bound := -1e-18 {mol};
 			slice[z].shell[1..n_radial_segs].a_Fe2O3.lower_bound := -1e3;
 			slice[z].shell[1..n_radial_segs].a_Fe3O4.lower_bound := -1e3;
@@ -2028,6 +2034,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			slice[z].shell[1..n_radial_segs].D_part_eff.lower_bound := -1e-6 {m^2/s};
 			slice[z].D_part_face[1..n_radial_segs - 1].lower_bound := -1e-6 {m^2/s};
 			slice[z].link[1..n_radial_segs - 1].D_face.lower_bound := -1e-6 {m^2/s};
+			slice[z].link[1..n_radial_segs - 1].D_up_pos.lower_bound := -1e-12 {m^2/s};
+			slice[z].link[1..n_radial_segs - 1].D_down_pos.lower_bound := -1e-12 {m^2/s};
 		END FOR;
 		FOR f IN [0..n_bed_segs - 1] DO
 			face[f].y_H2O.lower_bound := -1e-3;
@@ -2129,6 +2137,34 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		slice[n_bed_segs].morph_factor_shell[1..n_radial_segs],
 		J_transport;
 	END observe_cli_refined;
+
+	METHOD observe_cli_qfw_diagnostic;
+		OBSERVE reduction_degree, m_sample,
+		n_Fe2O3, n_Fe3O4, n_FeO, n_Fe, n_Fe2SiO4, n_SiO2_active,
+		rate_net[1..4],
+		xi[1..4],
+		n0_Fe2O3_zone[1], n0_Fe2O3_zone[n_bed_segs],
+		n_Fe3O4_zone[1], n_Fe3O4_zone[n_bed_segs],
+		xi1_zone[1], xi1_zone[n_bed_segs],
+		xi3_zone[1], xi3_zone[n_bed_segs],
+		y_H2_react, y_H2O_react,
+		y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs],
+		y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
+		slice[1].s_rxn_shell[1..n_radial_segs],
+		slice[n_bed_segs].s_rxn_shell[1..n_radial_segs],
+		slice[1].morph_factor_shell[1..n_radial_segs],
+		slice[n_bed_segs].morph_factor_shell[1..n_radial_segs],
+		J_transport,
+		slice[1..n_bed_segs].n_Fe2SiO4_shell[1..n_radial_segs],
+		slice[1..n_bed_segs].n_SiO2_active_shell[1..n_radial_segs],
+		slice[1..n_bed_segs].shell[1..n_radial_segs].rate_qfw,
+		slice[1..n_bed_segs].shell[1..n_radial_segs].rate_fay_red,
+		slice[1..n_bed_segs].shell[1..n_radial_segs].a_FeO,
+		slice[1..n_bed_segs].shell[1..n_radial_segs].a_Fe,
+		slice[1..n_bed_segs].shell[1..n_radial_segs].a_Fe2SiO4,
+		slice[1..n_bed_segs].shell[1..n_radial_segs].a_SiO2_active,
+		slice[1..n_bed_segs].shell[1..n_radial_segs].qfw_inventory_factor;
+	END observe_cli_qfw_diagnostic;
 
 	METHOD on_load;
 		RUN algebraic_base;
