@@ -44,6 +44,7 @@ MODEL tga_reduction_particle_shell_local(
 	(reaction_model = 'three_step_wustite')
 		OR (reaction_model = 'three_step_wustite_active')
 		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
 		OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph')
 		OR (morphology_model = 'porosity_blocked')
@@ -87,6 +88,12 @@ MODEL tga_reduction_particle_shell_local(
 	oxygen_mig_lambda IS_A factor;
 	oxygen_mig_width IS_A positive_factor;
 	oxygen_mig_exp IS_A positive_factor;
+	k_qfw "normalised finite-rate QFW exchange constant" IS_A frequency;
+	K_qfw "2 FeO + SiO2 <-> Fe2SiO4 equilibrium constant" IS_A positive_factor;
+	qfw_reverse_factor "diagnostic multiplier on Fe2SiO4 -> FeO + SiO2 exchange" IS_A factor;
+	k_fay_red "normalised finite-rate fayalite H2 reduction constant" IS_A frequency;
+	K_fay_red "Fe2SiO4 + 2 H2 <-> 2 Fe + SiO2 + 2 H2O equilibrium constant" IS_A positive_factor;
+	n0_SiO2_active_shell0 IS_A mole;
 	n0_Fe2O3_slice IS_A mole;
 	n0_Fe2O3_shell0 IS_A mole;
 	n0_per_area_slice IS_A mole_per_area;
@@ -109,6 +116,10 @@ MODEL tga_reduction_particle_shell_local(
 	n_Fe3O4 IS_A mole;
 	n_FeO IS_A mole;
 	n_Fe IS_A mole;
+	n_Fe2SiO4 IS_A mole;
+	n_SiO2_active IS_A mole;
+	n_Fe2SiO4_pos IS_A mole;
+	n_SiO2_active_pos IS_A mole;
 	xi1 IS_A reduction_extent;
 	xi3 IS_A reduction_extent;
 	xi_close IS_A factor;
@@ -127,8 +138,12 @@ MODEL tga_reduction_particle_shell_local(
 	close_temp_factor IS_A positive_factor;
 	sigma_dens IS_A positive_factor;
 	rate_forward_base[steps], rate_forward[steps], rate_reverse[steps], rate_net_raw[steps], rate_net[steps] IS_A extent_rate;
-	he_forward_available, mag_forward_available, wu_forward_available IS_A boolean_var;
+	rate_qfw IS_A extent_rate;
+	rate_fay_red IS_A extent_rate;
+	he_forward_available, mag_forward_available, wu_forward_available, qfw_inventory_available IS_A boolean_var;
 	a_Fe2O3, a_Fe3O4, a_FeO, a_Fe IS_A factor;
+	a_Fe2SiO4, a_SiO2_active IS_A factor;
+	qfw_inventory_factor IS_A factor;
 	redox_pair_capacity[steps] "normalised Fe capacity in each adjacent redox pair" IS_A factor;
 	redox_forward_gate[steps] "smooth source-presence gate for reduction direction" IS_A factor;
 	redox_reverse_gate[steps] "smooth source-presence gate for oxidation direction" IS_A factor;
@@ -179,7 +194,13 @@ MODEL tga_reduction_particle_shell_local(
 	wustite_step2_h2_factor_eq:
 		wustite_step2_h2_factor = 4 - 3 / wustite_fe_factor;
 	oxygen_shell_eq:
-		oxygen_remaining_shell = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+		oxygen_remaining_shell = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO + 2 * n_Fe2SiO4;
+	qfw_inventory_factor_eq:
+		qfw_inventory_factor = n0_SiO2_active_shell0 / (n0_SiO2_active_shell0 + 1e-12 {mol});
+	nfay_pos_eq:
+		n_Fe2SiO4_pos = 0.5 * (n_Fe2SiO4 + sqrt(n_Fe2SiO4 * n_Fe2SiO4 + 1e-48 {mol^2}));
+	nsio2_pos_eq:
+		n_SiO2_active_pos = 0.5 * (n_SiO2_active + sqrt(n_SiO2_active * n_SiO2_active + 1e-48 {mol^2}));
 	oxygen_access_frac_eq:
 		oxygen_access_frac = oxygen_remaining_shell / (3 * n0_Fe2O3_shell0);
 	oxygen_access_pos_eq:
@@ -206,14 +227,16 @@ MODEL tga_reduction_particle_shell_local(
 			RD_late_floor
 			+ (1 - RD_late_floor)
 			/ (1 + exp((reduction_degree_shell - RD_late_onset) / (RD_late_width + 1e-6)));
-	CONDITIONAL
-		he_forward_present: n_Fe2O3 > 0 {mol};
-		mag_forward_present: n_Fe3O4 > 0 {mol};
-		wu_forward_present: n_FeO > 0 {mol};
-	END CONDITIONAL;
-	he_forward_available == SATISFIED(he_forward_present, 1e-12 {mol});
-	mag_forward_available == SATISFIED(mag_forward_present, 1e-12 {mol});
-	wu_forward_available == SATISFIED(wu_forward_present, 1e-12 {mol});
+		CONDITIONAL
+			he_forward_present: n_Fe2O3 > 0 {mol};
+			mag_forward_present: n_Fe3O4 > 0 {mol};
+			wu_forward_present: n_FeO > 0 {mol};
+			qfw_inventory_present: n0_SiO2_active_shell0 > 1e-12 {mol};
+		END CONDITIONAL;
+		he_forward_available == SATISFIED(he_forward_present, 1e-12 {mol});
+		mag_forward_available == SATISFIED(mag_forward_present, 1e-12 {mol});
+		wu_forward_available == SATISFIED(wu_forward_present, 1e-12 {mol});
+		qfw_inventory_available == SATISFIED(qfw_inventory_present, 1e-18 {mol});
 	ahe_eq:
 		a_Fe2O3 =
 			(
@@ -250,6 +273,28 @@ MODEL tga_reduction_particle_shell_local(
 				(1 + solid_activity_floor)^solid_activity_order
 				- solid_activity_floor^solid_activity_order
 			);
+	afay_eq:
+		a_Fe2SiO4 =
+			(
+				((n_Fe2SiO4_pos / (n0_SiO2_active_shell0 + 1e-12 {mol})) + solid_activity_floor)^solid_activity_order
+				- solid_activity_floor^solid_activity_order
+			) / (
+				(1 + solid_activity_floor)^solid_activity_order
+				- solid_activity_floor^solid_activity_order
+			);
+	asio2_eq:
+		a_SiO2_active =
+			(
+				((n_SiO2_active_pos / (n0_SiO2_active_shell0 + 1e-12 {mol})) + solid_activity_floor)^solid_activity_order
+				- solid_activity_floor^solid_activity_order
+			) / (
+				(1 + solid_activity_floor)^solid_activity_order
+				- solid_activity_floor^solid_activity_order
+			);
+	afay_zero_eq:
+		a_Fe2SiO4 = 0;
+	asio2_zero_eq:
+		a_SiO2_active = 0;
 	ahe_zero_eq:
 		a_Fe2O3 = 0;
 	amag_zero_eq:
@@ -273,6 +318,14 @@ MODEL tga_reduction_particle_shell_local(
 		USE awu_eq;
 	CASE FALSE:
 		USE awu_zero_eq;
+	END WHEN;
+	WHEN(qfw_inventory_available)
+	CASE TRUE:
+		USE afay_eq;
+		USE asio2_eq;
+	CASE FALSE:
+		USE afay_zero_eq;
+		USE asio2_zero_eq;
 	END WHEN;
 	redoxcapacity1_eq:
 		redox_pair_capacity[1] = (2 * n_Fe2O3 + 3 * n_Fe3O4) / (2 * n0_Fe2O3_shell0);
@@ -403,6 +456,51 @@ MODEL tga_reduction_particle_shell_local(
 		CASE FALSE:
 			USE rfbase4_eq_depleted_nord;
 		END WHEN;
+	CASE 'three_step_wustite_active_nord_qfw':
+		rfbase1_eq_active_nord_qfw:
+			rate_forward_base[1] =
+				redox_pair_capacity[1] * redox_forward_gate[1] * k_step[1] * p * y_H2;
+		rfbase1_eq_depleted_nord_qfw:
+			rate_forward_base[1] = 0 {1/s};
+		WHEN(he_forward_available)
+		CASE TRUE:
+			USE rfbase1_eq_active_nord_qfw;
+		CASE FALSE:
+			USE rfbase1_eq_depleted_nord_qfw;
+		END WHEN;
+		rfbase2_eq_active_nord_qfw:
+			rate_forward_base[2] =
+				redox_pair_capacity[2] * redox_forward_gate[2] * k_step[2] * p * y_H2;
+		rfbase2_eq_depleted_nord_qfw:
+			rate_forward_base[2] = 0 {1/s};
+		WHEN(mag_forward_available)
+		CASE TRUE:
+			USE rfbase2_eq_active_nord_qfw;
+		CASE FALSE:
+			USE rfbase2_eq_depleted_nord_qfw;
+		END WHEN;
+		rfbase3_eq_active_nord_qfw:
+			rate_forward_base[3] =
+				redox_pair_capacity[3] * redox_forward_gate[3] * k_step[3] * p * y_H2;
+		rfbase3_eq_depleted_nord_qfw:
+			rate_forward_base[3] = 0 {1/s};
+		WHEN(wu_forward_available)
+		CASE TRUE:
+			USE rfbase3_eq_active_nord_qfw;
+		CASE FALSE:
+			USE rfbase3_eq_depleted_nord_qfw;
+		END WHEN;
+		rfbase4_eq_active_nord_qfw:
+			rate_forward_base[4] =
+				redox_pair_capacity[4] * redox_forward_gate[4] * k_step[4] * p * y_H2;
+		rfbase4_eq_depleted_nord_qfw:
+			rate_forward_base[4] = 0 {1/s};
+		WHEN(mag_forward_available)
+		CASE TRUE:
+			USE rfbase4_eq_active_nord_qfw;
+		CASE FALSE:
+			USE rfbase4_eq_depleted_nord_qfw;
+		END WHEN;
 	CASE 'two_step_direct':
 		rfbase1_eq_two_step:
 			rate_forward_base[1] =
@@ -443,6 +541,9 @@ MODEL tga_reduction_particle_shell_local(
 	CASE 'three_step_wustite_active_nord':
 		rnet1_eq_nord:
 			rate_net[1] = rate_forward[1] - rate_reverse[1];
+	CASE 'three_step_wustite_active_nord_qfw':
+		rnet1_eq_nord_qfw:
+			rate_net[1] = rate_forward[1] - rate_reverse[1];
 	CASE 'three_step_wustite':
 		rnet1_eq_three_step:
 			rate_net[1] = rd_capacity_factor * rate_forward[1] - rate_reverse[1];
@@ -458,6 +559,10 @@ MODEL tga_reduction_particle_shell_local(
 	CASE 'three_step_wustite':
 		Jshell_eq_three_step:
 			J_shell = n0_per_area_shell0 * (rate_net[1] + wustite_step2_h2_factor * rate_net[2] + rate_net[3]);
+		qfw_rate_eq_three_step:
+			rate_qfw = 0 {1/s};
+		fayred_rate_eq_three_step:
+			rate_fay_red = 0 {1/s};
 		rnetraw2_eq_three_step:
 			rate_net_raw[2] = rate_forward[2] - rate_reverse[2];
 		rnetraw3_eq_three_step:
@@ -478,9 +583,17 @@ MODEL tga_reduction_particle_shell_local(
 			der(n_FeO) = n0_Fe2O3_shell0 * ((3 / wustite_fe_factor) * rate_net[2] - rate_net[3]);
 		nfe_ode_eq_three_step:
 			der(n_Fe) = n0_Fe2O3_shell0 * wustite_fe_factor * rate_net[3];
+		nfay_ode_eq_three_step:
+			der(n_Fe2SiO4) = 0 {mol/s};
+		nsio2_ode_eq_three_step:
+			der(n_SiO2_active) = 0 {mol/s};
 	CASE 'three_step_wustite_active':
 		Jshell_eq_three_step_active:
 			J_shell = n0_per_area_shell0 * (rate_net[1] + wustite_step2_h2_factor * rate_net[2] + rate_net[3]);
+		qfw_rate_eq_three_step_active:
+			rate_qfw = 0 {1/s};
+		fayred_rate_eq_three_step_active:
+			rate_fay_red = 0 {1/s};
 		rnetraw2_eq_three_step_active:
 			rate_net_raw[2] = rate_forward[2] - rate_reverse[2];
 		rnetraw3_eq_three_step_active:
@@ -501,9 +614,17 @@ MODEL tga_reduction_particle_shell_local(
 			der(n_FeO) = n0_Fe2O3_shell0 * ((3 / wustite_fe_factor) * rate_net[2] - rate_net[3]);
 		nfe_ode_eq_three_step_active:
 			der(n_Fe) = n0_Fe2O3_shell0 * wustite_fe_factor * rate_net[3];
+		nfay_ode_eq_three_step_active:
+			der(n_Fe2SiO4) = 0 {mol/s};
+		nsio2_ode_eq_three_step_active:
+			der(n_SiO2_active) = 0 {mol/s};
 	CASE 'three_step_wustite_active_nord':
 		Jshell_eq_three_step_active_nord:
 			J_shell = n0_per_area_shell0 * (rate_net[1] + wustite_step2_h2_factor * rate_net[2] + rate_net[3]);
+		qfw_rate_eq_three_step_active_nord:
+			rate_qfw = 0 {1/s};
+		fayred_rate_eq_three_step_active_nord:
+			rate_fay_red = 0 {1/s};
 		rnetraw2_eq_three_step_active_nord:
 			rate_net_raw[2] = rate_forward[2] - rate_reverse[2];
 		rnetraw3_eq_three_step_active_nord:
@@ -524,9 +645,66 @@ MODEL tga_reduction_particle_shell_local(
 			der(n_FeO) = n0_Fe2O3_shell0 * ((3 / wustite_fe_factor) * rate_net[2] - rate_net[3]);
 		nfe_ode_eq_three_step_active_nord:
 			der(n_Fe) = n0_Fe2O3_shell0 * wustite_fe_factor * rate_net[3];
+		nfay_ode_eq_three_step_active_nord:
+			der(n_Fe2SiO4) = 0 {mol/s};
+		nsio2_ode_eq_three_step_active_nord:
+			der(n_SiO2_active) = 0 {mol/s};
+	CASE 'three_step_wustite_active_nord_qfw':
+		Jshell_eq_three_step_active_nord_qfw:
+			J_shell = n0_per_area_shell0 * (rate_net[1] + wustite_step2_h2_factor * rate_net[2] + rate_net[3] + 2 * rate_fay_red);
+		rnetraw2_eq_three_step_active_nord_qfw:
+			rate_net_raw[2] = rate_forward[2] - rate_reverse[2];
+		rnetraw3_eq_three_step_active_nord_qfw:
+			rate_net_raw[3] = rate_forward[3] - rate_reverse[3];
+		rnetraw4_eq_three_step_active_nord_qfw:
+			rate_net_raw[4] = 0 {1/s};
+		rnet2_eq_three_step_active_nord_qfw:
+			rate_net[2] = rate_forward[2] - rate_reverse[2];
+		rnet3_eq_three_step_active_nord_qfw:
+			rate_net[3] = rate_forward[3] - rate_reverse[3];
+		rnet4_eq_three_step_active_nord_qfw:
+			rate_net[4] = 0 {1/s};
+		qfw_rate_eq_three_step_active_nord_qfw_active:
+			rate_qfw = qfw_inventory_factor * k_qfw * (
+					a_FeO * a_FeO * a_SiO2_active
+					- qfw_reverse_factor * a_Fe2SiO4 / K_qfw
+				);
+		fayred_rate_eq_three_step_active_nord_qfw_active:
+			rate_fay_red = qfw_inventory_factor * k_fay_red * (
+					a_Fe2SiO4 * y_H2 * y_H2
+					- (a_Fe * a_Fe * a_SiO2_active * y_H2O * y_H2O) / K_fay_red
+				);
+		qfw_rate_eq_three_step_active_nord_qfw_inert:
+			rate_qfw = 0 {1/s};
+		fayred_rate_eq_three_step_active_nord_qfw_inert:
+			rate_fay_red = 0 {1/s};
+		WHEN(qfw_inventory_available)
+		CASE TRUE:
+			USE qfw_rate_eq_three_step_active_nord_qfw_active;
+			USE fayred_rate_eq_three_step_active_nord_qfw_active;
+		CASE FALSE:
+			USE qfw_rate_eq_three_step_active_nord_qfw_inert;
+			USE fayred_rate_eq_three_step_active_nord_qfw_inert;
+		END WHEN;
+		nhe_ode_eq_three_step_active_nord_qfw:
+			der(n_Fe2O3) = -3 * n0_Fe2O3_shell0 * rate_net[1];
+		nmag_ode_eq_three_step_active_nord_qfw:
+			der(n_Fe3O4) = n0_Fe2O3_shell0 * (2 * rate_net[1] - rate_net[2]);
+		nwu_ode_eq_three_step_active_nord_qfw:
+			der(n_FeO) = n0_Fe2O3_shell0 * ((3 / wustite_fe_factor) * rate_net[2] - rate_net[3] - 2 * rate_qfw);
+		nfe_ode_eq_three_step_active_nord_qfw:
+			der(n_Fe) = n0_Fe2O3_shell0 * (wustite_fe_factor * rate_net[3] + 2 * rate_fay_red);
+		nfay_ode_eq_three_step_active_nord_qfw:
+			der(n_Fe2SiO4) = n0_Fe2O3_shell0 * (rate_qfw - rate_fay_red);
+		nsio2_ode_eq_three_step_active_nord_qfw:
+			der(n_SiO2_active) = n0_Fe2O3_shell0 * (rate_fay_red - rate_qfw);
 	CASE 'two_step_direct':
 		Jshell_eq_two_step:
 			J_shell = n0_per_area_shell0 * (rate_net[1] + rate_net[4]);
+		qfw_rate_eq_two_step:
+			rate_qfw = 0 {1/s};
+		fayred_rate_eq_two_step:
+			rate_fay_red = 0 {1/s};
 		rnetraw2_eq_two_step:
 			rate_net_raw[2] = 0 {1/s};
 		rnetraw3_eq_two_step:
@@ -547,6 +725,10 @@ MODEL tga_reduction_particle_shell_local(
 			der(n_FeO) = 0 {mol/s};
 		nfe_ode_eq_two_step:
 			der(n_Fe) = 3 * n0_Fe2O3_shell0 * rate_net[4] / 4;
+		nfay_ode_eq_two_step:
+			der(n_Fe2SiO4) = 0 {mol/s};
+		nsio2_ode_eq_two_step:
+			der(n_SiO2_active) = 0 {mol/s};
 	END SELECT;
 
 	close_temp_factor_eq:
@@ -598,6 +780,13 @@ MODEL tga_reduction_particle_shell_local(
 						+ lam_open[2] * rate_net[2]
 						+ lam_open[3] * rate_net[3]
 					) * (1 - eps_o);
+		CASE 'three_step_wustite_active_nord_qfw':
+			eps_open_ode_eq_three_step_active_nord_qfw:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
 		CASE 'two_step_direct':
 			eps_open_ode_eq_two_step:
 				der(eps_o) = (
@@ -635,6 +824,13 @@ MODEL tga_reduction_particle_shell_local(
 					) * (1 - eps_o);
 		CASE 'three_step_wustite_active_nord':
 			eps_open_ode_eq_three_step_active_nord_sites:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
+		CASE 'three_step_wustite_active_nord_qfw':
+			eps_open_ode_eq_three_step_active_nord_qfw_sites:
 				der(eps_o) = (
 						lam_open[1] * rate_net[1]
 						+ lam_open[2] * rate_net[2]
@@ -688,6 +884,13 @@ MODEL tga_reduction_particle_shell_local(
 						+ lam_open[2] * rate_net[2]
 						+ lam_open[3] * rate_net[3]
 					) * (1 - eps_o);
+		CASE 'three_step_wustite_active_nord_qfw':
+			eps_open_ode_eq_three_step_active_nord_qfw_interface:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
 		CASE 'two_step_direct':
 			eps_open_ode_eq_two_step_interface:
 				der(eps_o) = (
@@ -733,6 +936,13 @@ MODEL tga_reduction_particle_shell_local(
 					) * (1 - eps_o);
 		CASE 'three_step_wustite_active_nord':
 			eps_open_ode_eq_three_step_active_nord_interface_omig:
+				der(eps_o) = (
+						lam_open[1] * rate_net[1]
+						+ lam_open[2] * rate_net[2]
+						+ lam_open[3] * rate_net[3]
+					) * (1 - eps_o);
+		CASE 'three_step_wustite_active_nord_qfw':
+			eps_open_ode_eq_three_step_active_nord_qfw_interface_omig:
 				der(eps_o) = (
 						lam_open[1] * rate_net[1]
 						+ lam_open[2] * rate_net[2]
@@ -799,6 +1009,7 @@ MODEL tga_reduction_bed_slice_radial_local(
 	(reaction_model = 'three_step_wustite')
 		OR (reaction_model = 'three_step_wustite_active')
 		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
 		OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph')
 		OR (morphology_model = 'porosity_blocked')
@@ -856,6 +1067,12 @@ MODEL tga_reduction_bed_slice_radial_local(
 	oxygen_mig_lambda IS_A factor;
 	oxygen_mig_width IS_A positive_factor;
 	oxygen_mig_exp IS_A positive_factor;
+	k_qfw IS_A frequency;
+	K_qfw IS_A positive_factor;
+	qfw_reverse_factor IS_A factor;
+	k_fay_red IS_A frequency;
+	K_fay_red IS_A positive_factor;
+	n0_SiO2_active_slice IS_A mole;
 	lam_open[steps] IS_A positive_factor;
 
 	n0_Fe2O3_slice IS_A mole;
@@ -880,11 +1097,15 @@ MODEL tga_reduction_bed_slice_radial_local(
 	n_Fe3O4_shell[shells] IS_A mole;
 	n_FeO_shell[shells] IS_A mole;
 	n_Fe_shell[shells] IS_A mole;
+	n_Fe2SiO4_shell[shells] IS_A mole;
+	n_SiO2_active_shell[shells] IS_A mole;
 
 	n_Fe2O3 IS_A mole;
 	n_Fe3O4 IS_A mole;
 	n_FeO IS_A mole;
 	n_Fe IS_A mole;
+	n_Fe2SiO4 IS_A mole;
+	n_SiO2_active IS_A mole;
 	xi1 IS_A reduction_extent;
 	xi3 IS_A reduction_extent;
 
@@ -937,6 +1158,10 @@ MODEL tga_reduction_bed_slice_radial_local(
 		n_FeO = SUM[n_FeO_shell[s] | s IN shells];
 	nfe_total_eq:
 		n_Fe = SUM[n_Fe_shell[s] | s IN shells];
+	nfay_total_eq:
+		n_Fe2SiO4 = SUM[n_Fe2SiO4_shell[s] | s IN shells];
+	nsio2_total_eq:
+		n_SiO2_active = SUM[n_SiO2_active_shell[s] | s IN shells];
 	xi1_eq:
 		xi1 = (1 - n_Fe2O3 / n0_Fe2O3_slice) / 3;
 	xi3_eq:
@@ -957,6 +1182,8 @@ MODEL tga_reduction_bed_slice_radial_local(
 		n_Fe3O4_shell[s], shell[s].n_Fe3O4 ARE_THE_SAME;
 		n_FeO_shell[s], shell[s].n_FeO ARE_THE_SAME;
 		n_Fe_shell[s], shell[s].n_Fe ARE_THE_SAME;
+		n_Fe2SiO4_shell[s], shell[s].n_Fe2SiO4 ARE_THE_SAME;
+		n_SiO2_active_shell[s], shell[s].n_SiO2_active ARE_THE_SAME;
 		xi1_shell[s], shell[s].xi1 ARE_THE_SAME;
 		xi3_shell[s], shell[s].xi3 ARE_THE_SAME;
 		xi_close_shell[s], shell[s].xi_close ARE_THE_SAME;
@@ -1040,6 +1267,12 @@ MODEL tga_reduction_bed_slice_radial_local(
 		oxygen_mig_lambda, shell[s].oxygen_mig_lambda ARE_THE_SAME;
 		oxygen_mig_width, shell[s].oxygen_mig_width ARE_THE_SAME;
 		oxygen_mig_exp, shell[s].oxygen_mig_exp ARE_THE_SAME;
+		k_qfw, shell[s].k_qfw ARE_THE_SAME;
+		K_qfw, shell[s].K_qfw ARE_THE_SAME;
+		qfw_reverse_factor, shell[s].qfw_reverse_factor ARE_THE_SAME;
+		k_fay_red, shell[s].k_fay_red ARE_THE_SAME;
+		K_fay_red, shell[s].K_fay_red ARE_THE_SAME;
+		shell[s].n0_SiO2_active_shell0 = n0_SiO2_active_slice / n_radial_segs;
 		n0_Fe2O3_slice, shell[s].n0_Fe2O3_slice ARE_THE_SAME;
 		shell[s].n0_Fe2O3_shell0 = n0_Fe2O3_slice / n_radial_segs;
 		n0_per_area_slice, shell[s].n0_per_area_slice ARE_THE_SAME;
@@ -1081,6 +1314,8 @@ MODEL tga_reduction_bed_slice_radial_local(
 		nmag_initial[s]: n_Fe3O4_shell[s] = 0 {mol};
 		nwu_initial[s]: n_FeO_shell[s] = 0 {mol};
 		nfe_initial[s]: n_Fe_shell[s] = 0 {mol};
+		nfay_initial[s]: n_Fe2SiO4_shell[s] = 0 {mol};
+		nsio2_initial[s]: n_SiO2_active_shell[s] = n0_SiO2_active_slice / n_radial_segs;
 		epso_initial[s]: eps_o_shell[s] = eps_o_init;
 		phib_initial[s]: phi_b_shell[s] = 0;
 		srxn_initial[s]: s_rxn_shell[s] = site_init;
@@ -1096,6 +1331,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	(reaction_model = 'three_step_wustite')
 		OR (reaction_model = 'three_step_wustite_active')
 		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
 		OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph')
 		OR (morphology_model = 'porosity_blocked')
@@ -1159,6 +1395,22 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	oxygen_mig_lambda IS_A factor;
 	oxygen_mig_width IS_A positive_factor;
 	oxygen_mig_exp IS_A positive_factor;
+	ore_Fe2O3_mass_frac IS_A positive_factor;
+	ore_SiO2_mass_frac IS_A factor;
+	sio2_active_frac IS_A factor;
+	k_qfw IS_A frequency;
+	K_qfw IS_A positive_factor;
+	qfw_reverse_factor IS_A factor;
+	K_qfw_A IS_A factor;
+	K_qfw_B IS_A factor;
+	K_qfw_C IS_A factor;
+	K_qfw_D IS_A factor;
+	k_fay_red IS_A frequency;
+	K_fay_red IS_A positive_factor;
+	K_fay_red_A IS_A factor;
+	K_fay_red_B IS_A factor;
+	K_fay_red_C IS_A factor;
+	K_fay_red_D IS_A factor;
 	RD_turn IS_A positive_factor;
 	lam_open[steps] IS_A positive_factor;
 
@@ -1204,13 +1456,20 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	MW_Fe3O4 IS_A molar_mass;
 	MW_FeO IS_A molar_mass;
 	MW_Fe IS_A molar_mass;
+	MW_SiO2 IS_A molar_mass;
+	MW_Fe2SiO4 IS_A molar_mass;
 	n0_Fe2O3 IS_A mole;
+	n0_SiO2_total IS_A mole;
+	n0_SiO2_active IS_A mole;
+	n0_SiO2_inactive IS_A mole;
 	n0_per_area IS_A mole_per_area;
 
 	n_Fe2O3 IS_A mole;
 	n_Fe3O4 IS_A mole;
 	n_FeO IS_A mole;
 	n_Fe IS_A mole;
+	n_Fe2SiO4 IS_A mole;
+	n_SiO2_active IS_A mole;
 	oxygen_remaining IS_A mole;
 	reduction_degree_raw IS_A factor;
 	RD_excess_pos IS_A positive_factor;
@@ -1244,9 +1503,29 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		y_Ar_bulk = 1 - y_H2_bulk - y_H2O_bulk;
 
 	n0_eq:
-		n0_Fe2O3 = m_sample_init / MW_Fe2O3;
+		n0_Fe2O3 = ore_Fe2O3_mass_frac * m_sample_init / MW_Fe2O3;
+	n0sio2_eq:
+		n0_SiO2_total = ore_SiO2_mass_frac * m_sample_init / MW_SiO2;
+	n0sio2active_eq:
+		n0_SiO2_active = sio2_active_frac * n0_SiO2_total;
+	n0sio2inactive_eq:
+		n0_SiO2_inactive = n0_SiO2_total - n0_SiO2_active;
 	n0area_eq:
 		n0_per_area = n0_Fe2O3 / A_crucible;
+	Kqfw_eq:
+		K_qfw = exp(
+				K_qfw_A
+				+ K_qfw_B / (T / 1 {K})
+				+ K_qfw_C * ln(T / 1 {K})
+				+ K_qfw_D * (T / 1 {K})
+			);
+	Kfayred_eq:
+		K_fay_red = exp(
+				K_fay_red_A
+				+ K_fay_red_B / (T / 1 {K})
+				+ K_fay_red_C * ln(T / 1 {K})
+				+ K_fay_red_D * (T / 1 {K})
+			);
 
 	nhe_total_eq:
 		n_Fe2O3 = SUM[slice[z].n_Fe2O3 | z IN [1..n_bed_segs]];
@@ -1256,6 +1535,10 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		n_FeO = SUM[slice[z].n_FeO | z IN [1..n_bed_segs]];
 	nfe_total_eq:
 		n_Fe = SUM[slice[z].n_Fe | z IN [1..n_bed_segs]];
+	nfay_total_eq:
+		n_Fe2SiO4 = SUM[slice[z].n_Fe2SiO4 | z IN [1..n_bed_segs]];
+	nsio2active_total_eq:
+		n_SiO2_active = SUM[slice[z].n_SiO2_active | z IN [1..n_bed_segs]];
 	reduction_degree_raw_eq:
 		reduction_degree_raw = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
 	RD_excess_pos_eq:
@@ -1274,24 +1557,31 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	SELECT (reaction_model)
 	CASE 'three_step_wustite':
 		oxygen_eq_three_step:
-			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+			oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO + 2 * n_Fe2SiO4;
 		xi2_eq_three_step:
 			xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
 		xi4_eq_three_step:
 			xi[4] = 0;
 		CASE 'three_step_wustite_active':
 			oxygen_eq_three_step_active:
-				oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+				oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO + 2 * n_Fe2SiO4;
 			xi2_eq_three_step_active:
 				xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
 			xi4_eq_three_step_active:
 				xi[4] = 0;
 		CASE 'three_step_wustite_active_nord':
 			oxygen_eq_three_step_active_nord:
-				oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO;
+				oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO + 2 * n_Fe2SiO4;
 			xi2_eq_three_step_active_nord:
 				xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
 			xi4_eq_three_step_active_nord:
+				xi[4] = 0;
+		CASE 'three_step_wustite_active_nord_qfw':
+			oxygen_eq_three_step_active_nord_qfw:
+				oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO + 2 * n_Fe2SiO4;
+			xi2_eq_three_step_active_nord_qfw:
+				xi[2] = 2 * xi[1] - n_Fe3O4 / n0_Fe2O3;
+			xi4_eq_three_step_active_nord_qfw:
 				xi[4] = 0;
 		CASE 'two_step_direct':
 			oxygen_eq_two_step:
@@ -1308,7 +1598,9 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			n_Fe2O3 * MW_Fe2O3
 			+ n_Fe3O4 * MW_Fe3O4
 			+ n_FeO * (MW_FeO - x_wustite * MW_Fe)
-			+ n_Fe * MW_Fe;
+			+ n_Fe * MW_Fe
+			+ n_Fe2SiO4 * MW_Fe2SiO4
+			+ (n_SiO2_active + n0_SiO2_inactive) * MW_SiO2;
 	Hbed_eq:
 		H_bed = m_sample / (rho_bulk_bed * A_crucible);
 	dzbed_eq:
@@ -1411,6 +1703,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	FOR z IN [1..n_bed_segs] CREATE
 		slice_n0_eq[z]:
 			slice[z].n0_Fe2O3_slice = n0_Fe2O3 / n_bed_segs;
+		slice_sio2_eq[z]:
+			slice[z].n0_SiO2_active_slice = n0_SiO2_active / n_bed_segs;
 		slice_n0area_eq[z]:
 			slice[z].n0_per_area_slice = n0_per_area / n_bed_segs;
 		n0_Fe2O3_zone[z], slice[z].n0_Fe2O3_slice ARE_THE_SAME;
@@ -1461,6 +1755,11 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	oxygen_mig_lambda, slice[1..n_bed_segs].oxygen_mig_lambda ARE_THE_SAME;
 	oxygen_mig_width, slice[1..n_bed_segs].oxygen_mig_width ARE_THE_SAME;
 	oxygen_mig_exp, slice[1..n_bed_segs].oxygen_mig_exp ARE_THE_SAME;
+	k_qfw, slice[1..n_bed_segs].k_qfw ARE_THE_SAME;
+	K_qfw, slice[1..n_bed_segs].K_qfw ARE_THE_SAME;
+	qfw_reverse_factor, slice[1..n_bed_segs].qfw_reverse_factor ARE_THE_SAME;
+	k_fay_red, slice[1..n_bed_segs].k_fay_red ARE_THE_SAME;
+	K_fay_red, slice[1..n_bed_segs].K_fay_red ARE_THE_SAME;
 	FOR r IN steps CREATE
 		lam_open[r], slice[1..n_bed_segs].lam_open[r] ARE_THE_SAME;
 		k_step[r], slice[1..n_bed_segs].k_step[r] ARE_THE_SAME;
@@ -1518,6 +1817,20 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		FIX oxygen_mig_lambda := 0.0;
 		FIX oxygen_mig_width := 0.08;
 		FIX oxygen_mig_exp := 1.5;
+		FIX ore_Fe2O3_mass_frac := 1.0;
+		FIX ore_SiO2_mass_frac := 0.0;
+		FIX sio2_active_frac := 0.0;
+		FIX k_qfw := 1e-3 {1/s};
+		FIX qfw_reverse_factor := 1.0;
+		FIX K_qfw_A := -0.594802370226;
+		FIX K_qfw_B := 4635.20037243;
+		FIX K_qfw_C := -0.204491343413;
+		FIX K_qfw_D := 0.000156866612087;
+		FIX k_fay_red := 1e-5 {1/s};
+		FIX K_fay_red_A := 24.0151127673;
+		FIX K_fay_red_B := -9803.03772029;
+		FIX K_fay_red_C := -2.91158658947;
+		FIX K_fay_red_D := 0.00152157523189;
 		FIX lam_open[1] := 0.4;
 		FIX lam_open[2] := 0.6;
 		FIX lam_open[3] := 0.8;
@@ -1552,6 +1865,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		FIX MW_Fe3O4 := 231.531 {g/g_mole};
 		FIX MW_FeO := 71.844 {g/g_mole};
 		FIX MW_Fe := 55.845 {g/g_mole};
+		FIX MW_SiO2 := 60.0843 {g/g_mole};
+		FIX MW_Fe2SiO4 := 203.7733 {g/g_mole};
 
 		FIX etak0[1] := 0.0015754844 {1/s/Pa};
 		FIX etak0[2] := 0.00076929627 {1/s/Pa};
@@ -1638,6 +1953,19 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		oxygen_mig_width.upper_bound := 1.0;
 		oxygen_mig_exp.lower_bound := 0.2;
 		oxygen_mig_exp.upper_bound := 8.0;
+		ore_Fe2O3_mass_frac.lower_bound := 0.5;
+		ore_Fe2O3_mass_frac.upper_bound := 1.0;
+		ore_SiO2_mass_frac.lower_bound := 0.0;
+		ore_SiO2_mass_frac.upper_bound := 0.5;
+		sio2_active_frac.lower_bound := 0.0;
+		sio2_active_frac.upper_bound := 1.0;
+		k_qfw.lower_bound := 1e-12 {1/s};
+		qfw_reverse_factor.lower_bound := 0.0;
+		qfw_reverse_factor.upper_bound := 1.0;
+		k_fay_red.lower_bound := 1e-12 {1/s};
+		n0_SiO2_total.lower_bound := -1e-18 {mol};
+		n0_SiO2_active.lower_bound := -1e-18 {mol};
+		n0_SiO2_inactive.lower_bound := -1e-18 {mol};
 		E_dens.lower_bound := 1 {kJ/mol};
 		n_close.lower_bound := 0.5;
 		n_close.upper_bound := 6;
@@ -1645,6 +1973,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		n_Fe3O4.lower_bound := -1e-3 {mol};
 		n_FeO.lower_bound := -1e-3 {mol};
 		n_Fe.lower_bound := -1e-3 {mol};
+		n_Fe2SiO4.lower_bound := -1e-3 {mol};
+		n_SiO2_active.lower_bound := -1e-3 {mol};
 		oxygen_remaining.lower_bound := -1e-3 {mol};
 		xi[steps].lower_bound := -1e-4;
 
@@ -1657,6 +1987,9 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			slice[z].n_Fe3O4.lower_bound := -1e-3 {mol};
 			slice[z].n_FeO.lower_bound := -1e-3 {mol};
 			slice[z].n_Fe.lower_bound := -1e-3 {mol};
+			slice[z].n_Fe2SiO4.lower_bound := -1e-3 {mol};
+			slice[z].n_SiO2_active.lower_bound := -1e-3 {mol};
+			slice[z].n0_SiO2_active_slice.lower_bound := -1e-18 {mol};
 			xi1_zone[z].lower_bound := -1e-4;
 			xi3_zone[z].lower_bound := -1e-4;
 			slice[z].xi1.lower_bound := -1e-4;
@@ -1677,6 +2010,11 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			slice[z].shell[1..n_radial_segs].n_Fe3O4.lower_bound := -1e-3 {mol};
 			slice[z].shell[1..n_radial_segs].n_FeO.lower_bound := -1e-3 {mol};
 			slice[z].shell[1..n_radial_segs].n_Fe.lower_bound := -1e-3 {mol};
+			slice[z].shell[1..n_radial_segs].n_Fe2SiO4.lower_bound := -1e-3 {mol};
+			slice[z].shell[1..n_radial_segs].n_SiO2_active.lower_bound := -1e-3 {mol};
+			slice[z].shell[1..n_radial_segs].n_Fe2SiO4_pos.lower_bound := -1e-18 {mol};
+			slice[z].shell[1..n_radial_segs].n_SiO2_active_pos.lower_bound := -1e-18 {mol};
+			slice[z].shell[1..n_radial_segs].n0_SiO2_active_shell0.lower_bound := -1e-18 {mol};
 			slice[z].shell[1..n_radial_segs].a_Fe2O3.lower_bound := -1e3;
 			slice[z].shell[1..n_radial_segs].a_Fe3O4.lower_bound := -1e3;
 			slice[z].shell[1..n_radial_segs].a_FeO.lower_bound := -1e3;
@@ -1688,6 +2026,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			slice[z].shell[1..n_radial_segs].rd_cap_gap.lower_bound := -1;
 			slice[z].shell[1..n_radial_segs].rd_capacity_factor.lower_bound := -1e-8;
 			slice[z].shell[1..n_radial_segs].D_part_eff.lower_bound := -1e-6 {m^2/s};
+			slice[z].D_part_face[1..n_radial_segs - 1].lower_bound := -1e-6 {m^2/s};
 			slice[z].link[1..n_radial_segs - 1].D_face.lower_bound := -1e-6 {m^2/s};
 		END FOR;
 		FOR f IN [0..n_bed_segs - 1] DO
@@ -1730,17 +2069,21 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	METHOD dynamic_reset;
 		d_int_eff := d_int_multiplier * d_p;
 		FOR z IN [1..n_bed_segs] DO
-			slice[z].shell[1..n_radial_segs].n_Fe2O3 := m_sample_init / (MW_Fe2O3 * n_bed_segs * n_radial_segs);
+			slice[z].shell[1..n_radial_segs].n_Fe2O3 := ore_Fe2O3_mass_frac * m_sample_init / (MW_Fe2O3 * n_bed_segs * n_radial_segs);
 			slice[z].shell[1..n_radial_segs].n_Fe3O4 := 0 {mol};
 			slice[z].shell[1..n_radial_segs].n_FeO := 0 {mol};
 			slice[z].shell[1..n_radial_segs].n_Fe := 0 {mol};
+			slice[z].shell[1..n_radial_segs].n_Fe2SiO4 := 0 {mol};
+			slice[z].shell[1..n_radial_segs].n_SiO2_active := n0_SiO2_active / (n_bed_segs * n_radial_segs);
 			slice[z].shell[1..n_radial_segs].eps_o := eps_o_init;
 			slice[z].shell[1..n_radial_segs].phi_b := 0;
 			slice[z].shell[1..n_radial_segs].s_rxn := site_init;
 			FREE der(slice[z].shell[1..n_radial_segs].n_Fe2O3),
 			der(slice[z].shell[1..n_radial_segs].n_Fe3O4),
 			der(slice[z].shell[1..n_radial_segs].n_FeO),
-			der(slice[z].shell[1..n_radial_segs].n_Fe);
+			der(slice[z].shell[1..n_radial_segs].n_Fe),
+			der(slice[z].shell[1..n_radial_segs].n_Fe2SiO4),
+			der(slice[z].shell[1..n_radial_segs].n_SiO2_active);
 			FREE der(slice[z].shell[1..n_radial_segs].eps_o),
 			der(slice[z].shell[1..n_radial_segs].phi_b),
 			der(slice[z].shell[1..n_radial_segs].s_rxn);
@@ -1750,7 +2093,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 
 	METHOD observe_default;
 		OBSERVE reduction_degree, m_sample,
-		n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+		n_Fe2O3, n_Fe3O4, n_FeO, n_Fe, n_Fe2SiO4, n_SiO2_active,
 		y_H2_react, y_H2O_react,
 		rate_net[1..4],
 		xi[1..4],
@@ -1761,7 +2104,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 
 	METHOD observe_cli_default;
 		OBSERVE reduction_degree, m_sample,
-		n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+		n_Fe2O3, n_Fe3O4, n_FeO, n_Fe, n_Fe2SiO4, n_SiO2_active,
 		y_H2_react, y_H2O_react,
 		y_H2_zone[1..n_bed_segs], y_H2O_zone[1..n_bed_segs],
 		y_H2_part[1..n_bed_segs], y_H2O_part[1..n_bed_segs],
@@ -1770,7 +2113,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 
 	METHOD observe_cli_refined;
 		OBSERVE reduction_degree, m_sample,
-		n_Fe2O3, n_Fe3O4, n_FeO, n_Fe,
+		n_Fe2O3, n_Fe3O4, n_FeO, n_Fe, n_Fe2SiO4, n_SiO2_active,
 		rate_net[1..4],
 		xi[1..4],
 		n0_Fe2O3_zone[1], n0_Fe2O3_zone[n_bed_segs],
@@ -1794,7 +2137,9 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 			FREE der(slice[z].shell[1..n_radial_segs].n_Fe2O3),
 			der(slice[z].shell[1..n_radial_segs].n_Fe3O4),
 			der(slice[z].shell[1..n_radial_segs].n_FeO),
-			der(slice[z].shell[1..n_radial_segs].n_Fe);
+			der(slice[z].shell[1..n_radial_segs].n_Fe),
+			der(slice[z].shell[1..n_radial_segs].n_Fe2SiO4),
+			der(slice[z].shell[1..n_radial_segs].n_SiO2_active);
 			FREE der(slice[z].shell[1..n_radial_segs].eps_o),
 			der(slice[z].shell[1..n_radial_segs].phi_b),
 			der(slice[z].shell[1..n_radial_segs].s_rxn);
@@ -1813,6 +2158,7 @@ MODEL tgadyn_msbed_linked_radial_family(
 	(reaction_model = 'three_step_wustite')
 		OR (reaction_model = 'three_step_wustite_active')
 		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
 		OR (reaction_model = 'two_step_direct');
 	(morphology_model = 'coupled') OR (morphology_model = 'nomorph')
 		OR (morphology_model = 'porosity_blocked')
@@ -1834,7 +2180,9 @@ MODEL tgadyn_msbed_linked_radial_family(
 			FREE der(m.slice[z].shell[1..n_radial_segs].n_Fe2O3),
 			der(m.slice[z].shell[1..n_radial_segs].n_Fe3O4),
 			der(m.slice[z].shell[1..n_radial_segs].n_FeO),
-			der(m.slice[z].shell[1..n_radial_segs].n_Fe);
+			der(m.slice[z].shell[1..n_radial_segs].n_Fe),
+			der(m.slice[z].shell[1..n_radial_segs].n_Fe2SiO4),
+			der(m.slice[z].shell[1..n_radial_segs].n_SiO2_active);
 			FREE der(m.slice[z].shell[1..n_radial_segs].eps_o),
 			der(m.slice[z].shell[1..n_radial_segs].phi_b),
 			der(m.slice[z].shell[1..n_radial_segs].s_rxn);
@@ -1947,6 +2295,17 @@ METHODS
 		RUN m.prepare_dynamic;
 	END on_load;
 END tgadyn_msbed_linked_radial_porosity_interface_omig_active_nord_configurable;
+
+MODEL tgadyn_msbed_linked_radial_porosity_interface_omig_qfw_active_nord_configurable(
+	n_bed_segs IS_A integer_constant;
+	n_radial_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'three_step_wustite_active_nord_qfw', 'porosity_interface_omig');
+METHODS
+	METHOD on_load;
+		RUN m.prepare_dynamic;
+	END on_load;
+END tgadyn_msbed_linked_radial_porosity_interface_omig_qfw_active_nord_configurable;
 
 MODEL tgadyn_msbed_linked_radial_nomorph_configurable(
 	n_bed_segs IS_A integer_constant;
