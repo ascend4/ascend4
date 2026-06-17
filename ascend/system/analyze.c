@@ -2186,7 +2186,8 @@ static int AnalyzeSelectorExprInDomain(CONST struct Expr *expr,
 
 static void ValidateSelectorCaseValues(struct Instance *context,
                                        struct Instance *selector,
-                                       struct Set *values)
+                                       struct Set *values,
+                                       symchar *otherwise_label)
 {
   CONST struct set_t *domain;
   struct Set *s;
@@ -2196,8 +2197,11 @@ static void ValidateSelectorCaseValues(struct Instance *context,
     return;
   }
   if (values == NULL) {
+    if (otherwise_label != NULL && StrMember(otherwise_label,domain)) {
+      return;
+    }
     ERROR_REPORTER_HERE(ASC_USER_ERROR,
-      "Selector WHEN cases must enumerate explicit selector states; OTHERWISE is not supported");
+      "Selector WHEN OTHERWISE cases must provide a label from the selector domain");
     return;
   }
 
@@ -2553,9 +2557,20 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   for (c=1;c<=len;c++) {
     cur_sol_case = when_case_create(NULL);
     cur_case = (struct Case *)(gl_fetch(scratch,c));
+    when_case_set_condition(cur_sol_case,GetCaseCondition(cur_case));
+    ProcessSwitchGuardDiscreteDeps(context,GetCaseCondition(cur_case));
+    when_case_set_applies(cur_sol_case,GetCaseApplies(cur_case));
+    when_case_set_otherwise_label(cur_sol_case,
+                                  GetCaseOtherwiseLabel(cur_case));
+    when_case_set_source(cur_sol_case,
+                         GetCaseModule(cur_case),
+                         GetCaseLineNum(cur_case));
+    when_case_set_case_number(cur_sol_case,c);
     ValueList = GetCaseValues(cur_case);
     if(selector_target != NULL){
-      ValidateSelectorCaseValues(context,selector_target,ValueList);
+      ValidateSelectorCaseValues(
+        context,selector_target,ValueList,GetCaseOtherwiseLabel(cur_case)
+      );
     }
     value = &(cur_sol_case->values[0]);
     if(g_symbol_values_list == NULL) {
@@ -3008,6 +3023,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
+    if(solver_int(vip->i)) flags |= VAR_INTEGER;
+    if(solver_binary(vip->i)) flags |= VAR_BINARY;
+    if(solver_semi(vip->i)) flags |= VAR_SEMICONT;
     if(vip->u.v.deriv > 1) flags |= VAR_DERIV; /* so that we can do relman_diffs with just the ydot vars */
 
     var_set_flags(var,flags);
@@ -3034,6 +3052,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.in_block)  flags |= VAR_INBLOCK;
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
     if(vip->u.v.solvervar) flags |= VAR_SVAR; /* shouldn't this be here? */
+    if(solver_int(vip->i)) flags |= VAR_INTEGER;
+    if(solver_binary(vip->i)) flags |= VAR_BINARY;
+    if(solver_semi(vip->i)) flags |= VAR_SEMICONT;
     var_set_flags(var,flags);
     p_data->masterpl[v] = var;
     p_data->solverpl[v] = var;
@@ -3058,6 +3079,9 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
     if(vip->u.v.discrete)  flags |= VAR_DISCRETE;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
+    if(solver_int(vip->i)) flags |= VAR_INTEGER;
+    if(solver_binary(vip->i)) flags |= VAR_BINARY;
+    if(solver_semi(vip->i)) flags |= VAR_SEMICONT;
 	/* CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var); */
     /* others may be appropriate (PVAR) */
     var_set_flags(var,flags);

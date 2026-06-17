@@ -5393,6 +5393,11 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   sys = SLV9(asys);
   iteration_begins(sys);
   check_system(sys);
+  if(slv_has_classifier_whens(server)) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+      "CMSlv does not yet consume CASE IF/APPLIES IF classifier regions");
+    return 1;
+  }
   if(sys->vlist == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was never set.");
     return 1;
@@ -5454,6 +5459,7 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   sys->nliter = 0;
   sys->s.cpu_elapsed = 0.0;
   sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
+  sys->s.over_defined = sys->s.under_defined = sys->s.struct_singular = FALSE;
   sys->s.block.previous_total_size = 0;
   sys->s.block.current_block = -1;
   sys->s.block.current_size = 0;
@@ -5493,6 +5499,7 @@ int slv9_resolve(slv_system_t server, SlvClientToken asys){
   sys->s.iteration = 0;
   sys->s.cpu_elapsed = 0.0;
   sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
+  sys->s.over_defined = sys->s.under_defined = sys->s.struct_singular = FALSE;
   sys->s.block.previous_total_size = 0;
 
   /* go to first unconverged block */
@@ -5891,14 +5898,24 @@ static const SlvFunctionsT slv9_internals = {
 	,slv9_dump_internals
 };
 
-int cmslv_register(void){
-	MSG("Registering CMSlv");
-	if(!solver_engine_named("LRSlv")){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv must be registered before CMSlv");
+static int cmslv_ensure_solver_registered(const char *name, const char *package){
+	if(solver_engine_named(name)){
 		return 1;
 	}
-	if(!solver_engine_named("QRSlv")){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv must be registered before CMSlv");
+	if(package_load(package,NULL)){
+		return 0;
+	}
+	return solver_engine_named(name) != NULL;
+}
+
+int cmslv_register(void){
+	MSG("Registering CMSlv");
+	if(!cmslv_ensure_solver_registered("LRSlv","lrslv")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"LRSlv must be loadable before CMSlv");
+		return 1;
+	}
+	if(!cmslv_ensure_solver_registered("QRSlv","qrslv")){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv must be loadable before CMSlv");
 		return 1;
 	}
 	return solver_register(&slv9_internals);

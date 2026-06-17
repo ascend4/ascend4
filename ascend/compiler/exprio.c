@@ -291,7 +291,11 @@ void WriteExprNode(FILE *f, CONST struct Expr *e)
     break;
   case e_satisfied:
     FPRINTF(f,"SATISFIED(");
-    WriteName(f,SatisfiedExprName(e));
+    if(SatisfiedExprName(e) != NULL){
+      WriteName(f,SatisfiedExprName(e));
+    }else{
+      FPRINTF(f,"<inline relation>");
+    }
     if (SatisfiedExprRValue(e)!=DBL_MAX){
       FPRINTF(f,",");
       FPRINTF(f,"%g",SatisfiedExprRValue(e));
@@ -692,7 +696,11 @@ void WriteExprNode2Str(Asc_DString *dstring, CONST struct Expr *e)
     break;
   case e_satisfied:
     Asc_DStringAppend(dstring,"SATISFIED(",-1);
-    WriteName2Str(dstring,SatisfiedExprName(e));
+    if(SatisfiedExprName(e) != NULL){
+      WriteName2Str(dstring,SatisfiedExprName(e));
+    }else{
+      Asc_DStringAppend(dstring,"<inline relation>",-1);
+    }
     if (SatisfiedExprRValue(e)!=DBL_MAX){
       sprintf(tmp,",%g",SatisfiedExprRValue(e));
       Asc_DStringAppend(dstring,tmp,-1);

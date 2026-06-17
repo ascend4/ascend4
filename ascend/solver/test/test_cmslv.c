@@ -316,6 +316,7 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 	T(pipeline)\
 	T(heatex)\
 	T(reinitignore)\
+	T(nested_when_static)\
 	T(linmassbal_ipopt)\
 	T(pipeline_ipopt)\
 	T(heatex_ipopt)\
@@ -325,6 +326,7 @@ static void test_linmassbal(void){ test_cmslv("linmassbal","CONOPT",1); }
 static void test_pipeline(void){ test_cmslv("pipeline","CONOPT",1); }
 static void test_heatex(void){ test_cmslv("heatex","CONOPT",1); }
 static void test_reinitignore(void){ test_cmslv("reinitignore","CONOPT",0); }
+static void test_nested_when_static(void){ test_cmslv("nested_when_static",NULL,0); }
 static void test_linmassbal_ipopt(void){ test_cmslv("linmassbal","IPOPT",1); }
 static void test_pipeline_ipopt(void){ test_cmslv("pipeline","IPOPT",1); }
 static void test_heatex_ipopt(void){ test_cmslv("heatex","IPOPT",1); }

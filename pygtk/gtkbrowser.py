@@ -141,6 +141,12 @@ class Browser:
 			,default=True
 		)
 
+		parser.add_option("--no-lazy-solvers"
+			,action="store_false", dest="lazy_solver_loading"
+			,help="load all standard solvers during GUI startup"
+			,default=None
+		)
+
 		parser.add_option("-t", "--test"
 			,action="store", type="string", dest="test"
 			,help="load a model and run contained tests without GUI")		
@@ -168,6 +174,13 @@ class Browser:
 		loading.print_status("Loading preferences")
 
 		self.prefs = Preferences()
+		_lazy_default = self.prefs.getBoolPref("Solver","lazy_loading",True)
+		self.lazy_solver_loading = _lazy_default if self.options.lazy_solver_loading is None else self.options.lazy_solver_loading
+		if self.options.test:
+			self.lazy_solver_loading = False
+		if hasattr(ascpy,"setAutoRegisterStandardSolvers"):
+			ascpy.setAutoRegisterStandardSolvers(not self.lazy_solver_loading)
+
 		_prefpath = self.prefs.getStringPref("Directories","librarypath",None)
 		_preffileopenpath = self.prefs.getStringPref("Directories","fileopenpath",None)
 		self.filename = None
@@ -389,7 +402,7 @@ class Browser:
 
 		loading.print_status("Getting solver list...") #,"GLADE_FILE = %s" % self.glade_file)
 
-		if not len(ascpy.getSolvers()):
+		if not len(self.get_solver_menu_names()):
 			print("NO SOLVERS LOADED!")
 			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
 
@@ -444,16 +457,26 @@ class Browser:
 			_pref_solver = next(iter(self.solver_engine_menu_dict))
 			loading.print_status(f"preferred solver not available, using: {_pref_solver}")
 
-		_mi = self.solver_engine_menu_dict.get(_pref_solver)
-		loading.print_status(f"active item: {_mi}")
-		if _mi:
-			_mi.set_active(True)
-
 		loading.print_status("Setting preferred solver...") #,"GLADE_FILE = %s" % self.glade_file)
-		# Ensure solver object is always initialised. Depending on GTK radio
-		# item state, set_active(True) may not emit a toggled callback.
-		if _pref_solver is not None and not hasattr(self, "solver"):
-			self.set_solver(_pref_solver)
+		_solver_candidates = []
+		if _pref_solver is not None:
+			_solver_candidates.append(_pref_solver)
+		for _name in self.solver_engine_menu_dict:
+			if _name not in _solver_candidates:
+				_solver_candidates.append(_name)
+		for _name in _solver_candidates:
+			if self.set_solver(_name):
+				_mi = self.solver_engine_menu_dict.get(_name)
+				loading.print_status(f"active item: {_mi}")
+				if _mi:
+					self._setting_solver_menu = True
+					try:
+						_mi.set_active(True)
+					finally:
+						self._setting_solver_menu = False
+				break
+		if not hasattr(self, "solver"):
+			self.reporter.reportError("No solver engine could be loaded.")
 
 		#--------
 		# Assign an icon to the main window
@@ -772,15 +795,23 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 #   ------------------
 #   SOLVER LIST
 
+	def get_solver_menu_names(self):
+		_names = []
+		if hasattr(ascpy,"getStandardSolvers"):
+			_names.extend(list(ascpy.getStandardSolvers()))
+		for _s in ascpy.getSolvers():
+			_name = _s.getName()
+			if _name not in _names:
+				_names.append(_name)
+		return _names
+
 	def update_solver_list(self):
 		self.solver_engine_menu = Gtk.Menu()
 		self.solver_engine_menu.show()
 		self.solver_engine.set_submenu(self.solver_engine_menu)
 		self.solver_engine_menu_dict = {}
-		_slvlist = ascpy.getSolvers()
 		_fmi = None
-		for _s in _slvlist:
-			_name = _s.getName()
+		for _name in self.get_solver_menu_names():
 			if _fmi is None:
 				_mi = Gtk.RadioMenuItem.new_with_label(None, _name)
 			else:
@@ -794,13 +825,18 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			
 	def set_solver(self,solvername):
 		""" this sets the active solver in the GUI, which is the default applied to newly instantiated models """
-		print(f"\nsetting solver to {solvername}")
+		if hasattr(ascpy,"isSolverRegistered") and hasattr(ascpy,"loadSolver"):
+			if not ascpy.isSolverRegistered(solvername):
+				if ascpy.loadSolver(solvername):
+					self.reporter.reportError(
+						"Unable to load solver engine '%s'. Check that it was built and that ASCENDSOLVERS includes the solver module path."
+						% solvername
+					)
+					return False
 		self.solver = ascpy.Solver(solvername)
-		print(f"\ngot solver {solvername}")
 		self.prefs.setStringPref("Solver","engine",solvername)
-		print(f"\nset pref to {solvername}")
 		self.reporter.reportNote("Set solver engine to '%s'" % solvername)
-		print(f"\nreported output re {solvername}")
+		return True
 
 #   --------------------------------------------
 # 	MAJOR GUI COMMANDS
@@ -819,7 +855,11 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_select_solver_toggled(self,widget,solvername):
 		if widget.get_active():
-			self.set_solver(solvername)
+			if getattr(self, "_setting_solver_menu", False):
+				return
+			_previous_solver = self.solver.getName() if hasattr(self, "solver") else None
+			if not self.set_solver(solvername) and _previous_solver in self.solver_engine_menu_dict:
+				self.solver_engine_menu_dict[_previous_solver].set_active(True)
 
 	def on_recent_file_select(self,widget):
 		if widget:
@@ -1098,9 +1138,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_integratorreporter = integwin.run()
 		if _integratorreporter!=None:
 			_integratorreporter.run()
-			self.sim.processVarStatus()
-			self.modelview.refreshtree()
-			self.update_simulation_statusbar()
 
 	def do_check(self):
 		if self.no_built_system():

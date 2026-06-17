@@ -575,8 +575,12 @@ Simulation::setSolver(Solver &solver){
 	/* CONSOLE_DEBUG("Setting solver on sim %p, root inst %p",this,this->simroot.getInternalType()); */
 
 	try{
-		// build the system (if not built already)
-		build();
+		/* If a targeted SOLVE has already built a submodel system, keep that
+		 * buildroot and select the solver on it. Building here unconditionally
+		 * widens SOLVE child back to the simulation root. */
+		if(!sys){
+			build();
+		}
 	}catch(runtime_error &e){
 		stringstream ss;
 		ss << "Couldn't prepare system for solving:";
@@ -1118,7 +1122,11 @@ Simulation::processVarStatus(){
 		MSG("There are %d blocks", block->number_of);
 	}
 
-	if(!bb->block){
+	bool allsolved = status.converged;
+	if(allsolved){
+		low = nvars;
+		high = nvars;
+	}else if(!bb->block){
 		/**
 		@todo if we don't have any block structure information then just
 		'manually' set 'low' and 'high' to both be equal to sys->n if the 
@@ -1137,12 +1145,14 @@ Simulation::processVarStatus(){
 	}
 	else{
 		int activeblock = block->current_block;
-		asc_assert(activeblock <= block->number_of);
-
-		low = bb->block[activeblock].col.low;
-		high = bb->block[activeblock].col.high;
+		if(activeblock < 0 || activeblock >= block->number_of){
+			low = nvars;
+			high = nvars;
+		}else{
+			low = bb->block[activeblock].col.low;
+			high = bb->block[activeblock].col.high;
+		}
 	}
-	bool allsolved = status.converged;
 	for(int c=0; c < nvars; ++c){
 		var_variable *v = vlist[c];
 		Instanc i((Instance *)var_instance(v));

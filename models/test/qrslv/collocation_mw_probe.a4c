@@ -1,0 +1,25 @@
+REQUIRE "collocation.a4l";
+IMPORT "qrslv";
+
+MODEL collocation_mw_probe REFINES mw_demo_column;
+METHODS
+METHOD on_load;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
+END on_load;
+
+METHOD solve_legacy_sequence;
+	RUN mw_column.Column.reset_to_massbal;
+	RUN values;
+	SOLVE mw_column;
+	DELETE SYSTEM;
+	RUN mw_column.Column.reset_to_fullthermo;
+	SOLVE mw_column;
+	DELETE SYSTEM;
+	RUN mw_column.Column.reset_to_adiabatic;
+	RUN mw_column.Column.zero_Q;
+	SOLVE mw_column;
+	DELETE SYSTEM;
+END solve_legacy_sequence;
+END collocation_mw_probe;

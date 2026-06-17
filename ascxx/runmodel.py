@@ -17,7 +17,11 @@ def _process_is_privileged():
 if _process_is_privileged():
 	sys.exit("ASCEND refuses to run with root or mismatched effective user/group IDs.")
 
-from plotutils import COLOR_CYCLE, group_series, group_ylabel
+from plotutils import (
+	group_series,
+	group_ylabel,
+	plot_grouped_time_series,
+)
 
 DEFAULT_INTEGRATOR = "IDA"
 DEFAULT_DURATION = 100.0
@@ -175,13 +179,17 @@ def _is_integrate_requested(args):
 	)
 
 
-def _get_units_info(inst):
+def _get_units_info(inst, autoscale=True):
 	try:
-		units = inst.getDisplayUnits(False)
+		if inst.isReal() and inst.isDimensionless():
+			return "", 1.0
+		units = inst.getDisplayUnits(autoscale)
 		name = units.getName().toString()
 		conversion = units.getConversion()
 		if conversion == 0:
 			conversion = 1.0
+		if name in ("?", "dimensionless", "[dimensionless]"):
+			name = ""
 		return name, conversion
 	except Exception:
 		return "", 1.0
@@ -292,28 +300,25 @@ def _plot_rows(report):
 		raise RuntimeError("No real-valued observed variables are available for plotting.")
 
 	grouped, order = group_series(real_columns, lambda col: col["units"] if col["units"] else "")
-	fig, axes = plt.subplots(len(order), 1, squeeze=False, sharex=True)
-	axes = [ax[0] for ax in axes]
 	x_all = [row["time"] for row in report["rows"]]
-	event_rows = [row for row in report["rows"] if row.get("event")]
+	event_indices = [i for i, row in enumerate(report["rows"]) if row.get("event")]
+	plot_groups = []
 
-	for ax, group in zip(axes, order):
+	for group in order:
 		entries = grouped[group]
-		for i, col in enumerate(entries):
-			y_all = [row["values"][col["index"]] for row in report["rows"]]
-			color = COLOR_CYCLE[i % len(COLOR_CYCLE)]
-			ax.plot(x_all, y_all, "-", color=color, label=col["label"])
-			if event_rows:
-				x_evt = [row["time"] for row in event_rows]
-				y_evt = [row["values"][col["index"]] for row in event_rows]
-				ax.plot(x_evt, y_evt, "o", ms=5, mfc="none", mec=color, linestyle="None")
-		ax.set_ylabel(group_ylabel(entries, lambda col: col["units"], lambda col: col["label"]))
-		ax.grid(True)
-		if len(entries) > 1:
-			ax.legend(loc="best")
+		plot_groups.append({
+			"ylabel": group_ylabel(entries, lambda col: col["units"], lambda col: col["label"]),
+			"series": [
+				{
+					"label": col["label"],
+					"values": [row["values"][col["index"]] for row in report["rows"]],
+					"color_index": i,
+				}
+				for i, col in enumerate(entries)
+			],
+		})
 
-	axes[-1].set_xlabel(report["time_label"])
-	plt.tight_layout()
+	plot_grouped_time_series(plt, x_all, plot_groups, report["time_label"], event_indices=event_indices)
 	plt.show()
 
 
@@ -598,6 +603,11 @@ def run_ascend_model(
 		import os
 		os.add_dll_directory(pathlib.Path(__file__).parent.parent)
 	import ascpy
+	try:
+		if ascpy.reloadDisplayUnitsOverrides() != 0:
+			print("WARNING: failed to reload display-units overrides", file=sys.stderr)
+	except Exception as e:
+		print(f"WARNING: failed to reload display-units overrides: {e}", file=sys.stderr)
 	old_hooks = ascpy.SolverHooksManager.Instance().getHooks()
 	progress = bool(progress or solver_progress)
 	solver_reporter = CliSolverReporter(ascpy) if progress else None

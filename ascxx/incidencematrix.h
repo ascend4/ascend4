@@ -12,10 +12,21 @@
 
 extern "C"{
 #include <ascend/system/incidence.h>
+#include <ascend/system/decomp.h>
 }
 
 typedef enum{
-	IM_NULL=0, IM_ACTIVE_FIXED, IM_ACTIVE_FREE, IM_DORMANT_FIXED, IM_DORMANT_FREE
+	IM_NULL=0,
+	IM_ACTIVE_FIXED,
+	IM_ACTIVE_FREE,
+	IM_DORMANT_FIXED,
+	IM_DORMANT_FREE,
+	IM_DECOMP_REAL,
+	IM_DECOMP_INTEGER,
+	IM_DECOMP_SELECTOR,
+	IM_DECOMP_LOGICAL,
+	IM_DECOMP_BOUNDARY,
+	IM_DECOMP_MIXED
 } IncidencePointType;
 
 typedef enum{
@@ -31,6 +42,30 @@ public:
 	int row;
 	int col;
 	IncidencePointType type;
+};
+
+class DecompBlockSummary{
+public:
+	DecompBlockSummary();
+
+	int block;
+	int row_low;
+	int col_low;
+	int row_high;
+	int col_high;
+	int rels;
+	int condrels;
+	int logrels;
+	int condlogrels;
+	int vars;
+	int intvars;
+	int binvars;
+	int semivars;
+	int dvars;
+	int booldvars;
+	int intdvars;
+	int symdvars;
+	std::string label;
 };
 
 /**
@@ -49,15 +84,26 @@ private:
 	slv_system_t sys;
 
 	std::vector<IncidencePoint> data;
+	std::vector<IncidencePoint> decomp_data;
+	std::vector<DecompBlockSummary> decomp_blocks;
 	incidence_vars_t i;
+	slv_decomp_partition_t decomp;
 	bool is_built;
+	bool decomp_built;
+	bool decomp_active;
 
 	void buildPlotData();
+	void buildDecompPlotData(bool active=false);
+	void ensureDecompPlotData(bool active=false);
+	const std::string getDecompBlockReportCurrent(const int &block);
+	const std::string getDecompReportCurrent();
 public:
 	explicit IncidenceMatrix(Simulation &sim);
+	IncidenceMatrix(const IncidenceMatrix &old);
 	~IncidenceMatrix();
 
 	const std::vector<IncidencePoint> &getIncidenceData();
+	const std::vector<IncidencePoint> &getDecompIncidenceData();
 	const int &getNumRows() const;
 	const int &getNumCols() const;
 	const Variable getVariable(const int &row) const;
@@ -68,6 +114,20 @@ public:
 	const std::vector<int> getBlockLocation(const int &block) const;
 	const BlockStatusType getBlockStatus(const int &block) const;
 	const int getNumBlocks();
+	const int getDecompNumRows();
+	const int getDecompNumCols();
+	const int getDecompNumBlocks();
+	const std::vector<int> getDecompBlockLocation(const int &block);
+	const std::vector<DecompBlockSummary> &getDecompBlockSummaries();
+	const std::string getDecompRowLabel(const int &row);
+	const std::string getDecompColLabel(const int &col);
+	const std::string getDecompRowKind(const int &row);
+	const std::string getDecompColKind(const int &col);
+	const std::vector<std::string> getDecompPointLegend() const;
+	const std::string getDecompBlockReport(const int &block);
+	const std::string getDecompReport();
+	const std::vector<IncidencePoint> &getActiveDecompIncidenceData();
+	const std::string getActiveDecompReport();
 };
 
 #endif // ASCXX_INCIDENCEMATRIX_H

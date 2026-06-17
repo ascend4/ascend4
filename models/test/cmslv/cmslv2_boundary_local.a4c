@@ -1,0 +1,34 @@
+REQUIRE "atoms.a4l";
+
+MODEL cmslv2_boundary_local;
+	x, y, q, u IS_A factor;
+	b, downstream IS_A boolean_var;
+
+	CONDITIONAL
+		c: x = q;
+	END CONDITIONAL;
+
+	l: b == SATISFIED(c, 1e-8);
+	downstream_logic: downstream == b;
+	pos: x + y = 2;
+	anchor: q = y;
+	downstream_real: u = y + 1;
+
+	WHEN (b)
+	CASE TRUE:
+		USE pos;
+	CASE FALSE:
+	END WHEN;
+METHODS
+	METHOD on_load;
+		x := 0.5;
+		y := 1.5;
+		q := 0.5;
+		u := 0;
+		b := SATISFIED(c, 1e-8);
+		downstream := FALSE;
+	END on_load;
+
+	METHOD self_test;
+	END self_test;
+END cmslv2_boundary_local;

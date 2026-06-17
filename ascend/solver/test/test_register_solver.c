@@ -29,13 +29,15 @@
 	T(a4sqp) \
 	T(slsqp) \
 	T(qrslv) \
+	T(decomp) \
 	T(fprops) \
 	T(lrslv) \
 	T(list) \
 	T(slvdof) \
 	T(datareader) \
 	T(sunpos) \
-	T(cmslv)
+	T(cmslv) \
+	T(cmslv2)
 
 #define PROTO_SOLVER(NAME) PROTO(solver,NAME)
 TESTS(PROTO_SOLVER)

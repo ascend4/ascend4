@@ -18,9 +18,9 @@
 	Header file that in turn includes the CONOPT API header.
 
 	This file exists in order to permit wrapping of conopt routines for use
-	in a dlopened implementation. The bundled CONOPT 3 header is retained as
-	conopt-3.h for legacy diagnostics; default builds use the installed
-	CONOPT header.
+	in a dlopened implementation. Bundled ABI declaration headers are retained
+	so ASCEND can build CONOPT runtime-loading support without a CONOPT
+	development install.
 *//*
 	By John Pye
 	Based on conopt.h by Vicente Rico Ramirez (created 05/97)
@@ -65,6 +65,8 @@
 
 #ifdef ASC_CONOPT_LEGACY3
 # include "conopt-3.h"
+#elif defined(ASC_BUNDLED_CONOPT4)
+# include "conopt-4.h"
 #else
 # include <conopt.h>
 #endif

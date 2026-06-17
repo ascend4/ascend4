@@ -77,6 +77,7 @@ public:
 	void findIndependentVar(); /**< find the independent variable (must not presume a certain choice of integration engine) */
 	void analyse();
 	void solve();
+	void processVarStatus();
 
 	/** write out a named matrix associated with the integrator, if possible. type can be NULL for the default matrix. */
 	void writeMatrix(char *fname, const char *type) const;

@@ -40,7 +40,6 @@
 }
 
 %ignore registerSolver;
-%ignore registerStandardSolvers;
 %include "solver.h"
 
 %include "simulation.h"
@@ -208,12 +207,20 @@ public:
 }
 
 %template(IncidencePointVector) std::vector<IncidencePoint>;
+%template(DecompBlockSummaryVector) std::vector<DecompBlockSummary>;
 %include "incidencematrix.h"
 
 %extend IncidencePoint{
 	%pythoncode{
 		def __repr__(self):
 			return str([ self.row, self.col, int(self.type) ]);
+	}
+}
+
+%extend DecompBlockSummary{
+	%pythoncode{
+		def __repr__(self):
+			return self.label
 	}
 }
 

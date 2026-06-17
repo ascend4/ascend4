@@ -1,0 +1,59 @@
+REQUIRE "atoms.a4l";
+
+MODEL cmslv2_scheduler;
+	root, logic1, seed, gate, choose, boundary IS_A boolean_var;
+	x, z, w IS_A factor;
+
+	root_to_logic: logic1 == root;
+	seed_to_gate: gate == seed;
+	gate_to_choose: choose == gate;
+
+	xtrue: x = 1;
+	xfalse: x = -1;
+	zdef: z = x + 1;
+
+	CONDITIONAL
+		bcond: z >= 1;
+	END CONDITIONAL;
+
+	boundary == SATISFIED(bcond, 1e-8);
+	wpos: w = z + 1;
+	wneg: w = z - 1;
+
+	WHEN (choose)
+	CASE TRUE:
+		USE xtrue;
+	CASE FALSE:
+		USE xfalse;
+	END WHEN;
+
+	WHEN (boundary)
+	CASE TRUE:
+		USE wpos;
+	CASE FALSE:
+		USE wneg;
+	END WHEN;
+
+METHODS
+		METHOD on_load;
+			FIX seed := TRUE;
+			FIX root := TRUE;
+			logic1 := FALSE;
+			gate := FALSE;
+			choose := FALSE;
+			boundary := FALSE;
+			x := 0;
+			z := -1;
+			w := 0;
+		END on_load;
+
+		METHOD self_test;
+			ASSERT logic1 == TRUE;
+			ASSERT gate == TRUE;
+			ASSERT choose == TRUE;
+			ASSERT boundary == TRUE;
+			ASSERT abs(x - 1) < 1e-12;
+			ASSERT abs(z - 2) < 1e-12;
+			ASSERT abs(w - 3) < 1e-12;
+		END self_test;
+END cmslv2_scheduler;
