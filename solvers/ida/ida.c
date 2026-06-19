@@ -36,6 +36,8 @@
 #include "idaanalyse.h"
 #include "idatypes.h"
 #include "idaprec.h"
+
+#include <stdio.h>
 #include "idacalc.h"
 #include "idaio.h"
 #include "idaboundary.h"
@@ -101,6 +103,18 @@ static IntegratorInitialiseFn integrator_ida_initialise;
 static IntegratorSolveFn integrator_ida_solve;
 static IntegratorFreeFn integrator_ida_free;
 
+static int integrator_ida_get_version(char *buf, size_t buflen){
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+#ifdef SUNDIALS_VERSION
+	snprintf(buf,buflen,"SUNDIALS %s",SUNDIALS_VERSION);
+#else
+	snprintf(buf,buflen,"SUNDIALS %d.%d",SUNDIALS_VERSION_MAJOR,SUNDIALS_VERSION_MINOR);
+#endif
+	return 0;
+}
+
 /**
  This data structure contains pointers to the various functions that are
  exposed to libascend in order for ASCEND to drive this solver.
@@ -118,7 +132,11 @@ static const IntegratorInternals integrator_ida_internals = {
  */
 extern ASC_EXPORT int ida_register(void) {
 	MSG("Registering IDA...");
-	return integrator_register(&integrator_ida_internals);
+	if(integrator_register(&integrator_ida_internals)){
+		return 1;
+	}
+	integrator_register_version("IDA",integrator_ida_get_version);
+	return 0;
 }
 
 /*-------------------------------------------------------------

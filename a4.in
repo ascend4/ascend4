@@ -438,6 +438,9 @@ if __name__ == "__main__":
 	p_units = s.add_parser('units',help = 'Manage display-units overrides')
 	p_units.set_defaults(action='units')
 	p_units.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to rununits.py')
+
+	p_solvers = s.add_parser('solvers',help = 'List available solver and integrator engines')
+	p_solvers.set_defaults(action='solvers')
 	
 	p_sh = s.add_parser('env',help = 'Create a sub-shell in which ASCEND environment variables are set.')
 	p_sh.set_defaults(action='env')
@@ -633,6 +636,8 @@ if __name__ == "__main__":
 		if rest and rest[0] == '--':
 			rest = rest[1:]
 		cmd += [PYTHON, sourceroot / 'ascxx' / 'rununits.py'] + rest
+	elif args.action == 'solvers':
+		cmd += [PYTHON, sourceroot / 'ascxx' / 'listsolvers.py']
 	elif args.action == 'env' :
 		shargs = []
 		if os.environ.get('ASCEND_SHELL'):

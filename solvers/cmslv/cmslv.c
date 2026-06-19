@@ -3347,6 +3347,58 @@ int32 slv9_optimizer_available(const char *name){
 }
 
 static
+void slv9_append_text(char *buf, size_t buflen, const char *text){
+	size_t used;
+	if(buf == NULL || buflen == 0 || text == NULL) {
+		return;
+	}
+	used = strlen(buf);
+	if(used >= buflen) {
+		return;
+	}
+	snprintf(buf + used, buflen - used, "%s", text);
+}
+
+static
+void slv9_append_solver_version(char *buf, size_t buflen, const char *name, int32 ensure_loaded){
+	const SlvFunctionsT *S;
+	char version[128];
+
+	slv9_append_text(buf,buflen,"; ");
+	slv9_append_text(buf,buflen,name);
+	slv9_append_text(buf,buflen,": ");
+
+	if(ensure_loaded && !slv9_ensure_optimizer_loaded(name)) {
+		slv9_append_text(buf,buflen,"unavailable");
+		return;
+	}
+
+	S = solver_engine_named(name);
+	if(S == NULL) {
+		slv9_append_text(buf,buflen,"unavailable");
+		return;
+	}
+	version[0] = '\0';
+	if(solver_get_version(name,version,sizeof(version)) == 0 && version[0] != '\0') {
+		slv9_append_text(buf,buflen,version);
+		return;
+	}
+	slv9_append_text(buf,buflen,"available");
+}
+
+static
+int slv9_get_version(char *buf, size_t buflen){
+	if(buf == NULL || buflen == 0) {
+		return 1;
+	}
+	snprintf(buf,buflen,"CMSlv");
+	slv9_append_solver_version(buf,buflen,"LRSlv",0);
+	slv9_append_solver_version(buf,buflen,"CONOPT",1);
+	slv9_append_solver_version(buf,buflen,"IPOPT",1);
+	return 0;
+}
+
+static
 void slv9_report_unavailable_optimizer(const char *name){
   if(name == NULL) {
     name = "";
@@ -5913,5 +5965,9 @@ int cmslv_register(void){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv must be loadable before CMSlv");
 		return 1;
 	}
-	return solver_register(&slv9_internals);
+	if(solver_register(&slv9_internals)){
+		return 1;
+	}
+	solver_register_version("CMSlv",slv9_get_version);
+	return 0;
 }

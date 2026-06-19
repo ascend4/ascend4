@@ -34,6 +34,7 @@
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/instance_io.h>
 #include <ascend/compiler/instquery.h>
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <limits.h>
@@ -2592,6 +2593,24 @@ static int highs_client_resolve(slv_system_t server, SlvClientToken asys){
 	return 0;
 }
 
+static int highs_client_get_version(char *buf, size_t buflen){
+	const char *version;
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+	version = Highs_version();
+	if(version != NULL && version[0] != '\0'){
+		snprintf(buf,buflen,"HiGHS %s",version);
+	}else{
+		snprintf(buf,buflen,"HiGHS %d.%d.%d"
+			,(int)Highs_versionMajor()
+			,(int)Highs_versionMinor()
+			,(int)Highs_versionPatch()
+		);
+	}
+	return 0;
+}
+
 
 static const SlvFunctionsT highs_client_internals = {
 	highs_solver_number
@@ -2614,5 +2633,9 @@ static const SlvFunctionsT highs_client_internals = {
 
 
 int highs_register(void){
-	return solver_register(&highs_client_internals);
+	if(solver_register(&highs_client_internals)){
+		return 1;
+	}
+	solver_register_version("HiGHS",highs_client_get_version);
+	return 0;
 }

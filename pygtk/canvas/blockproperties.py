@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-import gtk, gobject, os, pango, re
+import os
+import re
+
+from gtkcompat import gtk, gobject, pango, gtksourceview
 import blockinstance
 import preferences
-import gtksourceview2 as gtksourceview
 import modeltree
 from unitsdialog import UnitsDialog
 from varentry_canvas import *

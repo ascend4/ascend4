@@ -65,6 +65,7 @@
 #include <ascend/linear/mtx.h>
 
 #include <ascend/system/slv_client.h>
+#include <stddef.h>
 
 #include "samplelist.h"
 #include "pantelides.h"
@@ -217,6 +218,11 @@ typedef void IntegratorFreeFn(void *enginedata);
 /**<
 	Integrators must provide a function like this that frees internal
 	data that they have allocated in their 'enginedata' structure.
+*/
+
+typedef int IntegratorGetVersionFn(char *buf, size_t buflen);
+/**<
+	Optional version-reporting hook for integrator engines.
 */
 
 typedef struct IntegratorInternalsStruct{
@@ -638,6 +644,8 @@ ASC_DLLSPEC int integrator_initialise_ode(IntegratorSystem *blsys);
 	DYNAMIC LIST OF INTEGRATORS
 */
 ASC_DLLSPEC int integrator_register(const IntegratorInternals *integ);
+ASC_DLLSPEC int integrator_register_version(const char *integrator_name, IntegratorGetVersionFn *getversion);
+ASC_DLLSPEC int integrator_get_version(const char *integrator_name, char *buf, size_t buflen);
 
 /* @} */
 

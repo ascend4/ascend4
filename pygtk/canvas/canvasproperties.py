@@ -2,8 +2,9 @@
 Canvas Properties Dialog Pop Up 
 Author: Grivan Thapar, July 2010
 '''
-import gtk, gobject, os, pango,gtk.glade
-import gtksourceview2 as gtksourceview
+import os
+
+from gtkcompat import gtk, gobject, pango, gtksourceview
 import modeltree
 
 class CanvasProperties(object):
@@ -129,4 +130,3 @@ if __name__ == '__main__':
 	cp.run()
 
 # vim: set ts=4 noet:
-
