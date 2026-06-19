@@ -80,6 +80,10 @@ typedef struct{
 # undef FN_PTR_DECL
 
 conopt_fptrs_t conopt_fptrs;
+# ifdef ASC_CONOPT_API4
+typedef void COI_CALL (COIGET_Version_fn_t)(int *major, int *minor, int *patch);
+static COIGET_Version_fn_t *COIGET_Version_ptr = NULL;
+# endif
 static int conopt_loaded = 0;
 static char *conopt_libpath = NULL;
 
@@ -185,12 +189,17 @@ int asc_conopt_load(){
 # ifndef ASC_CONOPT_API4
 # undef FNDECOR
 # undef FNCASE
+# else
+	COIGET_Version_ptr = (COIGET_Version_fn_t *)Asc_DynamicFunction(libpath,"COIGET_Version");
 # endif
 
 	if(status!=0){
 		Asc_DynamicUnLoad(libpath);
 		ASC_FREE(libpath);
 		memset(&conopt_fptrs,0,sizeof(conopt_fptrs));
+# ifdef ASC_CONOPT_API4
+		COIGET_Version_ptr = NULL;
+# endif
 		return 1; /* failed to resolve all symbols */
 	}
 
@@ -207,6 +216,9 @@ int asc_conopt_unload(){
 	}
 
 	memset(&conopt_fptrs,0,sizeof(conopt_fptrs));
+# ifdef ASC_CONOPT_API4
+	COIGET_Version_ptr = NULL;
+# endif
 	if(conopt_libpath != NULL){
 		status = Asc_DynamicUnLoad(conopt_libpath);
 		ASC_FREE(conopt_libpath);
@@ -215,6 +227,16 @@ int asc_conopt_unload(){
 	conopt_loaded = 0;
 	return status;
 }
+
+# ifdef ASC_CONOPT_API4
+int asc_conopt_get_version(int *major, int *minor, int *patch){
+	if(!conopt_loaded || COIGET_Version_ptr == NULL){
+		return 1;
+	}
+	COIGET_Version_ptr(major,minor,patch);
+	return 0;
+}
+# endif
 
 #endif
 

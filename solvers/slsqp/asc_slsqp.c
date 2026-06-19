@@ -985,6 +985,16 @@ static void slsqp_dumpinternals(slv_system_t server, SlvClientToken asys, int le
 	);
 }
 
+static int slsqp_get_version(char *buf, size_t buflen){
+	int major = 0, minor = 0, bugfix = 0;
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+	nlopt_version(&major,&minor,&bugfix);
+	snprintf(buf,buflen,"SLSQP/NLopt %d.%d.%d",major,minor,bugfix);
+	return 0;
+}
+
 static const SlvFunctionsT slsqp_internals = {
 	SLSQP_SOLVER_NUMBER,
 	SLSQP_SOLVER_NAME,
@@ -1005,5 +1015,9 @@ static const SlvFunctionsT slsqp_internals = {
 };
 
 ASC_EXPORT int slsqp_register(void){
-	return solver_register(&slsqp_internals);
+	if(solver_register(&slsqp_internals)){
+		return 1;
+	}
+	solver_register_version(SLSQP_SOLVER_NAME,slsqp_get_version);
+	return 0;
 }

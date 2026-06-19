@@ -36,10 +36,54 @@
 #include <ascend/compiler/packages.h>
 #include <ascend/general/ospath.h>
 #include <signal.h>
+#include <string.h>
 
 #ifdef WIN32
 # include <windows.h>
 #endif
+
+#define SOLVER_VERSION_HOOKS_MAX 128
+
+typedef struct SolverVersionHookStruct{
+	const char *name;
+	SlvGetVersionF *getversion;
+} SolverVersionHook;
+
+static SolverVersionHook g_solver_version_hooks[SOLVER_VERSION_HOOKS_MAX];
+static int g_solver_version_hooks_count = 0;
+
+int solver_register_version(const char *solver_name, SlvGetVersionF *getversion){
+	int i;
+	if(solver_name == NULL || getversion == NULL){
+		return 1;
+	}
+	for(i = 0; i < g_solver_version_hooks_count; ++i){
+		if(strcmp(g_solver_version_hooks[i].name,solver_name) == 0){
+			g_solver_version_hooks[i].getversion = getversion;
+			return 0;
+		}
+	}
+	if(g_solver_version_hooks_count >= SOLVER_VERSION_HOOKS_MAX){
+		return 1;
+	}
+	g_solver_version_hooks[g_solver_version_hooks_count].name = solver_name;
+	g_solver_version_hooks[g_solver_version_hooks_count].getversion = getversion;
+	g_solver_version_hooks_count++;
+	return 0;
+}
+
+int solver_get_version(const char *solver_name, char *buf, size_t buflen){
+	int i;
+	if(solver_name == NULL || buf == NULL || buflen == 0){
+		return 1;
+	}
+	for(i = 0; i < g_solver_version_hooks_count; ++i){
+		if(strcmp(g_solver_version_hooks[i].name,solver_name) == 0){
+			return g_solver_version_hooks[i].getversion(buf,buflen);
+		}
+	}
+	return 1;
+}
 
 //#define SOLVER_DEBUG
 #ifdef SOLVER_DEBUG

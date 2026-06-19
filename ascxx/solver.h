@@ -29,6 +29,7 @@ public:
 
 	const int getIndex() const;
 	const std::string& getName() const;
+	const std::string getVersion() const;
 };
 
 class SolverReporter;

@@ -65,6 +65,8 @@
 
 #ifdef ASC_CONOPT_LEGACY3
 # include "conopt-3.h"
+#elif defined(ASC_CONOPT_BUNDLED4)
+# include "conopt-4.h"
 #else
 # include <conopt.h>
 #endif
@@ -92,6 +94,9 @@
 
 ASC_DLLSPEC int asc_conopt_load();
 ASC_DLLSPEC int asc_conopt_unload();
+# ifdef ASC_CONOPT_API4
+ASC_DLLSPEC int asc_conopt_get_version(int *major, int *minor, int *patch);
+# endif
 
 /*
 	This is a list of the functions that we're going to be using from CONOPT.

@@ -65,6 +65,49 @@
 # define MSG(...)
 #endif
 
+#define INTEGRATOR_VERSION_HOOKS_MAX 128
+
+typedef struct IntegratorVersionHookStruct{
+	const char *name;
+	IntegratorGetVersionFn *getversion;
+} IntegratorVersionHook;
+
+static IntegratorVersionHook g_integrator_version_hooks[INTEGRATOR_VERSION_HOOKS_MAX];
+static int g_integrator_version_hooks_count = 0;
+
+int integrator_register_version(const char *integrator_name, IntegratorGetVersionFn *getversion){
+	int i;
+	if(integrator_name == NULL || getversion == NULL){
+		return 1;
+	}
+	for(i = 0; i < g_integrator_version_hooks_count; ++i){
+		if(strcmp(g_integrator_version_hooks[i].name,integrator_name) == 0){
+			g_integrator_version_hooks[i].getversion = getversion;
+			return 0;
+		}
+	}
+	if(g_integrator_version_hooks_count >= INTEGRATOR_VERSION_HOOKS_MAX){
+		return 1;
+	}
+	g_integrator_version_hooks[g_integrator_version_hooks_count].name = integrator_name;
+	g_integrator_version_hooks[g_integrator_version_hooks_count].getversion = getversion;
+	g_integrator_version_hooks_count++;
+	return 0;
+}
+
+int integrator_get_version(const char *integrator_name, char *buf, size_t buflen){
+	int i;
+	if(integrator_name == NULL || buf == NULL || buflen == 0){
+		return 1;
+	}
+	for(i = 0; i < g_integrator_version_hooks_count; ++i){
+		if(strcmp(g_integrator_version_hooks[i].name,integrator_name) == 0){
+			return g_integrator_version_hooks[i].getversion(buf,buflen);
+		}
+	}
+	return 1;
+}
+
 #ifdef INTEGRATOR_DEBUG
 static void integ_debug_list(const char *label, struct gl_list_t *list){
 	if(list == NULL){

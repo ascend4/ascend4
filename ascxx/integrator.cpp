@@ -239,6 +239,16 @@ Integrator::getEngines(){
 }
 
 string
+Integrator::getEngineVersion(const string &name){
+	char version[256];
+	version[0] = '\0';
+	if(integrator_get_version(name.c_str(),version,sizeof(version))){
+		return "";
+	}
+	return version;
+}
+
+string
 Integrator::getName() const{
 	const IntegratorInternals *I = integrator_get_engine(blsys);
 	if(I==NULL){

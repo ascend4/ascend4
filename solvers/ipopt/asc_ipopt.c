@@ -47,7 +47,9 @@
 
 #include <ascend/general/ltmatrix.h>
 
+#include <IpoptConfig.h>
 #include <IpStdCInterface.h>
+#include <stdio.h>
 
 ASC_DLLSPEC SolverRegisterFn ipopt_register;
 
@@ -1487,6 +1489,14 @@ static int ipopt_resolve(slv_system_t server, SlvClientToken asys){
   	return 1;
 }
 
+static int ipopt_get_version(char *buf, size_t buflen){
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+	snprintf(buf,buflen,"IPOPT %s",IPOPT_VERSION);
+	return 0;
+}
+
 static const SlvFunctionsT ipopt_internals = {
 	67
 	,"IPOPT"
@@ -1507,7 +1517,11 @@ static const SlvFunctionsT ipopt_internals = {
 };
 
 int ipopt_register(void){
-	return solver_register(&ipopt_internals);
+	if(solver_register(&ipopt_internals)){
+		return 1;
+	}
+	solver_register_version("IPOPT",ipopt_get_version);
+	return 0;
 }
 
 // vim:ts=4:sw=4:noet
