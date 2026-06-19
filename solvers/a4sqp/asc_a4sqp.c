@@ -1124,6 +1124,24 @@ static void a4sqp_dumpinternals(slv_system_t server, SlvClientToken asys, int le
 	asc_a4sqp_report_view(sys);
 }
 
+static int a4sqp_get_version(char *buf, size_t buflen){
+	const SlvFunctionsT *S;
+	char version[128];
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+	S = solver_engine_named("HiGHS");
+	if(S != NULL){
+		version[0] = '\0';
+		if(solver_get_version("HiGHS",version,sizeof(version)) == 0 && version[0] != '\0'){
+			snprintf(buf,buflen,"A4SQP; HiGHS: %s",version);
+			return 0;
+		}
+	}
+	snprintf(buf,buflen,"A4SQP; HiGHS: unavailable");
+	return 0;
+}
+
 static const SlvFunctionsT a4sqp_internals = {
 	A4SQP_SOLVER_NUMBER,
 	A4SQP_SOLVER_NAME,
@@ -1144,5 +1162,9 @@ static const SlvFunctionsT a4sqp_internals = {
 };
 
 ASC_EXPORT int a4sqp_register(void){
-	return solver_register(&a4sqp_internals);
+	if(solver_register(&a4sqp_internals)){
+		return 1;
+	}
+	solver_register_version(A4SQP_SOLVER_NAME,a4sqp_get_version);
+	return 0;
 }

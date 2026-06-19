@@ -31,6 +31,7 @@
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/mem.h>
 #include <ascend/general/list.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <ascend/linear/mtx_vector.h>
@@ -47,6 +48,31 @@
 typedef struct conopt_system_structure *conopt_system_t;
 
 ASC_DLLSPEC SolverRegisterFn conopt_register;
+
+static int conopt_get_version(char *buf, size_t buflen){
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+#ifdef ASC_CONOPT_API4
+	{
+		int major = 0, minor = 0, patch = 0;
+# ifdef ASC_LINKED_CONOPT
+		COIGET_Version(&major,&minor,&patch);
+# else
+		if(asc_conopt_get_version(&major,&minor,&patch)){
+			major = CONOPT_VERSION_MAJOR;
+			minor = CONOPT_VERSION_MINOR;
+			patch = CONOPT_VERSION_PATCH;
+		}
+# endif
+		snprintf(buf,buflen,"CONOPT %d.%d.%d",major,minor,patch);
+		return 0;
+	}
+#else
+	snprintf(buf,buflen,"CONOPT 3 API");
+	return 0;
+#endif
+}
 
 #define conopt_register_conopt_function register_conopt_function
 #define conopt_coicsm coicsm
@@ -3124,7 +3150,11 @@ int conopt_register(void){
 		return 1;
 	}
 #endif
-	return solver_register(&conopt_internals);
+	if(solver_register(&conopt_internals)){
+		return 1;
+	}
+	solver_register_version("CONOPT",conopt_get_version);
+	return 0;
 }
 
 #ifndef ASC_LINKED_CONOPT

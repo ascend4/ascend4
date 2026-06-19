@@ -621,6 +621,11 @@ vars.Add(BoolVariable("CONOPT_LINKED"
 	,False
 ))
 
+vars.Add(BoolVariable("CONOPT_LEGACY3"
+	,"Use the bundled legacy CONOPT 3 API header instead of the default CONOPT 4 fallback header when CONOPT is not available at buildtime"
+	,False
+))
+
 vars.Add('CONOPT_CPPPATH'
 	,"Where is your conopt.h?"
 	,default_conopt_cpppath
@@ -1844,6 +1849,17 @@ int main(){
 }
 """
 
+conopt_header_test_text = """
+#if !defined(_WIN32)
+# define FNAME_LCASE_DECOR
+#endif
+
+#include <conopt.h>
+int main(){
+	return 0;
+}
+"""
+
 def CheckCONOPT(context):
 	context.Message( 'Checking for CONOPT... ' )
 
@@ -1851,6 +1867,17 @@ def CheckCONOPT(context):
 	
 	is_ok = context.TryLink(conopt_test_text,".c")
 	context.Result(is_ok)
+
+	context.env['CONOPT_BUNDLED4'] = False
+	if not is_ok:
+		if context.env.get('CONOPT_LEGACY3'):
+			context.Message( 'Using bundled legacy CONOPT 3 header... ' )
+			context.Result(True)
+		else:
+			context.Message( 'Checking for CONOPT header... ' )
+			has_header = context.TryCompile(conopt_header_test_text,".c")
+			context.Result(has_header)
+			context.env['CONOPT_BUNDLED4'] = not has_header
 	
 	keep.restore(context)
 		
