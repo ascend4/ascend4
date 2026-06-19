@@ -45,12 +45,24 @@
 #define SOLVER_VERSION_HOOKS_MAX 128
 
 typedef struct SolverVersionHookStruct{
-	const char *name;
+	char *name;
 	SlvGetVersionF *getversion;
 } SolverVersionHook;
 
 static SolverVersionHook g_solver_version_hooks[SOLVER_VERSION_HOOKS_MAX];
 static int g_solver_version_hooks_count = 0;
+
+static void solver_clear_version_hooks(void){
+	int i;
+	for(i = 0; i < g_solver_version_hooks_count; ++i){
+		if(g_solver_version_hooks[i].name != NULL){
+			ASC_FREE(g_solver_version_hooks[i].name);
+		}
+		g_solver_version_hooks[i].name = NULL;
+		g_solver_version_hooks[i].getversion = NULL;
+	}
+	g_solver_version_hooks_count = 0;
+}
 
 int solver_register_version(const char *solver_name, SlvGetVersionF *getversion){
 	int i;
@@ -66,7 +78,10 @@ int solver_register_version(const char *solver_name, SlvGetVersionF *getversion)
 	if(g_solver_version_hooks_count >= SOLVER_VERSION_HOOKS_MAX){
 		return 1;
 	}
-	g_solver_version_hooks[g_solver_version_hooks_count].name = solver_name;
+	g_solver_version_hooks[g_solver_version_hooks_count].name = ASC_STRDUP(solver_name);
+	if(g_solver_version_hooks[g_solver_version_hooks_count].name == NULL){
+		return 1;
+	}
 	g_solver_version_hooks[g_solver_version_hooks_count].getversion = getversion;
 	g_solver_version_hooks_count++;
 	return 0;
@@ -137,6 +152,7 @@ struct gl_list_t *solver_get_engines_growable(){
 }
 
 void solver_destroy_engines(){
+	solver_clear_version_hooks();
 	solver_get_list(1);
 }
 

@@ -68,12 +68,24 @@
 #define INTEGRATOR_VERSION_HOOKS_MAX 128
 
 typedef struct IntegratorVersionHookStruct{
-	const char *name;
+	char *name;
 	IntegratorGetVersionFn *getversion;
 } IntegratorVersionHook;
 
 static IntegratorVersionHook g_integrator_version_hooks[INTEGRATOR_VERSION_HOOKS_MAX];
 static int g_integrator_version_hooks_count = 0;
+
+static void integrator_clear_version_hooks(void){
+	int i;
+	for(i = 0; i < g_integrator_version_hooks_count; ++i){
+		if(g_integrator_version_hooks[i].name != NULL){
+			ASC_FREE(g_integrator_version_hooks[i].name);
+		}
+		g_integrator_version_hooks[i].name = NULL;
+		g_integrator_version_hooks[i].getversion = NULL;
+	}
+	g_integrator_version_hooks_count = 0;
+}
 
 int integrator_register_version(const char *integrator_name, IntegratorGetVersionFn *getversion){
 	int i;
@@ -89,7 +101,10 @@ int integrator_register_version(const char *integrator_name, IntegratorGetVersio
 	if(g_integrator_version_hooks_count >= INTEGRATOR_VERSION_HOOKS_MAX){
 		return 1;
 	}
-	g_integrator_version_hooks[g_integrator_version_hooks_count].name = integrator_name;
+	g_integrator_version_hooks[g_integrator_version_hooks_count].name = ASC_STRDUP(integrator_name);
+	if(g_integrator_version_hooks[g_integrator_version_hooks_count].name == NULL){
+		return 1;
+	}
 	g_integrator_version_hooks[g_integrator_version_hooks_count].getversion = getversion;
 	g_integrator_version_hooks_count++;
 	return 0;
@@ -914,6 +929,7 @@ struct gl_list_t *integrator_get_engines_growable(){
 }
 
 void integrator_free_engines(){
+	integrator_clear_version_hooks();
 	integrator_get_list(1);
 }
 
