@@ -327,9 +327,10 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 	
 	// Create and populate ExtPyData structure
 	extpydata = ASC_NEW(struct ExtPyData);
-	extpydata->name = ASC_NEW_ARRAY(char, strlen(cname) + 1);
+	size_t cname_len = strlen(cname);
+	extpydata->name = ASC_NEW_ARRAY(char, cname_len + 1);
 	extpydata->fn = fn;
-	strcpy(extpydata->name, cname);
+	memcpy(extpydata->name, cname, cname_len + 1);
 
 	// Register user function
 	const int nargs = 1;
@@ -400,8 +401,8 @@ char *extpy_filename(const char *partialname){
 
 	len = strlen(partialname);
 	name = ASC_NEW_ARRAY_CLEAR(char,len+4);
-	strcpy(name,partialname);
-	strcat(name,".py");
+	memcpy(name,partialname,len);
+	memcpy(name+len,".py",4);
 	//MSG("New filename is '%s'",name);
 	return name;
 }
