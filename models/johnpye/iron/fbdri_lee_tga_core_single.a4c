@@ -180,9 +180,11 @@ MODEL fbdri_lee_tga_core_single;
 	d_int_multiplier IS_A positive_factor;
 	d_int_eff IS_A distance;
 	core_area_multiplier IS_A positive_factor;
+	core_gas_bubble_blend IS_A factor;
+	core_gas_feed_blend IS_A factor;
 	A_core IS_A area;
 
-	eta[active_steps] IS_A positive_factor;
+	eta[steps] IS_A positive_factor;
 	rd_resistance[active_steps] "compatibility; unused in this TGA-core prototype" IS_A factor;
 	k0[steps] IS_A rate_per_pressure;
 	E_a[steps] IS_A molar_energy;
@@ -367,9 +369,15 @@ MODEL fbdri_lee_tga_core_single;
 		d_int_eff = d_int_multiplier * d_p;
 
 	core_gas_h2_eq:
-		core.centre.y_H2 = y_H2_e;
+		core.centre.y_H2 =
+			(1 - core_gas_feed_blend)
+			* ((1 - core_gas_bubble_blend) * y_H2_e + core_gas_bubble_blend * y_H2_b)
+			+ core_gas_feed_blend * y_H2_in;
 	core_gas_h2o_eq:
-		core.centre.y_H2O = y_H2O_e;
+		core.centre.y_H2O =
+			(1 - core_gas_feed_blend)
+			* ((1 - core_gas_bubble_blend) * y_H2O_e + core_gas_bubble_blend * y_H2O_b)
+			+ core_gas_feed_blend * y_H2O_in;
 	core_top_h2_eq:
 		core.top.y_H2 = core.centre.y_H2;
 	core_top_h2o_eq:
@@ -468,7 +476,7 @@ MODEL fbdri_lee_tga_core_single;
 			rd_resistance_factor[r] = 1;
 	END FOR;
 	kstep4_eq:
-		k_step[4] = k0[4] * exp(-E_a[4] / (1 {GAS_C} * T));
+		k_step[4] = eta[4] * k0[4] * exp(-E_a[4] / (1 {GAS_C} * T));
 
 	Nrxnc_eq:
 		N_rxn_H2_c = 0 {mol/s};
@@ -529,6 +537,8 @@ METHODS
 		FIX k_part_multiplier := 0.875869273089;
 		FIX d_int_multiplier := 0.669654200836;
 		FIX core_area_multiplier := 1.0;
+		FIX core_gas_bubble_blend := 0.0;
+		FIX core_gas_feed_blend := 0.0;
 
 		FIX Sh_particle := 1.02157931243;
 		FIX a_open := 0.0;
@@ -578,6 +588,7 @@ METHODS
 		FIX eta[1] := 1.0;
 		FIX eta[2] := 1.0;
 		FIX eta[3] := 1.0;
+		FIX eta[4] := 1.0;
 		FIX rd_resistance[1] := 0.0;
 		FIX rd_resistance[2] := 0.0;
 		FIX rd_resistance[3] := 0.0;
@@ -686,6 +697,10 @@ METHODS
 		emulsion_flow_multiplier.lower_bound := 1e-6;
 		K_be_multiplier.lower_bound := 1e-6;
 		core_area_multiplier.lower_bound := 1e-6;
+		core_gas_bubble_blend.lower_bound := 0;
+		core_gas_bubble_blend.upper_bound := 1;
+		core_gas_feed_blend.lower_bound := 0;
+		core_gas_feed_blend.upper_bound := 1;
 		d_int_multiplier.lower_bound := 1e-12;
 		d_int_multiplier.upper_bound := 1;
 		d_int_eff.lower_bound := 1e-12 {m};

@@ -185,7 +185,7 @@ MODEL fbdri_lee_tga_core_axial;
 	core_area_multiplier IS_A positive_factor;
 	A_core IS_A area;
 
-	eta[active_steps] IS_A positive_factor;
+	eta[steps] IS_A positive_factor;
 	rd_resistance[active_steps] "compatibility; unused in this TGA-core prototype" IS_A factor;
 	k0[steps] IS_A rate_per_pressure;
 	E_a[steps] IS_A molar_energy;
@@ -553,7 +553,7 @@ MODEL fbdri_lee_tga_core_axial;
 			rd_resistance_factor[r] = 1;
 	END FOR;
 	kstep4_eq:
-		k_step[4] = k0[4] * exp(-E_a[4] / (1 {GAS_C} * T));
+		k_step[4] = eta[4] * k0[4] * exp(-E_a[4] / (1 {GAS_C} * T));
 
 	Nrxnc_eq:
 		N_rxn_H2_c = 0 {mol/s};
@@ -670,6 +670,7 @@ METHODS
 		FIX eta[1] := 1.0;
 		FIX eta[2] := 1.0;
 		FIX eta[3] := 1.0;
+		FIX eta[4] := 1.0;
 		FIX rd_resistance[1] := 0.0;
 		FIX rd_resistance[2] := 0.0;
 		FIX rd_resistance[3] := 0.0;
