@@ -6,7 +6,7 @@ REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "johnpye/fboard.a4c";
-REQUIRE "johnpye/iron/tgadyn_msbed_linked_radial_active.a4c";
+REQUIRE "johnpye/iron/tgadyn_msbed_linked_radial_active_source2_experimental.a4c";
 
 MODEL fbdri_lee_tga_core_gas_state;
 	y_H2 "hydrogen mole fraction" IS_A mole_fraction;
