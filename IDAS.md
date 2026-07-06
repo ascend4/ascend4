@@ -1,0 +1,1063 @@
+---
+title: ASCEND IDAS Integrator Plan
+number-sections: true
+autocite: doi
+---
+
+# Purpose
+
+This note maps a practical path for adding SUNDIALS IDAS support to ASCEND.
+The first target is forward sensitivities for smooth, non-event DAE
+integrations, with enough C++/Python API exposure to use those sensitivities
+from the existing standalone A4SQP shooting driver for the TGA examples.
+
+The second target, event-handling models, is deliberately separated. IDAS can
+integrate sensitivities on smooth segments, but ASCEND must define how
+sensitivities pass through `WHEN`, boundary crossing, and reinitialization
+logic. That is a modelling/API problem as much as a SUNDIALS problem.
+
+# Background
+
+The current `solvers/ida` package builds one ASCEND integrator plugin named
+`ida` and registers one integrator engine:
+
+```text
+package_load('ida')
+  -> INTEGRATOR IDA
+```
+
+The current SCons detection links against `sundials_ida`, and the current C
+plugin registers a single `IntegratorInternals` record named `IDA`.
+
+The proposed design is to prefer the SUNDIALS IDAS library at build time when
+available. IDAS is a superset of IDA for DAE integration: it provides ordinary
+IDA-style DAE integration calls and additional forward/adjoint sensitivity
+interfaces. The SUNDIALS documentation describes IDAS as extending ordinary IVP
+integration with sensitivity calls such as `IDASensInit`, `IDASetSensParams`,
+and `IDAGetSens` [SUNDIALS IDAS FSA documentation][sundials-idas-fsa]. It also
+states that IDAS provides a superset of IDA functionality with forward and
+adjoint sensitivity analysis added to the main integrator
+[SUNDIALS IDAS introduction][sundials-idas-intro].
+
+# Build And Registration Strategy
+
+## Backend Selection
+
+At build time, detect IDAS first, then IDA:
+
+```text
+if SUNDIALS IDAS is available:
+    compile ida plugin against sundials_idas
+    define ASC_IDA_BACKEND_IDAS
+    register IDA and IDAS
+elif SUNDIALS IDA is available:
+    compile ida plugin against sundials_ida
+    define ASC_IDA_BACKEND_IDA
+    register IDA only
+else:
+    skip ida plugin
+```
+
+Do not link both `sundials_ida` and `sundials_idas` into the same plugin.
+Both libraries expose ordinary IDA symbols such as `IDACreate`, `IDASolve`, and
+`IDAFree`, so a single selected backend keeps symbol resolution simple.
+
+On a system with IDAS, `INTEGRATOR IDA` should still work and should not enable
+sensitivities by default. `INTEGRATOR IDAS` should mean that the user wants a
+sensitivity-capable integration whose sensitivities can be queried after the
+simulation, for the configured observed variables and sensitivity parameters.
+It should fail clearly if the plugin was built against plain IDA.
+
+## Fallback IDA Cost When Linked Against IDAS
+
+Using `libsundials_idas` as the backend for ordinary `INTEGRATOR IDA` should
+not impose the main sensitivity memory or runtime costs, provided ASCEND does
+not call the IDAS sensitivity initialization functions.
+
+The important distinction is:
+
+```text
+IDAS backend loaded, sensitivity calls not used:
+    ordinary DAE integration path
+    slightly larger shared library
+    no Ns-by-N sensitivity vector allocation
+
+IDAS backend with IDASensInit called:
+    state integration plus sensitivity integration
+    memory and runtime scale with sensitivity parameter count Ns
+```
+
+SUNDIALS documents `IDASensInit` as the call that activates forward
+sensitivity computations and allocates internal sensitivity memory. The
+documented additional workspace scales with the number of sensitivity
+parameters and the DAE state size. In simplified terms, the extra real
+workspace is proportional to:
+
+```text
+(maxord + 5) * Ns * N
+```
+
+where `Ns` is the number of sensitivity parameters and `N` is the DAE state
+dimension. Additional workspace is needed when vector sensitivity tolerances
+are used.
+
+Therefore the intended compatibility behavior is:
+
+```text
+INTEGRATOR IDA:
+    may be backed by libsundials_idas
+    must not call IDASensInit
+    should behave like current IDA apart from a modest library footprint change
+
+INTEGRATOR IDAS:
+    calls IDASensInit only when sensitivity parameters are configured
+    pays the sensitivity memory/runtime cost only in sensitivity mode
+```
+
+## SCons Changes
+
+Extend `solvers/ida/SConscript` along these lines:
+
+1. Replace `_default_sundials_libs(major)` with a backend-aware helper:
+
+   ```python
+   def _default_sundials_libs(major, backend):
+       first = 'sundials_idas' if backend == 'idas' else 'sundials_ida'
+       libs = [first, 'sundials_nvecserial']
+       ...
+       return libs
+   ```
+
+2. Add `idas_test_text` using `<idas/idas.h>` and `IDACreate`.
+
+3. Add `CheckIDAS(context)` before `CheckIDA(context)`.
+
+4. If `CheckIDAS` passes, set:
+
+   ```python
+   env['SUNDIALS_DAE_BACKEND'] = 'idas'
+   env.AppendUnique(CPPDEFINES=['ASC_IDA_BACKEND_IDAS'])
+   env.AppendUnique(SUNDIALS_LIBS=_default_sundials_libs(major, 'idas'))
+   ```
+
+5. If IDAS fails but IDA passes, set:
+
+   ```python
+   env['SUNDIALS_DAE_BACKEND'] = 'ida'
+   env.AppendUnique(CPPDEFINES=['ASC_IDA_BACKEND_IDA'])
+   env.AppendUnique(SUNDIALS_LIBS=_default_sundials_libs(major, 'ida'))
+   ```
+
+6. Keep the package name and output library name as `ida`.
+
+This preserves:
+
+```text
+package_load('ida')
+```
+
+as the single user-facing load point.
+
+## Integrator Registration
+
+Add a second engine ID and registration record when IDAS is available:
+
+```c
+static const IntegratorInternals integrator_ida_internals = {
+    integrator_ida_create,
+    integrator_ida_params_default,
+    integrator_ida_analyse,
+    integrator_ida_initialise,
+    integrator_ida_solve,
+    integrator_ida_write_matrix,
+    integrator_ida_debug,
+    integrator_ida_free,
+    INTEG_IDA,
+    "IDA"
+};
+
+#ifdef ASC_IDA_BACKEND_IDAS
+static const IntegratorInternals integrator_idas_internals = {
+    integrator_ida_create,
+    integrator_idas_params_default,
+    integrator_ida_analyse,
+    integrator_ida_initialise,
+    integrator_ida_solve,
+    integrator_ida_write_matrix,
+    integrator_ida_debug,
+    integrator_ida_free,
+    INTEG_IDAS,
+    "IDAS"
+};
+#endif
+```
+
+`integrator_ida_create` can be shared if `IntegratorIdaData` stores an internal
+mode flag:
+
+```c
+typedef enum{
+    ASC_IDA_MODE_IDA,
+    ASC_IDA_MODE_IDAS
+} AscIdaMode;
+```
+
+The mode can be set from the selected `IntegratorInternals` name during create
+or initialise. The important behavior is:
+
+```text
+IDA engine:
+    use the IDAS backend if that is what was built
+    do not call sensitivity initialization
+
+IDAS engine:
+    require ASC_IDA_BACKEND_IDAS
+    enable sensitivity options and output
+```
+
+# Non-Event IDAS Milestone
+
+This is the first implementation target.
+
+## Mathematical Scope
+
+Support models whose integration path is smooth over the requested time range:
+
+- no boundary root crossing;
+- no `WHEN` branch change that rebuilds or reinitializes the DAE;
+- no discontinuous assignment to state variables during the integration;
+- no event-time sensitivity needed.
+
+For a DAE
+
+$$
+F(t, y, \dot{y}, p) = 0
+$$
+
+IDAS forward sensitivities integrate, for each selected parameter `p_j`,
+the linearized sensitivity DAE for:
+
+```text
+S_j  = dy/dp_j
+Sd_j = dydot/dp_j
+```
+
+The SUNDIALS IDAS documentation formulates the DAE with parameters and
+initial conditions depending on parameters, and describes extracting
+sensitivities after each successful `IDASolve` call using `IDAGetSens`,
+`IDAGetSens1`, `IDAGetSensDky`, or `IDAGetSensDky1`
+[SUNDIALS IDAS FSA documentation][sundials-idas-fsa].
+
+## Sensitivity Parameter Selection
+
+Add an integrator-level parameter list separate from ordinary observed values.
+These are the sensitivity parameters $p_j$: the scalar inputs whose effect on
+the trajectory and observations should be tracked. The API needs to identify
+ASCEND instances that are treated as parameters for IDAS:
+
+```c
+int integrator_set_sensitivity_instances(
+    IntegratorSystem *sys,
+    struct Instance **instances,
+    int n
+);
+
+int integrator_get_num_sensitivity_instances(
+    IntegratorSystem *sys
+);
+
+struct Instance *integrator_get_sensitivity_instance(
+    IntegratorSystem *sys,
+    const long i
+);
+```
+
+The C++ API can mirror this:
+
+```c++
+void clearSensitivityInstances();
+void addSensitivityInstance(const Instanc &inst);
+long getNumSensitivityItems();
+Instanc getSensitivityInstance(const long &i);
+```
+
+The Python API then naturally becomes:
+
+```python
+integrator.clearSensitivityInstances()
+integrator.addSensitivityInstance(param_inst)
+integrator.getNumSensitivityItems()
+integrator.getSensitivityInstance(i)
+```
+
+For the first milestone, require each sensitivity instance to be a real scalar.
+Arrays can be handled by adding each scalar child explicitly.
+
+IDAS itself provides the low-level parameter hooks. `IDASensInit` receives
+`Ns`, the number of sensitivity parameters/sensitivity systems. `IDASetSensParams`
+then supplies:
+
+```c
+IDASetSensParams(void *ida_mem, realtype *p, realtype *pbar, int *plist);
+```
+
+where `p` is the parameter value array, `pbar` gives parameter scaling for
+internal difference-quotient sensitivity residuals, and `plist` optionally maps
+the sensitivity systems to entries in `p`. ASCEND's task is to map selected
+ASCEND instances to those `p` entries and keep the values synchronized before
+IDAS initialization/reinitialization.
+
+For optimisation wrappers such as the TGA A4SQP script, the optimisation free
+variables are the natural sensitivity parameters. They do not need to originate
+from ASCEND model source initially; the Python/C++ integrator API can provide
+them explicitly. Later, ASCEND model metadata such as `fit.contract` could be
+used as a convenience layer, but it is not required for the first prototype.
+
+## Parameter Value Ownership
+
+IDAS needs access to the current parameter values through `IDASetSensParams`
+when using the internal difference-quotient sensitivity residual. ASCEND should
+store a dense `double *p` array in `IntegratorIdaData`, filled from the selected
+instances before each IDAS initialization and refreshed before reinitialization.
+
+For the first milestone:
+
+- the IDAS parameter vector is a snapshot of scalar ASCEND parameter values;
+- the Python driver remains responsible for writing candidate parameter values
+  into the model before `integrator.analyse()` or `integrator.solve()`;
+- ASCEND maps sensitivity parameter instances to the corresponding entries in
+  the IDAS parameter vector.
+
+One implementation detail needs care before relying on IDAS internal
+difference-quotient sensitivity residuals. IDAS perturbs entries in the `p`
+array supplied through `IDASetSensParams`, but ASCEND's residual callback
+currently evaluates relations from values stored in the ASCEND instance/system
+state. Therefore perturbing `p` must affect residual evaluation. Possible
+solutions are:
+
+1. make the IDA residual callback synchronize the current `p` array into the
+   selected ASCEND parameter instances before evaluating relations;
+2. arrange for `p` entries to alias the same storage used by those fixed
+   parameter instances, if that is safe;
+3. provide an explicit IDAS sensitivity residual callback that computes the
+   effect of parameter perturbations in ASCEND-controlled code.
+
+The first option is probably the simplest prototype, but it must restore or
+resynchronize parameter values carefully because IDAS may call the residual
+function many times during finite-difference sensitivity evaluation.
+
+Later, exact `dF/dp` residual support could use ASCEND relation derivatives
+with respect to parameter instances. That should be a second milestone. The
+first milestone should use IDAS internal difference-quotient sensitivity
+residuals by passing `NULL` for the sensitivity residual callback.
+
+## Initial Sensitivities
+
+Initial sensitivities are the hardest non-event detail.
+
+For the DAE:
+
+$$
+F(t, y, \dot{y}, p) = 0
+$$
+
+ordinary consistent initial conditions satisfy:
+
+$$
+F(t_0, y_0, \dot{y}_0, p) = 0
+$$
+
+For a sensitivity parameter `p_j`, define:
+
+$$
+S_j = \frac{\partial y}{\partial p_j}
+$$
+
+$$
+\dot{S}_j = \frac{\partial \dot{y}}{\partial p_j}
+$$
+
+The initial sensitivity values are consistent when they satisfy the
+differentiated DAE and differentiated initialization constraints at `t0`:
+
+$$
+\frac{\partial F}{\partial y} S_j
++ \frac{\partial F}{\partial \dot{y}} \dot{S}_j
++ \frac{\partial F}{\partial p_j}
+= 0
+$$
+
+If the initial dynamic state is independent of `p_j`, zero initial
+sensitivities may be correct. If setup methods, fixed/free choices, initial
+assignments, or algebraic consistent-initial-condition solves make the initial
+state depend on `p_j`, then zero initial sensitivities may be wrong. For
+example:
+
+$$
+y(0) = p_j
+$$
+
+implies:
+
+$$
+\frac{\partial y(0)}{\partial p_j} = 1
+$$
+
+not zero.
+
+For the first milestone, support two modes:
+
+```text
+zero
+    yS0 = 0 and ypS0 = 0 for all sensitivity parameters
+
+consistent
+    yS0 and ypS0 start at zero, then IDAS computes consistent sensitivity
+    initial conditions where supported
+```
+
+Expose an option:
+
+```text
+sensitivity_initial = ZERO | CONSISTENT
+```
+
+Use `IDAGetSensConsistentIC` for diagnostics/extraction after IDAS consistent
+IC calculation when using the IDAS backend. If this is not enough for a model
+whose initial state is explicitly parameter-dependent, the model should be
+declared unsupported for sensitivity mode until ASCEND can differentiate the
+initialization method or let users supply initial sensitivity values.
+
+## IDAS Setup Sequence
+
+In the existing IDA setup path, after ordinary `IDACreate`, `IDAInit`,
+tolerances, linear solver, optional inputs, root setup, and consistent IC setup,
+add the sensitivity initialization only when:
+
+```text
+backend == IDAS
+and engine mode == IDAS
+and number of sensitivity parameters > 0
+```
+
+Sequence:
+
+```c
+yS0  = N_VCloneVectorArray(Ns, y0);
+ypS0 = N_VCloneVectorArray(Ns, y0);
+
+load_initial_sensitivities(yS0, ypS0);
+
+flag = IDASensInit(ida_mem, Ns, IDA_STAGGERED, NULL, yS0, ypS0);
+flag = IDASetSensParams(ida_mem, p, pbar, plist);
+flag = IDASensEEtolerances(ida_mem);
+flag = IDASetSensErrCon(ida_mem, SUNFALSE);
+```
+
+Recommended defaults:
+
+```text
+sensitivity_method = STAGGERED
+sensitivity_residual = INTERNAL_DQ
+sensitivity_tolerances = ESTIMATED
+sensitivity_error_control = OFF
+```
+
+Rationale:
+
+- `STAGGERED` is less intrusive for existing IDA behavior.
+- internal difference quotients avoid needing exact ASCEND `dF/dp` work first.
+- estimated tolerances are easier than exposing a full sensitivity tolerance
+  vector at the start.
+- leaving sensitivity variables out of local error control initially prevents
+  sensitivity accuracy demands from destabilizing ordinary integration.
+
+## Sensitivity Extraction At Observation Times
+
+The current reporting path records observed values. Add a parallel observed
+sensitivity matrix at each sample:
+
+```text
+time
+observed value i
+sensitivity parameter j
+d observed_i / d parameter_j
+```
+
+At each successful sample point:
+
+1. Call `IDAGetSens(ida_mem, &tret, yS)`.
+2. For each observed instance, map it to its integrator state index.
+3. Extract `NV_Ith_S(yS[j], state_index)` for each sensitivity parameter.
+4. Store a row-major matrix:
+
+   ```text
+   observed_sens[i_obs][j_param]
+   ```
+
+The first milestone should support any observed instance that maps directly to
+an IDAS unknown in the DAE vector. This includes both differential states and
+algebraic variables that IDA/IDAS solves as part of $y$; algebraic variables are
+not automatically excluded.
+
+## Chain Rule For Derived Observations
+
+A "derived observation" means an observed quantity that is not itself an IDAS
+unknown, for example a report-only expression, postprocessed value, assignment
+result, or helper variable computed from several solved variables after the DAE
+solve. For those values, IDAS can provide sensitivities of the underlying DAE
+unknowns, but ASCEND must still apply the observation chain rule.
+
+If the observed value is:
+
+$$
+g = g(y, p)
+$$
+
+then for sensitivity parameter $p_j$:
+
+$$
+\frac{\partial g}{\partial p_j}
+= \frac{\partial g}{\partial y} S_j
++ \left.\frac{\partial g}{\partial p_j}\right|_{y}
+$$
+
+where:
+
+- $S_j = \partial y / \partial p_j$ is the state/algebraic sensitivity
+  returned by IDAS;
+- $\partial g / \partial y$ is the derivative of the observation expression
+  with respect to the IDAS unknown vector;
+- $\left.\partial g / \partial p_j\right|_{y}$ is any direct dependence of
+  the observation expression on the sensitivity parameter, holding the IDAS
+  unknowns fixed.
+
+This distinction matters because an ASCEND observed instance may fall into one
+of several categories:
+
+1. Direct IDAS unknown: the observed instance maps to an entry in the IDAS $y$
+   vector. ASCEND can read $S_j$ directly from the IDAS sensitivity vector.
+2. Alias or simple model variable with known relation to an IDAS unknown: ASCEND
+   may be able to resolve the alias and still use the direct sensitivity.
+3. Algebraic variable solved by IDAS: this is still a direct IDAS unknown if it
+   is included in the DAE vector, even though it is not differential.
+4. Derived expression or postprocessed value: ASCEND must differentiate the
+   expression or calculation that defines the observation.
+
+For the first prototype, support categories 1 and 3, and category 2 where the
+existing instance/solver-variable mapping already makes it unambiguous. Return
+"not available" for category 4 until ASCEND has a reliable expression-level
+chain-rule path.
+
+A later implementation could compute derived-observation sensitivities by
+reusing ASCEND relation/expression derivative machinery, provided the observed
+quantity can be represented as a differentiable expression of solved variables
+and selected parameters. Non-smooth observations, conditional expressions, or
+postprocessing done outside the ASCEND expression system should remain explicit
+unsupported cases unless a user supplies a custom derivative.
+
+### ASCEND Examples
+
+A continuous derived observation can be as simple as an algebraic reporting
+variable. In `models/johnpye/iron/firstorder.a4c`, `X`, `reduction_degree`,
+`tau`, and `X_error` are derived from the dynamic state and parameters:
+
+```ascend
+MODEL firstorder_shrinking_core;
+    t IS_A time;
+    INDEPENDENT t;
+
+    k_scm IS_A frequency;
+    r_core IS_A fraction;
+    X IS_A fraction;
+    reduction_degree IS_A fraction;
+    tau IS_A time;
+    X_exact IS_A factor;
+    X_error IS_A factor;
+
+    core_ode:
+        der(r_core) = -k_scm;
+    conversion_eq:
+        X = 1 - r_core^3;
+    reduction_degree_eq:
+        reduction_degree = X;
+    tau_eq:
+        tau = 1 / k_scm;
+    error_eq:
+        X_error = X - X_exact;
+
+METHODS
+    METHOD observe_default;
+        OBSERVE r_core, X, reduction_degree, tau, X_error;
+    END observe_default;
+END firstorder_shrinking_core;
+```
+
+If `X`, `reduction_degree`, `tau`, or `X_error` are present in the IDAS DAE
+unknown vector, their sensitivities can be read directly from IDAS. If ASCEND
+chooses not to include one of them in the IDAS vector and instead treats it as a
+postprocessed observed expression, ASCEND must compute the chain rule from the
+underlying IDAS sensitivities.
+
+A second common example is a reporting variable with units conversion or
+normalization:
+
+```ascend
+MODEL reporting_example;
+    T IS_A temperature;
+    T_C IS_A factor;
+    conversion IS_A fraction;
+    conversion_percent IS_A factor;
+
+    temperature_report_eq:
+        T_C = T / 1 {K} - 273.15;
+    conversion_report_eq:
+        conversion_percent = 100 * conversion;
+
+METHODS
+    METHOD observe_default;
+        OBSERVE T_C, conversion_percent;
+    END observe_default;
+END reporting_example;
+```
+
+These are differentiable derived observations if `T` and `conversion` have
+valid IDAS sensitivities. ASCEND can compute their sensitivities with the
+observation-expression derivatives.
+
+Selectors are different. A selector can be observed, but it is a discrete mode,
+not a smooth derived observation:
+
+```ascend
+MODEL selector_observe_example;
+    stage IS_A integer;
+    modes IS_A set OF symbol_constant;
+    mode IS_A selector OF modes DEFAULT 'low';
+
+METHODS
+    METHOD on_load;
+        modes := ['low', 'high'];
+        OBSERVE stage, mode;
+    END on_load;
+END selector_observe_example;
+```
+
+For `mode`, there is no ordinary derivative $\partial mode / \partial p_j$ to
+return. If parameters change when a selector switches, that belongs to the
+hybrid/event sensitivity problem, not to the smooth observation chain rule. A
+first IDAS prototype should either report selector sensitivities as unavailable
+or expose only the selector value/event path metadata.
+
+## C API For Sensitivity Output
+
+Add a minimal query surface:
+
+```c
+ASC_DLLSPEC int integrator_has_sensitivities(IntegratorSystem *sys);
+
+ASC_DLLSPEC int integrator_get_num_sensitivity_instances(
+    IntegratorSystem *sys
+);
+
+ASC_DLLSPEC int integrator_get_current_observation_sensitivities(
+    IntegratorSystem *sys,
+    double *matrix,
+    int nobs,
+    int nparams
+);
+```
+
+The matrix layout should be documented as:
+
+```text
+matrix[i_obs * nparams + j_param]
+```
+
+Add a lower-level state-vector query only if needed:
+
+```c
+ASC_DLLSPEC int integrator_get_current_state_sensitivities(
+    IntegratorSystem *sys,
+    double *matrix,
+    int nstates,
+    int nparams
+);
+```
+
+For error reporting, distinguish:
+
+```text
+ASC_INTEG_SENS_NOT_BUILT
+ASC_INTEG_SENS_NOT_ENABLED
+ASC_INTEG_SENS_EVENT_UNSUPPORTED
+ASC_INTEG_SENS_OBS_UNSUPPORTED
+```
+
+Exact enum names can follow local conventions.
+
+## C++ And Python API
+
+Extend `ascxx::Integrator`:
+
+```c++
+bool hasSensitivities() const;
+
+void clearSensitivityInstances();
+void addSensitivityInstance(const Instanc &inst);
+long getNumSensitivityItems();
+Instanc getSensitivityInstance(const long &i);
+
+std::vector<std::vector<double> >
+getCurrentObservationSensitivities();
+```
+
+Expose through SWIG so Python can do:
+
+```python
+integrator.clearSensitivityInstances()
+for param_path in param_paths:
+    integrator.addSensitivityInstance(_instance_by_path(sim, param_path))
+
+integrator.solve()
+
+sens = integrator.getCurrentObservationSensitivities()
+```
+
+For reporter-based workflows, add an optional callback hook after observed
+values have been recorded:
+
+```c++
+virtual int recordObservedSensitivities();
+```
+
+That callback can be deferred if it is too invasive. The first Python
+implementation can have the reporter call:
+
+```python
+integrator.getCurrentObservationSensitivities()
+```
+
+inside `recordObservedValues()`.
+
+## Use In The TGA A4SQP Driver
+
+The current `models/johnpye/iron/tga_fit_a4sqp.py` computes gradients by
+finite differences around repeated IDA solves. With IDAS sensitivities, the
+evaluation path becomes:
+
+```text
+one A4SQP objective evaluation:
+    set candidate parameters
+    run ASCEND/IDAS once for each trial
+    collect residual vector r
+    collect sensitivity matrix dr/dp from IDAS
+    return objective and gradient
+```
+
+For least squares:
+
+```text
+r_i = sqrt(w_i) * (y_i - y_i_data)
+
+dJ/dp_j = sum_i r_i * dr_i/dp_j
+        = sum_i r_i * sqrt(w_i) * dy_i/dp_j
+```
+
+Driver changes:
+
+1. Add CLI option:
+
+   ```text
+   --gradient fd|idas
+   ```
+
+2. When `--gradient idas` is selected:
+
+   - set integrator engine to `IDAS`;
+   - add sensitivity instances matching active fit parameters;
+   - return both residuals and residual Jacobian from each trial;
+   - compute gradient by chain rule.
+
+3. If the integrator reports `ASC_INTEG_SENS_EVENT_UNSUPPORTED`, fall back to
+   finite differences unless the user passes:
+
+   ```text
+   --gradient-strict
+   ```
+
+4. Keep finite differences as the baseline for validation.
+
+Validation test for the driver:
+
+```text
+small first-order model
+known analytic or finite-difference gradient
+compare IDAS gradient with finite difference within tolerance
+```
+
+# Event-Handling Models
+
+## Why Events Are Different
+
+For a smooth segment, IDAS integrates sensitivity equations. At an event,
+ASCEND changes the mathematical problem:
+
+- a boundary root is crossed;
+- a `WHEN` case changes;
+- state variables may be reassigned;
+- algebraic/differential status may change;
+- the DAE may be rebuilt and reinitialized.
+
+The sensitivity state must pass through the event with the same semantics as
+the physical state. IDAS cannot infer ASCEND's modelling meaning for a
+`WHEN` reinitialization.
+
+For a reset map:
+
+$$
+y^+ = R(y^-, p, t_{event})
+$$
+
+the sensitivity jump is, schematically:
+
+$$
+S^+ =
+\frac{\partial R}{\partial y} S^-
++ \frac{\partial R}{\partial p}
++ \text{event-time terms}
+$$
+
+If the event time depends on the parameter, the event-time sensitivity must be
+computed from the guard equation. For a guard:
+
+$$
+h(y, \dot{y}, z, p, t_{event}) = 0
+$$
+
+the transition-time derivative `dt_event/dp` comes from differentiating the
+guard. Recent hybrid DAE sensitivity work formulates this explicitly and shows
+that consistent initialization and state transfer must also be solved for the
+sensitivity system at switching points [@doi:10.48550/arXiv.1904.08734].
+
+## Event Policy Classes
+
+ASCEND should not pretend that all events have the same uncertainty behavior.
+Introduce event sensitivity policy classes:
+
+```text
+continuous
+    no state reset; carry sensitivities through, then reinitialize ydot/DAE
+
+clamp_known
+    reset selected states to known constants; selected sensitivities become 0
+
+measurement_reset
+    reset selected states to measured estimates; sensitivities may become 0,
+    but uncertainty/covariance receives a measurement noise injection
+
+map
+    reset selected states with explicit differentiable expressions; compute
+    dR/dy and dR/dp
+
+unsupported
+    disable IDAS gradient for this trajectory and require finite differences
+    or smoothing
+```
+
+This is separate from deterministic sensitivity. If ASCEND later exposes
+uncertainty or covariance, reset policies need an additional process-noise or
+measurement-noise term:
+
+$$
+P^+ = A P^- A^T + Q_{event}
+$$
+
+where $A = \partial R / \partial y$ for the reset map. That should not be
+conflated with IDAS state sensitivities.
+
+## First Event Milestone
+
+Before attempting correct event sensitivity jumps, make event use visible:
+
+1. Add an event counter to `IntegratorIdaData`.
+2. Increment it for any boundary/guard crossing that causes reanalysis or
+   reinitialization.
+3. When sensitivity mode is enabled and event count is nonzero, mark the
+   sensitivity result:
+
+   ```text
+   invalid_due_to_events
+   ```
+
+4. Return a clear API status so Python can fall back to finite differences.
+
+This gives a safe first version:
+
+```text
+smooth model:
+    IDAS gradients allowed
+
+event model:
+    IDAS integration may still solve the state trajectory
+    sensitivities are not exposed as valid gradients
+```
+
+## Later Event Support
+
+To support event sensitivities correctly:
+
+1. Represent each event transition as an explicit reset relation:
+
+   ```text
+   T(y_plus, ydot_plus, z_plus, y_minus, ydot_minus, z_minus, p, t) = 0
+   ```
+
+2. Differentiate the guard and transition equations.
+
+3. Solve for:
+
+   ```text
+   dt_event/dp
+   S_plus
+   Sd_plus
+   algebraic sensitivities
+   ```
+
+4. Reinitialize IDAS sensitivity vectors with `IDASensReInit`.
+
+5. Record the event path. Sensitivities are local to the event sequence
+   selected by the forward simulation and may be invalid if a perturbation
+   changes event ordering.
+
+6. Add validation models:
+
+   - no-reset root crossing;
+   - known clamp reset;
+   - affine reset map;
+   - event time depending on a parameter;
+   - event order change detection.
+
+Hybrid sensitivity literature emphasizes that direct and adjoint sensitivities
+can be discontinuous at events and need jump conditions. Corner, Sandu, and
+Sandu describe jump sensitivity matrices for hybrid multibody systems
+[@doi:10.48550/arXiv.1802.07188]. Serban and Recuero formulate hybrid
+ODE/DAE transition conditions, transition-time sensitivities, and consistent
+post-transition initialization for sensitivity systems
+[@doi:10.48550/arXiv.1904.08734]. A recent DAE optimization treatment
+similarly frames event-split integration and reset maps as constraints whose
+gradients are valid for a fixed event ordering and transversal guard crossings
+[@doi:10.48550/arXiv.2605.05395].
+
+# Validation Plan
+
+## Backend Equivalence
+
+When IDAS is available, run existing IDA tests with:
+
+```text
+INTEGRATOR IDA
+```
+
+linked through the IDAS backend. Results should match the old IDA backend to
+existing tolerances.
+
+## Sensitivity Smoke Tests
+
+Add small models with known sensitivities:
+
+1. Scalar exponential decay:
+
+   ```text
+   ydot = -k*y
+   y(0) = y0
+   y(t) = y0 * exp(-k*t)
+   dy/dk = -t * y
+   ```
+
+2. First-order TGA-style model from `models/johnpye/iron/firstorder.a4c`.
+
+3. Algebraic observation sensitivity for an algebraic variable that is part of
+   the IDAS DAE vector.
+
+4. Derived observation sensitivity for a postprocessed value:
+
+   ```text
+   observed = a * y
+   ```
+
+   This can be deferred until ASCEND can apply the observation chain rule.
+
+Compare:
+
+```text
+IDAS sensitivity
+central finite difference sensitivity
+analytic sensitivity where available
+```
+
+## A4SQP Driver Validation
+
+In `tga_fit_a4sqp.py`, validate:
+
+```text
+--gradient fd
+--gradient idas
+```
+
+on a small single-trial model and one or two parameters. Require matching
+gradient signs and relative magnitudes before trusting multi-parameter fits.
+
+# Design Decisions And Remaining Questions
+
+1. `INTEGRATOR IDAS` should mean sensitivity-capable integration with
+   sensitivity data available for query after simulation. Sensitivity matrices
+   are meaningful only when sensitivity parameter instances have been supplied.
+   If no sensitivity parameters are configured, the engine can still run the
+   state trajectory, but `hasSensitivities()` should report false or an empty
+   parameter dimension.
+
+2. Sensitivity parameter selection should be API-driven first. These parameters
+   are the $p_j$ values supplied to IDAS through `IDASetSensParams`. In an
+   optimisation wrapper, the optimiser's free variables naturally define this
+   list. ASCEND language metadata can be added later as a convenience, but the
+   first prototype does not need the model source to declare the sensitivity
+   parameters.
+
+3. Deterministic sensitivities and uncertainty propagation should stay
+   separated. IDAS gives local derivatives such as $\partial y / \partial p_j$.
+   Uncertainty/covariance propagation can later be built on top of those
+   derivatives, but it should not be part of the first IDAS implementation.
+
+4. Observed algebraic variables should not be excluded just because they are
+   algebraic. If an observed variable is part of the IDAS DAE unknown vector, it
+   can have a direct IDAS sensitivity. The harder case is a derived observation
+   that is not an IDAS unknown; that requires ASCEND to apply a chain rule for
+   the observation expression.
+
+5. IDAS should use internal difference quotients for `dF/dp` in the first
+   prototype. Exact ASCEND residual derivatives with respect to selected
+   parameters should be treated as a later performance and accuracy upgrade.
+
+6. Remaining issue before prototyping: define the exact mapping from an
+   observed ASCEND instance to an IDAS vector index, including algebraic
+   variables, and return a clear status for observations that do not have a
+   direct mapping.
+
+7. Remaining issue before prototyping: decide how the IDAS `p` array is kept
+   synchronized with ASCEND parameter instances during IDAS internal
+   difference-quotient residual calls. Without this, `IDASetSensParams` can
+   hold the right numeric values but perturbing them will not necessarily
+   change ASCEND residual evaluations.
+
+# References
+
+::: references
+:::
+
+- [SUNDIALS IDAS introduction][sundials-idas-intro].
+- [SUNDIALS IDAS forward sensitivity analysis documentation][sundials-idas-fsa].
+- [SUNDIALS IDAS mathematical considerations][sundials-idas-math].
+
+[sundials-idas-intro]: https://sundials.readthedocs.io/en/latest/idas/Introduction_link.html
+[sundials-idas-fsa]: https://sundials.readthedocs.io/en/latest/idas/Usage/FSA.html
+[sundials-idas-math]: https://sundials.readthedocs.io/en/latest/idas/Mathematics_link.html
