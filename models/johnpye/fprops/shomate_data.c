@@ -11,6 +11,7 @@ typedef struct {
 } ShomateEntry;
 
 #define TERM(C, N) {(C), (N), SHOMATE_TERM_UNSET}
+#define LOGTERM(C) {(C), 0.0, SHOMATE_TERM_LOG_T}
 
 static const char *elements_ni[] = {"Ni"};
 static const double stoich_ni[] = {1.0};
@@ -397,6 +398,8 @@ static const ShomateSpecies species_co2_clone = {
  * - Fe2SiO4 (fayalite): anchored to Robie, Finch, and Hemingway (1982)
  *   at 298.15 K, with piecewise-linear Cp(T) segments through the
  *   Benisek, Kroll, and Dachs (2012) table.
+ * - Fe2SiO4 (fayalite, Hidayat et al. 2017): an alternate FactSage-style
+ *   optimized standard state for FeO-Fe2O3-SiO2 checks.
  * - FeAl2O4 (hercynite): anchored to Sack and Ghiorso (1991) standard
  *   state at 298.15 K, with piecewise-linear Cp(T) segments through the
  *   0 GPa Table 3 values in Verma et al. (2024) and a room-temperature
@@ -571,104 +574,27 @@ static ShomateTerm terms_fe2sio4_298_400[] = {
 	TERM(0.2020618556701029, 1.0)
 };
 
-static ShomateTerm terms_fe2sio4_400_500[] = {
-	TERM(102.11999999999998, 0.0),
-	TERM(0.12590000000000004, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_500_600[] = {
-	TERM(124.96999999999994, 0.0),
-	TERM(0.0802000000000001, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_600_700[] = {
-	TERM(138.89000000000007, 0.0),
-	TERM(0.056999999999999884, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_700_800[] = {
-	TERM(147.29, 0.0),
-	TERM(0.045, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_800_900[] = {
-	TERM(152.49000000000004, 0.0),
-	TERM(0.038499999999999944, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_900_1000[] = {
-	TERM(155.64, 0.0),
-	TERM(0.035, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1000_1100[] = {
-	TERM(157.93999999999988, 0.0),
-	TERM(0.032700000000000104, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1100_1200[] = {
-	TERM(159.48000000000005, 0.0),
-	TERM(0.03129999999999995, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1200_1300[] = {
-	TERM(160.67999999999998, 0.0),
-	TERM(0.03030000000000001, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1300_1400[] = {
-	TERM(161.71999999999977, 0.0),
-	TERM(0.029500000000000172, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1400_1500[] = {
-	TERM(162.70000000000007, 0.0),
-	TERM(0.028799999999999954, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1500_1600[] = {
-	TERM(163.6000000000001, 0.0),
-	TERM(0.028199999999999933, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1600_1700[] = {
-	TERM(164.56000000000014, 0.0),
-	TERM(0.02759999999999991, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1700_1800[] = {
-	TERM(165.5799999999997, 0.0),
-	TERM(0.02700000000000017, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1800_1900[] = {
-	TERM(166.4799999999999, 0.0),
-	TERM(0.026500000000000058, 1.0)
-};
-
-static ShomateTerm terms_fe2sio4_1900_2000[] = {
-	TERM(167.43000000000012, 0.0),
-	TERM(0.025999999999999943, 1.0)
+static ShomateTerm terms_fe2sio4_benisek_400_2000[] = {
+	TERM(-584.388, 0.0),
+	TERM(129440.0, -1.0),
+	TERM(-3.84956e7, -2.0),
+	TERM(4.10143e9, -3.0),
+	LOGTERM(98.4368)
 };
 
 static ShomateRange ranges_fe2sio4_slag[] = {
 	{298.15, 400.0, 2, terms_fe2sio4_298_400, 0},
-	{400.0, 500.0, 2, terms_fe2sio4_400_500, 0},
-	{500.0, 600.0, 2, terms_fe2sio4_500_600, 0},
-	{600.0, 700.0, 2, terms_fe2sio4_600_700, 0},
-	{700.0, 800.0, 2, terms_fe2sio4_700_800, 0},
-	{800.0, 900.0, 2, terms_fe2sio4_800_900, 0},
-	{900.0, 1000.0, 2, terms_fe2sio4_900_1000, 0},
-	{1000.0, 1100.0, 2, terms_fe2sio4_1000_1100, 0},
-	{1100.0, 1200.0, 2, terms_fe2sio4_1100_1200, 0},
-	{1200.0, 1300.0, 2, terms_fe2sio4_1200_1300, 0},
-	{1300.0, 1400.0, 2, terms_fe2sio4_1300_1400, 0},
-	{1400.0, 1500.0, 2, terms_fe2sio4_1400_1500, 0},
-	{1500.0, 1600.0, 2, terms_fe2sio4_1500_1600, 0},
-	{1600.0, 1700.0, 2, terms_fe2sio4_1600_1700, 0},
-	{1700.0, 1800.0, 2, terms_fe2sio4_1700_1800, 0},
-	{1800.0, 1900.0, 2, terms_fe2sio4_1800_1900, 0},
-	{1900.0, 2000.0, 2, terms_fe2sio4_1900_2000, 0}
+	{400.0, 2000.0, 5, terms_fe2sio4_benisek_400_2000, 0}
+};
+
+static ShomateTerm terms_fe2sio4_hidayat_2017_298_1478[] = {
+	TERM(248.9, 0.0),
+	TERM(-1923.8, -0.5),
+	TERM(-139104009.0, -3.0)
+};
+
+static ShomateRange ranges_fe2sio4_hidayat_2017[] = {
+	{298.15, 1478.0, 3, terms_fe2sio4_hidayat_2017_298_1478, 0}
 };
 
 static ShomateTerm terms_feal2o4_200_298[] = {
@@ -767,6 +693,23 @@ static const ShomateSpecies species_fe2sio4_slag = {
 	ranges_fe2sio4_slag
 };
 
+static const ShomateSpecies species_fe2sio4_hidayat_2017 = {
+	"Fe2SiO4",
+	"hidayat_2017_feo_fe2o3_sio2",
+	203.778,
+	FPROPS_PHASE_SOLID,
+	298.15,
+	100000.0,
+	-1478482.0,
+	150.294,
+	4390.0,
+	3,
+	elements_fe2sio4,
+	stoich_fe2sio4,
+	(unsigned)(sizeof(ranges_fe2sio4_hidayat_2017) / sizeof(ranges_fe2sio4_hidayat_2017[0])),
+	ranges_fe2sio4_hidayat_2017
+};
+
 static const ShomateSpecies species_feal2o4_slag = {
 	"FeAl2O4",
 	"slag_pragmatic_2026",
@@ -811,6 +754,8 @@ static const ShomateEntry entries[] = {
 	{"corundum", &species_al2o3_slag},
 	{"Fe2SiO4", &species_fe2sio4_slag},
 	{"fayalite", &species_fe2sio4_slag},
+	{"Fe2SiO4", &species_fe2sio4_hidayat_2017},
+	{"fayalite", &species_fe2sio4_hidayat_2017},
 	{"FeAl2O4", &species_feal2o4_slag},
 	{"hercynite", &species_feal2o4_slag},
 

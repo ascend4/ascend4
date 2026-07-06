@@ -652,6 +652,11 @@ vars.Add(BoolVariable("CONOPT_LINKED"
 	,False
 ))
 
+vars.Add(BoolVariable("CONOPT_LEGACY3"
+	,"Use the bundled legacy CONOPT 3 API header instead of the default CONOPT 4 fallback header when CONOPT is not available at buildtime"
+	,False
+))
+
 vars.Add('CONOPT_CPPPATH'
 	,"Where is your conopt.h?"
 	,default_conopt_cpppath
@@ -1893,6 +1898,17 @@ int main(){
 }
 """
 
+conopt_header_test_text = """
+#if !defined(_WIN32)
+# define FNAME_LCASE_DECOR
+#endif
+
+#include <conopt.h>
+int main(){
+	return 0;
+}
+"""
+
 def CheckCONOPT(context):
 	context.Message( 'Checking for CONOPT... ' )
 
@@ -1900,6 +1916,17 @@ def CheckCONOPT(context):
 	
 	is_ok = context.TryLink(conopt_test_text,".c")
 	context.Result(is_ok)
+
+	context.env['CONOPT_BUNDLED4'] = False
+	if not is_ok:
+		if context.env.get('CONOPT_LEGACY3'):
+			context.Message( 'Using bundled legacy CONOPT 3 header... ' )
+			context.Result(True)
+		else:
+			context.Message( 'Checking for CONOPT header... ' )
+			has_header = context.TryCompile(conopt_header_test_text,".c")
+			context.Result(has_header)
+			context.env['CONOPT_BUNDLED4'] = not has_header
 	
 	keep.restore(context)
 		
@@ -2959,18 +2986,18 @@ env['SOLVER_SUBDIRS'] = SOLVER_SUBDIRS
 
 env.SConscript(['solvers/SConscript'],'env')
 
-for k,v in {
-	'ASC_HAVE_MAKEMPS': env['OPTIONALS'].get('makemps', (False, None))[0],
-	'ASC_HAVE_IPOPT': env['OPTIONALS'].get('ipopt', (False, None))[0],
-	'ASC_HAVE_HIGHS': env['OPTIONALS'].get('highs', (False, None))[0],
-	'ASC_HAVE_A4SQP': env['OPTIONALS'].get('a4sqp', (False, None))[0],
-	'ASC_HAVE_SLSQP': env['OPTIONALS'].get('slsqp', (False, None))[0],
-}.items():
-	subst_dict['@%s@' %(k,)] = "#define %s 1" %(k,) if v else "// %s is not set." %(k,)
+def solver_was_built(name):
+	token = name.upper()
+	if not env.get('WITH_%s' % token, False):
+		return False
+	optional = env['OPTIONALS'].get(name.lower())
+	if optional is not None:
+		return bool(optional[0])
+	return True
 
 selected_solver_names = [
 	name for name in SOLVER_ENGINE_NAMES
-	if env.get('WITH_%s' % name.upper(), False)
+	if solver_was_built(name)
 ]
 solver_imports = ",".join(
 	name.lower() for name in selected_solver_names
@@ -2981,6 +3008,14 @@ for subst_env in (env, libascend_env):
 	subst_env['SUBST_DICT']['@ASC_SOLVER_NAMES@'] = solver_names
 subst_dict['@ASC_SOLVER_IMPORTS@'] = solver_imports
 subst_dict['@ASC_SOLVER_NAMES@'] = solver_names
+for macro, solver_name in {
+	'ASC_HAVE_MAKEMPS': 'MakeMPS',
+	'ASC_HAVE_IPOPT': 'IPOPT',
+	'ASC_HAVE_HIGHS': 'HiGHS',
+	'ASC_HAVE_A4SQP': 'A4SQP',
+	'ASC_HAVE_SLSQP': 'SLSQP',
+}.items():
+	subst_dict['@%s@' % macro] = "#define %s 1" % macro if solver_was_built(solver_name) else "// %s is not set." % macro
 
 env['SUBST_DICT'].update(subst_dict)
 env.Substfile(target='ascend/general/config.h', source='ascend/general/config.h.in')

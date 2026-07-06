@@ -1,12 +1,11 @@
 from gaphas import Canvas
-from gaphas.item import Line
 import re
 from blockitem import DefaultBlockItem, GraphicalBlockItem
 from blockline import BlockLine
 from blockstream import BlockStream
 from functools import reduce
 
-UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");
+UNITS_RE = re.compile(r"([-+]?(\d+(\.\d*)?|\d*\.\d+)([eE][-+]?\d+)?)\s*(.*)");
 
 saved_model = None
 
@@ -20,6 +19,12 @@ class BlockCanvas(Canvas):
 		self.saved_data = None
 		self.filename = None
 		self.user_code = ''
+
+	def add(self, item, parent=None, index=None):
+		super(BlockCanvas, self).add(item, parent, index)
+		setup_constraints = getattr(item, "setup_canvas_constraints", None)
+		if setup_constraints is not None:
+			setup_constraints(self.connections)
 	
 	def update_constraints(self, items):
 		"""
@@ -27,7 +32,9 @@ class BlockCanvas(Canvas):
 		constraint solver kicks in.
 		"""
 		# request solving of external constraints associated with dirty items
-		request_resolve = self._solver.request_resolve
+		request_resolve = getattr(self.solver, "request_resolve", None)
+		if request_resolve is None:
+			return self.connections.solve()
 		for item in items:
 			if hasattr(item,'ports'):
 				for p in item._ports:
@@ -35,7 +42,34 @@ class BlockCanvas(Canvas):
 						request_resolve(p.point.x)
 						request_resolve(p.point.y)
 
-		super(BlockCanvas,self).update_constraints(items)
+		self.connections.solve()
+
+	def update_now(self, dirty_items=None):
+		"""
+		Perform a Gaphas model update.
+
+		Gaphas 3 calls this method with the set of dirty items from GtkView.
+		Legacy canvas code also calls it without arguments after loading a
+		canvas, so keep that path as a full-canvas update.
+		"""
+		if dirty_items is None:
+			dirty_items = tuple(self.get_all_items())
+		super(BlockCanvas,self).update_now(dirty_items)
+		normalized_items = []
+		for item in dirty_items:
+			normalize_origin = getattr(item, "normalize_origin", None)
+			if normalize_origin is not None and normalize_origin():
+				normalized_items.append(item)
+		if normalized_items:
+			super(BlockCanvas,self).update_now(normalized_items)
+
+	def _obtain_cairo_context(self):
+		import cairo
+		surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 0, 0)
+		return cairo.Context(surface)
+
+	def get_connection(self, handle):
+		return self.connections.get_connection(handle)
 
 	def reattach_ascend(self, ascwrap, notesdb):
 		"""

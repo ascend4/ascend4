@@ -36,7 +36,9 @@ int shomate_prepare_range(ShomateRange *R){
 		return 0;
 	}
 	for(i = 0; i < R->n_terms; ++i){
-		R->terms[i].kind = shomate_term_kind(R->terms[i].exponent);
+		if(R->terms[i].kind == SHOMATE_TERM_UNSET){
+			R->terms[i].kind = shomate_term_kind(R->terms[i].exponent);
+		}
 	}
 	R->prepared = 1;
 	return 1;
@@ -85,6 +87,9 @@ double shomate_cp_molar(const ShomateRange *R, double T, FpropsError *err){
 		case SHOMATE_TERM_INV_T2:
 			cp += term->coeff * invT2;
 			break;
+		case SHOMATE_TERM_LOG_T:
+			cp += term->coeff * log(T);
+			break;
 		default:
 			cp += term->coeff * pow(T, term->exponent);
 			break;
@@ -110,6 +115,8 @@ static double shomate_term_delta_h(const ShomateTerm *term, double T0, double T1
 		return c * log(T1 / T0);
 	case SHOMATE_TERM_INV_T2:
 		return -c * (1.0 / T1 - 1.0 / T0);
+	case SHOMATE_TERM_LOG_T:
+		return c * ((T1 * log(T1) - T1) - (T0 * log(T0) - T0));
 	default:
 		{
 			double n = term->exponent;
@@ -138,6 +145,12 @@ static double shomate_term_delta_s(const ShomateTerm *term, double T0, double T1
 		return -c * (1.0 / T1 - 1.0 / T0);
 	case SHOMATE_TERM_INV_T2:
 		return -0.5 * c * (1.0 / (T1 * T1) - 1.0 / (T0 * T0));
+	case SHOMATE_TERM_LOG_T:
+		{
+			double l0 = log(T0);
+			double l1 = log(T1);
+			return 0.5 * c * (l1 * l1 - l0 * l0);
+		}
 	default:
 		{
 			double n = term->exponent;

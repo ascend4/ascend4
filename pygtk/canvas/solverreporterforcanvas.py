@@ -1,4 +1,4 @@
-import gtk
+from gtkcompat import gtk
 import ascpy
 import time
 

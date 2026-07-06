@@ -1,10 +1,7 @@
 import gaphas
-from gaphas.tool import Tool
-import pygtk
 import math
 
-pygtk.require('2.0')
-import gtk
+from gtkcompat import gtk
 import blockinstance
 import blockproperties
 import canvasproperties
@@ -13,7 +10,7 @@ from blockitem import CustomBlockItem_turbine
 
 import ascpy
 
-class ContextMenuTool(Tool):
+class ContextMenuTool:
 	"""
 	Context menu for blocks and connectors on the canvas, intended to be
 	the main mouse-based way by which interaction with blocks occurs (blocks
@@ -22,7 +19,7 @@ class ContextMenuTool(Tool):
 	hook into the appropriate code in the Application layer.
 	"""
 	def __init__(self,view=None):
-		super(ContextMenuTool, self).__init__(view)
+		self.view = view
 
 	def on_button_press(self, event):
 		context = self.view.tool
@@ -41,7 +38,6 @@ class ContextMenuTool(Tool):
 		window = context.view.parent.parent.parent.parent.parent
 		menurename.connect("activate",self.rename,context.view.hovered_item,window)
 		menu.add(menurename)
-		menudefault.set_sensitive(False)
 		'''menublockstreams.set_sensitive(False)'''
 
 		menudelete = gtk.MenuItem("_Delete",True)
@@ -116,11 +112,11 @@ class ContextMenuTool(Tool):
 			'''menublockstreams.set_sensitive(False)'''
 
 
-		if not hasattr(context.view.hovered_item,'blockinstance'):
+		if context.view.hovered_item and not hasattr(context.view.hovered_item,'blockinstance'):
 			menurename.set_sensitive(False)
 			#menuinfo.set_sensitive(False)
 
-		if context.view.hovered_item:
+		if context.view.hovered_item and hasattr(context.view.hovered_item,'blockinstance'):
 			if not context.view.hovered_item.blockinstance.instance:
 				menublockinstance.set_sensitive(False)
 

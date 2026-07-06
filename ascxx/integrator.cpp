@@ -294,6 +294,16 @@ Integrator::getEngines(){
 }
 
 string
+Integrator::getEngineVersion(const string &name){
+	char version[256];
+	version[0] = '\0';
+	if(integrator_get_version(name.c_str(),version,sizeof(version))){
+		return "";
+	}
+	return version;
+}
+
+string
 Integrator::getName() const{
 	const IntegratorInternals *I = integrator_get_engine(blsys);
 	if(I==NULL){
@@ -342,6 +352,25 @@ Integrator::setLogTimesteps(UnitsM units, double start, double end, unsigned lon
 		samplelist_set(samplelist,i,val);
 		// CONSOLE_DEBUG("samplelist[%lu] = %f",i,val);
 		val *= inc;
+	}
+	integrator_set_samples(blsys,samplelist);
+}
+
+void
+Integrator::setTimesteps(UnitsM units, const vector<double> &values){
+	if(values.size() < 2){
+		throw runtime_error("At least two timestep values are required");
+	}
+	if(samplelist!=NULL){
+		ASC_FREE(samplelist);
+	}
+	const dim_type *d = units.getDimensions().getInternalType();
+	samplelist = samplelist_new(values.size(), d);
+	for(unsigned long i=0;i<values.size();++i){
+		if(i > 0 && values[i] <= values[i - 1]){
+			throw runtime_error("Timestep values must be strictly increasing");
+		}
+		samplelist_set(samplelist,i,values[i]);
 	}
 	integrator_set_samples(blsys,samplelist);
 }

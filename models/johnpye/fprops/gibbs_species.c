@@ -1,4 +1,5 @@
 #include "gibbs_species.h"
+#include "shomate_species.h"
 
 #include <math.h>
 #include <string.h>
@@ -16,6 +17,12 @@ static const double stoich_fe3o4[] = {3.0, 4.0};
 
 static const char *elements_fe2o3[] = {"Fe", "O"};
 static const double stoich_fe2o3[] = {2.0, 3.0};
+
+static const char *elements_sio2[] = {"Si", "O"};
+static const double stoich_sio2[] = {1.0, 2.0};
+
+static const char *elements_fe2sio4[] = {"Fe", "Si", "O"};
+static const double stoich_fe2sio4[] = {2.0, 1.0, 4.0};
 
 static double gibbs_species_R(void){
 	return FPROPS_R;
@@ -152,6 +159,32 @@ static FpropsError gibbs_fe2o3(double T, double p, double *g_out){
 	return FPROPS_NO_ERROR;
 }
 
+static FpropsError gibbs_shomate_species(const char *name, const char *source, double T, double p, double *g_out){
+	const ShomateSpecies *S;
+	FpropsError err = FPROPS_NO_ERROR;
+	if(!g_out){
+		return FPROPS_RANGE_ERROR;
+	}
+	S = shomate_species_lookup(name, source);
+	if(!S){
+		return FPROPS_RANGE_ERROR;
+	}
+	*g_out = shomate_species_g_molar(S, T, p, &err);
+	return (err == FPROPS_NO_ERROR && isfinite(*g_out)) ? FPROPS_NO_ERROR : FPROPS_RANGE_ERROR;
+}
+
+static FpropsError gibbs_sio2_slag(double T, double p, double *g_out){
+	return gibbs_shomate_species("SiO2", "slag_pragmatic_2026", T, p, g_out);
+}
+
+static FpropsError gibbs_fe2sio4_slag(double T, double p, double *g_out){
+	return gibbs_shomate_species("Fe2SiO4", "slag_pragmatic_2026", T, p, g_out);
+}
+
+static FpropsError gibbs_fe2sio4_hidayat_2017(double T, double p, double *g_out){
+	return gibbs_shomate_species("Fe2SiO4", "hidayat_2017_feo_fe2o3_sio2", T, p, g_out);
+}
+
 /*
  * Pragmatic Tier 2 subset from Hidayat et al. (2015):
  * direct Gibbs-energy fits plus unary Hillert-Jarl magnetic terms for
@@ -205,6 +238,24 @@ static const GibbsSpecies species_fe2o3_feoxide_recon = {
 	&gibbs_fe2o3
 };
 
+static const GibbsSpecies species_sio2_slag = {
+	"SiO2", "slag_pragmatic_2026",
+	2, elements_sio2, stoich_sio2,
+	&gibbs_sio2_slag
+};
+
+static const GibbsSpecies species_fe2sio4_slag = {
+	"Fe2SiO4", "slag_pragmatic_2026",
+	3, elements_fe2sio4, stoich_fe2sio4,
+	&gibbs_fe2sio4_slag
+};
+
+static const GibbsSpecies species_fe2sio4_hidayat_2017 = {
+	"Fe2SiO4", "hidayat_2017_feo_fe2o3_sio2",
+	3, elements_fe2sio4, stoich_fe2sio4,
+	&gibbs_fe2sio4_hidayat_2017
+};
+
 static const GibbsSpeciesEntry entries[] = {
 	{"Fe_bcc", &species_fe_bcc},
 	{"Fe_bcc", &species_fe_bcc_feoxide_recon},
@@ -219,7 +270,13 @@ static const GibbsSpeciesEntry entries[] = {
 	{"Fe3O4", &species_fe3o4},
 	{"Fe3O4", &species_fe3o4_feoxide_recon},
 	{"Fe2O3", &species_fe2o3},
-	{"Fe2O3", &species_fe2o3_feoxide_recon}
+	{"Fe2O3", &species_fe2o3_feoxide_recon},
+	{"SiO2", &species_sio2_slag},
+	{"quartz", &species_sio2_slag},
+	{"Fe2SiO4", &species_fe2sio4_slag},
+	{"fayalite", &species_fe2sio4_slag},
+	{"Fe2SiO4", &species_fe2sio4_hidayat_2017},
+	{"fayalite", &species_fe2sio4_hidayat_2017}
 };
 
 const GibbsSpecies *gibbs_species_lookup(const char *name, const char *source){

@@ -1,4 +1,7 @@
-import gtk, gtk.glade, pango, gobject, re, os
+import os
+import re
+
+from gtkcompat import gtk, gobject, pango
 
 class UnitsDialog:
 
