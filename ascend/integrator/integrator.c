@@ -457,8 +457,12 @@ IntegratorSystem *integrator_new(slv_system_t slvsys, struct Instance *inst){
 	sys->ydot = NULL;
 	sys->obs = NULL;
 	sys->observed_instances = NULL;
+	sys->sensitivity_parameters = NULL;
+	sys->observation_sensitivities = NULL;
 	sys->n_y = 0;
 	sys->n_observed_instances = 0;
+	sys->n_sensitivity_parameters = 0;
+	sys->n_sensitivity_observations = 0;
 	sys->initial_mode_prepared = 0;
 	return sys;
 }
@@ -491,6 +495,8 @@ void integrator_free(IntegratorSystem *sys){
 	if(sys->ydot != NULL)ASC_FREE(sys->ydot);
 	if(sys->obs != NULL)ASC_FREE(sys->obs);
 	if(sys->observed_instances != NULL)ASC_FREE(sys->observed_instances);
+	if(sys->sensitivity_parameters != NULL)ASC_FREE(sys->sensitivity_parameters);
+	if(sys->observation_sensitivities != NULL)ASC_FREE(sys->observation_sensitivities);
 
 	slv_destroy_parms(&(sys->params));
 
@@ -2468,6 +2474,121 @@ int integrator_get_observation_value(IntegratorSystem *sys, const long i, struct
 	}
 	inst = integrator_get_observed_instance(sys, i);
 	return integrator_instance_value(inst, value);
+}
+
+
+int integrator_set_sensitivity_parameters(IntegratorSystem *sys, struct Instance **instances, int n){
+	int i;
+	asc_assert(sys != NULL);
+
+	if(sys->sensitivity_parameters != NULL){
+		ASC_FREE(sys->sensitivity_parameters);
+		sys->sensitivity_parameters = NULL;
+		sys->n_sensitivity_parameters = 0;
+	}
+	integrator_clear_observation_sensitivities(sys);
+
+	if(instances == NULL || n <= 0){
+		return 0;
+	}
+
+	sys->sensitivity_parameters = ASC_NEW_ARRAY(struct Instance *, n);
+	if(sys->sensitivity_parameters == NULL){
+		return 1;
+	}
+	for(i = 0; i < n; ++i){
+		sys->sensitivity_parameters[i] = instances[i];
+	}
+	sys->n_sensitivity_parameters = n;
+	return 0;
+}
+
+int integrator_get_num_sensitivity_parameters(IntegratorSystem *sys){
+	asc_assert(sys != NULL);
+	return sys->n_sensitivity_parameters;
+}
+
+struct Instance *integrator_get_sensitivity_parameter(IntegratorSystem *sys, const long i){
+	asc_assert(sys != NULL);
+	asc_assert(i >= 0);
+	asc_assert(i < sys->n_sensitivity_parameters);
+	return sys->sensitivity_parameters[i];
+}
+
+void integrator_clear_observation_sensitivities(IntegratorSystem *sys){
+	if(sys == NULL){
+		return;
+	}
+	if(sys->observation_sensitivities != NULL){
+		ASC_FREE(sys->observation_sensitivities);
+		sys->observation_sensitivities = NULL;
+	}
+	sys->n_sensitivity_observations = 0;
+}
+
+int integrator_set_observation_sensitivities(IntegratorSystem *sys, const double *values, int nobs, int nparams){
+	int i, nvalues;
+	asc_assert(sys != NULL);
+
+	integrator_clear_observation_sensitivities(sys);
+	if(values == NULL || nobs <= 0 || nparams <= 0){
+		return 0;
+	}
+	if(nparams != sys->n_sensitivity_parameters){
+		return 1;
+	}
+
+	nvalues = nobs * nparams;
+	sys->observation_sensitivities = ASC_NEW_ARRAY(double, nvalues);
+	if(sys->observation_sensitivities == NULL){
+		return 2;
+	}
+	for(i = 0; i < nvalues; ++i){
+		sys->observation_sensitivities[i] = values[i];
+	}
+	sys->n_sensitivity_observations = nobs;
+	return 0;
+}
+
+int integrator_get_num_sensitivity_observations(IntegratorSystem *sys){
+	asc_assert(sys != NULL);
+	return sys->n_sensitivity_observations;
+}
+
+int integrator_get_observation_sensitivity(IntegratorSystem *sys, const long obs_i, const long param_i, double *value){
+	long offset;
+	if(sys == NULL || value == NULL){
+		return 1;
+	}
+	if(sys->observation_sensitivities == NULL){
+		return 2;
+	}
+	if(obs_i < 0 || obs_i >= sys->n_sensitivity_observations){
+		return 3;
+	}
+	if(param_i < 0 || param_i >= sys->n_sensitivity_parameters){
+		return 4;
+	}
+	offset = obs_i * sys->n_sensitivity_parameters + param_i;
+	*value = sys->observation_sensitivities[offset];
+	return 0;
+}
+
+double *integrator_get_observation_sensitivities(IntegratorSystem *sys, double *values){
+	int i, nvalues;
+	asc_assert(sys != NULL);
+
+	nvalues = sys->n_sensitivity_observations * sys->n_sensitivity_parameters;
+	if(nvalues <= 0 || sys->observation_sensitivities == NULL){
+		return NULL;
+	}
+	if(values == NULL){
+		values = ASC_NEW_ARRAY(double, nvalues);
+	}
+	for(i = 0; i < nvalues; ++i){
+		values[i] = sys->observation_sensitivities[i];
+	}
+	return values;
 }
 
 /**

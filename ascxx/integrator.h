@@ -69,7 +69,12 @@ public:
 	void addObservedInstance(const Instanc &inst);
 	long getNumObservedItems();
 	Instanc getObservedInstance(const long &i);
+	void clearSensitivityParameters();
+	void addSensitivityParameter(const Instanc &inst);
+	long getNumSensitivityParameters();
+	Instanc getSensitivityParameter(const long &i);
 	std::vector<double> getCurrentObservations();
+	std::vector<std::vector<double> > getCurrentObservationSensitivities();
 	void saveObservations();
 	std::vector<std::vector<double> > getObservations();
 	Variable getObservedVariable(const long &i);
@@ -96,6 +101,7 @@ private:
 	SampleList *samplelist;
 	IntegratorSystem *blsys;
 	std::vector<struct Instance *> observed_instances;
+	std::vector<struct Instance *> sensitivity_parameters;
 	std::vector<std::vector<double> > obs;
 };
 

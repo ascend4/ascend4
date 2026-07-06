@@ -20,6 +20,7 @@
 
 #define TESTS(T) \
 	T(ida) \
+	T(idas) \
 	T(lsode)
 
 #define PROTO_INTEG(NAME) PROTO(integrator,NAME)
@@ -33,4 +34,3 @@ TESTS(PROTO_INTEG)
 	}
 
 REGISTER_SUITE(integrator,TESTS)
-

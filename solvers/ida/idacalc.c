@@ -157,6 +157,11 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	}
 
 	/* pass the values of everything back to the compiler */
+#ifdef ASC_IDA_BACKEND_IDAS
+	if(integrator_ida_sens_sync(integ)){
+		return -1;
+	}
+#endif
 	integrator_set_t(integ, (double)tt);
 	integrator_set_y(integ, NV_DATA_S(yy));
 	integrator_set_ydot(integ, NV_DATA_S(yp));

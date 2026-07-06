@@ -25,6 +25,12 @@
 #include "ida.h"
 #include <ascend/integrator/integrator.h>
 
+#ifdef ASC_IDA_BACKEND_IDAS
+# define ASC_INTEG_ENGINE_IS_IDA_FAMILY(integ) ((integ)->engine == INTEG_IDA || (integ)->engine == INTEG_IDAS)
+#else
+# define ASC_INTEG_ENGINE_IS_IDA_FAMILY(integ) ((integ)->engine == INTEG_IDA)
+#endif
+
 /* forward dec needed for IntegratorIdaPrecFreeFn */
 struct IntegratorIdaDataStruct;
 
@@ -67,6 +73,17 @@ typedef struct IntegratorIdaDataStruct{
 	int event_times_count;           /**< number of valid entries currently stored */
 	int event_times_next;            /**< next ring-buffer slot to overwrite */
 
+#ifdef ASC_IDA_BACKEND_IDAS
+	realtype *sens_p;                /**< IDAS parameter vector for forward sensitivities */
+	realtype *sens_p_nominal;        /**< nominal parameter values to restore into ASCEND instances */
+	realtype *sens_pbar;             /**< IDAS parameter scales for difference quotient sensitivities */
+	int *sens_plist;                 /**< IDAS sensitivity-parameter index mapping */
+	N_Vector *sens_y;                /**< IDAS state sensitivity vectors */
+	N_Vector *sens_yp;               /**< IDAS derivative sensitivity vectors */
+	int sens_np;                     /**< number of configured sensitivity parameters */
+	int sens_enabled;                /**< whether IDAS sensitivities were initialized */
+#endif
+
 	/* Error flag look-up data */
 	IdaFlagFn *flagfn;
 	IdaFlagNameFn *flagnamefn;
@@ -87,5 +104,13 @@ typedef struct IntegratorIdaDataStruct{
 	from within the IDA IntegratorSystem object.
 */
 IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *integ);
+
+#ifdef ASC_IDA_BACKEND_IDAS
+int integrator_ida_sens_setup(IntegratorSystem *integ, void *ida_mem, N_Vector y0);
+void integrator_ida_sens_free(IntegratorIdaData *enginedata);
+void integrator_ida_sens_restore(IntegratorSystem *integ);
+int integrator_ida_sens_sync(IntegratorSystem *integ);
+int integrator_ida_sens_record(IntegratorSystem *integ, void *ida_mem, realtype tret);
+#endif
 
 #endif

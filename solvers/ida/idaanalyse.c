@@ -733,7 +733,7 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 	char *varname;
 #endif
 
-	asc_assert(integ->engine==INTEG_IDA);
+	asc_assert(ASC_INTEG_ENGINE_IS_IDA_FAMILY(integ));
 
 	MSG("System contains a total of %d bnds and %d rels"
 		,slv_get_num_solvers_bnds(integ->system)

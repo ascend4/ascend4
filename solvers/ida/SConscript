@@ -48,6 +48,8 @@ int main(void){
 }
 """
 
+idas_test_text = ida_test_text.replace('<ida/ida.h>', '<idas/idas.h>').replace('<ida/ida_ls.h>', '<idas/idas_ls.h>')
+
 def _as_list(value):
 	if value is None:
 		return []
@@ -55,8 +57,8 @@ def _as_list(value):
 		return list(value)
 	return [value]
 
-def _default_sundials_libs(major):
-	libs = ['sundials_ida', 'sundials_nvecserial']
+def _default_sundials_libs(major, backend='ida'):
+	libs = ['sundials_%s' % backend, 'sundials_nvecserial']
 	if major >= 5:
 		core_lib = 'sundials_generic'
 		if major >= 7:
@@ -160,20 +162,31 @@ def CheckSUNDIALSVersion(context):
 		context.Result('%s (bad version)' % output.strip())
 		return False
 
-	context.env.AppendUnique(SUNDIALS_LIBS=_default_sundials_libs(major))
 	context.Result('%d.%d.%d, good' % (major, minor, patch))
 	return True
 
-def CheckIDA(context):
-	context.Message('Checking for IDA... ')
+def _check_sundials_dae_backend(context, name, test_text):
+	context.Message('Checking for %s... ' % name)
+	orig_cpppath = list(_as_list(context.env.get('CPPPATH')))
+	orig_libpath = list(_as_list(context.env.get('LIBPATH')))
+	orig_libs = list(_as_list(context.env.get('LIBS')))
 	context.env.AppendUnique(CPPPATH=context.env.get('SUNDIALS_CPPPATH_EXTRA') or [])
 	context.env.AppendUnique(CPPPATH=context.env.get('SUNDIALS_MPI_CPPPATH') or [])
 	context.env.AppendUnique(LIBPATH=context.env.get('SUNDIALS_MPI_LIBPATH') or [])
 	context.env.AppendUnique(LIBS=context.env.get('SUNDIALS_LIBS') or [])
 	context.env.AppendUnique(LIBS=context.env.get('SUNDIALS_MPI_LIBS') or [])
-	is_ok = context.TryLink(ida_test_text, '.c')
+	is_ok = context.TryLink(test_text, '.c')
+	context.env['CPPPATH'] = orig_cpppath
+	context.env['LIBPATH'] = orig_libpath
+	context.env['LIBS'] = orig_libs
 	context.Result(is_ok)
 	return is_ok
+
+def CheckIDA(context):
+	return _check_sundials_dae_backend(context, 'IDA', ida_test_text)
+
+def CheckIDAS(context):
+	return _check_sundials_dae_backend(context, 'IDAS', idas_test_text)
 
 if env.get('WITH_IDA'):
 	solver_env = env.Clone()
@@ -198,13 +211,24 @@ if env.get('WITH_IDA'):
 	conf = solver_env.Configure(custom_tests={
 		'CheckSUNDIALSVersion': CheckSUNDIALSVersion,
 		'CheckIDA': CheckIDA,
+		'CheckIDAS': CheckIDAS,
 	})
 	if not conf.CheckSUNDIALSVersion():
 		conf.env['WITH_IDA'] = False
 		ida_reason = 'SUNDIALS not found, or bad version'
-	elif not conf.CheckIDA():
-		conf.env['WITH_IDA'] = False
-		ida_reason = 'Unable to compile/link against SUNDIALS/IDA'
+	else:
+		major = conf.env['SUNDIALS_VERSION_MAJOR']
+		conf.env['SUNDIALS_LIBS'] = _default_sundials_libs(major, 'idas')
+		if conf.CheckIDAS():
+			conf.env['SUNDIALS_DAE_BACKEND'] = 'idas'
+			conf.env.AppendUnique(CPPDEFINES=['ASC_IDA_BACKEND_IDAS'])
+		else:
+			conf.env['SUNDIALS_LIBS'] = _default_sundials_libs(major, 'ida')
+			if conf.CheckIDA():
+				conf.env['SUNDIALS_DAE_BACKEND'] = 'ida'
+			else:
+				conf.env['WITH_IDA'] = False
+				ida_reason = 'Unable to compile/link against SUNDIALS IDAS or IDA'
 	solver_env = conf.Finish()
 
 	env.set_optional('ida', active=solver_env['WITH_IDA'], reason=ida_reason)

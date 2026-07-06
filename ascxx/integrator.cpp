@@ -119,6 +119,39 @@ Integrator::getObservedInstance(const long &i){
 	return Instanc(inst);
 }
 
+
+void
+Integrator::clearSensitivityParameters(){
+	sensitivity_parameters.clear();
+	if(integrator_set_sensitivity_parameters(blsys, NULL, 0)){
+		throw runtime_error("Failed to clear sensitivity parameters");
+	}
+}
+
+void
+Integrator::addSensitivityParameter(const Instanc &inst){
+	std::vector<struct Instance *> raw;
+	sensitivity_parameters.push_back(inst.getInternalType());
+	raw = sensitivity_parameters;
+	if(integrator_set_sensitivity_parameters(blsys, raw.empty() ? NULL : &raw[0], (int)raw.size())){
+		throw runtime_error("Failed to set sensitivity parameters");
+	}
+}
+
+long
+Integrator::getNumSensitivityParameters(){
+	return integrator_get_num_sensitivity_parameters(blsys);
+}
+
+Instanc
+Integrator::getSensitivityParameter(const long &i){
+	struct Instance *inst = integrator_get_sensitivity_parameter(blsys, i);
+	if(inst == NULL){
+		throw runtime_error("Sensitivity parameter is null");
+	}
+	return Instanc(inst);
+}
+
 /**
 	Find the independent variable in the system, or throw an exception if not found.
 */
@@ -308,6 +341,29 @@ Integrator::getCurrentObservations(){
 	vector<double> v=vector<double>(d,d+getNumObservedVars());
 	ASC_FREE(d);
 	return v;
+}
+
+
+vector<vector<double> >
+Integrator::getCurrentObservationSensitivities(){
+	int nobs = integrator_get_num_sensitivity_observations(blsys);
+	int nparams = integrator_get_num_sensitivity_parameters(blsys);
+	vector<vector<double> > matrix;
+	double *values;
+	if(nobs <= 0 || nparams <= 0){
+		return matrix;
+	}
+	values = integrator_get_observation_sensitivities(blsys, NULL);
+	if(values == NULL){
+		return matrix;
+	}
+	matrix.reserve((unsigned long)nobs);
+	for(int i = 0; i < nobs; ++i){
+		vector<double> row(values + i * nparams, values + (i + 1) * nparams);
+		matrix.push_back(row);
+	}
+	ASC_FREE(values);
+	return matrix;
 }
 
 void

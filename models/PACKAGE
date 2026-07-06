@@ -63,6 +63,7 @@ splitter.a4l
 
 # -- MECHANICAL ENGINEERING --
 twinslabs.a4c
+twinslabs_der.a4c
 
 # -- BASIC EXAMPLES --
 roots_of_poly.a4c

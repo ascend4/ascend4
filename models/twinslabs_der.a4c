@@ -1,0 +1,178 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+(*
+    Current-syntax version of twinslabs.a4c.
+
+    The physical problem and parameter values are the same as the legacy
+    example, but the dynamic equations use der(T_1) and der(T_2) directly
+    instead of declared derivative variables plus ode_type/ode_id metadata.
+
+    Lumped capacity heat transfer problem from p. 199 ff of Lienhard &
+    Lienhard, "A Heat Transfer Textbook" 3rd Ed. The problem has an analytical
+    solution, so it is useful as a compact dynamic-solver smoke test.
+*)
+MODEL twinslabs_der;
+    T_1 IS_A temperature;
+    T_2 IS_A temperature;
+    T_inf IS_A temperature;
+
+    rhocV_1 IS_A heat_capacity;
+    rhocV_2 IS_A heat_capacity;
+
+    slab_1: -rhocV_1 * der(T_1) = h_c * A * (T_1 - T_2);
+    slab_2: -rhocV_2 * der(T_2) = hbar * A * (T_2 - T_inf) - h_c * A * (T_1 - T_2);
+
+    h_c IS_A heat_transfer_coefficient;
+    hbar IS_A heat_transfer_coefficient;
+    A IS_A area;
+
+    t IS_A time;
+    INDEPENDENT t;
+
+METHODS
+    METHOD specify;
+        FIX rhocV_1, rhocV_2;
+        FIX T_inf;
+        FIX h_c, hbar, A;
+        FIX t;
+        FREE T_1, T_2;
+        FREE der(T_1), der(T_2);
+    END specify;
+
+    METHOD values;
+        rhocV_1 := 1000 {kg/m^3} * 1.0 {kJ/kg/K} * 0.05 {m^3};
+        rhocV_2 := 1000 {kg/m^3} * 1.0 {kJ/kg/K} * 0.05 {m^3};
+        A := 1.0 {m^2};
+        h_c := 5 {W/m^2/K};
+        hbar := 20 {W/m^2/K};
+
+        (* initial values: a cool double-wall on a hot day *)
+        T_1 := 290 {K};
+        T_2 := 285 {K};
+        T_inf := 313 {K};
+        t := 0 {s};
+
+        (* Default observation metadata for GUI and legacy reporter paths. *)
+        T_1.obs_id := 1;
+        T_2.obs_id := 2;
+    END values;
+
+    METHOD on_load;
+        RUN reset;
+        RUN specify;
+        RUN values;
+        OBSERVE T_1, T_2;
+        INTEGRATOR IDA;
+        INTEGRATE FROM 0 {s} TO 10 {h} STEPS 100;
+    END on_load;
+END twinslabs_der;
+
+MODEL twinslabs_der_exact;
+    T_1 IS_A solver_var;
+    T_2 IS_A solver_var;
+    h_c IS_A solver_var;
+    hbar IS_A solver_var;
+    C IS_A solver_var;
+    T_inf IS_A solver_var;
+    theta_10 IS_A solver_var;
+    theta_20 IS_A solver_var;
+    t IS_A solver_var;
+
+    t1_exact:
+        T_1 = T_inf
+            + (
+                (theta_20
+                    - (1
+                        + ((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                    ) * theta_10
+                ) / (
+                    (1
+                        + ((-(2*(h_c/C) + (hbar/C)) + sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                    )
+                    - (1
+                        + ((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                    )
+                )
+              ) * exp(((-(2*(h_c/C) + (hbar/C)) + sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2) * t)
+            + (
+                theta_10
+                - (
+                    (theta_20
+                        - (1
+                            + ((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                        ) * theta_10
+                    ) / (
+                        (1
+                            + ((-(2*(h_c/C) + (hbar/C)) + sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                        )
+                        - (1
+                            + ((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                        )
+                    )
+                  )
+              ) * exp(((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2) * t);
+
+    t2_exact:
+        T_2 = T_inf
+            + (
+                (theta_20
+                    - (1
+                        + ((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                    ) * theta_10
+                ) / (
+                    (1
+                        + ((-(2*(h_c/C) + (hbar/C)) + sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                    )
+                    - (1
+                        + ((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                    )
+                )
+              )
+              * (1 + ((-(2*(h_c/C) + (hbar/C)) + sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C))
+              * exp(((-(2*(h_c/C) + (hbar/C)) + sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2) * t)
+            + (
+                theta_10
+                - (
+                    (theta_20
+                        - (1
+                            + ((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                        ) * theta_10
+                    ) / (
+                        (1
+                            + ((-(2*(h_c/C) + (hbar/C)) + sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                        )
+                        - (1
+                            + ((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C)
+                        )
+                    )
+                  )
+              )
+              * (1 + ((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2)/(h_c/C))
+              * exp(((-(2*(h_c/C) + (hbar/C)) - sqrt(4*(h_c/C)^2 + (hbar/C)^2))/2) * t);
+
+METHODS
+    METHOD specify;
+        FIX h_c, hbar, C, T_inf, theta_10, theta_20, t;
+        FREE T_1, T_2;
+    END specify;
+
+    METHOD values;
+        C := 50000;
+        h_c := 5;
+        hbar := 20;
+        T_inf := 313;
+        theta_10 := -23;
+        theta_20 := -28;
+        t := 36000;
+        T_1 := 311.20729990233895;
+        T_2 := 312.5768007667359;
+    END values;
+
+    METHOD on_load;
+        RUN reset;
+        RUN specify;
+        RUN values;
+    END on_load;
+END twinslabs_der_exact;

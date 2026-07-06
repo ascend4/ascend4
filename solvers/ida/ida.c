@@ -55,6 +55,7 @@
 #include <ascend/utilities/error.h>
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/panic.h>
+#include <ascend/compiler/atomvalue.h>
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/compiler/packages.h>
 
@@ -125,6 +126,14 @@ static const IntegratorInternals integrator_ida_internals = {
 		integrator_ida_write_matrix, integrator_ida_debug, integrator_ida_free,
 		INTEG_IDA, "IDA" };
 
+#ifdef ASC_IDA_BACKEND_IDAS
+static const IntegratorInternals integrator_idas_internals = {
+		integrator_ida_create, integrator_ida_params_default,
+		integrator_ida_analyse, integrator_ida_initialise, integrator_ida_solve,
+		integrator_ida_write_matrix, integrator_ida_debug, integrator_ida_free,
+		INTEG_IDAS, "IDAS" };
+#endif
+
 /**
  This function is accessed by libascend when loading this solver. The
  function will register the integrator such that it can then be applied
@@ -136,6 +145,13 @@ extern ASC_EXPORT int ida_register(void) {
 		return 1;
 	}
 	integrator_register_version("IDA",integrator_ida_get_version);
+#ifdef ASC_IDA_BACKEND_IDAS
+	MSG("Registering IDAS...");
+	if(integrator_register(&integrator_idas_internals)){
+		return 1;
+	}
+	integrator_register_version("IDAS",integrator_ida_get_version);
+#endif
 	return 0;
 }
 
@@ -180,6 +196,16 @@ static void integrator_ida_create(IntegratorSystem *integ) {
 	enginedata->event_times_cap = 0;
 	enginedata->event_times_count = 0;
 	enginedata->event_times_next = 0;
+#ifdef ASC_IDA_BACKEND_IDAS
+	enginedata->sens_p = NULL;
+	enginedata->sens_p_nominal = NULL;
+	enginedata->sens_pbar = NULL;
+	enginedata->sens_plist = NULL;
+	enginedata->sens_y = NULL;
+	enginedata->sens_yp = NULL;
+	enginedata->sens_np = 0;
+	enginedata->sens_enabled = 0;
+#endif
 	enginedata->vfilter.matchbits = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE
 			| VAR_FIXED;
 	enginedata->vfilter.matchvalue = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE | 0;
@@ -241,6 +267,9 @@ static void integrator_ida_free(void *enginedata) {
 		ASC_FREE(d->event_times);
 		d->event_times = NULL;
 	}
+#ifdef ASC_IDA_BACKEND_IDAS
+	integrator_ida_sens_free(d);
+#endif
 
 #if SUNDIALS_VERSION_MAJOR >= 5
 	if(d->linear_solver != NULL){
@@ -289,10 +318,268 @@ IntegratorIdaData *integrator_ida_enginedata(IntegratorSystem *integ) {
 	IntegratorIdaData *d;
 	assert(integ!=NULL);
 	assert(integ->enginedata!=NULL);
-	assert(integ->engine==INTEG_IDA);
+	assert(ASC_INTEG_ENGINE_IS_IDA_FAMILY(integ));
 	d = ((IntegratorIdaData *) (integ->enginedata));
 	return d;
 }
+
+#ifdef ASC_IDA_BACKEND_IDAS
+void integrator_ida_sens_free(IntegratorIdaData *enginedata){
+	if(enginedata == NULL){
+		return;
+	}
+	if(enginedata->sens_y != NULL){
+		N_VDestroyVectorArray(enginedata->sens_y, enginedata->sens_np);
+		enginedata->sens_y = NULL;
+	}
+	if(enginedata->sens_yp != NULL){
+		N_VDestroyVectorArray(enginedata->sens_yp, enginedata->sens_np);
+		enginedata->sens_yp = NULL;
+	}
+	if(enginedata->sens_p != NULL){
+		ASC_FREE(enginedata->sens_p);
+		enginedata->sens_p = NULL;
+	}
+	if(enginedata->sens_p_nominal != NULL){
+		ASC_FREE(enginedata->sens_p_nominal);
+		enginedata->sens_p_nominal = NULL;
+	}
+	if(enginedata->sens_pbar != NULL){
+		ASC_FREE(enginedata->sens_pbar);
+		enginedata->sens_pbar = NULL;
+	}
+	if(enginedata->sens_plist != NULL){
+		ASC_FREE(enginedata->sens_plist);
+		enginedata->sens_plist = NULL;
+	}
+	enginedata->sens_np = 0;
+	enginedata->sens_enabled = 0;
+}
+
+static int integrator_ida_sens_parameter_valid(IntegratorSystem *integ,
+		struct Instance *inst){
+	int i;
+	if(inst == NULL){
+		return 0;
+	}
+	switch(InstanceKind(inst)){
+	case REAL_INST:
+	case REAL_ATOM_INST:
+		break;
+	default:
+		return 0;
+	}
+	if(!AtomAssigned(inst)){
+		return 0;
+	}
+	for(i = 0; i < integ->n_y; ++i){
+		if(integ->y[i] != NULL && var_instance(integ->y[i]) == inst){
+			return 0;
+		}
+		if(integ->ydot[i] != NULL && var_instance(integ->ydot[i]) == inst){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+int integrator_ida_sens_sync(IntegratorSystem *integ){
+	IntegratorIdaData *enginedata;
+	int i;
+	if(integ == NULL || integ->engine != INTEG_IDAS){
+		return 0;
+	}
+	enginedata = integrator_ida_enginedata(integ);
+	if(!enginedata->sens_enabled || enginedata->sens_p == NULL){
+		return 0;
+	}
+	for(i = 0; i < enginedata->sens_np; ++i){
+		struct Instance *inst = integrator_get_sensitivity_parameter(integ, i);
+		SetRealAtomValue(inst, enginedata->sens_p[i], 0);
+	}
+	return 0;
+}
+
+void integrator_ida_sens_restore(IntegratorSystem *integ){
+	IntegratorIdaData *enginedata;
+	int i;
+	if(integ == NULL || integ->engine != INTEG_IDAS){
+		return;
+	}
+	enginedata = integrator_ida_enginedata(integ);
+	if(!enginedata->sens_enabled || enginedata->sens_p_nominal == NULL){
+		return;
+	}
+	for(i = 0; i < enginedata->sens_np; ++i){
+		struct Instance *inst = integrator_get_sensitivity_parameter(integ, i);
+		enginedata->sens_p[i] = enginedata->sens_p_nominal[i];
+		SetRealAtomValue(inst, enginedata->sens_p_nominal[i], 0);
+	}
+}
+
+int integrator_ida_sens_setup(IntegratorSystem *integ, void *ida_mem, N_Vector y0){
+	IntegratorIdaData *enginedata;
+	int i, flag, nparams;
+
+	asc_assert(integ != NULL);
+	enginedata = integrator_ida_enginedata(integ);
+	integrator_ida_sens_free(enginedata);
+	integrator_clear_observation_sensitivities(integ);
+
+	nparams = integrator_get_num_sensitivity_parameters(integ);
+	if(nparams <= 0){
+		return 0;
+	}
+	if(integ->engine != INTEG_IDAS){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,
+				"Sensitivity parameters were configured, but the active integrator is not IDAS");
+		return 0;
+	}
+	if(enginedata->nroots > 0){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"IDAS sensitivities are not yet supported for event-handling models");
+		return 1;
+	}
+
+	enginedata->sens_np = nparams;
+	enginedata->sens_p = ASC_NEW_ARRAY(realtype, nparams);
+	enginedata->sens_p_nominal = ASC_NEW_ARRAY(realtype, nparams);
+	enginedata->sens_pbar = ASC_NEW_ARRAY(realtype, nparams);
+	enginedata->sens_plist = ASC_NEW_ARRAY(int, nparams);
+	enginedata->sens_y = N_VCloneVectorArray(nparams, y0);
+	enginedata->sens_yp = N_VCloneVectorArray(nparams, y0);
+	if(enginedata->sens_p == NULL || enginedata->sens_p_nominal == NULL
+			|| enginedata->sens_pbar == NULL || enginedata->sens_plist == NULL
+			|| enginedata->sens_y == NULL || enginedata->sens_yp == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Unable to allocate IDAS sensitivity data");
+		integrator_ida_sens_free(enginedata);
+		return 2;
+	}
+
+	for(i = 0; i < nparams; ++i){
+		struct Instance *inst = integrator_get_sensitivity_parameter(integ, i);
+		realtype pval;
+		if(!integrator_ida_sens_parameter_valid(integ, inst)){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,
+					"IDAS sensitivity parameters must be assigned real scalar inputs outside the DAE state vector");
+			integrator_ida_sens_free(enginedata);
+			return 3;
+		}
+		pval = RealAtomValue(inst);
+		enginedata->sens_p[i] = pval;
+		enginedata->sens_p_nominal[i] = pval;
+		enginedata->sens_pbar[i] = fmax(fabs(pval), 1.0);
+		enginedata->sens_plist[i] = i;
+		N_VConst(0.0, enginedata->sens_y[i]);
+		N_VConst(0.0, enginedata->sens_yp[i]);
+	}
+
+	flag = IDASensInit(ida_mem, nparams, IDA_STAGGERED, NULL,
+			enginedata->sens_y, enginedata->sens_yp);
+	if(flag != IDA_SUCCESS){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Failed to initialise IDAS sensitivities (IDASensInit error %d)", flag);
+		integrator_ida_sens_free(enginedata);
+		return 4;
+	}
+
+	flag = IDASetSensParams(ida_mem, enginedata->sens_p,
+			enginedata->sens_pbar, enginedata->sens_plist);
+	if(flag != IDA_SUCCESS){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Failed to set IDAS sensitivity parameters (IDASetSensParams error %d)", flag);
+		integrator_ida_sens_free(enginedata);
+		return 5;
+	}
+
+	flag = IDASensEEtolerances(ida_mem);
+	if(flag != IDA_SUCCESS){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Failed to set IDAS sensitivity tolerances (IDASensEEtolerances error %d)", flag);
+		integrator_ida_sens_free(enginedata);
+		return 6;
+	}
+
+	enginedata->sens_enabled = 1;
+	return 0;
+}
+
+static int integrator_ida_sens_state_index(IntegratorSystem *integ,
+		struct Instance *inst){
+	int i;
+	if(inst == NULL){
+		return -1;
+	}
+	for(i = 0; i < integ->n_y; ++i){
+		if(integ->y[i] != NULL && var_instance(integ->y[i]) == inst){
+			return i;
+		}
+	}
+	return -1;
+}
+
+int integrator_ida_sens_record(IntegratorSystem *integ, void *ida_mem,
+		realtype tret){
+	IntegratorIdaData *enginedata;
+	realtype tsens;
+	double *matrix;
+	int i, j, row, nobs, nparams, nvalues, flag;
+
+	if(integ == NULL || integ->engine != INTEG_IDAS){
+		return 0;
+	}
+	enginedata = integrator_ida_enginedata(integ);
+	if(!enginedata->sens_enabled){
+		return 0;
+	}
+
+	flag = IDAGetSens(ida_mem, &tsens, enginedata->sens_y);
+	if(flag != IDA_SUCCESS){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Failed to retrieve IDAS sensitivities at t = %g (IDAGetSens error %d)",
+				(double)tret, flag);
+		return 1;
+	}
+
+	nobs = integrator_get_num_observed_instances(integ);
+	nparams = enginedata->sens_np;
+	if(nobs <= 0 || nparams <= 0){
+		integrator_clear_observation_sensitivities(integ);
+		return 0;
+	}
+	nvalues = nobs * nparams;
+	matrix = ASC_NEW_ARRAY(double, nvalues);
+	if(matrix == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Unable to allocate observation sensitivity matrix");
+		return 2;
+	}
+	for(i = 0; i < nvalues; ++i){
+		matrix[i] = NAN;
+	}
+	for(row = 0; row < nobs; ++row){
+		struct Instance *obs = integrator_get_observed_instance(integ, row);
+		int state_index = integrator_ida_sens_state_index(integ, obs);
+		if(state_index < 0){
+			continue;
+		}
+		for(j = 0; j < nparams; ++j){
+			matrix[row * nparams + j] = NV_Ith_S(enginedata->sens_y[j], state_index);
+		}
+	}
+
+	if(integrator_set_observation_sensitivities(integ, matrix, nobs, nparams)){
+		ASC_FREE(matrix);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+				"Failed to store observation sensitivity matrix");
+		return 3;
+	}
+	ASC_FREE(matrix);
+	(void)tsens;
+	return 0;
+}
+#endif
 
 /*-------------------------------------------------------------
  PARAMETERS FOR IDA
@@ -328,7 +615,7 @@ enum ida_parameters {
  */
 static int integrator_ida_params_default(IntegratorSystem *integ) {
 	asc_assert(integ!=NULL);
-	asc_assert(integ->engine==INTEG_IDA);
+	asc_assert(ASC_INTEG_ENGINE_IS_IDA_FAMILY(integ));
 	slv_parameters_t *p;
 	p = &(integ->params);
 
@@ -1110,6 +1397,7 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 		realtype tout1) {
 	realtype t0;
 	N_Vector y0, yp0;
+	int status = 0;
 
 	y0 	= ida_bnd_new_zero_NV(integ, integ->n_y);
 	yp0 = ida_bnd_new_zero_NV(integ, integ->n_y);
@@ -1133,21 +1421,38 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 #endif
 
 	/* allocate internal memory  */
-	ida_malloc(integ, ida_mem, t0, y0, yp0);
+	status = ida_malloc(integ, ida_mem, t0, y0, yp0);
+	if(status != 0){
+		goto cleanup;
+	}
 
 	/* set optional inputs... */
-	ida_set_optional_inputs(integ, ida_mem, y0);
+	status = ida_set_optional_inputs(integ, ida_mem, y0);
+	if(status != 0){
+		goto cleanup;
+	}
 
 	/* calculate initial conditions */
-	ida_setup_IC(integ, ida_mem, tout1, t0, y0, yp0);
+	status = ida_setup_IC(integ, ida_mem, tout1, t0, y0, yp0);
+	if(status != 0){
+		goto cleanup;
+	}
+
+#ifdef ASC_IDA_BACKEND_IDAS
+	status = integrator_ida_sens_setup(integ, ida_mem, y0);
+	if(status != 0){
+		goto cleanup;
+	}
+#endif
 
 	/* specify ROOT-FINDING problem (if necessary) */
 	ida_root_init(integ, ida_mem);
 
 	/* Clean up */
+cleanup:
 	N_VDestroy_Serial(y0);
 	N_VDestroy_Serial(yp0);
-	return 0;
+	return status;
 }
 
 /**
@@ -1278,7 +1583,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	/* Setup parameter inputs and initial conditions for IDA. */
 	tout = samplelist_get(integ->samples, start_index + 1);
-	ida_prepare_integrator(integ, ida_mem, tout);
+	statuscode = ida_prepare_integrator(integ, ida_mem, tout);
+	if(statuscode != 0){
+		goto ida_cleanup;
+	}
 
 
 
@@ -1333,6 +1641,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 #endif
 
 				flag = IDASolve(ida_mem, tout, &tret, yret, ypret, IDA_NORMAL);
+#ifdef ASC_IDA_BACKEND_IDAS
+				integrator_ida_sens_restore(integ);
+#endif
 #ifdef ASC_SIGNAL_TRAPS
 			} else {
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Caught interrupt");
@@ -1485,6 +1796,13 @@ root_cleanup:
 			integrator_set_t(integ, (double) tret);
 			integrator_set_y(integ, NV_DATA_S(yret));
 			integrator_set_ydot(integ, NV_DATA_S(ypret));
+#ifdef ASC_IDA_BACKEND_IDAS
+			if(flag >= 0 && integrator_ida_sens_record(integ, ida_mem, tret)){
+				statuscode = 1;
+				goto ida_cleanup;
+			}
+			integrator_ida_sens_restore(integ);
+#endif
 
 			/* -- store the current values of all the stuff */
 			integrator_output_write(integ);

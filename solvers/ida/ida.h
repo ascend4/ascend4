@@ -47,8 +47,13 @@
 #  include <sundials/sundials_context.h>
 # endif
 # include <nvector/nvector_serial.h>
-# include <ida/ida.h>
-# include <ida/ida_ls.h>
+# ifdef ASC_IDA_BACKEND_IDAS
+#  include <idas/idas.h>
+#  include <idas/idas_ls.h>
+# else
+#  include <ida/ida.h>
+#  include <ida/ida_ls.h>
+# endif
 # include <sunmatrix/sunmatrix_dense.h>
 # include <sunlinsol/sunlinsol_dense.h>
 # include <sunlinsol/sunlinsol_spgmr.h>
@@ -62,5 +67,5 @@
 #endif
 
 #ifndef IDA_SUCCESS
-# error "Failed to include SUNDIALS IDA header file"
+# error "Failed to include SUNDIALS IDA or IDAS header file"
 #endif

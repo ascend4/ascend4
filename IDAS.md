@@ -215,6 +215,107 @@ IDAS engine:
     enable sensitivity options and output
 ```
 
+
+## Current Implementation Status
+
+As of this implementation pass, the first build/registration layer is in place:
+
+1. `solvers/ida/SConscript` checks for SUNDIALS IDAS first and falls back to
+   SUNDIALS IDA if IDAS is unavailable.
+2. When IDAS is found, `solvers/ida/libida_ascend.so` links against
+   `libsundials_idas` and compiles the IDA wrapper with
+   `ASC_IDA_BACKEND_IDAS`.
+3. `package_load('ida')` now registers both `INTEGRATOR IDA` and
+   `INTEGRATOR IDAS` from the same plugin when the backend is IDAS.
+4. The existing `IDA` behavior still uses the ordinary IDA solve path and does
+   not call `IDASensInit`.
+5. The core integrator API now has storage and accessors for:
+   - explicit sensitivity-driver parameter instances;
+   - row-major observed-output sensitivity matrices;
+   - C++/Python methods for setting parameter instances and querying the stored
+     sensitivity matrix.
+
+The implementation has been built and checked with:
+
+```text
+scons -j7
+./a4 solvers
+./a4 cutest integrator_ida
+./a4 cutest integrator_idas
+./a4 run models/twinslabs_der.a4c --model twinslabs_der --engine IDAS --output /tmp/twinslabs_der_idas.tsv --no-test
+```
+
+On the development machine used for this pass, `./a4 solvers` reported both:
+
+```text
+IDA: SUNDIALS 6.4.1
+IDAS: SUNDIALS 6.4.1
+```
+
+The existing `integrator_ida` CUnit suite passed with 44 selected tests and 937
+assertions. The current-syntax `twinslabs_der` example runs through the
+`./a4 run` pathway and produced byte-identical output for `--engine IDA` and
+`--engine IDAS` over the 10 h default integration.
+
+The IDAS-specific regression coverage is now in a separate `integrator_idas`
+CUnit suite. Its first test, `twinslabs_hc_sensitivity`, runs
+`models/twinslabs_der.a4c` with `h_c` as the configured sensitivity parameter
+and compares the final temperatures and final sensitivities against the
+closed-form two-exponential solution. The test does not assert against finite
+differences.
+
+The same source file also contains a test-only `twinslabs_der_exact` model that
+encodes the closed-form solution as ordinary ASCEND relations. The
+`integrator_idas` CUnit test builds that analytical model as a solver system,
+uses ASCEND's `relman_diff3` relation-gradient path to calculate
+$\partial T_1/\partial h_c$ and $\partial T_2/\partial h_c$, and compares those
+ASCEND-derived analytical derivatives with the IDAS sensitivities. SymPy is
+useful for deriving or checking the formula offline, but it is not a test
+dependency.
+
+The first smooth, non-event sensitivity path is now prototyped:
+
+1. `IntegratorIdaData` stores `sens_p`, `sens_p_nominal`, `sens_pbar`,
+   `sens_plist`, `sens_y`, and `sens_yp`.
+2. For `INTEGRATOR IDAS`, configured sensitivity parameters are read from
+   assigned real ASCEND instances after consistent initial-condition setup.
+3. `IDASensInit(..., NULL, sens_y, sens_yp)` enables IDAS' internal
+   difference-quotient sensitivity residuals.
+4. `IDASetSensParams(..., sens_p, sens_pbar, sens_plist)` supplies actual
+   ASCEND internal-unit parameter values and order-of-magnitude scaling.
+5. The existing IDA residual callback now copies the current `sens_p[i]` values
+   into the selected ASCEND parameter instances before `relman_eval`.
+6. After each successful output point, `IDAGetSens` is used to populate the
+   stored observed-output sensitivity matrix for observed items that are direct
+   state variables.
+
+The prototype intentionally rejects sensitivity mode when IDA/IDAS event roots
+are active. It also does not yet apply ASCEND's chain-rule layer for derived
+observations; observed variables that are not direct state variables are stored
+as unavailable (`NaN`) in the current matrix.
+
+The current `integrator_idas` regression uses `models/twinslabs_der.a4c`,
+`INTEGRATOR IDAS`, and `h_c` as the sensitivity parameter. The CUnit test
+asserts against analytical final temperatures from the closed-form
+two-exponential solution. For sensitivities, it asks ASCEND to differentiate
+the closed-form `twinslabs_der_exact` relations using `relman_diff3`, then
+compares IDAS output with those ASCEND-derived analytical derivatives. The
+final 10 h sensitivities reported for `OBSERVE T_1, T_2` are approximately:
+
+```text
+dT_1/dh_c = 0.675723
+dT_2/dh_c = 0.083816
+```
+
+A separate central finite-difference rerun with
+`h_c = 5 +/- 0.001 {W/m^2/K}` was used only as an independent smoke check while
+developing the prototype. It gave:
+
+```text
+dT_1/dh_c = 0.675731
+dT_2/dh_c = 0.083829
+```
+
 # Non-Event IDAS Milestone
 
 This is the first implementation target.
@@ -256,17 +357,17 @@ the trajectory and observations should be tracked. The API needs to identify
 ASCEND instances that are treated as parameters for IDAS:
 
 ```c
-int integrator_set_sensitivity_instances(
+int integrator_set_sensitivity_parameters(
     IntegratorSystem *sys,
     struct Instance **instances,
     int n
 );
 
-int integrator_get_num_sensitivity_instances(
+int integrator_get_num_sensitivity_parameters(
     IntegratorSystem *sys
 );
 
-struct Instance *integrator_get_sensitivity_instance(
+struct Instance *integrator_get_sensitivity_parameter(
     IntegratorSystem *sys,
     const long i
 );
@@ -275,23 +376,27 @@ struct Instance *integrator_get_sensitivity_instance(
 The C++ API can mirror this:
 
 ```c++
-void clearSensitivityInstances();
-void addSensitivityInstance(const Instanc &inst);
-long getNumSensitivityItems();
-Instanc getSensitivityInstance(const long &i);
+void clearSensitivityParameters();
+void addSensitivityParameter(const Instanc &inst);
+long getNumSensitivityParameters();
+Instanc getSensitivityParameter(const long &i);
 ```
 
 The Python API then naturally becomes:
 
 ```python
-integrator.clearSensitivityInstances()
-integrator.addSensitivityInstance(param_inst)
-integrator.getNumSensitivityItems()
-integrator.getSensitivityInstance(i)
+integrator.clearSensitivityParameters()
+integrator.addSensitivityParameter(param_inst)
+integrator.getNumSensitivityParameters()
+integrator.getSensitivityParameter(i)
 ```
 
 For the first milestone, require each sensitivity instance to be a real scalar.
-Arrays can be handled by adding each scalar child explicitly.
+Arrays can be handled by adding each scalar child explicitly. Selected
+parameters should also be fixed inputs, or at least not active DAE unknowns. If
+an instance is simultaneously part of the dynamic state/algebraic unknown vector
+and an externally perturbed sensitivity parameter, IDAS and ASCEND would be
+trying to own the same value in incompatible ways.
 
 IDAS itself provides the low-level parameter hooks. `IDASensInit` receives
 `Ns`, the number of sensitivity parameters/sensitivity systems. `IDASetSensParams`
@@ -305,7 +410,7 @@ where `p` is the parameter value array, `pbar` gives parameter scaling for
 internal difference-quotient sensitivity residuals, and `plist` optionally maps
 the sensitivity systems to entries in `p`. ASCEND's task is to map selected
 ASCEND instances to those `p` entries and keep the values synchronized before
-IDAS initialization/reinitialization.
+IDAS initialization/reinitialization and during residual evaluation.
 
 For optimisation wrappers such as the TGA A4SQP script, the optimisation free
 variables are the natural sensitivity parameters. They do not need to originate
@@ -313,43 +418,208 @@ from ASCEND model source initially; the Python/C++ integrator API can provide
 them explicitly. Later, ASCEND model metadata such as `fit.contract` could be
 used as a convenience layer, but it is not required for the first prototype.
 
-## Parameter Value Ownership
+## Parameter Value Bridge
 
 IDAS needs access to the current parameter values through `IDASetSensParams`
 when using the internal difference-quotient sensitivity residual. ASCEND should
-store a dense `double *p` array in `IntegratorIdaData`, filled from the selected
-instances before each IDAS initialization and refreshed before reinitialization.
+store a dense `realtype *p` array in `IntegratorIdaData`, filled from the
+selected instances before each IDAS initialization and refreshed before
+reinitialization. This array is the object IDAS sees as the parameter vector.
+The ASCEND instances remain the objects the relation evaluator sees.
 
-For the first milestone:
+That separation creates the parameter-value bridge problem: if IDAS perturbs
+`p[j]` while estimating sensitivity residuals, ASCEND residual evaluation must
+observe the same perturbed value. Otherwise IDAS will ask for a residual at
+$p_j + \delta$, but ASCEND will still evaluate relations using the unperturbed
+instance value.
 
-- the IDAS parameter vector is a snapshot of scalar ASCEND parameter values;
-- the Python driver remains responsible for writing candidate parameter values
-  into the model before `integrator.analyse()` or `integrator.solve()`;
-- ASCEND maps sensitivity parameter instances to the corresponding entries in
-  the IDAS parameter vector.
+Schematic IDAS internal difference-quotient evaluation is:
 
-One implementation detail needs care before relying on IDAS internal
-difference-quotient sensitivity residuals. IDAS perturbs entries in the `p`
-array supplied through `IDASetSensParams`, but ASCEND's residual callback
-currently evaluates relations from values stored in the ASCEND instance/system
-state. Therefore perturbing `p` must affect residual evaluation. Possible
-solutions are:
+$$
+F_p \approx
+\frac{F(t, y, \dot{y}, p + \delta e_j) - F(t, y, \dot{y}, p)}{\delta}
+$$
 
-1. make the IDA residual callback synchronize the current `p` array into the
-   selected ASCEND parameter instances before evaluating relations;
-2. arrange for `p` entries to alias the same storage used by those fixed
-   parameter instances, if that is safe;
-3. provide an explicit IDAS sensitivity residual callback that computes the
-   effect of parameter perturbations in ASCEND-controlled code.
+For ASCEND, the second argument list in that expression is not enough. The
+relation manager computes $F$ from model instances, so the selected ASCEND
+parameter instance must also be made to contain $p_j + \delta$ for the perturbed
+call.
 
-The first option is probably the simplest prototype, but it must restore or
-resynchronize parameter values carefully because IDAS may call the residual
-function many times during finite-difference sensitivity evaluation.
+### Simple Model Example
 
-Later, exact `dF/dp` residual support could use ASCEND relation derivatives
-with respect to parameter instances. That should be a second milestone. The
-first milestone should use IDAS internal difference-quotient sensitivity
-residuals by passing `NULL` for the sensitivity residual callback.
+Consider a first-order DAE model with one parameter `k`:
+
+```text
+MODEL first_order;
+    x IS_A solver_var;
+    k IS_A solver_var;
+    t IS_A solver_var;
+    dyn: der(x) = -k*x;
+
+    METHODS
+        METHOD specify;
+            FIX k, t;
+            FREE x, der(x);
+        END specify;
+    END METHODS;
+END first_order;
+```
+
+The residual is:
+
+$$
+F = \dot{x} + kx
+$$
+
+For sensitivity with respect to `k`, IDAS needs the effect of changing `k` on
+that residual. If `p[0]` is changed from `0.4` to `0.400001` inside an IDAS
+finite-difference call but the ASCEND instance `sim.k` still contains `0.4`,
+ASCEND evaluates the same residual twice and the computed $\partial F/\partial k$
+will be zero or wrong. The bridge must copy the current `p[0]` value into
+`sim.k` before the relation manager evaluates `dyn`.
+
+### TGA/A4SQP Example
+
+For a toy TGA optimisation, the Python driver may set a candidate parameter and
+then request sensitivities:
+
+```python
+sim.k0.setRealValue(candidate[0])
+sim.ea.setRealValue(candidate[1])
+
+integrator.clearSensitivityParameters()
+integrator.addSensitivityParameter(sim.k0.getInstance())
+integrator.addSensitivityParameter(sim.ea.getInstance())
+integrator.analyse()
+integrator.solve()
+
+sens = integrator.getCurrentObservationSensitivities()
+```
+
+At initialization, ASCEND reads `sim.k0` and `sim.ea` into:
+
+```text
+p[0] = value(sim.k0)
+p[1] = value(sim.ea)
+```
+
+During an internal IDAS sensitivity residual evaluation, IDAS may temporarily
+use a perturbed `p[0]`. The bridge has to make the model instance values match:
+
+```text
+sim.k0 := p[0]
+sim.ea := p[1]
+evaluate ASCEND residuals
+```
+
+Without that copy-in step, IDAS can still integrate the base trajectory, but
+its sensitivity equations do not correspond to the ASCEND model that the user
+is trying to fit.
+
+### Prototype Implementation
+
+The lowest-risk first implementation is a copy-in bridge in the IDA residual
+callback:
+
+1. build `enginedata->p`, `enginedata->pbar`, and `enginedata->plist` from
+   `integrator_get_sensitivity_parameter(sys, i)` before `IDASensInit`;
+2. call `IDASetSensParams(ida_mem, enginedata->p, enginedata->pbar,
+   enginedata->plist)`;
+3. at the start of every residual callback, before evaluating ASCEND relations,
+   copy `enginedata->p[i]` into the corresponding selected ASCEND instance;
+4. after `IDASolve`, `IDACalcIC`, and any failed solve exit, restore the model
+   instances to the nominal parameter values that should be visible to ASCEND
+   reporters and user code.
+
+The storage in `IntegratorIdaData` should include both current IDAS values and
+a restoration copy:
+
+```c
+typedef struct IntegratorIdaDataStruct {
+    ...
+    realtype *sens_p;
+    realtype *sens_p_nominal;
+    realtype *sens_pbar;
+    int *sens_plist;
+    long sens_np;
+} IntegratorIdaData;
+```
+
+The residual callback then does, conceptually:
+
+```c
+static int integrator_ida_fex(realtype t, N_Vector y, N_Vector ydot,
+        N_Vector residual, void *res_data)
+{
+    IntegratorSystem *integ = res_data;
+    IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+
+    ida_sync_sensitivity_parameters_from_p(integ, enginedata);
+
+    integrator_set_t(integ, t);
+    integrator_set_y(integ, NV_DATA_S(y));
+    integrator_set_ydot(integ, NV_DATA_S(ydot));
+    relman_eval(...);
+}
+```
+
+The copy should happen on every residual call, not only once at solve start,
+because IDAS may call the residual many times with different temporary
+parameter values while approximating sensitivity residuals.
+
+Aliasing `p[i]` directly to ASCEND instance storage would avoid copies, but it
+is a riskier second step. It depends on instance storage layout, type stability,
+unit conversion expectations, and whether IDAS ever treats the `p` array as
+ordinary mutable contiguous storage. A bridge copy is less clever and easier to
+validate.
+
+Providing an explicit IDAS sensitivity residual callback is another future
+option. In that design ASCEND would compute:
+
+$$
+\frac{\partial F}{\partial y} S_j
++ \frac{\partial F}{\partial \dot{y}} \dot{S}_j
++ \frac{\partial F}{\partial p_j}
+$$
+
+This avoids relying on IDAS finite differences for $F_{p_j}$, but it requires a
+reliable ASCEND API for differentiating relations with respect to arbitrary
+fixed parameter instances. That is more work than the first milestone needs.
+
+### Scaling And Units
+
+`pbar` matters for IDAS finite-difference increments and error scaling. ASCEND
+stores real values numerically in canonical units, so `pbar` must be a numeric
+scale in the same internal unit system as `p`.
+
+A reasonable first heuristic is:
+
+$$
+pbar_j = \max(|p_j|, 1)
+$$
+
+This is adequate for dimensionless or order-one parameters, but it is weak for
+very small kinetic constants, large activation energies, or parameters whose
+natural uncertainty scale differs substantially from their magnitude. The API
+should later allow the caller to provide explicit parameter scales, for example
+from an optimisation driver's variable scaling.
+
+### Consistency And Events
+
+The bridge is necessary but not sufficient for fully correct sensitivities.
+Initial sensitivity values must still be consistent with the DAE initial
+conditions. The first milestone should assume parameter-independent initial
+conditions and start with zero initial sensitivities; models whose initial state
+is itself a function of fitted parameters need a later consistent-sensitivity
+initialization path.
+
+For event-handling models, the same bridge must be applied around every IDAS
+restart and any guard or `WHEN` evaluation that depends on selected parameters.
+The first implementation can reasonably reject `IDAS` sensitivities when event
+handling is active. Supporting hybrid models later will require restoring
+nominal parameter values after failed/aborted event steps, reapplying the bridge
+before each `IDAReInit`, and deciding how parameter sensitivities propagate
+through reset maps.
 
 ## Initial Sensitivities
 
@@ -655,7 +925,7 @@ Add a minimal query surface:
 ```c
 ASC_DLLSPEC int integrator_has_sensitivities(IntegratorSystem *sys);
 
-ASC_DLLSPEC int integrator_get_num_sensitivity_instances(
+ASC_DLLSPEC int integrator_get_num_sensitivity_parameters(
     IntegratorSystem *sys
 );
 
@@ -702,10 +972,10 @@ Extend `ascxx::Integrator`:
 ```c++
 bool hasSensitivities() const;
 
-void clearSensitivityInstances();
-void addSensitivityInstance(const Instanc &inst);
-long getNumSensitivityItems();
-Instanc getSensitivityInstance(const long &i);
+void clearSensitivityParameters();
+void addSensitivityParameter(const Instanc &inst);
+long getNumSensitivityParameters();
+Instanc getSensitivityParameter(const long &i);
 
 std::vector<std::vector<double> >
 getCurrentObservationSensitivities();
@@ -714,9 +984,9 @@ getCurrentObservationSensitivities();
 Expose through SWIG so Python can do:
 
 ```python
-integrator.clearSensitivityInstances()
+integrator.clearSensitivityParameters()
 for param_path in param_paths:
-    integrator.addSensitivityInstance(_instance_by_path(sim, param_path))
+    integrator.addSensitivityParameter(_instance_by_path(sim, param_path))
 
 integrator.solve()
 
@@ -1016,6 +1286,15 @@ gradient signs and relative magnitudes before trusting multi-parameter fits.
    state trajectory, but `hasSensitivities()` should report false or an empty
    parameter dimension.
 
+   - Status: implemented as a distinct `INTEGRATOR IDAS` engine registered by
+     `package_load('ida')` when the build links against SUNDIALS IDAS.
+   - Status: fallback state-only behavior works; if no sensitivity parameters
+     are configured, IDAS follows the ordinary IDA solve path and does not call
+     `IDASensInit`.
+   - Remaining: no `hasSensitivities()` API exists yet. Current callers can
+     infer availability from `getNumSensitivityParameters()` and the returned
+     observation-sensitivity matrix.
+
 2. Sensitivity parameter selection should be API-driven first. These parameters
    are the $p_j$ values supplied to IDAS through `IDASetSensParams`. In an
    optimisation wrapper, the optimiser's free variables naturally define this
@@ -1023,10 +1302,27 @@ gradient signs and relative magnitudes before trusting multi-parameter fits.
    first prototype does not need the model source to declare the sensitivity
    parameters.
 
+   - Status: implemented in the C integrator API as
+     `integrator_set_sensitivity_parameters`,
+     `integrator_get_num_sensitivity_parameters`, and
+     `integrator_get_sensitivity_parameter`.
+   - Status: exposed through C++/Python as `clearSensitivityParameters`,
+     `addSensitivityParameter`, `getNumSensitivityParameters`, and
+     `getSensitivityParameter`.
+   - Remaining: there is no ASCEND-language declaration for sensitivity-driver
+     parameters yet, and no parameter-scale API beyond the first heuristic for
+     `pbar`.
+
 3. Deterministic sensitivities and uncertainty propagation should stay
    separated. IDAS gives local derivatives such as $\partial y / \partial p_j$.
    Uncertainty/covariance propagation can later be built on top of those
    derivatives, but it should not be part of the first IDAS implementation.
+
+   - Status: implemented prototype only stores deterministic local
+     sensitivities. It does not attempt covariance, intervals, or uncertainty
+     reset logic.
+   - Remaining: uncertainty propagation can be layered above the deterministic
+     sensitivity matrix once the parameter/output contracts are stable.
 
 4. Observed algebraic variables should not be excluded just because they are
    algebraic. If an observed variable is part of the IDAS DAE unknown vector, it
@@ -1034,20 +1330,58 @@ gradient signs and relative magnitudes before trusting multi-parameter fits.
    that is not an IDAS unknown; that requires ASCEND to apply a chain rule for
    the observation expression.
 
+   - Status: current implementation records sensitivities only for observed
+     instances that map directly to `integ->y[]` state-vector entries.
+   - Status: the `twinslabs_hc_sensitivity` regression covers direct observed
+     state variables, `T_1` and `T_2`.
+   - Remaining: direct algebraic entries in the IDAS DAE vector need a test
+     case. Derived observations still need the ASCEND chain-rule layer and are
+     currently stored as unavailable (`NaN`).
+
 5. IDAS should use internal difference quotients for `dF/dp` in the first
    prototype. Exact ASCEND residual derivatives with respect to selected
    parameters should be treated as a later performance and accuracy upgrade.
 
-6. Remaining issue before prototyping: define the exact mapping from an
-   observed ASCEND instance to an IDAS vector index, including algebraic
-   variables, and return a clear status for observations that do not have a
-   direct mapping.
+   - Status: implemented using `IDASensInit(..., NULL, sens_y, sens_yp)`, so
+     IDAS constructs sensitivity residuals internally using difference
+     quotients.
+   - Status: `IDASetSensParams` is called with actual ASCEND internal-unit
+     parameter values in `sens_p` and first-pass scales in `sens_pbar`.
+   - Remaining: exact $\partial F / \partial p_j$ support should be a later
+     optimization using ASCEND relation derivatives with respect to selected
+     parameter instances.
 
-7. Remaining issue before prototyping: decide how the IDAS `p` array is kept
-   synchronized with ASCEND parameter instances during IDAS internal
-   difference-quotient residual calls. Without this, `IDASetSensParams` can
-   hold the right numeric values but perturbing them will not necessarily
-   change ASCEND residual evaluations.
+6. Define the exact mapping from an observed ASCEND instance to an IDAS vector
+   index, including algebraic variables, and return a clear status for
+   observations that do not have a direct mapping.
+
+   - Status: implemented for direct state observations by matching the observed
+     instance pointer against `var_instance(integ->y[i])` and copying
+     `sens_y[j][i]` into the row-major observation-sensitivity matrix.
+   - Status: observations without a direct state-vector mapping are filled with
+     `NaN` in the current matrix.
+   - Remaining: extend the mapping to algebraic DAE-vector entries where
+     appropriate, and replace implicit `NaN` status with a more explicit
+     per-observation availability/status API if users need to distinguish
+     unsupported observations from numerical `NaN`.
+
+7. Keep the IDAS `p` array synchronized with ASCEND parameter instances during
+   IDAS internal difference-quotient residual calls. Without this,
+   `IDASetSensParams` can hold the right numeric values but perturbing them
+   will not necessarily change ASCEND residual evaluations.
+
+   - Status: implemented via the parameter-value bridge. `IntegratorIdaData`
+     stores `sens_p`, `sens_p_nominal`, `sens_pbar`, and `sens_plist`.
+   - Status: the residual callback calls `integrator_ida_sens_sync` before
+     `integrator_set_t`, `integrator_set_y`, `integrator_set_ydot`, and
+     `relman_eval`, copying current `sens_p[i]` values into the selected ASCEND
+     parameter instances.
+   - Status: nominal parameter values are restored after `IDASolve` and after
+     sensitivity recording so reporters and user code do not see temporary IDAS
+     finite-difference perturbations.
+   - Remaining: event/restart handling is still intentionally unsupported for
+     sensitivities, so this synchronization has only been validated for smooth,
+     non-event integrations.
 
 # References
 

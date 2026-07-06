@@ -75,6 +75,7 @@
 // Integrator engines are discovered at runtime via package loading, so keep
 // the engine IDs stable regardless of which plugins were built.
 #define IDA_OPTIONAL S I(IDA,integrator_ida_internals)
+#define IDAS_OPTIONAL S I(IDAS,integrator_idas_internals)
 
 #ifdef ASC_WTH_DOPRI5
 # define DOPRI5_OPTIONAL S I(DOPRI5,integrator_dopri5_internals)
@@ -86,6 +87,7 @@
 #define INTEG_LIST \
 	I(LSODE       ,integrator_lsode_internals) \
 	IDA_OPTIONAL \
+	IDAS_OPTIONAL \
 	DOPRI5_OPTIONAL \
 	S I(AWW       ,integrator_aww_internals)
 
@@ -278,12 +280,16 @@ struct IntegratorSystemStruct{
   struct var_variable **ydot; /**< array form of derivatives */
   struct var_variable **obs;  /**< array form of observed variables */
   struct Instance **observed_instances; /**< explicit typed observed instances */
+  struct Instance **sensitivity_parameters; /**< explicit sensitivity-driver parameter instances */
+  double *observation_sensitivities; /**< row-major d observed item / d sensitivity parameter values */
   int *y_id;                  /**< array form of y/ydot user indices, for DAEs we use negatives here for derivative vars */
   int *obs_id;                /**< array form of obs user indices */
   int n_y;
   int n_ydot;
   int n_obs;
   int n_observed_instances;
+  int n_sensitivity_parameters;
+  int n_sensitivity_observations;
   int n_diffeqs;              /**< number of differential equations (used by idaanalyse) */
   int currentstep;            /**< current step number (also @see integrator_getnsamples) */
   int initial_mode_prepared;  /**< one-shot INITIAL startup solve has been handled */
@@ -590,6 +596,50 @@ ASC_DLLSPEC int integrator_get_observation_value(IntegratorSystem *blsys, const 
 
 	The caller owns the returned `value_t` contents and must eventually call
 	`DestroyValue` on it.
+*/
+
+ASC_DLLSPEC int integrator_set_sensitivity_parameters(IntegratorSystem *blsys, struct Instance **instances, int n);
+/**<
+	Set the explicit sensitivity-driver parameter list for sensitivity-capable integrators.
+
+	If `instances` is NULL or `n <= 0`, any explicit parameter list is cleared.
+*/
+
+ASC_DLLSPEC int integrator_get_num_sensitivity_parameters(IntegratorSystem *blsys);
+/**<
+	Return the number of configured sensitivity-driver parameters.
+*/
+
+ASC_DLLSPEC struct Instance *integrator_get_sensitivity_parameter(IntegratorSystem *blsys, const long i);
+/**<
+	Return the ith configured sensitivity-driver parameter instance.
+*/
+
+ASC_DLLSPEC void integrator_clear_observation_sensitivities(IntegratorSystem *blsys);
+/**<
+	Clear stored observation sensitivities.
+*/
+
+ASC_DLLSPEC int integrator_set_observation_sensitivities(IntegratorSystem *blsys, const double *values, int nobs, int nparams);
+/**<
+	Store row-major observation sensitivities, where row `i` is the ith observed
+	item and column `j` is the jth configured sensitivity-driver parameter.
+*/
+
+ASC_DLLSPEC int integrator_get_num_sensitivity_observations(IntegratorSystem *blsys);
+/**<
+	Return the number of observed rows in the stored sensitivity matrix.
+*/
+
+ASC_DLLSPEC int integrator_get_observation_sensitivity(IntegratorSystem *blsys, const long obs_i, const long param_i, double *value);
+/**<
+	Return one stored observation sensitivity value.
+*/
+
+ASC_DLLSPEC double *integrator_get_observation_sensitivities(IntegratorSystem *blsys, double *values);
+/**<
+	Return a row-major copy of the stored observation sensitivity matrix. If
+	`values` is NULL, the caller owns the returned allocation.
 */
 
 ASC_DLLSPEC struct var_variable *integrator_get_independent_var(IntegratorSystem *blsys);
