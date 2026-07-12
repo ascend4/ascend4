@@ -1,0 +1,937 @@
+(* Experimental FB5B folded-membrane geometry coupled to the source2 core. *)
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/fboard.a4c";
+REQUIRE "johnpye/iron/tgadyn_msbed_linked_radial_active_source2_foldedmem_experimental.a4c";
+
+MODEL fbdri_lee_tga_core_gas_state;
+	y_H2 "hydrogen mole fraction" IS_A mole_fraction;
+	y_H2O "water-vapour mole fraction" IS_A mole_fraction;
+METHODS
+	METHOD values;
+		y_H2 := 0.9;
+		y_H2O := 0.1;
+	END values;
+END fbdri_lee_tga_core_gas_state;
+
+MODEL fbdri_lee_tga_core_cell;
+	b_in, b_out "bubble gas in/out" IS_A fbdri_lee_tga_core_gas_state;
+	e_in, e_out "emulsion gas in/out" IS_A fbdri_lee_tga_core_gas_state;
+
+	c_tot "ideal-gas molar density" IS_A molar_density;
+	F_bubble "bubble throughflow" IS_A molar_rate;
+	F_emulsion "emulsion throughflow" IS_A molar_rate;
+	V_bubble "bubble volume represented by this cell" IS_A volume;
+	K_be "bubble-emulsion interchange frequency" IS_A frequency;
+
+	N_be_H2 "bubble-to-emulsion hydrogen exchange" IS_A delta_molar_rate;
+	N_be_H2O "bubble-to-emulsion water exchange" IS_A delta_molar_rate;
+	N_rxn_H2 "hydrogen consumed by the shared particle core in this cell" IS_A delta_molar_rate;
+
+	Nbe_h2_eq:
+		N_be_H2 = K_be * V_bubble * c_tot * (b_in.y_H2 - e_out.y_H2);
+	Nbe_h2o_eq:
+		N_be_H2O = K_be * V_bubble * c_tot * (b_in.y_H2O - e_out.y_H2O);
+
+	bubble_h2_eq:
+		F_bubble * (b_in.y_H2 - b_out.y_H2) - N_be_H2 = 0 {mol/s};
+	bubble_h2o_eq:
+		F_bubble * (b_in.y_H2O - b_out.y_H2O) - N_be_H2O = 0 {mol/s};
+	emulsion_h2_eq:
+		F_emulsion * (e_in.y_H2 - e_out.y_H2) + N_be_H2 - N_rxn_H2 = 0 {mol/s};
+	emulsion_h2o_eq:
+		F_emulsion * (e_in.y_H2O - e_out.y_H2O) + N_be_H2O + N_rxn_H2 = 0 {mol/s};
+METHODS
+	METHOD values;
+		RUN b_in.values;
+		RUN b_out.values;
+		RUN e_in.values;
+		RUN e_out.values;
+		c_tot := 10 {mol/m^3};
+		F_bubble := 1e-3 {mol/s};
+		F_emulsion := 1e-4 {mol/s};
+		V_bubble := 1e-6 {m^3};
+		K_be := 1 {1/s};
+		N_be_H2 := 1e-6 {mol/s};
+		N_be_H2O := -1e-6 {mol/s};
+		N_rxn_H2 := 1e-6 {mol/s};
+	END values;
+	METHOD bound_self;
+		b_in.y_H2.lower_bound := -0.2;
+		b_out.y_H2.lower_bound := -0.2;
+		e_in.y_H2.lower_bound := -0.2;
+		e_out.y_H2.lower_bound := -0.2;
+		b_in.y_H2O.lower_bound := -1e-3;
+		b_out.y_H2O.lower_bound := -1e-3;
+		e_in.y_H2O.lower_bound := -1e-3;
+		e_out.y_H2O.lower_bound := -1e-3;
+		F_bubble.lower_bound := 1e-12 {mol/s};
+		F_emulsion.lower_bound := 1e-12 {mol/s};
+		V_bubble.lower_bound := 0 {m^3};
+		K_be.lower_bound := 0 {1/s};
+	END bound_self;
+END fbdri_lee_tga_core_cell;
+
+MODEL fbdri_lee_tga_core_single_family(
+	reaction_model IS_A symbol_constant;
+) WHERE (
+	(reaction_model = 'three_step_wustite')
+		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_src3')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
+		OR (reaction_model = 'two_step_direct');
+);
+	n_axial_cells IS_A integer_constant;
+	n_axial_cells :== 6;
+	n_radial_segs IS_A integer_constant;
+	n_radial_segs :== 5;
+	steps "TGA reaction steps" IS_A set OF integer_constant;
+	steps :== [1..4];
+	active_steps "compatibility kinetic multipliers sampled by FB scripts" IS_A set OF integer_constant;
+	active_steps :== [1..3];
+	axial_nodes IS_A set OF integer_constant;
+	axial_cells IS_A set OF integer_constant;
+	axial_nodes :== [0..n_axial_cells];
+	axial_cells :== [1..n_axial_cells];
+
+	morphology_model IS_A symbol_constant;
+	morphology_model :== 'porosity_interface';
+
+	t "time" IS_A time;
+	INDEPENDENT t;
+
+	T IS_A temperature;
+	p IS_A pressure;
+	p_stp IS_A pressure;
+	T_stp IS_A temperature;
+	c_tot "ideal-gas molar density at bed conditions" IS_A molar_density;
+	Vdot_feed_stp "volumetric feed rate at STP" IS_A volume_rate;
+	F_feed "gas feed molar rate" IS_A molar_rate;
+	F_bubble "molar flow assigned to bubble throughflow" IS_A molar_rate;
+	F_emulsion "molar flow assigned to emulsion throughflow" IS_A molar_rate;
+	rho_g "gas density at bed conditions" IS_A mass_density;
+	MW_H2, MW_H2O, MW_inert, MW_gas IS_A molar_mass;
+
+	d_t "reactor internal diameter" IS_A distance;
+	A_bed "reactor cross-sectional area" IS_A area;
+	L_mf "bed height at minimum fluidisation" IS_A distance;
+	L_f "expanded bubbling-bed height" IS_A distance;
+	dz "axial cell height" IS_A distance;
+	V_bed "expanded bed volume" IS_A volume;
+	V_bubble "total bubble volume in the bed" IS_A volume;
+	V_bubble_cell[axial_cells] "local bubble volume represented by each cell" IS_A volume;
+
+	u "superficial gas velocity at bed T,p" IS_A speed;
+	u_mf "minimum fluidisation superficial velocity" IS_A speed;
+	u_ratio_mf "operating velocity multiplier on u_mf" IS_A factor;
+	emulsion_flow_multiplier "multiplier on minimum-fluidisation emulsion throughflow" IS_A positive_factor;
+	K_be_multiplier "multiplier on Lee bubble-emulsion gas interchange" IS_A positive_factor;
+	eps_mf "bed voidage at minimum fluidisation" IS_A factor;
+	eps "overall bubbling-bed voidage" IS_A factor;
+	d_p "particle diameter" IS_A distance;
+	d_b "compatibility bubble diameter override, unused by Lee profile" IS_A distance;
+	rho_p "particle density" IS_A mass_density;
+	rho_bulk_bed "bulk bed density at minimum fluidisation" IS_A mass_density;
+
+	z_lee[axial_nodes] "height above distributor for Lee bubble profile" IS_A distance;
+	d_b_lee[axial_nodes] "Lee/Mori-Wen bubble diameter profile" IS_A distance;
+	u_br_lee[axial_nodes] "Lee isolated bubble rise velocity profile" IS_A speed;
+	u_b_lee[axial_nodes] "Lee bubble velocity profile" IS_A speed;
+	delta_lee[axial_nodes] "Lee bubble fraction profile" IS_A factor;
+	K_be_lee[axial_nodes] "Lee bubble-emulsion gas interchange profile" IS_A frequency;
+	d_b0_lee "initial bubble diameter at distributor" IS_A distance;
+	d_bm_lee "maximum bubble diameter" IS_A distance;
+	delta_cell[axial_cells] "cell-average bubble fraction" IS_A factor;
+	K_be_cell[axial_cells] "cell-average bubble-emulsion interchange coefficient" IS_A frequency;
+	delta "bed-height average bubble fraction" IS_A factor;
+	K_be "bed-height average bubble-emulsion interchange coefficient" IS_A frequency;
+
+	m_sample_init, m_sample IS_A mass;
+	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe, MW_SiO2, MW_Fe2SiO4 IS_A molar_mass;
+	ore_Fe2O3_mass_frac IS_A positive_factor;
+	ore_SiO2_mass_frac IS_A factor;
+	sio2_active_frac IS_A factor;
+	n0_Fe2O3 IS_A mole;
+	n0_SiO2_total IS_A mole;
+	n0_SiO2_active IS_A mole;
+	n0_SiO2_inactive IS_A mole;
+	n0_per_area IS_A mole_per_area;
+	n_Fe2O3, n_Fe3O4, n_FeO, n_Fe, n_Fe2SiO4, n_SiO2_active IS_A mole;
+	oxygen_remaining IS_A mole;
+	reduction_degree IS_A factor;
+
+	y_H2_in, y_H2O_in IS_A mole_fraction;
+	y_inert_in IS_A mole_fraction;
+	y_H2_b, y_H2O_b "outlet bubble gas composition" IS_A mole_fraction;
+	y_H2_e, y_H2O_e "outlet emulsion gas composition" IS_A mole_fraction;
+	y_H2_c, y_H2O_c "cloud aliases, equal to emulsion in this prototype" IS_A mole_fraction;
+	y_inert_b, y_inert_c, y_inert_e IS_A mole_fraction;
+
+	b_node[axial_nodes] "linked bubble gas states" IS_A fbdri_lee_tga_core_gas_state;
+	e_node[axial_nodes] "linked emulsion gas states" IS_A fbdri_lee_tga_core_gas_state;
+	cell[axial_cells] "axial gas-contact cells sharing one TGA particle core" IS_A fbdri_lee_tga_core_cell;
+	core IS_A tga_reduction_bed_slice_radial_local(n_radial_segs, reaction_model, morphology_model);
+
+	tr IS_A diffusion_h2o_h2_ar;
+	D_screen IS_A diffusivity;
+	D_eff_bed IS_A diffusivity;
+	D_part0 IS_A diffusivity;
+	tau_bed IS_A positive_factor;
+	k_bed_multiplier IS_A positive_factor;
+	k_part_multiplier IS_A positive_factor;
+	d_int_multiplier IS_A positive_factor;
+	d_int_eff IS_A distance;
+	core_area_multiplier IS_A positive_factor;
+	core_gas_bubble_blend IS_A factor;
+	core_gas_feed_blend IS_A factor;
+	A_core IS_A area;
+
+	eta[steps] IS_A positive_factor;
+	rd_resistance[active_steps] "compatibility; unused in this TGA-core prototype" IS_A factor;
+	k0[steps] IS_A rate_per_pressure;
+	E_a[steps] IS_A molar_energy;
+	k_step[steps] IS_A rate_per_pressure;
+	K_ratio_eq[steps] IS_A positive_factor;
+	K_fit IS_A tga_reduction_keq_fits;
+	rate_net[steps] "TGA-core average net rates" IS_A extent_rate;
+	rate_net_c[active_steps], rate_net_e[active_steps] "compatibility aliases" IS_A extent_rate;
+	rate_net_raw[active_steps] "compatibility alias" IS_A extent_rate;
+	rd_resistance_factor[active_steps] "compatibility alias" IS_A positive_factor;
+	phase_buffered_step3_blend "compatibility; unused" IS_A factor;
+	phase_buffered_smoothing "compatibility; unused" IS_A pressure;
+	solid_activity_order "TGA-core solid activity exponent" IS_A positive_factor;
+	solid_activity_floor "TGA-core solid activity floor" IS_A positive_factor;
+
+	Sh_particle IS_A positive_factor;
+	a_open IS_A factor;
+	a_close IS_A factor;
+	beta_T IS_A factor;
+	n_close IS_A positive_factor;
+	eps_o_init IS_A positive_factor;
+	beta_block IS_A positive_factor;
+	k_block IS_A frequency;
+	E_dens IS_A molar_energy;
+	eps_crit IS_A positive_factor;
+	perm_exp IS_A positive_factor;
+	D_floor_frac IS_A positive_factor;
+	RD_max IS_A positive_factor;
+	RD_cap_width IS_A positive_factor;
+	RD_corner_exp IS_A positive_factor;
+	RD_late_onset IS_A positive_factor;
+	RD_late_width IS_A positive_factor;
+	RD_late_floor IS_A positive_factor;
+	x_wustite IS_A factor;
+	site_init IS_A factor;
+	site_floor IS_A factor;
+	site_open_gain IS_A positive_factor;
+	oxygen_mig_lambda IS_A factor;
+	oxygen_mig_width IS_A positive_factor;
+	oxygen_mig_exp IS_A positive_factor;
+	lam_open[steps] IS_A positive_factor;
+	k_qfw IS_A frequency;
+	K_qfw IS_A positive_factor;
+	qfw_reverse_factor IS_A factor;
+	k_fay_red IS_A frequency;
+	K_fay_red IS_A positive_factor;
+
+	N_rxn_H2_total IS_A delta_molar_rate;
+	N_rxn_H2_c, N_rxn_H2_e "compatibility reaction rates" IS_A delta_molar_rate;
+	N_bc_H2, N_ce_H2, N_bc_H2O, N_ce_H2O "compatibility exchange rates" IS_A delta_molar_rate;
+	solid_share_c, solid_share_e IS_A factor;
+	m_s_cloud, m_s_emulsion IS_A mass;
+	solid_exchange_multiplier IS_A positive_factor;
+	solid_exchange_rate_min, solid_exchange_rate IS_A frequency;
+
+	ctot_eq: c_tot = p / (1 {GAS_C} * T);
+	tr_T_eq: tr.T = T;
+	tr_p_eq: tr.p = p;
+	MWgas_eq: MW_gas = y_H2_in * MW_H2 + y_H2O_in * MW_H2O + y_inert_in * MW_inert;
+	rhog_eq: rho_g = c_tot * MW_gas;
+	feed_eq: F_feed = Vdot_feed_stp * p_stp / (1 {GAS_C} * T_stp);
+	area_eq: A_bed = 0.25 {PI} * d_t^2;
+	u_eq: u = F_feed / (c_tot * A_bed);
+	u_ratio_eq: u_ratio_mf = u / u_mf;
+	Femulsion_eq: F_emulsion = emulsion_flow_multiplier * c_tot * A_bed * u_mf;
+	Fbubble_eq: F_bubble = F_feed - F_emulsion;
+
+	bed_mf_height_eq: L_mf = m_sample / (rho_bulk_bed * A_bed);
+	bed_height_eq: L_f = L_mf / (1 - delta);
+	dz_eq: dz = L_f / n_axial_cells;
+	vbed_eq: V_bed = A_bed * L_f;
+	vbubble_eq: V_bubble = SUM[V_bubble_cell[i] | i IN axial_cells];
+	eps_eq: 1 - eps = (1 - delta) * (1 - eps_mf);
+	db0_eq:
+		d_b0_lee =
+			2.78 {m}
+			* ((u - u_mf) / 1 {m/s})^2
+			/ (1 {EARTH_G} / 1 {m/s^2});
+	dbm_eq:
+		d_bm_lee =
+			0.65 {m}
+			* (
+				(3.141592653589793 / 4)
+				* (d_t / 1 {m})^2
+				* ((u - u_mf) / 1 {m/s})
+			)^0.4;
+
+	FOR i IN axial_nodes CREATE
+		z_eq[i]:
+			z_lee[i] = (i / n_axial_cells) * L_f;
+		db_eq[i]:
+			d_b_lee[i] =
+				d_bm_lee
+				- (d_bm_lee - d_b0_lee)
+				  * exp(-0.3 * z_lee[i] / d_t);
+		ubr_eq[i]:
+			u_br_lee[i] = 0.711 * (1 {EARTH_G} * d_b_lee[i])^0.5;
+		ub_eq[i]:
+			u_b_lee[i] = u - u_mf + u_br_lee[i];
+		delta_eq[i]:
+			delta_lee[i] = (u - u_mf) / u_b_lee[i];
+		Kbe_eq[i]:
+			K_be_lee[i] = 4.5 * u_mf / d_b_lee[i];
+	END FOR;
+	FOR i IN axial_cells CREATE
+		delta_cell_eq[i]:
+			delta_cell[i] = 0.5 * (delta_lee[i - 1] + delta_lee[i]);
+		Kbe_cell_eq[i]:
+			K_be_cell[i] = K_be_multiplier * 0.5 * (K_be_lee[i - 1] + K_be_lee[i]);
+		Vbubble_cell_eq[i]:
+			V_bubble_cell[i] = A_bed * dz * delta_cell[i];
+	END FOR;
+	delta_avg_eq:
+		delta = SUM[delta_cell[i] | i IN axial_cells] / n_axial_cells;
+	Kbe_avg_eq:
+		K_be = SUM[K_be_cell[i] | i IN axial_cells] / n_axial_cells;
+
+	n0_eq:
+		n0_Fe2O3 = ore_Fe2O3_mass_frac * m_sample_init / MW_Fe2O3;
+	n0sio2_eq:
+		n0_SiO2_total = ore_SiO2_mass_frac * m_sample_init / MW_SiO2;
+	n0sio2active_eq:
+		n0_SiO2_active = sio2_active_frac * n0_SiO2_total;
+	n0sio2inactive_eq:
+		n0_SiO2_inactive = n0_SiO2_total - n0_SiO2_active;
+	Acore_eq:
+		A_core = core_area_multiplier * A_bed;
+	n0area_eq:
+		n0_per_area = n0_Fe2O3 / A_core;
+	msample_eq:
+		m_sample
+		=
+		n_Fe2O3 * MW_Fe2O3
+		+ n_Fe3O4 * MW_Fe3O4
+		+ n_FeO * (MW_FeO - x_wustite * MW_Fe)
+		+ n_Fe * MW_Fe
+		+ n_Fe2SiO4 * MW_Fe2SiO4
+		+ (n_SiO2_active + n0_SiO2_inactive) * MW_SiO2;
+	oxygen_eq:
+		oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO + 2 * n_Fe2SiO4;
+	reduction_degree_eq:
+		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
+
+	b_feed_h2_eq: b_node[0].y_H2 = y_H2_in;
+	b_feed_h2o_eq: b_node[0].y_H2O = y_H2O_in;
+	e_feed_h2_eq: e_node[0].y_H2 = y_H2_in;
+	e_feed_h2o_eq: e_node[0].y_H2O = y_H2O_in;
+	yinert_in_eq: y_inert_in = 1 - y_H2_in - y_H2O_in;
+	out_b_h2_eq: y_H2_b = b_node[n_axial_cells].y_H2;
+	out_b_h2o_eq: y_H2O_b = b_node[n_axial_cells].y_H2O;
+	out_e_h2_eq: y_H2_e = e_node[n_axial_cells].y_H2;
+	out_e_h2o_eq: y_H2O_e = e_node[n_axial_cells].y_H2O;
+	out_c_h2_eq: y_H2_c = y_H2_e;
+	out_c_h2o_eq: y_H2O_c = y_H2O_e;
+	yinert_b_eq: y_inert_b = 1 - y_H2_b - y_H2O_b;
+	yinert_c_eq: y_inert_c = 1 - y_H2_c - y_H2O_c;
+	yinert_e_eq: y_inert_e = 1 - y_H2_e - y_H2O_e;
+
+	FOR i IN axial_cells CREATE
+		cell[i].b_in, b_node[i - 1] ARE_THE_SAME;
+		cell[i].b_out, b_node[i] ARE_THE_SAME;
+		cell[i].e_in, e_node[i - 1] ARE_THE_SAME;
+		cell[i].e_out, e_node[i] ARE_THE_SAME;
+		cell_vbubble_eq[i]:
+			cell[i].V_bubble = V_bubble_cell[i];
+		cell_Kbe_eq[i]:
+			cell[i].K_be = K_be_cell[i];
+		cell_rxn_eq[i]:
+			cell[i].N_rxn_H2 = N_rxn_H2_total / n_axial_cells;
+	END FOR;
+	c_tot, cell[axial_cells].c_tot ARE_THE_SAME;
+	F_bubble, cell[axial_cells].F_bubble ARE_THE_SAME;
+	F_emulsion, cell[axial_cells].F_emulsion ARE_THE_SAME;
+
+	Dscreen_eq:
+		D_screen = 2 / (1 / tr.D_H2_Ar + 1 / tr.D_H2O_Ar);
+	Deffbed_eq:
+		D_eff_bed = k_bed_multiplier * (eps_mf / tau_bed) * D_screen;
+	Dpart0_eq:
+		D_part0 = k_part_multiplier * D_screen;
+	dint_eq:
+		d_int_eff = d_int_multiplier * d_p;
+
+	core_gas_h2_eq:
+		core.centre.y_H2 =
+			(1 - core_gas_feed_blend)
+			* ((1 - core_gas_bubble_blend) * y_H2_e + core_gas_bubble_blend * y_H2_b)
+			+ core_gas_feed_blend * y_H2_in;
+	core_gas_h2o_eq:
+		core.centre.y_H2O =
+			(1 - core_gas_feed_blend)
+			* ((1 - core_gas_bubble_blend) * y_H2O_e + core_gas_bubble_blend * y_H2O_b)
+			+ core_gas_feed_blend * y_H2O_in;
+	core_top_h2_eq:
+		core.top.y_H2 = core.centre.y_H2;
+	core_top_h2o_eq:
+		core.top.y_H2O = core.centre.y_H2O;
+	core_bot_h2_eq:
+		core.bot.y_H2 = core.centre.y_H2;
+	core_bot_h2o_eq:
+		core.bot.y_H2O = core.centre.y_H2O;
+	core_bot_N_h2_eq:
+		core.bot.N_H2 = 0 {mol/m^2/s};
+	core_bot_N_h2o_eq:
+		core.bot.N_H2O = 0 {mol/m^2/s};
+	core_rxn_eq:
+		N_rxn_H2_total = A_core * core.J_reaction;
+
+	core_n0_eq:
+		core.n0_Fe2O3_slice = n0_Fe2O3;
+	core_sio2_eq:
+		core.n0_SiO2_active_slice = n0_SiO2_active;
+	core_n0area_eq:
+		core.n0_per_area_slice = n0_per_area;
+	n_Fe2O3, core.n_Fe2O3 ARE_THE_SAME;
+	n_Fe3O4, core.n_Fe3O4 ARE_THE_SAME;
+	n_FeO, core.n_FeO ARE_THE_SAME;
+	n_Fe, core.n_Fe ARE_THE_SAME;
+	n_Fe2SiO4, core.n_Fe2SiO4 ARE_THE_SAME;
+	n_SiO2_active, core.n_SiO2_active ARE_THE_SAME;
+
+	T, core.T ARE_THE_SAME;
+	p, core.p ARE_THE_SAME;
+	c_tot, core.c_tot ARE_THE_SAME;
+	d_p, core.d_p ARE_THE_SAME;
+	d_int_eff, core.d_int_eff ARE_THE_SAME;
+	L_f, core.dz_bed ARE_THE_SAME;
+	eps_mf, core.eps_bed ARE_THE_SAME;
+	D_screen, core.D_screen ARE_THE_SAME;
+	D_eff_bed, core.D_eff_bed ARE_THE_SAME;
+	D_part0, core.D_part0 ARE_THE_SAME;
+	Sh_particle, core.Sh_particle ARE_THE_SAME;
+	a_open, core.a_open ARE_THE_SAME;
+	a_close, core.a_close ARE_THE_SAME;
+	beta_T, core.beta_T ARE_THE_SAME;
+	n_close, core.n_close ARE_THE_SAME;
+	eps_o_init, core.eps_o_init ARE_THE_SAME;
+	beta_block, core.beta_block ARE_THE_SAME;
+	k_block, core.k_block ARE_THE_SAME;
+	E_dens, core.E_dens ARE_THE_SAME;
+	eps_crit, core.eps_crit ARE_THE_SAME;
+	perm_exp, core.perm_exp ARE_THE_SAME;
+	D_floor_frac, core.D_floor_frac ARE_THE_SAME;
+	solid_activity_order, core.solid_activity_order ARE_THE_SAME;
+	solid_activity_floor, core.solid_activity_floor ARE_THE_SAME;
+	RD_max, core.RD_max ARE_THE_SAME;
+	RD_cap_width, core.RD_cap_width ARE_THE_SAME;
+	RD_corner_exp, core.RD_corner_exp ARE_THE_SAME;
+	RD_late_onset, core.RD_late_onset ARE_THE_SAME;
+	RD_late_width, core.RD_late_width ARE_THE_SAME;
+	RD_late_floor, core.RD_late_floor ARE_THE_SAME;
+	x_wustite, core.x_wustite ARE_THE_SAME;
+	site_init, core.site_init ARE_THE_SAME;
+	site_floor, core.site_floor ARE_THE_SAME;
+	site_open_gain, core.site_open_gain ARE_THE_SAME;
+	oxygen_mig_lambda, core.oxygen_mig_lambda ARE_THE_SAME;
+	oxygen_mig_width, core.oxygen_mig_width ARE_THE_SAME;
+	oxygen_mig_exp, core.oxygen_mig_exp ARE_THE_SAME;
+	k_qfw, core.k_qfw ARE_THE_SAME;
+	K_qfw, core.K_qfw ARE_THE_SAME;
+	qfw_reverse_factor, core.qfw_reverse_factor ARE_THE_SAME;
+	k_fay_red, core.k_fay_red ARE_THE_SAME;
+	K_fay_red, core.K_fay_red ARE_THE_SAME;
+
+	FOR r IN steps CREATE
+		Keq_eq[r]:
+			K_ratio_eq[r] = exp(
+				K_fit.A[r]
+				+ K_fit.B[r] / (T / 1 {K})
+				+ K_fit.C[r] * ln(T / 1 {K})
+				+ K_fit.D[r] * (T / 1 {K})
+			);
+		rnet_eq[r]:
+			rate_net[r] = core.rate_net[r];
+		lam_open[r], core.lam_open[r] ARE_THE_SAME;
+		k_step[r], core.k_step[r] ARE_THE_SAME;
+		K_ratio_eq[r], core.K_ratio_eq[r] ARE_THE_SAME;
+	END FOR;
+	FOR r IN active_steps CREATE
+		kstep_active_eq[r]:
+			k_step[r] = eta[r] * k0[r] * exp(-E_a[r] / (1 {GAS_C} * T));
+		rnete_eq[r]:
+			rate_net_e[r] = rate_net[r];
+		rnetc_eq[r]:
+			rate_net_c[r] = 0 {1/s};
+		rnetraw_eq[r]:
+			rate_net_raw[r] = rate_net[r];
+		rdresfac_eq[r]:
+			rd_resistance_factor[r] = 1;
+	END FOR;
+	kstep4_eq:
+		k_step[4] = eta[4] * k0[4] * exp(-E_a[4] / (1 {GAS_C} * T));
+
+	Nrxnc_eq:
+		N_rxn_H2_c = 0 {mol/s};
+	Nrxne_eq:
+		N_rxn_H2_e = N_rxn_H2_total;
+	NbcH2_eq:
+		N_bc_H2 = SUM[cell[i].N_be_H2 | i IN axial_cells];
+	NceH2_eq:
+		N_ce_H2 = 0 {mol/s};
+	NbcH2O_eq:
+		N_bc_H2O = SUM[cell[i].N_be_H2O | i IN axial_cells];
+	NceH2O_eq:
+		N_ce_H2O = 0 {mol/s};
+	sharec_eq: solid_share_c = 0;
+	sharee_eq: solid_share_e = 1;
+	mscloud_eq: m_s_cloud = 0 {kg};
+	msemulsion_eq: m_s_emulsion = m_sample;
+	solid_exchange_min_eq: solid_exchange_rate_min = u / L_f;
+	solid_exchange_eq: solid_exchange_rate = solid_exchange_multiplier * solid_exchange_rate_min;
+
+METHODS
+	METHOD values;
+		FIX T := 800 {K} + 273.15 {K};
+		FIX p := 1 {atm};
+		FIX p_stp := 1 {atm};
+		FIX T_stp := 298.15 {K};
+		FIX Vdot_feed_stp := 2 {L/min};
+		FIX y_H2_in := 1.0;
+		FIX y_H2O_in := 0.0;
+		FIX MW_H2 := 2.01588 {g/g_mole};
+		FIX MW_H2O := 18.01528 {g/g_mole};
+		FIX MW_inert := 28.0134 {g/g_mole};
+
+		FIX d_t := 20 {mm};
+		FIX m_sample_init := 30 {g};
+		FIX d_p := 250 {um};
+		FIX d_b := 4 {mm};
+		FIX rho_p := 4000 {kg/m^3};
+		FIX rho_bulk_bed := 1800 {kg/m^3};
+		FIX eps_mf := 0.55;
+		FIX u_mf := 6 {mm/s};
+		FIX emulsion_flow_multiplier := 1.0;
+		FIX K_be_multiplier := 1.0;
+		FIX solid_exchange_multiplier := 1.0;
+
+		FIX MW_Fe2O3 := 159.687 {g/g_mole};
+		FIX MW_Fe3O4 := 231.531 {g/g_mole};
+		FIX MW_FeO := 71.844 {g/g_mole};
+		FIX MW_Fe := 55.845 {g/g_mole};
+		FIX MW_SiO2 := 60.0843 {g/g_mole};
+		FIX MW_Fe2SiO4 := 203.7733 {g/g_mole};
+		FIX ore_Fe2O3_mass_frac := 0.92428;
+		FIX ore_SiO2_mass_frac := 0.07572;
+		FIX sio2_active_frac := 0.0;
+
+		FIX tau_bed := 3.0;
+		FIX k_bed_multiplier := 0.386184629430;
+		FIX k_part_multiplier := 0.875869273089;
+		FIX d_int_multiplier := 0.669654200836;
+		FIX core_area_multiplier := 1.0;
+		FIX core_gas_bubble_blend := 0.0;
+		FIX core_gas_feed_blend := 0.0;
+
+		FIX Sh_particle := 1.02157931243;
+		FIX a_open := 0.0;
+		FIX a_close := 0.0;
+		FIX beta_T := 0.0;
+		FIX n_close := 1.0;
+		FIX eps_o_init := 0.081651108;
+		FIX beta_block := 17.137524;
+		FIX k_block := 4056.2077 {1/s};
+		FIX E_dens := 117.93297 {kJ/mol};
+		FIX eps_crit := 0.028496033;
+		FIX perm_exp := 3.939021;
+		FIX D_floor_frac := 2.8699459e-05;
+		FIX solid_activity_order := 1.1267411964554286;
+		FIX solid_activity_floor := 1.75876130213978e-05;
+		FIX RD_max := 1.05;
+		FIX RD_cap_width := 0.001;
+		FIX RD_corner_exp := 0.2;
+		FIX RD_late_onset := 0.99;
+		FIX RD_late_width := 0.3;
+		FIX RD_late_floor := 1.0;
+		FIX x_wustite := 0.0;
+		FIX site_init := 0.027923113;
+		FIX site_floor := 0.031387986;
+		FIX site_open_gain := 0.11991363;
+		FIX oxygen_mig_lambda := 0.0;
+		FIX oxygen_mig_width := 0.08530915;
+		FIX oxygen_mig_exp := 0.86141544;
+		FIX lam_open[1] := 3.2831718;
+		FIX lam_open[2] := 0.82987302;
+		FIX lam_open[3] := 2.7052229;
+		FIX lam_open[4] := 2.7052229;
+		FIX k_qfw := 1e-12 {1/s};
+		FIX K_qfw := 1.0;
+		FIX qfw_reverse_factor := 0.0;
+		FIX k_fay_red := 1e-12 {1/s};
+		FIX K_fay_red := 1.0;
+
+		FIX k0[1] := 0.000730240286465 {1/s/Pa};
+		FIX k0[2] := 0.0011416415084 {1/s/Pa};
+		FIX k0[3] := 0.00159194063573 {1/s/Pa};
+		FIX k0[4] := 0.00215453052902 {1/s/Pa};
+		FIX E_a[1] := 74.98520128301708 {kJ/mol};
+		FIX E_a[2] := 40.419114845335784 {kJ/mol};
+		FIX E_a[3] := 57.84052642334308 {kJ/mol};
+		FIX E_a[4] := 62.220807508270255 {kJ/mol};
+		FIX eta[1] := 1.0;
+		FIX eta[2] := 1.0;
+		FIX eta[3] := 1.0;
+		FIX eta[4] := 1.0;
+		FIX rd_resistance[1] := 0.0;
+		FIX rd_resistance[2] := 0.0;
+		FIX rd_resistance[3] := 0.0;
+		FIX phase_buffered_step3_blend := 1.0;
+		FIX phase_buffered_smoothing := 1e-6 {Pa};
+		RUN K_fit.values;
+
+		c_tot := 10 {mol/m^3};
+		F_feed := 1e-3 {mol/s};
+		F_bubble := 8e-4 {mol/s};
+		F_emulsion := 2e-4 {mol/s};
+		A_bed := 300 {mm^2};
+		u := 0.3 {m/s};
+		u_ratio_mf := 5;
+		L_mf := 50 {mm};
+		L_f := 80 {mm};
+		dz := 10 {mm};
+		eps := 0.75;
+		V_bed := 2e-5 {m^3};
+		V_bubble := 8e-6 {m^3};
+		d_b0_lee := 1 {mm};
+		d_bm_lee := 20 {mm};
+		delta := 0.5;
+		K_be := 3 {1/s};
+		D_screen := 1e-4 {m^2/s};
+		D_eff_bed := 1e-5 {m^2/s};
+		D_part0 := 1e-5 {m^2/s};
+		d_int_eff := d_int_multiplier * d_p;
+		A_core := A_bed;
+		n0_per_area := 1 {mol/m^2};
+
+		y_H2_b := 0.95;
+		y_H2_c := 0.90;
+		y_H2_e := 0.85;
+		y_H2O_b := 0.05;
+		y_H2O_c := 0.10;
+		y_H2O_e := 0.15;
+		y_inert_in := 0;
+		y_inert_b := 0;
+		y_inert_c := 0;
+		y_inert_e := 0;
+		N_rxn_H2_c := 0 {mol/s};
+		N_rxn_H2_e := 1e-5 {mol/s};
+		N_rxn_H2_total := 1e-5 {mol/s};
+		N_bc_H2 := 1e-4 {mol/s};
+		N_ce_H2 := 0 {mol/s};
+		N_bc_H2O := -1e-4 {mol/s};
+		N_ce_H2O := 0 {mol/s};
+		solid_share_c := 0;
+		solid_share_e := 1;
+		m_s_cloud := 0 {kg};
+		m_s_emulsion := m_sample_init;
+
+		n0_Fe2O3 := ore_Fe2O3_mass_frac * m_sample_init / MW_Fe2O3;
+		n0_SiO2_total := ore_SiO2_mass_frac * m_sample_init / MW_SiO2;
+		n0_SiO2_active := 0 {mol};
+		n0_SiO2_inactive := n0_SiO2_total;
+		n_Fe2O3 := n0_Fe2O3;
+		n_Fe3O4 := 0 {mol};
+		n_FeO := 0 {mol};
+		n_Fe := 0 {mol};
+		n_Fe2SiO4 := 0 {mol};
+		n_SiO2_active := 0 {mol};
+		m_sample := m_sample_init;
+		oxygen_remaining := 3 * n_Fe2O3;
+		reduction_degree := 0;
+		FOR r IN steps DO
+			k_step[r] := 1e-5 {1/s/Pa};
+			K_ratio_eq[r] := 1;
+			rate_net[r] := 1e-4 {1/s};
+		END FOR;
+		FOR r IN active_steps DO
+			rate_net_c[r] := 0 {1/s};
+			rate_net_e[r] := 1e-4 {1/s};
+			rate_net_raw[r] := 1e-4 {1/s};
+			rd_resistance_factor[r] := 1;
+		END FOR;
+		FOR i IN axial_nodes DO
+			RUN b_node[i].values;
+			RUN e_node[i].values;
+			z_lee[i] := 1 {mm};
+			d_b_lee[i] := 4 {mm};
+			u_br_lee[i] := 0.2 {m/s};
+			u_b_lee[i] := 0.3 {m/s};
+			delta_lee[i] := 0.5;
+			K_be_lee[i] := 3 {1/s};
+		END FOR;
+		FOR i IN axial_cells DO
+			RUN cell[i].values;
+			delta_cell[i] := 0.5;
+			K_be_cell[i] := 3 {1/s};
+			V_bubble_cell[i] := 1e-6 {m^3};
+		END FOR;
+		core.y_H2_part := 0.8;
+		core.y_H2O_part := 0.1;
+		core.y_H2_shell[1..n_radial_segs] := 0.8;
+		core.y_H2O_shell[1..n_radial_segs] := 0.1;
+		FIX t := 0 {s};
+	END values;
+
+	METHOD bound_self;
+		F_bubble.lower_bound := 1e-12 {mol/s};
+		F_emulsion.lower_bound := 1e-12 {mol/s};
+		u.lower_bound := 1e-6 {m/s};
+		u_mf.lower_bound := 1e-6 {m/s};
+		emulsion_flow_multiplier.lower_bound := 1e-6;
+		K_be_multiplier.lower_bound := 1e-6;
+		core_area_multiplier.lower_bound := 1e-6;
+		core_gas_bubble_blend.lower_bound := 0;
+		core_gas_bubble_blend.upper_bound := 1;
+		core_gas_feed_blend.lower_bound := 0;
+		core_gas_feed_blend.upper_bound := 1;
+		d_int_multiplier.lower_bound := 1e-12;
+		d_int_multiplier.upper_bound := 1;
+		d_int_eff.lower_bound := 1e-12 {m};
+		d_int_eff.upper_bound := d_p;
+		D_screen.lower_bound := -1 {m^2/s};
+		D_eff_bed.lower_bound := -1e-6 {m^2/s};
+		D_part0.lower_bound := -1e-6 {m^2/s};
+		L_f.lower_bound := 1e-6 {m};
+		delta.lower_bound := 1e-6;
+		delta.upper_bound := 0.99;
+		eps.lower_bound := 0.01;
+		eps.upper_bound := 0.99;
+		K_be.lower_bound := 0 {1/s};
+		reduction_degree.lower_bound := -1e-8;
+		reduction_degree.upper_bound := 1 + 1e-8;
+		m_sample.lower_bound := 0 {kg};
+		oxygen_remaining.lower_bound := -1e-9 {mol};
+		n_Fe2O3.lower_bound := -1e-6 {mol};
+		n_Fe3O4.lower_bound := -1e-6 {mol};
+		n_FeO.lower_bound := -1e-6 {mol};
+		n_Fe.lower_bound := -1e-6 {mol};
+		n_Fe2SiO4.lower_bound := -1e-6 {mol};
+		n_SiO2_active.lower_bound := -1e-6 {mol};
+		n0_SiO2_total.lower_bound := -1e-18 {mol};
+		n0_SiO2_active.lower_bound := -1e-18 {mol};
+		n0_SiO2_inactive.lower_bound := -1e-18 {mol};
+		y_H2O_b.lower_bound := -1e-3;
+		y_H2O_c.lower_bound := -1e-3;
+		y_H2O_e.lower_bound := -1e-3;
+		y_inert_b.lower_bound := -0.5;
+		y_inert_c.lower_bound := -0.5;
+		y_inert_e.lower_bound := -0.5;
+		phase_buffered_step3_blend.lower_bound := 0;
+		phase_buffered_step3_blend.upper_bound := 1;
+		phase_buffered_smoothing.lower_bound := 1e-9 {Pa};
+		eps_o_init.lower_bound := 1e-3;
+		eps_o_init.upper_bound := 0.95;
+		eps_crit.lower_bound := 1e-6;
+		eps_crit.upper_bound := 0.2;
+		perm_exp.lower_bound := 0.5;
+		perm_exp.upper_bound := 12;
+		D_floor_frac.lower_bound := 1e-12;
+		D_floor_frac.upper_bound := 0.1;
+		solid_activity_order.lower_bound := 0.2;
+		solid_activity_order.upper_bound := 5.0;
+		solid_activity_floor.lower_bound := 1e-8;
+		solid_activity_floor.upper_bound := 0.2;
+		site_init.lower_bound := 0.0;
+		site_init.upper_bound := 1.0;
+		site_floor.lower_bound := 0.0;
+		site_floor.upper_bound := 1.0;
+		site_open_gain.lower_bound := 1e-6;
+		oxygen_mig_lambda.lower_bound := 0.0;
+		oxygen_mig_width.lower_bound := 1e-4;
+		oxygen_mig_exp.lower_bound := 0.2;
+		k_qfw.lower_bound := 1e-12 {1/s};
+		k_fay_red.lower_bound := 1e-12 {1/s};
+		FOR i IN axial_nodes DO
+			z_lee[i].lower_bound := -1e-12 {m};
+			d_b_lee[i].lower_bound := 1 {um};
+			u_br_lee[i].lower_bound := 0 {m/s};
+			u_b_lee[i].lower_bound := 1e-6 {m/s};
+			delta_lee[i].lower_bound := 1e-6;
+			delta_lee[i].upper_bound := 0.99;
+			K_be_lee[i].lower_bound := 0 {1/s};
+			b_node[i].y_H2.lower_bound := -0.5;
+			b_node[i].y_H2O.lower_bound := -1e-3;
+			e_node[i].y_H2.lower_bound := -0.5;
+			e_node[i].y_H2O.lower_bound := -1e-3;
+		END FOR;
+		FOR i IN axial_cells DO
+			RUN cell[i].bound_self;
+			delta_cell[i].lower_bound := 1e-6;
+			delta_cell[i].upper_bound := 0.99;
+			K_be_cell[i].lower_bound := 0 {1/s};
+			V_bubble_cell[i].lower_bound := 0 {m^3};
+		END FOR;
+		core.y_H2O_centre.lower_bound := -1e-3;
+		core.y_H2O_part.lower_bound := -1e-3;
+		core.y_Ar.lower_bound := -0.5;
+		core.y_Ar_part.lower_bound := -0.5;
+		core.top.y_H2O.lower_bound := -1e-3;
+		core.bot.y_H2O.lower_bound := -1e-3;
+		core.n_Fe2O3.lower_bound := -1e-3 {mol};
+		core.n_Fe3O4.lower_bound := -1e-3 {mol};
+		core.n_FeO.lower_bound := -1e-3 {mol};
+		core.n_Fe.lower_bound := -1e-3 {mol};
+		core.n_Fe2SiO4.lower_bound := -1e-3 {mol};
+		core.n_SiO2_active.lower_bound := -1e-3 {mol};
+		core.n0_SiO2_active_slice.lower_bound := -1e-18 {mol};
+		core.xi1.lower_bound := -1e-4;
+		core.xi3.lower_bound := -1e-4;
+		core.xi1_shell[1..n_radial_segs].lower_bound := -1e-4;
+		core.xi3_shell[1..n_radial_segs].lower_bound := -1e-4;
+		core.shell[1..n_radial_segs].y_H2.lower_bound := -1e-6;
+		core.shell[1..n_radial_segs].y_H2O.lower_bound := -1e-3;
+		core.shell[1..n_radial_segs].xi_close.lower_bound := -1e-6;
+		core.shell[1..n_radial_segs].eps_o.lower_bound := 1e-6;
+		core.shell[1..n_radial_segs].eps_o.upper_bound := 1;
+		core.shell[1..n_radial_segs].phi_b.lower_bound := -1e-9;
+		core.shell[1..n_radial_segs].phi_b.upper_bound := 1.05;
+		core.shell[1..n_radial_segs].s_rxn.lower_bound := -0.02;
+		core.shell[1..n_radial_segs].s_rxn.upper_bound := 1.02;
+		core.shell[1..n_radial_segs].oxygen_remaining_shell.lower_bound := -1e-3 {mol};
+		core.shell[1..n_radial_segs].n_Fe2O3.lower_bound := -1e-3 {mol};
+		core.shell[1..n_radial_segs].n_Fe3O4.lower_bound := -1e-3 {mol};
+		core.shell[1..n_radial_segs].n_FeO.lower_bound := -1e-3 {mol};
+		core.shell[1..n_radial_segs].n_Fe.lower_bound := -1e-3 {mol};
+		core.shell[1..n_radial_segs].n_Fe2SiO4.lower_bound := -1e-3 {mol};
+		core.shell[1..n_radial_segs].n_SiO2_active.lower_bound := -1e-3 {mol};
+		core.shell[1..n_radial_segs].n_Fe2SiO4_pos.lower_bound := -1e-12 {mol};
+		core.shell[1..n_radial_segs].n_SiO2_active_pos.lower_bound := -1e-12 {mol};
+		core.shell[1..n_radial_segs].a_Fe2O3.lower_bound := -1e3;
+		core.shell[1..n_radial_segs].a_Fe3O4.lower_bound := -1e3;
+		core.shell[1..n_radial_segs].a_FeO.lower_bound := -1e3;
+		core.shell[1..n_radial_segs].a_Fe.lower_bound := -1e3;
+		core.shell[1..n_radial_segs].redox_pair_capacity[steps].lower_bound := -1e3;
+		core.shell[1..n_radial_segs].redox_forward_gate[steps].lower_bound := -1e3;
+		core.shell[1..n_radial_segs].redox_reverse_gate[steps].lower_bound := -1e3;
+		core.shell[1..n_radial_segs].reduction_degree_shell.lower_bound := -1e-6;
+		core.shell[1..n_radial_segs].rd_cap_gap.lower_bound := -1;
+		core.shell[1..n_radial_segs].rd_capacity_factor.lower_bound := -1e-8;
+		core.shell[1..n_radial_segs].D_part_eff.lower_bound := -1e-6 {m^2/s};
+		core.shell[1..n_radial_segs].D_part_eff_uncapped.lower_bound := -1e-6 {m^2/s};
+		core.D_part_face[1..n_radial_segs - 1].lower_bound := -1e-6 {m^2/s};
+		core.link[1..n_radial_segs - 1].D_face.lower_bound := -1e-6 {m^2/s};
+	END bound_self;
+
+	METHOD dynamic_reset;
+		t := 0 {s};
+		d_int_eff := d_int_multiplier * d_p;
+		core.shell[1..n_radial_segs].n_Fe2O3 := n0_Fe2O3 / n_radial_segs;
+		core.shell[1..n_radial_segs].n_Fe3O4 := 0 {mol};
+		core.shell[1..n_radial_segs].n_FeO := 0 {mol};
+		core.shell[1..n_radial_segs].n_Fe := 0 {mol};
+		core.shell[1..n_radial_segs].n_Fe2SiO4 := 0 {mol};
+		core.shell[1..n_radial_segs].n_SiO2_active := n0_SiO2_active / n_radial_segs;
+		core.shell[1..n_radial_segs].eps_o := eps_o_init;
+		core.shell[1..n_radial_segs].phi_b := 0;
+		core.shell[1..n_radial_segs].s_rxn := site_init;
+	END dynamic_reset;
+
+	METHOD free_dynamic;
+		FREE der(core.shell[1..n_radial_segs].n_Fe2O3),
+		der(core.shell[1..n_radial_segs].n_Fe3O4),
+		der(core.shell[1..n_radial_segs].n_FeO),
+		der(core.shell[1..n_radial_segs].n_Fe),
+		der(core.shell[1..n_radial_segs].n_Fe2SiO4),
+		der(core.shell[1..n_radial_segs].n_SiO2_active);
+		FREE der(core.shell[1..n_radial_segs].eps_o),
+		der(core.shell[1..n_radial_segs].phi_b),
+		der(core.shell[1..n_radial_segs].s_rxn);
+	END free_dynamic;
+
+	METHOD observe_default;
+		reduction_degree.obs_id := 1;
+		m_sample.obs_id := 2;
+		y_H2_b.obs_id := 3;
+		y_H2_e.obs_id := 4;
+		y_H2O_b.obs_id := 5;
+		y_H2O_e.obs_id := 6;
+		N_rxn_H2_total.obs_id := 7;
+		delta.obs_id := 8;
+		K_be.obs_id := 9;
+	END observe_default;
+
+	METHOD prepare_dynamic;
+		RUN values;
+		RUN bound_self;
+		RUN dynamic_reset;
+		FIX t;
+		RUN free_dynamic;
+		RUN observe_default;
+	END prepare_dynamic;
+
+	METHOD on_load;
+		RUN prepare_dynamic;
+	END on_load;
+END fbdri_lee_tga_core_single_family;
+
+MODEL fbdri_lee_tga_core_single WHERE (
+	(reaction_model = 'three_step_wustite')
+		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_src3')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
+		OR (reaction_model = 'two_step_direct');
+) REFINES fbdri_lee_tga_core_single_family(
+	reaction_model :== 'three_step_wustite_active_nord';
+);
+END fbdri_lee_tga_core_single;
+
+MODEL fbdri_lee_tga_core_single_wustite WHERE (
+	(reaction_model = 'three_step_wustite')
+		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_src3')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
+		OR (reaction_model = 'two_step_direct');
+) REFINES fbdri_lee_tga_core_single_family(
+	reaction_model :== 'three_step_wustite_active_nord';
+);
+END fbdri_lee_tga_core_single_wustite;
+
+MODEL fbdri_lee_tga_core_single_source3 WHERE (
+	(reaction_model = 'three_step_wustite')
+		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_src3')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
+		OR (reaction_model = 'two_step_direct');
+) REFINES fbdri_lee_tga_core_single_family(
+	reaction_model :== 'three_step_wustite_active_nord_src3';
+);
+END fbdri_lee_tga_core_single_source3;
+
+MODEL fbdri_lee_tga_core_single_direct WHERE (
+	(reaction_model = 'three_step_wustite')
+		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_src3')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
+		OR (reaction_model = 'two_step_direct');
+) REFINES fbdri_lee_tga_core_single_family(
+	reaction_model :== 'two_step_direct';
+);
+END fbdri_lee_tga_core_single_direct;
+
+(* vim: sw=4:noet:ts=4
+*)
