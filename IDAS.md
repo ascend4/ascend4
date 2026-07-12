@@ -273,6 +273,230 @@ ASCEND-derived analytical derivatives with the IDAS sensitivities. SymPy is
 useful for deriving or checking the formula offline, but it is not a test
 dependency.
 
+The suite also contains a compact exact-solution semi-explicit DAE in
+`models/test/ida/idas_sensitivity.a4c`:
+
+$$
+F_1 = \dot{y} + pz = 0
+$$
+
+$$
+F_2 = z - y^2 = 0
+$$
+
+with:
+
+$$
+y(0)=y_0,\qquad z(0)=y_0^2
+$$
+
+and exact solution:
+
+$$
+y(t)=\frac{y_0}{1+p y_0 t},\qquad z(t)=y(t)^2
+$$
+
+The forward sensitivities with respect to \(p\) are:
+
+$$
+\frac{\partial y}{\partial p} = -t\,y(t)^2
+$$
+
+$$
+\frac{\partial z}{\partial p}
+    = 2y(t)\frac{\partial y}{\partial p}
+    = -2t\,y(t)^3
+$$
+
+This is a small sign and indexing regression for both a differential observed
+variable (`y`) and an algebraic observed variable (`z`) before testing larger
+ported SUNDIALS examples. The ASCEND source writes the differential equation in
+the natural form `der(y) = -p*z`, with `z = y*y` as the algebraic constraint.
+
+The suite now also includes an ASCEND transcription of the SUNDIALS Robertson
+FSA example (`idasRoberts_FSA_dns.c`) in `models/test/ida/idas_sensitivity.a4c`.
+The model is written in the natural published form:
+
+$$
+\dot{y}_1 = -p_1y_1 + p_2y_2y_3
+$$
+
+$$
+\dot{y}_2 = p_1y_1 - p_2y_2y_3 - p_3y_2^2
+$$
+
+$$
+y_1 + y_2 + y_3 = 1
+$$
+
+The `roberts_fsa_sensitivity` regression configures \(p_1\), \(p_2\), and
+\(p_3\) as IDAS sensitivity parameters and compares the final state and
+forward sensitivity matrix at \(t=4\times10^{10}\) with the lower-level
+SUNDIALS `idasRoberts_FSA_dns_-sensi_stg_t.out` reference output. The test
+uses scalar absolute tolerance (`atolvect = FALSE`) and a larger internal step
+allowance so the tiny final \(y_1\) and \(y_2\) values are controlled by the
+requested tolerance rather than by loose model-default `ode_atol` values.
+
+The next regression tier should port additional SUNDIALS IDAS examples into
+ASCEND model code and compare against the lower-level SUNDIALS reference
+outputs, rather than copying the C implementations. Good candidates are:
+
+1. Slider-crank FSA (`idasSlCrank_FSA_dns.c`): a 10-variable stabilized
+   index-2 mechanical DAE with quadrature sensitivity output. This is now
+   partially transcribed in `models/test/ida/idas_sensitivity.a4c` as
+   `idas_slider_crank_fsa`; see the dedicated section below.
+2. Robertson ASAi and AkzoNobel ASAi: useful later for adjoint sensitivity
+   coverage, but not direct tests of the current forward-sensitivity API. They
+   should wait until ASCEND exposes IDAS adjoint integration and backward
+   problem setup.
+
+# Slider-Crank And Quadratures
+
+The SUNDIALS slider-crank FSA example is a useful next regression because it
+tests a constrained mechanical DAE and sensitivity of an integral output rather
+than only final state values. It also exposes two ASCEND/IDA gaps that
+Robertson does not.
+
+## Short-Term Accumulated-State Route
+
+The SUNDIALS example reports:
+
+$$
+G = \int_{0}^{10}
+    \frac{1}{2}\left(J_1v_1^2 + m_2v_2^2 + J_2v_3^2\right)\,dt
+$$
+
+with:
+
+$$
+G = 3.3366155611545363
+$$
+
+and:
+
+$$
+\frac{\partial G}{\partial(k,c)}
+    \approx (3.3346\times10^{-1},\ -3.6375\times10^{-1})
+$$
+
+The short-term ASCEND route avoids native IDAS quadrature APIs by adding a
+normal differential state:
+
+```ascend
+accumulated_energy:
+    der(G) = (J1 * qd * qd + m2 * xd * xd + J2 * phid * phid) / 2;
+```
+
+Then `G` is just another observed state variable, so the existing
+`integrator_get_observation_sensitivity` path can expose
+\(\partial G/\partial k\) and \(\partial G/\partial c\).
+
+This model is now present as `idas_slider_crank_fsa`. The equations are written
+in an ASCEND-readable coordinate form:
+
+- `q`, `x`, and `phi` are the generalized coordinates;
+- `qd`, `xd`, and `phid` are the generalized velocities;
+- `lambda_x`, `lambda_y`, `mu_x`, and `mu_y` are the GGL multiplier variables;
+- `spring_force_per_length` is named explicitly so the spring-damper transform
+  is inspectable without repeating the full expression in every force balance.
+
+The current CUnit test `slider_crank_fsa_accumulated_energy` configures `k` and
+`c` as sensitivity parameters and contains the expected checks against the
+SUNDIALS reference values, but it is currently recorded as a skipped known gap:
+ASCEND's IDA analyser rejects the GGL formulation before IDAS is called.
+
+## Current Structural-Index Barrier
+
+The slider-crank model uses the Gear-Gupta-Leimkuhler stabilized index-2 form.
+In that formulation the algebraic constraints are position and velocity
+constraints:
+
+$$
+x - \cos(\phi) - a\cos(q) = 0
+$$
+
+$$
+-\sin(\phi) - a\sin(q) = 0
+$$
+
+$$
+a\sin(q)\dot{q} + \dot{x} + \sin(\phi)\dot{\phi} = 0
+$$
+
+$$
+-a\cos(q)\dot{q} - \cos(\phi)\dot{\phi} = 0
+$$
+
+The algebraic multipliers appear in the differential equations rather than
+directly in those algebraic constraint equations. SUNDIALS IDAS can accept this
+with an appropriate `id` vector and by suppressing algebraic variables from
+local error testing. The lower-level example explicitly calls
+`IDASetSuppressAlg(TRUE)`.
+
+ASCEND's current `integrator_ida_analyse` path performs a structural check on
+the algebraic block and rejects the model because the matrix described as
+\(dg/dy_a\) is not full rank. That check is appropriate for the simpler
+index-1 DAE class currently expected by the ASCEND IDA wrapper, but it blocks
+this SUNDIALS-supported GGL formulation.
+
+Running the existing read-only Pantelides advisory on `idas_slider_crank_fsa`
+is useful diagnostically. It recognises the derivative chains for \(G\),
+\(\phi\), \(q\), \(x\), \(\dot{\phi}\), \(\dot{q}\), and \(\dot{x}\), and
+suggests differentiating:
+
+1. `position_constraint_x`
+2. `position_constraint_y`
+3. `velocity_constraint_x`
+4. `velocity_constraint_y`
+
+That is exactly the kind of structural information needed for an
+index-reduction route. However, the current Pantelides layer is advisory only:
+it reports generated relation names such as `d/dt(position_constraint_x)` but
+does not build symbolic differentiated relations, modify the active system, or
+replace/remove the original constraints. Therefore it cannot yet make this
+slider-crank formulation pass `integrator_ida_analyse`; it is evidence for the
+next implementation step rather than a runnable fix.
+
+To run this example through ASCEND without reformulating the mechanics into a
+different index-1 system, the IDAS integrator needs a controlled route that:
+
+1. Allows selected GGL/stabilized index-2 DAEs through analysis when the user
+   has explicitly selected `INTEGRATOR IDAS` or an equivalent option.
+2. Builds the IDAS `id` vector correctly for differential and algebraic
+   components, as the current code already does for accepted models.
+3. Exposes an ASCEND option equivalent to `IDASetSuppressAlg(TRUE)`.
+4. Starts from user-supplied consistent initial conditions, or calls IDAS
+   consistent-initial-condition routines in a way that is compatible with the
+   higher-index formulation.
+5. Initializes sensitivities consistently, ideally by arranging
+   `IDASensInit` before the relevant consistent-IC call when the model needs
+   nonzero initial sensitivity derivatives.
+
+## Proper Native Quadrature Route
+
+The accumulated-state route is useful because it exercises the existing
+observed-state sensitivity API. It is not the same as exposing IDAS
+quadratures. A native implementation should add Integrator-level support for:
+
+1. registering one or more quadrature residuals \(q' = g(t,y,\dot{y},p)\);
+2. calling `IDAQuadInit`, `IDAQuadSStolerances`, and `IDASetQuadErrCon`;
+3. calling `IDAQuadSensInit`, `IDAQuadSensSStolerances`, and
+   `IDASetQuadSensErrCon` when forward sensitivities are enabled;
+4. retrieving `IDAGetQuad` and `IDAGetQuadSens` at output points;
+5. exposing quadrature values and quadrature sensitivities through C, C++, and
+   Python APIs separately from observed state sensitivities.
+
+That route would let the ASCEND regression compare the SUNDIALS slider-crank
+example in its original form:
+
+$$
+G = \int_0^{10} g(t,y,p)\,dt
+$$
+
+rather than by adding \(G\) as an ordinary model state. It would also be the
+right API for optimisation drivers that care about objective integrals rather
+than final-time state observations.
+
 The first smooth, non-event sensitivity path is now prototyped:
 
 1. `IntegratorIdaData` stores `sens_p`, `sens_p_nominal`, `sens_pbar`,

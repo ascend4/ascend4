@@ -21,8 +21,8 @@ MODEL twinslabs_der;
     rhocV_1 IS_A heat_capacity;
     rhocV_2 IS_A heat_capacity;
 
-    slab_1: -rhocV_1 * der(T_1) = h_c * A * (T_1 - T_2);
-    slab_2: -rhocV_2 * der(T_2) = hbar * A * (T_2 - T_inf) - h_c * A * (T_1 - T_2);
+    slab_1: der(T_1) = -h_c * A * (T_1 - T_2) / rhocV_1;
+    slab_2: der(T_2) = (h_c * A * (T_1 - T_2) - hbar * A * (T_2 - T_inf)) / rhocV_2;
 
     h_c IS_A heat_transfer_coefficient;
     hbar IS_A heat_transfer_coefficient;

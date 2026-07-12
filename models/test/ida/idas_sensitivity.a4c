@@ -1,0 +1,258 @@
+REQUIRE "ivpsystem.a4l";
+
+(*
+    Small exact-solution semi-explicit DAE for IDAS sensitivity tests.
+
+        der(y) + p*z = 0
+        z - y^2 = 0
+
+    With y(0) = y0 and z(0) = y0^2:
+
+        y(t) = y0 / (1 + p*y0*t)
+        z(t) = y(t)^2
+*)
+MODEL idas_exact_dae;
+    y IS_A solver_var;
+    z IS_A solver_var;
+    p IS_A solver_var;
+    t IS_A solver_var;
+
+    dyn: der(y) = -p * z;
+    alg: z = y * y;
+
+    INDEPENDENT t;
+
+METHODS
+    METHOD specify;
+        FIX p, t;
+        FREE y, z;
+        FREE der(y);
+    END specify;
+
+    METHOD values;
+        p := 0.5;
+        y := 2.0;
+        z := 4.0;
+        t := 0.0;
+
+        y.obs_id := 1;
+        z.obs_id := 2;
+    END values;
+
+    METHOD on_load;
+        RUN reset;
+        RUN specify;
+        RUN values;
+        OBSERVE y, z;
+        INTEGRATOR IDA;
+        INTEGRATE FROM 0 {s} TO 10 {s} STEPS 10;
+    END on_load;
+END idas_exact_dae;
+
+(*
+    ASCEND transcription of the SUNDIALS IDAS Robertson FSA example:
+
+        der(y1) = -p1*y1 + p2*y2*y3
+        der(y2) =  p1*y1 - p2*y2*y3 - p3*y2^2
+        0       =  y1 + y2 + y3 - 1
+
+    The regression compares the final state and forward sensitivities against
+    the lower-level SUNDIALS idasRoberts_FSA_dns reference output.
+*)
+MODEL idas_roberts_fsa;
+    y1 IS_A solver_var;
+    y2 IS_A solver_var;
+    y3 IS_A solver_var;
+    p1 IS_A solver_var;
+    p2 IS_A solver_var;
+    p3 IS_A solver_var;
+    t IS_A solver_var;
+
+    r1: der(y1) = -p1 * y1 + p2 * y2 * y3;
+    r2: der(y2) = p1 * y1 - p2 * y2 * y3 - p3 * y2 * y2;
+    r3: y1 + y2 + y3 = 1;
+
+    INDEPENDENT t;
+
+METHODS
+    METHOD specify;
+        FIX p1, p2, p3, t;
+        FREE y1, y2, y3;
+        FREE der(y1), der(y2);
+    END specify;
+
+    METHOD values;
+        p1 := 0.04;
+        p2 := 1.0e4;
+        p3 := 3.0e7;
+        y1 := 1.0;
+        y2 := 0.0;
+        y3 := 0.0;
+        t := 0.0;
+
+        y1.obs_id := 1;
+        y2.obs_id := 2;
+        y3.obs_id := 3;
+    END values;
+
+    METHOD on_load;
+        RUN reset;
+        RUN specify;
+        RUN values;
+        OBSERVE y1, y2, y3;
+        INTEGRATOR IDA;
+        INTEGRATE FROM 0 TO 4.0e10 STEPS 12;
+    END on_load;
+END idas_roberts_fsa;
+
+(*
+    ASCEND transcription of the SUNDIALS IDAS slider-crank FSA example.
+
+    Coordinates:
+        q   crank angle
+        x   slider position
+        phi connecting-rod angle
+
+    The spring-damper force is written through named geometry quantities so
+    the coordinate transform remains inspectable in ASCEND. The SUNDIALS
+    example reports sensitivities of a quadrature; this short-term ASCEND
+    version uses an accumulated state G with der(G) equal to kinetic energy.
+*)
+MODEL idas_slider_crank_fsa;
+    q, x, phi IS_A solver_var;
+    qd, xd, phid IS_A solver_var;
+    lambda_x, lambda_y IS_A solver_var;
+    mu_x, mu_y IS_A solver_var;
+    G IS_A solver_var;
+
+    a, J1, J2, m2 IS_A solver_var;
+    k, c, l0, F IS_A solver_var;
+    t IS_A solver_var;
+
+    spring_force_per_length IS_A solver_var;
+
+    spring_force_transform:
+        spring_force_per_length =
+            (
+                k * (
+                    sqrt(
+                        x * x
+                        - x * (cos(phi) + a * cos(q))
+                        + (1 + a * a) / 4
+                        + a * (cos(phi) * cos(q) + sin(phi) * sin(q)) / 2
+                    ) - l0
+                )
+                + c * (
+                    (
+                        2 * x * xd
+                        - xd * (cos(phi) + a * cos(q))
+                        + x * (sin(phi) * phid + a * sin(q) * qd)
+                        - a * (sin(phi) * cos(q) - cos(phi) * sin(q))
+                            * (phid - qd) / 2
+                    ) / (
+                        2 * sqrt(
+                            x * x
+                            - x * (cos(phi) + a * cos(q))
+                            + (1 + a * a) / 4
+                            + a * (cos(phi) * cos(q) + sin(phi) * sin(q)) / 2
+                        )
+                    )
+                )
+            ) / sqrt(
+                x * x
+                - x * (cos(phi) + a * cos(q))
+                + (1 + a * a) / 4
+                + a * (cos(phi) * cos(q) + sin(phi) * sin(q)) / 2
+            );
+
+    kinematic_q:
+        der(q) = qd - a * sin(q) * mu_x + a * cos(q) * mu_y;
+    kinematic_x:
+        der(x) = xd - mu_x;
+    kinematic_phi:
+        der(phi) = phid - sin(phi) * mu_x + cos(phi) * mu_y;
+
+    dynamic_qd:
+        J1 * der(qd) =
+            -spring_force_per_length * a
+                * ((sin(phi) * cos(q) - cos(phi) * sin(q)) / 2 + x * sin(q)) / 2
+            - a * sin(q) * lambda_x
+            + a * cos(q) * lambda_y;
+    dynamic_xd:
+        m2 * der(xd) =
+            spring_force_per_length * (cos(phi) / 2 - x + a * cos(q) / 2)
+            + F
+            - lambda_x;
+    dynamic_phid:
+        J2 * der(phid) =
+            -spring_force_per_length
+                * (x * sin(phi) - a * (sin(phi) * cos(q) - cos(phi) * sin(q)) / 2) / 2
+            - F * sin(phi)
+            - sin(phi) * lambda_x
+            + cos(phi) * lambda_y;
+
+    position_constraint_x:
+        x = cos(phi) + a * cos(q);
+    position_constraint_y:
+        -sin(phi) - a * sin(q) = 0;
+    velocity_constraint_x:
+        a * sin(q) * qd + xd + sin(phi) * phid = 0;
+    velocity_constraint_y:
+        -a * cos(q) * qd - cos(phi) * phid = 0;
+
+    accumulated_energy:
+        der(G) = (J1 * qd * qd + m2 * xd * xd + J2 * phid * phid) / 2;
+
+    INDEPENDENT t;
+
+METHODS
+    METHOD specify;
+        FIX a, J1, J2, m2, k, c, l0, F, t;
+        FREE q, x, phi, qd, xd, phid, lambda_x, lambda_y, mu_x, mu_y, G;
+        FREE spring_force_per_length;
+        FREE der(q), der(x), der(phi), der(qd), der(xd), der(phid), der(G);
+    END specify;
+
+    METHOD values;
+        a := 0.5;
+        J1 := 1.0;
+        J2 := 2.0;
+        m2 := 1.0;
+        k := 1.0;
+        c := 1.0;
+        l0 := 1.0;
+        F := 1.0;
+
+        q := 1.5707963267948966;
+        phi := -0.5235987755982989;
+        x := 0.8660254037844386;
+        qd := 0.0;
+        xd := 0.0;
+        phid := 0.0;
+        lambda_x := 0.0;
+        lambda_y := 0.0;
+        mu_x := 0.0;
+        mu_y := 0.0;
+        G := 0.0;
+        t := 0.0;
+
+        der(q) := 0.0;
+        der(x) := 0.0;
+        der(phi) := 0.0;
+        der(qd) := 0.14174682452694518;
+        der(xd) := 1.5669872981077808;
+        der(phid) := 0.1791265877365274;
+        der(G) := 0.0;
+
+        G.obs_id := 1;
+    END values;
+
+    METHOD on_load;
+        RUN reset;
+        RUN specify;
+        RUN values;
+        OBSERVE G;
+        INTEGRATOR IDA;
+        INTEGRATE FROM 0 TO 10 STEPS 1;
+    END on_load;
+END idas_slider_crank_fsa;
