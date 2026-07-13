@@ -1,5 +1,26 @@
 REQUIRE "johnpye/fprops/reactive_stoic.a4l";
 
+(* Concrete, unparameterized flowsheet connector.  Keeping thermodynamic
+   package selection out of the connector permits whole-stream
+   ARE_THE_SAME connections even where adjacent units use different
+   stage-specific FPROPS packages. *)
+MODEL alumina_stream;
+	components IS_A set OF symbol_constant;
+	components :== ['gibbsite', 'boehmite', 'gamma_alumina', 'water'];
+	T IS_A temperature;
+	P IS_A pressure;
+	f[components] IS_A molar_rate;
+
+	METHODS
+	METHOD default_self;
+		T := 298.15 {K};
+		P := 1 {bar};
+		FOR i IN components DO
+			f[i] := 0 {mol/s};
+		END FOR;
+	END default_self;
+END alumina_stream;
+
 (*
 	Partition a reactive stream's enthalpy flow into selected solid and vapour
 	components.  The masked component-flow vectors are evaluated through the
@@ -23,12 +44,12 @@ MODEL alumina_enthalpy_split(
 	H_flow_vapours IS_A energy_rate;
 
 	FOR i IN solids CREATE
-		solids_keep[i]: f_solids[i] = f[i];
+		f_solids[i], f[i] ARE_THE_SAME;
 		vapours_zero[i]: f_vapours[i] = 0 {mol/s};
 	END FOR;
 	FOR i IN vapours CREATE
 		solids_zero[i]: f_solids[i] = 0 {mol/s};
-		vapours_keep[i]: f_vapours[i] = f[i];
+		f_vapours[i], f[i] ARE_THE_SAME;
 	END FOR;
 	calc_H_flow_solids: fprops_rxn_h_TPn(
 		T, P, f_solids[components] : INPUT;
@@ -42,18 +63,37 @@ MODEL alumina_enthalpy_split(
 	);
 END alumina_enthalpy_split;
 
-MODEL alumina_heater(pkg WILL_BE reactive_package;);
-	components ALIASES pkg.components;
-	inlet IS_A reactive_stream(pkg);
-	outlet IS_A reactive_stream(pkg);
+MODEL alumina_heater(
+	pkg WILL_BE reactive_package;
+	solids WILL_BE set OF symbol_constant;
+	vapours WILL_BE set OF symbol_constant;
+);
+	inlet IS_A alumina_stream;
+	outlet IS_A alumina_stream;
+	IN_SPLIT IS_A alumina_enthalpy_split(pkg, solids, vapours);
+	OUT_SPLIT IS_A alumina_enthalpy_split(pkg, solids, vapours);
 	Qdot IS_A energy_rate;
+	Qdot_solids IS_A energy_rate;
+	Qdot_vapours IS_A energy_rate;
 	DeltaP IS_A delta_pressure;
 
-	FOR i IN components CREATE
-		mbal[i]: outlet.f[i] = inlet.f[i];
+	FOR i IN inlet.components CREATE
+		outlet.f[i], inlet.f[i] ARE_THE_SAME;
+	END FOR;
+	IN_SPLIT.T, inlet.T ARE_THE_SAME;
+	IN_SPLIT.P, inlet.P ARE_THE_SAME;
+	OUT_SPLIT.T, outlet.T ARE_THE_SAME;
+	OUT_SPLIT.P, outlet.P ARE_THE_SAME;
+	FOR i IN pkg.components CREATE
+		IN_SPLIT.f[i], inlet.f[i] ARE_THE_SAME;
+		OUT_SPLIT.f[i], outlet.f[i] ARE_THE_SAME;
 	END FOR;
 	pbal: outlet.P = inlet.P - DeltaP;
-	ebal: outlet.H_flow = inlet.H_flow + Qdot;
+	solids_duty: Qdot_solids
+		= OUT_SPLIT.H_flow_solids - IN_SPLIT.H_flow_solids;
+	vapours_duty: Qdot_vapours
+		= OUT_SPLIT.H_flow_vapours - IN_SPLIT.H_flow_vapours;
+	ebal: Qdot = Qdot_solids + Qdot_vapours;
 
 	METHODS
 	METHOD default_self;
@@ -67,14 +107,38 @@ END alumina_heater;
 MODEL alumina_interstage_heater(
 	pkg_in WILL_BE reactive_package;
 	pkg_out WILL_BE reactive_package;
+	solids_in WILL_BE set OF symbol_constant;
+	solids_out WILL_BE set OF symbol_constant;
+	vapours WILL_BE set OF symbol_constant;
 );
-	inlet IS_A reactive_stream(pkg_in);
-	outlet IS_A reactive_stream(pkg_out);
+	inlet IS_A alumina_stream;
+	outlet IS_A alumina_stream;
+	IN_SPLIT IS_A alumina_enthalpy_split(pkg_in, solids_in, vapours);
+	OUT_SPLIT IS_A alumina_enthalpy_split(pkg_out, solids_out, vapours);
 	Qdot IS_A energy_rate;
+	Qdot_solids IS_A energy_rate;
+	Qdot_vapours IS_A energy_rate;
 	DeltaP IS_A delta_pressure;
 
+	FOR i IN inlet.components CREATE
+		outlet.f[i], inlet.f[i] ARE_THE_SAME;
+	END FOR;
+	IN_SPLIT.T, inlet.T ARE_THE_SAME;
+	IN_SPLIT.P, inlet.P ARE_THE_SAME;
+	OUT_SPLIT.T, outlet.T ARE_THE_SAME;
+	OUT_SPLIT.P, outlet.P ARE_THE_SAME;
+	FOR i IN pkg_in.components CREATE
+		IN_SPLIT.f[i], inlet.f[i] ARE_THE_SAME;
+	END FOR;
+	FOR i IN pkg_out.components CREATE
+		OUT_SPLIT.f[i], outlet.f[i] ARE_THE_SAME;
+	END FOR;
 	pbal: outlet.P = inlet.P - DeltaP;
-	ebal: outlet.H_flow = inlet.H_flow + Qdot;
+	solids_duty: Qdot_solids
+		= OUT_SPLIT.H_flow_solids - IN_SPLIT.H_flow_solids;
+	vapours_duty: Qdot_vapours
+		= OUT_SPLIT.H_flow_vapours - IN_SPLIT.H_flow_vapours;
+	ebal: Qdot = Qdot_solids + Qdot_vapours;
 
 	METHODS
 	METHOD default_self;
@@ -84,6 +148,45 @@ MODEL alumina_interstage_heater(
 		DeltaP := 0 {Pa};
 	END default_self;
 END alumina_interstage_heater;
+
+(* Adapter from the concrete flowsheet stream to the reusable, package-based
+   stoichiometric reactor.  Species outside the selected package pass through
+   unchanged and contribute no enthalpy, so they must be absent for that
+   stage's calculation to be physically meaningful. *)
+MODEL alumina_reactor(
+	pkg WILL_BE reactive_package;
+	reactions WILL_BE set OF symbol_constant;
+);
+	inlet IS_A alumina_stream;
+	outlet IS_A alumina_stream;
+	CORE IS_A reactor_stoic(pkg, reactions);
+	rxns ALIASES CORE.rxns;
+	xi ALIASES CORE.xi;
+	mu0 ALIASES CORE.mu0;
+	dg0_rxn ALIASES CORE.dg0_rxn;
+	DG0dot ALIASES CORE.DG0dot;
+	Qdot ALIASES CORE.Qdot;
+	DeltaP ALIASES CORE.DeltaP;
+
+	inlet.T, CORE.inlet.T ARE_THE_SAME;
+	inlet.P, CORE.inlet.P ARE_THE_SAME;
+	outlet.T, CORE.outlet.T ARE_THE_SAME;
+	outlet.P, CORE.outlet.P ARE_THE_SAME;
+	FOR i IN pkg.components CREATE
+		inlet.f[i], CORE.inlet.f[i] ARE_THE_SAME;
+		outlet.f[i], CORE.outlet.f[i] ARE_THE_SAME;
+	END FOR;
+	FOR i IN inlet.components - pkg.components CREATE
+		inlet.f[i], outlet.f[i] ARE_THE_SAME;
+	END FOR;
+
+	METHODS
+	METHOD default_self;
+		RUN inlet.default_self;
+		RUN outlet.default_self;
+		RUN CORE.default_self;
+	END default_self;
+END alumina_reactor;
 
 (*
 	Two-stage isothermal gibbsite calcination flowsheet:
@@ -130,19 +233,13 @@ MODEL alumina;
 	pkg2.source :== 'boehmite=serena_2009;gamma_alumina=usgs_bull_1452_1978;water=ideal+ref0:RPP';
 	pkg2.algorithm :== 'auto';
 
-	PREHEATER IS_A alumina_heater(pkg1);
-	R1 IS_A reactor_stoic(pkg1, reactions1);
-	INTERHEATER IS_A alumina_interstage_heater(pkg1, pkg2);
-	R2 IS_A reactor_stoic(pkg2, reactions2);
-	COOLER IS_A alumina_heater(pkg2);
-
-	(* Stream-enthalpy partitions used only to report sensible duties. *)
-	PREHEATER_IN_SPLIT IS_A alumina_enthalpy_split(pkg1, solids1, vapours);
-	PREHEATER_OUT_SPLIT IS_A alumina_enthalpy_split(pkg1, solids1, vapours);
-	INTERHEATER_IN_SPLIT IS_A alumina_enthalpy_split(pkg1, solids1, vapours);
-	INTERHEATER_OUT_SPLIT IS_A alumina_enthalpy_split(pkg2, solids2, vapours);
-	COOLER_IN_SPLIT IS_A alumina_enthalpy_split(pkg2, solids2, vapours);
-	COOLER_OUT_SPLIT IS_A alumina_enthalpy_split(pkg2, solids2, vapours);
+	PREHEATER IS_A alumina_heater(pkg1, solids1, vapours);
+	R1 IS_A alumina_reactor(pkg1, reactions1);
+	INTERHEATER IS_A alumina_interstage_heater(
+		pkg1, pkg2, solids1, solids2, vapours
+	);
+	R2 IS_A alumina_reactor(pkg2, reactions2);
+	COOLER IS_A alumina_heater(pkg2, solids2, vapours);
 
 	TABLE nu1_table[reactions1,components1] IS_A real_constant;
 		             gibbsite  boehmite  water
@@ -165,60 +262,23 @@ MODEL alumina;
 	DG0dot_stage1 ALIASES R1.DG0dot['GIB_TO_BOEHM'];
 	DG0dot_stage2 ALIASES R2.DG0dot['BOEHM_TO_GAMMA'];
 
-	FOR i IN components1 CREATE
-		preheater_to_R1_flow[i]: PREHEATER.outlet.f[i] = R1.inlet.f[i];
-		R1_to_interheater_flow[i]: R1.outlet.f[i] = INTERHEATER.inlet.f[i];
-	END FOR;
-	(* Complete stage-1 conversion leaves no gibbsite to transfer. *)
-	interstage_boehmite: INTERHEATER.outlet.f['boehmite']
-		= INTERHEATER.inlet.f['boehmite'];
-	interstage_water: INTERHEATER.outlet.f['water']
-		= INTERHEATER.inlet.f['water'];
-	interstage_gamma_feed: INTERHEATER.outlet.f['gamma_alumina'] = 0 {mol/s};
-	FOR i IN components2 CREATE
-		interheater_to_R2_flow[i]: INTERHEATER.outlet.f[i] = R2.inlet.f[i];
-		R2_to_cooler_flow[i]: R2.outlet.f[i] = COOLER.inlet.f[i];
-	END FOR;
-	preheater_to_R1_T: PREHEATER.outlet.T = R1.inlet.T;
-	preheater_to_R1_P: PREHEATER.outlet.P = R1.inlet.P;
-	R1_to_interheater_T: R1.outlet.T = INTERHEATER.inlet.T;
-	R1_to_interheater_P: R1.outlet.P = INTERHEATER.inlet.P;
-	interheater_to_R2_T: INTERHEATER.outlet.T = R2.inlet.T;
-	interheater_to_R2_P: INTERHEATER.outlet.P = R2.inlet.P;
-	R2_to_cooler_T: R2.outlet.T = COOLER.inlet.T;
-	R2_to_cooler_P: R2.outlet.P = COOLER.inlet.P;
+	(* The flowsheet topology is now expressed directly as whole-stream
+	   identity connections. *)
+	PREHEATER.outlet, R1.inlet ARE_THE_SAME;
+	R1.outlet, INTERHEATER.inlet ARE_THE_SAME;
+	INTERHEATER.outlet, R2.inlet ARE_THE_SAME;
+	R2.outlet, COOLER.inlet ARE_THE_SAME;
 
-	PREHEATER_IN_SPLIT.T = PREHEATER.inlet.T;
-	PREHEATER_IN_SPLIT.P = PREHEATER.inlet.P;
-	PREHEATER_OUT_SPLIT.T = PREHEATER.outlet.T;
-	PREHEATER_OUT_SPLIT.P = PREHEATER.outlet.P;
-	INTERHEATER_IN_SPLIT.T = INTERHEATER.inlet.T;
-	INTERHEATER_IN_SPLIT.P = INTERHEATER.inlet.P;
-	INTERHEATER_OUT_SPLIT.T = INTERHEATER.outlet.T;
-	INTERHEATER_OUT_SPLIT.P = INTERHEATER.outlet.P;
-	COOLER_IN_SPLIT.T = COOLER.inlet.T;
-	COOLER_IN_SPLIT.P = COOLER.inlet.P;
-	COOLER_OUT_SPLIT.T = COOLER.outlet.T;
-	COOLER_OUT_SPLIT.P = COOLER.outlet.P;
-	FOR i IN components1 CREATE
-		preheater_in_split_flow[i]: PREHEATER_IN_SPLIT.f[i] = PREHEATER.inlet.f[i];
-		preheater_out_split_flow[i]: PREHEATER_OUT_SPLIT.f[i] = PREHEATER.outlet.f[i];
-		interheater_in_split_flow[i]: INTERHEATER_IN_SPLIT.f[i] = INTERHEATER.inlet.f[i];
-	END FOR;
-	FOR i IN components2 CREATE
-		interheater_out_split_flow[i]: INTERHEATER_OUT_SPLIT.f[i] = INTERHEATER.outlet.f[i];
-		cooler_in_split_flow[i]: COOLER_IN_SPLIT.f[i] = COOLER.inlet.f[i];
-		cooler_out_split_flow[i]: COOLER_OUT_SPLIT.f[i] = COOLER.outlet.f[i];
-	END FOR;
-
-	stage1_isothermal: R1.outlet.T = R1.inlet.T;
-	stage2_isothermal: R2.outlet.T = R2.inlet.T;
-	cooled_to_ambient: COOLER.outlet.T = T_ambient;
+	R1.outlet.T, R1.inlet.T ARE_THE_SAME;
+	R2.outlet.T, R2.inlet.T ARE_THE_SAME;
+	COOLER.outlet.T, T_ambient ARE_THE_SAME;
 
 	q_rxn1 IS_A molar_energy;
 	q_rxn2 IS_A molar_energy;
-	stage1_duty_per_extent: R1.Qdot = R1.xi['GIB_TO_BOEHM'] * q_rxn1;
-	stage2_duty_per_extent: R2.Qdot = R2.xi['BOEHM_TO_GAMMA'] * q_rxn2;
+	stage1_duty_per_extent: R1.Qdot
+		= R1.xi['GIB_TO_BOEHM'] * q_rxn1;
+	stage2_duty_per_extent: R2.Qdot
+		= R2.xi['BOEHM_TO_GAMMA'] * q_rxn2;
 	(* Backwards-compatible stage-1 alias. *)
 	q_rxn ALIASES q_rxn1;
 
@@ -228,24 +288,12 @@ MODEL alumina;
 	Qdot_reactor2 ALIASES R2.Qdot;
 	Qdot_final_cooler ALIASES COOLER.Qdot;
 	(* Signed sensible-duty partitions: positive = heating, negative = cooling. *)
-	Qdot_preheater_solids IS_A energy_rate;
-	Qdot_preheater_steam IS_A energy_rate;
-	Qdot_interstage_solids IS_A energy_rate;
-	Qdot_interstage_steam IS_A energy_rate;
-	Qdot_final_cooler_solids IS_A energy_rate;
-	Qdot_final_cooler_steam IS_A energy_rate;
-	preheater_solids_duty: Qdot_preheater_solids
-		= PREHEATER_OUT_SPLIT.H_flow_solids - PREHEATER_IN_SPLIT.H_flow_solids;
-	preheater_steam_duty: Qdot_preheater_steam
-		= PREHEATER_OUT_SPLIT.H_flow_vapours - PREHEATER_IN_SPLIT.H_flow_vapours;
-	interstage_solids_duty: Qdot_interstage_solids
-		= INTERHEATER_OUT_SPLIT.H_flow_solids - INTERHEATER_IN_SPLIT.H_flow_solids;
-	interstage_steam_duty: Qdot_interstage_steam
-		= INTERHEATER_OUT_SPLIT.H_flow_vapours - INTERHEATER_IN_SPLIT.H_flow_vapours;
-	final_cooler_solids_duty: Qdot_final_cooler_solids
-		= COOLER_OUT_SPLIT.H_flow_solids - COOLER_IN_SPLIT.H_flow_solids;
-	final_cooler_steam_duty: Qdot_final_cooler_steam
-		= COOLER_OUT_SPLIT.H_flow_vapours - COOLER_IN_SPLIT.H_flow_vapours;
+	Qdot_preheater_solids ALIASES PREHEATER.Qdot_solids;
+	Qdot_preheater_steam ALIASES PREHEATER.Qdot_vapours;
+	Qdot_interstage_solids ALIASES INTERHEATER.Qdot_solids;
+	Qdot_interstage_steam ALIASES INTERHEATER.Qdot_vapours;
+	Qdot_final_cooler_solids ALIASES COOLER.Qdot_solids;
+	Qdot_final_cooler_steam ALIASES COOLER.Qdot_vapours;
 
 	(* Positive summaries make heating and rejected cooling easy to compare. *)
 	Qdot_sensible_heating_solids IS_A energy_rate;
@@ -296,7 +344,7 @@ MODEL alumina;
 
 		FIX PREHEATER.inlet.T;
 		FIX PREHEATER.inlet.P;
-		FIX PREHEATER.inlet.f[components1];
+		FIX PREHEATER.inlet.f[PREHEATER.inlet.components];
 		FIX R1.inlet.T;
 		FIX R2.inlet.T;
 		FIX R1.xi[reactions1];
@@ -311,6 +359,7 @@ MODEL alumina;
 		PREHEATER.inlet.P := 1 {bar};
 		PREHEATER.inlet.f['gibbsite'] := 1 {mol/s};
 		PREHEATER.inlet.f['boehmite'] := 0 {mol/s};
+		PREHEATER.inlet.f['gamma_alumina'] := 0 {mol/s};
 		PREHEATER.inlet.f['water'] := 0 {mol/s};
 		R1.inlet.T := 523.15 {K};
 		R2.inlet.T := 773.15 {K};
@@ -468,13 +517,18 @@ MODEL alumina;
 		ASSERT Qdot_sensible_cooling_solids > 0 {W};
 		ASSERT Qdot_sensible_cooling_steam > 0 {W};
 		ASSERT Qdot_cooling > 0 {W};
-		ASSERT abs(Qdot_total - (COOLER.outlet.H_flow - PREHEATER.inlet.H_flow)) < 1e-6 {W};
+		ASSERT abs(Qdot_total
+			- (COOLER.OUT_SPLIT.H_flow_solids + COOLER.OUT_SPLIT.H_flow_vapours)
+			+ (PREHEATER.IN_SPLIT.H_flow_solids + PREHEATER.IN_SPLIT.H_flow_vapours)
+		) < 1e-6 {W};
 		ASSERT q_rxn1 > 0 {J/mol};
 		ASSERT q_rxn2 > 0 {J/mol};
 		ASSERT dg0_stage1 < 0 {J/mol};
 		ASSERT dg0_stage2 < 0 {J/mol};
-		ASSERT abs(DG0dot_stage1 - R1.xi['GIB_TO_BOEHM'] * dg0_stage1) < 1e-6 {W};
-		ASSERT abs(DG0dot_stage2 - R2.xi['BOEHM_TO_GAMMA'] * dg0_stage2) < 1e-6 {W};
+		ASSERT abs(DG0dot_stage1
+			- R1.xi['GIB_TO_BOEHM'] * dg0_stage1) < 1e-6 {W};
+		ASSERT abs(DG0dot_stage2
+			- R2.xi['BOEHM_TO_GAMMA'] * dg0_stage2) < 1e-6 {W};
 	END self_test;
 
 	METHOD on_load;

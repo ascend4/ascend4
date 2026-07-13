@@ -188,6 +188,14 @@ avoids evaluating absent gibbsite above the `600 K` limit of its Serena data.
 The Serena boehmite data extend to `900 K`, so the current non-extrapolated
 stage-2 operating range ends at `626.85 degC`.
 
+The flowsheet itself uses a concrete, unparameterized `alumina_stream`
+connector containing `T`, `P`, and the four component flow rates. Unit
+operations are joined by whole-stream `ARE_THE_SAME` connections. Small
+package-specific adapters inside the heaters and reactors map those connector
+states onto the existing FPROPS `reactive_stream` calculations, retaining the
+stage-specific property limits without exposing atom-by-atom wiring in the
+top-level flowsheet.
+
 ### Thermodynamic Thresholds and Operating Temperatures
 
 The reactor model reports the standard reaction Gibbs energy independently of
