@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2008 Carnegie Mellon University
+	Copyright (C) 2008 John Pye
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -110,6 +110,7 @@ ExtBBoxFunc fprops_phsx_vT_calc;
 ExtBBoxFunc fprops_Tvsx_ph_calc;
 ExtBBoxFunc fprops_Tvsx_h_incomp_calc;
 ExtBBoxInitFunc asc_fprops_rxn_prepare;
+ExtBBoxInitFunc asc_fprops_rxn_mu0_prepare;
 ExtBBoxInitFunc asc_fprops_rxneq_prepare;
 ExtBBoxInitFunc asc_fprops_flash_prepare;
 ExtBBoxInitFunc asc_fprops_unifac_flash_prepare;
@@ -119,6 +120,7 @@ ExtBBoxFinalFunc asc_fprops_rxn_final;
 ExtBBoxFinalFunc asc_fprops_unifac_flash_final;
 ExtBBoxFunc fprops_rxn_h_TPn_calc;
 ExtBBoxFunc fprops_rxn_v_TPn_calc;
+ExtBBoxFunc fprops_rxn_mu0_T_calc;
 ExtBBoxFunc fprops_rxn_eqm_TPn_calc;
 ExtBBoxFunc fprops_rxn_eqm_TPn_deriv;
 ExtBBoxFunc fprops_flash_TPz_calc;
@@ -172,6 +174,7 @@ static const char *fprops_Tvsx_ph_help = "Calculate T, v, s, x from pressure and
 static const char *fprops_Tvsx_h_incomp_help = "Calculate T, v, s, x for incompressible fluid from enthalpy, using FPROPS";
 static const char *fprops_rxn_h_TPn_help = "Calculate package-based reactive mixture enthalpy from temperature, pressure and species molar vector, using FPROPS";
 static const char *fprops_rxn_v_TPn_help = "Calculate package-based reactive mixture volume from temperature, pressure and species molar vector, using FPROPS";
+static const char *fprops_rxn_mu0_T_help = "Calculate package species standard chemical potentials from temperature, using the package reference pressure";
 static const char *fprops_rxn_eqm_TPn_help = "Calculate package-based equilibrium outlet species molar vector from temperature, pressure and inlet species molar vector, using FPROPS";
 static const char *fprops_flash_TPz_help = "Calculate package-based TPz flash from temperature, pressure and overall composition, using FPROPS";
 static const char *fprops_unifac_flash_TPz_help = "Calculate ideal-vapor plus UNIFAC-liquid TPz flash from temperature, pressure and overall composition, using FPROPS";
@@ -181,6 +184,7 @@ static const char *fprops_unifac_liq_fugacity_TPx_help = "Calculate ideal-vapor-
 typedef struct{
 	int ns;
 	FpropsRxnPackage *pkg;
+	double P0;
 	char *algorithm;
 	char *source;
 	char **names;
@@ -603,6 +607,16 @@ ASC_EXPORT int fprops_register(){
 		, fprops_rxn_v_TPn_help
 		, 0.0
 	);
+	result += CreateUserFunctionBlackBox("fprops_rxn_mu0_T"
+		, asc_fprops_rxn_mu0_prepare
+		, fprops_rxn_mu0_T_calc
+		, (ExtBBoxFunc*)NULL
+		, (ExtBBoxFunc*)NULL
+		, asc_fprops_rxn_final
+		, 1,1
+		, fprops_rxn_mu0_T_help
+		, 0.0
+	);
 	result += CreateUserFunctionBlackBox("fprops_rxn_eqm_TPn"
 		, asc_fprops_rxneq_prepare
 		, fprops_rxn_eqm_TPn_calc
@@ -752,33 +766,42 @@ void asc_fprops_final(struct BBoxInterp *bbox){
 	bbox->user_data = NULL;
 }
 
-int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
+static int asc_fprops_rxn_prepare_common(struct BBoxInterp *bbox,
 	   struct Instance *data,
-	   struct gl_list_t *arglist
+	   struct gl_list_t *arglist,
+	   int with_species_vector
 ){
 	/* Reactive-package source selectors are resolved in the C-side FPROPS layer. */
-	struct Instance *srcinst, *alginst, *components_inst;
+	struct Instance *srcinst, *alginst, *p0inst, *components_inst;
 	const char *source = NULL;
 	const char *algorithm = NULL;
+	double P0 = 1e5;
 	const char **names = NULL;
 	const char **resolved_names = NULL;
 	AscFpropsRxnData *rxn = NULL;
 	unsigned long actual_inputs, actual_outputs, c, ns;
-	symchar *components_sym, *source_sym, *algorithm_sym;
+	unsigned long input_groups = with_species_vector ? 3UL : 1UL;
+	unsigned long output_group = input_groups + 1UL;
+	symchar *components_sym, *source_sym, *algorithm_sym, *p0_sym;
 	const struct set_t *components_set = NULL;
 
 	if(!bbox || !data || !arglist){
 		ERRMSG("Reactive FPROPS blackbox received invalid prepare arguments");
 		return 1;
 	}
-	if(gl_length(arglist) != 4){
-		ERRMSG("Reactive FPROPS blackbox expects 3 INPUT groups and 1 OUTPUT group");
+	if(gl_length(arglist) != output_group){
+		ERRMSG("Reactive FPROPS blackbox expects %lu INPUT groups and 1 OUTPUT group",
+			input_groups);
 		return 1;
 	}
-	actual_inputs = CountNumberOfArgs(arglist,1,3);
-	actual_outputs = CountNumberOfArgs(arglist,4,4);
-	if(actual_inputs < 3){
+	actual_inputs = CountNumberOfArgs(arglist,1,input_groups);
+	actual_outputs = CountNumberOfArgs(arglist,output_group,output_group);
+	if(with_species_vector && actual_inputs < 3){
 		ERRMSG("Reactive FPROPS blackbox requires T, P and a species flow vector");
+		return 1;
+	}
+	if(!with_species_vector && actual_inputs != 1){
+		ERRMSG("Reactive FPROPS standard-property blackbox requires temperature");
 		return 1;
 	}
 	if(actual_outputs < 1){
@@ -789,6 +812,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	components_sym = AddSymbol("components");
 	source_sym = AddSymbol("source");
 	algorithm_sym = AddSymbol("algorithm");
+	p0_sym = AddSymbol("P0");
 	components_inst = ChildByChar(data, components_sym);
 	if(!components_inst){
 		ERRMSG("Couldn't locate 'components' in reactive package DATA");
@@ -806,7 +830,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		ERRMSG("Reactive package DATA contains no components");
 		return 1;
 	}
-	if(actual_inputs != ns + 2){
+	if(with_species_vector && actual_inputs != ns + 2){
 		ERRMSG("Reactive package input vector length mismatch: got %lu species inputs, expected %lu",
 			actual_inputs - 2, ns);
 		return 1;
@@ -860,9 +884,27 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 			free(rxn);
 			return 1;
 		}
-			algorithm = SCP(SYMC_INST(alginst)->value);
-			if(algorithm && strlen(algorithm) == 0)algorithm = NULL;
+		algorithm = SCP(SYMC_INST(alginst)->value);
+		if(algorithm && strlen(algorithm) == 0)algorithm = NULL;
+	}
+	p0inst = ChildByChar(data, p0_sym);
+	if(p0inst){
+		if(InstanceKind(p0inst) != REAL_CONSTANT_INST){
+			ERRMSG("DATA member 'P0' must be a reference-pressure constant");
+			free(names);
+			free(resolved_names);
+			free(rxn);
+			return 1;
 		}
+		P0 = RealAtomValue(p0inst);
+		if(!(P0 > 0.0) || !isfinite(P0)){
+			ERRMSG("DATA member 'P0' must be a finite positive pressure");
+			free(names);
+			free(resolved_names);
+			free(rxn);
+			return 1;
+		}
+	}
 
 	for(c = 0; c < ns; ++c){
 		char resolved_name_buf[256];
@@ -907,6 +949,7 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 		free(rxn);
 		return 1;
 	}
+	rxn->P0 = P0;
 	if(algorithm){
 		rxn->algorithm = ASC_NEW_ARRAY(char, strlen(algorithm) + 1);
 		if(!rxn->algorithm){
@@ -983,6 +1026,31 @@ int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
 	free(resolved_names);
 	bbox->user_data = (void *)rxn;
 	asc_fprops_rxn_state_trace("prepare", bbox, rxn, NAN, NAN, NULL, NULL, 0);
+	return 0;
+}
+
+int asc_fprops_rxn_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	return asc_fprops_rxn_prepare_common(bbox, data, arglist, 1);
+}
+
+int asc_fprops_rxn_mu0_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	AscFpropsRxnData *rxn = NULL;
+	int status = asc_fprops_rxn_prepare_common(bbox, data, arglist, 0);
+	if(status){
+		return status;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn || CountNumberOfArgs(arglist,2,2) != (unsigned long)rxn->ns){
+		ERRMSG("Reactive FPROPS standard-property blackbox requires one output per package species");
+		asc_fprops_rxn_final(bbox);
+		return 1;
+	}
 	return 0;
 }
 
@@ -1920,6 +1988,46 @@ int fprops_Tvsx_h_incomp_calc(struct BBoxInterp *bbox,
 		ERRMSGP("Invalid fluid type (type %u)",FLUID->type);
 		return 10;
 	}
+}
+
+int fprops_rxn_mu0_T_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	AscFpropsRxnData *rxn;
+	int status;
+	(void)jacobian;
+
+	if(!bbox || !bbox->user_data){
+		return -5;
+	}
+	rxn = (AscFpropsRxnData *)bbox->user_data;
+	if(!rxn->pkg){
+		ERRMSG("Reactive FPROPS standard-property blackbox has no prepared package");
+		return -6;
+	}
+	if(ninputs != 1){
+		ERRMSG("Reactive FPROPS standard-property blackbox received %d inputs, expected 1",
+			ninputs);
+		return -1;
+	}
+	if(noutputs != rxn->ns){
+		ERRMSG("Reactive FPROPS standard-property blackbox received %d outputs, expected %d",
+			noutputs, rxn->ns);
+		return -2;
+	}
+	if(!inputs || !outputs){
+		return -3;
+	}
+
+	status = fprops_rxn_species_mu0(rxn->pkg, inputs[0], rxn->P0, outputs);
+	if(status){
+		ERRMSG("Reactive FPROPS standard chemical-potential evaluation failed with status %d",
+			status);
+		return status;
+	}
+	return 0;
 }
 
 int fprops_rxn_h_TPn_calc(struct BBoxInterp *bbox,

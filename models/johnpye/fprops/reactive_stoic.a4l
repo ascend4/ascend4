@@ -6,6 +6,8 @@ MODEL reactive_package(species WILL_BE set OF symbol_constant;);
 	components ALIASES species;
 	source IS_A symbol_constant;
 	algorithm IS_A symbol_constant;
+	P0 IS_A reference_pressure;
+	P0 :== 1 {bar};
 END reactive_package;
 
 MODEL reactive_state(pkg WILL_BE reactive_package;);
@@ -149,6 +151,24 @@ MODEL reactor_stoic(
 	Qdot IS_A energy_rate;
 	DeltaP IS_A delta_pressure;
 
+	(* Standard-state reaction thermodynamics at the lumped reactor outlet
+	   temperature and the package reference pressure.  These properties do
+	   not depend on inlet or outlet species amounts, so they remain defined
+	   when a participating species has zero flow. *)
+	mu0[components] IS_A molar_energy;
+	dg0_rxn[reactions] IS_A molar_energy;
+	DG0dot[reactions] IS_A energy_rate;
+	calc_mu0: fprops_rxn_mu0_T(
+		outlet.T : INPUT;
+		mu0[components] : OUTPUT;
+		pkg : DATA
+	);
+	FOR r IN reactions CREATE
+		calc_dg0_rxn[r]: dg0_rxn[r]
+			= SUM[rxns.nu[i][r] * mu0[i] | i IN components];
+		calc_DG0dot[r]: DG0dot[r] = xi[r] * dg0_rxn[r];
+	END FOR;
+
 	FOR k IN components CREATE
 		mbal[k]: outlet.f[k] = inlet.f[k] + SUM[rxns.nu[k][r] * xi[r] | r IN reactions];
 	END FOR;
@@ -164,6 +184,11 @@ METHODS
 		DeltaP := 0 {Pa};
 		FOR r IN reactions DO
 			xi[r] := 0 {mol/s};
+			dg0_rxn[r] := 0 {J/mol};
+			DG0dot[r] := 0 {W};
+		END FOR;
+		FOR i IN components DO
+			mu0[i] := 0 {J/mol};
 		END FOR;
 	END default_self;
 END reactor_stoic;

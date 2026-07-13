@@ -235,6 +235,25 @@ int fprops_rxn_eqm_sensitivities(const FpropsRxnPackage *pkg, const FpropsRxnTPN
 		const double *n_eq, double *dn_dT, double *dn_dP, double *dn_db);
 
 /**
+ * Evaluate standard chemical potentials for every species in a compiled
+ * reactive package.
+ *
+ * The output vector follows the package species order and is independent of
+ * species amounts.  This first implementation supports pure gas and pure
+ * condensed entries; solution-phase members return an unsupported status
+ * because an isolated member standard state has not yet been defined.
+ *
+ * @param pkg Compiled reactive package.
+ * @param T Temperature in K.
+ * @param P0 Standard/reference pressure in Pa.
+ * @param mu0_out Output vector of molar standard chemical potentials in J/mol,
+ *        length equal to the package species count.
+ * @return 0 on success, negative code on failure.
+ */
+int fprops_rxn_species_mu0(const FpropsRxnPackage *pkg, double T, double P0,
+		double *mu0_out);
+
+/**
  * Compute total mixture enthalpy using a compiled reactive package.
  *
  * @param pkg Compiled reactive package.

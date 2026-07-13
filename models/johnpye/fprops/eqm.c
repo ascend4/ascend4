@@ -5430,6 +5430,30 @@ static int eqm_phase_total_h_fd(const EqmBinaryPhaseMeta *phase, const double *n
 	return isfinite(*h_out);
 }
 
+int fprops_rxn_species_mu0(const FpropsRxnPackage *pkg, double T, double P0,
+		double *mu0_out){
+	int i;
+
+	if(!pkg || !mu0_out || pkg->ns <= 0 || !(T > 0.0) || !(P0 > 0.0)){
+		ERR("rxn species mu0: invalid args pkg=%p mu0_out=%p ns=%d T=%.17g P0=%.17g",
+			(void *)pkg, (void *)mu0_out, pkg ? pkg->ns : -1, T, P0);
+		return -11;
+	}
+	for(i = 0; i < pkg->ns; ++i){
+		if(pkg->species[i].entry_kind != FPROPS_RXN_ENTRY_PURE){
+			ERR("rxn species mu0: solution-phase standard state is not defined for '%s'",
+				pkg->species[i].name ? pkg->species[i].name : "(null)");
+			return -15;
+		}
+		if(!eqm_mu0_from_compiled(&pkg->species[i], T, P0, &mu0_out[i])){
+			ERR("rxn species mu0: evaluation failed for '%s' at T=%.17g P0=%.17g",
+				pkg->species[i].name ? pkg->species[i].name : "(null)", T, P0);
+			return -14;
+		}
+	}
+	return 0;
+}
+
 int fprops_rxn_mix_h(const FpropsRxnPackage *pkg, const FpropsRxnTPN *state, double *H_out){
 	double H_total = 0.0;
 	double h_phase = 0.0;

@@ -60,6 +60,7 @@ typedef struct SlvReqC_struct{
 typedef struct TestAscFpropsRxnData_struct{
 	int ns;
 	void *pkg;
+	double P0;
 	char *algorithm;
 	char *source;
 	char **names;

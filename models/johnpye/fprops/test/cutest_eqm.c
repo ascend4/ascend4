@@ -2777,6 +2777,40 @@ static void test_fprops_mix_h_tpn_fe2o3_h2_reduction_matches_standard_enthalpy(v
 	fprops_rxn_package_free(pkg);
 }
 
+static void test_fprops_rxn_package_species_mu0_alumina_matches_direct(void){
+	static const char *names[] = {"gibbsite", "boehmite", "water"};
+	static const char *source =
+		"gibbsite=serena_2009;boehmite=serena_2009;water=ideal+ref0:RPP";
+	FpropsRxnPackage *pkg = fprops_rxn_package_build(names, ARRAYLEN(names), source);
+	double mu0[ARRAYLEN(names)] = {NAN, NAN, NAN};
+	double expected = NAN;
+	int status;
+	int i;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+	status = fprops_rxn_species_mu0(pkg, 400.0, g_eqm.P0, mu0);
+	CU_ASSERT_EQUAL_FATAL(status, 0);
+	for(i = 0; i < ARRAYLEN(names); ++i){
+		CU_ASSERT_TRUE_FATAL(isfinite(mu0[i]));
+		CU_ASSERT_TRUE_FATAL(eqm_mu0_source(names[i], source, 400.0, g_eqm.P0, &expected));
+		CU_ASSERT_TRUE(fabs(mu0[i] - expected) <= 1e-8 * fmax(1.0, fabs(expected)));
+	}
+
+	fprops_rxn_package_free(pkg);
+}
+
+static void test_fprops_rxn_package_species_mu0_rejects_solution_members(void){
+	static const char *names[] = {"Wus_FeO", "Wus_FeO1p5"};
+	FpropsRxnPackage *pkg = fprops_rxn_package_build(names, ARRAYLEN(names), "hidayat_2015");
+	double mu0[ARRAYLEN(names)] = {NAN, NAN};
+	int status;
+
+	CU_ASSERT_PTR_NOT_NULL_FATAL(pkg);
+	status = fprops_rxn_species_mu0(pkg, 1073.15, g_eqm.P0, mu0);
+	CU_ASSERT_EQUAL(status, -15);
+	fprops_rxn_package_free(pkg);
+}
+
 static void test_fprops_rxn_package_ammonia_helmholtz_ref0_builds_and_solves(void){
 	static const char *names[] = {"NH3", "H2", "N2"};
 	static const char *source = "helmholtz+ref0:";
@@ -3714,6 +3748,8 @@ static void test_unifac_liq_fugacity_matches_vlecalc_ethanol_water_bubble_points
 #define RXN_PACKAGE_TESTS(T) \
 	T(mix_h_supports_wustite_phase) \
 	T(mix_h_matches_legacy) \
+	T(species_mu0_alumina_matches_direct) \
+	T(species_mu0_rejects_solution_members) \
 	T(ammonia_helmholtz_ref0_builds_and_solves) \
 	T(eqm_matches_legacy) \
 	T(eqm_tpy_matches_legacy) \
