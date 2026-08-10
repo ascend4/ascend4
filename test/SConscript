@@ -34,6 +34,16 @@ _cunit_libpath = test_env.get('CUNIT_LIBPATH')
 if _cunit_libpath:
 	test_env.Append(LIBPATH=_cunit_libpath)
 
+# CONOPT-specific tests include conopt_dl.h, which in turn includes the
+# installed CONOPT API header. libascend has this path already, but test_env is
+# cloned separately from the top-level environment.
+if 'CONOPT' in test_env['WITH_SOLVERS']:
+	_conopt_cpp = test_env.get('CONOPT_CPPPATH')
+	if _conopt_cpp:
+		test_env.AppendUnique(CPPPATH=_conopt_cpp)
+	elif test_env.get('CONOPT_BUNDLED4'):
+		test_env.AppendUnique(CPPPATH=['#solvers/conopt'])
+
 conf = test_env.Configure()
 if not conf.CheckDeclaration('CU_set_test_output_capture', '#include <CUnit/TestRun.h>\n'):
 	print("ERROR: CUnit is missing CU_set_test_output_capture; install CUnit 2.3.0 or newer.")

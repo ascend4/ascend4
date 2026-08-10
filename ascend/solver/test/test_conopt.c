@@ -48,7 +48,7 @@
 #include <test/common.h>
 
 static void test_license_parse(void){
-#ifdef ASC_WITH_CONOPT
+#ifdef ASC_CONOPT_API4
 	struct asc_conopt_license license;
 	CU_ASSERT_EQUAL(
 		ASC_CONOPT_LICENSE_APPLIED,
@@ -76,7 +76,7 @@ static void test_license_parse(void){
 }
 
 static void test_license_parse_errors(void){
-#ifdef ASC_WITH_CONOPT
+#ifdef ASC_CONOPT_API4
 	static const char *invalid[] = {
 		NULL,
 		"",
