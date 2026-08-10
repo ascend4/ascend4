@@ -93,6 +93,23 @@ jobs:
       run: |
         ./a4 cutest -r mallocdebug
 
+    # Repository secrets are deliberately limited to reviewed code on the
+    # default branch; pull-request jobs continue to exercise CONOPT demo mode.
+    - name: Licensed CONOPT tests
+      if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+      env:
+        ASCEND_CONOPT_LICENSE: ${{ secrets.ASCEND_CONOPT_LICENSE }}
+      run: |
+        if [ -z "$ASCEND_CONOPT_LICENSE" ]; then
+          echo "ASCEND_CONOPT_LICENSE is not configured; skipping licensed tests"
+          exit 0
+        fi
+        export CONOPT_PATH="$HOME/.local/lib"
+        test_log="$(mktemp)"
+        trap 'rm -f "$test_log"' EXIT
+        ./a4 cutest --list-failures solver_conopt solver_cmslv.linmassbal | tee "$test_log"
+        grep -qx 'No failures\.' "$test_log"
+
     - name: FPROPS CUnit tests
       run: |
         ./a4 script models/johnpye/fprops/test/cutest

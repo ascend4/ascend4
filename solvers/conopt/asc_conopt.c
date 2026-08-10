@@ -2831,6 +2831,11 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to initialise CONOPT model handle.");
 		return -4;
 	}
+	if(asc_conopt_apply_license(cntvect) == ASC_CONOPT_LICENSE_ERROR){
+		COI_Free(&cntvect);
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to configure the CONOPT license.");
+		return -4;
+	}
 #else
 	cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
 	COIDEF_Ini(cntvect);

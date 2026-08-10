@@ -3151,6 +3151,11 @@ int32 slv9_bnd_iterate_conopt(slv9_system_t sys, int32 num_opt_vars,
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"CMSlv CONOPT boundary problem creation failed.");
     return 0;
   }
+  if(asc_conopt_apply_license(sys->con.cntvect) == ASC_CONOPT_LICENSE_ERROR){
+    COI_Free(&(sys->con.cntvect));
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to configure the CMSlv CONOPT license.");
+    return 0;
+  }
 #else
   if(sys->con.cntvect == NULL){
 	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
