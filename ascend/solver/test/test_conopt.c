@@ -108,6 +108,16 @@ static void test_conopt(const char *filenamestem){
 	char env1[2*PATH_MAX];
 	int solver_index;
 
+#ifdef ASC_CONOPT_API4
+	{
+		int license_status = asc_conopt_license_status();
+		if(license_status == ASC_CONOPT_LICENSE_ABSENT){
+			CU_SKIP("No CONOPT license was configured; licensed solve skipped.");
+		}
+		CU_ASSERT_EQUAL_FATAL(ASC_CONOPT_LICENSE_APPLIED,license_status);
+	}
+#endif
+
 	Asc_CompilerInit(1);
 
 	/* set the needed environment variables so that models, solvers can be found */

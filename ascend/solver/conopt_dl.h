@@ -113,6 +113,14 @@ ASC_DLLSPEC int asc_conopt_parse_license(
 ASC_DLLSPEC void asc_conopt_license_destroy(struct asc_conopt_license *license);
 
 /**
+	Check the configured license source without exposing its value.
+	Returns ASC_CONOPT_LICENSE_ABSENT when no license was provided,
+	ASC_CONOPT_LICENSE_APPLIED when it is present and well-formed, and
+	ASC_CONOPT_LICENSE_ERROR when configuration was provided but cannot be used.
+*/
+ASC_DLLSPEC int asc_conopt_license_status(void);
+
+/**
 	Apply the configured license to a newly-created CONOPT handle.
 	ASCEND_CONOPT_LICENSE takes precedence over [conopt] license in the file
 	named by ASCEND_SECRETS_FILE, or the default user secrets.ini.

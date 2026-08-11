@@ -54,15 +54,16 @@ function and CONOPT retains its normal unlicensed/demo behavior.
 ## GitHub Actions
 
 Store the complete four-field value in one repository or organization secret
-named `ASCEND_CONOPT_LICENSE`, then expose it only to the trusted test step:
+named `ASCEND_CONOPT_LICENSE`. The normal CUnit step exposes it only for a push
+to the default branch:
 
 ```yaml
-- name: Licensed CONOPT tests
-  if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+- name: ASCEND CUnit tests
   env:
-    ASCEND_CONOPT_LICENSE: ${{ secrets.ASCEND_CONOPT_LICENSE }}
-  run: ./a4 cutest solver_conopt
+    ASCEND_CONOPT_LICENSE: ${{ github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && secrets.ASCEND_CONOPT_LICENSE || '' }}
+  run: ./a4 cutest -r mallocdebug
 ```
 
-Do not expose the secret to pull-request jobs that execute untrusted changes.
-The implementation never writes or logs the configured license value.
+When no license is provided, CONOPT-dependent tests report themselves skipped.
+Malformed, unreadable, rejected, or non-working licenses fail the tests. The
+implementation never writes or logs the configured license value.

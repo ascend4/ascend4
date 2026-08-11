@@ -561,6 +561,15 @@ static int asc_conopt_load_license(struct asc_conopt_license *license){
 	return result;
 }
 
+int asc_conopt_license_status(void){
+	struct asc_conopt_license license = {0};
+	int result = asc_conopt_load_license(&license);
+	if(result == ASC_CONOPT_LICENSE_APPLIED){
+		asc_conopt_license_destroy(&license);
+	}
+	return result;
+}
+
 int asc_conopt_apply_license(coiHandle_t cntvect){
 	struct asc_conopt_license license;
 	int result;

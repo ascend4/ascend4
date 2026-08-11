@@ -101,6 +101,8 @@ jobs:
           ascend solvers models test a4
 
     - name: Test ASCEND
+      env:
+        ASCEND_CONOPT_LICENSE: ${{ github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && secrets.ASCEND_CONOPT_LICENSE || '' }}
       run: |
         export PATH="$HOME/.local/lib:$PATH"
         export CONOPT_PATH="$HOME/.local/lib"

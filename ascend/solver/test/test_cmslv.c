@@ -40,6 +40,10 @@
 #include <ascend/system/slv_client.h>
 #include <ascend/system/slv_param.h>
 #include <ascend/solver/solver.h>
+#include <ascend/solver/conoptconfig.h>
+#ifdef ASC_WITH_CONOPT
+# include <ascend/solver/conopt_dl.h>
+#endif
 #include <ascend/system/slv_server.h>
 
 #include <test/common.h>
@@ -181,6 +185,16 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 	struct Instance *siminst = NULL;
 	slv_system_t sys = NULL;
 	char progress[8192];
+
+#ifdef ASC_CONOPT_API4
+	if(optsolver != NULL && strcmp(optsolver,"CONOPT") == 0){
+		int license_status = asc_conopt_license_status();
+		if(license_status == ASC_CONOPT_LICENSE_ABSENT){
+			CU_SKIP("No CONOPT license was configured; CMSlv CONOPT solve skipped.");
+		}
+		CU_ASSERT_EQUAL_FATAL(ASC_CONOPT_LICENSE_APPLIED,license_status);
+	}
+#endif
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
