@@ -144,8 +144,10 @@ MODEL fbdri_lee_tga_core_single_family(
 	u_b_lee[axial_nodes] "Lee bubble velocity profile" IS_A speed;
 	delta_lee[axial_nodes] "Lee bubble fraction profile" IS_A factor;
 	K_be_lee[axial_nodes] "Lee bubble-emulsion gas interchange profile" IS_A frequency;
-	d_b0_lee "initial bubble diameter at distributor" IS_A distance;
+	d_b0_lee_raw "uncapped initial bubble diameter correlation at distributor" IS_A distance;
+	d_b0_lee "initial bubble diameter at distributor, capped by d_bm_lee" IS_A distance;
 	d_bm_lee "maximum bubble diameter" IS_A distance;
+	d_b0_use_raw "true when the distributor estimate does not exceed d_bm_lee" IS_A boolean_var;
 	delta_cell[axial_cells] "cell-average bubble fraction" IS_A factor;
 	K_be_cell[axial_cells] "cell-average bubble-emulsion interchange coefficient" IS_A frequency;
 	delta "bed-height average bubble fraction" IS_A factor;
@@ -265,8 +267,8 @@ MODEL fbdri_lee_tga_core_single_family(
 	vbed_eq: V_bed = A_bed * L_f;
 	vbubble_eq: V_bubble = SUM[V_bubble_cell[i] | i IN axial_cells];
 	eps_eq: 1 - eps = (1 - delta) * (1 - eps_mf);
-	db0_eq:
-		d_b0_lee =
+	db0_raw_eq:
+		d_b0_lee_raw =
 			2.78 {m}
 			* ((u - u_mf) / 1 {m/s})^2
 			/ (1 {EARTH_G} / 1 {m/s^2});
@@ -278,6 +280,19 @@ MODEL fbdri_lee_tga_core_single_family(
 				* (d_t / 1 {m})^2
 				* ((u - u_mf) / 1 {m/s})
 			)^0.4;
+
+	CONDITIONAL
+		db0_not_above_max: d_b0_lee_raw <= d_bm_lee;
+	END CONDITIONAL;
+	d_b0_use_raw == SATISFIED(db0_not_above_max, 1e-9 {m});
+	db0_uncapped_eq: d_b0_lee = d_b0_lee_raw;
+	db0_capped_eq: d_b0_lee = d_bm_lee;
+	WHEN(d_b0_use_raw)
+		CASE TRUE:
+			USE db0_uncapped_eq;
+		CASE FALSE:
+			USE db0_capped_eq;
+	END WHEN;
 
 	FOR i IN axial_nodes CREATE
 		z_eq[i]:
@@ -616,6 +631,7 @@ METHODS
 		eps := 0.75;
 		V_bed := 2e-5 {m^3};
 		V_bubble := 8e-6 {m^3};
+		d_b0_lee_raw := 1 {mm};
 		d_b0_lee := 1 {mm};
 		d_bm_lee := 20 {mm};
 		delta := 0.5;
