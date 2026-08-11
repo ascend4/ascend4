@@ -26,7 +26,17 @@
 #include <ascend/utilities/error.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/general/env.h>
+#include <ascend/general/ascMalloc.h>
+#include <ctype.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#ifndef _WIN32
+# include <unistd.h>
+#endif
 #include "conopt_dl.h"
 
 #ifndef ASC_WITH_CONOPT
@@ -36,8 +46,6 @@
 #else
 
 #ifndef ASC_LINKED_CONOPT
-# include <ctype.h>
-# include <ascend/general/ascMalloc.h>
 # include <ascend/utilities/ascDynaLoad.h>
 
 //#define ASC_CONOPT_DEBUG
@@ -239,6 +247,353 @@ int asc_conopt_get_version(int *major, int *minor, int *patch){
 # endif
 
 #endif
+
+#ifdef ASC_CONOPT_API4
+
+#define ASC_CONOPT_SECRET_LINE_MAX 8192
+
+static void asc_conopt_secure_free(char *value){
+	if(value != NULL){
+		volatile char *p = value;
+		size_t n = strlen(value);
+		while(n-- > 0){
+			*p++ = '\0';
+		}
+		ASC_FREE(value);
+	}
+}
+
+void asc_conopt_license_destroy(struct asc_conopt_license *license){
+	if(license == NULL){
+		return;
+	}
+	asc_conopt_secure_free(license->licstring);
+	memset(license,0,sizeof(*license));
+}
+
+static int asc_conopt_parse_int(const char *text, int *value){
+	char *end;
+	long parsed;
+	if(text == NULL || value == NULL){
+		return 1;
+	}
+	while(isspace((unsigned char)*text)){
+		++text;
+	}
+	if(*text == '\0'){
+		return 1;
+	}
+	errno = 0;
+	parsed = strtol(text,&end,10);
+	if(errno == ERANGE || end == text || parsed < INT_MIN || parsed > INT_MAX){
+		return 1;
+	}
+	while(isspace((unsigned char)*end)){
+		++end;
+	}
+	if(*end != '\0'){
+		return 1;
+	}
+	*value = (int)parsed;
+	return 0;
+}
+
+int asc_conopt_parse_license(
+	const char *encoded, struct asc_conopt_license *license
+){
+	char *work;
+	char *sep;
+	char *fields[3];
+	size_t n;
+	int i;
+	if(license == NULL){
+		return ASC_CONOPT_LICENSE_ERROR;
+	}
+	memset(license,0,sizeof(*license));
+	if(encoded == NULL || *encoded == '\0'
+		|| strchr(encoded,'\n') != NULL || strchr(encoded,'\r') != NULL
+	){
+		return ASC_CONOPT_LICENSE_ERROR;
+	}
+	n = strlen(encoded) + 1;
+	work = ASC_NEW_ARRAY(char,n);
+	if(work == NULL){
+		return ASC_CONOPT_LICENSE_ERROR;
+	}
+	memcpy(work,encoded,n);
+	for(i = 2; i >= 0; --i){
+		sep = strrchr(work,',');
+		if(sep == NULL){
+			asc_conopt_secure_free(work);
+			return ASC_CONOPT_LICENSE_ERROR;
+		}
+		*sep = '\0';
+		fields[i] = sep + 1;
+	}
+	if(*work == '\0'
+		|| asc_conopt_parse_int(fields[0],&license->licint1)
+		|| asc_conopt_parse_int(fields[1],&license->licint2)
+		|| asc_conopt_parse_int(fields[2],&license->licint3)
+	){
+		asc_conopt_secure_free(work);
+		memset(license,0,sizeof(*license));
+		return ASC_CONOPT_LICENSE_ERROR;
+	}
+	license->licstring = work;
+	return ASC_CONOPT_LICENSE_APPLIED;
+}
+
+static char *asc_conopt_trim_left(char *text){
+	while(*text != '\0' && isspace((unsigned char)*text)){
+		++text;
+	}
+	return text;
+}
+
+static void asc_conopt_trim_right(char *text){
+	size_t n = strlen(text);
+	while(n > 0 && isspace((unsigned char)text[n - 1])){
+		text[--n] = '\0';
+	}
+}
+
+static char *asc_conopt_config_path(const char *base, const char *suffix){
+	char *path;
+	size_t n;
+	if(base == NULL || *base == '\0'){
+		return NULL;
+	}
+	n = strlen(base) + strlen(suffix) + 1;
+	path = ASC_NEW_ARRAY(char,n);
+	if(path != NULL){
+		snprintf(path,n,"%s%s",base,suffix);
+	}
+	return path;
+}
+
+static char *asc_conopt_default_secrets_path(void){
+#ifdef _WIN32
+	const char *appdata = getenv("APPDATA");
+	if(appdata != NULL && *appdata != '\0'){
+		return asc_conopt_config_path(appdata,"/ascend/secrets.ini");
+	}
+#else
+	const char *xdg = getenv("XDG_CONFIG_HOME");
+	if(xdg != NULL && *xdg != '\0'){
+		return asc_conopt_config_path(xdg,"/ascend/secrets.ini");
+	}
+#endif
+	return asc_conopt_config_path(getenv("HOME"),"/.config/ascend/secrets.ini");
+}
+
+static int asc_conopt_check_secret_file(FILE *fp, const char *path){
+#ifndef _WIN32
+	struct stat st;
+	if(fstat(fileno(fp),&st) != 0){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+			"Unable to inspect CONOPT secrets file '%s': %s",path,strerror(errno));
+		return 1;
+	}
+	if(!S_ISREG(st.st_mode) || st.st_uid != geteuid() || (st.st_mode & 077) != 0){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+			"CONOPT secrets file '%s' must be a regular file owned by the current user with no group or other permissions (for example, mode 0600)",path);
+		return 1;
+	}
+#else
+	(void)fp;
+	(void)path;
+#endif
+	return 0;
+}
+
+static int asc_conopt_read_secret_file(
+	const char *path, int explicit_path, char **encoded
+){
+	FILE *fp;
+	char buf[ASC_CONOPT_SECRET_LINE_MAX];
+	int in_conopt = 0;
+	int found = 0;
+	unsigned lineno = 0;
+	int result = ASC_CONOPT_LICENSE_ABSENT;
+	if(encoded == NULL){
+		return ASC_CONOPT_LICENSE_ERROR;
+	}
+	*encoded = NULL;
+	fp = fopen(path,"r");
+	if(fp == NULL){
+		if(errno == ENOENT && !explicit_path){
+			return ASC_CONOPT_LICENSE_ABSENT;
+		}
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+			"Unable to read CONOPT secrets file '%s': %s",path,strerror(errno));
+		return ASC_CONOPT_LICENSE_ERROR;
+	}
+	if(asc_conopt_check_secret_file(fp,path)){
+		fclose(fp);
+		return ASC_CONOPT_LICENSE_ERROR;
+	}
+	while(fgets(buf,sizeof(buf),fp) != NULL){
+		char *line;
+		char *end;
+		char *eq;
+		char *key;
+		char *value;
+		size_t n;
+		++lineno;
+		n = strlen(buf);
+		if(n > 0 && buf[n - 1] != '\n' && !feof(fp)){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+				"Line %u is too long in CONOPT secrets file '%s'",lineno,path);
+			result = ASC_CONOPT_LICENSE_ERROR;
+			goto cleanup;
+		}
+		buf[strcspn(buf,"\r\n")] = '\0';
+		line = asc_conopt_trim_left(buf);
+		asc_conopt_trim_right(line);
+		if(*line == '\0' || *line == '#' || *line == ';'){
+			continue;
+		}
+		if(*line == '['){
+			end = strchr(line,']');
+			if(end == NULL){
+				in_conopt = 0;
+				continue;
+			}
+			*end = '\0';
+			++end;
+			end = asc_conopt_trim_left(end);
+			in_conopt = (*end == '\0' && strcmp(line + 1,"conopt") == 0);
+			continue;
+		}
+		if(!in_conopt){
+			continue;
+		}
+		eq = strchr(line,'=');
+		if(eq == NULL){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+				"Malformed entry at line %u in CONOPT secrets file '%s'",lineno,path);
+			result = ASC_CONOPT_LICENSE_ERROR;
+			goto cleanup;
+		}
+		*eq = '\0';
+		key = asc_conopt_trim_left(line);
+		asc_conopt_trim_right(key);
+		if(strcmp(key,"license") != 0){
+			continue;
+		}
+		if(found){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+				"Duplicate CONOPT license entry in secrets file '%s'",path);
+			result = ASC_CONOPT_LICENSE_ERROR;
+			goto cleanup;
+		}
+		value = asc_conopt_trim_left(eq + 1);
+		asc_conopt_trim_right(value);
+		if(*value == '\0'){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+				"Empty CONOPT license entry in secrets file '%s'",path);
+			result = ASC_CONOPT_LICENSE_ERROR;
+			goto cleanup;
+		}
+		n = strlen(value) + 1;
+		*encoded = ASC_NEW_ARRAY(char,n);
+		if(*encoded == NULL){
+			result = ASC_CONOPT_LICENSE_ERROR;
+			goto cleanup;
+		}
+		memcpy(*encoded,value,n);
+		found = 1;
+	}
+	if(ferror(fp)){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+			"Error while reading CONOPT secrets file '%s'",path);
+		result = ASC_CONOPT_LICENSE_ERROR;
+		goto cleanup;
+	}
+	result = found ? ASC_CONOPT_LICENSE_APPLIED : ASC_CONOPT_LICENSE_ABSENT;
+
+cleanup:
+	memset(buf,0,sizeof(buf));
+	fclose(fp);
+	if(result == ASC_CONOPT_LICENSE_ERROR){
+		asc_conopt_secure_free(*encoded);
+		*encoded = NULL;
+	}
+	return result;
+}
+
+static int asc_conopt_load_license(struct asc_conopt_license *license){
+	const char *environment_license = getenv(ASC_CONOPT_LICENSE_ENV);
+	const char *explicit_path = getenv(ASC_CONOPT_SECRETS_FILE_ENV);
+	char *default_path = NULL;
+	char *encoded = NULL;
+	const char *path;
+	int result;
+	if(environment_license != NULL && *environment_license != '\0'){
+		result = asc_conopt_parse_license(environment_license,license);
+		if(result == ASC_CONOPT_LICENSE_ERROR){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+				"Malformed CONOPT license in environment variable %s",ASC_CONOPT_LICENSE_ENV);
+		}
+		return result;
+	}
+	if(explicit_path != NULL && *explicit_path != '\0'){
+		path = explicit_path;
+	}else{
+		default_path = asc_conopt_default_secrets_path();
+		path = default_path;
+	}
+	if(path == NULL){
+		return ASC_CONOPT_LICENSE_ABSENT;
+	}
+	result = asc_conopt_read_secret_file(
+		path, explicit_path != NULL && *explicit_path != '\0', &encoded
+	);
+	if(result == ASC_CONOPT_LICENSE_APPLIED){
+		result = asc_conopt_parse_license(encoded,license);
+		if(result == ASC_CONOPT_LICENSE_ERROR){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+				"Malformed CONOPT license in secrets file '%s'",path);
+		}
+	}
+	asc_conopt_secure_free(encoded);
+	ASC_FREE(default_path);
+	return result;
+}
+
+int asc_conopt_license_status(void){
+	struct asc_conopt_license license = {0};
+	int result = asc_conopt_load_license(&license);
+	if(result == ASC_CONOPT_LICENSE_APPLIED){
+		asc_conopt_license_destroy(&license);
+	}
+	return result;
+}
+
+int asc_conopt_apply_license(coiHandle_t cntvect){
+	struct asc_conopt_license license;
+	int result;
+	int conopt_result;
+	if(cntvect == NULL){
+		return ASC_CONOPT_LICENSE_ERROR;
+	}
+	result = asc_conopt_load_license(&license);
+	if(result != ASC_CONOPT_LICENSE_APPLIED){
+		return result;
+	}
+	conopt_result = COIDEF_License(
+		cntvect,license.licint1,license.licint2,license.licint3,license.licstring
+	);
+	asc_conopt_license_destroy(&license);
+	if(conopt_result != 0){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+			"CONOPT rejected the configured license information");
+		return ASC_CONOPT_LICENSE_ERROR;
+	}
+	return ASC_CONOPT_LICENSE_APPLIED;
+}
+
+#endif /* ASC_CONOPT_API4 */
 
 /*-----------------------------------------------------------------------------
    std.c (modified from the version provided with CONOPT)

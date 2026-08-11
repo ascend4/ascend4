@@ -78,6 +78,8 @@ Highs.log
 models/johnpye/fprops/test/eqm_case_runner
 models/johnpye/fprops/test/eqm_mu0_runner
 models/johnpye/fprops/test/eqm_nox_runner
+models/johnpye/fprops/test/eqm_spinel_entry_runner
+models/johnpye/fprops/test/feohsi_phase_runner
 cutest_a4sqp_ipoptc_results.jsonl
 cutest_a4sqp_ipoptc_logs/
 models/johnpye/fprops/examples/feoh

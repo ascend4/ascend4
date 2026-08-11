@@ -90,6 +90,8 @@ jobs:
         scons GCOV=1 CUNIT_PREFIX=$HOME/.local MALLOC_DEBUG=1 ascend models solvers ascxx pygtk test a4
 
     - name: ASCEND CUnit tests
+      env:
+        ASCEND_CONOPT_LICENSE: ${{ github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && secrets.ASCEND_CONOPT_LICENSE || '' }}
       run: |
         ./a4 cutest -r mallocdebug
 

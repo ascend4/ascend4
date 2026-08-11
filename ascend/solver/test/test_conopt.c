@@ -39,9 +39,67 @@
 #include <ascend/system/system.h>
 #include <ascend/system/slv_client.h>
 #include <ascend/solver/solver.h>
+#include <ascend/solver/conoptconfig.h>
+#ifdef ASC_WITH_CONOPT
+# include <ascend/solver/conopt_dl.h>
+#endif
 #include <ascend/system/slv_server.h>
 
 #include <test/common.h>
+
+static void test_license_parse(void){
+#ifdef ASC_CONOPT_API4
+	struct asc_conopt_license license;
+	CU_ASSERT_EQUAL(
+		ASC_CONOPT_LICENSE_APPLIED,
+		asc_conopt_parse_license("Example User,11,22,33",&license)
+	);
+	CU_ASSERT_STRING_EQUAL("Example User",license.licstring);
+	CU_ASSERT_EQUAL(11,license.licint1);
+	CU_ASSERT_EQUAL(22,license.licint2);
+	CU_ASSERT_EQUAL(33,license.licint3);
+	asc_conopt_license_destroy(&license);
+	CU_ASSERT_PTR_NULL(license.licstring);
+
+	CU_ASSERT_EQUAL(
+		ASC_CONOPT_LICENSE_APPLIED,
+		asc_conopt_parse_license("Example Organisation, Research Group, -1, 0, 42",&license)
+	);
+	CU_ASSERT_STRING_EQUAL("Example Organisation, Research Group",license.licstring);
+	CU_ASSERT_EQUAL(-1,license.licint1);
+	CU_ASSERT_EQUAL(0,license.licint2);
+	CU_ASSERT_EQUAL(42,license.licint3);
+	asc_conopt_license_destroy(&license);
+#else
+	CU_SKIP("CONOPT support is not enabled.");
+#endif
+}
+
+static void test_license_parse_errors(void){
+#ifdef ASC_CONOPT_API4
+	static const char *invalid[] = {
+		NULL,
+		"",
+		"Example User,1,2",
+		",1,2,3",
+		"Example User,one,2,3",
+		"Example User,1,2,3x",
+		"Example User,1,2,21474836470",
+		"Example User,1,2,3\n"
+	};
+	struct asc_conopt_license license;
+	size_t i;
+	for(i = 0; i < sizeof(invalid) / sizeof(invalid[0]); ++i){
+		CU_ASSERT_EQUAL(
+			ASC_CONOPT_LICENSE_ERROR,
+			asc_conopt_parse_license(invalid[i],&license)
+		);
+		CU_ASSERT_PTR_NULL(license.licstring);
+	}
+#else
+	CU_SKIP("CONOPT support is not enabled.");
+#endif
+}
 
 /*
 	Test solving a simple CONOPT model
@@ -49,6 +107,16 @@
 static void test_conopt(const char *filenamestem){
 	char env1[2*PATH_MAX];
 	int solver_index;
+
+#ifdef ASC_CONOPT_API4
+	{
+		int license_status = asc_conopt_license_status();
+		if(license_status == ASC_CONOPT_LICENSE_ABSENT){
+			CU_SKIP("No CONOPT license was configured; licensed solve skipped.");
+		}
+		CU_ASSERT_EQUAL_FATAL(ASC_CONOPT_LICENSE_APPLIED,license_status);
+	}
+#endif
 
 	Asc_CompilerInit(1);
 
@@ -168,6 +236,8 @@ ACTIVE_CONOPT_TESTS(T)
 #undef T
 
 #define TESTS(T) \
+	T(license_parse) \
+	T(license_parse_errors) \
 	ACTIVE_CONOPT_TESTS(T)
 
 REGISTER_TESTS_SIMPLE(solver_conopt, TESTS)
