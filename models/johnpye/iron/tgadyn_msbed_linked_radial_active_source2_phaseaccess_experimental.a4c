@@ -529,28 +529,13 @@ MODEL tga_reduction_particle_shell_local(
 			rfbase1_eq_active_nord_qfw:
 				rate_forward_base[1] =
 					redox_pair_capacity[1] * redox_forward_gate[1] * k_step[1] * p * y_H2;
-		rfbase1_eq_depleted_nord_qfw:
-			rate_forward_base[1] = 0 {1/s};
-		WHEN(he_forward_available)
-		CASE TRUE:
-			USE rfbase1_eq_active_nord_qfw;
-		CASE FALSE:
-			USE rfbase1_eq_depleted_nord_qfw;
-		END WHEN;
 		rfbase2_eq_active_nord_qfw:
 			rate_forward_base[2] =
-				redox_pair_capacity[2] * redox_forward_gate[2] * k_step[2] * p * y_H2;
-		rfbase2_eq_depleted_nord_qfw:
-			rate_forward_base[2] = 0 {1/s};
-		WHEN(mag_forward_available)
-		CASE TRUE:
-			USE rfbase2_eq_active_nord_qfw;
-		CASE FALSE:
-			USE rfbase2_eq_depleted_nord_qfw;
-		END WHEN;
+				a_Fe3O4 * k_step[2] * p * y_H2;
 		rfbase3_eq_active_nord_qfw:
 			rate_forward_base[3] =
-				redox_pair_capacity[3] * redox_forward_gate[3] * k_step[3] * p * y_H2;
+				(a_FeO * (2 - a_FeO)) * redox_pair_capacity[3]
+				* redox_forward_gate[3] * k_step[3] * p * y_H2;
 		rfbase3_eq_depleted_nord_qfw:
 			rate_forward_base[3] = 0 {1/s};
 		WHEN(wu_forward_available)
@@ -631,7 +616,8 @@ MODEL tga_reduction_particle_shell_local(
 		CASE 'three_step_wustite_active_nord_qfw':
 			rr3_eq_three_step_active_nord_qfw:
 				rate_reverse[3] =
-					redox_pair_capacity[3] * redox_reverse_gate[3] * k_step[3] * p * y_H2O / K_ratio_eq[3];
+					(a_FeO * (2 - a_FeO)) * redox_pair_capacity[3]
+					* redox_reverse_gate[3] * k_step[3] * p * y_H2O / K_ratio_eq[3];
 		CASE 'two_step_direct':
 			rr3_eq_two_step:
 				rate_reverse[3] =
@@ -798,13 +784,15 @@ MODEL tga_reduction_particle_shell_local(
 		Jshell_eq_three_step_active_nord_qfw:
 			J_shell = n0_per_area_shell0 * (rate_net[1] + wustite_step2_h2_factor * rate_net[2] + rate_net[3] + 2 * rate_fay_red);
 		rnetraw2_eq_three_step_active_nord_qfw:
-			rate_net_raw[2] = rate_forward[2] - rate_reverse[2];
+			rate_net_raw[2] =
+				iron_interface_factor * site_factor * a_Fe3O4
+				* k_step[2] * p * step2_affinity_pos;
 		rnetraw3_eq_three_step_active_nord_qfw:
 			rate_net_raw[3] = rate_forward[3] - rate_reverse[3];
 		rnetraw4_eq_three_step_active_nord_qfw:
 			rate_net_raw[4] = 0 {1/s};
 		rnet2_eq_three_step_active_nord_qfw:
-			rate_net[2] = rate_forward[2] - rate_reverse[2];
+			rate_net[2] = rate_net_raw[2];
 		rnet3_eq_three_step_active_nord_qfw:
 			rate_net[3] = rate_forward[3] - rate_reverse[3];
 		rnet4_eq_three_step_active_nord_qfw:

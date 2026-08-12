@@ -234,10 +234,18 @@ MODEL fbdri_lee_tga_core_single_family(
 	oxygen_mig_exp IS_A positive_factor;
 	lam_open[steps] IS_A positive_factor;
 	k_qfw IS_A frequency;
+	k_qfw_ref IS_A frequency;
+	E_qfw IS_A molar_energy;
+	T_qfw_ref IS_A temperature;
 	K_qfw IS_A positive_factor;
 	qfw_reverse_factor IS_A factor;
+	K_qfw_A, K_qfw_B, K_qfw_C, K_qfw_D IS_A factor;
 	k_fay_red IS_A frequency;
+	k_fay_red_ref IS_A frequency;
+	E_fay_red IS_A molar_energy;
+	T_fay_red_ref IS_A temperature;
 	K_fay_red IS_A positive_factor;
+	K_fay_red_A, K_fay_red_B, K_fay_red_C, K_fay_red_D IS_A factor;
 
 	N_rxn_H2_total IS_A delta_molar_rate;
 	N_rxn_H2_c, N_rxn_H2_e "compatibility reaction rates" IS_A delta_molar_rate;
@@ -317,6 +325,28 @@ MODEL fbdri_lee_tga_core_single_family(
 		n0_SiO2_active = sio2_active_frac * n0_SiO2_total;
 	n0sio2inactive_eq:
 		n0_SiO2_inactive = n0_SiO2_total - n0_SiO2_active;
+	Kqfw_eq:
+		K_qfw = exp(
+			K_qfw_A
+			+ K_qfw_B / (T / 1 {K})
+			+ K_qfw_C * ln(T / 1 {K})
+			+ K_qfw_D * (T / 1 {K})
+		);
+	Kfayred_eq:
+		K_fay_red = exp(
+			K_fay_red_A
+			+ K_fay_red_B / (T / 1 {K})
+			+ K_fay_red_C * ln(T / 1 {K})
+			+ K_fay_red_D * (T / 1 {K})
+		);
+	kqfw_temperature_eq:
+		k_qfw = k_qfw_ref * exp(
+			-E_qfw / (1 {GAS_C}) * (1 / T - 1 / T_qfw_ref)
+		);
+	kfayred_temperature_eq:
+		k_fay_red = k_fay_red_ref * exp(
+			-E_fay_red / (1 {GAS_C}) * (1 / T - 1 / T_fay_red_ref)
+		);
 	Acore_eq:
 		A_core = core_area_multiplier * A_bed;
 	n0area_eq:
@@ -578,11 +608,21 @@ METHODS
 		FIX lam_open[2] := 0.82987302;
 		FIX lam_open[3] := 2.7052229;
 		FIX lam_open[4] := 2.7052229;
-		FIX k_qfw := 1e-12 {1/s};
-		FIX K_qfw := 1.0;
-		FIX qfw_reverse_factor := 0.0;
-		FIX k_fay_red := 1e-12 {1/s};
-		FIX K_fay_red := 1.0;
+		FIX k_qfw_ref := 1e-12 {1/s};
+		FIX E_qfw := 0 {kJ/mol};
+		FIX T_qfw_ref := 1073.15 {K};
+		FIX qfw_reverse_factor := 1.0;
+		FIX K_qfw_A := -0.594802370226;
+		FIX K_qfw_B := 4635.20037243;
+		FIX K_qfw_C := -0.204491343413;
+		FIX K_qfw_D := 0.000156866612087;
+		FIX k_fay_red_ref := 1e-12 {1/s};
+		FIX E_fay_red := 0 {kJ/mol};
+		FIX T_fay_red_ref := 1073.15 {K};
+		FIX K_fay_red_A := 24.0151127673;
+		FIX K_fay_red_B := -9803.03772029;
+		FIX K_fay_red_C := -2.91158658947;
+		FIX K_fay_red_D := 0.00152157523189;
 
 		FIX k0[1] := 0.000730240286465 {1/s/Pa};
 		FIX k0[2] := 0.0011416415084 {1/s/Pa};
@@ -620,6 +660,10 @@ METHODS
 		d_bm_lee := 20 {mm};
 		delta := 0.5;
 		K_be := 3 {1/s};
+		K_qfw := 1;
+		K_fay_red := 1;
+		k_qfw := k_qfw_ref;
+		k_fay_red := k_fay_red_ref;
 		D_screen := 1e-4 {m^2/s};
 		D_eff_bed := 1e-5 {m^2/s};
 		D_part0 := 1e-5 {m^2/s};
@@ -922,6 +966,18 @@ MODEL fbdri_lee_tga_core_single_source3 WHERE (
 	reaction_model :== 'three_step_wustite_active_nord_src3';
 );
 END fbdri_lee_tga_core_single_source3;
+
+MODEL fbdri_lee_tga_core_single_qfw WHERE (
+	(reaction_model = 'three_step_wustite')
+		OR (reaction_model = 'three_step_wustite_active')
+		OR (reaction_model = 'three_step_wustite_active_nord')
+		OR (reaction_model = 'three_step_wustite_active_nord_src3')
+		OR (reaction_model = 'three_step_wustite_active_nord_qfw')
+		OR (reaction_model = 'two_step_direct');
+) REFINES fbdri_lee_tga_core_single_family(
+	reaction_model :== 'three_step_wustite_active_nord_qfw';
+);
+END fbdri_lee_tga_core_single_qfw;
 
 MODEL fbdri_lee_tga_core_single_direct WHERE (
 	(reaction_model = 'three_step_wustite')
