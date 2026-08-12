@@ -151,19 +151,25 @@ MODEL fbdri_lee_tga_core_single_family(
 	delta "bed-height average bubble fraction" IS_A factor;
 	K_be "bed-height average bubble-emulsion interchange coefficient" IS_A frequency;
 
-	m_sample_init, m_sample IS_A mass;
+	m_sample_init, m_sample, m_inert IS_A mass;
 	MW_Fe2O3, MW_Fe3O4, MW_FeO, MW_Fe, MW_SiO2, MW_Fe2SiO4 IS_A molar_mass;
-	ore_Fe2O3_mass_frac IS_A positive_factor;
+	ore_Fe2O3_mass_frac IS_A factor;
+	ore_Fe3O4_mass_frac, ore_FeO_mass_frac, ore_Fe_mass_frac IS_A factor;
+	ore_Fe2SiO4_mass_frac, ore_inert_mass_frac IS_A factor;
 	ore_SiO2_mass_frac IS_A factor;
 	sio2_active_frac IS_A factor;
 	n0_Fe2O3 IS_A mole;
+	n0_Fe3O4, n0_FeO, n0_Fe, n0_Fe2SiO4 IS_A mole;
+	n0_Fe_basis "Fe2O3-equivalent kinetic normalization: total initial Fe/2" IS_A mole;
 	n0_SiO2_total IS_A mole;
 	n0_SiO2_active IS_A mole;
 	n0_SiO2_inactive IS_A mole;
 	n0_per_area IS_A mole_per_area;
 	n_Fe2O3, n_Fe3O4, n_FeO, n_Fe, n_Fe2SiO4, n_SiO2_active IS_A mole;
-	oxygen_remaining IS_A mole;
-	reduction_degree IS_A factor;
+	oxygen_initial, oxygen_hematite_equiv, oxygen_remaining IS_A mole;
+	oxygen_removed IS_A mole;
+	reduction_degree "feed-relative oxygen removal; zero at reduction start" IS_A factor;
+	reduction_degree_hematite_equiv "absolute iron oxidation state relative to Fe2O3" IS_A factor;
 
 	y_H2_in, y_H2O_in IS_A mole_fraction;
 	y_inert_in IS_A mole_fraction;
@@ -319,6 +325,25 @@ MODEL fbdri_lee_tga_core_single_family(
 
 	n0_eq:
 		n0_Fe2O3 = ore_Fe2O3_mass_frac * m_sample_init / MW_Fe2O3;
+	n0mag_eq:
+		n0_Fe3O4 = ore_Fe3O4_mass_frac * m_sample_init / MW_Fe3O4;
+	n0wu_eq:
+		n0_FeO = ore_FeO_mass_frac * m_sample_init / (MW_FeO - x_wustite * MW_Fe);
+	n0fe_eq:
+		n0_Fe = ore_Fe_mass_frac * m_sample_init / MW_Fe;
+	n0fay_eq:
+		n0_Fe2SiO4 = ore_Fe2SiO4_mass_frac * m_sample_init / MW_Fe2SiO4;
+	n0febasis_eq:
+		n0_Fe_basis = (
+			2 * n0_Fe2O3 + 3 * n0_Fe3O4 + (1 - x_wustite) * n0_FeO
+			+ n0_Fe + 2 * n0_Fe2SiO4
+		) / 2;
+	oxygen_initial_eq:
+		oxygen_initial = 3 * n0_Fe2O3 + 4 * n0_Fe3O4 + n0_FeO + 2 * n0_Fe2SiO4;
+	oxygen_hematite_equiv_eq:
+		oxygen_hematite_equiv = 3 * n0_Fe_basis;
+	minert_eq:
+		m_inert = ore_inert_mass_frac * m_sample_init;
 	n0sio2_eq:
 		n0_SiO2_total = ore_SiO2_mass_frac * m_sample_init / MW_SiO2;
 	n0sio2active_eq:
@@ -350,7 +375,7 @@ MODEL fbdri_lee_tga_core_single_family(
 	Acore_eq:
 		A_core = core_area_multiplier * A_bed;
 	n0area_eq:
-		n0_per_area = n0_Fe2O3 / A_core;
+		n0_per_area = n0_Fe_basis / A_core;
 	msample_eq:
 		m_sample
 		=
@@ -359,11 +384,17 @@ MODEL fbdri_lee_tga_core_single_family(
 		+ n_FeO * (MW_FeO - x_wustite * MW_Fe)
 		+ n_Fe * MW_Fe
 		+ n_Fe2SiO4 * MW_Fe2SiO4
-		+ (n_SiO2_active + n0_SiO2_inactive) * MW_SiO2;
+		+ (n_SiO2_active + n0_SiO2_inactive) * MW_SiO2
+		+ m_inert;
 	oxygen_eq:
 		oxygen_remaining = 3 * n_Fe2O3 + 4 * n_Fe3O4 + n_FeO + 2 * n_Fe2SiO4;
+	oxygen_removed_eq:
+		oxygen_removed = oxygen_initial - oxygen_remaining;
 	reduction_degree_eq:
-		reduction_degree = (3 * n0_Fe2O3 - oxygen_remaining) / (3 * n0_Fe2O3);
+		reduction_degree = oxygen_removed / oxygen_initial;
+	reduction_degree_hematite_equiv_eq:
+		reduction_degree_hematite_equiv =
+			(oxygen_hematite_equiv - oxygen_remaining) / oxygen_hematite_equiv;
 
 	b_feed_h2_eq: b_node[0].y_H2 = y_H2_in;
 	b_feed_h2o_eq: b_node[0].y_H2O = y_H2O_in;
@@ -431,7 +462,17 @@ MODEL fbdri_lee_tga_core_single_family(
 		N_rxn_H2_total = A_core * core.J_reaction;
 
 	core_n0_eq:
-		core.n0_Fe2O3_slice = n0_Fe2O3;
+		core.n0_Fe2O3_slice = n0_Fe_basis;
+	core_n0he_initial_eq:
+		core.n0_Fe2O3_initial_slice = n0_Fe2O3;
+	core_n0mag_initial_eq:
+		core.n0_Fe3O4_initial_slice = n0_Fe3O4;
+	core_n0wu_initial_eq:
+		core.n0_FeO_initial_slice = n0_FeO;
+	core_n0fe_initial_eq:
+		core.n0_Fe_initial_slice = n0_Fe;
+	core_n0fay_initial_eq:
+		core.n0_Fe2SiO4_initial_slice = n0_Fe2SiO4;
 	core_sio2_eq:
 		core.n0_SiO2_active_slice = n0_SiO2_active;
 	core_n0area_eq:
@@ -566,7 +607,12 @@ METHODS
 		FIX MW_SiO2 := 60.0843 {g/g_mole};
 		FIX MW_Fe2SiO4 := 203.7733 {g/g_mole};
 		FIX ore_Fe2O3_mass_frac := 0.92428;
+		FIX ore_Fe3O4_mass_frac := 0.0;
+		FIX ore_FeO_mass_frac := 0.0;
+		FIX ore_Fe_mass_frac := 0.0;
+		FIX ore_Fe2SiO4_mass_frac := 0.0;
 		FIX ore_SiO2_mass_frac := 0.07572;
+		FIX ore_inert_mass_frac := 0.0;
 		FIX sio2_active_frac := 0.0;
 
 		FIX tau_bed := 3.0;
@@ -694,18 +740,32 @@ METHODS
 		m_s_emulsion := m_sample_init;
 
 		n0_Fe2O3 := ore_Fe2O3_mass_frac * m_sample_init / MW_Fe2O3;
+		n0_Fe3O4 := ore_Fe3O4_mass_frac * m_sample_init / MW_Fe3O4;
+		n0_FeO := ore_FeO_mass_frac * m_sample_init / (MW_FeO - x_wustite * MW_Fe);
+		n0_Fe := ore_Fe_mass_frac * m_sample_init / MW_Fe;
+		n0_Fe2SiO4 := ore_Fe2SiO4_mass_frac * m_sample_init / MW_Fe2SiO4;
+		n0_Fe_basis := (
+			2 * n0_Fe2O3 + 3 * n0_Fe3O4 + (1 - x_wustite) * n0_FeO
+			+ n0_Fe + 2 * n0_Fe2SiO4
+		) / 2;
 		n0_SiO2_total := ore_SiO2_mass_frac * m_sample_init / MW_SiO2;
 		n0_SiO2_active := 0 {mol};
 		n0_SiO2_inactive := n0_SiO2_total;
 		n_Fe2O3 := n0_Fe2O3;
-		n_Fe3O4 := 0 {mol};
-		n_FeO := 0 {mol};
-		n_Fe := 0 {mol};
-		n_Fe2SiO4 := 0 {mol};
+		n_Fe3O4 := n0_Fe3O4;
+		n_FeO := n0_FeO;
+		n_Fe := n0_Fe;
+		n_Fe2SiO4 := n0_Fe2SiO4;
 		n_SiO2_active := 0 {mol};
+		m_inert := ore_inert_mass_frac * m_sample_init;
 		m_sample := m_sample_init;
-		oxygen_remaining := 3 * n_Fe2O3;
+		oxygen_initial := 3 * n0_Fe2O3 + 4 * n0_Fe3O4 + n0_FeO + 2 * n0_Fe2SiO4;
+		oxygen_hematite_equiv := 3 * n0_Fe_basis;
+		oxygen_remaining := oxygen_initial;
+		oxygen_removed := 0 {mol};
 		reduction_degree := 0;
+		reduction_degree_hematite_equiv :=
+			(oxygen_hematite_equiv - oxygen_initial) / oxygen_hematite_equiv;
 		FOR r IN steps DO
 			k_step[r] := 1e-5 {1/s/Pa};
 			K_ratio_eq[r] := 1;
@@ -769,6 +829,14 @@ METHODS
 		reduction_degree.upper_bound := 1 + 1e-8;
 		m_sample.lower_bound := 0 {kg};
 		oxygen_remaining.lower_bound := -1e-9 {mol};
+		(* Zero initial inventories are physically valid.  Give the algebraic
+		   phase totals a small numerical envelope so IDA's initial consistency
+		   solve does not reject round-off below zero. *)
+		n0_Fe2O3.lower_bound := -1e-12 {mol};
+		n0_Fe3O4.lower_bound := -1e-12 {mol};
+		n0_FeO.lower_bound := -1e-12 {mol};
+		n0_Fe.lower_bound := -1e-12 {mol};
+		n0_Fe2SiO4.lower_bound := -1e-12 {mol};
 		n_Fe2O3.lower_bound := -1e-6 {mol};
 		n_Fe3O4.lower_bound := -1e-6 {mol};
 		n_FeO.lower_bound := -1e-6 {mol};
@@ -799,6 +867,20 @@ METHODS
 		solid_activity_order.upper_bound := 5.0;
 		solid_activity_floor.lower_bound := 1e-8;
 		solid_activity_floor.upper_bound := 0.2;
+		ore_Fe2O3_mass_frac.lower_bound := 0.0;
+		ore_Fe2O3_mass_frac.upper_bound := 1.0;
+		ore_Fe3O4_mass_frac.lower_bound := 0.0;
+		ore_Fe3O4_mass_frac.upper_bound := 1.0;
+		ore_FeO_mass_frac.lower_bound := 0.0;
+		ore_FeO_mass_frac.upper_bound := 1.0;
+		ore_Fe_mass_frac.lower_bound := 0.0;
+		ore_Fe_mass_frac.upper_bound := 1.0;
+		ore_Fe2SiO4_mass_frac.lower_bound := 0.0;
+		ore_Fe2SiO4_mass_frac.upper_bound := 1.0;
+		ore_SiO2_mass_frac.lower_bound := 0.0;
+		ore_SiO2_mass_frac.upper_bound := 1.0;
+		ore_inert_mass_frac.lower_bound := 0.0;
+		ore_inert_mass_frac.upper_bound := 1.0;
 		site_init.lower_bound := 0.0;
 		site_init.upper_bound := 1.0;
 		site_floor.lower_bound := 0.0;
@@ -841,6 +923,11 @@ METHODS
 		core.n_Fe.lower_bound := -1e-3 {mol};
 		core.n_Fe2SiO4.lower_bound := -1e-3 {mol};
 		core.n_SiO2_active.lower_bound := -1e-3 {mol};
+		core.n0_Fe2O3_initial_slice.lower_bound := -1e-12 {mol};
+		core.n0_Fe3O4_initial_slice.lower_bound := -1e-12 {mol};
+		core.n0_FeO_initial_slice.lower_bound := -1e-12 {mol};
+		core.n0_Fe_initial_slice.lower_bound := -1e-12 {mol};
+		core.n0_Fe2SiO4_initial_slice.lower_bound := -1e-12 {mol};
 		core.n0_SiO2_active_slice.lower_bound := -1e-18 {mol};
 		core.xi1.lower_bound := -1e-4;
 		core.xi3.lower_bound := -1e-4;
@@ -883,10 +970,10 @@ METHODS
 		t := 0 {s};
 		d_int_eff := d_int_multiplier * d_p;
 		core.shell[1..n_radial_segs].n_Fe2O3 := n0_Fe2O3 / n_radial_segs;
-		core.shell[1..n_radial_segs].n_Fe3O4 := 0 {mol};
-		core.shell[1..n_radial_segs].n_FeO := 0 {mol};
-		core.shell[1..n_radial_segs].n_Fe := 0 {mol};
-		core.shell[1..n_radial_segs].n_Fe2SiO4 := 0 {mol};
+		core.shell[1..n_radial_segs].n_Fe3O4 := n0_Fe3O4 / n_radial_segs;
+		core.shell[1..n_radial_segs].n_FeO := n0_FeO / n_radial_segs;
+		core.shell[1..n_radial_segs].n_Fe := n0_Fe / n_radial_segs;
+		core.shell[1..n_radial_segs].n_Fe2SiO4 := n0_Fe2SiO4 / n_radial_segs;
 		core.shell[1..n_radial_segs].n_SiO2_active := n0_SiO2_active / n_radial_segs;
 		core.shell[1..n_radial_segs].eps_o := eps_o_init;
 		core.shell[1..n_radial_segs].phi_b := 0;

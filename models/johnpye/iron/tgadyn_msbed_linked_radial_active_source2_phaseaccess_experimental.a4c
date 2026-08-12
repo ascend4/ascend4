@@ -1244,6 +1244,8 @@ MODEL tga_reduction_bed_slice_radial_local(
 	lam_open[steps] IS_A positive_factor;
 
 	n0_Fe2O3_slice IS_A mole;
+	n0_Fe2O3_initial_slice, n0_Fe3O4_initial_slice IS_A mole;
+	n0_FeO_initial_slice, n0_Fe_initial_slice, n0_Fe2SiO4_initial_slice IS_A mole;
 	n0_per_area_slice IS_A mole_per_area;
 
 	k_step[steps] IS_A rate_per_pressure;
@@ -1478,11 +1480,11 @@ MODEL tga_reduction_bed_slice_radial_local(
 
 	INITIAL
 	FOR s IN shells CREATE
-		nhe_initial[s]: n_Fe2O3_shell[s] = n0_Fe2O3_slice / n_radial_segs;
-		nmag_initial[s]: n_Fe3O4_shell[s] = 0 {mol};
-		nwu_initial[s]: n_FeO_shell[s] = 0 {mol};
-		nfe_initial[s]: n_Fe_shell[s] = 0 {mol};
-		nfay_initial[s]: n_Fe2SiO4_shell[s] = 0 {mol};
+		nhe_initial[s]: n_Fe2O3_shell[s] = n0_Fe2O3_initial_slice / n_radial_segs;
+		nmag_initial[s]: n_Fe3O4_shell[s] = n0_Fe3O4_initial_slice / n_radial_segs;
+		nwu_initial[s]: n_FeO_shell[s] = n0_FeO_initial_slice / n_radial_segs;
+		nfe_initial[s]: n_Fe_shell[s] = n0_Fe_initial_slice / n_radial_segs;
+		nfay_initial[s]: n_Fe2SiO4_shell[s] = n0_Fe2SiO4_initial_slice / n_radial_segs;
 		nsio2_initial[s]: n_SiO2_active_shell[s] = n0_SiO2_active_slice / n_radial_segs;
 		epso_initial[s]: eps_o_shell[s] = eps_o_init;
 		phib_initial[s]: phi_b_shell[s] = 0;
@@ -1879,6 +1881,16 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	FOR z IN [1..n_bed_segs] CREATE
 		slice_n0_eq[z]:
 			slice[z].n0_Fe2O3_slice = n0_Fe2O3 / n_bed_segs;
+		slice_n0he_initial_eq[z]:
+			slice[z].n0_Fe2O3_initial_slice = n0_Fe2O3 / n_bed_segs;
+		slice_n0mag_initial_eq[z]:
+			slice[z].n0_Fe3O4_initial_slice = 0 {mol};
+		slice_n0wu_initial_eq[z]:
+			slice[z].n0_FeO_initial_slice = 0 {mol};
+		slice_n0fe_initial_eq[z]:
+			slice[z].n0_Fe_initial_slice = 0 {mol};
+		slice_n0fay_initial_eq[z]:
+			slice[z].n0_Fe2SiO4_initial_slice = 0 {mol};
 		slice_sio2_eq[z]:
 			slice[z].n0_SiO2_active_slice = n0_SiO2_active / n_bed_segs;
 		slice_n0area_eq[z]:
@@ -2174,6 +2186,11 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		n_Fe.lower_bound := -1e-3 {mol};
 		n_Fe2SiO4.lower_bound := -1e-3 {mol};
 		n_SiO2_active.lower_bound := -1e-3 {mol};
+		n0_Fe2O3_initial_slice.lower_bound := -1e-12 {mol};
+		n0_Fe3O4_initial_slice.lower_bound := -1e-12 {mol};
+		n0_FeO_initial_slice.lower_bound := -1e-12 {mol};
+		n0_Fe_initial_slice.lower_bound := -1e-12 {mol};
+		n0_Fe2SiO4_initial_slice.lower_bound := -1e-12 {mol};
 		oxygen_remaining.lower_bound := -1e-3 {mol};
 		xi[steps].lower_bound := -0.05;
 
