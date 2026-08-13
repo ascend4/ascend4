@@ -65,5 +65,7 @@ to the default branch:
 ```
 
 When no license is provided, CONOPT-dependent tests report themselves skipped.
-Malformed, unreadable, rejected, or non-working licenses fail the tests. The
-implementation never writes or logs the configured license value.
+Malformed, unreadable, rejected, or non-working licenses fail the tests.
+`./a4 solvers` displays `LicString` and validates that CONOPT accepts a
+full-size model beyond its demo limits. The implementation never writes or
+logs the three license integers or the complete four-field license value.

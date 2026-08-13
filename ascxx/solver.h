@@ -30,6 +30,7 @@ public:
 	const int getIndex() const;
 	const std::string& getName() const;
 	const std::string getVersion() const;
+	const std::string getDetails() const;
 };
 
 class SolverReporter;
@@ -38,6 +39,12 @@ class SolverReporter;
 	Some global functions
 */
 void registerStandardSolvers();
+void setAutoRegisterStandardSolvers(bool enabled);
+bool getAutoRegisterStandardSolvers();
+const std::vector<std::string> getStandardSolvers();
+const std::vector<std::string> getStandardSolverImports();
+bool isSolverRegistered(const std::string &name);
+int loadSolver(const std::string &name);
 //void registerSolver(SlvRegistration regfuncptr);
 const std::vector<Solver> getSolvers();
 void setSolverInterrupt(const bool &interrupt);

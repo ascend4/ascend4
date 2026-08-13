@@ -188,7 +188,7 @@ static void test_cmslv(const char *filenamestem, const char *optsolver,
 
 #ifdef ASC_CONOPT_API4
 	if(optsolver != NULL && strcmp(optsolver,"CONOPT") == 0){
-		int license_status = asc_conopt_license_status();
+		int license_status = asc_conopt_license_status(NULL);
 		if(license_status == ASC_CONOPT_LICENSE_ABSENT){
 			CU_SKIP("No CONOPT license was configured; CMSlv CONOPT solve skipped.");
 		}

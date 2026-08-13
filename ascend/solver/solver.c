@@ -49,10 +49,17 @@ typedef struct SolverVersionHookStruct{
 	SlvGetVersionF *getversion;
 } SolverVersionHook;
 
+typedef struct SolverDetailsHookStruct{
+	char *name;
+	SlvGetDetailsF *getdetails;
+} SolverDetailsHook;
+
 static SolverVersionHook g_solver_version_hooks[SOLVER_VERSION_HOOKS_MAX];
 static int g_solver_version_hooks_count = 0;
+static SolverDetailsHook g_solver_details_hooks[SOLVER_VERSION_HOOKS_MAX];
+static int g_solver_details_hooks_count = 0;
 
-static void solver_clear_version_hooks(void){
+static void solver_clear_metadata_hooks(void){
 	int i;
 	for(i = 0; i < g_solver_version_hooks_count; ++i){
 		if(g_solver_version_hooks[i].name != NULL){
@@ -62,6 +69,14 @@ static void solver_clear_version_hooks(void){
 		g_solver_version_hooks[i].getversion = NULL;
 	}
 	g_solver_version_hooks_count = 0;
+	for(i = 0; i < g_solver_details_hooks_count; ++i){
+		if(g_solver_details_hooks[i].name != NULL){
+			ASC_FREE(g_solver_details_hooks[i].name);
+		}
+		g_solver_details_hooks[i].name = NULL;
+		g_solver_details_hooks[i].getdetails = NULL;
+	}
+	g_solver_details_hooks_count = 0;
 }
 
 int solver_register_version(const char *solver_name, SlvGetVersionF *getversion){
@@ -95,6 +110,42 @@ int solver_get_version(const char *solver_name, char *buf, size_t buflen){
 	for(i = 0; i < g_solver_version_hooks_count; ++i){
 		if(strcmp(g_solver_version_hooks[i].name,solver_name) == 0){
 			return g_solver_version_hooks[i].getversion(buf,buflen);
+		}
+	}
+	return 1;
+}
+
+int solver_register_details(const char *solver_name, SlvGetDetailsF *getdetails){
+	int i;
+	if(solver_name == NULL || getdetails == NULL){
+		return 1;
+	}
+	for(i = 0; i < g_solver_details_hooks_count; ++i){
+		if(strcmp(g_solver_details_hooks[i].name,solver_name) == 0){
+			g_solver_details_hooks[i].getdetails = getdetails;
+			return 0;
+		}
+	}
+	if(g_solver_details_hooks_count >= SOLVER_VERSION_HOOKS_MAX){
+		return 1;
+	}
+	g_solver_details_hooks[g_solver_details_hooks_count].name = ASC_STRDUP(solver_name);
+	if(g_solver_details_hooks[g_solver_details_hooks_count].name == NULL){
+		return 1;
+	}
+	g_solver_details_hooks[g_solver_details_hooks_count].getdetails = getdetails;
+	g_solver_details_hooks_count++;
+	return 0;
+}
+
+int solver_get_details(const char *solver_name, char *buf, size_t buflen){
+	int i;
+	if(solver_name == NULL || buf == NULL || buflen == 0){
+		return 1;
+	}
+	for(i = 0; i < g_solver_details_hooks_count; ++i){
+		if(strcmp(g_solver_details_hooks[i].name,solver_name) == 0){
+			return g_solver_details_hooks[i].getdetails(buf,buflen);
 		}
 	}
 	return 1;
@@ -152,7 +203,7 @@ struct gl_list_t *solver_get_engines_growable(){
 }
 
 void solver_destroy_engines(){
-	solver_clear_version_hooks();
+	solver_clear_metadata_hooks();
 	solver_get_list(1);
 }
 
@@ -308,48 +359,7 @@ int solver_register(const SlvFunctionsT *solver){
   SOLVER REGISTRATION
 */
 
-/* rewrote this stuff to get rid of all the #ifdefs -- JP */
-
-struct StaticSolverRegistration{
-	const char *importname;
-};
-
-/*
-	The names here are only used to provide information in the case where
-	solver registration fails. The definitive solver names are in the slv*.c
-	files.
-*/
-static const struct StaticSolverRegistration slv_reg[]={
-	{"qrslv"}
-#ifdef ASC_WITH_IPOPT
-	,{"ipopt"}
-#endif
-#ifdef ASC_WITH_MAKEMPS
-	,{"makemps"}
-#endif
-#ifdef ASC_WITH_HIGHS
-	,{"highs"}
-#endif
-#ifdef ASC_WITH_A4SQP
-	,{"a4sqp"}
-#endif
-#ifdef ASC_WITH_SLSQP
-	,{"slsqp"}
-#endif
-#if 0
-	,{"conopt"}
-	,{"lrslv"}
-	,{"cmslv"}
-#endif
-	,{NULL}
-/* 	{0,"SLV",&slv0_register} */
-/*	,{0,"MINOS",&slv1_register} */
-/*	,{0,"CSLV",&slv4_register} */
-/*	,{0,"LSSLV",&slv5_register} */
-/*	,{0,"MPS",&slv6_register} */
-/*	,{0,"NGSLV",&slv7_register} */
-/* 	,{0,"OPTSQP",&slv2_register} */
-};
+/* Old in-tree solvers retained for source compatibility only. */
 
 #if 0
 /* this code can automate calls to AddDllDirectory in Windows. however, for now, we found it wasn't needed (surprisingly) */
@@ -424,17 +434,23 @@ int SlvRegisterStandardClients(void){
 #endif
 
 	MSG("REGISTERING STANDARD SOLVER ENGINES");
-	for(i=0; slv_reg[i].importname!=NULL;++i){
-		MSG("Registering '%s'",slv_reg[i].importname);
-		error = package_load(slv_reg[i].importname,NULL);
-		if(error){
-			ERROR_REPORTER_HERE(ASC_PROG_NOTE
-				,"Unable to register solver '%s' (error %d).\n"
-				,slv_reg[i].importname,error
-			);
-		}else{
-			/* CONSOLE_DEBUG("Solver '%s' registered OK",slv_reg[i].importname); */
-			nclients++;
+	{
+		char imports[] = ASC_SOLVER_IMPORTS;
+		char *importname;
+		for(importname = strtok(imports,", \t"), i = 0;
+				importname != NULL;
+				importname = strtok(NULL,", \t"), ++i){
+			MSG("Registering '%s'",importname);
+			error = package_load(importname,NULL);
+			if(error){
+				ERROR_REPORTER_HERE(ASC_PROG_NOTE
+					,"Unable to register solver '%s' (error %d).\n"
+					,importname,error
+				);
+			}else{
+				/* CONSOLE_DEBUG("Solver '%s' registered OK",importname); */
+				nclients++;
+			}
 		}
 	}
   return nclients;

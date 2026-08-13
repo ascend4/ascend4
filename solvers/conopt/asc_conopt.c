@@ -74,6 +74,47 @@ static int conopt_get_version(char *buf, size_t buflen){
 #endif
 }
 
+static int conopt_get_details(char *buf, size_t buflen){
+#ifdef ASC_CONOPT_API4
+	char *licstring = NULL;
+	unsigned char *p;
+	int status;
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+	status = asc_conopt_validate_license(&licstring);
+	if(licstring != NULL){
+		for(p = (unsigned char *)licstring; *p != '\0'; ++p){
+			if(*p < 0x20 || *p == 0x7f){
+				*p = '?';
+			}
+		}
+	}
+	switch(status){
+		case ASC_CONOPT_LICENSE_ABSENT:
+			snprintf(buf,buflen,"unlicensed; demo limits apply");
+			break;
+		case ASC_CONOPT_LICENSE_VALID:
+			snprintf(buf,buflen,"licensed: %s",
+				licstring != NULL ? licstring : "configured");
+			break;
+		case ASC_CONOPT_LICENSE_INVALID:
+			snprintf(buf,buflen,"invalid license: %s; demo limits apply",
+				licstring != NULL ? licstring : "configured");
+			break;
+		default:
+			snprintf(buf,buflen,"license validation inconclusive");
+			break;
+	}
+	asc_conopt_license_string_destroy(licstring);
+	return 0;
+#else
+	(void)buf;
+	(void)buflen;
+	return 1;
+#endif
+}
+
 #define conopt_register_conopt_function register_conopt_function
 #define conopt_coicsm coicsm
 #define conopt_coimem coimem
@@ -3159,6 +3200,7 @@ int conopt_register(void){
 		return 1;
 	}
 	solver_register_version("CONOPT",conopt_get_version);
+	solver_register_details("CONOPT",conopt_get_details);
 	return 0;
 }
 
