@@ -110,7 +110,7 @@ static void test_conopt(const char *filenamestem){
 
 #ifdef ASC_CONOPT_API4
 	{
-		int license_status = asc_conopt_license_status();
+		int license_status = asc_conopt_license_status(NULL);
 		if(license_status == ASC_CONOPT_LICENSE_ABSENT){
 			CU_SKIP("No CONOPT license was configured; licensed solve skipped.");
 		}

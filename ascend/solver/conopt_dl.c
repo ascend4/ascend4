@@ -561,12 +561,233 @@ static int asc_conopt_load_license(struct asc_conopt_license *license){
 	return result;
 }
 
-int asc_conopt_license_status(void){
+void asc_conopt_license_string_destroy(char *licstring){
+	asc_conopt_secure_free(licstring);
+}
+
+int asc_conopt_license_status(char **licstring){
 	struct asc_conopt_license license = {0};
 	int result = asc_conopt_load_license(&license);
+	if(licstring != NULL){
+		*licstring = NULL;
+	}
 	if(result == ASC_CONOPT_LICENSE_APPLIED){
+		if(licstring != NULL){
+			*licstring = license.licstring;
+			license.licstring = NULL;
+		}
 		asc_conopt_license_destroy(&license);
 	}
+	return result;
+}
+
+#define ASC_CONOPT_LICENSE_PROBE_N 1001
+#define ASC_CONOPT_LICENSE_PROBE_M 1002
+#define ASC_CONOPT_LICENSE_PROBE_NZ 2002
+
+struct asc_conopt_license_probe {
+	int invalid_message;
+	int demo_limit_message;
+	int readmatrix_calls;
+};
+
+static int COI_CALL asc_conopt_license_probe_readmatrix(
+	double lower[], double curr[], double upper[], int vsta[], int typex[],
+	double rhs[], int esta[], int colsta[], int rowno[], double value[],
+	int nlflag[], int numvar, int numcon, int numnz, void *usrmem
+){
+	struct asc_conopt_license_probe *probe = usrmem;
+	int i;
+	if(probe == NULL
+		|| numvar != ASC_CONOPT_LICENSE_PROBE_N
+		|| numcon != ASC_CONOPT_LICENSE_PROBE_M
+		|| numnz != ASC_CONOPT_LICENSE_PROBE_NZ
+	){
+		return 1;
+	}
+	probe->readmatrix_calls++;
+	for(i = 0; i < ASC_CONOPT_LICENSE_PROBE_N; ++i){
+		lower[i] = -2.0;
+		curr[i] = 1.0;
+		upper[i] = 2.0;
+		vsta[i] = 0;
+		colsta[i] = 2 * i;
+		rowno[2 * i] = i;
+		value[2 * i] = 2.0;
+		nlflag[2 * i] = 1;
+		rowno[2 * i + 1] = ASC_CONOPT_LICENSE_PROBE_N;
+		value[2 * i + 1] = 1.0;
+		nlflag[2 * i + 1] = 0;
+	}
+	colsta[ASC_CONOPT_LICENSE_PROBE_N] = ASC_CONOPT_LICENSE_PROBE_NZ;
+	for(i = 0; i < ASC_CONOPT_LICENSE_PROBE_N; ++i){
+		typex[i] = 0;
+		rhs[i] = 1.0;
+		esta[i] = 0;
+	}
+	typex[ASC_CONOPT_LICENSE_PROBE_N] = 3;
+	rhs[ASC_CONOPT_LICENSE_PROBE_N] = 0.0;
+	esta[ASC_CONOPT_LICENSE_PROBE_N] = 0;
+	return 0;
+}
+
+static int COI_CALL asc_conopt_license_probe_fdeval(
+	const double x[], double *g, double jac[], int rowno,
+	const int jacnum[], int mode, int ignerr, int *errcnt, int numvar,
+	int numjac, int thread, void *usrmem
+){
+	int i;
+	(void)ignerr;
+	(void)errcnt;
+	(void)thread;
+	(void)usrmem;
+	if(numvar != ASC_CONOPT_LICENSE_PROBE_N
+		|| rowno < 0 || rowno >= ASC_CONOPT_LICENSE_PROBE_M
+	){
+		return 1;
+	}
+	if(mode == 1 || mode == 3){
+		if(rowno == ASC_CONOPT_LICENSE_PROBE_N){
+			*g = 0.0;
+			for(i = 0; i < ASC_CONOPT_LICENSE_PROBE_N; ++i){
+				*g += x[i];
+			}
+		}else{
+			*g = x[rowno] * x[rowno];
+		}
+	}
+	if(mode == 2 || mode == 3){
+		for(i = 0; i < numjac; ++i){
+			int col = jacnum != NULL ? jacnum[i] : i;
+			jac[i] = rowno == ASC_CONOPT_LICENSE_PROBE_N
+				? 1.0 : (col == rowno ? 2.0 * x[col] : 0.0);
+		}
+	}
+	return 0;
+}
+
+static int COI_CALL asc_conopt_license_probe_status(
+	int modsta, int solsta, int iter, double objval, void *usrmem
+){
+	(void)modsta;
+	(void)solsta;
+	(void)iter;
+	(void)objval;
+	(void)usrmem;
+	return 0;
+}
+
+static int COI_CALL asc_conopt_license_probe_solution(
+	const double xval[], const double xmar[], const int xbas[],
+	const int xsta[], const double yval[], const double ymar[],
+	const int ybas[], const int ysta[], int numvar, int numcon, void *usrmem
+){
+	(void)xval;
+	(void)xmar;
+	(void)xbas;
+	(void)xsta;
+	(void)yval;
+	(void)ymar;
+	(void)ybas;
+	(void)ysta;
+	(void)numvar;
+	(void)numcon;
+	(void)usrmem;
+	return 0;
+}
+
+static int COI_CALL asc_conopt_license_probe_message(
+	int smsg, int dmsg, int nmsg, char *msgv[], void *usrmem
+){
+	struct asc_conopt_license_probe *probe = usrmem;
+	int i;
+	(void)smsg;
+	(void)dmsg;
+	if(probe == NULL || msgv == NULL){
+		return 0;
+	}
+	for(i = 0; i < nmsg; ++i){
+		if(msgv[i] == NULL){
+			continue;
+		}
+		if(strstr(msgv[i],"No valid license") != NULL){
+			probe->invalid_message = 1;
+		}
+		if(strstr(msgv[i],"Limits for Demo Version Exceeded") != NULL){
+			probe->demo_limit_message = 1;
+		}
+	}
+	return 0;
+}
+
+static int COI_CALL asc_conopt_license_probe_errmsg(
+	int rowno, int colno, int posno, const char *msg, void *usrmem
+){
+	(void)rowno;
+	(void)colno;
+	(void)posno;
+	(void)msg;
+	(void)usrmem;
+	return 0;
+}
+
+int asc_conopt_validate_license(char **licstring){
+	struct asc_conopt_license license = {0};
+	struct asc_conopt_license_probe probe = {0};
+	coiHandle_t cntvect = NULL;
+	int result;
+	if(licstring != NULL){
+		*licstring = NULL;
+	}
+	result = asc_conopt_load_license(&license);
+	if(result != ASC_CONOPT_LICENSE_APPLIED){
+		return result;
+	}
+	if(COI_Create(&cntvect) != 0 || cntvect == NULL){
+		result = ASC_CONOPT_LICENSE_ERROR;
+		goto cleanup;
+	}
+	if(COIDEF_License(
+		cntvect,license.licint1,license.licint2,license.licint3,
+		license.licstring
+	) != 0){
+		result = ASC_CONOPT_LICENSE_ERROR;
+		goto cleanup;
+	}
+	COIDEF_NumVar(cntvect,ASC_CONOPT_LICENSE_PROBE_N);
+	COIDEF_NumCon(cntvect,ASC_CONOPT_LICENSE_PROBE_M);
+	COIDEF_NumNz(cntvect,ASC_CONOPT_LICENSE_PROBE_NZ);
+	COIDEF_NumNlNz(cntvect,ASC_CONOPT_LICENSE_PROBE_N);
+	COIDEF_OptDir(cntvect,1);
+	COIDEF_ObjCon(cntvect,ASC_CONOPT_LICENSE_PROBE_N);
+	COIDEF_ItLim(cntvect,0);
+	COIDEF_ErrLim(cntvect,20);
+	COIDEF_StdOut(cntvect,0);
+	COIDEF_UsrMem(cntvect,&probe);
+	COIDEF_ReadMatrix(cntvect,asc_conopt_license_probe_readmatrix);
+	COIDEF_FDEval(cntvect,asc_conopt_license_probe_fdeval);
+	COIDEF_Status(cntvect,asc_conopt_license_probe_status);
+	COIDEF_Solution(cntvect,asc_conopt_license_probe_solution);
+	COIDEF_Message(cntvect,asc_conopt_license_probe_message);
+	COIDEF_ErrMsg(cntvect,asc_conopt_license_probe_errmsg);
+	(void)COI_Solve(cntvect);
+	if(probe.invalid_message || probe.demo_limit_message){
+		result = ASC_CONOPT_LICENSE_INVALID;
+	}else if(probe.readmatrix_calls > 0){
+		result = ASC_CONOPT_LICENSE_VALID;
+	}else{
+		result = ASC_CONOPT_LICENSE_ERROR;
+	}
+
+cleanup:
+	if(cntvect != NULL){
+		COI_Free(&cntvect);
+	}
+	if(licstring != NULL){
+		*licstring = license.licstring;
+		license.licstring = NULL;
+	}
+	asc_conopt_license_destroy(&license);
 	return result;
 }
 
