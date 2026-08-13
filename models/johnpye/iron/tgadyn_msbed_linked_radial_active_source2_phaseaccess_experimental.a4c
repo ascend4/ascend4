@@ -112,6 +112,7 @@ MODEL tga_reduction_particle_shell_local(
 	k_qfw "normalised finite-rate QFW exchange constant" IS_A frequency;
 	K_qfw "2 FeO + SiO2 <-> Fe2SiO4 equilibrium constant" IS_A positive_factor;
 	qfw_reverse_factor "diagnostic multiplier on Fe2SiO4 -> FeO + SiO2 exchange" IS_A factor;
+	qfw_mobility_factor "bounded common multiplier on forward and reverse QFW exchange" IS_A factor;
 	k_fay_red "normalised finite-rate fayalite H2 reduction constant" IS_A frequency;
 	K_fay_red "Fe2SiO4 + 2 H2 <-> 2 Fe + SiO2 + 2 H2O equilibrium constant" IS_A positive_factor;
 	n0_SiO2_active_shell0 IS_A mole;
@@ -798,7 +799,7 @@ MODEL tga_reduction_particle_shell_local(
 		rnet4_eq_three_step_active_nord_qfw:
 			rate_net[4] = 0 {1/s};
 		qfw_rate_eq_three_step_active_nord_qfw_active:
-			rate_qfw = qfw_inventory_factor * k_qfw * (
+			rate_qfw = qfw_mobility_factor * qfw_inventory_factor * k_qfw * (
 					a_FeO * a_FeO * a_SiO2_active
 					- qfw_reverse_factor * a_Fe2SiO4 / K_qfw
 				);
@@ -1238,6 +1239,7 @@ MODEL tga_reduction_bed_slice_radial_local(
 	k_qfw IS_A frequency;
 	K_qfw IS_A positive_factor;
 	qfw_reverse_factor IS_A factor;
+	qfw_mobility_factor IS_A factor;
 	k_fay_red IS_A frequency;
 	K_fay_red IS_A positive_factor;
 	n0_SiO2_active_slice IS_A mole;
@@ -1440,6 +1442,7 @@ MODEL tga_reduction_bed_slice_radial_local(
 		k_qfw, shell[s].k_qfw ARE_THE_SAME;
 		K_qfw, shell[s].K_qfw ARE_THE_SAME;
 		qfw_reverse_factor, shell[s].qfw_reverse_factor ARE_THE_SAME;
+		qfw_mobility_factor, shell[s].qfw_mobility_factor ARE_THE_SAME;
 		k_fay_red, shell[s].k_fay_red ARE_THE_SAME;
 		K_fay_red, shell[s].K_fay_red ARE_THE_SAME;
 		shell[s].n0_SiO2_active_shell0 = n0_SiO2_active_slice / n_radial_segs;
@@ -1572,6 +1575,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	k_qfw IS_A frequency;
 	K_qfw IS_A positive_factor;
 	qfw_reverse_factor IS_A factor;
+	qfw_mobility_factor IS_A factor;
 	K_qfw_A IS_A factor;
 	K_qfw_B IS_A factor;
 	K_qfw_C IS_A factor;
@@ -1946,6 +1950,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 	k_qfw, slice[1..n_bed_segs].k_qfw ARE_THE_SAME;
 	K_qfw, slice[1..n_bed_segs].K_qfw ARE_THE_SAME;
 	qfw_reverse_factor, slice[1..n_bed_segs].qfw_reverse_factor ARE_THE_SAME;
+	qfw_mobility_factor, slice[1..n_bed_segs].qfw_mobility_factor ARE_THE_SAME;
 	k_fay_red, slice[1..n_bed_segs].k_fay_red ARE_THE_SAME;
 	K_fay_red, slice[1..n_bed_segs].K_fay_red ARE_THE_SAME;
 	FOR r IN steps CREATE
@@ -2010,6 +2015,7 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		FIX sio2_active_frac := 0.0;
 		FIX k_qfw := 1e-3 {1/s};
 		FIX qfw_reverse_factor := 1.0;
+		FIX qfw_mobility_factor := 1.0;
 		FIX K_qfw_A := -0.594802370226;
 		FIX K_qfw_B := 4635.20037243;
 		FIX K_qfw_C := -0.204491343413;
@@ -2173,6 +2179,8 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		k_qfw.lower_bound := 1e-12 {1/s};
 		qfw_reverse_factor.lower_bound := 0.0;
 		qfw_reverse_factor.upper_bound := 1.0;
+		qfw_mobility_factor.lower_bound := 0.0;
+		qfw_mobility_factor.upper_bound := 1.0;
 		k_fay_red.lower_bound := 1e-12 {1/s};
 		n0_SiO2_total.lower_bound := -1e-18 {mol};
 		n0_SiO2_active.lower_bound := -1e-18 {mol};

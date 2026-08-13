@@ -245,6 +245,7 @@ MODEL fbdri_lee_tga_core_single_family(
 	T_qfw_ref IS_A temperature;
 	K_qfw IS_A positive_factor;
 	qfw_reverse_factor IS_A factor;
+	qfw_mobility_factor "bounded common multiplier on forward and reverse QFW exchange" IS_A factor;
 	K_qfw_A, K_qfw_B, K_qfw_C, K_qfw_D IS_A factor;
 	k_fay_red IS_A frequency;
 	k_fay_red_ref IS_A frequency;
@@ -524,6 +525,7 @@ MODEL fbdri_lee_tga_core_single_family(
 	k_qfw, core.k_qfw ARE_THE_SAME;
 	K_qfw, core.K_qfw ARE_THE_SAME;
 	qfw_reverse_factor, core.qfw_reverse_factor ARE_THE_SAME;
+	qfw_mobility_factor, core.qfw_mobility_factor ARE_THE_SAME;
 	k_fay_red, core.k_fay_red ARE_THE_SAME;
 	K_fay_red, core.K_fay_red ARE_THE_SAME;
 
@@ -658,6 +660,7 @@ METHODS
 		FIX E_qfw := 0 {kJ/mol};
 		FIX T_qfw_ref := 1073.15 {K};
 		FIX qfw_reverse_factor := 1.0;
+		FIX qfw_mobility_factor := 1.0;
 		FIX K_qfw_A := -0.594802370226;
 		FIX K_qfw_B := 4635.20037243;
 		FIX K_qfw_C := -0.204491343413;
@@ -890,6 +893,8 @@ METHODS
 		oxygen_mig_width.lower_bound := 1e-4;
 		oxygen_mig_exp.lower_bound := 0.2;
 		k_qfw.lower_bound := 1e-12 {1/s};
+		qfw_mobility_factor.lower_bound := 0.0;
+		qfw_mobility_factor.upper_bound := 1.0;
 		k_fay_red.lower_bound := 1e-12 {1/s};
 		FOR i IN axial_nodes DO
 			z_lee[i].lower_bound := -1e-12 {m};
