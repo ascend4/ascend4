@@ -92,7 +92,9 @@
 enum asc_conopt_license_result {
 	ASC_CONOPT_LICENSE_ERROR = -1,
 	ASC_CONOPT_LICENSE_ABSENT = 0,
-	ASC_CONOPT_LICENSE_APPLIED = 1
+	ASC_CONOPT_LICENSE_APPLIED = 1,
+	ASC_CONOPT_LICENSE_INVALID = 2,
+	ASC_CONOPT_LICENSE_VALID = 3
 };
 
 struct asc_conopt_license {
@@ -113,12 +115,22 @@ ASC_DLLSPEC int asc_conopt_parse_license(
 ASC_DLLSPEC void asc_conopt_license_destroy(struct asc_conopt_license *license);
 
 /**
-	Check the configured license source without exposing its value.
+	Check the configured license source. When licstring is non-NULL and a
+	well-formed license is present, it receives an allocated copy of LicString.
+	Release it with asc_conopt_license_string_destroy().
 	Returns ASC_CONOPT_LICENSE_ABSENT when no license was provided,
 	ASC_CONOPT_LICENSE_APPLIED when it is present and well-formed, and
 	ASC_CONOPT_LICENSE_ERROR when configuration was provided but cannot be used.
 */
-ASC_DLLSPEC int asc_conopt_license_status(void);
+ASC_DLLSPEC int asc_conopt_license_status(char **licstring);
+ASC_DLLSPEC void asc_conopt_license_string_destroy(char *licstring);
+
+/**
+	Validate the configured license by asking CONOPT to initialize an NLP just
+	beyond its demo-size limit. When licstring is non-NULL, ownership follows
+	asc_conopt_license_status().
+*/
+ASC_DLLSPEC int asc_conopt_validate_license(char **licstring);
 
 /**
 	Apply the configured license to a newly-created CONOPT handle.

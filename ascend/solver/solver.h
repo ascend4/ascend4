@@ -49,6 +49,7 @@ typedef mtx_matrix_t (SlvGetSysMtxF)(slv_system_t, SlvClientToken);
 typedef void (SlvDumpInfoF)(slv_system_t, SlvClientToken,int);
 typedef int (SlvSolveF)(slv_system_t, SlvClientToken);
 typedef int (SlvGetVersionF)(char *buf, size_t buflen);
+typedef int (SlvGetDetailsF)(char *buf, size_t buflen);
 
 /** Registration information for a solver.
 	@TODO Complete documentation of slv_registration_data members.
@@ -107,6 +108,8 @@ typedef int (SlvProgressCallbackF)(const char *solver_name, const char *message,
 ASC_DLLSPEC int solver_register(const SlvFunctionsT *solver);
 ASC_DLLSPEC int solver_register_version(const char *solver_name, SlvGetVersionF *getversion);
 ASC_DLLSPEC int solver_get_version(const char *solver_name, char *buf, size_t buflen);
+ASC_DLLSPEC int solver_register_details(const char *solver_name, SlvGetDetailsF *getdetails);
+ASC_DLLSPEC int solver_get_details(const char *solver_name, char *buf, size_t buflen);
 
 ASC_DLLSPEC int SlvRegisterStandardClients(void);
 /**<

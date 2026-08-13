@@ -484,9 +484,10 @@ DEFAULT_WITH_SOLVERS = [
 # Which solvers will we allow?
 vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default includes the open"
-		+" solvers normally available in a developer build."
+		+" solvers normally available in a developer build. The option 'LSOD' is provided for backwards compatibility"
+		+"; the value 'LSODE' is preferred."
 	,DEFAULT_WITH_SOLVERS
-	,WITH_SOLVER_TOKENS
+	,WITH_SOLVER_TOKENS + ['LSOD']
 ))
 
 # Where will the local copy of the help files be kept?
@@ -1144,6 +1145,10 @@ for l in ['SUNDIALS','IPOPT']:
 	if env.get(var) and not isinstance(env[var],list):
 		env[var] = env[var].split(",")
 
+if 'LSOD' in env['WITH_SOLVERS']:
+	if 'LSODE' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('LSODE')
+	env['WITH_SOLVERS'].remove('LSOD')
 if 'CMSLV' in env['WITH_SOLVERS'] and 'LRSLV' not in env['WITH_SOLVERS']:
 	env['WITH_SOLVERS'].append('LRSLV')
 if 'CMSLV2' in env['WITH_SOLVERS']:
