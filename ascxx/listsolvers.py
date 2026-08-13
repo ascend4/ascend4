@@ -6,6 +6,11 @@ List solver and integrator engines available to the current ASCEND build.
 import ascpy
 
 
+def _discard_probe_error(severity, filename, line, message):
+	"""Suppress expected diagnostics while probing optional solver packages."""
+	return 0
+
+
 def _name(obj):
 	return obj.getName() if hasattr(obj, "getName") else str(obj)
 
@@ -44,30 +49,35 @@ def _details(obj):
 
 
 def main():
-	ascpy.setAutoRegisterStandardSolvers(True)
-	ascpy.Library()
+	reporter = ascpy.getReporter()
+	reporter.setPythonErrorCallback(_discard_probe_error)
+	try:
+		ascpy.setAutoRegisterStandardSolvers(True)
+		ascpy.Library()
 
-	print("Solvers:")
-	for solver in ascpy.getSolvers():
-		name = _name(solver)
-		version = _version(solver, name)
-		details = _details(solver)
-		label = f"  {name}"
-		if version:
-			label += f": {version}"
-		if details:
-			label += f" ({details})"
-		print(label)
+		print("Solvers:")
+		for solver in ascpy.getSolvers():
+			name = _name(solver)
+			version = _version(solver, name)
+			details = _details(solver)
+			label = f"  {name}"
+			if version:
+				label += f": {version}"
+			if details:
+				label += f" ({details})"
+			print(label)
 
-	print("Integrators:")
-	for name in ascpy.Integrator.getEngines():
-		version = ""
-		if hasattr(ascpy.Integrator, "getEngineVersion"):
-			version = ascpy.Integrator.getEngineVersion(name)
-		if version:
-			print(f"  {name}: {version}")
-		else:
-			print(f"  {name}")
+		print("Integrators:")
+		for name in ascpy.Integrator.getEngines():
+			version = ""
+			if hasattr(ascpy.Integrator, "getEngineVersion"):
+				version = ascpy.Integrator.getEngineVersion(name)
+			if version:
+				print(f"  {name}: {version}")
+			else:
+				print(f"  {name}")
+	finally:
+		reporter.clearPythonErrorCallback()
 
 
 if __name__ == "__main__":
