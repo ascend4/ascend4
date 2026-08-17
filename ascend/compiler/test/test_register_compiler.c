@@ -64,7 +64,8 @@
 	T(merge_arrays) \
 	T(merge_dims) \
 	T(merge_model_children) \
-	T(merge_model_values)
+	T(merge_model_values) \
+	T(merge_parameterized)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)
