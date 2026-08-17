@@ -1246,7 +1246,8 @@ MODEL tga_reduction_bed_slice_radial_local(
 	lam_open[steps] IS_A positive_factor;
 
 	n0_Fe2O3_slice IS_A mole;
-	n0_Fe2O3_initial_slice, n0_Fe3O4_initial_slice IS_A mole;
+	n0_Fe2O3_initial_slice IS_A mole;
+	n0_Fe3O4_initial_slice IS_A mole;
 	n0_FeO_initial_slice, n0_Fe_initial_slice, n0_Fe2SiO4_initial_slice IS_A mole;
 	n0_per_area_slice IS_A mole_per_area;
 
@@ -2194,15 +2195,15 @@ MODEL tga_reduction_screen_dyn_msbed_linked_radial(
 		n_Fe.lower_bound := -1e-3 {mol};
 		n_Fe2SiO4.lower_bound := -1e-3 {mol};
 		n_SiO2_active.lower_bound := -1e-3 {mol};
-		n0_Fe2O3_initial_slice.lower_bound := -1e-12 {mol};
-		n0_Fe3O4_initial_slice.lower_bound := -1e-12 {mol};
-		n0_FeO_initial_slice.lower_bound := -1e-12 {mol};
-		n0_Fe_initial_slice.lower_bound := -1e-12 {mol};
-		n0_Fe2SiO4_initial_slice.lower_bound := -1e-12 {mol};
 		oxygen_remaining.lower_bound := -1e-3 {mol};
 		xi[steps].lower_bound := -0.05;
 
 		FOR z IN [1..n_bed_segs] DO
+			slice[z].n0_Fe2O3_initial_slice.lower_bound := -1e-12 {mol};
+			slice[z].n0_Fe3O4_initial_slice.lower_bound := -1e-12 {mol};
+			slice[z].n0_FeO_initial_slice.lower_bound := -1e-12 {mol};
+			slice[z].n0_Fe_initial_slice.lower_bound := -1e-12 {mol};
+			slice[z].n0_Fe2SiO4_initial_slice.lower_bound := -1e-12 {mol};
 			y_H2_zone[z].lower_bound := -1e6;
 			y_H2_zone[z].upper_bound := 1e6;
 			y_H2O_zone[z].lower_bound := -1e6;
