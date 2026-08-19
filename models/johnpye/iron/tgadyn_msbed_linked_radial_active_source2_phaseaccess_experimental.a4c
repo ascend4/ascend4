@@ -2573,6 +2573,17 @@ METHODS
 	END on_load;
 END tgadyn_msbed_linked_radial_porosity_interface_active_nord_configurable;
 
+MODEL tgadyn_msbed_linked_radial_porosity_interface_qfw_active_nord_configurable(
+	n_bed_segs IS_A integer_constant;
+	n_radial_segs IS_A integer_constant;
+);
+	m IS_A tgadyn_msbed_linked_radial_family(n_bed_segs, n_radial_segs, 'three_step_wustite_active_nord_qfw', 'porosity_interface');
+METHODS
+	METHOD on_load;
+		RUN m.prepare_dynamic;
+	END on_load;
+END tgadyn_msbed_linked_radial_porosity_interface_qfw_active_nord_configurable;
+
 MODEL tgadyn_msbed_linked_radial_porosity_interface_omig_active_nord_configurable(
 	n_bed_segs IS_A integer_constant;
 	n_radial_segs IS_A integer_constant;
