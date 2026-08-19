@@ -24,6 +24,14 @@ extern "C" {
 void a4sqp_cutest_lsq_dim(int n, int *nres, int *max_row_nnz, int *status);
 void a4sqp_cutest_lsq_weights(int nres, double *weights, int *status);
 void a4sqp_cutest_lsq_residuals(int n, const double *x, int nres, double *residuals, int *status);
+void a4sqp_cutest_lsq_jacobian_dense(
+	int n,
+	const double *x,
+	int nres,
+	int leading_dim,
+	double *jacobian,
+	int *status
+);
 void a4sqp_cutest_lsq_jacobian_row(
 	int n,
 	const double *x,
@@ -56,6 +64,10 @@ struct A4SqpCutestContext {
 	int lsq_handoff_improved;
 	struct A4SqpLsqStats lsq_stats;
 	double *lsq_weights;
+	double *lsq_jac_dense;
+	double *lsq_jac_x;
+	int lsq_jac_valid;
+	int lsq_use_dense_jac_cache;
 };
 
 static A4SqpBool a4sqp_cutest_eval_f(
@@ -133,6 +145,21 @@ static double a4sqp_cutest_bound_projected_grad_inf(
 		}
 	}
 	return result;
+}
+
+static int a4sqp_cutest_lsq_default_max_iter(const struct A4SqpCutestContext *ctx, int sqp_max_iter){
+	long work_estimate;
+	if(sqp_max_iter <= 0){
+		sqp_max_iter = 200;
+	}
+	if(ctx == NULL || ctx->lsq_nres <= 0 || ctx->n <= 0){
+		return sqp_max_iter;
+	}
+	work_estimate = (long)ctx->lsq_nres * (long)ctx->n;
+	if(ctx->lsq_nres >= 1000 || work_estimate >= 200000L){
+		return sqp_max_iter < 20 ? sqp_max_iter : 20;
+	}
+	return sqp_max_iter;
 }
 
 static int a4sqp_cutest_final_objective_gradient(
@@ -351,9 +378,57 @@ static int a4sqp_cutest_lsq_eval_residuals(void *userdata, const real64 *x, real
 	if(ctx == NULL || x == NULL || residuals == NULL || ctx->lsq_nres <= 0){
 		return 1;
 	}
+	ctx->lsq_jac_valid = 0;
 	memcpy(ctx->hess_x_work,x,(size_t)ctx->n * sizeof(*x));
 	a4sqp_cutest_lsq_residuals((int)ctx->n,(const double *)x,ctx->lsq_nres,(double *)residuals,&status);
 	return status == 0 ? 0 : 1;
+}
+
+static int a4sqp_cutest_lsq_jac_cache_matches(const struct A4SqpCutestContext *ctx, const double *x){
+	int i;
+	if(ctx == NULL || x == NULL || !ctx->lsq_jac_valid || ctx->lsq_jac_x == NULL){
+		return 0;
+	}
+	for(i = 0; i < ctx->n; ++i){
+		if(ctx->lsq_jac_x[i] != x[i]){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int a4sqp_cutest_lsq_ensure_jac_cache(struct A4SqpCutestContext *ctx){
+	int status = 0;
+	const double *x;
+	if(
+		ctx == NULL
+		|| ctx->hess_x_work == NULL
+		|| ctx->lsq_jac_dense == NULL
+		|| ctx->lsq_jac_x == NULL
+		|| ctx->lsq_nres <= 0
+		|| ctx->n <= 0
+	){
+		return 1;
+	}
+	x = (const double *)ctx->hess_x_work;
+	if(a4sqp_cutest_lsq_jac_cache_matches(ctx,x)){
+		return 0;
+	}
+	a4sqp_cutest_lsq_jacobian_dense(
+		(int)ctx->n,
+		x,
+		ctx->lsq_nres,
+		(int)ctx->n,
+		ctx->lsq_jac_dense,
+		&status
+	);
+	if(status != 0){
+		ctx->lsq_jac_valid = 0;
+		return 1;
+	}
+	memcpy(ctx->lsq_jac_x,x,(size_t)ctx->n * sizeof(*ctx->lsq_jac_x));
+	ctx->lsq_jac_valid = 1;
+	return 0;
 }
 
 static int a4sqp_cutest_lsq_eval_jacobian_row(
@@ -367,25 +442,46 @@ static int a4sqp_cutest_lsq_eval_jacobian_row(
 	struct A4SqpCutestContext *ctx = (struct A4SqpCutestContext *)userdata;
 	int status = 0;
 	int nnz_local = 0;
+	int col;
+	double *jac_row;
 	if(ctx == NULL || row < 0 || row >= ctx->lsq_nres || capacity < ctx->lsq_max_row_nnz
 		|| columns == NULL || values == NULL || nnz == NULL
 	){
 		return 1;
 	}
-	a4sqp_cutest_lsq_jacobian_row(
-		(int)ctx->n,
-		(const double *)ctx->hess_x_work,
-		(int)row,
-		(int)capacity,
-		(int *)columns,
-		(double *)values,
-		&nnz_local,
-		&status
-	);
-	if(status != 0){
+	if(!ctx->lsq_use_dense_jac_cache){
+		a4sqp_cutest_lsq_jacobian_row(
+			(int)ctx->n,
+			(const double *)ctx->hess_x_work,
+			(int)row,
+			(int)capacity,
+			(int *)columns,
+			(double *)values,
+			&nnz_local,
+			&status
+		);
+		if(status != 0){
+			return 1;
+		}
+		*nnz = (int32)nnz_local;
+		return 0;
+	}
+	if(a4sqp_cutest_lsq_ensure_jac_cache(ctx)){
 		return 1;
 	}
-	*nnz = (int32)nnz_local;
+	*nnz = 0;
+	jac_row = ctx->lsq_jac_dense + (size_t)row * (size_t)ctx->n;
+	for(col = 0; col < ctx->n; ++col){
+		double value = jac_row[col];
+		if(value != 0.0){
+			if(*nnz >= capacity){
+				return 1;
+			}
+			columns[*nnz] = (int32)col;
+			values[*nnz] = (real64)value;
+			++(*nnz);
+		}
+	}
 	return 0;
 }
 
@@ -400,9 +496,12 @@ static int a4sqp_cutest_try_lsq(
 	enum A4SqpApplicationReturnStatus *solve_status
 ){
 	const char *mode_name = a4sqp_cutest_env_string("A4SQP_TRY_LSQ","OFF");
-	const char *fallback_start = a4sqp_cutest_env_string("A4SQP_LSQ_FALLBACK_START","ORIGINAL");
+	const char *fallback_start = a4sqp_cutest_env_string("A4SQP_LSQ_FALLBACK_START","IMPROVED");
+	const char *linear_solver_name = a4sqp_cutest_env_string("A4SQP_LSQ_LINEAR_SOLVER","DENSE_QR");
+	const char *max_iter_env = getenv("A4SQP_LSQ_MAX_ITER");
 	int probe_status = 0;
 	int keep_improved = 0;
+	int sqp_max_iter = 0;
 	struct A4SqpLsqProblem problem;
 	struct A4SqpLsqOptions options;
 	struct A4SqpLsqStats lsq_stats;
@@ -429,10 +528,29 @@ static int a4sqp_cutest_try_lsq(
 	}
 	MALLOC(x_backup,ctx->n,rp_);
 	MALLOC(ctx->lsq_weights,ctx->lsq_nres,double);
-	if(x_backup == NULL || ctx->lsq_weights == NULL){
+	ctx->lsq_use_dense_jac_cache = strcmp(linear_solver_name,"NORMAL") != 0;
+	if(ctx->lsq_use_dense_jac_cache){
+		ctx->lsq_jac_dense = (double *)malloc(
+			sizeof(*ctx->lsq_jac_dense) * (size_t)ctx->lsq_nres * (size_t)ctx->n
+		);
+		MALLOC(ctx->lsq_jac_x,ctx->n,double);
+	}else{
+		ctx->lsq_jac_dense = NULL;
+		ctx->lsq_jac_x = NULL;
+	}
+	ctx->lsq_jac_valid = 0;
+	if(x_backup == NULL || ctx->lsq_weights == NULL
+		|| (ctx->lsq_use_dense_jac_cache && (ctx->lsq_jac_dense == NULL || ctx->lsq_jac_x == NULL))
+	){
 		FREE(x_backup);
 		FREE(ctx->lsq_weights);
+		FREE(ctx->lsq_jac_dense);
+		FREE(ctx->lsq_jac_x);
 		ctx->lsq_weights = NULL;
+		ctx->lsq_jac_dense = NULL;
+		ctx->lsq_jac_x = NULL;
+		ctx->lsq_jac_valid = 0;
+		ctx->lsq_use_dense_jac_cache = 0;
 		return 1;
 	}
 	memcpy(x_backup,x,(size_t)ctx->n * sizeof(*x_backup));
@@ -441,7 +559,13 @@ static int a4sqp_cutest_try_lsq(
 		memcpy(x,x_backup,(size_t)ctx->n * sizeof(*x));
 		FREE(x_backup);
 		FREE(ctx->lsq_weights);
+		FREE(ctx->lsq_jac_dense);
+		FREE(ctx->lsq_jac_x);
 		ctx->lsq_weights = NULL;
+		ctx->lsq_jac_dense = NULL;
+		ctx->lsq_jac_x = NULL;
+		ctx->lsq_jac_valid = 0;
+		ctx->lsq_use_dense_jac_cache = 0;
 		return -1;
 	}
 
@@ -457,13 +581,20 @@ static int a4sqp_cutest_try_lsq(
 
 	memset(&options,0,sizeof(options));
 	options.mode = strcmp(mode_name,"GAUSS") == 0 ? A4SQP_LSQ_MODE_GAUSS : A4SQP_LSQ_MODE_LM;
-	options.max_iter = a4sqp_cutest_env_int(
-		"A4SQP_LSQ_MAX_ITER",
-		a4sqp_cutest_env_int("A4SQP_MAX_ITER",200)
-	);
+	sqp_max_iter = a4sqp_cutest_env_int("A4SQP_MAX_ITER",200);
+	options.max_iter = (max_iter_env != NULL && max_iter_env[0] != '\0')
+		? a4sqp_cutest_env_int("A4SQP_LSQ_MAX_ITER",sqp_max_iter)
+		: a4sqp_cutest_lsq_default_max_iter(ctx,sqp_max_iter);
 	options.max_backtrack = a4sqp_cutest_env_int("A4SQP_MAX_BACKTRACK",20);
 	options.grad_tol = a4sqp_cutest_env_double("A4SQP_TOL",1e-7);
+	options.acceptable_tol = a4sqp_cutest_env_int("A4SQP_ACCEPTABLE_ITER",0) > 0
+		? a4sqp_cutest_env_double("A4SQP_ACCEPTABLE_TOL",1e-5)
+		: 0.0;
 	options.step_tol = a4sqp_cutest_env_double("A4SQP_STEP_TOL",1e-8);
+	options.linear_solver =
+		linear_solver_name != NULL && strcmp(linear_solver_name,"NORMAL") == 0
+		? A4SQP_LSQ_LINEAR_NORMAL
+		: A4SQP_LSQ_LINEAR_DENSE_QR;
 
 	memset(&lsq_stats,0,sizeof(lsq_stats));
 	memcpy(ctx->hess_x_work,x,(size_t)ctx->n * sizeof(*x));
@@ -506,10 +637,11 @@ static int a4sqp_cutest_try_lsq(
 	}
 	FREE(x_backup);
 	fprintf(stderr,
-		"A4SQP-CUTEst: least-squares attempt using %s did not converge "
+		"A4SQP-CUTEst: least-squares attempt using %s/%s did not converge "
 		"(status=%d, iter=%d, obj=%.17g, grad=%.17g, step=%.17g, lambda=%.17g); "
 		"falling back to SQP from %s point.\n",
 		mode_name,
+		linear_solver_name != NULL ? linear_solver_name : "DENSE_QR",
 		(int)lsq_status,
 		lsq_stats.iterations,
 		(double)lsq_stats.objective,
@@ -1160,6 +1292,8 @@ report:
 	FREE(ctx.hess_row);
 	FREE(ctx.hess_col);
 	FREE(ctx.lsq_weights);
+	FREE(ctx.lsq_jac_dense);
+	FREE(ctx.lsq_jac_x);
 	FREE(pname);
 	FREE(classification);
 	return (int)solve_status;

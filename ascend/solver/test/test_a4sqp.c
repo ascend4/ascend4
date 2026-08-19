@@ -1515,6 +1515,13 @@ static void test_a4sqp_lsq_basic_solve(void){
 	);
 }
 
+static void test_a4sqp_lsq_dense_qr_solve(void){
+	CU_ASSERT_EQUAL(
+		a4sqp_run_model_self_test("test/a4sqp/lsq_basic.a4c","lsq_basic_dense_qr","sim_lsq_basic_dense_qr"),
+		0
+	);
+}
+
 static void test_a4sqp_bt10_solve(void){
 	CU_ASSERT_EQUAL(
 		a4sqp_run_model_self_test("test/a4sqp/bt10.a4c","bt10","sim_bt10"),
@@ -1633,6 +1640,7 @@ static void test_a4sqp_cont6_qq_solve_skipped(void){
 	T(a4sqp_hs21_auto_exact_lagrangian) \
 	T(a4sqp_bqp1var_solve) \
 	T(a4sqp_lsq_basic_solve) \
+	T(a4sqp_lsq_dense_qr_solve) \
 	T(a4sqp_bt10_solve) \
 	T(a4sqp_cb3_solve) \
 	T(a4sqp_bt2_solve) \

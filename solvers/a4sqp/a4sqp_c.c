@@ -71,6 +71,9 @@ struct A4SqpCOptions {
 	char hessian[32];
 	char exact_lagrangian_multipliers[32];
 	char scaleopt[32];
+	char lsq_variable_projection[32];
+	char lsq_damping_update[32];
+	double lsq_lambda_init;
 };
 
 struct A4SqpProblemInfo {
@@ -121,6 +124,21 @@ static const struct A4SqpOptionInfo a4sqp_c_option_info[] = {
 	A4SQP_OPT_INT("lsq_max_iter","LSQ maximum iterations",1,
 		"Maximum iterations for the least-squares pre-solve; zero reuses max_iter.",
 		0,0,1000000,A4SQP_FALSE),
+	A4SQP_OPT_BOOL("lsq_scaled_stationarity","LSQ scaled stationarity",1,
+		"Use diagonal J'J scaling when testing least-squares stationarity.",
+		0,A4SQP_FALSE),
+	A4SQP_OPT_STR("lsq_linear_solver","LSQ linear solver",1,
+		"Linear solver for least-squares trial steps: DENSE_QR or NORMAL.",
+		"DENSE_QR",((const char *const[]){"DENSE_QR","NORMAL",NULL}),A4SQP_FALSE),
+	A4SQP_OPT_STR("lsq_variable_projection","LSQ variable projection",1,
+		"Eliminate structurally linear variables from recognised unconstrained least-squares objectives: OFF, AUTO, or ON.",
+		"OFF",((const char *const[]){"OFF","AUTO","ON",NULL}),A4SQP_FALSE),
+	A4SQP_OPT_STR("lsq_damping_update","LSQ damping update",1,
+		"Levenberg-Marquardt damping update rule for the least-squares path: NIELSEN, MINPACK, BOLD, or TRUST.",
+		"NIELSEN",((const char *const[]){"NIELSEN","MINPACK","BOLD","TRUST",NULL}),A4SQP_FALSE),
+	A4SQP_OPT_NUM("lsq_lambda_init","LSQ initial damping",1,
+		"Initial Levenberg-Marquardt damping for the least-squares path; zero uses the built-in default.",
+		0.0,0.0,1e12,A4SQP_FALSE),
 	A4SQP_OPT_NUM("hess_reg","Hessian regularization",2,
 		"Minimum diagonal margin enforced when regularizing the step Hessian to a convex QP model.",
 		1e-8,0.0,1e12,A4SQP_TRUE),
@@ -380,6 +398,9 @@ static void a4sqp_c_default_options(struct A4SqpCOptions *opt){
 	strcpy(opt->hessian,"BFGS");
 	strcpy(opt->exact_lagrangian_multipliers,"ROW_DUAL_SIGNED");
 	strcpy(opt->scaleopt,"ROW_2NORM");
+	strcpy(opt->lsq_variable_projection,"OFF");
+	strcpy(opt->lsq_damping_update,"NIELSEN");
+	opt->lsq_lambda_init = 0.0;
 }
 
 static double a4sqp_c_map_bound(double value, double lower_inf, double upper_inf){
@@ -583,6 +604,40 @@ A4SqpBool AddA4SqpStrOption(A4SqpProblem problem, char *keyword, char *val){
 		}
 		return A4SQP_FALSE;
 	}
+	if(a4sqp_c_streq(keyword,"lsq_variable_projection")){
+		if(a4sqp_c_streq(val,"OFF") || a4sqp_c_streq(val,"FALSE") || a4sqp_c_streq(val,"0")){
+			strcpy(p->opt.lsq_variable_projection,"OFF");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"AUTO")){
+			strcpy(p->opt.lsq_variable_projection,"AUTO");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"ON") || a4sqp_c_streq(val,"TRUE") || a4sqp_c_streq(val,"1")){
+			strcpy(p->opt.lsq_variable_projection,"ON");
+			return A4SQP_TRUE;
+		}
+		return A4SQP_FALSE;
+	}
+	if(a4sqp_c_streq(keyword,"lsq_damping_update")){
+		if(a4sqp_c_streq(val,"NIELSEN")){
+			strcpy(p->opt.lsq_damping_update,"NIELSEN");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"MINPACK")){
+			strcpy(p->opt.lsq_damping_update,"MINPACK");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"BOLD")){
+			strcpy(p->opt.lsq_damping_update,"BOLD");
+			return A4SQP_TRUE;
+		}
+		if(a4sqp_c_streq(val,"TRUST")){
+			strcpy(p->opt.lsq_damping_update,"TRUST");
+			return A4SQP_TRUE;
+		}
+		return A4SQP_FALSE;
+	}
 	if(a4sqp_c_streq(keyword,"reduced_gradient_polish_mode")){
 		if(a4sqp_c_streq(val,"OFF") || a4sqp_c_streq(val,"FALSE") || a4sqp_c_streq(val,"0")){
 			strcpy(p->opt.reduced_gradient_polish_mode,"OFF");
@@ -748,6 +803,13 @@ A4SqpBool AddA4SqpNumOption(A4SqpProblem problem, char *keyword, A4SqpNumber val
 			return A4SQP_FALSE;
 		}
 		p->opt.bound_push = val;
+		return A4SQP_TRUE;
+	}
+	if(a4sqp_c_streq(keyword,"lsq_lambda_init")){
+		if(val < 0.0 || !isfinite(val)){
+			return A4SQP_FALSE;
+		}
+		p->opt.lsq_lambda_init = val;
 		return A4SQP_TRUE;
 	}
 	if(a4sqp_c_streq(keyword,"qp_time_limit")){
@@ -2898,16 +2960,24 @@ static void a4sqp_c_core_after_qp_solve(void *vctx, const struct A4SqpQp *qp, in
 
 static void a4sqp_c_refresh_stats(struct A4SqpCSolve *solve, int iterations){
 	double maxvio = 0.0;
+	double violations = 0.0;
 	if(solve == NULL || solve->problem == NULL){
 		return;
 	}
 	solve->problem->stats.iterations = iterations;
 	solve->problem->stats.objective = solve->view.obj_value;
+	solve->problem->stats.merit_after = solve->last_merit_after;
+	solve->problem->stats.model_merit_after = solve->last_model_merit_after;
+	solve->problem->stats.predicted_reduction = solve->last_predicted_reduction;
+	solve->problem->stats.alpha = solve->last_alpha;
+	solve->problem->stats.trust_ratio = solve->last_trust_ratio;
+	solve->problem->stats.linearized_violation = solve->last_linearized_violation;
 	solve->problem->stats.final_step_norm = solve->last_step_norm;
 	solve->problem->stats.final_trust_radius = solve->trust_radius;
 	solve->problem->stats.final_elastic_max = solve->last_elastic_max;
 	solve->problem->stats.reduced_gradient_polish_mode = solve->problem->opt.reduced_gradient_polish;
-	a4sqp_c_view_violation(&solve->view,&maxvio);
+	violations = a4sqp_c_view_violation(&solve->view,&maxvio);
+	solve->problem->stats.max_constraint_violation_sum = violations;
 	solve->problem->stats.max_constraint_violation = maxvio;
 	solve->problem->stats.projected_gradient_inf = a4sqp_c_projected_gradient_inf(solve);
 	a4sqp_c_update_kkt_stats(solve);
@@ -3313,12 +3383,20 @@ enum A4SqpApplicationReturnStatus A4SqpSolve(
 		}
 	}
 	if(solve.view.n_var >= 0){
+		double maxvio = 0.0;
 		p->stats.objective = solve.has_objective ? solve.view.obj_value : 0.0;
+		p->stats.merit_after = solve.last_merit_after;
+		p->stats.model_merit_after = solve.last_model_merit_after;
+		p->stats.predicted_reduction = solve.last_predicted_reduction;
+		p->stats.alpha = solve.last_alpha;
+		p->stats.trust_ratio = solve.last_trust_ratio;
+		p->stats.linearized_violation = solve.last_linearized_violation;
 		p->stats.final_step_norm = solve.last_step_norm;
 		p->stats.final_trust_radius = solve.trust_radius;
 		p->stats.final_elastic_max = solve.last_elastic_max;
 		p->stats.regularization_size = solve.hess.last_reg;
-		(void)a4sqp_c_view_violation(&solve.view,&p->stats.max_constraint_violation);
+		p->stats.max_constraint_violation_sum = a4sqp_c_view_violation(&solve.view,&maxvio);
+		p->stats.max_constraint_violation = maxvio;
 		p->stats.projected_gradient_inf = a4sqp_c_projected_gradient_inf(&solve);
 		a4sqp_c_update_kkt_stats(&solve);
 	}

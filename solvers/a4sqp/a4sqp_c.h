@@ -166,6 +166,13 @@ struct A4SqpSolveStats {
 	A4SqpInt restoration_exits;
 	A4SqpInt restoration_handoffs;
 	A4SqpNumber objective;
+	A4SqpNumber merit_after;
+	A4SqpNumber model_merit_after;
+	A4SqpNumber predicted_reduction;
+	A4SqpNumber alpha;
+	A4SqpNumber trust_ratio;
+	A4SqpNumber linearized_violation;
+	A4SqpNumber max_constraint_violation_sum;
 	A4SqpNumber max_constraint_violation;
 	A4SqpNumber projected_gradient_inf;
 	A4SqpNumber kkt_error;
