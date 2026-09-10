@@ -5,46 +5,40 @@
 import os, sys
 from gtkcompat import gtk
 
-os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
+CANVAS_DIR = os.path.dirname(os.path.abspath(__file__))
+PYGTK_DIR = os.path.dirname(CANVAS_DIR)
+SOURCE_ROOT = os.path.dirname(PYGTK_DIR)
 
 DEFAULT_LIBRARY = 'brayton_fprops_rachel.a4c'
+DEFAULT_CANVAS_MODEL_LIBRARY = os.path.join(SOURCE_ROOT,'models','test','canvas')
 
-#Remove this sometime
-DEFAULT_CANVAS_MODEL_LIBRARY = os.path.join('..','..','models','test','canvas')
 
-'''Set the required paths'''
-try:
-	os.environ['ASCENDLIBRARY']
-	os.environ['LD_LIBRARY_PATH']
-except KeyError:
-	os.environ['ASCENDLIBRARY'] = os.path.join('..','..','models')
-	os.environ['LD_LIBRARY_PATH'] = os.path.join('..','..')
-os.environ['ASCENDSOLVERS'] = os.path.join('..','..','solvers','qrslv')
+def configure_standalone_environment():
+	"""Supply standalone defaults without replacing launcher configuration."""
+	os.chdir(CANVAS_DIR)
+	os.environ.setdefault('ASCENDLIBRARY', os.path.join(SOURCE_ROOT,'models'))
+	os.environ.setdefault('LD_LIBRARY_PATH', SOURCE_ROOT)
+	os.environ.setdefault('ASCENDSOLVERS', os.path.join(SOURCE_ROOT,'solvers','qrslv'))
+	for path in (PYGTK_DIR, os.path.join(SOURCE_ROOT,'ascxx')):
+		if path not in sys.path:
+			sys.path.append(path)
 
-sys.path.append("..")
-sys.path.append("../../ascxx")
-
-if sys.platform.startswith("win"):
-	# Fetches the legacy Gtk2 path from registry. This branch is retained only
-	# for old Windows setups; Gtk3 installations should normally be on PATH.
-	import winreg
-	import msvcrt
-	try:
-		k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "Software\\GTK\\2.0")
-	except EnvironmentError:
-		# use TkInter to report the error :-)
-		from TkInter import *
-		root = Tk()
-		w = Label(root,"You must install the Gtk+ 2.2 Runtime Environment to run this program")
-		w.pack()
-		root.mainloop()
-		sys.exit(1)
-	else:
-		gtkdir = winreg.QueryValueEx(k, "Path")
-		# we must make sure the gtk2 path is the first thing in the path
-		# otherwise, we can get errors if the system finds other libs with
-		# the same name in the path...
-		os.environ['PATH'] = "%s/lib;%s/bin;" % (gtkdir[0], gtkdir[0]) + os.environ['PATH']
+	if sys.platform.startswith("win"):
+		# Retained only for old Gtk2 Windows setups. Gtk3 should normally
+		# already be available on PATH.
+		import winreg
+		try:
+			k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "Software\\GTK\\2.0")
+		except EnvironmentError:
+			from tkinter import Label, Tk
+			root = Tk()
+			w = Label(root,"You must install the Gtk+ 2.2 Runtime Environment to run this program")
+			w.pack()
+			root.mainloop()
+			sys.exit(1)
+		else:
+			gtkdir = winreg.QueryValueEx(k, "Path")
+			os.environ['PATH'] = "%s/lib;%s/bin;" % (gtkdir[0], gtkdir[0]) + os.environ['PATH']
 	
 class Application(object):
 	
@@ -66,6 +60,7 @@ class Application(object):
 		gtk.main()
 
 if __name__ == '__main__':
+	configure_standalone_environment()
 	from optparse import OptionParser
 	parser = OptionParser()
 	parser.add_option('-f','--file',dest='file')

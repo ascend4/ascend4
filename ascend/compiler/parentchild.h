@@ -200,6 +200,19 @@ ASC_DLLSPEC int InstanceDeclarationLocation(
  *  multiple declaration sites.
  */
 
+ASC_DLLSPEC int InstanceChildDeclarationLocation(
+    CONST struct Instance *parent,
+    unsigned long child_index,
+    CONST char **filename,
+    int *lineno
+);
+/**<
+ * Resolves the declaration of a particular local child slot. Unlike
+ * InstanceDeclarationLocation(), this remains unambiguous when two child
+ * names in the same parent alias or have been merged to the same instance.
+ * Child indices are one-based, as for InstanceChild().
+ */
+
 extern CONST struct TypeDescription *ChildRefines(CONST struct Instance *i,
                                                   unsigned long n);
 /**<

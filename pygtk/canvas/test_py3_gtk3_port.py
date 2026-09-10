@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import py_compile
 import importlib
+import os
 import re
 import sys
 import unittest
@@ -48,6 +49,23 @@ class CanvasPortingTests(unittest.TestCase):
 		for path in self.python_files():
 			with self.subTest(path=path.name):
 				py_compile.compile(str(path), doraise=True)
+
+	def test_canvas_entry_import_preserves_process_environment(self):
+		before_cwd = os.getcwd()
+		before_paths = {
+			name: os.environ.get(name)
+			for name in ("ASCENDLIBRARY", "ASCENDSOLVERS", "LD_LIBRARY_PATH")
+		}
+		module = self.import_canvas_module("canvas")
+		importlib.reload(module)
+		self.assertEqual(before_cwd, os.getcwd())
+		self.assertEqual(
+			before_paths,
+			{
+				name: os.environ.get(name)
+				for name in ("ASCENDLIBRARY", "ASCENDSOLVERS", "LD_LIBRARY_PATH")
+			},
+		)
 
 	def test_removed_legacy_imports_do_not_return(self):
 		legacy_patterns = [

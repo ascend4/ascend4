@@ -991,6 +991,42 @@ int InstanceDeclarationLocation(CONST struct Instance *inst,
   return 1;
 }
 
+int InstanceChildDeclarationLocation(CONST struct Instance *parent,
+                                     unsigned long child_index,
+                                     CONST char **filename,
+                                     int *lineno)
+{
+  CONST struct Statement *s;
+
+  if(filename != NULL){
+    *filename = NULL;
+  }
+  if(lineno != NULL){
+    *lineno = 0;
+  }
+  if(parent == NULL || child_index == 0 || child_index > NumberChildren(parent)){
+    return 0;
+  }
+
+  if(IsArrayInstance(parent)){
+    return InstanceDeclarationLocation(
+        InstanceChild(parent,child_index),parent,filename,lineno
+    );
+  }
+
+  s = ChildDeclaration(parent,child_index);
+  if(s == NULL){
+    return 0;
+  }
+  if(filename != NULL){
+    *filename = Asc_ModuleFileName(StatementModule(s));
+  }
+  if(lineno != NULL){
+    *lineno = StatementLineNum(s);
+  }
+  return 1;
+}
+
 unsigned long ChildSearch(CONST struct Instance *i,
 			  CONST struct InstanceName *name)
 {

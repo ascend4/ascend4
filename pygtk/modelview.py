@@ -1,4 +1,6 @@
-from gi.repository import GdkPixbuf
+import os
+
+from gi.repository import Gdk, GdkPixbuf, Gtk, Pango
 
 from properties import *
 from unitsdialog import *
@@ -13,6 +15,14 @@ BROWSER_UNINCLUDED_COLOR = "#888888"
 
 BLOCK_INDEX = 7
 ORIGINAL_PATH_INDEX = 8
+MODEL_ORDER_INDEX = 9
+BLOCK_KIND_INDEX = 10
+BLOCK_LOW_INDEX = 11
+BLOCK_HIGH_INDEX = 12
+
+BLOCK_UNKNOWN = 0
+BLOCK_FIXED = 1
+BLOCK_NUMBERED = 2
 
 class ModelView:
 	def __init__(self,browser,builder):
@@ -27,10 +37,15 @@ class ModelView:
 		self.solver_var_blocks = {}
 		self.solver_rel_blocks = {}
 		self.solver_fixed_vars = set()
+		self.declaration_file_order = {}
+		self.variables = {"shown": set(), "hidden": set()}
 
 		# name, type, value, foreground, weight, editable, status-icon,
-		# solver block, original tree-store path
-		columns = [str,str,str,str,int,bool,GdkPixbuf.Pixbuf,str,str]
+		# solver block, original tree-store path, calculated model order,
+		# block kind, and numeric block extent.
+		columns = [
+			str,str,str,str,int,bool,GdkPixbuf.Pixbuf,str,str,int,int,int,int
+		]
 		self.modelstore = Gtk.TreeStore(*columns)
 		titles = ["Name","Type","Value"]
 		self.modelview.set_model(self.modelstore)
@@ -82,6 +97,22 @@ class ModelView:
 			self.showblocksmenuitem.set_active(_show_blocks)
 			self.showblocksmenuitem.connect("toggled", self.on_show_tree_blocks_toggled)
 
+		# Keep sorting outside the TreeStore. Its paths are used as stable keys
+		# into otank, while the filter and sort models may freely rearrange the
+		# paths presented by the TreeView.
+		self.filtered_model = self.modelstore.filter_new()
+		self.filtered_model.set_visible_func(self.filter_rows)
+		self.sort_model = Gtk.TreeModelSort.new_with_model(self.filtered_model)
+		self.sort_model.set_default_sort_func(self.compare_model_order, None)
+		self.sort_model.set_sort_func(0, self.compare_names, None)
+		self.sort_model.set_sort_func(BLOCK_LOW_INDEX, self.compare_blocks, None)
+		self.modelview.set_model(self.sort_model)
+		self.tvcolumns[0].set_sort_column_id(0)
+		self.blockcolumn.set_sort_column_id(BLOCK_LOW_INDEX)
+		# Alphabetical order is the initial presentation. A third click on an
+		# active header returns to the default (declaration/model) order.
+		self.sort_model.set_sort_column_id(0, Gtk.SortType.ASCENDING)
+
 		#--------------------
 		# get all menu icons and set up the context menu for fixing/freeing vars
 		_imagelist = []
@@ -113,10 +144,100 @@ class ModelView:
 		self.hideallmenuitem.connect("activate", self.hide_all_variables)
 		self.hidevariable.connect("activate", self.show_variable)
 
-		self.variables = {"shown": set(), "hidden": set()}
-
 		if not self.treecontext:
 			raise RuntimeError("Couldn't create browsercontext")
+
+	@staticmethod
+	def compare_values(left, right):
+		return (left > right) - (left < right)
+
+	def refresh_declaration_file_order(self):
+		self.declaration_file_order = {}
+		try:
+			modules = self.browser.library.getModules()
+		except RuntimeError:
+			return
+		for module in modules:
+			filename = str(module.getFilename())
+			if not filename:
+				continue
+			filename = os.path.realpath(filename)
+			if filename not in self.declaration_file_order:
+				self.declaration_file_order[filename] = len(self.declaration_file_order)
+
+	def model_order_key(self, model, piter):
+		order = model.get_value(piter, MODEL_ORDER_INDEX)
+		name = model.get_value(piter, 0)
+		return (order, name.casefold(), name)
+
+	def child_model_orders(self, parent, children):
+		"""Calculate source/model order only for this materialised sibling set."""
+		entries = []
+		for fallback_order, child in enumerate(children):
+			try:
+				filename = str(child.getDeclarationFilename(parent))
+				line = int(child.getDeclarationLine(parent))
+			except (AttributeError, RuntimeError):
+				filename = ""
+				line = 0
+			if filename and line > 0:
+				normalized = os.path.realpath(filename)
+				file_rank = self.declaration_file_order.get(
+					normalized, len(self.declaration_file_order)
+				)
+				key = (
+					0, file_rank,
+					normalized if normalized not in self.declaration_file_order else "",
+					line, fallback_order,
+				)
+			else:
+				key = (1, fallback_order)
+			entries.append((key, fallback_order))
+		entries.sort()
+		return {
+			child_index: model_order
+			for model_order, (_key, child_index) in enumerate(entries)
+		}
+
+	def compare_model_order(self, model, left, right, _data):
+		return self.compare_values(
+			self.model_order_key(model, left), self.model_order_key(model, right)
+		)
+
+	def compare_names(self, model, left, right, _data):
+		left_name = model.get_value(left, 0)
+		right_name = model.get_value(right, 0)
+		return self.compare_values(
+			(left_name.casefold(), left_name),
+			(right_name.casefold(), right_name),
+		)
+
+	def block_sort_key(self, model, piter, descending):
+		kind = model.get_value(piter, BLOCK_KIND_INDEX)
+		low = model.get_value(piter, BLOCK_LOW_INDEX)
+		high = model.get_value(piter, BLOCK_HIGH_INDEX)
+		if kind == BLOCK_NUMBERED:
+			group = 0 if descending else 1
+			block = -high if descending else low
+		elif kind == BLOCK_FIXED:
+			group = 1 if descending else 0
+			block = 0
+		else:
+			group = 2
+			block = 0
+		return (group, block, self.model_order_key(model, piter))
+
+	def compare_blocks(self, model, left, right, _data):
+		_sort_column, order = self.sort_model.get_sort_column_id()
+		descending = order == Gtk.SortType.DESCENDING
+		result = self.compare_values(
+			self.block_sort_key(model, left, descending),
+			self.block_sort_key(model, right, descending),
+		)
+		# Gtk reverses the comparator result for descending sorts. The block
+		# comparator has already selected highest extents and kept unknown rows
+		# last, so compensate for that final reversal.
+		return -result if descending else result
 
 	def setSimulation(self,sim):
 		# instance hierarchy
@@ -126,6 +247,8 @@ class ModelView:
 		self.solver_var_blocks = {}
 		self.solver_rel_blocks = {}
 		self.solver_fixed_vars = set()
+		self.declaration_file_order = {}
+		self.refresh_declaration_file_order()
 		self.browser.disable_menu()
 		try:
 			self.make( self.sim.getName(),self.sim.getModel() )
@@ -135,10 +258,10 @@ class ModelView:
 
 		self.fill_variables_menus()
 
-		filtered_model = self.modelstore.filter_new()
-		filtered_model.set_visible_func(self.filter_rows)
-		self.modelview.set_model(filtered_model)
-		self.modelview.expand_row(filtered_model.get_path(filtered_model.get_iter_first()), False)
+		self.filtered_model.refilter()
+		root = self.sort_model.get_iter_first()
+		if root is not None:
+			self.modelview.expand_row(self.sort_model.get_path(root), False)
 
 		self.browser.maintabs.set_current_page(1)
 
@@ -172,15 +295,17 @@ class ModelView:
 		for instype in list(self.variables["hidden"]):
 			self.set_variable_visibility(instype, True)
 
+		self.filtered_model.refilter()
 		model = self.modelview.get_model()
-		model.refilter()
-		self.modelview.expand_row(model.get_path(model.get_iter_first()), False)
+		root = model.get_iter_first()
+		if root is not None:
+			self.modelview.expand_row(model.get_path(root), False)
 
 	def hide_all_variables(self, *args):
 		for instype in list(self.variables["shown"]):
 			self.set_variable_visibility(instype, False)
 
-		self.modelview.get_model().refilter()
+		self.filtered_model.refilter()
 
 	def show_variable(self, widget):
 		# if context menu
@@ -199,7 +324,7 @@ class ModelView:
 			else:
 				self.set_variable_visibility(instype, True)
 
-		self.modelview.get_model().refilter()
+		self.filtered_model.refilter()
 
 	def set_variable_visibility(self, instype, show):
 		if show:
@@ -262,6 +387,7 @@ class ModelView:
 		self.solver_var_blocks = {}
 		self.solver_rel_blocks = {}
 		self.solver_fixed_vars = set()
+		self.declaration_file_order = {}
 
 #   --------------------------------------------
 #   INSTANCE TREE
@@ -306,14 +432,18 @@ class ModelView:
 		#if(len(_value) > 80):
 		#	_value = _value[:80] + "..."
 
-		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon, "", None]
+		return [
+			_name, _type, _value, _fgcolor, _fontweight, _editable,
+			_statusicon, "", None, 0, BLOCK_UNKNOWN, 0, 0
+		]
 
-	def make_row(self, piter, value, name=None): # for instance browser
+	def make_row(self, piter, value, name=None, parent=None, model_order=0): # for instance browser
 		assert(value)
 		_piter = self.modelstore.append(piter, self.get_tree_row_data(value))
 		path = self.modelstore.get_path(_piter)
-		self.modelstore.set_value(_piter, BLOCK_INDEX, self.get_solver_block_label(value))
 		self.modelstore.set_value(_piter, ORIGINAL_PATH_INDEX, str(path))
+		self.modelstore.set_value(_piter, MODEL_ORDER_INDEX, model_order)
+		self.set_direct_block_data(_piter, value)
 		if name is not None:
 			self.modelstore.set_value(_piter, 0, str(name))
 		return _piter
@@ -340,7 +470,8 @@ class ModelView:
 				else:
 					self.modelstore.set_value(_iter,3,BROWSER_UNINCLUDED_COLOR)
 
-		if self.blockcolumn.get_visible():
+		sort_column, _order = self.sort_model.get_sort_column_id()
+		if self.blockcolumn.get_visible() or sort_column == BLOCK_LOW_INDEX:
 			self.refresh_solver_blocks()
 
 	def on_show_tree_blocks_toggled(self, widget):
@@ -351,18 +482,13 @@ class ModelView:
 			self.refresh_solver_blocks()
 
 	def refresh_solver_blocks(self):
-		"""Refresh solver block labels in the instance tree.
-
-		Only real-valued solver variables and algebraic relations currently
-		have block information in IncidenceMatrix. Fixed solver variables are
-		marked explicitly; all other rows remain blank.
-		"""
+		"""Refresh leaf block labels and compound-row block extents."""
 		self.solver_var_blocks = {}
 		self.solver_rel_blocks = {}
 		self.solver_fixed_vars = set()
 		for _path in self.otank:
 			_iter = self.modelstore.get_iter(_path)
-			self.modelstore.set_value(_iter, BLOCK_INDEX, "")
+			self.clear_block_data(_iter)
 
 		if not hasattr(self, 'sim') or self.sim is None:
 			return
@@ -370,7 +496,7 @@ class ModelView:
 		try:
 			im = self.sim.getIncidenceMatrix()
 			nblocks = im.getNumBlocks()
-		except (RuntimeError, IndexError):
+		except (AttributeError, RuntimeError, IndexError):
 			# A system that has not been presolved, or a solver that does not
 			# supply decomposition information, simply has no labels to show.
 			return
@@ -378,13 +504,15 @@ class ModelView:
 		var_blocks = {}
 		rel_blocks = {}
 		try:
-			fixed_vars = set(str(var.getName()) for var in self.sim.getFixedVariables())
+			fixed_vars = set(
+				self.solver_instance_key(var) for var in self.sim.getFixedVariables()
+			)
 			for block in range(nblocks):
 				for var in im.getBlockVars(block):
-					var_blocks[str(var.getName())] = block
+					var_blocks[self.solver_instance_key(var)] = block
 				for rel in im.getBlockRels(block):
-					rel_blocks[str(rel.getName())] = block
-		except (RuntimeError, IndexError):
+					rel_blocks[self.solver_instance_key(rel)] = block
+		except (AttributeError, RuntimeError, IndexError):
 			# Treat incomplete decomposition information as unavailable instead
 			# of leaving a partially-labelled tree.
 			return
@@ -393,27 +521,103 @@ class ModelView:
 		self.solver_rel_blocks = rel_blocks
 		self.solver_fixed_vars = fixed_vars
 
-		for _path in self.otank:
-			_iter = self.modelstore.get_iter(_path)
-			_name, instance = self.otank[_path]
-			self.modelstore.set_value(_iter, BLOCK_INDEX, self.get_solver_block_label(instance))
+		self.apply_cached_block_data()
 
-	def get_solver_block_label(self, instance):
-		"""Return the cached block label for an instance-tree row."""
+	def solver_instance_key(self, instance):
+		"""Identify the underlying instance, independent of any alias path."""
+		try:
+			instance = instance.getInstance()
+		except (AttributeError, RuntimeError):
+			pass
+		try:
+			return ("instance", int(instance.getInstanceId()))
+		except (AttributeError, RuntimeError):
+			# Compatibility fallback for an older ASCXX module. It does not give
+			# alias guarantees, but retains the former behaviour.
+			return ("name", str(self.sim.getInstanceName(instance)))
+
+	def clear_block_data(self, piter):
+		self.modelstore.set_value(piter, BLOCK_INDEX, "")
+		self.modelstore.set_value(piter, BLOCK_KIND_INDEX, BLOCK_UNKNOWN)
+		self.modelstore.set_value(piter, BLOCK_LOW_INDEX, 0)
+		self.modelstore.set_value(piter, BLOCK_HIGH_INDEX, 0)
+
+	def get_solver_block_data(self, instance):
+		"""Return display label, kind, low block, and high block."""
 		try:
 			if instance.getType().isRefinedSolverVar():
-				fullname = str(self.sim.getInstanceName(instance))
-				if fullname in self.solver_fixed_vars:
-					return "fixed"
-				if fullname in self.solver_var_blocks:
-					return str(self.solver_var_blocks[fullname])
+				key = self.solver_instance_key(instance)
+				if key in self.solver_fixed_vars:
+					return ("–", BLOCK_FIXED, 0, 0)
+				if key in self.solver_var_blocks:
+					block = self.solver_var_blocks[key]
+					return (str(block), BLOCK_NUMBERED, block, block)
 			elif instance.isRelation():
-				fullname = str(self.sim.getInstanceName(instance))
-				if fullname in self.solver_rel_blocks:
-					return str(self.solver_rel_blocks[fullname])
+				key = self.solver_instance_key(instance)
+				if key in self.solver_rel_blocks:
+					block = self.solver_rel_blocks[key]
+					return (str(block), BLOCK_NUMBERED, block, block)
 		except RuntimeError:
 			pass
-		return ""
+		return ("", BLOCK_UNKNOWN, 0, 0)
+
+	def set_direct_block_data(self, piter, instance):
+		label, kind, low, high = self.get_solver_block_data(instance)
+		self.modelstore.set_value(piter, BLOCK_INDEX, label)
+		self.modelstore.set_value(piter, BLOCK_KIND_INDEX, kind)
+		self.modelstore.set_value(piter, BLOCK_LOW_INDEX, low)
+		self.modelstore.set_value(piter, BLOCK_HIGH_INDEX, high)
+
+	def update_compound_block_extent(self, piter):
+		"""Aggregate descendant block data and return this row's extent."""
+		child = self.modelstore.iter_children(piter)
+		child_data = []
+		while child is not None:
+			child_data.append(self.update_compound_block_extent(child))
+			child = self.modelstore.iter_next(child)
+
+		path = self.modelstore.get_path(piter).to_string()
+		instance = self.otank[path][1]
+		if not instance.isCompound():
+			return (
+				self.modelstore.get_value(piter, BLOCK_KIND_INDEX),
+				self.modelstore.get_value(piter, BLOCK_LOW_INDEX),
+				self.modelstore.get_value(piter, BLOCK_HIGH_INDEX),
+			)
+
+		numbered = [data for data in child_data if data[0] == BLOCK_NUMBERED]
+		if numbered:
+			low = min(data[1] for data in numbered)
+			high = max(data[2] for data in numbered)
+			label = str(low) if low == high else "%d–%d" % (low, high)
+			kind = BLOCK_NUMBERED
+		elif any(data[0] == BLOCK_FIXED for data in child_data):
+			label = "–"
+			kind = BLOCK_FIXED
+			low = high = 0
+		else:
+			label = ""
+			kind = BLOCK_UNKNOWN
+			low = high = 0
+
+		self.modelstore.set_value(piter, BLOCK_INDEX, label)
+		self.modelstore.set_value(piter, BLOCK_KIND_INDEX, kind)
+		self.modelstore.set_value(piter, BLOCK_LOW_INDEX, low)
+		self.modelstore.set_value(piter, BLOCK_HIGH_INDEX, high)
+		return (kind, low, high)
+
+	def apply_cached_block_data(self):
+		for _path, (_name, instance) in self.otank.items():
+			piter = self.modelstore.get_iter(_path)
+			self.set_direct_block_data(piter, instance)
+		root = self.modelstore.get_iter_first()
+		while root is not None:
+			self.update_compound_block_extent(root)
+			root = self.modelstore.iter_next(root)
+
+	def get_solver_block_label(self, instance):
+		"""Return the cached direct block label for an instance."""
+		return self.get_solver_block_data(instance)[0]
 
 	def refresh_display_units(self, instance=None, instance_type=None):
 		"""
@@ -520,7 +724,7 @@ class ModelView:
 				return True
 
 		# now that the variable is set, update the GUI and re-solve if desired
-		_iter = self.modelstore.get_iter(path)
+		_iter = self.modelstore.get_iter(originalpath)
 		self.modelstore.set_value(_iter,2, self.browser.get_instance_display_value(_instance))
 
 		if _instance.getType().isRefinedSolverVar():
@@ -546,11 +750,12 @@ class ModelView:
 		assert(value)
 		if value.isCompound():
 			children=value.getChildren();
+			model_orders = self.child_model_orders(value, children)
 			##### EXTERNAL RELATION WORKAROUND
 			index = 0
 			relation_outputs = None
 			##### EXTERNAL RELATION WORKAROUND
-			for child in children:
+			for child_index, child in enumerate(children):
 				try:
 					_name = child.getName()
 					##### EXTERNAL RELATION WORKAROUND
@@ -562,7 +767,10 @@ class ModelView:
 							_name = relation_outputs[index]
 							index += 1
 					##### EXTERNAL RELATION WORKAROUND
-					_piter = self.make_row(piter, child, _name)
+					_piter = self.make_row(
+						piter, child, _name, parent=value,
+						model_order=model_orders[child_index]
+					)
 					if child.isCompound() and len(child.getChildren()) > 0 and depth > 0:
 						self.make_children(child, _piter, depth - 1)
 					_path = self.modelstore.get_path(_piter)
@@ -603,6 +811,8 @@ class ModelView:
 	def row_expanded(self, modelview, piter, path):
 		originalpath = Gtk.TreePath.new_from_string(modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX))
 		self.make(path=originalpath)
+		if self.solver_var_blocks or self.solver_rel_blocks or self.solver_fixed_vars:
+			self.apply_cached_block_data()
 
 
 #   ------------------------------

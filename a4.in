@@ -221,6 +221,11 @@ if __name__ == "__main__":
 	p_pytest.set_defaults(action='pytest')
 	p_pytest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to pytest')
 
+	p_canvas = s.add_parser('canvas',help = 'Launch the ASCEND canvas modeller')
+	p_canvas.set_defaults(action='canvas')
+	p_canvas.add_argument('-f','--file',dest='canvas_file',help='Canvas file to open')
+	p_canvas.add_argument('-l','--library',help='Canvas model library to load')
+
 	p_units = s.add_parser('units',help = 'Manage display-units overrides')
 	p_units.set_defaults(action='units')
 	p_units.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to rununits.py')
@@ -400,6 +405,12 @@ if __name__ == "__main__":
 		if rest and rest[0] == '--':
 			rest = rest[1:]
 		cmd += [PYTHON, '-m', 'pytest'] + rest
+	elif args.action == 'canvas':
+		cmd += [PYTHON, sourceroot / 'pygtk' / 'canvas' / 'canvas.py']
+		if args.canvas_file:
+			cmd += ['--file', args.canvas_file]
+		if args.library:
+			cmd += ['--library', args.library]
 	elif args.action == 'units':
 		rest = list(args.rest)
 		if rest and rest[0] == '--':

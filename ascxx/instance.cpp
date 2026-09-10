@@ -45,6 +45,7 @@ extern "C"{
 }
 
 #include <iostream>
+#include <cstdint>
 #include <stdexcept>
 #include <sstream>
 
@@ -850,6 +851,50 @@ Instanc::getSetType() const{
 	}
 	if(SetAtomList(i)==NULL)return empty_set;
 	return SetKind(SetAtomList(i));
+}
+
+const string
+Instanc::getDeclarationFilename(const Instanc &parent) const{
+	const char *filename = NULL;
+	unsigned long childnum = 0;
+	for(unsigned long ci=1; ci<=NumberChildren(parent.i); ++ci){
+		if(SymChar(ChildName(parent.i,ci)) == name){
+			childnum = ci;
+			break;
+		}
+	}
+	if((childnum == 0 || !InstanceChildDeclarationLocation(
+		parent.i,childnum,&filename,NULL
+	)) && !InstanceDeclarationLocation(i,parent.i,&filename,NULL)){
+		return "";
+	}
+	if(filename == NULL){
+		return "";
+	}
+	return filename;
+}
+
+const long
+Instanc::getDeclarationLine(const Instanc &parent) const{
+	int lineno = 0;
+	unsigned long childnum = 0;
+	for(unsigned long ci=1; ci<=NumberChildren(parent.i); ++ci){
+		if(SymChar(ChildName(parent.i,ci)) == name){
+			childnum = ci;
+			break;
+		}
+	}
+	if((childnum == 0 || !InstanceChildDeclarationLocation(
+		parent.i,childnum,NULL,&lineno
+	)) && !InstanceDeclarationLocation(i,parent.i,NULL,&lineno)){
+		return 0;
+	}
+	return lineno;
+}
+
+const unsigned long long
+Instanc::getInstanceId() const{
+	return static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(i));
 }
 
 /// Get the child instances :)

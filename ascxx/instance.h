@@ -105,6 +105,9 @@ public:
 	const bool isAssigned() const;
 	const bool isModel() const;
 	const SymChar getName() const;
+	const std::string getDeclarationFilename(const Instanc &parent) const;
+	const long getDeclarationLine(const Instanc &parent) const;
+	const unsigned long long getInstanceId() const;
 	const double getRealValue() const;
 	const bool isDimensionless() const;
 	const Dimensions getDimensions() const;
