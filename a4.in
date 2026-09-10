@@ -133,12 +133,12 @@ if __name__ == "__main__":
 	argv = list(sys.argv)
 	if (
 		len(argv) >= 3
-		and argv[1] == 'cutest'
+		and argv[1] in ('cutest', 'pytest')
 		and '--' not in argv[2:]
 		and any(arg in ('-h', '--help') for arg in argv[2:])
 	):
 		argv[2:] = ['--help' if arg == '-h' else arg for arg in argv[2:]]
-		# Forward cutest help flags to the underlying runner instead of
+		# Forward test-runner help flags to the underlying runner instead of
 		# letting argparse consume them as subcommand help.
 		argv.insert(2, '--')
 	if (
@@ -217,6 +217,10 @@ if __name__ == "__main__":
 	p_cutest.set_defaults(action='cutest')
 	p_cutest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to test/test')
 
+	p_pytest = s.add_parser('pytest',help = 'Run Python tests with the ASCEND environment set')
+	p_pytest.set_defaults(action='pytest')
+	p_pytest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to pytest')
+
 	p_units = s.add_parser('units',help = 'Manage display-units overrides')
 	p_units.set_defaults(action='units')
 	p_units.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to rununits.py')
@@ -235,7 +239,7 @@ if __name__ == "__main__":
 
 	args, unknown = p.parse_known_args(argv[1:])
 	if unknown:
-		if hasattr(args, 'action') and args.action == 'cutest':
+		if hasattr(args, 'action') and args.action in ('cutest', 'pytest'):
 			# Pass unknown args through to the test runner.
 			if not hasattr(args, 'rest') or args.rest is None:
 				args.rest = []
@@ -391,6 +395,11 @@ if __name__ == "__main__":
 		if rest and rest[0] == '--':
 			rest = rest[1:]
 		cmd += shebang(sourceroot / 'test' / 'test', rest)
+	elif args.action == 'pytest':
+		rest = list(args.rest)
+		if rest and rest[0] == '--':
+			rest = rest[1:]
+		cmd += [PYTHON, '-m', 'pytest'] + rest
 	elif args.action == 'units':
 		rest = list(args.rest)
 		if rest and rest[0] == '--':
