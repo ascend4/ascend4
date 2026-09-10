@@ -70,25 +70,16 @@ class IterableIPShell:
     @param input_func: Replacement for builtin raw_input()
     @type input_func: function
     '''
-    io = IPython.utils.io
+    self.stdin = cin if cin is not None else sys.stdin
+    self.stdout = cout if cout is not None else sys.stdout
+    self.stderr = cerr if cerr is not None else sys.stderr
     if input_func:
       if parse_version(IPython.release.version) >= parse_version("1.2.1"):
         IPython.terminal.interactiveshell.raw_input_original = input_func
       else:
         IPython.frontend.terminal.interactiveshell.raw_input_original = input_func
-    if cin:
-      io.stdin = io.IOStream(cin)
-    if cout:
-      io.stdout = io.IOStream(cout)
-    if cerr:
-      io.stderr = io.IOStream(cerr)
 
-    # This is to get rid of the blockage that accurs during 
-    # IPython.Shell.InteractiveShell.user_setup()
-
-    io.raw_input = lambda x: None
-
-    os.environ['TERM'] = 'dumb'
+    os.environ.setdefault('TERM', 'dumb')
     excepthook = sys.excepthook 
 
     if parse_version(IPython.release.version) >= parse_version('4.0.0'):
@@ -99,22 +90,22 @@ class IterableIPShell:
     cfg.InteractiveShell.colors = "Linux"
     cfg.Completer.use_jedi = False
 
-    # InteractiveShell's __init__ overwrites io.stdout,io.stderr with
-    # sys.stdout, sys.stderr, this makes sure they are right
-    #
-    old_stdout, old_stderr = sys.stdout, sys.stderr
-    sys.stdout, sys.stderr = io.stdout.stream, io.stderr.stream
-
-    # InteractiveShell inherits from SingletonConfigurable, so use instance()
-    #
-    if parse_version(IPython.release.version) >= parse_version("1.2.1"):
-      self.IP = IPython.terminal.embed.InteractiveShellEmbed.instance(\
-              config=cfg, user_ns=user_ns)
-    else:
-      self.IP = IPython.frontend.terminal.embed.InteractiveShellEmbed.instance(\
-              config=cfg, user_ns=user_ns)
-
-    sys.stdout, sys.stderr = old_stdout, old_stderr
+    # InteractiveShell inherits from SingletonConfigurable, so use instance().
+    # Modern IPython writes to sys.stdout/sys.stderr directly; its former
+    # IPython.utils.io.IOStream compatibility layer was removed.
+    old_stdin, old_stdout, old_stderr = sys.stdin, sys.stdout, sys.stderr
+    try:
+      sys.stdin = self.stdin
+      sys.stdout = self.stdout
+      sys.stderr = self.stderr
+      if parse_version(IPython.release.version) >= parse_version("1.2.1"):
+        self.IP = IPython.terminal.embed.InteractiveShellEmbed.instance(\
+                config=cfg, user_ns=user_ns)
+      else:
+        self.IP = IPython.frontend.terminal.embed.InteractiveShellEmbed.instance(\
+                config=cfg, user_ns=user_ns)
+    finally:
+      sys.stdin, sys.stdout, sys.stderr = old_stdin, old_stdout, old_stderr
 
     self.IP.system = lambda cmd: self.shell(self.IP.var_expand(cmd),
                                             header='IPython system call: ')
@@ -126,7 +117,7 @@ class IterableIPShell:
     sys.excepthook = excepthook
     self.iter_more = 0
     self.history_level = 0
-    self.complete_sep =  re.compile('[\s\{\}\[\]\(\)]')
+    self.complete_sep = re.compile(r'[\s{}\[\]()]')
     self.updateNamespace({'exit':lambda:None})
     self.updateNamespace({'quit':lambda:None})
     if parse_version(IPython.release.version) < parse_version("5.0.0"):
@@ -159,59 +150,56 @@ class IterableIPShell:
     # this is needed because some functions in IPython use 'print' to print
     # output (like 'who')
     #
-    orig_stdout = sys.stdout
-    sys.stdout = IPython.utils.io.stdout
-
-    orig_stdin = sys.stdin
-    sys.stdin = IPython.utils.io.stdin;
-    self.prompt = self.generatePrompt(self.iter_more)
-
-    self.IP.hooks.pre_prompt_hook()
-    if self.iter_more:
-        try:
-            self.prompt = self.generatePrompt(True)
-        except:
-            self.IP.showtraceback()
-        if self.IP.autoindent:
-            self.IP.rl_do_indent = True
-
+    old_stdin, old_stdout, old_stderr = sys.stdin, sys.stdout, sys.stderr
     try:
-      line = self.IP.raw_input(self.prompt)
-    except KeyboardInterrupt:
-      self.IP.write('\nKeyboardInterrupt\n')
-      if self.no_input_splitter:
-        self.lines = []
-      else:
-        self.IP.input_splitter.reset()
-    except:
-      self.IP.showtraceback()
-    else:
-      if self.no_input_splitter:
-        self.lines.append(line)
-        (status, self.indent_spaces) = self.IP.check_complete('\n'.join(self.lines))
-        self.iter_more = status == 'incomplete'
-      else:
-        self.IP.input_splitter.push(line)
-        self.iter_more = self.IP.input_splitter.push_accepts_more()
+      sys.stdin = self.stdin
+      sys.stdout = self.stdout
+      sys.stderr = self.stderr
       self.prompt = self.generatePrompt(self.iter_more)
-      if not self.iter_more:
-          if self.no_input_splitter:
-            source_raw = '\n'.join(self.lines)
-            self.lines = []
-          elif parse_version(IPython.release.version) >= parse_version("2.0.0-dev"):
-            source_raw = self.IP.input_splitter.raw_reset()
-          else:
-            source_raw = self.IP.input_splitter.source_raw_reset()[1]
-          self.IP.run_cell(source_raw, store_history=True)
-          self.IP.rl_do_indent = False
-      else:
-          # TODO: Auto-indent
-          #
-          self.IP.rl_do_indent = True
-          pass
 
-    sys.stdout = orig_stdout
-    sys.stdin = orig_stdin
+      self.IP.hooks.pre_prompt_hook()
+      if self.iter_more:
+          try:
+              self.prompt = self.generatePrompt(True)
+          except:
+              self.IP.showtraceback()
+          if self.IP.autoindent:
+              self.IP.rl_do_indent = True
+
+      try:
+        line = self.IP.raw_input(self.prompt)
+      except KeyboardInterrupt:
+        print('\nKeyboardInterrupt', file=self.stderr)
+        if self.no_input_splitter:
+          self.lines = []
+        else:
+          self.IP.input_splitter.reset()
+      except:
+        self.IP.showtraceback()
+      else:
+        if self.no_input_splitter:
+          self.lines.append(line)
+          (status, self.indent_spaces) = self.IP.check_complete('\n'.join(self.lines))
+          self.iter_more = status == 'incomplete'
+        else:
+          self.IP.input_splitter.push(line)
+          self.iter_more = self.IP.input_splitter.push_accepts_more()
+        self.prompt = self.generatePrompt(self.iter_more)
+        if not self.iter_more:
+            if self.no_input_splitter:
+              source_raw = '\n'.join(self.lines)
+              self.lines = []
+            elif parse_version(IPython.release.version) >= parse_version("2.0.0-dev"):
+              source_raw = self.IP.input_splitter.raw_reset()
+            else:
+              source_raw = self.IP.input_splitter.source_raw_reset()[1]
+            self.IP.run_cell(source_raw, store_history=True)
+            self.IP.rl_do_indent = False
+        else:
+            # TODO: Auto-indent
+            self.IP.rl_do_indent = True
+    finally:
+      sys.stdin, sys.stdout, sys.stderr = old_stdin, old_stdout, old_stderr
 
   def generatePrompt(self, is_continuation):
     '''
@@ -408,7 +396,7 @@ class ConsoleView(gtk.TextView):
                                   weight=700)
     self.text_buffer.create_tag('0')
     self.text_buffer.create_tag('notouch', editable=False)
-    self.color_pat = re.compile('\x01?\x1b\[(.*?)m\x02?')
+    self.color_pat = re.compile(r'\x01?\x1b\[(.*?)m\x02?')
     self.line_start = \
         self.text_buffer.create_mark('line_start', 
                                      self.text_buffer.get_end_iter(), True)

@@ -2220,6 +2220,17 @@ upper and lower bounds displayed.</property>
                       </object>
                     </child>
                     <child>
+                      <object class="GtkCheckMenuItem" id="relations_appear_last">
+                        <property name="use_action_appearance">False</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Relations appear _last</property>
+                        <property name="tooltip_text" translatable="yes">Place relations after other rows when sorting by name or solver block</property>
+                        <property name="use_underline">True</property>
+                        <property name="active">True</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="show_variables">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
