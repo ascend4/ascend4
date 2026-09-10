@@ -1076,6 +1076,13 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.update_simulation_statusbar()
 		return False
 
+	def do_solve_refresh_after_error(self):
+		# Presolve may still have produced useful block information, and
+		# postsolve updates instance statuses before reporting non-convergence.
+		self.modelview.refreshtree()
+		self.update_simulation_statusbar()
+		return False
+
 	def do_solve_thread(self, reporter):
 		try:
 			ascpy.setSolverProgressReporter(reporter)
@@ -1094,6 +1101,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			GObject.idle_add(self.do_solve_finish, reporter, status)
 		except RuntimeError as err:
 			self.reporter.reportError(str(err))
+			GObject.idle_add(self.do_solve_refresh_after_error)
 		finally:
 			try:
 				ascpy.setSolverInterrupt(False)

@@ -255,6 +255,11 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 
 	def do_solve_finish(self, reporter, status):
 		reporter.finalise(status)
+		self.browser.modelview.refreshtree()
+		self.browser.update_simulation_statusbar()
+		return False
+	def do_solve_refresh_after_error(self):
+		self.browser.modelview.refreshtree()
 		self.browser.update_simulation_statusbar()
 		return False
 
@@ -277,6 +282,7 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 			GObject.idle_add(self.do_solve_finish, reporter, status)
 		except Exception as e:
 			print("PYTHON ERROR:", str(e))
+			GObject.idle_add(self.do_solve_refresh_after_error)
 		finally:
 			try:
 				ascpy.setSolverInterrupt(False)

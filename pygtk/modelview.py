@@ -11,7 +11,8 @@ BROWSER_SETTING_COLOR = "#4444AA"
 BROWSER_INCLUDED_COLOR = "black"
 BROWSER_UNINCLUDED_COLOR = "#888888"
 
-ORIGINAL_PATH_INDEX = 7
+BLOCK_INDEX = 7
+ORIGINAL_PATH_INDEX = 8
 
 class ModelView:
 	def __init__(self,browser,builder):
@@ -23,9 +24,13 @@ class ModelView:
 		self.modelview = builder.get_object("browserview")
 
 		self.otank = {}
+		self.solver_var_blocks = {}
+		self.solver_rel_blocks = {}
+		self.solver_fixed_vars = set()
 
-		# name, type, value, foreground, weight, editable, status-icon
-		columns = [str,str,str,str,int,bool,GdkPixbuf.Pixbuf,str]
+		# name, type, value, foreground, weight, editable, status-icon,
+		# solver block, original tree-store path
+		columns = [str,str,str,str,int,bool,GdkPixbuf.Pixbuf,str,str]
 		self.modelstore = Gtk.TreeStore(*columns)
 		titles = ["Name","Type","Value"]
 		self.modelview.set_model(self.modelstore)
@@ -61,6 +66,21 @@ class ModelView:
 				tvcolumn.add_attribute(renderer, 'editable', 5)
 				renderer.connect('edited',self.cell_edited_callback)
 			i = i + 1
+
+		# Block numbers use the same zero-based numbering as Diagnose Blocks.
+		# Unsupported instance kinds and solvers without a block decomposition
+		# are deliberately displayed as blank cells.
+		self.blockcolumn = Gtk.TreeViewColumn("Block")
+		_blockrenderer = Gtk.CellRendererText()
+		self.blockcolumn.pack_start(_blockrenderer, True)
+		self.blockcolumn.add_attribute(_blockrenderer, 'text', BLOCK_INDEX)
+		self.modelview.append_column(self.blockcolumn)
+		self.showblocksmenuitem = self.browser.builder.get_object("show_tree_blocks")
+		_show_blocks = self.browser.prefs.getBoolPref("Browser", "show_tree_blocks", True)
+		self.blockcolumn.set_visible(_show_blocks)
+		if self.showblocksmenuitem is not None:
+			self.showblocksmenuitem.set_active(_show_blocks)
+			self.showblocksmenuitem.connect("toggled", self.on_show_tree_blocks_toggled)
 
 		#--------------------
 		# get all menu icons and set up the context menu for fixing/freeing vars
@@ -103,6 +123,9 @@ class ModelView:
 		self.sim = sim
 		self.modelstore.clear()
 		self.otank = {} # map path -> (name,value)
+		self.solver_var_blocks = {}
+		self.solver_rel_blocks = {}
+		self.solver_fixed_vars = set()
 		self.browser.disable_menu()
 		try:
 			self.make( self.sim.getName(),self.sim.getModel() )
@@ -236,6 +259,9 @@ class ModelView:
 		self.clear_variables_menus()
 		self.modelstore.clear()
 		self.otank = {}
+		self.solver_var_blocks = {}
+		self.solver_rel_blocks = {}
+		self.solver_fixed_vars = set()
 
 #   --------------------------------------------
 #   INSTANCE TREE
@@ -280,12 +306,13 @@ class ModelView:
 		#if(len(_value) > 80):
 		#	_value = _value[:80] + "..."
 
-		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon, None]
+		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon, "", None]
 
 	def make_row(self, piter, value, name=None): # for instance browser
 		assert(value)
 		_piter = self.modelstore.append(piter, self.get_tree_row_data(value))
 		path = self.modelstore.get_path(_piter)
+		self.modelstore.set_value(_piter, BLOCK_INDEX, self.get_solver_block_label(value))
 		self.modelstore.set_value(_piter, ORIGINAL_PATH_INDEX, str(path))
 		if name is not None:
 			self.modelstore.set_value(_piter, 0, str(name))
@@ -312,6 +339,81 @@ class ModelView:
 					self.modelstore.set_value(_iter,3,BROWSER_INCLUDED_COLOR)
 				else:
 					self.modelstore.set_value(_iter,3,BROWSER_UNINCLUDED_COLOR)
+
+		if self.blockcolumn.get_visible():
+			self.refresh_solver_blocks()
+
+	def on_show_tree_blocks_toggled(self, widget):
+		visible = widget.get_active()
+		self.blockcolumn.set_visible(visible)
+		self.browser.prefs.setBoolPref("Browser", "show_tree_blocks", visible)
+		if visible:
+			self.refresh_solver_blocks()
+
+	def refresh_solver_blocks(self):
+		"""Refresh solver block labels in the instance tree.
+
+		Only real-valued solver variables and algebraic relations currently
+		have block information in IncidenceMatrix. Fixed solver variables are
+		marked explicitly; all other rows remain blank.
+		"""
+		self.solver_var_blocks = {}
+		self.solver_rel_blocks = {}
+		self.solver_fixed_vars = set()
+		for _path in self.otank:
+			_iter = self.modelstore.get_iter(_path)
+			self.modelstore.set_value(_iter, BLOCK_INDEX, "")
+
+		if not hasattr(self, 'sim') or self.sim is None:
+			return
+
+		try:
+			im = self.sim.getIncidenceMatrix()
+			nblocks = im.getNumBlocks()
+		except (RuntimeError, IndexError):
+			# A system that has not been presolved, or a solver that does not
+			# supply decomposition information, simply has no labels to show.
+			return
+
+		var_blocks = {}
+		rel_blocks = {}
+		try:
+			fixed_vars = set(str(var.getName()) for var in self.sim.getFixedVariables())
+			for block in range(nblocks):
+				for var in im.getBlockVars(block):
+					var_blocks[str(var.getName())] = block
+				for rel in im.getBlockRels(block):
+					rel_blocks[str(rel.getName())] = block
+		except (RuntimeError, IndexError):
+			# Treat incomplete decomposition information as unavailable instead
+			# of leaving a partially-labelled tree.
+			return
+
+		self.solver_var_blocks = var_blocks
+		self.solver_rel_blocks = rel_blocks
+		self.solver_fixed_vars = fixed_vars
+
+		for _path in self.otank:
+			_iter = self.modelstore.get_iter(_path)
+			_name, instance = self.otank[_path]
+			self.modelstore.set_value(_iter, BLOCK_INDEX, self.get_solver_block_label(instance))
+
+	def get_solver_block_label(self, instance):
+		"""Return the cached block label for an instance-tree row."""
+		try:
+			if instance.getType().isRefinedSolverVar():
+				fullname = str(self.sim.getInstanceName(instance))
+				if fullname in self.solver_fixed_vars:
+					return "fixed"
+				if fullname in self.solver_var_blocks:
+					return str(self.solver_var_blocks[fullname])
+			elif instance.isRelation():
+				fullname = str(self.sim.getInstanceName(instance))
+				if fullname in self.solver_rel_blocks:
+					return str(self.solver_rel_blocks[fullname])
+		except RuntimeError:
+			pass
+		return ""
 
 	def refresh_display_units(self, instance=None, instance_type=None):
 		"""

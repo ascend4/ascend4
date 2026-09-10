@@ -2209,6 +2209,17 @@ upper and lower bounds displayed.</property>
                       </object>
                     </child>
                     <child>
+                      <object class="GtkCheckMenuItem" id="show_tree_blocks">
+                        <property name="use_action_appearance">False</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Show solver _blocks in tree</property>
+                        <property name="tooltip_text" translatable="yes">Show solver block numbers for variables and relations in the model tree</property>
+                        <property name="use_underline">True</property>
+                        <property name="active">True</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="show_variables">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
