@@ -85,7 +85,9 @@ class ModelView:
 			tvcolumn.add_attribute(renderer, 'weight', 4)
 			if(i==2):
 				tvcolumn.add_attribute(renderer, 'editable', 5)
+				self.valuerenderer = renderer
 				renderer.connect('edited',self.cell_edited_callback)
+				renderer.connect('editing-started', self.cell_editing_started_callback)
 			i = i + 1
 
 		# Let the Value column absorb spare horizontal space. Otherwise GTK gives
@@ -887,6 +889,23 @@ class ModelView:
 
 		self.browser.do_solve_if_auto()
 		return True
+
+	def cell_editing_started_callback(self, renderer, editable, path):
+		"""Replace rounded display text with full precision for inline editing."""
+		if not isinstance(editable, Gtk.Entry):
+			return
+		try:
+			piter = self.modelview.get_model().get_iter(path)
+			originalpath = self.modelview.get_model().get_value(
+				piter, ORIGINAL_PATH_INDEX
+			)
+			_instance = self.otank[originalpath][1]
+		except (KeyError, TypeError, ValueError):
+			return
+		editable.set_text(
+			self.browser.get_instance_display_value(_instance, full_precision=True)
+		)
+		editable.select_region(0, -1)
 
 	##### EXTERNAL RELATION WORKAROUND
 	def get_external_relation_outputs(self, value):

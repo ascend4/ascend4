@@ -299,6 +299,7 @@ class Browser:
 
 		self.builder.connect_signals(self)
 		self.init_units_policy_controls()
+		self.init_significant_figures_control()
 
 		#-------
 		# Status icons
@@ -682,6 +683,54 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.units_edit_name_menu.show()
 		self.units_scope_model_menu.show()
 
+	def init_significant_figures_control(self):
+		"""Create the radio submenu controlling displayed numeric precision."""
+		stored = str(
+			self.prefs.getStringPref("Browser", "significant_figures", "full")
+		).lower()
+		self.significant_figures = int(stored) if stored in ("3", "4", "5", "6") else None
+		self.significant_figures_menu_items = {}
+		menu = self.builder.get_object("significant_figures_menu")
+		if menu is None:
+			return
+
+		first_item = None
+		for value, label in (
+			(None, "Full precision"),
+			(3, "3"),
+			(4, "4"),
+			(5, "5"),
+			(6, "6"),
+		):
+			if first_item is None:
+				item = Gtk.RadioMenuItem.new_with_label(None, label)
+				first_item = item
+			else:
+				item = Gtk.RadioMenuItem.new_with_label_from_widget(first_item, label)
+			item.connect("toggled", self.on_significant_figures_toggled, value)
+			menu.append(item)
+			item.show()
+			self.significant_figures_menu_items[value] = item
+
+		self._setting_significant_figures_menu = True
+		try:
+			self.significant_figures_menu_items[self.significant_figures].set_active(True)
+		finally:
+			self._setting_significant_figures_menu = False
+
+	def on_significant_figures_toggled(self, item, value):
+		if not item.get_active() or getattr(
+			self, "_setting_significant_figures_menu", False
+		):
+			return
+		self.significant_figures = value
+		stored = "full" if value is None else str(value)
+		self.prefs.setStringPref("Browser", "significant_figures", stored)
+		if self.sim is not None and hasattr(self, "modelview"):
+			self.modelview.refreshtree()
+		if hasattr(self, "observers"):
+			self.sync_observers()
+
 	def _set_units_scope_menu_active_no_persist(self, active):
 		self.units_scope_model_menu.handler_block(self._units_scope_model_handler)
 		self.units_scope_model_menu.set_active(active)
@@ -741,7 +790,23 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			# Backward compatibility with older ascpy builds.
 			return instance.getDisplayUnits(autoscale)
 
-	def get_instance_display_value(self, instance, autoscale=None):
+	def format_real_value(self, value, full_precision=False):
+		"""Format a scalar for display without changing its stored value."""
+		if full_precision or self.significant_figures is None:
+			return str(value)
+		try:
+			return format(float(value), ".%dg" % self.significant_figures)
+		except (TypeError, ValueError):
+			return str(value)
+
+	def format_display_value(self, value, full_precision=False):
+		"""Format the numeric part of an optional value-and-units string."""
+		text = str(value)
+		number, separator, units = text.partition(" ")
+		formatted = self.format_real_value(number, full_precision)
+		return formatted + (separator + units if separator else "")
+
+	def get_instance_display_value(self, instance, autoscale=None, full_precision=False):
 		if instance.isReal():
 			if (instance.isAtom() or instance.isFund() or instance.isConst()) and not instance.isDefined():
 				return "undefined"
@@ -754,7 +819,10 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				value = "'%s'" % instance.getSelectorValue()
 		else:
 			value = str(instance.getValue())
-		return CelsiusUnits.convert_show(instance, value, True)
+		value = CelsiusUnits.convert_show(instance, value, True)
+		if instance.isReal() or instance.isRelation():
+			return self.format_display_value(value, full_precision)
+		return value
 
 	def _get_simulation_status_message(self):
 		if self.sim is None:

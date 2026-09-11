@@ -219,12 +219,12 @@ class DiagnoseWindow:
 			default_units = self.var.getInstance().getType().getDimensions().getDefaultUnits().getName().toString()
 			pref_units = self.var.getInstance().getType().getPreferredUnits()
 			if pref_units and self.prefs.getBoolPref("Diagnose","show_preferred_units",True):
-				varval = str(self.var.getValue())+" "+pref_units.getName().toString()
+				varval = self.browser.format_real_value(self.var.getValue())+" "+pref_units.getName().toString()
 			else:
 				if default_units=="?":
-					varval = str(self.var.getValue())
+					varval = self.browser.format_real_value(self.var.getValue())
 				else:
-					varval = str(self.var.getValue())+" "+default_units
+					varval = self.browser.format_real_value(self.var.getValue())+" "+default_units
 			self.varval.set_text(varval)
 			self.varinfobutton.set_sensitive(True)
 		else:
@@ -234,7 +234,9 @@ class DiagnoseWindow:
 
 		if self.rel:
 			self.relname.set_text(self.rel.getName())
-			self.relresid.set_text(str(self.rel.getResidual()))
+			self.relresid.set_text(
+				self.browser.format_real_value(self.rel.getResidual())
+			)
 			self.relinfobutton.set_sensitive(True)
 		else:
 			self.relname.set_text("")
@@ -400,7 +402,9 @@ class DiagnoseWindow:
 			,"Upper bound": self.var.getUpperBound()
 		}
 		for k,v in list(_rows.items()):
-			text += "\n  %s\t%s" % (k,value_human(v)+units)
+			text += "\n  %s\t%s" % (
+				k, self.browser.format_real_value(v) + units
+			)
 		
 		text += "\n\nIncident with %d relations:" % self.var.getNumIncidentRelations()
 		for r in self.var.getIncidentRelations():
@@ -412,7 +416,9 @@ class DiagnoseWindow:
 	def on_relinfobutton_clicked(self,*args):
 		title = "Relation '%s'" % self.rel
 		text = "%s\n%s\n" % (title,"(from the solver's view)")
-		text += "\n  %s\t%15f" % ("Residual", self.rel.getResidual())
+		text += "\n  %s\t%s" % (
+			"Residual", self.browser.format_real_value(self.rel.getResidual())
+		)
 
 		text += "\n\nRelation expression:\n"
 		text += self.rel.getRelationAsString()
@@ -427,7 +433,9 @@ class DiagnoseWindow:
 			else:
 				if default_units != "?" :
 					units += default_units
-			text += "\n  %s\t= %s" % ( v.getName(),value_human(v.getValue())+units )
+			text += "\n  %s\t= %s" % (
+				v.getName(), self.browser.format_real_value(v.getValue()) + units
+			)
 
 		_dialog = InfoDialog(self.browser,self.window,text,title,tabs=(150,300))
 		_dialog.run()
@@ -499,12 +507,6 @@ class DiagnoseWindow:
 
 	def on_imageevent_button_press_event(self,widget,event):
 		self.show_cursor(event.x, event.y)
-
-
-def value_human(v):
-	if v==0 or abs( math.log10(abs(v)) )<8:
-		return "%f" % v	
-	return "%e" % v
 
 #---------------------------------------
 # Procedures to 'fold' a list of items from a hierarchy

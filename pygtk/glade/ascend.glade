@@ -2231,6 +2231,20 @@ upper and lower bounds displayed.</property>
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="significant_figures">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Significant _figures</property>
+                        <property name="use_underline">True</property>
+                        <child type="submenu">
+                          <object class="GtkMenu" id="significant_figures_menu">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="show_variables">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>

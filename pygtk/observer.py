@@ -47,6 +47,7 @@ class ObserverColumn:
 	"""
 	def __init__(self,instance,index,name=None,units=None,browser=None):
 		self.instance = instance
+		self.browser = browser
 		self.name = name
 		self.index = index
 		self.kind = self._detect_kind()
@@ -126,7 +127,7 @@ class ObserverColumn:
 			return self.instance.getRealValue()
 		return self.instance.getValueAsString()
 
-	def display_value(self, rawval):
+	def display_value(self, rawval, full_precision=False):
 		if not self.is_real():
 			if rawval is None:
 				return ""
@@ -136,7 +137,10 @@ class ObserverColumn:
 				return "'%s'" % rawval
 			return str(rawval)
 		value = rawval / self.units.getConversion()
-		return CelsiusUnits.convert_show_value(self.instance, value)
+		value = CelsiusUnits.convert_show_value(self.instance, value)
+		if self.browser is not None:
+			return self.browser.format_real_value(value, full_precision)
+		return value
 
 	def plot_value(self, rawval):
 		if not self.is_plottable():
@@ -552,6 +556,12 @@ class ObserverTab:
 			return
 		self.browser.do_solve_if_auto()
 
+	def on_view_cell_editing_started(self, renderer, editable, path, col):
+		if not isinstance(editable, Gtk.Entry) or not col.is_real():
+			return
+		editable.set_text(col.display_value(col.current_value(), full_precision=True))
+		editable.select_region(0, -1)
+
 	def sync(self):
 		self.view.queue_draw()
 		#self.browser.reporter.reportNote("SYNC performed")
@@ -570,6 +580,9 @@ class ObserverTab:
 		# create a new column
 		_renderer = Gtk.CellRendererText()
 		_renderer.connect('edited',self.on_view_cell_edited, _col)
+		_renderer.connect(
+			'editing-started', self.on_view_cell_editing_started, _col
+		)
 		_tvcol = ClickableTreeColumn(_col.title)
 		_tvcol.pack_start(_renderer,False)
 		self.tvcols[self.colindex-1] = _tvcol
