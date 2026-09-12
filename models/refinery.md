@@ -5,6 +5,9 @@
 It implements [GAMS MARCO](https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_marco.html),
 which cites Kendrick, Meeraus & Suh (1981), *Oil Refinery Modeling with the
 GAMS Language*, and Aronofsky, Dutton & Tayyabkhan (1978).
+The original technical report is [UT/CES-RR-14, DE82902083 (NTIS record)](https://ntrl.ntis.gov/NTRL/dashboard/searchResults/titleDetail/DE82902083.xhtml).
+Equation and table references in the ASCEND comments refer to that report.
+Page references use its printed numbering: add 5 for the PDF page number.
 
 Two crude oils feed distillation, reforming, cracking and hydrotreating.
 Intermediate streams retain their crude origin until final blending.
@@ -41,10 +44,12 @@ Inspect `u` (crude purchases), `ui` (butane purchases), `z` (processing),
 
 ## Dimensions and SI conversion
 
-The GAMS listing omits quality units. The unit-labelled tables in
-Bredström et al., [*Refinery Optimization Platform*, SNF Report 23/08](https://snf.no/media/bzreolub/snf-report-23-08.pdf),
-Tables 1, 4–7, 10, 13 and 16, identify the same quality data. We use that
-report to establish units, **not** its modified process model or results.
+The modern GAMS listing omits quality units. The original report explicitly
+specifies them in Tables 9–10 (pp. 20–21), the discussion on pp. 13 and 19,
+and comments in its GAMS listing (p. 31). These directly confirm our SI
+conversions. Bredström et al., [*Refinery Optimization Platform*, SNF Report 23/08](https://snf.no/media/bzreolub/snf-report-23-08.pdf),
+Tables 1, 4–7, 10, 13 and 16, provide corroborating data; we do not adopt
+that later report's modified process model or results.
 
 | Quantity | Source convention | ASCEND representation |
 |---|---|---|
@@ -67,7 +72,7 @@ The sulfur limits 3.5 and 3.4 become 9.98553560974139 and
 9.7002345923202 kg/m³. Multiplication by component volume flow gives sulfur
 mass flow, so the blending inequality is dimensionally meaningful.
 Although a [GAMS guide discussion](https://gams.com/54/docs/UG_ModelSolve.html)
-calls these limits percentages, the unit-labelled reference and MARCO's
+calls these limits percentages, the original report and MARCO's
 volume-weighted equations support concentration units. Treating the numbers
 as mass percentages would require density-weighted equations and change the LP.
 
@@ -85,6 +90,10 @@ approximation**. Here `w` is a component's volume flow, not its mass fraction.
 For a liquid blend, mass conservation gives mass flow = Σ ρᵢQᵢ. If its volume
 flow is Q = Σ Qᵢ, its density is ρblend = Σ ρᵢQᵢ / Q. Thus the requirement
 ρblend ≤ ρmax becomes Σ ρᵢQᵢ ≤ ρmax Q: exactly `density_limit`.
+This matches the report's Eq. (3) and its negligible-volume-loss assumption
+(p. 12), and the volume-fraction quality rule in Eq. (4), cross-multiplied
+to obtain Eqs. (5)–(6). The footnote on p. 11 explicitly requires equality
+in the final-product balance to reproduce the textbook solution.
 
 This assumes densities and volumes at the same reference temperature and
 pressure, and neglects volume contraction or expansion on mixing. It is not
@@ -118,7 +127,37 @@ capacity coefficient in MARCO; we omit its tautological capacity row, not
 impose zero throughput. The unused Mid-Continent hydro activity remains in the
 model and has zero optimal throughput because it costs money but produces nothing.
 Distillate cracking retains the GAMS cost of 0.8 USD/barrel, versus 0.08 for
-gas-oil cracking; these are deliberately not made equal.
+gas-oil cracking; these are deliberately not made equal. This differs from
+the original report, as detailed below.
+
+## Cross-check against the 1981 technical report
+
+The equations match Eqs. (1)–(12), with Eq. (2) separated into purchased-butane
+and produced-intermediate constraints. The permitted blends, yields, capacity
+coefficients, capacities, prices, quality data and crude purchase bounds match
+Tables 2–11 after unit conversion, except for the operating-cost difference:
+
+- **Table 7 (p. 19) and the GAMS listing (p. 31) both use 0.08 USD/barrel
+  for distillate cracking**, while modern GAMS MARCO uses 0.8. The current
+  ASCEND example retains the modern GAMS dataset. Using the report's cost
+  in the separate matrix formulation gives 12208.343242 USD/day, matching
+  the report's published 12208 USD/day in Section 9 (p. 36). The baseline
+  flows are unchanged; the extra modern operating expense is
+  0.72 USD/barrel × 7805.446897 barrels/day = 5619.921766 USD/day.
+- **Table 3 (p. 16) prints a positive West Texas crude-input coefficient.**
+  This conflicts with the input-sign explanation following Eq. (1) and with
+  the report's executable listing on p. 30, which uses −1. Our crude-availability
+  constraint follows the equation and executable listing, not that table typo.
+- The **tighter-sulfur scenario is a later GAMS example**, not a solve in
+  the 1981 report. Section 6(b), p. 17, explicitly confirms the absence of
+  a hydrotreater capacity restriction, consistent with our model.
+
+Section 9 also reports Mid-Continent crude purchases of 89717 barrels/day
+and sales of 7523 barrels/day of fuel gas, 42298 of premium gasoline and
+36809 of fuel oil. Our baseline agrees within one barrel/day of those
+whole-number figures. The modern GAMS guide gives more precise process
+levels, used by the assertions below. No model coefficients or constraints
+were changed as part of this source cross-check.
 
 ## Verified results
 
@@ -142,7 +181,9 @@ the conversion factor is 158.987294928 m³/day per reported flow unit.
 
 ### Calculated economic results
 
-The published table does **not** report profit. The more precise economic
+The modern GAMS guide's table does **not** report profit; the original
+technical report does, but for its lower cracking cost described above.
+The more precise economic
 references below were calculated locally, not taken from a GAMS objective
 listing. Both ASCEND adapters agree with a separately written Python matrix
 transcription solved using SciPy's HiGHS interface in MARCO's original

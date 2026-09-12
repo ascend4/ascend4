@@ -1,4 +1,10 @@
 (* Mini refinery LP: GAMS MARCO, Kendrick, Meeraus & Suh (1981).
+   Original report: Oil Refinery Modeling with the GAMS Language,
+   UT/CES-RR-14, DE82902083 (November 1981). PDF/catalogue:
+   https://ntrl.ntis.gov/NTRL/dashboard/searchResults/titleDetail/DE82902083.xhtml
+   Equation/table references below use that report's numbering and printed
+   pages (printed page 1 is PDF page 6). Data follow modern GAMS MARCO;
+   see the Table 7 comment for its different distillate-cracking cost.
    SI conversion and quality-unit references are documented in refinery.md.
    sr = straight-run; rf = reformed; cc = catalytically cracked.
    Sulfur is mass per volume, NOT a mass fraction. *)
@@ -14,6 +20,7 @@ ATOM refinery_income REFINES solver_var DIMENSION C/T DEFAULT 0{USD/day};
 END refinery_income;
 
 MODEL refinery_problem;
+    (* Section 3 / Table 1: commodity sets; Table 2: permitted blend routes. *)
     cr "Crudes: Mid-Continent and West Texas" IS_A set OF symbol_constant;
     ci "Intermediate streams, distinguished further by crude origin" IS_A set OF symbol_constant;
     cf "Saleable products" IS_A set OF symbol_constant;
@@ -60,6 +67,8 @@ MODEL refinery_problem;
     x[cf] "Product sales" IS_A volume_rate;
     phi, phir, phip, phiw "Profit, revenue, purchases and operating expense rates" IS_A refinery_income;
 
+    (* Table 3, p. 16: Mid-Continent intermediate yields. Crude input is
+       handled directly by mbr, with the -1 coefficient of Eq. (1). *)
     TABLE am[ci,p];
                       a_dist, n_reform, cc_dist, cc_gas_oil, hydro;
         butane:       0,      0,        0,       0,          0;
@@ -74,6 +83,8 @@ MODEL refinery_problem;
         cc_gas_oil:   0,      0,        0.21,    0.22,       0;
         hydro_res:    0,      0,        0,       0,          0;
     END TABLE;
+    (* Table 3: West Texas yields. Its printed crude row has a sign typo
+       (+1); Eq. (1) and the GAMS listing on p. 30 correctly use -1. *)
     TABLE aw[ci,p];
                       a_dist, n_reform, cc_dist, cc_gas_oil, hydro;
         butane:       0,      0,        0,       0,          0;
@@ -94,20 +105,24 @@ MODEL refinery_problem;
             a['w_tex'][i][j] :== aw[i][j];
         END FOR;
     END FOR;
+    (* Table 4 / Section 6(b), p. 17: no hydrotreater capacity restriction. *)
     TABLE b[m,p];
                   a_dist, n_reform, cc_dist, cc_gas_oil, hydro;
         a_still:  1,      0,        0,       0,          0;
         reformer: 0,      1,        0,       0,          0;
         c_crack:  0,      0,        1,       1,          0;
     END TABLE;
+    (* Table 5: capacities converted from thousands of barrels/day. *)
     TABLE k[m] UNITS {m^3/day};
         a_still:  15898.7294928;
         reformer: 3179.74589856;
         c_crack:  4769.61884784;
     END TABLE;
+    (* Table 11: crude purchase limits, on the same volume/time basis. *)
     FOR r IN cr CREATE
         ur[r] :== 31797.4589856{m^3/day};
     END FOR;
+    (* Table 6: crude, product and butane prices, converted from USD/barrel. *)
     TABLE pr[cr] UNITS {USD/m^3};
         mid_c: 47.1735807782408;
         w_tex: 40.8837700078087;
@@ -119,6 +134,10 @@ MODEL refinery_problem;
         fuel_oil: 41.8272416233735;
         fuel_gas: 9.43471615564816;
     END TABLE;
+    (* Table 7, p. 19, and GAMS listing p. 31 use 0.08 USD/barrel for BOTH
+       cracking routes. Modern GAMS MARCO instead uses 0.8 for cc_dist;
+       retain that dataset here. This is why our profit differs from the
+       report's 12208 USD/day in Section 9 (see refinery.md). *)
     TABLE op[p] UNITS {USD/m^3};
         a_dist: 0.62898107704321;
         n_reform: 0.943471615564816;
@@ -126,14 +145,16 @@ MODEL refinery_problem;
         cc_gas_oil: 0.503184861634568;
         hydro: 0.62898107704321;
     END TABLE;
-    pd :== 42.4562227004167{USD/m^3};
+    pd :== 42.4562227004167{USD/m^3}; (* Table 6: butane. *)
 
+    (* Table 10: octane attributes; Table 8: lower octane specifications. *)
     TABLE oct[cg];
         butane: 91.8; sr_gas: 78.5; sr_naphtha: 65; rf_gas: 104; cc_gas: 93.7;
     END TABLE;
     TABLE omin[fg];
         premium: 90; regular: 86;
     END TABLE;
+    (* Table 10: vapour pressure, explicitly mmHg in the report; here Pa. *)
     TABLE vp[cg] UNITS {Pa};
         butane: 26557.819573068;
         sr_gas: 2453.131928436;
@@ -141,7 +162,9 @@ MODEL refinery_problem;
         rf_gas: 342.63853565655;
         cc_gas: 919.9244731635;
     END TABLE;
-    vmax :== 1693.1943201705{Pa};
+    vmax :== 1693.1943201705{Pa}; (* Table 9: upper vapour-pressure limit. *)
+    (* Table 10: density and sulfur content are BOTH in lb/barrel;
+       converted here to kg/m^3. Units are repeated in the listing, p. 31. *)
     TABLE rho[ch,cr] UNITS {kg/m^3};
                       mid_c,             w_tex;
         sr_naphtha  : 776.018767385616, 776.018767385616;
@@ -160,6 +183,7 @@ MODEL refinery_problem;
         cc_gas_oil  : 1.00711259149677, 3.73744332821749;
         hydro_res   : 0, 17.1180610452709;
     END TABLE;
+    (* Table 9: upper density and sulfur-concentration specifications. *)
     rmax['distillate'] :== 873.021113308818{kg/m^3};
     rmax['fuel_oil'] :== 1004.25958132256{kg/m^3};
     smax['distillate'] :== 1.42650508710591{kg/m^3};
@@ -170,15 +194,19 @@ MODEL refinery_problem;
        separate until blending. Inequalities permit unused material/disposal;
        yields need not sum to one (volume is not conserved through reaction). *)
     FOR r IN cr CREATE
+        (* Eq. (1): raw-material availability. *)
         mbr[r]: u[r] >= z[r]['a_dist'];
+        (* Eq. (8): upper bound on crude purchases. *)
         lcp[r]: u[r] <= ur[r];
+        (* Eq. (2): purchased intermediate, restricted to butane. *)
         butane_balance[r]: ui[r] >= SUM[w[r][f]['butane'] | f IN uses['butane']];
         FOR i IN ci - ['butane'] CREATE
+            (* Eq. (2): produced intermediates. *)
             mb[r][i]: SUM[a[r][i][j]*z[r][j] | j IN p]
                 >= SUM[w[r][f][i] | f IN uses[i]];
         END FOR;
     END FOR;
-    (* Both crude processing lines compete for the same equipment capacity. *)
+    (* Eq. (7): both crude processing lines share equipment capacity. *)
     FOR n IN m CREATE
         cc[n]: SUM[SUM[b[n][j]*z[r][j] | j IN p] | r IN cr] <= k[n];
     END FOR;
@@ -188,7 +216,9 @@ MODEL refinery_problem;
                 w[r][f][i] "Component allocation to a permitted blend" IS_A volume_rate;
             END FOR;
         END FOR;
-        (* Liquid blend volumes are assumed additive at a common reference
+        (* Eq. (3), p. 12: the report explicitly neglects blending-volume
+           losses; the footnote on p. 11 requires equality, not inequality.
+           Liquid blend volumes are assumed additive at a common reference
            temperature/pressure: neglect contraction, expansion and losses.
            Fuel gas retains the source's accounting-volume basis, not an
            actual gas volume determined from a temperature and pressure. *)
@@ -198,7 +228,10 @@ MODEL refinery_problem;
        rules. Unlike mass accounting, these are not conservation laws or a
        vapour-liquid equilibrium calculation; real blends may be nonlinear. *)
     FOR f IN fg CREATE
+        (* Eq. (5): lower quality limit, obtained from Eq. (4) by multiplying
+           the volume-fraction expression by total product flow x. *)
         octane_limit[f]: SUM[SUM[oct[i]*w[r][f][i] | i IN blend[f]] | r IN cr] >= omin[f]*x[f];
+        (* Eq. (6): upper quality limit, vapour pressure. *)
         vapor_limit[f]: SUM[SUM[vp[i]*w[r][f][i] | i IN blend[f]] | r IN cr] <= vmax*x[f];
     END FOR;
     (* rho*w is component mass flow. With additive liquid volumes, blend
@@ -208,15 +241,16 @@ MODEL refinery_problem;
        sulfur*w similarly counts sulfur mass flow: sulfur is kg/m^3, not
        kg/kg. A mass-fraction limit would instead use total blend mass flow. *)
     FOR f IN fh CREATE
+        (* Eq. (6): upper quality limits, density and sulfur concentration. *)
         density_limit[f]: SUM[SUM[rho[i][r]*w[r][f][i] | i IN blend[f]] | r IN cr] <= rmax[f]*x[f];
         sulfur_limit[f]: SUM[SUM[sulfur[i][r]*w[r][f][i] | i IN blend[f]] | r IN cr] <= smax[f]*x[f];
     END FOR;
     (* Price per volume times volume per time gives a monetary rate. Only
        variable costs are modelled; there is no minimum operating commitment. *)
-    arev: phir = SUM[pf[f]*x[f] | f IN cf];
-    amat: phip = SUM[pr[r]*u[r] + pd*ui[r] | r IN cr];
-    aoper: phiw = SUM[SUM[op[j]*z[r][j] | j IN p] | r IN cr];
-    aprof: phi = phir - phip - phiw;
+    arev: phir = SUM[pf[f]*x[f] | f IN cf]; (* Eq. (9). *)
+    amat: phip = SUM[pr[r]*u[r] + pd*ui[r] | r IN cr]; (* Eq. (10). *)
+    aoper: phiw = SUM[SUM[op[j]*z[r][j] | j IN p] | r IN cr]; (* Eq. (11). *)
+    aprof: phi = phir - phip - phiw; (* Eq. (12). *)
     obj: MAXIMIZE phi;
 
 METHODS
@@ -261,7 +295,7 @@ END self_test;
 END refinery_problem;
 
 MODEL refinery REFINES refinery_problem;
-    slim :== 9.98553560974138{kg/m^3};
+    slim :== 9.98553560974138{kg/m^3}; (* Table 9: 3.5 lb/barrel. *)
     reference_profit :== 6588.421476681333{USD/day};
 METHODS
 METHOD self_test;
@@ -292,6 +326,7 @@ END on_load;
 END refinery_highs;
 
 MODEL refinery_low_sulfur REFINES refinery_problem;
+    (* Later GAMS scenario, not in the 1981 report: 3.4 lb/barrel. *)
     slim :== 9.7002345923202{kg/m^3};
     reference_profit :== 0{USD/day};
 METHODS
