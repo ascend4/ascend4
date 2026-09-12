@@ -1281,7 +1281,20 @@ static void test_highs_steel_production(void){
 	run_highs_model("models/steel_production.a4c","steel_production_highs",515033,0,NULL,0,&opts);
 }
 
+static void run_refinery_showcase(const char *model, double profit_per_day){
+	struct highs_run_options opts={0};
+	opts.initial_method="";
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	/* The model uses currency/time: the native objective is USD/s. */
+	run_highs_model("models/refinery.a4c",model,profit_per_day/86400,0,NULL,0,&opts);
+}
+static void test_highs_refinery(void){run_refinery_showcase("refinery_highs",6588.421476681333);}
+static void test_highs_refinery_low_sulfur(void){run_refinery_showcase("refinery_low_sulfur_highs",0);}
+
 #define TESTS(T) \
+	T(highs_refinery) \
+	T(highs_refinery_low_sulfur) \
 	T(highs_steel_production) \
 	T(highs_alloy_blending) \
 	T(highs_alloy_blending_mass_balance) \

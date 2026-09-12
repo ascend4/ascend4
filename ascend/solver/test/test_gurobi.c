@@ -206,6 +206,9 @@ static void test_alloy_blending_ten_pounds(void){run_case("models/alloy_blending
 static void test_alloy_blending_detailed(void){run_case("models/alloy_blending_detailed.a4c","alloy_blending_detailed",SHOWCASE,4.98);}
 static void test_alloy_blending_detailed_mass_balance(void){run_case("models/alloy_blending_detailed.a4c","alloy_blending_detailed",SHOWCASE_MB,4.98);}
 static void test_steel_production(void){run_case("models/steel_production.a4c","steel_production",SELF_TEST,515033);}
+/* ASCEND's monetary flow dimension is stored in USD/s, not USD/day. */
+static void test_refinery(void){run_case("models/refinery.a4c","refinery",SELF_TEST,6588.421476681333/86400);}
+static void test_refinery_low_sulfur(void){run_case("models/refinery.a4c","refinery_low_sulfur",SELF_TEST,0);}
 #define TESTS(T) \
 	T(lp1) T(offset) T(scaling) T(resolve) T(afiro) \
 	T(infeasible) T(unbounded) T(time_limit) T(interrupt) \
@@ -213,5 +216,6 @@ static void test_steel_production(void){run_case("models/steel_production.a4c","
 	T(integer_rejected) T(binary_rejected) T(integer_relaxed) T(binary_relaxed) T(tangent) \
 	T(objective_only_variable) T(bad_evaluation) T(shared_export) \
 	T(alloy_blending) T(alloy_blending_mass_balance) T(alloy_blending_ten_pounds) \
-	T(alloy_blending_detailed) T(alloy_blending_detailed_mass_balance) T(steel_production)
+	T(alloy_blending_detailed) T(alloy_blending_detailed_mass_balance) T(steel_production) \
+	T(refinery) T(refinery_low_sulfur)
 REGISTER_TESTS_SIMPLE(solver_gurobi,TESTS)

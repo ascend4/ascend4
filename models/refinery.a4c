@@ -1,0 +1,265 @@
+(* Mini refinery LP: GAMS MARCO, Kendrick, Meeraus & Suh (1981).
+   SI conversion and quality-unit references are documented in refinery.md.
+   sr = straight-run; rf = reformed; cc = catalytically cracked.
+   Sulfur is mass per volume, NOT a mass fraction. *)
+REQUIRE "atoms.a4l";
+CONSTANT refinery_flow_constant REFINES real_constant DIMENSION L^3/T;
+CONSTANT refinery_price_constant REFINES real_constant DIMENSION C/L^3;
+CONSTANT refinery_income_constant REFINES real_constant DIMENSION C/T;
+CONSTANT refinery_sulfur_constant REFINES reference_mass_density;
+ATOM refinery_income REFINES solver_var DIMENSION C/T DEFAULT 0{USD/day};
+    lower_bound := -1e50{USD/day};
+    upper_bound := 1e50{USD/day};
+    nominal := 10000{USD/day};
+END refinery_income;
+
+MODEL refinery_problem;
+    cr "Crudes: Mid-Continent and West Texas" IS_A set OF symbol_constant;
+    ci "Intermediate streams, distinguished further by crude origin" IS_A set OF symbol_constant;
+    cf "Saleable products" IS_A set OF symbol_constant;
+    cg, ch "Gasoline and heavy-product blend components" IS_A set OF symbol_constant;
+    fg, fh "Gasoline and heavy-product grades" IS_A set OF symbol_constant;
+    p "Distillation, reforming, two cracking routes, hydrotreating" IS_A set OF symbol_constant;
+    m "Capacity-limited units; hydro has no capacity limit in MARCO" IS_A set OF symbol_constant;
+    cr :== ['mid_c','w_tex'];
+    ci :== ['butane','sr_gas','sr_naphtha','sr_dist','sr_gas_oil','sr_res',
+            'rf_gas','fuel_gas','cc_gas','cc_gas_oil','hydro_res'];
+    fg :== ['premium','regular'];
+    fh :== ['distillate','fuel_oil'];
+    cf :== fg + fh + ['fuel_gas'];
+    cg :== ['butane','sr_gas','sr_naphtha','rf_gas','cc_gas'];
+    ch :== ['sr_naphtha','sr_dist','sr_gas_oil','sr_res','cc_gas_oil','hydro_res'];
+    p :== ['a_dist','n_reform','cc_dist','cc_gas_oil','hydro'];
+    m :== ['a_still','reformer','c_crack'];
+    blend[cf] "Allowed ingredients for each product" IS_A set OF symbol_constant;
+    uses[ci] "Products accepting each ingredient" IS_A set OF symbol_constant;
+    blend['premium'] :== cg;
+    blend['regular'] :== cg;
+    blend['distillate'] :== ['sr_dist','sr_naphtha','sr_gas_oil','cc_gas_oil'];
+    blend['fuel_oil'] :== ['sr_gas_oil','sr_res','cc_gas_oil','hydro_res'];
+    blend['fuel_gas'] :== ['fuel_gas'];
+    FOR i IN ci CREATE
+        uses[i] :== [f IN cf | i IN blend[f]];
+    END FOR;
+
+    am[ci][p], aw[ci][p] "Signed volume yields for each crude; negative means feed" IS_A factor_constant;
+    a[cr][ci][p] "Crude-indexed technology coefficients" IS_A factor_constant;
+    b[m][p] "Capacity usage per unit process throughput" IS_A factor_constant;
+    k[m] "Installed throughput capacity" IS_A refinery_flow_constant;
+    ur[cr] "Crude supply limits" IS_A refinery_flow_constant;
+    pr[cr], pf[cf], op[p] "Crude prices, sales prices and processing costs" IS_A refinery_price_constant;
+    pd "Purchased butane price" IS_A refinery_price_constant;
+    oct[cg], omin[fg] "Blend octane numbers and minimum specifications" IS_A factor_constant;
+    vp[cg], vmax "Linear vapour-pressure coefficients and upper specification" IS_A pressure_constant;
+    rho[ch][cr], rmax[fh] "Component densities and product density limits" IS_A reference_mass_density;
+    sulfur[ch][cr], smax[fh] "Sulfur concentrations and upper specifications" IS_A refinery_sulfur_constant;
+    slim "Fuel-oil sulfur limit; set by the example refinement" IS_A refinery_sulfur_constant;
+    reference_profit "Regression reference, not part of the optimisation" IS_A refinery_income_constant;
+    z[cr][p] "Process throughput" IS_A volume_rate;
+    u[cr], ui[cr] "Crude and butane purchases, by crude processing line" IS_A volume_rate;
+    x[cf] "Product sales" IS_A volume_rate;
+    phi, phir, phip, phiw "Profit, revenue, purchases and operating expense rates" IS_A refinery_income;
+
+    TABLE am[ci,p];
+                      a_dist, n_reform, cc_dist, cc_gas_oil, hydro;
+        butane:       0,      0,        0,       0,          0;
+        sr_gas:       0.236,  0,        0,       0,          0;
+        sr_naphtha:   0.223, -1,        0,       0,          0;
+        sr_dist:      0.087,  0,       -1,       0,          0;
+        sr_gas_oil:   0.111,  0,        0,      -1,          0;
+        sr_res:       0.315,  0,        0,       0,          0;
+        rf_gas:       0,      0.807,    0,       0,          0;
+        fuel_gas:     0.029,  0.129,    0.30,    0.31,       0;
+        cc_gas:       0,      0,        0.59,    0.59,       0;
+        cc_gas_oil:   0,      0,        0.21,    0.22,       0;
+        hydro_res:    0,      0,        0,       0,          0;
+    END TABLE;
+    TABLE aw[ci,p];
+                      a_dist, n_reform, cc_dist, cc_gas_oil, hydro;
+        butane:       0,      0,        0,       0,          0;
+        sr_gas:       0.180,  0,        0,       0,          0;
+        sr_naphtha:   0.196, -1,        0,       0,          0;
+        sr_dist:      0.073,  0,       -1,       0,          0;
+        sr_gas_oil:   0.091,  0,        0,      -1,          0;
+        sr_res:       0.443,  0,        0,       0,         -1;
+        rf_gas:       0,      0.836,    0,       0,          0;
+        fuel_gas:     0.017,  0.099,    0.36,    0.38,       0;
+        cc_gas:       0,      0,        0.58,    0.60,       0;
+        cc_gas_oil:   0,      0,        0.15,    0.15,       0;
+        hydro_res:    0,      0,        0,       0,          0.97;
+    END TABLE;
+    FOR i IN ci CREATE
+        FOR j IN p CREATE
+            a['mid_c'][i][j] :== am[i][j];
+            a['w_tex'][i][j] :== aw[i][j];
+        END FOR;
+    END FOR;
+    TABLE b[m,p];
+                  a_dist, n_reform, cc_dist, cc_gas_oil, hydro;
+        a_still:  1,      0,        0,       0,          0;
+        reformer: 0,      1,        0,       0,          0;
+        c_crack:  0,      0,        1,       1,          0;
+    END TABLE;
+    TABLE k[m] UNITS {m^3/day};
+        a_still:  15898.7294928;
+        reformer: 3179.74589856;
+        c_crack:  4769.61884784;
+    END TABLE;
+    FOR r IN cr CREATE
+        ur[r] :== 31797.4589856{m^3/day};
+    END FOR;
+    TABLE pr[cr] UNITS {USD/m^3};
+        mid_c: 47.1735807782408;
+        w_tex: 40.8837700078087;
+    END TABLE;
+    TABLE pf[cf] UNITS {USD/m^3};
+        premium: 66.0430130895371;
+        regular: 57.2372780109322;
+        distillate: 48.4315429323272;
+        fuel_oil: 41.8272416233735;
+        fuel_gas: 9.43471615564816;
+    END TABLE;
+    TABLE op[p] UNITS {USD/m^3};
+        a_dist: 0.62898107704321;
+        n_reform: 0.943471615564816;
+        cc_dist: 5.03184861634568;
+        cc_gas_oil: 0.503184861634568;
+        hydro: 0.62898107704321;
+    END TABLE;
+    pd :== 42.4562227004167{USD/m^3};
+
+    TABLE oct[cg];
+        butane: 91.8; sr_gas: 78.5; sr_naphtha: 65; rf_gas: 104; cc_gas: 93.7;
+    END TABLE;
+    TABLE omin[fg];
+        premium: 90; regular: 86;
+    END TABLE;
+    TABLE vp[cg] UNITS {Pa};
+        butane: 26557.819573068;
+        sr_gas: 2453.131928436;
+        sr_naphtha: 871.9284136941;
+        rf_gas: 342.63853565655;
+        cc_gas: 919.9244731635;
+    END TABLE;
+    vmax :== 1693.1943201705{Pa};
+    TABLE rho[ch,cr] UNITS {kg/m^3};
+                      mid_c,             w_tex;
+        sr_naphtha  : 776.018767385616, 776.018767385616;
+        sr_dist     : 833.078970869853, 849.055827845439;
+        sr_gas_oil  : 841.638001392488, 865.317985838446;
+        sr_res      : 978.582489754656, 1041.34871358732;
+        cc_gas_oil  : 839.926195287961, 853.335343106757;
+        hydro_res   : 0, 1041.34871358732;
+    END TABLE;
+    TABLE sulfur[ch,cr] UNITS {kg/m^3};
+                      mid_c,             w_tex;
+        sr_naphtha  : 0.807401879301946, 4.2224550578335;
+        sr_dist     : 1.50068335163542, 8.07401879301946;
+        sr_gas_oil  : 2.79594997072759, 14.4077013797697;
+        sr_res      : 13.4091478187956, 31.3831119163301;
+        cc_gas_oil  : 1.00711259149677, 3.73744332821749;
+        hydro_res   : 0, 17.1180610452709;
+    END TABLE;
+    rmax['distillate'] :== 873.021113308818{kg/m^3};
+    rmax['fuel_oil'] :== 1004.25958132256{kg/m^3};
+    smax['distillate'] :== 1.42650508710591{kg/m^3};
+    smax['fuel_oil'] :== slim;
+
+    FOR r IN cr CREATE
+        mbr[r]: u[r] >= z[r]['a_dist'];
+        lcp[r]: u[r] <= ur[r];
+        butane_balance[r]: ui[r] >= SUM[w[r][f]['butane'] | f IN uses['butane']];
+        FOR i IN ci - ['butane'] CREATE
+            mb[r][i]: SUM[a[r][i][j]*z[r][j] | j IN p]
+                >= SUM[w[r][f][i] | f IN uses[i]];
+        END FOR;
+    END FOR;
+    FOR n IN m CREATE
+        cc[n]: SUM[SUM[b[n][j]*z[r][j] | j IN p] | r IN cr] <= k[n];
+    END FOR;
+    FOR f IN cf CREATE
+        FOR r IN cr CREATE
+            FOR i IN blend[f] CREATE
+                w[r][f][i] "Component allocation to a permitted blend" IS_A volume_rate;
+            END FOR;
+        END FOR;
+        bb[f]: x[f] = SUM[SUM[w[r][f][i] | i IN blend[f]] | r IN cr];
+    END FOR;
+    FOR f IN fg CREATE
+        octane_limit[f]: SUM[SUM[oct[i]*w[r][f][i] | i IN blend[f]] | r IN cr] >= omin[f]*x[f];
+        vapor_limit[f]: SUM[SUM[vp[i]*w[r][f][i] | i IN blend[f]] | r IN cr] <= vmax*x[f];
+    END FOR;
+    FOR f IN fh CREATE
+        density_limit[f]: SUM[SUM[rho[i][r]*w[r][f][i] | i IN blend[f]] | r IN cr] <= rmax[f]*x[f];
+        sulfur_limit[f]: SUM[SUM[sulfur[i][r]*w[r][f][i] | i IN blend[f]] | r IN cr] <= smax[f]*x[f];
+    END FOR;
+    arev: phir = SUM[pf[f]*x[f] | f IN cf];
+    amat: phip = SUM[pr[r]*u[r] + pd*ui[r] | r IN cr];
+    aoper: phiw = SUM[SUM[op[j]*z[r][j] | j IN p] | r IN cr];
+    aprof: phi = phir - phip - phiw;
+    obj: MAXIMIZE phi;
+
+METHODS
+METHOD on_load;
+    SOLVER Gurobi;
+END on_load;
+METHOD self_test;
+    ASSERT abs((phi - reference_profit)/1{USD/day}) < 1e-4;
+    ASSERT abs((phi - phir + phip + phiw)/1{USD/day}) < 1e-4;
+    FOR r IN cr DO
+        ASSERT u[r] >= z[r]['a_dist'] - 1e-6{m^3/day};
+        ASSERT u[r] <= ur[r] + 1e-6{m^3/day};
+        ASSERT ui[r] >= SUM[w[r][f]['butane'] | f IN uses['butane']] - 1e-6{m^3/day};
+        FOR j IN p DO
+            ASSERT z[r][j] >= -1e-6{m^3/day};
+        END FOR;
+        FOR i IN ci - ['butane'] DO
+            ASSERT SUM[a[r][i][j]*z[r][j] | j IN p] >= SUM[w[r][f][i] | f IN uses[i]] - 1e-6{m^3/day};
+        END FOR;
+    END FOR;
+    FOR n IN m DO
+        ASSERT SUM[SUM[b[n][j]*z[r][j] | j IN p] | r IN cr] <= k[n] + 1e-6{m^3/day};
+    END FOR;
+    FOR f IN cf DO
+        ASSERT x[f] >= -1e-6{m^3/day};
+        ASSERT abs((x[f] - SUM[SUM[w[r][f][i] | i IN blend[f]] | r IN cr])/1{m^3/day}) < 1e-6;
+        FOR r IN cr DO
+            FOR i IN blend[f] DO
+                ASSERT w[r][f][i] >= -1e-6{m^3/day};
+            END FOR;
+        END FOR;
+    END FOR;
+    FOR f IN fg DO
+        ASSERT SUM[SUM[oct[i]*w[r][f][i] | i IN blend[f]] | r IN cr] >= omin[f]*x[f] - 1e-4{m^3/day};
+        ASSERT SUM[SUM[vp[i]*w[r][f][i] | i IN blend[f]] | r IN cr] <= vmax*x[f] + 1e-2{Pa*m^3/day};
+    END FOR;
+    FOR f IN fh DO
+        ASSERT SUM[SUM[rho[i][r]*w[r][f][i] | i IN blend[f]] | r IN cr] <= rmax[f]*x[f] + 1e-3{kg/day};
+        ASSERT SUM[SUM[sulfur[i][r]*w[r][f][i] | i IN blend[f]] | r IN cr] <= smax[f]*x[f] + 1e-5{kg/day};
+    END FOR;
+END self_test;
+END refinery_problem;
+
+MODEL refinery REFINES refinery_problem;
+    slim :== 9.98553560974138{kg/m^3};
+    reference_profit :== 6588.421476681333{USD/day};
+END refinery;
+
+MODEL refinery_highs REFINES refinery;
+METHODS
+METHOD on_load;
+    SOLVER HiGHS;
+END on_load;
+END refinery_highs;
+
+MODEL refinery_low_sulfur REFINES refinery_problem;
+    slim :== 9.7002345923202{kg/m^3};
+    reference_profit :== 0{USD/day};
+END refinery_low_sulfur;
+
+MODEL refinery_low_sulfur_highs REFINES refinery_low_sulfur;
+METHODS
+METHOD on_load;
+    SOLVER HiGHS;
+END on_load;
+END refinery_low_sulfur_highs;

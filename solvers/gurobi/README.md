@@ -93,6 +93,15 @@ adds inventory balances linking four weeks, with a profit-maximising objective:
 ./a4 run models/steel_production.a4c
 ```
 
+The third showcase, [refinery planning](../../models/refinery.md), ports GAMS
+MARCO with SI data, crude-specific process yields and dimensional blend-quality
+constraints. It includes the original and tighter fuel-oil sulfur limits:
+
+```sh
+./a4 run models/refinery.a4c
+./a4 run models/refinery.a4c --model refinery_low_sulfur
+```
+
 ## Options and semantics
 
 - `nonlin` (default false): explicitly request **one tangent LP** at the current
