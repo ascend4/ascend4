@@ -36,6 +36,19 @@ def get_effective_home():
 		return pathlib.Path(homedrive + homepath)
 	return pathlib.Path.home()
 
+def configure_gurobi_license(environ, user_home):
+	"""Use ASCEND's drop-in license only when no explicit override exists.
+	Without this file, leave Gurobi's native license search untouched. Never
+	read license contents or copy credentials into launcher configuration.
+	"""
+	if 'GRB_LICENSE_FILE' in environ:
+		return False
+	license_file = pathlib.Path(user_home) / '.config' / 'ascend' / 'gurobi.lic'
+	if not license_file.is_file():
+		return False
+	environ['GRB_LICENSE_FILE'] = str(license_file.resolve())
+	return True
+
 def add_at_start(envvar,pathcomponents):
 	"""
 	Add path components at start of envvar, but only if they're not already in the path somewhere.
@@ -270,6 +283,8 @@ if __name__ == "__main__":
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
 
 	restart = []
+	if configure_gurobi_license(os.environ, get_effective_home()):
+		MSG("Using the ASCEND Gurobi license file")
 
 	# for Mac, add our local PyGTK libraries at start of Python path:
 	#if platform.system()=="Darwin":

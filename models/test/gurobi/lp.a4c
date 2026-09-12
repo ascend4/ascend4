@@ -1,0 +1,112 @@
+REQUIRE "system.a4l";
+
+MODEL gurobi_offset;
+	x, y, p IS_A solver_var;
+	c1: x + y <= p;
+	c2: x >= 1;
+	obj: MAXIMIZE 3*x + 2*y + 7;
+METHODS
+METHOD on_load;
+	FIX p := 4;
+	x := 1; y := 1;
+	x.lower_bound := 0; x.upper_bound := 2;
+	y.lower_bound := 0;
+	x.nominal := 10; y.nominal := 0.1; p.nominal := 100;
+END on_load;
+END gurobi_offset;
+
+MODEL gurobi_infeasible;
+	x IS_A solver_var;
+	c1: x <= 1;
+	c2: x >= 2;
+	obj: MINIMIZE x;
+METHODS
+METHOD on_load;
+	x := 0;
+END on_load;
+END gurobi_infeasible;
+
+MODEL gurobi_unbounded;
+	x IS_A solver_var;
+	c1: x >= 0;
+	obj: MINIMIZE -x;
+METHODS
+METHOD on_load;
+	x := 3;
+END on_load;
+END gurobi_unbounded;
+
+MODEL gurobi_quadratic;
+	x IS_A solver_var;
+	c1: x^2 <= 4;
+	obj: MINIMIZE x;
+METHODS
+METHOD on_load;
+	x := 0;
+	x.lower_bound := 0;
+END on_load;
+END gurobi_quadratic;
+
+MODEL gurobi_cubic;
+	x, y IS_A solver_var;
+	c1: x^3 + y <= 4;
+	obj: MINIMIZE x + y;
+METHODS
+METHOD on_load;
+	x := 0; y := 0;
+END on_load;
+END gurobi_cubic;
+
+MODEL gurobi_quadratic_objective;
+	x IS_A solver_var;
+	c1: x <= 4;
+	obj: MINIMIZE x^2;
+METHODS
+METHOD on_load;
+	x := 0;
+END on_load;
+END gurobi_quadratic_objective;
+
+MODEL gurobi_integer;
+	x IS_A solver_int;
+	c1: x <= 2.5;
+	obj: MAXIMIZE x;
+METHODS
+METHOD on_load;
+	x := 0;
+	x.lower_bound := 0;
+END on_load;
+END gurobi_integer;
+
+MODEL gurobi_binary;
+	x IS_A solver_binary;
+	c1: x <= 0.5;
+	obj: MAXIMIZE x;
+METHODS
+METHOD on_load;
+	x := 0;
+END on_load;
+END gurobi_binary;
+
+MODEL gurobi_objective_only_variable;
+	x, y IS_A solver_var;
+	c1: y <= 1;
+	obj: MAXIMIZE x + 9;
+METHODS
+METHOD on_load;
+	x := 0; y := 0;
+	x.lower_bound := 0; x.upper_bound := 2;
+	y.lower_bound := 0;
+END on_load;
+END gurobi_objective_only_variable;
+
+MODEL gurobi_bad_evaluation;
+	x, p IS_A solver_var;
+	c1: x / p <= 1;
+	obj: MINIMIZE x;
+METHODS
+METHOD on_load;
+	x := 1;
+	FIX p := 0;
+END on_load;
+END gurobi_bad_evaluation;

@@ -54,6 +54,9 @@ struct highs_run_options{
 	const char *presolve;
 	const char *solver;
 	const char *parallel;
+	const char *initial_method;
+	const char *setup_method;
+	int run_self_test;
 };
 
 struct reporter_capture{
@@ -325,9 +328,15 @@ static void run_highs_model(
 	CU_ASSERT_FATAL(siminst != NULL);
 
 	{
-		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		struct Name *name = CreateIdName(AddSymbol(opts && opts->initial_method ? opts->initial_method : "on_load"));
 		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 		CU_ASSERT(pe == Proc_all_ok);
+		DestroyName(name);
+	}
+	if(opts && opts->setup_method){
+		struct Name *name = CreateIdName(AddSymbol(opts->setup_method));
+		CU_ASSERT(Initialize(GetSimulationRoot(siminst),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
+		DestroyName(name);
 	}
 
 	sys = system_build(GetSimulationRoot(siminst));
@@ -448,6 +457,11 @@ static void run_highs_model(
 			break;
 		}
 		CU_ASSERT_DOUBLE_EQUAL(vars[i].expected,value,vars[i].tol);
+	}
+	if(opts && opts->run_self_test){
+		struct Name *name = CreateIdName(AddSymbol("self_test"));
+		CU_ASSERT(Initialize(GetSimulationRoot(siminst),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
+		DestroyName(name);
 	}
 	{
 		struct Instance *root = GetSimulationRoot(siminst);
@@ -1242,7 +1256,27 @@ cleanup:
 	Asc_CompilerDestroy();
 }
 
+static void run_alloy_showcase(int detailed, const char *setup_method, double objective){
+	struct highs_run_options opts={0};
+	opts.initial_method="initialise";
+	opts.setup_method=setup_method;
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	run_highs_model(detailed ? "models/alloy_blending_detailed.a4c" : "models/alloy_blending.a4c",
+		detailed ? "alloy_blending_detailed" : "alloy_blending",objective,0,NULL,0,&opts);
+}
+static void test_highs_alloy_blending(void){run_alloy_showcase(0,NULL,4.98);}
+static void test_highs_alloy_blending_mass_balance(void){run_alloy_showcase(0,"with_mass_balance",4.98);}
+static void test_highs_alloy_blending_ten_pounds(void){run_alloy_showcase(1,"ten_pound_batch",49.8);}
+static void test_highs_alloy_blending_detailed(void){run_alloy_showcase(1,NULL,4.98);}
+static void test_highs_alloy_blending_detailed_mass_balance(void){run_alloy_showcase(1,"with_mass_balance",4.98);}
+
 #define TESTS(T) \
+	T(highs_alloy_blending) \
+	T(highs_alloy_blending_mass_balance) \
+	T(highs_alloy_blending_ten_pounds) \
+	T(highs_alloy_blending_detailed) \
+	T(highs_alloy_blending_detailed_mass_balance) \
 	T(highs_lp1) \
 	T(highs_lp_structured) \
 	T(highs_lp_structured_table) \

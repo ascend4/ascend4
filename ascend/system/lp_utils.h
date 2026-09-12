@@ -5,10 +5,10 @@
  * @file
  * Shared LP/MIP utility helpers used by optional solvers that build
  * matrix-based problem data from ASCEND relations/variables (currently
- * MakeMPS and HiGHS).
+ * MakeMPS, HiGHS and Gurobi).
  *
  * The routines in this header operate on solver lists and on the shared
- * `mps_data_t` structure in `lp_data.h`, so both solvers can reuse the same
+ * `mps_data_t` structure in `lp_data.h`, so the solvers can reuse the same
  * incidence filtering, matrix assembly, and bounds/type extraction logic.
  */
 
@@ -20,8 +20,41 @@
 #include "var.h"
 #include "rel.h"
 
+/** Backend-independent sparse LP/MIP arrays, in original column order.
+ * Row indices are compacted; row_original maps them to ASCEND solver indices.
+ * Initialise to zero before first use and release with lp_sparse_destroy.
+ */
+typedef struct lp_sparse {
+	int32 num_col, num_row, num_nz;
+	int32 *start, *index, *row_original;
+	real64 *value, *cost, *lower, *upper, *row_lower, *row_upper;
+	char *type;
+	real64 objective_offset;
+	int maximize;
+} lp_sparse_t;
+
+ASC_DLLSPEC void lp_sparse_destroy(lp_sparse_t *p);
+ASC_DLLSPEC int lp_sparse_build(lp_sparse_t *p, const mps_data_t *mps,
+	struct var_variable **vars, struct rel_relation *obj,
+	real64 minus_infinity, real64 plus_infinity);
+/** Write only active free variables, undo scaling, and refresh residuals. */
+ASC_DLLSPEC int lp_write_solution(slv_system_t sys, const mps_data_t *mps,
+	const real64 *values, int safe);
+/** Conservative symbolic affine check, relative to the supplied free-variable filter. */
+ASC_DLLSPEC int lp_relation_is_affine(struct rel_relation *rel, const var_filter_t *filter);
+/** Assemble shared LP/MIP data. No solver call; does not repair model bounds.
+ * Requires an objective, at least one variable and one relation in the lists.
+ * Caller validates exact-vs-linearised eligibility before calling.
+ */
+ASC_DLLSPEC int lp_prepare(slv_system_t sys, mps_data_t *mps, slv_status_t *status,
+	int scale_variables, int scale_relations);
+
 /** True for non-fixed active variables in solver lists. */
 ASC_DLLSPEC boolean lp_free_inc_var_filter(struct var_variable *var);
+/** True for an active free integer/binary/semicontinuous variable that has
+ * not been individually relaxed. For eligibility of continuous-only adapters.
+ */
+ASC_DLLSPEC boolean lp_var_needs_relaxation(struct var_variable *var);
 /** True for active included relations in solver lists. */
 ASC_DLLSPEC boolean lp_inc_rel_filter(struct rel_relation *rel);
 

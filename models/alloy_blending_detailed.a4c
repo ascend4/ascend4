@@ -1,0 +1,255 @@
+(*
+   Extended alloy-blending showcase: reusable equations and reporting.
+   Start with alloy_blending.a4c for the compact formulation.
+
+   Data and problem concept: GAMS Model Library, BLEND (Blending Problem I),
+   https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_blend.html
+   The source cites G. B. Dantzig, Linear Programming and Extensions,
+   Princeton University Press, 1963, section 3.4.
+
+   This is an independent ASCEND formulation. The source's unspecified
+   monetary unit is represented by USD for dimensional checking, not as a
+   statement of current market prices. Its one-pound blend is generalised
+   to a specified batch mass. Compositions below are mass fractions, not
+   percentages. Mixing is lossless; there are no stock limits, processing
+   charges, minimum purchases or chemical reactions.
+*)
+REQUIRE "atoms.a4l";
+
+MODEL alloy_blending_problem;
+    alloys "Available purchased feed alloys" IS_A set OF symbol_constant;
+    elements "Complete list of conserved elements" IS_A set OF symbol_constant;
+
+    composition[alloys][elements] "Element mass fractions in each feed"
+        IS_A factor_constant;
+    target[elements] "Required product mass fractions" IS_A factor_constant;
+    price[alloys] "Purchase price per unit mass" IS_A cost_per_mass_constant;
+
+    batch_mass "Specified product batch size; must remain fixed for an LP" IS_A mass;
+    purchase[alloys] "Decision variables: mass of each alloy to purchase" IS_A mass;
+    total_cost "Total purchase cost of the batch" IS_A monetary_unit;
+
+    (* Named reporting quantities remain linear because batch_mass is fixed. *)
+    blend_fraction[alloys] "Feed shares in the finished product" IS_A mass_fraction;
+    element_mass[elements] "Delivered mass of each element" IS_A mass;
+    alloy_cost[alloys] "Cost contribution from each feed" IS_A monetary_unit;
+    specific_cost "Product cost per unit mass" IS_A cost_per_mass;
+
+    FOR e IN elements CREATE
+        element_account[e]: element_mass[e] =
+            SUM[composition[a][e]*purchase[a] | a IN alloys];
+        product_specification[e]: element_mass[e] = target[e]*batch_mass;
+    END FOR;
+
+    FOR a IN alloys CREATE
+        fraction_account[a]: blend_fraction[a]*batch_mass = purchase[a];
+        cost_account[a]: alloy_cost[a] = price[a]*purchase[a];
+    END FOR;
+    cost_total: total_cost = SUM[alloy_cost[a] | a IN alloys];
+    unit_cost_account: specific_cost*batch_mass = total_cost;
+    obj: MINIMIZE total_cost;
+
+    (* Optional redundant row, reproducing the source's second formulation.
+       Sum the element balances: each composition row and the target sum to
+       one, so SUM(purchase) = batch_mass already follows. This argument
+       requires a complete, normalised composition specification. *)
+    total_mass_balance: SUM[purchase[a] | a IN alloys] = batch_mass;
+
+    NOTES
+        'description' SELF {
+            Choose nonnegative feed quantities to meet an exact elemental
+            specification at minimum purchase cost. Sets and immutable data
+            are supplied by refinement; the equations are independent of the
+            number and names of feeds or elements.
+        }
+        'LP structure' SELF {
+            Composition and prices are constants. Batch mass is fixed in
+            specify, making even the reporting equations affine in the free
+            variables. Freeing batch_mass changes that property. No nonlinear
+            solver option or tangent approximation is needed.
+        }
+    END NOTES;
+
+METHODS
+METHOD check_data;
+    ASSERT CARD[alloys] > 0;
+    ASSERT CARD[elements] > 0;
+    ASSERT batch_mass > 0{kg};
+    ASSERT abs(SUM[target[e] | e IN elements] - 1) < 1e-10;
+    FOR e IN elements DO
+        ASSERT target[e] >= 0;
+        ASSERT target[e] <= 1;
+    END FOR;
+    FOR a IN alloys DO
+        ASSERT price[a] >= 0{USD/kg};
+        ASSERT abs(SUM[composition[a][e] | e IN elements] - 1) < 1e-10;
+        FOR e IN elements DO
+            ASSERT composition[a][e] >= 0;
+            ASSERT composition[a][e] <= 1;
+        END FOR;
+    END FOR;
+END check_data;
+
+METHOD specify;
+    FIX batch_mass;
+    FREE purchase[alloys];
+    FREE total_cost;
+    FREE blend_fraction[alloys];
+    FREE element_mass[elements];
+    FREE alloy_cost[alloys];
+    FREE specific_cost;
+END specify;
+
+METHOD bound_self;
+    FOR a IN alloys DO
+        purchase[a].lower_bound := 0{kg};
+        alloy_cost[a].lower_bound := 0{USD};
+    END FOR;
+    total_cost.lower_bound := 0{USD};
+END bound_self;
+
+METHOD scale_self;
+    batch_mass.nominal := batch_mass;
+    FOR a IN alloys DO
+        purchase[a].nominal := batch_mass;
+        alloy_cost[a].nominal := batch_mass*1{USD/lbm};
+    END FOR;
+    FOR e IN elements DO
+        element_mass[e].nominal := batch_mass;
+    END FOR;
+    total_cost.nominal := batch_mass*1{USD/lbm};
+    specific_cost.nominal := 1{USD/lbm};
+END scale_self;
+
+METHOD default_self;
+    (* A neutral starting mixture, not a preloaded optimum. It need not meet
+       the product specification; the LP solver finds a feasible optimum. *)
+    FOR a IN alloys DO
+        purchase[a] := batch_mass/CARD[alloys];
+        blend_fraction[a] := 1.0/CARD[alloys];
+        alloy_cost[a] := price[a]*purchase[a];
+    END FOR;
+    FOR e IN elements DO
+        element_mass[e] := SUM[composition[a][e]*purchase[a] | a IN alloys];
+    END FOR;
+    total_cost := SUM[alloy_cost[a] | a IN alloys];
+    specific_cost := total_cost/batch_mass;
+END default_self;
+
+METHOD with_mass_balance;
+    total_mass_balance.included := TRUE;
+END with_mass_balance;
+
+METHOD without_mass_balance;
+    total_mass_balance.included := FALSE;
+END without_mass_balance;
+
+METHOD check_solution;
+    ASSERT abs(SUM[purchase[a] | a IN alloys]/batch_mass - 1) < 1e-7;
+    FOR e IN elements DO
+        ASSERT abs(SUM[composition[a][e]*purchase[a] | a IN alloys]
+            /batch_mass - target[e]) < 1e-7;
+        ASSERT abs(element_mass[e]/batch_mass - target[e]) < 1e-7;
+    END FOR;
+    FOR a IN alloys DO
+        ASSERT purchase[a]/batch_mass >= -1e-7;
+        ASSERT abs(blend_fraction[a] - purchase[a]/batch_mass) < 1e-7;
+        ASSERT abs((alloy_cost[a] - price[a]*purchase[a])
+            /(batch_mass*1{USD/lbm})) < 1e-7;
+    END FOR;
+    ASSERT abs((total_cost - SUM[price[a]*purchase[a] | a IN alloys])
+        /(batch_mass*1{USD/lbm})) < 1e-7;
+    ASSERT abs((specific_cost - total_cost/batch_mass)/1{USD/lbm}) < 1e-7;
+END check_solution;
+END alloy_blending_problem;
+
+MODEL alloy_blending_detailed REFINES alloy_blending_problem;
+    alloys :== ['a','b','c','d','e','f','g','h','i'];
+    elements :== ['lead','zinc','tin'];
+
+    TABLE composition[alloys,elements];
+        lead, zinc, tin;
+        a, 0.10, 0.10, 0.80;
+        b, 0.10, 0.30, 0.60;
+        c, 0.40, 0.50, 0.10;
+        d, 0.60, 0.30, 0.10;
+        e, 0.30, 0.30, 0.40;
+        f, 0.30, 0.40, 0.30;
+        g, 0.30, 0.20, 0.50;
+        h, 0.50, 0.40, 0.10;
+        i, 0.20, 0.30, 0.50;
+    END TABLE;
+    target['lead'] :== 0.30;
+    target['zinc'] :== 0.30;
+    target['tin'] :== 0.40;
+    price['a'] :== 4.1{USD/lbm};
+    price['b'] :== 4.3{USD/lbm};
+    price['c'] :== 5.8{USD/lbm};
+    price['d'] :== 6.0{USD/lbm};
+    price['e'] :== 7.6{USD/lbm};
+    price['f'] :== 7.5{USD/lbm};
+    price['g'] :== 7.3{USD/lbm};
+    price['h'] :== 6.9{USD/lbm};
+    price['i'] :== 7.3{USD/lbm};
+
+    NOTES
+        'reference' SELF {GAMS BLEND; Dantzig (1963), section 3.4.}
+        'expected solution' SELF {
+            Buy 0.6 lbm of b and 0.4 lbm of d per pound of product. All other
+            purchases vanish. Specific cost is 4.98 USD/lbm. Alloy e already
+            has the desired composition but costs 7.60 USD/lbm, illustrating
+            why purchasing a mixture can be cheaper than buying to spec.
+        }
+        'usage' SELF {
+            on_load selects Gurobi; use_highs selects HiGHS instead. Compare
+            with_mass_balance and without_mass_balance, then solve again.
+            ten_pound_batch changes scale without changing optimal shares.
+            See alloy_blending.md for command-line examples and interpretation.
+        }
+    END NOTES;
+METHODS
+METHOD initialise;
+    batch_mass := 1{lbm};
+    RUN check_data;
+    RUN specify;
+    RUN bound_self;
+    RUN scale_self;
+    RUN default_self;
+    RUN without_mass_balance;
+END initialise;
+
+METHOD on_load;
+    RUN initialise;
+    SOLVER Gurobi;
+END on_load;
+
+METHOD use_highs;
+    SOLVER HiGHS;
+END use_highs;
+
+METHOD ten_pound_batch;
+    batch_mass := 10{lbm};
+    RUN check_data;
+    RUN scale_self;
+    RUN default_self;
+END ten_pound_batch;
+
+METHOD self_test;
+    RUN check_solution;
+    ASSERT abs(purchase['b']/batch_mass - 0.6) < 1e-7;
+    ASSERT abs(purchase['d']/batch_mass - 0.4) < 1e-7;
+    FOR a IN alloys - ['b','d'] DO
+        ASSERT abs(purchase[a]/batch_mass) < 1e-7;
+    END FOR;
+    ASSERT abs((specific_cost - 4.98{USD/lbm})/1{USD/lbm}) < 1e-7;
+END self_test;
+END alloy_blending_detailed;
+
+(* This entry point does not require the Gurobi plugin or a Gurobi license. *)
+MODEL alloy_blending_detailed_highs REFINES alloy_blending_detailed;
+METHODS
+METHOD on_load;
+    RUN initialise;
+    SOLVER HiGHS;
+END on_load;
+END alloy_blending_detailed_highs;

@@ -810,7 +810,7 @@ extern int32 slv_get_num_solvers_condlogrels(slv_system_t sys);
 	@ref solverslists
 */
 
-extern int32 slv_get_num_solvers_whens(slv_system_t sys);
+ASC_DLLSPEC int32 slv_get_num_solvers_whens(slv_system_t sys);
 /**< Returns the length of the solver whens list.
 	The length does NOT include the terminating NULL.
 	@ref solverslists
@@ -1100,4 +1100,3 @@ const void *slv_get_diffvars(slv_system_t sys);
 /* @} */
 
 #endif  /* ASC_SLV_CLIENT_H */
-

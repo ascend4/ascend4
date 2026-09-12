@@ -18,6 +18,7 @@ csrcs = Split("""
 	slv_stdcalls.c system.c var.c
 	incidence.c
 	lp_utils.c
+	lp_export.c
 """)
 
 solver_env = libascend_env.Clone()

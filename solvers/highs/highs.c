@@ -391,225 +391,9 @@ extern boolean highs_free_inc_var_filter(struct var_variable *var){
 	return lp_free_inc_var_filter(var);
 }
 
-static boolean inc_rel_filter(struct rel_relation *rel)
-/**
- ***  Returns true if rel is an incident relation.
- **/
-{
-	return lp_inc_rel_filter(rel);
-}
-
-
 /* _________________________________________________________________________ */
 
-/*
- ***  Routines to calculate the mps problem representation
- ***  --------------------
- ***  var_relaxed - is the variable relaxed or not?
- ***  calc_c - calculate c vector, coefficients of objective
-        (called by calc_matrix)
- ***  calc_bounds - convert var bounds to an array of numbers
- ***  calc_reloplist - convert relation operators <=, >=, = to array of numbers
- ***  calc_svtlist - create array of numbers containing var types
- ***  calc_matrix - compute entire matrix representaion of problem
- **/
-
-
-/**
- ***  Calculate gradient of the objective function. (or any expression, for that matter)
- ***  On the linear system we should have, this is the c vector of
- ***  our problem max/min {cx: Ax<=b}.
- ***  On nonlinear problems is the linearization of problem at current point
- **/
-static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
-                      int32 org_row,  /* original number of row to store them */
-                      struct rel_relation  *obj)           /* expression to diffs */
-{
-	return lp_calc_c(mtx,org_row,obj);
-}
-
-
-/**
- **  Stores the upper or lower bounds of all non-fixed, incident vars
- **  in a new array, which is returned by the routine
- **/
-static real64 *calc_bounds(struct var_variable **vlist, /* variable list to get bounds */
-                                 int32 vused,      /* number of variables in solver list */
-                                 boolean upper)         /* do upper, else lower */
-
-{
-	return lp_calc_bounds(vlist,vused,upper);
-}
-
-
-/**
- ***  This function constructs the a list of relational operators: <=, >=, =
- ***  from the relations list.  The values for each relational operator
- ***  corresponds to rel_TOK_less, rel_TOK_equal, and rel_TOK_greater.
- ***  (Defined in rel.h)
- ***  Or rel_TOK_nonincident for relations that aren't incident (see slv6.h)
- ***
- ***  Note: the rel_less, rel_equal, and rel_greater routines in rel.h don't
- ***  behave as you'd expect, and should _not_ be used.  Use rel_type instead.
- **/
-static char *calc_reloplist(struct rel_relation **rlist,
-                            int32    rused)   /* entry for each relation */
-{
-	return lp_calc_reloplist(rlist,rused);
-}
-
-/**
-	This function constructs the solver var list from the variable list.
-
-	WARNING:  This routine assumes that a struct var_variable *is an Instance.
-	In the future this is going to change, and this routine will break.
-
-	UPDATE: have made some steps to fixing above wrong assumption -- Feb 2011 JP.
- **/
-static char *calc_svtlist( struct var_variable **vlist,    /* input, not modified */
-                           int32 vused,        /* number of vars (incident or nonincident, free or fixed) */
-                           int *solver_var_used,     /* number of each type of var are cached  */
-                           int *solver_relaxed_used,
-                           int *solver_int_used,
-                           int *solver_binary_used,
-                           int *solver_semi_used,
-                           int *solver_other_used,
-                           int *solver_fixed){
-	return lp_calc_svtlist(
-		vlist
-		,vused
-		,solver_var_used
-		,solver_relaxed_used
-		,solver_int_used
-		,solver_binary_used
-		,solver_semi_used
-		,solver_other_used
-		,solver_fixed
-	);
-}
-
-static mtx_matrix_t calc_matrix(int32     cap,
-                                int32     rused,
-                                int32     vused,
-                                struct rel_relation  **rlist,
-                                struct rel_relation *obj,
-                                int32     crow,
-                                slv_status_t    *s,
-                                int32     *rank,
-                                real64    **rhs_orig)
-/**
-	@param     cap,          in: capacity of matrix
-	@param    rused,        in: total number of relations used
-	@param    vused,        in: total number of variables used
-	@param rlist,       in: Relation list (NULL terminated)
-	@param obj,          in: objective function
-	@param crow,         in: row to store objective row
-	@param s,          out: s.calc_ok
-	@param rank,       out
-	@oaram rhs_orig   out: rhs array origin
-
- ***  Creates and calculates a matrix representation of the A matrix, c row,
- ***  and the RHS or b column (which is stored in rhs_orig).
- ***  On nonlinear problems is the linearization of problem at current point.
- ***
- *** Note: the residual stored in the rhs array is not the real right hand side.
- ***  The residual returned by the diffs call is just the value of
- **         (lhs expr) - (rhs expr)
- ***  we want the residual excluding the current variables.
- ***  At the moment there isn't a
- ***  clean way to do this.  It will be calculated in the real_rhs routine.
- ***  This routine
- ***  will take for each relation:
- ***         sum(i, (Jacobian value var[i])*(Variable value var[i])) - rhs[i]
- ***  which is the real rhs.
- ***  However, this will _not_ be valid for the nonlinear case.
- ***  Other than this, the mps file will be the linearization of a nonlinear
- ***  system at the
- ***  current point.  If you are adding an MINLP feature,
- ***  you'll need to come up with a better way.
- ***
-<pre>
- ***       MPS matrix strucutre
- ***                                    v
- ***       min/max cx:                  u
- ***       Ax (<= = >=) b               s
- ***                                    e
- ***                       1            d
- ***
- ***                       |            |
- ***                       |            |
- ***                      \ /          \ /
- ***
- ***                      +-            -+
- ***       1          ->  |              |
- ***                      |              |
- ***                      |      A       |
- ***                      |              |
- ***       rused      ->  |              |
- ***                      +-            -+
- ***
- ***       crow       ->  [      c       ]
- ***
- ***
- ***       rused                 row of last incident relation
- ***       crow = rused + 1,     row of cost vector
- ***       vused                 column of last incident variable
- ***
- ***       cap = max(vused+1,rused), size of sparse square matrix
- ***       cap = N ---> row/column 0 to N-1 exist
-</pre>
-*/
-{
-	(void)calc_c;
-	return lp_calc_matrix(cap,rused,vused,rlist,obj,crow,s,rank,rhs_orig);
-}
-
-
-static void real_rhs(mtx_matrix_t    Ac_mtx,      /* Matrix representation of problem */
-                     char            relopcol[],  /* is it incident? */
-                     struct var_variable  **vlist,      /* Variable list (NULL terminated) */
-                     int32     rused,       /* in: total number of relations used */
-                     int32     vused,       /* in: total number of variables used */
-                     real64    rhs[])       /* out: rhs array origin */
-/**
- ***  Takes the residuals stored in rhs, and converts them into the actual right
- ***  hand sides we want.
- ***
- ***  Note: the residual stored in the rhs array is not the real right hand side.
- ***  The residual returned by the diffs call is just the value of
- **         (lhs expr) - (rhs expr)
- ***  we want the residual excluding the current variables.  At the moment there isn't a
- ***  clean way to do this.  It will be calculated in the real_rhs routine.  This routine
- ***  will take for each relation:
- ***         sum(i, (Jacobian value var[i])*(Variable value var[i])) - rhs[i]
- ***  which is the real rhs.  However, this will _not_ be valid for the nonlinear case.
- ***  Other than this, the mps file will be the linearization of a nonlinear system at the
- ***  current point.  If you are adding an MINLP feature, you'll need to come up with a better way.
- ***
- **/
-{
-	lp_real_rhs(Ac_mtx,relopcol,vlist,rused,vused,rhs);
-}
-
-/* _________________________________________________________________________ */
-
-/**
- ***  Routines used by presolve
- ***  --------------------
- ***  ensure_bounds - fix inconsistent bounds
- ***  update_vlist - add vars to vlist
- ***  determine_vlist - build new vlist
- **/
-
-
-static void ensure_bounds(FILE *mif,highs_system_t sys, struct var_variable *var)
-/**
- ***  Ensures that the variable value is within its bounds.
- **/
-{
-	lp_ensure_bounds(mif,sys->slv,var);
-}
-
+/* LP assembly, sparse export and writeback are shared in libascend. */
 #ifndef KILL
 
 static struct var_variable **update_vlist(struct var_variable * *vlist, expr_t expr)
@@ -1027,7 +811,7 @@ boolean highs_eligible_solver(highs_system_t server){
    /*  Check that the system is linear unless nonlinear linearization is enabled. */
    if (SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_NONLIN) == 0){
       for( rp=sys->rlist ; *rp != NULL ; ++rp )   /* check relations */
-          if(!relman_is_linear(*rp,&vfilter)) {
+          if(lp_inc_rel_filter(*rp) && !lp_relation_is_affine(*rp,&vfilter)) {
             char *relname = rel_make_name(sys->slv,*rp);
             ERROR_REPORTER_HERE(ASC_PROG_ERR
                ,"With current settings, HiGHS requires linear models; nonlinearity in constraint '%s'."
@@ -1036,7 +820,7 @@ boolean highs_eligible_solver(highs_system_t server){
             ASC_FREE(relname);
             return(FALSE);   /* don't do nonlinearities */
           }
-      if(!relman_is_linear(sys->obj,&vfilter)){
+      if(!lp_relation_is_affine(sys->obj,&vfilter)){
           char *relname = rel_make_name(sys->slv,sys->obj);
           ERROR_REPORTER_HERE(ASC_PROG_ERR
              ,"With current settings, HiGHS requires linear models; nonlinearity in objective '%s'."
@@ -1060,262 +844,21 @@ boolean highs_eligible_solver(highs_system_t server){
 }
 
 void highs_presolve(slv_system_t server){
-	highs_system_t sys;
-	sys = SYS(server);
-
-   struct var_variable **vp;
-   struct rel_relation **rp;
-
-   /* Check if necessary pointers are non-NULL */
-   check_system(sys);
-   if( sys->vlist == NULL ) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"variable list was never set.");
+   highs_system_t sys = SYS(server);
+   sys->obj = slv_get_obj_relation(sys->slv);
+   sys->vlist = slv_get_solvers_var_list(sys->slv);
+   sys->rlist = slv_get_solvers_rel_list(sys->slv);
+   memset(&sys->s,0,sizeof(sys->s));
+   sys->s.kind = SLV_STATUS_LP;
+   if(!highs_eligible_solver(sys) || lp_prepare(sys->slv,&sys->mps,&sys->s,
+      SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_VARNOM_SCALE),
+      SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_RELNOM_SCALE))){
+      sys->s.calc_ok = FALSE;
       return;
    }
-   if( sys->blist == NULL ) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"boundary list was never set.");
-      return;
-   }
-   if( sys->rlist == NULL ) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"relation list was never set.");
-      return;
-   }
-
-   /* time presolve */
-   sys->clock = tm_cpu_time();  /* record start time */
-
-#if 0
-/*  set up vlist, if necessary, and set all vars, rels, and boundary's
-    to being nonincident, set up index scheme */
-
-#ifndef KILL
-   if( sys->vlist_user == NULL ) determine_vlist(sys);
-#else
-   if( sys->vlist_user == NULL ){
-     ERROR_REPORTER_HERE(ASC_PROG_ERR,"automatic variable-list setup is broken.");
-     exit(1);
-   }
-#endif
-   sys->mps.cap = 0;
-   for( vp=sys->vlist,cap=0 ; *vp != NULL ; ++vp ) {
-      var_set_sindex(*vp,cap++);
-      var_set_in_block(*vp,FALSE);
-   }
-   sys->mps.cap = cap;
-   for( rp=sys->rlist,cap=0 ; *rp != NULL ; ++rp ) {
-      rel_set_sindex(*rp,cap++);
-      rel_set_in_block(*rp,FALSE);
-      rel_set_satisfied(*rp,FALSE);
-   }
-   sys->mps.cap = MAX(sys->mps.cap,cap+1);   /* allow an extra relation for crow,
-                                                cap = N --> row/col 0 to N-1 exist */
-   for( bp = sys->blist ; *bp != NULL ; ++bp ) {
-      bnd_set_in_block(*bp,FALSE);
-      bnd_set_active(*bp,FALSE);
-   }
-
-    /**
-    ***  Now mark all variables appearing in the objective function,
-    ***  the boundaries and the relations as incident.
-    **/
-
-   /* Mark all variables appearing in the objective function as incident */
-   if( sys->obj ) exprman_decide_incidence_obj(sys->obj);
-
-      /* Set incidence of included vars in included bounds, calc bused, set all bounds inactive */
-   sys->mps.bused = 0;
-   bfilter.included = bnd_true;
-   bfilter.in_block = bnd_ignore;
-   for( bp = sys->blist ; *bp != NULL ; bp++ ) {
-      if( bnd_apply_filter(*bp,&bfilter) ) {
-	  bndman_decide_incidence(*bp);  /* mark incident variables */
-          sys->mps.bused++;
-      }
-   }
-
-   /* Count the incident relations in rused */
-   sys->mps.rused = 0;
-   sys->mps.rinc = 0;
-   for( rp = sys->rlist ; *rp != NULL ; rp++ ) {
-      rel_set_satisfied(*rp,FALSE);
-      if( inc_rel_filter(*rp) ) {
-     	 relman_decide_incidence(*rp);   /* mark incident variables in included rels */
-         sys->mps.rinc++;
-      }
-      sys->mps.rused++;
-   }
-
-#endif
-	  /* Legacy incidence setup above is disabled; compute the core counts here. */
-	   sys->mps.rused = 0;
-	   sys->mps.rinc = 0;
-	   for( rp = sys->rlist ; *rp != NULL ; ++rp ) {
-	      if( inc_rel_filter(*rp) ) {
-	         sys->mps.rinc++;
-	      }
-	      sys->mps.rused++;
-	   }
-
-	      /* compute info for variables */
-	   sys->mps.vused = 0;     /* number starting at 0 */
-	   sys->mps.vinc = 0;
-	   for( vp = sys->vlist ; *vp != NULL ; vp++ ) {
-	      if( highs_free_inc_var_filter(*vp) )
-	          sys->mps.vinc++;
-	      sys->mps.vused++;    /* count up incident, non-fixed vars */
-	   }
-	   if(sys->mps.vinc == 0){
-	      /* Fallback for systems where incident flags are not pre-marked. */
-	      var_filter_t active_free;
-	      active_free.matchbits = (VAR_FIXED | VAR_ACTIVE);
-	      active_free.matchvalue = VAR_ACTIVE;
-	      for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
-	         if( var_apply_filter(*vp,&active_free) ){
-	            sys->mps.vinc++;
-	         }
-	      }
-	   }
-
-	   /* calculate values for other index_mps_t vars */
-	   sys->mps.cap = sys->mps.vused;
-	   if(sys->mps.cap < sys->mps.rused + 1){
-	      sys->mps.cap = sys->mps.rused + 1;
-	   }
-	   sys->mps.crow     = sys->mps.rused;    /* note rused = N means rows 0 to N-1, exist,
-	                                             the next one will be numbered rused */
-	   /* calculate rank later */
-
-	   /* Call highs_elgibile_solver to see if the solver has a chance */
-	   /* If not bail now ... requires the incidence values of prev section be set */
-	   if(! highs_eligible_solver(sys)) {
-	      ERROR_REPORTER_HERE(ASC_PROG_ERR,"model is not eligible with current options.");
-	      return;
-	   }
-
-   /*  Make sure that at least one incident variable and at least one incident
-       relation exist, else bail */
-   if ((sys->mps.rinc == 0) || (sys->mps.vinc == 0))  {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR
-         ,"model must have at least one incident variable and equation (incident variables=%d, incident equations=%d)."
-         ,sys->mps.vinc,sys->mps.rinc
-      );
-      return;
-   }
-
-   /* free memory, and set all pointers to NULL */
-   nuke_pointers(&(sys->mps));
-
-   /* setup matrix representaion of problem */
-   sys->mps.Ac_mtx = calc_matrix(sys->mps.cap,
-                                 sys->mps.rused,
-                                 sys->mps.vused,
-                                 sys->rlist,
-                                 sys->obj,
-                                 sys->mps.crow,
-                                 &sys->s,        /* how long for the jacobian calcs and any errors */
-                                 &sys->mps.rank,
-                                 &sys->mps.bcol);
-   if( sys->mps.Ac_mtx == NULL ) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed to build matrix representation.");
-      nuke_pointers(&(sys->mps));
-      return;
-   }
-
-   /* get upper bound row */
-   sys->mps.ubrow = calc_bounds(sys->vlist, sys->mps.vused, TRUE);
-   if (sys->mps.ubrow == NULL)  {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"error calculating variable upper bounds.");
-      nuke_pointers(&(sys->mps));
-      return;
-   }
-
-   /* get lower bound row */
-   sys->mps.lbrow = calc_bounds(sys->vlist, sys->mps.vused, FALSE);
-   if (sys->mps.lbrow == NULL)  {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"error calculating variable lower bounds.");
-      nuke_pointers(&(sys->mps));
-      return;
-   }
-
-	/* Call calc_svtlist to allocate array of variable types */
-	sys->mps.typerow = calc_svtlist(sys->vlist,
-	                                sys->mps.vused,
-	                                &sys->mps.solver_var_used,      /* output */
-                                   &sys->mps.solver_relaxed_used,  /* output */
-                                   &sys->mps.solver_int_used,      /* output */
-                                   &sys->mps.solver_binary_used,   /* output */
-                                   &sys->mps.solver_semi_used,     /* output */
-                                   &sys->mps.solver_other_used,    /* output */
-                                   &sys->mps.solver_fixed);        /* output */
-   if(sys->mps.typerow == NULL) {         /* allocation failed */
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"error calculating variable type list.");
-      nuke_pointers(&(sys->mps));
-      return;
-   }
-
-   /* Call calc_reloplist here, to calculate the relational operators >=, <=, = */
-	 sys->mps.relopcol = calc_reloplist(sys->rlist, sys->mps.rused);
-    if(sys->mps.relopcol == NULL) {         /* allocation failed */
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"error calculating relational operators.");
-      nuke_pointers(&(sys->mps));
-      return;
-   }
-
-   /* adjust the rhs vector so it actually contains the rhs */
-   real_rhs(sys->mps.Ac_mtx,      /* Matrix representation of problem */
-            sys->mps.relopcol,    /* is it incident? */
-            sys->vlist,           /* in: Variable list (NULL terminated) */
-            sys->mps.rused,       /* in: total number of relations used */
-            sys->mps.vused,       /* in: total number of variables used */
-            sys->mps.bcol);       /* out: rhs array origin */
-
-
-   /* Call ensure_bounds over all vars to make bounds self-consistent */
-   for( vp=sys->vlist; *vp != NULL ; ++vp )
-     ensure_bounds(NULL,sys, *vp);
-
-   if(!lp_apply_nominal_scaling(
-      sys->mps.Ac_mtx,
-      sys->mps.lbrow,
-      sys->mps.ubrow,
-      sys->mps.bcol,
-      sys->mps.typerow,
-      sys->mps.relopcol,
-      sys->mps.cap,
-      sys->mps.rused,
-      sys->mps.vused,
-      sys->mps.crow,
-      sys->vlist,
-      sys->rlist,
-      sys->obj,
-      SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_VARNOM_SCALE),
-      SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_RELNOM_SCALE),
-      &sys->mps.col_scale,
-      &sys->mps.row_scale
-   )){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed applying LP/MIP nominal scaling.");
-      nuke_pointers(&(sys->mps));
-      return;
-   }
-
-   /* Reset status flags */
-   sys->s.over_defined = (sys->mps.rinc > sys->mps.vinc);
-   sys->s.under_defined = (sys->mps.rinc < sys->mps.vinc);
-   sys->s.struct_singular = (sys->mps.rank < sys->mps.rinc);
-   /* HiGHS can solve LP/MIP models even with rank-deficient row sets. */
-   sys->s.ok = sys->s.calc_ok;
-   sys->s.ready_to_solve = sys->s.ok;
-
    sys->s.kind = highs_is_mip_from_typerow(sys) ? SLV_STATUS_MIP : SLV_STATUS_LP;
-   sys->s.converged = FALSE;      /* changes to true after highs_solve */
-
-   sys->s.cpu_elapsed       = (double)(tm_cpu_time() - sys->clock);  /* record times */
-   sys->s.iteration         = 0;
-   memset(&sys->s.u,0,sizeof(sys->s.u));
-
-   /* LP/MIP details will be populated after solve. */
+   sys->s.ok = sys->s.calc_ok = sys->s.ready_to_solve = TRUE;
    highs_spoof_block_status(sys);
-
 }
 
 struct highs_problem_data{
@@ -1326,6 +869,7 @@ struct highs_problem_data{
 	HighsInt *a_index;
 	double *a_value;
 	double *col_cost;
+	double objective_offset;
 	double *col_lower;
 	double *col_upper;
 	double *row_lower;
@@ -1356,169 +900,47 @@ static void highs_problem_data_free(struct highs_problem_data *p){
 }
 
 static int highs_build_problem(highs_system_t sys, struct highs_problem_data *p, int *is_mip){
-	int32 rused, vused, orgrow, orgcol, rowcount, nnzmax;
-	int32 currow, curcol;
-	int32 nnz;
-	int *row_map = NULL;
-	int relaxed;
-	double pinf, minf, hinf;
-	mtx_coord_t nz;
-	mtx_range_t range;
-	real64 a;
-	int direction;
-
-	rused = sys->mps.rused;
-	vused = sys->mps.vused;
-	relaxed = SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_RELAXED);
-	pinf = SLV_PARAM_REAL(&(sys->p),HIGHS_PARAM_PINF);
-	minf = SLV_PARAM_REAL(&(sys->p),HIGHS_PARAM_MINF);
-	hinf = 1e30;
-	*is_mip = 0;
-
-	memset(p,0,sizeof(*p));
-
-	row_map = ASC_NEW_ARRAY_OR_NULL(int,rused);
-	if(row_map == NULL)return 0;
-	for(orgrow = 0; orgrow < rused; ++orgrow){
-		row_map[orgrow] = -1;
-	}
-
-	rowcount = 0;
-	for(orgrow = 0; orgrow < rused; ++orgrow){
-		if(sys->mps.relopcol[orgrow] != rel_TOK_nonincident){
-			row_map[orgrow] = rowcount++;
-		}
-	}
-
-	nnzmax = 0;
-	for(orgcol = 0; orgcol < vused; ++orgcol){
-		curcol = mtx_org_to_col(sys->mps.Ac_mtx,orgcol);
-		if(curcol < 0)continue;
-		nz.col = curcol;
-		nz.row = mtx_FIRST;
-		a = mtx_next_in_col(sys->mps.Ac_mtx,&nz,mtx_range(&range,0,rused-1));
-		while(nz.row != mtx_LAST){
-			(void)a;
-			++nnzmax;
-			a = mtx_next_in_col(sys->mps.Ac_mtx,&nz,mtx_range(&range,0,rused-1));
-		}
-	}
-
-	p->num_col = (HighsInt)vused;
-	p->num_row = (HighsInt)rowcount;
-	p->num_nz = 0;
-
-	p->a_start = ASC_NEW_ARRAY_OR_NULL(HighsInt,vused+1);
-	p->a_index = ASC_NEW_ARRAY_OR_NULL(HighsInt,MAX(nnzmax,1));
-	p->a_value = ASC_NEW_ARRAY_OR_NULL(double,MAX(nnzmax,1));
-	p->col_cost = ASC_NEW_ARRAY_OR_NULL(double,vused);
-	p->col_lower = ASC_NEW_ARRAY_OR_NULL(double,vused);
-	p->col_upper = ASC_NEW_ARRAY_OR_NULL(double,vused);
-	p->integrality = ASC_NEW_ARRAY_OR_NULL(HighsInt,vused);
-	p->row_lower = ASC_NEW_ARRAY_OR_NULL(double,MAX(rowcount,1));
-	p->row_upper = ASC_NEW_ARRAY_OR_NULL(double,MAX(rowcount,1));
-	p->col_value = ASC_NEW_ARRAY_OR_NULL(double,vused);
-	p->col_dual = ASC_NEW_ARRAY_OR_NULL(double,vused);
-	p->row_value = ASC_NEW_ARRAY_OR_NULL(double,MAX(rowcount,1));
-	p->row_dual = ASC_NEW_ARRAY_OR_NULL(double,MAX(rowcount,1));
-	if(
-		p->a_start == NULL || p->a_index == NULL || p->a_value == NULL
-		|| p->col_cost == NULL || p->col_lower == NULL || p->col_upper == NULL
-		|| p->integrality == NULL || p->row_lower == NULL || p->row_upper == NULL
-		|| p->col_value == NULL || p->col_dual == NULL
-		|| p->row_value == NULL || p->row_dual == NULL
-	){
-		ascfree(row_map);
-		return 0;
-	}
-
-	for(orgcol = 0; orgcol < vused; ++orgcol){
-		p->col_cost[orgcol] = 0.0;
-		p->integrality[orgcol] = kHighsVarTypeContinuous;
-		p->col_lower[orgcol] = (sys->mps.lbrow[orgcol] <= minf) ? -hinf : sys->mps.lbrow[orgcol];
-		p->col_upper[orgcol] = (sys->mps.ubrow[orgcol] >= pinf) ? hinf : sys->mps.ubrow[orgcol];
-		if(!relaxed){
-			switch(sys->mps.typerow[orgcol]){
-				case MPS_INT:
-				case MPS_BINARY:
-					p->integrality[orgcol] = kHighsVarTypeInteger;
-					*is_mip = 1;
-					break;
-				case MPS_SEMI:
-					p->integrality[orgcol] = kHighsVarTypeSemiContinuous;
-					*is_mip = 1;
-					break;
-				default:
-					break;
-			}
-		}
-	}
-
-	for(orgrow = 0; orgrow < rused; ++orgrow){
-		int ridx = row_map[orgrow];
-		if(ridx < 0)continue;
-		switch(sys->mps.relopcol[orgrow]){
-			case rel_TOK_less:
-				p->row_lower[ridx] = -hinf;
-				p->row_upper[ridx] = sys->mps.bcol[orgrow];
-				break;
-			case rel_TOK_greater:
-				p->row_lower[ridx] = sys->mps.bcol[orgrow];
-				p->row_upper[ridx] = hinf;
-				break;
-			case rel_TOK_equal:
-				p->row_lower[ridx] = sys->mps.bcol[orgrow];
-				p->row_upper[ridx] = sys->mps.bcol[orgrow];
-				break;
-			default:
-				p->row_lower[ridx] = -hinf;
-				p->row_upper[ridx] = hinf;
-				break;
-		}
-	}
-
-	currow = mtx_org_to_row(sys->mps.Ac_mtx,sys->mps.crow);
-	if(currow >= 0){
-		nz.row = currow;
-		nz.col = mtx_FIRST;
-		a = mtx_next_in_row(sys->mps.Ac_mtx,&nz,mtx_range(&range,0,vused-1));
-		while(nz.col != mtx_LAST){
-			orgcol = mtx_col_to_org(sys->mps.Ac_mtx,nz.col);
-			if(orgcol >= 0 && orgcol < vused){
-				p->col_cost[orgcol] = a;
-			}
-			a = mtx_next_in_row(sys->mps.Ac_mtx,&nz,mtx_range(&range,0,vused-1));
-		}
-	}
-
-	nnz = 0;
-	for(orgcol = 0; orgcol < vused; ++orgcol){
-		curcol = mtx_org_to_col(sys->mps.Ac_mtx,orgcol);
-		p->a_start[orgcol] = (HighsInt)nnz;
-		if(curcol < 0)continue;
-		nz.col = curcol;
-		nz.row = mtx_FIRST;
-		a = mtx_next_in_col(sys->mps.Ac_mtx,&nz,mtx_range(&range,0,rused-1));
-		while(nz.row != mtx_LAST){
-			orgrow = mtx_row_to_org(sys->mps.Ac_mtx,nz.row);
-			if(orgrow >= 0 && orgrow < rused && row_map[orgrow] >= 0){
-				p->a_index[nnz] = (HighsInt)row_map[orgrow];
-				p->a_value[nnz] = a;
-				++nnz;
-			}
-			a = mtx_next_in_col(sys->mps.Ac_mtx,&nz,mtx_range(&range,0,rused-1));
-		}
-	}
-	p->a_start[vused] = (HighsInt)nnz;
-	p->num_nz = (HighsInt)nnz;
-
-	direction = relman_obj_direction(sys->obj);
-	if(direction == 1){
-		/* nothing to do: HiGHS model sense will be set to maximize */
-	}
-
-	ascfree(row_map);
-	return 1;
+   lp_sparse_t shared = {0};
+   int32 i;
+   int relaxed = SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_RELAXED);
+   memset(p,0,sizeof(*p));
+   *is_mip = 0;
+   if(lp_sparse_build(&shared,&sys->mps,sys->vlist,sys->obj,
+      SLV_PARAM_REAL(&sys->p,HIGHS_PARAM_MINF),
+      SLV_PARAM_REAL(&sys->p,HIGHS_PARAM_PINF)))return 0;
+   p->num_col=shared.num_col; p->num_row=shared.num_row; p->num_nz=shared.num_nz;
+   p->objective_offset=shared.objective_offset;
+   p->col_cost=shared.cost; shared.cost=NULL;
+   p->col_lower=shared.lower; shared.lower=NULL;
+   p->col_upper=shared.upper; shared.upper=NULL;
+   p->row_lower=shared.row_lower; shared.row_lower=NULL;
+   p->row_upper=shared.row_upper; shared.row_upper=NULL;
+   p->a_value=shared.value; shared.value=NULL;
+   /* HiGHS may use 64-bit indices; do not alias libascend's int32 arrays. */
+   p->a_start=ASC_NEW_ARRAY(HighsInt,p->num_col+1);
+   p->a_index=ASC_NEW_ARRAY(HighsInt,MAX(p->num_nz,1));
+   p->integrality=ASC_NEW_ARRAY(HighsInt,p->num_col);
+   p->col_value=ASC_NEW_ARRAY(double,p->num_col);
+   p->col_dual=ASC_NEW_ARRAY(double,p->num_col);
+   p->row_value=ASC_NEW_ARRAY(double,MAX(p->num_row,1));
+   p->row_dual=ASC_NEW_ARRAY(double,MAX(p->num_row,1));
+   if(!p->a_start || !p->a_index || !p->integrality || !p->col_value ||
+      !p->col_dual || !p->row_value || !p->row_dual){
+      lp_sparse_destroy(&shared); highs_problem_data_free(p); return 0;
+   }
+   for(i=0;i<=p->num_col;++i)p->a_start[i]=shared.start[i];
+   for(i=0;i<p->num_nz;++i)p->a_index[i]=shared.index[i];
+   for(i=0;i<p->num_col;++i){
+      p->integrality[i]=kHighsVarTypeContinuous;
+      if(!relaxed){
+         if(shared.type[i]==MPS_INT || shared.type[i]==MPS_BINARY)
+            p->integrality[i]=kHighsVarTypeInteger;
+         else if(shared.type[i]==MPS_SEMI)p->integrality[i]=kHighsVarTypeSemiContinuous;
+      }
+      if(p->integrality[i]!=kHighsVarTypeContinuous)*is_mip=1;
+   }
+   lp_sparse_destroy(&shared);
+   return 1;
 }
 
 static int highs_apply_options(highs_system_t sys, void *highs){
@@ -2299,10 +1721,7 @@ void highs_solve(slv_system_t server){
 	HighsInt model_status;
 	HighsInt sense;
 	int is_mip;
-	struct var_variable **vp;
-	struct rel_relation **rp;
 	int safeeval;
-	int calc_ok;
 	int all_calc_ok;
 	int have_primal_solution = 0;
 	int iteration_count;
@@ -2380,14 +1799,14 @@ void highs_solve(slv_system_t server){
 	if(is_mip){
 		status = Highs_passMip(
 			highs,p.num_col,p.num_row,p.num_nz
-			,kHighsMatrixFormatColwise,sense,0.0
+			,kHighsMatrixFormatColwise,sense,p.objective_offset
 			,p.col_cost,p.col_lower,p.col_upper,p.row_lower,p.row_upper
 			,p.a_start,p.a_index,p.a_value,p.integrality
 		);
 	}else{
 		status = Highs_passLp(
 			highs,p.num_col,p.num_row,p.num_nz
-			,kHighsMatrixFormatColwise,sense,0.0
+			,kHighsMatrixFormatColwise,sense,p.objective_offset
 			,p.col_cost,p.col_lower,p.col_upper,p.row_lower,p.row_upper
 			,p.a_start,p.a_index,p.a_value
 		);
@@ -2444,31 +1863,8 @@ void highs_solve(slv_system_t server){
 	}
 
 	if(sys->s.converged || have_primal_solution){
-		for(vp = sys->vlist; *vp != NULL; ++vp){
-			int32 orgcol = var_sindex(*vp);
-			if(orgcol >= 0 && orgcol < sys->mps.vused){
-				real64 v = p.col_value[orgcol];
-				if(sys->mps.col_scale != NULL){
-					v *= sys->mps.col_scale[orgcol];
-				}
-				var_set_value(*vp,v);
-			}
-		}
-
 		safeeval = SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL);
-		all_calc_ok = 1;
-		calc_ok = 1;
-
-		if(sys->obj != NULL){
-			(void)relman_eval(sys->obj,&calc_ok,safeeval);
-			if(!calc_ok)all_calc_ok = 0;
-		}
-		for(rp = sys->rlist; *rp != NULL; ++rp){
-			if(inc_rel_filter(*rp)){
-				(void)relman_eval(*rp,&calc_ok,safeeval);
-				if(!calc_ok)all_calc_ok = 0;
-			}
-		}
+		all_calc_ok = lp_write_solution(sys->slv,&sys->mps,p.col_value,safeeval) == 0;
 		sys->s.calc_ok = all_calc_ok;
 
 		if(!all_calc_ok){
@@ -2521,22 +1917,8 @@ void highs_iterate(slv_system_t server){
 
 
 void highs_resolve(slv_system_t server){
-	highs_system_t sys;
-	sys = SYS(server);
-
-  /* This routine is meant to be called when the following parts of
-     the system change:
-       - any parameter except "partition".
-       - variable values.
-       - variable nominal values.
-       - variable bounds.
-     However, if var values or bounds change, we need a new MPS file,
-     so there is no way to use the previous solution.
-     Just call highs_solve, and do it the normal way.
-  */
-
-   check_system(sys);
-	highs_solve(server);
+   highs_presolve(server);
+   highs_solve(server);
 }
 
 /* Adapters from modern solver API (server + token) to legacy highs callbacks. */

@@ -26,6 +26,7 @@
 	T(conopt) \
 	T(makemps) \
 	T(highs) \
+	T(gurobi) \
 	T(a4sqp) \
 	T(slsqp) \
 	T(qrslv) \
