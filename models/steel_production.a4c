@@ -1,0 +1,90 @@
+(* Multiperiod steel production: Fourer, Gay & Kernighan, AMPL, section 4.2,
+   steelT (Figures 4-4 and 4-5). See steel_production.md for source and results.
+   Interpret the example's tons as metric tonnes; USD is illustrative currency.
+   Inventory incurs a charge at each week's end, including the final week. *)
+REQUIRE "atoms.a4l";
+CONSTANT steel_mass_constant REFINES real_constant DIMENSION M;
+
+MODEL steel_production;
+    prod "Steel products" IS_A set OF symbol_constant;
+    week "Production and sales periods" IS_A set OF integer_constant;
+    T "Number of weeks" IS_A integer_constant;
+    prod :== ['bands','coils'];
+    T :== 4;
+    week :== [1..T];
+    rate[prod] "Production throughput" IS_A mass_rate_constant;
+    avail[week] "Mill operating time available each week" IS_A time_constant;
+    inv0[prod] "Inventory before week 1" IS_A steel_mass_constant;
+    prodcost[prod] "Production cost per tonne" IS_A cost_per_mass_constant;
+    invcost[prod] "Cost per tonne carried at each weekly boundary" IS_A cost_per_mass_constant;
+    revenue[prod][week] "Selling price" IS_A cost_per_mass_constant;
+    market[prod][week] "Upper limit on sales, not a demand obligation" IS_A steel_mass_constant;
+    Make[prod][week] "Production in each week" IS_A mass;
+    Sell[prod][week] "Sales in each week" IS_A mass;
+    Inv[prod][0..T] "End-of-week stock; index 0 is opening stock" IS_A mass;
+    profit "Sales less production and inventory costs" IS_A monetary_unit;
+
+    TABLE rate[prod] UNITS {tonne/h};
+        bands, coils;
+        200,   140;
+    END TABLE;
+    TABLE inv0[prod] UNITS {tonne};
+        bands, coils;
+        10,    0;
+    END TABLE;
+    TABLE prodcost[prod] UNITS {USD/tonne};
+        bands, coils;
+        10,    11;
+    END TABLE;
+    TABLE invcost[prod] UNITS {USD/tonne};
+        bands, coils;
+        2.5,   3;
+    END TABLE;
+    TABLE avail[week] UNITS {h};
+        : 1,  2,  3,  4;
+          40, 40, 32, 40;
+    END TABLE;
+    TABLE revenue[prod,week] UNITS {USD/tonne};
+               1,  2,  3,  4;
+        bands, 25, 26, 27, 27;
+        coils, 30, 35, 37, 39;
+    END TABLE;
+    TABLE market[prod,week] UNITS {tonne};
+               1,    2,    3,    4;
+        bands, 6000, 6000, 4000, 6500;
+        coils, 4000, 2500, 3500, 4200;
+    END TABLE;
+
+    FOR t IN week CREATE
+        capacity[t]: SUM[Make[p][t]/rate[p] | p IN prod] <= avail[t];
+    END FOR;
+    FOR p IN prod CREATE
+        opening[p]: Inv[p][0] = inv0[p];
+        FOR t IN week CREATE
+            balance[p][t]: Inv[p][t-1] + Make[p][t] = Sell[p][t] + Inv[p][t];
+            sales_limit[p][t]: Sell[p][t] <= market[p][t];
+        END FOR;
+    END FOR;
+    accounting: profit = SUM[SUM[revenue[p][t]*Sell[p][t]
+        - prodcost[p]*Make[p][t] - invcost[p]*Inv[p][t] | t IN week] | p IN prod];
+    obj: MAXIMIZE profit;
+
+METHODS
+METHOD on_load;
+    SOLVER Gurobi;
+END on_load;
+METHOD self_test;
+    ASSERT abs((profit - 515033{USD})/1{USD}) < 1e-5;
+    ASSERT abs((Inv['coils'][1] - 1100{tonne})/1{tonne}) < 1e-6;
+    ASSERT abs((Make['coils'][1] - 1407{tonne})/1{tonne}) < 1e-6;
+    ASSERT abs((Sell['coils'][1] - 307{tonne})/1{tonne}) < 1e-6;
+    ASSERT abs(SUM[Inv[p][T] | p IN prod]/1{tonne}) < 1e-6;
+END self_test;
+END steel_production;
+
+MODEL steel_production_highs REFINES steel_production;
+METHODS
+METHOD on_load;
+    SOLVER HiGHS;
+END on_load;
+END steel_production_highs;

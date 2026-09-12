@@ -54,7 +54,7 @@ struct highs_run_options{
 	const char *presolve;
 	const char *solver;
 	const char *parallel;
-	const char *initial_method;
+	const char *initial_method; /* NULL: on_load; empty: no initialisation. */
 	const char *setup_method;
 	int run_self_test;
 };
@@ -327,7 +327,7 @@ static void run_highs_model(
 	siminst = SimsCreateInstance(AddSymbol(model_name), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst != NULL);
 
-	{
+	if(!(opts && opts->initial_method && !opts->initial_method[0])){
 		struct Name *name = CreateIdName(AddSymbol(opts && opts->initial_method ? opts->initial_method : "on_load"));
 		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 		CU_ASSERT(pe == Proc_all_ok);
@@ -1271,7 +1271,18 @@ static void test_highs_alloy_blending_ten_pounds(void){run_alloy_showcase(1,"ten
 static void test_highs_alloy_blending_detailed(void){run_alloy_showcase(1,NULL,4.98);}
 static void test_highs_alloy_blending_detailed_mass_balance(void){run_alloy_showcase(1,"with_mass_balance",4.98);}
 
+static void test_highs_steel_production(void){
+	struct highs_run_options opts={0};
+	/* No setup needed; select the solver here without frontend SOLVER hooks. */
+	opts.initial_method="";
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	opts.objective_tol=1e-6;
+	run_highs_model("models/steel_production.a4c","steel_production_highs",515033,0,NULL,0,&opts);
+}
+
 #define TESTS(T) \
+	T(highs_steel_production) \
 	T(highs_alloy_blending) \
 	T(highs_alloy_blending_mass_balance) \
 	T(highs_alloy_blending_ten_pounds) \

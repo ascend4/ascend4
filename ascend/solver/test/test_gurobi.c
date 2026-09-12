@@ -20,7 +20,7 @@
 #include <test/common.h>
 
 enum { EXACT, REJECT, SCALED, RESOLVE, RELAX, TANGENT, INFEASIBLE, UNBOUNDED, TIMEOUT, INTERRUPT, BAD_EVAL, PREPARE_ONLY,
-	SHOWCASE, SHOWCASE_MB, SHOWCASE_10LB };
+	SHOWCASE, SHOWCASE_MB, SHOWCASE_10LB, SELF_TEST };
 
 static int param(slv_parameters_t *p, const char *name){
 	int i;
@@ -71,9 +71,13 @@ static void run_case(const char *path,const char *model,int mode,double expected
 	CU_ASSERT(zz_parse()==0);
 	sim=SimsCreateInstance(AddSymbol(model),AddSymbol("sim1"),e_normal,NULL);
 	CU_ASSERT(sim!=NULL); if(!sim)goto cleanup;
-	name=CreateIdName(AddSymbol(showcase ? "initialise" : "on_load"));
-	CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
-	DestroyName(name);
+	/* SELF_TEST examples need no setup; their on_load only selects a solver
+	 * through frontend hooks, which this C harness does not install. */
+	if(mode!=SELF_TEST){
+		name=CreateIdName(AddSymbol(showcase ? "initialise" : "on_load"));
+		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
+		DestroyName(name);
+	}
 	if(mode==SHOWCASE_MB || mode==SHOWCASE_10LB){
 		name=CreateIdName(AddSymbol(mode==SHOWCASE_MB ? "with_mass_balance" : "ten_pound_batch"));
 		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
@@ -144,7 +148,7 @@ static void run_case(const char *path,const char *model,int mode,double expected
 	CU_ASSERT_TRUE(status.u.lp.have_objective);
 	CU_ASSERT_DOUBLE_EQUAL(status.u.lp.objective_value,expected,1e-6);
 	CU_ASSERT_DOUBLE_EQUAL(rel_residual(slv_get_obj_relation(sys)),expected,1e-6);
-	if(showcase){
+	if(showcase || mode==SELF_TEST){
 		name=CreateIdName(AddSymbol("self_test"));
 		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
 		DestroyName(name);
@@ -201,6 +205,7 @@ static void test_alloy_blending_mass_balance(void){run_case("models/alloy_blendi
 static void test_alloy_blending_ten_pounds(void){run_case("models/alloy_blending_detailed.a4c","alloy_blending_detailed",SHOWCASE_10LB,49.8);}
 static void test_alloy_blending_detailed(void){run_case("models/alloy_blending_detailed.a4c","alloy_blending_detailed",SHOWCASE,4.98);}
 static void test_alloy_blending_detailed_mass_balance(void){run_case("models/alloy_blending_detailed.a4c","alloy_blending_detailed",SHOWCASE_MB,4.98);}
+static void test_steel_production(void){run_case("models/steel_production.a4c","steel_production",SELF_TEST,515033);}
 #define TESTS(T) \
 	T(lp1) T(offset) T(scaling) T(resolve) T(afiro) \
 	T(infeasible) T(unbounded) T(time_limit) T(interrupt) \
@@ -208,5 +213,5 @@ static void test_alloy_blending_detailed_mass_balance(void){run_case("models/all
 	T(integer_rejected) T(binary_rejected) T(integer_relaxed) T(binary_relaxed) T(tangent) \
 	T(objective_only_variable) T(bad_evaluation) T(shared_export) \
 	T(alloy_blending) T(alloy_blending_mass_balance) T(alloy_blending_ten_pounds) \
-	T(alloy_blending_detailed) T(alloy_blending_detailed_mass_balance)
+	T(alloy_blending_detailed) T(alloy_blending_detailed_mass_balance) T(steel_production)
 REGISTER_TESTS_SIMPLE(solver_gurobi,TESTS)

@@ -86,6 +86,13 @@ showcase is retained separately as `models/alloy_blending_detailed.a4c`:
 ./a4 run models/alloy_blending.a4c
 ```
 
+The [multiperiod steel-production example](../../models/steel_production.md)
+adds inventory balances linking four weeks, with a profit-maximising objective:
+
+```sh
+./a4 run models/steel_production.a4c
+```
+
 ## Options and semantics
 
 - `nonlin` (default false): explicitly request **one tangent LP** at the current
