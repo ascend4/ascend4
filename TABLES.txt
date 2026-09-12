@@ -70,7 +70,58 @@ TABLE t[i] IS_A temperature_constant UNITS {K} POSITIONAL;
 END TABLE;
 </source>
 
-=== 2) Dense non-POSITIONAL TABLE ===
+=== 2) Labelled one-dimensional TABLE ===
+
+Both horizontal and vertical layouts are supported. These two examples assign
+the same values, independently of the ordering of the index set:
+
+<source lang=ascend>
+TABLE cost[alloy] IS_A cost_per_mass_constant UNITS {USD/lbm};
+    b,   a,   c;
+    4.3, 4.1, 5.8;
+END TABLE;
+</source>
+
+<source lang=ascend>
+TABLE cost[alloy] IS_A cost_per_mass_constant UNITS {USD/lbm};
+    b: 4.3;
+    a: 4.1;
+    c: 5.8;
+END TABLE;
+</source>
+
+Rules:
+
+* Horizontal layout has one label-header row and one numeric-value row.
+* Vertical layout has one label and one numeric value per row.
+* Colons are optional when the layout is unambiguous. A leading colon before
+  the header selects horizontal layout; a colon after a label selects vertical
+  layout. Conflicting markers are rejected.
+* Without markers, ASCEND tests both layouts using the body structure and
+  label/value syntax, before assigning anything or inferring an index set.
+  It does not use index membership or cardinality to choose an orientation.
+* If both layouts fit, an ambiguity error asks for a colon. For example,
+  <code>1 2</code> followed by <code>3 4</code> is ambiguous, even if the
+  destination index set is already defined. Write <code>: 1 2</code> for
+  horizontal layout, or <code>1: 2</code> and <code>3: 4</code> for vertical.
+* Spaces and tabs separate entries; commas may also be used. Newlines and
+  semicolons end rows. Blank lines are ignored.
+* A horizontal CSV header may start with a comma representing an empty
+  top-left cell. The value row may then also start with a comma. Other empty
+  comma-delimited fields, including trailing commas, are errors, not zeros.
+* Whitespace is not fixed-width: repeated spaces/tabs collapse. To preserve
+  and detect empty spreadsheet cells, use comma-delimited input rather than
+  relying on blank space or repeated tabs.
+* Labels may be integers or symbols, including quoted symbols with spaces.
+  Numeric values may have signs and exponent notation. Expressions are not
+  supported as cells.
+* Labels must uniquely cover the index set. Duplicate labels, unknown labels,
+  and incorrect counts are errors. An undefined simple named index set can
+  be inferred from the labels, as in dense 2-D TABLEs.
+* Statement-level units, dimensional checking, and inline declarations work
+  as for other TABLEs. POSITIONAL behaviour is unchanged.
+
+=== 3) Dense two-dimensional non-POSITIONAL TABLE ===
 
 <source lang=ascend>
 TABLE cost[r,c] IS_A integer_constant;
@@ -82,7 +133,7 @@ END TABLE;
 
 Implemented behavior:
 
-* Dense non-POSITIONAL mode currently requires exactly 2 indices.
+* This matrix layout requires exactly 2 indices; see above for 1-D layouts.
 * First non-empty row is the column-label header.
 * Header may optionally start with <code>:</code>.
 * Each data row begins with a row label; <code>:</code> after row label is optional.
@@ -122,7 +173,7 @@ Rules for <code>UNITS {..}</code>:
 Examples:
 
 <source lang=ascend>
-TABLE load[i] IS_A factor_constant;
+TABLE load[i] IS_A factor_constant POSITIONAL;
     1.0
     0.8
 END TABLE;
@@ -161,9 +212,9 @@ Current label handling:
 * Integer labels: parsed as integers and matched to integer sets.
 * Symbol labels: unquoted identifiers or quoted symbols (e.g. <code>'New York'</code>) are matched to symbol sets.
 
-== Implicit Set Inference (Implemented for Dense TABLE) ==
+== Implicit Set Inference (Implemented for Labelled TABLE) ==
 
-If an index set expression cannot yet be evaluated and it is a simple named set, dense TABLE can infer and assign that set from labels.
+If an index set expression cannot yet be evaluated and it is a simple named set, labelled TABLE can infer and assign that set from labels. This applies to both 1-D and dense 2-D TABLEs.
 
 Example:
 
@@ -320,7 +371,7 @@ Optional units-row behavior:
 
 == Test Coverage Notes ==
 
-The implemented TABLE behavior above is covered in <code>compiler_basics</code> tests, including:
+The implemented TABLE behavior above is covered in <code>compiler_tables</code> tests, including:
 
 * POSITIONAL success/fail paths.
 * Dense integer labels.
@@ -329,5 +380,7 @@ The implemented TABLE behavior above is covered in <code>compiler_basics</code> 
 * Dense implicit-set inference.
 * Dense invalid row/column label failures.
 * TABLE statement-level units success/failure paths.
+* Labelled 1-D horizontal and vertical layouts, optional colons, CSV and tab-separated input.
+* 1-D orientation ambiguity, quoted labels, signed values and indices, inferred sets, and missing/duplicate/invalid entries.
 
 [[Category:Development]]
