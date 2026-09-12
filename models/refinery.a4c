@@ -165,6 +165,10 @@ MODEL refinery_problem;
     smax['distillate'] :== 1.42650508710591{kg/m^3};
     smax['fuel_oil'] :== slim;
 
+    (* Steady-state stream availability: signed volume yields represent each
+       process, not a thermodynamic or elemental balance. Crude origins stay
+       separate until blending. Inequalities permit unused material/disposal;
+       yields need not sum to one (volume is not conserved through reaction). *)
     FOR r IN cr CREATE
         mbr[r]: u[r] >= z[r]['a_dist'];
         lcp[r]: u[r] <= ur[r];
@@ -174,6 +178,7 @@ MODEL refinery_problem;
                 >= SUM[w[r][f][i] | f IN uses[i]];
         END FOR;
     END FOR;
+    (* Both crude processing lines compete for the same equipment capacity. *)
     FOR n IN m CREATE
         cc[n]: SUM[SUM[b[n][j]*z[r][j] | j IN p] | r IN cr] <= k[n];
     END FOR;
@@ -183,16 +188,31 @@ MODEL refinery_problem;
                 w[r][f][i] "Component allocation to a permitted blend" IS_A volume_rate;
             END FOR;
         END FOR;
+        (* Liquid blend volumes are assumed additive at a common reference
+           temperature/pressure: neglect contraction, expansion and losses.
+           Fuel gas retains the source's accounting-volume basis, not an
+           actual gas volume determined from a temperature and pressure. *)
         bb[f]: x[f] = SUM[SUM[w[r][f][i] | i IN blend[f]] | r IN cr];
     END FOR;
+    (* Octane and vapour pressure use the source's empirical linear blending
+       rules. Unlike mass accounting, these are not conservation laws or a
+       vapour-liquid equilibrium calculation; real blends may be nonlinear. *)
     FOR f IN fg CREATE
         octane_limit[f]: SUM[SUM[oct[i]*w[r][f][i] | i IN blend[f]] | r IN cr] >= omin[f]*x[f];
         vapor_limit[f]: SUM[SUM[vp[i]*w[r][f][i] | i IN blend[f]] | r IN cr] <= vmax*x[f];
     END FOR;
+    (* rho*w is component mass flow. With additive liquid volumes, blend
+       density = SUM[rho*w]/x, so its upper limit is the linear inequality
+       below. Densities and volumes must refer to the same reference state.
+       Cross-multiplication avoids division by zero when a product is absent.
+       sulfur*w similarly counts sulfur mass flow: sulfur is kg/m^3, not
+       kg/kg. A mass-fraction limit would instead use total blend mass flow. *)
     FOR f IN fh CREATE
         density_limit[f]: SUM[SUM[rho[i][r]*w[r][f][i] | i IN blend[f]] | r IN cr] <= rmax[f]*x[f];
         sulfur_limit[f]: SUM[SUM[sulfur[i][r]*w[r][f][i] | i IN blend[f]] | r IN cr] <= smax[f]*x[f];
     END FOR;
+    (* Price per volume times volume per time gives a monetary rate. Only
+       variable costs are modelled; there is no minimum operating commitment. *)
     arev: phir = SUM[pf[f]*x[f] | f IN cf];
     amat: phip = SUM[pr[r]*u[r] + pd*ui[r] | r IN cr];
     aoper: phiw = SUM[SUM[op[j]*z[r][j] | j IN p] | r IN cr];
@@ -243,6 +263,25 @@ END refinery_problem;
 MODEL refinery REFINES refinery_problem;
     slim :== 9.98553560974138{kg/m^3};
     reference_profit :== 6588.421476681333{USD/day};
+METHODS
+METHOD self_test;
+    RUN refinery_problem::self_test;
+    (* Published GAMS User Guide, "Sensitivity or Scenario Analysis", base:
+       z(mid-c,a-dist)=89.718, z(mid-c,n-reform)=20.000,
+       z(mid-c,cc-dist)=7.805; all other process levels are zero.
+       Values are rounded to 0.001 thousand barrels/day. One such flow unit
+       is 158.987294928 m^3/day; allow half the published rounding interval.
+       https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_SensitivityOrScenarioAnalysis *)
+    ASSERT abs(z['mid_c']['a_dist']/158.987294928{m^3/day} - 89.718) < 0.000501;
+    ASSERT abs(z['mid_c']['n_reform']/158.987294928{m^3/day} - 20.000) < 0.000501;
+    ASSERT abs(z['mid_c']['cc_dist']/158.987294928{m^3/day} - 7.805) < 0.000501;
+    FOR j IN ['cc_gas_oil','hydro'] DO
+        ASSERT abs(z['mid_c'][j]/1{m^3/day}) < 1e-6;
+    END FOR;
+    FOR j IN p DO
+        ASSERT abs(z['w_tex'][j]/1{m^3/day}) < 1e-6;
+    END FOR;
+END self_test;
 END refinery;
 
 MODEL refinery_highs REFINES refinery;
@@ -255,6 +294,23 @@ END refinery_highs;
 MODEL refinery_low_sulfur REFINES refinery_problem;
     slim :== 9.7002345923202{kg/m^3};
     reference_profit :== 0{USD/day};
+METHODS
+METHOD self_test;
+    RUN refinery_problem::self_test;
+    (* The same published GAMS report explicitly confirms no production
+       for the tighter sulfur limit (scenario "one"). Check flows, not only
+       zero profit: with no minimum demand, the optimal action is shutdown. *)
+    FOR r IN cr DO
+        ASSERT abs(u[r]/1{m^3/day}) < 1e-6;
+        ASSERT abs(ui[r]/1{m^3/day}) < 1e-6;
+        FOR j IN p DO
+            ASSERT abs(z[r][j]/1{m^3/day}) < 1e-6;
+        END FOR;
+    END FOR;
+    FOR f IN cf DO
+        ASSERT abs(x[f]/1{m^3/day}) < 1e-6;
+    END FOR;
+END self_test;
 END refinery_low_sulfur;
 
 MODEL refinery_low_sulfur_highs REFINES refinery_low_sulfur;

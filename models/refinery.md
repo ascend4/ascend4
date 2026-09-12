@@ -78,6 +78,28 @@ fuel specification. Likewise, fuel gas retains MARCO's barrel-based accounting
 volume, converted to m³—not a measured gas volume at specified pressure and
 temperature. Unit checking does not supply the missing thermophysical basis.
 
+## Physical basis of the blending equations
+
+The density constraint is physically consistent **under the additive-volume
+approximation**. Here `w` is a component's volume flow, not its mass fraction.
+For a liquid blend, mass conservation gives mass flow = Σ ρᵢQᵢ. If its volume
+flow is Q = Σ Qᵢ, its density is ρblend = Σ ρᵢQᵢ / Q. Thus the requirement
+ρblend ≤ ρmax becomes Σ ρᵢQᵢ ≤ ρmax Q: exactly `density_limit`.
+
+This assumes densities and volumes at the same reference temperature and
+pressure, and neglects volume contraction or expansion on mixing. It is not
+an exact mixture-property model. `bb` supplies the additive-volume balance;
+its nonnegative flows also make the cross-multiplied limit valid at zero
+production, where a blend density would otherwise be undefined.
+
+Sulfur concentration follows the same mass-per-volume accounting. A sulfur
+mass-fraction limit would instead constrain sulfur mass flow relative to
+total blend mass flow. Octane and vapour pressure are different: their
+linear blend rules are empirical approximations, not conservation laws or
+vapour-liquid equilibrium calculations. The process yield matrices likewise
+represent a planning model, not complete reaction, elemental or energy balances.
+Short comments beside the ASCEND equations explain these distinctions.
+
 ## ASCEND structure and source fidelity
 
 `refinery_problem` holds the common data and equations. The concrete models
@@ -100,8 +122,32 @@ gas-oil cracking; these are deliberately not made equal.
 
 ## Verified results
 
-Both ASCEND adapters agree with a separate matrix transcription of MARCO
-solved in its original numerical units. For the baseline:
+### Published GAMS process levels
+
+The [GAMS User Guide's scenario-analysis report](https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_SensitivityOrScenarioAnalysis)
+publishes these baseline process levels in thousands of barrels/day:
+
+| Crude | Process | Published level |
+|---|---|---:|
+| Mid-Continent | Atmospheric distillation | 89.718 |
+| Mid-Continent | Naphtha reforming | 20.000 |
+| Mid-Continent | Distillate cracking | 7.805 |
+
+All other baseline process levels are zero. The report also explicitly
+confirms zero production for the tighter sulfur specification. Both model
+refinements check these published results in `self_test`, in addition to the
+common feasibility checks. Nonzero reference levels use a tolerance of half
+the published 0.001-unit rounding interval, plus a small numerical allowance;
+the conversion factor is 158.987294928 m³/day per reported flow unit.
+
+### Calculated economic results
+
+The published table does **not** report profit. The more precise economic
+references below were calculated locally, not taken from a GAMS objective
+listing. Both ASCEND adapters agree with a separately written Python matrix
+transcription solved using SciPy's HiGHS interface in MARCO's original
+numerical units. This bypassed ASCEND but did not execute GAMS, and the matrix
+transcription was written by the same implementer. For the baseline:
 
 | Economic result | USD/day |
 |---|---:|
