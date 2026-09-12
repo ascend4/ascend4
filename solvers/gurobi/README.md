@@ -7,7 +7,22 @@ and variable bounds. It does not yet expose Gurobi MILP, QP, or nonlinear models
 ## Build and license
 
 Install the Gurobi C SDK with headers in `~/.local/include` and its shared library
-in `~/.local/lib`, then build with:
+in `~/.local/lib`. For the Gurobi 13.0.3 Linux x86-64 tarball in your home
+directory, extract just the C header, runtime library and linker symlink:
+
+```sh
+mkdir -p "$HOME/.local"
+tar -xzf "$HOME/gurobi13.0.3_linux64.tar.gz" \
+    -C "$HOME/.local" --strip-components=2 --no-same-owner \
+    gurobi1303/linux64/include/gurobi_c.h \
+    gurobi1303/linux64/lib/libgurobi.so.13.0.3 \
+    gurobi1303/linux64/lib/libgurobi130.so
+```
+
+Adjust the archive and member names for other releases. Both library entries
+are needed: `libgurobi130.so` links to the versioned runtime. This command
+replaces any existing files at those three paths; it does not install a license
+or the Gurobi command-line tools. Then build with:
 
 ```sh
 scons -j4 WITH_GUROBI=1
