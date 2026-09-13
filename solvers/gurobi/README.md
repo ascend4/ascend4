@@ -103,6 +103,15 @@ constraints. It includes the original and tighter fuel-oil sulfur limits:
 ./a4 run models/refinery.a4c --model refinery_low_sulfur
 ```
 
+For a dimensioned MIP showcase, [Food Manufacture II](../../models/food_manufacture_2.md)
+adds binary ingredient choices to six months of oil purchasing, refining and
+blending. It uses ordinary linear constraints and works with either solver:
+
+```sh
+./a4 run models/food_manufacture_2.a4c
+./a4 run models/food_manufacture_2.a4c --model food_manufacture_2_highs
+```
+
 ## Options and semantics
 
 - `nonlin` (default false): explicitly request **one tangent LP/MIP** at the current

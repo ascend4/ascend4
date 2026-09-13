@@ -25,7 +25,7 @@ enum { EXACT, REJECT, SCALED, RESOLVE, RELAX, TANGENT, INFEASIBLE, UNBOUNDED, TI
 	SHOWCASE, SHOWCASE_MB, SHOWCASE_10LB, SELF_TEST, PARAMETERS, LP_TUNED, LP_ITER_LIMIT, LP_BAR_LIMIT,
 	MIP, MIP_SCALED, MIP_BENCH, MIP_RESOLVE, MIP_INFEASIBLE, MIP_TIMEOUT,
 	MIP_INTERRUPT, MIP_QUIET_INTERRUPT, MIP_SOLUTION_LIMIT, MIP_CALLBACK_INTERRUPT,
-	MIP_QUIET, MIP_PREPARE, MIP_NODE_LIMIT, MIP_TANGENT, MIP_TUNED, MIP_WORK_LIMIT, MIP_MEM_LIMIT };
+	MIP_QUIET, MIP_PREPARE, MIP_NODE_LIMIT, MIP_TANGENT, MIP_TUNED, MIP_WORK_LIMIT, MIP_MEM_LIMIT, MIP_SELF_TEST };
 
 /* Defaults/ranges deliberately checked independently of the adapter mapping. */
 static const struct {
@@ -116,9 +116,9 @@ static void run_case(const char *path,const char *model,int mode,double expected
 	CU_ASSERT(zz_parse()==0);
 	sim=SimsCreateInstance(AddSymbol(model),AddSymbol("sim1"),e_normal,NULL);
 	CU_ASSERT(sim!=NULL); if(!sim)goto cleanup;
-	/* SELF_TEST examples need no setup; their on_load only selects a solver
-	 * through frontend hooks, which this C harness does not install. */
-	if(mode!=SELF_TEST){
+	/* SELF_TEST examples need no setup; solver/OPTION hooks from on_load are
+	 * supplied by this harness instead (including a zero relative MIP gap). */
+	if(mode!=SELF_TEST && mode!=MIP_SELF_TEST){
 		name=CreateIdName(AddSymbol(showcase ? "initialise" : "on_load"));
 		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
 		DestroyName(name);
@@ -356,7 +356,7 @@ static void run_case(const char *path,const char *model,int mode,double expected
 		}
 	}
 	CU_ASSERT_DOUBLE_EQUAL(rel_residual(slv_get_obj_relation(sys)),expected,1e-6);
-	if(showcase || mode==SELF_TEST || mode==MIP_BENCH){
+	if(showcase || mode==SELF_TEST || mode==MIP_BENCH || mode==MIP_SELF_TEST){
 		name=CreateIdName(AddSymbol("self_test"));
 		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
 		DestroyName(name);
@@ -459,6 +459,7 @@ static void test_mip_solution_limit(void){run_case("models/test/mip/tsp_mtz8.a4c
 static void test_mip_callback_interrupt(void){run_case("models/test/mip/tsp_mtz8.a4c","mip_tsp_mtz8",MIP_CALLBACK_INTERRUPT,0);}
 static void test_mip_node_limit(void){run_case("models/test/mip/tsp_mtz8.a4c","mip_tsp_mtz8",MIP_NODE_LIMIT,0);}
 static void test_mip_tuned(void){run_case("models/test/mip/tsp_mtz8.a4c","mip_tsp_mtz8",MIP_TUNED,166);}
+static void test_food_manufacture_2(void){run_case("models/food_manufacture_2.a4c","food_manufacture_2",MIP_SELF_TEST,100278.7037037037);}
 #define DOMAIN_CASE(NAME,MODEL,MODE,OBJ) static void test_##NAME(void){run_case("models/test/mip/domains.a4c",MODEL,MODE,OBJ);}
 DOMAIN_CASE(semi_zero,"mip_semi_gap",MIP_SCALED,0)
 DOMAIN_CASE(semi_active,"mip_semi_active",MIP_SCALED,2)
@@ -488,5 +489,5 @@ DOMAIN_CASE(binary_wide_bounds_relaxed,"mip_binary_wide_bounds",RELAX,1)
 	T(objective_only_variable) T(bad_evaluation) T(shared_export) \
 	T(alloy_blending) T(alloy_blending_mass_balance) T(alloy_blending_ten_pounds) \
 	T(alloy_blending_detailed) T(alloy_blending_detailed_mass_balance) T(steel_production) \
-	T(refinery) T(refinery_low_sulfur)
+	T(refinery) T(refinery_low_sulfur) T(food_manufacture_2)
 REGISTER_TESTS_SIMPLE(solver_gurobi,TESTS)
