@@ -132,13 +132,12 @@ MODEL stn_inventory(g WILL_BE stn_grid; d WILL_BE stn_stock_data;);
     FOR t IN [1..g.n] CREATE
         eq_4[t]: stock[t] = stock[t-1] + received[t] - withdrawn[t];
     END FOR;
-    (* An unlimited stock retains only the non-negativity part of Eq. (3).
-       SELECT is structural: no logical decisions enter the MIP. *)
+    (* Mass variables already have nonnegative bounds. Unlimited storage
+       needs no additional relation. SELECT is structural, not a MIP choice. *)
     SELECT (d.limited)
     CASE TRUE:
         FOR t IN g.point CREATE eq_3[t]: stock[t] <= d.capacity; END FOR;
     CASE FALSE:
-        FOR t IN g.point CREATE nonnegative[t]: stock[t] >= 0{kg}; END FOR;
     END SELECT;
 METHODS
 METHOD self_test;

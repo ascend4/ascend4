@@ -688,7 +688,167 @@ VECTOR_FAIL(dimension_conflict,"symbol",SYMBOLS,"temperature_constant","UNITS {h
 #undef VECTOR_TEST
 #undef VECTOR_FAIL
 
+/* Qualified domains are assigned in child models, after the parent's first
+   execution attempt. Check actual values, not just non-NULL simulations:
+   ASCEND can return a partially instantiated simulation with pending work. */
+static void run_deferred_case(const char *name, const char *body,
+    const char *result_expr, double expected, const char *error){
+	char model[8192];
+	int status;
+	struct Instance *sim, *root, *result;
+	snprintf(model,sizeof(model),
+		"MODEL table_axis;\n"
+		"labels, unset IS_A set OF symbol_constant; labels :== ['a','b'];\n"
+		"idx IS_A set OF integer_constant; idx :== [1..2];\n"
+		"flag IS_A boolean_constant; flag :== TRUE;\nEND table_axis;\n"
+		"MODEL table_nested; axis IS_A table_axis; END table_nested;\n"
+		"MODEL table_bound(d WILL_BE table_nested;);\n"
+		"TABLE x[d.axis.labels] IS_A time_constant UNITS {h}; a: 1; b: 2; END TABLE;\n"
+		"END table_bound;\n"
+		"MODEL table_target(labels IS_A set OF symbol_constant;);\n"
+		"x[labels] IS_A time_constant; END table_target;\n"
+		"MODEL deferred_case; d IS_A table_nested;\n%s\n"
+		"result IS_A time_constant; result :== %s;\nEND deferred_case;\n",
+		body,result_expr);
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	table_parse_error_capture_reset();
+	error_reporter_set_callback(&table_parse_error_capture_cb);
+	Asc_OpenModule("atoms.a4l",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(zz_parse() == 0);
+	Asc_OpenStringModule(model,&status,name);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(zz_parse() == 0);
+	CU_ASSERT_FATAL(g_table_parse_error_capture.error_count == 0);
+	sim = SimsCreateInstance(AddSymbol("deferred_case"),AddSymbol("sim1"),e_normal,NULL);
+	CU_ASSERT_FATAL(sim != NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root != NULL);
+	result = ChildByChar(root,AddSymbol("result"));
+	CU_ASSERT_FATAL(result != NULL);
+	if(error){
+		CU_ASSERT(g_table_parse_error_capture.error_count > 0);
+		CU_ASSERT(strstr(g_table_parse_error_capture.all_error_msgs,error) != NULL);
+		/* In particular, loop prechecks must not assign an earlier cell
+		   before encountering a bad token or a later invalid iteration. */
+		CU_ASSERT(!AtomAssigned(result));
+	}else{
+		CU_ASSERT(g_table_parse_error_capture.error_count == 0);
+		CU_ASSERT(AtomAssigned(result));
+		if(AtomAssigned(result)) CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(result),expected,1e-9);
+	}
+	sim_destroy(sim);
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+#define DEFERRED_CASE(NAME,BODY,EXPR,VALUE,ERROR) \
+static void test_deferred_##NAME(void){run_deferred_case(#NAME,BODY,EXPR,VALUE,ERROR);}
+
+DEFERRED_CASE(vector_vertical,
+	"TABLE x[d.axis.labels] IS_A time_constant UNITS {h}; b: 2; a: 1; END TABLE;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(vector_horizontal,
+	"TABLE x[d.axis.labels] IS_A time_constant UNITS {h}; : b a; 2 1; END TABLE;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(vector_expression,
+	"TABLE x[d.axis.labels + ['c']] IS_A time_constant UNITS {h}; a: 1; b: 2; c: 3; END TABLE;",
+	"x['a'] + x['b'] + x['c']",21600,NULL)
+DEFERRED_CASE(dense,
+	"TABLE x[d.axis.labels][d.axis.idx] IS_A time_constant UNITS {h};\n"
+	"2 1; b: 4 3; a: 2 1; END TABLE;",
+	"x['a'][1] + 10*x['b'][2]",147600,NULL)
+DEFERRED_CASE(dense_comma_indices,
+	"TABLE x[d.axis.labels,d.axis.idx] IS_A time_constant UNITS {h};\n"
+	"2 1; b: 4 3; a: 2 1; END TABLE;",
+	"x['a'][1] + 10*x['b'][2]",147600,NULL)
+DEFERRED_CASE(dense_inferred_first,
+	"rows IS_A set OF symbol_constant;\n"
+	"TABLE x[rows][d.axis.idx] IS_A time_constant UNITS {h};\n"
+	"1 2; a: 1 2; b: 3 4; END TABLE;",
+	"x['a'][1] + 10*x['b'][2]",147600,NULL)
+DEFERRED_CASE(positional_vector,
+	"TABLE x[d.axis.labels] IS_A time_constant POSITIONAL UNITS {h}; 1 2; END TABLE;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(positional_dense,
+	"TABLE x[d.axis.labels,d.axis.idx] IS_A time_constant POSITIONAL UNITS {h};\n"
+	"1 2; 3 4; END TABLE;",
+	"x['a'][1] + 10*x['b'][2]",147600,NULL)
+DEFERRED_CASE(positional_range,
+	"TABLE x[1..2] IS_A time_constant POSITIONAL UNITS {h}; 1 2; END TABLE;",
+	"x[1] + x[2]",10800,NULL)
+DEFERRED_CASE(loop_labelled,
+	"x[d.axis.labels] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[d.axis.labels] UNITS {h}; a: 1; b: 2; END TABLE; END FOR;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(loop_positional,
+	"x[1..2][d.axis.labels] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[k][d.axis.labels] POSITIONAL UNITS {h}; 1 2; END TABLE; END FOR;",
+	"x[1]['a'] + x[2]['b']",10800,NULL)
+DEFERRED_CASE(loop_inference,
+	"labels IS_A set OF symbol_constant; x[labels] IS_A time_constant;\n"
+	"FOR k IN [1..2] CREATE\n"
+	"TABLE x[labels] UNITS {h}; a: 1; b: 2; END TABLE; END FOR;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(unassigned,
+	"TABLE x[d.axis.unset] IS_A time_constant UNITS {h}; a: 1; b: 2; END TABLE;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(missing,
+	"TABLE x[d.axis.typo] IS_A time_constant UNITS {h}; a: 1; b: 2; END TABLE;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(positional_unassigned,
+	"TABLE x[d.axis.unset] IS_A time_constant POSITIONAL UNITS {h}; 1 2; END TABLE;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(wrong_type,
+	"x[d.axis.labels] IS_A time_constant;\n"
+	"TABLE x[d.axis.flag] UNITS {h}; a: 1; b: 2; END TABLE;",
+	"x['a']",0,"TABLE index")
+DEFERRED_CASE(nonmember,
+	"TABLE x[d.axis.labels] IS_A time_constant UNITS {h}; a: 1; z: 2; END TABLE;",
+	"x['a']",0,"not a member")
+DEFERRED_CASE(loop_unassigned,
+	"x[d.axis.unset] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[d.axis.unset] UNITS {h}; a: 1; b: 2; END TABLE; END FOR;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(loop_invalid,
+	"x[1..2][d.axis.labels] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[k][d.axis.labels] POSITIONAL UNITS {h}; 1 foo; END TABLE; END FOR;",
+	"x[1]['a']",0,"non-numeric token")
+DEFERRED_CASE(model_parameter,
+	"b IS_A table_bound(d);",
+	"b.x['a'] + b.x['b']",10800,NULL)
+DEFERRED_CASE(positional_child_target,
+	"labels IS_A set OF symbol_constant; labels :== ['a','b'];\n"
+	"b IS_A table_target(labels);\n"
+	"TABLE b.x[labels] POSITIONAL UNITS {h}; 1 2; END TABLE;",
+	"b.x['a'] + b.x['b']",10800,NULL)
+DEFERRED_CASE(circular_domain,
+	"d.axis.unset :== [s IN ['a','b'] | x[s] > 0{h}];\n"
+	"TABLE x[d.axis.unset] IS_A time_constant UNITS {h}; a: 1; b: 2; END TABLE;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(loop_constructs_target,
+	"FOR k IN [1] CREATE FOR j IN d.axis.labels CREATE\n"
+	"x[k][j] IS_A time_constant; END FOR;\n"
+	"TABLE x[k][d.axis.labels] POSITIONAL UNITS {h}; 1 2; END TABLE; END FOR;",
+	"x[1]['a']",0,"assignment target is still undefined or unresolved")
+DEFERRED_CASE(loop_dense_invalid,
+	"x[1..2][d.axis.labels] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[k][d.axis.labels] UNITS {h}; a b; 1: 1 2; END TABLE; END FOR;",
+	"x[1]['a']",0,"not a member")
+
+#undef DEFERRED_CASE
+
 #define TESTS(T) \
+	T(deferred_vector_vertical) T(deferred_vector_horizontal) T(deferred_vector_expression) \
+	T(deferred_dense) T(deferred_dense_comma_indices) T(deferred_dense_inferred_first) \
+	T(deferred_positional_vector) T(deferred_positional_dense) T(deferred_positional_range) \
+	T(deferred_loop_labelled) T(deferred_loop_positional) T(deferred_loop_inference) \
+	T(deferred_unassigned) T(deferred_missing) T(deferred_positional_unassigned) \
+	T(deferred_wrong_type) T(deferred_nonmember) T(deferred_loop_unassigned) T(deferred_loop_invalid) \
+	T(deferred_model_parameter) T(deferred_positional_child_target) \
+	T(deferred_circular_domain) T(deferred_loop_constructs_target) \
+	T(deferred_loop_dense_invalid) \
 	T(vector_horizontal) T(vector_vertical) T(vector_vertical_csv) \
 	T(vector_horizontal_tabs) T(vector_vertical_tabs) \
 	T(vector_horizontal_corner) T(vector_horizontal_corner_header_only) \

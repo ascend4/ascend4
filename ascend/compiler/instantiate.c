@@ -6519,7 +6519,8 @@ static int TableEvaluateDomains(struct Instance *inst,
                                 struct Statement *statement,
                                 struct table_domain_t *domains,
                                 unsigned max_domains,
-                                unsigned *num_domains)
+                                unsigned *num_domains,
+                                int *undefined)
 {
   struct value_t value, ordered;
   struct gl_list_t *list;
@@ -6530,6 +6531,7 @@ static int TableEvaluateDomains(struct Instance *inst,
   IVAL(value);
   IVAL(ordered);
   *num_domains = 0;
+  *undefined = 0;
 
   asc_assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(inst);
@@ -6604,6 +6606,11 @@ static int TableEvaluateDomains(struct Instance *inst,
     DestroyValue(&ordered);
     break;
   case error_value:
+    if (ErrorValue(value) == name_unfound || ErrorValue(value) == undefined_value) {
+      *undefined = 1;
+      DestroyValue(&value);
+      return 0;
+    }
     STATEMENT_ERROR(statement,"TABLE index set could not be evaluated");
     DestroyValue(&value);
     return 0;
@@ -6661,15 +6668,6 @@ struct table_domain_ref_t {
   CONST struct Name *set_name;
 };
 
-static int TableAssignCell(struct Instance *work,
-                           struct Statement *statement,
-                           CONST struct table_domain_t *domains,
-                           unsigned ndims,
-                           CONST unsigned long *positions,
-                           CONST struct scalar_units_runtime_t *units_runtime,
-                           int is_int,
-                           long ival,
-                           double rval);
 static int TableAssignCellMaybeWait(struct Instance *work,
                                     struct Statement *statement,
                                     CONST struct table_domain_t *domains,
@@ -6678,7 +6676,8 @@ static int TableAssignCellMaybeWait(struct Instance *work,
                                     CONST struct scalar_units_runtime_t *units_runtime,
                                     int is_int,
                                     long ival,
-                                    double rval);
+                                    double rval,
+                                    int check_only);
 
 static int TableTokenIsDelimiter(CONST char *tok)
 {
@@ -7994,6 +7993,19 @@ static int TableEvaluateDomainExpr(struct Instance *work,
   }
 }
 
+/* TABLE uses the ordinary phase-1 retry budget, not a separate scheduler.
+   A missing name may belong to a child not constructed yet. Only diagnose
+   unresolved dependencies after those retries; never silently drop the TABLE. */
+static int TablePending(struct Statement *statement, CONST char *what)
+{
+  char message[160];
+  if (g_iteration < MAXNUMBER) return -1;
+  snprintf(message,sizeof(message),
+      "TABLE %s is still undefined or unresolved after instantiation retries",what);
+  STATEMENT_ERROR(statement,message);
+  return 0;
+}
+
 static int TableAssignDomainSet(struct Instance *work,
                                 CONST struct Name *set_name,
                                 CONST struct set_t *setvalue,
@@ -8006,6 +8018,11 @@ static int TableAssignDomainSet(struct Instance *work,
   int ok;
 
   instances = FindInstances(work,(struct Name *)set_name,&err);
+  if (instances == NULL &&
+      (rel_errorlist_get_find_error(&err) == unmade_instance ||
+       rel_errorlist_get_find_error(&err) == undefined_instance)) {
+    return TablePending(statement,"inferred index set");
+  }
   if (instances == NULL || gl_length(instances) != 1) {
     if (instances != NULL) {
       gl_destroy(instances);
@@ -8076,9 +8093,11 @@ static int TableInferDomainFromLabels(struct Instance *work,
     }
   }
 
-  if (!TableAssignDomainSet(work,set_name,setvalue,statement)) {
+  ok = TableAssignDomainSet(work,set_name,setvalue,statement);
+  if (ok != 1) {
     goto cleanup;
   }
+  ok = 0;
   if (!TableInitDomainFromSet(setvalue,statement,domain)) {
     goto cleanup;
   }
@@ -8089,6 +8108,21 @@ cleanup:
     DestroySet(setvalue);
   }
   return ok;
+}
+
+/* 1 = ready, -1 = retry, 0 = invalid. Inference is deliberately restricted
+   to simple names: qualified domains must be supplied by their owning model. */
+static int TableResolveDomain(struct Instance *work, struct Statement *statement,
+    CONST struct table_domain_ref_t *ref, char **labels, unsigned long nlabels,
+    struct table_domain_t *domain)
+{
+  int undefined;
+  if (TableEvaluateDomainExpr(work,ref->expr,statement,domain,&undefined)) return 1;
+  if (!undefined) return 0;
+  if (ref->set_name != NULL) {
+    return TableInferDomainFromLabels(work,ref->set_name,labels,nlabels,statement,domain);
+  }
+  return TablePending(statement,"index domain");
 }
 
 static int TableLabelToPosition(CONST struct table_domain_t *domain,
@@ -8279,7 +8313,7 @@ static int TableVectorParse(CONST struct table_vector_row_t *rows,
 }
 
 static int ExecuteTABLEVector(struct Instance *work, struct Statement *statement,
-                              CONST struct table_domain_ref_t *ref)
+                              CONST struct table_domain_ref_t *ref, int check_only)
 {
   struct table_domain_t domain = {NULL,empty_set,0};
   struct scalar_units_runtime_t units_runtime;
@@ -8292,7 +8326,7 @@ static int ExecuteTABLEVector(struct Instance *work, struct Statement *statement
   unsigned long nrows = 0, i;
   unsigned long *positions = NULL;
   char *seen = NULL;
-  int h, v, undefined = 0, result = 0;
+  int h, v, resolved, result = 0;
 
   for (line = strtok_r(body,"\n",&line_ctx); line != NULL;
        line = strtok_r(NULL,"\n",&line_ctx)) {
@@ -8319,10 +8353,9 @@ static int ExecuteTABLEVector(struct Instance *work, struct Statement *statement
   }
   vector = h ? &horizontal : &vertical;
   if (!ResolveScalarUnits(statement->v.table.units,statement,"TABLE",&units_runtime)) goto invalid;
-  if (!TableEvaluateDomainExpr(work,ref->expr,statement,&domain,&undefined)) {
-    if (!undefined || !TableInferDomainFromLabels(work,ref->set_name,
-        vector->labels,vector->len,statement,&domain)) goto invalid;
-  }
+  resolved = TableResolveDomain(work,statement,ref,vector->labels,vector->len,&domain);
+  if (resolved < 0) goto cleanup;
+  if (!resolved) goto invalid;
   if (domain.len != vector->len) {
     STATEMENT_ERROR(statement,"1-D TABLE label/value count does not match index cardinality");
     goto invalid;
@@ -8340,7 +8373,7 @@ static int ExecuteTABLEVector(struct Instance *work, struct Statement *statement
   for (i = 0; i < vector->len; ++i) {
     struct table_cell_value_t *cell = &vector->values[i];
     int assigned = TableAssignCellMaybeWait(work,statement,&domain,1,&positions[i],
-        &units_runtime,cell->is_int,cell->ival,cell->rval);
+        &units_runtime,cell->is_int,cell->ival,cell->rval,check_only);
     if (assigned < 0) goto cleanup;
     if (!assigned) goto invalid;
   }
@@ -8362,7 +8395,8 @@ cleanup:
   return result;
 }
 
-static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
+static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement,
+                             int check_only)
 {
   struct table_domain_t domains[2];
   struct table_domain_ref_t refs[2];
@@ -8390,7 +8424,7 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
     return 1;
   }
   if (ndims == 1) {
-    return ExecuteTABLEVector(work,statement,&refs[0]);
+    return ExecuteTABLEVector(work,statement,&refs[0],check_only);
   }
   if (ndims != 2) {
     STATEMENT_ERROR(statement,"Dense non-POSITIONAL TABLE requires 1 or 2 indices");
@@ -8595,21 +8629,12 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
   }
 
   for (d = 0; d < 2; ++d) {
-    int undefined = 0;
-    if (!TableEvaluateDomainExpr(work,refs[d].expr,statement,&domains[d],&undefined)) {
-      if (!undefined) {
-        MarkStatContext(statement,context_WRONG);
-        goto cleanup;
-      }
-      if (!TableInferDomainFromLabels(work
-            ,refs[d].set_name
-            ,(d == 0) ? row_labels : col_labels
-            ,(d == 0) ? nrows : ncols
-            ,statement
-            ,&domains[d])) {
-        MarkStatContext(statement,context_WRONG);
-        goto cleanup;
-      }
+    int resolved = TableResolveDomain(work,statement,&refs[d],
+        d == 0 ? row_labels : col_labels,d == 0 ? nrows : ncols,&domains[d]);
+    if (resolved < 0) goto cleanup;
+    if (!resolved) {
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
     }
   }
 
@@ -8666,7 +8691,7 @@ static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
       pos[1] = col_pos[c];
       assign_result = TableAssignCellMaybeWait(work,statement,domains,2,pos,
                                                &units_runtime,
-                                               cell->is_int,cell->ival,cell->rval);
+                                               cell->is_int,cell->ival,cell->rval,check_only);
       if (assign_result < 0) {
         rval = 0;
         goto cleanup;
@@ -8711,6 +8736,7 @@ cleanup:
   for (d = 0; d < 2; ++d) {
     TableDomainDestroy(&domains[d]);
   }
+  if (StatWrong(statement)) return 1;
   return rval;
 }
 
@@ -8769,45 +8795,6 @@ static struct Name *TableBuildCellName(CONST struct Name *templ,
   return result;
 }
 
-static int TableAssignCell(struct Instance *work,
-                           struct Statement *statement,
-                           CONST struct table_domain_t *domains,
-                           unsigned ndims,
-                           CONST unsigned long *positions,
-                           CONST struct scalar_units_runtime_t *units_runtime,
-                           int is_int,
-                           long ival,
-                           double rval)
-{
-  struct Name *lhs;
-  struct gl_list_t *instances;
-  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
-  struct Instance *inst;
-  int ok;
-
-  lhs = TableBuildCellName(statement->v.table.name,domains,ndims,positions);
-  if (lhs == NULL) {
-    STATEMENT_ERROR(statement,"Unable to construct TABLE assignment target name");
-    return 0;
-  }
-
-  instances = FindInstances(work,lhs,&err);
-  DestroyName(lhs);
-  if (instances == NULL || gl_length(instances) != 1) {
-    if (instances != NULL) {
-      gl_destroy(instances);
-    }
-    STATEMENT_ERROR(statement,"TABLE assignment target could not be resolved uniquely");
-    return 0;
-  }
-  inst = (struct Instance *)gl_fetch(instances,1);
-  gl_destroy(instances);
-
-  ok = AssignNumericToConstantInstance(inst,statement,is_int,ival,rval,
-                                       units_runtime,Dimensionless(),"TABLE");
-  return ok;
-}
-
 static int TableAssignCellMaybeWait(struct Instance *work,
                                     struct Statement *statement,
                                     CONST struct table_domain_t *domains,
@@ -8816,7 +8803,8 @@ static int TableAssignCellMaybeWait(struct Instance *work,
                                     CONST struct scalar_units_runtime_t *units_runtime,
                                     int is_int,
                                     long ival,
-                                    double rval)
+                                    double rval,
+                                    int check_only)
 {
   struct Name *lhs;
   struct gl_list_t *instances;
@@ -8836,7 +8824,7 @@ static int TableAssignCellMaybeWait(struct Instance *work,
     switch (rel_errorlist_get_find_error(&err)) {
     case unmade_instance:
     case undefined_instance:
-      return -1;
+      return TablePending(statement,"assignment target");
     default:
       STATEMENT_ERROR(statement,"TABLE assignment target could not be resolved uniquely");
       return 0;
@@ -8850,6 +8838,7 @@ static int TableAssignCellMaybeWait(struct Instance *work,
   inst = (struct Instance *)gl_fetch(instances,1);
   gl_destroy(instances);
 
+  if (check_only) return 1;
   ok = AssignNumericToConstantInstance(inst,statement,is_int,ival,rval,
                                        units_runtime,Dimensionless(),"TABLE");
   return ok;
@@ -9837,7 +9826,8 @@ cleanup:
   return 1;
 }
 
-static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
+static int ExecuteTABLEMode(struct Instance *work, struct Statement *statement,
+                            int check_only){
   struct table_domain_t domains[2];
   struct scalar_units_runtime_t units_runtime;
   CONST struct Name *node;
@@ -9860,7 +9850,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
     return 1;
   }
   if (!statement->v.table.positional) {
-    return ExecuteTABLEDense(work,statement);
+    return ExecuteTABLEDense(work,statement,check_only);
   }
 
   if (!ResolveScalarUnits(statement->v.table.units,statement,"TABLE",&units_runtime)) {
@@ -9877,12 +9867,17 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
   for (node = statement->v.table.name; node != NULL; node = NextName(node)) {
     if (!NameId(node)) {
       unsigned added = 0;
+      int undefined = 0;
       if (ndims >= 2) {
         STATEMENT_ERROR(statement,"POSITIONAL TABLE currently supports at most 2 indices");
         MarkStatContext(statement,context_WRONG);
         goto cleanup;
       }
-      if (!TableEvaluateDomains(work,NameSetPtr(node),statement,&domains[ndims],2 - ndims,&added)) {
+      if (!TableEvaluateDomains(work,NameSetPtr(node),statement,&domains[ndims],2 - ndims,&added,&undefined)) {
+        if (undefined && TablePending(statement,"index domain") < 0) {
+          rval = 0;
+          goto cleanup;
+        }
         MarkStatContext(statement,context_WRONG);
         goto cleanup;
       }
@@ -9970,6 +9965,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
       row_has_values = 1;
 
       if (ndims == 1) {
+        int assigned;
         flat_index++;
         if (flat_index > domains[0].len) {
           STATEMENT_ERROR(statement,"Too many TABLE values for 1-D target");
@@ -9977,11 +9973,18 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
           goto cleanup;
         }
         pos[0] = flat_index;
-        if (!TableAssignCell(work,statement,domains,1,pos,&units_runtime,is_int,ival,rvalnum)) {
+        assigned = TableAssignCellMaybeWait(work,statement,domains,1,pos,
+            &units_runtime,is_int,ival,rvalnum,check_only);
+        if (assigned < 0) {
+          rval = 0;
+          goto cleanup;
+        }
+        if (!assigned) {
           MarkStatContext(statement,context_WRONG);
           goto cleanup;
         }
       } else {
+        int assigned;
         if (row_index > domains[0].len) {
           STATEMENT_ERROR(statement,"Too many TABLE rows for first index set");
           MarkStatContext(statement,context_WRONG);
@@ -9994,7 +9997,13 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
         }
         pos[0] = row_index;
         pos[1] = col_index;
-        if (!TableAssignCell(work,statement,domains,2,pos,&units_runtime,is_int,ival,rvalnum)) {
+        assigned = TableAssignCellMaybeWait(work,statement,domains,2,pos,
+            &units_runtime,is_int,ival,rvalnum,check_only);
+        if (assigned < 0) {
+          rval = 0;
+          goto cleanup;
+        }
+        if (!assigned) {
           MarkStatContext(statement,context_WRONG);
           goto cleanup;
         }
@@ -10051,6 +10060,20 @@ cleanup:
     TableDomainDestroy(&domains[di]);
   }
   return rval;
+}
+
+static int ExecuteTABLE(struct Instance *work, struct Statement *statement)
+{
+  return ExecuteTABLEMode(work,statement,0);
+}
+
+/* A FOR must not start until all its TABLE domains and target cells exist.
+   Reuse parsing/validation without writing any numeric cells. Label inference
+   may assign a simple domain set here, so existing array declarations can
+   expand on the next phase-1 sweep (as for a TABLE outside a loop). */
+static int CheckTABLE(struct Instance *work, struct Statement *statement)
+{
+  return ExecuteTABLEMode(work,statement,1);
 }
 
 
@@ -12049,7 +12072,7 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
   case CASGN:
     return CheckCASGN(inst,stat);
   case TABLESTAT:
-    return 1;
+    return CheckTABLE(inst,stat);
   case DATASETSTAT:
     return 1;
   case ASGN:

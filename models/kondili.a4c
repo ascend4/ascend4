@@ -12,9 +12,7 @@ MODEL kondili_case(bc_capacity IS_A mass_constant; expected IS_A stn_value;);
     plant IS_A stn_network(grid,data);
     data.state :== ['Feed_A','Feed_B','Feed_C','Hot_A','Int_AB','Int_BC','Impure_E','Product_1','Product_2'];
     data.task :== ['Heating','Reaction_1','Reaction_2','Reaction_3','Separation'];
-    units IS_A set OF symbol_constant;
-    units :== ['Heater','Reactor_1','Reactor_2','Still'];
-    data.unit :== units;
+    data.unit :== ['Heater','Reactor_1','Reactor_2','Still'];
     r ALIASES data.recipe;
 
     (* Fixed mass recipes and staggered withdrawals, Fig. 3. The neglected
@@ -48,8 +46,8 @@ MODEL kondili_case(bc_capacity IS_A mass_constant; expected IS_A stn_value;);
     FOR j IN ['Reactor_1','Reactor_2'] CREATE
         data.equipment[j].task :== ['Reaction_1','Reaction_2','Reaction_3'];
     END FOR;
-    capacity[units] IS_A mass_constant;
-    TABLE capacity[units] UNITS {kg};
+    capacity[data.unit] IS_A mass_constant;
+    TABLE capacity[data.unit] UNITS {kg};
         Heater: 100;
         Reactor_1: 80;
         Reactor_2: 50;

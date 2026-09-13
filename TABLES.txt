@@ -235,6 +235,36 @@ Behavior:
 * Otherwise infer symbol set.
 * Duplicate inferred labels are rejected.
 
+=== Deferred execution ===
+
+TABLE participates in ordinary phase-1 instantiation retries. A qualified
+index expression such as <code>data.unit</code> may therefore be supplied by a
+child model after the parent's first execution attempt; no local index-set
+copy is required. This applies to labelled 1-D and 2-D TABLEs and to POSITIONAL
+TABLEs. Target array elements may also wait for array expansion.
+
+<source lang=ascend>
+capacity[data.unit] IS_A mass_constant;
+TABLE capacity[data.unit] UNITS {kg};
+    Heater: 100;
+    Reactor_1: 80;
+    Reactor_2: 50;
+    Still: 200;
+END TABLE;
+</source>
+
+This does not extend label-based inference to qualified names: the owning
+model must supply <code>data.unit</code>. Simple named sets retain the inference
+rules above. Undefined or unresolved domains are reported as errors when
+instantiation retries are exhausted; waiting does not suppress invalid types,
+labels, dimensions, or table shapes.
+
+Inside a FOR, TABLE readiness is checked before executing the loop. This check
+does not assign numeric cells, but it may infer a simple index set so that an
+existing array declaration can expand. Declare target arrays outside the loop,
+or construct them in a separate loop: a TABLE cannot populate elements whose
+construction is blocked by that same loop's readiness check.
+
 == Current Limitations ==
 
 * Sparse non-POSITIONAL TABLE assignment (e.g. <code>row: col=value ...</code>) is not implemented.
