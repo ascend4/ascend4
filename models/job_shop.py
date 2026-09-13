@@ -83,23 +83,32 @@ def plot_schedule(operations, makespan, solver=None):
 
     jobs = sorted({op.job for op in operations})
     machines = sorted({op.machine for op in operations})
-    machine_colors = {"Blue": "#80b1d3", "Green": "#8dd3a4", "Yellow": "#ffdf70"}
-    job_colors = dict(zip(jobs, ("#a6cee3", "#fdbf6f", "#cab2d6")))
+    # Press determines hue; Paper 1/2/3 determine light/medium-light/medium.
+    # Keep each operation's colour identical in both views.
+    machine_colors = {
+        "Blue": ("#c6def1", "#92bddc", "#5c9fcb"),
+        "Green": ("#c6e8c2", "#98d18d", "#69b95b"),
+        "Yellow": ("#fff1b3", "#ffe17a", "#ffd04b"),
+    }
+    job_shades = {job: i for i, job in enumerate(jobs)}
     fig, axes = plt.subplots(2, 1, figsize=(12, 7.5), sharex=True,
                              constrained_layout=True)
     title = "Printing job shop | 3 jobs / 3 presses / 8 operations"
     fig.suptitle(title + f"\nMakespan: {makespan:g} min"
-                 + (f" | {solver}" if solver else ""), fontsize=15)
+                 + (f" | {solver}" if solver else "")
+                 + "\nShade: Paper 1 = light | Paper 2 = medium-light | Paper 3 = medium",
+                 fontsize=13)
     panels = (
-        (axes[0], jobs, "job", "machine", machine_colors, "Schedule by job", "Paper job"),
-        (axes[1], machines, "machine", "job", job_colors, "Schedule by press", "Printing press"),
+        (axes[0], jobs, "job", "machine", "Schedule by job", "Paper job"),
+        (axes[1], machines, "machine", "job", "Schedule by press", "Printing press"),
     )
-    for ax, lanes, lane_key, color_key, colors, heading, ylabel in panels:
+    for ax, lanes, lane_key, label_key, heading, ylabel in panels:
         for op in operations:
             lane = lanes.index(getattr(op, lane_key))
-            label = getattr(op, color_key).replace("_", " ")
+            label = getattr(op, label_key).replace("_", " ")
             ax.barh(lane, op.duration, left=op.start, height=0.62,
-                    color=colors[getattr(op, color_key)], edgecolor="#424242", linewidth=0.8)
+                    color=machine_colors[op.machine][job_shades[op.job]],
+                    edgecolor="#424242", linewidth=0.8)
             ax.text(op.start + op.duration / 2, lane,
                     f"{label}\n{time_label(op.start)}–{time_label(op.finish)}",
                     ha="center", va="center", fontsize=8, color="#202020")
@@ -115,8 +124,8 @@ def plot_schedule(operations, makespan, solver=None):
         ax.axvline(makespan, color="#b22222", linestyle="--", linewidth=1.3)
         ax.text(makespan + 0.8, -0.55, f"{makespan:g} min", color="#b22222", fontsize=9)
         ax.spines[["top", "right"]].set_visible(False)
-        ax.legend(handles=[Patch(facecolor=color, edgecolor="#424242",
-                                 label=name.replace("_", " ")) for name, color in colors.items()],
+        ax.legend(handles=[Patch(facecolor=shades[1], edgecolor="#424242",
+                                 label=name) for name, shades in machine_colors.items()],
                   loc="lower right", bbox_to_anchor=(1, 1.01), ncol=3, frameon=False)
     axes[0].tick_params(labelbottom=True)
     axes[1].set_xlabel("Elapsed time / min (bar labels show start–finish)")

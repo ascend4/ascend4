@@ -18,8 +18,11 @@ built, and Matplotlib installed:
 
 The script loads `job_shop.a4c`, solves through the ASCEND adapter, runs the
 model's self-test, prints operation start/duration/finish times, and saves a
-two-panel Gantt chart. The upper panel groups by paper job and colours by press;
-the lower groups by press and colours by job. Bars give start–finish times, and
+two-panel Gantt chart. The upper panel groups by paper job and the lower by
+press. In both panels, blue/green/yellow identifies the press, while the shade
+identifies the job: Paper 1 is light, Paper 2 medium-light, and Paper 3 medium.
+Each operation retains exactly the same colour between views; labels also
+identify the paper jobs in the lower panel. Bars give start–finish times, and
 a dashed line marks the makespan. No Pyomo, pandas or vendor Python bindings
 are needed. Gurobi requires a working license, discovered by `a4` as usual.
 

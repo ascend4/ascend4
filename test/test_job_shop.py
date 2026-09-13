@@ -90,17 +90,32 @@ class GanttPlot(unittest.TestCase):
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        from matplotlib.colors import to_rgba
         fig = job_shop.plot_schedule(reference_schedule(), 97, "HiGHS")
         self.addCleanup(plt.close, fig)
         self.assertEqual(len(fig.axes), 2)
         self.assertIn("Makespan: 97 min", fig._suptitle.get_text())
+        self.assertIn("Paper 1 = light | Paper 2 = medium-light | Paper 3 = medium",
+                      fig._suptitle.get_text())
         self.assertIn("Elapsed time / min", fig.axes[1].get_xlabel())
         for ax in fig.axes:
             self.assertEqual(len(ax.patches), 8)
             self.assertEqual(len(ax.get_yticklabels()), 3)
-            self.assertEqual(len(ax.get_legend().get_texts()), 3)
+            self.assertEqual([t.get_text() for t in ax.get_legend().get_texts()],
+                             ["Blue", "Green", "Yellow"])
             self.assertEqual(list(ax.lines[0].get_xdata()), [97, 97])
             self.assertTrue(any("0–10" in t.get_text() for t in ax.texts))
+        press_colors = {
+            "Blue": ("#c6def1", "#92bddc", "#5c9fcb"),
+            "Green": ("#c6e8c2", "#98d18d", "#69b95b"),
+            "Yellow": ("#fff1b3", "#ffe17a", "#ffd04b"),
+        }
+        for op, top, bottom in zip(reference_schedule(), fig.axes[0].patches, fig.axes[1].patches):
+            shade = int(op.job[-1]) - 1
+            self.assertEqual(top.get_facecolor(), to_rgba(press_colors[op.machine][shade]))
+            self.assertEqual(bottom.get_facecolor(), top.get_facecolor())
+        for job in ("Paper 1", "Paper 2", "Paper 3"):
+            self.assertTrue(any(t.get_text().startswith(job + "\n") for t in fig.axes[1].texts))
         with tempfile.TemporaryDirectory(prefix="ascend-gantt-test-") as tmp:
             for suffix in ("png", "svg"):
                 output = Path(tmp) / f"schedule.{suffix}"
