@@ -460,6 +460,7 @@ static void test_mip_callback_interrupt(void){run_case("models/test/mip/tsp_mtz8
 static void test_mip_node_limit(void){run_case("models/test/mip/tsp_mtz8.a4c","mip_tsp_mtz8",MIP_NODE_LIMIT,0);}
 static void test_mip_tuned(void){run_case("models/test/mip/tsp_mtz8.a4c","mip_tsp_mtz8",MIP_TUNED,166);}
 static void test_food_manufacture_2(void){run_case("models/food_manufacture_2.a4c","food_manufacture_2",MIP_SELF_TEST,100278.7037037037);}
+static void test_job_shop(void){run_case("models/job_shop.a4c","job_shop",MIP_SELF_TEST,97*60);}
 #define DOMAIN_CASE(NAME,MODEL,MODE,OBJ) static void test_##NAME(void){run_case("models/test/mip/domains.a4c",MODEL,MODE,OBJ);}
 DOMAIN_CASE(semi_zero,"mip_semi_gap",MIP_SCALED,0)
 DOMAIN_CASE(semi_active,"mip_semi_active",MIP_SCALED,2)
@@ -489,5 +490,5 @@ DOMAIN_CASE(binary_wide_bounds_relaxed,"mip_binary_wide_bounds",RELAX,1)
 	T(objective_only_variable) T(bad_evaluation) T(shared_export) \
 	T(alloy_blending) T(alloy_blending_mass_balance) T(alloy_blending_ten_pounds) \
 	T(alloy_blending_detailed) T(alloy_blending_detailed_mass_balance) T(steel_production) \
-	T(refinery) T(refinery_low_sulfur) T(food_manufacture_2)
+	T(refinery) T(refinery_low_sulfur) T(food_manufacture_2) T(job_shop)
 REGISTER_TESTS_SIMPLE(solver_gurobi,TESTS)

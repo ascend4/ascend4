@@ -1338,6 +1338,21 @@ static void test_highs_food_manufacture_2(void){
 	run_highs_model("models/food_manufacture_2.a4c","food_manufacture_2_highs",100278.7037037037,0,NULL,0,&opts);
 }
 
+static void test_highs_job_shop(void){
+	struct highs_run_options opts={0};
+	opts.initial_method="";
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	opts.objective_tol=1e-6;
+	opts.set_runtime_options=1;
+	opts.time_limit=60;
+	opts.threads=1;
+	opts.mip_rel_gap=0;
+	opts.mip_abs_gap=1e-7;
+	/* ASCEND stores the time-valued objective in seconds, not minutes. */
+	run_highs_model("models/job_shop.a4c","job_shop_highs",97*60,0,NULL,0,&opts);
+}
+
 static void run_refinery_showcase(const char *model, double profit_per_day){
 	struct highs_run_options opts={0};
 	opts.initial_method="";
@@ -1350,6 +1365,7 @@ static void test_highs_refinery(void){run_refinery_showcase("refinery_highs",658
 static void test_highs_refinery_low_sulfur(void){run_refinery_showcase("refinery_low_sulfur_highs",0);}
 
 #define TESTS(T) \
+	T(highs_job_shop) \
 	T(highs_food_manufacture_2) \
 	T(highs_refinery) \
 	T(highs_refinery_low_sulfur) \

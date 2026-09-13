@@ -1,0 +1,90 @@
+(* Three printing jobs, three presses, eight non-preemptive operations.
+   Gueret, Prins & Sevaux, Applications of Optimization with Xpress-MP (2000),
+   as presented in the ND Pyomo Cookbook, sections 4.3.3-4.3.8:
+   https://jckantor.github.io/ND-Pyomo-Cookbook/notebooks/04.03-Job-Shop-Scheduling.html
+   See job_shop.md for the Python driver and optional GUI Gantt method. *)
+REQUIRE "atoms.a4l";
+
+MODEL job_shop;
+    op "Operations numbered along each job's route" IS_A set OF integer_constant;
+    op :== [1..8];
+    job[op], press[op] "Paper product and required printing press" IS_A symbol_constant;
+    pred[op] "Predecessor operation; 0 means no predecessor" IS_A integer_constant;
+    dur[op], horizon "Processing times and a safe serial-schedule bound" IS_A time_constant;
+    start[op], finish[op], makespan "Elapsed times from the start of the schedule" IS_A time;
+    following "Operations with a predecessor" IS_A set OF integer_constant;
+    rivals[op] "Higher-numbered operations requiring the same press" IS_A set OF integer_constant;
+
+    FOR i IN [1,2] CREATE job[i] :== 'Paper_1'; END FOR;
+    FOR i IN [3..5] CREATE job[i] :== 'Paper_2'; END FOR;
+    FOR i IN [6..8] CREATE job[i] :== 'Paper_3'; END FOR;
+    FOR i IN [1,4,7] CREATE press[i] :== 'Blue'; END FOR;
+    FOR i IN [3,8] CREATE press[i] :== 'Green'; END FOR;
+    FOR i IN [2,5,6] CREATE press[i] :== 'Yellow'; END FOR;
+    TABLE dur[op] UNITS {min};
+         1,  2,  3,  4,  5,  6,  7,  8;
+        45, 10, 10, 20, 34, 28, 12, 17;
+    END TABLE;
+    TABLE pred[op];
+        1, 2, 3, 4, 5, 6, 7, 8;
+        0, 1, 0, 3, 4, 0, 6, 7;
+    END TABLE;
+    following :== [i IN op | pred[i] > 0];
+    horizon :== SUM[dur[i] | i IN op];
+    FOR i IN op CREATE
+        rivals[i] :== [j IN op | j > i AND press[j] = press[i]];
+    END FOR;
+
+    (* All jobs are available at time zero. Waiting between operations is
+       allowed; setup/transfer times are zero. A press handles one operation
+       at a time, without interruption. Times retain their physical dimension. *)
+    FOR i IN op CREATE
+        release[i]: start[i] >= 0{s};
+        processing[i]: finish[i] = start[i] + dur[i];
+        completion[i]: finish[i] <= makespan;
+        FOR j IN rivals[i] CREATE
+            before[i][j] "1 if operation i precedes j on their common press" IS_A solver_binary;
+            (* Each finish <= horizon and each start >= 0, so horizon is a
+               valid big-M for either inactive ordering inequality. There are
+               seven unordered pairs, hence seven binary decisions. *)
+            order_ij[i][j]: finish[i] <= start[j] + horizon*(1 - before[i][j]);
+            order_ji[i][j]: finish[j] <= start[i] + horizon*before[i][j];
+        END FOR;
+    END FOR;
+    FOR i IN following CREATE
+        route[i]: finish[pred[i]] <= start[i];
+    END FOR;
+    (* Running all jobs serially is feasible in 176 min; this explicit upper
+       bound is also essential to the validity of the ordering formulation. *)
+    schedule_bound: makespan <= horizon;
+    obj: MINIMIZE makespan;
+
+METHODS
+METHOD on_load;
+    SOLVER Gurobi;
+    OPTION mip_rel_gap 0.0;
+END on_load;
+METHOD self_test;
+    (* Published optimum. Slack permits alternative optimal start times. *)
+    ASSERT abs((makespan - 97{min})/1{s}) < 1e-5;
+    ASSERT makespan <= horizon + 1e-5{s};
+    FOR i IN op DO
+        ASSERT start[i] >= -1e-5{s};
+        ASSERT abs((finish[i] - start[i] - dur[i])/1{s}) < 1e-5;
+        ASSERT finish[i] <= makespan + 1e-5{s};
+        FOR j IN rivals[i] DO
+            ASSERT abs(before[i][j]) < 1e-7 OR abs(before[i][j] - 1) < 1e-7;
+            ASSERT finish[i] <= start[j] + 1e-5{s} OR finish[j] <= start[i] + 1e-5{s};
+        END FOR;
+    END FOR;
+    FOR i IN following DO ASSERT finish[pred[i]] <= start[i] + 1e-5{s}; END FOR;
+END self_test;
+END job_shop;
+
+MODEL job_shop_highs REFINES job_shop;
+METHODS
+METHOD on_load;
+    SOLVER HiGHS;
+    OPTION mip_rel_gap 0.0;
+END on_load;
+END job_shop_highs;
