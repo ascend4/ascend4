@@ -133,7 +133,8 @@ The showcase self-test checks the published cost, daily energy, demand and
 reserve. Each group also checks integral counts, output limits, startup
 transitions and cost/energy accounting without requiring one exact schedule.
 
-The small analytic component tests use W/kW/MW, minutes/seconds and USD/h/MWh
+The small analytic tests in `test/mip/electrical_power_1_tests.a4c` exercise the
+example's generator helper using W/kW/MW, minutes/seconds and USD/h/MWh
 together: 3 MW for 30 minutes, followed by 1 MW for 5400 seconds. The result is
 3 MWh and USD 27.50 of running costs. Two starts cost USD 200, independently
 of period lengths; one initially-online unit reduces this to USD 100. Both

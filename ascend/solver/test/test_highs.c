@@ -1367,8 +1367,12 @@ static void run_commitment_model(const char *path, const char *model, double cos
 	run_highs_model(path,model,cost,0,NULL,0,&opts);
 }
 static void test_highs_electrical_power_1(void){run_commitment_model("models/electrical_power_1.a4c","electrical_power_1_highs",1002540);}
-static void test_highs_uc_units(void){run_commitment_model("models/test/mip/unit_commitment.a4c","uc_units",227.5);}
-static void test_highs_uc_initial(void){run_commitment_model("models/test/mip/unit_commitment.a4c","uc_initial",127.5);}
+static void test_highs_uc_units(void){run_commitment_model("models/test/mip/electrical_power_1_tests.a4c","uc_units",227.5);}
+static void test_highs_uc_initial(void){run_commitment_model("models/test/mip/electrical_power_1_tests.a4c","uc_initial",127.5);}
+static void test_highs_kondili(void){run_commitment_model("models/kondili.a4c","kondili",2744.375);}
+static void test_highs_kondili_no_bc_storage(void){run_commitment_model("models/kondili.a4c","kondili_no_bc_storage",2210.625);}
+static void test_highs_stn_small_batches(void){run_commitment_model("models/test/mip/stn_tests.a4c","stn_small_batches",12);}
+static void test_highs_stn_small_below_minimum(void){run_commitment_model("models/test/mip/stn_tests.a4c","stn_small_below_minimum",0);}
 
 static void run_refinery_showcase(const char *model, double profit_per_day){
 	struct highs_run_options opts={0};
@@ -1382,6 +1386,7 @@ static void test_highs_refinery(void){run_refinery_showcase("refinery_highs",658
 static void test_highs_refinery_low_sulfur(void){run_refinery_showcase("refinery_low_sulfur_highs",0);}
 
 #define TESTS(T) \
+	T(highs_kondili) T(highs_kondili_no_bc_storage) T(highs_stn_small_batches) T(highs_stn_small_below_minimum) \
 	T(highs_electrical_power_1) T(highs_uc_units) T(highs_uc_initial) \
 	T(highs_job_shop) \
 	T(highs_food_manufacture_2) \

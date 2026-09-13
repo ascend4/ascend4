@@ -1,4 +1,6 @@
-(* Small analytic regressions for power/energy/cost units and initial state. *)
+(* Analytic tests for the electrical_power_1 example's generator helper:
+   power/energy/cost units and initial state. The distinct basename avoids
+   a collision with the example in ASCEND's REQUIRE module lookup. *)
 REQUIRE "electrical_power_1.a4c";
 
 MODEL uc_units_case;

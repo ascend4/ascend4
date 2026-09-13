@@ -1,0 +1,20 @@
+(* Optional GUI plotting; the core model does not import Python. *)
+REQUIRE "kondili.a4c";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "kondili";
+MODEL kondili_plot REFINES kondili;
+METHODS
+METHOD plot; EXTERNAL kondili_plot(SELF); END plot;
+END kondili_plot;
+MODEL kondili_plot_highs REFINES kondili_plot;
+METHODS
+METHOD on_load; SOLVER HiGHS; OPTION mip_rel_gap 0.0; END on_load;
+END kondili_plot_highs;
+MODEL kondili_no_bc_storage_plot REFINES kondili_no_bc_storage;
+METHODS
+METHOD plot; EXTERNAL kondili_plot(SELF); END plot;
+END kondili_no_bc_storage_plot;
+MODEL kondili_no_bc_storage_plot_highs REFINES kondili_no_bc_storage_plot;
+METHODS
+METHOD on_load; SOLVER HiGHS; OPTION mip_rel_gap 0.0; END on_load;
+END kondili_no_bc_storage_plot_highs;

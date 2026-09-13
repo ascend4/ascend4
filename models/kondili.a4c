@@ -1,0 +1,109 @@
+(* Kondili, Pantelides & Sargent (1993), original illustrative example,
+   Fig. 3 / p. 215 and section 5 / pp. 223-225.
+   https://doi.org/10.1016/0098-1354(93)80015-F
+   Local reference: ~/Downloads/1-s2.0-009813549380015F-main.pdf.
+   See kondili.md: the Cookbook changes reactor capacity and economics.
+   USD is used as a display convention for the paper's generic currency. *)
+REQUIRE "stn.a4l";
+
+MODEL kondili_case(bc_capacity IS_A mass_constant; expected IS_A stn_value;);
+    grid IS_A stn_grid(10,1{h});
+    data IS_A stn_data;
+    plant IS_A stn_network(grid,data);
+    data.state :== ['Feed_A','Feed_B','Feed_C','Hot_A','Int_AB','Int_BC','Impure_E','Product_1','Product_2'];
+    data.task :== ['Heating','Reaction_1','Reaction_2','Reaction_3','Separation'];
+    units IS_A set OF symbol_constant;
+    units :== ['Heater','Reactor_1','Reactor_2','Still'];
+    data.unit :== units;
+    r ALIASES data.recipe;
+
+    (* Fixed mass recipes and staggered withdrawals, Fig. 3. The neglected
+       distillation residue has no separate mass fraction in the paper. *)
+    r['Heating'].feed :== ['Feed_A']; r['Heating'].product :== ['Hot_A'];
+    r['Heating'].rin['Feed_A'] :== 1; r['Heating'].rout['Hot_A'] :== 1;
+    r['Heating'].delay['Hot_A'] :== 1{h}; r['Heating'].duration :== 1{h};
+    r['Reaction_1'].feed :== ['Feed_B','Feed_C']; r['Reaction_1'].product :== ['Int_BC'];
+    r['Reaction_1'].rin['Feed_B'] :== 0.5; r['Reaction_1'].rin['Feed_C'] :== 0.5;
+    r['Reaction_1'].rout['Int_BC'] :== 1;
+    r['Reaction_1'].delay['Int_BC'] :== 2{h}; r['Reaction_1'].duration :== 2{h};
+    r['Reaction_2'].feed :== ['Hot_A','Int_BC']; r['Reaction_2'].product :== ['Int_AB','Product_1'];
+    r['Reaction_2'].rin['Hot_A'] :== 0.4; r['Reaction_2'].rin['Int_BC'] :== 0.6;
+    r['Reaction_2'].rout['Int_AB'] :== 0.6; r['Reaction_2'].rout['Product_1'] :== 0.4;
+    FOR s IN r['Reaction_2'].product CREATE r['Reaction_2'].delay[s] :== 2{h}; END FOR;
+    r['Reaction_2'].duration :== 2{h};
+    r['Reaction_3'].feed :== ['Feed_C','Int_AB']; r['Reaction_3'].product :== ['Impure_E'];
+    r['Reaction_3'].rin['Feed_C'] :== 0.2; r['Reaction_3'].rin['Int_AB'] :== 0.8;
+    r['Reaction_3'].rout['Impure_E'] :== 1;
+    r['Reaction_3'].delay['Impure_E'] :== 1{h}; r['Reaction_3'].duration :== 1{h};
+    r['Separation'].feed :== ['Impure_E']; r['Separation'].product :== ['Int_AB','Product_2'];
+    r['Separation'].rin['Impure_E'] :== 1;
+    r['Separation'].rout['Int_AB'] :== 0.1; r['Separation'].rout['Product_2'] :== 0.9;
+    r['Separation'].delay['Int_AB'] :== 2{h}; r['Separation'].delay['Product_2'] :== 1{h};
+    r['Separation'].duration :== 2{h};
+
+    (* Equipment capacities are mass limits, already accounting for density
+       (p. 216). Reactor 2 is 50 kg, NOT the Cookbook's 80 kg. *)
+    data.equipment['Heater'].task :== ['Heating'];
+    data.equipment['Still'].task :== ['Separation'];
+    FOR j IN ['Reactor_1','Reactor_2'] CREATE
+        data.equipment[j].task :== ['Reaction_1','Reaction_2','Reaction_3'];
+    END FOR;
+    capacity[units] IS_A mass_constant;
+    TABLE capacity[units] UNITS {kg};
+        Heater: 100;
+        Reactor_1: 80;
+        Reactor_2: 50;
+        Still: 200;
+    END TABLE;
+    FOR j IN data.unit CREATE
+        FOR i IN data.equipment[j].task CREATE
+            data.equipment[j].bmin[i] :== 0{kg};
+            data.equipment[j].bmax[i] :== capacity[j];
+        END FOR;
+    END FOR;
+
+    (* No feed scarcity is specified. 1000 kg of EACH feed is a nonbinding
+       initial supply: see the equipment-throughput bounds in kondili.md.
+       Unlimited feed/product storage is represented by absence of a bound. *)
+    FOR s IN ['Feed_A','Feed_B','Feed_C'] CREATE
+        data.stock[s].initial :== 1000{kg}; data.stock[s].price :== 0{USD/kg};
+    END FOR;
+    FOR s IN ['Hot_A','Int_AB','Int_BC','Impure_E','Product_1','Product_2'] CREATE
+        data.stock[s].initial :== 0{kg};
+    END FOR;
+    FOR s IN ['Feed_A','Feed_B','Feed_C','Product_1','Product_2'] CREATE
+        data.stock[s].limited :== FALSE; data.stock[s].capacity :== 0{kg};
+    END FOR;
+    FOR s IN ['Hot_A','Int_AB','Int_BC','Impure_E'] CREATE
+        data.stock[s].limited :== TRUE; data.stock[s].price :== -1{USD/kg};
+    END FOR;
+    data.stock['Hot_A'].capacity :== 100{kg}; data.stock['Int_AB'].capacity :== 200{kg};
+    data.stock['Int_BC'].capacity :== bc_capacity; data.stock['Impure_E'].capacity :== 100{kg};
+    FOR s IN ['Product_1','Product_2'] CREATE data.stock[s].price :== 10{USD/kg}; END FOR;
+    (* Section 5: terminal material value, with NO charge per batch start. *)
+    obj: MAXIMIZE plant.value;
+METHODS
+METHOD on_load;
+    SOLVER Gurobi;
+    OPTION mip_rel_gap 0.0;
+END on_load;
+METHOD self_test;
+    RUN plant.self_test;
+    ASSERT abs((plant.value - expected)/1{USD}) < 1e-5;
+END self_test;
+END kondili_case;
+
+(* Section 5 reports 2744 and 2210, without fractional currency units.
+   Unrounded optima below were verified by independent matrix transcription. *)
+MODEL kondili REFINES kondili_case(bc_capacity :== 150{kg}; expected :== 2744.375{USD};);
+END kondili;
+MODEL kondili_no_bc_storage REFINES kondili_case(bc_capacity :== 0{kg}; expected :== 2210.625{USD};);
+END kondili_no_bc_storage;
+MODEL kondili_highs REFINES kondili;
+METHODS
+METHOD on_load; SOLVER HiGHS; OPTION mip_rel_gap 0.0; END on_load;
+END kondili_highs;
+MODEL kondili_no_bc_storage_highs REFINES kondili_no_bc_storage;
+METHODS
+METHOD on_load; SOLVER HiGHS; OPTION mip_rel_gap 0.0; END on_load;
+END kondili_no_bc_storage_highs;

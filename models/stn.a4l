@@ -1,0 +1,182 @@
+(* Discrete-time state-task network scheduling components.
+   Kondili, Pantelides & Sargent (1993), doi:10.1016/0098-1354(93)80015-F.
+   Fixed recipes, instantaneous transfers, dedicated finite/unlimited storage,
+   and complete equipment connectivity. These are scheduling envelopes, not
+   thermodynamic equipment models. See kondili.md for scope and conventions. *)
+REQUIRE "atoms.a4l";
+
+CONSTANT stn_price REFINES real_constant DIMENSION C/M;
+CONSTANT stn_value REFINES real_constant DIMENSION C;
+CONSTANT mass_constant REFINES real_constant DIMENSION M;
+
+MODEL stn_grid(n IS_A integer_constant; dt IS_A time_constant;)
+WHERE (n > 0; dt > 0{s};);
+    point IS_A set OF integer_constant;
+    point :== [0..n];
+    t[point] IS_A time_constant;
+    FOR k IN point CREATE t[k] :== k*dt; END FOR;
+END stn_grid;
+
+MODEL stn_recipe;
+    feed, product IS_A set OF symbol_constant;
+    rin[feed], rout[product] "Mass fractions of the whole batch" IS_A factor_constant;
+    delay[product], duration "Output release times and total processing time" IS_A time_constant;
+METHODS
+METHOD self_test;
+    ASSERT CARD[feed] > 0 AND CARD[product] > 0;
+    ASSERT abs(SUM[rin[s] | s IN feed] - 1) < 1e-10;
+    ASSERT abs(SUM[rout[s] | s IN product] - 1) < 1e-10;
+    FOR s IN feed DO ASSERT rin[s] > 0; END FOR;
+    FOR s IN product DO
+        ASSERT rout[s] > 0;
+        ASSERT delay[s] > 0{s} AND delay[s] <= duration;
+    END FOR;
+    ASSERT CARD[s IN product | delay[s] = duration] > 0;
+END self_test;
+END stn_recipe;
+
+MODEL stn_equipment_data;
+    task IS_A set OF symbol_constant;
+    bmin[task], bmax[task] IS_A mass_constant;
+END stn_equipment_data;
+
+MODEL stn_stock_data;
+    initial, capacity IS_A mass_constant;
+    limited "FALSE means no dedicated storage upper bound" IS_A boolean_constant;
+    price "Terminal value, possibly negative for intermediates" IS_A stn_price;
+END stn_stock_data;
+
+MODEL stn_data;
+    state, task, unit IS_A set OF symbol_constant;
+    recipe[task] IS_A stn_recipe;
+    equipment[unit] IS_A stn_equipment_data;
+    stock[state] IS_A stn_stock_data;
+END stn_data;
+
+MODEL stn_operation(g WILL_BE stn_grid; r WILL_BE stn_recipe;
+    bmin IS_A mass_constant; bmax IS_A mass_constant;)
+WHERE (bmin >= 0{kg}; bmax >= bmin; bmax > 0{kg};
+    r.duration > 0{s}; r.duration <= g.t[g.n];
+    CARD[r.feed] > 0; CARD[r.product] > 0;
+    abs(SUM[r.rin[s] | s IN r.feed] - 1) < 1e-10;
+    abs(SUM[r.rout[s] | s IN r.product] - 1) < 1e-10;
+    CARD[s IN r.feed | r.rin[s] <= 0] = 0;
+    CARD[s IN r.product | r.rout[s] <= 0 OR r.delay[s] <= 0{s} OR r.delay[s] > r.duration] = 0;
+    CARD[s IN r.product | r.delay[s] = r.duration] > 0;
+    CARD[s IN r.product | CARD[k IN g.point | g.t[k] = r.delay[s]] <> 1] = 0;
+);
+    launch "Only starts that finish inside the horizon" IS_A set OF integer_constant;
+    launch :== [k IN g.point | g.t[k] + r.duration <= g.t[g.n]];
+    w[launch] "1 if a batch starts at this grid point" IS_A solver_binary;
+    b[launch] "Whole batch mass, not a mass flow rate" IS_A mass;
+    charge[r.feed][g.point], discharge[r.product][g.point], held[g.point] IS_A mass;
+    busy[g.point] "Fraction of one equipment item occupied (0 or 1)" IS_A factor;
+    FOR k IN launch CREATE
+        eq_2_min[k]: b[k] >= bmin*w[k];
+        eq_2_max[k]: b[k] <= bmax*w[k];
+    END FOR;
+    FOR t IN g.point CREATE
+        occupation[t]: busy[t] = SUM[w[k] | k IN [q IN launch |
+            g.t[q] <= g.t[t] AND g.t[t] < g.t[q] + r.duration]];
+        FOR s IN r.feed CREATE
+            loading[s][t]: charge[s][t] = r.rin[s]*SUM[b[k] | k IN [q IN launch | q = t]];
+        END FOR;
+        FOR s IN r.product CREATE
+            unloading[s][t]: discharge[s][t] = r.rout[s]*SUM[b[k] | k IN [q IN launch |
+                g.t[q] + r.delay[s] = g.t[t]]];
+        END FOR;
+        (* Retain the unwithdrawn part of a batch in the equipment. *)
+        holdup[t]: held[t] = SUM[b[k] | k IN [q IN launch | q <= t]]
+            - SUM[SUM[discharge[s][k] | k IN [q IN g.point | q <= t]] | s IN r.product];
+    END FOR;
+METHODS
+METHOD self_test;
+    RUN r.self_test;
+    (* Exact grid alignment is required; no rounding of processing times. *)
+    FOR s IN r.product DO
+        ASSERT CARD[k IN g.point | g.t[k] = r.delay[s]] = 1;
+    END FOR;
+    FOR k IN launch DO
+        ASSERT abs(w[k]) < 1e-7 OR abs(w[k] - 1) < 1e-7;
+        ASSERT b[k] >= bmin*w[k] - 1e-6{kg};
+        ASSERT b[k] <= bmax*w[k] + 1e-6{kg};
+    END FOR;
+    FOR t IN g.point DO ASSERT held[t] >= -1e-6{kg}; END FOR;
+    ASSERT abs(held[g.n]/1{kg}) < 1e-6;
+END self_test;
+END stn_operation;
+
+MODEL stn_unit(g WILL_BE stn_grid; d WILL_BE stn_data; name IS_A symbol_constant;);
+    task ALIASES d.equipment[name].task;
+    FOR i IN task CREATE
+        op[i] IS_A stn_operation(g, d.recipe[i],
+            d.equipment[name].bmin[i], d.equipment[name].bmax[i]);
+    END FOR;
+    held[g.point] IS_A mass;
+    FOR t IN g.point CREATE
+        (* Backward aggregation is equivalent to the allocation rule of
+           Eq. (1), without its big-M. A unit can restart at completion. *)
+        allocation[t]: SUM[op[i].busy[t] | i IN task] <= 1;
+        holdup[t]: held[t] = SUM[op[i].held[t] | i IN task];
+    END FOR;
+METHODS
+METHOD self_test;
+    FOR i IN task DO RUN op[i].self_test; END FOR;
+    FOR t IN g.point DO ASSERT SUM[op[i].busy[t] | i IN task] <= 1 + 1e-7; END FOR;
+END self_test;
+END stn_unit;
+
+MODEL stn_inventory(g WILL_BE stn_grid; d WILL_BE stn_stock_data;);
+    received[g.point], withdrawn[g.point], stock[g.point] IS_A mass;
+    eq_4_initial: stock[0] = d.initial + received[0] - withdrawn[0];
+    FOR t IN [1..g.n] CREATE
+        eq_4[t]: stock[t] = stock[t-1] + received[t] - withdrawn[t];
+    END FOR;
+    (* An unlimited stock retains only the non-negativity part of Eq. (3).
+       SELECT is structural: no logical decisions enter the MIP. *)
+    SELECT (d.limited)
+    CASE TRUE:
+        FOR t IN g.point CREATE eq_3[t]: stock[t] <= d.capacity; END FOR;
+    CASE FALSE:
+        FOR t IN g.point CREATE nonnegative[t]: stock[t] >= 0{kg}; END FOR;
+    END SELECT;
+METHODS
+METHOD self_test;
+    FOR t IN g.point DO
+        ASSERT stock[t] >= -1e-6{kg};
+        IF d.limited THEN ASSERT stock[t] <= d.capacity + 1e-6{kg}; END IF;
+    END FOR;
+END self_test;
+END stn_inventory;
+
+MODEL stn_network(g WILL_BE stn_grid; d WILL_BE stn_data;);
+    FOR j IN d.unit CREATE u[j] IS_A stn_unit(g,d,j); END FOR;
+    FOR s IN d.state CREATE v[s] IS_A stn_inventory(g,d.stock[s]); END FOR;
+    producers[d.state][d.unit], consumers[d.state][d.unit] IS_A set OF symbol_constant;
+    FOR s IN d.state CREATE
+        FOR j IN d.unit CREATE
+            producers[s][j] :== [i IN d.equipment[j].task | s IN d.recipe[i].product];
+            consumers[s][j] :== [i IN d.equipment[j].task | s IN d.recipe[i].feed];
+        END FOR;
+    END FOR;
+    FOR s IN d.state CREATE
+        FOR t IN g.point CREATE
+            receipts[s][t]: v[s].received[t] = SUM[SUM[u[j].op[i].discharge[s][t]
+                | i IN producers[s][j]] | j IN d.unit];
+            withdrawals[s][t]: v[s].withdrawn[t] = SUM[SUM[u[j].op[i].charge[s][t]
+                | i IN consumers[s][j]] | j IN d.unit];
+        END FOR;
+    END FOR;
+    value "Terminal material value; may be negative" IS_A monetary_unit;
+    eq_18: value = SUM[d.stock[s].price*v[s].stock[g.n] | s IN d.state];
+METHODS
+METHOD self_test;
+    FOR j IN d.unit DO RUN u[j].self_test; END FOR;
+    FOR s IN d.state DO RUN v[s].self_test; END FOR;
+    (* Check global conservation rather than adding a redundant equation. *)
+    FOR t IN g.point DO
+        ASSERT abs((SUM[v[s].stock[t] | s IN d.state] + SUM[u[j].held[t] | j IN d.unit]
+            - SUM[d.stock[s].initial | s IN d.state])/1{kg}) < 1e-5;
+    END FOR;
+END self_test;
+END stn_network;
