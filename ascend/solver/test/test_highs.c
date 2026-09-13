@@ -1353,6 +1353,23 @@ static void test_highs_job_shop(void){
 	run_highs_model("models/job_shop.a4c","job_shop_highs",97*60,0,NULL,0,&opts);
 }
 
+static void run_commitment_model(const char *path, const char *model, double cost){
+	struct highs_run_options opts={0};
+	opts.initial_method="";
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	opts.objective_tol=1e-6;
+	opts.set_runtime_options=1;
+	opts.time_limit=60;
+	opts.threads=1;
+	opts.mip_rel_gap=0;
+	opts.mip_abs_gap=1e-7;
+	run_highs_model(path,model,cost,0,NULL,0,&opts);
+}
+static void test_highs_electrical_power_1(void){run_commitment_model("models/electrical_power_1.a4c","electrical_power_1_highs",1002540);}
+static void test_highs_uc_units(void){run_commitment_model("models/test/mip/unit_commitment.a4c","uc_units",227.5);}
+static void test_highs_uc_initial(void){run_commitment_model("models/test/mip/unit_commitment.a4c","uc_initial",127.5);}
+
 static void run_refinery_showcase(const char *model, double profit_per_day){
 	struct highs_run_options opts={0};
 	opts.initial_method="";
@@ -1365,6 +1382,7 @@ static void test_highs_refinery(void){run_refinery_showcase("refinery_highs",658
 static void test_highs_refinery_low_sulfur(void){run_refinery_showcase("refinery_low_sulfur_highs",0);}
 
 #define TESTS(T) \
+	T(highs_electrical_power_1) T(highs_uc_units) T(highs_uc_initial) \
 	T(highs_job_shop) \
 	T(highs_food_manufacture_2) \
 	T(highs_refinery) \
