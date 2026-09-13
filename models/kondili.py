@@ -10,14 +10,6 @@ from pathlib import Path
 import sys
 
 
-def named(array, key):
-    """The current ascpy [] operator accepts integer indices only."""
-    for c in array.getChildren():
-        if str(c.getName()) == str(key):
-            return c
-    raise ValueError(f'Missing array element {key}')
-
-
 def read_results(model):
     """Copy solved values into plain Python data, with kg and hours for display."""
     d, g, p = model.data, model.grid, model.plant
@@ -25,28 +17,28 @@ def read_results(model):
     times = [g.t[t].getRealValue()/3600 for t in points]
     recipes, stocks, units = {}, {}, {}
     for i in map(str,d.task.getSetValue()):
-        r = named(d.recipe,i)
+        r = d.recipe[i]
         recipes[i] = dict(duration=r.duration.getRealValue()/3600,
-            inputs={s: named(r.rin,s).getRealValue() for s in map(str,r.feed.getSetValue())},
-            outputs={s: (named(r.rout,s).getRealValue(), named(r.delay,s).getRealValue()/3600)
+            inputs={s: r.rin[s].getRealValue() for s in map(str,r.feed.getSetValue())},
+            outputs={s: (r.rout[s].getRealValue(), r.delay[s].getRealValue()/3600)
                      for s in map(str,r.product.getSetValue())})
     for s in map(str,d.state.getSetValue()):
-        v = named(d.stock,s)
+        v = d.stock[s]
         stocks[s] = dict(initial=v.initial.getRealValue(),
             capacity=v.capacity.getRealValue() if v.limited.getBoolValue() else None,
-            price=v.price.getRealValue(), values=[named(p.v,s).stock[t].getRealValue() for t in points])
+            price=v.price.getRealValue(), values=[p.v[s].stock[t].getRealValue() for t in points])
     for j in map(str,d.unit.getSetValue()):
         batches = []
-        equipment = named(d.equipment,j)
-        unit = named(p.u,j)
+        equipment = d.equipment[j]
+        unit = p.u[j]
         for i in map(str,equipment.task.getSetValue()):
-            op = named(unit.op,i)
+            op = unit.op[i]
             for k in op.launch.getSetValue():
                 w, b = op.w[k].getRealValue(), op.b[k].getRealValue()
                 if not math.isfinite(w) or min(abs(w), abs(w-1)) > 1e-6:
                     raise ValueError(f"Non-binary start: {j}/{i}/{k}")
-                bmin = named(equipment.bmin,i).getRealValue()
-                bmax = named(equipment.bmax,i).getRealValue()
+                bmin = equipment.bmin[i].getRealValue()
+                bmax = equipment.bmax[i].getRealValue()
                 if not math.isfinite(b) or b < bmin*w-1e-6 or b > bmax*w+1e-6:
                     raise ValueError(f"Invalid batch size: {j}/{i}/{k}")
                 if w > 0.5:

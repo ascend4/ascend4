@@ -77,6 +77,8 @@ public:
 	std::vector<Instanc> &getChildren();
 	Instanc getChild(const SymChar &) const;
 	Instanc getChild(const long &) const;
+	/** Look up an element of a symbol-indexed array (not a model attribute). */
+	Instanc getArrayElement(const SymChar &) const;
 	const enum inst_t getKind() const;
 	const std::string getKindStr() const;
 	const Type getType() const;

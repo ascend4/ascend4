@@ -989,6 +989,25 @@ Instanc::getChild(const long &index) const{
 		
 }
 
+Instanc
+Instanc::getArrayElement(const SymChar &index) const{
+	if(getKind() != ARRAY_ENUM_INST){
+		stringstream ss;
+		ss << "Instance '" << getName() << "' is not a symbol-indexed array";
+		throw runtime_error(ss.str());
+	}
+	struct InstanceName n;
+	InstanceNameType(n) = StrArrayIndex;
+	InstanceStrIndex(n) = index.getInternalType();
+	unsigned long childindex = ChildSearch(i,&n);
+	if(childindex){
+		return Instanc(InstanceChild(i,childindex),index);
+	}
+	stringstream ss;
+	ss << "Invalid symbol index '" << index << "' for instance '" << getName() << "'";
+	throw std::range_error(ss.str());
+}
+
 Plot
 Instanc::getPlot() const{
 	if(isPlottable()){
