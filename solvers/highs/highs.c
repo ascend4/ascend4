@@ -105,6 +105,7 @@ struct highs_system_structure {
     ***
     **/
    mps_data_t  mps;          /* the main chunk of data for the problem */
+   int prepared_relaxed;    /* global domain policy used to assemble mps */
 
 };
 
@@ -126,30 +127,6 @@ static void highs_spoof_block_status(highs_system_t sys){
    block->jactime = 0.0;
    block->residual = 0.0;
 }
-
-static int highs_is_mip_from_typerow(const highs_system_t sys){
-	int is_mip = 0;
-	int relaxed = SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_RELAXED);
-	int32 orgcol;
-
-	if(relaxed || sys->mps.typerow == NULL){
-		return 0;
-	}
-	for(orgcol = 0; orgcol < sys->mps.vused; ++orgcol){
-		switch(sys->mps.typerow[orgcol]){
-			case MPS_INT:
-			case MPS_BINARY:
-			case MPS_SEMI:
-				is_mip = 1;
-				break;
-			default:
-				break;
-		}
-		if(is_mip)break;
-	}
-	return is_mip;
-}
-
 
 static int highs_get_default_parameters(slv_system_t server, SlvClientToken asys
 		,slv_parameters_t *parameters
@@ -850,13 +827,15 @@ void highs_presolve(slv_system_t server){
    sys->rlist = slv_get_solvers_rel_list(sys->slv);
    memset(&sys->s,0,sizeof(sys->s));
    sys->s.kind = SLV_STATUS_LP;
-   if(!highs_eligible_solver(sys) || lp_prepare(sys->slv,&sys->mps,&sys->s,
+   if(!highs_eligible_solver(sys) || lp_prepare_relaxed(sys->slv,&sys->mps,&sys->s,
       SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_VARNOM_SCALE),
-      SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_RELNOM_SCALE))){
+      SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_RELNOM_SCALE),
+      SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_RELAXED))){
       sys->s.calc_ok = FALSE;
       return;
    }
-   sys->s.kind = highs_is_mip_from_typerow(sys) ? SLV_STATUS_MIP : SLV_STATUS_LP;
+   sys->s.kind = lp_problem_is_mip(&sys->mps) ? SLV_STATUS_MIP : SLV_STATUS_LP;
+   sys->prepared_relaxed = SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_RELAXED);
    sys->s.ok = sys->s.calc_ok = sys->s.ready_to_solve = TRUE;
    highs_spoof_block_status(sys);
 }
@@ -902,7 +881,6 @@ static void highs_problem_data_free(struct highs_problem_data *p){
 static int highs_build_problem(highs_system_t sys, struct highs_problem_data *p, int *is_mip){
    lp_sparse_t shared = {0};
    int32 i;
-   int relaxed = SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_RELAXED);
    memset(p,0,sizeof(*p));
    *is_mip = 0;
    if(lp_sparse_build(&shared,&sys->mps,sys->vlist,sys->obj,
@@ -932,11 +910,9 @@ static int highs_build_problem(highs_system_t sys, struct highs_problem_data *p,
    for(i=0;i<p->num_nz;++i)p->a_index[i]=shared.index[i];
    for(i=0;i<p->num_col;++i){
       p->integrality[i]=kHighsVarTypeContinuous;
-      if(!relaxed){
-         if(shared.type[i]==MPS_INT || shared.type[i]==MPS_BINARY)
-            p->integrality[i]=kHighsVarTypeInteger;
-         else if(shared.type[i]==MPS_SEMI)p->integrality[i]=kHighsVarTypeSemiContinuous;
-      }
+      if(shared.type[i]==MPS_INT || shared.type[i]==MPS_BINARY)
+         p->integrality[i]=kHighsVarTypeInteger;
+      else if(shared.type[i]==MPS_SEMI)p->integrality[i]=kHighsVarTypeSemiContinuous;
       if(p->integrality[i]!=kHighsVarTypeContinuous)*is_mip=1;
    }
    lp_sparse_destroy(&shared);
@@ -1731,6 +1707,12 @@ void highs_solve(slv_system_t server){
 	memset(&info,0,sizeof(info));
 	model_status = kHighsModelStatusNotset;
 	MSG("starting HiGHS solve.");
+	/* Domain relaxation now happens before scaling in the shared exporter.
+	 * Preserve support for changing this option after ASCEND presolve.
+	 */
+	if(sys->mps.Ac_mtx && sys->prepared_relaxed!=SLV_PARAM_BOOL(&sys->p,HIGHS_PARAM_RELAXED)){
+		highs_presolve(server);
+	}
 
 	/* make sure none of the LP data pointers are NULL */
 	if ((sys->mps.Ac_mtx == NULL) ||

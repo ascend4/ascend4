@@ -64,8 +64,23 @@ int lp_relation_is_affine(struct rel_relation *rel, const var_filter_t *filter){
 		&& affine_degree(r,Infix_RhsSide(r),rel,filter) < 2;
 }
 
+int lp_problem_is_mip(const mps_data_t *m){
+	int32 i;
+	if(!m || !m->typerow)return 0;
+	for(i=0;i<m->vused;++i){
+		if(m->typerow[i]==MPS_INT || m->typerow[i]==MPS_BINARY
+			|| m->typerow[i]==MPS_SEMI)return 1;
+	}
+	return 0;
+}
+
 int lp_prepare(slv_system_t sys, mps_data_t *m, slv_status_t *status,
 	int scale_variables, int scale_relations){
+	return lp_prepare_relaxed(sys,m,status,scale_variables,scale_relations,0);
+}
+
+int lp_prepare_relaxed(slv_system_t sys, mps_data_t *m, slv_status_t *status,
+	int scale_variables, int scale_relations, int relaxed){
 	struct var_variable **v = slv_get_solvers_var_list(sys);
 	struct rel_relation **r = slv_get_solvers_rel_list(sys);
 	struct rel_relation *obj = slv_get_obj_relation(sys);
@@ -101,7 +116,34 @@ int lp_prepare(slv_system_t sys, mps_data_t *m, slv_status_t *status,
 	 * fixed too, and never write these columns back to ASCEND.
 	 */
 	for(i=0; i<m->vused; ++i){
-		if(m->typerow[i] == MPS_FIXED)m->lbrow[i] = m->ubrow[i] = var_value(v[i]);
+		if(m->typerow[i] == MPS_FIXED){
+			m->lbrow[i] = m->ubrow[i] = var_value(v[i]);
+			continue;
+		}
+		/* Binary domains remain within [0,1], also in the relaxation. Read
+		 * the original type: individual relaxation already erased it above.
+		 */
+		if(solver_binary(var_instance(v[i])) && !isnan(m->lbrow[i]) && !isnan(m->ubrow[i])){
+			m->lbrow[i] = fmax(m->lbrow[i],0);
+			m->ubrow[i] = fmin(m->ubrow[i],1);
+		}
+		if(relaxed || m->typerow[i]==MPS_RELAXED){
+			/* Convex hull of {0} union [L,U], not merely [L,U]. Do not
+			 * turn inconsistent original bounds into a valid interval.
+			 */
+			if(solver_semi(var_instance(v[i])) && m->lbrow[i]<=m->ubrow[i]){
+				m->lbrow[i] = fmin(m->lbrow[i],0);
+				m->ubrow[i] = fmax(m->ubrow[i],0);
+			}
+			switch(m->typerow[i]){
+			case MPS_INT: --m->solver_int_used; break;
+			case MPS_BINARY: --m->solver_binary_used; break;
+			case MPS_SEMI: --m->solver_semi_used; break;
+			default: continue;
+			}
+			m->typerow[i]=MPS_RELAXED;
+			++m->solver_relaxed_used;
+		}
 	}
 	lp_real_rhs(m->Ac_mtx,m->relopcol,v,m->rused,m->vused,m->bcol);
 	if(!lp_apply_nominal_scaling(m->Ac_mtx,m->lbrow,m->ubrow,m->bcol,m->typerow,

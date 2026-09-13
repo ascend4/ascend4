@@ -44,10 +44,19 @@ ASC_DLLSPEC int lp_write_solution(slv_system_t sys, const mps_data_t *mps,
 ASC_DLLSPEC int lp_relation_is_affine(struct rel_relation *rel, const var_filter_t *filter);
 /** Assemble shared LP/MIP data. No solver call; does not repair model bounds.
  * Requires an objective, at least one variable and one relation in the lists.
- * Caller validates exact-vs-linearised eligibility before calling.
+ * Caller validates exact-vs-linearised eligibility before calling. Applies
+ * per-variable relaxation and binary/semi domains before scaling.
+ * Does not modify ASCEND variable bounds or relaxation flags.
  */
 ASC_DLLSPEC int lp_prepare(slv_system_t sys, mps_data_t *mps, slv_status_t *status,
 	int scale_variables, int scale_relations);
+/** As lp_prepare, with optional global relaxation. The original entry point
+ * honours individual relaxation flags only and remains ABI-compatible.
+ */
+ASC_DLLSPEC int lp_prepare_relaxed(slv_system_t sys, mps_data_t *mps, slv_status_t *status,
+	int scale_variables, int scale_relations, int relaxed);
+/** True when the prepared problem still has discrete variable domains. */
+ASC_DLLSPEC int lp_problem_is_mip(const mps_data_t *mps);
 
 /** True for non-fixed active variables in solver lists. */
 ASC_DLLSPEC boolean lp_free_inc_var_filter(struct var_variable *var);

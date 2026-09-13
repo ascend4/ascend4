@@ -57,6 +57,7 @@ struct highs_run_options{
 	const char *initial_method; /* NULL: on_load; empty: no initialisation. */
 	const char *setup_method;
 	int run_self_test;
+	int toggle_relaxation_after_presolve;
 };
 
 struct reporter_capture{
@@ -427,6 +428,12 @@ static void run_highs_model(
 	}
 
 	(void)slv_presolve(sys);
+	if(opts && opts->toggle_relaxation_after_presolve){
+		slv_parameters_t pp;
+		slv_get_parameters(sys,&pp);
+		SLV_PARAM_BOOL(&pp,find_param_index(&pp,"relaxed"))=!opts->relaxed;
+		slv_set_parameters(sys,&pp);
+	}
 	if(opts != NULL && opts->use_iterate){
 		(void)slv_iterate(sys);
 	}else if(opts != NULL && opts->use_resolve){
@@ -657,6 +664,41 @@ static void test_highs_mip_facility_location(void){
 		7,
 		NULL
 	);
+}
+
+/* Both adapters use the same exported domains, including convex-hull bounds
+ * for semicontinuous relaxation. Keep fixtures solver-independent. */
+#define DOMAIN_CASE(NAME,MODEL,RELAXED,OBJ) \
+static void test_##NAME(void){ \
+	struct highs_run_options opts={0}; \
+	opts.relaxed=RELAXED; opts.objective_tol=1e-7; opts.expect_converged=1; \
+	run_highs_model("models/test/mip/domains.a4c",MODEL,OBJ,0,NULL,0,&opts); \
+}
+DOMAIN_CASE(highs_semi_zero,"mip_semi_gap",0,0)
+DOMAIN_CASE(highs_semi_active,"mip_semi_active",0,2)
+DOMAIN_CASE(highs_semi_relaxed,"mip_semi_gap",1,1)
+DOMAIN_CASE(highs_semi_individually_relaxed,"mip_semi_individually_relaxed",0,1)
+DOMAIN_CASE(highs_integer_individually_relaxed,"mip_integer_individually_relaxed",0,2.5)
+DOMAIN_CASE(highs_domains,"mip_domains",0,-1)
+DOMAIN_CASE(highs_domains_relaxed,"mip_domains",1,0)
+DOMAIN_CASE(highs_domains_partially_relaxed,"mip_domains_partially_relaxed",0,-0.5)
+DOMAIN_CASE(highs_binary_wide_bounds,"mip_binary_wide_bounds",0,1)
+DOMAIN_CASE(highs_binary_wide_bounds_relaxed,"mip_binary_wide_bounds",1,1)
+#undef DOMAIN_CASE
+
+static void test_highs_relax_after_presolve(void){
+	struct highs_run_options opts={0};
+	opts.expect_converged=1;
+	opts.toggle_relaxation_after_presolve=1;
+	run_highs_model("models/test/mip/domains.a4c","mip_semi_gap",1,0,NULL,0,&opts);
+}
+
+static void test_highs_unrelax_after_presolve(void){
+	struct highs_run_options opts={0};
+	opts.expect_converged=1;
+	opts.relaxed=1;
+	opts.toggle_relaxation_after_presolve=1;
+	run_highs_model("models/test/mip/domains.a4c","mip_semi_gap",0,0,NULL,0,&opts);
 }
 
 static void test_highs_mip_facility_location_table_labels(void){
@@ -1311,6 +1353,11 @@ static void test_highs_refinery_low_sulfur(void){run_refinery_showcase("refinery
 	T(highs_mip_mixed_iterate) \
 	T(highs_mip_mixed_resolve) \
 	T(highs_mip_facility_location) \
+	T(highs_semi_zero) T(highs_semi_active) T(highs_semi_relaxed) \
+	T(highs_semi_individually_relaxed) T(highs_integer_individually_relaxed) \
+	T(highs_domains) T(highs_domains_relaxed) T(highs_binary_wide_bounds) T(highs_binary_wide_bounds_relaxed) \
+	T(highs_domains_partially_relaxed) \
+	T(highs_relax_after_presolve) T(highs_unrelax_after_presolve) \
 	T(highs_mip_facility_location_table_labels) \
 	T(highs_mip_tsp_mtz8) \
 	T(highs_mip_tsp_mtz8_table_labels) \
