@@ -12,6 +12,9 @@ solver_qrslv
 solver_ipopt
 solver_makemps
 solver_highs
+solver_gurobi
+solver_list
+solver_slvdof
 solver_a4sqp
 solver_slsqp
 solver_conopt
@@ -19,24 +22,7 @@ solver_cmslv
 
 linear_*
 
-compiler_basics
-compiler_func
-compiler_units
-compiler_expr
-compiler_relation
-compiler_fixfree
-compiler_chkdim
-compiler_dimen
-compiler_fractions
-compiler_name
-compiler_symtab
-compiler_fixassign
-compiler_qlfdid
-compiler_autodiff
-compiler_bintok
-compiler_instantiate_*
-compiler_merge*
-compiler_dataset
+compiler_*
 
 packages_defaultall
 integrator_lsode
