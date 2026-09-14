@@ -695,7 +695,7 @@ static void run_deferred_case(const char *name, const char *body,
     const char *result_expr, double expected, const char *error){
 	char model[8192];
 	int status;
-	struct Instance *sim, *root, *result;
+	struct Instance *sim = NULL, *root, *result;
 	snprintf(model,sizeof(model),
 		"MODEL table_axis;\n"
 		"labels, unset IS_A set OF symbol_constant; labels :== ['a','b'];\n"
@@ -715,18 +715,28 @@ static void run_deferred_case(const char *name, const char *body,
 	table_parse_error_capture_reset();
 	error_reporter_set_callback(&table_parse_error_capture_cb);
 	Asc_OpenModule("atoms.a4l",&status);
-	CU_ASSERT_FATAL(status == 0);
-	CU_ASSERT_FATAL(zz_parse() == 0);
+	CU_ASSERT(status == 0);
+	if(status != 0) goto cleanup;
+	status = zz_parse();
+	CU_ASSERT(status == 0);
+	if(status != 0) goto cleanup;
 	Asc_OpenStringModule(model,&status,name);
-	CU_ASSERT_FATAL(status == 0);
-	CU_ASSERT_FATAL(zz_parse() == 0);
-	CU_ASSERT_FATAL(g_table_parse_error_capture.error_count == 0);
+	CU_ASSERT(status == 0);
+	if(status != 0) goto cleanup;
+	status = zz_parse();
+	CU_ASSERT(status == 0);
+	if(status != 0) goto cleanup;
+	CU_ASSERT(g_table_parse_error_capture.error_count == 0);
+	if(g_table_parse_error_capture.error_count != 0) goto cleanup;
 	sim = SimsCreateInstance(AddSymbol("deferred_case"),AddSymbol("sim1"),e_normal,NULL);
-	CU_ASSERT_FATAL(sim != NULL);
+	CU_ASSERT(sim != NULL);
+	if(sim == NULL) goto cleanup;
 	root = GetSimulationRoot(sim);
-	CU_ASSERT_FATAL(root != NULL);
+	CU_ASSERT(root != NULL);
+	if(root == NULL) goto cleanup;
 	result = ChildByChar(root,AddSymbol("result"));
-	CU_ASSERT_FATAL(result != NULL);
+	CU_ASSERT(result != NULL);
+	if(result == NULL) goto cleanup;
 	if(error){
 		CU_ASSERT(g_table_parse_error_capture.error_count > 0);
 		CU_ASSERT(strstr(g_table_parse_error_capture.all_error_msgs,error) != NULL);
@@ -738,7 +748,10 @@ static void run_deferred_case(const char *name, const char *body,
 		CU_ASSERT(AtomAssigned(result));
 		if(AtomAssigned(result)) CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(result),expected,1e-9);
 	}
-	sim_destroy(sim);
+cleanup:
+	/* A failed assertion must not leave the compiler initialised for the next
+	   test: CU_ASSERT_FATAL would return without running this cleanup. */
+	if(sim != NULL) sim_destroy(sim);
 	error_reporter_set_callback(NULL);
 	Asc_CompilerDestroy();
 }
