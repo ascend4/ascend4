@@ -50,6 +50,7 @@
 	T(instantiate_array) \
 	T(instantiate_arr) \
 	T(instantiate_for) \
+	T(for_distribution) \
 	T(instantiate_when_select) \
 	T(instantiate_param_refine) \
 	T(instantiate_alias) \

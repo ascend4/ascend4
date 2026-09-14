@@ -259,11 +259,14 @@ rules above. Undefined or unresolved domains are reported as errors when
 instantiation retries are exhausted; waiting does not suppress invalid types,
 labels, dimensions, or table shapes.
 
-Inside a FOR, TABLE readiness is checked before executing the loop. This check
+Inside a FOR CREATE, the compiler internally separates construction and
+structural-assignment statements into independently pending loop nests. A
+target may therefore be declared and populated by TABLE within the same loop.
+TABLE readiness is checked before executing its distributed loop; this check
 does not assign numeric cells, but it may infer a simple index set so that an
-existing array declaration can expand. Declare target arrays outside the loop,
-or construct them in a separate loop: a TABLE cannot populate elements whose
-construction is blocked by that same loop's readiness check.
+existing array declaration can expand. Each construction still runs over its
+whole index domain; this does not enable partial sparse-array construction or
+dependencies between iterations of a single statement.
 
 == Current Limitations ==
 

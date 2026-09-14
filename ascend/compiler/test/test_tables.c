@@ -831,7 +831,7 @@ DEFERRED_CASE(loop_constructs_target,
 	"FOR k IN [1] CREATE FOR j IN d.axis.labels CREATE\n"
 	"x[k][j] IS_A time_constant; END FOR;\n"
 	"TABLE x[k][d.axis.labels] POSITIONAL UNITS {h}; 1 2; END TABLE; END FOR;",
-	"x[1]['a']",0,"assignment target is still undefined or unresolved")
+	"x[1]['a']",3600,NULL)
 DEFERRED_CASE(loop_dense_invalid,
 	"x[1..2][d.axis.labels] IS_A time_constant; FOR k IN [1..2] CREATE\n"
 	"TABLE x[k][d.axis.labels] UNITS {h}; a b; 1: 1 2; END TABLE; END FOR;",
