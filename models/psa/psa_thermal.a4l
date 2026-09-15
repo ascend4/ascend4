@@ -1,0 +1,154 @@
+(* Smith & Westerberg (1991), pp. 2969-2972, printed operation equations.
+   https://doi.org/10.1016/0009-2509(91)85001-E
+   Local source: ~/Downloads/1-s2.0-000925099185001E-main.pdf.
+   These are EQUATION-AUDIT components, not a closed thermal PSA cycle.
+   psa_thermal.md records unresolved heat, equilibrium and inventory choices. *)
+REQUIRE "psa/psa_cycle.a4l";
+
+ATOM psa_volume_heat_capacity REFINES solver_var DIMENSION M/L/T^2/TMP
+    DEFAULT 804000{J/m^3/K};
+    lower_bound := 0{J/m^3/K};
+    nominal := 804000{J/m^3/K};
+END psa_volume_heat_capacity;
+
+ATOM psa_pressure_time_coefficient REFINES solver_var DIMENSION L*T^3/M
+    DEFAULT 1e-5{s/Pa};
+    lower_bound := 0{s/Pa};
+    nominal := 1e-5{s/Pa};
+END psa_pressure_time_coefficient;
+
+MODEL psa_thermal_bed_data;
+    V "Packed bed volume, NOT gas void volume" IS_A volume;
+    eps IS_A fraction;
+    rho "Dry carbon particle-envelope density" IS_A mass_density;
+    Cv "Solid volumetric heat capacity, per solid volume (Table 1)" IS_A psa_volume_heat_capacity;
+    cpA, cpB "Constant gas molar heat capacities (Table 1)" IS_A molar_heat_capacity;
+    H "Adsorption heat RELEASE magnitude; explicitly supplied, not combustion heat" IS_A molar_energy;
+    Mcarbon IS_A mass;
+    carbon_mass: Mcarbon = V*(1-eps)*rho;
+END psa_thermal_bed_data;
+
+MODEL psa_paper_adsorption(bed WILL_BE psa_thermal_bed_data;
+    phi IS_A factor_constant; eta IS_A factor_constant;)
+WHERE (phi > 0; phi <= 1; eta > 0; eta <= 1;);
+    carbon IS_A cen_yang_methane;
+    Te ALIASES carbon.T;
+    T0 "Initially uniform bed temperature; also product outlet temperature" IS_A temperature;
+    Tfeed IS_A temperature;
+    P IS_A pressure;
+    y IS_A fraction;
+    Vads IS_A volume;
+    sA0, sAe "Initial and final adsorbed methane, per bed" IS_A psa_amount;
+    void_feed "Feed-composition gas in the hot, utilised region at end" IS_A psa_amount;
+    feed, product IS_A psa_amount;
+    eq_6: Vads = phi*bed.V;
+    eq_7: sAe = eta*phi*bed.Mcarbon*carbon.q;
+    feed_partial_pressure: carbon.p = y*P;
+    eq_10: void_feed*8.31446261815324{J/mol/K}*Te = P*Vads*bed.eps;
+    (* EXACTLY as printed: the heat-release term uses sAe, NOT sAe-sA0.
+       For sA0 > 0 this deserves checking against the original source code.
+       The gas term for H2 uses T0, consistent with the assumed outlet T. *)
+    (* Divide by solid heat capacity: residual has units K, avoiding
+       roundoff at QRSlv's absolute tolerance on a megajoule balance. *)
+    eq_11: Te-T0 = (sAe*bed.H + (sAe-sA0)*bed.cpA*(Tfeed-Te)
+        + (1-y)*(feed-void_feed)*bed.cpB*(Tfeed-T0))
+        /(Vads*(1-bed.eps)*bed.Cv);
+    eq_12: y*(feed-void_feed) = sAe-sA0;
+    eq_13: product = (1-y)*(feed-void_feed)
+        + P*Vads*bed.eps/(8.31446261815324{J/mol/K}*T0);
+END psa_paper_adsorption;
+
+(* OPTIONAL interpretation of the undefined K_A^eq in eq. (26): the
+   zero-concentration slope of mass loading w against gas concentration.
+   w = K*c_A at infinite dilution, K has units m^3/mol (NOT mol/kg/Pa).
+   Only for the n=1 methane LRC. This is a hypothesis, not a sourced
+   identification of the K actually used by Smith & Westerberg. *)
+MODEL psa_methane_henry;
+    carbon IS_A cen_yang_methane;
+    T ALIASES carbon.T;
+    K IS_A molar_volume;
+    infinite_dilution: carbon.p = 0{Pa};
+    mass_loading_slope: K = carbon.MW*carbon.qsat*carbon.affinity
+        *8.31446261815324{J/mol/K}*T/carbon.p_ref;
+END psa_methane_henry;
+
+MODEL psa_paper_desorption(bed WILL_BE psa_thermal_bed_data;
+    phi IS_A factor_constant; etaAds IS_A factor_constant; etaDes IS_A factor_constant;)
+WHERE (phi > 0; phi <= 1; etaAds > 0; etaAds <= 1; etaDes > 0; etaDes <= 1;);
+    T0 "Bed temperature AFTER blowdown, not necessarily adsorption temperature" IS_A temperature;
+    Te, TinB IS_A temperature;
+    P IS_A pressure;
+    K "Unresolved desorption equilibrium constant in printed eq. (26)" IS_A molar_volume;
+    qref "Reference equilibrium mass loading q_A in eq. (26)" IS_A psa_mass_loading;
+    yout "CH4 mole fraction in the constant-composition purge exhaust" IS_A fraction;
+    sA0, sAe, removed IS_A psa_amount;
+    hydrogen_in, hydrogen_out, void_hydrogen IS_A psa_amount;
+    solid_removed: removed = phi*sA0;
+    solid_remaining: sAe = sA0-removed;
+    eq_26: yout*K*P = etaAds*etaDes*qref*Te*8.31446261815324{J/mol/K};
+    eq_27: T0-Te = (removed*bed.H + removed*bed.cpA*(Te-T0)
+        + hydrogen_in*bed.cpB*(Te-TinB))/(bed.V*(1-bed.eps)*bed.Cv);
+    (* Printed eq. (28) charges the entire FINAL void H2 inventory.
+       It has no subtraction of initial void H2 and no explicit initial
+       void CH4 balance. Do not substitute this component for the closed
+       inventory model in psa_cycle.a4l without resolving that convention. *)
+    exhaust_ratio: yout*hydrogen_out = (1-yout)*removed;
+    eq_28: hydrogen_in = hydrogen_out+void_hydrogen;
+    eq_29: void_hydrogen*8.31446261815324{J/mol/K}*Te = P*bed.V*bed.eps;
+END psa_paper_desorption;
+
+(* Smith (1991), PhD thesis, pp. 86-87, eqs (6.21)-(6.23).
+   Local source: ~/Downloads/smith-1991-The_optimal_design_of_pressure.pdf.
+   This is a DIFFERENT purge closure from the journal's eqs (26)-(29):
+   ratio is mol H2 per mol desorbed CH4, not an equilibrium efficiency.
+   No Henry coefficient or exhaust-equilibrium assumption is required. *)
+MODEL psa_thesis_desorption(bed WILL_BE psa_thermal_bed_data;
+    phi IS_A factor_constant; ratio IS_A factor_constant;)
+WHERE (phi > 0; phi <= 1; ratio > 0;);
+    T0 "Bed temperature after blowdown" IS_A temperature;
+    Te, TinB IS_A temperature;
+    P "Constant absolute purge pressure" IS_A pressure;
+    sA0, sAe, removed IS_A psa_amount;
+    sweep_hydrogen "Ratio term ONLY, excluding the final void charge" IS_A psa_amount;
+    hydrogen_in, void_hydrogen IS_A psa_amount;
+    solid_removed: removed = phi*sA0;
+    solid_remaining: sAe = sA0-removed;
+    sweep_requirement: sweep_hydrogen = ratio*removed;
+    eq_6_21: T0-Te = (removed*bed.H + removed*bed.cpA*(Te-T0)
+        + hydrogen_in*bed.cpB*(Te-TinB))/(bed.V*(1-bed.eps)*bed.Cv);
+    eq_6_22: hydrogen_in = sweep_hydrogen+void_hydrogen;
+    (* Molar residual, rather than P*V energy units, for numerical scaling. *)
+    eq_6_23: void_hydrogen = P*bed.V*bed.eps/(8.31446261815324{J/mol/K}*Te);
+END psa_thesis_desorption;
+
+(* Component-inventory completion of the thesis operation, NOT an extra
+   source equation or a rigorous transient energy model. The thesis's full
+   final-void H2 charge is retained. Consequently ALL initial void H2 exits
+   in addition to the sweep term; initial void CH4 also leaves the bed.
+   Do not subtract the initial H2 again from hydrogen_in: that would be a
+   different purge closure. An initially nonempty bed is not an error.
+   The printed heat balance above omits explicit initial-gas sensible
+   energy; these mass checks do NOT establish full energy conservation. *)
+MODEL psa_thesis_purge_inventory(purge WILL_BE psa_thesis_desorption;);
+    initialA, initialH "Initial gas inventories, supplied by upstream operation" IS_A psa_amount;
+    finalA, finalH IS_A psa_amount;
+    wasteA, wasteH "TOTAL exhaust, including displaced initial void gas" IS_A psa_amount;
+    yout "Batch-average exhaust CH4 fraction, not an equilibrium composition" IS_A fraction;
+    initial_voids: initialA+initialH = purge.P*purge.bed.V*purge.bed.eps
+        /(8.31446261815324{J/mol/K}*purge.T0);
+    clean_voids: finalA = 0{mol};
+    final_hydrogen: finalH = purge.void_hydrogen;
+    methane: initialA+purge.removed = finalA+wasteA;
+    hydrogen: initialH+purge.hydrogen_in = finalH+wasteH;
+    exhaust_composition: yout*(wasteA+wasteH) = wasteA;
+END psa_thesis_purge_inventory;
+
+(* Eq. (36) for one PRESENT pressure-changing operation (z=1).
+   Supply a_pc explicitly: the paper does not tabulate its value.
+   Directional pressure difference avoids ABS inside an NLP. *)
+MODEL psa_paper_pressure_time;
+    Phigh, Plow IS_A pressure;
+    a_pc IS_A psa_pressure_time_coefficient;
+    valve, duration IS_A time;
+    eq_36: duration = a_pc*(Phigh-Plow)+valve;
+END psa_paper_pressure_time;

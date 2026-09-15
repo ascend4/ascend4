@@ -1,0 +1,181 @@
+(* Conservative, time-integrated thermal PSA reconstruction, NOT a literal
+   transcription of Smith's approximate heat equations. See
+   psa_thermal_cycle.md for the caloric and operation closures.
+   Source: Smith (1991), PhD thesis, Chapter 6, pp. 80-88;
+   ~/Downloads/smith-1991-The_optimal_design_of_pressure.pdf. *)
+REQUIRE "psa/psa_thermal.a4l";
+
+ATOM psa_signed_energy REFINES solver_var DIMENSION M*L^2/T^2 DEFAULT 0{J};
+    nominal := 1e6{J};
+    lower_bound := -1e12{J}; upper_bound := 1e12{J};
+END psa_signed_energy;
+
+ATOM psa_heat_capacity REFINES solver_var DIMENSION M*L^2/T^2/TMP DEFAULT 1e5{J/K};
+    nominal := 1e5{J/K}; lower_bound := 1e-9{J/K};
+END psa_heat_capacity;
+
+MODEL psa_caloric_bed REFINES psa_thermal_bed_data;
+    Tref "Arbitrary caloric reference temperature; not a boundary condition" IS_A temperature;
+    R IS_A heat_capacity_a_constant;
+    R :== 8.31446261815324{J/mol/K};
+    Csolid "Heat capacity of dry carbon in the whole bed" IS_A psa_heat_capacity;
+    solid_capacity: Csolid = V*(1-eps)*Cv;
+END psa_caloric_bed;
+
+(* A uniform region occupying share of the packed volume. H is the
+   enthalpy of adsorption RELEASE magnitude. With h_g=cp*(T-Tref), ideal
+   gas u_g=h_g-R*T, NOT (cp-R)*(T-Tref). Adsorbed CH4 has negligible PV
+   and, explicitly as an approximation, the same cp as gaseous CH4.
+   Consequently u_s=cpA*(T-Tref)-H. Hydrogen does not adsorb. *)
+MODEL psa_caloric_state(bed WILL_BE psa_caloric_bed; share IS_A factor_constant;)
+WHERE (share > 0; share <= 1;);
+    T IS_A temperature;
+    P IS_A pressure;
+    gA, gH, sA, n IS_A psa_amount;
+    U "Internal energy of dry carbon, adsorbate and void gas" IS_A psa_signed_energy;
+    gas_total: n = gA+gH;
+    ideal_gas: n = P*share*bed.V*bed.eps/(bed.R*T);
+    caloric: U/bed.Csolid = share*(T-bed.Tref)
+        + (sA*(bed.cpA*(T-bed.Tref)-bed.H)
+        + gA*(bed.cpA*(T-bed.Tref)-bed.R*T)
+        + gH*(bed.cpB*(T-bed.Tref)-bed.R*T))/bed.Csolid;
+END psa_caloric_state;
+
+(* Thesis eqs (6.1)-(6.8): retain utilisation, equilibrium and two-zone
+   profiles, but REPLACE the approximate heat equation by the complete
+   rigid-bed open-system energy balance. No double-counting initial solid.
+   All adsorbed methane is assigned to the hot region; the cold tail has
+   pure H2. Product leaves at the initial/cold-tail temperature.
+   mode=0: adiabatic; mode=1: imposed isothermal comparison with heat duty. *)
+MODEL psa_caloric_adsorption(start WILL_BE psa_caloric_state;
+    hot WILL_BE psa_caloric_state; cold WILL_BE psa_caloric_state;
+    carbon WILL_BE cen_yang_methane; y WILL_BE fraction;
+    Tfeed WILL_BE temperature; eta IS_A factor_constant; mode IS_A integer_constant;)
+WHERE (start.bed, hot.bed, cold.bed WILL_BE_THE_SAME;
+    start.P, hot.P, cold.P WILL_BE_THE_SAME;
+    carbon.T, hot.T WILL_BE_THE_SAME;
+    start.share = 1; hot.share+cold.share = 1;
+    eta > 0; eta <= 1; mode >= 0; mode <= 1;);
+    feed, product IS_A psa_amount;
+    Q "Heat INTO bed, zero in adiabatic mode" IS_A psa_signed_energy;
+    partial_pressure: carbon.p = y*hot.P;
+    loading: hot.sA = eta*hot.share*hot.bed.Mcarbon*carbon.q;
+    hot_composition: hot.gA = y*hot.n;
+    cold_composition: cold.gA = 0{mol};
+    cold_solid: cold.sA = 0{mol};
+    cold_temperature: cold.T = start.T;
+    methane: start.sA+start.gA+y*feed = hot.sA+hot.gA+cold.sA+cold.gA;
+    hydrogen: start.gH+(1-y)*feed = hot.gH+cold.gH+product;
+    energy: (hot.U+cold.U-start.U)/start.bed.Csolid =
+        (feed*(y*start.bed.cpA+(1-y)*start.bed.cpB)*(Tfeed-start.bed.Tref)
+        - product*start.bed.cpB*(start.T-start.bed.Tref)+Q)/start.bed.Csolid;
+    SELECT (mode)
+    CASE 0: adiabatic: Q = 0{J};
+    CASE 1: isothermal: hot.T = start.T;
+    END SELECT;
+END psa_caloric_adsorption;
+
+(* Sealed, adiabatic mixing of the two adsorption exit regions. Solid
+   loading is frozen; internal heat redistribution conserves U. Final
+   pressure is a RESULT, not forced to equal adsorption pressure. *)
+MODEL psa_caloric_mixing(hot WILL_BE psa_caloric_state; cold WILL_BE psa_caloric_state;
+    finish WILL_BE psa_caloric_state;)
+WHERE (hot.bed, cold.bed, finish.bed WILL_BE_THE_SAME;
+    hot.share+cold.share = finish.share;);
+    methane: finish.gA = hot.gA+cold.gA;
+    hydrogen: finish.gH = hot.gH+cold.gH;
+    frozen_solid: finish.sA = hot.sA+cold.sA;
+    energy: finish.U/finish.bed.Csolid = (hot.U+cold.U)/finish.bed.Csolid;
+END psa_caloric_mixing;
+
+(* Well-mixed withdrawal, frozen adsorbate, and instant gas/solid thermal
+   equilibrium. This differs from the thesis's gas-only adiabatic expansion
+   followed by equilibration. Integrating (S+n*cv)dT=R*T*dn gives the
+   endpoint law below. The logarithms have dimensionless arguments. *)
+MODEL psa_caloric_blowdown(start WILL_BE psa_caloric_state;
+    finish WILL_BE psa_caloric_state; mode IS_A integer_constant;)
+WHERE (start.bed, finish.bed WILL_BE_THE_SAME;
+    start.share = 1; finish.share = 1; mode >= 0; mode <= 1;);
+    x IS_A fraction;
+    cv IS_A molar_heat_capacity;
+    S IS_A psa_heat_capacity;
+    wasteA, wasteH IS_A psa_amount;
+    Eout, Q IS_A psa_signed_energy;
+    composition: start.gA = x*start.n;
+    gas_capacity: cv = x*start.bed.cpA+(1-x)*start.bed.cpB-start.bed.R;
+    retained_capacity: S = start.bed.Csolid+start.sA*start.bed.cpA;
+    frozen_solid: finish.sA = start.sA;
+    final_composition: finish.gA = x*finish.n;
+    methane: wasteA = start.gA-finish.gA;
+    hydrogen: wasteH = start.gH-finish.gH;
+    energy: (finish.U-start.U)/start.bed.Csolid = (Q-Eout)/start.bed.Csolid;
+    SELECT (mode)
+    CASE 0:
+        adiabatic: Q = 0{J};
+        expansion: ln(finish.T/start.T) = start.bed.R/cv
+            *ln((S+finish.n*cv)/(S+start.n*cv));
+    CASE 1:
+        isothermal: finish.T = start.T;
+        exhaust_heat: Eout/start.bed.Csolid = (wasteA*start.bed.cpA+wasteH*start.bed.cpB)
+            *(start.T-start.bed.Tref)/start.bed.Csolid;
+    END SELECT;
+END psa_caloric_blowdown;
+
+(* Retain thesis eq (6.22)'s purge SUPPLY rule, with all initial void gas
+   in the exhaust. Replace eq (6.21) by complete inventory/stream energy.
+   beta selects an effective, common exhaust temperature between initial
+   and final bed temperatures. It is a closure input, NOT a kinetic result.
+   ratio is an input instance: FIX it to recover the thesis ratio scenario,
+   or connect an effective equilibrium-sweep closure without duplicating
+   the conservation equations (see psa_part1_physical.a4c). *)
+MODEL psa_caloric_purge(start WILL_BE psa_caloric_state; finish WILL_BE psa_caloric_state;
+    Tin WILL_BE temperature; beta WILL_BE fraction;
+    phi IS_A factor_constant; ratio WILL_BE positive_factor; mode IS_A integer_constant;)
+WHERE (start.bed, finish.bed WILL_BE_THE_SAME;
+    start.P, finish.P WILL_BE_THE_SAME;
+    start.share = 1; finish.share = 1;
+    phi > 0; phi <= 1; mode >= 0; mode <= 1;);
+    removed, hydrogen_in, wasteA, wasteH IS_A psa_amount;
+    Tout IS_A temperature;
+    Eout, Q IS_A psa_signed_energy;
+    desorbed: removed = phi*start.sA;
+    solid_inventory: finish.sA = start.sA-removed;
+    pure_hydrogen: finish.gA = 0{mol};
+    eq_6_22: hydrogen_in = ratio*removed+finish.gH;
+    methane: wasteA = start.gA+removed-finish.gA;
+    hydrogen: wasteH = start.gH+hydrogen_in-finish.gH;
+    exhaust_temperature: Tout = (1-beta)*start.T+beta*finish.T;
+    exhaust_heat: Eout/start.bed.Csolid = (wasteA*start.bed.cpA+wasteH*start.bed.cpB)
+        *(Tout-start.bed.Tref)/start.bed.Csolid;
+    energy: (finish.U-start.U)/start.bed.Csolid =
+        (hydrogen_in*start.bed.cpB*(Tin-start.bed.Tref)-Eout+Q)/start.bed.Csolid;
+    SELECT (mode)
+    CASE 0: adiabatic: Q = 0{J};
+    CASE 1: isothermal: finish.T = start.T;
+    END SELECT;
+END psa_caloric_purge;
+
+(* Rigid-bed filling with feed: all incoming methane adsorbs, H2 stays
+   gaseous. This retains the thesis's complete-capture assumption while
+   including the heat of adsorption and the flow/internal-energy terms. *)
+MODEL psa_caloric_repressurisation(start WILL_BE psa_caloric_state;
+    finish WILL_BE psa_caloric_state; y WILL_BE fraction;
+    Tfeed WILL_BE temperature; mode IS_A integer_constant;)
+WHERE (start.bed, finish.bed WILL_BE_THE_SAME;
+    start.share = 1; finish.share = 1; mode >= 0; mode <= 1;);
+    feed IS_A psa_amount;
+    Q IS_A psa_signed_energy;
+    pure_hydrogen: finish.gA = 0{mol};
+    methane: finish.sA = start.sA+start.gA+y*feed;
+    hydrogen: finish.gH = start.gH+(1-y)*feed;
+    energy: (finish.U-start.U)/start.bed.Csolid =
+        (feed*(y*start.bed.cpA+(1-y)*start.bed.cpB)*(Tfeed-start.bed.Tref)+Q)
+        /start.bed.Csolid;
+    SELECT (mode)
+    CASE 0: adiabatic: Q = 0{J};
+    CASE 1:
+        (* Anchor the whole isothermal cycle here, avoiding one redundant
+           equality around the cyclic chain of identical temperatures. *)
+        isothermal: finish.T = Tfeed;
+    END SELECT;
+END psa_caloric_repressurisation;

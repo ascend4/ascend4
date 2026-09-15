@@ -1,0 +1,77 @@
+(* Adsorption properties for the Smith--Westerberg PSA reconstruction.
+   Cen & Yang (1986), Separation Science and Technology 21(9), 845-864,
+   equation (8), Table 2 and nomenclature, pp. 849-850, 863.
+   https://doi.org/10.1080/01496398608058382
+   See psa_properties.md for loading conventions and scope. *)
+REQUIRE "atoms.a4l";
+
+CONSTANT psa_volume_loading REFINES real_constant DIMENSION L^3/M;
+CONSTANT psa_volume_loading_temperature REFINES real_constant DIMENSION L^3*TMP/M;
+CONSTANT psa_molar_heat REFINES real_constant DIMENSION M*L^2/T^2/Q;
+
+ATOM psa_loading REFINES solver_var DIMENSION Q/M DEFAULT 1{mol/kg};
+    lower_bound := 0{mol/kg};
+    upper_bound := 1e6{mol/kg};
+    nominal := 1{mol/kg};
+END psa_loading;
+
+(* This ratio uses dry adsorbent mass, not total mixture mass. Unlike a
+   mass fraction it need not be bounded above by one. *)
+ATOM psa_mass_loading REFINES positive_factor DEFAULT 0.01;
+    nominal := 0.01;
+END psa_mass_loading;
+
+ATOM psa_partial_pressure REFINES pressure;
+    lower_bound := 0{Pa};
+END psa_partial_pressure;
+
+(* Single adsorbing species: pure gas, or a species diluted in an INERT
+   carrier. This is not the competitive multicomponent LRC expression.
+   p is the adsorbate's PARTIAL pressure, not total bed pressure.
+   a and b describe gas volume at STP per mass of dry adsorbent; conversion
+   to mol/kg is part of the model, not an implicit factor in the data. *)
+MODEL psa_lrc_isotherm(
+    a IS_A psa_volume_loading;
+    b IS_A psa_volume_loading_temperature;
+    c IS_A factor_constant;
+    d IS_A temperature_constant;
+    n IS_A factor_constant;
+) WHERE (n > 0;);
+    T "Absolute adsorbent/gas equilibrium temperature" IS_A temperature;
+    p "Partial pressure of the adsorbing species" IS_A psa_partial_pressure;
+    qsat "Saturation loading per mass of dry adsorbent" IS_A psa_loading;
+    q "Equilibrium loading per mass of dry adsorbent" IS_A psa_loading;
+    affinity "Dimensionless coefficient for pressure expressed relative to 1 psi" IS_A positive_factor;
+    activity "Dimensionless pressure-dependent adsorption term" IS_A positive_factor;
+    Vm_stp "Ideal-gas molar volume at 273.15 K and 1 atm" IS_A molar_volume_constant;
+    p_ref "One international psi, expressed in SI" IS_A pressure_constant;
+    Vm_stp :== 8.31446261815324{J/mol/K}*273.15{K}/101325{Pa};
+    (* measures.a4l currently uses 6894.733 Pa for psi. Keep the precise
+       empirical reference here without changing that global unit. *)
+    p_ref :== 6894.757293168{Pa};
+
+    saturation: qsat*Vm_stp = a + b/T;
+    temperature_dependence: affinity = exp(c + d/T);
+    (* Writing a pressure RATIO makes the empirical power dimensionally
+       valid even for noninteger n. Do not exponentiate a pressure in Pa
+       and retain the paper's numerical psi-based coefficient. *)
+    pressure_dependence: activity = affinity*(p/p_ref)^n;
+    equilibrium: q*(1 + activity) = qsat*activity;
+END psa_lrc_isotherm;
+
+(* Cen & Yang Table 2: the number 40539 is not a decimal-comma value.
+   Their q_m is cm3(STP)/g, NOT kg/kg. Smith & Westerberg (1992), Table 2,
+   retain these numbers but omit the loading units from a and b. *)
+MODEL cen_yang_methane WHERE (n > 0;) REFINES psa_lrc_isotherm(
+    a :== -0.76{cm^3/g}; b :== 40539{cm^3*K/g};
+    c :== -10.245; d :== 1756{K}; n :== 1;
+);
+    MW "Methane molar mass used for conversion to mass loading" IS_A molar_weight_constant;
+    Hads "Positive magnitude of heat released per mole adsorbed" IS_A psa_molar_heat;
+    w "Mass of adsorbed methane per mass of dry carbon" IS_A psa_mass_loading;
+    MW :== 16.043{g/mol};
+    (* Cen & Yang Table 2, 5000 cal/mol; thermochemical calorie = 4.184 J.
+       Property data only: no energy balance is imposed by this model. *)
+    Hads :== 20920{J/mol};
+    mass_loading: w = q*MW;
+END cen_yang_methane;
