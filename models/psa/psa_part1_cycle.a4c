@@ -1,0 +1,146 @@
+(* Closed zero-PE JOURNAL-equation reconstruction. Source outputs are
+   comparison targets, not extra equations. Additional boundary conventions
+   and nonzero energy defects are documented in psa_part1_cycle.md. *)
+REQUIRE "psa/psa_part1.a4c";
+REQUIRE "psa/psa_part1_cycle.a4l";
+
+MODEL psa_part1_cycle_base;
+    pressure_basis "0: table pressures are reconciled; 1: valve endpoints" IS_A integer_constant;
+    data IS_A psa_part1_data;
+    bed IS_A psa_caloric_bed;
+    boundary IS_A set OF symbol_constant;
+    boundary :== ['pressurised','mixed','blown_down','regenerated'];
+    state[boundary] IS_A psa_caloric_state(bed, 1);
+    hot IS_A psa_caloric_state(bed, data.phi['pe0']);
+    cold IS_A psa_caloric_state(bed, 0.25);
+    ads IS_A psa_paper_adsorption(bed, data.phi['pe0'], data.etaAds);
+    des IS_A psa_paper_desorption(bed, data.phiDes, data.etaAds, data.etaDes);
+    henry IS_A psa_methane_henry;
+    Tfeed "Specified reservoir temperature" IS_A temperature;
+    Psource "Unreported feed reservoir pressure: independent scenario input" IS_A pressure;
+    PH, PL IS_A pressure;
+    y IS_A fraction;
+    K_multiplier "Explicit sensitivity parameter, NOT fitted to published purge" IS_A positive_factor;
+    Tfeed, ads.Tfeed ARE_THE_SAME;
+    ads.y, y ARE_THE_SAME;
+    ads.P, hot.P, cold.P, state['pressurised'].P ARE_THE_SAME;
+    ads.Te, hot.T ARE_THE_SAME;
+    ads.T0, cold.T, state['pressurised'].T ARE_THE_SAME;
+    ads.sA0, state['pressurised'].sA ARE_THE_SAME;
+    ads.sAe, hot.sA ARE_THE_SAME;
+    des.T0, state['blown_down'].T ARE_THE_SAME;
+    des.Te, state['regenerated'].T, henry.T ARE_THE_SAME;
+    des.sA0, state['blown_down'].sA ARE_THE_SAME;
+    des.sAe, state['regenerated'].sA ARE_THE_SAME;
+    des.P, state['blown_down'].P, state['regenerated'].P ARE_THE_SAME;
+    des.qref, ads.carbon.w ARE_THE_SAME;
+    K_hypothesis: des.K = K_multiplier*henry.K;
+    hot_gas: hot.gA = y*hot.n;
+    cold_gas: cold.gA = 0{mol};
+    cold_solid: cold.sA = 0{mol};
+    regenerated_gas: state['regenerated'].gA = 0{mol};
+    (* Added boundary closure: sealed caloric mixing of the two-zone exit.
+       This is not specified in Part I and remains independently labelled. *)
+    mix IS_A psa_caloric_mixing(hot, cold, state['mixed']);
+    bd IS_A psa_part1_blowdown(state['mixed'], state['blown_down'], y);
+    fr IS_A psa_part1_repressurisation(state['regenerated'], state['pressurised'], y, Tfeed, Psource);
+    SELECT (pressure_basis)
+    CASE 0:
+        high_pressure: state['pressurised'].P = PH;
+        low_pressure: state['blown_down'].P = PL;
+    CASE 1:
+        high_valve_pressure: fr.Pvalve = PH;
+        low_valve_pressure: bd.Pvalve = PL;
+    END SELECT;
+
+    purgeA, purgeH, feed, product, wasteA, wasteH IS_A psa_amount;
+    recovery, purge_yavg IS_A fraction;
+    Ffeed IS_A molar_rate;
+    period IS_A time;
+    Eads_in, Eads_out, Epurge_out, heater, energy_defect, ads_defect, purge_defect IS_A psa_signed_energy;
+    methane_exhaust: purgeA = state['blown_down'].gA+des.removed;
+    hydrogen_exhaust: purgeH = state['blown_down'].gH+des.hydrogen_in-state['regenerated'].gH;
+    average_exhaust: purge_yavg*(purgeA+purgeH) = purgeA;
+    total_feed: feed = ads.feed+fr.feed;
+    net_product: product = ads.product-des.hydrogen_in;
+    methane_waste: wasteA = bd.wasteA+purgeA;
+    hydrogen_waste: wasteH = bd.wasteH+purgeH;
+    eq_31: recovery*(1-y)*feed = product;
+    (* Physical plant-wide throughput convention, NOT literal eq (37). *)
+    throughput: Ffeed*period = 2*feed;
+    adsorption_inlet: Eads_in = ads.feed*(y*bed.cpA+(1-y)*bed.cpB)*(Tfeed-bed.Tref);
+    adsorption_outlet: Eads_out = ads.product*bed.cpB*(ads.T0-bed.Tref);
+    purge_outlet: Epurge_out = (purgeA*bed.cpA+purgeH*bed.cpB)*(des.Te-bed.Tref);
+    purge_heater: heater = des.hydrogen_in*bed.cpB*(des.TinB-ads.T0);
+    adsorption_diagnostic: ads_defect = hot.U+cold.U-state['pressurised'].U-Eads_in+Eads_out;
+    purge_diagnostic: purge_defect = state['regenerated'].U-state['blown_down'].U
+        - des.hydrogen_in*bed.cpB*(des.TinB-bed.Tref)+Epurge_out;
+    (* Positive defect = more external outgoing energy than incoming.
+       A diagnostic, NOT a compensating heat input to force conservation. *)
+    plant_diagnostic: energy_defect = product*bed.cpB*(ads.T0-bed.Tref)+bd.Eout+Epurge_out
+        - Eads_in-fr.Efeed-heater;
+METHODS
+METHOD on_load;
+    (* Also restore forward specifications after an inverse diagnostic. *)
+    FREE ads.feed, des.hydrogen_in;
+    FIX bed.V, bed.eps, bed.rho, bed.Cv, bed.cpA, bed.cpB, bed.H, bed.Tref;
+    bed.V := 3.141592653589793*data.size['d']['pe0']^2*data.size['L']['pe0']/4;
+    bed.eps := data.eps; bed.rho := 800{kg/m^3}; bed.Cv := 804000{J/m^3/K};
+    bed.cpA := 36.8{J/mol/K}; bed.cpB := 29.3{J/mol/K};
+    bed.H := 20920{J/mol}; bed.Tref := 298{K};
+    FIX PH, PL, y, Tfeed, Psource, des.TinB, Ffeed, K_multiplier;
+    PH := data.P['P9']['pe0']; PL := data.P['P5']['pe0']; y := data.y;
+    Tfeed := 298{K}; des.TinB := 350{K}; Ffeed := 31.1{mol/s};
+    (* 300 psi is an EXPLICIT UNSOURCED reservoir-pressure scenario.
+       It is not borrowed from Part II, fitted, or a published input. *)
+    Psource := 300*ads.carbon.p_ref; K_multiplier := 1;
+    FOR k IN boundary DO state[k].T := 298{K}; state[k].sA := 5{mol}; END FOR;
+    state['pressurised'].P := PH; state['mixed'].P := PH;
+    state['blown_down'].P := PL; state['regenerated'].P := PL;
+    state['mixed'].sA := 65{mol}; state['blown_down'].sA := 65{mol};
+    hot.T := 310{K}; hot.sA := 65{mol}; cold.T := 298{K};
+    bd.Pvalve := 6*ads.carbon.p_ref; bd.Tgas := 120{K};
+    fr.Pvalve := 230*ads.carbon.p_ref; fr.TB := 600{K}; fr.TF := 280{K};
+    IF pressure_basis = 1 THEN
+        bd.Pvalve := PL; fr.Pvalve := PH;
+        des.P := 2.5*PL; bd.Tgas := 150{K};
+    END IF;
+    des.K := 0.0005{m^3/mol}; des.yout := 0.5;
+    SOLVER QRSlv;
+END on_load;
+(* Inverse DIAGNOSTICS, not recovered property data or design optimisation.
+   Run after solving on_load. FIX/ FREE exchange specifications, preserving
+   a square equation system. Other Table 4 flows remain independent checks. *)
+METHOD fit_purge;
+    FIX bed.H;
+    FREE ads.feed;
+    FREE K_multiplier;
+    FIX des.hydrogen_in;
+    des.hydrogen_in := data.amount['purge_H2']['pe0'];
+END fit_purge;
+METHOD fit_adsorption_purge;
+    RUN fit_purge;
+    (* H is algebraically inferred, including a negative result if required.
+       The Python report flags this as incompatible with heat RELEASE;
+       allowing that diagnostic is not permission to use it in design. *)
+    FREE bed.H;
+    FIX ads.feed;
+    ads.feed := data.amount['ads_feed']['pe0'];
+END fit_adsorption_purge;
+METHOD self_test;
+    ASSERT product > 0{mol} AND recovery > 0 AND recovery < 1;
+    ASSERT abs((y*feed-wasteA)/1{mol}) < 1e-5;
+    ASSERT abs(((1-y)*feed-product-wasteH)/1{mol}) < 1e-5;
+    ASSERT abs((energy_defect-ads_defect-bd.energy_defect-purge_defect-fr.energy_defect)/1{J}) < 0.1;
+    (* Deliberately NO assertion that energy_defect=0 or that table amounts
+       agree. Those questions are what this model is intended to expose. *)
+END self_test;
+END psa_part1_cycle_base;
+
+MODEL psa_part1_cycle REFINES psa_part1_cycle_base;
+    pressure_basis :== 0;
+END psa_part1_cycle;
+
+MODEL psa_part1_cycle_valve REFINES psa_part1_cycle_base;
+    pressure_basis :== 1;
+END psa_part1_cycle_valve;

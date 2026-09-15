@@ -1253,6 +1253,56 @@ static void test_units_ladder_invalid_anchor_rejected(void){
 	Asc_CompilerDestroy();
 }
 
+/* A failed top-level units definition must not reject the next valid MODEL,
+   whether it is in this module, the next module, or a fresh compiler session.
+   Inside a MODEL, however, its error must still reject that enclosing type. */
+static void check_units_ladder_error_recovery(int mode){
+	const char *bad = "UNITS LADDER kg; END UNITS LADDER;\n";
+	const char *good = "MODEL after_bad_units; END after_bad_units;\n";
+	char model[256];
+	int status, errors;
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+	if(mode == 3){
+		snprintf(model,sizeof(model),
+			"MODEL bad_units; %s END bad_units;\n%s",bad,good);
+	}else{
+		snprintf(model,sizeof(model),"%s%s",bad,mode == 0 ? good : "");
+	}
+	Asc_OpenStringModule(model,&status,"bad_units_recovery");
+	CU_ASSERT(status == 0);
+	if(status != 0) goto cleanup;
+	CU_ASSERT(zz_parse() == 0);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,"anchor") != NULL);
+	errors = g_parse_error_capture.error_count;
+	if(mode == 1 || mode == 2){
+		if(mode == 2){
+			Asc_CompilerDestroy();
+			Asc_CompilerInit(1);
+		}
+		Asc_OpenStringModule(good,&status,"after_bad_units");
+		CU_ASSERT(status == 0);
+		if(status != 0) goto cleanup;
+		CU_ASSERT(zz_parse() == 0);
+		CU_ASSERT(g_parse_error_capture.error_count == errors);
+	}
+	CU_ASSERT(FindType(AddSymbol("after_bad_units")) != NULL);
+	if(mode == 3){
+		CU_ASSERT(FindType(AddSymbol("bad_units")) == NULL);
+	}
+cleanup:
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_units_ladder_recovery_same_module(void){check_units_ladder_error_recovery(0);}
+static void test_units_ladder_recovery_next_module(void){check_units_ladder_error_recovery(1);}
+static void test_units_ladder_recovery_reinit(void){check_units_ladder_error_recovery(2);}
+static void test_units_ladder_error_rejects_model(void){check_units_ladder_error_recovery(3);}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -1289,6 +1339,10 @@ static void test_units_ladder_invalid_anchor_rejected(void){
 	T(constant_declared_units_inherited_on_refine) \
 	T(constant_units_clause_mismatched_default_rejected) \
 	T(units_ladder_define_and_extend) \
-	T(units_ladder_invalid_anchor_rejected)
+	T(units_ladder_invalid_anchor_rejected) \
+	T(units_ladder_recovery_same_module) \
+	T(units_ladder_recovery_next_module) \
+	T(units_ladder_recovery_reinit) \
+	T(units_ladder_error_rejects_model)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)

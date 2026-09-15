@@ -169,7 +169,6 @@ Type::getSimulation(const SymChar &sym
 	error_reporter_tree_start();
 
 	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, NULL);
-	Simulation sim(i,sym);
 
 	bool has_error = FALSE;
 	if(error_reporter_tree_has_error()){
@@ -178,13 +177,23 @@ Type::getSimulation(const SymChar &sym
 
 	error_reporter_tree_end();
 	if(has_error){
-
+		/* A failed child may leave a partial simulation. No wrapper owns it
+		 * yet, and SimsCreateInstance does not add it to the simulation list. */
+		sim_destroy(i);
 		stringstream ss;
 		ss << "Error(s) during instantiation of type '" << getName() << "'";
 		throw runtime_error(ss.str());
-	}else{
-		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Instantiated %s",SCP(getInternalType()->name));
 	}
+	if(i == NULL){
+		/* Some compiler rejections return NULL without a structured error. */
+		stringstream ss;
+		ss << "Failed to create instance of type '" << getName() << "'";
+		throw runtime_error(ss.str());
+	}
+	/* The constructor dereferences i to obtain the simulation root. Check
+	 * both failure paths and flush diagnostics BEFORE constructing it. */
+	Simulation sim(i,sym);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE,"Instantiated %s",SCP(getInternalType()->name));
 
 #if 1
 	//CONSOLE_DEBUG("CHECKING INSTANCE...");
@@ -203,10 +212,6 @@ Type::getSimulation(const SymChar &sym
 	sim.checkStatistics();
 	CONSOLE_DEBUG("...DONE CHECKING STATISTICS");
 #endif
-
-	if(i==NULL){
-		throw runtime_error("Failed to create instance");
-	}
 
 	if(rundefaultmethod){
 		//CONSOLE_DEBUG("RUNNING DEFAULT METHOD");

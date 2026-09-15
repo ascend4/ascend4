@@ -452,6 +452,7 @@ SOLVER_ENGINE_NAMES = [
 	'IPOPT',
 	'MakeMPS',
 	'HiGHS',
+	'Gurobi',
 	'A4SQP',
 	'SLSQP',
 	'LRSlv',
@@ -468,6 +469,7 @@ WITH_SOLVER_TOKENS = [s.upper() for s in SOLVER_NAMES]
 SOLVER_SUBDIRS = [s.lower() for s in SOLVER_NAMES]
 NON_DEFAULT_SOLVER_TOKENS = set([
 	'RADAU5',
+	'GUROBI',
 ])
 DEFAULT_WITH_SOLVERS = [
 	token for token in WITH_SOLVER_TOKENS
@@ -689,6 +691,17 @@ vars.Add(PackageVariable("HIGHS_PREFIX"
 	,"Prefix for your HiGHS install (if not found via default pkg-config path)"
 	,default_user_local
 ))
+
+#------- GUROBI SDK -------
+# SDK detection is separate from optional solver selection.
+vars.Add(PackageVariable("GUROBI_PREFIX"
+	,"Prefix for the Gurobi C SDK (include/gurobi_c.h and lib/)"
+	,default_user_local
+))
+vars.Add("GUROBI_LIB"
+	,"Gurobi library name override (empty derives gurobi<major><minor> from the header)"
+	,""
+)
 
 #
 #	vars.Add("IPOPT_LIBS"
@@ -2210,6 +2223,53 @@ int main(){
 def CheckPCRE(context):
 	return CheckExtLib(context,libname='pcre',text=pcre_test_text)
 
+def CheckGurobi(context):
+	"""Detect the optional C SDK without starting a licensed environment.
+
+	Keep its flags separate so libascend and unrelated solvers do not acquire
+	a dependency on the proprietary runtime.
+	"""
+	context.Message("Checking for Gurobi C SDK... ")
+	for name in ['GUROBI_CPPPATH','GUROBI_LIBPATH','GUROBI_LIBS']:
+		context.env[name] = []
+	context.env['HAVE_GUROBI'] = False
+	prefix = pathlib.Path(os.path.expanduser(context.env.subst('$GUROBI_PREFIX')))
+	header = prefix / 'include' / 'gurobi_c.h'
+	try:
+		header_text = header.read_text()
+	except OSError:
+		context.Result('no (gurobi_c.h not found under GUROBI_PREFIX)')
+		return False
+	libname = context.env.subst('$GUROBI_LIB').strip()
+	if not libname:
+		major = re.search(r'^\s*#define\s+GRB_VERSION_MAJOR\s+(\d+)',header_text,re.M)
+		minor = re.search(r'^\s*#define\s+GRB_VERSION_MINOR\s+(\d+)',header_text,re.M)
+		if major is None or minor is None:
+			context.Result('no (cannot determine library name; set GUROBI_LIB)')
+			return False
+		libname = 'gurobi' + major.group(1) + minor.group(1)
+	libpaths = [str(prefix / d) for d in ['lib','lib64'] if (prefix / d).is_dir()]
+	saved = SnapshotBuildFlags(context.env)
+	try:
+		context.env.PrependUnique(CPPPATH=[str(header.parent)],LIBPATH=libpaths,LIBS=[libname])
+		ok = context.TryLink('''
+#include <gurobi_c.h>
+int main(void){
+	int major, minor, technical;
+	GRBversion(&major, &minor, &technical);
+	return 0;
+}
+''','.c')
+	finally:
+		RestoreBuildFlags(context.env,saved)
+	if ok:
+		context.env['GUROBI_CPPPATH'] = [str(header.parent)]
+		context.env['GUROBI_LIBPATH'] = libpaths
+		context.env['GUROBI_LIBS'] = [libname]
+		context.env['HAVE_GUROBI'] = True
+	context.Result(bool(ok))
+	return bool(ok)
+
 #----------------
 # GCC Version sniffing
 
@@ -2258,6 +2318,7 @@ conf = Configure(env
 		, 'CheckSigReset' : CheckSigReset
 		, 'CheckErf' : CheckErf
 		, 'CheckPCRE' : CheckPCRE
+		, 'CheckGurobi' : CheckGurobi
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -2590,6 +2651,10 @@ if nlopt_ok:
 	conf.env['HAVE_NLOPT'] = True
 RestoreBuildFlags(conf.env,nlopt_saved)
 conf.env.set_optional('nlopt',active=nlopt_ok,reason=nlopt_reason)
+
+# Probe the SDK without requiring a runtime license.
+gurobi_ok = conf.CheckGurobi()
+conf.env.set_optional('gurobi_sdk',active=gurobi_ok,reason='C SDK not found (see GUROBI_PREFIX and GUROBI_LIB)')
 
 # LSODE needs Fortran; no fortran then no LSODE
 

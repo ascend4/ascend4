@@ -76,9 +76,12 @@ class StudyReporter(PythonSolverReporter):
 	def fill_values(self,status):
 		
 		self.studyvar.set_text(self.browser.sim.getInstanceName(self.instance))
-		self.currentvalue.set_text(str(self.instance.getRealValue()))
+		formatted_value = self.browser.format_real_value(self.instance.getRealValue())
+		self.currentvalue.set_text(formatted_value)
 		self.points.set_text("%d out of %d solved" % (self.pointsdone, self.nsteps+1))
-		self.currentrun.set_text("%s = %0.2f" % (self.browser.sim.getInstanceName(self.instance), self.instance.getRealValue()))
+		self.currentrun.set_text("%s = %s" % (
+			self.browser.sim.getInstanceName(self.instance), formatted_value
+		))
 		self.totaltime.set_text("%0.1f s" % self.totalelapsed)
 		self.numblocks.set_text("%d of %d" % (status.getCurrentBlockNum(),status.getNumBlocks()))
 		self.numvars.set_text("%d of %d" % (status.getNumConverged(), self.nv))

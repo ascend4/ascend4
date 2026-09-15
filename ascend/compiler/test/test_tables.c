@@ -511,7 +511,372 @@ static void test_instantiate_tables_v05_fail_units_dimension_conflict(void){
 	instantiate_module_expect_error("test/compiler/tables_v05_fail_units_dimension_conflict.a4c","tables_v05_fail_units_dimension_conflict","Dimensionally inconsistent assignment");
 }
 
+/* Exercise the real parser and instantiator, including deferred array expansion. */
+static void run_vector_case(const char *name, const char *kind, const char *set,
+    const char *type, const char *options, const char *body,
+    const char *keys[3], const double expected[3], const char *error){
+	char model[4096];
+	int status;
+	unsigned j;
+	struct Instance *sim, *root, *arr;
+
+	snprintf(model,sizeof(model),
+		"MODEL vector_case;\n"
+		"i IS_A set OF %s_constant;\n%s\n"
+		"TABLE x[i] IS_A %s %s;\n%s\nEND TABLE;\nEND vector_case;\n",
+		kind,set,type,options,body);
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	table_parse_error_capture_reset();
+	error_reporter_set_callback(&table_parse_error_capture_cb);
+	/* Load dependencies before opening a string-backed scanner buffer. */
+	Asc_OpenModule("atoms.a4l",&status);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(zz_parse() == 0);
+	Asc_OpenStringModule(model,&status,name);
+	CU_ASSERT_FATAL(status == 0);
+	CU_ASSERT_FATAL(zz_parse() == 0);
+	CU_ASSERT_FATAL(g_table_parse_error_capture.error_count == 0);
+	sim = SimsCreateInstance(AddSymbol("vector_case"),AddSymbol("sim1"),e_normal,NULL);
+	CU_ASSERT_FATAL(sim != NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root != NULL);
+	arr = ChildByChar(root,AddSymbol("x"));
+	CU_ASSERT_FATAL(arr != NULL);
+	if(error){
+		CU_ASSERT(g_table_parse_error_capture.error_count > 0);
+		CU_ASSERT(strstr(g_table_parse_error_capture.all_error_msgs,error) != NULL);
+		/* Invalid layouts and labels must not partially assign the vector. */
+		for(j = 1; j <= NumberChildren(arr); ++j){
+			CU_ASSERT(!AtomAssigned(InstanceChild(arr,j)));
+		}
+		if(strstr(error,"Ambiguous") && !*set){
+			CU_ASSERT(!AtomAssigned(ChildByChar(root,AddSymbol("i"))));
+		}
+	}else{
+		CU_ASSERT(g_table_parse_error_capture.error_count == 0);
+		for(j = 0; j < 3 && keys[j] != NULL; ++j){
+			struct InstanceName rec;
+			struct Instance *cell;
+			unsigned long pos;
+			if(strcmp(kind,"integer") == 0){
+				SetInstanceNameType(rec,IntArrayIndex);
+				SetInstanceNameIntIndex(rec,strtol(keys[j],NULL,10));
+			}else{
+				SetInstanceNameType(rec,StrArrayIndex);
+				SetInstanceNameStrIndex(rec,AddSymbol(keys[j]));
+			}
+			pos = ChildSearch(arr,&rec);
+			CU_ASSERT_FATAL(pos != 0);
+			cell = InstanceChild(arr,pos);
+			CU_ASSERT_FATAL(cell != NULL);
+			CU_ASSERT_FATAL(AtomAssigned(cell));
+			if(InstanceKind(cell) == INTEGER_CONSTANT_INST){
+				CU_ASSERT(GetIntegerAtomValue(cell) == (long)expected[j]);
+			}else{
+				CU_ASSERT_FATAL(InstanceKind(cell) == REAL_CONSTANT_INST);
+				CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(cell),expected[j],1e-10);
+			}
+		}
+		CU_ASSERT(NumberChildren(arr) == j);
+	}
+	sim_destroy(sim);
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+#define VECTOR_TEST(NAME,KIND,SET,TYPE,OPTIONS,BODY,K1,V1,K2,V2,K3,V3,ERROR) \
+static void test_vector_##NAME(void){ \
+	const char *keys[3] = {K1,K2,K3}; \
+	const double expected[3] = {V1,V2,V3}; \
+	run_vector_case(#NAME,KIND,SET,TYPE,OPTIONS,BODY,keys,expected,ERROR); \
+}
+#define VECTOR_FAIL(NAME,KIND,SET,TYPE,OPTIONS,BODY,ERROR) \
+	VECTOR_TEST(NAME,KIND,SET,TYPE,OPTIONS,BODY,NULL,0,NULL,0,NULL,0,ERROR)
+#define SYMBOLS "i :== ['a','b','c'];"
+#define INTEGERS "i :== [1..3];"
+
+VECTOR_TEST(horizontal,"symbol",SYMBOLS,"factor_constant","",
+	"c, a, b;\n3.5, 1.5, 2.5;", "a",1.5,"b",2.5,"c",3.5,NULL)
+VECTOR_TEST(vertical,"symbol",SYMBOLS,"factor_constant","",
+	"c 3.5\na 1.5\nb 2.5", "a",1.5,"b",2.5,"c",3.5,NULL)
+VECTOR_TEST(vertical_csv,"symbol",SYMBOLS,"integer_constant","",
+	"b,2; a,1; c,3;", "a",1,"b",2,"c",3,NULL)
+VECTOR_TEST(horizontal_tabs,"symbol",SYMBOLS,"integer_constant","",
+	"\tc\ta\tb\n\t3\t1\t2", "a",1,"b",2,"c",3,NULL)
+VECTOR_TEST(vertical_tabs,"symbol",SYMBOLS,"integer_constant","",
+	"c\t3\na\t1\nb\t2", "a",1,"b",2,"c",3,NULL)
+VECTOR_TEST(horizontal_corner,"symbol",SYMBOLS,"integer_constant","",
+	",c,a,b\n,3,1,2", "a",1,"b",2,"c",3,NULL)
+VECTOR_TEST(horizontal_corner_header_only,"symbol",SYMBOLS,"integer_constant","",
+	",c,a,b\n3,1,2", "a",1,"b",2,"c",3,NULL)
+VECTOR_TEST(horizontal_integer,"integer",INTEGERS,"integer_constant","",
+	"3 1 2\n30 10 20", "1",10,"2",20,"3",30,NULL)
+VECTOR_TEST(vertical_integer,"integer",INTEGERS,"integer_constant","",
+	"3 30\n1 10\n2 20", "1",10,"2",20,"3",30,NULL)
+VECTOR_TEST(horizontal_colon,"integer","i :== [1..2];","integer_constant","",
+	": 2,1\n20,10", "1",10,"2",20,NULL,0,NULL)
+VECTOR_TEST(vertical_colon,"integer","i :== [1..2];","integer_constant","",
+	"2: 20\n1: 10", "1",10,"2",20,NULL,0,NULL)
+VECTOR_TEST(vertical_partial_colon,"integer","i :== [1..2];","integer_constant","",
+	"2 20\n1: 10", "1",10,"2",20,NULL,0,NULL)
+VECTOR_TEST(inferred_horizontal,"symbol","","factor_constant","",
+	"z,a,b\n3,1,2", "a",1,"b",2,"z",3,NULL)
+VECTOR_TEST(inferred_vertical,"symbol","","factor_constant","",
+	"z 3\na 1\nb 2", "a",1,"b",2,"z",3,NULL)
+VECTOR_TEST(inferred_integer,"integer","","integer_constant","",
+	": 3,1,2\n30,10,20", "1",10,"2",20,"3",30,NULL)
+VECTOR_TEST(quoted_labels,"symbol","","factor_constant","",
+	"'New York', 'lead,zinc', '1'\n3,2,1", "New York",3,"lead,zinc",2,"1",1,NULL)
+VECTOR_TEST(quoted_vertical,"symbol","","factor_constant","",
+	"'New York': 3\n'lead,zinc': 2\n'1': 1", "New York",3,"lead,zinc",2,"1",1,NULL)
+VECTOR_TEST(signed_values,"symbol",SYMBOLS,"factor_constant","",
+	"a b c\n- 1.5, + 2.5, -3e-2", "a",-1.5,"b",2.5,"c",-0.03,NULL)
+VECTOR_TEST(signed_labels,"integer","","integer_constant","",
+	": -2, +1, 3\n20,10,30", "-2",20,"1",10,"3",30,NULL)
+VECTOR_TEST(single_horizontal,"symbol","","factor_constant","",
+	"a\n1", "a",1,NULL,0,NULL,0,NULL)
+VECTOR_TEST(single_vertical,"symbol","","factor_constant","",
+	"a 1", "a",1,NULL,0,NULL,0,NULL)
+VECTOR_TEST(horizontal_units,"symbol",SYMBOLS,"time_constant","UNITS {h}",
+	"a b c\n1 2 3", "a",3600,"b",7200,"c",10800,NULL)
+VECTOR_TEST(vertical_units,"symbol",SYMBOLS,"time_constant","UNITS {h}",
+	"a 1\nb 2\nc 3", "a",3600,"b",7200,"c",10800,NULL)
+VECTOR_FAIL(ambiguous,"integer","i :== [1..2];","integer_constant","",
+	"1 2\n3 4", "Ambiguous 1-D TABLE")
+VECTOR_FAIL(ambiguous_inferred,"integer","","integer_constant","",
+	"1 2\n3 4", "Ambiguous 1-D TABLE")
+VECTOR_FAIL(duplicate,"symbol",SYMBOLS,"factor_constant","",
+	"a a c\n1 2 3", "duplicate labels")
+VECTOR_FAIL(duplicate_inferred,"symbol","","factor_constant","",
+	"a 1\na 2\nc 3", "duplicate labels")
+VECTOR_FAIL(nonmember,"symbol",SYMBOLS,"factor_constant","",
+	"a b z\n1 2 3", "not a member")
+VECTOR_FAIL(count,"symbol",SYMBOLS,"factor_constant","",
+	"a b\n1 2", "count does not match")
+VECTOR_FAIL(label_type,"integer",INTEGERS,"factor_constant","",
+	"a b c\n1 2 3", "not a valid integer")
+VECTOR_FAIL(short_values,"symbol",SYMBOLS,"factor_constant","",
+	"a b c\n1 2", "Malformed labelled 1-D TABLE")
+VECTOR_FAIL(extra_values,"symbol",SYMBOLS,"factor_constant","",
+	"a b c\n1 2 3 4", "Malformed labelled 1-D TABLE")
+VECTOR_FAIL(empty_cell,"symbol",SYMBOLS,"factor_constant","",
+	"a,b,c\n1,,3", "empty data fields")
+VECTOR_FAIL(empty_label,"symbol",SYMBOLS,"factor_constant","",
+	"a,,c\n1,2,3", "Malformed labelled 1-D TABLE")
+VECTOR_FAIL(trailing_comma,"symbol",SYMBOLS,"factor_constant","",
+	"a,b,c\n1,2,3,", "Malformed labelled 1-D TABLE")
+VECTOR_FAIL(vertical_empty,"symbol",SYMBOLS,"factor_constant","",
+	"a,,1\nb,2\nc,3", "empty data fields")
+VECTOR_FAIL(nonnumeric,"symbol",SYMBOLS,"factor_constant","",
+	"a b c\n1 foo 3", "Malformed labelled 1-D TABLE")
+VECTOR_FAIL(dangling_sign,"symbol",SYMBOLS,"factor_constant","",
+	"a b c\n1 2 -", "Malformed labelled 1-D TABLE")
+VECTOR_FAIL(mixed_colons,"integer","i :== [1..2];","integer_constant","",
+	": 1 2\n3: 4", "Malformed labelled 1-D TABLE")
+VECTOR_FAIL(empty,"symbol",SYMBOLS,"factor_constant","",
+	"", "Malformed labelled 1-D TABLE")
+VECTOR_FAIL(integer_units,"symbol",SYMBOLS,"integer_constant","UNITS {h}",
+	"a b c\n1 2 3", "units are not allowed for integer")
+VECTOR_FAIL(invalid_units,"symbol",SYMBOLS,"factor_constant","UNITS {bad_units_xyz}",
+	"a b c\n1 2 3", "TABLE units are invalid")
+VECTOR_FAIL(dimension_conflict,"symbol",SYMBOLS,"temperature_constant","UNITS {h}",
+	"a b c\n1 2 3", "Dimensionally inconsistent assignment")
+
+#undef SYMBOLS
+#undef INTEGERS
+#undef VECTOR_TEST
+#undef VECTOR_FAIL
+
+/* Qualified domains are assigned in child models, after the parent's first
+   execution attempt. Check actual values, not just non-NULL simulations:
+   ASCEND can return a partially instantiated simulation with pending work. */
+static void run_deferred_case(const char *name, const char *body,
+    const char *result_expr, double expected, const char *error){
+	char model[8192];
+	int status;
+	struct Instance *sim = NULL, *root, *result;
+	snprintf(model,sizeof(model),
+		"MODEL table_axis;\n"
+		"labels, unset IS_A set OF symbol_constant; labels :== ['a','b'];\n"
+		"idx IS_A set OF integer_constant; idx :== [1..2];\n"
+		"flag IS_A boolean_constant; flag :== TRUE;\nEND table_axis;\n"
+		"MODEL table_nested; axis IS_A table_axis; END table_nested;\n"
+		"MODEL table_bound(d WILL_BE table_nested;);\n"
+		"TABLE x[d.axis.labels] IS_A time_constant UNITS {h}; a: 1; b: 2; END TABLE;\n"
+		"END table_bound;\n"
+		"MODEL table_target(labels IS_A set OF symbol_constant;);\n"
+		"x[labels] IS_A time_constant; END table_target;\n"
+		"MODEL deferred_case; d IS_A table_nested;\n%s\n"
+		"result IS_A time_constant; result :== %s;\nEND deferred_case;\n",
+		body,result_expr);
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	table_parse_error_capture_reset();
+	error_reporter_set_callback(&table_parse_error_capture_cb);
+	Asc_OpenModule("atoms.a4l",&status);
+	CU_ASSERT(status == 0);
+	if(status != 0) goto cleanup;
+	status = zz_parse();
+	CU_ASSERT(status == 0);
+	if(status != 0) goto cleanup;
+	Asc_OpenStringModule(model,&status,name);
+	CU_ASSERT(status == 0);
+	if(status != 0) goto cleanup;
+	status = zz_parse();
+	CU_ASSERT(status == 0);
+	if(status != 0) goto cleanup;
+	CU_ASSERT(g_table_parse_error_capture.error_count == 0);
+	if(g_table_parse_error_capture.error_count != 0) goto cleanup;
+	sim = SimsCreateInstance(AddSymbol("deferred_case"),AddSymbol("sim1"),e_normal,NULL);
+	CU_ASSERT(sim != NULL);
+	if(sim == NULL) goto cleanup;
+	root = GetSimulationRoot(sim);
+	CU_ASSERT(root != NULL);
+	if(root == NULL) goto cleanup;
+	result = ChildByChar(root,AddSymbol("result"));
+	CU_ASSERT(result != NULL);
+	if(result == NULL) goto cleanup;
+	if(error){
+		CU_ASSERT(g_table_parse_error_capture.error_count > 0);
+		CU_ASSERT(strstr(g_table_parse_error_capture.all_error_msgs,error) != NULL);
+		/* In particular, loop prechecks must not assign an earlier cell
+		   before encountering a bad token or a later invalid iteration. */
+		CU_ASSERT(!AtomAssigned(result));
+	}else{
+		CU_ASSERT(g_table_parse_error_capture.error_count == 0);
+		CU_ASSERT(AtomAssigned(result));
+		if(AtomAssigned(result)) CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(result),expected,1e-9);
+	}
+cleanup:
+	/* A failed assertion must not leave the compiler initialised for the next
+	   test: CU_ASSERT_FATAL would return without running this cleanup. */
+	if(sim != NULL) sim_destroy(sim);
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+#define DEFERRED_CASE(NAME,BODY,EXPR,VALUE,ERROR) \
+static void test_deferred_##NAME(void){run_deferred_case(#NAME,BODY,EXPR,VALUE,ERROR);}
+
+DEFERRED_CASE(vector_vertical,
+	"TABLE x[d.axis.labels] IS_A time_constant UNITS {h}; b: 2; a: 1; END TABLE;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(vector_horizontal,
+	"TABLE x[d.axis.labels] IS_A time_constant UNITS {h}; : b a; 2 1; END TABLE;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(vector_expression,
+	"TABLE x[d.axis.labels + ['c']] IS_A time_constant UNITS {h}; a: 1; b: 2; c: 3; END TABLE;",
+	"x['a'] + x['b'] + x['c']",21600,NULL)
+DEFERRED_CASE(dense,
+	"TABLE x[d.axis.labels][d.axis.idx] IS_A time_constant UNITS {h};\n"
+	"2 1; b: 4 3; a: 2 1; END TABLE;",
+	"x['a'][1] + 10*x['b'][2]",147600,NULL)
+DEFERRED_CASE(dense_comma_indices,
+	"TABLE x[d.axis.labels,d.axis.idx] IS_A time_constant UNITS {h};\n"
+	"2 1; b: 4 3; a: 2 1; END TABLE;",
+	"x['a'][1] + 10*x['b'][2]",147600,NULL)
+DEFERRED_CASE(dense_inferred_first,
+	"rows IS_A set OF symbol_constant;\n"
+	"TABLE x[rows][d.axis.idx] IS_A time_constant UNITS {h};\n"
+	"1 2; a: 1 2; b: 3 4; END TABLE;",
+	"x['a'][1] + 10*x['b'][2]",147600,NULL)
+DEFERRED_CASE(positional_vector,
+	"TABLE x[d.axis.labels] IS_A time_constant POSITIONAL UNITS {h}; 1 2; END TABLE;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(positional_dense,
+	"TABLE x[d.axis.labels,d.axis.idx] IS_A time_constant POSITIONAL UNITS {h};\n"
+	"1 2; 3 4; END TABLE;",
+	"x['a'][1] + 10*x['b'][2]",147600,NULL)
+DEFERRED_CASE(positional_range,
+	"TABLE x[1..2] IS_A time_constant POSITIONAL UNITS {h}; 1 2; END TABLE;",
+	"x[1] + x[2]",10800,NULL)
+DEFERRED_CASE(loop_labelled,
+	"x[d.axis.labels] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[d.axis.labels] UNITS {h}; a: 1; b: 2; END TABLE; END FOR;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(loop_positional,
+	"x[1..2][d.axis.labels] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[k][d.axis.labels] POSITIONAL UNITS {h}; 1 2; END TABLE; END FOR;",
+	"x[1]['a'] + x[2]['b']",10800,NULL)
+DEFERRED_CASE(loop_inference,
+	"labels IS_A set OF symbol_constant; x[labels] IS_A time_constant;\n"
+	"FOR k IN [1..2] CREATE\n"
+	"TABLE x[labels] UNITS {h}; a: 1; b: 2; END TABLE; END FOR;",
+	"x['a'] + x['b']",10800,NULL)
+DEFERRED_CASE(unassigned,
+	"TABLE x[d.axis.unset] IS_A time_constant UNITS {h}; a: 1; b: 2; END TABLE;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(missing,
+	"TABLE x[d.axis.typo] IS_A time_constant UNITS {h}; a: 1; b: 2; END TABLE;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(positional_unassigned,
+	"TABLE x[d.axis.unset] IS_A time_constant POSITIONAL UNITS {h}; 1 2; END TABLE;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(wrong_type,
+	"x[d.axis.labels] IS_A time_constant;\n"
+	"TABLE x[d.axis.flag] UNITS {h}; a: 1; b: 2; END TABLE;",
+	"x['a']",0,"TABLE index")
+DEFERRED_CASE(nonmember,
+	"TABLE x[d.axis.labels] IS_A time_constant UNITS {h}; a: 1; z: 2; END TABLE;",
+	"x['a']",0,"not a member")
+DEFERRED_CASE(loop_unassigned,
+	"x[d.axis.unset] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[d.axis.unset] UNITS {h}; a: 1; b: 2; END TABLE; END FOR;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(loop_invalid,
+	"x[1..2][d.axis.labels] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[k][d.axis.labels] POSITIONAL UNITS {h}; 1 foo; END TABLE; END FOR;",
+	"x[1]['a']",0,"non-numeric token")
+DEFERRED_CASE(model_parameter,
+	"b IS_A table_bound(d);",
+	"b.x['a'] + b.x['b']",10800,NULL)
+DEFERRED_CASE(positional_child_target,
+	"labels IS_A set OF symbol_constant; labels :== ['a','b'];\n"
+	"b IS_A table_target(labels);\n"
+	"TABLE b.x[labels] POSITIONAL UNITS {h}; 1 2; END TABLE;",
+	"b.x['a'] + b.x['b']",10800,NULL)
+DEFERRED_CASE(circular_domain,
+	"d.axis.unset :== [s IN ['a','b'] | x[s] > 0{h}];\n"
+	"TABLE x[d.axis.unset] IS_A time_constant UNITS {h}; a: 1; b: 2; END TABLE;",
+	"x['a']",0,"index domain is still undefined or unresolved")
+DEFERRED_CASE(loop_constructs_target,
+	"FOR k IN [1] CREATE FOR j IN d.axis.labels CREATE\n"
+	"x[k][j] IS_A time_constant; END FOR;\n"
+	"TABLE x[k][d.axis.labels] POSITIONAL UNITS {h}; 1 2; END TABLE; END FOR;",
+	"x[1]['a']",3600,NULL)
+DEFERRED_CASE(loop_dense_invalid,
+	"x[1..2][d.axis.labels] IS_A time_constant; FOR k IN [1..2] CREATE\n"
+	"TABLE x[k][d.axis.labels] UNITS {h}; a b; 1: 1 2; END TABLE; END FOR;",
+	"x[1]['a']",0,"not a member")
+
+#undef DEFERRED_CASE
+
 #define TESTS(T) \
+	T(deferred_vector_vertical) T(deferred_vector_horizontal) T(deferred_vector_expression) \
+	T(deferred_dense) T(deferred_dense_comma_indices) T(deferred_dense_inferred_first) \
+	T(deferred_positional_vector) T(deferred_positional_dense) T(deferred_positional_range) \
+	T(deferred_loop_labelled) T(deferred_loop_positional) T(deferred_loop_inference) \
+	T(deferred_unassigned) T(deferred_missing) T(deferred_positional_unassigned) \
+	T(deferred_wrong_type) T(deferred_nonmember) T(deferred_loop_unassigned) T(deferred_loop_invalid) \
+	T(deferred_model_parameter) T(deferred_positional_child_target) \
+	T(deferred_circular_domain) T(deferred_loop_constructs_target) \
+	T(deferred_loop_dense_invalid) \
+	T(vector_horizontal) T(vector_vertical) T(vector_vertical_csv) \
+	T(vector_horizontal_tabs) T(vector_vertical_tabs) \
+	T(vector_horizontal_corner) T(vector_horizontal_corner_header_only) \
+	T(vector_horizontal_integer) T(vector_vertical_integer) \
+	T(vector_horizontal_colon) T(vector_vertical_colon) T(vector_vertical_partial_colon) \
+	T(vector_inferred_horizontal) T(vector_inferred_vertical) T(vector_inferred_integer) \
+	T(vector_quoted_labels) T(vector_quoted_vertical) T(vector_signed_values) T(vector_signed_labels) \
+	T(vector_single_horizontal) T(vector_single_vertical) \
+	T(vector_horizontal_units) T(vector_vertical_units) \
+	T(vector_ambiguous) T(vector_ambiguous_inferred) T(vector_duplicate) \
+	T(vector_duplicate_inferred) T(vector_nonmember) T(vector_count) T(vector_label_type) \
+	T(vector_short_values) T(vector_extra_values) T(vector_empty_cell) T(vector_empty_label) \
+	T(vector_trailing_comma) T(vector_vertical_empty) T(vector_nonnumeric) \
+	T(vector_dangling_sign) T(vector_mixed_colons) T(vector_empty) \
+	T(vector_integer_units) T(vector_invalid_units) T(vector_dimension_conflict) \
 	T(parse_tables_v05) \
 	T(instantiate_tables_v05_positional) \
 	T(instantiate_tables_v05_positional_csv_semicolon) \

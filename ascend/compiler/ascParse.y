@@ -1595,7 +1595,14 @@ definition_id:
 
 units_def:
 	units_statement ';'
-	{ /* nothing to do. just cruft to fix ; problem */ }
+	{
+	  /* This is a complete top-level definition. Its errors have already
+	   * been reported and must not invalidate the next type definition.
+	   * Do not reset in units_statement: units nested inside a MODEL must
+	   * still cause that enclosing definition to be rejected.
+	   */
+	  g_untrapped_error = 0;
+	}
 	;
 
 units_statement:

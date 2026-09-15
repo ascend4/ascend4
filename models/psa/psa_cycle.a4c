@@ -1,0 +1,94 @@
+(* Fixed-design zero/one-equalisation PSA cycles: isothermal reconstructions,
+   NOT a reproduction of the published cost optimum. psa_cycle.md records
+   the choices that differ from, or are unspecified by, the papers. *)
+REQUIRE "psa/psa_cycle.a4l";
+
+(* Common representative-bed cycle. Derived cases specify the boundary
+   set, number of beds, and the blowdown/repressurisation inlet states. *)
+MODEL psa_cycle_base;
+    bed IS_A psa_isothermal_bed;
+    carbon IS_A cen_yang_methane;
+    bed.T, carbon.T ARE_THE_SAME;
+    y "Feed methane mole fraction; hydrogen is the inert carrier" IS_A fraction;
+    PH, PL "Adsorption and regeneration absolute pressures" IS_A pressure;
+
+    boundary IS_A set OF symbol_constant;
+    state[boundary] IS_A psa_bed_state(bed);
+    bd_in, fr_in "Boundary labels selected by each cycle topology" IS_A symbol_constant;
+    bd_start ALIASES state[bd_in];
+    fr_start ALIASES state[fr_in];
+    PH, state['pressurised'].P, state['loaded'].P ARE_THE_SAME;
+    PL, state['blown_down'].P, state['regenerated'].P ARE_THE_SAME;
+
+    (* Parameters: utilized bed fraction, fraction of equilibrium loading;
+       regenerated solid fraction, mol H2 per mol solid CH4 desorbed.
+       These empirical choices are held fixed; purity is NOT verified. *)
+    ads IS_A psa_adsorption_step(state['pressurised'], state['loaded'], carbon, y, 0.75, 1.0);
+    bd IS_A psa_blowdown_step(bd_start, state['blown_down']);
+    purge IS_A psa_purge_step(state['blown_down'], state['regenerated'], 0.98, 1.25);
+    fr IS_A psa_feed_repressurisation(fr_start, state['pressurised'], y);
+    (* fr returns to the SAME state consumed by ads. No duplicated state
+       plus extra closure relations: the shared inventories close the cycle. *)
+
+    feed, product, wasteA, wasteH "External batch amounts, per bed per cycle" IS_A psa_amount;
+    recovery "Net H2 product divided by H2 in ALL external feed" IS_A fraction;
+    nbed IS_A integer_constant;
+    Ffeed, Fproduct "Plant-average external molar flow rates" IS_A molar_rate;
+    period "Cycle duration consistent with the specified average plant feed" IS_A time;
+    feed_total: feed = ads.feed + fr.feed;
+    net_product: product = ads.product - purge.hydrogen_in;
+    methane_waste: wasteA = bd.wasteA + purge.wasteA;
+    hydrogen_waste: wasteH = bd.wasteH + purge.wasteH;
+    eq_31: recovery*(1 - y)*feed = product;
+    (* The plant has nbed identical beds. This is throughput accounting,
+       not a kinetic prediction or a proof that operation times fit. *)
+    average_feed: Ffeed*period = nbed*feed;
+    average_product: Fproduct*period = nbed*product;
+
+METHODS
+METHOD on_load;
+    FIX bed.d, bed.L, bed.eps, bed.rho, bed.T, PH, PL, y, Ffeed;
+    (* Geometry/temperature: 1992 Table 2. Void fraction/density/feed:
+       Table 1 (eps=0.44, NOT the alternative 0.4 in Table 2). *)
+    bed.d := 0.396{m}; bed.L := 1.982{m}; bed.eps := 0.44;
+    bed.rho := 800{kg/m^3}; bed.T := 299{K};
+    PH := 355*carbon.p_ref; PL := 15*carbon.p_ref; y := 0.05;
+    Ffeed := 31.11{mol/s};
+    SOLVER QRSlv;
+END on_load;
+METHOD self_test;
+    (* Independent plant-boundary checks: do NOT add redundant relations
+       to the equation system just to restate the operation balances. *)
+    ASSERT PH > PL AND PL > 0{Pa};
+    ASSERT y > 0 AND y < 1;
+    ASSERT abs((y*feed - wasteA)/1{mol}) < 1e-6;
+    ASSERT abs(((1 - y)*feed - product - wasteH)/1{mol}) < 1e-6;
+    ASSERT product > 0{mol} AND recovery > 0 AND recovery < 1;
+    ASSERT abs((Fproduct - recovery*(1 - y)*Ffeed)/1{mol/s}) < 1e-7;
+    FOR k IN boundary DO
+        ASSERT state[k].gA >= 0{mol} AND state[k].gH >= 0{mol} AND state[k].sA >= 0{mol};
+        ASSERT state[k].sA <= state['loaded'].sA + 1e-7{mol};
+    END FOR;
+END self_test;
+END psa_cycle_base;
+
+MODEL psa_cycle REFINES psa_cycle_base;
+    boundary :== ['pressurised','loaded','blown_down','regenerated'];
+    nbed :== 2;
+    bd_in :== 'loaded'; fr_in :== 'regenerated';
+END psa_cycle;
+
+MODEL psa_cycle_1pe REFINES psa_cycle_base;
+    boundary :== ['pressurised','loaded','equalised_down','blown_down','regenerated','equalised_up'];
+    nbed :== 3;
+    bd_in :== 'equalised_down'; fr_in :== 'equalised_up';
+    pe IS_A psa_equalisation_step(state['loaded'], state['equalised_down'],
+        state['regenerated'], state['equalised_up']);
+    (* Internal transfer is reused later in the representative bed's cycle
+       and cancels at the plant boundary; it is neither feed nor product. *)
+END psa_cycle_1pe;
+
+MODEL psa_timing_0pe WHERE (npe >= 0; npe <= 1;) REFINES psa_cycle_timing(npe :== 0;);
+END psa_timing_0pe;
+MODEL psa_timing_1pe WHERE (npe >= 0; npe <= 1;) REFINES psa_cycle_timing(npe :== 1;);
+END psa_timing_1pe;

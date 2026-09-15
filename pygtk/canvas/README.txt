@@ -1,6 +1,14 @@
 
 Canvas-based modelling for ASCEND
 
+From an in-tree SCons build, launch it with:
+
+    ./a4 canvas
+
+Use `./a4 canvas --help` for the optional canvas file and model-library
+arguments. The launcher supplies the same ASCEND library and solver paths as
+the other `a4` commands.
+
 For full details and screenshots see 
 http://ascendwiki.cheme.cmu.edu/Canvas-based_modeller_for_ASCEND
 

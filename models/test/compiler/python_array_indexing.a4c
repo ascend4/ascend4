@@ -1,0 +1,8 @@
+REQUIRE "atoms.a4l";
+MODEL python_array_indexing;
+    labels IS_A set OF symbol_constant;
+    labels :== ['left','right','with space','10'];
+    x[labels] IS_A factor;
+    ints[-2,3] IS_A factor;
+    nested[labels][-2,3] IS_A factor;
+END python_array_indexing;

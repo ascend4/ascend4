@@ -77,6 +77,8 @@ public:
 	std::vector<Instanc> &getChildren();
 	Instanc getChild(const SymChar &) const;
 	Instanc getChild(const long &) const;
+	/** Look up an element of a symbol-indexed array (not a model attribute). */
+	Instanc getArrayElement(const SymChar &) const;
 	const enum inst_t getKind() const;
 	const std::string getKindStr() const;
 	const Type getType() const;
@@ -105,6 +107,9 @@ public:
 	const bool isAssigned() const;
 	const bool isModel() const;
 	const SymChar getName() const;
+	const std::string getDeclarationFilename(const Instanc &parent) const;
+	const long getDeclarationLine(const Instanc &parent) const;
+	const unsigned long long getInstanceId() const;
 	const double getRealValue() const;
 	const bool isDimensionless() const;
 	const Dimensions getDimensions() const;

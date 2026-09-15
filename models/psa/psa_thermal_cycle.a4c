@@ -1,0 +1,97 @@
+(* Closed zero-PE cycle, with conservative caloric reconstruction.
+   NOT the published optimum; no kinetics, purity or economics are solved.
+   See psa_thermal_cycle.md for the departures from thesis heat balances. *)
+REQUIRE "psa/psa_thermal_cycle.a4l";
+
+MODEL psa_thermal_cycle_base;
+    mode "0 adiabatic; 1 thermostatted isothermal comparison" IS_A integer_constant;
+    phi, eta, phiDes IS_A factor_constant;
+    purge_ratio "Sweep H2 per mole desorbed CH4; may be supplied by a closure model" IS_A positive_factor;
+    bed IS_A psa_caloric_bed;
+    boundary IS_A set OF symbol_constant;
+    boundary :== ['pressurised','mixed','blown_down','regenerated'];
+    state[boundary] IS_A psa_caloric_state(bed, 1);
+    hot IS_A psa_caloric_state(bed, phi);
+    cold IS_A psa_caloric_state(bed, 1-phi);
+    carbon IS_A cen_yang_methane;
+    hot.T, carbon.T ARE_THE_SAME;
+    PH, PL IS_A pressure;
+    PH, state['pressurised'].P, hot.P, cold.P ARE_THE_SAME;
+    PL, state['blown_down'].P, state['regenerated'].P ARE_THE_SAME;
+    y IS_A fraction;
+    Tfeed, Tpurge IS_A temperature;
+    beta "Purge exhaust temperature weighting: 0 initial, 1 final" IS_A fraction;
+    ads IS_A psa_caloric_adsorption(state['pressurised'], hot, cold, carbon, y, Tfeed, eta, mode);
+    mix IS_A psa_caloric_mixing(hot, cold, state['mixed']);
+    bd IS_A psa_caloric_blowdown(state['mixed'], state['blown_down'], mode);
+    purge IS_A psa_caloric_purge(state['blown_down'], state['regenerated'],
+        Tpurge, beta, phiDes, purge_ratio, mode);
+    fr IS_A psa_caloric_repressurisation(state['regenerated'], state['pressurised'], y, Tfeed, mode);
+
+    feed, product, wasteA, wasteH IS_A psa_amount;
+    recovery IS_A fraction;
+    Ffeed, Fproduct IS_A molar_rate;
+    period "Two-bed throughput accounting, NOT a feasible schedule prediction" IS_A time;
+    heater, Qbed, Efeed, Eproduct, Ewaste IS_A psa_signed_energy;
+    feed_total: feed = ads.feed+fr.feed;
+    net_product: product = ads.product-purge.hydrogen_in;
+    methane_waste: wasteA = bd.wasteA+purge.wasteA;
+    hydrogen_waste: wasteH = bd.wasteH+purge.wasteH;
+    recovery_definition: recovery*(1-y)*feed = product;
+    throughput: Ffeed*period = 2*feed;
+    production: Fproduct*period = 2*product;
+    (* Internal purge is taken from gross product. Account for its heater
+       separately so it cancels correctly at the external plant boundary. *)
+    purge_heater: heater = purge.hydrogen_in*bed.cpB*(Tpurge-state['pressurised'].T);
+    bed_heat: Qbed = ads.Q+bd.Q+purge.Q+fr.Q;
+    feed_enthalpy: Efeed = feed*(y*bed.cpA+(1-y)*bed.cpB)*(Tfeed-bed.Tref);
+    product_enthalpy: Eproduct = product*bed.cpB*(state['pressurised'].T-bed.Tref);
+    waste_enthalpy: Ewaste = bd.Eout+purge.Eout;
+METHODS
+METHOD on_load;
+    RUN setup;
+END on_load;
+METHOD setup;
+    FIX bed.V, bed.eps, bed.rho, bed.Cv, bed.cpA, bed.cpB, bed.H, bed.Tref;
+    bed.V := 3.141592653589793*0.396^2*1.982/4*1{m^3};
+    bed.eps := 0.44; bed.rho := 800{kg/m^3}; bed.Cv := 804000{J/m^3/K};
+    bed.cpA := 36.8{J/mol/K}; bed.cpB := 29.3{J/mol/K};
+    (* Explicit Cen-Yang caloric hypothesis, not ambiguous economic heats. *)
+    bed.H := 20920{J/mol}; bed.Tref := 298{K};
+    FIX PH, PL, y, Tfeed, Tpurge, beta, Ffeed;
+    PH := 355*carbon.p_ref; PL := 15*carbon.p_ref; y := 0.05;
+    Tfeed := 298{K}; Tpurge := 350{K}; beta := 0.5; Ffeed := 31.11{mol/s};
+    FIX purge_ratio; purge_ratio := 1.25;
+    FOR k IN boundary DO
+        state[k].T := 300{K}; state[k].sA := 10{mol};
+        state[k].gA := 0{mol};
+    END FOR;
+    state['mixed'].P := 24{bar}; state['mixed'].sA := 80{mol};
+    state['blown_down'].sA := 80{mol};
+    hot.T := 315{K}; hot.sA := 80{mol}; cold.T := 300{K};
+    SOLVER QRSlv;
+END setup;
+METHOD self_test;
+    ASSERT state['mixed'].P > PL;
+    ASSERT product > 0{mol} AND recovery > 0 AND recovery < 1;
+    ASSERT abs((y*feed-wasteA)/1{mol}) < 1e-5;
+    ASSERT abs(((1-y)*feed-product-wasteH)/1{mol}) < 1e-5;
+    ASSERT abs((Efeed+heater+Qbed-Eproduct-Ewaste)/1{J}) < 0.1;
+    ASSERT state['pressurised'].sA < hot.sA;
+    FOR k IN boundary DO
+        ASSERT state[k].T > 0{K};
+        ASSERT state[k].gA >= -1e-7{mol} AND state[k].gH >= 0{mol};
+        ASSERT state[k].sA >= 0{mol};
+    END FOR;
+END self_test;
+END psa_thermal_cycle_base;
+
+MODEL psa_thermal_cycle REFINES psa_thermal_cycle_base;
+    mode :== 0;
+    phi :== 0.75; eta :== 1; phiDes :== 0.98;
+END psa_thermal_cycle;
+
+MODEL psa_thermal_cycle_isothermal REFINES psa_thermal_cycle_base;
+    mode :== 1;
+    phi :== 0.75; eta :== 1; phiDes :== 0.98;
+END psa_thermal_cycle_isothermal;

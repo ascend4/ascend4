@@ -103,6 +103,17 @@ jobs:
       run: |    
         ./a4 script ascxx/testslvreq
         ./a4 script ascxx/testipopt
+        ./a4 script test/test_instantiation_errors.py
+
+    - name: PSA property, fixed-cycle and conditional scheduling tests
+      run: |
+        ./a4 script models/psa/test/test_psa_properties.py
+        ./a4 script models/psa/test/test_psa_cycle.py
+        ./a4 script models/psa/test/test_psa_thermal.py
+        ./a4 script models/psa/test/test_psa_thermal_cycle.py
+        ./a4 script models/psa/test/test_psa_part1.py
+        ./a4 script models/psa/test/test_psa_part1_cycle.py
+        ./a4 script models/psa/test/test_psa_part1_physical.py
 
     - name: ASCEND FPROPS external function test
       run: |    

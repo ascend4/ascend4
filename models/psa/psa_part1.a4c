@@ -1,0 +1,163 @@
+(* Dedicated Part I benchmark, not a thesis/Part II parameter deck.
+   Smith & Westerberg (1991), CES 46, 2967-2976:
+   https://doi.org/10.1016/0009-2509(91)85001-E
+   Local PDF: ~/Downloads/1-s2.0-000925099185001E-main.pdf.
+   Table 1 p.2972; utilisation p.2973; Tables 2-5 pp.2973-2974.
+   Scanned pages checked, not just OCR. See psa_part1.md for ambiguities.
+   Published outputs are CONSTANTS, never solver starting guesses or fits. *)
+REQUIRE "psa/psa_thermal.a4l";
+
+CONSTANT psa_benchmark_amount REFINES real_constant DIMENSION Q;
+CONSTANT psa_benchmark_cost_rate REFINES real_constant DIMENSION C/T;
+
+MODEL psa_part1_data;
+    cases IS_A set OF symbol_constant;
+    cases :== ['pe0','pe1','pe2','pe3'];
+    pairs, operations IS_A set OF integer_constant;
+    pairs :== [1..3]; operations :== [1..9];
+    axes, streams, points IS_A set OF symbol_constant;
+    axes :== ['d','L'];
+    streams :== ['ads_feed','fr_feed','gross_H2','purge_H2'];
+    points :== ['P2','P3','P4','P5','P9'];
+    npe[cases], nbed[cases], J[pairs][cases] IS_A integer_constant;
+    phi[cases], etaAds, etaDes, phiDes, y, eps IS_A factor_constant;
+    etaAds :== 0.95; etaDes :== 0.95; phiDes :== 1;
+    y :== 0.05; eps :== 0.44;
+    TABLE npe[cases]; pe0, pe1, pe2, pe3; 0, 1, 2, 3; END TABLE;
+    TABLE nbed[cases]; pe0, pe1, pe2, pe3; 2, 3, 4, 5; END TABLE;
+    TABLE J[pairs,cases];
+           pe0, pe1, pe2, pe3;
+        1,   0,   1,   2,   3;
+        2,   0,   0,   1,   2;
+        3,   0,   0,   0,   1;
+    END TABLE;
+    TABLE phi[cases]; pe0, pe1, pe2, pe3; 0.75, 0.85, 0.90, 0.95; END TABLE;
+
+    size[axes][cases] IS_A length_constant;
+    D[cases], tau[operations][cases] IS_A time_constant;
+    p_psi[points][cases], recovery[cases] IS_A factor_constant;
+    P[points][cases] IS_A pressure_constant;
+    amount[streams][cases] IS_A psa_benchmark_amount;
+    cost_table3[cases], cost_table5[cases] IS_A psa_benchmark_cost_rate;
+    year IS_A time_constant;
+    year :== 1{yr};
+    TABLE size[axes,cases] UNITS {m};
+           pe0,  pe1,  pe2,  pe3;
+        d, 0.45, 0.40, 0.39, 0.40;
+        L, 2.24, 1.98, 1.98, 1.97;
+    END TABLE;
+    TABLE D[cases] UNITS {s}; pe0, pe1, pe2, pe3; 54.8, 64.7, 70.1, 74.2; END TABLE;
+    (* Table 4 lists tau1..5 and tau9. Reciprocal slots tau6..8 are
+       supplied by equal-duration coupling, NOT additional tabulated data.
+       Zero denotes an absent operation; it is not a measured duration. *)
+    TABLE tau[operations,cases] UNITS {s};
+           pe0,  pe1,  pe2,  pe3;
+        1, 93.1, 70.1, 70.1, 74.2;
+        2,  0,   55.5, 35.1, 37.1;
+        3,  0,    0,   35.1, 37.1;
+        4,  0,    0,    0,   37.1;
+        5, 10.4,  9.2, 35.1, 37.1;
+        6,  0,    0,    0,   37.1;
+        7,  0,    0,   35.1, 37.1;
+        8,  0,   55.5, 35.1, 37.1;
+        9,  6.1,  3.8, 35.1, 37.1;
+    END TABLE;
+    TABLE p_psi[points,cases];
+            pe0,   pe1,   pe2,   pe3;
+        P2,   0,   155.7, 332.2, 260.6;
+        P3,   0,     0,   118.1, 185.1;
+        P4,   0,     0,     0,    96.8;
+        P5,  15.0,  15.0,  15.0,  15.0;
+        P9, 225.0, 356.0, 358.7, 360.5;
+    END TABLE;
+    FOR p IN points CREATE
+        FOR k IN cases CREATE
+            (* International psi, independent of ASCEND's legacy psi unit.
+               P=0 for absent PE points is a sentinel, never a bed input. *)
+            P[p][k] :== p_psi[p][k]*6894.757293168{Pa};
+        END FOR;
+    END FOR;
+    (* The table's four-digit amounts are interpreted as mol, despite
+       general nomenclature kgmol: only this scale agrees with Ffeed*D. *)
+    TABLE amount[streams,cases] UNITS {mol};
+                   pe0,   pe1,   pe2,   pe3;
+        ads_feed, 1610,  1953,  2137,  2272;
+        fr_feed,    95.6,  59.1,  45.0,  37.0;
+        gross_H2, 1533,  1861,  2035,  2164;
+        purge_H2,   47.7,   4.5,   4.5,   4.5;
+    END TABLE;
+    TABLE recovery[cases]; pe0, pe1, pe2, pe3; 0.90, 0.95, 0.96, 0.97; END TABLE;
+    TABLE cost_table3[cases] UNITS {MUSD/yr};
+        pe0, pe1, pe2, pe3; -1.329, -1.390, -1.396, -1.395;
+    END TABLE;
+    (* Table 5 at PrB=3.5 USD/kgmol: more printed digits, same scenario. *)
+    TABLE cost_table5[cases] UNITS {MUSD/yr};
+        pe0, pe1, pe2, pe3; -1.3292, -1.3901, -1.3964, -1.3953;
+    END TABLE;
+END psa_part1_data;
+
+(* Four INDEPENDENT operation audits at Table 4 geometry/pressure points.
+   No PE operation or closed cycle is claimed even for pe1..pe3.
+   P9 is used as adsorption pressure; unreported inlet bed temperatures
+   and initial loading are explicit FIXED assumptions, not fitted outputs.
+   The K closure is the existing Henry-slope HYPOTHESIS, not Part I data. *)
+MODEL psa_part1;
+    data IS_A psa_part1_data;
+    cases ALIASES data.cases;
+    bed[cases] IS_A psa_thermal_bed_data;
+    henry[cases] IS_A psa_methane_henry;
+    Hads "Chosen adsorption heat, distinct from Table 1 economic heat entries" IS_A molar_energy;
+    reported_HA, reported_HB IS_A molar_energy_constant;
+    reported_HA :== 890000{J/mol}; reported_HB :== 286000{J/mol};
+    Ffeed "Table 1, 0.0311 kgmol/s, NOT the thesis's 0.03111" IS_A molar_rate;
+    feed_total[cases], net_H2[cases] IS_A psa_amount;
+    recovery_from_amounts[cases] IS_A factor;
+    period[cases], slot_sum[cases] IS_A time;
+    FOR k IN cases CREATE
+        ads[k] IS_A psa_paper_adsorption(bed[k], data.phi[k], data.etaAds);
+        des[k] IS_A psa_paper_desorption(bed[k], data.phiDes, data.etaAds, data.etaDes);
+        bed[k].H, Hads ARE_THE_SAME;
+        henry[k].T, des[k].Te ARE_THE_SAME;
+        henry[k].K, des[k].K ARE_THE_SAME;
+        ads[k].sAe, des[k].sA0 ARE_THE_SAME;
+        ads[k].carbon.w, des[k].qref ARE_THE_SAME;
+        (* Diagnostics from PUBLISHED amounts, independent of audit results.
+           Eq (31) is checked, not imposed on the printed recovery value. *)
+        feed_sum[k]: feed_total[k] = data.amount['ads_feed'][k]+data.amount['fr_feed'][k];
+        product_sum[k]: net_H2[k] = data.amount['gross_H2'][k]-data.amount['purge_H2'][k];
+        eq_31_check[k]: recovery_from_amounts[k]*(1-data.y)*feed_total[k] = net_H2[k];
+        eq_1_check[k]: period[k] = data.nbed[k]*data.D[k];
+        eq_2_check[k]: slot_sum[k] = SUM[data.tau[j][k] | j IN [1..9]];
+    END FOR;
+METHODS
+METHOD on_load;
+    FIX Hads, Ffeed;
+    Hads := 20920{J/mol}; Ffeed := 31.1{mol/s};
+    FOR k IN cases DO
+        FIX bed[k].V, bed[k].eps, bed[k].rho, bed[k].Cv, bed[k].cpA, bed[k].cpB;
+        bed[k].V := 3.141592653589793*data.size['d'][k]^2*data.size['L'][k]/4;
+        bed[k].eps := data.eps; bed[k].rho := 800{kg/m^3};
+        bed[k].Cv := 804000{J/m^3/K};
+        bed[k].cpA := 36.8{J/mol/K}; bed[k].cpB := 29.3{J/mol/K};
+        FIX ads[k].P, ads[k].y, ads[k].T0, ads[k].Tfeed, ads[k].sA0;
+        ads[k].P := data.P['P9'][k]; ads[k].y := data.y;
+        ads[k].T0 := 298{K}; ads[k].Tfeed := 298{K}; ads[k].sA0 := 0{mol};
+        FIX des[k].P, des[k].T0, des[k].TinB;
+        des[k].P := data.P['P5'][k]; des[k].T0 := 298{K}; des[k].TinB := 350{K};
+        ads[k].Te := 315{K}; des[k].Te := 290{K};
+        des[k].K := 0.0005{m^3/mol}; des[k].yout := 0.5;
+    END FOR;
+    SOLVER QRSlv;
+END on_load;
+METHOD self_test;
+    FOR k IN cases DO
+        ASSERT ads[k].Te > ads[k].T0;
+        ASSERT des[k].Te < des[k].T0;
+        ASSERT des[k].yout > 0 AND des[k].yout < 1;
+        ASSERT abs((slot_sum[k]-period[k])/1{s}) < 0.5;
+        (* Printed flow, duration and amounts only agree approximately.
+           This check uses the physically consistent plant-wide basis D. *)
+        ASSERT abs((Ffeed*data.D[k]-feed_total[k])/feed_total[k]) < 0.01;
+    END FOR;
+END self_test;
+END psa_part1;
