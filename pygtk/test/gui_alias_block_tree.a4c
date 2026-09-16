@@ -1,0 +1,25 @@
+REQUIRE "atoms.a4l";
+
+MODEL gui_fixed_inputs;
+	known IS_A solver_var;
+END gui_fixed_inputs;
+
+MODEL gui_alias_stage;
+	original IS_A solver_var;
+	local_alias ALIASES original;
+	merged IS_A solver_var;
+	original, merged ARE_THE_SAME;
+	result IS_A solver_var;
+	calculate_result: result = original + 1;
+END gui_alias_stage;
+
+MODEL gui_alias_block_tree;
+	fixeds IS_A gui_fixed_inputs;
+	stage IS_A gui_alias_stage;
+	connect: stage.original = fixeds.known;
+METHODS
+METHOD on_load;
+	FIX fixeds.known;
+	fixeds.known := 1;
+END on_load;
+END gui_alias_block_tree;

@@ -1,0 +1,13 @@
+REQUIRE "system.a4l";
+
+MODEL list_refresh;
+	x, y, p, q IS_A solver_var;
+	sum: x + y = p;
+	difference: x - y = q;
+METHODS
+	METHOD on_load;
+		FIX p, q;
+		p := 8; q := 2;
+		x := 0; y := 0;
+	END on_load;
+END list_refresh;

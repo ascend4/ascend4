@@ -1,0 +1,9 @@
+(* Optional GUI wrapper, following job_shop_plot.a4c. Solve, then run gantt.
+   Headless reports for all cases use psa_scheduling.py. *)
+REQUIRE "psa/psa_scheduling.a4c";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "psa/psa_scheduling";
+MODEL psa_scheduling_plot REFINES psa_scheduling;
+METHODS
+METHOD gantt; EXTERNAL psa_scheduling_gantt(SELF); END gantt;
+END psa_scheduling_plot;

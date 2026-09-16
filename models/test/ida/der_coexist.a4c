@@ -1,0 +1,27 @@
+REQUIRE "ivpsystem.a4l";
+
+MODEL der_coexist_cell;
+    x IS_A solver_var;
+END der_coexist_cell;
+
+(* Nested arrays and an alias exercise once-per-instance traversal. *)
+MODEL der_coexist;
+    cell[1..3] IS_A der_coexist_cell;
+    alias_x ALIASES cell[2].x;
+    t, other_t IS_A solver_var;
+    INDEPENDENT t;
+    FOR i IN [1..3] CREATE
+        dyn[i]: der(cell[i].x) + cell[i].x^2 = 0;
+    END FOR;
+METHODS
+    METHOD on_load;
+        FIX t, other_t;
+        t := 0;
+        other_t := 0;
+        FOR i IN [1..3] DO
+            FIX cell[i].x;
+            cell[i].x := i + 2;
+            FREE der(cell[i].x);
+        END FOR;
+    END on_load;
+END der_coexist;

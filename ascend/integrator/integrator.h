@@ -637,6 +637,12 @@ ASC_DLLSPEC int integrator_output_write_obs(IntegratorSystem *blsys);
 ASC_DLLSPEC int integrator_output_close(IntegratorSystem *blsys);
 
 ASC_DLLSPEC int integrator_has_initial_relations(IntegratorSystem *blsys);
+/** Solve INITIAL equations on the borrowed system, preserving its identity and
+    original solver client. Restore normal inclusion and derivative defaults on
+    every exit. Attempted values remain inspectable on failure. Structural
+    transitions invalidate retained client matrices: callers must presolve
+    before resuming algebraic solving (ODE startup does this automatically).
+    Rebuilds integrator analysis after the temporary INITIAL configuration. */
 ASC_DLLSPEC int integrator_initialise_with_solver(IntegratorSystem *blsys, int solver_index);
 ASC_DLLSPEC int integrator_initialise_ode(IntegratorSystem *blsys);
 

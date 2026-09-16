@@ -179,6 +179,8 @@ ASC_DLLSPEC int *cases_matching(struct gl_list_t *disvars, int *ncases);
  * visiting of cases when some of the whens are nested.
  * It returns an array containing the (ID number of) cases which
  * applies for the current values of the discrete varaibles.
+ * On allocation/size failure, reports an error, returns NULL and sets
+ * *ncases to zero; no partial list is returned.
  */
 
 extern void configure_conditional_problem(int numwhens,
@@ -266,4 +268,3 @@ extern int32 build_disvar_solver_from_master(struct dis_discrete **masterdl,
 /* @} */
 
 #endif /*  ASC_COND_CONFIG_H */
-

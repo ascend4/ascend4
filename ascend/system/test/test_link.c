@@ -133,7 +133,40 @@ static void test_simple_fail3(){
 /*===========================================================================*/
 /* Registration information */
 
+static void test_fixed_logrelation(){
+	int status;
+	struct Instance *sim=NULL;
+	slv_system_t sys=NULL;
+	struct Name *name;
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_OpenModule("test/compiler/boolrel.a4c",&status);
+	CU_ASSERT(status==0);
+	if(status)goto cleanup;
+	status=zz_parse();
+	CU_ASSERT(status==0);
+	if(status)goto cleanup;
+	sim=SimsCreateInstance(AddSymbol("boolrel_fixed"),AddSymbol("sim1"),e_normal,NULL);
+	CU_ASSERT(sim!=NULL);
+	if(!sim)goto cleanup;
+	name=CreateIdName(AddSymbol("on_load"));
+	CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
+	DestroyName(name);
+	/* No algebraic relations: the old warning dereferenced a NULL rip before
+	 * reaching the normal rejection of this empty algebraic solver system. */
+	error_reporter_tree_start();
+	sys=system_build(GetSimulationRoot(sim));
+	error_reporter_tree_end();
+	CU_ASSERT(sys==NULL);
+cleanup:
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+	if(sim)sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 #define TESTS(T) \
+	T(fixed_logrelation) \
 	T(simple_ok1) \
 	T(simple_ok2) \
 	T(simple_fail1) \

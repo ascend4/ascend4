@@ -1,0 +1,21 @@
+REQUIRE "system.a4l";
+
+MODEL wrapper_positive(n IS_A integer_constant;) WHERE (n > 0;);
+    x IS_A real;
+METHODS
+METHOD on_load;
+    x := 42;
+END on_load;
+END wrapper_positive;
+
+MODEL wrapper_good_root WHERE (n > 0;) REFINES wrapper_positive(n :== 1;);
+END wrapper_good_root;
+
+(* A rejected root returns NULL from SimsCreateInstance. *)
+MODEL wrapper_bad_root WHERE (n > 0;) REFINES wrapper_positive(n :== 0;);
+END wrapper_bad_root;
+
+(* A rejected child leaves a partial, non-NULL simulation to be destroyed. *)
+MODEL wrapper_bad_child;
+    child IS_A wrapper_positive(0);
+END wrapper_bad_child;

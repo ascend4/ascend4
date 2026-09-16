@@ -45,6 +45,25 @@ typedef void (*VisitTwoProc)(struct Instance *,VOIDPTR);
  *  Used with VisitInstanceTreeTwo().
  */
 
+enum InstanceVisitCoverage {
+  INSTANCE_VISIT_STRUCTURAL = 0,
+  INSTANCE_VISIT_MATERIALISED_DERIVATIVES = 1
+};
+
+/**
+ * Silent two-argument visitor with explicit runtime-instance coverage.
+ * The structural mode is identical to SilentVisitInstanceTreeTwo. The
+ * derivative mode additionally visits existing derivative pseudo-children,
+ * once per instance, without scanning for or creating derivatives. The depth
+ * ordering applies to pseudo-children too; leaf independently controls atom
+ * attributes. Existing structural visitors are deliberately unchanged.
+ * As with the existing visitors, callbacks must not recursively start another
+ * tree traversal or mutate the graph being visited.
+ */
+ASC_DLLSPEC void SilentVisitInstanceTreeTwoWithCoverage(struct Instance *inst,
+    VisitTwoProc proc, int depth, int leaf, VOIDPTR userdata,
+    enum InstanceVisitCoverage coverage);
+
 typedef void (*IndexedVisitProc)(struct Instance *, unsigned long *,
                                  int, VOIDPTR);
 /**<
@@ -247,7 +266,7 @@ extern void IndexedVisitInstanceTree(struct Instance *inst,
  *  aware of the change.
  */
 
-extern void SilentVisitInstanceTreeTwo(struct Instance *inst,
+ASC_DLLSPEC void SilentVisitInstanceTreeTwo(struct Instance *inst,
                                        VisitTwoProc proc,
                                        int depth,
                                        int leaf,
@@ -352,4 +371,3 @@ extern struct visitmapinfo *MakeVisitMap(struct Instance *inst, unsigned long *m
 /* @} */
 
 #endif  /* ASC_VISITINST_H */
-

@@ -1,0 +1,91 @@
+(* Frozen-solid, isothermal gas transfers for the dynamic reconstruction.
+   Smith (1991) thesis section 7.4, p.96: average gas after pressure changes.
+   Reconstruction assumption: donor gas is well mixed during withdrawal.
+   These are NOT the adiabatic/equilibrating design equations of chapter 6.
+   Solid loading is passed unchanged by the cycle driver. See psa_dynamic.md. *)
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL psa_frozen_gas_step;
+    V "Gas void volume" IS_A volume;
+    T IS_A temperature;
+    P0, P1 IS_A pressure;
+    y0, y1, yin, yout "Methane mole fractions (signed numerical diagnostics allowed)" IS_A factor;
+    n0, n1, nin, nout "Total gas amounts" IS_A mole;
+    m0, m1, minlet, moutlet "Methane amounts" IS_A mole;
+    initial_gas: n0*8.31446261815324{J/mol/K}*T = P0*V;
+    final_gas: n1*8.31446261815324{J/mol/K}*T = P1*V;
+    initial_methane: m0 = n0*y0;
+    final_methane: m1 = n1*y1;
+    entering_methane: minlet = nin*yin;
+    leaving_methane: moutlet = nout*yout;
+    total_balance: n1 = n0 + nin - nout;
+    methane_balance: m1 = m0 + minlet - moutlet;
+    mixed_donor: yout = y0;
+METHODS
+    METHOD numerical_bounds;
+        (* Do not change a transferred inventory to conceal spatial undershoot. *)
+        m0.lower_bound := -1e6{mol}; m1.lower_bound := -1e6{mol};
+        minlet.lower_bound := -1e6{mol}; moutlet.lower_bound := -1e6{mol};
+    END numerical_bounds;
+END psa_frozen_gas_step;
+
+MODEL psa_dynamic_transfer_cycle(pe IS_A integer_constant;) WHERE (pe >= 0; pe <= 3;);
+    pair IS_A set OF integer_constant;
+    pair :== [1..pe];
+    V IS_A volume;
+    T IS_A temperature;
+    Ph, Pl IS_A pressure;
+    ya "Bed-average methane after adsorption" IS_A factor;
+    yp "Bed-average methane after purge" IS_A factor;
+    fill_y "Repressurisation feed methane (thesis section 7.2, O9)" IS_A factor;
+    down[pair], up[pair], blowdown, fill IS_A psa_frozen_gas_step;
+    FOR j IN pair CREATE
+        down[j].V, up[j].V, V ARE_THE_SAME;
+        down[j].T, up[j].T, T ARE_THE_SAME;
+        down[j].P1, up[j].P1 ARE_THE_SAME;
+        down[j].nout, up[j].nin ARE_THE_SAME;
+        down[j].yout, up[j].yin ARE_THE_SAME;
+    END FOR;
+    FOR j IN [2..pe] CREATE
+        down[j].P0, down[j-1].P1 ARE_THE_SAME;
+        down[j].y0, down[j-1].y1 ARE_THE_SAME;
+        up[j-1].P0, up[j].P1 ARE_THE_SAME;
+        up[j-1].y0, up[j].y1 ARE_THE_SAME;
+    END FOR;
+    blowdown.V, fill.V, V ARE_THE_SAME;
+    blowdown.T, fill.T, T ARE_THE_SAME;
+    blowdown.P1, Pl ARE_THE_SAME;
+    fill.P1, Ph ARE_THE_SAME;
+    fill.yin, fill_y ARE_THE_SAME;
+    SELECT (pe)
+    CASE 0:
+        blowdown.P0, Ph ARE_THE_SAME;
+        blowdown.y0, ya ARE_THE_SAME;
+        fill.P0, Pl ARE_THE_SAME;
+        fill.y0, yp ARE_THE_SAME;
+    OTHERWISE:
+        down[1].P0, Ph ARE_THE_SAME;
+        down[1].y0, ya ARE_THE_SAME;
+        blowdown.P0, down[pe].P1 ARE_THE_SAME;
+        blowdown.y0, down[pe].y1 ARE_THE_SAME;
+        up[pe].P0, Pl ARE_THE_SAME;
+        up[pe].y0, yp ARE_THE_SAME;
+        fill.P0, up[1].P1 ARE_THE_SAME;
+        fill.y0, up[1].y1 ARE_THE_SAME;
+    END SELECT;
+METHODS
+    METHOD on_load;
+        FIX V := 0.1{m^3}; FIX T := 299{K};
+        FIX Ph := 2447638.838{Pa}; FIX Pl := 103421.35939752{Pa};
+        FIX ya := 0.03; FIX yp := 0.001; FIX fill_y := 0.05;
+        FOR j IN pair DO
+            FIX down[j].nin := 0{mol}; FIX down[j].yin := 0;
+            FIX up[j].nout := 0{mol};
+            RUN down[j].numerical_bounds; RUN up[j].numerical_bounds;
+        END FOR;
+        FIX blowdown.nin := 0{mol}; FIX blowdown.yin := 0;
+        FIX fill.nout := 0{mol};
+        RUN blowdown.numerical_bounds; RUN fill.numerical_bounds;
+    END on_load;
+END psa_dynamic_transfer_cycle;

@@ -1,0 +1,13 @@
+REQUIRE "atoms.a4l";
+
+MODEL gui_significant_figures;
+	fixed_value IS_A solver_var;
+	solved_value IS_A solver_var;
+	definition: solved_value = fixed_value / 3;
+
+METHODS
+METHOD on_load;
+	FIX fixed_value;
+	fixed_value := 1.23456789012345;
+END on_load;
+END gui_significant_figures;

@@ -1,0 +1,244 @@
+REQUIRE "atoms.a4l";
+
+MODEL fd_constants;
+    FOR i IN [1..3] CREATE
+        a[i] IS_A integer_constant;
+        a[i] :== i;
+    END FOR;
+    result IS_A integer_constant;
+    result :== SUM[a[i] | i IN [1..3]];
+END fd_constants;
+
+MODEL fd_reverse;
+    a[1..3], b[1..3] IS_A integer_constant;
+    FOR i IN [1..3] CREATE
+        b[i] :== 2*a[i];
+        a[i] :== i;
+    END FOR;
+    result IS_A integer_constant;
+    result :== SUM[b[i] | i IN [1..3]];
+END fd_reverse;
+
+MODEL fd_child;
+    n IS_A integer_constant;
+END fd_child;
+MODEL fd_children;
+    FOR i IN [1..3] CREATE
+        c[i] IS_A fd_child;
+        c[i].n :== i;
+    END FOR;
+    result IS_A integer_constant;
+    result :== SUM[c[i].n | i IN [1..3]];
+END fd_children;
+
+MODEL fd_consumer(v[1..3] WILL_BE fd_child;);
+    total IS_A integer_constant;
+    total :== SUM[v[i].n | i IN [1..3]];
+END fd_consumer;
+MODEL fd_array_parameter;
+    consumer IS_A fd_consumer(c);
+    FOR i IN [1..3] CREATE
+        c[i] IS_A fd_child;
+        c[i].n :== i;
+    END FOR;
+    result IS_A integer_constant;
+    result :== consumer.total;
+END fd_array_parameter;
+
+MODEL fd_parameter(n IS_A integer_constant;);
+    value IS_A integer_constant;
+    value :== 2*n;
+END fd_parameter;
+MODEL fd_parameters;
+    FOR i IN [1..3] CREATE
+        c[i] IS_A fd_parameter(a[i]);
+        a[i] IS_A integer_constant;
+        a[i] :== i;
+    END FOR;
+    result IS_A integer_constant;
+    result :== SUM[c[i].value | i IN [1..3]];
+END fd_parameters;
+
+MODEL fd_ragged;
+    FOR i IN [1..2] CREATE
+        cols[i] IS_A set OF integer_constant;
+        cols[i] :== [1..i];
+        FOR j IN cols[i] CREATE
+            x[i][j] IS_A integer_constant;
+            x[i][j] :== 10*i+j;
+        END FOR;
+    END FOR;
+    result IS_A integer_constant;
+    result :== x[1][1] + x[2][1] + x[2][2];
+END fd_ragged;
+
+MODEL fd_symbols;
+    nodes IS_A set OF symbol_constant;
+    nodes :== ['A','B','C'];
+    FOR i IN nodes CREATE
+        dest[i] IS_A set OF symbol_constant;
+        dest[i] :== [j IN nodes | j <> i];
+        FOR j IN dest[i] CREATE
+            x[i][j] IS_A integer_constant;
+            x[i][j] :== 1;
+        END FOR;
+    END FOR;
+    result IS_A integer_constant;
+    result :== SUM[SUM[x[i][j] | j IN dest[i]] | i IN nodes];
+END fd_symbols;
+
+MODEL fd_more REFINES fd_child;
+    extra IS_A integer_constant;
+    extra :== 11;
+END fd_more;
+MODEL fd_merge;
+    FOR i IN [1..3] CREATE
+        c[i], other[i] IS_A fd_child;
+        c[i], other[i] ARE_THE_SAME;
+        c[i] IS_REFINED_TO fd_more;
+        c[i].n :== i;
+        alias[i] ALIASES c[i];
+    END FOR;
+    result IS_A integer_constant;
+    result :== SUM[alias[i].n + other[i].n | i IN [1..3]];
+END fd_merge;
+MODEL fd_alike;
+    FOR i IN [1..3] CREATE
+        c[i], other[i] IS_A fd_child;
+        c[i], other[i] ARE_ALIKE;
+        c[i] IS_REFINED_TO fd_more;
+        c[i].n :== i;
+        other[i].n :== 10*i;
+    END FOR;
+    result IS_A integer_constant;
+    result :== SUM[other[i].n | i IN [1..3]];
+END fd_alike;
+
+MODEL fd_select(flag IS_A boolean_constant;);
+    result IS_A integer_constant;
+    SELECT (flag)
+    CASE TRUE:
+        FOR i IN [1..3] CREATE
+            a[i] IS_A integer_constant;
+            a[i] :== i;
+        END FOR;
+        result :== SUM[a[i] | i IN [1..3]];
+    CASE FALSE:
+        FOR i IN [1..3] CREATE
+            b[i] IS_A integer_constant;
+            b[i] :== 10*i;
+        END FOR;
+        result :== SUM[b[i] | i IN [1..3]];
+    END SELECT;
+END fd_select;
+MODEL fd_select_true REFINES fd_select(flag :== TRUE;); END fd_select_true;
+MODEL fd_select_false REFINES fd_select(flag :== FALSE;); END fd_select_false;
+MODEL fd_nested_select;
+    outer, inner IS_A boolean_constant;
+    outer :== TRUE; inner :== FALSE;
+    result IS_A integer_constant;
+    SELECT (outer)
+    CASE TRUE:
+        SELECT (inner)
+        CASE TRUE:
+            result :== -1;
+        CASE FALSE:
+            FOR i IN [1..3] CREATE
+                a[i] IS_A integer_constant;
+                a[i] :== i;
+            END FOR;
+            result :== SUM[a[i] | i IN [1..3]];
+        END SELECT;
+    OTHERWISE:
+        result :== -2;
+    END SELECT;
+END fd_nested_select;
+MODEL fd_refines REFINES fd_constants;
+    FOR j IN [1..2] CREATE
+        b[j] IS_A integer_constant;
+        b[j] :== result + j;
+    END FOR;
+METHODS
+METHOD self_test;
+    ASSERT b[1] = 7;
+    ASSERT b[2] = 8;
+END self_test;
+END fd_refines;
+
+MODEL fd_equations;
+    FOR i IN [1..3] CREATE
+        n[i] IS_A integer_constant;
+        n[i] :== i;
+        x[i] IS_A factor;
+        eq[i]: x[i] = n[i];
+        b[i] IS_A boolean_var;
+        lr[i]: b[i] == TRUE;
+    END FOR;
+    result IS_A integer_constant;
+    result :== SUM[n[i] | i IN [1..3]];
+END fd_equations;
+
+MODEL fd_empty;
+    FOR i IN [] CREATE
+        a[i] IS_A integer_constant;
+        a[i] :== i;
+    END FOR;
+    result IS_A integer_constant;
+    result :== 0;
+END fd_empty;
+
+(* Later-phase defaults must retain their iteration-major ordering. *)
+MODEL fd_defaults;
+    FOR i IN [1..3] CREATE
+        n[i] IS_A integer_constant;
+        n[i] :== i;
+        x[i] IS_A factor;
+        x[i] := i;
+        x[4-i] := 10*i;
+    END FOR;
+    (* A top-level default also exercises the model's default-statement flag. *)
+    result IS_A integer;
+    result := 6;
+METHODS
+METHOD self_test;
+    ASSERT n[3] = 3;
+    ASSERT x[1] = 30;
+    ASSERT x[2] = 20;
+    ASSERT x[3] = 3;
+END self_test;
+END fd_defaults;
+
+(* Procedural loops must not be distributed. *)
+MODEL fd_method;
+    result IS_A integer_constant;
+    result :== 1;
+    v IS_A integer;
+METHODS
+METHOD self_test;
+    v := 0;
+    FOR i IN [1..3] DO
+        v := 10*v+i;
+        v := v+1;
+    END FOR;
+    ASSERT v = 234;
+END self_test;
+END fd_method;
+
+(* Distribution does not enable dependencies between iterations of a single
+   statement, nor make genuinely circular constant definitions solvable. *)
+MODEL fd_recurrence;
+    a[1..3] IS_A integer_constant;
+    a[1] :== 1;
+    FOR i IN [2..3] CREATE a[i] :== a[i-1]+1; END FOR;
+    result IS_A integer_constant;
+    result :== a[3];
+END fd_recurrence;
+MODEL fd_cycle;
+    FOR i IN [1..3] CREATE
+        a[i], b[i] IS_A integer_constant;
+        a[i] :== b[i]+1;
+        b[i] :== a[i]+1;
+    END FOR;
+    result IS_A integer_constant;
+    result :== a[1];
+END fd_cycle;

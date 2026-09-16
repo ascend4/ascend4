@@ -1,0 +1,10 @@
+REQUIRE "test/ipopt/lp1.a4c";
+
+(* A small LP using Gurobi. Inherits lp1's optimum checks: x = 2, y = 2. *)
+MODEL gurobi_demo REFINES lp1;
+METHODS
+METHOD on_load;
+	RUN lp1::on_load;
+	SOLVER Gurobi;
+END on_load;
+END gurobi_demo;

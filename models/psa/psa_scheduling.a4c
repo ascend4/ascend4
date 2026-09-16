@@ -1,0 +1,90 @@
+(* Published cyclic scheduling benchmarks, sharing psa_cyclic_schedule.
+   Smith (1991), The Optimal Design of Pressure Swing Adsorption Systems:
+   ~/Downloads/smith-1991-The_optimal_design_of_pressure.pdf
+   Chapter 4 examples also appear in Smith & Westerberg (1990),
+   https://doi.org/10.1016/0009-2509(90)80176-F.
+   See psa_scheduling.md for source results and scope of reproduction. *)
+REQUIRE "psa/psa_scheduling.a4l";
+
+MODEL psa_scheduling_case(family IS_A integer_constant;
+    npe IS_A integer_constant; extra IS_A boolean_constant;);
+    data IS_A psa_schedule_data;
+    schedule IS_A psa_cyclic_schedule(data);
+    SELECT (family)
+    CASE 1:
+        (* Oxy-Rich, thesis section 4.5, eqs (4.18)-(4.21).
+           extra adds continuous product and continuous feed compression.
+           The chosen scales satisfy the source's T >= 4 min; T is not
+           minimised. Without extra, D=2 min gives a four-minute cycle. *)
+        data.n :== 4; data.pair :== [1]; data.ordering :== [];
+        data.donor[1] :== 2; data.receiver[1] :== 4;
+        data.short :== []; data.feed_op :== 1; data.compressor :== extra;
+        data.label[1] :== 'Adsorption_feed';
+        data.label[2] :== 'Production_purge_supply';
+        data.label[3] :== 'Blowdown'; data.label[4] :== 'Purge_receive';
+        SELECT (extra)
+        CASE TRUE: data.continuous :== [2]; data.display_shift :== 1{min};
+        CASE FALSE: data.continuous :== []; data.display_shift :== 2{min};
+        END SELECT;
+    CASE 2:
+        (* Seven-operation example, eq (4.28); extra adds eq (4.29).
+           Purge uses stored product, NOT a third simultaneous bed pair. *)
+        data.n :== 7; data.pair :== [1,2]; data.continuous :== [1];
+        data.short :== []; data.compressor :== FALSE; data.feed_op :== 1;
+        data.display_shift :== 1{min};
+        TABLE data.donor[data.pair]; : 1, 2; 2, 3; END TABLE;
+        TABLE data.receiver[data.pair]; : 1, 2; 6, 5; END TABLE;
+        data.label[1] :== 'Adsorption_product'; data.label[2] :== 'Product_supply';
+        data.label[3] :== 'PE_down'; data.label[4] :== 'Stored_product_purge';
+        data.label[5] :== 'PE_up'; data.label[6] :== 'Product_pressurisation';
+        data.label[7] :== 'Feed_repressurisation';
+        SELECT (extra)
+        CASE TRUE:
+            data.ordering :== [1]; data.longer[1] :== 4; data.shorter[1] :== 3;
+        CASE FALSE: data.ordering :== [];
+        END SELECT;
+    CASE 3:
+        (* Hydrogen cases, thesis sections 7.2-7.3 / Table 7-2; Part I
+           journal paper Tables 2 and 4. Presence of each PE pair is fixed
+           per solve, as in section 7.3. N and J are NOT prescribed.
+           Compact route indices: O1, PE-downs, O5, PE-ups, O9. *)
+        data.n :== 2*npe + 3; data.pair :== [1..npe];
+        data.continuous :== [1]; data.short :== [2..data.n];
+        data.ordering :== []; data.compressor :== FALSE; data.feed_op :== 1;
+        data.display_shift :== 1{min};
+        data.label[1] :== 'Adsorption_product';
+        data.label[npe+2] :== 'Blowdown_and_purge';
+        data.label[data.n] :== 'Feed_repressurisation';
+        FOR l IN data.pair CREATE
+            data.donor[l] :== l + 1;
+            data.receiver[l] :== 2*npe + 3 - l;
+            data.label[l+1] :== 'PE_down';
+            data.label[2*npe+3-l] :== 'PE_up';
+        END FOR;
+    END SELECT;
+METHODS
+METHOD on_load;
+    RUN schedule.on_load;
+    SOLVER HiGHS;
+    OPTION mip_rel_gap 0.0;
+    OPTION mip_abs_gap 0.0;
+END on_load;
+METHOD self_test; RUN schedule.self_test; END self_test;
+END psa_scheduling_case;
+
+MODEL psa_scheduling REFINES psa_scheduling_case(family :== 3; npe :== 3; extra :== FALSE;);
+END psa_scheduling;
+MODEL psa_scheduling_pe0 REFINES psa_scheduling_case(family :== 3; npe :== 0; extra :== FALSE;);
+END psa_scheduling_pe0;
+MODEL psa_scheduling_pe1 REFINES psa_scheduling_case(family :== 3; npe :== 1; extra :== FALSE;);
+END psa_scheduling_pe1;
+MODEL psa_scheduling_pe2 REFINES psa_scheduling_case(family :== 3; npe :== 2; extra :== FALSE;);
+END psa_scheduling_pe2;
+MODEL psa_scheduling_oxy REFINES psa_scheduling_case(family :== 1; npe :== 0; extra :== FALSE;);
+END psa_scheduling_oxy;
+MODEL psa_scheduling_oxy_continuous REFINES psa_scheduling_case(family :== 1; npe :== 0; extra :== TRUE;);
+END psa_scheduling_oxy_continuous;
+MODEL psa_scheduling_seven REFINES psa_scheduling_case(family :== 2; npe :== 0; extra :== FALSE;);
+END psa_scheduling_seven;
+MODEL psa_scheduling_seven_purge REFINES psa_scheduling_case(family :== 2; npe :== 0; extra :== TRUE;);
+END psa_scheduling_seven_purge;

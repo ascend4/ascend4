@@ -1,0 +1,72 @@
+(* Physically conservative zero-PE alternatives at the Part I design point.
+   NOT recovered source code or an economic optimum. See psa_part1_physical.md.
+   Smith & Westerberg (1991), doi:10.1016/0009-2509(91)85001-E;
+   local source ~/Downloads/1-s2.0-000925099185001E-main.pdf. *)
+REQUIRE "psa/psa_part1.a4c";
+REQUIRE "psa/psa_thermal_cycle.a4c";
+
+MODEL psa_part1_physical_base REFINES psa_thermal_cycle_base;
+    data IS_A psa_part1_data;
+    phi :== 0.75; eta :== 0.95; phiDes :== 1;
+    supply_rule "0 Henry hypothesis; 1 full LRC; 2 specified sweep ratio" IS_A integer_constant;
+    henry IS_A psa_methane_henry;
+    equilibrium IS_A cen_yang_methane;
+    henry.T, equilibrium.T, state['regenerated'].T ARE_THE_SAME;
+    yout "Effective sweep CH4 fraction, NOT final or batch-average exhaust composition" IS_A fraction;
+    average_yout "Actual integrated exhaust CH4 fraction, including initial void displacement" IS_A fraction;
+    extra_capacity "Additional effective thermal capacity / carbon capacity, fixed-design sensitivity" IS_A positive_factor;
+    (* Two alternate interpretations of eq (26)'s equilibrium construction.
+       Full LRC uses q(yout*PL,Te)=etaAds*etaDes*q_ads, avoiding an undefined K.
+       It is an effective SWEEP closure, not a claim that a completely
+       regenerated bed remains in equilibrium with methane-rich exhaust. *)
+    equilibrium_partial_pressure: equilibrium.p = yout*PL;
+    SELECT (supply_rule)
+    CASE 0:
+        henry_sweep: yout*henry.K*PL = data.etaAds*data.etaDes*carbon.w*bed.R*henry.T;
+        henry_ratio: purge_ratio*yout = 1-yout;
+    CASE 1:
+        nonlinear_sweep: equilibrium.q = data.etaAds*data.etaDes*carbon.q;
+        nonlinear_ratio: purge_ratio*yout = 1-yout;
+    CASE 2:
+        specified_sweep: yout*(1+purge_ratio) = 1;
+    END SELECT;
+    total_exhaust: average_yout*(purge.wasteA+purge.wasteH) = purge.wasteA;
+    effective_capacity: bed.Cv = (1+extra_capacity)*804000{J/m^3/K};
+METHODS
+METHOD on_load;
+    RUN setup;
+    bed.V := 3.141592653589793*data.size['d']['pe0']^2*data.size['L']['pe0']/4;
+    PH := data.P['P9']['pe0']; PL := data.P['P5']['pe0']; Ffeed := 31.1{mol/s};
+    FREE bed.Cv;
+    FIX extra_capacity; extra_capacity := 0;
+    IF supply_rule < 2 THEN FREE purge_ratio; END IF;
+    yout := 0.5;
+END on_load;
+METHOD self_test;
+    ASSERT product > 0{mol} AND recovery > 0 AND recovery < 1;
+    ASSERT abs((y*feed-wasteA)/1{mol}) < 1e-5;
+    ASSERT abs(((1-y)*feed-product-wasteH)/1{mol}) < 1e-5;
+    ASSERT abs((Efeed+heater+Qbed-Eproduct-Ewaste)/1{J}) < 0.1;
+    ASSERT yout > 0 AND yout < 1 AND purge_ratio > 0;
+    ASSERT state['mixed'].P > PL AND PL >= 101325{Pa};
+    ASSERT state['pressurised'].sA < hot.sA;
+    FOR k IN boundary DO
+        ASSERT state[k].T > 0{K};
+        ASSERT state[k].gA >= -1e-7{mol} AND state[k].gH >= 0{mol};
+        ASSERT state[k].sA >= -1e-7{mol};
+    END FOR;
+END self_test;
+END psa_part1_physical_base;
+
+MODEL psa_part1_physical REFINES psa_part1_physical_base;
+    mode :== 0; supply_rule :== 1;
+END psa_part1_physical;
+MODEL psa_part1_physical_henry REFINES psa_part1_physical_base;
+    mode :== 0; supply_rule :== 0;
+END psa_part1_physical_henry;
+MODEL psa_part1_physical_ratio REFINES psa_part1_physical_base;
+    mode :== 0; supply_rule :== 2;
+END psa_part1_physical_ratio;
+MODEL psa_part1_physical_isothermal REFINES psa_part1_physical_base;
+    mode :== 1; supply_rule :== 1;
+END psa_part1_physical_isothermal;
