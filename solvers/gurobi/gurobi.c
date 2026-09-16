@@ -304,46 +304,50 @@ static void gurobi_mip_bounds(slv_status_mip_t *mip, double primal, double dual)
 	}
 }
 
+static int gurobi_mip_callback(GRBmodel *model, void *cbdata, int where, GurobiSystem *s){
+	double runtime=0, iterations=0;
+	char message[256];
+	slv_status_mip_t *mip=slv_status_mip_rw(&s->status);
+	double primal=GRB_INFINITY, dual=GRB_INFINITY, nodes=0;
+	int solutions=0;
+	char bound_text[40], gap_text[40], obj_text[40];
+	if(!mip || GRBcbget(cbdata,where,GRB_CB_RUNTIME,&runtime))return 0;
+	s->status.cpu_elapsed=runtime;
+	GRBcbget(cbdata,where,GRB_CB_MIP_OBJBST,&primal);
+	GRBcbget(cbdata,where,GRB_CB_MIP_OBJBND,&dual);
+	GRBcbget(cbdata,where,GRB_CB_MIP_SOLCNT,&solutions);
+	gurobi_mip_bounds(mip,solutions>0 ? primal : GRB_INFINITY,dual);
+	if(!GRBcbget(cbdata,where,GRB_CB_MIP_NODCNT,&nodes)){
+		mip->have_node_count=1;
+		mip->node_count=nodes>=(double)LLONG_MAX ? LLONG_MAX : (long long)nodes;
+	}
+	if(!GRBcbget(cbdata,where,GRB_CB_MIP_ITRCNT,&iterations)){
+		s->status.iteration=iterations>INT_MAX ? INT_MAX : (int32)iterations;
+		mip->have_total_lp_iterations=1;
+		mip->total_lp_iterations=s->status.iteration;
+	}
+	if(runtime>=s->next_progress && SLV_PARAM_BOOL(&s->params,PROGRESS)){
+		s->next_progress=runtime+0.25;
+		if(mip->have_primal_bound)snprintf(obj_text,sizeof(obj_text),"%.12g",primal);
+		else strcpy(obj_text,"none");
+		if(mip->have_dual_bound)snprintf(bound_text,sizeof(bound_text),"%.12g",dual);
+		else strcpy(bound_text,"unknown");
+		if(mip->have_gap)snprintf(gap_text,sizeof(gap_text),"%.6g",mip->gap);
+		else strcpy(gap_text,"unknown");
+		snprintf(message,sizeof(message),"mip_nodes=%lld, obj=%s, mip_bound=%s, mip_gap=%s, t=%.3g",
+			mip->node_count,obj_text,bound_text,gap_text,runtime);
+		slv_report_progress("Gurobi",message);
+		if(slv_get_solver_interrupt())GRBterminate(model);
+	}
+	return 0;
+}
+
 static int __stdcall gurobi_callback(GRBmodel *model, void *cbdata, int where, void *userdata){
 	GurobiSystem *s=userdata;
 	double runtime=0, iterations=0, objective=0;
 	char message[256];
 	if(slv_get_solver_interrupt()){GRBterminate(model);return 0;}
-	if(where==GRB_CB_MIP){
-		slv_status_mip_t *mip=slv_status_mip_rw(&s->status);
-		double primal=GRB_INFINITY, dual=GRB_INFINITY, nodes=0;
-		int solutions=0;
-		char bound_text[40], gap_text[40], obj_text[40];
-		if(!mip || GRBcbget(cbdata,where,GRB_CB_RUNTIME,&runtime))return 0;
-		s->status.cpu_elapsed=runtime;
-		GRBcbget(cbdata,where,GRB_CB_MIP_OBJBST,&primal);
-		GRBcbget(cbdata,where,GRB_CB_MIP_OBJBND,&dual);
-		GRBcbget(cbdata,where,GRB_CB_MIP_SOLCNT,&solutions);
-		gurobi_mip_bounds(mip,solutions>0 ? primal : GRB_INFINITY,dual);
-		if(!GRBcbget(cbdata,where,GRB_CB_MIP_NODCNT,&nodes)){
-			mip->have_node_count=1;
-			mip->node_count=nodes>=(double)LLONG_MAX ? LLONG_MAX : (long long)nodes;
-		}
-		if(!GRBcbget(cbdata,where,GRB_CB_MIP_ITRCNT,&iterations)){
-			s->status.iteration=iterations>INT_MAX ? INT_MAX : (int32)iterations;
-			mip->have_total_lp_iterations=1;
-			mip->total_lp_iterations=s->status.iteration;
-		}
-		if(runtime>=s->next_progress && SLV_PARAM_BOOL(&s->params,PROGRESS)){
-			s->next_progress=runtime+0.25;
-			if(mip->have_primal_bound)snprintf(obj_text,sizeof(obj_text),"%.12g",primal);
-			else strcpy(obj_text,"none");
-			if(mip->have_dual_bound)snprintf(bound_text,sizeof(bound_text),"%.12g",dual);
-			else strcpy(bound_text,"unknown");
-			if(mip->have_gap)snprintf(gap_text,sizeof(gap_text),"%.6g",mip->gap);
-			else strcpy(gap_text,"unknown");
-			snprintf(message,sizeof(message),"mip_nodes=%lld, obj=%s, mip_bound=%s, mip_gap=%s, t=%.3g",
-				mip->node_count,obj_text,bound_text,gap_text,runtime);
-			slv_report_progress("Gurobi",message);
-			if(slv_get_solver_interrupt())GRBterminate(model);
-		}
-		return 0;
-	}
+	if(where==GRB_CB_MIP)return gurobi_mip_callback(model,cbdata,where,s);
 	if(where!=GRB_CB_SIMPLEX && where!=GRB_CB_BARRIER)return 0;
 	if(GRBcbget(cbdata,where,GRB_CB_RUNTIME,&runtime))return 0;
 	s->status.cpu_elapsed=runtime;

@@ -1342,7 +1342,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 			//printf("\n asadada %d \n",original_indep_var->i == inst);
 		  }
 		  /*>>DS: Checking that the independent variable is the same one in each derivative chains */
-		  if(gl_length(p_data->indepvars) == 0 || analyze_instances_share_clique(original_indep_var->i, inst)) {
+		  if(original_indep_var == NULL || analyze_instances_share_clique(original_indep_var->i, inst)) {
 			//printf("\n ttttttt %ld %s \n",gl_length(p_data->indepvars),WriteInstanceNameString(inst,p_data->root));
 		        gl_append_ptr(p_data->indepvars,(POINTER)ip);
 			/* CONSOLE_DEBUG("Added to indep vars"); */
@@ -2840,7 +2840,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
       if(p_data->lognnz==lognnzold) {
         ERROR_REPORTER_START_NOLINE(ASC_PROG_WARNING);
 		FPRINTF(ASCERR,"No free boolean variables in included logrelation:");
-        WriteInstanceName(ASCWAR,rip->i,p_data->root);
+        WriteInstanceName(ASCWAR,lrip->i,p_data->root);
 		error_reporter_end_flush();
       }
     }

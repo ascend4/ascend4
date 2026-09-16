@@ -9,3 +9,14 @@ METHOD on_load;
 END on_load;
 END boolrel;
 
+(* System analysis must name the logical relation, not dereference a stale
+   algebraic-relation pointer, when all its boolean variables are fixed. *)
+MODEL boolrel_fixed;
+	a,b IS_A boolean_var;
+	all_fixed: a == b;
+METHODS
+METHOD on_load;
+	a := TRUE; b := TRUE;
+	a.fixed := TRUE; b.fixed := TRUE;
+END on_load;
+END boolrel_fixed;

@@ -73,11 +73,19 @@ def isolated(task, n, stencil):
     # ASCEND's current Python wrapper does not own/delete simulation trees.
     # Bound a large sweep's memory without clearing a caller's shared Library.
     # Each case runs with the same interpreter and inherited ./a4 environment.
+    # Validate the callable API as well as argparse's typed CLI. Never let an
+    # option-looking value become a new option in the worker invocation.
+    if task not in ('advection', 'tight-advection', 'operations', 'css'):
+        raise ValueError('Unknown convergence task')
+    if type(n) is not int or n < 4:
+        raise ValueError('At least four integer cells required')
+    if type(stencil) is not int or stencil not in (1, 5):
+        raise ValueError('Stencil must be 1 or 5')
     print(f'Checking {task}: {n} cells, stencil {stencil}', flush=True)
     with tempfile.TemporaryDirectory(prefix='psa-grid-') as directory:
         output = Path(directory)/'result.json'
-        command = [sys.executable, str(Path(__file__).resolve()), '--worker', task,
-                   '--cells', str(n), '--stencil', str(stencil), '--output', str(output)]
+        command = [sys.executable, str(Path(__file__).resolve()), '--worker='+task,
+                   '--cells='+str(n), '--stencil='+str(stencil), '--output='+str(output)]
         completed = subprocess.run(command, capture_output=True, text=True)
         if completed.returncode:
             raise RuntimeError(f'{task}, n={n}, stencil={stencil} failed:\n{completed.stderr[-4000:]}')
@@ -85,6 +93,8 @@ def isolated(task, n, stencil):
 
 
 def grid_check(grids=(25, 50, 100), stencils=(1, 5), include_cycles=False):
+    if any(type(n) is not int or n < 4 for n in grids):
+        raise ValueError('Grids must contain integers of at least four cells')
     if len(grids) < 2 or any(b <= a or b % a for a, b in zip(grids, grids[1:])):
         raise ValueError('Use at least two increasing nested grids')
     report = dict(grids=list(grids), stencils={})

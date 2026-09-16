@@ -4793,6 +4793,47 @@ static void AppendDistributedFOR(struct StatementList *out,
 /* Returns a new owned list. Leaf statements are shared by reference, not
    deep-copied: only loop/SELECT wrappers change. Run before SELECT flattening
    and inheritance, so cached SELECT counts and inherited definitions agree. */
+static struct StatementList *DistributeCreateStatements(CONST struct StatementList *sl);
+
+static void DistributeCreateFOR(struct StatementList *out, CONST struct Statement *s)
+{
+  struct StatementList *expanded = DistributeCreateStatements(ForStatStmts(s));
+  struct StatementList *later = EmptyStatementList();
+  unsigned long j;
+  for (j = 1; j <= StatementListLength(expanded); ++j) {
+    struct Statement *part = GetStatement(expanded,j);
+    if (IsConstructionFamily(part)) {
+      struct StatementList *body = EmptyStatementList();
+      AppendStatement(body,part);
+      AppendDistributedFOR(out,s,body);
+    } else {
+      AppendStatement(later,part);
+    }
+  }
+  if (StatementListLength(later) || !StatementListLength(expanded)) {
+    AppendDistributedFOR(out,s,later);
+  } else {
+    DestroyStatementList(later);
+  }
+  DestroyStatementList(expanded);
+}
+
+static void DistributeCreateSELECT(struct StatementList *out, CONST struct Statement *s)
+{
+  struct SelectList *sel, *cases = NULL;
+  struct Statement *copy;
+  for (sel = SelectStatCases(s); sel != NULL; sel = NextSelectCase(sel)) {
+    struct SelectList *item = CreateSelect(CopySetList(SelectSetList(sel)),
+        DistributeCreateStatements(SelectStatementList(sel)));
+    if (cases == NULL) cases = item;
+    else LinkSelectCases(cases,item);
+  }
+  copy = CreateSELECT(CopyVariableList(SelectStatVL(s)),cases);
+  PreserveStatementSource(copy,s);
+  AppendStatement(out,copy);
+  DestroyStatement(copy);
+}
+
 static struct StatementList *DistributeCreateStatements(CONST struct StatementList *sl)
 {
   struct StatementList *out = EmptyStatementList();
@@ -4800,38 +4841,9 @@ static struct StatementList *DistributeCreateStatements(CONST struct StatementLi
   for (c = 1; c <= StatementListLength(sl); ++c) {
     struct Statement *s = GetStatement(sl,c);
     if (StatementType(s) == FOR && ForLoopKind(s) == fk_create && IsConstructionFamily(s)) {
-      struct StatementList *expanded = DistributeCreateStatements(ForStatStmts(s));
-      struct StatementList *later = EmptyStatementList();
-      unsigned long j;
-      for (j = 1; j <= StatementListLength(expanded); ++j) {
-        struct Statement *part = GetStatement(expanded,j);
-        if (IsConstructionFamily(part)) {
-          struct StatementList *body = EmptyStatementList();
-          AppendStatement(body,part);
-          AppendDistributedFOR(out,s,body);
-        } else {
-          AppendStatement(later,part);
-        }
-      }
-      if (StatementListLength(later) || !StatementListLength(expanded)) {
-        AppendDistributedFOR(out,s,later);
-      } else {
-        DestroyStatementList(later);
-      }
-      DestroyStatementList(expanded);
+      DistributeCreateFOR(out,s);
     } else if (StatementType(s) == SELECT) {
-      struct SelectList *sel, *cases = NULL;
-      struct Statement *copy;
-      for (sel = SelectStatCases(s); sel != NULL; sel = NextSelectCase(sel)) {
-        struct SelectList *item = CreateSelect(CopySetList(SelectSetList(sel)),
-            DistributeCreateStatements(SelectStatementList(sel)));
-        if (cases == NULL) cases = item;
-        else LinkSelectCases(cases,item);
-      }
-      copy = CreateSELECT(CopyVariableList(SelectStatVL(s)),cases);
-      PreserveStatementSource(copy,s);
-      AppendStatement(out,copy);
-      DestroyStatement(copy);
+      DistributeCreateSELECT(out,s);
     } else {
       AppendStatement(out,s);
     }

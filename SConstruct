@@ -1102,6 +1102,12 @@ env = Environment(
 	, **envadditional
 )
 
+# Opt-in tooling target: capture the actual per-source flags, including clones
+# for solver plugins and tests. This target does not rebuild object files.
+if 'compile_commands.json' in COMMAND_LINE_TARGETS:
+	env.Tool('compilation_db')
+	env.CompilationDatabase('compile_commands.json')
+
 # Create .def files by default on Windows (or else SCons 2.0.1 never seems to be happy)
 if platform.system()=="Windows":
 	env.Append(WINDOWS_INSERT_DEF=1)

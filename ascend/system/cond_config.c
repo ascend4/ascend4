@@ -26,6 +26,8 @@
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
+#include <limits.h>
+#include <stdint.h>
 
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
@@ -65,7 +67,7 @@ struct ds_case_list {
 */
 void analyze_when(struct w_when *);
 static void simplified_analyze_when(struct w_when *);
-static void cases_matching_in_when_list(struct gl_list_t *,
+static int cases_matching_in_when_list(struct gl_list_t *,
 					struct ds_case_list *,
 					int32 *);
 
@@ -1608,25 +1610,31 @@ void enumerate_cases_in_when(struct w_when *when)
 #define alloc_case_array(ncases,type)   \
    ((ncases) > 0 ? (type *)ascmalloc((ncases)*sizeof(type)) : NULL)
 #define copy_case_num(from,too,nnums)  \
-   asc_memcpy((from),(too),(nnums)*sizeof(int32))
+   asc_memcpy((too),(from),(nnums)*sizeof(int32))
 
 /*
  * Appends a case_number onto the list
  */
-static void append_case_number( struct ds_case_list *cl, int32 case_number)
+static int append_case_number( struct ds_case_list *cl, int32 case_number)
 {
    if( cl->length == cl->capacity ) {
       int32 newcap;
       int32 *newlist;
+      if(cl->capacity > INT_MAX-40)return 1;
       newcap = cl->capacity + 40;
+      if((size_t)newcap > SIZE_MAX/sizeof(int32))return 1;
       newlist = alloc_case_array(newcap,int);
-      copy_case_num((char *)cl->case_number,(char *)newlist,cl->length);
+      if(newlist == NULL)return 1;
+      if(cl->length > 0){
+         copy_case_num((char *)cl->case_number,(char *)newlist,cl->length);
+      }
       if( cl->case_number != NULL )
 	 ascfree(cl->case_number);
       cl->case_number = newlist;
       cl->capacity = newcap;
    }
    cl->case_number[cl->length++] = case_number;
+   return 0;
 }
 
 
@@ -1650,7 +1658,7 @@ static void remove_case_number( struct ds_case_list *cl, int32 ndx)
  * such number is -1, that means that the case contains nested whens
  * (and therefore nested cases) and the search is done recursively
  */
-static void cases_matching_in_when(struct w_when *when,
+static int cases_matching_in_when(struct w_when *when,
 				   struct ds_case_list *cl,
 				   int32 *ncases)
 {
@@ -1661,7 +1669,7 @@ static void cases_matching_in_when(struct w_when *when,
 
   cases = when_cases_list(when);
   if (cases == NULL) {
-    return;
+    return 0;
   }
   clen = gl_length(cases);
   for (c=1;c<=clen;c++) {
@@ -1670,13 +1678,14 @@ static void cases_matching_in_when(struct w_when *when,
       case_number = when_case_case_number(cur_case);
       if (case_number == -1) {
         whens_in_case = when_case_whens_list(cur_case);
-        cases_matching_in_when_list(whens_in_case,cl,ncases);
+        if(cases_matching_in_when_list(whens_in_case,cl,ncases))return 1;
       }else{
-        append_case_number(cl,case_number);
+        if(append_case_number(cl,case_number))return 1;
 	(*ncases)++;
       }
     }
   }
+  return 0;
 }
 
 
@@ -1684,7 +1693,7 @@ static void cases_matching_in_when(struct w_when *when,
  * Disentagle a list of whens and analyze each one of them, looking
  * for the number of matching cases.
  */
-static void cases_matching_in_when_list(struct gl_list_t *whens,
+static int cases_matching_in_when_list(struct gl_list_t *whens,
                                         struct ds_case_list *cl,
 					int32 *ncases)
 {
@@ -1692,16 +1701,17 @@ static void cases_matching_in_when_list(struct gl_list_t *whens,
   int32 w,wlen;
 
   if (whens == NULL) {
-    return;
+    return 0;
   }
   wlen = gl_length(whens);
   for (w=1;w<=wlen;w++) {
     when = (struct w_when *)(gl_fetch(whens,w));
     if (!when_visited(when)) {
-      cases_matching_in_when(when,cl,ncases);
+      if(cases_matching_in_when(when,cl,ncases))return 1;
     }
     when_set_visited(when,TRUE);
   }
+  return 0;
 }
 
 /*
@@ -1731,7 +1741,7 @@ int32 *cases_matching(struct gl_list_t *disvars, int32 *ncases)
   (*ncases) =  0;
   cl.length = cl.capacity = 0;
   cl.case_number = NULL;
-  append_case_number(&cl,0);
+  if(append_case_number(&cl,0))goto allocation_failed;
 
   /*
    * First make sure that all of the Whens has the flag VISITED off,
@@ -1764,11 +1774,18 @@ int32 *cases_matching(struct gl_list_t *disvars, int32 *ncases)
     }
     wlen = gl_length(whens);
     if (wlen > 0) {
-      cases_matching_in_when_list(whens,&cl,ncases);
+      if(cases_matching_in_when_list(whens,&cl,ncases)){
+        goto allocation_failed;
+      }
     }
   }
 
   return cl.case_number;
+allocation_failed:
+  ascfree(cl.case_number);
+  *ncases = 0;
+  ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to grow matching WHEN case list.");
+  return NULL;
 }
 
 

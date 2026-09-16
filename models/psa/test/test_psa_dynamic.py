@@ -8,6 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import psa_dynamic as dynamic
@@ -120,6 +121,15 @@ class DynamicPSA(unittest.TestCase):
         with self.assertRaises(ValueError): dynamic.run_operation(initial=dict(y=[0], q=[0]))
         with self.assertRaises(ValueError): cycle.Transfers(4)
         with self.assertRaises(ValueError): checks.coarsen([0]*5, 3)
+
+    def test_worker_rejects_invalid_arguments_before_launch(self):
+        with patch.object(checks.subprocess, 'run') as launch:
+            for args in (('--help', 25, 1), ('css', '--help', 1),
+                         ('css', 0, 1), ('css', True, 1), ('css', 25, '--help')):
+                with self.subTest(args=args), self.assertRaises(ValueError):
+                    checks.isolated(*args)
+            with self.assertRaises(ValueError): checks.grid_check((0, 25))
+            launch.assert_not_called()
 
     def test_five_point_css_reference(self):
         r = cycle.solve(50, 5)

@@ -855,7 +855,7 @@ Instanc::getSetType() const{
 
 const string
 Instanc::getDeclarationFilename(const Instanc &parent) const{
-	const char *filename = NULL;
+	const char *filename = nullptr;
 	unsigned long childnum = 0;
 	for(unsigned long ci=1; ci<=NumberChildren(parent.i); ++ci){
 		if(SymChar(ChildName(parent.i,ci)) == name){
@@ -864,11 +864,11 @@ Instanc::getDeclarationFilename(const Instanc &parent) const{
 		}
 	}
 	if((childnum == 0 || !InstanceChildDeclarationLocation(
-		parent.i,childnum,&filename,NULL
-	)) && !InstanceDeclarationLocation(i,parent.i,&filename,NULL)){
+		parent.i,childnum,&filename,nullptr
+	)) && !InstanceDeclarationLocation(i,parent.i,&filename,nullptr)){
 		return "";
 	}
-	if(filename == NULL){
+	if(filename == nullptr){
 		return "";
 	}
 	return filename;
@@ -885,8 +885,8 @@ Instanc::getDeclarationLine(const Instanc &parent) const{
 		}
 	}
 	if((childnum == 0 || !InstanceChildDeclarationLocation(
-		parent.i,childnum,NULL,&lineno
-	)) && !InstanceDeclarationLocation(i,parent.i,NULL,&lineno)){
+		parent.i,childnum,nullptr,&lineno
+	)) && !InstanceDeclarationLocation(i,parent.i,nullptr,&lineno)){
 		return 0;
 	}
 	return lineno;

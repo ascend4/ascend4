@@ -11,6 +11,7 @@
 #include <ascend/utilities/error.h>
 #include <math.h>
 #include <limits.h>
+#include <stdint.h>
 #include <string.h>
 
 boolean lp_var_needs_relaxation(struct var_variable *var){
@@ -23,10 +24,29 @@ boolean lp_var_needs_relaxation(struct var_variable *var){
  * This deliberately does not infer linearity from derivatives at one point.
  */
 static int affine_degree(const struct relation *r, const struct relation_term *t,
+	struct rel_relation *rel, const var_filter_t *filter);
+
+static int affine_binary_degree(const struct relation *r, const struct relation_term *t,
 	struct rel_relation *rel, const var_filter_t *filter){
-	int a, b;
-	unsigned long i;
+	int a = affine_degree(r,TermBinLeft(t),rel,filter);
+	int b = affine_degree(r,TermBinRight(t),rel,filter);
 	double exponent;
+	if(a == 2 || b == 2)return 2;
+	if(a == 0 && b == 0)return 0;
+	switch(RelationTermType(t)){
+	case e_plus: case e_minus: return a > b ? a : b;
+	case e_times: return a + b;
+	case e_divide: return b == 0 ? a : 2;
+	default:
+		if(b || RelationEvaluateTermSafe(r,TermBinRight(t),&exponent) != safe_ok)return 2;
+		if(exponent == 1.0)return a;
+		return exponent == 0.0 ? 0 : 2;
+	}
+}
+
+static int affine_degree(const struct relation *r, const struct relation_term *t,
+	struct rel_relation *rel, const var_filter_t *filter){
+	unsigned long i;
 	const struct var_variable **vars = rel_incidence_list((struct rel_relation *)rel);
 	if(!t)return 0;
 	switch(RelationTermType(t)){
@@ -40,18 +60,7 @@ static int affine_degree(const struct relation *r, const struct relation_term *t
 		return affine_degree(r,TermFuncLeft(t),rel,filter) == 0 ? 0 : 2;
 	case e_plus: case e_minus: case e_times: case e_divide:
 	case e_power: case e_ipower:
-		a = affine_degree(r,TermBinLeft(t),rel,filter);
-		b = affine_degree(r,TermBinRight(t),rel,filter);
-		if(a == 2 || b == 2)return 2;
-		if(a == 0 && b == 0)return 0;
-		switch(RelationTermType(t)){
-		case e_plus: case e_minus: return a > b ? a : b;
-		case e_times: return a + b;
-		case e_divide: return b == 0 ? a : 2;
-		default:
-			if(b || RelationEvaluateTermSafe(r,TermBinRight(t),&exponent) != safe_ok)return 2;
-			return exponent == 1.0 ? a : (exponent == 0.0 ? 0 : 2);
-		}
+		return affine_binary_degree(r,t,rel,filter);
 	default: return 2;
 	}
 }
@@ -77,6 +86,35 @@ int lp_problem_is_mip(const mps_data_t *m){
 int lp_prepare(slv_system_t sys, mps_data_t *m, slv_status_t *status,
 	int scale_variables, int scale_relations){
 	return lp_prepare_relaxed(sys,m,status,scale_variables,scale_relations,0);
+}
+
+static void lp_prepare_domains(mps_data_t *m, struct var_variable **v, int relaxed){
+	int32 i;
+	for(i=0; i<m->vused; ++i){
+		if(m->typerow[i] == MPS_FIXED){
+			m->lbrow[i] = m->ubrow[i] = var_value(v[i]);
+			continue;
+		}
+		/* Binary domains also constrain individually/globally relaxed columns. */
+		if(solver_binary(var_instance(v[i])) && !isnan(m->lbrow[i]) && !isnan(m->ubrow[i])){
+			m->lbrow[i] = fmax(m->lbrow[i],0);
+			m->ubrow[i] = fmin(m->ubrow[i],1);
+		}
+		if(!relaxed && m->typerow[i]!=MPS_RELAXED)continue;
+		/* Convex hull of {0} union [L,U], without repairing invalid bounds. */
+		if(solver_semi(var_instance(v[i])) && m->lbrow[i]<=m->ubrow[i]){
+			m->lbrow[i] = fmin(m->lbrow[i],0);
+			m->ubrow[i] = fmax(m->ubrow[i],0);
+		}
+		switch(m->typerow[i]){
+		case MPS_INT: --m->solver_int_used; break;
+		case MPS_BINARY: --m->solver_binary_used; break;
+		case MPS_SEMI: --m->solver_semi_used; break;
+		default: continue;
+		}
+		m->typerow[i]=MPS_RELAXED;
+		++m->solver_relaxed_used;
+	}
 }
 
 int lp_prepare_relaxed(slv_system_t sys, mps_data_t *m, slv_status_t *status,
@@ -112,39 +150,7 @@ int lp_prepare_relaxed(slv_system_t sys, mps_data_t *m, slv_status_t *status,
 	m->typerow = lp_calc_svtlist(v,m->vused,&m->solver_var_used,&m->solver_relaxed_used,
 		&m->solver_int_used,&m->solver_binary_used,&m->solver_semi_used,&m->solver_other_used,&m->solver_fixed);
 	if(!m->lbrow || !m->ubrow || !m->relopcol || !m->typerow)goto fail;
-	/* Fixed variables are excluded from coefficients. Keep their exported columns
-	 * fixed too, and never write these columns back to ASCEND.
-	 */
-	for(i=0; i<m->vused; ++i){
-		if(m->typerow[i] == MPS_FIXED){
-			m->lbrow[i] = m->ubrow[i] = var_value(v[i]);
-			continue;
-		}
-		/* Binary domains remain within [0,1], also in the relaxation. Read
-		 * the original type: individual relaxation already erased it above.
-		 */
-		if(solver_binary(var_instance(v[i])) && !isnan(m->lbrow[i]) && !isnan(m->ubrow[i])){
-			m->lbrow[i] = fmax(m->lbrow[i],0);
-			m->ubrow[i] = fmin(m->ubrow[i],1);
-		}
-		if(relaxed || m->typerow[i]==MPS_RELAXED){
-			/* Convex hull of {0} union [L,U], not merely [L,U]. Do not
-			 * turn inconsistent original bounds into a valid interval.
-			 */
-			if(solver_semi(var_instance(v[i])) && m->lbrow[i]<=m->ubrow[i]){
-				m->lbrow[i] = fmin(m->lbrow[i],0);
-				m->ubrow[i] = fmax(m->ubrow[i],0);
-			}
-			switch(m->typerow[i]){
-			case MPS_INT: --m->solver_int_used; break;
-			case MPS_BINARY: --m->solver_binary_used; break;
-			case MPS_SEMI: --m->solver_semi_used; break;
-			default: continue;
-			}
-			m->typerow[i]=MPS_RELAXED;
-			++m->solver_relaxed_used;
-		}
-	}
+	lp_prepare_domains(m,v,relaxed);
 	lp_real_rhs(m->Ac_mtx,m->relopcol,v,m->rused,m->vused,m->bcol);
 	if(!lp_apply_nominal_scaling(m->Ac_mtx,m->lbrow,m->ubrow,m->bcol,m->typerow,
 		m->relopcol,m->cap,m->rused,m->vused,m->crow,v,r,obj,
@@ -163,82 +169,134 @@ void lp_sparse_destroy(lp_sparse_t *p){
 	memset(p,0,sizeof(*p));
 }
 
-int lp_sparse_build(lp_sparse_t *p, const mps_data_t *m,
-	struct var_variable **vars, struct rel_relation *obj, real64 minf, real64 pinf){
-	int32 i, j, row, col, nnz=0, calc_ok=1;
-	int32 *map = NULL;
+/* Check signed dimensions before addition, allocation or indexing. The
+ * objective row must be outside the original constraint-row range. */
+static int lp_sparse_shape_valid(const mps_data_t *m){
+	if(!m || !m->Ac_mtx || !m->relopcol || !m->typerow
+		|| !m->lbrow || !m->ubrow || !m->bcol)return 0;
+	if(m->vused<=0 || m->vused==INT_MAX || m->rused<=0
+		|| m->vused>m->cap || m->rused>=m->cap)return 0;
+	if(m->crow<m->rused || m->crow>=m->cap || m->cap>mtx_order(m->Ac_mtx))return 0;
+	return (size_t)m->cap < SIZE_MAX/sizeof(real64);
+}
+
+static int32 lp_sparse_count(const mps_data_t *m, const int32 *map){
+	int32 i, row, nnz=0;
 	mtx_coord_t nz;
 	mtx_range_t range;
-	double a;
+	/* Iterate the full permuted matrix: objective/constraint rows can have
+	 * moved during output assignment. Filter using original row indices.
+	 */
+	for(i=0; i<m->vused; ++i){
+		nz.col = mtx_org_to_col(m->Ac_mtx,i); nz.row = mtx_FIRST;
+		if(nz.col<0 || nz.col>=m->cap)return -1;
+		while(mtx_next_in_col(m->Ac_mtx,&nz,mtx_range(&range,0,m->cap-1)), nz.row != mtx_LAST){
+			row = mtx_row_to_org(m->Ac_mtx,nz.row);
+			if(row<0 || row>=m->cap)return -1;
+			if(row>=m->rused || map[row]<0)continue;
+			if(nnz==INT_MAX)return -1;
+			++nnz;
+		}
+	}
+	return nnz;
+}
+
+static int lp_sparse_allocate(lp_sparse_t *p, int32 nnz){
+	size_t nz = nnz ? (size_t)nnz : 1;
+	size_t nr = p->num_row ? (size_t)p->num_row : 1;
+	if(nz>SIZE_MAX/sizeof(real64))return 1;
+#define ALLOC(F,T,N) p->F=ASC_NEW_ARRAY(T,N)
+	ALLOC(start,int32,(size_t)p->num_col+1); ALLOC(index,int32,nz); ALLOC(value,real64,nz);
+	ALLOC(cost,real64,p->num_col); ALLOC(lower,real64,p->num_col); ALLOC(upper,real64,p->num_col);
+	ALLOC(type,char,p->num_col); ALLOC(row_lower,real64,nr); ALLOC(row_upper,real64,nr);
+#undef ALLOC
+	return !p->start || !p->index || !p->value || !p->cost || !p->lower
+		|| !p->upper || !p->type || !p->row_lower || !p->row_upper;
+}
+
+static int lp_sparse_bounds(lp_sparse_t *p, const mps_data_t *m, real64 minf, real64 pinf){
+	int32 i, row;
+	for(i=0; i<m->vused; ++i){
+		p->cost[i]=0;
+		p->type[i]=m->typerow[i];
+		p->lower[i]=m->lbrow[i] <= minf ? -HUGE_VAL : m->lbrow[i];
+		p->upper[i]=m->ubrow[i] >= pinf ? HUGE_VAL : m->ubrow[i];
+		if(isnan(p->lower[i]) || isnan(p->upper[i]))return 1;
+	}
+	for(i=0; i<p->num_row; ++i){
+		row=p->row_original[i];
+		if(row<0 || row>=m->rused || !isfinite(m->bcol[row]))return 1;
+		switch(m->relopcol[row]){
+		case rel_TOK_less: p->row_lower[i]=-HUGE_VAL; p->row_upper[i]=m->bcol[row]; break;
+		case rel_TOK_greater: p->row_lower[i]=m->bcol[row]; p->row_upper[i]=HUGE_VAL; break;
+		case rel_TOK_equal: p->row_lower[i]=p->row_upper[i]=m->bcol[row]; break;
+		default: return 1;
+		}
+	}
+	return 0;
+}
+
+static int lp_sparse_values(lp_sparse_t *p, const mps_data_t *m, const int32 *map, int32 nnz){
+	int32 i, row;
+	mtx_coord_t nz;
+	mtx_range_t range;
+	real64 a;
+	for(i=0; i<m->vused; ++i){
+		p->start[i]=p->num_nz;
+		nz.col=mtx_org_to_col(m->Ac_mtx,i); nz.row=mtx_FIRST;
+		if(nz.col<0 || nz.col>=m->cap)return 1;
+		while((a=mtx_next_in_col(m->Ac_mtx,&nz,mtx_range(&range,0,m->cap-1))), nz.row != mtx_LAST){
+			if(!isfinite(a))return 1;
+			row=mtx_row_to_org(m->Ac_mtx,nz.row);
+			if(row<0 || row>=m->cap)return 1;
+			if(row == m->crow){
+				p->cost[i]=a;
+				continue;
+			}
+			if(row>=m->rused || map[row]<0)continue;
+			if(p->num_nz>=nnz)return 1;
+			p->index[p->num_nz]=map[row]; p->value[p->num_nz]=a;
+			++p->num_nz;
+		}
+	}
+	p->start[m->vused]=p->num_nz;
+	return p->num_nz != nnz;
+}
+
+static int lp_sparse_objective(lp_sparse_t *p, const mps_data_t *m,
+	struct var_variable **vars, struct rel_relation *obj){
+	int32 i, calc_ok=1;
+	p->maximize=relman_obj_direction(obj)==1;
+	p->objective_offset=relman_eval(obj,&calc_ok,1);
+	if(!calc_ok || !isfinite(p->objective_offset))return 1;
+	for(i=0; i<m->vused; ++i){
+		if(!vars[i])return 1;
+		p->objective_offset -= p->cost[i]*var_value(vars[i])/(m->col_scale ? m->col_scale[i] : 1.0);
+	}
+	return !isfinite(p->objective_offset);
+}
+
+int lp_sparse_build(lp_sparse_t *p, const mps_data_t *m,
+	struct var_variable **vars, struct rel_relation *obj, real64 minf, real64 pinf){
+	int32 i, nnz;
+	int32 *map = NULL;
+	if(!p)return 1;
 	lp_sparse_destroy(p);
-	if(!m || !m->Ac_mtx || !vars || !obj || minf >= pinf)return 1;
+	if(!lp_sparse_shape_valid(m) || !vars || !obj || !(minf < pinf))return 1;
 	p->num_col = m->vused;
 	map = ASC_NEW_ARRAY(int32,m->rused);
 	p->row_original = ASC_NEW_ARRAY(int32,m->rused);
 	if(!map || !p->row_original)goto fail;
 	for(i=0; i<m->rused; ++i){
 		map[i] = -1;
-		if(m->relopcol[i]){
-			map[i] = p->num_row;
-			p->row_original[p->num_row++] = i;
-		}
+		if(!m->relopcol[i])continue;
+		map[i] = p->num_row;
+		p->row_original[p->num_row++] = i;
 	}
-	/* Iterate the full permuted matrix: objective/constraint rows can have
-	 * moved during output assignment. Filter using original row indices.
-	 */
-	for(i=0; i<m->vused; ++i){
-		nz.col = mtx_org_to_col(m->Ac_mtx,i); nz.row = mtx_FIRST;
-		while((a=mtx_next_in_col(m->Ac_mtx,&nz,mtx_range(&range,0,m->cap-1))), nz.row != mtx_LAST){
-			row = mtx_row_to_org(m->Ac_mtx,nz.row);
-			if(row < m->rused && map[row]>=0){
-				if(nnz == INT_MAX)goto fail;
-				++nnz;
-			}
-		}
-	}
-#define ALLOC(F,T,N) do { p->F=ASC_NEW_ARRAY(T,(N)>0?(N):1); if(!p->F)goto fail; } while(0)
-	ALLOC(start,int32,m->vused+1); ALLOC(index,int32,nnz); ALLOC(value,real64,nnz);
-	ALLOC(cost,real64,m->vused); ALLOC(lower,real64,m->vused); ALLOC(upper,real64,m->vused);
-	ALLOC(type,char,m->vused); ALLOC(row_lower,real64,p->num_row); ALLOC(row_upper,real64,p->num_row);
-#undef ALLOC
-	for(i=0; i<m->vused; ++i){
-		p->cost[i]=0;
-		p->type[i]=m->typerow[i];
-		p->lower[i]=m->lbrow[i] <= minf ? -HUGE_VAL : m->lbrow[i];
-		p->upper[i]=m->ubrow[i] >= pinf ? HUGE_VAL : m->ubrow[i];
-		if(isnan(p->lower[i]) || isnan(p->upper[i]))goto fail;
-	}
-	for(i=0; i<p->num_row; ++i){
-		row=p->row_original[i];
-		if(!isfinite(m->bcol[row]))goto fail;
-		switch(m->relopcol[row]){
-		case rel_TOK_less: p->row_lower[i]=-HUGE_VAL; p->row_upper[i]=m->bcol[row]; break;
-		case rel_TOK_greater: p->row_lower[i]=m->bcol[row]; p->row_upper[i]=HUGE_VAL; break;
-		case rel_TOK_equal: p->row_lower[i]=p->row_upper[i]=m->bcol[row]; break;
-		default: goto fail;
-		}
-	}
-	for(i=0; i<m->vused; ++i){
-		col=mtx_org_to_col(m->Ac_mtx,i);
-		p->start[i]=p->num_nz;
-		nz.col=col; nz.row=mtx_FIRST;
-		while((a=mtx_next_in_col(m->Ac_mtx,&nz,mtx_range(&range,0,m->cap-1))), nz.row != mtx_LAST){
-			if(!isfinite(a))goto fail;
-			row=mtx_row_to_org(m->Ac_mtx,nz.row);
-			if(row == m->crow)p->cost[i]=a;
-			else if(row<m->rused && map[row]>=0){
-				j=p->num_nz++;
-				p->index[j]=map[row]; p->value[j]=a;
-			}
-		}
-	}
-	p->start[m->vused]=p->num_nz;
-	p->maximize=relman_obj_direction(obj)==1;
-	p->objective_offset=relman_eval(obj,&calc_ok,1);
-	if(!calc_ok || !isfinite(p->objective_offset))goto fail;
-	for(i=0; i<m->vused; ++i)
-		p->objective_offset -= p->cost[i]*var_value(vars[i])/(m->col_scale ? m->col_scale[i] : 1.0);
-	if(!isfinite(p->objective_offset))goto fail;
+	nnz = lp_sparse_count(m,map);
+	if(nnz<0 || lp_sparse_allocate(p,nnz))goto fail;
+	if(lp_sparse_bounds(p,m,minf,pinf) || lp_sparse_values(p,m,map,nnz))goto fail;
+	if(lp_sparse_objective(p,m,vars,obj))goto fail;
 	ASC_FREE(map);
 	return 0;
 fail:
@@ -248,11 +306,20 @@ fail:
 	return 1;
 }
 
-int lp_write_solution(slv_system_t sys, const mps_data_t *m, const real64 *values, int safe){
-	struct var_variable **v=slv_get_solvers_var_list(sys);
+static int lp_refresh_residuals(slv_system_t sys, int safe){
 	struct rel_relation **r=slv_get_solvers_rel_list(sys), *obj=slv_get_obj_relation(sys);
 	int32 i, calc_ok=1;
 	int ok=1;
+	if(obj){ relman_eval(obj,&calc_ok,safe); if(!calc_ok)ok=0; }
+	for(i=0; r[i]; ++i){
+		if(lp_inc_rel_filter(r[i])){ relman_eval(r[i],&calc_ok,safe); if(!calc_ok)ok=0; }
+	}
+	return ok ? 0 : 1;
+}
+
+int lp_write_solution(slv_system_t sys, const mps_data_t *m, const real64 *values, int safe){
+	struct var_variable **v=slv_get_solvers_var_list(sys);
+	int32 i;
 	/* Validate all values before changing the model. */
 	for(i=0; v[i]; ++i){
 		int32 col=var_sindex(v[i]);
@@ -263,9 +330,5 @@ int lp_write_solution(slv_system_t sys, const mps_data_t *m, const real64 *value
 		int32 col=var_sindex(v[i]);
 		if(lp_free_inc_var_filter(v[i]))var_set_value(v[i],values[col]*(m->col_scale ? m->col_scale[col] : 1));
 	}
-	if(obj){ relman_eval(obj,&calc_ok,safe); if(!calc_ok)ok=0; }
-	for(i=0; r[i]; ++i){
-		if(lp_inc_rel_filter(r[i])){ relman_eval(r[i],&calc_ok,safe); if(!calc_ok)ok=0; }
-	}
-	return ok ? 0 : 1;
+	return lp_refresh_residuals(sys,safe);
 }

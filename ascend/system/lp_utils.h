@@ -34,6 +34,10 @@ typedef struct lp_sparse {
 } lp_sparse_t;
 
 ASC_DLLSPEC void lp_sparse_destroy(lp_sparse_t *p);
+/** Build checked sparse arrays from prepared data. Reject invalid dimensions,
+ * nonfinite coefficients and inconsistent matrix mappings. On failure any
+ * previous output is released and the output structure is cleared.
+ */
 ASC_DLLSPEC int lp_sparse_build(lp_sparse_t *p, const mps_data_t *mps,
 	struct var_variable **vars, struct rel_relation *obj,
 	real64 minus_infinity, real64 plus_infinity);
