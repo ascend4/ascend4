@@ -1,0 +1,201 @@
+(* Time-integrated, isothermal PSA building blocks. These conserve CH4/H2
+   but do NOT resolve concentration fronts or establish product purity.
+   Smith & Westerberg (1991), equations (6)-(25), (28)-(31); the purge
+   closure below is explicitly a reconstruction, not their equation (26).
+   See psa_cycle.md for references, assumptions and remaining work. *)
+REQUIRE "psa/psa_properties.a4l";
+
+ATOM psa_amount REFINES mole DEFAULT 100{mol};
+    nominal := 100{mol};
+END psa_amount;
+
+MODEL psa_isothermal_bed;
+    d, L "Internal diameter and packed length" IS_A distance;
+    eps "Interparticle gas void fraction" IS_A fraction;
+    rho "Particle-envelope density of dry carbon, NOT bulk bed density" IS_A mass_density;
+    T "Imposed common gas/solid temperature; no adiabatic energy balance" IS_A temperature;
+    V, Vgas "Packed-bed and interparticle gas volumes" IS_A volume;
+    Mcarbon "Dry carbon mass, excluding gas voids" IS_A mass;
+    geometry: V = 3.141592653589793*d^2*L/4;
+    gas_volume: Vgas = eps*V;
+    carbon_mass: Mcarbon = (1 - eps)*rho*V;
+END psa_isothermal_bed;
+
+(* Inventories at ONE operation boundary. Each state uses the same bed,
+   but has its own pressure and component inventories. Hydrogen does not
+   adsorb. n is gas only; sA is separately counted adsorbed methane. *)
+MODEL psa_bed_state(bed WILL_BE psa_isothermal_bed;);
+    P IS_A pressure;
+    n "Total gas in the bed voids" IS_A psa_amount;
+    gA, gH "Gas-phase methane and hydrogen inventories" IS_A psa_amount;
+    sA "Adsorbed methane inventory" IS_A psa_amount;
+    ideal_gas: P*bed.Vgas = n*8.31446261815324{J/mol/K}*bed.T;
+    gas_inventory: n = gA + gH;
+END psa_bed_state;
+
+MODEL psa_adsorption_step(start WILL_BE psa_bed_state; finish WILL_BE psa_bed_state;
+    carbon WILL_BE cen_yang_methane; y WILL_BE fraction;
+    phi IS_A factor_constant; eta IS_A factor_constant;)
+WHERE (start.bed, finish.bed WILL_BE_THE_SAME;
+    start.P, finish.P WILL_BE_THE_SAME;
+    carbon.T, finish.bed.T WILL_BE_THE_SAME;
+    phi > 0; phi <= 1; eta > 0; eta <= 1;);
+    feed "Feed gas admitted during adsorption, per bed per cycle" IS_A psa_amount;
+    product "Gross pure hydrogen withdrawn during adsorption" IS_A psa_amount;
+    feed_equilibrium: carbon.p = y*finish.P;
+    (* 1991 eqs (6),(7): sharp front occupies phi of the packed bed.
+       eq (10): occupied gas region has feed composition; remaining gas
+       region is pure H2. The feed isotherm supplies loading in mol/kg. *)
+    eq_7: finish.sA = phi*eta*finish.bed.Mcarbon*carbon.q;
+    loaded_gas: finish.gA = phi*y*finish.n;
+    (* Integrated component balances, equivalent to eqs (12),(13) when
+       the initial void gas is pure H2. No product purity is calculated. *)
+    methane: start.sA + start.gA + y*feed = finish.sA + finish.gA;
+    hydrogen: start.gH + (1 - y)*feed = finish.gH + product;
+END psa_adsorption_step;
+
+MODEL psa_blowdown_step(start WILL_BE psa_bed_state; finish WILL_BE psa_bed_state;)
+WHERE (start.bed, finish.bed WILL_BE_THE_SAME;);
+    wasteA, wasteH "Methane and hydrogen vented during blowdown" IS_A psa_amount;
+    (* Frozen solid, as in the paper's pressure-changing approximation.
+       Reconstruction: withdrawal from well-mixed void gas at fixed T;
+       thus gas composition is unchanged as the pressure decreases. *)
+    frozen_solid: finish.sA = start.sA;
+    gas_composition: finish.gA*start.n = start.gA*finish.n;
+    methane: start.gA = finish.gA + wasteA;
+    hydrogen: start.gH = finish.gH + wasteH;
+END psa_blowdown_step;
+
+(* One coupled event, not two independent vent/fill operations. The four
+   boundary states describe donor and receiver at the SAME event time.
+   In a periodic cycle they may reference a common bed DESIGN while their
+   inventories represent distinct physical beds at shifted cycle phases.
+   Isothermal analogue of 1991 eqs (14)-(25), NOT its adiabatic sequence:
+   donor solid is frozen, donor void gas is well mixed, and the receiver
+   captures all incoming methane (and any initially present void methane).
+   Receiver capacity/kinetics must be checked by the containing model. *)
+MODEL psa_equalisation_step(donor_start WILL_BE psa_bed_state;
+    donor_finish WILL_BE psa_bed_state; receiver_start WILL_BE psa_bed_state;
+    receiver_finish WILL_BE psa_bed_state;)
+WHERE (donor_start.bed, donor_finish.bed WILL_BE_THE_SAME;
+    receiver_start.bed, receiver_finish.bed WILL_BE_THE_SAME;);
+    transferA, transferH "Internal CH4/H2 transfer from donor to receiver" IS_A psa_amount;
+    P ALIASES donor_finish.P;
+    eq_14: donor_finish.P = receiver_finish.P;
+    frozen_donor: donor_finish.sA = donor_start.sA;
+    donor_composition: donor_finish.gA*donor_start.n = donor_start.gA*donor_finish.n;
+    donor_methane: donor_start.gA = donor_finish.gA + transferA;
+    donor_hydrogen: donor_start.gH = donor_finish.gH + transferH;
+    receiver_capture: receiver_finish.gA = 0{mol};
+    receiver_methane: receiver_start.sA + receiver_start.gA + transferA
+        = receiver_finish.sA + receiver_finish.gA;
+    receiver_hydrogen: receiver_start.gH + transferH = receiver_finish.gH;
+END psa_equalisation_step;
+
+MODEL psa_purge_step(start WILL_BE psa_bed_state; finish WILL_BE psa_bed_state;
+    regenerated IS_A factor_constant; ratio IS_A factor_constant;)
+WHERE (start.bed, finish.bed WILL_BE_THE_SAME;
+    start.P, finish.P WILL_BE_THE_SAME;
+    regenerated > 0; regenerated <= 1; ratio > 0;);
+    removed "Methane desorbed from carbon, excluding methane in void gas" IS_A psa_amount;
+    hydrogen_in "Pure H2 taken from gross product for regeneration" IS_A psa_amount;
+    wasteA, wasteH "Components leaving in purge exhaust" IS_A psa_amount;
+    (* Like 1991 eq (28), remove a specified fraction of adsorbed methane.
+       The remaining void gas is idealised as pure H2. The 1992 text
+       discusses H2/CH4 ratios about 1.25, but does not unambiguously map
+       that ratio onto eq (26). Here ratio is explicitly mol H2 supplied
+       per mol SOLID methane removed. It is an input, not a prediction. *)
+    desorbed: removed = regenerated*start.sA;
+    solid_inventory: finish.sA = start.sA - removed;
+    clean_voids: finish.gA = 0{mol};
+    purge_requirement: hydrogen_in = ratio*removed;
+    methane: start.gA + removed = finish.gA + wasteA;
+    hydrogen: start.gH + hydrogen_in = finish.gH + wasteH;
+END psa_purge_step;
+
+MODEL psa_feed_repressurisation(start WILL_BE psa_bed_state; finish WILL_BE psa_bed_state;
+    y WILL_BE fraction;)
+WHERE (start.bed, finish.bed WILL_BE_THE_SAME;);
+    feed "Feed admitted during repressurisation, per bed per cycle" IS_A psa_amount;
+    (* 1991 eq (30), isothermal limit: all incoming methane is captured on
+       carbon, while hydrogen fills the void space. No gas leaves. *)
+    clean_voids: finish.gA = 0{mol};
+    methane: start.sA + start.gA + y*feed = finish.sA + finish.gA;
+    hydrogen: start.gH + (1 - y)*feed = finish.gH;
+END psa_feed_repressurisation;
+
+(* Fixed-topology scheduling LP, Smith & Westerberg (1990), eqs (2),(5),
+   (6),(8),(10): allocated time = processing time + standby. Inputs are
+   cycle period and SPECIFIED processing durations, not kinetic predictions.
+   One bed is always adsorbing: both its actual and allocated times equal D.
+   Stages: ads, [PE down], blowdown, purge, [PE up], feed repressurisation.
+   For one PE, N=3 and J=1 are fixed; this does not search other schedules. *)
+MODEL psa_cycle_timing(npe IS_A integer_constant;)
+WHERE (npe >= 0; npe <= 1;);
+    nstage IS_A integer_constant;
+    nstage :== 4 + 2*npe;
+    stage IS_A set OF integer_constant;
+    stage :== [1..nstage];
+    period, D "Cycle period and phase shift between consecutive beds" IS_A time;
+    actual[stage] "Specified processing duration (adsorption lasts D)" IS_A time;
+    allocated[stage], idle[stage] IS_A time;
+    boundary[0..nstage] "Cumulative stage boundaries for one bed" IS_A time;
+    margin "Minimum standby allowance across non-adsorption stages" IS_A time;
+    gross, purge_use "Gross H2 production and internal purge per bed-cycle" IS_A psa_amount;
+    shift: (npe + 2)*D = period;
+    origin: boundary[0] = 0{s};
+    FOR k IN stage CREATE
+        accounting[k]: allocated[k] = actual[k] + idle[k];
+        clock[k]: boundary[k] = boundary[k-1] + allocated[k];
+    END FOR;
+    closure: boundary[nstage] = period;
+    continuous_production: actual[1] = D;
+    adsorption_slot: allocated[1] = D;
+    (* Additional unbuffered-product assumption: one bed adsorbs at a
+       constant gross H2 rate while at most one other bed purges. These
+       amounts are fixed inputs, so this remains a linear constraint. *)
+    hydrogen_supply: gross*actual[3+npe] >= purge_use*D;
+    FOR k IN [2..nstage] CREATE headroom[k]: idle[k] >= margin; END FOR;
+    SELECT (npe)
+    CASE 0:
+    CASE 1:
+        paired_processing: actual[2] = actual[5];
+        (* Equal allocated times are an additional symmetric-slot choice;
+           equal actual times are required for the physical coupling. *)
+        paired_slots: allocated[2] = allocated[5];
+        synchronisation: boundary[4] - boundary[1] = D;
+    END SELECT;
+    (* A layout objective, not an economic or kinetic objective. *)
+    obj: MAXIMIZE margin;
+METHODS
+METHOD on_load;
+    FIX period;
+    FIX gross, purge_use;
+    gross := 1{mol}; purge_use := 0{mol};
+    period := (npe + 2)*60{s};
+    FOR k IN [2..nstage] DO FIX actual[k]; actual[k] := 1{s}; END FOR;
+    (* The paired equation determines the receiver duration; do not leave
+       an equation with both sides fixed for the solver to discard. *)
+    IF npe = 1 THEN FREE actual[5]; END IF;
+    (* Callers must replace these illustrative durations before solving.
+       No solver selected here: the reporting driver chooses HiGHS/Gurobi. *)
+END on_load;
+METHOD self_test;
+    ASSERT period > 0{s};
+    ASSERT abs((boundary[nstage] - period)/1{s}) < 1e-7;
+    ASSERT abs((actual[1] - D)/1{s}) < 1e-7;
+    ASSERT abs(idle[1]/1{s}) < 1e-7;
+    ASSERT gross*actual[3+npe] >= purge_use*D - 1e-6{mol*s};
+    ASSERT margin >= -1e-7{s};
+    IF npe = 1 THEN
+        ASSERT abs((actual[2] - actual[5])/1{s}) < 1e-7;
+        ASSERT abs((allocated[2] - allocated[5])/1{s}) < 1e-7;
+        ASSERT abs((boundary[4] - boundary[1] - D)/1{s}) < 1e-7;
+    END IF;
+    FOR k IN stage DO
+        ASSERT actual[k] > 0{s};
+        ASSERT idle[k] >= -1e-7{s};
+        ASSERT abs((allocated[k] - actual[k] - idle[k])/1{s}) < 1e-7;
+    END FOR;
+END self_test;
+END psa_cycle_timing;

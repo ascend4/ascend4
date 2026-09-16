@@ -531,6 +531,23 @@ struct Instance *InstanceGetDerivative(struct Instance *base){
   return entry->inst;
 }
 
+struct Instance *InstancePeekDerivative(struct Instance *base){
+  unsigned long i, len;
+  if(base == NULL || !derivinst_can_materialise(base) || g_derivinst_entries == NULL){
+    return NULL;
+  }
+  /* Do not even search for the simulation ancestor here: that traversal
+   * also changes visit numbers and would disrupt the caller's tree walk. */
+  len = gl_length(g_derivinst_entries);
+  for(i = 1; i <= len; ++i){
+    struct derivinst_entry *entry = gl_fetch(g_derivinst_entries, i);
+    if(entry != NULL && entry->base == base && entry->present){
+      return entry->inst;
+    }
+  }
+  return NULL;
+}
+
 struct Instance *InstanceEnsureDerivative(struct Instance *base){
   struct Instance *root;
   struct derivinst_entry *entry;

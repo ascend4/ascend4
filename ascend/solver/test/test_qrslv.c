@@ -493,6 +493,98 @@ static void test_singleton_sticky_resolve(void){
 /*===========================================================================*/
 /* Registration information */
 
+/* Includes same-address reorder notification, replacement with freed old
+   storage, and reuse after another QRSlv client has partitioned the system. */
+static void test_list_refresh(void){
+	int parse, qr, n, i, pass;
+	struct Instance *sim, *root;
+	struct Name *method;
+	slv_system_t sys;
+	SlvClientToken original;
+	struct var_variable **old, **replacement, *swap;
+	struct rel_relation **oldrels, **newrels;
+	slv_status_t status;
+	unsigned long revision;
+	mtx_matrix_t matrix;
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+	CU_ASSERT_FATAL(0 == package_load("qrslv", NULL));
+	qr = slv_lookup_client("QRSlv");
+	Asc_OpenModule("test/qrslv/list_refresh.a4c", &parse);
+	CU_ASSERT_FATAL(parse == 0 && zz_parse() == 0);
+	sim = SimsCreateInstance(AddSymbol("list_refresh"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(sim);
+	root = GetSimulationRoot(sim);
+	method = CreateIdName(AddSymbol("on_load"));
+	CU_ASSERT_FATAL(Proc_all_ok == Initialize(root, method, "sim1", ASCERR, WP_STOPONERR, NULL, NULL));
+	DestroyName(method);
+	sys = system_build(root);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(sys);
+	CU_ASSERT_FATAL(slv_select_solver(sys, qr) >= 0);
+	original = slv_get_client_token(sys);
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+	matrix = slv_get_sys_mtx(sys);
+	revision = slv_get_solver_lists_revision(sys);
+
+	/* Value-only solves must preserve structural state, including across an
+	   unchanged-structure presolve (LSODE's post-Jacobian path). */
+	for(i = 0; i < 10; ++i){
+		SetRealAtomValue(ChildByChar(root, AddSymbol("p")), 8 + 2*i, 0);
+		CU_ASSERT_FATAL(0 == slv_resolve(sys));
+		CU_ASSERT_FATAL(0 == slv_solve(sys));
+		CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ChildByChar(root, AddSymbol("x"))), 5 + i, 1e-8);
+		CU_ASSERT_EQUAL(slv_get_solver_lists_revision(sys), revision);
+		CU_ASSERT_PTR_EQUAL(slv_get_sys_mtx(sys), matrix);
+		CU_ASSERT_FATAL(0 == slv_presolve(sys));
+		CU_ASSERT_PTR_EQUAL(slv_get_sys_mtx(sys), matrix);
+	}
+	for(pass = 0; pass < 4; ++pass){
+		old = slv_get_solvers_var_list(sys);
+		n = slv_get_num_solvers_vars(sys);
+		if(pass == 0){
+			swap = old[0]; old[0] = old[n-1]; old[n-1] = swap;
+			for(i = 0; i < n; ++i) var_set_sindex(old[i], i);
+			/* Setter must invalidate even with identical address and size. */
+			slv_set_solvers_var_list(sys, old, n);
+		}else if(pass == 1){
+			replacement = ASC_NEW_ARRAY(struct var_variable *, n+1);
+			memcpy(replacement, old, (n+1)*sizeof(*old));
+			slv_set_solvers_var_list(sys, replacement, n);
+			ASC_FREE(old);
+		}else if(pass == 2){
+			oldrels = slv_get_solvers_rel_list(sys);
+			n = slv_get_num_solvers_rels(sys);
+			newrels = ASC_NEW_ARRAY(struct rel_relation *, n+1);
+			memcpy(newrels, oldrels, (n+1)*sizeof(*oldrels));
+			slv_set_solvers_rel_list(sys, newrels, n);
+			ASC_FREE(oldrels);
+		}else{
+			CU_ASSERT_FATAL(slv_switch_solver(sys, qr) >= 0);
+			CU_ASSERT_FATAL(0 == slv_presolve(sys));
+			CU_ASSERT_FATAL(0 == slv_solve(sys));
+			slv_destroy_client(sys);
+			slv_set_solver_index(sys, qr);
+			slv_set_client_token(sys, original);
+		}
+		CU_ASSERT(0 != slv_resolve(sys)); /* reject stale lists, don't read them */
+		CU_ASSERT(0 != slv_solve(sys));
+		CU_ASSERT(0 != slv_iterate(sys));
+		CU_ASSERT_FATAL(0 == slv_presolve(sys));
+		CU_ASSERT_FATAL(0 == slv_solve(sys));
+		slv_get_status(sys, &status);
+		CU_ASSERT(status.converged);
+		CU_ASSERT_PTR_EQUAL(slv_get_client_token(sys), original);
+		CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ChildByChar(root, AddSymbol("x"))), 14, 1e-8);
+	}
+	system_destroy(sys);
+	system_free_reused_mem();
+	solver_destroy_engines();
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 #define TESTS1(T,X) \
 	T(fixedbug513_no_simplify) \
 	X T(fixedbug513_simplify) \
@@ -501,7 +593,8 @@ static void test_singleton_sticky_resolve(void){
 	X T(fixedbug564_repeat) \
 	T(external_blocks) \
 	T(external_single_block_scope) \
-	X T(singleton_sticky_resolve)
+	X T(singleton_sticky_resolve) \
+	X T(list_refresh)
 
 #define X
 #define TESTS(T) TESTS1(T,X)

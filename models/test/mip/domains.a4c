@@ -1,0 +1,104 @@
+REQUIRE "system.a4l";
+
+(* Small shared HiGHS/Gurobi domain regressions. A semicontinuous variable
+   is zero OR in [lower_bound, upper_bound]; relaxing it must retain zero. *)
+MODEL mip_semi_gap;
+	x IS_A solver_semi;
+	cap: x <= 1;
+	obj: MAXIMIZE x;
+METHODS
+METHOD on_load;
+	x := 3;
+	x.lower_bound := 2; x.upper_bound := 5;
+	x.nominal := 100;
+END on_load;
+END mip_semi_gap;
+
+MODEL mip_semi_individually_relaxed REFINES mip_semi_gap;
+METHODS
+METHOD on_load;
+	RUN mip_semi_gap::on_load;
+	x.relaxed := TRUE;
+END on_load;
+END mip_semi_individually_relaxed;
+
+MODEL mip_semi_active;
+	x IS_A solver_semi;
+	demand: x >= 1;
+	obj: MINIMIZE x;
+METHODS
+METHOD on_load;
+	x := 3;
+	x.lower_bound := 2; x.upper_bound := 5;
+	x.nominal := 100;
+END on_load;
+END mip_semi_active;
+
+MODEL mip_integer_infeasible;
+	x IS_A solver_int;
+	demand: x = 0.5;
+	obj: MINIMIZE x;
+METHODS
+METHOD on_load;
+	x := 3;
+END on_load;
+END mip_integer_infeasible;
+
+MODEL mip_domains;
+	x IS_A solver_int;
+	y IS_A solver_binary;
+	z IS_A solver_semi;
+	p IS_A solver_var;
+	capacity: x + y <= 2.5;
+	shutdown: z <= 1;
+	obj: MAXIMIZE 2*x + y - 3*z - p;
+METHODS
+METHOD on_load;
+	FIX p := 5;
+	x := 0; y := 0; z := 3;
+	x.nominal := 10; y.nominal := 0.01; z.nominal := 100;
+	z.lower_bound := 2; z.upper_bound := 5;
+END on_load;
+END mip_domains;
+
+MODEL mip_domains_partially_relaxed REFINES mip_domains;
+METHODS
+METHOD on_load;
+	RUN mip_domains::on_load;
+	y.relaxed := TRUE;
+END on_load;
+END mip_domains_partially_relaxed;
+
+MODEL mip_quadratic;
+	x IS_A solver_int;
+	cap: x^2 <= 4;
+	obj: MAXIMIZE x;
+METHODS
+METHOD on_load;
+	x := 1;
+END on_load;
+END mip_quadratic;
+
+MODEL mip_binary_wide_bounds;
+	x IS_A solver_binary;
+	cap: x <= 3;
+	obj: MAXIMIZE x;
+METHODS
+METHOD on_load;
+	x := 0;
+	(* Bounds cannot enlarge the domain implied by solver_binary. *)
+	x.lower_bound := -2; x.upper_bound := 4;
+END on_load;
+END mip_binary_wide_bounds;
+
+MODEL mip_integer_individually_relaxed;
+	x IS_A solver_int;
+	cap: x <= 2.5;
+	obj: MAXIMIZE x;
+METHODS
+METHOD on_load;
+	x := 0;
+	x.nominal := 10;
+	x.relaxed := TRUE;
+END on_load;
+END mip_integer_individually_relaxed;

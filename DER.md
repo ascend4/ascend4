@@ -126,6 +126,35 @@ Current split:
 This keeps compiler/system tree walking stable while still allowing browser and
 interactive tooling to expose derivatives.
 
+#### Solver-system coexistence and interface pointers
+
+`SilentVisitInstanceTreeTwoWithCoverage` provides an explicit opt-in to visit
+already-materialised derivative pseudo-children. Existing visitors remain
+structural-only. The new traversal does not discover or create derivatives;
+`InstancePeekDerivative` reads the registry without triggering a nested scan
+or ancestor traversal. Top-down/bottom-up ordering applies to pseudo-children,
+and the existing `leaf` option independently controls visiting atom attributes.
+
+System analysis materialises and counts its required derivatives first, then
+uses `PushInterfacePtrsWithCoverage` to install temporary analysis mappings on
+both ordinary and derivative instances. The existing sidecar list saves pairs
+of instance addresses and previous interface pointers. `PopInterfacePtrs`
+restores all changed slots on successful and failed builds, before any solve.
+This preserves GUI data and allows sequential use of multiple solver systems
+over the same runtime instances. Each system retains its own variable/relation
+mappings; destroying one must neither destroy derivative instances nor clear
+their interface pointers.
+
+This is not thread-safety or general re-entrancy: callbacks must not inspect
+GUI interface data while build-time mappings are installed. Nor does it isolate
+shared model values or INITIAL inclusion/default settings. INITIAL processing
+therefore uses a scoped configuration transition, as described below.
+
+Regression coverage in `system_der` includes traversal policy, aliased nested
+arrays, residuals/Jacobians in two systems, both teardown orders, failed second
+builds and retries, GUI-style pointer preservation, and normal/INITIAL system
+coexistence.
+
 ## Current Object Model
 
 The public derivative API is currently centred around:
@@ -550,6 +579,53 @@ features, but the current `pre(x)` / `REINIT(...)` / selector /
 `SWITCH TO ... IF ...` semantics are documented separately.
 
 ## `INITIAL`
+
+### Solver-system lifetime and structural refresh
+
+INITIAL initialization borrows the caller's existing solver system; it does
+not destroy or replace it. The instance tree, system-owned variable/relation
+objects, GUI handles, integrator parameters, and explicit observer selections
+remain valid. The selected algebraic client is reused when appropriate;
+otherwise a temporary client is installed and the original client restored,
+including its parameter settings, on every exit.
+
+Initialization enables INITIAL equations and temporarily disables implicit
+derivatives' algebraic-default treatment. Cleanup restores normal inclusion
+and derivative defaults on both success and failure. Attempted values and
+relation residuals remain available for inspection. Failure leaves startup
+unprepared, so correcting values or parameters permits another attempt with
+the same integrator. Integrator analysis is rebuilt after the configuration
+transition because the algebraic solver may have reordered the shared lists.
+
+Working-list replacement, reordering, block replacement and conditional
+reanalysis advance a system revision. QRSlv refreshes its borrowed list
+addresses/counts and rebuilds its structural state at **presolve** when that
+revision has changed. This covers IDA replacing a variable array, even when
+its size changes or an allocator reuses the same address. QRSlv acknowledges
+its own permutations so they do not force an unnecessary subsequent rebuild.
+External code that edits lists in place must call `slv_solver_lists_changed`;
+this notification does not itself run a solver. Other solver clients must
+adopt the refresh contract before being considered safe for list replacement.
+
+ODE startup fixes the states and presolves once before derivative evaluation.
+LSODE/DOPRI5/RADAU5 retain their existing `resolve → solve` evaluation paths;
+LSODE's special post-Jacobian presolve path is unchanged. QRSlv rejects stale
+list use in resolve/solve/iterate with a request to presolve, rather than
+dereferencing freed arrays. Unchanged-structure presolve retains the existing
+matrix-reuse path. No list scan or automatic structural rebuild is added to
+the repeated numerical evaluation path.
+
+This is sequential reuse, not simultaneous solving on a shared system.
+Changing model topology still requires the usual system rebuild. A failed
+INITIAL solve does not yet have a dedicated GUI system-view/report object;
+diagnostics and the inspectable instance tree are retained instead.
+
+Regression coverage includes freed-array replacement, same-address reorder,
+working-list growth, retained client reuse and parameters, failed INITIAL
+retry, unchanged-structure matrix reuse, and live C++/Python handles and
+observer selections during integration callbacks.
+
+### Syntax
 
 `INITIAL` is a declarative section inside `MODEL`, positioned between the main
 declarative statement list and the `METHODS` section:

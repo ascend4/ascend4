@@ -86,3 +86,4 @@ models/johnpye/fprops/examples/feoh
 models/johnpye/fprops/*.odt
 feohsi_phase_runner
 eqm_spinel_entry_runner
+/compile_commands.json

@@ -84,6 +84,7 @@ static int reindex_vars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
     var_set_sindex(vp[c],c);
   }
   ascfree(vtmp);
+  slv_solver_lists_changed(sys);
   return 0;
 }
 /**
@@ -127,6 +128,7 @@ static int reindex_rels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
     rel_set_sindex(rp[c],c);
   }
   ascfree(rtmp);
+  slv_solver_lists_changed(sys);
   return 0;
 }
 
@@ -482,6 +484,7 @@ int slv_block_partition_harwell(slv_system_t sys)
   }
 
   /* reset solver indicies to make life easier */
+  slv_solver_lists_changed(sys);
   for (c = 0; c < vlen; c++) {
     vp[c] = vtmp[c];
     var_set_sindex(vp[c],c);
@@ -1092,6 +1095,7 @@ LIST_DEBUG(rel,rel_relation)
 		} \
 	 \
 		MAYBE_CONSOLE_DEBUG("SORTING"); \
+		slv_solver_lists_changed(sys); \
 	 \
 		start = list + begin; \
 		end = list + len; \

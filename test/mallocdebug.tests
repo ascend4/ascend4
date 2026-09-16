@@ -10,6 +10,7 @@ solver_column
 solver_conopt
 solver_decomp
 solver_fprops
+solver_gurobi
 solver_highs
 solver_ipopt
 solver_list
@@ -23,27 +24,8 @@ solver_slvreq
 
 linear_*
 
-compiler_basics
-compiler_func
-compiler_units
-compiler_expr
-compiler_relation
-compiler_fixfree
-compiler_chkdim
-compiler_dimen
-compiler_fractions
-compiler_name
-compiler_symtab
-compiler_fixassign
-compiler_qlfdid
-compiler_autodiff
-compiler_bintok
-compiler_instantiate_*
-compiler_merge*
-compiler_dataset
+compiler_*
 
 packages_defaultall
 integrator_lsode
 integrator_ida
-
-solver_fprops

@@ -1,0 +1,29 @@
+(* Methane-on-carbon property check, not a PSA design optimisation.
+   Smith & Westerberg (1992), Table 2: 299 K, 355 psia; Table 1: 5% CH4.
+   Hydrogen is treated as non-adsorbing, as in their simplified model.
+   See psa_properties.md for reference data and deliberate limitations. *)
+REQUIRE "psa/psa_properties.a4l";
+
+MODEL psa_properties;
+    carbon IS_A cen_yang_methane;
+    T ALIASES carbon.T;
+    P "Total absolute pressure of the gas mixture" IS_A psa_partial_pressure;
+    y "Methane mole fraction in the hydrogen-rich feed" IS_A fraction;
+    partial_pressure: carbon.p = y*P;
+
+METHODS
+METHOD on_load;
+    FIX T, P, y;
+    T := 299{K}; P := 355*carbon.p_ref; y := 0.05;
+    SOLVER QRSlv;
+END on_load;
+METHOD self_test;
+    (* Independent evaluation of Cen & Yang's original cm3(STP)/g and
+       psi correlation, converted using the explicitly stated STP basis.
+       These are calculated checks, NOT published PSA solution values. *)
+    ASSERT abs(carbon.affinity - 0.012624823286806036) < 1e-10;
+    ASSERT abs((carbon.qsat - 6.015085347937{mol/kg})/1{mol/kg}) < 1e-8;
+    ASSERT abs((carbon.q - 1.101163713067{mol/kg})/1{mol/kg}) < 1e-8;
+    ASSERT abs(carbon.w - 0.017665969449) < 1e-10;
+END self_test;
+END psa_properties;

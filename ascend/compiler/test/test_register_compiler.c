@@ -50,6 +50,7 @@
 	T(instantiate_array) \
 	T(instantiate_arr) \
 	T(instantiate_for) \
+	T(for_distribution) \
 	T(instantiate_when_select) \
 	T(instantiate_param_refine) \
 	T(instantiate_alias) \
@@ -64,7 +65,8 @@
 	T(merge_arrays) \
 	T(merge_dims) \
 	T(merge_model_children) \
-	T(merge_model_values)
+	T(merge_model_values) \
+	T(merge_parameterized)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

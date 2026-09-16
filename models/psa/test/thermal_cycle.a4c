@@ -1,0 +1,6 @@
+REQUIRE "psa/psa_thermal_cycle.a4c";
+
+MODEL psa_thermal_cycle_ipopt_check REFINES psa_thermal_cycle;
+    (* Test-only objective for a fixed-design, square feasibility problem. *)
+    obj: MINIMIZE product;
+END psa_thermal_cycle_ipopt_check;

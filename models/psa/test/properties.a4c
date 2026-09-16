@@ -1,0 +1,20 @@
+REQUIRE "psa/psa_properties.a4l";
+
+(* H2 pure-gas coefficients from Cen & Yang Table 2 exercise the general
+   noninteger pressure exponent; this is NOT their competitive mixture. *)
+MODEL psa_fractional_property_test WHERE (n > 0;) REFINES psa_lrc_isotherm(
+    a :== 87.68{cm^3/g}; b :== 42392{cm^3*K/g};
+    c :== -12.336; d :== 1219.3{K}; n :== 0.97;
+);
+METHODS
+METHOD on_load;
+    FIX T, p;
+    T := 298{K}; p := 100*p_ref;
+    SOLVER QRSlv;
+END on_load;
+END psa_fractional_property_test;
+
+MODEL psa_invalid_exponent;
+    bad IS_A psa_lrc_isotherm(-0.76{cm^3/g}, 40539{cm^3*K/g},
+        -10.245, 1756{K}, 0);
+END psa_invalid_exponent;

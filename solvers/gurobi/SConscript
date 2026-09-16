@@ -1,0 +1,18 @@
+Import('env')
+
+if env.get('WITH_GUROBI'):
+	if not env.get('HAVE_GUROBI'):
+		env.set_optional('gurobi',active=False,reason='Gurobi C SDK not found (see GUROBI_PREFIX)')
+	else:
+		solver_env=env.Clone()
+		solver_env.AppendUnique(
+			CPPPATH=env['GUROBI_CPPPATH'],
+			LIBPATH=env['GUROBI_LIBPATH']+['#'],
+			LIBS=env['GUROBI_LIBS']+['ascend']
+		)
+		lib=solver_env.SharedLibrary('gurobi',['gurobi.c'],
+			SHLIBSUFFIX=env['EXTLIB_SUFFIX'],SHLIBPREFIX=env['EXTLIB_PREFIX'])
+		env.Depends(lib,env['libascend'])
+		env['extfns'] += [lib]
+		if env.get('CAN_INSTALL'):
+			env.InstallShared(Dir(env.subst('$INSTALL_ROOT$INSTALL_SOLVERS')),lib)

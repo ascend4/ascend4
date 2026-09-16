@@ -1,0 +1,86 @@
+(*
+	ARE_THE_SAME and parameterised stream/port patterns.
+
+	The compiler currently rejects merging two instances of a parameterised
+	MODEL, even when both instances use the same actual parameter object.  Two
+	supported connection patterns are tested alongside that restriction:
+
+	1. merge unparameterised base ports first, then refine the resulting shared
+	   instance to a parameterised stream type;
+	2. instantiate the parameterised stream once at flowsheet level and pass
+	   that same stream instance as a WILL_BE parameter to adjacent units.
+*)
+
+MODEL merge_param_package;
+	components IS_A set OF symbol_constant;
+END merge_param_package;
+
+MODEL merge_param_port_base;
+	T IS_A real;
+END merge_param_port_base;
+
+MODEL merge_param_stream(
+	pkg WILL_BE merge_param_package;
+) REFINES merge_param_port_base;
+	components ALIASES pkg.components;
+	f[components] IS_A real;
+END merge_param_stream;
+
+MODEL merge_param_internal_port_unit(
+	pkg WILL_BE merge_param_package;
+);
+	inlet IS_A merge_param_stream(pkg);
+	outlet IS_A merge_param_stream(pkg);
+END merge_param_internal_port_unit;
+
+MODEL merge_param_base_port_unit;
+	inlet IS_A merge_param_port_base;
+	outlet IS_A merge_param_port_base;
+END merge_param_base_port_unit;
+
+MODEL merge_param_shared_stream_unit(
+	inlet WILL_BE merge_param_stream;
+	outlet WILL_BE merge_param_stream;
+) WHERE (
+	inlet.pkg, outlet.pkg WILL_BE_THE_SAME;
+);
+END merge_param_shared_stream_unit;
+
+(* Current compiler restriction: the parameter object is exactly the same. *)
+MODEL merge_param_fail_same_argument;
+	pkg IS_A merge_param_package;
+	pkg.components :== ['a', 'b'];
+	U1, U2 IS_A merge_param_internal_port_unit(pkg);
+	U1.outlet, U2.inlet ARE_THE_SAME;
+END merge_param_fail_same_argument;
+
+(* Current compiler restriction also applies to equal-valued but distinct
+   parameter objects. *)
+MODEL merge_param_fail_equal_distinct_arguments;
+	pkg1, pkg2 IS_A merge_param_package;
+	pkg1.components :== ['a', 'b'];
+	pkg2.components :== ['a', 'b'];
+	U1 IS_A merge_param_internal_port_unit(pkg1);
+	U2 IS_A merge_param_internal_port_unit(pkg2);
+	U1.outlet, U2.inlet ARE_THE_SAME;
+END merge_param_fail_equal_distinct_arguments;
+
+(* Supported pattern: merge the unparameterised base instances before
+   refining the one resulting shared instance. *)
+MODEL merge_param_ok_merge_base_then_refine;
+	pkg IS_A merge_param_package;
+	pkg.components :== ['a', 'b'];
+	U1, U2 IS_A merge_param_base_port_unit;
+	U1.outlet, U2.inlet ARE_THE_SAME;
+	U1.outlet IS_REFINED_TO merge_param_stream(pkg);
+END merge_param_ok_merge_base_then_refine;
+
+(* Supported thermodynamics.a4l-style pattern: S1 is the connection because
+   the same previously instantiated stream is passed to both units. *)
+MODEL merge_param_ok_shared_stream_parameter;
+	pkg IS_A merge_param_package;
+	pkg.components :== ['a', 'b'];
+	S0, S1, S2 IS_A merge_param_stream(pkg);
+	U1 IS_A merge_param_shared_stream_unit(S0, S1);
+	U2 IS_A merge_param_shared_stream_unit(S1, S2);
+END merge_param_ok_shared_stream_parameter;

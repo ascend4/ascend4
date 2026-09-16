@@ -17,7 +17,7 @@
 
 #define LP_TOK_NONINCIDENT 0
 
-#define destroy_array(p) if((p) != NULL) ascfree((p))
+#define destroy_array(p) do { if((p) != NULL) ascfree((p)); (p) = NULL; } while(0)
 #define create_zero_array(len,type) ((len) > 0 ? ASC_NEW_ARRAY_CLEAR(type,len) : NULL)
 #define create_array(len,type) ((len) > 0 ? ASC_NEW_ARRAY(type,len) : NULL)
 
@@ -80,7 +80,7 @@ boolean lp_calc_c(mtx_matrix_t mtx, int32 org_row, struct rel_relation *obj){
 	int32 len, count, i;
 	int32 row;
 	int status;
-	int safe = 0;
+	int safe = 1;
 
 	if((mtx == NULL) || (obj == NULL)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"routine was passed a NULL pointer.");
@@ -329,7 +329,7 @@ mtx_matrix_t lp_calc_matrix(
 	struct rel_relation **rp;
 	int32 orgrow;
 	int status;
-	int safe = 0;
+	int safe = 1;
 
 	if(obj == NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"system must have an objective.");
@@ -348,6 +348,7 @@ mtx_matrix_t lp_calc_matrix(
 	*rhs_orig = create_zero_array(rused,real64);
 	if(*rhs_orig == NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"memory allocation for right-hand side failed.");
+		mtx_destroy(mtx);
 		return NULL;
 	}
 
@@ -383,7 +384,10 @@ mtx_matrix_t lp_calc_matrix(
 
 	if(*rank < 0){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"symbolic rank calculation failed; matrix may be bad.");
-		return mtx;
+		s->calc_ok = FALSE;
+		mtx_destroy(mtx);
+		destroy_array(*rhs_orig);
+		return NULL;
 	}
 
 	if(!lp_calc_c(mtx,crow,obj)){

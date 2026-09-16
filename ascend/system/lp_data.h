@@ -40,7 +40,7 @@ typedef struct mps_data {
 #define MPS_SEMI 5
 #define MPS_FIXED 6
 
-#define MPS_BINARY_STR "boolean_var"
+#define MPS_BINARY_STR "solver_binary"
 #define MPS_INT_STR "solver_int"
 #define MPS_SEMI_STR "solver_semi"
 #define MPS_VAR_STR "solver_var"

@@ -1,0 +1,46 @@
+(* Executable audit of the 1991 adsorption/desorption equations.
+   NOT a zero-PE cycle: post-blowdown temperature is an independent input;
+   blowdown, repressurisation, cyclic thermal closure and economics are absent.
+   See psa_thermal.md before interpreting results as physical predictions. *)
+REQUIRE "psa/psa_thermal.a4l";
+
+MODEL psa_thermal;
+    bed IS_A psa_thermal_bed_data;
+    ads IS_A psa_paper_adsorption(bed, 0.75, 0.95);
+    des IS_A psa_paper_desorption(bed, 1.0, 0.95, 0.95);
+    henry IS_A psa_methane_henry;
+    henry.T, des.Te ARE_THE_SAME;
+    henry.K, des.K ARE_THE_SAME;
+    ads.sAe, des.sA0 ARE_THE_SAME;
+    ads.carbon.w, des.qref ARE_THE_SAME;
+    (* This one case explicitly selects the Henry-slope hypothesis.
+       The component itself leaves K free for other interpretations. *)
+METHODS
+METHOD on_load;
+    FIX bed.V, bed.eps, bed.rho, bed.Cv, bed.cpA, bed.cpB, bed.H;
+    (* Geometry/pressures: 1991 Table 4, zero-PE column. Other data Table 1. *)
+    bed.V := 3.141592653589793*0.45^2*2.24/4*1{m^3};
+    bed.eps := 0.44; bed.rho := 800{kg/m^3};
+    bed.Cv := 804000{J/m^3/K};
+    bed.cpA := 36.8{J/mol/K}; bed.cpB := 29.3{J/mol/K};
+    (* Explicit Cen-Yang heat hypothesis, NOT Table 1's 890000 J/mol.
+       The latter matches methane combustion, not its adsorption on carbon. *)
+    bed.H := 20920{J/mol};
+    FIX ads.P, ads.y, ads.T0, ads.Tfeed, ads.sA0;
+    ads.P := 225*ads.carbon.p_ref; ads.y := 0.05;
+    ads.T0 := 298{K}; ads.Tfeed := 298{K}; ads.sA0 := 0{mol};
+    FIX des.P, des.T0, des.TinB;
+    des.P := 15*ads.carbon.p_ref;
+    des.T0 := 298{K}; des.TinB := 350{K};
+    ads.Te := 310{K}; des.Te := 285{K}; des.K := 0.0005{m^3/mol};
+    des.yout := 0.5;
+    SOLVER QRSlv;
+END on_load;
+METHOD self_test;
+    ASSERT ads.Te > ads.T0;
+    ASSERT des.Te < des.T0;
+    ASSERT des.yout > 0 AND des.yout < 1;
+    ASSERT abs((ads.sAe-des.removed-des.sAe)/1{mol}) < 1e-6;
+    ASSERT abs((des.hydrogen_in-des.hydrogen_out-des.void_hydrogen)/1{mol}) < 1e-6;
+END self_test;
+END psa_thermal;

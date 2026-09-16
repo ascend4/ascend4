@@ -1,0 +1,20 @@
+(* Optional Python/Matplotlib GUI integration; the optimisation model itself
+   has no dependency on extpy or plotting libraries. Solve, then RUN gantt. *)
+REQUIRE "job_shop.a4c";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "job_shop";
+
+MODEL job_shop_plot REFINES job_shop;
+METHODS
+METHOD gantt;
+    EXTERNAL job_shop_gantt(SELF);
+END gantt;
+END job_shop_plot;
+
+MODEL job_shop_plot_highs REFINES job_shop_plot;
+METHODS
+METHOD on_load;
+    SOLVER HiGHS;
+    OPTION mip_rel_gap 0.0;
+END on_load;
+END job_shop_plot_highs;

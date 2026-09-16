@@ -1,0 +1,66 @@
+(* Least-cost, lossless blending of a one-pound lead-zinc-tin alloy.
+   Data: GAMS BLEND; Dantzig (1963), section 3.4.
+   https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_blend.html
+   USD denotes the example's monetary unit, not current market prices.
+   See alloy_blending.md and alloy_blending_detailed.a4c for more detail. *)
+REQUIRE "atoms.a4l";
+
+MODEL alloy_blending;
+    alloy "Available feed alloys" IS_A set OF symbol_constant;
+    elem "Conserved elements" IS_A set OF symbol_constant;
+    alloy :== ['a','b','c','d','e','f','g','h','i'];
+    elem :== ['lead','zinc','tin'];
+    compdat[elem][alloy] "Feed compositions, as mass fractions" IS_A factor_constant;
+    rb[elem] "Required product mass fractions" IS_A factor_constant;
+    c[alloy] "Feed purchase prices" IS_A cost_per_mass_constant;
+    v[alloy] "Mass of each feed to buy; mass has a nonnegative lower bound" IS_A mass;
+    phi "Total purchase cost" IS_A monetary_unit;
+
+    TABLE compdat[elem,alloy];
+              a,    b,    c,    d,    e,    f,    g,    h,    i;
+        lead, 0.10, 0.10, 0.40, 0.60, 0.30, 0.30, 0.30, 0.50, 0.20;
+        zinc, 0.10, 0.30, 0.50, 0.30, 0.30, 0.40, 0.20, 0.40, 0.30;
+        tin,  0.80, 0.60, 0.10, 0.10, 0.40, 0.30, 0.50, 0.10, 0.50;
+    END TABLE;
+    TABLE c[alloy] UNITS {USD/lbm};
+        a,   b,   c,   d,   e,   f,   g,   h,   i;
+        4.1, 4.3, 5.8, 6.0, 7.6, 7.5, 7.3, 6.9, 7.3;
+    END TABLE;
+    rb['lead'] :== 0.30;
+    rb['zinc'] :== 0.30;
+    rb['tin'] :== 0.40;
+
+    FOR e IN elem CREATE
+        pc[e]: SUM[compdat[e][a]*v[a] | a IN alloy] = rb[e]*1{lbm};
+    END FOR;
+    mb: SUM[v[a] | a IN alloy] = 1{lbm};
+    ac: phi = SUM[c[a]*v[a] | a IN alloy];
+    obj: MINIMIZE phi;
+
+METHODS
+METHOD initialise;
+    (* Normalised compositions make mb redundant: compare with it included. *)
+    mb.included := FALSE;
+END initialise;
+METHOD on_load;
+    RUN initialise;
+    SOLVER Gurobi;
+END on_load;
+METHOD with_mass_balance;
+    mb.included := TRUE;
+END with_mass_balance;
+METHOD self_test;
+    ASSERT abs((v['b'] - 0.6{lbm})/1{lbm}) < 1e-7;
+    ASSERT abs((v['d'] - 0.4{lbm})/1{lbm}) < 1e-7;
+    ASSERT abs((phi - 4.98{USD})/1{USD}) < 1e-7;
+END self_test;
+END alloy_blending;
+
+(* Optional entry point requiring no commercial solver or license. *)
+MODEL alloy_blending_highs REFINES alloy_blending;
+METHODS
+METHOD on_load;
+    RUN initialise;
+    SOLVER HiGHS;
+END on_load;
+END alloy_blending_highs;

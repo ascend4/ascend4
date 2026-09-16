@@ -100,3 +100,53 @@ METHODS
 		FREE der(y);
 	END on_load;
 END ida_initial_bad_overdetermined;
+
+(* A numerical INITIAL failure that can be corrected without rebuilding. *)
+MODEL ida_initial_retry;
+	y, rhs, t IS_A solver_var;
+	dyn: der(y) = -4*y;
+	INDEPENDENT t;
+	INITIAL
+		y0: y^2 = rhs;
+METHODS
+	METHOD on_load;
+		FIX t, rhs;
+		t := 0; rhs := -1; y := 1;
+		y.lower_bound := 0;
+		FREE der(y);
+	END on_load;
+END ida_initial_retry;
+
+(* The state is initially unattached: IDA must enlarge the working list. *)
+MODEL ida_nonincident_state;
+	y, dy, t IS_A solver_var;
+	dyn: dy = 1;
+METHODS
+	METHOD on_load;
+		INDEPENDENT t;
+		DER(dy, y);
+		y := 0; dy := 1; t := 0;
+	END on_load;
+END ida_nonincident_state;
+
+MODEL ida_initial_when;
+	y, z, t IS_A solver_var;
+	mode IS_A integer;
+	INDEPENDENT t;
+	dyn: der(y) + z = 0;
+	low: z = y;
+	high: z = 2*y;
+	WHEN(mode)
+		CASE 0: USE low;
+		CASE 1: USE high;
+	END WHEN;
+	INITIAL
+		y0: y = 1;
+METHODS
+	METHOD on_load;
+		FIX t;
+		t := 0;
+		mode := 1;
+		(* Deliberately leave der(y)'s implicit algebraic default intact. *)
+	END on_load;
+END ida_initial_when;

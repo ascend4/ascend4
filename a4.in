@@ -39,6 +39,19 @@ def get_effective_home():
 		return pathlib.Path(homedrive + homepath)
 	return pathlib.Path.home()
 
+def configure_gurobi_license(environ, user_home):
+	"""Use ASCEND's drop-in license only when no explicit override exists.
+	Without this file, leave Gurobi's native license search untouched. Never
+	read license contents or copy credentials into launcher configuration.
+	"""
+	if 'GRB_LICENSE_FILE' in environ:
+		return False
+	license_file = pathlib.Path(user_home) / '.config' / 'ascend' / 'gurobi.lic'
+	if not license_file.is_file():
+		return False
+	environ['GRB_LICENSE_FILE'] = str(license_file.resolve())
+	return True
+
 def add_at_start(envvar,pathcomponents):
 	"""
 	Add path components at start of envvar, but only if they're not already in the path somewhere.
@@ -332,12 +345,12 @@ if __name__ == "__main__":
 	argv = list(sys.argv)
 	if (
 		len(argv) >= 3
-		and argv[1] == 'cutest'
+		and argv[1] in ('cutest', 'pytest')
 		and '--' not in argv[2:]
 		and any(arg in ('-h', '--help') for arg in argv[2:])
 	):
 		argv[2:] = ['--help' if arg == '-h' else arg for arg in argv[2:]]
-		# Forward cutest help flags to the underlying runner instead of
+		# Forward test-runner help flags to the underlying runner instead of
 		# letting argparse consume them as subcommand help.
 		argv.insert(2, '--')
 	if (
@@ -435,6 +448,15 @@ if __name__ == "__main__":
 	p_completion = s.add_parser('completion', help='Install Bash completion hook into ~/.bashrc')
 	p_completion.set_defaults(action='completion')
 
+	p_pytest = s.add_parser('pytest',help = 'Run Python tests with the ASCEND environment set')
+	p_pytest.set_defaults(action='pytest')
+	p_pytest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to pytest')
+
+	p_canvas = s.add_parser('canvas',help = 'Launch the ASCEND canvas modeller')
+	p_canvas.set_defaults(action='canvas')
+	p_canvas.add_argument('-f','--file',dest='canvas_file',help='Canvas file to open')
+	p_canvas.add_argument('-l','--library',help='Canvas model library to load')
+
 	p_units = s.add_parser('units',help = 'Manage display-units overrides')
 	p_units.set_defaults(action='units')
 	p_units.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to rununits.py')
@@ -453,7 +475,7 @@ if __name__ == "__main__":
 
 	args, unknown = p.parse_known_args(argv[1:])
 	if unknown:
-		if hasattr(args, 'action') and args.action == 'cutest':
+		if hasattr(args, 'action') and args.action in ('cutest', 'pytest'):
 			# Pass unknown args through to the test runner.
 			if not hasattr(args, 'rest') or args.rest is None:
 				args.rest = []
@@ -479,6 +501,8 @@ if __name__ == "__main__":
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
 
 	restart = []
+	if configure_gurobi_license(os.environ, get_effective_home()):
+		MSG("Using the ASCEND Gurobi license file")
 
 	# for Mac, add our local PyGTK libraries at start of Python path:
 	#if platform.system()=="Darwin":
@@ -631,6 +655,17 @@ if __name__ == "__main__":
 		if rest and rest[0] == '--':
 			rest = rest[1:]
 		cmd += shebang(sourceroot / 'test' / 'test', rest)
+	elif args.action == 'pytest':
+		rest = list(args.rest)
+		if rest and rest[0] == '--':
+			rest = rest[1:]
+		cmd += [PYTHON, '-m', 'pytest'] + rest
+	elif args.action == 'canvas':
+		cmd += [PYTHON, sourceroot / 'pygtk' / 'canvas' / 'canvas.py']
+		if args.canvas_file:
+			cmd += ['--file', args.canvas_file]
+		if args.library:
+			cmd += ['--library', args.library]
 	elif args.action == 'units':
 		rest = list(args.rest)
 		if rest and rest[0] == '--':

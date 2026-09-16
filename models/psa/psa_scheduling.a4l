@@ -1,0 +1,127 @@
+(* Reusable, fixed-sequence cyclic scheduling components.
+   Smith (1991), thesis Chapter 4, eqs (4.24)-(4.27); Smith & Westerberg
+   (1990), https://doi.org/10.1016/0009-2509(90)80176-F.
+   Unlike the discrete-time stn.a4l network, identical beds follow one
+   continuous-time route, staggered by D. No big-M or time grid is needed.
+   Normalised times are explicit ratios to D, NOT dimensionless substitutes
+   for physical processing times. This library does not model gas flows. *)
+REQUIRE "atoms.a4l";
+
+ATOM psa_schedule_ratio REFINES factor DEFAULT 1;
+    lower_bound := 0;
+    nominal := 1;
+END psa_schedule_ratio;
+
+MODEL psa_schedule_data;
+    n "Number of included operations, in route order" IS_A integer_constant;
+    op, pair, continuous, short, ordering IS_A set OF integer_constant;
+    op :== [1..n];
+    donor[pair], receiver[pair] IS_A integer_constant;
+    longer[ordering], shorter[ordering] IS_A integer_constant;
+    label[op] "Operation names for reports" IS_A symbol_constant;
+    compressor "Require constant concurrency of ONE feed operation" IS_A boolean_constant;
+    feed_op IS_A integer_constant;
+    display_shift "Reporting scale, not a kinetic prediction" IS_A time_constant;
+    paired, producing, shortened, ordered IS_A boolean_constant;
+    paired :== CARD[pair] > 0;
+    producing :== CARD[continuous] > 0;
+    shortened :== CARD[short] > 0;
+    ordered :== CARD[ordering] > 0;
+END psa_schedule_data;
+
+MODEL psa_cyclic_operation(D WILL_BE time; epsilon WILL_BE factor;);
+    p, s, tau "Processing, standby and allocated time, divided by D" IS_A psa_schedule_ratio;
+    a, b "Allocated start and finish, divided by D" IS_A psa_schedule_ratio;
+    processing, standby, start, finish IS_A time;
+    allocation: tau = p + s;
+    interval: b = a + tau;
+    positive_processing: p >= epsilon;
+    processing_time: processing = D*p;
+    standby_time: standby = D*s;
+    start_time: start = D*a;
+    finish_time: finish = D*b;
+END psa_cyclic_operation;
+
+MODEL psa_cyclic_schedule(data WILL_BE psa_schedule_data;);
+    D "Bed-to-bed time shift: FIXED reporting scale" IS_A time;
+    period IS_A time;
+    epsilon "Explicit approximation to strictly positive normalised durations" IS_A factor;
+    N "Number of identical beds: the primary integer decision" IS_A solver_int;
+    J[data.pair] "Integer shifts between donor and receiver operations" IS_A solver_int;
+    Jfeed "Integer number of beds simultaneously feeding" IS_A solver_int;
+    slot[data.op] IS_A psa_cyclic_operation(D,epsilon);
+    minimum_processing "Optional max-min timing tie-break, divided by D" IS_A psa_schedule_ratio;
+    presentation_weight "Zero for minimum N; one ONLY after fixing optimal N" IS_A factor;
+    origin: slot[1].a = 0;
+    FOR k IN [2..data.n] CREATE
+        route[k]: slot[k].a = slot[k-1].b;
+    END FOR;
+    closure: slot[data.n].b = N;
+    cycle_time: period = N*D;
+    FOR k IN data.op CREATE
+        minimum[k]: minimum_processing <= slot[k].p;
+    END FOR;
+    (* Empty false cases omit optional relations structurally, as in
+       stn_inventory. An empty FOR alone currently leaves a NULL child. *)
+    SELECT (data.paired)
+    CASE TRUE:
+        FOR l IN data.pair CREATE
+            (* Actual durations match; standby after either operation may differ.
+               Donor on bed b meets receiver on bed (b-J[l]) modulo N. *)
+            coupling[l]: slot[data.receiver[l]].a - slot[data.donor[l]].a = J[l];
+            transfer[l]: slot[data.receiver[l]].p = slot[data.donor[l]].p;
+            other_bed[l]: J[l] <= N - 1;
+        END FOR;
+    CASE FALSE:
+    END SELECT;
+    SELECT (data.producing)
+    CASE TRUE:
+        FOR k IN data.continuous CREATE
+            (* EACH listed operation independently covers the whole period.
+               Not a general union-of-several-product-operations constraint. *)
+            coverage[k]: slot[k].p >= 1;
+        END FOR;
+    CASE FALSE:
+    END SELECT;
+    SELECT (data.shortened)
+    CASE TRUE:
+        FOR k IN data.short CREATE
+            short_operation[k]: slot[k].p <= 1 - epsilon;
+        END FOR;
+    CASE FALSE:
+    END SELECT;
+    SELECT (data.ordered)
+    CASE TRUE:
+        FOR l IN data.ordering CREATE
+            duration_order[l]: slot[data.longer[l]].p >= slot[data.shorter[l]].p;
+        END FOR;
+    CASE FALSE:
+    END SELECT;
+    SELECT (data.compressor)
+    CASE TRUE:
+        feed_concurrency: slot[data.feed_op].p = Jfeed;
+        feed_running: Jfeed >= 1;
+    CASE FALSE:
+        no_compressor: Jfeed = 0;
+    END SELECT;
+    obj: MINIMIZE N - presentation_weight*minimum_processing;
+METHODS
+METHOD on_load;
+    FIX D; D := data.display_shift;
+    FIX epsilon; epsilon := 0.01;
+    FIX presentation_weight; presentation_weight := 0;
+    N.lower_bound := 1; N.upper_bound := 8;
+    Jfeed.lower_bound := 0; Jfeed.upper_bound := 8;
+    FOR l IN data.pair DO
+        J[l].lower_bound := 1; J[l].upper_bound := 8;
+    END FOR;
+END on_load;
+METHOD self_test;
+    ASSERT N >= 1;
+    ASSERT abs((period - N*D)/1{s}) < 1e-5;
+    FOR k IN data.op DO
+        ASSERT slot[k].p >= epsilon - 1e-7;
+        ASSERT slot[k].s >= -1e-7;
+    END FOR;
+END self_test;
+END psa_cyclic_schedule;
