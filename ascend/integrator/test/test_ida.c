@@ -13,6 +13,7 @@
 #include <ascend/utilities/error.h>
 
 #include <ascend/compiler/ascCompiler.h>
+#include <ascend/compiler/derivinst.h>
 #include <ascend/compiler/atomvalue.h>
 #include <ascend/compiler/functype.h>
 #include <ascend/compiler/initialize.h>
@@ -1464,18 +1465,144 @@ static void test_initial_dae(){
 static void test_initial_bad_overdetermined(){
 	IdaTestSystem testsys;
 	int solve_res;
+	slv_system_t original;
 
 	if(ida_test_load("test/ida/initial.a4c", "ida_initial_bad_overdetermined", 0, &testsys)){
 		return;
 	}
 
 	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	original = testsys.integ->system;
 	ida_configure_runtime(testsys.integ, 0.0, 1.0, 20);
 	solve_res = integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1);
+	CU_ASSERT_PTR_EQUAL(testsys.integ->system, original);
+	CU_ASSERT(!testsys.integ->initial_mode_prepared);
+	CU_ASSERT_EQUAL(slv_get_selected_solver(original), -1);
+	CU_ASSERT_PTR_NULL(slv_get_client_token(original));
 
 	ida_free_runtime(testsys.integ);
 	ida_cleanup(&testsys);
 	CU_ASSERT(0 != solve_res);
+}
+
+static void ida_test_retained_client(int retry, int alternate){
+	IdaTestSystem testsys;
+	slv_system_t original;
+	SlvClientToken client;
+	slv_parameters_t params;
+	slv_status_t status;
+	SlvFunctionsT alternate_engine;
+	struct Instance *root, *y, *derivative;
+	int qr, index, default_flag;
+	if(ida_test_load("test/ida/initial.a4c",
+			retry ? "ida_initial_retry" : "ida_initial_dae", 0, &testsys)) return;
+	original = testsys.integ->system;
+	root = GetSimulationRoot(testsys.siminst);
+	y = ida_child(root, "y");
+	derivative = InstanceGetDerivative(y);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(derivative);
+	default_flag = DerivativeInstanceUsesAlgebraicDefault(derivative);
+	CU_ASSERT_FATAL(0 == package_load("qrslv", NULL));
+	qr = slv_lookup_client("QRSlv");
+	if(alternate){
+		/* A distinct registered engine using QRSlv's implementation exercises
+		   temporary-client restoration without another solver dependency. */
+		alternate_engine = *solver_engine(qr);
+		alternate_engine.number = 12345;
+		alternate_engine.name = "INITIAL_test_retained_engine";
+		CU_ASSERT_FATAL(0 == solver_register(&alternate_engine));
+		qr = alternate_engine.number;
+	}
+	CU_ASSERT_FATAL(slv_select_solver(original, qr) >= 0);
+	client = slv_get_client_token(original);
+	slv_get_parameters(original, &params);
+	index = ida_find_param(&params, "iterationlimit");
+	CU_ASSERT_FATAL(index >= 0);
+	SLV_PARAM_INT(&params, index) = 123;
+	slv_set_parameters(original, &params);
+	/* Warm the client, then let IDA replace its borrowed variable array. */
+	CU_ASSERT_FATAL(0 == slv_presolve(original));
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 20);
+	if(retry){
+		CU_ASSERT(0 != integrator_solve(testsys.integ, 0, 20));
+		CU_ASSERT_PTR_EQUAL(testsys.integ->system, original);
+		CU_ASSERT_PTR_EQUAL(slv_get_client_token(original), client);
+		CU_ASSERT(!testsys.integ->initial_mode_prepared);
+		CU_ASSERT_PTR_EQUAL(InstanceGetDerivative(y), derivative);
+		CU_ASSERT_EQUAL(DerivativeInstanceUsesAlgebraicDefault(derivative), default_flag);
+		CU_ASSERT(!GetBooleanAtomValue(ida_child(ida_child(root, "y0"), "included")));
+		CU_ASSERT(isfinite(RealAtomValue(y)));
+		SetRealAtomValue(ida_child(root, "rhs"), 1, 0);
+		SetRealAtomValue(y, 1, 0);
+	}
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, 20));
+	CU_ASSERT_PTR_EQUAL(testsys.integ->system, original);
+	CU_ASSERT_PTR_EQUAL(slv_get_client_token(original), client);
+	CU_ASSERT_PTR_EQUAL(InstanceGetDerivative(y), derivative);
+	CU_ASSERT_EQUAL(slv_get_selected_solver(original), qr);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(y), exp(retry ? -4.0 : -2.0), 3e-4);
+	slv_get_parameters(original, &params);
+	CU_ASSERT_EQUAL(SLV_PARAM_INT(&params, index), 123);
+	/* Return to an algebraic solve using the original client, whose cached
+	   arrays have now been replaced twice by IDA analysis. */
+	SetBooleanAtomValue(ida_child(y, "fixed"), TRUE, 0);
+	CU_ASSERT_FATAL(0 == slv_presolve(original));
+	CU_ASSERT_FATAL(0 == slv_solve(original));
+	slv_get_status(original, &status);
+	CU_ASSERT(status.converged);
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_initial_retained_client(void){ ida_test_retained_client(0, 0); }
+static void test_initial_failure_retry(void){ ida_test_retained_client(1, 0); }
+static void test_initial_temporary_client(void){ ida_test_retained_client(0, 1); }
+static void test_initial_temporary_client_retry(void){ ida_test_retained_client(1, 1); }
+
+static void test_working_list_growth(void){
+	IdaTestSystem testsys;
+	slv_system_t sys;
+	SlvClientToken client;
+	slv_status_t status;
+	int n;
+	if(ida_test_load("test/ida/initial.a4c", "ida_nonincident_state", 0, &testsys)) return;
+	sys = testsys.integ->system;
+	CU_ASSERT_FATAL(0 == package_load("qrslv", NULL));
+	CU_ASSERT_FATAL(slv_select_solver(sys, slv_lookup_client("QRSlv")) >= 0);
+	client = slv_get_client_token(sys);
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	n = slv_get_num_solvers_vars(sys);
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	CU_ASSERT_EQUAL(slv_get_num_solvers_vars(sys), n+1);
+	CU_ASSERT(0 != slv_resolve(sys));
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+	CU_ASSERT_FATAL(0 == slv_solve(sys));
+	slv_get_status(sys, &status);
+	CU_ASSERT(status.converged);
+	CU_ASSERT_PTR_EQUAL(slv_get_client_token(sys), client);
+	ida_cleanup(&testsys);
+}
+
+static void test_initial_when_defaults(void){
+	IdaTestSystem testsys;
+	struct Instance *root, *y, *derivative;
+	slv_system_t original;
+	if(ida_test_load("test/ida/initial.a4c", "ida_initial_when", 0, &testsys)) return;
+	original = testsys.integ->system;
+	root = GetSimulationRoot(testsys.siminst);
+	y = ida_child(root, "y");
+	derivative = InstanceGetDerivative(y);
+	CU_ASSERT_FATAL(DerivativeInstanceUsesAlgebraicDefault(derivative));
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0, 1, 20);
+	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, 20));
+	CU_ASSERT_PTR_EQUAL(testsys.integ->system, original);
+	CU_ASSERT(DerivativeInstanceUsesAlgebraicDefault(derivative));
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(y), exp(-2), 3e-4);
+	CU_ASSERT(!GetBooleanAtomValue(ida_child(ida_child(root, "y0"), "included")));
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
 }
 
 static void test_initial_alias_binding_bug(){
@@ -1539,6 +1666,12 @@ static void test_initial_alias_binding_bug(){
 		T(initial_hier_array_decay_param_t) \
 		T(initial_dae) \
 	T(initial_bad_overdetermined) \
-	T(initial_alias_binding_bug)
+	T(initial_alias_binding_bug) \
+	T(initial_retained_client) \
+	T(initial_failure_retry) \
+	T(initial_temporary_client) \
+	T(initial_temporary_client_retry) \
+	T(initial_when_defaults) \
+	T(working_list_growth)
 
 REGISTER_TESTS_SIMPLE(integrator_ida, TESTS)

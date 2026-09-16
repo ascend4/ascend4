@@ -1913,6 +1913,13 @@ static void CollectIpData(struct Instance *i, void *d)
 struct gl_list_t *PushInterfacePtrs(struct Instance *i, IPFunc makeip,
                                     unsigned long iest,int visit,VOIDPTR vp)
 {
+  return PushInterfacePtrsWithCoverage(i,makeip,iest,visit,vp,
+      INSTANCE_VISIT_STRUCTURAL);
+}
+
+struct gl_list_t *PushInterfacePtrsWithCoverage(struct Instance *i, IPFunc makeip,
+    unsigned long iest,int visit,VOIDPTR vp,enum InstanceVisitCoverage coverage)
+{
   struct pipdata pip;
   /* use iest to get an initial list capacity so we don't go
    * into list expansion fits with the allocator.
@@ -1927,10 +1934,11 @@ struct gl_list_t *PushInterfacePtrs(struct Instance *i, IPFunc makeip,
   pip.vp = vp;
   if (pip.makeip == NULL) {
     FPRINTF(ASCERR,"Error in PushInterfacePtrs call.\n");
+    gl_destroy(pip.old);
     return NULL;
   }
   /* do the stuff */
-  SilentVisitInstanceTreeTwo(i,CollectIpData,visit,0,(VOIDPTR)&pip);
+  SilentVisitInstanceTreeTwoWithCoverage(i,CollectIpData,visit,0,(VOIDPTR)&pip,coverage);
   return pip.old;
 }
 

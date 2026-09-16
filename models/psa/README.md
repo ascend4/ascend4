@@ -28,8 +28,8 @@ models are kept distinct, rather than presenting every choice as part of
 the original work.
 
 The folder contains models, scripts, source notes and regression tests.
-The study is parked at a tested fixed-design cycle comparison,
-**not a reproduced Part I design optimum**.
+It includes a tested fixed-design cycle comparison and a minimum-bed
+cyclic scheduling MIP, **not a reproduced Part I design optimum**.
 
 ## What is PSA, and what does this example do?
 
@@ -64,6 +64,7 @@ From the repository root, with ASCEND and its Python bindings built:
 ```sh
 ./a4 script models/psa/psa_part1_physical.py
 ./a4 script models/psa/psa_part1_cycle.py
+./a4 script models/psa/psa_scheduling.py --solver HiGHS --output psa.png
 ./a4 pytest models/psa/test -q
 ```
 
@@ -71,7 +72,10 @@ The first command compares unfitted, conservative alternatives with the
 literal journal-equation reconstruction; the second reports the latter's
 remaining discrepancies. QRSlv handles these cycle calculations. The
 earlier timing tests also exercise available HiGHS/Gurobi solvers; Gurobi
-requires its normal licence. CI uses the scripts under `test/` here.
+requires its normal licence. The scheduling driver produces a report and
+periodic Gantt chart (Matplotlib required); see [scheduling](psa_scheduling.md)
+for all eight source cases and optional GUI plotting. CI uses the scripts
+under `test/` here.
 
 ## What is here?
 
@@ -79,6 +83,8 @@ requires its normal licence. CI uses the scripts under `test/` here.
 |---|---|
 | [psa_properties](psa_properties.md) | Cen–Yang methane adsorption isotherm and dimensional conversions |
 | [psa_cycle](psa_cycle.md) | Earlier isothermal zero/one-equalisation cycles and conditional scheduling LPs |
+| [psa_scheduling](psa_scheduling.md) | Reusable minimum-bed cyclic scheduling MIP; eight published cases, HiGHS/Gurobi checks and Gantt plotting |
+| [psa_dynamic](psa_dynamic.md) | IDA bed operations, conservative frozen-solid transfers, representative-bed CSS for 0–3 equalisation pairs, and spatial/time refinement checks |
 | [psa_thermal](psa_thermal.md) | Printed journal/thesis operation-equation audits; includes `psa_thesis_thermal.a4c` |
 | [psa_thermal_cycle](psa_thermal_cycle.md) | Conservative zero-equalisation thermal components and earlier thesis-based scenario |
 | [psa_part1](psa_part1.md) | Part I source-data deck and published-results consistency checks |
@@ -125,9 +131,28 @@ property calculations and conservative alternative energy balances using
 current ASCEND. Literal-equation discrepancies and source inconsistencies
 remain visible; no fitted heat or K has been promoted to physical data.
 
-Conservative 1–3 equalisation cycles, design-dependent operating limits,
-economics and optimisation over competing designs remain unfinished.
-Dynamic purity validation is also not implemented. The test suite verifies
+The standalone scheduling MIP now reproduces the published minimum bed
+counts and pairing integers for the Oxy-Rich, seven-operation and hydrogen
+0–3 equalisation cases. This is a genuine scheduling optimisation, but it
+does not yet connect the resulting time envelopes to the physical cycle
+or optimise economics. Its displayed time scale is chosen, not predicted.
+
+The isothermal dynamic reconstruction now assembles the complete operation
+sequence and iterates a representative bed to cyclic steady state. Methane
+inventories and paired gas transfers are audited. The pressure-step donor
+mixing rule and spatial boundary closures are explicit reconstruction choices;
+the five-point stencil permits reported numerical undershoots. Grid checks
+stabilise adsorption utilisation near 0.804, versus the published 0.88. More
+importantly, the constant-flow trace approximation predicts purge methane
+fractions above one; this physical limitation is flagged, not clipped. See
+[dynamic validation results](psa_dynamic.md#numerical-results-and-comparison-with-the-thesis).
+This is not a multi-bed startup simulation, a physically validated purge
+transient, or a reproduction of the published profiles.
+
+Conservative multi-equalisation **thermal design** cycles, design-dependent
+operating limits, economics and optimisation over competing designs remain
+unfinished. Dynamic outlet impurity is calculated, but has not established
+the published purity specification or an exact hydrogen balance. The test suite verifies
 the implemented calculations, not historical optimality or actual plant
 performance. Source PDFs remain in the user's Downloads folder and are
 not bundled with the repository.

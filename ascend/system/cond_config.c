@@ -1859,6 +1859,8 @@ void reanalyze_solver_lists(slv_system_t sys)
   struct gl_list_t *symbol_list;
   int32 c;
 
+  slv_solver_lists_changed(sys);
+
   solverrl = slv_get_solvers_rel_list(sys);
   solverol = slv_get_solvers_obj_list(sys);
   solverll = slv_get_solvers_logrel_list(sys);

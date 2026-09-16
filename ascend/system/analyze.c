@@ -624,7 +624,6 @@ static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
                                  struct gl_list_t *, struct gl_list_t *);
 static void ProcessSwitchGuardDiscreteDeps(struct Instance *context,
     const struct Expr *guard);
-static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data);
 static int analyze_reinit_marks_discrete_real(struct problem_t *p_data, const struct Instance *inst);
 static int analyze_instances_share_clique(CONST struct Instance *a, CONST struct Instance *b);
 static int BooleanChildValue(struct Instance *i,symchar *sc);
@@ -1273,6 +1272,24 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
   CONST char *symval;
 
   p_data = (struct problem_t *)vp;
+  if(IsDerivativeInstance(inst)){
+    struct dynreg_entry *dyn = dynamic_registry_lookup(p_data, inst);
+    /* A browser may have materialised derivatives outside this system's
+     * equations. Only classify those counted by its dynamic registry. */
+    if(dyn == NULL){
+      return NULL;
+    }
+    ip = analyze_getip();
+    memset(ip, 0, sizeof(*ip));
+    ip->i = inst;
+    ip->u.v.active = 1;
+    ip->u.v.solvervar = 1;
+    ip->u.v.basis = 1;
+    ip->u.v.deriv = dyn->deriv;
+    ip->u.v.odeid = dyn->odeid;
+    gl_append_ptr(p_data->vars, ip);
+    return ip;
+  }
   switch( InstanceKind(inst) ) {
   case REAL_ATOM_INST:   		/* Variable or parameter or real */
     ip = analyze_getip();
@@ -1758,13 +1775,10 @@ int analyze_make_master_lists(struct problem_t *p_data){
 #undef CL
 
   /* decorate the instance tree with ips, collecting vars and models. */
-  p_data->oldips = PushInterfacePtrs(p_data->root,classify_instance,
-                                    g_reuse.ipcap,1,p_data);
+  p_data->oldips = PushInterfacePtrsWithCoverage(p_data->root,classify_instance,
+      g_reuse.ipcap,1,p_data,INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
   if(p_data->oldips == NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
-    return 1;
-  }
-  if(analyze_append_hidden_dynamic_vars(p_data)){
     return 1;
   }
 
@@ -2008,13 +2022,6 @@ void analyze_free_lists(struct problem_t *p_data){
   ADUN(dynbindrels);
   ADUN(reinit_discretes);
   if(p_data->dynhiddeninsts != NULL){
-    unsigned long i, len = gl_length(p_data->dynhiddeninsts);
-    for(i = 1; i <= len; ++i){
-      struct Instance *inst = (struct Instance *)gl_fetch(p_data->dynhiddeninsts, i);
-      if(inst != NULL){
-        SetInterfacePtr(inst,NULL);
-      }
-    }
     gl_destroy(p_data->dynhiddeninsts);
     p_data->dynhiddeninsts = NULL;
   }
@@ -3702,47 +3709,6 @@ static void bind_derivative_terms(struct Instance *inst, VOIDPTR userdata)
     data->errors = 1;
     return;
   }
-}
-
-static int analyze_append_hidden_dynamic_vars(struct problem_t *p_data){
-  unsigned long i, len;
-
-  if(p_data == NULL || p_data->dynhiddeninsts == NULL){
-    return 0;
-  }
-
-  len = gl_length(p_data->dynhiddeninsts);
-  for(i = 1; i <= len; ++i){
-    struct Instance *inst = (struct Instance *)gl_fetch(p_data->dynhiddeninsts, i);
-    struct dynreg_entry *dyn;
-    struct solver_ipdata *ip;
-
-    if(inst == NULL || GetInterfacePtr(inst) != NULL){
-      continue;
-    }
-    dyn = dynamic_registry_lookup(p_data, inst);
-    if(dyn == NULL){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Hidden derivative instance missing from dynamic registry.");
-      return 1;
-    }
-    ip = analyze_getip();
-    memset(ip, 0, sizeof(*ip));
-    ip->i = inst;
-    ip->u.v.active = 1;
-    ip->u.v.fixed = 0;
-    ip->u.v.solvervar = 1;
-    ip->u.v.basis = 1;
-    ip->u.v.incident = 0;
-    ip->u.v.in_block = 0;
-    ip->u.v.discrete = 0;
-    ip->u.v.deriv = dyn->deriv;
-    ip->u.v.odeid = dyn->odeid;
-    ip->u.v.obsid = 0;
-    SetInterfacePtr(inst, ip);
-    gl_append_ptr(p_data->vars, ip);
-  }
-
-  return 0;
 }
 
 /*----------------------------------------------------------------------------*/

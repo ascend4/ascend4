@@ -34,6 +34,7 @@
 #include <ascend/system/diffvars.h>
 #include <ascend/system/diffvars_impl.h>
 #include <ascend/system/var.h>
+#include <ascend/system/relman.h>
 #include <ascend/solver/solver.h>
 
 #include <test/common.h>
@@ -520,7 +521,241 @@ static void test_der_array_same_ok(void){
 	destroy_loaded_system(sys,siminst);
 }
 
+struct der_visit_test {
+	struct Instance *base, *deriv, *attribute;
+	int bases, derivatives, attributes, sequence, base_position, derivative_position;
+};
+
+static void record_der_visit(struct Instance *inst, void *userdata){
+	struct der_visit_test *v = userdata;
+	++v->sequence;
+	if(inst == v->base){ ++v->bases; v->base_position = v->sequence; }
+	if(inst == v->deriv){ ++v->derivatives; v->derivative_position = v->sequence; }
+	if(inst == v->attribute){ ++v->attributes; }
+}
+
+static void test_der_visit_coverage(void){
+	struct Instance *sim = load_sim_for_model("test/ida/alias_der_wLINK.a4c", "der_only_direct_ok");
+	struct Instance *root = GetSimulationRoot(sim);
+	struct Instance *base = ChildByChar(root, AddSymbol("y"));
+	struct der_visit_test v = {0};
+	int depth, leaf;
+	v.base = base;
+	CU_ASSERT_PTR_NULL(InstancePeekDerivative(base));
+	SilentVisitInstanceTreeTwoWithCoverage(root, record_der_visit, 0, 0, &v,
+		INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+	CU_ASSERT(v.bases == 1);
+	CU_ASSERT_PTR_NULL(InstancePeekDerivative(base)); /* traversal must not create it */
+	for(depth = 0; depth <= 1; ++depth){
+		for(leaf = 0; leaf <= 1; ++leaf){
+			memset(&v, 0, sizeof(v));
+			v.base = base;
+			v.deriv = InstanceEnsureDerivative(base);
+			CU_ASSERT_FATAL(v.deriv != NULL);
+			v.attribute = ChildByChar(v.deriv, AddSymbol("fixed"));
+			SilentVisitInstanceTreeTwoWithCoverage(root, record_der_visit, depth, leaf, &v,
+				INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+			CU_ASSERT(v.bases == 1);
+			CU_ASSERT(v.derivatives == 1);
+			CU_ASSERT(v.attributes == leaf);
+			CU_ASSERT(depth ? v.derivative_position < v.base_position
+				: v.base_position < v.derivative_position);
+			v.bases = v.derivatives = v.attributes = 0;
+			SilentVisitInstanceTreeTwo(root, record_der_visit, depth, leaf, &v);
+			CU_ASSERT(v.bases == 1);
+			CU_ASSERT(v.derivatives == 0);
+			CU_ASSERT(v.attributes == 0);
+		}
+	}
+	destroy_loaded_system(NULL, sim);
+}
+
+/* Deliberately opaque non-NULL data, like the GUI's InstanceInterfaceData.
+ * Neither analysis nor system destruction may interpret or change it. */
+static void *der_test_interface(struct Instance *inst, void *userdata){
+	return InstanceKind(inst) == REAL_ATOM_INST || InstanceKind(inst) == REL_INST
+		? userdata : NULL;
+}
+
+static void check_der_test_interface(struct Instance *inst, void *userdata){
+	if(der_test_interface(inst, userdata)){
+		CU_ASSERT_PTR_EQUAL(GetInterfacePtr(inst), userdata);
+	}
+}
+
+static void assert_coexist_math(slv_system_t sys){
+	struct rel_relation **rels = slv_get_solvers_rel_list(sys);
+	struct var_variable **master = slv_get_master_var_list(sys);
+	int r;
+	var_filter_t all = {0, 0};
+	CU_ASSERT_FATAL(slv_get_num_solvers_rels(sys) == 3);
+	for(r = 0; r < 3; ++r){
+		real64 gradient[4];
+		struct var_variable *vars[4];
+		int32 count = 0, ok = 0, j;
+		int nbase = 0, nder = 0;
+		CU_ASSERT_DOUBLE_EQUAL(relman_eval(rels[r], &ok, 1), 0, 1e-7);
+		CU_ASSERT(ok);
+		CU_ASSERT(0 == relman_diff3(rels[r], &all, gradient, vars, &count, 1));
+		CU_ASSERT_FATAL(count == 2);
+		for(j = 0; j < count; ++j){
+			struct Instance *inst = (struct Instance *)var_instance(vars[j]);
+			CU_ASSERT_PTR_EQUAL(master[var_mindex(vars[j])], vars[j]);
+			if(IsDerivativeInstance(inst)){
+				++nder;
+				CU_ASSERT_DOUBLE_EQUAL(gradient[j], 1, 1e-12);
+				CU_ASSERT_PTR_EQUAL(InstancePeekDerivative(DerivativeInstanceBase(inst)), inst);
+			}else{
+				++nbase;
+				CU_ASSERT_DOUBLE_EQUAL(gradient[j], 2 * RealAtomValue(inst), 1e-12);
+			}
+		}
+		CU_ASSERT(nbase == 1 && nder == 1);
+	}
+}
+
+static void solve_coexist_system(slv_system_t sys, int qrslv){
+	slv_status_t status;
+	CU_ASSERT(slv_select_solver(sys, qrslv) != -1);
+	CU_ASSERT(0 == slv_presolve(sys));
+	CU_ASSERT(0 == slv_solve(sys));
+	slv_get_status(sys, &status);
+	CU_ASSERT(status.converged);
+	assert_coexist_math(sys);
+}
+
+static void run_der_system_coexist(int destroy_first){
+	struct Instance *sim = load_sim_for_model("test/ida/der_coexist.a4c", "der_coexist");
+	struct Instance *root = GetSimulationRoot(sim);
+	struct Instance *base = ChildByChar(root, AddSymbol("alias_x"));
+	struct Instance *deriv = InstancePeekDerivative(base);
+	struct Instance *other = ChildByChar(root, AddSymbol("other_t"));
+	struct gl_list_t *saved, *nested;
+	slv_system_t a, b;
+	struct var_variable *held;
+	struct der_visit_test visits = {0};
+	int gui_data = 1234567, temporary_data = 7654321, round;
+	int qrslv = ensure_qrslv_loaded();
+	CU_ASSERT_FATAL(deriv != NULL);
+	visits.base = base;
+	visits.deriv = deriv;
+	SilentVisitInstanceTreeTwoWithCoverage(root, record_der_visit, 1, 0, &visits,
+		INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+	CU_ASSERT(visits.bases == 1 && visits.derivatives == 1); /* alias not visited twice */
+	saved = PushInterfacePtrsWithCoverage(root, der_test_interface, 0, 1, &gui_data,
+		INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+	CU_ASSERT_FATAL(saved != NULL);
+	nested = PushInterfacePtrsWithCoverage(root, der_test_interface, 0, 1, &temporary_data,
+		INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+	CU_ASSERT_FATAL(nested != NULL);
+	CU_ASSERT_PTR_EQUAL(GetInterfacePtr(deriv), &temporary_data);
+	PopInterfacePtrs(nested, NULL, NULL);
+	CU_ASSERT_PTR_EQUAL(GetInterfacePtr(deriv), &gui_data);
+	a = system_build(root);
+	CU_ASSERT_FATAL(a != NULL);
+	solve_coexist_system(a, qrslv);
+	/* Presolve can reorder the solver list; retain a handle after that. */
+	held = find_derivative_var(a);
+	CU_ASSERT_FATAL(held != NULL);
+	for(round = 0; round < 3; ++round){
+		b = system_build(root);
+		CU_ASSERT_FATAL(b != NULL);
+		CU_ASSERT(find_derivative_var(b) != held);
+		assert_diffvars_shape(b, 3, 1, 2);
+		solve_coexist_system(b, qrslv);
+		assert_coexist_math(a);
+		SilentVisitInstanceTreeTwoWithCoverage(root, check_der_test_interface, 0, 0, &gui_data,
+			INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+		system_destroy(b);
+		CU_ASSERT_PTR_EQUAL(find_derivative_var(a), held);
+		CU_ASSERT_PTR_EQUAL(InstancePeekDerivative(base), deriv);
+		SilentVisitInstanceTreeTwoWithCoverage(root, check_der_test_interface, 0, 0, &gui_data,
+			INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+	}
+	/* Force failure AFTER pointer installation, then restore and retry. */
+	SetIntegerAtomValue(ChildByChar(other, AddSymbol("ode_type")), -1, 0);
+	error_reporter_tree_start();
+	b = system_build(root);
+	error_reporter_tree_end();
+	CU_ASSERT_PTR_NULL(b);
+	if(b != NULL) system_destroy(b);
+	SetIntegerAtomValue(ChildByChar(other, AddSymbol("ode_type")), 0, 0);
+	SilentVisitInstanceTreeTwoWithCoverage(root, check_der_test_interface, 0, 0, &gui_data,
+		INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+	CU_ASSERT_PTR_EQUAL(find_derivative_var(a), held);
+	solve_coexist_system(a, qrslv);
+	b = system_build(root);
+	CU_ASSERT_FATAL(b != NULL);
+	if(destroy_first){ system_destroy(a); a = b; }
+	else{ system_destroy(b); }
+	solve_coexist_system(a, qrslv);
+	system_destroy(a);
+	SilentVisitInstanceTreeTwoWithCoverage(root, check_der_test_interface, 0, 0, &gui_data,
+		INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+	CU_ASSERT(gui_data == 1234567 && temporary_data == 7654321);
+	PopInterfacePtrs(saved, NULL, NULL);
+	CU_ASSERT_PTR_NULL(GetInterfacePtr(deriv));
+	system_free_reused_mem();
+	destroy_loaded_system(NULL, sim);
+}
+
+static void test_der_coexist_destroy_first(void){ run_der_system_coexist(1); }
+static void test_der_coexist_destroy_second(void){ run_der_system_coexist(0); }
+
+static void test_der_coexist_initial(void){
+	/* This is a backend coexistence test, not the integrator's INITIAL
+	 * lifecycle (which still replaces its caller's normal system). */
+	struct Instance *sim = load_sim_for_model("test/ida/initial.a4c", "ida_initial_dae");
+	struct Instance *root = GetSimulationRoot(sim);
+	struct Instance *y = ChildByChar(root, AddSymbol("y"));
+	struct Instance *deriv = InstancePeekDerivative(y);
+	slv_system_t normal, initial;
+	struct var_variable **normal_vars;
+	struct rel_relation **normal_rels;
+	struct gl_list_t *saved;
+	int qrslv = ensure_qrslv_loaded(), gui_data = 42, r;
+	slv_status_t status;
+	CU_ASSERT_FATAL(deriv != NULL);
+	normal = system_build(root);
+	CU_ASSERT_FATAL(normal != NULL);
+	CU_ASSERT_PTR_NULL(GetInterfacePtr(deriv)); /* NULL must also be restored */
+	normal_vars = slv_get_solvers_var_list(normal);
+	normal_rels = slv_get_solvers_rel_list(normal);
+	saved = PushInterfacePtrsWithCoverage(root, der_test_interface, 0, 1, &gui_data,
+		INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+	CU_ASSERT_FATAL(saved != NULL);
+	initial = system_build_with_mode(root, SYSTEM_BUILD_INITIAL);
+	CU_ASSERT_FATAL(initial != NULL);
+	CU_ASSERT(slv_select_solver(initial, qrslv) != -1);
+	CU_ASSERT(0 == slv_presolve(initial));
+	CU_ASSERT(0 == slv_solve(initial));
+	slv_get_status(initial, &status);
+	CU_ASSERT(status.converged);
+	system_destroy(initial);
+	system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
+	CU_ASSERT_PTR_EQUAL(slv_get_solvers_var_list(normal), normal_vars);
+	CU_ASSERT_PTR_EQUAL(slv_get_solvers_rel_list(normal), normal_rels);
+	CU_ASSERT_PTR_EQUAL(InstancePeekDerivative(y), deriv);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(y), 1, 1e-9);
+	CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(deriv), -2, 1e-9);
+	for(r = 0; r < slv_get_num_solvers_rels(normal); ++r){
+		int32 ok = 0;
+		CU_ASSERT_DOUBLE_EQUAL(relman_eval(normal_rels[r], &ok, 1), 0, 1e-9);
+		CU_ASSERT(ok);
+	}
+	system_destroy(normal);
+	SilentVisitInstanceTreeTwoWithCoverage(root, check_der_test_interface, 0, 0, &gui_data,
+		INSTANCE_VISIT_MATERIALISED_DERIVATIVES);
+	PopInterfacePtrs(saved, NULL, NULL);
+	system_free_reused_mem();
+	destroy_loaded_system(NULL, sim);
+}
+
 #define TESTS(T) \
+	T(der_visit_coverage) \
+	T(der_coexist_destroy_first) \
+	T(der_coexist_destroy_second) \
+	T(der_coexist_initial) \
 	T(der_expr_direct_ok) \
 	T(der_equation_direct_ok) \
 	T(der_only_direct_ok) \

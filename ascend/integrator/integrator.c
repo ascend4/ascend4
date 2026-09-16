@@ -42,6 +42,7 @@
 
 #include <ascend/system/slv_common.h>
 #include <ascend/system/conditional.h>
+#include <ascend/system/cond_config.h>
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/slv_client.h>
 #include <ascend/system/block.h>
@@ -1278,137 +1279,112 @@ int integrator_has_initial_relations(IntegratorSystem *sys){
 
 int integrator_initialise_with_solver(IntegratorSystem *sys, int solver_index){
 	struct Instance *root;
-	slv_system_t init_sys = NULL;
-	slv_system_t normal_sys = NULL;
-	unsigned long res;
-	struct var_variable **vlist = NULL;
-	unsigned long nvars = 0, i = 0;
+	slv_system_t system;
+	SlvClientToken saved_client;
+	int saved_solver, temporary_client = 0, result = 0;
+	struct var_variable **vlist;
 	struct Instance **defaults = NULL;
-	unsigned long ndefaults = 0;
+	unsigned long nvars, ndefaults = 0, i;
+	slv_status_t status;
 
-	if(sys == NULL){
+	if(sys == NULL || sys->system == NULL){
 		return 1;
 	}
 	root = integrator_root_instance(sys);
 	if(root == NULL || !integrator_root_has_initial_relations(root)){
 		return 0;
 	}
-	if(solver_index < 0){
+	if(solver_index < 0 || solver_engine(solver_index) == NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No algebraic solver selected for initialization");
 		return 2;
 	}
-	if(sys->system != NULL){
-		system_destroy(sys->system);
-		sys->system = NULL;
-	}
-	integrator_clear_analysis(sys);
 
-	init_sys = system_build_with_mode(root, SYSTEM_BUILD_INITIAL);
-	if(init_sys == NULL){
-		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build initialization-mode system");
-		return 3;
-	}
-	if(slv_select_solver(init_sys, solver_index) == -1){
-		system_destroy(init_sys);
-		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to select algebraic solver for initialization solve");
-		return 4;
+	/* Borrow the caller's system; never destroy it. Like CMSlv, retain the
+	   original client when a different algebraic engine is needed. Reusing
+	   the same engine also preserves the user's initialization parameters. */
+	system = sys->system;
+	saved_solver = slv_get_selected_solver(system);
+	saved_client = slv_get_client_token(system);
+	if(saved_solver != solver_index || saved_client == NULL){
+		/* Detach first, so even a failed client constructor cannot leave the
+		   saved token paired with the temporary engine's function table. */
+		slv_set_client_token(system, NULL);
+		temporary_client = 1;
+		if(slv_switch_solver(system, solver_index) < 0
+				|| slv_get_client_token(system) == NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to select algebraic solver for initialization");
+			result = 4;
+			goto restore_client;
+		}
 	}
 
-	vlist = slv_get_solvers_var_list(init_sys);
-	nvars = (unsigned long)slv_get_num_solvers_vars(init_sys);
+	vlist = slv_get_solvers_var_list(system);
+	nvars = (unsigned long)slv_get_num_solvers_vars(system);
 	if(nvars > 0){
-		defaults = ASC_NEW_ARRAY_CLEAR(struct Instance *, nvars);
+		defaults = ASC_NEW_ARRAY(struct Instance *, nvars);
+		if(defaults == NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory for initialization metadata");
+			result = 3;
+			goto restore_client;
+		}
 	}
 	for(i = 0; i < nvars; ++i){
-		struct var_variable *var = vlist[i];
-		struct Instance *inst;
-		if(var == NULL){
-			continue;
-		}
-		inst = (struct Instance *)var_instance(var);
-		if(inst != NULL && IsDerivativeInstance(inst) && DerivativeInstanceUsesAlgebraicDefault(inst)){
+		struct Instance *inst = (struct Instance *)var_instance(vlist[i]);
+		if(inst != NULL && IsDerivativeInstance(inst)
+				&& DerivativeInstanceUsesAlgebraicDefault(inst)){
 			DerivativeInstanceSetAlgebraicDefault(inst, FALSE);
 			defaults[ndefaults++] = inst;
 		}
 	}
+
+	system_set_build_mode(root, SYSTEM_BUILD_INITIAL);
+	reanalyze_solver_lists(system);
 	slv_block_set_dof_messages_enabled(FALSE);
-	if(slv_presolve(init_sys)){
-		slv_status_t status;
-		slv_get_status(init_sys, &status);
-		slv_block_set_dof_messages_enabled(TRUE);
-		for(i = 0; i < ndefaults; ++i){
-			if(defaults[i] != NULL){
-				DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
-			}
-		}
-		if(defaults != NULL){
-			ASC_FREE(defaults);
-		}
-		system_destroy(init_sys);
-		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
+	memset(&status, 0, sizeof(status));
+	result = slv_presolve(system);
+	slv_get_status(system, &status);
+	slv_block_set_dof_messages_enabled(TRUE);
+	if(result || status.over_defined || status.under_defined
+			|| status.struct_singular || status.inconsistent){
 		integrator_report_initial_status_failure(&status, 1);
-		return 5;
-	}
-	{
-		slv_status_t status;
-		slv_get_status(init_sys, &status);
-		slv_block_set_dof_messages_enabled(TRUE);
-		if(status.over_defined || status.under_defined || status.struct_singular || status.inconsistent){
-			for(i = 0; i < ndefaults; ++i){
-				if(defaults[i] != NULL){
-					DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
-				}
-			}
-			if(defaults != NULL){
-				ASC_FREE(defaults);
-			}
-			system_destroy(init_sys);
-			system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
-			integrator_report_initial_status_failure(&status, 1);
-			return 5;
+		result = 5;
+	}else{
+		result = slv_solve(system);
+		slv_get_status(system, &status);
+		if(result || !status.ok || !status.converged){
+			integrator_report_initial_status_failure(&status, 0);
+			result = 6;
 		}
 	}
-	res = slv_solve(init_sys);
-	{
-		slv_status_t status;
-		slv_get_status(init_sys, &status);
+
+	/* Restore temporary metadata on success AND failure. Keep attempted
+	   values/residuals in the instance tree for inspection and correction.
+	   INITIAL may have reordered the shared lists, so rebuild only the
+	   integrator's analysis, not the system or its instance mappings. */
 	for(i = 0; i < ndefaults; ++i){
-		if(defaults[i] != NULL){
-			DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
+		DerivativeInstanceSetAlgebraicDefault(defaults[i], TRUE);
+	}
+	ASC_FREE(defaults);
+	system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
+	reanalyze_solver_lists(system);
+
+restore_client:
+	if(temporary_client){
+		if(slv_get_client_token(system) != NULL){
+			slv_destroy_client(system);
 		}
+		slv_set_solver_index(system, saved_solver);
+		slv_set_client_token(system, saved_client);
 	}
-	if(defaults != NULL){
-		ASC_FREE(defaults);
+	if(result == 3 || result == 4){
+		return result;
 	}
-	system_destroy(init_sys);
-	if(res || !status.ok || !status.converged){
-		system_set_build_mode(root, SYSTEM_BUILD_NORMAL);
-		integrator_report_initial_status_failure(&status, 0);
-		return 6;
-	}
-	}
-	normal_sys = system_build_with_mode(root, SYSTEM_BUILD_NORMAL);
-	if(normal_sys == NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to rebuild normal-mode system after initialization solve");
-		return 7;
-	}
-	if(solver_index >= 0 && slv_select_solver(normal_sys, solver_index) == -1){
-		system_destroy(normal_sys);
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to restore solver after initialization solve");
-		return 8;
-	}
-	if(sys->system != NULL){
-		system_destroy(sys->system);
-	}
-	sys->system = normal_sys;
 	integrator_clear_analysis(sys);
 	if(integrator_analyse(sys)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to reanalyse normal-mode system after initialization solve");
-		return 9;
+		if(!result) result = 9;
 	}
-	return 0;
+	return result;
 }
 
 int integrator_initialise_ode(IntegratorSystem *sys){
@@ -1419,7 +1395,9 @@ int integrator_initialise_ode(IntegratorSystem *sys){
 		return 1;
 	}
 	integrator_fix_ode_states(sys);
-	return 0;
+	/* Establish the normal ODE algebraic problem once. RHS callbacks must
+	   remain resolve/solve operations, not repeat structural preparation. */
+	return slv_presolve(sys->system);
 }
 
 static int integrator_report_initial_status_failure(const slv_status_t *status, int presolve){
@@ -1740,14 +1718,11 @@ static void integrator_clear_analysis(IntegratorSystem *sys){
     ASC_FREE(sys->obs);
     sys->obs = NULL;
   }
-  if(sys->observed_instances != NULL){
-    ASC_FREE(sys->observed_instances);
-    sys->observed_instances = NULL;
-  }
+  /* Explicit observer selections are user configuration, not analysis data.
+     Their instance handles remain valid across INITIAL reconfiguration. */
   sys->x = NULL;
   sys->n_y = 0;
   sys->n_obs = 0;
-  sys->n_observed_instances = 0;
   sys->nstates = 0;
   sys->nderivs = 0;
 }

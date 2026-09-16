@@ -527,6 +527,15 @@ ASC_DLLSPEC void slv_bnd_initialization(slv_system_t sys);
 	function provided in bndman.
 */
 
+/** Notify retained clients after an in-place working-list reorder or other
+    structural reconfiguration. List setters and the system's reordering
+    routines do this automatically. This does not presolve any client.
+    Clients must refresh borrowed lists before dereferencing them at presolve;
+    a client doing its own reordering may acknowledge the resulting revision.
+    Numerical value changes do not require notification. */
+ASC_DLLSPEC void slv_solver_lists_changed(slv_system_t sys);
+ASC_DLLSPEC unsigned long slv_get_solver_lists_revision(slv_system_t sys);
+
 extern void slv_set_solvers_var_list(slv_system_t sys,
                                      struct var_variable **vlist,
                                      int size);
