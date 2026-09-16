@@ -94,6 +94,35 @@ def schedule(result, durations, solver='HiGHS'):
     return timing
 
 
+def _validate_processing(timing, close):
+    stages, D = timing['stages'], timing['D']
+    previous = 0
+    for s in stages:
+        if (not close(s['start'], previous) or s['actual'] <= 0 or s['idle'] < -1e-7
+                or not close(s['end']-s['start'], s['actual']+s['idle'])):
+            raise ValueError('Invalid processing/standby accounting')
+        previous = s['end']
+    if not close(stages[0]['actual'], D) or not close(stages[0]['idle'], 0):
+        raise ValueError('Standby cannot count as continuous production')
+    purge_time = next(s['actual'] for s in stages if s['name'] == 'purge')
+    if (timing['gross'] <= 0 or timing['purge'] < 0
+            or timing['gross']*purge_time + 1e-6 < timing['purge']*D):
+        raise ValueError('Insufficient unbuffered hydrogen supply during purge')
+
+
+def _validate_equalisation_timing(stages, beds, D, period, close):
+    ed, eu = stages[1], stages[4]
+    if not close(ed['actual'], eu['actual']) or not close(ed['end']-ed['start'], eu['end']-eu['start']):
+        raise ValueError('PE processing/allocated durations do not match')
+    # Donor on bed b pairs with receiver on bed b-1, modulo the cycle.
+    for bed in range(beds):
+        donor = (bed*D + ed['start']) % period
+        receiver = (((bed-1) % beds)*D + eu['start']) % period
+        separation = abs(donor-receiver)
+        if not (close(separation, 0) or close(separation, period)):
+            raise ValueError('PE events are not synchronised across beds')
+
+
 def validate_timing(timing):
     """Check the returned event layout independently, including cross-cycle pairing."""
     def close(a, b): return math.isclose(a, b, rel_tol=1e-8, abs_tol=1e-7)
@@ -109,29 +138,9 @@ def validate_timing(timing):
         raise ValueError('Invalid minimum standby allowance')
     if not close(period, beds*D) or not close(stages[0]['start'], 0) or not close(stages[-1]['end'], period):
         raise ValueError('Cycle timing does not close')
-    previous = 0
-    for s in stages:
-        if (not close(s['start'], previous) or s['actual'] <= 0 or s['idle'] < -1e-7
-                or not close(s['end']-s['start'], s['actual']+s['idle'])):
-            raise ValueError('Invalid processing/standby accounting')
-        previous = s['end']
-    if not close(stages[0]['actual'], D) or not close(stages[0]['idle'], 0):
-        raise ValueError('Standby cannot count as continuous production')
-    purge_time = next(s['actual'] for s in stages if s['name'] == 'purge')
-    if (timing['gross'] <= 0 or timing['purge'] < 0
-            or timing['gross']*purge_time + 1e-6 < timing['purge']*D):
-        raise ValueError('Insufficient unbuffered hydrogen supply during purge')
+    _validate_processing(timing, close)
     if beds == 3:
-        ed, eu = stages[1], stages[4]
-        if not close(ed['actual'], eu['actual']) or not close(ed['end']-ed['start'], eu['end']-eu['start']):
-            raise ValueError('PE processing/allocated durations do not match')
-        # Donor on bed b pairs with receiver on bed b-1, modulo the cycle.
-        for bed in range(beds):
-            donor = (bed*D + ed['start']) % period
-            receiver = (((bed-1) % beds)*D + eu['start']) % period
-            separation = abs(donor-receiver)
-            if not (close(separation, 0) or close(separation, period)):
-                raise ValueError('PE events are not synchronised across beds')
+        _validate_equalisation_timing(stages, beds, D, period, close)
 
 
 def report(r):

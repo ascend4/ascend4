@@ -44,6 +44,15 @@ def read_schedule(model):
     return operations, makespan
 
 
+def _validate_operation_times(operations, makespan, tol):
+    for op in operations:
+        if (not all(math.isfinite(v) for v in (op.start, op.duration, op.finish))
+                or op.start < -tol or op.duration <= 0
+                or abs(op.finish - op.start - op.duration) > tol
+                or op.finish > makespan + tol):
+            raise ValueError(f"Invalid timing for operation {op.number}.")
+
+
 def validate_schedule(operations, makespan, tol=1e-6):
     """Reject unsolved/invalid values before presenting them as a schedule."""
     if not operations or not math.isfinite(makespan) or makespan <= 0:
@@ -51,12 +60,8 @@ def validate_schedule(operations, makespan, tol=1e-6):
     by_number = {op.number: op for op in operations}
     if len(by_number) != len(operations):
         raise ValueError("Duplicate operation numbers.")
+    _validate_operation_times(operations, makespan, tol)
     for op in operations:
-        if (not all(math.isfinite(v) for v in (op.start, op.duration, op.finish))
-                or op.start < -tol or op.duration <= 0
-                or abs(op.finish - op.start - op.duration) > tol
-                or op.finish > makespan + tol):
-            raise ValueError(f"Invalid timing for operation {op.number}.")
         if op.predecessor:
             pred = by_number.get(op.predecessor)
             if pred is None or pred.finish > op.start + tol:

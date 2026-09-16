@@ -237,12 +237,12 @@ static int lp_sparse_bounds(lp_sparse_t *p, const mps_data_t *m, real64 minf, re
 }
 
 static int lp_sparse_values(lp_sparse_t *p, const mps_data_t *m, const int32 *map, int32 nnz){
-	int32 i, row;
+	int32 i, row, written=0;
 	mtx_coord_t nz;
 	mtx_range_t range;
 	real64 a;
 	for(i=0; i<m->vused; ++i){
-		p->start[i]=p->num_nz;
+		p->start[i]=written;
 		nz.col=mtx_org_to_col(m->Ac_mtx,i); nz.row=mtx_FIRST;
 		if(nz.col<0 || nz.col>=m->cap)return 1;
 		while((a=mtx_next_in_col(m->Ac_mtx,&nz,mtx_range(&range,0,m->cap-1))), nz.row != mtx_LAST){
@@ -254,13 +254,15 @@ static int lp_sparse_values(lp_sparse_t *p, const mps_data_t *m, const int32 *ma
 				continue;
 			}
 			if(row>=m->rused || map[row]<0)continue;
-			if(p->num_nz>=nnz)return 1;
-			p->index[p->num_nz]=map[row]; p->value[p->num_nz]=a;
-			++p->num_nz;
+			if(written>=nnz)return 1;
+			p->index[written]=map[row]; p->value[written]=a;
+			++written;
 		}
 	}
-	p->start[m->vused]=p->num_nz;
-	return p->num_nz != nnz;
+	if(written != nnz)return 1;
+	p->start[m->vused]=written;
+	p->num_nz=written;
+	return 0;
 }
 
 static int lp_sparse_objective(lp_sparse_t *p, const mps_data_t *m,

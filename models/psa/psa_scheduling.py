@@ -17,9 +17,7 @@ TITLES = dict(oxy='Oxy-Rich', oxy_continuous='Oxy-Rich: continuous product and f
               **{f'pe{n}': f'Hydrogen PSA: {n} pressure equalisation(s)' for n in range(4)})
 
 
-def prepare(case='pe3', solver='HiGHS', epsilon=.01, max_beds=8, shift=None):
-    """Return a fresh simulation; no source optimum is supplied to the MIP."""
-    import ascpy
+def _validate_options(case, solver, epsilon, max_beds, shift):
     if case not in CASES or solver not in ('HiGHS', 'Gurobi'):
         raise ValueError('Unknown case or solver')
     if not math.isfinite(epsilon) or not 0 < epsilon < .5:
@@ -29,6 +27,12 @@ def prepare(case='pe3', solver='HiGHS', epsilon=.01, max_beds=8, shift=None):
         raise ValueError('max_beds must be a positive integer')
     if shift is not None and (not math.isfinite(shift) or shift <= 0):
         raise ValueError('Reporting shift must be positive seconds')
+
+
+def prepare(case='pe3', solver='HiGHS', epsilon=.01, max_beds=8, shift=None):
+    """Return a fresh simulation; no source optimum is supplied to the MIP."""
+    import ascpy
+    _validate_options(case, solver, epsilon, max_beds, shift)
     library = ascpy.Library()
     try:
         typ = library.findType(CASES[case])
@@ -121,27 +125,13 @@ def segments(start, duration, period):
         yield 0.0, b - period
 
 
-def validate(r, tol=1e-6):
-    """Check scalar constraints AND expanded periodic events on every bed.
+def require(test, message):
+    if not test:
+        raise ValueError(message)
 
-    Midpoints between all event boundaries exhaust the intervals on which
-    concurrency is constant: this is not approximate time-grid sampling.
-    Units for event checks are D; dimensional outputs are checked separately.
-    """
-    def require(test, message):
-        if not test:
-            raise ValueError(message)
 
-    N, D, eps = (r[k] for k in ('N', 'D', 'epsilon'))
-    require(all(math.isfinite(r[k]) for k in ('N', 'D', 'epsilon', 'period', 'Jfeed')),
-            'Non-finite scheduling result')
-    require(N >= 1 and abs(N-round(N)) < tol, 'Non-integer bed count')
-    N = round(N)
-    require(D > 0 and 0 < eps < .5, 'Invalid time scale or epsilon')
-    require(abs(r['period']/D-N) < tol, 'Incorrect physical period')
+def _validate_route(r, N, D, eps, tol):
     ops = r['operations']
-    require(list(ops) == list(range(1, len(ops)+1)) and len(ops) >= 2,
-            'Route must contain consecutive operation indices')
     end = 0.0
     for k, op in ops.items():
         require(all(math.isfinite(v) for name, v in op.items() if name != 'label'),
@@ -159,6 +149,10 @@ def validate(r, tol=1e-6):
         require(ops[k]['p'] <= 1-eps+tol, 'Short operation exceeds one shift')
     for longer, shorter in r['ordering']:
         require(ops[longer]['p'] >= ops[shorter]['p']-tol, 'Duration ordering violated')
+
+
+def _validate_pairs(r, N, tol):
+    ops = r['operations']
     for pair in r['pairs']:
         J = pair['J']
         require(math.isfinite(J) and 1 <= J+tol and J <= N-1+tol
@@ -172,6 +166,8 @@ def validate(r, tol=1e-6):
             require(partner != bed and abs(difference/N-round(difference/N)) < tol
                     and abs(donor['p']-receiver['p']) < tol, 'Unmatched bed transfer event')
 
+
+def _schedule_events(ops, N):
     # Expand actual processing and standby, not merely the allocated slots.
     events = []
     for bed in range(N):
@@ -179,6 +175,35 @@ def validate(r, tol=1e-6):
             for idle, offset, duration in ((False, 0, op['p']), (True, op['p'], op['s'])):
                 for a, b in segments(op['a']+bed+offset, max(0, duration), N):
                     events.append((a, b, bed, k, idle))
+    return events
+
+
+def validate(r, tol=1e-6):
+    """Check scalar constraints AND expanded periodic events on every bed.
+
+    Midpoints between all event boundaries exhaust the intervals on which
+    concurrency is constant: this is not approximate time-grid sampling.
+    Units for event checks are D; dimensional outputs are checked separately.
+    """
+    N, D, eps = (r[k] for k in ('N', 'D', 'epsilon'))
+    require(all(math.isfinite(r[k]) for k in ('N', 'D', 'epsilon', 'period', 'Jfeed')),
+            'Non-finite scheduling result')
+    require(N >= 1 and abs(N-round(N)) < tol, 'Non-integer bed count')
+    N = round(N)
+    require(D > 0 and 0 < eps < .5, 'Invalid time scale or epsilon')
+    require(abs(r['period']/D-N) < tol, 'Incorrect physical period')
+    ops = r['operations']
+    require(list(ops) == list(range(1, len(ops)+1)) and len(ops) >= 2,
+            'Route must contain consecutive operation indices')
+    _validate_route(r, N, D, eps, tol)
+    _validate_pairs(r, N, tol)
+
+    events = _schedule_events(ops, N)
+    _validate_concurrency(r, events, N, tol)
+    return events
+
+
+def _validate_concurrency(r, events, N, tol):
     boundaries = sorted({0.0, float(N)} | {x for a, b, *_ in events for x in (a, b)})
     jf = r['Jfeed']
     require(abs(jf-round(jf)) < tol, 'Non-integer feed concurrency')
@@ -195,7 +220,14 @@ def validate(r, tol=1e-6):
         if r['compressor']:
             require(sum(e[3] == r['feed_op'] and not e[4] for e in active) == round(jf),
                     'Feed compressor concurrency changes within the period')
-    return events
+
+
+def _operation_color(label):
+    if 'Adsorption' in label:
+        return '#91c9a0'
+    if 'purge' in label.lower() or 'Blowdown' in label:
+        return '#eab881'
+    return '#d9ce8c'
 
 
 def plot_schedule(r):
@@ -204,9 +236,7 @@ def plot_schedule(r):
     from matplotlib.patches import Patch
     events = validate(r)
     ops, D, N = r['operations'], r['D']/60, r['N']
-    colors = {k: '#91c9a0' if 'Adsorption' in op['label'] else
-              '#eab881' if 'purge' in op['label'].lower() or 'Blowdown' in op['label']
-              else '#d9ce8c' for k, op in ops.items()}
+    colors = {k: _operation_color(op['label']) for k, op in ops.items()}
     for pair, color in zip(r['pairs'], ('#80b8db', '#b9a1d5', '#df9fab')):
         colors[pair['donor']] = colors[pair['receiver']] = color
     fig, ax = plt.subplots(figsize=(12, 3.0 + .55*N), layout='constrained')

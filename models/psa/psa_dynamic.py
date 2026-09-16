@@ -33,15 +33,8 @@ def build(n=50, stencil=5):
     return typ.getSimulation('dynamic_bed', True)
 
 
-def run_operation(n=50, stencil=5, operation='adsorption', initial=None,
-                  duration=None, samples=69, rtol=1e-7, atol=1e-9, changes=None,
-                  simulation=None):
-    """Integrate a single constant-P, constant-flow operation in flow coordinates.
-
-    Initial y and q arrays are in flow direction. No profiles are clipped;
-    linear high-order spatial undershoots are included in diagnostics.
-    """
-    import ascpy
+def _operation_duration(n, operation, initial, duration, samples, rtol, atol):
+    """Validate caller inputs before changing a supplied simulation."""
     if operation not in ('adsorption', 'purge'):
         raise ValueError('Operation must be adsorption or purge')
     duration = (69 if operation == 'adsorption' else 31) if duration is None else duration
@@ -53,15 +46,11 @@ def run_operation(n=50, stencil=5, operation='adsorption', initial=None,
             or any(len(initial[key]) != n for key in ('y', 'q'))
             or any(not math.isfinite(v) for key in ('y', 'q') for v in initial[key])):
         raise ValueError('Initial profiles must contain n finite y and q values')
-    sim = simulation if simulation is not None else build(n, stencil)
-    if simulation is not None:
-        sim.invalidateSystem()
-        sim.runDefaultMethod()
-    m = sim.getModel()
-    if m.n.getIntValue() != n or m.stencil.getIntValue() != stencil:
-        raise ValueError('Reused simulation has a different grid or stencil')
-    if operation == 'purge':
-        sim.run(next(method for method in m.getType().getMethods() if str(method.getName()) == 'purge'))
+    return duration
+
+
+def _set_operating_inputs(m, changes):
+    """Apply dimensional inputs, then check the resulting operating point."""
     units = dict(P='Pa', F='mol/s', k='1/s', T='K', rho='kg/m^3', L='m', d='m')
     for key, value in (changes or {}).items():
         if key not in (*units, 'yin', 'eps') or not math.isfinite(value):
@@ -76,12 +65,10 @@ def run_operation(n=50, stencil=5, operation='adsorption', initial=None,
     if (m.F.getRealValue() < 0 or m.k.getRealValue() < 0
             or not 0 < m.eps.getRealValue() < 1 or not 0 <= m.yin.getRealValue() <= 1):
         raise ValueError('Invalid flow, rate, void fraction or inlet composition')
-    if initial is not None:
-        for i in range(1, n+1):
-            m.y0[i].setRealValue(initial['y'][i-1])
-            m.q0[i].setRealValueWithUnits(initial['q'][i-1], 'mol/kg')
-    sim.checkDimensions()
-    sim.build()
+
+
+def _integrator(sim, duration, samples, rtol, atol):
+    import ascpy
     integ = ascpy.Integrator(sim)
     integ.setEngine('IDA')
     params = integ.getParameters()
@@ -97,6 +84,36 @@ def run_operation(n=50, stencil=5, operation='adsorption', initial=None,
     integ.setParameters(params)
     integ.setMaxSubSteps(20000)
     integ.setLinearTimesteps(ascpy.Units('s'), 0, duration, samples)
+    return integ
+
+
+def run_operation(n=50, stencil=5, operation='adsorption', initial=None,
+                  duration=None, samples=69, rtol=1e-7, atol=1e-9, changes=None,
+                  simulation=None):
+    """Integrate a single constant-P, constant-flow operation in flow coordinates.
+
+    Initial y and q arrays are in flow direction. No profiles are clipped;
+    linear high-order spatial undershoots are included in diagnostics.
+    """
+    import ascpy
+    duration = _operation_duration(n, operation, initial, duration, samples, rtol, atol)
+    sim = simulation if simulation is not None else build(n, stencil)
+    if simulation is not None:
+        sim.invalidateSystem()
+        sim.runDefaultMethod()
+    m = sim.getModel()
+    if m.n.getIntValue() != n or m.stencil.getIntValue() != stencil:
+        raise ValueError('Reused simulation has a different grid or stencil')
+    if operation == 'purge':
+        sim.run(next(method for method in m.getType().getMethods() if str(method.getName()) == 'purge'))
+    _set_operating_inputs(m, changes)
+    if initial is not None:
+        for i in range(1, n+1):
+            m.y0[i].setRealValue(initial['y'][i-1])
+            m.q0[i].setRealValueWithUnits(initial['q'][i-1], 'mol/kg')
+    sim.checkDimensions()
+    sim.build()
+    integ = _integrator(sim, duration, samples, rtol, atol)
     rows = []
 
     class Recorder(ascpy.IntegratorReporterCxx):

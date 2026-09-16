@@ -139,5 +139,27 @@ done:
 	lp_sparse_destroy(&p);cleanup(&f);
 }
 
-#define TESTS(T) T(permuted_sparse) T(invalid_sparse_dimensions) T(empty_and_nonfinite_sparse)
+static void test_rebuild_sparse(void){
+	struct fixture f={0};
+	lp_sparse_t p={0};
+	int ready=setup(&f), nnz, i;
+	CU_ASSERT(ready==0);
+	if(ready)goto done;
+	if(build(&f,&p,&f.m)){CU_FAIL("Initial export failed");goto done;}
+	nnz=p.num_nz;
+	CU_ASSERT(nnz>0);
+	/* Output counters are not input to assembly. Reuse owned buffers with
+	 * stale metadata, including the negative value hypothesised by Sonar. */
+	p.num_nz=-1;
+	if(build(&f,&p,&f.m)){CU_FAIL("Repeated export failed");goto done;}
+	CU_ASSERT(p.num_nz==nnz);
+	CU_ASSERT(p.start[0]==0 && p.start[p.num_col]==nnz);
+	for(i=0;i<p.num_col;++i){
+		CU_ASSERT(p.start[i]>=0 && p.start[i]<=p.start[i+1]);
+	}
+done:
+	lp_sparse_destroy(&p);cleanup(&f);
+}
+
+#define TESTS(T) T(permuted_sparse) T(invalid_sparse_dimensions) T(empty_and_nonfinite_sparse) T(rebuild_sparse)
 REGISTER_TESTS_SIMPLE(system_lp_export,TESTS)

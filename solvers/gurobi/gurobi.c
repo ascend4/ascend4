@@ -370,32 +370,18 @@ static int __stdcall gurobi_callback(GRBmodel *model, void *cbdata, int where, v
 	return 0;
 }
 
-static int gurobi_solve(slv_system_t server, SlvClientToken token){
-	GurobiSystem *s=token;
+/* Translate the shared sparse representation into Gurobi's input arrays.
+ * GRBloadmodel copies these arrays; their lifetime ends here on either path. */
+static int gurobi_load_model(GurobiSystem *s){
 	lp_sparse_t *p=&s->lp;
-	slv_status_lp_t *lp;
-	slv_status_mip_t *mip;
-	int err=0, status=GRB_LOADED, count=0, i;
+	int err=0, i;
 	int *start=NULL, *length=NULL, *index=NULL;
 	char *sense=NULL, *type=NULL;
-	double *rhs=NULL, *lower=NULL, *upper=NULL, *values=NULL;
-	double iterations=0, violation=0;
-	GRBenv *env;
-#define TRY(CALL) do {err=(CALL); if(err)goto fail;} while(0)
-	if((!s->prepared || !s->status.ready_to_solve) && gurobi_presolve(server,token))return 1;
-	mip=slv_status_mip_rw(&s->status);
-	lp=mip ? &mip->lp : &s->status.u.lp;
-	s->status.ready_to_solve=FALSE;
-	if(slv_get_solver_interrupt()){
-		s->status.panic=TRUE; s->status.ok=FALSE; return 0;
-	}
-	if(!s->env){
-		TRY(gurobi_open_environment(&s->env));
-	}
-#define ALLOC(F,T,N) do { F=ASC_NEW_ARRAY(T,(N)>0?(N):1); if(!F){err=GRB_ERROR_OUT_OF_MEMORY;goto fail;} } while(0)
+	double *rhs=NULL, *lower=NULL, *upper=NULL;
+#define ALLOC(F,T,N) do { (F)=ASC_NEW_ARRAY(T,(N)>0?(N):1); if(!(F)){err=GRB_ERROR_OUT_OF_MEMORY;goto cleanup;} } while(0)
 	ALLOC(start,int,p->num_col); ALLOC(length,int,p->num_col); ALLOC(index,int,p->num_nz);
 	ALLOC(sense,char,p->num_row); ALLOC(rhs,double,p->num_row);
-	ALLOC(lower,double,p->num_col); ALLOC(upper,double,p->num_col); ALLOC(values,double,p->num_col);
+	ALLOC(lower,double,p->num_col); ALLOC(upper,double,p->num_col);
 	ALLOC(type,char,p->num_col);
 #undef ALLOC
 	for(i=0;i<p->num_col;++i){
@@ -416,18 +402,18 @@ static int gurobi_solve(slv_system_t server, SlvClientToken token){
 		else {sense[i]=GRB_GREATER_EQUAL;rhs[i]=p->row_lower[i];}
 	}
 	gurobi_release_model(s);
-	TRY(GRBloadmodel(s->env,&s->model,"ASCEND",p->num_col,p->num_row,
+	err=GRBloadmodel(s->env,&s->model,"ASCEND",p->num_col,p->num_row,
 		p->maximize?GRB_MAXIMIZE:GRB_MINIMIZE,p->objective_offset,p->cost,sense,rhs,
-		start,length,index,p->value,lower,upper,type,NULL,NULL));
-	env=GRBgetenv(s->model);
-	TRY(gurobi_apply_options(env,&s->params));
-	TRY(GRBsetcallbackfunc(s->model,gurobi_callback,s));
-	s->next_progress=0;
-	if(SLV_PARAM_BOOL(&s->params,PROGRESS))slv_report_progress("Gurobi",mip ? "Starting MIP optimization" : "Starting LP optimization");
-	if(slv_get_solver_interrupt()){status=GRB_INTERRUPTED;goto finished;}
-	TRY(GRBoptimize(s->model));
-	TRY(GRBgetintattr(s->model,GRB_INT_ATTR_STATUS,&status));
-	TRY(GRBgetintattr(s->model,GRB_INT_ATTR_SOLCOUNT,&count));
+		start,length,index,p->value,lower,upper,type,NULL,NULL);
+cleanup:
+	ASC_FREE(start); ASC_FREE(length); ASC_FREE(index); ASC_FREE(sense);
+	ASC_FREE(rhs); ASC_FREE(lower); ASC_FREE(upper); ASC_FREE(type);
+	return err;
+}
+
+static void gurobi_read_iterations(GurobiSystem *s, slv_status_lp_t *lp){
+	double iterations=0;
+	int i=0;
 	GRBgetdblattr(s->model,GRB_DBL_ATTR_RUNTIME,&s->status.cpu_elapsed);
 	if(!GRBgetdblattr(s->model,GRB_DBL_ATTR_ITERCOUNT,&iterations)){
 		s->status.iteration=iterations>INT_MAX ? INT_MAX : (int32)iterations;
@@ -436,40 +422,59 @@ static int gurobi_solve(slv_system_t server, SlvClientToken token){
 	if(!GRBgetintattr(s->model,GRB_INT_ATTR_BARITERCOUNT,&i)){
 		lp->have_ipm_iterations=1;lp->ipm_iterations=i;
 	}
+
+}
+
+/* Do not publish an incumbent until both primal and integrality tolerances
+ * have been checked. In particular, an interrupted MIP may have no incumbent. */
+static int gurobi_read_solution(slv_system_t server, GurobiSystem *s,
+		slv_status_lp_t *lp, int count, int is_mip){
+	int err=0;
+	double violation=0, *values=NULL;
+#define TRY(CALL) do {err=(CALL); if(err)goto cleanup;} while(0)
 	lp->have_primal_status=1;lp->primal_status=SLV_SOLUTION_STATUS_NONE;
-	if(count>0){
-		TRY(GRBgetdblattr(s->model,GRB_DBL_ATTR_OBJVAL,&lp->objective_value));
-		lp->have_objective=1;
-		TRY(GRBgetdblattr(s->model,GRB_DBL_ATTR_CONSTR_VIO,&violation));
-		lp->max_primal_infeasibility=violation;
-		TRY(GRBgetdblattr(s->model,GRB_DBL_ATTR_BOUND_VIO,&violation));
-		lp->max_primal_infeasibility=fmax(lp->max_primal_infeasibility,violation);
-		lp->have_max_primal_infeas=1;
-		violation=0;
-		if(mip)TRY(GRBgetdblattr(s->model,GRB_DBL_ATTR_INT_VIO,&violation));
-		if(lp->max_primal_infeasibility<=SLV_PARAM_REAL(&s->params,FEAS_TOL)
-			&& violation<=SLV_PARAM_REAL(&s->params,INT_TOL)){
-			lp->primal_status=SLV_SOLUTION_STATUS_FEASIBLE;
-			TRY(GRBgetdblattrarray(s->model,GRB_DBL_ATTR_X,0,p->num_col,values));
-			s->status.calc_ok=lp_write_solution(server,&s->mps,values,1)==0;
-		}else lp->primal_status=SLV_SOLUTION_STATUS_INFEASIBLE;
+	if(count<=0)return 0;
+	TRY(GRBgetdblattr(s->model,GRB_DBL_ATTR_OBJVAL,&lp->objective_value));
+	lp->have_objective=1;
+	TRY(GRBgetdblattr(s->model,GRB_DBL_ATTR_CONSTR_VIO,&violation));
+	lp->max_primal_infeasibility=violation;
+	TRY(GRBgetdblattr(s->model,GRB_DBL_ATTR_BOUND_VIO,&violation));
+	lp->max_primal_infeasibility=fmax(lp->max_primal_infeasibility,violation);
+	lp->have_max_primal_infeas=1;
+	violation=0;
+	if(is_mip)TRY(GRBgetdblattr(s->model,GRB_DBL_ATTR_INT_VIO,&violation));
+	if(lp->max_primal_infeasibility<=SLV_PARAM_REAL(&s->params,FEAS_TOL)
+		&& violation<=SLV_PARAM_REAL(&s->params,INT_TOL)){
+		lp->primal_status=SLV_SOLUTION_STATUS_FEASIBLE;
+		values=ASC_NEW_ARRAY(double,s->lp.num_col);
+		if(!values){err=GRB_ERROR_OUT_OF_MEMORY;goto cleanup;}
+		TRY(GRBgetdblattrarray(s->model,GRB_DBL_ATTR_X,0,s->lp.num_col,values));
+		s->status.calc_ok=lp_write_solution(server,&s->mps,values,1)==0;
+	}else lp->primal_status=SLV_SOLUTION_STATUS_INFEASIBLE;
+cleanup:
+	ASC_FREE(values);
+	return err;
+#undef TRY
+}
+
+static void gurobi_read_mip_status(GurobiSystem *s, slv_status_mip_t *mip, int count){
+	const slv_status_lp_t *lp=&mip->lp;
+	double dual=GRB_INFINITY, nodes=0, gap=GRB_INFINITY;
+	GRBgetdblattr(s->model,GRB_DBL_ATTR_OBJBOUND,&dual);
+	gurobi_mip_bounds(mip,count>0 ? lp->objective_value : GRB_INFINITY,dual);
+	if(!GRBgetdblattr(s->model,GRB_DBL_ATTR_MIPGAP,&gap) && gurobi_finite(gap)){
+		mip->have_gap=1; mip->gap=gap;
 	}
-	if(mip){
-		double dual=GRB_INFINITY, nodes=0, gap=GRB_INFINITY;
-		GRBgetdblattr(s->model,GRB_DBL_ATTR_OBJBOUND,&dual);
-		gurobi_mip_bounds(mip,count>0 ? lp->objective_value : GRB_INFINITY,dual);
-		if(!GRBgetdblattr(s->model,GRB_DBL_ATTR_MIPGAP,&gap) && gurobi_finite(gap)){
-			mip->have_gap=1; mip->gap=gap;
-		}
-		mip->have_solution_count=1; mip->solution_count=count;
-		if(!GRBgetdblattr(s->model,GRB_DBL_ATTR_NODECOUNT,&nodes)){
-			mip->have_node_count=1;
-			mip->node_count=nodes>=(double)LLONG_MAX ? LLONG_MAX : (long long)nodes;
-		}
-		mip->have_total_lp_iterations=lp->have_simplex_iterations;
-		mip->total_lp_iterations=lp->simplex_iterations;
+	mip->have_solution_count=1; mip->solution_count=count;
+	if(!GRBgetdblattr(s->model,GRB_DBL_ATTR_NODECOUNT,&nodes)){
+		mip->have_node_count=1;
+		mip->node_count=nodes>=(double)LLONG_MAX ? LLONG_MAX : (long long)nodes;
 	}
-finished:
+	mip->have_total_lp_iterations=lp->have_simplex_iterations;
+	mip->total_lp_iterations=lp->simplex_iterations;
+}
+
+static void gurobi_finish(GurobiSystem *s, slv_status_lp_t *lp, int is_mip, int status){
 	lp->have_model_status=1;lp->model_status=status;
 	s->status.converged=status==GRB_OPTIMAL && s->status.calc_ok
 		&& lp->primal_status==SLV_SOLUTION_STATUS_FEASIBLE;
@@ -482,20 +487,49 @@ finished:
 	s->status.panic=status==GRB_INTERRUPTED;
 	s->status.diverged=status==GRB_UNBOUNDED || status==GRB_INF_OR_UNBD || status==GRB_NUMERIC;
 	s->status.ok=s->status.converged;
-	if(!s->status.converged)ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Gurobi %s terminated: %s, status %d (feasible solution: %s).",mip ? "MIP" : "LP",gurobi_status_name(status),status,lp->primal_status==SLV_SOLUTION_STATUS_FEASIBLE?"yes":"no");
+	if(!s->status.converged)ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Gurobi %s terminated: %s, status %d (feasible solution: %s).",is_mip ? "MIP" : "LP",gurobi_status_name(status),status,lp->primal_status==SLV_SOLUTION_STATUS_FEASIBLE?"yes":"no");
 	if(SLV_PARAM_BOOL(&s->params,PROGRESS))slv_report_progress("Gurobi",gurobi_status_name(status));
 	if(SLV_PARAM_BOOL(&s->params,NONLIN))ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Gurobi status refers to the tangent LP/MIP, not the original nonlinear model.");
-	goto cleanup;
+}
+
+static int gurobi_solve(slv_system_t server, SlvClientToken token){
+	GurobiSystem *s=token;
+	slv_status_lp_t *lp;
+	slv_status_mip_t *mip;
+	int err=0, status=GRB_LOADED, count=0;
+#define TRY(CALL) do {err=(CALL); if(err)goto fail;} while(0)
+	if((!s->prepared || !s->status.ready_to_solve) && gurobi_presolve(server,token))return 1;
+	mip=slv_status_mip_rw(&s->status);
+	lp=mip ? &mip->lp : &s->status.u.lp;
+	s->status.ready_to_solve=FALSE;
+	if(slv_get_solver_interrupt()){
+		s->status.panic=TRUE; s->status.ok=FALSE; return 0;
+	}
+	if(!s->env)TRY(gurobi_open_environment(&s->env));
+	TRY(gurobi_load_model(s));
+	TRY(gurobi_apply_options(GRBgetenv(s->model),&s->params));
+	TRY(GRBsetcallbackfunc(s->model,gurobi_callback,s));
+	s->next_progress=0;
+	if(SLV_PARAM_BOOL(&s->params,PROGRESS))slv_report_progress("Gurobi",mip ? "Starting MIP optimization" : "Starting LP optimization");
+	if(slv_get_solver_interrupt()){
+		gurobi_finish(s,lp,mip!=NULL,GRB_INTERRUPTED);
+		return 0;
+	}
+	TRY(GRBoptimize(s->model));
+	TRY(GRBgetintattr(s->model,GRB_INT_ATTR_STATUS,&status));
+	TRY(GRBgetintattr(s->model,GRB_INT_ATTR_SOLCOUNT,&count));
+	gurobi_read_iterations(s,lp);
+	TRY(gurobi_read_solution(server,s,lp,count,mip!=NULL));
+	if(mip)gurobi_read_mip_status(s,mip,count);
+	gurobi_finish(s,lp,mip!=NULL,status);
+	return 0;
 fail:
 	s->status.ok=s->status.converged=FALSE;
 	s->status.calc_ok=FALSE;
 	/* Native messages can include credentials during environment startup. */
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Gurobi C API error %d. Check parameters and Gurobi license configuration (GRB_LICENSE_FILE).",err);
 	if(!s->model && s->env){GRBfreeenv(s->env);s->env=NULL;}
-cleanup:
-	ASC_FREE(start); ASC_FREE(length); ASC_FREE(index); ASC_FREE(sense);
-	ASC_FREE(rhs); ASC_FREE(lower); ASC_FREE(upper); ASC_FREE(values); ASC_FREE(type);
-	return err ? 1 : 0;
+	return 1;
 #undef TRY
 }
 

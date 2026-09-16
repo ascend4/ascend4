@@ -1674,15 +1674,14 @@ static int cases_matching_in_when(struct w_when *when,
   clen = gl_length(cases);
   for (c=1;c<=clen;c++) {
     cur_case = (struct when_case *)(gl_fetch(cases,c));
-    if (when_case_active(cur_case)){
-      case_number = when_case_case_number(cur_case);
-      if (case_number == -1) {
-        whens_in_case = when_case_whens_list(cur_case);
-        if(cases_matching_in_when_list(whens_in_case,cl,ncases))return 1;
-      }else{
-        if(append_case_number(cl,case_number))return 1;
-	(*ncases)++;
-      }
+    if (!when_case_active(cur_case))continue;
+    case_number = when_case_case_number(cur_case);
+    if (case_number == -1) {
+      whens_in_case = when_case_whens_list(cur_case);
+      if(cases_matching_in_when_list(whens_in_case,cl,ncases))return 1;
+    }else{
+      if(append_case_number(cl,case_number))return 1;
+      (*ncases)++;
     }
   }
   return 0;

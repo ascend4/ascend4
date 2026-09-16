@@ -88,93 +88,173 @@ static int unexpected_progress(const char *solver,const char *message,void *data
 	return 0;
 }
 
-static void run_case(const char *path,const char *model,int mode,double expected){
-	struct Instance *sim=NULL;
-	slv_system_t sys=NULL;
+static void invalidate_parameter(struct slv_parameter *q, int j){
+	if(q->type==real_parm){
+		q->info.r.value=j==0 ? q->info.r.low-1 : j==1 ? q->info.r.high*2+1 : j==2 ? NAN : HUGE_VAL;
+	}else if(q->type==int_parm)q->info.i.value=j==0 ? q->info.i.low-1 : q->info.i.high+1;
+	else q->info.b.value=j==0 ? -1 : 2;
+}
+
+static void check_parameters(slv_system_t sys){
 	slv_parameters_t p;
 	slv_status_t status;
-	const slv_status_lp_t *lp;
-	double *original_lower=NULL, *original_upper=NULL;
-	struct var_variable **vars;
-	struct Name *name;
-	int opened, selected, licensed=getenv("ASCEND_TEST_GUROBI") && !strcmp(getenv("ASCEND_TEST_GUROBI"),"1");
-	int skip=0, seen=0, nvars=0, i;
-	int is_mip=mode>=MIP;
-	int showcase=mode==SHOWCASE || mode==SHOWCASE_MB || mode==SHOWCASE_10LB;
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/gurobi");
-	if(package_load("gurobi",NULL)){
-		if(licensed){CU_FAIL("Requested Gurobi plugin is unavailable");}
-		else {skip=1;}
-		goto cleanup;
-	}
-	selected=slv_lookup_client("Gurobi");
-	CU_ASSERT(selected>=0); if(selected<0)goto cleanup;
-	Asc_OpenModule(path,&opened);
-	CU_ASSERT(opened==0); if(opened)goto cleanup;
-	CU_ASSERT(zz_parse()==0);
-	sim=SimsCreateInstance(AddSymbol(model),AddSymbol("sim1"),e_normal,NULL);
-	CU_ASSERT(sim!=NULL); if(!sim)goto cleanup;
-	/* SELF_TEST examples need no setup; solver/OPTION hooks from on_load are
-	 * supplied by this harness instead (including a zero relative MIP gap). */
-	if(mode!=SELF_TEST && mode!=MIP_SELF_TEST){
-		name=CreateIdName(AddSymbol(showcase ? "initialise" : "on_load"));
-		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
-		DestroyName(name);
-	}
-	if(mode==SHOWCASE_MB || mode==SHOWCASE_10LB){
-		name=CreateIdName(AddSymbol(mode==SHOWCASE_MB ? "with_mass_balance" : "ten_pound_batch"));
-		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
-		DestroyName(name);
-	}
-	sys=system_build(GetSimulationRoot(sim));
-	CU_ASSERT(sys!=NULL); if(!sys)goto cleanup;
-	vars=slv_get_solvers_var_list(sys);
-	while(vars[nvars])++nvars;
-	original_lower=ASC_NEW_ARRAY(double,nvars);
-	original_upper=ASC_NEW_ARRAY(double,nvars);
-	for(i=0;i<nvars;++i){
-		original_lower[i]=var_lower_bound(vars[i]);
-		original_upper[i]=var_upper_bound(vars[i]);
-	}
-	CU_ASSERT(slv_select_solver(sys,selected)>=0);
+	int i;
 	slv_get_parameters(sys,&p);
-	CU_ASSERT(p.whose==selected);
-	if(mode==PARAMETERS){
-		for(i=0;i<(int)(sizeof(tuning_parameters)/sizeof(tuning_parameters[0]));++i){
-			int idx=param(&p,tuning_parameters[i].name), j;
-			struct slv_parameter original=p.parms[idx], *q=&p.parms[idx];
-			CU_ASSERT(q->type==tuning_parameters[i].type);
-			CU_ASSERT(q->description && q->description[0]);
-			if(q->type==real_parm){
-				CU_ASSERT_DOUBLE_EQUAL(q->info.r.value,tuning_parameters[i].value,0);
-				CU_ASSERT_DOUBLE_EQUAL(q->info.r.low,tuning_parameters[i].low,0);
-				CU_ASSERT_DOUBLE_EQUAL(q->info.r.high,tuning_parameters[i].high,0);
-			}else if(q->type==int_parm){
-				CU_ASSERT(q->info.i.value==tuning_parameters[i].value);
-				CU_ASSERT(q->info.i.low==tuning_parameters[i].low);
-				CU_ASSERT(q->info.i.high==tuning_parameters[i].high);
-			}else CU_ASSERT(q->info.b.value==0);
-			/* C clients can bypass frontend validation: test both ends, NaN
-			 * and IEEE infinity, without ever acquiring a license. */
-			for(j=0;j<(q->type==real_parm ? 4 : 2);++j){
-				if(q->type==real_parm){
-					q->info.r.value=j==0 ? q->info.r.low-1 : j==1 ? q->info.r.high*2+1 : j==2 ? NAN : HUGE_VAL;
-				}else if(q->type==int_parm)q->info.i.value=j==0 ? q->info.i.low-1 : q->info.i.high+1;
-				else q->info.b.value=j==0 ? -1 : 2;
-				slv_set_parameters(sys,&p);
-				CU_ASSERT(slv_presolve(sys)!=0);
-				slv_get_status(sys,&status);
-				CU_ASSERT_FALSE(status.calc_ok);
-				CU_ASSERT_FALSE(status.ready_to_solve);
-			}
-			*q=original;
+	for(i=0;i<(int)(sizeof(tuning_parameters)/sizeof(tuning_parameters[0]));++i){
+		int idx=param(&p,tuning_parameters[i].name), j;
+		struct slv_parameter original=p.parms[idx], *q=&p.parms[idx];
+		CU_ASSERT(q->type==tuning_parameters[i].type);
+		CU_ASSERT(q->description && q->description[0]);
+		if(q->type==real_parm){
+			CU_ASSERT_DOUBLE_EQUAL(q->info.r.value,tuning_parameters[i].value,0);
+			CU_ASSERT_DOUBLE_EQUAL(q->info.r.low,tuning_parameters[i].low,0);
+			CU_ASSERT_DOUBLE_EQUAL(q->info.r.high,tuning_parameters[i].high,0);
+		}else if(q->type==int_parm){
+			CU_ASSERT(q->info.i.value==tuning_parameters[i].value);
+			CU_ASSERT(q->info.i.low==tuning_parameters[i].low);
+			CU_ASSERT(q->info.i.high==tuning_parameters[i].high);
+		}else CU_ASSERT(q->info.b.value==0);
+		/* C clients can bypass frontend validation: test both ends, NaN
+		 * and IEEE infinity, without ever acquiring a license. */
+		for(j=0;j<(q->type==real_parm ? 4 : 2);++j){
+			invalidate_parameter(q,j);
+			slv_set_parameters(sys,&p);
+			CU_ASSERT(slv_presolve(sys)!=0);
+			slv_get_status(sys,&status);
+			CU_ASSERT_FALSE(status.calc_ok);
+			CU_ASSERT_FALSE(status.ready_to_solve);
 		}
-		slv_set_parameters(sys,&p);
-		CU_ASSERT(slv_presolve(sys)==0);
-		goto cleanup;
+		*q=original;
 	}
+	slv_set_parameters(sys,&p);
+	CU_ASSERT(slv_presolve(sys)==0);
+}
+
+static void set_tuning_options(slv_parameters_t *p, int mode){
+	SLV_PARAM_INT(p,param(p,"mip_focus"))=1;
+	SLV_PARAM_REAL(p,param(p,"heuristics"))=0.2;
+	SLV_PARAM_INT(p,param(p,"cuts"))=2;
+	SLV_PARAM_INT(p,param(p,"symmetry"))=2;
+	SLV_PARAM_BOOL(p,param(p,"integrality_focus"))=1;
+	SLV_PARAM_INT(p,param(p,"numeric_focus"))=2;
+	SLV_PARAM_INT(p,param(p,"scale_flag"))=2;
+	SLV_PARAM_INT(p,param(p,"aggregate"))=0;
+	SLV_PARAM_REAL(p,param(p,"work_limit"))=100;
+	SLV_PARAM_REAL(p,param(p,"soft_mem_limit"))=1;
+	SLV_PARAM_REAL(p,param(p,"iteration_limit"))=100000;
+	SLV_PARAM_INT(p,param(p,"bar_iter_limit"))=500;
+	SLV_PARAM_REAL(p,param(p,"bar_conv_tol"))=1e-10;
+	SLV_PARAM_INT(p,param(p,"crossover"))=mode==LP_TUNED ? 0 : 1;
+	SLV_PARAM_INT(p,param(p,"node_method"))=1;
+	SLV_PARAM_INT(p,param(p,"method"))=mode==LP_TUNED ? 2 : 1;
+	SLV_PARAM_INT(p,param(p,"presolve"))=0;
+}
+
+static void set_lp_limit_options(slv_parameters_t *p, int mode){
+	SLV_PARAM_INT(p,param(p,"presolve"))=0;
+	SLV_PARAM_INT(p,param(p,"method"))=mode==LP_ITER_LIMIT ? 1 : 2;
+	if(mode==LP_ITER_LIMIT)SLV_PARAM_REAL(p,param(p,"iteration_limit"))=0;
+	else{
+		SLV_PARAM_INT(p,param(p,"bar_iter_limit"))=0;
+		/* Otherwise crossover can finish the LP despite the barrier limit. */
+		SLV_PARAM_INT(p,param(p,"crossover"))=0;
+	}
+}
+
+static void check_limited_mip(slv_system_t sys, slv_status_t status, int mode, int seen){
+	const slv_status_lp_t *lp=&status.u.mip.lp;
+	struct var_variable **vars=slv_get_solvers_var_list(sys);
+	int i, nvars=slv_get_num_solvers_vars(sys);
+	CU_ASSERT_FALSE(status.converged);
+	if(mode==MIP_SOLUTION_LIMIT){
+		CU_ASSERT(lp->model_status==10); /* GRB_SOLUTION_LIMIT */
+		CU_ASSERT_TRUE(status.iteration_limit_exceeded);
+		CU_ASSERT(status.u.mip.have_solution_count && status.u.mip.solution_count>=1);
+		CU_ASSERT(lp->primal_status==SLV_SOLUTION_STATUS_FEASIBLE);
+	}else if(mode==MIP_NODE_LIMIT){
+		CU_ASSERT(lp->model_status==8); /* GRB_NODE_LIMIT */
+		CU_ASSERT_TRUE(status.iteration_limit_exceeded);
+	}else{
+		CU_ASSERT(seen>0);
+		CU_ASSERT_TRUE(status.panic);
+	}
+	if(lp->primal_status==SLV_SOLUTION_STATUS_FEASIBLE){
+		CU_ASSERT_DOUBLE_EQUAL(rel_residual(slv_get_obj_relation(sys)),lp->objective_value,1e-6);
+		CU_ASSERT_TRUE(status.u.mip.have_primal_bound);
+		/* This is a minimisation benchmark with known optimum 166. */
+		CU_ASSERT(status.u.mip.primal_bound>=166-1e-6);
+		if(status.u.mip.have_dual_bound){
+			CU_ASSERT(status.u.mip.dual_bound<=166+1e-6);
+			CU_ASSERT(status.u.mip.dual_bound<=status.u.mip.primal_bound+1e-6);
+		}
+		for(i=0;i<nvars;++i){
+			struct TypeDescription *type=InstanceTypeDesc(var_instance(vars[i]));
+			if(type==MoreRefined(type,FindType(AddSymbol("solver_int")))){
+				CU_ASSERT_DOUBLE_EQUAL(var_value(vars[i]),round(var_value(vars[i])),1e-7);
+			}
+		}
+	}
+}
+
+static void check_optimal_mip(slv_system_t sys, slv_status_t status, double expected){
+	const slv_status_mip_t *m=&status.u.mip;
+	struct var_variable **v=slv_get_solvers_var_list(sys);
+	CU_ASSERT_TRUE(m->have_primal_bound);
+	CU_ASSERT_TRUE(m->have_dual_bound);
+	CU_ASSERT_TRUE(m->have_gap);
+	CU_ASSERT_TRUE(m->have_abs_gap);
+	CU_ASSERT_TRUE(m->have_node_count);
+	CU_ASSERT(m->have_solution_count && m->solution_count>=1);
+	CU_ASSERT_DOUBLE_EQUAL(m->primal_bound,expected,1e-6);
+	CU_ASSERT_DOUBLE_EQUAL(m->dual_bound,expected,1e-6);
+	CU_ASSERT_DOUBLE_EQUAL(m->gap,0,1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(m->abs_gap,0,1e-6);
+	for(;*v;++v){
+		struct TypeDescription *type=InstanceTypeDesc(var_instance(*v));
+		if(type==MoreRefined(type,FindType(AddSymbol("solver_int"))) && !var_relaxed(*v) && !var_fixed(*v)){
+			CU_ASSERT_DOUBLE_EQUAL(var_value(*v),round(var_value(*v)),1e-7);
+		}
+	}
+}
+
+static void check_lp_resolve(slv_system_t sys){
+	slv_status_t status;
+	var_set_upper_bound(variable(sys,"x"),1);
+	var_set_value(variable(sys,"p"),6);
+	CU_ASSERT(slv_resolve(sys)==0);
+	slv_get_status(sys,&status);
+	CU_ASSERT_TRUE(status.converged);
+	CU_ASSERT_DOUBLE_EQUAL(status.u.lp.objective_value,20,1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"x")),1,1e-8);
+	CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"y")),5,1e-8);
+	CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"p")),6,1e-8);
+}
+
+static void check_mip_resolve(slv_system_t sys){
+	slv_status_t status;
+	slv_parameters_t p;
+	var_set_upper_bound(variable(sys,"x"),1.5);
+	CU_ASSERT(slv_resolve(sys)==0);
+	slv_get_status(sys,&status);
+	CU_ASSERT_TRUE(status.converged);
+	CU_ASSERT(status.kind==SLV_STATUS_MIP);
+	CU_ASSERT_DOUBLE_EQUAL(status.u.mip.lp.objective_value,1,1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"x")),1,1e-7);
+	/* Rebuild and rescale after switching from MIP to LP relaxation. */
+	slv_get_parameters(sys,&p);
+	SLV_PARAM_BOOL(&p,param(&p,"relaxed"))=1;
+	SLV_PARAM_BOOL(&p,param(&p,"varnom_scale"))=1;
+	slv_set_parameters(sys,&p);
+	CU_ASSERT(slv_resolve(sys)==0);
+	slv_get_status(sys,&status);
+	CU_ASSERT_TRUE(status.converged);
+	CU_ASSERT(status.kind==SLV_STATUS_LP);
+	CU_ASSERT_DOUBLE_EQUAL(status.u.lp.objective_value,1.5,1e-7);
+}
+
+static void set_case_options(slv_system_t sys, int mode){
+	slv_parameters_t p;
+	slv_get_parameters(sys,&p);
 	SLV_PARAM_INT(&p,param(&p,"threads"))=1;
 	SLV_PARAM_INT(&p,param(&p,"random_seed"))=42;
 	SLV_PARAM_REAL(&p,param(&p,"mip_rel_gap"))=0;
@@ -191,33 +271,10 @@ static void run_case(const char *path,const char *model,int mode,double expected
 		SLV_PARAM_INT(&p,param(&p,"presolve"))=0;
 	}
 	if(mode==MIP_TUNED || mode==LP_TUNED){
-		SLV_PARAM_INT(&p,param(&p,"mip_focus"))=1;
-		SLV_PARAM_REAL(&p,param(&p,"heuristics"))=0.2;
-		SLV_PARAM_INT(&p,param(&p,"cuts"))=2;
-		SLV_PARAM_INT(&p,param(&p,"symmetry"))=2;
-		SLV_PARAM_BOOL(&p,param(&p,"integrality_focus"))=1;
-		SLV_PARAM_INT(&p,param(&p,"numeric_focus"))=2;
-		SLV_PARAM_INT(&p,param(&p,"scale_flag"))=2;
-		SLV_PARAM_INT(&p,param(&p,"aggregate"))=0;
-		SLV_PARAM_REAL(&p,param(&p,"work_limit"))=100;
-		SLV_PARAM_REAL(&p,param(&p,"soft_mem_limit"))=1;
-		SLV_PARAM_REAL(&p,param(&p,"iteration_limit"))=100000;
-		SLV_PARAM_INT(&p,param(&p,"bar_iter_limit"))=500;
-		SLV_PARAM_REAL(&p,param(&p,"bar_conv_tol"))=1e-10;
-		SLV_PARAM_INT(&p,param(&p,"crossover"))=mode==LP_TUNED ? 0 : 1;
-		SLV_PARAM_INT(&p,param(&p,"node_method"))=1;
-		SLV_PARAM_INT(&p,param(&p,"method"))=mode==LP_TUNED ? 2 : 1;
-		SLV_PARAM_INT(&p,param(&p,"presolve"))=0;
+		set_tuning_options(&p,mode);
 	}
 	if(mode==LP_ITER_LIMIT || mode==LP_BAR_LIMIT){
-		SLV_PARAM_INT(&p,param(&p,"presolve"))=0;
-		SLV_PARAM_INT(&p,param(&p,"method"))=mode==LP_ITER_LIMIT ? 1 : 2;
-		if(mode==LP_ITER_LIMIT)SLV_PARAM_REAL(&p,param(&p,"iteration_limit"))=0;
-		else{
-			SLV_PARAM_INT(&p,param(&p,"bar_iter_limit"))=0;
-			/* Otherwise crossover can finish the LP despite the barrier limit. */
-			SLV_PARAM_INT(&p,param(&p,"crossover"))=0;
-		}
+		set_lp_limit_options(&p,mode);
 	}
 	if(mode==MIP_WORK_LIMIT)SLV_PARAM_REAL(&p,param(&p,"work_limit"))=0;
 	if(mode==MIP_MEM_LIMIT)SLV_PARAM_REAL(&p,param(&p,"soft_mem_limit"))=0;
@@ -227,12 +284,104 @@ static void run_case(const char *path,const char *model,int mode,double expected
 		SLV_PARAM_BOOL(&p,param(&p,"relnom_scale"))=1;
 	}
 	slv_set_parameters(sys,&p);
+}
+
+static void check_no_solution(slv_system_t sys, slv_status_t status, int mode, double expected){
+	const slv_status_lp_t *lp=mode>=MIP ? &status.u.mip.lp : &status.u.lp;
+	CU_ASSERT_FALSE(status.converged);
+	if(mode==INFEASIBLE || mode==MIP_INFEASIBLE)CU_ASSERT_TRUE(status.inconsistent);
+	if(mode==UNBOUNDED)CU_ASSERT_TRUE(status.diverged);
+	if(mode==TIMEOUT || mode==MIP_TIMEOUT)CU_ASSERT_TRUE(status.time_limit_exceeded);
+	if(mode==INTERRUPT || mode==MIP_INTERRUPT || mode==MIP_QUIET_INTERRUPT)CU_ASSERT_TRUE(status.panic);
+	CU_ASSERT_FALSE(lp->have_objective);
+	CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"x")),expected,1e-8);
+}
+
+static void check_case_result(slv_system_t sys, struct Instance *sim, int mode,
+		double expected, int seen){
+	slv_status_t status;
+	const slv_status_lp_t *lp;
+	struct Name *name;
+	int is_mip=mode>=MIP;
+	int showcase=mode==SHOWCASE || mode==SHOWCASE_MB || mode==SHOWCASE_10LB;
+	slv_get_status(sys,&status);
+	CU_ASSERT(status.kind==(is_mip ? SLV_STATUS_MIP : SLV_STATUS_LP));
+	lp=is_mip ? &status.u.mip.lp : &status.u.lp;
+	if(mode==LP_ITER_LIMIT || mode==LP_BAR_LIMIT || mode==MIP_WORK_LIMIT || mode==MIP_MEM_LIMIT){
+		CU_ASSERT_FALSE(status.converged);
+		CU_ASSERT_FALSE(status.ready_to_solve);
+		CU_ASSERT_FALSE(status.inconsistent);
+		CU_ASSERT_FALSE(status.panic);
+		CU_ASSERT_FALSE(status.time_limit_exceeded);
+		CU_ASSERT(lp->have_model_status);
+		CU_ASSERT(lp->model_status==(mode==MIP_WORK_LIMIT ? 16 : mode==MIP_MEM_LIMIT ? 17 : 7));
+		CU_ASSERT(status.iteration_limit_exceeded==(mode!=MIP_MEM_LIMIT));
+		return;
+	}
+	if(mode==MIP_SOLUTION_LIMIT || mode==MIP_CALLBACK_INTERRUPT || mode==MIP_NODE_LIMIT){
+		check_limited_mip(sys,status,mode,seen);
+		return;
+	}
+	if(mode==INFEASIBLE || mode==UNBOUNDED || mode==TIMEOUT || mode==INTERRUPT
+		|| mode==MIP_INFEASIBLE || mode==MIP_TIMEOUT || mode==MIP_INTERRUPT || mode==MIP_QUIET_INTERRUPT){
+		check_no_solution(sys,status,mode,expected);
+		return;
+	}
+	CU_ASSERT_TRUE(status.converged);
+	CU_ASSERT_TRUE(lp->have_objective);
+	CU_ASSERT_DOUBLE_EQUAL(lp->objective_value,expected,1e-6);
+	if(mode==LP_TUNED){
+		CU_ASSERT(lp->have_ipm_iterations && lp->ipm_iterations>0);
+	}
+	if(is_mip){
+		check_optimal_mip(sys,status,expected);
+	}
+	CU_ASSERT_DOUBLE_EQUAL(rel_residual(slv_get_obj_relation(sys)),expected,1e-6);
+	if(showcase || mode==SELF_TEST || mode==MIP_BENCH || mode==MIP_SELF_TEST){
+		name=CreateIdName(AddSymbol("self_test"));
+		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
+		DestroyName(name);
+	}
+	if(mode==SCALED || mode==RESOLVE){
+		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"p")),4,1e-8);
+		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"x")),2,1e-8);
+		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"y")),2,1e-8);
+	}
+	if(mode==RESOLVE){
+		check_lp_resolve(sys);
+	}
+	if(mode==MIP_RESOLVE){
+		check_mip_resolve(sys);
+	}
+}
+
+static void initialise_case(struct Instance *sim, int mode){
+	struct Name *name;
+	int showcase=mode==SHOWCASE || mode==SHOWCASE_MB || mode==SHOWCASE_10LB;
+	/* SELF_TEST examples need no setup; solver/OPTION hooks from on_load are
+	 * supplied by this harness instead (including a zero relative MIP gap). */
+	if(mode!=SELF_TEST && mode!=MIP_SELF_TEST){
+		name=CreateIdName(AddSymbol(showcase ? "initialise" : "on_load"));
+		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
+		DestroyName(name);
+	}
+	if(mode==SHOWCASE_MB || mode==SHOWCASE_10LB){
+		name=CreateIdName(AddSymbol(mode==SHOWCASE_MB ? "with_mass_balance" : "ten_pound_batch"));
+		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
+		DestroyName(name);
+	}
+}
+
+/* Return whether this case proceeds beyond presolve. */
+static int prepare_case(slv_system_t sys, int mode){
+	slv_status_t status;
+	int is_mip=mode>=MIP;
 	if(mode==REJECT){
 		CU_ASSERT_FALSE(slv_eligible_solver(sys));
 		CU_ASSERT(slv_presolve(sys)!=0);
 		slv_get_status(sys,&status);
 		CU_ASSERT_FALSE(status.ready_to_solve);
-		goto cleanup;
+		return 0;
 	}
 	CU_ASSERT_TRUE(slv_eligible_solver(sys));
 	if(mode==BAD_EVAL){
@@ -240,12 +389,12 @@ static void run_case(const char *path,const char *model,int mode,double expected
 		slv_get_status(sys,&status);
 		CU_ASSERT_FALSE(status.ready_to_solve);
 		CU_ASSERT_FALSE(status.calc_ok);
-		goto cleanup;
+		return 0;
 	}
 	CU_ASSERT(slv_presolve(sys)==0);
 	slv_get_status(sys,&status);
 	CU_ASSERT(status.kind==(is_mip ? SLV_STATUS_MIP : SLV_STATUS_LP));
-	if(mode==MIP_PREPARE)goto cleanup;
+	if(mode==MIP_PREPARE)return 0;
 	if(mode==PREPARE_ONLY){
 		mps_data_t m={0}; lp_sparse_t sparse={0};
 		CU_ASSERT(lp_prepare(sys,&m,&status,1,1)==0);
@@ -256,8 +405,56 @@ static void run_case(const char *path,const char *model,int mode,double expected
 		CU_ASSERT_DOUBLE_EQUAL(sparse.objective_offset,7,1e-10);
 		CU_ASSERT(sparse.num_nz==3);
 		lp_sparse_destroy(&sparse);lp_nuke_pointers(&m);
+		return 0;
+	}
+	return 1;
+}
+
+static void run_case(const char *path,const char *model,int mode,double expected){
+	struct Instance *sim=NULL;
+	slv_system_t sys=NULL;
+	slv_parameters_t p;
+	slv_status_t status;
+	double *original_lower=NULL, *original_upper=NULL;
+	struct var_variable **vars;
+	const char *requested=getenv("ASCEND_TEST_GUROBI");
+	int opened, selected, licensed=requested && !strcmp(requested,"1");
+	int skip=0, seen=0, nvars=0, i;
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/gurobi");
+	if(package_load("gurobi",NULL)){
+		if(licensed){CU_FAIL("Requested Gurobi plugin is unavailable");}
+		else {skip=1;}
 		goto cleanup;
 	}
+	selected=slv_lookup_client("Gurobi");
+	CU_ASSERT(selected>=0); if(selected<0)goto cleanup;
+	Asc_OpenModule(path,&opened);
+	CU_ASSERT(opened==0); if(opened)goto cleanup;
+	CU_ASSERT(zz_parse()==0);
+	sim=SimsCreateInstance(AddSymbol(model),AddSymbol("sim1"),e_normal,NULL);
+	CU_ASSERT(sim!=NULL); if(!sim)goto cleanup;
+	initialise_case(sim,mode);
+	sys=system_build(GetSimulationRoot(sim));
+	CU_ASSERT(sys!=NULL); if(!sys)goto cleanup;
+	vars=slv_get_solvers_var_list(sys);
+	while(vars[nvars])++nvars;
+	original_lower=ASC_NEW_ARRAY(double,nvars);
+	original_upper=ASC_NEW_ARRAY(double,nvars);
+	for(i=0;i<nvars;++i){
+		original_lower[i]=var_lower_bound(vars[i]);
+		original_upper[i]=var_upper_bound(vars[i]);
+	}
+	CU_ASSERT(slv_select_solver(sys,selected)>=0);
+	slv_get_parameters(sys,&p);
+	CU_ASSERT(p.whose==selected);
+	if(mode==PARAMETERS){
+		check_parameters(sys);
+		goto cleanup;
+	}
+	set_case_options(sys,mode);
+	if(!prepare_case(sys,mode))goto cleanup;
 	/* Frontends can change options after presolve, before iterate. */
 	slv_get_parameters(sys,&p);
 	slv_set_parameters(sys,&p);
@@ -272,130 +469,7 @@ static void run_case(const char *path,const char *model,int mode,double expected
 		CU_ASSERT_DOUBLE_EQUAL(var_lower_bound(vars[i]),original_lower[i],0);
 		CU_ASSERT_DOUBLE_EQUAL(var_upper_bound(vars[i]),original_upper[i],0);
 	}
-	slv_get_status(sys,&status);
-	CU_ASSERT(status.kind==(is_mip ? SLV_STATUS_MIP : SLV_STATUS_LP));
-	lp=is_mip ? &status.u.mip.lp : &status.u.lp;
-	if(mode==LP_ITER_LIMIT || mode==LP_BAR_LIMIT || mode==MIP_WORK_LIMIT || mode==MIP_MEM_LIMIT){
-		CU_ASSERT_FALSE(status.converged);
-		CU_ASSERT_FALSE(status.ready_to_solve);
-		CU_ASSERT_FALSE(status.inconsistent);
-		CU_ASSERT_FALSE(status.panic);
-		CU_ASSERT_FALSE(status.time_limit_exceeded);
-		CU_ASSERT(lp->have_model_status);
-		CU_ASSERT(lp->model_status==(mode==MIP_WORK_LIMIT ? 16 : mode==MIP_MEM_LIMIT ? 17 : 7));
-		CU_ASSERT(status.iteration_limit_exceeded==(mode!=MIP_MEM_LIMIT));
-		goto cleanup;
-	}
-	if(mode==MIP_SOLUTION_LIMIT || mode==MIP_CALLBACK_INTERRUPT || mode==MIP_NODE_LIMIT){
-		CU_ASSERT_FALSE(status.converged);
-		if(mode==MIP_SOLUTION_LIMIT){
-			CU_ASSERT(lp->model_status==10); /* GRB_SOLUTION_LIMIT */
-			CU_ASSERT_TRUE(status.iteration_limit_exceeded);
-			CU_ASSERT(status.u.mip.have_solution_count && status.u.mip.solution_count>=1);
-			CU_ASSERT(lp->primal_status==SLV_SOLUTION_STATUS_FEASIBLE);
-		}else if(mode==MIP_NODE_LIMIT){
-			CU_ASSERT(lp->model_status==8); /* GRB_NODE_LIMIT */
-			CU_ASSERT_TRUE(status.iteration_limit_exceeded);
-		}else{
-			CU_ASSERT(seen>0);
-			CU_ASSERT_TRUE(status.panic);
-		}
-		if(lp->primal_status==SLV_SOLUTION_STATUS_FEASIBLE){
-			CU_ASSERT_DOUBLE_EQUAL(rel_residual(slv_get_obj_relation(sys)),lp->objective_value,1e-6);
-			CU_ASSERT_TRUE(status.u.mip.have_primal_bound);
-			/* This is a minimisation benchmark with known optimum 166. */
-			CU_ASSERT(status.u.mip.primal_bound>=166-1e-6);
-			if(status.u.mip.have_dual_bound){
-				CU_ASSERT(status.u.mip.dual_bound<=166+1e-6);
-				CU_ASSERT(status.u.mip.dual_bound<=status.u.mip.primal_bound+1e-6);
-			}
-			for(i=0;i<nvars;++i){
-				struct TypeDescription *type=InstanceTypeDesc(var_instance(vars[i]));
-				if(type==MoreRefined(type,FindType(AddSymbol("solver_int")))){
-					CU_ASSERT_DOUBLE_EQUAL(var_value(vars[i]),round(var_value(vars[i])),1e-7);
-				}
-			}
-		}
-		goto cleanup;
-	}
-	if(mode==INFEASIBLE || mode==UNBOUNDED || mode==TIMEOUT || mode==INTERRUPT
-		|| mode==MIP_INFEASIBLE || mode==MIP_TIMEOUT || mode==MIP_INTERRUPT || mode==MIP_QUIET_INTERRUPT){
-		CU_ASSERT_FALSE(status.converged);
-		if(mode==INFEASIBLE || mode==MIP_INFEASIBLE)CU_ASSERT_TRUE(status.inconsistent);
-		if(mode==UNBOUNDED)CU_ASSERT_TRUE(status.diverged);
-		if(mode==TIMEOUT || mode==MIP_TIMEOUT)CU_ASSERT_TRUE(status.time_limit_exceeded);
-		if(mode==INTERRUPT || mode==MIP_INTERRUPT || mode==MIP_QUIET_INTERRUPT)CU_ASSERT_TRUE(status.panic);
-		CU_ASSERT_FALSE(lp->have_objective);
-		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"x")),expected,1e-8);
-		goto cleanup;
-	}
-	CU_ASSERT_TRUE(status.converged);
-	CU_ASSERT_TRUE(lp->have_objective);
-	CU_ASSERT_DOUBLE_EQUAL(lp->objective_value,expected,1e-6);
-	if(mode==LP_TUNED){
-		CU_ASSERT(lp->have_ipm_iterations && lp->ipm_iterations>0);
-	}
-	if(is_mip){
-		const slv_status_mip_t *m=&status.u.mip;
-		struct var_variable **v=slv_get_solvers_var_list(sys);
-		CU_ASSERT_TRUE(m->have_primal_bound);
-		CU_ASSERT_TRUE(m->have_dual_bound);
-		CU_ASSERT_TRUE(m->have_gap);
-		CU_ASSERT_TRUE(m->have_abs_gap);
-		CU_ASSERT_TRUE(m->have_node_count);
-		CU_ASSERT(m->have_solution_count && m->solution_count>=1);
-		CU_ASSERT_DOUBLE_EQUAL(m->primal_bound,expected,1e-6);
-		CU_ASSERT_DOUBLE_EQUAL(m->dual_bound,expected,1e-6);
-		CU_ASSERT_DOUBLE_EQUAL(m->gap,0,1e-7);
-		CU_ASSERT_DOUBLE_EQUAL(m->abs_gap,0,1e-6);
-		for(;*v;++v){
-			struct TypeDescription *type=InstanceTypeDesc(var_instance(*v));
-			if(type==MoreRefined(type,FindType(AddSymbol("solver_int"))) && !var_relaxed(*v) && !var_fixed(*v)){
-				CU_ASSERT_DOUBLE_EQUAL(var_value(*v),round(var_value(*v)),1e-7);
-			}
-		}
-	}
-	CU_ASSERT_DOUBLE_EQUAL(rel_residual(slv_get_obj_relation(sys)),expected,1e-6);
-	if(showcase || mode==SELF_TEST || mode==MIP_BENCH || mode==MIP_SELF_TEST){
-		name=CreateIdName(AddSymbol("self_test"));
-		CU_ASSERT(Initialize(GetSimulationRoot(sim),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
-		DestroyName(name);
-	}
-	if(mode==SCALED || mode==RESOLVE){
-		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"p")),4,1e-8);
-		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"x")),2,1e-8);
-		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"y")),2,1e-8);
-	}
-	if(mode==RESOLVE){
-		var_set_upper_bound(variable(sys,"x"),1);
-		var_set_value(variable(sys,"p"),6);
-		CU_ASSERT(slv_resolve(sys)==0);
-		slv_get_status(sys,&status);
-		CU_ASSERT_TRUE(status.converged);
-		CU_ASSERT_DOUBLE_EQUAL(status.u.lp.objective_value,20,1e-7);
-		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"x")),1,1e-8);
-		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"y")),5,1e-8);
-		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"p")),6,1e-8);
-	}
-	if(mode==MIP_RESOLVE){
-		var_set_upper_bound(variable(sys,"x"),1.5);
-		CU_ASSERT(slv_resolve(sys)==0);
-		slv_get_status(sys,&status);
-		CU_ASSERT_TRUE(status.converged);
-		CU_ASSERT(status.kind==SLV_STATUS_MIP);
-		CU_ASSERT_DOUBLE_EQUAL(status.u.mip.lp.objective_value,1,1e-7);
-		CU_ASSERT_DOUBLE_EQUAL(var_value(variable(sys,"x")),1,1e-7);
-		/* Rebuild and rescale after switching from MIP to LP relaxation. */
-		slv_get_parameters(sys,&p);
-		SLV_PARAM_BOOL(&p,param(&p,"relaxed"))=1;
-		SLV_PARAM_BOOL(&p,param(&p,"varnom_scale"))=1;
-		slv_set_parameters(sys,&p);
-		CU_ASSERT(slv_resolve(sys)==0);
-		slv_get_status(sys,&status);
-		CU_ASSERT_TRUE(status.converged);
-		CU_ASSERT(status.kind==SLV_STATUS_LP);
-		CU_ASSERT_DOUBLE_EQUAL(status.u.lp.objective_value,1.5,1e-7);
-	}
+	check_case_result(sys,sim,mode,expected,seen);
 cleanup:
 	ASC_FREE(original_lower); ASC_FREE(original_upper);
 	slv_set_progress_callback(NULL,NULL);

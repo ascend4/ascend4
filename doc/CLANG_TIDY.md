@@ -122,3 +122,77 @@ optional LP adapter nor a commercial licence. Gurobi's licensed tests need
 network access with the current licence configuration: a sandboxed run
 failed with `GRB_ERROR_NETWORK` (10022), then passed when network access
 was allowed. This is not a reason to skip Gurobi tests silently.
+
+## Follow-up on the updated PR 78 report
+
+The next Sonar snapshot had 27 HIGH maintainability findings, one BLOCKER
+reliability finding and no HIGH security findings. Eighteen old findings
+were no longer open, but three new ones appeared. This follow-up addresses
+the reported code paths without adding warning suppressions:
+
+- Assemble sparse LP values using a locally initialised, capacity-checked
+  cursor; publish `num_nz` only after assembly succeeds. This avoids relying
+  on the analyser tracking `memset` through the output-structure reset. Add
+  a repeated-export regression with stale negative output metadata.
+- Skip inactive WHEN cases early to reduce nesting while retaining recursive
+  traversal and error propagation.
+- Separate Gurobi model loading, solution validation, iteration/MIP statistics
+  and termination reporting. Give temporary input arrays a single owner and
+  cleanup path. Split the test harness into setup, options, presolve and
+  outcome checks, retaining its assertions and licensed solves.
+- Separate horizontal/vertical vector TABLE parsing, tokenisation and label
+  validation. Preserve ambiguous-input rejection and deferred execution.
+- Separate the Python showcases' input, physical/event validation and plotting
+  stages, and simplify GUI block-sort key construction. Add a regression that
+  invalid operation arguments do not reset a caller's existing simulation.
+
+The two large compiler routines `ExecuteTABLEDense` and `ExecuteTABLEMode`
+remain unchanged, including their seven HIGH complexity/nesting findings.
+Their token state, partial assignments, pending-domain returns and cleanup
+paths deserve a dedicated parser/executor refactor. This pass does not change
+TABLE syntax or execution order merely to meet a complexity threshold.
+Only a subsequent Sonar run can confirm closures and any new findings.
+
+The focused cognitive-complexity check (threshold 25, macro expansion excluded)
+no longer reports the refactored vector TABLE or Gurobi functions. The core,
+Unix and C++ analyser checks are run separately from that metric. Whole-file
+`bugprone-*` checking still reports legacy/style warnings, and the compiler
+still has the previously identified `CompListInArray` uninitialised-value path
+dependent on list invariants; this is not a claim of a warning-free codebase.
+
+Additional regression commands for the Python refactors:
+
+```sh
+./a4 pytest test/test_job_shop.py test/test_kondili.py -q
+./a4 script models/psa/test/test_psa_cycle.py
+./a4 script models/psa/test/test_psa_part1_cycle.py
+./a4 script models/psa/test/test_psa_scheduling.py
+xvfb-run -a ./a4 pytest pygtk/test/test_modelview_blocks.py -q
+```
+
+Together with the dynamic suite above, these exercise numerical results,
+invalid inputs/results, GUI sorting and headless plot output. Run each PSA
+suite in its own process. Add `compiler_dataset` to the earlier C command
+when checking the compiler changes.
+
+## Interpreting string-function security warnings
+
+The generic “Does not handle strings that are not \\0-terminated” wording
+matches [Flawfinder](https://dwheeler.com/flawfinder/), which documents that
+it uses lexical matching rather than control/data-flow analysis. A hit on
+`strlen` is a request to inspect its input contract, not proof of an over-read.
+
+For example, `variable()` in `ascend/solver/test/test_gurobi.c` receives literal
+names at its call sites. Its other string comes from `var_make_name`, through
+`WriteInstanceNameString` and `Asc_DStringResult`. The dynamic-string builder
+explicitly maintains a terminating NUL and the result includes that byte.
+This path does not justify replacing every consumer with a bounded operation.
+
+Prioritise producers and boundaries: raw file/network buffers, fixed-size
+arrays, truncating copies, allocation-size arithmetic, foreign APIs and object
+lifetimes. Use explicit lengths/capacities where input is not yet a C string.
+`strnlen`/`strncmp` only help when their bound is actually valid for the object;
+an arbitrary bound neither establishes that contract nor fixes dangling pointers.
+Record reviewed false positives or tune the relevant rule instead of concealing
+calls behind wrappers. Retain data-flow analysis, malformed-input tests and
+memory checking; none individually proves all callers safe.

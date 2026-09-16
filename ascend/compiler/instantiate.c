@@ -8265,37 +8265,42 @@ static int TableVectorReadValue(CONST struct table_vector_row_t *row,
 }
 
 /* Probe syntax only: no assignments, domain inference, or diagnostics here. */
+static int TableVectorParseHorizontal(CONST struct table_vector_row_t *rows,
+                                       struct table_vector_t *vector)
+{
+  unsigned long p, i;
+  int empty_corner = strcmp(rows[0].tokens[0],",") == 0;
+  p = empty_corner || strcmp(rows[0].tokens[0],":") == 0 ? 1 : 0;
+  while (p < rows[0].len) {
+    char *label = TableVectorReadLabel(&rows[0],&p);
+    if (label == NULL) return 0;
+    vector->labels = (char **)ascrealloc(vector->labels,
+        sizeof(char *) * (vector->len + 1));
+    vector->labels[vector->len++] = label;
+    if (p < rows[0].len && strcmp(rows[0].tokens[p],",") == 0) {
+      if (++p == rows[0].len) return 0;
+    }
+  }
+  if (vector->len == 0) return 0;
+  vector->values = ASC_NEW_ARRAY(struct table_cell_value_t,vector->len);
+  p = 0;
+  /* A CSV row vector may retain the empty label column on both lines. */
+  if (empty_corner && strcmp(rows[1].tokens[0],",") == 0) ++p;
+  for (i = 0; i < vector->len; ++i) {
+    if (!TableVectorReadValue(&rows[1],&p,&vector->values[i])) return 0;
+    if (i + 1 < vector->len && p < rows[1].len
+        && strcmp(rows[1].tokens[p],",") == 0) ++p;
+  }
+  return p == rows[1].len;
+}
+
 static int TableVectorParse(CONST struct table_vector_row_t *rows,
                              unsigned long nrows, int horizontal,
                              struct table_vector_t *vector)
 {
-  unsigned long r, p, i;
-  if (nrows == 0 || (horizontal && nrows != 2)) return 0;
-  if (horizontal) {
-    int empty_corner = strcmp(rows[0].tokens[0],",") == 0;
-    p = empty_corner || strcmp(rows[0].tokens[0],":") == 0 ? 1 : 0;
-    while (p < rows[0].len) {
-      char *label = TableVectorReadLabel(&rows[0],&p);
-      if (label == NULL) return 0;
-      vector->labels = (char **)ascrealloc(vector->labels,
-          sizeof(char *) * (vector->len + 1));
-      vector->labels[vector->len++] = label;
-      if (p < rows[0].len && strcmp(rows[0].tokens[p],",") == 0) {
-        if (++p == rows[0].len) return 0;
-      }
-    }
-    if (vector->len == 0) return 0;
-    vector->values = ASC_NEW_ARRAY(struct table_cell_value_t,vector->len);
-    p = 0;
-    /* A CSV row vector may retain the empty label column on both lines. */
-    if (empty_corner && strcmp(rows[1].tokens[0],",") == 0) ++p;
-    for (i = 0; i < vector->len; ++i) {
-      if (!TableVectorReadValue(&rows[1],&p,&vector->values[i])) return 0;
-      if (i + 1 < vector->len && p < rows[1].len
-          && strcmp(rows[1].tokens[p],",") == 0) ++p;
-    }
-    return p == rows[1].len;
-  }
+  unsigned long r, p;
+  if (nrows == 0) return 0;
+  if (horizontal) return nrows == 2 && TableVectorParseHorizontal(rows,vector);
   vector->labels = ASC_NEW_ARRAY(char *,nrows);
   vector->values = ASC_NEW_ARRAY(struct table_cell_value_t,nrows);
   for (r = 0; r < nrows; ++r) {
@@ -8312,6 +8317,48 @@ static int TableVectorParse(CONST struct table_vector_row_t *rows,
   return 1;
 }
 
+static struct table_vector_row_t *TableVectorRows(char *body, unsigned long *nrows)
+{
+  struct table_vector_row_t *rows = NULL;
+  char *line, *line_ctx = NULL;
+  *nrows = 0;
+  for (line = strtok_r(body,"\n",&line_ctx); line != NULL;
+       line = strtok_r(NULL,"\n",&line_ctx)) {
+    char *cursor = line, *tok;
+    struct table_vector_row_t row = {NULL,0};
+    while ((tok = TableVectorNextToken(&cursor)) != NULL) {
+      row.tokens = (char **)ascrealloc(row.tokens,sizeof(char *) * (row.len + 1));
+      row.tokens[row.len++] = tok;
+    }
+    if (row.len) {
+      rows = (struct table_vector_row_t *)ascrealloc(rows,sizeof(*rows) * (*nrows + 1));
+      rows[(*nrows)++] = row;
+    }
+  }
+  return rows;
+}
+
+static int TableVectorPositions(CONST struct table_vector_t *vector,
+                                CONST struct table_domain_t *domain,
+                                unsigned long *positions, struct Statement *statement)
+{
+  unsigned long i;
+  int valid = 0;
+  char *seen = ASC_NEW_ARRAY_CLEAR(char,domain->len);
+  for (i = 0; i < vector->len; ++i) {
+    if (!TableLabelToPosition(domain,vector->labels[i],&positions[i],statement,1)) goto cleanup;
+    if (seen[positions[i] - 1]) {
+      STATEMENT_ERROR(statement,"1-D TABLE contains duplicate labels");
+      goto cleanup;
+    }
+    seen[positions[i] - 1] = 1;
+  }
+  valid = 1;
+cleanup:
+  ascfree(seen);
+  return valid;
+}
+
 static int ExecuteTABLEVector(struct Instance *work, struct Statement *statement,
                               CONST struct table_domain_ref_t *ref, int check_only)
 {
@@ -8322,25 +8369,11 @@ static int ExecuteTABLEVector(struct Instance *work, struct Statement *statement
   struct table_vector_t vertical = {NULL,NULL,0};
   struct table_vector_t *vector;
   char *body = ASC_STRDUP(statement->v.table.body != NULL ? statement->v.table.body : "");
-  char *line, *line_ctx = NULL;
   unsigned long nrows = 0, i;
   unsigned long *positions = NULL;
-  char *seen = NULL;
   int h, v, resolved, result = 0;
 
-  for (line = strtok_r(body,"\n",&line_ctx); line != NULL;
-       line = strtok_r(NULL,"\n",&line_ctx)) {
-    char *cursor = line, *tok;
-    struct table_vector_row_t row = {NULL,0};
-    while ((tok = TableVectorNextToken(&cursor)) != NULL) {
-      row.tokens = (char **)ascrealloc(row.tokens,sizeof(char *) * (row.len + 1));
-      row.tokens[row.len++] = tok;
-    }
-    if (row.len) {
-      rows = (struct table_vector_row_t *)ascrealloc(rows,sizeof(*rows) * (nrows + 1));
-      rows[nrows++] = row;
-    }
-  }
+  rows = TableVectorRows(body,&nrows);
   h = TableVectorParse(rows,nrows,1,&horizontal);
   v = TableVectorParse(rows,nrows,0,&vertical);
   if (h && v) {
@@ -8361,15 +8394,7 @@ static int ExecuteTABLEVector(struct Instance *work, struct Statement *statement
     goto invalid;
   }
   positions = ASC_NEW_ARRAY(unsigned long,vector->len);
-  seen = ASC_NEW_ARRAY_CLEAR(char,domain.len);
-  for (i = 0; i < vector->len; ++i) {
-    if (!TableLabelToPosition(&domain,vector->labels[i],&positions[i],statement,1)) goto invalid;
-    if (seen[positions[i] - 1]) {
-      STATEMENT_ERROR(statement,"1-D TABLE contains duplicate labels");
-      goto invalid;
-    }
-    seen[positions[i] - 1] = 1;
-  }
+  if (!TableVectorPositions(vector,&domain,positions,statement)) goto invalid;
   for (i = 0; i < vector->len; ++i) {
     struct table_cell_value_t *cell = &vector->values[i];
     int assigned = TableAssignCellMaybeWait(work,statement,&domain,1,&positions[i],
@@ -8384,7 +8409,6 @@ invalid:
   MarkStatContext(statement,context_WRONG);
   result = 1;
 cleanup:
-  if (seen != NULL) ascfree(seen);
   if (positions != NULL) ascfree(positions);
   TableDomainDestroy(&domain);
   TableVectorDestroy(&horizontal);

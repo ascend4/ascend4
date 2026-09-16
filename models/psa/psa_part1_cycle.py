@@ -12,9 +12,7 @@ from pathlib import Path
 PSI = 6894.757293168
 
 
-def solve(pressure_basis='reconciled', source_pressure=300*PSI, K_multiplier=1, adsorption_heat=20920,
-          fit='none'):
-    import ascpy
+def _validate_options(pressure_basis, source_pressure, K_multiplier, adsorption_heat, fit):
     if pressure_basis not in ('reconciled', 'valve'):
         raise ValueError('Pressure basis must be reconciled or valve')
     if fit not in ('none', 'purge', 'adsorption-purge'):
@@ -23,6 +21,28 @@ def solve(pressure_basis='reconciled', source_pressure=300*PSI, K_multiplier=1, 
         raise ValueError('Source pressure and K multiplier must be finite and positive')
     if not math.isfinite(adsorption_heat) or adsorption_heat < 0:
         raise ValueError('Adsorption heat must be finite and nonnegative')
+
+
+def _physical_warnings(m, source_pressure, fitted):
+    def v(x): return x.getRealValue()
+    warnings = []
+    if fitted:
+        warnings.append('Inverse diagnostic: fitted K/heat are conditional calibration values, NOT recovered historical inputs or validation.')
+    if v(m.bed.H) < 0:
+        warnings.append('Inferred adsorption heat is NEGATIVE: incompatible with the assumed exothermic heat-release magnitude. This is an algebraic diagnostic, not a physical fit.')
+    if v(m.bd.Pvalve) < 101325:
+        warnings.append('Blowdown endpoint is below atmospheric pressure: a low-pressure sink/vacuum would be required; none is modelled.')
+    if source_pressure < v(m.fr.Pvalve):
+        warnings.append('Feed valve endpoint exceeds reservoir pressure: additional pressurisation/work is not modelled.')
+    if abs(v(m.energy_defect)) > .1:
+        warnings.append('The printed-equation cycle has a nonzero energy-accounting defect; it is not a conservative thermal design.')
+    return warnings
+
+
+def solve(pressure_basis='reconciled', source_pressure=300*PSI, K_multiplier=1, adsorption_heat=20920,
+          fit='none'):
+    import ascpy
+    _validate_options(pressure_basis, source_pressure, K_multiplier, adsorption_heat, fit)
     lib = ascpy.Library()
     name = 'psa_part1_cycle' if pressure_basis == 'reconciled' else 'psa_part1_cycle_valve'
     try:
@@ -72,17 +92,7 @@ def solve(pressure_basis='reconciled', source_pressure=300*PSI, K_multiplier=1, 
                           printed_half_digit_mol=half_digit[k],
                           within_printed_rounding=abs(amounts[k]-published[k]) <= half_digit[k])
                   for k in amounts}
-    warnings = []
-    if fitted:
-        warnings.append('Inverse diagnostic: fitted K/heat are conditional calibration values, NOT recovered historical inputs or validation.')
-    if v(m.bed.H) < 0:
-        warnings.append('Inferred adsorption heat is NEGATIVE: incompatible with the assumed exothermic heat-release magnitude. This is an algebraic diagnostic, not a physical fit.')
-    if v(m.bd.Pvalve) < 101325:
-        warnings.append('Blowdown endpoint is below atmospheric pressure: a low-pressure sink/vacuum would be required; none is modelled.')
-    if source_pressure < v(m.fr.Pvalve):
-        warnings.append('Feed valve endpoint exceeds reservoir pressure: additional pressurisation/work is not modelled.')
-    if abs(v(m.energy_defect)) > .1:
-        warnings.append('The printed-equation cycle has a nonzero energy-accounting defect; it is not a conservative thermal design.')
+    warnings = _physical_warnings(m, source_pressure, fitted)
     return dict(scope='Closed Part I equation audit, not a validated optimum', pressure_basis=pressure_basis,
                 assumptions=dict(source_pressure_Pa=source_pressure, K_multiplier=v(m.K_multiplier),
                                  adsorption_heat_J_mol=v(m.bed.H), K='Henry-slope hypothesis',

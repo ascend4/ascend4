@@ -10,6 +10,26 @@ from pathlib import Path
 import sys
 
 
+def _read_unit(d, g, p, j, points):
+    batches = []
+    equipment = d.equipment[j]
+    unit = p.u[j]
+    for i in map(str,equipment.task.getSetValue()):
+        op = unit.op[i]
+        for k in op.launch.getSetValue():
+            w, b = op.w[k].getRealValue(), op.b[k].getRealValue()
+            if not math.isfinite(w) or min(abs(w), abs(w-1)) > 1e-6:
+                raise ValueError(f"Non-binary start: {j}/{i}/{k}")
+            bmin = equipment.bmin[i].getRealValue()
+            bmax = equipment.bmax[i].getRealValue()
+            if not math.isfinite(b) or b < bmin*w-1e-6 or b > bmax*w+1e-6:
+                raise ValueError(f"Invalid batch size: {j}/{i}/{k}")
+            if w > 0.5:
+                batches.append(dict(task=i, start=g.t[k].getRealValue()/3600, mass=max(0,b)))
+    return dict(batches=sorted(batches, key=lambda b: b['start']),
+                    held=[unit.held[t].getRealValue() for t in points])
+
+
 def read_results(model):
     """Copy solved values into plain Python data, with kg and hours for display."""
     d, g, p = model.data, model.grid, model.plant
@@ -28,36 +48,14 @@ def read_results(model):
             capacity=v.capacity.getRealValue() if v.limited.getBoolValue() else None,
             price=v.price.getRealValue(), values=[p.v[s].stock[t].getRealValue() for t in points])
     for j in map(str,d.unit.getSetValue()):
-        batches = []
-        equipment = d.equipment[j]
-        unit = p.u[j]
-        for i in map(str,equipment.task.getSetValue()):
-            op = unit.op[i]
-            for k in op.launch.getSetValue():
-                w, b = op.w[k].getRealValue(), op.b[k].getRealValue()
-                if not math.isfinite(w) or min(abs(w), abs(w-1)) > 1e-6:
-                    raise ValueError(f"Non-binary start: {j}/{i}/{k}")
-                bmin = equipment.bmin[i].getRealValue()
-                bmax = equipment.bmax[i].getRealValue()
-                if not math.isfinite(b) or b < bmin*w-1e-6 or b > bmax*w+1e-6:
-                    raise ValueError(f"Invalid batch size: {j}/{i}/{k}")
-                if w > 0.5:
-                    batches.append(dict(task=i, start=g.t[k].getRealValue()/3600, mass=max(0,b)))
-        units[j] = dict(batches=sorted(batches, key=lambda b: b['start']),
-                        held=[unit.held[t].getRealValue() for t in points])
+        units[j] = _read_unit(d, g, p, j, points)
     result = dict(times=times, recipes=recipes, stocks=stocks, units=units,
                   value=p.value.getRealValue())
     validate_results(result)
     return result
 
 
-def validate_results(result, tol=1e-5):
-    """Independently reconstruct batch events, stock and equipment mass balances."""
-    times, recipes, stocks, units = (result[k] for k in ('times','recipes','stocks','units'))
-    if not times or times[0] != 0 or any(not math.isfinite(t) for t in times):
-        raise ValueError("Invalid time grid")
-    if any(b <= a for a,b in zip(times,times[1:])):
-        raise ValueError("Time grid must increase")
+def _validate_recipes(recipes, stocks):
     for r in recipes.values():
         if not math.isfinite(r['duration']) or r['duration'] <= 0:
             raise ValueError('Invalid recipe duration')
@@ -68,6 +66,67 @@ def validate_results(result, tol=1e-5):
         delays = [delay for f,delay in r['outputs'].values()]
         if any(not math.isfinite(d) or d <= 0 or d > r['duration'] for d in delays) or max(delays) != r['duration']:
             raise ValueError('Invalid product release times')
+
+
+def _validate_unit(j, u, recipes, times, tick, delta, tol):
+    change = [0.0]*len(times)
+    finish = 0.0
+    for b in sorted(u['batches'], key=lambda b: b['start']):
+        r = recipes[b['task']]
+        if not math.isfinite(b['mass']) or b['mass'] < 0:
+            raise ValueError("Invalid batch mass")
+        if b['start'] < finish-1e-8:
+            raise ValueError(f"Overlapping batches on {j}")
+        finish = b['start']+r['duration']
+        tick(finish)
+        k = tick(b['start'])
+        change[k] += b['mass']
+        for s,f in r['inputs'].items():
+            delta[s][k] -= f*b['mass']
+        for s,(f,delay) in r['outputs'].items():
+            q = tick(b['start']+delay)
+            delta[s][q] += f*b['mass']
+            change[q] -= f*b['mass']
+    _validate_held_inventory(j, u['held'], change, tol)
+
+
+def _validate_held_inventory(j, samples, change, tol):
+    held = 0.0
+    if len(samples) != len(change):
+        raise ValueError("Missing equipment inventory samples")
+    for k in range(len(change)):
+        held += change[k]
+        if not math.isfinite(held) or not math.isfinite(samples[k]) or abs(held-samples[k]) > tol or held < -tol:
+            raise ValueError(f"Equipment mass balance failed for {j}")
+    if abs(held) > tol:
+        raise ValueError(f"Unfinished material in {j}")
+
+
+def _validate_stock(s, v, times, delta, tol):
+    mass = v['initial']
+    if not math.isfinite(mass) or mass < 0 or not math.isfinite(v['price']):
+        raise ValueError('Invalid initial stock or price')
+    if v['capacity'] is not None and (not math.isfinite(v['capacity']) or v['capacity'] < 0):
+        raise ValueError('Invalid storage capacity')
+    if len(v['values']) != len(times):
+        raise ValueError("Missing stock samples")
+    for k in range(len(times)):
+        mass += delta[s][k]
+        if not math.isfinite(mass) or not math.isfinite(v['values'][k]) or abs(mass-v['values'][k]) > tol or mass < -tol:
+            raise ValueError(f"Stock balance failed for {s}")
+        if v['capacity'] is not None and mass > v['capacity']+tol:
+            raise ValueError(f"Storage capacity exceeded for {s}")
+    return mass*v['price']
+
+
+def validate_results(result, tol=1e-5):
+    """Independently reconstruct batch events, stock and equipment mass balances."""
+    times, recipes, stocks, units = (result[k] for k in ('times','recipes','stocks','units'))
+    if not times or times[0] != 0 or any(not math.isfinite(t) for t in times):
+        raise ValueError("Invalid time grid")
+    if any(b <= a for a,b in zip(times,times[1:])):
+        raise ValueError("Time grid must increase")
+    _validate_recipes(recipes, stocks)
     def tick(t):
         matches = [k for k,x in enumerate(times) if abs(t-x) < 1e-8]
         if len(matches) != 1:
@@ -75,51 +134,24 @@ def validate_results(result, tol=1e-5):
         return matches[0]
     delta = {s: [0.0]*len(times) for s in stocks}
     for j,u in units.items():
-        change = [0.0]*len(times)
-        finish = 0.0
-        for b in sorted(u['batches'], key=lambda b: b['start']):
-            r = recipes[b['task']]
-            if not math.isfinite(b['mass']) or b['mass'] < 0:
-                raise ValueError("Invalid batch mass")
-            if b['start'] < finish-1e-8:
-                raise ValueError(f"Overlapping batches on {j}")
-            finish = b['start']+r['duration']
-            tick(finish)
-            k = tick(b['start'])
-            change[k] += b['mass']
-            for s,f in r['inputs'].items():
-                delta[s][k] -= f*b['mass']
-            for s,(f,delay) in r['outputs'].items():
-                q = tick(b['start']+delay)
-                delta[s][q] += f*b['mass']
-                change[q] -= f*b['mass']
-        held = 0.0
-        if len(u['held']) != len(times):
-            raise ValueError("Missing equipment inventory samples")
-        for k in range(len(times)):
-            held += change[k]
-            if not math.isfinite(held) or not math.isfinite(u['held'][k]) or abs(held-u['held'][k]) > tol or held < -tol:
-                raise ValueError(f"Equipment mass balance failed for {j}")
-        if abs(held) > tol:
-            raise ValueError(f"Unfinished material in {j}")
+        _validate_unit(j, u, recipes, times, tick, delta, tol)
     value = 0.0
     for s,v in stocks.items():
-        mass = v['initial']
-        if not math.isfinite(mass) or mass < 0 or not math.isfinite(v['price']):
-            raise ValueError('Invalid initial stock or price')
-        if v['capacity'] is not None and (not math.isfinite(v['capacity']) or v['capacity'] < 0):
-            raise ValueError('Invalid storage capacity')
-        if len(v['values']) != len(times):
-            raise ValueError("Missing stock samples")
-        for k in range(len(times)):
-            mass += delta[s][k]
-            if not math.isfinite(mass) or not math.isfinite(v['values'][k]) or abs(mass-v['values'][k]) > tol or mass < -tol:
-                raise ValueError(f"Stock balance failed for {s}")
-            if v['capacity'] is not None and mass > v['capacity']+tol:
-                raise ValueError(f"Storage capacity exceeded for {s}")
-        value += mass*v['price']
+        value += _validate_stock(s, v, times, delta, tol)
     if not math.isfinite(result['value']) or abs(value-result['value']) > tol:
         raise ValueError("Terminal value does not match inventories")
+
+
+def _plot_batches(ax, lane, batches, recipes, colors):
+    for b in batches:
+        if b['mass'] < 1e-6:  # Cost-free zero-mass starts have no physical batch.
+            continue
+        r = recipes[b['task']]
+        ax.barh(lane,r['duration'],left=b['start'],height=.65,color=colors[b['task']],edgecolor='black')
+        ax.text(b['start']+r['duration']/2,lane,f"{b['mass']:.3g} kg",ha='center',va='center',fontsize=8)
+        for f,delay in r['outputs'].values():
+            if delay < r['duration']:
+                ax.plot(b['start']+delay,lane+.3,marker='v',color='black',markersize=5)
 
 
 def plot_results(result, solver=None):
@@ -134,16 +166,8 @@ def plot_results(result, solver=None):
     rows = math.ceil(len(result['stocks'])/3)
     layout = fig.add_gridspec(1+rows,3, height_ratios=[2.3]+[1]*rows)
     ax = fig.add_subplot(layout[0,:])
-    for lane,j in enumerate(sorted(units)):
-        for b in units[j]['batches']:
-            if b['mass'] < 1e-6:  # Cost-free zero-mass starts have no physical batch.
-                continue
-            r = recipes[b['task']]
-            ax.barh(lane,r['duration'],left=b['start'],height=.65,color=colors[b['task']],edgecolor='black')
-            ax.text(b['start']+r['duration']/2,lane,f"{b['mass']:.3g} kg",ha='center',va='center',fontsize=8)
-            for f,delay in r['outputs'].values():
-                if delay < r['duration']:
-                    ax.plot(b['start']+delay,lane+.3,marker='v',color='black',markersize=5)
+    for lane, j in enumerate(sorted(units)):
+        _plot_batches(ax, lane, units[j]['batches'], recipes, colors)
     ax.set_yticks(range(len(units)),[j.replace('_',' ') for j in sorted(units)])
     ax.set(xlim=(0,result['times'][-1]),xlabel='Elapsed time / h',title='Equipment schedule | bar labels: batch mass; ▼: early discharge')
     ax.legend(handles=[Patch(facecolor=colors[i],label=i.replace('_',' ')) for i in names],ncol=5,loc='upper center',bbox_to_anchor=(.5,1.3))

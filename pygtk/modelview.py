@@ -280,37 +280,28 @@ class ModelView:
 		except RuntimeError:
 			return False
 
+	def block_detail_key(self, model, piter, descending):
+		if self.relations_appear_last:
+			return (
+				1 if self.row_is_relation(model, piter) else 0,
+				self.model_order_key(model, piter),
+			)
+		position_column = BLOCK_POSITION_HIGH_INDEX if descending else BLOCK_POSITION_LOW_INDEX
+		return (
+			model.get_value(piter, position_column),
+			0 if self.row_is_compound(model, piter) else 1,
+			self.model_order_key(model, piter),
+		)
+
 	def block_sort_key(self, model, piter, descending):
 		kind = model.get_value(piter, BLOCK_KIND_INDEX)
-		low = model.get_value(piter, BLOCK_LOW_INDEX)
-		high = model.get_value(piter, BLOCK_HIGH_INDEX)
 		if kind == BLOCK_NUMBERED:
 			group = 0 if descending else 1
-			block = -high if descending else low
-			if self.relations_appear_last:
-				detail = (
-					1 if self.row_is_relation(model, piter) else 0,
-					self.model_order_key(model, piter),
-				)
-			else:
-				position_column = (
-					BLOCK_POSITION_HIGH_INDEX
-					if descending else BLOCK_POSITION_LOW_INDEX
-				)
-				detail = (
-					model.get_value(piter, position_column),
-					0 if self.row_is_compound(model, piter) else 1,
-					self.model_order_key(model, piter),
-				)
-		elif kind == BLOCK_FIXED:
-			group = 1 if descending else 0
-			block = 0
-			detail = self.model_order_key(model, piter)
-		else:
-			group = 2
-			block = 0
-			detail = self.model_order_key(model, piter)
-		return (group, block, detail)
+			block = (-model.get_value(piter, BLOCK_HIGH_INDEX) if descending
+			         else model.get_value(piter, BLOCK_LOW_INDEX))
+			return (group, block, self.block_detail_key(model, piter, descending))
+		group = (1 if descending else 0) if kind == BLOCK_FIXED else 2
+		return (group, 0, self.model_order_key(model, piter))
 
 	def compare_blocks(self, model, left, right, _data):
 		_sort_column, order = self.sort_model.get_sort_column_id()

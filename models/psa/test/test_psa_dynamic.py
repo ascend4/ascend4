@@ -8,7 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import psa_dynamic as dynamic
@@ -121,6 +121,19 @@ class DynamicPSA(unittest.TestCase):
         with self.assertRaises(ValueError): dynamic.run_operation(initial=dict(y=[0], q=[0]))
         with self.assertRaises(ValueError): cycle.Transfers(4)
         with self.assertRaises(ValueError): checks.coarsen([0]*5, 3)
+
+    def test_operation_validation_precedes_simulation_reset(self):
+        sim = Mock()
+        for options in (dict(operation='unknown'), dict(duration=0),
+                        dict(duration=float('nan')), dict(samples=1.5),
+                        dict(rtol=0), dict(atol=1),
+                        dict(initial=dict(y=[0], q=[0])),
+                        dict(initial=dict(y=[float('nan')]*8, q=[0]*8))):
+            with self.subTest(options=options), self.assertRaises(ValueError):
+                dynamic.run_operation(n=8, simulation=sim, **options)
+        sim.invalidateSystem.assert_not_called()
+        sim.runDefaultMethod.assert_not_called()
+        sim.getModel.assert_not_called()
 
     def test_worker_rejects_invalid_arguments_before_launch(self):
         with patch.object(checks.subprocess, 'run') as launch:
