@@ -35,3 +35,11 @@ METHOD on_load;
 	OPTION max_iter 20;
 END on_load;
 END lsq_basic;
+
+MODEL lsq_basic_dense_qr REFINES lsq_basic;
+METHODS
+METHOD on_load;
+	RUN lsq_basic::on_load;
+	OPTION lsq_linear_solver 'DENSE_QR';
+END on_load;
+END lsq_basic_dense_qr;

@@ -102,6 +102,20 @@ Useful environment/option overrides:
   CUTEst objective-group least-squares path. The runner default is `LM`, but
   only compatible unconstrained sum-of-squares problems use it; other problems
   fall back to the ordinary NLP/SQP path.
+- `--lsq-max-iter N` or `A4SQP_LSQ_MAX_ITER=N` caps the LSQ pre-solve. The
+  runner default `0` leaves the CUTEst driver to choose an adaptive cap; very
+  large residual systems are capped at 20 LSQ iterations unless this option is
+  set explicitly.
+- `--lsq-fallback-start original|improved` or `A4SQP_LSQ_FALLBACK_START=...`
+  controls the SQP handoff after a non-converged LSQ pre-solve. The default is
+  `improved`.
+- `--lsq-linear-solver DENSE_QR|NORMAL` or `A4SQP_LSQ_LINEAR_SOLVER=...`
+  controls the LSQ trial-step linear solve. The default is `DENSE_QR`; use
+  `NORMAL` to force normal equations.
+
+Focused notes for the dense QR LSQ CUTEst work are in
+`solvers/a4sqp/CUTEST_LSQ_DENSE_QR_EXPERIMENT.md`.
+
 - `--a4sqp-hess-reg VALUE` or `A4SQP_HESS_REG=VALUE`
 - `--ipopt-max-iter N` or `IPOPTC_MAX_ITER=N`
 - `--ipopt-tol VALUE` or `IPOPTC_TOL=VALUE`

@@ -15,6 +15,19 @@ enum A4SqpLsqMode {
 	A4SQP_LSQ_MODE_LM
 };
 
+enum A4SqpLsqLinearSolver {
+	A4SQP_LSQ_LINEAR_DEFAULT = 0,
+	A4SQP_LSQ_LINEAR_NORMAL = 1,
+	A4SQP_LSQ_LINEAR_DENSE_QR = 2
+};
+
+enum A4SqpLsqDampingUpdate {
+	A4SQP_LSQ_DAMPING_NIELSEN = 0,
+	A4SQP_LSQ_DAMPING_MINPACK = 1,
+	A4SQP_LSQ_DAMPING_BOLD = 2,
+	A4SQP_LSQ_DAMPING_TRUST = 3
+};
+
 enum A4SqpLsqStatus {
 	A4SQP_LSQ_SOLVED = 0,
 	A4SQP_LSQ_MAX_ITER = 1,
@@ -25,9 +38,13 @@ enum A4SqpLsqStatus {
 
 struct A4SqpLsqOptions {
 	enum A4SqpLsqMode mode;
+	enum A4SqpLsqLinearSolver linear_solver;
 	int max_iter;
 	int max_backtrack;
+	int scaled_stationarity;
+	enum A4SqpLsqDampingUpdate damping_update;
 	real64 grad_tol;
+	real64 acceptable_tol;
 	real64 step_tol;
 	real64 lambda_init;
 	real64 lambda_min;
@@ -53,6 +70,18 @@ struct A4SqpLsqStats {
 	int accepted_steps;
 };
 
+struct A4SqpLsqProjection {
+	int32 n_linear;
+	const int32 *linear_cols;
+	int (*eval_affine_model)(
+		void *userdata,
+		const real64 *x,
+		int32 n_linear,
+		real64 *offset,
+		real64 *linear_jac_rowmajor
+	);
+};
+
 struct A4SqpLsqProblem {
 	int32 n_var;
 	int32 n_res;
@@ -70,6 +99,7 @@ struct A4SqpLsqProblem {
 		int32 *nnz
 	);
 	int (*progress)(void *userdata, const struct A4SqpLsqIteration *iteration);
+	const struct A4SqpLsqProjection *projection;
 };
 
 A4SQP_CORE_EXPORT enum A4SqpLsqStatus a4sqp_lsq_solve(
