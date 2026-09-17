@@ -41,7 +41,7 @@ if 'CONOPT' in test_env['WITH_SOLVERS']:
 	_conopt_cpp = test_env.get('CONOPT_CPPPATH')
 	if _conopt_cpp:
 		test_env.AppendUnique(CPPPATH=_conopt_cpp)
-	elif test_env.get('CONOPT_BUNDLED4'):
+	if test_env.get('CONOPT_BUNDLED4'):
 		test_env.AppendUnique(CPPPATH=['#solvers/conopt'])
 
 conf = test_env.Configure()
