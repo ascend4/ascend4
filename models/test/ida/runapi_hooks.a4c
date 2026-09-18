@@ -1,0 +1,60 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(* A constant slope makes time-unit conversion observable without depending
+   on a particular integrator's adaptive timestep choices. *)
+MODEL runapi_hooks;
+    t IS_A time;
+    y IS_A solver_var;
+    dyn: der(y) = 1{1/s};
+    INDEPENDENT t;
+    INITIAL
+        y0: y = 0;
+METHODS
+    METHOD on_load;
+        FIX t := 120{s};
+        FREE der(y);
+        OBSERVE y;
+        STUDY y;
+        SOLVER QRSlv;
+        INTEGRATOR IDA;
+        OPTION rtol 3e-7;
+        OPTION atol 7e-9;
+        OPTION atolvect FALSE;
+        OPTION maxord 2;
+        OPTION linsolver 'DENSE';
+    END on_load;
+    METHOD update_options;
+        OPTION rtol 2e-7;
+    END update_options;
+    METHOD integrate_case;
+        INTEGRATE FROM 2{min} TO 3{min} STEPS 4;
+    END integrate_case;
+    METHOD select_lsode;
+        INTEGRATOR LSODE;
+    END select_lsode;
+END runapi_hooks;
+
+MODEL runapi_hooks_auto REFINES runapi_hooks;
+METHODS
+    METHOD on_load;
+        RUN runapi_hooks::on_load;
+        RUN integrate_case;
+    END on_load;
+END runapi_hooks_auto;
+
+(* Initialization must see the requested start, not on_load's old t. *)
+MODEL runapi_initial_time;
+    t IS_A time;
+    y IS_A solver_var;
+    dyn: der(y) = 1{1/s};
+    INDEPENDENT t;
+    INITIAL
+        y0: y = t / 1{s};
+METHODS
+    METHOD on_load;
+        FIX t := 999{s};
+        FREE der(y);
+        SOLVER QRSlv;
+    END on_load;
+END runapi_initial_time;

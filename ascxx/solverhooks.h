@@ -33,6 +33,7 @@
 
 class SolverReporter;
 class Simulation;
+class Integrator;
 
 extern "C"{
 #include <ascend/general/platform.h>
@@ -119,6 +120,10 @@ public:
 */
 class SolverHooks{
 private:
+	friend class Simulation;
+	friend class Library;
+	static void resetConfiguration(Simulation *S);
+	static void clearConfigurations();
 	SolverReporter *R;
 public:
 	SolverHooks(SolverReporter *reporter = NULL);
@@ -155,8 +160,16 @@ public:
 	/// Return the default observed variables registered by OBSERVE.
 	virtual std::vector<Instanc> getObservedVars(Simulation *S) const;
 
+	/// Selected METHOD integrator, or an empty string if none was selected.
+	std::string getIntegratorName(Simulation *S) const;
+
+	/// Replay METHOD options for the selected engine. An explicit different
+	/// engine uses its own defaults, not options belonging to the old engine.
+	void applyIntegratorOptions(Simulation *S, Integrator &integrator) const;
+
 	SolverReporter *getSolverReporter();
 
+	/// Rebind callbacks to this wrapper without resetting simulation settings.
 	void assign(Simulation *S);
 };
 
@@ -177,7 +190,7 @@ public:
 */
 class SolverHooksManager{
 private:
-	bool own_hooks;
+	SolverHooks *default_hooks;
 	SolverHooks *hooks;
 	SolverHooksManager(); // This class will be a singleton
 	~SolverHooksManager();

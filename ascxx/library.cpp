@@ -41,6 +41,7 @@ extern "C"{
 #include "library.h"
 #include "simulation.h"
 #include "solver.h"
+#include "solverhooks.h"
 
 //#define ASCXX_LIBRARY_DEBUG
 #ifdef ASCXX_LIBRARY_DEBUG
@@ -382,6 +383,7 @@ Library::clear(){
 	//listModules();
 
 	MSG("Destroying simulations...");
+	SolverHooks::clearConfigurations();
 	Asc_DestroySimulations();
 
 	MSG("Clearing library...");

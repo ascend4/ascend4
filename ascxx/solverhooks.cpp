@@ -514,6 +514,9 @@ SolverHooks::setIntegrator(const char *integratorname, Simulation *S){
 	for(std::vector<std::string>::const_iterator i = engines.begin(); i != engines.end(); ++i){
 		if(*i == integratorname){
 			StoredIntegratorConfig &config = get_integrator_config(S);
+			if(config.integrator_name != integratorname){
+				config.options.clear();
+			}
 			config.have_integrator = true;
 			config.integrator_name = integratorname;
 			get_focus_config(S) = FOCUS_INTEGRATOR;
@@ -941,10 +944,7 @@ SolverHooks::doIntegrate(const IntegrateRequest &request, Simulation *S){
 			for(std::vector<Instanc>::const_iterator i = observed.begin(); i != observed.end(); ++i){
 				I.addObservedInstance(*i);
 			}
-			res = apply_stored_integrator_config(I, integrator_config);
-			if(res != 0){
-				return res;
-			}
+			applyIntegratorOptions(S, I);
 			I.findIndependentVar();
 
 			Instanc indep_inst = I.getIndependentVariable().getInstance();
@@ -995,12 +995,43 @@ SolverHooks::getObservedVars(Simulation *S) const{
 }
 
 void
+SolverHooks::resetConfiguration(Simulation *S){
+	g_solver_configs.erase(S->getInternalType());
+	g_study_configs.erase(S->getInternalType());
+	g_integrator_configs.erase(S->getInternalType());
+	g_focus_configs.erase(S->getInternalType());
+}
+
+void
+SolverHooks::clearConfigurations(){
+	g_solver_configs.clear();
+	g_study_configs.clear();
+	g_integrator_configs.clear();
+	g_focus_configs.clear();
+}
+
+std::string
+SolverHooks::getIntegratorName(Simulation *S) const{
+	const StoredIntegratorConfig &config = get_integrator_config(S);
+	return config.have_integrator ? config.integrator_name : "";
+}
+
+void
+SolverHooks::applyIntegratorOptions(Simulation *S, Integrator &integrator) const{
+	const StoredIntegratorConfig &config = get_integrator_config(S);
+	if(config.have_integrator && integrator.getName() == config.integrator_name){
+		int res = apply_stored_integrator_config(integrator, config);
+		if(res != 0){
+			throw std::runtime_error("Unable to apply stored integrator options (error "
+				+ std::to_string(res) + ")");
+		}
+	}
+}
+
+void
 SolverHooks::assign(Simulation *S){
 	S->setSolverHooks(this);
 	MSG("Assigning SolverHooks to Simulation...");
-	get_study_config(S) = StoredStudyConfig();
-	get_integrator_config(S) = StoredIntegratorConfig();
-	get_focus_config(S) = FOCUS_NONE;
 	SlvReqHooks hooks = SLVREQ_HOOKS_EMPTY;
 	hooks.set_solver_fn = &ascxx_slvreq_set_solver;
 	hooks.set_integrator_fn = &ascxx_slvreq_set_integrator;
@@ -1044,7 +1075,7 @@ public:
 SolverHooksManager::SolverHooksManager(){
 	MSG("Creating SolverHooksManager with NULL hooks");
 	this->hooks = NULL;
-	this->own_hooks = 0;
+	this->default_hooks = NULL;
 }
 
 SolverHooksManager *SolverHooksManager::_instance;
@@ -1058,29 +1089,25 @@ SolverHooksManager::Instance(){
 }
 
 SolverHooksManager::~SolverHooksManager(){
-	if(own_hooks){
-		MSG("Delete owned hooks");
-		delete hooks;
-	}
+	delete default_hooks;
 }
 
 void
 SolverHooksManager::setHooks(SolverHooks *H){
 	MSG("Using hooks at %p",H);
-	if(hooks && own_hooks){
-		MSG("Deleting previous owned hooks");
-		delete(hooks);
-	}
+	// Keep the default alive: callers temporarily install CLI/GUI hooks and
+	// then restore the pointer returned by getHooks(). Custom hooks are borrowed.
 	this->hooks = H;
-	this->own_hooks = 0;
 }
 
 SolverHooks *
 SolverHooksManager::getHooks(){
 	if(this->hooks == NULL){
 		MSG("Creating new default SolverHooks...");
-		this->hooks = new SolverHooks();
-		this->own_hooks = 1;
+		if(default_hooks == NULL){
+			default_hooks = new SolverHooks();
+		}
+		this->hooks = default_hooks;
 	}
 	return this->hooks;
 }

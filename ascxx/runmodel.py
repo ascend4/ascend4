@@ -443,12 +443,6 @@ class CliSolverHooks:
 				else:
 					ascpy.SolverHooks.__init__(self)
 
-			def setIntegrator(self, integratorname, sim):
-				res = ascpy.SolverHooks.setIntegrator(self, integratorname, sim)
-				if res == 0:
-					self._owner.integrator_name = integratorname
-				return res
-
 			def doObserve(self, request, sim):
 				return ascpy.SolverHooks.doObserve(self, request, sim)
 
@@ -461,21 +455,19 @@ class CliSolverHooks:
 				self._owner.saw_integrate_request = True
 				if self._owner.suppress_integrate:
 					return 0
-				start = request.getStart()
-				stop = request.getStop()
-				steps = request.getSteps()
 				_run_integration(
 					ascpy=self._owner.ascpy,
 					sim=sim,
-					engine=self._owner.integrator_name or DEFAULT_INTEGRATOR,
-					start=start,
-					duration=stop - start,
-					steps=steps,
+					engine=None,
+					start=None,
+					duration=None,
+					steps=None,
 					units_token=None,
 					output=None,
 					plot=False,
 					microstates="endpoints",
 					progress=self._owner.progress,
+					request_defaults=self._owner.integrate_request,
 				)
 				self._owner.integrated = True
 				return 0
@@ -484,7 +476,6 @@ class CliSolverHooks:
 		self.suppress_integrate = suppress_integrate
 		self.reporter = reporter
 		self.progress = progress
-		self.integrator_name = None
 		self.integrate_request = None
 		self.integrated = False
 		self.saw_integrate_request = False
@@ -515,20 +506,18 @@ def _configure_integrator_observed(sim, integrator):
 		integrator.addObservedInstance(inst)
 
 
-def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, output, plot, microstates, progress=False):
+def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, output, plot, microstates, progress=False, request_defaults=None):
 	sim.build()
 	integrator = ascpy.Integrator(sim)
-	integrator.setEngine(engine or DEFAULT_INTEGRATOR)
+	hooks = sim.getSolverHooks()
+	method_engine = hooks.getIntegratorName(sim) if hooks is not None else None
+	integrator.setEngine(engine or method_engine or DEFAULT_INTEGRATOR)
+	if hooks is not None:
+		hooks.applyIntegratorOptions(sim, integrator)
 	integrator.findIndependentVar()
 	indep = integrator.getIndependentVariable()
 	indep_inst = indep.getInstance()
 	indep_units = indep_inst.getDisplayUnits(False)
-
-	start_value = 0.0 if start is None else start
-	duration_value = DEFAULT_DURATION if duration is None else duration
-	steps_value = DEFAULT_STEPS if steps is None else steps
-	if steps_value < 1:
-		raise RuntimeError("Integration steps must be at least 1.")
 
 	if units_token is not None:
 		units_name = units_token
@@ -536,6 +525,23 @@ def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, ou
 	else:
 		units = indep_units
 		units_name = units.getName().toString()
+
+	# METHOD bounds have already been evaluated in base units. CLI values
+	# use the selected units. Convert inherited bounds individually so a
+	# partial CLI override cannot reinterpret the other bound.
+	start_value = 0.0 if start is None else start
+	duration_value = DEFAULT_DURATION if duration is None else duration
+	steps_value = DEFAULT_STEPS if steps is None else steps
+	if request_defaults is not None:
+		conversion = units.getConversion()
+		if start is None:
+			start_value = request_defaults["start"] / conversion
+		if duration is None:
+			duration_value = (request_defaults["stop"] - request_defaults["start"]) / conversion
+		if steps is None:
+			steps_value = request_defaults["steps"]
+	if steps_value < 1:
+		raise RuntimeError("Integration steps must be at least 1.")
 
 	integrator.setLinearTimesteps(units, start_value, start_value + duration_value, steps_value)
 	_configure_integrator_observed(sim, integrator)
@@ -564,7 +570,7 @@ def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, ou
 	if plot:
 		_plot_rows(report)
 
-	if units_token is None and units_name:
+	if units_token is None and units_name and (request_defaults is None or start is not None or duration is not None):
 		print(f"NOTE: integration bounds interpreted in independent-variable display units '{units_name}'.")
 
 
@@ -631,31 +637,19 @@ def run_ascend_model(
 
 		if integrate:
 			request_defaults = cli_hooks.get_integrate_request(M)
-			effective_engine = engine
-			if effective_engine is None and request_defaults is not None:
-				effective_engine = cli_hooks.integrator_name
-			effective_start = start
-			effective_duration = duration
-			effective_steps = steps
-			if request_defaults is not None:
-				if effective_start is None:
-					effective_start = request_defaults["start"]
-				if effective_duration is None:
-					effective_duration = request_defaults["stop"] - request_defaults["start"]
-				if effective_steps is None:
-					effective_steps = request_defaults["steps"]
 			_run_integration(
 				ascpy=ascpy,
 				sim=M,
-				engine=effective_engine,
-				start=effective_start,
-				duration=effective_duration,
-				steps=effective_steps,
+				engine=engine,
+				start=start,
+				duration=duration,
+				steps=steps,
 				units_token=units,
 				output=output,
 				plot=plot,
 				microstates=microstates,
 				progress=progress,
+				request_defaults=request_defaults,
 			)
 		elif cli_hooks.did_integrate(M):
 			pass

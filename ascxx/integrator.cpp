@@ -258,12 +258,18 @@ Integrator::getName() const{
 }
 
 /**
-	@TODO what about conversion factors? Is an allowance being made?
+	Bounds are expressed in the supplied units; sample times use base units.
 */
 void
 Integrator::setLinearTimesteps(UnitsM units, double start, double end, unsigned long num){
+	if(num == 0)throw runtime_error("At least one timestep is required");
+	start *= units.getConversion();
+	end *= units.getConversion();
+	if(!std::isfinite(start) || !std::isfinite(end) || end <= start){
+		throw runtime_error("Timesteps require finite bounds with end > start");
+	}
 	if(samplelist!=NULL){
-		ASC_FREE(samplelist);
+		samplelist_free(samplelist);
 	}
 	const dim_type *d = units.getDimensions().getInternalType();
 	samplelist = samplelist_new(num+1, d);
@@ -277,18 +283,24 @@ Integrator::setLinearTimesteps(UnitsM units, double start, double end, unsigned 
 }
 
 /**
-	@TODO what about conversion factors? Is an allowance being made?
+	Bounds are expressed in the supplied units; sample times use base units.
 */
 void
 Integrator::setLogTimesteps(UnitsM units, double start, double end, unsigned long num){
-	if(samplelist!=NULL){
-		ASC_FREE(samplelist);
-	}
+	if(num == 0)throw runtime_error("At least one timestep is required");
+	start *= units.getConversion();
+	end *= units.getConversion();
 	const dim_type *d = units.getDimensions().getInternalType();
 
+	if(!std::isfinite(start) || !std::isfinite(end)){
+		throw runtime_error("Timesteps require finite bounds");
+	}
 	if(start<=0)throw runtime_error("starting timestep needs to be > 0");
 	if(end<=0)throw runtime_error("end timestep needs to be > 0");
 	if(end <= start)throw runtime_error("end timestep needs to be > starting timestep");
+	if(samplelist!=NULL){
+		samplelist_free(samplelist);
+	}
 
 	samplelist = samplelist_new(num+1, d);
 	double val = start;

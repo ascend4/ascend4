@@ -237,19 +237,40 @@ Resolved for the first pass:
 
 ### Lifetime Of Options And Observe Sets
 
-Still open:
+Current ascxx/CLI behavior:
 
-- if a user selects integrator `A`, sets options, then selects integrator `B`,
-  then returns to `A`, should `A`'s earlier options still be remembered?
-- should named/default `OBSERVE` lists persist across solver/integrator focus
-  changes within the same METHOD execution context?
+- Observation lists, deferred study outputs, selected engines, options, and
+  option focus belong to the simulation and survive separate `sim.run(...)`
+  calls. Rebinding callbacks does not reset that configuration. New simulations
+  start with empty configuration; clearing the library discards stored settings.
+- The CLI uses the METHOD-selected integrator unless `--engine` overrides it,
+  including when no METHOD issued `INTEGRATE`.
+- Native and Python integration replay the selected integrator's METHOD options.
+  An explicit different engine uses its own defaults. Selecting a different
+  integrator in a METHOD clears the previous integrator's options; reselecting
+  the same engine preserves them.
 
-Current working assumption:
+Keeping separate option histories and restoring them when an engine is
+reselected remains a possible extension.
 
-- default and named `OBSERVE` lists should persist in the current simulation
-  context
-- solver/integrator-specific options should be stored per selected engine and
-  restored when that engine is re-selected
+### Integration Time Units
+
+`setLinearTimesteps` and `setLogTimesteps` accept bounds in the supplied units
+and convert them to base units for the integrator. Bounds must be finite and
+increasing, with at least one reporting interval; logarithmic bounds must also
+be positive.
+
+METHOD `INTEGRATE` bounds are already evaluated in base units. CLI `--start`
+and `--duration` values use `--units`, or the independent variable's display
+units when it is omitted. Inherited METHOD bounds retain their physical values
+even when only one CLI bound is overridden. Overriding the start preserves an
+inherited duration, not the original stop time.
+
+The requested first sample sets the independent variable before initialization,
+so `INITIAL` equations and engine startup see the requested start time.
+
+Regression coverage: `test/test_runapi_hooks.py` (run with `./a4 pytest`, or
+`./a4 script /usr/bin/python3 test/test_runapi_hooks.py` on Linux).
 
 ## Implementation Sequence
 

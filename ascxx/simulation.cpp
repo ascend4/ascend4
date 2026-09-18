@@ -92,6 +92,7 @@ Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), sim
 	sing = NULL;
 	activeblock = 0;
 	solverhooks = NULL;
+	SolverHooks::resetConfiguration(this);
 	asc_simstatus_mark_dirty(i);
 	// Create an Instance object for the 'simulation root' (we'll call
 	// it the 'simulation model') and it can be fetched using 'getModel()'

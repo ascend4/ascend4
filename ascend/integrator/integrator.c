@@ -2126,6 +2126,10 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 
 	MSG("RUNNING INTEGRATION...");
 
+	/* The first sample defines the start of this run. Set it before INITIAL
+	   equations and engine startup evaluate expressions involving time. */
+	integrator_set_t(sys, samplelist_get(sys->samples, start_index));
+
 	if(!sys->initial_mode_prepared && sys->internals->initialisefn != NULL){
 		if((sys->internals->initialisefn)(sys)){
 			return -5;
