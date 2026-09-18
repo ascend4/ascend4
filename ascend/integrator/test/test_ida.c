@@ -802,6 +802,86 @@ static void test_event_side_cluster_inclusive(){
 	ida_check_event_side("ida_event_cluster_inclusive", 25, 1, 200, 0);
 }
 
+
+/* Independent nearby roots must not undo a previous crossing. Check both
+ * 0.2 s (after the cluster) and 1 s using fresh integrations. The 2e-6 m
+ * wide-tolerance bound permits either raw or tolerance-shifted root semantics;
+ * it does not permit a permanent stale branch. See models/test/ida/close_events.md.
+ */
+static void ida_check_close_event(const char *type_name, int rising,
+		int zero_tolerance, double end){
+	IdaTestSystem testsys;
+	slv_parameters_t params;
+	struct Instance *root, *xs, *ons;
+	int idx, res, i;
+	double tolerance = zero_tolerance ? 1e-8 : 2e-6;
+
+	if(ida_test_load("test/ida/close_events.a4c", type_name, 1, &testsys)) return;
+	CU_ASSERT_FATAL(0 == integrator_params_get(testsys.integ, &params));
+	idx = ida_find_param(&params, "rtol");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_REAL(&params, idx) = 1e-9;
+	idx = ida_find_param(&params, "atolvect");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_BOOL(&params, idx) = TRUE;
+	idx = ida_find_param(&params, "zeno_ncycles");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_INT(&params, idx) = 200;
+	idx = ida_find_param(&params, "zeno_duration");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_REAL(&params, idx) = 1e-4;
+	CU_ASSERT_FATAL(0 == integrator_params_set(testsys.integ, &params));
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, end, 10);
+	integrator_set_minstep(testsys.integ, 0.0);
+	ida_error_capture_reset();
+	error_reporter_set_callback(&ida_error_capture_cb);
+	res = integrator_solve(testsys.integ, 0,
+		samplelist_length(testsys.integ->samples) - 1);
+	error_reporter_set_callback(NULL);
+	CU_TEST(res == 0);
+	CU_TEST(g_ida_error_capture.error_count == 0);
+	if(res == 0){
+		root = GetSimulationRoot(testsys.siminst);
+		CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_child(root, "t")), end, 1e-8);
+		xs = ida_child(root, "x");
+		ons = ida_child(root, "on");
+		for(i = 1; i <= 3; ++i){
+			double tau = 0.1 + i * 1e-8;
+			double expected = rising ? 2 * end - tau : end + tau;
+			double actual = RealAtomValue(ida_array_child(xs, i));
+			if(fabs(actual - expected) > tolerance){
+				fprintf(stderr, "%s: x[%d](%.2g s) = %.12g m; expected %.12g m\n",
+					type_name, i, end, actual, expected);
+			}
+			CU_ASSERT_DOUBLE_EQUAL(actual, expected, tolerance);
+			CU_TEST(!!GetBooleanAtomValue(ida_array_child(ons, i)) == rising);
+		}
+	}
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_close_event_rising_strict(){
+	ida_check_close_event("ida_close_rising_strict", 1, 0, 0.2);
+	ida_check_close_event("ida_close_rising_strict", 1, 0, 1.0);
+}
+
+static void test_close_event_falling_inclusive(){
+	ida_check_close_event("ida_close_falling_inclusive", 0, 0, 0.2);
+	ida_check_close_event("ida_close_falling_inclusive", 0, 0, 1.0);
+}
+
+static void test_close_event_rising_zero_tol(){
+	ida_check_close_event("ida_close_rising_strict_zero_tol", 1, 1, 0.2);
+	ida_check_close_event("ida_close_rising_strict_zero_tol", 1, 1, 1.0);
+}
+
+static void test_close_event_falling_zero_tol(){
+	ida_check_close_event("ida_close_falling_inclusive_zero_tol", 0, 1, 0.2);
+	ida_check_close_event("ida_close_falling_inclusive_zero_tol", 0, 1, 1.0);
+}
+
 /* Additional event semantics: simultaneous mixed truth values, opposite
  * crossings of one boundary, and reset/consistency changes to its residual. */
 static void ida_check_event_restart(const char *type_name, int kind, int falling){
@@ -1859,6 +1939,10 @@ static void test_initial_alias_binding_bug(){
 	T(event_side_cluster_limit) \
 	T(event_side_cluster_strict) \
 	T(event_side_cluster_inclusive) \
+	T(close_event_rising_strict) \
+	T(close_event_falling_inclusive) \
+	T(close_event_rising_zero_tol) \
+	T(close_event_falling_zero_tol) \
 	T(event_side_mixed) \
 	T(event_side_repeated_gt) \
 	T(event_side_repeated_ge) \
