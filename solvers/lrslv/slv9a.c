@@ -36,6 +36,8 @@
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/cond_config.h>
 
+#include <ascend/compiler/logrel_util.h>
+
 #include <ascend/solver/solver.h>
 #include <ascend/solver/logblock.h>
 
@@ -44,10 +46,6 @@
 typedef struct slv9a_system_structure *slv9a_system_t;
 
 ASC_DLLSPEC SolverRegisterFn lrslv_register;
-
-/* Some constants for use with IDA */
-#define IDA_TRUE = 2
-#define IDA_FALSE = 3
 
 #define SLV9A(s) ((slv9a_system_t)(s))
 #define SERVER (sys->slv)
@@ -937,6 +935,7 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
   struct rel_relation *rel;
   struct logrel_relation *logrel;
   struct gl_list_t *per_insts;
+  struct LogRelBoundaryValue *boundary_values = NULL;
   struct Instance *i;
   bnd_filter_t bfilter;
   int32 numbnds,numper,nb;
@@ -1019,47 +1018,38 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
     }
   }
 
-  /* Stick crossed boundaries onto per_insts for IDA-triggered reconfiguration.
-   * At present we support simultaneous crossings only when they all imply the
-   * same target truth value. Mixed TRUE/FALSE target sets need a richer API
-   * than the current single 'per_value' perturb mode.
-   */
-  if (WITH_IDA) {
-		numbnds = slv_get_num_solvers_bnds(server);
-		for (nb = 0; nb < numbnds; nb++) {
-			cur_bnd = blist[nb];
-			if (bnd_ida_crossed(cur_bnd)) {
-				int cur_value = bnd_ida_value(cur_bnd) ? 2 : 3;
-				if(per_insts == NULL){
-					per_insts = gl_create(numbnds);
-					per_value = cur_value;
-				}else if(per_value != cur_value){
-					ERROR_REPORTER_HERE(ASC_USER_ERROR,
-						"Simultaneous boundary crossings with mixed target truth values are not supported.");
-					if(per_insts != NULL){
-						gl_destroy(per_insts);
-					}
-					per_insts = NULL;
-					sys->s.inconsistent = TRUE;
-					iteration_ends(sys);
-					update_status(sys);
-					return 8;
-				}
-
-				if (bnd_kind(cur_bnd) == e_bnd_rel) {
-					rel = bnd_rel(bnd_real_cond(cur_bnd));
-					i = (struct Instance *) rel_instance(rel);
-					gl_append_ptr(per_insts, i);
-				} else {
-					if (bnd_kind(cur_bnd) == e_bnd_logrel) {
-						logrel = bnd_logrel(bnd_log_cond(cur_bnd));
-						i = (struct Instance *) logrel_instance(logrel);
-						gl_append_ptr(per_insts, i);
-					}
-				}
-			}
-
-		}
+  /* Each crossed boundary has its own post-event truth value. CMSlv's
+   * inversion mode remains independent of IDA's explicit-value mode. */
+  if(WITH_IDA && !PERTURB_BOUNDARY){
+    numbnds = slv_get_num_solvers_bnds(server);
+    for(nb = 0; nb < numbnds; ++nb){
+      cur_bnd = blist[nb];
+      if(!bnd_ida_crossed(cur_bnd)) continue;
+      if(per_insts == NULL){
+        per_insts = gl_create(numbnds);
+        boundary_values = ASC_NEW_ARRAY(struct LogRelBoundaryValue, numbnds);
+        if(per_insts == NULL || boundary_values == NULL){
+          if(per_insts != NULL) gl_destroy(per_insts);
+          if(boundary_values != NULL) ASC_FREE(boundary_values);
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate boundary overrides");
+          sys->s.inconsistent = TRUE;
+          iteration_ends(sys);
+          update_status(sys);
+          return 8;
+        }
+        per_value = LOGREL_BOUNDARY_VALUES;
+      }
+      if(bnd_kind(cur_bnd) == e_bnd_rel){
+        i = (struct Instance *)rel_instance(bnd_rel(bnd_real_cond(cur_bnd)));
+      }else if(bnd_kind(cur_bnd) == e_bnd_logrel){
+        i = (struct Instance *)logrel_instance(bnd_logrel(bnd_log_cond(cur_bnd)));
+      }else{
+        continue;
+      }
+      boundary_values[nb].instance = i;
+      boundary_values[nb].value = bnd_ida_value(cur_bnd);
+      gl_append_ptr(per_insts, &boundary_values[nb]);
+    }
   }
 
   iteration_begins(sys);
@@ -1095,6 +1085,7 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
 
       ds_status=slv_direct_log_solve(SERVER,lrel,dvar,mif,0,NULL);
     }
+    if(boundary_values != NULL) ASC_FREE(boundary_values);
     sys->s.block.functime += (tm_cpu_time()-time0);
 
     switch( ds_status ) {
@@ -1141,6 +1132,8 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
       return 7;
     }
   } else {
+    if(per_insts != NULL) gl_destroy(per_insts);
+    if(boundary_values != NULL) ASC_FREE(boundary_values);
     FPRINTF(lif,"block number = %d \n",sys->s.block.current_block);
     FPRINTF(lif,"block size = %d \n",sys->s.block.current_size );
     FPRINTF(lif,"block iteration = %d \n",sys->s.block.iteration);

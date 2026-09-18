@@ -205,6 +205,16 @@ LogTermSatisfied(CONST struct logrelation *lrel,
     }
   }
 
+  if(perturb == LOGREL_BOUNDARY_VALUES && instances != NULL){
+    len = gl_length(instances);
+    for(n = 1; n <= len; ++n){
+      const struct LogRelBoundaryValue *entry = gl_fetch(instances, n);
+      if(inst == entry->instance){
+        return !!entry->value;
+      }
+    }
+  }
+
   /* perturb == 2 or 3 implies IDA wants true or false */
   if( ( (perturb == 2) || (perturb == 3) ) && (instances!=NULL) ) {
 	  len = gl_length(instances);

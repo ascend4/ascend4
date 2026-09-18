@@ -73,6 +73,7 @@ typedef struct IntegratorIdaDataStruct{
 
 	struct bnd_boundary **bndlist;	 /**< NULL-terminated list of boundaries, for use in the root-finding  code */
 	int nbnds; /* number of boundaries */
+	realtype *boundary_root_tol; /**< event-local root roundoff bands, indexed by boundary */
 	struct when_reinit **guardroots; /**< active-case simple comparison guards used as extra IDA roots */
 	struct Instance **guardcontexts; /**< evaluation context for each active direct guard root */
 	int nguardroots; /* number of active direct guard roots */
