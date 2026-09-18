@@ -6,7 +6,7 @@ IDA and LRSlv; no particle model, kinetics data or Python generator is needed.
 The native assertions are in
 [test_ida.c](../../../ascend/integrator/test/test_ida.c).
 
-Each state starts at zero and has velocity 2 m/s when its Boolean `on[i]` is
+In the original seven tests, each state starts at zero and has velocity 2 m/s when its Boolean `on[i]` is
 true, and 1 m/s otherwise. Its single event occurs at
 `tau[i] = 0.1 + i*1e-7` seconds. Initial Booleans are explicitly set to the
 correct pre-event values. Four separate models test `>`, `>=`, `<` and `<=`;
@@ -83,8 +83,99 @@ The existing `multi_boundary_same_direction`, `reinit_boolean_latch` and
 `reinit_boolean_cascade` tests also pass: ten tests run, seven pass, three
 fail, none skipped.
 
-The acceptance target is that all seven new tests pass while the existing
-hybrid-event tests continue to pass. These tests assert correct behaviour;
-they deliberately fail on the affected integration layer. They do not prove
-a defect in SUNDIALS IDA itself. No solver implementation change accompanies
-them.
+The original tests assert correct behaviour and deliberately fail on the
+affected integration layer. They do not establish a defect in SUNDIALS IDA
+itself.
+
+## Repair and additional coverage
+
+The repair retains a separate post-crossing truth value for each boundary
+through same-time logical and consistency iteration. Inequality orientation
+and IDA's crossing direction select that value. LRSlv passes per-relation
+values to the logical evaluator, so simultaneous TRUE and FALSE targets work,
+including both terms in one logical expression. Ordinary SATISFIED evaluation
+and CMSlv's inversion mode are unchanged.
+
+A reset or consistency solve releases an override when the residual leaves
+its event-local roundoff band. That band is the absolute residual at IDA's
+returned root plus 32 machine epsilons times the absolute relation nominal
+(with scale 1 if that nominal is zero). It does not use the SATISFIED tolerance:
+a small, resolved reset must still take effect. All overrides and their storage
+are cleared at event exit, including failure paths.
+
+The returned root state is installed before logical solving. Both root
+crossing directions remain enabled after restart; the former persistent
+direction filter could suppress a later opposite crossing. Direct-guard
+indices are read before reanalysis changes the active guard list. Restart
+and consistency failures propagate to the integration caller.
+
+The fixture now supplies 19 native tests in total:
+
+- The original seven isolated-crossing and finite-cluster tests.
+- One simultaneous mixed-target test, including a compound logical expression.
+- Four tests crossing the same boundary in opposite directions at 0.2 and
+  0.4 seconds. Final positions are 1.2 m for `>`/`>=`, and 1.8 m for `<`/`<=`.
+- Four reset tests using an algebraic boundary `z = 2*y`. They check four
+  resets, the final continuous/algebraic state and the cleared Boolean.
+- Three reset variants covering a reset smaller than the SATISFIED tolerance,
+  an omitted tolerance and an explicit zero tolerance.
+
+The reset tests use automatic initial step selection with their tight DAE
+absolute tolerances. Their reset counter also detects duplicate or missed
+applications of REINIT.
+
+## Bouncing-event checks
+
+The older `boundary` test incorrectly expected the spring/damper ball to be
+at equilibrium at 30 seconds. The repaired solver keeps detecting departures
+from contact, and the ball is still bouncing then. Its expectation now uses
+an independent piecewise analytical solution with tighter numerical tolerances.
+For the fixture parameters, free flight is a parabola under gravity 9.8 m/s².
+During contact, with elapsed contact time `s`, position is
+
+```text
+y(s) = 9.902 + exp(-0.5*s) * (A*cos(w*s) + B*sin(w*s))
+w = sqrt(99.75)
+A = 10 - 9.902
+B = (v_entry + 0.5*A)/w
+```
+
+Start with the first impact at `sqrt(60/9.8)` seconds. Alternate contact
+until its first ascending return to `y = 10`, then free flight until the next
+impact. This gives `y(30) = 10.09871453998119 m` and
+`v(30) = -1.17307793252196 m/s`.
+
+The ideal-rebound accumulation test now explicitly uses five events within
+0.1 seconds and requires the accumulation diagnostic. This detects the
+shrinking bounce sequence while its excursions are numerically resolved.
+No default event-count setting or guard algorithm was changed. This check
+does not guarantee detection of arbitrarily small unresolved bounces.
+
+## Validation and branch handoff
+
+On `branch-crossing-error-ida`, based on `python3`, the following command
+passed all 85 tests and 2073 assertions, with no skipped tests or retained
+allocations reported by the test memory tracker (2026-09-18):
+
+```sh
+scons -j6 test/test solvers/ida/libida_ascend.so solvers/lrslv/liblrslv_ascend.so
+LD_LIBRARY_PATH="$HOME/.local/lib:.:${LD_LIBRARY_PATH:-}" test/test --list-failures \
+  integrator_ida solver_lrslv solver_cmslv \
+  compiler_instantiate_logrel_bool_algebra \
+  compiler_instantiate_relation_logrel_bool
+```
+
+Use these native tests for the feature-branch acceptance check. This branch's
+`a4 run --integrate` path does not transfer METHOD integrator options into its
+new integrator. Consequently a standalone cluster run can still stop at the
+default count of 20 despite the fixture requesting 200. The native tests
+explicitly apply their parameters and verify the cluster solution. The
+frontend option-transfer difference is outside this solver repair.
+
+U1/U2/U3 qualification remains pending until this fix is merged into `fboard2`,
+which contains the required iron models and frontend configuration handling.
+No scientific qualification follows from failed loading attempts on the
+`python3`-based feature branch. After merging, replay the analytical suite,
+U1 inventory/throughput controls, U2 one-cell controls, then U3 bed grids with
+a documented finite event allowance. The later TGA corrector failures still
+require that replay; their cause has not been established by these tests.

@@ -542,35 +542,44 @@ static void test_shm(){
 
 static void test_boundary(){
 	IdaTestSystem testsys;
-	struct Instance *root, *iy, *ir, *iv, *im, *ig, *ik1;
-	double y, r, v, m, g, k1, yeq;
+	struct Instance *root, *iy, *iv;
+	slv_parameters_t params;
+	int idx;
+	double y, v;
 
 	if(ida_test_load("test/ida/leon/bouncingball.a4c", "bouncingball", 1, &testsys)){
 		return;
 	}
 
+	CU_ASSERT_FATAL(0 == integrator_params_get(testsys.integ, &params));
+	idx = ida_find_param(&params, "rtol");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_REAL(&params, idx) = 1e-9;
+	idx = ida_find_param(&params, "atolvect");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_BOOL(&params, idx) = FALSE;
+	idx = ida_find_param(&params, "atol");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_REAL(&params, idx) = 1e-10;
+	CU_ASSERT_FATAL(0 == integrator_params_set(testsys.integ, &params));
 	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
 	ida_configure_runtime(testsys.integ, 0.0, 30.0, 120);
+	integrator_set_stepzero(testsys.integ, 0);
 	CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1));
 
 	root = GetSimulationRoot(testsys.siminst);
 	iy = ida_child(root, "y");
-	ir = ida_child(root, "r");
 	iv = ida_child(root, "v");
-	im = ida_child(root, "m");
-	ig = ida_child(root, "g");
-	ik1 = ida_child(root, "k1");
 	y = RealAtomValue(iy);
-	r = RealAtomValue(ir);
 	v = RealAtomValue(iv);
-	m = RealAtomValue(im);
-	g = RealAtomValue(ig);
-	k1 = RealAtomValue(ik1);
-	yeq = r - m * g / k1;
 
-	CU_TEST(fabs(y - yeq) < 5e-4);
-	CU_TEST(y < 25.0);
-	CU_TEST(fabs(v) < 1e-3);
+	/* Exact free-flight parabolas joined to the damped contact oscillator
+	 * (decay 0.5/s, frequency sqrt(99.75)/s) give this state at 30 s.
+	 * The ball is still bouncing: the old equilibrium assertion passed
+	 * only because the boundary bug left the contact branch active. */
+	fprintf(stderr, "bouncingball at 30 s: y=%.15g v=%.15g\n", y, v);
+	CU_ASSERT_DOUBLE_EQUAL(y, 10.09871453998119, 5e-4);
+	CU_ASSERT_DOUBLE_EQUAL(v, -1.17307793252196, 3e-3);
 
 	ida_free_runtime(testsys.integ);
 	ida_cleanup(&testsys);
@@ -791,6 +800,103 @@ static void test_event_side_cluster_strict(){
 
 static void test_event_side_cluster_inclusive(){
 	ida_check_event_side("ida_event_cluster_inclusive", 25, 1, 200, 0);
+}
+
+/* Additional event semantics: simultaneous mixed truth values, opposite
+ * crossings of one boundary, and reset/consistency changes to its residual. */
+static void ida_check_event_restart(const char *type_name, int kind, int falling){
+	IdaTestSystem testsys;
+	struct Instance *root;
+	slv_parameters_t params;
+	int idx, res;
+	double end = kind >= 2 ? 0.95 : 1.0;
+	double length_scale = kind == 3 ? 1e-10 : 1.0;
+	if(ida_test_load("test/ida/event_side.a4c", type_name, 1, &testsys)) return;
+	CU_ASSERT_FATAL(0 == integrator_params_get(testsys.integ, &params));
+	idx = ida_find_param(&params, "rtol");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_REAL(&params, idx) = 1e-9;
+	CU_ASSERT_FATAL(0 == integrator_params_set(testsys.integ, &params));
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0, end, 20);
+	integrator_set_minstep(testsys.integ, 0);
+	/* Let IDA choose a step consistent with tight DAE tolerances. */
+	integrator_set_stepzero(testsys.integ, 0);
+	/* Resolve both roots of the non-monotonic time guard. */
+	integrator_set_maxstep(testsys.integ, 0.05);
+	res = integrator_solve(testsys.integ, 0, 20);
+	CU_TEST(res == 0);
+	if(res == 0){
+		root = GetSimulationRoot(testsys.siminst);
+		CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_child(root, "t")), end, 1e-8);
+		if(kind == 0){
+			struct Instance *xs = ida_child(root, "x"), *ons = ida_child(root, "on");
+			int i;
+			for(i = 1; i <= 3; ++i){
+				CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_array_child(xs, i)),
+					i == 2 ? 1.1 : 1.9, 1e-8);
+				CU_TEST(!!GetBooleanAtomValue(ida_array_child(ons, i)) == (i != 2));
+			}
+		}else if(kind == 1){
+			CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_child(root, "x")), falling ? 1.8 : 1.2, 1e-8);
+			CU_TEST(!!GetBooleanAtomValue(ida_child(root, "on")) == falling);
+		}else{
+			CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_child(root, "y")), (falling ? 0.25 : 0.15)*length_scale, 1e-8*length_scale);
+			CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_child(root, "z")), (falling ? 0.5 : 0.3)*length_scale, 1e-8*length_scale);
+			CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_child(root, "count")), 4.0, 1e-8);
+			CU_TEST(!GetBooleanAtomValue(ida_child(root, "on")));
+		}
+	}
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_event_side_mixed(){
+	ida_check_event_restart("ida_event_mixed", 0, 0);
+}
+
+static void test_event_side_repeated_gt(){
+	ida_check_event_restart("ida_event_repeated_gt", 1, 0);
+}
+
+static void test_event_side_repeated_ge(){
+	ida_check_event_restart("ida_event_repeated_ge", 1, 0);
+}
+
+static void test_event_side_repeated_lt(){
+	ida_check_event_restart("ida_event_repeated_lt", 1, 1);
+}
+
+static void test_event_side_repeated_le(){
+	ida_check_event_restart("ida_event_repeated_le", 1, 1);
+}
+
+static void test_event_side_reset_gt(){
+	ida_check_event_restart("ida_event_reset_gt", 2, 0);
+}
+
+static void test_event_side_reset_ge(){
+	ida_check_event_restart("ida_event_reset_ge", 2, 0);
+}
+
+static void test_event_side_reset_lt(){
+	ida_check_event_restart("ida_event_reset_lt", 2, 1);
+}
+
+static void test_event_side_reset_le(){
+	ida_check_event_restart("ida_event_reset_le", 2, 1);
+}
+
+static void test_event_side_reset_small(){
+	ida_check_event_restart("ida_event_reset_small", 3, 0);
+}
+
+static void test_event_side_reset_default_tol(){
+	ida_check_event_restart("ida_event_reset_default_tol", 2, 0);
+}
+
+static void test_event_side_reset_zero_tol(){
+	ida_check_event_restart("ida_event_reset_zero_tol", 2, 0);
 }
 
 static void test_reinit_boolean_latch(){
@@ -1315,16 +1421,31 @@ static void test_example_resting_rebound(){
 
 static void test_example_ideal_rebound_zeno_stop(){
 	IdaTestSystem testsys;
-	int solve_res;
+	int solve_res, idx;
+	slv_parameters_t params;
 
 	if(ida_test_load("johnpye/dyn/ideal_rebound.a4c", "ideal_rebound", 1, &testsys)){
 		return;
 	}
 
+	/* Detect the accumulating impacts while their heights are still
+	 * resolved by this test's integration tolerances. */
+	CU_ASSERT_FATAL(0 == integrator_params_get(testsys.integ, &params));
+	idx = ida_find_param(&params, "zeno_ncycles");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_INT(&params, idx) = 5;
+	idx = ida_find_param(&params, "zeno_duration");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_REAL(&params, idx) = 0.1;
+	CU_ASSERT_FATAL(0 == integrator_params_set(testsys.integ, &params));
 	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
 	ida_configure_runtime(testsys.integ, 0.0, 5.0, 100);
+	ida_error_capture_reset();
+	error_reporter_set_callback(&ida_error_capture_cb);
 	solve_res = integrator_solve(testsys.integ, 0, samplelist_length(testsys.integ->samples) - 1);
+	error_reporter_set_callback(NULL);
 	CU_ASSERT_NOT_EQUAL(solve_res, 0);
+	CU_TEST(NULL != strstr(g_ida_error_capture.all_error_msgs, "Event accumulation detected"));
 
 	ida_free_runtime(testsys.integ);
 	ida_cleanup(&testsys);
@@ -1738,6 +1859,18 @@ static void test_initial_alias_binding_bug(){
 	T(event_side_cluster_limit) \
 	T(event_side_cluster_strict) \
 	T(event_side_cluster_inclusive) \
+	T(event_side_mixed) \
+	T(event_side_repeated_gt) \
+	T(event_side_repeated_ge) \
+	T(event_side_repeated_lt) \
+	T(event_side_repeated_le) \
+	T(event_side_reset_gt) \
+	T(event_side_reset_ge) \
+	T(event_side_reset_lt) \
+	T(event_side_reset_le) \
+	T(event_side_reset_small) \
+	T(event_side_reset_default_tol) \
+	T(event_side_reset_zero_tol) \
 	T(reinit_boolean_latch) \
 	T(reinit_boolean_cascade) \
 	T(reinit_algebraic_target_rejected) \

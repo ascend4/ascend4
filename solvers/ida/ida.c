@@ -170,6 +170,7 @@ static void integrator_ida_create(IntegratorSystem *integ) {
 	enginedata->rellist = NULL;
 	enginedata->bndlist = NULL;
 	enginedata->nbnds = 0;
+	enginedata->boundary_root_tol = NULL;
 	enginedata->guardroots = NULL;
 	enginedata->guardcontexts = NULL;
 	enginedata->nguardroots = 0;
@@ -229,6 +230,7 @@ static void integrator_ida_free(void *enginedata) {
 	}
 
 	ASC_FREE(d->rellist);
+	if(d->boundary_root_tol != NULL) ASC_FREE(d->boundary_root_tol);
 	if(d->guardroots != NULL){
 		ASC_FREE(d->guardroots);
 		d->guardroots = NULL;
@@ -676,7 +678,9 @@ static int ida_refresh_bnd_cond_states(IntegratorSystem *integ, int **states, in
 	}
 
 	for(i = 0; i < nbnds; ++i){
-		(*states)[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+		struct bnd_boundary *bnd = enginedata->bndlist[i];
+		(*states)[i] = bnd_ida_crossed(bnd) ? bnd_ida_value(bnd)
+			: bndman_calc_satisfied(bnd);
 	}
 
 	return 0;
@@ -1174,19 +1178,22 @@ int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem,
 	flag = IDAReInit(ida_mem, t0, y0, yp0);
 	if (flag!=IDA_SUCCESS) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR, "Reinitialisation failed.");
+		goto cleanup;
 	}
 
-	ida_set_optional_inputs(integ, ida_mem, y0);
+	flag = ida_set_optional_inputs(integ, ida_mem, y0);
+	if(flag != 0) goto cleanup;
 
 	/* calculate initial conditions */
-	ida_setup_IC(integ, ida_mem, tout1, t0, y0, yp0);
+	flag = ida_setup_IC(integ, ida_mem, tout1, t0, y0, yp0);
+	if(flag != 0) goto cleanup;
 
-	ida_root_init(integ, ida_mem);
+	flag = ida_root_init(integ, ida_mem);
 
-	/* Clean up */
+cleanup:
 	N_VDestroy_Serial(y0);
 	N_VDestroy_Serial(yp0);
-	return 0;
+	return flag;
 }
 
 	/*-------------------------------------------------------------
@@ -1212,8 +1219,6 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	int statuscode = 0;
 
 	int *rootsfound;			/** < IDA rootfinder reports root index in here */
-	int *rootdir;				/** < Used to tell IDA to ignore doulve crossings */
-	int *crossed_to_state;		/** < Boundary truth states immediately after the crossing */
 	int *bnd_cond_states;		/** < Record of boundary states so that IDA can tell LRSlv
 										   how to evaluate a boundary crossing */
 	int n_bnd_cond_states;
@@ -1349,8 +1354,11 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 					/* Store the root index */
 					rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nroots);
-					rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nroots);
-					crossed_to_state = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds > 0 ? enginedata->nbnds : 1);
+					if(rootsfound == NULL){
+						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate root information");
+						statuscode = 1;
+						goto ida_cleanup;
+					}
 
 						if (IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
 							ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
@@ -1369,15 +1377,24 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						}
 					}
 #endif
+					/* Root callbacks may leave the model at a trial point. Use the
+					 * returned root state before evaluating any event logic. */
+					integrator_set_t(integ, (double)tret);
+					integrator_set_y(integ, NV_DATA_S(yret));
+					integrator_set_ydot(integ, NV_DATA_S(ypret));
 					need_to_reconfigure = 0;
-					if(enginedata->nbnds){
-						need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
-								bnd_cond_states);
-					}
+					/* Read the old direct-guard root indices before boundary
+					 * reanalysis can replace the active guard list. */
 					for(i = enginedata->nbnds; i < enginedata->nroots; ++i){
-						if(rootsfound[i] != 0){
-							need_to_reconfigure = 1;
+						if(rootsfound[i] != 0) need_to_reconfigure = 1;
+					}
+					if(enginedata->nbnds){
+						int changed = ida_cross_boundary(integ, rootsfound, bnd_cond_states);
+						if(changed < 0){
+							statuscode = 1;
+							goto root_cleanup;
 						}
+						need_to_reconfigure |= changed;
 					}
 
 					if (need_to_reconfigure) {
@@ -1385,18 +1402,12 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							statuscode = 1;
 							goto root_cleanup;
 						}
-						for(i = 0; i < enginedata->nbnds; ++i){
-							crossed_to_state[i] = bnd_cond_states[i];
-						}
 						MSG("Boundaries were crossed; "
 								"need to reinitialise solver...");
 						/* so, now we need to restart the integration. we will assume that
 						 everything changes: number of variables, etc, etc, etc. */
 
-						/* First write the left-limit state exactly at the event time. */
-						integrator_set_t(integ, (double)tret);
-						integrator_set_y(integ, NV_DATA_S(yret));
-						integrator_set_ydot(integ, NV_DATA_S(ypret));
+						/* The returned root state was installed before reconfiguration. */
 						integrator_output_write(integ);
 						integrator_output_write_obs(integ);
 						 ida_hybrid_trace(integ, "before_event_iterate", tret);
@@ -1425,7 +1436,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							skipping_output = 1;
 						}
 
-						ida_reinit_integrator(integ, ida_mem, tout);
+						if(ida_reinit_integrator(integ, ida_mem, tout) != 0){
+							statuscode = 1;
+							goto root_cleanup;
+						}
 						/*
 						 * Emit the post-reinitialisation consistent state at the same
 						 * event time. Default CLI output collapses this back to
@@ -1440,37 +1454,18 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						yret = ida_bnd_new_zero_NV(integ, integ->n_y);
 						ypret = ida_bnd_new_zero_NV(integ, integ->n_y);
 
-#if SUNDIALS_VERSION_MAJOR >= 5
-						/* If the post-event state is still on a boundary, suppress
-						 * the just-seen crossing direction to avoid an immediate
-						 * double hit. Only do this when the post-event state is
-						 * still on the new side of the crossed boundary; if REINIT
-						 * has moved the system to the opposite side we must allow
-						 * the next same-direction crossing. */
+						ida_bnd_update_crossings(integ);
 						if(ida_refresh_bnd_cond_states(integ, &bnd_cond_states, &n_bnd_cond_states) != 0){
 							statuscode = 1;
 							goto root_cleanup;
 						}
-						for(i = 0; i < enginedata->nbnds; i++) {
-							if(rootsfound[i] != 0
-								&& bnd_cond_states[i] == crossed_to_state[i]){
-								rootdir[i] = rootsfound[i];
-							}else{
-								rootdir[i] = 0;
-							}
-						}
-						for(i = enginedata->nbnds; i < enginedata->nroots; ++i){
-							rootdir[i] = 0;
-						}
-
-						IDASetRootDirection(ida_mem, rootdir);
-#endif
+						/* IDA reinitialisation handles roots at the restart point.
+						 * Leave both directions armed for subsequent crossings. */
 
 					} /* need to reconfigure */
 root_cleanup:
+						ida_bnd_clear_crossings(integ);
 						ASC_FREE(rootsfound);
-						ASC_FREE(rootdir);
-						ASC_FREE(crossed_to_state);
 						if(statuscode != 0){
 							goto ida_cleanup;
 						}
