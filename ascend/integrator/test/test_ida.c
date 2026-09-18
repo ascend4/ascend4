@@ -691,6 +691,108 @@ static void test_multi_boundary_same_direction(){
 	ida_cleanup(&testsys);
 }
 
+/*
+ * A root at t = tau changes a constant velocity from 1 to 2 m/s (rising
+ * condition), or 2 to 1 m/s (falling condition). Strictness cannot affect
+ * the integral after crossing. Keep the four single crossings separate:
+ * a subsequent event can accidentally repair an earlier stale Boolean.
+ * See models/test/ida/event_side.md for exact solutions and reproduction.
+ */
+static void ida_check_event_side(const char *type_name, int count, int rising,
+		int event_limit, int expect_limit){
+	IdaTestSystem testsys;
+	slv_parameters_t params;
+	struct Instance *root, *xs, *ons;
+	int idx, solve_res, i;
+
+	if(ida_test_load("test/ida/event_side.a4c", type_name, 1, &testsys)){
+		return;
+	}
+
+	/* C-side METHOD hooks do not apply OPTION statements. */
+	CU_ASSERT_FATAL(0 == integrator_params_get(testsys.integ, &params));
+	idx = ida_find_param(&params, "rtol");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_REAL(&params, idx) = 1e-9;
+	idx = ida_find_param(&params, "atolvect");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_BOOL(&params, idx) = TRUE;
+	idx = ida_find_param(&params, "zeno_ncycles");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_INT(&params, idx) = event_limit;
+	idx = ida_find_param(&params, "zeno_duration");
+	CU_ASSERT_FATAL(idx >= 0);
+	SLV_PARAM_REAL(&params, idx) = 1e-4;
+	CU_ASSERT_FATAL(0 == integrator_params_set(testsys.integ, &params));
+
+	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+	ida_configure_runtime(testsys.integ, 0.0, 1.0, 10);
+	integrator_set_minstep(testsys.integ, 0.0);
+	ida_error_capture_reset();
+	error_reporter_set_callback(&ida_error_capture_cb);
+	solve_res = integrator_solve(testsys.integ, 0,
+		samplelist_length(testsys.integ->samples) - 1);
+	error_reporter_set_callback(NULL);
+
+	if(expect_limit){
+		/* This is a configured guard, not proof of infinitely many events. */
+		CU_TEST(solve_res != 0);
+		CU_TEST(NULL != strstr(g_ida_error_capture.all_error_msgs,
+			"Event accumulation detected"));
+	}else{
+		CU_TEST(solve_res == 0);
+		CU_TEST(g_ida_error_capture.error_count == 0);
+		if(solve_res == 0){
+			root = GetSimulationRoot(testsys.siminst);
+			CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_child(root, "t")), 1.0, 1e-8);
+			xs = ida_child(root, "x");
+			ons = ida_child(root, "on");
+			for(i = 1; i <= count; ++i){
+				double tau = 0.1 + i * 1e-7;
+				double expected = rising ? 2.0 - tau : 1.0 + tau;
+				double actual = RealAtomValue(ida_array_child(xs, i));
+				if(fabs(actual - expected) > 1e-8){
+					fprintf(stderr, "%s: x[%d](1 s) = %.12g m; expected %.12g m\n",
+						type_name, i, actual, expected);
+				}
+				CU_ASSERT_DOUBLE_EQUAL(actual, expected, 1e-8);
+				CU_TEST(!!GetBooleanAtomValue(ida_array_child(ons, i)) == rising);
+			}
+		}
+	}
+
+	ida_free_runtime(testsys.integ);
+	ida_cleanup(&testsys);
+}
+
+static void test_event_side_rising_strict(){
+	ida_check_event_side("ida_event_rising_strict", 1, 1, 20, 0);
+}
+
+static void test_event_side_rising_inclusive(){
+	ida_check_event_side("ida_event_rising_inclusive", 1, 1, 20, 0);
+}
+
+static void test_event_side_falling_strict(){
+	ida_check_event_side("ida_event_falling_strict", 1, 0, 20, 0);
+}
+
+static void test_event_side_falling_inclusive(){
+	ida_check_event_side("ida_event_falling_inclusive", 1, 0, 20, 0);
+}
+
+static void test_event_side_cluster_limit(){
+	ida_check_event_side("ida_event_cluster_strict", 25, 1, 20, 1);
+}
+
+static void test_event_side_cluster_strict(){
+	ida_check_event_side("ida_event_cluster_strict", 25, 1, 200, 0);
+}
+
+static void test_event_side_cluster_inclusive(){
+	ida_check_event_side("ida_event_cluster_inclusive", 25, 1, 200, 0);
+}
+
 static void test_reinit_boolean_latch(){
 	IdaTestSystem testsys;
 	struct Instance *root, *it, *iy, *isample, *itrigger, *ilatched;
@@ -1629,6 +1731,13 @@ static void test_initial_alias_binding_bug(){
 	T(reinit_reflect) \
 	T(reinit_discrete_sawtooth) \
 	T(multi_boundary_same_direction) \
+	T(event_side_rising_strict) \
+	T(event_side_rising_inclusive) \
+	T(event_side_falling_strict) \
+	T(event_side_falling_inclusive) \
+	T(event_side_cluster_limit) \
+	T(event_side_cluster_strict) \
+	T(event_side_cluster_inclusive) \
 	T(reinit_boolean_latch) \
 	T(reinit_boolean_cascade) \
 	T(reinit_algebraic_target_rejected) \

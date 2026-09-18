@@ -1,0 +1,211 @@
+(*
+ * Independent, analytically soluble event-side regression fixtures.
+ * No kinetics data, Python generation, or external packages are required.
+ * See event_side.md and ascend/integrator/test/test_ida.c.
+ *)
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_event_rising_strict;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..1] IS_A distance;
+    on[1..1] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..1] CREATE
+        reached[i]: t > (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..1] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..1] := FALSE;
+        x[1..1] := 0 {m};
+        x[1..1].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 20;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..1];
+    END on_load;
+END ida_event_rising_strict;
+
+MODEL ida_event_rising_inclusive;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..1] IS_A distance;
+    on[1..1] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..1] CREATE
+        reached[i]: t >= (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..1] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..1] := FALSE;
+        x[1..1] := 0 {m};
+        x[1..1].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 20;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..1];
+    END on_load;
+END ida_event_rising_inclusive;
+
+MODEL ida_event_falling_strict;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..1] IS_A distance;
+    on[1..1] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..1] CREATE
+        reached[i]: t < (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..1] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..1] := TRUE;
+        x[1..1] := 0 {m};
+        x[1..1].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 20;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..1];
+    END on_load;
+END ida_event_falling_strict;
+
+MODEL ida_event_falling_inclusive;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..1] IS_A distance;
+    on[1..1] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..1] CREATE
+        reached[i]: t <= (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..1] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..1] := TRUE;
+        x[1..1] := 0 {m};
+        x[1..1].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 20;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..1];
+    END on_load;
+END ida_event_falling_inclusive;
+
+MODEL ida_event_cluster_strict;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..25] IS_A distance;
+    on[1..25] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..25] CREATE
+        reached[i]: t > (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..25] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..25] := FALSE;
+        x[1..25] := 0 {m};
+        x[1..25].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 200;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..25];
+    END on_load;
+END ida_event_cluster_strict;
+
+MODEL ida_event_cluster_inclusive;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..25] IS_A distance;
+    on[1..25] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..25] CREATE
+        reached[i]: t >= (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..25] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..25] := FALSE;
+        x[1..25] := 0 {m};
+        x[1..25].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 200;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..25];
+    END on_load;
+END ida_event_cluster_inclusive;
