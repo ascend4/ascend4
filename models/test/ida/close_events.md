@@ -35,12 +35,12 @@ controls and give the correct trajectories.
 The native tests in [test_ida.c](../../../ascend/integrator/test/test_ida.c)
 check successful integration, no solver error reports, time, all three
 states and all three Booleans. Each fixture runs independently to 0.2 s
-(after the cluster) and 1 s. Wide-tolerance tests allow 2e-6 m error around
-the raw-root solution, deliberately admitting a consistently shifted
-SATISFIED root surface as well. Zero-tolerance controls require 1e-8 m.
-Neither interpretation admits a permanent stale branch. The tests assert
-correct behaviour, so the two wide-tolerance tests are expected to fail on
-the affected implementation; this is not an expected-failure mask.
+(after the cluster) and 1 s. All trajectory checks now require 1e-8 m agreement with the raw-root
+solution, including wide-tolerance fixtures. This pins down the selected
+IDA semantics. The original reproducer allowed 2e-6 m while the choice
+between raw and shifted roots was still open. The two wide-tolerance tests
+fail on the affected implementation and pass with the repair below;
+failures are not masked as expected failures.
 
 ## Build and run
 
@@ -75,34 +75,93 @@ mean the numerical solution is correct. After switching branches, rebuild
 `ascxx/_ascpy.so` and `a4` if using the frontend: stale generated bindings
 previously prevented model integrator options from being applied.
 
-## Repair scope
+## Implemented repair: IDA-mode ordered guards
 
-The relevant interaction spans `solvers/ida/idaboundary.c`,
-`solvers/ida/ida.c`, `solvers/lrslv/slv9a.c`, and
-`ascend/compiler/logrel_util.c`. The ordinary SATISFIED evaluator requires
-residual greater than the tolerance for strict `>`, whereas `<=` remains
-true while residual is less than the tolerance. IDA locates the unshifted
-zero. The previous fix preserves crossing truth through the current event
-iteration only; a later event uses ordinary evaluation for earlier guards.
+In `solvers/lrslv/slv9a.c`, the existing `withida` mode now supplies explicit
+truth values for **all ordered boundary relations** during each logical
+solve, not only those crossed in the current event. For a current crossing,
+the directional override still takes priority. For every other ordered
+guard, `bndman_calc_satisfied` evaluates the signed residual against zero,
+including strict/inclusive behaviour at equality. That system-level routine
+already ignores tolerance for ordered relations, matching IDA's raw root
+function and its boundary-state refresh. The defect was falling back to the
+compiler's differently defined SATISFIED evaluation for unlisted guards.
 
-Choose consistent hybrid inequality semantics: either locate the
-SATISFIED-shifted surface or evaluate hybrid guards consistently against the
-raw signed surface/crossing history. Do not enlarge the same-event override
-band indiscriminately: resolved small REINIT resets must still take effect.
-Persistent state must not suppress reverse crossings or unrelated state
-resets. A larger event-count allowance cannot repair the wrong branch.
+The resulting contract is:
 
-Keep the existing event-side, mixed-direction, recrossing, small/default/zero
-SATISFIED reset, root-at-output, reinitialisation-error and event-accumulation
-regressions. Extend coverage during repair to an unrelated later event and
-a reverse recrossing while nearby guards are involved. These four fixtures
-isolate the monotone-root defect; they do not replace those broader controls.
+- During IDA initialization and event iteration, ordered guards (`>`, `>=`,
+  `<`, `<=`) use their raw relation surface. SATISFIED's explicit or default
+  tolerance does not move that surface or create a hysteresis band.
+- At a located root, the existing direction override selects the right-limit
+  branch through same-time iteration. A resolved reset still releases it
+  according to the existing event-local roundoff rule.
+- Between events, the selected equation system remains fixed. Reverse
+  crossings remain enabled; no new persistent override is introduced.
+- Ordinary LRSlv and CMSlv retain the compiler's SATISFIED tolerance and
+  perturbation/inversion behaviour. CMSlv inversion also takes precedence
+  if both solver mode flags are set.
+- Equality/non-equality and logical boundaries retain their existing paths.
+  Their event-detection semantics are not redesigned by this change.
+
+This is a change confined to LRSlv's existing IDA execution mode. No parser,
+compiler evaluation, IDA root finder, model syntax or global tolerance has
+been changed. A model needing physical hysteresis should express separate
+switch-on/switch-off thresholds and state explicitly; SATISFIED tolerance
+is not an implicit hysteresis parameter during IDA integration.
+
+## Modelica / OpenModelica review
+
+[Modelica 3.6, section 8.5](https://specification.modelica.org/maint/3.6/equations.html#events-and-synchronization)
+describes event-generating expressions as buffered values: they remain
+constant during continuous integration and change at events. Root finding
+locates the change, and event processing selects the appropriate branch.
+This supports separating dynamic guard evaluation from an ordinary
+pointwise feasibility test. It does not prescribe ASCEND syntax or require
+a user-sized hysteresis band.
+
+[OpenModelica's runtime `model_help.h`](https://github.com/OpenModelica/OpenModelica/blob/master/OMCompiler/SimulationRuntime/c/simulation/solver/model_help.h)
+separates ordinary comparison functions from zero-crossing comparisons.
+Its `relationhysteresis` routine distinguishes initialization, continuous
+integration (returning stored relation values), and event evaluation using
+previous relation state and nominal scales. Thus numerical event hysteresis
+is a runtime mechanism, not simply a tolerance-shifted ordinary comparison.
+This repair adopts consistent event semantics; it does not claim to reproduce
+OpenModelica's complete event algorithm.
+
+The [Modelica Standard Library Hysteresis block](https://doc.modelica.org/Modelica%204.0.0/Resources/helpWSM/Modelica/Modelica.Blocks.Logical.Hysteresis.html)
+separately models hysteresis using explicit upper/lower thresholds and an
+initial output state. That is the appropriate conceptual distinction from
+numerical root handling. Sources reviewed 19 September 2026.
+
+## Additional regression coverage
+
+The fixture file now also contains rising-inclusive and falling-strict
+nearby crossings; rising/falling recrossing cases with an unrelated event
+at 0.5 s and a return crossing at 0.8 s; and `ida_guard_truth_modes`.
+The recrossing tests inspect independent trajectories at 0.2, 0.6 and 1 s,
+checking both the unrelated-event interval and the return branch. A 0.05 s
+maximum step resolves both roots of their nonmonotone guards.
+
+The truth-mode test places a fixed residual at -5e-7, 0 and +5e-7 inside a
+1e-6 SATISFIED tolerance. It checks all four ordered operators, a compound
+Boolean expression, and equality satisfaction. It compares ordinary LRSlv,
+IDA mode, CMSlv inversion, and both flags together. This directly checks
+initialization within the old tolerance band and compatibility rather than
+relying only on completed integration trajectories.
+
+For the full affected suites:
+
+```sh
+LD_LIBRARY_PATH="$HOME/.local/lib:.:${LD_LIBRARY_PATH:-}" test/test --list-failures \
+  integrator_ida solver_lrslv solver_cmslv
+```
 
 The same logical reversions were observed during phase appearance in a
 multi-shell TGA model (`n/n0 > 1e-12`, SATISFIED tolerance `1e-12`). The
-reproducer establishes an ASCEND hybrid/root-logical inconsistency, not a
-SUNDIALS defect or the cause of every late TGA corrector failure. All fixture
-and native-test changes here leave solver implementation unchanged.
+reproducer establishes an ASCEND root/logical inconsistency, not a SUNDIALS
+defect or the cause of every late TGA corrector failure. The TGA replay must
+wait for this repair to return to the modelling branch: the current
+`python3`-derived branch does not contain the complete fboard2 model setup.
 
 ## Verified baseline, 19 September 2026
 
@@ -116,3 +175,20 @@ pass (`event_side_rising_strict`, `event_side_falling_inclusive`,
 16 failing state/Boolean assertions confined to the two new reproducer
 cases; the process exits 35. Both integration calls themselves return
 success without solver errors. The native harness reports no leaked memory.
+
+## Verified repair, 19 September 2026
+
+On `satisfied-tolerance` (base `ac333e14`), the final affected-suite command
+above passes all 87 tests and 2,870 assertions, with zero failures and no
+skips. This includes the original close-event reproducers, all four ordered
+operators, nearby recrossings, truth-mode compatibility, the existing IDA
+reset/event tests, LRSlv, and eight CMSlv tests. The native harness reports
+no leaked memory. `git diff --check` is clean. The pre-fix four-case replay
+on this branch reproduced the two failures before the implementation change.
+
+An exploratory additional real non-equality conditional (`ne: g != 0`)
+triggered the existing compiler assertion `LogRelIsCond: lrel != NULL`
+during fixture setup, before LRSlv evaluation. That exploratory fixture was
+removed; resolving this separate compiler limitation is outside this repair.
+The production change explicitly excludes unordered relations. Equality
+compatibility is tested; no new non-equality event qualification is claimed.

@@ -133,3 +133,202 @@ OPTION zeno_ncycles 200;
 OBSERVE x[1..3];
 END on_load;
 END ida_close_falling_inclusive_zero_tol;
+
+
+MODEL ida_close_rising_inclusive;
+t IS_A time;
+INDEPENDENT t;
+x[1..3] IS_A distance;
+on[1..3] IS_A boolean_var;
+CONDITIONAL
+FOR i IN [1..3] CREATE
+  reached[i]: t >= (0.1 + i*1e-8)*1 {s};
+END FOR;
+END CONDITIONAL;
+FOR i IN [1..3] CREATE
+  on[i] == SATISFIED(reached[i],1e-6);
+  slow[i]: der(x[i]) = 1 {m/s};
+  fast[i]: der(x[i]) = 2 {m/s};
+  WHEN(on[i])
+  CASE TRUE: USE fast[i];
+  CASE FALSE: USE slow[i];
+  END WHEN;
+END FOR;
+METHODS
+METHOD on_load;
+t := 0 {s};
+on[1..3] := FALSE;
+x[1..3] := 0 {m};
+x[1..3].ode_atol := 1e-10;
+INTEGRATOR IDA;
+OPTION rtol 1e-9;
+OPTION atolvect TRUE;
+OPTION zeno_ncycles 200;
+OBSERVE x[1..3];
+END on_load;
+END ida_close_rising_inclusive;
+
+MODEL ida_close_falling_strict;
+t IS_A time;
+INDEPENDENT t;
+x[1..3] IS_A distance;
+on[1..3] IS_A boolean_var;
+CONDITIONAL
+FOR i IN [1..3] CREATE
+  reached[i]: t < (0.1 + i*1e-8)*1 {s};
+END FOR;
+END CONDITIONAL;
+FOR i IN [1..3] CREATE
+  on[i] == SATISFIED(reached[i],1e-6);
+  slow[i]: der(x[i]) = 1 {m/s};
+  fast[i]: der(x[i]) = 2 {m/s};
+  WHEN(on[i])
+  CASE TRUE: USE fast[i];
+  CASE FALSE: USE slow[i];
+  END WHEN;
+END FOR;
+METHODS
+METHOD on_load;
+t := 0 {s};
+on[1..3] := TRUE;
+x[1..3] := 0 {m};
+x[1..3].ode_atol := 1e-10;
+INTEGRATOR IDA;
+OPTION rtol 1e-9;
+OPTION atolvect TRUE;
+OPTION zeno_ncycles 200;
+OBSERVE x[1..3];
+END on_load;
+END ida_close_falling_strict;
+
+MODEL ida_close_recross_rising;
+t IS_A time;
+INDEPENDENT t;
+x[1..3] IS_A distance;
+on[1..3] IS_A boolean_var;
+z IS_A distance;
+tick IS_A boolean_var;
+CONDITIONAL
+  clock: t > 0.5 {s};
+FOR i IN [1..3] CREATE
+  reached[i]: (t - (0.1 + i*1e-8)*1 {s})*(0.8 {s} - t) > 0 {s^2};
+END FOR;
+END CONDITIONAL;
+FOR i IN [1..3] CREATE
+  on[i] == SATISFIED(reached[i],1e-6);
+  slow[i]: der(x[i]) = 1 {m/s};
+  fast[i]: der(x[i]) = 2 {m/s};
+  WHEN(on[i])
+  CASE TRUE: USE fast[i];
+  CASE FALSE: USE slow[i];
+  END WHEN;
+END FOR;
+tick == SATISFIED(clock,1e-6);
+zslow: der(z) = 1 {m/s};
+zfast: der(z) = 2 {m/s};
+WHEN(tick)
+CASE TRUE: USE zfast;
+CASE FALSE: USE zslow;
+END WHEN;
+METHODS
+METHOD on_load;
+t := 0 {s};
+z := 0 {m};
+z.ode_atol := 1e-10;
+tick := FALSE;
+on[1..3] := FALSE;
+x[1..3] := 0 {m};
+x[1..3].ode_atol := 1e-10;
+INTEGRATOR IDA;
+OPTION rtol 1e-9;
+OPTION atolvect TRUE;
+OPTION zeno_ncycles 200;
+OBSERVE x[1..3];
+END on_load;
+END ida_close_recross_rising;
+
+MODEL ida_close_recross_falling;
+t IS_A time;
+INDEPENDENT t;
+x[1..3] IS_A distance;
+on[1..3] IS_A boolean_var;
+z IS_A distance;
+tick IS_A boolean_var;
+CONDITIONAL
+  clock: t > 0.5 {s};
+FOR i IN [1..3] CREATE
+  reached[i]: (t - (0.1 + i*1e-8)*1 {s})*(0.8 {s} - t) <= 0 {s^2};
+END FOR;
+END CONDITIONAL;
+FOR i IN [1..3] CREATE
+  on[i] == SATISFIED(reached[i],1e-6);
+  slow[i]: der(x[i]) = 1 {m/s};
+  fast[i]: der(x[i]) = 2 {m/s};
+  WHEN(on[i])
+  CASE TRUE: USE fast[i];
+  CASE FALSE: USE slow[i];
+  END WHEN;
+END FOR;
+tick == SATISFIED(clock,1e-6);
+zslow: der(z) = 1 {m/s};
+zfast: der(z) = 2 {m/s};
+WHEN(tick)
+CASE TRUE: USE zfast;
+CASE FALSE: USE zslow;
+END WHEN;
+METHODS
+METHOD on_load;
+t := 0 {s};
+z := 0 {m};
+z.ode_atol := 1e-10;
+tick := FALSE;
+on[1..3] := TRUE;
+x[1..3] := 0 {m};
+x[1..3].ode_atol := 1e-10;
+INTEGRATOR IDA;
+OPTION rtol 1e-9;
+OPTION atolvect TRUE;
+OPTION zeno_ncycles 200;
+OBSERVE x[1..3];
+END on_load;
+END ida_close_recross_falling;
+
+MODEL ida_guard_truth_modes;
+t IS_A time;
+INDEPENDENT t;
+g IS_A factor;
+x[1..6] IS_A distance;
+on[1..6] IS_A boolean_var;
+CONDITIONAL
+  gt: g > 0;
+  ge: g >= 0;
+  lt: g < 0;
+  le: g <= 0;
+  eq: g = 0;
+END CONDITIONAL;
+on[1] == SATISFIED(gt,1e-6);
+on[2] == SATISFIED(ge,1e-6);
+on[3] == SATISFIED(lt,1e-6);
+on[4] == SATISFIED(le,1e-6);
+on[5] == (SATISFIED(gt,1e-6) OR SATISFIED(lt,1e-6));
+on[6] == SATISFIED(eq,1e-6);
+FOR i IN [1..6] CREATE
+  slow[i]: der(x[i]) = 1 {m/s};
+  fast[i]: der(x[i]) = 2 {m/s};
+  WHEN(on[i])
+  CASE TRUE: USE fast[i];
+  CASE FALSE: USE slow[i];
+  END WHEN;
+END FOR;
+METHODS
+METHOD on_load;
+t := 0 {s};
+FIX g;
+g := 5e-7;
+on[1..6] := FALSE;
+x[1..6] := 0 {m};
+x[1..6].ode_atol := 1e-10;
+INTEGRATOR IDA;
+OBSERVE x[1..6];
+END on_load;
+END ida_guard_truth_modes;

@@ -40,6 +40,7 @@
 #include <ascend/integrator/integrator.h>
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_client.h>
+#include <ascend/system/bnd.h>
 #include <ascend/system/slv_param.h>
 #include <ascend/system/slv_server.h>
 #include <ascend/system/system.h>
@@ -804,17 +805,17 @@ static void test_event_side_cluster_inclusive(){
 
 
 /* Independent nearby roots must not undo a previous crossing. Check both
- * 0.2 s (after the cluster) and 1 s using fresh integrations. The 2e-6 m
- * wide-tolerance bound permits either raw or tolerance-shifted root semantics;
- * it does not permit a permanent stale branch. See models/test/ida/close_events.md.
+ * 0.2 s (after the cluster) and 1 s using fresh integrations. IDA uses raw
+ * ordered boundaries, independently of the ordinary SATISFIED tolerance.
+ * See models/test/ida/close_events.md for this dynamic-mode contract.
  */
 static void ida_check_close_event(const char *type_name, int rising,
-		int zero_tolerance, double end){
+		double end, int recross){
 	IdaTestSystem testsys;
 	slv_parameters_t params;
 	struct Instance *root, *xs, *ons;
 	int idx, res, i;
-	double tolerance = zero_tolerance ? 1e-8 : 2e-6;
+	const double tolerance = 1e-8;
 
 	if(ida_test_load("test/ida/close_events.a4c", type_name, 1, &testsys)) return;
 	CU_ASSERT_FATAL(0 == integrator_params_get(testsys.integ, &params));
@@ -834,6 +835,7 @@ static void ida_check_close_event(const char *type_name, int rising,
 	CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
 	ida_configure_runtime(testsys.integ, 0.0, end, 10);
 	integrator_set_minstep(testsys.integ, 0.0);
+	if(recross) integrator_set_maxstep(testsys.integ, 0.05);
 	ida_error_capture_reset();
 	error_reporter_set_callback(&ida_error_capture_cb);
 	res = integrator_solve(testsys.integ, 0,
@@ -848,14 +850,15 @@ static void ida_check_close_event(const char *type_name, int rising,
 		ons = ida_child(root, "on");
 		for(i = 1; i <= 3; ++i){
 			double tau = 0.1 + i * 1e-8;
-			double expected = rising ? 2 * end - tau : end + tau;
+			double span = fmax(0.0, (recross ? fmin(end, 0.8) : end) - tau);
+			double expected = rising ? end + span : 2 * end - span;
 			double actual = RealAtomValue(ida_array_child(xs, i));
 			if(fabs(actual - expected) > tolerance){
 				fprintf(stderr, "%s: x[%d](%.2g s) = %.12g m; expected %.12g m\n",
 					type_name, i, end, actual, expected);
 			}
 			CU_ASSERT_DOUBLE_EQUAL(actual, expected, tolerance);
-			CU_TEST(!!GetBooleanAtomValue(ida_array_child(ons, i)) == rising);
+			CU_TEST(!!GetBooleanAtomValue(ida_array_child(ons, i)) == (rising != (recross && end > 0.8)));
 		}
 	}
 	ida_free_runtime(testsys.integ);
@@ -863,23 +866,99 @@ static void ida_check_close_event(const char *type_name, int rising,
 }
 
 static void test_close_event_rising_strict(){
-	ida_check_close_event("ida_close_rising_strict", 1, 0, 0.2);
-	ida_check_close_event("ida_close_rising_strict", 1, 0, 1.0);
+	ida_check_close_event("ida_close_rising_strict", 1, 0.2, 0);
+	ida_check_close_event("ida_close_rising_strict", 1, 1.0, 0);
 }
 
 static void test_close_event_falling_inclusive(){
-	ida_check_close_event("ida_close_falling_inclusive", 0, 0, 0.2);
-	ida_check_close_event("ida_close_falling_inclusive", 0, 0, 1.0);
+	ida_check_close_event("ida_close_falling_inclusive", 0, 0.2, 0);
+	ida_check_close_event("ida_close_falling_inclusive", 0, 1.0, 0);
 }
 
 static void test_close_event_rising_zero_tol(){
-	ida_check_close_event("ida_close_rising_strict_zero_tol", 1, 1, 0.2);
-	ida_check_close_event("ida_close_rising_strict_zero_tol", 1, 1, 1.0);
+	ida_check_close_event("ida_close_rising_strict_zero_tol", 1, 0.2, 0);
+	ida_check_close_event("ida_close_rising_strict_zero_tol", 1, 1.0, 0);
 }
 
 static void test_close_event_falling_zero_tol(){
-	ida_check_close_event("ida_close_falling_inclusive_zero_tol", 0, 1, 0.2);
-	ida_check_close_event("ida_close_falling_inclusive_zero_tol", 0, 1, 1.0);
+	ida_check_close_event("ida_close_falling_inclusive_zero_tol", 0, 0.2, 0);
+	ida_check_close_event("ida_close_falling_inclusive_zero_tol", 0, 1.0, 0);
+}
+
+static void test_close_event_rising_inclusive(){
+	ida_check_close_event("ida_close_rising_inclusive", 1, 1.0, 0);
+}
+
+static void test_close_event_falling_strict(){
+	ida_check_close_event("ida_close_falling_strict", 0, 1.0, 0);
+}
+
+static void test_close_event_recross_rising(){
+	ida_check_close_event("ida_close_recross_rising", 1, 0.2, 1);
+	ida_check_close_event("ida_close_recross_rising", 1, 0.6, 1);
+	ida_check_close_event("ida_close_recross_rising", 1, 1.0, 1);
+}
+
+static void test_close_event_recross_falling(){
+	ida_check_close_event("ida_close_recross_falling", 0, 0.2, 1);
+	ida_check_close_event("ida_close_recross_falling", 0, 0.6, 1);
+	ida_check_close_event("ida_close_recross_falling", 0, 1.0, 1);
+}
+
+/* Ordinary SATISFIED and CMSlv inversion retain their tolerance semantics;
+ * only ordered guards in IDA mode follow their raw root surface. */
+static void test_guard_truth_modes(){
+	IdaTestSystem testsys;
+	slv_parameters_t params;
+	slv_status_t status;
+	struct Instance *root, *ons;
+	slv_system_t sys;
+	struct bnd_boundary **bnds;
+	int mode, sample, i, idx, nbnds;
+	const double values[] = {-5e-7, 0, 5e-7};
+	if(ida_test_load("test/ida/close_events.a4c", "ida_guard_truth_modes", 1, &testsys)) return;
+	sys = testsys.integ->system;
+	root = GetSimulationRoot(testsys.siminst);
+	ons = ida_child(root, "on");
+	CU_ASSERT_FATAL(slv_select_solver(sys, slv_lookup_client("LRSlv")) >= 0);
+	bnds = slv_get_solvers_bnd_list(sys);
+	nbnds = slv_get_num_solvers_bnds(sys);
+	CU_ASSERT_FATAL(nbnds == 5);
+	for(mode = 0; mode < 4; ++mode){
+		int withida = mode == 1 || mode == 3;
+		int perturb = mode >= 2;
+		slv_get_parameters(sys, &params);
+		idx = ida_find_param(&params, "withida");
+		CU_ASSERT_FATAL(idx >= 0);
+		SLV_PARAM_BOOL(&params, idx) = withida;
+		idx = ida_find_param(&params, "perturbboundaries");
+		CU_ASSERT_FATAL(idx >= 0);
+		SLV_PARAM_BOOL(&params, idx) = perturb;
+		slv_set_parameters(sys, &params);
+		for(i = 0; i < nbnds; ++i) bnd_set_perturb(bnds[i], perturb);
+		for(sample = 0; sample < 3; ++sample){
+			double g = values[sample];
+			int expected[6] = {0, 1, 0, 1, 0, 1};
+			if(withida && !perturb){
+				expected[0] = g > 0; expected[1] = g >= 0;
+				expected[2] = g < 0; expected[3] = g <= 0;
+				expected[4] = g != 0;
+			}else if(perturb){
+				for(i = 0; i < 4; ++i) expected[i] = !expected[i];
+				expected[4] = 1; /* NOT(gt) OR NOT(lt) */
+				expected[5] = 0;
+			}
+			SetRealAtomValue(ida_child(root, "g"), g, 0);
+			CU_ASSERT_FATAL(0 == slv_presolve(sys));
+			slv_solve(sys);
+			slv_get_status(sys, &status);
+			CU_TEST(status.converged);
+			for(i = 0; i < 6; ++i){
+				CU_TEST(!!GetBooleanAtomValue(ida_array_child(ons, i+1)) == expected[i]);
+			}
+		}
+	}
+	ida_cleanup(&testsys);
 }
 
 /* Additional event semantics: simultaneous mixed truth values, opposite
@@ -1939,6 +2018,11 @@ static void test_initial_alias_binding_bug(){
 	T(event_side_cluster_limit) \
 	T(event_side_cluster_strict) \
 	T(event_side_cluster_inclusive) \
+	T(close_event_rising_inclusive) \
+	T(close_event_falling_strict) \
+	T(close_event_recross_rising) \
+	T(close_event_recross_falling) \
+	T(guard_truth_modes) \
 	T(close_event_rising_strict) \
 	T(close_event_falling_inclusive) \
 	T(close_event_rising_zero_tol) \
