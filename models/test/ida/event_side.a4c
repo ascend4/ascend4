@@ -1,0 +1,618 @@
+(*
+ * Independent, analytically soluble event-side regression fixtures.
+ * No kinetics data, Python generation, or external packages are required.
+ * See event_side.md and ascend/integrator/test/test_ida.c.
+ *)
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL ida_event_rising_strict;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..1] IS_A distance;
+    on[1..1] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..1] CREATE
+        reached[i]: t > (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..1] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..1] := FALSE;
+        x[1..1] := 0 {m};
+        x[1..1].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 20;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..1];
+    END on_load;
+END ida_event_rising_strict;
+
+MODEL ida_event_rising_inclusive;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..1] IS_A distance;
+    on[1..1] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..1] CREATE
+        reached[i]: t >= (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..1] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..1] := FALSE;
+        x[1..1] := 0 {m};
+        x[1..1].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 20;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..1];
+    END on_load;
+END ida_event_rising_inclusive;
+
+MODEL ida_event_falling_strict;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..1] IS_A distance;
+    on[1..1] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..1] CREATE
+        reached[i]: t < (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..1] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..1] := TRUE;
+        x[1..1] := 0 {m};
+        x[1..1].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 20;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..1];
+    END on_load;
+END ida_event_falling_strict;
+
+MODEL ida_event_falling_inclusive;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..1] IS_A distance;
+    on[1..1] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..1] CREATE
+        reached[i]: t <= (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..1] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..1] := TRUE;
+        x[1..1] := 0 {m};
+        x[1..1].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 20;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..1];
+    END on_load;
+END ida_event_falling_inclusive;
+
+MODEL ida_event_cluster_strict;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..25] IS_A distance;
+    on[1..25] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..25] CREATE
+        reached[i]: t > (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..25] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..25] := FALSE;
+        x[1..25] := 0 {m};
+        x[1..25].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 200;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..25];
+    END on_load;
+END ida_event_cluster_strict;
+
+MODEL ida_event_cluster_inclusive;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..25] IS_A distance;
+    on[1..25] IS_A boolean_var;
+CONDITIONAL
+    FOR i IN [1..25] CREATE
+        reached[i]: t >= (0.1 + i*1e-7)*1 {s};
+    END FOR;
+END CONDITIONAL;
+    FOR i IN [1..25] CREATE
+        on[i] == SATISFIED(reached[i], 1e-12);
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        on[1..25] := FALSE;
+        x[1..25] := 0 {m};
+        x[1..25].ode_atol := 1e-10;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OPTION zeno_ncycles 200;
+        OPTION zeno_duration 1e-4;
+        OBSERVE x[1..25];
+    END on_load;
+END ida_event_cluster_inclusive;
+
+(* Opposite target truth values at exactly the same event time, including
+   both overridden terms in a single logical relation. *)
+MODEL ida_event_mixed;
+    t IS_A time;
+    INDEPENDENT t;
+    x[1..3] IS_A distance;
+    on[1..3] IS_A boolean_var;
+CONDITIONAL
+    up: t > 0.1 {s};
+    down: t <= 0.1 {s};
+END CONDITIONAL;
+    on[1] == SATISFIED(up, 1e-12);
+    on[2] == SATISFIED(down, 1e-12);
+    on[3] == (SATISFIED(up, 1e-12) AND NOT SATISFIED(down, 1e-12));
+    FOR i IN [1..3] CREATE
+        slow[i]: der(x[i]) = 1 {m/s};
+        fast[i]: der(x[i]) = 2 {m/s};
+        WHEN(on[i])
+        CASE TRUE: USE fast[i];
+        CASE FALSE: USE slow[i];
+        END WHEN;
+    END FOR;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        x[1..3] := 0 {m};
+        x[1..3].ode_atol := 1e-10;
+        on[1] := FALSE; on[2] := TRUE; on[3] := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE x[1..3];
+    END on_load;
+END ida_event_mixed;
+
+(* The same boundary crosses in both directions, at 0.2 and 0.4 s. *)
+MODEL ida_event_repeated_gt;
+    t IS_A time;
+    INDEPENDENT t;
+    x IS_A distance;
+    on IS_A boolean_var;
+CONDITIONAL
+    crossing: (t - 0.2 {s})*(0.4 {s} - t) > 0 {s^2};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 1e-12);
+    slow: der(x) = 1 {m/s};
+    fast: der(x) = 2 {m/s};
+    WHEN(on)
+    CASE TRUE: USE fast;
+    CASE FALSE: USE slow;
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        x := 0 {m};
+        x.ode_atol := 1e-10;
+        on := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE x;
+    END on_load;
+END ida_event_repeated_gt;
+
+(* The same boundary crosses in both directions, at 0.2 and 0.4 s. *)
+MODEL ida_event_repeated_ge;
+    t IS_A time;
+    INDEPENDENT t;
+    x IS_A distance;
+    on IS_A boolean_var;
+CONDITIONAL
+    crossing: (t - 0.2 {s})*(0.4 {s} - t) >= 0 {s^2};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 1e-12);
+    slow: der(x) = 1 {m/s};
+    fast: der(x) = 2 {m/s};
+    WHEN(on)
+    CASE TRUE: USE fast;
+    CASE FALSE: USE slow;
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        x := 0 {m};
+        x.ode_atol := 1e-10;
+        on := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE x;
+    END on_load;
+END ida_event_repeated_ge;
+
+(* The same boundary crosses in both directions, at 0.2 and 0.4 s. *)
+MODEL ida_event_repeated_lt;
+    t IS_A time;
+    INDEPENDENT t;
+    x IS_A distance;
+    on IS_A boolean_var;
+CONDITIONAL
+    crossing: (t - 0.2 {s})*(0.4 {s} - t) < 0 {s^2};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 1e-12);
+    slow: der(x) = 1 {m/s};
+    fast: der(x) = 2 {m/s};
+    WHEN(on)
+    CASE TRUE: USE fast;
+    CASE FALSE: USE slow;
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        x := 0 {m};
+        x.ode_atol := 1e-10;
+        on := TRUE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE x;
+    END on_load;
+END ida_event_repeated_lt;
+
+(* The same boundary crosses in both directions, at 0.2 and 0.4 s. *)
+MODEL ida_event_repeated_le;
+    t IS_A time;
+    INDEPENDENT t;
+    x IS_A distance;
+    on IS_A boolean_var;
+CONDITIONAL
+    crossing: (t - 0.2 {s})*(0.4 {s} - t) <= 0 {s^2};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 1e-12);
+    slow: der(x) = 1 {m/s};
+    fast: der(x) = 2 {m/s};
+    WHEN(on)
+    CASE TRUE: USE fast;
+    CASE FALSE: USE slow;
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        x := 0 {m};
+        x.ode_atol := 1e-10;
+        on := TRUE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE x;
+    END on_load;
+END ida_event_repeated_le;
+
+(* A reset moves the continuous state back across the triggering boundary.
+   The boundary depends on z, which must be recomputed for consistency. *)
+MODEL ida_event_reset_gt;
+    t IS_A time;
+    INDEPENDENT t;
+    y, z IS_A distance;
+    count IS_A generic_real;
+    on IS_A boolean_var;
+    motion: der(y) = 1 {m/s};
+    observe: z = 2*y;
+CONDITIONAL
+    crossing: z > 0.4 {m};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 1e-12);
+    WHEN(on)
+    CASE TRUE:
+        REINIT(y, 0 {m});
+        REINIT(count, pre(count) + 1);
+    CASE FALSE:
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        y := 0 {m};
+        z := 0.0 {m};
+        y.ode_atol := 1e-10;
+        z.ode_atol := 1e-10;
+        der(y) := 1 {m/s};
+        count := 0;
+        on := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE y;
+    END on_load;
+END ida_event_reset_gt;
+
+(* A reset moves the continuous state back across the triggering boundary.
+   The boundary depends on z, which must be recomputed for consistency. *)
+MODEL ida_event_reset_ge;
+    t IS_A time;
+    INDEPENDENT t;
+    y, z IS_A distance;
+    count IS_A generic_real;
+    on IS_A boolean_var;
+    motion: der(y) = 1 {m/s};
+    observe: z = 2*y;
+CONDITIONAL
+    crossing: z >= 0.4 {m};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 1e-12);
+    WHEN(on)
+    CASE TRUE:
+        REINIT(y, 0 {m});
+        REINIT(count, pre(count) + 1);
+    CASE FALSE:
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        y := 0 {m};
+        z := 0.0 {m};
+        y.ode_atol := 1e-10;
+        z.ode_atol := 1e-10;
+        der(y) := 1 {m/s};
+        count := 0;
+        on := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE y;
+    END on_load;
+END ida_event_reset_ge;
+
+(* A reset moves the continuous state back across the triggering boundary.
+   The boundary depends on z, which must be recomputed for consistency. *)
+MODEL ida_event_reset_lt;
+    t IS_A time;
+    INDEPENDENT t;
+    y, z IS_A distance;
+    count IS_A generic_real;
+    on IS_A boolean_var;
+    motion: der(y) = -1 {m/s};
+    observe: z = 2*y;
+CONDITIONAL
+    crossing: z < 0.4 {m};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 1e-12);
+    WHEN(on)
+    CASE TRUE:
+        REINIT(y, 0.4 {m});
+        REINIT(count, pre(count) + 1);
+    CASE FALSE:
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        y := 0.4 {m};
+        z := 0.8 {m};
+        y.ode_atol := 1e-10;
+        z.ode_atol := 1e-10;
+        der(y) := -1 {m/s};
+        count := 0;
+        on := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE y;
+    END on_load;
+END ida_event_reset_lt;
+
+(* A reset moves the continuous state back across the triggering boundary.
+   The boundary depends on z, which must be recomputed for consistency. *)
+MODEL ida_event_reset_le;
+    t IS_A time;
+    INDEPENDENT t;
+    y, z IS_A distance;
+    count IS_A generic_real;
+    on IS_A boolean_var;
+    motion: der(y) = -1 {m/s};
+    observe: z = 2*y;
+CONDITIONAL
+    crossing: z <= 0.4 {m};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 1e-12);
+    WHEN(on)
+    CASE TRUE:
+        REINIT(y, 0.4 {m});
+        REINIT(count, pre(count) + 1);
+    CASE FALSE:
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        y := 0.4 {m};
+        z := 0.8 {m};
+        y.ode_atol := 1e-10;
+        z.ode_atol := 1e-10;
+        der(y) := -1 {m/s};
+        count := 0;
+        on := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE y;
+    END on_load;
+END ida_event_reset_le;
+
+
+MODEL ida_event_reset_small;
+    t IS_A time;
+    INDEPENDENT t;
+    y, z IS_A distance;
+    count IS_A generic_real;
+    on IS_A boolean_var;
+    motion: der(y) = 1e-10 {m/s};
+    observe: z = 2*y;
+CONDITIONAL
+    crossing: z > 4e-11 {m};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 1e-8);
+    WHEN(on)
+    CASE TRUE:
+        REINIT(y, 0 {m});
+        REINIT(count, pre(count) + 1);
+    CASE FALSE:
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        y := 0 {m};
+        z := 0.0 {m};
+        y.ode_atol := 1e-20;
+        z.ode_atol := 1e-20;
+        der(y) := 1e-10 {m/s};
+        count := 0;
+        on := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE y;
+    END on_load;
+END ida_event_reset_small;
+
+
+MODEL ida_event_reset_default_tol;
+    t IS_A time;
+    INDEPENDENT t;
+    y, z IS_A distance;
+    count IS_A generic_real;
+    on IS_A boolean_var;
+    motion: der(y) = 1 {m/s};
+    observe: z = 2*y;
+CONDITIONAL
+    crossing: z > 0.4 {m};
+END CONDITIONAL;
+    on == SATISFIED(crossing);
+    WHEN(on)
+    CASE TRUE:
+        REINIT(y, 0 {m});
+        REINIT(count, pre(count) + 1);
+    CASE FALSE:
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        y := 0 {m};
+        z := 0.0 {m};
+        y.ode_atol := 1e-10;
+        z.ode_atol := 1e-10;
+        der(y) := 1 {m/s};
+        count := 0;
+        on := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE y;
+    END on_load;
+END ida_event_reset_default_tol;
+
+
+MODEL ida_event_reset_zero_tol;
+    t IS_A time;
+    INDEPENDENT t;
+    y, z IS_A distance;
+    count IS_A generic_real;
+    on IS_A boolean_var;
+    motion: der(y) = 1 {m/s};
+    observe: z = 2*y;
+CONDITIONAL
+    crossing: z > 0.4 {m};
+END CONDITIONAL;
+    on == SATISFIED(crossing, 0.0);
+    WHEN(on)
+    CASE TRUE:
+        REINIT(y, 0 {m});
+        REINIT(count, pre(count) + 1);
+    CASE FALSE:
+    END WHEN;
+METHODS
+    METHOD on_load;
+        t := 0 {s};
+        y := 0 {m};
+        z := 0.0 {m};
+        y.ode_atol := 1e-10;
+        z.ode_atol := 1e-10;
+        der(y) := 1 {m/s};
+        count := 0;
+        on := FALSE;
+        INTEGRATOR IDA;
+        OPTION rtol 1e-9;
+        OPTION atolvect TRUE;
+        OBSERVE y;
+    END on_load;
+END ida_event_reset_zero_tol;
