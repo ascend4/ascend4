@@ -152,7 +152,8 @@ def preprocess_gprofng_args(argv):
 	- ``--gprofng EXPERIMENT``
 	- ``--gprofng=EXPERIMENT``
 	"""
-	subcommands = {'open', 'gui', 'run', 'script', 'cutest', 'units', 'env', 'q'}
+	subcommands = {'open', 'gui', 'run', 'int', 'script', 'cutest', 'complete',
+		'completion', 'pytest', 'canvas', 'units', 'solvers', 'env', 'q'}
 	rewritten = [argv[0]]
 	i = 1
 	while i < len(argv):
@@ -340,12 +341,32 @@ def setup_bash_completion(sourceroot):
 	print("Current shell was not modified: './a4 completion' runs in a child process and cannot source into the parent bash.")
 	print(f"To enable it now in this shell, run: source \"{completion_script}\"")
 
+def prepare_pytest_display(cmd, visible=False):
+	"""Keep automated GUI tests off the user's desktop, including Wayland."""
+	environ = os.environ.copy()
+	if visible:
+		return cmd, environ
+	programs = {name: shutil.which(name) for name in ('xvfb-run', 'Xvfb', 'xauth')}
+	missing = [name for name, path in programs.items() if path is None]
+	if missing:
+		raise RuntimeError(
+			"a4 pytest requires a private Xvfb display; missing: %s. "
+			"On Debian/Ubuntu, install it with: sudo apt-get install xvfb xauth. "
+			"To explicitly use your desktop for debugging, run ./a4 pytest --visible."
+			% ', '.join(missing)
+		)
+	# xvfb-run supplies a new DISPLAY and XAUTHORITY. GTK must not bypass it
+	# by connecting to an inherited Wayland display instead.
+	environ['GDK_BACKEND'] = 'x11'
+	environ.pop('WAYLAND_DISPLAY', None)
+	return [programs['xvfb-run'], '-a'] + cmd, environ
+
 if __name__ == "__main__":
 	refuse_privileged_process()
 	argv = list(sys.argv)
 	if (
 		len(argv) >= 3
-		and argv[1] in ('cutest', 'pytest')
+		and argv[1] == 'cutest'
 		and '--' not in argv[2:]
 		and any(arg in ('-h', '--help') for arg in argv[2:])
 	):
@@ -448,8 +469,12 @@ if __name__ == "__main__":
 	p_completion = s.add_parser('completion', help='Install Bash completion hook into ~/.bashrc')
 	p_completion.set_defaults(action='completion')
 
-	p_pytest = s.add_parser('pytest',help = 'Run Python tests with the ASCEND environment set')
+	# Leave -h/--help to pytest. Launcher options must precede pytest arguments.
+	p_pytest = s.add_parser('pytest', add_help=False,
+		help='Run Python tests on a private Xvfb display (--visible to use your desktop)')
 	p_pytest.set_defaults(action='pytest')
+	p_pytest.add_argument('--visible', action='store_true',
+		help='Use the current display for debugging (put before pytest arguments)')
 	p_pytest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to pytest')
 
 	p_canvas = s.add_parser('canvas',help = 'Launch the ASCEND canvas modeller')
@@ -660,6 +685,9 @@ if __name__ == "__main__":
 		if rest and rest[0] == '--':
 			rest = rest[1:]
 		cmd += [PYTHON, '-m', 'pytest'] + rest
+		if args.gdb or args.gdb1 or args.valgrind or args.callgrind or args.gprofng is not None:
+			# Debug/profile the tests themselves, not just the subprocess coordinator.
+			cmd += ['--no-isolation']
 	elif args.action == 'canvas':
 		cmd += [PYTHON, sourceroot / 'pygtk' / 'canvas' / 'canvas.py']
 		if args.canvas_file:
@@ -717,8 +745,24 @@ if __name__ == "__main__":
 			, '--args'
 		] + resolve_cmd_for_debugger(cmd)
 		
+	child_env = None
+	if getattr(args, 'action', None) == 'pytest':
+		try:
+			cmd, child_env = prepare_pytest_display(cmd, args.visible)
+		except RuntimeError as error:
+			sys.exit(str(error))
+		child_env['PYTHONPATH'] = os.pathsep.join(filter(None, (
+			str(sourceroot / 'tools'), child_env.get('PYTHONPATH'))))
+		plugins = child_env.get('PYTEST_PLUGINS', '').split(',')
+		if 'ascend_pytest' not in plugins:
+			plugins.append('ascend_pytest')
+		child_env['PYTEST_PLUGINS'] = ','.join(filter(None, plugins))
+		if not args.visible:
+			print("a4 pytest: using a private Xvfb display (--visible to use your desktop).",
+				file=sys.stderr, flush=True)
+
 	MSG("CMD =",cmd)
-	proc = subprocess.run(cmd)
+	proc = subprocess.run(cmd, env=child_env)
 	sys.exit(proc.returncode)
 
 # vim:syntax=python:ts=4:sw=4:noet

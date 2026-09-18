@@ -1018,13 +1018,24 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
     }
   }
 
-  /* Each crossed boundary has its own post-event truth value. CMSlv's
-   * inversion mode remains independent of IDA's explicit-value mode. */
+  /* IDA locates ordered boundaries at zero residual. Evaluate every ordered
+   * guard on that same surface, including guards not crossed in this event;
+   * ordinary SATISFIED tolerances must not undo a previous nearby crossing.
+   * At the current root, the event-local directional override takes priority.
+   * CMSlv perturbations and ordinary LRSlv SATISFIED evaluation are unchanged.
+   * Equality/not-equality and logical boundaries keep their existing semantics.
+   */
   if(WITH_IDA && !PERTURB_BOUNDARY){
     numbnds = slv_get_num_solvers_bnds(server);
     for(nb = 0; nb < numbnds; ++nb){
       cur_bnd = blist[nb];
-      if(!bnd_ida_crossed(cur_bnd)) continue;
+      if(!bnd_ida_crossed(cur_bnd)){
+        if(bnd_kind(cur_bnd) != e_bnd_rel) continue;
+        rel = bnd_rel(bnd_real_cond(cur_bnd));
+        /* Ordered comparisons have exactly one direction. Equality has
+         * neither, and not-equality has both in the relation flag API. */
+        if(rel_less(rel) == rel_greater(rel)) continue;
+      }
       if(per_insts == NULL){
         per_insts = gl_create(numbnds);
         boundary_values = ASC_NEW_ARRAY(struct LogRelBoundaryValue, numbnds);
@@ -1047,7 +1058,8 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
         continue;
       }
       boundary_values[nb].instance = i;
-      boundary_values[nb].value = bnd_ida_value(cur_bnd);
+      boundary_values[nb].value = bnd_ida_crossed(cur_bnd)
+          ? bnd_ida_value(cur_bnd) : bndman_calc_satisfied(cur_bnd);
       gl_append_ptr(per_insts, &boundary_values[nb]);
     }
   }

@@ -95,6 +95,16 @@ def capture_window(window, filename):
 	return True
 
 
+def destroy_browser_windows(app, gtk_runtime):
+	"""Destroy browser-owned windows, not GTK's process-wide internal windows."""
+	# list_toplevels() also contains GtkTooltipWindow. Destroying that window
+	# leaves GTK's tooltip machinery using a destroyed widget in later tests.
+	# The browser and its Glade dialogs are owned by this browser's builder.
+	for widget in app.builder.get_objects():
+		if isinstance(widget, gtk_runtime.Window):
+			widget.destroy()
+
+
 @pytest.fixture
 def browser(gtk_runtime, monkeypatch, tmp_path, request):
 	"""Create a real Browser while isolating its per-user files."""
@@ -137,7 +147,6 @@ def browser(gtk_runtime, monkeypatch, tmp_path, request):
 		app.library.clear()
 	except Exception:
 		pass
-	for window in gtk_runtime.Window.list_toplevels():
-		window.destroy()
+	destroy_browser_windows(app, gtk_runtime)
 	drain_gtk_events()
 	preferences.Preferences._instance = None
