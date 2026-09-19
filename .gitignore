@@ -89,3 +89,5 @@ eqm_spinel_entry_runner
 /compile_commands.json
 
 /solvers/ida/test_ida
+/solvers/ida/benchmarks/auto-crossover.csv
+/solvers/ida/benchmarks/auto-integration.json

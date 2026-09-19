@@ -19,7 +19,7 @@ def main():
     ap.add_argument('--models', type=Path, required=True, help='fboard2 models directory')
     ap.add_argument('--cells', type=int, required=True)
     ap.add_argument('--radial', type=int, default=3)
-    ap.add_argument('--solver', choices=['DENSE', 'KLU'], required=True)
+    ap.add_argument('--solver', choices=['DENSE', 'KLU', 'AUTO'], required=True)
     ap.add_argument('--end', type=float, default=3)
     ap.add_argument('--samples', type=int, default=30)
     ap.add_argument('--output', type=Path, required=True)

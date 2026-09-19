@@ -40,6 +40,82 @@ void ida_sparse_free(IntegratorIdaData *data){
 }
 
 #ifdef ASC_IDA_KLU
+/* Share exactly the same derivative-to-state mapping in counting and assembly. */
+static int ida_sparse_column(IntegratorSystem *integ, const struct var_variable *v){
+	int col = var_sindex(v);
+	if(var_deriv(v)){
+		if(col < integ->n_y || col - integ->n_y >= integ->n_ydot) return -1;
+		col = integrator_ida_diffindex(integ, v);
+	}
+	return col >= 0 && col < integ->n_y ? col : -1;
+}
+
+int ida_sparse_count(IntegratorSystem *integ, size_t *nnz){
+	IntegratorIdaData *d = integ->enginedata;
+	int *seen;
+	*nnz = 0;
+	if(integ->n_y <= 0 || d->nrels != integ->n_y
+		|| (size_t)integ->n_y > SIZE_MAX / sizeof(*seen)) return 1;
+	seen = ASC_NEW_ARRAY_CLEAR(int, integ->n_y);
+	if(!seen) return 1;
+	for(int i = 0; i < d->nrels; ++i){
+		int len = rel_n_incidences(d->rellist[i]);
+		const struct var_variable **vars = rel_incidence_list(d->rellist[i]);
+		if(len < 0) goto fail;
+		for(int j = 0; j < len; ++j){
+			if(!var_apply_filter(vars[j], &d->vfilter)) continue;
+			int col = ida_sparse_column(integ, vars[j]);
+			if(col < 0) goto fail;
+			if(seen[col] != i + 1){
+				if(*nnz == SIZE_MAX) goto fail;
+				++*nnz;
+				seen[col] = i + 1;
+			}
+		}
+	}
+	ASC_FREE(seen);
+	return 0;
+fail:
+	ASC_FREE(seen);
+	return 1;
+}
+#endif
+
+int ida_auto_use_klu(int n, size_t nnz){
+	/* n is an int; its square fits uint64_t, including on 32-bit hosts. */
+	return n >= 64 && (uint64_t)nnz <= (uint64_t)n * (uint64_t)n / 10;
+}
+
+int ida_auto_select(IntegratorSystem *integ, int autodiff, const char **solver,
+	const char **reason, size_t *nnz){
+	*solver = "DENSE";
+	*nnz = SIZE_MAX;
+#ifndef ASC_IDA_KLU
+	(void)integ;
+	(void)autodiff;
+	*reason = "no-klu";
+#else
+	if(!autodiff){
+		*reason = "finite-difference";
+	}else if(integ->n_y < 64){
+		*reason = "small-system";
+	}else{
+		if(ida_sparse_count(integ, nnz)){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR, "Unable to count IDA Jacobian structure for AUTO");
+			return 1;
+		}
+		if(ida_auto_use_klu(integ->n_y, *nnz)){
+			*solver = "KLU";
+			*reason = "sparse-pattern";
+		}else{
+			*reason = "dense-pattern";
+		}
+	}
+#endif
+	return 0;
+}
+
+#ifdef ASC_IDA_KLU
 int ida_sparse_build(IntegratorSystem *integ){
 	IntegratorIdaData *d = integ->enginedata;
 	struct IdaSparsePattern *p;
@@ -89,12 +165,8 @@ int ida_sparse_build(IntegratorSystem *integ){
 			int col;
 			if(!var_apply_filter(v, &d->vfilter)) continue;
 			p->isderiv[k] = !!var_deriv(v);
-			col = var_sindex(v);
-			if(p->isderiv[k]){
-				if(col < integ->n_y || col >= integ->n_y + integ->n_ydot) goto fail;
-				col = integrator_ida_diffindex(integ, v);
-			}
-			if(col < 0 || col >= integ->n_y) goto fail;
+			col = ida_sparse_column(integ, v);
+			if(col < 0) goto fail;
 			entries[k].row = i; entries[k].col = col; entries[k].source = k;
 			++k;
 		}
