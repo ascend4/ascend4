@@ -1643,7 +1643,7 @@ static SlvClientToken conopt_create(slv_system_t server, int32*statusindex){
 
 static void destroy_matrices( conopt_system_t sys){
    if( sys->J.mtx ) {
-     mtx_destroy(sys->J.mtx);
+     asc_mtx_destroy(sys->J.mtx);
    }
 }
 

@@ -2413,7 +2413,7 @@ static void destroy_matrices( slv5_system_t sys)
       for( ; count >= 0; count-- ) {
          destroy_array(linsolqr_get_rhs(sys->J.sys,count));
        }
-      mtx_destroy(linsolqr_get_matrix(sys->J.sys));
+      asc_mtx_destroy(linsolqr_get_matrix(sys->J.sys));
       linsolqr_set_matrix(sys->J.sys,NULL);
       linsolqr_destroy(sys->J.sys);
       sys->J.sys = NULL;

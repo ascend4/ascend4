@@ -150,7 +150,12 @@ extern void mtx_debug_redirect_freeze(void);
  ***  redirecting errors back to stderr.
  **/
 
-ASC_DLLSPEC void mtx_destroy(mtx_matrix_t matrix);
+/* Do not restore the unprefixed mtx_destroy name or a macro alias: C11
+ * <threads.h> declares that name for mutex destruction. In dlopen clients
+ * libc can win symbol lookup, silently bypassing ASCEND matrix cleanup.
+ * Callers/plugins must rebuild against this namespaced entry point.
+ */
+ASC_DLLSPEC void asc_mtx_destroy(mtx_matrix_t matrix);
 /**<
  ***  Destroys the matrix, freeing the memory it occupied.
  ***  Does nothing if matrix fails mtx_check_matrix.
