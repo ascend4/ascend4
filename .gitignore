@@ -82,3 +82,5 @@ models/johnpye/fprops/test/feohsi_phase_runner
 cutest_a4sqp_ipoptc_results.jsonl
 cutest_a4sqp_ipoptc_logs/
 /compile_commands.json
+
+/solvers/ida/test_ida

@@ -501,7 +501,7 @@ int ida_bnd_reanalyse(IntegratorSystem *integ){
 	integ->n_y = 0;
 
 
-	integrator_ida_analyse(integ);
+	if(integrator_ida_analyse(integ) != 0) return 1;
 	enginedata = integrator_ida_enginedata(integ);
 	(void)enginedata;
 	return ida_refresh_event_roots(integ);

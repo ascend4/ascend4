@@ -51,6 +51,10 @@
 # include <ida/ida_ls.h>
 # include <sunmatrix/sunmatrix_dense.h>
 # include <sunlinsol/sunlinsol_dense.h>
+# ifdef ASC_IDA_KLU
+#  include <sunmatrix/sunmatrix_sparse.h>
+#  include <sunlinsol/sunlinsol_klu.h>
+# endif
 # include <sunlinsol/sunlinsol_spgmr.h>
 # include <sunlinsol/sunlinsol_spbcgs.h>
 # include <sunlinsol/sunlinsol_sptfqmr.h>
