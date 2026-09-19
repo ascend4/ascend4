@@ -59,6 +59,7 @@ enum ida_parameters {
 	IDA_PARAM_ZENO_NCYCLES,
 	IDA_PARAM_ZENO_DURATION,
 	IDA_PARAM_DIAGNOSTICS,
+	IDA_PARAM_STATS,
 	IDA_PARAMS_SIZE
 };
 
@@ -100,7 +101,9 @@ typedef struct IntegratorIdaDataStruct{
 #endif
 #if SUNDIALS_VERSION_MAJOR >= 5
 	SUNLinearSolver linear_solver;
-	SUNMatrix dense_matrix;
+	SUNMatrix matrix;
+	struct IdaSparsePattern *sparse;
+	int allocated_n;
 #endif
 
 } IntegratorIdaData;

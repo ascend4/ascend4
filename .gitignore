@@ -87,3 +87,5 @@ models/johnpye/fprops/*.odt
 feohsi_phase_runner
 eqm_spinel_entry_runner
 /compile_commands.json
+
+/solvers/ida/test_ida

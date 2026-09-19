@@ -301,6 +301,11 @@ int integrator_ida_djex(realtype tt, realtype c_j
 	variables = ASC_NEW_ARRAY(struct var_variable*, NV_LENGTH_S(yy) * 2);
 	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
 
+	if(!variables || !derivatives){
+		ASC_FREE(variables); ASC_FREE(derivatives);
+		return -1;
+	}
+
 	/* pass the values of everything back to the compiler */
 	integrator_set_t(integ, (double)tt);
 	integrator_set_y(integ, NV_DATA_S(yy));
@@ -308,7 +313,8 @@ int integrator_ida_djex(realtype tt, realtype c_j
 
 	/* perform bounds checking on all variables */
 	if(slv_check_bounds(integ->system, 0, -1, NULL)){
-		/* ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Variable(s) out of bounds"); */
+		ASC_FREE(variables);
+		ASC_FREE(derivatives);
 		return 1;
 	}
 
