@@ -609,7 +609,7 @@ static SlvClientToken slv9a_create(slv_system_t server, int *statusindex)
 static void destroy_matrices( slv9a_system_t sys)
 {
   if (sys->S.mtx) {
-    mtx_destroy(sys->S.mtx);
+    asc_mtx_destroy(sys->S.mtx);
     sys->S.mtx = NULL;
   }
   return;

@@ -39,7 +39,7 @@ void lp_nuke_pointers(mps_data_t *mps){
 	if(mps == NULL)return;
 
 	if(mps->Ac_mtx != NULL){
-		mtx_destroy(mps->Ac_mtx);
+		asc_mtx_destroy(mps->Ac_mtx);
 		mps->Ac_mtx = NULL;
 	}
 	if(mps->lbrow != NULL){
@@ -348,7 +348,7 @@ mtx_matrix_t lp_calc_matrix(
 	*rhs_orig = create_zero_array(rused,real64);
 	if(*rhs_orig == NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"memory allocation for right-hand side failed.");
-		mtx_destroy(mtx);
+		asc_mtx_destroy(mtx);
 		return NULL;
 	}
 
@@ -359,7 +359,7 @@ mtx_matrix_t lp_calc_matrix(
 				s->calc_ok = FALSE;
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"relation index %d out of range.",(int)orgrow);
 				destroy_array(*rhs_orig);
-				mtx_destroy(mtx);
+				asc_mtx_destroy(mtx);
 				return NULL;
 			}
 			status = relman_diffs(*rp,&vfilter,mtx,&((*rhs_orig)[orgrow]),safe);
@@ -367,7 +367,7 @@ mtx_matrix_t lp_calc_matrix(
 				s->calc_ok = FALSE;
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"error while calculating A matrix.");
 				destroy_array(*rhs_orig);
-				mtx_destroy(mtx);
+				asc_mtx_destroy(mtx);
 				return NULL;
 			}
 		}
@@ -376,7 +376,7 @@ mtx_matrix_t lp_calc_matrix(
 	mtx_output_assign(mtx,crow,vused);
 	if(!mtx_output_assigned(mtx)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"output assignment for rank calculation failed.");
-		mtx_destroy(mtx);
+		asc_mtx_destroy(mtx);
 		destroy_array(*rhs_orig);
 		return NULL;
 	}
@@ -385,7 +385,7 @@ mtx_matrix_t lp_calc_matrix(
 	if(*rank < 0){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"symbolic rank calculation failed; matrix may be bad.");
 		s->calc_ok = FALSE;
-		mtx_destroy(mtx);
+		asc_mtx_destroy(mtx);
 		destroy_array(*rhs_orig);
 		return NULL;
 	}
@@ -393,7 +393,7 @@ mtx_matrix_t lp_calc_matrix(
 	if(!lp_calc_c(mtx,crow,obj)){
 		s->calc_ok = FALSE;
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"error calculating objective coefficients.");
-		mtx_destroy(mtx);
+		asc_mtx_destroy(mtx);
 		destroy_array(*rhs_orig);
 		return NULL;
 	}

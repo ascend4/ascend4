@@ -89,7 +89,7 @@ int slv_log_block_partition(slv_system_t sys)
 
   if (slv_make_log_incidence_mtx(sys,mtx,&dvf,&lrf)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failure in creating incidence matrix.");
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 1;
   }
 
@@ -119,7 +119,7 @@ int slv_log_block_partition(slv_system_t sys)
   len = mtx_number_of_blocks(mtx);
   newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
   if (newblocks == NULL) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 2;
   }
   for (c = 0 ; c < len; c++) {
@@ -215,7 +215,7 @@ int slv_log_block_partition(slv_system_t sys)
 
 #if USEDCODE
    if (reindex_dvars_from_mtx(sys,0,dvlen-1,mtx)) {
-     mtx_destroy(mtx);
+     asc_mtx_destroy(mtx);
      return 2;
    }
 #endif /* USEDCODE */
@@ -227,7 +227,7 @@ int slv_log_block_partition(slv_system_t sys)
 
 #if USEDCODE
    if (reindex_logrels_from_mtx(sys,0,lrlen-1,mtx)) {
-     mtx_destroy(mtx);
+     asc_mtx_destroy(mtx);
      return 2;
    }
 #endif /* USEDCODE */

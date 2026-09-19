@@ -606,7 +606,7 @@ static void destroy_slave(mtx_matrix_t master, mtx_matrix_t mtx){
   free_header(mtx);
 }
 
-void mtx_destroy(mtx_matrix_t mtx){
+void asc_mtx_destroy(mtx_matrix_t mtx){
   int32 i;
   if(!mtx_check_matrix(mtx)) return;
   if (ISSLAVE(mtx)) {
@@ -622,7 +622,7 @@ void mtx_destroy(mtx_matrix_t mtx){
       mtx->slaves[i] = NULL;
     } else {
       FPRINTF(g_mtxerr,
-        "mtx_destroy: Corrupt slave found while destroying master.\n");
+        "asc_mtx_destroy: Corrupt slave found while destroying master.\n");
       FPRINTF(g_mtxerr,
         "             Slave %d being abandoned.\n",i);
     }
