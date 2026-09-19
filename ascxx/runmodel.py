@@ -1,8 +1,12 @@
 import argparse
+import copy
 import os
 import pathlib
-import re
 import sys
+import weakref
+
+from runresult import RunDiagnostic, RunError, RunResult
+from runvalues import apply_overrides, resolve_instance
 
 def _process_is_privileged():
 	if not hasattr(os, "getuid"):
@@ -23,21 +27,17 @@ DEFAULT_INTEGRATOR = "IDA"
 DEFAULT_DURATION = 100.0
 DEFAULT_STEPS = 30
 
-def _print_requested_vars(sim, printvars):
-	re1 = re.compile(r"^[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*(\.[a-zA-Z_][a-zA-Z_0-9]*(\[[0-9]+|'[^']*'\])*)*$")
+def _requested_vars(sim, printvars):
 	for varname in printvars:
-		if not re1.match(varname):
-			raise RuntimeError(f"Requested variable name '{varname}' does not match allowable pattern.")
-		var = eval(f"sim.{varname}")
-		print(f"{var} = {var.getValue()}")
+		yield varname, resolve_instance(sim, varname)
 
 
-def _print_default_study_vars(sim):
+def _default_study_vars(sim):
 	hooks = sim.getSolverHooks()
 	if hooks is None:
 		return
 	for var in hooks.getStudyPrintVars(sim):
-		print(f"{sim.getInstanceName(var)} = {var.getValue()}")
+		yield str(sim.getInstanceName(var)), var
 
 
 def _find_method(model_type, method_name):
@@ -52,6 +52,24 @@ def _find_optional_method(model_type, method_name):
 		if meth.getName() == method_name:
 			return meth
 	return None
+
+
+def _method_names(methods):
+	return [methods] if isinstance(methods, str) else (methods or [])
+
+
+def _run_named_method(sim, name):
+	"""Run a root or qualified submodel METHOD using the active solver hooks."""
+	if "." not in name:
+		sim.run(_find_method(sim.getType(), name))
+		return
+	path, method = name.rsplit(".", 1)
+	target = resolve_instance(sim, path)
+	if not target.isModel():
+		raise ValueError(f"METHOD target {path!r} is not a model")
+	import ascpy
+	ascpy.SolverHooksManager.Instance().getHooks().assign(sim)
+	sim.run(_find_method(target.getType(), method), target)
 
 
 def _needs_final_solve(sim):
@@ -80,36 +98,36 @@ def _status_label(status):
 	return "not-converged"
 
 
-def _print_simstatus(sim):
+def _simulation_status(sim):
 	state = "solved"
-	parts = []
+	parts = {}
 	if sim.isMethodRunning():
 		state = "running-method"
 	elif sim.isSolveDirty():
 		state = "dirty"
-	parts.append(f"state={state}")
+	parts["state"] = state
 	try:
 		target = sim.getSolveTargetName()
 	except Exception:
 		target = ""
 	if target:
-		parts.append(f"target={target}")
+		parts["target"] = str(target)
 	try:
-		parts.append(f"solver={sim.getSolver().getName()}")
+		parts["solver"] = str(sim.getSolver().getName())
 	except Exception:
 		pass
 	try:
-		parts.append(f"solver_status={_status_label(sim.getStatus())}")
+		parts["solver_status"] = _status_label(sim.getStatus())
 	except Exception:
 		pass
-	print("STATUS: " + ", ".join(parts))
+	return parts
 
 
 class CliSolverReporter:
 	def __init__(self, ascpy, sim=None, stream=None):
 		class _Reporter(ascpy.SolverReporter):
 			def __init__(self, owner):
-				self._owner = owner
+				self._owner = weakref.proxy(owner)
 				ascpy.SolverReporter.__init__(self)
 
 			def report(self, status):
@@ -209,6 +227,36 @@ def _display_value(inst):
 	if inst.isSymbol():
 		return "'" + str(inst.getSymbolValue()) + "'"
 	return inst.getValueAsString()
+
+
+def _value_kind(inst):
+	for name, check in (("real", inst.isReal), ("boolean", inst.isBool),
+		("integer", inst.isInt), ("selector", inst.isSelector), ("symbol", inst.isSymbol)):
+		if check():
+			return name
+	return "string"
+
+
+def _typed_value(inst):
+	if inst.isBool():
+		return bool(inst.getBoolValue())
+	if inst.isSelector():
+		return str(inst.getSelectorValue())
+	if inst.isSymbol():
+		return str(inst.getSymbolValue())
+	return _display_value(inst)
+
+
+def _snapshot_scalar(inst):
+	units, _ = _get_units_info(inst) if inst.isReal() else ("", 1.0)
+	return {"value": _typed_value(inst), "units": units if units != "1" else "",
+		"kind": _value_kind(inst), "display": str(inst.getValue())}
+
+
+def _render_value(value, column):
+	if column.get("kind") in ("symbol", "selector"):
+		return "'" + value + "'"
+	return value
 
 
 def _format_cell(value):
@@ -321,7 +369,7 @@ class CliIntegratorReporter:
 	def __init__(self, ascpy, sim, integrator, progress=False, stream=None):
 		class _Reporter(ascpy.IntegratorReporterCxx):
 			def __init__(self, owner, wrapped):
-				self._owner = owner
+				self._owner = weakref.proxy(owner)
 				ascpy.IntegratorReporterCxx.__init__(self, wrapped)
 
 			def initOutput(self):
@@ -329,7 +377,7 @@ class CliIntegratorReporter:
 					self._owner._capture_columns()
 					return 1
 				except Exception as e:
-					sys.stderr.write(f"runmodel.py: integrator initOutput failed: {e}\n")
+					self._owner._callback_error("initOutput", e)
 					return 0
 
 			def updateStatus(self):
@@ -337,7 +385,7 @@ class CliIntegratorReporter:
 					self._owner._report_progress()
 					return 1
 				except Exception as e:
-					sys.stderr.write(f"runmodel.py: integrator updateStatus failed: {e}\n")
+					self._owner._callback_error("updateStatus", e)
 					return 0
 
 			def recordObservedValues(self):
@@ -345,11 +393,14 @@ class CliIntegratorReporter:
 					self._owner._capture_row()
 					return 1
 				except Exception as e:
-					sys.stderr.write(f"runmodel.py: integrator recordObservedValues failed: {e}\n")
+					self._owner._callback_error("recordObservedValues", e)
 					return 0
 
 			def closeOutput(self):
-				self._owner._report_final()
+				try:
+					self._owner._report_final()
+				except Exception as e:
+					self._owner._callback_error("closeOutput", e)
 				return 0
 
 		self.ascpy = ascpy
@@ -359,7 +410,17 @@ class CliIntegratorReporter:
 		self.stream = stream if stream is not None else sys.stdout
 		self.columns = []
 		self.rows = []
+		self.diagnostics = []
+		self.time_label = "time"
+		self.time_units = ""
+		self.time_conversion = 1.0
 		self.reporter = _Reporter(self, integrator)
+
+	def _callback_error(self, callback, error):
+		# Do not throw through a native integrator callback. Some engines ignore
+		# callback return values, so execution also checks these diagnostics.
+		self.diagnostics.append(RunDiagnostic(
+			"reporter." + callback, str(error), exception_type=type(error).__name__))
 
 	def _report_progress(self):
 		if not self.progress:
@@ -392,52 +453,56 @@ class CliIntegratorReporter:
 	def _capture_columns(self):
 		if self.columns:
 			return
+		independent = self.integrator.getIndependentVariable()
+		self.time_units, self.time_conversion = _get_units_info(independent.getInstance())
+		self.time_label = str(independent.getName())
+		if self.time_units and self.time_units != "1":
+			self.time_label += f" [{self.time_units}]"
 		nobs = self.integrator.getNumObservedItems()
 		for i in range(nobs):
 			inst = self.integrator.getObservedInstance(i)
-			units_name, _ = _get_units_info(inst)
+			units_name, conversion = _get_units_info(inst) if inst.isReal() else ("", 1.0)
 			self.columns.append({
 				"index": i,
 				"instance": inst,
-				"label": self.sim.getInstanceName(inst),
+				"label": str(self.sim.getInstanceName(inst)),
 				"units": units_name if units_name != "1" else "",
 				"is_real": inst.isReal(),
+				"kind": _value_kind(inst),
+				"conversion": conversion,
 			})
 
 	def _capture_row(self):
 		self._capture_columns()
-		indep = self.integrator.getIndependentVariable().getInstance()
-		_, conversion = _get_units_info(indep)
 		time_raw = self.integrator.getCurrentTime()
 		row = {
 			"time_raw": time_raw,
-			"time": time_raw / conversion,
-			"values": [_display_value(col["instance"]) for col in self.columns],
+			"time": time_raw / self.time_conversion,
+			"values": [col["instance"].getRealValue() / col["conversion"]
+				if col["is_real"] else _typed_value(col["instance"]) for col in self.columns],
 			"event": False,
 		}
 		self.rows.append(row)
 
-	def build_report(self, microstates):
-		indep = self.integrator.getIndependentVariable().getInstance()
-		time_units, _ = _get_units_info(indep)
-		time_label = self.integrator.getIndependentVariable().getName()
-		if time_units and time_units != "1":
-			time_label += f" [{time_units}]"
-		rows = list(self.rows)
+	def build_report(self, microstates="all"):
+		# A report is a detached snapshot, safe even after library.clear().
+		# No native calls here: failed integration may leave the system unusable.
+		rows = copy.deepcopy(self.rows)
 		_mark_event_rows(rows)
 		rows = _filter_rows(rows, microstates)
 		return {
-			"time_label": time_label,
-			"columns": self.columns,
+			"time_label": self.time_label,
+			"time_units": self.time_units,
+			"columns": [{k: v for k, v in col.items() if k != "instance"} for col in self.columns],
 			"rows": rows,
 		}
 
 
 class CliSolverHooks:
-	def __init__(self, ascpy, suppress_integrate=False, reporter=None, progress=False):
+	def __init__(self, ascpy, suppress_integrate=False, reporter=None, progress=False, render=True):
 		class _Hooks(ascpy.SolverHooks):
 			def __init__(self, owner):
-				self._owner = owner
+				self._owner = weakref.proxy(owner)
 				if owner.reporter is not None:
 					ascpy.SolverHooks.__init__(self, owner.reporter.reporter)
 				else:
@@ -455,7 +520,7 @@ class CliSolverHooks:
 				self._owner.saw_integrate_request = True
 				if self._owner.suppress_integrate:
 					return 0
-				_run_integration(
+				result = _execute_integration(
 					ascpy=self._owner.ascpy,
 					sim=sim,
 					engine=None,
@@ -463,19 +528,26 @@ class CliSolverHooks:
 					duration=None,
 					steps=None,
 					units_token=None,
-					output=None,
-					plot=False,
-					microstates="endpoints",
 					progress=self._owner.progress,
 					request_defaults=self._owner.integrate_request,
 				)
-				self._owner.integrated = True
-				return 0
+				self._owner.results.append(result)
+				if self._owner.render:
+					try:
+						render_run_result(result, show_status=False)
+					except Exception as error:
+						result.fail("render", error)
+				self._owner.integrated = self._owner.integrated or result.ok
+				# SLVREQ_INTEGRATE_FAIL (ascend/compiler/slvreq.h). Keep Python
+				# exceptions from escaping through the native METHOD callback.
+				return 0 if result.ok else 3
 
 		self.ascpy = ascpy
 		self.suppress_integrate = suppress_integrate
 		self.reporter = reporter
 		self.progress = progress
+		self.render = render
+		self.results = []
 		self.integrate_request = None
 		self.integrated = False
 		self.saw_integrate_request = False
@@ -506,75 +578,118 @@ def _configure_integrator_observed(sim, integrator):
 		integrator.addObservedInstance(inst)
 
 
+def _execute_integration(ascpy, sim, engine=None, start=None, duration=None,
+		steps=None, units_token=None, progress=False, request_defaults=None):
+	result = RunResult(action="integrate", phase="prepare")
+	reporter = None
+	try:
+		sim.build()
+		integrator = ascpy.Integrator(sim)
+		hooks = sim.getSolverHooks()
+		method_engine = hooks.getIntegratorName(sim) if hooks is not None else None
+		integrator.setEngine(engine or method_engine or DEFAULT_INTEGRATOR)
+		if hooks is not None:
+			hooks.applyIntegratorOptions(sim, integrator)
+		integrator.findIndependentVar()
+		indep_inst = integrator.getIndependentVariable().getInstance()
+		units = ascpy.Units(units_token) if units_token is not None else indep_inst.getDisplayUnits(False)
+		units_name = str(units.getName())
+
+		# METHOD bounds are base-unit values; CLI numbers use selected units.
+		start_value = 0.0 if start is None else start
+		duration_value = DEFAULT_DURATION if duration is None else duration
+		steps_value = DEFAULT_STEPS if steps is None else steps
+		if request_defaults is not None:
+			conversion = units.getConversion()
+			if start is None:
+				start_value = request_defaults["start"] / conversion
+			if duration is None:
+				duration_value = (request_defaults["stop"] - request_defaults["start"]) / conversion
+			if steps is None:
+				steps_value = request_defaults["steps"]
+		if steps_value < 1:
+			raise RuntimeError("Integration steps must be at least 1.")
+		integrator.setLinearTimesteps(units, start_value, start_value + duration_value, steps_value)
+		_configure_integrator_observed(sim, integrator)
+		reporter = CliIntegratorReporter(ascpy, sim, integrator, progress=progress)
+		integrator.setReporter(reporter.reporter)
+		result.phase = "analyse"
+		integrator.analyse()
+		if integrator.getNumObservedItems() == 0 and integrator.getNumObservedVars() == 0:
+			raise RuntimeError("Integration requested but no observed variables are defined. Add OBSERVE statements or obs_id defaults.")
+		reporter._capture_columns()
+		result.phase = "integrate"
+		integrator.solve()
+		result.phase = "complete"
+		if units_token is None and units_name and (request_defaults is None or start is not None or duration is not None):
+			result.notes.append(f"integration bounds interpreted in independent-variable display units '{units_name}'.")
+	except Exception as error:
+		result.fail(result.phase, error)
+	finally:
+		if reporter is not None:
+			result.diagnostics.extend(reporter.diagnostics)
+			if reporter.diagnostics:
+				result.status = "failed"
+				result.phase = reporter.diagnostics[0].phase
+			# This is pure Python snapshotting: retain even the initial/partial
+			# rows after solve raises or a native engine ignores a callback error.
+			if reporter.columns or reporter.rows:
+				result.tables.append(reporter.build_report())
+	return result
+
+
+def execute_integration(sim, *, engine=None, start=None, duration=None, steps=None,
+		units=None, progress=False):
+	"""Integrate a caller-owned simulation and return a detached RunResult.
+
+	No table printing, plotting or file writes. Numerical/setup failures are
+	returned as failed results, with all recorded rows retained. The caller keeps
+	ownership of the simulation; native diagnostics still use ASCEND's reporter.
+	"""
+	import ascpy
+	return _execute_integration(ascpy, sim, engine, start, duration, steps, units, progress)
+
+
+def render_run_result(result, *, output=None, plot=False, microstates="endpoints", show_status=True):
+	"""Present detached data, without executing ASCEND or changing the result."""
+	if microstates not in ("all", "none", "endpoints"):
+		raise ValueError("Unknown microstate selection: " + str(microstates))
+	if output is not None and len(result.tables) > 1:
+		raise ValueError("A single output path cannot hold multiple integration tables")
+	for table in result.tables:
+		report = dict(table, rows=_filter_rows(table["rows"], microstates))
+		headers = [report["time_label"]] + [
+			col["label"] + (f" [{col['units']}]" if col["units"] else "")
+			for col in report["columns"]]
+		rows = [[row["time"]] + [_render_value(value, col)
+			for value, col in zip(row["values"], report["columns"])] for row in report["rows"]]
+		if output is not None:
+			_write_tsv(output, headers, rows)
+		else:
+			_print_table(headers, rows)
+		if plot:
+			_plot_rows(report)
+	for name, value in result.values.items():
+		print(f"{name} = {value['display']}")
+	for note in result.notes:
+		print("NOTE: " + note)
+	if show_status:
+		parts = [f"{key}={value}" for key, value in result.simulation_status.items()]
+		if not result.ok:
+			parts.append("run_status=failed")
+		if parts:
+			print("STATUS: " + ", ".join(parts))
+
+
 def _run_integration(ascpy, sim, engine, start, duration, steps, units_token, output, plot, microstates, progress=False, request_defaults=None):
-	sim.build()
-	integrator = ascpy.Integrator(sim)
-	hooks = sim.getSolverHooks()
-	method_engine = hooks.getIntegratorName(sim) if hooks is not None else None
-	integrator.setEngine(engine or method_engine or DEFAULT_INTEGRATOR)
-	if hooks is not None:
-		hooks.applyIntegratorOptions(sim, integrator)
-	integrator.findIndependentVar()
-	indep = integrator.getIndependentVariable()
-	indep_inst = indep.getInstance()
-	indep_units = indep_inst.getDisplayUnits(False)
-
-	if units_token is not None:
-		units_name = units_token
-		units = ascpy.Units(units_token)
-	else:
-		units = indep_units
-		units_name = units.getName().toString()
-
-	# METHOD bounds have already been evaluated in base units. CLI values
-	# use the selected units. Convert inherited bounds individually so a
-	# partial CLI override cannot reinterpret the other bound.
-	start_value = 0.0 if start is None else start
-	duration_value = DEFAULT_DURATION if duration is None else duration
-	steps_value = DEFAULT_STEPS if steps is None else steps
-	if request_defaults is not None:
-		conversion = units.getConversion()
-		if start is None:
-			start_value = request_defaults["start"] / conversion
-		if duration is None:
-			duration_value = (request_defaults["stop"] - request_defaults["start"]) / conversion
-		if steps is None:
-			steps_value = request_defaults["steps"]
-	if steps_value < 1:
-		raise RuntimeError("Integration steps must be at least 1.")
-
-	integrator.setLinearTimesteps(units, start_value, start_value + duration_value, steps_value)
-	_configure_integrator_observed(sim, integrator)
-	reporter = CliIntegratorReporter(ascpy, sim, integrator, progress=progress)
-	integrator.setReporter(reporter.reporter)
-	integrator.analyse()
-
-	if integrator.getNumObservedItems() == 0 and integrator.getNumObservedVars() == 0:
-		raise RuntimeError("Integration requested but no observed variables are defined. Add OBSERVE statements or obs_id defaults.")
-
-	reporter._capture_columns()
-	integrator.solve()
-	report = reporter.build_report(microstates)
-
-	headers = [report["time_label"]]
-	headers.extend(
-		col["label"] + (f" [{col['units']}]" if col["units"] else "")
-		for col in report["columns"]
-	)
-	table_rows = [[row["time"]] + row["values"] for row in report["rows"]]
-	if output is not None:
-		_write_tsv(output, headers, table_rows)
-	else:
-		_print_table(headers, table_rows)
-
-	if plot:
-		_plot_rows(report)
-
-	if units_token is None and units_name and (request_defaults is None or start is not None or duration is not None):
-		print(f"NOTE: integration bounds interpreted in independent-variable display units '{units_name}'.")
+	"""Compatibility wrapper for the original CLI integration helper."""
+	result = _execute_integration(ascpy, sim, engine, start, duration, steps, units_token, progress, request_defaults)
+	render_run_result(result, output=output, plot=plot, microstates=microstates, show_status=False)
+	result.raise_for_status()
+	return result
 
 
-def run_ascend_model(
+def execute_model(
 	filen,
 	model=None,
 	printvars=None,
@@ -586,17 +701,24 @@ def run_ascend_model(
 	duration=None,
 	steps=None,
 	units=None,
-	output=None,
-	plot=False,
-	microstates="endpoints",
 	progress=False,
 	solver_progress=False,
+	overrides=None,
+	setup_methods=None,
+	run_on_load=True,
+	solve=True,
 ):
 	"""
-	Run an ASCEND model from the command line.
+	Execute the existing model workflow and return a detached RunResult.
 
 	If the model's own methods already performed a solve/integration during
-	`on_load`, no extra steady QRSlv solve is forced afterward.
+	`on_load`, no extra steady QRSlv solve is forced afterward. This function
+	does not print result tables or write files. It records execution failures
+	in the result rather than exiting Python. Native diagnostics are unchanged.
+	Library loading still uses ASCEND's process-global library.
+	Order: optional on_load, setup_methods, overrides, runmethod(s), final action.
+	solve=False disables only the implicit steady solve and self_test; explicit
+	METHOD solves/integrations and integrate=True still execute.
 	"""
 
 	import platform
@@ -607,37 +729,49 @@ def run_ascend_model(
 	old_hooks = ascpy.SolverHooksManager.Instance().getHooks()
 	progress = bool(progress or solver_progress)
 	solver_reporter = CliSolverReporter(ascpy) if progress else None
-	cli_hooks = CliSolverHooks(ascpy, suppress_integrate=integrate, reporter=solver_reporter, progress=progress)
+	cli_hooks = CliSolverHooks(ascpy, suppress_integrate=integrate, reporter=solver_reporter, progress=progress, render=False)
+	result = RunResult(action="integrate" if integrate else ("solve" if solve else "methods"), phase="load")
+	M = None
 	ascpy.SolverHooksManager.Instance().setHooks(cli_hooks.hooks)
-	if solver_reporter is not None:
-		ascpy.setSolverProgressReporter(solver_reporter.reporter)
 
 	try:
+		if solver_reporter is not None:
+			ascpy.setSolverProgressReporter(solver_reporter.reporter)
+		filen = pathlib.Path(filen)
 		L = ascpy.Library()
 		L.load(str(filen))
 		if model is None:
 			model = filen.stem
+		result.phase = "lookup"
 		try:
 			T = L.findType(model)
-		except RuntimeError as e:
-			print(e)
-			from pathlib import Path
-			for M in L.getModules():
-				if Path(M.getFilename()) == Path(filen):
-					print(f"Module {M.getFilename()} contains:")
-					for m in L.getModuleTypes(M):
-						print(f"  {m}")
-			sys.exit(2)
+		except RuntimeError:
+			for module in L.getModules():
+				if pathlib.Path(module.getFilename()) == filen:
+					result.notes.append(f"Module {module.getFilename()} contains: " +
+						", ".join(str(typ) for typ in L.getModuleTypes(module)))
+			raise
 
-		M = T.getSimulation("sim", True)
+		result.phase = "instantiate"
+		M = T.getSimulation("sim", False)
 		if solver_reporter is not None:
 			solver_reporter.set_sim(M)
-		if runmethod is not None:
-			M.run(_find_method(T, runmethod))
+		if run_on_load:
+			result.phase = "on_load"
+			M.runDefaultMethod()
+		for method in _method_names(setup_methods):
+			result.phase = "setup:" + method
+			_run_named_method(M, method)
+		result.phase = "overrides"
+		apply_overrides(M, overrides or [])
+		for method in _method_names(runmethod):
+			result.phase = "method:" + method
+			_run_named_method(M, method)
 
 		if integrate:
+			result.phase = "integrate"
 			request_defaults = cli_hooks.get_integrate_request(M)
-			_run_integration(
+			integration = _execute_integration(
 				ascpy=ascpy,
 				sim=M,
 				engine=engine,
@@ -645,15 +779,15 @@ def run_ascend_model(
 				duration=duration,
 				steps=steps,
 				units_token=units,
-				output=output,
-				plot=plot,
-				microstates=microstates,
 				progress=progress,
 				request_defaults=request_defaults,
 			)
+			cli_hooks.results.append(integration)
+			integration.raise_for_status()
 		elif cli_hooks.did_integrate(M):
 			pass
-		elif _needs_final_solve(M):
+		elif solve and _needs_final_solve(M):
+			result.phase = "solve"
 			try:
 				solver = M.getSolver()
 			except RuntimeError:
@@ -663,13 +797,17 @@ def run_ascend_model(
 			else:
 				M.solve(solver, ascpy.SolverReporter())
 
+		result.phase = "observe"
 		if printvars is not None:
 			test = False
-			_print_requested_vars(M, printvars)
+			for name, inst in _requested_vars(M, printvars):
+				result.values[name] = _snapshot_scalar(inst)
 		elif not integrate and not cli_hooks.did_integrate(M):
-			_print_default_study_vars(M)
+			for name, inst in _default_study_vars(M):
+				result.values[name] = _snapshot_scalar(inst)
 
-		if test and not integrate and not cli_hooks.did_integrate(M):
+		if test and solve and not integrate and not cli_hooks.did_integrate(M):
+			result.phase = "self_test"
 			try:
 				self_test = _find_optional_method(T, "self_test")
 				if self_test is not None:
@@ -677,21 +815,71 @@ def run_ascend_model(
 			except Exception as e:
 				raise RuntimeError(f"While attempting to run 'self_test': {str(e)}")
 
-		_print_simstatus(M)
+		result.phase = "complete"
+	except RunError as error:
+		# The integration's original error and partial rows are merged below.
+		if not any(error.result is integration for integration in cli_hooks.results):
+			result.fail(result.phase, error)
+	except Exception as error:
+		result.fail(result.phase, error)
 	finally:
+		for integration in cli_hooks.results:
+			result.action = "integrate"
+			result.tables.extend(integration.tables)
+			result.diagnostics.extend(integration.diagnostics)
+			result.notes.extend(integration.notes)
+			if not integration.ok:
+				result.status = "failed"
+				result.phase = integration.phase
+		if M is not None:
+			try:
+				result.simulation_status = _simulation_status(M)
+			except Exception as error:
+				result.diagnostics.append(RunDiagnostic("status", str(error), severity="warning"))
 		if solver_reporter is not None:
 			try:
 				ascpy.setSolverProgressReporter(None)
 			except Exception:
 				pass
 		ascpy.SolverHooksManager.Instance().setHooks(old_hooks)
+		if M is not None:
+			# Native callbacks must not retain our temporary Python hook object.
+			try:
+				old_hooks.assign(M)
+				M.invalidateSystem()
+			except Exception as error:
+				result.fail("cleanup", error)
+	return result
+
+
+def run_ascend_model(filen, model=None, printvars=None, test=True, runmethod=None,
+		integrate=False, engine=None, start=None, duration=None, steps=None, units=None,
+		output=None, plot=False, microstates="endpoints", progress=False, solver_progress=False,
+		overrides=None, setup_methods=None, run_on_load=True, solve=True):
+	"""CLI-compatible execution/presentation; failures raise RunError with .result."""
+	result = execute_model(filen, model=model, printvars=printvars, test=test,
+		runmethod=runmethod, integrate=integrate, engine=engine, start=start,
+		duration=duration, steps=steps, units=units, progress=progress, solver_progress=solver_progress,
+		overrides=overrides, setup_methods=setup_methods, run_on_load=run_on_load, solve=solve)
+	try:
+		render_run_result(result, output=output, plot=plot, microstates=microstates)
+	except Exception as error:
+		result.fail("render", error)
+	result.raise_for_status()
+	return result
 
 
 if __name__ == "__main__":
-	p = argparse.ArgumentParser(description="Solve or integrate ASCEND models via the command line.")
+	p = argparse.ArgumentParser(description="Solve or integrate ASCEND models via the command line.",
+		epilog="Execution order (independent of flag placement): on_load, setup methods, "
+		"all --set overrides, run methods, final solve/integration, reporting/self_test.")
 	p.add_argument("file", type=pathlib.Path, help="ASCEND model file to be opened")
 	p.add_argument("--model", "-m", help="Name of MODEL to instantiate (defaults to filename without extension)")
-	p.add_argument("-r", "--run-method", dest="runmethod", help="Run METHOD after 'on_load' and before the final action")
+	p.add_argument("--no-on-load", action="store_true", help="Skip the default on_load METHOD")
+	p.add_argument("--setup-method", action="append", help="Run METHOD before overrides (repeatable, in supplied order)")
+	p.add_argument("--set", dest="overrides", action="append", metavar="PATH=VALUE", help="Assign a scalar after setup, before run methods; e.g. 'T=873.15{K}'. Repeatable; does not FIX/FREE")
+	p.add_argument("-r", "--run-method", dest="runmethod", action="append", help="Run METHOD after overrides and before the final action (repeatable, in supplied order)")
+	p.add_argument("--no-solve", action="store_true", help="Skip the implicit final steady solve and self_test; explicit METHOD actions still execute")
 	p.add_argument("-p", "--print", dest="printvars", action="append", nargs="+", help="Variables to print (can be used multiple times). Implies --no-test.")
 	p.add_argument("--no-test", "-n", action="store_false", help="Suppress running of 'self_test' method after solving")
 	p.add_argument("--integrate", "--int", "-i", action="store_true", help="Run via the integrator API instead of steady-state solve")
@@ -723,6 +911,10 @@ if __name__ == "__main__":
 			printvars=printvars,
 			test=args.no_test,
 			runmethod=args.runmethod,
+			overrides=args.overrides,
+			setup_methods=args.setup_method,
+			run_on_load=not args.no_on_load,
+			solve=not args.no_solve,
 			integrate=_is_integrate_requested(args),
 			engine=args.engine,
 			start=args.start,
@@ -735,6 +927,9 @@ if __name__ == "__main__":
 			progress=args.progress,
 		)
 		sys.exit(0)
+	except RunError as e:
+		sys.stderr.write(f"{pathlib.Path(sys.argv[0]).name}: {str(e)}\n")
+		sys.exit(2 if e.result.phase == "lookup" else 1)
 	except Exception as e:
 		sys.stderr.write(f"{pathlib.Path(sys.argv[0]).name}: {str(e)}\n")
 		sys.exit(1)

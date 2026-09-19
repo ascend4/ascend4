@@ -1,0 +1,103 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL runapi_override_group;
+    amount IS_A mass;
+METHODS
+    METHOD double_amount;
+        amount := 2 * amount;
+    END double_amount;
+END runapi_override_group;
+
+MODEL runapi_override_scalars;
+    x IS_A solver_var;
+    T IS_A temperature;
+    flag IS_A boolean;
+    count IS_A integer;
+    tag IS_A symbol;
+    modes IS_A set OF symbol_constant;
+    modes :== ['low', 'high'];
+    mode IS_A selector OF modes DEFAULT 'low';
+    n IS_A integer_constant;
+    n :== 2;
+    values[1..n] IS_A solver_var;
+    named['hydrogen','a=b'] IS_A solver_var;
+    group IS_A runapi_override_group;
+METHODS
+    METHOD on_load;
+        FIX x := 1;
+        T := 300 {K};
+        flag := FALSE;
+        count := 1;
+        tag := 'default';
+        group.amount := 1 {kg};
+    END on_load;
+    METHOD self_test;
+        ASSERT FALSE;
+    END self_test;
+END runapi_override_scalars;
+
+MODEL runapi_override_explicit_start REFINES runapi_override_scalars;
+METHODS
+    METHOD on_load;
+        ASSERT FALSE;
+    END on_load;
+END runapi_override_explicit_start;
+
+(* Minimal analogue of kinetics' defaults -> inputs -> dynamic_reset sequence.
+   Its analytic solution makes a stale initial inventory easy to detect. *)
+MODEL runapi_override_kinetics;
+    t IS_A time;
+    m_sample_init, inventory IS_A mass;
+    tau IS_A time;
+    stage IS_A integer;
+    dyn: der(inventory) = -inventory / tau;
+    INDEPENDENT t;
+    INITIAL
+        inventory0: inventory = m_sample_init;
+METHODS
+    METHOD on_load;
+        RUN defaults;
+        stage := 1;
+    END on_load;
+    METHOD defaults;
+        FIX t := 0 {s};
+        FIX m_sample_init := 10 {mg};
+        FIX tau := 60 {s};
+        stage := 2;
+    END defaults;
+    METHOD prepare_case;
+        ASSERT stage = 2;
+        ASSERT m_sample_init > 10 {mg};
+        inventory := m_sample_init;
+        FREE der(inventory);
+        SOLVER QRSlv;
+        INTEGRATOR IDA;
+        OPTION linsolver 'DENSE';
+        OPTION atolvect FALSE;
+        OPTION atol 1e-12;
+        OPTION rtol 1e-8;
+        OBSERVE inventory;
+        stage := 3;
+    END prepare_case;
+    METHOD check_prepared;
+        ASSERT stage = 3;
+        ASSERT inventory = m_sample_init;
+        stage := 4;
+    END check_prepared;
+    METHOD integrate_case;
+        ASSERT stage = 4;
+        INTEGRATE FROM 0 {s} TO 60 {s} STEPS 4;
+    END integrate_case;
+END runapi_override_kinetics;
+
+(* Equivalent to the per-case setup METHOD emitted by the kinetics driver. *)
+MODEL runapi_override_wrapper REFINES runapi_override_kinetics;
+METHODS
+    METHOD legacy_case;
+        RUN defaults;
+        m_sample_init := 40 {mg};
+        RUN prepare_case;
+        RUN check_prepared;
+    END legacy_case;
+END runapi_override_wrapper;

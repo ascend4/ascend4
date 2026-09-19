@@ -1,0 +1,67 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL runapi_result_base;
+    t IS_A time;
+    y IS_A solver_var;
+    flag IS_A boolean;
+    count IS_A integer;
+    tag IS_A symbol;
+    INDEPENDENT t;
+METHODS
+    METHOD on_load;
+        FIX t := 0{s};
+        FREE der(y);
+        flag := TRUE;
+        count := 7;
+        tag := 'sample';
+        SOLVER QRSlv;
+        INTEGRATOR IDA;
+        OPTION linsolver 'DENSE';
+        OBSERVE y, flag, count, tag;
+    END on_load;
+END runapi_result_base;
+
+MODEL runapi_result_ok REFINES runapi_result_base;
+    dyn: der(y) = 1{1/s};
+    INITIAL
+        y0: y = 0;
+END runapi_result_ok;
+
+(* The requested interval crosses a singularity. IDA should retain output
+   from t < 1 s, but cannot complete the run to 2 s. *)
+MODEL runapi_result_partial REFINES runapi_result_base;
+    dyn: der(y) = 1{1/s}/sqrt(1 - t/1{s});
+    INITIAL
+        y0: y = 0;
+END runapi_result_partial;
+
+MODEL runapi_result_auto REFINES runapi_result_partial;
+METHODS
+    METHOD on_load;
+        RUN runapi_result_base::on_load;
+        INTEGRATE FROM 0{s} TO 2{s} STEPS 10;
+    END on_load;
+END runapi_result_auto;
+
+MODEL runapi_result_twice REFINES runapi_result_ok;
+METHODS
+    METHOD on_load;
+        RUN runapi_result_base::on_load;
+        INTEGRATE FROM 0{s} TO 1{s} STEPS 4;
+        INTEGRATE FROM 1{s} TO 2{s} STEPS 4;
+    END on_load;
+END runapi_result_twice;
+
+MODEL runapi_result_steady;
+    y IS_A solver_var;
+    eq: y = 2;
+METHODS
+    METHOD on_load;
+        SOLVER QRSlv;
+        STUDY y;
+    END on_load;
+    METHOD self_test;
+        ASSERT abs(y - 2) < 1e-8;
+    END self_test;
+END runapi_result_steady;

@@ -249,9 +249,18 @@ Current ascxx/CLI behavior:
   An explicit different engine uses its own defaults. Selecting a different
   integrator in a METHOD clears the previous integrator's options; reselecting
   the same engine preserves them.
+- Steady-solver METHOD options follow the same clear-on-change rule: selecting
+  another solver discards the previous solver's saved options; reselecting the
+  same solver preserves them across METHOD calls and solver-system rebuilds.
+  Switching back does not restore an old option history. A failed selection
+  leaves the saved solver configuration unchanged, so a subsequent `SOLVE` can
+  reselect it. This does not promise rollback of all live native solver state.
 
 Keeping separate option histories and restoring them when an engine is
 reselected remains a possible extension.
+
+Steady-solver regression coverage: `test/test_solver_option_scope.py` (switching
+tests use HiGHS when available; no CONOPT installation is required).
 
 ### Integration Time Units
 
@@ -271,6 +280,27 @@ so `INITIAL` equations and engine startup see the requested start time.
 
 Regression coverage: `test/test_runapi_hooks.py` (run with `./a4 pytest`, or
 `./a4 script /usr/bin/python3 test/test_runapi_hooks.py` on Linux).
+
+### Structured And Partial Results
+
+CLI case inputs can be assigned with `--set 'PATH=VALUE{units}'`, after
+`--setup-method` calls and before repeatable `--run-method` calls. `--no-on-load`
+and `--no-solve` allow explicit METHOD-owned setup/execution. See the
+[execution order and caveats](RUNAPI.md#cli-overrides-and-execution-order).
+
+The Python driver and CLI share the execution/result path in `runmodel.py`.
+`execute_integration(sim, ...)` returns a detached `RunResult`, retaining typed
+observations and all recorded event microstates. `execute_model(...)` also
+collects integrations requested by METHODs. Rendering and microstate filtering
+are separate from execution; see [RUNAPI.md](RUNAPI.md#current-implementation).
+
+Integration failure no longer discards recorded rows. The CLI prints them (or
+writes them with `--output`) before exiting nonzero. A partial TSV is not evidence
+of success: callers must check the exit status or `RunResult.ok`. Python reporter
+callback errors also make the result fail. Native diagnostics continue through
+ASCEND's existing reporter.
+
+Regression coverage: `test/test_runapi_results.py`.
 
 ## Implementation Sequence
 

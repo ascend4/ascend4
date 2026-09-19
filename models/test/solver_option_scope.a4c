@@ -1,0 +1,31 @@
+REQUIRE "system.a4l";
+
+(* QRSlv can solve the equality; HiGHS can solve the same problem as an LP. *)
+MODEL solver_option_scope;
+    x IS_A solver_var;
+    eq: x = 2;
+    obj: MINIMIZE x;
+METHODS
+    METHOD on_load;
+        SOLVER QRSlv;
+    END on_load;
+    METHOD configure_qrslv;
+        OPTION iterationlimit 123;
+        OPTION convopt 'RELNOM_SCALE';
+    END configure_qrslv;
+    METHOD select_qrslv;
+        SOLVER QRSlv;
+    END select_qrslv;
+    METHOD select_highs;
+        SOLVER HiGHS;
+    END select_highs;
+    METHOD select_missing;
+        SOLVER RunapiMissingSolver;
+    END select_missing;
+    METHOD select_ineligible;
+        SOLVER LRSlv;
+    END select_ineligible;
+    METHOD solve_case;
+        SOLVE;
+    END solve_case;
+END solver_option_scope;

@@ -494,11 +494,16 @@ SolverHooks::setSolver(const char *solvername, Simulation *S){
 	/* note desired return codes from slvreq.h */
 	try{
 		Solver solver(solvername);
-		StoredSolverConfig &config = get_solver_config(S);
-		config.have_solver = true;
-		config.solver_name = solvername;
 		S->build();
 		S->setSolver(solver);
+		// Commit only a successful selection. Options belong to that solver,
+		// not to whichever engine happens to be selected on the next SOLVE.
+		StoredSolverConfig &config = get_solver_config(S);
+		if(config.solver_name != solver.getName()){
+			config.options.clear();
+		}
+		config.have_solver = true;
+		config.solver_name = solver.getName();
 	}catch(std::runtime_error &E){
 		return SLVREQ_UNKNOWN_SOLVER;
 	}
