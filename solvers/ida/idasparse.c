@@ -40,6 +40,45 @@ void ida_sparse_free(IntegratorIdaData *data){
 }
 
 #ifdef ASC_IDA_KLU
+int ida_klu_setup(SUNLinearSolver solver, SUNMatrix matrix){
+	int flag = SUNLinSolSetup_KLU(solver, matrix);
+	sun_klu_common *common = SUNLinSol_KLUGetCommon(solver);
+	if(flag != SUNLS_PACKAGE_FAIL_REC || common->status != KLU_SINGULAR) return flag;
+
+	/* KLU refactor reuses numerical pivots. A zero pivot can therefore occur
+	 * in a nonsingular matrix. SUNDIALS returns before its conditioning-based
+	 * fresh-factorization path in this case (including in 6.4.1 and 7.9.0).
+	 * Keep symbolic analysis and the old numeric object until recovery works:
+	 * a genuinely singular trial must remain recoverable by IDA step retries.
+	 * This uses the KLU content declared in sunlinsol_klu.h. */
+	SUNLinearSolverContent_KLU content = (SUNLinearSolverContent_KLU)solver->content;
+#if defined(SUNDIALS_INT64_T)
+	typedef SuiteSparse_long IdaKluIndex;
+#else
+	typedef int IdaKluIndex;
+#endif
+	sun_klu_numeric *fresh = sun_klu_factor(
+		(IdaKluIndex *)SM_INDEXPTRS_S(matrix), (IdaKluIndex *)SM_INDEXVALS_S(matrix),
+		SM_DATA_S(matrix), SUNLinSol_KLUGetSymbolic(solver), common);
+	if(!fresh){
+		/* Preserve the original recoverable result for a singular trial.
+		 * Allocation/invalid-input failures are not convergence retries. */
+		if(common->status != KLU_SINGULAR){
+#if SUNDIALS_VERSION_MAJOR >= 7
+			flag = SUN_ERR_EXT_FAIL;
+#else
+			flag = SUNLS_PACKAGE_FAIL_UNREC;
+#endif
+		}
+		content->last_flag = flag;
+		return flag;
+	}
+	sun_klu_free_numeric(&content->numeric, common);
+	content->numeric = fresh;
+	content->last_flag = SUNLS_SUCCESS;
+	return SUNLS_SUCCESS;
+}
+
 /* Share exactly the same derivative-to-state mapping in counting and assembly. */
 static int ida_sparse_column(IntegratorSystem *integ, const struct var_variable *v){
 	int col = var_sindex(v);
