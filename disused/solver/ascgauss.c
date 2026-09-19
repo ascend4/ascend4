@@ -294,9 +294,9 @@ int gauss2_entry(linsolqr_system_t sys, mtx_region_t *region)
   }
 
   if (ISNULL(sys->ludata)) return 1;
-  if (NOTNULL(sys->inverse)) mtx_destroy(sys->inverse);
+  if (NOTNULL(sys->inverse)) asc_mtx_destroy(sys->inverse);
   sys->inverse = NULL;
-  if (NOTNULL(sys->factors)) mtx_destroy(sys->factors);
+  if (NOTNULL(sys->factors)) asc_mtx_destroy(sys->factors);
   if (region == mtx_ENTIRE_MATRIX) determine_pivot_range(sys);
   else square_region(sys,region);
 

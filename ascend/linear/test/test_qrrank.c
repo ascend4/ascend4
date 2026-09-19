@@ -64,7 +64,7 @@ static void test_qr1x1(void){
 	CU_ASSERT(r==1);
 
 	linsolqr_destroy(L);
-	mtx_destroy(M);
+	asc_mtx_destroy(M);
 	system_free_reused_mem();
 }
 
@@ -110,7 +110,7 @@ static void test_qr2x2(void){
 	CU_ASSERT(r==2);
 
 	linsolqr_destroy(L);
-	mtx_destroy(M);
+	asc_mtx_destroy(M);
 	system_free_reused_mem();
 }
 
@@ -161,7 +161,7 @@ static void test_qr3x3(void){
 	CU_ASSERT(r==3);
 
 	linsolqr_destroy(L);
-	mtx_destroy(M);
+	asc_mtx_destroy(M);
 	system_free_reused_mem();
 }
 

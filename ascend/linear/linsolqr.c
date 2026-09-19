@@ -373,9 +373,9 @@ void linsolqr_destroy(linsolqr_system_t sys){
      MSG("linsolqr contains coef mtx which will NOT be destroyed");
    }
    if( NOTNULL(sys->inverse) )
-      mtx_destroy(sys->inverse);
+      asc_mtx_destroy(sys->inverse);
    if( NOTNULL(sys->factors) )
-      mtx_destroy(sys->factors);
+      asc_mtx_destroy(sys->factors);
    destroy_rhs_list(sys->rl);
    destroy_qrdata(sys->qrdata);
    destroy_ludata(sys->ludata);
@@ -2810,9 +2810,9 @@ static int condqr_entry(linsolqr_system_t sys,mtx_region_t *region){
 */
 
    if( NOTNULL(sys->factors) )
-      mtx_destroy(sys->factors);
+      asc_mtx_destroy(sys->factors);
    if( NOTNULL(sys->inverse)  )
-      mtx_destroy(sys->inverse);
+      asc_mtx_destroy(sys->inverse);
    sys->factors = mtx_copy_region(sys->coef, mtx_region(&(sys->qrdata->facreg),
                                              sys->rng.low,sys->rng.high,
                                              sys->rng.low,sys->rng.high));
