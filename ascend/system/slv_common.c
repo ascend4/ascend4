@@ -429,7 +429,7 @@ int32 **slv_create_lnkmap(int m, int n, int len, int *hi, int *hj)
   for (i=0 ; i<len ; i++) {
     if ((hi[i] >=  m) || (hj[i] >= n)) {
       FPRINTF(stderr,"Warning: index out of range in slv_create_lnkmap\n");
-      mtx_destroy(mtx);
+      asc_mtx_destroy(mtx);
       return NULL;
     }
     coord.row = hi[i];
@@ -437,7 +437,7 @@ int32 **slv_create_lnkmap(int m, int n, int len, int *hi, int *hj)
     mtx_fill_value(mtx,&coord,(real64)i);
   }
   map = slv_lnkmap_from_mtx(mtx,mtx_ENTIRE_MATRIX);
-  mtx_destroy(mtx);
+  asc_mtx_destroy(mtx);
   return map;
 }
 

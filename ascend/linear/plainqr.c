@@ -811,10 +811,10 @@ int cpqr_entry(linsolqr_system_t sys,mtx_region_t *region){
    sys->qrdata->facreg = factor_region;
 
    if( NOTNULL(sys->inverse)  ) {
-     mtx_destroy(sys->inverse);
+     asc_mtx_destroy(sys->inverse);
      sys->inverse = NULL;
    }
-   if( NOTNULL(sys->factors) ) mtx_destroy(sys->factors);
+   if( NOTNULL(sys->factors) ) asc_mtx_destroy(sys->factors);
 
    sys->factors = mtx_copy_region(sys->coef, &(sys->qrdata->facreg));
    sys->qrdata->hhvects = mtx_create_slave(sys->factors);

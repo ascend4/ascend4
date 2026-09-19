@@ -234,7 +234,7 @@ int integrator_ida_write_matrix(const IntegratorSystem *integ, FILE *f, const ch
 
 	if(J.vars)ASC_FREE(J.vars);
 	if(J.rels)ASC_FREE(J.rels);
-	if(J.M)mtx_destroy(J.M);
+	if(J.M)asc_mtx_destroy(J.M);
 
 	return status;
 }

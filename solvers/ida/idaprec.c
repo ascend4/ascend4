@@ -115,7 +115,7 @@ void integrator_ida_pfree_jacobian(IntegratorIdaData *enginedata){
 	if(enginedata->precdata){
 		precdata = (IntegratorIdaPrecDataJacobian *)enginedata->precdata;
 		P = linsolqr_get_matrix(precdata->L);
-		mtx_destroy(P);
+		asc_mtx_destroy(P);
 		linsolqr_destroy(precdata->L);
 		ASC_FREE(precdata);
 		enginedata->precdata = NULL;
