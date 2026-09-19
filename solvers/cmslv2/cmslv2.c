@@ -3521,7 +3521,7 @@ void get_multipliers(SlvClientToken asys,
   len = mtx_number_of_blocks(sys->lin_mtx);
   newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
   if(newblocks == NULL) {
-    mtx_destroy(sys->lin_mtx);
+    asc_mtx_destroy(sys->lin_mtx);
     return;
   }
   for (c = 0 ; c < len; c++) {
@@ -3599,7 +3599,7 @@ void get_multipliers(SlvClientToken asys,
 #endif /*  SHOW_LAGRANGE_DETAILS  */
   }
   linsolqr_set_matrix(lsys,NULL);
-  mtx_destroy(sys->lin_mtx);
+  asc_mtx_destroy(sys->lin_mtx);
   linsolqr_destroy(lsys);
   destroy_array(newblocks);
   destroy_array(weights);

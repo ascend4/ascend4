@@ -146,7 +146,7 @@ void linsol_destroy(linsol_system_t sys)
 {
    check_system(sys);
    if( sys->inv != NULL ) {
-     mtx_destroy(sys->inv);
+     asc_mtx_destroy(sys->inv);
    }
    destroy_rhs_list(sys->rl);
    sys->integrity = DESTROYED;
@@ -1253,7 +1253,7 @@ void linsol_invert(linsol_system_t sys,mtx_region_t *region)
    time = tm_cpu_time();
 #endif
    if( sys->inv != NULL )
-      mtx_destroy(sys->inv);
+      asc_mtx_destroy(sys->inv);
    sys->inv = mtx_copy(sys->coef);
    sys->rank = -1;
    sys->smallest_pivot = 0.0;
