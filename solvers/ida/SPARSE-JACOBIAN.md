@@ -504,3 +504,8 @@ run U1/U3 event/conservation/tolerance checks, and qualify the Gadi runtime.
 Automatic selection, symbolic reuse across events, full dimension-changing
 restart support and the separate fboard2 reporting changes remain subsequent
 work.
+
+The subsequent [AUTO selection investigation](AUTO-SELECTION.md) measures
+smaller TGA cases and synthetic systems, considers unconditional KLU, and
+proposes a conservative initial automatic selection policy. It includes
+reproducible benchmarks; AUTO itself is not yet implemented.
