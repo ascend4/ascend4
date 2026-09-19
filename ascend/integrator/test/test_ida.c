@@ -336,9 +336,11 @@ static int ida_test_load(const char *module_path, const char *type_name, int nee
 		return 1;
 	}
 
-	/* Run the same regression suite against either explicit solver. */
+	/* Exercise the default unless a backend is explicitly requested. */
 	const char *linsolver = getenv("ASC_TEST_IDA_LINSOLVER");
-	ida_set_char_option(testsys->integ, "linsolver", linsolver ? linsolver : "DENSE");
+	CU_ASSERT_STRING_EQUAL(SLV_PARAM_CHAR(&testsys->integ->params,
+		ida_find_param(&testsys->integ->params, "linsolver")), "AUTO");
+	if(linsolver) ida_set_char_option(testsys->integ, "linsolver", linsolver);
 	ida_set_char_option(testsys->integ, "prec", "NONE");
 	return 0;
 }
@@ -2030,6 +2032,139 @@ static void test_sparse_incidence_switch(void){
 extern int ida_load_rellist(IntegratorSystem *);
 extern int ida_reinit_integrator(IntegratorSystem *, void *, realtype);
 
+static void test_auto_policy(void){
+    CU_ASSERT(!ida_auto_use_klu(63, 63));
+    CU_ASSERT(ida_auto_use_klu(64, 64));
+    CU_ASSERT(ida_auto_use_klu(64, 409));
+    CU_ASSERT(!ida_auto_use_klu(64, 410));
+    CU_ASSERT(ida_auto_use_klu(100, 1000)); /* Exactly 10%. */
+    CU_ASSERT(!ida_auto_use_klu(100, 1001));
+    CU_ASSERT(ida_auto_use_klu(100000, 100000)); /* n*n must not overflow int. */
+}
+
+static int auto_seen_modes;
+static int auto_reported_reasons;
+static const char *auto_test_solver;
+static int auto_test_autodiff;
+static int ida_auto_message(ERROR_REPORTER_CALLBACK_ARGS){
+    char msg[512];
+    va_list copy;
+    va_copy(copy, args);
+    vsnprintf(msg, sizeof(msg), fmt, copy);
+    va_end(copy);
+    if(strstr(msg, "IDA AUTO selected")){
+        CU_ASSERT(sev == ASC_PROG_NOTE);
+        if(strstr(msg, "sparse (KLU)") && strstr(msg, "at most 10%")) auto_reported_reasons |= 1;
+        if(strstr(msg, "dense (DENSE)") && strstr(msg, "exceeds 10%")) auto_reported_reasons |= 2;
+        if(strstr(msg, "dense (DENSE)") && strstr(msg, "autodiff is disabled")) auto_reported_reasons |= 4;
+        if(strstr(msg, "dense (DENSE)") && strstr(msg, "not available")) auto_reported_reasons |= 8;
+        if(strstr(msg, "dense (DENSE)") && strstr(msg, "below the 64-unknown")) auto_reported_reasons |= 16;
+    }
+    return error_reporter_default_callback(sev, filename, line, funcname, fmt, args);
+}
+static int ida_auto_report(struct IntegratorSystemStruct *integ){
+    IntegratorIdaData *d = integ->enginedata;
+    double t = integrator_get_t(integ);
+    int phase = t < 0.2 ? 1 : (t > 0.3 && t < 0.7 ? 2 : (t > 0.8 ? 4 : 0));
+    int want_sparse = 0;
+    if(!phase) return 0; /* Avoid observing the old mode exactly at an event. */
+#ifdef ASC_IDA_KLU
+    want_sparse = strcmp(auto_test_solver, "KLU") == 0
+        || (strcmp(auto_test_solver, "AUTO") == 0 && auto_test_autodiff && phase != 2);
+#endif
+    CU_ASSERT_PTR_NOT_NULL(d->matrix);
+    if(d->matrix){
+        CU_ASSERT(SUNMatGetID(d->matrix) == (want_sparse ? SUNMATRIX_SPARSE : SUNMATRIX_DENSE));
+    }
+    auto_seen_modes |= phase;
+    return 0;
+}
+
+static void ida_test_auto_switch(const char *solver, int autodiff){
+    IdaTestSystem testsys;
+    IntegratorReporter reporter = test_ida_reporter;
+    const char *selected, *reason;
+    size_t nnz;
+    if(ida_test_load("test/ida/auto.a4c", "ida_auto_switch", 1, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    CU_ASSERT(testsys.integ->n_y == 64);
+    ida_set_char_option(testsys.integ, "linsolver", solver);
+    SLV_PARAM_BOOL(&testsys.integ->params, ida_find_param(&testsys.integ->params, "autodiff")) = autodiff;
+    SLV_PARAM_BOOL(&testsys.integ->params, ida_find_param(&testsys.integ->params, "atolvect")) = FALSE;
+    SLV_PARAM_REAL(&testsys.integ->params, ida_find_param(&testsys.integ->params, "atol")) = 1e-8;
+    SLV_PARAM_REAL(&testsys.integ->params, ida_find_param(&testsys.integ->params, "rtol")) = 1e-8;
+    CU_ASSERT_FATAL(0 == ida_load_rellist(testsys.integ));
+    CU_ASSERT_FATAL(0 == ida_auto_select(testsys.integ, autodiff, &selected, &reason, &nnz));
+#ifdef ASC_IDA_KLU
+    CU_ASSERT_STRING_EQUAL(selected, autodiff ? "KLU" : "DENSE");
+    CU_ASSERT_STRING_EQUAL(reason, autodiff ? "sparse-pattern" : "finite-difference");
+    if(autodiff) CU_ASSERT(nnz == 64); /* State and derivative share each diagonal. */
+#else
+    CU_ASSERT_STRING_EQUAL(selected, "DENSE");
+    CU_ASSERT_STRING_EQUAL(reason, "no-klu");
+#endif
+    ida_configure_runtime(testsys.integ, 0, 1, 20);
+    reporter.write_obs = ida_auto_report;
+    integrator_set_reporter(testsys.integ, &reporter);
+    auto_seen_modes = 0;
+    auto_test_solver = solver;
+    auto_test_autodiff = autodiff;
+    auto_reported_reasons = 0;
+    error_reporter_set_callback(ida_auto_message);
+    int result = integrator_solve(testsys.integ, 0, 20);
+    error_reporter_set_callback(NULL);
+    CU_ASSERT_FATAL(0 == result);
+    if(strcmp(solver, "AUTO") == 0){
+#ifdef ASC_IDA_KLU
+        CU_ASSERT(auto_reported_reasons == (autodiff ? 3 : 4));
+#else
+        CU_ASSERT(auto_reported_reasons == 8);
+#endif
+    }else{
+        CU_ASSERT(auto_reported_reasons == 0);
+    }
+    CU_ASSERT(auto_seen_modes == 7);
+    for(int i = 0; i < testsys.integ->n_y; ++i){
+        CU_ASSERT_DOUBLE_EQUAL(var_value(testsys.integ->y[i]), exp(-1), 1e-6);
+    }
+    CU_ASSERT_STRING_EQUAL(SLV_PARAM_CHAR(&testsys.integ->params, ida_find_param(&testsys.integ->params, "linsolver")), solver);
+    ida_free_runtime(testsys.integ);
+    ida_cleanup(&testsys);
+}
+
+static void test_auto_switch(void){ ida_test_auto_switch("AUTO", TRUE); }
+static void test_auto_finite_difference(void){ ida_test_auto_switch("AUTO", FALSE); }
+static void test_auto_dense_override(void){ ida_test_auto_switch("DENSE", TRUE); }
+
+static void test_auto_small(void){
+    IdaTestSystem testsys;
+    const char *solver, *reason;
+    size_t nnz;
+    if(ida_test_load("test/ida/sparse.a4c", "ida_sparse_values", 0, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    CU_ASSERT_FATAL(0 == ida_auto_select(testsys.integ, TRUE, &solver, &reason, &nnz));
+    CU_ASSERT_STRING_EQUAL(solver, "DENSE");
+#ifdef ASC_IDA_KLU
+    CU_ASSERT_STRING_EQUAL(reason, "small-system");
+#else
+    CU_ASSERT_STRING_EQUAL(reason, "no-klu");
+#endif
+    ida_set_char_option(testsys.integ, "linsolver", "AUTO");
+    ida_configure_runtime(testsys.integ, 0, 1, 20);
+    auto_reported_reasons = 0;
+    error_reporter_set_callback(ida_auto_message);
+    int result = integrator_solve(testsys.integ, 0, 20);
+    error_reporter_set_callback(NULL);
+    CU_ASSERT(result == 0);
+#ifdef ASC_IDA_KLU
+    CU_ASSERT(auto_reported_reasons == 16);
+#else
+    CU_ASSERT(auto_reported_reasons == 8);
+#endif
+    ida_free_runtime(testsys.integ);
+    ida_cleanup(&testsys);
+}
+
 static void test_resize_rejected(void){
     IdaTestSystem testsys;
     if(ida_test_load("test/ida/sparse.a4c", "ida_sparse_resize", 1, &testsys)) return;
@@ -2064,6 +2199,7 @@ static void test_klu_unsupported(void){
 }
 
 #ifdef ASC_IDA_KLU
+static void test_auto_klu_override(void){ ida_test_auto_switch("KLU", TRUE); }
 static void test_sparse_entries(void){
     IdaTestSystem testsys;
     IntegratorIdaData *d;
@@ -2075,6 +2211,9 @@ static void test_sparse_entries(void){
     CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
     CU_ASSERT_FATAL(0 == ida_load_rellist(testsys.integ));
     d = testsys.integ->enginedata;
+    size_t structural_nnz;
+    CU_ASSERT_FATAL(0 == ida_sparse_count(testsys.integ, &structural_nnz));
+    CU_ASSERT(structural_nnz == 4); /* Counts structural zeros, merging y and y'. */
     CU_ASSERT_FATAL(0 == ida_sparse_build(testsys.integ));
     nnz = SM_NNZ_S(d->matrix);
     CU_ASSERT(nnz == 4); /* Includes two numerically zero entries initially. */
@@ -2107,11 +2246,12 @@ static void test_sparse_entries(void){
     SUNMatDestroy(dense); N_VDestroy(y); N_VDestroy(yp);
     ida_cleanup(&testsys);
 }
-#define INTERNAL_KLU_TESTS(T) T(sparse_entries)
+#define INTERNAL_KLU_TESTS(T) T(sparse_entries) T(auto_klu_override)
 #else
 #define INTERNAL_KLU_TESTS(T)
 #endif
-#define INTERNAL_IDA_TESTS(T) T(resize_rejected) T(klu_unsupported) INTERNAL_KLU_TESTS(T)
+#define INTERNAL_IDA_TESTS(T) T(resize_rejected) T(klu_unsupported) \
+    T(auto_policy) T(auto_small) T(auto_switch) T(auto_finite_difference) T(auto_dense_override) INTERNAL_KLU_TESTS(T)
 #else
 #define INTERNAL_IDA_TESTS(T)
 #endif

@@ -1,7 +1,8 @@
 # IDA automatic linear solver selection: investigation
 
-Investigation on 19 September 2026, following `fbfffba1`. This is a proposal;
-the runtime still defaults to DENSE and accepts explicit KLU. See
+Investigation on 19 September 2026, following `fbfffba1`. The policy below is
+now implemented as the default `linsolver=AUTO`; explicit DENSE and KLU
+remain available. See
 [SPARSE-JACOBIAN.md](SPARSE-JACOBIAN.md) for implementation and prior tests.
 
 ## Recommendation
@@ -11,7 +12,7 @@ solver overrides. The earlier tentative threshold of 1000 unknowns and 1%
 density is unnecessarily restrictive on this machine. Conversely, these
 measurements do not justify using KLU unconditionally for every model.
 
-A conservative first AUTO policy would be:
+The initial AUTO policy is:
 
 1. Use DENSE if KLU was not compiled in, or `autodiff=false`.
 2. Use DENSE for fewer than 64 IDA unknowns.
@@ -25,9 +26,9 @@ evidence that KLU becomes slower above 10%. KLU was competitive even for the
 fully dense cases tested. Keep explicit KLU available above the limit.
 Do not add user-facing tuning parameters until experience calls for them.
 
-Initially offer AUTO as an opt-in choice. Making AUTO the default can be a
-separate change after regression and platform qualification. Keeping explicit
-DENSE is useful for reproducibility, finite differences, and diagnosis.
+AUTO is the default. Explicit DENSE remains useful for reproducibility,
+finite differences, and diagnosis. The thresholds are inexpensive heuristics;
+an explicit choice remains useful on models where they choose poorly.
 
 ## Complete integration measurements
 
@@ -120,44 +121,64 @@ subsequent setups can reuse symbolic information and pivots, with condition
 checks that can trigger fresh numeric factorization. See the
 [SUNDIALS 6.4.1 KLU documentation](https://sundials.readthedocs.io/en/v6.4.1/sunlinsol/SUNLinSol_links.html#the-sunlinsol-klu-module).
 
-## Implementation outline
+## Implementation
 
-Resolve AUTO in `ida_set_optional_inputs`, before matrix allocation and the
-initial consistency solve. Preserve the requested parameter string and keep
-the selected backend separately for attachment and diagnostics.
+AUTO is resolved in `ida_set_optional_inputs`, before matrix allocation and
+the initial consistency solve. The requested parameter string is preserved;
+the selected backend is used separately for attachment and diagnostics.
 
-Measure structural density as `nnz / n / n` for the actual IDA system: active
+Structural density is `nnz / n / n` for the actual IDA system: active
 relations, filtered unknowns, and derivative variables mapped to their state
-columns. Count the union of `dF/dy` and `dF/dy'`, deduplicating overlapping
-entries even when their initial numeric value is zero. Reuse the mapping
-rules in `ida_sparse_build`; factor out a shared mapping helper if necessary.
+columns. The count is the union of `dF/dy` and `dF/dy'`, deduplicating overlapping
+entries even when their initial numeric value is zero. Counting and assembly
+share the same column-mapping helper.
 
-Avoid constructing the entire CSC/scatter cache merely to decide on DENSE.
-A row-by-row scan with an O(n) marker array can count unique mapped columns
-in O(incidences) time. Skip this scan for unavailable KLU, finite differences,
-or tiny systems. If KLU is selected, build its existing cache once. Use
-overflow-safe counts and density arithmetic. Invalid incidence mappings are
-errors, not reasons to silently change solver.
+A row-by-row scan with an O(n) marker array counts unique mapped columns
+in O(incidences) time without constructing a CSC/scatter cache. The scan is
+skipped for unavailable KLU, finite differences, or tiny systems. KLU's cache
+is built only if selected. Counts and threshold arithmetic avoid integer
+overflow. Invalid incidence mappings produce an error.
 
-Reconsider AUTO at the existing structural/event restart boundary, where the
-current implementation already rebuilds the linear solver and sparse cache.
-Do not switch backends on every timestep or after ordinary nonlinear
-convergence failures. Dimension-changing restarts remain unsupported.
-Do not add automatic dense retries after KLU numerical/allocation failure in
-this first version: they can obscure errors or allocate an enormous matrix.
+AUTO is reconsidered at the existing structural/event restart boundary,
+where the linear solver and sparse cache are rebuilt. Ordinary timesteps and
+nonlinear convergence failures do not trigger backend switching.
+Dimension-changing restarts remain unsupported. There is no automatic dense
+retry after a KLU numerical/allocation failure: it could obscure the original
+error or allocate an enormous matrix.
 
-Extend the existing `stats` diagnostic to record requested/selected solver,
+AUTO reports its selected backend and reason through `error_reporter`
+(`ASC_PROG_NOTE`) after successful setup, including event restarts. These
+messages do not require `stats=true`. Structural decisions include dimension,
+entry count and density; fallback messages explain unavailable KLU, disabled
+autodiff or the small-system threshold. Explicit solver requests do not emit
+AUTO messages.
+
+The existing `stats` diagnostic also records requested/selected solver,
 dimension, structural entries/density when measured, and selection reason
 (`no-klu`, `finite-difference`, `small-system`, `dense-pattern`, or
-`sparse-pattern`). Explicit DENSE/KLU behaviour should remain unchanged.
+`sparse-pattern`). A count/density of -1 means it was not measured. Explicit
+DENSE/KLU behaviour remains unchanged.
 
-Test the policy at both threshold boundaries without timing assertions;
-exercise AUTO with KLU absent, autodiff disabled, and explicit overrides.
-Compare integration outputs with explicit DENSE/KLU. Test same-size events
-whose pattern changes across the density threshold, plus existing event and
-setup-failure regressions. Repeat the small/TGA benchmarks on the deployment
-machine before promoting AUTO to the default. More elaborate fill estimates
+Tests cover both threshold boundaries without timing assertions, AUTO with
+KLU absent or autodiff disabled, and explicit overrides. A 64-state model
+switches from sparse to dense and back, checking the attached matrix type,
+reported reasons and the exact decay solution in all modes. Existing event
+and setup-failure regressions remain part of the suite.
+Repeat the small/TGA benchmarks on the deployment machine when qualifying
+performance there. More elaborate fill estimates
 or online timing selection can wait for evidence that this policy is inadequate.
+
+Local validation with AUTO as the default: all 79 main IDA tests and all 88
+focused tests pass, also when forcing DENSE or KLU. A build with KLU disabled
+passes all 86 applicable focused tests using the default AUTO fallback.
+Valgrind over the focused AUTO suite reports zero errors and no definitely,
+indirectly or possibly lost allocations (104 bytes remain reachable).
+
+Three alternating-order probes of the 230-unknown TGA case gave median solve
+times of 34.9 ms for explicit KLU and 36.2 ms for AUTO; their final paired
+sampled trajectories were identical. These whole-integration timings include
+the AUTO notification and do not isolate the counting cost. The extra scan
+uses O(n) temporary storage and O(incidences) work only at setup/restarts.
 
 ## Reproduction
 

@@ -1,9 +1,10 @@
 # Optional sparse Jacobians and KLU for IDA {#sec:ida-sparse}
 
-Date: 19 September 2026. Status: experimental explicit KLU implementation
-with passing local regressions and short TGA benchmarks. Production/Gadi
+Date: 19 September 2026. Status: optional KLU implementation with AUTO now
+the default, passing local regressions and short TGA benchmarks. Production/Gadi
 qualification remains outstanding. The original proposal and evidence are
-retained below; see the implementation results at the end.
+retained below; see the implementation results at the end and
+[AUTO selection](AUTO-SELECTION.md) for the current policy.
 
 This note records the assessment of ASCEND revision
 `3098f08e7c5fdc50041187218a79007ba70bd2d9` and provides a starting point for
@@ -357,8 +358,9 @@ smaller direct-solver experiment.
 
 ## Implemented explicit KLU path and local checks {#sec:ida-sparse-results}
 
-The working implementation retains `DENSE` as default. Select `linsolver=KLU`
-and `autodiff=true` explicitly. `stats=true` prints solver selection, dimension,
+The initial explicit-KLU implementation retained `DENSE` as default; the
+subsequent AUTO implementation described below is now the default. Select
+`linsolver=KLU` and `autodiff=true` to force KLU. `stats=true` prints solver selection, dimension,
 CSC entry count, counters before consistency/event resets and at completion,
 and KLU factor nonzeros and KLU's own peak allocation counter. The reported
 phase counters are raw snapshots; do not blindly sum repeated snapshots after
@@ -501,11 +503,13 @@ probe, not a bound for other states or model variants.
 Before U4 fitting: obtain the exact fixed-parameter source2 cases and original
 run configuration, compare complete trajectories through later reduction,
 run U1/U3 event/conservation/tolerance checks, and qualify the Gadi runtime.
-Automatic selection, symbolic reuse across events, full dimension-changing
+Symbolic reuse across events, full dimension-changing
 restart support and the separate fboard2 reporting changes remain subsequent
 work.
 
 The subsequent [AUTO selection investigation](AUTO-SELECTION.md) measures
 smaller TGA cases and synthetic systems, considers unconditional KLU, and
-proposes a conservative initial automatic selection policy. It includes
-reproducible benchmarks; AUTO itself is not yet implemented.
+documents the initial automatic selection policy. It includes reproducible
+benchmarks. `linsolver=AUTO` is now the default; explicit DENSE and KLU remain available.
+AUTO reports its backend and selection reason through `error_reporter` at
+setup and event restarts, independently of the `stats` option.

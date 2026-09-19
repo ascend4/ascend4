@@ -39,6 +39,7 @@
 #include "idaprec.h"
 
 #include <stdio.h>
+#include <stdint.h>
 #include "idacalc.h"
 #include "idaio.h"
 #include "idaboundary.h"
@@ -417,10 +418,12 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 				,"See IDA manual, section 5.5.3. Choose 'ASCEND' to use the linsolqr"
 				" direct linear solver bundled with ASCEND, 'DENSE' to use the dense"
 				" solver bundled with IDA, KLU for optional sparse direct solving (requires autodiff),"
+				" or AUTO to select KLU when available with autodiff, at least 64 unknowns"
+				" and at most 10% structural density, otherwise DENSE,"
 				" or one of the Krylov solvers SPGMR, SPBCG"
 				" or SPTFQMR (which still need preconditioners to be implemented"
 				" before they can be very useful."
-			}, "DENSE"}, (char *[]) {"ASCEND","DENSE","KLU","BAND","SPGMR","SPBCG","SPTFQMR",NULL}
+			}, "AUTO"}, (char *[]) {"AUTO","ASCEND","DENSE","KLU","BAND","SPGMR","SPBCG","SPTFQMR",NULL}
 	);
 
 	slv_param_int(p,IDA_PARAM_MAXL
@@ -784,7 +787,9 @@ int ida_malloc(IntegratorSystem *integ, void *ida_mem, realtype t0,
  */
 int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0) {
 	int flag;
-	char *linsolver;
+	const char *linsolver;
+	const char *selection_reason = "explicit";
+	size_t structural_nnz = SIZE_MAX;
 	char *pname = NULL;
 	int maxl;
 	const IntegratorIdaPrec *prec = NULL;
@@ -834,12 +839,16 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 	/* attach linear solver module, using the default value of maxl */
 	linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 	MSG("ASSIGNING LINEAR SOLVER '%s'",linsolver);
+	if(strcmp(linsolver, "AUTO") == 0){
+		if(ida_auto_select(integ, SLV_PARAM_BOOL(&integ->params, IDA_PARAM_AUTODIFF), &linsolver, &selection_reason, &structural_nnz)) return 5;
+	}
 	if (strcmp(linsolver, "ASCEND") == 0) {
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING
 			,"The experimental ASCEND direct linear solver is unavailable with SUNDIALS %d; using DENSE instead"
 			,SUNDIALS_VERSION_MAJOR
 		);
 		linsolver = "DENSE";
+		selection_reason = "compatibility-fallback";
 	}
 
 	if (strcmp(linsolver, "KLU") == 0) {
@@ -1010,14 +1019,28 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 	 ...nothing here at the moment...
 	 */
 
+	if(strcmp(SLV_PARAM_CHAR(&integ->params, IDA_PARAM_LINSOLVER), "AUTO") == 0){
+		if(structural_nnz != SIZE_MAX){
+			ERROR_REPORTER_HERE(ASC_PROG_NOTE,
+				"IDA AUTO selected %s: %d unknowns (minimum 64), structural density %.6g%% %s 10%% (%zu entries)\n",
+				strcmp(linsolver, "KLU") == 0 ? "sparse (KLU)" : "dense (DENSE)",
+				integ->n_y, 100.0 * (double)structural_nnz / integ->n_y / integ->n_y,
+				strcmp(linsolver, "KLU") == 0 ? "at most" : "exceeds", structural_nnz);
+		}else{
+			const char *why = strcmp(selection_reason, "no-klu") == 0 ? "KLU support is not available in this build"
+				: strcmp(selection_reason, "finite-difference") == 0 ? "autodiff is disabled; KLU requires autodiff"
+				: "system size is below the 64-unknown threshold";
+			ERROR_REPORTER_HERE(ASC_PROG_NOTE, "IDA AUTO selected dense (DENSE): %s (%d unknowns)\n", why, integ->n_y);
+		}
+	}
 	if(SLV_PARAM_BOOL(&integ->params, IDA_PARAM_STATS)){
-		long long nnz = -1;
+		long long nnz = structural_nnz == SIZE_MAX ? -1 : (long long)structural_nnz;
 #ifdef ASC_IDA_KLU
 		if(strcmp(linsolver, "KLU") == 0) nnz = (long long)SM_NNZ_S(enginedata->matrix);
 #endif
-		fprintf(stderr, "IDA solver requested=%s selected=%s n=%d nnz=%lld reason=%s\n",
+		fprintf(stderr, "IDA solver requested=%s selected=%s n=%d nnz=%lld density=%.6g reason=%s\n",
 			SLV_PARAM_CHAR(&integ->params, IDA_PARAM_LINSOLVER), linsolver, integ->n_y, nnz,
-			strcmp(SLV_PARAM_CHAR(&integ->params, IDA_PARAM_LINSOLVER), linsolver) == 0 ? "explicit" : "compatibility-fallback");
+			nnz < 0 ? -1.0 : (double)nnz / integ->n_y / integ->n_y, selection_reason);
 	}
 	return 0;
 } /* ida_set_optional_inputs */

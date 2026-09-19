@@ -18,7 +18,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--n', type=int, required=True)
     ap.add_argument('--pattern', choices=['band', 'dense'], required=True)
-    ap.add_argument('--solver', choices=['DENSE', 'KLU'], required=True)
+    ap.add_argument('--solver', choices=['DENSE', 'KLU', 'AUTO'], required=True)
     ap.add_argument('--repeats', type=int, default=10)
     ap.add_argument('--warmups', type=int, default=2)
     args = ap.parse_args()
