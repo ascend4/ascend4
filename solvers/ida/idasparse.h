@@ -10,6 +10,8 @@ int ida_auto_use_klu(int n, size_t nnz);
 int ida_auto_select(IntegratorSystem *integ, int autodiff, const char **solver,
 	const char **reason, size_t *nnz);
 #ifdef ASC_IDA_KLU
+/* Retry a failed fixed-pivot refactorization with fresh numerical pivots. */
+int ida_klu_setup(SUNLinearSolver solver, SUNMatrix matrix);
 int ida_sparse_count(IntegratorSystem *integ, size_t *nnz);
 int ida_sparse_build(IntegratorSystem *integ);
 int ida_sparse_jac(realtype t, realtype cj, N_Vector y, N_Vector yp,

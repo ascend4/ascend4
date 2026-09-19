@@ -628,6 +628,7 @@ vars.Add('SUNDIALS_LIBPATH'
 
 vars.Add(BoolVariable('WITH_IDA_KLU', 'Enable optional IDA sparse KLU solver when available', True))
 vars.Add('SUNDIALS_KLU_CPPPATH', 'Additional include paths for SUNDIALS KLU/SuiteSparse', '')
+vars.Add('SUNDIALS_KLU_LIBPATH', 'Additional library paths for SuiteSparse/KLU', '')
 vars.Add('SUNDIALS_KLU_LIBS', 'Additional libraries for SUNDIALS KLU (e.g. static SuiteSparse dependencies)', '')
 
 vars.Add('SUNDIALS_LIBS'

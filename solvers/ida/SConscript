@@ -195,6 +195,14 @@ int main(void){
     SUNLinearSolver S = SUNLinSol_KLU(y, A);
 #endif
     if(!S) return 1;
+    /* The ASCEND recovery path calls KLU directly for fresh numerical pivots. */
+    SM_INDEXPTRS_S(A)[0] = 0; SM_INDEXPTRS_S(A)[1] = 1;
+    SM_INDEXVALS_S(A)[0] = 0; SM_DATA_S(A)[0] = 1;
+    if(SUNLinSolSetup(S, A)) return 1;
+    sun_klu_numeric *numeric = sun_klu_factor(SM_INDEXPTRS_S(A), SM_INDEXVALS_S(A),
+        SM_DATA_S(A), SUNLinSol_KLUGetSymbolic(S), SUNLinSol_KLUGetCommon(S));
+    if(!numeric) return 1;
+    sun_klu_free_numeric(&numeric, SUNLinSol_KLUGetCommon(S));
     SUNLinSolFree(S); SUNMatDestroy(A); N_VDestroy(y);
 #if SUNDIALS_VERSION_MAJOR >= 6
     SUNContext_Free(&ctx);
@@ -206,6 +214,7 @@ int main(void){
 def CheckIDAKLU(context):
     context.Message('Checking for optional IDA KLU... ')
     oldpaths = list(context.env.get('CPPPATH', []))
+    oldlibpaths = list(context.env.get('LIBPATH', []))
     oldlibs = list(context.env.get('LIBS', []))
     extra = context.env.get('SUNDIALS_KLU_CPPPATH') or []
     if isinstance(extra, str):
@@ -218,12 +227,16 @@ def CheckIDAKLU(context):
     if isinstance(libs, str):
         libs = libs.replace(',', ' ').split()
     context.env.AppendUnique(CPPPATH=extra)
-    context.env.AppendUnique(LIBS=['sundials_sunlinsolklu', 'sundials_sunmatrixsparse'] + libs)
+    libpaths = context.env.get('SUNDIALS_KLU_LIBPATH') or []
+    if isinstance(libpaths, str):
+        libpaths = libpaths.split(os.pathsep)
+    context.env.AppendUnique(LIBPATH=libpaths)
+    context.env.AppendUnique(LIBS=['sundials_sunlinsolklu', 'sundials_sunmatrixsparse', 'klu'] + libs)
     ok = context.TryLink(klu_test_text, '.c')
     if ok:
         context.env.AppendUnique(CPPDEFINES=['ASC_IDA_KLU'])
     else:
-        context.env.Replace(CPPPATH=oldpaths, LIBS=oldlibs)
+        context.env.Replace(CPPPATH=oldpaths, LIBPATH=oldlibpaths, LIBS=oldlibs)
     context.Result(ok)
     return ok
 

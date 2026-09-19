@@ -872,6 +872,7 @@ int ida_set_optional_inputs(IntegratorSystem *integ, void *ida_mem, N_Vector y0)
 		enginedata->linear_solver = SUNLinSol_KLU(y0, enginedata->matrix);
 # endif
 		if(!enginedata->linear_solver) return 5;
+		enginedata->linear_solver->ops->setup = ida_klu_setup;
 		flag = IDASetLinearSolver(ida_mem, enginedata->linear_solver, enginedata->matrix);
 		if(flag != IDALS_SUCCESS) return 5;
 		flag = IDASetJacFn(ida_mem, ida_sparse_jac);

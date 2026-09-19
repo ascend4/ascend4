@@ -2199,6 +2199,60 @@ static void test_klu_unsupported(void){
 }
 
 #ifdef ASC_IDA_KLU
+static void test_klu_pivot_recovery(void){
+    IdaTestSystem testsys;
+    if(ida_test_load("test/ida/sparse.a4c", "ida_sparse_values", 0, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    IntegratorIdaData *d = testsys.integ->enginedata;
+    N_Vector x = ida_bnd_new_zero_NV(testsys.integ, 2);
+    N_Vector b = ida_bnd_new_zero_NV(testsys.integ, 2);
+#if SUNDIALS_VERSION_MAJOR >= 6
+    SUNMatrix a = SUNSparseMatrix(2, 2, 4, CSC_MAT, d->sunctx);
+    SUNLinearSolver s = SUNLinSol_KLU(x, a, d->sunctx);
+#else
+    SUNMatrix a = SUNSparseMatrix(2, 2, 4, CSC_MAT);
+    SUNLinearSolver s = SUNLinSol_KLU(x, a);
+#endif
+    CU_ASSERT_PTR_NOT_NULL_FATAL(a);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(s);
+    s->ops->setup = ida_klu_setup;
+    SM_INDEXPTRS_S(a)[0] = 0; SM_INDEXPTRS_S(a)[1] = 2; SM_INDEXPTRS_S(a)[2] = 4;
+    SM_INDEXVALS_S(a)[0] = 0; SM_INDEXVALS_S(a)[1] = 1;
+    SM_INDEXVALS_S(a)[2] = 0; SM_INDEXVALS_S(a)[3] = 1;
+    /* [[1,1],[1,2]] chooses a diagonal pivot. */
+    SM_DATA_S(a)[0] = 1; SM_DATA_S(a)[1] = 1;
+    SM_DATA_S(a)[2] = 1; SM_DATA_S(a)[3] = 2;
+    CU_ASSERT_FATAL(SUNLinSolInitialize(s) == SUNLS_SUCCESS);
+    CU_ASSERT_FATAL(SUNLinSolSetup(s, a) == SUNLS_SUCCESS);
+    sun_klu_symbolic *symbolic = SUNLinSol_KLUGetSymbolic(s);
+    /* [[0,1],[1,2]] is nonsingular, but its old first pivot is zero. */
+    SM_DATA_S(a)[0] = 0;
+    CU_ASSERT(SUNLinSolSetup_KLU(s, a) == SUNLS_PACKAGE_FAIL_REC);
+    CU_ASSERT(SUNLinSol_KLUGetCommon(s)->status == KLU_SINGULAR);
+    CU_ASSERT_FATAL(SUNLinSolSetup(s, a) == SUNLS_SUCCESS);
+    CU_ASSERT(SUNLinSolLastFlag(s) == SUNLS_SUCCESS);
+    CU_ASSERT(SUNLinSol_KLUGetSymbolic(s) == symbolic);
+    CU_ASSERT(SM_DATA_S(a)[0] == 0); /* No perturbation of the matrix. */
+    NV_Ith_S(b, 0) = 1; NV_Ith_S(b, 1) = 3;
+    CU_ASSERT_FATAL(SUNLinSolSolve(s, a, x, b, 0) == SUNLS_SUCCESS);
+    CU_ASSERT_DOUBLE_EQUAL(NV_Ith_S(x, 0), 1, 1e-14);
+    CU_ASSERT_DOUBLE_EQUAL(NV_Ith_S(x, 1), 1, 1e-14);
+    /* A genuinely singular trial stays recoverable; it must not be accepted. */
+    SM_DATA_S(a)[2] = 0;
+    CU_ASSERT(SUNLinSolSetup(s, a) == SUNLS_PACKAGE_FAIL_REC);
+    CU_ASSERT(SUNLinSolLastFlag(s) == SUNLS_PACKAGE_FAIL_REC);
+    CU_ASSERT(SUNLinSol_KLUGetCommon(s)->status == KLU_SINGULAR);
+    /* IDA may retry a different matrix after the failed fresh factorization. */
+    SM_DATA_S(a)[0] = 1; SM_DATA_S(a)[2] = 1;
+    CU_ASSERT_FATAL(SUNLinSolSetup(s, a) == SUNLS_SUCCESS);
+    NV_Ith_S(b, 0) = 2;
+    CU_ASSERT_FATAL(SUNLinSolSolve(s, a, x, b, 0) == SUNLS_SUCCESS);
+    CU_ASSERT_DOUBLE_EQUAL(NV_Ith_S(x, 0), 1, 1e-14);
+    CU_ASSERT_DOUBLE_EQUAL(NV_Ith_S(x, 1), 1, 1e-14);
+    SUNLinSolFree(s); SUNMatDestroy(a); N_VDestroy(x); N_VDestroy(b);
+    ida_cleanup(&testsys);
+}
+
 static void test_auto_klu_override(void){ ida_test_auto_switch("KLU", TRUE); }
 static void test_sparse_entries(void){
     IdaTestSystem testsys;
@@ -2246,7 +2300,7 @@ static void test_sparse_entries(void){
     SUNMatDestroy(dense); N_VDestroy(y); N_VDestroy(yp);
     ida_cleanup(&testsys);
 }
-#define INTERNAL_KLU_TESTS(T) T(sparse_entries) T(auto_klu_override)
+#define INTERNAL_KLU_TESTS(T) T(sparse_entries) T(auto_klu_override) T(klu_pivot_recovery)
 #else
 #define INTERNAL_KLU_TESTS(T)
 #endif

@@ -379,10 +379,11 @@ consistency solve. Actual dimension changes are explicitly rejected before
 The optional SCons compile/link check defines `ASC_IDA_KLU` only when the
 sparse/KLU modules work. `WITH_IDA_KLU=False` forces a dense-only build.
 `SUNDIALS_KLU_CPPPATH` supplies extra include directories (path-separated),
+`SUNDIALS_KLU_LIBPATH` supplies extra SuiteSparse library directories,
 and `SUNDIALS_KLU_LIBS` supplies additional libraries (comma/space-separated),
 for example for custom/static SuiteSparse installations. Existing
 `SUNDIALS_LIBPATH` supplies library directories. A failed KLU check restores
-the dense build's libraries and include paths; an explicit unavailable KLU
+the dense build's libraries, library paths and include paths; an explicit unavailable KLU
 request fails instead of falling back.
 
 ### Validation
@@ -513,3 +514,8 @@ documents the initial automatic selection policy. It includes reproducible
 benchmarks. `linsolver=AUTO` is now the default; explicit DENSE and KLU remain available.
 AUTO reports its backend and selection reason through `error_reporter` at
 setup and event restarts, independently of the `stats` option.
+
+The subsequent [KLU recovery investigation](KLU-RECOVERY.md) reproduces and
+fixes the tighter-tolerance X30/X31 failures. It documents a numerical-pivot
+recovery path, a small regression case, matched 6.4.1/7.9.0 replays, and KLU
+build requirements for NCI.
