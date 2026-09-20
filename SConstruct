@@ -2851,7 +2851,7 @@ for k,v in {
 				,'ASC_WITH_LRSLV':env['WITH_LRSLV']
 				,'ASC_WITH_CMSLV':env['WITH_CMSLV']
 				,'ASC_WITH_CMSLV2':env['WITH_CMSLV2']
-				,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
+				,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
 				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
 				,'ASC_WITH_PCRE':env['WITH_PCRE']
 			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
