@@ -1,0 +1,41 @@
+(* Archival 15 April 2026 X49 parameters; performance fixture, not U3/U4 qualification.
+   Requires the fboard2 model library; substitute @CELLS@ and @RADIAL@. *)
+REQUIRE "johnpye/iron/tgadyn_msbed_linked_radial.a4c";
+MODEL batch_case_X49() REFINES tgadyn_msbed_linked_radial_configurable(
+	n_bed_segs :== @CELLS@;
+	n_radial_segs :== @RADIAL@;
+);
+	core ALIASES m.m;
+METHODS
+	METHOD setup_X49;
+		core.T := 1073.15 {K};
+		core.A_crucible := 31.1724531052 {mm^2};
+		core.y_H2_bulk := 0.6;
+		core.d_p := 0.000125 {m};
+		core.H_bed := 2 {mm};
+		core.L_freeboard := 8.3 {mm};
+		core.m_sample_init := 104.1 {mg};
+		core.eps_bed := 0.324360733656;
+		core.tau_bed := 1.53887541095;
+		core.k_fb_multiplier := 4.18369959708;
+		core.k_bed_multiplier := 0.958347234066;
+		core.Sh_particle := 0.689576652764;
+		core.k_part_multiplier := 0.00307164518073;
+		core.d_int_multiplier := 0.839041414782;
+		core.a_open := 3.23672166988;
+		core.a_close := 4.58227814076;
+		core.beta_T := -1.87005095013;
+		core.etak0[1] := 0.00349577202776 {1/s/Pa};
+		core.E_a[1] := 56.0021225871 {kJ/mol};
+		core.etak0[2] := 0.000900646013967 {1/s/Pa};
+		core.E_a[2] := 53.5839305919 {kJ/mol};
+		core.etak0[3] := 0.00567280316362 {1/s/Pa};
+		core.E_a[3] := 49.7791673372 {kJ/mol};
+		core.etak0[4] := 0.00015 {1/s/Pa};
+		core.E_a[4] := 60 {kJ/mol};
+		RUN core.bound_self;
+		RUN core.use_measured_bed_height;
+		RUN core.dynamic_reset;
+		RUN core.observe_cli_default;
+	END setup_X49;
+END batch_case_X49;

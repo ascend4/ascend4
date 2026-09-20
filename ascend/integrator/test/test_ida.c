@@ -337,7 +337,11 @@ static int ida_test_load(const char *module_path, const char *type_name, int nee
 		return 1;
 	}
 
-	ida_set_char_option(testsys->integ, "linsolver", "DENSE");
+	/* Exercise the default unless a backend is explicitly requested. */
+	const char *linsolver = getenv("ASC_TEST_IDA_LINSOLVER");
+	CU_ASSERT_STRING_EQUAL(SLV_PARAM_CHAR(&testsys->integ->params,
+		ida_find_param(&testsys->integ->params, "linsolver")), "AUTO");
+	if(linsolver) ida_set_char_option(testsys->integ, "linsolver", linsolver);
 	ida_set_char_option(testsys->integ, "prec", "NONE");
 	return 0;
 }
@@ -2077,7 +2081,311 @@ static void test_trial_bound_terminal_failure(void){
     ida_cleanup(&testsys);
 }
 
+
+static void test_sparse_incidence_switch(void){
+    IdaTestSystem testsys;
+    struct Instance *root;
+    if(ida_test_load("test/ida/sparse.a4c", "ida_sparse_switch", 1, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    ida_configure_runtime(testsys.integ, 0, 1, 20);
+    CU_ASSERT_FATAL(0 == integrator_solve(testsys.integ, 0, 20));
+    root = GetSimulationRoot(testsys.siminst);
+    CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_child(root, "y")), 1, 1e-5);
+    CU_ASSERT_DOUBLE_EQUAL(RealAtomValue(ida_child(root, "z")), 2, 1e-5);
+    CU_ASSERT(GetBooleanAtomValue(ida_child(root, "switched")));
+    ida_free_runtime(testsys.integ);
+    ida_cleanup(&testsys);
+}
+
+#ifdef ASC_TEST_IDA_INTERNALS
+#include <solvers/ida/idatypes.h>
+#include <solvers/ida/idacalc.h>
+#include <solvers/ida/idasparse.h>
+#include <solvers/ida/idaboundary.h>
+extern int ida_load_rellist(IntegratorSystem *);
+extern int ida_reinit_integrator(IntegratorSystem *, void *, realtype);
+
+static void test_auto_policy(void){
+    CU_ASSERT(!ida_auto_use_klu(63, 63));
+    CU_ASSERT(ida_auto_use_klu(64, 64));
+    CU_ASSERT(ida_auto_use_klu(64, 409));
+    CU_ASSERT(!ida_auto_use_klu(64, 410));
+    CU_ASSERT(ida_auto_use_klu(100, 1000)); /* Exactly 10%. */
+    CU_ASSERT(!ida_auto_use_klu(100, 1001));
+    CU_ASSERT(ida_auto_use_klu(100000, 100000)); /* n*n must not overflow int. */
+}
+
+static int auto_seen_modes;
+static int auto_reported_reasons;
+static const char *auto_test_solver;
+static int auto_test_autodiff;
+static int ida_auto_message(ERROR_REPORTER_CALLBACK_ARGS){
+    char msg[512];
+    va_list copy;
+    va_copy(copy, args);
+    vsnprintf(msg, sizeof(msg), fmt, copy);
+    va_end(copy);
+    if(strstr(msg, "IDA AUTO selected")){
+        CU_ASSERT(sev == ASC_PROG_NOTE);
+        if(strstr(msg, "sparse (KLU)") && strstr(msg, "at most 10%")) auto_reported_reasons |= 1;
+        if(strstr(msg, "dense (DENSE)") && strstr(msg, "exceeds 10%")) auto_reported_reasons |= 2;
+        if(strstr(msg, "dense (DENSE)") && strstr(msg, "autodiff is disabled")) auto_reported_reasons |= 4;
+        if(strstr(msg, "dense (DENSE)") && strstr(msg, "not available")) auto_reported_reasons |= 8;
+        if(strstr(msg, "dense (DENSE)") && strstr(msg, "below the 64-unknown")) auto_reported_reasons |= 16;
+    }
+    return error_reporter_default_callback(sev, filename, line, funcname, fmt, args);
+}
+static int ida_auto_report(struct IntegratorSystemStruct *integ){
+    IntegratorIdaData *d = integ->enginedata;
+    double t = integrator_get_t(integ);
+    int phase = t < 0.2 ? 1 : (t > 0.3 && t < 0.7 ? 2 : (t > 0.8 ? 4 : 0));
+    int want_sparse = 0;
+    if(!phase) return 0; /* Avoid observing the old mode exactly at an event. */
+#ifdef ASC_IDA_KLU
+    want_sparse = strcmp(auto_test_solver, "KLU") == 0
+        || (strcmp(auto_test_solver, "AUTO") == 0 && auto_test_autodiff && phase != 2);
+#endif
+    CU_ASSERT_PTR_NOT_NULL(d->matrix);
+    if(d->matrix){
+        CU_ASSERT(SUNMatGetID(d->matrix) == (want_sparse ? SUNMATRIX_SPARSE : SUNMATRIX_DENSE));
+    }
+    auto_seen_modes |= phase;
+    return 0;
+}
+
+static void ida_test_auto_switch(const char *solver, int autodiff){
+    IdaTestSystem testsys;
+    IntegratorReporter reporter = test_ida_reporter;
+    const char *selected, *reason;
+    size_t nnz;
+    if(ida_test_load("test/ida/auto.a4c", "ida_auto_switch", 1, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    CU_ASSERT(testsys.integ->n_y == 64);
+    ida_set_char_option(testsys.integ, "linsolver", solver);
+    SLV_PARAM_BOOL(&testsys.integ->params, ida_find_param(&testsys.integ->params, "autodiff")) = autodiff;
+    SLV_PARAM_BOOL(&testsys.integ->params, ida_find_param(&testsys.integ->params, "atolvect")) = FALSE;
+    SLV_PARAM_REAL(&testsys.integ->params, ida_find_param(&testsys.integ->params, "atol")) = 1e-8;
+    SLV_PARAM_REAL(&testsys.integ->params, ida_find_param(&testsys.integ->params, "rtol")) = 1e-8;
+    CU_ASSERT_FATAL(0 == ida_load_rellist(testsys.integ));
+    CU_ASSERT_FATAL(0 == ida_auto_select(testsys.integ, autodiff, &selected, &reason, &nnz));
+#ifdef ASC_IDA_KLU
+    CU_ASSERT_STRING_EQUAL(selected, autodiff ? "KLU" : "DENSE");
+    CU_ASSERT_STRING_EQUAL(reason, autodiff ? "sparse-pattern" : "finite-difference");
+    if(autodiff) CU_ASSERT(nnz == 64); /* State and derivative share each diagonal. */
+#else
+    CU_ASSERT_STRING_EQUAL(selected, "DENSE");
+    CU_ASSERT_STRING_EQUAL(reason, "no-klu");
+#endif
+    ida_configure_runtime(testsys.integ, 0, 1, 20);
+    reporter.write_obs = ida_auto_report;
+    integrator_set_reporter(testsys.integ, &reporter);
+    auto_seen_modes = 0;
+    auto_test_solver = solver;
+    auto_test_autodiff = autodiff;
+    auto_reported_reasons = 0;
+    error_reporter_set_callback(ida_auto_message);
+    int result = integrator_solve(testsys.integ, 0, 20);
+    error_reporter_set_callback(NULL);
+    CU_ASSERT_FATAL(0 == result);
+    if(strcmp(solver, "AUTO") == 0){
+#ifdef ASC_IDA_KLU
+        CU_ASSERT(auto_reported_reasons == (autodiff ? 3 : 4));
+#else
+        CU_ASSERT(auto_reported_reasons == 8);
+#endif
+    }else{
+        CU_ASSERT(auto_reported_reasons == 0);
+    }
+    CU_ASSERT(auto_seen_modes == 7);
+    for(int i = 0; i < testsys.integ->n_y; ++i){
+        CU_ASSERT_DOUBLE_EQUAL(var_value(testsys.integ->y[i]), exp(-1), 1e-6);
+    }
+    CU_ASSERT_STRING_EQUAL(SLV_PARAM_CHAR(&testsys.integ->params, ida_find_param(&testsys.integ->params, "linsolver")), solver);
+    ida_free_runtime(testsys.integ);
+    ida_cleanup(&testsys);
+}
+
+static void test_auto_switch(void){ ida_test_auto_switch("AUTO", TRUE); }
+static void test_auto_finite_difference(void){ ida_test_auto_switch("AUTO", FALSE); }
+static void test_auto_dense_override(void){ ida_test_auto_switch("DENSE", TRUE); }
+
+static void test_auto_small(void){
+    IdaTestSystem testsys;
+    const char *solver, *reason;
+    size_t nnz;
+    if(ida_test_load("test/ida/sparse.a4c", "ida_sparse_values", 0, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    CU_ASSERT_FATAL(0 == ida_auto_select(testsys.integ, TRUE, &solver, &reason, &nnz));
+    CU_ASSERT_STRING_EQUAL(solver, "DENSE");
+#ifdef ASC_IDA_KLU
+    CU_ASSERT_STRING_EQUAL(reason, "small-system");
+#else
+    CU_ASSERT_STRING_EQUAL(reason, "no-klu");
+#endif
+    ida_set_char_option(testsys.integ, "linsolver", "AUTO");
+    ida_configure_runtime(testsys.integ, 0, 1, 20);
+    auto_reported_reasons = 0;
+    error_reporter_set_callback(ida_auto_message);
+    int result = integrator_solve(testsys.integ, 0, 20);
+    error_reporter_set_callback(NULL);
+    CU_ASSERT(result == 0);
+#ifdef ASC_IDA_KLU
+    CU_ASSERT(auto_reported_reasons == 16);
+#else
+    CU_ASSERT(auto_reported_reasons == 8);
+#endif
+    ida_free_runtime(testsys.integ);
+    ida_cleanup(&testsys);
+}
+
+static void test_resize_rejected(void){
+    IdaTestSystem testsys;
+    if(ida_test_load("test/ida/sparse.a4c", "ida_sparse_resize", 1, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    CU_ASSERT(testsys.integ->n_y == 2);
+    ida_configure_runtime(testsys.integ, 0, 1, 20);
+    CU_ASSERT(integrator_solve(testsys.integ, 0, 20) != 0);
+    CU_ASSERT(testsys.integ->n_y == 3);
+    CU_ASSERT_DOUBLE_EQUAL(integrator_get_t(testsys.integ), 0.5, 1e-6);
+    ida_free_runtime(testsys.integ);
+    ida_cleanup(&testsys);
+}
+
+static void test_klu_unsupported(void){
+    IdaTestSystem testsys;
+    int i, result;
+    if(ida_test_load("test/ida/sparse.a4c", "ida_sparse_values", 0, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    ida_set_char_option(testsys.integ, "linsolver", "KLU");
+    for(i = 0; i < testsys.integ->params.num_parms; ++i){
+        struct slv_parameter *p = &testsys.integ->params.parms[i];
+        if(strcmp(p->name, "autodiff") == 0) SLV_PARAM_BOOL(&(testsys.integ->params), i) = FALSE;
+    }
+    ida_configure_runtime(testsys.integ, 0, 1, 20);
+    result = integrator_solve(testsys.integ, 0, 20);
+    CU_ASSERT(result != 0);
+    /* Retry on the same engine after setup failure. */
+    ida_set_char_option(testsys.integ, "linsolver", "DENSE");
+    CU_ASSERT(0 == integrator_solve(testsys.integ, 0, 20));
+    ida_free_runtime(testsys.integ);
+    ida_cleanup(&testsys);
+}
+
+#ifdef ASC_IDA_KLU
+static void test_klu_pivot_recovery(void){
+    IdaTestSystem testsys;
+    if(ida_test_load("test/ida/sparse.a4c", "ida_sparse_values", 0, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    IntegratorIdaData *d = testsys.integ->enginedata;
+    N_Vector x = ida_bnd_new_zero_NV(testsys.integ, 2);
+    N_Vector b = ida_bnd_new_zero_NV(testsys.integ, 2);
+#if SUNDIALS_VERSION_MAJOR >= 6
+    SUNMatrix a = SUNSparseMatrix(2, 2, 4, CSC_MAT, d->sunctx);
+    SUNLinearSolver s = SUNLinSol_KLU(x, a, d->sunctx);
+#else
+    SUNMatrix a = SUNSparseMatrix(2, 2, 4, CSC_MAT);
+    SUNLinearSolver s = SUNLinSol_KLU(x, a);
+#endif
+    CU_ASSERT_PTR_NOT_NULL_FATAL(a);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(s);
+    s->ops->setup = ida_klu_setup;
+    SM_INDEXPTRS_S(a)[0] = 0; SM_INDEXPTRS_S(a)[1] = 2; SM_INDEXPTRS_S(a)[2] = 4;
+    SM_INDEXVALS_S(a)[0] = 0; SM_INDEXVALS_S(a)[1] = 1;
+    SM_INDEXVALS_S(a)[2] = 0; SM_INDEXVALS_S(a)[3] = 1;
+    /* [[1,1],[1,2]] chooses a diagonal pivot. */
+    SM_DATA_S(a)[0] = 1; SM_DATA_S(a)[1] = 1;
+    SM_DATA_S(a)[2] = 1; SM_DATA_S(a)[3] = 2;
+    CU_ASSERT_FATAL(SUNLinSolInitialize(s) == SUNLS_SUCCESS);
+    CU_ASSERT_FATAL(SUNLinSolSetup(s, a) == SUNLS_SUCCESS);
+    sun_klu_symbolic *symbolic = SUNLinSol_KLUGetSymbolic(s);
+    /* [[0,1],[1,2]] is nonsingular, but its old first pivot is zero. */
+    SM_DATA_S(a)[0] = 0;
+    CU_ASSERT(SUNLinSolSetup_KLU(s, a) == SUNLS_PACKAGE_FAIL_REC);
+    CU_ASSERT(SUNLinSol_KLUGetCommon(s)->status == KLU_SINGULAR);
+    CU_ASSERT_FATAL(SUNLinSolSetup(s, a) == SUNLS_SUCCESS);
+    CU_ASSERT(SUNLinSolLastFlag(s) == SUNLS_SUCCESS);
+    CU_ASSERT(SUNLinSol_KLUGetSymbolic(s) == symbolic);
+    CU_ASSERT(SM_DATA_S(a)[0] == 0); /* No perturbation of the matrix. */
+    NV_Ith_S(b, 0) = 1; NV_Ith_S(b, 1) = 3;
+    CU_ASSERT_FATAL(SUNLinSolSolve(s, a, x, b, 0) == SUNLS_SUCCESS);
+    CU_ASSERT_DOUBLE_EQUAL(NV_Ith_S(x, 0), 1, 1e-14);
+    CU_ASSERT_DOUBLE_EQUAL(NV_Ith_S(x, 1), 1, 1e-14);
+    /* A genuinely singular trial stays recoverable; it must not be accepted. */
+    SM_DATA_S(a)[2] = 0;
+    CU_ASSERT(SUNLinSolSetup(s, a) == SUNLS_PACKAGE_FAIL_REC);
+    CU_ASSERT(SUNLinSolLastFlag(s) == SUNLS_PACKAGE_FAIL_REC);
+    CU_ASSERT(SUNLinSol_KLUGetCommon(s)->status == KLU_SINGULAR);
+    /* IDA may retry a different matrix after the failed fresh factorization. */
+    SM_DATA_S(a)[0] = 1; SM_DATA_S(a)[2] = 1;
+    CU_ASSERT_FATAL(SUNLinSolSetup(s, a) == SUNLS_SUCCESS);
+    NV_Ith_S(b, 0) = 2;
+    CU_ASSERT_FATAL(SUNLinSolSolve(s, a, x, b, 0) == SUNLS_SUCCESS);
+    CU_ASSERT_DOUBLE_EQUAL(NV_Ith_S(x, 0), 1, 1e-14);
+    CU_ASSERT_DOUBLE_EQUAL(NV_Ith_S(x, 1), 1, 1e-14);
+    SUNLinSolFree(s); SUNMatDestroy(a); N_VDestroy(x); N_VDestroy(b);
+    ida_cleanup(&testsys);
+}
+
+static void test_auto_klu_override(void){ ida_test_auto_switch("KLU", TRUE); }
+static void test_sparse_entries(void){
+    IdaTestSystem testsys;
+    IntegratorIdaData *d;
+    N_Vector y, yp;
+    SUNMatrix dense;
+    int pass, i, j;
+    sunindextype nnz;
+    if(ida_test_load("test/ida/sparse.a4c", "ida_sparse_values", 0, &testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    CU_ASSERT_FATAL(0 == ida_load_rellist(testsys.integ));
+    d = testsys.integ->enginedata;
+    size_t structural_nnz;
+    CU_ASSERT_FATAL(0 == ida_sparse_count(testsys.integ, &structural_nnz));
+    CU_ASSERT(structural_nnz == 4); /* Counts structural zeros, merging y and y'. */
+    CU_ASSERT_FATAL(0 == ida_sparse_build(testsys.integ));
+    nnz = SM_NNZ_S(d->matrix);
+    CU_ASSERT(nnz == 4); /* Includes two numerically zero entries initially. */
+    y = ida_bnd_new_zero_NV(testsys.integ, testsys.integ->n_y);
+    yp = ida_bnd_new_zero_NV(testsys.integ, testsys.integ->n_y);
+#if SUNDIALS_VERSION_MAJOR >= 6
+    dense = SUNDenseMatrix(testsys.integ->n_y, testsys.integ->n_y, d->sunctx);
+#else
+    dense = SUNDenseMatrix(testsys.integ->n_y, testsys.integ->n_y);
+#endif
+    for(pass = 0; pass < 6; ++pass){
+        realtype cj = pass % 3 == 0 ? 0.0 : (pass % 3 == 1 ? 1.0 : 1000.0);
+        for(i = 0; i < testsys.integ->n_y; ++i) NV_Ith_S(y, i) = pass < 3 ? 0 : 1;
+        SUNMatZero(dense);
+        SUNMatZero(d->matrix);
+        CU_ASSERT_FATAL(0 == integrator_ida_djex(0, cj, y, yp, NULL, dense, testsys.integ, NULL, NULL, NULL));
+        CU_ASSERT_FATAL(0 == ida_sparse_jac(0, cj, y, yp, NULL, d->matrix, testsys.integ, NULL, NULL, NULL));
+        CU_ASSERT(SM_NNZ_S(d->matrix) == nnz);
+        CU_ASSERT(SM_INDEXPTRS_S(d->matrix)[testsys.integ->n_y] == nnz);
+        for(j = 0; j < testsys.integ->n_y; ++j){
+            for(i = 0; i < testsys.integ->n_y; ++i){
+                realtype value = 0;
+                for(sunindextype k = SM_INDEXPTRS_S(d->matrix)[j]; k < SM_INDEXPTRS_S(d->matrix)[j+1]; ++k){
+                    if(SM_INDEXVALS_S(d->matrix)[k] == i) value = SM_DATA_S(d->matrix)[k];
+                }
+                CU_ASSERT_DOUBLE_EQUAL(value, SM_ELEMENT_D(dense, i, j), 1e-12);
+            }
+        }
+    }
+    SUNMatDestroy(dense); N_VDestroy(y); N_VDestroy(yp);
+    ida_cleanup(&testsys);
+}
+#define INTERNAL_KLU_TESTS(T) T(sparse_entries) T(auto_klu_override) T(klu_pivot_recovery)
+#else
+#define INTERNAL_KLU_TESTS(T)
+#endif
+#define INTERNAL_IDA_TESTS(T) T(resize_rejected) T(klu_unsupported) \
+    T(auto_policy) T(auto_small) T(auto_switch) T(auto_finite_difference) T(auto_dense_override) INTERNAL_KLU_TESTS(T)
+#else
+#define INTERNAL_IDA_TESTS(T)
+#endif
+
 #define TESTS(T) \
+	INTERNAL_IDA_TESTS(T) \
+	T(sparse_incidence_switch) \
 	T(trial_bound_reporting) \
 	T(trial_bound_terminal_failure) \
 	T(shm) \

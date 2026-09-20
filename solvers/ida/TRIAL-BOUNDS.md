@@ -17,9 +17,9 @@ error to log-based qualification tools.
 non-mutating behaviour. It reports out-of-range trial values as notes,
 including the offending value and bound. Inconsistent bounds and invalid
 range arguments retain error severity. Existing users of `slv_check_bounds`
-retain their original diagnostics. IDA's residual and dense-Jacobian
-callbacks use the recoverable variant; terminal IDA failures remain errors.
-The fboard2 sparse-Jacobian callback needs the same one-line substitution.
+retain their original diagnostics. IDA's residual, dense-Jacobian and
+sparse-Jacobian callbacks use the recoverable variant; terminal IDA failures
+remain errors.
 
 This does not relax variable bounds, clip trial values, change tolerances,
 accept a failed integration, or establish that an accepted trajectory is
