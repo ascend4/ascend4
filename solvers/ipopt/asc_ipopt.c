@@ -51,6 +51,9 @@
 #include <IpStdCInterface.h>
 #ifdef ASC_IPOPT_HSL_LOADER
 # include <HSLLoader.h>
+#elif defined(ASC_IPOPT_MODERN_HSL)
+# include <IpLinearSolvers.h>
+# include "ipopt_hsl.h"
 #endif
 #include <stdio.h>
 
@@ -1533,6 +1536,32 @@ static int ipopt_get_details(char *buf, size_t buflen){
 		}
 		if(!loaded && LSL_isHSLLoaded()){
 			LSL_unloadHSL();
+		}
+		if(!found){
+			used = strlen(buf);
+			snprintf(buf + used, buflen - used, "; no HSL");
+		}
+	}
+#elif defined(ASC_IPOPT_MODERN_HSL)
+	{
+		const char *names[] = {"MA27", "MA57", "MA77", "MA86", "MA97"};
+		const unsigned int flags[] = {IPOPTLINEARSOLVER_MA27, IPOPTLINEARSOLVER_MA57,
+			IPOPTLINEARSOLVER_MA77, IPOPTLINEARSOLVER_MA86, IPOPTLINEARSOLVER_MA97};
+		unsigned int available = asc_ipopt_hsl_available(
+# ifdef ASC_WITH_IPOPT_HSLIB
+			ASC_IPOPT_HSL_LIBRARY
+# else
+			NULL
+# endif
+		);
+		int found = 0;
+		size_t i, used;
+		for(i = 0; i < sizeof(names) / sizeof(names[0]); ++i){
+			if(available & flags[i]){
+				used = strlen(buf);
+				snprintf(buf + used, buflen - used, ", %s", names[i]);
+				found = 1;
+			}
 		}
 		if(!found){
 			used = strlen(buf);
