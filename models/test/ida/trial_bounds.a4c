@@ -1,0 +1,31 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(* Bounds are inspected in tentative callback states by the C regression. *)
+MODEL ida_trial_bounds;
+    t IS_A time;
+    x IS_A positive_factor;
+    INDEPENDENT t;
+    decay: der(x) = -x / (1 {s});
+METHODS
+    METHOD on_load;
+        FIX t;
+        t := 0 {s}; x := 1;
+        x.upper_bound := 2;
+        FREE der(x);
+    END on_load;
+END ida_trial_bounds;
+
+(* This trajectory would cross x=0; retrying must eventually fail loudly. *)
+MODEL ida_trial_bounds_terminal;
+    t IS_A time;
+    x IS_A positive_factor;
+    INDEPENDENT t;
+    dynamics: der(x) = -1 {1/s};
+METHODS
+    METHOD on_load;
+        FIX t;
+        t := 0 {s}; x := 1;
+        FREE der(x);
+    END on_load;
+END ida_trial_bounds_terminal;
