@@ -1,0 +1,10 @@
+(* Probe for the legacy parameterized collocation library.  This is deliberately
+ * isolated from the modern collocation.a4l preservation wrapper. *)
+REQUIRE "libraries/system.lib";
+REQUIRE "libraries/atoms.lib";
+REQUIRE "libraries/components.par.lib";
+REQUIRE "libraries/propertyoptions.par.lib";
+REQUIRE "libraries/HGthermo.par.lib";
+REQUIRE "libraries/stream.par.lib";
+REQUIRE "libraries/flash.par.lib";
+REQUIRE "libraries/collocation.par.lib";

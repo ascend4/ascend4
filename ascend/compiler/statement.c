@@ -2568,6 +2568,8 @@ int CompareWhenStatements(CONST struct Statement *s1,
   struct VariableList *vl1, *vl2;
   struct WhenList *cases1,*cases2;
   struct Set *val1, *val2;
+  struct Expr *cond1, *cond2;
+  struct Expr *applies1, *applies2;
   struct StatementList *sl1, *sl2;
 
   vl1 = WhenStatVL(s1);
@@ -2588,6 +2590,36 @@ int CompareWhenStatements(CONST struct Statement *s1,
     ctmp = CompareSetStructures(val1,val2);
     if (ctmp != 0) {
       return ctmp;
+    }
+
+    cond1 = WhenCaseCondition(cases1);
+    cond2 = WhenCaseCondition(cases2);
+    if (cond1 != NULL || cond2 != NULL) {
+      if (cond1 == NULL) {
+        return -1;
+      }
+      if (cond2 == NULL) {
+        return 1;
+      }
+      ctmp = CompareExprs(cond1,cond2);
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    }
+
+    applies1 = WhenCaseApplies(cases1);
+    applies2 = WhenCaseApplies(cases2);
+    if (applies1 != NULL || applies2 != NULL) {
+      if (applies1 == NULL) {
+        return -1;
+      }
+      if (applies2 == NULL) {
+        return 1;
+      }
+      ctmp = CompareExprs(applies1,applies2);
+      if (ctmp != 0) {
+        return ctmp;
+      }
     }
 
     sl1 = WhenStatementList(cases1);

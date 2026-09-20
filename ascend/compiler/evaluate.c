@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <float.h>
+#include <math.h>
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
@@ -44,6 +46,10 @@
 #include "exprs.h"
 #include "find.h"
 #include "exprio.h"
+
+#ifndef DEFTOLERANCE
+#define DEFTOLERANCE 1e-08
+#endif /* DEFTOLERANCE */
 
 static struct gl_list_t *g_names_needed = NULL;
 static EvaluatePreNameFn *g_evaluation_pre_name_fn = NULL;
@@ -662,6 +668,55 @@ void EvaluateSuchThatNamesNeeded(CONST struct Expr *expr,
   }
 }
 
+static int InlineSatisfiedResidual(struct value_t lhs, struct value_t rhs,
+                                   double *residual)
+{
+  struct value_t diff;
+  IVAL(diff);
+
+  if(residual == NULL) {
+    return 1;
+  }
+
+  diff = SubtractValues(lhs,rhs);
+  switch(ValueKind(diff)) {
+  case real_value:
+    *residual = RealValue(diff);
+    DestroyValue(&diff);
+    return 0;
+  case integer_value:
+    *residual = (double)IntegerValue(diff);
+    DestroyValue(&diff);
+    return 0;
+  default:
+    DestroyValue(&diff);
+    return 1;
+  }
+}
+
+static int InlineSatisfiedTruth(enum Expr_enum relop, double residual,
+                                double tolerance)
+{
+  double tol = tolerance != DBL_MAX ? fabs(tolerance) : DEFTOLERANCE;
+
+  switch(relop) {
+  case e_equal:
+    return tol > fabs(residual);
+  case e_notequal:
+    return !(tol > fabs(residual));
+  case e_greater:
+    return tol < residual;
+  case e_greatereq:
+    return -tol < residual;
+  case e_less:
+    return -tol > residual;
+  case e_lesseq:
+    return tol > residual;
+  default:
+    return 0;
+  }
+}
+
 /**
 	The main expression-evaluation routine for the ASCEND compiler?
 
@@ -673,6 +728,9 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
   struct value_t top,next;
   symchar *cptr;
   struct stack_t *stack;
+  enum Expr_enum inline_relop = e_token;
+  double inline_residual = 0.0;
+  int inline_residual_valid = 0;
   IVAL(top);
   IVAL(next);
   if (ContainsSuchThat(expr,stop)!=NULL) {
@@ -711,9 +769,24 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
       StackPush(stack,top);
       break;
     case e_satisfied:		/* satisfied evaluation */
-      top = InstanceEvaluateSatisfiedName(SatisfiedExprName(expr),
-                                          SatisfiedExprRValue(expr));
-      StackPush(stack,top);
+      if(SatisfiedExprName(expr) != NULL) {
+        top = InstanceEvaluateSatisfiedName(SatisfiedExprName(expr),
+                                            SatisfiedExprRValue(expr));
+        StackPush(stack,top);
+      }else if(inline_residual_valid) {
+        top = StackPopTop(stack);
+        DestroyValue(&top);
+        top = CreateBooleanValue(
+          InlineSatisfiedTruth(
+            inline_relop,inline_residual,SatisfiedExprRValue(expr)
+          ),
+          0
+        );
+        StackPush(stack,top);
+        inline_residual_valid = 0;
+      }else{
+        StackPush(stack,CreateErrorValue(incorrect_name));
+      }
       break;
     case e_int:			/* integer constant */
       top = CreateIntegerValue(ExprIValue(expr),1);
@@ -836,6 +909,10 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
 				/* = should bind more tightly than == */
       top = StackPopTop(stack);
       next = StackPopTop(stack);
+      inline_residual_valid =
+        ExprType(expr) == e_equal
+        && !InlineSatisfiedResidual(next,top,&inline_residual);
+      inline_relop = ExprType(expr);
       StackPush(stack,EqualValues(next,top));
       DestroyValue(&top);
       DestroyValue(&next);
@@ -845,6 +922,10 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
 				/* <> should bind more tightly than != */
       top = StackPopTop(stack);
       next = StackPopTop(stack);
+      inline_residual_valid =
+        ExprType(expr) == e_notequal
+        && !InlineSatisfiedResidual(next,top,&inline_residual);
+      inline_relop = ExprType(expr);
       StackPush(stack,NotEqualValues(next,top));
       DestroyValue(&top);
       DestroyValue(&next);
@@ -852,6 +933,9 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
     case e_less:		/* less than test */
       top = StackPopTop(stack);
       next = StackPopTop(stack);
+      inline_residual_valid =
+        !InlineSatisfiedResidual(next,top,&inline_residual);
+      inline_relop = ExprType(expr);
       StackPush(stack,LessValues(next,top));
       DestroyValue(&top);
       DestroyValue(&next);
@@ -859,6 +943,9 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
     case e_greater:		/* greater than test */
       top = StackPopTop(stack);
       next = StackPopTop(stack);
+      inline_residual_valid =
+        !InlineSatisfiedResidual(next,top,&inline_residual);
+      inline_relop = ExprType(expr);
       StackPush(stack,GreaterValues(next,top));
       DestroyValue(&top);
       DestroyValue(&next);
@@ -866,6 +953,9 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
     case e_lesseq:		/* less then or equal test */
       top = StackPopTop(stack);
       next = StackPopTop(stack);
+      inline_residual_valid =
+        !InlineSatisfiedResidual(next,top,&inline_residual);
+      inline_relop = ExprType(expr);
       StackPush(stack,LessEqValues(next,top));
       DestroyValue(&top);
       DestroyValue(&next);
@@ -873,6 +963,9 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
     case e_greatereq:		/* greater than or equal test */
       top = StackPopTop(stack);
       next = StackPopTop(stack);
+      inline_residual_valid =
+        !InlineSatisfiedResidual(next,top,&inline_residual);
+      inline_relop = ExprType(expr);
       StackPush(stack,GreaterEqValues(next,top));
       DestroyValue(&top);
       DestroyValue(&next);

@@ -428,6 +428,13 @@ struct Expr *CopyExprList(CONST struct Expr *e)
     result = EPMALLOC;
     result->v.bvalue = ep->v.bvalue;
     break;
+  case e_satisfied:
+    result = EPMALLOC;
+    result->v.se.sen = ep->v.se.sen != NULL
+      ? CopyName(ep->v.se.sen) : NULL;
+    result->v.se.ser.rvalue = ep->v.se.ser.rvalue;
+    result->v.se.ser.dimensions = ep->v.se.ser.dimensions;
+    break;
   case e_set:
     result = EPMALLOC;
     result->v.s = CopySetList(ep->v.s);
@@ -485,6 +492,14 @@ struct Expr *CopyExprList(CONST struct Expr *e)
       p = p->next;
       p->v.bvalue = ep->v.bvalue;
       break;
+    case e_satisfied:
+      p->next = EPMALLOC;
+      p = p->next;
+      p->v.se.sen = ep->v.se.sen != NULL
+        ? CopyName(ep->v.se.sen) : NULL;
+      p->v.se.ser.rvalue = ep->v.se.ser.rvalue;
+      p->v.se.ser.dimensions = ep->v.se.ser.dimensions;
+      break;
     case e_set:
       p->next = EPMALLOC;
       p = p->next;
@@ -530,6 +545,11 @@ void DestroyExprList(struct Expr *e)
 		case e_der:
 		case e_pre:
 			DestroyName(ep->v.nptr);
+			break;
+		case e_satisfied:
+			if(ep->v.se.sen != NULL) {
+				DestroyName(ep->v.se.sen);
+			}
 			break;
 		case e_set:
 		case e_card:
@@ -755,7 +775,14 @@ int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2)
     case e_not:
       break;
     case e_satisfied:
-      ctmp = CompareNames(SatisfiedExprName(e1),SatisfiedExprName(e2));
+      if(SatisfiedExprName(e1) == NULL || SatisfiedExprName(e2) == NULL) {
+        if(SatisfiedExprName(e1) != SatisfiedExprName(e2)) {
+          return SatisfiedExprName(e1) == NULL ? -1 : 1;
+        }
+        ctmp = 0;
+      }else{
+        ctmp = CompareNames(SatisfiedExprName(e1),SatisfiedExprName(e2));
+      }
       if (ctmp != 0) return ctmp;
       rtmp = SatisfiedExprRValue(e1) - SatisfiedExprRValue(e2);
       if (rtmp != 0.0) {

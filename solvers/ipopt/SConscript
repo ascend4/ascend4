@@ -72,6 +72,27 @@ static Bool eval_jac_g(Index n, Number *x, Bool new_x, Index m, Index nele_jac,
 	return TRUE;
 }
 
+/* Older IPOPT C interfaces require this callback even in limited-memory mode. */
+static Bool eval_h(Index n, Number *x, Bool new_x, Number obj_factor,
+	Index m, Number *lambda, Bool new_lambda, Index nele_hess,
+	Index *iRow, Index *jCol, Number *values, UserDataPtr user_data){
+	(void)n;
+	(void)x;
+	(void)new_x;
+	(void)m;
+	(void)lambda;
+	(void)new_lambda;
+	(void)nele_hess;
+	(void)user_data;
+	if(values == NULL){
+		iRow[0] = 0; jCol[0] = 0;
+		iRow[1] = 1; jCol[1] = 1;
+	}else{
+		values[0] = values[1] = 2.0 * obj_factor;
+	}
+	return TRUE;
+}
+
 static int status_ok(enum ApplicationReturnStatus status){
 	return status == Solve_Succeeded
 		|| status == Solved_To_Acceptable_Level
@@ -84,8 +105,8 @@ static int hsllib_supported(const char *hsllib){
 	Number g_L[1] = {1.0};
 	Number g_U[1] = {1.0};
 	IpoptProblem prob = CreateIpoptProblem(
-		2, x_L, x_U, 1, g_L, g_U, 2, 0, 0,
-		eval_f, eval_g, eval_grad_f, eval_jac_g, NULL
+		2, x_L, x_U, 1, g_L, g_U, 2, 2, 0,
+		eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h
 	);
 	int ok = 0;
 	if(prob == NULL){
@@ -104,8 +125,8 @@ static int try_solver(const char *solver, const char *hsllib, int use_hsllib){
 	Number x[2] = {0.2, 0.8};
 	Number obj = 0.0;
 	IpoptProblem prob = CreateIpoptProblem(
-		2, x_L, x_U, 1, g_L, g_U, 2, 0, 0,
-		eval_f, eval_g, eval_grad_f, eval_jac_g, NULL
+		2, x_L, x_U, 1, g_L, g_U, 2, 2, 0,
+		eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h
 	);
 	enum ApplicationReturnStatus status;
 	if(prob == NULL){
@@ -132,16 +153,17 @@ static int try_solver(const char *solver, const char *hsllib, int use_hsllib){
 int main(void){
 	char msg[1024];
 	const char *lib = %(probe_target)s;
+	const char *solver = %(solver)s;
 	int load_rc;
 	int have_hsllib;
 	int use_hsllib;
-	int ma27_runtime;
-	int ma97_runtime;
 
 	have_hsllib = hsllib_supported(lib);
 	use_hsllib = have_hsllib && lib != NULL && lib[0] != '\0';
-	ma27_runtime = try_solver("ma27", lib, use_hsllib);
-	ma97_runtime = try_solver("ma97", lib, use_hsllib);
+	if(solver != NULL){
+		printf("runtime=%%d\n", try_solver(solver, lib, use_hsllib));
+		return 0;
+	}
 
 	if(LSL_isHSLLoaded()){
 		LSL_unloadHSL();
@@ -158,8 +180,6 @@ int main(void){
 	printf("ma27_symbol=%%d\n", LSL_isMA27available() ? 1 : 0);
 	printf("ma97_symbol=%%d\n", LSL_isMA97available() ? 1 : 0);
 	printf("mc19=%%d\n", LSL_isMC19available() ? 1 : 0);
-	printf("ma27_runtime=%%d\n", ma27_runtime);
-	printf("ma97_runtime=%%d\n", ma97_runtime);
 	printf("message=%%s\n", msg);
 
 	if(LSL_isHSLLoaded()){
@@ -197,7 +217,7 @@ def CheckIPOPTHSL(context):
 		return False
 
 	is_ok, output = context.TryRun(
-		ipopt_hsl_test_text % {'probe_target': _c_string_literal(probe_target)},
+		ipopt_hsl_test_text % {'probe_target': _c_string_literal(probe_target), 'solver': 'NULL'},
 		".c"
 	)
 	if not is_ok:
@@ -209,6 +229,16 @@ def CheckIPOPTHSL(context):
 		return False
 
 	parsed = _parse_probe_output(output)
+	# Probe each solver in its own process: older IPOPT versions can exit
+	# outright when a requested HSL routine cannot be loaded.
+	for name in ('ma27', 'ma97'):
+		ok, solver_output = context.TryRun(ipopt_hsl_test_text % {
+			'probe_target': _c_string_literal(probe_target),
+			'solver': _c_string_literal(name),
+		}, '.c')
+		parsed[name + '_runtime'] = (
+			_parse_probe_output(solver_output).get('runtime', '0') if ok else '0'
+		)
 	loadable = parsed.get('load_rc') == '0' and parsed.get('loaded') == '1'
 	hsllib_supported = parsed.get('hsllib_supported') == '1'
 	ma27_symbol_available = parsed.get('ma27_symbol') == '1'
@@ -248,6 +278,25 @@ def CheckIPOPTHSL(context):
 	context.Result(context.env['IPOPT_HSL_STATUS'])
 	return loadable
 
+def CheckIPOPTHSLLoader(context):
+	context.Message('Checking for IPOPT runtime HSL query API... ')
+	ok = context.TryLink('''
+#include <stddef.h>
+#include <HSLLoader.h>
+int main(void){
+	char message[1024];
+	LSL_loadHSL(NULL, message, sizeof(message));
+	LSL_isHSLLoaded();
+	LSL_unloadHSL();
+	return LSL_isMA27available() + LSL_isMA57available()
+		+ LSL_isMA77available() + LSL_isMA86available() + LSL_isMA97available();
+}
+''', '.c')
+	if ok:
+		context.env.AppendUnique(CPPDEFINES=['ASC_IPOPT_HSL_LOADER'])
+	context.Result(ok)
+	return ok
+
 def CheckIPOPT(context):
 	context.Message( 'Checking for IPOPT... ' )
 	is_ok = context.env.ensure_ipopt()
@@ -272,10 +321,12 @@ if env.get('WITH_IPOPT'):
 	conf = solver_env.Configure(custom_tests={
 		'CheckIPOPT':CheckIPOPT,
 		'CheckIPOPTHSL':CheckIPOPTHSL,
+		'CheckIPOPTHSLLoader':CheckIPOPTHSLLoader,
 	})
 	if not conf.CheckIPOPT():
 		conf.env['WITH_IPOPT'] = False
 	else:
+		conf.CheckIPOPTHSLLoader()
 		conf.CheckIPOPTHSL()
 	solver_env = conf.Finish()
 

@@ -28,6 +28,8 @@
 #include <ascend/linear/linsolqr.h>
 
 #include <ascend/system/diffvars.h>
+#include <ascend/system/conditional.h>
+#include <ascend/system/slv_client.h>
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/block.h>
 #include <ascend/system/diffvars.h>
@@ -66,6 +68,27 @@
 //static int integrator_ida_check_partitioning(IntegratorSystem *integ);
 static int integrator_ida_check_diffindex(IntegratorSystem *integ);
 /* static int integrator_ida_rebuild_diffindex(IntegratorSystem *integ); */
+
+static int integrator_ida_reject_classifier_whens(IntegratorSystem *integ){
+	struct w_when **whens;
+	int32 nwhens, w;
+
+	if(integ == NULL || integ->system == NULL){
+		return 1;
+	}
+
+	whens = slv_get_solvers_when_list(integ->system);
+	nwhens = slv_get_num_solvers_whens(integ->system);
+	for(w = 0; w < nwhens; ++w){
+		if(when_has_classifier_predicates(whens[w])){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,
+				"IDA does not yet support CASE IF/APPLIES IF in WHEN; explicit classifier-transition lowering is required");
+			return 1;
+		}
+	}
+
+	return 0;
+}
 
 const var_filter_t integrator_ida_nonderiv = {
 	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV | VAR_DISCRETE,
@@ -742,6 +765,10 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 
 	/* set the active flags on  variables depending on the state of WHENs */
 	MSG("Currently %d rels active",slv_count_solvers_rels(integ->system, &integrator_ida_rel));
+
+	if(integrator_ida_reject_classifier_whens(integ)){
+		return 1;
+	}
 
 	reanalyze_solver_lists(integ->system);
 

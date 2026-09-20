@@ -456,4 +456,3 @@ extern int *LogRelFindBoolValues(struct Instance *i,
 /* @} */
 
 #endif /* ASC_LOGRELATION_UTIL_H */
-

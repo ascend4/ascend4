@@ -209,4 +209,3 @@ extern struct gl_list_t *FindInstancesFromNames(
 /* @} */
 
 #endif /* ASC_FIND_H */
-

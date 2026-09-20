@@ -1,0 +1,60 @@
+REQUIRE "atoms.a4l";
+
+MODEL when_case_if_guard_logic;
+	x IS_A factor;
+
+	nested_regions IS_A set OF symbol_constant;
+	nested_regions :== ['slow', 'intermediate', 'fast'];
+	nested_region IS_A selector OF nested_regions DEFAULT 'slow';
+
+	interval_regions IS_A set OF symbol_constant;
+	interval_regions :== ['low', 'middle', 'high'];
+	interval_region IS_A selector OF interval_regions DEFAULT 'middle';
+
+	named_interval_regions IS_A set OF symbol_constant;
+	named_interval_regions :== ['low', 'middle', 'high'];
+	named_interval_region IS_A selector OF named_interval_regions DEFAULT 'middle';
+
+	B[1..2] IS_A factor_constant;
+	B[1] :== 1.0;
+	B[2] :== 5.0;
+
+	nested_slow_eq: x = 0.5;
+	nested_intermediate_eq: x = 2.0;
+	nested_fast_eq: x = 8.0;
+
+	interval_low_eq: x = 0.5;
+	interval_middle_eq: x = 3.0;
+	interval_high_eq: x = 8.0;
+
+	named_interval_low_eq: x = 0.5;
+	named_interval_middle_eq: x = 3.0;
+	named_interval_high_eq: x = 8.0;
+
+	WHEN (nested_region)
+	CASE 'slow' IF SATISFIED(x < 1.0, 1e-8):
+		USE nested_slow_eq;
+	CASE 'intermediate' IF SATISFIED(x < 5.0, 1e-8):
+		USE nested_intermediate_eq;
+	OTHERWISE 'fast':
+		USE nested_fast_eq;
+	END WHEN;
+
+	WHEN (interval_region)
+	CASE 'low' IF SATISFIED(x <= 1.0, 1e-8):
+		USE interval_low_eq;
+	CASE 'high' IF SATISFIED(x >= 5.0, 1e-8):
+		USE interval_high_eq;
+	OTHERWISE 'middle':
+		USE interval_middle_eq;
+	END WHEN;
+
+	WHEN (named_interval_region)
+	CASE 'low' IF SATISFIED(x <= B[1], 1e-8):
+		USE named_interval_low_eq;
+	CASE 'high' IF SATISFIED(x >= B[2], 1e-8):
+		USE named_interval_high_eq;
+	OTHERWISE 'middle':
+		USE named_interval_middle_eq;
+	END WHEN;
+END when_case_if_guard_logic;

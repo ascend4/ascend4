@@ -49,6 +49,9 @@
 
 #include <IpoptConfig.h>
 #include <IpStdCInterface.h>
+#ifdef ASC_IPOPT_HSL_LOADER
+# include <HSLLoader.h>
+#endif
 #include <stdio.h>
 
 ASC_DLLSPEC SolverRegisterFn ipopt_register;
@@ -1497,6 +1500,51 @@ static int ipopt_get_version(char *buf, size_t buflen){
 	return 0;
 }
 
+static int ipopt_get_details(char *buf, size_t buflen){
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+	snprintf(buf,buflen,"with mumps");
+#ifdef ASC_IPOPT_HSL_LOADER
+	{
+		const char *names[] = {"MA27", "MA57", "MA77", "MA86", "MA97"};
+		int (*available[])(void) = {LSL_isMA27available, LSL_isMA57available,
+			LSL_isMA77available, LSL_isMA86available, LSL_isMA97available};
+		int loaded = LSL_isHSLLoaded();
+		int found = 0;
+		size_t i, used;
+		char message[1024];
+		/* Use the same library as a solve, including IPOPT's default search
+		   path for a library installed after ASCEND was built. Never unload
+		   an HSL library that was already in use by another solver instance. */
+		if(!loaded){
+# ifdef ASC_WITH_IPOPT_HSLIB
+			LSL_loadHSL(ASC_IPOPT_HSL_LIBRARY, message, sizeof(message));
+# else
+			LSL_loadHSL(NULL, message, sizeof(message));
+# endif
+		}
+		for(i = 0; i < sizeof(names) / sizeof(names[0]); ++i){
+			if(available[i]()){
+				used = strlen(buf);
+				snprintf(buf + used, buflen - used, ", %s", names[i]);
+				found = 1;
+			}
+		}
+		if(!loaded && LSL_isHSLLoaded()){
+			LSL_unloadHSL();
+		}
+		if(!found){
+			used = strlen(buf);
+			snprintf(buf + used, buflen - used, "; no HSL");
+		}
+	}
+#else
+	snprintf(buf,buflen,"with mumps; HSL availability unknown");
+#endif
+	return 0;
+}
+
 static const SlvFunctionsT ipopt_internals = {
 	67
 	,"IPOPT"
@@ -1521,6 +1569,7 @@ int ipopt_register(void){
 		return 1;
 	}
 	solver_register_version("IPOPT",ipopt_get_version);
+	solver_register_details("IPOPT",ipopt_get_details);
 	return 0;
 }
 

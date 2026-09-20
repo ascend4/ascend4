@@ -17,6 +17,7 @@
 #include <ascend/compiler/watchpt.h>
 
 #include <ascend/system/block.h>
+#include <ascend/system/conditional.h>
 #include <ascend/system/decomp.h>
 #include <ascend/system/discrete.h>
 #include <ascend/system/logrel.h>
@@ -51,8 +52,9 @@ static void decomp_fixture_destroy(struct decomp_fixture *fx){
 	Asc_CompilerDestroy();
 }
 
-static void decomp_load_model_expect(
-		const char *modelname, struct decomp_fixture *fx, int decomp_status
+static void decomp_load_model_prepare_expect(
+		const char *modelname, struct decomp_fixture *fx,
+		int prepare_classifiers, int decomp_status
 ){
 	int status;
 	struct module_t *m;
@@ -82,11 +84,28 @@ static void decomp_load_model_expect(
 
 	fx->sys = system_build(fx->root);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(fx->sys);
+	if(prepare_classifiers){
+		CU_ASSERT_FATAL(
+			0 == slv_prepare_classifier_whens(fx->sys,WHEN_REGION_STEADY)
+		);
+	}
 	CU_ASSERT_FATAL(decomp_status == slv_decomp_partition(fx->sys,&fx->decomp));
+}
+
+static void decomp_load_model_expect(
+		const char *modelname, struct decomp_fixture *fx, int decomp_status
+){
+	decomp_load_model_prepare_expect(modelname,fx,0,decomp_status);
 }
 
 static void decomp_load_model(const char *modelname, struct decomp_fixture *fx){
 	decomp_load_model_expect(modelname,fx,0);
+}
+
+static void decomp_load_model_prepare(
+		const char *modelname, struct decomp_fixture *fx
+){
+	decomp_load_model_prepare_expect(modelname,fx,1,0);
 }
 
 static struct Instance *decomp_child(struct decomp_fixture *fx, const char *name){
@@ -174,6 +193,29 @@ static int decomp_logrel_org_row(struct decomp_fixture *fx, const char *name){
 		}
 	}
 	CU_FAIL_FATAL("logrelation was not found in solver logrelation lists");
+	return -1;
+}
+
+static int decomp_logrel_ptr_org_row(
+		struct decomp_fixture *fx, struct logrel_relation *target
+){
+	struct logrel_relation **logrels = slv_get_solvers_logrel_list(fx->sys);
+	struct logrel_relation **condlogrels =
+		slv_get_solvers_condlogrel_list(fx->sys);
+	int32 i, n = slv_get_num_solvers_logrels(fx->sys);
+	for(i = 0; i < n; ++i){
+		if(logrels[i] == target){
+			return fx->decomp.n_rels + fx->decomp.n_condrels + i;
+		}
+	}
+	n = slv_get_num_solvers_condlogrels(fx->sys);
+	for(i = 0; i < n; ++i){
+		if(condlogrels[i] == target){
+			return fx->decomp.n_rels + fx->decomp.n_condrels
+				+ fx->decomp.n_logrels + i;
+		}
+	}
+	CU_FAIL_FATAL("logrelation pointer was not found in solver logrelation lists");
 	return -1;
 }
 
@@ -528,6 +570,27 @@ static void test_when_logrel_edges(void){
 	decomp_fixture_destroy(&fx);
 }
 
+static void test_case_if_guard_boundary_edges(void){
+	struct decomp_fixture fx;
+	struct logrel_relation *guard_logrel;
+	int logrow, xcol;
+
+	decomp_load_model_prepare("case_if_guard_boundary",&fx);
+	CU_ASSERT_EQUAL(slv_get_num_classifier_rels(fx.sys),1);
+	CU_ASSERT_EQUAL(slv_get_num_classifier_logrels(fx.sys),1);
+	CU_ASSERT_EQUAL(slv_get_num_classifier_bnds(fx.sys),2);
+
+	guard_logrel = slv_get_classifier_logrel(fx.sys,0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(guard_logrel);
+
+	logrow = decomp_logrel_ptr_org_row(&fx,guard_logrel);
+	xcol = decomp_var_org_col(&fx,"x");
+
+	CU_ASSERT_TRUE(decomp_has_edge(&fx.decomp,logrow,xcol));
+
+	decomp_fixture_destroy(&fx);
+}
+
 static void test_null_inputs(void){
 	slv_decomp_partition_t decomp;
 
@@ -556,6 +619,7 @@ static void test_null_inputs(void){
 	T(conditional_logrel_row_kind) \
 	T(conditional_relation_row_kind) \
 	T(when_logrel_edges) \
+	T(case_if_guard_boundary_edges) \
 	T(null_inputs)
 
 REGISTER_TESTS_SIMPLE(solver_decomp, TESTS)
