@@ -43,6 +43,7 @@
 #include <ascend/system/bnd.h>
 #include <ascend/system/slv_param.h>
 #include <ascend/system/slv_server.h>
+#include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/system.h>
 
 #include <test/common.h>
@@ -2008,6 +2009,78 @@ static void test_initial_alias_binding_bug(){
 	CU_ASSERT_FATAL(0 == solve_res);
 }
 
+static int trial_bound_notes;
+static int ida_trial_bound_capture(ERROR_REPORTER_CALLBACK_ARGS){
+    char msg[1024];
+    va_list copy;
+    va_copy(copy,args);
+    vsnprintf(msg,sizeof(msg),fmt,copy);
+    va_end(copy);
+    if(strstr(msg,"rejected as a recoverable trial")){
+        CU_ASSERT(sev == ASC_PROG_NOTE);
+        CU_ASSERT(strstr(msg,"value=") != NULL);
+        trial_bound_notes++;
+    }
+    return ida_error_capture_cb(sev,filename,line,funcname,fmt,args);
+}
+
+static void test_trial_bound_reporting(void){
+    IdaTestSystem testsys;
+    struct var_variable *x = NULL, **vars;
+    struct Instance *ix;
+    slv_system_t sys;
+    int i;
+    if(ida_test_load("test/ida/trial_bounds.a4c","ida_trial_bounds",0,&testsys)) return;
+    sys = testsys.integ->system;
+    ix = ida_child(GetSimulationRoot(testsys.siminst),"x");
+    vars = slv_get_solvers_var_list(sys);
+    for(i=0;i<slv_get_num_solvers_vars(sys);++i){
+        if(var_instance(vars[i]) == ix){ x=vars[i]; break; }
+    }
+    CU_ASSERT_PTR_NOT_NULL_FATAL(x);
+    ida_error_capture_reset(); trial_bound_notes=0;
+    error_reporter_set_callback(ida_trial_bound_capture);
+    CU_ASSERT(0 == slv_check_bounds_recoverable(sys,0,-1,"test trial"));
+    var_set_value(x,-0.25);
+    CU_ASSERT(2 == slv_check_bounds_recoverable(sys,0,-1,"test trial"));
+    CU_ASSERT_DOUBLE_EQUAL(var_value(x),-0.25,0); /* Never clip the trial. */
+    CU_ASSERT(trial_bound_notes == 1);
+    CU_ASSERT(g_ida_error_capture.error_count == 0);
+    var_set_value(x,2.25);
+    CU_ASSERT(4 == slv_check_bounds_recoverable(sys,0,-1,"test trial"));
+    CU_ASSERT_DOUBLE_EQUAL(var_value(x),2.25,0);
+    CU_ASSERT(trial_bound_notes == 2);
+    CU_ASSERT(g_ida_error_capture.error_count == 0);
+    /* Existing callers retain error severity and identical rejection flags. */
+    CU_ASSERT(4 == slv_check_bounds(sys,0,-1,"accepted"));
+    CU_ASSERT(g_ida_error_capture.error_count > 0);
+    ida_error_capture_reset();
+    var_set_lower_bound(x,3);
+    CU_ASSERT(slv_check_bounds_recoverable(sys,0,-1,"test trial") & 1);
+    CU_ASSERT(g_ida_error_capture.error_count > 0); /* Invalid bounds are errors. */
+    error_reporter_set_callback(NULL);
+    var_set_lower_bound(x,0); var_set_value(x,1);
+    ida_cleanup(&testsys);
+}
+
+static void test_trial_bound_terminal_failure(void){
+    IdaTestSystem testsys;
+    int result;
+    if(ida_test_load("test/ida/trial_bounds.a4c","ida_trial_bounds_terminal",0,&testsys)) return;
+    CU_ASSERT_FATAL(0 == integrator_analyse(testsys.integ));
+    ida_configure_runtime(testsys.integ,0,2,20);
+    ida_error_capture_reset(); trial_bound_notes=0;
+    error_reporter_set_callback(ida_trial_bound_capture);
+    result=integrator_solve(testsys.integ,0,20);
+    error_reporter_set_callback(NULL);
+    CU_ASSERT(result != 0);
+    CU_ASSERT(trial_bound_notes > 0);
+    CU_ASSERT(g_ida_error_capture.error_count > 0);
+    CU_ASSERT(integrator_get_t(testsys.integ) < 2);
+    ida_free_runtime(testsys.integ);
+    ida_cleanup(&testsys);
+}
+
 
 static void test_sparse_incidence_switch(void){
     IdaTestSystem testsys;
@@ -2313,6 +2386,8 @@ static void test_sparse_entries(void){
 #define TESTS(T) \
 	INTERNAL_IDA_TESTS(T) \
 	T(sparse_incidence_switch) \
+	T(trial_bound_reporting) \
+	T(trial_bound_terminal_failure) \
 	T(shm) \
 	T(boundary) \
 	T(integ1) \

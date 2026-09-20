@@ -142,7 +142,7 @@ slvDOF_system_t slvDOF_create()
 static void destroy_matrices(slvDOF_system_t sys)
 {
   if( sys->J.mtx ) {
-    mtx_destroy(sys->J.mtx);
+    asc_mtx_destroy(sys->J.mtx);
   }
   if(sys->rows)ASC_FREE(sys->rows);
   if(sys->cols)ASC_FREE(sys->cols);

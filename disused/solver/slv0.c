@@ -2510,7 +2510,7 @@ slv0_system_t sys;
       int count = linsol_number_of_rhs(sys->J.sys)-1;
       for( ; count >= 0; count-- )
 	 destroy_array(linsol_get_rhs(sys->J.sys,count));
-      mtx_destroy(linsol_get_matrix(sys->J.sys));
+      asc_mtx_destroy(linsol_get_matrix(sys->J.sys));
       linsol_destroy(sys->J.sys);
       if( sys->J.relpivots ) set_destroy( sys->J.relpivots );
       if( sys->J.varpivots ) set_destroy( sys->J.varpivots );

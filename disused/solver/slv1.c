@@ -482,8 +482,8 @@ static void destroy_jacobian(slv1_system_t sys)
     int count = linsol_number_of_rhs(sys->jacobian.sys)-1;
     for( ; count >= 0; count-- )
       free_vector(linsol_get_rhs(sys->jacobian.sys,count));
-    mtx_destroy(linsol_get_matrix(sys->jacobian.sys));
-    mtx_destroy(sys->jacobian.objmtx);
+    asc_mtx_destroy(linsol_get_matrix(sys->jacobian.sys));
+    asc_mtx_destroy(sys->jacobian.objmtx);
     linsol_destroy(sys->jacobian.sys);
     sys->jacobian.sys=NULL;
     sys->jacobian.mtx=NULL;
