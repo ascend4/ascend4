@@ -25,7 +25,9 @@ ipopt_hsl_test_text = r"""
 #include <stdio.h>
 #include <string.h>
 
-#include <HSLLoader.h>
+#ifndef ASC_IPOPT_MODERN_HSL
+# include <HSLLoader.h>
+#endif
 #include <IpStdCInterface.h>
 
 static Bool eval_f(Index n, Number *x, Bool new_x, Number *obj_value, UserDataPtr user_data){
@@ -151,20 +153,37 @@ static int try_solver(const char *solver, const char *hsllib, int use_hsllib){
 }
 
 int main(void){
+#ifndef ASC_IPOPT_MODERN_HSL
 	char msg[1024];
+	int load_rc;
+#endif
 	const char *lib = %(probe_target)s;
 	const char *solver = %(solver)s;
-	int load_rc;
 	int have_hsllib;
 	int use_hsllib;
 
 	have_hsllib = hsllib_supported(lib);
 	use_hsllib = have_hsllib && lib != NULL && lib[0] != '\0';
 	if(solver != NULL){
+#ifdef ASC_IPOPT_MODERN_HSL
+		/* Some IPOPT versions crash while cleaning up a missing MA97 library.
+		   Check the same runtime symbols as the listing before trying a solve. */
+		unsigned int available = asc_ipopt_hsl_available(lib);
+		unsigned int required = strcmp(solver, "ma27") == 0
+			? IPOPTLINEARSOLVER_MA27 : IPOPTLINEARSOLVER_MA97;
+		if(!(available & required)){
+			printf("runtime=0\n");
+			return 0;
+		}
+#endif
 		printf("runtime=%%d\n", try_solver(solver, lib, use_hsllib));
 		return 0;
 	}
 
+#ifdef ASC_IPOPT_MODERN_HSL
+	printf("probe_target=%%s\n", lib ? lib : "");
+	printf("hsllib_supported=%%d\n", have_hsllib);
+#else
 	if(LSL_isHSLLoaded()){
 		LSL_unloadHSL();
 	}
@@ -185,6 +204,7 @@ int main(void){
 	if(LSL_isHSLLoaded()){
 		LSL_unloadHSL();
 	}
+#endif
 	return 0;
 }
 """
@@ -208,7 +228,11 @@ def CheckIPOPTHSL(context):
 	context.Message('Checking IPOPT HSL support (hsllib, MA27, MA97)... ')
 
 	probe_target = context.env.get('IPOPT_HSL_PROBE_TARGET')
-	if not probe_target:
+	modern = context.env.get('IPOPT_MODERN_HSL', False)
+	if modern and not context.env.get('IPOPT_HSL_FOUND'):
+		# Use IPOPT's default libhsl when no explicit library was discovered.
+		probe_target = None
+	if not probe_target and not modern:
 		context.env['IPOPT_HSL_LOADABLE'] = False
 		context.env['IPOPT_HSL_MA27_AVAILABLE'] = False
 		context.env['IPOPT_HSL_MA97_AVAILABLE'] = False
@@ -216,10 +240,18 @@ def CheckIPOPTHSL(context):
 		context.Result("no (%s)" % context.env['IPOPT_HSL_STATUS'])
 		return False
 
-	is_ok, output = context.TryRun(
-		ipopt_hsl_test_text % {'probe_target': _c_string_literal(probe_target), 'solver': 'NULL'},
-		".c"
-	)
+	def run_probe(solver):
+		source = ipopt_hsl_test_text % {
+			'probe_target': _c_string_literal(probe_target),
+			'solver': _c_string_literal(solver),
+		}
+		if modern:
+			# Embed the helper so SCons invalidates cached probes when it changes.
+			with open(File('ipopt_hsl.cpp').abspath) as helper:
+				source = helper.read().replace('#include "ipopt_hsl.h"', '') + source
+		return context.TryRun(source, '.cpp' if modern else '.c')
+
+	is_ok, output = run_probe(None)
 	if not is_ok:
 		context.env['IPOPT_HSL_LOADABLE'] = False
 		context.env['IPOPT_HSL_MA27_AVAILABLE'] = False
@@ -232,10 +264,7 @@ def CheckIPOPTHSL(context):
 	# Probe each solver in its own process: older IPOPT versions can exit
 	# outright when a requested HSL routine cannot be loaded.
 	for name in ('ma27', 'ma97'):
-		ok, solver_output = context.TryRun(ipopt_hsl_test_text % {
-			'probe_target': _c_string_literal(probe_target),
-			'solver': _c_string_literal(name),
-		}, '.c')
+		ok, solver_output = run_probe(name)
 		parsed[name + '_runtime'] = (
 			_parse_probe_output(solver_output).get('runtime', '0') if ok else '0'
 		)
@@ -254,7 +283,7 @@ def CheckIPOPTHSL(context):
 	context.env['IPOPT_HSL_MA97_SYMBOL_AVAILABLE'] = ma97_symbol_available
 	context.env['IPOPT_HSL_MA27_AVAILABLE'] = ma27_available
 	context.env['IPOPT_HSL_MA97_AVAILABLE'] = ma97_available
-	if parsed.get('probe_target'):
+	if parsed.get('probe_target') and (context.env.get('IPOPT_HSL_FOUND') or loadable):
 		context.env['IPOPT_HSL_PROBE_TARGET'] = parsed['probe_target']
 		context.env['IPOPT_HSL_LIBRARY'] = parsed['probe_target']
 
@@ -266,12 +295,14 @@ def CheckIPOPTHSL(context):
 	else:
 		status.append('HSL not found')
 	status.append('hsllib yes' if hsllib_supported else 'hsllib no')
-	status.append('probe load ok' if loadable else 'probe load failed')
-	status.append('MA27 symbols yes' if ma27_symbol_available else 'MA27 symbols no')
-	status.append('MA97 symbols yes' if ma97_symbol_available else 'MA97 symbols no')
+	if not modern:
+		status.append('probe load ok' if loadable else 'probe load failed')
+		status.append('MA27 symbols yes' if ma27_symbol_available else 'MA27 symbols no')
+		status.append('MA97 symbols yes' if ma97_symbol_available else 'MA97 symbols no')
 	status.append('MA27 yes' if ma27_available else 'MA27 no')
 	status.append('MA97 yes' if ma97_available else 'MA97 no')
-	status.append('MC19 yes' if mc19_available else 'MC19 no')
+	if not modern:
+		status.append('MC19 yes' if mc19_available else 'MC19 no')
 	if message and not loadable:
 		status.append('note: %s' % message)
 	context.env['IPOPT_HSL_STATUS'] = ', '.join(status)
@@ -294,6 +325,20 @@ int main(void){
 ''', '.c')
 	if ok:
 		context.env.AppendUnique(CPPDEFINES=['ASC_IPOPT_HSL_LOADER'])
+	else:
+		ok = context.TryLink('''
+#include <IpLinearSolvers.h>
+#include <IpLibraryLoader.hpp>
+int main(){
+	Ipopt::LibraryLoader loader("libhsl." IPOPT_SHAREDLIBEXT);
+	loader.loadLibrary();
+	loader.loadSymbol("ma27ad");
+	return IpoptGetAvailableLinearSolvers(1);
+}
+''', '.cpp')
+		if ok:
+			context.env['IPOPT_MODERN_HSL'] = True
+			context.env.AppendUnique(CPPDEFINES=['ASC_IPOPT_MODERN_HSL'])
 	context.Result(ok)
 	return ok
 
@@ -363,12 +408,15 @@ if env.get('WITH_IPOPT'):
 		if solver_env.get('IPOPT_HSLIB_SUPPORTED') and solver_env.get('IPOPT_HSL_LIBRARY'):
 			solver_env.AppendUnique(CPPDEFINES=['ASC_WITH_IPOPT_HSLIB'])
 			solver_env.AppendUnique(CPPDEFINES=[
-				('ASC_IPOPT_HSL_LIBRARY', '"%s"' % str(solver_env['IPOPT_HSL_LIBRARY']).replace('"', '\\"'))
+				('ASC_IPOPT_HSL_LIBRARY', _c_string_literal(solver_env['IPOPT_HSL_LIBRARY']).replace('"', '\\"'))
 			])
 
 		solver_env.Append(LIBS=['ascend'],LIBPATH=['#'])
 
-		lib = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
+		sources = ["asc_ipopt.c"]
+		if solver_env.get('IPOPT_MODERN_HSL'):
+			sources.append('ipopt_hsl.cpp')
+		lib = solver_env.SharedLibrary("ipopt",sources
 			,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 			,SHLIBPREFIX = env['EXTLIB_PREFIX']
 		)
