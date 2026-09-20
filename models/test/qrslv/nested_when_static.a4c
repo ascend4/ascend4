@@ -1,0 +1,75 @@
+REQUIRE "system.a4l";
+
+MODEL nested_when_static_outer_true_inner_false;
+	y IS_A generic_real;
+	outer, inner IS_A boolean_var;
+
+	r_tt: y = 11;
+	r_tf: y = 12;
+	r_ft: y = 21;
+	r_ff: y = 22;
+
+	WHEN (outer)
+	CASE TRUE:
+		WHEN (inner)
+		CASE TRUE:
+			USE r_tt;
+		CASE FALSE:
+			USE r_tf;
+		END WHEN;
+	CASE FALSE:
+		WHEN (inner)
+		CASE TRUE:
+			USE r_ft;
+		CASE FALSE:
+			USE r_ff;
+		END WHEN;
+	END WHEN;
+METHODS
+	METHOD on_load;
+		y := 0;
+		FIX outer := TRUE;
+		FIX inner := FALSE;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(y - 12) < 1e-8;
+	END self_test;
+END nested_when_static_outer_true_inner_false;
+
+MODEL nested_when_static_outer_false_inner_true;
+	y IS_A generic_real;
+	outer, inner IS_A boolean_var;
+
+	r_tt: y = 11;
+	r_tf: y = 12;
+	r_ft: y = 21;
+	r_ff: y = 22;
+
+	WHEN (outer)
+	CASE TRUE:
+		WHEN (inner)
+		CASE TRUE:
+			USE r_tt;
+		CASE FALSE:
+			USE r_tf;
+		END WHEN;
+	CASE FALSE:
+		WHEN (inner)
+		CASE TRUE:
+			USE r_ft;
+		CASE FALSE:
+			USE r_ff;
+		END WHEN;
+	END WHEN;
+METHODS
+	METHOD on_load;
+		y := 0;
+		FIX outer := FALSE;
+		FIX inner := TRUE;
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(y - 21) < 1e-8;
+	END self_test;
+END nested_when_static_outer_false_inner_true;

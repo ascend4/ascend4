@@ -1,0 +1,7 @@
+REQUIRE "system.a4l";
+
+MODEL when_inline_satisfied_outside_classifier_rejected;
+	a IS_A solver_var;
+	b IS_A boolean_var;
+	l: b == SATISFIED(a < 5, 1e-6);
+END when_inline_satisfied_outside_classifier_rejected;

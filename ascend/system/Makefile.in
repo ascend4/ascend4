@@ -44,7 +44,8 @@ EXEC_LIBS =
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
 LIB_OBJS= \
-analyze.o  calc.o         discrete.o  logrelman.o      slv.o           system.o \
+analyze.o  calc.o         decomp.o    discrete.o       logrelman.o     slv.o \
+system.o \
 block.o    cond_config.o  graph.o     model_reorder.o  slv_common.o    var.o \
 bnd.o      conditional.o  jacobian.o  rel.o            slv_param.o \
 bndman.o   diffvars.o     logrel.o    relman.o         slv_stdcalls.o

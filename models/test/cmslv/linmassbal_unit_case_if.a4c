@@ -1,0 +1,48 @@
+REQUIRE "atoms.a4l";
+
+MODEL linmassbal_unit_case_if;
+	Fmain, Fsub1, Fsub2 IS_A molar_rate;
+	B[1..2] IS_A molar_rate;
+	a[1..3], b[1..3] IS_A factor_constant;
+	mode IS_A symbol_constant;
+	mode :== 'unit';
+	a[1] :== 1.1;
+	a[2] :== 1.15;
+	a[3] :== 1.2;
+	b[1] :== 0.05;
+	b[2] :== 0.1;
+	b[3] :== 0.2;
+
+	eq1a: Fsub1 = a[1] * Fmain;
+	eq1b: Fsub2 = b[1] * Fmain;
+	eq2a: Fsub1 = a[2] * Fmain;
+	eq2b: Fsub2 = b[2] * Fmain;
+	eq3a: Fsub1 = a[3] * Fmain;
+	eq3b: Fsub2 = b[3] * Fmain;
+
+	WHEN (mode)
+	CASE 'unit' IF SATISFIED(Fmain <= B[1], 1e-8 {lb_mole/hour}):
+		USE eq1a;
+		USE eq1b;
+	CASE 'unit' IF SATISFIED(Fmain >= B[2], 1e-8 {lb_mole/hour}):
+		USE eq3a;
+		USE eq3b;
+	OTHERWISE:
+		USE eq2a;
+		USE eq2b;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		FIX Fmain := 5 {lb_mole/hour};
+		FIX B[1] := 3 {lb_mole/hour};
+		FIX B[2] := 7 {lb_mole/hour};
+		Fsub1 := 0 {lb_mole/hour};
+		Fsub2 := 0 {lb_mole/hour};
+	END on_load;
+
+	METHOD self_test;
+		ASSERT abs(Fsub1 - 5.75 {lb_mole/hour}) < 1e-8 {lb_mole/hour};
+		ASSERT abs(Fsub2 - 0.5 {lb_mole/hour}) < 1e-8 {lb_mole/hour};
+	END self_test;
+END linmassbal_unit_case_if;

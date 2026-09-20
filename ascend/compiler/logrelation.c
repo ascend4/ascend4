@@ -458,6 +458,71 @@ struct logrel_term *CreateLogTermFromInst(struct Instance *inst,
   }
 }
 
+static int CheckSatisfiedInstance(struct Instance *inst, rel_errorlist *err)
+{
+  CONST struct relation *rel;
+  CONST struct logrelation *logrel;
+  enum Expr_enum type;
+
+  switch(InstanceKind(inst)){
+  case REL_INST:
+    rel = GetInstanceRelation(inst,&type);
+    if (!RelationIsCond(rel)){
+      rel_errorlist_set_lrcode(err,incorrect_linst_type);
+      return 0;
+    }
+    return 1;
+  case LREL_INST:
+    logrel = GetInstanceLogRel(inst);
+    if (!LogRelIsCond(logrel)){
+      rel_errorlist_set_lrcode(err,incorrect_linst_type);
+      return 0;
+    }
+    return 1;
+  default:
+    rel_errorlist_set_lrcode(err,incorrect_linst_type);
+    return 0;
+  }
+}
+
+static struct Instance *ResolveSatisfiedInstance(
+	CONST struct Expr *start,
+	struct Instance *ref,
+	rel_errorlist *err,
+	LogRelSatisfiedResolverFn resolver,
+	void *userdata
+)
+{
+  struct gl_list_t *instances;
+  struct Instance *inst;
+
+  inst = NULL;
+  if (SatisfiedExprName(start) == NULL) {
+    rel_errorlist_set_lrcode(err,incorrect_logstructure);
+    return NULL;
+  }
+  if (resolver != NULL) {
+    inst = (*resolver)(SatisfiedExprName(start), userdata);
+  }
+  if (inst != NULL) {
+    return inst;
+  }
+
+  instances = FindInstances(ref,SatisfiedExprName(start),err);
+  if (instances == NULL){
+    rel_errorlist_set_lrcode(err,find_logerror);
+    return NULL;
+  }
+  if (gl_length(instances)!=1) {
+    gl_destroy(instances);
+    rel_errorlist_set_lrcode(err,incorrect_logstructure);
+    return NULL;
+  }
+  inst = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+  return inst;
+}
+
 
 
 
@@ -472,14 +537,13 @@ static int ConvertLogExpr(CONST struct Expr *start,
 			      struct Instance *ref,
 			      struct Instance *lrel,
 			      rel_errorlist *err,
+			      LogRelSatisfiedResolverFn resolver,
+			      void *userdata,
 			      struct logrel_side_temp *newside)
 {
   struct gl_list_t *instances;
   struct logrel_term *term;
   struct Instance *inst;
-  CONST struct relation *rel;
-  CONST struct logrelation *logrel;
-  enum Expr_enum type;
   int result;
   symchar *str;
   struct for_var_t *fvp;
@@ -507,25 +571,28 @@ static int ConvertLogExpr(CONST struct Expr *start,
           return 0;
         }
       }else{
-        instances = FindInstances(ref,ExprName(start),err);
-        if (instances!=NULL){
-          if (gl_length(instances)==1){
-            inst = (struct Instance *)gl_fetch(instances,1);
-            gl_destroy(instances);
-            if ((term = CreateLogTermFromInst(inst,lrel,err))!=NULL){
-              AppendLogTermBuf(term);
+        inst = resolver != NULL ? (*resolver)(ExprName(start),userdata) : NULL;
+        if (inst == NULL) {
+          instances = FindInstances(ref,ExprName(start),err);
+          if (instances!=NULL){
+            if (gl_length(instances)==1){
+              inst = (struct Instance *)gl_fetch(instances,1);
+              gl_destroy(instances);
             }else{
+              rel_errorlist_set_lrcode(err,incorrect_logstructure);
+              gl_destroy(instances);
               DestroyLogTermList();
               return 0;
             }
           }else{
-            rel_errorlist_set_lrcode(err,incorrect_logstructure);
-            gl_destroy(instances);
+            rel_errorlist_set_lrcode(err,find_logerror);
             DestroyLogTermList();
             return 0;
           }
+        }
+        if ((term = CreateLogTermFromInst(inst,lrel,err))!=NULL){
+          AppendLogTermBuf(term);
         }else{
-          rel_errorlist_set_lrcode(err,find_logerror);
           DestroyLogTermList();
           return 0;
         }
@@ -536,43 +603,10 @@ static int ConvertLogExpr(CONST struct Expr *start,
       AppendLogTermBuf(term);
       break;
     case e_satisfied:
-      instances = FindInstances(ref,SatisfiedExprName(start),err);
-      if (instances == NULL){
-        rel_errorlist_set_lrcode(err,find_logerror);
-        gl_destroy(instances);
+      inst = ResolveSatisfiedInstance(start,ref,err,resolver,userdata);
+      if (inst == NULL || !CheckSatisfiedInstance(inst,err)){
         DestroyLogTermList();
         return 0;
-      }else{
-        if (gl_length(instances)==1) {
-          inst = (struct Instance *)gl_fetch(instances,1);
-          gl_destroy(instances);
-          switch(InstanceKind(inst)){
-            case REL_INST:
-              rel = GetInstanceRelation(inst,&type);
-              if (!RelationIsCond(rel)){
-                rel_errorlist_set_lrcode(err,incorrect_linst_type);
-                DestroyLogTermList();
-                return 0;
-              }
-              break;
-            case LREL_INST:
-              logrel = GetInstanceLogRel(inst);
-              if (!LogRelIsCond(logrel)){
-                rel_errorlist_set_lrcode(err,incorrect_linst_type);
-                DestroyLogTermList();
-                return 0;
-              }
-              break;
-            default:
-             rel_errorlist_set_lrcode(err,incorrect_linst_type);
-             DestroyLogTermList();
-             return 0;
-          }
-        }else{
-          gl_destroy(instances);
-          rel_errorlist_set_lrcode(err,incorrect_logstructure);
-          return 0;
-        }
       }
       term = CreateSatisfiedTerm(SatisfiedExprName(start),
                                  inst,
@@ -862,8 +896,9 @@ void DestroyBVarList(struct gl_list_t *, struct Instance *);
 void DestroySatRelList(struct gl_list_t *, struct Instance *);
 
 
-struct logrelation *CreateLogicalRelation(struct Instance *reference,
+static struct logrelation *CreateLogicalRelationInternal(struct Instance *reference,
 	struct Instance *lrelinst, CONST struct Expr *ex, rel_errorlist *err
+	,LogRelSatisfiedResolverFn resolver, void *userdata
 ){
   struct logrelation *result;
   CONST struct Expr *rhs_ex,*last_ex;
@@ -882,7 +917,8 @@ struct logrelation *CreateLogicalRelation(struct Instance *reference,
     type = ExprType(last_ex);
     rhs_ex = FindLogRHS(ex);
     if (rhs_ex!=NULL){
-      lhs = ConvertLogExpr(ex,rhs_ex,reference,lrelinst,err,&leftside);
+      lhs = ConvertLogExpr(ex,rhs_ex,reference,lrelinst,err,
+                           resolver,userdata,&leftside);
       if(!lhs) {
         if (g_logrelation_bvar_list!=NULL) {
           DestroyBVarList(g_logrelation_bvar_list,lrelinst);
@@ -894,7 +930,8 @@ struct logrelation *CreateLogicalRelation(struct Instance *reference,
         g_logrelation_satrel_list = NULL;
         return NULL;
       }
-      rhs = ConvertLogExpr(rhs_ex,last_ex,reference,lrelinst,err,&rightside);
+      rhs = ConvertLogExpr(rhs_ex,last_ex,reference,lrelinst,err,
+                           resolver,userdata,&rightside);
       if(!rhs) {
         DestroyLogTermSide(&leftside);
         if (g_logrelation_bvar_list!=NULL) {
@@ -968,6 +1005,24 @@ struct logrelation *CreateLogicalRelation(struct Instance *reference,
   g_logrelation_bvar_list = NULL;
   g_logrelation_satrel_list = NULL;
   return result;
+}
+
+struct logrelation *CreateLogicalRelation(struct Instance *reference,
+	struct Instance *lrelinst, CONST struct Expr *ex, rel_errorlist *err
+){
+  return CreateLogicalRelationInternal(reference,lrelinst,ex,err,NULL,NULL);
+}
+
+struct logrelation *CreateLogicalRelationWithSatisfiedResolver(
+	struct Instance *reference,
+	struct Instance *lrelinst,
+	CONST struct Expr *ex,
+	rel_errorlist *err,
+	LogRelSatisfiedResolverFn resolver,
+	void *userdata
+){
+  return CreateLogicalRelationInternal(reference,lrelinst,ex,err,
+                                      resolver,userdata);
 }
 
 
@@ -1343,6 +1398,9 @@ static int CheckLogExpr(CONST struct Instance *ref,
     case e_boolean:
       break;			/* automatically okay! */
     case e_satisfied:
+      if(SatisfiedExprName(start) == NULL) {
+         return 0;
+      }
       if(!CheckExprSatisfied(ref,SatisfiedExprName(start))) {
          return 0 ;
       }
@@ -1568,5 +1626,3 @@ struct logrelation *CopyLogRelToModify(CONST struct Instance *src_inst,
   result = CopyLogRelation(src_inst,dest_inst,varlist,rellist);
   return result;
 }
-
-

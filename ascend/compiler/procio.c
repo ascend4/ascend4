@@ -375,7 +375,7 @@ void ProcWriteFixError(struct procFrame *fm, CONST struct Name *var){
 		strcpy(errmsg, "Bad setup for FIX statement (Is 'solver_var' present in the library?)");
 		break;
 	case Proc_illegal_type_use:
-		strcpy(errmsg, "Incorrect type for variable being fixed (must be a refined solver_var)");
+		strcpy(errmsg, "Incorrect type for variable being fixed (must be a refined solver_var or discrete atom with fixed child)");
 		break;
 	case Proc_bad_name:
 		strcpy(errmsg, "Unknown variable in FIX statement");
@@ -408,5 +408,4 @@ void ProcWriteSlvReqError(struct procFrame *fm){
 	}
 	WriteInitErr(fm,msg);
 }
-
 

@@ -139,7 +139,7 @@ extern int32 logrel_sindex(struct logrel_relation *logrel);
  *  Retrieves the index number of the given logrelation as it
  *  appears in a solvers logrelation list.
  */
-extern void logrel_set_sindex(struct logrel_relation *logrel,
+ASC_DLLSPEC void logrel_set_sindex(struct logrel_relation *logrel,
                               int32 sindex);
 /**<
  *  Sets he index number of the given logrelation as it
@@ -417,4 +417,3 @@ extern void logrel_set_included(struct logrel_relation *logrel,
 /* @} */
 
 #endif  /* ASC_LOGREL_H  */
-

@@ -6,7 +6,7 @@ csrcs = Split("""
 	bnd.c bndman.c calc.c 
 	chkdim.c
 	cond_config.c
-	conditional.c discrete.c
+	conditional.c decomp.c discrete.c
 	diffvars.c
 	jacobian.c
 	lsq.c

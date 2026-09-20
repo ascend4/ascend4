@@ -28,7 +28,7 @@
 #endif
 #include <ascend/general/platform.h>
 
-#ifdef WITH_GRAPHVIZ
+#ifdef ASC_HAVE_GRAPHVIZ
 # include <gvc.h>
 #ifdef WITH_CGRAPH
 # include <cgraph.h>
@@ -60,7 +60,7 @@ int system_write_graph(slv_system_t sys
 	, FILE *fp
 	, const char *format
 ){
-#ifdef WITH_GRAPHVIZ
+#ifdef ASC_HAVE_GRAPHVIZ
 	incidence_vars_t id;
 	build_incidence_data(sys, &id);
 
@@ -249,7 +249,6 @@ int system_write_graph(slv_system_t sys
 	return 1;
 #endif
 }
-
 
 
 

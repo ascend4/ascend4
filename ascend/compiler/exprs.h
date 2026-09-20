@@ -65,8 +65,8 @@ ASC_DLLSPEC struct Expr *CreateOpExpr(enum Expr_enum t);
  *  Create an operator node.
  */
 
-extern struct Expr *CreateSatisfiedExpr(struct Name *n, 
-                                        double tol, 
+extern struct Expr *CreateSatisfiedExpr(struct Name *n,
+                                        double tol,
                                         CONST dim_type *dims);
 /**<
  *  Create an satisfied operator node.

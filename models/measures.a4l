@@ -520,6 +520,17 @@ UNITS LADDER
 END UNITS LADDER;
 
 UNITS LADDER
+	ug = {micro*g};
+	mg = {milli*g};
+	g = {kg/1000};
+	kg = {kg};
+	t = {1000*kg};
+	kt = {1000*t};
+	Mt = {1000*kt};
+	Gt = {1000*Mt};
+END UNITS LADDER;
+
+UNITS LADDER
 	aN = {N*1e-18};
 	fN = {N*1e-15};
 	pN = {N*1e-12};

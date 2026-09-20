@@ -28,10 +28,12 @@
 
 #include <ascend/general/platform.h>
 #include <ascend/general/list.h>
+#include <ascend/compiler/compiler.h>
 
 #include "slv_types.h"
 
 struct Expr;
+struct module_t;
 
 /**	@addtogroup system_cond
 	@{
@@ -63,7 +65,7 @@ struct w_when {
  *                        When functions
  */
 
-extern struct w_when *when_create(SlvBackendToken instance,
+ASC_DLLSPEC struct w_when *when_create(SlvBackendToken instance,
                                   struct w_when *newwhen);
 /**<
  *  Creates a when given the when instance.
@@ -94,7 +96,7 @@ extern void when_destroy_cases(struct w_when *when);
  *  Destroys a the list of cases of a when.
  */
 
-extern void when_destroy(struct w_when *when);
+ASC_DLLSPEC void when_destroy(struct w_when *when);
 /**<
  *  Destroys a when.
  */
@@ -113,7 +115,7 @@ extern void when_set_dvars_list( struct w_when *when,
  *  Sets the list of dis variables of the given when.
  */
 
-extern struct gl_list_t *when_cases_list( struct w_when *when);
+ASC_DLLSPEC struct gl_list_t *when_cases_list( struct w_when *when);
 /**< Retrieves the list of cases of the given when. */
 extern void when_set_cases_list( struct w_when *when,
                                  struct gl_list_t *clist);
@@ -226,6 +228,8 @@ extern void when_set_flagbit(struct w_when *when,
  */
 #define WHEN_VISITED            0x4
 /**< Required for conditional analysis, for avoiding to reanalyze a WHEN */
+#define WHEN_CLASSIFIER_GUARD_DVARS 0x10
+/**< Classifier WHEN has generated Boolean guard dvars for solver analysis. */
 #define WHEN_CHANGES_STRUCTURE  0x8
 /**<
  *  Required for conditional analysis. Tells if the sutructure of
@@ -267,6 +271,13 @@ extern void when_set_flagbit(struct w_when *when,
 /** when case data structure */
 struct when_case {
   int32 values[MAX_VAR_IN_LIST];  /**< values of conditional variables */
+  const struct Expr *condition;    /**< optional CASE ... IF classifier guard */
+  const struct Expr *applies;      /**< optional APPLIES IF region predicate */
+  symchar *otherwise_label;        /**< optional label for OTHERWISE cases */
+  struct Expr *region;             /**< solver-side lowered region predicate */
+  int32 region_source;             /**< enum when_region_source */
+  struct module_t *source_module;   /**< source module for user diagnostics */
+  unsigned long source_line;        /**< source line for user diagnostics */
   struct gl_list_t *rels;         /**< pointer to relations */
   struct gl_list_t *logrels;      /**< pointer to logrelations */
   struct gl_list_t *whens;        /**< pointer to whens */
@@ -284,6 +295,46 @@ struct when_reinit {
   const struct Expr *guard;       /**< optional guard expression evaluated at event time */
 };
 
+enum when_region_request {
+  WHEN_REGION_STEADY = 1,         /**< region predicates for steady conditional solving */
+  WHEN_REGION_DYNAMIC_CLASSIFIER  /**< region predicates for inferred dynamic tracking */
+};
+
+enum when_region_source {
+  WHEN_REGION_NONE = 0,
+  WHEN_REGION_APPLIES,
+  WHEN_REGION_CASE_IF,
+  WHEN_REGION_CASE_IF_OTHERWISE
+};
+
+struct when_guard_materialization {
+  int32 guard_booleans;           /**< logical guard slots in compact CASE IF encoding */
+  int32 reusable_named_guards;     /**< CASE IF guards that can reuse a simple named Boolean */
+  int32 real_boundaries;          /**< natural real relation boundaries in guards */
+  int32 logical_boundaries;       /**< SATISFIED/logical boundary terms in guards */
+  int32 boolean_ops;              /**< Boolean/logical operators in guards */
+  int32 unsupported_dynamic_terms; /**< pre/der terms not suitable for steady CMSlv lowering */
+  int32 hidden_boolean_instances; /**< generated Boolean atom instances needed by instance-backed lowering */
+  int32 hidden_relation_instances; /**< generated relation instances needed for real boundaries */
+  int32 hidden_logrel_instances;   /**< generated logrelation instances needed for guard definitions */
+  int32 requires_generated_artifacts; /**< nonzero when generated solver-side artifacts are needed */
+};
+
+struct when_guard_artifact {
+  int32 guard_index;               /**< zero-based CASE IF guard slot */
+  const struct when_case *source_case; /**< source case owning this guard */
+  const struct Expr *guard;        /**< source guard expression, not owned */
+  int32 reuse_existing_boolean;    /**< nonzero if guard itself is a named Boolean */
+  int32 generated_boolean;         /**< nonzero if a helper guard Boolean is needed */
+  int32 real_boundaries;           /**< natural real relation boundaries in this guard */
+  int32 logical_boundaries;        /**< SATISFIED/logical boundary terms in this guard */
+  int32 boolean_ops;               /**< Boolean operators in this guard */
+  int32 reusable_named_terms;      /**< named Boolean terms reusable inside this guard */
+  int32 unsupported_dynamic_terms; /**< pre/der terms in this guard */
+  struct module_t *source_module;  /**< source module for diagnostics */
+  unsigned long source_line;       /**< source line for diagnostics */
+};
+
 extern struct when_reinit *when_reinit_create(struct when_reinit *newreinit);
 extern void when_reinit_destroy(struct when_reinit *wr);
 extern SlvBackendToken when_reinit_target(const struct when_reinit *wr);
@@ -293,7 +344,7 @@ extern void when_reinit_set_rhs(struct when_reinit *wr, const struct Expr *rhs);
 extern const struct Expr *when_reinit_guard(const struct when_reinit *wr);
 extern void when_reinit_set_guard(struct when_reinit *wr, const struct Expr *guard);
 
-extern struct when_case *when_case_create(struct when_case *newcase);
+ASC_DLLSPEC struct when_case *when_case_create(struct when_case *newcase);
 /**<
  *  Creates a when case.
  *  If the case supplied is NULL, we allocate the memory for the
@@ -306,12 +357,156 @@ extern void when_case_destroy(struct when_case *wc);
  *  Destroys a when case.
  */
 
-extern int32 *when_case_values_list( struct when_case *wc);
+ASC_DLLSPEC int32 *when_case_values_list( struct when_case *wc);
 /**< Retrieves the list of values of the given case. */
 extern void when_case_set_values_list( struct when_case *wc, int32 *vallist);
 /**<
  *  Sets the list of values of the given case.
  */
+
+ASC_DLLSPEC const struct Expr *when_case_condition(const struct when_case *wc);
+/**< Retrieves the optional CASE ... IF classifier guard of the given case. */
+ASC_DLLSPEC void when_case_set_condition(struct when_case *wc, const struct Expr *condition);
+/**<
+ *  Sets the optional CASE ... IF classifier guard of the given case.
+ */
+
+ASC_DLLSPEC const struct Expr *when_case_applies(const struct when_case *wc);
+/**< Retrieves the optional APPLIES IF region predicate of the given case. */
+ASC_DLLSPEC void when_case_set_applies(struct when_case *wc, const struct Expr *applies);
+/**<
+ *  Sets the optional APPLIES IF region predicate of the given case.
+ */
+
+ASC_DLLSPEC symchar *when_case_otherwise_label(const struct when_case *wc);
+/**< Retrieves the optional label attached to an OTHERWISE case. */
+ASC_DLLSPEC void when_case_set_otherwise_label(struct when_case *wc, symchar *label);
+/**<
+ *  Sets the optional label attached to an OTHERWISE case.
+ */
+
+ASC_DLLSPEC int when_case_has_classifier_predicate(const struct when_case *wc);
+/**< Returns nonzero if the case has CASE IF or APPLIES IF metadata. */
+
+ASC_DLLSPEC int when_has_classifier_predicates(const struct w_when *when);
+/**< Returns nonzero if this WHEN or any nested active/inactive case has classifier predicates. */
+
+ASC_DLLSPEC const struct Expr *when_case_region_predicate(const struct when_case *wc);
+/**< Retrieves the solver-side lowered region predicate, if any. */
+
+ASC_DLLSPEC int32 when_case_region_source(const struct when_case *wc);
+/**< Retrieves the enum when_region_source value for the lowered predicate. */
+
+ASC_DLLSPEC void when_case_clear_region_predicate(struct when_case *wc);
+/**< Clears and destroys any solver-side lowered region predicate. */
+
+ASC_DLLSPEC void when_case_set_region_predicate(struct when_case *wc,
+                                           struct Expr *region,
+                                           int32 source);
+/**<
+ *  Sets the solver-side lowered region predicate.
+ *  Ownership of region is transferred to wc.
+ */
+
+ASC_DLLSPEC struct module_t *when_case_source_module(const struct when_case *wc);
+/**< Retrieves the source module for diagnostics, if available. */
+
+ASC_DLLSPEC unsigned long when_case_source_line(const struct when_case *wc);
+/**< Retrieves the source line for diagnostics, or zero if unavailable. */
+
+ASC_DLLSPEC void when_case_set_source(struct when_case *wc,
+                                      struct module_t *module,
+                                      unsigned long line);
+/**< Sets source provenance for diagnostics. */
+
+ASC_DLLSPEC int when_lower_classifier_regions(struct w_when *when,
+                                         enum when_region_request request);
+/**<
+ *  Derives per-case region predicates from CASE IF or APPLIES IF metadata.
+ *
+ *  This mutates only the solver-side w_when/when_case presentation created in
+ *  slv_system_t. It does not modify the compiler instance tree or its Case
+ *  objects. Solvers should call this explicitly when they are prepared to
+ *  consume lowered classifier-region semantics.
+ *
+ *  Returns 0 on success, nonzero on unsupported or inconsistent metadata.
+ */
+
+ASC_DLLSPEC int when_case_if_guard_count(const struct w_when *when,
+                                         int32 *nguards);
+/**<
+ *  Counts the ordered guard expressions in a CASE IF cascade. This is the
+ *  compact Boolean encoding of the cascade: each guard is a natural generated
+ *  Boolean, and cases are represented as wildcard tuple patterns over those
+ *  guards.
+ *
+ *  Returns 0 on success and nonzero if the WHEN is not a pure CASE IF cascade.
+ */
+
+ASC_DLLSPEC const struct Expr *when_case_if_guard(const struct w_when *when,
+                                                 int32 guard_index);
+/**<
+ *  Retrieves guard_index from the compact CASE IF guard list. Indexing is
+ *  zero-based. The returned expression is owned by the when_case and must not be
+ *  destroyed by the caller.
+ */
+
+ASC_DLLSPEC int when_case_if_pattern(const struct w_when *when,
+                                     const struct when_case *wc,
+                                     int32 *values,
+                                     int32 *nvalues);
+/**<
+ *  Computes the old-style WHEN(bool,...) wildcard tuple for a case in a CASE IF
+ *  cascade. TRUE is 1, FALSE is 0, and ANY/don't-care is -2.
+ *
+ *  For example:
+ *    CASE A IF g1      -> TRUE, *
+ *    CASE B IF g2      -> FALSE, TRUE
+ *    OTHERWISE         -> FALSE, FALSE
+ *
+ *  Returns 0 on success and nonzero if the WHEN is not a pure CASE IF cascade
+ *  or the case is not a member of the WHEN.
+ */
+
+ASC_DLLSPEC int when_case_if_materialization_plan(
+                                     const struct w_when *when,
+                                     struct when_guard_materialization *plan);
+/**<
+ *  Computes the generated-object shape needed to materialize a CASE IF cascade
+ *  as old CMSlv-style Boolean/logrel/boundary machinery while preserving
+ *  natural guard boundaries.
+ *
+ *  Each CASE IF guard becomes one generated Boolean. Real relational operators
+ *  found inside those guards are counted as natural real boundaries; SATISFIED
+ *  and Boolean equality/inequality terms are counted as logical boundaries.
+ *
+ *  Returns 0 on success and nonzero if the WHEN is not a pure CASE IF cascade.
+ */
+
+ASC_DLLSPEC struct when_guard_artifact *when_guard_artifact_create(
+                                     const struct w_when *when,
+                                     int32 guard_index);
+/**<
+ *  Creates a descriptor for one CASE IF guard slot.
+ *
+ *  The returned artifact owns no compiler expressions or cases; it only points
+ *  back to the source guard and source case. Destroy it with
+ *  when_guard_artifact_destroy().
+ */
+
+ASC_DLLSPEC void when_guard_artifact_destroy(
+                                     struct when_guard_artifact *artifact);
+/**< Destroys a guard artifact descriptor. */
+
+ASC_DLLSPEC struct gl_list_t *when_case_if_artifacts_create(
+                                     const struct w_when *when);
+/**<
+ *  Creates a gl_list of struct when_guard_artifact*, one per CASE IF guard.
+ *  Returns NULL if the WHEN is not a pure CASE IF cascade.
+ */
+
+ASC_DLLSPEC void when_case_if_artifacts_destroy(struct gl_list_t *artifacts);
+/**< Destroys a list returned by when_case_if_artifacts_create(). */
 
 extern struct gl_list_t *when_case_rels_list( struct when_case *wc);
 /**< Retrieves the list of rels of the given case. */

@@ -1,0 +1,135 @@
+REQUIRE "atoms.a4l";
+IMPORT "cmslv";
+
+MODEL cmslv2_fluidbed_switch_crash;
+	u, u_mf, u_ratio_mf, eps_mf, u_emf IS_A factor;
+	u_br, u_b, u_b_dh, u_b_geldart_a, u_b_geldart_b, u_b_correlation IS_A factor;
+	u_b_closure_code IS_A factor;
+	bubble_regime_ratio IS_A factor;
+	delta, delta_slow, delta_intermediate_low, delta_intermediate IS_A factor;
+	delta_fast, delta_fast_or_vigorous, delta_vigorous IS_A factor;
+	u_ratio_vigorous_min IS_A factor;
+
+	u_b_use_dh, u_b_use_a_or_dh, u_b_use_correlation IS_A boolean_var;
+	delta_use_slow, delta_use_intermediate_or_slow, delta_use_vigorous IS_A boolean_var;
+
+	u_eq: u = u_mf * u_ratio_mf;
+	u_emf_eq: u_emf = u_mf / eps_mf;
+	u_br_eq: u_br = 0.445;
+	u_b_dh_eq: u_b_dh = u - u_mf + u_br;
+	u_b_geldart_a_eq: u_b_geldart_a = 1.0;
+	u_b_geldart_b_eq: u_b_geldart_b = 2.0;
+
+	CONDITIONAL
+		u_b_dh_selected: u_b_closure_code < 0.5;
+		u_b_a_or_dh_selected: u_b_closure_code < 1.5;
+		u_b_correlation_at_least_dh: u_b_correlation >= u_b_dh;
+		delta_slow_selected: bubble_regime_ratio < 1;
+		delta_intermediate_or_slow_selected: bubble_regime_ratio < 5;
+		delta_vigorous_selected: u_ratio_mf >= u_ratio_vigorous_min;
+	END CONDITIONAL;
+
+	u_b_use_dh == SATISFIED(u_b_dh_selected, 1e-6);
+	u_b_use_a_or_dh == SATISFIED(u_b_a_or_dh_selected, 1e-6);
+	u_b_use_correlation == SATISFIED(u_b_correlation_at_least_dh, 1e-6);
+	delta_use_slow == SATISFIED(delta_slow_selected, 1e-6);
+	delta_use_intermediate_or_slow == SATISFIED(delta_intermediate_or_slow_selected, 1e-6);
+	delta_use_vigorous == SATISFIED(delta_vigorous_selected, 1e-6);
+
+	u_b_corr_eq_geldart_a: u_b_correlation = u_b_geldart_a;
+	u_b_corr_eq_geldart_b: u_b_correlation = u_b_geldart_b;
+
+	WHEN(u_b_use_a_or_dh)
+		CASE TRUE:
+			USE u_b_corr_eq_geldart_a;
+		CASE FALSE:
+			USE u_b_corr_eq_geldart_b;
+	END WHEN;
+
+	u_b_eq_dh: u_b = u_b_dh;
+	u_b_eq_correlation: u_b = u_b_correlation;
+
+	WHEN(u_b_use_dh, u_b_use_correlation)
+		CASE TRUE,TRUE:
+			USE u_b_eq_dh;
+		CASE TRUE,FALSE:
+			USE u_b_eq_dh;
+		CASE FALSE,TRUE:
+			USE u_b_eq_correlation;
+		CASE FALSE,FALSE:
+			USE u_b_eq_dh;
+	END WHEN;
+
+	bubble_regime_ratio_eq: bubble_regime_ratio = u_b / u_emf;
+	delta_slow_eq: delta_slow = (u - u_mf) / (u_b + 2 * u_mf);
+	delta_intermediate_low_eq: delta_intermediate_low = (u - u_mf) / (u_b + u_mf);
+	delta_fast_eq: delta_fast = (u - u_mf) / u_b;
+	delta_intermediate_eq:
+		delta_intermediate =
+			delta_intermediate_low
+			+ (bubble_regime_ratio - 1) / 4 * (delta_fast - delta_intermediate_low);
+	delta_vigorous_eq: delta_vigorous = u / u_b;
+
+	delta_fast_or_vigorous_eq_fast: delta_fast_or_vigorous = delta_fast;
+	delta_fast_or_vigorous_eq_vigorous: delta_fast_or_vigorous = delta_vigorous;
+
+	WHEN(delta_use_vigorous)
+		CASE TRUE:
+			USE delta_fast_or_vigorous_eq_vigorous;
+		CASE FALSE:
+			USE delta_fast_or_vigorous_eq_fast;
+	END WHEN;
+
+	delta_eq_slow: delta = delta_slow;
+	delta_eq_intermediate: delta = delta_intermediate;
+	delta_eq_fast_or_vigorous: delta = delta_fast_or_vigorous;
+
+	WHEN(delta_use_slow, delta_use_intermediate_or_slow)
+		CASE TRUE,TRUE:
+			USE delta_eq_slow;
+		CASE FALSE,TRUE:
+			USE delta_eq_intermediate;
+		CASE FALSE,FALSE:
+			USE delta_eq_fast_or_vigorous;
+		OTHERWISE:
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		FIX u_mf := 0.006;
+		FIX eps_mf := 0.55;
+		FIX u_ratio_mf := 50;
+		FIX u_b_closure_code := 0;
+		FIX u_ratio_vigorous_min := 10;
+
+		u := 0.30;
+		u_emf := 0.011;
+		u_br := 0.445;
+		u_b_dh := 0.739;
+		u_b_geldart_a := 1.0;
+		u_b_geldart_b := 2.0;
+		u_b_correlation := 1.0;
+		u_b := 0.739;
+		bubble_regime_ratio := 68;
+		delta_slow := 0.39;
+		delta_intermediate_low := 0.39;
+		delta_intermediate := 0.39;
+		delta_fast := 0.398;
+		delta_vigorous := 0.406;
+		delta_fast_or_vigorous := 0.406;
+		delta := 0.406;
+
+		u_b_use_dh := TRUE;
+		u_b_use_a_or_dh := TRUE;
+		u_b_use_correlation := TRUE;
+		delta_use_slow := FALSE;
+		delta_use_intermediate_or_slow := FALSE;
+		delta_use_vigorous := TRUE;
+
+		SOLVER CMSlv;
+		OPTION optsolvers 'IPOPT';
+		OPTION cmslv2 TRUE;
+		OPTION iterationlimit 10;
+		OPTION progress_log TRUE;
+	END on_load;
+END cmslv2_fluidbed_switch_crash;

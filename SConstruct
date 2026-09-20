@@ -457,6 +457,7 @@ SOLVER_ENGINE_NAMES = [
 	'SLSQP',
 	'LRSlv',
 	'CMSlv',
+	'CMSlv2',
 ]
 SOLVER_INTEGRATOR_NAMES = [
 	'LSODE',
@@ -1154,6 +1155,11 @@ if 'LSOD' in env['WITH_SOLVERS']:
 	env['WITH_SOLVERS'].remove('LSOD')
 if 'CMSLV' in env['WITH_SOLVERS'] and 'LRSLV' not in env['WITH_SOLVERS']:
 	env['WITH_SOLVERS'].append('LRSLV')
+if 'CMSLV2' in env['WITH_SOLVERS']:
+	if 'LRSLV' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('LRSLV')
+	if 'QRSLV' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('QRSLV')
 
 vars.Save('options.cache',env)
 
@@ -2844,7 +2850,8 @@ for k,v in {
 				,'ASC_WITH_SLSQP':env['WITH_SLSQP']
 				,'ASC_WITH_LRSLV':env['WITH_LRSLV']
 				,'ASC_WITH_CMSLV':env['WITH_CMSLV']
-				,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
+				,'ASC_WITH_CMSLV2':env['WITH_CMSLV2']
+				,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
 				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
 				,'ASC_WITH_PCRE':env['WITH_PCRE']
 			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']

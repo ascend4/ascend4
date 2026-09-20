@@ -1,0 +1,144 @@
+REQUIRE "collocation.a4l";
+IMPORT "ipopt";
+IMPORT "qrslv";
+
+MODEL collocation_preserve REFINES test_coll_column;
+METHODS
+(* Modern wrapper for the historical collocation.a4s sequence.  The staged
+ * SOLVE methods are deliberately separated while this legacy model is being
+ * restored for current solvers. *)
+METHOD on_load;
+	RUN default_all;
+	RUN values;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
+END on_load;
+
+METHOD on_load_ipopt;
+	RUN values;
+	SOLVER IPOPT;
+	OPTION linear_solver 'mumps';
+END on_load_ipopt;
+
+METHOD solve_feed_state;
+	RUN Column.feed_tray.state.reset_to_fullthermo;
+	FIX Column.feed_tray.state.phase_fraction['vapor'];
+	Column.feed_tray.state.phase_fraction['vapor'] := 0.0;
+	(* Bubble-point initialization: keep the incipient vapor phase present
+	 * even though its phase fraction is fixed to zero. *)
+	FIX Column.feed_tray.state.slack_PhaseDisappearance['vapor'];
+	Column.feed_tray.state.slack_PhaseDisappearance['vapor'] := 0.0;
+	Column.feed_tray.state.complementarity['vapor'].included := FALSE;
+	FREE Column.feed_tray.state.T;
+	SOLVE Column.feed_tray.state;
+	DELETE SYSTEM;
+	RUN Column.propagate_feed_values;
+END solve_feed_state;
+
+METHOD prepare_massbal;
+	RUN Column.reset_to_massbal;
+END prepare_massbal;
+
+METHOD solve_massbal;
+	RUN prepare_massbal;
+	SOLVE Column;
+	DELETE SYSTEM;
+END solve_massbal;
+
+METHOD solve_massbal_units;
+	(* Experimental preservation path based on the old Tcl/Tk
+	 * CollocationTraySolve procedure: solve the column parts before
+	 * attempting the assembled collocation column. *)
+	RUN prepare_massbal;
+	RUN Column.condenser.reset;
+	SOLVE Column.condenser;
+	DELETE SYSTEM;
+	FOR i IN [1..Column.nfeeds + 1] DO
+		FOR j IN [1..Column.coll_stack[i].ncolls] DO
+			FOR k IN [1..Column.coll_stack[i].coll[j].ntrays] DO
+				RUN Column.coll_stack[i].coll[j].tray[k].reset;
+				SOLVE Column.coll_stack[i].coll[j].tray[k];
+				DELETE SYSTEM;
+			END FOR;
+		END FOR;
+	END FOR;
+	RUN Column.feed_tray.reset;
+	SOLVE Column.feed_tray;
+	DELETE SYSTEM;
+	RUN Column.reboiler.reset;
+	SOLVE Column.reboiler;
+	DELETE SYSTEM;
+	SOLVE Column;
+	DELETE SYSTEM;
+END solve_massbal_units;
+
+METHOD solve_massbal_root;
+	RUN prepare_massbal;
+	SOLVE;
+	DELETE SYSTEM;
+END solve_massbal_root;
+
+METHOD solve_feed_and_massbal_root;
+	RUN solve_feed_state;
+	RUN prepare_massbal;
+	SOLVE;
+	DELETE SYSTEM;
+END solve_feed_and_massbal_root;
+
+METHOD solve_prepared_column;
+	SOLVE Column;
+	DELETE SYSTEM;
+END solve_prepared_column;
+
+METHOD prepare_transformed;
+	RUN Column.trans_poly;
+	RUN Column.z_based_poly;
+END prepare_transformed;
+
+METHOD solve_transformed;
+	RUN prepare_transformed;
+	SOLVE Column;
+	DELETE SYSTEM;
+END solve_transformed;
+
+METHOD prepare_fullthermo;
+	RUN Column.reset_to_fullthermo;
+END prepare_fullthermo;
+
+METHOD solve_fullthermo;
+	RUN prepare_fullthermo;
+	SOLVE Column;
+	DELETE SYSTEM;
+END solve_fullthermo;
+
+METHOD prepare_adiabatic;
+	RUN Column.reset_to_adiabatic;
+	RUN Column.zero_Q;
+END prepare_adiabatic;
+
+METHOD solve_adiabatic;
+	RUN prepare_adiabatic;
+	SOLVE;
+	DELETE SYSTEM;
+END solve_adiabatic;
+
+METHOD solve_legacy_sequence;
+	RUN on_load;
+	RUN solve_feed_state;
+	RUN solve_massbal;
+	RUN solve_transformed;
+	RUN solve_fullthermo;
+	RUN solve_adiabatic;
+END solve_legacy_sequence;
+
+METHOD on_load_test;
+	RUN on_load;
+	ASSERT abs(Feed.T - 298 {K}) < 1e-8 {K};
+	ASSERT abs(Feed.P - 1 {atm}) < 1e-8 {atm};
+	ASSERT abs(Feed.f['acetone'] - 3.6 {mole/s}) < 1e-8 {mole/s};
+	ASSERT abs(Feed.f['benzene'] - 4.0 {mole/s}) < 1e-8 {mole/s};
+	ASSERT abs(Feed.f['chloroform'] - 2.4 {mole/s}) < 1e-8 {mole/s};
+	ASSERT abs(Distillate.flow - 6.0 {mole/s}) < 1e-8 {mole/s};
+END on_load_test;
+END collocation_preserve;

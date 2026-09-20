@@ -238,4 +238,3 @@ extern void RemoveWhen(struct Instance *i, struct Instance *when);
 /* @} */
 
 #endif  /* ASC_MATHINST_H */
-
