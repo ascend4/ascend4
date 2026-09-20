@@ -115,9 +115,9 @@ static int integrator_ida_get_version(char *buf, size_t buflen){
 	const char *klu = "KLU-less";
 #endif
 #ifdef SUNDIALS_VERSION
-	snprintf(buf,buflen,"SUNDIALS %s (%s)",SUNDIALS_VERSION,klu);
+	snprintf(buf,buflen,"SUNDIALS %s (%s); LRSlv; QRSlv",SUNDIALS_VERSION,klu);
 #else
-	snprintf(buf,buflen,"SUNDIALS %d.%d (%s)",SUNDIALS_VERSION_MAJOR,SUNDIALS_VERSION_MINOR,klu);
+	snprintf(buf,buflen,"SUNDIALS %d.%d (%s); LRSlv; QRSlv",SUNDIALS_VERSION_MAJOR,SUNDIALS_VERSION_MINOR,klu);
 #endif
 	return 0;
 }
