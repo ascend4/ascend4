@@ -277,8 +277,8 @@ int slv_ensure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif){
 
 
 /* return 0 on success (ie bounds are met) */
-int slv_check_bounds(const slv_system_t sys
-	,int32 lo,int32 hi, const char *label
+static int slv_check_bounds_impl(const slv_system_t sys
+	,int32 lo,int32 hi, const char *label, int recoverable
 ){
   real64 val,low,high;
   int32 c,len;
@@ -314,22 +314,38 @@ int slv_check_bounds(const slv_system_t sys
     }
 
     if(low > val){
-      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      ERROR_REPORTER_START_NOLINE(recoverable ? ASC_PROG_NOTE : ASC_USER_ERROR);
       FPRINTF(ASCERR,"The %s variable '",label);
       var_write_name(sys,var,ASCERR);
-      FPRINTF(ASCERR,"' was set below its lower bound.");
+      if(recoverable){
+        FPRINTF(ASCERR,"' rejected as a recoverable trial: value=%.17g below lower_bound=%.17g.",val,low);
+      }else{
+        FPRINTF(ASCERR,"' was set below its lower bound.");
+      }
       error_reporter_end_flush();
       err = err | 0x2;
     }else if( val > high ){
-      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      ERROR_REPORTER_START_NOLINE(recoverable ? ASC_PROG_NOTE : ASC_USER_ERROR);
         FPRINTF(ASCERR,"The %s variable '",label);
         var_write_name(sys,var,ASCERR);
-        FPRINTF(ASCERR,"' was set above its upper bound.");
+        if(recoverable){
+          FPRINTF(ASCERR,"' rejected as a recoverable trial: value=%.17g above upper_bound=%.17g.",val,high);
+        }else{
+          FPRINTF(ASCERR,"' was set above its upper bound.");
+        }
       error_reporter_end_flush();
       err = err | 0x4;
     }
   }
   return err;
+}
+
+int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi, const char *label){
+  return slv_check_bounds_impl(sys,lo,hi,label,0);
+}
+
+int slv_check_bounds_recoverable(const slv_system_t sys, int32 lo, int32 hi, const char *label){
+  return slv_check_bounds_impl(sys,lo,hi,label,1);
 }
 
 

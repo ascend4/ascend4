@@ -246,7 +246,7 @@ int ida_sparse_jac(realtype t, realtype cj, N_Vector y, N_Vector yp,
 	integrator_set_t(integ, t);
 	integrator_set_y(integ, NV_DATA_S(y));
 	integrator_set_ydot(integ, NV_DATA_S(yp));
-	if(slv_check_bounds(integ->system, 0, -1, NULL)) return 1;
+	if(slv_check_bounds_recoverable(integ->system, 0, -1, "IDA sparse Jacobian trial")) return 1;
 	/* IDA zeros the matrix, including its index arrays, before calling us. */
 	memcpy(SM_INDEXPTRS_S(J), p->colptr, ((size_t)p->n + 1)*sizeof(sunindextype));
 	memcpy(SM_INDEXVALS_S(J), p->rowind, (size_t)p->nnz*sizeof(sunindextype));

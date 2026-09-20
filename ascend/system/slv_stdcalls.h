@@ -97,6 +97,16 @@ ASC_DLLSPEC int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
 	@return 0 if bounds are ok and variable lies in range, non-zero otherwise
 */
 
+/** Check a solver callback's tentative values without labelling a recoverable
+    rejection as a model error. Same comparisons, return flags and no mutation
+    as slv_check_bounds. Out-of-range values are reported as notes with their
+    values/bounds; inconsistent bounds and invalid arguments remain errors.
+    Use only when the caller rejects the trial on a nonzero return and reports
+    terminal solver failures separately. Not for accepted-state validation.
+*/
+ASC_DLLSPEC int slv_check_bounds_recoverable(const slv_system_t sys,
+    int32 lo, int32 hi, const char *label);
+
 /*------------------------------------------------------------------------------
   OUTPUT ASSIGNMENT AND PARTITIONING IN LOGICAL RELATIONS
 */
