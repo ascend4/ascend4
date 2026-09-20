@@ -698,7 +698,7 @@ extern struct logrel_relation **slv_get_solvers_condlogrel_list(slv_system_t sys
 	@ref solverslists
 */
 
-extern struct w_when **slv_get_solvers_when_list(slv_system_t sys);
+ASC_DLLSPEC struct w_when **slv_get_solvers_when_list(slv_system_t sys);
 /**<
 	Returns the (NULL-terminated) list of solver whens.
 	@ref solverslists
