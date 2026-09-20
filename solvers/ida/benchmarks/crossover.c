@@ -45,7 +45,7 @@ static void run(int n,const char *pattern,double density,int sparse,SUNContext c
  if(!x||!b)exit(2);
  for(int i=0;i<n;i++){NV_Ith_S(b,i)=0;for(int j=0;j<n;j++)NV_Ith_S(b,i)+=full[(size_t)j*n+i];}
  SUNMatrix A=sparse?SUNSparseMatrix(n,n,nnz,CSC_MAT,ctx):SUNDenseMatrix(n,n,ctx);
- if(!A||!x||!b)exit(2);
+ if(!A)exit(2);
  double first[5];SUNLinearSolver S=NULL;
  for(int r=0;r<5;r++){
   load(A,sparse,n,v,cp,ri,nnz);
