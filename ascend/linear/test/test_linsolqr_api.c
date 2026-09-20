@@ -175,7 +175,7 @@ static void test_ranki_ba2_api_workflow(void){
 	CU_ASSERT(0 == linsolqr_number_of_rhs(l));
 
 	linsolqr_destroy(l);
-	mtx_destroy(m);
+	asc_mtx_destroy(m);
 	system_free_reused_mem();
 }
 

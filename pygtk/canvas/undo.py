@@ -12,12 +12,23 @@ TODO ::
     3. Implement Redo.
 '''
 
-from gaphas.state import observers,revert_handler,subscribers,saveapply,reversible_pair
 import threading
 from decorator import decorator
-from gaphas.tool import Tool
 
 mutex = threading.Lock()
+observers = set()
+subscribers = set()
+
+def revert_handler(event):
+	pass
+
+def saveapply(*event):
+	pass
+
+def reversible_pair(*args, **kwargs):
+	def wrapper(func):
+		return func
+	return wrapper
 
 block_observers = set()
     
@@ -74,12 +85,12 @@ def block_dispatch(event, queue):
     for s in queue: 
         s(event)
 
-class UndoMonitorTool(Tool):
+class UndoMonitorTool:
     '''
     This tool captures all the mouse button press events, returns False
     '''
     def __init__(self,view=None):
-        super(UndoMonitorTool, self).__init__(view)
+        self.view = view
          
     @block_observed
     def on_button_press(self,event):
@@ -232,4 +243,4 @@ class undoManager(object):
             return
         
         self.app.status.push(0,"Redo Not Implemented")
-        return 
+        return

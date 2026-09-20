@@ -65,7 +65,7 @@
 
 #ifdef ASC_CONOPT_LEGACY3
 # include "conopt-3.h"
-#elif defined(ASC_BUNDLED_CONOPT4)
+#elif defined(ASC_CONOPT_BUNDLED4)
 # include "conopt-4.h"
 #else
 # include <conopt.h>
@@ -85,6 +85,59 @@
 
 #ifdef ASC_CONOPT_API4
 # define COIDEF_NumNZ COIDEF_NumNz
+
+# define ASC_CONOPT_LICENSE_ENV "ASCEND_CONOPT_LICENSE"
+# define ASC_CONOPT_SECRETS_FILE_ENV "ASCEND_SECRETS_FILE"
+
+enum asc_conopt_license_result {
+	ASC_CONOPT_LICENSE_ERROR = -1,
+	ASC_CONOPT_LICENSE_ABSENT = 0,
+	ASC_CONOPT_LICENSE_APPLIED = 1,
+	ASC_CONOPT_LICENSE_INVALID = 2,
+	ASC_CONOPT_LICENSE_VALID = 3
+};
+
+struct asc_conopt_license {
+	char *licstring;
+	int licint1;
+	int licint2;
+	int licint3;
+};
+
+/**
+	Parse "LicString,LicInt1,LicInt2,LicInt3", splitting from the right so
+	that LicString may itself contain commas. The caller must release a
+	successful result with asc_conopt_license_destroy().
+*/
+ASC_DLLSPEC int asc_conopt_parse_license(
+	const char *encoded, struct asc_conopt_license *license
+);
+ASC_DLLSPEC void asc_conopt_license_destroy(struct asc_conopt_license *license);
+
+/**
+	Check the configured license source. When licstring is non-NULL and a
+	well-formed license is present, it receives an allocated copy of LicString.
+	Release it with asc_conopt_license_string_destroy().
+	Returns ASC_CONOPT_LICENSE_ABSENT when no license was provided,
+	ASC_CONOPT_LICENSE_APPLIED when it is present and well-formed, and
+	ASC_CONOPT_LICENSE_ERROR when configuration was provided but cannot be used.
+*/
+ASC_DLLSPEC int asc_conopt_license_status(char **licstring);
+ASC_DLLSPEC void asc_conopt_license_string_destroy(char *licstring);
+
+/**
+	Validate the configured license by asking CONOPT to initialize an NLP just
+	beyond its demo-size limit. When licstring is non-NULL, ownership follows
+	asc_conopt_license_status().
+*/
+ASC_DLLSPEC int asc_conopt_validate_license(char **licstring);
+
+/**
+	Apply the configured license to a newly-created CONOPT handle.
+	ASCEND_CONOPT_LICENSE takes precedence over [conopt] license in the file
+	named by ASCEND_SECRETS_FILE, or the default user secrets.ini.
+*/
+ASC_DLLSPEC int asc_conopt_apply_license(coiHandle_t cntvect);
 #endif
 
 #ifndef ASC_LINKED_CONOPT
@@ -94,6 +147,9 @@
 
 ASC_DLLSPEC int asc_conopt_load();
 ASC_DLLSPEC int asc_conopt_unload();
+# ifdef ASC_CONOPT_API4
+ASC_DLLSPEC int asc_conopt_get_version(int *major, int *minor, int *patch);
+# endif
 
 /*
 	This is a list of the functions that we're going to be using from CONOPT.
@@ -112,6 +168,7 @@ ASC_DLLSPEC int asc_conopt_unload();
 	D( COIDEF_NumNlNz   , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
 	D( COIDEF_OptDir    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
 	D( COIDEF_ObjCon    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
+	D( COIDEF_License   , (coiHandle_t cntvect, int i1, int i2, int i3, const char *s), (cntvect,i1,i2,i3,s), "") X \
 	D( COIDEF_ItLim     , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
 	D( COIDEF_ErrLim    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \
 	D( COIDEF_StdOut    , (coiHandle_t cntvect, int v), (cntvect,v), "") X \

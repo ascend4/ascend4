@@ -48,6 +48,7 @@
 #include "instance_types.h"
 #include "tmpnum.h"
 #include "visitinst.h"
+#include "derivinst.h"
 
 unsigned long global_visit_num = 0;
 int g_iscomplete = 1;
@@ -582,8 +583,9 @@ void IndexedVisitInstanceTree(struct Instance *inst, IndexedVisitProc proc,
 
 static
 void SilentVisitTreeTwo(struct Instance *inst,
-        	        VisitTwoProc proc,
-        	        int depth, int leaf,VOIDPTR userdata)
+                        VisitTwoProc proc,
+                        int depth, int leaf,VOIDPTR userdata,
+                        enum InstanceVisitCoverage coverage)
 {
   unsigned long nc,c;
   struct Instance *child;
@@ -596,8 +598,14 @@ void SilentVisitTreeTwo(struct Instance *inst,
       nc = NumberChildren(inst);
       for(c=1;c<=nc;c++) {
         if ( (child = InstanceChild(inst,c)) !=NULL) {
-          SilentVisitTreeTwo(child,proc,depth,leaf,userdata);
+          SilentVisitTreeTwo(child,proc,depth,leaf,userdata,coverage);
         }
+      }
+    }
+    if(coverage == INSTANCE_VISIT_MATERIALISED_DERIVATIVES){
+      child = InstancePeekDerivative(inst);
+      if(child != NULL){
+        SilentVisitTreeTwo(child,proc,depth,leaf,userdata,coverage);
       }
     }
     if (depth) {
@@ -640,9 +648,17 @@ void SilentVisitInstanceTreeTwo(struct Instance *inst,
         		        int depth, int leaf,
         		        VOIDPTR userdata)
 {
+  SilentVisitInstanceTreeTwoWithCoverage(inst,proc,depth,leaf,userdata,
+      INSTANCE_VISIT_STRUCTURAL);
+}
+
+void SilentVisitInstanceTreeTwoWithCoverage(struct Instance *inst,
+    VisitTwoProc proc, int depth, int leaf, VOIDPTR userdata,
+    enum InstanceVisitCoverage coverage)
+{
   global_visit_num++;
   AssertMemory(inst);
-  SilentVisitTreeTwo(inst,proc,depth,leaf,userdata);
+  SilentVisitTreeTwo(inst,proc,depth,leaf,userdata,coverage);
 }
 
 void VisitInstanceTreeTwo(struct Instance *inst,

@@ -1,0 +1,31 @@
+REQUIRE "ivpsystem.a4l";
+
+(* Switch sparse -> dense -> sparse, keeping dimension and exact solution.
+   Initially all states are one, so every state follows exp(-t) in both modes. *)
+MODEL ida_auto_switch;
+    n IS_A integer_constant;
+    n :== 64;
+    y[1..n], t IS_A solver_var;
+    dense_mode IS_A boolean_var;
+    INDEPENDENT t;
+    FOR i IN [1..n] CREATE
+        sparse_eq[i]: der(y[i]) + y[i] = 0;
+        dense_eq[i]: der(y[i]) + 2*y[i] = SUM[y[j] | j IN [1..n]]/n;
+    END FOR;
+CONDITIONAL
+    enter_dense: t >= 0.25;
+    leave_dense: t >= 0.75;
+END CONDITIONAL;
+    dense_mode == SATISFIED(enter_dense, 1e-10) AND NOT SATISFIED(leave_dense, 1e-10);
+    WHEN(dense_mode)
+    CASE TRUE: USE dense_eq;
+    CASE FALSE: USE sparse_eq;
+    END WHEN;
+METHODS
+    METHOD on_load;
+        FIX t;
+        t := 0;
+        y[1..n] := 1;
+        dense_mode := FALSE;
+    END on_load;
+END ida_auto_switch;

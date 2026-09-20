@@ -178,15 +178,27 @@ extern int LogTermBoolVar(CONST struct logrelation *lrel,
  *  Return the integar value from a e_var type logical relation term.
  */
 
+/** Per-relation SATISFIED overrides for one logical solve. The caller owns
+ * both the entries and their list; no override is retained by the evaluator.
+ * In LOGREL_BOUNDARY_VALUES mode, `instances` contains pointers to these
+ * entries rather than bare Instance pointers. Unlisted terms evaluate normally.
+ */
+#define LOGREL_BOUNDARY_VALUES 4
+struct LogRelBoundaryValue {
+  struct Instance *instance;
+  int value;
+};
+
 extern int LogTermSatisfied(CONST struct logrelation *lrel,
                             CONST struct logrel_term *term,
                             int perturb,
                             struct gl_list_t *instances);
 /**<
  *  Return the truth value of a SATISFIED logical relation term.
- *  If perturb, and the instances pointed by the SATISFIED term is included
- *  in the list instances, the truth value of the SATISFIED term is
- *  inverted.
+ *  perturb = 0 evaluates normally; 1 inverts listed relation instances;
+ *  2/3 force listed instances true/false. LOGREL_BOUNDARY_VALUES uses a list
+ *  of LogRelBoundaryValue entries to override each listed instance separately.
+ *  This mode is also accepted by the residual and direct-solve functions below.
  */
 
 extern CONST struct Name *LogTermSatName(CONST struct logrel_term *term);
@@ -393,9 +405,8 @@ extern int LogRelCalcResidualPostfix(struct Instance *i,
  *  if they do not, the residual is zero. Similar reasoning applies when
  *  the logical relation is an inequality.
  *  Uses postfix evaluation.
- *  If *perturb !=0, that means that we will invert the truth value of
- *  the SATISFIED terms involving the relation instances pointed by the
- *  gl_list.
+ *  perturb and instances follow the override modes documented at
+ *  LogTermSatisfied (including per-relation LOGREL_BOUNDARY_VALUES).
  *  status != 0 implies a problem.
  */
 
@@ -411,9 +422,8 @@ extern int LogRelCalcResidualInfix(struct Instance *i,
  *  if they do not, the residual is zero. Similar reasoning applies when
  *  the logical relation is an inequality.
  *  Uses infix evaluation.
- *  If *perturb !=0, that means that we will invert the truth value of
- *  the SATISFIED terms involving the relation instances pointed by the
- *  gl_list
+ *  perturb and instances follow the override modes documented at
+ *  LogTermSatisfied (including per-relation LOGREL_BOUNDARY_VALUES).
  *  status != 0 implies a problem.
  */
 
@@ -433,9 +443,8 @@ extern int *LogRelFindBoolValues(struct Instance *i,
  *  nsolns > 0 : The soln_status equals the number of roots found
  *  nsolns is at most two for logical operations.
  *  The calling function should NOT free the soln_list.
- *  If *perturb !=0, that means that we will invert the truth value of
- *  the SATISFIED terms involving the relation instances pointed by the
- *  gl_list in order to find the boolean values wanted.
+ *  perturb and instances follow the override modes documented at
+ *  LogTermSatisfied (including per-relation LOGREL_BOUNDARY_VALUES).
  */
 
 #define LogRelCalcResidual(i,r) LogRelCalcResidualPostfix(i,r,0,NULL)

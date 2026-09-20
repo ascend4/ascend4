@@ -1,4 +1,4 @@
-import gtk, gtk.glade, pango
+from gtkcompat import gtk, pango
 import blockcanvas
 
 class MethodEntry:
@@ -48,4 +48,4 @@ class MethodEntry:
 		
 if __name__=='__main__':
 	MethodEntry()
-	gtk.main()	
+	gtk.main()

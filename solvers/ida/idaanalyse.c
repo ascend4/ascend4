@@ -642,7 +642,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating dg/dya");
 		ASC_FREE(df_dydp.vars);
 		ASC_FREE(df_dydp.rels);
-		if(df_dydp.M)mtx_destroy(df_dydp.M);
+		if(df_dydp.M)asc_mtx_destroy(df_dydp.M);
 		return 1;
 	}
 	MSG("dg/dya: nr = %d, nv = %d",dg_dya.n_rels,dg_dya.n_vars);
@@ -681,7 +681,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 	ASC_FREE(dg_dya.vars);
 	ASC_FREE(dg_dya.rels);
-	if(dg_dya.M)mtx_destroy(dg_dya.M);
+	if(dg_dya.M)asc_mtx_destroy(dg_dya.M);
 
 	if(df_dydp.n_rels <= 0){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No differential equations were found in the DAE system!");
@@ -689,7 +689,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"The differential part of the the jacobian dg/dya is not square!");
 		ASC_FREE(df_dydp.vars);
 		ASC_FREE(df_dydp.rels);
-		if(df_dydp.M)mtx_destroy(df_dydp.M);
+		if(df_dydp.M)asc_mtx_destroy(df_dydp.M);
 		return 1;
 	}else{
 		/* check the rank */
@@ -718,7 +718,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 
 	ASC_FREE(df_dydp.vars);
 	ASC_FREE(df_dydp.rels);
-	if(df_dydp.M)mtx_destroy(df_dydp.M);
+	if(df_dydp.M)asc_mtx_destroy(df_dydp.M);
 	return index_error;
 #else
 	MSG("check_index disabled");

@@ -49,6 +49,7 @@ public:
 	~Integrator();
 
 	static std::vector<std::string> getEngines();
+	static std::string getEngineVersion(const std::string &name);
 	void setEngine(const std::string &name);
 	std::string getName() const;
 

@@ -1,5 +1,3 @@
-from gaphas.item import Line
-
 class LineInstance:
 	"""
 	Class representation of the ASCEND 'ARE_THE_SAME' relationship
@@ -29,4 +27,3 @@ class LineInstance:
 			return ("\t%s, %s ARE_THE_SAME;\n" % (li.fromblock.name, li.toblock.name))
 		except:
 			return ""
-

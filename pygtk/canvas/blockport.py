@@ -1,8 +1,6 @@
-from gaphas.connector import PointPort
 from blockinstance import PortInstance
-from gaphas.connector import Position
-from gaphas.solver import Variable
-from gaphas.solver import WEAK
+from gaphas.port import PointPort
+from gaphas.position import Position
 
 class BlockPort(PointPort):
 	"""
@@ -12,7 +10,7 @@ class BlockPort(PointPort):
 	"""
 
 	def __init__(self, blockinstance, portname,location, portlabel):
-		super(BlockPort,self).__init__(Position((float(location[0]),float(location[1]))))
+		super(BlockPort,self).__init__(Position(float(location[0]),float(location[1])))
 		self.portinstance = blockinstance.ports[portname]
 		self.portname = portname
 		self.portlabel= portlabel

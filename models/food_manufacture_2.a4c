@@ -1,0 +1,124 @@
+(* Food Manufacture II: Williams, Model Building in Mathematical Programming,
+   5th ed., example 2, pp. 255, 299-300. Data and published optimum:
+   https://github.com/Gurobi/modeling-examples/blob/master/food_manufacturing/food_manufacture_2.ipynb
+   Interpret all source tons as metric tonnes, retaining the numerical problem.
+   See food_manufacture_2.md for assumptions, source errata and a reference plan. *)
+REQUIRE "atoms.a4l";
+CONSTANT food_mass_constant REFINES real_constant DIMENSION M;
+
+MODEL food_manufacture_2;
+    oil, veg, nonveg "Oils and their separate refining lines" IS_A set OF symbol_constant;
+    month "1 = January, ..., 6 = June" IS_A set OF integer_constant;
+    T "Number of planning months" IS_A integer_constant;
+    veg :== ['VEG1','VEG2']; nonveg :== ['OIL1','OIL2','OIL3'];
+    oil :== veg + nonveg;
+    T :== 6; month :== [1..T];
+    cost[month][oil] "Purchase price for delivery in each month" IS_A cost_per_mass_constant;
+    price "Selling price of the finished blend" IS_A cost_per_mass_constant;
+    hold "Charge per mass of closing stock at each monthly boundary" IS_A cost_per_mass_constant;
+    cap[oil] "Per-oil upper bound implied by its refining line" IS_A food_mass_constant;
+    vcap, ncap "Monthly vegetable/non-vegetable refining capacities" IS_A food_mass_constant;
+    initial, target, space "Opening, terminal and maximum stock of each oil" IS_A food_mass_constant;
+    minimum "Minimum monthly consumption of any selected oil" IS_A food_mass_constant;
+    hardness[oil], hmin, hmax "Dimensionless empirical hardness indices" IS_A factor_constant;
+    max_oils "Maximum ingredients in one month's recipe" IS_A integer_constant;
+    buy[month][oil] "Raw oil purchased for delivery this month" IS_A mass;
+    consume[month][oil] "Raw oil refined and blended this month" IS_A mass;
+    store[0..T][oil] "Closing raw stock; index 0 is opening stock" IS_A mass;
+    produce[month] "Finished product made and sold this month" IS_A mass;
+    use[month][oil] "1 exactly when an oil is consumed this month" IS_A solver_binary;
+    profit "Total six-month sales less purchases and storage charges" IS_A monetary_unit;
+
+    price :== 150{USD/tonne}; hold :== 5{USD/tonne};
+    vcap :== 200{tonne}; ncap :== 250{tonne}; minimum :== 20{tonne};
+    initial :== 500{tonne}; target :== 500{tonne}; space :== 1000{tonne};
+    hmin :== 3; hmax :== 6; max_oils :== 3;
+    TABLE cost[month,oil] UNITS {USD/tonne};
+           VEG1, VEG2, OIL1, OIL2, OIL3;
+        1: 110,  120,  130,  110,  115;
+        2: 130,  130,  110,   90,  115;
+        3: 110,  140,  130,  100,   95;
+        4: 120,  110,  120,  120,  125;
+        5: 100,  120,  150,  110,  105;
+        6:  90,  100,  140,   80,  135;
+    END TABLE;
+    TABLE hardness[oil];
+        VEG1, VEG2, OIL1, OIL2, OIL3;
+        8.8,  6.1,  2.0,  4.2,  5.0;
+    END TABLE;
+    FOR o IN veg CREATE cap[o] :== vcap; END FOR;
+    FOR o IN nonveg CREATE cap[o] :== ncap; END FOR;
+
+    FOR o IN oil CREATE
+        opening[o]: store[0][o] = initial;
+        closing[o]: store[T][o] = target;
+        FOR t IN month CREATE
+            balance[t][o]: store[t-1][o] + buy[t][o] = consume[t][o] + store[t][o];
+            storage[t][o]: store[t][o] <= space;
+            (* Tight physical bounds encode zero OR at least minimum, not
+               an arbitrary large M. Binary selectors also express the recipe. *)
+            use_min[t][o]: consume[t][o] >= minimum*use[t][o];
+            use_max[t][o]: consume[t][o] <= cap[o]*use[t][o];
+        END FOR;
+    END FOR;
+    FOR t IN month CREATE
+        veg_limit[t]: SUM[consume[t][o] | o IN veg] <= vcap;
+        nonveg_limit[t]: SUM[consume[t][o] | o IN nonveg] <= ncap;
+        (* Lossless refining/blending, no refined-oil or product inventory. *)
+        mass_balance[t]: SUM[consume[t][o] | o IN oil] = produce[t];
+        (* Mass-weighted empirical hardness. Multiplication by total mass
+           keeps the limits linear and well-defined even at zero production. *)
+        hard_min[t]: SUM[hardness[o]*consume[t][o] | o IN oil] >= hmin*produce[t];
+        hard_max[t]: SUM[hardness[o]*consume[t][o] | o IN oil] <= hmax*produce[t];
+        recipe[t]: SUM[use[t][o] | o IN oil] <= max_oils;
+        FOR o IN veg CREATE needs_oil3[t][o]: use[t][o] <= use[t]['OIL3']; END FOR;
+    END FOR;
+    (* Charge purchases, NOT consumption (a typo in the notebook's displayed
+       objective). Holding is charged once per month, including June's stock. *)
+    accounting: profit = SUM[price*produce[t]
+        - SUM[cost[t][o]*buy[t][o] + hold*store[t][o] | o IN oil] | t IN month];
+    obj: MAXIMIZE profit;
+
+METHODS
+METHOD on_load;
+    SOLVER Gurobi;
+    OPTION mip_rel_gap 0.0;
+END on_load;
+METHOD self_test;
+    (* Published optimum; alternative optimal schedules exist. Check physical
+       feasibility and discrete decisions, not one particular solver's basis. *)
+    ASSERT abs((profit - 100278.7037037037{USD})/1{USD}) < 1e-4;
+    ASSERT abs((profit - SUM[price*produce[t]
+        - SUM[cost[t][o]*buy[t][o] + hold*store[t][o] | o IN oil] | t IN month])/1{USD}) < 1e-4;
+    FOR o IN oil DO
+        ASSERT abs((store[0][o] - initial)/1{tonne}) < 1e-6;
+        ASSERT abs((store[T][o] - target)/1{tonne}) < 1e-6;
+        FOR t IN month DO
+            ASSERT buy[t][o] >= -1e-6{tonne};
+            ASSERT store[t][o] >= -1e-6{tonne};
+            ASSERT store[t][o] <= space + 1e-6{tonne};
+            ASSERT abs((store[t-1][o] + buy[t][o] - consume[t][o] - store[t][o])/1{tonne}) < 1e-6;
+            ASSERT abs(use[t][o]) < 1e-7 OR abs(use[t][o] - 1) < 1e-7;
+            ASSERT consume[t][o] >= minimum*use[t][o] - 1e-6{tonne};
+            ASSERT consume[t][o] <= cap[o]*use[t][o] + 1e-6{tonne};
+        END FOR;
+    END FOR;
+    FOR t IN month DO
+        ASSERT SUM[consume[t][o] | o IN veg] <= vcap + 1e-6{tonne};
+        ASSERT SUM[consume[t][o] | o IN nonveg] <= ncap + 1e-6{tonne};
+        ASSERT abs((SUM[consume[t][o] | o IN oil] - produce[t])/1{tonne}) < 1e-6;
+        ASSERT SUM[hardness[o]*consume[t][o] | o IN oil] >= hmin*produce[t] - 1e-6{tonne};
+        ASSERT SUM[hardness[o]*consume[t][o] | o IN oil] <= hmax*produce[t] + 1e-6{tonne};
+        ASSERT SUM[use[t][o] | o IN oil] <= max_oils + 1e-7;
+        FOR o IN veg DO ASSERT use[t][o] <= use[t]['OIL3'] + 1e-7; END FOR;
+    END FOR;
+END self_test;
+END food_manufacture_2;
+
+MODEL food_manufacture_2_highs REFINES food_manufacture_2;
+METHODS
+METHOD on_load;
+    SOLVER HiGHS;
+    OPTION mip_rel_gap 0.0;
+END on_load;
+END food_manufacture_2_highs;

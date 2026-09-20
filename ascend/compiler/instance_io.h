@@ -41,6 +41,7 @@
 #include <ascend/compiler/compiler.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/instance_enum.h>
+#include <ascend/compiler/visitinst.h>
 
 /**
 	Return the instance's type name as given in instance_enum.h.
@@ -262,7 +263,7 @@ typedef VOIDPTR (*IPFunc)(struct Instance *,VOIDPTR);
  *  responsibility and none of ours.
  */
 
-extern struct gl_list_t *PushInterfacePtrs(struct Instance *i,
+ASC_DLLSPEC struct gl_list_t *PushInterfacePtrs(struct Instance *i,
                                            IPFunc ipcreatef,
                                            unsigned long int iest,
                                            int visitorder,
@@ -294,6 +295,15 @@ extern struct gl_list_t *PushInterfacePtrs(struct Instance *i,
  *  This is not a hard assumption to meet in single thread code.
  */
 
+/**
+ * PushInterfacePtrs with explicit traversal coverage. Existing derivative
+ * pseudo-instances can be included without materialising new ones. Pop with
+ * the ordinary PopInterfacePtrs: the saved list contains every changed slot.
+ */
+ASC_DLLSPEC struct gl_list_t *PushInterfacePtrsWithCoverage(struct Instance *i,
+    IPFunc ipcreatef, unsigned long iest, int visitorder, VOIDPTR vp,
+    enum InstanceVisitCoverage coverage);
+
 typedef VOIDPTR (*IPDeleteFunc)(struct Instance *, VOIDPTR, VOIDPTR);
 /**<
  *  This is a function you supply. It will be called with the pointer
@@ -302,7 +312,7 @@ typedef VOIDPTR (*IPDeleteFunc)(struct Instance *, VOIDPTR, VOIDPTR);
  *  This is so you may do any destruction of the objects returned by IPFunc.
  */
 
-extern void PopInterfacePtrs(struct gl_list_t *oldips,
+ASC_DLLSPEC void PopInterfacePtrs(struct gl_list_t *oldips,
                              IPDeleteFunc ipdestroyf,
                              VOIDPTR vp);
 /**<
@@ -342,4 +352,3 @@ extern int ArrayIsModel(struct Instance *i);
 /* @} */
 
 #endif /* ASC_INSTANCE_IO_H */
-

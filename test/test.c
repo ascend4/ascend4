@@ -673,6 +673,9 @@ cleanup_ops:
 	if(ran_tests && list_skipped){
 		list_skipped_tests();
 	}
+	if(ran_tests && result == CUE_SUCCESS && CU_get_number_of_failures() != 0){
+		result = CUE_TEST_FAIL;
+	}
 
 cleanup:
 	oplist_free(&ops);

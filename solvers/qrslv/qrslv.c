@@ -211,6 +211,7 @@ struct qrslv_system_structure {
   /* Solver information */
   int                    integrity;    /* ? Has the system been created */
   int32                  presolved;    /* ? Has the system been presolved */
+  unsigned long          lists_revision; /* working lists used by this client */
   slv_parameters_t       p;            /* Parameters */
   slv_status_t           s;            /* Status (as of iteration end) */
   struct update_data     update;       /* Jacobian frequency counters */
@@ -2736,6 +2737,8 @@ static void reorder_new_block(qrslv_system_t sys){
       slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block,
                                   SLV_PARAM_INT(&(sys->p),CUTOFF),0,mtx_SPK1);
     }
+    /* This client owns the reorder and has updated its matrix accordingly. */
+    sys->lists_revision = slv_get_solver_lists_revision(SERVER);
     /* tell linsol to bless it and get on with things */
     linsolqr_reorder(sys->J.sys,&(sys->J.reg),natural);
     if(sys->s.block.current_block > sys->s.block.current_reordered_block) {
@@ -3248,6 +3251,7 @@ static SlvClientToken qrslv_create(slv_system_t server, int *statusindex)
   sys->vlist = slv_get_solvers_var_list(server);
   sys->rlist = slv_get_solvers_rel_list(server);
   sys->obj = slv_get_obj_relation(server);
+  sys->lists_revision = slv_get_solver_lists_revision(server);
   if(sys->vlist == NULL) {
     ascfree(sys);
     FPRINTF(stderr,"QRSlv called with no variables.\n");
@@ -3277,7 +3281,7 @@ static void destroy_matrices( qrslv_system_t sys)
       for( ; count >= 0; count-- ) {
          destroy_array(linsolqr_get_rhs(sys->J.sys,count));
        }
-      mtx_destroy(linsolqr_get_matrix(sys->J.sys));
+      asc_mtx_destroy(linsolqr_get_matrix(sys->J.sys));
       linsolqr_set_matrix(sys->J.sys,NULL);
       linsolqr_destroy(sys->J.sys);
       if(sys->J.relpivots ) set_destroy( sys->J.relpivots );
@@ -3716,6 +3720,17 @@ static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
       "QRSlv does not support CASE IF/APPLIES IF in WHEN; a solver must explicitly consume lowered classifier regions");
     return 1;
   }
+  /* IDA and other structural analyses can replace (and free), resize or
+     reorder these borrowed lists. Never inspect the old lists first. */
+  if(sys->lists_revision != slv_get_solver_lists_revision(server)){
+    sys->vlist = slv_get_solvers_var_list(server);
+    sys->rlist = slv_get_solvers_rel_list(server);
+    sys->obj = slv_get_obj_relation(server);
+    sys->vtot = slv_get_num_solvers_vars(server);
+    sys->rtot = slv_get_num_solvers_rels(server);
+    sys->presolved = 0;
+    slv_check_var_initialization(server);
+  }
   if(sys->vlist == NULL ) {
     ERROR_REPORTER_START_HERE(ASC_PROG_ERROR);
     FPRINTF(stderr,"Variable list was never set.");
@@ -3803,6 +3818,8 @@ static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
   iteration_ends(sys);
   sys->s.u.nlp.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
 
+  sys->lists_revision = slv_get_solver_lists_revision(server);
+
   return 0;
 }
 
@@ -3846,6 +3863,10 @@ static int qrslv_resolve(slv_system_t server, SlvClientToken asys){
   sys = QRSLV(asys);
 
   check_system(sys);
+  if(sys->lists_revision != slv_get_solver_lists_revision(server)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv working lists changed: call presolve before resolve");
+    return 1;
+  }
   for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
     var_set_in_block(*vp,FALSE);
   }
@@ -3890,6 +3911,10 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
   lif = LIF(sys);
   if(server == NULL || sys==NULL) return 1;
   if(check_system(QRSLV(sys))) return 2;
+  if(sys->lists_revision != slv_get_solver_lists_revision(server)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv working lists changed: call presolve before iterate");
+    return 3;
+  }
   if(!sys->s.ready_to_solve){
     ERROR_REPORTER_HERE(ASC_USER_ERROR,"Not ready to solve.");
     return 3;
@@ -4289,6 +4314,10 @@ static int qrslv_solve(slv_system_t server, SlvClientToken asys){
   sys = QRSLV(asys);
   if(server == NULL || sys==NULL) return 1;
   if(check_system(sys)) return 1;
+  if(sys->lists_revision != slv_get_solver_lists_revision(server)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv working lists changed: call presolve before solve");
+    return 1;
+  }
 
 #ifdef LISTS_DEBUG
   {

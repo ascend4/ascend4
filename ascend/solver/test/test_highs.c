@@ -54,6 +54,10 @@ struct highs_run_options{
 	const char *presolve;
 	const char *solver;
 	const char *parallel;
+	const char *initial_method; /* NULL: on_load; empty: no initialisation. */
+	const char *setup_method;
+	int run_self_test;
+	int toggle_relaxation_after_presolve;
 };
 
 struct reporter_capture{
@@ -324,10 +328,16 @@ static void run_highs_model(
 	siminst = SimsCreateInstance(AddSymbol(model_name), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst != NULL);
 
-	{
-		struct Name *name = CreateIdName(AddSymbol("on_load"));
+	if(!(opts && opts->initial_method && !opts->initial_method[0])){
+		struct Name *name = CreateIdName(AddSymbol(opts && opts->initial_method ? opts->initial_method : "on_load"));
 		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 		CU_ASSERT(pe == Proc_all_ok);
+		DestroyName(name);
+	}
+	if(opts && opts->setup_method){
+		struct Name *name = CreateIdName(AddSymbol(opts->setup_method));
+		CU_ASSERT(Initialize(GetSimulationRoot(siminst),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
+		DestroyName(name);
 	}
 
 	sys = system_build(GetSimulationRoot(siminst));
@@ -418,6 +428,12 @@ static void run_highs_model(
 	}
 
 	(void)slv_presolve(sys);
+	if(opts && opts->toggle_relaxation_after_presolve){
+		slv_parameters_t pp;
+		slv_get_parameters(sys,&pp);
+		SLV_PARAM_BOOL(&pp,find_param_index(&pp,"relaxed"))=!opts->relaxed;
+		slv_set_parameters(sys,&pp);
+	}
 	if(opts != NULL && opts->use_iterate){
 		(void)slv_iterate(sys);
 	}else if(opts != NULL && opts->use_resolve){
@@ -448,6 +464,11 @@ static void run_highs_model(
 			break;
 		}
 		CU_ASSERT_DOUBLE_EQUAL(vars[i].expected,value,vars[i].tol);
+	}
+	if(opts && opts->run_self_test){
+		struct Name *name = CreateIdName(AddSymbol("self_test"));
+		CU_ASSERT(Initialize(GetSimulationRoot(siminst),name,"sim1",ASCERR,WP_STOPONERR,NULL,NULL)==Proc_all_ok);
+		DestroyName(name);
 	}
 	{
 		struct Instance *root = GetSimulationRoot(siminst);
@@ -643,6 +664,41 @@ static void test_highs_mip_facility_location(void){
 		7,
 		NULL
 	);
+}
+
+/* Both adapters use the same exported domains, including convex-hull bounds
+ * for semicontinuous relaxation. Keep fixtures solver-independent. */
+#define DOMAIN_CASE(NAME,MODEL,RELAXED,OBJ) \
+static void test_##NAME(void){ \
+	struct highs_run_options opts={0}; \
+	opts.relaxed=RELAXED; opts.objective_tol=1e-7; opts.expect_converged=1; \
+	run_highs_model("models/test/mip/domains.a4c",MODEL,OBJ,0,NULL,0,&opts); \
+}
+DOMAIN_CASE(highs_semi_zero,"mip_semi_gap",0,0)
+DOMAIN_CASE(highs_semi_active,"mip_semi_active",0,2)
+DOMAIN_CASE(highs_semi_relaxed,"mip_semi_gap",1,1)
+DOMAIN_CASE(highs_semi_individually_relaxed,"mip_semi_individually_relaxed",0,1)
+DOMAIN_CASE(highs_integer_individually_relaxed,"mip_integer_individually_relaxed",0,2.5)
+DOMAIN_CASE(highs_domains,"mip_domains",0,-1)
+DOMAIN_CASE(highs_domains_relaxed,"mip_domains",1,0)
+DOMAIN_CASE(highs_domains_partially_relaxed,"mip_domains_partially_relaxed",0,-0.5)
+DOMAIN_CASE(highs_binary_wide_bounds,"mip_binary_wide_bounds",0,1)
+DOMAIN_CASE(highs_binary_wide_bounds_relaxed,"mip_binary_wide_bounds",1,1)
+#undef DOMAIN_CASE
+
+static void test_highs_relax_after_presolve(void){
+	struct highs_run_options opts={0};
+	opts.expect_converged=1;
+	opts.toggle_relaxation_after_presolve=1;
+	run_highs_model("models/test/mip/domains.a4c","mip_semi_gap",1,0,NULL,0,&opts);
+}
+
+static void test_highs_unrelax_after_presolve(void){
+	struct highs_run_options opts={0};
+	opts.expect_converged=1;
+	opts.relaxed=1;
+	opts.toggle_relaxation_after_presolve=1;
+	run_highs_model("models/test/mip/domains.a4c","mip_semi_gap",0,0,NULL,0,&opts);
 }
 
 static void test_highs_mip_facility_location_table_labels(void){
@@ -1242,7 +1298,106 @@ cleanup:
 	Asc_CompilerDestroy();
 }
 
+static void run_alloy_showcase(int detailed, const char *setup_method, double objective){
+	struct highs_run_options opts={0};
+	opts.initial_method="initialise";
+	opts.setup_method=setup_method;
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	run_highs_model(detailed ? "models/alloy_blending_detailed.a4c" : "models/alloy_blending.a4c",
+		detailed ? "alloy_blending_detailed" : "alloy_blending",objective,0,NULL,0,&opts);
+}
+static void test_highs_alloy_blending(void){run_alloy_showcase(0,NULL,4.98);}
+static void test_highs_alloy_blending_mass_balance(void){run_alloy_showcase(0,"with_mass_balance",4.98);}
+static void test_highs_alloy_blending_ten_pounds(void){run_alloy_showcase(1,"ten_pound_batch",49.8);}
+static void test_highs_alloy_blending_detailed(void){run_alloy_showcase(1,NULL,4.98);}
+static void test_highs_alloy_blending_detailed_mass_balance(void){run_alloy_showcase(1,"with_mass_balance",4.98);}
+
+static void test_highs_steel_production(void){
+	struct highs_run_options opts={0};
+	/* No setup needed; select the solver here without frontend SOLVER hooks. */
+	opts.initial_method="";
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	opts.objective_tol=1e-6;
+	run_highs_model("models/steel_production.a4c","steel_production_highs",515033,0,NULL,0,&opts);
+}
+
+static void test_highs_food_manufacture_2(void){
+	struct highs_run_options opts={0};
+	opts.initial_method="";
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	opts.objective_tol=1e-6;
+	/* Request a proof rather than stopping at the default relative MIP gap. */
+	opts.set_runtime_options=1;
+	opts.time_limit=60;
+	opts.threads=1;
+	opts.mip_rel_gap=0;
+	opts.mip_abs_gap=1e-7;
+	run_highs_model("models/food_manufacture_2.a4c","food_manufacture_2_highs",100278.7037037037,0,NULL,0,&opts);
+}
+
+static void test_highs_job_shop(void){
+	struct highs_run_options opts={0};
+	opts.initial_method="";
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	opts.objective_tol=1e-6;
+	opts.set_runtime_options=1;
+	opts.time_limit=60;
+	opts.threads=1;
+	opts.mip_rel_gap=0;
+	opts.mip_abs_gap=1e-7;
+	/* ASCEND stores the time-valued objective in seconds, not minutes. */
+	run_highs_model("models/job_shop.a4c","job_shop_highs",97*60,0,NULL,0,&opts);
+}
+
+static void run_commitment_model(const char *path, const char *model, double cost){
+	struct highs_run_options opts={0};
+	opts.initial_method="";
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	opts.objective_tol=1e-6;
+	opts.set_runtime_options=1;
+	opts.time_limit=60;
+	opts.threads=1;
+	opts.mip_rel_gap=0;
+	opts.mip_abs_gap=1e-7;
+	run_highs_model(path,model,cost,0,NULL,0,&opts);
+}
+static void test_highs_electrical_power_1(void){run_commitment_model("models/electrical_power_1.a4c","electrical_power_1_highs",1002540);}
+static void test_highs_uc_units(void){run_commitment_model("models/test/mip/electrical_power_1_tests.a4c","uc_units",227.5);}
+static void test_highs_uc_initial(void){run_commitment_model("models/test/mip/electrical_power_1_tests.a4c","uc_initial",127.5);}
+static void test_highs_kondili(void){run_commitment_model("models/kondili.a4c","kondili",2744.375);}
+static void test_highs_kondili_no_bc_storage(void){run_commitment_model("models/kondili.a4c","kondili_no_bc_storage",2210.625);}
+static void test_highs_stn_small_batches(void){run_commitment_model("models/test/mip/stn_tests.a4c","stn_small_batches",12);}
+static void test_highs_stn_small_below_minimum(void){run_commitment_model("models/test/mip/stn_tests.a4c","stn_small_below_minimum",0);}
+
+static void run_refinery_showcase(const char *model, double profit_per_day){
+	struct highs_run_options opts={0};
+	opts.initial_method="";
+	opts.run_self_test=1;
+	opts.expect_converged=1;
+	/* The model uses currency/time: the native objective is USD/s. */
+	run_highs_model("models/refinery.a4c",model,profit_per_day/86400,0,NULL,0,&opts);
+}
+static void test_highs_refinery(void){run_refinery_showcase("refinery_highs",6588.421476681333);}
+static void test_highs_refinery_low_sulfur(void){run_refinery_showcase("refinery_low_sulfur_highs",0);}
+
 #define TESTS(T) \
+	T(highs_kondili) T(highs_kondili_no_bc_storage) T(highs_stn_small_batches) T(highs_stn_small_below_minimum) \
+	T(highs_electrical_power_1) T(highs_uc_units) T(highs_uc_initial) \
+	T(highs_job_shop) \
+	T(highs_food_manufacture_2) \
+	T(highs_refinery) \
+	T(highs_refinery_low_sulfur) \
+	T(highs_steel_production) \
+	T(highs_alloy_blending) \
+	T(highs_alloy_blending_mass_balance) \
+	T(highs_alloy_blending_ten_pounds) \
+	T(highs_alloy_blending_detailed) \
+	T(highs_alloy_blending_detailed_mass_balance) \
 	T(highs_lp1) \
 	T(highs_lp_structured) \
 	T(highs_lp_structured_table) \
@@ -1253,6 +1408,11 @@ cleanup:
 	T(highs_mip_mixed_iterate) \
 	T(highs_mip_mixed_resolve) \
 	T(highs_mip_facility_location) \
+	T(highs_semi_zero) T(highs_semi_active) T(highs_semi_relaxed) \
+	T(highs_semi_individually_relaxed) T(highs_integer_individually_relaxed) \
+	T(highs_domains) T(highs_domains_relaxed) T(highs_binary_wide_bounds) T(highs_binary_wide_bounds_relaxed) \
+	T(highs_domains_partially_relaxed) \
+	T(highs_relax_after_presolve) T(highs_unrelax_after_presolve) \
 	T(highs_mip_facility_location_table_labels) \
 	T(highs_mip_tsp_mtz8) \
 	T(highs_mip_tsp_mtz8_table_labels) \

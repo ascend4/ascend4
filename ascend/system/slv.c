@@ -269,13 +269,9 @@ int slv_destroy(slv_system_t sys)
 	slv_destroy_classifier_artifacts(sys);
 
 	if(sys->hidden_instances != NULL){
-		unsigned long i, len = gl_length(sys->hidden_instances);
-		for(i = 1; i <= len; ++i){
-			struct Instance *inst = (struct Instance *)gl_fetch(sys->hidden_instances, i);
-			if(inst != NULL){
-				SetInterfacePtr(inst,NULL);
-			}
-		}
+		/* Borrowed runtime instances. Analysis restored their interface
+		 * pointers before returning; neither those pointers nor the
+		 * instances belong to this system. */
 		gl_destroy(sys->hidden_instances);
 		sys->hidden_instances = NULL;
 	}
@@ -521,6 +517,7 @@ void slv_set_solvers_blocks(slv_system_t sys,int len, mtx_region_t *data)
       }
       sys->dof.blocks.block = data;
       sys->dof.blocks.nblocks = len;
+      slv_solver_lists_changed(sys);
     }
   }
 }
@@ -598,6 +595,14 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 		slv_get_solvers_*_list
 		slv_get_master_*_list
 */
+void slv_solver_lists_changed(slv_system_t sys){
+	++sys->solver_lists_revision;
+}
+
+unsigned long slv_get_solver_lists_revision(slv_system_t sys){
+	return sys->solver_lists_revision;
+}
+
 #define DEFINE_SET_SOLVERS_LIST_METHOD(NAME,PROP,TYPE) \
 	ASC_DLLSPEC void slv_set_solvers_##NAME##_list(slv_system_t sys, struct TYPE **vlist, int size){ \
 		if(sys->PROP.master==NULL){ \
@@ -606,6 +611,7 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 		} \
 		sys->PROP.snum = size; \
 		sys->PROP.solver = vlist; \
+		slv_solver_lists_changed(sys); \
 	}
 
 #define DEFINE_SET_SOLVERS_LIST_METHOD_RETURN(NAME,PROP,TYPE) \
@@ -616,6 +622,7 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 		} \
 		sys->PROP.snum = size; \
 		sys->PROP.solver = vlist; \
+		slv_solver_lists_changed(sys); \
 	}
 
 #ifdef EMPTY_DEBUG

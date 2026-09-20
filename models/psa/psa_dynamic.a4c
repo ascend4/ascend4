@@ -1,0 +1,13 @@
+(* Thesis section 7.4: 50 equal spatial increments, 299 K, 69 s adsorption.
+   ./a4 run models/psa/psa_dynamic.a4c --integrate --duration 69 --steps 69 --units s
+   Local source: ~/Downloads/smith-1991-The_optimal_design_of_pressure.pdf.
+   These are fixed-bed operation models, not economic design optima. *)
+REQUIRE "psa/psa_dynamic.a4l";
+
+MODEL psa_dynamic WHERE (n >= 4; stencil = 1 OR stencil = 5;)
+REFINES psa_dynamic_bed(n :== 50; stencil :== 5;);
+END psa_dynamic;
+
+MODEL psa_dynamic_upwind WHERE (n >= 4; stencil = 1 OR stencil = 5;)
+REFINES psa_dynamic_bed(n :== 50; stencil :== 1;);
+END psa_dynamic_upwind;

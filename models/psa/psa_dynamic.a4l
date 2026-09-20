@@ -1,0 +1,123 @@
+(* Isothermal, trace-methane fixed-bed dynamics: Smith (1991), thesis
+   eqs (5.11)-(5.17), section 7.4 and Tables 7-3/7-4.
+   See psa_dynamic.md for discretisation and reconstruction boundaries.
+   Coordinate x follows the gas flow; reverse profiles for countercurrent
+   purge. No pressure-changing step or energy equation is hidden here. *)
+REQUIRE "ivpsystem.a4l";
+REQUIRE "psa/psa_properties.a4l";
+
+MODEL psa_dynamic_bed(n IS_A integer_constant; stencil IS_A integer_constant;)
+WHERE (n >= 4; stencil = 1 OR stencil = 5;);
+    cell, face IS_A set OF integer_constant;
+    cell :== [1..n]; face :== [0..n];
+    t IS_A time;
+    INDEPENDENT t;
+    d, L, dx IS_A distance;
+    area IS_A area;
+    volume IS_A volume;
+    eps IS_A fraction;
+    rho "Particle-envelope carbon density, not packed bulk density" IS_A mass_density;
+    T IS_A temperature;
+    P IS_A pressure;
+    F "Total molar flow, treated constant under trace-species assumption" IS_A molar_rate;
+    k "LDF rate constant" IS_A frequency;
+    yin "Methane inlet mole fraction" IS_A fraction;
+    gas_concentration IS_A molar_density;
+    carbon_mass IS_A mass;
+    reference IS_A psa_lrc_isotherm(-0.76{cm^3/g},40539{cm^3*K/g},ln(0.0129),0{K},1);
+    (* Table 7-3's B=0.0129 at 299 K, NOT the slightly different B(T)
+       from Cen-Yang. The original general isotherm remains unchanged. *)
+    reference.T, T ARE_THE_SAME;
+    reference.p = 0.05*P;
+    section: area = 3.141592653589793*d^2/4;
+    spacing: dx = L/n;
+    size: volume = area*L;
+    adsorbent: carbon_mass = (1-eps)*rho*volume;
+    ideal_gas: gas_concentration*8.31446261815324{J/mol/K}*T = P;
+
+    y[cell] "Cell-average gas methane mole fraction" IS_A factor;
+    q[cell], qe[cell] "Actual and equilibrium solid loading" IS_A psa_loading;
+    y0[cell] IS_A factor;
+    q0[cell] IS_A psa_loading;
+    yf[face] "Convective face reconstruction; not a separate fluid state" IS_A factor;
+    x[cell] IS_A distance;
+    FOR i IN cell CREATE
+        position[i]: x[i] = (i-0.5)*dx;
+        (* Algebraic n=1 LRC is regular at zero concentration. *)
+        equilibrium[i]: qe[i]*(1 + reference.affinity*P*y[i]/reference.p_ref)
+            = reference.qsat*reference.affinity*P*y[i]/reference.p_ref;
+        eq_5_13[i]: der(q[i]) = k*(qe[i]-q[i]);
+        (* Conservative dimensional counterpart of eq (5.11).
+           Adsorption removes methane from gas and adds the SAME amount
+           to dry carbon. No normalised time or hidden solid-density factor. *)
+        eq_5_11[i]: eps*gas_concentration*der(y[i])
+            + (1-eps)*rho*der(q[i]) = F*(yf[i-1]-yf[i])/(area*dx);
+    END FOR;
+    inlet: yf[0] = yin;
+    SELECT (stencil)
+    CASE 1:
+        FOR i IN cell CREATE upwind[i]: yf[i] = y[i]; END FOR;
+    CASE 5:
+        (* Fourth-order, five-point upwind-biased interior derivative:
+           (-y[i-3]+6*y[i-2]-18*y[i-1]+10*y[i]+3*y[i+1])/(12*dx).
+           Flux form preserves the discrete overall balance. The source
+           does not specify boundary closures: use first-order end faces,
+           and the imposed inlet value as the upstream value at face 2.
+           This linear high-order stencil is NOT positivity preserving. *)
+        first_face: yf[1] = y[1];
+        second_face: 12*yf[2] = yin-5*y[1]+13*y[2]+3*y[3];
+        FOR i IN [3..n-1] CREATE
+            interior_face[i]: 12*yf[i] = y[i-2]-5*y[i-1]+13*y[i]+3*y[i+1];
+        END FOR;
+        last_face: yf[n] = y[n];
+    END SELECT;
+
+    admitted, discharged, inventory, initial_inventory IS_A mole;
+    balance_error "Methane balance defect, including gas AND adsorbed phases" IS_A mole;
+    inlet_integral: der(admitted) = F*yin;
+    outlet_integral: der(discharged) = F*yf[n];
+    contents: inventory = volume/n*SUM[eps*gas_concentration*y[i]
+        + (1-eps)*rho*q[i] | i IN cell];
+    initial_contents: initial_inventory = volume/n*SUM[eps*gas_concentration*y0[i]
+        + (1-eps)*rho*q0[i] | i IN cell];
+    overall_balance: balance_error = inventory-initial_inventory-admitted+discharged;
+
+INITIAL
+    FOR i IN cell CREATE
+        initial_gas[i]: y[i] = y0[i];
+        initial_solid[i]: q[i] = q0[i];
+    END FOR;
+    initial_inlet: admitted = 0{mol};
+    initial_outlet: discharged = 0{mol};
+
+METHODS
+METHOD on_load;
+    FIX t := 0{s};
+    FIX d := 0.396{m}; FIX L := 1.982{m};
+    FIX eps := 0.4; FIX rho := 800{kg/m^3};
+    FIX T := 299{K}; FIX P := 2447638.838{Pa}; (* 355 international psia *)
+    FIX F := 31.1{mol/s}; FIX k := 4{1/s}; FIX yin := 0.05;
+    FOR i IN cell DO
+        FIX y0[i] := 0; FIX q0[i] := 0{mol/kg};
+        FREE der(y[i]), der(q[i]);
+        y[i].nominal := 0.05; q[i].nominal := 1{mol/kg};
+        (* Permit integrator roundoff and high-order spatial undershoot;
+           report actual minima rather than clipping states or mass. *)
+        q[i].lower_bound := -1{mol/kg}; qe[i].lower_bound := -1{mol/kg};
+        (* Transfer the computed solid profile exactly between operations,
+           including reported numerical undershoots: q0 is not a clip. *)
+        q0[i].lower_bound := -1{mol/kg};
+    END FOR;
+    FREE der(admitted), der(discharged);
+    balance_error.lower_bound := -1e6{mol};
+    discharged.lower_bound := -1{mol};
+    OBSERVE y[n], inventory, admitted, discharged, balance_error;
+    SOLVER QRSlv;
+    INTEGRATOR IDA;
+END on_load;
+METHOD purge;
+    (* Initial profiles must be supplied in reversed spatial order by the
+       containing cycle/driver. This method changes only operating inputs. *)
+    P := 103421.35939752{Pa}; F := 4.21{mol/s}; yin := 0;
+END purge;
+END psa_dynamic_bed;

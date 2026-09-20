@@ -45,7 +45,9 @@ class RelPropsWin:
 			self.exprbuff.set_text(self.instance.getWhenAsString(self.browser.sim.getModel()))
 
 		if str(self.instance.getType()) == "relation":
-			self.residual.set_text(str(self.instance.getResidual()))
+			self.residual.set_text(
+				self.browser.format_real_value(self.instance.getResidual())
+			)
 			self.included.set_active(self.instance.isIncluded())
 		else:
 			self.morepropsbutton.set_sensitive(False)
@@ -72,7 +74,10 @@ class RelPropsWin:
 		c = self.instance.getChildren()
 		if c:
 			for i in c:
-				text += "%s = %s\n" % (self.browser.sim.getInstanceName(i), i.getValue())
+				text += "%s = %s\n" % (
+					self.browser.sim.getInstanceName(i),
+					self.browser.get_instance_display_value(i),
+				)
 		else:
 				text += "This relation has no 'child' properties"
 		_dialog = InfoDialog(self.browser,self.window,text,title)
@@ -257,7 +262,10 @@ class VarPropsWin:
 		c = self.instance.getChildren()
 		if c:
 			for i in c:
-				text += "%s = %s\n" % (self.browser.sim.getInstanceName(i), i.getValue())
+				text += "%s = %s\n" % (
+					self.browser.sim.getInstanceName(i),
+					self.browser.get_instance_display_value(i),
+				)
 		else:
 				text += "This variable has no 'child' properties"
 		_dialog = InfoDialog(self.browser,self.window,text,title)

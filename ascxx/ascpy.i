@@ -439,6 +439,9 @@ public:
 
 	const std::vector<Instanc> getClique() const;
 	const std::vector<std::string> getAliases() const;
+	const std::string getDeclarationFilename(const Instanc &parent) const;
+	const long getDeclarationLine(const Instanc &parent) const;
+	const unsigned long long getInstanceId() const;
 };
 
 int saveDisplayUnitsOverrides(void);
@@ -472,7 +475,13 @@ void clearDisplayUnitsNameOverride(
 	}
 	Instanc __getitem__(const long &index){
 		return self->getChild(index);
-	} 
+	}
+	Instanc __getitem__(const std::string &index){
+		return self->getArrayElement(SymChar(index));
+	}
+	Instanc __getitem__(SymChar index){
+		return self->getArrayElement(index);
+	}
 	double __float__(){
 		if(self->isReal()){
 			return self->getRealValue();

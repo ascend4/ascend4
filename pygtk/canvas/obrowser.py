@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+from gtkcompat import gtk
 
 class Browser:
 	def make_row( self, piter, name, value ):
@@ -127,4 +125,3 @@ def test():
 
 if __name__ == "__main__":
     test()
-

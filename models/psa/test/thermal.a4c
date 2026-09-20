@@ -1,0 +1,42 @@
+REQUIRE "psa/psa_thermal.a4c";
+REQUIRE "psa/psa_thesis_thermal.a4c";
+
+MODEL psa_thesis_thermal_ipopt_check REFINES psa_thesis_thermal;
+    obj: MINIMIZE ads.product;
+END psa_thesis_thermal_ipopt_check;
+
+(* Independent operation fixture: allow zero solid loading and select
+   phi/ratio different from the showcase, including a ratio greater than 1. *)
+MODEL psa_thesis_purge_check;
+    bed IS_A psa_thermal_bed_data;
+    des IS_A psa_thesis_desorption(bed, 0.5, 2.0);
+    gas IS_A psa_thesis_purge_inventory(des);
+METHODS
+METHOD on_load;
+    FIX bed.V, bed.eps, bed.rho, bed.Cv, bed.cpA, bed.cpB, bed.H;
+    bed.V := 0.25{m^3}; bed.eps := 0.44; bed.rho := 800{kg/m^3};
+    bed.Cv := 804000{J/m^3/K};
+    bed.cpA := 36.8{J/mol/K}; bed.cpB := 29.3{J/mol/K};
+    bed.H := 20920{J/mol};
+    FIX des.P, des.T0, des.TinB, des.sA0, gas.initialA;
+    des.P := 1{bar}; des.T0 := 298{K}; des.TinB := 350{K};
+    des.sA0 := 100{mol}; gas.initialA := 0{mol};
+    des.Te := 290{K};
+    SOLVER QRSlv;
+END on_load;
+END psa_thesis_purge_check;
+
+MODEL psa_thermal_ipopt_check REFINES psa_thermal;
+    (* Fixed-input feasibility cross-check; NOT a design objective. *)
+    obj: MINIMIZE ads.product;
+END psa_thermal_ipopt_check;
+
+MODEL psa_pressure_time_check REFINES psa_paper_pressure_time;
+METHODS
+METHOD on_load;
+    FIX Phigh, Plow, a_pc, valve;
+    Phigh := 20{bar}; Plow := 1{bar};
+    a_pc := 1e-5{s/Pa}; valve := 1{s};
+    SOLVER QRSlv;
+END on_load;
+END psa_pressure_time_check;

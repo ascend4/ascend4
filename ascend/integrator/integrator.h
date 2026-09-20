@@ -65,6 +65,7 @@
 #include <ascend/linear/mtx.h>
 
 #include <ascend/system/slv_client.h>
+#include <stddef.h>
 
 #include "samplelist.h"
 #include "pantelides.h"
@@ -217,6 +218,11 @@ typedef void IntegratorFreeFn(void *enginedata);
 /**<
 	Integrators must provide a function like this that frees internal
 	data that they have allocated in their 'enginedata' structure.
+*/
+
+typedef int IntegratorGetVersionFn(char *buf, size_t buflen);
+/**<
+	Optional version-reporting hook for integrator engines.
 */
 
 typedef struct IntegratorInternalsStruct{
@@ -631,6 +637,12 @@ ASC_DLLSPEC int integrator_output_write_obs(IntegratorSystem *blsys);
 ASC_DLLSPEC int integrator_output_close(IntegratorSystem *blsys);
 
 ASC_DLLSPEC int integrator_has_initial_relations(IntegratorSystem *blsys);
+/** Solve INITIAL equations on the borrowed system, preserving its identity and
+    original solver client. Restore normal inclusion and derivative defaults on
+    every exit. Attempted values remain inspectable on failure. Structural
+    transitions invalidate retained client matrices: callers must presolve
+    before resuming algebraic solving (ODE startup does this automatically).
+    Rebuilds integrator analysis after the temporary INITIAL configuration. */
 ASC_DLLSPEC int integrator_initialise_with_solver(IntegratorSystem *blsys, int solver_index);
 ASC_DLLSPEC int integrator_initialise_ode(IntegratorSystem *blsys);
 
@@ -638,6 +650,8 @@ ASC_DLLSPEC int integrator_initialise_ode(IntegratorSystem *blsys);
 	DYNAMIC LIST OF INTEGRATORS
 */
 ASC_DLLSPEC int integrator_register(const IntegratorInternals *integ);
+ASC_DLLSPEC int integrator_register_version(const char *integrator_name, IntegratorGetVersionFn *getversion);
+ASC_DLLSPEC int integrator_get_version(const char *integrator_name, char *buf, size_t buflen);
 
 /* @} */
 

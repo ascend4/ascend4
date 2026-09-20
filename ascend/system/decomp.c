@@ -565,18 +565,18 @@ static int decomp_partition_mode(slv_system_t sys, slv_decomp_partition_t *decom
 	if(decomp->rank == 0){
 		if(mode == DECOMP_ACTIVE){
 			ret = decomp_copy_blocks_and_perms(mtx,decomp);
-			mtx_destroy(mtx);
+			asc_mtx_destroy(mtx);
 			if(ret != 0){
 				decomp_clear_owned(decomp);
 			}
 			return ret;
 		}
-		mtx_destroy(mtx);
+		asc_mtx_destroy(mtx);
 		return 1;
 	}
 	mtx_partition(mtx);
 	ret = decomp_copy_blocks_and_perms(mtx,decomp);
-	mtx_destroy(mtx);
+	asc_mtx_destroy(mtx);
 	if(ret != 0){
 		decomp_clear_owned(decomp);
 	}

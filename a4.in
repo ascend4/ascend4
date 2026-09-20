@@ -36,6 +36,19 @@ def get_effective_home():
 		return pathlib.Path(homedrive + homepath)
 	return pathlib.Path.home()
 
+def configure_gurobi_license(environ, user_home):
+	"""Use ASCEND's drop-in license only when no explicit override exists.
+	Without this file, leave Gurobi's native license search untouched. Never
+	read license contents or copy credentials into launcher configuration.
+	"""
+	if 'GRB_LICENSE_FILE' in environ:
+		return False
+	license_file = pathlib.Path(user_home) / '.config' / 'ascend' / 'gurobi.lic'
+	if not license_file.is_file():
+		return False
+	environ['GRB_LICENSE_FILE'] = str(license_file.resolve())
+	return True
+
 def add_at_start(envvar,pathcomponents):
 	"""
 	Add path components at start of envvar, but only if they're not already in the path somewhere.
@@ -128,6 +141,26 @@ def resolve_cmd_for_debugger(cmd):
 		return cmd
 	return shebang(cmd[0], cmd[1:])
 
+def prepare_pytest_display(cmd, visible=False):
+	"""Keep automated GUI tests off the user's desktop, including Wayland."""
+	environ = os.environ.copy()
+	if visible:
+		return cmd, environ
+	programs = {name: shutil.which(name) for name in ('xvfb-run', 'Xvfb', 'xauth')}
+	missing = [name for name, path in programs.items() if path is None]
+	if missing:
+		raise RuntimeError(
+			"a4 pytest requires a private Xvfb display; missing: %s. "
+			"On Debian/Ubuntu, install it with: sudo apt-get install xvfb xauth. "
+			"To explicitly use your desktop for debugging, run ./a4 pytest --visible."
+			% ', '.join(missing)
+		)
+	# xvfb-run supplies a new DISPLAY and XAUTHORITY. GTK must not bypass it
+	# by connecting to an inherited Wayland display instead.
+	environ['GDK_BACKEND'] = 'x11'
+	environ.pop('WAYLAND_DISPLAY', None)
+	return [programs['xvfb-run'], '-a'] + cmd, environ
+
 if __name__ == "__main__":
 	refuse_privileged_process()
 	argv = list(sys.argv)
@@ -138,7 +171,7 @@ if __name__ == "__main__":
 		and any(arg in ('-h', '--help') for arg in argv[2:])
 	):
 		argv[2:] = ['--help' if arg == '-h' else arg for arg in argv[2:]]
-		# Forward cutest help flags to the underlying runner instead of
+		# Forward test-runner help flags to the underlying runner instead of
 		# letting argparse consume them as subcommand help.
 		argv.insert(2, '--')
 	if (
@@ -217,9 +250,25 @@ if __name__ == "__main__":
 	p_cutest.set_defaults(action='cutest')
 	p_cutest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to test/test')
 
+	# Leave -h/--help to pytest. Launcher options must precede pytest arguments.
+	p_pytest = s.add_parser('pytest', add_help=False,
+		help='Run Python tests on a private Xvfb display (--visible to use your desktop)')
+	p_pytest.set_defaults(action='pytest')
+	p_pytest.add_argument('--visible', action='store_true',
+		help='Use the current display for debugging (put before pytest arguments)')
+	p_pytest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to pytest')
+
+	p_canvas = s.add_parser('canvas',help = 'Launch the ASCEND canvas modeller')
+	p_canvas.set_defaults(action='canvas')
+	p_canvas.add_argument('-f','--file',dest='canvas_file',help='Canvas file to open')
+	p_canvas.add_argument('-l','--library',help='Canvas model library to load')
+
 	p_units = s.add_parser('units',help = 'Manage display-units overrides')
 	p_units.set_defaults(action='units')
 	p_units.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to rununits.py')
+
+	p_solvers = s.add_parser('solvers',help = 'List available solver and integrator engines')
+	p_solvers.set_defaults(action='solvers')
 	
 	p_sh = s.add_parser('env',help = 'Create a sub-shell in which ASCEND environment variables are set.')
 	p_sh.set_defaults(action='env')
@@ -232,7 +281,7 @@ if __name__ == "__main__":
 
 	args, unknown = p.parse_known_args(argv[1:])
 	if unknown:
-		if hasattr(args, 'action') and args.action == 'cutest':
+		if hasattr(args, 'action') and args.action in ('cutest', 'pytest'):
 			# Pass unknown args through to the test runner.
 			if not hasattr(args, 'rest') or args.rest is None:
 				args.rest = []
@@ -258,6 +307,8 @@ if __name__ == "__main__":
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
 
 	restart = []
+	if configure_gurobi_license(os.environ, get_effective_home()):
+		MSG("Using the ASCEND Gurobi license file")
 
 	# for Mac, add our local PyGTK libraries at start of Python path:
 	#if platform.system()=="Darwin":
@@ -388,11 +439,27 @@ if __name__ == "__main__":
 		if rest and rest[0] == '--':
 			rest = rest[1:]
 		cmd += shebang(sourceroot / 'test' / 'test', rest)
+	elif args.action == 'pytest':
+		rest = list(args.rest)
+		if rest and rest[0] == '--':
+			rest = rest[1:]
+		cmd += [PYTHON, '-m', 'pytest'] + rest
+		if args.gdb or args.gdb1 or args.valgrind or args.callgrind:
+			# Debug the tests themselves, not just the subprocess coordinator.
+			cmd += ['--no-isolation']
+	elif args.action == 'canvas':
+		cmd += [PYTHON, sourceroot / 'pygtk' / 'canvas' / 'canvas.py']
+		if args.canvas_file:
+			cmd += ['--file', args.canvas_file]
+		if args.library:
+			cmd += ['--library', args.library]
 	elif args.action == 'units':
 		rest = list(args.rest)
 		if rest and rest[0] == '--':
 			rest = rest[1:]
 		cmd += [PYTHON, sourceroot / 'ascxx' / 'rununits.py'] + rest
+	elif args.action == 'solvers':
+		cmd += [PYTHON, sourceroot / 'ascxx' / 'listsolvers.py']
 	elif args.action == 'env' :
 		shargs = []
 		if os.environ.get('ASCEND_SHELL'):
@@ -437,8 +504,24 @@ if __name__ == "__main__":
 			, '--args'
 		] + resolve_cmd_for_debugger(cmd)
 		
+	child_env = None
+	if getattr(args, 'action', None) == 'pytest':
+		try:
+			cmd, child_env = prepare_pytest_display(cmd, args.visible)
+		except RuntimeError as error:
+			sys.exit(str(error))
+		child_env['PYTHONPATH'] = os.pathsep.join(filter(None, (
+			str(sourceroot / 'tools'), child_env.get('PYTHONPATH'))))
+		plugins = child_env.get('PYTEST_PLUGINS', '').split(',')
+		if 'ascend_pytest' not in plugins:
+			plugins.append('ascend_pytest')
+		child_env['PYTEST_PLUGINS'] = ','.join(filter(None, plugins))
+		if not args.visible:
+			print("a4 pytest: using a private Xvfb display (--visible to use your desktop).",
+				file=sys.stderr, flush=True)
+
 	MSG("CMD =",cmd)
-	proc = subprocess.run(cmd)
+	proc = subprocess.run(cmd, env=child_env)
 	sys.exit(proc.returncode)
 
 # vim:syntax=python:ts=4:sw=4:noet

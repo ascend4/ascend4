@@ -13,6 +13,8 @@ if env.get('WITH_CONOPT'):
 	)
 	if env.get('CONOPT_CPPPATH'):
 		solver_env.AppendUnique(CPPPATH = env['CONOPT_CPPPATH'])
+	if env.get('CONOPT_BUNDLED4'):
+		solver_env.AppendUnique(CPPPATH = ['#solvers/conopt'])
 
 	if env.get('CONOPT_LINKED'):
 		solver_env.AppendUnique(

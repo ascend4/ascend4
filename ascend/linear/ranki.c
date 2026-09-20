@@ -338,10 +338,10 @@ int ranki_entry(linsolqr_system_t sys,mtx_region_t *region){
       return 1;
 
    if( NOTNULL(sys->inverse) )
-      mtx_destroy(sys->inverse);
+      asc_mtx_destroy(sys->inverse);
    sys->inverse=NULL;
    if( NOTNULL(sys->factors) )
-      mtx_destroy(sys->factors);
+      asc_mtx_destroy(sys->factors);
    if( region == mtx_ENTIRE_MATRIX ) determine_pivot_range(sys);
    else square_region(sys,region);
 

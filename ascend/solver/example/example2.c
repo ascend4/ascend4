@@ -282,7 +282,7 @@ int main()
    print_residuals(D2,range);
    print_solution(D2,range);
 
-   mtx_destroy(N);
+   asc_mtx_destroy(N);
    linsol_destroy(sys);
 
    /* 2nd case */

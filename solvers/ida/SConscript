@@ -175,6 +175,71 @@ def CheckIDA(context):
 	context.Result(is_ok)
 	return is_ok
 
+klu_test_text = """
+#include <sundials/sundials_config.h>
+#include <sunlinsol/sunlinsol_klu.h>
+int main(void){
+#if SUNDIALS_VERSION_MAJOR >= 6
+    SUNContext ctx;
+# if SUNDIALS_VERSION_MAJOR >= 7
+    if(SUNContext_Create(SUN_COMM_NULL, &ctx)) return 1;
+# else
+    if(SUNContext_Create(NULL, &ctx)) return 1;
+# endif
+    N_Vector y = N_VNew_Serial(1, ctx);
+    SUNMatrix A = SUNSparseMatrix(1, 1, 1, CSC_MAT, ctx);
+    SUNLinearSolver S = SUNLinSol_KLU(y, A, ctx);
+#else
+    N_Vector y = N_VNew_Serial(1);
+    SUNMatrix A = SUNSparseMatrix(1, 1, 1, CSC_MAT);
+    SUNLinearSolver S = SUNLinSol_KLU(y, A);
+#endif
+    if(!S) return 1;
+    /* The ASCEND recovery path calls KLU directly for fresh numerical pivots. */
+    SM_INDEXPTRS_S(A)[0] = 0; SM_INDEXPTRS_S(A)[1] = 1;
+    SM_INDEXVALS_S(A)[0] = 0; SM_DATA_S(A)[0] = 1;
+    if(SUNLinSolSetup(S, A)) return 1;
+    sun_klu_numeric *numeric = sun_klu_factor(SM_INDEXPTRS_S(A), SM_INDEXVALS_S(A),
+        SM_DATA_S(A), SUNLinSol_KLUGetSymbolic(S), SUNLinSol_KLUGetCommon(S));
+    if(!numeric) return 1;
+    sun_klu_free_numeric(&numeric, SUNLinSol_KLUGetCommon(S));
+    SUNLinSolFree(S); SUNMatDestroy(A); N_VDestroy(y);
+#if SUNDIALS_VERSION_MAJOR >= 6
+    SUNContext_Free(&ctx);
+#endif
+    return 0;
+}
+"""
+
+def CheckIDAKLU(context):
+    context.Message('Checking for optional IDA KLU... ')
+    oldpaths = list(context.env.get('CPPPATH', []))
+    oldlibpaths = list(context.env.get('LIBPATH', []))
+    oldlibs = list(context.env.get('LIBS', []))
+    extra = context.env.get('SUNDIALS_KLU_CPPPATH') or []
+    if isinstance(extra, str):
+        extra = extra.split(os.pathsep)
+    # SuiteSparse installs klu.h either directly in include or in suitesparse/.
+    paths = _as_list(context.env.get('SUNDIALS_CPPPATH')) + ['/usr/include', '/usr/local/include']
+    extra += [os.path.join(p, 'suitesparse') for p in paths
+              if os.path.isdir(os.path.join(p, 'suitesparse'))]
+    libs = context.env.get('SUNDIALS_KLU_LIBS') or []
+    if isinstance(libs, str):
+        libs = libs.replace(',', ' ').split()
+    context.env.AppendUnique(CPPPATH=extra)
+    libpaths = context.env.get('SUNDIALS_KLU_LIBPATH') or []
+    if isinstance(libpaths, str):
+        libpaths = libpaths.split(os.pathsep)
+    context.env.AppendUnique(LIBPATH=libpaths)
+    context.env.AppendUnique(LIBS=['sundials_sunlinsolklu', 'sundials_sunmatrixsparse', 'klu'] + libs)
+    ok = context.TryLink(klu_test_text, '.c')
+    if ok:
+        context.env.AppendUnique(CPPDEFINES=['ASC_IDA_KLU'])
+    else:
+        context.env.Replace(CPPPATH=oldpaths, LIBPATH=oldlibpaths, LIBS=oldlibs)
+    context.Result(ok)
+    return ok
+
 if env.get('WITH_IDA'):
 	solver_env = env.Clone()
 	ida_reason = None
@@ -198,6 +263,7 @@ if env.get('WITH_IDA'):
 	conf = solver_env.Configure(custom_tests={
 		'CheckSUNDIALSVersion': CheckSUNDIALSVersion,
 		'CheckIDA': CheckIDA,
+		'CheckIDAKLU': CheckIDAKLU,
 	})
 	if not conf.CheckSUNDIALSVersion():
 		conf.env['WITH_IDA'] = False
@@ -205,6 +271,8 @@ if env.get('WITH_IDA'):
 	elif not conf.CheckIDA():
 		conf.env['WITH_IDA'] = False
 		ida_reason = 'Unable to compile/link against SUNDIALS/IDA'
+	if conf.env['WITH_IDA'] and env.get('WITH_IDA_KLU', True):
+		conf.CheckIDAKLU()
 	solver_env = conf.Finish()
 
 	env.set_optional('ida', active=solver_env['WITH_IDA'], reason=ida_reason)
@@ -215,11 +283,24 @@ if env.get('WITH_IDA'):
 		solver_env.AppendUnique(LIBPATH=['#'])
 		solver_env.AppendUnique(LIBS=['ascend'])
 
-		srcs = ['ida.c', 'idacalc.c', 'idalinear.c', 'idaio.c', 'idaprec.c', 'idaanalyse.c', 'idaboundary.c']
-		lib = solver_env.SharedLibrary('ida', srcs,
+		srcs = ['ida.c', 'idacalc.c', 'idalinear.c', 'idaio.c', 'idaprec.c', 'idaanalyse.c', 'idaboundary.c', 'idasparse.c']
+		objects = solver_env.SharedObject(srcs)
+		lib = solver_env.SharedLibrary('ida', objects,
 			SHLIBSUFFIX=env['EXTLIB_SUFFIX'],
 			SHLIBPREFIX=env['EXTLIB_PREFIX']
 		)
+
+		# A focused runner also works with CUnit 2.1, independently of the
+		# newer CUnit features required by the complete ASCEND test harness.
+		if 'test-ida' in COMMAND_LINE_TARGETS:
+			test_env = solver_env.Clone()
+			test_env.AppendUnique(CPPPATH=_as_list(env.get('CUNIT_CPPPATH')))
+			test_env.AppendUnique(LIBPATH=_as_list(env.get('CUNIT_LIBPATH')))
+			test_env.AppendUnique(LIBS=['cunit'])
+			test_env.AppendUnique(CPPDEFINES=['ASC_TEST_IDA_INTERNALS'])
+			cases = test_env.Object('test_ida_cases', '#ascend/integrator/test/test_ida.c')
+			runner = test_env.Program('test_ida', ['test_ida_runner.c', cases] + objects)
+			env.Alias('test-ida', [runner, lib])
 
 		env.Depends(lib, env['libascend'])
 		env['extfns'] += lib

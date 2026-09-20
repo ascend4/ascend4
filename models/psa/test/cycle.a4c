@@ -1,0 +1,48 @@
+REQUIRE "psa/psa_cycle.a4c";
+
+(* The current IPOPT adapter requires an objective. All physical inputs
+   remain fixed and the balances determine a unique result, so this is
+   a solver cross-check, NOT design optimisation. *)
+MODEL psa_cycle_ipopt_check REFINES psa_cycle;
+    obj: MINIMIZE product;
+END psa_cycle_ipopt_check;
+
+MODEL psa_cycle_1pe_ipopt_check REFINES psa_cycle_1pe;
+    obj: MINIMIZE product;
+END psa_cycle_1pe_ipopt_check;
+
+(* Independent two-bed event; permits unequal bed volumes for conservation
+   checks, unlike the identical-bed periodic showcase. *)
+MODEL psa_pe_unit_check;
+    donor, receiver IS_A psa_isothermal_bed;
+    ds, df IS_A psa_bed_state(donor);
+    rs, rf IS_A psa_bed_state(receiver);
+    pe IS_A psa_equalisation_step(ds, df, rs, rf);
+METHODS
+METHOD on_load;
+    FIX donor.d, donor.L, donor.eps, donor.rho, donor.T;
+    FIX receiver.d, receiver.L, receiver.eps, receiver.rho, receiver.T;
+    donor.d := 0.396{m}; donor.L := 1.982{m}; donor.eps := 0.44;
+    donor.rho := 800{kg/m^3}; donor.T := 299{K};
+    receiver.d := 0.396{m}; receiver.L := 1.982{m}; receiver.eps := 0.44;
+    receiver.rho := 800{kg/m^3}; receiver.T := 299{K};
+    FIX ds.P, ds.gA, ds.sA, rs.P, rs.gA, rs.sA;
+    ds.P := 24{bar}; ds.gA := 4{mol}; ds.sA := 90{mol};
+    rs.P := 1{bar}; rs.gA := 0{mol}; rs.sA := 2{mol};
+    SOLVER QRSlv;
+END on_load;
+END psa_pe_unit_check;
+
+MODEL psa_cycle_wrong_bed;
+    a, b IS_A psa_isothermal_bed;
+    start IS_A psa_bed_state(a);
+    finish IS_A psa_bed_state(b);
+    op IS_A psa_blowdown_step(start, finish);
+END psa_cycle_wrong_bed;
+
+MODEL psa_cycle_unshared_purge_pressure;
+    bed IS_A psa_isothermal_bed;
+    start, finish IS_A psa_bed_state(bed);
+    (* Equal initial numerical values are not a shared pressure variable. *)
+    op IS_A psa_purge_step(start, finish, 0.98, 1.25);
+END psa_cycle_unshared_purge_pressure;

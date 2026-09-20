@@ -22,6 +22,8 @@
 	T(link) \
 	T(conditional) \
 	T(der) \
+	T(lp_export) \
+	T(cond_config) \
 	T(leastsq)
 
 #define PROTO_TEST(NAME) PROTO(system,NAME)

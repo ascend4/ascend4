@@ -68,6 +68,26 @@ Solver::getName() const{
 	return name;
 }
 
+const string
+Solver::getVersion() const{
+	char version[256];
+	version[0] = '\0';
+	if(solver_get_version(name.c_str(),version,sizeof(version))){
+		return "";
+	}
+	return version;
+}
+
+const string
+Solver::getDetails() const{
+	char details[512];
+	details[0] = '\0';
+	if(solver_get_details(name.c_str(),details,sizeof(details))){
+		return "";
+	}
+	return details;
+}
+
 //---------------------------------
 // >>>> GLOBAL FUNCTIONS <<<<
 // for registering solvers and querying the complete list

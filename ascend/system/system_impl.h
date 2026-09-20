@@ -59,6 +59,7 @@ struct system_structure {
 		simultaneously. The serial_id provides a unique tag that will
 		never repeat. Clients concerned with identity but not capable
 		of tracking time must use the serial_id for checks. */
+	unsigned long solver_lists_revision; /**< Replacement or external reordering of working lists. */
 
 	SlvBackendToken instance;	/* should be void * in the most generic case */
 
@@ -212,7 +213,7 @@ struct system_structure {
 	struct rel_relation *obj; /**< selected for optimization from list */
 	struct var_variable *objvar; /**< selected for optimization from list */
 	struct gl_list_t *symbollist; /**< list of symbol values struct used to assign an integer value to a symbol value */
-	struct gl_list_t *hidden_instances; /**< hidden backend-only instances created during dynamic analysis */
+	struct gl_list_t *hidden_instances; /**< owned list of borrowed runtime derivative instances */
 	struct gl_list_t *classifier_artifacts; /**< generated CASE IF guard artifacts owned by this system */
 	struct gl_list_t *classifier_encodings; /**< generated CASE IF guard Boolean encodings owned by this system */
 	struct {

@@ -1,0 +1,74 @@
+(* Part I pressure-changing operations, Smith & Westerberg (1991),
+   printed p.2970, eqs (15)-(25), and feed-repressurisation eq (30).
+   ~/Downloads/1-s2.0-000925099185001E-main.pdf.
+   Literal-equation audit: not the conservative pressure-changing models.
+   Caloric state U is used for DIAGNOSTICS, not an extra energy constraint.
+   See psa_part1_cycle.md for the explicit receiver-side interpretations. *)
+REQUIRE "psa/psa_thermal_cycle.a4l";
+
+MODEL psa_part1_blowdown(start WILL_BE psa_caloric_state;
+    finish WILL_BE psa_caloric_state; y WILL_BE fraction;)
+WHERE (start.bed, finish.bed WILL_BE_THE_SAME;
+    start.share = 1; finish.share = 1;);
+    Pvalve "Gas pressure BEFORE thermal equilibration" IS_A pressure;
+    Tgas "Gas-only expansion endpoint temperature" IS_A temperature;
+    cp "Printed feed-composition heat capacity, not the actual mixed void composition" IS_A molar_heat_capacity;
+    x "Actual mixed void methane fraction for component bookkeeping" IS_A fraction;
+    exponent IS_A positive_factor;
+    wasteA, wasteH IS_A psa_amount;
+    Eout, energy_defect IS_A psa_signed_energy;
+    heat_capacity: cp = y*start.bed.cpA+(1-y)*start.bed.cpB;
+    eq_15: Tgas = start.T*(Pvalve/start.P)^(start.bed.R/cp);
+    eq_18: finish.n = Pvalve*start.bed.V*start.bed.eps/(start.bed.R*Tgas);
+    eq_22: finish.T-start.T = finish.n*cp*(Tgas-finish.T)/start.bed.Csolid;
+    (* Eq (24) is the ideal-gas equation already owned by finish.
+       Do not also force finish.P=Pvalve. No solid desorbs in this step. *)
+    frozen_solid: finish.sA = start.sA;
+    initial_composition: start.gA = x*start.n;
+    final_composition: finish.gA = x*finish.n;
+    methane: wasteA = start.gA-finish.gA;
+    hydrogen: wasteH = start.gH-finish.gH;
+    (* Integrate outlet h along the printed gas-only expansion path.
+       Gas composition for h is the ACTUAL void composition. This makes
+       any mismatch with the printed feed-based cp visible in the defect. *)
+    path_exponent: exponent = start.bed.R/(cp-start.bed.R);
+    outlet_energy: Eout/start.bed.Csolid =
+        (x*start.bed.cpA+(1-x)*start.bed.cpB)*
+        (start.T*start.n/(exponent+1)*(1-(finish.n/start.n)^(exponent+1))
+        - start.bed.Tref*(start.n-finish.n))/start.bed.Csolid;
+    diagnostic: energy_defect/start.bed.Csolid =
+        (finish.U-start.U+Eout)/start.bed.Csolid;
+END psa_part1_blowdown;
+
+MODEL psa_part1_repressurisation(start WILL_BE psa_caloric_state;
+    finish WILL_BE psa_caloric_state; y WILL_BE fraction;
+    Tfeed WILL_BE temperature; Psource WILL_BE pressure;)
+WHERE (start.bed, finish.bed WILL_BE_THE_SAME;
+    start.share = 1; finish.share = 1;);
+    Pvalve "Endpoint pressure BEFORE capture/thermal reconciliation" IS_A pressure;
+    TB, TF "Compressed initial H2 and incoming-feed endpoint temperatures" IS_A temperature;
+    cp IS_A molar_heat_capacity;
+    feed IS_A psa_amount;
+    Efeed, energy_defect IS_A psa_signed_energy;
+    heat_capacity: cp = y*start.bed.cpA+(1-y)*start.bed.cpB;
+    eq_16: TB = start.T*(Pvalve/start.P)^(start.bed.R/start.bed.cpB);
+    eq_17: TF = Tfeed*(Pvalve/Psource)^(start.bed.R/cp);
+    (* Eqs (19)-(21) after eliminating displaced H2 volume. Eq (21)'s
+       printed volume label appears repeated; use it as the initial-H2
+       occupied volume as required by eq (20). Initial voids are pure H2.
+       Eq (23) uses feed cp even for the initial H2 term; retained here.
+       No adsorption heat term appears in printed eq (23); none added. *)
+    gas_partition: feed = (Pvalve*start.bed.V*start.bed.eps/start.bed.R-start.gH*TB)/TF;
+    eq_23: finish.T-start.T = (start.gH*cp*(TB-finish.T)
+        + feed*cp*(TF-finish.T))/start.bed.Csolid;
+    clean_voids: finish.gA = 0{mol};
+    hydrogen: finish.gH = start.gH+(1-y)*feed;
+    methane: finish.sA = start.sA+y*feed;
+    (* Eq (25) is finish's ideal-gas equation; eq (30) follows directly
+       from hydrogen balance and the two ideal-gas inventories.
+       Efeed uses the specified external reservoir Tfeed. The diagnostic
+       includes any omitted conditioning/work between reservoir and bed. *)
+    inlet_energy: Efeed = feed*cp*(Tfeed-start.bed.Tref);
+    diagnostic: energy_defect/start.bed.Csolid =
+        (finish.U-start.U-Efeed)/start.bed.Csolid;
+END psa_part1_repressurisation;

@@ -2209,6 +2209,42 @@ upper and lower bounds displayed.</property>
                       </object>
                     </child>
                     <child>
+                      <object class="GtkCheckMenuItem" id="show_tree_blocks">
+                        <property name="use_action_appearance">False</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Show solver _blocks in tree</property>
+                        <property name="tooltip_text" translatable="yes">Show solver block numbers for variables and relations in the model tree</property>
+                        <property name="use_underline">True</property>
+                        <property name="active">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkCheckMenuItem" id="relations_appear_last">
+                        <property name="use_action_appearance">False</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Relations appear _last</property>
+                        <property name="tooltip_text" translatable="yes">Place relations after other rows when sorting by name or solver block</property>
+                        <property name="use_underline">True</property>
+                        <property name="active">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="significant_figures">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Significant _figures</property>
+                        <property name="use_underline">True</property>
+                        <child type="submenu">
+                          <object class="GtkMenu" id="significant_figures_menu">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="show_variables">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>

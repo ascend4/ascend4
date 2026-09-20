@@ -31,6 +31,7 @@
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/mem.h>
 #include <ascend/general/list.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <ascend/linear/mtx_vector.h>
@@ -47,6 +48,72 @@
 typedef struct conopt_system_structure *conopt_system_t;
 
 ASC_DLLSPEC SolverRegisterFn conopt_register;
+
+static int conopt_get_version(char *buf, size_t buflen){
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+#ifdef ASC_CONOPT_API4
+	{
+		int major = 0, minor = 0, patch = 0;
+# ifdef ASC_LINKED_CONOPT
+		COIGET_Version(&major,&minor,&patch);
+# else
+		if(asc_conopt_get_version(&major,&minor,&patch)){
+			major = CONOPT_VERSION_MAJOR;
+			minor = CONOPT_VERSION_MINOR;
+			patch = CONOPT_VERSION_PATCH;
+		}
+# endif
+		snprintf(buf,buflen,"CONOPT %d.%d.%d",major,minor,patch);
+		return 0;
+	}
+#else
+	snprintf(buf,buflen,"CONOPT 3 API");
+	return 0;
+#endif
+}
+
+static int conopt_get_details(char *buf, size_t buflen){
+#ifdef ASC_CONOPT_API4
+	char *licstring = NULL;
+	unsigned char *p;
+	int status;
+	if(buf == NULL || buflen == 0){
+		return 1;
+	}
+	status = asc_conopt_validate_license(&licstring);
+	if(licstring != NULL){
+		for(p = (unsigned char *)licstring; *p != '\0'; ++p){
+			if(*p < 0x20 || *p == 0x7f){
+				*p = '?';
+			}
+		}
+	}
+	switch(status){
+		case ASC_CONOPT_LICENSE_ABSENT:
+			snprintf(buf,buflen,"unlicensed; demo limits apply");
+			break;
+		case ASC_CONOPT_LICENSE_VALID:
+			snprintf(buf,buflen,"licensed: %s",
+				licstring != NULL ? licstring : "configured");
+			break;
+		case ASC_CONOPT_LICENSE_INVALID:
+			snprintf(buf,buflen,"invalid license: %s; demo limits apply",
+				licstring != NULL ? licstring : "configured");
+			break;
+		default:
+			snprintf(buf,buflen,"license validation inconclusive");
+			break;
+	}
+	asc_conopt_license_string_destroy(licstring);
+	return 0;
+#else
+	(void)buf;
+	(void)buflen;
+	return 1;
+#endif
+}
 
 #define conopt_register_conopt_function register_conopt_function
 #define conopt_coicsm coicsm
@@ -1576,7 +1643,7 @@ static SlvClientToken conopt_create(slv_system_t server, int32*statusindex){
 
 static void destroy_matrices( conopt_system_t sys){
    if( sys->J.mtx ) {
-     mtx_destroy(sys->J.mtx);
+     asc_mtx_destroy(sys->J.mtx);
    }
 }
 
@@ -2805,6 +2872,11 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to initialise CONOPT model handle.");
 		return -4;
 	}
+	if(asc_conopt_apply_license(cntvect) == ASC_CONOPT_LICENSE_ERROR){
+		COI_Free(&cntvect);
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to configure the CONOPT license.");
+		return -4;
+	}
 #else
 	cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
 	COIDEF_Ini(cntvect);
@@ -3124,7 +3196,12 @@ int conopt_register(void){
 		return 1;
 	}
 #endif
-	return solver_register(&conopt_internals);
+	if(solver_register(&conopt_internals)){
+		return 1;
+	}
+	solver_register_version("CONOPT",conopt_get_version);
+	solver_register_details("CONOPT",conopt_get_details);
+	return 0;
 }
 
 #ifndef ASC_LINKED_CONOPT

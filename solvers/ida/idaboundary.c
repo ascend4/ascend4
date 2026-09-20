@@ -8,6 +8,8 @@
 #include "idaboundary.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
+#include <math.h>
 
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
@@ -24,6 +26,7 @@
 #include <ascend/system/slv_common.h>
 #include <ascend/system/logrel.h>
 #include <ascend/system/rel.h>
+#include <ascend/system/bndman.h>
 #include <ascend/system/system_impl.h>
 
 #include <ascend/compiler/atomvalue.h>
@@ -503,10 +506,44 @@ int ida_bnd_reanalyse(IntegratorSystem *integ){
 	integ->n_y = 0;
 
 
-	integrator_ida_analyse(integ);
+	if(integrator_ida_analyse(integ) != 0) return 1;
 	enginedata = integrator_ida_enginedata(integ);
 	(void)enginedata;
 	return ida_refresh_event_roots(integ);
+}
+
+/* A continuous crossing selects the right-limit truth at the root. Keep it
+ * during same-time logical/consistency iteration, but release it when a reset
+ * or consistency solve moves the condition away from the root roundoff band.
+ * SATISFIED tolerances are deliberately not used: for inequalities they must
+ * not mask a small but resolved reset to the opposite side. */
+void ida_bnd_update_crossings(IntegratorSystem *integ){
+	IntegratorIdaData *data = integrator_ida_enginedata(integ);
+	int i;
+	for(i = 0; i < data->nbnds; ++i){
+		struct bnd_boundary *bnd = data->bndlist[i];
+		if(bnd_ida_crossed(bnd) && (bnd_kind(bnd) != e_bnd_rel
+				|| fabs(bndman_real_eval(bnd)) > data->boundary_root_tol[i])){
+			if(ida_hybrid_trace_enabled()){
+				fprintf(stderr, "[HYBRID] release boundary %d residual=%.17g band=%.17g\n",
+					i, bnd_kind(bnd) == e_bnd_rel ? bndman_real_eval(bnd) : 0.0,
+					data->boundary_root_tol[i]);
+			}
+			bnd_set_ida_crossed(bnd, 0);
+		}
+	}
+}
+
+void ida_bnd_clear_crossings(IntegratorSystem *integ){
+	IntegratorIdaData *data = integrator_ida_enginedata(integ);
+	int i;
+	for(i = 0; i < data->nbnds; ++i){
+		bnd_set_ida_crossed(data->bndlist[i], 0);
+	}
+	if(data->boundary_root_tol != NULL){
+		ASC_FREE(data->boundary_root_tol);
+		data->boundary_root_tol = NULL;
+	}
 }
 
 int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1){
@@ -530,6 +567,7 @@ int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1
 
 		if(need_logical_solve){
 			int already_solved = 0;
+			ida_bnd_update_crossings(integ);
 
 			if(ida_discrete_snapshot_capture(integ->system, &dshot) != 0){
 				gl_destroy(applied_reinits);
@@ -718,6 +756,11 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	/* Flag the crossed boundary and update bnd_cond_states */
 	enginedata = integ->enginedata;
 	num_bnds = enginedata->nbnds;
+	enginedata->boundary_root_tol = ASC_NEW_ARRAY_CLEAR(realtype, num_bnds);
+	if(enginedata->boundary_root_tol == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate crossing state");
+		return -1;
+	}
 	for (i = 0; i < num_bnds; i++) {
 		if (rootsfound[i]) {
 			struct bnd_boundary *bnd;
@@ -728,14 +771,26 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 			bnd = enginedata->bndlist[i];
 			bnd_set_ida_crossed(bnd, 1);
 
-			/* Flag boundary for change, update bnd_cond_state */
-			if (bnd_cond_states[i] == 0) {
-				bnd_set_ida_value(bnd, 1);
-				bnd_cond_states[i] = 1;
-			} else {
-				bnd_set_ida_value(bnd, 0);
-				bnd_cond_states[i] = 0;
+			/* Inequality truth follows the side of the residual, not its
+			 * value exactly at zero, nor a possibly stale previous Boolean. */
+			if(bnd_kind(bnd) == e_bnd_rel){
+				struct rel_relation *rel = bnd_rel(bnd_real_cond(bnd));
+				double nominal = fabs(rel_nominal(rel));
+				/* Include the residual at IDA's returned root plus floating
+				 * point roundoff at the relation's nominal scale. */
+				enginedata->boundary_root_tol[i] = fabs(bndman_real_eval(bnd))
+					+ 32 * DBL_EPSILON * (nominal > 0 ? nominal : 1.0);
+				if(rel_greater(rel)){
+					bnd_cond_states[i] = rootsfound[i] > 0;
+				}else if(rel_less(rel)){
+					bnd_cond_states[i] = rootsfound[i] < 0;
+				}else{
+					bnd_cond_states[i] = !bnd_cond_states[i];
+				}
+			}else{
+				bnd_cond_states[i] = rootsfound[i] > 0;
 			}
+			bnd_set_ida_value(bnd, bnd_cond_states[i]);
 		}
 	}
 
@@ -762,13 +817,8 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 		}
 	}
 
-	/* Reset the boundary flag */
-	for (i = 0; i < num_bnds; i++) {
-		if (rootsfound[i]) {
-			struct bnd_boundary *bnd = enginedata->bndlist[i];
-			bnd_set_ida_crossed(bnd, 0);
-		}
-	}
+	/* Crossing overrides remain active through same-time event iteration.
+	 * The caller clears them on both success and failure. */
 
 	/*
 	 * Emit the post-logical-settling state at the same event time. This lets
@@ -781,7 +831,7 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	/* update the main system if required */
 	if (ida_discrete_snapshot_changed(&dshot)) {
 		ida_discrete_snapshot_clear(&dshot);
-		ida_bnd_reanalyse(integ);
+		if(ida_bnd_reanalyse(integ) != 0) return -1;
 
 		return 1;
 	} else {

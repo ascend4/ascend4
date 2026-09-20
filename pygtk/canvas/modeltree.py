@@ -1,6 +1,4 @@
-import pygtk
-pygtk.require('2.0')
-import gtk, pango
+from gtkcompat import gtk, pango
 import blockinstance
 
 BROWSER_FIXED_COLOR = "#008800"

@@ -84,6 +84,7 @@ static int reindex_vars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
     var_set_sindex(vp[c],c);
   }
   ascfree(vtmp);
+  slv_solver_lists_changed(sys);
   return 0;
 }
 /**
@@ -127,6 +128,7 @@ static int reindex_rels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
     rel_set_sindex(rp[c],c);
   }
   ascfree(rtmp);
+  slv_solver_lists_changed(sys);
   return 0;
 }
 
@@ -192,7 +194,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
 
   if (slv_make_incidence_mtx(sys,mtx,&vf,&rf)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"failure in creating incidence matrix.");
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 1;
   }
 
@@ -233,7 +235,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
   len = mtx_number_of_blocks(mtx);
   newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
   if (newblocks == NULL) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 2;
   }
   for (c = 0 ; c < len; c++) {
@@ -337,20 +339,20 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
    * and reorder the lists.
    */
   if (reindex_vars_from_mtx(sys,0,vlen-1,mtx)) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 2;
   }
   /* now, at last we have rows jacobian in the order we want the lists to
    * be handed to the solvers. So, we need to reset the rel sindex values.
    */
   if (reindex_rels_from_mtx(sys,0,rlen-1,mtx)) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 2;
   }
 
   /* CONSOLE_DEBUG("FIRST REL = %p",rp[0]); */
 
-  mtx_destroy(mtx);
+  asc_mtx_destroy(mtx);
   return 0;
 }
 
@@ -482,6 +484,7 @@ int slv_block_partition_harwell(slv_system_t sys)
   }
 
   /* reset solver indicies to make life easier */
+  slv_solver_lists_changed(sys);
   for (c = 0; c < vlen; c++) {
     vp[c] = vtmp[c];
     var_set_sindex(vp[c],c);
@@ -793,7 +796,7 @@ int slv_spk1_reorder_block(slv_system_t sys,int bnum,int transpose)
   if (slv_make_incidence_mtx(sys,mtx,&vf,&rf)) {
     FPRINTF(stderr,
       "slv_spk1_reorder_block: failure in creating incidence matrix.\n");
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 1;
   }
   /* verify that block has no empty columns, though not checking diagonal */
@@ -801,7 +804,7 @@ int slv_spk1_reorder_block(slv_system_t sys,int bnum,int transpose)
     coord.col = mtx_FIRST;
     coord.row = c;
     if (mtx_next_in_row(mtx,&coord,mtx_ALL_COLS), coord.col == mtx_LAST) {
-      mtx_destroy(mtx);
+      asc_mtx_destroy(mtx);
       FPRINTF(stderr, "slv_spk1_reorder_block: empty row (%d) found.\n",c);
       return 1;
     }
@@ -809,7 +812,7 @@ int slv_spk1_reorder_block(slv_system_t sys,int bnum,int transpose)
     coord.col = c;
     if (mtx_next_in_col(mtx,&coord,mtx_ALL_ROWS), coord.row == mtx_LAST) {
       FPRINTF(stderr, "slv_spk1_reorder_block: empty col (%d) found.\n",c);
-      mtx_destroy(mtx);
+      asc_mtx_destroy(mtx);
       return 1;
     }
   }
@@ -819,17 +822,17 @@ int slv_spk1_reorder_block(slv_system_t sys,int bnum,int transpose)
     mtx_reorder(mtx,&reg,mtx_SPK1);
   }
   if (reindex_vars_from_mtx(sys,reg.col.low,reg.col.high,mtx)) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 2;
   }
   if (reindex_rels_from_mtx(sys,reg.row.low,reg.row.high,mtx)) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 2;
   }
   d = slv_get_dofdata(sys);
   d->reorder.block_reordering = 1;	/* spk1 */
 
-  mtx_destroy(mtx);
+  asc_mtx_destroy(mtx);
   return 0;
 }
 
@@ -885,7 +888,7 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
   b = slv_get_solvers_blocks(sys);
   assert(b!=NULL); /* probably shouldn't be an assert here ... */
   if (bnum <0 || bnum >= b->nblocks || b->block == NULL) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 1;
   }
   reg = b->block[bnum];
@@ -897,18 +900,18 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
     rel_set_in_block(rp[c],1);
   }
   if (reg.row.low != reg.col.low || reg.row.high != reg.col.high) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 1; /* must be square */
   }
   if (reg.row.high - reg.row.low < 3) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 0; /* must be 3x3 or bigger to have any effect */
   }
 
   if (slv_make_incidence_mtx(sys,mtx,&vf,&rf)) {
     FPRINTF(stderr,
       "slv_tear_drop_reorder_block: failure in creating incidence matrix.\n");
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     return 1;
   }
   /* verify that block has no empty columns, though not checking diagonal */
@@ -916,7 +919,7 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
     coord.col = mtx_FIRST;
     coord.row = c;
     if (mtx_next_in_row(mtx,&coord,mtx_ALL_COLS), coord.col == mtx_LAST) {
-      mtx_destroy(mtx);
+      asc_mtx_destroy(mtx);
       FPRINTF(stderr, "slv_tear_drop_reorder_block: empty row (%d) found.\n",c);
       return 1;
     }
@@ -924,7 +927,7 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
     coord.col = c;
     if (mtx_next_in_col(mtx,&coord,mtx_ALL_ROWS), coord.row == mtx_LAST) {
       FPRINTF(stderr, "slv_tear_drop_reorder_block: empty col (%d) found.\n",c);
-      mtx_destroy(mtx);
+      asc_mtx_destroy(mtx);
       return 1;
     }
   }
@@ -947,19 +950,19 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
 #endif
   reg = b->block[bnum]; /* bisect likely munged reg */
   if (reindex_vars_from_mtx(sys,reg.col.low,reg.col.high,mtx)) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     mr_reorder_destroy(mrsys);
     return 2;
   }
   if (reindex_rels_from_mtx(sys,reg.row.low,reg.row.high,mtx)) {
-    mtx_destroy(mtx);
+    asc_mtx_destroy(mtx);
     mr_reorder_destroy(mrsys);
     return 2;
   }
   d = slv_get_dofdata(sys);
   d->reorder.block_reordering = 2;	/* tear_drop_baa */
 
-  mtx_destroy(mtx);
+  asc_mtx_destroy(mtx);
   mr_reorder_destroy(mrsys);
   return 0;
 }
@@ -1092,6 +1095,7 @@ LIST_DEBUG(rel,rel_relation)
 		} \
 	 \
 		MAYBE_CONSOLE_DEBUG("SORTING"); \
+		slv_solver_lists_changed(sys); \
 	 \
 		start = list + begin; \
 		end = list + len; \

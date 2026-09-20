@@ -1,0 +1,41 @@
+(* A different topology and half-hour grid exercise the shared components. *)
+REQUIRE "stn.a4l";
+
+MODEL stn_small(feed IS_A mass_constant; expected IS_A real_constant;);
+    g IS_A stn_grid(4,30{min});
+    d IS_A stn_data;
+    p IS_A stn_network(g,d);
+    d.state :== ['feed','early','late']; d.task :== ['split']; d.unit :== ['vessel'];
+    d.recipe['split'].feed :== ['feed']; d.recipe['split'].product :== ['early','late'];
+    d.recipe['split'].rin['feed'] :== 1;
+    d.recipe['split'].rout['early'] :== 0.5; d.recipe['split'].rout['late'] :== 0.5;
+    d.recipe['split'].delay['early'] :== 30{min}; d.recipe['split'].delay['late'] :== 1{h};
+    d.recipe['split'].duration :== 1{h};
+    d.equipment['vessel'].task :== ['split'];
+    d.equipment['vessel'].bmin['split'] :== 2{kg};
+    d.equipment['vessel'].bmax['split'] :== 10{kg};
+    FOR s IN d.state CREATE d.stock[s].limited :== FALSE; d.stock[s].capacity :== 0{kg}; END FOR;
+    d.stock['feed'].initial :== feed; d.stock['feed'].price :== 0{USD/kg};
+    FOR s IN ['early','late'] CREATE d.stock[s].initial :== 0{kg}; d.stock[s].price :== 1{USD/kg}; END FOR;
+    obj: MAXIMIZE p.value;
+METHODS
+METHOD self_test;
+    RUN p.self_test;
+    ASSERT abs(p.value/1{USD} - expected) < 1e-6;
+END self_test;
+END stn_small;
+MODEL stn_small_batches REFINES stn_small(feed :== 12{kg}; expected :== 12;); END stn_small_batches;
+MODEL stn_small_below_minimum REFINES stn_small(feed :== 1{kg}; expected :== 0;); END stn_small_below_minimum;
+
+(* These must fail during instantiation, not silently lose delayed material. *)
+MODEL stn_invalid(release IS_A time_constant; fraction IS_A factor_constant;);
+    g IS_A stn_grid(2,1{h});
+    r IS_A stn_recipe;
+    op IS_A stn_operation(g,r,0{kg},10{kg});
+    r.feed :== ['feed']; r.product :== ['product'];
+    r.rin['feed'] :== 1; r.rout['product'] :== fraction;
+    r.delay['product'] :== release; r.duration :== release;
+    obj: MAXIMIZE op.b[0];
+END stn_invalid;
+MODEL stn_off_grid REFINES stn_invalid(release :== 30{min}; fraction :== 1;); END stn_off_grid;
+MODEL stn_bad_yield REFINES stn_invalid(release :== 1{h}; fraction :== 0.9;); END stn_bad_yield;

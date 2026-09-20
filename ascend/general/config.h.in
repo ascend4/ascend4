@@ -172,7 +172,7 @@ typedef unsigned long long asc_intptr_t;
 /*
 	Whether Graphviz support is enabled.
 */
-@ASC_HAVE_GRAPHVIZ@
+@WITH_GRAPHVIZ@
 
 /*
 	Whether Graphviz headers require HAVE_BOOLEAN to be declared.

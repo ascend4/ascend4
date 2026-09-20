@@ -4745,6 +4745,112 @@ void FlatListSelectStmts(struct StatementList *newstatl,
   }
 }
 
+/* A declarative FOR is a quantifier, not an execution-order barrier.
+   Give each phase-1 statement its own enclosing loop nest so the ordinary
+   pending-statement machinery can resolve dependencies between statements.
+   Each sparse construction still executes over its complete domain at once.
+
+   Keep later-phase statements together: in particular, distributing :=
+   defaults individually could change the order of overlapping assignments.
+   Do not visit methods, WHERE loops, WHEN cases or CONDITIONAL relations. */
+static int IsConstructionFamily(CONST struct Statement *s)
+{
+  unsigned long c;
+  switch (StatementType(s)) {
+  case ISA: case IRT: case ALIASES: case ARR: case ATS: case AA:
+  case REF: case CASGN: case TABLESTAT: case DATASETSTAT:
+    return 1;
+  case FOR:
+    if (ForLoopKind(s) != fk_create) return 0;
+    for (c = 1; c <= StatementListLength(ForStatStmts(s)); ++c) {
+      if (IsConstructionFamily(GetStatement(ForStatStmts(s),c))) return 1;
+    }
+    return 0;
+  default:
+    return 0;
+  }
+}
+
+static void PreserveStatementSource(struct Statement *copy, CONST struct Statement *source)
+{
+  copy->mod = source->mod;
+  copy->linenum = source->linenum;
+  copy->context = source->context;
+}
+
+/* Takes ownership of body; the new wrapper retains the original loop's
+   index scope, source location and context, with freshly computed flags. */
+static void AppendDistributedFOR(struct StatementList *out,
+    CONST struct Statement *source, struct StatementList *body)
+{
+  struct Statement *loop = CreateFOR(ForStatIndex(source),
+      CopyExprList(ForStatExpr(source)),body,ForLoopOrder(source),ForLoopKind(source));
+  PreserveStatementSource(loop,source);
+  AppendStatement(out,loop);
+  DestroyStatement(loop);
+}
+
+/* Returns a new owned list. Leaf statements are shared by reference, not
+   deep-copied: only loop/SELECT wrappers change. Run before SELECT flattening
+   and inheritance, so cached SELECT counts and inherited definitions agree. */
+static struct StatementList *DistributeCreateStatements(CONST struct StatementList *sl);
+
+static void DistributeCreateFOR(struct StatementList *out, CONST struct Statement *s)
+{
+  struct StatementList *expanded = DistributeCreateStatements(ForStatStmts(s));
+  struct StatementList *later = EmptyStatementList();
+  unsigned long j;
+  for (j = 1; j <= StatementListLength(expanded); ++j) {
+    struct Statement *part = GetStatement(expanded,j);
+    if (IsConstructionFamily(part)) {
+      struct StatementList *body = EmptyStatementList();
+      AppendStatement(body,part);
+      AppendDistributedFOR(out,s,body);
+    } else {
+      AppendStatement(later,part);
+    }
+  }
+  if (StatementListLength(later) || !StatementListLength(expanded)) {
+    AppendDistributedFOR(out,s,later);
+  } else {
+    DestroyStatementList(later);
+  }
+  DestroyStatementList(expanded);
+}
+
+static void DistributeCreateSELECT(struct StatementList *out, CONST struct Statement *s)
+{
+  struct SelectList *sel, *cases = NULL;
+  struct Statement *copy;
+  for (sel = SelectStatCases(s); sel != NULL; sel = NextSelectCase(sel)) {
+    struct SelectList *item = CreateSelect(CopySetList(SelectSetList(sel)),
+        DistributeCreateStatements(SelectStatementList(sel)));
+    if (cases == NULL) cases = item;
+    else LinkSelectCases(cases,item);
+  }
+  copy = CreateSELECT(CopyVariableList(SelectStatVL(s)),cases);
+  PreserveStatementSource(copy,s);
+  AppendStatement(out,copy);
+  DestroyStatement(copy);
+}
+
+static struct StatementList *DistributeCreateStatements(CONST struct StatementList *sl)
+{
+  struct StatementList *out = EmptyStatementList();
+  unsigned long c;
+  for (c = 1; c <= StatementListLength(sl); ++c) {
+    struct Statement *s = GetStatement(sl,c);
+    if (StatementType(s) == FOR && ForLoopKind(s) == fk_create && IsConstructionFamily(s)) {
+      DistributeCreateFOR(out,s);
+    } else if (StatementType(s) == SELECT) {
+      DistributeCreateSELECT(out,s);
+    } else {
+      AppendStatement(out,s);
+    }
+  }
+  return out;
+}
+
 /* This function should have at most 2 callers: the yacc, and
  * possibly another function in this file creating a base type.
  * Here we sanity check type guts, derive additional guts, and
@@ -4815,6 +4921,13 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
     /* AddContext(rsl,context_MODPARAM); reductions are declarative */
     AddContext(wsl,context_MODWHERE);
   }
+
+  newstatl = DistributeCreateStatements(sl);
+  DestroyStatementList(sl);
+  sl = newstatl;
+  newstatl = DistributeCreateStatements(isl);
+  DestroyStatementList(isl);
+  isl = newstatl;
 
   /* Making a flat list containing all of the statements in SELECTs */
   if (SlistHasWhat(sl) & contains_SELECT) {

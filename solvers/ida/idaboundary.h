@@ -59,6 +59,11 @@ int ida_bnd_reanalyse(IntegratorSystem *integ);
  */
 int ida_bnd_event_iterate(IntegratorSystem *integ, void *ida_mem, realtype tout1);
 
+/** Release crossing overrides displaced from their boundary by event settling. */
+void ida_bnd_update_crossings(IntegratorSystem *integ);
+/** End the event override scope, including on error exits. */
+void ida_bnd_clear_crossings(IntegratorSystem *integ);
+
 /**
  * Update the relist, as equations may have been added/removed after a crossing
  *

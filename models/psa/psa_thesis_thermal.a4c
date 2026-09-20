@@ -1,0 +1,51 @@
+(* Smith (1991), The Optimal Design of Pressure Swing Adsorption Systems,
+   Chapter 6, pp. 80-87. Local PDF:
+   ~/Downloads/smith-1991-The_optimal_design_of_pressure.pdf.
+   Fixed-input operation audit, NOT a closed thermal cycle or optimum.
+   In particular the post-blowdown temperature is specified, not predicted.
+   See psa_thermal.md for the source assumptions and remaining gaps. *)
+REQUIRE "psa/psa_thermal.a4l";
+
+MODEL psa_thesis_thermal;
+    bed IS_A psa_thermal_bed_data;
+    (* Table 7-10, zero-PE calibrated utilisation/efficiency inputs. *)
+    ads IS_A psa_paper_adsorption(bed, 0.75, 1.0);
+    des IS_A psa_thesis_desorption(bed, 0.98, 1.25);
+    gas IS_A psa_thesis_purge_inventory(des);
+    ads.sAe, des.sA0 ARE_THE_SAME;
+    x0 "Specified post-blowdown gas CH4 fraction" IS_A fraction;
+    initial_composition: gas.initialA = x0*(gas.initialA+gas.initialH);
+METHODS
+METHOD on_load;
+    FIX bed.V, bed.eps, bed.rho, bed.Cv, bed.cpA, bed.cpB, bed.H;
+    (* Table 7-11 geometry; Table 7-1 void fraction and heat capacities.
+       We do not combine Table 7-3's alternative void fraction of 0.4. *)
+    bed.V := 3.141592653589793*0.396^2*1.982/4*1{m^3};
+    bed.eps := 0.44; bed.rho := 800{kg/m^3};
+    bed.Cv := 804000{J/m^3/K};
+    bed.cpA := 36.8{J/mol/K}; bed.cpB := 29.3{J/mol/K};
+    (* Cen-Yang adsorption heat: explicit hypothesis, NOT the ambiguous
+       Table 7-1 heat H_A = 890000 J/mol. Kept separate from economics. *)
+    bed.H := 20920{J/mol};
+    FIX ads.P, ads.y, ads.T0, ads.Tfeed, ads.sA0;
+    ads.P := 355*ads.carbon.p_ref; ads.y := 0.05;
+    ads.T0 := 298{K}; ads.Tfeed := 298{K}; ads.sA0 := 0{mol};
+    FIX des.P, des.T0, des.TinB, x0;
+    des.P := 15*ads.carbon.p_ref;
+    des.T0 := 298{K}; des.TinB := 350{K};
+    (* Well-mixed, frozen-solid blowdown of a two-zone adsorption exit
+       would retain this composition; that blowdown is NOT solved here. *)
+    x0 := 0.75*0.05;
+    ads.Te := 315{K}; des.Te := 285{K};
+    SOLVER QRSlv;
+END on_load;
+METHOD self_test;
+    ASSERT ads.Te > ads.T0;
+    ASSERT des.Te < des.T0;
+    ASSERT abs((des.hydrogen_in-des.sweep_hydrogen-des.void_hydrogen)/1{mol}) < 1e-6;
+    ASSERT abs((gas.initialA+des.sA0-gas.finalA-des.sAe-gas.wasteA)/1{mol}) < 1e-6;
+    ASSERT abs((gas.initialH+des.hydrogen_in-gas.finalH-gas.wasteH)/1{mol}) < 1e-6;
+    ASSERT gas.wasteA >= 0{mol} AND gas.wasteH >= 0{mol};
+    ASSERT gas.yout > 0 AND gas.yout < 1;
+END self_test;
+END psa_thesis_thermal;

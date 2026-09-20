@@ -162,7 +162,7 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	integrator_set_ydot(integ, NV_DATA_S(yp));
 
 	/* perform bounds checking on all variables */
-	if(slv_check_bounds(integ->system, 0, -1, NULL)){
+	if(slv_check_bounds_recoverable(integ->system, 0, -1, "IDA residual trial")){
 		/* ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Variable(s) out of bounds"); */
 		return 1;
 	}
@@ -301,14 +301,20 @@ int integrator_ida_djex(realtype tt, realtype c_j
 	variables = ASC_NEW_ARRAY(struct var_variable*, NV_LENGTH_S(yy) * 2);
 	derivatives = ASC_NEW_ARRAY(double, NV_LENGTH_S(yy) * 2);
 
+	if(!variables || !derivatives){
+		ASC_FREE(variables); ASC_FREE(derivatives);
+		return -1;
+	}
+
 	/* pass the values of everything back to the compiler */
 	integrator_set_t(integ, (double)tt);
 	integrator_set_y(integ, NV_DATA_S(yy));
 	integrator_set_ydot(integ, NV_DATA_S(yp));
 
 	/* perform bounds checking on all variables */
-	if(slv_check_bounds(integ->system, 0, -1, NULL)){
-		/* ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Variable(s) out of bounds"); */
+	if(slv_check_bounds_recoverable(integ->system, 0, -1, "IDA dense Jacobian trial")){
+		ASC_FREE(variables);
+		ASC_FREE(derivatives);
 		return 1;
 	}
 

@@ -45,6 +45,7 @@ extern "C"{
 }
 
 #include <iostream>
+#include <cstdint>
 #include <stdexcept>
 #include <sstream>
 
@@ -852,6 +853,50 @@ Instanc::getSetType() const{
 	return SetKind(SetAtomList(i));
 }
 
+const string
+Instanc::getDeclarationFilename(const Instanc &parent) const{
+	const char *filename = nullptr;
+	unsigned long childnum = 0;
+	for(unsigned long ci=1; ci<=NumberChildren(parent.i); ++ci){
+		if(SymChar(ChildName(parent.i,ci)) == name){
+			childnum = ci;
+			break;
+		}
+	}
+	if((childnum == 0 || !InstanceChildDeclarationLocation(
+		parent.i,childnum,&filename,nullptr
+	)) && !InstanceDeclarationLocation(i,parent.i,&filename,nullptr)){
+		return "";
+	}
+	if(filename == nullptr){
+		return "";
+	}
+	return filename;
+}
+
+const long
+Instanc::getDeclarationLine(const Instanc &parent) const{
+	int lineno = 0;
+	unsigned long childnum = 0;
+	for(unsigned long ci=1; ci<=NumberChildren(parent.i); ++ci){
+		if(SymChar(ChildName(parent.i,ci)) == name){
+			childnum = ci;
+			break;
+		}
+	}
+	if((childnum == 0 || !InstanceChildDeclarationLocation(
+		parent.i,childnum,nullptr,&lineno
+	)) && !InstanceDeclarationLocation(i,parent.i,nullptr,&lineno)){
+		return 0;
+	}
+	return lineno;
+}
+
+const unsigned long long
+Instanc::getInstanceId() const{
+	return static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(i));
+}
+
 /// Get the child instances :)
 vector<Instanc> &
 Instanc::getChildren()
@@ -942,6 +987,25 @@ Instanc::getChild(const long &index) const{
 	ss << "Invalid child index '" << index << "' for instance '" << getName() << "'";
 	throw runtime_error(ss.str());
 		
+}
+
+Instanc
+Instanc::getArrayElement(const SymChar &index) const{
+	if(getKind() != ARRAY_ENUM_INST){
+		stringstream ss;
+		ss << "Instance '" << getName() << "' is not a symbol-indexed array";
+		throw runtime_error(ss.str());
+	}
+	struct InstanceName n;
+	InstanceNameType(n) = StrArrayIndex;
+	InstanceStrIndex(n) = index.getInternalType();
+	unsigned long childindex = ChildSearch(i,&n);
+	if(childindex){
+		return Instanc(InstanceChild(i,childindex),index);
+	}
+	stringstream ss;
+	ss << "Invalid symbol index '" << index << "' for instance '" << getName() << "'";
+	throw std::range_error(ss.str());
 }
 
 Plot

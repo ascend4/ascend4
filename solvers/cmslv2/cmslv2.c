@@ -3479,6 +3479,11 @@ int32 slv9_bnd_iterate_conopt(slv9_system_t sys, int32 num_opt_vars,
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"CMSlv CONOPT boundary problem creation failed.");
     return 0;
   }
+  if(asc_conopt_apply_license(sys->con.cntvect) == ASC_CONOPT_LICENSE_ERROR){
+    COI_Free(&(sys->con.cntvect));
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to configure the CMSlv2 CONOPT license.");
+    return 0;
+  }
 #else
   if(sys->con.cntvect == NULL){
 	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
@@ -3675,6 +3680,59 @@ int32 slv9_optimizer_available(const char *name){
 }
 
 static
+void slv9_append_text(char *buf, size_t buflen, const char *text){
+	size_t used;
+	if(buf == NULL || buflen == 0 || text == NULL) {
+		return;
+	}
+	used = strlen(buf);
+	if(used >= buflen) {
+		return;
+	}
+	snprintf(buf + used, buflen - used, "%s", text);
+}
+
+static
+void slv9_append_solver_version(char *buf, size_t buflen, const char *name, int32 ensure_loaded){
+	const SlvFunctionsT *S;
+	char version[128];
+
+	slv9_append_text(buf,buflen,"; ");
+	slv9_append_text(buf,buflen,name);
+	slv9_append_text(buf,buflen,": ");
+
+	if(ensure_loaded && !slv9_ensure_optimizer_loaded(name)) {
+		slv9_append_text(buf,buflen,"unavailable");
+		return;
+	}
+
+	S = solver_engine_named(name);
+	if(S == NULL) {
+		slv9_append_text(buf,buflen,"unavailable");
+		return;
+	}
+	version[0] = '\0';
+	if(solver_get_version(name,version,sizeof(version)) == 0 && version[0] != '\0') {
+		slv9_append_text(buf,buflen,version);
+		return;
+	}
+	slv9_append_text(buf,buflen,"available");
+}
+
+static
+int slv9_get_version(char *buf, size_t buflen){
+	if(buf == NULL || buflen == 0) {
+		return 1;
+	}
+	snprintf(buf,buflen,"CMSlv2");
+	slv9_append_solver_version(buf,buflen,"QRSlv",0);
+	slv9_append_solver_version(buf,buflen,"LRSlv",0);
+	slv9_append_solver_version(buf,buflen,"CONOPT",1);
+	slv9_append_solver_version(buf,buflen,"IPOPT",1);
+	return 0;
+}
+
+static
 void slv9_report_unavailable_optimizer(const char *name){
   if(name == NULL) {
     name = "";
@@ -3843,7 +3901,7 @@ void get_multipliers(SlvClientToken asys,
   len = mtx_number_of_blocks(sys->lin_mtx);
   newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
   if(newblocks == NULL) {
-    mtx_destroy(sys->lin_mtx);
+    asc_mtx_destroy(sys->lin_mtx);
     return;
   }
   for (c = 0 ; c < len; c++) {
@@ -3921,7 +3979,7 @@ void get_multipliers(SlvClientToken asys,
 #endif /*  SHOW_LAGRANGE_DETAILS  */
   }
   linsolqr_set_matrix(lsys,NULL);
-  mtx_destroy(sys->lin_mtx);
+  asc_mtx_destroy(sys->lin_mtx);
   linsolqr_destroy(lsys);
   destroy_array(newblocks);
   destroy_array(weights);
@@ -10948,5 +11006,9 @@ int cmslv2_register(void){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"QRSlv must be loadable before CMSlv2");
 		return 1;
 	}
-	return solver_register(&slv9_internals);
+	if(solver_register(&slv9_internals)){
+		return 1;
+	}
+	solver_register_version("CMSlv2",slv9_get_version);
+	return 0;
 }

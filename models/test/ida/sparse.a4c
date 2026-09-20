@@ -1,0 +1,67 @@
+REQUIRE "ivpsystem.a4l";
+
+(* State and derivative contributions overlap; d(algebraic)/dy starts at zero. *)
+MODEL ida_sparse_values;
+    y, z, t IS_A solver_var;
+    INDEPENDENT t;
+    dynamics: der(y) + (1 + z)*y = 0;
+    algebraic: z = y*y;
+METHODS
+    METHOD on_load;
+        FIX t;
+        t := 0; y := 0; z := 0;
+        FREE der(y);
+    END on_load;
+END ida_sparse_values;
+
+(* The active algebraic relation changes incidence, with unchanged dimension. *)
+MODEL ida_sparse_switch;
+    y, z, w, t IS_A solver_var;
+    switched IS_A boolean_var;
+    INDEPENDENT t;
+    dynamics: der(y) = 1;
+    auxiliary: w = 2*y;
+    before: z = y;
+    after: z = w;
+CONDITIONAL
+    trip: t >= 0.5;
+END CONDITIONAL;
+    switched == SATISFIED(trip, 1e-10);
+    WHEN(switched)
+    CASE TRUE: USE after;
+    CASE FALSE: USE before;
+    END WHEN;
+METHODS
+    METHOD on_load;
+        FIX t;
+        t := 0; y := 0; z := 0; w := 0;
+        FREE der(y);
+        switched := FALSE;
+    END on_load;
+END ida_sparse_switch;
+
+(* A real dimension-changing event must fail before IDAReInit sees new vectors. *)
+MODEL ida_sparse_resize;
+    y, z, w, t IS_A solver_var;
+    switched IS_A boolean_var;
+    INDEPENDENT t;
+    dynamics: der(y) = 1;
+    auxiliary: w = 2*y;
+    before: z = y;
+    after: z = w;
+CONDITIONAL
+    trip: t >= 0.5;
+END CONDITIONAL;
+    switched == SATISFIED(trip, 1e-10);
+    WHEN(switched)
+    CASE TRUE: USE after; USE auxiliary;
+    CASE FALSE: USE before;
+    END WHEN;
+METHODS
+    METHOD on_load;
+        FIX t;
+        t := 0; y := 0; z := 0; w := 0;
+        FREE der(y);
+        switched := FALSE;
+    END on_load;
+END ida_sparse_resize;

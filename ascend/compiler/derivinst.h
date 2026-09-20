@@ -9,6 +9,8 @@ struct Instance;
 /* public instance-centric API */
 ASC_DLLSPEC int InstanceHasDerivative(struct Instance *base);
 ASC_DLLSPEC struct Instance *InstanceGetDerivative(struct Instance *base);
+/** Existing derivative only: no lazy scanning or materialisation. Safe in tree visitors. */
+ASC_DLLSPEC struct Instance *InstancePeekDerivative(struct Instance *base);
 ASC_DLLSPEC struct Instance *InstanceEnsureDerivative(struct Instance *base);
 ASC_DLLSPEC int IsDerivativeInstance(CONST struct Instance *inst);
 ASC_DLLSPEC struct Instance *DerivativeInstanceBase(CONST struct Instance *inst);

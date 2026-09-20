@@ -1,0 +1,15 @@
+REQUIRE "system.a4l";
+
+(* 85 matching cases plus the sentinel force two 40-entry list expansions. *)
+MODEL many_when_cases;
+	b[1..85] IS_A boolean_var;
+	x[1..85] IS_A solver_var;
+	FOR i IN [1..85] CREATE
+		on[i]: x[i] = 1;
+		off[i]: x[i] = 0;
+		choice[i]: WHEN (b[i])
+		CASE TRUE: USE on[i];
+		CASE FALSE: USE off[i];
+		END WHEN;
+	END FOR;
+END many_when_cases;

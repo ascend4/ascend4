@@ -452,6 +452,7 @@ SOLVER_ENGINE_NAMES = [
 	'IPOPT',
 	'MakeMPS',
 	'HiGHS',
+	'Gurobi',
 	'A4SQP',
 	'SLSQP',
 	'LRSlv',
@@ -469,6 +470,7 @@ WITH_SOLVER_TOKENS = [s.upper() for s in SOLVER_NAMES]
 SOLVER_SUBDIRS = [s.lower() for s in SOLVER_NAMES]
 NON_DEFAULT_SOLVER_TOKENS = set([
 	'RADAU5',
+	'GUROBI',
 ])
 DEFAULT_WITH_SOLVERS = [
 	token for token in WITH_SOLVER_TOKENS
@@ -478,9 +480,10 @@ DEFAULT_WITH_SOLVERS = [
 # Which solvers will we allow?
 vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default includes the open"
-		+" solvers normally available in a developer build."
+		+" solvers normally available in a developer build. The option 'LSOD' is provided for backwards compatibility"
+		+"; the value 'LSODE' is preferred."
 	,DEFAULT_WITH_SOLVERS
-	,WITH_SOLVER_TOKENS
+	,WITH_SOLVER_TOKENS + ['LSOD']
 ))
 
 # Where will the local copy of the help files be kept?
@@ -624,6 +627,11 @@ vars.Add('SUNDIALS_LIBPATH'
 	,default_sundials_libpath
 )
 
+vars.Add(BoolVariable('WITH_IDA_KLU', 'Enable optional IDA sparse KLU solver when available', True))
+vars.Add('SUNDIALS_KLU_CPPPATH', 'Additional include paths for SUNDIALS KLU/SuiteSparse', '')
+vars.Add('SUNDIALS_KLU_LIBPATH', 'Additional library paths for SuiteSparse/KLU', '')
+vars.Add('SUNDIALS_KLU_LIBS', 'Additional libraries for SUNDIALS KLU (e.g. static SuiteSparse dependencies)', '')
+
 vars.Add('SUNDIALS_LIBS'
 	,"Optional comma-separated override for SUNDIALS libraries"
 	,""
@@ -643,6 +651,11 @@ vars.Add("CONOPT_LIB"
 
 vars.Add(BoolVariable("CONOPT_LINKED"
 	,"Do you want to dynamically link to CONOPT (only possible if CONOPT is available at buildtime)"
+	,False
+))
+
+vars.Add(BoolVariable("CONOPT_LEGACY3"
+	,"Use the bundled legacy CONOPT 3 API header instead of the default CONOPT 4 fallback header when CONOPT is not available at buildtime"
 	,False
 ))
 
@@ -684,6 +697,17 @@ vars.Add(PackageVariable("HIGHS_PREFIX"
 	,"Prefix for your HiGHS install (if not found via default pkg-config path)"
 	,default_user_local
 ))
+
+#------- GUROBI SDK -------
+# SDK detection is separate from optional solver selection.
+vars.Add(PackageVariable("GUROBI_PREFIX"
+	,"Prefix for the Gurobi C SDK (include/gurobi_c.h and lib/)"
+	,default_user_local
+))
+vars.Add("GUROBI_LIB"
+	,"Gurobi library name override (empty derives gurobi<major><minor> from the header)"
+	,""
+)
 
 #
 #	vars.Add("IPOPT_LIBS"
@@ -1084,6 +1108,12 @@ env = Environment(
 	, **envadditional
 )
 
+# Opt-in tooling target: capture the actual per-source flags, including clones
+# for solver plugins and tests. This target does not rebuild object files.
+if 'compile_commands.json' in COMMAND_LINE_TARGETS:
+	env.Tool('compilation_db')
+	env.CompilationDatabase('compile_commands.json')
+
 # Create .def files by default on Windows (or else SCons 2.0.1 never seems to be happy)
 if platform.system()=="Windows":
 	env.Append(WINDOWS_INSERT_DEF=1)
@@ -1119,6 +1149,10 @@ for l in ['SUNDIALS','IPOPT']:
 	if env.get(var) and not isinstance(env[var],list):
 		env[var] = env[var].split(",")
 
+if 'LSOD' in env['WITH_SOLVERS']:
+	if 'LSODE' not in env['WITH_SOLVERS']:
+		env['WITH_SOLVERS'].append('LSODE')
+	env['WITH_SOLVERS'].remove('LSOD')
 if 'CMSLV' in env['WITH_SOLVERS'] and 'LRSLV' not in env['WITH_SOLVERS']:
 	env['WITH_SOLVERS'].append('LRSLV')
 if 'CMSLV2' in env['WITH_SOLVERS']:
@@ -1872,6 +1906,17 @@ int main(){
 }
 """
 
+conopt_header_test_text = """
+#if !defined(_WIN32)
+# define FNAME_LCASE_DECOR
+#endif
+
+#include <conopt.h>
+int main(){
+	return 0;
+}
+"""
+
 def CheckCONOPT(context):
 	context.Message( 'Checking for CONOPT... ' )
 
@@ -1879,6 +1924,17 @@ def CheckCONOPT(context):
 	
 	is_ok = context.TryLink(conopt_test_text,".c")
 	context.Result(is_ok)
+
+	context.env['CONOPT_BUNDLED4'] = False
+	if not is_ok:
+		if context.env.get('CONOPT_LEGACY3'):
+			context.Message( 'Using bundled legacy CONOPT 3 header... ' )
+			context.Result(True)
+		else:
+			context.Message( 'Checking for CONOPT header... ' )
+			has_header = context.TryCompile(conopt_header_test_text,".c")
+			context.Result(has_header)
+			context.env['CONOPT_BUNDLED4'] = not has_header
 	
 	keep.restore(context)
 		
@@ -2184,6 +2240,53 @@ int main(){
 def CheckPCRE(context):
 	return CheckExtLib(context,libname='pcre',text=pcre_test_text)
 
+def CheckGurobi(context):
+	"""Detect the optional C SDK without starting a licensed environment.
+
+	Keep its flags separate so libascend and unrelated solvers do not acquire
+	a dependency on the proprietary runtime.
+	"""
+	context.Message("Checking for Gurobi C SDK... ")
+	for name in ['GUROBI_CPPPATH','GUROBI_LIBPATH','GUROBI_LIBS']:
+		context.env[name] = []
+	context.env['HAVE_GUROBI'] = False
+	prefix = pathlib.Path(os.path.expanduser(context.env.subst('$GUROBI_PREFIX')))
+	header = prefix / 'include' / 'gurobi_c.h'
+	try:
+		header_text = header.read_text()
+	except OSError:
+		context.Result('no (gurobi_c.h not found under GUROBI_PREFIX)')
+		return False
+	libname = context.env.subst('$GUROBI_LIB').strip()
+	if not libname:
+		major = re.search(r'^\s*#define\s+GRB_VERSION_MAJOR\s+(\d+)',header_text,re.M)
+		minor = re.search(r'^\s*#define\s+GRB_VERSION_MINOR\s+(\d+)',header_text,re.M)
+		if major is None or minor is None:
+			context.Result('no (cannot determine library name; set GUROBI_LIB)')
+			return False
+		libname = 'gurobi' + major.group(1) + minor.group(1)
+	libpaths = [str(prefix / d) for d in ['lib','lib64'] if (prefix / d).is_dir()]
+	saved = SnapshotBuildFlags(context.env)
+	try:
+		context.env.PrependUnique(CPPPATH=[str(header.parent)],LIBPATH=libpaths,LIBS=[libname])
+		ok = context.TryLink('''
+#include <gurobi_c.h>
+int main(void){
+	int major, minor, technical;
+	GRBversion(&major, &minor, &technical);
+	return 0;
+}
+''','.c')
+	finally:
+		RestoreBuildFlags(context.env,saved)
+	if ok:
+		context.env['GUROBI_CPPPATH'] = [str(header.parent)]
+		context.env['GUROBI_LIBPATH'] = libpaths
+		context.env['GUROBI_LIBS'] = [libname]
+		context.env['HAVE_GUROBI'] = True
+	context.Result(bool(ok))
+	return bool(ok)
+
 #----------------
 # GCC Version sniffing
 
@@ -2232,6 +2335,7 @@ conf = Configure(env
 		, 'CheckSigReset' : CheckSigReset
 		, 'CheckErf' : CheckErf
 		, 'CheckPCRE' : CheckPCRE
+		, 'CheckGurobi' : CheckGurobi
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -2565,6 +2669,10 @@ if nlopt_ok:
 RestoreBuildFlags(conf.env,nlopt_saved)
 conf.env.set_optional('nlopt',active=nlopt_ok,reason=nlopt_reason)
 
+# Probe the SDK without requiring a runtime license.
+gurobi_ok = conf.CheckGurobi()
+conf.env.set_optional('gurobi_sdk',active=gurobi_ok,reason='C SDK not found (see GUROBI_PREFIX and GUROBI_LIB)')
+
 # LSODE needs Fortran; no fortran then no LSODE
 
 if conf.env['WITH_LSODE']:
@@ -2743,7 +2851,7 @@ for k,v in {
 				,'ASC_WITH_LRSLV':env['WITH_LRSLV']
 				,'ASC_WITH_CMSLV':env['WITH_CMSLV']
 				,'ASC_WITH_CMSLV2':env['WITH_CMSLV2']
-				,'ASC_HAVE_GRAPHVIZ':env['OPTIONALS'].get('graphviz', (False, None))[0]
+				,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
 				,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
 				,'ASC_WITH_PCRE':env['WITH_PCRE']
 			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']

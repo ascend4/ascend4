@@ -1009,7 +1009,7 @@ static void test_slv_common(void)
     vec_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - prod low > high */
   CU_TEST(TRUE == asc_assert_failed());
 
-  mtx_destroy(mtx);
+  asc_mtx_destroy(mtx);
   vec_destroy(pvec1);
   vec_destroy(pvec2);
 
@@ -1170,7 +1170,7 @@ static void test_slv_common(void)
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[9], 0.000001);
   CU_ASSERT_DOUBLE_EQUAL(0.0, pvec2->vec[10], 0.000001);
 
-  mtx_destroy(mtx);
+  asc_mtx_destroy(mtx);
   vec_destroy(pvec1);
   vec_destroy(pvec2);
   vec_destroy(pvec3);
@@ -1651,7 +1651,7 @@ static void test_slv_common(void)
 
   slv_destroy_lnkmap(lnkmap);
 
-  mtx_destroy(mtx);
+  asc_mtx_destroy(mtx);
 
   CU_TEST(test_meminuse == ascmeminuse());
 
