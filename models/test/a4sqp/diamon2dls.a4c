@@ -1,0 +1,249 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "a4sqp";
+IMPORT "ipopt";
+
+MODEL diamon2dls;
+	obs IS_A set OF integer_constant;
+	peaks IS_A set OF integer_constant;
+	peak_fields IS_A set OF symbol_constant;
+	x[obs], y[obs] IS_A real_constant;
+	peak_data[peaks][peak_fields] IS_A real_constant;
+	weight[peaks], width[peaks] IS_A solver_var;
+	piinv IS_A real_constant;
+
+	peaks :== [1..33];
+	peak_fields :== ['pos','start_weight','start_width','solution_weight','solution_width'];
+	piinv :== 0.31830988618379067154;
+
+	DATASET xrd FROM "test/a4sqp/diamon2dls_xrd.csv";
+		INDEX obs FROM COLUMN i IS_A integer_constant;
+		x[obs] FROM COLUMN x IS_A real_constant;
+		y[obs] FROM COLUMN y IS_A real_constant;
+	END DATASET;
+
+	NOTES
+		'description' SELF {
+			ASCEND translation of CUTEst DIAMON2DLS. The measured XRD
+			data are loaded through DATASET from diamon2dls_xrd.csv;
+			the model fits 33 Lorentzian peaks with free weights and widths.
+		}
+		'source' SELF {
+			Diamond powder diffraction data fitting problem DIAMON2DLS;
+			SIF input by Nick Gould and Tyrone Rees, Feb 2016;
+			least-squares version by Nick Gould, Jan 2020; corrected May 2024.
+		}
+	END NOTES;
+
+	TABLE peak_data[peaks,peak_fields];
+		: pos start_weight start_width solution_weight solution_width
+		1: 1.88790653 1.0215400678 0.02 0.3017086395 0.0890807527
+		2: 2.00155403 0.0128719128 0.02 -0.007422389 -1.332095537
+		3: 2.07411359 0.4292206739 0.02 0.023312701 0.1362108064
+		4: 2.11869837 0.8009548574 0.02 -0.007652141 -0.059172337
+		5: 2.16240895 0.2202801749 0.02 -0.008838883 0.1298600772
+		6: 2.2192327 2.6915110182 0.02 -0.106645926 -0.017661477
+		7: 2.28130172 0.8064571417 0.02 0.0149618232 0.0290691263
+		8: 2.38970394 2.2686398843 0.02 0.0168066243 -0.066528677
+		9: 2.48848985 14.352901162 0.02 0.792465977 0.0166069946
+		10: 2.70704273 12.161699758 0.02 0.7810374673 0.019155949
+		11: 2.94745089 0.276676662 0.02 0.0528990728 -0.035925807
+		12: 2.96668355 0.2434602195 0.02 0.035850519 0.025550346
+		13: 3.12928689 1.1650863975 0.02 -0.037291326 -0.011522126
+		14: 3.22632437 0.1774572413 0.02 0.0029844591 0.077564024
+		15: 3.25517335 0.1153950601 0.02 0.0133718713 -0.203203124
+		16: 3.38018559 3.7470242328 0.02 0.2258059696 0.018125397
+		17: 3.66954961 0.833501062 0.02 0.0526196143 0.0202985649
+		18: 3.7220023 0.1588345259 0.02 2.2654991e-05 -0.000785395
+		19: 3.83127874 0.3867741611 0.02 0.0130111377 0.0230455128
+		20: 3.95891362 0.9231772721 0.02 0.092053014 0.0306733402
+		21: 4.05245425 0.2596415821 0.02 0.0154136541 -0.051983444
+		22: 4.17484386 2.0709635713 0.02 0.1359528957 0.0204696002
+		23: 4.43098784 1.944950803 0.02 0.2470268012 0.0448641086
+		24: 4.55949693 1.4841998492 0.02 0.0761630001 0.0183419319
+		25: 4.60145908 0.4816362663 0.02 -0.004165952 -0.008188201
+		26: 4.70461604 0.4934043524 0.02 0.0207077058 0.0142473506
+		27: 4.8226346 0.3289805969 0.02 0.0181842428 0.0148378598
+		28: 4.96862792 0.8399929759 0.02 0.0603145479 0.0227439812
+		29: 5.39524314 0.4600450055 0.02 0.0291177824 0.0395530764
+		30: 5.41884685 0.4909424311 0.02 0.0389911368 0.0515494286
+		31: 2.58640154 0.9861479337 0.02 -0.00753597 -0.015857477
+		32: 3.86187614 -0.017883084 0.02 -0.061715707 0.4941320681
+		33: 5.19854555 0.2654081509 0.02 0.0115845177 0.0297126864
+	END TABLE;
+
+	obj: MINIMIZE SUM[
+		(
+			SUM[
+				piinv * weight[j] * width[j]
+				/ ((x[i] - peak_data[j]['pos'])^2 + width[j]^2)
+				| j IN peaks
+			] - y[i]
+		)^2
+		| i IN obs
+	];
+
+METHODS
+METHOD set_start1;
+	FOR j IN peaks DO
+		weight[j] := peak_data[j]['start_weight'];
+		width[j] := peak_data[j]['start_width'];
+	END FOR;
+END set_start1;
+
+METHOD set_solution_start;
+	FOR j IN peaks DO
+		weight[j] := peak_data[j]['solution_weight'];
+		width[j] := peak_data[j]['solution_width'];
+	END FOR;
+END set_solution_start;
+
+METHOD set_nominals;
+	FOR j IN peaks DO
+		weight[j].nominal := 1.0;
+		width[j].nominal := 0.02;
+	END FOR;
+END set_nominals;
+
+METHOD fix_peak_parameters;
+	FIX weight[peaks];
+	FIX width[peaks];
+END fix_peak_parameters;
+
+METHOD free_peak_parameters;
+	FREE weight[peaks];
+	FREE width[peaks];
+	FOR j IN peaks DO
+		weight[j].lower_bound := -1e20;
+		weight[j].upper_bound := 1e20;
+		width[j].lower_bound := -1e20;
+		width[j].upper_bound := 1e20;
+	END FOR;
+END free_peak_parameters;
+
+METHOD use_a4sqp_lsq;
+	RUN free_peak_parameters;
+	SOLVER A4SQP;
+	OPTION try_lsq 'LM';
+	OPTION lsq_variable_projection 'AUTO';
+	OPTION lsq_damping_update 'TRUST';
+	OPTION lsq_lambda_init 10.0;
+	OPTION lsq_max_iter 60;
+	OPTION lsq_scaled_stationarity TRUE;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'BFGS';
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION max_iter 300;
+END use_a4sqp_lsq;
+
+METHOD use_a4sqp_exact;
+	RUN free_peak_parameters;
+	SOLVER A4SQP;
+	OPTION try_lsq 'OFF';
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'EXACT_OBJ';
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION max_iter 300;
+END use_a4sqp_exact;
+
+METHOD use_a4sqp_probe;
+	RUN free_peak_parameters;
+	SOLVER A4SQP;
+	OPTION try_lsq 'OFF';
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'BFGS';
+	OPTION max_iter 1;
+END use_a4sqp_probe;
+
+METHOD use_a4sqp_lsq_solution_start;
+	RUN set_solution_start;
+	RUN use_a4sqp_lsq;
+END use_a4sqp_lsq_solution_start;
+
+METHOD use_a4sqp_lsq_scaled_stationarity_solution_start;
+	RUN use_a4sqp_lsq_solution_start;
+	OPTION lsq_scaled_stationarity TRUE;
+END use_a4sqp_lsq_scaled_stationarity_solution_start;
+
+METHOD use_a4sqp_lsq_dense_qr_solution_start;
+	RUN use_a4sqp_lsq_solution_start;
+	OPTION lsq_linear_solver 'DENSE_QR';
+END use_a4sqp_lsq_dense_qr_solution_start;
+
+METHOD use_a4sqp_lm_long_solution_start;
+	RUN set_solution_start;
+	RUN free_peak_parameters;
+	SOLVER A4SQP;
+	OPTION try_lsq 'LM';
+	OPTION lsq_max_iter 1000;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'BFGS';
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION max_iter 1;
+END use_a4sqp_lm_long_solution_start;
+
+METHOD use_a4sqp_gauss_solution_start;
+	RUN set_solution_start;
+	RUN free_peak_parameters;
+	SOLVER A4SQP;
+	OPTION try_lsq 'GAUSS';
+	OPTION lsq_max_iter 300;
+	OPTION scaleopt 'ROW_2NORM';
+	OPTION hessian 'BFGS';
+	OPTION kkt_convergence TRUE;
+	OPTION acceptable_iter 5;
+	OPTION max_iter 1;
+END use_a4sqp_gauss_solution_start;
+
+METHOD use_ipopt;
+	RUN free_peak_parameters;
+	SOLVER IPOPT;
+	OPTION print_level 0;
+	OPTION print_user_options 'no';
+	OPTION hessian_approximation 'limited-memory';
+	OPTION max_iter 300;
+END use_ipopt;
+
+METHOD use_ipopt_solution_start;
+	RUN set_solution_start;
+	RUN use_ipopt;
+END use_ipopt_solution_start;
+
+METHOD evaluate_solution_start;
+	RUN set_solution_start;
+	RUN fix_peak_parameters;
+	FOR j IN peaks DO
+		weight[j].lower_bound := weight[j];
+		weight[j].upper_bound := weight[j];
+		width[j].lower_bound := width[j];
+		width[j].upper_bound := width[j];
+	END FOR;
+	SOLVER IPOPT;
+	OPTION print_level 0;
+	OPTION print_user_options 'no';
+	OPTION max_iter 1;
+END evaluate_solution_start;
+
+METHOD self_test;
+	ASSERT CARD[obs] = 4643;
+	ASSERT CARD[peaks] = 33;
+	ASSERT abs(x[1] - 1.81971804) < 1e-10;
+	ASSERT abs(x[4643] - 5.8778079) < 1e-10;
+	ASSERT abs(y[1] - 2.23846503) < 1e-10;
+	ASSERT abs(y[4643] - 1.59857895) < 1e-10;
+END self_test;
+
+METHOD on_load;
+	RUN set_start1;
+	RUN set_nominals;
+	RUN use_a4sqp_lsq;
+END on_load;
+
+METHOD on_load_test;
+	RUN set_start1;
+	RUN set_nominals;
+END on_load_test;
+END diamon2dls;

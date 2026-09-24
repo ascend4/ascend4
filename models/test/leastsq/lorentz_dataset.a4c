@@ -1,0 +1,40 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL lorentz_dataset_nested;
+	obs IS_A set OF integer_constant;
+	peaks IS_A set OF integer_constant;
+	x[obs], y[obs] IS_A real_constant;
+	pos[peaks] IS_A real_constant;
+	w[peaks], g[peaks] IS_A solver_var;
+	piinv IS_A real_constant;
+
+	piinv :== 0.31830988618379067154;
+	peaks :== [1..2];
+	pos[1] :== 1.88790653;
+	pos[2] :== 2.00155403;
+
+	DATASET d FROM "test/leastsq/lorentz_dataset.csv";
+		INDEX obs FROM COLUMN i IS_A integer_constant;
+		x[obs] FROM COLUMN x IS_A real_constant;
+		y[obs] FROM COLUMN y IS_A real_constant;
+	END DATASET;
+
+	obj: MINIMIZE SUM[
+		(
+			SUM[
+				piinv*w[j]*g[j]/((x[i] - pos[j])^2 + g[j]^2)
+				| j IN peaks
+			] - y[i]
+		)^2
+		| i IN obs
+	];
+
+METHODS
+METHOD on_load;
+	w[1] := 1.0215400678;
+	w[2] := 0.0128719128;
+	g[1] := 0.02;
+	g[2] := 0.02;
+END on_load;
+END lorentz_dataset_nested;

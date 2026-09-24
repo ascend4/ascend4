@@ -161,6 +161,7 @@ static enum safe_err rel_eval_term_safe(
 	double *gradient,
 	unsigned long nvar
 );
+static int rel_term_affine_degree(CONST struct relation_term *term, CONST unsigned char *var_mask, unsigned long mask_len);
 
 /* the following appear only to be used locally, so I've made them static  -- JP */
 
@@ -2394,6 +2395,97 @@ int RelationAnalyzeLeastSquaresObjectiveWithResiduals(
 
 int RelationAnalyzeLeastSquaresObjective(CONST struct relation *rel, struct RelationLeastSquaresAnalysis *analysis){
 	return RelationAnalyzeLeastSquaresObjectiveWithResiduals(rel, analysis, NULL, NULL);
+}
+
+static int rel_term_const_int(CONST struct relation_term *term, long *value){
+	if(term == NULL || RelationTermType(term) != e_int){
+		return 0;
+	}
+	if(value != NULL){
+		*value = I_TERM(term)->ivalue;
+	}
+	return 1;
+}
+
+static int rel_term_affine_degree(CONST struct relation_term *term, CONST unsigned char *var_mask, unsigned long mask_len){
+	enum Expr_enum type;
+	int left_degree;
+	int right_degree;
+	long exponent;
+
+	if(term == NULL){
+		return 2;
+	}
+	type = RelationTermType(term);
+	switch(type){
+	case e_zero:
+	case e_real:
+	case e_int:
+		return 0;
+	case e_var:
+	case e_der:
+	case e_pre:
+		return TermVarNumber(term) < mask_len && var_mask[TermVarNumber(term)] ? 1 : 0;
+	case e_uminus:
+		return rel_term_affine_degree(U_TERM(term)->left,var_mask,mask_len);
+	case e_func:
+		left_degree = rel_term_affine_degree(F_TERM(term)->left,var_mask,mask_len);
+		return left_degree == 0 ? 0 : 2;
+	case e_plus:
+	case e_minus:
+		left_degree = rel_term_affine_degree(B_TERM(term)->left,var_mask,mask_len);
+		right_degree = rel_term_affine_degree(B_TERM(term)->right,var_mask,mask_len);
+		if(left_degree > 1 || right_degree > 1){
+			return 2;
+		}
+		return left_degree > right_degree ? left_degree : right_degree;
+	case e_times:
+		left_degree = rel_term_affine_degree(B_TERM(term)->left,var_mask,mask_len);
+		right_degree = rel_term_affine_degree(B_TERM(term)->right,var_mask,mask_len);
+		if(left_degree > 1 || right_degree > 1 || left_degree + right_degree > 1){
+			return 2;
+		}
+		return left_degree + right_degree;
+	case e_divide:
+		left_degree = rel_term_affine_degree(B_TERM(term)->left,var_mask,mask_len);
+		right_degree = rel_term_affine_degree(B_TERM(term)->right,var_mask,mask_len);
+		if(left_degree > 1 || right_degree > 0){
+			return 2;
+		}
+		return left_degree;
+	case e_ipower:
+	case e_power:
+		left_degree = rel_term_affine_degree(B_TERM(term)->left,var_mask,mask_len);
+		right_degree = rel_term_affine_degree(B_TERM(term)->right,var_mask,mask_len);
+		if(left_degree == 0 && right_degree == 0){
+			return 0;
+		}
+		if(right_degree > 0){
+			return 2;
+		}
+		if(rel_term_const_int(B_TERM(term)->right,&exponent)){
+			if(exponent == 0){
+				return 0;
+			}
+			if(exponent == 1){
+				return left_degree;
+			}
+		}
+		return left_degree == 0 ? 0 : 2;
+	default:
+		return 2;
+	}
+}
+
+int RelationTermIsAffineInVariables(
+	CONST struct relation_term *term,
+	CONST unsigned char *var_mask,
+	unsigned long mask_len
+){
+	if(term == NULL || var_mask == NULL || mask_len == 0){
+		return 0;
+	}
+	return rel_term_affine_degree(term,var_mask,mask_len) <= 1;
 }
 
 struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel)

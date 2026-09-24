@@ -14,7 +14,8 @@ struct relation_term;
 
 enum system_lsq_analyse_flags {
 	SYSTEM_LSQ_ANALYSE_CLASSIFY = 0,
-	SYSTEM_LSQ_ANALYSE_BUILD_VIEW = 1
+	SYSTEM_LSQ_ANALYSE_BUILD_VIEW = 1,
+	SYSTEM_LSQ_ANALYSE_BUILD_PROJECTION = 2
 };
 
 struct system_lsq_residual {
@@ -29,6 +30,8 @@ struct system_lsq_view {
 	struct RelationLeastSquaresAnalysis analysis;
 	unsigned long nresiduals;
 	struct system_lsq_residual *residuals;
+	unsigned long nprojected;
+	int *projected_sindex;
 };
 
 ASC_DLLSPEC int system_analyse_lsq_objective(
