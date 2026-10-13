@@ -100,6 +100,7 @@ ExtBBoxFunc fprops_w_Trho_calc;
 ExtBBoxFunc fprops_mu_Trho_calc;
 ExtBBoxFunc fprops_lam_Trho_calc;
 ExtBBoxFunc fprops_rho_Tp_calc;
+ExtBBoxFunc fprops_sat_T_calc;
 ExtBBoxFunc fprops_cp_Tp_calc;
 ExtBBoxFunc fprops_h_Tp_calc;
 ExtBBoxFunc fprops_s_Tp_calc;
@@ -161,6 +162,7 @@ static const char *fprops_mu_Trho_help = "Calculate viscosity from temperature a
 static const char *fprops_lam_Trho_help = "Calculate thermal conductivity sound from temperature and density, using FPROPS";
 
 static const char *fprops_rho_Tp_help = "rho(T,p) esp. for incompressible substances";
+static const char *fprops_sat_T_help = "Calculate saturation pressure, liquid density and vapor density from temperature, using FPROPS";
 static const char *fprops_cp_Tp_help = "h(T,p) esp. for incompressible substances";
 static const char *fprops_h_Tp_help = "h(T,p) esp. for incompressible substances";
 static const char *fprops_s_Tp_help = "s(T,p) esp. for incompressible substances";
@@ -578,6 +580,7 @@ ASC_EXPORT int fprops_register(){
 	CALCFN(fprops_lam_Trho,2,1);
 
 	CALCFN(fprops_rho_Tp,2,1);
+	CALCFN(fprops_sat_T,1,3);
 	CALCFN(fprops_cp_Tp,2,1);
 	CALCFN(fprops_h_Tp,2,1);
 	CALCFN(fprops_s_Tp,2,1);
@@ -1416,6 +1419,27 @@ static const char *noutputs_msg = "Incorrect call: %u outputs received, but expe
 	/* coefficients required for this fluid; cast it to the required form: */\
 	const PureFluid *FLUID = (const PureFluid *)bbox->user_data;\
     FpropsError err=FPROPS_NO_ERROR;
+
+/* Pure-fluid saturation at prescribed T: outputs p_sat, rho_liquid, rho_vapor. */
+int fprops_sat_T_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(1,3);
+	(void)jacobian;
+	if(!FLUID->sat_fn){
+		ERRMSG("Prepared fluid does not support saturation calculations");
+		return FPROPS_DATA_ERROR;
+	}
+	if(!isfinite(inputs[0]) || inputs[0] < TTRIP(FLUID)
+			|| inputs[0] >= TCRIT(FLUID)){
+		ERRMSG("Saturation temperature must be at least the triple point and below the critical point");
+		return FPROPS_RANGE_ERROR;
+	}
+	fprops_sat_T(inputs[0], &outputs[0], &outputs[1], &outputs[2], FLUID, &err);
+	return err;
+}
 
 /**
 	Evaluation function for 'fprops_p'.

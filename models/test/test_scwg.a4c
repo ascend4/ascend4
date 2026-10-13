@@ -1,0 +1,57 @@
+(* Run with ./a4 run models/test/test_scwg.a4c.
+   References calculated independently with FPROPS Python sat_T/mu0_source
+   (RPP canonical names carbon_monoxide, carbon_dioxide, hydrogen, water)
+   and a scalar bracketed solve for the shift extent. *)
+REQUIRE "johnpye/scwg.a4c";
+
+MODEL test_scwg REFINES scwg;
+METHODS
+	METHOD self_test;
+		RUN scwg::self_test;
+		(* Default observed-pressure specification, including all three
+		   saturation-wrapper outputs at two temperatures. *)
+		ASSERT abs(initial_props.p_sat - 3169.92934 {Pa}) < 0.01 {Pa};
+		ASSERT abs(initial_props.rho_l - 997.003352 {kg/m^3}) < 0.0001 {kg/m^3};
+		ASSERT abs(initial_props.rho_v_sat - 0.0230748042 {kg/m^3}) < 1e-8 {kg/m^3};
+		ASSERT abs(props.p_sat - 1554927.90047 {Pa}) < 0.1 {Pa};
+		ASSERT abs(props.rho_l - 864.658102 {kg/m^3}) < 0.0001 {kg/m^3};
+		ASSERT abs(props.rho_v_sat - 7.86099452 {kg/m^3}) < 1e-7 {kg/m^3};
+		ASSERT abs(P_baseline - 17.3506959945 {bar}) < 1e-5 {bar};
+		ASSERT abs(K_wgs - 213.870665548) < 1e-5;
+		ASSERT abs(m_C_reacted - 1 {g}) < 1e-6 {g};
+
+		RUN forward_1g;
+		SOLVE;
+		RUN scwg::self_test;
+		ASSERT abs(P_observed - 40.2199988983 {bar}) < 1e-5 {bar};
+
+		(* Zero conversion must not divide by zero or lose solvability. *)
+		RUN blank;
+		SOLVE;
+		RUN scwg::self_test;
+		ASSERT abs(delta_P) < 0.1 {Pa};
+		ASSERT abs(n_CO) < 1e-9 {mol};
+		ASSERT abs(n_CO2) < 1e-9 {mol};
+		ASSERT abs(n_H2) < 1e-9 {mol};
+
+		(* Same zero-conversion state specified by observed pressure. *)
+		FREE m_C_reacted;
+		FIX P_observed;
+		SOLVE;
+		RUN scwg::self_test;
+		ASSERT abs(m_C_reacted) < 1e-6 {g};
+
+		RUN forward_1g;
+		T := 373.15 {K};
+		SOLVE;
+		RUN scwg::self_test;
+		ASSERT abs(P_baseline - 2.27656560191 {bar}) < 1e-5 {bar};
+		ASSERT abs(P_observed - 18.3393085311 {bar}) < 1e-5 {bar};
+
+		T := 573.15 {K};
+		SOLVE;
+		RUN scwg::self_test;
+		ASSERT abs(P_baseline - 88.8520900385 {bar}) < 1e-5 {bar};
+		ASSERT abs(P_observed - 126.318066020 {bar}) < 1e-5 {bar};
+	END self_test;
+END test_scwg;

@@ -1,0 +1,323 @@
+(*
+First pressure-based char conversion model: an NLA system for QRSlv.
+
+Run from the ASCEND source directory:
+  ./a4 run models/johnpye/scwg.a4c
+  ./a4 run models/johnpye/scwg.a4c -p P_baseline P_observed delta_P m_C_reacted X
+  ./a4 run models/johnpye/scwg.a4c -r forward_1g -p P_observed m_C_reacted
+  ./a4 run models/johnpye/scwg.a4c -r blank -p P_baseline P_observed delta_P
+
+Default illustrative charge: 500 g total water, 50 g pure carbon, 1 L
+vessel, initially at 25 degC and 1 bar ABSOLUTE with saturated water vapour
+and argon. At a specified observed temperature and absolute pressure,
+infer carbon consumed and CO/CO2/H2 inventories. No kinetic law is used.
+
+ASSUMPTIONS / DOMAIN
+  - Uniform measured temperature; no energy balance.
+  - Liquid water and a gas headspace must remain present in all three
+    states (initial, heated blank, reacting). Below water's critical point
+    only: despite the filename, this is NOT yet a supercritical model.
+  - IAPWS-95 pure-water saturation pressure and saturated liquid density.
+    Liquid compression, water activity and Poynting corrections neglected.
+  - All gases, INCLUDING water vapour, obey the ideal-gas law. The FPROPS
+    saturated vapour density is reported but is NOT used in the inventory.
+  - No dissolution, adsorption, methane, oxygen or other biomass products.
+  - C + H2O -> CO + H2 has specified/inferred extent xi; only the subsequent
+    CO + H2O <=> CO2 + H2 reaction is at chemical equilibrium (extent eta).
+    Solid carbon is NOT constrained to chemical equilibrium.
+  - V_displaced is an optional CONSTANT excluded volume for solids/inserts;
+    its default is zero, matching the initial illustrative calculation.
+    Changes of solid volume with conversion are neglected.
+
+The model predicts total product inventories, not intrinsic reaction rates.
+CO2 dissolution and gas nonideality need assessing before using these
+inferred inventories quantitatively. Run check_physical after GUI solves.
+*)
+
+REQUIRE "johnpye/fprops/reactive_stoic.a4l";
+
+(* Use the current SI value rather than the legacy GAS_C unit definition. *)
+CONSTANT scwg_gas_constant REFINES real_constant
+	DIMENSION M*L^2/T^2/Q/TMP :== 8.31446261815324 {J/mol/K};
+
+(* Water property package: select the pure-water Helmholtz EOS in FPROPS.
+   The saturation helper evaluates its properties at a supplied temperature. *)
+MODEL scwg_water_data;
+	component, type IS_A symbol_constant;
+	component :== 'water';
+	type :== 'helmholtz';
+END scwg_water_data;
+
+MODEL scwg_water_saturation;
+	cd IS_A scwg_water_data;
+	T IS_A temperature;
+	p_sat IS_A pressure;
+	rho_l, rho_v_sat IS_A mass_density;
+	sat: fprops_sat_T(
+		T : INPUT;
+		p_sat, rho_l, rho_v_sat : OUTPUT;
+		cd : DATA
+	);
+METHODS
+	METHOD default_self;
+		T.lower_bound := 273.16 {K};
+		T.upper_bound := 647.095 {K};
+		T := 473.15 {K};
+		p_sat := 15.55 {bar};
+		p_sat.nominal := 10 {bar};
+		rho_l := 865 {kg/m^3};
+		rho_l.nominal := 1000 {kg/m^3};
+		rho_v_sat := 8 {kg/m^3};
+		rho_v_sat.nominal := 10 {kg/m^3};
+	END default_self;
+END scwg_water_saturation;
+
+(* Common water inventory and headspace calculation. m_water is total
+   water remaining as H2O, including both liquid and vapour. *)
+MODEL scwg_water_space(
+	props WILL_BE scwg_water_saturation;
+	V_available WILL_BE volume;
+	m_water WILL_BE mass;
+);
+	R IS_A scwg_gas_constant;
+	M_water IS_A molar_weight_constant;
+	M_water :== 18.01528 {g/mol};
+	m_liquid, m_vapour IS_A mass;
+	V_liquid, V_gas IS_A volume;
+	n_vapour IS_A mole;
+	water_balance: m_water = m_liquid + m_vapour;
+	liquid_volume: m_liquid = props.rho_l * V_liquid;
+	volume_balance: V_available = V_liquid + V_gas;
+	vapour_mass: m_vapour = M_water * n_vapour;
+	vapour_pressure: props.p_sat * V_gas = n_vapour * R * props.T;
+METHODS
+	METHOD default_self;
+		m_liquid := 496 {g};
+		m_liquid.nominal := 500 {g};
+		m_vapour := 4 {g};
+		m_vapour.nominal := 5 {g};
+		V_liquid := 0.575 {L};
+		V_liquid.nominal := 0.5 {L};
+		V_gas := 0.425 {L};
+		V_gas.nominal := 0.5 {L};
+		n_vapour := 0.2 {mol};
+		n_vapour.nominal := 0.2 {mol};
+	END default_self;
+END scwg_water_space;
+
+MODEL scwg;
+	R IS_A scwg_gas_constant;
+	M_C, M_water, M_CO, M_CO2, M_H2 IS_A molar_weight_constant;
+	M_C :== 12.011 {g/mol};
+	M_water :== 18.01528 {g/mol};
+	(* Internally consistent atomic masses for the mass-balance check. *)
+	M_CO :== 28.0104 {g/mol};
+	M_CO2 :== 44.0098 {g/mol};
+	M_H2 :== 2.01588 {g/mol};
+
+	(* Vessel and water inventories in three states: initial conditions set
+	   the argon charge; baseline is the heated charge with no reaction;
+	   reacting has less water because some has supplied oxygen and hydrogen
+	   to the product gases. Baseline and reacting share the observed T,
+	   but their liquid inventories and headspace volumes can differ. *)
+	V_vessel, V_displaced, V_available IS_A volume;
+	m_water_initial, m_C_initial, m_water_remaining IS_A mass;
+	P_initial, P_observed, P_baseline IS_A pressure;
+	delta_P IS_A delta_pressure;
+	n_argon IS_A mole;
+	initial_props, props IS_A scwg_water_saturation;
+	T_initial ALIASES initial_props.T;
+	T ALIASES props.T;
+	initial IS_A scwg_water_space(initial_props, V_available, m_water_initial);
+	baseline IS_A scwg_water_space(props, V_available, m_water_initial);
+	reacting IS_A scwg_water_space(props, V_available, m_water_remaining);
+
+	(* Water-argon baseline pressure calculation. Subtract the initial water
+	   vapour partial pressure from the initial total pressure to determine
+	   the conserved argon inventory. Heat that same inventory to T to obtain
+	   P_baseline. delta_P reports the excursion above this blank prediction. *)
+	available_volume: V_available = V_vessel - V_displaced;
+	initial_argon: (P_initial - initial_props.p_sat) * initial.V_gas
+		= n_argon * R * T_initial;
+	baseline_pressure: (P_baseline - props.p_sat) * baseline.V_gas
+		= n_argon * R * T;
+	excursion: delta_P = P_observed - P_baseline;
+
+	(* Water-gas shift reaction thermochemistry: CO + H2O <=> CO2 + H2.
+	   FPROPS provides standard chemical potentials on a common reference
+	   basis. Their reaction difference gives dg0_wgs and hence K_wgs(T).
+	   This calculation determines the equilibrium constant, not the amount
+	   of solid carbon consumed. *)
+	components IS_A set OF symbol_constant;
+	components :== ['CO', 'CO2', 'H2', 'H2O'];
+	pkg IS_A reactive_package(components);
+	pkg.source :== 'ideal+ref0:RPP';
+	pkg.algorithm :== 'auto';
+	mu0[components], dg0_wgs IS_A molar_energy;
+	K_wgs IS_A positive_factor;
+	standard_potentials: fprops_rxn_mu0_T(
+		T : INPUT;
+		mu0[components] : OUTPUT;
+		pkg : DATA
+	);
+	wgs_dg: dg0_wgs = mu0['CO2'] + mu0['H2'] - mu0['CO'] - mu0['H2O'];
+	wgs_K: K_wgs = exp(-dg0_wgs / (R * T));
+
+	(* Reaction material balances. First, xi mol of carbon reacts with water
+	   to form xi mol each of CO and H2. Shift extent eta then converts eta
+	   mol of CO and water into CO2 and additional H2. These balances also
+	   account for water consumed and express inferred carbon loss as mass
+	   and fractional conversion X. *)
+	xi "carbon consumed" IS_A mole;
+	eta "water-gas-shift extent" IS_A mole;
+	n_CO, n_CO2, n_H2 IS_A mole;
+	m_C_reacted, m_C_remaining, m_CO, m_CO2, m_H2 IS_A mass;
+	X "fraction of initial carbon consumed" IS_A fraction;
+	co_balance: n_CO = xi - eta;
+	co2_balance: n_CO2 = eta;
+	h2_balance: n_H2 = xi + eta;
+	water_consumed: m_water_remaining = m_water_initial - M_water * (xi + eta);
+	carbon_consumed: m_C_reacted = M_C * xi;
+	carbon_remaining: m_C_remaining = m_C_initial - m_C_reacted;
+	conversion: m_C_reacted = X * m_C_initial;
+	co_mass: m_CO = M_CO * n_CO;
+	co2_mass: m_CO2 = M_CO2 * n_CO2;
+	h2_mass: m_H2 = M_H2 * n_H2;
+
+	(* Water-gas shift equilibrium composition calculation.
+	   p_CO2*p_H2 = K*p_CO*p_H2O, rearranged without ratios or logs
+	   of species amounts so that zero conversion remains well defined. *)
+	shift_equilibrium: n_CO2 * n_H2 * R * T
+		= K_wgs * n_CO * props.p_sat * reacting.V_gas;
+	(* Observed pressure constraint. After subtracting saturated water vapour
+	   pressure, the remaining pressure is supplied by argon and products.
+	   With P_observed fixed, this equation and shift equilibrium determine
+	   xi and eta together with the water/headspace balances above. *)
+	observed_pressure: (P_observed - props.p_sat) * reacting.V_gas
+		= (n_argon + n_CO + n_CO2 + n_H2) * R * T;
+
+METHODS
+	(* Numerical starting guesses and scaling for QRSlv. Assignments here,
+	   including m_C_reacted := 1 g, do not FIX those variables. Nominals
+	   provide characteristic magnitudes for solver scaling. *)
+	METHOD default_self;
+		RUN initial_props.default_self;
+		RUN props.default_self;
+		RUN initial.default_self;
+		RUN baseline.default_self;
+		RUN reacting.default_self;
+		V_available := 1 {L};
+		V_available.nominal := 1 {L};
+		n_argon := 0.02 {mol};
+		n_argon.nominal := 0.02 {mol};
+		P_baseline := 17.35 {bar};
+		P_baseline.nominal := 20 {bar};
+		P_observed.nominal := 40 {bar};
+		delta_P := 22.88 {bar};
+		delta_P.nominal := 20 {bar};
+		m_water_remaining := 497 {g};
+		m_water_remaining.nominal := 500 {g};
+		xi := 0.083 {mol};
+		xi.nominal := 0.1 {mol};
+		eta := 0.0827 {mol};
+		eta.nominal := 0.1 {mol};
+		n_CO := 0.0003 {mol};
+		n_CO.nominal := 0.001 {mol};
+		n_CO2 := 0.0827 {mol};
+		n_CO2.nominal := 0.1 {mol};
+		n_H2 := 0.1657 {mol};
+		n_H2.nominal := 0.2 {mol};
+		m_C_reacted := 1 {g};
+		m_C_reacted.nominal := 1 {g};
+		m_C_remaining := 49 {g};
+		m_C_remaining.nominal := 50 {g};
+		m_CO := 0.008 {g};
+		m_CO.nominal := 0.03 {g};
+		m_CO2 := 3.64 {g};
+		m_CO2.nominal := 4 {g};
+		m_H2 := 0.334 {g};
+		m_H2.nominal := 0.4 {g};
+		X := 0.02;
+		X.nominal := 0.02;
+		K_wgs := 293;
+		K_wgs.nominal := 300;
+		dg0_wgs := -22330 {J/mol};
+		FOR i IN components DO
+			mu0[i] := -200000 {J/mol};
+			mu0[i].nominal := 200000 {J/mol};
+		END FOR;
+	END default_self;
+
+	(* Default specification: fix the vessel, initial charge, initial state
+	   and observed T/P; leave carbon consumed to be solved. Replace the
+	   illustrative T and P_observed with measurements for an actual sample. *)
+	METHOD on_load;
+		RUN default_self;
+		FIX V_vessel := 1 {L};
+		FIX V_displaced := 0 {L};
+		FIX m_water_initial := 500 {g};
+		FIX m_C_initial := 50 {g};
+		FIX T_initial := 298.15 {K};
+		FIX P_initial := 1 {bar};
+		FIX T := 473.15 {K};
+		(* This synthetic pressure was calculated using the same equations
+		   with 1 g carbon consumed. Solving with pressure fixed therefore
+		   recovers 1 g as a consistency demonstration, not an experimental
+		   result. The FREE statement below leaves carbon loss unknown. *)
+		FIX P_observed := 40.2199988983 {bar};
+		FREE m_C_reacted;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+	END on_load;
+
+	(* Forward calculation: specify 1 g carbon consumed and solve for
+	   pressure, keeping exactly the same NLA equations. *)
+	METHOD forward_1g;
+		FREE P_observed;
+		FIX m_C_reacted := 1 {g};
+	END forward_1g;
+
+	(* Blank calculation: specify zero conversion. The reacting vessel
+	   should then reproduce the separately calculated water-argon baseline. *)
+	METHOD blank;
+		FREE P_observed;
+		FIX m_C_reacted := 0 {g};
+		xi := 0 {mol};
+		eta := 0 {mol};
+		n_CO := 0 {mol};
+		n_CO2 := 0 {mol};
+		n_H2 := 0 {mol};
+	END blank;
+
+	(* Check that the solved state lies within the assumed two-phase domain
+	   and does not consume more carbon than was initially charged. *)
+	METHOD check_physical;
+		ASSERT V_available > 0 {L};
+		ASSERT initial.V_gas > 0 {L};
+		ASSERT baseline.V_gas > 0 {L};
+		ASSERT reacting.V_gas > 0 {L};
+		ASSERT initial.m_liquid > 0 {g};
+		ASSERT baseline.m_liquid > 0 {g};
+		ASSERT reacting.m_liquid > 0 {g};
+		ASSERT n_argon >= 0 {mol};
+		ASSERT xi >= -1e-9 {mol};
+		ASSERT eta >= -1e-9 {mol};
+		ASSERT eta <= xi + 1e-9 {mol};
+		ASSERT X >= -1e-9;
+		ASSERT X <= 1 + 1e-9;
+		ASSERT delta_P >= -1 {Pa};
+	END check_physical;
+
+	METHOD self_test;
+		RUN check_physical;
+		(* Independent elemental and mass-balance checks, valid in either
+		   specification and at zero conversion. Argon cancels unchanged. *)
+		ASSERT abs(n_CO + n_CO2 - m_C_reacted / M_C) < 1e-8 {mol};
+		ASSERT abs(m_water_remaining / M_water + n_H2
+			- m_water_initial / M_water) < 1e-7 {mol};
+		ASSERT abs(m_water_remaining / M_water + n_CO + 2 * n_CO2
+			- m_water_initial / M_water) < 1e-7 {mol};
+		ASSERT abs(m_water_remaining + m_C_remaining + m_CO + m_CO2 + m_H2
+			- m_water_initial - m_C_initial) < 1e-5 {g};
+	END self_test;
+END scwg;
