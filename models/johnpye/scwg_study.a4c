@@ -1,0 +1,143 @@
+(*
+Pressure-temperature paths for the scwg closed-vessel NLA model.
+
+From the source directory:
+  ./a4 run models/johnpye/scwg_study.a4c -r study
+  python3 models/johnpye/scwg_plot.py scwg_study.tsv
+
+In the GUI, open this model and run study. Results populate the Observer;
+plot P_blank_bar, P_low_bar and P_high_bar against T_degC there.
+The CLI writes scwg_study.tsv in the current directory. --plot on a4 run
+is for integration, so do not use that option for this algebraic STUDY.
+
+The two reacting paths use prescribed cumulative CO2 release histories.
+They are illustrative scenarios, NOT predictions of the gasification rate.
+At each temperature, the original scwg equations calculate the associated
+carbon consumption, CO/H2 inventories, remaining water and pressure.
+Consequently these paths include hydrogen; they do not represent CO2-only
+addition. Actual HTL products/kinetics require a different reaction model.
+
+A linear temperature ramp supplies a time-temperature relationship. CO2
+release begins at T_onset, then approaches CO2_limit exponentially with
+time constant tau. This is an analytical release law, so no integration
+or kinetic parameter estimation is needed for the sweep.
+
+The blank uses the existing ideal inert-gas model (argon). Within this
+approximation, inert air gives the same blank at the same initial T/P.
+Oxygen chemistry is excluded from the reacting paths.
+
+All thermodynamic limitations of scwg apply: liquid water must remain,
+ideal gases, no dissolution, and water-gas-shift equilibrium. In particular,
+the 25-300 degC sweep is a subcritical screening calculation, not yet a
+supercritical-water or quantitative high-pressure mixture model.
+*)
+
+REQUIRE "johnpye/scwg.a4c";
+
+MODEL scwg_study;
+	(* Two copies of the vessel share the initial charge and temperature.
+	   Only the prescribed CO2 release parameters differ between paths. *)
+	vessel[1..2] IS_A scwg;
+	T, T_initial, T_onset, T_end IS_A temperature;
+	V_vessel, V_displaced IS_A volume;
+	m_water_initial, m_C_initial IS_A mass;
+	P_initial IS_A pressure;
+	T, vessel[1..2].T ARE_THE_SAME;
+	T_initial, vessel[1..2].T_initial ARE_THE_SAME;
+	V_vessel, vessel[1..2].V_vessel ARE_THE_SAME;
+	V_displaced, vessel[1..2].V_displaced ARE_THE_SAME;
+	m_water_initial, vessel[1..2].m_water_initial ARE_THE_SAME;
+	m_C_initial, vessel[1..2].m_C_initial ARE_THE_SAME;
+	P_initial, vessel[1..2].P_initial ARE_THE_SAME;
+
+	(* Prescribed heating and release history. The positive-part expression
+	   keeps release exactly zero before the onset temperature. Changing
+	   heating_rate changes time available for release at a given T. *)
+	heating_rate IS_A temperature_rate;
+	t_elapsed, t_active IS_A time;
+	tau[1..2] IS_A time;
+	CO2_limit[1..2] IS_A mass;
+	heating: T = T_initial + heating_rate * t_elapsed;
+	exposure: t_active = (T - T_onset + abs(T - T_onset)) / (2 * heating_rate);
+	FOR i IN [1..2] CREATE
+		release[i]: vessel[i].m_CO2 = CO2_limit[i] * (1 - exp(-t_active / tau[i]));
+	END FOR;
+
+	(* Explicit plotting units make CLI exports independent of user display
+	   preferences. These are numerical values in degC, bar absolute, grams
+	   and minutes. Physical calculations above retain dimensioned variables. *)
+	T_degC, P_blank_bar, P_low_bar, P_high_bar IS_A factor;
+	CO2_low_g, CO2_high_g, C_low_g, C_high_g, elapsed_min IS_A factor;
+	plot_T: T_degC = (T - 273.15 {K}) / 1 {K};
+	plot_blank: P_blank_bar = vessel[1].P_baseline / 1 {bar};
+	plot_low: P_low_bar = vessel[1].P_observed / 1 {bar};
+	plot_high: P_high_bar = vessel[2].P_observed / 1 {bar};
+	plot_CO2_low: CO2_low_g = vessel[1].m_CO2 / 1 {g};
+	plot_CO2_high: CO2_high_g = vessel[2].m_CO2 / 1 {g};
+	plot_C_low: C_low_g = vessel[1].m_C_reacted / 1 {g};
+	plot_C_high: C_high_g = vessel[2].m_C_reacted / 1 {g};
+	plot_time: elapsed_min = t_elapsed / 60 {s};
+
+METHODS
+	METHOD on_load;
+		FOR i IN [1..2] DO
+			RUN vessel[i].on_load;
+			(* Release is now set by the equation above. Free observed pressure
+			   and retain carbon consumption as a solved quantity. *)
+			FREE vessel[i].P_observed;
+			FREE vessel[i].m_CO2;
+			FREE vessel[i].m_C_reacted;
+		END FOR;
+		FIX T := 298.15 {K};
+		FIX T_end := 573.15 {K};
+		FIX T_onset := 423.15 {K};
+		FIX heating_rate := 5 {K/min};
+		(* Case 1: lower yield, slower approach. Case 2: higher yield, faster
+		   approach. Limits are asymptotic CO2 masses, not final carbon loss. *)
+		FIX CO2_limit[1] := 1 {g};
+		FIX tau[1] := 15 {min};
+		FIX CO2_limit[2] := 5 {g};
+		FIX tau[2] := 5 {min};
+		tau[1..2].lower_bound := 0.001 {s};
+		heating_rate.lower_bound := 1e-6 {K/s};
+		t_elapsed := 0 {s};
+		t_active := 0 {s};
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+	END on_load;
+
+	(* Pure ASCEND sweep: each point solves the full vessel equations.
+	   110 intervals give 111 rows at 2.5 K spacing for the default range. *)
+	METHOD study;
+		RUN check_inputs;
+		STUDY T_degC, P_blank_bar, P_low_bar, P_high_bar,
+			CO2_low_g, CO2_high_g, C_low_g, C_high_g, elapsed_min
+			VARY T FROM T_initial TO T_end STEPS 110
+			NOW FILE "scwg_study.tsv";
+		RUN self_test;
+	END study;
+
+	METHOD check_inputs;
+		ASSERT heating_rate > 0 {K/s};
+		ASSERT T_end > T_initial;
+		ASSERT T_end < 647.096 {K};
+		ASSERT T_onset >= T_initial;
+		FOR i IN [1..2] DO
+			ASSERT tau[i] > 0 {s};
+			ASSERT CO2_limit[i] >= 0 {g};
+		END FOR;
+	END check_inputs;
+
+	METHOD self_test;
+		RUN check_inputs;
+		FOR i IN [1..2] DO
+			RUN vessel[i].self_test;
+			ASSERT vessel[i].m_CO2 <= CO2_limit[i] + 1e-7 {g};
+		END FOR;
+		ASSERT abs(vessel[1].P_baseline - vessel[2].P_baseline) < 0.1 {Pa};
+		IF T <= T_onset THEN
+			ASSERT abs(vessel[1].delta_P) < 0.1 {Pa};
+			ASSERT abs(vessel[2].delta_P) < 0.1 {Pa};
+		END IF;
+	END self_test;
+END scwg_study;
